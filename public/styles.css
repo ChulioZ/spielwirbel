@@ -8115,8 +8115,17 @@ kbd {
      computes to 0 in a degenerate viewport, which is what the Browser pane
      reports on a freshly opened tab, so without it the panel collapses to
      nothing exactly where it is being measured
-     (.claude/rules/preview-pane-paint-artifacts.md). */
-  max-height: max(300px, calc(100dvh - 500px));
+     (.claude/rules/preview-pane-paint-artifacts.md).
+
+     --pot-band is the world vessel's reservation (slot 10, #1086), inherited
+     from .setup-panel and 0 everywhere else. Subtracting it HERE is what gives
+     the band back to the screen WHEN THIS BOUND BINDS: a pool long enough to be
+     clipped shrinks by exactly what the panel grew by, so the panel's height —
+     and the action bar under it — does not move. It cannot help a SHORT pool,
+     which is content-sized, nor any viewport under ~800px tall, where the 300px
+     floor already wins; the band's 84px cap is measured against the CTA for
+     those cases instead (slot 10's comment). */
+  max-height: max(300px, calc(100dvh - 500px - var(--pot-band, 0px)));
   overflow-y: auto;
   /* Room for the hover lift. `overflow-y: auto` computes `overflow-x` to `auto`
      as well, so a tile that grows past its layout box here produces a horizontal
@@ -9337,11 +9346,12 @@ kbd {
       theme token (--brand, --brand-strong, --stage-ink), so a motif follows the
       world's accent for free and never hardcodes a shade
       (.claude/rules/theme-derived-colors.md).
-   2. SEVEN SLOT RULES, shared by every world, keyed off the bare [data-world]:
+   2. TEN SLOT RULES, shared by every world, keyed off the bare [data-world]:
       the page backdrop, the primary-button frame, the section-heading rule, the
-      card corner, the empty-state scene, the finale stage and the winner
-      reveal's victory scene (#940). Each is a PSEUDO-ELEMENT with
-      pointer-events: none — never a real element, never in an accessible name,
+      card corner, the empty-state scene, the finale stage, the winner
+      reveal's victory scene (#940), the round's crown (#1082), the Pokale
+      podium's floor (#1083) and the session pot's vessel (#1086). Each is a
+      PSEUDO-ELEMENT with pointer-events: none — never a real element, never in an accessible name,
       never a change to a hit target — and each anchors its host with
       position: relative only (no overflow change on cards, so nothing a card
       contains gets clipped). The one REAL element a world touches is the
@@ -9394,6 +9404,10 @@ kbd {
   --world-particle-inset: auto -12px;
   --world-particle-anim: world-firefly;
   --world-particle-dur: 2.4s;
+  /* Slot 10 (#1086) — the vessel the pot's covers are piled in. 200x120,
+     standing on the band's bottom edge, drawn like every other world mask:
+     black, sized by the SLOT, coloured by --brand. */
+  --world-vessel: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='120' viewBox='0 0 200 120'%3E%3Cg fill='%23000'%3E%3Cpath fill-rule='evenodd' d='M22 42c0-12 35-20 78-20s78 8 78 20v52c0 12-35 20-78 20s-78-8-78-20zM32 42c0-9 30-15 68-15s68 6 68 15s-30 15-68 15s-68-6-68-15zM48 42c0-5 22-9 52-9s52 4 52 9s-22 9-52 9s-52-4-52-9zM64 42c0-3 15-5 36-5s36 2 36 5s-15 5-36 5s-36-2-36-5zM62 70v34h3v-34zM96 74v32h3v-32zM136 68v36h3v-36z'/%3E%3Cpath d='M4 112c8-8 16-12 26-14l3 7c-10 1-18 4-26 9zM196 112c-8-8-16-12-26-14l-3 7c10 1 18 4 26 9z'/%3E%3C/g%3E%3C/svg%3E");
 }
 
 [data-world="scifi"] {
@@ -9433,6 +9447,7 @@ kbd {
   --world-particle-inset: -30px auto;
   --world-particle-anim: world-star;
   --world-particle-dur: 1.2s;
+  --world-vessel: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='120' viewBox='0 0 200 120'%3E%3Cg fill='%23000'%3E%3Cpath fill='%23fff' fill-opacity='.35' d='M74 30h52l16 54H58z'/%3E%3Cpath d='M22 92C12 66 24 36 50 20l7 11C36 44 26 68 33 88z'/%3E%3Cpath d='M178 92c10-26-2-56-28-72l-7 11c21 13 31 37 24 57z'/%3E%3Cpath d='M42 10h22v18H42zM136 10h22v18h-22z'/%3E%3Cpath fill-rule='evenodd' d='M100 82c43 0 78 8 78 19s-35 19-78 19s-78-8-78-19s35-19 78-19zM100 92c-29 0-52 4-52 9s23 9 52 9s52-4 52-9s-23-9-52-9z'/%3E%3Cpath fill-rule='evenodd' d='M100 94c24 0 43 3 43 7s-19 7-43 7s-43-3-43-7s19-7 43-7zM100 98c-14 0-25 2-25 3s11 3 25 3s25-2 25-3s-11-3-25-3z'/%3E%3C/g%3E%3C/svg%3E");
 }
 
 
@@ -9472,6 +9487,7 @@ kbd {
   --world-particle-inset: auto -14px;
   --world-particle-anim: world-bubble;
   --world-particle-dur: 2.2s;
+  --world-vessel: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='120' viewBox='0 0 200 120'%3E%3Cg fill='%23000'%3E%3Cpath d='M100 8c36 0 66 16 72 37c-22-9-45-14-72-14s-50 5-72 14c6-21 36-37 72-37z'/%3E%3Cpath d='M100 50c44 0 80 13 80 29c0 16-36 29-80 29s-80-13-80-29c0-16 36-29 80-29z'/%3E%3Cpath fill='%23fff' fill-opacity='.35' d='M98 56h4v50h-4zM70 58l4-1 9 48-4 1zM126 57l4 1-9 48-4-1zM44 65l4-2 17 42-4 2zM152 63l4 2-17 42-4-2z'/%3E%3Cpath d='M8 96c10-10 22-16 34-18l2 9c-11 2-21 7-30 15zM192 96c-10-10-22-16-34-18l-2 9c11 2 21 7 30 15z'/%3E%3C/g%3E%3C/svg%3E");
 }
 
 [data-world="chess"] {
@@ -9510,6 +9526,7 @@ kbd {
   --world-particle-inset: -12px auto;
   --world-particle-anim: world-tumble;
   --world-particle-dur: 2.6s;
+  --world-vessel: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='120' viewBox='0 0 200 120'%3E%3Cg fill='%23000'%3E%3Cpath d='M30 60L46 10h108l16 50z'/%3E%3Cpath fill='%23fff' fill-opacity='.35' d='M50 15h26v19H50zM102 15h26v19h-26zM37 38h26v20H37zM89 38h26v20H89zM141 38h26v20h-26z'/%3E%3Cpath d='M18 60h164v11H18z'/%3E%3Cpath d='M24 71h152v33c0 5-3 9-8 9H32c-5 0-8-4-8-9z'/%3E%3Cpath fill='%23fff' fill-opacity='.35' d='M92 84h16v14c0 4-2 6-4 7h-8c-2-1-4-3-4-7z'/%3E%3Cpath d='M34 113h18v7H34zM148 113h18v7h-18z'/%3E%3C/g%3E%3C/svg%3E");
 }
 
 [data-world="horror"] {
@@ -9548,6 +9565,7 @@ kbd {
   --world-particle-inset: -16px auto;
   --world-particle-anim: world-flit;
   --world-particle-dur: 2.4s;
+  --world-vessel: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='120' viewBox='0 0 200 120'%3E%3Cg fill='%23000'%3E%3Cpath d='M28 34c0-8 32-14 72-14s72 6 72 14v8c0 30-24 54-56 62h-32c-32-8-56-32-56-62z'/%3E%3Cpath d='M40 22c-6-6-6-14 0-18h120c6 4 6 12 0 18z'/%3E%3Cpath d='M50 104l-10 14h14l6-14zM150 104l10 14h-14l-6-14z'/%3E%3Cpath d='M84 12c-2-8 2-12 6-12s8 4 6 12zM104 10c-2-6 0-10 4-10s6 4 4 10z'/%3E%3C/g%3E%3C/svg%3E");
 }
 
 [data-world="dinos"] {
@@ -9586,6 +9604,7 @@ kbd {
   --world-particle-inset: -10px auto;
   --world-particle-anim: world-ash;
   --world-particle-dur: 2.8s;
+  --world-vessel: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='120' viewBox='0 0 200 120'%3E%3Cg fill='%23000'%3E%3Cpath d='M66 34c9 0 17 13 17 27s-8 23-17 23s-17-9-17-23s8-27 17-27z'/%3E%3Cpath d='M134 38c9 0 17 13 17 26s-8 22-17 22s-17-8-17-22s8-26 17-26z'/%3E%3Cpath d='M100 24c10 0 19 15 19 31s-9 26-19 26s-19-10-19-26s9-31 19-31z'/%3E%3Cpath d='M14 76c0-14 39-23 86-23s86 9 86 23c0 18-39 32-86 32s-86-14-86-32z'/%3E%3Cpath fill='%23fff' fill-opacity='.35' d='M22 74l156 8-1 7-156-8zM26 88l148-10 1 7-148 10zM40 98l124-14 1 6-124 14z'/%3E%3Cpath d='M2 92c11-9 24-14 37-15l2 8c-12 1-23 5-33 12zM198 92c-11-9-24-14-37-15l-2 8c12 1 23 5 33 12z'/%3E%3C/g%3E%3C/svg%3E");
 }
 
 [data-world="burg"] {
@@ -9625,6 +9644,7 @@ kbd {
   --world-particle-inset: auto -12px;
   --world-particle-anim: world-firefly;
   --world-particle-dur: 2.2s;
+  --world-vessel: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='120' viewBox='0 0 200 120'%3E%3Cg fill='%23000'%3E%3Cpath d='M20 60h160v50c0 4-2 6-6 6H26c-4 0-6-2-6-6z'/%3E%3Cpath d='M24 58c0-16 8-28 16-32h120c8 4 16 16 16 32z'/%3E%3Cpath fill='%23fff' fill-opacity='.35' d='M92 60h16v18c0 4-2 6-4 8h-8c-2-2-4-4-4-8z'/%3E%3Cpath d='M20 62h160v6H20z'/%3E%3C/g%3E%3C/svg%3E");
 }
 
 /* The display face: the world's own first, then the standard stack, so a
@@ -10252,6 +10272,99 @@ kbd {
 .theme-card[data-world] .theme-card__bar::before { top: -8px; left: -9px; }
 .theme-card[data-world] .theme-card__bar::after { bottom: -8px; right: -9px; transform: rotate(180deg); }
 
+/* Slot 10 — DER KESSEL. The session-setup pot gets the world's vessel painted
+   behind the covers (#1086): a stump for Forest, a cauldron for Horror, a chest
+   for Burg, and a teleporter pad, an open clam, an open chess box and a nest of
+   eggs for the rest. This is the screen the whole table is gathered around when
+   „Loswirbeln" is pressed, and the only world mark it carried was the backdrop.
+
+   TWO HOSTS, because the pool is rendered twice and CSS picks one by width
+   (views-session.js): the `.setup-panel` from 860px up, the `.pool-hint` strip
+   inside the filter bar below it. The issue proposed `.pool-shelf`, and
+   measuring ruled it out on both counts. At 1470 the shelf is not rendered at
+   all — `.setup-grid .pool-hint { display: none }` — so the widest presentation,
+   the one a group actually gathers around, would have got nothing. And below
+   860 the shelf is a horizontal scroller, so an absolutely-positioned layer
+   inside it SCROLLS AWAY WITH THE COVERS: measured on the demo at 390px, a
+   probe pinned to the shelf's bottom moved from x 46 to x -164 on a 210px
+   flick, and `overflow-y` computes to `auto`, so anything taller than the
+   padding box is clipped as well. Each host below is `display: none` at the
+   other's widths, so the two rules never both paint.
+
+   The panel RESERVES its band, slot 9's discipline — its tiles carry titles, so
+   unreserved art would sit under them, and an unreserved layer faint enough to
+   be safe there is not worth painting: composited on --surface, --ink-soft holds
+   AA only to alpha .12 (measured over all seven worlds; .16 gives Chess
+   4.44:1). Reserved, the band takes slot 7's bold .55 instead.
+
+   It is paid for out of the pool's own scroll height where that is possible:
+   `--pot-band` is subtracted in `.setup-panel__body`'s `max-height` above, so a
+   pool long enough to be clipped gives the band back and the panel's total
+   height does not move — measured at 1470x870 with 32 tiles, the panel stays
+   454px for every band from 0 to 56. That coupling is also what makes the
+   prefers-contrast branch one declaration: `--pot-band: 0px` undoes the padding
+   and the subtraction together.
+
+   It is NOT free on a short pool, and the 84px cap is that measurement rather
+   than a round number. Below the `max(300px, …)` floor — any viewport under
+   ~800px tall — the subtraction cannot bite at all, so the band is simply added
+   height, and what the screen has to protect is the „Loswirbeln" button, not the
+   document height (this page scrolls past its footer at 1280x800 today, at any
+   band). Measured at 1280x800 on an 8-game pool: the CTA's bottom sits at 686
+   with no band, 770 at 84 and 802 at 116 — i.e. 116 puts the button the whole
+   layout exists to keep reachable below an 800px fold, and 84 leaves 30px.
+
+   The strip reserves NOTHING, because it cannot. Measured at 390x844 the setup
+   screen fills the viewport to the pixel (app 732 + footer 112 = 844, no slack
+   — .claude/rules/setup-screens-two-column-layout.md §5 measured the same), so
+   a band there would buy art with a scrollbar on the one screen whose height is
+   already spent. It is text-free by GEOMETRY instead: the count group is the
+   row's only text and is a left-aligned flex item, measured ending at x 22 of
+   256 at 390px and at x 91 of 622 at 768px, while the art is right-anchored and
+   painted only as wide as its own 5:3 ratio at the row's height — 127px, so it
+   starts at x 129 and x 495. The `min(220px, 60%)` box is a floor for that art,
+   never a position: its own left edge (x 102 at 390px) already clears the text,
+   so a locale with a longer caption cannot walk into it. */
+[data-world] .setup-panel {
+  --pot-band: clamp(52px, 8vw, 84px);
+  position: relative;
+  isolation: isolate;
+  padding-bottom: calc(16px + var(--pot-band));
+}
+[data-world] .setup-panel::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0;
+  height: var(--pot-band);
+  z-index: -1;
+  pointer-events: none;
+  background: var(--brand);
+  /* The victory scene's alpha (slot 7). Bold, and affordable because the band
+     is text-free — by reservation here, by geometry on the strip below. */
+  opacity: .55;
+  mask-image: var(--world-vessel);
+  /* Sized by HEIGHT so the art keeps its own ratio, and so the reservation and
+     the mask are the one number (slot 9's comment). */
+  mask-size: auto 100%;
+  mask-repeat: no-repeat;
+  mask-position: center bottom;
+}
+[data-world] .setup-filterbar .pool-hint { position: relative; isolation: isolate; }
+[data-world] .setup-filterbar .pool-hint::after {
+  content: '';
+  position: absolute;
+  inset: 0 0 0 auto;
+  width: min(220px, 60%);
+  z-index: -1;
+  pointer-events: none;
+  background: var(--brand);
+  opacity: .55;
+  mask-image: var(--world-vessel);
+  mask-size: auto 100%;
+  mask-repeat: no-repeat;
+  mask-position: right bottom;
+}
+
 /* Backdrop motifs are decoration under text; a reader who asked for more
    contrast gets the plain page. The small marks (frame, rule, corner) stay,
    and so do the particles — small and moving, like the confetti they replace. */
@@ -10268,6 +10381,8 @@ kbd {
   [data-world] .rail__id::before,
   [data-world] .dock::before,
   [data-world] .podium::before,
+  [data-world] .setup-panel::after,
+  [data-world] .setup-filterbar .pool-hint::after,
   /* A flow element, so hiding it needs no reservation undone below: the poster
      simply loses its strip and the name moves up. */
   .theme-card__crown,
@@ -10277,6 +10392,9 @@ kbd {
      The coverless tile gets its tornado back rather than nothing. */
   [data-world] .hero, [data-world] .rail__id { padding-top: 0; }
   [data-world] .podium { padding-bottom: 0; }
+  /* One declaration for the pot: the band is both the panel's padding and the
+     subtraction in its pool's max-height, so zeroing it undoes both. */
+  [data-world] .setup-panel { --pot-band: 0px; }
   [data-world] .cover-ph::after { display: none; }
   [data-world] .cover-ph .ti { display: block; }
 }

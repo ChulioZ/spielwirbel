@@ -500,7 +500,11 @@ What the app does, in detail. For a short overview see the
   behind the bottom navigation, the round's name in the world's face in the top
   bar, and the world's mark on a game that has no cover art. The Pokale podium
   stands on the world's own floor, and the recap card a group shares carries
-  the world's scene along its foot.
+  the world's scene along its foot. When you set a session up, the pot of
+  eligible games sits in a vessel of the world's own — a tree stump in Forest, a
+  cauldron in Horror, a treasure chest in Burg, a teleporter pad in Sci-Fi, an
+  open clam in Ocean, an open games box in Chess and a nest of eggs in
+  Dinosaurs.
   On the winner reveal a world plays
   its own victory scene in place of the confetti — in Forest a tree grows
   while fireflies drift up, in Sci-Fi a rocket lifts off past streaking stars,

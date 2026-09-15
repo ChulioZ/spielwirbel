@@ -241,9 +241,11 @@ const TOKENS = ['--world-font', '--world-backdrop', '--world-backdrop-size', '--
   // Slot 8 (#1082): where the stage art is anchored inside the crown strip —
   // `top` for the worlds whose motif hangs (canopy, waves, webs), `bottom` for
   // those whose motif stands (skyline, rank, horizon).
-  '--world-crown-y'];
+  '--world-crown-y',
+  // Slot 10 (#1086): the vessel the session pot's covers are piled in.
+  '--world-vessel'];
 
-test('each world declares the whole token set the nine slots read, in the registry\'s face', () => {
+test('each world declares the whole token set the ten slots read, in the registry\'s face', () => {
   for (const w of WORLDS) {
     const body = bodyOf(`[data-world="${w.id}"]`);
     assert.ok(body, `styles.css has no [data-world="${w.id}"] token block`);
@@ -285,6 +287,13 @@ const SLOTS = [
   '[data-world] .hero::before',
   // Slot 9 (#1083) — the podium's floor, slot 7's band art under the pedestals.
   '[data-world] .podium::before',
+  // Slot 10 (#1086) — the session pot's vessel. TWO entries, because the pool
+  // is rendered twice and CSS picks one by width: deleting either rule leaves
+  // a whole class of viewport with no vessel, and a single entry would not see
+  // it. That is the mistake the issue's own proposal made — it named only
+  // `.pool-shelf`, which is `display: none` from 860px up.
+  '[data-world] .setup-panel::after',
+  '[data-world] .setup-filterbar .pool-hint::after',
 ];
 
 /* A slot selector can hold commas inside :is(), which bodyOfIn() would split on.
@@ -294,7 +303,7 @@ const SLOTS = [
    #1083, where removing the podium floor left the existence test green. */
 const slotBody = (sel) => (rulesOf(topLevel()).find(([s]) => s.split('\n').map((x) => x.trim().replace(/,$/, '')).includes(sel)) || [])[1] || null;
 
-test('the nine slots exist, and every ornament is a pseudo-element that takes no clicks', () => {
+test('the ten slots exist, and every ornament is a pseudo-element that takes no clicks', () => {
   for (const sel of SLOTS) assert.ok(slotBody(sel), `slot ${sel} is missing`);
   const rules = rulesOf(CSS).filter(([sel]) => sel.includes('[data-world'));
   assert.ok(rules.length >= 21, `the world rules have moved (found ${rules.length})`);
@@ -433,6 +442,80 @@ test('every world has a floor for the podium to stand on, on one of the two band
   assert.deepEqual(bare, [], 'these worlds declare no victory band at all, so their podium has no floor');
 });
 
+// ---- slot 10: the session pot's vessel (#1086) ---------------------------
+
+/* The pool is rendered TWICE and CSS picks one by width (views-session.js), so
+   this slot is the only one with two hosts — and the two are not symmetrical.
+   The panel can reserve a band and pays for it out of the pool's own scroll
+   height; the strip cannot reserve anything (the setup screen fills a 390x844
+   phone to the pixel) and is text-free by geometry instead. Both halves are
+   pinned here, because each is load-bearing in a way the other is not. */
+
+test('the pot\'s vessel paints on BOTH presentations, in the world\'s own art', () => {
+  for (const sel of ['[data-world] .setup-panel::after',
+    '[data-world] .setup-filterbar .pool-hint::after']) {
+    const art = slotBody(sel);
+    assert.ok(art, `${sel} is missing`);
+    assert.match(art, /mask-image:\s*var\(--world-vessel\)/, `${sel} draws art of its own`);
+    assert.match(art, /background:\s*var\(--brand\)/, `${sel} does not paint in the accent`);
+    assert.match(art, /opacity:\s*\.55/, `${sel}: the text-free alpha is slot 7's .55`);
+    assert.match(art, /z-index:\s*-1/, `${sel} would paint OVER the covers`);
+  }
+});
+
+test('the panel reserves its band and pays for it out of the pool, not the screen', () => {
+  const host = slotBody('[data-world] .setup-panel');
+  assert.ok(host, 'the panel host rule is missing');
+  const cap = /--pot-band:\s*clamp\([^,]+,[^,]+,\s*(\d+)px\)/.exec(host);
+  assert.ok(cap, 'the band is not one clamped number');
+  /* The cap is a measurement, not a round number: at 1280x800 on a short pool
+     the band is added height (the max-height floor binds under ~800px tall), and
+     116px put the „Loswirbeln" button's bottom at 802 against an 800px fold.
+     84 leaves 30px. Raising this without re-measuring loses the CTA. */
+  assert.ok(Number(cap[1]) <= 84, `the band's cap is ${cap[1]}px — above 84 the CTA leaves the fold at 1280x800`);
+  assert.match(host, /padding-bottom:\s*calc\(16px \+ var\(--pot-band\)\)/,
+    'the panel does not reserve the band it paints in — the art sits under the tile titles');
+  assert.match(slotBody('[data-world] .setup-panel::after'), /height:\s*var\(--pot-band\)/,
+    'the art and the reservation are two numbers, which can drift');
+  /* The coupling, and the whole reason the band is affordable: the pool's
+     max-height gives the band back, so the panel's total height is unchanged and
+     the action bar does not move down the screen. Without this the vessel costs
+     the CTA exactly the distance the max-height exists to protect. */
+  assert.match(bodyOf('.setup-panel__body'),
+    /max-height:\s*max\(300px,\s*calc\(100dvh - 500px - var\(--pot-band,\s*0px\)\)\)/,
+    "the pool's scroll height does not give the band back");
+});
+
+test('the phone strip reserves NOTHING and clears the count group by geometry', () => {
+  /* Measured on the demo at 390x844: the setup screen ends at 844 exactly (app
+     732 + footer 112), so a reserved band here buys art with a scrollbar. The
+     art is right-anchored instead, and the row's only text — the count group —
+     is a left-aligned flex item ending at x 22 of 256 (x 91 of 622 at 768). */
+  const host = slotBody('[data-world] .setup-filterbar .pool-hint');
+  assert.ok(host, 'the strip host rule is missing');
+  assert.doesNotMatch(host, /padding/,
+    'the strip reserves height it has not got — the setup screen already fills a 390px phone');
+  const art = slotBody('[data-world] .setup-filterbar .pool-hint::after');
+  assert.match(art, /inset:\s*0 0 0 auto/, 'the art is not anchored to the row\'s right edge');
+  assert.match(art, /width:\s*min\(220px, 60%\)/,
+    'the art box is unbounded, so a long caption and the vessel can meet');
+  assert.match(art, /mask-position:\s*right bottom/, 'the art does not sit at the anchored edge');
+});
+
+test('every world\'s vessel is the same 200x120 box, so one band height sizes them all', () => {
+  /* Both hosts size the mask by HEIGHT (`auto 100%`), so the art's width is the
+     band height times this ratio — 127px on the strip, which is the number the
+     geometry argument above rests on. A world shipping a differently-shaped
+     vessel would silently paint wider than the clearance measured for it. */
+  for (const w of WORLDS) {
+    assert.equal(artRatio('--world-vessel', w), 120 / 200, `${w.id}: the vessel is not a 200x120 box`);
+  }
+  for (const sel of ['[data-world] .setup-panel::after',
+    '[data-world] .setup-filterbar .pool-hint::after']) {
+    assert.match(slotBody(sel), /mask-size:\s*auto 100%/, `${sel}: the art must keep its own ratio`);
+  }
+});
+
 test('the crown, the dock motif and the podium floor stand down under prefers-contrast: more', () => {
   /* Every world ornament does, and three of them need their RESERVATION removed
      with them: a hidden crown over an unchanged `padding-top` leaves the round's
@@ -444,7 +527,8 @@ test('the crown, the dock motif and the podium floor stand down under prefers-co
   assert.ok(hi, 'no prefers-contrast: more block');
   for (const sel of ['[data-world] .hero::before', '[data-world] .rail__id::before',
     '[data-world] .dock::before', '[data-world] .cover-ph::after',
-    '[data-world] .podium::before', '.theme-card__crown']) {
+    '[data-world] .podium::before', '.theme-card__crown',
+    '[data-world] .setup-panel::after', '[data-world] .setup-filterbar .pool-hint::after']) {
     assert.ok(hi.includes(sel), `${sel} still paints under prefers-contrast: more`);
   }
   assert.match(hi, /\[data-world\] \.hero[^:][^{]*\{[^}]*padding-top:\s*0/,
@@ -453,6 +537,13 @@ test('the crown, the dock motif and the podium floor stand down under prefers-co
     'the floor is hidden but its reservation stays — the pedestals stand on nothing');
   assert.match(hi, /\[data-world\] \.cover-ph \.ti\s*\{[^}]*display:\s*block/,
     'the tornado does not come back, so a coverless tile shows nothing at all');
+  /* The pot's reservation is undone by zeroing the BAND, not the padding: the
+     same custom property is subtracted in the pool's max-height, so a branch
+     that reset `padding-bottom` would hide the art and still shorten the pool.
+     Measured by writing it that way — this assertion is the only thing that
+     tells the two apart. */
+  assert.match(hi, /\[data-world\] \.setup-panel\s*\{[^}]*--pot-band:\s*0px/,
+    'the vessel is hidden but its band is not zeroed — an empty strip under the covers');
 });
 
 test('the backdrop alpha stays inside the contrast budget for body text on the page', () => {

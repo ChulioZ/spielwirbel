@@ -86,6 +86,13 @@ re-render, and only one is ever in the accessibility tree.
   shelf pushes the CTA straight back below the fold, i.e. re-creates the defect —
   which is why the strip's own unbounded list is laid out on ONE row that scrolls
   sideways rather than wrapping.
+- **Anything painted ON the pool needs a rule per presentation.** Slot 10's
+  world vessel (#1086) is the first ornament to land here, and the issue's own
+  one-selector proposal named `.pool-shelf` — which is not rendered from 860px
+  up, so the widest presentation would have got nothing.
+  `.claude/rules/ornament-slots-need-every-presentation.md` has the measurement
+  and the second trap (the shelf is a scroller, so an abspos layer inside it
+  travels with the covers).
 - **The empty-state line needs `grid-column: 1 / -1`.** The panel body is a tile
   grid, so without it the message becomes one 110px grid item and wraps after
   two words — measured, and it looks like a broken panel rather than a missing
