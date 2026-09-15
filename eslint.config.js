@@ -304,6 +304,7 @@ const frontendGlobals = {
   careList: 'readonly', anniversary: 'readonly',
   RECAP_CARD_W: 'readonly', RECAP_CARD_PAD: 'readonly', RECAP_CARD_GAP: 'readonly',
   RECAP_CARD_TILE_H: 'readonly', RECAP_CARD_ROW_H: 'readonly', RECAP_CARD_SHELF_H: 'readonly',
+  RECAP_CARD_SCENE_H: 'readonly',
   recapToken: 'readonly', recapPalette: 'readonly', recapFit: 'readonly',
   recapFont: 'readonly', recapPanel: 'readonly', recapCardBlocks: 'readonly',
   recapCardHeight: 'readonly', drawRecapCard: 'readonly', recapCardBlob: 'readonly',
