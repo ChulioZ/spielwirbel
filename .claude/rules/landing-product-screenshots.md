@@ -8,7 +8,17 @@ paths:
 ---
 # Regenerating the landing-page product screenshots (#438, #457, #669, #1090)
 
-The logged-out landing page's hero and its three-step walkthrough show real
+**Since #1091 the hero shows no screenshot at all** — it plays the app's own
+pot, vote and Tafel live from the shipped components
+(`public/js/landing-moments.js`,
+`.claude/rules/landing-character-is-shipped-moments.md`). The three committed
+shots are now the **walkthrough's** alone, which changes two things below:
+`shelfPhone` is rendered once rather than twice, and everything this file says
+about sizing "the hero's box" is history, kept because it is the reasoning
+behind the crops that are still shipped. The set itself, the capture script and
+every step of the procedure are unchanged.
+
+The logged-out landing page's three-step walkthrough shows real
 screenshots of the app
 (`public/img/landing-<shot>.<locale>.webp`, referenced from `LANDING_SHOTS` in
 `public/js/views-landing.js` — **one set per shipped locale** since #457). They
@@ -87,7 +97,7 @@ way that reads as something else:
   rated sessions each run with `count: 1` and a two-tag include filter (§3), so
   a draw started without resetting them re-draws that one already-rated game —
   and the card's primary action then reads „Fertig"/"Done" instead of
-  „Weiter"/"Next". Nothing is broken; the hero just illustrates the *end* of a
+  „Weiter"/"Next". Nothing is broken; the shot just illustrates the *end* of a
   wizard rather than the middle of one. Reset the chips (click each round its
   cycle until neither `is-on` nor `is-excluded`) and set `#count` before `#go`.
 
@@ -119,7 +129,7 @@ avoid, and the reason covers are hotlinked rather than downloaded.
 Seed the data through the real API against a throwaway `DATA_DIR`
 (`.claude/rules/no-reading-production-data.md`); leaving `background` null gives
 the round the **standard theme**, which is the palette the landing page itself
-renders on, so the screenshot sits in the hero instead of clashing with it.
+renders on, so the screenshot sits in the page instead of clashing with it.
 
 ## 3a. An affordance gated on DATA cannot be reshot into existence (#752)
 
@@ -318,8 +328,9 @@ this table (not just re-run the probe) if the cover formula changes.
 There used to be a fourth asset — a 1280-wide desktop shelf capture the hero
 swapped in through a `<picture>` above 720px. #1090 retired it: the rebuilt hero
 is two columns from 1024px and gives its image 660–800px, where that capture's
-tile labels shrink to ~9px. So every shot is phone-shaped, the hero renders one
-`<img>`, and `LANDING_SHOT_BP` is gone.
+tile labels shrink to ~9px. So every shot is phone-shaped and `LANDING_SHOT_BP`
+is gone. (#1091 then took the hero's `<img>` out entirely — see the note at the
+top — so `shelfPhone` renders once, as the walkthrough's first step.)
 
 Size each asset at **~1.8–2.2×** its widest rendered box (measured: 2.08× on a
 phone; the walkthrough caps them at 280px). That is the decode-memory budget from
@@ -405,10 +416,9 @@ Three details in there are load-bearing:
 - **The weight budget is per locale, not a committed total.** A flat total gets
   laxer per visitor with each language added, which is backwards for the one
   number guarding the page's first paint. Today: ~104 KB (en), ~108 KB (de)
-  against a 200 KB cap. Since #1090 a visitor downloads the WHOLE set — the hero
-  and the walkthrough's first step share one `<img src>` and the other two are
-  the steps beside it — where the retired `<picture>` used to fetch one of two
-  shelf widths, so the budget binds harder than it did.
+  against a 200 KB cap. Since #1090 a visitor downloads the WHOLE set — three
+  walkthrough steps, three `<img src>`s — where the retired `<picture>` used to
+  fetch one of two shelf widths, so the budget binds harder than it did.
 - **The parity test is what a third language trips.** Adding a `lang/fr.js` and a
   `LOCALES` row without shooting the screenshots would otherwise ship French copy
   around German images — `landingShots()` falls back rather than breaking, so

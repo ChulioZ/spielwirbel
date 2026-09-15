@@ -1464,6 +1464,12 @@ I18N.en = {
   'landing.shot.shelfAlt': 'Screenshot: a group’s game shelf in Spielwirbel — games as tiles with their Spielwirbel score, next to the navigation for Start, shelf, chronicle and trophies.',
   'landing.shot.voteAlt': 'Screenshot: voting in Spielwirbel — a drawn game with the question “how much do you want to play this?” and a scale of five faces running from 1 (“not at all”) to 5 (“absolutely”).',
   'landing.shot.resultAlt': 'Screenshot: a session’s result in Spielwirbel — at the top the game that was played, with its “played” stamp and the winner, and below it the start of the ranking with the winning game’s Spielwirbel score.',
+  // The hero stage (#1091): the captions under the app's own three moments.
+  'landing.moments.label': 'How a session goes: pot, vote, result',
+  'landing.moments.pot': 'Games are drawn from the pot',
+  'landing.moments.vote': 'Lea rates, then the device moves on',
+  'landing.moments.result': 'The ranking fills in – then the table is set',
+  'landing.moments.replay': 'Watch again',
   'landing.features.title': 'What you get',
   'landing.features.shelf.title': 'One shelf for everything',
   'landing.features.shelf.desc': 'BoardGameGeek supplies titles, cover art and player counts.',

@@ -308,16 +308,13 @@ function showLanding() {
         <p class="landing-hero__sub">${esc(t('landing.hero.sub'))}</p>
         ${renderLandingOffer({ trust: true })}
       </div>
-      <!-- ONE element on purpose: #1091 replaces this slot with the app's own
-           three moments played live from the shipped components, and a
-           <picture> or a wrapper full of siblings would make that a rewrite
-           rather than a swap. (No backticks in here: this comment is inside a
-           template literal.) -->
-      <div class="landing-hero__visual">
-        <img class="landing-shot" src="${shots.shelfPhone.src}"
-             width="${shots.shelfPhone.w}" height="${shots.shelfPhone.h}"
-             alt="${esc(t('landing.shot.shelfAlt'))}" />
-      </div>
+      <!-- EMPTY on purpose: renderLandingMoments() (landing-moments.js) fills it
+           below with the app's own three moments, played once from the shipped
+           components (#1091). It replaced a static shelf screenshot, which still
+           opens the walkthrough further down — the hero now SHOWS the loop and
+           the walkthrough explains it, rather than both doing the second thing.
+           (No backticks in here: this comment is inside a template literal.) -->
+      <div class="landing-hero__visual" id="landingMoments"></div>
     </section>
 
     <!-- The strip holds no focusable content, so below 720px — where it becomes
@@ -355,6 +352,10 @@ function showLanding() {
   </div>`);
 
   app.appendChild(view);
+  // After the append: the stage's replay button moves focus to itself, and a
+  // detached tree has no focus to move. It is also what makes the isConnected
+  // guard in the timeline meaningful (landing-moments.js).
+  view.querySelector('#landingMoments').appendChild(renderLandingMoments());
   wireLandingOffer(view);
   landingRevealOperatorClaims(view);
   // Not awaited: the landing page must render at once, and the block appears

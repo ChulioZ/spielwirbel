@@ -3089,19 +3089,24 @@ body.auth-screen .topbar__context { display: none; }
   max-width: 30em;
 }
 .landing-hero__visual { width: 100%; }
-/* The phone-shaped shot would otherwise fill the whole column and push
-   everything below it off the first screen. 300 below 720, 340 above — the two
-   values the stacked hero and the two-column hero respectively have room for. */
-.landing-hero__visual .landing-shot { max-width: 300px; margin: 0 auto; }
+/* The stage would otherwise fill the whole column and push everything below it
+   off the first screen. 340 below 720, 520 above — the two values the stacked
+   hero and the two-column hero respectively have room for. It inherits this job
+   from the hero screenshot #1091 replaced, breakpoint included:
+   test/landing-shots.test.js derives the landing's wide breakpoint from the
+   min-width block here and tiles every narrow landing @media against it. */
+.landing-hero__visual .landing-moments { max-width: 340px; margin: 0 auto; }
 @media (min-width: 720px) {
-  .landing-hero__visual .landing-shot { max-width: 340px; }
+  .landing-hero__visual .landing-moments { max-width: 520px; }
 }
 @media (min-width: 1024px) {
   .landing-hero {
     display: grid;
     /* Both tracks minmax(0, …): a grid track's default `auto` minimum is its
-       content's min-content size, so the image track would refuse to shrink
-       below the screenshot's intrinsic width and push the copy out. */
+       content's min-content size, so the visual's track would refuse to shrink
+       below what it holds and push the copy out. (It held a screenshot with an
+       intrinsic width when this was written; since #1091 it holds the stage,
+       whose scenes are the app's own components — an even stronger reason.) */
     grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
     align-items: center;
     gap: 40px;
@@ -3111,7 +3116,141 @@ body.auth-screen .topbar__context { display: none; }
   .landing-hero__brand { justify-content: flex-start; }
   .landing-hero__sub { margin-inline: 0; }
   .landing-hero .landing-offer { align-items: flex-start; }
-  .landing-hero__visual .landing-shot { margin-inline: 0; }
+  .landing-hero__visual .landing-moments { margin-inline: 0; }
+}
+
+/* ---- The hero stage (#1091): the app's own three moments ---- */
+
+/* The landing hero plays the loop instead of showing a picture of it. Every
+   scene below is the real view's markup with the real classes, so the rules that
+   style it are the app's own — what lives here is ONLY the stage: the box, which
+   scene is on, and the handful of places a component has to be told it is in a
+   520px hero rather than on a screen.
+
+   The two keyframes the first draft of this stage was built around, `pot-whirl`
+   and `press-in`, are NOT here and must not come back: #1122 removed them from
+   the app, and test/session-pot.test.js + test/result-motion.test.js fail on the
+   keyword appearing anywhere in this file (see public/js/landing-moments.js). */
+.landing-moments { display: flex; flex-direction: column; gap: 10px; }
+.landing-moments__stage {
+  position: relative;
+  /* Sized from the TALLEST scene so the hero's box is reserved before anything
+     plays and no scene change moves the page — which is the whole reason it is
+     a fixed box rather than one that grows per scene. Which scene binds differs
+     by width: the result at 570px here (measured at 390), the vote card at
+     545px from 720. 4/7 is 595px at the 340px cap, i.e. slightly SHORTER than
+     the 599px the phone screenshot this replaced rendered at. */
+  aspect-ratio: 4 / 7;
+}
+.lm-scene {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  /* Hidden AND invisible: opacity alone leaves an inert scene on top of the
+     live one, which eats the hover lift of every tile under it. */
+  opacity: 0;
+  visibility: hidden;
+}
+/* A scene that does not fit must SHOW it, never be squashed to fit. Without
+   this, flex shrinking silently compressed the table band at 390px: the row it
+   rides in is a `1fr` grid track, so a shrunk slot resolved it to the `0fr`
+   floor — 34px of padding and border, measured identically in Chromium and
+   WebKit — and the band rendered as a hairline with its 96px cover clipped
+   inside. Nothing overflowed, nothing errored, and the scene's own height
+   measured "correct". */
+.lm-scene > * { flex-shrink: 0; }
+.landing-moments[data-scene="1"] .lm-scene--pot,
+.landing-moments[data-scene="2"] .lm-scene--vote,
+.landing-moments[data-scene="3"] .lm-scene--result { opacity: 1; visibility: visible; }
+/* The cross-fade. A TRANSITION rather than a keyframe on a timeline of its own:
+   the scene is chosen by an attribute the module's one setTimeout chain writes,
+   so there is a single clock for the whole stage and the rest state needs no
+   `both`-filled base style to agree with (.claude/rules/landing-character-is-
+   shipped-moments.md). Under reduced motion the module sets the attribute to 3
+   at once and this simply never runs. */
+@media (prefers-reduced-motion: no-preference) {
+  .lm-scene { transition: opacity var(--dur-slow) var(--ease-out), visibility var(--dur-slow); }
+}
+
+/* The pot panel is `display: none` below 860px in the app, where the phone gets
+   the snap strip instead. The stage shows it at every width — an accepted
+   liberty (#1091): the strip's 64px thumbs say much less about what a pot is.
+   Qualified to (0,3,0) so it beats `@media (min-width: 860px) .setup-panel`
+   (0,2,0) on SPECIFICITY, not on source order — that block sits ~5000 lines
+   below this one (.claude/rules/responsive-content-width.md). */
+.landing-moments .lm-scene--pot .setup-panel { display: block; margin-bottom: 12px; }
+/* The pool bound is viewport-relative on the real screen, which has a viewport
+   to spend; here the budget is the stage box. Three fixed columns rather than
+   the panel's `auto-fill, minmax(124px, 1fr)`: that is 3 across in the app's own
+   860px layout, but only 2 in a 340px stage, which makes the pot three rows tall
+   and the scene overflow the box by 70px at each end (measured at 390px). Fixed
+   here so both widths show the same 3x2 pot the app shows. */
+.landing-moments .lm-scene--pot .setup-panel__body {
+  max-height: none;
+  overflow: visible;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+/* The vote cover is capped by the VIEWPORT on the real screen (the card is
+   height-budgeted, .claude/rules/fitting-a-screen-to-the-viewport-height.md).
+   In a hero box a 4/3 ratio on a 480px card is 360px of cover and the nav falls
+   out of the stage, so it is capped by height here instead.
+
+   Compounded to (0,3,0) rather than the natural `.landing-moments .vote__img`,
+   which is what this was first written as: the phone card's own cap,
+   `.vote .vote__img` inside `@media (max-width: 859px)`, is the SAME (0,2,0)
+   and is declared ~1400 lines further down, so it won on source order and the
+   cover came out at 240px on a phone — measured. That block's own header warns
+   about exactly this. */
+.landing-moments .vote .vote__img { aspect-ratio: auto; height: 150px; }
+
+/* „Loswirbeln" takes the press. Not an animation — the same three declarations
+   `.btn:active` already applies, driven by a class so the timeline can hold it
+   for a beat. Keeping the values here rather than reaching for :active is the
+   point: the stage may not fake a pointer state, and an author retuning the
+   press will grep for `--press-mb` and find both. */
+.landing-moments .btn.is-press {
+  transform: translateY(2px);
+  border-bottom-width: 1.5px;
+  margin-bottom: calc(var(--press-mb) + 2.5px);
+}
+
+/* The caption: three lines stacked in one cell, so the box is the tallest one's
+   height and nothing below it moves when the scene changes. */
+.landing-moments__caption { display: grid; margin: 0; text-align: center; }
+.landing-moments__caption > span {
+  grid-area: 1 / 1;
+  opacity: 0;
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+}
+.landing-moments[data-scene="1"] .landing-moments__caption > span[data-for="1"],
+.landing-moments[data-scene="2"] .landing-moments__caption > span[data-for="2"],
+.landing-moments[data-scene="3"] .landing-moments__caption > span[data-for="3"] { opacity: 1; }
+@media (prefers-reduced-motion: no-preference) {
+  .landing-moments__caption > span { transition: opacity var(--dur-slow) var(--ease-out); }
+}
+.landing-moments__replay { align-self: center; }
+
+/* The phone shows the TOP TWO rather than all three. At 390px the app's row is
+   a two-line grid at 145px, so a third one puts the result scene at 725px — and
+   the stage box has to fit its tallest scene or the page jumps on every cut.
+   Two rows still say what the scene is for ("the ranking fills in, the winner
+   turns gold"): the gold group and one challenger. Chosen over scaling the
+   scene down, which blurs type, and over a taller box, which would put ~725px
+   of stage under ~600px of copy on the one screen #1090 shortened. */
+@media (max-width: 719px) {
+  .landing-moments .tafel > .trow:last-child { display: none; }
+}
+
+@media (min-width: 720px) {
+  .landing-moments__stage { aspect-ratio: 13 / 14; }
+  /* 175, not 190: at 190 the vote scene measured 560px in a 560px box, i.e. the
+     tallest scene exactly filled it with no headroom for a locale whose question
+     wraps. 175 buys 15px and costs nothing anyone can see. */
+  .landing-moments .vote .vote__img { height: 175px; }
 }
 
 /* A product screenshot, framed as a window onto the app (#438). Shared by the

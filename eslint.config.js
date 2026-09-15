@@ -274,6 +274,16 @@ const frontendGlobals = {
   confirmDialog: 'readonly',
   // core.js (issue #1090): the top bar's „Anmelden" link
   showLoginLink: 'readonly',
+  // landing-moments.js (issue #1091): the hero stage that plays the app's loop
+  renderLandingMoments: 'readonly', stopLandingMoments: 'readonly',
+  wireLandingMomentsReplay: 'readonly', lmReducedMotion: 'readonly',
+  lmScenePot: 'readonly', lmSceneVote: 'readonly', lmSceneResult: 'readonly',
+  lmRow: 'readonly', lmGame: 'readonly', lmTimers: 'writable',
+  LM_POT_TITLES: 'readonly', LM_RANK: 'readonly', LM_SEATS: 'readonly',
+  LM_VOTER: 'readonly', LM_VOTE: 'readonly', LM_WINNERS: 'readonly',
+  LM_PRESS: 'readonly', LM_RELEASE: 'readonly', LM_VOTE_AT: 'readonly',
+  LM_RATE: 'readonly', LM_RESULT: 'readonly', LM_RACE: 'readonly',
+  LM_LIFT: 'readonly', LM_UNROLL: 'readonly',
   // views-landing.js (issue #322): logged-out landing page
   showLanding: 'readonly', LANDING_FEATURES: 'readonly', LANDING_WALK: 'readonly',
   LANDING_SHOTS: 'readonly', landingShots: 'readonly', LANDING_REPO_URL: 'readonly',
