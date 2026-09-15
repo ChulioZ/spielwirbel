@@ -9,11 +9,12 @@ The session-setup pot (#1017) lifts a cover under the pointer with
 with
 
 ```css
-max-height: max(300px, calc(100dvh - 500px));
+max-height: max(300px, calc(100dvh - 500px - var(--pot-band, 0px)));
 overflow-y: auto;
 ```
 
-and nothing else about overflow. Measured at 1280×860 with the side padding
+and nothing else about overflow. (`--pot-band` is the world vessel's
+reservation, #1086 — 0 outside a world, and irrelevant to everything below.) Measured at 1280×860 with the side padding
 removed: a 157px tile grows **6.3px per side**, the rightmost one escapes the body
 by **5.1px**, and `scrollWidth − clientWidth` becomes **5**.
 

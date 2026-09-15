@@ -123,7 +123,7 @@ exempts it — but the glyph is the thing that says „sealed", and because `--g
 is a fill *here and nowhere else*, the fix moves no medal, crown or trophy. An
 exemption is the right answer when the fix has blast radius; this one had none.
 
-## Worlds (#903): one hook, nine slots, additive over the tokens
+## Worlds (#903): one hook, ten slots, additive over the tokens
 
 The registry is `public/js/round-designs.js` — `PALETTES`, `WORLDS` and
 `resolveDesign(bg)`, which finds a design by its stable `id` first and by the
@@ -144,7 +144,8 @@ ornament rule keys off that attribute, in two halves at the end of `styles.css`:
   finale stage, (#940) the winner reveal's victory scene, (#1082) the
   **crown**: the stage art as a text-free strip above the round's name, on the
   hub hero and the desktop rail, and (#1083) the **floor** under the Pokale
-  podium — each a
+  podium, and (#1086) the **vessel**
+  behind the session pot's covers — each a
   pseudo-element with `pointer-events: none`, painting the mask in a THEME
   token (`--brand`, `--brand-strong`, `--stage-ink`), never in a shade of its
   own. Slot 7 is the one with text ON its host, so its bold alpha is bought
@@ -159,6 +160,17 @@ ornament rule keys off that attribute, in two halves at the end of `styles.css`:
   the one real element a world touches, and the generator in `views-session.js`
   stays world-agnostic (`test/result-tafel.test.js` scans it for a world
   name).
+
+  **Slot 10 (#1086) is the first slot whose host is rendered TWICE**, and it is
+  the shape to check for before writing any new one: the session pot is a tile
+  panel from 860px up and a scrolling strip below, each `display: none` at the
+  other's widths, so the slot is two rules and the spec lists both. The panel
+  reserves its band like slots 5/8/9; the strip cannot (the screen fills a
+  390x844 phone exactly) and is text-free by geometry instead. The band's 84px
+  cap is measured off the CTA, not chosen. Both traps —
+  and why the issue's own single `.pool-shelf` selector painted nothing at
+  desktop widths — are in
+  `.claude/rules/ornament-slots-need-every-presentation.md`.
 
   **Slot 8 (#1082) takes slot 7's reservation discipline to a second place, and
   needs it for the same reason.** The crown is painted at
