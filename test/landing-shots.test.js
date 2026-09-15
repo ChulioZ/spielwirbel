@@ -172,7 +172,7 @@ test("each locale's screenshot set stays inside its weight budget", () => {
   }
 });
 
-test('every narrow landing block stops below the hero shot\u2019s own breakpoint', () => {
+test('every narrow landing block stops below the hero visual\u2019s own breakpoint', () => {
   // What this used to pin was the <picture> `media` against the stylesheet. The
   // <picture> went with #1090 and the hero's <img> itself with #1091 — the hero
   // plays the app's own moments now (public/js/landing-moments.js) — and the
