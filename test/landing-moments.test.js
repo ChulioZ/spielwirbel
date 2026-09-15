@@ -30,7 +30,11 @@
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
 const { loadApp } = require('./support/dom');
+
+const ROOT = path.join(__dirname, '..');
 
 /* Replace the context's window timers with a clock the spec drives. Returns the
    handle; `pending` is what proves a cancel actually cancelled. */
@@ -329,6 +333,67 @@ test('re-rendering the landing (a language switch) cancels the running play', (t
 
   assert.equal(stage.dataset.scene, '1', 'the abandoned stage played on');
   assert.equal(second.dataset.scene, '3');
+});
+
+/* ------------------------- the breakpoint coupling ------------------------ */
+
+/* The one assertion here that reads the STYLESHEET rather than the DOM, because
+ * jsdom applies no external CSS and the claim is a relationship between two
+ * media queries that must agree.
+ *
+ * It exists because they did not. The stage trims the Tafel to two rows because
+ * the app's row is a two-line grid until `min-width: 1280px`, where it re-lays
+ * as one line — but the trim shipped at `max-width: 719px`, so every width from
+ * 720 to 1279 got three TALL rows: 650px of scene in a 560px box at 848px,
+ * 50px of it painted over the caption underneath. Both spot checks (390 and
+ * 1280) sat on opposite sides of the gap and both passed.
+ *
+ * So the number is derived from the Tafel's own block, never restated. */
+test('the stage trims its rows exactly where the app’s row stops being one line', () => {
+  const css = fs.readFileSync(path.join(ROOT, 'public/styles.css'), 'utf8')
+    // Or a selector regex matches inside prose that merely mentions the class —
+    // and this file's own CSS comment names both of these
+    // (.claude/rules/css-text-assertions-strip-comments.md).
+    .replace(/\/\*[\s\S]*?\*\//g, '');
+
+  const oneLine = css.match(/@media \(min-width: (\d+)px\)\s*\{[^}]*\.tafel \.trow\b/);
+  assert.ok(oneLine, 'styles.css re-lays .tafel .trow as one line in a min-width block');
+
+  const trim = css.match(/@media \(max-width: (\d+)px\)\s*\{\s*\.landing-moments \.tafel > \.trow:last-child/);
+  assert.ok(trim, 'the stage trims its last row in a max-width block');
+
+  assert.equal(
+    Number(trim[1]),
+    Number(oneLine[1]) - 1,
+    `the stage trims below ${trim[1]}px while the Tafel's row stays two lines below ${oneLine[1]}px — `
+    + 'every width in between gets three tall rows and the scene overruns its box',
+  );
+});
+
+test('the stage box is a fixed height, never an aspect-ratio', () => {
+  /* A ratio ties the box's height to its column's WIDTH, and the box's content
+   * is text — which gets taller as the column narrows. The two move in opposite
+   * directions, and measured (WebKit, with `aspect-ratio: 4/7` and `13/14` in
+   * place) the ratio lost in two bands: at 360px the box came out 581 against a
+   * 594px result scene, and from 1024px — where the hero becomes two columns and
+   * the visual column drops to ~448px — the box fell to 483 while the vote card
+   * stayed 547, i.e. every laptop width overran by ~60px onto the caption below.
+   *
+   * Pinned because "express the box as a ratio" is the tidier-looking form and
+   * will be proposed again; the numbers and the reasoning are in the stylesheet. */
+  const css = fs.readFileSync(path.join(ROOT, 'public/styles.css'), 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, '');
+  const blocks = [...css.matchAll(/\.landing-moments__stage\s*\{([^}]*)\}/g)].map((m) => m[1]);
+  // NOT `every`: a block may legitimately touch the box without sizing it (the
+  // narrow-band `overflow-x: clip`). The claim is that no block sizes it by a
+  // ratio, and that at least two DO size it in px — the base and its breakpoint.
+  assert.ok(blocks.length >= 2, 'the stage box is declared, and re-sized in at least one breakpoint');
+  for (const body of blocks) {
+    assert.doesNotMatch(body, /aspect-ratio/,
+      'the stage box must not be sized by a ratio — it shrinks exactly where its text grows');
+  }
+  assert.ok(blocks.filter((b) => /height:\s*\d+px/.test(b)).length >= 2,
+    'the stage box must state an explicit pixel height in its base rule and in its breakpoint');
 });
 
 /* ------------------------------ the mount -------------------------------- */

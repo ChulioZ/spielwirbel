@@ -3134,13 +3134,32 @@ body.auth-screen .topbar__context { display: none; }
 .landing-moments { display: flex; flex-direction: column; gap: 10px; }
 .landing-moments__stage {
   position: relative;
-  /* Sized from the TALLEST scene so the hero's box is reserved before anything
-     plays and no scene change moves the page — which is the whole reason it is
-     a fixed box rather than one that grows per scene. Which scene binds differs
-     by width: the result at 570px here (measured at 390), the vote card at
-     545px from 720. 4/7 is 595px at the 340px cap, i.e. slightly SHORTER than
-     the 599px the phone screenshot this replaced rendered at. */
-  aspect-ratio: 4 / 7;
+  /* A fixed HEIGHT, deliberately not an `aspect-ratio`.
+
+     The box must fit its tallest scene — that is the whole reason it is fixed
+     rather than growing per scene, since a growing one moves the page on every
+     cut. But its content is TEXT, which gets taller as the column narrows,
+     while a ratio makes the box SHORTER at exactly the same moment. The two
+     move in opposite directions and the ratio loses.
+
+     Measured, with `aspect-ratio: 4/7` / `13/14` in place (WebKit, which lays
+     these scenes out up to 24px taller than Chromium):
+
+       320px   box 516   result 638   -> the narrowest supported width
+       360px   box 581   result 594   -> 13px onto the caption
+       1024px  box 483   vote   547   -> 64px onto the caption
+
+     The second one is the instructive band: from 1024 the hero becomes two
+     columns, so the visual column drops to ~448px and the ratio takes the box
+     down to 483 while the vote card does not move at all. Every laptop width
+     was broken by the mechanism that was supposed to size the box.
+
+     So: two numbers, each the tallest scene in its band plus headroom. Below
+     720 that is the result scene, which reaches 638 at 320px — the narrowest
+     width this app lays out for; from 720 up it is the vote card (547). 650 is
+     ~50px more than the 599px the phone screenshot this replaced rendered at,
+     which is the price of a box that fits at 320 as well as at 719. */
+  height: 650px;
 }
 .lm-scene {
   position: absolute;
@@ -3234,19 +3253,44 @@ body.auth-screen .topbar__context { display: none; }
 }
 .landing-moments__replay { align-self: center; }
 
-/* The phone shows the TOP TWO rather than all three. At 390px the app's row is
-   a two-line grid at 145px, so a third one puts the result scene at 725px — and
-   the stage box has to fit its tallest scene or the page jumps on every cut.
-   Two rows still say what the scene is for ("the ranking fills in, the winner
-   turns gold"): the gold group and one challenger. Chosen over scaling the
-   scene down, which blurs type, and over a taller box, which would put ~725px
-   of stage under ~600px of copy on the one screen #1090 shortened. */
-@media (max-width: 719px) {
+/* Below ~345px the vote card cannot fit the column, and the page scrolls
+   sideways. The card is not the stage's to fix: measured by cloning the app's
+   own `.vote` straight into `#app` at a 320px viewport, it comes out 330px wide
+   there too — the five mood faces have a 328px min-content, so the real vote
+   screen is equally over at that width. What IS the stage's to fix is that a
+   DECORATIVE preview must never make the marketing page scroll horizontally.
+
+   `clip`, not `hidden`: `hidden` would make the box a scroll container, and the
+   scenes are positioned against it. Scoped to the band that needs it so the
+   pool tiles' hover lift is not clipped at every other width. */
+@media (max-width: 359px) {
+  .landing-moments__stage { overflow-x: clip; }
+}
+
+/* Below the rail breakpoint the stage shows the TOP TWO rows rather than all
+   three, because that is exactly where the app's own row stops being one line:
+   `@media (min-width: 1280px) .tafel .trow` re-lays it as `rank cover main bars
+   score action`, and under it the row is a two- or three-line grid at 145px.
+   Three of those do not fit any stage box (650px of scene at 848px wide,
+   measured — 50px of it landing on the caption below), and the box has to fit
+   its tallest scene or the page jumps on every cut.
+
+   Two rows still say what the scene is for — the ranking fills in, the winner
+   turns gold: the gold group and one challenger. Chosen over scaling the scene
+   down, which blurs type, and over a taller box, which at 390px would put
+   ~725px of stage under ~600px of copy on the one screen #1090 shortened.
+
+   THE NUMBER IS NOT FREE: it must stay equal to that `min-width: 1280px`, or the
+   stage gets three tall rows in whatever band the two disagree over — which is
+   how this shipped wrong the first time, trimmed at 719 and spot-checked only at
+   390 and 1280, i.e. on both sides of the gap. test/landing-moments.test.js
+   derives the Tafel's breakpoint from the stylesheet and pins this one to it. */
+@media (max-width: 1279px) {
   .landing-moments .tafel > .trow:last-child { display: none; }
 }
 
 @media (min-width: 720px) {
-  .landing-moments__stage { aspect-ratio: 13 / 14; }
+  .landing-moments__stage { height: 575px; }
   /* 175, not 190: at 190 the vote scene measured 560px in a 560px box, i.e. the
      tallest scene exactly filled it with no headroom for a locale whose question
      wraps. 175 buys 15px and costs nothing anyone can see. */

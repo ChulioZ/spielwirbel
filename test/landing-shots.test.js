@@ -207,6 +207,14 @@ test('every narrow landing block stops below the hero visual\u2019s own breakpoi
     // the @media block's own close.
     const body = css.slice(m.index + m[0].length, css.indexOf('\n}', m.index));
     if (!/\.landing[\w-]*\s*\{|\.landing[\w-]*\s+\./.test(body)) continue;
+    /* One documented exception (#1091): the hero stage trims the Tafel to two
+       rows below 1280, and that number is not the landing's own rhythm — it is
+       the width where the app's `.tafel .trow` stops being one line, so the two
+       MUST straddle this breakpoint together. It has its own guard, which pins
+       it to the Tafel's block rather than to this one:
+       test/landing-moments.test.js, "the stage trims its rows exactly where the
+       app's row stops being one line". */
+    if (/\.landing-moments \.tafel > \.trow:last-child/.test(body)) continue;
     checked++;
     assert.ok(
       Number(m[1]) < wide,

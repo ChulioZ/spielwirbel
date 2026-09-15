@@ -56,6 +56,38 @@ hook still exists:
 grep -rn "is-race\|is-reveal\|is-lift\|data-unroll" public/styles.css public/js/
 ```
 
+## The fixed box is sized in PIXELS, and a ratio is the trap
+
+The stage shows one scene at a time in a fixed box, because a box that grew per
+scene would move the page on every cut. Expressing that box as an
+`aspect-ratio` is the tidier-looking form and it is wrong: the box's content is
+**text**, which gets taller as the column narrows, while a ratio makes the box
+**shorter** at exactly the same moment. The two move in opposite directions.
+
+Measured on #1091 with the ratio in place, in WebKit:
+
+| width | box | tallest scene | result |
+|---|---|---|---|
+| 360px | 581 | 594 | 13px onto the caption |
+| 1024px | 483 | 547 | 64px onto the caption |
+
+The 1024 row is the instructive one: that is where the hero becomes two columns,
+so the visual column drops to ~448px and the ratio takes the box down with it
+while the vote card does not move at all. **Every laptop width was broken by the
+mechanism meant to size the box.** `test/landing-moments.test.js` now pins the
+explicit `height`, because "express this as a ratio" will be proposed again.
+
+Two corollaries for anyone re-measuring it:
+
+- **Sweep the bands, don't spot-check two widths.** The first pass checked 390
+  and 1280 — which sit on *opposite sides* of every band that was broken, so both
+  passed. The app's Tafel row is a two-line grid until `min-width: 1280px`, and
+  the hero becomes two columns at 1024; those are the edges that matter.
+- **Include the margins.** A "content height" summed from child
+  `getBoundingClientRect()` excludes the last row's `margin-bottom` and the
+  slot's — ~34px here — while the flex centring lays out with them, so the check
+  under-reports exactly the overflow it exists to find.
+
 ## One clock, not two
 
 The stage's timings live in one `setTimeout` chain in `landing-moments.js`; the
