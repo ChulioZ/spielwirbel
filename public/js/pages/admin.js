@@ -237,7 +237,7 @@
     refreshLog();
   }
 
-  // ---- instance metrics (#274, reshaped by #404) ----------------------------
+  // ---- instance metrics (#274, reshaped by #404 and split in two by #1124) ---
 
   // Each row is [label, verdict, value, note?]. A NULL verdict renders the
   // neutral pill — which is what a plain count gets, since "42 accounts" is not
@@ -258,15 +258,16 @@
     return 'ok';
   }
 
-  /* Turn the raw design histogram into „Wald 12 · Standard 7 · unbekannt 1",
-     biggest first, capped so one card row cannot become a list of everything.
+  /* Turn the raw design histogram into one labelled line per design, biggest
+     first — uncapped since #1124. The list is bounded by the registry in
+     public/js/round-designs.js plus collage/none and a single „unbekannt"
+     bucket, so it cannot grow without a code change; the old „+N weitere" tail
+     hid entries for a list that was never going to be long.
 
      `resolveDesign` comes from public/js/round-designs.js, which this page now
      loads: it is dependency-free with the module.exports guard, and a page
      script is its own eslint block — it must NOT be added to index.html's SPA
      scope for this (.claude/rules/frontend-helper-modules-and-coverage.md). */
-  const DESIGN_ROW_MAX = 5;
-
   function designLabel(key) {
     if (key === 'none') return 'ohne Design';
     if (key === 'collage') return 'Collage';
@@ -283,73 +284,29 @@
     return hit ? hit.id : 'unbekannt';
   }
 
-  function designSummary(hist) {
-    const sorted = Object.entries(hist).sort((a, b) => b[1] - a[1]);
-    const shown = sorted.slice(0, DESIGN_ROW_MAX)
-      .map(([k, n]) => `${designLabel(k)} ${n}`);
-    const rest = sorted.length - shown.length;
-    if (rest > 0) shown.push(`+${rest} weitere`);
-    return shown.join(' · ');
+  function designLines(hist) {
+    return Object.entries(hist)
+      .sort((a, b) => b[1] - a[1])
+      .map(([k, n]) => [designLabel(k), String(n)]);
   }
 
-  function statusRows(s) {
+  /* „n / total", the ONLY shape an adoption figure may take (#1124). A bare
+     count is what this card was cleaned of: „18 Runden" cannot be read without
+     knowing how many rounds there are, and the reader of an operator panel is
+     precisely the person who should not have to remember.
+
+     A zero denominator renders „—", not „0 / 0": on a fresh instance the latter
+     claims a share of nothing, and 0/0 is the one input that would otherwise
+     produce a percentage nobody can compute. */
+  const share = (n, total) => (total > 0 ? `${n} / ${total}` : '—');
+
+  /* ---- card 1: Grenzen & Kontingente --------------------------------------
+     What is close to refusing a user, plus the runtime. Everything here either
+     carries a graded pill or is a single fact about the process — nothing on
+     this card is a count of content. */
+  function limitRows(s) {
     const m = s.metrics;
     const rows = [];
-
-    rows.push(['Konten', null, String(m.accounts.total),
-      `${m.accounts.verified} bestätigt · ${m.accounts.total - m.accounts.verified} unbestätigt`
-      + ` · ${m.accounts.disabled} gesperrt · ${m.accounts.withAvatar} mit Bild`]);
-
-    /* The two metrics that CAN be graphed, and the only two: `createRound`
-       writes no `createdAt`, and the rounds/games/members tables carry only a
-       `seq`. Runden, Spieler*innen and Spiele therefore keep plain counts — a
-       knowing trade (operator decision 2026-09-05: derive history from the
-       timestamps that exist rather than add a snapshot table).
-
-       New-per-week, not a cumulative curve: a cumulative created-line drifts
-       above the headline total forever, because deletions never subtract from
-       it. The text value is the last complete figure, which is what the removed
-       „Neue Konten" row was trying to say. */
-    const lastOf = (series) => {
-      const v = Object.values(series);
-      return v.length ? v[v.length - 1] : 0;
-    };
-    rows.push(['Konten (Verlauf)', null, String(lastOf(m.accounts.history)),
-      'neu diese Woche · 26 Wochen', m.accounts.history]);
-
-    rows.push(['Runden', null, String(m.rounds.total)]);
-
-    // Seats across all rounds — most of them belong to people with no account,
-    // which is why this is a different (and larger) number than 'Konten' above.
-    // It is what the public „Spieler*innen" counter publishes (#564).
-    rows.push(['Spieler*innen', null, String(m.content.members),
-      'Mitglieds-Plätze in allen Runden']);
-
-    // Both figures, because they answer different questions and the public page
-    // publishes the ACTIVE one: the quota counts every row, the Regal does not.
-    rows.push(['Spiele', null, String(m.content.games),
-      `${m.content.activeGames} im Regal · ${m.content.games - m.content.activeGames} archiviert oder auf der Wunschliste`]);
-
-    rows.push(['Sessions', null, String(m.content.sessions),
-      `${m.content.sessionsFinished} abgeschlossen · ${m.content.sessions30d} in den letzten 30 Tagen`]);
-
-    rows.push(['Sessions (Verlauf)', null, String(lastOf(m.content.sessionHistory)),
-      'neu diese Woche · 26 Wochen', m.content.sessionHistory]);
-
-    // Rounds USING each shelf state — how many groups reach for the archive and
-    // the wishlist at all, which the game totals above do not answer.
-    rows.push(['Regal-Nutzung', null,
-      `${m.content.roundsWithRetired} · ${m.content.roundsWithCompleted} · ${m.content.roundsWithWish}`,
-      `Runden mit Aussortiertem · mit Durchgespieltem · mit Wunschliste (von ${m.rounds.total})`]);
-
-    /* What rounds are wearing. The SERVER sends a raw histogram keyed by the
-       stored id (or a legacy page hex, or 'collage'/'none') and never resolves
-       it — round-designs.js's header says the stored id is deliberately not
-       validated against the registry, so that the list never becomes a
-       cross-boundary contract. Resolving happens HERE, and an id the registry
-       does not know falls back to „unbekannt" rather than disappearing. */
-    rows.push(['Designs', null, String(Object.keys(m.designs).length),
-      designSummary(m.designs) || 'keine Runde trägt ein Design']);
 
     rows.push(['Demo-Konten', capVerdict(m.demo.live, m.demo.max),
       `${m.demo.live} / ${m.demo.max}`, 'aktiv gegen MAX_LIVE_DEMOS']);
@@ -361,14 +318,10 @@
       `${m.mail.sent} / ${m.mail.limit}`,
       'gesendet heute (UTC) gegen MAIL_DAILY_MAX · zählt nur den antwortenden Prozess, nicht alle Replicas']);
 
-    rows.push(['Teilen & Freunde', null,
-      `${m.social.sharedRounds} · ${m.social.invitationsOpen} · ${m.social.friendships}`,
-      'geteilte Runden · offene Einladungen · Freundschaften']);
-
     // The quota row pairs each ceiling with the highest value anyone currently
     // holds, so "is someone about to be refused?" is answerable without a
     // database console — the pill goes amber/red as soon as ANY of the three
-    // crosses its threshold, and the note says which. With accounts off the
+    // crosses its threshold, and the breakdown says which. With accounts off the
     // ceilings are inert (.claude/rules/per-tenant-quotas.md), so the peaks are
     // shown without a verdict that implies a refusal that cannot happen.
     const peakVerdict = s.quotas.enforced
@@ -378,9 +331,11 @@
       : 'warn';
     rows.push(['Kontingente', peakVerdict,
       s.quotas.enforced ? 'aktiv' : 'inaktiv (Accounts aus)',
-      `Höchstwerte: Runden/Konto ${m.peaks.roundsPerTenant} / ${s.quotas.roundsPerTenant}`
-      + ` · Spiele/Runde ${m.peaks.gamesPerRound} / ${s.quotas.gamesPerRound}`
-      + ` · Tags/Runde ${m.peaks.tagsPerRound} / ${s.quotas.tagsPerRound}`]);
+      'Höchstwerte gegen die Ceilings', [
+        ['Runden/Konto', `${m.peaks.roundsPerTenant} / ${s.quotas.roundsPerTenant}`],
+        ['Spiele/Runde', `${m.peaks.gamesPerRound} / ${s.quotas.gamesPerRound}`],
+        ['Tags/Runde', `${m.peaks.tagsPerRound} / ${s.quotas.tagsPerRound}`],
+      ]]);
 
     // The runtime the answering process is on (#977). Neutral pill, deliberately:
     // a verdict would need a minimum-version floor hardcoded here, and a floor in
@@ -390,8 +345,8 @@
     // Guarded because this is the one field on the card that can be ABSENT: a
     // deploy overlaps the outgoing and incoming containers, so a freshly-loaded
     // panel can be answered by the old process for a few seconds. Unguarded,
-    // `s.runtime.node` throws inside statusRows — which runs outside
-    // loadStatus's try — and the whole Kennzahlen card silently renders empty.
+    // `s.runtime.node` throws inside limitRows — which runs outside loadStatus's
+    // try — and the whole card silently renders empty.
     // Dropping the row beats a '—' that reads as a broken runtime.
     if (s.runtime) {
       rows.push(['Node', null, s.runtime.node,
@@ -401,72 +356,134 @@
     return rows;
   }
 
+  /* ---- card 2: Funktionsnutzung -------------------------------------------
+     Site adoption (Konten) and feature adoption (everything else). NO VERDICTS
+     here, ever: low uptake is not a fault condition, and a green pill would
+     grade something for which nobody has set a threshold.
+
+     Two tile shapes, both used below:
+      - a COMPOSITE tile, whose breakdown lines are parts of the headline share
+        (Regal-Nutzung, Designs, Titelbilder). The headline is the union, which
+        the parts cannot be summed into — one round can be in two of them.
+      - a BUNDLE tile, whose figures are independent shares of the same (or a
+        related) denominator. The headline is the tile's leading figure and each
+        remaining line carries its own „n / total", so no line is left to be read
+        against a denominator the reader has to guess. */
+  function adoptionRows(s) {
+    const m = s.metrics;
+    const a = m.adoption;
+    const rounds = m.rounds.total;
+    const rows = [];
+
+    /* FIRST on this card, and the one deliberate BARE COUNT on either of them:
+       „wie viele haben sich überhaupt angemeldet" has no denominator — there is
+       no population of would-be accounts to divide by. It sits here rather than
+       under Grenzen because it is adoption, and because it is literally the
+       denominator of the Konto-Funktionen tile below it. Do not "fix" it into a
+       share of nothing. */
+    rows.push(['Konten', null, String(m.accounts.total), null, [
+      ['bestätigt', String(m.accounts.verified)],
+      ['unbestätigt', String(m.accounts.total - m.accounts.verified)],
+      ['gesperrt', String(m.accounts.disabled)],
+    ]]);
+    // „mit Bild" is deliberately NOT here — it is an adoption figure and is
+    // stated as a share in Konto-Funktionen. Showing it twice was the old card.
+
+    rows.push(['Regal-Nutzung', null, share(a.roundsWithAnyShelf, rounds),
+      `Runden, die das Regal über den Grundzustand hinaus nutzen (von ${rounds})`, [
+        ['Aussortiert', String(a.roundsWithRetired)],
+        ['Durchgespielt', String(a.roundsWithCompleted)],
+        ['Wunschliste', String(a.roundsWithWish)],
+      ]]);
+
+    /* What rounds are wearing. The SERVER sends a raw histogram keyed by the
+       stored id (or a legacy page hex, or 'collage'/'none') and never resolves
+       it — round-designs.js's header says the stored id is deliberately not
+       validated against the registry, so that the list never becomes a
+       cross-boundary contract. Resolving happens HERE, and an id the registry
+       does not know falls back to „unbekannt" rather than disappearing. */
+    const designed = rounds - (m.designs.none || 0);
+    rows.push(['Designs', null, share(designed, rounds),
+      `Runden mit Design (von ${rounds})`,
+      designLines(m.designs)]);
+
+    rows.push(['Teilen & Freunde', null, share(m.social.sharedRounds, rounds),
+      `geteilte Runden (von ${rounds})`, [
+        ['offene Einladungen', String(m.social.invitationsOpen)],
+        ['Freundschaften', String(m.social.friendships)],
+      ]]);
+
+    const games = m.content.games;
+    rows.push(['Spiele-Quellen & Titelbilder', null,
+      share(a.gamesWithOwnCover + a.gamesWithProviderCover, games),
+      `Spiele mit Titelbild (von ${games})`, [
+        ['verknüpft', String(a.gamesLinked)],
+        ['von Hand', String(games - a.gamesLinked)],
+        ['eigenes Bild', String(a.gamesWithOwnCover)],
+        ['vom Anbieter', String(a.gamesWithProviderCover)],
+      ]]);
+
+    rows.push(['Besitz & Erweiterungen', null, share(a.gamesWithOwners, games),
+      `Spiele mit Besitzer*in (von ${games})`, [
+        ['mit Erweiterungen', share(a.gamesWithExpansions, games)],
+      ]]);
+
+    const sessions = m.content.sessions;
+    rows.push(['Sessions', null, share(a.sessionsWithGuests, sessions),
+      `Sessions mit Gästen (von ${sessions})`, [
+        ['mit Teams', share(a.sessionsWithTeams, sessions)],
+        ['mit Vote-Link', share(a.sessionsWithVoteLink, sessions)],
+      ]]);
+
+    const accounts = m.accounts.total;
+    rows.push(['Konto-Funktionen & eigene Tags', null,
+      share(a.accountsWithPasskey, accounts),
+      `Konten mit Passkey (von ${accounts})`, [
+        ['BGG-Konto', share(a.accountsWithBggUsername, accounts)],
+        // The one figure on this tile measured against ROUNDS, not accounts —
+        // which is why every line here carries its own denominator.
+        ['Konto-Bild', share(m.accounts.withAvatar, accounts)],
+        ['Runden mit eigenen Tags', share(a.roundsWithTags, rounds)],
+      ]]);
+
+    return rows;
+  }
+
   async function loadStatus() {
     const grid = $('statusGrid');
+    const adoption = $('adoptionGrid');
     grid.replaceChildren();
+    adoption.replaceChildren();
     hide($('statusError'));
+    hide($('adoptionError'));
 
     let status;
     try {
       ({ status } = await api('/status'));
     } catch (err) {
+      // ONE fetch feeds both grids, so one failure has to be reported in both
+      // error slots — otherwise the second card sits silently empty and reads
+      // as „nothing is being used" rather than „this did not load".
       show($('statusError'), message(err), 'err');
+      show($('adoptionError'), message(err), 'err');
       return;
     }
 
-    renderTiles(grid, statusRows(status));
+    renderTiles(grid, limitRows(status));
+    renderTiles(adoption, adoptionRows(status));
   }
 
-  /* A 26-week bar chart, hand-rolled (#941). No charting dependency: this file
-     is a standalone IIFE with no SPA globals and no build step, and one sparkline
-     is not worth either.
+  /* One [label, verdict, value, note?, breakdown?] row per tile. Shared by the
+     two Kennzahlen boards and the BGG-Korpus card so they cannot drift into
+     several ideas of what a status tile looks like. Every value goes in via
+     textContent.
 
-     Colours come from the page's own tokens via `currentColor` and a `fill`
-     that names a variable — never a hex. test/standalone-page-brand.test.js
-     sweeps this page for stray palette hexes, and a chart is exactly where one
-     would look harmless.
-
-     ACCESSIBILITY: a bare <svg> is invisible to a screen reader, so it carries
-     role="img" and an aria-label summarising the series. The tile also keeps a
-     TEXT value beside it, which is what anyone not looking at pixels actually
-     reads. */
-  const CHART_W = 150;
-  const CHART_H = 28;
-
-  function renderChart(series, label) {
-    const values = Object.values(series);
-    if (!values.length) return null;
-    const max = Math.max(1, ...values);
-    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg.setAttribute('viewBox', `0 0 ${CHART_W} ${CHART_H}`);
-    svg.setAttribute('class', 'status__chart');
-    svg.setAttribute('role', 'img');
-    const total = values.reduce((a, b) => a + b, 0);
-    const weeks = Object.keys(series);
-    svg.setAttribute('aria-label',
-      `${label}: ${total} in 26 Wochen, Höchstwert ${max}, zuletzt ${values[values.length - 1]}`
-      + ` (Woche ab ${weeks[weeks.length - 1]})`);
-    const slot = CHART_W / values.length;
-    values.forEach((v, i) => {
-      // A zero week still draws a 1px stub, so a quiet week reads as "nothing
-      // happened" rather than as a gap in the data.
-      const h = v === 0 ? 1 : Math.max(2, Math.round((v / max) * CHART_H));
-      const bar = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-      bar.setAttribute('x', String(Math.round(i * slot)));
-      bar.setAttribute('y', String(CHART_H - h));
-      bar.setAttribute('width', String(Math.max(1, Math.floor(slot) - 1)));
-      bar.setAttribute('height', String(h));
-      bar.setAttribute('fill', v === 0 ? 'var(--line)' : 'var(--accent)');
-      svg.appendChild(bar);
-    });
-    return svg;
-  }
-
-  // One [label, verdict, value, note?, series?] row per tile. Shared by the
-  // Kennzahlen board and the BGG-Korpus card so the two cannot drift into two
-  // ideas of what a status tile looks like. Every value goes in via textContent.
+     `breakdown` is a list of [label, value] pairs, one LINE each (#1124). The
+     shape it replaced ran the figures and their labels as two positional lists
+     — „12 · 7 · 1" over „Aussortiert · Durchgespielt · Wunschliste" — which the
+     reader had to zip by eye, and got wrong as soon as one figure was 0. */
   function renderTiles(grid, rows) {
-    for (const [label, verdict, value, note, series] of rows) {
+    for (const [label, verdict, value, note, breakdown] of rows) {
       const item = document.createElement('div');
       item.className = 'status__item';
 
@@ -489,9 +506,20 @@
         item.appendChild(hint);
       }
 
-      if (series) {
-        const chart = renderChart(series, label);
-        if (chart) item.appendChild(chart);
+      if (breakdown && breakdown.length) {
+        const list = document.createElement('div');
+        list.className = 'status__breakdown';
+        for (const [name, figure] of breakdown) {
+          const line = document.createElement('div');
+          line.className = 'status__bd';
+          const key = document.createElement('span');
+          key.textContent = name;
+          const val = document.createElement('b');
+          val.textContent = figure;
+          line.append(key, val);
+          list.appendChild(line);
+        }
+        item.appendChild(list);
       }
 
       grid.appendChild(item);

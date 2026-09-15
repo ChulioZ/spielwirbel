@@ -87,6 +87,11 @@ trimmed to roughly the last ten, exactly like `TERMS_CHANGELOG`.
 skill's review phase, before committing), explicitly ask: *does this change make
 any of those seven stale?* Update it in the same branch/PR.
 
+The eighth surface is not a document at all and has its own file: a new feature
+whose **uptake** nothing can report leaves the operator unable to tell whether it
+landed — `.claude/rules/propose-an-admin-stat-for-new-features.md`, same budget
+posture as the news row above, and the same default of no.
+
 Pure refactors, styling tweaks, and test-only changes usually don't need it —
 but make the check consciously rather than skipping it.
 

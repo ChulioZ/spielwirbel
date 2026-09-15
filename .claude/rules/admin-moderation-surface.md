@@ -38,8 +38,8 @@ enumerates FILES has the same blind spot as one that enumerates call shapes
 (`.claude/rules/source-scanning-guards-enumerate-shapes.md`).
 
 `ADMIN_PASSWORD` turns on `/admin.html` + `/api/admin`: lookup/takedown/
-redaction, account suspend/restore, GDPR export/erasure, the action log, the
-Kennzahlen card. `lib/admin.js` · `lib/routes/admin/` · `public/admin.html` +
+redaction, account suspend/restore, GDPR export/erasure, the action log, the two
+Kennzahlen cards („Grenzen & Kontingente" + „Funktionsnutzung", #1124). `lib/admin.js` · `lib/routes/admin/` · `public/admin.html` +
 `public/js/pages/admin.js`. Every trap below fails *silently* or *dangerously* if
 undone.
 
