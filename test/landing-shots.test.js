@@ -172,14 +172,15 @@ test("each locale's screenshot set stays inside its weight budget", () => {
   }
 });
 
-test('every narrow landing block stops below the hero shot\u2019s own breakpoint', () => {
+test('every narrow landing block stops below the hero visual\u2019s own breakpoint', () => {
   // What this used to pin was the <picture> `media` against the stylesheet. The
-  // <picture> went with #1090 — all three shots are phone-shaped now, so the hero
-  // renders one <img> at every width — and the adjacency survives it: the hero
-  // shot is capped at 300px below 720 and 340 above, so a narrow landing block
-  // that reached 720 would apply the phone rhythm at a width where the wider cap
-  // is already in force. Same discipline as the dock clearance
-  // (.claude/rules/responsive-hub-tabs.md §2), and just as invisible.
+  // <picture> went with #1090 and the hero's <img> itself with #1091 — the hero
+  // plays the app's own moments now (public/js/landing-moments.js) — and the
+  // adjacency survives both: the hero's visual is capped at 340px below 720 and
+  // 520 above, so a narrow landing block that reached 720 would apply the phone
+  // rhythm at a width where the wider cap is already in force. Same discipline
+  // as the dock clearance (.claude/rules/responsive-hub-tabs.md §2), and just as
+  // invisible.
   //
   // `<`, not `===`: the landing legitimately has more than one narrow
   // breakpoint since #1090 (719 for the walkthrough strip, 519 for the primary
@@ -192,11 +193,12 @@ test('every narrow landing block stops below the hero shot\u2019s own breakpoint
     .replace(/\/\*[\s\S]*?\*\//g, '');
 
   // Derived from the stylesheet, never restated: the wide branch is whatever
-  // block un-caps the hero shot, so a retune of that breakpoint moves both sides.
+  // block re-caps the hero's visual, so a retune of that breakpoint moves both
+  // sides.
   const wideRule = css.match(
-    /@media \(min-width: (\d+)px\)\s*\{[^}]*\.landing-hero__visual \.landing-shot/
+    /@media \(min-width: (\d+)px\)\s*\{[^}]*\.landing-hero__visual \.landing-moments/
   );
-  assert.ok(wideRule, 'styles.css un-caps the hero shot in a min-width block');
+  assert.ok(wideRule, 'styles.css re-caps the hero visual in a min-width block');
   const wide = Number(wideRule[1]);
 
   let checked = 0;
@@ -205,6 +207,14 @@ test('every narrow landing block stops below the hero shot\u2019s own breakpoint
     // the @media block's own close.
     const body = css.slice(m.index + m[0].length, css.indexOf('\n}', m.index));
     if (!/\.landing[\w-]*\s*\{|\.landing[\w-]*\s+\./.test(body)) continue;
+    /* One documented exception (#1091): the hero stage trims the Tafel to two
+       rows below 1280, and that number is not the landing's own rhythm — it is
+       the width where the app's `.tafel .trow` stops being one line, so the two
+       MUST straddle this breakpoint together. It has its own guard, which pins
+       it to the Tafel's block rather than to this one:
+       test/landing-moments.test.js, "the stage trims its rows exactly where the
+       app's row stops being one line". */
+    if (/\.landing-moments \.tafel > \.trow:last-child/.test(body)) continue;
     checked++;
     assert.ok(
       Number(m[1]) < wide,
@@ -276,11 +286,16 @@ test('the screenshots are informative images, not decoration', () => {
   const altKeys = [...walk[1].matchAll(/'(landing\.shot\.\w+)'/g)].map((m) => m[1]);
   assert.deepEqual(altKeys, ['landing.shot.shelfAlt', 'landing.shot.voteAlt', 'landing.shot.resultAlt']);
   assert.match(VIEW, /alt="\$\{esc\(t\(altKey\)\)\}"/, 'the walkthrough renders its alt from the table');
-  // The hero's own shot names its key directly, and must not be decoration
-  // either — the pre-#438 hero was aria-hidden, which is the wrong answer once
-  // the image is the thing explaining the product.
-  assert.match(VIEW, /alt="\$\{esc\(t\('landing\.shot\.shelfAlt'\)\)\}"/);
-  assert.doesNotMatch(VIEW, /landing-hero__visual"[^>]*aria-hidden/);
+  // The hero holds no image at all since #1091 — it plays the app's own moments
+  // — so the pre-#438 failure it used to guard against (an aria-hidden hero
+  // picture) cannot recur there. What replaces the assertion is its inverse: the
+  // hero's slot must stay EMPTY in the markup, because the stage is appended
+  // into it after the view is in the document. A stray <img> here would be a
+  // second, undescribed picture sitting under the stage.
+  const slot = VIEW.match(/<div class="landing-hero__visual"([^>]*)><\/div>/);
+  assert.ok(slot, 'the hero visual is an empty slot the stage is mounted into');
+  assert.doesNotMatch(slot[1], /aria-hidden/,
+    'the slot holds the stage, which names itself — hiding the slot would hide that name');
 });
 
 test('the capture seed can still make the metadata-gated affordances render', () => {

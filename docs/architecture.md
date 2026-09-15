@@ -637,6 +637,9 @@ public/
     round-rail.js    the desktop navigation rail (from 1280px): round identity,
                      the four sections, the two archives + the Wunschliste, and
                      one Einstellungen entry
+    landing-moments.js  the landing hero's stage: the app's own pot, vote and
+                     Tafel played once from the shipped components and their own
+                     keyframes (issue #1091)
     views-landing.js logged-out marketing landing page shown at / in accounts
                      mode before registration (issue #322)
     views-home.js    the home dashboard (#842) — greeting, resume tickets for

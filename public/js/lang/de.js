@@ -1455,6 +1455,12 @@ I18N.de = {
   'landing.shot.shelfAlt': 'Screenshot: das Spielregal einer Runde in Spielwirbel – Spiele als Kacheln mit ihrem Spielwirbel-Score, daneben die Navigation zu Start, Regal, Chronik und Pokalen.',
   'landing.shot.voteAlt': 'Screenshot: die Abstimmung in Spielwirbel – ein ausgelostes Spiel mit der Frage „Wie gern möchtest du das spielen?“ und einer Skala aus fünf Gesichtern von 1 („gar nicht“) bis 5 („unbedingt“).',
   'landing.shot.resultAlt': 'Screenshot: das Ergebnis einer Session in Spielwirbel – oben das gespielte Spiel mit dem Stempel „Gespielt“ und dem Gewinner, darunter der Beginn der Wertung mit dem Spielwirbel-Score des Siegerspiels.',
+  // Die Hero-Bühne (#1091): die Bildunterschriften der drei Momente.
+  'landing.moments.label': 'So läuft eine Session: Topf, Abstimmung, Ergebnis',
+  'landing.moments.pot': 'Aus dem Topf werden Spiele gezogen',
+  'landing.moments.vote': 'Lea bewertet, dann geht das Gerät weiter',
+  'landing.moments.result': 'Die Wertung läuft ein – dann steht der Tisch',
+  'landing.moments.replay': 'Nochmal ansehen',
   'landing.features.title': 'Was ihr davon habt',
   'landing.features.shelf.title': 'Ein Regal für alles',
   'landing.features.shelf.desc': 'BoardGameGeek liefert Titel, Cover und Spielerzahl.',

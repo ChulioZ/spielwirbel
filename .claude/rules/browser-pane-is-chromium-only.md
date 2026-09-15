@@ -78,6 +78,33 @@ Swapping `evaluateJavaScript` for `takeSnapshot(with:)` writing a PNG gives a
 **picture** from WebKit, which is what closes the loop on a bug the operator
 reported from a screenshot.
 
+## Pointed at a RUNNING SERVER, the probe must use a non-persistent data store
+
+The recipe above loads a `file:` URL, which registers no service worker. Point it
+at `http://localhost:<port>` instead — worth doing, because it measures the real
+app rather than a synthetic page — and the app's own **cache-first service
+worker** installs into `WKWebView`'s *default* website data store, which is
+**shared across every run of your probe binary**. Every later run is then served
+the stylesheet from that cache, and the numbers are of a build you may have
+edited an hour ago.
+
+It fails silently, with plausible output. Measured on #1091: a 13-width sweep
+reported three Tafel rows at **every** width against a stylesheet that trims to
+two, i.e. it confidently contradicted the CSS on disk — and the natural reading
+is "the trim rule is broken".
+
+```swift
+let cfg = WKWebViewConfiguration()
+cfg.websiteDataStore = .nonPersistent()          // no SW, no cache, every run
+let wv = WKWebView(frame: …, configuration: cfg)
+wv.load(URLRequest(url: url, cachePolicy: .reloadIgnoringLocalAndRemoteCacheData,
+                   timeoutInterval: 20))
+```
+
+**Prove the probe is current before trusting a sweep**: have the script report one
+value you know you just changed. Same discipline as the `<link>` cache-bust the
+Browser pane needs (`.claude/rules/pwa-service-worker.md`), one engine over.
+
 ## Four things that will cost you an hour each
 
 - **Run the same script in BOTH engines, and run the CONTROL.** "WebKit says 0"
