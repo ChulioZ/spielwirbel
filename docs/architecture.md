@@ -177,6 +177,11 @@ lib/
                      each with its design, games (hotlinked provider covers plus
                      resolved provider metadata), tags, sessions and per-locale
                      text (issues #427, #953)
+  user-stats.js      one account's play record aggregated over every member seat
+                     it holds, in its own and in shared rounds (issue #1089).
+                     Runs public/js/member-stats.js per seat rather than
+                     re-deriving it, and returns plain numbers and game titles
+                     only — no round name, round id, member name or tenant id
   demo-tenant.js     the one definition of the `demo-` tenant-id prefix that
                      classifies a tenant as a demo, dependency-free so the repo
                      backends and the logger can require it without a cycle
@@ -700,10 +705,13 @@ public/
                      panel, all from one payload and one card renderer. Renders
                      nothing at all — no heading, no container — when the
                      feature is off or every metric is still below its threshold
-    views-friends.js Freundeskreis view + home dashboard tile (#325; since #842
-                     it invites rather than vanishing when you have no friends)
-                     and the account profile at /u/:username (#558; accounts
-                     mode only)
+    views-friends.js Der Kreis view + home dashboard tile (#325; since #842
+                     it invites rather than vanishing when you have no friends).
+                     Holds the helpers the profile shares (avatar, name, feed
+                     event, send error, report button)
+    views-profile.js the account profile at /u/:username (#558; accounts mode
+                     only) — its entry points, the account's own activity feed
+                     and its play record across every round (#1089)
     views-account.js Konto settings: identity + change password (#482; accounts mode only)
     router.js        URL ↔ view routing (History API): deep links, reloads
     main.js          bootstrap: route from the current URL              (loads last)

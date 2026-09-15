@@ -47,7 +47,15 @@ async function showAccount() {
   // satisfiable. Showing it would invite "why do I have an address I never
   // gave?", so the honest answer is a dash.
   facts.appendChild(renderKontoFact(t('auth.email'), me.demo ? '—' : me.email));
-  facts.appendChild(renderKontoFact(t('auth.username'), me.username || '—'));
+  /* The handle IS the profile's address, so it is the second entry point to it
+     (#1089) — a real <a href> via navLink, which is what makes a modified click
+     open a tab rather than being swallowed (.claude/rules/in-app-nav-links.md).
+     An account mid-erasure has no handle and therefore no profile to point at,
+     so it renders the plain dash: an <a> with no usable target is not a link. */
+  facts.appendChild(me.username
+    ? renderKontoFact(t('auth.username'), me.username,
+      (el) => navLink(el, profilePath(me.username), () => showProfile(me.username)))
+    : renderKontoFact(t('auth.username'), '—'));
   app.appendChild(facts);
 
   // The profile picture (#841), beside the identity facts it belongs to.
@@ -60,6 +68,13 @@ async function showAccount() {
     app.appendChild(h(`<h2 class="konto-section__h">${esc(t('konto.avatar.title'))}</h2>`));
     app.appendChild(buildAvatarForm(me));
   }
+
+  /* Who sees your play statistics (#1089). Its own „Profil" section rather than
+     a row in the mail block below: that one is about what we SEND you, this is
+     about what other people can SEE — and it sits up here beside the handle,
+     which is the profile's address. A demo gets it too; it has a profile. */
+  app.appendChild(h(`<h2 class="konto-section__h">${esc(t('konto.profile.title'))}</h2>`));
+  app.appendChild(buildProfileStatsForm(me));
 
   app.appendChild(h(`<h2 class="konto-section__h">${esc(t('konto.bgg.title'))}</h2>`));
   app.appendChild(buildBggForm(me.bggUsername));
@@ -466,6 +481,22 @@ function buildNotifyForm(me) {
   return wrap;
 }
 
+/* Whether accepted friends see this account's play statistics on its profile
+   (#1089). ON by default, like the two mail opt-outs and unlike the BG Stats
+   opt-in below: the aggregate is what the profile screen exists to show, and a
+   silent default of OFF would make the feature look unbuilt for every account.
+   The subject always sees their own numbers — the server ignores this for the
+   self branch — so the label says "friends", not "on your profile". */
+function buildProfileStatsForm(me) {
+  const wrap = h(`<div class="konto-notify">
+      <p class="muted konto-notify__intro">${esc(t('konto.profile.intro'))}</p>
+    </div>`);
+  wrap.appendChild(buildPrefToggle(
+    'statsVisible', t('konto.profile.stats'), me.statsVisible,
+    (want) => (want ? 'konto.profile.on' : 'konto.profile.off')));
+  return wrap;
+}
+
 /* The BG Stats push opt-in (#485).
 
    OFF by default, unlike the two above: BG Stats' own integration guidance is to
@@ -490,13 +521,21 @@ function buildBgStatsForm(me) {
   return wrap;
 }
 
-// One read-only label/value pair. Not a .ds-row: that component is a click
-// target (cursor: pointer) and these rows do nothing.
-function renderKontoFact(label, value) {
-  return h(`<div class="konto-fact">
+/* One read-only label/value pair. Not a .ds-row: that component is a click
+   target (cursor: pointer) and most of these rows do nothing.
+
+   `wire` (#1089) is how the ONE row that does becomes a real anchor: it is
+   handed the value element, already built and escaped. The element is an <a>
+   only when a hook is given, so a row with nothing to link to never announces as
+   a nameless control (.claude/rules/native-button-vs-focusable-span.md). */
+function renderKontoFact(label, value, wire) {
+  const row = h(`<div class="konto-fact">
       <span class="konto-fact__label">${esc(label)}</span>
-      <span class="konto-fact__value">${esc(value)}</span>
+      ${wire ? `<a class="konto-fact__value">${esc(value)}</a>`
+    : `<span class="konto-fact__value">${esc(value)}</span>`}
     </div>`);
+  if (wire) wire(row.querySelector('.konto-fact__value'));
+  return row;
 }
 
 // The change-password form. Current password + new password, matching the route:

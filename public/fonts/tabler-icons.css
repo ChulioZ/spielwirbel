@@ -60,6 +60,7 @@
 .ti-user-plus::before { content: "\eb4b"; }
 .ti-user-minus::before { content: "\eb4a"; }
 .ti-user-x::before { content: "\eb4c"; }
+.ti-user-circle::before { content: "\ef68"; }
 .ti-lock-off::before { content: "\ed1e"; }
 /* #561 — same cmap verification as the line above; `settings` is 0xeb20 in this
    bundle, one codepoint away from `search` below it. */

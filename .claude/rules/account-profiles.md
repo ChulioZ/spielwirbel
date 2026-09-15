@@ -2,6 +2,7 @@
 paths:
   - "lib/routes/profile.js"
   - "lib/routes/friends.js"
+  - "public/js/views-profile.js"
   - "public/js/views-friends.js"
   - "test/profile.test.js"
 ---
@@ -10,8 +11,13 @@ paths:
 `GET /api/account/profile/:username` renders `/u/:username`. It is mounted on
 `/api/account/profile` beside invitations and friends, i.e. **before** the `/api`
 tenant gate — correctly, because the caller is usually a stranger to the
-subject's tenant and a profile crosses no tenant at all. Three consequences of
-that placement fail silently.
+subject's tenant. Three consequences of that placement fail silently.
+
+**„A profile crosses no tenant" stopped being true in #1089**: it now carries
+`stats`, an aggregate over every round the SUBJECT has a seat in, read via
+`repo.forTenant(...)` on the module-level repo (`lib/user-stats.js`) since
+`req.repo` does not exist ahead of the gate. The placement is still right — the
+CALLER is never scoped into those tenants — and §4 keeps the disclosure honest.
 
 ## 1. Suspension is enforced on the `/api` gate, which this route never reaches
 
@@ -65,6 +71,21 @@ Verified by breaking both on purpose
 feed test, and hoisting the `feedFor` call above the friendship branch reddens
 **two**.
 
+## 2b. The SELF feed has no cutoff, and the demo may read its own profile
+
+Both are #1089 and both look like §2 being relaxed. They are not. The cutoff
+dates a disclosure from the moment consent was given; your own profile discloses
+nothing to anybody, so `feedFor(target.id, null)` is right and a cutoff would
+hide your own history from you.
+
+The demo refusal (#877) likewise applies only to a profile that is **not** the
+caller's own. **The ordering is the load-bearing part, and the natural spelling
+is wrong:** the "is this me?" test compares the requested handle against the
+CALLER'S OWN username, *before* the target lookup. Keying it off `target.id ===
+me` — written that way here first — reintroduces a username oracle for demos,
+since an unknown handle then 404s where a real one 403s. `test/profile.test.js`
+pins the two answers as `deepEqual`.
+
 ## 3. The four friendship states are derived from the CALLER's rows
 
 `incoming` vs `outgoing` is not a property of the friendship — it is a property
@@ -74,6 +95,23 @@ drift on what "incoming" means. The test asserts the same row reads `outgoing`
 for the sender and `incoming` for the addressee **and** that both report the same
 `friendshipId`, which is what makes it a statement about one row rather than two
 coincidences.
+
+## 4. `stats` is absent, never empty — and the payload is safe BY CONSTRUCTION
+
+The play record (#1089) follows `events`' shape: a stranger, a pending request
+and a friend whose `statsVisible` is off get **no `stats` key at all** — `null`
+would be indistinguishable from an account with nothing to show.
+
+- **The filtering lives in `lib/user-stats.js`, not here.** It returns numbers,
+  game titles and cover paths only — never a round name, round id, member name or
+  tenant id — so the friend branch cannot leak by forgetting a field. A
+  route-level redaction list is the version that rots.
+- **`target.statsVisible !== false`**, so an account predating the field reads as
+  VISIBLE, matching `meProjection`; the legacy shape needs its own spec
+  (`.claude/rules/defaulted-account-fields-need-a-legacy-shape-spec.md`).
+- The SUBJECT always sees their own numbers. The toggle governs what friends see,
+  and hiding a figure from the person it is about would make the setting
+  unverifiable from the screen offering it.
 
 ## The row link: a row with buttons can never become the anchor
 
@@ -98,7 +136,9 @@ affordance), the rule `in-app-nav-links.md` states for `statCard`'s `linkMid`.
 
 Two real accounts are awkward to make in a dev instance (registration needs a
 mailed link, and a demo cannot befriend anyone), so **stub `window.accountApi`**
-and drive `showProfile` through the five states — it is a top-level `function`
+and drive `showProfile` (`public/js/views-profile.js` since #1089, split out of
+views-friends.js when the screen gained real content) through the five states —
+it is a top-level `function`
 declaration and therefore a real `window` property
 (`.claude/rules/in-app-nav-links.md` §1). `window.isDemoAccount` is stubbable the
 same way, which is the only practical way to see the non-demo "send request"

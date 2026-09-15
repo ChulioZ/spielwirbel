@@ -441,6 +441,47 @@ setup screen and the Regal POST `…/provider-info` for a game that can never
 complete, with no error anywhere. Its two guards carry a `Provider` prefix
 because a classic script's top-level `const` is a global.
 
+**The sixteenth is `public/js/win-score.js`** (#1089): `memberWinScores` and
+`memberGameWinScores`, the Siegwertung and its per-game partition. Shared LOGIC,
+and it reaches the server for one reason — `lib/user-stats.js` aggregates a
+member's record across every round an account has a seat in, and the Siegwertung
+is a term of that record. It is listed as its own entry rather than under
+`vote-score.js`'s paragraph, which merely mentions it, because the check below
+reads the entry list.
+
+Its trap is the one `vote-score.js` describes for `tileValue`, one function over:
+`partyGroupsOf` is an **injected** parameter with no default, because a party is
+the unit the score is computed over and a hand-written "group the seats" stand-in
+would return plausible, confidently wrong numbers with nothing red. The Node
+caller must pass the real `sessionPartyGroups` out of `session-people.js`.
+
+**The seventeenth is `public/js/member-stats.js`** (#1089): `memberStats`, one
+member's whole record in one round — sessions joined, wins, win rate, Siegwertung,
+average rating given, favourite and strongest game. It is the `draw-pool.js`
+direction taken as far as it goes: not a value and not a predicate but a whole
+derivation, shared because the account profile (`/u/:username`) shows the SAME
+statistics summed over every seat an account holds, and a second implementation
+would let the member page and the profile state different numbers for one person
+— each labelled „Siegquote", neither wrong-looking, with no error anywhere.
+
+It carries the trap that this direction of sharing creates, and it is worth
+stating because the obvious fix is forbidden here: `memberStats` reads six
+siblings off the shared global scope (`sessionEnding`, `sessionPartyCount`,
+`sessionPartyGroups`, `memberWinScores`, `memberGameWinScores`, `isNameableGame`),
+and **a public/js file cannot require() a sibling**. So they are **injected** as a
+`deps` object, the shape recap.js, period-recap.js and win-score.js already use,
+with the browser falling back to the globals when the argument is omitted. That
+fallback is safe only because the failure is loud in the other direction: under
+Node the globals do not exist at all, so a caller who forgets `deps` gets a
+`ReferenceError` on the first call rather than a second, quieter code path.
+
+The function also returns raw material the member page never reads — the two
+contest counts, the two rating totals, and a per-game breakdown. That is
+deliberate and is what keeps the aggregate honest: a win rate cannot be averaged
+across seats and a rating mean cannot be un-weighted, so the account-wide figures
+are recomputed from counts rather than from the per-seat rates, and the favourite
+game is picked once over the merged set rather than once per round.
+
 **Each new instance must be named above.** `test/rule-enumerations.test.js`
 asserts every `require('../public/js/…')` under `lib/routes/` and `lib/` appears
 in it, because the list had already gone stale by one before anyone noticed. The

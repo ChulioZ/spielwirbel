@@ -4305,6 +4305,15 @@ a.c-ring__face:hover { box-shadow: 0 0 0 3px var(--brand-edge); }
 .friend-row__link:focus-visible .friend-row__name { text-decoration: underline; }
 
 /* ===== Account profile /u/:username (#558) ===== */
+/* The account-wide stats block (#1089). It reuses `.member-figure` and
+   `.pokale-card` wholesale — the same numbers computed by the same function, so
+   they must read the same — and adds only what the profile context needs: the
+   strip's own spacing (the member card supplies that from its frame) and the
+   note explaining to a FRIEND what these numbers do and do not name. */
+.profile-stats { margin-bottom: 18px; }
+.profile-stats .profile-figures { margin-bottom: 18px; }
+.profile-stats__games { margin-bottom: 10px; }
+.profile-stats__note { font-size: var(--text-sm); margin: 0; }
 .profile-head { display: flex; align-items: center; gap: 16px; margin: 4px 0 18px; }
 .profile-head__text { min-width: 0; }
 .profile-head__text h1 { margin: 0 0 2px; overflow-wrap: anywhere; }
@@ -6314,10 +6323,16 @@ a.c-ring__face:hover { box-shadow: 0 0 0 3px var(--brand-edge); }
 /* The five figures, one treatment, one row that wraps. `1 1 96px` puts 3 + 2 on
    a phone with the second row filling the width; there is no grid, so no track
    can be empty at any viewport — which is the defect this replaced. */
-.member-card__figures {
+.member-card__figures,
+.profile-figures {
   display: flex;
   flex-wrap: wrap;
   gap: 18px 26px;
+}
+/* The member card's own framing only: the rule above is shared with the account
+   profile (#1089), which has no card around it and — crucially — no `--m-tone`,
+   so a border-colour mixed from it would resolve against nothing there. */
+.member-card__figures {
   margin-top: 22px;
   padding-top: 18px;
   border-top: 1px solid color-mix(in oklab, var(--m-tone) 26%, transparent);
@@ -6380,7 +6395,7 @@ a.c-ring__face:hover { box-shadow: 0 0 0 3px var(--brand-edge); }
      column gap needs 340px for three, so five wrapped 2 + 2 + 1 and the last
      figure sat alone on a row of its own. 3×88 + 2×14 = 292 fits; a fourth
      would need 394 and cannot. The two on the second row then grow to fill it. */
-  .member-card__figures { gap: 16px 14px; }
+  .member-card__figures, .profile-figures { gap: 16px 14px; }
   .member-figure { flex: 1 1 88px; }
 }
 @media (min-width: 1280px) {

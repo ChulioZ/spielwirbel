@@ -256,9 +256,9 @@ const frontendGlobals = {
   showFriends: 'readonly', renderHomeFriends: 'readonly',
   renderFriendRequestItem: 'readonly', renderFeedEvent: 'readonly',
   friendAvatar: 'readonly', friendName: 'readonly',
-  feedText: 'readonly', friendSendError: 'readonly',
+  feedText: 'readonly', friendSendError: 'readonly', accountReportButton: 'readonly',
   // views-friends.js — account profile (issue #558)
-  showProfile: 'readonly', renderProfileCta: 'readonly',
+  showProfile: 'readonly', renderProfileCta: 'readonly', renderProfileStats: 'readonly',
   friendRowMain: 'readonly', wireFriendRowMain: 'readonly',
   // views-account.js (issue #482)
   showAccount: 'readonly', renderKontoFact: 'readonly',
