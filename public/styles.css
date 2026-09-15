@@ -25,6 +25,7 @@
 @font-face { font-family: 'Playfair Display'; font-style: normal; font-weight: 700; font-display: swap; src: url('fonts/playfair-display-latin-700-normal.woff2') format('woff2'); }
 @font-face { font-family: 'Creepster'; font-style: normal; font-weight: 400 800; font-display: swap; src: url('fonts/creepster-latin-400-normal.woff2') format('woff2'); }
 @font-face { font-family: 'Alfa Slab One'; font-style: normal; font-weight: 400 800; font-display: swap; src: url('fonts/alfa-slab-one-latin-400-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Cinzel'; font-style: normal; font-weight: 400 800; font-display: swap; src: url('fonts/cinzel-latin-700-normal.woff2') format('woff2'); }
 
 :root {
   /* Native UI — the <select> popup, scrollbars, form-control defaults — follows
@@ -9585,6 +9586,45 @@ kbd {
   --world-particle-dur: 2.8s;
 }
 
+[data-world="burg"] {
+  --world-font: "Cinzel";
+  --world-backdrop: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240' viewBox='0 0 240 240'%3E%3Cg fill='%23000'%3E%3Cpath d='M30 40h6v-6h5v6h6v-6h5v6h6v-6h5v6h6v34H30zM36 52v18h20V52z'/%3E%3Cpath d='M150 130c0-2 12-4 16-4s16 2 16 4v18c0 10-8 18-16 22c-8-4-16-12-16-22z'/%3E%3Cpath fill-rule='evenodd' d='M60 170a10 10 0 1 0 20 0a10 10 0 1 0-20 0zM66 170a4 4 0 1 0 8 0a4 4 0 1 0-8 0zM78 168h30v5h-6v5h-5v-5h-4v5h-5v-5h-10z'/%3E%3Cpath d='M190 40v60h-3V40zM191 40l26 8l-26 8z'/%3E%3Cpath d='M110 90c-4-6-2-12 4-14c3 4 3 8 0 12c6-2 10 2 10 6c-4 2-8 0-10-4c-2 4-6 6-10 4c0-4 2-6 6-4z'/%3E%3Cpath d='M200 186c-7 7-9 14-4 20c1-4 4-7 7-10c2 4 4 8 3 12c6-5 5-15-2-22c0 3-1 6-4 8c1-3 1-6 0-8z'/%3E%3Cpath d='M196 208h8l-2 22h-4z'/%3E%3C/g%3E%3C/svg%3E");
+  --world-backdrop-size: 320px 320px;
+  /* Stone: rises from the floor of the viewport, like Dinosaurs' sediment. */
+  --world-backdrop-fade: linear-gradient(transparent 0%, #000 100vh);
+  --world-frame: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='88' height='56' viewBox='0 0 88 56'%3E%3Cg fill='%23000'%3E%3Cpath d='M0 0h7v6h6V0h7v6h6V0h7v6h6V0h7v12H12v32H0zM0 26h12v7H0z'/%3E%3C/g%3E%3C/svg%3E");
+  --world-rule: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='10' viewBox='0 0 140 10'%3E%3Cg fill='%23000'%3E%3Cpath d='M0 1H140v1.2H0zM0 2L10 10L20 2zM20 2L30 10L40 2zM40 2L50 10L60 2zM60 2L70 10L80 2zM80 2L90 10L100 2zM100 2L110 10L120 2zM120 2L130 10L140 2z'/%3E%3C/g%3E%3C/svg%3E");
+  --world-corner: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 22 22'%3E%3Cg fill='%23000'%3E%3Cpath d='M3 3c0-1 6-2 8-2s8 1 8 2v9c0 5-4 8-8 10c-4-2-8-5-8-10z'/%3E%3C/g%3E%3C/svg%3E");
+  --world-scene: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='120' viewBox='0 0 600 120'%3E%3Cg fill='%23000'%3E%3Cpath fill-rule='evenodd' d='M0 120v-14c40-6 90-14 130-14v-8h4v-6h5v6h5v-6h5v6h5v-6h5v6h5v-6h4v20h4V64h6v-6h5v6h6v-6h5v6h6v-6h5v6h5v28h8V52h6v-8h5v8h6v-8h5v8h6v-8h5v8h6v-8h5v8h6v44h8V70h5v-6h5v6h5v-6h5v6h5v-6h5v6h5v20h8V80h4v-6h5v6h5v-6h5v6h5v-6h4v18c50 0 130 8 236 14v14zM296 120v-26c0-8 6-14 14-14s14 6 14 14v26z'/%3E%3Cpath d='M264 52l-14-4l14-4zM366 60l14-4l-14-4z'/%3E%3Cpath d='M30 78L39.24 96H20.759999999999998zM30 86.8L43.64 106.8H16.36zM30 97.2L48.04 116.4H11.96zM28.02 114.8h3.96V118h-3.96z'/%3E%3Cpath d='M570 72L580.08 92.7H559.92zM570 82.12L584.88 105.12H555.12zM570 94.08L589.68 116.16H550.32zM567.84 114.32h4.32V118h-4.32z'/%3E%3Cpath fill-opacity='0.6' d='M556 86L563.56 99.5H548.44zM556 92.6L567.16 107.6H544.84zM556 100.4L570.76 114.8H541.24zM554.38 113.6h3.2399999999999998V116h-3.2399999999999998z'/%3E%3Cg transform='translate(420 6) scale(0.36)'%3E%3Cpath d='M46 60c8-10 26-16 50-14c16 1 30 6 42 14c-12 6-26 8-40 8c-20 0-38-2-52-8z'/%3E%3Cpath d='M50 62c-12-4-20-14-20-28c0-8 3-15 9-20l8 5c-4 4-6 9-6 15c1 10 7 18 17 24z'/%3E%3Cpath d='M8 20c4-10 14-16 26-14c8 1 14 5 18 11l-6 4c-6-2-12-2-18 0l-4 5l-16-2z'/%3E%3Cpath d='M6 26l18 3l-3 6l-15-4z'/%3E%3Cpath d='M34 8l5-14l3 14zM42 9l7-12l1 13z'/%3E%3Cpath d='M74 42c-3-16 4-30 18-38c-3 8-2 15 3 20c5-8 14-12 24-11c-5 6-6 12-3 18c9-3 18-1 26 5c-6 4-10 9-12 15c-18 1-38 0-56-4c-1-2-1-3 0-5z'/%3E%3Cpath d='M96 48l4-7l4 7zM110 48l4-7l4 7zM124 50l4-7l4 7z'/%3E%3Cpath d='M136 62c14 2 24 10 28 22c1 5 0 10-3 14l8 6l-11 2l-1-8c2-5 1-9-3-13c-7-7-14-13-18-23z'/%3E%3Cpath d='M160 96l10-6l4 10l-10 2z'/%3E%3Cpath d='M80 68l-5 11l7-2l3-9zM104 68l-2 11l7-3l1-8z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  --world-stage: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='140' viewBox='0 0 600 140'%3E%3Cg fill='%23000'%3E%3Cpath d='M0 140v-12h12v-8h8v8h12v-8h8v8h12v-8h8v8h12v12zM528 140v-12h12v-8h8v8h12v-8h8v8h12v-8h8v8h12v12z'/%3E%3Cg transform='translate(200 24) scale(1.05)'%3E%3Cpath d='M46 60c8-10 26-16 50-14c16 1 30 6 42 14c-12 6-26 8-40 8c-20 0-38-2-52-8z'/%3E%3Cpath d='M50 62c-12-4-20-14-20-28c0-8 3-15 9-20l8 5c-4 4-6 9-6 15c1 10 7 18 17 24z'/%3E%3Cpath d='M8 20c4-10 14-16 26-14c8 1 14 5 18 11l-6 4c-6-2-12-2-18 0l-4 5l-16-2z'/%3E%3Cpath d='M6 26l18 3l-3 6l-15-4z'/%3E%3Cpath d='M34 8l5-14l3 14zM42 9l7-12l1 13z'/%3E%3Cpath d='M74 42c-3-16 4-30 18-38c-3 8-2 15 3 20c5-8 14-12 24-11c-5 6-6 12-3 18c9-3 18-1 26 5c-6 4-10 9-12 15c-18 1-38 0-56-4c-1-2-1-3 0-5z'/%3E%3Cpath d='M96 48l4-7l4 7zM110 48l4-7l4 7zM124 50l4-7l4 7z'/%3E%3Cpath d='M136 62c14 2 24 10 28 22c1 5 0 10-3 14l8 6l-11 2l-1-8c2-5 1-9-3-13c-7-7-14-13-18-23z'/%3E%3Cpath d='M160 96l10-6l4 10l-10 2z'/%3E%3Cpath d='M80 68l-5 11l7-2l3-9zM104 68l-2 11l7-3l1-8z'/%3E%3C/g%3E%3Cpath fill-rule='evenodd' d='M486 46a22 22 0 1 0 44 0a22 22 0 1 0-44 0zM496 46a17 17 0 1 0 34 0a17 17 0 1 0-34 0z'/%3E%3Ccircle cx='90' cy='40' r='2'/%3E%3Ccircle cx='140' cy='70' r='1.6'/%3E%3Ccircle cx='420' cy='30' r='2'/%3E%3Ccircle cx='560' cy='80' r='1.5'/%3E%3Ccircle cx='40' cy='90' r='1.8'/%3E%3C/g%3E%3C/svg%3E");
+  --world-stage-size: 100% auto;
+  --world-stage-repeat: no-repeat;
+  --world-stage-position: center top;
+  /* Slot 8 — the crown: battlements stand on the bottom, so the strip shows
+     the art's bottom edge. */
+  --world-crown-y: bottom;
+  /* Slot 7 — layer 1 is the castle: a tower in each gutter with its windows
+     and door cut out, and the curtain wall with its gate across the band,
+     rising into place; layer 2 is the dragon, flying in from the right
+     gutter. The bits are sparks off the torches. */
+  --world-victory-l: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='280' viewBox='0 0 120 280'%3E%3Cg fill='%23000'%3E%3Cpath fill-rule='evenodd' d='M30 282V84h8v-8h9v8h9v-8h9v8h9v-8h9v8h8v198zM50 282v-40c0-8 5-14 11-14s11 6 11 14v40zM56 140a5 5 0 1 0 10 0a5 5 0 1 0-10 0z'/%3E%3Cpath d='M60 74V30h3v44zM63 30l24 8l-24 8z'/%3E%3C/g%3E%3C/svg%3E");
+  --world-victory-r: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='280' viewBox='0 0 120 280'%3E%3Cg fill='%23000'%3E%3Cpath fill-rule='evenodd' d='M30 282V64h8v-8h9v8h9v-8h9v8h9v-8h9v8h8v218zM50 282v-40c0-8 5-14 11-14s11 6 11 14v40zM56 120a5 5 0 1 0 10 0a5 5 0 1 0-10 0zM56 180a5 5 0 1 0 10 0a5 5 0 1 0-10 0z'/%3E%3Cpath d='M60 54V10h3v44zM63 10l-24 8l24 8z'/%3E%3C/g%3E%3C/svg%3E");
+  --world-victory-band: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='90' viewBox='0 0 600 90'%3E%3Cg fill='%23000'%3E%3Cpath fill-rule='evenodd' d='M0 90V60h12v-8h8v8h12v-8h8v8h12v-8h8v8h12v-8h8v8h12v-8h8v8h12v-8h8v8h12v-8h8v8h12v-8h8v8h12v-8h8v8h12v-8h8v8h12v-8h8v8h12v-8h8v8h12v-8h8v8h12v-8h8v8h12v-8h8v8h12v-8h8v8h12v-8h8v8h12v-8h8v8h12v-8h8v8h12v-8h8v8h12v-8h8v8h12v-8h8v8h12v-8h8v8h12v-8h8v8h12v-8h8v8h12v-8h8v8h12v-8h8v8h12v-8h8v8h12v-8h8v8h12v-8h8v8v30zM284 90V66c0-9 7-16 16-16s16 7 16 16v24z'/%3E%3C/g%3E%3C/svg%3E");
+  --world-victory-2-l: none;
+  --world-victory-2-r: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='280' viewBox='0 0 120 280'%3E%3Cg fill='%23000'%3E%3Cg transform='translate(-22 26) scale(0.8)'%3E%3Cpath d='M46 60c8-10 26-16 50-14c16 1 30 6 42 14c-12 6-26 8-40 8c-20 0-38-2-52-8z'/%3E%3Cpath d='M50 62c-12-4-20-14-20-28c0-8 3-15 9-20l8 5c-4 4-6 9-6 15c1 10 7 18 17 24z'/%3E%3Cpath d='M8 20c4-10 14-16 26-14c8 1 14 5 18 11l-6 4c-6-2-12-2-18 0l-4 5l-16-2z'/%3E%3Cpath d='M6 26l18 3l-3 6l-15-4z'/%3E%3Cpath d='M34 8l5-14l3 14zM42 9l7-12l1 13z'/%3E%3Cpath d='M74 42c-3-16 4-30 18-38c-3 8-2 15 3 20c5-8 14-12 24-11c-5 6-6 12-3 18c9-3 18-1 26 5c-6 4-10 9-12 15c-18 1-38 0-56-4c-1-2-1-3 0-5z'/%3E%3Cpath d='M96 48l4-7l4 7zM110 48l4-7l4 7zM124 50l4-7l4 7z'/%3E%3Cpath d='M136 62c14 2 24 10 28 22c1 5 0 10-3 14l8 6l-11 2l-1-8c2-5 1-9-3-13c-7-7-14-13-18-23z'/%3E%3Cpath d='M160 96l10-6l4 10l-10 2z'/%3E%3Cpath d='M80 68l-5 11l7-2l3-9zM104 68l-2 11l7-3l1-8z'/%3E%3C/g%3E%3Ccircle cx='30' cy='150' r='2'/%3E%3Ccircle cx='62' cy='180' r='1.6'/%3E%3Ccircle cx='42' cy='220' r='2'/%3E%3C/g%3E%3C/svg%3E");
+  --world-victory-2-band: none;
+  --world-victory-y: bottom;
+  --world-victory-2-y: top;
+  --world-victory-anim: world-tide;
+  --world-victory-anim-2: world-flyby;
+  --world-particle: radial-gradient(circle, #000 30%, transparent 70%);
+  --world-particle-w: 8px;
+  --world-particle-h: 8px;
+  --world-particle-inset: auto -12px;
+  --world-particle-anim: world-firefly;
+  --world-particle-dur: 2.2s;
+}
+
 /* The display face: the world's own first, then the standard stack, so a
    glyph the world face lacks still renders in Baloo 2. Declaring the face in
    @font-face (top of this file) downloads nothing; the fetch happens the first
@@ -9948,6 +9988,12 @@ kbd {
   @keyframes world-erupt {
     0%, 40% { transform: translateY(6%); opacity: 0; }
     100% { transform: translateY(0); opacity: var(--victory-alpha); }
+  }
+  /* Burg (#1084): the dragon comes in from the right rather than rising with
+     the wall, so it holds off until the towers have landed. */
+  @keyframes world-flyby {
+    0%, 30% { transform: translateX(28%); opacity: 0; }
+    100% { transform: translateX(0); opacity: var(--victory-alpha); }
   }
   @keyframes world-ash {
     0% { transform: translate(0, 0); opacity: 0; }

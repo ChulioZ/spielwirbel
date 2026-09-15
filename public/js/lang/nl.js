@@ -986,6 +986,7 @@ I18N.nl = {
   'theme.chess': 'Schaken',
   'theme.horror': 'Horror',
   'theme.dinos': 'Dinosauriërs',
+  'theme.burg': 'Kasteel',
   'design.group.colors': 'Kleuren',
   'design.group.worlds': 'Werelden',
   'design.worlds.note': 'Een wereld voegt boven op de kleuren een eigen lettertype, ornamenten en een achtergrond toe.',

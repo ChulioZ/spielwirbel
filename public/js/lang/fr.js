@@ -994,6 +994,7 @@ I18N.fr = {
   'theme.chess': 'Échecs',
   'theme.horror': 'Horreur',
   'theme.dinos': 'Dinosaures',
+  'theme.burg': 'Château',
   'design.group.colors': 'Couleurs',
   'design.group.worlds': 'Mondes',
   'design.worlds.note': 'Un monde ajoute aux couleurs sa propre police, des ornements et un fond.',

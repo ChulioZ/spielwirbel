@@ -988,6 +988,7 @@ I18N.pt = {
   'theme.chess': 'Xadrez',
   'theme.horror': 'Terror',
   'theme.dinos': 'Dinossauros',
+  'theme.burg': 'Castelo',
   'design.group.colors': 'Cores',
   'design.group.worlds': 'Mundos',
   'design.worlds.note': 'Um mundo acrescenta a sua própria tipografia, ornamentos e um pano de fundo sobre as cores.',
