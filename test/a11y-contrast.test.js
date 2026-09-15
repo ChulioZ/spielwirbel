@@ -27,7 +27,7 @@ const {
 } = require('./support/css');
 const { loadApp } = require('./support/dom');
 const {
-  contrast, luminance, hsl, composite, evaluate, tokensFor, alphaOf, mixOklab,
+  contrast, luminance, hsl, composite, evaluate, tokensFor, alphaOf, mixOklab, toHex,
 } = require('./support/theme');
 
 // Every design a round can pick — the palettes AND the worlds — required off
@@ -200,6 +200,7 @@ const OPEN_SET = { tag: 'button', classes: ['chip', 'setup-addons__chip', 'is-on
 const TOKENS = {
   '--on-accent': 'onAccent', '--brand': 'brand', '--brand-strong': 'brandStrong',
   '--surface': 'surface', '--ink': 'ink', '--ink-soft': 'inkSoft', '--line': 'line',
+  '--control-edge': 'controlEdge', '--control-fill': 'controlFill',
 };
 const tokenOf = (decl) => {
   const m = /var\((--[\w-]+)\)/.exec(decl.value);
@@ -221,7 +222,9 @@ test('the other two add-on chip states are untouched: closed + set stays filled,
   assert.equal(tokenOf(resolvedDeclaration(CLOSED_SET, 'color')), 'onAccent');
   assert.equal(tokenOf(resolvedDeclaration(CLOSED_SET, 'background')), 'brand');
   assert.equal(tokenOf(resolvedDeclaration(OPEN_UNSET, 'color')), 'brandStrong');
-  assert.equal(tokenOf(resolvedDeclaration(OPEN_UNSET, 'background')), 'surface');
+  // --control-fill since #1140: on a light design it still resolves to the white
+  // --surface this asserted before, on a dark one to --sunken-soft.
+  assert.equal(tokenOf(resolvedDeclaration(OPEN_UNSET, 'background')), 'controlFill');
 });
 
 test('the RESOLVED ink/fill pair of an open + set add-on chip clears AA on every design', () => {
@@ -730,9 +733,10 @@ test('no bare white is painted outside the rules that justify one', () => {
    results screen's „TEILGENOMMEN" line in it, i.e. all but invisible (1.07:1 on
    a light design), and the dark scheme is what surfaced it.
 
-   #938 took the token from 18.5% to 45%, so „far too faint to read" is no longer
-   why this rule holds — at 45% it still falls short of AA for text (3.23:1 worst
-   case against --surface, against a 4.5 bar), and the rule now stands on what the
+   #938 took the token from 18.5% to 45% (and #1140 to 53% on a dark design), so
+   „far too faint to read" is no longer why this rule holds — at 45% it still
+   falls short of AA for text (3.23:1 worst case against --surface, against a 4.5
+   bar), and the rule now stands on what the
    token is FOR rather than on how invisible it happens to be. Keep it that way:
    a future retune that did clear 4.5 would still be the wrong tone for a label.
 
@@ -992,4 +996,157 @@ test('no white exemption is stale', () => {
     .map(([sel]) => sel.replace(/\s+/g, ' ').trim()));
   const stale = [...WHITE_EXEMPT.keys()].filter((sel) => !withWhite.has(sel));
   assert.deepEqual(stale, [], `exempted but no longer paints a white — delete these: ${stale.join(', ')}`);
+});
+
+/* ---- #1140: the control edge, and the dark neutral ramp ------------------
+
+   On a dark design --line resolved BETWEEN the page and --surface (7% against
+   --surface's 9%), so a chip's border measured 1.05:1 against the chip's own
+   fill — the boundary that identifies the control separated it from nothing.
+   Two tokens came out of that: --control-edge carries SC 1.4.11's 3:1 for the
+   ~25 borders that identify a control, and --control-fill gives a control on a
+   dark design a tone of its own instead of repeating its parent's --surface.
+
+   Every rule whose border identifies an interactive control. .vote and
+   .rec-undone are deliberately NOT here although both drew a --line border in
+   the issue's grep: each is a <div> container (the voting card, a dismissed-
+   recommendation status row), and 1.4.11 binds a boundary only where it
+   identifies a control. Add a selector here when you add a control — that is
+   what stops a new one quietly taking the structural hairline. */
+const CONTROL_RULES = [
+  '.chip', '.tag-mode__opt', '.btn', '.input, .select', '.sort-select',
+  '.search-pill', '.fbar__trigger', '.stepper__btn', '.stepper__val',
+  '.icon-picker__trigger', '.icon-picker__btn', '.mood', '.opt-card',
+  '.theme-card', '.game-card__pick', '.member-chip', '.winner-chip',
+  '.team-chip', '.tables-seat', '.lang-picker', '.topbar__acct',
+  '.landing-chip', '.paste-zone', '.cover-pick',
+  '.nr-seat--out .nr-seat__avatar',
+];
+
+test('every control rule still exists — otherwise the scan below guards nothing', () => {
+  const missing = CONTROL_RULES.filter((sel) => !bodyOf(sel) && !slotBodyFor(sel));
+  assert.deepEqual(missing, [],
+    'renamed or deleted; re-point CONTROL_RULES or the border scan passes vacuously');
+  assert.ok(CONTROL_RULES.length >= 20, 'the control list has been gutted');
+});
+
+/* The scan enumerates the CALL SHAPES a border is written in, not just the
+   token — `.claude/rules/source-scanning-guards-enumerate-shapes.md`. This
+   sheet spells a control's edge four ways: the `border:` shorthand at 1px,
+   1.5px and 2px, `2px dashed`, and `border-color:` on a state rule. A pattern
+   anchored to `border:` alone would pass over the dashed and border-color
+   forms while looking exhaustive.
+
+   Proven by reverting .mood's border to var(--line) on purpose: this test goes
+   red naming .mood, and its sibling below stays green. */
+test('no interactive control draws its edge with the structural --line', () => {
+  const BORDER = /\bborder(?:-(?:color|top|right|bottom|left|inline|block)[\w-]*)?\s*:[^;]*var\(--line\)/;
+  const offenders = CONTROL_RULES
+    .filter((sel) => BORDER.test(bodyOf(sel) || slotBodyFor(sel) || ''))
+    .map((sel) => `${sel} — border still var(--line)`);
+  assert.deepEqual(offenders, [],
+    '--line is the ~1.4:1 structural hairline; a control boundary needs --control-edge at 3:1');
+});
+
+test('every control rule actually declares --control-edge — the scan above is not satisfied by deleting the border', () => {
+  const without = CONTROL_RULES
+    .filter((sel) => !/var\(--control-edge\)/.test(bodyOf(sel) || slotBodyFor(sel) || ''));
+  assert.deepEqual(without, [], 'declares no --control-edge border at all');
+});
+
+test('--control-edge clears the 3:1 non-text bar on both grounds, on every design', () => {
+  const failures = sweep((t) => [
+    ['control edge on its own fill (--control-fill)', t.controlEdge, t.controlFill],
+    ['control edge on the card behind it (--surface)', t.controlEdge, t.surface],
+    ['control edge on the page (--page-bg)', t.controlEdge, t.page],
+  ], AA_LARGE);
+  assert.deepEqual(failures, [],
+    'a border that identifies a control is a meaningful non-text graphic — SC 1.4.11 wants 3:1');
+});
+
+/* The three neutral tones, measured against the ground each one actually sits
+   on, with the LIGHT designs' shipped ratios as the bar. Pinning a ratio rather
+   than a percentage is the point: light is the half that was always right, so a
+   dark design is asked to reach what light already ships instead of hitting a
+   number somebody typed. All three ran at 1.04–1.15 on dark before #1140. */
+// A hair under each light minimum (1.37 / 1.25 / 1.20, all on chess), so the
+// design that DEFINES the floor is not sitting on a rounding boundary. The
+// gap to what this replaced is two orders of slack either way: every dark
+// design measured 1.04-1.15 before #1140.
+const LIGHT_FLOOR = { line: 1.36, sunken: 1.24, sunkenSoft: 1.19 };
+
+test('the dark neutral ramp separates from --surface as well as the light one does', () => {
+  const failures = [];
+  for (const t of THEMES) {
+    for (const [key, label] of [['line', '--line'], ['sunken', '--sunken'], ['sunkenSoft', '--sunken-soft']]) {
+      const ratio = contrast(t[key], t.surface);
+      if (ratio < LIGHT_FLOOR[key]) failures.push(`${name(t)} — ${label} on --surface = ${ratio.toFixed(2)}:1 (floor ${LIGHT_FLOOR[key]})`);
+    }
+  }
+  assert.deepEqual(failures, [],
+    'on a dark design --surface is a lift off the page, so a tone mixed at the light percentage lands on top of it');
+});
+
+test('the dark ramp keeps its ORDER — soft, sunken, line, edge, each a real step off the page', () => {
+  const failures = [];
+  for (const t of THEMES) {
+    const steps = [t.sunkenSoft, t.sunken, t.line, t.controlEdge].map((c) => contrast(c, t.page));
+    const sorted = steps.every((v, i) => i === 0 || v >= steps[i - 1]);
+    if (!sorted) failures.push(`${name(t)} — off the page: ${steps.map((v) => v.toFixed(2)).join(' < ')}`);
+  }
+  assert.deepEqual(failures, [],
+    'the names describe an ordering; on dark the tones run upward, but soft must still be the shallowest');
+});
+
+test('a control never repeats its parent card exactly — --control-fill is a real step on every design', () => {
+  const failures = [];
+  for (const t of THEMES) {
+    // Light keeps the white-on-white pair on purpose: there the 3:1 border IS
+    // the boundary, and moving it would restyle every light design. What must
+    // never happen is a dark design where BOTH are identical, i.e. no boundary
+    // at all beyond a border that used to be 1.05:1.
+    const same = toHex(t.controlFill) === toHex(t.surface);
+    if (t.dark && same) failures.push(`${name(t)} — --control-fill is exactly --surface (${toHex(t.surface)})`);
+  }
+  assert.deepEqual(failures, [], 'a dark control needs its own tone, not its parent repeated');
+});
+
+/* Raising the resting edge to 3:1 silently inverts the hover affordance, and
+   nothing else would have caught it: --brand-edge measures 1.39-1.95:1 against a
+   control's fill, so a control resting at 3.1-3.7 would have got FAINTER under
+   the pointer. Six controls (.mood, .member-chip, .winner-chip, .cover-pick and
+   the two focus rules) already moved to --brand; the other nine now do too.
+
+   Measured rather than pinned as "never --brand-edge": the decision is "hover is
+   at least as strong as rest", and a future token could satisfy it differently. */
+test('hovering a control never WEAKENS its edge', () => {
+  const HOVER_TOKENS = { '--brand': 'brand', '--brand-edge': 'brandEdge', '--control-edge': 'controlEdge' };
+  /* A FILLED variant (.btn--primary, .chip.is-on) repaints its own ground, so
+     its hover border is measured against --brand rather than --control-fill and
+     is not this test's business. Detect that from the variant's own rule instead
+     of listing them: anything that declares a background other than
+     --control-fill has left the plain-control case behind. */
+  const repainted = new Set(rulesOf(CSS)
+    .filter(([, body]) => /(^|[;{\s])background(?:-color)?:\s*var\((?!--control-fill)/.test(body))
+    .map(([sel]) => sel.trim()));
+  const base = (sel) => sel.trim().replace(/:(?:hover|focus|focus-within|not)\b.*$/, '');
+  const hovers = rulesOf(CSS)
+    .filter(([sel]) => /:(?:hover|focus|focus-within)\b/.test(sel)
+      && CONTROL_RULES.some((c) => base(sel).startsWith(c.split(',')[0]))
+      && !repainted.has(base(sel)))
+    .map(([sel, body]) => [sel.trim(), /border-color:\s*var\((--[\w-]+)\)/.exec(body)])
+    .filter(([, m]) => m);
+  assert.ok(hovers.length >= 9, `only ${hovers.length} control hover borders found — has the scan drifted?`);
+
+  const failures = [];
+  for (const [sel, m] of hovers) {
+    const key = HOVER_TOKENS[m[1]];
+    assert.ok(key, `${sel} hovers to ${m[1]} — add it to HOVER_TOKENS so it can be measured`);
+    for (const t of THEMES) {
+      const rest = contrast(t.controlEdge, t.controlFill);
+      const hot = contrast(t[key], t.controlFill);
+      if (hot < rest) failures.push(`${name(t)} — ${sel} ${hot.toFixed(2)}:1 < resting ${rest.toFixed(2)}:1`);
+    }
+  }
+  assert.deepEqual(failures.slice(0, 6), [], 'the hover border is fainter than the resting one');
 });

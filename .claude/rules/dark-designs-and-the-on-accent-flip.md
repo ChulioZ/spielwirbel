@@ -89,7 +89,7 @@ them were failing on light designs the whole time:
   surface at 1.40:1. `font: inherit` is the tell, and `test/a11y-contrast.test.js`
   now pins it.
 - **`--placeholder` was painting real text.** It is a fallback GLYPH tone — then
-  18.5% off the page, 45% since #938; `.result-people__label` measured **1.07:1
+  18.5% off the page, 45% since #938 (53% on dark since #1140); `.result-people__label` measured **1.07:1
   on a light design** and 1.58 on dark, i.e. the dark scheme made it *better*.
 - **A minted mix instead of a prepared one.** `.score-pill--none` spelled its own
   8% tone and put `--ink-soft` at 4.15:1 on the default design; `--sunken` (4%)
@@ -115,7 +115,7 @@ The cause is that a rendered-page sweep reads *whatever is painted*, and on a
 coverless game box that is `.cover-ph`'s gradient, not `--placeholder` at all:
 `.claude/rules/cover-ph-owns-the-coverless-game-glyph.md`. Prefer the resolver
 for any claim about a token; keep the page sweep for finding *which* elements to
-look at. (#938 has since taken the token to 45% and pinned it with a spec — a
+look at. (#938 took the token to 45% and pinned it with a spec — a
 token-PAIR check is perfectly expressible without jsdom; only the page walk is
 not.)
 
@@ -133,6 +133,11 @@ kept passing, which is this repo's worst failure mode
 single statement of what a design is — and the spec pins the two to each other,
 because a dark page that forgot the flag renders dark ink on a dark background
 everywhere at once.
+
+**The NEUTRAL ramp had the same split and it was missed here** — this file
+covers the ink on a saturated fill, while `--line`/`--sunken`/`--sunken-soft`
+collapsed into `--surface` on every dark design until #1140:
+`.claude/rules/dark-scheme-neutral-ramp-runs-upward.md`.
 
 **Related:** `.claude/rules/theme-derived-colors.md` (what derives from what),
 `.claude/rules/color-mix-interpolation-space.md` (`--shade`, and why the
