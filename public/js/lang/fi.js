@@ -957,6 +957,7 @@ I18N.fi = {
   'theme.chess': 'Shakki',
   'theme.horror': 'Kauhu',
   'theme.dinos': 'Dinosaurukset',
+  'theme.burg': 'Linna',
   'design.group.colors': 'Värit',
   'design.group.worlds': 'Maailmat',
   'design.worlds.note': 'Maailma tuo värien päälle oman kirjasintyyppinsä, koristeensa ja taustansa.',

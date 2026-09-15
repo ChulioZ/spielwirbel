@@ -1000,6 +1000,7 @@ I18N.es = {
   'theme.chess': 'Ajedrez',
   'theme.horror': 'Terror',
   'theme.dinos': 'Dinosaurios',
+  'theme.burg': 'Castillo',
   'design.group.colors': 'Colores',
   'design.group.worlds': 'Mundos',
   'design.worlds.note': 'Un mundo añade a los colores su propia tipografía, adornos y un fondo.',

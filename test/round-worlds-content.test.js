@@ -1,14 +1,15 @@
 'use strict';
 
-/* The four content worlds (#905): Ocean, Chess, Horror and Dinosaurs on the
-   #903 machinery. test/round-worlds.test.js pins the MECHANISM for every entry
-   in WORLDS — the token set, the slots, the bands, the media gates — so this
-   file only pins what is specific to shipping a world as CONTENT: that the
-   registry holds the six, that each committed face is a real font rather than
-   a fetched error page, that a single-weight face reaches the bold headings
-   ask for without a synthesised faux-bold, and that the pages the issue
-   worried about colliding stay apart. Named after what it covers rather than
-   after a module (.claude/rules/test-file-names-collide-silently.md). */
+/* The content worlds: Ocean, Chess, Horror and Dinosaurs (#905), and Burg
+   (#1084), on the #903 machinery. test/round-worlds.test.js pins the MECHANISM
+   for every entry in WORLDS — the token set, the slots, the bands, the media
+   gates — so this file only pins what is specific to shipping a world as
+   CONTENT: that the registry holds the seven, that each committed face is a
+   real font rather than a fetched error page, that a single-weight face
+   reaches the bold headings ask for without a synthesised faux-bold, and that
+   the colours the issues worried about colliding stay apart. Named after what
+   it covers rather than after a module
+   (.claude/rules/test-file-names-collide-silently.md). */
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
@@ -18,14 +19,16 @@ const { CSS } = require('./support/css');
 const { PALETTES, WORLDS, DESIGNS } = require('../public/js/round-designs');
 
 const ROOT = path.join(__dirname, '..');
-const SIX = ['forest', 'scifi', 'ocean', 'chess', 'horror', 'dinos'];
+const SEVEN = ['forest', 'scifi', 'ocean', 'chess', 'horror', 'dinos', 'burg'];
 
-test('the six worlds ship, in registry order, and Dinosaurs took the place the issue gave it', () => {
-  assert.deepEqual(WORLDS.map((w) => w.id), SIX);
+test('the seven worlds ship, in registry order, and Dinosaurs took the place the issue gave it', () => {
+  assert.deepEqual(WORLDS.map((w) => w.id), SEVEN);
   assert.ok(!DESIGNS.some((d) => /princess|prinzessin/i.test(d.id + d.labelKey)),
     'the fourth world is Dinosaurs by operator decision (#905), not a princess world');
-  const horror = WORLDS.find((w) => w.id === 'horror');
-  assert.equal(horror.scheme, 'dark', 'Horror takes the dark page #904 made possible');
+  for (const id of ['horror', 'burg']) {
+    assert.equal(WORLDS.find((w) => w.id === id).scheme, 'dark',
+      `${id} takes the dark page #904 made possible`);
+  }
   for (const id of ['ocean', 'chess', 'dinos']) {
     assert.equal(WORLDS.find((w) => w.id === id).scheme, undefined, `${id} is a light page`);
   }
@@ -89,6 +92,36 @@ test('no two designs share a page hex, and the warm light pages keep their dista
   const ocean = WORLDS.find((w) => w.id === 'ocean');
   const [r, g, b] = rgb(ocean.accent);
   assert.ok(b > g && b > r, `ocean accent ${ocean.accent} is not blue-led`);
+});
+
+test('Burg keeps its ember clear of gold, of Pfirsich and of every other page', () => {
+  /* Burg is the registry's first WARM world (#1084), which puts its accent into
+     two occupied neighbourhoods at once. `--gold` is the WINNERS' colour — it
+     paints the Pokale ranks and the victory band's top group — so an ember that
+     drifts into it makes a podium unreadable as a ranking on this one world,
+     which no contrast check would notice because both are legible. Pfirsich is
+     the closest warm accent already shipped. The page half is the same worry as
+     Dinosaurs': a warm near-black that is a hex-neighbour of Horror's or
+     Obsidian's reads as the same design in any screenshot without an ornament
+     in frame. */
+  const rgb = (hex) => hex.replace('#', '').match(/../g).map((x) => parseInt(x, 16));
+  const dist = (a, b) => Math.max(...rgb(a).map((c, i) => Math.abs(c - rgb(b)[i])));
+  const burg = WORLDS.find((w) => w.id === 'burg');
+  assert.ok(burg, 'Burg is not in the registry');
+
+  const gold = /--gold:\s*(#[0-9a-f]{6})/i.exec(CSS);
+  assert.ok(gold, 'styles.css declares no --gold to compare against');
+  assert.ok(dist(burg.accent, gold[1]) >= 40,
+    `burg accent ${burg.accent} is within 40 of --gold ${gold[1]} — the podium's ranks would read as the world`);
+
+  const pfirsich = PALETTES.find((p) => p.id === 'pfirsich');
+  assert.ok(dist(burg.accent, pfirsich.accent) >= 40,
+    `burg accent ${burg.accent} is close to pfirsich's ${pfirsich.accent}`);
+
+  for (const d of DESIGNS.filter((x) => x.id !== 'burg')) {
+    assert.ok(dist(burg.page, d.page) >= 3,
+      `burg page ${burg.page} is a hex-neighbour of ${d.id} ${d.page}`);
+  }
 });
 
 test('each world names its own emblem, and the four new glyphs are declared in the icon subset', () => {

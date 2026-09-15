@@ -1047,6 +1047,7 @@ I18N.en = {
   'theme.chess': 'Chess',
   'theme.horror': 'Horror',
   'theme.dinos': 'Dinosaurs',
+  'theme.burg': 'Castle',
   'design.group.colors': 'Colors',
   'design.group.worlds': 'Worlds',
   'design.worlds.note': 'A world adds its own typeface, ornaments and a backdrop on top of the colors.',

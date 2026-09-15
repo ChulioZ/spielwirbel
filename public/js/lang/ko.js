@@ -935,6 +935,7 @@ I18N.ko = {
   'theme.chess': '체스',
   'theme.horror': '호러',
   'theme.dinos': '공룡',
+  'theme.burg': '성',
   'design.group.colors': '색상',
   'design.group.worlds': '세계관',
   'design.worlds.note': '세계관은 색상 위에 고유한 글꼴과 장식, 배경을 더해요.',

@@ -1037,6 +1037,7 @@ I18N.de = {
   'theme.chess': 'Schach',
   'theme.horror': 'Grusel',
   'theme.dinos': 'Dinosaurier',
+  'theme.burg': 'Burg',
   'design.group.colors': 'Farben',
   'design.group.worlds': 'Welten',
   'design.worlds.note': 'Eine Welt bringt zu den Farben eine eigene Schrift, Verzierungen und einen Hintergrund mit.',

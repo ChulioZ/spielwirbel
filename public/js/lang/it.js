@@ -993,6 +993,7 @@ I18N.it = {
   'theme.chess': 'Scacchi',
   'theme.horror': 'Horror',
   'theme.dinos': 'Dinosauri',
+  'theme.burg': 'Castello',
   'design.group.colors': 'Colori',
   'design.group.worlds': 'Mondi',
   'design.worlds.note': 'Un mondo aggiunge ai colori un carattere tipografico, ornamenti e uno sfondo propri.',

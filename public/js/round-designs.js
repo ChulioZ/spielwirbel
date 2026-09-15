@@ -91,6 +91,23 @@ const WORLDS = [
   { id: 'chess', labelKey: 'theme.chess', page: '#f3f2f5', accent: '#38343f', world: 'chess', font: 'Playfair Display', icon: 'ti-chess-knight' },
   { id: 'horror', labelKey: 'theme.horror', page: '#120c14', accent: '#9fdc70', world: 'horror', font: 'Creepster', icon: 'ti-ghost', scheme: 'dark' },
   { id: 'dinos', labelKey: 'theme.dinos', page: '#f3efe3', accent: '#0f6b5f', world: 'dinos', font: 'Alfa Slab One', icon: 'ti-bone' },
+  // Burg (#1084) is the registry's first WARM world, and the third dark one.
+  // Dark by operator decision rather than parchment: a light castle page would
+  // have to stay as pale as Sand to keep --ink-soft at AA over the backdrop
+  // motif, which is the hex-neighbour trap the Dinosaurs assertion in
+  // test/round-worlds-content.test.js already guards. Its ember accent is kept
+  // clear of --gold (#d99a06): gold is the winners' colour and a world whose
+  // accent drifts into it makes the Pokale podium unreadable as a ranking.
+  //
+  // The page is DARKER than the #1c1714 the issue specified, and the reason is
+  // a measurement rather than taste: --surface is derived from the page, and
+  // die Tafel fills its winning rows with 22% --gold over --surface, so a
+  // lighter dark page floats that ground up until --ink-soft on it drops below
+  // AA. At #1c1714 it measured 4.48:1 (test/a11y-contrast.test.js, "the
+  // winners' gold fill"); #171310 lands at 4.71:1, the same headroom Obsidian
+  // ships with. The bar is tight for every dark design — Sci-Fi sits at 4.62 —
+  // so a future dark page is the one place to re-run that check first.
+  { id: 'burg', labelKey: 'theme.burg', page: '#171310', accent: '#e8825a', world: 'burg', font: 'Cinzel', icon: 'ti-building-castle', scheme: 'dark' },
 ];
 
 const DESIGNS = PALETTES.concat(WORLDS);
