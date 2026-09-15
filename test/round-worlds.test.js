@@ -176,6 +176,33 @@ test('a round on a world reopens the design screen with that world active', asyn
   assert.equal(dom.document.documentElement.dataset.world, 'scifi');
 });
 
+test('a world card is a POSTER: crown art across the top, the name at display size, no filler lines', async (t) => {
+  /* The picker is the one screen whose whole job is choosing a world, and the
+     swatch showed the seven at their most alike (measured 2026-09-13: a
+     152x106 card, the name at --text-sm, the art nowhere). */
+  const { dom } = await openDesign(t, null);
+  const grids = [...dom.app.querySelectorAll('.theme-cards')];
+  assert.equal(grids.length, 2);
+  assert.equal(grids[0].classList.contains('theme-cards--worlds'), false,
+    'the Farben group keeps its small cards');
+  assert.ok(grids[1].classList.contains('theme-cards--worlds'),
+    'the Welten group did not get the poster tracks');
+
+  for (const w of WORLDS) {
+    const card = dom.app.querySelector(`.theme-card[data-world="${w.id}"]`);
+    assert.ok(card.querySelector('.theme-card__crown'), `${w.id} shows no crown art`);
+    assert.ok(card.querySelector('.theme-card__body > .theme-card__name'), `${w.id} has no poster body`);
+    assert.ok(card.querySelector('.theme-card__bar'), `${w.id} lost its framed accent bar`);
+    assert.equal(card.querySelectorAll('.theme-card__line').length, 0,
+      "the grey lines are the swatch's filler — a poster shows the world instead");
+    // The art is decoration inside a button whose whole label is still the name.
+    assert.equal(card.textContent.trim(), dom.run(`t('${w.labelKey}')`));
+  }
+  const pal = dom.app.querySelector('.theme-card:not([data-world])');
+  assert.equal(pal.querySelector('.theme-card__crown'), null, 'a palette card grew a crown');
+  assert.equal(pal.querySelectorAll('.theme-card__line').length, 2, 'the Farben cards changed shape');
+});
+
 // ---- the home tile -------------------------------------------------------
 
 test('the home tile shows the world glyph, and the app glyph for a palette', async (t) => {
@@ -340,6 +367,26 @@ test('the crown reserves its own height through ONE property, so art and space c
     'the crown crops at a fixed edge, so half the worlds show the wrong part of their art');
 });
 
+test('the poster crown re-uses slot 8\'s art and per-world anchor, over a lighter backdrop', () => {
+  /* Two things the natural implementation gets wrong. A second copy of the art
+     would drift from the crown the ROUND wears — the design screen is where a
+     world is judged, so the two must be the same scene cropped the same way.
+     And a poster carries the motif backdrop AND the crown, so the .16 measured
+     for a bare swatch stacks; the lighter alpha therefore rides ONE declaration
+     on the shared card/tile rule rather than a second rule at the same
+     specificity, where source order and not the author decides which wins
+     (test/css-specificity.test.js). */
+  const crown = slotBody('.theme-card__crown');
+  assert.ok(crown, 'the poster card has no crown rule');
+  assert.match(crown, /mask-image:\s*var\(--world-stage\)/, 'the poster draws art of its own');
+  assert.match(crown, /mask-position:\s*center var\(--world-crown-y\)/,
+    'a fixed edge crops half the worlds at the wrong end');
+  assert.match(slotBody(':is(.theme-card, .round-card)[data-world]::before'),
+    /opacity:\s*var\(--motif-a,\s*\.16\)/, 'the card backdrop takes no per-card alpha');
+  assert.match(slotBody('.theme-card--world'), /--motif-a:\s*\.10/,
+    'the poster keeps the full swatch alpha under its crown');
+});
+
 test('the podium floor reserves its band through ONE property, and that property is a LENGTH', () => {
   /* The crown's discipline (above), plus the trap that is specific to this host.
      A percentage resolves against the containing block's WIDTH in
@@ -397,7 +444,7 @@ test('the crown, the dock motif and the podium floor stand down under prefers-co
   assert.ok(hi, 'no prefers-contrast: more block');
   for (const sel of ['[data-world] .hero::before', '[data-world] .rail__id::before',
     '[data-world] .dock::before', '[data-world] .cover-ph::after',
-    '[data-world] .podium::before']) {
+    '[data-world] .podium::before', '.theme-card__crown']) {
     assert.ok(hi.includes(sel), `${sel} still paints under prefers-contrast: more`);
   }
   assert.match(hi, /\[data-world\] \.hero[^:][^{]*\{[^}]*padding-top:\s*0/,

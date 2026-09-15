@@ -202,7 +202,11 @@ Three constraints, each with its reason: the face changes through
 `test/game-detail-hero.test.js` pins *where*, not *what*); and the preview card and the home
 tile carry the attribute THEMSELVES, so the slots must read TOKENS — custom
 properties inherit from the nearest element that sets them, which is what lets
-a Sci-Fi card inside a Forest round preview Sci-Fi. A motif under text costs
+a Sci-Fi card inside a Forest round preview Sci-Fi. Since #1085 the picker's
+world card also RENDERS slot 8's art, as a real `<span>` rather than a
+pseudo-element — its own `::before` is already the backdrop — so the card is
+judged as the crown the round will wear; the pseudo-element discipline above
+binds the SLOTS, not everything a world paints. A motif under text costs
 contrast the plain-background harness cannot see (a stage tile at .16 put
 `--stage-faint` at 2.27:1), so the bold scenes live in text-free bands.
 `test/round-worlds.test.js` pins the hook, the token set, the pseudo-element

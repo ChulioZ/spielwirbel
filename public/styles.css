@@ -9283,6 +9283,8 @@ kbd {
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: 12px;
 }
+/* The Welten group runs on wider tracks and a different card — .theme-cards--worlds
+   and .theme-card--world, with the world preview rules near the end of this file. */
 .theme-card {
   position: relative;
   border: 2px solid var(--line);
@@ -10070,11 +10072,52 @@ kbd {
   z-index: -1;
   pointer-events: none;
   background: var(--brand);
-  opacity: .16;
+  /* One declaration, overridden by the host rather than by a second rule at the
+     same specificity — where source order, not the author, would decide
+     (test/css-specificity.test.js). The poster card below carries the crown as
+     well as this backdrop, so .16 under both stacks into mud. */
+  opacity: var(--motif-a, .16);
   mask-image: var(--world-backdrop);
   mask-size: var(--world-backdrop-size);
   mask-repeat: repeat;
 }
+
+/* #1085 — the WELTEN group is a POSTER. The picker is the one screen whose
+   whole job is choosing a world, and the swatch showed the seven at their most
+   alike: one 152x106 box each, the same backdrop alpha, the art nowhere.
+
+   The crown strip is slot 8's scene and slot 8's per-world anchor, not a second
+   copy: a world that retunes its stage retunes its card with it, and the card
+   is judged as the crown the round will actually wear. The card carries
+   data-world ITSELF (see above), so --world-stage and --world-crown-y resolve
+   to the world it names rather than to the round the picker sits in. The strip
+   is text-free by geometry, which is what buys the bolder .42 — the name sits
+   below it, on the page, at the tone it had as a swatch. */
+.theme-cards--worlds { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+.theme-card--world {
+  --motif-a: .10;
+  padding: 0;
+  gap: 0;
+  align-items: stretch;
+}
+.theme-card__crown {
+  height: 84px;
+  background: var(--brand);
+  opacity: .42;
+  mask-image: var(--world-stage);
+  mask-position: center var(--world-crown-y);
+  mask-size: 100% auto;
+  mask-repeat: no-repeat;
+}
+.theme-card__body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 12px 14px 14px;
+}
+.theme-card--world .theme-card__name { font-size: var(--text-xl); margin-top: 0; }
+
 /* ---- #1082: the round WEARS its world ----------------------------------
    Measured 2026-09-13 over the seeded demo at 1470x870: besides the .09
    backdrop a world painted 3 marks on the hub, 4 on Chronik and Pokale, 12 on
@@ -10225,6 +10268,9 @@ kbd {
   [data-world] .rail__id::before,
   [data-world] .dock::before,
   [data-world] .podium::before,
+  /* A flow element, so hiding it needs no reservation undone below: the poster
+     simply loses its strip and the name moves up. */
+  .theme-card__crown,
   :is(.theme-card, .round-card)[data-world]::before { display: none; }
   /* The crown's and the floor's reservations go with their art, or the name
      sits under an empty 96px band and the pedestals stand on 84px of nothing.
