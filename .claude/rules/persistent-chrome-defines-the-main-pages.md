@@ -96,7 +96,8 @@ walked away from it; assert against the file that renders the wrapper.
 
 ## The branch a `backRow` on the happy path misses
 
-`showProfile` renders an early `user_not_found` screen before its main body. A
+`showProfile` (`views-profile.js` since #1089) renders an early `user_not_found`
+screen before its main body. A
 typo'd URL is the likeliest way to reach a profile at all, so that branch is the
 one that most needs a way out — and it is invisible to a control added further
 down. Check a view's early returns before assuming one call site covers it.

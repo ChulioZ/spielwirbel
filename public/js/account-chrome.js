@@ -125,6 +125,18 @@ function setupAccountUi() {
     el.appendChild(h(`<div class="popover__head">${
       username ? `<strong>${esc(username)}</strong>` : ''
     }${esc((accountUser && accountUser.email) || '')}</div>`));
+    /* „Mein Profil" (#1089): the first entry point to your OWN profile. Until
+       then only OTHER people's were reachable (a Kreis card, the feed, a shared
+       link), so the one screen an account has about itself could be opened only
+       by typing its own URL.
+
+       Gated on holding a username, because the profile is addressed by handle —
+       an account mid-erasure has none, and the row would open a 404. */
+    if (username) {
+      const mine = h(`<button class="popover__opt"><i class="ti ti-user-circle" aria-hidden="true"></i> ${esc(t('profile.menu'))}</button>`);
+      mine.addEventListener('click', () => { close(); showProfile(username); });
+      el.appendChild(mine);
+    }
     // Freundeskreis (#325): the entry point to the dedicated friends view.
     const friends = h(`<button class="popover__opt"><i class="ti ti-users" aria-hidden="true"></i> ${esc(t('friends.menu'))}</button>`);
     friends.addEventListener('click', () => { close(); showFriends(); });

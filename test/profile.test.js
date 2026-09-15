@@ -29,7 +29,7 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const request = require('supertest');
 
-const { app } = require('./helpers');
+const { app, store } = require('./helpers');
 const repo = require('../lib/repo');
 const { outbox } = require('../lib/mail');
 
@@ -128,6 +128,97 @@ test('your own handle reports self with no friendship to act on', async () => {
   assert.equal(res.body.friendship, 'none');
   // No friendshipId: there is no relationship, so the view offers no CTA.
   assert.equal('friendshipId' in res.body, false);
+});
+
+/* ------------------------- the self profile (#1089) ------------------------ */
+
+test('#1089: the self profile carries its OWN stats and its own feed, uncut', async () => {
+  const alice = await makeAccount('selfst-alice@example.com');
+  const round = await makeRound(alice, ['Anna', 'Bob']);
+  // Long before any friendship exists — the self feed has no cutoff to apply,
+  // because there is no friendship to date one from.
+  await addGame(alice, round.id, 'Azul');
+  await sleep(20);
+
+  const res = await profile(alice, alice.username);
+  assert.equal(res.status, 200);
+  assert.deepEqual(res.body.events.map((e) => e.title), ['Azul']);
+  assert.ok(res.body.stats, 'the self profile always carries stats');
+  // A fresh round with no finished session is the empty state, and it is a REAL
+  // record rather than a missing key — the view keys its empty line off
+  // `sessions === 0`, which it cannot do if the whole object is absent.
+  assert.equal(res.body.stats.sessions, 0);
+  assert.equal(res.body.stats.rounds, 1, 'the owner seat counts');
+});
+
+test('#1089: the subject sees their own stats even with statsVisible OFF', async () => {
+  const alice = await makeAccount('selfoff-alice@example.com');
+  await request(app).patch('/api/account/me').set(auth(alice.token)).send({ statsVisible: false });
+
+  const res = await profile(alice, alice.username);
+  // The toggle governs what FRIENDS see. Hiding a number from the person it is
+  // about would make the setting unverifiable from the UI that offers it.
+  assert.ok(res.body.stats, 'the switch is about friends, not about yourself');
+});
+
+test('#1089: stats reach an accepted friend only, and only while the toggle is on', async () => {
+  const alice = await makeAccount('vis-alice@example.com');
+  const bob = await makeAccount('vis-bob@example.com');
+
+  // A STRANGER gets no stats key at all — absent, not empty, exactly like
+  // `events`: `stats: null` would be indistinguishable from a blank record.
+  assert.equal('stats' in (await profile(bob, alice.username)).body, false);
+
+  // Nor does a PENDING request, in either direction.
+  await sendReq(bob, alice.username);
+  assert.equal('stats' in (await profile(bob, alice.username)).body, false);
+  assert.equal('stats' in (await profile(alice, bob.username)).body, false);
+
+  const fid = (await inbox(alice)).find((i) => i.type === 'friend_request').payload.friendshipId;
+  await request(app).post(`/api/account/friends/${fid}/accept`).set(auth(alice.token));
+  assert.ok((await profile(bob, alice.username)).body.stats, 'an accepted friend sees them by default');
+
+  // Switched off, they disappear for the friend — and stay gone until it is back on.
+  await request(app).patch('/api/account/me').set(auth(alice.token)).send({ statsVisible: false });
+  assert.equal('stats' in (await profile(bob, alice.username)).body, false);
+  await request(app).patch('/api/account/me').set(auth(alice.token)).send({ statsVisible: true });
+  assert.ok((await profile(bob, alice.username)).body.stats);
+});
+
+/* The legacy shape .claude/rules/defaulted-account-fields-need-a-legacy-shape-spec.md
+   requires. Every account a spec can build is born carrying the key, so without
+   deleting it by hand this file cannot tell `!== false` from `=== true` — and
+   the wrong one would hide the feature from every account that predates it. */
+test('#1089: a user row with no statsVisible key reads as VISIBLE', async () => {
+  const alice = await makeAccount('legacy-alice@example.com');
+  const bob = await makeAccount('legacy-bob@example.com');
+  await befriend(alice, bob);
+
+  const row = store.data.users.find((u) => u.id === alice.user.id);
+  delete row.statsVisible;
+  store.saveData();
+  assert.equal('statsVisible' in store.data.users.find((u) => u.id === alice.user.id), false,
+    'the key is really gone — a delete on a snapshot would silently do nothing');
+
+  assert.ok((await profile(bob, alice.username)).body.stats,
+    'an account predating the field must behave like one that never touched the toggle');
+  assert.equal((await request(app).get('/api/account/me').set(auth(alice.token))).body.statsVisible, true);
+});
+
+test('#1089: statsVisible round-trips through /me and refuses a non-boolean', async () => {
+  const alice = await makeAccount('pref-alice@example.com');
+  const patch = (v) => request(app).patch('/api/account/me').set(auth(alice.token)).send({ statsVisible: v });
+
+  assert.equal((await patch(false)).body.statsVisible, false);
+  assert.equal((await request(app).get('/api/account/me').set(auth(alice.token))).body.statsVisible, false);
+
+  // Strictly a boolean: the value is read back as `!== false`, so a stored
+  // string 'false' would be honoured going in and read as VISIBLE forever.
+  const bad = await patch('false');
+  assert.equal(bad.status, 400);
+  assert.equal(bad.body.error, 'invalid_stats_pref');
+  assert.equal((await request(app).get('/api/account/me').set(auth(alice.token))).body.statsVisible, false,
+    'the refused write changed nothing');
 });
 
 test('matching the handle is case-insensitive', async () => {
@@ -233,7 +324,7 @@ test('the profile requires a token, and 404s with accounts off', async () => {
   }
 });
 
-test('a guest demo account is refused the profile, picture included (#877)', async () => {
+test('a guest demo account is refused ANOTHER account\'s profile, picture included (#877)', async () => {
   const alice = await makeAccount('pdemo-alice@example.com');
   // Written straight to the store rather than uploaded: what matters here is
   // that the field is populated, not how it got there.
@@ -263,4 +354,41 @@ test('a guest demo account is refused the profile, picture included (#877)', asy
   const ok = await profile(bob, alice.username);
   assert.equal(ok.status, 200);
   assert.equal(ok.body.avatar, '/uploads/0123456789abcdef.webp');
+});
+
+test('#1089: a demo sees its OWN profile, and that does not reopen the oracle', async () => {
+  const started = await request(app).post('/api/account/demo').send({});
+  assert.equal(started.status, 200);
+  const token = started.body.accessToken;
+  const mine = (await request(app).get('/api/account/me').set(auth(token))).body;
+  assert.ok(mine.username, 'a demo account gets a username');
+
+  // The self exception: the demo is the showcase, and a profile with nothing on
+  // it showcases nothing.
+  const own = await request(app)
+    .get(`/api/account/profile/${encodeURIComponent(mine.username)}`)
+    .set(auth(token));
+  assert.equal(own.status, 200);
+  assert.equal(own.body.self, true);
+  assert.ok(own.body.stats, 'the seeded demo rounds give it real numbers');
+  assert.ok(own.body.stats.sessions > 0, 'the seed plays sessions the demo account sits in');
+
+  // Case-insensitively, like getUserByUsername — otherwise a typed URL in the
+  // wrong case would 403 the visitor out of their own profile.
+  assert.equal((await request(app)
+    .get(`/api/account/profile/${encodeURIComponent(mine.username.toUpperCase())}`)
+    .set(auth(token))).status, 200);
+
+  /* The oracle control, and the reason the check is keyed off the CALLER's handle
+     rather than off `target.id === me`: a demo must not be able to tell a real
+     account's handle apart from a free one. Both of these are 403 — deciding the
+     refusal after the lookup would make the first 403 and the second 404. */
+  const real = await makeAccount('pdemo-oracle@example.com');
+  const taken = await request(app)
+    .get(`/api/account/profile/${encodeURIComponent(real.username)}`).set(auth(token));
+  const free = await request(app)
+    .get('/api/account/profile/definitely-nobody-xyz').set(auth(token));
+  assert.deepEqual(taken.body, free.body);
+  assert.equal(taken.status, free.status);
+  assert.equal(taken.status, 403);
 });

@@ -7,6 +7,7 @@ paths:
   - "lib/routes/account.js"
   - "lib/routes/profile.js"
   - "public/js/views-friends.js"
+  - "public/js/views-profile.js"
   - "public/js/views-landing.js"
   - "test/demo.test.js"
   - "lib/observability.js"
@@ -232,9 +233,14 @@ suffices), the deep link passes nothing.
   visitor gets in one unauthenticated request — so both sentences stayed literally
   true while a picture of a person became reachable without registering. #841 put
   that picture behind the gate without re-running the question.
-  The guard is **middleware**, before the lookup: a 403 that depended on whether
-  the handle existed would make the demo surface a username oracle the signed-in
-  surface deliberately is not.
+  The guard runs **before the lookup**: a 403 that depended on whether the handle
+  existed would make the demo surface a username oracle the signed-in surface
+  deliberately is not. It was middleware until **#1089**, which had to let a demo
+  read its OWN profile (the self profile gained content, and the demo is the
+  showcase) — so it is now an inline check that keeps the same ordering by
+  comparing the requested handle against the CALLER'S OWN username. Deciding it
+  from `target.id === me` would read correctly and reopen the oracle; see
+  `.claude/rules/account-profiles.md` §2b.
   Left open knowingly: `GET /api/account/avatars` still resolves any id a caller
   can name (its own comment explains why it is no narrower than `/uploads`). With
   the profile closed a demo has no way to *obtain* a real account's opaque id —

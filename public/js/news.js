@@ -41,6 +41,119 @@
 // AFTER, which is the exact unearned interruption this design exists to avoid.
 const NEWS = [
   /*
+   * Clears the bar: an account's own record ACROSS rounds did not exist before.
+   * Every round computed a per-seat record on its member page, but nobody could
+   * see the sum — a player in three rounds had three unconnected records — and
+   * the account's own profile could not be opened from anywhere in the UI at
+   * all. So this is a screen a user genuinely could not reach, with a number
+   * nothing in the app could answer.
+   */
+  {
+    revision: '2026-09-15',
+    de: {
+      title: 'Dein eigenes Profil, mit deiner Bilanz über alle Runden',
+      body: 'Über „Mein Profil" im Konto-Menü kommst du jetzt auf deine eigene '
+        + 'Profilseite. Dort steht deine Bilanz über alle Runden zusammen, eigene '
+        + 'wie geteilte: Sessions, Siege, Siegquote, Siegwertung, deine '
+        + 'durchschnittliche Wertung, dein Lieblingsspiel und dein stärkstes '
+        + 'Spiel — ein Spiel, das in mehreren Runden im Regal steht, zählt dabei '
+        + 'als eins. Darunter siehst du deine eigenen Aktivitäten. Befreundete '
+        + 'Konten sehen dieselbe Bilanz; im Konto lässt sich das mit einem '
+        + 'Schalter abstellen. Rundennamen, Mitspielende und einzelne Sessions '
+        + 'gibt das Profil nie preis.',
+    },
+    en: {
+      title: 'Your own profile, with your record across every round',
+      body: 'Your account menu now has „My profile", which opens your own profile '
+        + 'page. It carries your record across all your rounds, your own and '
+        + 'shared ones alike: sessions, wins, win rate, win score, your average '
+        + 'rating, your favourite game and your strongest game — a game on the '
+        + 'shelf in several rounds counts once. Your own activity is listed '
+        + 'below it. Accepted friends see the same record; a switch in your '
+        + 'account settings turns that off. The profile never reveals round '
+        + 'names, fellow players or individual sessions.',
+    },
+    es: {
+      title: 'Tu propio perfil, con tu balance de todos los grupos',
+      body: 'El menú de tu cuenta tiene ahora «Mi perfil», que abre tu propia '
+        + 'página de perfil. Allí está tu balance de todos tus grupos, propios y '
+        + 'compartidos: sesiones, victorias, porcentaje de victorias, puntuación '
+        + 'de victorias, tu valoración media, tu juego favorito y tu juego más '
+        + 'fuerte: un juego que esté en la estantería de varios grupos cuenta una '
+        + 'sola vez. Debajo aparece tu propia actividad. Tus amistades aceptadas '
+        + 'ven el mismo balance; un interruptor en tu cuenta lo desactiva. El '
+        + 'perfil nunca revela nombres de grupos, otros jugadores ni sesiones '
+        + 'concretas.',
+    },
+    fr: {
+      title: 'Ton propre profil, avec ton bilan sur tous les groupes',
+      body: 'Le menu de ton compte propose désormais « Mon profil », qui ouvre ta '
+        + 'propre page de profil. On y trouve ton bilan sur tous tes groupes, les '
+        + 'tiens comme ceux partagés : sessions, victoires, taux de victoires, '
+        + 'score de victoires, ta note moyenne, ton jeu préféré et ton jeu le plus '
+        + 'fort — un jeu présent dans l\'étagère de plusieurs groupes ne compte '
+        + 'qu\'une fois. Ton activité est listée en dessous. Tes amis acceptés '
+        + 'voient le même bilan ; un interrupteur dans ton compte le désactive. Le '
+        + 'profil ne révèle jamais les noms des groupes, les autres joueurs ni les '
+        + 'sessions individuelles.',
+    },
+    it: {
+      title: 'Il tuo profilo, con il tuo bilancio su tutti i gruppi',
+      body: 'Nel menu del tuo account trovi ora «Il mio profilo», che apre la tua '
+        + 'pagina di profilo. Lì c\'è il tuo bilancio su tutti i tuoi gruppi, i '
+        + 'tuoi e quelli condivisi: sessioni, vittorie, percentuale di vittorie, '
+        + 'punteggio vittorie, la tua valutazione media, il tuo gioco preferito e '
+        + 'il tuo gioco più forte — un gioco presente nello scaffale di più gruppi '
+        + 'conta una volta sola. Sotto trovi le tue attività. Le amicizie accettate '
+        + 'vedono lo stesso bilancio; un interruttore nell\'account lo disattiva. '
+        + 'Il profilo non rivela mai i nomi dei gruppi, gli altri giocatori o le '
+        + 'singole sessioni.',
+    },
+    nl: {
+      title: 'Je eigen profiel, met je balans over alle groepen',
+      body: 'In je accountmenu staat nu „Mijn profiel", dat je eigen profielpagina '
+        + 'opent. Daar staat je balans over al je groepen, eigen en gedeelde: '
+        + 'sessies, overwinningen, winstpercentage, winstwaardering, je gemiddelde '
+        + 'waardering, je lievelingsspel en je sterkste spel — een spel dat in '
+        + 'meerdere groepen in de kast staat, telt één keer. Daaronder staat je '
+        + 'eigen activiteit. Geaccepteerde vrienden zien dezelfde balans; een '
+        + 'schakelaar in je account zet dat uit. Het profiel geeft nooit '
+        + 'groepsnamen, medespelers of afzonderlijke sessies prijs.',
+    },
+    pt: {
+      title: 'O teu próprio perfil, com o teu balanço de todos os grupos',
+      body: 'O menu da tua conta passa a ter «O meu perfil», que abre a tua própria '
+        + 'página de perfil. Aí está o teu balanço de todos os teus grupos, '
+        + 'próprios e partilhados: sessões, vitórias, taxa de vitórias, pontuação '
+        + 'de vitórias, a tua avaliação média, o teu jogo preferido e o teu jogo '
+        + 'mais forte — um jogo que esteja na estante de vários grupos conta uma '
+        + 'vez. Por baixo aparece a tua própria atividade. As amizades aceites '
+        + 'veem o mesmo balanço; um interruptor na tua conta desliga isso. O perfil '
+        + 'nunca revela nomes de grupos, outros jogadores ou sessões individuais.',
+    },
+    fi: {
+      title: 'Oma profiilisi ja tilastosi kaikista ryhmistä',
+      body: 'Tilivalikossa on nyt „Oma profiili", josta avautuu oma profiilisivusi. '
+        + 'Siinä näkyy tilastosi kaikista ryhmistäsi, omista ja jaetuista: sessiot, '
+        + 'voitot, voittoprosentti, voittopisteet, keskimääräinen arviosi, '
+        + 'lempipelisi ja vahvin pelisi — useamman ryhmän hyllyssä oleva peli '
+        + 'lasketaan kerran. Alla näkyy oma toimintasi. Hyväksytyt kaverit näkevät '
+        + 'saman tilaston; tilin asetuksista sen voi kytkeä pois. Profiili ei '
+        + 'koskaan paljasta ryhmien nimiä, muita pelaajia eikä yksittäisiä '
+        + 'sessioita.',
+    },
+    ko: {
+      title: '모든 그룹을 합친 전적을 담은 내 프로필',
+      body: '계정 메뉴에 „내 프로필"이 추가되어 내 프로필 페이지를 열 수 있습니다. '
+        + '내 그룹과 공유받은 그룹을 모두 합친 전적이 표시됩니다: 세션, 승리, 승률, '
+        + '승점, 내가 준 평균 평점, 좋아하는 게임, 가장 강한 게임 — 여러 그룹의 '
+        + '책장에 있는 같은 게임은 하나로 셉니다. 그 아래에는 내 활동이 나옵니다. '
+        + '수락된 친구도 같은 전적을 볼 수 있으며, 계정 설정의 스위치로 끌 수 '
+        + '있습니다. 프로필은 그룹 이름, 함께 플레이한 사람, 개별 세션을 절대 '
+        + '드러내지 않습니다.',
+    },
+  },
+  /*
    * Clears the bar: until now a round's member list could only ever GROW. There
    * was no way to remove anybody, and that was not an oversight — votes are
    * stored per member id and every game's score is recomputed from them, so a

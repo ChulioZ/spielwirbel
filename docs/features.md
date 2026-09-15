@@ -674,9 +674,22 @@ What the app does, in detail. For a short overview see the
   report button, and the one friend
   action your current relationship allows (send / cancel / accept+decline /
   unfriend) — plus that account's feed, but **only between accepted friends**
-  and still only for activity after you became friends. Nothing tenant-private
-  is shown: no e-mail address, no shelf, no sessions, no ratings. Signing in is
-  required, so profiles are not public web pages and are not crawlable.
+  and still only for activity after you became friends. No e-mail address is ever
+  shown. Signing in is required, so profiles are not public web pages and are not
+  crawlable.
+- **Your own profile, and your record across rounds** – *accounts mode only*
+  (issue #1089). „Mein Profil" in the account menu — and the handle on the Konto
+  screen — open your own profile. It carries your **play record aggregated over
+  every round you hold a seat in**, your own and ones shared with you: sessions
+  played, wins, win rate, Siegwertung, your average rating given, the number of
+  rounds and of distinct games played, and your favourite and strongest game. A
+  game that sits on the shelf in several rounds counts once — entries are merged
+  by their provider id, or by title when neither carries one. Below that is your
+  own activity feed, with no cutoff. Accepted friends see the same record unless
+  you switch it off (Konto → Profil; on by default); strangers and pending
+  requests never do, and you always see your own. The record names **no round,
+  no other member and no individual session or rating** — only figures and at
+  most two game titles.
 - **Profile pictures** – *accounts mode only* (issue #841). An account can upload
   a picture, replace it or remove it again from the Konto screen; without one the
   app keeps showing the coloured tile with your initials, which also stands in if

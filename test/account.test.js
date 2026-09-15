@@ -1186,11 +1186,14 @@ test('PATCH /me leaves the handle alone when the key is absent, and never expose
   // `pendingEmail` (#1076) is the ADDRESS of a pending change, or null — never
   // the token hash or the timestamps beside it in the stored record, which is
   // the half this exact-key assertion is here to catch.
+  // `statsVisible` (#1089) rides on every account as a real boolean, defaulting
+  // ON like the two notify keys — it governs whether accepted friends see this
+  // account's play statistics on its profile.
   assert.deepEqual(Object.keys(res.body).sort(),
     ['acceptedTermsRevision', 'avatar', 'bgStats', 'bggUsername', 'createdAt', 'demo',
       'demoExpiresAt', 'email', 'emailVerified', 'id', 'lastSeenNewsRevision',
-      'notifyFriendRequests', 'notifyRoundInvitations', 'pendingEmail', 'termsRevision',
-      'username']);
+      'notifyFriendRequests', 'notifyRoundInvitations', 'pendingEmail', 'statsVisible',
+      'termsRevision', 'username']);
   assert.equal(res.body.demo, false);
   assert.equal(res.body.demoExpiresAt, null);
 
