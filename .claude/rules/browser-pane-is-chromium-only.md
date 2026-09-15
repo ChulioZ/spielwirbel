@@ -34,6 +34,10 @@ on**:
   recent features WebKit shipped on its own timeline.
 - Anything where the natural implementation reads "the browser trims/collapses
   this for us".
+- **Canvas export.** What taints a canvas is engine-specific: WebKit taints on a
+  `createPattern()` built from an SVG image, however same-origin, and the pane
+  exports the same card without complaint
+  (`.claude/rules/webkit-taints-a-canvas-on-an-svg-pattern.md`).
 
 ## The probe: a headless WKWebView, no Safari automation, no download
 
@@ -147,7 +151,10 @@ beside every geometric reading in the measurement script — it costs one field 
 it is the difference between a finding and an hour.
 
 **Related:** `.claude/rules/css-multicolumn-card-flows.md` (point 5, the claim
-this file exists because of), `.claude/rules/preview-pane-paint-artifacts.md`
+this file exists because of),
+`.claude/rules/webkit-taints-a-canvas-on-an-svg-pattern.md` (the second claim,
+found the same way — a canvas export that worked in the pane and threw on every
+WebKit browser), `.claude/rules/preview-pane-paint-artifacts.md`
 and `.claude/rules/blur-events-never-fire-in-the-preview-pane.md` (the other
 half of "the pane is lying to you" — those are about the pane not being a real
 browsing context; this one is about it not being the only engine).
