@@ -4548,7 +4548,7 @@ module.exports = function repoContract(repo) {
   test('instanceMetrics counts the instance, excluding demo tenants', async (t) => {
     const NOW = '2026-07-28T12:00:00.000Z';
     const daysAgo = (n) => new Date(Date.parse(NOW) - n * 86400000).toISOString();
-    const before = await repo.instanceMetrics(NOW);
+    const before = await repo.instanceMetrics();
 
     const tenant = `metrics-${Math.random().toString(16).slice(2)}`;
     const round = await repo.createRound(tenant, { name: 'Zählrunde', members: ['Ann', 'Bo'] });
@@ -4567,14 +4567,11 @@ module.exports = function repoContract(repo) {
     });
 
     await t.test('rounds, games, sessions and their maxima all move', async () => {
-      const m = await repo.instanceMetrics(NOW);
+      const m = await repo.instanceMetrics();
       assert.equal(m.rounds.total, before.rounds.total + 1);
       assert.equal(m.content.games, before.content.games + 2);
       assert.equal(m.content.sessions, before.content.sessions + 2);
       assert.equal(m.content.sessionsFinished, before.content.sessionsFinished + 1);
-      // Only the 2-day-old one is inside the 30-day window; the 90-day-old one
-      // is the boundary's other side.
-      assert.equal(m.content.sessions30d, before.content.sessions30d + 1);
       assert.ok(m.peaks.gamesPerRound >= 2);
       assert.ok(m.peaks.tagsPerRound >= 1);
       assert.ok(m.peaks.roundsPerTenant >= 1);
@@ -4585,11 +4582,11 @@ module.exports = function repoContract(repo) {
       // is reduced or Number()-ed in JS is a number whatever SQL returned, and
       // the fields that would actually catch a dropped cast are the ones nobody
       // remembers to add.
-      /* RECURSES to the leaves since #941, which added two history objects and a
-         design histogram. Stopping at the first level would have reported
-         `accounts.history` as "not a number" — and the tempting fix, an
-         allowlist of known-nested fields, has to be maintained by whoever just
-         added the nesting. Recursing has no such gap. */
+      /* RECURSES to the leaves since #941, which added a design histogram (and
+         two history series, since removed by #1124). Stopping at the first level
+         would have reported a nested block as "not a number" — and the tempting
+         fix, an allowlist of known-nested fields, has to be maintained by
+         whoever just added the nesting. Recursing has no such gap. */
       const leaves = (node, path) => {
         for (const [k, v] of Object.entries(node)) {
           if (v && typeof v === 'object' && !Array.isArray(v)) { leaves(v, `${path}.${k}`); continue; }
@@ -4600,7 +4597,7 @@ module.exports = function repoContract(repo) {
     });
 
     await t.test('a demo tenant contributes to nothing', async () => {
-      const mid = await repo.instanceMetrics(NOW);
+      const mid = await repo.instanceMetrics();
       const demoTenant = `demo-${Math.random().toString(16).slice(2)}`;
       const demoRound = await repo.createRound(demoTenant, { name: 'Demo', members: ['Gast'] });
       await repo.createGame(demoTenant, demoRound.id, {
@@ -4610,15 +4607,25 @@ module.exports = function repoContract(repo) {
         gameIds: [], votes: {}, createdAt: daysAgo(1), finished: true,
       });
       await repo.createUser({ ...userFields(), tenantId: demoTenant, demo: true, createdAt: daysAgo(1) });
+      /* The vote-link table is the one the demo filter reads out of `data`
+         rather than off a `tenant_id` COLUMN (it is not tenant-scoped and not
+         under RLS), so it is the one whose filter can be wrong on its own. */
+      const demoSession = await repo.createSession(demoTenant, demoRound.id, {
+        gameIds: [], votes: {}, createdAt: daysAgo(1), finished: false,
+      });
+      await repo.createSessionVoteLink({
+        tenantId: demoTenant, roundId: demoRound.id, sessionId: demoSession.id,
+      });
 
-      const m = await repo.instanceMetrics(NOW);
+      const m = await repo.instanceMetrics();
       assert.deepEqual(m.rounds, mid.rounds);
       assert.deepEqual(m.content, mid.content);
       assert.deepEqual(m.accounts, mid.accounts);
+      assert.deepEqual(m.adoption, mid.adoption, 'a demo tenant must not move an adoption figure');
     });
 
     await t.test('the social counts see accepted rows only, never a demo one', async () => {
-      const mid = await repo.instanceMetrics(NOW);
+      const mid = await repo.instanceMetrics();
       const demoTenant = `demo-${Math.random().toString(16).slice(2)}`;
       const real = await repo.createUser({ ...userFields(), tenantId: `t-${Math.random().toString(16).slice(2)}` });
       const guest = await repo.createUser({ ...userFields(), tenantId: demoTenant, demo: true });
@@ -4646,14 +4653,14 @@ module.exports = function repoContract(repo) {
       assert.equal(withDemo, 'request_pending', 'the pair already exists in the other direction');
       await repo.acceptFriendRequest(pending.id, guest.id);
 
-      const m = await repo.instanceMetrics(NOW);
+      const m = await repo.instanceMetrics();
       assert.equal(m.social.sharedRounds, mid.social.sharedRounds + 1);
       assert.equal(m.social.invitationsOpen, mid.social.invitationsOpen + 1);
       assert.equal(m.social.friendships, mid.social.friendships, 'a demo friendship must not count');
     });
 
     await t.test('accounts count by state, and by the 30-day window', async () => {
-      const mid = await repo.instanceMetrics(NOW);
+      const mid = await repo.instanceMetrics();
       await repo.createUser({
         ...userFields(), tenantId: `t-${Math.random().toString(16).slice(2)}`,
         createdAt: daysAgo(3), emailVerified: true,
@@ -4667,7 +4674,7 @@ module.exports = function repoContract(repo) {
         createdAt: daysAgo(200), emailVerified: true,
       });
 
-      const m = await repo.instanceMetrics(NOW);
+      const m = await repo.instanceMetrics();
       assert.equal(m.accounts.total, mid.accounts.total + 3);
       assert.equal(m.accounts.verified, mid.accounts.verified + 2);
       assert.equal(m.accounts.disabled, mid.accounts.disabled + 1);
@@ -4684,7 +4691,7 @@ module.exports = function repoContract(repo) {
          be fine while a cleared-to-'' row inflated the figure on one backend
          only. Hence `coalesce(data->>'avatar', '') <> ''`, asserted with all
          three shapes present. */
-      const mid = await repo.instanceMetrics(NOW);
+      const mid = await repo.instanceMetrics();
       const mk = (avatar) => repo.createUser({
         ...userFields(), tenantId: `av-${Math.random().toString(16).slice(2)}`,
         createdAt: daysAgo(1), avatar,
@@ -4694,70 +4701,14 @@ module.exports = function repoContract(repo) {
       await mk('');                  // cleared to empty
       await mk(undefined);           // never set
 
-      const m = await repo.instanceMetrics(NOW);
+      const m = await repo.instanceMetrics();
       assert.equal(m.accounts.total, mid.accounts.total + 4);
       assert.equal(m.accounts.withAvatar, mid.accounts.withAvatar + 1,
         'only the account with real bytes behind it may count');
     });
 
-    await t.test('the history series is 26 weekly buckets ending with NOW\'s week', async () => {
-      const m = await repo.instanceMetrics(NOW);
-      for (const [label, series] of [['accounts', m.accounts.history], ['sessions', m.content.sessionHistory]]) {
-        const keys = Object.keys(series);
-        assert.equal(keys.length, 26, `${label}: expected 26 buckets`);
-        assert.deepEqual(keys, [...keys].sort(), `${label}: buckets must be oldest-first`);
-        // NOW is a Tuesday, so its ISO week starts on the Monday before.
-        assert.equal(keys[25], '2026-07-27', `${label}: the last bucket is NOW's ISO week (Monday)`);
-        for (const v of Object.values(series)) assert.equal(typeof v, 'number');
-      }
-    });
-
-    await t.test('a dated account lands in its own week; an UNDATED one is dropped', async () => {
-      /* Dropped rather than bucketed as "unknown", and BOTH backends must drop
-         it identically — a row that one counts and the other ignores is the
-         same silent-drift shape as withAvatar above. */
-      const mid = await repo.instanceMetrics(NOW);
-      const week = (s) => Object.entries(s);
-      const sum = (s) => Object.values(s).reduce((a, b) => a + b, 0);
-
-      await repo.createUser({
-        ...userFields(), tenantId: `hw-${Math.random().toString(16).slice(2)}`,
-        createdAt: '2026-07-28T09:00:00.000Z',   // NOW's own Tuesday
-      });
-      await repo.createUser({
-        ...userFields(), tenantId: `hw-${Math.random().toString(16).slice(2)}`,
-        createdAt: null,
-      });
-      await repo.createUser({
-        ...userFields(), tenantId: `hw-${Math.random().toString(16).slice(2)}`,
-        createdAt: 'not a date at all',
-      });
-
-      const m = await repo.instanceMetrics(NOW);
-      assert.equal(sum(m.accounts.history), sum(mid.accounts.history) + 1,
-        'exactly one of the three was datable');
-      const bucket = Object.fromEntries(week(m.accounts.history));
-      const wasBucket = Object.fromEntries(week(mid.accounts.history));
-      assert.equal(bucket['2026-07-27'], wasBucket['2026-07-27'] + 1,
-        'a Tuesday row belongs to its Monday');
-    });
-
-    await t.test('a row OUTSIDE the 26-week window is ignored, not clamped into the first bucket', async () => {
-      // Clamping would draw a false spike at the left edge every time the
-      // window moves.
-      const mid = await repo.instanceMetrics(NOW);
-      const sum = (s) => Object.values(s).reduce((a, b) => a + b, 0);
-      await repo.createUser({
-        ...userFields(), tenantId: `old-${Math.random().toString(16).slice(2)}`,
-        createdAt: '2024-01-01T00:00:00.000Z',
-      });
-      const m = await repo.instanceMetrics(NOW);
-      assert.equal(m.accounts.total, mid.accounts.total + 1, 'it still counts in the total');
-      assert.equal(sum(m.accounts.history), sum(mid.accounts.history), 'but not in the series');
-    });
-
     await t.test('rounds-with-retired/completed/wish count ROUNDS, not games', async () => {
-      const mid = await repo.instanceMetrics(NOW);
+      const mid = await repo.instanceMetrics();
       const tn = `shelf-${Math.random().toString(16).slice(2)}`;
       const r = await repo.createRound(tn, { name: 'Regal', members: ['Ann'] });
       // TWO archived games in ONE round: the round must count once.
@@ -4768,12 +4719,16 @@ module.exports = function repoContract(repo) {
       const w = await repo.createGame(tn, r.id, gameFields({ title: 'W' }));
       await repo.updateGame(tn, r.id, w.id, { wish: true });
 
-      const m = await repo.instanceMetrics(NOW);
-      assert.equal(m.content.roundsWithRetired, mid.content.roundsWithRetired + 1,
+      const m = await repo.instanceMetrics();
+      assert.equal(m.adoption.roundsWithRetired, mid.adoption.roundsWithRetired + 1,
         'two archived games in one round is ONE round using the archive');
-      assert.equal(m.content.roundsWithWish, mid.content.roundsWithWish + 1);
-      assert.equal(m.content.roundsWithCompleted, mid.content.roundsWithCompleted,
+      assert.equal(m.adoption.roundsWithWish, mid.adoption.roundsWithWish + 1);
+      assert.equal(m.adoption.roundsWithCompleted, mid.adoption.roundsWithCompleted,
         'nothing was marked completed');
+      /* The UNION, which is the tile's headline and cannot be derived from the
+         three above: this round is in two of them and must count ONCE. */
+      assert.equal(m.adoption.roundsWithAnyShelf, mid.adoption.roundsWithAnyShelf + 1,
+        'a round in two shelf states is one round using the shelf, not two');
     });
 
     await t.test('the design histogram keys on the RAW id, and never resolves it', async () => {
@@ -4781,7 +4736,7 @@ module.exports = function repoContract(repo) {
          round-designs.js's header says so, and the panel resolves labels
          instead. An unknown id must therefore survive as itself rather than
          being folded into 'none'. */
-      const mid = await repo.instanceMetrics(NOW);
+      const mid = await repo.instanceMetrics();
       const tn = `dz-${Math.random().toString(16).slice(2)}`;
       const plain = await repo.createRound(tn, { name: 'Ohne', members: ['Ann'] });
       const forest = await repo.createRound(tn, { name: 'Wald', members: ['Ann'] });
@@ -4791,7 +4746,7 @@ module.exports = function repoContract(repo) {
       await repo.setBackground(tn, legacy.id, { type: 'theme', page: '#eef4ff', accent: '#3b5bdb' });
       await repo.setBackground(tn, alien.id, { type: 'theme', id: 'not-a-design', page: '#fff', accent: '#000' });
 
-      const d = (await repo.instanceMetrics(NOW)).designs;
+      const d = (await repo.instanceMetrics()).designs;
       const was = mid.designs;
       const delta = (k) => (d[k] || 0) - (was[k] || 0);
       assert.equal(delta('forest'), 1, 'a world counts under its id');
@@ -4799,6 +4754,95 @@ module.exports = function repoContract(repo) {
       assert.equal(delta('not-a-design'), 1, 'an unknown id survives as itself');
       assert.equal(delta('none'), 1, 'a round with no design counts under none');
       assert.ok(plain);
+    });
+
+    /* ---- #1124: the adoption figures ------------------------------------- */
+
+    // Every figure asserted from a fixture that makes it NON-ZERO and from one
+    // that leaves it at zero. The zero half is the one that matters: a predicate
+    // written as "the key is present" instead of "present and non-empty" passes
+    // the first half of every one of these and fails only the second.
+    const ADOPTION = [
+      'roundsWithRetired', 'roundsWithCompleted', 'roundsWithWish', 'roundsWithAnyShelf',
+      'roundsWithTags', 'gamesLinked', 'gamesWithOwnCover', 'gamesWithProviderCover',
+      'gamesWithOwners', 'gamesWithExpansions', 'sessionsWithGuests', 'sessionsWithTeams',
+      'sessionsWithVoteLink', 'accountsWithPasskey', 'accountsWithBggUsername',
+    ];
+
+    await t.test('every adoption figure moves on a fixture that uses the feature', async () => {
+      const mid = await repo.instanceMetrics();
+      const tn = `ad-${Math.random().toString(16).slice(2)}`;
+      const r = await repo.createRound(tn, { name: 'Genutzt', members: ['Ann'] });
+      await repo.addTag(tn, r.id, 'Kurz', null);
+
+      // A linked game wearing the PROVIDER's cover.
+      await repo.createGame(tn, r.id, gameFields({
+        title: 'Verknüpft',
+        image: 'https://cf.geekdo-images.test/x.jpg',
+        source: { provider: 'bgg', externalId: '13' },
+      }));
+      // A hand-typed game wearing bytes THIS instance stores, owned by someone,
+      // with an expansion on the shelf.
+      const own = await repo.createGame(tn, r.id, gameFields({ title: 'Eigen', image: '/uploads/a.webp' }));
+      await repo.updateGame(tn, r.id, own.id, { ownerIds: [r.members[0].id] });
+      await repo.setGameExpansions(tn, r.id, own.id, [{ title: 'Erweiterung' }], null);
+      // The three shelf states, on ONE round, so the union counts once.
+      const shelved = await repo.createGame(tn, r.id, gameFields({ title: 'Regal' }));
+      await repo.updateGame(tn, r.id, shelved.id, { retired: true, completed: true, wish: true });
+
+      const session = await repo.createSession(tn, r.id, {
+        gameIds: [own.id],
+        votes: {},
+        createdAt: daysAgo(1),
+        finished: true,
+        guests: [{ id: 'g1', name: 'Gast' }],
+        teams: [{ id: 't1', personIds: [r.members[0].id, 'g1'] }],
+      });
+      await repo.createSessionVoteLink({ tenantId: tn, roundId: r.id, sessionId: session.id });
+
+      await repo.createUser({
+        ...userFields(), tenantId: `au-${Math.random().toString(16).slice(2)}`,
+        bggUsername: 'ada', identities: [{ type: 'passkey', credentialId: 'c1' }],
+      });
+
+      const m = await repo.instanceMetrics();
+      for (const key of ADOPTION) {
+        assert.equal(m.adoption[key], mid.adoption[key] + 1, `${key} did not move`);
+      }
+      // The denominators move with them, or the shares the panel renders are
+      // measured against a total that never grew.
+      assert.equal(m.content.games, mid.content.games + 3);
+      assert.equal(m.content.sessions, mid.content.sessions + 1);
+      assert.equal(m.accounts.total, mid.accounts.total + 1);
+    });
+
+    await t.test('a round using NOTHING moves no adoption figure', async () => {
+      /* `guests`, `teams`, `expansions`, `ownerIds` and `tags` are ABSENT keys on
+         an unused row by deliberate design, so this is where a predicate that
+         tests presence rather than non-emptiness fails — and where a Postgres
+         jsonb_array_length on a missing key would error the whole query rather
+         than count zero. */
+      const mid = await repo.instanceMetrics();
+      const tn = `ad0-${Math.random().toString(16).slice(2)}`;
+      const r = await repo.createRound(tn, { name: 'Schlicht', members: ['Ann'] });
+      const g = await repo.createGame(tn, r.id, gameFields({ title: 'Nackt' }));
+      await repo.createSession(tn, r.id, {
+        gameIds: [g.id], votes: {}, createdAt: daysAgo(1), finished: true,
+      });
+      // An explicitly EMPTY list is not adoption either — the same trap one step
+      // over, and the shape a round that once had a tag and lost it leaves behind.
+      await repo.setGameExpansions(tn, r.id, g.id, [], null);
+      await repo.updateGame(tn, r.id, g.id, { ownerIds: [] });
+      await repo.createUser({
+        ...userFields(), tenantId: `au0-${Math.random().toString(16).slice(2)}`,
+        bggUsername: null, identities: [],
+      });
+
+      const m = await repo.instanceMetrics();
+      for (const key of ADOPTION) {
+        assert.equal(m.adoption[key], mid.adoption[key], `${key} counted a row that uses nothing`);
+      }
+      assert.equal(m.content.games, mid.content.games + 1, 'the denominator still moved');
     });
   });
 

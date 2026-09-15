@@ -234,13 +234,9 @@ lib/
                      ranks dump is parsed with
   observability.js   structured logging, /healthz + /readyz, central error handler
   status.js          aggregate usage metrics + the quota ceilings for the
-                     operator panel's Kennzahlen card (issues #274/#404) —
+                     operator panel's two Kennzahlen cards — Grenzen &
+                     Kontingente and Funktionsnutzung (issues #274/#404/#1124) —
                      counts only, never a secret value and never personal data
-  metrics-history.js the 26 weekly buckets behind the Konten and Sessions
-                     charts (issue #941). One module both repo backends use, so
-                     the two cannot pick different week boundaries — and the
-                     reason neither casts a stored date in SQL: one malformed
-                     value would throw for the whole query
   provider-info.js   lazy backfill of BGG's standard metadata onto linked
                      games (issues #717/#724/#736/#828/#829): eligibility (a
                      TTL-stamped attempt marker) and the best-effort fill every
@@ -786,5 +782,5 @@ is ever committed; Dependabot keeps dependencies updated via weekly PRs — npm
 packages, the GitHub Actions, and the Dockerfile's Node base image. The base
 image and every third-party action are pinned to an exact patch / a commit SHA,
 so a runtime or action security release arrives as a reviewable, CI-tested PR
-rather than through a mutable tag nobody controls; the admin panel's Kennzahlen
-card reports the Node version the running process is actually on.
+rather than through a mutable tag nobody controls; the admin panel's „Grenzen &
+Kontingente" card reports the Node version the running process is actually on.

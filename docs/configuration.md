@@ -266,18 +266,22 @@ by tenant, action and date range; the erasure entry records only ids, date,
 reason and counts, never the erased content, since the log outlives the erasure
 it evidences.
 
-The panel opens with a **Kennzahlen** card: how much this instance is being used
-— accounts (verified / unverified / suspended, plus new ones in the last 7 and
-30 days), how many of them own at least one round, rounds, games, sessions
-(finished, and in the last 30 days), live guest demos against their cap, the
-day's outbound mail against the `MAIL_DAILY_MAX` budget (a per-process counter —
-with several replicas the card shows the answering process's share, not a
-global sum), shared
-rounds / open invitations / friendships, and the **quota ceilings paired with
-the highest value anyone currently holds** against each, so "is someone about to
-be refused?" is answerable without a database console. Every field is a count —
-**no secret value and no personal data is ever returned**, and demo tenants are
-excluded from everything but their own row. A **Feedback** card shows what users sent through the contact form's
+The panel opens with two metric cards. **Grenzen & Kontingente** answers "is
+something about to refuse a user": live guest demos against their cap, the day's
+outbound mail against the `MAIL_DAILY_MAX` budget (a per-process counter — with
+several replicas the card shows the answering process's share, not a global sum),
+the **quota ceilings paired with the highest value anyone currently holds**
+against each, and the Node version the answering process is running.
+**Funktionsnutzung** answers "is any of this being used": how many accounts exist
+(verified / unverified / suspended), and then one share per feature — rounds using
+the archive, the played shelf or the wishlist; rounds wearing a design, carrying
+their own tags or shared with someone; games linked to a provider, wearing a
+cover, owned by a named person or carrying expansions; sessions with guests, with
+teams or opened through a shared vote link; accounts with a passkey, a BGG
+username or a profile picture. Every adoption figure is stated as `n / total`
+against the population it is measured in, never as a bare count. Every field is a
+count — **no secret value and no personal data is ever returned**, and demo
+tenants are excluded from everything but their own row. A **Feedback** card shows what users sent through the contact form's
 Feedback category (with the sender's address only where they provided one).
 The Feedback and Protokoll cards page rather than truncate (`100 von 342`,
 **Mehr laden**) and export *every* entry as UTF-8 CSV (BOM included, so Excel

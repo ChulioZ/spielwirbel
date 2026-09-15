@@ -124,9 +124,22 @@ test('the usage numbers count what the instance holds', async () => {
   assert.equal(s.metrics.content.games, before.metrics.content.games + 1);
   assert.equal(s.metrics.content.sessions, before.metrics.content.sessions + 1);
   assert.equal(s.metrics.content.sessionsFinished, before.metrics.content.sessionsFinished + 1);
-  assert.equal(s.metrics.content.sessions30d, before.metrics.content.sessions30d + 1);
   assert.equal(s.metrics.accounts.total, before.metrics.accounts.total + 1);
   assert.equal(s.metrics.accounts.verified, before.metrics.accounts.verified + 1);
+});
+
+/* The three figures #1124 took OFF the operator card but deliberately left in
+   the payload: lib/public-stats.js's COUNTERS read exactly these for the public
+   landing block (#564), where an absent field silently fails its threshold and
+   the counters simply stop rendering — no error anywhere. Deleting them looks
+   like tidying up a card nobody reads. */
+test('the three figures the PUBLIC counters read are still sent', async () => {
+  const s = await instanceStatus();
+  for (const key of ['activeGames', 'members', 'sessionsFinished']) {
+    assert.equal(typeof s.metrics.content[key], 'number',
+      `content.${key} is gone — lib/public-stats.js reads it for the landing counters`);
+  }
+  assert.equal(typeof s.metrics.rounds.total, 'number');
 });
 
 test('demo tenants are excluded from every number except the demo row', async () => {
@@ -150,6 +163,7 @@ test('demo tenants are excluded from every number except the demo row', async ()
   assert.deepEqual(s.metrics.rounds, before.metrics.rounds);
   assert.deepEqual(s.metrics.content, before.metrics.content);
   assert.deepEqual(s.metrics.accounts, before.metrics.accounts);
+  assert.deepEqual(s.metrics.adoption, before.metrics.adoption);
   assert.deepEqual(s.metrics.peaks, before.metrics.peaks);
 
   // …and the one row that DOES report them saw it.
@@ -260,9 +274,9 @@ test('every metric is a number — no name, address or id reaches the card', asy
   for (const secret of ['GEHEIMER-RUNDENNAME', 'GEHEIMER-NAME', 'GEHEIMER-TITEL', 'GEHEIME-ADRESSE', 'GEHEIMER-NUTZER', tenant]) {
     assert.equal(serialized.includes(secret), false, `${secret} reached the metrics payload`);
   }
-  /* RECURSES TO THE LEAVES since #941, which added two history objects and a
-     design histogram. The old two-level form reported `accounts.history` as
-     "not a number" the moment nesting appeared — and the tempting fix is an
+  /* RECURSES TO THE LEAVES since #941, which added a design histogram (and two
+     history objects, since removed by #1124). The old two-level form reported a
+     nested block as "not a number" the moment nesting appeared — and the tempting fix is an
      allowlist of known-nested fields, which is exactly wrong: it has to be
      maintained by the same person who just added the nesting, i.e. by the
      person who would also be adding the leak. Recursion has no such gap.
@@ -289,7 +303,8 @@ test('a name planted in a metrics KEY is caught, not just in a value', async () 
      card. Driven against a hand-built payload rather than the live one, because
      the point is the SWEEP, not today's data. */
   const planted = {
-    accounts: { total: 1, history: { '2026-01-05': 0 } },
+    accounts: { total: 1 },
+    adoption: { gamesLinked: 0 },
     designs: { 'GEHEIMER-DESIGNNAME': 2 },
   };
   const serialized = JSON.stringify(planted);

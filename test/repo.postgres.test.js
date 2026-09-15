@@ -632,9 +632,14 @@ if (!process.env.DATABASE_URL) {
     await repo.createGame(tenant, round.id, {
       title: 'Gezähltes Spiel', minPlayers: 1, maxPlayers: 4, image: null, source: null,
     });
+    // Guests on the session and a tag on the round, so the adoption figures
+    // read from the RLS-scoped tables have something to find: a zero there is
+    // exactly what a read outside atx() would report.
     await repo.createSession(tenant, round.id, {
       gameIds: [], votes: {}, createdAt: new Date().toISOString(), finished: true,
+      guests: [{ id: 'g1', name: 'Gast' }],
     });
+    await repo.addTag(tenant, round.id, 'Kurz', null);
 
     const admin = new Client({
       connectionString: process.env.DATABASE_URL,
@@ -675,19 +680,26 @@ if (!process.env.DATABASE_URL) {
     assert.ok(out.content.sessions >= 1, 'sessions were invisible without the admin escape');
     assert.ok(out.peaks.gamesPerRound >= 1, 'the games peak was invisible without the admin escape');
 
-    /* #941's additions, and the reason this probe exists at all. `sessions` is
-       RLS-scoped, so a history read outside atx() returns ZERO ROWS RATHER THAN
-       AN ERROR — the panel would draw a healthy-looking EMPTY CHART on
-       production while every superuser-run test stayed green. The session
-       created above is dated now, so its bucket must be non-empty here. */
-    const played = Object.values(out.content.sessionHistory).reduce((a, b) => a + b, 0);
-    assert.ok(played >= 1,
-      'the session history was empty without the admin escape — it is not reading under atx()');
-    assert.equal(Object.keys(out.content.sessionHistory).length, 26, 'and it is still 26 buckets');
+    /* The #1124 adoption figures, and the reason this probe exists at all: they
+       are computed from `games`, `sessions` and `rounds`, all RLS-scoped, so a
+       read outside atx() returns ZERO ROWS RATHER THAN AN ERROR — the panel
+       would report „nobody uses anything" on a production instance full of data
+       while every superuser-run test stayed green. A zero is a plausible reading
+       for an adoption figure, which is what makes it dangerous.
+
+       (This replaces the same assertion on the weekly session series, which
+       #1124 removed along with both charts.) */
+    assert.ok(out.adoption.sessionsWithGuests >= 1,
+      'the session adoption figures were empty without the admin escape — not reading under atx()');
+    assert.ok(out.adoption.roundsWithTags >= 1,
+      'the round adoption figures were empty without the admin escape');
     assert.ok(Object.values(out.designs).reduce((a, b) => a + b, 0) >= 1,
       'the design histogram was invisible without the admin escape');
-    assert.equal(typeof out.content.roundsWithRetired, 'number');
+    assert.equal(typeof out.adoption.roundsWithRetired, 'number');
     assert.equal(typeof out.accounts.withAvatar, 'number');
+    // session_vote_links is deliberately NOT RLS-scoped, so this one is read on
+    // plain knex — it must still come back as a number under a plain role.
+    assert.equal(typeof out.adoption.sessionsWithVoteLink, 'number');
     // pg returns count() as a bigint STRING; a missing ::int would make this
     // backend answer '1' where the JSON one answers 1.
     for (const n of [out.rounds.total, out.content.games, out.social.friendships, out.peaks.tagsPerRound]) {

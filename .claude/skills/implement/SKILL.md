@@ -231,6 +231,13 @@ lights a dot that competes with the legally load-bearing terms notice, so the
 list is a budget rather than a changelog. The rule above states the bar; ask the
 question consciously rather than skipping it, in either direction.
 
+And a third, same posture: **does this change ship a feature whose uptake the
+operator cannot otherwise see?** If the only way to learn whether anyone uses it
+is a database console, propose a „Funktionsnutzung" tile for the operator panel —
+the figure, its denominator and where it comes from. *Propose*, never add unasked;
+the default answer is again **no**, since most changes have no uptake to measure.
+See `.claude/rules/propose-an-admin-stat-for-new-features.md`.
+
 ## 3. Review the local changes thoroughly
 
 Convince yourself it actually works before anything leaves the machine. Read your

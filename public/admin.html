@@ -131,10 +131,17 @@
     .pill--ok { background: var(--ok-bg); color: var(--ok-ink); }
     .pill--warn { background: var(--warn-bg); color: var(--warn-ink); }
     /* Status BOARD: tiles spread across the full width and pack tightly. */
-    .status { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 0.75rem; align-items: start; }
+    .status { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 0.75rem; align-items: start; }
     .status__item { background: var(--sunken); border: 1px solid var(--line); border-radius: 10px; padding: 0.7rem 0.8rem; }
     .status__label { color: var(--muted); font-size: 0.78rem; margin-bottom: 0.3rem; }
     .status__note { color: var(--muted); font-size: 0.78rem; margin-top: 0.3rem; }
+    /* One labelled line per figure (#1124). The old shape ran the figures and
+       their labels as two positional lists („12 · 7 · 1" over „Aussortiert ·
+       Durchgespielt · Wunschliste"), which the reader had to zip by eye. */
+    .status__breakdown { margin-top: 0.45rem; display: grid; gap: 0.15rem; }
+    .status__bd { display: flex; justify-content: space-between; gap: 0.6rem; font-size: 0.82rem; }
+    .status__bd span { color: var(--muted); }
+    .status__bd b { font-weight: 600; font-variant-numeric: tabular-nums; }
     .scroll { overflow-x: auto; }
     /* "100 von 342" (#288) — a card must never hide entries silently. */
     .count { margin: -0.4rem 0 0.9rem; }
@@ -194,14 +201,33 @@
       <button class="ghost small" id="logout">Abmelden</button>
     </div>
 
+    <!-- Two sibling cards, not one „Kennzahlen" heading over both (#1124): the
+         left-hand question is „wie nah ist etwas daran, jemanden abzuweisen",
+         the right-hand one „wird das hier überhaupt benutzt". The privacy
+         sentence repeats on BOTH because it is the statement the personal-data
+         sweep in test/status.test.js exists to keep true, and a reader who
+         screenshots one card must see it there.
+         The ids #statusGrid/#statusError deliberately survive the split — rules
+         and tests cite them (.claude/rules/admin-kennzahlen-card.md). -->
     <section class="card">
-      <h2>Kennzahlen</h2>
+      <h2>Grenzen &amp; Kontingente</h2>
       <p class="sub" style="margin-bottom: 0.9rem;">
-        Nutzung dieser Instanz. Alle Zahlen ohne Demo-Konten (außer der Demo-Zeile).
-        Nur Summen und Höchstwerte, keine personenbezogenen Daten, keine Geheimnisse.
+        Wie nah diese Instanz an ihren Grenzen ist. Alle Zahlen ohne Demo-Konten
+        (außer der Demo-Zeile). Nur Summen und Höchstwerte, keine
+        personenbezogenen Daten, keine Geheimnisse.
       </p>
       <div class="status" id="statusGrid"></div>
       <p class="msg msg--err" id="statusError" role="alert" hidden></p>
+    </section>
+
+    <section class="card">
+      <h2>Funktionsnutzung</h2>
+      <p class="sub" style="margin-bottom: 0.9rem;">
+        Wie stark die Instanz und ihre Funktionen angenommen werden. Alle Zahlen
+        ohne Demo-Konten, keine personenbezogenen Daten, keine Geheimnisse.
+      </p>
+      <div class="status" id="adoptionGrid"></div>
+      <p class="msg msg--err" id="adoptionError" role="alert" hidden></p>
     </section>
 
     <div class="dash">

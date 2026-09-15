@@ -36,7 +36,8 @@ the fix shipped was decided by a cache, and:
   diff, which is to say invisible.
 - **nothing could report it.** `process.version` was not surfaced anywhere, so the
   question "which Node is production on?" had no answer short of a Railway
-  console. That is why the pin shipped **with** the admin Kennzahlen row: a pin
+  console. That is why the pin shipped **with** the admin „Node" row — on the
+  „Grenzen & Kontingente" card since #1124 split „Kennzahlen" in two: a pin
   describes what the *next* build will use, never what is running now.
 
 ## Why the actions are pinned harder than the image
