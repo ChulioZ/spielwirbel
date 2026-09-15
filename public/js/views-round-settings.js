@@ -160,11 +160,11 @@ async function showBackground(rid) {
   // rather than in the round's (see "Worlds" in styles.css).
   [
     { titleKey: 'design.group.colors', noteKey: 'design.note', designs: PALETTES },
-    { titleKey: 'design.group.worlds', noteKey: 'design.worlds.note', designs: WORLDS },
+    { titleKey: 'design.group.worlds', noteKey: 'design.worlds.note', designs: WORLDS, posters: true },
   ].forEach((group) => {
     const sec = h(`<div class="section"><h2>${esc(t(group.titleKey))}</h2></div>`);
     sec.appendChild(h(`<div class="muted" style="margin-bottom:14px">${esc(t(group.noteKey))}</div>`));
-    const grid = h('<div class="theme-cards"></div>');
+    const grid = h(`<div class="theme-cards${group.posters ? ' theme-cards--worlds' : ''}"></div>`);
     group.designs.forEach((th) => {
       const active = th.std ? !stored : Boolean(current && current.id === th.id);
       const worldAttr = th.world ? ` data-world="${esc(th.world)}"` : '';
@@ -175,12 +175,28 @@ async function showBackground(rid) {
       // and every card needs --brand so an ornament paints the design it names.
       const schemeAttr = th.scheme ? ` data-scheme="${esc(th.scheme)}"` : '';
       const style = `background:${th.page};--page-bg:${th.page};--brand:${th.accent}`;
-      const sw = h(`<button class="theme-card${th.world ? ' theme-card--world' : ''}${active ? ' is-active' : ''}"${worldAttr}${schemeAttr} aria-pressed="${active}" style="${style}" title="${esc(t(th.labelKey))}">
-         <span class="theme-card__bar" style="background:${th.accent}"></span>
+      const label = esc(t(th.labelKey));
+      const check = `<span class="theme-card__check" style="background:${th.accent}"><i class="ti ti-check" aria-hidden="true"></i></span>`;
+      /* A world is a POSTER, a palette a swatch (#1085). The picker is the one
+         screen whose whole job is choosing a world, and the shared swatch — a
+         152x106 box, the name at --text-sm — showed the seven at their most
+         alike. The poster gives the world its crown art across the top and its
+         name at display size in its own face; the grey filler lines go, since
+         there is real art to show instead. The framed bar and the check are the
+         palette card's, unchanged, so choosing still reads the same. */
+      const face = th.world
+        ? `<span class="theme-card__crown"></span>
+         <span class="theme-card__body">
+           <span class="theme-card__name" style="color:${th.accent}">${label}</span>
+           <span class="theme-card__bar" style="background:${th.accent}"></span>
+         </span>`
+        : `<span class="theme-card__bar" style="background:${th.accent}"></span>
          <span class="theme-card__line"></span>
          <span class="theme-card__line theme-card__line--short"></span>
-         <span class="theme-card__name" style="color:${th.accent}">${esc(t(th.labelKey))}</span>
-         <span class="theme-card__check" style="background:${th.accent}"><i class="ti ti-check" aria-hidden="true"></i></span>
+         <span class="theme-card__name" style="color:${th.accent}">${label}</span>`;
+      const sw = h(`<button class="theme-card${th.world ? ' theme-card--world' : ''}${active ? ' is-active' : ''}"${worldAttr}${schemeAttr} aria-pressed="${active}" style="${style}" title="${label}">
+         ${face}
+         ${check}
        </button>`);
       sw.addEventListener('click', async () => {
         const payload = th.std

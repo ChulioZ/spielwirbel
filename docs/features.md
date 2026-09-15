@@ -492,6 +492,9 @@ What the app does, in detail. For a short overview see the
   further: each brings its own display typeface, a backdrop motif and ornament
   framing on primary buttons, section headings, cards, empty states and the
   finale stage, and reaches the round's home tile and its shareable recap card.
+  In the picker the worlds are **poster cards** — the world's own scenery across
+  the top of the card and its name in its own display face — so a group sees
+  what it is choosing; the plain colour schemes stay small swatches.
   The round also **wears** its world on the screens you actually look at it on:
   a crown of the world's own scenery above the round's name, the world's motif
   behind the bottom navigation, the round's name in the world's face in the top
