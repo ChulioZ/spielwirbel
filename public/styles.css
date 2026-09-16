@@ -9664,6 +9664,8 @@ kbd {
   --world-font: "Averia Serif Libre";
   --world-backdrop: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240' viewBox='0 0 240 240'%3E%3Cg fill='%23000'%3E %3Cpath d='M18 46c14-18 40-22 62-10c-12 22-40 28-62 10z'/%3E %3Cpath d='M150 30c10-20 36-26 60-16c-10 22-36 30-60 16z'/%3E %3Cpath d='M60 136c18-10 40-6 56 12c-20 8-42 4-56-12z'/%3E %3Cpath d='M168 128c4-22 24-36 48-34c-4 24-24 38-48 34z'/%3E %3Cpath d='M20 206c16-12 38-12 56 2c-16 12-38 12-56-2z'/%3E %3Cpath d='M132 214c12-18 36-24 58-14c-12 18-36 24-58 14z'/%3E %3Cpath d='M96 76c2-12 12-20 26-18c-2 12-12 20-26 18z'/%3E %3Cpath d='M204 200c2-12 12-20 26-18c-2 12-12 20-26 18z'/%3E %3Ccircle cx='118' cy='176' r='3'/%3E%3Ccircle cx='230' cy='70' r='2.6'/%3E%3Ccircle cx='42' cy='106' r='2.6'/%3E%3Ccircle cx='150' cy='90' r='2.2'/%3E %3C/g%3E%3C/svg%3E");
   --world-backdrop-size: 320px 320px;
+  /* Slot 1's alpha. Ceiling .095 (see the slot rule); .09 keeps the margin. */
+  --world-backdrop-alpha: .09;
   /* A canopy: densest at the top of the viewport, thinning toward the bottom. */
   --world-backdrop-fade: linear-gradient(#000 0%, transparent 130vh);
   --world-frame: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='88' height='56' viewBox='0 0 88 56'%3E%3Cpath d='M4 54C8 34 22 16 50 8' fill='none' stroke='%23000' stroke-width='3' stroke-linecap='round'/%3E %3Cg fill='%23000'%3E %3Cpath d='M10 40c4-12 14-18 26-14c-4 12-14 18-26 14z'/%3E %3Cpath d='M24 22c8-8 20-10 30-4c-8 8-20 10-30 4z'/%3E %3Cpath d='M42 12c8-6 18-6 26 0c-8 6-18 6-26 0z'/%3E %3Cpath d='M2 52c-2-10 2-18 12-22c2 10-2 18-12 22z'/%3E %3Ccircle cx='20' cy='30' r='2.4'/%3E%3Ccircle cx='60' cy='9' r='2'/%3E%3C/g%3E%3C/svg%3E");
@@ -9706,8 +9708,11 @@ kbd {
   --world-font: "Chakra Petch";
   --world-backdrop: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg fill='%23000'%3E %3Crect x='0' y='19.5' width='120' height='1'/%3E%3Crect x='0' y='59.5' width='120' height='1'/%3E%3Crect x='0' y='99.5' width='120' height='1'/%3E %3Crect x='19.5' y='0' width='1' height='120'/%3E%3Crect x='59.5' y='0' width='1' height='120'/%3E%3Crect x='99.5' y='0' width='1' height='120'/%3E %3Cpath d='M20 20h40v40h40' fill='none' stroke='%23000' stroke-width='2'/%3E %3Cpath d='M100 100h-40v-24' fill='none' stroke='%23000' stroke-width='2'/%3E %3Ccircle cx='20' cy='20' r='3'/%3E%3Ccircle cx='100' cy='60' r='3'/%3E%3Ccircle cx='60' cy='76' r='2.5'/%3E%3Crect x='97' y='97' width='6' height='6'/%3E %3C/g%3E%3C/svg%3E");
   --world-backdrop-size: 150px 150px;
-  /* A circuit floor: rises from the bottom, fades under the page glow. */
-  --world-backdrop-fade: linear-gradient(transparent 0%, #000 90vh);
+  /* Slot 1's alpha. Ceiling .295 (see the slot rule); .26 keeps the margin. */
+  --world-backdrop-alpha: .26;
+  /* A circuit floor: rises from the bottom, fades under the page glow. The
+     floor stop is NOT transparent — see burg below for why. */
+  --world-backdrop-fade: linear-gradient(rgb(0 0 0 / .55) 0%, #000 90vh);
   --world-frame: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='88' height='56' viewBox='0 0 88 56'%3E%3Cdefs%3E %3ClinearGradient id='f' x1='0' x2='1' y1='0' y2='0'%3E%3Cstop offset='0' stop-color='%23000'/%3E%3Cstop offset='1' stop-color='%23000' stop-opacity='0'/%3E%3C/linearGradient%3E %3ClinearGradient id='v' x1='0' x2='0' y1='0' y2='1'%3E%3Cstop offset='0' stop-color='%23000'/%3E%3Cstop offset='1' stop-color='%23000' stop-opacity='0'/%3E%3C/linearGradient%3E%3C/defs%3E %3Cpath d='M3 30V3h27' fill='none' stroke='%23000' stroke-width='3'/%3E %3Crect x='30' y='2' width='58' height='2' fill='url(%23f)'/%3E %3Crect x='2' y='30' width='2' height='26' fill='url(%23v)'/%3E %3Crect x='0' y='0' width='7' height='7' fill='%23000'/%3E%3C/svg%3E");
   --world-rule: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='10' viewBox='0 0 140 10'%3E%3Cpath d='M6 1H1v8h5M104 1h5v8h-5' fill='none' stroke='%23000' stroke-width='1.6'/%3E %3Crect x='10' y='4.25' width='88' height='1.5' fill='%23000'/%3E %3Crect x='114' y='3' width='4' height='4' fill='%23000'/%3E%3Crect x='122' y='3' width='4' height='4' fill='%23000' opacity='.6'/%3E%3Crect x='130' y='3' width='4' height='4' fill='%23000' opacity='.3'/%3E%3C/svg%3E");
   --world-corner: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 22 22'%3E%3Cpath d='M22 0v14L8 0z' fill='%23000' opacity='.7'/%3E%3Cpath d='M22 6V0h-6' fill='none' stroke='%23000' stroke-width='2'/%3E%3C/svg%3E");
@@ -9747,8 +9752,11 @@ kbd {
   --world-font: "Comfortaa";
   --world-backdrop: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240' viewBox='0 0 240 240'%3E%3Cg fill='%23000'%3E%3Cpath d='M30 60c10-12 26-14 40-6l12-8v18l-12-6c-14 8-30 6-40-6zM50 58a2.5 2.5 0 1 1 0 5a2.5 2.5 0 1 1 0-5z'/%3E%3Cpath d='M150 130c8-9 20-11 30-4l9-6v14l-9-5c-10 6-22 5-30-4z'/%3E%3Cpath d='M120 40c5-6 12-7 18-3l6-4v10l-6-3c-6 4-13 3-18-3z'/%3E%3Cpath d='M210 200c-6 8-16 9-24 3l-8 5v-13l8 4c8-5 18-4 24 4z'/%3E%3Cpath d='M60 190l4 10h10l-8 6l3 10l-9-6l-9 6l3-10l-8-6h10z'/%3E%3Cpath d='M178 76a14 14 0 0 1 28 0v4h-28zM181 82h3l1 16l-2 4h-3l2-4zM188 82h3v18l-2 4h-3l2-4zM196 82h3l2 16l-2 4h-3l2-4zM202 82h3l-1 14h-3z'/%3E%3Ccircle cx='100' cy='100' r='3'/%3E%3Ccircle cx='108' cy='88' r='2'/%3E%3Ccircle cx='96' cy='112' r='2'/%3E%3Ccircle cx='200' cy='150' r='2.5'/%3E%3Ccircle cx='40' cy='130' r='2'/%3E%3Cpath d='M0 226c14-8 26-8 40 0s26 8 40 0v3c-14 8-26 8-40 0s-26-8-40 0zM160 226c14-8 26-8 40 0s26 8 40 0v3c-14 8-26 8-40 0s-26-8-40 0z'/%3E%3C/g%3E%3C/svg%3E");
   --world-backdrop-size: 320px 320px;
-  /* The sea: rises from the bottom of the viewport, clear water above. */
-  --world-backdrop-fade: linear-gradient(transparent 0%, #000 100vh);
+  /* Slot 1's alpha. Ceiling .095 (see the slot rule); .09 keeps the margin. */
+  --world-backdrop-alpha: .09;
+  /* The sea: rises from the bottom of the viewport, clear water above —
+     but never to nothing at the top; see burg for the floor. */
+  --world-backdrop-fade: linear-gradient(rgb(0 0 0 / .55) 0%, #000 100vh);
   --world-frame: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='88' height='56' viewBox='0 0 88 56'%3E%3Cpath d='M4 54C6 30 18 12 44 8c15-2 28 6 26 18c-2 9-12 12-17 6c-3-4 1-9 6-8' fill='none' stroke='%23000' stroke-width='3' stroke-linecap='round'/%3E%3Cg fill='%23000'%3E%3Ccircle cx='12' cy='20' r='2.6'/%3E%3Ccircle cx='22' cy='10' r='2'/%3E%3Ccircle cx='6' cy='34' r='1.6'/%3E%3C/g%3E%3C/svg%3E");
   --world-rule: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='10' viewBox='0 0 140 10'%3E%3Cpath d='M0 5c8 -5 16 -5 24 0c8 -5 16 -5 24 0c8 -5 16 -5 24 0c8 -5 16 -5 24 0c8 -5 16 -5 24 0' fill='none' stroke='%23000' stroke-width='1.6' stroke-linecap='round'/%3E%3Cg fill='%23000'%3E%3Cg transform='translate(131 5) scale(0.42 0.42)'%3E%3Cpath d='M-14 0c8-9 22-9 30 0c-8 9-22 9-30 0z'/%3E%3Cpath d='M14 0l11-8v16z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
   --world-corner: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 22 22'%3E%3Cg fill='none' stroke='%23000' stroke-width='1.9'%3E%3Ccircle cx='13' cy='8' r='6'/%3E%3Ccircle cx='5' cy='15' r='3.6'/%3E%3Ccircle cx='16' cy='18' r='2.3'/%3E%3C/g%3E%3Ccircle cx='15.5' cy='5.5' r='1.3' fill='%23000'/%3E%3C/svg%3E");
@@ -9786,8 +9794,11 @@ kbd {
   --world-font: "Playfair Display";
   --world-backdrop: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cg fill='%23000'%3E%3Cpath fill-rule='evenodd' transform='translate(12 8) scale(0.36 0.36)' d='M21 111c-1-18 2-34 10-46l-11-3c-5-1-7-5-6-9l4-8c1-3 4-4 7-3l3 1c3-7 8-12 14-15l4-12l6 9l7-4l-1 9c6 5 9 14 9 26c0 22-5 36-5 55zM36 36a2.6 2.6 0 1 0 5.2 0a2.6 2.6 0 1 0-5.2 0z'/%3E%3Cpath transform='translate(12 8) scale(0.36 0.36)' d='M20 111h29v3h-29zM9 128v-7c0-2 1-3 3-3h40c2 0 3 1 3 3v7zM15 118v-4c0-2 1-3 3-3h28c2 0 3 1 3 3v4z'/%3E%3Cpath transform='translate(104 18) scale(0.28 0.28)' d='M21 44a11 11 0 1 0 22 0a11 11 0 1 0-22 0zM27 52h10v8h-10zM19 61a13 4 0 1 0 26 0a13 4 0 1 0-26 0zM25 62h14c0 22.05 8 39.2 8 49h-30c0-9.8 8-26.950000000000003 8-49zM9 128v-7c0-2 1-3 3-3h40c2 0 3 1 3 3v7zM15 118v-4c0-2 1-3 3-3h28c2 0 3 1 3 3v4z'/%3E%3Cpath transform='translate(98 96) scale(0.34 0.34)' d='M17 24h9v9h5v-9h6v9h5v-9h9v19h-34zM15 44a17 3.5 0 1 0 34 0a17 3.5 0 1 0-34 0zM19 46h26c0 22 1 44 4 65h-34c3-21 4-43 4-65zM9 128v-7c0-2 1-3 3-3h40c2 0 3 1 3 3v7zM15 118v-4c0-2 1-3 3-3h28c2 0 3 1 3 3v4z'/%3E%3Cpath fill-rule='evenodd' transform='translate(20 92) scale(0.36 0.36)' d='M32 19c9 7 14 18 13 33h-26c-1-15 4-26 13-33zM24 46l14-15l3 3l-14 15z'/%3E%3Cpath transform='translate(20 92) scale(0.36 0.36)' d='M28 15a4 4 0 1 0 8 0a4 4 0 1 0-8 0zM19 54a13 4 0 1 0 26 0a13 4 0 1 0-26 0zM25 55h14c0 25.2 9 44.800000000000004 9 56h-32c0-11.200000000000001 9-30.800000000000004 9-56zM9 128v-7c0-2 1-3 3-3h40c2 0 3 1 3 3v7zM15 118v-4c0-2 1-3 3-3h28c2 0 3 1 3 3v4z'/%3E%3C/g%3E%3C/svg%3E");
   --world-backdrop-size: 200px 200px;
-  /* A board on the table: rises from the bottom, clears the top. */
-  --world-backdrop-fade: linear-gradient(transparent 0%, #000 100vh);
+  /* Slot 1's alpha. Ceiling .095 (see the slot rule); .09 keeps the margin. */
+  --world-backdrop-alpha: .09;
+  /* A board on the table: rises from the bottom, thins toward the top
+     without reaching zero there; see burg for the floor. */
+  --world-backdrop-fade: linear-gradient(rgb(0 0 0 / .55) 0%, #000 100vh);
   --world-frame: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='88' height='56' viewBox='0 0 88 56'%3E%3Cg fill='%23000'%3E%3Cpath d='M0 0h8v8h-8zM16 0h8v8h-8zM32 0h8v8h-8zM48 0h8v8h-8zM8 8h8v8h-8zM24 8h8v8h-8zM40 8h8v8h-8zM56 8h8v8h-8z'/%3E%3Cpath d='M0 16h8v8h-8zM8 24h8v8h-8zM0 32h8v8h-8zM8 40h8v8h-8zM0 48h8v8h-8z'/%3E%3C/g%3E%3C/svg%3E");
   --world-rule: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='10' viewBox='0 0 140 10'%3E%3Cg fill='%23000'%3E%3Crect x='0' y='1' width='8' height='8'/%3E%3Crect x='16' y='1' width='8' height='8'/%3E%3Crect x='32' y='1' width='8' height='8'/%3E%3Crect x='48' y='1' width='8' height='8'/%3E%3Crect x='64' y='1' width='8' height='8'/%3E%3Crect x='80' y='1' width='8' height='8'/%3E%3Crect x='96' y='1' width='8' height='8'/%3E%3Crect x='112' y='1' width='8' height='8'/%3E%3Cg transform='translate(134 10) scale(0.27)'%3E%3Ccircle cx='0' cy='-30' r='6'/%3E%3Cpath d='M-6-22h12l-2 6c5 2 7 6 7 12h-22c0-6 2-10 7-12z'/%3E%3Crect x='-11' y='-4' width='22' height='4'/%3E%3C/g%3E%3C/g%3E%3Crect x='.5' y='.5' width='127' height='9' fill='none' stroke='%23000' stroke-width='1'/%3E%3C/svg%3E");
   --world-corner: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 22 22'%3E%3Cg fill='%23000'%3E%3Cpath fill-rule='evenodd' transform='translate(-1 -2) scale(0.24 0.24)' d='M21 111c-1-18 2-34 10-46l-11-3c-5-1-7-5-6-9l4-8c1-3 4-4 7-3l3 1c3-7 8-12 14-15l4-12l6 9l7-4l-1 9c6 5 9 14 9 26c0 22-5 36-5 55zM36 36a2.6 2.6 0 1 0 5.2 0a2.6 2.6 0 1 0-5.2 0z'/%3E%3C/g%3E%3C/svg%3E");
@@ -9825,6 +9836,8 @@ kbd {
   --world-font: "Creepster";
   --world-backdrop: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240' viewBox='0 0 240 240'%3E%3Cg fill='none' stroke='%23000' stroke-width='1.5' stroke-linecap='round'%3E%3Cpath d='M0 0L74.0 0.0M0 0L69.5 25.3M0 0L56.7 47.6M0 0L37.0 64.1M0 0L12.8 72.9M0 0L0.0 74.0'/%3E%3Cpath d='M22.2 0Q17.3 17.3 0 22.2M40.7 0Q31.7 31.7 0 40.7M59.2 0Q46.2 46.2 0 59.2M74 0Q57.7 57.7 0 74' opacity='.85'/%3E%3C/g%3E%3Cg fill='%23000'%3E%3Cg transform='translate(150 62) scale(0.9)'%3E%3Cpath d='M0-2c-3-5-9-7-15-4c1 3 1 6-1 9c4-3 8-3 11 1l2-3l3 3c3-4 7-4 11-1c-2-3-2-6-1-9c-6-3-12-1-15 4l-1 2z'/%3E%3C/g%3E%3Cg transform='translate(60 150) scale(0.7)'%3E%3Cpath d='M0-2c-3-5-9-7-15-4c1 3 1 6-1 9c4-3 8-3 11 1l2-3l3 3c3-4 7-4 11-1c-2-3-2-6-1-9c-6-3-12-1-15 4l-1 2z'/%3E%3C/g%3E%3Cg transform='translate(200 200) scale(0.55)'%3E%3Cpath d='M0-2c-3-5-9-7-15-4c1 3 1 6-1 9c4-3 8-3 11 1l2-3l3 3c3-4 7-4 11-1c-2-3-2-6-1-9c-6-3-12-1-15 4l-1 2z'/%3E%3C/g%3E%3Cpath d='M88 226v-21a11 11 0 0 1 22 0v21z'/%3E%3Crect x='85' y='226' width='28' height='4'/%3E%3Cpath fill-rule='evenodd' d='M180 156a24 24 0 1 0 48 0a24 24 0 1 0-48 0zM194 156a19 19 0 1 0 38 0a19 19 0 1 0-38 0z'/%3E%3Ccircle cx='174' cy='120' r='1.6'/%3E%3Ccircle cx='232' cy='150' r='1.4'/%3E%3C/g%3E%3C/svg%3E");
   --world-backdrop-size: 320px 320px;
+  /* Slot 1's alpha. Ceiling .275 (see the slot rule); .24 keeps the margin. */
+  --world-backdrop-alpha: .24;
   /* Webs hang from the top of the viewport and thin out below. */
   --world-backdrop-fade: linear-gradient(#000 0%, transparent 130vh);
   --world-frame: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='88' height='56' viewBox='0 0 88 56'%3E%3Cg transform='translate(2 2)'%3E%3Cg fill='none' stroke='%23000' stroke-width='1.5' stroke-linecap='round'%3E%3Cpath d='M0 0L56.0 0.0M0 0L52.6 19.2M0 0L42.9 36.0M0 0L28.0 48.5M0 0L9.7 55.1M0 0L0.0 56.0'/%3E%3Cpath d='M16.8 0Q13.1 13.1 0 16.8M30.800000000000004 0Q24.0 24.0 0 30.800000000000004M44.800000000000004 0Q34.9 34.9 0 44.800000000000004M56 0Q43.7 43.7 0 56' opacity='.85'/%3E%3C/g%3E%3C/g%3E%3Cg fill='%23000'%3E%3Cpath d='M70 14v16' stroke='%23000' stroke-width='1.2'/%3E%3Ccircle cx='70' cy='30' r='2.6'/%3E%3Cellipse cx='70' cy='37' rx='4' ry='5'/%3E%3Cpath d='M66 34l-7-3M66 39l-7 2M74 34l7-3M74 39l7 2' stroke='%23000' stroke-width='1.2' fill='none'/%3E%3C/g%3E%3C/svg%3E");
@@ -9864,8 +9877,10 @@ kbd {
   --world-font: "Alfa Slab One";
   --world-backdrop: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240' viewBox='0 0 240 240'%3E%3Cg fill='%23000'%3E%3Cg transform='translate(40 30) rotate(20) scale(0.9)'%3E%3Cellipse cx='0' cy='5' rx='6.5' ry='5.5'/%3E%3Cellipse cx='-7.5' cy='-6' rx='2.8' ry='7' transform='rotate(-32 -7.5 -6)'/%3E%3Cellipse cx='0' cy='-9' rx='2.8' ry='8'/%3E%3Cellipse cx='7.5' cy='-6' rx='2.8' ry='7' transform='rotate(32 7.5 -6)'/%3E%3C/g%3E%3Cg transform='translate(74 74) rotate(16) scale(0.9)'%3E%3Cellipse cx='0' cy='5' rx='6.5' ry='5.5'/%3E%3Cellipse cx='-7.5' cy='-6' rx='2.8' ry='7' transform='rotate(-32 -7.5 -6)'/%3E%3Cellipse cx='0' cy='-9' rx='2.8' ry='8'/%3E%3Cellipse cx='7.5' cy='-6' rx='2.8' ry='7' transform='rotate(32 7.5 -6)'/%3E%3C/g%3E%3Cg transform='translate(100 122) rotate(22) scale(0.9)'%3E%3Cellipse cx='0' cy='5' rx='6.5' ry='5.5'/%3E%3Cellipse cx='-7.5' cy='-6' rx='2.8' ry='7' transform='rotate(-32 -7.5 -6)'/%3E%3Cellipse cx='0' cy='-9' rx='2.8' ry='8'/%3E%3Cellipse cx='7.5' cy='-6' rx='2.8' ry='7' transform='rotate(32 7.5 -6)'/%3E%3C/g%3E%3Cg transform='translate(136 166) rotate(18) scale(0.9)'%3E%3Cellipse cx='0' cy='5' rx='6.5' ry='5.5'/%3E%3Cellipse cx='-7.5' cy='-6' rx='2.8' ry='7' transform='rotate(-32 -7.5 -6)'/%3E%3Cellipse cx='0' cy='-9' rx='2.8' ry='8'/%3E%3Cellipse cx='7.5' cy='-6' rx='2.8' ry='7' transform='rotate(32 7.5 -6)'/%3E%3C/g%3E%3Cg transform='translate(164 214) rotate(24) scale(0.9)'%3E%3Cellipse cx='0' cy='5' rx='6.5' ry='5.5'/%3E%3Cellipse cx='-7.5' cy='-6' rx='2.8' ry='7' transform='rotate(-32 -7.5 -6)'/%3E%3Cellipse cx='0' cy='-9' rx='2.8' ry='8'/%3E%3Cellipse cx='7.5' cy='-6' rx='2.8' ry='7' transform='rotate(32 7.5 -6)'/%3E%3C/g%3E%3Cg transform='translate(190 50) rotate(-28) scale(0.8)'%3E%3Crect x='-13' y='-3' width='26' height='6' rx='3'/%3E%3Ccircle cx='-13' cy='-4' r='4.2'/%3E%3Ccircle cx='-13' cy='4' r='4.2'/%3E%3Ccircle cx='13' cy='-4' r='4.2'/%3E%3Ccircle cx='13' cy='4' r='4.2'/%3E%3C/g%3E%3Cg transform='translate(40 190) rotate(24) scale(0.7)'%3E%3Crect x='-13' y='-3' width='26' height='6' rx='3'/%3E%3Ccircle cx='-13' cy='-4' r='4.2'/%3E%3Ccircle cx='-13' cy='4' r='4.2'/%3E%3Ccircle cx='13' cy='-4' r='4.2'/%3E%3Ccircle cx='13' cy='4' r='4.2'/%3E%3C/g%3E%3Cg transform='translate(210 130) rotate(70) scale(0.55)'%3E%3Crect x='-13' y='-3' width='26' height='6' rx='3'/%3E%3Ccircle cx='-13' cy='-4' r='4.2'/%3E%3Ccircle cx='-13' cy='4' r='4.2'/%3E%3Ccircle cx='13' cy='-4' r='4.2'/%3E%3Ccircle cx='13' cy='4' r='4.2'/%3E%3C/g%3E%3Cpath d='M20 118c4-5 10-5 14 0c0 5-3 9-7 12c-4-3-7-7-7-12z' opacity='.8'/%3E%3C/g%3E%3C/svg%3E");
   --world-backdrop-size: 320px 320px;
-  /* Sediment: rises from the bottom of the viewport. */
-  --world-backdrop-fade: linear-gradient(transparent 0%, #000 100vh);
+  /* Slot 1's alpha. Ceiling .090 (see the slot rule); .09 keeps the margin. */
+  --world-backdrop-alpha: .09;
+  /* Sediment: rises from the bottom of the viewport, floored; see burg. */
+  --world-backdrop-fade: linear-gradient(rgb(0 0 0 / .55) 0%, #000 100vh);
   --world-frame: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='88' height='56' viewBox='0 0 88 56'%3E%3Cg fill='%23000'%3E%3Cg transform='translate(10 48) rotate(-40) scale(0.5)'%3E%3Cellipse cx='0' cy='5' rx='6.5' ry='5.5'/%3E%3Cellipse cx='-7.5' cy='-6' rx='2.8' ry='7' transform='rotate(-32 -7.5 -6)'/%3E%3Cellipse cx='0' cy='-9' rx='2.8' ry='8'/%3E%3Cellipse cx='7.5' cy='-6' rx='2.8' ry='7' transform='rotate(32 7.5 -6)'/%3E%3C/g%3E%3Cg transform='translate(26 32) rotate(-48) scale(0.62)'%3E%3Cellipse cx='0' cy='5' rx='6.5' ry='5.5'/%3E%3Cellipse cx='-7.5' cy='-6' rx='2.8' ry='7' transform='rotate(-32 -7.5 -6)'/%3E%3Cellipse cx='0' cy='-9' rx='2.8' ry='8'/%3E%3Cellipse cx='7.5' cy='-6' rx='2.8' ry='7' transform='rotate(32 7.5 -6)'/%3E%3C/g%3E%3Cg transform='translate(46 20) rotate(-58) scale(0.74)'%3E%3Cellipse cx='0' cy='5' rx='6.5' ry='5.5'/%3E%3Cellipse cx='-7.5' cy='-6' rx='2.8' ry='7' transform='rotate(-32 -7.5 -6)'/%3E%3Cellipse cx='0' cy='-9' rx='2.8' ry='8'/%3E%3Cellipse cx='7.5' cy='-6' rx='2.8' ry='7' transform='rotate(32 7.5 -6)'/%3E%3C/g%3E%3Cg transform='translate(70 12) rotate(-70) scale(0.86)'%3E%3Cellipse cx='0' cy='5' rx='6.5' ry='5.5'/%3E%3Cellipse cx='-7.5' cy='-6' rx='2.8' ry='7' transform='rotate(-32 -7.5 -6)'/%3E%3Cellipse cx='0' cy='-9' rx='2.8' ry='8'/%3E%3Cellipse cx='7.5' cy='-6' rx='2.8' ry='7' transform='rotate(32 7.5 -6)'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
   --world-rule: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='10' viewBox='0 0 140 10'%3E%3Cg fill='%23000'%3E%3Crect x='0' y='3' width='7.0' height='6.0' rx='1.6'/%3E%3Crect x='2.3' y='0.8' width='2.4' height='2'/%3E%3Crect x='10' y='3.1' width='6.8' height='5.8' rx='1.6'/%3E%3Crect x='12.2' y='0.9' width='2.4' height='2'/%3E%3Crect x='20' y='3.2' width='6.7' height='5.6' rx='1.6'/%3E%3Crect x='22.2' y='1.0' width='2.4' height='2'/%3E%3Crect x='30' y='3.3' width='6.5' height='5.4' rx='1.6'/%3E%3Crect x='32.1' y='1.1' width='2.4' height='2'/%3E%3Crect x='40' y='3.4' width='6.4' height='5.2' rx='1.6'/%3E%3Crect x='42.0' y='1.2' width='2.4' height='2'/%3E%3Crect x='50' y='3.5' width='6.3' height='5.0' rx='1.6'/%3E%3Crect x='51.9' y='1.3' width='2.4' height='2'/%3E%3Crect x='60' y='3.6' width='6.1' height='4.8' rx='1.6'/%3E%3Crect x='61.8' y='1.4' width='2.4' height='2'/%3E%3Crect x='70' y='3.7' width='6.0' height='4.6' rx='1.6'/%3E%3Crect x='71.8' y='1.5' width='2.4' height='2'/%3E%3Crect x='80' y='3.8' width='5.8' height='4.4' rx='1.6'/%3E%3Crect x='81.7' y='1.6' width='2.4' height='2'/%3E%3Crect x='90' y='3.9' width='5.7' height='4.2' rx='1.6'/%3E%3Crect x='91.6' y='1.7' width='2.4' height='2'/%3E%3Crect x='100' y='4' width='5.5' height='4.0' rx='1.6'/%3E%3Crect x='101.5' y='1.8' width='2.4' height='2'/%3E%3Crect x='110' y='4.1' width='5.3' height='3.8' rx='1.6'/%3E%3Crect x='111.5' y='1.9' width='2.4' height='2'/%3E%3Crect x='120' y='4.2' width='5.2' height='3.6' rx='1.6'/%3E%3Crect x='121.4' y='2.0' width='2.4' height='2'/%3E%3Crect x='0' y='4.4' width='134' height='1.2' opacity='.6'/%3E%3C/g%3E%3C/svg%3E");
   --world-corner: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 22 22'%3E%3Cpath d='M4 3c4 3 10 3 14 0c1 8-3 15-7 18c-4-3-8-10-7-18z' fill='%23000'/%3E%3C/svg%3E");
@@ -9903,8 +9918,18 @@ kbd {
   --world-font: "Cinzel";
   --world-backdrop: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240' viewBox='0 0 240 240'%3E%3Cg fill='%23000'%3E%3Cpath d='M30 40h6v-6h5v6h6v-6h5v6h6v-6h5v6h6v34H30zM36 52v18h20V52z'/%3E%3Cpath d='M150 130c0-2 12-4 16-4s16 2 16 4v18c0 10-8 18-16 22c-8-4-16-12-16-22z'/%3E%3Cpath fill-rule='evenodd' d='M60 170a10 10 0 1 0 20 0a10 10 0 1 0-20 0zM66 170a4 4 0 1 0 8 0a4 4 0 1 0-8 0zM78 168h30v5h-6v5h-5v-5h-4v5h-5v-5h-10z'/%3E%3Cpath d='M190 40v60h-3V40zM191 40l26 8l-26 8z'/%3E%3Cpath d='M110 90c-4-6-2-12 4-14c3 4 3 8 0 12c6-2 10 2 10 6c-4 2-8 0-10-4c-2 4-6 6-10 4c0-4 2-6 6-4z'/%3E%3Cpath d='M200 186c-7 7-9 14-4 20c1-4 4-7 7-10c2 4 4 8 3 12c6-5 5-15-2-22c0 3-1 6-4 8c1-3 1-6 0-8z'/%3E%3Cpath d='M196 208h8l-2 22h-4z'/%3E%3C/g%3E%3C/svg%3E");
   --world-backdrop-size: 320px 320px;
-  /* Stone: rises from the floor of the viewport, like Dinosaurs' sediment. */
-  --world-backdrop-fade: linear-gradient(transparent 0%, #000 100vh);
+  /* Slot 1's alpha. Ceiling .335 (see the slot rule); .30 keeps the margin. */
+  --world-backdrop-alpha: .30;
+  /* Stone: rises from the floor of the viewport, like Dinosaurs' sediment.
+
+     The gradient starts at .55, not at `transparent` (#1138). This layer is
+     `position: fixed`, so the gradient does NOT scroll: stop 0% is the top of
+     every screen, forever, and a transparent stop there means the motif is
+     absent exactly where the eye lands first and present only along the
+     viewport floor — which is what the report showed. .55 keeps the ramp the
+     world wants (the motif still gathers downward, ~1.8x denser at the floor)
+     while the top reads at Lc ~4, half a light world's step rather than none. */
+  --world-backdrop-fade: linear-gradient(rgb(0 0 0 / .55) 0%, #000 100vh);
   --world-frame: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='88' height='56' viewBox='0 0 88 56'%3E%3Cg fill='%23000'%3E%3Cpath d='M0 0h7v6h6V0h7v6h6V0h7v6h6V0h7v12H12v32H0zM0 26h12v7H0z'/%3E%3C/g%3E%3C/svg%3E");
   --world-rule: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='10' viewBox='0 0 140 10'%3E%3Cg fill='%23000'%3E%3Cpath d='M0 1H140v1.2H0zM0 2L10 10L20 2zM20 2L30 10L40 2zM40 2L50 10L60 2zM60 2L70 10L80 2zM80 2L90 10L100 2zM100 2L110 10L120 2zM120 2L130 10L140 2z'/%3E%3C/g%3E%3C/svg%3E");
   --world-corner: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 22 22'%3E%3Cg fill='%23000'%3E%3Cpath d='M3 3c0-1 6-2 8-2s8 1 8 2v9c0 5-4 8-8 10c-4-2-8-5-8-10z'/%3E%3C/g%3E%3C/svg%3E");
@@ -9950,9 +9975,18 @@ kbd {
 /* Slot 1 — the page backdrop. A fixed layer under everything, above the
    body's own glow + grain: the motif tile, intersected with a fade so it sits
    where the world wants it and never across a whole reading column at once.
-   Alpha is the contrast budget: at .09 of the accent over the page, --ink
-   keeps AAA and --ink-soft keeps AA on the densest pixel of the motif
-   (test/round-worlds.test.js pins the ceiling and measures both). */
+
+   Alpha is the contrast budget, and it is PER WORLD (#1138) rather than one
+   number: --ink keeps AAA and --ink-soft keeps AA on the densest pixel of the
+   motif, which each world's own page and accent price differently
+   (test/round-worlds.test.js measures both, per world, and there is no shared
+   ceiling left to pin). One flat .09 shipped until #1138 and was tuned for a
+   LIGHT page: alpha is not comparable across schemes, because the same step
+   over a near-black page is swallowed by screen flare — the term APCA models
+   and a pure lightness space does not. Measured that way the three dark worlds
+   sat at Lc ~2.4 against the light worlds' ~8.4, i.e. under a third of the
+   step, while their own AAA/AA ceilings were three times higher (burg .335)
+   than the number they were held to. Their alphas buy that step back. */
 [data-world] body::before {
   content: '';
   position: fixed;
@@ -9960,7 +9994,7 @@ kbd {
   z-index: -1;
   pointer-events: none;
   background: var(--brand);
-  opacity: .09;
+  opacity: var(--world-backdrop-alpha);
   mask-image: var(--world-backdrop), var(--world-backdrop-fade);
   mask-size: var(--world-backdrop-size), 100% 100%;
   mask-repeat: repeat, no-repeat;
@@ -10387,8 +10421,24 @@ kbd {
   /* One declaration, overridden by the host rather than by a second rule at the
      same specificity — where source order, not the author, would decide
      (test/css-specificity.test.js). The poster card below carries the crown as
-     well as this backdrop, so .16 under both stacks into mud. */
-  opacity: var(--motif-a, .16);
+     well as this backdrop, so the swatch alpha under both stacks into mud.
+
+     THE FALLBACK IS THE HOME ROUND TILE, and only that (#1138). Every world
+     card in the picker is a poster — views-round-settings.js sets posters:true
+     for the WELTEN group, which IS the world registry — so .theme-card--world
+     overrides this on all seven, and the value here is reached exclusively by
+     .round-card[data-world] on home. That is why it does NOT derive from
+     --world-backdrop-alpha the way the poster below does: the tile sits on the
+     UNTHEMED lobby's --surface in the visitor's own scheme, so the dark-page
+     flare argument behind the per-world alphas simply does not apply to it,
+     and the text over it is --ink-soft body type rather than a display-size
+     accent name. Its own bar is AA on that ink, on BOTH lobby schemes, which
+     caps it at .150 (Chess, light lobby) — .14 for the margin, the same value
+     and the same reasoning as the dock's motif. It shipped at .16 until #1138,
+     i.e. at 4.44:1 on Chess: under the bar, on a light world rather than one
+     of the dark ones this issue was about. test/a11y-contrast.test.js measures
+     it per world per lobby. */
+  opacity: var(--motif-a, .14);
   mask-image: var(--world-backdrop);
   mask-size: var(--world-backdrop-size);
   mask-repeat: repeat;
@@ -10407,7 +10457,22 @@ kbd {
    below it, on the page, at the tone it had as a swatch. */
 .theme-cards--worlds { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
 .theme-card--world {
-  --motif-a: .10;
+  /* Derived (#1138), so the poster PREDICTS the page: a world whose backdrop
+     was retuned shows that retune in the card it is chosen from, instead of
+     being picked off a card where the motif reads and landing on a page where
+     it does not. x1.1 lands the four light worlds at .099 — a hair off the .10
+     measured for this card. The card carries the crown as well, which is why
+     it is x1.1 and not the bolder ratio the backdrop itself could take.
+
+     The bar here is neither ink: it is .theme-card__name, painted in the
+     design's OWN accent (views-round-settings.js writes it inline), so the
+     name CLOSES on the wash as alpha rises. At --text-xl/700 that is large
+     text, 3:1, and the measured maxima run .400 (ocean) to .610 (chess).
+     The .30 cap is MARGIN, not the bar: it binds only burg (x1.1 would give
+     it .33) and buys 4.06:1 where the uncapped value still passes at 3.79:1.
+     Keeping it means the derivation cannot walk a retuned world up to its
+     ceiling unnoticed. */
+  --motif-a: min(calc(var(--world-backdrop-alpha) * 1.1), .30);
   padding: 0;
   gap: 0;
   align-items: stretch;

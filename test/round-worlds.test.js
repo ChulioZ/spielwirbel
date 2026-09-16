@@ -229,6 +229,10 @@ test('the home tile shows the world glyph, and the app glyph for a palette', asy
 // ---- the CSS contract ----------------------------------------------------
 
 const TOKENS = ['--world-font', '--world-backdrop', '--world-backdrop-size', '--world-backdrop-fade',
+  // Slot 1's alpha (#1138). Explicit in all seven rather than a var() fallback
+  // on the slot rule: a world that forgot it would silently inherit a number
+  // measured for somebody else's page, which is the bug that issue was.
+  '--world-backdrop-alpha',
   '--world-frame', '--world-rule', '--world-corner', '--world-scene',
   '--world-stage', '--world-stage-size', '--world-stage-repeat', '--world-stage-position',
   // Slot 7 (#940): the victory scene's two layers, each a gutter pair plus a
@@ -391,9 +395,41 @@ test('the poster crown re-uses slot 8\'s art and per-world anchor, over a lighte
   assert.match(crown, /mask-position:\s*center var\(--world-crown-y\)/,
     'a fixed edge crops half the worlds at the wrong end');
   assert.match(slotBody(':is(.theme-card, .round-card)[data-world]::before'),
-    /opacity:\s*var\(--motif-a,\s*\.16\)/, 'the card backdrop takes no per-card alpha');
-  assert.match(slotBody('.theme-card--world'), /--motif-a:\s*\.10/,
-    'the poster keeps the full swatch alpha under its crown');
+    /opacity:\s*var\(--motif-a,\s*\.14\)/, 'the card backdrop takes no per-card alpha');
+  /* #1138: the poster's own alpha is DERIVED, so retuning a world's backdrop
+     moves the card it is chosen from. The fallback beside it stays a literal on
+     purpose — it is reached only by the home round tile, which sits on the
+     unthemed lobby and is measured against a different ink in
+     test/a11y-contrast.test.js. Asserting the shape, not the number, so the
+     two cannot silently converge again. */
+  assert.match(slotBody('.theme-card--world'),
+    /--motif-a:\s*min\(calc\(var\(--world-backdrop-alpha\)\s*\*\s*[\d.]+\),\s*\.[\d]+\)/,
+    'the poster must derive its motif from the backdrop alpha it previews');
+});
+
+test('the poster\'s derived motif keeps the world\'s own name legible on it', () => {
+  /* The bar on this card is NOT an ink: .theme-card__name is painted in the
+     design's own accent (views-round-settings.js writes it inline), and the
+     motif under it is that same accent — so the two CLOSE on each other as
+     alpha rises, which is the failure a derivation can introduce and no ink
+     measurement anywhere else would see. --text-xl at 700 is large text: 3:1.
+
+     The card is self-contained rather than dependent on the round it is shown
+     in: it carries background:<page> and --brand:<accent> inline, so the
+     composite below is what ships regardless of the surrounding design. */
+  const m = /--motif-a:\s*min\(calc\(var\(--world-backdrop-alpha\)\s*\*\s*([\d.]+)\),\s*(\.[\d]+)\)/
+    .exec(slotBody('.theme-card--world'));
+  assert.ok(m, 'the poster declares no derived --motif-a');
+  const [factor, cap] = [Number(m[1]), Number(m[2])];
+  const failures = [];
+  for (const w of WORLDS) {
+    const th = tokensFor(w);
+    const a = Math.min(backdropAlpha(w) * factor, cap);
+    const ratio = contrast(th.brand, over(th.brand, th.page, a));
+    if (ratio < 3) failures.push(`${w.id}: the name at --motif-a ${a.toFixed(3)} = ${ratio.toFixed(2)}:1`);
+  }
+  assert.deepEqual(failures, [],
+    'a poster name is the accent ON the accent; large bold text needs 3:1');
 });
 
 test('the podium floor reserves its band through ONE property, and that property is a LENGTH', () => {
@@ -546,11 +582,23 @@ test('the crown, the dock motif and the podium floor stand down under prefers-co
     'the vessel is hidden but its band is not zeroed — an empty strip under the covers');
 });
 
+/* The alpha each world declares for slot 1, read from its own token block. */
+const backdropAlpha = (world) => {
+  const m = /--world-backdrop-alpha:\s*([\d.]+)/.exec(bodyOf(`[data-world="${world.id}"]`) || '');
+  assert.ok(m, `${world.id} declares no --world-backdrop-alpha`);
+  return Number(m[1]);
+};
+const over = (top, under, a) => top.map((c, i) => Math.round(c * a + under[i] * (1 - a)));
+
 test('the backdrop alpha stays inside the contrast budget for body text on the page', () => {
-  const m = /opacity:\s*([\d.]+)/.exec(slotBody('[data-world] body::before'));
-  assert.ok(m, 'the backdrop declares no opacity');
-  const alpha = Number(m[1]);
-  assert.ok(alpha <= 0.1, `backdrop alpha ${alpha} is above the .1 ceiling`);
+  /* Until #1138 this read ONE opacity off the slot rule and capped it at .1.
+     The cap was standing in for the measurement below — and it stood in badly,
+     because .1 is near the ceiling on a light page (dinos' is .090) and about a
+     third of it on a dark one (burg's is .335). So the flat number both
+     over-constrained the dark worlds and told nobody it was doing so. The slot
+     now reads a per-world token and the only bar left is the real one. */
+  assert.match(slotBody('[data-world] body::before'), /opacity:\s*var\(--world-backdrop-alpha\)/,
+    'slot 1 must take its alpha from the per-world token, not a literal');
 
   // Composite the accent over the page at that alpha and measure the two inks
   // that sit straight on the page, the way test/a11y-contrast.test.js does.
@@ -558,20 +606,50 @@ test('the backdrop alpha stays inside the contrast budget for body text on the p
      world (#904) replaces both, and a regex over `:root` would have measured the
      light pair over a night page — reporting ~1.05:1 for a combination the app
      never paints, i.e. failing for the wrong reason and hiding the real one. */
-  const over = (top, under, a) => top.map((c, i) => Math.round(c * a + under[i] * (1 - a)));
   // The motif is at its densest where a silhouette is fully covered, so the
   // composite IS the worst pixel; body text keeps AAA there and the muted ink
-  // keeps AA. (At .09 the drop is ~1.5 points off a ~13:1 ratio.)
+  // keeps AA.
   const failures = [];
   for (const w of WORLDS) {
     const t = tokensFor(w);
-    const bg = over(t.brand, t.page, alpha);
+    const bg = over(t.brand, t.page, backdropAlpha(w));
     const onMotif = contrast(t.ink, bg);
     const softOnMotif = contrast(t.inkSoft, bg);
     if (onMotif < 7) failures.push(`${w.id}: --ink on the motif = ${onMotif.toFixed(2)}:1`);
     if (softOnMotif < 4.5) failures.push(`${w.id}: --ink-soft on the motif = ${softOnMotif.toFixed(2)}:1`);
   }
   assert.deepEqual(failures, [], 'a motif under text must keep AAA for --ink and AA for --ink-soft');
+});
+
+test('a bottom-weighted backdrop fade never starts at zero, or the motif is absent at the top of every screen', () => {
+  /* Slot 1 is `position: fixed`, so its fade does not scroll: stop 0% is the
+     top of the viewport on every screen the round ever shows. A mask is
+     multiplicative, so `transparent 0%` there means NO motif at the top
+     whatever the alpha above says — the reported symptom on burg, and the half
+     of #1138 that no alpha retune would have fixed.
+
+     Only the worlds whose gradient RISES are in scope; forest and horror
+     already start opaque and are excluded by reading the direction rather than
+     by naming them, so a world that flips its gradient is covered for free. */
+  const checked = [];
+  const failures = [];
+  for (const w of WORLDS) {
+    const body = bodyOf(`[data-world="${w.id}"]`) || '';
+    const m = /--world-backdrop-fade:\s*linear-gradient\(([^;]+)\);/.exec(body);
+    assert.ok(m, `${w.id} declares no --world-backdrop-fade`);
+    const first = m[1].split(',').find((s) => !/^\s*(to |[\d.]+deg)/.test(s)) || '';
+    // A gradient that starts opaque is top-weighted; it is not this trap.
+    if (/#000\s*0%/.test(first)) continue;
+    checked.push(w.id);
+    if (/transparent/.test(first)) { failures.push(`${w.id}: fade starts at transparent`); continue; }
+    const a = /\/\s*([\d.]+)\s*\)/.exec(first);
+    if (!a) { failures.push(`${w.id}: fade's first stop has no readable alpha (${first.trim()})`); continue; }
+    if (Number(a[1]) < 0.2) failures.push(`${w.id}: fade starts at ${a[1]}, too faint to read at the top`);
+  }
+  // Anti-vacuous: the loop must have judged something. If every world were
+  // top-weighted the assertion below would pass while measuring nothing.
+  assert.ok(checked.length >= 3, `only ${checked.length} rising fades found — has the shape changed?`);
+  assert.deepEqual(failures, [], 'a rising fade needs a non-zero floor so the motif reads at the top too');
 });
 
 /* The scene slots are BOLD (.36 / .4) because they sit where no text is — and
