@@ -323,9 +323,16 @@ test('the stamp on the box is the SAME component as the game page presses', () =
 /* #1139 — the picker state on a phone.
  *
  * The band kept its two-column table layout while the picker was open, so a
- * 390pt phone left the chips a ~250pt gutter: 7 chips over 6 rows, one of them
- * („Fortsetzung folgt") wrapping INSIDE its own pill, and „Fertig" below the
- * fold at the one moment the whole group is looking at the screen.
+ * 390pt phone left the chips a 222pt gutter. Measured there, on the issue's
+ * fixture (three-line title, four members, three endings): the band ran 665px,
+ * the question took four lines to ask one thing, and „Fortsetzung folgt"
+ * wrapped INSIDE its own pill — a 72px chip beside six 48px ones. After: 507px,
+ * one line, and a uniform 44px.
+ *
+ * Note what is NOT the evidence. The issue's own acceptance criterion — the
+ * actions row above `clientHeight` with the band scrolled to the top — was
+ * already true on `main` at every realistic phone height, so it discriminates
+ * nothing; the 158px and the uniform chip heights are the finding.
  *
  * These ask which declaration WINS, not merely that one exists — the picking
  * rules compete with the `.tisch` / `.tisch__box` rules in the same media
