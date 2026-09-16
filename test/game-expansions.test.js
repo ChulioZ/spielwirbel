@@ -251,50 +251,61 @@ function boot(t, expansions) {
 }
 
 /* #1039 replaced the `.gd-expansions` page section with a chip on the card that
-   opens the editor, and moved the owned rows — with their remove control — to
-   the top of that editor. So the "does the round own anything" question is now
-   answered by the chip, and the rows are asserted inside the overlay.
+   opens the editor, and moved the owned rows into it. So the "does the round own
+   anything" question is answered by the chip, and the entries are asserted inside
+   the overlay.
 
-   Opening it needs the desktop branch stubbed, because jsdom's matchMedia never
-   matches and the editor would otherwise present as a sheet. */
+   Since #1143 the editor is a centred list DIALOG at every width, so there is no
+   `usesEditorSheet` stub here any more — which is also why every spec in this
+   file is a check on that: `window.matchMedia` does not exist at all in this
+   harness, so an editor still consulting the 860px split throws
+   (`matchMedia is not a function`) rather than falling back to a sheet, and the
+   whole file goes red. The explicit DESKTOP stub in the presentation spec at the
+   bottom is the narrower guard — it is the one that distinguishes "took the
+   split" from "took the anchored branch". */
 const expansionsChip = (dom) => dom.app.querySelector('.gd-chips .tag--expansions');
 
 async function openExpansions(dom, gameId) {
-  dom.set('usesEditorSheet', () => false);
   await dom.call('showGameDetail', 'r1', gameId);
   const chip = expansionsChip(dom);
   assert.ok(chip, 'the expansions chip is not on the card');
   chip.click();
-  const card = dom.document.querySelector('.popover--expansions');
+  const card = dom.document.querySelector('.editor--expansions');
   assert.ok(card, 'the expansions editor did not open');
   return card;
 }
 
-test('the chip counts the owned expansions and the editor lists them, with and without a range', async (t) => {
+test('the chip counts the owned expansions, and they lead the list as TICKED rows', async (t) => {
   const { dom } = boot(t, EXP);
   const card = await openExpansions(dom, 'g1');
 
   assert.match(expansionsChip(dom).textContent, /2 Erweiterungen/, 'the chip states the count');
 
-  const titles = [...card.querySelectorAll('.exp-have__row .ds-row__title')].map((el) => el.textContent);
+  const titles = [...card.querySelectorAll('.exp-row .ds-row__title')].map((el) => el.textContent);
   assert.deepEqual(titles, ['5–6 Spieler', 'Ohne Angabe']);
   // An expansion whose player count nobody knows says so, rather than showing
   // a range it does not have.
-  const metas = [...card.querySelectorAll('.exp-have__row .ds-row__main .muted')].map((el) => el.textContent);
+  const metas = [...card.querySelectorAll('.exp-row .ds-row__main .muted')].map((el) => el.textContent);
   assert.deepEqual(metas, ['5–6 Personen', 'ohne Spielerzahl']);
-  // The remove control is the reason the rows had to move rather than simply go:
-  // the editor is now the only way to it.
-  assert.equal(card.querySelectorAll('.exp-have__row .exp-row__remove').length, 2);
-  assert.ok(card.querySelector('.exp-own__name'), 'and the add form is still below them');
+  // Owned IS ticked (#1143): one list, one row shape, two states. The old editor
+  // rendered these in a separate box with a „Entfernen" button apiece.
+  const boxes = [...card.querySelectorAll('.exp-row input')];
+  assert.deepEqual(boxes.map((b) => b.checked), [true, true]);
+  assert.equal(card.querySelectorAll('.exp-row.ds-row--picked').length, 2, 'and reads as picked');
+  assert.equal(card.querySelector('.exp-row__remove'), null,
+    'removal is unticking now — a per-row remove button would be a second commit model');
 });
 
-test('owning none leaves a dashed chip as the way in, and the editor lists nothing', async (t) => {
+test('owning none leaves a dashed chip as the way in, and the list is empty', async (t) => {
   const { dom } = boot(t, null);
   const card = await openExpansions(dom, 'g1');
   assert.ok(expansionsChip(dom).classList.contains('tag--empty'), 'the chip reads as unset');
   assert.match(expansionsChip(dom).textContent, /Erweiterung/);
-  assert.equal(card.querySelector('.exp-have'), null, 'no owned block at all');
+  assert.equal(card.querySelectorAll('.exp-row').length, 0, 'nothing to tick');
   assert.ok(card.querySelector('.exp-own__name'), 'but still the way to add one');
+  // Nothing to read and no provider to ask, so the one action on offer is not
+  // hidden behind a disclosure over an empty box.
+  assert.equal(card.querySelector('.exp-own').open, true);
 });
 
 test('a wished EXPANSION\'s own detail page offers no expansions affordance at all (#698)', async (t) => {
@@ -389,86 +400,6 @@ test('… and says nothing when the base box already seats the table', async (t)
   assert.equal(dom.app.querySelector('.tisch__note--warn'), null, 'and says nothing about a box');
 });
 
-/* --------- the editor's anchored variant must be RE-PLACED (#653) ----------
-   The candidate list arrives asynchronously, so `openPopover` measures the card
-   while it still says "…" and the placement it picks is for that height. Left
-   alone the grown card hangs off the bottom of the viewport — and there is no
-   recovering from that by scrolling, because a page scroll CLOSES a popover
-   (.claude/rules/anchored-popover-is-placed-once.md).
-
-   Measured before the fix, on an 800px viewport with a low anchor: the card
-   grew 379px -> 592px, kept `top: 315`, and the OK button landed at y=898 —
-   98px below the fold, unreachable. */
-
-test('the expansion editor re-places its popover once the candidates arrive', async (t) => {
-  const dom = loadApp({ locale: 'de' });
-  t.after(() => dom.close());
-  const round = roundFixture(null);
-  round.games[0].source = { provider: 'bgg', externalId: '13', url: 'https://boardgamegeek.com/boardgame/13' };
-  // NOT the fixture's `[]`, which means "query nothing" rather than "all"
-  // (the absent-≠-empty shape the retired `providers` setting had, #744).
-  round.providers = ['bgg'];
-
-  let resolveLookup;
-  const pending = new Promise((r) => { resolveLookup = r; });
-  dom.set('api', async (method, url) => {
-    if (/\/activities$/.test(url)) return [];
-    if (/\/lookup\/expansions/.test(url)) return pending;
-    if (/^\/api\/rounds\/[^/]+$/.test(url)) return round;
-    return {};
-  });
-  dom.set('isLoggedIn', () => false);
-  // The desktop branch: jsdom's matchMedia never matches, so the editor would
-  // otherwise present as a sheet, which scrolls itself and needs no placement.
-  dom.set('usesEditorSheet', () => false);
-  let placements = 0;
-  dom.set('repositionPopover', () => { placements += 1; });
-
-  await dom.call('showGameDetail', 'r1', 'g1');
-  dom.app.querySelector('.gd-chips .tag--expansions').click();
-  await new Promise((r) => setTimeout(r, 0));
-  assert.equal(placements, 0, 'nothing to re-place while the list is still loading');
-
-  resolveLookup({ expansions: [{ providerId: '325', title: 'Seefahrer' }] });
-  await new Promise((r) => setTimeout(r, 0));
-  await new Promise((r) => setTimeout(r, 0));
-  assert.equal(placements, 1, 'the card changed height, so it must be placed again');
-});
-
-test('… and re-places even when the lookup FAILS or comes back empty', async () => {
-  // Both branches also change the card's height (a one-line message replaces
-  // the "…" placeholder), and the failure branch is the one a `.then()`-only
-  // fix would silently miss.
-  for (const outcome of ['empty', 'error']) {
-    const dom = loadApp({ locale: 'de' });
-    const round = roundFixture(null);
-    round.games[0].source = { provider: 'bgg', externalId: '13', url: 'https://boardgamegeek.com/boardgame/13' };
-    // NOT the fixture's `[]`, which means "query nothing" rather than "all"
-    // (absent means "all", #744) — with it the tick-list is never
-    // built and the branch under test does not run at all.
-    round.providers = ['bgg'];
-    dom.set('api', async (method, url) => {
-      if (/\/activities$/.test(url)) return [];
-      if (/\/lookup\/expansions/.test(url)) {
-        if (outcome === 'error') throw new Error('provider_unreachable');
-        return { expansions: [] };
-      }
-      if (/^\/api\/rounds\/[^/]+$/.test(url)) return round;
-      return {};
-    });
-    dom.set('isLoggedIn', () => false);
-    dom.set('usesEditorSheet', () => false);
-    let placements = 0;
-    dom.set('repositionPopover', () => { placements += 1; });
-
-    await dom.call('showGameDetail', 'r1', 'g1');
-    dom.app.querySelector('.gd-chips .tag--expansions').click();
-    for (let i = 0; i < 4; i++) await new Promise((r) => setTimeout(r, 0));
-    assert.equal(placements, 1, `the ${outcome} branch must re-place too`);
-    dom.close();
-  }
-});
-
 /* The candidate rows repeat the base title BGG puts in front of every expansion
    name, which on a 312px phone row is a third of the line spent on the word in
    the page's own <h1>. Trimmed for display only (#1142) — what is stored is the
@@ -500,14 +431,13 @@ test('a candidate repeating the base title renders trimmed, and still stores the
     return {};
   });
   dom.set('isLoggedIn', () => false);
-  dom.set('usesEditorSheet', () => false);
 
   await dom.call('showGameDetail', 'r1', 'g1');
   dom.app.querySelector('.gd-chips .tag--expansions').click();
   for (let i = 0; i < 4; i++) await new Promise((r) => setTimeout(r, 0));
 
-  const card = dom.document.querySelector('.popover--expansions');
-  const rows = [...card.querySelectorAll('.exp-pick__row .ds-row__main')].map((el) => el.textContent);
+  const card = dom.document.querySelector('.editor--expansions');
+  const rows = [...card.querySelectorAll('.exp-row .ds-row__title')].map((el) => el.textContent);
   assert.deepEqual(rows, [
     'Erweiterung 1 – Wirtshäuser und Kathedralen',
     'Die Jäger und Sammler',
@@ -517,7 +447,7 @@ test('a candidate repeating the base title renders trimmed, and still stores the
 
   // Ticking the trimmed row still sends the id, so the server resolves the
   // provider's own full title — the trim never reaches the stored data.
-  card.querySelectorAll('.exp-pick__row input')[0].click();
+  card.querySelectorAll('.exp-row input')[0].click();
   card.querySelector('.btn--primary').click();
   await new Promise((r) => setTimeout(r, 0));
   // Compared field by field: the bodies are built in the jsdom realm, so a
@@ -525,136 +455,4 @@ test('a candidate repeating the base title renders trimmed, and still stores the
   // data.
   assert.equal(puts.length, 1, 'one PUT');
   assert.deepEqual([...puts[0].expansions].map((e) => ({ ...e })), [{ providerId: '1' }]);
-});
-
-/* ------------ the editor card is bounded by the VIEWPORT (#653) -------------
-   Asserted over the stylesheet text, because jsdom applies no external
-   stylesheet and an unresized Browser pane's viewport height is degenerate —
-   there `45vh` resolves to 0, which is precisely the failure the floor exists
-   to prevent. (`resize_window` DOES clear that, so the real geometry behind the
-   two numbers below was measured in a browser — see #728 and
-   `.claude/rules/preview-pane-paint-artifacts.md`. What cannot be measured
-   there is the stylesheet's own text, which is what these guard.) */
-
-const { bodyOf, RULES, whole, declaredValue } = require('./support/css');
-
-test('the anchored expansion editor is capped, WITH a floor', () => {
-  // Compounded with `.popover` since #706, so the card's sizing beats the base's
-  // `max-width: 300px` on specificity rather than on source order.
-  const card = bodyOf('.popover.popover--expansions');
-  assert.ok(card, 'the rule exists');
-  assert.match(card, /max-height:\s*max\(/,
-    'a bare min(…vh, …) computes to 0 on a degenerate viewport and collapses the card '
-    + 'to nothing, leaving its own children rendering outside it — measured at 18px tall '
-    + 'with the OK button 200px past its bottom edge');
-  assert.match(card, /vh/, 'and it must actually track the viewport, not just a constant');
-});
-
-test('the cap fits the room place() can actually count on — half the viewport', () => {
-  /* `place()` puts the card wholly above or wholly below its anchor and falls
-     back to BELOW when neither side fits, so the room it is guaranteed is the
-     larger of the two — worst case, an anchor in the vertical middle, half the
-     viewport. Measured on the real editor at 1440x900 (#728): at the 78vh this
-     shipped with, the card was 529px against a 430px budget and its OK button
-     landed 96px past a fold a page scroll cannot recover, on 51 of Codenames'
-     119 reachable scroll positions. At 45vh the card is 405px and every game
-     page in the sweep is clean. */
-  const vh = Number((bodyOf('.popover.popover--expansions').match(/min\(\s*(\d+)vh/) || [])[1]);
-  assert.ok(vh > 0, 'the cap has no vh term to check');
-  assert.ok(vh <= 50, `the card may claim at most half the viewport, not ${vh}vh`);
-});
-
-test('the max() floor clears what the card\'s own children insist on', () => {
-  /* The floor is not only the degenerate-viewport guard above. `.exp-pick`
-     carries `min-height: 0` so the cap can bite, so a floor BELOW the card's
-     irreducible minimum does not shrink the card — the tick-list spills out of
-     `.exp-pick` and renders on top of the free-text form (measured, 53px of
-     overlap at a 315px cap). Shipped at 280px against a 371px minimum, which
-     only bit under ~476px of viewport at 78vh; at 45vh it would have bitten
-     under ~825px.
-
-     FIXED_CHROME is the measured rest of the card at 1440x900 — the tick-list's
-     head (21) + its margin (10) + the free-text form (157) + the OK button (57)
-     + padding and gaps (30). Deriving the bound from the list's OWN declared
-     floor is the point: raise that and this goes red rather than silently
-     re-opening the overlap. */
-  const FIXED_CHROME = 275;
-  const floor = Number(bodyOf('.popover.popover--expansions').match(/max-height:\s*max\(\s*(\d+)px/)[1]);
-  const listFloor = Number(bodyOf('.popover--expansions .exp-pick__body')
-    .match(/min-height:\s*(\d+)px/)[1]);
-  assert.ok(floor >= listFloor + FIXED_CHROME,
-    `floor ${floor}px is under the card's own minimum (${listFloor} + ${FIXED_CHROME}) — `
-    + 'squeezed below it the tick-list overlaps the free-text form instead of shrinking');
-});
-
-test('the tick-list is the part that gives way, so the OK button stays visible', () => {
-  const list = bodyOf(':is(.popover--expansions, .editor--expansions) .exp-pick__body');
-  assert.ok(list, 'the rule exists');
-  // Without `flex: 1 1 auto` the list keeps its natural height and the card's
-  // cap pushes the free-text form and the button out of the card instead. This
-  // one stays shared: it is inert in the sheet, which has no cap to absorb.
-  assert.match(list, /flex:\s*1\s+1\s+auto/);
-  // The bounds are popover-only since #1142 — see the spec below, which is what
-  // guards that split. The give-way behaviour they describe is unchanged.
-  const bounded = bodyOf('.popover--expansions .exp-pick__body');
-  assert.ok(bounded, 'the popover-only rule exists');
-  assert.match(bounded, /overflow-y:\s*auto/);
-  // Reaching the end of the list must not chain into the page: a page scroll
-  // closes the popover outright.
-  assert.match(bounded, /overscroll-behavior:\s*contain/);
-
-  // A flex item's default `min-height: auto` is its CONTENT size, so the cap on
-  // the card is inert without this — the two only work as a pair.
-  const pick = bodyOf(':is(.popover--expansions, .editor--expansions) .exp-pick');
-  assert.match(pick, /min-height:\s*0/);
-});
-
-/* The split #1142 restored: the cap and the two boxes that give way under it are
-   ONE unit, and the whole unit is popover-only
-   (`.claude/rules/popover-vs-sheet-editors.md` §4).
-
-   #1039 added the owned list with an `:is()` cap, which bounded the SHEET too —
-   a presentation with no fold to protect that is already its own scroll
-   container. Measured at 390x844 with 6 owned + 20 candidates: the sheet had
-   717px of room, took 577, clipped the owned list to one row with its remove
-   button sliced in half, and did not scroll at all (`scrollHeight -
-   clientHeight === 0`) while ~140px of it sat empty. Owning NOTHING was
-   unaffected, so the defect only appeared once the feature was used — which is
-   why no geometry test above could see it. */
-
-test('nothing bounds the expansions SHEET — the cap and both scroll boxes are popover-only', () => {
-  /* `min-height` is deliberately NOT in this list: `.exp-pick`/`.exp-have` carry
-     `min-height: 0` so the card's cap can bite, which is inert rather than
-     bounding in a sheet. The boxes' own floors are checked as floors below. */
-  const BOUNDS = ['max-height', 'overflow-y', 'overscroll-behavior'];
-  const sheetRules = RULES.filter(([sel]) => whole('.editor--expansions').test(sel));
-  // Anti-vacuous: the sheet still shares every inner LAYOUT rule, so an empty
-  // list here would mean the selector moved, not that the split holds.
-  assert.ok(sheetRules.length >= 8,
-    `only ${sheetRules.length} rules name .editor--expansions — has the sheet variant been renamed?`);
-
-  for (const [sel, body] of sheetRules) {
-    for (const prop of BOUNDS) {
-      assert.equal(declaredValue(body, prop), null,
-        `${sel} sets ${prop} on the sheet presentation. A sheet has no fold to protect and is `
-        + 'already its own scroll container, so a cap there clips content nothing was constraining '
-        + 'and a nested scroll box takes the gesture away from `.sheet`');
-    }
-  }
-
-  // …and the popover keeps all of it, so the split is a MOVE rather than a loss.
-  assert.match(bodyOf('.popover.popover--expansions:has(.exp-have)') || '', /max-height:\s*max\(/,
-    'the owned-list cap must stay, compounded with `.popover` so it beats the base card rule');
-  for (const box of ['.exp-pick__body', '.exp-have__body']) {
-    const bounded = bodyOf(`.popover--expansions ${box}`);
-    assert.ok(bounded, `${box} has no popover-only rule — its bounds went missing rather than moving`);
-    assert.match(bounded, /max-height:\s*\d+px/, `${box} must still give way under the card's cap`);
-    assert.match(bounded, /min-height:\s*[1-9]\d*px/, `${box} must still keep its floor`);
-    assert.match(bounded, /overflow-y:\s*auto/);
-    // The shared rule keeps the layout and none of the bounds.
-    const shared = bodyOf(`:is(.popover--expansions, .editor--expansions) ${box}`);
-    assert.match(shared, /display:\s*flex/, 'the shared layout rule is still there');
-    assert.doesNotMatch(shared, /min-height/,
-      `the floor bounds a cap the sheet does not have — it belongs with it in .popover--expansions ${box}`);
-  }
 });

@@ -137,6 +137,12 @@ the friends feed (`MAX_FEED_EVENTS`, default 50, issue #325) and the in-app
 inbox (`MAX_INBOX_ITEMS`, default 100, issue #207). With accounts off (the
 default, single-tenant deploy) these are inert. See the quotas block in `.env.example`.
 
+One of them is also told to the client: `GET /api/config` reports
+`expansionsPerGame`, so the expansions dialog can count the ticked set against the
+ceiling („3 von 40 im Regal") instead of letting the user find out from the 403
+after pressing Übernehmen (issue #1143). It reports `null` where quotas are inert,
+so a self-hosted round is shown a bare count rather than a limit nothing applies.
+
 Require a login: set `AUTH_PASSWORD=…` (and optionally `SESSION_SECRET=…`) to gate
 the whole app behind a single shared password — an unauthenticated visitor gets a
 login page and the API returns `401`. Leave `AUTH_PASSWORD` unset and the app

@@ -173,10 +173,10 @@ test('.sheet--list widens the list dialogs and outranks .sheet--dialog', () => {
   assert.equal(widthOf('.sheet--dialog'), 460, 'the short-form dialogs must keep 460px');
 });
 
-/* The three dialogs whose body is a scanning list, keyed by a marker inside
-   their own markup rather than by a line number. The second half of this — that
-   nothing ELSE carries the modifier — is what stops the first half being
-   satisfied by spraying `sheet--list` over every sheet, the same shape as
+/* The dialogs whose body is a scanning list, keyed by a marker inside their own
+   markup rather than by a line number. The second half of this — that nothing
+   ELSE carries the modifier — is what stops the first half being satisfied by
+   spraying `sheet--list` over every sheet, the same shape as
    `test/ds-row-affordance.test.js`. */
 const LIST_DIALOGS = [
   ['public/js/bgg-import.js', 'class="bgg-import"', 'BGG collection import'],
@@ -184,14 +184,32 @@ const LIST_DIALOGS = [
   ['public/js/views-archive.js', 'class="ds-list wish-pick"', 'Grundspiel wählen'],
 ];
 
+/* THE FOURTH IS NOT A LITERAL (#1143). `openEditor` builds its own sheet, so the
+   expansions editor asks for the list width through an ARGUMENT — and a source
+   scan for `class="sheet …"` cannot see that at all
+   (.claude/rules/source-scanning-guards-enumerate-shapes.md: the shape a scan
+   misses is invisible, and this one would have reported the app as having three
+   list dialogs forever).
+
+   So the call sites are enumerated too, and exactly as strictly: every
+   `openEditor(…)` passing `{ list: true }` must be listed here. */
+const LIST_EDITORS = [
+  ['public/js/game-editors.js', 'openExpansionEditor', 'Erweiterungen'],
+];
+
 // Every `<div class="sheet …">` opening tag in a file, with the markup it opens.
+// A class list holding a `${…}` is `openEditor`'s own parameterized template
+// rather than a view's literal; it is handled by the LIST_EDITORS spec below and
+// is skipped here, because reading it as a class name gives neither answer.
 function sheetBlocks(file) {
   const src = fs.readFileSync(path.join(ROOT, file), 'utf8');
   const starts = [...src.matchAll(/<div class="sheet ([^"]*)"/g)];
-  return starts.map((m, i) => ({
-    classes: m[1],
-    markup: src.slice(m.index, i + 1 < starts.length ? starts[i + 1].index : m.index + 2000),
-  }));
+  return starts
+    .map((m, i) => ({
+      classes: m[1],
+      markup: src.slice(m.index, i + 1 < starts.length ? starts[i + 1].index : m.index + 2000),
+    }))
+    .filter((b) => !b.classes.includes('${'));
 }
 
 test('exactly the three list dialogs carry .sheet--list', () => {
@@ -212,6 +230,64 @@ test('exactly the three list dialogs carry .sheet--list', () => {
     }
   }
   assert.deepEqual(matched.sort(), LIST_DIALOGS.map(([, , label]) => label).sort());
+});
+
+/* The parameterized template is allowed to exist, but only ONCE and only in
+   sheet.js — otherwise the skip in `sheetBlocks` above quietly becomes a way to
+   opt any sheet out of both sweeps. */
+test('exactly one sheet builds its class list dynamically, and it is openEditor\'s', () => {
+  const dynamic = [];
+  for (const file of fs.readdirSync(path.join(ROOT, 'public/js'))) {
+    if (!file.endsWith('.js')) continue;
+    const src = fs.readFileSync(path.join(ROOT, 'public/js', file), 'utf8');
+    for (const m of src.matchAll(/<div class="sheet ([^"]*)"/g)) {
+      if (m[1].includes('${')) dynamic.push(file);
+    }
+  }
+  assert.deepEqual(dynamic, ['sheet.js']);
+});
+
+/* Comments must go first, and this is not hygiene — measured. The call site
+   explains the option in a comment one line above the call, so a raw-text scan
+   is GREEN with the call itself changed to `{ list: false }`: the place a rule is
+   written down is the place its token legitimately appears
+   (.claude/rules/source-scanning-guards-enumerate-shapes.md, "The inverse").
+
+   Only WHOLE-LINE `//` comments are stripped, never a trailing one, so a `//`
+   inside a string literal (`'https://…'`) is left alone — the failure the same
+   rule warns about for JS. */
+const stripJsComments = (src) => src
+  .replace(/\/\*[\s\S]*?\*\//g, '')
+  .replace(/^[ \t]*\/\/.*$/gm, '');
+
+const ASKS_FOR_LIST = /\{\s*list:\s*true\s*\}/;
+
+test('the list-option matcher reads calls and not the prose about them', () => {
+  // Its own self-test, because the two failures above are invisible from a green
+  // run: a matcher that sees the comment can never fail, and one that sees
+  // neither can never fail either.
+  assert.ok(ASKS_FOR_LIST.test(stripJsComments('openEditor(a, b, c, d, undefined, { list: true });')));
+  assert.equal(ASKS_FOR_LIST.test(stripJsComments('  // `{ list: true }` — a scanning list\n  foo();')), false);
+  assert.equal(ASKS_FOR_LIST.test(stripJsComments('/* pass { list: true } here */\nfoo();')), false);
+  assert.equal(ASKS_FOR_LIST.test(stripJsComments("const u = 'https://x/y'; f({ list: true });")), true);
+  assert.equal(ASKS_FOR_LIST.test(stripJsComments('f({ list: false });')), false);
+});
+
+test('exactly the listed editors ask openEditor for the list width', () => {
+  const found = [];
+  for (const file of fs.readdirSync(path.join(ROOT, 'public/js'))) {
+    if (!file.endsWith('.js')) continue;
+    const rel = `public/js/${file}`;
+    // The option object, wherever it sits in the argument list.
+    const src = stripJsComments(fs.readFileSync(path.join(ROOT, rel), 'utf8'));
+    if (!ASKS_FOR_LIST.test(src)) continue;
+    const hit = LIST_EDITORS.find(([f]) => f === rel);
+    assert.ok(hit, `${rel} asks for the list dialog but is not listed as one`);
+    assert.match(src, new RegExp(hit[1]), `${rel} no longer defines ${hit[1]}`);
+    found.push(hit[2]);
+  }
+  assert.deepEqual(found.sort(), LIST_EDITORS.map(([, , label]) => label).sort(),
+    'a listed editor stopped asking for the list width — it is back to a 460px card');
 });
 
 test('the short-form dialogs stay narrow', () => {

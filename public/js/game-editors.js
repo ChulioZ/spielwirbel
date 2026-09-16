@@ -268,8 +268,9 @@ async function saveExpansions(ctx, list) {
    und Kathedralen" — so every candidate row repeats the base title that is
    already the page's <h1> two elements above. On a 312px phone row that is a
    third of the line spent on a word the user is looking at: measured over 12
-   real Carcassonne candidates, 903px of list -> 768px (−15 %). At the popover's
-   540px nothing changes, because every row is one line there already.
+   real Carcassonne candidates, 903px of list -> 768px (−15 %). In the 640px
+   dialog the editor presents as since #1143 the saving is smaller, because most
+   names are one line there already — it is the phone the trim is for.
 
    DISPLAY ONLY. The PUT sends `{ providerId }` and the server resolves the
    title from the provider, so what gets stored is untouched — and a hand-typed
@@ -287,111 +288,181 @@ function expansionLabel(baseTitle, title) {
   return rest ? rest[1] : title;
 }
 
-// Add: the provider's own list as a tick-list, plus a free-text field. The
-// candidates cost no extra upstream request — they ride on the /thing body the
-// detail hop already fetched (lib/routes/lookup.js).
+// The per-game expansion ceiling, from GET /api/config at boot (core.js). Module
+// state rather than a value threaded through the context: the dialog reads it at
+// render time, which keeps it clear of the load-order trap
+// (.claude/rules/frontend-script-load-order.md) — core.js loads first and calls
+// this from inside its fetch callback.
+//
+// `null` is a real answer, not "not loaded yet": quotas are enforced only in
+// accounts mode (lib/quota.js), so a self-hosted instance has no ceiling and the
+// bar states a bare count instead of counting against a limit that does not
+// exist. It stays null if the probe fails, which degrades the same way.
+let expansionsCap = null;
+function setExpansionsCap(n) {
+  expansionsCap = Number.isInteger(n) && n > 0 ? n : null;
+}
+
+// Past this many rows the list stops being scannable and gets a filter field.
+// Below it the field is pure chrome in a dialog whose whole point is height.
+const EXPANSION_FILTER_FROM = 20;
+
+/* Add: the provider's own list as a tick-list, plus a free-text field. The
+   candidates cost no extra upstream request — they ride on the /thing body the
+   detail hop already fetched (lib/routes/lookup.js).
+
+   ONE LIST, ONE COMMIT (#1143). An expansion is in the cupboard or it is not, so
+   owned entries and the provider's remaining candidates are the same row in two
+   states — ticked and unticked — and „Übernehmen" sends the ticked set. That is
+   the shape `PUT …/games/:gid/expansions` always had: it replaces the list
+   wholesale, and the editor used to disagree with it, committing ticks on OK
+   while firing a confirm dialog for every removal.
+
+   Unticking therefore REPLACES removal, and the trade is deliberate: a removal
+   is now silent until commit, where it used to raise a confirmation. The sticky
+   count is what makes it visible, and dismissing the dialog is the undo — which
+   is strictly better than a confirm the user had to answer before they could see
+   what else they were about to change. */
 function openExpansionEditor(ctx, anchor) {
   const { rid, game } = ctx;
   const owned = game.expansions || [];
   // Titled „Erweiterungen" rather than „Erweiterung hinzufügen" since #1039:
   // the editor absorbed the removed section's list, so it is no longer only an
-  // add form — and on a phone that string is the sheet's accessible name.
+  // add form — and that string is the dialog's accessible name.
   openEditor(anchor, 'expansions', t('detail.expansionsTitle'), (el, close) => {
-    const keep = owned.map((e) => ({ id: e.id }));
-    const picked = new Set();
     const canPick = game.source && typeof game.source.externalId === 'string'
       && game.source.provider === 'bgg';
 
-    // What the round already owns — the rows the `.gd-expansions` section used
-    // to carry on the page (#1039). They lead the editor because it is now the
-    // only way to this list: dropping them with the section would have made an
-    // owned expansion unremovable, which no test could have seen (the route is
-    // untouched and the chip still counts them).
-    if (owned.length) {
-      const have = h(`<div class="exp-have">
-           <div class="exp-have__head muted">${esc(t('detail.expansionsTitle'))}</div>
-           <div class="exp-have__body"></div>
-         </div>`);
-      const haveBody = have.querySelector('.exp-have__body');
-      owned.forEach((e) => {
-        const range = Number.isInteger(e.minPlayers) && Number.isInteger(e.maxPlayers)
-          ? playersText(e.minPlayers, e.maxPlayers)
-          : t('detail.expansionNoRange');
-        // A plain <div> row, so it must carry `ds-row--static` — `.ds-row`
-        // declares cursor:pointer and a hover lift, i.e. it promises a click
-        // target (.claude/rules/ds-row-is-a-click-target.md). The remove button
-        // inside it is the only thing here that is clickable.
-        const row = h(`<div class="ds-row ds-row--static exp-have__row">
-             <div class="ds-row__main">
-               <div class="ds-row__title">${esc(e.title)}</div>
-               <div class="muted">${esc(range)}</div>
-             </div>
-             <div class="ds-row__meta">
-               <button class="link-btn exp-row__remove" aria-label="${esc(t('detail.expansionRemove'))}">${iconText('ti-trash', t('detail.expansionRemove'))}</button>
-             </div>
-           </div>`);
-        row.querySelector('.exp-row__remove').addEventListener('click', async () => {
-          // The editor goes first: `confirmDialog` is a sheet on <body>, and a
-          // mousedown on it is "outside" the popover, which would tear this one
-          // down mid-await anyway. Same order as the image editor's actions.
-          close();
-          if (!await confirmDialog({
-            body: t('detail.expansionRemoveConfirm', { title: e.title }),
-            confirmLabel: t('detail.expansionRemove'), icon: 'ti-trash',
-          })) return;
-          saveExpansions(ctx, owned.filter((x) => x.id !== e.id).map((x) => ({ id: x.id })));
-        });
-        haveBody.appendChild(row);
-      });
-      el.appendChild(have);
+    // One row per entry, in commit order: what is owned leads, the provider's
+    // remaining candidates follow as they arrive. `picked` is keyed by the row's
+    // own identity so an untick is reversible until commit.
+    //   { key, label, meta, payload, picked }
+    // `payload` is what the PUT carries for a ticked row — `{ id }` for
+    // something already stored (the server keeps it verbatim), `{ providerId }`
+    // for a candidate (the server resolves the title upstream, so the display
+    // trim below never reaches the data).
+    const rows = [];
+    const listEl = h('<div class="exp-list"></div>');
+    const noteEl = h('<div class="exp-note muted"></div>');
+    let filterEl = null;
+    let filterText = '';
+
+    owned.forEach((e) => rows.push({
+      key: 'id:' + e.id,
+      label: e.title,
+      meta: Number.isInteger(e.minPlayers) && Number.isInteger(e.maxPlayers)
+        ? playersText(e.minPlayers, e.maxPlayers)
+        : t('detail.expansionNoRange'),
+      payload: { id: e.id },
+      picked: true,
+    }));
+
+    const pickedCount = () => rows.filter((r) => r.picked).length
+      + (nameEl.value.trim() ? 1 : 0);
+
+    // The count and the ceiling, restated on every tick. This is the whole
+    // reason the cap crosses to the client (#1143): it used to be reachable
+    // only as `detail.toast.expansionQuota` AFTER a PUT the server refused.
+    function paintBar() {
+      const n = pickedCount();
+      const over = expansionsCap !== null && n > expansionsCap;
+      countEl.textContent = expansionsCap === null
+        ? t('detail.expansionCount', { n })
+        : t('detail.expansionCountMax', { n, max: expansionsCap });
+      countEl.classList.toggle('exp-bar__count--over', over);
+      // Refused before the request rather than after it — the bar has already
+      // said why, so a toast would only repeat it.
+      okBtn.disabled = over;
     }
+
+    function paintList() {
+      const q = filterText.trim().toLowerCase();
+      const shown = q ? rows.filter((r) => r.label.toLowerCase().includes(q)) : rows;
+      listEl.replaceChildren();
+      if (!shown.length) {
+        if (q) listEl.appendChild(h(`<div class="muted">${esc(t('detail.expansionFilterEmpty'))}</div>`));
+        return;
+      }
+      shown.forEach((r) => {
+        // A <label> row, so the whole line toggles its checkbox — and it must
+        // NOT sit inside a `.field`, where `.field label` (0,1,1) would flatten
+        // it (.claude/rules/label-rows-lose-to-field-label.md). `.ds-row--picked`
+        // is the ticked state; it is the app's existing "this one is selected"
+        // treatment, which is what lets one row carry both states without a
+        // second component (.claude/rules/ds-row-is-a-click-target.md — a
+        // <label> row is genuinely clickable and takes no `--static`).
+        const row = h(`<label class="ds-row exp-row${r.picked ? ' ds-row--picked' : ''}">
+             <span class="ds-row__main">
+               <span class="ds-row__title">${esc(r.label)}</span>
+               ${r.meta ? `<span class="muted">${esc(r.meta)}</span>` : ''}
+             </span>
+             <span class="ds-row__meta"><input type="checkbox"${r.picked ? ' checked' : ''} /></span>
+           </label>`);
+        row.querySelector('input').addEventListener('change', (ev) => {
+          r.picked = ev.target.checked;
+          row.classList.toggle('ds-row--picked', r.picked);
+          paintBar();
+        });
+        listEl.appendChild(row);
+      });
+    }
+
+    el.appendChild(listEl);
+    el.appendChild(noteEl);
 
     if (canPick) {
       const prov = providerLabel(game.source.provider);
-      const list = h(`<div class="exp-pick"><div class="exp-pick__head muted">${esc(t('detail.expansionPickTitle', { provider: prov }))}</div><div class="exp-pick__body muted">…</div></div>`);
-      el.appendChild(list);
-      const body = list.querySelector('.exp-pick__body');
+      noteEl.textContent = t('detail.expansionPickLoading', { provider: prov });
       api('GET', `/api/rounds/${rid}/lookup/expansions?provider=${encodeURIComponent(game.source.provider)}&id=${encodeURIComponent(game.source.externalId)}`)
         .then((res) => {
           const have = new Set(owned.map((e) => (e.source || {}).externalId).filter(Boolean));
           const fresh = (res.expansions || []).filter((c) => !have.has(c.providerId));
-          body.innerHTML = '';
           if (!fresh.length) {
-            body.className = 'exp-pick__body muted';
-            body.textContent = t('detail.expansionPickEmpty', { provider: prov });
+            noteEl.textContent = t('detail.expansionPickEmpty', { provider: prov });
             return;
           }
-          body.className = 'exp-pick__body';
-          fresh.forEach((c) => {
-            // A <label> row, so the whole line toggles its checkbox — and it
-            // must NOT sit inside a `.field`, where `.field label` (0,1,1)
-            // would flatten it (.claude/rules/label-rows-lose-to-field-label.md).
-            const row = h(`<label class="ds-row exp-pick__row"><span class="ds-row__main">${esc(expansionLabel(game.title, c.title))}</span><span class="ds-row__meta"><input type="checkbox" /></span></label>`);
-            row.querySelector('input').addEventListener('change', (ev) => {
-              if (ev.target.checked) picked.add(c.providerId);
-              else picked.delete(c.providerId);
-            });
-            body.appendChild(row);
-          });
+          noteEl.textContent = '';
+          fresh.forEach((c) => rows.push({
+            key: 'p:' + c.providerId,
+            label: expansionLabel(game.title, c.title),
+            meta: '',
+            payload: { providerId: c.providerId },
+            picked: false,
+          }));
+          // Only now is the merged length known, so the filter can only be
+          // decided here — it is the candidates that make the list long.
+          if (rows.length > EXPANSION_FILTER_FROM && !filterEl) {
+            filterEl = h(`<input class="input exp-filter" type="search" autocomplete="off"
+                 placeholder="${esc(t('detail.expansionFilterPlaceholder'))}"
+                 aria-label="${esc(t('detail.expansionFilterPlaceholder'))}" />`);
+            filterEl.addEventListener('input', () => { filterText = filterEl.value; paintList(); });
+            el.insertBefore(filterEl, listEl);
+          }
+          paintList();
         })
-        .catch(() => {
-          body.className = 'exp-pick__body muted';
-          body.textContent = t('detail.expansionPickError', { provider: prov });
-        })
-        // The candidates arrive AFTER openPopover measured the card, so the
-        // anchored variant is still placed for its loading height and would
-        // hang off the fold — with no way back, since a page scroll closes a
-        // popover. Placement is idempotent and this is a no-op for the sheet
-        // and when no popover is open (.claude/rules/anchored-popover-is-placed-once.md).
-        .finally(() => repositionPopover());
+        .catch(() => { noteEl.textContent = t('detail.expansionPickError', { provider: prov }); });
     }
 
-    const own = h(`<div class="exp-own">
-         <div class="exp-own__head muted">${esc(t('detail.expansionOwnTitle'))}</div>
-         <input class="input exp-own__name" maxlength="${EXPANSION_TITLE_MAX}" placeholder="${esc(t('detail.expansionNamePlaceholder'))}" />
-         <div class="pp-row exp-own__range"></div>
-         <div class="muted popover__hint">${esc(t('detail.expansionRangeHint'))}</div>
-       </div>`);
+    /* The rare question, behind a disclosure (#1143). It used to be a
+       permanently open 157px form — a third of the card — for the one input
+       most opens never touch.
+
+       A native <details>: focusable, Enter/Space-activated and toggled by the
+       platform, none of which a hand-rolled `aria-expanded` button gets for
+       free (.claude/rules/native-button-vs-focusable-span.md, and the same call
+       bgg-import.js's „already on the shelf" section makes). */
+    const own = h(`<details class="exp-own">
+         <summary class="exp-own__head">${esc(t('detail.expansionOwnTitle'))}</summary>
+         <div class="exp-own__body">
+           <input class="input exp-own__name" maxlength="${EXPANSION_TITLE_MAX}" placeholder="${esc(t('detail.expansionNamePlaceholder'))}" />
+           <div class="pp-row exp-own__range" hidden></div>
+           <div class="muted popover__hint">${esc(t('detail.expansionRangeHint'))}</div>
+         </div>
+       </details>`);
+    // Nothing owned and no provider to ask: the free-text form is the only thing
+    // on offer, so it opens with the dialog rather than hiding the one action
+    // behind a disclosure over an empty list.
+    if (!canPick && !owned.length) own.open = true;
     const nameEl = own.querySelector('.exp-own__name');
     const min = h('<input class="input" inputmode="numeric" />');
     const max = h('<input class="input" inputmode="numeric" />');
@@ -401,11 +472,23 @@ function openExpansionEditor(ctx, anchor) {
     }));
     const range = own.querySelector('.exp-own__range');
     range.append(min, h('<span>–</span>'), max);
+    // The range only means anything once there is something to range over, so
+    // the two fields appear with the name rather than before it. `hidden` alone
+    // would lose to `.pp-row`'s own `display: flex`, hence the paired
+    // `[hidden]` rule in the stylesheet
+    // (.claude/rules/hidden-attribute-vs-display-rule.md).
+    nameEl.addEventListener('input', () => {
+      range.hidden = !nameEl.value.trim();
+      paintBar();
+    });
     el.appendChild(own);
 
-    const okBtn = h(`<button class="btn btn--primary">${esc(t('common.ok'))}</button>`);
+    const countEl = h('<span class="exp-bar__count"></span>');
+    const okBtn = h(`<button class="btn btn--primary">${esc(t('detail.expansionApply'))}</button>`);
+    const bar = h('<div class="toolbar sheet__actions exp-bar"></div>');
+    bar.append(countEl, okBtn);
     okBtn.addEventListener('click', () => {
-      const list = [...keep, ...[...picked].map((providerId) => ({ providerId }))];
+      const list = rows.filter((r) => r.picked).map((r) => r.payload);
       const title = nameEl.value.trim();
       if (title) {
         const mn = min.value.trim() === '' ? null : parseInt(min.value, 10);
@@ -416,13 +499,23 @@ function openExpansionEditor(ctx, anchor) {
         if (mn !== null && (!Number.isInteger(mn) || !Number.isInteger(mx) || mn < 1 || mx < mn))
           return toast(t('detail.toast.expansionRange'));
         list.push({ title, minPlayers: mn, maxPlayers: mx });
-      } else if (!picked.size) {
-        return close(); // nothing to do
+      } else if (rows.every((r) => r.picked === (r.payload.id !== undefined))) {
+        // Every owned row still ticked and no candidate ticked: the set is what
+        // it was when the dialog opened, so there is nothing to PUT.
+        return close();
       }
       close();
       saveExpansions(ctx, list);
     });
-    el.appendChild(okBtn);
-    return () => { if (!canPick) { nameEl.focus(); } };
-  });
+    el.appendChild(bar);
+
+    paintList();
+    paintBar();
+    // No autofocus: the list is the thing to read, and on a phone focusing the
+    // free-text field inside a <details> nobody opened would raise the keyboard
+    // over it.
+    return null;
+    // `{ list: true }` — a scanning list is a centred dialog at every width, not
+    // an anchored card. See openEditor in sheet.js for the measurement.
+  }, undefined, { list: true });
 }

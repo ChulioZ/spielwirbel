@@ -381,21 +381,25 @@ test('the button triggers keep their pill/frame look, and .tag--empty keeps its 
     'the cover overlay no longer reveals on focus');
 });
 
-/* The three content-heavy popovers size the FLOATING CARD, which is the one part
+/* The content-heavy popovers size the FLOATING CARD, which is the one part
    deliberately NOT shared with the sheet (a sheet is already full width). #706
-   widened all three, because width is the axis that has room: a wider card wraps
+   widened them, because width is the axis that has room: a wider card wraps
    its content onto fewer lines, so it shows more entries AND gets shorter — where
    raising a height cap buys rows at the cost of pushing the card past a fold that
    a page scroll cannot recover (`.claude/rules/anchored-popover-is-placed-once.md`,
    "The cap's ceiling is HALF the viewport"). Measured at 1440x900:
 
-     .popover--expansions  360 -> 540   3 -> 4 rows of a Carcassonne tick-list
      .popover--tags        340 -> 480   5 -> 3 wrapped lines of chips
      .popover.has-covers   380 -> 520   3 -> 5 cover columns (6 -> 10 tiles)
 
+   `.popover--expansions` was the third and is gone (#1143): widening a card can
+   only do so much for a 26-row list, and that editor is now a centred list dialog
+   at every width instead. Its presentation is pinned by
+   `test/game-expansions.test.js` rather than by a width floor here.
+
    Floors, not exact values: a retune stays green, a revert to the old widths does
    not. */
-const CARD_WIDTHS = [['popover--expansions', 480], ['popover--tags', 420], ['has-covers', 460]];
+const CARD_WIDTHS = [['popover--tags', 420], ['has-covers', 460]];
 
 /* The rule that actually sizes the card, looked up BY ITS BODY: the one naming
    this variant class and declaring a max-width. Reading the selector back out of

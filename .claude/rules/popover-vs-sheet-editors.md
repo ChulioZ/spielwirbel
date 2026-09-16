@@ -9,8 +9,8 @@ paths:
 
 The three game-detail editors (tags, players, cover) are one builder each with
 **two presentations**: an anchored `.popover` from 860px up, a bottom sheet below
-it. `openEditor(anchor, variant, title, build, onClose)` in `sheet.js`
-picks between them. This is not a taste call — the anchored form is *structurally*
+it. `openEditor(anchor, variant, title, build, onClose, opts)` in `sheet.js`
+picks between them (`opts.list` opts out — see below). This is not a taste call — the anchored form is *structurally*
 unusable on a phone, and the way it fails is invisible from every check we have.
 
 **The filter panel (#844) is the fourth, and the first from outside game detail.**
@@ -28,10 +28,42 @@ there is no scroll to lose to, and a bottom sheet for three rows of buttons is
 ceremony. Measured on #1039 at 390×844: the menu opens as a `.popover--menu`,
 fits inside the viewport, and dismisses on Escape with `aria-expanded` following.
 
-So the test is not "which screen is this on" but **"does it contain a field?"**
-If it does, `openEditor`. If it is buttons only, `openPopover` — and then
-`aria-expanded` is yours to sync, through `onClose` and never by wrapping the
-`close` you are handed (§2b).
+**The second exception, from the other end: a scanning LIST is a dialog at every
+width** (#1143). `openEditor(…, { list: true })` opts out of the split entirely —
+the editor is the centred `sheet--dialog sheet--list` from 320px to 2560px, and
+never an anchored card.
+
+The argument is `place()`'s, not the keyboard's. A popover is placed wholly above
+or wholly below its anchor, so the room it can count on is **half the viewport** —
+fine for a form, hopeless for 26 rows. At 1024×768 and 1280×800 the expansions
+card was clamped, and a clamp sets `min-height: auto` on every child, which drops
+the flex floors the cap depends on: the card itself became a **third scroll
+region**, with „OK" 271px below its own visible edge and 2 of 26 rows on screen.
+A `.sheet` has no fold to protect and is already its own scroll container, so all
+of that simply stops existing.
+
+The tell that a card is the wrong shape is not a single measurement — it is the
+*history*. That one editor's cap and floor were retuned in five consecutive
+releases (#653 → #706 → #722 → #728 → #1142), each correctly, each measured. Five
+corrections to one card's geometry means the content does not fit the container.
+
+So the test has two halves now:
+
+| The editor holds | Presentation |
+|---|---|
+| buttons only | `openPopover`, every width |
+| a text field or a few controls | `openEditor`, the 860px split |
+| a list you SCAN, unbounded in length | `openEditor(…, { list: true })`, dialog at every width |
+
+If it contains a field and is not a long list, `openEditor`. If it is buttons
+only, `openPopover` — and then `aria-expanded` is yours to sync, through
+`onClose` and never by wrapping the `close` you are handed (§2b).
+
+`test/sheet-viewport-height.test.js` enumerates both the markup literals and the
+`{ list: true }` call sites, so a fourth list dialog has to be declared. Note its
+scan strips comments first: the call site documents the option by name one line
+above the call, so a raw-text form is green with the call itself turned off
+(`.claude/rules/source-scanning-guards-enumerate-shapes.md`).
 
 ## 1. Why an anchored popover dies on a phone
 
@@ -163,10 +195,14 @@ Two things to take from it. **The `:has()` shape hides the question**: a cap
 added as a *condition on an existing card rule* reads as a tweak to that rule,
 not as a new declaration needing the popover/sheet call. And **a floor moves with
 its cap** — `min-height: 46px` is the floor of a bound the sheet does not have,
-so leaving it shared bounds a box nothing was capping. `test/game-expansions.test.js`
-("nothing bounds the expansions SHEET") now asserts no rule naming
-`.editor--expansions` sets `max-height`, `overflow-y` or `overscroll-behavior`,
-so the next one fails rather than shipping.
+so leaving it shared bounds a box nothing was capping.
+`test/expansions-editor.test.js` ("nothing bounds the expansions editor any
+more") asserts no rule naming `.editor--expansions` sets `max-height`,
+`overflow-y` or `overscroll-behavior`, so the next one fails rather than
+shipping. Since #1143 that editor has no popover presentation at all, so the
+assertion reads as "nothing capped it on the way past" rather than as one half of
+a split — but the guard is unchanged and the trap it catches is the live one for
+`.popover--tags` and `.popover--owners`.
 
 ## Verifying this in the Browser pane
 

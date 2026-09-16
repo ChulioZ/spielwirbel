@@ -419,6 +419,14 @@ function initFooter() {
       // later-loaded support.js; safe here because this callback runs long
       // after every script has loaded (frontend-script-load-order.md).
       if (cfg && cfg.donateUrl) initSupport(cfg.donateUrl);
+      // The per-game expansion ceiling (#1143), so the expansions dialog can
+      // count the ticked set against it instead of letting the user discover it
+      // from a 403. Module state in game-editors.js rather than a stashed `cfg`,
+      // for the same reason as setContactAvailable above: the dialog reads it at
+      // render time and stays clear of the load-order trap. Unconditional —
+      // `null` (quotas inert) is a meaningful value the setter must receive, not
+      // a reason to skip the call.
+      setExpansionsCap(cfg ? cfg.expansionsPerGame : null);
     })
     .catch(() => {});
 }
