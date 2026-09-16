@@ -172,6 +172,22 @@ test('each of the five states shows at most one chip and at most one button', as
   }
 });
 
+test('a friendship with no date renders NO chip, not a wrong one', async (t_) => {
+  // Unreachable today — the route sets `since` from `acceptedAt` on every
+  // accepted row — but the fallback that suggests itself (`friends.pending`)
+  // would print „Ausstehend" over an accepted friendship, so the branch is
+  // pinned rather than left to whoever edits it next.
+  const body = stranger({ friendship: 'friends', friendshipId: 'f1' });
+  delete body.since;
+  const dom = bootWith(t_, body);
+  await dom.call('showProfile', 'bo');
+
+  assert.equal(dom.app.querySelector('.member-card__chip'), null);
+  assert.equal(dom.app.textContent.includes(t('friends.pending')), false);
+  // The relationship is still legible: the menu offers to end it.
+  assert.deepEqual(await menuLabels(dom), [t('friends.unfriend'), t('friends.reportAccount')]);
+});
+
 test('a demo account is told why, instead of being given a button that must fail', async (t_) => {
   const dom = bootWith(t_, stranger(), { isDemoAccount: () => true });
   await dom.call('showProfile', 'bo');

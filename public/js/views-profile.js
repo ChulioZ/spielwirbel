@@ -302,10 +302,17 @@ function renderProfileState(row, p, reload) {
   if (p.self) return chip(t('profile.chip.self'));
 
   if (p.friendship === 'friends') {
-    // „Befreundet seit" was a second muted line under the name; as the chip it
-    // states the relationship AND its date in the account's own colour, and the
-    // one action it implies („Freundschaft beenden") is in the menu.
-    return chip(p.since ? t('profile.chip.friends', { when: fmtMonth(p.since) }) : t('friends.pending'));
+    /* „Befreundet seit" was a second muted line under the name; as the chip it
+       states the relationship AND its date in the account's own colour, and the
+       one action it implies („Freundschaft beenden") is in the menu.
+
+       No `since` means no chip, rather than a date-less one. The route sets it
+       from `acceptedAt` on every accepted row, so this is unreachable today —
+       and the menu still says you are friends by offering „Entfernen". The
+       fallback that suggests itself, `friends.pending`, would print
+       „Ausstehend" over an accepted friendship. */
+    if (p.since) chip(t('profile.chip.friends', { when: fmtMonth(p.since) }));
+    return row;
   }
 
   if (p.friendship === 'incoming') {
