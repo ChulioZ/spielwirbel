@@ -192,6 +192,34 @@ const EXPANSION_PAIRS = [
 ];
 PAIRS.push(...EXPANSION_PAIRS);
 
+/* Die Spielerkarte's meta line and the feed tile's verb (#1132). The meta line
+   is the reason two figures could leave the strip at all — „3 Runden · 9 Spiele"
+   only reads as a sentence if it inflects, where the strip's own „Runden" label
+   never had to. The tile verb is the row sentence compressed: the tile names the
+   game above it, so only the „and N more" part is left, and that part IS the
+   count. */
+const PROFILE_PAIRS = [
+  {
+    what: 'profile.metaRounds — die Spielerkarte\'s meta line',
+    one: 'profile.metaRoundsOne', other: 'profile.metaRounds', params: {},
+    de: ['1 Runde', '2 Runden'],
+    en: ['1 round', '2 rounds'],
+  },
+  {
+    what: 'profile.metaGames — die Spielerkarte\'s meta line',
+    one: 'profile.metaGamesOne', other: 'profile.metaGames', params: {},
+    de: ['1 Spiel', '2 Spiele'],
+    en: ['1 game', '2 games'],
+  },
+  {
+    what: 'friends.tile.imported — the feed tile\'s verb for a bulk import',
+    one: 'friends.tile.importedOne', other: 'friends.tile.imported', params: {},
+    de: ['ins Regal gestellt · +1 Spiel', 'ins Regal gestellt · +2 Spiele'],
+    en: ['added to the shelf · +1 game', 'added to the shelf · +2 games'],
+  },
+];
+PAIRS.push(...PROFILE_PAIRS);
+
 const SILENT_PAIRS = [
   {
     what: 'home.lastPlayedWon — the round card\'s last-played line',

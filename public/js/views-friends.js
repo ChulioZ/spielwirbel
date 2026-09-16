@@ -6,6 +6,12 @@
    those created after the friendship was accepted. Requests are addressed by the
    unique username (#320) and delivered through the inbox (#207).
 
+   The feed's two RENDERERS live in feed-view.js since #1132 — a component with
+   three callers on three screens — while the two screens that host one (Der
+   Kreis and the home dashboard) stay here. What remains shared from this file
+   is the account vocabulary: accountColor, friendAvatar, friendName, the row
+   main and the account report button.
+
    Account-mode only: a logged-out visitor (or legacy mode) is sent home. Part of
    the shared frontend scope — loads after account.js/core.js and uses their
    helpers (accountApi/isLoggedIn/accountsActive/refreshInboxBadge, h/esc/app/t/
@@ -261,11 +267,23 @@ function friendSendError(code) {
   return t(m[code] || 'friends.err.generic');
 }
 
+/* The colour an account wears, derived from its username so it keeps the same
+   one everywhere (there is no round context to borrow from).
+
+   Its own helper since #1132: the Spielerkarte paints a whole card from this
+   value while the avatar beside it is painted with the same one, and a second
+   copy of the arithmetic is how the card and the face come to disagree
+   (.claude/rules/shared-constants-across-the-stack.md, applied inside one
+   file). */
+function accountColor(username) {
+  return MEMBER_COLORS[gameHue(username || '?') % MEMBER_COLORS.length];
+}
+
 // A small avatar for an account, coloured deterministically from the username so
 // a friend keeps the same colour everywhere (no round context to borrow from).
 function friendAvatar(username, avatar, extraClass) {
   const name = username || '?';
-  const color = MEMBER_COLORS[gameHue(name) % MEMBER_COLORS.length];
+  const color = accountColor(name);
   // The picture, when this account has one (#841). `avatar` is the path the
   // payload already carried (profile / friends list / feed), so these surfaces
   // never touch the batch endpoint. The colour stays as the fallback behind it:
@@ -307,88 +325,6 @@ function wireFriendRowMain(row, username) {
   const link = row.querySelector('.friend-row__link');
   if (link) navLink(link, profilePath(username), () => showProfile(username));
   return row;
-}
-
-/* --------------------------------- feed ------------------------------------ */
-
-// The localized feed line, with the friend's name and the game title emphasised.
-// The lang string is trusted; the two interpolated values are escaped first, so
-// injecting the result as HTML is safe.
-/* One branch per event type, which is how it has to be read now (#1079).
-
-   It used to be "session_played, else added", the shape lib/feed-events.js's
-   header warned would need revisiting — and `games_imported` is that case: it
-   carries a COUNT and therefore a plural, so `t()` is not enough.
-
-   `{n}` is `count - 1`, the "and N more" part, so a three-game import reads
-   "…and 2 more games" and a two-game one takes the SINGULAR. The route never
-   emits this type for one game, so `n` is never 0.
-
-   A row with no count is rendered as a plain `game_added` rather than throwing:
-   rows written before this change are still in production feeds and age out
-   over MAX_FEED_EVENTS, and the row still carries the title they name. */
-function feedText(ev) {
-  const params = {
-    user: `<strong>${friendName(ev.username)}</strong>`,
-    game: `<strong>${esc(ev.title || '')}</strong>`,
-  };
-  if (ev.type === 'session_played') return t('friends.feed.played', params);
-  if (ev.type === 'games_imported' && Number.isInteger(ev.count) && ev.count > 1) {
-    const n = ev.count - 1;
-    return tn(n, 'friends.feed.importedOne', 'friends.feed.imported', { ...params, n });
-  }
-  return t('friends.feed.added', params);
-}
-
-function renderFeedEvent(ev) {
-  const imgStyle = ev.coverUrl ? ` style="background-image:url('${coverUrl(ev.coverUrl, COVER_THUMB)}')"` : '';
-  const fallback = ev.coverUrl ? '' : '<i class="ti ti-cards" aria-hidden="true"></i>';
-  // The AUTHOR, badged onto the corner of the GAME's cover (#841). The row's one
-  // image slot belongs to the game, so the person rides on it rather than taking
-  // a fourth column — which on a phone would push the line that carries the
-  // actual news further right. It needs the wrapper because .feed-item__img is
-  // `overflow: hidden` and would clip a badge placed inside it.
-  //
-  // aria-hidden: the author's name is already in the line beside it, in bold.
-  const who = friendAvatar(ev.username, ev.avatar, 'feed-item__who');
-  const item = h(`<div class="feed-item">
-      <span class="feed-item__media">
-        <span class="feed-item__img"${imgStyle}>${fallback}</span>
-        ${who}
-      </span>
-      <div class="feed-item__body">
-        <div class="feed-item__text">${feedText(ev)}</div>
-        <div class="feed-item__time muted">${esc(fmtDateTime(ev.at))}</div>
-      </div>
-    </div>`);
-
-  // Report this item to the operator (#559). The feed is the only screen where
-  // one user sees another's free text, so the DSA Art. 16(1) notice channel gets
-  // an entry point here rather than only in the footer. The URL is built at
-  // render time and is null when the contact channel is unconfigured or the
-  // event names no account — then no button is rendered at all.
-  //
-  // The subject goes in UNESCAPED, unlike feedText's interpolations: it is a
-  // query-string value the reporter will see and may edit in a plain text
-  // field, not markup.
-  const url = feedReportUrl({
-    username: ev.username,
-    subject: t('friends.feed.reportSubject', {
-      user: ev.username || '',
-      game: ev.title || '',
-      date: fmtDateTime(ev.at),
-    }),
-  });
-  if (url) {
-    const btn = h(`<button class="feed-item__report" type="button"
-        aria-label="${esc(t('friends.feed.report'))}" title="${esc(t('friends.feed.report'))}">
-        <i class="ti ti-flag" aria-hidden="true"></i></button>`);
-    // New tab (#390), matching the feedback button, so the SPA stays loaded
-    // behind the contact page; noopener prevents a window.opener leak.
-    btn.addEventListener('click', () => window.open(url, '_blank', 'noopener'));
-    item.appendChild(btn);
-  }
-  return item;
 }
 
 /* Report an ACCOUNT to the operator (#841), the DSA Art. 16(1) entry point for a

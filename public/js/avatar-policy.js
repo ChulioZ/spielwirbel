@@ -20,9 +20,13 @@
 const AVATAR_MAX_BYTES = 5 * 1024 * 1024;
 
 // The stored square. 256 rather than the issue's suggested 512 because the
-// LARGEST avatar the app renders anywhere is `.profile-head .avatar` at 64px
-// (public/styles.css) — 256 still covers that at 3x DPR, and a single variant
-// keeps one object per account on every takedown, erasure and purge path.
+// LARGEST avatar the app renders anywhere is `.member-avatar` (public/styles.css)
+// — 104px on the member page and, since #1132, on an account profile; 84px
+// below 520px. 256 covers the phone size at 3x DPR and the desktop one at the
+// 2x those screens actually run, and a single variant keeps one object per
+// account on every takedown, erasure and purge path.
+// (This comment named `.profile-head .avatar` at 64px until #1132 removed that
+// rule — it had been wrong since #1074 introduced the bigger one.)
 const AVATAR_SIZE = 256;
 
 // One output format for every input: re-encoding is what neutralises a polyglot

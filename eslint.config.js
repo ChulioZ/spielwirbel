@@ -266,11 +266,18 @@ const frontendGlobals = {
   unreadDot: 'readonly', afterRemove: 'readonly',
   // views-friends.js (issue #325)
   showFriends: 'readonly', renderHomeFriends: 'readonly',
-  renderFriendRequestItem: 'readonly', renderFeedEvent: 'readonly',
+  renderFriendRequestItem: 'readonly',
   friendAvatar: 'readonly', friendName: 'readonly',
-  feedText: 'readonly', friendSendError: 'readonly', accountReportButton: 'readonly',
-  // views-friends.js — account profile (issue #558)
-  showProfile: 'readonly', renderProfileCta: 'readonly', renderProfileStats: 'readonly',
+  friendSendError: 'readonly', accountReportButton: 'readonly',
+  // views-friends.js — the account's own colour (#1132)
+  accountColor: 'readonly',
+  // feed-view.js — the friend feed's two presentations (#325, #1132)
+  feedText: 'readonly', renderFeedEvent: 'readonly',
+  FEED_TILES_COLLAPSED: 'readonly', feedTileVerb: 'readonly',
+  renderFeedTile: 'readonly', renderFeedTiles: 'readonly',
+  // views-profile.js — the account profile (issue #558, rebuilt in #1132)
+  showProfile: 'readonly', renderProfileCard: 'readonly', renderProfileState: 'readonly',
+  profileMenuItems: 'readonly',
   friendRowMain: 'readonly', wireFriendRowMain: 'readonly',
   // views-account.js (issue #482)
   showAccount: 'readonly', renderKontoFact: 'readonly',

@@ -14,6 +14,7 @@ paths:
   - "test/players-plural.test.js"
   - "test/recap-card-cover.test.js"
   - "public/js/views-friends.js"
+  - "public/js/feed-view.js"
   - "public/js/views-profile.js"
   - "public/js/views-home.js"
   - "public/js/views-round-detail.js"

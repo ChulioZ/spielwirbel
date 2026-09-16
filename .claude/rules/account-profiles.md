@@ -4,6 +4,7 @@ paths:
   - "lib/routes/friends.js"
   - "public/js/views-profile.js"
   - "public/js/views-friends.js"
+  - "public/js/feed-view.js"
   - "test/profile.test.js"
 ---
 # The account profile (#558) sits AHEAD of the tenant gate — so it re-checks suspension itself

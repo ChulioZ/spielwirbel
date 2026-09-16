@@ -28,7 +28,18 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 
 const { loadApp } = require('./support/dom');
-const { bodyOf } = require('./support/css');
+const { bodyOf, bodyOfIn, rulesOf, topLevel } = require('./support/css');
+
+/* `.member-card`'s frame rule is a GROUPED selector since #1132 — die
+   Spielerkarte shares this card, deliberately by selector rather than by a
+   copied recipe — so bodyOf(), which compares the whole selector text, no
+   longer finds it. Looked up in `topLevel()` rather than in the whole sheet:
+   the 520px block declares `.member-card, .profile-card { padding: … }`, which
+   a grouped lookup over everything would answer with instead — and a padding
+   rule has no tone to read, so the assertions below would fail as though the
+   band had lost its derivation
+   (.claude/rules/css-rule-lookup-answers-with-the-media-reset.md). */
+const frameBody = (sel) => bodyOfIn(sel, rulesOf(topLevel()));
 
 const RID = 'r1';
 const MID = 'm1';
@@ -99,7 +110,7 @@ test('a member with no colour of their own still renders a band', async (t) => {
 });
 
 test('the band is derived from --m-tone and the surface — never a literal hex', () => {
-  const head = bodyOf('.member-card');
+  const head = frameBody('.member-card');
   assert.ok(head, '.member-card has no rule any more');
 
   // Every colour in the band comes from the tone or from a theme token, so a

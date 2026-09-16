@@ -713,13 +713,17 @@ public/
                      panel, all from one payload and one card renderer. Renders
                      nothing at all — no heading, no container — when the
                      feature is off or every metric is still below its threshold
+    feed-view.js     the friend feed's two presentations (#325, #1132): the row
+                     for a narrow section, the tile grid where the feed is the
+                     content. A component with three callers on three screens
     views-friends.js Der Kreis view + home dashboard tile (#325; since #842
                      it invites rather than vanishing when you have no friends).
-                     Holds the helpers the profile shares (avatar, name, feed
-                     event, send error, report button)
+                     Holds the account vocabulary the profile shares (colour,
+                     avatar, name, send error, report button)
     views-profile.js the account profile at /u/:username (#558; accounts mode
-                     only) — its entry points, the account's own activity feed
-                     and its play record across every round (#1089)
+                     only) — die Spielerkarte, one card in the account's own
+                     colour carrying its play record (#1089, rebuilt in #1132),
+                     the state action, the „…" menu and the tiled activity feed
     views-account.js Konto settings: identity + change password (#482; accounts mode only)
     router.js        URL ↔ view routing (History API): deep links, reloads
     main.js          bootstrap: route from the current URL              (loads last)

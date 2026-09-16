@@ -670,16 +670,22 @@ What the app does, in detail. For a short overview see the
   nothing and the list starts out empty. Entries live in the deployed code, so a
   self-hosted instance shows exactly what shipped with its version. With accounts
   off the screen still opens; there is simply no account to badge it against.
-- **Account profiles** – *accounts mode only* (issue #558). Every account has a
-  profile at `/u/‹username›`, reachable by clicking a name in the Freundeskreis
-  and usable to check you have the right person **before** sending a request.
-  It shows the username, its picture or initials, "member since ‹month›", a
-  report button, and the one friend
-  action your current relationship allows (send / cancel / accept+decline /
-  unfriend) — plus that account's feed, but **only between accepted friends**
-  and still only for activity after you became friends. No e-mail address is ever
-  shown. Signing in is required, so profiles are not public web pages and are not
-  crawlable.
+- **Account profiles** – *accounts mode only* (issues #558, #1132). Every account
+  has a profile at `/u/‹username›`, reachable by clicking a name in the
+  Freundeskreis and usable to check you have the right person **before** sending
+  a request. Since #1132 the whole page is **one card in that account's own
+  colour** — die Spielerkarte, the member page's Tischkarte for an account: the
+  picture or initials inside a ring that IS the win rate, the initials again as a
+  watermark, "member since ‹month› · N rounds · N games" under the name, a chip
+  saying what the two of you are to each other, and — at most — the one friend
+  action the moment calls for (send a request, or accept/decline one). Everything
+  rarer moves into the „…" menu beside „Zurück": unfriend, withdraw a request,
+  and report the account. On your own profile the picture wears a pencil and
+  leads to Konto, which is where it is actually changed.
+  Below the card is that account's activity, as a grid of tiles rather than a
+  column of rows — **only between accepted friends**, and still only for activity
+  after you became friends. No e-mail address is ever shown. Signing in is
+  required, so profiles are not public web pages and are not crawlable.
 - **Your own profile, and your record across rounds** – *accounts mode only*
   (issue #1089). „Mein Profil" in the account menu — and the handle on the Konto
   screen — open your own profile. It carries your **play record aggregated over
@@ -692,7 +698,11 @@ What the app does, in detail. For a short overview see the
   you switch it off (Konto → Profil; on by default); strangers and pending
   requests never do, and you always see your own. The record names **no round,
   no other member and no individual session or rating** — only figures and at
-  most two game titles.
+  most two game titles. Since #1132 it is the five figures of the card's strip —
+  wins, win rate, sessions, Siegwertung (with its own bar) and your average
+  rating given — while the two that describe breadth rather than performance, the
+  round and game counts, are the line under your name. The favourite and
+  strongest game are the two ribboned boxes at the foot of the card.
 - **Profile pictures** – *accounts mode only* (issue #841). An account can upload
   a picture, replace it or remove it again from the Konto screen; without one the
   app keeps showing the coloured tile with your initials, which also stands in if
