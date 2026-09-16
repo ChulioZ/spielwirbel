@@ -373,6 +373,23 @@ test('the tile\'s second line gets TWO lines, so the date is not ellipsised away
     'nowrap is back, which is the single-line truncation this replaced');
 });
 
+test('both roster controls declare a focus ring, not the UA default', () => {
+  /* #1136 deleted `a.c-ring__face:focus-visible` with the avatar band, and the
+     tile that replaced it is now the roster's ONLY interactive element — so a
+     missing rule here would leave the one control on the screen with no brand
+     focus treatment, unlike every sibling in the app. Measured in the pane: no
+     `:focus-visible` rule matched the tile before this was added. */
+  const { CSS, rulesOf } = require('./support/css');
+  const rules = rulesOf(CSS).filter(([sel]) => /:focus-visible/.test(sel));
+  for (const [needle, what] of [['a.k-tile:focus-visible', 'the person tile'],
+    ['.k-tile--add:focus-visible', 'the „＋" tile']]) {
+    const hit = rules.find(([sel]) => sel.split(',').some((s) => s.trim() === needle));
+    assert.ok(hit, `${what} declares no :focus-visible rule`);
+    assert.match(hit[1], /outline:\s*2px solid var\(--brand\)/,
+      `${what}'s focus ring is not the app's brand outline`);
+  }
+});
+
 test('the roster and the tile names agree on who is a friend', async () => {
   // Requests are cards in another band; only friends are tiles.
   await open({

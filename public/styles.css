@@ -4258,6 +4258,12 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
 }
 a.k-tile:hover { border-color: var(--brand); }
 a.k-tile:hover .k-tile__name { text-decoration: underline; }
+/* The tile is the roster's ONLY interactive element since #1136, so it carries
+   the focus ring the band avatar (`a.c-ring__face`) used to — dropping that rule
+   with the band would have left the one control on the screen relying on the UA
+   default, unlike every sibling (`.lobby-cta`, `.game-link`, `.member-link`). */
+a.k-tile:focus-visible,
+.k-tile--add:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
 /* Content above the art. `.k-tile__art` is the one child that must NOT be
    lifted, and it is excluded by being absolutely positioned rather than by a
    selector — a `:not()` here would be one more thing to keep in step. */
