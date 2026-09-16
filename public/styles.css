@@ -854,6 +854,27 @@ h1, h2, h3 { font-family: var(--font-display); }
     max-width: var(--w-detail);
   }
 
+  /* Die Spielerkarte's screen (#1132) takes the same licence, with the spread's
+     two halves rather than the Freundeskreis's one.
+
+     Measured before: the head, the action and the feed sat in the 900px reading
+     measure while `.profile-stats` inherited the `.pokale-cards` exemption —
+     THREE left edges from 1280px (190 / 20 / 190) on a screen that is one
+     record. The two game tiles were 709-874px wide each for a 64px thumb and
+     two words.
+
+     `--w-detail`, not `--w-shell` like the Freundeskreis: this screen renders a
+     back control at EVERY width (`.claude/rules/persistent-chrome-defines-the-main-pages.md`),
+     which is precisely why the neighbour could widen further and this one
+     cannot. That back row is a SIBLING of the wrapper, so it must be named
+     here or the „…" page menu sits ~250px inside the page's right edge — the
+     #543/#577 lesson, two screens over.
+
+     (0,5,0) against the cap's (0,3,0) — specificity, never source order. */
+  .app:has(.profile-screen) > *:not(.rail):not(.dock):is(.back-row, .profile-screen) {
+    max-width: var(--w-detail);
+  }
+
   /* The logged-out landing page (#1090) takes the same licence, on the plainest
      argument of the four: nothing persistent renders on this screen at all. The
      auth-screen chrome hides home, context and feedback, the rail never renders
@@ -4379,25 +4400,15 @@ a.c-ring__face:hover { box-shadow: 0 0 0 3px var(--brand-edge); }
 .friend-row__link:focus-visible .friend-row__name { text-decoration: underline; }
 
 /* ===== Account profile /u/:username (#558) ===== */
-/* The account-wide stats block (#1089). It reuses `.member-figure` and
-   `.pokale-card` wholesale — the same numbers computed by the same function, so
-   they must read the same — and adds only what the profile context needs: the
-   strip's own spacing (the member card supplies that from its frame) and the
-   note explaining to a FRIEND what these numbers do and do not name. */
-.profile-stats { margin-bottom: 18px; }
-.profile-stats .profile-figures { margin-bottom: 18px; }
-.profile-stats__games { margin-bottom: 10px; }
-.profile-stats__note { font-size: var(--text-sm); margin: 0; }
-.profile-head { display: flex; align-items: center; gap: 16px; margin: 4px 0 18px; }
-.profile-head__text { min-width: 0; }
-.profile-head__text h1 { margin: 0 0 2px; overflow-wrap: anywhere; }
-.profile-head__text p { margin: 2px 0 0; font-size: var(--text-sm); }
-/* The profile's avatar is the row avatar at hero size — same deterministic
-   colour + initials, so an account looks the same here as in a row. */
-.profile-head .avatar { width: 64px; height: 64px; font-size: 24px; /* glyph, not type */ flex: none; }
-/* One relationship action (plus, for an incoming request, its decline). */
-.profile-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
-.profile-actions p { margin: 0; }
+/* Die Spielerkarte (#1132). The card's frame, wash and blocks are die
+   Tischkarte's, shared by selector rather than copied — see `.member-card`,
+   which this joins. What lives here is only what the profile context adds. */
+.profile-card__meta { margin: 6px 0 0; font-size: var(--text-sm); overflow-wrap: anywhere; }
+/* The friend-facing note, under the card rather than inside it: it is about the
+   record's LIMITS, which is a sentence for the reader and not part of the
+   identity the card states. */
+.profile-note { font-size: var(--text-sm); margin: 0 0 18px; }
+.profile-screen > .empty-note { margin-top: 0; }
 /* The feed: one row per event, a small square cover thumb + the line + time. */
 .feed-list { display: flex; flex-direction: column; gap: 10px; }
 .feed-item {
@@ -4466,6 +4477,88 @@ a.c-ring__face:hover { box-shadow: 0 0 0 3px var(--brand-edge); }
 .feed-item__report .ti { font-size: var(--text-md); display: block; }
 .friend-row__report:hover,
 .feed-item__report:hover { background: var(--sunken); color: var(--ink); }
+/* The feed as a WALL of tiles (#1132; #1136 for the Freundeskreis). A row is
+   68px of page for one line of news in a measure it does not use — 26 events
+   measure 2261px as rows against 463px as tiles, which is what lets the feed
+   and the thing above it both take the whole width.
+
+   `auto-fill`, never `auto-fit`: an empty track must stay empty rather than let
+   a lone tile balloon to the pane
+   (`.claude/rules/auto-fit-collapses-only-empty-tracks.md`).
+
+   172px is LOAD-BEARING rather than chosen: it is the largest minimum that
+   still gives TWO columns at 390px (2 x 172 + 10 = 354 <= 362 of content box),
+   and it gives nine at 1800. */
+.e-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(172px, 1fr)); gap: 10px; }
+.e-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+}
+.e-tile__img {
+  flex: none;
+  overflow: hidden;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-sm);
+  background: var(--sunken) center/cover no-repeat;
+  display: grid;
+  place-items: center;
+  color: var(--placeholder);
+  font-size: 20px; /* glyph, not type */
+}
+.e-tile__title { font-weight: 700; line-height: 1.3; overflow-wrap: anywhere; }
+/* One full-width line under the title, so the author does not take a column
+   from the news the way the row's badge exists to avoid. */
+.e-tile__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 6px;
+  margin-top: auto;
+  font-size: var(--text-xs);
+  color: var(--ink-soft);
+}
+.e-tile__who { display: inline-flex; align-items: center; gap: 5px; min-width: 0; }
+.e-tile__who .avatar { width: 20px; height: 20px; font-size: 10px; /* glyph, not type */ }
+.e-tile__name { font-weight: 700; color: var(--ink); overflow-wrap: anywhere; }
+/* The report button rides the tile's top-right corner — the one place on a
+   172px tile that no text reaches. Same size and same quiet treatment as the
+   row's, so the notice channel does not change character with the layout. */
+.e-tile__report {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  border: none;
+  background: transparent;
+  color: var(--ink-soft);
+  cursor: pointer;
+  line-height: 1;
+  padding: 8px 9px;
+  border-radius: var(--radius-sm);
+}
+.e-tile__report .ti { font-size: var(--text-md); display: block; }
+.e-tile__report:hover { background: var(--sunken); color: var(--ink); }
+.e-feed__more { margin-top: 10px; }
+/* Below 1024px the grid shows eight tiles — two rows at the phone's two
+   columns — then the expander. Above it nothing is capped: four rows of tiles
+   is not a screenful, and the whole point of the shape is that width buys
+   density. In CSS rather than a slice in JS, which would need a resize listener
+   to stay right (the `.k-feed` mechanism, generalised).
+   `nth-of-type`, not `nth-child`: the grid's children are all tiles today, and
+   the day one of them is not, counting by position would hide the wrong one. */
+@media (max-width: 1023px) {
+  .e-feed:not(.is-open) .e-tile:nth-of-type(n + 9) { display: none; }
+}
+@media (min-width: 1024px) {
+  .e-feed__more { display: none; }
+}
+
 /* Home compact section: a heading with a "see all" link, then a few feed rows.
    Since #842 it is a tile in the `.home-dash` flow, which owns the spacing —
    the standalone top margin it used to carry would offset it inside its row. */
@@ -6167,7 +6260,12 @@ a.c-ring__face:hover { box-shadow: 0 0 0 3px var(--brand-edge); }
    plain --surface, the radial at the TOP RIGHT away from where the name reads,
    and an inset ring rather than a border so the card's size does not depend on
    whether --m-tone resolves. Both are contrast decisions rather than taste. */
-.member-card {
+/* `.profile-card` is die Spielerkarte (#1132): the SAME card, for an account
+   instead of a seat. It shares this frame by selector rather than by a copied
+   recipe, so the wash — a contrast decision, not a taste one — cannot come to
+   mean two different things (test/a11y-contrast.test.js measures it once). */
+.member-card,
+.profile-card {
   position: relative;
   padding: 26px 24px;
   margin: 0 0 22px;
@@ -6403,16 +6501,14 @@ a.c-ring__face:hover { box-shadow: 0 0 0 3px var(--brand-edge); }
 /* The five figures, one treatment, one row that wraps. `1 1 96px` puts 3 + 2 on
    a phone with the second row filling the width; there is no grid, so no track
    can be empty at any viewport — which is the defect this replaced. */
-.member-card__figures,
-.profile-figures {
+/* One strip, shared with die Spielerkarte (#1132), which carries the same five
+   figures inside a card with the same `--m-tone` — so unlike #1089's loose
+   `.profile-figures`, the framing half applies there too and no longer needs
+   splitting out. */
+.member-card__figures {
   display: flex;
   flex-wrap: wrap;
   gap: 18px 26px;
-}
-/* The member card's own framing only: the rule above is shared with the account
-   profile (#1089), which has no card around it and — crucially — no `--m-tone`,
-   so a border-colour mixed from it would resolve against nothing there. */
-.member-card__figures {
   margin-top: 22px;
   padding-top: 18px;
   border-top: 1px solid color-mix(in oklab, var(--m-tone) 26%, transparent);
@@ -6466,7 +6562,7 @@ a.c-ring__face:hover { box-shadow: 0 0 0 3px var(--brand-edge); }
 @media (max-width: 520px) {
   /* The card keeps its shape on a phone; only the breathing room goes, so the
      avatar and a long name still fit on one row before wrapping. */
-  .member-card { padding: 20px 16px; }
+  .member-card, .profile-card { padding: 20px 16px; }
   .member-card__id { gap: 16px; }
   .member-avatar { width: 84px; height: 84px; font-size: 30px; }
   .member-figure__value { font-size: var(--text-xl); }
@@ -6475,7 +6571,7 @@ a.c-ring__face:hover { box-shadow: 0 0 0 3px var(--brand-edge); }
      column gap needs 340px for three, so five wrapped 2 + 2 + 1 and the last
      figure sat alone on a row of its own. 3×88 + 2×14 = 292 fits; a fourth
      would need 394 and cannot. The two on the second row then grow to fill it. */
-  .member-card__figures, .profile-figures { gap: 16px 14px; }
+  .member-card__figures { gap: 16px 14px; }
   .member-figure { flex: 1 1 88px; }
 }
 @media (min-width: 1280px) {

@@ -417,6 +417,97 @@ test('the landing width sits between the reading measure and the shell', () => {
   });
 });
 
+/* Die Spielerkarte's screen (#1132) — the seventh, and the second to escape the
+   measure while rendering navigation, so it has the spread's TWO halves rather
+   than the landing's one. Its back control is unconditional at every width
+   (`.claude/rules/persistent-chrome-defines-the-main-pages.md`), which is both
+   why the back row must be named here and why this screen takes `--w-detail`
+   rather than the Freundeskreis's wider shell. */
+test('the profile screen and its back row opt out of the reading measure TOGETHER', () => {
+  const exemptions = RULES.filter(([sel, body]) =>
+    whole('.profile-screen').test(sel) && /max-width:/.test(body));
+  assert.ok(exemptions.length,
+    'nothing exempts .profile-screen from the reading measure, so the card keeps the text measure');
+
+  exemptions.forEach(([sel, body]) => {
+    assert.ok(whole('.back-row').test(sel),
+      `"${sel}" widens the profile without widening the back row, which leaves the page menu inside the page's right edge`);
+    assert.match(sel, /:has\(\.profile-screen\)/,
+      `"${sel}" is not conditioned on the profile being present, so it widens every screen's back row`);
+    const vars = [...body.matchAll(/max-width:\s*var\((--[\w-]+)\)/g)].map((m) => m[1]);
+    assert.equal(vars.length, 1,
+      `"${sel}" does not take its width from a single custom property`);
+    const classes = (sel.match(/\.[\w-]+/g) || []).length;
+    assert.ok(classes > 3,
+      `"${sel}" has ${classes} class components and does not out-rank the (0,3,0) reading-measure cap`);
+  });
+});
+
+test('the profile width sits between the reading measure and the shell', () => {
+  // The arithmetic half, pinned separately for the reason every sibling above
+  // states: at 880 every selector assertion stays green while the exemption
+  // makes the screen NARROWER than the cap it exists to escape.
+  const exemptions = RULES.filter(([sel, body]) =>
+    whole('.profile-screen').test(sel) && /max-width:/.test(body));
+  const vars = exemptions.flatMap(([, body]) =>
+    [...body.matchAll(/max-width:\s*var\((--[\w-]+)\)/g)].map((m) => m[1]));
+  assert.ok(vars.length, 'the profile screen takes no custom property for its width');
+  vars.forEach((name) => {
+    const width = rootPx(name);
+    assert.ok(width, `:root does not declare ${name}`);
+    assert.ok(width > rootPx('--w-read'),
+      `${name} (${width}px) is not wider than --w-read (${rootPx('--w-read')}px), so the exemption buys nothing`);
+    assert.ok(width <= rootPx('--w-shell'), `${name} exceeds the shell it sits in`);
+  });
+});
+
+/* The tiled feed's column floor (#1132/#1136). Arithmetic, not "a grid exists":
+   172px is the largest minimum that still gives TWO columns at 390px, and a
+   nudge to 180 would silently return the phone to one column — the single-column
+   stack this shape exists to replace. */
+test('the feed tile grid gives a phone two columns', () => {
+  const narrow = rulesUnder(/max-width:\s*520px/);
+  const grid = bodyOf('.e-grid');
+  assert.ok(grid, '.e-grid rule not found');
+  assert.match(grid, /auto-fill/,
+    'auto-fit collapses empty tracks and lets a lone tile balloon to the pane');
+  const spec = gridSpec(grid);
+  assert.ok(spec && spec.floor && spec.gap, '.e-grid declares no minmax floor / gap');
+
+  // The phone's real content box: `.app` is re-padded in the narrow block.
+  const pad = sidePadding(bodyOf('.app', narrow));
+  const phone = columnsIn(390 - 2 * pad, spec);
+  assert.equal(phone, 2,
+    `a ${spec.floor}px floor gives a 390px phone ${phone} tile column(s) — one is the stack this replaced`);
+  assert.ok(columnsIn(rootPx('--w-detail'), spec) >= 6,
+    'the grid buys no density at the detail width, which is the whole point of tiling');
+});
+
+/* The collapse is CSS and the count it hides from is JS, so the two can drift
+   without anything rendering wrong — the grid would simply show seven tiles and
+   an expander that says nine, or nine tiles and a button that expands nothing.
+   Pinned as ARITHMETIC over both sources rather than as "a collapse rule
+   exists". */
+test('the tiled feed hides exactly the tiles its expander promises', () => {
+  const src = fs.readFileSync(path.join(__dirname, '..', 'public', 'js', 'feed-view.js'), 'utf8');
+  const declared = /const FEED_TILES_COLLAPSED = (\d+);/.exec(src);
+  assert.ok(declared, 'feed-view.js no longer declares FEED_TILES_COLLAPSED');
+
+  const below = rulesUnder(/max-width:\s*1023px/);
+  const hit = below.find(([sel]) => whole('.e-tile').test(sel) && /nth-of-type/.test(sel));
+  assert.ok(hit, 'nothing collapses the tiled feed below the column breakpoint');
+  assert.match(hit[1], /display:\s*none/, 'the collapse rule hides nothing');
+  const nth = /nth-of-type\(n \+ (\d+)\)/.exec(hit[0]);
+  assert.ok(nth, `the collapse is not an open-ended nth-of-type: ${hit[0]}`);
+  assert.equal(Number(nth[1]), Number(declared[1]) + 1,
+    `the CSS hides from tile ${nth[1]} while the view expands at ${declared[1]}`);
+
+  // …and above it nothing is capped at all, so the expander must go with the cap.
+  const above = rulesUnder(/min-width:\s*1024px/);
+  assert.ok(above.some(([sel, body]) => whole('.e-feed__more').test(sel) && /display:\s*none/.test(body)),
+    'the expander survives above the breakpoint, where every tile is already shown');
+});
+
 test('the detail spread is two columns from the app breakpoint, on bounded tracks', () => {
   const hit = mediaBlocks()
     .map(([query, css]) => ({ query, body: bodyOf('.pass', rulesOf(css)) }))

@@ -23,7 +23,8 @@ const { test, after } = require('node:test');
 const assert = require('node:assert/strict');
 
 const {
-  rulesOf, bodyOf, mediaBlocks, whole, CSS, RULES, matchesEl, declaredValue, resolvedDeclaration,
+  rulesOf, bodyOf, bodyOfIn, topLevel, mediaBlocks, whole, CSS, RULES, matchesEl, declaredValue,
+  resolvedDeclaration,
 } = require('./support/css');
 const { loadApp } = require('./support/dom');
 const {
@@ -743,7 +744,7 @@ test('no bare white is painted outside the rules that justify one', () => {
    The exemptions are the boxes the token is actually for. Each must still be a
    glyph container, never a run of text. */
 const PLACEHOLDER_GLYPHS = new Set([
-  '.session-card__img', '.game-card__img', '.feed-item__img',
+  '.session-card__img', '.game-card__img', '.feed-item__img', '.e-tile__img',
   '.lookup__thumb--none .ti', '.pool-tile__img',
 ]);
 
@@ -1044,6 +1045,43 @@ test('the Tischkarte watermark leaves the name legible over it', () => {
   assert.deepEqual(failures.slice(0, 6), [],
     `the watermark paints the member tone at ${(alpha * 100).toFixed(0)}% over the card's wash; `
     + `the name (--ink) can overlap it at 1280px and needs ${AA_TEXT}:1`);
+});
+
+/* Die Spielerkarte's wash (#1132). The card is `.member-card`'s frame shared by
+   selector, and it paints the account's own palette colour at 13% under the
+   text — but where the Tischkarte's text is `--ink` throughout, this one carries
+   a MUTED meta line („Mitglied seit … · 3 Runden · 9 Spiele"), so `--ink-soft`
+   on that wash is a bar the member page never had to clear.
+
+   It does clear it, and not by much: the worst pair over every design and every
+   palette tone measures 4.82:1 against the 4.5 bar. That is why the line stays
+   at the LINEAR wash's strength — the radial peak measures 3.26:1 for the same
+   ink, which is #1074's own reason the card's top-right corner carries no text
+   and is not something this added. Moving the meta line up into that corner, or
+   deepening the 13%, re-opens this.
+
+   `--ink` is measured beside it so the figure strip's labels are covered by the
+   same sweep rather than by inheritance from the member page's own test. */
+test('the Spielerkarte\'s wash keeps its muted meta line over AA, in every account colour', () => {
+  const body = bodyOfIn('.profile-card', rulesOf(topLevel()));
+  assert.ok(body, '.profile-card no longer shares the card frame — re-measure the wash it has now');
+  const mix = /color-mix\(in oklab, var\(--m-tone\) (\d+)%, var\(--surface\)\)/.exec(body);
+  assert.ok(mix, `the card's linear wash is not a --m-tone/--surface mix: ${body}`);
+  const alpha = Number(mix[1]) / 100;
+
+  const failures = [];
+  for (const th of THEMES) {
+    for (const tone of MEMBER_COLORS) {
+      const wash = mixOklab(tone, th.surface, alpha);
+      for (const [label, ink] of [['--ink', th.ink], ['--ink-soft', th.inkSoft]]) {
+        const ratio = contrast(ink, wash);
+        if (ratio < AA_TEXT) failures.push(`${name(th)} ${label} on ${tone} = ${ratio.toFixed(2)}:1`);
+      }
+    }
+  }
+  assert.deepEqual(failures.slice(0, 6), [],
+    `the card washes the account's tone at ${(alpha * 100).toFixed(0)}% under its meta line; `
+    + `the muted ink needs ${AA_TEXT}:1. Lower the alpha, do not widen this test.`);
 });
 
 /* The anti-vacuous half, the shape test/design-tokens.test.js uses for its glyph

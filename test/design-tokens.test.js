@@ -80,7 +80,7 @@ const GLYPH_LITERALS = [
   '.stage__voter-avatar .avatar', '.nr-seat__avatar', '.nr-seat--empty .nr-seat__avatar',
   '.podium__avatar', '.podium__col--multi .podium__avatar',
   '.podium--single .podium__col--multi .podium__avatar',
-  '.profile-head .avatar', '.member-avatar', '.handover__avatar',
+  '.member-avatar', '.handover__avatar',
   '.spotlight__seat .avatar',
   '.konto-avatar__preview', '.feed-item__who',
   // placeholder glyphs centred in a cover / thumb / tile box
@@ -88,6 +88,9 @@ const GLYPH_LITERALS = [
   // exemption has to name the whole selector text — these are matched exactly.
   '.ticket__img', '.session-card__img', '.round-card__emblem', '.lobby-cta__icon,\n.empty__icon',
   '.landing-claim__icon', '.landing-step__num', '.feed-item__img', '.trow__img', '.tisch__box',
+  // the feed's TILE form (#1132): the same cover box and the same author face,
+  // one component over.
+  '.e-tile__img', '.e-tile__who .avatar',
   // …and the same box shrunk while the winner picker is open (#1139).
   '.tisch[data-state="picking"] .tisch__box',
   '.friends-invite__icon',
