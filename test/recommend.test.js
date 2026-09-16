@@ -22,6 +22,7 @@ const {
   partyDistribution,
   buildPlayScale,
   buildShelfIndex,
+  representativePlaytime,
   MIN_PROFILE_GAMES,
   NEUTRAL,
   REASON_LINES,
@@ -57,6 +58,9 @@ const info = (over = {}) => ({
   weight: 3,
   minPlayers: 2,
   maxPlayers: 4,
+  // BOTH bounds, always: the scorer reads the band (`representativePlaytime`),
+  // so an override giving only `maxPlaytime` means a 60-to-X game and not the
+  // X-minute game it reads as. State the length you mean (#1141).
   minPlaytime: 60,
   maxPlaytime: 60,
   minAge: 12,
@@ -379,8 +383,8 @@ test('plays pull the complexity and time targets toward what the round actually 
   // targets have to follow the bonus.
   const sessions = [1, 2, 3].map((i) => directPick(`s${i}`, 'g1'));
   const corpus = [
-    entry('o1', { info: info({ weight: 4.5, maxPlaytime: 180 }) }),
-    ...Array.from({ length: MIN_PROFILE_GAMES - 1 }, (_, i) => entry(`o${i + 2}`, { info: info({ weight: 2, maxPlaytime: 30 }) })),
+    entry('o1', { info: info({ weight: 4.5, minPlaytime: 180, maxPlaytime: 180 }) }),
+    ...Array.from({ length: MIN_PROFILE_GAMES - 1 }, (_, i) => entry(`o${i + 2}`, { info: info({ weight: 2, minPlaytime: 30, maxPlaytime: 30 }) })),
   ];
   const idle = profileOf(shelfRound(), corpus);
   const played = profileOf(shelfRound({ sessions }), corpus);
@@ -737,6 +741,7 @@ test('the ranking does not move when the corpus grows (#772 keeps §7\'s invaria
       bayesRating: 5.5 + (i % 7) * 0.5,
       info: info({
         weight: 2 + (i % 5) * 0.5,
+        minPlaytime: 30 + (i % 6) * 30,
         maxPlaytime: 30 + (i % 6) * 30,
         mechanics: [...loved, ...Array.from({ length: 4 - loved.length }, (_, k) => `Z${i}-${k}`)],
         categories: pick(TASTE_CATEGORIES, i, 1 + (i % 3)),
@@ -762,6 +767,7 @@ test('the ranking does not move when the corpus grows (#772 keeps §7\'s invaria
       bayesRating: 7 + (i % 4) * 0.3,
       info: info({
         weight: 3,
+        minPlaytime: 60,
         maxPlaytime: 60,
         mechanics: TASTE_MECHANICS.slice(0, 3 + (i % 3)),
         categories: TASTE_CATEGORIES.slice(0, 2),
@@ -798,8 +804,8 @@ test('the ranking does not move when the corpus grows (#772 keeps §7\'s invaria
 test('TIME is the distance from the group\'s own evening length', () => {
   const profile = profileOf(shelfRound(), shelfCorpus());
   assert.equal(profile.targetTime, 60);
-  const fits = entry('x', { info: info({ maxPlaytime: 60 }) });
-  const marathon = entry('y', { info: info({ maxPlaytime: 120 }) });
+  const fits = entry('x', { info: info({ minPlaytime: 60, maxPlaytime: 60 }) });
+  const marathon = entry('y', { info: info({ minPlaytime: 120, maxPlaytime: 120 }) });
   assert.equal(delta(profile, fits, marathon), W_TIME);
 });
 
@@ -810,8 +816,8 @@ test('TIME\'s window is a SHARE of the shelf, so it scales instead of costing th
   const long = shelfAt(120);
   assert.equal(Math.round(short.targetTime * 1e6) / 1e6, 40);
   assert.equal(Math.round(long.targetTime * 1e6) / 1e6, 120);
-  const at = (profile, maxPlaytime) =>
-    termValue(profile, entry('x', { info: info({ maxPlaytime }) }), 'time');
+  const at = (profile, minutes) =>
+    termValue(profile, entry('x', { info: info({ minPlaytime: minutes, maxPlaytime: minutes }) }), 'time');
 
   assert.equal(at(short, 40), 1, 'each shelf still peaks at its own target');
   assert.equal(at(long, 120), 1);
@@ -833,12 +839,64 @@ test('TIME\'s window is a SHARE of the shelf, so it scales instead of costing th
   assert.ok(at(long, 70) > 0);
 });
 
+test('a game\'s length is ONE number: the midpoint, unless the band is a campaign', () => {
+  const cases = [
+    [60, 120, 90, 'an ordinary band is its midpoint'],
+    [60, 60, 60, 'a degenerate band is unchanged'],
+    [20, 600, 20, 'ratio 30 is a campaign, not a range — the single sitting'],
+    [30, 300, 165, 'ratio 10 is NOT past the threshold, so it is still a midpoint'],
+    [30, 301, 30, 'one minute past 10x flips it'],
+    [null, 90, 90, 'whichever bound exists'],
+    [45, null, 45, 'ditto, from the other side'],
+    [null, null, null, 'no claim at all'],
+  ];
+  for (const [min, max, want, why] of cases) {
+    assert.equal(representativePlaytime({ minPlaytime: min, maxPlaytime: max }), want, why);
+  }
+  // `toPositiveInt()` in lib/providers/bgg.js normalises BGG's "0 = no data" to
+  // null, so the ratio can never divide by zero — asserted rather than assumed.
+  assert.equal(representativePlaytime({ minPlaytime: 0, maxPlaytime: 90 }), 90, 'a 0 bound is no bound');
+  assert.equal(representativePlaytime({}), null);
+  assert.equal(representativePlaytime({ minPlaytime: 'x', maxPlaytime: '90' }), null);
+});
+
+test('the scorer, the shelf target and the reason line all read the SAME figure', () => {
+  // The shelf sits at 60 minutes flat, and the candidate's band 30-90 has its
+  // midpoint exactly on it while its maximum is 30 minutes away. So a scorer
+  // still reading `maxPlaytime` cannot reach a perfect time term...
+  const profile = profileOf(shelfRound(), shelfCorpus());
+  assert.equal(profile.targetTime, 60);
+  const cand = entry('cand', { info: info({ minPlaytime: 30, maxPlaytime: 90 }) });
+  assert.equal(termValue(profile, cand, 'time'), 1, 'scored on the midpoint, which IS the target');
+
+  // ...and the reason line must name the figure it was scored on, not the bound.
+  // Wiring two of the three sites and leaving this one is the miss a spec that
+  // only checks the score cannot see (#1141).
+  const reason = scoreCandidate(profile, cand).terms.find((t) => t.term === 'time');
+  assert.equal(reason.minutes, representativePlaytime(cand.info));
+  assert.equal(reason.minutes, 60);
+});
+
+test('the shelf TARGET is the mean of those figures, so a wide band no longer inflates it', () => {
+  // Every shelf game runs 30-90: a target read off `maxPlaytime` would be 90.
+  const profile = profileOf(shelfRound(), shelfCorpus({ minPlaytime: 30, maxPlaytime: 90 }));
+  assert.equal(profile.targetTime, 60);
+  // And a campaign on the shelf contributes the sitting, not the arc: eight of
+  // nine games at 60 flat plus one 20-600 lands at 55.6, where the maximum
+  // would have dragged it to 120.
+  const corpus = shelfCorpus();
+  corpus[0].info = info({ minPlaytime: 20, maxPlaytime: 600 });
+  const withCampaign = profileOf(shelfRound(), corpus);
+  assert.ok(withCampaign.targetTime < 60 && withCampaign.targetTime > 50,
+    `a campaign pulls the target DOWN, not up (got ${withCampaign.targetTime})`);
+});
+
 test('an UNKNOWN attribute scores neutral, not zero', () => {
   const profile = profileOf(shelfRound(), shelfCorpus());
   // A row BGG knows nothing about beyond its rank must not be buried under a row
   // that is a documented bad match; it has simply made no claim.
-  const silent = entry('x', { info: info({ weight: null, maxPlaytime: null }) });
-  const wrong = entry('y', { info: info({ weight: 4.2, maxPlaytime: 120 }) });
+  const silent = entry('x', { info: info({ weight: null, minPlaytime: null, maxPlaytime: null }) });
+  const wrong = entry('y', { info: info({ weight: 4.2, minPlaytime: 120, maxPlaytime: 120 }) });
   assert.equal(delta(profile, silent, wrong), Math.round((W_COMPLEXITY + W_TIME) * NEUTRAL * 1e6) / 1e6);
 });
 
@@ -1098,7 +1156,7 @@ test('the complexity and time reasons carry the ROUND\'s number alongside the ca
   // mechanics and categories, and a poll with nothing to say.
   const cand = entry('cand', {
     bayesRating: 5.5,
-    info: info({ weight: 2.8, maxPlaytime: 50, mechanics: ['ZZ'], categories: ['ZZ'], bestWith: [], recommendedWith: [] }),
+    info: info({ weight: 2.8, minPlaytime: 50, maxPlaytime: 50, mechanics: ['ZZ'], categories: ['ZZ'], bestWith: [], recommendedWith: [] }),
   });
   const [rec] = recommend(round, [...shelfCorpus(), cand]).recommendations;
 
@@ -1108,6 +1166,26 @@ test('the complexity and time reasons carry the ROUND\'s number alongside the ca
   // „Gewicht 2,8" with an unjudgeable claim attached.
   assert.deepEqual(rec.reasons.find((r) => r.term === 'complexity'), { term: 'complexity', weight: 2.8, target: 3 });
   assert.deepEqual(rec.reasons.find((r) => r.term === 'time'), { term: 'time', minutes: 50, target: 60 });
+});
+
+test('the time reason ROUNDS its minutes — a midpoint can be a half (#1141)', () => {
+  const round = shelfRound();
+  // A 45-70 band: its midpoint is 57.5, which is what the term is scored on and
+  // what „Rund 57.5 Minuten" would have said — with a decimal point `t()` does
+  // not localise, in a sentence whose „Rund" promises a round number.
+  const cand = entry('cand', {
+    bayesRating: 5.5,
+    info: info({ weight: 3, minPlaytime: 45, maxPlaytime: 70, mechanics: ['ZZ'], categories: ['ZZ'], bestWith: [], recommendedWith: [] }),
+  });
+  const corpus = [...shelfCorpus(), cand];
+  assert.equal(representativePlaytime(cand.info), 57.5, 'the fixture must actually land on a half');
+
+  const profile = profileOf(round, corpus);
+  const term = scoreCandidate(profile, cand).terms.find((t) => t.term === 'time');
+  assert.equal(term.minutes, 57.5, 'the SCORER keeps the exact figure');
+
+  const [rec] = recommend(round, corpus).recommendations;
+  assert.deepEqual(rec.reasons.find((r) => r.term === 'time'), { term: 'time', minutes: 58, target: 60 });
 });
 
 /* ------------------------------- wished games ------------------------------ */
@@ -1133,7 +1211,7 @@ const wishGame = () => ({ id: 'gw', title: 'Wished', wish: true, source: { provi
 const wishRow = (over = {}) =>
   entry(WISH_ID, {
     name: 'Wished classic',
-    info: info({ mechanics: ['M-wish'], categories: ['C-wish'], weight: 5, maxPlaytime: 240, ...over }),
+    info: info({ mechanics: ['M-wish'], categories: ['C-wish'], weight: 5, minPlaytime: 240, maxPlaytime: 240, ...over }),
   });
 
 test('a WISHED game shapes nothing in the profile — vectors, targets or counts', () => {
@@ -1152,7 +1230,7 @@ test('a WISHED game shapes nothing in the profile — vectors, targets or counts
   // The consequence that matters: the ranking is identical, term for term. A
   // candidate built out of the WISH's attributes is the sharpest probe — it is
   // the one a leaked wish would promote hardest.
-  const candidate = entry('c', { info: info({ mechanics: ['M-wish'], categories: ['C-wish'], weight: 5, maxPlaytime: 240 }) });
+  const candidate = entry('c', { info: info({ mechanics: ['M-wish'], categories: ['C-wish'], weight: 5, minPlaytime: 240, maxPlaytime: 240 }) });
   assert.equal(scoreCandidate(withWish, candidate).score, scoreCandidate(without, candidate).score);
 
   // …but it is still known, so it is still never recommended back. That filter
@@ -1353,7 +1431,7 @@ test('a mechanics reason NAMES the owned games it was derived from', () => {
   const out = recommend(round, [
     ...corpus,
     // Weak everywhere else, so mechanics is the reason that survives.
-    entry('cand', { bayesRating: 5.5, info: info({ weight: 4.9, maxPlaytime: 400, mechanics: ['Engine Building'], categories: [] }) }),
+    entry('cand', { bayesRating: 5.5, info: info({ weight: 4.9, minPlaytime: 400, maxPlaytime: 400, mechanics: ['Engine Building'], categories: [] }) }),
   ]);
   const reason = out.recommendations[0].reasons.find((r) => r.term === 'mechanics');
   assert.deepEqual(reason.games, ['Owned 1', 'Owned 2']);
@@ -1416,7 +1494,7 @@ test('a term at or below neutral is never claimed as a reason', () => {
     ...shelfCorpus(),
     // Bad on every axis: an honest answer names nothing rather than inventing a
     // compliment for a game that only got in because the shelf is short.
-    entry('cand', { bayesRating: 5.5, info: info({ weight: 4.9, maxPlaytime: 400, mechanics: ['ZZ'], categories: ['ZZ'], bestWith: [9] }) }),
+    entry('cand', { bayesRating: 5.5, info: info({ weight: 4.9, minPlaytime: 400, maxPlaytime: 400, mechanics: ['ZZ'], categories: ['ZZ'], bestWith: [9] }) }),
   ]);
   assert.deepEqual(out.recommendations[0].reasons, []);
 });

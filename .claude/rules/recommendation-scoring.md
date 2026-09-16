@@ -605,6 +605,35 @@ No division-by-zero path, and it is worth not re-deriving: `toPositiveInt()` in
 `lib/providers/bgg.js` normalises BGG's "0 = no data" to `null`, so `targetTime`
 is either null — which `proximity()` answers with `null` — or positive.
 
+**And the FIGURE being compared is a midpoint, not a bound (#1141).**
+`representativePlaytime(info)` collapses the corpus's `minPlaytime`/`maxPlaytime`
+band to one number, and all three sites use it — the shelf target, the candidate's
+`time` term, and the reason line's `minutes` — because a comparison is only
+like-for-like if both sides are read the same way. It used to be `maxPlaytime` on
+both sides: consistent, but consistently inflated (27 % high on the demo shelf),
+and the reason line then called that upper bound „Rund {minutes} Minuten" directly
+under a fact chip printing the honest range.
+
+The non-obvious half is the exception. Past `CAMPAIGN_BAND_RATIO` (10, strictly
+greater) the helper returns `minPlaytime` instead, because such a band is not a
+range: `lib/providers/bgg.js` keeps both bounds precisely because "the spread is
+the information … any single number describes neither", and Toriki's 20–600 is one
+sitting against a whole legacy arc — whose midpoint, 310, is a length nobody has
+ever played it at. So the midpoint is right for a *range* and wrong for a
+*campaign*, and 10× is where one stops being the other. `30–300` is still a range
+(165); `30–301` is not (30).
+
+Two things this deliberately does not touch: the game-detail **fact chip** stays a
+range, which is the one place the spread should survive; and `draw-pool.js`'s
+filters keep comparing bounds to bounds, where „at most M" against `maxPlaytime`
+is the honest worst case rather than a point estimate
+(`.claude/rules/provider-info-is-a-field-set.md`).
+
+The fixture trap that comes with it: `test/recommend.test.js`'s `info()` helper
+defaults to `minPlaytime: 60, maxPlaytime: 60`, so an override passing only
+`maxPlaytime: 120` is a **60–120** game and scores as 90 — it does not mean what it
+reads as. Every fixture now states both bounds; keep it that way.
+
 ### A reason line must name the ROUND's half of the comparison
 
 `quality` stands alone and the two taste terms name the owned games. The other
@@ -620,7 +649,8 @@ numeral („zu {n}"), which reads as an ordinal in German.
 **And the time line must say GAMES, not sessions.** It said „wie eure üblichen
 Sessions" in every shipped locale for the life of the feature, and **sessions record
 no duration anywhere in this app**: `targetTime` is the affinity-weighted mean of
-the *shelf's* `maxPlaytime`, a property of the boxes they own. A reason line
+the shelf's *representative* playtime (above), a property of the boxes they own —
+it was the shelf's `maxPlaytime` until #1141. A reason line
 claiming a measurement the app never takes is the failure mode §10's guard exists
 for, arrived at by wording rather than by a model.
 
