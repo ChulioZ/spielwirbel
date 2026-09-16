@@ -1753,7 +1753,12 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     if (!chosenId) { freshChoice = false; return; }
     if (freshChoice) { tischSlot.setAttribute('data-unroll', ''); freshChoice = false; }
     const game = games.find((g) => g.id === chosenId);
-    tisch.dataset.state = finished ? 'done' : 'table';
+    /* Three states, matching the three render branches below exactly — the
+       picker is a sub-state of `done`, not a fourth one: the finish is already
+       recorded when it opens. `picking` is what lets the phone rule narrow the
+       band while the question is on screen (#1139) without touching the width
+       the record is read at. */
+    tisch.dataset.state = !finished ? 'table' : (pickerOpen ? 'picking' : 'done');
 
     const imgStyle = game && game.image
       ? ` style="background-image:url('${coverUrl(game.image, COVER_THUMB)}')"`
@@ -1841,7 +1846,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
       tischBar.appendChild(barBtn);
       tischBar.hidden = false;
     } else if (pickerOpen) {
-      main.appendChild(h(`<div class="tisch__prompt">${esc(t('result.whoWon', { game: game ? game.title : '' }))}</div>`));
+      main.appendChild(h(`<div class="tisch__prompt">${esc(t('result.whoWon'))}</div>`));
 
       /* Guests can win too (#458) — they played the game. They just never enter
          the round-level standings; see the Pokale tab.

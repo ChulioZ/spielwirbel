@@ -944,7 +944,7 @@ I18N.nl = {
   'result.finishTitleDone': 'Resultaat vastgelegd',
   'result.finishTitle': 'Spel afronden',
   'result.finishPrompt': '“{game}” gespeeld? Markeer het als gespeeld — winnaars kun je daarna vastleggen.',
-  'result.whoWon': 'Wie won “{game}” — of hoe liep het af? (optioneel, meerdere mogelijk)',
+  'result.whoWon': 'Wie won?',
   'result.markPlayed': 'Als gespeeld markeren',
   'result.reset': 'Terugzetten',
   'result.winners': 'Winnaars: {names}',

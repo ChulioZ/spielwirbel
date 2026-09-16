@@ -995,7 +995,7 @@ I18N.de = {
   'result.finishTitleDone': 'Ergebnis eingetragen',
   'result.finishTitle': 'Spiel abschließen',
   'result.finishPrompt': '„{game}“ gespielt? Als gespielt markieren – Gewinner könnt ihr danach eintragen.',
-  'result.whoWon': 'Wer hat „{game}“ gewonnen – oder wie ging es aus? (optional, Mehrfachauswahl möglich)',
+  'result.whoWon': 'Wer hat gewonnen?',
   'result.markPlayed': 'Als gespielt markieren',
   'result.reset': 'Zurücksetzen',
   'result.winners': 'Gewonnen: {names}',

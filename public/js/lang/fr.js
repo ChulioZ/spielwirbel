@@ -952,7 +952,7 @@ I18N.fr = {
   'result.finishTitleDone': 'Résultat enregistré',
   'result.finishTitle': 'Clore la partie',
   'result.finishPrompt': 'Vous avez joué à « {game} » ? Marque-le comme joué — tu pourras noter les vainqueurs ensuite.',
-  'result.whoWon': 'Qui a gagné « {game} » — ou comment cela s’est-il terminé ? (facultatif, plusieurs possibles)',
+  'result.whoWon': 'Qui a gagné ?',
   'result.markPlayed': 'Marquer comme joué',
   'result.reset': 'Réinitialiser',
   'result.winners': 'Vainqueurs : {names}',

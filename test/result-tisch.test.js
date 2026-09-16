@@ -17,7 +17,7 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { loadApp, flush } = require('./support/dom');
 const {
-  bodyOf, mediaBlocks, rulesOf, outranks, resolvedDeclaration, declaredValue,
+  RULES, bodyOf, mediaBlocks, rulesOf, topLevel, outranks, resolvedDeclaration, declaredValue,
 } = require('./support/css');
 
 const ME = 'user-me';
@@ -135,7 +135,7 @@ test('finishing stamps the box and opens the picker, because who won is the one 
   await flush();
 
   assert.deepEqual(sent.map((s) => s.body), [{ finished: true, winnerIds: [] }]);
-  assert.equal(band(dom).dataset.state, 'done');
+  assert.equal(band(dom).dataset.state, 'picking');
   const stamp = band(dom).querySelector('.stamp.stamp--table');
   assert.ok(stamp, 'the box is stamped');
   assert.match(stamp.textContent, /Gespielt/);
@@ -201,6 +201,32 @@ test('the in-row finish panel and the chosen-game banner are gone', async (t) =>
   // The chosen row stays in the ranking with its chip: the ranking is the VOTE's
   // record and must stay complete — place 3 must not become place 2.
   assert.equal(dom.app.querySelectorAll('.trow').length, 2);
+});
+
+/* `data-state` is the band's only hook into the sheet, and until #1139 nothing
+   consumed it at all — so it had never been asserted against the branch it is
+   supposed to name. It must track the RENDER, not the data: `finished` is
+   already true while the picker is open (the finish is recorded first, the
+   question comes after), so a two-value attribute said „done" over a screen
+   showing the question. */
+test('the band says „picking" while and only while the picker is open', async (t) => {
+  const { dom } = await show(t, { finished: true, winnerIds: ['m1'] });
+  assert.equal(band(dom).dataset.state, 'done', 'a recorded evening opens on the picture');
+
+  btn(dom, /Ändern/).click();
+  assert.equal(band(dom).dataset.state, 'picking', '„Ändern" is the picker, so the band narrows');
+
+  btn(dom, /Fertig/).click();
+  assert.equal(band(dom).dataset.state, 'done', 'and „Fertig" gives the width back');
+
+  btn(dom, /Ändern/).click();
+  [...dom.app.querySelectorAll('.winner-chip')].find((c) => /Ben/.test(c.textContent)).click();
+  await flush();
+  assert.equal(band(dom).dataset.state, 'done', 'recording a winner closes it too');
+
+  btn(dom, /Zurücksetzen/).click();
+  await flush();
+  assert.equal(band(dom).dataset.state, 'table', 'and an unfinished evening is neither');
 });
 
 // ------------------------------------------------------------ the CSS contract
@@ -292,4 +318,111 @@ test('the stamp on the box is the SAME component as the game page presses', () =
   assert.doesNotMatch(table, /border:\s*3px double/, 'the double rule belongs to `.stamp` itself');
   assert.match(bodyOf('.stamp::before'), /border:\s*3px double var\(--sc\)/,
     'and `.stamp` must still be the thing that declares it');
+});
+
+/* #1139 — the picker state on a phone.
+ *
+ * The band kept its two-column table layout while the picker was open, so a
+ * 390pt phone left the chips a ~250pt gutter: 7 chips over 6 rows, one of them
+ * („Fortsetzung folgt") wrapping INSIDE its own pill, and „Fertig" below the
+ * fold at the one moment the whole group is looking at the screen.
+ *
+ * These ask which declaration WINS, not merely that one exists — the picking
+ * rules compete with the `.tisch` / `.tisch__box` rules in the same media
+ * block, and this sheet's standing trap is a tie decided by source order. */
+const phoneRules = () => mediaBlocks()
+  .filter(([q]) => /max-width:\s*639px/.test(q))
+  .flatMap(([, css]) => rulesOf(css));
+
+const phoneRule = (sel) => phoneRules()
+  .find(([s]) => s.replace(/\s+/g, ' ') === sel);
+
+test('the picking band gives its width to the answer, and outranks the table layout', () => {
+  const band = phoneRule('.tisch[data-state="picking"]');
+  assert.ok(band, 'the picker still renders at the table width on a phone');
+  assert.match(declaredValue(band[1], 'grid-template-columns'), /^64px/,
+    'the chips get the room back only if the box column actually shrinks');
+  // (0,2,0) vs (0,1,0). A second class instead of the attribute would TIE the
+  // `.tisch` rule beside it and ride on source order.
+  assert.ok(outranks('.tisch[data-state="picking"]', '.tisch'),
+    'ties the phone `.tisch` rule it competes with and rides on source order');
+
+  const box = phoneRule('.tisch[data-state="picking"] .tisch__box');
+  assert.ok(box, 'the box keeps its 96px table size while the picker is open');
+  assert.equal(declaredValue(box[1], 'width'), '64px');
+  assert.ok(outranks('.tisch[data-state="picking"] .tisch__box', '.tisch__box'));
+});
+
+test('the box is SHRUNK, never hidden — the stamp on it is the receipt', async (t) => {
+  /* The „Gespielt" stamp is appended to the box in the same render that opens
+     the picker, and it is the only confirmation on screen that the finish was
+     recorded. Hiding the box to buy the width would take the receipt with it. */
+  const { dom } = await show(t);
+  btn(dom, /Als gespielt markieren/).click();
+  await flush();
+  const box = band(dom).querySelector('.tisch__box');
+  assert.ok(box, 'the box is still built while picking');
+  assert.match(box.querySelector('.stamp.stamp--table').textContent, /Gespielt/);
+
+  const rule = phoneRule('.tisch[data-state="picking"] .tisch__box');
+  assert.notEqual(declaredValue(rule[1], 'display'), 'none', 'that would take the receipt with it');
+});
+
+/* The chip rules TIE the base ones at (0,1,0), so specificity decides nothing
+   and the cascade falls to source order. Written beside the band's other phone
+   rules — the obvious place, 30 lines up — every one of them LOSES to the base
+   rule below it and the block changes nothing at all, while reading exactly
+   like a block that works. Measured: with the rules in that position the chips
+   stayed at 18px/10px 18px. So this asks which declaration WINS.
+   (.claude/rules/assert-the-decision-not-its-ingredients.md) */
+test('phone chips are denser HORIZONTALLY, and never below the target-size floor', () => {
+  const chip = phoneRule('.winner-chip');
+  assert.ok(chip, 'the chip is the same pill at 390pt as at 1440pt');
+  // The win is the padding: shorter pills fit more per row, which is what
+  // collapses the rows. The height saving is incidental — and floored, because
+  // 16px type with 8px of padding computes to ~42px.
+  assert.match(declaredValue(chip[1], 'padding'), /^8px 14px$/);
+  assert.equal(declaredValue(chip[1], 'min-height'), '44px',
+    'a chip under 44px fails the target-size floor this app holds itself to');
+  assert.match(declaredValue(chip[1], 'font-size'), /var\(--text-md\)/,
+    'a bare px here would also fail test/design-tokens.test.js');
+  assert.equal(declaredValue(phoneRule('.winner-chips')[1], 'gap'), '8px');
+
+  // Source order, stated directly: the phone rule must come after the base one.
+  const positions = (sel) => RULES
+    .map(([s], i) => [s.replace(/\s+/g, ' '), i])
+    .filter(([s]) => s === sel)
+    .map(([, i]) => i);
+  for (const sel of ['.winner-chip', '.winner-chips']) {
+    const [base, phone] = positions(sel);
+    assert.equal(positions(sel).length, 2, `${sel} is declared ${positions(sel).length} times, not 2`);
+    assert.ok(phone > base,
+      `the phone ${sel} rule sits BEFORE the base one it ties — the base wins and it does nothing`);
+  }
+});
+
+test('above 639px the picker is untouched — desktop has the room', () => {
+  // topLevel() strips every @media block, so this is the desktop sheet alone —
+  // `bodyOf` would have answered with whichever copy comes first in the file.
+  const base = rulesOf(topLevel());
+  const bodyOfBase = (sel) => (base.find(([s]) => s.trim() === sel) || [])[1];
+
+  assert.match(bodyOfBase('.tisch'), /grid-template-columns:\s*128px/,
+    'the band narrowed everywhere, not just where it had to');
+  const chip = bodyOfBase('.winner-chip');
+  assert.match(chip, /font-size:\s*var\(--text-lg\)/);
+  assert.match(chip, /padding:\s*10px 18px/);
+  assert.equal(declaredValue(chip, 'min-height'), null, 'the floor is a phone correction, not a base');
+  assert.equal(declaredValue(bodyOfBase('.winner-chips'), 'gap'), '10px');
+
+  // And no picking rule may exist outside a phone query at all.
+  assert.deepEqual(base.map(([sel]) => sel).filter((sel) => /data-state="picking"/.test(sel)), [],
+    'a picking rule escaped its media query and now narrows the desktop band');
+});
+
+test('the dead .member-chip component is gone, not left beside the one it duplicated', () => {
+  /* A near-identical copy of `.winner-chip` that no JS, HTML or test ever built
+     — the „keep in sync" trap sitting next to the component #1139 changes. */
+  assert.equal(bodyOf('.member-chip'), null);
+  assert.equal(bodyOf('.member-chips'), null);
 });
