@@ -691,7 +691,13 @@ I18N.nl = {
   'detail.expansionPickLoading': '{provider} wordt geraadpleegd …',
   'detail.expansionNamePlaceholder': 'Naam van de uitbreiding',
   'detail.expansionRangeHint': 'Aantal spelers: beide velden of geen van beide.',
-  'detail.expansionNoRange': 'geen aantal spelers',
+  // What an owned expansion UNLOCKS (#1144) — the table sizes it admits that
+  // the base box does not. A run reads „5–6“, a gap „2, 5–6“: never the
+  // hull between them (.claude/rules/expansions-widen-by-union.md).
+  'detail.expansionAddsOne': 'Maakt {n} speler mogelijk',
+  'detail.expansionAdds': 'Maakt {n} spelers mogelijk',
+  'detail.expansionAddsNone': 'Verandert niets aan het aantal spelers',
+  'detail.expansionNoRange': 'Zonder aantal spelers — maakt niets groter',
   'detail.toast.expansionsSaved': 'Uitbreidingen opgeslagen',
   'detail.toast.expansionNeedsBoth': 'Vul beide aantallen spelers in — of laat ze allebei leeg.',
   'detail.toast.expansionRange': 'Het hoogste aantal spelers moet minstens het laagste zijn.',

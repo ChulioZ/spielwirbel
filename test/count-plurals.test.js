@@ -177,6 +177,21 @@ const ADDON_PAIRS = [
 ];
 PAIRS.push(...ADDON_PAIRS);
 
+/* The expansions editor's „was schaltet das frei"-Zeile (#1144). The `{n}` it
+   substitutes is a RUN STRING („5–6", „2, 5–6"), not the number that picked the
+   category — `tn`'s params override its own `n`, the way playersText already
+   does — so only a lone „1" is ever singular. Passing 1 and 2 with no params
+   here therefore exercises exactly the two branches the call site can reach. */
+const EXPANSION_PAIRS = [
+  {
+    what: 'detail.expansionAdds — what an owned expansion unlocks',
+    one: 'detail.expansionAddsOne', other: 'detail.expansionAdds', params: {},
+    de: ['Ermöglicht 1 Person', 'Ermöglicht 2 Personen'],
+    en: ['Seats 1 player', 'Seats 2 players'],
+  },
+];
+PAIRS.push(...EXPANSION_PAIRS);
+
 const SILENT_PAIRS = [
   {
     what: 'home.lastPlayedWon — the round card\'s last-played line',

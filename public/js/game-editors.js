@@ -288,6 +288,49 @@ function expansionLabel(baseTitle, title) {
   return rest ? rest[1] : title;
 }
 
+/* What an OWNED expansion unlocks, as one line (#1144).
+
+   The row used to print the expansion's own interval („2–6 Personen"), which is
+   the wrong question: the reader wants to know what the box in the cupboard adds
+   to the game beside it, and this screen never shows the base game's range to
+   compare against. So the line names the table sizes the expansion admits and
+   the base box does not — `expansionAddedCounts`, which is built out of the very
+   predicates the draw pool uses.
+
+   NOT a min/max comparison, and that is the whole reason the counts come from
+   draw-pool.js rather than from two subtractions here: „erhöht die maximale
+   Spielerzahl von 5 auf 6" is the hull of
+   .claude/rules/expansions-widen-by-union.md §1 written as a sentence, and on a
+   3–4 game with a 1–1 solo expansion it would offer a table of two that no box
+   in the cupboard seats. The pool refuses to tell that lie; the copy must not
+   tell it either.
+
+   THREE states, all of which render, because the two silences mean different
+   things: an expansion that declares a range and adds nothing is data the reader
+   can trust, while one with no range is data missing from the shelf. Folding
+   them together would hide the only one they can act on.
+
+   Runs are grouped rather than printed as one interval, since the added set can
+   be non-contiguous (3–4 plus a 2–6 expansion adds 2, 5 and 6) — printing „2–6"
+   there puts the hull back after the arithmetic avoided it. */
+function expansionUnlocksLine(game, expansion) {
+  const added = expansionAddedCounts(game, expansion);
+  if (added === null) return t('detail.expansionNoRange');
+  if (!added.length) return t('detail.expansionAddsNone');
+  const runs = [];
+  added.forEach((n) => {
+    const last = runs[runs.length - 1];
+    if (last && n === last[1] + 1) last[1] = n;
+    else runs.push([n, n]);
+  });
+  const text = runs.map(([a, b]) => (a === b ? String(a) : `${a}–${b}`)).join(', ');
+  // The plural category comes from the COUNT, the printed `{n}` from the runs —
+  // `tn`'s params override its own `n`, the same shape playersText uses. Only a
+  // lone „1" is singular; „1, 5" names two table sizes and is not.
+  return tn(added.length === 1 ? added[0] : 2,
+    'detail.expansionAddsOne', 'detail.expansionAdds', { n: text });
+}
+
 // The per-game expansion ceiling, from GET /api/config at boot (core.js). Module
 // state rather than a value threaded through the context: the dialog reads it at
 // render time, which keeps it clear of the load-order trap
@@ -351,9 +394,7 @@ function openExpansionEditor(ctx, anchor) {
 
     owned.forEach((e) => rows.push({
       label: e.title,
-      meta: Number.isInteger(e.minPlayers) && Number.isInteger(e.maxPlayers)
-        ? playersText(e.minPlayers, e.maxPlayers)
-        : t('detail.expansionNoRange'),
+      meta: expansionUnlocksLine(game, e),
       payload: { id: e.id },
       picked: true,
     }));

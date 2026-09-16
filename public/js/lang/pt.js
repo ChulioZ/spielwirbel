@@ -693,7 +693,13 @@ I18N.pt = {
   'detail.expansionPickLoading': 'A consultar o {provider} …',
   'detail.expansionNamePlaceholder': 'Nome da expansão',
   'detail.expansionRangeHint': 'Número de jogadores: os dois campos ou nenhum.',
-  'detail.expansionNoRange': 'sem número de jogadores',
+  // What an owned expansion UNLOCKS (#1144) — the table sizes it admits that
+  // the base box does not. A run reads „5–6“, a gap „2, 5–6“: never the
+  // hull between them (.claude/rules/expansions-widen-by-union.md).
+  'detail.expansionAddsOne': 'Permite {n} jogador',
+  'detail.expansionAdds': 'Permite {n} jogadores',
+  'detail.expansionAddsNone': 'Não muda o número de jogadores',
+  'detail.expansionNoRange': 'Sem número de jogadores — não aumenta nada',
   'detail.toast.expansionsSaved': 'Expansões salvas',
   'detail.toast.expansionNeedsBoth': 'Preencha os dois números de jogadores — ou deixe os dois vazios.',
   'detail.toast.expansionRange': 'O maior número de jogadores precisa ser pelo menos igual ao menor.',

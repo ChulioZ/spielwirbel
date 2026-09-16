@@ -11,6 +11,8 @@ paths:
   - "public/js/views-session.js"
   - "public/js/views-archive.js"
   - "public/js/wish-expansion.js"
+  - "public/js/game-editors.js"
+  - "test/expansions-editor.test.js"
   - "test/draw-pool.test.js"
   - "test/game-expansions.test.js"
   - "test/wish-expansion.test.js"
@@ -80,6 +82,27 @@ max exceeds the base's", say — lets the warning and the pool disagree: a game
 drawn because of an expansion, with the warning naming a different one or none at
 all. `requiredExpansions` is therefore `expansionAdmits` again, gated on the base
 box *not* fitting, and both live in the one shared file.
+
+**Since #1144 the expansions EDITOR is a second consumer of the same rule.** Each
+owned row states what it unlocks („Ermöglicht 6 Personen"), derived by
+`expansionAddedCounts` — `expansionAdmits && !fitsOwnRange` over the expansion's
+own interval — rather than by comparing bounds. Two things measured while
+building it are worth carrying:
+
+- **A hull states the lie as a SENTENCE.** „Erhöht die maximale Spielerzahl von 5
+  auf 6" is §1 in prose; on a 3–4 game with a 1–1 solo expansion it reads
+  „ermöglicht 1–2 Personen" and offers the pair no box seats. The pool refuses to
+  tell that lie and the copy must not either.
+- **Only the SOLO case discriminates a hull from the union, and this is not
+  obvious from the fixtures.** Base 3–4 plus a 2–6 expansion is the natural
+  "non-contiguous" test — and a min/max hull produces the identical `[2, 5, 6]`
+  there, so that case stays green against the broken implementation. Measured on
+  #1144: reverting to a hull reddened exactly one spec, the 1–1 one. A
+  non-contiguous fixture guards the run FORMATTER; only an expansion reaching
+  *below* the base box guards the derivation.
+
+The added set can be non-contiguous, so the line groups runs („2, 5–6") — a
+single interval there puts the hull back after the arithmetic avoided it.
 
 ## Where an expansion deliberately does NOT reach
 

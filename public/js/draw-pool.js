@@ -188,6 +188,41 @@ function requiredExpansions(game, playerCount) {
   return (game.expansions || []).filter((e) => expansionAdmits(e, playerCount));
 }
 
+// The table sizes ONE owned expansion admits that the game's own box does not
+// (#1144) — what the expansions editor tells the reader each ticked entry
+// unlocks. `null` when the expansion declares no usable range, which is a
+// different answer from `[]` ("it declares one and it adds nothing"): the editor
+// renders three states, and folding the missing data into "changes nothing"
+// would hide the one case the reader can act on.
+//
+// DERIVED FROM THE SAME TWO PREDICATES THE POOL USES, deliberately, and this is
+// the whole point of the function existing at all. The obvious implementation —
+// "its max exceeds the base's" — is the hull of §1 of
+// .claude/rules/expansions-widen-by-union.md wearing a sentence: a 3–4 game plus
+// a solo 1–1 expansion would read „ermöglicht 1–4 Personen" and offer a table of
+// two that no box in the cupboard seats. Computing the copy from a second rule
+// is exactly what §3 forbids for `requiredExpansions`, one surface over.
+//
+// The candidates are the integers inside the expansion's own interval, because
+// that is precisely the set `expansionAdmits` can answer yes to at a party count
+// (which is always a whole number). `ceil`/`floor` keep that true for a
+// fractional bound no route would store but a hand-edited file could.
+// `EXPANSION_SPAN_MAX` bounds the walk: the route caps a bound at 999, so a
+// wider interval is data no UI can produce and is not worth iterating.
+const EXPANSION_SPAN_MAX = 1000;
+function expansionAddedCounts(game, expansion) {
+  const min = expansion && expansion.minPlayers;
+  const max = expansion && expansion.maxPlayers;
+  if (typeof min !== 'number' || typeof max !== 'number') return null;
+  const lo = Math.ceil(min);
+  const hi = Math.min(Math.floor(max), lo + EXPANSION_SPAN_MAX - 1);
+  const added = [];
+  for (let n = lo; n <= hi; n++) {
+    if (expansionAdmits(expansion, n) && !fitsOwnRange(game || {}, n)) added.push(n);
+  }
+  return added;
+}
+
 // ---- The filters over BGG's imported metadata (#725) -----------------------
 //
 // #724 imports playing time, complexity, minimum age, categories and mechanics;
@@ -470,6 +505,11 @@ if (typeof module !== 'undefined' && module.exports) {
     ownedByParty,
     shelfParty,
     requiredExpansions,
+    // Exported so the editor's copy and its spec bind to the SAME predicates the
+    // pool does, rather than to a paraphrase of them (#1144).
+    fitsOwnRange,
+    expansionAdmits,
+    expansionAddedCounts,
     EXPANSION_TITLE_MAX,
     fitsMetadataFilters,
     metadataFilterOptions,

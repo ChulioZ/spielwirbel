@@ -16,6 +16,7 @@ const {
   isActiveGame,
   fitsPlayerCount,
   requiredExpansions,
+  expansionAddedCounts,
   fitsMetadataFilters,
   metadataFilterOptions,
   hasMetadataFilterOptions,
@@ -138,6 +139,54 @@ test('requiredExpansions names only what the BASE box cannot seat', () => {
   );
   assert.deepEqual(requiredExpansions(game, 9), [], 'a count nothing admits names nothing');
   assert.deepEqual(requiredExpansions({ minPlayers: 3, maxPlayers: 4 }, 5), []);
+});
+
+/* What the expansions EDITOR says each owned box unlocks (#1144). Same family as
+   requiredExpansions above and here for the same reason: computing the line from
+   a second rule — "its max exceeds the base's", say — lets the copy and the pool
+   disagree, which is §3 of .claude/rules/expansions-widen-by-union.md pointed at
+   the editor instead of the results screen. */
+
+test('expansionAddedCounts names the table sizes the BASE box cannot seat', () => {
+  const game = { minPlayers: 3, maxPlayers: 4 };
+  assert.deepEqual(expansionAddedCounts(game, { minPlayers: 5, maxPlayers: 6 }), [5, 6]);
+  assert.deepEqual(expansionAddedCounts(game, { minPlayers: 3, maxPlayers: 6 }), [5, 6],
+    'the counts the base box already seats are not "added"');
+  assert.deepEqual(expansionAddedCounts(game, { minPlayers: 3, maxPlayers: 4 }), [],
+    'an expansion inside the base range adds nothing at all');
+});
+
+/* THE HULL CASE, from the rule's own worked example. A hull of the bounds would
+   report 1–4 and therefore offer a table of TWO that no box in the cupboard
+   seats — the same lie in the copy that the pool refuses to tell. */
+test('a SOLO expansion on a 3–4 game adds 1 and never 2', () => {
+  const added = expansionAddedCounts({ minPlayers: 3, maxPlayers: 4 }, { minPlayers: 1, maxPlayers: 1 });
+  assert.deepEqual(added, [1]);
+  assert.ok(!added.includes(2), 'a hull of the bounds would admit a pair nothing seats');
+});
+
+test('a non-contiguous set stays non-contiguous', () => {
+  // Base 3–4 plus a 2–6 expansion admits 2, 5 and 6 — printing "2–6" would put
+  // the hull back into the sentence after the arithmetic avoided it.
+  assert.deepEqual(expansionAddedCounts({ minPlayers: 3, maxPlayers: 4 }, { minPlayers: 2, maxPlayers: 6 }),
+    [2, 5, 6]);
+});
+
+test('no declared range is null — a DIFFERENT answer from "adds nothing"', () => {
+  const game = { minPlayers: 3, maxPlayers: 4 };
+  assert.equal(expansionAddedCounts(game, {}), null);
+  assert.equal(expansionAddedCounts(game, { maxPlayers: 6 }), null, 'a bare maximum states no interval');
+  assert.equal(expansionAddedCounts(game, { minPlayers: 5 }), null, 'nor does a bare minimum');
+  assert.equal(expansionAddedCounts(game, null), null);
+  // The two are distinguishable, which is what lets the editor render three
+  // states rather than folding the missing data into "changes nothing".
+  assert.deepEqual(expansionAddedCounts(game, { minPlayers: 3, maxPlayers: 3 }), []);
+});
+
+test('a base game with no range of its own is widened by nothing', () => {
+  // fitsOwnRange admits every count there, so no expansion can add one — the
+  // same asymmetry the predicate itself encodes, arriving at the right copy.
+  assert.deepEqual(expansionAddedCounts({}, { minPlayers: 1, maxPlayers: 9 }), []);
 });
 
 /* ---- the metadata filters (#725) ------------------------------------------- */

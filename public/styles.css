@@ -6777,9 +6777,50 @@ a.c-ring__face:hover { box-shadow: 0 0 0 3px var(--brand-edge); }
    content nothing was constraining. */
 .editor--expansions .exp-list { display: flex; flex-direction: column; gap: 6px; }
 /* Compact, like the old candidate rows: this is a dialog full of names, so the
-   default `.ds-row` padding costs roughly a row per three. */
-.editor--expansions .exp-row { padding: 8px 12px; }
+   default `.ds-row` padding costs roughly a row per three.
+
+   The extra leading padding is the SPINE's room (#1144), and it is the only
+   dimension this feature spends: the spine itself is absolutely positioned, so
+   a 26-row list is exactly as tall as it was before it existed. */
+.editor--expansions .exp-row { position: relative; padding: 8px 12px 8px 22px; }
 .editor--expansions .exp-row .ds-row__title { font-weight: 600; }
+/* The box spine — the app's own „Regal" made literal, so one glance down the
+   leading edge says which boxes are in the cupboard without a second column.
+   Short and sunken when the row is unticked, full-height and brand-coloured when
+   it is not.
+
+   It is NOT the only signal: `.ds-row--picked` already carries the border and
+   the tint, and the checkbox stays, so state is never on colour alone
+   (.claude/rules/accessibility-contrast-and-modals.md §3). Both colours come
+   from the round's theme tokens rather than a literal
+   (.claude/rules/theme-derived-colors.md), which is also why the unticked spine
+   is `--sunken` and not a fixed grey: on a dark design it has to be the lighter
+   of the two.
+
+   `transform`, not `height`, so the transition runs on the compositor and
+   cannot reflow the list under the reader's pointer. */
+.editor--expansions .exp-row::before {
+  content: '';
+  position: absolute;
+  inset-inline-start: 8px;
+  top: 50%;
+  width: 4px;
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--sunken);
+  transform: translateY(-50%) scaleY(0.36);
+  transition: transform var(--dur-base) ease, background-color var(--dur-base) ease;
+}
+.editor--expansions .exp-row.ds-row--picked::before {
+  background: var(--brand);
+  transform: translateY(-50%) scaleY(1);
+}
+/* Motion here only ever answers the reader's own click — there is nothing to
+   wait through — but it is still motion, so it goes. The two END states are
+   untouched, which is what keeps the spine a signal rather than an animation. */
+@media (prefers-reduced-motion: reduce) {
+  .editor--expansions .exp-row::before { transition: none; }
+}
 /* Empty unless the provider hop is loading, empty-handed or unreachable, so it
    must cost nothing while it says nothing — the `#dupHint` shape
    (.claude/rules/accessibility-contrast-and-modals.md §4). */

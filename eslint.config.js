@@ -132,6 +132,7 @@ const frontendGlobals = {
   roundCan: 'readonly',
   // draw-pool.js (issues #634, #653) — also required by lib/draw.js
   isActiveGame: 'readonly', fitsPlayerCount: 'readonly', requiredExpansions: 'readonly',
+  expansionAddedCounts: 'readonly',
   ownedByParty: 'readonly', shelfParty: 'readonly', fitsRecommendedCount: 'readonly',
   // provider-info-fields.js (shared with lib/, #717/#724; client since the 2026-09-08 audit)
   PROVIDER_INFO_FIELDS: 'readonly', CHIPPED_PROVIDER_INFO_FIELDS: 'readonly',

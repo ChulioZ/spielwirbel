@@ -651,7 +651,13 @@ I18N.ko = {
   'detail.expansionPickLoading': '{provider}에 묻는 중 …',
   'detail.expansionNamePlaceholder': '확장 이름',
   'detail.expansionRangeHint': '인원수: 두 칸 모두 채우거나 모두 비워 두세요.',
-  'detail.expansionNoRange': '인원수 없음',
+  // What an owned expansion UNLOCKS (#1144) — the table sizes it admits that
+  // the base box does not. A run reads „5–6“, a gap „2, 5–6“: never the
+  // hull between them (.claude/rules/expansions-widen-by-union.md).
+  'detail.expansionAddsOne': '{n}명까지 앉을 수 있음',
+  'detail.expansionAdds': '{n}명까지 앉을 수 있음',
+  'detail.expansionAddsNone': '인원수는 그대로',
+  'detail.expansionNoRange': '인원수 없음 — 자리를 늘리지 않음',
   'detail.toast.expansionsSaved': '확장을 저장했어요',
   'detail.toast.expansionNeedsBoth': '인원수를 두 칸 모두 채우거나 — 모두 비워 주세요.',
   'detail.toast.expansionRange': '최대 인원수는 최소 인원수 이상이어야 해요.',

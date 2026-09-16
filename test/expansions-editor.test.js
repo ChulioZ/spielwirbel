@@ -295,7 +295,7 @@ test('a tick survives the filter that hides its row', async (t) => {
    naming the same selector cannot answer for a deleted rule
    (.claude/rules/css-rule-lookup-answers-with-the-media-reset.md). */
 
-const { rulesOf, topLevel, whole } = require('./support/css');
+const { rulesOf, topLevel, whole, mediaBlocks, CSS } = require('./support/css');
 
 const TOP = rulesOf(topLevel());
 const topBody = (sel) => (TOP.find(([s]) => s.split(',').map((x) => x.trim()).includes(sel)) || [])[1] || null;
@@ -347,4 +347,115 @@ test('the sticky commit bar sits flush against the scrollport', () => {
   const flush = topBody('.sheet > .editor.editor--expansions:last-child');
   assert.ok(flush, 'the trailing gap is back under the sticky bar');
   assert.match(flush, /margin-bottom:\s*0/);
+});
+
+/* ---- What each owned row says it UNLOCKS (#1144) ---------------------------
+
+   The editor never mentioned the one thing an owned expansion reaches into:
+   `fitsPlayerCount`. A row reported the expansion's own interval („2–6
+   Personen"), which the reader then had to compare against the base box's range
+   in their head — on a screen that does not show that range at all.
+
+   Every assertion here is about a SENTENCE derived from the pool's own
+   predicates. Reverting the line to a min/max comparison keeps the first case
+   green and breaks the last two, which is the point of asserting all four. */
+
+// Catan's own box is 3–4 throughout this section, so every number below is a
+// count the base game cannot seat.
+const UNLOCKS = [
+  { id: 'u1', title: 'Fünf–Sechs', source: null, minPlayers: 5, maxPlayers: 6, addedAt: '2026-08-01T10:00:00.000Z' },
+  { id: 'u2', title: 'Händler', source: null, minPlayers: 3, maxPlayers: 4, addedAt: '2026-08-01T10:00:00.000Z' },
+  { id: 'u3', title: 'Ohne Angabe', source: null, minPlayers: null, maxPlayers: null, addedAt: '2026-08-01T10:00:00.000Z' },
+];
+
+const metas = (card) => [...card.querySelectorAll('.exp-row')]
+  .map((r) => { const m = r.querySelector('.ds-row__main .muted'); return m ? m.textContent : null; });
+
+test('an owned row says what it UNLOCKS, not what its own box says', async (t) => {
+  const { dom } = bootPicker(t, { owned: UNLOCKS });
+  const card = await openPicker(dom);
+
+  assert.deepEqual(metas(card).slice(0, 3), [
+    'Ermöglicht 5–6 Personen',
+    'Ändert die Spielerzahl nicht',
+    'Ohne Spielerzahl — erweitert nichts',
+  ]);
+  // The raw interval is what the row used to print, and „2–6 Personen" on a 3–4
+  // game is exactly the sentence this replaces.
+  assert.doesNotMatch(card.textContent, /3–4 Personen/,
+    'the expansion’s own interval is not the reader’s question');
+});
+
+test('a run is a run and a gap is a gap — never the hull between them', async (t) => {
+  /* 3–4 base + a 2–6 expansion admits 2, 5 and 6. This guards the FORMATTER,
+     not the derivation: a line built from the set's own ends would print
+     „2–6 Personen" and offer a table of four through an expansion, and of
+     three, which the base box already seats. (Measured — the natural min/max
+     HULL happens to produce the same three counts for this fixture, so it is
+     the solo case below that discriminates that half, not this one.) */
+  const { dom } = bootPicker(t, {
+    owned: [{ id: 'g1', title: 'Lücke', source: null, minPlayers: 2, maxPlayers: 6, addedAt: '2026-08-01T10:00:00.000Z' }],
+  });
+  const card = await openPicker(dom);
+  assert.equal(metas(card)[0], 'Ermöglicht 2, 5–6 Personen');
+});
+
+test('a SOLO expansion inflects, and never names the pair a hull would invent', async (t) => {
+  const { dom } = bootPicker(t, {
+    owned: [{ id: 's1', title: 'Solo', source: null, minPlayers: 1, maxPlayers: 1, addedAt: '2026-08-01T10:00:00.000Z' }],
+  });
+  const card = await openPicker(dom);
+  assert.equal(metas(card)[0], 'Ermöglicht 1 Person', 'an uninflected „1 Personen" is the tell');
+  assert.doesNotMatch(card.textContent, /1–4|Ermöglicht 2/, 'a hull of 3–4 and 1–1 admits a pair nothing seats');
+});
+
+/* A candidate carries no line at all, and that is a DATA limit rather than a
+   design one: GET …/lookup/expansions returns `{ providerId, title }`, so the
+   player counts do not exist client-side until the server resolves the ticked
+   ids on save. Fetching them would be one upstream request per candidate. */
+test('a provider candidate gets no line — its counts are not known yet', async (t) => {
+  const { dom } = bootPicker(t, { owned: UNLOCKS });
+  const card = await openPicker(dom);
+  assert.deepEqual(metas(card).slice(3), [null, null], 'Seefahrer and Städte & Ritter');
+});
+
+/* The spine (#1144). A CSS-text assertion because jsdom applies no external
+   stylesheet — the DOM half of this feature is the line above, which the specs
+   further up drive through the real view. */
+test('the spine marks the ticked state without costing the list any height', () => {
+  const base = topBody('.editor--expansions .exp-row::before');
+  const on = topBody('.editor--expansions .exp-row.ds-row--picked::before');
+  assert.ok(base && on, 'the spine rules are gone');
+
+  // Absolutely positioned, so 26 rows are exactly as tall as they were without
+  // it — the „zero extra height" the seats band was dropped in favour of.
+  assert.match(base, /position:\s*absolute/);
+  // Theme tokens, never literals: on a dark design --sunken is the LIGHTER of
+  // the two (.claude/rules/theme-derived-colors.md).
+  assert.match(base, /background:\s*var\(--sunken\)/);
+  assert.match(on, /background:\s*var\(--brand\)/);
+  assert.doesNotMatch(base + on, /#[0-9a-fA-F]{3,8}/, 'a literal colour cannot follow the round’s design');
+  // transform, not height — a growing box would reflow the list under the
+  // pointer that is clicking it.
+  assert.match(base, /transform:[^;]*scaleY\(0?\.\d+\)/);
+  // The duration and the radius come from the scales, not from literals
+  // (test/design-tokens.test.js enforces both sheet-wide).
+  assert.match(base, /transition:[^;]*var\(--dur-/);
+  assert.match(on, /transform:[^;]*scaleY\(1\)/);
+
+  // …and it is never the only signal. The checkbox is asserted by the DOM specs
+  // above; this is the row-level treatment it rides on.
+  assert.ok(topBody('.ds-row--picked'), '.ds-row--picked carries the border and tint');
+});
+
+test('the spine’s transition is suppressed under prefers-reduced-motion', () => {
+  const reduce = mediaBlocks(CSS).filter(([q]) => /prefers-reduced-motion:\s*reduce/.test(q));
+  const off = reduce.flatMap(([, css]) => rulesOf(css))
+    .find(([sel]) => sel === '.editor--expansions .exp-row::before');
+  assert.ok(off, 'no reduce override for the spine');
+  assert.match(off[1], /transition:\s*none/);
+  // The two END states must stay outside the query: suppressing the colour or
+  // the scale as well would park every spine at the unticked look, which is a
+  // wrong statement rather than a still picture.
+  assert.doesNotMatch(off[1], /background|transform/);
 });
