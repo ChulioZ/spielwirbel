@@ -145,15 +145,30 @@ function usesEditorSheet() {
 // Escape, a backdrop tap, Back, an outside click, and the page scroll that tears
 // a popover down. A caller that only wraps the `close` it is handed sees none of
 // those, which is how a trigger's `aria-expanded` goes stale (#844).
-function openEditor(anchor, variant, title, build, onClose) {
-  if (!usesEditorSheet()) {
+//
+// `opts.list` (optional, #1143) opts OUT of the width split above: the editor is
+// the centred `sheet--dialog sheet--list` at every width, never the anchored
+// popover. One flag for both halves because they are one decision — a long
+// SCANNING LIST is the content class that wants the wider dialog, and it is the
+// same content class an anchored card cannot hold: `place()` can only count on
+// half the viewport, so past a few dozen rows the card is clamped, its children's
+// flex floors drop away and the card itself becomes a third scroll region with
+// its commit button below the fold. Measured on the expansions editor at 1280×800:
+// „OK" 271px past the card's visible edge, 2 of 26 rows on screen.
+//
+// This widens `.claude/rules/popover-vs-sheet-editors.md`: a menu of buttons may
+// be a popover at every width, and a scanning list may be a dialog at every
+// width. Everything in between still takes the 860px split.
+function openEditor(anchor, variant, title, build, onClose, opts) {
+  const list = !!(opts && opts.list);
+  if (!list && !usesEditorSheet()) {
     return openPopover(anchor, (el, close) => {
       el.classList.add('popover--' + variant);
       return build(el, close);
     }, onClose);
   }
   const backdrop = h(`<div class="sheet-backdrop sheet-backdrop--center">
-      <div class="sheet sheet--dialog" role="dialog" aria-modal="true" aria-label="${esc(title)}">
+      <div class="sheet sheet--dialog${list ? ' sheet--list' : ''}" role="dialog" aria-modal="true" aria-label="${esc(title)}">
         <div class="sheet__head">
           <h2>${esc(title)}</h2>
           <button class="sheet__close" aria-label="${esc(t('common.close'))}"><i class="ti ti-x" aria-hidden="true"></i></button>
@@ -162,7 +177,7 @@ function openEditor(anchor, variant, title, build, onClose) {
       </div>
     </div>`);
   const body = backdrop.querySelector('.editor');
-  // None of the three navigates on success — they PATCH and re-render in place —
+  // None of these navigates on success — they PATCH/PUT and re-render in place —
   // so a plain closeSheet() is right; no closeSheet(next) deferral is needed
   // (.claude/rules/sheet-history-back-dismissal.md).
   const attached = build(body, () => closeSheet());

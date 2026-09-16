@@ -359,6 +359,7 @@ const frontendGlobals = {
   openPlayersPopover: 'readonly', openOwnersPopover: 'readonly',
   openTagsPopover: 'readonly', openImagePopover: 'readonly',
   openExpansionEditor: 'readonly', saveExpansions: 'readonly', showAddGame: 'readonly',
+  setExpansionsCap: 'readonly',
   OFF_SHELF_LISTS: 'readonly', offShelfListOf: 'readonly',
   showTags: 'readonly', showTransferGames: 'readonly',
   showInvite: 'readonly', inviteError: 'readonly', insertFriendPicker: 'readonly',

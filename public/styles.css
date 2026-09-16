@@ -6645,8 +6645,8 @@ a.c-ring__face:hover { box-shadow: 0 0 0 3px var(--brand-edge); }
 .editor { display: flex; flex-direction: column; gap: 6px; }
 :is(.popover--players, .editor--players) .pp-row { display: flex; align-items: center; gap: 8px; }
 :is(.popover--players, .editor--players) .pp-row .input { width: 68px; }
-/* Capped for the same reason as `.popover--expansions` below, and hit the same
-   way (#722): a round's tag list grows without bound — ~34 in the report — the
+/* Capped because a popover cannot be scrolled into view, and hit the same way
+   (#722): a round's tag list grows without bound — ~34 in the report — the
    chips are appended BEFORE the create row, and a popover cannot be scrolled
    into view because a page scroll closes it outright. So the name input,
    „Hinzufügen" and OK were not merely off-screen, they were unreachable, and
@@ -6691,7 +6691,8 @@ a.c-ring__face:hover { box-shadow: 0 0 0 3px var(--brand-edge); }
 /* The two boxes that give way under that cap, so the create row is always the
    last thing still on screen. Popover-only on purpose: the sheet presentation
    scrolls itself, and a nested scroll box there would take the gesture away
-   from `.sheet` — the same call `.popover--expansions` makes.
+   from `.sheet`. (The expansions editor used to make the same call; #1143 moved
+   it out of the popover presentation altogether rather than capping it.)
 
    `min-height` is doing two jobs in both rules: a flex item's default
    `min-height: auto` is its content size, so without an explicit one the card's
@@ -6750,182 +6751,68 @@ a.c-ring__face:hover { box-shadow: 0 0 0 3px var(--brand-edge); }
 }
 :is(.popover--owners, .editor--owners) .filter-chips { margin-bottom: 10px; }
 .popover--image { min-width: 220px; }
-/* Expansions (#653). Wider than the 300px default like the tags editor: the
-   tick-list holds full expansion names, which a narrow card wraps to three
-   lines each. */
-/* The anchored variant is also capped to the VIEWPORT, and the tick-list is the
-   part that gives way (#653). Two reasons the cap is not optional: a popover
-   cannot be scrolled into view — a page scroll closes it — so anything past the
-   fold is unreachable, and a game like Carcassonne has dozens of candidates,
-   which pushed the OK button ~100px below the bottom of an 800px viewport.
-   Only `.popover--expansions`: the sheet variant scrolls itself.
+/* Expansions (#1143). The one editor in the app that is a centred list DIALOG at
+   every width rather than an anchored card above 860px — `openEditor(…, { list:
+   true })`. Everything popover-shaped that used to live here is gone with it: the
+   card `max-width`, the viewport cap, its `:has(.exp-have)` variant and the two
+   nested scroll boxes that gave way under it.
 
-   The `max()` floor is NOT decoration: a bare `min(45vh, 620px)` computes to
-   **0** wherever the viewport height is degenerate, which collapses the card to
-   nothing and leaves its own children rendering outside it — measured, 18px
-   tall with the OK button 200px below its bottom edge. Same trap, same remedy
-   as `.cover-picker__grid` (.claude/rules/anchored-popover-is-placed-once.md).
-   The floor has a SECOND job, and #728 found it the hard way — see the rule. */
-/* 540px rather than the 360px this shipped at (#706), and the WIDTH is what
-   makes the tick-list usable — not the height, which is already spent (see the
-   note on the cap below). A candidate row is a `.ds-row`, so a title that does
-   not fit takes a second and third line. Measured at 1440x900 over Carcassonne's
-   real German candidate names:
-
-     width   row heights (px)                  rows inside the 240px list box
-     360     72,72,45,72,45,72,45,72           3
-     520     72,45,45,45,45,72,45,45           4
-     540     72,45,45,45,45,45,45,45           4
-     560     45,45,45,45,45,45,45,45           4
-
-   540 is where all but the single longest name („Erweiterung 1 – Wirtshäuser und
-   Kathedralen") collapses to one line; the total height of those eight entries
-   falls 537px -> 429px. Past it the return is one title per 20px, so this stops
-   at the top of the range #706 proposed rather than chasing the longest name in
-   board gaming.
-
-   `place()` clamps horizontally (`maxLeft`, 8px margin), so a card wider than the
-   room beside its anchor slides into view rather than off-screen — the width has
-   no equivalent of the vertical dead zone below.
-
-   Compounded with `.popover` for the same reason as `.popover.popover--tags`
-   above: at (0,1,0) it merely ties with the base's `max-width: 300px` and wins
-   on source order alone. */
-.popover.popover--expansions {
-  max-width: 540px;
-  /* 45vh, down from the 78vh this shipped at, and a 380px floor, up from 280px.
-     #706 asked for the cap to be RAISED; #728 measured it instead and both
-     numbers were wrong in the same direction — too much height.
-
-     `place()` can only count on HALF the viewport (it puts the card wholly above
-     or wholly below its anchor and falls back to below), so the room it is
-     guaranteed is `(H - anchorH - 12) / 2` — 430px at 1440x900 for this 27px
-     trigger. Measured on the real editor with a 12-candidate list: the card is
-     **529px**, placed at top 476, and its OK button landed **96px past the
-     fold** — unreachable, because a page scroll closes a popover outright.
-     Not a stubbed-anchor curiosity either: sweeping the demo round's nine game
-     pages, Codenames put the trigger inside that dead band at **51 of its 119**
-     reachable scroll positions. At 45vh the card is 405px and all nine are
-     clean; the tick-list gives way 240px -> 117px and the card ends 32px above
-     the fold.
-
-     The 380px floor is the half #722's rule warned about and nothing had
-     checked: the floor must be >= the sum of the children's own floors, and
-     280px was **91px under** the card's measured 371px minimum (list floor 96 +
-     head 21 + margin 10 + the free-text form 157 + the button 57 + 30 chrome).
-     `.exp-pick` carries `min-height: 0` so the cap can bite, so below that
-     minimum the card does not shrink — its tick-list spills out of `.exp-pick`
-     and lands **on top of** the free-text form (measured: 53px of overlap at a
-     315px cap). At 78vh that only bit under ~476px of viewport; at 45vh it
-     would have bitten under ~825px, i.e. on ordinary laptops. Lower the vh term
-     and this floor without re-measuring the children and you trade a fold
-     problem for an overlap.
-
-     Fold-safe from ~799px of viewport height up (was ~1097px). Below that the
-     card sits at its 380px floor and no cap can do better — which is what #739
-     added `place()`'s clamp for. The cap still earns its place above that
-     threshold: it lets the tick-list be the part that gives way, where the clamp
-     can only shorten the card and scroll the remainder. */
-  max-height: max(380px, min(45vh, 620px));
-}
-/* One more child since #1039, so one more term in that floor: the owned list's
-   head (21) + margin (10) + its own 46px body floor = 77, i.e. 457 rounded to
-   460. Scoped with `:has()` rather than raised outright, so a game that owns
-   nothing keeps the card #722/#728 actually measured. (0,3,0) beats the base
-   card rule's (0,2,0) on specificity, not on source order.
-
-   Compounded with `.popover` since #1142, like every other card-sizing rule
-   here. It shipped as an `:is()` pair, which put a 460px cap on the SHEET — a
-   presentation with no fold to protect that is already its own scroll container.
-   The effect was that owning expansions made the editor worse: at 390x844 the
-   sheet had 717px of room, took 577, and clipped the owned list to one row with
-   its „Entfernen" button sliced in half, while ~140px of the sheet sat empty and
-   nothing scrolled. A game owning NOTHING was unaffected, so the defect appeared
-   only once the feature was used. */
-.popover.popover--expansions:has(.exp-have) {
-  max-height: max(460px, min(45vh, 620px));
-}
-:is(.popover--expansions, .editor--expansions) .exp-pick {
-  margin-bottom: 10px;
-  /* A flex item's default `min-height: auto` is its content size, so without
-     this the card's max-height would be ignored and the button pushed out
-     anyway — the cap and this line only work as a pair. */
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
-:is(.popover--expansions, .editor--expansions) .exp-pick__head,
-:is(.popover--expansions, .editor--expansions) .exp-have__head,
-:is(.popover--expansions, .editor--expansions) .exp-own__head {
+   Why the card could not hold this content: `place()` only ever counts on half
+   the viewport, so a 26-row list clamps the card at 1024×768 and 1280×800 — and a
+   clamp sets `min-height: auto` on every child, dropping the flex floors, so the
+   card itself became a THIRD scroll region with „OK" 271px below its visible
+   edge. `.sheet` is already its own scroll container with nothing above or below
+   it, which is why none of those rules have a replacement here rather than a
+   rewritten one. See `.claude/rules/popover-vs-sheet-editors.md`. */
+.editor--expansions { gap: 10px; }
+/* The sheet's own trailing gap would otherwise sit UNDER the sticky bar, so the
+   bar stops 26px short of the scrollport when the list is scrolled to its end.
+   (0,4,0) against `.sheet > :last-child:not(.sheet__actions)`'s (0,3,0) — on
+   specificity, never on source order (.claude/rules/responsive-content-width.md). */
+.sheet > .editor.editor--expansions:last-child { margin-bottom: 0; }
+/* One list, one row shape. An owned entry and a provider candidate differ only by
+   `.ds-row--picked` + the checkbox — which is the point: the editor used to render
+   them as two boxes with two heads, two floors and two different commit models.
+   No bounds of any kind: `.sheet` scrolls, so a `max-height` here would clip
+   content nothing was constraining. */
+.editor--expansions .exp-list { display: flex; flex-direction: column; gap: 6px; }
+/* Compact, like the old candidate rows: this is a dialog full of names, so the
+   default `.ds-row` padding costs roughly a row per three. */
+.editor--expansions .exp-row { padding: 8px 12px; }
+.editor--expansions .exp-row .ds-row__title { font-weight: 600; }
+/* Empty unless the provider hop is loading, empty-handed or unreachable, so it
+   must cost nothing while it says nothing — the `#dupHint` shape
+   (.claude/rules/accessibility-contrast-and-modals.md §4). */
+.editor--expansions .exp-note:empty { display: none; }
+.editor--expansions .exp-note { font-size: var(--text-sm); }
+.editor--expansions .exp-filter { margin-bottom: 2px; }
+/* The rare question, collapsed: a 157px always-open form became a ~48px summary.
+   A native <details>, so Enter/Space and the focus ring come from the platform. */
+.editor--expansions .exp-own { border-top: 1px solid var(--line); padding-top: 10px; }
+.editor--expansions .exp-own__head {
   font-size: var(--text-sm);
-  margin-bottom: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  /* The marker is the disclosure's only affordance, so it stays — this just
+     keeps it on the text baseline rather than in its own list-item box. */
+  list-style-position: inside;
 }
-/* What the round already owns (#1039) — the rows the removed `.gd-expansions`
-   page section used to carry. Built like `.exp-pick` above, and it has to be:
-   the card's `max-height` budget is shared out by its children, so a child
-   without `min-height: 0` and a cap of its own would ignore the budget and push
-   the free-text form and the OK button out (the 53px overlap #728 measured). */
-:is(.popover--expansions, .editor--expansions) .exp-have {
-  margin-bottom: 10px;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
-:is(.popover--expansions, .editor--expansions) .exp-have__body {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  /* Gives way with the candidate list, but never all the way: without a floor
-     this box is the first thing squeezed to zero on a short viewport, and since
-     #1039 this editor is the ONLY way to remove an owned expansion — so a
-     collapsed list is not a cosmetic loss but an unreachable action. The floor
-     itself is popover-only below, with the cap it is the floor of. */
-  flex: 0 1 auto;
-}
-/* Popover-only, like `.popover--tags`' two boxes and the tick-list below: the
-   cap and whatever gives way under it are ONE unit, and a sheet has no cap
-   (.claude/rules/popover-vs-sheet-editors.md §4). In the sheet this computes
-   `overflow-y: visible` with no cap and `.sheet` is the only scroll region. */
-.popover--expansions .exp-have__body {
-  min-height: 46px;
-  max-height: 168px;
-  overflow-y: auto;
-  /* Reaching the end must not chain into the page, because a page scroll closes
-     the popover outright (.claude/rules/overlay-page-lock.md §3). */
-  overscroll-behavior: contain;
-}
-:is(.popover--expansions, .editor--expansions) .exp-have__row { padding: 8px 10px; }
-/* A game can have 100+ expansions, so the list is a bounded scroll box. It
-   lives inside an overlay, so it must not chain its scroll into the page
-   behind it (.claude/rules/overlay-page-lock.md §5). */
-:is(.popover--expansions, .editor--expansions) .exp-pick__body {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  /* Absorbs the shrink so the free-text form and the OK button below keep their
-     natural size and stay visible. Harmless in the sheet, where there is no cap
-     to absorb — the bounds themselves are popover-only below. */
-  flex: 1 1 auto;
-}
-/* Popover-only, for the reason given on the owned list above. The floor is
-   deliberate — one row of candidates is always better than none — and it is
-   what stops a short viewport collapsing the list to nothing, the same call
-   .cover-picker__grid makes. */
-.popover--expansions .exp-pick__body {
-  min-height: 96px;
-  max-height: 240px;
-  overflow-y: auto;
-  /* Reaching the end of the list must not chain into the page, because a page
-     scroll closes the popover outright (.claude/rules/overlay-page-lock.md §3). */
-  overscroll-behavior: contain;
-}
-/* A compact row: the editor is a 360px card, not a 900px page, so the default
-   `.ds-row` padding would leave room for about three names. */
-:is(.popover--expansions, .editor--expansions) .exp-pick__row { padding: 8px 10px; }
-:is(.popover--expansions, .editor--expansions) .exp-own { margin-bottom: 8px; }
-:is(.popover--expansions, .editor--expansions) .exp-own__name { margin-bottom: 8px; }
-:is(.popover--expansions, .editor--expansions) .exp-own__range { display: flex; align-items: center; gap: 8px; }
-:is(.popover--expansions, .editor--expansions) .exp-own__range .input { width: 68px; }
+.editor--expansions .exp-own__body { display: flex; flex-direction: column; gap: 8px; padding-top: 8px; }
+.editor--expansions .exp-own__range { display: flex; align-items: center; gap: 8px; }
+.editor--expansions .exp-own__range .input { width: 68px; }
+/* The range fields appear with the name. The `hidden` attribute alone loses to
+   the `display: flex` above — author rules beat the UA stylesheet — so the paired
+   `[hidden]` rule is what actually hides them
+   (.claude/rules/hidden-attribute-vs-display-rule.md). (0,3,0) beats it outright. */
+.editor--expansions .exp-own__range[hidden] { display: none; }
+/* The count and the commit button, pinned to the scrollport's bottom edge by
+   `.sheet__actions` (which brings the sticky, the rule and the safe-area padding).
+   The count is the whole reason the expansion quota is now told to the client:
+   `MAX_EXPANSIONS_PER_GAME` used to be reachable only as a toast AFTER a PUT the
+   server refused. */
+.editor--expansions .exp-bar { justify-content: space-between; align-items: center; }
+.editor--expansions .exp-bar__count { font-size: var(--text-sm); color: var(--ink-soft); }
+.editor--expansions .exp-bar__count--over { color: var(--danger); font-weight: 600; }
 .popover__hint { font-size: var(--text-sm); }
 
 .ds-list { display: flex; flex-direction: column; gap: 10px; }

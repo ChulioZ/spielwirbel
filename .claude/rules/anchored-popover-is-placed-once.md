@@ -39,6 +39,20 @@ player-count scrape, which a break-on-purpose loop showed guarded nothing.
 
 ## The second instance (#653), and why an ASYNC fill is the sharper case
 
+> **The exemplar is HISTORY since #1143 — the mechanism is not.** Every
+> `.popover--expansions` / `.exp-pick` measurement below is real and is what
+> taught the rule, but that editor is a centred list dialog at every width now
+> and neither selector exists in `styles.css` any more. Don't grep for them and
+> conclude this file is wrong; read them as the worked example they are. The cap,
+> the floor, the `min-height: 0` pairing and `place()`'s clamp all still bind
+> `.popover--tags`, `.popover--owners` and `.popover.has-covers`.
+>
+> It is also the *outcome* of this rule rather than a departure from it: five
+> releases of correcting one card's cap and floor (#653 → #706 → #722 → #728 →
+> #1039 → #1142) is the signal that a 26-row list was never popover-shaped
+> content. See `.claude/rules/popover-vs-sheet-editors.md`, "a scanning list may
+> be a dialog at every width".
+
 The expansion editor hit this within a day of shipping. Its BGG tick-list is
 fetched when the editor opens, so `openPopover` measures a card that still says
 "…" — there is no user action between the placement and the growth at all,
@@ -51,7 +65,9 @@ Two things generalise from the fix:
 - **Re-place from `.finally()`, not `.then()`.** The empty-list and the failure
   branches also swap the placeholder for a one-line message, so they change the
   height too. A `.then()`-only call leaves the *error* path mis-placed, which is
-  the path nobody looks at.
+  the path nobody looks at. (This editor was the only async-filled popover in the
+  app; with #1143 the app has none, so the bullet is a standing instruction for
+  the next one rather than a description of live code.)
 - **A tall card needs a cap as well as a correct placement.** Right placement
   only guarantees the card is *anchored*; it can still be taller than the
   viewport. `.popover--expansions` therefore caps itself and lets the tick-list
@@ -114,8 +130,10 @@ what would have detonated it.
 **Measure the minimum, don't sum the CSS.** Only 96 of those 371px is declared
 anywhere — the rest is rendered text and controls. Squeeze the card
 (`el.style.maxHeight = '0px'`) and read what the children insist on.
-`test/game-expansions.test.js` then binds the floor to the list's *declared*
-floor plus that measured remainder, so raising one without the other goes red.
+`test/game-expansions.test.js` then bound the floor to the list's *declared*
+floor plus that measured remainder, so raising one without the other went red.
+That spec went with the popover in #1143; write the equivalent for whichever card
+you are capping, since the technique is what transfers, not the assertion.
 
 ### When no cap can fix it — `place()` clamps, and the floor is a trap (#739)
 
