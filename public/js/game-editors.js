@@ -334,9 +334,11 @@ function openExpansionEditor(ctx, anchor) {
       && game.source.provider === 'bgg';
 
     // One row per entry, in commit order: what is owned leads, the provider's
-    // remaining candidates follow as they arrive. `picked` is keyed by the row's
-    // own identity so an untick is reversible until commit.
-    //   { key, label, meta, payload, picked }
+    // remaining candidates follow as they arrive.
+    //   { label, meta, payload, picked }
+    // `picked` lives on the MODEL, never in the DOM, because `paintList` rebuilds
+    // the rows on every keystroke of the filter — reading the checkboxes back at
+    // commit time would drop every tick the filter happens to be hiding.
     // `payload` is what the PUT carries for a ticked row — `{ id }` for
     // something already stored (the server keeps it verbatim), `{ providerId }`
     // for a candidate (the server resolves the title upstream, so the display
@@ -348,7 +350,6 @@ function openExpansionEditor(ctx, anchor) {
     let filterText = '';
 
     owned.forEach((e) => rows.push({
-      key: 'id:' + e.id,
       label: e.title,
       meta: Number.isInteger(e.minPlayers) && Number.isInteger(e.maxPlayers)
         ? playersText(e.minPlayers, e.maxPlayers)
@@ -423,7 +424,6 @@ function openExpansionEditor(ctx, anchor) {
           }
           noteEl.textContent = '';
           fresh.forEach((c) => rows.push({
-            key: 'p:' + c.providerId,
             label: expansionLabel(game.title, c.title),
             meta: '',
             payload: { providerId: c.providerId },
