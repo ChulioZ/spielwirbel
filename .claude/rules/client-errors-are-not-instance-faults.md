@@ -35,6 +35,14 @@ faults:
   §7, the last hand-rolled item). `unhandled_error` at `level=error` is exactly
   what such a tool keys on, so it would have arrived pre-flooded.
 
+**Part of it has now landed, and this file is the reason its buffer is
+SEPARATE.** `POST /api/client-error` (#1149) accepts browser-side fault reports
+from unauthenticated callers, which is the shape above exactly — so it writes
+into its own ring buffer with its own card and its own eviction, and logs at
+`info` so it cannot reach `logBuffer` by the back door. Reusing the #359 buffer
+"because it is already there" is the mistake this file exists to prevent, one
+endpoint over. See `.claude/rules/caught-client-faults-are-invisible.md`.
+
 ## The rule
 
 **Classify by whose fault it is, not by whether something threw.** A 4xx is the
@@ -77,7 +85,10 @@ failure behind a change made for noise. **When you quieten a channel, first go
 and look at what is legitimately using it** — the per-route ceiling in
 `lib/app.js` shipped in the same change for exactly that reason.
 
-**Related:** `.claude/rules/pino-http-customprops-runs-twice.md` (the other
+**Related:** `.claude/rules/caught-client-faults-are-invisible.md` (the mirror
+image — the client recording nothing, and the endpoint whose buffer this file
+kept out of the panel's),
+`.claude/rules/pino-http-customprops-runs-twice.md` (the other
 defect in this file the same day),
 `.claude/rules/product-event-logging.md` (the no-personal-data allowlist the
 `type`-not-`message` choice follows),

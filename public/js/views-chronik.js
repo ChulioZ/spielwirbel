@@ -458,7 +458,15 @@ async function shareRecapCard(period, model) {
   let blob;
   try {
     blob = await recapCardBlob(model);
-  } catch {
+  } catch (err) {
+    // The error was not even bound to a variable until #1149. Nothing here
+    // touches the server, so this catch was the END of the story: canvas.toBlob()
+    // threw a SecurityError for EVERY round on a world design in Safari and
+    // every iOS browser, and the only trace anywhere was this one toast on the
+    // user's own screen (.claude/rules/webkit-taints-a-canvas-on-an-svg-pattern.md).
+    // The toast is unchanged — this adds a report, it does not change what the
+    // user sees.
+    reportClientError('recap_export', err);
     toast(t('periodRecap.toast.failed'));
     return;
   }

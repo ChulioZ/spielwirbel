@@ -37,6 +37,12 @@ process.env.MAIL_DAILY_MAX = '1000000';
 // default would refuse them part-way through with a 429 that looks like a broken
 // ballot. test/security.test.js drives the real ceiling on a throwaway app.
 process.env.VOTE_LINK_RATE_LIMIT_MAX = '1000000';
+// And for the browser-fault endpoint's own limiter (#1149, default 20/window):
+// test/browser-error-reports.test.js floods it well past the ring buffer's cap
+// to prove the bound holds, which the default would refuse part-way through with
+// a 429 that looks like a broken endpoint. That spec drives the real ceiling
+// itself on a throwaway app.
+process.env.CLIENT_ERROR_RATE_LIMIT_MAX = '1000000';
 
 // Keep the observability request logger quiet during the ordinary suite so test
 // output isn't buried under one JSON line per request. test/observability.test.js

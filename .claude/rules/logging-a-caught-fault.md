@@ -103,7 +103,10 @@ four that do not remove a line at all but make it carry the wrong thing (log the
 query, log `err.message`, log per file, drop the ENOENT guard). Those four are
 the ones worth keeping if this spec is ever trimmed; the rest only prove presence.
 
-**Related:** `.claude/rules/client-errors-are-not-instance-faults.md` (which
+**Related:** `.claude/rules/caught-client-faults-are-invisible.md` (#1149, the
+CLIENT-side half of the same audit — and §1's trap pointed the other way: there
+the bytes a `SyntaxError` quotes are an API response rather than `data.json`),
+`.claude/rules/client-errors-are-not-instance-faults.md` (which
 faults must NOT be recorded as ours, and the ring buffer this shares),
 `.claude/rules/product-event-logging.md` (the no-personal-data allowlist),
 `.claude/rules/secrets-in-paths-reach-the-logs.md` (the third field that leaks),

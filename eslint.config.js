@@ -13,6 +13,17 @@ const globals = require('globals');
 // (referencing something not yet defined) without flagging the legitimate
 // cross-file calls. 'writable' = reassigned somewhere; 'readonly' = not.
 const frontendGlobals = {
+  // error-report.js (issue #1149) — loads FIRST, so a load-time throw anywhere
+  // in the rest of the shell is still reported.
+  CLIENT_ERROR_KINDS: 'readonly', CLIENT_ERROR_MESSAGE_MAX: 'readonly',
+  CLIENT_ERROR_MAX_PER_LOAD: 'readonly', CLIENT_ERROR_SCREENS: 'readonly',
+  CLIENT_ERROR_ROUND_TABS: 'readonly', CLIENT_ERROR_ROUND_ITEMS: 'readonly',
+  CLIENT_ERROR_SCRIPT_RE: 'readonly', CLIENT_ERROR_OPAQUE: 'readonly',
+  clientErrorPathShape: 'readonly', isClientErrorPathShape: 'readonly',
+  clientErrorSource: 'readonly', clientErrorMessage: 'readonly',
+  clientErrorReport: 'readonly', resetClientErrorBudget: 'readonly',
+  reportClientError: 'readonly', installClientErrorReporting: 'readonly',
+  clientErrorsSent: 'writable', clientErrorsSeen: 'writable',
   // locales.js
   LOCALES: 'readonly', SUPPORTED_LOCALES: 'readonly', LOCALE_LABELS: 'readonly',
   LOCALE_TAGS: 'readonly', localeTag: 'readonly',

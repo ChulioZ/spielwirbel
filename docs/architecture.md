@@ -313,6 +313,11 @@ lib/
                                              .../passkeys/login, which is the one
                                              unauthenticated part (#418) —
                                              404 unless ACCOUNTS_ENABLED)
+    client-error.js  /api/client-error      (browser-side fault reports, #1149 —
+                                             unauthenticated, own rate limit,
+                                             closed payload allowlist; feeds its
+                                             OWN ring buffer, never the instance
+                                             warn/error one)
     contact.js       /api/contact           (public contact form / DSA notice
                                              intake → stores every submission +
                                              e-mails the operator + acknowledges
@@ -400,6 +405,9 @@ public/
       kontakt.js     kontakt.html's own script (the bilingual contact form)
       admin.js       admin.html's own script, so no privileged code ships in
                      the SPA
+    error-report.js  browser-side fault reporting (#1149): the fault-kind enum,
+                     the route-shape redaction and the bounded reporter — loads
+                     FIRST, shared with the backend, which requires it
     locales.js       the set of shipped UI locales (code, native label, BCP-47
                      tag) — shared with the backend, which requires it
     i18n.js          translation engine (t(), locale detection, plural rules)

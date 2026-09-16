@@ -54,8 +54,15 @@ nothing.
   exported fine on every engine; only the seven worlds reached the pattern. A
   spot check on a default round is green on both engines.
 - **The failure is caught and toasted**, by design (`shareRecapCard` refuses to
-  scold a user who dismissed the share sheet), so no console error reaches
-  anybody and the browser-side telemetry is a single localized string.
+  scold a user who dismissed the share sheet), so no console error reached
+  anybody and the only trace was a single localized string on the user's own
+  screen. **#1149 changed that half and only that half**: the catch is unchanged
+  and still toasts, but it now also calls `reportClientError('recap_export', err)`,
+  so a recurrence of *this* fault shows up in the operator panel's
+  „Browser-Fehler" card with the browser engine beside it — which is the one
+  field that would have made this bug obvious at a glance. The general discipline
+  is `.claude/rules/caught-client-faults-are-invisible.md`; the toast is still
+  what the user sees, so don't read the report as a reason to surface more.
 - **It shipped believing the opposite.** The header comment reasoned about
   tainting explicitly and correctly, and concluded the code was safe — the gap
   was between "same-origin" and "what WebKit taints on", not an oversight about
@@ -69,5 +76,6 @@ taint itself; say so rather than reading it as engine coverage.
 
 **Related:** `.claude/rules/browser-pane-is-chromium-only.md` (the probe, and the
 general form of this trap — a claim proved on the engine that was never in
-doubt), `.claude/rules/provider-cover-hotlinking.md` (the *other* reason this
+doubt), `.claude/rules/caught-client-faults-are-invisible.md` (the reporting this
+bug is the worked example for), `.claude/rules/provider-cover-hotlinking.md` (the *other* reason this
 canvas must stay untainted, and constraint 1's first half).
