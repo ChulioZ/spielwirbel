@@ -633,12 +633,14 @@ What the app does, in detail. For a short overview see the
   BoardGameGeek collection import — "*added ‹game› and N more games*" notes, with
   the **game title and cover** and, for that last one, a plain count; never
   member names, ratings, votes or round names, and only for activity after you
-  became friends. The screen itself is **one grid
-  of person cards** sorted by state — a request you have not answered is always
-  the first card, whatever the friend count — with the feed as a second column
-  from 1024px up and collapsed under the grid below it. Each card carries what
-  that person last did, or how long you have been friends. A friendship shares **no round
-  data**; it is purely social. Unfriending is unilateral and immediate in both
+  became friends. The screen itself is **three full-width bands** — what is
+  waiting on you, your people, what is new — stacked in that order at every
+  width, so a request you have not answered always leads whatever the friend
+  count. Each friend is a compact tile carrying what that person last did (or how
+  long you have been friends) and, behind it, a wash of the cover they last
+  played; tapping one opens their profile, where removing them lives. The feed
+  below is a **wall of tiles** rather than a column of rows. A friendship shares
+  **no round data**; it is purely social. Unfriending is unilateral and immediate in both
   directions. With accounts off the whole feature is inert.
 - **E-mail for actionable inbox items** – *accounts mode only* (issue #618). A
   round invitation or a friend request is also **e-mailed** to its recipient, not
@@ -707,14 +709,14 @@ What the app does, in detail. For a short overview see the
   a picture, replace it or remove it again from the Konto screen; without one the
   app keeps showing the coloured tile with your initials, which also stands in if
   a picture ever fails to load. It appears wherever the account already does: the
-  profile page, Freundeskreis rows and requests, the friend feed, and any round
+  profile page, Freundeskreis tiles and requests, the friend feed, and any round
   seat linked to that account — the seat's **name** is unchanged either way.
   Uploads are re-encoded server-side to one square format with the image file's
   metadata (EXIF/GPS) stripped, so a phone photo's coordinates are never stored.
   Guest-demo accounts cannot set one, and since #877 they cannot read a profile
   at all — otherwise "signed-in" would include an account anyone gets in one
   unauthenticated request. Pictures are visible to real signed-in accounts only,
-  and are reportable from the profile and from a Freundeskreis row.
+  and are reportable from the profile and from a feed tile.
 - **Entdecken** – *live by default; PUBLIC_STATS_ENABLED=false takes it down* (issue #564). Publishes
   the whole instance at a glance: how many rounds, players, shelf games and
   played sessions it holds, plus the games on the most shelves and the ones most

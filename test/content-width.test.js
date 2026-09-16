@@ -652,12 +652,19 @@ test('a voter chip keeps room for a real name beside its status badge', () => {
     `a voter chip leaves its name ${nameWidth}px, which truncates an ordinary member name`);
 });
 
-/* Der Kreis (#1092) — the fifth screen to escape the reading measure, and the
-   only one that needs NO back-row half: `showFriends` renders no `.back-row`
-   sibling, so there is nothing to drag along. The spec asserts that absence
-   rather than assuming it — if the screen ever grows one, this goes red and the
-   exemption has to grow a second selector like the four above. */
-test('Der Kreis opts out of the reading measure, and has no sibling to drag with it', () => {
+/* The Freundeskreis (#1092, widened by #1136) — the fifth screen to escape the
+   reading measure, and the only one that needs NO back-row half: `showFriends`
+   renders no `.back-row` sibling, so there is nothing to drag along. The spec
+   asserts that absence rather than assuming it — if the screen ever grows one,
+   this goes red and the exemption has to grow a second selector like the four
+   above.
+
+   It is the one screen on `--w-shell` rather than `--w-detail`, which is a
+   claim about its CONTENT rather than about its chrome: both of its bands are
+   grids that use whatever width they are given, so capping them at 1400 spent
+   580px per side on gutter at 2560 and froze the roster at three columns from
+   1280 up. */
+test('the Freundeskreis opts out of the reading measure, and has no sibling to drag with it', () => {
   const exemptions = RULES.filter(([sel, body]) =>
     whole('.friends-screen').test(sel) && /max-width:/.test(body));
   assert.ok(exemptions.length,
@@ -668,8 +675,8 @@ test('Der Kreis opts out of the reading measure, and has no sibling to drag with
       `"${sel}" is not conditioned on the screen being present, so it widens every screen`);
     const vars = [...body.matchAll(/max-width:\s*var\((--[\w-]+)\)/g)].map((m) => m[1]);
     assert.equal(vars.length, 1, `"${sel}" does not take its width from a single custom property`);
-    assert.equal(vars[0], '--w-detail',
-      `"${sel}" takes ${vars[0]}, not the one custom property the other widened screens share`);
+    assert.equal(vars[0], '--w-shell',
+      `"${sel}" takes ${vars[0]}, not the shell width #1136 widened it to`);
     // It competes with the (0,3,0) reading-measure cap, and source order breaks
     // silently when someone moves a block.
     const classes = (sel.match(/\.[\w-]+/g) || []).length;

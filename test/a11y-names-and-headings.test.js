@@ -58,7 +58,7 @@ async function friendsView(t, locale) {
      this file guards (A-011, a placeholder standing in for a label) is about the
      field, so the spec opens it — asserting the tile instead would quietly stop
      testing the input. */
-  dom.app.querySelector('.k-card--add').click();
+  dom.app.querySelector('.k-tile--add').click();
   return dom;
 }
 

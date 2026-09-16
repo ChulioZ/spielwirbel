@@ -7,9 +7,9 @@
    unique username (#320) and delivered through the inbox (#207).
 
    The feed's two RENDERERS live in feed-view.js since #1132 — a component with
-   three callers on three screens — while the two screens that host one (Der
-   Kreis and the home dashboard) stay here. What remains shared from this file
-   is the account vocabulary: accountColor, friendAvatar, friendName, the row
+   three callers on three screens — while the two screens that host one (the
+   Freundeskreis and the home dashboard) stay here. What remains shared from this
+   file is the account vocabulary: accountColor, friendAvatar, friendName, the row
    main and the account report button.
 
    Account-mode only: a logged-out visitor (or legacy mode) is sent home. Part of
@@ -19,30 +19,25 @@
 
 'use strict';
 
-// How many feed events the collapsed column shows below 1024px, where it sits
-// UNDER the grid rather than beside it. Six is what fits without the duplicate
-// of the home dashboard's own tile costing a screenful (#1092).
-const KREIS_FEED_COLLAPSED = 6;
-
 /* ------------------------------ dedicated view ----------------------------- */
 
-/* Der Kreis (#1092): one state-sorted grid of person cards beside a narrow feed
-   column.
+/* Three full-width bands (#1136): what is waiting on you, your people, what is
+   new. No split, at any width.
 
-   It was four stacked lists, and the order was the inverse of both frequency and
-   uniqueness. Measured over 9 friends / 2 incoming / 1 outgoing / 18 events: the
-   add form — used once per friend — owned the top slot, the two DUPLICATES (the
-   feed, which the home dashboard already shows, and the incoming requests, which
-   the inbox already carries) filled the first 1700px, and the roster, the only
-   content unique to this screen, started at y = 2119. The first request sat at
-   y = 1762 at every viewport from 768 to 2560 — and at y = 4258 for an account
-   with 28 friends, i.e. the account that most needs the screen scrolled furthest
-   to reach the thing a person is waiting on.
+   #1092 put the roster beside a narrow feed column, and the dead column that
+   produced was not a proportion to retune — it was a property of splitting at
+   all. Two columns whose heights come from two unrelated counts mean one always
+   runs out first, and shifting width between them only moves the hole. Measured
+   over 9 friends / 3 requests / 26 events: 1601px of empty column at EVERY width
+   from 1280 to 2560, and the same 3.4:1 height ratio at 3 friends, so it was
+   structural rather than a property of that dataset. The roster grows 132px per
+   three people and the feed ~87px per event; matching a full feed would have
+   needed about 150 friends.
 
-   The diagnosis is that the screen holds two contents with opposite needs. The
-   feed is a chronological text line wanting ~360px of measure and getting 766.
-   The people are short, unordered entries you scan for ONE of — a grid, not
-   rows with their action 511px away. One content per column, action first.
+   What removes it is making the feed USE width. As tiles, 26 events measure
+   463px instead of 2261 — at which point both bands want the whole width and
+   there is no second column left to run dry. Below 1024 the old shape inverted
+   the defect anyway: the phone scrolled 1737px of roster before the feed began.
 
    `opts.feed === 'all'` pre-expands the feed, so the home tile's „Alle anzeigen"
    keeps its promise. */
@@ -72,106 +67,139 @@ async function showFriends(opts) {
   const screen = h('<div class="friends-screen"></div>');
   screen.appendChild(h(`<div class="lobby-head"><h1>${esc(t('friends.title'))}</h1></div>`));
 
-  const band = renderCircleBand(lists);
-  if (band) screen.appendChild(band);
+  /* ORDER IS THE FEATURE, and it survives the rebuild: a request is the one
+     thing on this screen somebody is waiting on, so it leads whatever the
+     friend count — which is the property the four stacked lists could not have.
+     It is now a band rather than the first cells of a shared grid. */
+  const pending = lists.incoming.map((r) => [r, 'incoming'])
+    .concat(lists.outgoing.map((r) => [r, 'outgoing']));
+  if (pending.length) {
+    /* The heading names what the band HOLDS, so an account with nothing incoming
+       is not told that somebody is waiting on it. The issue specified only
+       „Warten auf dich"; the outgoing-only state has no incoming request to be
+       waiting, and each card states its own status underneath either way (#1092,
+       which is what let the per-state headings go). */
+    const band = renderBand(t(lists.incoming.length ? 'friends.waitingTitle' : 'friends.sentTitle'),
+      pending.length);
+    const grid = h('<div class="k-grid"></div>');
+    pending.forEach(([r, state]) => grid.appendChild(renderPersonCard(r, state)));
+    band.appendChild(grid);
+    screen.appendChild(band);
+  }
 
-  const split = h('<div class="k-split"></div>');
-  const grid = h('<div class="k-grid"></div>');
+  const roster = renderBand(t('friends.rosterTitle'), lists.friends.length);
+  const tiles = h('<div class="k-tiles"></div>');
+  lists.friends.forEach((f) => tiles.appendChild(renderPersonTile(f, feed.events)));
+  tiles.appendChild(renderAddTile());
+  roster.appendChild(tiles);
+  screen.appendChild(roster);
 
-  /* ORDER IS THE FEATURE: incoming first, then outgoing, then friends. A request
-     is the one thing on this screen somebody is waiting on, and it now lands at
-     the top whatever the friend count — which is the property the stacked lists
-     could not have, since the roster sat above them and grew. */
-  lists.incoming.forEach((r) => grid.appendChild(renderPersonCard(r, 'incoming')));
-  lists.outgoing.forEach((r) => grid.appendChild(renderPersonCard(r, 'outgoing')));
-  lists.friends.forEach((f) => grid.appendChild(renderPersonCard(f, 'friend', feed.events)));
-  grid.appendChild(renderAddTile());
-  split.appendChild(grid);
+  const news = renderBand(t('friends.newsTitle'));
+  if (feed.events.length) {
+    const tiled = renderFeedTiles(feed.events);
+    // „Alle anzeigen" from the home tile promises every event; below 1024 the
+    // grid collapses to eight, so the link has to open it already expanded.
+    if (o.feed === 'all') tiled.classList.add('is-open');
+    news.appendChild(tiled);
+  } else {
+    news.appendChild(h(`<p class="muted empty-note">${esc(t('friends.feedEmpty'))}</p>`));
+  }
+  screen.appendChild(news);
 
-  split.appendChild(renderKreisFeed(feed.events, o.feed === 'all'));
-  screen.appendChild(split);
   app.appendChild(screen);
 }
 
-/* „Der Kreis" made visible (#1093): a row of overlapping avatars above the grid,
-   doubling as a way into each profile, with the screen's whole state in one line
-   beside it.
+/* A band: a full-width section with one heading, and the count of what is in it
+   INSIDE that heading rather than beside it.
 
-   Overlapping avatars are the app's OWN idiom — the home round cards render
-   member stacks exactly this way — so this is the established shape one notch
-   bolder rather than a new invention.
-
-   ORDER MIRRORS THE GRID: accounts with a pending incoming request first, each
-   wearing a brand ring, then friends. The one thing somebody is waiting on is
-   the one thing that leads, on both halves of the screen.
-
-   Nothing is rendered for an empty circle: a band with no faces is not a
-   picture, and the grid's own empty state already speaks. */
-const BAND_MAX = 12;
-
-function renderCircleBand(lists) {
-  const waiting = lists.incoming.filter((r) => r.username);
-  const people = waiting.concat(lists.friends);
-  if (!people.length) return null;
-
-  const wrap = h('<div class="c-band"></div>');
-  const ring = h('<div class="c-ring"></div>');
-  people.slice(0, BAND_MAX).forEach((p, i) => ring.appendChild(bandAvatar(p, i < waiting.length)));
-  const rest = people.length - Math.min(people.length, BAND_MAX);
-  /* The overflow chip is DECORATION, not information: the count line beside it
-     already states the whole number, so announcing „+16" as well would read the
-     same fact twice in a less useful form. */
-  if (rest) ring.appendChild(h(`<span class="c-more" aria-hidden="true">+${rest}</span>`));
-  wrap.appendChild(ring);
-
-  const bold = (n) => `<strong>${n}</strong>`;
-  let text = tn(lists.friends.length, 'friends.band.countOne', 'friends.band.count',
-    { n: bold(lists.friends.length) });
-  if (lists.incoming.length) {
-    text += ` · ${tn(lists.incoming.length, 'friends.band.waitingOne', 'friends.band.waiting',
-      { n: bold(lists.incoming.length) })}`;
-  }
-  wrap.appendChild(h(`<p class="c-band__text">${text}</p>`));
-  return wrap;
+   Inside, because a bare number next to an <h2> is announced as a stray digit
+   with nothing to attach it to — where „Deine Freunde 9" reads as the sentence
+   it is. It replaces #1093's avatar band, which rendered the same faces 20px
+   above a grid that now shows them all. */
+function renderBand(title, count) {
+  const n = count == null ? '' : ` <span class="k-band__count">${count}</span>`;
+  return h(`<section class="k-band"><h2 class="k-band__h">${esc(title)}${n}</h2></section>`);
 }
 
-/* One band avatar. NOT `friendAvatar()`: that one is `aria-hidden="true"` on
-   purpose, because everywhere it is used today the account's name sits beside it
-   in text. Here there is no name beside it, so reusing it would produce a row of
-   links with no accessible name at all — the one thing about this band that is
-   easy to get wrong and invisible on screen.
+/* One person, as a tile (#1136). It replaces the 121px card for FRIENDS only —
+   requests keep the card, because they carry buttons.
 
-   An account with no resolvable username (edge: mid-erasure) has no profile to
-   point at and stays a <span>, exactly as `friendRowMain` decided: an <a> with
-   no usable href is not a link — not focusable, no affordance. */
-function bandAvatar(p, waiting) {
+   The tile carries NO action, and that is a removal rather than a loss: its only
+   one was `Entfernen`, which the profile screen has offered since #558 — so the
+   whole tile becomes the link to that profile, where `Entfernen` and the report
+   entry point both already live. A card with one button and a link inside it is
+   what made the card 121px tall.
+
+   It is a real <a> rather than a div that re-earns the click in JS
+   (.claude/rules/ds-row-is-a-click-target.md). An account with no resolvable
+   username (edge: mid-erasure) has no profile to point at and stays a <div> —
+   an <a> with no usable href is not a link at all, not focusable and with no
+   affordance. */
+function renderPersonTile(p, events) {
   const name = p.username || '';
-  const shown = name || t('friends.unknownUser');
-  const color = MEMBER_COLORS[gameHue(shown) % MEMBER_COLORS.length];
-  const face = avatarFace(initials(shown), { src: p.avatar });
-  const cls = `avatar c-ring__face${waiting ? ' avatar--wait' : ''}`;
-  if (!name) {
-    return h(`<span class="${cls}" style="background:${color}" aria-hidden="true">${face}</span>`);
+  const shown = friendName(p.username);
+  const line = personTileLine(p, events);
+  const inner = `${friendAvatar(p.username, p.avatar)}
+      <span class="k-tile__body">
+        <span class="k-tile__name">${shown}</span>
+        ${line ? `<span class="k-tile__line muted">${line}</span>` : ''}
+      </span>`;
+  const tile = name
+    ? h(`<a class="k-tile" href="${esc(profilePath(name))}">${inner}</a>`)
+    : h(`<div class="k-tile k-tile--dead">${inner}</div>`);
+
+  /* The cover wash (#1094): that friend's most recently played cover, bled into
+     the tile's right side so every tile carries a colour taken from what the
+     person actually plays. The art is already in the `/friends/feed` payload the
+     line above is derived from, so it costs no request — and it is the LINE's
+     game, never a second lookup, so the two can never name different games.
+
+     A friend with no recent activity stays plain: that is a difference the grid
+     should show, not hide. Requested at thumb size — the grid can hold 28 of
+     these (.claude/rules/provider-cover-sizing.md). */
+  const last = lastEventOf(p, events);
+  if (last && last.coverUrl) {
+    tile.insertBefore(
+      h(`<span class="k-tile__art" style="background-image:url('${coverUrl(last.coverUrl, COVER_THUMB)}')"></span>`),
+      tile.firstChild);
   }
-  const label = t(waiting ? 'friends.band.avatarWaiting' : 'friends.band.avatarLabel', { user: shown });
-  const el = h(`<a class="${cls}" style="background:${color}" href="${esc(profilePath(name))}"
-       aria-label="${esc(label)}">${face}</a>`);
-  navLink(el, profilePath(name), () => showProfile(name));
-  return el;
+  if (name) navLink(tile, profilePath(name), () => showProfile(name));
+  return tile;
 }
 
-/* The „＋" tile, last in the grid. The add form was a full-width row at the TOP
-   of the page for a control used once per friend; as a tile it costs one grid
-   cell and sits where you look after scanning the people you already have.
+/* The tile's second line: what this person last did, else how long you have been
+   friends. Both come from payloads the view already holds — `since` is the
+   acceptedAt the friends list has always returned and nothing rendered.
+
+   The date is RELATIVE within the last month — „gestern", „vor 3 Tagen" — and
+   absolute past it. A relative count has to be over LOCAL CALENDAR days or it
+   says „gestern" for something 14 hours old; `fmtRelativeDays` returns null past
+   the cutoff and this falls back, so the threshold lives in one place. A
+   friendship two years old reads „seit September 2024", never „vor 743 Tagen". */
+function personTileLine(p, events) {
+  const last = lastEventOf(p, events);
+  if (last) {
+    const rel = fmtRelativeDays(dayIndexOf(Date.now()) - dayIndexOf(last.at));
+    return `${esc(last.title || '')} · ${esc(rel || fmtDate(last.at))}`;
+  }
+  return p.since ? esc(t('friends.card.since', { when: fmtMonth(p.since) })) : '';
+}
+
+/* The „＋" tile, last in the roster. The add form was a full-width row at the TOP
+   of the page for a control used once per friend; as a tile it costs one cell and
+   sits where you look after scanning the people you already have.
 
    It becomes the field IN PLACE rather than opening an editor: there is nothing
    to dismiss, and the enclosing <form> is what keeps Enter-to-submit and the
-   submit button's semantics. */
+   submit button's semantics. The form spans the whole row, because a username
+   field plus a submit button does not fit a 168px track. */
 function renderAddTile() {
-  const tile = h(`<button type="button" class="k-card k-card--add">
-       <span class="k-card__plus" aria-hidden="true">＋</span>
-       <span class="k-card__name">${esc(t('friends.addTile'))}</span>
-       <span class="k-card__line muted">${esc(t('friends.addTileSub'))}</span>
+  const tile = h(`<button type="button" class="k-tile k-tile--add">
+       <span class="k-tile__plus" aria-hidden="true">＋</span>
+       <span class="k-tile__body">
+         <span class="k-tile__name">${esc(t('friends.addTile'))}</span>
+         <span class="k-tile__line muted">${esc(t('friends.addTileSub'))}</span>
+       </span>
      </button>`);
   tile.addEventListener('click', () => {
     // The placeholder is not the label (WCAG 2.2 SC 3.3.2/4.1.2): it disappears
@@ -187,7 +215,7 @@ function renderAddTile() {
     // those heuristics also key on is unchanged by the tile, so the id and the
     // opt-outs are the whole mitigation here. See
     // .claude/rules/password-managers-ignore-autocomplete-off.md.
-    const form = h(`<form class="k-card k-card--adding friends-add">
+    const form = h(`<form class="k-tile k-tile--adding friends-add">
          <input class="input" id="friendHandle" type="text" autocomplete="off" spellcheck="false"
                 autocapitalize="none" maxlength="30" aria-label="${esc(t('friends.addLabel'))}"
                 data-1p-ignore data-lpignore="true" data-bwignore
@@ -214,42 +242,6 @@ function renderAddTile() {
     });
   });
   return tile;
-}
-
-/* The feed as the second column. It stays a LIST, not a grid: its chronological
-   order carries meaning, which is exactly the half of
-   .claude/rules/tiles-vs-lists.md that decides between the two shapes — the
-   people beside it are unordered and short, so they tile.
-
-   Below 1024px it collapses under the grid to six events plus an expander, so
-   the duplicate of the home dashboard's own tile stops costing a screenful. */
-function renderKreisFeed(events, expanded) {
-  const col = h(`<section class="k-feed">
-       <h2 class="friends-section__h">${esc(t('friends.newsTitle'))}</h2>
-     </section>`);
-  if (!events.length) {
-    col.appendChild(h(`<p class="muted empty-note">${esc(t('friends.feedEmpty'))}</p>`));
-    return col;
-  }
-  /* EVERY event is rendered; the collapse is CSS, not a slice. Above 1024px the
-     feed is its own sticky column and shows the lot — that is what the column is
-     for. Below it the feed sits UNDER the grid, where the same eighteen events
-     are a screenful of something the home dashboard already shows, so all but
-     the first six are hidden and the expander appears.
-
-     Doing it in CSS rather than by slicing is what keeps it correct without a
-     resize listener: a width read once at render time is wrong the moment the
-     window changes, and this screen re-renders only on an action. */
-  const list = h('<div class="feed-list"></div>');
-  events.forEach((ev) => list.appendChild(renderFeedEvent(ev)));
-  col.appendChild(list);
-  if (expanded) col.classList.add('is-open');
-  if (events.length > KREIS_FEED_COLLAPSED) {
-    const more = h(`<button type="button" class="link-btn k-feed__more">${esc(t('friends.feedMore', { count: events.length }))}</button>`);
-    more.addEventListener('click', () => col.classList.add('is-open'));
-    col.appendChild(more);
-  }
-  return col;
 }
 
 /* ------------------------------ account profile ---------------------------- */
@@ -353,56 +345,39 @@ function accountReportButton(username) {
   return btn;
 }
 
-/* ----------------------------- request/friend rows ------------------------- */
+/* -------------------------------- request cards ---------------------------- */
 
-/* ONE card for all three states (#1092), replacing renderIncomingRequest,
-   renderOutgoingRequest and renderFriendRow. They were the same markup three
-   times with a different `.ds-row__meta`, and the state was carried by which
-   HEADING they sat under — so removing the headings is what forces the card to
-   state its own status.
+/* ONE card for BOTH request states (#1092, narrowed by #1136). It was one card
+   for three, and the third — a friend — is now `renderPersonTile`: a friend has
+   no pending action, so everything that made this a 121px card with a button row
+   was cost it did not need.
 
-   `.claude/rules/account-profiles.md` binds unchanged: only the avatar+name half
-   is an <a>, because the card keeps its action buttons and a <button> inside an
-   <a> is invalid HTML. The CARD is not a click target and must not promise one
+   What is left is genuinely a card. `.claude/rules/account-profiles.md` binds
+   unchanged: only the avatar+name half is an <a>, because the card keeps its
+   action buttons and a <button> inside an <a> is invalid HTML. The CARD is not a
+   click target and must not promise one
    (.claude/rules/ds-row-is-a-click-target.md). An account with no resolvable
    username (edge: mid-erasure) stays a <span> — an <a> with no usable href is
    not a link at all.
 
-   Requests are the one LIFTED state: a brand left edge and a tint, so the
-   actionable cards read as different without a heading above them. */
-function renderPersonCard(p, state, events) {
+   Requests keep their LIFTED treatment — a brand left edge and a tint — which
+   now reads against the quiet tiles below rather than against neighbours in the
+   same grid. They carry no cover wash: the lifted edge is the one loud thing on
+   the screen and art would compete with it. */
+function renderPersonCard(p, state) {
   const card = h(`<div class="k-card k-card--${state}">
       <div class="k-card__who"></div>
       <div class="k-card__meta"></div>
     </div>`);
-  /* The wash (#1094): that friend's most recently played cover, bled into the
-     card's right side so every card carries a colour taken from what the person
-     actually plays. The art is already in the `/friends/feed` payload the second
-     line is derived from, so it costs no request.
-
-     FRIENDS ONLY, and only with an event. A card with no recent activity stays
-     plain — that is a difference the grid should show, not hide — and request
-     cards keep their lifted brand edge from #1092 as the one loud thing in the
-     grid, which art would compete with.
-
-     Requested at thumb size: the grid can hold 28 of these
-     (.claude/rules/provider-cover-sizing.md). */
-  const last = state === 'friend' ? lastEventOf(p, events) : null;
-  if (last && last.coverUrl) {
-    card.insertBefore(
-      h(`<div class="k-card__art" style="background-image:url('${coverUrl(last.coverUrl, COVER_THUMB)}')"></div>`),
-      card.firstChild);
-  }
 
   const who = card.querySelector('.k-card__who');
   who.innerHTML = friendRowMain(p.username, p.avatar);
   wireFriendRowMain(card, p.username);
 
-  // The second line: what this person last did, else how long you have been
-  // friends. Both come from payloads the view already holds — `since` is the
-  // acceptedAt the friends list has always returned and nothing rendered.
-  const line = personCardLine(p, state, events);
-  if (line) who.appendChild(h(`<div class="k-card__line muted">${line}</div>`));
+  // The card states its own status, which is what let the per-state headings go
+  // (#1092) — and still matters now that the band above can hold both kinds.
+  const line = esc(t(state === 'incoming' ? 'friends.card.wants' : 'friends.card.sent'));
+  who.appendChild(h(`<div class="k-card__line muted">${line}</div>`));
 
   const meta = card.querySelector('.k-card__meta');
   if (state === 'incoming') {
@@ -423,24 +398,11 @@ function renderPersonCard(p, state, events) {
       refreshInboxBadge();
       showFriends();
     });
-  } else if (state === 'outgoing') {
+  } else {
     meta.appendChild(h(`<button class="link-btn friend-req__cancel" type="button">${esc(t('friends.cancel'))}</button>`));
     meta.querySelector('.friend-req__cancel').addEventListener('click', async () => {
       try { await accountApi('POST', `/friends/${p.friendshipId}/decline`); } catch {}
       showFriends();
-    });
-  } else {
-    meta.appendChild(h(`<button class="link-btn friend-row__remove" type="button">${esc(t('friends.unfriend'))}</button>`));
-    meta.querySelector('.friend-row__remove').addEventListener('click', async () => {
-      if (!await confirmDialog({
-        body: t('friends.unfriendConfirm', { name: p.username || t('friends.unknownUser') }),
-        confirmLabel: t('friends.unfriend'),
-      })) return;
-      try {
-        await accountApi('DELETE', `/friends/${p.friendshipId}`);
-        toast(t('friends.toast.removed'));
-        showFriends();
-      } catch { toast(t('friends.err.generic')); }
     });
   }
   // Outgoing carries no report button: you are the one who reached out, and the
@@ -452,35 +414,11 @@ function renderPersonCard(p, state, events) {
   return card;
 }
 
-/* The card's second line. A request says what it is; a friend gets their most
-   recent event out of the feed the view already fetched, and falls back to the
-   friendship's own age.
-
-   The date is RELATIVE within the last month — „gestern", „vor 3 Tagen",
-   „letzte Woche" — and absolute past it. #1092 shipped it absolute because a
-   relative one has to count LOCAL CALENDAR days or it says „gestern" for
-   something 14 hours old, and the helper that does that correctly (`dayIndexOf`)
-   landed with #1080; this is that follow-up.
-
-   The cutoff is the point: a friendship two years old reads „seit September
-   2024", never „vor 743 Tagen". `fmtRelativeDays` returns null past it and this
-   falls back, so the threshold lives in one place. */
-/* That account's most recent feed event, or null. Shared by the card's second
+/* That account's most recent feed event, or null. Shared by the tile's second
    line and its cover wash (#1094) so the two can never describe different
    games — the wash IS the line's game, rendered as colour. */
 function lastEventOf(p, events) {
   return (events || []).find((ev) => ev.username && ev.username === p.username) || null;
-}
-
-function personCardLine(p, state, events) {
-  if (state === 'incoming') return esc(t('friends.card.wants'));
-  if (state === 'outgoing') return esc(t('friends.card.sent'));
-  const last = lastEventOf(p, events);
-  if (last) {
-    const rel = fmtRelativeDays(dayIndexOf(Date.now()) - dayIndexOf(last.at));
-    return `${esc(last.title || '')} · ${esc(rel || fmtDate(last.at))}`;
-  }
-  return p.since ? esc(t('friends.card.since', { when: fmtMonth(p.since) })) : '';
 }
 
 /* -------------------------- home-screen feed section ----------------------- */

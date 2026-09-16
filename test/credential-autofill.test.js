@@ -45,7 +45,7 @@ async function friendsField(t) {
   /* Since #1092 the field lives inside the „＋" tile and only exists once it is
      pressed — so the spec presses it. Asserting against the tile instead would
      quietly stop testing the input, which is the whole subject here. */
-  const tile = dom.app.querySelector('.k-card--add');
+  const tile = dom.app.querySelector('.k-tile--add');
   assert.ok(tile, 'the „＋" tile did not render — the add form has moved again');
   tile.click();
   const form = dom.document.querySelector('form.friends-add');

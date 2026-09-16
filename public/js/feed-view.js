@@ -1,8 +1,8 @@
 /* Spielwirbel – the friend feed, in its two presentations (#325, #1132).
 
    Its own file since #1132, which gave the feed a second shape. It is a
-   COMPONENT rather than a screen: three callers on three screens read it — Der
-   Kreis and the home dashboard (views-friends.js) and an account profile
+   COMPONENT rather than a screen: three callers on three screens read it — the
+   Freundeskreis and the home dashboard (views-friends.js) and an account profile
    (views-profile.js) — so it belongs to none of them, and the two presentations
    stay together because they render the same events and must keep saying the
    same thing.
@@ -115,13 +115,15 @@ function renderFeedEvent(ev) {
    meta row would otherwise repeat that name once per tile. Building a second
    near-identical renderer is the change being wrong however green it is. */
 
-// How many tiles the collapsed grid shows below 1024px. Eight is two rows at
-// the phone's two columns, and above 1024 nothing is capped at all — four rows
-// of tiles is not a screenful.
+// How many tiles the collapsed grid shows below 1024px. At the phone's two
+// columns that is FOUR rows, ~187px each — measured on #1136, correcting this
+// comment, which said two. Above 1024 nothing is capped at all: four rows of
+// tiles across seven columns is not a screenful.
 const FEED_TILES_COLLAPSED = 8;
 
 /* The tile's verb. Deliberately shorter than feedText's sentence: the tile
-   already names the game above it and (on the Kreis) the author beside it, so
+   already names the game above it and (on the Freundeskreis) the author beside it,
+   so
    the sentence would print both twice. Same three branches as feedText,
    including the plural — `games_imported` carries a COUNT, so t() is not
    enough (.claude/rules/source-scanning-guards-enumerate-shapes.md). */
@@ -181,8 +183,7 @@ function renderFeedTile(ev, opts) {
 
 /* The grid plus its expander. EVERY tile is rendered and the collapse is CSS,
    never a slice: a width read once at render time is wrong the moment the window
-   changes, and these screens re-render only on an action (the `.k-feed`
-   mechanism, which this generalises). */
+   changes, and these screens re-render only on an action. */
 function renderFeedTiles(events, opts) {
   const wrap = h('<div class="e-feed"></div>');
   const grid = h('<div class="e-grid"></div>');
