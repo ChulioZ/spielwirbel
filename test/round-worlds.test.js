@@ -228,6 +228,14 @@ test('the home tile shows the world glyph, and the app glyph for a palette', asy
 
 // ---- the CSS contract ----------------------------------------------------
 
+/* The alpha each world declares for slot 1, read from its own token block. */
+const backdropAlpha = (world) => {
+  const m = /--world-backdrop-alpha:\s*([\d.]+)/.exec(bodyOf(`[data-world="${world.id}"]`) || '');
+  assert.ok(m, `${world.id} declares no --world-backdrop-alpha`);
+  return Number(m[1]);
+};
+const over = (top, under, a) => top.map((c, i) => Math.round(c * a + under[i] * (1 - a)));
+
 const TOKENS = ['--world-font', '--world-backdrop', '--world-backdrop-size', '--world-backdrop-fade',
   // Slot 1's alpha (#1138). Explicit in all seven rather than a var() fallback
   // on the slot rule: a world that forgot it would silently inherit a number
@@ -581,14 +589,6 @@ test('the crown, the dock motif and the podium floor stand down under prefers-co
   assert.match(hi, /\[data-world\] \.setup-panel\s*\{[^}]*--pot-band:\s*0px/,
     'the vessel is hidden but its band is not zeroed — an empty strip under the covers');
 });
-
-/* The alpha each world declares for slot 1, read from its own token block. */
-const backdropAlpha = (world) => {
-  const m = /--world-backdrop-alpha:\s*([\d.]+)/.exec(bodyOf(`[data-world="${world.id}"]`) || '');
-  assert.ok(m, `${world.id} declares no --world-backdrop-alpha`);
-  return Number(m[1]);
-};
-const over = (top, under, a) => top.map((c, i) => Math.round(c * a + under[i] * (1 - a)));
 
 test('the backdrop alpha stays inside the contrast budget for body text on the page', () => {
   /* Until #1138 this read ONE opacity off the slot rule and capped it at .1.

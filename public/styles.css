@@ -9877,7 +9877,8 @@ kbd {
   --world-font: "Alfa Slab One";
   --world-backdrop: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240' viewBox='0 0 240 240'%3E%3Cg fill='%23000'%3E%3Cg transform='translate(40 30) rotate(20) scale(0.9)'%3E%3Cellipse cx='0' cy='5' rx='6.5' ry='5.5'/%3E%3Cellipse cx='-7.5' cy='-6' rx='2.8' ry='7' transform='rotate(-32 -7.5 -6)'/%3E%3Cellipse cx='0' cy='-9' rx='2.8' ry='8'/%3E%3Cellipse cx='7.5' cy='-6' rx='2.8' ry='7' transform='rotate(32 7.5 -6)'/%3E%3C/g%3E%3Cg transform='translate(74 74) rotate(16) scale(0.9)'%3E%3Cellipse cx='0' cy='5' rx='6.5' ry='5.5'/%3E%3Cellipse cx='-7.5' cy='-6' rx='2.8' ry='7' transform='rotate(-32 -7.5 -6)'/%3E%3Cellipse cx='0' cy='-9' rx='2.8' ry='8'/%3E%3Cellipse cx='7.5' cy='-6' rx='2.8' ry='7' transform='rotate(32 7.5 -6)'/%3E%3C/g%3E%3Cg transform='translate(100 122) rotate(22) scale(0.9)'%3E%3Cellipse cx='0' cy='5' rx='6.5' ry='5.5'/%3E%3Cellipse cx='-7.5' cy='-6' rx='2.8' ry='7' transform='rotate(-32 -7.5 -6)'/%3E%3Cellipse cx='0' cy='-9' rx='2.8' ry='8'/%3E%3Cellipse cx='7.5' cy='-6' rx='2.8' ry='7' transform='rotate(32 7.5 -6)'/%3E%3C/g%3E%3Cg transform='translate(136 166) rotate(18) scale(0.9)'%3E%3Cellipse cx='0' cy='5' rx='6.5' ry='5.5'/%3E%3Cellipse cx='-7.5' cy='-6' rx='2.8' ry='7' transform='rotate(-32 -7.5 -6)'/%3E%3Cellipse cx='0' cy='-9' rx='2.8' ry='8'/%3E%3Cellipse cx='7.5' cy='-6' rx='2.8' ry='7' transform='rotate(32 7.5 -6)'/%3E%3C/g%3E%3Cg transform='translate(164 214) rotate(24) scale(0.9)'%3E%3Cellipse cx='0' cy='5' rx='6.5' ry='5.5'/%3E%3Cellipse cx='-7.5' cy='-6' rx='2.8' ry='7' transform='rotate(-32 -7.5 -6)'/%3E%3Cellipse cx='0' cy='-9' rx='2.8' ry='8'/%3E%3Cellipse cx='7.5' cy='-6' rx='2.8' ry='7' transform='rotate(32 7.5 -6)'/%3E%3C/g%3E%3Cg transform='translate(190 50) rotate(-28) scale(0.8)'%3E%3Crect x='-13' y='-3' width='26' height='6' rx='3'/%3E%3Ccircle cx='-13' cy='-4' r='4.2'/%3E%3Ccircle cx='-13' cy='4' r='4.2'/%3E%3Ccircle cx='13' cy='-4' r='4.2'/%3E%3Ccircle cx='13' cy='4' r='4.2'/%3E%3C/g%3E%3Cg transform='translate(40 190) rotate(24) scale(0.7)'%3E%3Crect x='-13' y='-3' width='26' height='6' rx='3'/%3E%3Ccircle cx='-13' cy='-4' r='4.2'/%3E%3Ccircle cx='-13' cy='4' r='4.2'/%3E%3Ccircle cx='13' cy='-4' r='4.2'/%3E%3Ccircle cx='13' cy='4' r='4.2'/%3E%3C/g%3E%3Cg transform='translate(210 130) rotate(70) scale(0.55)'%3E%3Crect x='-13' y='-3' width='26' height='6' rx='3'/%3E%3Ccircle cx='-13' cy='-4' r='4.2'/%3E%3Ccircle cx='-13' cy='4' r='4.2'/%3E%3Ccircle cx='13' cy='-4' r='4.2'/%3E%3Ccircle cx='13' cy='4' r='4.2'/%3E%3C/g%3E%3Cpath d='M20 118c4-5 10-5 14 0c0 5-3 9-7 12c-4-3-7-7-7-12z' opacity='.8'/%3E%3C/g%3E%3C/svg%3E");
   --world-backdrop-size: 320px 320px;
-  /* Slot 1's alpha. Ceiling .090 (see the slot rule); .09 keeps the margin. */
+  /* Slot 1's alpha. .09 IS this world's ceiling — the tightest of the seven,
+     with no margin left; see the slot rule before nudging it. */
   --world-backdrop-alpha: .09;
   /* Sediment: rises from the bottom of the viewport, floored; see burg. */
   --world-backdrop-fade: linear-gradient(rgb(0 0 0 / .55) 0%, #000 100vh);
@@ -10432,12 +10433,16 @@ kbd {
      UNTHEMED lobby's --surface in the visitor's own scheme, so the dark-page
      flare argument behind the per-world alphas simply does not apply to it,
      and the text over it is --ink-soft body type rather than a display-size
-     accent name. Its own bar is AA on that ink, on BOTH lobby schemes, which
-     caps it at .150 (Chess, light lobby) — .14 for the margin, the same value
-     and the same reasoning as the dock's motif. It shipped at .16 until #1138,
-     i.e. at 4.44:1 on Chess: under the bar, on a light world rather than one
-     of the dark ones this issue was about. test/a11y-contrast.test.js measures
-     it per world per lobby. */
+     accent name. And the lobby is never dark: #904's dark block is scoped to
+     :root and .theme-card, deliberately, so that a dark round's tile does not
+     turn dark ("one dark tile in a light lobby would read as a patchwork",
+     views-home.js). So there is ONE ground — the standard light --surface —
+     and the bar on it caps this at .150 (Chess); .14 for the margin, the same
+     value and the same reasoning as the dock's motif. It shipped at .16 until
+     #1138, i.e. at 4.44:1 on Chess: under the bar, on a light world rather
+     than one of the dark ones this issue was about.
+     test/a11y-contrast.test.js measures every world on that ground, and pins
+     the not-dark premise rather than assuming it. */
   opacity: var(--motif-a, .14);
   mask-image: var(--world-backdrop);
   mask-size: var(--world-backdrop-size);
