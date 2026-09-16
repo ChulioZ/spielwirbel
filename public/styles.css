@@ -838,20 +838,24 @@ h1, h2, h3 { font-family: var(--font-display); }
      (0,5,0) against the cap's (0,3,0) — specificity, never source order. */
   .app:has(.member-card) > *:not(.rail):not(.dock):is(.back-row, .member-card),
   .app:has(.member-card) > *:not(.rail):not(.dock):has(.member-games),
-  /* Der Kreis (#1092) takes the same licence, and its argument is the plainest
-     of the three: the screen renders NO navigation at all — no rail, no dock, no
-     back row — so widening it moves nothing. That is the setup forms' reasoning,
-     not the rail/dock one.
+  /* The Freundeskreis (#1092) takes the same licence, and its argument is the
+     plainest of the three: the screen renders NO navigation at all — no rail, no
+     dock, no back row — so widening it moves nothing. That is the setup forms'
+     reasoning, not the rail/dock one.
 
      ONE selector, unlike `.pass` and `.result-screen`: `showFriends` renders no
      `.back-row` sibling to drag along. Confirmed rather than assumed.
 
-     Measured before: page height and every section position were IDENTICAL from
-     768 to 2560, and at 2560 1660 of 2560px (65%) was gutter.
+     `--w-shell`, not `--w-detail` like its neighbours, and #1136 is what earned
+     it: at 1400 the old split froze at three roster columns from 1280 to 2560
+     (the grid was 1022px at every one of them — 22px short of a fourth track,
+     permanently) while 580px per side became gutter at 2560. With the split
+     gone both bands are content that USES width, so the cap is what bounds them
+     and 1800 is the widest this app ever goes. Gutters at 2560: 380 per side.
 
      (0,4,0) against the cap's (0,3,0) — specificity, never source order. */
   .app:has(.friends-screen) > *:not(.rail):not(.dock):is(.friends-screen) {
-    max-width: var(--w-detail);
+    max-width: var(--w-shell);
   }
 
   /* Die Spielerkarte's screen (#1132) takes the same licence, with the spread's
@@ -4198,95 +4202,96 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
   .stats-cta { margin-top: 32px; padding-top: 24px; }
 }
 
-/* ===== Freundeskreis / friends (#325), rebuilt as Der Kreis (#1092) ===== */
+/* ===== Freundeskreis / friends (#325), rebuilt as three bands (#1136) ===== */
 
-/* Two contents with opposite needs, one column each. The feed is a
-   chronological text line wanting ~360px of measure and getting 766; the people
-   are short, unordered entries you scan for ONE of. Stacking both in one column
-   served neither.
+/* Three full-width bands, and no split at any width. #1092 put the roster beside
+   a narrow feed column; the dead column that produced was a property of
+   splitting at all rather than a proportion to retune, because two columns whose
+   heights come from two unrelated counts mean one always runs out first.
+   Measured: 1601px of empty column at EVERY width from 1280 to 2560, and the
+   same 3.4:1 ratio at 3 friends as at 9.
 
-   `auto-fill`, not `auto-fit`: the grid then needs no breakpoint of its own and
-   a lone card cannot balloon to the full width — the constraint
-   .claude/rules/tiles-vs-lists.md states for `.ds-list--tiles`. The FEED stays a
-   list, because its order carries meaning. */
-/* „Der Kreis" (#1093): the circle the screen is named after, made visible.
-   Overlapping avatars are the home round card's own member-stack idiom, one
-   notch bolder. Colours are tokens throughout — the disc is the account's
-   deterministic MEMBER_COLORS entry set inline, its 2px ring is `.avatar`'s own
-   border in --surface, and a pending request re-colours that border to --brand
-   with a --brand-tint halo. No literals. */
-.c-band {
-  display: flex;
-  align-items: center;
-  gap: 8px 16px;
-  flex-wrap: wrap;          /* ring and count stack on a phone rather than scroll */
-  margin-bottom: 18px;
-}
-/* The padding/negative-margin pair is what lets the ring WRAP: every face
-   carries -10px, and the container's matching padding cancels it for the first
-   one on EVERY row. A `:first-child` exemption looks equivalent and is not — it
-   pulls each wrapped row 10px left of the one above it. */
-.c-ring {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  row-gap: 6px;
-  padding-left: 10px;
-}
-.c-ring__face { margin-left: -10px; width: 38px; height: 38px; }
-.c-ring .avatar--wait {
-  border-color: var(--brand);
-  box-shadow: 0 0 0 3px var(--brand-tint);
-  /* Above its neighbours, so the halo is never clipped by the next face. */
-  position: relative;
-  z-index: 1;
-}
-a.c-ring__face:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; }
-a.c-ring__face:hover { box-shadow: 0 0 0 3px var(--brand-edge); }
-.c-more {
-  margin-left: -10px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 38px;
-  height: 38px;
-  padding: 0 8px;
-  border-radius: var(--radius-pill);
-  border: 2px solid var(--surface);
-  background: var(--line);
-  color: var(--ink-soft);
-  font-size: var(--text-sm);
-  font-weight: 700;
-}
-.c-band__text { margin: 0; color: var(--ink-soft); font-size: var(--text-md); }
-.c-band__text strong { color: var(--ink); font-weight: 700; }
+   What removes it is making the feed USE width (`.e-grid`, #1132): 26 events
+   measure 463px as tiles against 2261 as rows, at which point both bands want
+   the whole width and there is no second column left to run dry. */
+.k-band { margin-bottom: 26px; }
+.k-band:last-child { margin-bottom: 0; }
+/* The count lives INSIDE the heading, so a screen reader announces „Deine
+   Freunde 9" rather than a stray digit with nothing to attach it to. It is the
+   whole of what #1093's avatar band said — that band rendered the same faces
+   20px above a grid that now shows every one of them. */
+.k-band__h { font-size: var(--text-lg); margin: 0 0 10px; }
+.k-band__count { color: var(--ink-soft); font-weight: 600; }
 
-.k-split { display: grid; gap: 26px; }
+/* The requests band keeps the 252px card track: a card carries two buttons and a
+   name that must WRAP (see .k-card .friend-row__name below). */
 .k-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(252px, 1fr)); gap: 12px; }
-@media (min-width: 1024px) {
-  .k-split { grid-template-columns: minmax(0, 1fr) 344px; column-gap: 34px; align-items: start; }
-  /* Sticky, so scanning a long roster keeps the feed in view rather than
-     scrolling it away above the fold. */
-  .k-feed { position: sticky; top: 16px; }
-}
 
-/* One card, three states. It is NOT a click target and must not look like one
-   (.claude/rules/ds-row-is-a-click-target.md): the avatar+name half is the
-   anchor, and the buttons are buttons. */
-.k-card {
+/* The roster. `auto-fill`, never `auto-fit`, so an empty track stays empty and a
+   lone tile cannot balloon to the pane
+   (.claude/rules/auto-fit-collapses-only-empty-tracks.md).
+
+   168px is LOAD-BEARING rather than chosen: it is the largest minimum that still
+   gives TWO columns at 390px (2 x 168 + 10 = 346 <= 362 of content box), and it
+   gives one row at 1800. */
+.k-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: 10px; }
+
+/* One person, ~56px against the card's 121. It IS the link to the profile — a
+   real <a>, not a div that re-earns the click in JS
+   (.claude/rules/ds-row-is-a-click-target.md) — because its only action,
+   `Entfernen`, has lived on that profile since #558, together with the account
+   report entry point. */
+.k-tile {
+  position: relative;
+  overflow: hidden;   /* the art bleeds past the right edge and is clipped here */
   display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: 10px;
-  padding: 14px;
+  padding: 10px 12px;
   min-width: 0;
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
   background: var(--surface);
-  position: relative;   /* hosts .k-card__art */
-  overflow: hidden;     /* the art bleeds past the right edge and is clipped here */
+  color: inherit;
+  text-align: left;
+  font: inherit;
 }
-/* The cover wash (#1094): the friend's most recently played game, bled into the
-   card's right side. Colour that is ABOUT the person rather than applied to them.
+a.k-tile:hover { border-color: var(--brand); }
+a.k-tile:hover .k-tile__name { text-decoration: underline; }
+/* The tile is the roster's ONLY interactive element since #1136, so it carries
+   the focus ring the band avatar (`a.c-ring__face`) used to — dropping that rule
+   with the band would have left the one control on the screen relying on the UA
+   default, unlike every sibling (`.lobby-cta`, `.game-link`, `.member-link`). */
+a.k-tile:focus-visible,
+.k-tile--add:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+/* Content above the art. `.k-tile__art` is the one child that must NOT be
+   lifted, and it is excluded by being absolutely positioned rather than by a
+   selector — a `:not()` here would be one more thing to keep in step. */
+.k-tile > *:not(.k-tile__art) { position: relative; }
+.k-tile .avatar { flex: none; }
+.k-tile__body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+/* The name WRAPS rather than truncating. At 390px the pre-#1092 row gave it 36px
+   where it needed 75-166 and rendered "an…" / "de…"; a 168px tile leaves ~98px,
+   which is the same trap one component later. */
+.k-tile__name { font-weight: 600; overflow-wrap: anywhere; }
+/* TWO lines, not one. On a single nowrap line a 168px tile leaves the line
+   ~98px, which the game title alone fills — measured at 1470, seven of nine
+   tiles read „Wingspan · h…" and lost the date entirely, i.e. half of what the
+   line is for. Clamped rather than free so the tiles in a row stay a uniform
+   height and the grid stays a grid (the `.cover-pick__caption` idiom). */
+.k-tile__line {
+  font-size: var(--text-sm);
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* The cover wash (#1094, on the tile since #1136): the friend's most recently
+   played game, bled into the right side. Colour that is ABOUT the person rather
+   than applied to them.
 
    THE ALPHA IS A MEASURED CEILING, NOT A TASTE CALL, and the issue's starting
    value of .17 does not pass. Compositing an arbitrary cover over --surface
@@ -4299,18 +4304,14 @@ a.c-ring__face:hover { box-shadow: 0 0 0 3px var(--brand-edge); }
      .12     4.48:1                                FAILS AA by 0.02
      .11     4.61:1  (Standard, dark cover)        ships
 
-   --ink measures 9.17:1 at .11, so the muted second line is what binds — it is
-   `white-space: nowrap` with an ellipsis, so it spans the whole card and really
-   does reach the far right where the mask is fully opaque. test/a11y-contrast
+   --ink measures 9.17:1 at .11, so the muted second line is what binds — it
+   wraps to fill the tile's width, so it really does reach the far right where
+   the mask is fully opaque, and the fade buys it nothing. test/a11y-contrast
    re-derives all of this from the `opacity` below, so raising it goes red.
 
-   The --accent link buttons in .k-card__meta would fail at full alpha (4.03:1),
-   and do not, because the mask has not opened yet where they sit: measured at
-   375px they end at 46% of the card and see 0.0148 effective alpha (5.00:1).
-   The threshold to know if that row ever grows: --accent first drops under AA
-   around .065 effective, which the fade reaches at roughly 67% of the card
-   width. Today's buttons have a ~47% width margin before that bites. */
-.k-card__art {
+   The card's --accent link buttons used to need a separate argument here; the
+   tile has no buttons at all, so the two lines above are the whole of it. */
+.k-tile__art {
   position: absolute;
   inset: 0 -18% 0 38%;
   background: center / cover no-repeat;
@@ -4319,10 +4320,33 @@ a.c-ring__face:hover { box-shadow: 0 0 0 3px var(--brand-edge); }
   -webkit-mask-image: linear-gradient(90deg, transparent, #000 62%);
           mask-image: linear-gradient(90deg, transparent, #000 62%);
 }
-/* Content above the art. `.k-card__art` is the one child that must NOT be
-   lifted, and it is excluded by being absolutely positioned rather than by a
-   selector — a `:not()` here would be one more thing to keep in step. */
-.k-card > *:not(.k-card__art) { position: relative; }
+
+/* The „＋" tile, last in the roster. A dashed edge so it reads as a slot rather
+   than as a person. */
+.k-tile--add {
+  border-style: dashed;
+  background: transparent;
+  cursor: pointer;
+}
+.k-tile--add:hover { border-color: var(--brand); color: var(--brand-strong); }
+.k-tile__plus { font-size: var(--text-xl); line-height: 1; /* glyph, not type */ }
+/* The form spans the row: a username field plus a submit button does not fit a
+   168px track, and the tile it replaces is the last cell either way. */
+.k-tile--adding { grid-column: 1 / -1; gap: 8px; }
+
+/* One card, two request states. It is NOT a click target and must not look like
+   one (.claude/rules/ds-row-is-a-click-target.md): the avatar+name half is the
+   anchor, and the buttons are buttons. */
+.k-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
 .k-card__who { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .k-card__line {
   font-size: var(--text-sm);
@@ -4332,43 +4356,12 @@ a.c-ring__face:hover { box-shadow: 0 0 0 3px var(--brand-edge); }
 }
 .k-card__meta { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: auto; }
 
-/* Requests are the one LIFTED state: a brand left edge and a tint, so the
-   actionable cards read as different WITHOUT a heading above them — which is
-   what lets the headings go. Outgoing is quieter than incoming: it is a fact
-   about something you already did, not something waiting on you. */
+/* Requests are the one LIFTED state: a brand left edge and a tint, so the band
+   reads as actionable against the quiet tiles below it. Outgoing is quieter than
+   incoming: it is a fact about something you already did, not something waiting
+   on you. */
 .k-card--incoming { border-left: 3px solid var(--brand); background: var(--brand-tint-soft); }
 .k-card--outgoing { border-left: 3px solid var(--ink-soft); }
-
-/* The „＋" tile, last in the grid. A dashed edge so it reads as a slot rather
-   than as a person. */
-.k-card--add {
-  align-items: flex-start;
-  gap: 4px;
-  text-align: left;
-  border-style: dashed;
-  background: transparent;
-  color: var(--ink);
-  cursor: pointer;
-  font: inherit;
-  min-height: 96px;
-  justify-content: center;
-}
-.k-card--add:hover { border-color: var(--brand); color: var(--brand-strong); }
-.k-card__plus { font-size: var(--text-2xl); line-height: 1; /* glyph, not type */ }
-.k-card__name { font-weight: 600; }
-.k-card--adding { gap: 8px; justify-content: center; }
-.k-feed__more { margin-top: 10px; }
-/* Below the column breakpoint the feed sits UNDER the grid, where eighteen
-   events are a screenful of something the home dashboard already carries. Six,
-   then the expander. Above 1024px the feed has its own sticky column and shows
-   the lot, so both the cap and the button are gone — hence the media query
-   rather than a slice in JS, which would need a resize listener to stay right. */
-@media (max-width: 1023px) {
-  .k-feed:not(.is-open) .feed-item:nth-child(n + 7) { display: none; }
-}
-@media (min-width: 1024px) {
-  .k-feed__more { display: none; }
-}
 
 /* Add-friend row: a username field + submit. It lives INSIDE the „＋" tile since
    #1092 — it was a full-width row at the top of the page, i.e. the rarest
@@ -4545,11 +4538,11 @@ a.c-ring__face:hover { box-shadow: 0 0 0 3px var(--brand-edge); }
 .e-tile__report .ti { font-size: var(--text-md); display: block; }
 .e-tile__report:hover { background: var(--sunken); color: var(--ink); }
 .e-feed__more { margin-top: 10px; }
-/* Below 1024px the grid shows eight tiles — two rows at the phone's two
-   columns — then the expander. Above it nothing is capped: four rows of tiles
+/* Below 1024px the grid shows eight tiles — four rows at the phone's two
+   columns, measured at ~187px each (#1136) — then the expander. Above it nothing is capped: four rows of tiles
    is not a screenful, and the whole point of the shape is that width buys
    density. In CSS rather than a slice in JS, which would need a resize listener
-   to stay right (the `.k-feed` mechanism, generalised).
+   to stay right.
    `nth-of-type`, not `nth-child`: the grid's children are all tiles today, and
    the day one of them is not, counting by position would hide the wrong one. */
 @media (max-width: 1023px) {

@@ -301,7 +301,9 @@ test('below 1024 the grid collapses to eight tiles plus an expander', async (t_)
   await many.call('showProfile', 'ada');
   const feed = many.app.querySelector('.e-feed');
   // EVERY tile is rendered; the collapse is CSS, so no resize listener can be
-  // wrong about the width (the .k-feed mechanism, one screen over).
+  // wrong about the width. (This used to cite the Freundeskreis .k-feed column
+  // as the precedent; #1136 replaced that screen with the same .e-feed grid, so
+  // the two now share this mechanism rather than one copying the other.)
   assert.equal(feed.querySelectorAll('.e-tile').length, 9);
   const more = feed.querySelector('.e-feed__more');
   assert.equal(more.textContent, t('friends.feedMore', { count: 9 }));

@@ -116,6 +116,10 @@ about a *meaningful* sequence. DOM order is untouched, so the phone (one column)
 still reads action-first. **Never convert a container whose items carry an
 order** — that is `.claude/rules/tiles-vs-lists.md`'s ordering half, and multicol
 breaks it harder than a grid does, since a grid at least reads left-to-right.
+ #1136 makes that asymmetry
+load-bearing: it moved the friend feed — a chronology — into a row-major grid
+*because* wrapping left-to-right preserves newest-first. One boundary, read from
+both files: **row-major grid yes, `columns:` never**, for ordered content.
 
 ## Verifying it
 

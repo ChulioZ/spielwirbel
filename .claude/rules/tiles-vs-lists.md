@@ -14,14 +14,34 @@ deliberately were not, and the line between them is not about available width:
 | entries are **unordered** | order carries meaning |
 | entries are **short** (a chip, a name, a toggle) | entries are rich (cover, stats, several actions) |
 | you scan for one entry | you read the sequence |
-| tags, providers, the round lobby, the Regal | session results, the Chronik (related sessions left this column in #1040) |
+| tags, providers, the round lobby, the Regal, the friend feed (#1136) | session results, the Chronik (related sessions left this column in #1040) |
 
-**The ordering half is the one that actually bites.** A grid is read
-left-to-right and then wrapped, so putting a *ranking* in one makes rank 3 sit
-to the right of rank 2 and rank 4 below rank 1. The session results screen
-exists to communicate an order — the winner, then rows sorted by rating — so tiling
-its rows would destroy the one thing it is for, while looking tidier. Same for
-the Chronik: a month-grouped timeline read in columns is not a timeline.
+**The ordering half is the one that actually bites — and it is about a RANKING,
+not about every ordered thing.** A grid is read left-to-right and then wrapped,
+so putting a *ranking* in one makes rank 3 sit to the right of rank 2 and rank 4
+below rank 1. The session results screen exists to communicate an order — the
+winner, then rows sorted by rating — so tiling its rows would destroy the one
+thing it is for, while looking tidier.
+
+**A CHRONOLOGY is the case this half used to over-reach on, and #1040/#1136
+corrected it.** A row-major grid reads left-to-right and then wraps, which is
+the same sequence a wrapped paragraph of text has — so newest-first still reads
+newest-first. The precedent is the Stempelkarte (`.stamps`, #1040): a dated
+sequence of a game's sessions, tiled, and nobody has had trouble reading it. The
+friend feed followed it onto `.e-grid` (#1132 on a profile, #1136 on the
+Freundeskreis), where the gain is the whole point of that screen's rebuild — 26
+events measure **463px as tiles against 2261 as rows**.
+
+What is banned is **column-major**, and that ban is absolute: multicol flows
+down column 1 and then down column 2, which scrambles a chronology outright.
+`.claude/rules/css-multicolumn-card-flows.md` states the same thing from its own
+side. So an ordered container may be a row-major `grid`; it may never be
+`columns:`, however similar the two look in a screenshot. A RANKING stays a list
+either way, because the eye has to compare adjacent ranks rather than merely
+read them in order.
+
+The Chronik keeps the list form for a different reason than the ban: it is a
+month-grouped timeline whose rows are rich, so the richness half decides it.
 
 **The richness half is about the meta half of a row.** `.ds-row` puts its
 `__main` and `__meta` at opposite ends, which is exactly right at 900px for a
@@ -93,14 +113,27 @@ doesn't have to be redone.
   width per viewport is what that argument actually wanted**; it reached for
   "deliberate raggedness" because the component in the middle could not be any
   other width.
-- **Der Kreis** — the screen that needs BOTH shapes at once (#1092), which is
-  why it is worth an entry. The people tile: short, unordered entries you scan
-  for one of, in an `auto-fill` grid so a lone card cannot balloon. The feed
-  beside them stays a LIST, because its chronological order carries meaning —
-  the second half of the rule, applied to two contents on one screen rather than
-  to two screens. Stacking both in one column served neither: measured, a feed
-  line carried 247px of text in a 766px box while a friend's name sat 511px from
-  its own „Entfernen".
+- **The Freundeskreis** — the entry that recorded the reading this file has
+  since corrected, so both halves are kept. #1092 tiled the people (short,
+  unordered entries you scan for one of) and left the feed beside them a LIST,
+  "because its chronological order carries meaning" — this rule's own ordering
+  half, applied to two contents on one screen rather than to two screens.
+
+  The tiling was right and the list was not, and what exposed it was not the
+  feed at all but the SPLIT the list forced. Two columns whose heights come from
+  two unrelated counts mean one always runs out first: measured over 9 friends
+  and 26 events, **1601px of dead column at every width from 1280 to 2560**, and
+  the same 3.4:1 ratio at 3 friends, so it was structural rather than a property
+  of that dataset. Re-proportioning only moves the hole. What removes it is the
+  feed USING width, i.e. tiling it — at which point both bands want the whole
+  width and there is no second column left to run dry (#1136: three stacked
+  bands, nothing side by side, 169px of scroll at 1470 against 1564).
+
+  So the transferable lesson is about the QUESTION, not the answer: "does this
+  content's order carry meaning" is the wrong test for a chronology — ask
+  whether the reading ORDER survives wrapping, which for row-major it does. And
+  a screen that needs two shapes at once is worth re-reading as a screen that
+  should not have been split.
 
 - **Game detail** — **restructured in #1039, so this entry is history.** For two
   releases the reading here was that the defect was a *sizing* one, not a shape

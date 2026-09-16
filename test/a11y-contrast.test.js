@@ -962,28 +962,26 @@ test('the home tile motif leaves its meta line over AA on every world', () => {
     + 'Chess binds: .16 lands at 4.44:1, .14 at 4.61:1.');
 });
 
-/* The Freundeskreis cover wash (#1094). Unlike every fill above it, the layer is
-   an arbitrary USER-FACING IMAGE — a game cover — so there is no token to mix
-   with and no average to assume. The honest worst case is the extremes: pure
-   black over a light design, pure white over a dark one, which is what a very
-   dark or very bright cover approaches.
+/* The Freundeskreis cover wash (#1094, on the person TILE since #1136). Unlike
+   every fill above it, the layer is an arbitrary USER-FACING IMAGE — a game
+   cover — so there is no token to mix with and no average to assume. The honest
+   worst case is the extremes: pure black over a light design, pure white over a
+   dark one, which is what a very dark or very bright cover approaches.
 
-   Measured at FULL alpha on purpose. The card's second line is
-   `white-space: nowrap` with an ellipsis, so it spans the whole card and really
-   does reach the far right where the mask is fully opaque — the fade buys the
-   text nothing and must not be credited to it.
+   Measured at FULL alpha on purpose. The tile's second line wraps to fill the
+   tile's width, so it really does reach the far right where the mask is fully
+   opaque — the fade buys the text nothing and must not be credited to it.
 
-   The --accent link buttons in `.k-card__meta` are deliberately NOT here: they
-   would fail at full alpha (4.03:1 on Salbei) and do not fail in fact, because
-   the mask has not opened where they sit — measured at 375px they end at 46% of
-   the card and see 0.0148 effective alpha. That is a LAYOUT fact, which this
-   file cannot see; it is recorded in the CSS comment beside the rule with the
-   threshold (~67% of the card width) at which it would stop holding. */
-test('the friend card\'s cover wash keeps its text over AA, for any cover', () => {
-  const decl = bodyOf('.k-card__art');
-  assert.ok(decl, '.k-card__art is gone — did the wash move?');
+   This used to carry a third paragraph exempting the card's --accent link
+   buttons, which would fail at full alpha (4.03:1 on Salbei) and did not fail in
+   fact because the mask had not opened where they sat. #1136 removed the buttons
+   with the card: a person tile carries no action at all, so the two ink levels
+   below are now the whole of what paints over this layer. */
+test('the friend tile\'s cover wash keeps its text over AA, for any cover', () => {
+  const decl = bodyOf('.k-tile__art');
+  assert.ok(decl, '.k-tile__art is gone — did the wash move?');
   const m = /(^|[\s;])opacity:\s*([\d.]+)/.exec(decl);
-  assert.ok(m, `.k-card__art declares no opacity: ${decl}`);
+  assert.ok(m, `.k-tile__art declares no opacity: ${decl}`);
   const alpha = Number(m[2]);
 
   const failures = [];
@@ -997,7 +995,7 @@ test('the friend card\'s cover wash keeps its text over AA, for any cover', () =
     }
   }
   assert.deepEqual(failures, [],
-    `the wash paints a cover at ${(alpha * 100).toFixed(0)}% over --surface; the card's text needs `
+    `the wash paints a cover at ${(alpha * 100).toFixed(0)}% over --surface; the tile's text needs `
     + `${AA_TEXT}:1. The issue's starting .17 lands at 3.84:1 on Sci-Fi dark — lower the alpha, `
     + 'do not widen this test.');
 });
