@@ -34,7 +34,10 @@ What the app does, in detail. For a short overview see the
   already knows for the base game, or typed in by hand — so "do we still have
   Seefahrer?" is answered by the app. An expansion that seats more (or fewer)
   people widens the range the draw filters by, which is how the 5–6-player
-  extension stops a six-person evening from hiding the game you own. A game can
+  extension stops a six-person evening from hiding the game you own. An owned
+  entry that widens the table says which sizes it unlocks for *that* game
+  („Ermöglicht 6 Personen"), rather than repeating its own interval for the
+  reader to compare in their head; one that changes nothing simply says nothing. A game can
   also record **which members own the box** — on the add sheet, on the
   BoardGameGeek import, and on the detail page — and the draw then skips a game
   whose owners are all staying home tonight, with the setup screen saying how

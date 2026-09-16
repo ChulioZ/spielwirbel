@@ -696,7 +696,11 @@ I18N.fr = {
   'detail.expansionPickLoading': 'Interrogation de {provider} …',
   'detail.expansionNamePlaceholder': 'Nom de l’extension',
   'detail.expansionRangeHint': 'Nombre de joueurs : les deux champs ou aucun.',
-  'detail.expansionNoRange': 'sans nombre de joueurs',
+  // What an owned expansion UNLOCKS (#1144) — the table sizes it admits that
+  // the base box does not. A run reads „5–6“, a gap „2, 5–6“: never the
+  // hull between them (.claude/rules/expansions-widen-by-union.md).
+  'detail.expansionAddsOne': 'Permet {n} joueur',
+  'detail.expansionAdds': 'Permet {n} joueurs',
   'detail.toast.expansionsSaved': 'Extensions enregistrées',
   'detail.toast.expansionNeedsBoth': 'Remplis les deux nombres de joueurs — ou laisse les deux vides.',
   'detail.toast.expansionRange': 'Le nombre de joueurs le plus élevé doit être au moins égal au plus bas.',

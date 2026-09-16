@@ -665,7 +665,11 @@ I18N.fi = {
   'detail.expansionPickLoading': 'Kysytään palvelusta {provider} …',
   'detail.expansionNamePlaceholder': 'Lisäosan nimi',
   'detail.expansionRangeHint': 'Pelaajamäärä: molemmat kentät tai ei kumpaakaan.',
-  'detail.expansionNoRange': 'ei pelaajamäärää',
+  // What an owned expansion UNLOCKS (#1144) — the table sizes it admits that
+  // the base box does not. A run reads „5–6“, a gap „2, 5–6“: never the
+  // hull between them (.claude/rules/expansions-widen-by-union.md).
+  'detail.expansionAddsOne': 'Mahdollistaa {n} pelaajan',
+  'detail.expansionAdds': 'Mahdollistaa {n} pelaajaa',
   'detail.toast.expansionsSaved': 'Lisäosat tallennettu',
   'detail.toast.expansionNeedsBoth': 'Täytä molemmat pelaajamäärät — tai jätä molemmat tyhjiksi.',
   'detail.toast.expansionRange': 'Suurimman pelaajamäärän on oltava vähintään pienin.',

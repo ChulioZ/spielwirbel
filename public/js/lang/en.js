@@ -716,7 +716,11 @@ I18N.en = {
   'detail.expansionPickLoading': 'Asking {provider} …',
   'detail.expansionNamePlaceholder': 'Expansion name',
   'detail.expansionRangeHint': 'Player count: both fields or neither.',
-  'detail.expansionNoRange': 'no player count',
+  // What an owned expansion UNLOCKS (#1144) — the table sizes it admits that
+  // the base box does not. A run reads „5–6“, a gap „2, 5–6“: never the
+  // hull between them (.claude/rules/expansions-widen-by-union.md).
+  'detail.expansionAddsOne': 'Seats {n} player',
+  'detail.expansionAdds': 'Seats {n} players',
   'detail.toast.expansionsSaved': 'Expansions saved',
   'detail.toast.expansionNeedsBoth': 'Please fill in both player counts \u2014 or leave both empty.',
   'detail.toast.expansionRange': 'The highest player count must be at least the lowest.',
