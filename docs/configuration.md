@@ -37,7 +37,34 @@ Tune the limits with `RATE_LIMIT_MAX` (global, per 15 min),
 default 60 — higher because it is an ordinary user action, not a signup), and
 `AVATAR_RATE_LIMIT_MAX` (profile-picture uploads, per 15 min, default 10 — the
 one endpoint whose cost is decoding attacker-supplied bytes, so it gets a much
-lower ceiling than the account surface around it).
+lower ceiling than the account surface around it), and
+`CLIENT_ERROR_RATE_LIMIT_MAX` (browser-side fault reports, per 15 min, default
+20 — see below).
+
+### Browser-side fault reports (issue #1149)
+
+Nothing that goes wrong in a visitor's browser used to reach the operator: a
+caught failure with no server involvement — a canvas export, a clipboard read, a
+service-worker registration — left no trace anywhere but a toast on the user's
+own screen. `POST /api/client-error` takes a minimal, fixed report and the
+operator panel shows it in a „Browser-Fehler" card beside the instance's own
+warn/error lines.
+
+- It is **unauthenticated** and mounted ahead of the auth gate, because the
+  faults most worth hearing about are the ones on the login and landing screens.
+- `CLIENT_ERROR_RATE_LIMIT_MAX` (default 20 per IP per 15 min) is its own
+  ceiling, stacking with the global one. It is deliberately *not* the auth
+  ceiling: an error storm from a shared address must not spend the budget people
+  need to log in with.
+- Reports go into their **own** in-memory ring buffer, never the one behind
+  `GET /api/admin/logs`. An unauthenticated writer must not be able to evict the
+  instance's own faults — see
+  `.claude/rules/client-errors-are-not-instance-faults.md`.
+- The payload is a closed allowlist (fault kind, truncated message, our own
+  script path and line, the *route shape* rather than the path, the locale) plus
+  a server-derived browser engine. Nothing is persisted; there is no env var to
+  turn it off, and no third-party error tracker is involved
+  (`docs/production-readiness.md` §7 item 2 is still open).
 
 Voting by shared link (issue #652): a per-device session can be shared as
 `/vote/<token>` so people **without an account** vote from their own phone.

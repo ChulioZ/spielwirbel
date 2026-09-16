@@ -230,6 +230,7 @@
     $('password').value = '';
     loadStatus();
     loadLogs();
+    loadClientLogs();
     loadNotices();
     // Konten is deliberately NOT loaded here (#403) — see loadUsers().
     loadFeedback();
@@ -738,6 +739,79 @@
 
     for (const e of entries) body.appendChild(logRow(e));
   }
+
+  // ---- browser-side fault reports (#1149) ----------------------------------
+
+  // The second buffer, from a DIFFERENT route on purpose: its writer is
+  // unauthenticated, so it must not be able to evict anything from the card
+  // above (lib/observability.js recordClientError).
+  //
+  // Every value is rendered with textContent, like loadLogs() — a message is
+  // attacker-influenced text and this page runs with operator privileges. The
+  // route's allowlist is the first line of that; this is the second.
+  async function loadClientLogs() {
+    const body = $('clientLogsTable').querySelector('tbody');
+    body.replaceChildren();
+    hide($('clientLogsError'));
+
+    let entries;
+    try {
+      ({ entries } = await api('/logs/client'));
+    } catch (err) {
+      show($('clientLogsError'), message(err), 'err');
+      return;
+    }
+
+    const head = document.createElement('tr');
+    ['Zeitpunkt', 'Art', 'Meldung', 'Engine'].forEach((h) => cell(head, h, { head: true }));
+    body.appendChild(head);
+
+    $('clientLogsCount').textContent = `${entries.length} Einträge`;
+    $('clientLogsCount').hidden = !entries.length;
+
+    if (!entries.length) {
+      const row = document.createElement('tr');
+      cell(row, 'Keine Browser-Fehler seit dem letzten Neustart.', { colSpan: 4 });
+      body.appendChild(row);
+      return;
+    }
+
+    for (const e of entries) body.appendChild(clientLogRow(e));
+  }
+
+  // One report: when, which kind of fault, its message, and the engine. The
+  // script source and the screen shape go into the <details> — they are what you
+  // read second, once a message has caught your eye.
+  function clientLogRow(e) {
+    const row = document.createElement('tr');
+    cell(row, fmt(e.ts));
+    cell(row, e.kind || '—');
+
+    const msg = cell(row, '');
+    msg.style.wordBreak = 'break-word';
+    const text = document.createElement('div');
+    text.style.whiteSpace = 'pre-wrap';
+    text.textContent = e.message || '—';
+    msg.appendChild(text);
+
+    const extra = [];
+    if (e.source) extra.push(`source: ${e.source}`);
+    if (e.path) extra.push(`screen: ${e.path}`);
+    if (e.locale) extra.push(`locale: ${e.locale}`);
+    if (extra.length) {
+      const small = document.createElement('div');
+      small.style.fontSize = '0.8rem';
+      small.style.marginTop = '0.3rem';
+      small.style.opacity = '0.75';
+      small.textContent = extra.join(' · ');
+      msg.appendChild(small);
+    }
+
+    cell(row, e.ua || '—');
+    return row;
+  }
+
+  $('clientLogsReload').addEventListener('click', loadClientLogs);
 
   // Fields already shown in their own column — everything else falls into the
   // expandable detail block below.

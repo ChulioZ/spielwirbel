@@ -482,6 +482,31 @@ across seats and a rating mean cannot be un-weighted, so the account-wide figure
 are recomputed from counts rather than from the per-seat rates, and the favourite
 game is picked once over the merged set rather than once per round.
 
+**The eighteenth is `public/js/error-report.js`** (#1149): `CLIENT_ERROR_KINDS`,
+the fault kinds a browser may report, plus `CLIENT_ERROR_MESSAGE_MAX` and
+`isClientErrorPathShape`. The client OFFERS them (the two window handlers and
+the four explicit call sites) and `lib/routes/client-error.js` VALIDATES against
+them, so it is the plain shape — but its failure direction is the one worth
+naming: a drifted server copy 400s the report, so the **fault the report was
+about stays invisible**, which is the exact condition this whole feature exists
+to end. A copy would silently restore the blind spot through the mechanism built
+to remove it.
+
+`isClientErrorPathShape` is the sharpest thing here and is not a value at all.
+The reporter sends the route SHAPE rather than `location.pathname`, because a
+client path carries round, game and member ids — and one carries a live
+credential, the shared vote link's token (#652). The server therefore validates
+with the **very function that produced the value**: a shape is exactly a string
+that is its own shape, so there is no second regex to drift out of sync with the
+route table. Generalise that rather than the constant: **where a client
+normalises a value, share the normaliser and validate by idempotence**, instead
+of sharing the value and writing a pattern for it at the far end.
+
+Note what deliberately did **not** join it: `uaEngine` lives in
+`lib/observability.js`, because the engine is derived **server-side** from the
+request's own header and the client never sends one — it is not shared at all,
+and putting it here would export a function with no second reader.
+
 **Each new instance must be named above.** `test/rule-enumerations.test.js`
 asserts every `require('../public/js/…')` under `lib/routes/` and `lib/` appears
 in it, because the list had already gone stale by one before anyone noticed. The

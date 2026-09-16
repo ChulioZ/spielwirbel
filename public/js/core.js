@@ -165,7 +165,19 @@ async function api(method, url, body, _retried) {
  * network and seeds the cache. */
 const SWR_FRESH_MS = 5000;
 const swrStore = createSwrStore({
-  storage: (() => { try { return window.localStorage; } catch { return null; } })(),
+  // localStorage throws outright in some privacy modes. Reported ONCE, from
+  // here, because this IIFE runs once at load (#1149) — auth-tokens.js's
+  // saStore() answers the same question about the same API, but is called on
+  // every request, so wiring it too would only add a dedup lookup to a hot path
+  // and report a condition this line has already reported.
+  storage: (() => {
+    try {
+      return window.localStorage;
+    } catch (err) {
+      reportClientError('storage_unavailable', err);
+      return null;
+    }
+  })(),
   storageKey: 'spielwirbel.swr.v1',
 });
 let swrRenderToken = 0; // bumped by syncUrl (router.js) on every navigation
@@ -562,7 +574,12 @@ async function readClipboardImage() {
     }
     toast(t('addGame.toast.noImage'));
     return null;
-  } catch {
+  } catch (err) {
+    // No server involvement, so this catch is the whole story — the same blind
+    // spot as the recap export (#1149). navigator.clipboard.read() is refused
+    // outright by some engines and permission states, which is worth knowing
+    // rather than guessing from "paste doesn't work for me".
+    reportClientError('clipboard_read', err);
     toast(t('addGame.toast.pasteFail'));
     return null;
   }

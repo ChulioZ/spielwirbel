@@ -264,6 +264,24 @@
           <p class="msg msg--err" id="logsError" role="alert" hidden></p>
         </section></div>
 
+        <div class="card-slot"><section class="card">
+          <h2>Browser-Fehler</h2>
+          <p class="sub" style="margin-bottom: 0.9rem;">
+            Fehler, die im Browser von Besucher:innen aufgetreten sind und dort
+            sonst niemandem auffallen — im Arbeitsspeicher, nicht dauerhaft
+            gespeichert und beim Neustart geleert. Bewusst getrennt vom
+            Fehlerprotokoll darüber: diese Meldungen kommen von außen und dürfen
+            die Meldungen dieser Instanz nicht verdrängen. „Engine“ ist nur
+            Browser-Engine und Hauptversion, nie die vollständige Kennung.
+          </p>
+          <p class="sub count" id="clientLogsCount" hidden></p>
+          <div class="scroll"><table id="clientLogsTable"><tbody></tbody></table></div>
+          <div class="row" style="margin-top: 1rem;">
+            <button class="ghost small" id="clientLogsReload">Neu laden</button>
+          </div>
+          <p class="msg msg--err" id="clientLogsError" role="alert" hidden></p>
+        </section></div>
+
         <div class="card-slot"><section class="card" id="contentCard" hidden>
           <h2>Texte der Runde</h2>
           <p class="sub" style="margin-bottom: 0.9rem;">
