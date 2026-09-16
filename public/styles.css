@@ -101,9 +101,9 @@
 
      A consequence worth knowing: at 3:1 the resting edge is stronger than
      --brand-edge (1.4-2.0), so the nine control hovers that used to move to
-     --brand-edge now move to --brand, as .mood, .member-chip, .winner-chip and
-     .cover-pick already did. Left alone, hovering a chip would have made its
-     outline FAINTER than at rest.
+     --brand-edge now move to --brand, as .mood, .winner-chip and .cover-pick
+     already did. Left alone, hovering a chip would have made its outline
+     FAINTER than at rest.
 
      test/a11y-contrast.test.js measures it against both grounds on every design,
      and scans the sheet so a new control cannot quietly take --line instead. */
@@ -5499,26 +5499,19 @@ a.c-ring__face:hover { box-shadow: 0 0 0 3px var(--brand-edge); }
      is already the session's own subtitle two elements up the same screen,
      where it has the width to be read. */
   .tisch__box .stamp--table .stamp__date { display: none; }
-}
-.member-chips { display: flex; flex-wrap: wrap; gap: 10px; }
-.member-chip {
-  font-family: var(--font-display);
-  font-size: var(--text-lg);
-  font-weight: 600;
-  padding: 10px 18px;
-  border-radius: var(--radius-pill);
-  border: 2px solid var(--control-edge);
-  background: var(--control-fill);
-  color: var(--ink-soft);
-  cursor: pointer;
-}
-.member-chip:hover { border-color: var(--brand); }
-.member-chip.is-selected {
-  background: var(--brand);
-  border-color: var(--brand);
-  color: var(--on-accent);
-}
 
+  /* While the question is on screen the band gives its width to the answer.
+     (0,2,0) beats the `.tisch` rule above on specificity, so it wins wherever
+     it sits in this block rather than riding on source order — the trap this
+     sheet keeps falling into.
+
+     The box SHRINKS rather than going away: the „Gespielt" stamp is appended to
+     it in the same render that opens the picker, and it is the only
+     confirmation on screen that the finish was recorded. The picker is the
+     question; the stamp is the receipt. */
+  .tisch[data-state="picking"] { grid-template-columns: 64px minmax(0, 1fr); gap: 12px; }
+  .tisch[data-state="picking"] .tisch__box { width: 64px; font-size: 24px; /* glyph, not type */ }
+}
 .winner-chips { display: flex; flex-wrap: wrap; gap: 10px; }
 .winner-chip {
   font-family: var(--font-display);
@@ -5536,6 +5529,19 @@ a.c-ring__face:hover { box-shadow: 0 0 0 3px var(--brand-edge); }
   background: var(--gold-soft);
   border-color: var(--gold-edge);
   color: var(--gold-deep);
+}
+@media (max-width: 639px) {
+  /* Denser chips, phone only (#1139). The win is HORIZONTAL — shorter pills fit
+     more per row, which is what collapses the rows; the height saving is
+     incidental and is floored at 44px, because 16px type with 8px of padding
+     computes to ~42px, under the target-size floor.
+
+     This block sits AFTER the base rules on purpose: every declaration here
+     ties them at (0,1,0), so the cascade falls to source order and a phone
+     block written beside `.tisch` — 30 lines up, where the rest of this band's
+     phone rules live — would lose to the base and change nothing at all. */
+  .winner-chips { gap: 8px; }
+  .winner-chip { font-size: var(--text-md); padding: 8px 14px; min-height: 44px; }
 }
 
 /* Game detail page */

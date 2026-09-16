@@ -1076,7 +1076,7 @@ const CONTROL_RULES = [
   '.chip', '.tag-mode__opt', '.btn', '.input, .select', '.sort-select',
   '.search-pill', '.fbar__trigger', '.stepper__btn', '.stepper__val',
   '.icon-picker__trigger', '.icon-picker__btn', '.mood', '.opt-card',
-  '.theme-card', '.game-card__pick', '.member-chip', '.winner-chip',
+  '.theme-card', '.game-card__pick', '.winner-chip',
   '.team-chip', '.tables-seat', '.lang-picker', '.topbar__acct',
   '.landing-chip', '.paste-zone', '.cover-pick',
   '.nr-seat--out .nr-seat__avatar',
@@ -1173,8 +1173,8 @@ test('a control never repeats its parent card exactly — --control-fill is a re
 /* Raising the resting edge to 3:1 silently inverts the hover affordance, and
    nothing else would have caught it: --brand-edge measures 1.39-1.95:1 against a
    control's fill, so a control resting at 3.1-3.7 would have got FAINTER under
-   the pointer. Six controls (.mood, .member-chip, .winner-chip, .cover-pick and
-   the two focus rules) already moved to --brand; the other nine now do too.
+   the pointer. Five controls (.mood, .winner-chip, .cover-pick and the two
+   focus rules) already moved to --brand; the other nine now do too.
 
    Measured rather than pinned as "never --brand-edge": the decision is "hover is
    at least as strong as rest", and a future token could satisfy it differently. */

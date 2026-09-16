@@ -915,7 +915,7 @@ I18N.fi = {
   'result.finishTitleDone': 'Tulos kirjattu',
   'result.finishTitle': 'Päätä peli',
   'result.finishPrompt': 'Pelasitteko ”{game}”? Merkitse se pelatuksi — voittajat voi kirjata jälkeenpäin.',
-  'result.whoWon': 'Kuka voitti pelin ”{game}” — vai miten se päättyi? (valinnainen, useampi mahdollinen)',
+  'result.whoWon': 'Kuka voitti?',
   'result.markPlayed': 'Merkitse pelatuksi',
   'result.reset': 'Nollaa',
   'result.winners': 'Voittajat: {names}',

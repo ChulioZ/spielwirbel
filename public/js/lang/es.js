@@ -958,7 +958,7 @@ I18N.es = {
   'result.finishTitleDone': 'Resultado registrado',
   'result.finishTitle': 'Cerrar la partida',
   'result.finishPrompt': '¿Habéis jugado a «{game}»? Márcalo como jugado; después puedes anotar quién ganó.',
-  'result.whoWon': '¿Quién ganó a «{game}» o cómo acabó? (opcional, se puede elegir a varios)',
+  'result.whoWon': '¿Quién ganó?',
   'result.markPlayed': 'Marcar como jugado',
   'result.reset': 'Restablecer',
   'result.winners': 'Ganadores: {names}',

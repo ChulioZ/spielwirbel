@@ -1005,7 +1005,7 @@ I18N.en = {
   'result.finishTitleDone': 'Result recorded',
   'result.finishTitle': 'Finish game',
   'result.finishPrompt': 'Played “{game}”? Mark it as played — you can record winners afterwards.',
-  'result.whoWon': 'Who won “{game}” — or how did it end? (optional, multiple possible)',
+  'result.whoWon': 'Who won?',
   'result.markPlayed': 'Mark as played',
   'result.reset': 'Reset',
   'result.winners': 'Winners: {names}',

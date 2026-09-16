@@ -88,6 +88,8 @@ const GLYPH_LITERALS = [
   // exemption has to name the whole selector text — these are matched exactly.
   '.ticket__img', '.session-card__img', '.round-card__emblem', '.lobby-cta__icon,\n.empty__icon',
   '.landing-claim__icon', '.landing-step__num', '.feed-item__img', '.trow__img', '.tisch__box',
+  // …and the same box shrunk while the winner picker is open (#1139).
+  '.tisch[data-state="picking"] .tisch__box',
   '.friends-invite__icon',
   /* The Tischkarte's initials watermark (#1075) — a letterform used as
      furniture in the card's text-free corner, sized to the card rather than to

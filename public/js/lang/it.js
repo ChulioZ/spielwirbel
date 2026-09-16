@@ -951,7 +951,7 @@ I18N.it = {
   'result.finishTitleDone': 'Risultato registrato',
   'result.finishTitle': 'Concludi la partita',
   'result.finishPrompt': 'Avete giocato a «{game}»? Segnalo come giocato — i vincitori puoi registrarli dopo.',
-  'result.whoWon': 'Chi ha vinto a «{game}» — o com’è andata a finire? (facoltativo, anche più di uno)',
+  'result.whoWon': 'Chi ha vinto?',
   'result.markPlayed': 'Segna come giocato',
   'result.reset': 'Azzera',
   'result.winners': 'Vincitori: {names}',

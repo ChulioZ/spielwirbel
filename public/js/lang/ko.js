@@ -895,7 +895,7 @@ I18N.ko = {
   'result.finishTitleDone': '결과를 기록했어요',
   'result.finishTitle': '게임 마무리',
   'result.finishPrompt': '“{game}”을(를) 플레이했나요? 플레이한 것으로 표시하세요 — 승자는 나중에 기록해도 돼요.',
-  'result.whoWon': '“{game}”은(는) 누가 이겼나요 — 아니면 어떻게 끝났나요? (선택, 여러 명 가능)',
+  'result.whoWon': '누가 이겼나요?',
   'result.markPlayed': '플레이한 것으로 표시',
   'result.reset': '초기화',
   'result.winners': '승자: {names}',
