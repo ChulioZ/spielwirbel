@@ -7,6 +7,11 @@ paths:
 
 # On a dark design every neutral token mixed at the light percentage lands ON `--surface`
 
+> The sibling trap, for a wash rather than a derived token:
+> `.claude/rules/alpha-washes-are-not-comparable-across-schemes.md`. This file is
+> about a mix that lands somewhere **else** on dark; that one is about an alpha
+> that lands exactly where you asked and still cannot be seen.
+
 `:root` derives the whole neutral ramp off the page toward `--shade`, and the
 dark block flips `--shade` to `#fff` — so the mixes "just work" in both
 directions. They do not. `--surface` is the one token that is **not** a fixed

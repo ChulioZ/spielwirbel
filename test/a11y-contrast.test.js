@@ -902,6 +902,65 @@ test('the dock motif leaves its labels over AA on every design', () => {
     + `.dock__item is --ink-soft and needs ${AA_TEXT}:1. The issue's .16 lands at 4.44:1 on Chess.`);
 });
 
+/* The home round tile's world motif (#1138). The sibling of the dock check
+   above, and the host nothing measured: `:is(.theme-card, .round-card)[data-world]::before`
+   declares its alpha as `var(--motif-a, <literal>)`, and the LITERAL is reached
+   by the home tile alone — every world card in the picker is a poster and
+   overrides it (views-round-settings.js sets posters:true for the WELTEN group,
+   which is the world registry itself).
+
+   The ground is the thing to get right, and it is not the world's. Home calls
+   applyBackground(null), so the lobby stays STANDARD; the tile carries only
+   --brand (and data-scheme far enough to fix its emblem's ink), and #904's dark
+   block is scoped to :root and .theme-card precisely so a dark round's tile
+   does NOT turn dark — "one dark tile in a light lobby would read as a
+   patchwork" (views-home.js). So the composite is the world's accent over the
+   standard LIGHT --surface, with the standard --ink-soft on top: one ground,
+   not one per design. Measuring it per design instead would report a pairing
+   the app never paints, which is the trap the backdrop budget in
+   test/round-worlds.test.js documents from the other direction.
+
+   That scoping is a premise, so it is pinned below rather than assumed: widen
+   the dark block to .round-card and this test's ground is wrong, which should
+   be loud.
+
+   It shipped at .16 from #1082 until #1138, i.e. at 4.44:1 on Chess — under the
+   bar, and on a LIGHT world rather than one of the dark ones #1138 was about.
+   Same miss, same cause and the same landing value as the dock's .16 above. */
+test('the home tile motif leaves its meta line over AA on every world', () => {
+  const decl = slotBodyFor(':is(.theme-card, .round-card)[data-world]::before');
+  assert.ok(decl, 'the card/tile world motif is gone — did it move?');
+  const m = /opacity:\s*var\(--motif-a,\s*([\d.]+)\)/.exec(decl);
+  assert.ok(m, `the tile motif declares no --motif-a fallback: ${decl}`);
+  const alpha = Number(m[1]);
+
+  // The premise: the lobby, and therefore this tile, is never dark.
+  const darkSel = rulesOf(CSS).map(([s]) => s).find((s) => s.includes(':root[data-scheme="dark"]'));
+  assert.ok(darkSel, 'the dark token block is gone');
+  assert.ok(!/\.round-card/.test(darkSel),
+    `the dark block now covers .round-card (${darkSel.trim()}) — the tile can be dark, so this check's ground is stale`);
+
+  const std = DESIGNS.find((d) => d.std);
+  assert.ok(std, 'no standard design in the registry — the lobby ground would be a guess');
+  const lobby = tokensFor(std);
+  const worlds = DESIGNS.filter((d) => d.world);
+  // Anti-vacuous: a registry that lost its worlds leaves the loop green over nothing.
+  assert.ok(worlds.length >= 7, `only ${worlds.length} worlds — the loop below measures too little`);
+
+  const failures = [];
+  for (const w of worlds) {
+    // .round-card__last is --ink-soft at --text-sm: normal-size text, AA.
+    // The densest pixel is a fully covered silhouette, i.e. the full alpha.
+    const ground = composite(tokensFor(w).brand, lobby.surface, alpha);
+    const ratio = contrast(lobby.inkSoft, ground);
+    if (ratio < AA_TEXT) failures.push(`${w.id} = ${ratio.toFixed(2)}:1`);
+  }
+  assert.deepEqual(failures, [],
+    `the home tile paints its world motif at ${(alpha * 100).toFixed(0)}% of the world's --brand `
+    + `over the standard --surface; .round-card__last is --ink-soft and needs ${AA_TEXT}:1. `
+    + 'Chess binds: .16 lands at 4.44:1, .14 at 4.61:1.');
+});
+
 /* The Freundeskreis cover wash (#1094). Unlike every fill above it, the layer is
    an arbitrary USER-FACING IMAGE — a game cover — so there is no token to mix
    with and no average to assume. The honest worst case is the extremes: pure

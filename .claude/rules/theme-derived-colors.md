@@ -229,6 +229,11 @@ half is `.claude/rules/dark-designs-and-the-on-accent-flip.md`. Two traps in
 authoring a world's artwork — a mask reads alpha, so white is not a cutout, and
 a single-weight face needs a `font-weight` range — are
 `.claude/rules/world-artwork-masks-and-single-weight-faces.md` (#905).
+**A slot's ALPHA is not portable between a light world and a dark one** — one
+number over both buys a third of the step on the dark side, and the wash still
+passes every contrast bar while being invisible:
+`.claude/rules/alpha-washes-are-not-comparable-across-schemes.md` (#1138), which
+also has why a `var()` fallback's real consumer may not be the host you expect.
 
 ## The browser chrome is themed too, and it is NOT a CSS variable
 
