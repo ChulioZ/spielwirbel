@@ -670,8 +670,6 @@ I18N.fi = {
   // hull between them (.claude/rules/expansions-widen-by-union.md).
   'detail.expansionAddsOne': 'Mahdollistaa {n} pelaajan',
   'detail.expansionAdds': 'Mahdollistaa {n} pelaajaa',
-  'detail.expansionAddsNone': 'Ei muuta pelaajamäärää',
-  'detail.expansionNoRange': 'Ei pelaajamäärää — ei laajenna mitään',
   'detail.toast.expansionsSaved': 'Lisäosat tallennettu',
   'detail.toast.expansionNeedsBoth': 'Täytä molemmat pelaajamäärät — tai jätä molemmat tyhjiksi.',
   'detail.toast.expansionRange': 'Suurimman pelaajamäärän on oltava vähintään pienin.',

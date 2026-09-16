@@ -720,8 +720,6 @@ I18N.de = {
   // hull between them (.claude/rules/expansions-widen-by-union.md).
   'detail.expansionAddsOne': 'Ermöglicht {n} Person',
   'detail.expansionAdds': 'Ermöglicht {n} Personen',
-  'detail.expansionAddsNone': 'Ändert die Spielerzahl nicht',
-  'detail.expansionNoRange': 'Ohne Spielerzahl — erweitert nichts',
   'detail.toast.expansionsSaved': 'Erweiterungen gespeichert',
   'detail.toast.expansionNeedsBoth': 'Bitte beide Spielerzahlen ausfüllen — oder beide leer lassen.',
   'detail.toast.expansionRange': 'Die höchste Spielerzahl muss mindestens so groß sein wie die niedrigste.',

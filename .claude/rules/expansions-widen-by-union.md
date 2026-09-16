@@ -83,11 +83,23 @@ drawn because of an expansion, with the warning naming a different one or none a
 all. `requiredExpansions` is therefore `expansionAdmits` again, gated on the base
 box *not* fitting, and both live in the one shared file.
 
-**Since #1144 the expansions EDITOR is a second consumer of the same rule.** Each
+**Since #1144 the expansions EDITOR is a second consumer of the same rule.** An
 owned row states what it unlocks („Ermöglicht 6 Personen"), derived by
 `expansionAddedCounts` — `expansionAdmits && !fitsOwnRange` over the expansion's
-own interval — rather than by comparing bounds. Two things measured while
+own interval — rather than by comparing bounds. Three things measured while
 building it are worth carrying:
+
+- **The line is POSITIVE-ONLY, and a row that unlocks nothing carries none.**
+  This is a product decision with a testable consequence, so it is here rather
+  than only in a comment: an expansion that changes no player count is the
+  overwhelming majority (most are content, not seats), so a „Ändert die
+  Spielerzahl nicht" line would appear on nearly every row and read as a
+  complaint about a perfectly good box. A three-state version was built and
+  rejected (operator, 2026-09-16); `test/expansions-editor.test.js` asserts no
+  locale still carries a phrase for either empty case, because an unread key is
+  one call site away from coming back. `expansionAddedCounts` still distinguishes
+  `null` (no range recorded) from `[]` (a range that adds nothing) — that is a
+  faithful report, and the view is what folds them.
 
 - **A hull states the lie as a SENTENCE.** „Erhöht die maximale Spielerzahl von 5
   auf 6" is §1 in prose; on a 3–4 game with a 1–1 solo expansion it reads

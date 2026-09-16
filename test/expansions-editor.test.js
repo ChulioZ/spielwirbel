@@ -17,7 +17,7 @@
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { loadApp, flush } = require('./support/dom');
+const { loadApp, flush, loadI18n } = require('./support/dom');
 
 // The two stored expansions the fixture's Catan owns — one with a player range
 // and one without, since "no range" renders its own line.
@@ -356,9 +356,16 @@ test('the sticky commit bar sits flush against the scrollport', () => {
    Personen"), which the reader then had to compare against the base box's range
    in their head — on a screen that does not show that range at all.
 
-   Every assertion here is about a SENTENCE derived from the pool's own
-   predicates. Reverting the line to a min/max comparison keeps the first case
-   green and breaks the last two, which is the point of asserting all four. */
+   POSITIVE ATTRIBUTION ONLY. A row that unlocks nothing carries NO line, and
+   that is the load-bearing half rather than an omission: an expansion that
+   changes no player count is the overwhelming majority, so a „changes nothing"
+   line would be the line on nearly every row and would read as a complaint
+   about a perfectly good box. The three-state version was built and rejected
+   (operator, 2026-09-16).
+
+   Every line that IS rendered is a sentence derived from the pool's own
+   predicates. Reverting to a min/max comparison keeps the first case green and
+   breaks the solo one, which is why both are here. */
 
 // Catan's own box is 3–4 throughout this section, so every number below is a
 // count the base game cannot seat.
@@ -371,19 +378,41 @@ const UNLOCKS = [
 const metas = (card) => [...card.querySelectorAll('.exp-row')]
   .map((r) => { const m = r.querySelector('.ds-row__main .muted'); return m ? m.textContent : null; });
 
-test('an owned row says what it UNLOCKS, not what its own box says', async (t) => {
+test('a row says what it UNLOCKS — and says nothing at all when it unlocks nothing', async (t) => {
   const { dom } = bootPicker(t, { owned: UNLOCKS });
   const card = await openPicker(dom);
 
   assert.deepEqual(metas(card).slice(0, 3), [
     'Ermöglicht 5–6 Personen',
-    'Ändert die Spielerzahl nicht',
-    'Ohne Spielerzahl — erweitert nichts',
+    // A 3–4 expansion on a 3–4 game, and one with no range recorded. Neither
+    // gets a line: there is nothing positive to say, and saying so on every
+    // content expansion is what this shape exists to avoid.
+    null,
+    null,
   ]);
-  // The raw interval is what the row used to print, and „2–6 Personen" on a 3–4
-  // game is exactly the sentence this replaces.
+  // The raw interval is what the row used to print, and „3–4 Personen" on a 3–4
+  // game is exactly the non-answer this replaces.
   assert.doesNotMatch(card.textContent, /3–4 Personen/,
     'the expansion’s own interval is not the reader’s question');
+  // Nor does the rejected three-state version leave a trace: no locale may
+  // carry a phrase for the two empty cases, or it would be one edit from
+  // returning.
+  assert.doesNotMatch(card.textContent, /Ändert die Spielerzahl|Ohne Spielerzahl/);
+});
+
+/* The keys really are gone, in every locale — not merely unused by this view.
+   An unread key is one call site from coming back, and this is the assertion
+   that makes removing it a decision rather than a tidy-up. */
+test('no locale carries a phrase for "this expansion changes nothing"', () => {
+  const { SUPPORTED_LOCALES } = require('../public/js/locales');
+  for (const loc of SUPPORTED_LOCALES) {
+    const dict = loadI18n(loc);
+    for (const key of ['detail.expansionAddsNone', 'detail.expansionNoRange']) {
+      // t() falls back to the key name when the key is absent — which is
+      // exactly the signal we want here.
+      assert.equal(dict.t(key), key, `${loc}: '${key}' is back`);
+    }
+  }
 });
 
 test('a run is a run and a gap is a gap — never the hull between them', async (t) => {
@@ -409,10 +438,11 @@ test('a SOLO expansion inflects, and never names the pair a hull would invent', 
   assert.doesNotMatch(card.textContent, /1–4|Ermöglicht 2/, 'a hull of 3–4 and 1–1 admits a pair nothing seats');
 });
 
-/* A candidate carries no line at all, and that is a DATA limit rather than a
-   design one: GET …/lookup/expansions returns `{ providerId, title }`, so the
-   player counts do not exist client-side until the server resolves the ticked
-   ids on save. Fetching them would be one upstream request per candidate. */
+/* A provider candidate carries no line either, and for a DATA reason rather
+   than the editorial one above: GET …/lookup/expansions returns
+   `{ providerId, title }`, so the player counts do not exist client-side until
+   the server resolves the ticked ids on save. Fetching them would be one
+   upstream request per candidate. */
 test('a provider candidate gets no line — its counts are not known yet', async (t) => {
   const { dom } = bootPicker(t, { owned: UNLOCKS });
   const card = await openPicker(dom);
@@ -438,10 +468,10 @@ test('the spine marks the ticked state without costing the list any height', () 
   // transform, not height — a growing box would reflow the list under the
   // pointer that is clicking it.
   assert.match(base, /transform:[^;]*scaleY\(0?\.\d+\)/);
+  assert.match(on, /transform:[^;]*scaleY\(1\)/);
   // The duration and the radius come from the scales, not from literals
   // (test/design-tokens.test.js enforces both sheet-wide).
   assert.match(base, /transition:[^;]*var\(--dur-/);
-  assert.match(on, /transform:[^;]*scaleY\(1\)/);
 
   // …and it is never the only signal. The checkbox is asserted by the DOM specs
   // above; this is the row-level treatment it rides on.

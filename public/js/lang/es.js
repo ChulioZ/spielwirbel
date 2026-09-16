@@ -700,8 +700,6 @@ I18N.es = {
   // hull between them (.claude/rules/expansions-widen-by-union.md).
   'detail.expansionAddsOne': 'Permite {n} jugador',
   'detail.expansionAdds': 'Permite {n} jugadores',
-  'detail.expansionAddsNone': 'No cambia el número de jugadores',
-  'detail.expansionNoRange': 'Sin número de jugadores — no amplía nada',
   'detail.toast.expansionsSaved': 'Expansiones guardadas',
   'detail.toast.expansionNeedsBoth': 'Rellena los dos números de jugadores — o deja los dos vacíos.',
   'detail.toast.expansionRange': 'El número máximo de jugadores tiene que ser al menos el mínimo.',

@@ -288,14 +288,30 @@ function expansionLabel(baseTitle, title) {
   return rest ? rest[1] : title;
 }
 
-/* What an OWNED expansion unlocks, as one line (#1144).
+/* What an OWNED expansion unlocks, as one line (#1144) — or NOTHING, which is
+   the common case and the whole shape of this function.
 
    The row used to print the expansion's own interval („2–6 Personen"), which is
    the wrong question: the reader wants to know what the box in the cupboard adds
    to the game beside it, and this screen never shows the base game's range to
    compare against. So the line names the table sizes the expansion admits and
-   the base box does not — `expansionAddedCounts`, which is built out of the very
+   the base box does not — `expansionAddedCounts`, built out of the very
    predicates the draw pool uses.
+
+   POSITIVE ATTRIBUTION ONLY, and this is the part to leave alone (operator
+   decision, 2026-09-16). An expansion that changes no player count is the
+   OVERWHELMING majority — most are content, not seats — so a „Ändert die
+   Spielerzahl nicht" line would be the line on nearly every row, reading as a
+   complaint about a perfectly good box. The three-state version was built and
+   rejected for exactly that. Saying nothing is the correct thing to say: the
+   row still has its title, its spine and its checkbox, and the absence of a
+   line is not a verdict on the expansion.
+
+   That folds `null` (no range recorded) and `[]` (a range that adds nothing)
+   onto the same empty answer here. They stay distinguishable in the predicate,
+   which is a faithful report rather than a UI decision — the ONLY reader that
+   ever cared is this function, so if a surface needs to tell them apart again
+   it can.
 
    NOT a min/max comparison, and that is the whole reason the counts come from
    draw-pool.js rather than from two subtractions here: „erhöht die maximale
@@ -305,18 +321,12 @@ function expansionLabel(baseTitle, title) {
    in the cupboard seats. The pool refuses to tell that lie; the copy must not
    tell it either.
 
-   THREE states, all of which render, because the two silences mean different
-   things: an expansion that declares a range and adds nothing is data the reader
-   can trust, while one with no range is data missing from the shelf. Folding
-   them together would hide the only one they can act on.
-
    Runs are grouped rather than printed as one interval, since the added set can
    be non-contiguous (3–4 plus a 2–6 expansion adds 2, 5 and 6) — printing „2–6"
    there puts the hull back after the arithmetic avoided it. */
 function expansionUnlocksLine(game, expansion) {
   const added = expansionAddedCounts(game, expansion);
-  if (added === null) return t('detail.expansionNoRange');
-  if (!added.length) return t('detail.expansionAddsNone');
+  if (!added || !added.length) return '';
   const runs = [];
   added.forEach((n) => {
     const last = runs[runs.length - 1];

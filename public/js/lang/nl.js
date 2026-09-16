@@ -696,8 +696,6 @@ I18N.nl = {
   // hull between them (.claude/rules/expansions-widen-by-union.md).
   'detail.expansionAddsOne': 'Maakt {n} speler mogelijk',
   'detail.expansionAdds': 'Maakt {n} spelers mogelijk',
-  'detail.expansionAddsNone': 'Verandert niets aan het aantal spelers',
-  'detail.expansionNoRange': 'Zonder aantal spelers — maakt niets groter',
   'detail.toast.expansionsSaved': 'Uitbreidingen opgeslagen',
   'detail.toast.expansionNeedsBoth': 'Vul beide aantallen spelers in — of laat ze allebei leeg.',
   'detail.toast.expansionRange': 'Het hoogste aantal spelers moet minstens het laagste zijn.',

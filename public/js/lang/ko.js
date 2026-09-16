@@ -656,8 +656,6 @@ I18N.ko = {
   // hull between them (.claude/rules/expansions-widen-by-union.md).
   'detail.expansionAddsOne': '{n}명까지 앉을 수 있음',
   'detail.expansionAdds': '{n}명까지 앉을 수 있음',
-  'detail.expansionAddsNone': '인원수는 그대로',
-  'detail.expansionNoRange': '인원수 없음 — 자리를 늘리지 않음',
   'detail.toast.expansionsSaved': '확장을 저장했어요',
   'detail.toast.expansionNeedsBoth': '인원수를 두 칸 모두 채우거나 — 모두 비워 주세요.',
   'detail.toast.expansionRange': '최대 인원수는 최소 인원수 이상이어야 해요.',

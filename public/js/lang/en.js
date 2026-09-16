@@ -721,8 +721,6 @@ I18N.en = {
   // hull between them (.claude/rules/expansions-widen-by-union.md).
   'detail.expansionAddsOne': 'Seats {n} player',
   'detail.expansionAdds': 'Seats {n} players',
-  'detail.expansionAddsNone': 'Does not change the player count',
-  'detail.expansionNoRange': 'No player count — widens nothing',
   'detail.toast.expansionsSaved': 'Expansions saved',
   'detail.toast.expansionNeedsBoth': 'Please fill in both player counts \u2014 or leave both empty.',
   'detail.toast.expansionRange': 'The highest player count must be at least the lowest.',

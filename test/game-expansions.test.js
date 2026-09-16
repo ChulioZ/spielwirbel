@@ -283,13 +283,15 @@ test('the chip counts the owned expansions, and they lead the list as TICKED row
 
   const titles = [...card.querySelectorAll('.exp-row .ds-row__title')].map((el) => el.textContent);
   assert.deepEqual(titles, ['5–6 Spieler', 'Ohne Angabe']);
-  /* Each row states what it UNLOCKS for THIS game — the base box here is 3–4,
-     so the 5–6 expansion adds exactly those two counts, and one with no range
-     says so rather than showing an interval it does not have. The three states
-     and the arithmetic behind them belong to test/expansions-editor.test.js
+  /* A row states what it UNLOCKS for THIS game — the base box here is 3–4, so
+     the 5–6 expansion adds exactly those two counts. „Ohne Angabe" records no
+     range and therefore gets NO line at all: positive attribution only, since a
+     „changes nothing" line would be the line on nearly every content expansion.
+     The arithmetic and the empty cases belong to test/expansions-editor.test.js
      (#1144); this asserts only that the chip's list really carries the line. */
-  const metas = [...card.querySelectorAll('.exp-row .ds-row__main .muted')].map((el) => el.textContent);
-  assert.deepEqual(metas, ['Ermöglicht 5–6 Personen', 'Ohne Spielerzahl — erweitert nichts']);
+  const metas = [...card.querySelectorAll('.exp-row')]
+    .map((r) => { const m = r.querySelector('.ds-row__main .muted'); return m ? m.textContent : null; });
+  assert.deepEqual(metas, ['Ermöglicht 5–6 Personen', null]);
   // Owned IS ticked (#1143): one list, one row shape, two states. The old editor
   // rendered these in a separate box with a „Entfernen" button apiece.
   const boxes = [...card.querySelectorAll('.exp-row input')];
