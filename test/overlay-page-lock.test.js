@@ -31,13 +31,15 @@ const CONTAINED = [
   '.lookup__menu',       // the add-game suggestion dropdown
   '.cover-picker__grid', // the edition-cover picker
   // The expansion tick-list (#653) — a game can have 100+ expansions, so the
-  // list is bounded, and it sits in the popover/sheet editor.
-  ':is(.popover--expansions, .editor--expansions) .exp-pick__body',
+  // list is bounded under the anchored card's cap. Popover-only since #1142:
+  // it shipped as an `:is()` pair, which put a nested scroll box in the SHEET
+  // and capped a presentation that scrolls itself.
+  '.popover--expansions .exp-pick__body',
   // The owned-expansions list (#1039) — the rows the removed `.gd-expansions`
   // page section used to carry, now at the top of the same editor and bounded
   // for the same reason: it shares the card's max-height budget with the
   // tick-list above, so it has to be able to give way.
-  ':is(.popover--expansions, .editor--expansions) .exp-have__body',
+  '.popover--expansions .exp-have__body',
   // The tags editor's chip row and icon grid (#722) — a round's tag list grows
   // without bound, so both give way under the anchored card's cap. Popover-only:
   // the sheet presentation scrolls itself.

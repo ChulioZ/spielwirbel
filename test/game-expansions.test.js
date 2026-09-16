@@ -469,6 +469,64 @@ test('… and re-places even when the lookup FAILS or comes back empty', async (
   }
 });
 
+/* The candidate rows repeat the base title BGG puts in front of every expansion
+   name, which on a 312px phone row is a third of the line spent on the word in
+   the page's own <h1>. Trimmed for display only (#1142) — what is stored is the
+   provider's title, resolved server-side from the id the PUT sends, so the
+   second half of this spec is what keeps the trim cosmetic. */
+test('a candidate repeating the base title renders trimmed, and still stores the provider id', async (t) => {
+  const dom = loadApp({ locale: 'de' });
+  t.after(() => dom.close());
+  const round = roundFixture(null);
+  round.games[0].title = 'Carcassonne';
+  round.games[0].source = { provider: 'bgg', externalId: '822' };
+  round.providers = ['bgg'];
+  const puts = [];
+  dom.set('api', async (method, url, body) => {
+    if (/\/activities$/.test(url)) return [];
+    if (/\/lookup\/expansions/.test(url)) {
+      return { expansions: [
+        { providerId: '1', title: 'Carcassonne: Erweiterung 1 – Wirtshäuser und Kathedralen' },
+        { providerId: '2', title: 'Carcassonne - Die Jäger und Sammler' },
+        // No separator, so it is a different GAME rather than a suffix — „Das
+        // Würfelspiel" alone would name the wrong box on the shelf.
+        { providerId: '3', title: 'Carcassonne Das Würfelspiel' },
+        // Nothing to trim at all.
+        { providerId: '4', title: 'Die Burg' },
+      ] };
+    }
+    if (method === 'PUT') { puts.push(body); return { ...round.games[0], expansions: [] }; }
+    if (/^\/api\/rounds\/[^/]+$/.test(url)) return round;
+    return {};
+  });
+  dom.set('isLoggedIn', () => false);
+  dom.set('usesEditorSheet', () => false);
+
+  await dom.call('showGameDetail', 'r1', 'g1');
+  dom.app.querySelector('.gd-chips .tag--expansions').click();
+  for (let i = 0; i < 4; i++) await new Promise((r) => setTimeout(r, 0));
+
+  const card = dom.document.querySelector('.popover--expansions');
+  const rows = [...card.querySelectorAll('.exp-pick__row .ds-row__main')].map((el) => el.textContent);
+  assert.deepEqual(rows, [
+    'Erweiterung 1 – Wirtshäuser und Kathedralen',
+    'Die Jäger und Sammler',
+    'Carcassonne Das Würfelspiel',
+    'Die Burg',
+  ]);
+
+  // Ticking the trimmed row still sends the id, so the server resolves the
+  // provider's own full title — the trim never reaches the stored data.
+  card.querySelectorAll('.exp-pick__row input')[0].click();
+  card.querySelector('.btn--primary').click();
+  await new Promise((r) => setTimeout(r, 0));
+  // Compared field by field: the bodies are built in the jsdom realm, so a
+  // strict deepEqual against a literal fails on the prototype rather than the
+  // data.
+  assert.equal(puts.length, 1, 'one PUT');
+  assert.deepEqual([...puts[0].expansions].map((e) => ({ ...e })), [{ providerId: '1' }]);
+});
+
 /* ------------ the editor card is bounded by the VIEWPORT (#653) -------------
    Asserted over the stylesheet text, because jsdom applies no external
    stylesheet and an unresized Browser pane's viewport height is degenerate —
@@ -478,7 +536,7 @@ test('… and re-places even when the lookup FAILS or comes back empty', async (
    `.claude/rules/preview-pane-paint-artifacts.md`. What cannot be measured
    there is the stylesheet's own text, which is what these guard.) */
 
-const { bodyOf } = require('./support/css');
+const { bodyOf, RULES, whole, declaredValue } = require('./support/css');
 
 test('the anchored expansion editor is capped, WITH a floor', () => {
   // Compounded with `.popover` since #706, so the card's sizing beats the base's
@@ -522,7 +580,7 @@ test('the max() floor clears what the card\'s own children insist on', () => {
      re-opening the overlap. */
   const FIXED_CHROME = 275;
   const floor = Number(bodyOf('.popover.popover--expansions').match(/max-height:\s*max\(\s*(\d+)px/)[1]);
-  const listFloor = Number(bodyOf(':is(.popover--expansions, .editor--expansions) .exp-pick__body')
+  const listFloor = Number(bodyOf('.popover--expansions .exp-pick__body')
     .match(/min-height:\s*(\d+)px/)[1]);
   assert.ok(floor >= listFloor + FIXED_CHROME,
     `floor ${floor}px is under the card's own minimum (${listFloor} + ${FIXED_CHROME}) — `
@@ -533,15 +591,70 @@ test('the tick-list is the part that gives way, so the OK button stays visible',
   const list = bodyOf(':is(.popover--expansions, .editor--expansions) .exp-pick__body');
   assert.ok(list, 'the rule exists');
   // Without `flex: 1 1 auto` the list keeps its natural height and the card's
-  // cap pushes the free-text form and the button out of the card instead.
+  // cap pushes the free-text form and the button out of the card instead. This
+  // one stays shared: it is inert in the sheet, which has no cap to absorb.
   assert.match(list, /flex:\s*1\s+1\s+auto/);
-  assert.match(list, /overflow-y:\s*auto/);
+  // The bounds are popover-only since #1142 — see the spec below, which is what
+  // guards that split. The give-way behaviour they describe is unchanged.
+  const bounded = bodyOf('.popover--expansions .exp-pick__body');
+  assert.ok(bounded, 'the popover-only rule exists');
+  assert.match(bounded, /overflow-y:\s*auto/);
   // Reaching the end of the list must not chain into the page: a page scroll
   // closes the popover outright.
-  assert.match(list, /overscroll-behavior:\s*contain/);
+  assert.match(bounded, /overscroll-behavior:\s*contain/);
 
   // A flex item's default `min-height: auto` is its CONTENT size, so the cap on
   // the card is inert without this — the two only work as a pair.
   const pick = bodyOf(':is(.popover--expansions, .editor--expansions) .exp-pick');
   assert.match(pick, /min-height:\s*0/);
+});
+
+/* The split #1142 restored: the cap and the two boxes that give way under it are
+   ONE unit, and the whole unit is popover-only
+   (`.claude/rules/popover-vs-sheet-editors.md` §4).
+
+   #1039 added the owned list with an `:is()` cap, which bounded the SHEET too —
+   a presentation with no fold to protect that is already its own scroll
+   container. Measured at 390x844 with 6 owned + 20 candidates: the sheet had
+   717px of room, took 577, clipped the owned list to one row with its remove
+   button sliced in half, and did not scroll at all (`scrollHeight -
+   clientHeight === 0`) while ~140px of it sat empty. Owning NOTHING was
+   unaffected, so the defect only appeared once the feature was used — which is
+   why no geometry test above could see it. */
+
+test('nothing bounds the expansions SHEET — the cap and both scroll boxes are popover-only', () => {
+  /* `min-height` is deliberately NOT in this list: `.exp-pick`/`.exp-have` carry
+     `min-height: 0` so the card's cap can bite, which is inert rather than
+     bounding in a sheet. The boxes' own floors are checked as floors below. */
+  const BOUNDS = ['max-height', 'overflow-y', 'overscroll-behavior'];
+  const sheetRules = RULES.filter(([sel]) => whole('.editor--expansions').test(sel));
+  // Anti-vacuous: the sheet still shares every inner LAYOUT rule, so an empty
+  // list here would mean the selector moved, not that the split holds.
+  assert.ok(sheetRules.length >= 8,
+    `only ${sheetRules.length} rules name .editor--expansions — has the sheet variant been renamed?`);
+
+  for (const [sel, body] of sheetRules) {
+    for (const prop of BOUNDS) {
+      assert.equal(declaredValue(body, prop), null,
+        `${sel} sets ${prop} on the sheet presentation. A sheet has no fold to protect and is `
+        + 'already its own scroll container, so a cap there clips content nothing was constraining '
+        + 'and a nested scroll box takes the gesture away from `.sheet`');
+    }
+  }
+
+  // …and the popover keeps all of it, so the split is a MOVE rather than a loss.
+  assert.match(bodyOf('.popover.popover--expansions:has(.exp-have)') || '', /max-height:\s*max\(/,
+    'the owned-list cap must stay, compounded with `.popover` so it beats the base card rule');
+  for (const box of ['.exp-pick__body', '.exp-have__body']) {
+    const bounded = bodyOf(`.popover--expansions ${box}`);
+    assert.ok(bounded, `${box} has no popover-only rule — its bounds went missing rather than moving`);
+    assert.match(bounded, /max-height:\s*\d+px/, `${box} must still give way under the card's cap`);
+    assert.match(bounded, /min-height:\s*[1-9]\d*px/, `${box} must still keep its floor`);
+    assert.match(bounded, /overflow-y:\s*auto/);
+    // The shared rule keeps the layout and none of the bounds.
+    const shared = bodyOf(`:is(.popover--expansions, .editor--expansions) ${box}`);
+    assert.match(shared, /display:\s*flex/, 'the shared layout rule is still there');
+    assert.doesNotMatch(shared, /min-height/,
+      `the floor bounds a cap the sheet does not have — it belongs with it in .popover--expansions ${box}`);
+  }
 });
