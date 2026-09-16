@@ -881,14 +881,13 @@ test('the shelf TARGET is the mean of those figures, so a wide band no longer in
   // Every shelf game runs 30-90: a target read off `maxPlaytime` would be 90.
   const profile = profileOf(shelfRound(), shelfCorpus({ minPlaytime: 30, maxPlaytime: 90 }));
   assert.equal(profile.targetTime, 60);
-  // And a campaign on the shelf contributes the sitting, not the arc: eight of
-  // nine games at 60 flat plus one 20-600 lands at 55.6, where the maximum
-  // would have dragged it to 120.
+  // And a campaign on the shelf contributes the sitting, not the arc: seven of
+  // the eight shelf games at 60 flat plus one 20-600 is (7*60 + 20) / 8 = 55,
+  // where reading the bound would have dragged it UP to 127.5.
   const corpus = shelfCorpus();
   corpus[0].info = info({ minPlaytime: 20, maxPlaytime: 600 });
   const withCampaign = profileOf(shelfRound(), corpus);
-  assert.ok(withCampaign.targetTime < 60 && withCampaign.targetTime > 50,
-    `a campaign pulls the target DOWN, not up (got ${withCampaign.targetTime})`);
+  assert.equal(withCampaign.targetTime, 55, 'a campaign pulls the target DOWN, not up');
 });
 
 test('an UNKNOWN attribute scores neutral, not zero', () => {

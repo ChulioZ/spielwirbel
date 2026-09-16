@@ -629,6 +629,12 @@ filters keep comparing bounds to bounds, where „at most M" against `maxPlaytim
 is the honest worst case rather than a point estimate
 (`.claude/rules/provider-info-is-a-field-set.md`).
 
+And a midpoint can be a **half**, which the reason payload has to absorb:
+`reasonsFrom` rounds `minutes` exactly as it already rounded `target`. A 45–70
+game scores on 57,5 and the sentence says 58 — otherwise „Rund" promises a round
+number and delivers a decimal separator `t()` does not localise. The *scorer*
+keeps the exact figure; only the sentence rounds.
+
 The fixture trap that comes with it: `test/recommend.test.js`'s `info()` helper
 defaults to `minPlaytime: 60, maxPlaytime: 60`, so an override passing only
 `maxPlaytime: 120` is a **60–120** game and scores as 90 — it does not mean what it
