@@ -6825,9 +6825,18 @@ a.c-ring__face:hover { box-shadow: 0 0 0 3px var(--brand-edge); }
 /* One more child since #1039, so one more term in that floor: the owned list's
    head (21) + margin (10) + its own 46px body floor = 77, i.e. 457 rounded to
    460. Scoped with `:has()` rather than raised outright, so a game that owns
-   nothing keeps the card #722/#728 actually measured. (0,2,0) beats the base
-   `:is()` rule's (0,1,0) on specificity, not on source order. */
-:is(.popover--expansions, .editor--expansions):has(.exp-have) {
+   nothing keeps the card #722/#728 actually measured. (0,3,0) beats the base
+   card rule's (0,2,0) on specificity, not on source order.
+
+   Compounded with `.popover` since #1142, like every other card-sizing rule
+   here. It shipped as an `:is()` pair, which put a 460px cap on the SHEET — a
+   presentation with no fold to protect that is already its own scroll container.
+   The effect was that owning expansions made the editor worse: at 390x844 the
+   sheet had 717px of room, took 577, and clipped the owned list to one row with
+   its „Entfernen" button sliced in half, while ~140px of the sheet sat empty and
+   nothing scrolled. A game owning NOTHING was unaffected, so the defect appeared
+   only once the feature was used. */
+.popover.popover--expansions:has(.exp-have) {
   max-height: max(460px, min(45vh, 620px));
 }
 :is(.popover--expansions, .editor--expansions) .exp-pick {
@@ -6863,8 +6872,15 @@ a.c-ring__face:hover { box-shadow: 0 0 0 3px var(--brand-edge); }
   /* Gives way with the candidate list, but never all the way: without a floor
      this box is the first thing squeezed to zero on a short viewport, and since
      #1039 this editor is the ONLY way to remove an owned expansion — so a
-     collapsed list is not a cosmetic loss but an unreachable action. */
+     collapsed list is not a cosmetic loss but an unreachable action. The floor
+     itself is popover-only below, with the cap it is the floor of. */
   flex: 0 1 auto;
+}
+/* Popover-only, like `.popover--tags`' two boxes and the tick-list below: the
+   cap and whatever gives way under it are ONE unit, and a sheet has no cap
+   (.claude/rules/popover-vs-sheet-editors.md §4). In the sheet this computes
+   `overflow-y: visible` with no cap and `.sheet` is the only scroll region. */
+.popover--expansions .exp-have__body {
   min-height: 46px;
   max-height: 168px;
   overflow-y: auto;
@@ -6881,11 +6897,15 @@ a.c-ring__face:hover { box-shadow: 0 0 0 3px var(--brand-edge); }
   flex-direction: column;
   gap: 6px;
   /* Absorbs the shrink so the free-text form and the OK button below keep their
-     natural size and stay visible. The floor is deliberate — one row of
-     candidates is always better than none — and it is what stops a short
-     viewport collapsing the list to nothing, the same call
-     .cover-picker__grid makes. */
+     natural size and stay visible. Harmless in the sheet, where there is no cap
+     to absorb — the bounds themselves are popover-only below. */
   flex: 1 1 auto;
+}
+/* Popover-only, for the reason given on the owned list above. The floor is
+   deliberate — one row of candidates is always better than none — and it is
+   what stops a short viewport collapsing the list to nothing, the same call
+   .cover-picker__grid makes. */
+.popover--expansions .exp-pick__body {
   min-height: 96px;
   max-height: 240px;
   overflow-y: auto;

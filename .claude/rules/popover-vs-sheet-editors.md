@@ -148,6 +148,26 @@ Verified — in the sheet those two boxes compute `overflow-y: visible` and the
 sheet still scrolls itself. Read `:is()` as covering rules the two presentations
 genuinely share, not as a quota to hit.
 
+**The worked failure (#1039 → #1142), because this rule was already correct and
+was skipped anyway.** #1039 gave the expansions editor a second list and a cap
+for it, written as an `:is()` pair like the inner layout rules around it — so a
+**460px cap and two nested scroll boxes landed in the sheet**. Measured at
+390×844 with 6 owned expansions: the sheet had 717px, took 577, clipped the
+owned list to one row with its „Entfernen" button sliced in half, and did not
+scroll at all while ~140px of it sat empty. **Owning expansions made the editor
+worse**, and the same game owning nothing was fine — so the defect appeared only
+once the feature was used, which is why the four geometry tests next door stayed
+green.
+
+Two things to take from it. **The `:has()` shape hides the question**: a cap
+added as a *condition on an existing card rule* reads as a tweak to that rule,
+not as a new declaration needing the popover/sheet call. And **a floor moves with
+its cap** — `min-height: 46px` is the floor of a bound the sheet does not have,
+so leaving it shared bounds a box nothing was capping. `test/game-expansions.test.js`
+("nothing bounds the expansions SHEET") now asserts no rule naming
+`.editor--expansions` sets `max-height`, `overflow-y` or `overscroll-behavior`,
+so the next one fails rather than shipping.
+
 ## Verifying this in the Browser pane
 
 The pane **cannot reproduce the bug** — it has no soft keyboard, and a freshly

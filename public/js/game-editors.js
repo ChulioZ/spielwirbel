@@ -264,6 +264,29 @@ async function saveExpansions(ctx, list) {
   }
 }
 
+/* BGG names an expansion in full — „Carcassonne: Erweiterung 1 – Wirtshäuser
+   und Kathedralen" — so every candidate row repeats the base title that is
+   already the page's <h1> two elements above. On a 312px phone row that is a
+   third of the line spent on a word the user is looking at: measured over 12
+   real Carcassonne candidates, 903px of list -> 768px (−15 %). At the popover's
+   540px nothing changes, because every row is one line there already.
+
+   DISPLAY ONLY. The PUT sends `{ providerId }` and the server resolves the
+   title from the provider, so what gets stored is untouched — and a hand-typed
+   entry never comes through here at all.
+
+   The separator must be present: a candidate merely STARTING with the base word
+   („Catan Das Duell") is a different game, not a suffix, and is left whole. */
+function expansionLabel(baseTitle, title) {
+  const base = (baseTitle || '').trim();
+  if (!base || title.length <= base.length) return title;
+  if (title.slice(0, base.length).toLowerCase() !== base.toLowerCase()) return title;
+  // `\S` so a title that is nothing but the base plus punctuation keeps its
+  // own text rather than rendering as an empty row.
+  const rest = /^\s*[:\u2013\u2014-]\s*(\S.*)$/.exec(title.slice(base.length));
+  return rest ? rest[1] : title;
+}
+
 // Add: the provider's own list as a tick-list, plus a free-text field. The
 // candidates cost no extra upstream request — they ride on the /thing body the
 // detail hop already fetched (lib/routes/lookup.js).
@@ -343,7 +366,7 @@ function openExpansionEditor(ctx, anchor) {
             // A <label> row, so the whole line toggles its checkbox — and it
             // must NOT sit inside a `.field`, where `.field label` (0,1,1)
             // would flatten it (.claude/rules/label-rows-lose-to-field-label.md).
-            const row = h(`<label class="ds-row exp-pick__row"><span class="ds-row__main">${esc(c.title)}</span><span class="ds-row__meta"><input type="checkbox" /></span></label>`);
+            const row = h(`<label class="ds-row exp-pick__row"><span class="ds-row__main">${esc(expansionLabel(game.title, c.title))}</span><span class="ds-row__meta"><input type="checkbox" /></span></label>`);
             row.querySelector('input').addEventListener('change', (ev) => {
               if (ev.target.checked) picked.add(c.providerId);
               else picked.delete(c.providerId);
