@@ -868,6 +868,7 @@ I18N.nl = {
   'directPlay.teamsNote': 'Teams spelen samen — en winnen samen.',
 
   'vote.progress': 'Stap {n} van {total}',
+  'vote.advanced': 'Spel {n} van {total}: {title}',
   'vote.crumb': 'Stemmen',
   'vote.leaveConfirm': 'De stemming verlaten? De tot nu toe ingevulde beoordelingen gaan verloren.',
   'vote.turn': '{name}, jouw beurt!',
@@ -879,9 +880,6 @@ I18N.nl = {
   'vote.ratingLabel': '{n} van {max}',
   'vote.scaleLow': 'helemaal niet',
   'vote.scaleHigh': 'heel graag',
-  'vote.next': 'Volgende ›',
-  'vote.finish': 'Klaar',
-  'vote.toast.needRating': 'Kies een beoordeling',
   'vote.toast.saved': 'Resultaten opgeslagen',
 
   'finale.crumb': 'Finale',

@@ -178,7 +178,10 @@ test('nothing on the stage is focusable or clickable except the replay button', 
   // is a keyboard trap's less dramatic cousin: focus lands somewhere that does
   // nothing and says nothing.
   const buttons = [...stage.querySelectorAll('button')].filter((b) => !b.classList.contains('landing-moments__replay'));
-  assert.ok(buttons.length >= 8, 'the scenes really do contain the app’s buttons');
+  // Seven since #1168 took „Weiter" off the vote card — the scene mirrors the
+  // real card, so the floor moves with it rather than the scene keeping a
+  // button the app no longer has.
+  assert.ok(buttons.length >= 7, 'the scenes really do contain the app’s buttons');
   for (const b of buttons) {
     assert.equal(b.disabled, true, `${b.className} is live on the stage`);
     assert.equal(b.getAttribute('tabindex'), '-1', `${b.className} is still a tab stop`);

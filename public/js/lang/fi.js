@@ -839,6 +839,7 @@ I18N.fi = {
   'directPlay.teamsNote': 'Joukkueet pelaavat yhdessä — ja voittavat yhdessä.',
 
   'vote.progress': 'Vaihe {n} / {total}',
+  'vote.advanced': 'Peli {n}/{total}: {title}',
   'vote.crumb': 'Äänestys',
   'vote.leaveConfirm': 'Poistutaanko äänestyksestä? Tähän asti annetut arviot menetetään.',
   'vote.turn': '{name}, sinun vuorosi!',
@@ -850,9 +851,6 @@ I18N.fi = {
   'vote.ratingLabel': '{n} / {max}',
   'vote.scaleLow': 'en lainkaan',
   'vote.scaleHigh': 'ehdottomasti',
-  'vote.next': 'Seuraava ›',
-  'vote.finish': 'Valmis',
-  'vote.toast.needRating': 'Valitse arvio',
   'vote.toast.saved': 'Tulokset tallennettu',
 
   'finale.crumb': 'Finaali',

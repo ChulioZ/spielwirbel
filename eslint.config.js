@@ -36,11 +36,14 @@ const frontendGlobals = {
   fmtDateTime: 'readonly', fmtDate: 'readonly', fmtMonth: 'readonly', fmtMonthKey: 'readonly', fmtMoney: 'readonly',
   fmtRelativeDays: 'readonly',
   fmtAvg: 'readonly', fmtSigned: 'readonly', fmtCount: 'readonly',
+  // live-region.js (issue #1168) — the two aria-live regions, split out of core.js
+  toastEl: 'readonly', toastTimer: 'writable', toast: 'readonly',
+  srLiveEl: 'readonly', announceTimer: 'writable', announce: 'readonly',
   // core.js
-  app: 'readonly', context: 'readonly', toastEl: 'readonly',
-  currentView: 'writable', h: 'readonly', esc: 'readonly', toastTimer: 'writable',
+  app: 'readonly', context: 'readonly',
+  currentView: 'writable', h: 'readonly', esc: 'readonly',
   cardSlot: 'readonly', slotOf: 'readonly',
-  toast: 'readonly', api: 'readonly', setContext: 'readonly', setDocTitle: 'readonly',
+  api: 'readonly', setContext: 'readonly', setDocTitle: 'readonly',
   backRow: 'readonly', joinNames: 'readonly',
   // doc-title.js
   docTitle: 'readonly', DOC_TITLE_SEP: 'readonly', DOC_TITLE_BRAND_SEP: 'readonly',
@@ -160,6 +163,10 @@ const frontendGlobals = {
   // holds the vote scale's own bounds since #909 folded vote-scale.js away
   MOODS: 'readonly', ratingFace: 'readonly',
   RATING_MIN: 'readonly', RATING_MAX: 'readonly',
+  // vote-advance.js (issue #1168): the beat between a rating tap and the next card
+  VOTE_ADVANCE_MS: 'readonly', VOTE_ADVANCE_REDUCED_MS: 'readonly',
+  VOTE_TAP_GUARD_MS: 'readonly',
+  voteAdvanceMs: 'readonly', createVoteAdvance: 'readonly',
   // win-score.js (issue #895): the Siegwertung
   sessionWinScores: 'readonly', memberWinScores: 'readonly',
   memberGameWinScores: 'readonly',

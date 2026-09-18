@@ -570,6 +570,10 @@ public/
                      vote cards and the session result distribution name a
                      rating with the same glyph; also the scale's own bounds,
                      derived from the face list (issues #890, #909)
+    vote-advance.js  the beat between a rating tap and the next card, plus the
+                     longer window taps are ignored for, so one tap per game
+                     can never let a double-tap rate the following one
+                     (issue #1168)
     seat-picker.js   the seat ring both session-starting screens open with: the
                      round's members as in/out toggles, that session's guests
                      beside them, and a „+" seat that adds one (issues #458,
@@ -615,6 +619,9 @@ public/
                      cover editor and the collection-import list
     doc-title.js     joins a screen's browser-tab title, most specific part
                      first, ahead of the brand (issue #522)
+    live-region.js   the app's two aria-live regions: toast() for what everyone
+                     sees, announce() for what only a screen reader is told
+                     (issues #145, #1168)
     popover-fit.js   which side of its anchor a popover goes on and how far it
                      may be squeezed to stay reachable there (issue #739)
     sheet.js         the bottom sheet — the app's modal overlay primitive,

@@ -872,6 +872,7 @@ I18N.it = {
   'directPlay.teamsNote': 'Le squadre giocano insieme — e vincono insieme.',
 
   'vote.progress': 'Passo {n} di {total}',
+  'vote.advanced': 'Gioco {n} di {total}: {title}',
   'vote.crumb': 'Votazione',
   'vote.leaveConfirm': 'Uscire dalla votazione? Le valutazioni inserite finora andranno perse.',
   'vote.turn': '{name}, tocca a te!',
@@ -883,9 +884,6 @@ I18N.it = {
   'vote.ratingLabel': '{n} su {max}',
   'vote.scaleLow': 'per niente',
   'vote.scaleHigh': 'moltissima',
-  'vote.next': 'Avanti ›',
-  'vote.finish': 'Fine',
-  'vote.toast.needRating': 'Scegli una valutazione',
   'vote.toast.saved': 'Risultati salvati',
 
   'finale.crumb': 'Finale',

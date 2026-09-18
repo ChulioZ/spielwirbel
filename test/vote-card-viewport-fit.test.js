@@ -194,3 +194,53 @@ test('the rating faces get their phone size, which they never used to', () => {
     assert.ok(n >= 44, `a rating face is ${n}px on a phone, below the 44px target-size floor (#666)`);
   }
 });
+
+/* The wide layout's vertical balance (#1168).
+
+   Until then the right column ended in the „Zurück"/„Weiter" nav row, pinned
+   with `align-self: end`, and that is what filled the space under the scale —
+   the column read as balanced by accident. Removing the nav left a dead band
+   (97px at 1100x760) while the cover still ran full height, so the text floated
+   high. A `1fr` spacer at EACH end makes the centring deliberate.
+
+   The rows then have to be pinned, and that is the part no one would guess:
+   auto-placement with a definite COLUMN takes the first free slot in it, and
+   the leading spacer is free in column 2 — so with only the first row pinned
+   the title rendered ABOVE the person line. Measured; it reads as the markup
+   order having changed rather than as a grid rule.
+
+   Collected across EVERY rule naming the selector rather than through a single
+   lookup: `.vote--split .rating` is also a member of the grouped `grid-column`
+   rule, and a first-match lookup answers with that one — the trap in
+   `.claude/rules/css-rule-lookup-answers-with-the-media-reset.md`, one file
+   over. */
+test('the wide layout centres its content column and pins every row in DOM order', () => {
+  assert.ok(splitBlock, 'no wide-layout block declares .vote--split');
+  const SPLIT = rulesOf(splitBlock[1]);
+
+  const track = (bodyOf('.vote--split', SPLIT) || '').match(/grid-template-rows:\s*([^;]+)/);
+  assert.ok(track, '.vote--split no longer declares grid-template-rows');
+  const rows = track[1].trim().split(/\s+/);
+  assert.equal(rows[1], '1fr',
+    'no spacer above the content column — it sits hard against the progress bar');
+  assert.equal(rows[rows.length - 1], '1fr',
+    'no spacer below the content column — it floats high, as it did when the nav row went');
+
+  // The card's own DOM order, which the rows must follow.
+  const ORDER = ['.vote__who', '.vote__title', '.vote__q', '.rating', '.rating-scale'];
+  const placed = ORDER.map((cls) => {
+    const row = SPLIT
+      .filter(([sel]) => sel.split(',').map((s) => s.trim()).includes(`.vote--split ${cls}`))
+      .map(([, body]) => body.match(/grid-row:\s*(\d+)/))
+      .find(Boolean);
+    assert.ok(row, `${cls} has no explicit grid-row in the wide layout — auto-placement will find the spacer`);
+    return Number(row[1]);
+  });
+
+  assert.deepEqual(placed, [...placed].sort((a, b) => a - b),
+    `the wide layout's rows run out of DOM order: ${ORDER.map((c, i) => `${c}=${placed[i]}`).join(' ')}`);
+  assert.equal(new Set(placed).size, placed.length, 'two content rows were given the same grid row');
+  assert.ok(placed[0] > 2, 'the first content row is the spacer itself');
+  assert.ok(placed[placed.length - 1] < rows.length,
+    'the last content row is the trailing spacer, so nothing balances the column below');
+});
