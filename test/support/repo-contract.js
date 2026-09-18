@@ -4938,6 +4938,31 @@ module.exports = function repoContract(repo) {
         'the account whose tenant holds a round read as roundless');
     });
 
+    await t.test('a legacy account with NO tenantId is resolved to the default tenant', async () => {
+      /* No fixture in the suite expresses this shape, because every account the
+         app creates carries a tenantId (#136) — so the two backends' fallbacks
+         are the kind of branch that agrees with any implementation until
+         somebody writes it down
+         (.claude/rules/defaulted-account-fields-need-a-legacy-shape-spec.md).
+         They are NOT the same expression: the JSON side reads
+         `u.tenantId || DEFAULT_TENANT`, the SQL side
+         `coalesce(nullif(data->>'tenantId', ''), 'default')` — the `nullif` is
+         what makes an empty string behave like an absent key, which `coalesce`
+         alone would not. */
+      const mid = await repo.instanceMetrics();
+      await repo.createUser({ ...userFields(), tenantId: undefined });
+      const orphan = await repo.instanceMetrics();
+      assert.equal(orphan.adoption.accountsWithoutRound - mid.adoption.accountsWithoutRound, 1,
+        'a tenantless account must read as roundless while no default-tenant round exists');
+
+      // Give the DEFAULT tenant a round, and the same account must flip to
+      // settled — which only happens if both backends resolved it to 'default'.
+      await repo.createRound('default', { name: 'Alt', members: ['Ann'] });
+      const settled = await repo.instanceMetrics();
+      assert.equal(settled.adoption.accountsWithoutRound, orphan.adoption.accountsWithoutRound - 1,
+        'the tenantless account did not resolve to the default tenant');
+    });
+
     await t.test('ADMIN_EXCLUDE_TENANTS removes a tenant from the card only', async () => {
       const tn = `ex-${Math.random().toString(16).slice(2)}`;
       const r = await repo.createRound(tn, { name: 'Ausgenommen', members: ['Ann'] });
