@@ -4938,17 +4938,37 @@ a.k-tile:focus-visible,
    for its own sake — it is the allowance for a game title that wraps to a
    second line (37px), which is common and which nothing else here absorbs.
 
-   #1168 made the card SHORTER without moving this number, and deliberately so.
-   It removed the „Weiter"/„Zurück" nav row (~58px) and grew .vote__who to hold
-   the corner undo (+25px), a net ~33px the budget now carries as extra slack —
-   so the cover is a little smaller on a short phone than it could be. Measured
-   at 390x640 after the change: cover 160px, card 403px, i.e. 243px of non-cover
-   card. That does NOT reconcile with the ~354 above (the gap is close to the
-   footer's 111.7px), so which of the rule's two goals this number actually
-   targets is unclear from the outside — and retuning it is a measurement plus a
-   decision, not an arithmetic correction. Left alone on purpose: nothing is
-   broken, the card fits above the fold with room, and the only cost is cover
-   size. See .claude/rules/fitting-a-screen-to-the-viewport-height.md.
+   #1168 spent that height on the cover. It removed the „Weiter"/„Zurück" nav
+   row (~58px) and grew .vote__who to hold the corner undo (+25px), a net 33px —
+   so the budget came down by exactly 33 (480 -> 447) and every phone size gets
+   those pixels as cover: 120 -> 153 at 360x600, 160 -> 193 at 390x640, 220 ->
+   253 at 414x700.
+
+   THE CAP HAD TO MOVE WITH IT, and that is the non-obvious half. At 414x700 the
+   new budget alone computes 253px, past the old 240 cap — so the cover would
+   have pinned there and stopped giving way, which is the vacuous state
+   test/vote-card-viewport-fit.test.js exists to catch and would have failed the
+   change. 260 is the smallest cap that lets the full 33px land at all three of
+   the issue's viewports while still binding on a tall phone (915svh).
+
+   Read the cap's "no further than 4/3" below as APPROXIMATE, which it always
+   was: it is a fixed px against a width-dependent ratio, so it is exact only
+   around the width it was calibrated at. Measured — at 414x700 the new 253px
+   cover is 344px wide, i.e. still inside 4/3 (258px); on a narrow tall phone
+   (360 wide) 4/3 is 216px, so the cap overshoots it, exactly as the old 240
+   already did. 260 shifts a pre-existing approximation rather than introducing
+   a new behaviour, and the ::before/::after layers letterbox any cover into
+   whatever box they get.
+
+   Note the 480 above never did decompose as stated: measured at 390x640 the
+   non-cover card is 243px, not ~354, and the ~111px gap is suspiciously close
+   to the footer. The number was more conservative than the goal it is written
+   against (the card fits above the FOLD, operator decision 2026-08-06 — the
+   page still scrolls, and every pixel of that is footer). What actually bounds
+   it now is the cap, not the fit: goal 1 is satisfied by any budget >= 358
+   (82px of chrome + 243 + 33 for a title that wraps to a second line), while
+   the elasticity requirement needs > 700 - cap. See
+   .claude/rules/fitting-a-screen-to-the-viewport-height.md.
 
    `svh`, never `dvh`/`vh`: Firefox for Android (where this was reported) hides
    its toolbar as you scroll, so `dvh` would reflow the card mid-session, and
@@ -4974,7 +4994,7 @@ a.k-tile:focus-visible,
   .vote .vote__who strong { display: inline; margin-top: 0; font-size: var(--text-lg); }
   .vote .vote__img {
     aspect-ratio: auto;
-    height: max(110px, min(240px, calc(100svh - 480px)));
+    height: max(110px, min(260px, calc(100svh - 447px)));
     margin: 10px 20px 6px;
   }
   .vote .vote__title { padding: 2px 20px; font-size: var(--text-xl); }
