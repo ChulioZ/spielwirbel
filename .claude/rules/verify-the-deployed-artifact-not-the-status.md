@@ -24,6 +24,29 @@ The commit status went green **four seconds before** the deployment went
 reason about it further than that; treat it as a signal that can be green over a
 deploy that did not happen.
 
+## …and RED over a deploy that DID happen (2026-09-18, the #1174 merge)
+
+The same status is unreliable in the other direction, which matters because the
+obvious reaction to it is worse than the obvious reaction to a false green.
+Measured on `6052c48`:
+
+| Signal | What it said |
+|---|---|
+| Railway **commit status** | **`error`** — „Deployment cancelled" |
+| Railway **deployment** `6531209703` | `in_progress` 19:12:16 → **`success`** 19:16:34 |
+| The **previous** deployment `6528524224` | `success` → **`inactive`** 19:16:33, one second earlier |
+| Production's served shell | `spielwirbel-shell-4fc099ca` — the local build of that merge |
+
+So the deploy was fine and the status was wrong. The tell is the pair: the newest
+deployment record reaching `success` while the one before it flips to `inactive`
+in the same second is the ordinary supersede handshake, not a failure.
+
+**Why this direction is the more expensive one.** A false green ends with a
+missing feature; a false red invites a *rollback, a revert or a re-deploy* of
+something already live and healthy — an outward-facing action taken on a wrong
+premise. So do not act on „Deployment cancelled" until the artifact says
+otherwise. The `curl` in §1 answers it in one call, and it answered it here.
+
 ## 1. Verify the ARTIFACT — the deployed commit is directly observable
 
 The optional production build (#141) content-hashes `js/**` + `styles.css` and
