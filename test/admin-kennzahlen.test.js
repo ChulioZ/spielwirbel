@@ -40,6 +40,19 @@ const STATUS = (over = {}) => ({
       gamesWithOwners: 9, gamesWithExpansions: 4,
       sessionsWithGuests: 8, sessionsWithTeams: 2, sessionsWithVoteLink: 5,
       accountsWithPasskey: 11, accountsWithBggUsername: 6,
+      /* The card's own denominators (#1174), DELIBERATELY DIFFERENT from the
+         instance-wide twins above — `accounts.total` is 42 against 40 here,
+         `rounds.total` 11 against 10, `content.games` 90 against 80 and
+         `content.sessions` 33 against 30. A renderer that reached for the
+         instance-wide figure would still produce a plausible „n / total", so
+         only a fixture where the two disagree can tell them apart. */
+      accountsTotal: 40, roundsTotal: 10, gamesTotal: 80, sessionsTotal: 30,
+      accountsWithAvatar: 7, accountsWithoutRound: 13, accountsWithBgStats: 4,
+      funnel: {
+        started: 28, rated: 18, closed: 22, chosen: 20, played: 12, result: 9, cancelled: 3,
+      },
+      // Sums to roundsTotal, which the tile's own test asserts.
+      roundsByFinished: { none: 5, one: 3, many: 2 },
     },
     designs: { ...DESIGNS },
     social: { sharedRounds: 2, invitationsOpen: 1, friendships: 5 },
@@ -153,7 +166,7 @@ test('each tile lands on the card whose question it answers', async (t) => {
   assert.deepEqual(labelsOf(adoptionTiles(doc)),
     ['Konten', 'Regal-Nutzung', 'Designs', 'Teilen & Freunde',
       'Spiele-Quellen & Titelbilder', 'Besitz & Erweiterungen', 'Sessions',
-      'Konto-Funktionen & eigene Tags'],
+      'Konto-Funktionen & eigene Tags', 'Session-Trichter', 'Runden mit zweiter Session'],
     'Konten sits FIRST on „Funktionsnutzung" — it is the denominator of the tiles below it');
 });
 
@@ -213,9 +226,10 @@ test('Regal-Nutzung is a SHARE of the rounds, with the three states beneath it',
   const { doc, dom } = await panel();
   t.after(() => dom.window.close());
   const row = adoptionTiles(doc).find((x) => x.label === 'Regal-Nutzung');
-  // 7 of 11, the UNION — not 3 + 1 + 5, which double-counts a round in two states.
-  assert.equal(row.value, '7 / 11');
-  assert.match(row.note, /von 11/, 'the note must say what the share is out of');
+  // 7 of 10, the UNION — not 3 + 1 + 5, which double-counts a round in two
+  // states. 10 is `adoption.roundsTotal`, not `rounds.total` (#1174).
+  assert.equal(row.value, '7 / 10');
+  assert.match(row.note, /von 10/, 'the note must say what the share is out of');
   assert.deepEqual(row.breakdown,
     [['Aussortiert', '3'], ['Durchgespielt', '1'], ['Wunschliste', '5']]);
 });
@@ -253,8 +267,8 @@ test('designs are resolved by the PANEL, and an unknown id reads „unbekannt"',
   t.after(() => dom.window.close());
   const row = adoptionTiles(doc).find((x) => x.label === 'Designs');
   assert.ok(row, 'no Designs row');
-  // 11 rounds, 3 of them wearing nothing.
-  assert.equal(row.value, '8 / 11');
+  // 10 rounds on this card, 3 of them wearing nothing.
+  assert.equal(row.value, '7 / 10');
   const lines = Object.fromEntries(row.breakdown);
   assert.equal(lines.forest, '4', 'a known world is named by its id');
   assert.equal(lines.standard, '2',
@@ -294,7 +308,7 @@ test('Konten is the ONE bare count, and „mit Bild" appears exactly once', asyn
   const text = doc.getElementById('adoptionGrid').textContent;
   assert.equal(/mit Bild/.test(text), false, 'the old „mit Bild" wording is back on Konten');
   const konto = adoptionTiles(doc).find((x) => x.label === 'Konto-Funktionen & eigene Tags');
-  assert.deepEqual(Object.fromEntries(konto.breakdown)['Konto-Bild'], '7 / 42');
+  assert.deepEqual(Object.fromEntries(konto.breakdown)['Konto-Bild'], '7 / 40');
 });
 
 test('every new adoption figure renders against its own denominator', async (t) => {
@@ -303,30 +317,30 @@ test('every new adoption figure renders against its own denominator', async (t) 
   const by = Object.fromEntries(adoptionTiles(doc).map((x) => [x.label, x]));
 
   const covers = by['Spiele-Quellen & Titelbilder'];
-  assert.equal(covers.value, '52 / 90', '12 own + 40 provider covers, of 90 games');
+  assert.equal(covers.value, '52 / 80', '12 own + 40 provider covers, of 80 games');
   assert.deepEqual(covers.breakdown, [
-    ['verknüpft', '55'], ['von Hand', '35'], ['eigenes Bild', '12'], ['vom Anbieter', '40'],
+    ['verknüpft', '55'], ['von Hand', '25'], ['eigenes Bild', '12'], ['vom Anbieter', '40'],
   ]);
 
   const owned = by['Besitz & Erweiterungen'];
-  assert.equal(owned.value, '9 / 90');
-  assert.deepEqual(Object.fromEntries(owned.breakdown)['mit Erweiterungen'], '4 / 90');
+  assert.equal(owned.value, '9 / 80');
+  assert.deepEqual(Object.fromEntries(owned.breakdown)['mit Erweiterungen'], '4 / 80');
 
   const sessions = by.Sessions;
-  assert.equal(sessions.value, '8 / 33');
+  assert.equal(sessions.value, '8 / 30');
   const sl = Object.fromEntries(sessions.breakdown);
-  assert.equal(sl['mit Teams'], '2 / 33');
-  assert.equal(sl['mit Vote-Link'], '5 / 33');
+  assert.equal(sl['mit Teams'], '2 / 30');
+  assert.equal(sl['mit Vote-Link'], '5 / 30');
 
   const konto = Object.fromEntries(by['Konto-Funktionen & eigene Tags'].breakdown);
-  assert.equal(by['Konto-Funktionen & eigene Tags'].value, '11 / 42');
-  assert.equal(konto['BGG-Konto'], '6 / 42');
+  assert.equal(by['Konto-Funktionen & eigene Tags'].value, '11 / 40');
+  assert.equal(konto['BGG-Konto'], '6 / 40');
   // The one line on this tile measured against ROUNDS rather than accounts,
   // which is why each line carries its own denominator.
-  assert.equal(konto['Runden mit eigenen Tags'], '6 / 11');
+  assert.equal(konto['Runden mit eigenen Tags'], '6 / 10');
 
   const social = by['Teilen & Freunde'];
-  assert.equal(social.value, '2 / 11');
+  assert.equal(social.value, '2 / 10');
   assert.deepEqual(social.breakdown, [['offene Einladungen', '1'], ['Freundschaften', '5']]);
 });
 
@@ -396,4 +410,87 @@ test('an INCOMPLETE sweep marks every figure as a floor', async (t) => {
   const values = [...doc.querySelectorAll('#storageGrid .pill')].map((e) => e.textContent);
   assert.ok(values.filter((v) => v.startsWith('≥')).length >= 3,
     `an incomplete sweep must mark its figures as floors: ${values.join(' | ')}`);
+});
+
+
+/* ------------------------- the funnel and the habit ----------------------- */
+
+test('the funnel headline is „played of started", with the other stages as lines', async (t) => {
+  const { doc, dom } = await panel();
+  t.after(() => dom.window.close());
+  const tile = adoptionTiles(doc).find((x) => x.label === 'Session-Trichter');
+  assert.ok(tile, 'no Session-Trichter tile');
+  /* The headline is „gespielt", not „gestartet": a session that never reaches
+     „Als gespielt markieren" leaves no Chronik entry and lifts no score, which
+     is the loss the tile exists to show. */
+  assert.equal(tile.value, '12 / 28');
+  assert.match(tile.note, /28 gestarteten/);
+  assert.deepEqual(tile.breakdown, [
+    ['von ≥2 bewertet', '18 / 28'],
+    ['Abstimmung beendet', '22 / 28'],
+    ['Spiel gewählt', '20 / 28'],
+    ['Ergebnis erfasst', '9 / 28'],
+    ['abgebrochen', '3 / 28'],
+  ]);
+  /* Every line is a share of STARTED, never of the line above it. The fixture
+     is built so a pipeline reading would be visibly wrong — 18 rated sits below
+     22 closed, which happens for real whenever a round picks its game directly
+     (born closed and chosen, with nobody ever asked to vote). */
+  assert.ok(tile.breakdown.every(([, v]) => v === '—' || v.endsWith('/ 28')),
+    `a funnel line divides by something other than „started": ${JSON.stringify(tile.breakdown)}`);
+});
+
+test('the habit tile bands sum to the round total it divides by', async (t) => {
+  const { doc, dom } = await panel();
+  t.after(() => dom.window.close());
+  const tile = adoptionTiles(doc).find((x) => x.label === 'Runden mit zweiter Session');
+  assert.ok(tile, 'no „Runden mit zweiter Session" tile');
+  assert.equal(tile.value, '2 / 10');
+  const [one, none] = tile.breakdown.map(([, v]) => Number(v));
+  /* A COMPOSITE tile: the headline plus its two bands account for every round,
+     so a reader can trust the breakdown to be exhaustive rather than a
+     selection. 2 + 3 + 5 = 10 = adoption.roundsTotal. */
+  assert.equal(2 + one + none, 10,
+    'the three bands no longer sum to the round total — the tile stopped being exhaustive');
+});
+
+test('every share divides by the ADOPTION denominator, not the instance-wide one', async (t) => {
+  /* The whole point of ADMIN_EXCLUDE_TENANTS (#1174): a numerator that had the
+     operator's tenants removed, over a denominator that did not, reports shares
+     above 100 %. Nothing about the rendered tile would look wrong — it is still
+     a tidy „n / total" — so the fixture makes the two disagree and this test is
+     the only thing that can see which one was used. */
+  const { doc, dom } = await panel();
+  t.after(() => dom.window.close());
+  const byLabel = Object.fromEntries(adoptionTiles(doc).map((x) => [x.label, x]));
+  const denominatorOf = (v) => (v === '—' ? null : Number(v.split('/')[1].trim()));
+
+  assert.equal(denominatorOf(byLabel['Regal-Nutzung'].value), 10, 'Regal-Nutzung used rounds.total');
+  assert.equal(denominatorOf(byLabel.Designs.value), 10, 'Designs used rounds.total');
+  assert.equal(denominatorOf(byLabel['Teilen & Freunde'].value), 10,
+    'Teilen & Freunde used rounds.total');
+  assert.equal(denominatorOf(byLabel['Spiele-Quellen & Titelbilder'].value), 80,
+    'the covers tile used content.games');
+  assert.equal(denominatorOf(byLabel['Besitz & Erweiterungen'].value), 80,
+    'the ownership tile used content.games');
+  assert.equal(denominatorOf(byLabel.Sessions.value), 30, 'the Sessions tile used content.sessions');
+  assert.equal(denominatorOf(byLabel['Konto-Funktionen & eigene Tags'].value), 40,
+    'the account tile used accounts.total');
+
+  /* „Konten" is the ONE deliberate exception and must keep counting everybody:
+     it is a bare count of who signed up at all, and an operator hidden from it
+     could not see their own instance's size. */
+  assert.equal(byLabel.Konten.value, '42');
+});
+
+test('the two new account figures are shares of the accounts on this card', async (t) => {
+  const { doc, dom } = await panel();
+  t.after(() => dom.window.close());
+  const tile = adoptionTiles(doc).find((x) => x.label === 'Konto-Funktionen & eigene Tags');
+  const lines = Object.fromEntries(tile.breakdown);
+  assert.equal(lines['BG-Stats-Weitergabe'], '4 / 40');
+  assert.equal(lines['ohne Runde (nach Tenant)'], '13 / 40');
+  // The Konto-Bild line reads the ADOPTION twin, not accounts.withAvatar —
+  // both are 7 in the fixture on purpose, so this pins the denominator.
+  assert.equal(lines['Konto-Bild'], '7 / 40');
 });
