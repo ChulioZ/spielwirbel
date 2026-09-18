@@ -7328,9 +7328,6 @@ a.k-tile:focus-visible,
 
 
 /* ---- Toast ---- */
-/* Hidden by default via the class, NOT the `hidden` attribute: the element is a
-   permanent aria-live region (#145) and must stay in the accessibility tree, so
-   only `.is-on` decides whether it is painted. */
 /* Visually hidden, still in the accessibility tree — the #srLive region that
    announce() writes into (#1168). Not `display: none` and not `hidden`: either
    removes it from the tree, and a live region that is absent until it has text
@@ -7345,6 +7342,9 @@ a.k-tile:focus-visible,
   border: 0;
 }
 
+/* Hidden by default via the class, NOT the `hidden` attribute: the element is a
+   permanent aria-live region (#145) and must stay in the accessibility tree, so
+   only `.is-on` decides whether it is painted. */
 .toast {
   position: fixed;
   bottom: 24px; left: 50%; transform: translateX(-50%);

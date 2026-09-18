@@ -934,7 +934,6 @@ I18N.en = {
   'vote.ratingLabel': '{n} out of {max}',
   'vote.scaleLow': 'not at all',
   'vote.scaleHigh': 'absolutely',
-  // One scale, one message: the same 1–5 for members and guests (#909).
   'vote.toast.saved': 'Results saved',
 
   'finale.crumb': 'Finale',

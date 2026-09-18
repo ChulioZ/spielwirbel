@@ -923,7 +923,6 @@ I18N.de = {
   'vote.ratingLabel': '{n} von {max}',
   'vote.scaleLow': 'gar nicht',
   'vote.scaleHigh': 'unbedingt',
-  // Eine Skala, eine Meldung: dieselbe 1–5 für Mitglieder und Gäste (#909).
   'vote.toast.saved': 'Ergebnisse gespeichert',
 
   'finale.crumb': 'Finale',
