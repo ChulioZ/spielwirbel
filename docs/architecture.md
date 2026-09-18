@@ -106,6 +106,9 @@ lib/
   auth.js            shared-password gate (active when AUTH_PASSWORD is set)
   admin.js           operator gate for the moderation surface (separate
                      ADMIN_PASSWORD; 404s unless set — issue #268)
+  admin-exclusions.js  which tenants the panel's „Funktionsnutzung" card leaves
+                     out (ADMIN_EXCLUDE_TENANTS), so its shares describe other
+                     people's usage rather than the operator's own (issue #1174)
   accounts.js        user-account primitives: Argon2id passwords, access/refresh
                      tokens (issue #135; off unless ACCOUNTS_ENABLED)
   webauthn.js        passkey primitives (issue #418): the RP identity and the

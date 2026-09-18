@@ -94,6 +94,11 @@ syntax for type timestamp with time zone: "t"`) where the JSON backend silently
 drops that row — so the backend meant to agree instead 500s the panel, and only
 on the instance holding the bad row.
 
+**The card's ARITHMETIC lives next door**: what each share divides by, what
+`ADMIN_EXCLUDE_TENANTS` reaches, and why the funnel is a bundle rather than a
+pipeline — `.claude/rules/funktionsnutzung-shares-and-funnel.md` (#1174). Read it
+before touching `adoptionRows()` or anything under `metrics.adoption`.
+
 ## The adoption figures MUST be read under `atx()`
 
 `rounds`, `games` and `sessions` are RLS-scoped, so a plain query under a

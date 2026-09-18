@@ -333,6 +333,16 @@ every action that applies to it. Individual **Feedback** entries and
 **Meldungen** are deleted from there — feedback freely, while a *decided* notice
 is protected (it is Art. 17 retention evidence) behind an explicit confirmation.
 
+`ADMIN_EXCLUDE_TENANTS` (issue #1174) takes a comma-separated list of tenant ids
+and removes them from the panel's **„Funktionsnutzung"** card — its numerators
+*and* its denominators, so every share stays a share of what is left. It exists
+because on a small instance the operator's own rounds dominate every ratio: they
+are the oldest and the most thoroughly exercised, so a feature can read as widely
+adopted while nobody else has ever opened it. The exclusion reaches that card
+only — „Grenzen & Kontingente", the quota peaks and the public statistics
+counters keep counting every real tenant, so an operator can never hide
+themselves from their own limits. Unset (the default) nothing is excluded.
+
 `ADMIN_PASSWORD` must be a **separate** secret from `AUTH_PASSWORD`: the latter
 is shared with everyone using the instance, while these powers cross tenant
 boundaries. Optionally set `ADMIN_SESSION_SECRET` to sign the admin cookie
