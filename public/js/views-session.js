@@ -739,8 +739,18 @@ function startVoting(round, session, games, people, opts = {}) {
   // saves each column as it is given. The guards stay — losing four ratings to a
   // stray Back is still worth a confirm.
   let saved = false;
+  // One POST per run (#1168). Reaching finish() used to take a deliberate
+  // „Weiter" press; now the last rating tap does it after a beat, so a stray
+  // tap landing just as the beat releases would fire a second submission while
+  // the first is still awaiting. The catch below resets it — a failed save has
+  // to stay retryable.
+  let finishing = false;
   // Set by finish() so a Back out of the results screen can rebuild the finale.
   let finaleArgs = null;
+  // The beat between a rating tap and the next card (vote-advance.js, #1168).
+  // Per RUN, not per card: it is what a card's handlers ask whether an advance
+  // is already in flight, and a per-card one could not answer that.
+  const advance = createVoteAdvance();
 
   const hasVotes = () => Object.values(votes).some((byGame) => Object.keys(byGame).length > 0);
 
@@ -786,6 +796,9 @@ function startVoting(round, session, games, people, opts = {}) {
   const guardLeave = () => {
     if (!saved && hasVotes() && !confirm(t('vote.leaveConfirm'))) return false;
     window.removeEventListener('beforeunload', unloadGuard);
+    // Or the beat fires after the wizard is gone and renders a vote card over
+    // whatever screen the user actually navigated to (#1168).
+    advance.cancel();
     return true;
   };
 
@@ -808,6 +821,10 @@ function startVoting(round, session, games, people, opts = {}) {
 
   // Back/Forward inside the flow. Returns true when this wizard owns the entry.
   function onPopstate(pathname) {
+    // Any traversal outranks a pending advance: its callback means "one step
+    // forward from where I was", which after a Back is forward out of the card
+    // the user just asked for (#1168).
+    advance.cancel();
     const at = parseSessionPath(pathname);
     const mine = at && at.rid === round.id && at.sid === session.id;
     if (mine && at.kind === 'vote' && at.step < steps.length) {
@@ -860,6 +877,21 @@ function startVoting(round, session, games, people, opts = {}) {
         return `<span class="vote-progress__seg" role="progressbar" aria-label="${esc(personLabel(p))}" aria-valuemin="0" aria-valuemax="${perPerson}" aria-valuenow="${done}" aria-valuetext="${esc(t('vote.progress', { n: done, total: perPerson }))}"><span style="width:${pct}%;background:${personColor(round, p)}"></span></span>`;
       })
       .join('')}</div>`;
+  }
+
+  /* What a beat delivers to a screen reader (#1168). A sighted voter watches
+     the card change; a reader gets a focus move onto a heading and otherwise no
+     idea which game this is or how far through the person's cards they are.
+     Counted in GAMES rather than in steps — `steps` interleaves the handover
+     screens, and "Spiel 2 von 5" is about the shelf, not about the wizard. */
+  function announceCard() {
+    const step = steps[idx];
+    if (!step || step.type !== 'vote') return;
+    announce(t('vote.advanced', {
+      n: games.indexOf(step.game) + 1,
+      total: games.length,
+      title: step.game.title,
+    }));
   }
 
   // Which control the pending re-render was triggered from, so focus can be put
@@ -923,13 +955,12 @@ function startVoting(round, session, games, people, opts = {}) {
         ${progressBar()}
         <div class="vote__who">${esc(t('vote.who'))} <strong style="color:${color}">${esc(personLabel(person))}</strong></div>
         <div class="vote__img" ${imgStyle}>${fallback}</div>
-        <h1 class="vote__title">${esc(game.title)}</h1>
+        <h1 class="vote__title" tabindex="-1">${esc(game.title)}</h1>
         <div class="vote__q" id="voteQ">${esc(t('vote.question'))}</div>
         <div class="rating" role="group" aria-labelledby="voteQ"></div>
         <div class="rating-scale"><span>${esc(t('vote.scaleLow'))}</span><span>${esc(t('vote.scaleHigh'))}</span></div>
         <div class="vote__nav">
           <button class="btn" id="backBtn"><i class="ti ti-chevron-left" aria-hidden="true"></i> ${esc(t('vote.back'))}</button>
-          <button class="btn btn--primary" id="nextBtn">${idx === total - 1 ? esc(t('vote.finish')) + ' <i class="ti ti-chevron-right" aria-hidden="true"></i>' : esc(t('vote.next'))}</button>
         </div>
       </div>`);
 
@@ -941,6 +972,13 @@ function startVoting(round, session, games, people, opts = {}) {
     const infoBtn = gameInfoButton(game);
     if (infoBtn) card.querySelector('.vote__title').append(' ', infoBtn);
     else fetchCardGameInfo(game, card);
+
+    // A card a beat delivered puts focus on its heading, so a keyboard or
+    // screen-reader voter lands at the top of the new game rather than on
+    // <body> (#1168). Deliberately NOT a rating: `wanted` is only ever set by
+    // the two in-place handlers below and by the advance itself, so arriving
+    // through a Back or a language switch still moves nothing.
+    if (wanted && wanted.kind === 'title') restore = card.querySelector('.vote__title');
 
     /* The scale: 1–5 as mood faces, the same five for a member and a guest
        (#909 removed the members-only trash tile that used to sit below the 1).
@@ -967,24 +1005,40 @@ function startVoting(round, session, games, people, opts = {}) {
       }
       if (wanted && wanted.kind === 'mood' && wanted.n === n) restore = b;
       b.addEventListener('click', () => {
+        /* The guard, and the whole safety story of #1168: this is what makes
+           "no double-tap may ever rate the following game" true. The
+           `.vote--advancing` class only stops a POINTER — an Enter on a focused
+           face is not a pointer event and would sail straight past it. */
+        if (advance.locked) return;
         votes[person.id][game.id] = { rating: n };
         refocus = { kind: 'mood', n };
+        // Re-render first, so the beat is spent on a card showing the choice at
+        // its traffic-light fill. That frame IS the acknowledgement; without it
+        // the screen would simply jump and the tap would read as unregistered.
         render();
+        // The node to hold is the one render() just built — the card this
+        // handler closed over is already detached.
+        advance.schedule(app.querySelector('.vote'), () => {
+          // No "did idx move?" check here on purpose. It would be a SECOND
+          // mechanism covering what advance.cancel() already covers in
+          // onPopstate and guardLeave — and a redundant one is worse than
+          // none: with it in place, deleting either cancel leaves every test
+          // green, so the thing that actually protects the user stops being
+          // guarded. Measured (#1168) — both breaks, zero red.
+          if (idx === total - 1) return finish();
+          refocus = { kind: 'title' };
+          go(idx + 1);
+          announceCard();
+        });
       });
       ratingEl.appendChild(b);
     }
 
     const backBtn = card.querySelector('#backBtn');
     backBtn.disabled = idx === 0;
-    backBtn.addEventListener('click', () => history.back());
-
-    card.querySelector('#nextBtn').addEventListener('click', () => {
-      // One scale, so one guard: has this person put the game anywhere on it?
-      if (!Number.isFinite((votes[person.id][game.id] || {}).rating)) {
-        return toast(t('vote.toast.needRating'));
-      }
-      if (idx === total - 1) finish();
-      else go(idx + 1);
+    backBtn.addEventListener('click', () => {
+      if (advance.locked) return;
+      history.back();
     });
 
     /* No scroll reset here. `render()` also runs from onPopstate (a Back, where
@@ -1001,6 +1055,8 @@ function startVoting(round, session, games, people, opts = {}) {
   }
 
   async function finish() {
+    if (finishing) return;
+    finishing = true;
     try {
       // Per-device run (#209): the caller writes the columns its own way (one
       // request per person) and decides where to go next. The teardown in
@@ -1025,7 +1081,7 @@ function startVoting(round, session, games, people, opts = {}) {
       // Nobody sees the result yet: the finale gate gathers everyone first.
       finaleArgs = [fresh, savedSession, games];
       showFinale(...finaleArgs);
-    } catch (e) { toast(e.message); }
+    } catch (e) { finishing = false; toast(e.message); }
   }
 
   go(0);

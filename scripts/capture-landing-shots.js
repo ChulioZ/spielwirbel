@@ -562,12 +562,28 @@ async function reachVoteScreen(cdp, rid) {
     const moods = document.querySelectorAll('.rating .mood');
     /* Pre-select 4 of 5 — a blank scale looks unfinished. Index 3 is that face:
        the row is the five ratings and nothing else since #909 removed the
-       leading trash tile that had offset them by one. */
-    if (moods[3]) moods[3].click();
-    await new Promise((r) => setTimeout(r, 400));
+       leading trash tile that had offset them by one.
+
+       Since #1168 the tap ADVANCES the card, so this no longer leaves us on a
+       rated card — it leaves us on the next one, blank. The old 400ms wait sat
+       just past the 340ms beat, which is the worst possible place: long enough
+       to advance, short enough to look like a timing detail. So tap, let the
+       beat and its tap guard finish, then step back — a revisited card shows
+       its rating preselected and, deliberately, does not advance again. */
+    if (moods[3]) {
+      moods[3].click();
+      await new Promise((r) => setTimeout(r, 800));
+      history.back();
+      await new Promise((r) => setTimeout(r, 500));
+    }
+    const shown = document.querySelectorAll('.rating .mood');
     return {
       seen,
-      moods: moods.length,
+      moods: shown.length,
+      // Which face the shot will actually show as chosen, 1-based. Guarded
+      // below: a blank scale is the failure this whole block exists to avoid,
+      // and #1168 produced exactly that without any test going red.
+      selected: [...shown].findIndex((b) => b.getAttribute('aria-pressed') === 'true') + 1,
       // What is actually on screen, so a failure says which screen we are stuck on.
       onScreen: [...document.querySelectorAll('button, a.btn')].slice(0, 12)
         .map((b) => (b.id ? '#' + b.id : b.className) + ':' + (b.textContent || '').trim().slice(0, 24)),
@@ -580,6 +596,11 @@ async function reachVoteScreen(cdp, rid) {
      longer has could be committed. Move it deliberately, never to make a run
      pass. */
   if (!walk || walk.moods !== 5) fail(`could not reach the vote screen: ${JSON.stringify(walk, null, 1)}`);
+  /* And that the scale is not blank. Same posture as the tile count above: the
+     shot's whole job is to show what rating a game looks like, and #1168 turned
+     the pre-select into a no-op silently — nine locales' worth of marketing
+     screenshots of an untouched scale, which reads as a screen nobody has used. */
+  if (walk.selected !== 4) fail(`the vote shot would show no chosen rating (selected=${walk.selected})`);
 }
 
 // The results screen's own equivalent of reachVoteScreen's tile-count guard: a

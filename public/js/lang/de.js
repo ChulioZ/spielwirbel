@@ -909,6 +909,7 @@ I18N.de = {
   'directPlay.teamsNote': 'Teams spielen zusammen – und gewinnen zusammen.',
 
   'vote.progress': 'Schritt {n} von {total}',
+  'vote.advanced': 'Spiel {n} von {total}: {title}',
   'vote.crumb': 'Abstimmung',
   'vote.leaveConfirm': 'Abstimmung verlassen? Die bisher abgegebenen Bewertungen gehen verloren.',
   'vote.turn': '{name}, du bist dran!',
@@ -922,10 +923,7 @@ I18N.de = {
   'vote.ratingLabel': '{n} von {max}',
   'vote.scaleLow': 'gar nicht',
   'vote.scaleHigh': 'unbedingt',
-  'vote.next': 'Weiter ›',
-  'vote.finish': 'Fertig',
   // Eine Skala, eine Meldung: dieselbe 1–5 für Mitglieder und Gäste (#909).
-  'vote.toast.needRating': 'Bitte eine Bewertung wählen',
   'vote.toast.saved': 'Ergebnisse gespeichert',
 
   'finale.crumb': 'Finale',

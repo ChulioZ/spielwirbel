@@ -12,6 +12,7 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 
 const { loadApp, translator } = require('./support/dom');
+const { setMotion, beat } = require('./support/vote-card');
 const { PROVIDER_INFO_FIELDS, hasProviderField } = require('../public/js/provider-info-fields');
 
 const RID = 'r1';
@@ -320,6 +321,7 @@ test('a storefront game in the wizard asks nothing', async (t_) => {
 
 test('the vote-link card shows the ⓘ only for a game carrying info', async (t_) => {
   const { dom } = bootApp(t_);
+  setMotion(dom, true);
   const person = { id: 'm1', name: 'Anna', guest: false, color: null };
   const ballot = {
     roundName: 'Freitagsrunde',
@@ -335,9 +337,9 @@ test('the vote-link card shows the ⓘ only for a game carrying info', async (t_
   // Advance to the second card: no info -> no affordance.
   const first = dom.app.querySelector('.vote__title').textContent;
   assert.match(first, /Catan/);
-  // Select a rating so „Weiter" passes its guard, then advance.
+  // The rating tap IS the advance since #1168 — there is no „Weiter" to press.
   dom.app.querySelectorAll('.rating .mood')[3].click();
-  dom.app.querySelector('#nextBtn').click();
+  await beat(dom);
   assert.match(dom.app.querySelector('.vote__title').textContent, /Ohne/);
   assert.equal(dom.app.querySelector('.vote__title .vote__info'), null);
 });

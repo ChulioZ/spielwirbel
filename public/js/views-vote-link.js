@@ -167,6 +167,17 @@ function renderVoteLinkCards(token, ballot, person) {
   const games = ballot.games;
   const votes = {};
   let idx = 0;
+  // The same beat as the wizard's card, from the same file (#1168): a rating
+  // tap advances after a short lock, so this surface costs one tap per game
+  // too. Per run, not per card — the lock is what a card's handlers ask.
+  const advance = createVoteAdvance();
+  // One submission per run, for the same reason as the wizard's `finishing`:
+  // the last rating tap now reaches submit() on its own, so a stray tap just
+  // after the beat releases could POST a second time mid-await.
+  let submitting = false;
+  // Only a card a beat delivered takes focus; arriving through „Zurück" must
+  // leave it where the user put it.
+  let focusTitle = false;
 
   function render() {
     const game = games[idx];
@@ -178,13 +189,12 @@ function renderVoteLinkCards(token, ballot, person) {
     const card = h(`<div class="vote vote--split">
         <div class="vote__who">${esc(t('voteLink.youAre'))} <strong style="color:${color}">${esc(personLabel(person))}</strong></div>
         <div class="vote__img" ${imgStyle}>${coverPlaceholder(game)}</div>
-        <h1 class="vote__title">${esc(game.title)}</h1>
+        <h1 class="vote__title" tabindex="-1">${esc(game.title)}</h1>
         <div class="vote__q" id="voteQ">${esc(t('vote.question'))}</div>
         <div class="rating" role="group" aria-labelledby="voteQ"></div>
         <div class="rating-scale"><span>${esc(t('vote.scaleLow'))}</span><span>${esc(t('vote.scaleHigh'))}</span></div>
         <div class="vote__nav">
           <button class="btn" id="backBtn"><i class="ti ti-chevron-left" aria-hidden="true"></i> ${esc(t('vote.back'))}</button>
-          <button class="btn btn--primary" id="nextBtn">${idx === games.length - 1 ? esc(t('vote.finish')) + ' <i class="ti ti-chevron-right" aria-hidden="true"></i>' : esc(t('vote.next'))}</button>
         </div>
       </div>`);
 
@@ -216,8 +226,24 @@ function renderVoteLinkCards(token, ballot, person) {
         b.style.borderColor = avgColor(n);
       }
       b.addEventListener('click', () => {
+        // The JS half of the double-tap guard — identical to the wizard's, and
+        // the reason both cards take their beat from one file (#1168).
+        if (advance.locked) return;
         votes[game.id] = { rating: n };
+        // Re-render first so the beat is spent showing the choice at its
+        // traffic-light fill; that frame is the acknowledgement.
         render();
+        advance.schedule(app.querySelector('.vote'), () => {
+          // Nothing can move `idx` while a beat runs — this page has no history
+          // of its own, and „Zurück" is locked for the duration — so there is no
+          // second guard here either. See the wizard's note on why a redundant
+          // one is actively harmful.
+          if (idx === games.length - 1) return submit();
+          idx += 1;
+          focusTitle = true;
+          render();
+          announce(t('vote.advanced', { n: idx + 1, total: games.length, title: games[idx].title }));
+        });
       });
       ratingEl.appendChild(b);
     }
@@ -226,25 +252,24 @@ function renderVoteLinkCards(token, ballot, person) {
     // one correction this screen has to offer — there is no earlier step to
     // return to and no chrome to leave through.
     card.querySelector('#backBtn').addEventListener('click', () => {
+      if (advance.locked) return;
       if (idx === 0) return renderVoteLinkClaim(token, ballot);
       idx -= 1;
       render();
     });
 
-    card.querySelector('#nextBtn').addEventListener('click', () => {
-      // Same guard as the wizard: is the game anywhere on the scale?
-      if (!Number.isFinite((votes[game.id] || {}).rating)) {
-        return toast(t('vote.toast.needRating'));
-      }
-      if (idx === games.length - 1) return submit();
-      idx += 1;
-      render();
-    });
-
     app.appendChild(card);
+
+    // After the append, never before: focus() on a detached node is a no-op.
+    if (focusTitle) {
+      focusTitle = false;
+      card.querySelector('.vote__title').focus();
+    }
   }
 
   async function submit() {
+    if (submitting) return;
+    submitting = true;
     try {
       await api('POST', `/api/vote/${encodeURIComponent(token)}/votes/${encodeURIComponent(person.id)}`, { votes });
     } catch {
@@ -254,6 +279,8 @@ function renderVoteLinkCards(token, ballot, person) {
       // there is nothing they can do about it from here.
       return renderVoteLinkDead();
     }
+    // Past the POST there is no retry to protect: the ratings are on the
+    // server, and every path from here lands on a screen with no vote card.
     // Re-read rather than patching the local copy: other people have been voting
     // on their own devices, so the count on the confirmation should be the
     // server's. A failure here is not worth stranding them — they voted.

@@ -163,8 +163,9 @@ function lmScenePot() {
 }
 
 /* Scene 2 — the vote card (#890/#909), as startVoting() renders it: the person,
-   the drawn cover, the question, the five mood faces and the scale. Every
-   control is inert (`disabled` + `tabindex="-1"`) — the stage is a picture, and
+   the drawn cover, the question, the five mood faces and the scale. „Zurück" is
+   the card's only button since #1168 — the face tap itself advances — and the
+   picture has to keep matching the card it claims to be. Every control is inert (`disabled` + `tabindex="-1"`) — the stage is a picture, and
    a focusable dead button inside it would be a tab stop that does nothing. */
 function lmSceneVote() {
   const game = lmGame(LM_RANK[0].title);
@@ -185,7 +186,6 @@ function lmSceneVote() {
         <div class="rating-scale"><span>${esc(t('vote.scaleLow'))}</span><span>${esc(t('vote.scaleHigh'))}</span></div>
         <div class="vote__nav">
           <button class="btn" type="button" disabled tabindex="-1"><i class="ti ti-chevron-left" aria-hidden="true"></i> ${esc(t('vote.back'))}</button>
-          <button class="btn btn--primary" type="button" disabled tabindex="-1">${esc(t('vote.next'))}</button>
         </div>
       </div>
     </div>`;

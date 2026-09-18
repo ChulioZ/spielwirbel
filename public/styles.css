@@ -4774,6 +4774,18 @@ a.k-tile:focus-visible,
 
 .vote__nav { display: flex; gap: 10px; padding: 0 20px 20px; }
 .vote__nav .btn { flex: 1; }
+/* Since #1168 the vote card's only button is „Zurück" — the rating tap itself
+   advances. A lone stretched button would read as the screen's primary action,
+   which is the opposite of what it is, so it keeps its own width. */
+.vote__nav .btn:only-child { flex: 0 0 auto; }
+
+/* The beat after a rating tap (#1168, vote-advance.js). Pointer-events is the
+   BELT: it stops a second tap becoming an event at all, so the finger cannot
+   reach the next game's faces while the outgoing card is still on screen. The
+   braces are the `advance.locked` guard in JS, which is the half that also
+   covers a keyboard Enter. No dimming and no transform on purpose — the beat
+   must read as "registered", and a card that fades reads as lag. */
+.vote--advancing { pointer-events: none; }
 
 /* Info affordance on the vote cards (#717). Inline in the title line so the
    height-budgeted card gains no extra row (fitting-a-screen-to-the-viewport-
@@ -7319,6 +7331,20 @@ a.k-tile:focus-visible,
 /* Hidden by default via the class, NOT the `hidden` attribute: the element is a
    permanent aria-live region (#145) and must stay in the accessibility tree, so
    only `.is-on` decides whether it is painted. */
+/* Visually hidden, still in the accessibility tree — the #srLive region that
+   announce() writes into (#1168). Not `display: none` and not `hidden`: either
+   removes it from the tree, and a live region that is absent until it has text
+   is never announced at all. The 1px clip box is the standard shape. */
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
 .toast {
   position: fixed;
   bottom: 24px; left: 50%; transform: translateX(-50%);
