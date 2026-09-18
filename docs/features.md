@@ -246,7 +246,11 @@ What the app does, in detail. For a short overview see the
   a round's remembered draw filters keep working, because assignments are stored
   by id rather than by name. A rename onto a name the round already uses is
   refused rather than merging the two tags. Deleting a tag simply unassigns it
-  from every game.
+  from every game. A round can also put its tags in the **order it wants**: two
+  arrows on each tile of the Tags screen move a tag earlier or later, and that
+  one order is what every surface listing tags then shows — the tiles, the
+  game-detail chips, the Regal bulk-assign sheet, the filter panel and the draw
+  presets. A newly created tag still lands at the end.
 - **Members** – each member has a detail page (opened from the Start hero row,
   the Pokale podium, or a session's participant list): **one card in that
   member's own colour** carrying the whole record — wins, sessions joined, win
