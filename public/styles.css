@@ -7128,6 +7128,12 @@ a.k-tile:focus-visible,
 }
 .tag-act .ti { font-size: var(--text-md); display: block; }
 .tag-act:hover { background: var(--sunken); color: var(--ink); }
+/* The two reorder arrows (#1159) are DISABLED at the ends of the list rather
+   than hidden, so a tile's control set keeps its width as the tag moves. The
+   hover reset is the load-bearing half: without it a dead button still lights
+   up under the pointer and reads as clickable. */
+.tag-act:disabled { opacity: .35; cursor: default; }
+.tag-act:disabled:hover { background: transparent; color: var(--ink-soft); }
 .tag-act--danger:hover { background: color-mix(in oklab, var(--danger) 12%, var(--surface)); color: var(--danger); }
 .ds-row {
   display: flex;

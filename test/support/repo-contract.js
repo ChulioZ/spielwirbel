@@ -2133,6 +2133,49 @@ module.exports = function repoContract(repo) {
     assert.equal(await repo.addTag(T, 'missing', 'X'), null);
   });
 
+  // Manual tag order (#1159). `tags` is an array in both backends, so array
+  // order already IS the stored order — no `position` field, no migration.
+  test('reorderTags permutes the stored order and rejects a stale list (#1159)', async () => {
+    const round = await freshRound();
+    const a = await repo.addTag(T, round.id, 'Muy bien a 3');
+    const b = await repo.addTag(T, round.id, 'Muy bien a 4');
+    const c = await repo.addTag(T, round.id, 'Muy bien a 2');
+    assert.deepEqual((await repo.getRound(T, round.id)).tags.map((tg) => tg.name),
+      ['Muy bien a 3', 'Muy bien a 4', 'Muy bien a 2'], 'addTag appends — the reporter’s own case');
+
+    // A game keeps its assignment across a reorder: `tagIds` stores ids, never
+    // indices, which is why reordering is safe where delete-and-recreate is not.
+    const game = await repo.createGame(T, round.id, gameFields({ title: 'Azul', tagIds: [c.id, a.id] }));
+
+    const moved = await repo.reorderTags(T, round.id, [c.id, a.id, b.id]);
+    assert.deepEqual(moved.map((tg) => tg.name), ['Muy bien a 2', 'Muy bien a 3', 'Muy bien a 4']);
+    const after = await repo.getRound(T, round.id);
+    assert.deepEqual(after.tags.map((tg) => tg.name),
+      ['Muy bien a 2', 'Muy bien a 3', 'Muy bien a 4'], 'and it survives the round-trip');
+    assert.deepEqual(after.tags, [c, a, b], 'the tag objects travel whole — ids, names and icons');
+    assert.deepEqual(after.games.find((g) => g.id === game.id).tagIds, [c.id, a.id],
+      'a reorder must not touch a single assignment');
+
+    // A newly created tag still lands at the END of the manual order.
+    const d = await repo.addTag(T, round.id, 'Muy bien a 5');
+    assert.deepEqual((await repo.getRound(T, round.id)).tags.map((tg) => tg.id),
+      [c.id, a.id, b.id, d.id]);
+
+    // The list must be an EXACT permutation — this is what stops a stale client
+    // from resurrecting a tag another tab deleted or dropping one it just made.
+    assert.equal(await repo.reorderTags(T, round.id, [c.id, a.id, b.id]), 'tags_changed',
+      'short of the current list');
+    assert.equal(await repo.reorderTags(T, round.id, [c.id, a.id, b.id, d.id, 'ghost']), 'tags_changed',
+      'an unknown id');
+    assert.equal(await repo.reorderTags(T, round.id, [c.id, c.id, a.id, b.id]), 'tags_changed',
+      'a repeated id — the same length as the round’s list, so length alone cannot see it');
+    assert.equal(await repo.reorderTags(T, round.id, []), 'tags_changed');
+    assert.deepEqual((await repo.getRound(T, round.id)).tags.map((tg) => tg.id),
+      [c.id, a.id, b.id, d.id], 'a rejected reorder writes nothing');
+
+    assert.equal(await repo.reorderTags(T, 'missing', [a.id]), null);
+  });
+
   test('tag icons: absent by default, set on create, patchable, clearable (#255)', async () => {
     const round = await freshRound();
 
