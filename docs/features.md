@@ -375,9 +375,9 @@ What the app does, in detail. For a short overview see the
   way, and each person's ratings are saved the moment they give them: one
   **1–5** scale per drawn game, from „gar nicht" to „unbedingt". Rating is **one
   tap per game** — the face you press is the answer, and the card moves on by
-  itself after a short beat; „Zurück" reopens the last one with its rating still
-  chosen if you want to change it. Three ways in, freely mixed within one
-  evening:
+  itself after a short beat. The card's only other control is an undo in its
+  top-left corner, which reopens the last game with its rating still chosen.
+  Three ways in, freely mixed within one evening:
   - **pass the device around** – tap whoever is next, a handover screen names
     them so nobody peeks, and when they are done the lobby leads with the next
     person still open;

@@ -163,9 +163,10 @@ function lmScenePot() {
 }
 
 /* Scene 2 — the vote card (#890/#909), as startVoting() renders it: the person,
-   the drawn cover, the question, the five mood faces and the scale. „Zurück" is
-   the card's only button since #1168 — the face tap itself advances — and the
-   picture has to keep matching the card it claims to be.
+   the drawn cover, the question, the five mood faces and the scale. Since #1168
+   the face tap itself advances, so the card's one remaining control is the undo
+   in its top-left corner — and the picture has to keep matching the card it
+   claims to be.
 
    Every control is inert (`disabled` + `tabindex="-1"`) — the stage is a
    picture, and a focusable dead button inside it would be a tab stop that does
@@ -180,16 +181,15 @@ function lmSceneVote() {
   }
   return `<div class="lm-scene lm-scene--vote">
       <div class="vote">
-        <div class="vote__who">${esc(t('vote.who'))}
+        <div class="vote__who">
+          <button class="vote__undo" type="button" disabled tabindex="-1"><i class="ti ti-arrow-back-up" aria-hidden="true"></i></button>
+          ${esc(t('vote.who'))}
           <strong style="color:${MEMBER_COLORS[2]}">${esc(LM_VOTER)}</strong></div>
         <div class="vote__img">${coverPlaceholder(game)}</div>
         <div class="vote__title">${esc(game.title)}</div>
         <div class="vote__q">${esc(t('vote.question'))}</div>
         <div class="rating">${faces.join('')}</div>
         <div class="rating-scale"><span>${esc(t('vote.scaleLow'))}</span><span>${esc(t('vote.scaleHigh'))}</span></div>
-        <div class="vote__nav">
-          <button class="btn" type="button" disabled tabindex="-1"><i class="ti ti-chevron-left" aria-hidden="true"></i> ${esc(t('vote.back'))}</button>
-        </div>
       </div>
     </div>`;
 }

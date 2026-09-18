@@ -187,15 +187,12 @@ function renderVoteLinkCards(token, ballot, person) {
 
     app.innerHTML = '';
     const card = h(`<div class="vote vote--split">
-        <div class="vote__who">${esc(t('voteLink.youAre'))} <strong style="color:${color}">${esc(personLabel(person))}</strong></div>
+        <div class="vote__who"><button class="vote__undo" id="backBtn" type="button" aria-label="${esc(t('vote.back'))}" title="${esc(t('vote.back'))}"><i class="ti ti-arrow-back-up" aria-hidden="true"></i></button>${esc(t('voteLink.youAre'))} <strong style="color:${color}">${esc(personLabel(person))}</strong></div>
         <div class="vote__img" ${imgStyle}>${coverPlaceholder(game)}</div>
         <h1 class="vote__title" tabindex="-1">${esc(game.title)}</h1>
         <div class="vote__q" id="voteQ">${esc(t('vote.question'))}</div>
         <div class="rating" role="group" aria-labelledby="voteQ"></div>
         <div class="rating-scale"><span>${esc(t('vote.scaleLow'))}</span><span>${esc(t('vote.scaleHigh'))}</span></div>
-        <div class="vote__nav">
-          <button class="btn" id="backBtn"><i class="ti ti-chevron-left" aria-hidden="true"></i> ${esc(t('vote.back'))}</button>
-        </div>
       </div>`);
 
     // Same info affordance as the wizard's card (#717) — the ballot projection

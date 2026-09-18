@@ -78,7 +78,49 @@ async function wizard(t, { saved = [], reduced = true, hold = null } = {}) {
 test('the vote card has no „Weiter" any more — the rating IS the advance', async (t) => {
   const dom = await wizard(t);
   assert.equal(dom.app.querySelector('#nextBtn'), null, 'the confirmation button is back');
-  assert.ok(dom.app.querySelector('#backBtn'), '„Zurück" must stay — it is the way to undo');
+  assert.equal(dom.app.querySelector('.vote__nav'), null, 'the nav row is back');
+  assert.ok(dom.app.querySelector('#backBtn'), 'the way back must stay — it is the undo');
+});
+
+/* The way back is now a bare icon in the card's top-left corner, not a button
+   in a row. With „Weiter" gone a lone full-width „Zurück" read as the screen's
+   primary action, which is the opposite of what it is.
+
+   Three things are pinned because each fails silently. It must live INSIDE
+   `.vote__who` — that is what makes it follow the content column in the ≥860px
+   split layout instead of landing on the cover. It must carry an accessible
+   name — the glyph is `aria-hidden`, so without one the control announces as
+   nothing at all. And the name stays „Zurück" rather than „Rückgängig": on the
+   shared-link card's FIRST card this same control goes back to the name picker,
+   where „undo" would be a lie. */
+test('the way back is an unlabelled corner icon inside the person line', async (t) => {
+  const dom = await wizard(t);
+  const undo = dom.app.querySelector('#backBtn');
+
+  assert.ok(undo.classList.contains('vote__undo'));
+  assert.ok(undo.closest('.vote__who'), 'it must sit in the person line, not loose in the card');
+  assert.equal(undo.textContent.trim(), '', 'icon only — no text label');
+  assert.ok(undo.querySelector('i.ti.ti-arrow-back-up'), 'the undo glyph is missing');
+  assert.equal(undo.querySelector('i').getAttribute('aria-hidden'), 'true');
+  assert.equal(undo.getAttribute('aria-label'), dom.run("t('vote.back')"));
+
+  // Nothing to go back to on the first card, and it says so rather than lying.
+  assert.equal(undo.disabled, true);
+  moods(dom)[3].click();
+  await beat(dom);
+  assert.equal(dom.app.querySelector('#backBtn').disabled, false);
+});
+
+test('the shared-link card wears the same corner control', async (t) => {
+  const { dom } = await voteLinkCards(t);
+  const undo = dom.app.querySelector('#backBtn');
+  assert.ok(undo.classList.contains('vote__undo'));
+  assert.ok(undo.closest('.vote__who'));
+  assert.equal(undo.textContent.trim(), '');
+  assert.equal(undo.getAttribute('aria-label'), dom.run("t('vote.back')"));
+  // Enabled on card ONE here, unlike the wizard: it goes back to the name
+  // picker, which is the one correction this screen has to offer.
+  assert.equal(undo.disabled, false);
 });
 
 test('one tap rates the game and moves to the next one', async (t) => {
