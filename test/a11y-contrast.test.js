@@ -710,6 +710,9 @@ const WHITE_EXEMPT = new Map([
   ['.gd-score .score-info', 'on its own translucent-black scrim over box art, like .gd-img__edit'],
   ['.gd-score .score-info:hover, .gd-score .score-info:focus-visible',
     'the same scrim, deepened — still not on a theme surface'],
+  ['.vote-qr__code',
+    'a QR code MUST be dark-on-light or a camera refuses it, so this one surface '
+    + 'deliberately does not follow the round\'s design (#1170)'],
 ]);
 
 test('no bare white is painted outside the rules that justify one', () => {

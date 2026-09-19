@@ -395,7 +395,11 @@ What the app does, in detail. For a short overview see the
   evening. Because votes are saved as they are given rather than held until the
   end, an interrupted evening loses at most the card someone was on.
 - **Voting by shared link, without an account** – any running session can be
-  shared as one URL (a "share" button in the lobby, mint-on-demand). Its holder
+  shared as one URL (a "share" button in the lobby, mint-on-demand) or held up
+  as a **QR code** beside it, which is the faster of the two at a table: five
+  phones scan the host's screen at once, where sharing means finding the group
+  chat mid-evening. The code is drawn for the link currently in force and is
+  always dark-on-light, whatever design the round wears. Its holder
   opens it, claims their own name from the session's participant list and rates
   the drawn games on their phone — no sign-up, nothing to install. The link is a
   capability for exactly that one session: it shows the round name, the drawn

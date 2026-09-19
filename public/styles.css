@@ -9272,6 +9272,34 @@ kbd {
 .live-vote__hotseat { display: flex; flex-direction: column; gap: 8px; }
 .live-vote__hotseat-btn { display: flex; align-items: center; gap: 10px; justify-content: flex-start; }
 
+/* Sharing the session: the link and the code as one row of two (#652, #1170).
+   Wrapping rather than shrinking, because „Link zum Abstimmen teilen" is a long
+   label in every shipped language and the code's button must never be the one
+   that gets squeezed into an icon — it is the faster of the two at a table. */
+.live-vote__share-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.live-vote__share { flex: 1 1 14rem; }
+.live-vote__qr { flex: 0 1 auto; }
+
+/* The code itself. Black on white REGARDLESS of the round's design: the dark
+   worlds would otherwise hand a scanner an inverted code, which many phone
+   cameras refuse outright — so this is the one surface in the app that does not
+   follow the round's theme. The white field is the quiet zone the format
+   requires, and the server's own 2-module margin sits inside it. */
+.vote-qr__code {
+  background: #fff;
+  border-radius: var(--radius-lg);
+  padding: 14px;
+  margin: 4px auto 0;
+  /* Big enough that a phone held across a table still resolves the modules;
+     capped so it cannot outgrow a narrow sheet. */
+  width: min(300px, 100%);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+}
+.vote-qr__code svg { width: 100%; height: 100%; display: block; }
+.vote-qr__hint { margin: 14px 0 0; font-size: var(--text-md); }
+
 /* ---- Finale: the dark stage before the reveal ----
    All tones derive from the round's accent (see --stage-* in :root), so the
    curtain matches whatever design the round uses. */
