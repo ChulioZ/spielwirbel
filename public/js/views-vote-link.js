@@ -359,8 +359,10 @@ function renderVoteLinkDone(token, ballot, person) {
    not an install offer and not a button. A family voting together on one shared
    screen must never see it, which is what the `linked` gate below is for.
 
-   All four conditions have to hold; each one is a separate way of getting this
-   wrong, and the second is the load-bearing one. */
+   Four conditions have to hold and each is a separate way of getting this wrong.
+   Three are guards below; the fourth is the CALL SITE — this runs only from
+   `renderVoteLinkDone`, i.e. only after this device has submitted its ratings.
+   The `linked` gate is the load-bearing one. */
 function appendVoteLinkAppNote(root, ballot, person) {
   // 1. The claimed seat is not an account's. Someone who already has the app is
   //    not the audience, and telling them what Spielwirbel is reads as spam.
