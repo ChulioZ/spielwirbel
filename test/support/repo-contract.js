@@ -2133,6 +2133,49 @@ module.exports = function repoContract(repo) {
     assert.equal(await repo.addTag(T, 'missing', 'X'), null);
   });
 
+  // Manual tag order (#1159). `tags` is an array in both backends, so array
+  // order already IS the stored order — no `position` field, no migration.
+  test('reorderTags permutes the stored order and rejects a stale list (#1159)', async () => {
+    const round = await freshRound();
+    const a = await repo.addTag(T, round.id, 'Muy bien a 3');
+    const b = await repo.addTag(T, round.id, 'Muy bien a 4');
+    const c = await repo.addTag(T, round.id, 'Muy bien a 2');
+    assert.deepEqual((await repo.getRound(T, round.id)).tags.map((tg) => tg.name),
+      ['Muy bien a 3', 'Muy bien a 4', 'Muy bien a 2'], 'addTag appends — the reporter’s own case');
+
+    // A game keeps its assignment across a reorder: `tagIds` stores ids, never
+    // indices, which is why reordering is safe where delete-and-recreate is not.
+    const game = await repo.createGame(T, round.id, gameFields({ title: 'Azul', tagIds: [c.id, a.id] }));
+
+    const moved = await repo.reorderTags(T, round.id, [c.id, a.id, b.id]);
+    assert.deepEqual(moved.map((tg) => tg.name), ['Muy bien a 2', 'Muy bien a 3', 'Muy bien a 4']);
+    const after = await repo.getRound(T, round.id);
+    assert.deepEqual(after.tags.map((tg) => tg.name),
+      ['Muy bien a 2', 'Muy bien a 3', 'Muy bien a 4'], 'and it survives the round-trip');
+    assert.deepEqual(after.tags, [c, a, b], 'the tag objects travel whole — ids, names and icons');
+    assert.deepEqual(after.games.find((g) => g.id === game.id).tagIds, [c.id, a.id],
+      'a reorder must not touch a single assignment');
+
+    // A newly created tag still lands at the END of the manual order.
+    const d = await repo.addTag(T, round.id, 'Muy bien a 5');
+    assert.deepEqual((await repo.getRound(T, round.id)).tags.map((tg) => tg.id),
+      [c.id, a.id, b.id, d.id]);
+
+    // The list must be an EXACT permutation — this is what stops a stale client
+    // from resurrecting a tag another tab deleted or dropping one it just made.
+    assert.equal(await repo.reorderTags(T, round.id, [c.id, a.id, b.id]), 'tags_changed',
+      'short of the current list');
+    assert.equal(await repo.reorderTags(T, round.id, [c.id, a.id, b.id, d.id, 'ghost']), 'tags_changed',
+      'an unknown id');
+    assert.equal(await repo.reorderTags(T, round.id, [c.id, c.id, a.id, b.id]), 'tags_changed',
+      'a repeated id — the same length as the round’s list, so length alone cannot see it');
+    assert.equal(await repo.reorderTags(T, round.id, []), 'tags_changed');
+    assert.deepEqual((await repo.getRound(T, round.id)).tags.map((tg) => tg.id),
+      [c.id, a.id, b.id, d.id], 'a rejected reorder writes nothing');
+
+    assert.equal(await repo.reorderTags(T, 'missing', [a.id]), null);
+  });
+
   test('tag icons: absent by default, set on create, patchable, clearable (#255)', async () => {
     const round = await freshRound();
 
@@ -4843,6 +4886,161 @@ module.exports = function repoContract(repo) {
         assert.equal(m.adoption[key], mid.adoption[key], `${key} counted a row that uses nothing`);
       }
       assert.equal(m.content.games, mid.content.games + 1, 'the denominator still moved');
+    });
+
+    /* ------------------- the session funnel (#1174) ----------------------- */
+    /* Deliberately NOT folded into ADOPTION above: those fifteen are all
+       „does this row use the feature" and move by exactly one on a fixture that
+       does. The funnel is a set of independent shares, the bands are a
+       partition, and the four denominators move on every fixture — so they need
+       their own states rather than a sixteenth entry in a list whose semantics
+       they do not share. */
+
+    await t.test('the funnel stages and the habit bands agree across backends', async () => {
+      const mid = await repo.instanceMetrics();
+      const tn = `fn-${Math.random().toString(16).slice(2)}`;
+      const r = await repo.createRound(tn, { name: 'Trichter', members: ['Ann', 'Bo'] });
+      const mk = (over) => repo.createSession(tn, r.id, {
+        gameIds: [], votes: {}, createdAt: daysAgo(1), ...over,
+      });
+      // Two raters, which is what „bewertet" asks for. A person key whose object
+      // is EMPTY is a seat that was asked and never answered — the one shape a
+      // naive Object.keys(votes).length would miscount, in both backends.
+      await mk({ votes: { p1: { g: { rating: 4 } }, p2: { g: { rating: 2 } }, p3: {} } });
+      await mk({ done: true, chosenGameId: 'g1' });
+      await mk({ finished: true, winnerIds: ['m1'] });
+      await mk({ finished: true, winnerIds: [], ending: 'noWinner' });
+      await mk({ finished: true, winnerIds: [] });      // played, no result recorded
+      await mk({ cancelled: true });
+      // An `ending` the allowlist does not know reads as unrecorded, never as a
+      // result — the SQL spells the same three values out for that reason.
+      await mk({ finished: true, winnerIds: [], ending: 'somethingNew' });
+
+      const m = await repo.instanceMetrics();
+      const d = (k) => m.adoption.funnel[k] - mid.adoption.funnel[k];
+      assert.equal(d('started'), 7);
+      assert.equal(d('rated'), 1, 'an empty seat entry counted as a rater');
+      assert.equal(d('closed'), 1);
+      assert.equal(d('chosen'), 1);
+      assert.equal(d('played'), 4);
+      assert.equal(d('result'), 2, 'winners or a KNOWN ending, nothing else');
+      assert.equal(d('cancelled'), 1);
+
+      // Four finished sessions in one round: the habit band, not four rounds.
+      assert.equal(m.adoption.roundsByFinished.many - mid.adoption.roundsByFinished.many, 1);
+      assert.equal(
+        m.adoption.roundsByFinished.none + m.adoption.roundsByFinished.one
+          + m.adoption.roundsByFinished.many,
+        m.adoption.roundsTotal,
+        'the bands stopped partitioning the rounds on the card',
+      );
+    });
+
+    await t.test('a split parent is outside the funnel while its tables are in it', async () => {
+      const mid = await repo.instanceMetrics();
+      const tn = `sp-${Math.random().toString(16).slice(2)}`;
+      const r = await repo.createRound(tn, { name: 'Zwei Tische', members: ['Ann'] });
+      const mk = (over) => repo.createSession(tn, r.id, {
+        gameIds: [], votes: {}, createdAt: daysAgo(1), ...over,
+      });
+      const a = await mk({ finished: true, winnerIds: ['m1'] });
+      const b = await mk({ finished: true, winnerIds: ['m2'] });
+      await mk({ multiTable: true, childSessionIds: [a.id, b.id], votes: { p1: { g: { rating: 5 } }, p2: { g: { rating: 3 } } } });
+
+      const m = await repo.instanceMetrics();
+      assert.equal(m.adoption.funnel.started - mid.adoption.funnel.started, 2);
+      assert.equal(m.adoption.funnel.rated - mid.adoption.funnel.rated, 0);
+      // …but it is still a session the instance holds, so the card's session
+      // denominator counts all three. `childSessionIds` is an ABSENT key on an
+      // ordinary session, which is where a jsonb_array_length without the
+      // typeof guard would error the whole query rather than count zero.
+      assert.equal(m.adoption.sessionsTotal - mid.adoption.sessionsTotal, 3);
+    });
+
+    await t.test('the two account figures and the four denominators agree', async () => {
+      const mid = await repo.instanceMetrics();
+      const settled = `st-${Math.random().toString(16).slice(2)}`;
+      await repo.createRound(settled, { name: 'Hat eine', members: ['Ann'] });
+      await repo.createUser({
+        ...userFields(), tenantId: settled, bgStats: true, avatar: '/uploads/p.webp',
+      });
+      await repo.createUser({
+        ...userFields(), tenantId: `nr-${Math.random().toString(16).slice(2)}`, bgStats: false,
+      });
+
+      const m = await repo.instanceMetrics();
+      assert.equal(m.adoption.accountsTotal - mid.adoption.accountsTotal, 2);
+      assert.equal(m.adoption.roundsTotal - mid.adoption.roundsTotal, 1);
+      assert.equal(m.adoption.accountsWithBgStats - mid.adoption.accountsWithBgStats, 1);
+      assert.equal(m.adoption.accountsWithAvatar - mid.adoption.accountsWithAvatar, 1);
+      /* By TENANT — the only link that exists between an account and a round.
+         The Postgres side must read `rounds` under the admin escape here: a
+         plain query returns zero rows rather than an error, which would report
+         every account as roundless with a perfectly plausible number. */
+      assert.equal(m.adoption.accountsWithoutRound - mid.adoption.accountsWithoutRound, 1,
+        'the account whose tenant holds a round read as roundless');
+    });
+
+    await t.test('a legacy account with NO tenantId is resolved to the default tenant', async () => {
+      /* No fixture in the suite expresses this shape, because every account the
+         app creates carries a tenantId (#136) — so the two backends' fallbacks
+         are the kind of branch that agrees with any implementation until
+         somebody writes it down
+         (.claude/rules/defaulted-account-fields-need-a-legacy-shape-spec.md).
+         They are NOT the same expression: the JSON side reads
+         `u.tenantId || DEFAULT_TENANT`, the SQL side
+         `coalesce(nullif(data->>'tenantId', ''), 'default')` — the `nullif` is
+         what makes an empty string behave like an absent key, which `coalesce`
+         alone would not. */
+      const mid = await repo.instanceMetrics();
+      await repo.createUser({ ...userFields(), tenantId: undefined });
+      const orphan = await repo.instanceMetrics();
+      assert.equal(orphan.adoption.accountsWithoutRound - mid.adoption.accountsWithoutRound, 1,
+        'a tenantless account must read as roundless while no default-tenant round exists');
+
+      // Give the DEFAULT tenant a round, and the same account must flip to
+      // settled — which only happens if both backends resolved it to 'default'.
+      await repo.createRound('default', { name: 'Alt', members: ['Ann'] });
+      const settled = await repo.instanceMetrics();
+      assert.equal(settled.adoption.accountsWithoutRound, orphan.adoption.accountsWithoutRound - 1,
+        'the tenantless account did not resolve to the default tenant');
+    });
+
+    await t.test('ADMIN_EXCLUDE_TENANTS removes a tenant from the card only', async () => {
+      const tn = `ex-${Math.random().toString(16).slice(2)}`;
+      const r = await repo.createRound(tn, { name: 'Ausgenommen', members: ['Ann'] });
+      await repo.addTag(tn, r.id, 'Kurz', null);
+      await repo.createGame(tn, r.id, gameFields({ title: 'Eins', image: '/uploads/e.webp' }));
+      await repo.createSession(tn, r.id, {
+        gameIds: [], votes: {}, createdAt: daysAgo(1), finished: true, winnerIds: ['m1'],
+      });
+      await repo.createUser({ ...userFields(), tenantId: tn, bgStats: true });
+
+      const plain = await repo.instanceMetrics();
+      process.env.ADMIN_EXCLUDE_TENANTS = tn;
+      let hidden;
+      try {
+        hidden = await repo.instanceMetrics();
+      } finally {
+        delete process.env.ADMIN_EXCLUDE_TENANTS;
+      }
+
+      for (const key of ['roundsTotal', 'gamesTotal', 'sessionsTotal', 'accountsTotal',
+        'roundsWithTags', 'gamesWithOwnCover', 'accountsWithBgStats']) {
+        assert.equal(plain.adoption[key] - hidden.adoption[key], 1, `${key} was not excluded`);
+      }
+      assert.equal(plain.adoption.funnel.played - hidden.adoption.funnel.played, 1);
+      assert.equal(plain.adoption.roundsByFinished.one - hidden.adoption.roundsByFinished.one, 1);
+      assert.equal(plain.designs.none - (hidden.designs.none || 0), 1,
+        'the design histogram is rendered as a share on the same card and must follow it');
+
+      /* …and NOTHING outside that card moves. lib/public-stats.js reads
+         `content` for the public landing counters, and an operator hidden from
+         `peaks` would be blind to the quota they are about to hit. */
+      assert.deepEqual(hidden.content, plain.content);
+      assert.deepEqual(hidden.rounds, plain.rounds);
+      assert.deepEqual(hidden.accounts, plain.accounts);
+      assert.deepEqual(hidden.peaks, plain.peaks);
     });
   });
 

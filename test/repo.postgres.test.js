@@ -640,6 +640,22 @@ if (!process.env.DATABASE_URL) {
       guests: [{ id: 'g1', name: 'Gast' }],
     });
     await repo.addTag(tenant, round.id, 'Kurz', null);
+    /* An account whose OWN tenant holds that round (#1174). „Konten ohne Runde"
+       joins `users` (no RLS) to `rounds` (RLS-scoped), so outside atx() the
+       rounds side matches nothing and EVERY account reads as roundless — a
+       number that is not merely zero but confidently wrong in the flattering
+       direction. This account is what makes the two answers differ. */
+    await repo.createUser({
+      email: `${tenant}@example.test`,
+      username: tenant,
+      tenantId: tenant,
+      createdAt: new Date().toISOString(),
+      emailVerified: true,
+      identities: [],
+      verification: null,
+      reset: null,
+      refreshTokens: [],
+    });
 
     const admin = new Client({
       connectionString: process.env.DATABASE_URL,
@@ -700,9 +716,25 @@ if (!process.env.DATABASE_URL) {
     // session_vote_links is deliberately NOT RLS-scoped, so this one is read on
     // plain knex — it must still come back as a number under a plain role.
     assert.equal(typeof out.adoption.sessionsWithVoteLink, 'number');
+    /* The funnel and the habit bands (#1174) read `sessions`, RLS-scoped like
+       the rest — and an all-zero funnel is the most plausible-looking wrong
+       answer on the card, because „nobody finishes a session" is exactly the
+       problem it was built to detect. */
+    assert.ok(out.adoption.funnel.started >= 1,
+      'the funnel was empty without the admin escape — not reading under atx()');
+    assert.ok(out.adoption.funnel.played >= 1, 'the played stage was invisible without the escape');
+    assert.ok(out.adoption.roundsByFinished.one >= 1,
+      'the habit bands were invisible without the admin escape');
+    /* The sharpest of the lot: without the escape the `rounds` side of the
+       anti-join matches nothing, so every account reads as roundless and the
+       two figures become EQUAL. The seeded account above holds a round, so a
+       correct read must leave at least one account out of the count. */
+    assert.ok(out.adoption.accountsWithoutRound < out.adoption.accountsTotal,
+      'every account read as roundless — the rounds anti-join ran outside atx()');
     // pg returns count() as a bigint STRING; a missing ::int would make this
     // backend answer '1' where the JSON one answers 1.
-    for (const n of [out.rounds.total, out.content.games, out.social.friendships, out.peaks.tagsPerRound]) {
+    for (const n of [out.rounds.total, out.content.games, out.social.friendships,
+      out.peaks.tagsPerRound, out.adoption.funnel.rated, out.adoption.accountsWithoutRound]) {
       assert.equal(typeof n, 'number');
     }
   });

@@ -106,6 +106,9 @@ lib/
   auth.js            shared-password gate (active when AUTH_PASSWORD is set)
   admin.js           operator gate for the moderation surface (separate
                      ADMIN_PASSWORD; 404s unless set — issue #268)
+  admin-exclusions.js  which tenants the panel's „Funktionsnutzung" card leaves
+                     out (ADMIN_EXCLUDE_TENANTS), so its shares describe other
+                     people's usage rather than the operator's own (issue #1174)
   accounts.js        user-account primitives: Argon2id passwords, access/refresh
                      tokens (issue #135; off unless ACCOUNTS_ENABLED)
   webauthn.js        passkey primitives (issue #418): the RP identity and the
@@ -570,6 +573,10 @@ public/
                      vote cards and the session result distribution name a
                      rating with the same glyph; also the scale's own bounds,
                      derived from the face list (issues #890, #909)
+    vote-advance.js  the beat between a rating tap and the next card, plus the
+                     longer window taps are ignored for, so one tap per game
+                     can never let a double-tap rate the following one
+                     (issue #1168)
     seat-picker.js   the seat ring both session-starting screens open with: the
                      round's members as in/out toggles, that session's guests
                      beside them, and a „+" seat that adds one (issues #458,
@@ -615,6 +622,9 @@ public/
                      cover editor and the collection-import list
     doc-title.js     joins a screen's browser-tab title, most specific part
                      first, ahead of the brand (issue #522)
+    live-region.js   the app's two aria-live regions: toast() for what everyone
+                     sees, announce() for what only a screen reader is told
+                     (issues #145, #1168)
     popover-fit.js   which side of its anchor a popover goes on and how far it
                      may be squeezed to stay reachable there (issue #739)
     sheet.js         the bottom sheet — the app's modal overlay primitive,

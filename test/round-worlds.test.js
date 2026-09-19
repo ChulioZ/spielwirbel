@@ -859,8 +859,16 @@ test('a world re-shapes the confetti bits through tokens — the same bits, no s
 /* Slot 2's frame hangs .8em outside the button box, and a button row sits its
    controls 10px apart — so a primary button with a neighbour paints its ornament
    onto that neighbour unless something reserves the space. Measured in the pane
-   on 2026-09-08 before the fix: 4.4px of leaf over „Zurück" (.vote__nav) and
-   7.6px over „Speichern & weiteres" (.toolbar.sheet__actions).
+   on 2026-09-08 before the fix: 7.6px of leaf over „Speichern & weiteres"
+   (.toolbar.sheet__actions).
+
+   It used to cover a second row, the vote card's (4.4px over „Zurück"), and
+   this test asserted `.vote__nav` beside `.toolbar`. #1168 deleted that row —
+   the rating tap advances, so the card has no primary button and its one
+   remaining control is a bare corner icon — so the arm was removed from the
+   selector and the assertion with it. Leaving it would have pinned a selector
+   arm that can no longer match anything, which is the same vacuous green this
+   file's neighbours are written against.
 
    Two properties are asserted, and the SECOND is the one that cost a cycle. The
    clearance must be `column-gap`, never a margin on the button: .toolbar wraps,
@@ -878,9 +886,10 @@ test('a world-framed primary button reserves room for its ornament beside a neig
   assert.ok(rule, 'no ornament-clearance rule scoped to a row holding a primary button');
   const [sel, body] = rule;
 
-  // Both rows that hold a primary button today.
+  // The one row that holds a primary button beside a neighbour today.
   assert.match(sel, /\.toolbar/);
-  assert.match(sel, /\.vote__nav/);
+  assert.doesNotMatch(sel, /\.vote__nav/,
+    'the vote card has had no button row since #1168 — a selector arm for it matches nothing');
 
   // column-gap, not `gap` and not a margin — see the note above.
   assert.match(body, /column-gap:/, 'the clearance must be column-gap');

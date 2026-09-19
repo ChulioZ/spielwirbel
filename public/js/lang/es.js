@@ -879,6 +879,7 @@ I18N.es = {
   'directPlay.teamsNote': 'Los equipos juegan juntos, y ganan juntos.',
 
   'vote.progress': 'Paso {n} de {total}',
+  'vote.advanced': 'Juego {n} de {total}: {title}',
   'vote.crumb': 'Votación',
   'vote.leaveConfirm': '¿Salir de la votación? Se perderán las valoraciones hechas hasta ahora.',
   'vote.turn': '¡{name}, te toca!',
@@ -890,9 +891,6 @@ I18N.es = {
   'vote.ratingLabel': '{n} de {max}',
   'vote.scaleLow': 'nada',
   'vote.scaleHigh': 'muchísimo',
-  'vote.next': 'Siguiente ›',
-  'vote.finish': 'Listo',
-  'vote.toast.needRating': 'Elige una valoración',
   'vote.toast.saved': 'Resultados guardados',
 
   'finale.crumb': 'Final',
@@ -1041,6 +1039,9 @@ I18N.es = {
   'tags.editIcon': 'Cambiar el icono',
   'tags.namePlaceholder': 'Nombre de la etiqueta',
   'tags.edit': 'Editar etiqueta',
+  'tags.moveEarlier': 'Mover la etiqueta hacia delante',
+  'tags.moveLater': 'Mover la etiqueta hacia atrás',
+  'tags.toast.changed': 'Las etiquetas han cambiado mientras tanto: se han recargado.',
   'tags.save': 'Guardar',
   'tags.toast.updated': 'Etiqueta actualizada',
   'tags.toast.nameTaken': 'Esta ronda ya tiene una etiqueta con ese nombre',

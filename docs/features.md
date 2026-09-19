@@ -246,7 +246,11 @@ What the app does, in detail. For a short overview see the
   a round's remembered draw filters keep working, because assignments are stored
   by id rather than by name. A rename onto a name the round already uses is
   refused rather than merging the two tags. Deleting a tag simply unassigns it
-  from every game.
+  from every game. A round can also put its tags in the **order it wants**: two
+  arrows on each tile of the Tags screen move a tag earlier or later, and that
+  one order is what every surface listing tags then shows — the tiles, the
+  game-detail chips, the Regal bulk-assign sheet, the filter panel and the draw
+  presets. A newly created tag still lands at the end.
 - **Members** – each member has a detail page (opened from the Start hero row,
   the Pokale podium, or a session's participant list): **one card in that
   member's own colour** carrying the whole record — wins, sessions joined, win
@@ -373,8 +377,11 @@ What the app does, in detail. For a short overview see the
 - **Voting** – the draw opens a **lobby** showing who has voted and who has not.
   There is nothing to configure and no mode to pick: every session works the same
   way, and each person's ratings are saved the moment they give them: one
-  **1–5** scale per drawn game, from „gar nicht" to „unbedingt". Three ways in,
-  freely mixed within one evening:
+  **1–5** scale per drawn game, from „gar nicht" to „unbedingt". Rating is **one
+  tap per game** — the face you press is the answer, and the card moves on by
+  itself after a short beat. The card's only other control is an undo in its
+  top-left corner, which reopens the last game with its rating still chosen.
+  Three ways in, freely mixed within one evening:
   - **pass the device around** – tap whoever is next, a handover screen names
     them so nobody peeks, and when they are done the lobby leads with the next
     person still open;

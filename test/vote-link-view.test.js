@@ -15,6 +15,7 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { loadApp, flush } = require('./support/dom');
+const { setMotion, beat } = require('./support/vote-card');
 
 const BALLOT = {
   roundName: 'Freitagsrunde',
@@ -92,38 +93,49 @@ test('picking a name opens the cards; a member and a guest get the same scale', 
   );
 });
 
-test('a rating must be given before the cards advance', async (t) => {
+/* Until #1168 this asserted the „needRating" toast: a card could be left with
+   nothing on the scale and „Weiter" pressed, so there was a state to guard
+   against. There is no longer one — the rating IS the advance, so an unrated
+   card has no way past it at all, and the guard and its nine translations went
+   with the button. What is left to pin is that nothing else advances the card. */
+test('only a rating advances the card — there is no way past an unrated one', async (t) => {
   const { dom } = boot(t);
+  setMotion(dom, true);
   const toasts = [];
   dom.set('toast', (m) => toasts.push(m));
   await dom.call('showVoteLink', 'tok-3');
   dom.app.querySelectorAll('.live-vote__hotseat-btn')[0].click();
 
-  // Next with nothing chosen stays on the first card and says why.
-  dom.app.querySelector('#nextBtn').click();
-  assert.equal(toasts.length, 1);
-  assert.match(dom.app.querySelector('.vote__title').textContent, /Catan/);
+  assert.equal(dom.app.querySelector('#nextBtn'), null, 'the confirmation button is back');
+  await beat(dom);
+  assert.match(dom.app.querySelector('.vote__title').textContent, /Catan/,
+    'an untouched card advanced on its own');
+  assert.equal(toasts.length, 0);
 
-  // With a rating it moves on.
+  // One tap, and it moves on.
   dom.app.querySelectorAll('.mood')[3].click();
-  dom.app.querySelector('#nextBtn').click();
+  await beat(dom);
   assert.match(dom.app.querySelector('.vote__title').textContent, /Azul/);
 });
 
 test('submitting sends only the claimed person\'s ratings, then shows the thank-you', async (t) => {
   const { dom, calls } = boot(t);
+  setMotion(dom, true);
   await dom.call('showVoteLink', 'tok-4');
   dom.app.querySelectorAll('.live-vote__hotseat-btn')[0].click(); // Anna
 
   // Catan -> 5, then a change of mind onto the 1: one tile wins, and the
   // payload carries the rating alone with no `retire` key beside it (#909).
+  // Since #1168 a change of mind goes through „Zurück" rather than a second tap
+  // on the same card — the first tap has already advanced, and the second one
+  // inside the beat is exactly what the double-tap guard exists to swallow.
   dom.app.querySelectorAll('.mood')[4].click();
+  await beat(dom);
+  dom.app.querySelector('#backBtn').click();
   dom.app.querySelectorAll('.mood')[0].click();
-  dom.app.querySelector('#nextBtn').click();
-  dom.app.querySelectorAll('.mood')[0].click(); // Azul -> 1
-  dom.app.querySelector('#nextBtn').click(); // finish
-
-  await new Promise((r) => setTimeout(r, 0));
+  await beat(dom);
+  dom.app.querySelectorAll('.mood')[0].click(); // Azul -> 1, and that finishes
+  await beat(dom);
 
   const post = calls.find((c) => c.method === 'POST');
   assert.ok(post, 'the votes were never submitted');

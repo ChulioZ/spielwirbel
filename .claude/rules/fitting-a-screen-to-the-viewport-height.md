@@ -42,6 +42,14 @@ by measurement, not argument: at the issue's own stated floors the vote card is
 keep the footer (2026-08-06), so the vote screen still scrolls ~113px, and every
 pixel of it is footer.
 
+**Those figures are #666's, not today's.** #1168 removed the vote card's nav row
+and put its one remaining control in the corner, and the freed 33px went to the
+cover (budget 480 -> 447, cap 240 -> 260 — the cap had to move or the cover
+pinned at 414x700 and stopped being elastic at all). Measured after it, at
+360x600: 243px of non-cover card, 153px of cover, and **122px of headroom above
+the fold** once the demo banner is discounted — which also re-confirms the 82px
+in the table above, since `cardTop - bannerHeight` came out at exactly 82.
+
 **State which goal you are hitting, in the PR and on the issue.** A card that
 fits above the fold against a page that still scrolls looks like a half-done job
 to anyone holding the strict metric.

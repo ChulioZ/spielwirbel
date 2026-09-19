@@ -4749,8 +4749,21 @@ a.k-tile:focus-visible,
   margin: 0 auto;
 }
 .vote__who {
+  /* The positioning context AND the box for the corner undo (#1168). The two
+     numbers live here so the row can be sized FROM them: the button is out of
+     flow, so a row shorter than it lets it hang out of the bottom and clip the
+     cover's top-left corner — measured at 420px before this, 17px of overhang
+     and 7px of it over the cover. `min-height` makes that unrepresentable
+     rather than a coincidence of the line height. */
+  --undo-top: 10px;
+  --undo-size: 44px;
+  min-height: calc(var(--undo-top) + var(--undo-size));
+  position: relative;
   text-align: center;
-  padding: 18px 20px 0;
+  /* Symmetric side padding, wide enough to clear the corner control on the
+     left: the line stays centred in the CARD (not in what is left of it) and a
+     long name can never run underneath the button. */
+  padding: 18px 56px 0;
   font-size: var(--text-md);
   color: var(--ink-soft);
 }
@@ -4766,14 +4779,59 @@ a.k-tile:focus-visible,
   font-size: 64px; /* glyph, not type */
 }
 .vote__title { text-align: center; font-size: var(--text-2xl); font-weight: 800; padding: 6px 20px; margin: 0; }
-.vote__type { text-align: center; margin-bottom: 8px; }
 .vote__q { text-align: center; color: var(--ink-soft); margin: 6px 20px; }
 
 .rating { display: flex; justify-content: center; gap: 10px; padding: 8px 20px 4px; }
 .rating-scale { display: flex; justify-content: space-between; padding: 2px 22px 0; color: var(--ink-soft); font-size: var(--text-sm); }
 
-.vote__nav { display: flex; gap: 10px; padding: 0 20px 20px; }
-.vote__nav .btn { flex: 1; }
+/* The card's ONE remaining control since #1168: the rating tap advances, so
+   what is left is an undo, and it must not read as the screen's action. Hence a
+   bare icon in the top-left corner rather than the „Zurück" button that used to
+   sit in a nav row beside „Weiter" — with the primary gone, a lone full-width
+   button read as the thing to press, which is precisely wrong.
+
+   Top-left is deliberate on two counts: it is the corner a thumb reaches LAST,
+   which is what you want of an undo on a screen whose whole job is rapid
+   tapping; and being absolutely placed inside .vote__who it costs the
+   height-budgeted card NO row at all. The nav row it replaces was ~64px, which
+   the cover gets back on a phone
+   (.claude/rules/fitting-a-screen-to-the-viewport-height.md).
+
+   44px is WCAG 2.5.5's target-size floor, the same one the mood tiles are held
+   to below — an icon-only control has no label to enlarge its hit area, so the
+   box IS the target. */
+.vote__undo {
+  position: absolute;
+  left: 8px;
+  /* Derived from .vote__who's two properties, never restated — that is what
+     keeps the row tall enough to hold this box. */
+  top: var(--undo-top);
+  width: var(--undo-size);
+  height: var(--undo-size);
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--ink-soft);
+  font-size: var(--text-xl);
+  line-height: 1;
+  cursor: pointer;
+}
+.vote__undo:hover:not(:disabled) { color: var(--ink); border-color: var(--ink-soft); }
+/* Kept in place rather than hidden on the first card: it says the way back
+   exists and is simply not available yet, and a control that appeared between
+   cards would be a second thing moving during the beat. */
+.vote__undo:disabled { opacity: .3; cursor: default; }
+
+/* The beat after a rating tap (#1168, vote-advance.js). Pointer-events is the
+   BELT: it stops a second tap becoming an event at all, so the finger cannot
+   reach the next game's faces while the outgoing card is still on screen. The
+   braces are the `advance.locked` guard in JS, which is the half that also
+   covers a keyboard Enter. No dimming and no transform on purpose — the beat
+   must read as "registered", and a card that fades reads as lag. */
+.vote--advancing { pointer-events: none; }
 
 /* Info affordance on the vote cards (#717). Inline in the title line so the
    height-budgeted card gains no extra row (fitting-a-screen-to-the-viewport-
@@ -4809,18 +4867,38 @@ a.k-tile:focus-visible,
 .game-info__fact-value { overflow-wrap: anywhere; }
 .game-info__source { font-size: var(--text-xs); margin-top: 10px; }
 
-/* Wide/landscape screens: image on the left, all controls on the right, so
-   the whole card (incl. the next button) fits without scrolling. */
+/* Wide/landscape screens: image on the left, all controls on the right, so the
+   whole card fits without scrolling.
+
+   The right column is CENTRED against the cover, by a `1fr` spacer at each end
+   of the content rows. Until #1168 the bottom one was the nav row — pinned with
+   `align-self: end`, it filled the space under the scale and the column read as
+   balanced by accident. With the nav gone that space became a dead band under
+   the faces (97px at 1100x760) while the cover still ran full height, so the
+   text column floated high and the card looked unfinished. Two spacers make the
+   balance deliberate instead of a side effect of what happened to be last.
+
+   EVERY content row is pinned, not just the first, and that is not belt and
+   braces. Auto-placement with a definite COLUMN searches for the first free
+   slot in that column — and the leading spacer row is free in column 2 — so
+   with only `.vote__who` pinned the title jumped into the spacer and rendered
+   ABOVE the person line. Measured, and it looks like the markup order changed
+   rather than like a grid rule. */
 @media (min-width: 860px) {
   .vote--split {
     max-width: 940px;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto auto auto auto auto auto auto 1fr auto;
+    grid-template-rows: auto 1fr auto auto auto auto auto 1fr;
     column-gap: 10px;
     padding-bottom: 4px;
   }
-  .vote--split .vote-progress { grid-column: 1 / -1; }
+  .vote--split .vote-progress { grid-column: 1 / -1; grid-row: 1; }
+  .vote--split .vote__who { grid-row: 3; }
+  .vote--split .vote__title { grid-row: 4; }
+  .vote--split .vote__q { grid-row: 5; }
+  .vote--split .rating { grid-row: 6; }
+  .vote--split .rating-scale { grid-row: 7; }
   .vote--split .vote__img {
     grid-column: 1;
     grid-row: 2 / -1;
@@ -4829,12 +4907,9 @@ a.k-tile:focus-visible,
   }
   .vote--split .vote__who,
   .vote--split .vote__title,
-  .vote--split .vote__type,
   .vote--split .vote__q,
   .vote--split .rating,
-  .vote--split .rating-scale,
-  .vote--split .vote__nav { grid-column: 2; }
-  .vote--split .vote__nav { align-self: end; }
+  .vote--split .rating-scale { grid-column: 2; }
 }
 
 /* Phones (#666): the same "fits without scrolling" requirement the split layout
@@ -4863,6 +4938,38 @@ a.k-tile:focus-visible,
    for its own sake — it is the allowance for a game title that wraps to a
    second line (37px), which is common and which nothing else here absorbs.
 
+   #1168 spent that height on the cover. It removed the „Weiter"/„Zurück" nav
+   row (~58px) and grew .vote__who to hold the corner undo (+25px), a net 33px —
+   so the budget came down by exactly 33 (480 -> 447) and every phone size gets
+   those pixels as cover: 120 -> 153 at 360x600, 160 -> 193 at 390x640, 220 ->
+   253 at 414x700.
+
+   THE CAP HAD TO MOVE WITH IT, and that is the non-obvious half. At 414x700 the
+   new budget alone computes 253px, past the old 240 cap — so the cover would
+   have pinned there and stopped giving way, which is the vacuous state
+   test/vote-card-viewport-fit.test.js exists to catch and would have failed the
+   change. 260 is the smallest cap that lets the full 33px land at all three of
+   the issue's viewports while still binding on a tall phone (915svh).
+
+   Read the cap's "no further than 4/3" below as APPROXIMATE, which it always
+   was: it is a fixed px against a width-dependent ratio, so it is exact only
+   around the width it was calibrated at. Measured — at 414x700 the new 253px
+   cover is 344px wide, i.e. still inside 4/3 (258px); on a narrow tall phone
+   (360 wide) 4/3 is 216px, so the cap overshoots it, exactly as the old 240
+   already did. 260 shifts a pre-existing approximation rather than introducing
+   a new behaviour, and the ::before/::after layers letterbox any cover into
+   whatever box they get.
+
+   Note the 480 above never did decompose as stated: measured at 390x640 the
+   non-cover card is 243px, not ~354, and the ~111px gap is suspiciously close
+   to the footer. The number was more conservative than the goal it is written
+   against (the card fits above the FOLD, operator decision 2026-08-06 — the
+   page still scrolls, and every pixel of that is footer). What actually bounds
+   it now is the cap, not the fit: goal 1 is satisfied by any budget >= 358
+   (82px of chrome + 243 + 33 for a title that wraps to a second line), while
+   the elasticity requirement needs > 700 - cap. See
+   .claude/rules/fitting-a-screen-to-the-viewport-height.md.
+
    `svh`, never `dvh`/`vh`: Firefox for Android (where this was reported) hides
    its toolbar as you scroll, so `dvh` would reflow the card mid-session, and
    the case that has to fit is the toolbar-SHOWN one, which is what `svh` is.
@@ -4887,7 +4994,7 @@ a.k-tile:focus-visible,
   .vote .vote__who strong { display: inline; margin-top: 0; font-size: var(--text-lg); }
   .vote .vote__img {
     aspect-ratio: auto;
-    height: max(110px, min(240px, calc(100svh - 480px)));
+    height: max(110px, min(260px, calc(100svh - 447px)));
     margin: 10px 20px 6px;
   }
   .vote .vote__title { padding: 2px 20px; font-size: var(--text-xl); }
@@ -4901,7 +5008,6 @@ a.k-tile:focus-visible,
      tiles further above the floor, which is the safe direction. */
   .vote .rating { padding: 6px 12px 2px; gap: 6px; }
   .vote .rating-scale { padding-top: 0; padding-inline: 14px; }
-  .vote .vote__nav { padding: 0 20px 14px; }
 }
 
 
@@ -7022,6 +7128,12 @@ a.k-tile:focus-visible,
 }
 .tag-act .ti { font-size: var(--text-md); display: block; }
 .tag-act:hover { background: var(--sunken); color: var(--ink); }
+/* The two reorder arrows (#1159) are DISABLED at the ends of the list rather
+   than hidden, so a tile's control set keeps its width as the tag moves. The
+   hover reset is the load-bearing half: without it a dead button still lights
+   up under the pointer and reads as clickable. */
+.tag-act:disabled { opacity: .35; cursor: default; }
+.tag-act:disabled:hover { background: transparent; color: var(--ink-soft); }
 .tag-act--danger:hover { background: color-mix(in oklab, var(--danger) 12%, var(--surface)); color: var(--danger); }
 .ds-row {
   display: flex;
@@ -7316,6 +7428,20 @@ a.k-tile:focus-visible,
 
 
 /* ---- Toast ---- */
+/* Visually hidden, still in the accessibility tree — the #srLive region that
+   announce() writes into (#1168). Not `display: none` and not `hidden`: either
+   removes it from the tree, and a live region that is absent until it has text
+   is never announced at all. The 1px clip box is the standard shape. */
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* Hidden by default via the class, NOT the `hidden` attribute: the element is a
    permanent aria-live region (#145) and must stay in the accessibility tree, so
    only `.is-on` decides whether it is painted. */
@@ -10048,11 +10174,15 @@ kbd {
 [data-world] .btn--primary::after { bottom: -.7em; right: -.8em; transform: rotate(180deg); }
 
 /* …and the corollary: the frame hangs .8em OUTSIDE the button box on each side,
-   while a button row sits its controls 10px apart (.toolbar, .vote__nav). So a
-   primary button with a neighbour lets its ornament land ON that neighbour —
-   measured 2026-09-08 at 4.4px of leaf over „Zurück" on the vote card and 7.6px
-   over „Speichern & weiteres" in the add-game sheet, which reads as a rendering
-   glitch rather than as a flourish.
+   while a button row sits its controls 10px apart (.toolbar). So a primary
+   button with a neighbour lets its ornament land ON that neighbour — measured
+   2026-09-08 at 7.6px of leaf over „Speichern & weiteres" in the add-game
+   sheet, which reads as a rendering glitch rather than as a flourish.
+
+   The vote card was the second row this covered (4.4px of leaf over „Zurück").
+   #1168 removed its nav entirely — the rating tap advances, so there is no
+   primary button left there — and the `.vote__nav` arm was dropped with it
+   rather than left in the selector matching nothing.
 
    It has to be COLUMN-GAP, not a margin on the button. A margin looked right and
    is wrong on a phone: .toolbar wraps (flex-wrap: wrap; .sheet__actions grows its
@@ -10064,12 +10194,12 @@ kbd {
    the row-gap for the wrapped case.
 
    22px clears the largest ornament in these rows (.8em of the sheet's 22px
-   btn--lg = 17.6px) with ~4px to spare; the vote card's 18px needs 14.4px. A
+   btn--lg = 17.6px) with ~4px to spare. A
    button type above ~27px would outgrow it — raise this with it, and note the
    overhang is sized in the BUTTON's em while this is the row's, which is why the
    two cannot simply be written as one number. :has() keeps every other .toolbar
    on its normal 10px. */
-[data-world] :is(.toolbar, .vote__nav):has(> .btn--primary) { column-gap: 22px; }
+[data-world] .toolbar:has(> .btn--primary) { column-gap: 22px; }
 
 /* Slot 3 — a rule under a heading: section headings (direct children only:
    the same selector without `>` reaches every card title inside the
