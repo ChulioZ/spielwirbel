@@ -288,6 +288,7 @@ function showSessionLobby(round, session, handedOn) {
   // The link is minted on demand rather than with the draw — most sessions never
   // need one, and a token that exists is a token that can leak.
   if (pending.length) {
+    const shareRow = h('<div class="live-vote__share-row"></div>');
     const share = h(`<button class="btn live-vote__share">
         <i class="ti ti-link" aria-hidden="true"></i> ${esc(t('lobby.share'))}
       </button>`);
@@ -317,7 +318,19 @@ function showSessionLobby(round, session, handedOn) {
         share.disabled = false;
       }
     });
-    actions.appendChild(share);
+    shareRow.appendChild(share);
+
+    // The same link as a code on this screen (#1170). Beside the share control
+    // rather than inside its sheet: at a table it is the FASTER of the two —
+    // five phones scan it at once, where sharing means finding the group chat
+    // mid-evening — so it must not be something you reach by first trying the
+    // other one.
+    const qr = h(`<button class="btn live-vote__qr" type="button">
+        <i class="ti ti-qrcode" aria-hidden="true"></i> ${esc(t('lobby.qr'))}
+      </button>`);
+    qr.addEventListener('click', () => showVoteQrSheet(round, session));
+    shareRow.appendChild(qr);
+    actions.appendChild(shareRow);
   }
 
   // Closing is available at every point, not only once everyone is in: someone
@@ -410,4 +423,48 @@ function showShareUrlSheet(url) {
   const field = sheet.querySelector('#shareUrlField');
   field.focus();
   field.select();
+}
+
+/* The vote link as a code to hold up at the table (#1170).
+
+   Drawn by the server (lib/routes/sessions.js), which mints the link through
+   the same guard the share button does and encodes the URL it would itself
+   serve — so the picture cannot point somewhere the link does not. Fetched on
+   every open rather than cached: the code then always shows the link currently
+   in force.
+
+   Injected as inline SVG, never as a `data:` image URL — the token would
+   otherwise sit in an attribute that a screenshot, a devtools copy or a crash
+   report carries off with it. The markup is the server's own. */
+function showVoteQrSheet(round, session) {
+  const backdrop = h(`<div class="sheet-backdrop sheet-backdrop--center">
+      <div class="sheet sheet--dialog vote-qr" role="dialog" aria-modal="true" aria-label="${esc(t('lobby.qr'))}">
+        <div class="sheet__head">
+          <h2>${esc(round.name)}</h2>
+          <button class="sheet__close" type="button" aria-label="${esc(t('common.close'))}"><i class="ti ti-x" aria-hidden="true"></i></button>
+        </div>
+        <div class="vote-qr__code" role="img" aria-label="${esc(t('lobby.qrAlt'))}">
+          <p class="muted center">${esc(t('lobby.qrLoading'))}</p>
+        </div>
+        <p class="muted center vote-qr__hint">${esc(t('lobby.qrHint'))}</p>
+      </div>
+    </div>`);
+  const sheet = backdrop.querySelector('.sheet');
+  document.body.appendChild(backdrop);
+
+  const onKey = (e) => { if (e.key === 'Escape') closeSheet(); };
+  document.addEventListener('keydown', onKey, true);
+  openSheet(backdrop, onKey);
+  backdrop.addEventListener('mousedown', (e) => { if (e.target === backdrop) closeSheet(); });
+  sheet.querySelector('.sheet__close').addEventListener('click', () => closeSheet());
+
+  api('POST', `/api/rounds/${round.id}/sessions/${session.id}/vote-link/qr`, {}).then(({ svg }) => {
+    // The sheet may be gone by now — a code nobody is waiting for is not an
+    // error, and writing into a detached node would hide the next one.
+    if (!document.body.contains(backdrop)) return;
+    sheet.querySelector('.vote-qr__code').innerHTML = svg;
+  }).catch((e) => {
+    if (document.body.contains(backdrop)) closeSheet();
+    toast(e.message);
+  });
 }

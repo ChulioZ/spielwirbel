@@ -577,6 +577,9 @@ public/
                      longer window taps are ignored for, so one tap per game
                      can never let a double-tap rate the following one
                      (issue #1168)
+    vote-path.js     the path a shared vote link lives at, built by the client
+                     that hands the link around and by the server that draws
+                     the same URL as a QR code (issues #652, #1170)
     seat-picker.js   the seat ring both session-starting screens open with: the
                      round's members as in/out toggles, that session's guests
                      beside them, and a „+" seat that adds one (issues #458,

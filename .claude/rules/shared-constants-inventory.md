@@ -507,6 +507,21 @@ Note what deliberately did **not** join it: `uaEngine` lives in
 request's own header and the client never sends one — it is not shared at all,
 and putting it here would export a function with no second reader.
 
+**The nineteenth is `public/js/vote-path.js`** (#1170): `votePath`, the path a
+shared vote link lives at. It is the only entry where neither side *validates*
+anything — both sides BUILD. The client builds the URL it hands around
+(`views-session-live.js` via the share sheet, `router.js` when it reflects the
+page), and since #1170 `lib/routes/sessions.js` builds the same URL to draw the
+QR code people scan off a phone at the table.
+
+That symmetry is what makes a copy here worse than usual, not better: a drifted
+server copy would render a *perfectly valid* code leading to a 404, and nothing
+in the app could see it. The route is client-side, so no server test resolves it;
+the picture is correct as a picture; and the only instrument that reports the
+failure is a phone in somebody's hand on a real evening. Where the palette bug
+surfaced as a 400 the same day, this one would surface as „der Code geht nicht"
+weeks later, with no way to tell which half was wrong.
+
 **Each new instance must be named above.** `test/rule-enumerations.test.js`
 asserts every `require('../public/js/…')` under `lib/routes/` and `lib/` appears
 in it, because the list had already gone stale by one before anyone noticed. The

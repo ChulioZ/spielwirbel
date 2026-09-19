@@ -148,6 +148,7 @@
 .ti-dice-5::before { content: "\f08f"; }
 .ti-chess::before { content: "\f382"; }
 .ti-puzzle::before { content: "\eb10"; }
+.ti-qrcode::before { content: "\eb11"; }
 .ti-sword::before { content: "\f030"; }
 .ti-shield::before { content: "\eb24"; }
 /* How a played session ended when nobody won (#1038). Codepoints read from

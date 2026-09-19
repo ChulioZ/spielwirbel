@@ -76,10 +76,8 @@ function roundPath(rid, sub) {
 // encoded here rather than at each link site — usernames are user-chosen and
 // need not be URL-safe.
 const profilePath = (username) => `/u/${encodeURIComponent(username)}`;
-// The public vote link (#652). The token is base64url, which is already
-// path-safe, but it is encoded here for the same reason profilePath encodes a
-// username: the builder, not each call site, owns that question.
-const votePath = (token) => `/vote/${encodeURIComponent(token)}`;
+// The public vote link (#652) lives in js/vote-path.js — the server builds the
+// same path when it draws the QR code (#1170), so the shape has one home.
 const gamePath = (rid, gid) => `/round/${rid}/game/${gid}`;
 const memberPath = (rid, mid) => `/round/${rid}/member/${mid}`;
 const resultsPath = (rid, sid) => `/round/${rid}/session/${sid}`;

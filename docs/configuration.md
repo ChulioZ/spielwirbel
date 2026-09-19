@@ -74,6 +74,14 @@ abandoned rather than closed reaches none of the event-driven deletions, so
 without a max age its link would never expire. The link stops working at that
 cutoff (checked in the route) and a 15-minute sweep deletes the rows.
 
+The same link is also served as a picture: `POST
+/api/rounds/:rid/sessions/:sid/vote-link/qr` mints it through the very guard the
+share button uses and answers with an inline SVG (`no-store`, since it draws a
+live capability). It is encoded server-side with the `qrcode` package, so no
+encoder ships to the browser, and the URL is built from the requesting origin —
+the app fetches same-origin, so that is by construction the page the sharer is
+looking at.
+
 Contact form (issues #224/#272): a public, login-free page at `/kontakt.html`
 with a bilingual form that POSTs to `/api/contact`, which e-mails the operator —
 the phone-free second communication channel a German Impressum (§ 5 DDG) relies
