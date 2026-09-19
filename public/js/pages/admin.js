@@ -373,7 +373,16 @@
   function adoptionRows(s) {
     const m = s.metrics;
     const a = m.adoption;
-    const rounds = m.rounds.total;
+    /* THE CARD'S OWN DENOMINATORS (#1174), never `m.rounds.total` /
+       `m.content.*` / `m.accounts.total`. Those count every real tenant, while
+       every numerator here may have had the operator's own tenants removed
+       (ADMIN_EXCLUDE_TENANTS) — dividing by an instance-wide total would then
+       report shares above 100 %. With the variable unset the two are equal,
+       which is why this reads as a no-op change and is not one. */
+    const rounds = a.roundsTotal;
+    const games = a.gamesTotal;
+    const sessions = a.sessionsTotal;
+    const accounts = a.accountsTotal;
     const rows = [];
 
     /* FIRST on this card, and the one deliberate BARE COUNT on either of them:
@@ -414,7 +423,6 @@
         ['Freundschaften', String(m.social.friendships)],
       ]]);
 
-    const games = m.content.games;
     rows.push(['Spiele-Quellen & Titelbilder', null,
       share(a.gamesWithOwnCover + a.gamesWithProviderCover, games),
       `Spiele mit Titelbild (von ${games})`, [
@@ -429,22 +437,63 @@
         ['mit Erweiterungen', share(a.gamesWithExpansions, games)],
       ]]);
 
-    const sessions = m.content.sessions;
     rows.push(['Sessions', null, share(a.sessionsWithGuests, sessions),
       `Sessions mit Gästen (von ${sessions})`, [
         ['mit Teams', share(a.sessionsWithTeams, sessions)],
         ['mit Vote-Link', share(a.sessionsWithVoteLink, sessions)],
       ]]);
 
-    const accounts = m.accounts.total;
     rows.push(['Konto-Funktionen & eigene Tags', null,
       share(a.accountsWithPasskey, accounts),
       `Konten mit Passkey (von ${accounts})`, [
         ['BGG-Konto', share(a.accountsWithBggUsername, accounts)],
         // The one figure on this tile measured against ROUNDS, not accounts —
         // which is why every line here carries its own denominator.
-        ['Konto-Bild', share(m.accounts.withAvatar, accounts)],
+        ['Konto-Bild', share(a.accountsWithAvatar, accounts)],
+        ['BG-Stats-Weitergabe', share(a.accountsWithBgStats, accounts)],
+        /* Registered and never started anything. Measured by TENANT, the only
+           link that exists — an account invited into someone else's tenant
+           (#138) therefore reads as settled, which the note says rather than
+           implying a per-account answer the data cannot give. */
+        ['ohne Runde (nach Tenant)', share(a.accountsWithoutRound, accounts)],
         ['Runden mit eigenen Tags', share(a.roundsWithTags, rounds)],
+      ]]);
+
+    /* THE SESSION FUNNEL (#1174) — the one tile about the core loop rather than
+       about a feature. Its headline is „gespielt", because a session that never
+       reaches „Als gespielt markieren" leaves no Chronik entry, lifts no score
+       and updates no Staubfänger: that is the app losing its own data, and it
+       is the number the whole card was missing.
+
+       THE LINES ARE NOT A PIPELINE and must not be read as one. Each is an
+       independent share of „gestartet": a direct-pick session is created
+       already closed and with a game chosen while nobody ever voted, so
+       „bewertet" can be smaller than „Abstimmung beendet" with nothing wrong.
+       „abgebrochen" is counted apart for the same reason — an evening nobody
+       played on purpose is a resolved outcome, not a loss.
+
+       Split parents are outside the denominator entirely; their tables are
+       counted instead (lib/repo/json.js). */
+    const f = a.funnel;
+    rows.push(['Session-Trichter', null, share(f.played, f.started),
+      `Sessions als gespielt markiert (von ${f.started} gestarteten)`, [
+        ['von ≥2 bewertet', share(f.rated, f.started)],
+        ['Abstimmung beendet', share(f.closed, f.started)],
+        ['Spiel gewählt', share(f.chosen, f.started)],
+        ['Ergebnis erfasst', share(f.result, f.started)],
+        ['abgebrochen', share(f.cancelled, f.started)],
+      ]]);
+
+    /* „Wird daraus eine Gewohnheit?" — the only figure on either card that says
+       whether the app is used a SECOND time, which is a different question from
+       whether any feature is used at all. The three bands sum to the round
+       total, so the headline is the one that matters and the breakdown accounts
+       for the rest. */
+    const rbf = a.roundsByFinished;
+    rows.push(['Runden mit zweiter Session', null, share(rbf.many, rounds),
+      `Runden mit mindestens zwei gespielten Sessions (von ${rounds})`, [
+        ['genau eine', String(rbf.one)],
+        ['noch keine', String(rbf.none)],
       ]]);
 
     return rows;

@@ -261,6 +261,11 @@
        region that only appears together with its text is never announced. -->
   <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 
+  <!-- The SILENT half of the same idea (#1168): announcements that belong to a
+       screen reader and to nobody else, so they must not become a visible toast.
+       Same permanence rule as above — it stays in the tree, only its text moves. -->
+  <div id="srLive" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+
   <!-- Order matters: i18n + languages first, core next, main (bootstrap) last. -->
   <script src="/js/error-report.js"></script>
   <script src="/js/locales.js"></script>
@@ -299,6 +304,7 @@
   <script src="/js/win-score.js"></script>
   <script src="/js/vote-score.js"></script>
   <script src="/js/rating-faces.js"></script>
+  <script src="/js/vote-advance.js"></script>
   <script src="/js/wish-expansion.js"></script>
   <script src="/js/bulk-tidy.js"></script>
   <script src="/js/session-outcome.js"></script>
@@ -317,6 +323,7 @@
   <script src="/js/popover.js"></script>
   <script src="/js/tag-chips.js"></script>
   <script src="/js/game-stats.js"></script>
+  <script src="/js/live-region.js"></script>
   <script src="/js/core.js"></script>
   <script src="/js/empty-state.js"></script>
   <script src="/js/seat-picker.js"></script>

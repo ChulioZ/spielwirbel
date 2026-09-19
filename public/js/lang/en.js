@@ -920,6 +920,7 @@ I18N.en = {
   'directPlay.teamsNote': 'Teams play together — and win together.',
 
   'vote.progress': 'Step {n} of {total}',
+  'vote.advanced': 'Game {n} of {total}: {title}',
   'vote.crumb': 'Voting',
   'vote.leaveConfirm': 'Leave the vote? The ratings entered so far will be lost.',
   'vote.turn': '{name}, your turn!',
@@ -933,10 +934,6 @@ I18N.en = {
   'vote.ratingLabel': '{n} out of {max}',
   'vote.scaleLow': 'not at all',
   'vote.scaleHigh': 'absolutely',
-  'vote.next': 'Next ›',
-  'vote.finish': 'Done',
-  // One scale, one message: the same 1–5 for members and guests (#909).
-  'vote.toast.needRating': 'Please choose a rating',
   'vote.toast.saved': 'Results saved',
 
   'finale.crumb': 'Finale',
@@ -1088,6 +1085,9 @@ I18N.en = {
   'tags.editIcon': 'Change icon',
   'tags.namePlaceholder': 'Tag name',
   'tags.edit': 'Edit tag',
+  'tags.moveEarlier': 'Move tag earlier',
+  'tags.moveLater': 'Move tag later',
+  'tags.toast.changed': 'The tags changed in the meantime – reloaded.',
   'tags.save': 'Save',
   'tags.toast.updated': 'Tag updated',
   'tags.toast.nameTaken': 'This round already has a tag with that name',
