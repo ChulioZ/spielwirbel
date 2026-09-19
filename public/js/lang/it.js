@@ -845,6 +845,8 @@ I18N.it = {
   'voteLink.doneProgressOne': 'Ha votato {n} su {total}. Il gruppo scoprirà il risultato al tavolo.',
   'voteLink.doneProgress': 'Hanno votato {n} su {total}. Il gruppo scoprirà il risultato al tavolo.',
   'voteLink.revise': 'Cambia il mio voto',
+  'voteLink.appNote': 'Questo era Spielwirbel: gratis per il vostro gruppo.',
+  'voteLink.appNoteCta': 'Crea il tuo gruppo',
   'voteLink.deadTitle': 'Questo link non porta da nessuna parte',
   'voteLink.deadBody': 'La votazione è finita, oppure il link è sbagliato. Meglio chiedere al gruppo.',
   'log.title': 'Che cosa è successo',

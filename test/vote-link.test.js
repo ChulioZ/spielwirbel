@@ -166,6 +166,70 @@ test('a guest is offered on the ballot and marked as one', async () => {
   assert.equal(res.body.people.filter((p) => !p.guest).length, round.members.length);
 });
 
+/* The two fields #1169 added, and what each one is NOT.
+
+   The done step shows one sentence naming the app — but only to somebody who
+   does not already have it, and never off a demo round. Both gates are decided
+   from the ballot, so both are route behaviour rather than client taste. */
+
+test('a seat marks whether it belongs to an ACCOUNT — as a boolean, never the userId', async () => {
+  const repo = require('../lib/repo');
+  const { round, token } = await setup({ session: { guests: ['Dana'] } });
+  const [alice, bob] = round.members;
+  await repo.forTenant('default').updateMember(round.id, alice.id, { userId: 'u-alice' });
+
+  const res = await request(app).get(`/api/vote/${token}`);
+  const by = (name) => res.body.people.find((p) => p.name === name);
+  assert.equal(by(alice.name).linked, true, 'a seat held by an account');
+  assert.equal(by(bob.name).linked, false, 'a name-only seat');
+  // A guest has no member row to hang an account off, so it is false by
+  // construction — asserted anyway, because `undefined` would read as false at
+  // every call site while meaning "this route forgot about guests".
+  assert.equal(by('Dana').linked, false);
+
+  // The point of the boolean. The route's header promises no account identifier
+  // travels, and this is the field that would have broken it: a raw userId hands
+  // a stranger holding the link a stable cross-session handle for a person.
+  const body = JSON.stringify(res.body);
+  assert.equal(body.includes('u-alice'), false, `ballot leaked a userId: ${body}`);
+  assert.equal(body.includes('"userId"'), false);
+});
+
+test('a DEMO round marks itself, so nothing is pitched off data that evaporates', async () => {
+  const repo = require('../lib/repo');
+
+  // An ordinary tenant first — a `demo` that is hardcoded either way passes
+  // only one of these two, which is what makes the pair worth having.
+  const plain = await setup();
+  const plainRes = await request(app).get(`/api/vote/${plain.token}`);
+  assert.equal(plainRes.body.demo, false);
+
+  // A round seeded straight onto a demo tenant. `demo-` is the whole classifier
+  // (lib/demo-tenant.js), so this is the real condition rather than a stub.
+  const demoTenant = 'demo-0123456789abcdef';
+  const scoped = repo.forTenant(demoTenant);
+  const demoRound = await scoped.createRound({ name: 'Demo', members: ['Anna'] });
+  const game = await scoped.createGame(demoRound.id, {
+    title: 'Catan', minPlayers: 1, maxPlayers: 8, image: null,
+  });
+  const session = await scoped.createSession(demoRound.id, {
+    createdAt: new Date().toISOString(),
+    memberIds: demoRound.members.map((m) => m.id),
+    gameIds: [game.id],
+    events: [],
+  });
+  const link = await repo.createSessionVoteLink({
+    tenantId: demoTenant, roundId: demoRound.id, sessionId: session.id,
+  });
+
+  const demoRes = await request(app).get(`/api/vote/${link.id}`);
+  assert.equal(demoRes.status, 200, 'a demo link must still be votable');
+  assert.equal(demoRes.body.demo, true);
+  // The flag is a boolean, not the tenant id — the no-tenant-identifier promise
+  // above still holds, and this is the assertion that keeps it holding.
+  assert.equal(JSON.stringify(demoRes.body).includes(demoTenant), false);
+});
+
 /* --------------------------- Writing through it ---------------------------- */
 
 test('a link vote lands exactly like an in-app one', async () => {

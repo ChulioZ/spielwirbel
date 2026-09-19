@@ -796,6 +796,8 @@ I18N.ko = {
   'voteLink.doneProgressOne': '{total}명 중 {n}명이 투표했어요. 결과는 다 같이 테이블에서 확인해요.',
   'voteLink.doneProgress': '{total}명 중 {n}명이 투표했어요. 결과는 다 같이 테이블에서 확인해요.',
   'voteLink.revise': '내 투표 바꾸기',
+  'voteLink.appNote': '방금 쓴 건 Spielwirbel이에요. 우리 모임에도 무료예요.',
+  'voteLink.appNoteCta': '내 모임 만들기',
   'voteLink.deadTitle': '이 링크는 아무 데도 이어지지 않아요',
   'voteLink.deadBody': '투표가 끝났거나 링크가 잘못됐어요. 모임에 물어보는 게 좋겠어요.',
   'log.title': '무슨 일이 있었나요',

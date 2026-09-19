@@ -57,6 +57,30 @@ function setVoteLinkClaim(token, personId) {
   } catch { /* storage unavailable: the claim simply is not remembered */ }
 }
 
+/* Whether this device has already been told what the app is (#1169).
+
+   Device-wide, NOT per token — unlike the claim above. The note answers "what
+   was this?", which is a question a person has exactly once however many links
+   they are sent; keying it per token would show it again at every friend's
+   table, which is the nagging this feature is deliberately not.
+
+   Stored rather than derived because there is nothing to derive it from: this
+   visitor has no account and no server-side row, so the device is the only
+   place the fact can live. Listed in the § 25 TDDDG storage inventory in
+   `lib/legal.js` (both languages), like INSTALL_DISMISSED_KEY. */
+const VOTE_LINK_NOTE_KEY = 'spielwirbel.voteLinkNote';
+
+function voteLinkNoteShown() {
+  try { return localStorage.getItem(VOTE_LINK_NOTE_KEY) === '1'; } catch { return false; }
+}
+
+function markVoteLinkNoteShown() {
+  // Storage unavailable (Safari private mode throws on access) means the note
+  // may appear once more on a later link. That is the right way round to fail:
+  // the alternative is suppressing it for someone who has never seen it.
+  try { localStorage.setItem(VOTE_LINK_NOTE_KEY, '1'); } catch { /* shown again next time */ }
+}
+
 // The avatar tone. A guest is not a round member, so they have no palette
 // position and the server sends `color: null` — they get the same neutral ink
 // `personColor()` gives them in the app (#458), which also reads as "not one of
@@ -130,10 +154,16 @@ function renderVoteLinkClaim(token, ballot) {
       </div>
     </div>`);
 
+  // Initials, never `avatarFace()`. The ballot carries no `userId` by design
+  // (#1169 settled it as a boolean `linked` instead), and AVATAR_CACHE is filled
+  // only by the auth-gated avatar route this page cannot call — so the lookup
+  // could resolve nothing anyway. This used to pass `{ userId: person.userId }`
+  // on a field that was always undefined, which read as if a linked member's
+  // picture rendered here.
   const list = root.querySelector('#vlClaim');
   ballot.people.forEach((person) => {
     const btn = h(`<button class="btn live-vote__hotseat-btn">
-        <span class="live-person__avatar live-person__avatar--sm" style="background:${voteLinkColor(person)}">${avatarFace(initials(person.name), { userId: person.userId })}</span>
+        <span class="live-person__avatar live-person__avatar--sm" style="background:${voteLinkColor(person)}">${esc(initials(person.name))}</span>
         ${esc(personLabel(person))}
         ${person.hasVoted ? `<span class="live-person__state"><i class="ti ti-check" aria-hidden="true"></i> ${esc(t('lobby.voted'))}</span>` : ''}
       </button>`);
@@ -315,5 +345,39 @@ function renderVoteLinkDone(token, ballot, person) {
   // the voting may have closed in the meantime, and `showVoteLink` is the one
   // place that re-asks the server whether the link still works.
   root.querySelector('#vlAgain').addEventListener('click', () => showVoteLink(token));
+
+  appendVoteLinkAppNote(root, ballot, person);
   app.appendChild(root);
+}
+
+/* The one sentence naming the app, once per device (#1169).
+
+   THIS IS THE ONLY SURFACE IT MAY APPEAR ON. A played evening puts the link on
+   four to six phones belonging to people who never chose Spielwirbel, and this
+   is the app's single point of contact with them — but it is also somebody
+   else's session on somebody else's evening, so it is a sentence and not a card,
+   not an install offer and not a button. A family voting together on one shared
+   screen must never see it, which is what the `linked` gate below is for.
+
+   All four conditions have to hold; each one is a separate way of getting this
+   wrong, and the second is the load-bearing one. */
+function appendVoteLinkAppNote(root, ballot, person) {
+  // 1. The claimed seat is not an account's. Someone who already has the app is
+  //    not the audience, and telling them what Spielwirbel is reads as spam.
+  if (person.linked) return;
+  // 2. Not on a demo tenant. A demo evaporates, so pitching off the back of one
+  //    invites somebody to start from data that is about to be deleted.
+  if (ballot.demo) return;
+  // 3. Once per device, ever.
+  if (voteLinkNoteShown()) return;
+  markVoteLinkNoteShown();
+
+  // A plain <a>, deliberately NOT navLink(): a full navigation is what this
+  // wants. The visitor has no round, no account and no SPA state worth keeping,
+  // and landing on `/` cold gives them the public landing page rather than a
+  // route resolved out of a vote-link session. No tracking parameter on it.
+  root.appendChild(h(`<p class="muted center vote-link__note">
+      ${esc(t('voteLink.appNote'))}
+      <a href="/">${esc(t('voteLink.appNoteCta'))}</a>
+    </p>`));
 }

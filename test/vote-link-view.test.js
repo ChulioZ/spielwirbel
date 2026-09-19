@@ -19,14 +19,15 @@ const { setMotion, beat } = require('./support/vote-card');
 
 const BALLOT = {
   roundName: 'Freitagsrunde',
+  demo: false,
   games: [
     { id: 'g1', title: 'Catan', image: null },
     { id: 'g2', title: 'Azul', image: null },
   ],
   people: [
-    { id: 'm1', name: 'Anna', guest: false, color: '#7f77dd', hasVoted: false },
-    { id: 'm2', name: 'Ben', guest: false, color: '#2f6f4f', hasVoted: true },
-    { id: 'gu1', name: 'Dana', guest: true, color: null, hasVoted: false },
+    { id: 'm1', name: 'Anna', guest: false, color: '#7f77dd', hasVoted: false, linked: false },
+    { id: 'm2', name: 'Ben', guest: false, color: '#2f6f4f', hasVoted: true, linked: true },
+    { id: 'gu1', name: 'Dana', guest: true, color: null, hasVoted: false, linked: false },
   ],
 };
 
@@ -206,4 +207,108 @@ test('an unusable link renders the dead state, never a blank screen', async (t) 
   assert.ok(dom.app.textContent.trim().length > 20, 'a blank page is the failure this guards');
   assert.equal(/abgelaufen|expired/i.test(dom.app.textContent), false, 'must not diagnose');
   assert.equal(dom.app.querySelectorAll('.mood').length, 0);
+});
+
+/* ------------ The one-off sentence naming the app (#1169) ------------------ */
+
+/* This is the app's single point of contact with people who never chose it —
+   four to six phones per played evening — so the gates below are the feature.
+   Each test drives the real flow to the done step rather than calling
+   `renderVoteLinkDone` directly: the conditions read the ballot and the person
+   the CARDS handed on, and a direct call would let a wrong hand-off pass. */
+
+// Vote through both games as `who`, landing on the done step.
+async function voteThrough(dom, token, who) {
+  setMotion(dom, true);
+  await dom.call('showVoteLink', token);
+  [...dom.app.querySelectorAll('.live-vote__hotseat-btn')]
+    .find((b) => b.textContent.includes(who)).click();
+  await flush();
+  dom.app.querySelectorAll('.mood')[3].click();
+  await beat(dom);
+  dom.app.querySelectorAll('.mood')[3].click();
+  await beat(dom);
+}
+
+const noteOf = (dom) => dom.app.querySelector('.vote-link__note');
+
+test('an unlinked seat is told what the app was — once, with one plain link to /', async (t) => {
+  const { dom } = boot(t);
+  await voteThrough(dom, 'tok-note', 'Anna');
+
+  assert.match(dom.app.textContent, /Danke/, 'never reached the done step');
+  const note = noteOf(dom);
+  assert.ok(note, 'the one surface that reaches a non-user showed nothing');
+  assert.match(note.textContent, /Spielwirbel/);
+
+  // One link, to the landing page, with nothing appended. A tracking parameter
+  // here would be a third-party-free page acquiring an identifier, and a
+  // `navLink` would route in-app — this visitor has no app to route inside.
+  const links = note.querySelectorAll('a');
+  assert.equal(links.length, 1, 'a sentence with one offer, not a card of them');
+  assert.equal(links[0].getAttribute('href'), '/');
+
+  // A sentence, not an install offer: no button and no dismiss control.
+  assert.equal(note.querySelector('button'), null);
+});
+
+test('the same device is not told twice — the flag survives a revise', async (t) => {
+  const { dom } = boot(t);
+  await voteThrough(dom, 'tok-once', 'Anna');
+  assert.ok(noteOf(dom), 'the first pass must show it, or the second proves nothing');
+
+  // „Stimme ändern" re-runs the whole screen, which is the realistic way a
+  // device reaches the done step a second time.
+  dom.app.querySelector('#vlAgain').click();
+  await flush();
+  dom.app.querySelectorAll('.live-vote__hotseat-btn')[0].click();
+  await flush();
+  dom.app.querySelectorAll('.mood')[2].click();
+  await beat(dom);
+  dom.app.querySelectorAll('.mood')[2].click();
+  await beat(dom);
+
+  assert.match(dom.app.textContent, /Danke/);
+  assert.equal(noteOf(dom), null, 'the second pass nagged');
+});
+
+test('a seat that belongs to an ACCOUNT is never told — they already have the app', async (t) => {
+  // Ben is the linked seat. He has voted, so the claim asks before replacing —
+  // accept, otherwise the cards never open and the test passes vacuously.
+  const { dom } = boot(t);
+  dom.set('confirmDialog', () => Promise.resolve(true));
+  await voteThrough(dom, 'tok-linked', 'Ben');
+
+  assert.match(dom.app.textContent, /Danke/, 'never reached the done step');
+  assert.equal(noteOf(dom), null);
+});
+
+test('a demo round never pitches — its data is about to evaporate', async (t) => {
+  const { dom } = boot(t, { ballot: { ...BALLOT, demo: true } });
+  await voteThrough(dom, 'tok-demo', 'Anna');
+
+  assert.match(dom.app.textContent, /Danke/, 'never reached the done step');
+  assert.equal(noteOf(dom), null);
+});
+
+/* The scope half of the rule, which no rendering can assert: the note must
+   appear on THIS screen and nowhere else — not on the hot-seat wizard, not on
+   a linked member's own-device view, not in the lobby or the results.
+
+   A lexical scan, so mind what it can and cannot see
+   (.claude/rules/source-scanning-guards-enumerate-shapes.md): it proves no other
+   frontend file NAMES the key, which is how a copy-paste into the wizard would
+   arrive. It cannot prove the sentence is absent from a screen that reached it
+   some other way, and the per-render assertions above are what cover that. */
+test('the note\'s keys exist in exactly one view file', () => {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const dir = path.join(__dirname, '..', 'public', 'js');
+  const files = fs.readdirSync(dir).filter((f) => f.endsWith('.js'));
+  assert.ok(files.length > 30, 'the scan found no view files — it is measuring nothing');
+
+  for (const key of ['voteLink.appNote', 'voteLink.appNoteCta']) {
+    const holders = files.filter((f) => fs.readFileSync(path.join(dir, f), 'utf8').includes(key));
+    assert.deepEqual(holders, ['views-vote-link.js'], `${key} is named outside its one screen`);
+  }
 });

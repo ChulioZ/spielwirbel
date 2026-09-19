@@ -843,6 +843,8 @@ I18N.pt = {
   'voteLink.doneProgressOne': '{n} de {total} votou. O grupo revela o resultado na mesa.',
   'voteLink.doneProgress': '{n} de {total} votaram. O grupo revela o resultado na mesa.',
   'voteLink.revise': 'Mudar o meu voto',
+  'voteLink.appNote': 'Isto foi o Spielwirbel — gratuito para o vosso próprio grupo.',
+  'voteLink.appNoteCta': 'Criar o teu grupo',
   'voteLink.deadTitle': 'Este link não leva a lugar nenhum',
   'voteLink.deadBody': 'A votação acabou ou o link está errado. Melhor perguntar ao grupo.',
   'log.title': 'O que aconteceu',

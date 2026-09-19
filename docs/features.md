@@ -402,7 +402,10 @@ What the app does, in detail. For a short overview see the
   games and who has voted so far, and never a single rating, the result, or
   anything else about the round. It cannot add players (the draw already filtered
   the pool by the player count), and it stops working the moment voting closes,
-  the session is cancelled or deleted, or 30 days pass.
+  the session is cancelled or deleted, or 30 days pass. Once they have voted,
+  someone whose seat does not belong to an account sees one quiet line naming
+  the app and linking to the front page — once per device, never for a seat that
+  is already linked, and never on a demo round.
 - **What happened in a session** – every session keeps a short record of who
   started it, whose votes were submitted by whom, who ended the voting and who
   recorded the result, shown while voting runs and again under the results. It

@@ -812,6 +812,8 @@ I18N.fi = {
   'voteLink.doneProgressOne': '{n} / {total} on äänestänyt. Porukka paljastaa tuloksen pöydässä.',
   'voteLink.doneProgress': '{n} / {total} on äänestänyt. Porukka paljastaa tuloksen pöydässä.',
   'voteLink.revise': 'Muuta ääntäni',
+  'voteLink.appNote': 'Tämä oli Spielwirbel – ilmainen omalle peliporukallenne.',
+  'voteLink.appNoteCta': 'Luo oma porukka',
   'voteLink.deadTitle': 'Tämä linkki ei johda mihinkään',
   'voteLink.deadBody': 'Äänestys on ohi tai linkki on väärä. Kysy porukalta.',
   'log.title': 'Mitä tapahtui',

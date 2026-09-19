@@ -436,7 +436,9 @@ const frontendGlobals = {
   renderVoteLinkCards: 'readonly', renderVoteLinkDone: 'readonly',
   renderVoteLinkDead: 'readonly', voteLinkClaim: 'readonly',
   setVoteLinkClaim: 'readonly', voteLinkColor: 'readonly',
-  VOTE_LINK_CLAIM_KEY: 'readonly',
+  VOTE_LINK_CLAIM_KEY: 'readonly', VOTE_LINK_NOTE_KEY: 'readonly',
+  voteLinkNoteShown: 'readonly', markVoteLinkNoteShown: 'readonly',
+  appendVoteLinkAppNote: 'readonly',
   // router.js
   routing: 'writable', navIndex: 'writable', roundPath: 'readonly',
   gamePath: 'readonly', memberPath: 'readonly', resultsPath: 'readonly',
