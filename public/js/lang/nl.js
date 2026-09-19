@@ -841,6 +841,8 @@ I18N.nl = {
   'voteLink.doneProgressOne': '{n} van de {total} heeft gestemd. De groep onthult het resultaat aan tafel.',
   'voteLink.doneProgress': '{n} van de {total} hebben gestemd. De groep onthult het resultaat aan tafel.',
   'voteLink.revise': 'Mijn stem wijzigen',
+  'voteLink.appNote': 'Dit was Spielwirbel – gratis voor je eigen speelgroep.',
+  'voteLink.appNoteCta': 'Eigen groep starten',
   'voteLink.deadTitle': 'Deze link leidt nergens heen',
   'voteLink.deadBody': 'De stemming is voorbij, of de link klopt niet. Vraag het de groep maar even.',
   'log.title': 'Wat er gebeurd is',

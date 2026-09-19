@@ -9261,6 +9261,14 @@ kbd {
 
 .live-vote__actions { display: flex; flex-direction: column; gap: 12px; }
 .live-vote__done { margin: 0; }
+/* The one-off "what was this?" line on the vote-link done step (#1169). A
+   sentence, not a card: no surface, no border, no button — the visitor is on
+   somebody else's session and gets one quiet offer, or none. The top margin is
+   what separates it from „Stimme ändern" so it does not read as a second
+   action on the same group. */
+.vote-link__note { margin-top: 28px; font-size: var(--text-md); }
+.vote-link__note a { color: var(--brand); }
+
 .live-vote__hotseat { display: flex; flex-direction: column; gap: 8px; }
 .live-vote__hotseat-btn { display: flex; align-items: center; gap: 10px; justify-content: flex-start; }
 

@@ -884,6 +884,8 @@ I18N.en = {
   'voteLink.doneProgressOne': '{n} of {total} has voted. The group reveals the result at the table.',
   'voteLink.doneProgress': '{n} of {total} have voted. The group reveals the result at the table.',
   'voteLink.revise': 'Change my vote',
+  'voteLink.appNote': 'That was Spielwirbel — free for your own group.',
+  'voteLink.appNoteCta': 'Start your own round',
   'voteLink.deadTitle': 'This link leads nowhere',
   'voteLink.deadBody': 'Voting is over, or the link is wrong. Best to ask the group.',
   // The session log (#209). It names the ACCOUNT, never the device: the server

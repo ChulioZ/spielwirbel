@@ -849,6 +849,8 @@ I18N.es = {
   'voteLink.doneProgressOne': 'Ha votado {n} de {total}. El resultado se desvela en la mesa.',
   'voteLink.doneProgress': 'Han votado {n} de {total}. El resultado se desvela en la mesa.',
   'voteLink.revise': 'Cambiar mi voto',
+  'voteLink.appNote': 'Esto era Spielwirbel: gratis para vuestro propio grupo.',
+  'voteLink.appNoteCta': 'Crear tu propio grupo',
   'voteLink.deadTitle': 'Este enlace no lleva a ninguna parte',
   'voteLink.deadBody': 'La votación ha terminado, o el enlace es incorrecto. Lo mejor es preguntarle al grupo.',
   // El registro de la sesión (#209). Nombra la CUENTA, nunca el dispositivo: el

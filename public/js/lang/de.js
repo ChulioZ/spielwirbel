@@ -878,6 +878,8 @@ I18N.de = {
   'voteLink.doneProgressOne': '{n} von {total} hat abgestimmt. Das Ergebnis zeigt die Runde am Tisch.',
   'voteLink.doneProgress': '{n} von {total} haben abgestimmt. Das Ergebnis zeigt die Runde am Tisch.',
   'voteLink.revise': 'Stimme ändern',
+  'voteLink.appNote': 'Das war Spielwirbel – kostenlos für eure eigene Runde.',
+  'voteLink.appNoteCta': 'Eigene Runde starten',
   'voteLink.deadTitle': 'Dieser Link führt ins Leere',
   'voteLink.deadBody': 'Die Abstimmung ist vorbei, oder der Link stimmt nicht. Frag am besten in der Runde nach.',
   // Der Session-Verlauf (#209). Er benennt das KONTO, nicht das Gerät: der

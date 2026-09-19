@@ -96,6 +96,12 @@ test('configured: the privacy policy covers the real processors and no ODR link'
     'keine Konto- oder Mandanten-Kennung',       // feedback is anonymous since #321 — pin the §11 disclosure
     'Aktionsprotokoll',                          // moderation log + erasure-record retention
     '§ 25', 'TDDDG',                             // consent-free storage position
+    // The vote-link app note's device flag (#1169). Paired DE + EN, like the
+    // §16 markers below: the two inventories are edited independently, and a
+    // stored-on-your-device fact disclosed in only one language is exactly the
+    // § 25 TDDDG gap this list exists to keep shut.
+    'um welchen Dienst es sich handelt',
+    'note naming this service',
     'Art. 77',                                   // right to lodge a complaint
     'Art. 22',                                   // explicit no-automated-decisions statement
     // §16 sharing scope (#878 widened it; the 2026-09-06 audit found EN still
