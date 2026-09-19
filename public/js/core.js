@@ -6,7 +6,6 @@
 
 const app = document.getElementById('app');
 const context = document.getElementById('context');
-const toastEl = document.getElementById('toast');
 
 // The brand mark is a real link to '/' (#330), so it can be opened in a new tab
 // and its address copied like any other. The callback is an arrow so
@@ -66,25 +65,7 @@ const esc = (s) =>
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])
   );
 
-// Toasts carry confirmations AND errors, so they must reach a screen reader
-// (#145). The element is an aria-live region declared in index.html, and it must
-// stay in the accessibility tree permanently for that to work: a live region
-// that is inserted (or un-`hidden`) with its text already in place is NOT
-// announced. So visibility is a class, never the `hidden` attribute — the empty
-// region sits in the tree and only its text content changes, which is exactly
-// the mutation aria-live listens for.
-let toastTimer;
-function toast(msg) {
-  toastEl.textContent = msg;
-  toastEl.classList.add('is-on');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => {
-    toastEl.classList.remove('is-on');
-    // Clear the text too, so the next identical message is still a change the
-    // live region reports rather than a no-op mutation.
-    toastEl.textContent = '';
-  }, 2200);
-}
+// toast() and announce() moved to live-region.js (#1168) — see its header.
 
 async function api(method, url, body, _retried) {
   const opts = { method, headers: {} };

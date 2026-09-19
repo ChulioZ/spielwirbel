@@ -298,6 +298,74 @@ async function showTags(rid) {
     sec.appendChild(emptyState({ icon: 'ti-tags', title: t('tags.emptyTitle'), text: t('tags.empty') }));
   } else {
     const list = h('<div class="ds-list ds-list--tiles"></div>');
+
+    /* Manual order (#1159). Array order IS the stored order, and every surface
+       that lists tags — these tiles, the game-detail chips, the Regal bulk
+       sheet, the filter panel, the draw presets — renders it straight, so
+       moving a tile here moves the tag everywhere.
+
+       The controls say „nach vorne"/„nach hinten" rather than up/down: this is
+       a WRAPPING GRID (`.ds-list--tiles`, three columns at reading width, one
+       on a phone), so the previous tag is to the left on a laptop and above on
+       a phone. An up arrow would point somewhere the tag does not go at most
+       widths; „earlier/later" is true at every width, and for an icon-only
+       button the label is what a screen reader reads anyway. */
+    const order = tags.map((tg) => tg.id);
+    const rows = new Map();
+
+    // Each save sends the WHOLE order, so two in flight at once can be applied
+    // in either sequence and leave the server on the earlier of the two. Chain
+    // them instead: a keyboard user holding „nach vorne" outruns the network.
+    let pending = Promise.resolve();
+    const persist = () => {
+      pending = pending.then(async () => {
+        try {
+          await api('PATCH', `/api/rounds/${rid}/tags/order`, { tagIds: order.slice() });
+        } catch (e) {
+          // `tags_changed` means another tab created or deleted a tag, so this
+          // list is stale by definition and there is nothing local worth
+          // keeping — take the server's.
+          toast(e.message === 'tags_changed' ? t('tags.toast.changed') : e.message);
+          showTags(rid);
+          throw e; // stop the chain; the view is being rebuilt under it
+        }
+      }).catch(() => {});
+    };
+
+    // Disabled rather than hidden at the two ends: a tile whose control set
+    // changes width as it moves is worse than a dead button.
+    const syncEnds = () => {
+      order.forEach((tagId, i) => {
+        const row = rows.get(tagId);
+        row.querySelector('.tag-act--back').disabled = i === 0;
+        row.querySelector('.tag-act--fwd').disabled = i === order.length - 1;
+      });
+    };
+
+    const move = (tagId, delta, pressed, partner) => {
+      const from = order.indexOf(tagId);
+      const to = from + delta;
+      if (from < 0 || to < 0 || to >= order.length) return;
+      // An open inline editor is inserted AFTER its own row, so moving rows
+      // around would strand it beside a different tag. Reordering is not
+      // editing — close it.
+      list.querySelectorAll('.tag-edit').forEach((el) => el.remove());
+      order.splice(to, 0, order.splice(from, 1)[0]);
+      const row = rows.get(tagId);
+      // After the splice the tag that swapped places with this one sits at the
+      // OLD index, in both directions.
+      const swapped = rows.get(order[from]);
+      if (delta < 0) swapped.before(row); else swapped.after(row);
+      syncEnds();
+      // Re-inserting the row detaches it, which drops focus — so pressing
+      // „nach vorne" three times would otherwise move three different tags one
+      // place each instead of one tag three places. When the move just disabled
+      // the pressed button (the tag reached an end), hand focus to its partner
+      // rather than letting it fall to the document.
+      (pressed.disabled ? partner : pressed).focus();
+      persist();
+    };
+
     tags.forEach((tg) => {
       const n = round.games.filter((g) => (g.tagIds || []).includes(tg.id)).length;
       const row = h(`<div class="ds-row ds-row--static tag-row">
@@ -351,6 +419,16 @@ async function showTags(rid) {
         row.after(editor);
         nameInput.focus();
       });
+      // Only worth showing once there is something to reorder: a lone tag would
+      // carry two permanently dead buttons.
+      if (tags.length > 1) {
+        const back = h(`<button class="tag-act tag-act--back" aria-label="${esc(t('tags.moveEarlier'))}" title="${esc(t('tags.moveEarlier'))}"><i class="ti ti-arrow-left" aria-hidden="true"></i></button>`);
+        const fwd = h(`<button class="tag-act tag-act--fwd" aria-label="${esc(t('tags.moveLater'))}" title="${esc(t('tags.moveLater'))}"><i class="ti ti-arrow-right" aria-hidden="true"></i></button>`);
+        back.addEventListener('click', () => move(tg.id, -1, back, fwd));
+        fwd.addEventListener('click', () => move(tg.id, 1, fwd, back));
+        row.querySelector('.ds-row__meta').appendChild(back);
+        row.querySelector('.ds-row__meta').appendChild(fwd);
+      }
       row.querySelector('.ds-row__meta').appendChild(edit);
       const del = h(`<button class="tag-act tag-act--danger" aria-label="${esc(t('tags.delete'))}"><i class="ti ti-trash" aria-hidden="true"></i></button>`);
       del.addEventListener('click', async () => {
@@ -365,8 +443,10 @@ async function showTags(rid) {
         } catch (e) { toast(e.message); }
       });
       row.querySelector('.ds-row__meta').appendChild(del);
+      rows.set(tg.id, row);
       list.appendChild(row);
     });
+    if (tags.length > 1) syncEnds();
     sec.appendChild(list);
   }
   app.appendChild(sec);

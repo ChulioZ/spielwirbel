@@ -378,3 +378,62 @@ test('the client maxlength on EVERY tag-name input equals the server TAG_NAME_MA
   assert.equal(clientMaxes.length, 3, 'expected exactly three tag-name inputs with a maxlength');
   for (const max of clientMaxes) assert.equal(max, serverMax);
 });
+
+// Manual tag order (#1159). The route is PATCH …/tags/order, and it must be
+// registered BEFORE PATCH …/tags/:tagId or Express hands it to that handler
+// with tagId === 'order' — a 404 that reads like a missing route.
+test('tag order: reorders, rejects a stale list, leaves assignments alone', async (t) => {
+  const round = await createRound(request);
+  const mk = async (name) => (await request(app).post(`/api/rounds/${round.id}/tags`)
+    .send({ name })).body;
+  const a = await mk('Muy bien a 3');
+  const b = await mk('Muy bien a 4');
+  const c = await mk('Muy bien a 2');
+  const game = (await addGame(round.id, 'Azul', [c.id, a.id])).body;
+
+  await t.test('moves a tag and answers with the new order', async () => {
+    const res = await request(app).patch(`/api/rounds/${round.id}/tags/order`)
+      .send({ tagIds: [c.id, a.id, b.id] });
+    assert.equal(res.status, 200);
+    assert.deepEqual(res.body.map((tg) => tg.name),
+      ['Muy bien a 2', 'Muy bien a 3', 'Muy bien a 4']);
+  });
+
+  await t.test('and the round reads back in that order', async () => {
+    const res = await request(app).get(`/api/rounds/${round.id}`);
+    assert.deepEqual(res.body.tags.map((tg) => tg.id), [c.id, a.id, b.id]);
+    assert.deepEqual(res.body.games.find((g) => g.id === game.id).tagIds, [c.id, a.id],
+      'assignments are stored as ids, so a reorder cannot disturb them');
+  });
+
+  await t.test('a stale list is refused with 409 tags_changed', async () => {
+    for (const tagIds of [[c.id, a.id], [c.id, a.id, b.id, 'ghost'], [c.id, c.id, a.id]]) {
+      const res = await request(app).patch(`/api/rounds/${round.id}/tags/order`).send({ tagIds });
+      assert.equal(res.status, 409, JSON.stringify(tagIds));
+      assert.equal(res.body.error, 'tags_changed');
+    }
+    const after = await request(app).get(`/api/rounds/${round.id}`);
+    assert.deepEqual(after.body.tags.map((tg) => tg.id), [c.id, a.id, b.id], 'nothing was written');
+  });
+
+  await t.test('a malformed body is a 400, not a 409', async () => {
+    for (const body of [{}, { tagIds: 'nope' }, { tagIds: [] }, { tagIds: [1, 2, 3] }]) {
+      const res = await request(app).patch(`/api/rounds/${round.id}/tags/order`).send(body);
+      assert.equal(res.status, 400, JSON.stringify(body));
+    }
+  });
+
+  await t.test('an unknown round is a 404', async () => {
+    const res = await request(app).patch('/api/rounds/missing/tags/order').send({ tagIds: [a.id] });
+    assert.equal(res.status, 404);
+  });
+
+  await t.test('renaming a tag still works after the reorder (the /:tagId route is intact)', async () => {
+    const res = await request(app).patch(`/api/rounds/${round.id}/tags/${c.id}`)
+      .send({ name: 'Perfecto a 2' });
+    assert.equal(res.status, 200);
+    assert.equal(res.body.name, 'Perfecto a 2');
+    const after = await request(app).get(`/api/rounds/${round.id}`);
+    assert.deepEqual(after.body.tags.map((tg) => tg.id), [c.id, a.id, b.id], 'and the order held');
+  });
+});

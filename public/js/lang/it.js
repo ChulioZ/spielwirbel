@@ -872,6 +872,7 @@ I18N.it = {
   'directPlay.teamsNote': 'Le squadre giocano insieme — e vincono insieme.',
 
   'vote.progress': 'Passo {n} di {total}',
+  'vote.advanced': 'Gioco {n} di {total}: {title}',
   'vote.crumb': 'Votazione',
   'vote.leaveConfirm': 'Uscire dalla votazione? Le valutazioni inserite finora andranno perse.',
   'vote.turn': '{name}, tocca a te!',
@@ -883,9 +884,6 @@ I18N.it = {
   'vote.ratingLabel': '{n} su {max}',
   'vote.scaleLow': 'per niente',
   'vote.scaleHigh': 'moltissima',
-  'vote.next': 'Avanti ›',
-  'vote.finish': 'Fine',
-  'vote.toast.needRating': 'Scegli una valutazione',
   'vote.toast.saved': 'Risultati salvati',
 
   'finale.crumb': 'Finale',
@@ -1034,6 +1032,9 @@ I18N.it = {
   'tags.editIcon': 'Cambia icona',
   'tags.namePlaceholder': 'Nome dell’etichetta',
   'tags.edit': 'Modifica etichetta',
+  'tags.moveEarlier': 'Sposta il tag in avanti',
+  'tags.moveLater': 'Sposta il tag indietro',
+  'tags.toast.changed': 'I tag sono cambiati nel frattempo: ricaricati.',
   'tags.save': 'Salva',
   'tags.toast.updated': 'Etichetta aggiornata',
   'tags.toast.nameTaken': 'Questo gruppo ha già un’etichetta con questo nome',

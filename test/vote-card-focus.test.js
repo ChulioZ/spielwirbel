@@ -19,6 +19,7 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { loadApp } = require('./support/dom');
+const { setMotion, beat } = require('./support/vote-card');
 
 const MEMBER = { id: 'm1', name: 'Anna', color: '#7f77dd' };
 const GUEST = { id: 'g-1', name: 'Lea', guest: true };
@@ -59,6 +60,11 @@ function sessionFixture() {
 async function voteCard(t, person = MEMBER) {
   const dom = loadApp();
   t.after(() => dom.close());
+  // #1168 made the rating tap advance the card after a beat. Every case below
+  // is about the frame BEFORE that — the rebuilt card the tap produces — so the
+  // short beat keeps the file quick; test/vote-tap-advances.test.js owns the
+  // advance itself.
+  setMotion(dom, true);
   dom.set('api', async () => roundFixture());
   await dom.call('startVoting', roundFixture(), sessionFixture(), GAMES, [person], {
     skipIntro: true,
@@ -89,9 +95,18 @@ test('rating a game leaves focus on that rating in the rebuilt card', async (t) 
   assert.equal(after[3].getAttribute('aria-pressed'), 'true');
 });
 
+/* A change of mind is a Back and a fresh tap since #1168 — a second tap on the
+   same card cannot happen any more, because the first one has already taken the
+   card away. What still has to hold is the half this file is about: the rebuilt
+   card keeps focus on whichever face was just pressed. */
 test('re-rating moves focus to the newly chosen face', async (t) => {
   const dom = await voteCard(t);
   moods(dom)[3].click();
+  await beat(dom);
+  await new Promise((resolve) => {
+    dom.window.addEventListener('popstate', () => setTimeout(resolve, 0), { once: true });
+    dom.window.history.back();
+  });
   moods(dom)[0].click(); // change of mind: rating 1
 
   const after = moods(dom);
@@ -129,6 +144,11 @@ test('a guest card restores rating focus like a member one', async (t) => {
 test('re-picking clears the previous face rather than adding to it', async (t) => {
   const dom = await voteCard(t);
   moods(dom)[0].click();
+  await beat(dom);
+  await new Promise((resolve) => {
+    dom.window.addEventListener('popstate', () => setTimeout(resolve, 0), { once: true });
+    dom.window.history.back();
+  });
   moods(dom)[2].click(); // rating 3
 
   const after = moods(dom);
@@ -147,20 +167,23 @@ test('re-picking clears the previous face rather than adding to it', async (t) =
 test('advancing to the next game does not pull focus into the rating row', async (t) => {
   const dom = await voteCard(t);
   moods(dom)[4].click(); // focus is now on a rating…
-  dom.app.querySelector('#nextBtn').click(); // …and we leave for game 2
+  await beat(dom);       // …and the beat delivers game 2
 
-  assert.equal(dom.app.querySelector('.vote__title').textContent, 'Azul', 'expected the second game');
+  assert.equal(dom.app.querySelector('.vote__title').textContent.trim(), 'Azul', 'expected the second game');
   assert.ok(
     !moods(dom).includes(active(dom)),
     'arriving on a fresh card must not focus a rating'
   );
-  assert.equal(active(dom), dom.document.body);
+  // Not <body> any more: since #1168 a card the beat DELIVERED puts focus on its
+  // own heading, so a keyboard voter carries on from the top of the new game
+  // rather than from the start of the document.
+  assert.equal(active(dom), dom.app.querySelector('.vote__title'));
 });
 
 test('going Back to the previous game does not pull focus into the rating row', async (t) => {
   const dom = await voteCard(t);
   moods(dom)[4].click();
-  dom.app.querySelector('#nextBtn').click();
+  await beat(dom);
 
   // jsdom queues the traversal, so a bare tick is not enough — wait on the real
   // popstate (the router's own listener is registered first, at load time) and
@@ -175,6 +198,8 @@ test('going Back to the previous game does not pull focus into the rating row', 
     !moods(dom).includes(active(dom)),
     'a Back must not focus a rating'
   );
+  assert.notEqual(active(dom), dom.app.querySelector('.vote__title'),
+    'only a card the beat delivered takes focus — a Back must move nothing');
 });
 
 // A language switch re-runs the current step through `currentView` — the third
@@ -210,7 +235,7 @@ test('the vote progress is exposed as a progressbar per person, in steps', async
   assert.equal(seg().getAttribute('aria-valuetext'), dom.run(`t('vote.progress', { n: 0, total: ${GAMES.length} })`));
 
   moods(dom)[2].click();
-  dom.app.querySelector('#nextBtn').click();
+  await beat(dom);
   assert.equal(seg().getAttribute('aria-valuenow'), '1', 'advancing a card moves the value');
   assert.equal(seg().getAttribute('aria-valuetext'), dom.run(`t('vote.progress', { n: 1, total: ${GAMES.length} })`));
 });

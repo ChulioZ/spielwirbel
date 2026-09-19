@@ -33,7 +33,7 @@ const VARS = [
   'ACCOUNTS_ENABLED', 'SESSION_SECRET', 'AUTH_PASSWORD', 'ADMIN_PASSWORD',
   'SMTP_PASS', 'BGG_API_TOKEN', 'IMPRESSUM_ADDRESS', 'IMPRESSUM_EMAIL',
   'MAX_ROUNDS_PER_TENANT', 'MAX_GAMES_PER_ROUND', 'MAX_TAGS_PER_ROUND',
-  'MAX_LIVE_DEMOS', 'DEMO_ENABLED', 'MAIL_DAILY_MAX',
+  'MAX_LIVE_DEMOS', 'DEMO_ENABLED', 'MAIL_DAILY_MAX', 'ADMIN_EXCLUDE_TENANTS',
 ];
 
 async function withEnv(overrides, fn) {
@@ -318,4 +318,214 @@ test('a name planted in a metrics KEY is caught, not just in a value', async () 
     }
   } catch (err) { caught = err; }
   assert.ok(caught, 'the string sweep did not catch a name planted in a KEY');
+});
+
+
+/* --------------------- the session funnel (#1174) ------------------------- */
+
+// One rating by one person. The funnel's „rated" stage wants TWO, because one
+// is the host trying the flow out alone — the case the card exists to tell
+// apart from a real evening.
+const votesBy = (n) => Object.fromEntries(
+  Array.from({ length: n }, (_, i) => [`p${i}`, { g1: { rating: 4 } }]),
+);
+
+test('each funnel stage counts the sessions in that state, independently', async () => {
+  const before = await instanceStatus();
+  const tenant = `fun-${uniq()}`;
+  const round = await repo.createRound(tenant, { name: 'Trichter', members: ['Ann', 'Bo'] });
+  const add = (session) => repo.createSession(tenant, round.id, {
+    gameIds: [], votes: {}, createdAt: iso(1), ...session,
+  });
+
+  await add({});                                              // started only
+  await add({ votes: votesBy(2) });                           // + rated
+  await add({ votes: votesBy(1) });                           // NOT rated: one person
+  // A seat that was asked and never answered is not a rater either.
+  await add({ votes: { p0: { g1: { rating: 3 } }, p1: {} } });
+  await add({ done: true });                                  // + closed
+  await add({ chosenGameId: 'g1' });                          // + chosen
+  await add({ finished: true, winnerIds: ['m1'] });           // + played + result
+  await add({ finished: true, winnerIds: [], ending: 'lost' }); // + played + result
+  await add({ finished: true, winnerIds: [] });               // played, NOT result
+  await add({ cancelled: true });                             // + cancelled
+
+  const f = (await instanceStatus()).metrics.adoption.funnel;
+  const b = before.metrics.adoption.funnel;
+  assert.equal(f.started - b.started, 10);
+  assert.equal(f.rated - b.rated, 1, 'one rater, or an empty seat entry, is not „bewertet"');
+  assert.equal(f.closed - b.closed, 1);
+  assert.equal(f.chosen - b.chosen, 1);
+  assert.equal(f.played - b.played, 3);
+  assert.equal(f.result - b.result, 2, 'finished with neither winners nor an ending is unrecorded');
+  assert.equal(f.cancelled - b.cancelled, 1);
+});
+
+test('an unknown `ending` is unrecorded, and a cancelled session never has a result', async () => {
+  /* Both come from the shared sessionEnding() rather than from a bare
+     `winnerIds.length` — the exact site public/js/session-outcome.js's header
+     says fails silently. An allowlist means a value nobody has heard of reads as
+     „nicht erfasst" instead of quietly counting as a recorded result. */
+  const before = await instanceStatus();
+  const tenant = `end-${uniq()}`;
+  const round = await repo.createRound(tenant, { name: 'Enden', members: ['Ann'] });
+  const add = (session) => repo.createSession(tenant, round.id, {
+    gameIds: [], votes: {}, createdAt: iso(1), ...session,
+  });
+  await add({ finished: true, winnerIds: [], ending: 'brandNew' });
+  await add({ finished: true, winnerIds: ['m1'], cancelled: true });
+
+  const f = (await instanceStatus()).metrics.adoption.funnel;
+  assert.equal(f.result - before.metrics.adoption.funnel.result, 0);
+});
+
+test('a split parent is outside the funnel — its tables are counted instead', async () => {
+  /* A parent split across tables holds a real vote, was never played and is not
+     an abandoned evening either (public/js/session-outcome.js). Counting it
+     would book a loss against „gespielt" for a round that played two games. */
+  const before = await instanceStatus();
+  const tenant = `split-${uniq()}`;
+  const round = await repo.createRound(tenant, { name: 'Zwei Tische', members: ['Ann', 'Bo'] });
+  const add = (session) => repo.createSession(tenant, round.id, {
+    gameIds: [], votes: {}, createdAt: iso(1), ...session,
+  });
+  const a = await add({ finished: true, winnerIds: ['m1'] });
+  const b2 = await add({ finished: true, winnerIds: ['m2'] });
+  await add({ multiTable: true, childSessionIds: [a.id, b2.id], votes: votesBy(3) });
+
+  const f = (await instanceStatus()).metrics.adoption.funnel;
+  const b = before.metrics.adoption.funnel;
+  assert.equal(f.started - b.started, 2, 'the parent was counted as a started session');
+  assert.equal(f.played - b.played, 2);
+  assert.equal(f.rated - b.rated, 0, 'the parent’s own votes reached the funnel');
+  // …while the SESSION denominator still counts all three: the parent is a
+  // session the instance holds, it is only outside this one tile.
+  assert.equal(
+    (await instanceStatus()).metrics.adoption.sessionsTotal - before.metrics.adoption.sessionsTotal,
+    3,
+  );
+});
+
+test('rounds are banded by how many sessions they FINISHED, and the bands are exhaustive', async () => {
+  const before = await instanceStatus();
+  const tenant = `band-${uniq()}`;
+  const mk = async (name, finishedCount, extraOpen) => {
+    const r = await repo.createRound(tenant, { name, members: ['Ann'] });
+    for (let i = 0; i < finishedCount; i += 1) {
+      await repo.createSession(tenant, r.id, {
+        gameIds: [], votes: {}, createdAt: iso(1), finished: true,
+      });
+    }
+    if (extraOpen) {
+      await repo.createSession(tenant, r.id, { gameIds: [], votes: {}, createdAt: iso(1) });
+    }
+  };
+  await mk('Nie gespielt', 0, false);   // no sessions at all
+  await mk('Nur gestartet', 0, true);   // sessions, none finished
+  await mk('Einmal', 1, false);
+  await mk('Gewohnheit', 2, false);
+
+  const s = await instanceStatus();
+  const r = s.metrics.adoption.roundsByFinished;
+  const b = before.metrics.adoption.roundsByFinished;
+  /* Both zero-cases land in „none", and they reach it differently: one has no
+     sessions row at all, the other has sessions that never finished. The
+     Postgres backend derives `none` by subtraction precisely because a
+     group-by over sessions cannot see the first kind. */
+  assert.equal(r.none - b.none, 2);
+  assert.equal(r.one - b.one, 1);
+  assert.equal(r.many - b.many, 1);
+  assert.equal(r.none + r.one + r.many, s.metrics.adoption.roundsTotal,
+    'the three bands must account for every round on the card');
+});
+
+test('„ohne Runde" and the BG-Stats opt-in count accounts, by tenant', async () => {
+  const before = await instanceStatus();
+  const settled = `has-${uniq()}`;
+  const roundless = `none-${uniq()}`;
+  const mkUser = (tenantId, over = {}) => repo.createUser({
+    email: `${uniq()}@example.test`, username: uniq(), tenantId,
+    createdAt: iso(1), emailVerified: true, identities: [], verification: null,
+    reset: null, refreshTokens: [], bgStats: false, ...over,
+  });
+  await repo.createRound(settled, { name: 'Hat eine', members: ['Ann'] });
+  await mkUser(settled, { bgStats: true });
+  await mkUser(roundless);
+
+  const a = (await instanceStatus()).metrics.adoption;
+  const b = before.metrics.adoption;
+  assert.equal(a.accountsWithoutRound - b.accountsWithoutRound, 1,
+    'the account whose tenant owns a round must not read as roundless');
+  assert.equal(a.accountsWithBgStats - b.accountsWithBgStats, 1);
+  assert.equal(a.accountsTotal - b.accountsTotal, 2);
+});
+
+/* ------------------- ADMIN_EXCLUDE_TENANTS (#1174) ------------------------ */
+
+test('an excluded tenant leaves the adoption card but not the counters', async () => {
+  const tenant = `excl-${uniq()}`;
+  const round = await repo.createRound(tenant, { name: 'Ausgenommen', members: ['Ann', 'Bo'] });
+  await repo.createGame(tenant, round.id, {
+    title: 'Eins', minPlayers: 1, maxPlayers: 4, image: '/uploads/x.webp', source: null,
+  });
+  await repo.createSession(tenant, round.id, {
+    gameIds: [], votes: votesBy(2), createdAt: iso(1), finished: true, winnerIds: ['m1'],
+  });
+  await repo.createUser({
+    email: `${uniq()}@example.test`, username: uniq(), tenantId: tenant,
+    createdAt: iso(1), emailVerified: true, identities: [], verification: null,
+    reset: null, refreshTokens: [], bgStats: true, avatar: '/uploads/a.webp',
+  });
+
+  const plain = await instanceStatus();
+  const hidden = await withEnv({ ADMIN_EXCLUDE_TENANTS: tenant }, instanceStatus);
+
+  // Gone from the card: numerator AND denominator, which is the whole point —
+  // a filtered numerator over an unfiltered total reports over 100 %.
+  const a = hidden.metrics.adoption;
+  const p = plain.metrics.adoption;
+  assert.equal(p.roundsTotal - a.roundsTotal, 1);
+  assert.equal(p.gamesTotal - a.gamesTotal, 1);
+  assert.equal(p.sessionsTotal - a.sessionsTotal, 1);
+  assert.equal(p.accountsTotal - a.accountsTotal, 1);
+  assert.equal(p.gamesWithOwnCover - a.gamesWithOwnCover, 1);
+  assert.equal(p.accountsWithBgStats - a.accountsWithBgStats, 1);
+  assert.equal(p.accountsWithAvatar - a.accountsWithAvatar, 1);
+  assert.equal(p.funnel.started - a.funnel.started, 1);
+  assert.equal(p.funnel.played - a.funnel.played, 1);
+  assert.equal(p.roundsByFinished.one - a.roundsByFinished.one, 1);
+
+  /* …and untouched everywhere else. An operator who has hidden themselves from
+     their own quota peaks would be blind to the limit they are about to hit,
+     and lib/public-stats.js reads `content` for the PUBLIC landing counters —
+     an exclusion reaching there would silently shrink them. */
+  assert.deepEqual(hidden.metrics.rounds, plain.metrics.rounds);
+  assert.deepEqual(hidden.metrics.content, plain.metrics.content);
+  assert.deepEqual(hidden.metrics.accounts, plain.metrics.accounts);
+  assert.deepEqual(hidden.metrics.peaks, plain.metrics.peaks);
+});
+
+test('the variable is read per call, never bound at module load', async () => {
+  /* The repo modules are required once per process and long before anything
+     sets this, so a cached copy would make the setting silently inert — and on
+     a real instance it would pin whatever the value was at boot. Same property
+     the quota ceilings above are tested for, and the same reason. */
+  const tenant = `live-${uniq()}`;
+  await repo.createRound(tenant, { name: 'Sofort', members: ['Ann'] });
+  const on = await withEnv({ ADMIN_EXCLUDE_TENANTS: tenant }, instanceStatus);
+  const off = await withEnv({ ADMIN_EXCLUDE_TENANTS: undefined }, instanceStatus);
+  assert.equal(off.metrics.adoption.roundsTotal - on.metrics.adoption.roundsTotal, 1);
+});
+
+test('a blank or spaced-out list excludes nothing', async () => {
+  // Splitting on commas without trimming and dropping empties would turn
+  // „" into one excluded tenant named "" — harmless here, but „a, b" into
+  // one named " b", which silently fails to exclude the tenant the operator
+  // typed.
+  const tenant = `trim-${uniq()}`;
+  await repo.createRound(tenant, { name: 'Leerzeichen', members: ['Ann'] });
+  const plain = await withEnv({ ADMIN_EXCLUDE_TENANTS: '' }, instanceStatus);
+  const spaced = await withEnv({ ADMIN_EXCLUDE_TENANTS: `other, ${tenant} ,` }, instanceStatus);
+  assert.equal(plain.metrics.adoption.roundsTotal - spaced.metrics.adoption.roundsTotal, 1,
+    'the tenant written with surrounding spaces was not excluded');
 });

@@ -909,6 +909,7 @@ I18N.de = {
   'directPlay.teamsNote': 'Teams spielen zusammen – und gewinnen zusammen.',
 
   'vote.progress': 'Schritt {n} von {total}',
+  'vote.advanced': 'Spiel {n} von {total}: {title}',
   'vote.crumb': 'Abstimmung',
   'vote.leaveConfirm': 'Abstimmung verlassen? Die bisher abgegebenen Bewertungen gehen verloren.',
   'vote.turn': '{name}, du bist dran!',
@@ -922,10 +923,6 @@ I18N.de = {
   'vote.ratingLabel': '{n} von {max}',
   'vote.scaleLow': 'gar nicht',
   'vote.scaleHigh': 'unbedingt',
-  'vote.next': 'Weiter ›',
-  'vote.finish': 'Fertig',
-  // Eine Skala, eine Meldung: dieselbe 1–5 für Mitglieder und Gäste (#909).
-  'vote.toast.needRating': 'Bitte eine Bewertung wählen',
   'vote.toast.saved': 'Ergebnisse gespeichert',
 
   'finale.crumb': 'Finale',
@@ -1078,6 +1075,9 @@ I18N.de = {
   'tags.editIcon': 'Symbol ändern',
   'tags.namePlaceholder': 'Tag-Name',
   'tags.edit': 'Tag bearbeiten',
+  'tags.moveEarlier': 'Tag nach vorne schieben',
+  'tags.moveLater': 'Tag nach hinten schieben',
+  'tags.toast.changed': 'Die Tags haben sich zwischenzeitlich geändert – neu geladen.',
   'tags.save': 'Speichern',
   'tags.toast.updated': 'Tag geändert',
   'tags.toast.nameTaken': 'Diese Runde hat schon einen Tag mit diesem Namen',
