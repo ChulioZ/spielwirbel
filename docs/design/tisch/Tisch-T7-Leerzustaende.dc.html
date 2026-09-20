@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="design_doc_mode" content="canvas">
+  <link rel="stylesheet" href="../../../public/fonts/tabler-icons.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Manrope:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #2b1e0d; font-family: 'Manrope', sans-serif; }
+    a { color: #f0cf86; text-decoration: none; display: inline-block; padding: 4px 0; }
+    a:hover { color: #fbe6b4; text-decoration: underline; }
+  </style>
+</helmet>
+<div style="display: flex; flex-direction: column; gap: 40px; padding: 44px; width: max-content; background-color: #3b2a12; background-image: repeating-linear-gradient(180deg, rgba(255,255,255,.035) 0 2px, transparent 2px 7px), radial-gradient(120% 80% at 30% 0%, rgba(240,207,134,.10), transparent 60%); color: #f6ecd8;">
+
+  <div data-screen-label="T7 Kopf" style="max-width: 1240px; display: flex; flex-direction: column; gap: 14px; background: linear-gradient(180deg, #f8f3e7, #efe7d5); color: #2f2620; border-radius: 4px; padding: 26px 30px; box-shadow: 0 14px 30px rgba(0,0,0,.45);">
+    <div style="display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;">
+      <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: #6b4210; background: #f0cf86; border-radius: 3px; padding: 5px 10px;">T7</span>
+      <h1 style="margin: 0; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 38px; line-height: 1.05;">Leere und junge Zustände — Der Tisch</h1>
+      <span style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #6b5a45;">baut auf T1–T6</span>
+    </div>
+    <p style="margin: 0; font-size: 16px; line-height: 1.55; max-width: 92ch; color: #4a4038;">Die meisten Runden sind in einem dieser Zustände. Prinzip für den Tisch: <strong>ein leerer Tisch ist kein Fehler, sondern eine Einladung</strong> — der Filz bleibt, das Messing bleibt, es fehlen nur die Spiele. Kein Zustand zeigt eine graue Box mit „Keine Daten“; jeder nennt den einen nächsten Schritt.</p>
+  </div>
+
+  <div style="display: flex; gap: 22px; align-items: flex-start; flex-wrap: wrap;">
+
+    <div data-screen-label="T7.1 Lobby leer" style="display: flex; flex-direction: column; gap: 9px;">
+      <span style="font-family: ui-monospace, Menlo, monospace; font-size: 12px; color: #dcb587;">1 · Lobby, keine Runde</span>
+      <div style="width: 390px; min-height: 700px; border-radius: 34px; background: #3b2a12; box-shadow: 0 18px 44px rgba(0,0,0,.5), inset 0 0 0 1px rgba(240,207,134,.25); display: flex; flex-direction: column; overflow: hidden;">
+        <div style="padding: 14px 18px 0; display: flex; align-items: center; gap: 10px;">
+          <span style="font-weight: 700; font-size: 13px;">19:12</span>
+          <span style="margin-left: auto; display: flex; align-items: center; gap: 11px;">
+            <span style="font-weight: 700; font-size: 12px; border: 1px solid rgba(246,236,216,.45); border-radius: 999px; padding: 3px 9px;">DE</span>
+            <i class="ti ti-mail" style="font-size: 19px; color: #f0cf86;"></i>
+            <i class="ti ti-user-circle" style="font-size: 22px; color: #f0cf86;"></i>
+          </span>
+        </div>
+        <div style="padding: 20px 18px 0; display: flex; flex-direction: column; gap: 4px;">
+          <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 14px; letter-spacing: .12em; text-transform: uppercase; color: #e2c496;">Spielecafé</span>
+          <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 26px; line-height: 1.12;">Noch keine Runde gegründet.</span>
+        </div>
+        <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 30px 26px;">
+          <span style="width: 176px; height: 176px; border-radius: 50%; padding: 10px; background: linear-gradient(180deg, #d9a951, #8a6224); box-shadow: 0 14px 28px rgba(0,0,0,.5);">
+            <span style="display: flex; width: 100%; height: 100%; border-radius: 50%; background: radial-gradient(120% 90% at 50% 32%, #2f6b4d, #1c4531 76%); box-shadow: inset 0 8px 20px rgba(0,0,0,.45); align-items: center; justify-content: center; color: #f0cf86; font-size: 40px;"><i class="ti ti-tornado"></i></span>
+          </span>
+          <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 21px; text-align: center; line-height: 1.2;">Eine Runde ist eine Gruppe, die zusammen spielt.</span>
+          <span style="font-size: 14px; font-weight: 600; color: #e2c496; text-align: center; line-height: 1.55; max-width: 30ch;">Gründe eine, hol dein Regal in einem Schritt von BGG, und die erste Session dauert keine zwei Minuten.</span>
+        </div>
+        <div style="padding: 0 18px 22px; display: flex; flex-direction: column; gap: 9px;">
+          <button style="width: 100%; min-height: 58px; display: flex; align-items: center; justify-content: center; gap: 10px; border-radius: 4px; border: 1px solid #a87a2e; background: linear-gradient(180deg, #f6d795, #d9a951); color: #3b2a12; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 19px; cursor: pointer; box-shadow: 0 3px 0 #8a6224;"><i class="ti ti-plus" style="font-size: 22px;"></i> Neue Runde gründen</button>
+          <span style="min-height: 48px; display: flex; align-items: center; justify-content: center; gap: 9px; border-radius: 4px; background: #5b4128; border: 1px solid #b98a55; font-weight: 700; font-size: 15px;"><i class="ti ti-mail" style="color: #f0cf86;"></i> Ich wurde eingeladen</span>
+          <span style="text-align: center; font-size: 12px; font-weight: 600; color: #dcb587; padding-top: 4px;">Oder erst gucken: <a href="#">Demo-Runde ansehen</a></span>
+        </div>
+      </div>
+    </div>
+
+    <div data-screen-label="T7.2 Lobby eine" style="display: flex; flex-direction: column; gap: 9px;">
+      <span style="font-family: ui-monospace, Menlo, monospace; font-size: 12px; color: #dcb587;">2 · Lobby, genau eine Runde</span>
+      <div style="width: 390px; min-height: 700px; border-radius: 34px; background: #3b2a12; box-shadow: 0 18px 44px rgba(0,0,0,.5), inset 0 0 0 1px rgba(240,207,134,.25); display: flex; flex-direction: column; overflow: hidden;">
+        <div style="padding: 14px 18px 0; display: flex; align-items: center; gap: 10px;">
+          <span style="font-weight: 700; font-size: 13px;">19:12</span>
+          <span style="margin-left: auto; display: flex; align-items: center; gap: 11px;">
+            <span style="font-weight: 700; font-size: 12px; border: 1px solid rgba(246,236,216,.45); border-radius: 999px; padding: 3px 9px;">DE</span>
+            <i class="ti ti-mail" style="font-size: 19px; color: #f0cf86;"></i>
+            <i class="ti ti-user-circle" style="font-size: 22px; color: #f0cf86;"></i>
+          </span>
+        </div>
+        <div style="padding: 18px 18px 14px; display: flex; flex-direction: column; gap: 3px;">
+          <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 26px; line-height: 1.1;">Schön, dass ihr da seid.</span>
+          <span style="font-family: 'Bricolage Grotesque'; font-weight: 500; font-size: 16px; color: #e2c496;">Welche Runde spielt heute?</span>
+        </div>
+        <div style="padding: 0 18px; display: flex; flex-direction: column; gap: 14px;">
+          <span style="border-radius: 4px; overflow: hidden; box-shadow: 0 10px 22px rgba(0,0,0,.45);">
+            <span style="display: block; background: radial-gradient(110% 150% at 30% -30%, #2f6b4d, #1c4531 74%); padding: 18px 16px; border-bottom: 3px solid #9a6d2b;">
+              <span style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 20px; color: #3b2a12; background: linear-gradient(180deg, #f6d795, #d9a951); border-radius: 3px; padding: 6px 12px;">Donnerstagsrunde</span>
+              </span>
+              <span style="display: flex; align-items: center; gap: 8px; padding-top: 12px;">
+                <span style="width: 34px; height: 34px; border-radius: 50%; background: #198663; border: 2px solid #f0cf86; color: #fff; display: grid; place-items: center; font-weight: 800; font-size: 12px;">LE</span>
+                <span style="width: 34px; height: 34px; border-radius: 50%; border: 2px dashed #f0cf86; color: #f0cf86; display: grid; place-items: center; font-size: 17px;"><i class="ti ti-plus"></i></span>
+                <span style="font-size: 12px; font-weight: 700; color: #cfe6d6;">Nur du · 3 Spiele · noch keine Session</span>
+              </span>
+            </span>
+            <span style="display: flex; align-items: center; gap: 9px; background: linear-gradient(180deg, #f8f3e7, #efe7d5); color: #2f2620; padding: 12px 14px; min-height: 48px;">
+              <i class="ti ti-user-plus" style="color: #7a4a28; font-size: 19px;"></i>
+              <span style="font-size: 13px; font-weight: 700;">Lade die anderen ein — dann zählt eine Abstimmung.</span>
+            </span>
+          </span>
+          <span style="display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 56px; border-radius: 4px; border: 2px dashed rgba(240,207,134,.55); color: #f0cf86; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 16px;"><i class="ti ti-plus" style="font-size: 20px;"></i> Zweite Runde gründen</span>
+          <div style="background: #4a3423; border: 1px solid rgba(240,207,134,.22); border-radius: 4px; padding: 14px; display: flex; flex-direction: column; gap: 8px;">
+            <span style="display: flex; align-items: center; gap: 8px;"><i class="ti ti-bulb" style="color: #f0cf86; font-size: 18px;"></i><span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 16px;">Nächster Schritt</span></span>
+            <span style="display: flex; align-items: center; gap: 10px; min-height: 40px; font-size: 14px; font-weight: 600;"><i class="ti ti-cards" style="color: #dcb587; font-size: 17px;"></i> Regal von BGG holen<i class="ti ti-chevron-right" style="margin-left: auto; color: #dcb587;"></i></span>
+            <span style="display: flex; align-items: center; gap: 10px; min-height: 40px; font-size: 14px; font-weight: 600;"><i class="ti ti-user-plus" style="color: #dcb587; font-size: 17px;"></i> Mitglieder einladen<i class="ti ti-chevron-right" style="margin-left: auto; color: #dcb587;"></i></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div data-screen-label="T7.3 Runde ohne Spiele" style="display: flex; flex-direction: column; gap: 9px;">
+      <span style="font-family: ui-monospace, Menlo, monospace; font-size: 12px; color: #dcb587;">3 · Neue Runde, 0 Spiele</span>
+      <div style="width: 390px; min-height: 700px; border-radius: 34px; background: #3b2a12; box-shadow: 0 18px 44px rgba(0,0,0,.5), inset 0 0 0 1px rgba(240,207,134,.25); display: flex; flex-direction: column; overflow: hidden;">
+        <div style="background: radial-gradient(120% 130% at 50% -20%, #2f6b4d, #1c4531 72%); border-bottom: 3px solid #9a6d2b; padding: 14px 18px 18px; display: flex; flex-direction: column; gap: 10px;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <span style="font-weight: 700; font-size: 13px;">19:12</span>
+            <span style="margin-left: auto; display: flex; align-items: center; gap: 11px;">
+              <span style="font-weight: 700; font-size: 12px; border: 1px solid rgba(246,236,216,.5); border-radius: 999px; padding: 3px 9px;">DE</span>
+              <i class="ti ti-mail" style="font-size: 19px; color: #f0cf86;"></i>
+              <i class="ti ti-user-circle" style="font-size: 22px; color: #f0cf86;"></i>
+            </span>
+          </div>
+          <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 25px; line-height: 1.1;">Sonntagsrunde</span>
+          <span style="font-size: 12px; font-weight: 700; color: #cfe6d6;">2 Mitglieder · 0 Spiele · noch keine Session</span>
+          <div style="display: flex; gap: 10px; padding-top: 4px;">
+            <span style="width: 44px; height: 44px; border-radius: 50%; background: #198663; border: 2px solid #f0cf86; color: #fff; display: grid; place-items: center; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 15px;">LE</span>
+            <span style="width: 44px; height: 44px; border-radius: 50%; background: #c6522c; border: 2px solid #f0cf86; color: #fff; display: grid; place-items: center; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 15px;">JO</span>
+            <span style="width: 44px; height: 44px; border-radius: 50%; border: 2px dashed #f0cf86; color: #f0cf86; display: grid; place-items: center; font-size: 20px;"><i class="ti ti-plus"></i></span>
+          </div>
+        </div>
+        <div style="padding: 18px; display: flex; flex-direction: column; gap: 14px;">
+          <div style="border-radius: 4px; border: 1px dashed rgba(240,207,134,.45); background: #4a3423; padding: 20px 18px; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center;">
+            <span style="width: 92px; height: 92px; border-radius: 50%; border: 3px dashed rgba(240,207,134,.5); display: grid; place-items: center; color: #f0cf86; font-size: 32px;"><i class="ti ti-dice-3"></i></span>
+            <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 20px;">Der Topf ist noch leer</span>
+            <span style="font-size: 14px; font-weight: 600; color: #e2c496; line-height: 1.55;">Gewirbelt wird aus dem Regal. Legt das erste Spiel auf den Tisch — oder holt euer Regal in einem Schritt von BGG.</span>
+            <button style="width: 100%; min-height: 52px; display: flex; align-items: center; justify-content: center; gap: 9px; border-radius: 4px; border: 1px solid #a87a2e; background: linear-gradient(180deg, #f6d795, #d9a951); color: #3b2a12; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 17px; cursor: pointer; box-shadow: 0 3px 0 #8a6224;"><i class="ti ti-plus" style="font-size: 19px;"></i> Spiel hinzufügen</button>
+            <span style="width: 100%; min-height: 46px; display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: 4px; background: #5b4128; border: 1px solid #b98a55; font-weight: 700; font-size: 14px;"><i class="ti ti-cards" style="color: #f0cf86;"></i> Von BGG übernehmen</span>
+          </div>
+          <span style="display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 0 14px; border-radius: 4px; background: #4b3823; border: 1px solid rgba(185,138,85,.4); color: rgba(246,236,216,.6); font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 16px;"><i class="ti ti-tornado" style="font-size: 20px;"></i> Session wirbeln<span style="margin-left: auto; font-family: 'Manrope', sans-serif; font-weight: 600; font-size: 11px;">ab 2 Spielen</span></span>
+          <div style="background: #4a3423; border: 1px solid rgba(240,207,134,.22); border-radius: 4px; padding: 14px; display: flex; flex-direction: column; gap: 8px;">
+            <span style="display: flex; align-items: center; gap: 8px;"><i class="ti ti-tool" style="color: #e8c168; font-size: 18px;"></i><span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 16px;">Kümmerliste</span></span>
+            <span style="display: flex; align-items: center; gap: 10px; min-height: 38px; font-size: 14px; font-weight: 600;"><i class="ti ti-layout-grid" style="color: #dcb587; font-size: 17px;"></i> Regal füllen<i class="ti ti-chevron-right" style="margin-left: auto; color: #dcb587;"></i></span>
+            <span style="display: flex; align-items: center; gap: 10px; min-height: 38px; font-size: 14px; font-weight: 600;"><i class="ti ti-user-plus" style="color: #dcb587; font-size: 17px;"></i> Zwei Plätze sind noch frei<i class="ti ti-chevron-right" style="margin-left: auto; color: #dcb587;"></i></span>
+          </div>
+        </div>
+        <div style="margin-top: auto; height: 86px; flex: none; background: linear-gradient(180deg, #2f6b4d, #1c4531); border-top: 3px solid #9a6d2b; display: flex; align-items: flex-start; padding: 8px 6px 0;">
+          <sc-for list="{{ dockStart }}" as="d" hint-placeholder-count="4">
+            <span style="flex: 1; min-height: 58px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; border-radius: 4px; background: {{ d.bg }}; color: {{ d.ink }};">
+              <i class="{{ d.icon }}" style="font-size: 22px;"></i>
+              <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 12px;">{{ d.label }}</span>
+            </span>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+
+    <div data-screen-label="T7.4 Regal ohne Session" style="display: flex; flex-direction: column; gap: 9px;">
+      <span style="font-family: ui-monospace, Menlo, monospace; font-size: 12px; color: #dcb587;">4 · Regal voll, 0 Sessions</span>
+      <div style="width: 390px; min-height: 700px; border-radius: 34px; background: #3b2a12; box-shadow: 0 18px 44px rgba(0,0,0,.5), inset 0 0 0 1px rgba(240,207,134,.25); display: flex; flex-direction: column; overflow: hidden;">
+        <div style="background: radial-gradient(120% 130% at 50% -20%, #2f6b4d, #1c4531 72%); border-bottom: 3px solid #9a6d2b; padding: 14px 18px 18px; display: flex; flex-direction: column; gap: 10px;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <span style="font-weight: 700; font-size: 13px;">19:12</span>
+            <span style="margin-left: auto; display: flex; align-items: center; gap: 11px;">
+              <span style="font-weight: 700; font-size: 12px; border: 1px solid rgba(246,236,216,.5); border-radius: 999px; padding: 3px 9px;">DE</span>
+              <i class="ti ti-mail" style="font-size: 19px; color: #f0cf86;"></i>
+              <i class="ti ti-user-circle" style="font-size: 22px; color: #f0cf86;"></i>
+            </span>
+          </div>
+          <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 25px; line-height: 1.1;">Bergers Spieletreff</span>
+          <span style="font-size: 12px; font-weight: 700; color: #cfe6d6;">4 Mitglieder · 38 Spiele aus BGG · noch keine Session</span>
+        </div>
+        <div style="padding: 18px; display: flex; flex-direction: column; gap: 14px;">
+          <button style="width: 100%; min-height: 60px; display: flex; align-items: center; justify-content: center; gap: 11px; border-radius: 4px; border: 1px solid #a87a2e; background: linear-gradient(180deg, #f6d795, #d9a951); color: #3b2a12; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 21px; cursor: pointer; box-shadow: 0 3px 0 #8a6224, 0 10px 20px rgba(0,0,0,.4);"><i class="ti ti-tornado" style="font-size: 25px;"></i> Erste Session wirbeln</button>
+          <div style="background: #4a3423; border: 1px solid rgba(240,207,134,.22); border-radius: 4px; padding: 16px; display: flex; flex-direction: column; gap: 10px;">
+            <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 18px;">38 Spiele stehen bereit</span>
+            <span style="display: flex; gap: 6px;">
+              <sc-for list="{{ youngCovers }}" as="c" hint-placeholder-count="6">
+                <span style="width: 48px; height: 62px; border-radius: 3px; background: {{ c.bg }}; box-shadow: 0 3px 8px rgba(0,0,0,.45);"></span>
+              </sc-for>
+            </span>
+            <span style="font-size: 13px; font-weight: 600; color: #e2c496; line-height: 1.55;">Noch keine Wertung — deshalb stehen hier keine Scores und keine Empfehlungen. Nach der ersten Session füllt sich beides von selbst.</span>
+          </div>
+          <div style="background: #4a3423; border: 1px dashed rgba(240,207,134,.4); border-radius: 4px; padding: 16px; display: flex; flex-direction: column; gap: 9px;">
+            <span style="display: flex; align-items: center; gap: 8px; color: #dcb587;"><i class="ti ti-activity" style="font-size: 18px;"></i><span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 16px; color: #e2c496;">Rundenpuls</span></span>
+            <span style="font-size: 13px; font-weight: 600; color: #dcb587; line-height: 1.55;">Zahlen gibt es ab der ersten Session. Solange bleibt hier Platz — nicht „0“.</span>
+          </div>
+          <div style="background: #4a3423; border: 1px solid rgba(240,207,134,.22); border-radius: 4px; padding: 16px; display: flex; flex-direction: column; gap: 9px;">
+            <span style="display: flex; align-items: center; gap: 8px;"><i class="ti ti-bulb" style="color: #f0cf86; font-size: 18px;"></i><span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 16px;">Wie wär’s mit</span></span>
+            <span style="font-size: 13px; font-weight: 600; color: #e2c496; line-height: 1.55;">Vorschläge brauchen Wertungen. Bis dahin: das Spiel mit der höchsten BGG-Wertung in eurem Regal ist <strong>Nordlichter</strong>.</span>
+          </div>
+        </div>
+        <div style="margin-top: auto; height: 86px; flex: none; background: linear-gradient(180deg, #2f6b4d, #1c4531); border-top: 3px solid #9a6d2b; display: flex; align-items: flex-start; padding: 8px 6px 0;">
+          <sc-for list="{{ dockStart }}" as="d" hint-placeholder-count="4">
+            <span style="flex: 1; min-height: 58px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; border-radius: 4px; background: {{ d.bg }}; color: {{ d.ink }};">
+              <i class="{{ d.icon }}" style="font-size: 22px;"></i>
+              <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 12px;">{{ d.label }}</span>
+            </span>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+
+    <div data-screen-label="T7.5 Nach erster Session" style="display: flex; flex-direction: column; gap: 9px;">
+      <span style="font-family: ui-monospace, Menlo, monospace; font-size: 12px; color: #dcb587;">5 · Nach der ersten Session — keine Serien, keine Trends</span>
+      <div style="width: 390px; min-height: 700px; border-radius: 34px; background: #3b2a12; box-shadow: 0 18px 44px rgba(0,0,0,.5), inset 0 0 0 1px rgba(240,207,134,.25); display: flex; flex-direction: column; overflow: hidden;">
+        <div style="background: radial-gradient(120% 130% at 50% -20%, #2f6b4d, #1c4531 72%); border-bottom: 3px solid #9a6d2b; padding: 14px 18px 18px; display: flex; flex-direction: column; gap: 10px;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <span style="font-weight: 700; font-size: 13px;">22:40</span>
+            <span style="margin-left: auto; display: flex; align-items: center; gap: 11px;">
+              <span style="font-weight: 700; font-size: 12px; border: 1px solid rgba(246,236,216,.5); border-radius: 999px; padding: 3px 9px;">DE</span>
+              <i class="ti ti-mail" style="font-size: 19px; color: #f0cf86;"></i>
+              <i class="ti ti-user-circle" style="font-size: 22px; color: #f0cf86;"></i>
+            </span>
+          </div>
+          <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 25px; line-height: 1.1;">Bergers Spieletreff</span>
+          <span style="font-size: 12px; font-weight: 700; color: #cfe6d6;">4 Mitglieder · 38 Spiele · 1 Session</span>
+        </div>
+        <div style="padding: 18px; display: flex; flex-direction: column; gap: 13px;">
+          <div style="background: #4a3423; border: 1px solid rgba(240,207,134,.22); border-radius: 4px; padding: 14px; display: flex; flex-direction: column; gap: 10px;">
+            <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 17px;">Zuletzt gespielt</span>
+            <span style="display: flex; align-items: center; gap: 12px;">
+              <span style="width: 52px; height: 68px; border-radius: 3px; background: linear-gradient(150deg, #2f5d7a, #14324a); flex: none;"></span>
+              <span style="display: flex; flex-direction: column; gap: 3px;">
+                <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 17px;">Nordlichter</span>
+                <span style="font-size: 12px; font-weight: 600; color: #e2c496;">Heute · Jonas hat gewonnen</span>
+                <span style="display: inline-flex; align-items: center; gap: 5px; align-self: flex-start; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 12px; color: #2a1a08; background: #b8e08a; border: 1px solid rgba(0,0,0,.4); border-radius: 999px; padding: 2px 8px;"><i class="ti ti-mood-crazy-happy" style="font-size: 12px;"></i> 4,6</span>
+              </span>
+            </span>
+          </div>
+          <div style="background: #4a3423; border: 1px solid rgba(240,207,134,.22); border-radius: 4px; padding: 14px; display: flex; flex-direction: column; gap: 10px;">
+            <span style="display: flex; align-items: center; gap: 8px;"><i class="ti ti-activity" style="color: #f0cf86; font-size: 18px;"></i><span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 17px;">Rundenpuls</span></span>
+            <span style="display: flex; gap: 8px;">
+              <span style="flex: 1; background: #5b4128; border-radius: 4px; padding: 8px 10px; display: flex; align-items: baseline; gap: 6px;"><span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 19px;">1</span><span style="font-size: 11px; font-weight: 700; color: #e2c496;">Session</span></span>
+              <span style="flex: 1; background: #5b4128; border-radius: 4px; padding: 8px 10px; display: flex; align-items: baseline; gap: 6px;"><span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 19px;">4,6</span><span style="font-size: 11px; font-weight: 700; color: #e2c496;">Schnitt</span></span>
+            </span>
+            <span style="font-size: 12px; font-weight: 600; color: #dcb587; line-height: 1.5;">Serien und Trends zeigen wir ab der dritten Session — vorher wäre jede Linie geraten.</span>
+          </div>
+          <div style="background: #4a3423; border: 1px solid rgba(240,207,134,.22); border-radius: 4px; padding: 14px; display: flex; flex-direction: column; gap: 10px;">
+            <span style="display: flex; align-items: center; gap: 8px;"><i class="ti ti-trophy" style="color: #f0cf86; font-size: 18px;"></i><span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 17px;">Pokale</span></span>
+            <span style="display: flex; align-items: center; gap: 11px;">
+              <span style="position: relative; width: 44px; height: 44px;">
+                <span style="position: absolute; inset: 0; border-radius: 50%; background: #c6522c; border: 2px solid #f0cf86; color: #fff; display: grid; place-items: center; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 15px;">JO</span>
+                <i class="ti ti-crown" style="position: absolute; left: 50%; top: -13px; transform: translateX(-50%); font-size: 15px; color: #f0cf86;"></i>
+              </span>
+              <span style="display: flex; flex-direction: column;">
+                <span style="font-weight: 700; font-size: 15px;">Jonas führt mit 1 Sieg</span>
+                <span style="font-size: 12px; font-weight: 600; color: #dcb587;">Ein Podium braucht drei Sessions.</span>
+              </span>
+            </span>
+          </div>
+          <div style="background: #4a3423; border: 1px solid rgba(240,207,134,.22); border-radius: 4px; padding: 14px; display: flex; flex-direction: column; gap: 9px;">
+            <span style="display: flex; align-items: center; gap: 8px;"><i class="ti ti-bulb" style="color: #f0cf86; font-size: 18px;"></i><span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 17px;">Wie wär’s mit</span></span>
+            <span style="display: flex; align-items: center; gap: 11px; min-height: 40px;">
+              <span style="width: 32px; height: 42px; border-radius: 2px; background: linear-gradient(150deg, #7a5b2f, #42301a); flex: none;"></span>
+              <span style="display: flex; flex-direction: column;">
+                <span style="font-weight: 700; font-size: 15px;">Kartographen</span>
+                <span style="font-size: 12px; color: #dcb587;">Ähnlich wie Nordlichter, das gut ankam</span>
+              </span>
+            </span>
+          </div>
+        </div>
+        <div style="margin-top: auto; height: 86px; flex: none; background: linear-gradient(180deg, #2f6b4d, #1c4531); border-top: 3px solid #9a6d2b; display: flex; align-items: flex-start; padding: 8px 6px 0;">
+          <sc-for list="{{ dockStart }}" as="d" hint-placeholder-count="4">
+            <span style="flex: 1; min-height: 58px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; border-radius: 4px; background: {{ d.bg }}; color: {{ d.ink }};">
+              <i class="{{ d.icon }}" style="font-size: 22px;"></i>
+              <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 12px;">{{ d.label }}</span>
+            </span>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+
+    <div data-screen-label="T7.6 Demo" style="display: flex; flex-direction: column; gap: 9px;">
+      <span style="font-family: ui-monospace, Menlo, monospace; font-size: 12px; color: #dcb587;">6 · Demo-Runde — voll bestückt, klar als Demo erkennbar</span>
+      <div style="width: 390px; min-height: 700px; border-radius: 34px; background: #3b2a12; box-shadow: 0 18px 44px rgba(0,0,0,.5), inset 0 0 0 1px rgba(240,207,134,.25); display: flex; flex-direction: column; overflow: hidden;">
+        <div style="background: repeating-linear-gradient(135deg, rgba(240,207,134,.14) 0 12px, transparent 12px 24px), radial-gradient(120% 130% at 50% -20%, #2f6b4d, #1c4531 72%); border-bottom: 3px solid #9a6d2b; padding: 14px 18px 18px; display: flex; flex-direction: column; gap: 10px;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <span style="font-weight: 700; font-size: 13px;">19:12</span>
+            <span style="margin-left: auto; display: flex; align-items: center; gap: 11px;">
+              <span style="font-weight: 700; font-size: 12px; border: 1px solid rgba(246,236,216,.5); border-radius: 999px; padding: 3px 9px;">DE</span>
+              <i class="ti ti-user-circle" style="font-size: 22px; color: #f0cf86;"></i>
+            </span>
+          </div>
+          <span style="display: inline-flex; align-self: flex-start; align-items: center; gap: 7px; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #3b2a12; background: #f0cf86; border-radius: 3px; padding: 4px 9px;"><i class="ti ti-eye-off" style="font-size: 13px;"></i> Demo · nichts wird gespeichert</span>
+          <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 25px; line-height: 1.1;">Beispielrunde</span>
+          <span style="font-size: 12px; font-weight: 700; color: #cfe6d6;">6 Mitglieder · 24 Spiele · 31 Sessions</span>
+        </div>
+        <div style="padding: 18px; display: flex; flex-direction: column; gap: 12px;">
+          <button style="width: 100%; min-height: 54px; display: flex; align-items: center; justify-content: center; gap: 10px; border-radius: 4px; border: 1px solid #a87a2e; background: linear-gradient(180deg, #f6d795, #d9a951); color: #3b2a12; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 18px; cursor: pointer; box-shadow: 0 3px 0 #8a6224;"><i class="ti ti-tornado" style="font-size: 21px;"></i> Session wirbeln</button>
+          <sc-for list="{{ demoRows }}" as="d" hint-placeholder-count="4">
+            <span style="display: flex; align-items: center; gap: 11px; min-height: 52px; padding: 10px 13px; border-radius: 4px; background: #4a3423; border: 1px solid rgba(240,207,134,.22);">
+              <i class="{{ d.icon }}" style="color: #f0cf86; font-size: 19px;"></i>
+              <span style="display: flex; flex-direction: column;">
+                <span style="font-weight: 700; font-size: 14px;">{{ d.label }}</span>
+                <span style="font-size: 11px; font-weight: 600; color: #dcb587;">{{ d.hint }}</span>
+              </span>
+              <span style="margin-left: auto; font-weight: 700; font-size: 13px; color: #e2c496; font-variant-numeric: tabular-nums;">{{ d.value }}</span>
+            </span>
+          </sc-for>
+          <div style="background: #4a3423; border: 1px solid #b98a55; border-radius: 4px; padding: 16px; display: flex; flex-direction: column; gap: 10px;">
+            <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 17px;">Gefällt dir das?</span>
+            <span style="font-size: 13px; font-weight: 600; color: #e2c496; line-height: 1.55;">Die Beispielrunde gehört niemandem und wird jede Nacht zurückgesetzt. Deine eigene Runde behält alles.</span>
+            <button style="min-height: 48px; border-radius: 4px; border: 1px solid #b98a55; background: #5b4128; color: #f6ecd8; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 16px; cursor: pointer;">Eigene Runde gründen</button>
+          </div>
+        </div>
+        <div style="margin-top: auto; height: 86px; flex: none; background: linear-gradient(180deg, #2f6b4d, #1c4531); border-top: 3px solid #9a6d2b; display: flex; align-items: flex-start; padding: 8px 6px 0;">
+          <sc-for list="{{ dockStart }}" as="d" hint-placeholder-count="4">
+            <span style="flex: 1; min-height: 58px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; border-radius: 4px; background: {{ d.bg }}; color: {{ d.ink }};">
+              <i class="{{ d.icon }}" style="font-size: 22px;"></i>
+              <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 12px;">{{ d.label }}</span>
+            </span>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div data-screen-label="T7.7 Dichte" style="display: flex; flex-direction: column; gap: 10px;">
+    <span style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #dcb587;">7 · Dichte am Desktop — 42 Spiele, 12 Plätze, langer Rundenname, +30 % Sprachlängen</span>
+    <div style="width: 1440px; min-height: 900px; border-radius: 4px; background: #3b2a12; box-shadow: 0 20px 50px rgba(0,0,0,.5); display: flex; flex-direction: column; overflow: hidden;">
+      <div style="height: 60px; display: flex; align-items: center; gap: 18px; padding: 0 28px; background: #2f2109; border-bottom: 1px solid rgba(240,207,134,.25); flex: none;">
+        <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 15px; letter-spacing: .14em; text-transform: uppercase; color: #3b2a12; background: linear-gradient(180deg, #f6d795, #d9a951); border-radius: 3px; padding: 5px 11px;">Spielwirbel</span>
+        <span style="margin-left: auto; display: flex; align-items: center; gap: 14px;">
+          <span style="display: inline-flex; align-items: center; gap: 6px; font-weight: 700; font-size: 13px; border: 1px solid rgba(240,207,134,.45); border-radius: 999px; padding: 5px 12px;">Suomi <i class="ti ti-chevron-down" style="font-size: 15px; color: #f0cf86;"></i></span>
+          <i class="ti ti-mail" style="font-size: 22px; color: #f0cf86;"></i>
+          <span style="display: inline-flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px;"><span style="width: 32px; height: 32px; border-radius: 50%; background: #198663; color: #fff; display: grid; place-items: center; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 12px;">LE</span> Lea</span>
+        </span>
+      </div>
+      <div style="display: flex; flex: 1;">
+        <div style="width: 216px; flex: none; background: #32230f; border-right: 3px solid #9a6d2b; padding: 20px 14px; display: flex; flex-direction: column; gap: 16px;">
+          <span style="display: flex; flex-direction: column; gap: 3px;">
+            <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 17px; line-height: 1.15; word-break: break-word;">Donnerstagsrunde im Spielecafé Nord</span>
+            <span style="font-size: 12px; font-weight: 700; color: #e2c496;">12 Mitglieder · 42 Spiele</span>
+          </span>
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <sc-for list="{{ railLong }}" as="r" hint-placeholder-count="5">
+              <span style="display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 11px; border-radius: 3px; background: {{ r.bg }}; border: {{ r.border }}; color: {{ r.ink }}; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 13px; line-height: 1.2;">
+                <i class="{{ r.icon }}" style="font-size: 19px; flex: none;"></i> {{ r.label }}
+              </span>
+            </sc-for>
+          </div>
+          <span style="font-size: 11px; font-weight: 600; color: #dcb587; line-height: 1.5; margin-top: auto;">Finnische Labels sind bis zu 30 % länger — die Schiene bricht auf zwei Zeilen statt zu kürzen.</span>
+        </div>
+        <div style="flex: 1; display: flex; flex-direction: column; min-width: 0;">
+          <div style="background: radial-gradient(90% 150% at 50% -30%, #2f6b4d, #1c4531 72%); border-bottom: 5px solid #9a6d2b; padding: 18px 26px 20px; display: flex; flex-direction: column; gap: 14px;">
+            <div style="display: flex; flex-wrap: wrap; gap: 9px;">
+              <sc-for list="{{ twelve }}" as="p" hint-placeholder-count="12">
+                <span style="display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 12px 0 4px; border-radius: 999px; background: rgba(0,0,0,.22); border: 1px solid rgba(240,207,134,.45);">
+                  <span style="width: 34px; height: 34px; border-radius: 50%; background: {{ p.bg }}; border: 2px solid #f0cf86; color: #fff; display: grid; place-items: center; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 12px; flex: none;">{{ p.ini }}</span>
+                  <span style="font-weight: 700; font-size: 13px;">{{ p.name }}</span>
+                  <span style="font-weight: 800; font-size: 11px; color: #3b2a12; background: #f0cf86; border-radius: 999px; padding: 1px 7px; font-variant-numeric: tabular-nums;">{{ p.wins }}</span>
+                </span>
+              </sc-for>
+              <span style="display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 14px; border-radius: 999px; border: 2px dashed rgba(240,207,134,.55); color: #f6ecd8; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 13px;"><i class="ti ti-plus" style="color: #f0cf86;"></i> Platz dazu</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+              <button style="min-height: 60px; padding: 0 26px; display: inline-flex; align-items: center; gap: 11px; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 20px; color: #3b2a12; background: linear-gradient(180deg, #f6d795, #d9a951); border: 1px solid #a87a2e; border-radius: 4px; cursor: pointer; box-shadow: 0 3px 0 #8a6224;"><i class="ti ti-tornado" style="font-size: 24px;"></i> Pyöräytä sessio</button>
+              <span style="display: inline-flex; align-items: center; gap: 7px; min-height: 40px; padding: 0 14px; border-radius: 999px; background: #3f6a48; border: 1px solid #f0cf86; font-weight: 700; font-size: 13px;"><i class="ti ti-clock" style="color: #f0cf86;"></i> Alle 60 min</span>
+              <span style="display: inline-flex; align-items: center; gap: 7px; min-height: 40px; padding: 0 14px; border-radius: 999px; background: #3f6a48; border: 1px solid #f0cf86; font-weight: 700; font-size: 13px;"><i class="ti ti-bolt" style="color: #f0cf86;"></i> Kevyttä puuhaa</span>
+              <span style="display: inline-flex; align-items: center; gap: 7px; min-height: 40px; padding: 0 14px; border-radius: 999px; background: linear-gradient(180deg, #f6d795, #d9a951); border: 1px solid #a87a2e; color: #3b2a12; font-weight: 700; font-size: 13px;"><i class="ti ti-home-heart"></i> Perheystävällinen</span>
+              <span style="font-size: 12px; font-weight: 600; color: #cfe6d6;">31 peliä potissa · 11 puuttuu, koska omistajat eivät pelaa</span>
+            </div>
+          </div>
+          <div style="padding: 18px 26px 24px; display: flex; flex-direction: column; gap: 12px; min-width: 0;">
+            <div style="display: flex; gap: 12px; align-items: center;">
+              <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 22px;">Regal · 42 Spiele</span>
+              <span style="font-size: 13px; font-weight: 600; color: #e2c496;">Ab 40 Spielen wird das Brett zur Reihe: Cover 76 px, vier Bretter, Score-Pille unter dem Titel</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+              <sc-for list="{{ denseShelves }}" as="sh" hint-placeholder-count="4">
+                <div style="display: flex; flex-direction: column;">
+                  <div style="display: flex; align-items: flex-end; gap: 12px; min-height: 108px;">
+                    <sc-for list="{{ sh.games }}" as="g" hint-placeholder-count="11">
+                      <span style="width: 76px; display: flex; flex-direction: column; gap: 4px;">
+                        <span style="width: 76px; height: {{ g.h }}; border-radius: 2px; background: {{ g.bg }}; box-shadow: 0 5px 10px rgba(0,0,0,.45);"></span>
+                        <span style="font-weight: 700; font-size: 11px; line-height: 1.2; height: 26px; overflow: hidden;">{{ g.title }}</span>
+                        <span style="display: inline-flex; align-self: flex-start; align-items: center; gap: 4px; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 11px; color: {{ g.pillInk }}; background: {{ g.pillBg }}; border: 1px solid rgba(0,0,0,.4); border-radius: 999px; padding: 1px 7px; font-variant-numeric: tabular-nums;"><i class="{{ g.face }}" style="font-size: 11px;"></i> {{ g.score }}</span>
+                      </span>
+                    </sc-for>
+                  </div>
+                  <span style="height: 11px; border-radius: 2px; background: linear-gradient(180deg, #d9a951, #8a6224); box-shadow: 0 6px 12px rgba(0,0,0,.45);"></span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div data-screen-label="T7.8 Übergabe" style="max-width: 1440px; background: #4a3423; border: 1px solid rgba(240,207,134,.28); border-radius: 4px; padding: 22px 26px; display: flex; flex-direction: column; gap: 10px;">
+    <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 20px;">Was T7 entscheidet</span>
+    <span style="font-size: 15px; line-height: 1.6; color: #f0e3c8; max-width: 100ch;">Leere Zustände behalten das Material: <strong>Filz und Messing bleiben, nur die Spiele fehlen</strong> — der leere Tisch ist selbst die Grafik (Messingring, Filzfläche, Wirbel-Glyphe in der Mitte). Jeder Zustand nennt genau einen nächsten Schritt und sperrt, was noch nicht gehen kann, mit dem Grund am Knopf („ab 2 Spielen“). Wo Zahlen fehlen, steht <strong>kein „0“ und keine leere Achse</strong>, sondern ein Satz, ab wann es Zahlen gibt („Serien ab der dritten Session“). Die Demo trägt eine Messingbanderole „Demo · nichts wird gespeichert“ und eine Diagonalschraffur im Filz, damit sie nie mit der eigenen Runde verwechselt wird. Dichte: ab 40 Spielen schrumpft der Coverkasten auf 76 × 96 px und das Regal läuft über vier Bretter; 12 Plätze werden Chips mit Siegzahl statt Avataren im Bogen; lange Namen und finnische Labels <strong>brechen auf zwei Zeilen, statt zu kürzen</strong>.</span>
+    <span style="font-size: 14px; line-height: 1.6; color: #dcb587;">Offen: T8 (Markerfarben und Rampe) · T13/T14 (leere Chronik, leere Pokale, leerer Posteingang in den jeweiligen Briefs).</span>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1540}}">
+class Component extends DCLogic {
+  renderVals() {
+    const cover = (a, b) => `linear-gradient(150deg, ${a}, ${b})`;
+    const faces = ['ti-mood-cry', 'ti-mood-sad', 'ti-mood-neutral', 'ti-mood-smile', 'ti-mood-crazy-happy'];
+    const pillRamp = ['#8f2f22', '#a05a1f', '#b8a12e', '#8dbf46', '#b8e08a'];
+    const pillInkRamp = ['#fdf4e4', '#fdf4e4', '#2a1a08', '#2a1a08', '#2a1a08'];
+    const colours = ['#c6522c', '#198663', '#726bc7', '#a66815', '#c34d74', '#2f6f9e', '#54821d', '#993556'];
+
+    const dockStart = [
+      ['Start', 'ti ti-home'], ['Regal', 'ti ti-layout-grid'], ['Chronik', 'ti ti-history'], ['Pokale', 'ti ti-trophy'],
+    ].map(([label, icon]) => ({
+      label, icon,
+      bg: label === 'Start' ? 'linear-gradient(180deg, #f6d795, #d9a951)' : 'transparent',
+      ink: label === 'Start' ? '#3b2a12' : '#f6ecd8',
+    }));
+
+    const youngCovers = [
+      cover('#2f5d7a', '#14324a'), cover('#7a5b2f', '#42301a'), 'radial-gradient(70% 70% at 30% 25%, #a2508f, #3a1a34 80%)',
+      cover('#3f5d2f', '#22331a'), 'linear-gradient(90deg, #8f4a22 0 34%, #d9a951 34%)', cover('#3a3a5d', '#1a1a33'),
+    ].map((bg) => ({ bg }));
+
+    const demoRows = [
+      { label: 'Regal', hint: 'Cover und Titel von BGG', value: '24 Spiele', icon: 'ti ti-layout-grid' },
+      { label: 'Chronik', hint: 'Zwei Jahre Beispieldaten', value: '31 Sessions', icon: 'ti ti-history' },
+      { label: 'Pokale', hint: 'Podium und Rangliste', value: 'Jonas führt', icon: 'ti ti-trophy' },
+      { label: 'Wie wär’s mit', hint: 'Aus Wertungen berechnet', value: '3 Vorschläge', icon: 'ti ti-bulb' },
+    ];
+
+    const railLong = [
+      ['Alku', 'ti ti-home'], ['Hylly', 'ti ti-layout-grid'], ['Aikakirja', 'ti ti-history'],
+      ['Palkinnot', 'ti ti-trophy'], ['Asetukset ja kutsut', 'ti ti-settings'],
+    ].map(([label, icon]) => ({
+      label, icon,
+      bg: label === 'Alku' ? 'linear-gradient(180deg, #f6d795, #d9a951)' : 'transparent',
+      border: label === 'Alku' ? '1px solid #a87a2e' : '1px solid rgba(240,207,134,.28)',
+      ink: label === 'Alku' ? '#3b2a12' : '#f0cf86',
+    }));
+
+    const names = ['Lea', 'Jonas', 'Mia', 'Tom', 'Ada', 'Ben', 'Ida', 'Nils', 'Ruth', 'Timo', 'Věra', 'Jean-Pierre'];
+    const twelve = names.map((name, i) => ({
+      name, ini: name.slice(0, 2).toUpperCase(),
+      bg: colours[i % colours.length],
+      wins: String([9, 7, 5, 4, 3, 2, 1, 1, 0, 0, 0, 0][i]),
+    }));
+
+    // 42 Spiele auf vier Brettern
+    const titles = [
+      'Nordlichter', 'Kartographen', 'Die Insel', 'Zugvögel', 'Hafenmeister', 'Rattenkönig', 'Turmbau',
+      'Seidenstraße', 'Mondgarten', 'Kellergeister', 'Wolkenpost', 'Ackerbau', 'Uhrwerk', 'Salzhandel',
+      'Vogelzug', 'Bernstein', 'Nebelwald', 'Kartenhaus', 'Sternwarte', 'Postkutsche', 'Weberei',
+      'Glasbläser', 'Obstgarten', 'Fischmarkt', 'Leuchtturm', 'Steinbruch', 'Wasserwerk', 'Kräuterhaus',
+      'Bergpass', 'Dünenritt', 'Winterfest', 'Tulpenfieber', 'Nachtwache', 'Almhütte', 'Kanalbau',
+      'Marktplatz', 'Schleusen', 'Waldkauz', 'Korbflechter', 'Salzgarten', 'Windmühle', 'Eisenbahn',
+    ];
+    const palettes = [
+      cover('#2f5d7a', '#14324a'), cover('#7a5b2f', '#42301a'), 'radial-gradient(70% 70% at 30% 25%, #a2508f, #3a1a34 80%)',
+      cover('#3f5d2f', '#22331a'), 'linear-gradient(0deg, #14324a 0 46%, #2f5d7a 46%)', 'repeating-linear-gradient(135deg, #5b4128 0 9px, #4a3423 9px 18px)',
+      'linear-gradient(90deg, #8f4a22 0 34%, #d9a951 34%)', cover('#6a2f2f', '#331a1a'), 'radial-gradient(60% 60% at 70% 20%, #e8dcb0, #4a5b2f 75%)',
+      cover('#3a3a5d', '#1a1a33'), 'linear-gradient(180deg, #cfe2ef 0 58%, #6a93ad 58%)', cover('#7a6a2f', '#42391a'),
+    ];
+    const heights = ['96px', '84px', '104px', '78px', '92px', '88px', '108px', '82px', '100px', '86px', '76px', '98px'];
+    const denseGames = titles.map((title, i) => {
+      const stop = [5, 4, 3, 2, 4, 0, 5, 3, 4, 2, 4, 3][i % 12];
+      return {
+        title,
+        bg: palettes[i % palettes.length],
+        h: '96px',
+        score: stop ? [null, '1,4', '2,4', '3,3', '4,1', '4,8'][stop] : '—',
+        face: stop ? 'ti ' + faces[stop - 1] : 'ti ti-mood-empty',
+        pillBg: stop ? pillRamp[stop - 1] : '#5b4128',
+        pillInk: stop ? pillInkRamp[stop - 1] : '#e2c496',
+      };
+    });
+    const denseShelves = [0, 1, 2, 3].map((n) => ({ games: denseGames.slice(n * 11, n * 11 + 11) }));
+
+    return { dockStart, youngCovers, demoRows, railLong, twelve, denseShelves };
+  }
+}
+
+</script>
+</body>
+</html>

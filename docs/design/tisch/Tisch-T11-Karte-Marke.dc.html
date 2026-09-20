@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="design_doc_mode" content="canvas">
+  <link rel="stylesheet" href="../../../public/fonts/tabler-icons.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Manrope:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #2b1e0d; font-family: 'Manrope', sans-serif; }
+    a { color: #f0cf86; text-decoration: none; display: inline-block; padding: 4px 0; }
+    a:hover { color: #fbe6b4; text-decoration: underline; }
+  </style>
+</helmet>
+<div style="display: flex; flex-direction: column; gap: 36px; padding: 44px; width: max-content; background-color: #3b2a12; background-image: repeating-linear-gradient(180deg, rgba(255,255,255,.035) 0 2px, transparent 2px 7px), radial-gradient(120% 80% at 30% 0%, rgba(240,207,134,.10), transparent 60%); color: #f6ecd8;">
+
+  <div data-screen-label="T11 Kopf" style="max-width: 1240px; display: flex; flex-direction: column; gap: 14px; background: linear-gradient(180deg, #f8f3e7, #efe7d5); color: #2f2620; border-radius: 4px; padding: 26px 30px; box-shadow: 0 14px 30px rgba(0,0,0,.45);">
+    <div style="display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;">
+      <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: #6b4210; background: #f0cf86; border-radius: 3px; padding: 5px 10px;">T11</span>
+      <h1 style="margin: 0; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 38px; line-height: 1.05;">Rückblickkarte und Marke — Der Tisch</h1>
+      <span style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #6b5a45;">baut auf T1, T4, T8</span>
+    </div>
+    <p style="margin: 0; font-size: 16px; line-height: 1.55; max-width: 92ch; color: #4a4038;">Die teilbare Karte (Hochformat, als PNG exportiert), die App-Icons, das Favicon, das Open-Graph-Bild und die drei Kompositionen für die Landing-Screenshots. <strong>Keine SVG-Muster in der Karte</strong> — WebKit verdirbt damit die Canvas; alle Flächen sind Verläufe und Volltöne.</p>
+    <div style="display: flex; flex-wrap: wrap; gap: 10px; font-size: 13px; font-weight: 700;">
+      <span style="background: #e7dcc4; border-radius: 3px; padding: 6px 11px;">Karte 1080 × 1350 (hier 1:1 dargestellt, 0,5×)</span>
+      <span style="background: #e7dcc4; border-radius: 3px; padding: 6px 11px;">Icons 192 · 512 · maskable · apple-touch</span>
+      <span style="background: #e7dcc4; border-radius: 3px; padding: 6px 11px;">OG 1200 × 630</span>
+    </div>
+  </div>
+
+  <div data-screen-label="T11.1 Karte" style="display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap;">
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      <span style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #dcb587;">1 · Rückblickkarte · 540 × 675 (= 1080 × 1350 bei 2×)</span>
+      <div style="width: 540px; height: 675px; border-radius: 6px; overflow: hidden; box-shadow: 0 22px 50px rgba(0,0,0,.6); display: flex; flex-direction: column; background: #3b2a12;">
+        <div style="height: 300px; flex: none; position: relative; background: radial-gradient(90% 130% at 50% -20%, #2f6b4d, #1c4531 74%); border-bottom: 7px solid #9a6d2b; padding: 26px 28px; display: flex; flex-direction: column;">
+          <span style="display: flex; align-items: center; gap: 10px;">
+            <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 14px; letter-spacing: .14em; text-transform: uppercase; color: #3b2a12; background: linear-gradient(180deg, #f6d795, #d9a951); border-radius: 3px; padding: 5px 11px;">Spielwirbel</span>
+            <span style="margin-left: auto; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: #f6ecd8;">Donnerstagsrunde · 20.09.2026</span>
+          </span>
+          <span style="margin-top: auto; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 37px; line-height: 1.06; color: #f6ecd8;">„Nordlichter“ wurde gespielt.<br><span style="color: #f0cf86;">Jonas</span> hat gewonnen.</span>
+        </div>
+        <div style="flex: 1; padding: 22px 28px 24px; display: flex; flex-direction: column; gap: 16px;">
+          <div style="display: flex; align-items: center; gap: 18px;">
+            <span style="width: 118px; height: 154px; border-radius: 3px; background: linear-gradient(150deg, #2f5d7a, #14324a); flex: none; box-shadow: 0 8px 18px rgba(0,0,0,.5); display: flex; align-items: flex-end; padding: 12px;">
+              <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 17px; line-height: .95; color: #eaf2f7;">NORD<br>LICHTER</span>
+            </span>
+            <span style="display: flex; flex-direction: column; gap: 8px;">
+              <span style="display: inline-flex; align-self: flex-start; align-items: center; gap: 7px; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: #eaf6ec; background: #23543c; border: 2px solid #3f7a5c; border-radius: 3px; padding: 6px 12px; transform: rotate(-6deg);"><i class="ti ti-check" style="font-size: 15px;"></i> Gespielt</span>
+              <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 56px; line-height: 1; font-variant-numeric: tabular-nums;">4,8</span>
+              <span style="font-size: 13px; font-weight: 700; color: #e2c496;">Spielwirbel-Score aus 5 Wertungen</span>
+            </span>
+          </div>
+          <div style="display: flex; gap: 12px;">
+            <sc-for list="{{ present }}" as="p" hint-placeholder-count="5">
+              <span style="display: flex; flex-direction: column; align-items: center; gap: 5px; width: 62px;">
+                <span style="position: relative; width: 48px; height: 48px;">
+                  <span style="position: absolute; inset: 0; border-radius: 50%; background: {{ p.bg }}; border: 2px solid #f0cf86; color: #fff; display: grid; place-items: center; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 16px;">{{ p.ini }}</span>
+                  <i class="{{ p.crown }}" style="position: absolute; left: 50%; top: -14px; transform: translateX(-50%); font-size: 16px; color: #f0cf86;"></i>
+                </span>
+                <span style="font-size: 12px; font-weight: 700;">{{ p.name }}</span>
+              </span>
+            </sc-for>
+          </div>
+          <div style="background: linear-gradient(180deg, #f8f3e7, #efe7d5); color: #2f2620; border-radius: 4px; overflow: hidden;">
+            <sc-for list="{{ tafel }}" as="row" hint-placeholder-count="3">
+              <span style="display: flex; align-items: center; gap: 10px; padding: 9px 14px; background: {{ row.bg }}; border-bottom: 1px solid rgba(47,38,32,.12);">
+                <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 15px; width: 14px;">{{ row.rank }}</span>
+                <span style="width: 22px; height: 28px; border-radius: 2px; background: {{ row.cover }}; flex: none;"></span>
+                <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 15px;">{{ row.title }}</span>
+                <span style="margin-left: auto; display: inline-flex; align-items: center; gap: 5px; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 12px; color: {{ row.pillInk }}; background: {{ row.pillBg }}; border: 1px solid rgba(0,0,0,.4); border-radius: 999px; padding: 2px 8px; font-variant-numeric: tabular-nums;"><i class="{{ row.face }}" style="font-size: 12px;"></i> {{ row.score }}</span>
+              </span>
+            </sc-for>
+          </div>
+          <span style="margin-top: auto; display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 12px; font-weight: 700; color: #e2c496;">spielwirbel.app</span>
+            <span style="margin-left: auto; display: inline-flex; align-items: center; background: #f8f3e7; border-radius: 3px; padding: 5px 9px;"><img src="../../../public/icons/powered-by-bgg.png" alt="Powered by BGG" style="display: block; width: 104px; height: auto;"></span>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 14px; width: 620px;">
+      <div style="background: #4a3423; border: 1px solid rgba(240,207,134,.22); border-radius: 4px; padding: 18px 20px; display: flex; flex-direction: column; gap: 10px;">
+        <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 19px;">Regeln der Karte</span>
+        <span style="font-size: 14px; font-weight: 600; line-height: 1.6; color: #f0e3c8;">Vier Zonen von oben nach unten: <strong>Filzkopf mit dem Satz</strong>, Cover mit Stempel und Score, die Menschen, die Tafel. Der Filzkopf trägt die Markerfarbe der Runde (T8) und ist das, was die Karte auf einen Blick einer Runde zuordnet. Die Messingkante unter dem Kopf ist 7 px — auf 2× also 14 px, damit sie im Feed nicht verschwindet.</span>
+        <span style="font-size: 13px; font-weight: 600; line-height: 1.6; color: #dcb587;">Nur Verläufe und Volltöne, keine SVG-Muster und keine Icon-Font im Export — die Gesichter in der Tafel werden beim Rendern durch die gleichen Glyphen als Bild ersetzt. Cover kommen als Bild von BGG; fehlt eines, steht die Holzprägung aus T1.</span>
+      </div>
+      <div style="background: #4a3423; border: 1px solid rgba(240,207,134,.22); border-radius: 4px; padding: 18px 20px; display: flex; flex-direction: column; gap: 12px;">
+        <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 19px;">Varianten</span>
+        <div style="display: flex; gap: 12px;">
+          <sc-for list="{{ variants }}" as="v" hint-placeholder-count="3">
+            <span style="width: 176px; display: flex; flex-direction: column; gap: 7px;">
+              <span style="width: 176px; height: 220px; border-radius: 4px; overflow: hidden; box-shadow: 0 8px 18px rgba(0,0,0,.45); display: flex; flex-direction: column; background: #3b2a12;">
+                <span style="height: 96px; flex: none; background: {{ v.felt }}; border-bottom: 3px solid #9a6d2b; padding: 10px; display: flex; flex-direction: column; justify-content: flex-end;">
+                  <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 13px; line-height: 1.12; color: #f6ecd8;">{{ v.head }}</span>
+                </span>
+                <span style="flex: 1; padding: 10px; display: flex; flex-direction: column; gap: 7px;">
+                  <span style="display: flex; align-items: center; gap: 8px;">
+                    <span style="width: 30px; height: 40px; border-radius: 2px; background: {{ v.cover }}; flex: none;"></span>
+                    <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 22px; font-variant-numeric: tabular-nums;">{{ v.score }}</span>
+                  </span>
+                  <span style="font-size: 10px; font-weight: 600; color: #dcb587; line-height: 1.4;">{{ v.note }}</span>
+                </span>
+              </span>
+              <span style="font-size: 12px; font-weight: 700; color: #e2c496;">{{ v.label }}</span>
+            </span>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div data-screen-label="T11.2 Icons" style="display: flex; flex-direction: column; gap: 14px;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 22px;">2 · App-Icon, Favicon, Open Graph</span>
+      <span style="flex: 1; height: 1px; background: linear-gradient(90deg, rgba(240,207,134,.5), transparent);"></span>
+    </div>
+    <div style="display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap;">
+      <div style="background: #4a3423; border: 1px solid rgba(240,207,134,.22); border-radius: 4px; padding: 18px 20px; display: flex; gap: 20px; align-items: flex-end;">
+        <sc-for list="{{ icons }}" as="i" hint-placeholder-count="5">
+          <span style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+            <span style="width: {{ i.size }}; height: {{ i.size }}; border-radius: {{ i.radius }}; background: radial-gradient(100% 110% at 35% 15%, #2f6b4d, #1c4531 72%); border: {{ i.border }}; display: grid; place-items: center; box-shadow: 0 6px 14px rgba(0,0,0,.45); overflow: hidden; position: relative;">
+              <i class="ti ti-tornado" style="font-size: {{ i.glyph }}; color: #f0cf86;"></i>
+              <span style="{{ i.safeStyle }}"></span>
+            </span>
+            <span style="font-size: 12px; font-weight: 700; color: #e2c496;">{{ i.label }}</span>
+            <span style="font-family: ui-monospace, Menlo, monospace; font-size: 10px; color: #dcb587;">{{ i.file }}</span>
+          </span>
+        </sc-for>
+      </div>
+      <div style="flex: 1; min-width: 420px; background: #4a3423; border: 1px solid rgba(240,207,134,.22); border-radius: 4px; padding: 18px 20px; display: flex; flex-direction: column; gap: 10px;">
+        <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 19px;">Icon-Regeln</span>
+        <span style="font-size: 14px; font-weight: 600; line-height: 1.6; color: #f0e3c8;">Das Icon ist <strong>Filz mit Wirbel in Gold</strong> — kein Tisch, keine Würfel: auf 16 px bleibt nur eine Form lesbar. Die Messingkante entfällt im Icon, weil sie bei kleinen Größen zu einem grauen Rand verschmiert. Maskable hat 20 % Sicherheitsrand, der Wirbel sitzt in der inneren 60-%-Zone. Das Favicon verzichtet auf den Verlauf und nutzt #1c4531 flächig.</span>
+        <span style="font-size: 13px; font-weight: 600; line-height: 1.6; color: #dcb587;"><strong>Jedes Design bringt sein eigenes Icon</strong> (Entscheidung nach der Prüfung): das Manifest tauscht Icon und Theme-Color mit der Designwahl, der Tisch liefert Filz plus Goldwirbel. Wer Klassisch behält, behält den weißen Würfel auf Orange — es gibt also keinen stillen Markenwechsel.</span>
+      </div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 9px;">
+      <span style="font-family: ui-monospace, Menlo, monospace; font-size: 12px; color: #dcb587;">Open Graph · 1200 × 630 (hier 0,5×)</span>
+      <div style="width: 600px; height: 315px; border-radius: 4px; overflow: hidden; box-shadow: 0 14px 30px rgba(0,0,0,.5); display: flex; background: #3b2a12;">
+        <div style="width: 340px; flex: none; background: radial-gradient(90% 130% at 30% -10%, #2f6b4d, #1c4531 74%); border-right: 5px solid #9a6d2b; padding: 24px; display: flex; flex-direction: column; gap: 14px;">
+          <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: #3b2a12; background: linear-gradient(180deg, #f6d795, #d9a951); border-radius: 3px; padding: 5px 11px; align-self: flex-start;">Spielwirbel</span>
+          <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 30px; line-height: 1.08;">Wer am Tisch sitzt, entscheidet mit.</span>
+          <span style="font-size: 14px; font-weight: 600; line-height: 1.5; color: #eaf6ec;">Regal füllen, Session wirbeln, geheim werten.</span>
+          <span style="margin-top: auto; display: inline-flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 700;"><i class="ti ti-lock" style="color: #a8dcb4;"></i> Kein Tracking · EU-Hosting</span>
+        </div>
+        <div style="flex: 1; padding: 24px 22px; display: flex; flex-direction: column; gap: 12px; justify-content: center;">
+          <span style="display: flex; gap: 10px; align-items: flex-end;">
+            <sc-for list="{{ ogCovers }}" as="c" hint-placeholder-count="4">
+              <span style="width: 54px; height: {{ c.h }}; border-radius: 3px; background: {{ c.bg }}; box-shadow: 0 5px 11px rgba(0,0,0,.5);"></span>
+            </sc-for>
+          </span>
+          <span style="height: 9px; border-radius: 2px; background: linear-gradient(180deg, #d9a951, #8a6224);"></span>
+          <span style="display: inline-flex; align-self: flex-start; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px; border-radius: 4px; background: linear-gradient(180deg, #f6d795, #d9a951); color: #3b2a12; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 16px;"><i class="ti ti-tornado" style="font-size: 19px;"></i> Session wirbeln</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div data-screen-label="T11.3 Screenshots" style="display: flex; flex-direction: column; gap: 14px;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 22px;">3 · Die drei Landing-Kompositionen</span>
+      <span style="flex: 1; height: 1px; background: linear-gradient(90deg, rgba(240,207,134,.5), transparent);"></span>
+      <span style="font-size: 12px; color: #e2c496;">werden in neun Sprachen gerendert — deshalb bleibt Text im Bild kurz</span>
+    </div>
+    <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+      <sc-for list="{{ shots }}" as="s" hint-placeholder-count="3">
+        <div style="width: 396px; display: flex; flex-direction: column; gap: 10px;">
+          <div style="width: 396px; height: 300px; border-radius: 4px; background: {{ s.bg }}; border: 1px solid rgba(240,207,134,.22); box-shadow: 0 12px 26px rgba(0,0,0,.45); position: relative; overflow: hidden; padding: 20px;">
+            <span style="position: absolute; left: 20px; top: 18px; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #f0cf86;">{{ s.kicker }}</span>
+            <div style="position: absolute; left: {{ s.frameX }}; top: 54px; width: 196px; height: 300px; border-radius: 22px; background: #3b2a12; box-shadow: 0 16px 34px rgba(0,0,0,.6), inset 0 0 0 1px rgba(240,207,134,.3); overflow: hidden; display: flex; flex-direction: column;">
+              <span style="height: 72px; flex: none; background: {{ s.felt }}; border-bottom: 2px solid #9a6d2b; padding: 10px; display: flex; flex-direction: column; justify-content: flex-end;">
+                <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 12px; color: #f6ecd8;">{{ s.phoneHead }}</span>
+              </span>
+              <span style="flex: 1; padding: 10px; display: flex; flex-direction: column; gap: 7px;">
+                <sc-for list="{{ s.rows }}" as="row" hint-placeholder-count="3">
+                  <span style="display: flex; align-items: center; gap: 7px; min-height: 34px; border-radius: 3px; background: #4a3423; padding: 0 8px;">
+                    <span style="width: 18px; height: 24px; border-radius: 2px; background: {{ row.cover }}; flex: none;"></span>
+                    <span style="font-size: 10px; font-weight: 700;">{{ row.label }}</span>
+                    <span style="margin-left: auto; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 11px; color: #f0cf86;">{{ row.value }}</span>
+                  </span>
+                </sc-for>
+              </span>
+              <span style="height: 30px; flex: none; background: linear-gradient(180deg, #2f6b4d, #1c4531); border-top: 2px solid #9a6d2b;"></span>
+            </div>
+            <span style="position: absolute; right: 20px; bottom: 20px; width: 150px; display: flex; flex-direction: column; gap: 7px;">
+              <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 19px; line-height: 1.15; color: #f6ecd8;">{{ s.claim }}</span>
+              <span style="font-size: 11px; font-weight: 600; line-height: 1.45; color: #e2c496;">{{ s.sub }}</span>
+            </span>
+          </div>
+          <span style="font-size: 13px; font-weight: 700; color: #e2c496;">{{ s.title }}</span>
+          <span style="font-size: 12px; font-weight: 600; color: #dcb587; line-height: 1.5;">{{ s.note }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div data-screen-label="T11.4 Übergabe" style="max-width: 1240px; background: #4a3423; border: 1px solid rgba(240,207,134,.28); border-radius: 4px; padding: 22px 26px; display: flex; flex-direction: column; gap: 10px;">
+    <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 20px;">Was T11 entscheidet</span>
+    <span style="font-size: 15px; line-height: 1.6; color: #f0e3c8; max-width: 100ch;">Die Rückblickkarte ist ein <strong>Filzkopf über Papier</strong>: oben der Satz auf der Markerfarbe der Runde mit 14-px-Messingkante (2×), darunter Cover, Stempel und Score, dann die Menschen, unten die Tafel — in dieser Reihenfolge lesen Leute einen geteilten Screenshot. Drei Varianten deckt sie ab: normal, mehrere Tische, Rückblick eines Zeitraums. Das <strong>App-Icon gehört zum Design</strong>: der Tisch liefert Filz plus Goldwirbel ohne Messingkante, Klassisch behält den weißen Würfel auf Orange, und das Manifest tauscht Icon samt Theme-Color mit der Designwahl. Text im Screenshot bleibt kurz, weil er in neun Sprachen gerendert wird.</span>
+    <span style="font-size: 14px; line-height: 1.6; color: #dcb587;">Offen: T12 baut die Landing-Seite um diese drei Kompositionen · Icons und OG werden als PNG aus diesen Rahmen exportiert.</span>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1340}}">
+class Component extends DCLogic {
+  renderVals() {
+    const cover = (a, b) => `linear-gradient(150deg, ${a}, ${b})`;
+    const faces = ['ti-mood-cry', 'ti-mood-sad', 'ti-mood-neutral', 'ti-mood-smile', 'ti-mood-crazy-happy'];
+    const pillRamp = ['#8f2f22', '#a05a1f', '#b8a12e', '#8dbf46', '#b8e08a'];
+    const pillInk = ['#fdf4e4', '#fdf4e4', '#2a1a08', '#2a1a08', '#2a1a08'];
+    const pill = (stop) => ({ pillBg: pillRamp[stop - 1], pillInk: pillInk[stop - 1], face: 'ti ' + faces[stop - 1] });
+    const C = { lea: '#198663', jonas: '#c6522c', mia: '#726bc7', ada: '#2f6f9e', ben: '#54821d' };
+
+    const present = [
+      { name: 'Jonas', ini: 'JO', bg: C.jonas, crown: 'ti ti-crown' },
+      { name: 'Lea', ini: 'LE', bg: C.lea, crown: 'ti' },
+      { name: 'Mia', ini: 'MI', bg: C.mia, crown: 'ti' },
+      { name: 'Ada', ini: 'AD', bg: C.ada, crown: 'ti' },
+      { name: 'Ben', ini: 'BE', bg: C.ben, crown: 'ti' },
+    ];
+
+    const tafel = [
+      Object.assign({ rank: '1', title: 'Nordlichter', score: '4,8', cover: cover('#2f5d7a', '#14324a'), bg: 'linear-gradient(90deg, #f6e3b4, #f0cf86)' }, pill(5)),
+      Object.assign({ rank: '2', title: 'Kartographen', score: '4,1', cover: cover('#7a5b2f', '#42301a'), bg: '#f8f3e7' }, pill(4)),
+      Object.assign({ rank: '3', title: 'Zugvögel', score: '2,4', cover: cover('#3f5d2f', '#22331a'), bg: '#efe7d5' }, pill(2)),
+    ];
+
+    const variants = [
+      {
+        label: 'Normal', head: '„Nordlichter“ wurde gespielt. Jonas hat gewonnen.',
+        felt: 'radial-gradient(90% 130% at 50% -20%, #2f6b4d, #1c4531 74%)',
+        cover: cover('#2f5d7a', '#14324a'), score: '4,8', note: 'Ein Tisch, ein Sieger, drei Zeilen Tafel.',
+      },
+      {
+        label: 'Mehrere Tische', head: 'Zwei Tische. Jonas und Ida haben gewonnen.',
+        felt: 'linear-gradient(100deg, #1c4531 0 50%, #33264a 50%)',
+        cover: 'radial-gradient(70% 70% at 30% 25%, #a2508f, #3a1a34 80%)', score: '4,5', note: 'Der Kopf teilt sich diagonal in beide Filze, darunter zwei Tafeln zu je zwei Zeilen.',
+      },
+      {
+        label: 'Zeitraum', head: 'Sommer 2026 · 14 Sessions',
+        felt: 'radial-gradient(90% 130% at 50% -20%, #7a2f3f, #461b25 74%)',
+        cover: 'linear-gradient(90deg, #8f4a22 0 34%, #d9a951 34%)', score: '4,2', note: 'Statt eines Spiels: Meistgespielt, bester Score, wer am häufigsten gewonnen hat.',
+      },
+    ];
+
+    const icons = [
+      { label: 'App 512', size: '112px', radius: '22px', glyph: '58px', file: 'icon-512.png', border: 'none', safeStyle: 'display: none;' },
+      { label: 'App 192', size: '76px', radius: '16px', glyph: '40px', file: 'icon-192.png', border: 'none', safeStyle: 'display: none;' },
+      {
+        label: 'Maskable', size: '112px', radius: '22px', glyph: '40px', file: 'icon-maskable.png', border: 'none',
+        safeStyle: 'position: absolute; inset: 20%; border-radius: 50%; border: 1px dashed rgba(240,207,134,.55);',
+      },
+      { label: 'Apple Touch', size: '76px', radius: '14px', glyph: '38px', file: 'apple-touch-icon.png', border: 'none', safeStyle: 'display: none;' },
+      { label: 'Favicon 32', size: '32px', radius: '5px', glyph: '18px', file: 'favicon.png', border: 'none', safeStyle: 'display: none;' },
+    ];
+
+    const ogCovers = [
+      { bg: cover('#2f5d7a', '#14324a'), h: '92px' },
+      { bg: cover('#7a5b2f', '#42301a'), h: '74px' },
+      { bg: 'radial-gradient(70% 70% at 30% 25%, #a2508f, #3a1a34 80%)', h: '104px' },
+      { bg: 'repeating-linear-gradient(135deg, #5b4128 0 8px, #4a3423 8px 16px)', h: '84px' },
+    ];
+
+    const shots = [
+      {
+        title: 'Komposition 1 · Das Regal', kicker: 'Screenshot 1',
+        bg: 'radial-gradient(90% 120% at 15% 0%, #4a3423, #32230f 74%)',
+        felt: 'radial-gradient(110% 150% at 30% -30%, #2f6b4d, #1c4531 74%)',
+        frameX: '20px', phoneHead: 'Regal · 12 Spiele',
+        claim: 'Euer Regal an einem Ort.', sub: 'Titel, Cover und Spielerzahl kommen von BGG.',
+        note: 'Telefonrahmen links, Claim rechts. Zeigt echte Cover in ungleichen Höhen.',
+        rows: [
+          { label: 'Nordlichter', value: '4,8', cover: cover('#2f5d7a', '#14324a') },
+          { label: 'Kartographen', value: '4,1', cover: cover('#7a5b2f', '#42301a') },
+          { label: 'Die Insel', value: '3,3', cover: 'radial-gradient(70% 70% at 30% 25%, #a2508f, #3a1a34 80%)' },
+        ],
+      },
+      {
+        title: 'Komposition 2 · Die Abstimmung', kicker: 'Screenshot 2',
+        bg: 'radial-gradient(90% 120% at 85% 0%, #2f6b4d, #1c4531 74%)',
+        felt: 'radial-gradient(110% 150% at 30% -30%, #2f6b4d, #1c4531 74%)',
+        frameX: '20px', phoneHead: 'Wie gern spielst du das heute?',
+        claim: 'Geheim werten, dann aufdecken.', sub: 'Fünf Gesichter, 1 bis 5, niemand schaut ab.',
+        note: 'Wertungskarte im Rahmen auf Filz, Filz auch als Grund der Komposition — das Ritual ist hier das Bild.',
+        rows: [
+          { label: 'gar nicht', value: '1', cover: '#8f2f22' },
+          { label: 'kann ich', value: '3', cover: '#b8a12e' },
+          { label: 'unbedingt', value: '5', cover: '#b8e08a' },
+        ],
+      },
+      {
+        title: 'Komposition 3 · Das Ergebnis', kicker: 'Screenshot 3',
+        bg: 'radial-gradient(90% 120% at 50% 0%, #5b4128, #32230f 74%)',
+        felt: 'radial-gradient(110% 150% at 30% -30%, #2f6b4d, #1c4531 74%)',
+        frameX: '106px', phoneHead: 'Jonas hat gewonnen.',
+        claim: 'Und die Chronik führt Buch.', sub: 'Sieger, Score und Pokale ohne Tippen.',
+        note: 'Rahmen zentriert, Claim unten rechts; die Goldzeile der Tafel ist der Blickfang.',
+        rows: [
+          { label: 'Nordlichter', value: '4,8', cover: cover('#2f5d7a', '#14324a') },
+          { label: 'Kartographen', value: '4,1', cover: cover('#7a5b2f', '#42301a') },
+          { label: 'Zugvögel', value: '2,4', cover: cover('#3f5d2f', '#22331a') },
+        ],
+      },
+    ];
+
+    return { present, tafel, variants, icons, ogCovers, shots };
+  }
+}
+
+</script>
+</body>
+</html>

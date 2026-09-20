@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="design_doc_mode" content="canvas">
+  <link rel="stylesheet" href="../../../public/fonts/tabler-icons.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Manrope:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #2b1e0d; font-family: 'Manrope', sans-serif; }
+    a { color: #f0cf86; text-decoration: none; display: inline-block; padding: 4px 0; }
+    a:hover { color: #fbe6b4; text-decoration: underline; }
+  </style>
+</helmet>
+<div style="display: flex; flex-direction: column; gap: 36px; padding: 44px; width: max-content; background-color: #3b2a12; background-image: repeating-linear-gradient(180deg, rgba(255,255,255,.035) 0 2px, transparent 2px 7px), radial-gradient(120% 80% at 30% 0%, rgba(240,207,134,.10), transparent 60%); color: #f6ecd8;">
+
+  <div data-screen-label="T15a Kopf" style="max-width: 1240px; display: flex; flex-direction: column; gap: 14px; background: linear-gradient(180deg, #f8f3e7, #efe7d5); color: #2f2620; border-radius: 4px; padding: 26px 30px; box-shadow: 0 14px 30px rgba(0,0,0,.45);">
+    <div style="display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;">
+      <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: #6b4210; background: #f0cf86; border-radius: 3px; padding: 5px 10px;">T15a</span>
+      <h1 style="margin: 0; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 38px; line-height: 1.05;">Sheets und Popover — Der Tisch</h1>
+      <span style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #6b5a45;">baut auf T1 · nach der Prüfung eingeschoben</span>
+    </div>
+    <p style="margin: 0; font-size: 16px; line-height: 1.55; max-width: 92ch; color: #4a4038;">Die achtzehn Overlays, mit denen Leute den halben Abend arbeiten. Eine Form, zwei Auftritte: am Telefon <strong>Sheet von unten</strong>, am Desktop <strong>Popover an seinem Auslöser</strong> — gleicher Inhalt, gleiche Reihenfolge, gleiche Knöpfe. Alle sind Papier auf Holz; Filz kommt in einem Overlay nur vor, wenn es um den Filz geht.</p>
+    <div style="display: flex; flex-wrap: wrap; gap: 10px; font-size: 13px; font-weight: 700;">
+      <span style="background: #e7dcc4; border-radius: 3px; padding: 6px 11px;">Griff 42 × 4 px · Kopf mit Titel und Schließen 34 px</span>
+      <span style="background: #e7dcc4; border-radius: 3px; padding: 6px 11px;">Zeilen 44 px · Knöpfe 48 px · Rand 18 px</span>
+      <span style="background: #e7dcc4; border-radius: 3px; padding: 6px 11px;">Ein Sheet hat höchstens eine Primäraktion</span>
+    </div>
+  </div>
+
+  <div data-screen-label="T15a.0 Regel" style="max-width: 1240px; display: flex; gap: 16px; align-items: stretch; flex-wrap: wrap;">
+    <div style="width: 390px; flex: none; display: flex; flex-direction: column; gap: 9px;">
+      <span style="font-family: ui-monospace, Menlo, monospace; font-size: 12px; color: #dcb587;">Telefon · Sheet von unten</span>
+      <div style="width: 390px; height: 300px; border-radius: 22px 22px 6px 6px; background: #241806; box-shadow: 0 16px 34px rgba(0,0,0,.5), inset 0 0 0 1px rgba(240,207,134,.25); display: flex; flex-direction: column; justify-content: flex-end; overflow: hidden;">
+        <span style="flex: 1; background: rgba(28,16,4,.55);"></span>
+        <div style="background: linear-gradient(180deg, #f8f3e7, #efe7d5); color: #2f2620; border-radius: 12px 12px 0 0; padding: 10px 0 16px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 -14px 34px rgba(0,0,0,.55);">
+          <span style="align-self: center; width: 42px; height: 4px; border-radius: 999px; background: rgba(47,38,32,.3);"></span>
+          <span style="padding: 0 18px; display: flex; align-items: center; gap: 10px;">
+            <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 20px;">Titel</span>
+            <span style="margin-left: auto; width: 34px; height: 34px; border-radius: 50%; border: 1px solid rgba(47,38,32,.2); background: #e7dcc4; display: grid; place-items: center; font-size: 17px;"><i class="ti ti-x"></i></span>
+          </span>
+          <span style="padding: 0 18px; display: flex; flex-direction: column; gap: 8px;">
+            <span style="min-height: 44px; border-radius: 4px; background: #efe7d5; display: flex; align-items: center; padding: 0 12px; font-weight: 600; font-size: 14px; color: #6b5a45;">Zeile · 44 px</span>
+            <span style="min-height: 48px; border-radius: 4px; background: linear-gradient(180deg, #f6d795, #d9a951); border: 1px solid #a87a2e; display: flex; align-items: center; justify-content: center; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 16px; color: #3b2a12;">Eine Primäraktion</span>
+          </span>
+        </div>
+      </div>
+    </div>
+    <div style="width: 390px; flex: none; display: flex; flex-direction: column; gap: 9px;">
+      <span style="font-family: ui-monospace, Menlo, monospace; font-size: 12px; color: #dcb587;">Desktop · Popover am Auslöser</span>
+      <div style="width: 390px; height: 300px; border-radius: 6px; background: #3b2a12; box-shadow: 0 16px 34px rgba(0,0,0,.5), inset 0 0 0 1px rgba(240,207,134,.25); position: relative; overflow: hidden; padding: 18px;">
+        <span style="display: inline-flex; align-items: center; gap: 8px; min-height: 42px; padding: 0 13px; border-radius: 4px; background: #5b4128; border: 1px solid #b98a55; font-weight: 700; font-size: 14px; box-shadow: 0 0 0 3px #3b2a12, 0 0 0 6px #f0cf86;"><i class="ti ti-filter" style="color: #f0cf86;"></i> Auslöser</span>
+        <div style="position: absolute; left: 18px; top: 74px; width: 300px; border-radius: 8px; background: linear-gradient(180deg, #f8f3e7, #efe7d5); color: #2f2620; border: 1px solid #a87a2e; box-shadow: 0 14px 30px rgba(0,0,0,.5); overflow: hidden;">
+          <span style="display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-bottom: 1px solid rgba(47,38,32,.16);">
+            <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 15px; letter-spacing: .06em; text-transform: uppercase; color: #7a4a28;">Titel</span>
+            <span style="margin-left: auto; width: 26px; height: 26px; display: grid; place-items: center; font-size: 16px; color: #6b5a45;"><i class="ti ti-x"></i></span>
+          </span>
+          <span style="display: block; padding: 12px 14px; font-size: 13px; font-weight: 600; line-height: 1.5; color: #4a4038;">Derselbe Inhalt, dieselbe Reihenfolge — nur ohne Griff, mit Kapitälchen-Titel und an den Auslöser geheftet.</span>
+          <span style="display: flex; gap: 8px; padding: 10px 14px; border-top: 1px solid rgba(47,38,32,.16);">
+            <span style="flex: 1; min-height: 36px; border-radius: 4px; background: linear-gradient(180deg, #f6d795, #d9a951); border: 1px solid #a87a2e; display: flex; align-items: center; justify-content: center; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 14px; color: #3b2a12;">Übernehmen</span>
+            <span style="min-height: 36px; padding: 0 12px; border-radius: 4px; border: 1px solid rgba(47,38,32,.25); display: flex; align-items: center; font-weight: 700; font-size: 14px; color: #4a4038;">Zurücksetzen</span>
+          </span>
+        </div>
+      </div>
+    </div>
+    <div style="flex: 1; min-width: 380px; background: #4a3423; border: 1px solid rgba(240,207,134,.22); border-radius: 4px; padding: 18px 20px; display: flex; flex-direction: column; gap: 10px;">
+      <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 19px;">Was sich zwischen den Auftritten ändert</span>
+      <span style="font-size: 14px; font-weight: 600; line-height: 1.6; color: #f0e3c8;">Nur drei Dinge: der <strong>Griff</strong> (nur Telefon), der <strong>Titel</strong> (Telefon 20 px normal, Desktop 15 px Kapitälchen), und die <strong>Verankerung</strong> (Telefon unten über volle Breite, Desktop am Auslöser, 300 px breit). Inhalt, Reihenfolge, Knopfreihenfolge und Wortlaut sind identisch — wer das Telefon kennt, findet sich am Desktop sofort zurecht.</span>
+      <span style="font-size: 13px; font-weight: 600; line-height: 1.6; color: #dcb587;">Schließen: Tippen daneben, Wischen nach unten, Escape, das ×. Ein Sheet mit ungespeicherter Eingabe fragt nach (T15b, Dialog „Verwerfen?“). Lange Listen scrollen im Sheet, der Kopf bleibt stehen.</span>
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 20px; flex-wrap: wrap; max-width: 1670px;">
+    <sc-for list="{{ sheets }}" as="s" hint-placeholder-count="18">
+      <div style="width: 390px; display: flex; flex-direction: column; gap: 9px;">
+        <span style="font-family: ui-monospace, Menlo, monospace; font-size: 12px; color: #dcb587;">{{ s.n }} · {{ s.caption }}</span>
+        <div style="width: 390px; border-radius: 12px 12px 6px 6px; background: linear-gradient(180deg, #f8f3e7, #efe7d5); color: #2f2620; box-shadow: 0 14px 30px rgba(0,0,0,.45); padding: 10px 0 16px; display: flex; flex-direction: column; gap: 11px;">
+          <span style="align-self: center; width: 42px; height: 4px; border-radius: 999px; background: rgba(47,38,32,.3);"></span>
+          <span style="padding: 0 18px; display: flex; align-items: center; gap: 10px;">
+            <span style="display: flex; flex-direction: column; min-width: 0;">
+              <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 20px; line-height: 1.2;">{{ s.title }}</span>
+              <span style="{{ s.subStyle }}">{{ s.sub }}</span>
+            </span>
+            <span style="margin-left: auto; width: 34px; height: 34px; flex: none; border-radius: 50%; border: 1px solid rgba(47,38,32,.2); background: #e7dcc4; display: grid; place-items: center; font-size: 17px;"><i class="ti ti-x"></i></span>
+          </span>
+          <div style="padding: 0 18px; display: flex; flex-direction: column; gap: 8px;">
+            <sc-for list="{{ s.rows }}" as="r" hint-placeholder-count="4">
+              <span style="display: flex; align-items: center; gap: 11px; min-height: 44px; padding: 0 12px; border-radius: 4px; background: {{ r.bg }}; border: {{ r.border }};">
+                <span style="{{ r.leadStyle }}">{{ r.lead }}</span>
+                <span style="display: flex; flex-direction: column; min-width: 0;">
+                  <span style="font-weight: 700; font-size: 14px; line-height: 1.3;">{{ r.label }}</span>
+                  <span style="{{ r.hintStyle }}">{{ r.hint }}</span>
+                </span>
+                <span style="{{ r.tailStyle }}">{{ r.tail }}</span>
+              </span>
+            </sc-for>
+          </div>
+          <div style="padding: 0 18px; display: flex; gap: 9px; align-items: center;">
+            <span style="{{ s.secondaryStyle }}">{{ s.secondary }}</span>
+            <span style="flex: 1; min-height: 48px; border-radius: 4px; background: {{ s.primaryBg }}; border: 1px solid {{ s.primaryBorder }}; color: {{ s.primaryInk }}; display: flex; align-items: center; justify-content: center; gap: 8px; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 16px;"><i class="{{ s.primaryIcon }}"></i> {{ s.primary }}</span>
+          </div>
+          <span style="{{ s.footStyle }}">{{ s.foot }}</span>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+
+  <div data-screen-label="T15a.19 Übergabe" style="max-width: 1240px; background: #4a3423; border: 1px solid rgba(240,207,134,.28); border-radius: 4px; padding: 22px 26px; display: flex; flex-direction: column; gap: 10px;">
+    <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 20px;">Was T15a entscheidet</span>
+    <span style="font-size: 15px; line-height: 1.6; color: #f0e3c8; max-width: 100ch;">Overlays sind <strong>Papier, das auf den Tisch gelegt wird</strong> — nie Filz, nie Nussbaum, mit einer Ausnahme: die Filz-Auswahl zeigt Filz, weil sie Filz auswählt. Eine Form für beide Breiten, drei Unterschiede (Griff, Titelgröße, Verankerung). <strong>Höchstens eine Primäraktion pro Overlay</strong>; wo zwei Wege gleich wichtig sind (Spiel hinzufügen: suchen oder selbst eintragen), stehen beide als Sekundärzeilen und die Primäraktion bleibt das Suchergebnis. Zerstörende Aktionen erscheinen hier nie als Primärknopf — sie gehen über einen Dialog aus T15b. Das Wortlaut-Prinzip aus der Prüfung gilt: die Titel sind die Strings der App (<em>„Spiel hinzufügen“, „Aussortieren“, „Von BGG übernehmen“, „Cover der Ausgabe wählen“</em>), keine Umschreibungen.</span>
+    <span style="font-size: 14px; line-height: 1.6; color: #dcb587;">Offen an T15b: die ~30 Bestätigungsdialoge, Toasts, das „…“-Menü und die Fehlerzustände dieser Sheets (BGG nicht erreichbar, Kontingent voll, kein Treffer).</span>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1760}}">
+class Component extends DCLogic {
+  renderVals() {
+    const cover = (a, b) => `linear-gradient(150deg, ${a}, ${b})`;
+    const C = { lea: '#198663', jonas: '#c6522c', mia: '#726bc7', tom: '#a66815', ada: '#2f6f9e', ben: '#54821d' };
+    const HINT = 'font-size: 11px; font-weight: 600; color: #6b5a45; line-height: 1.35;';
+    const NOHINT = 'display: none;';
+    const TAIL = 'margin-left: auto; font-size: 12px; font-weight: 700; color: #7a4a28; flex: none;';
+    const TAILI = 'margin-left: auto; font-size: 18px; color: #7a4a28; flex: none;';
+    const NOTAIL = 'display: none;';
+    const FOOT = 'padding: 0 18px; font-size: 11px; font-weight: 600; line-height: 1.5; color: #6b5a45;';
+    const SUB = 'font-size: 12px; font-weight: 600; color: #6b5a45;';
+    const SEC = 'min-height: 48px; padding: 0 14px; border-radius: 4px; border: 1px solid rgba(47,38,32,.25); display: flex; align-items: center; font-weight: 700; font-size: 14px; color: #4a4038; flex: none;';
+    const swatch = (bg) => `width: 30px; height: 40px; border-radius: 2px; background: ${bg}; flex: none;`;
+    const dot = (bg) => `width: 32px; height: 32px; border-radius: 50%; background: ${bg}; color: #fff; display: grid; place-items: center; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 12px; flex: none;`;
+    const icon = 'width: 30px; text-align: center; font-size: 19px; color: #7a4a28; flex: none;';
+    const box = (on) => `width: 24px; height: 24px; border-radius: 3px; flex: none; background: ${on ? 'linear-gradient(180deg, #f6d795, #d9a951)' : '#fffaf0'}; border: 1px solid #a87a2e; color: #3b2a12; display: grid; place-items: center; font-size: 15px;`;
+
+    const row = (o) => ({
+      bg: o.bg || '#efe7d5',
+      border: o.border || '1px solid rgba(47,38,32,.12)',
+      lead: o.lead ?? '', leadStyle: o.leadStyle || 'display: none;',
+      label: o.label, hint: o.hint ?? '', hintStyle: o.hint ? HINT : NOHINT,
+      tail: o.tail ?? '', tailStyle: o.tail ? (o.tailIcon ? NOTAIL : TAIL) : NOTAIL,
+    });
+    const iconRow = (ic, label, hint, tail) => row({ lead: '', leadStyle: icon + ' display: block;', label, hint, tail });
+
+    const sheet = (n, caption, title, sub, rows, primary, opts = {}) => ({
+      n, caption, title, sub, subStyle: sub ? SUB : 'display: none;',
+      rows,
+      primary, primaryIcon: opts.icon || 'ti',
+      primaryBg: opts.quiet ? '#e7dcc4' : 'linear-gradient(180deg, #f6d795, #d9a951)',
+      primaryBorder: opts.quiet ? 'rgba(47,38,32,.25)' : '#a87a2e',
+      primaryInk: opts.quiet ? '#2f2620' : '#3b2a12',
+      secondary: opts.secondary || '', secondaryStyle: opts.secondary ? SEC : 'display: none;',
+      foot: opts.foot || '', footStyle: opts.foot ? FOOT : 'display: none;',
+    });
+
+    // Zeilenbausteine mit sichtbarem Vorsatz (Cover, Avatar, Symbol, Kasten)
+    const coverRow = (bg, label, hint, tail) => ({ ...row({ label, hint, tail }), lead: '', leadStyle: swatch(bg) + ' display: block;' });
+    const personRow = (ini, bg, label, hint, tail) => ({ ...row({ label, hint, tail }), lead: ini, leadStyle: dot(bg) });
+    const checkRow = (on, label, hint, tail) => ({ ...row({ label, hint, tail }), lead: on ? '✓' : '', leadStyle: box(on) });
+
+    const sheets = [
+      sheet('1', 'Spiel hinzufügen (Regal, Hub)', 'Spiel hinzufügen', '4 Treffer bei BGG', [
+        coverRow(cover('#2f5d7a', '#14324a'), 'Nordlichter', '2026 · 2–5 · 60 min', 'im Regal'),
+        coverRow(cover('#1f4a63', '#0d2233'), 'Nordlichter: Polarwind', 'Erweiterung zu Nordlichter', ''),
+        coverRow(cover('#2f7a6b', '#14423a'), 'Nordlicht-Expedition', '2024 · 1–5 · 90 min', ''),
+      ], 'Hinzufügen', { icon: 'ti ti-plus', secondary: 'Selbst eintragen', foot: 'Titel, Cover und Spielerzahl kommen von BoardGameGeek. Oder „Von BGG übernehmen“ für die ganze Sammlung.' }),
+
+      sheet('2', 'Spiel bearbeiten (Spielepass)', 'Spiel bearbeiten', 'Nordlichter', [
+        iconRow('', 'Titel', '', 'Nordlichter'),
+        iconRow('', 'Spielerzahl', 'Steuert, was in den Topf kommt', '2–5'),
+        iconRow('', 'Dauer', '', '60 min'),
+        personRow('LE', C.lea, 'Gehört Lea', 'Zählt mit, wenn Lea mitspielt', 'ändern'),
+      ], 'Speichern', { icon: 'ti ti-check', secondary: 'Abbrechen' }),
+
+      sheet('3', 'Cover der Ausgabe (Spielepass)', 'Cover der Ausgabe wählen', '6 Ausgaben bei BGG', [
+        coverRow(cover('#2f5d7a', '#14324a'), 'Deutsche Ausgabe 2026', 'aktuell gewählt', '✓'),
+        coverRow(cover('#1f4a63', '#0d2233'), 'Erstausgabe 2024', '', ''),
+        coverRow('repeating-linear-gradient(135deg, #5b4128 0 8px, #4a3423 8px 16px)', 'Ausgabe ohne Namen', 'kein Bild hinterlegt', ''),
+      ], 'Cover übernehmen', { icon: 'ti ti-photo', foot: 'Damit im Regal die Schachtel steht, die ihr wirklich habt.' }),
+
+      sheet('4', 'BGG-Sammlung (Regal, Konto)', 'BGG-Sammlung übernehmen', 'als „im Besitz“ markiert: 38', [
+        iconRow('', 'Wem gehören die Spiele?', 'Alle einer Person oder einzeln zuordnen', 'Lea'),
+        checkRow(true, 'Nur Grundspiele', 'Erweiterungen überspringen', ''),
+        checkRow(false, 'Auch Wunschliste', '11 Titel', ''),
+      ], '38 Spiele übernehmen', { icon: 'ti ti-cards', foot: 'Deine Sammlung muss bei BoardGameGeek öffentlich sein.' }),
+
+      sheet('5', 'Filter (Regal, Topf)', 'Filter', '2 aktiv · 31 von 42 Spielen', [
+        checkRow(true, '4 Spieler', '', '18'),
+        checkRow(true, 'unter 60 min', '', '11'),
+        checkRow(false, 'Score ab 4,0', '', '7'),
+        checkRow(false, 'Nur ungespielt', '', '3'),
+      ], 'Übernehmen', { icon: 'ti ti-filter', secondary: 'Zurücksetzen' }),
+
+      sheet('6', 'Sortierung (Regal)', 'Sortierung', '', [
+        iconRow('', 'Bewertung', 'höchster Score zuerst', '✓'),
+        iconRow('', 'Name', '', ''),
+        iconRow('', 'Zuletzt gespielt', '', ''),
+        iconRow('', 'Zufällig', '', ''),
+      ], 'Übernehmen', { icon: 'ti ti-check', quiet: true }),
+
+      sheet('7', 'Platz wählen (Session-Setup)', 'Wer spielt mit?', '4 von 6 Plätzen', [
+        personRow('LE', C.lea, 'Lea', 'spielt mit', '✓'),
+        personRow('JO', C.jonas, 'Jonas', 'spielt mit', '✓'),
+        personRow('TO', '#5a4a35', 'Tom', 'heute nicht dabei', ''),
+        personRow('BE', '#5a4a35', 'Ben', 'heute nicht dabei', ''),
+      ], 'Übernehmen', { icon: 'ti ti-check', secondary: 'Alle', foot: 'Platz antippen = mitspielen.' }),
+
+      sheet('8', 'Gäste (Session-Setup)', 'Jemand ohne Spiele?', 'Gäste zählen mit, besitzen aber nichts', [
+        personRow('MI', '#5a4a35', 'Mia', 'Gast · nur heute', 'entfernen'),
+        iconRow('', 'Name eintippen', 'Gast wird nach der Session vergessen', '+'),
+        checkRow(false, 'Als Mitglied aufnehmen', 'Bekommt einen festen Platz und eine Farbe', ''),
+      ], 'Gast hinzufügen', { icon: 'ti ti-user-plus' }),
+
+      sheet('9', 'Teams (Session-Setup)', 'Teams', '2 Teams · 4 Personen', [
+        personRow('LE', C.lea, 'Team A · Lea', '', 'wechseln'),
+        personRow('JO', C.jonas, 'Team A · Jonas', '', 'wechseln'),
+        personRow('MI', C.mia, 'Team B · Mia', '', 'wechseln'),
+        personRow('AD', C.ada, 'Team B · Ada', '', 'wechseln'),
+      ], 'Übernehmen', { icon: 'ti ti-users', secondary: 'Team +', foot: 'Ein Team wertet gemeinsam und gewinnt gemeinsam.' }),
+
+      sheet('10', 'Mehrere Tische (Session-Setup)', 'Mehrere Tische', '8 Personen · 2 Tische', [
+        iconRow('', 'Tisch 1 · Wohnzimmer', 'Lea, Jonas, Ada, Mia', '4'),
+        iconRow('', 'Tisch 2 · Küche', 'Ida, Nils, Tom, Ben', '4'),
+        iconRow('', 'Tisch hinzufügen', '', '+'),
+      ], 'Übernehmen', { icon: 'ti ti-arrows-split', foot: 'Jeder Tisch wirbelt und wertet für sich; beide Ergebnisse gehen in dieselbe Chronik.' }),
+
+      sheet('11', 'Mitglied bearbeiten (Mitgliedsseite)', 'Mitglied bearbeiten', 'Jonas', [
+        iconRow('', 'Name', '', 'Jonas'),
+        personRow('JO', C.jonas, 'Farbe', 'Acht feste Farben', 'ändern'),
+        checkRow(false, 'Aus der Runde nehmen', 'Wertungen bleiben anonym erhalten', ''),
+      ], 'Speichern', { icon: 'ti ti-check', secondary: 'Abbrechen' }),
+
+      sheet('12', 'Farbe wählen (Mitglied)', 'Farbe', 'Jede Farbe nur einmal pro Runde', [
+        personRow('JO', C.jonas, 'Ziegel', 'vergeben an Jonas', '✓'),
+        personRow('LE', C.lea, 'Tanne', 'vergeben an Lea', ''),
+        personRow('ID', '#c34d74', 'Mohn', 'frei', ''),
+      ], 'Farbe übernehmen', { icon: 'ti ti-palette', foot: 'Weiße Initialen auf allen acht geprüft (T8).' }),
+
+      sheet('13', 'Filz der Runde (Einstellungen)', 'Filz der Runde', 'Gehört der Runde, nicht dir', [
+        iconRow('', 'Tannenfilz', 'Voreinstellung', '✓'),
+        iconRow('', 'Kobaltfilz', '', ''),
+        iconRow('', 'Ockerfilz', 'hellster Filz · Papierschrift', ''),
+      ], 'Filz übernehmen', { icon: 'ti ti-palette', foot: 'Das einzige Overlay, das Filz zeigt — weil es Filz auswählt.' }),
+
+      sheet('14', 'Tags (Einstellungen, Spielepass)', 'Tags', '4 Tags in dieser Runde', [
+        iconRow('', 'Kennerspiel', '7 Spiele', '✓'),
+        iconRow('', 'Familie', '12 Spiele', ''),
+        iconRow('', 'Neuer Tag', 'Name und Symbol wählen', '+'),
+      ], 'Übernehmen', { icon: 'ti ti-tags', quiet: true }),
+
+      sheet('15', 'Einladen (Einstellungen, Hub)', 'Einladen', 'Link gilt 7 Tage', [
+        iconRow('', 'spielwirbel.app/r/donnerstag-8f3q', 'Wer kommt, braucht Bestätigung', 'kopieren'),
+        iconRow('', 'Per E-Mail schicken', '', ''),
+        iconRow('', 'QR-Code zeigen', 'Für alle am selben Tisch', ''),
+      ], 'Link teilen', { icon: 'ti ti-share' }),
+
+      sheet('16', 'Übertragen (Regal, Bulk)', 'In andere Runde übertragen', '3 Spiele ausgewählt', [
+        iconRow('', 'Familie Berger', '9 Spiele · du bist dabei', ''),
+        iconRow('', 'Mittwochs im Café', '18 Spiele · du bist dabei', ''),
+        checkRow(true, 'Hier behalten', 'Sonst wandern sie ganz hinüber', ''),
+      ], 'Übertragen', { icon: 'ti ti-arrows-split', secondary: 'Abbrechen' }),
+
+      sheet('17', 'Rückblick (Chronik)', 'Rückblick', 'Zeitraum wählen', [
+        iconRow('', 'Sommer 2026', '14 Sessions', '✓'),
+        iconRow('', 'Dieses Jahr', '23 Sessions', ''),
+        iconRow('', 'Eigener Zeitraum', 'von – bis', ''),
+      ], 'Rückblick zeigen', { icon: 'ti ti-history', foot: 'Ergibt die teilbare Karte aus T11 — Meistgespielt, bester Score, häufigster Sieger.' }),
+
+      sheet('18', 'Teilen (Ergebnis, Chronik, Profil)', 'Teilen', '„Nordlichter“ · 20.09.', [
+        iconRow('', 'Karte als Bild', 'Hochformat, 1080 × 1350', 'PNG'),
+        iconRow('', 'Link zur Session', 'Nur wer den Link hat, sieht sie', 'kopieren'),
+        checkRow(false, 'Ohne Namen teilen', 'Zeigt Spiele und Score, keine Personen', ''),
+      ], 'Bild erzeugen', { icon: 'ti ti-share' }),
+    ];
+
+    return { sheets };
+  }
+}
+
+</script>
+</body>
+</html>

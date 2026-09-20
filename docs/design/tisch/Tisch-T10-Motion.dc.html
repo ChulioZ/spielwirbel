@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="design_doc_mode" content="canvas">
+  <link rel="stylesheet" href="../../../public/fonts/tabler-icons.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Manrope:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #2b1e0d; font-family: 'Manrope', sans-serif; }
+    a { color: #f0cf86; text-decoration: none; display: inline-block; padding: 4px 0; }
+    a:hover { color: #fbe6b4; text-decoration: underline; }
+    @keyframes tossIn {
+      0% { transform: translate(var(--fx), var(--fy)) rotate(var(--fr)) scale(.9); opacity: 0; }
+      55% { opacity: 1; }
+      100% { transform: translate(0, 0) rotate(var(--tr)) scale(1); opacity: 1; }
+    }
+    @keyframes spinPot { 0% { transform: rotate(0deg); } 70% { transform: rotate(340deg); } 100% { transform: rotate(360deg); } }
+    @keyframes potPulse { 0%, 100% { box-shadow: inset 0 8px 20px rgba(0,0,0,.45), 0 0 0 0 rgba(240,207,134,.5); } 55% { box-shadow: inset 0 8px 20px rgba(0,0,0,.45), 0 0 0 16px rgba(240,207,134,0); } }
+    @keyframes dealOut { 0% { transform: translateY(-46px) scale(.8); opacity: 0; } 100% { transform: translateY(0) scale(1); opacity: 1; } }
+    @keyframes flipCard { 0% { transform: rotateY(0deg); } 45% { transform: rotateY(90deg); } 55% { transform: rotateY(90deg); } 100% { transform: rotateY(0deg); } }
+    @keyframes riseBar { 0% { height: 6px; } 100% { height: var(--h); } }
+    @keyframes goldSweep { 0% { background-position: -140% 0; } 100% { background-position: 240% 0; } }
+    @keyframes stampDown { 0% { transform: rotate(-14deg) scale(2.2); opacity: 0; } 60% { opacity: 1; } 75% { transform: rotate(-7deg) scale(.96); } 100% { transform: rotate(-7deg) scale(1); opacity: 1; } }
+    @keyframes seatPop { 0% { transform: scale(1); } 40% { transform: scale(1.14); } 100% { transform: scale(1); } }
+    @media (prefers-reduced-motion: reduce) {
+      * { animation: none !important; transition: none !important; }
+    }
+  </style>
+</helmet>
+<div style="display: flex; flex-direction: column; gap: 36px; padding: 44px; width: max-content; background-color: #3b2a12; background-image: repeating-linear-gradient(180deg, rgba(255,255,255,.035) 0 2px, transparent 2px 7px), radial-gradient(120% 80% at 30% 0%, rgba(240,207,134,.10), transparent 60%); color: #f6ecd8;">
+
+  <div data-screen-label="T10 Kopf" style="max-width: 1240px; display: flex; flex-direction: column; gap: 14px; background: linear-gradient(180deg, #f8f3e7, #efe7d5); color: #2f2620; border-radius: 4px; padding: 26px 30px; box-shadow: 0 14px 30px rgba(0,0,0,.45);">
+    <div style="display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;">
+      <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: #6b4210; background: #f0cf86; border-radius: 3px; padding: 5px 10px;">T10</span>
+      <h1 style="margin: 0; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 38px; line-height: 1.05;">Bewegung — Der Tisch</h1>
+      <span style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #6b5a45;">baut auf T2–T4</span>
+    </div>
+    <p style="margin: 0; font-size: 16px; line-height: 1.55; max-width: 92ch; color: #4a4038;">Fünf Rituale als Prototyp, jedes mit seinem <strong>statischen Endzustand daneben</strong>. Der Tisch bewegt sich wie Material: Karten werden geworfen, Messing schwingt nach, nichts schwebt und nichts pulsiert dauerhaft. Bei „Bewegung reduzieren“ zeigt jeder Ablauf sofort den Endzustand — dieses Blatt schaltet dafür alle Animationen ab.</p>
+    <div style="display: flex; flex-wrap: wrap; gap: 10px; font-size: 13px; font-weight: 700;">
+      <span style="background: #e7dcc4; border-radius: 3px; padding: 6px 11px;">Kurven: Wurf <em>cubic-bezier(.2,.8,.2,1)</em> · Stempel <em>cubic-bezier(.3,1.5,.5,1)</em></span>
+      <span style="background: #e7dcc4; border-radius: 3px; padding: 6px 11px;">Nichts dauert länger als 900 ms</span>
+      <span style="background: #e7dcc4; border-radius: 3px; padding: 6px 11px;">Kein Ablauf blockiert eine Eingabe</span>
+    </div>
+  </div>
+
+  <sc-for list="{{ rituals }}" as="r" hint-placeholder-count="5">
+    <div style="max-width: 1240px; display: flex; flex-direction: column; gap: 12px;">
+      <div style="display: flex; align-items: baseline; gap: 12px;">
+        <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 22px;">{{ r.n }} · {{ r.title }}</span>
+        <span style="font-size: 13px; font-weight: 600; color: #e2c496;">{{ r.subtitle }}</span>
+        <span style="margin-left: auto; font-family: ui-monospace, Menlo, monospace; font-size: 12px; color: #dcb587;">{{ r.timing }}</span>
+      </div>
+      <div style="display: flex; gap: 16px; align-items: stretch;">
+        <div style="width: 428px; flex: none; border-radius: 4px; background: {{ r.stageBg }}; border: 1px solid rgba(240,207,134,.25); box-shadow: 0 10px 22px rgba(0,0,0,.4); overflow: hidden; position: relative;">
+          <span style="position: absolute; left: 12px; top: 10px; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: #f0cf86; z-index: 3;">läuft</span>
+          <div style="height: 268px; display: grid; place-items: center;">{{ r.live }}</div>
+        </div>
+        <div style="width: 428px; flex: none; border-radius: 4px; background: {{ r.stageBg }}; border: 1px solid rgba(240,207,134,.25); box-shadow: 0 10px 22px rgba(0,0,0,.4); overflow: hidden; position: relative;">
+          <span style="position: absolute; left: 12px; top: 10px; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: #f0cf86; z-index: 3;">Endzustand · auch bei reduzierter Bewegung</span>
+          <div style="height: 268px; display: grid; place-items: center;">{{ r.still }}</div>
+        </div>
+        <div style="flex: 1; min-width: 300px; background: #4a3423; border: 1px solid rgba(240,207,134,.22); border-radius: 4px; padding: 16px 18px; display: flex; flex-direction: column; gap: 9px;">
+          <span style="font-family: 'Bricolage Grotesque'; font-weight: 700; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: #e2c496;">Was passiert</span>
+          <span style="font-size: 14px; font-weight: 600; line-height: 1.55; color: #f0e3c8;">{{ r.what }}</span>
+          <span style="font-family: 'Bricolage Grotesque'; font-weight: 700; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: #e2c496; padding-top: 4px;">Warum so</span>
+          <span style="font-size: 13px; font-weight: 600; line-height: 1.55; color: #dcb587;">{{ r.why }}</span>
+        </div>
+      </div>
+    </div>
+  </sc-for>
+
+  <div data-screen-label="T10.6 Übergabe" style="max-width: 1240px; background: #4a3423; border: 1px solid rgba(240,207,134,.28); border-radius: 4px; padding: 22px 26px; display: flex; flex-direction: column; gap: 10px;">
+    <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 20px;">Was T10 entscheidet</span>
+    <span style="font-size: 15px; line-height: 1.6; color: #f0e3c8; max-width: 100ch;">Der Tisch bewegt Dinge, nicht Flächen: Karten fliegen in den Topf (gestaffelt, 90 ms Abstand), der Topf dreht sich <strong>einmal</strong> und legt drei Karten aus, die Wertungskarte kippt zur nächsten Person, die Tafel lässt die Balken aufsteigen und fährt einen Goldstreifen über die Siegerzeile, der Stempel „Gespielt“ kommt von oben und schwingt einmal nach. Kein Element pulsiert dauerhaft, keine Bewegung länger als 900 ms, und jede endet in exakt dem Bild, das bei reduzierter Bewegung sofort steht. <strong>Der Wurf ist die Signaturbewegung</strong> — sie unterscheidet den Tisch von Brücke (Statusanzeigen) und Run (harte Schnitte).</span>
+    <span style="font-size: 14px; line-height: 1.6; color: #dcb587;">Offen: T11 nutzt Goldstreifen und Stempel auf der Rückblickkarte (dort statisch, weil PNG) · die Umsetzung sollte die Staffelung über CSS-Variablen lösen, damit die Anzahl der Karten variabel bleibt.</span>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1340}}">
+class Component extends DCLogic {
+  renderVals() {
+    const h = React.createElement;
+    const FELT = 'radial-gradient(110% 130% at 50% 0%, #2f6b4d, #1c4531 74%)';
+    const WALNUT = 'linear-gradient(180deg, #4a3423, #3b2a12)';
+    const covers = [
+      'linear-gradient(150deg, #2f5d7a, #14324a)',
+      'linear-gradient(150deg, #7a5b2f, #42301a)',
+      'radial-gradient(70% 70% at 30% 25%, #a2508f, #3a1a34 80%)',
+      'linear-gradient(150deg, #3f5d2f, #22331a)',
+      'linear-gradient(90deg, #8f4a22 0 34%, #d9a951 34%)',
+    ];
+    const potRing = (children, extraStyle) => h('div', {
+      style: {
+        width: 150, height: 150, borderRadius: '50%', padding: 9,
+        background: 'linear-gradient(180deg, #d9a951, #8a6224)', position: 'relative', ...extraStyle,
+      },
+    }, h('div', {
+      style: {
+        width: '100%', height: '100%', borderRadius: '50%',
+        background: 'radial-gradient(120% 90% at 50% 32%, #2f6b4d, #1c4531 76%)',
+        boxShadow: 'inset 0 8px 20px rgba(0,0,0,.45)', display: 'grid', placeItems: 'center',
+        color: '#f0cf86', position: 'relative', overflow: 'hidden',
+      },
+    }, children));
+
+    const card = (bg, extra) => h('span', { style: { width: 42, height: 56, borderRadius: 3, background: bg, boxShadow: '0 4px 9px rgba(0,0,0,.5)', display: 'block', ...extra } });
+
+    // 1 · Topf füllen
+    const tossTargets = [
+      { fx: '-150px', fy: '-92px', fr: '-26deg', tr: '-7deg', d: 0 },
+      { fx: '150px', fy: '-84px', fr: '22deg', tr: '5deg', d: 0.09 },
+      { fx: '-124px', fy: '96px', fr: '16deg', tr: '-3deg', d: 0.18 },
+      { fx: '140px', fy: '100px', fr: '-20deg', tr: '9deg', d: 0.27 },
+      { fx: '0px', fy: '-116px', fr: '8deg', tr: '2deg', d: 0.36 },
+    ];
+    const fanRow = (animated) => h('div', { style: { display: 'flex', gap: 6, alignItems: 'center', justifyContent: 'center' } },
+      tossTargets.map((t, i) => h('span', {
+        key: i,
+        style: {
+          width: 42, height: 56, borderRadius: 3, background: covers[i], boxShadow: '0 4px 9px rgba(0,0,0,.5)',
+          transform: `rotate(${t.tr})`,
+          animation: animated ? `tossIn 620ms cubic-bezier(.2,.8,.2,1) ${t.d}s both` : 'none',
+          ['--fx']: t.fx, ['--fy']: t.fy, ['--fr']: t.fr, ['--tr']: t.tr,
+        },
+      })));
+    const fillStage = (animated) => h('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 } },
+      potRing(h('span', { style: { fontFamily: "'Bricolage Grotesque'", fontWeight: 800, fontSize: 34, color: '#f0cf86', fontVariantNumeric: 'tabular-nums' } }, '9'),
+        animated ? { animation: 'potPulse 1.6s ease-out .45s infinite' } : null),
+      fanRow(animated),
+      h('span', { style: { fontSize: 12, fontWeight: 700, color: '#cfe6d6' } }, animated ? '9 Spiele wandern in den Topf' : '9 Spiele im Topf'));
+
+    // 2 · Auslosen
+    const drawStage = (animated) => h('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 } },
+      potRing(h('i', {
+        className: 'ti ti-tornado',
+        style: { fontSize: 46, animation: animated ? 'spinPot 900ms cubic-bezier(.2,.8,.2,1) both' : 'none' },
+      })),
+      h('div', { style: { display: 'flex', gap: 10 } }, [0, 1, 2].map((i) => h('span', {
+        key: i,
+        style: {
+          width: 52, height: 70, borderRadius: 3, background: covers[i], boxShadow: '0 6px 12px rgba(0,0,0,.5)',
+          animation: animated ? `dealOut 380ms cubic-bezier(.2,.8,.2,1) ${0.62 + i * 0.12}s both` : 'none',
+        },
+      }))),
+      h('span', { style: { fontSize: 12, fontWeight: 700, color: '#cfe6d6' } }, '3 von 9 gezogen'));
+
+    // 3 · Karte weitergeben
+    const voteStage = (animated) => h('div', {
+      style: {
+        width: 300, background: 'linear-gradient(180deg, #f8f3e7, #efe7d5)', color: '#2f2620', borderRadius: 6,
+        padding: 16, display: 'flex', flexDirection: 'column', gap: 10, boxShadow: '0 12px 26px rgba(0,0,0,.45)',
+        animation: animated ? 'flipCard 760ms cubic-bezier(.4,0,.2,1) infinite' : 'none',
+      },
+    }, [
+      h('span', { key: 'k', style: { fontFamily: "'Bricolage Grotesque'", fontWeight: 800, fontSize: 11, letterSpacing: '.12em', textTransform: 'uppercase', color: '#7a4a28' } }, animated ? 'Lea → Jonas' : 'Jonas wertet'),
+      h('span', { key: 't', style: { fontFamily: "'Bricolage Grotesque'", fontWeight: 800, fontSize: 22 } }, 'Kartographen'),
+      h('div', { key: 'f', style: { display: 'flex', gap: 6 } },
+        ['ti-mood-cry', 'ti-mood-sad', 'ti-mood-neutral', 'ti-mood-smile', 'ti-mood-crazy-happy'].map((f, i) => h('span', {
+          key: f,
+          style: {
+            flex: 1, minHeight: 44, borderRadius: 4, background: '#e7dcc4', border: '1px solid rgba(47,38,32,.18)',
+            display: 'grid', placeItems: 'center', color: '#2f2620', fontSize: 19,
+          },
+        }, h('i', { className: 'ti ' + f })))),
+      h('span', { key: 'n', style: { fontSize: 12, fontWeight: 600, color: '#6b5a45' } }, 'Geheim · die anderen schauen weg'),
+    ]);
+
+    // 4 · Aufdecken
+    const barRamp = ['#8f2f22', '#a05a1f', '#8d7a1c', '#5f8b2a', '#23602b'];
+    const revealStage = (animated) => h('div', {
+      style: { width: 340, borderRadius: 4, overflow: 'hidden', background: 'linear-gradient(180deg, #f8f3e7, #efe7d5)', color: '#2f2620', boxShadow: '0 12px 26px rgba(0,0,0,.45)' },
+    }, [
+      h('div', {
+        key: 'row', style: {
+          display: 'flex', alignItems: 'center', gap: 10, padding: '11px 14px',
+          background: animated
+            ? 'linear-gradient(100deg, #f0cf86 0 32%, #fff6dd 46%, #f0cf86 60%)'
+            : 'linear-gradient(90deg, #f6e3b4, #f0cf86)',
+          backgroundSize: animated ? '240% 100%' : '100% 100%',
+          animation: animated ? 'goldSweep 1.4s ease-in-out .75s infinite' : 'none',
+        },
+      }, [
+        h('span', { key: 'r', style: { fontFamily: "'Bricolage Grotesque'", fontWeight: 800, fontSize: 17 } }, '1'),
+        h('span', { key: 'c', style: { width: 26, height: 34, borderRadius: 2, background: covers[0] } }),
+        h('span', { key: 't', style: { fontFamily: "'Bricolage Grotesque'", fontWeight: 800, fontSize: 16 } }, 'Nordlichter'),
+        h('span', { key: 's', style: { marginLeft: 'auto', fontFamily: "'Bricolage Grotesque'", fontWeight: 800, fontSize: 20, fontVariantNumeric: 'tabular-nums' } }, '4,8'),
+      ]),
+      h('div', { key: 'bars', style: { display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: 10, padding: '16px 14px 12px', height: 96 } },
+        [1, 0, 1, 2, 3].map((c, i) => h('span', { key: i, style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 } }, [
+          h('span', {
+            key: 'b',
+            style: {
+              width: 26, borderRadius: '2px 2px 0 0', background: barRamp[i],
+              height: (10 + c * 16), ['--h']: (10 + c * 16) + 'px',
+              animation: animated ? `riseBar 460ms cubic-bezier(.2,.8,.2,1) ${i * 0.07}s both` : 'none',
+            },
+          }),
+          h('i', { key: 'f', className: 'ti ' + ['ti-mood-cry', 'ti-mood-sad', 'ti-mood-neutral', 'ti-mood-smile', 'ti-mood-crazy-happy'][i], style: { fontSize: 14, color: '#6b5a45' } }),
+        ]))),
+    ]);
+
+    // 5 · Gespielt-Stempel
+    const stampStage = (animated) => h('div', { style: { position: 'relative', width: 300, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 } }, [
+      h('span', { key: 'c', style: { width: 120, height: 158, borderRadius: 3, background: covers[0], boxShadow: '0 10px 22px rgba(0,0,0,.5)' } }),
+      h('span', {
+        key: 's',
+        style: {
+          display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 16px', borderRadius: 3,
+          background: '#23543c', border: '2px solid #3f7a5c', color: '#eaf6ec',
+          fontFamily: "'Bricolage Grotesque'", fontWeight: 800, fontSize: 18, letterSpacing: '.08em', textTransform: 'uppercase',
+          transform: 'rotate(-7deg)',
+          animation: animated ? 'stampDown 620ms cubic-bezier(.3,1.5,.5,1) .2s both' : 'none',
+        },
+      }, [h('i', { key: 'i', className: 'ti ti-check', style: { fontSize: 19 } }), 'Gespielt']),
+      h('span', { key: 'w', style: { display: 'flex', alignItems: 'center', gap: 9, fontSize: 13, fontWeight: 700, color: '#f6ecd8' } }, [
+        h('span', {
+          key: 'a',
+          style: {
+            width: 38, height: 38, borderRadius: '50%', background: '#c6522c', border: '2px solid #f0cf86', color: '#fff',
+            display: 'grid', placeItems: 'center', fontFamily: "'Bricolage Grotesque'", fontWeight: 800, fontSize: 13,
+            animation: animated ? 'seatPop 520ms cubic-bezier(.3,1.5,.5,1) .5s both' : 'none',
+          },
+        }, 'JO'),
+        'Jonas hat gewonnen',
+      ]),
+    ]);
+
+    const rituals = [
+      {
+        n: '1', title: 'Der Topf füllt sich', subtitle: 'nach „Wer spielt mit?“',
+        timing: '5 × 620 ms · Staffel 90 ms · cubic-bezier(.2,.8,.2,1)',
+        stageBg: FELT, live: fillStage(true), still: fillStage(false),
+        what: 'Jedes Spiel, das die Filter durchlässt, wird aus seiner Richtung auf den Tisch geworfen und landet leicht schief in der Reihe unter dem Topf. Die Zahl im Topf zählt mit.',
+        why: 'Der Wurf erklärt, woher die Spiele kommen: aus den Regalen der Leute, die mitspielen. Deshalb kommen sie von außen und nicht aus dem Nichts.',
+      },
+      {
+        n: '2', title: 'Loswirbeln', subtitle: 'der eine Knopf',
+        timing: '900 ms Drehung, dann 3 × 380 ms · Staffel 120 ms',
+        stageBg: FELT, live: drawStage(true), still: drawStage(false),
+        what: 'Der Topf dreht sich genau einmal und bremst weich aus; danach legt er die gezogenen Karten nach unten aus, eine nach der anderen.',
+        why: 'Eine Drehung, nicht fünf: es soll nach Auslosen aussehen, nicht nach Glücksrad. Die Karten kommen aus dem Topf, damit die Herkunft sichtbar bleibt.',
+      },
+      {
+        n: '3', title: 'Karte weitergeben', subtitle: 'zwischen zwei Personen',
+        timing: '760 ms · rotateY · cubic-bezier(.4,0,.2,1)',
+        stageBg: WALNUT, live: voteStage(true), still: voteStage(false),
+        what: 'Die Wertungskarte kippt um ihre Mittelachse und kommt mit dem Namen der nächsten Person zurück. In der Mitte der Drehung ist nichts lesbar.',
+        why: 'Die Drehung ist der Sichtschutz: sie sagt „jetzt schaut nur noch die nächste Person“, ohne dass ein Warnhinweis nötig ist.',
+      },
+      {
+        n: '4', title: 'Aufdecken', subtitle: 'wenn alle gewertet haben',
+        timing: 'Balken 5 × 460 ms · Staffel 70 ms · Goldstreifen 1,4 s',
+        stageBg: WALNUT, live: revealStage(true), still: revealStage(false),
+        what: 'Die Balken der Wertungsverteilung wachsen von der Grundlinie hoch, danach fährt ein Lichtstreifen einmal über die Goldzeile des Siegers.',
+        why: 'Zuerst die Daten, dann die Auszeichnung — in dieser Reihenfolge liest man das Ergebnis. Der Streifen fährt über Messing, nicht über Text, damit Lesbarkeit nie leidet.',
+      },
+      {
+        n: '5', title: 'Gespielt', subtitle: 'am Ende der Session',
+        timing: '620 ms · cubic-bezier(.3,1.5,.5,1) · ein Nachschwingen',
+        stageBg: WALNUT, live: stampStage(true), still: stampStage(false),
+        what: 'Der Stempel „Gespielt“ fällt von oben aufs Cover, wird kurz zu klein und setzt sich schief. Danach hüpft die Marke des Siegers einmal.',
+        why: 'Ein Stempel ist die einzige Bewegung mit Überschwingen im ganzen Design — er darf sich wie ein Handgriff anfühlen. Alles andere bleibt sachlich.',
+      },
+    ];
+
+    return { rituals };
+  }
+}
+
+</script>
+</body>
+</html>

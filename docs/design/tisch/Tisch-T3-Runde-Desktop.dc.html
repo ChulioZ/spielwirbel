@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="design_doc_mode" content="canvas">
+  <link rel="stylesheet" href="../../../public/fonts/tabler-icons.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Manrope:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #2b1e0d; font-family: 'Manrope', sans-serif; }
+    a { color: #f0cf86; text-decoration: none; display: inline-block; padding: 4px 0; }
+    a:hover { color: #fbe6b4; text-decoration: underline; }
+  </style>
+</helmet>
+<div style="display: flex; flex-direction: column; gap: 44px; padding: 44px; width: max-content; background-color: #3b2a12; background-image: repeating-linear-gradient(180deg, rgba(255,255,255,.035) 0 2px, transparent 2px 7px), radial-gradient(120% 80% at 30% 0%, rgba(240,207,134,.10), transparent 60%); color: #f6ecd8;">
+
+  <div data-screen-label="T3 Kopf" style="max-width: 1440px; display: flex; flex-direction: column; gap: 14px; background: linear-gradient(180deg, #f8f3e7, #efe7d5); color: #2f2620; border-radius: 4px; padding: 26px 30px; box-shadow: 0 14px 30px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.7);">
+    <div style="display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;">
+      <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: #6b4210; background: #f0cf86; border-radius: 3px; padding: 5px 10px;">T3</span>
+      <h1 style="margin: 0; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 38px; line-height: 1.05;">Runden-Screens, Desktop 1440 — Der Tisch</h1>
+      <span style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #6b5a45;">20.09.2026 · baut auf T1, T2</span>
+    </div>
+    <p style="margin: 0; font-size: 16px; line-height: 1.55; max-width: 92ch; color: #4a4038;">Fünf Screens in der gemeinsamen IA: Lobby, Rundenhub mit allen Blöcken und den drei Vorschauen, Regal mit ungleichen Covern, Spielepass und Spiel-Suche. Die Erreichbarkeit trägt eine <strong>Messingschiene links</strong> — Start · Regal · Chronik · Pokale · Einstellungen, auf jedem Runden-Screen dieselbe Position.</p>
+    <div style="display: flex; flex-wrap: wrap; gap: 10px; font-size: 13px; font-weight: 700;">
+      <span style="background: #e7dcc4; border-radius: 3px; padding: 6px 11px;">Schiene 216 px · Inhalt 1224 px</span>
+      <span style="background: #e7dcc4; border-radius: 3px; padding: 6px 11px;">Lobby ohne Schiene (kein Rundenkontext)</span>
+      <span style="background: #f7e0d6; border-radius: 3px; padding: 6px 11px; color: #8f2f22;">Cover sind typografische Platzhalter — echte Schachtelbilder kommen zur Laufzeit von BGG</span>
+    </div>
+  </div>
+
+  <div data-screen-label="T3.1 Lobby" style="display: flex; flex-direction: column; gap: 10px;">
+    <span style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #dcb587;">1 · Lobby — jede Runde ein Tisch im Spielecafé</span>
+    <div style="width: 1440px; height: 900px; position: relative; overflow: hidden; border-radius: 4px; background-color: #4a3423; background-image: repeating-linear-gradient(180deg, rgba(255,255,255,.05) 0 2px, transparent 2px 6px); box-shadow: 0 20px 50px rgba(0,0,0,.5);">
+      <div style="position: absolute; inset: 0; background: radial-gradient(90% 70% at 50% 25%, transparent 38%, rgba(0,0,0,.45) 100%);"></div>
+      <div style="position: absolute; left: 0; right: 0; top: 0; height: 64px; display: flex; align-items: center; gap: 20px; padding: 0 32px; background: #3b2a12; border-bottom: 3px solid #9a6d2b;">
+        <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 17px; letter-spacing: .14em; text-transform: uppercase; color: #3b2a12; background: linear-gradient(180deg, #f6d795, #d9a951); border-radius: 3px; padding: 6px 13px;">Spielwirbel</span>
+        <span style="font-family: 'Bricolage Grotesque'; font-weight: 500; font-size: 15px; color: #e2c496;">Spielecafé · deine Tische</span>
+        <span style="margin-left: auto; display: flex; align-items: center; gap: 14px;">
+          <span style="display: inline-flex; align-items: center; gap: 6px; font-weight: 700; font-size: 13px; color: #f6ecd8; border: 1px solid rgba(240,207,134,.45); border-radius: 999px; padding: 6px 13px;">Deutsch <i class="ti ti-chevron-down" style="font-size: 15px; color: #f0cf86;"></i></span>
+          <span style="position: relative; width: 40px; height: 40px; display: grid; place-items: center; color: #f0cf86;"><i class="ti ti-mail" style="font-size: 23px;"></i><span style="position: absolute; right: 6px; top: 6px; width: 10px; height: 10px; border-radius: 50%; background: #ab3c22; border: 1px solid #3b2a12;"></span></span>
+          <span style="display: inline-flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px;"><span style="width: 34px; height: 34px; border-radius: 50%; background: #198663; color: #fff; display: grid; place-items: center; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 13px;">LE</span> Lea</span>
+        </span>
+      </div>
+      <div style="position: absolute; left: 44px; top: 100px; display: flex; flex-direction: column; gap: 4px;">
+        <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 44px; line-height: 1.05; color: #f6ecd8;">Schön, dass ihr da seid.</span>
+        <span style="font-family: 'Bricolage Grotesque'; font-weight: 500; font-size: 21px; color: #e2c496;">Welche Runde spielt heute?</span>
+      </div>
+      <a href="#" style="position: absolute; right: 44px; top: 108px; width: 430px; padding: 15px 18px; display: flex; align-items: center; gap: 14px; background: linear-gradient(180deg, #f8f3e7, #efe7d5); color: #2f2620; border-radius: 4px; box-shadow: 0 12px 26px rgba(0,0,0,.45);">
+        <span style="width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(180deg, #f6d795, #d9a951); color: #3b2a12; display: grid; place-items: center; flex: none; font-size: 22px;"><i class="ti ti-tornado"></i></span>
+        <span style="display: flex; flex-direction: column; gap: 1px; min-width: 0;">
+          <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: #ab3c22;">Abstimmung läuft · Familie Berger</span>
+          <span style="font-family: 'Bricolage Grotesque'; font-weight: 700; font-size: 19px; line-height: 1.15;">3 Spiele ausgelost — du bist noch dran</span>
+          <span style="font-size: 13px; font-weight: 600; color: #6b5a45;">Heute, 19:12 · Jetzt abstimmen →</span>
+        </span>
+      </a>
+      <div style="position: absolute; left: 44px; right: 44px; top: 232px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 28px;">
+        <sc-for list="{{ tables }}" as="t" hint-placeholder-count="3">
+          <a href="#" style="position: relative; height: 430px; display: block;">
+            <span style="position: absolute; left: 50%; top: 190px; width: 244px; height: 244px; margin-left: -122px; margin-top: -122px; border-radius: 50%; padding: 11px; background: linear-gradient(180deg, #d9a951, #8a6224); box-shadow: 0 16px 34px rgba(0,0,0,.5);">
+              <span style="display: block; width: 100%; height: 100%; border-radius: 50%; background: radial-gradient(120% 90% at 50% 32%, {{ t.feltA }}, {{ t.feltB }} 76%); box-shadow: inset 0 8px 20px rgba(0,0,0,.45);"></span>
+            </span>
+            <sc-for list="{{ t.seats }}" as="s" hint-placeholder-count="5">
+              <span style="position: absolute; left: {{ s.x }}; top: {{ s.y }}; width: 46px; height: 46px; margin: -23px 0 0 -23px; border-radius: 50%; background: {{ s.bg }}; border: 2px solid #f0cf86; color: #fff; display: grid; place-items: center; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 15px; box-shadow: 0 4px 9px rgba(0,0,0,.5);">{{ s.ini }}</span>
+            </sc-for>
+            <span style="position: absolute; left: 50%; top: 190px; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 7px; width: 176px; text-align: center;">
+              <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 19px; line-height: 1.1; color: #3b2a12; background: linear-gradient(180deg, #f6d795, #d9a951); border-radius: 3px; padding: 8px 13px;">{{ t.name }}</span>
+              <span style="font-weight: 700; font-size: 13px; color: #f6ecd8;">{{ t.stats }}</span>
+            </span>
+            <span style="position: absolute; left: 50%; bottom: 0; transform: translateX(-50%) rotate(-1.2deg); width: 244px; padding: 11px 14px; background: linear-gradient(180deg, #f8f3e7, #efe7d5); color: #2f2620; border-radius: 2px; box-shadow: 0 8px 18px rgba(0,0,0,.4); font-size: 13px;">
+              <span style="display: block; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #7a4a28; margin-bottom: 3px;">Zuletzt gespielt</span>
+              <span style="font-weight: 700;">{{ t.lastGame }}</span> — {{ t.lastWinner }} <i class="ti ti-trophy" style="color: #a87a2e;"></i>
+            </span>
+          </a>
+        </sc-for>
+        <a href="#" style="position: relative; height: 430px; display: block;">
+          <span style="position: absolute; left: 50%; top: 190px; width: 244px; height: 244px; margin-left: -122px; margin-top: -122px; border-radius: 50%; border: 3px dashed rgba(240,207,134,.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: #f0cf86;">
+            <i class="ti ti-plus" style="font-size: 34px;"></i>
+            <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 17px;">Neue Runde gründen</span>
+          </span>
+        </a>
+      </div>
+      <div style="position: absolute; left: 44px; right: 44px; bottom: 22px; display: flex; align-items: center; gap: 22px; font-size: 13px; font-weight: 600; color: #e2c496;">
+        <a href="#">FAQ</a><a href="#">Kontakt</a><a href="#">Impressum</a><a href="#">Datenschutz</a><a href="#">Nutzungsbedingungen</a>
+        <span style="display: inline-flex; align-items: center; gap: 7px; font-weight: 700; color: #f6ecd8;"><i class="ti ti-lock" style="color: #a8dcb4;"></i> Kein Tracking · EU-Hosting</span>
+        <span style="margin-left: auto; display: inline-flex; align-items: center; background: #f8f3e7; border-radius: 3px; padding: 7px 11px;"><img src="../../../public/icons/powered-by-bgg.png" alt="Powered by BGG" style="display: block; width: 132px; height: auto;"></span>
+      </div>
+    </div>
+  </div>
+
+  <div data-screen-label="T3.2 Hub" style="display: flex; flex-direction: column; gap: 10px;">
+    <span style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #dcb587;">2 · Rundenhub — Schiene, Plätze, eine Aktion, alle Blöcke, drei Vorschauen</span>
+    <div style="width: 1440px; height: 900px; position: relative; overflow: hidden; border-radius: 4px; background: #3b2a12; box-shadow: 0 20px 50px rgba(0,0,0,.5);">
+      <div style="position: absolute; left: 0; right: 0; top: 0; height: 60px; display: flex; align-items: center; gap: 18px; padding: 0 28px; background: #2f2109; border-bottom: 1px solid rgba(240,207,134,.25); z-index: 3;">
+        <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 15px; letter-spacing: .14em; text-transform: uppercase; color: #3b2a12; background: linear-gradient(180deg, #f6d795, #d9a951); border-radius: 3px; padding: 5px 11px;">Spielwirbel</span>
+        <span style="margin-left: auto; display: flex; align-items: center; gap: 14px;">
+          <span style="display: inline-flex; align-items: center; gap: 6px; font-weight: 700; font-size: 13px; border: 1px solid rgba(240,207,134,.45); border-radius: 999px; padding: 5px 12px;">Deutsch <i class="ti ti-chevron-down" style="font-size: 15px; color: #f0cf86;"></i></span>
+          <span style="position: relative; width: 36px; height: 36px; display: grid; place-items: center; color: #f0cf86;"><i class="ti ti-mail" style="font-size: 22px;"></i><span style="position: absolute; right: 5px; top: 5px; width: 9px; height: 9px; border-radius: 50%; background: #ab3c22; border: 1px solid #2f2109;"></span></span>
+          <span style="display: inline-flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px;"><span style="width: 32px; height: 32px; border-radius: 50%; background: #198663; color: #fff; display: grid; place-items: center; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 12px;">LE</span> Lea</span>
+        </span>
+      </div>
+      <div style="position: absolute; left: 0; top: 60px; bottom: 0; width: 216px; background: #32230f; border-right: 3px solid #9a6d2b; padding: 22px 16px; display: flex; flex-direction: column; gap: 18px;">
+        <span style="display: flex; flex-direction: column; gap: 3px;">
+          <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 21px; line-height: 1.1;">Donnerstagsrunde</span>
+          <span style="font-size: 12px; font-weight: 700; color: #e2c496;">6 Mitglieder · 12 Spiele</span>
+        </span>
+        <div style="display: flex; flex-direction: column; gap: 7px;">
+          <sc-for list="{{ rail }}" as="r" hint-placeholder-count="5">
+            <span style="display: flex; align-items: center; gap: 11px; min-height: 44px; padding: 0 12px; border-radius: 3px; background: {{ r.bg }}; border: {{ r.border }}; color: {{ r.ink }}; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 15px;">
+              <i class="{{ r.icon }}" style="font-size: 20px;"></i> {{ r.label }}
+            </span>
+          </sc-for>
+        </div>
+        <span style="margin-top: auto; display: flex; flex-direction: column; gap: 8px; font-size: 12px; font-weight: 600; color: #e2c496;">
+          <span style="display: inline-flex; align-items: center; gap: 7px; color: #f6ecd8; font-weight: 700;"><i class="ti ti-lock" style="color: #a8dcb4;"></i> Kein Tracking · EU-Hosting</span>
+          <span style="display: inline-flex; align-items: center; background: #f8f3e7; border-radius: 3px; padding: 6px 9px;"><img src="../../../public/icons/powered-by-bgg.png" alt="Powered by BGG" style="display: block; width: 116px; height: auto;"></span>
+        </span>
+      </div>
+      <div style="position: absolute; left: 216px; right: 0; top: 60px; height: 258px; background: radial-gradient(90% 150% at 50% -30%, #2f6b4d, #1c4531 72%); border-bottom: 5px solid #9a6d2b; overflow: hidden;">
+        <div style="position: absolute; inset: 0; background-image: repeating-linear-gradient(48deg, rgba(255,255,255,.035) 0 2px, transparent 2px 5px);"></div>
+        <div style="position: absolute; left: 34px; top: 26px; display: flex; gap: 12px;">
+          <sc-for list="{{ hubSeats }}" as="s" hint-placeholder-count="6">
+            <span style="display: flex; flex-direction: column; align-items: center; gap: 5px; width: 74px;">
+              <span style="position: relative; width: 52px; height: 52px;">
+                <span style="position: absolute; inset: 0; border-radius: 50%; background: {{ s.bg }}; border: 2px solid {{ s.ring }}; color: #fff; display: grid; place-items: center; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 18px; box-shadow: 0 5px 10px rgba(0,0,0,.45);">{{ s.ini }}</span>
+                <span style="position: absolute; right: -5px; bottom: -4px; min-width: 21px; height: 21px; border-radius: 999px; background: #f8f3e7; border: 1px solid #a87a2e; color: #3b2a12; font-weight: 800; font-size: 11px; display: grid; place-items: center; padding: 0 4px;">{{ s.wins }}</span>
+                <i class="{{ s.crown }}" style="position: absolute; left: 50%; top: -15px; transform: translateX(-50%); font-size: 17px; color: #f0cf86;"></i>
+              </span>
+              <span style="font-size: 12px; font-weight: 700; color: #f6ecd8;">{{ s.name }}</span>
+            </span>
+          </sc-for>
+          <span style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; width: 74px; color: #f6ecd8;">
+            <span style="width: 52px; height: 52px; border-radius: 50%; border: 2px dashed #f0cf86; display: grid; place-items: center; font-size: 22px;"><i class="ti ti-plus"></i></span>
+            <span style="font-size: 12px; font-weight: 700; color: #f6ecd8;">Platz dazu</span>
+          </span>
+        </div>
+        <div style="position: absolute; left: 34px; right: 34px; bottom: 26px; display: flex; align-items: center; gap: 18px;">
+          <button style="min-height: 64px; padding: 0 30px; display: inline-flex; align-items: center; gap: 12px; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 23px; color: #3b2a12; background: linear-gradient(180deg, #f6d795, #d9a951); border: 1px solid #a87a2e; border-radius: 4px; cursor: pointer; box-shadow: 0 3px 0 #8a6224, 0 12px 24px rgba(0,0,0,.4);"><i class="ti ti-tornado" style="font-size: 27px;"></i> Session wirbeln</button>
+          <span style="display: flex; gap: 9px;">
+            <span style="display: inline-flex; align-items: center; gap: 7px; min-height: 40px; padding: 0 15px; border-radius: 999px; background: #3f6a48; border: 1px solid #f0cf86; color: #f6ecd8; font-weight: 700; font-size: 14px;"><i class="ti ti-clock" style="color: #f0cf86;"></i> Unter 60 Min</span>
+            <span style="display: inline-flex; align-items: center; gap: 7px; min-height: 40px; padding: 0 15px; border-radius: 999px; background: #3f6a48; border: 1px solid #f0cf86; color: #f6ecd8; font-weight: 700; font-size: 14px;"><i class="ti ti-bolt" style="color: #f0cf86;"></i> Leichte Kost</span>
+            <span style="display: inline-flex; align-items: center; gap: 7px; min-height: 40px; padding: 0 15px; border-radius: 999px; background: linear-gradient(180deg, #f6d795, #d9a951); border: 1px solid #a87a2e; color: #3b2a12; font-weight: 700; font-size: 14px;"><i class="ti ti-home-heart"></i> Familientauglich</span>
+          </span>
+          <span style="margin-left: auto; font-size: 13px; font-weight: 600; color: #cfe6d6;">9 Spiele im {{ gefaessWort }} · 3 weitere fehlen, weil ihre Besitzer nicht mitspielen</span>
+        </div>
+      </div>
+      <div style="position: absolute; left: 244px; right: 28px; top: 342px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; align-items: start;">
+        <div style="background: #4a3423; border: 1px solid rgba(240,207,134,.22); border-radius: 4px; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+          <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 19px;">Zuletzt gespielt</span>
+          <span style="display: flex; align-items: center; gap: 13px;">
+            <span style="width: 60px; height: 80px; border-radius: 3px; background: linear-gradient(150deg, #2f5d7a, #14324a); flex: none; box-shadow: 0 5px 12px rgba(0,0,0,.45);"></span>
+            <span style="display: flex; flex-direction: column; gap: 4px;">
+              <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 19px;">Nordlichter</span>
+              <span style="font-size: 13px; font-weight: 600; color: #e2c496;">19.09. · Jonas hat gewonnen</span>
+              <span style="display: inline-flex; align-items: center; gap: 5px; align-self: flex-start; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 13px; color: #2a1a08; background: #b8e08a; border: 1px solid rgba(0,0,0,.4); border-radius: 999px; padding: 3px 9px;"><i class="ti ti-mood-crazy-happy" style="font-size: 13px;"></i> 4,8</span>
+            </span>
+          </span>
+        </div>
+        <div style="background: #4a3423; border: 1px solid rgba(240,207,134,.22); border-radius: 4px; padding: 16px; display: flex; flex-direction: column; gap: 10px;">
+          <span style="display: flex; align-items: center; gap: 8px;"><i class="ti ti-bulb" style="color: #f0cf86; font-size: 20px;"></i><span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 19px;">Wie wär’s mit</span></span>
+          <sc-for list="{{ recos }}" as="r" hint-placeholder-count="3">
+            <span style="display: flex; align-items: center; gap: 11px; min-height: 40px;">
+              <span style="width: 32px; height: 42px; border-radius: 2px; background: {{ r.cover }}; flex: none;"></span>
+              <span style="display: flex; flex-direction: column;">
+                <span style="font-weight: 700; font-size: 15px;">{{ r.title }}</span>
+                <span style="font-size: 12px; color: #dcb587;">{{ r.reason }}</span>
+              </span>
+            </span>
+          </sc-for>
+        </div>
+        <div style="background: #4a3423; border: 1px solid rgba(240,207,134,.22); border-radius: 4px; padding: 16px; display: flex; flex-direction: column; gap: 11px;">
+          <span style="display: flex; align-items: center; gap: 8px;"><i class="ti ti-activity" style="color: #f0cf86; font-size: 20px;"></i><span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 19px;">Rundenpuls</span></span>
+          <span style="display: flex; gap: 9px;">
+            <sc-for list="{{ puls }}" as="p" hint-placeholder-count="3">
+              <span style="flex: 1; background: #5b4128; border-radius: 4px; padding: 10px; display: flex; flex-direction: column; gap: 2px;">
+                <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 21px; font-variant-numeric: tabular-nums;">{{ p.value }}</span>
+                <span style="font-size: 11px; font-weight: 700; color: #e2c496;">{{ p.label }}</span>
+              </span>
+            </sc-for>
+          </span>
+          <span style="font-size: 12px; font-weight: 600; color: #dcb587; line-height: 1.5;">Seit Mai keine Runde ohne Jonas · längste Serie: 3 Siege</span>
+        </div>
+      </div>
+      <div style="position: absolute; left: 244px; right: 28px; top: 546px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; align-items: start;">
+        <div style="background: #4a3423; border: 1px solid rgba(240,207,134,.22); border-radius: 4px; padding: 16px; display: flex; flex-direction: column; gap: 10px;">
+          <span style="display: flex; align-items: center; gap: 8px;"><i class="ti ti-tool" style="color: #e8c168; font-size: 20px;"></i><span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 19px;">Kümmerliste</span><span style="margin-left: auto; font-weight: 800; font-size: 12px; color: #3b2a12; background: #e8c168; border-radius: 999px; padding: 2px 9px;">3</span></span>
+          <sc-for list="{{ kuemmer }}" as="k" hint-placeholder-count="3">
+            <span style="display: flex; align-items: center; gap: 10px; min-height: 38px; font-size: 14px; font-weight: 600;">
+              <i class="{{ k.icon }}" style="color: #dcb587; font-size: 18px;"></i> {{ k.label }}
+              <i class="ti ti-chevron-right" style="margin-left: auto; color: #dcb587; font-size: 18px;"></i>
+            </span>
+          </sc-for>
+        </div>
+        <sc-for list="{{ previews }}" as="p" hint-placeholder-count="2">
+          <div style="background: #4a3423; border: 1px solid rgba(240,207,134,.22); border-radius: 4px; padding: 16px; display: flex; flex-direction: column; gap: 10px;">
+            <span style="display: flex; align-items: center; gap: 8px;"><i class="{{ p.icon }}" style="color: #f0cf86; font-size: 20px;"></i><span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 19px;">{{ p.label }}</span><span style="margin-left: auto; font-size: 12px; font-weight: 700; color: #f0cf86;">öffnen →</span></span>
+            <sc-for list="{{ p.rows }}" as="row" hint-placeholder-count="3">
+              <span style="display: flex; align-items: center; gap: 10px; min-height: 34px; font-size: 14px; font-weight: 600; border-bottom: 1px solid rgba(240,207,134,.1);">
+                <span style="width: 22px; height: 28px; border-radius: 2px; background: {{ row.cover }}; flex: none;"></span>
+                {{ row.label }}
+                <span style="margin-left: auto; font-weight: 700; color: #e2c496; font-variant-numeric: tabular-nums;">{{ row.value }}</span>
+              </span>
+            </sc-for>
+          </div>
+        </sc-for>
+      </div>
+      <div style="position: absolute; left: 244px; right: 28px; bottom: 22px; display: flex; gap: 12px; align-items: center;">
+        <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: #e2c496; width: 92px; line-height: 1.25; flex: none;">Nicht im Regal</span>
+        <sc-for list="{{ offshelf }}" as="o" hint-placeholder-count="5">
+          <span style="flex: 1; display: flex; align-items: center; gap: 9px; min-height: 48px; padding: 0 13px; border-radius: 4px; background: #4a3423; border: 1px solid rgba(240,207,134,.22); font-size: 14px; font-weight: 700;">
+            <i class="{{ o.icon }}" style="color: #dcb587; font-size: 19px;"></i> {{ o.label }}
+            <span style="margin-left: auto; color: #e2c496; font-variant-numeric: tabular-nums;">{{ o.count }}</span>
+          </span>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+
+  <div data-screen-label="T3.3 Regal" style="display: flex; flex-direction: column; gap: 10px;">
+    <span style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #dcb587;">3 · Regal — ungleiche Cover auf Brettern, Suche, Sortierung, Auswahl</span>
+    <div style="width: 1440px; height: 900px; position: relative; overflow: hidden; border-radius: 4px; background: #3b2a12; box-shadow: 0 20px 50px rgba(0,0,0,.5);">
+      <div style="position: absolute; left: 0; right: 0; top: 0; height: 60px; display: flex; align-items: center; gap: 18px; padding: 0 28px; background: #2f2109; border-bottom: 1px solid rgba(240,207,134,.25);">
+        <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 15px; letter-spacing: .14em; text-transform: uppercase; color: #3b2a12; background: linear-gradient(180deg, #f6d795, #d9a951); border-radius: 3px; padding: 5px 11px;">Spielwirbel</span>
+        <span style="margin-left: auto; display: flex; align-items: center; gap: 14px;">
+          <span style="display: inline-flex; align-items: center; gap: 6px; font-weight: 700; font-size: 13px; border: 1px solid rgba(240,207,134,.45); border-radius: 999px; padding: 5px 12px;">Deutsch <i class="ti ti-chevron-down" style="font-size: 15px; color: #f0cf86;"></i></span>
+          <i class="ti ti-mail" style="font-size: 22px; color: #f0cf86;"></i>
+          <span style="display: inline-flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px;"><span style="width: 32px; height: 32px; border-radius: 50%; background: #198663; color: #fff; display: grid; place-items: center; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 12px;">LE</span> Lea</span>
+        </span>
+      </div>
+      <div style="position: absolute; left: 0; top: 60px; bottom: 0; width: 216px; background: #32230f; border-right: 3px solid #9a6d2b; padding: 22px 16px; display: flex; flex-direction: column; gap: 18px;">
+        <span style="display: flex; flex-direction: column; gap: 3px;">
+          <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 21px; line-height: 1.1;">Donnerstagsrunde</span>
+          <span style="font-size: 12px; font-weight: 700; color: #e2c496;">6 Mitglieder · 12 Spiele</span>
+        </span>
+        <div style="display: flex; flex-direction: column; gap: 7px;">
+          <sc-for list="{{ railRegal }}" as="r" hint-placeholder-count="5">
+            <span style="display: flex; align-items: center; gap: 11px; min-height: 44px; padding: 0 12px; border-radius: 3px; background: {{ r.bg }}; border: {{ r.border }}; color: {{ r.ink }}; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 15px;">
+              <i class="{{ r.icon }}" style="font-size: 20px;"></i> {{ r.label }}
+            </span>
+          </sc-for>
+        </div>
+      </div>
+      <div style="position: absolute; left: 244px; right: 28px; top: 84px; display: flex; align-items: center; gap: 12px;">
+        <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 30px;">Regal</span>
+        <span style="font-weight: 700; font-size: 15px; color: #e2c496;">12 Spiele</span>
+        <span style="margin-left: auto; display: flex; align-items: center; gap: 9px;">
+          <span style="display: flex; align-items: center; gap: 8px; width: 250px; min-height: 42px; padding: 0 12px; border-radius: 4px; background: #f8f3e7; border: 1px solid #a87a2e; color: #6b5a45; font-weight: 600; font-size: 14px;"><i class="ti ti-search" style="color: #8d6436;"></i> Im Regal suchen</span>
+          <span style="display: inline-flex; align-items: center; gap: 8px; min-height: 42px; padding: 0 13px; border-radius: 4px; background: #5b4128; border: 1px solid #b98a55; font-weight: 700; font-size: 14px;">Sortiert: Bewertung <i class="ti ti-chevron-down" style="color: #f0cf86;"></i></span>
+          <span style="display: inline-flex; align-items: center; gap: 8px; min-height: 42px; padding: 0 13px; border-radius: 4px; background: #5b4128; border: 1px solid #b98a55; font-weight: 700; font-size: 14px;"><i class="ti ti-filter" style="color: #f0cf86;"></i> Filter <span style="font-weight: 800; font-size: 11px; color: #3b2a12; background: #f0cf86; border-radius: 999px; padding: 1px 7px;">2</span></span>
+          <span style="display: inline-flex; align-items: center; gap: 8px; min-height: 42px; padding: 0 13px; border-radius: 4px; background: #5b4128; border: 1px solid #b98a55; font-weight: 700; font-size: 14px;"><i class="ti ti-checkbox" style="color: #f0cf86;"></i> Auswählen</span>
+          <span style="display: inline-flex; align-items: center; gap: 8px; min-height: 42px; padding: 0 13px; border-radius: 4px; background: #5b4128; border: 1px solid #b98a55; font-weight: 700; font-size: 14px;"><i class="ti ti-archive" style="color: #f0cf86;"></i> Nicht im Regal</span>
+          <button style="min-height: 42px; padding: 0 16px; display: inline-flex; align-items: center; gap: 8px; border-radius: 4px; border: 1px solid #a87a2e; background: linear-gradient(180deg, #f6d795, #d9a951); color: #3b2a12; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 15px; cursor: pointer;"><i class="ti ti-plus" style="font-size: 18px;"></i> Spiel hinzufügen</button>
+        </span>
+      </div>
+      <div style="position: absolute; left: 244px; right: 28px; top: 146px; display: flex; flex-direction: column; gap: 30px;">
+        <sc-for list="{{ shelves }}" as="sh" hint-placeholder-count="3">
+          <div style="display: flex; flex-direction: column; gap: 0;">
+            <div style="display: flex; align-items: flex-end; gap: 22px; min-height: 150px; padding: 0 8px;">
+              <sc-for list="{{ sh.games }}" as="g" hint-placeholder-count="6">
+                <span style="display: flex; flex-direction: column; gap: 7px; width: 124px;">
+                  <span style="width: 124px; height: 118px; border-radius: 3px; background: {{ g.bg }}; box-shadow: 0 8px 16px rgba(0,0,0,.5), inset 0 0 0 1px rgba(0,0,0,.3); display: flex; align-items: {{ g.align }}; padding: 10px; overflow: hidden;">
+                    <span style="{{ g.titleStyle }}">{{ g.coverTitle }}</span>
+                  </span>
+                  <span style="display: flex; flex-direction: column; gap: 2px;">
+                    <span style="font-weight: 700; font-size: 13px; line-height: 1.25;">{{ g.title }}</span>
+                    <span style="display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: #dcb587;">{{ g.meta }}</span>
+                  </span>
+                  <span style="display: inline-flex; align-items: center; gap: 5px; align-self: flex-start; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 12px; color: {{ g.pillInk }}; background: {{ g.pillBg }}; border: 1px solid {{ g.pillBorder }}; border-radius: 999px; padding: 2px 8px; font-variant-numeric: tabular-nums;"><i class="{{ g.face }}" style="font-size: 12px;"></i> {{ g.score }}</span>
+                </span>
+              </sc-for>
+            </div>
+            <span style="height: 14px; border-radius: 2px; background: linear-gradient(180deg, #d9a951, #8a6224); box-shadow: 0 8px 14px rgba(0,0,0,.45);"></span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+
+  <div data-screen-label="T3.4 Spielepass" style="display: flex; flex-direction: column; gap: 10px;">
+    <span style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #dcb587;">4 · Spielepass — ein Spiel, seine Wertungen, seine Geschichte</span>
+    <div style="width: 1440px; height: 900px; position: relative; overflow: hidden; border-radius: 4px; background: #3b2a12; box-shadow: 0 20px 50px rgba(0,0,0,.5);">
+      <div style="position: absolute; left: 0; right: 0; top: 0; height: 60px; display: flex; align-items: center; gap: 18px; padding: 0 28px; background: #2f2109; border-bottom: 1px solid rgba(240,207,134,.25);">
+        <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 15px; letter-spacing: .14em; text-transform: uppercase; color: #3b2a12; background: linear-gradient(180deg, #f6d795, #d9a951); border-radius: 3px; padding: 5px 11px;">Spielwirbel</span>
+        <span style="margin-left: auto; display: flex; align-items: center; gap: 14px;">
+          <span style="display: inline-flex; align-items: center; gap: 6px; font-weight: 700; font-size: 13px; border: 1px solid rgba(240,207,134,.45); border-radius: 999px; padding: 5px 12px;">Deutsch <i class="ti ti-chevron-down" style="font-size: 15px; color: #f0cf86;"></i></span>
+          <i class="ti ti-mail" style="font-size: 22px; color: #f0cf86;"></i>
+          <span style="display: inline-flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px;"><span style="width: 32px; height: 32px; border-radius: 50%; background: #198663; color: #fff; display: grid; place-items: center; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 12px;">LE</span> Lea</span>
+        </span>
+      </div>
+      <div style="position: absolute; left: 0; top: 60px; bottom: 0; width: 216px; background: #32230f; border-right: 3px solid #9a6d2b; padding: 22px 16px; display: flex; flex-direction: column; gap: 18px;">
+        <span style="display: flex; flex-direction: column; gap: 3px;">
+          <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 21px; line-height: 1.1;">Donnerstagsrunde</span>
+          <span style="font-size: 12px; font-weight: 700; color: #e2c496;">6 Mitglieder · 12 Spiele</span>
+        </span>
+        <div style="display: flex; flex-direction: column; gap: 7px;">
+          <sc-for list="{{ railRegal }}" as="r" hint-placeholder-count="5">
+            <span style="display: flex; align-items: center; gap: 11px; min-height: 44px; padding: 0 12px; border-radius: 3px; background: {{ r.bg }}; border: {{ r.border }}; color: {{ r.ink }}; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 15px;">
+              <i class="{{ r.icon }}" style="font-size: 20px;"></i> {{ r.label }}
+            </span>
+          </sc-for>
+        </div>
+      </div>
+      <span style="position: absolute; left: 244px; top: 80px; display: inline-flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; color: #f0cf86;"><i class="ti ti-chevron-left" style="font-size: 18px;"></i> Zurück zum Regal</span>
+      <div style="position: absolute; left: 244px; top: 120px; width: 300px; display: flex; flex-direction: column; gap: 14px;">
+        <span style="width: 300px; height: 390px; border-radius: 4px; background: linear-gradient(150deg, #2f5d7a, #14324a); box-shadow: 0 16px 34px rgba(0,0,0,.55), inset 0 0 0 1px rgba(0,0,0,.3); display: flex; align-items: flex-end; padding: 22px;">
+          <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 34px; line-height: 1; color: #eaf2f7; letter-spacing: -.01em;">NORD<br>LICHTER</span>
+        </span>
+        <span style="display: flex; gap: 9px;">
+          <button style="flex: 1; min-height: 44px; border-radius: 4px; border: 1px solid #b98a55; background: #5b4128; color: #f6ecd8; font-weight: 700; font-size: 14px; cursor: pointer;">Cover wählen</button>
+          <button style="flex: 1; min-height: 44px; border-radius: 4px; border: 1px solid #b98a55; background: #5b4128; color: #f6ecd8; font-weight: 700; font-size: 14px; cursor: pointer;">Bearbeiten</button>
+        </span>
+      </div>
+      <div style="position: absolute; left: 576px; right: 28px; top: 120px; display: flex; flex-direction: column; gap: 18px;">
+        <div style="display: flex; align-items: flex-start; gap: 20px;">
+          <span style="display: flex; flex-direction: column; gap: 6px;">
+            <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 42px; line-height: 1.05;">Nordlichter</span>
+            <span style="font-size: 15px; font-weight: 600; color: #e2c496;">2–4 Spieler · 60 min · ab 10 · Gehört Lea</span>
+            <span style="display: flex; gap: 8px; padding-top: 4px;">
+              <span style="display: inline-flex; align-items: center; gap: 6px; min-height: 30px; padding: 0 12px; border-radius: 3px; background: #5b4128; border: 1px solid #b98a55; font-weight: 700; font-size: 13px;"><i class="ti ti-dice-3" style="color: #f0cf86;"></i> Kennerspiel</span>
+              <span style="display: inline-flex; align-items: center; gap: 6px; min-height: 30px; padding: 0 12px; border-radius: 3px; background: #23543c; border: 1px solid #3f7a5c; color: #eaf6ec; font-weight: 700; font-size: 13px;"><i class="ti ti-home-heart"></i> Familie</span>
+            </span>
+          </span>
+          <span style="margin-left: auto; display: flex; flex-direction: column; align-items: flex-end; gap: 6px;">
+            <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 62px; line-height: 1; color: #f6ecd8; font-variant-numeric: tabular-nums;">4,8</span>
+            <span style="font-size: 13px; font-weight: 700; color: #e2c496;">Spielwirbel-Score aus 5 Wertungen</span>
+          </span>
+        </div>
+        <div style="background: #4a3423; border: 1px solid rgba(240,207,134,.22); border-radius: 4px; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+          <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: #e2c496;">Wer wie gewertet hat</span>
+          <span style="display: flex; gap: 10px;">
+            <sc-for list="{{ passVotes }}" as="v" hint-placeholder-count="5">
+              <span style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 7px; background: #5b4128; border-radius: 4px; padding: 12px 8px;">
+                <span style="width: 40px; height: 40px; border-radius: 50%; background: {{ v.bg }}; border: 2px solid rgba(240,207,134,.7); color: #fff; display: grid; place-items: center; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 14px;">{{ v.ini }}</span>
+                <i class="{{ v.face }}" style="font-size: 24px; color: #f0cf86;"></i>
+                <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 17px;">{{ v.n }}</span>
+              </span>
+            </sc-for>
+          </span>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: start;">
+          <div style="background: #4a3423; border: 1px solid rgba(240,207,134,.22); border-radius: 4px; padding: 16px; display: flex; flex-direction: column; gap: 10px;">
+            <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 17px;">Gespielt in</span>
+            <sc-for list="{{ passHistory }}" as="h" hint-placeholder-count="3">
+              <span style="display: flex; align-items: center; gap: 10px; min-height: 36px; font-size: 14px; font-weight: 600; border-bottom: 1px solid rgba(240,207,134,.1);">
+                <span style="width: 26px; height: 26px; border-radius: 50%; background: {{ h.bg }}; color: #fff; display: grid; place-items: center; font-weight: 800; font-size: 11px;">{{ h.ini }}</span>
+                {{ h.date }}
+                <span style="margin-left: auto; color: #e2c496; font-weight: 700;">{{ h.note }}</span>
+              </span>
+            </sc-for>
+          </div>
+          <div style="background: #4a3423; border: 1px solid rgba(240,207,134,.22); border-radius: 4px; padding: 16px; display: flex; flex-direction: column; gap: 10px;">
+            <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 17px;">Aktionen</span>
+            <span style="display: flex; flex-wrap: wrap; gap: 8px;">
+              <span style="display: inline-flex; align-items: center; gap: 7px; min-height: 40px; padding: 0 13px; border-radius: 4px; background: #5b4128; border: 1px solid #b98a55; font-weight: 700; font-size: 14px;"><i class="ti ti-archive" style="color: #f0cf86;"></i> Nicht im Regal</span>
+              <span style="display: inline-flex; align-items: center; gap: 7px; min-height: 40px; padding: 0 13px; border-radius: 4px; background: #5b4128; border: 1px solid #b98a55; font-weight: 700; font-size: 14px;"><i class="ti ti-circle-check" style="color: #f0cf86;"></i> Durchgespielt</span>
+              <span style="display: inline-flex; align-items: center; gap: 7px; min-height: 40px; padding: 0 13px; border-radius: 4px; background: #5b4128; border: 1px solid #b98a55; font-weight: 700; font-size: 14px;"><i class="ti ti-user" style="color: #f0cf86;"></i> Besitzer ändern</span>
+              <span style="display: inline-flex; align-items: center; gap: 7px; min-height: 40px; padding: 0 13px; border-radius: 4px; background: #5a2b23; border: 1px solid #b5432a; color: #fdeee8; font-weight: 700; font-size: 14px;"><i class="ti ti-trash"></i> Aus dem Regal löschen</span>
+            </span>
+            <span style="font-size: 12px; font-weight: 600; color: #dcb587; line-height: 1.5; padding-top: 2px;">Spieldaten und Cover von BoardGameGeek · Quelle: BGG (englisch)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div data-screen-label="T3.5 Spiel-Suche" style="display: flex; flex-direction: column; gap: 10px;">
+    <span style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #dcb587;">5 · Spiel hinzufügen — Suche als Popover über dem Regal</span>
+    <div style="width: 1440px; height: 900px; position: relative; overflow: hidden; border-radius: 4px; background: #3b2a12; box-shadow: 0 20px 50px rgba(0,0,0,.5);">
+      <div style="position: absolute; inset: 0; opacity: .35;">
+        <div style="position: absolute; left: 0; right: 0; top: 0; height: 60px; background: #2f2109; border-bottom: 1px solid rgba(240,207,134,.25);"></div>
+        <div style="position: absolute; left: 0; top: 60px; bottom: 0; width: 216px; background: #32230f; border-right: 3px solid #9a6d2b;"></div>
+        <div style="position: absolute; left: 244px; right: 28px; top: 146px; display: flex; flex-direction: column; gap: 30px;">
+          <sc-for list="{{ shelves }}" as="sh" hint-placeholder-count="2">
+            <div style="display: flex; flex-direction: column;">
+              <div style="display: flex; align-items: flex-end; gap: 22px; min-height: 150px; padding: 0 8px;">
+                <sc-for list="{{ sh.games }}" as="g" hint-placeholder-count="6">
+                  <span style="width: 124px; height: 118px; border-radius: 3px; background: {{ g.bg }};"></span>
+                </sc-for>
+              </div>
+              <span style="height: 14px; border-radius: 2px; background: linear-gradient(180deg, #d9a951, #8a6224);"></span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      <div style="position: absolute; inset: 0; background: rgba(28,16,4,.55);"></div>
+      <div style="position: absolute; left: 50%; top: 92px; width: 720px; margin-left: -360px; background: linear-gradient(180deg, #f8f3e7, #efe7d5); color: #2f2620; border-radius: 8px; box-shadow: 0 24px 60px rgba(0,0,0,.6); border: 1px solid #a87a2e; overflow: hidden;">
+        <div style="display: flex; align-items: center; gap: 14px; padding: 18px 22px; border-bottom: 1px solid rgba(47,38,32,.16);">
+          <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 24px;">Spiel hinzufügen</span>
+          <span style="margin-left: auto; width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(47,38,32,.2); background: #e7dcc4; display: grid; place-items: center; font-size: 19px;"><i class="ti ti-x"></i></span>
+        </div>
+        <div style="padding: 18px 22px; display: flex; flex-direction: column; gap: 14px;">
+          <span style="display: flex; align-items: center; gap: 10px; background: #fffaf0; border: 1px solid #a87a2e; border-radius: 4px; padding: 0 14px; min-height: 50px; box-shadow: 0 0 0 3px rgba(240,207,134,.35);">
+            <i class="ti ti-search" style="color: #8d6436; font-size: 20px;"></i>
+            <span style="font-weight: 700; font-size: 17px; color: #2f2620;">nordl</span>
+            <span style="width: 2px; height: 22px; background: #7a4a28;"></span>
+            <span style="margin-left: auto; font-size: 13px; font-weight: 600; color: #6b5a45;">4 Treffer bei BGG</span>
+          </span>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <sc-for list="{{ lookup }}" as="l" hint-placeholder-count="4">
+              <span style="display: flex; align-items: center; gap: 14px; min-height: 76px; padding: 10px 12px; border-radius: 4px; background: {{ l.bg }}; border: 1px solid rgba(47,38,32,.14);">
+                <span style="width: 44px; height: 58px; border-radius: 2px; background: {{ l.cover }}; flex: none; box-shadow: 0 3px 7px rgba(0,0,0,.3);"></span>
+                <span style="display: flex; flex-direction: column; gap: 3px; min-width: 0;">
+                  <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 18px;">{{ l.title }}</span>
+                  <span style="font-size: 13px; font-weight: 600; color: #6b5a45;">{{ l.meta }}</span>
+                </span>
+                <span style="margin-left: auto; display: flex; align-items: center; gap: 10px;">
+                  <span style="font-size: 12px; font-weight: 700; color: {{ l.stateInk }};">{{ l.state }}</span>
+                  <span style="min-height: 40px; padding: 0 15px; display: inline-flex; align-items: center; gap: 7px; border-radius: 4px; background: {{ l.btnBg }}; border: 1px solid {{ l.btnBorder }}; color: {{ l.btnInk }}; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 14px;"><i class="{{ l.btnIcon }}"></i> {{ l.btn }}</span>
+                </span>
+              </span>
+            </sc-for>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px; border-top: 1px solid rgba(47,38,32,.16); padding-top: 14px;">
+            <span style="display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 15px; border-radius: 4px; background: #e7dcc4; border: 1px solid rgba(47,38,32,.2); font-weight: 700; font-size: 14px;"><i class="ti ti-cards" style="color: #7a4a28;"></i> Von BGG übernehmen</span>
+            <span style="display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 15px; border-radius: 4px; background: #e7dcc4; border: 1px solid rgba(47,38,32,.2); font-weight: 700; font-size: 14px;"><i class="ti ti-pencil" style="color: #7a4a28;"></i> Selbst eintragen</span>
+            <span style="margin-left: auto; display: inline-flex; align-items: center; background: #f8f3e7; border-radius: 3px; padding: 5px 9px;"><img src="../../../public/icons/powered-by-bgg.png" alt="Powered by BGG" style="display: block; width: 116px; height: auto;"></span>
+          </div>
+        </div>
+      </div>
+      <div style="position: absolute; left: 50%; bottom: 40px; margin-left: -360px; width: 720px; display: flex; align-items: center; gap: 11px; background: #23543c; border: 1px solid #3f7a5c; border-radius: 4px; padding: 13px 16px; color: #eaf6ec; box-shadow: 0 14px 30px rgba(0,0,0,.5);">
+        <i class="ti ti-check" style="font-size: 20px; color: #a8dcb4;"></i>
+        <span style="font-weight: 700; font-size: 15px;">„Zugvögel“ ist im Regal.</span>
+        <span style="margin-left: auto; font-weight: 700; font-size: 14px; text-decoration: underline;">Rückgängig</span>
+      </div>
+    </div>
+  </div>
+
+  <div data-screen-label="T3.6 Übergabe" style="max-width: 1440px; background: #4a3423; border: 1px solid rgba(240,207,134,.28); border-radius: 4px; padding: 22px 26px; display: flex; flex-direction: column; gap: 10px;">
+    <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 20px;">Was T3 entscheidet</span>
+    <span style="font-size: 15px; line-height: 1.6; color: #f0e3c8; max-width: 100ch;">Die <strong>Messingschiene</strong> trägt die Erreichbarkeit: Start · Regal · Chronik · Pokale · Einstellungen, 216 px breit, auf jedem Runden-Screen an derselben Stelle, aktiv als Messingplatte mit dunkler Schrift. Die Lobby hat keine Schiene, weil es dort keinen Rundenkontext gibt — nur Kopfleiste und Tische. Der Hub behält die Filzbühne (Plätze, eine Aktion, die drei Schnellfilter) und darunter drei Spalten: Zuletzt gespielt · Wie wär’s mit · Rundenpuls, dann Kümmerliste · Chronik-Vorschau · Pokale-Vorschau, ganz unten die fünf Regal-Abzweigungen. Das <strong>Regal</strong> ist keine Kartenwand, sondern drei Bretter mit Messingkante: Cover stehen in einem <strong>festen Kasten</strong> (124 × 118 px) darauf, weil die App kein Seitenverhältnis speichert; die Bilder füllen den Kasten, eines ohne Bild trägt die Holzprägung. Der Spielepass zeigt das Cover groß, den Score als Zahl und die fünf Wertungen mit Gesicht.</span>
+    <span style="font-size: 14px; line-height: 1.6; color: #dcb587;">Platzhalter: die Cover sind typografische Felder im festen Kasten — echte Schachtelbilder kommen zur Laufzeit von BGG, der Kein-Cover-Fall ist echt gestaltet. Die Platzhalterfarben sind <strong>keine Tokens</strong>. Offen: T4 (Session-Screens Desktop), T6 (Regal, Spielepass, Suche auf 390), T7 (leere und junge Zustände dieser fünf Screens).</span>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;gefaessWort&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Topf&quot;,&quot;Schale&quot;,&quot;Hut&quot;],&quot;default&quot;:&quot;Topf&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Wortstand&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const P = this.props;
+    const cover = (a, b) => `linear-gradient(150deg, ${a}, ${b})`;
+    const faces = ['ti-mood-cry', 'ti-mood-sad', 'ti-mood-neutral', 'ti-mood-smile', 'ti-mood-crazy-happy'];
+    const C = { lea: '#198663', jonas: '#c6522c', mia: '#726bc7', tom: '#a66815', ada: '#2f6f9e', ben: '#54821d', ida: '#c34d74', nils: '#993556' };
+
+    const railItems = (active) => [
+      ['Start', 'ti ti-home'], ['Regal', 'ti ti-layout-grid'], ['Chronik', 'ti ti-history'],
+      ['Pokale', 'ti ti-trophy'], ['Einstellungen', 'ti ti-settings'],
+    ].map(([label, icon]) => {
+      const on = label === active;
+      return {
+        label, icon,
+        bg: on ? 'linear-gradient(180deg, #f6d795, #d9a951)' : 'transparent',
+        border: on ? '1px solid #a87a2e' : '1px solid rgba(240,207,134,.28)',
+        ink: on ? '#3b2a12' : '#f0cf86',
+      };
+    });
+
+    // Lobby: Tische mit Plätzen auf dem Kreisrand
+    const tableDefs = [
+      { name: 'Donnerstagsrunde', stats: '6 Mitglieder · 23 Sessions', lastGame: 'Nordlichter', lastWinner: 'Jonas', feltA: '#2f6b4d', feltB: '#1c4531', seats: [C.lea, C.jonas, C.mia, C.tom, C.ada, C.ben] },
+      { name: 'Familie Berger', stats: '4 Mitglieder · 11 Sessions', lastGame: 'Kartographen', lastWinner: 'Mia', feltA: '#5d4a7a', feltB: '#33264a', seats: [C.mia, C.ida, C.nils, C.tom] },
+      { name: 'Mittwochs im Café', stats: '5 Mitglieder · 7 Sessions', lastGame: 'Die Insel', lastWinner: 'Ada', feltA: '#7a5b2f', feltB: '#42301a', seats: [C.ada, C.ben, C.lea, C.nils, C.ida] },
+    ];
+    const inis = { [C.lea]: 'LE', [C.jonas]: 'JO', [C.mia]: 'MI', [C.tom]: 'TO', [C.ada]: 'AD', [C.ben]: 'BE', [C.ida]: 'ID', [C.nils]: 'NI' };
+    const tables = tableDefs.map((t) => ({
+      ...t,
+      seats: t.seats.map((bg, i) => {
+        const a = (-Math.PI / 2) + (i / t.seats.length) * Math.PI * 2;
+        return {
+          bg, ini: inis[bg],
+          x: `calc(50% + ${Math.round(Math.cos(a) * 140)}px)`,
+          y: `${190 + Math.round(Math.sin(a) * 140)}px`,
+        };
+      }),
+    }));
+
+    const hubSeats = [
+      ['Lea', C.lea, '9', 0], ['Jonas', C.jonas, '7', 1], ['Mia', C.mia, '5', 0],
+      ['Tom', C.tom, '4', 0], ['Ada', C.ada, '3', 0], ['Ben', C.ben, '1', 0],
+    ].map(([name, bg, wins, crown]) => ({
+      name, bg, wins, ini: name.slice(0, 2).toUpperCase(),
+      ring: '#f0cf86', crown: crown ? 'ti ti-crown' : 'ti',
+    }));
+
+    const recos = [
+      { title: 'Zugvögel', reason: 'Wie Nordlichter, nur kürzer', cover: cover('#3f5d2f', '#22331a') },
+      { title: 'Die Insel', reason: 'Seit 4 Monaten nicht gespielt', cover: cover('#6a2f5d', '#3a1a34') },
+      { title: 'Hafenmeister', reason: 'Passt zu 4 Spielern und 45 min', cover: cover('#2f5d7a', '#14324a') },
+    ];
+
+    const puls = [
+      { value: '23', label: 'Sessions' }, { value: '4,1', label: 'Schnitt' }, { value: '3', label: 'ungespielt' },
+    ];
+
+    const kuemmer = [
+      { label: '2 Spiele ohne Bild', icon: 'ti ti-photo' },
+      { label: '1 Session ohne eingetragenes Ergebnis', icon: 'ti ti-trophy' },
+      { label: '3 Spiele ohne Spielerzahl', icon: 'ti ti-users' },
+    ];
+
+    const previews = [
+      {
+        label: 'Chronik', icon: 'ti ti-history',
+        rows: [
+          { label: '19.09. · Nordlichter', value: 'Jonas', cover: cover('#2f5d7a', '#14324a') },
+          { label: '12.09. · Kartographen', value: 'Lea', cover: cover('#7a5b2f', '#42301a') },
+          { label: '05.09. · Die Insel', value: 'Mia', cover: cover('#6a2f5d', '#3a1a34') },
+        ],
+      },
+      {
+        label: 'Pokale', icon: 'ti ti-trophy',
+        rows: [
+          { label: '1 · Jonas', value: '7 Siege', cover: 'linear-gradient(180deg, #f6d795, #d9a951)' },
+          { label: '2 · Lea', value: '9 Siege', cover: 'linear-gradient(180deg, #e8e2d4, #b9b3a4)' },
+          { label: '3 · Mia', value: '5 Siege', cover: 'linear-gradient(180deg, #d9a37a, #a06b42)' },
+        ],
+      },
+    ];
+
+    const offshelf = [
+            { label: 'Aussortiert', icon: 'ti ti-trash-x', count: '2' },
+      { label: 'Durchgespielt', icon: 'ti ti-circle-check', count: '3' },
+      { label: 'Wunschliste', icon: 'ti ti-tags', count: '2' },
+      { label: 'Könnte euch gefallen', icon: 'ti ti-sparkles', count: '6' },
+    ];
+
+    // Regal: ungleiche Cover — Höhe, Feld und Titelsatz variieren, eines ohne Bild
+    const bricolage = "font-family: 'Bricolage Grotesque'; font-weight: 800;";
+    const art = [
+      ['Nordlichter', 'NORD LICHTER', cover('#2f5d7a', '#14324a'), '118px', 'flex-end', `${bricolage} font-size: 21px; line-height: .95; color: #eaf2f7;`, '4,8', 4],
+      ['Kartographen', 'Kartographen', cover('#7a5b2f', '#42301a'), '106px', 'flex-start', 'font-weight: 700; font-size: 15px; letter-spacing: .02em; color: #f3e3c6; text-transform: uppercase;', '4,1', 3],
+      ['Die Insel', 'DIE\nINSEL', 'radial-gradient(70% 70% at 30% 25%, #a2508f, #3a1a34 80%)', '126px', 'center', `${bricolage} font-size: 26px; line-height: .9; color: #ffe9fb; text-align: center; white-space: pre-line;`, '3,3', 2],
+      ['Zugvögel', 'zugvögel', cover('#3f5d2f', '#22331a'), '94px', 'flex-end', 'font-weight: 700; font-size: 17px; letter-spacing: .14em; color: #e4f0d8;', '2,4', 1],
+      ['Hafenmeister', 'HAFEN—\nMEISTER', 'linear-gradient(0deg, #14324a 0 46%, #2f5d7a 46%)', '112px', 'flex-start', `${bricolage} font-size: 17px; line-height: 1.05; color: #eaf2f7; white-space: pre-line;`, '3,9', 3],
+      ['Rattenkönig', '', 'repeating-linear-gradient(135deg, #5b4128 0 9px, #4a3423 9px 18px)', '106px', 'center', `${bricolage} font-size: 15px; line-height: 1.15; color: #f0cf86; text-align: center;`, '—', 2],
+      ['Turmbau', 'TURMBAU', 'linear-gradient(90deg, #8f4a22 0 34%, #d9a951 34%)', '132px', 'flex-end', `${bricolage} font-size: 19px; color: #2b1a08;`, '4,4', 4],
+      ['Seidenstraße', 'SEIDEN\nSTRASSE', cover('#6a2f2f', '#331a1a'), '100px', 'flex-end', 'font-weight: 700; font-size: 14px; line-height: 1.2; letter-spacing: .1em; color: #f7dcc8; white-space: pre-line;', '3,6', 3],
+      ['Mondgarten', 'Mond\ngarten', 'radial-gradient(60% 60% at 70% 20%, #e8dcb0, #4a5b2f 75%)', '120px', 'flex-start', `${bricolage} font-size: 20px; line-height: 1; color: #23310f; white-space: pre-line;`, '4,6', 5],
+      ['Kellergeister', 'KELLER\nGEISTER', cover('#3a3a5d', '#1a1a33'), '108px', 'center', `${bricolage} font-size: 16px; line-height: 1.05; color: #dfe2f7; text-align: center; white-space: pre-line;`, '2,9', 2],
+      ['Wolkenpost', 'wolkenpost', 'linear-gradient(180deg, #cfe2ef 0 58%, #6a93ad 58%)', '92px', 'flex-start', 'font-weight: 700; font-size: 16px; letter-spacing: .04em; color: #17303f;', '4,2', 4],
+      ['Ackerbau', 'ACKERBAU', cover('#7a6a2f', '#42391a'), '124px', 'flex-end', `${bricolage} font-size: 18px; letter-spacing: .04em; color: #f7f0d0;`, '3,1', 2],
+    ];
+    const ramp = ['#8f2f22', '#a05a1f', '#b8a12e', '#8dbf46', '#b8e08a'];
+    const rampInk = ['#fdf4e4', '#fdf4e4', '#2a1a08', '#2a1a08', '#2a1a08'];
+    const games = art.map(([title, coverTitle, bg, h, align, titleStyle, score, stop]) => ({
+      title, coverTitle, bg, h, align, titleStyle, score,
+      meta: title === 'Rattenkönig' ? 'Kein Cover · Gehört Tom' : '2–4 · 60 min',
+      face: 'ti ' + faces[stop - 1],
+      pillBg: score === '—' ? '#5b4128' : ramp[stop - 1],
+      pillInk: score === '—' ? '#e2c496' : rampInk[stop - 1],
+      pillBorder: score === '—' ? '#b98a55' : 'rgba(0,0,0,.35)',
+    }));
+    const shelves = [
+      { games: games.slice(0, 4) },
+      { games: games.slice(4, 8) },
+      { games: games.slice(8, 12) },
+    ];
+
+    const passVotes = [
+      ['Lea', C.lea, 5], ['Jonas', C.jonas, 5], ['Mia', C.mia, 5], ['Ada', C.ada, 4], ['Ben', C.ben, 5],
+    ].map(([name, bg, n]) => ({ bg, ini: name.slice(0, 2).toUpperCase(), n: String(n), face: 'ti ' + faces[n - 1] }));
+
+    const passHistory = [
+      { date: '19.09.2026', note: 'Jonas hat gewonnen', ini: 'JO', bg: C.jonas },
+      { date: '22.08.2026', note: 'Lea hat gewonnen', ini: 'LE', bg: C.lea },
+      { date: '04.07.2026', note: 'Mia hat gewonnen', ini: 'MI', bg: C.mia },
+    ];
+
+    const lookup = [
+      { title: 'Nordlichter', meta: '2026 · 2–4 · 60 min · BGG', cover: cover('#2f5d7a', '#14324a'), state: 'steht schon im Regal', stateInk: '#6b5a45', bg: '#e7dcc4', btn: 'Im Regal', btnBg: 'transparent', btnBorder: 'rgba(47,38,32,.25)', btnInk: '#6b5a45', btnIcon: 'ti ti-check' },
+      { title: 'Nordlichter: Polarwind', meta: 'Erweiterung zu Nordlichter · 2027', cover: cover('#1f4a63', '#0d2233'), state: '', stateInk: '#6b5a45', bg: '#f8f3e7', btn: 'Hinzufügen', btnBg: 'linear-gradient(180deg, #f6d795, #d9a951)', btnBorder: '#a87a2e', btnInk: '#3b2a12', btnIcon: 'ti ti-plus' },
+      { title: 'Nordlicht-Expedition', meta: '2024 · 1–5 · 90 min · BGG', cover: cover('#2f7a6b', '#14423a'), state: '', stateInk: '#6b5a45', bg: '#f8f3e7', btn: 'Hinzufügen', btnBg: 'linear-gradient(180deg, #f6d795, #d9a951)', btnBorder: '#a87a2e', btnInk: '#3b2a12', btnIcon: 'ti ti-plus' },
+      { title: 'Nordland', meta: '2019 · 2–6 · 45 min · BGG', cover: 'repeating-linear-gradient(135deg, #8d7a55 0 8px, #6b5a3f 8px 16px)', state: 'auf der Wunschliste', stateInk: '#7a4a28', bg: '#f8f3e7', btn: 'Hinzufügen', btnBg: 'linear-gradient(180deg, #f6d795, #d9a951)', btnBorder: '#a87a2e', btnInk: '#3b2a12', btnIcon: 'ti ti-plus' },
+    ];
+
+    return {
+      tables, hubSeats, recos, puls, kuemmer, previews, offshelf, shelves, passVotes, passHistory, lookup,
+      rail: railItems('Start'), railRegal: railItems('Regal'),
+      gefaessWort: P.gefaessWort ?? 'Topf',
+    };
+  }
+}
+
+</script>
+</body>
+</html>

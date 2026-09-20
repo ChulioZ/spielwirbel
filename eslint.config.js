@@ -450,7 +450,10 @@ const frontendGlobals = {
 };
 
 module.exports = [
-  { ignores: ['node_modules/**', 'data/**', 'dist/**'] },
+  // docs/design/** holds design references, not app code: a generated React
+  // runtime (support.js) and a browser-only audit script that is loaded into a
+  // rendered sheet by hand. Neither runs in the app (docs/design/README.md).
+  { ignores: ['node_modules/**', 'data/**', 'dist/**', 'docs/design/**'] },
   js.configs.recommended,
   {
     // Empty `catch {}` is a deliberate "swallow and keep the default" idiom here.

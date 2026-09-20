@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="design_doc_mode" content="canvas">
+  <link rel="stylesheet" href="../../../public/fonts/tabler-icons.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Manrope:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #2b1e0d; font-family: 'Manrope', sans-serif; }
+    a { color: #f0cf86; text-decoration: none; display: inline-block; padding: 4px 0; }
+    a:hover { color: #fbe6b4; text-decoration: underline; }
+  </style>
+</helmet>
+<div style="display: flex; flex-direction: column; gap: 36px; padding: 44px; width: max-content; background-color: #3b2a12; background-image: repeating-linear-gradient(180deg, rgba(255,255,255,.035) 0 2px, transparent 2px 7px), radial-gradient(120% 80% at 30% 0%, rgba(240,207,134,.10), transparent 60%); color: #f6ecd8;">
+
+  <div data-screen-label="T15b Kopf" style="max-width: 1240px; display: flex; flex-direction: column; gap: 14px; background: linear-gradient(180deg, #f8f3e7, #efe7d5); color: #2f2620; border-radius: 4px; padding: 26px 30px; box-shadow: 0 14px 30px rgba(0,0,0,.45);">
+    <div style="display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;">
+      <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: #6b4210; background: #f0cf86; border-radius: 3px; padding: 5px 10px;">T15b</span>
+      <h1 style="margin: 0; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 38px; line-height: 1.05;">Dialoge, Toasts, „…“-Menü — Der Tisch</h1>
+      <span style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #6b5a45;">baut auf T1, T15a</span>
+    </div>
+    <p style="margin: 0; font-size: 16px; line-height: 1.55; max-width: 92ch; color: #4a4038;">Was bestätigt, meldet und nachfragt. Grundsatz: <strong>ein Dialog fragt nur, wenn etwas verloren geht</strong> — alles Umkehrbare passiert sofort und bekommt einen Toast mit „Rückgängig“. Das spart in dieser App rund ein Drittel der heutigen Dialoge.</p>
+    <div style="display: flex; flex-wrap: wrap; gap: 10px; font-size: 13px; font-weight: 700;">
+      <span style="background: #e7dcc4; border-radius: 3px; padding: 6px 11px;">Titel = die Frage · Text = die Folge · Knopf = das Verb</span>
+      <span style="background: #e7dcc4; border-radius: 3px; padding: 6px 11px;">Nie „Bist du sicher?“</span>
+      <span style="background: #e7dcc4; border-radius: 3px; padding: 6px 11px;">Zerstörend = Rot gefüllt, immer rechts</span>
+    </div>
+  </div>
+
+  <div data-screen-label="T15b.1 Anatomie" style="display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap;">
+    <div style="display: flex; flex-direction: column; gap: 9px;">
+      <span style="font-family: ui-monospace, Menlo, monospace; font-size: 12px; color: #dcb587;">1 · Anatomie · 420 px, beide Breiten gleich</span>
+      <div style="width: 420px; border-radius: 8px; background: linear-gradient(180deg, #f8f3e7, #efe7d5); color: #2f2620; box-shadow: 0 20px 44px rgba(0,0,0,.55); padding: 22px 24px; display: flex; flex-direction: column; gap: 12px;">
+        <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 22px; line-height: 1.2;">Session löschen?</span>
+        <span style="font-size: 15px; font-weight: 600; line-height: 1.55; color: #4a4038;">„Nordlichter“ vom 19.09. verschwindet aus Chronik und Pokale. Das lässt sich nicht rückgängig machen.</span>
+        <span style="display: flex; gap: 9px; justify-content: flex-end; padding-top: 4px;">
+          <span style="min-height: 44px; padding: 0 16px; border-radius: 4px; border: 1px solid rgba(47,38,32,.25); display: flex; align-items: center; font-weight: 700; font-size: 15px; color: #4a4038;">Abbrechen</span>
+          <span style="min-height: 44px; padding: 0 18px; border-radius: 4px; background: #8f2f22; border: 1px solid #b5432a; color: #fdf4e4; display: flex; align-items: center; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 15px;">Löschen</span>
+        </span>
+      </div>
+    </div>
+    <div style="flex: 1; min-width: 420px; background: #4a3423; border: 1px solid rgba(240,207,134,.22); border-radius: 4px; padding: 18px 20px; display: flex; flex-direction: column; gap: 10px;">
+      <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 19px;">Die vier Regeln</span>
+      <sc-for list="{{ rules }}" as="r" hint-placeholder-count="4">
+        <span style="display: flex; gap: 12px; align-items: flex-start;">
+          <span style="width: 26px; height: 26px; flex: none; border-radius: 50%; background: #5b4128; border: 1px solid #b98a55; color: #f0cf86; display: grid; place-items: center; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 13px;">{{ r.n }}</span>
+          <span style="display: flex; flex-direction: column; gap: 2px;">
+            <span style="font-weight: 700; font-size: 15px;">{{ r.title }}</span>
+            <span style="font-size: 13px; font-weight: 600; line-height: 1.5; color: #dcb587;">{{ r.text }}</span>
+          </span>
+        </span>
+      </sc-for>
+    </div>
+  </div>
+
+  <div data-screen-label="T15b.2 Dialoge" style="display: flex; flex-direction: column; gap: 14px;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 22px;">2 · Die Dialoge, die bleiben</span>
+      <span style="flex: 1; height: 1px; background: linear-gradient(90deg, rgba(240,207,134,.5), transparent);"></span>
+      <span style="font-size: 12px; color: #e2c496;">Wortlaut aus der App, wo es ihn gibt</span>
+    </div>
+    <div style="display: flex; gap: 18px; flex-wrap: wrap; max-width: 1700px;">
+      <sc-for list="{{ dialogs }}" as="d" hint-placeholder-count="6">
+        <div style="width: 404px; display: flex; flex-direction: column; gap: 8px;">
+          <span style="font-family: ui-monospace, Menlo, monospace; font-size: 11px; color: #dcb587;">{{ d.trigger }}</span>
+          <div style="width: 404px; border-radius: 8px; background: linear-gradient(180deg, #f8f3e7, #efe7d5); color: #2f2620; box-shadow: 0 14px 30px rgba(0,0,0,.45); padding: 20px 22px; display: flex; flex-direction: column; gap: 11px;">
+            <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 20px; line-height: 1.2;">{{ d.title }}</span>
+            <span style="font-size: 14px; font-weight: 600; line-height: 1.55; color: #4a4038;">{{ d.body }}</span>
+            <span style="{{ d.noteStyle }}">{{ d.note }}</span>
+            <span style="display: flex; gap: 9px; justify-content: flex-end; padding-top: 2px;">
+              <span style="min-height: 44px; padding: 0 15px; border-radius: 4px; border: 1px solid rgba(47,38,32,.25); display: flex; align-items: center; font-weight: 700; font-size: 14px; color: #4a4038;">{{ d.cancel }}</span>
+              <span style="min-height: 44px; padding: 0 17px; border-radius: 4px; background: {{ d.primaryBg }}; border: 1px solid {{ d.primaryBorder }}; color: {{ d.primaryInk }}; display: flex; align-items: center; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 14px;">{{ d.primary }}</span>
+            </span>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div data-screen-label="T15b.3 Liste" style="display: flex; flex-direction: column; gap: 14px;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 22px;">3 · Alle Nachfragen im Überblick</span>
+      <span style="flex: 1; height: 1px; background: linear-gradient(90deg, rgba(240,207,134,.5), transparent);"></span>
+    </div>
+    <div style="max-width: 1440px; background: #4a3423; border: 1px solid rgba(240,207,134,.22); border-radius: 4px; overflow: hidden;">
+      <div style="display: grid; grid-template-columns: 260px 1fr 150px 130px; gap: 14px; padding: 12px 20px; background: #32230f; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #f0cf86;">
+        <span>Auslöser</span><span>Titel und Folge</span><span>Primärknopf</span><span>Ton</span>
+      </div>
+      <sc-for list="{{ allDialogs }}" as="a" hint-placeholder-count="16">
+        <div style="display: grid; grid-template-columns: 260px 1fr 150px 130px; gap: 14px; padding: 11px 20px; border-bottom: 1px solid rgba(240,207,134,.12); align-items: baseline;">
+          <span style="font-weight: 700; font-size: 13px; color: #e2c496;">{{ a.trigger }}</span>
+          <span style="font-size: 13px; font-weight: 600; line-height: 1.5;"><strong>{{ a.title }}</strong> {{ a.body }}</span>
+          <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 13px;">{{ a.primary }}</span>
+          <span style="{{ a.toneStyle }}">{{ a.tone }}</span>
+        </div>
+      </sc-for>
+      <div style="padding: 14px 20px; display: flex; gap: 14px; align-items: baseline;">
+        <span style="font-size: 13px; font-weight: 700; color: #f6ecd8;">Ohne Nachfrage, mit „Rückgängig“:</span>
+        <span style="font-size: 13px; font-weight: 600; line-height: 1.6; color: #dcb587;">{{ undoList }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div data-screen-label="T15b.4 Toasts" style="display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap;">
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+      <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 22px;">4 · Toasts</span>
+      <sc-for list="{{ toasts }}" as="t" hint-placeholder-count="5">
+        <div style="width: 480px; display: flex; align-items: center; gap: 12px; background: {{ t.bg }}; border: 1px solid {{ t.border }}; border-radius: 4px; padding: 13px 16px; color: {{ t.ink }}; box-shadow: 0 12px 26px rgba(0,0,0,.45);">
+          <i class="{{ t.icon }}" style="font-size: 20px; color: {{ t.iconInk }};"></i>
+          <span style="display: flex; flex-direction: column;">
+            <span style="font-weight: 700; font-size: 14px;">{{ t.text }}</span>
+            <span style="{{ t.hintStyle }}">{{ t.hint }}</span>
+          </span>
+          <span style="{{ t.actionStyle }}">{{ t.action }}</span>
+        </div>
+      </sc-for>
+      <span style="width: 480px; font-size: 13px; font-weight: 600; line-height: 1.6; color: #dcb587;">Sitz: Telefon über dem Dock (86 px Abstand), Desktop unten links über der Schiene. Dauer 5 s, mit „Rückgängig“ 8 s; Fehler bleiben, bis sie weggetippt werden. Höchstens einer gleichzeitig — der neue ersetzt den alten.</span>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+      <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 22px;">5 · Das „…“-Menü</span>
+      <div style="display: flex; gap: 14px; flex-wrap: wrap;">
+        <sc-for list="{{ menus }}" as="m" hint-placeholder-count="4">
+          <div style="width: 236px; display: flex; flex-direction: column; gap: 7px;">
+            <span style="font-family: ui-monospace, Menlo, monospace; font-size: 11px; color: #dcb587;">{{ m.where }}</span>
+            <div style="border-radius: 4px; background: linear-gradient(180deg, #f8f3e7, #efe7d5); border: 1px solid #a87a2e; box-shadow: 0 12px 26px rgba(0,0,0,.45); overflow: hidden;">
+              <sc-for list="{{ m.rows }}" as="r" hint-placeholder-count="4">
+                <span style="display: flex; align-items: center; gap: 10px; padding: 0 13px; min-height: 42px; font-weight: 600; font-size: 14px; color: {{ r.ink }}; border-bottom: 1px solid rgba(47,38,32,.1);"><i class="{{ r.icon }}" style="font-size: 17px;"></i> {{ r.label }}</span>
+              </sc-for>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+      <span style="width: 500px; font-size: 13px; font-weight: 600; line-height: 1.6; color: #dcb587;">Reihenfolge immer gleich: erst Ändern, dann Teilen, dann Umkehrbares, zuletzt Zerstörendes in Rot mit Trennlinie darüber. Was im Screen schon als Knopf steht, wiederholt das Menü nicht.</span>
+    </div>
+  </div>
+
+  <div data-screen-label="T15b.5 Fehler" style="display: flex; flex-direction: column; gap: 14px;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 22px;">6 · Wenn ein Sheet nicht liefern kann</span>
+      <span style="flex: 1; height: 1px; background: linear-gradient(90deg, rgba(240,207,134,.5), transparent);"></span>
+    </div>
+    <div style="display: flex; gap: 18px; flex-wrap: wrap;">
+      <sc-for list="{{ errors }}" as="e" hint-placeholder-count="3">
+        <div style="width: 390px; display: flex; flex-direction: column; gap: 8px;">
+          <span style="font-family: ui-monospace, Menlo, monospace; font-size: 11px; color: #dcb587;">{{ e.where }}</span>
+          <div style="width: 390px; border-radius: 12px 12px 6px 6px; background: linear-gradient(180deg, #f8f3e7, #efe7d5); color: #2f2620; box-shadow: 0 14px 30px rgba(0,0,0,.45); padding: 10px 0 18px; display: flex; flex-direction: column; gap: 12px;">
+            <span style="align-self: center; width: 42px; height: 4px; border-radius: 999px; background: rgba(47,38,32,.3);"></span>
+            <span style="padding: 0 18px; display: flex; align-items: center; gap: 10px;">
+              <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 19px;">{{ e.title }}</span>
+              <span style="margin-left: auto; width: 34px; height: 34px; border-radius: 50%; border: 1px solid rgba(47,38,32,.2); background: #e7dcc4; display: grid; place-items: center; font-size: 17px;"><i class="ti ti-x"></i></span>
+            </span>
+            <span style="margin: 0 18px; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; background: #efe7d5; border-radius: 4px; padding: 20px 16px;">
+              <span style="width: 56px; height: 56px; border-radius: 50%; background: #e7dcc4; border: 2px dashed rgba(47,38,32,.25); display: grid; place-items: center; font-size: 24px; color: #7a4a28;"><i class="{{ e.icon }}"></i></span>
+              <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 17px; line-height: 1.25;">{{ e.head }}</span>
+              <span style="font-size: 13px; font-weight: 600; line-height: 1.5; color: #4a4038;">{{ e.text }}</span>
+            </span>
+            <span style="padding: 0 18px; display: flex; gap: 9px;">
+              <span style="{{ e.secondaryStyle }}">{{ e.secondary }}</span>
+              <span style="flex: 1; min-height: 48px; border-radius: 4px; background: linear-gradient(180deg, #f6d795, #d9a951); border: 1px solid #a87a2e; color: #3b2a12; display: flex; align-items: center; justify-content: center; gap: 8px; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 15px;"><i class="{{ e.icon2 }}"></i> {{ e.primary }}</span>
+            </span>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div data-screen-label="T15b.6 Übergabe" style="max-width: 1440px; background: linear-gradient(180deg, #f8f3e7, #efe7d5); color: #2f2620; border-radius: 4px; padding: 24px 28px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 14px 30px rgba(0,0,0,.45);">
+    <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 24px;">Was T15 entscheidet — und der Tisch ist fertig</span>
+    <span style="font-size: 15px; line-height: 1.6; color: #4a4038; max-width: 100ch;">Ein Dialog erscheint <strong>nur, wenn etwas verloren geht</strong>: elf Nachfragen bleiben, der Rest wird eine sofortige Aktion mit „Rückgängig“ im Toast. Titel ist die Frage, Text die Folge, Knopf das Verb — „Bist du sicher?“ kommt nicht vor, und das Verb steht nie als „OK“ da. Zerstörendes ist rot gefüllt und steht rechts, Abbrechen links und ohne Fläche. Toasts sitzen am Telefon über dem Dock und am Desktop unten links, höchstens einer, Fehler bleiben stehen. Das „…“-Menü hat in allen vier Auftritten dieselbe Reihenfolge: Ändern · Teilen · Umkehrbares · Zerstörendes. Fehlende Antworten von BGG sind kein Dialog, sondern der Leerzustand des Sheets mit einem Weg zurück.</span>
+    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+      <sc-for list="{{ briefs }}" as="b" hint-placeholder-count="16">
+        <span style="display: inline-flex; align-items: center; gap: 7px; min-height: 34px; padding: 0 11px; border-radius: 3px; background: #e7dcc4; font-weight: 700; font-size: 13px;"><i class="ti ti-check" style="color: #2f6f3f;"></i> {{ b.label }}</span>
+      </sc-for>
+    </div>
+    <span style="font-size: 14px; line-height: 1.6; color: #6b5a45;">Damit liegt „Der Tisch“ vollständig vor: Bauteile, beide Breiten für Runde und Session, Konto, leere Zustände, Farben, Vokabular, Bewegung, Karte und Marke, öffentliche Flächen, beide Stufe-2-Pakete und die Overlays. Phase 2 übernimmt die Liste als X1–X15 — mit den vier Regeln aus der Prüfung als Startbedingung.</span>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1760}}">
+class Component extends DCLogic {
+  renderVals() {
+    const NOTE = 'font-size: 12px; font-weight: 700; color: #8f2f22; background: #f7e0d6; border-radius: 3px; padding: 7px 10px; line-height: 1.45;';
+    const danger = { primaryBg: '#8f2f22', primaryBorder: '#b5432a', primaryInk: '#fdf4e4' };
+    const calm = { primaryBg: 'linear-gradient(180deg, #f6d795, #d9a951)', primaryBorder: '#a87a2e', primaryInk: '#3b2a12' };
+
+    const rules = [
+      { n: '1', title: 'Nur bei echtem Verlust fragen', text: 'Alles Umkehrbare passiert sofort und bekommt einen Toast mit „Rückgängig“. Aussortieren, Comeback, Tag setzen, Cover tauschen brauchen keine Nachfrage.' },
+      { n: '2', title: 'Titel ist die Frage, Text die Folge', text: 'Der Titel nennt die Sache („Session löschen?“), der Text sagt, was danach fehlt — namentlich, mit Datum. Kein „Bist du sicher?“, kein „Achtung“.' },
+      { n: '3', title: 'Der Knopf trägt das Verb', text: 'Löschen, Aussortieren, Übertragen, Verlassen — nie „OK“, nie „Ja“. Abbrechen steht links und ohne Fläche.' },
+      { n: '4', title: 'Zerstörend ist rot und rechts', text: 'Rotes Feld mit Papierschrift, immer an derselben Stelle. Ein Dialog hat nie zwei gefüllte Knöpfe.' },
+    ];
+
+    const dialogs = [
+      {
+        trigger: 'Chronik · „…“ → Session löschen', title: 'Session löschen?',
+        body: '„Nordlichter“ vom 19.09. verschwindet aus Chronik und Pokale. Das lässt sich nicht rückgängig machen.',
+        note: '', cancel: 'Abbrechen', primary: 'Löschen', ...danger,
+      },
+      {
+        trigger: 'Spielepass · Aus dem Regal löschen', title: '„Nordlichter“ endgültig löschen?',
+        body: 'Das Spiel verschwindet mit allen Wertungen. Wenn es nur aus dem Regal soll: aussortieren — dann bleibt es unter „Aussortiert“ einsehbar.',
+        note: '', cancel: 'Abbrechen', primary: 'Endgültig löschen', ...danger,
+      },
+      {
+        trigger: 'Einstellungen · Runde löschen', title: 'Runde löschen?',
+        body: 'Löscht diese Runde mit allen Spielen, Sessions und Wertungen. Das lässt sich nicht rückgängig machen.',
+        note: 'Tippe „Donnerstagsrunde“, um zu bestätigen.', cancel: 'Abbrechen', primary: 'Runde löschen', ...danger,
+      },
+      {
+        trigger: 'Einstellungen · Runde verlassen', title: 'Runde verlassen?',
+        body: 'Du gibst deinen Zugriff auf diese geteilte Runde ab. Die Runde selbst bleibt bestehen, deine Wertungen bleiben anonym erhalten.',
+        note: '', cancel: 'Bleiben', primary: 'Verlassen', ...danger,
+      },
+      {
+        trigger: 'Session läuft · Zurücksetzen', title: 'Abstimmung zurücksetzen?',
+        body: 'Alle Wertungen dieser Session gehen verloren, die gezogenen Spiele bleiben. Danach wird von vorn gewertet.',
+        note: '', cancel: 'Abbrechen', primary: 'Zurücksetzen', ...danger,
+      },
+      {
+        trigger: 'Sheet mit Eingabe · schließen', title: 'Änderungen verwerfen?',
+        body: 'Du hast den Namen und die Spielerzahl geändert. Beim Schließen bleibt das Spiel, wie es war.',
+        note: '', cancel: 'Weiter bearbeiten', primary: 'Verwerfen', ...danger,
+      },
+    ].map((d) => ({ ...d, noteStyle: d.note ? NOTE : 'display: none;' }));
+
+    const tone = (t) => t === 'zerstörend'
+      ? 'font-weight: 800; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #fdeee8; background: #8f2f22; border-radius: 3px; padding: 4px 8px; justify-self: start;'
+      : 'font-weight: 800; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #3b2a12; background: #e8c168; border-radius: 3px; padding: 4px 8px; justify-self: start;';
+
+    const allDialogs = [
+      ['Chronik · Session löschen', 'Session löschen?', '„{Spiel}“ vom {Datum} verschwindet aus Chronik und Pokale.', 'Löschen', 'zerstörend'],
+      ['Spielepass · endgültig löschen', '„{Spiel}“ endgültig löschen?', 'Mit allen Wertungen. Alternative: aussortieren.', 'Endgültig löschen', 'zerstörend'],
+      ['Regal · Auswahl löschen', '{n} Spiele endgültig löschen?', 'Das lässt sich nicht rückgängig machen.', 'Löschen', 'zerstörend'],
+      ['Einstellungen · Runde löschen', 'Runde löschen?', 'Mit allen Spielen, Sessions und Wertungen. Name eintippen.', 'Runde löschen', 'zerstörend'],
+      ['Einstellungen · Runde verlassen', 'Runde verlassen?', 'Zugriff weg, Runde bleibt, Wertungen bleiben anonym.', 'Verlassen', 'zerstörend'],
+      ['Mitglied · aus der Runde nehmen', '{Name} aus der Runde nehmen?', 'Der Platz verschwindet, die Wertungen bleiben anonym erhalten.', 'Entfernen', 'zerstörend'],
+      ['Session · Abstimmung zurücksetzen', 'Abstimmung zurücksetzen?', 'Alle Wertungen dieser Session gehen verloren.', 'Zurücksetzen', 'zerstörend'],
+      ['Session · anderes Spiel gespielt', 'Anderes Spiel eintragen?', 'Das Ergebnis zeigt danach {Spiel}; die Wertungen bleiben, wie sie sind.', 'Eintragen', 'nachfragen'],
+      ['Ergebnis · Sieger ändern', 'Sieger ändern?', 'Pokale und Bilanz rechnen neu.', 'Ändern', 'nachfragen'],
+      ['Sheet mit Eingabe · schließen', 'Änderungen verwerfen?', 'Beim Schließen bleibt alles, wie es war.', 'Verwerfen', 'zerstörend'],
+      ['Konto · löschen', 'Konto löschen?', 'Du verschwindest aus allen Runden; deine Wertungen bleiben anonym dort.', 'Konto löschen', 'zerstörend'],
+      ['BGG · Übernahme mit Kontingent', '{n} Spiele passen nicht mehr', 'Die Runde fasst {m} Spiele. Weniger auswählen oder aufräumen.', 'Auswahl ändern', 'nachfragen'],
+      ['Regal · Übertragen', '{n} Spiele übertragen?', 'Sie erscheinen zusätzlich in {Runde}. Hier bleiben sie erhalten.', 'Übertragen', 'nachfragen'],
+      ['Wunschliste · ins Regal', '„{Spiel}“ ins Regal stellen?', 'Es verlässt die Wunschliste und kommt in den Topf.', 'Ins Regal', 'nachfragen'],
+      ['Session · löschen während sie läuft', 'Laufende Session abbrechen?', 'Die bisherigen Wertungen gehen verloren.', 'Abbrechen', 'zerstörend'],
+      ['Einladung · Link neu erzeugen', 'Alten Link ungültig machen?', 'Wer den alten Link hat, kommt nicht mehr hinein.', 'Neu erzeugen', 'nachfragen'],
+    ].map(([trigger, title, body, primary, t]) => ({ trigger, title, body, primary, tone: t, toneStyle: tone(t) }));
+
+    const undoList = 'Aussortieren · Comeback · Durchgespielt setzen · auf die Wunschliste · Tag setzen und lösen · Cover tauschen · Gast hinzufügen · Platz an- und abwählen · Filter setzen · Sortierung ändern · Spiel hinzufügen · Teams bilden · Freundschaft annehmen · Posteingang leeren';
+
+    const toasts = [
+      { icon: 'ti ti-check', iconInk: '#a8dcb4', bg: '#23543c', border: '#3f7a5c', ink: '#eaf6ec', text: '„Nordlichter“ ist im Regal.', hint: '', action: 'Rückgängig' },
+      { icon: 'ti ti-archive', iconInk: '#a8dcb4', bg: '#23543c', border: '#3f7a5c', ink: '#eaf6ec', text: '„Zugvögel“ aussortiert', hint: 'Zu finden unter „Nicht im Regal“.', action: 'Rückgängig' },
+      { icon: 'ti ti-alert-triangle', iconInk: '#f7c0ae', bg: '#6a2118', border: '#a5382a', ink: '#fdeee8', text: 'BoardGameGeek ist gerade nicht erreichbar.', hint: 'Das Spiel lässt sich trotzdem selbst eintragen.', action: 'Erneut' },
+      { icon: 'ti ti-hourglass', iconInk: '#f0cf86', bg: '#4a3423', border: '#b98a55', ink: '#f6ecd8', text: 'BoardGameGeek stellt deine Sammlung zusammen.', hint: 'Das dauert bei großen Sammlungen einen Moment.', action: '' },
+      { icon: 'ti ti-share', iconInk: '#a8dcb4', bg: '#23543c', border: '#3f7a5c', ink: '#eaf6ec', text: 'Link kopiert', hint: '', action: '' },
+    ].map((t) => ({
+      ...t,
+      hintStyle: t.hint ? 'font-size: 12px; font-weight: 600; opacity: .9;' : 'display: none;',
+      actionStyle: t.action ? 'margin-left: auto; min-height: 24px; padding: 0 2px; font-weight: 700; font-size: 13px; text-decoration: underline; flex: none;' : 'display: none;',
+    }));
+
+    const menus = [
+      {
+        where: 'Am Spiel (Regal, Spielepass)',
+        rows: [
+          { label: 'Bearbeiten', icon: 'ti ti-pencil', ink: '#2f2620' },
+          { label: 'Cover wählen', icon: 'ti ti-photo', ink: '#2f2620' },
+          { label: 'In andere Runde', icon: 'ti ti-arrows-split', ink: '#2f2620' },
+          { label: 'Aussortieren', icon: 'ti ti-archive', ink: '#2f2620' },
+          { label: 'Endgültig löschen', icon: 'ti ti-trash', ink: '#8f2f22' },
+        ],
+      },
+      {
+        where: 'An der Session (Ergebnis, Chronik)',
+        rows: [
+          { label: 'Sieger ändern', icon: 'ti ti-trophy', ink: '#2f2620' },
+          { label: 'Anderes Spiel', icon: 'ti ti-arrows-split', ink: '#2f2620' },
+          { label: 'Teilen', icon: 'ti ti-share', ink: '#2f2620' },
+          { label: 'Zurücksetzen', icon: 'ti ti-refresh', ink: '#2f2620' },
+          { label: 'Session löschen', icon: 'ti ti-trash', ink: '#8f2f22' },
+        ],
+      },
+      {
+        where: 'Am Mitglied (Hub, Mitgliedsseite)',
+        rows: [
+          { label: 'Bearbeiten', icon: 'ti ti-pencil', ink: '#2f2620' },
+          { label: 'Farbe', icon: 'ti ti-palette', ink: '#2f2620' },
+          { label: 'Spielerkarte ansehen', icon: 'ti ti-user-circle', ink: '#2f2620' },
+          { label: 'Aus der Runde nehmen', icon: 'ti ti-user-x', ink: '#8f2f22' },
+        ],
+      },
+      {
+        where: 'An der Runde (Lobby, Einstellungen)',
+        rows: [
+          { label: 'Einstellungen', icon: 'ti ti-settings', ink: '#2f2620' },
+          { label: 'Einladen', icon: 'ti ti-user-plus', ink: '#2f2620' },
+          { label: 'Filz der Runde', icon: 'ti ti-palette', ink: '#2f2620' },
+          { label: 'Runde verlassen', icon: 'ti ti-user-x', ink: '#8f2f22' },
+          { label: 'Runde löschen', icon: 'ti ti-trash', ink: '#8f2f22' },
+        ],
+      },
+    ];
+
+    const errors = [
+      {
+        where: 'Spiel hinzufügen · kein Treffer', title: 'Spiel hinzufügen', icon: 'ti ti-search',
+        head: 'Nichts gefunden für „nordlchter“', text: 'Vielleicht ein Tippfehler — oder das Spiel steht nicht bei BoardGameGeek. Du kannst es selbst eintragen, mit Titel und Spielerzahl.',
+        primary: 'Selbst eintragen', icon2: 'ti ti-pencil', secondary: 'Neu suchen',
+      },
+      {
+        where: 'Spiel hinzufügen · BGG antwortet nicht', title: 'Spiel hinzufügen', icon: 'ti ti-alert-triangle',
+        head: 'BoardGameGeek antwortet gerade nicht', text: 'Das liegt nicht an euch. Später noch einmal suchen — oder das Spiel jetzt selbst eintragen und später verknüpfen.',
+        primary: 'Erneut versuchen', icon2: 'ti ti-refresh', secondary: 'Selbst eintragen',
+      },
+      {
+        where: 'BGG-Sammlung · nichts markiert', title: 'BGG-Sammlung übernehmen', icon: 'ti ti-cards',
+        head: 'In deiner Sammlung ist nichts als „im Besitz“ markiert', text: 'Markiere Spiele auf boardgamegeek.com als „Own“ und versuche es dann noch einmal. Die Sammlung muss öffentlich sein.',
+        primary: 'Erneut versuchen', icon2: 'ti ti-refresh', secondary: 'Schließen',
+      },
+    ].map((e) => ({ ...e, secondaryStyle: e.secondary ? 'min-height: 48px; padding: 0 14px; border-radius: 4px; border: 1px solid rgba(47,38,32,.25); display: flex; align-items: center; font-weight: 700; font-size: 14px; color: #4a4038; flex: none;' : 'display: none;' }));
+
+    const briefs = [
+      'T1 Bauteile', 'T2 Telefon-Kern', 'T3 Runde Desktop', 'T4 Session Desktop', 'T5 Konto', 'T6 Telefon-Rest',
+      'T7 Leerzustände', 'T8 Farben', 'T9 Vokabular', 'T10 Bewegung', 'T11 Karte & Marke', 'T12 Öffentlich',
+      'T13 Stufe 2a', 'T14 Stufe 2b', 'T15a Sheets', 'T15b Dialoge',
+    ].map((label) => ({ label }));
+
+    return { rules, dialogs, allDialogs, undoList, toasts, menus, errors, briefs };
+  }
+}
+
+</script>
+</body>
+</html>
