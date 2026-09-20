@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="design_doc_mode" content="canvas">
+  <link rel="stylesheet" href="../../../public/fonts/tabler-icons.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #cfe0e7; font-family: 'Figtree', sans-serif; }
+    a { color: #0e6690; text-decoration: none; }
+    a:hover { color: #0a4f70; text-decoration: underline; }
+  </style>
+</helmet>
+<div style="display: flex; flex-direction: column; gap: 40px; padding: 44px; width: max-content; color: #10283a; background-color: #e4f1f5; background-image: radial-gradient(900px 500px at 18% 0%, rgba(255,255,255,.7), transparent 65%), radial-gradient(900px 600px at 86% 40%, rgba(255,255,255,.5), transparent 70%);">
+
+  <div data-screen-label="O15b Kopf" style="max-width: 1240px; display: flex; flex-direction: column; gap: 12px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 22px; padding: 26px 30px; box-shadow: 0 14px 34px rgba(14,60,90,.14);">
+    <div style="display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;">
+      <span style="font-weight: 700; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: #f7fbfc; background: #0e6690; border-radius: 999px; padding: 5px 12px;">O15b</span>
+      <h1 style="margin: 0; font-family: 'Comfortaa'; font-weight: 700; font-size: 36px; line-height: 1.05;">Dialoge · Toasts · das „…“-Menü — Ocean</h1>
+      <span style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #3f5a6b;">20.09.2026 · Phase 2, Brief 13 von 13 (Teil b)</span>
+    </div>
+    <p style="margin: 0; font-size: 16px; line-height: 1.55; max-width: 92ch; color: #3f5a6b;">Die Dialogfrage wird umgedreht: <strong style="color: #10283a;">ein Dialog erscheint nur, wenn etwas verloren geht.</strong> Alles Umkehrbare passiert sofort und meldet sich als Toast mit „Rückgängig“. Von den rund dreißig Nachfragen der heutigen App bleiben so <strong style="color: #10283a;">elf</strong>.</p>
+    <div style="display: flex; flex-wrap: wrap; gap: 10px; font-size: 13px; font-weight: 600;">
+      <span style="background: #d7e9f0; border-radius: 999px; padding: 6px 13px;"><i class="ti ti-check" style="color: #1a6b4a;"></i> Titel ist die Frage, Text die Folge, Knopf das Verb</span>
+      <span style="background: #d7e9f0; border-radius: 999px; padding: 6px 13px;"><i class="ti ti-check" style="color: #1a6b4a;"></i> Kein „Bist du sicher?“, kein „OK“</span>
+      <span style="background: #d7e9f0; border-radius: 999px; padding: 6px 13px;"><i class="ti ti-check" style="color: #1a6b4a;"></i> Zerstörendes rot gefüllt und rechts</span>
+    </div>
+    <div style="display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; background: #f7ded6; border-radius: 14px; font-size: 13px; line-height: 1.55; color: #10283a;"><i class="ti ti-alert-triangle" style="font-size: 18px; color: #a3392b; flex: none; margin-top: 1px;"></i><span><strong>Vokabular-Revert 20.09.2026:</strong> Bucht → <strong>Runde</strong> · Küste (Navigation) → <strong>Start</strong> · Riff → <strong>Regal</strong> · Gezeiten → <strong>Chronik</strong> · Perlenkette → <strong>Pokale</strong> · Tauchgang → <strong>Session</strong> · Perle / „hat die Perle“ → <strong>Sieg / „hat gewonnen“</strong> · Boje → <strong>Mitglied</strong> · Jenseits des Riffs → <strong>Nicht im Regal</strong> · Strandgut → <strong>Aussortiert</strong> · Gehoben → <strong>Durchgespielt</strong> · Am Horizont → <strong>Wunschliste</strong> · Flaschenpost → <strong>Könnte euch gefallen</strong> · Werft → <strong>Kümmerliste</strong> · Echolot → <strong>Ergebnis</strong> · Tauchkarte → <strong>Wertungskarte</strong> · Mehrere Boote → <strong>Mehrere Tische</strong> · „Wer taucht mit?“ → <strong>„Wer spielt mit?“</strong>. Eigen bleiben nur: <strong>Muschel · Abtauchen · auftauchen · in der Tiefe · „Wie viele holen wir hoch?“</strong> (<a href="Ocean-O9-Vokabular.dc.html" style="display: inline-flex; align-items: center; min-height: 24px; padding: 0 3px;">O9</a>).</span></div>
+  </div>
+
+  <div data-screen-label="O15b.1 Die Regel" style="display: flex; flex-direction: column; gap: 14px;">
+    <div style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #3f5a6b; line-height: 1.4;">O15b.1 · Was fragt und was einfach passiert — dieselbe Liste, zwei Spalten</div>
+    <div style="display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap;">
+      <div style="width: 610px; display: flex; flex-direction: column; gap: 10px; padding: 22px 24px; background: #f7fbfc; border: 1.5px solid #e3cbc6; border-radius: 20px; box-sizing: border-box;">
+        <span style="display: flex; align-items: center; gap: 10px;"><i class="ti ti-lock-question" style="font-size: 20px; color: #a3392b;"></i><span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 19px;">Fragt nach · 11</span></span>
+        <span style="font-size: 13px; font-weight: 600; color: #3f5a6b; line-height: 1.5;">Etwas geht verloren, das sich nicht in einem Klick zurückholen lässt.</span>
+        <sc-for list="{{ asks }}" as="a" hint-placeholder-count="11">
+          <span style="display: flex; align-items: baseline; gap: 12px; padding: 8px 0; border-top: 1px solid #f0dcd8;">
+            <span style="font-weight: 700; font-size: 14.5px; min-width: 210px;">{{ a.what }}</span>
+            <span style="font-size: 13px; font-weight: 600; color: #3f5a6b; line-height: 1.45;">{{ a.why }}</span>
+          </span>
+        </sc-for>
+      </div>
+      <div style="width: 610px; display: flex; flex-direction: column; gap: 10px; padding: 22px 24px; background: #f7fbfc; border: 1.5px solid #cde7dc; border-radius: 20px; box-sizing: border-box;">
+        <span style="display: flex; align-items: center; gap: 10px;"><i class="ti ti-bolt" style="font-size: 20px; color: #1a6b4a;"></i><span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 19px;">Passiert sofort · 19</span></span>
+        <span style="font-size: 13px; font-weight: 600; color: #3f5a6b; line-height: 1.5;">Umkehrbar — der Toast trägt „Rückgängig“ und steht 7 Sekunden.</span>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px; padding-top: 8px;">
+          <sc-for list="{{ instant }}" as="i" hint-placeholder-count="19">
+            <span style="padding: 8px 14px; border-radius: 999px; background: #eaf4f8; font-weight: 700; font-size: 13.5px;">{{ i }}</span>
+          </sc-for>
+        </div>
+        <span style="font-size: 12.5px; font-weight: 600; color: #3f5a6b; line-height: 1.55; padding-top: 12px; border-top: 1px solid #dfebf1;">Das streicht rund ein Drittel der heutigen Nachfragen. Wer etwas versehentlich tut, merkt es innerhalb von Sekunden — und genau so lange steht der Weg zurück offen.</span>
+      </div>
+    </div>
+  </div>
+
+  <div data-screen-label="O15b.2 Die elf Dialoge" style="display: flex; flex-direction: column; gap: 14px;">
+    <div style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #3f5a6b; line-height: 1.4;">O15b.2 · Die elf, ausgeschrieben. Der Titel ist die Frage, der Text die Folge, der Knopf das Verb.</div>
+    <div style="display: grid; grid-template-columns: repeat(3, 400px); gap: 20px; align-items: start;">
+      <sc-for list="{{ dialogs }}" as="d" hint-placeholder-count="11">
+        <div style="display: flex; flex-direction: column; gap: 10px; padding: 22px 24px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 22px; box-shadow: 0 22px 48px rgba(14,60,90,.16); box-sizing: border-box;">
+          <span style="font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #0e6690;">{{ d.from }}</span>
+          <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 20px; line-height: 1.2;">{{ d.title }}</span>
+          <span style="font-size: 14px; font-weight: 600; color: #3f5a6b; line-height: 1.5;">{{ d.body }}</span>
+          <sc-if value="{{ d.hasNote }}" hint-placeholder-val="{{ false }}">
+            <span style="display: flex; align-items: flex-start; gap: 9px; padding: 11px 13px; background: #eaf4f8; border-radius: 13px; font-size: 12.5px; font-weight: 600; color: #3f5a6b; line-height: 1.45;"><i class="ti ti-info-circle" style="font-size: 16px; color: #0e6690; flex: none; margin-top: 1px;"></i>{{ d.note }}</span>
+          </sc-if>
+          <span style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 6px;">
+            <span style="padding: 11px 18px; border-radius: 999px; color: #0e6690; font-weight: 700; font-size: 15px; min-height: 44px; display: inline-flex; align-items: center;">{{ d.cancel }}</span>
+            <span style="padding: 11px 18px; border-radius: 999px; background: {{ d.ctaBg }}; color: {{ d.ctaInk }}; font-weight: 700; font-size: 15px; min-height: 44px; display: inline-flex; align-items: center;">{{ d.cta }}</span>
+          </span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div data-screen-label="O15b.3 Toasts" style="display: flex; flex-direction: column; gap: 14px;">
+    <div style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #3f5a6b; line-height: 1.4;">O15b.3 · Fünf Typen, ein Sitz: unten mittig, am Telefon über dem Dock. Nie mehr als einer gleichzeitig — der neue verdrängt den alten.</div>
+    <div style="display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap;">
+      <div style="width: 700px; display: flex; flex-direction: column; gap: 14px; padding: 22px 24px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 20px; box-shadow: 0 6px 18px rgba(14,60,90,.1); box-sizing: border-box;">
+        <sc-for list="{{ toasts }}" as="t" hint-placeholder-count="5">
+          <div style="display: flex; flex-direction: column; gap: 8px; padding: 12px 0; border-top: 1px solid #dfebf1;">
+            <span style="display: flex; align-items: baseline; gap: 10px;"><span style="font-weight: 700; font-size: 14.5px;">{{ t.type }}</span><span style="font-family: ui-monospace, Menlo, monospace; font-size: 12px; color: #3f5a6b;">{{ t.spec }}</span></span>
+            <span style="display: inline-flex; align-items: center; gap: 11px; padding: 13px 18px; border-radius: 999px; background: {{ t.bg }}; color: {{ t.ink }}; font-weight: 600; font-size: 14px; box-shadow: 0 14px 30px rgba(14,60,90,.28); align-self: flex-start;">
+              <i class="ti {{ t.icon }}" style="font-size: 18px;"></i>{{ t.text }}
+              <sc-if value="{{ t.hasAction }}" hint-placeholder-val="{{ false }}">
+                <span style="margin-left: 8px; font-weight: 700; color: {{ t.actionInk }}; display: inline-flex; align-items: center; min-height: 24px; padding: 0 4px;">{{ t.action }}</span>
+              </sc-if>
+            </span>
+          </div>
+        </sc-for>
+      </div>
+      <div style="width: 390px; height: 420px; position: relative; overflow: hidden; border-radius: 28px; background-color: #e4f1f5; box-shadow: 0 18px 44px rgba(14,60,90,.2);">
+        <div style="position: absolute; left: 0; right: 0; top: 0; height: 48px; display: flex; align-items: center; gap: 10px; padding: 0 16px; background: #f7fbfc; border-bottom: 1px solid #c9dde6;">
+          <span style="width: 30px; height: 30px; border-radius: 50%; background: #0e6690; color: #f7fbfc; display: grid; place-items: center;"><i class="ti ti-tornado" style="font-size: 16px;"></i></span>
+          <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 16px;">Das Regal</span>
+        </div>
+        <div style="position: absolute; left: 16px; right: 16px; top: 62px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <span style="border-radius: 14px; overflow: hidden; background: #ffffff; border: 1px solid #c9dde6;"><span style="display: block; aspect-ratio: 4/3; background: linear-gradient(145deg, oklch(.6 .13 200), oklch(.36 .12 230));"></span><span style="display: block; padding: 8px 10px; font-weight: 700; font-size: 13px;">Nordlichter</span></span>
+          <span style="border-radius: 14px; overflow: hidden; background: #ffffff; border: 1px solid #c9dde6; opacity: .45;"><span style="display: block; aspect-ratio: 4/3; background: linear-gradient(145deg, oklch(.6 .13 20), oklch(.36 .12 50));"></span><span style="display: block; padding: 8px 10px; font-weight: 700; font-size: 13px;">Zinnober</span></span>
+        </div>
+        <span style="position: absolute; left: 14px; right: 14px; bottom: 90px; display: flex; align-items: center; gap: 10px; padding: 13px 16px; border-radius: 999px; background: #10283a; color: #f7fbfc; font-weight: 600; font-size: 13.5px; box-shadow: 0 14px 30px rgba(14,60,90,.34); box-sizing: border-box;"><i class="ti ti-archive" style="font-size: 17px;"></i>Zinnober ist aussortiert.<span style="margin-left: auto; font-weight: 700; color: #9ed4ee; display: inline-flex; align-items: center; min-height: 24px; padding: 0 4px;">Rückgängig</span></span>
+        <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 76px; display: flex; background: #f7fbfc; border-top: 1px solid #c9dde6; padding: 6px 8px 14px; box-sizing: border-box;">
+          <sc-for list="{{ dock }}" as="d" hint-placeholder-count="4">
+            <span style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; border-radius: 16px; background: {{ d.bg }}; min-height: 56px;"><i class="ti {{ d.icon }}" style="font-size: 22px; color: {{ d.ink }};"></i><span style="font-size: 11px; font-weight: 700;">{{ d.label }}</span></span>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div data-screen-label="O15b.4 Das Menü" style="display: flex; flex-direction: column; gap: 14px;">
+    <div style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #3f5a6b; line-height: 1.4;">O15b.4 · Das „…“-Menü in vier Auftritten — immer dieselbe Reihenfolge: Ändern · Teilen · Umkehrbares · Zerstörendes</div>
+    <div style="display: grid; grid-template-columns: repeat(4, 300px); gap: 20px; align-items: start;">
+      <sc-for list="{{ menus }}" as="m" hint-placeholder-count="4">
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <span style="display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #0e6690;"><span style="width: 28px; height: 28px; border-radius: 50%; background: #d7e9f0; display: grid; place-items: center; color: #10283a; font-size: 15px;"><i class="ti ti-dots"></i></span>{{ m.where }}</span>
+          <div style="border-radius: 16px; background: #f7fbfc; border: 1px solid #c9dde6; padding: 8px; box-shadow: 0 22px 48px rgba(14,60,90,.2); display: flex; flex-direction: column;">
+            <sc-for list="{{ m.items }}" as="i" hint-placeholder-count="5">
+              <span style="display: flex; align-items: center; gap: 11px; padding: 11px 12px; border-radius: 11px; min-height: 44px; border-top: {{ i.sep }};">
+                <i class="ti {{ i.icon }}" style="font-size: 18px; color: {{ i.ink }}; width: 20px; flex: none;"></i>
+                <span style="font-weight: 700; font-size: 14.5px; color: {{ i.ink }};">{{ i.label }}</span>
+              </span>
+            </sc-for>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div data-screen-label="O15b.5 Herkunft" style="max-width: 1240px; display: flex; flex-direction: column; gap: 12px; padding: 22px 24px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 20px; box-shadow: 0 6px 18px rgba(14,60,90,.1);">
+    <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 20px;">Woher die Wörter kommen</span>
+    <span style="font-size: 14px; font-weight: 600; color: #3f5a6b; line-height: 1.6; max-width: 100ch;">Die Struktur der elf Dialoge stammt aus den Nachfragen, die die App heute stellt. <strong style="color: #10283a;">Rund ein Drittel der Texte ist wörtlich übernommen</strong> — überall dort, wo die App bereits klar formuliert („1× gar nicht“, „Sortiert: Bewertung“, die drei Schnellstart-Presets, die Einträge der Kümmerliste). Der Rest ist neu geschrieben, weil Ocean andere Substantive hat: aus „Regal“ wird „Regal“, aus „Session löschen“ wird „Session löschen“. <strong style="color: #10283a;">Kein Dialog erfindet eine Funktion</strong>, die es nicht gibt — wo unklar war, ob die App etwas kann, steht der Dialog nicht in der Liste.</span>
+  </div>
+
+  <div data-screen-label="O15b.6 Übergabe" style="max-width: 1240px; background: #10283a; color: #eaf4f8; border-radius: 22px; padding: 24px 28px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 14px 34px rgba(14,60,90,.2);">
+    <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 20px; color: #f7fbfc;">Ocean ist vollständig</span>
+    <span style="font-size: 15px; line-height: 1.65; max-width: 100ch;">O1 bis O15b decken ab: Tokens und Bauteile · Telefon und Desktop für Stufe 1 und 2 · Konto und Designwahl · leere und junge Zustände · gemessene Farben, Score-Rampe und Rückblickkarte · Vokabular mit Glossar in DE und EN · Bewegung mit statischen Endbildern · achtzehn Overlays, elf Dialoge, fünf Toasts und das Menü. <strong style="color: #f7fbfc;">Nicht enthalten, weil face-only:</strong> Markenassets (O11) und die öffentlichen Flächen (O12) — die hat nur der Tisch. Nächster Schritt ist das Übergabepaket und die Prüfung durch Claude Code.</span>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1340,&quot;height&quot;:1000}}">
+class Component extends DCLogic {
+  renderVals() {
+    const asks = [
+      { what: 'Session löschen', why: 'Das Ergebnis verschwindet aus der Chronik, der Sieg wird zurückgenommen.' },
+      { what: 'Runde löschen', why: 'Regal, Chronik und Pokale sind weg — für alle.' },
+      { what: 'Runde verlassen', why: 'Du siehst die Chronik danach nicht mehr.' },
+      { what: 'Jemanden entfernen', why: 'Die Person verliert den Zugang; ihre Siege bleiben stehen.' },
+      { what: 'Runde übertragen', why: 'Du gibst alle Rechte ab und kannst sie nicht zurücknehmen.' },
+      { what: 'Konto löschen', why: 'Endgültig, mit allem was daran hängt.' },
+      { what: 'Wertung abbrechen', why: 'Die bereits abgegebenen Stimmen dieses Sessions gehen verloren.' },
+      { what: 'Session zurücksetzen', why: 'Alle Wertungen werden gelöscht, die Session beginnt von vorn.' },
+      { what: 'Spiel aus dem Regal löschen', why: 'Anders als Aussortiert: die Sessions verlieren ihre Verbindung.' },
+      { what: 'BGG-Sammlung ersetzen', why: 'Eigene Änderungen an Titeln und Covern werden überschrieben.' },
+      { what: 'Ungespeichert verlassen', why: 'Die Eingaben in diesem Formular gehen verloren.' },
+    ];
+
+    const instant = [
+      'Aussortieren', 'Zurück ins Regal', 'Als durchgespielt markieren', 'Auf die Wunschliste setzen',
+      'Von der Wunschliste nehmen', 'Tag hinzufügen', 'Tag entfernen', 'Cover wechseln', 'Gast dazunehmen',
+      'Gast entfernen', 'Filter setzen', 'Filter zurücksetzen', 'Sortierung ändern', 'Team bilden',
+      'Team auflösen', 'Farbe ändern', 'Marker ändern', 'Tische mischen', 'Könnte euch gefallen wegwischen',
+    ];
+
+    const D = (from, title, body, cta, cancel, danger, note) => ({
+      from, title, body, cta, cancel,
+      ctaBg: danger ? '#a3392b' : '#0e6690',
+      ctaInk: danger ? '#fdf4f2' : '#f7fbfc',
+      note: note || '', hasNote: !!note,
+    });
+
+    const dialogs = [
+      D('Ergebnis', 'Session löschen?', 'Das Ergebnis vom 14. September verschwindet aus der Chronik. Jonas’ Sieg wird zurückgenommen.', 'Löschen', 'Behalten', true),
+      D('Einstellungen', 'Die ganze Runde löschen?', '12 Spiele im Regal, 23 Sessions und alle Pokale sind danach weg — auch für Marco, Jonas und Tim.', 'Runde löschen', 'Abbrechen', true, 'Tipp: „Runde verlassen“ nimmt nur dich heraus und lässt den Rest stehen.'),
+      D('Einstellungen', 'Die Runde verlassen?', 'Du siehst die Chronik und das Regal danach nicht mehr. Deine 7 Siege bleiben in den Pokalen stehen.', 'Verlassen', 'Bleiben', true),
+      D('Einstellungen', 'Tim aus der Runde nehmen?', 'Tim verliert den Zugang zu Regal und Chronik. Seine 2 Siege und seine Wertungen bleiben erhalten.', 'Entfernen', 'Abbrechen', true),
+      D('Einstellungen', 'Die Runde an Jonas übertragen?', 'Jonas bekommt alle Rechte, du behältst „Mitspielen“. Zurücknehmen kann das nur noch Jonas.', 'Übertragen', 'Abbrechen', false),
+      D('Konto', 'Dein Konto löschen?', 'Alle Runden, in denen nur du bist, verschwinden mit. In den anderen bleibt dein Name als ehemaliges Mitglied stehen.', 'Konto löschen', 'Abbrechen', true, 'Lade vorher deine Daten herunter — danach geht es nicht mehr.'),
+      D('Wertungskarte', 'Wertung abbrechen?', 'Marco und Jonas haben schon gewertet. Ihre Stimmen gehen verloren, die Session beginnt neu.', 'Abbrechen und verwerfen', 'Weiterwerten', true),
+      D('Ergebnis', 'Session zurücksetzen?', 'Alle vier Wertungen werden gelöscht. Dieselben drei Spiele bleiben in der Auswahl.', 'Zurücksetzen', 'Abbrechen', true),
+      D('Spieldetail', '„Nordlichter“ ganz löschen?', 'Anders als Aussortiert: die vier Sessions verlieren ihre Verbindung zum Spiel und zeigen nur noch den Namen.', 'Löschen', 'Aussortieren', true, 'Aussortiert ist fast immer das, was ihr eigentlich wollt.'),
+      D('Regal', 'Sammlung ersetzen?', 'Die 47 Spiele von BGG überschreiben Titel und Cover, die ihr von Hand geändert habt.', 'Ersetzen', 'Nur Neue holen', false),
+      D('Formular', 'Ohne Speichern schließen?', 'Die Änderungen an „Nordlichter“ sind noch nicht gespeichert.', 'Verwerfen', 'Weiter bearbeiten', true),
+    ];
+
+    const toasts = [
+      { type: 'Umkehrbar', spec: '7 s · #10283a · mit Rückgängig', bg: '#10283a', ink: '#f7fbfc', icon: 'ti-archive', text: 'Zinnober ist aussortiert.', hasAction: true, action: 'Rückgängig', actionInk: '#9ed4ee' },
+      { type: 'Bestätigung', spec: '4 s · #1a6b4a · ohne Aktion', bg: '#1a6b4a', ink: '#f4fbf7', icon: 'ti-check', text: 'Gespeichert.', hasAction: false, action: '', actionInk: '' },
+      { type: 'Fehler', spec: '7 s · #a3392b · mit zweitem Versuch', bg: '#a3392b', ink: '#fdf4f2', icon: 'ti-alert-triangle', text: 'BGG antwortet nicht.', hasAction: true, action: 'Nochmal', actionInk: '#fdf4f2' },
+      { type: 'Hinweis', spec: '4 s · #10283a · ohne Aktion', bg: '#10283a', ink: '#f7fbfc', icon: 'ti-info-circle', text: '3 Spiele fehlen, weil ihre Besitzer nicht mitspielen.', hasAction: false, action: '', actionInk: '' },
+      { type: 'Fortschritt', spec: 'bis fertig · #10283a · nicht wegwischbar', bg: '#10283a', ink: '#f7fbfc', icon: 'ti-download', text: 'Holt 47 Spiele von BGG … 23', hasAction: false, action: '', actionInk: '' },
+    ];
+
+    const M = (where, items) => ({
+      where,
+      items: items.map((i, idx) => ({ ...i, ink: i.danger ? '#a3392b' : '#10283a', sep: i.sep ? '1px solid #dfebf1' : 'none' })),
+    });
+    const menus = [
+      M('Am Spiel im Regal', [
+        { label: 'Bearbeiten', icon: 'ti-pencil' },
+        { label: 'Cover wechseln', icon: 'ti-photo' },
+        { label: 'Teilen', icon: 'ti-share', sep: true },
+        { label: 'Aussortieren', icon: 'ti-archive', sep: true },
+        { label: 'Als durchgespielt markieren', icon: 'ti-circle-check' },
+        { label: 'Aus dem Regal löschen', icon: 'ti-trash', danger: true, sep: true },
+      ]),
+      M('Am Session', [
+        { label: 'Anderes Spiel eintragen', icon: 'ti-pencil' },
+        { label: 'Sieger ändern', icon: 'ti-crown' },
+        { label: 'Karte teilen', icon: 'ti-share', sep: true },
+        { label: 'Zurücksetzen', icon: 'ti-refresh', sep: true },
+        { label: 'Session löschen', icon: 'ti-trash', danger: true, sep: true },
+      ]),
+      M('An der Person', [
+        { label: 'Farbe ändern', icon: 'ti-palette' },
+        { label: 'Rechte ändern', icon: 'ti-shield' },
+        { label: 'Spielerkarte ansehen', icon: 'ti-user', sep: true },
+        { label: 'Aus der Runde nehmen', icon: 'ti-user-minus', danger: true, sep: true },
+      ]),
+      M('An der Runde', [
+        { label: 'Umbenennen', icon: 'ti-pencil' },
+        { label: 'Marker ändern', icon: 'ti-palette' },
+        { label: 'Einladungslink', icon: 'ti-link', sep: true },
+        { label: 'Daten herunterladen', icon: 'ti-download' },
+        { label: 'Übertragen', icon: 'ti-arrow-right', sep: true },
+        { label: 'Verlassen', icon: 'ti-logout', danger: true },
+        { label: 'Runde löschen', icon: 'ti-trash', danger: true },
+      ]),
+    ];
+
+    const dock = [
+      { label: 'Start', icon: 'ti-home' }, { label: 'Regal', icon: 'ti-cards' },
+      { label: 'Chronik', icon: 'ti-history' }, { label: 'Pokale', icon: 'ti-trophy' },
+    ].map((d, i) => ({ ...d, bg: i === 1 ? '#cfe6ef' : 'transparent', ink: i === 1 ? '#0e6690' : '#3f5a6b' }));
+
+    return { asks, instant, dialogs, toasts, menus, dock };
+  }
+}
+</script>
+</body>
+</html>

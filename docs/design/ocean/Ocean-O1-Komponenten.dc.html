@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="design_doc_mode" content="canvas">
+  <link rel="stylesheet" href="../../../public/fonts/tabler-icons.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #cfe0e7; font-family: 'Figtree', sans-serif; }
+    a { color: #0e6690; text-decoration: none; }
+    a:hover { color: #0a4f70; text-decoration: underline; }
+    @keyframes o1spin { to { transform: rotate(360deg); } }
+    @keyframes o1rise { 0% { transform: translateY(0); opacity: 0; } 15% { opacity: 1; } 100% { transform: translateY(-34px); opacity: 0; } }
+    @keyframes o1shimmer { 0% { opacity: .4; } 50% { opacity: .85; } 100% { opacity: .4; } }
+  </style>
+</helmet>
+<div style="display: flex; flex-direction: column; gap: 44px; padding: 44px; width: max-content; color: #10283a; background-color: #e4f1f5; background-image: radial-gradient(900px 500px at 18% 0%, rgba(255,255,255,.7), transparent 65%), radial-gradient(900px 600px at 86% 40%, rgba(255,255,255,.5), transparent 70%);">
+
+  <div data-screen-label="O1 Kopf" style="max-width: 1240px; display: flex; flex-direction: column; gap: 14px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 22px; padding: 26px 30px; box-shadow: 0 14px 34px rgba(14,60,90,.14);">
+    <div style="display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;">
+      <span style="font-weight: 700; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: #f7fbfc; background: #0e6690; border-radius: 999px; padding: 5px 12px;">O1</span>
+      <h1 style="margin: 0; font-family: 'Comfortaa'; font-weight: 700; font-size: 38px; line-height: 1.05;">Bauteile &amp; Tokens — Ocean</h1>
+      <span style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #3f5a6b;">20.09.2026 · Phase 2, Brief 1 von 13</span>
+    </div>
+    <p style="margin: 0; font-size: 16px; line-height: 1.55; max-width: 92ch; color: #3f5a6b;">Ein Blatt, keine Screens: Tokens, Schrift, Zustände. Ocean ist ein <strong style="color: #10283a;">helles</strong> Design — die Flächen liegen <strong style="color: #10283a;">über</strong> dem Seitenton, Tiefe kommt aus weichen Schatten, runden Kanten und Wasser: Blasen, Muschel, Tidenlinien. Alles hier ist die Quelle für O2–O15.</p>
+    <div style="display: flex; flex-wrap: wrap; gap: 10px; font-size: 13px; font-weight: 600;">
+      <span style="background: #d7e9f0; border-radius: 999px; padding: 6px 13px;"><i class="ti ti-check" style="color: #1a6b4a;"></i> Kontraste nach WCAG 2.2 wie geschrieben</span>
+      <span style="background: #d7e9f0; border-radius: 999px; padding: 6px 13px;"><i class="ti ti-check" style="color: #1a6b4a;"></i> Ziele ≥ 24 px · 44 px auf Wertungskarte und Dock</span>
+      <span style="background: #d7e9f0; border-radius: 999px; padding: 6px 13px;"><i class="ti ti-check" style="color: #1a6b4a;"></i> 2 Schnitte, beide OFL · Tabler-Subset</span>
+      <span style="background: #f7ded6; border-radius: 999px; padding: 6px 13px; color: #a3392b; font-weight: 700;"><i class="ti ti-alert-triangle"></i> Personenfarben tragen keinen Text unter 24 px — sechs der acht liegen bei 4,3:1</span>
+    </div>
+    <div style="font-size: 14px; line-height: 1.6; color: #3f5a6b; border-top: 1px solid #dfebf1; padding-top: 12px;">Die vier Regeln aus der Tisch-Prüfung gelten hier ab Brief 1, nicht erst ab der Prüfung: <strong style="color: #10283a;">(1)</strong> Akzent- und Personenfarbe erst ab 24 px als Text · <strong style="color: #10283a;">(2)</strong> kein Text auf einem Cover, Titel und Meta stehen auf deckendem Band · <strong style="color: #10283a;">(3)</strong> O1 ist die einzige Token-Quelle, O8 misst nur · <strong style="color: #10283a;">(4)</strong> Wörter aus der App abschreiben, nicht paraphrasieren. Gefäß = <strong style="color: #10283a;">Muschel</strong> · Hauptaktion „Abtauchen“ (§2).</div>
+    <div style="display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; background: #f7ded6; border-radius: 14px; font-size: 13px; line-height: 1.55; color: #10283a;"><i class="ti ti-alert-triangle" style="font-size: 18px; color: #a3392b; flex: none; margin-top: 1px;"></i><span><strong>Vokabular-Revert 20.09.2026:</strong> Bucht → <strong>Runde</strong> · Küste (Navigation) → <strong>Start</strong> · Riff → <strong>Regal</strong> · Gezeiten → <strong>Chronik</strong> · Perlenkette → <strong>Pokale</strong> · Tauchgang → <strong>Session</strong> · Perle / „hat die Perle“ → <strong>Sieg / „hat gewonnen“</strong> · Boje → <strong>Mitglied</strong> · Jenseits des Riffs → <strong>Nicht im Regal</strong> · Strandgut → <strong>Aussortiert</strong> · Gehoben → <strong>Durchgespielt</strong> · Am Horizont → <strong>Wunschliste</strong> · Flaschenpost → <strong>Könnte euch gefallen</strong> · Werft → <strong>Kümmerliste</strong> · Echolot → <strong>Ergebnis</strong> · Tauchkarte → <strong>Wertungskarte</strong> · Mehrere Boote → <strong>Mehrere Tische</strong> · „Wer taucht mit?“ → <strong>„Wer spielt mit?“</strong>. Eigen bleiben nur: <strong>Muschel · Abtauchen · auftauchen · in der Tiefe · „Wie viele holen wir hoch?“</strong> (<a href="Ocean-O9-Vokabular.dc.html" style="display: inline-flex; align-items: center; min-height: 24px; padding: 0 3px;">O9</a>).</span></div>
+  </div>
+
+  <div data-screen-label="O1.1 Tokens" style="display: flex; flex-direction: column; gap: 18px;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 22px;">1 · Tokens</span>
+      <span style="flex: 1; height: 1px; background: linear-gradient(90deg, #a9c4d1, transparent);"></span>
+    </div>
+    <sc-for list="{{ tokenGroups }}" as="g" hint-placeholder-count="5">
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <div style="font-weight: 700; font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: #0e6690;">{{ g.title }}</div>
+        <div style="display: flex; flex-wrap: wrap; gap: 12px; max-width: 1240px;">
+          <sc-for list="{{ g.items }}" as="t" hint-placeholder-count="5">
+            <div style="width: 232px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 16px; overflow: hidden; box-shadow: 0 6px 16px rgba(14,60,90,.10);">
+              <div style="height: 62px; background: {{ t.bg }}; border-bottom: 1px solid #c9dde6; display: flex; align-items: flex-end; justify-content: flex-end; padding: 6px 9px;">
+                <span style="font-family: ui-monospace, Menlo, monospace; font-size: 11px; font-weight: 700; color: {{ t.chipInk }};">{{ t.sample }}</span>
+              </div>
+              <div style="padding: 9px 12px 12px; display: flex; flex-direction: column; gap: 3px;">
+                <span style="font-weight: 700; font-size: 14px;">{{ t.name }}</span>
+                <span style="font-family: ui-monospace, Menlo, monospace; font-size: 12px; color: #0e6690;">{{ t.value }}</span>
+                <span style="font-size: 12px; line-height: 1.45; color: #3f5a6b;">{{ t.use }}</span>
+                <sc-if value="{{ kontrastwerte }}" hint-placeholder-val="{{ true }}">
+                  <span style="font-family: ui-monospace, Menlo, monospace; font-size: 11px; font-weight: 700; color: {{ t.ratioInk }};">{{ t.ratio }}</span>
+                </sc-if>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-for>
+    <div style="display: flex; flex-wrap: wrap; gap: 12px; max-width: 1240px;">
+      <div style="width: 380px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 16px; padding: 16px 18px; display: flex; flex-direction: column; gap: 10px;">
+        <span style="font-weight: 700; font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: #0e6690;">Radien</span>
+        <div style="display: flex; align-items: flex-end; gap: 12px;">
+          <span style="width: 54px; height: 42px; background: #cfe6ef; border-radius: 10px;"></span>
+          <span style="width: 54px; height: 42px; background: #cfe6ef; border-radius: 16px;"></span>
+          <span style="width: 54px; height: 42px; background: #cfe6ef; border-radius: 22px;"></span>
+          <span style="width: 74px; height: 42px; background: #cfe6ef; border-radius: 999px;"></span>
+          <span style="width: 42px; height: 42px; background: #cfe6ef; border-radius: 50%;"></span>
+        </div>
+        <span style="font-family: ui-monospace, Menlo, monospace; font-size: 12px; color: #3f5a6b;">10 klein · 16 Kachel · 22 Karte · 999 Chip &amp; Knopf · 50 % Mitglied, Blase, Knopfkern</span>
+        <span style="font-size: 12px; line-height: 1.5; color: #3f5a6b;">Wasser hat keine Ecken: nichts unter 10 px Radius, keine harten Kanten, keine Rahmenlinien als Hauptträger.</span>
+      </div>
+      <div style="width: 412px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 16px; padding: 16px 18px; display: flex; flex-direction: column; gap: 10px;">
+        <span style="font-weight: 700; font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: #0e6690;">Abstände (4er-Raster)</span>
+        <div style="display: flex; align-items: flex-end; gap: 6px;">
+          <span style="width: 4px; height: 18px; background: #0e6690; border-radius: 2px;"></span>
+          <span style="width: 8px; height: 24px; background: #0e6690; border-radius: 3px;"></span>
+          <span style="width: 12px; height: 30px; background: #0e6690; border-radius: 4px;"></span>
+          <span style="width: 16px; height: 36px; background: #0e6690; border-radius: 5px;"></span>
+          <span style="width: 22px; height: 42px; background: #0e6690; border-radius: 6px;"></span>
+          <span style="width: 28px; height: 48px; background: #0e6690; border-radius: 7px;"></span>
+          <span style="width: 40px; height: 54px; background: #0e6690; border-radius: 8px;"></span>
+          <span style="width: 56px; height: 60px; background: #0e6690; border-radius: 9px;"></span>
+        </div>
+        <span style="font-family: ui-monospace, Menlo, monospace; font-size: 12px; color: #3f5a6b;">4 · 8 · 12 · 16 · 22 · 28 · 40 · 56</span>
+        <span style="font-size: 12px; line-height: 1.5; color: #3f5a6b;">Karteninneres 14/16 · Blockabstand 22 · Sektionsabstand 44 · Bildschirmrand 40 (Desktop, Reling 104) / 16 (Telefon).</span>
+      </div>
+      <div style="width: 380px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 16px; padding: 16px 18px; display: flex; flex-direction: column; gap: 10px;">
+        <span style="font-weight: 700; font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: #0e6690;">Trefferflächen</span>
+        <sc-for list="{{ targets }}" as="g" hint-placeholder-count="5">
+          <span style="display: flex; align-items: center; gap: 12px; padding: 5px 0; border-top: 1px solid #dfebf1;">
+            <span style="width: 54px; flex: none; font-family: ui-monospace, Menlo, monospace; font-size: 12px; font-weight: 700; color: #0e6690;">{{ g.px }}</span>
+            <span style="font-size: 12.5px; line-height: 1.45; color: #3f5a6b;">{{ g.what }}</span>
+          </span>
+        </sc-for>
+        <span style="font-size: 12px; line-height: 1.5; color: #3f5a6b;">Die sichtbare Fläche darf kleiner sein — die Trefferfläche wird über <code style="font-family: ui-monospace, Menlo, monospace;">min-height</code> und Polsterung erreicht, nie über Zeilenhöhe allein.</span>
+      </div>
+      <div style="width: 380px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 16px; padding: 16px 18px; display: flex; flex-direction: column; gap: 12px;">
+        <span style="font-weight: 700; font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: #0e6690;">Schatten &amp; Tiefen</span>
+        <span style="height: 34px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 12px; box-shadow: 0 6px 18px rgba(14,60,90,.10); display: flex; align-items: center; padding: 0 10px; font-size: 12px; color: #3f5a6b;">Fläche · 0 6px 18px rgba(14,60,90,.10)</span>
+        <span style="height: 34px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 12px; box-shadow: 0 14px 34px rgba(14,60,90,.16); display: flex; align-items: center; padding: 0 10px; font-size: 12px; color: #3f5a6b;">Gehoben · 0 14px 34px rgba(14,60,90,.16)</span>
+        <span style="height: 34px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 12px; box-shadow: 0 22px 48px rgba(14,60,90,.22); display: flex; align-items: center; padding: 0 10px; font-size: 12px; color: #3f5a6b;">Overlay · 0 22px 48px rgba(14,60,90,.22)</span>
+        <span style="height: 34px; background: #cfe6ef; border-radius: 12px; box-shadow: inset 0 4px 10px rgba(14,60,90,.16); display: flex; align-items: center; padding: 0 10px; font-size: 12px; color: #10283a;">Vertiefung · inset 0 4px 10px rgba(14,60,90,.16)</span>
+        <span style="font-size: 12px; line-height: 1.5; color: #3f5a6b;">Schatten sind blau getönt, nie schwarz — Licht kommt von oben durchs Wasser.</span>
+      </div>
+    </div>
+  </div>
+
+  <div data-screen-label="O1.2 Schrift" style="display: flex; flex-direction: column; gap: 18px;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 22px;">2 · Schrift</span>
+      <span style="flex: 1; height: 1px; background: linear-gradient(90deg, #a9c4d1, transparent);"></span>
+    </div>
+    <div style="display: flex; gap: 14px; flex-wrap: wrap; max-width: 1240px;">
+      <div style="width: 300px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 8px;">
+        <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 42px; line-height: 1;">Comfortaa</span>
+        <span style="font-size: 13px; color: #0e6690; line-height: 1.5; font-weight: 600;">Display &amp; Titel · OFL · nur Schnitt 700</span>
+        <span style="font-size: 12px; color: #3f5a6b; line-height: 1.5;">Runde Endungen, passt zur Blase. Nie unter 17 px, nie für Fließtext, nie gesperrt.</span>
+      </div>
+      <div style="width: 300px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 8px;">
+        <span style="font-weight: 700; font-size: 42px; line-height: 1;">Figtree</span>
+        <span style="font-size: 13px; color: #0e6690; line-height: 1.5; font-weight: 600;">Text &amp; Zahlen · OFL · Schnitte 400 / 500 / 600 / 700</span>
+        <span style="font-size: 12px; color: #3f5a6b; line-height: 1.5;">Scores und Tabellen mit tabularen Ziffern: font-variant-numeric: tabular-nums. Kein Faux-Bold.</span>
+      </div>
+      <div style="flex: 1; min-width: 560px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 10px;">
+        <sc-for list="{{ typeScale }}" as="r" hint-placeholder-count="7">
+          <div style="display: flex; align-items: baseline; gap: 16px; border-bottom: 1px solid #dfebf1; padding-bottom: 8px;">
+            <span style="width: 124px; flex: none; font-family: ui-monospace, Menlo, monospace; font-size: 11px; color: #3f5a6b;">{{ r.spec }}</span>
+            <span style="{{ r.style }}">{{ r.sample }}</span>
+            <span style="margin-left: auto; flex: none; font-size: 12px; color: #0e6690; font-weight: 600;">{{ r.use }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+
+  <div data-screen-label="O1.3 Knöpfe" style="display: flex; flex-direction: column; gap: 18px;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 22px;">3 · Knöpfe</span>
+      <span style="flex: 1; height: 1px; background: linear-gradient(90deg, #a9c4d1, transparent);"></span>
+      <sc-if value="{{ zustandslabels }}" hint-placeholder-val="{{ true }}">
+        <span style="font-size: 12px; color: #3f5a6b; font-weight: 600;">Zustände von links: Ruhe · Hover · Fokus · Deaktiviert · Lädt</span>
+      </sc-if>
+    </div>
+    <div style="background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 22px; padding: 22px; display: flex; flex-direction: column; gap: 20px; max-width: 1240px; box-shadow: 0 6px 18px rgba(14,60,90,.10);">
+
+      <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+        <span style="width: 132px; flex: none; font-weight: 700; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: #0e6690;">Primär</span>
+        <button style="font-family: 'Figtree', sans-serif; font-weight: 700; font-size: 16px; color: #f7fbfc; background: #0e6690; border: 1px solid #0a4f70; border-radius: 999px; padding: 13px 24px; min-height: 44px; cursor: pointer; box-shadow: 0 10px 20px rgba(14,60,90,.28);" style-hover="background: #0a4f70; box-shadow: 0 6px 14px rgba(14,60,90,.3);">Abtauchen</button>
+        <button style="font-family: 'Figtree', sans-serif; font-weight: 700; font-size: 16px; color: #f7fbfc; background: #0a4f70; border: 1px solid #083d57; border-radius: 999px; padding: 13px 24px; min-height: 44px; cursor: pointer; box-shadow: 0 6px 14px rgba(14,60,90,.3);">Abtauchen</button>
+        <button style="font-family: 'Figtree', sans-serif; font-weight: 700; font-size: 16px; color: #f7fbfc; background: #0e6690; border: 1px solid #0a4f70; border-radius: 999px; padding: 13px 24px; min-height: 44px; cursor: pointer; box-shadow: 0 0 0 3px #f7fbfc, 0 0 0 6px #0e6690;">Abtauchen</button>
+        <button disabled="disabled" style="font-family: 'Figtree', sans-serif; font-weight: 700; font-size: 16px; color: #6b8494; background: #d3e2e8; border: 1px solid #c2d5de; border-radius: 999px; padding: 13px 24px; min-height: 44px; cursor: not-allowed;">Abtauchen</button>
+        <button style="font-family: 'Figtree', sans-serif; font-weight: 700; font-size: 16px; color: #f7fbfc; background: #0e6690; border: 1px solid #0a4f70; border-radius: 999px; padding: 13px 24px; min-height: 44px; cursor: progress; display: inline-flex; align-items: center; gap: 10px;"><span style="width: 16px; height: 16px; border-radius: 50%; border: 2px solid rgba(247,251,252,.35); border-top-color: #f7fbfc; animation: o1spin .9s linear infinite;"></span>Taucht ab …</button>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+        <span style="width: 132px; flex: none; font-weight: 700; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: #0e6690;">Sekundär</span>
+        <button style="font-family: 'Figtree', sans-serif; font-weight: 700; font-size: 15px; color: #10283a; background: #f7fbfc; border: 1.5px solid #a9c4d1; border-radius: 999px; padding: 11px 20px; min-height: 40px; cursor: pointer;" style-hover="background: #eaf4f8; border-color: #0e6690;">Spiel hinzufügen</button>
+        <button style="font-family: 'Figtree', sans-serif; font-weight: 700; font-size: 15px; color: #10283a; background: #eaf4f8; border: 1.5px solid #0e6690; border-radius: 999px; padding: 11px 20px; min-height: 40px; cursor: pointer;">Spiel hinzufügen</button>
+        <button style="font-family: 'Figtree', sans-serif; font-weight: 700; font-size: 15px; color: #10283a; background: #f7fbfc; border: 1.5px solid #a9c4d1; border-radius: 999px; padding: 11px 20px; min-height: 40px; cursor: pointer; box-shadow: 0 0 0 3px #f7fbfc, 0 0 0 6px #0e6690;">Spiel hinzufügen</button>
+        <button disabled="disabled" style="font-family: 'Figtree', sans-serif; font-weight: 700; font-size: 15px; color: #6b8494; background: #f7fbfc; border: 1.5px solid #d3e2e8; border-radius: 999px; padding: 11px 20px; min-height: 40px; cursor: not-allowed;">Spiel hinzufügen</button>
+        <button style="font-family: 'Figtree', sans-serif; font-weight: 700; font-size: 15px; color: #10283a; background: #f7fbfc; border: 1.5px solid #a9c4d1; border-radius: 999px; padding: 11px 20px; min-height: 40px; cursor: progress; display: inline-flex; align-items: center; gap: 9px;"><span style="width: 15px; height: 15px; border-radius: 50%; border: 2px solid #c9dde6; border-top-color: #0e6690; animation: o1spin .9s linear infinite;"></span>Speichert …</button>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+        <span style="width: 132px; flex: none; font-weight: 700; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: #0e6690;">Geist</span>
+        <button style="font-family: 'Figtree', sans-serif; font-weight: 700; font-size: 15px; color: #0e6690; background: transparent; border: 1px solid transparent; border-radius: 999px; padding: 10px 16px; min-height: 40px; cursor: pointer;" style-hover="background: #d7e9f0; color: #0a4f70;">Zurück</button>
+        <button style="font-family: 'Figtree', sans-serif; font-weight: 700; font-size: 15px; color: #0a4f70; background: #d7e9f0; border: 1px solid transparent; border-radius: 999px; padding: 10px 16px; min-height: 40px; cursor: pointer;">Zurück</button>
+        <button style="font-family: 'Figtree', sans-serif; font-weight: 700; font-size: 15px; color: #0e6690; background: transparent; border: 1px solid transparent; border-radius: 999px; padding: 10px 16px; min-height: 40px; cursor: pointer; box-shadow: 0 0 0 3px #f7fbfc, 0 0 0 6px #0e6690;">Zurück</button>
+        <button disabled="disabled" style="font-family: 'Figtree', sans-serif; font-weight: 700; font-size: 15px; color: #8ba3b1; background: transparent; border: 1px solid transparent; border-radius: 999px; padding: 10px 16px; min-height: 40px; cursor: not-allowed;">Zurück</button>
+        <button style="font-family: 'Figtree', sans-serif; font-weight: 700; font-size: 15px; color: #0e6690; background: transparent; border-radius: 999px; padding: 10px 16px; min-height: 40px; cursor: progress; display: inline-flex; align-items: center; gap: 9px;"><span style="width: 15px; height: 15px; border-radius: 50%; border: 2px solid #c9dde6; border-top-color: #0e6690; animation: o1spin .9s linear infinite;"></span>Lädt …</button>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+        <span style="width: 132px; flex: none; font-weight: 700; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: #0e6690;">Gefahr</span>
+        <button style="font-family: 'Figtree', sans-serif; font-weight: 700; font-size: 15px; color: #fdf4f2; background: #a3392b; border: 1px solid #8a2f23; border-radius: 999px; padding: 11px 20px; min-height: 40px; cursor: pointer;" style-hover="background: #8a2f23;">Session löschen</button>
+        <button style="font-family: 'Figtree', sans-serif; font-weight: 700; font-size: 15px; color: #fdf4f2; background: #8a2f23; border: 1px solid #72271d; border-radius: 999px; padding: 11px 20px; min-height: 40px; cursor: pointer;">Session löschen</button>
+        <button style="font-family: 'Figtree', sans-serif; font-weight: 700; font-size: 15px; color: #fdf4f2; background: #a3392b; border: 1px solid #8a2f23; border-radius: 999px; padding: 11px 20px; min-height: 40px; cursor: pointer; box-shadow: 0 0 0 3px #f7fbfc, 0 0 0 6px #a3392b;">Session löschen</button>
+        <button disabled="disabled" style="font-family: 'Figtree', sans-serif; font-weight: 700; font-size: 15px; color: #a98a84; background: #eddad6; border: 1px solid #e3cbc6; border-radius: 999px; padding: 11px 20px; min-height: 40px; cursor: not-allowed;">Session löschen</button>
+        <button style="font-family: 'Figtree', sans-serif; font-weight: 700; font-size: 15px; color: #fdf4f2; background: #a3392b; border: 1px solid #8a2f23; border-radius: 999px; padding: 11px 20px; min-height: 40px; cursor: progress; display: inline-flex; align-items: center; gap: 9px;"><span style="width: 15px; height: 15px; border-radius: 50%; border: 2px solid rgba(253,244,242,.35); border-top-color: #fdf4f2; animation: o1spin .9s linear infinite;"></span>Löscht …</button>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap; border-top: 1px solid #dfebf1; padding-top: 18px;">
+        <span style="width: 132px; flex: none; font-weight: 700; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: #0e6690;">Symbol</span>
+        <button style="width: 40px; height: 40px; border-radius: 50%; background: #d7e9f0; border: 1px solid transparent; color: #10283a; font-size: 18px; cursor: pointer; display: grid; place-items: center;" style-hover="background: #bfdde8;"><i class="ti ti-dots"></i></button>
+        <button style="width: 40px; height: 40px; border-radius: 50%; background: #d7e9f0; border: 1px solid transparent; color: #10283a; font-size: 18px; cursor: pointer; display: grid; place-items: center;" style-hover="background: #bfdde8;"><i class="ti ti-share"></i></button>
+        <button style="width: 40px; height: 40px; border-radius: 50%; background: #d7e9f0; border: 1px solid transparent; color: #10283a; font-size: 18px; cursor: pointer; display: grid; place-items: center; box-shadow: 0 0 0 3px #f7fbfc, 0 0 0 6px #0e6690;"><i class="ti ti-filter"></i></button>
+        <button disabled="disabled" style="width: 40px; height: 40px; border-radius: 50%; background: #eaf1f4; border: 1px solid transparent; color: #8ba3b1; font-size: 18px; cursor: not-allowed; display: grid; place-items: center;"><i class="ti ti-trash"></i></button>
+        <span style="font-size: 12px; color: #3f5a6b; max-width: 420px; line-height: 1.5;">40 × 40 px sichtbar, Trefferfläche 44 px über negatives Margin; nie kleiner als 24 px.</span>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 22px; flex-wrap: wrap; border-top: 1px solid #dfebf1; padding-top: 18px;">
+        <span style="width: 132px; flex: none; font-weight: 700; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: #0e6690;">Die Blase</span>
+        <span style="position: relative; width: 150px; height: 150px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: radial-gradient(circle at 32% 28%, #ffffff 0%, #f3f9fb 30%, #d7e9f0 70%, #b9d4e0 100%); color: #10283a; box-shadow: 0 12px 24px rgba(14,60,90,.32), inset 0 -6px 12px rgba(14,102,144,.18); cursor: pointer;">
+          <i class="ti ti-tornado" style="font-size: 40px; color: #0e6690;"></i>
+          <span style="font-weight: 700; font-size: 20px; line-height: 1;">Abtauchen</span>
+        </span>
+        <span style="font-size: 13px; color: #3f5a6b; max-width: 560px; line-height: 1.55;">Die eine Aktion der Runde sitzt als Blase in der offenen Muschel — 150 px auf dem Desktop, 128 px am Telefon. Sie ist ein Knopf, kein Bild: Fokusring wie Primär, Beschriftung immer <strong style="color: #10283a;">„Abtauchen“</strong>, das Wirbel-Zeichen bleibt das <code style="font-family: ui-monospace, Menlo, monospace; background: #d7e9f0; border-radius: 4px; padding: 1px 5px;">ti-tornado</code> aus allen Designs. Es gibt sie nur einmal pro Screen.</span>
+      </div>
+    </div>
+  </div>
+
+  <div data-screen-label="O1.4 Eingaben" style="display: flex; flex-direction: column; gap: 18px;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 22px;">4 · Eingaben</span>
+      <span style="flex: 1; height: 1px; background: linear-gradient(90deg, #a9c4d1, transparent);"></span>
+    </div>
+    <div style="display: flex; flex-wrap: wrap; gap: 14px; max-width: 1240px;">
+      <div style="width: 396px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 6px 18px rgba(14,60,90,.10);">
+        <span style="font-weight: 700; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: #0e6690;">Textfeld</span>
+        <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 700; color: #3f5a6b;">Rundenname
+          <input type="text" value="Donnerstagsrunde" style="font-family: 'Figtree', sans-serif; font-weight: 600; font-size: 15px; color: #10283a; background: #ffffff; border: 1.5px solid #a9c4d1; border-radius: 12px; padding: 11px 13px; min-height: 44px;">
+        </label>
+        <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 700; color: #3f5a6b;">Fokus
+          <input type="text" value="Donnerstagsrunde" style="font-family: 'Figtree', sans-serif; font-weight: 600; font-size: 15px; color: #10283a; background: #ffffff; border: 1.5px solid #0e6690; border-radius: 12px; padding: 11px 13px; min-height: 44px; box-shadow: 0 0 0 3px rgba(14,102,144,.22);">
+        </label>
+        <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 700; color: #a3392b;">Fehler
+          <input type="text" value="" placeholder="Name fehlt" style="font-family: 'Figtree', sans-serif; font-weight: 600; font-size: 15px; color: #10283a; background: #ffffff; border: 1.5px solid #a3392b; border-radius: 12px; padding: 11px 13px; min-height: 44px;">
+          <span style="font-size: 12.5px; font-weight: 600; color: #a3392b; display: inline-flex; align-items: center; gap: 5px;"><i class="ti ti-alert-triangle"></i>Jede Runde braucht einen Namen.</span>
+        </label>
+        <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 700; color: #6b8494;">Deaktiviert
+          <input type="text" value="Donnerstagsrunde" disabled="disabled" style="font-family: 'Figtree', sans-serif; font-weight: 600; font-size: 15px; color: #6b8494; background: #eaf1f4; border: 1.5px solid #d3e2e8; border-radius: 12px; padding: 11px 13px; min-height: 44px;">
+        </label>
+      </div>
+      <div style="width: 396px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 6px 18px rgba(14,60,90,.10);">
+        <span style="font-weight: 700; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: #0e6690;">Suche &amp; Auswahl</span>
+        <label style="display: inline-flex; align-items: center; gap: 9px; padding: 11px 16px; background: #ffffff; border: 1.5px solid #a9c4d1; border-radius: 999px; color: #3f5a6b; font-weight: 600; font-size: 15px; min-height: 44px; box-sizing: border-box;"><i class="ti ti-search"></i><input placeholder="Spiele suchen …" style="border: none; background: none; font: inherit; color: #10283a; outline: none; width: 100%;"></label>
+        <span style="display: inline-flex; align-items: center; justify-content: space-between; gap: 10px; padding: 11px 16px; background: #ffffff; border: 1.5px solid #a9c4d1; border-radius: 12px; font-weight: 600; font-size: 15px; min-height: 44px; box-sizing: border-box;">Sortiert: Bewertung <i class="ti ti-chevron-down" style="color: #0e6690;"></i></span>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <label style="display: flex; align-items: center; gap: 12px; font-size: 15px; font-weight: 600; min-height: 44px;"><span style="width: 26px; height: 26px; border-radius: 8px; background: #0e6690; display: grid; place-items: center; color: #f7fbfc; flex: none;"><i class="ti ti-check" style="font-size: 17px;"></i></span>Nur Spiele der Anwesenden</label>
+          <label style="display: flex; align-items: center; gap: 12px; font-size: 15px; font-weight: 600; min-height: 44px;"><span style="width: 26px; height: 26px; border-radius: 8px; background: #ffffff; border: 2px solid #a9c4d1; box-sizing: border-box; flex: none;"></span>Auch Aussortiert zeigen</label>
+          <label style="display: flex; align-items: center; gap: 12px; font-size: 15px; font-weight: 600; min-height: 44px;"><span style="width: 52px; height: 30px; border-radius: 999px; background: #0e6690; display: flex; align-items: center; padding: 3px; box-sizing: border-box; flex: none;"><span style="width: 24px; height: 24px; border-radius: 50%; background: #f7fbfc; margin-left: auto; box-shadow: 0 2px 4px rgba(14,60,90,.3);"></span></span>Geheime Wertung</label>
+          <label style="display: flex; align-items: center; gap: 12px; font-size: 15px; font-weight: 600; color: #6b8494; min-height: 44px;"><span style="width: 52px; height: 30px; border-radius: 999px; background: #d3e2e8; display: flex; align-items: center; padding: 3px; box-sizing: border-box; flex: none;"><span style="width: 24px; height: 24px; border-radius: 50%; background: #f7fbfc;"></span></span>Ergebnis sofort zeigen</label>
+        </div>
+      </div>
+      <div style="width: 396px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 6px 18px rgba(14,60,90,.10);">
+        <span style="font-weight: 700; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: #0e6690;">Anzahl &amp; Regler</span>
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <span style="display: flex; gap: 10px;">
+            <span style="width: 40px; height: 40px; border-radius: 50%; background: radial-gradient(circle at 32% 28%, #ffffff 0%, #f3f9fb 30%, #d7e9f0 70%, #b9d4e0 100%); box-shadow: 0 4px 8px rgba(14,60,90,.3);"></span>
+            <span style="width: 40px; height: 40px; border-radius: 50%; background: radial-gradient(circle at 32% 28%, #ffffff 0%, #f3f9fb 30%, #d7e9f0 70%, #b9d4e0 100%); box-shadow: 0 4px 8px rgba(14,60,90,.3);"></span>
+            <span style="width: 40px; height: 40px; border-radius: 50%; background: radial-gradient(circle at 32% 28%, #ffffff 0%, #f3f9fb 30%, #d7e9f0 70%, #b9d4e0 100%); box-shadow: 0 4px 8px rgba(14,60,90,.3);"></span>
+          </span>
+          <span style="margin-left: auto; display: flex; gap: 8px;">
+            <span style="width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: #d7e9f0; color: #10283a; font-size: 18px;"><i class="ti ti-minus"></i></span>
+            <span style="width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: #d7e9f0; color: #10283a; font-size: 18px;"><i class="ti ti-plus"></i></span>
+          </span>
+        </div>
+        <span style="font-size: 13px; color: #3f5a6b; font-weight: 600;">Wie viele holen wir hoch? Die Anzahl sind Blasen, nicht Ziffern — bis 5, darüber „5 + 3“.</span>
+        <div style="display: flex; flex-direction: column; gap: 8px; border-top: 1px solid #dfebf1; padding-top: 14px;">
+          <span style="font-size: 13px; font-weight: 700; color: #3f5a6b;">Spieldauer bis 90 Min</span>
+          <span style="position: relative; display: block; height: 8px; border-radius: 999px; background: #d3e2e8;">
+            <span style="position: absolute; left: 0; top: 0; bottom: 0; width: 62%; border-radius: 999px; background: #0e6690;"></span>
+            <span style="position: absolute; left: 62%; top: 50%; width: 28px; height: 28px; margin: -14px 0 0 -14px; border-radius: 50%; background: radial-gradient(circle at 32% 28%, #ffffff 0%, #f3f9fb 30%, #d7e9f0 70%, #b9d4e0 100%); box-shadow: 0 4px 10px rgba(14,60,90,.35);"></span>
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div data-screen-label="O1.5 Chips" style="display: flex; flex-direction: column; gap: 18px;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 22px;">5 · Chips, Tags, Segmente</span>
+      <span style="flex: 1; height: 1px; background: linear-gradient(90deg, #a9c4d1, transparent);"></span>
+    </div>
+    <div style="display: flex; flex-wrap: wrap; gap: 14px; max-width: 1240px;">
+      <div style="width: 600px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 6px 18px rgba(14,60,90,.10);">
+        <span style="font-weight: 700; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: #0e6690;">Filterchips · aus, an, entfernbar, deaktiviert</span>
+        <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
+          <span style="padding: 9px 16px; border-radius: 999px; background: #cfe6ef; color: #10283a; font-weight: 700; font-size: 14px; min-height: 40px; display: inline-flex; align-items: center;">Unter 60 Min</span>
+          <span style="padding: 9px 16px; border-radius: 999px; background: #0e6690; color: #f7fbfc; font-weight: 700; font-size: 14px; min-height: 40px; display: inline-flex; align-items: center; gap: 8px;">Leichte Kost <i class="ti ti-x" style="font-size: 15px;"></i></span>
+          <span style="padding: 9px 16px; border-radius: 999px; background: #cfe6ef; color: #10283a; font-weight: 700; font-size: 14px; min-height: 40px; display: inline-flex; align-items: center;">Familientauglich</span>
+          <span style="padding: 9px 16px; border-radius: 999px; background: #eaf1f4; color: #8ba3b1; font-weight: 700; font-size: 14px; min-height: 40px; display: inline-flex; align-items: center;">Kennerspiel</span>
+        </div>
+        <span style="font-size: 12.5px; color: #3f5a6b; line-height: 1.5;">Die drei Schnellstart-Presets heißen in jedem Design gleich: <strong style="color: #10283a;">Unter 60 Min · Leichte Kost · Familientauglich</strong>. Sie stehen unter der Blase und filtern die Muschel.</span>
+      </div>
+      <div style="width: 300px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 6px 18px rgba(14,60,90,.10);">
+        <span style="font-weight: 700; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: #0e6690;">Segmente</span>
+        <span style="display: inline-flex; padding: 4px; border-radius: 999px; background: #d7e9f0; gap: 2px;">
+          <span style="flex: 1; text-align: center; padding: 9px 12px; border-radius: 999px; background: #f7fbfc; color: #10283a; font-weight: 700; font-size: 14px; box-shadow: 0 2px 6px rgba(14,60,90,.16);">Regal</span>
+          <span style="flex: 1; text-align: center; padding: 9px 12px; border-radius: 999px; color: #3f5a6b; font-weight: 700; font-size: 14px;">Aussortiert</span>
+          <span style="flex: 1; text-align: center; padding: 9px 12px; border-radius: 999px; color: #3f5a6b; font-weight: 700; font-size: 14px;">Wunschliste</span>
+        </span>
+        <span style="font-size: 12.5px; color: #3f5a6b; line-height: 1.5;">Segmente nur innerhalb einer Seite, nie als Ersatz für die Reling.</span>
+      </div>
+      <div style="width: 300px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 6px 18px rgba(14,60,90,.10);">
+        <span style="font-weight: 700; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: #0e6690;">Zustandsmarken</span>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+          <span style="padding: 5px 12px; border-radius: 999px; background: #f2e394; color: #10283a; font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;">Abstimmung läuft</span>
+          <span style="padding: 5px 12px; border-radius: 999px; background: #d7e9f0; color: #10283a; font-size: 12px; font-weight: 700;">Aussortiert</span>
+          <span style="padding: 5px 12px; border-radius: 999px; background: #cde7dc; color: #10283a; font-size: 12px; font-weight: 700;">Durchgespielt</span>
+          <span style="padding: 5px 12px; border-radius: 999px; background: #f7ded6; color: #a3392b; font-size: 12px; font-weight: 700;">1× gar nicht</span>
+        </div>
+        <span style="font-size: 12.5px; color: #3f5a6b; line-height: 1.5;">Marken beschreiben, sie klicken nicht. Das Veto heißt wie in der App „1× gar nicht“.</span>
+      </div>
+    </div>
+  </div>
+
+  <div data-screen-label="O1.6 Overlays" style="display: flex; flex-direction: column; gap: 18px;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 22px;">6 · Overlays</span>
+      <span style="flex: 1; height: 1px; background: linear-gradient(90deg, #a9c4d1, transparent);"></span>
+      <span style="font-size: 12px; color: #3f5a6b; font-weight: 600;">Eine Form, zwei Auftritte — ausgezeichnet in O15</span>
+    </div>
+    <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; max-width: 1240px;">
+      <div style="width: 330px; border-radius: 22px 22px 0 0; background: #f7fbfc; border: 1px solid #c9dde6; border-bottom: none; padding: 14px 20px 22px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 -12px 40px rgba(14,60,90,.18);">
+        <span style="width: 44px; height: 5px; border-radius: 999px; background: #c9dde6; align-self: center;"></span>
+        <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 21px;">Filter</span>
+        <span style="font-size: 13px; color: #3f5a6b; line-height: 1.5;">Telefon: Sheet von unten, Griff oben, Titel 21 px, volle Breite.</span>
+        <span style="display: flex; gap: 8px; flex-wrap: wrap;"><span style="padding: 8px 14px; border-radius: 999px; background: #0e6690; color: #f7fbfc; font-weight: 700; font-size: 13px;">Unter 60 Min</span><span style="padding: 8px 14px; border-radius: 999px; background: #cfe6ef; color: #10283a; font-weight: 700; font-size: 13px;">Leichte Kost</span></span>
+      </div>
+      <div style="width: 300px; border-radius: 16px; background: #f7fbfc; border: 1px solid #c9dde6; padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 22px 48px rgba(14,60,90,.22);">
+        <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 17px;">Filter</span>
+        <span style="font-size: 13px; color: #3f5a6b; line-height: 1.5;">Desktop: Popover am Auslöser, kein Griff, Titel 17 px. Sonst identisch — drei Unterschiede, mehr nicht.</span>
+        <span style="display: flex; gap: 8px; flex-wrap: wrap;"><span style="padding: 7px 13px; border-radius: 999px; background: #0e6690; color: #f7fbfc; font-weight: 700; font-size: 13px;">Unter 60 Min</span><span style="padding: 7px 13px; border-radius: 999px; background: #cfe6ef; color: #10283a; font-weight: 700; font-size: 13px;">Leichte Kost</span></span>
+      </div>
+      <div style="width: 340px; border-radius: 22px; background: #f7fbfc; border: 1px solid #c9dde6; padding: 22px 24px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 22px 48px rgba(14,60,90,.22);">
+        <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 20px; line-height: 1.2;">Session löschen?</span>
+        <span style="font-size: 14px; color: #3f5a6b; line-height: 1.5;">Das Ergebnis vom 14. Sep verschwindet aus der Chronik. Jonas’ Sieg wird zurückgenommen.</span>
+        <span style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 8px;">
+          <span style="padding: 10px 18px; border-radius: 999px; color: #0e6690; font-weight: 700; font-size: 15px;">Behalten</span>
+          <span style="padding: 10px 18px; border-radius: 999px; background: #a3392b; color: #fdf4f2; font-weight: 700; font-size: 15px;">Löschen</span>
+        </span>
+        <span style="font-size: 12px; color: #3f5a6b; line-height: 1.5; border-top: 1px solid #dfebf1; padding-top: 10px;">Titel ist die Frage, Text die Folge, Knopf das Verb. Zerstörendes rot und rechts, nie als einziger Weg.</span>
+      </div>
+      <div style="width: 380px; display: flex; flex-direction: column; gap: 10px;">
+        <span style="display: flex; align-items: center; gap: 12px; padding: 13px 18px; border-radius: 999px; background: #10283a; color: #f7fbfc; font-weight: 600; font-size: 14px; box-shadow: 0 14px 30px rgba(14,60,90,.3);"><i class="ti ti-archive" style="font-size: 18px;"></i>Zinnober ist aussortiert.<span style="margin-left: auto; font-weight: 700; color: #9ed4ee; display: inline-flex; align-items: center; min-height: 24px; padding: 0 4px;">Rückgängig</span></span>
+        <span style="display: flex; align-items: center; gap: 12px; padding: 13px 18px; border-radius: 999px; background: #1a6b4a; color: #f4fbf7; font-weight: 600; font-size: 14px; box-shadow: 0 14px 30px rgba(14,60,90,.3);"><i class="ti ti-check" style="font-size: 18px;"></i>Gespeichert.</span>
+        <span style="display: flex; align-items: center; gap: 12px; padding: 13px 18px; border-radius: 999px; background: #a3392b; color: #fdf4f2; font-weight: 600; font-size: 14px; box-shadow: 0 14px 30px rgba(14,60,90,.3);"><i class="ti ti-alert-triangle" style="font-size: 18px;"></i>BGG antwortet nicht.<span style="margin-left: auto; font-weight: 700; display: inline-flex; align-items: center; min-height: 24px; padding: 0 4px;">Nochmal</span></span>
+        <span style="font-size: 12.5px; color: #3f5a6b; line-height: 1.5;">Toasts sitzen unten mittig (Telefon über dem Dock), 4 s, mit Rückgängig 7 s. Alles Umkehrbare passiert sofort und meldet sich hier — kein Dialog.</span>
+      </div>
+    </div>
+  </div>
+
+  <div data-screen-label="O1.7 Ergebnis" style="display: flex; flex-direction: column; gap: 18px;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 22px;">7 · Das Ergebnis (Ergebnistabelle)</span>
+      <span style="flex: 1; height: 1px; background: linear-gradient(90deg, #a9c4d1, transparent);"></span>
+    </div>
+    <div style="width: 700px; padding: 20px 22px 18px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 22px; box-shadow: 0 14px 34px rgba(14,60,90,.12); display: flex; flex-direction: column; gap: 12px;">
+      <div style="display: flex; justify-content: space-between; align-items: baseline;"><span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 20px;">Das Ergebnis</span><span style="font-size: 12px; font-weight: 700; color: #0e6690; letter-spacing: .1em; text-transform: uppercase;">3 Spiele · 4 Stimmen</span></div>
+      <sc-for list="{{ resultRows }}" as="r" hint-placeholder-count="3">
+        <div style="display: grid; grid-template-columns: 30px 60px minmax(0, 1fr) auto 64px; gap: 12px; align-items: center; padding: 10px 12px; border-radius: 14px; background: {{ r.bg }}; border: {{ r.border }};">
+          <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 22px; text-align: center;">{{ r.place }}</span>
+          <span style="width: 60px; aspect-ratio: 4 / 3; border-radius: 8px; background: {{ r.cover }}; box-shadow: 0 4px 8px rgba(14,60,90,.25);"></span>
+          <span style="display: flex; flex-direction: column; min-width: 0;"><span style="font-weight: 700; font-size: 16px; line-height: 1.15;">{{ r.title }}</span><span style="font-size: 12.5px; color: #3f5a6b; font-weight: 600;">{{ r.sub }}</span></span>
+          <span style="display: flex; gap: 4px; align-items: flex-end; height: 30px;"><sc-for list="{{ r.bars }}" as="b" hint-placeholder-count="5"><span style="width: 14px; display: flex; flex-direction: column; justify-content: flex-end; height: 100%;"><span style="border-radius: 7px 7px 0 0; background: {{ b.c }}; height: {{ b.h }}; min-height: 3px;"></span></span></sc-for></span>
+          <span style="justify-self: end; min-width: 44px; padding: 5px 10px; border-radius: 999px; background: {{ r.pillBg }}; color: {{ r.pillInk }}; font-weight: 700; font-size: 16px; text-align: center; border: 1px solid rgba(16,40,58,.14); box-sizing: border-box; font-variant-numeric: tabular-nums;">{{ r.score }}</span>
+        </div>
+      </sc-for>
+      <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12.5px; color: #3f5a6b; font-weight: 600;"><span>Spielwirbel-Score: Veto-Kurve über 1–5, nicht der reine Durchschnitt <i class="ti ti-info-circle"></i></span><span style="color: #a3392b; font-weight: 700;">Session löschen</span></div>
+    </div>
+  </div>
+
+  <div data-screen-label="O1.8 Menschen" style="display: flex; flex-direction: column; gap: 18px;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 22px;">8 · Mitglieder &amp; Cover</span>
+      <span style="flex: 1; height: 1px; background: linear-gradient(90deg, #a9c4d1, transparent);"></span>
+    </div>
+    <div style="display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-start; max-width: 1240px;">
+      <div style="width: 600px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 6px 18px rgba(14,60,90,.10);">
+        <span style="font-weight: 700; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: #0e6690;">Das Mitglied</span>
+        <div style="display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-end;">
+          <sc-for list="{{ buoys }}" as="b" hint-placeholder-count="6">
+            <span style="display: flex; flex-direction: column; align-items: center; gap: 6px; width: 84px;">
+              <span style="position: relative; width: {{ b.size }}; height: {{ b.size }}; border-radius: 50%; background: #f7fbfc; border: {{ b.ring }}; box-sizing: border-box; display: grid; place-items: center; font-weight: 700; font-size: {{ b.fs }}; color: #10283a; box-shadow: {{ b.shadow }};">{{ b.ini }}<sc-if value="{{ b.crown }}" hint-placeholder-val="{{ false }}"><i class="ti ti-crown" style="position: absolute; top: -24px; left: 50%; transform: translateX(-50%) rotate(-8deg); font-size: 26px; color: #8a6a10;"></i></sc-if></span>
+              <span style="font-size: 11.5px; font-weight: 600; color: #3f5a6b; text-align: center; line-height: 1.25;">{{ b.label }}</span>
+            </span>
+          </sc-for>
+        </div>
+        <span style="font-size: 12.5px; color: #3f5a6b; line-height: 1.55;">Ein Ring, kein gefüllter Kreis: die Personenfarbe trägt nie die Initialen. Größen 26 / 34 / 48 / 52 px, Ringstärke 4–5 px. Die Krone markiert, wer gewonnen hat, und sitzt <strong style="color: #10283a;">über</strong> dem Mitglied — sie überdeckt nie das Gesicht.</span>
+      </div>
+      <div style="width: 600px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 6px 18px rgba(14,60,90,.10);">
+        <span style="font-weight: 700; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: #0e6690;">Cover — fester Kasten, kein Text im Bild</span>
+        <div style="display: flex; gap: 14px; align-items: flex-start;">
+          <sc-for list="{{ covers }}" as="c" hint-placeholder-count="4">
+            <span style="width: 132px; display: flex; flex-direction: column; border-radius: 12px; overflow: hidden; border: 1px solid #c9dde6; background: #ffffff; box-shadow: 0 6px 14px rgba(14,60,90,.14);">
+              <span style="display: block; aspect-ratio: 4 / 3; background: {{ c.bg }};"></span>
+              <span style="display: flex; flex-direction: column; gap: 1px; padding: 8px 10px 10px; background: #ffffff;">
+                <span style="font-weight: 700; font-size: 13px; line-height: 1.2;">{{ c.title }}</span>
+                <span style="font-size: 11.5px; font-weight: 600; color: #3f5a6b;">{{ c.meta }}</span>
+              </span>
+            </span>
+          </sc-for>
+        </div>
+        <span style="font-size: 12.5px; color: #3f5a6b; line-height: 1.55;">Jedes Cover sitzt im <strong style="color: #10283a;">4 : 3-Kasten</strong> — die App speichert kein Seitenverhältnis, also wird beschnitten, nie gestreckt, und die Höhen bleiben gleich. Titel und Meta stehen <strong style="color: #10283a;">unter</strong> dem Bild auf deckendem Weiß. Fehlt das Bild, kommt die Blase auf Wellenpapier und die Marke „Noch kein Bild“.</span>
+      </div>
+    </div>
+  </div>
+
+  <div data-screen-label="O1.9 Wertung" style="display: flex; flex-direction: column; gap: 18px;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 22px;">9 · Wertung: Blasen &amp; Score</span>
+      <span style="flex: 1; height: 1px; background: linear-gradient(90deg, #a9c4d1, transparent);"></span>
+    </div>
+    <div style="display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-start; max-width: 1240px;">
+      <div style="width: 616px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 16px; padding: 22px 18px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 6px 18px rgba(14,60,90,.10);">
+        <span style="font-weight: 700; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: #0e6690;">Die fünf Gesichter — 1 bis 5, vierte gewählt</span>
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 10px; padding: 8px 6px 0;">
+          <sc-for list="{{ moods }}" as="m" hint-placeholder-count="5">
+            <span style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+              <span style="width: 90px; height: 90px; border-radius: 50%; display: grid; place-items: center; background: {{ m.bg }}; border: {{ m.border }}; box-sizing: border-box; box-shadow: {{ m.shadow }}; color: {{ m.ink }}; font-size: 46px; transform: {{ m.tf }};"><i class="ti {{ m.face }}"></i></span>
+              <span style="font-weight: 700; font-size: 15px; color: #3f5a6b;">{{ m.n }}</span>
+            </span>
+          </sc-for>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 13px; color: #3f5a6b; padding: 0 10px;"><span>gar nicht</span><span>unbedingt</span></div>
+        <span style="font-size: 12.5px; color: #3f5a6b; line-height: 1.55;">Die fünf Tabler-Gesichter sind in allen Designs dieselben: <code style="font-family: ui-monospace, Menlo, monospace; background: #d7e9f0; border-radius: 4px; padding: 1px 5px;">mood-cry · mood-sad · mood-neutral · mood-smile · mood-crazy-happy</code>. In Ocean sind sie Blasen: die gewählte steigt 8 px auf, füllt sich in der Skalenfarbe und bekommt den Akzentring. 90 px Ziel, weit über den geforderten 44.</span>
+      </div>
+      <div style="width: 600px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 6px 18px rgba(14,60,90,.10);">
+        <span style="font-weight: 700; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: #0e6690;">Score-Rampe · Tiefsee → Sonnenlicht</span>
+        <div style="display: flex; gap: 10px; align-items: flex-end;">
+          <sc-for list="{{ rampCards }}" as="s" hint-placeholder-count="6">
+            <span style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px;">
+              <span style="width: 100%; min-height: 54px; border-radius: 12px; background: {{ s.bg }}; color: {{ s.ink }}; display: grid; place-items: center; font-weight: 700; font-size: 18px; border: 1px solid rgba(16,40,58,.14); box-sizing: border-box; font-variant-numeric: tabular-nums;">{{ s.label }}</span>
+              <span style="font-size: 11px; font-weight: 600; color: #3f5a6b; text-align: center; line-height: 1.3;">{{ s.name }}</span>
+              <sc-if value="{{ kontrastwerte }}" hint-placeholder-val="{{ true }}">
+                <span style="font-family: ui-monospace, Menlo, monospace; font-size: 10.5px; font-weight: 700; color: #1a6b4a;">{{ s.ratio }}</span>
+              </sc-if>
+            </span>
+          </sc-for>
+        </div>
+        <span style="font-size: 12.5px; color: #3f5a6b; line-height: 1.55;">Sechs Stufen: fünf für 1–5 und <strong style="color: #10283a;">Tintenfisch</strong> für alles unter 1 — das ist kein eigener Wert, sondern die Farbe eines Spiels, das ein „gar nicht“ kassiert hat. Der Score steht immer mit <strong style="color: #10283a;">einer Nachkommastelle und Komma</strong>: 4,8. Textfarbe ist pro Stufe festgelegt, nie berechnet.</span>
+      </div>
+    </div>
+    <div style="display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-start; max-width: 1240px;">
+      <div style="width: 616px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 6px 18px rgba(14,60,90,.10);">
+        <span style="font-weight: 700; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: #0e6690;">Die Blase — eine Form, sechs Bauteile</span>
+        <span style="font-size: 12.5px; color: #3f5a6b; line-height: 1.55;">Damit ein Issue eine einzelne Verwendung adressieren kann, trägt jede einen eigenen Namen. Alle benutzen denselben Verlauf; sie unterscheiden sich in Größe, Rand und Schatten.</span>
+        <sc-for list="{{ bubbleParts }}" as="b" hint-placeholder-count="6">
+          <span style="display: flex; align-items: center; gap: 13px; padding: 7px 0; border-top: 1px solid #dfebf1;">
+            <span style="width: {{ b.size }}; height: {{ b.size }}; border-radius: 50%; background: radial-gradient(circle at 32% 28%, #ffffff 0%, #f3f9fb 30%, #d7e9f0 70%, #b9d4e0 100%); border: {{ b.border }}; box-sizing: border-box; flex: none; box-shadow: 0 3px 8px rgba(14,60,90,.18);"></span>
+            <span style="display: flex; flex-direction: column; gap: 1px; min-width: 0;">
+              <span style="font-weight: 700; font-size: 14.5px;">{{ b.name }}</span>
+              <span style="font-size: 12.5px; font-weight: 600; color: #3f5a6b; line-height: 1.4;">{{ b.where }}</span>
+            </span>
+            <span style="margin-left: auto; font-family: ui-monospace, Menlo, monospace; font-size: 11.5px; color: #3f5a6b; flex: none;">{{ b.px }}</span>
+          </span>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+
+  <div data-screen-label="O1.10 Leer" style="display: flex; flex-direction: column; gap: 18px;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 22px;">10 · Leer, Laden, Fuß</span>
+      <span style="flex: 1; height: 1px; background: linear-gradient(90deg, #a9c4d1, transparent);"></span>
+    </div>
+    <div style="display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-start; max-width: 1240px;">
+      <div style="width: 380px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 16px; padding: 26px 20px; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; box-shadow: 0 6px 18px rgba(14,60,90,.10);">
+        <span style="width: 56px; height: 56px; border-radius: 50%; background: radial-gradient(circle at 32% 28%, #ffffff 0%, #f3f9fb 30%, #d7e9f0 70%, #b9d4e0 100%); box-shadow: 0 6px 12px rgba(14,60,90,.25);"></span>
+        <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 19px;">Das Regal ist noch leer.</span>
+        <span style="font-size: 14px; color: #3f5a6b; line-height: 1.5;">Setzt euer erstes Spiel ins Regal — oder übernehmt eine Sammlung von BGG.</span>
+        <span style="display: flex; gap: 10px; margin-top: 4px;"><span style="padding: 10px 18px; border-radius: 999px; background: #0e6690; color: #f7fbfc; font-weight: 700; font-size: 14px;">Spiel hinzufügen</span><span style="padding: 10px 18px; border-radius: 999px; border: 1.5px solid #a9c4d1; font-weight: 700; font-size: 14px;">Von BGG übernehmen</span></span>
+      </div>
+      <div style="width: 380px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 6px 18px rgba(14,60,90,.10);">
+        <span style="font-weight: 700; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: #0e6690;">Laden</span>
+        <span style="display: flex; gap: 12px; align-items: center;">
+          <span style="width: 60px; aspect-ratio: 4/3; border-radius: 8px; background: #e2edf2; animation: o1shimmer 1.4s ease-in-out infinite;"></span>
+          <span style="flex: 1; display: flex; flex-direction: column; gap: 6px;"><span style="height: 13px; width: 70%; border-radius: 999px; background: #e2edf2; animation: o1shimmer 1.4s ease-in-out .15s infinite;"></span><span style="height: 11px; width: 45%; border-radius: 999px; background: #e2edf2; animation: o1shimmer 1.4s ease-in-out .3s infinite;"></span></span>
+        </span>
+        <span style="display: flex; gap: 12px; align-items: center;">
+          <span style="width: 60px; aspect-ratio: 4/3; border-radius: 8px; background: #e2edf2; animation: o1shimmer 1.4s ease-in-out .2s infinite;"></span>
+          <span style="flex: 1; display: flex; flex-direction: column; gap: 6px;"><span style="height: 13px; width: 55%; border-radius: 999px; background: #e2edf2; animation: o1shimmer 1.4s ease-in-out .35s infinite;"></span><span style="height: 11px; width: 60%; border-radius: 999px; background: #e2edf2; animation: o1shimmer 1.4s ease-in-out .5s infinite;"></span></span>
+        </span>
+        <span style="display: inline-flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; color: #3f5a6b; margin-top: 4px;"><span style="width: 18px; height: 18px; border-radius: 50%; border: 2px solid #c9dde6; border-top-color: #0e6690; animation: o1spin .9s linear infinite;"></span>Platzhalter pulsen, sie springen nicht. Unter reduzierter Bewegung stehen sie still bei 60 % Deckkraft.</span>
+      </div>
+      <div style="width: 440px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 6px 18px rgba(14,60,90,.10);">
+        <span style="font-weight: 700; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: #0e6690;">Fuß — auf jedem Screen gleich</span>
+        <span style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap; font-size: 12.5px; font-weight: 600; color: #3f5a6b; border-top: 1px solid #dfebf1; padding-top: 12px;"><a href="#" style="display: inline-flex; align-items: center; min-height: 32px; padding: 0 4px;">FAQ</a><a href="#" style="display: inline-flex; align-items: center; min-height: 32px; padding: 0 4px;">Kontakt</a><a href="#" style="display: inline-flex; align-items: center; min-height: 32px; padding: 0 4px;">Impressum</a><a href="#" style="display: inline-flex; align-items: center; min-height: 32px; padding: 0 4px;">Datenschutz</a><a href="#" style="display: inline-flex; align-items: center; min-height: 32px; padding: 0 4px;">Nutzungsbedingungen</a></span>
+        <span style="display: flex; align-items: center; justify-content: space-between; gap: 12px;"><span style="display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; color: #3f5a6b;"><i class="ti ti-eye-off"></i>Kein Tracking · EU-Hosting</span><img src="../../../public/icons/powered-by-bgg.png" alt="Powered by BGG" style="width: 100px; height: auto;"></span>
+        <span style="font-size: 12px; color: #3f5a6b; line-height: 1.5;">Das BGG-Abzeichen ist Pflicht, sobald Spieldaten von dort kommen. Fußlinks sind 32 px hoch und tragen Textfarbe, nie Akzent auf Akzent.</span>
+      </div>
+    </div>
+  </div>
+
+  <div data-screen-label="O1.11 Übergabe" style="max-width: 1240px; background: #10283a; color: #eaf4f8; border-radius: 22px; padding: 24px 28px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 14px 34px rgba(14,60,90,.2);">
+    <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 20px; color: #f7fbfc;">Was O2 von hier mitnimmt</span>
+    <span style="font-size: 15px; line-height: 1.65; max-width: 100ch;">Flächen nach oben: Seite <code style="font-family: ui-monospace, Menlo, monospace;">#e4f1f5</code> → Fläche <code style="font-family: ui-monospace, Menlo, monospace;">#f7fbfc</code> → gehoben <code style="font-family: ui-monospace, Menlo, monospace;">#ffffff</code>, Vertiefung <code style="font-family: ui-monospace, Menlo, monospace;">#cfe6ef</code>. Text immer <code style="font-family: ui-monospace, Menlo, monospace;">#10283a</code>, Sekundärtext <code style="font-family: ui-monospace, Menlo, monospace;">#3f5a6b</code> (6,3:1), Akzent <code style="font-family: ui-monospace, Menlo, monospace;">#0e6690</code> (5,4:1) — er darf Text tragen. Personen- und Markerfarben dürfen es nicht: sie sind Ring, Füllung, Tidenlinie. Radien ab 10 px, Chips und Knöpfe rund. Ein Primärknopf pro Screen, und auf der Runde ist das die Blase in der Muschel. Die Reling (104 px, fünf Ziele) und die Kopfleiste stehen auf jedem Desktop-Screen, das Dock mit vier Zielen auf jedem Telefon-Screen — beides zeichnet O2 zuerst.</span>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1400,&quot;height&quot;:900},&quot;kontrastwerte&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Prüfung&quot;},&quot;zustandslabels&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Prüfung&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const P = this.props;
+    return {
+      kontrastwerte: P.kontrastwerte ?? true,
+      zustandslabels: P.zustandslabels ?? true,
+      ...this.tokens(),
+    };
+  }
+
+  tokens() {
+    const ini = (n) => n.slice(0, 2).toUpperCase();
+    const cover = (h) => `linear-gradient(145deg, oklch(.6 .13 ${h}), oklch(.36 .12 ${h + 30}))`;
+    const fmt = (v) => v.toFixed(1).replace('.', ',');
+    const ok = '#1a6b4a', warn = '#a3392b';
+
+    const targets = [
+      { px: '44 px', what: 'Wertungskarte, Dock, jeder Knopf mit Text' },
+      { px: '40 px', what: 'Symbolknopf, Chip, Eingabe, Listenzeile' },
+      { px: '32 px', what: 'Fußlinks — mit 4 px Polsterung links und rechts' },
+      { px: '24 px', what: 'Textlinks im Fließtext, Brotkrumen, Toast-Aktionen' },
+      { px: 'nie < 24', what: 'kein Bedienelement darunter, auch kein rein dekoratives' },
+    ];
+    const tokenGroups = [
+      {
+        title: 'Flächen & Tiefen — hell, nach oben gestaffelt',
+        items: [
+          { name: 'Seite', value: '#e4f1f5', bg: '#e4f1f5', chipInk: '#3f5a6b', sample: 'Aa', use: 'Wasseroberfläche, Grund aller Screens', ratio: 'Text #10283a: 13,1:1', ratioInk: ok },
+          { name: 'Fläche', value: '#f7fbfc', bg: '#f7fbfc', chipInk: '#3f5a6b', sample: 'Aa', use: 'Karten, Reling, Kopfleiste, Sheets', ratio: 'Text #10283a: 14,4:1', ratioInk: ok },
+          { name: 'Gehoben', value: '#ffffff', bg: '#ffffff', chipInk: '#3f5a6b', sample: 'Aa', use: 'Eingaben, Coverkasten, Popover', ratio: 'Text #10283a: 14,8:1', ratioInk: ok },
+          { name: 'Vertiefung', value: '#cfe6ef', bg: '#cfe6ef', chipInk: '#10283a', sample: 'Aa', use: 'Chips in Ruhe, Segmentschiene, aktive Reling', ratio: 'Text #10283a: 11,2:1', ratioInk: ok },
+          { name: 'Linie', value: '#c9dde6', bg: '#c9dde6', chipInk: '#10283a', sample: '—', use: 'Kanten aller Flächen; #dfebf1 innerhalb einer Karte', ratio: 'nicht für Text', ratioInk: '#3f5a6b' },
+        ],
+      },
+      {
+        title: 'Schrift & Akzent',
+        items: [
+          { name: 'Text', value: '#10283a', bg: '#10283a', chipInk: '#f7fbfc', sample: 'Aa', use: 'Alle Titel, alle Werte, alles Lesbare', ratio: 'auf Fläche: 14,4:1', ratioInk: ok },
+          { name: 'Sekundärtext', value: '#3f5a6b', bg: '#3f5a6b', chipInk: '#f7fbfc', sample: 'Aa', use: 'Meta, Hilfszeilen, Fußlinks', ratio: 'auf Fläche: 6,9:1', ratioInk: ok },
+          { name: 'Akzent', value: '#0e6690', bg: '#0e6690', chipInk: '#f7fbfc', sample: 'Aa', use: 'Primärknopf, Kicker, Links, aktive Reling-Glyphe. Trägt Text nur auf Fläche, Seite und Vertiefung — nicht auf den tiefen Stufen des Wasserverlaufs', ratio: 'Fläche 5,9:1 · Seite 5,4:1 · #cfe3ec 5,0:1 · #a9c9d8 4,0 ✗', ratioInk: ok },
+          { name: 'Akzent dunkel', value: '#0a4f70', bg: '#0a4f70', chipInk: '#f7fbfc', sample: 'Aa', use: 'Hover und Kante des Primärknopfs', ratio: 'auf Fläche: 8,0:1', ratioInk: ok },
+          { name: 'Umriss', value: '#a9c4d1', bg: '#a9c4d1', chipInk: '#10283a', sample: '—', use: 'Kante von Sekundärknopf und Eingabe (3,1:1 gegen Fläche)', ratio: 'nicht für Text', ratioInk: '#3f5a6b' },
+        ],
+      },
+      {
+        title: 'Zustände',
+        items: [
+          { name: 'Erfolg', value: '#1a6b4a', bg: '#1a6b4a', chipInk: '#f4fbf7', sample: 'Aa', use: 'Bestätigungstoast, „Durchgespielt“', ratio: 'auf Fläche: 5,4:1', ratioInk: ok },
+          { name: 'Warnung', value: '#8a6a10', bg: '#8a6a10', chipInk: '#fdf8ea', sample: 'Aa', use: 'Krone, Hinweise — nie als Flächenfarbe', ratio: 'auf Fläche: 5,0:1', ratioInk: ok },
+          { name: 'Gefahr', value: '#a3392b', bg: '#a3392b', chipInk: '#fdf4f2', sample: 'Aa', use: 'Löschen, Fehlertext, „1× gar nicht“', ratio: 'auf Fläche: 6,1:1', ratioInk: ok },
+          { name: 'Sonne', value: '#f2e394', bg: '#f2e394', chipInk: '#10283a', sample: 'Aa', use: 'Bester Score, „Abstimmung läuft“ — Fläche, nie Text', ratio: 'nur mit Text #10283a', ratioInk: ok },
+          { name: 'Tintenfisch', value: '#4a1942', bg: '#4a1942', chipInk: '#f7fbfc', sample: 'Aa', use: 'Score unter 1 — ein Spiel mit „gar nicht“', ratio: 'Text #f7fbfc: 13,6:1', ratioInk: ok },
+        ],
+      },
+      {
+        title: 'Personenfarben — die acht globalen, unverändert · Ring und Füllung, kein Fließtext',
+        items: [
+          { name: 'Koralle', value: '#c6522c', bg: '#c6522c', chipInk: '#ffffff', sample: 'MA', use: 'Mitglied, Tidenlinie, Balken', ratio: '4,3:1 — Text erst ab 24 px', ratioInk: warn },
+          { name: 'Seegras', value: '#198663', bg: '#198663', chipInk: '#ffffff', sample: 'JO', use: 'Mitglied, Tidenlinie, Balken', ratio: '4,3:1 — Text erst ab 24 px', ratioInk: warn },
+          { name: 'Seeigel', value: '#726bc7', bg: '#726bc7', chipInk: '#ffffff', sample: 'LE', use: 'Mitglied, Tidenlinie, Balken', ratio: '4,3:1 — Text erst ab 24 px', ratioInk: warn },
+          { name: 'Bernstein', value: '#a66815', bg: '#a66815', chipInk: '#ffffff', sample: 'TI', use: 'Mitglied, Tidenlinie, Balken', ratio: '4,3:1 — Text erst ab 24 px', ratioInk: warn },
+          { name: 'Anemone', value: '#c34d74', bg: '#c34d74', chipInk: '#ffffff', sample: 'AY', use: 'Mitglied, Tidenlinie, Balken', ratio: '4,3:1 — Text erst ab 24 px', ratioInk: warn },
+          { name: 'Lagune', value: '#2f6f9e', bg: '#2f6f9e', chipInk: '#ffffff', sample: 'BE', use: 'Mitglied, Tidenlinie, Balken', ratio: '5,1:1 — trägt auch kleinen Text', ratioInk: ok },
+          { name: 'Tang', value: '#54821d', bg: '#54821d', chipInk: '#ffffff', sample: 'CH', use: 'Mitglied, Tidenlinie, Balken', ratio: '4,3:1 — Text erst ab 24 px', ratioInk: warn },
+          { name: 'Purpur', value: '#993556', bg: '#993556', chipInk: '#ffffff', sample: 'NI', use: 'Mitglied, Tidenlinie, Balken', ratio: '6,6:1 — trägt auch kleinen Text', ratioInk: ok },
+        ],
+      },
+      {
+        title: 'Wasser & Ornament — nie Textträger',
+        items: [
+              { name: 'Blase', value: 'radial 32 % 28 %', bg: 'radial-gradient(circle at 32% 28%, #ffffff 0%, #f3f9fb 30%, #d7e9f0 70%, #b9d4e0 100%)', chipInk: '#10283a', sample: '○', use: 'Eine Form, sechs benannte Bauteile — siehe Abschnitt 9', ratio: 'Ornament', ratioInk: '#3f5a6b' },
+          { name: 'Tiefe', value: '#1c4a66 → #123a52', bg: 'linear-gradient(180deg, #1c4a66, #123a52)', chipInk: '#f7fbfc', sample: 'Aa', use: 'Noch nicht gewertete Karten, Rückseiten', ratio: 'Text #f7fbfc: 9,8:1', ratioInk: ok },
+          { name: 'Muschel', value: '#f3ebdd / #e2d2b8', bg: 'repeating-conic-gradient(from 200deg at 50% 100%, #f3ebdd 0 5deg, #e2d2b8 5deg 10deg)', chipInk: '#10283a', sample: 'Aa', use: 'Der Topf — die einzige warme Fläche des Designs', ratio: 'Text #10283a: 12,4:1', ratioInk: ok },
+          { name: 'Wellenpapier', value: '#eaf4f8 / #dfedf3', bg: 'repeating-linear-gradient(135deg, #eaf4f8 0 10px, #dfedf3 10px 20px)', chipInk: '#10283a', sample: 'Aa', use: 'Spiel ohne Bild, leere Kästen', ratio: 'Text #10283a: 12,9:1', ratioInk: ok },
+        ],
+      },
+      {
+        title: 'Wasserverlauf — die 16 Stufen, auf denen Ocean steht · Text nur wo vermerkt',
+        items: [
+          { name: 'Gischt', value: '#eef7fa', bg: '#eef7fa', chipInk: '#3f5a6b', sample: 'Aa', use: 'Oberster Stopp aller Verläufe', ratio: 'Text #10283a: 14,1:1 · Akzent 5,8:1', ratioInk: ok },
+          { name: 'Untiefe', value: '#e2f0f5', bg: '#e2f0f5', chipInk: '#3f5a6b', sample: 'Aa', use: 'Lobby-Kachel oben, Ergebnisfläche', ratio: 'Text 12,9:1 · Akzent 5,3:1', ratioInk: ok },
+          { name: 'Brandung', value: '#dcecf2', bg: '#dcecf2', chipInk: '#3f5a6b', sample: 'Aa', use: 'Mitte der Anmelde- und Vollbildverläufe', ratio: 'Text 12,4:1 · Akzent 5,1:1', ratioInk: ok },
+          { name: 'Flach', value: '#cfe3ec', bg: '#cfe3ec', chipInk: '#3f5a6b', sample: 'Aa', use: 'Unterster Stopp, auf dem Akzenttext noch erlaubt ist', ratio: 'Text 11,1:1 · Akzent 5,0:1 — Grenze', ratioInk: ok },
+          { name: 'Küstenwasser', value: '#a9c9d8', bg: '#a9c9d8', chipInk: '#10283a', sample: 'Aa', use: 'Verlaufsende. Nur Tinte, nie Akzent', ratio: 'Text 7,9:1 · Akzent 4,0:1 ✗', ratioInk: warn },
+          { name: 'Wasserlinie', value: '#8fc0da → #4f8fbb', bg: 'linear-gradient(180deg, #8fc0da, #4f8fbb)', chipInk: '#10283a', sample: 'Aa', use: 'Wasser unter der Tidenlinie auf Lobby-Kacheln', ratio: 'nur Tinte, kein Fließtext', ratioInk: warn },
+          { name: 'Rückenflosse', value: '#2f6d94 → #163a55', bg: 'linear-gradient(180deg, #2f6d94, #163a55)', chipInk: '#f7fbfc', sample: 'Aa', use: 'Der Wal', ratio: 'Text #f7fbfc: 6,3:1', ratioInk: ok },
+          { name: 'Tiefe', value: '#1c4a66 → #123a52', bg: 'linear-gradient(180deg, #1c4a66, #123a52)', chipInk: '#f7fbfc', sample: 'Aa', use: 'Verdeckte Karten, Sichtblende', ratio: 'Text #f7fbfc: 9,8:1', ratioInk: ok },
+          { name: 'Grund', value: '#0d2b3e', bg: '#0d2b3e', chipInk: '#f7fbfc', sample: 'Aa', use: 'Unterster Stopp der Sichtblende', ratio: 'Text #f7fbfc: 13,7:1', ratioInk: ok },
+        ],
+      },
+      {
+        title: 'Sand — die Muschel, die einzige warme Fläche',
+        items: [
+          { name: 'Sand hell', value: '#f7efe2', bg: '#f7efe2', chipInk: '#10283a', sample: 'Aa', use: 'Heller Streifen der unteren Muschelhälfte', ratio: 'Text #10283a: 13,4:1', ratioInk: ok },
+          { name: 'Sand', value: '#f3ebdd', bg: '#f3ebdd', chipInk: '#10283a', sample: 'Aa', use: 'Heller Streifen der oberen Muschelhälfte', ratio: 'Text #10283a: 12,9:1', ratioInk: ok },
+          { name: 'Sand dunkel', value: '#e2d2b8', bg: '#e2d2b8', chipInk: '#10283a', sample: 'Aa', use: 'Dunkler Streifen beider Hälften (mit #e8dac2 unten)', ratio: 'Text #10283a: 10,8:1', ratioInk: ok },
+          { name: 'Muschelkante', value: '#d8c6a6', bg: '#d8c6a6', chipInk: '#10283a', sample: '—', use: 'Der 3-px-Rand der Muschel', ratio: 'nicht für Text', ratioInk: '#3f5a6b' },
+        ],
+      },
+    ];
+
+    const typeScale = [
+      { spec: 'Comfortaa 700 · 40/44', style: "font-family: 'Comfortaa'; font-weight: 700; font-size: 40px; line-height: 1.1;", sample: 'Willkommen an der Küste.', use: 'Seitentitel' },
+      { spec: 'Comfortaa 700 · 30/34', style: "font-family: 'Comfortaa'; font-weight: 700; font-size: 30px; line-height: 1.12;", sample: 'Das Regal', use: 'Screentitel' },
+      { spec: 'Comfortaa 700 · 21/24', style: "font-family: 'Comfortaa'; font-weight: 700; font-size: 21px;", sample: 'Donnerstagsrunde', use: 'Kartentitel' },
+      { spec: 'Comfortaa 700 · 17/22', style: "font-family: 'Comfortaa'; font-weight: 700; font-size: 17px;", sample: 'Wie wär’s mit', use: 'Blocktitel' },
+      { spec: 'Figtree 600 · 16/24', style: 'font-weight: 600; font-size: 16px; line-height: 1.5;', sample: 'Welche Runde spielt heute?', use: 'Fließtext' },
+      { spec: 'Figtree 700 · 15/20', style: 'font-weight: 700; font-size: 15px;', sample: 'Nordlichter', use: 'Listeneintrag' },
+      { spec: 'Figtree 600 · 13/19', style: 'font-weight: 600; font-size: 13px; color: #3f5a6b;', sample: 'Gehört Marco · zuletzt im Juni', use: 'Meta' },
+      { spec: 'Figtree 700 · 12 · .12 em', style: 'font-weight: 700; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: #0e6690;', sample: 'Mitglieder · 4', use: 'Kicker' },
+    ];
+
+    const people = ['#c6522c', '#198663', '#726bc7', '#a66815', '#c34d74', '#2f6f9e', '#54821d', '#993556'];
+    const buoys = [
+      { ini: 'MA', color: people[0], size: '26px', fs: '9.5px', label: '26 · Rangliste', crown: false },
+      { ini: 'JO', color: people[1], size: '34px', fs: '12px', label: '34 · Liste, Feed', crown: false },
+      { ini: 'LE', color: people[2], size: '48px', fs: '15px', label: '48 · Runde', crown: false },
+      { ini: 'TI', color: people[3], size: '52px', fs: '16px', label: '52 · Session', crown: false },
+      { ini: 'JO', color: people[1], size: '52px', fs: '16px', label: 'hat gewonnen', crown: true },
+      { ini: '+', color: null, size: '48px', fs: '20px', label: 'Platz dazu', crown: false },
+    ].map((b) => ({
+      ...b,
+      ring: b.color ? `5px solid ${b.color}` : '2px dashed #8fb3c4',
+      shadow: b.crown ? '0 0 0 6px rgba(242,227,148,.7), 0 4px 10px rgba(14,60,90,.15)' : '0 4px 10px rgba(14,60,90,.15)',
+    }));
+
+    const covers = [
+      { title: 'Nordlichter', meta: '2–5 · 90 Min · Marco', bg: cover(200) },
+      { title: 'Moorgeister', meta: '3–6 · 40 Min · Lea', bg: cover(160) },
+      { title: 'Glutkessel', meta: '2–4 · 30 Min · Tim', bg: cover(30) },
+      { title: 'Hafenmeister', meta: '2–4 · 60 Min · Jonas', bg: 'repeating-linear-gradient(135deg, #eaf4f8 0 10px, #dfedf3 10px 20px)' },
+    ];
+
+    const ramp = [
+      { bg: '#23305c', ink: '#f7fbfc' }, { bg: '#35609a', ink: '#f7fbfc' }, { bg: '#6a9fd0', ink: '#10283a' },
+      { bg: '#b7d4ee', ink: '#10283a' }, { bg: '#f2e394', ink: '#10283a' },
+    ];
+    const veto = { bg: '#4a1942', ink: '#f7fbfc' };
+    const stop = (s) => (s < 1 ? veto : ramp[Math.min(4, Math.max(0, Math.round(s) - 1))]);
+    const rampNames = ['Tiefsee', 'Dämmerzone', 'Freiwasser', 'Flachwasser', 'Sonnenlicht'];
+    const rampRatios = ['12,1:1', '6,0:1', '5,4:1', '11,0:1', '13,3:1'];
+    const rampCards = [
+      ...ramp.map((s, i) => ({ ...s, label: fmt(i + 1), name: rampNames[i], ratio: rampRatios[i] })),
+      { ...veto, label: '0,8', name: 'Tintenfisch · unter 1', ratio: '13,6:1' },
+    ];
+
+    const bubbleParts = [
+      { name: 'Knopfkern', where: 'Der Primärknopf in der Muschel — „Abtauchen“', size: '46px', border: 'none', px: '150 / 128 px' },
+      { name: 'Wertungsblase', where: 'Die fünf Gesichter der Wertungskarte', size: '40px', border: '2px solid #a9c4d1', px: '94 / 64 px' },
+      { name: 'Score-Blase', where: 'Der Score an der Ecke des Covers, mit weißem Rand', size: '34px', border: '2px solid #ffffff', px: '42 / 36 px' },
+      { name: 'Anzahlblase', where: '„Wie viele holen wir hoch?“ — eine je gezogenem Spiel', size: '30px', border: 'none', px: '40 / 34 px' },
+      { name: 'Zierblase', where: 'Aufsteigend im Ergebnis und in der Sichtblende', size: '18px', border: '1px solid rgba(14,102,144,.35)', px: '7–18 px' },
+      { name: 'Bildmarke', where: 'Spiel ohne Cover, auf Wellenpapier', size: '26px', border: 'none', px: '26 px' },
+    ];
+    const faces = ['ti-mood-cry', 'ti-mood-sad', 'ti-mood-neutral', 'ti-mood-smile', 'ti-mood-crazy-happy'];
+    const bubbleBg = 'radial-gradient(circle at 32% 28%, #ffffff 0%, #f3f9fb 30%, #d7e9f0 70%, #b9d4e0 100%)';
+    const moods = faces.map((face, i) => {
+      const sel = i === 3, st = ramp[i];
+      return {
+        n: i + 1, face,
+        bg: sel ? st.bg : bubbleBg, ink: sel ? st.ink : '#10283a',
+        border: sel ? '3px solid #f7fbfc' : '2px solid #a9c4d1',
+        shadow: sel ? '0 0 0 6px #0e6690, 0 12px 24px rgba(14,60,90,.28)' : 'inset 0 -4px 8px rgba(14,102,144,.12), 0 6px 12px rgba(14,60,90,.12)',
+        tf: sel ? 'translateY(-8px) scale(1.06)' : 'none',
+      };
+    });
+
+    const bars = (dist) => { const m = Math.max(...dist, 1); return dist.map((c, i) => ({ c: ramp[i].bg, h: Math.round((c / m) * 100) + '%' })); };
+    const resultRows = [
+      { place: 1, title: 'Nordlichter', sub: 'Gehört Marco · gespielt, Sieg vergeben', score: 4.8, dist: [0, 0, 0, 1, 3], h: 200, bg: '#f2e394', border: '1px solid #ddcd78' },
+      { place: 2, title: 'Kartographen des Nordens', sub: 'Gehört Lea', score: 3.8, dist: [0, 0, 2, 1, 1], h: 150, bg: '#f7fbfc', border: '1px solid #c9dde6' },
+      { place: 3, title: 'Rost & Regen', sub: 'Gehört Tim · 1× gar nicht', score: 2.9, dist: [1, 1, 1, 1, 0], h: 220, bg: '#f7fbfc', border: '1px solid #c9dde6' },
+    ].map((r) => { const st = stop(r.score); return { ...r, cover: cover(r.h), bars: bars(r.dist), score: fmt(r.score), pillBg: st.bg, pillInk: st.ink }; });
+
+    return { tokenGroups, typeScale, targets, bubbleParts, buoys, covers, rampCards, moods, resultRows };
+  }
+}
+</script>
+</body>
+</html>

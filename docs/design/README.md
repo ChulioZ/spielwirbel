@@ -16,23 +16,27 @@ map.
 | `handover-vokabular-2026-09-20.md` | The vocabulary rule: **nouns and navigation are Spielwirbel's, the ritual is the theme's.** §1 lists the words no design may rename, §2 the few places a design may have its own words. |
 | `pruefung-tisch-2026-09-20.md` | The review of the first package (Der Tisch), in the format every later review uses: Datei · Screen · Befund · Messwert · Vorschlag. Its A/B findings are binding rules for every design. |
 | `tisch/` | The reviewed „Der Tisch" package (V2, sixteen sheets T1–T15b), one HTML sheet per brief, plus the runtime that renders them and the package's own README. |
+| `pruefung-ocean-2026-09-20.md` | The review of the second package (Ocean), over two rounds. Its closing section is binding for every later package — in particular that the audit tool over-reports on gradient-led designs (see step 2). |
+| `ocean/` | The reviewed „Ocean“ package (fifteen sheets O1–O15b plus the concept sheet), same shape as `tisch/`. |
 | `tools/audit.js` | The contrast + hit-size audit that measured the Tisch sheets (see below). |
 
 The issues that implement the programme start at #1184 (the design layer) and
-end at #1202 (the flip); #1203–#1207 are one placeholder epic per remaining
-design. The decisions behind them are in the handover's §1 and in the issues
+end at #1202 (the flip); #1203–#1206 are one placeholder epic per remaining
+design, and Ocean's slices are #1209–#1221 (its epic #1207 closes when Ocean is
+enabled). The decisions behind them are in the handover's §1 and in the issues
 themselves; do not re-derive them.
 
 ## Opening a sheet
 
 The sheets are **design references**, not app code: inline-styled HTML rendered
-by `tisch/support.js` (a generated runtime that loads React and Babel from
+by each package's `support.js` (a generated runtime that loads React and Babel from
 unpkg). They reference the app's fonts and icons at `../../../public/…`, so they
 must be served from the **repository root**:
 
 ```bash
 python3 -m http.server 3199
 # then open http://localhost:3199/docs/design/tisch/Tisch-T3-Runde-Desktop.dc.html
+#   or http://localhost:3199/docs/design/ocean/Ocean-O3-Runde-Desktop.dc.html
 ```
 
 Opening a sheet as a `file://` URL renders a static snapshot with `{{ … }}`
@@ -69,6 +73,21 @@ is the procedure that produced #1188–#1200 for Der Tisch.
    those, and only those. Render the full sheets with headless Chrome
    (`--headless=new --screenshot --window-size=<w>,<h>`) for the visual pass;
    the pane shows them too small to judge.
+
+   **The worst-stop rule over-reports on a gradient-led design, and you cannot
+   tell the real hits from the false ones without a second pass.** It suits flat
+   surfaces like Tisch's felt. Ocean's sheets sit on page-height gradients, and
+   the audit reported **31 contrast failures of which 28 were not** — text at the
+   light end of a gradient, scored against its dark end. So when a package uses
+   gradients behind text, confirm every hit against the pixels that were actually
+   painted: set every glyph to `color: transparent`, take **one** screenshot per
+   sheet, and read each text node's own box out of it.
+
+   Take the **modal** colour of that box, not its darkest pixel — a neighbouring
+   element that overlaps the box otherwise decides the answer. On Ocean the
+   darkest-pixel rule invented 19 further ghosts, among them every member
+   initial whose box includes its colour ring. Report both: `mode` is the
+   finding, a `mode`-passes/`p10`-fails split is a box that straddles something.
 3. **Check the words** against `handover-vokabular-2026-09-20.md` §1 (never
    renamed) and §2 (may be themed), the evening-word ban, and the app's own
    strings (`public/js/lang/de.js`): the three hub presets, the veto reason
@@ -81,7 +100,8 @@ is the procedure that produced #1188–#1200 for Der Tisch.
 5. **Check the source.** Every hex value used in X2–X15 must be declared in X1;
    the marker colours and the score ramp live in X1 and are only *measured* in
    X8. Two sheets citing different contrast numbers for one pair is a finding.
-6. **Write the review** in `pruefung-tisch-2026-09-20.md`'s format: systemic
+6. **Write the review** in `pruefung-tisch-2026-09-20.md`'s format (or
+   `pruefung-ocean-2026-09-20.md`'s, which adds the round-1/round-2 table): systemic
    findings (source sheet + every sheet they reach) first, then words and
    content, then IA, then decisions the designer took that the operator must
    confirm. Send it back; a package goes to issues only after the operator's go.
@@ -96,4 +116,7 @@ is the procedure that produced #1188–#1200 for Der Tisch.
    is enabled in production.
 
 The Tisch review found that every systemic defect lived in the token sheet and
-propagated; that is why steps 2 and 5 come before anything visual.
+propagated; that is why steps 2 and 5 come before anything visual. The Ocean
+review adds a fourth habit: a package states which of the earlier reviews'
+binding rules it has applied, and that claim is checkable — Ocean named four of
+the nine and the one it left out (hit sizes) was the one it failed.

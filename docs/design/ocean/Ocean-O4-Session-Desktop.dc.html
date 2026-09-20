@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="design_doc_mode" content="canvas">
+  <link rel="stylesheet" href="../../../public/fonts/tabler-icons.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #cfe0e7; font-family: 'Figtree', sans-serif; }
+    a { color: #0e6690; text-decoration: none; }
+    a:hover { color: #0a4f70; text-decoration: underline; }
+    @keyframes o4rise { 0% { transform: translate(0, 0); opacity: 0; } 12% { opacity: 1; } 50% { transform: translate(7px, -80px); } 100% { transform: translate(-3px, -160px); opacity: 0; } }
+  </style>
+</helmet>
+<div style="display: flex; flex-direction: column; gap: 44px; padding: 44px; width: max-content; color: #10283a; background-color: #e4f1f5; background-image: radial-gradient(900px 500px at 18% 0%, rgba(255,255,255,.7), transparent 65%), radial-gradient(900px 600px at 86% 40%, rgba(255,255,255,.5), transparent 70%);">
+
+  <div data-screen-label="O4 Kopf" style="max-width: 1240px; display: flex; flex-direction: column; gap: 12px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 22px; padding: 26px 30px; box-shadow: 0 14px 34px rgba(14,60,90,.14);">
+    <div style="display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;">
+      <span style="font-weight: 700; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: #f7fbfc; background: #0e6690; border-radius: 999px; padding: 5px 12px;">O4</span>
+      <h1 style="margin: 0; font-family: 'Comfortaa'; font-weight: 700; font-size: 36px; line-height: 1.05;">Der Session, Desktop 1440 — Ocean</h1>
+      <span style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #3f5a6b;">20.09.2026 · Phase 2, Brief 4 von 13</span>
+    </div>
+    <p style="margin: 0; font-size: 16px; line-height: 1.55; max-width: 92ch; color: #3f5a6b;">Die Schleife von Anfang bis Ende: Neue Session · geheime Wertungskarte · geteilte Wertung am selben Bildschirm · Ergebnis · mehrere Tische. Die Wertungskarte ist der einzige Screen ohne Kopfleiste und Reling — <strong style="color: #10283a;">Vollbild, damit niemand mitliest</strong>.</p>
+    <div style="display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; background: #f7ded6; border-radius: 14px; font-size: 13px; line-height: 1.55; color: #10283a;"><i class="ti ti-alert-triangle" style="font-size: 18px; color: #a3392b; flex: none; margin-top: 1px;"></i><span><strong>Vokabular-Revert 20.09.2026:</strong> Bucht → <strong>Runde</strong> · Küste (Navigation) → <strong>Start</strong> · Riff → <strong>Regal</strong> · Gezeiten → <strong>Chronik</strong> · Perlenkette → <strong>Pokale</strong> · Tauchgang → <strong>Session</strong> · Perle / „hat die Perle“ → <strong>Sieg / „hat gewonnen“</strong> · Boje → <strong>Mitglied</strong> · Jenseits des Riffs → <strong>Nicht im Regal</strong> · Strandgut → <strong>Aussortiert</strong> · Gehoben → <strong>Durchgespielt</strong> · Am Horizont → <strong>Wunschliste</strong> · Flaschenpost → <strong>Könnte euch gefallen</strong> · Werft → <strong>Kümmerliste</strong> · Echolot → <strong>Ergebnis</strong> · Tauchkarte → <strong>Wertungskarte</strong> · Mehrere Boote → <strong>Mehrere Tische</strong> · „Wer taucht mit?“ → <strong>„Wer spielt mit?“</strong>. Eigen bleiben nur: <strong>Muschel · Abtauchen · auftauchen · in der Tiefe · „Wie viele holen wir hoch?“</strong> (<a href="Ocean-O9-Vokabular.dc.html" style="display: inline-flex; align-items: center; min-height: 24px; padding: 0 3px;">O9</a>).</span></div>
+  </div>
+
+  <div data-screen-label="O4.1 Neue Session" style="display: flex; flex-direction: column; gap: 10px;">
+    <div style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #3f5a6b; max-width: 1440px; line-height: 1.4;">O4.1 · Plätze antippen, die Spiele sammeln sich live in der Muschel, die Anzahl sind Siege — und es steht immer da, wie viele Spiele warum fehlen</div>
+    <div style="width: 1440px; height: 900px; position: relative; overflow: hidden; border-radius: 6px; font-size: 16px; line-height: 1.45; background-color: #e4f1f5; background-image: radial-gradient(600px 320px at 22% 14%, rgba(255,255,255,.7), transparent 70%), radial-gradient(700px 380px at 78% 60%, rgba(255,255,255,.55), transparent 70%); box-shadow: 0 18px 44px rgba(14,60,90,.18);">
+      <div style="position: absolute; left: 0; right: 0; top: 0; height: 60px; display: flex; align-items: center; gap: 18px; padding: 0 28px; background: #f7fbfc; border-bottom: 1px solid #c9dde6; z-index: 3;">
+        <a href="#" style="display: inline-flex; align-items: center; gap: 10px; color: #10283a;"><span style="width: 34px; height: 34px; border-radius: 50%; background: #0e6690; color: #f7fbfc; display: grid; place-items: center;"><i class="ti ti-tornado" style="font-size: 18px;"></i></span><span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 20px;">Spielwirbel</span></a>
+        <span style="font-size: 15px; font-weight: 600; color: #3f5a6b; display: inline-flex; align-items: center; gap: 8px;"><a href="#" style="display: inline-flex; align-items: center; min-height: 24px;">Donnerstagsrunde</a> <i class="ti ti-chevron-right" style="font-size: 12px;"></i> <strong style="color: #10283a; font-weight: 700;">Neue Session</strong></span>
+        <span style="margin-left: auto; display: flex; gap: 10px; align-items: center;">
+          <span style="font-size: 14px; font-weight: 700; color: #10283a; border: 1.5px solid #a9c4d1; border-radius: 999px; padding: 7px 14px; display: inline-flex; gap: 6px; align-items: center; min-height: 36px; box-sizing: border-box;"><i class="ti ti-world" style="font-size: 15px;"></i>Deutsch <i class="ti ti-chevron-down" style="font-size: 12px;"></i></span>
+          <span style="width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: #d7e9f0; color: #10283a;"><i class="ti ti-mail" style="font-size: 17px;"></i></span>
+          <span style="width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: #d7e9f0; color: #10283a;"><i class="ti ti-user" style="font-size: 17px;"></i></span>
+        </span>
+      </div>
+      <nav style="position: absolute; left: 0; top: 60px; bottom: 42px; width: 104px; display: flex; flex-direction: column; gap: 6px; padding: 18px 10px; box-sizing: border-box; background: #f7fbfc; border-right: 1px solid #c9dde6; z-index: 3;">
+        <sc-for list="{{ rail }}" as="r" hint-placeholder-count="5">
+          <a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 4px; border-radius: 14px; background: {{ r.bg }}; color: #10283a; font-size: 11.5px; font-weight: 700; margin-top: {{ r.mt }}; min-height: 56px; justify-content: center;"><i class="ti {{ r.icon }}" style="font-size: 22px; color: {{ r.ink }};"></i>{{ r.label }}</a>
+        </sc-for>
+      </nav>
+      <div style="position: absolute; left: 136px; right: 40px; top: 84px; bottom: 52px; display: grid; grid-template-columns: 290px minmax(0, 1fr) 290px; gap: 28px; align-items: start;">
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <h1 style="margin: 0; font-family: 'Comfortaa'; font-weight: 700; font-size: 26px; line-height: 1.1;">Wer spielt mit?</h1>
+          <div style="font-size: 14px; font-weight: 600; color: #3f5a6b; margin-top: -6px;">Platz antippen = mitspielen. Die Zahl der Personen filtert die Muschel.</div>
+          <sc-for list="{{ setupSeats }}" as="s" hint-placeholder-count="5">
+            <a href="#" style="display: flex; align-items: center; gap: 12px; color: #10283a; opacity: {{ s.op }}; min-height: 52px;">
+              <span style="width: 52px; height: 52px; border-radius: 50%; background: {{ s.bg }}; border: {{ s.border }}; box-sizing: border-box; display: grid; place-items: center; font-weight: 700; font-size: 16px; color: #10283a; box-shadow: {{ s.shadow }}; flex: none;">{{ s.ini }}</span>
+              <span style="display: flex; flex-direction: column; line-height: 1.15;"><span style="font-weight: 700; font-size: 17px;">{{ s.name }}</span><span style="font-size: 13px; font-weight: 600; color: #3f5a6b;">{{ s.state }}</span></span>
+            </a>
+          </sc-for>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px;">
+            <span style="padding: 8px 14px; border-radius: 999px; background: #cfe6ef; color: #10283a; font-weight: 700; font-size: 13px; min-height: 36px; display: inline-flex; align-items: center; gap: 6px;"><i class="ti ti-users"></i>Teams</span>
+            <span style="padding: 8px 14px; border-radius: 999px; background: #cfe6ef; color: #10283a; font-weight: 700; font-size: 13px; min-height: 36px; display: inline-flex; align-items: center;">Jemand ohne Spiele?</span>
+            <span style="padding: 8px 14px; border-radius: 999px; background: #cfe6ef; color: #10283a; font-weight: 700; font-size: 13px; min-height: 36px; display: inline-flex; align-items: center; gap: 6px;"><i class="ti ti-arrows-split"></i>Mehrere Tische</span>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 14px;">
+          <div style="font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #0e6690;">Die Muschel</div>
+          <div style="position: relative; width: 500px; height: 430px;">
+            <span style="position: absolute; left: 10px; top: 0; width: 480px; height: 200px; border-radius: 240px 240px 0 0 / 200px 200px 0 0; background: radial-gradient(circle at 50% 75%, rgba(255,255,255,.8), transparent 55%), repeating-conic-gradient(from 200deg at 50% 100%, #f3ebdd 0 4deg, #e2d2b8 4deg 8deg); border: 3px solid #d8c6a6; border-bottom: none; box-sizing: border-box; box-shadow: inset 0 10px 24px rgba(14,60,90,.08);"></span>
+            <div style="position: absolute; left: 10px; top: 150px; width: 480px; height: 280px; border-radius: 0 0 240px 240px / 0 0 280px 280px; background: radial-gradient(circle at 50% 8%, rgba(255,255,255,.7), transparent 60%), repeating-conic-gradient(from 100deg at 50% 0%, #f7efe2 0 4deg, #e8dac2 4deg 8deg); border: 3px solid #d8c6a6; box-sizing: border-box; box-shadow: 0 26px 40px rgba(14,60,90,.22), inset 0 -18px 30px rgba(120,90,50,.16); overflow: hidden;">
+              <sc-for list="{{ clamGames }}" as="g" hint-placeholder-count="9">
+                <span style="position: absolute; width: 90px; border-radius: 8px; overflow: hidden; background: #ffffff; box-shadow: 0 6px 12px rgba(14,60,90,.35); left: {{ g.x }}; top: {{ g.y }}; transform: rotate({{ g.rot }});">
+                  <span style="display: block; aspect-ratio: 4 / 3; background: {{ g.cover }};"></span>
+                </span>
+              </sc-for>
+              <span style="position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); padding: 7px 16px; border-radius: 999px; background: rgba(16,40,58,.9); color: #f7fbfc; font-weight: 700; font-size: 14px; white-space: nowrap;"><span style="font-size: 20px;">9</span> Spiele in der Muschel</span>
+            </div>
+          </div>
+          <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: center;">
+            <span style="padding: 8px 15px; border-radius: 999px; background: #cfe6ef; color: #10283a; font-weight: 700; font-size: 13px; min-height: 36px; display: inline-flex; align-items: center; gap: 6px;"><i class="ti ti-filter"></i>Filter</span>
+            <span style="padding: 8px 15px; border-radius: 999px; background: #0e6690; color: #f7fbfc; font-weight: 700; font-size: 13px; min-height: 36px; display: inline-flex; align-items: center; gap: 7px;">Unter 60 Min <i class="ti ti-x" style="font-size: 15px;"></i></span>
+            <span style="font-size: 13px; font-weight: 600; color: #3f5a6b; margin-left: 6px;">3 weitere fehlen, weil ihre Besitzer nicht mitspielen.</span>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 18px; height: 100%;">
+          <div style="padding: 18px 20px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 20px; box-shadow: 0 6px 18px rgba(14,60,90,.10);">
+            <div style="font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #0e6690;">Wie viele holen wir hoch?</div>
+            <div style="display: flex; align-items: center; gap: 10px; margin-top: 14px;">
+              <span style="display: flex; gap: 10px; padding-left: 4px;">
+                <span style="width: 40px; height: 40px; border-radius: 50%; background: radial-gradient(circle at 32% 28%, #ffffff 0%, #f3f9fb 30%, #d7e9f0 70%, #b9d4e0 100%); box-shadow: 0 4px 8px rgba(14,60,90,.3);"></span>
+                <span style="width: 40px; height: 40px; border-radius: 50%; background: radial-gradient(circle at 32% 28%, #ffffff 0%, #f3f9fb 30%, #d7e9f0 70%, #b9d4e0 100%); box-shadow: 0 4px 8px rgba(14,60,90,.3);"></span>
+                <span style="width: 40px; height: 40px; border-radius: 50%; background: radial-gradient(circle at 32% 28%, #ffffff 0%, #f3f9fb 30%, #d7e9f0 70%, #b9d4e0 100%); box-shadow: 0 4px 8px rgba(14,60,90,.3);"></span>
+              </span>
+              <span style="margin-left: auto; display: flex; gap: 8px;"><span style="width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: #d7e9f0; color: #10283a; font-size: 18px;"><i class="ti ti-minus"></i></span><span style="width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: #d7e9f0; color: #10283a; font-size: 18px;"><i class="ti ti-plus"></i></span></span>
+            </div>
+            <div style="font-size: 13px; color: #3f5a6b; font-weight: 600; margin-top: 12px;">3 Spiele werden gezogen · 3 spielen mit</div>
+          </div>
+          <div style="padding: 16px 20px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 20px; box-shadow: 0 6px 18px rgba(14,60,90,.10); display: flex; flex-direction: column; gap: 8px;">
+            <span style="font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #0e6690;">Wie gewertet wird</span>
+            <span style="display: flex; align-items: center; gap: 10px; font-size: 14.5px; font-weight: 700;"><span style="width: 44px; height: 26px; border-radius: 999px; background: #0e6690; display: flex; align-items: center; padding: 3px; box-sizing: border-box; flex: none;"><span style="width: 20px; height: 20px; border-radius: 50%; background: #f7fbfc; margin-left: auto;"></span></span>Geheim — erst am Ende aufdecken</span>
+            <span style="font-size: 12.5px; font-weight: 600; color: #3f5a6b; line-height: 1.5;">Jede Person wertet für sich; die Karten der anderen bleiben in der Tiefe, bis alle durch sind.</span>
+          </div>
+          <a href="#" style="margin-top: auto; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 26px 20px 22px; border-radius: 28px; text-align: center; background: #0e6690; color: #f7fbfc; box-shadow: 0 14px 26px rgba(14,60,90,.35);">
+            <i class="ti ti-tornado" style="font-size: 40px;"></i>
+            <span style="font-weight: 700; font-size: 30px; line-height: 1;">Abtauchen</span>
+            <span style="font-size: 13px; font-weight: 700; opacity: .92;">3 aus 9 · für 3 Personen</span>
+          </a>
+        </div>
+      </div>
+      <div style="position: absolute; left: 128px; right: 40px; bottom: 0; height: 42px; display: flex; align-items: center; gap: 14px; font-size: 12.5px; font-weight: 600; color: #3f5a6b; border-top: 1px solid #c9dde6;"><a href="#" style="display: inline-flex; align-items: center; min-height: 32px; padding: 0 4px;">FAQ</a><a href="#" style="display: inline-flex; align-items: center; min-height: 32px; padding: 0 4px;">Kontakt</a><a href="#" style="display: inline-flex; align-items: center; min-height: 32px; padding: 0 4px;">Impressum</a><a href="#" style="display: inline-flex; align-items: center; min-height: 32px; padding: 0 4px;">Datenschutz</a><a href="#" style="display: inline-flex; align-items: center; min-height: 32px; padding: 0 4px;">Nutzungsbedingungen</a><span style="margin-left: auto; display: inline-flex; align-items: center; gap: 6px;"><i class="ti ti-eye-off"></i>Kein Tracking · EU-Hosting</span><img src="../../../public/icons/powered-by-bgg.png" alt="Powered by BGG" style="width: 100px; height: auto;"></div>
+    </div>
+  </div>
+
+  <div data-screen-label="O4.2 Wertungskarte" style="display: flex; flex-direction: column; gap: 10px;">
+    <div style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #3f5a6b; max-width: 1440px; line-height: 1.4;">O4.2 · Leas Wertungskarte im Vollbild: keine Kopfleiste, keine Reling — nur die Karte, die fünf Blasen und der Weg zurück. Die anderen Spiele bleiben in der Tiefe.</div>
+    <div style="width: 1440px; height: 900px; position: relative; overflow: hidden; border-radius: 6px; font-size: 16px; line-height: 1.45; background: linear-gradient(180deg, #eef7fa 0%, #dcecf2 48%, #cfe3ec 100%); box-shadow: 0 18px 44px rgba(14,60,90,.18); display: flex; flex-direction: column; color: #10283a;">
+      <div style="padding: 26px 40px 0; display: flex; align-items: center; justify-content: space-between; gap: 20px;">
+        <span style="width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; background: #f7fbfc; color: #10283a; box-shadow: 0 6px 14px rgba(14,60,90,.16);"><i class="ti ti-arrow-back-up" style="font-size: 23px;"></i></span>
+        <span style="font-size: 16px; font-weight: 700; color: #10283a;">Es wertet <span style="font-size: 26px; color: #4a4396;">Lea</span> · Karte 2 von 3</span>
+        <span style="display: flex; gap: 7px;">
+          <span style="width: 16px; height: 16px; border-radius: 50%; background: radial-gradient(circle at 32% 28%, #ffffff 0%, #f3f9fb 30%, #d7e9f0 70%, #b9d4e0 100%); border: 1px solid #a9c4d1; box-sizing: border-box;"></span>
+          <span style="width: 16px; height: 16px; border-radius: 50%; background: radial-gradient(circle at 32% 28%, #ffffff 0%, #f3f9fb 30%, #d7e9f0 70%, #b9d4e0 100%); border: 1px solid #726bc7; box-sizing: border-box; box-shadow: 0 0 0 4px rgba(114,107,199,.3);"></span>
+          <span style="width: 16px; height: 16px; border-radius: 50%; border: 2px solid #a9c4d1; box-sizing: border-box;"></span>
+        </span>
+      </div>
+      <div style="flex: 1; display: grid; grid-template-columns: 250px minmax(0, 1fr) 250px; gap: 30px; align-items: center; padding: 0 40px;">
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <div style="font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #0e6690;">Wer hat schon gewertet</div>
+          <sc-for list="{{ voteSeats }}" as="m" hint-placeholder-count="4">
+            <span style="display: flex; align-items: center; gap: 12px; color: #10283a; opacity: {{ m.op }};">
+              <span style="width: 52px; height: 52px; border-radius: 50%; background: #f7fbfc; border: 5px solid {{ m.color }}; box-sizing: border-box; display: grid; place-items: center; font-weight: 700; font-size: 16px; box-shadow: {{ m.shadow }}; flex: none;">{{ m.ini }}</span>
+              <span style="display: flex; flex-direction: column; line-height: 1.15; gap: 5px;"><span style="font-weight: 700; font-size: 17px;">{{ m.name }}</span>
+                <span style="display: flex; gap: 6px;"><sc-for list="{{ m.cards }}" as="c" hint-placeholder-count="3"><span style="width: 16px; height: 16px; border-radius: 50%; background: {{ c.bg }}; border: {{ c.border }}; box-shadow: {{ c.ring }}; box-sizing: border-box;"></span></sc-for></span>
+              </span>
+            </span>
+          </sc-for>
+        </div>
+        <div style="justify-self: center; width: 700px; padding: 28px 36px 32px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 30px; box-shadow: 0 24px 54px rgba(14,60,90,.2); box-sizing: border-box;">
+          <div style="display: flex; gap: 28px; align-items: center;">
+            <span style="width: 300px; flex: none; border-radius: 16px; overflow: hidden; background: #ffffff; box-shadow: 0 14px 26px rgba(14,60,90,.3);">
+              <span style="display: block; aspect-ratio: 4 / 3; background: linear-gradient(145deg, oklch(.6 .13 150), oklch(.36 .12 180));"></span>
+            </span>
+            <span style="display: flex; flex-direction: column; gap: 6px;">
+              <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 27px; line-height: 1.1;">Kartographen des Nordens <i class="ti ti-info-circle" style="font-size: 18px; color: #3f5a6b; vertical-align: middle;"></i></span>
+              <span style="font-size: 15px; color: #3f5a6b; font-weight: 600;">2–4 Spieler · 45 Min</span>
+              <span style="font-size: 15px; color: #3f5a6b; font-weight: 600;">Gehört Lea · zuletzt im Juni · Ø 4,2 bei euch</span>
+              <span style="font-weight: 700; font-size: 21px; margin-top: 14px;">Wie gern möchtest du das spielen?</span>
+            </span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; margin-top: 30px; padding: 0 6px;">
+            <sc-for list="{{ moods }}" as="m" hint-placeholder-count="5">
+              <span style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                <span style="width: 94px; height: 94px; border-radius: 50%; display: grid; place-items: center; background: {{ m.bg }}; border: {{ m.border }}; box-sizing: border-box; box-shadow: {{ m.shadow }}; color: {{ m.ink }}; font-size: 48px; transform: {{ m.tf }};"><i class="ti {{ m.face }}"></i></span>
+                <span style="font-weight: 700; font-size: 15px; color: #3f5a6b;">{{ m.n }}</span>
+              </span>
+            </sc-for>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 13px; color: #3f5a6b; margin-top: 8px; padding: 0 10px;"><span>gar nicht</span><span>unbedingt</span></div>
+        </div>
+        <div style="font-size: 14px; color: #3f5a6b; font-weight: 600; line-height: 1.45;">
+          <div style="font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #0e6690; margin-bottom: 8px;">Noch in der Tiefe</div>
+          Die anderen zwei Spiele bleiben unten, bis alle gewertet haben. Dann tauchen sie auf.
+          <div style="display: flex; gap: 12px; margin-top: 16px;">
+            <span style="position: relative; width: 100px; aspect-ratio: 4 / 3; border-radius: 12px; background: linear-gradient(180deg, #1c4a66, #123a52); box-shadow: 0 8px 16px rgba(14,60,90,.3); transform: rotate(-3deg);"><span style="position: absolute; right: 12px; top: 10px; width: 8px; height: 8px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.95), rgba(255,255,255,.3) 50%, rgba(255,255,255,.1)); border: 1px solid rgba(255,255,255,.5);"></span></span>
+            <span style="position: relative; width: 100px; aspect-ratio: 4 / 3; border-radius: 12px; background: linear-gradient(180deg, #1c4a66, #123a52); box-shadow: 0 8px 16px rgba(14,60,90,.3); transform: rotate(4deg);"><span style="position: absolute; left: 14px; bottom: 12px; width: 6px; height: 6px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.95), rgba(255,255,255,.3) 50%, rgba(255,255,255,.1)); border: 1px solid rgba(255,255,255,.5);"></span></span>
+          </div>
+        </div>
+      </div>
+      <div style="padding: 0 40px 26px; text-align: center; font-size: 13px; font-weight: 600; color: #3f5a6b;">Kein Dock, keine Kopfleiste, kein Fuß — die Wertung ist der einzige Vollbildzustand des Designs.</div>
+    </div>
+  </div>
+
+  <div data-screen-label="O4.3 Geteilte Wertung" style="display: flex; flex-direction: column; gap: 10px;">
+    <div style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #3f5a6b; max-width: 1440px; line-height: 1.4;">O4.3 · Ein Gerät, alle werten nacheinander: der Bildschirm wird weitergereicht. Zwischen zwei Personen liegt die Sichtblende — sie ist der Übergabemoment.</div>
+    <div style="width: 1440px; height: 900px; position: relative; overflow: hidden; border-radius: 6px; font-size: 16px; line-height: 1.45; background: linear-gradient(180deg, #1c4a66 0%, #123a52 60%, #0d2b3e 100%); box-shadow: 0 18px 44px rgba(14,60,90,.18); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 34px; color: #eaf4f8;">
+      {{ bubbles }}
+      <div style="position: relative; display: flex; flex-direction: column; align-items: center; gap: 10px; z-index: 2;">
+        <span style="width: 120px; height: 120px; border-radius: 50%; background: #f7fbfc; border: 8px solid #726bc7; box-sizing: border-box; display: grid; place-items: center; font-weight: 700; font-size: 38px; color: #10283a; box-shadow: 0 0 0 12px rgba(114,107,199,.28), 0 18px 34px rgba(0,0,0,.35);">LE</span>
+        <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 40px; line-height: 1.1;">Lea ist dran.</span>
+        <span style="font-size: 19px; font-weight: 600; color: #b9d4e0;">Gib das Gerät weiter — und schau weg, bis es klingelt.</span>
+      </div>
+      <a href="#" style="position: relative; z-index: 2; display: inline-flex; align-items: center; gap: 12px; padding: 18px 34px; border-radius: 999px; background: #f7fbfc; color: #10283a; font-weight: 700; font-size: 20px; box-shadow: 0 14px 30px rgba(0,0,0,.35); min-height: 44px;"><i class="ti ti-cards" style="font-size: 24px; color: #0e6690;"></i>Ich bin Lea — Karten zeigen</a>
+      <div style="position: relative; z-index: 2; display: flex; gap: 22px; align-items: center; margin-top: 10px;">
+        <sc-for list="{{ relaySeats }}" as="m" hint-placeholder-count="4">
+          <span style="display: flex; flex-direction: column; align-items: center; gap: 6px; opacity: {{ m.op }};">
+            <span style="width: 52px; height: 52px; border-radius: 50%; background: rgba(247,251,252,.12); border: 5px solid {{ m.color }}; box-sizing: border-box; display: grid; place-items: center; font-weight: 700; font-size: 16px; color: #f7fbfc;">{{ m.ini }}</span>
+            <span style="font-size: 13px; font-weight: 700;">{{ m.state }}</span>
+          </span>
+        </sc-for>
+      </div>
+      <span style="position: absolute; bottom: 26px; left: 0; right: 0; text-align: center; font-size: 13px; font-weight: 600; color: #9ec2d4; z-index: 2;">Die Tiefe ist der einzige dunkle Zustand von Ocean — sie bedeutet immer „hier ist etwas verdeckt“.</span>
+    </div>
+  </div>
+
+  <div data-screen-label="O4.4 Der Wal taucht auf" style="display: flex; flex-direction: column; gap: 10px;">
+    <div style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #3f5a6b; max-width: 1440px; line-height: 1.4;">O4.4 · Ergebnis: der Wal spielt mit dem gespielten Spiel auf dem Rücken auf, rechts das Ergebnis und die Karte zum Teilen. Wer gewonnen hat, trägt die Krone.</div>
+    <div style="width: 1440px; height: 900px; position: relative; overflow: hidden; border-radius: 6px; font-size: 16px; line-height: 1.45; background-color: #e4f1f5; background-image: radial-gradient(600px 320px at 22% 14%, rgba(255,255,255,.7), transparent 70%); box-shadow: 0 18px 44px rgba(14,60,90,.18); color: #10283a;">
+      <div style="position: absolute; left: 0; right: 0; top: 0; height: 60px; display: flex; align-items: center; gap: 18px; padding: 0 28px; background: #f7fbfc; border-bottom: 1px solid #c9dde6; z-index: 3;">
+        <a href="#" style="display: inline-flex; align-items: center; gap: 10px; color: #10283a;"><span style="width: 34px; height: 34px; border-radius: 50%; background: #0e6690; color: #f7fbfc; display: grid; place-items: center;"><i class="ti ti-tornado" style="font-size: 18px;"></i></span><span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 20px;">Spielwirbel</span></a>
+        <span style="font-size: 15px; font-weight: 600; color: #3f5a6b; display: inline-flex; align-items: center; gap: 8px;"><a href="#" style="display: inline-flex; align-items: center; min-height: 24px;">Donnerstagsrunde</a> <i class="ti ti-chevron-right" style="font-size: 12px;"></i> <strong style="color: #10283a; font-weight: 700;">Ergebnis · 14. Sep 2026</strong></span>
+        <span style="margin-left: auto; display: flex; gap: 10px; align-items: center;">
+          <span style="font-size: 14px; font-weight: 700; color: #f7fbfc; padding: 8px 16px; border-radius: 999px; background: #0e6690; display: inline-flex; gap: 6px; align-items: center; min-height: 36px; box-sizing: border-box;"><i class="ti ti-share"></i>Teilen</span>
+          <span style="font-size: 14px; font-weight: 700; color: #10283a; border: 1.5px solid #a9c4d1; border-radius: 999px; padding: 7px 14px; display: inline-flex; gap: 6px; align-items: center; min-height: 36px; box-sizing: border-box;"><i class="ti ti-world" style="font-size: 15px;"></i>Deutsch <i class="ti ti-chevron-down" style="font-size: 12px;"></i></span>
+          <span style="width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: #d7e9f0; color: #10283a;"><i class="ti ti-user" style="font-size: 17px;"></i></span>
+        </span>
+      </div>
+      <nav style="position: absolute; left: 0; top: 60px; bottom: 42px; width: 104px; display: flex; flex-direction: column; gap: 6px; padding: 18px 10px; box-sizing: border-box; background: #f7fbfc; border-right: 1px solid #c9dde6; z-index: 3;">
+        <sc-for list="{{ rail }}" as="r" hint-placeholder-count="5">
+          <a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 4px; border-radius: 14px; background: {{ r.bg }}; color: #10283a; font-size: 11.5px; font-weight: 700; margin-top: {{ r.mt }}; min-height: 56px; justify-content: center;"><i class="ti {{ r.icon }}" style="font-size: 22px; color: {{ r.ink }};"></i>{{ r.label }}</a>
+        </sc-for>
+      </nav>
+      <div style="position: absolute; left: 136px; right: 40px; top: 84px; bottom: 52px; display: grid; grid-template-columns: 230px minmax(0, 1fr) 500px; gap: 28px; align-items: start;">
+        <div style="display: flex; flex-direction: column; gap: 22px;">
+          <div style="font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #0e6690;">Wer dabei war</div>
+          <sc-for list="{{ resultSeats }}" as="m" hint-placeholder-count="4">
+            <a href="#" style="display: flex; align-items: center; gap: 12px; color: #10283a; min-height: 52px;">
+              <span style="position: relative; width: 52px; height: 52px; border-radius: 50%; background: #f7fbfc; border: 5px solid {{ m.color }}; box-sizing: border-box; display: grid; place-items: center; font-weight: 700; font-size: 16px; box-shadow: {{ m.shadow }}; flex: none;">{{ m.ini }}<sc-if value="{{ m.won }}" hint-placeholder-val="{{ false }}"><i class="ti ti-crown" style="position: absolute; top: -28px; left: 50%; transform: translateX(-50%) rotate(-8deg); font-size: 30px; color: #8a6a10;"></i></sc-if></span>
+              <span style="display: flex; flex-direction: column; line-height: 1.15;"><span style="font-weight: 700; font-size: 17px;">{{ m.name }}</span><span style="font-size: 13px; font-weight: 700; color: {{ m.subColor }};">{{ m.sub }}</span></span>
+            </a>
+          </sc-for>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <div style="font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #0e6690;">In der Runde · 14. Sep 2026</div>
+          <h1 style="margin: 0; font-family: 'Comfortaa'; font-weight: 700; font-size: 32px; line-height: 1.12; text-wrap: balance;">„Nordlichter“ wurde gespielt. Jonas hat gewonnen!</h1>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <span style="padding: 9px 15px; border-radius: 999px; background: #cfe6ef; color: #10283a; font-weight: 700; font-size: 13px; min-height: 36px; display: inline-flex; align-items: center;">Sieger ändern</span>
+            <span style="padding: 9px 15px; border-radius: 999px; background: #cfe6ef; color: #10283a; font-weight: 700; font-size: 13px; min-height: 36px; display: inline-flex; align-items: center;">Anderes Spiel</span>
+            <span style="padding: 9px 15px; border-radius: 999px; background: #cfe6ef; color: #10283a; font-weight: 700; font-size: 13px; min-height: 36px; display: inline-flex; align-items: center;">Zurücksetzen</span>
+          </div>
+          <div style="position: relative; height: 400px; border-radius: 22px; overflow: hidden; background: linear-gradient(180deg, #eef7fa 0%, #e2f0f5 100%); border: 1px solid #c9dde6;">
+            <span style="position: absolute; left: 110px; bottom: 140px; width: 260px; height: 104px; border-radius: 50% 60% 40% 45% / 100% 100% 35% 40%; background: linear-gradient(180deg, #2f6d94 0%, #1f4f72 60%, #163a55 100%);"></span>
+            <span style="position: absolute; left: 130px; bottom: 140px; width: 190px; height: 34px; border-radius: 0 0 50% 50% / 0 0 100% 100%; background: rgba(255,255,255,.22);"></span>
+            <span style="position: absolute; left: 350px; bottom: 182px; width: 76px; height: 62px; background: #1f4f72; clip-path: polygon(0 42%, 60% 30%, 100% 0, 82% 50%, 100% 100%, 60% 70%, 0 58%); transform: rotate(-8deg);"></span>
+            <span style="position: absolute; left: 205px; bottom: 96px; width: 56px; height: 40px; background: #1a4360; clip-path: polygon(0 0, 100% 30%, 40% 100%); transform: rotate(20deg); opacity: .8;"></span>
+            <span style="position: absolute; left: 160px; bottom: 192px; width: 10px; height: 10px; border-radius: 50%; background: #f7fbfc; box-shadow: inset -3px 0 0 #10283a;"></span>
+            <span style="position: absolute; left: 130px; bottom: 222px; width: 200px; border-radius: 10px; overflow: hidden; background: #ffffff; box-shadow: 0 16px 30px rgba(14,60,90,.35); transform: rotate(-5deg);">
+              <span style="position: relative; display: block; aspect-ratio: 4 / 3; background: linear-gradient(145deg, oklch(.58 .12 200), oklch(.36 .11 230));">
+                <span style="position: absolute; right: 10px; top: 50px; border: 3px solid #0e6690; border-radius: 8px; padding: 2px 8px; font-weight: 700; font-size: 15px; letter-spacing: .1em; text-transform: uppercase; color: #0e6690; background: #f7fbfc; transform: rotate(-9deg);">Gespielt</span>
+              </span>
+            </span>
+            <span style="position: absolute; left: 0; right: 0; bottom: 0; height: 180px; background: linear-gradient(180deg, rgba(127,180,211,.72), rgba(42,106,151,.92));"></span>
+            <span style="position: absolute; left: 0; right: 0; bottom: 174px; height: 14px; background-image: radial-gradient(circle at 50% 100%, rgba(127,180,211,.72) 8px, transparent 9px); background-size: 28px 14px; background-repeat: repeat-x;"></span>
+            {{ bubbles2 }}
+            <span style="position: absolute; right: 14px; bottom: 12px; font-size: 13px; font-weight: 700; color: #10283a; background: #f7fbfc; padding: 7px 13px; border-radius: 999px;">Session Nr. 23 · Jonas’ 9. Sieg · Nordlichter zum 4. Mal</span>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <div style="padding: 20px 22px 18px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 22px; box-shadow: 0 14px 34px rgba(14,60,90,.12); display: flex; flex-direction: column; gap: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: baseline;"><span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 20px;">Das Ergebnis</span><span style="font-size: 12px; font-weight: 700; color: #0e6690; letter-spacing: .1em; text-transform: uppercase;">3 Spiele · 4 Stimmen</span></div>
+            <sc-for list="{{ resultRows }}" as="r" hint-placeholder-count="3">
+              <div style="display: grid; grid-template-columns: 30px 60px minmax(0, 1fr) auto 64px; gap: 12px; align-items: center; padding: 10px 12px; border-radius: 14px; background: {{ r.bg }}; border: {{ r.border }};">
+                <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 22px; text-align: center;">{{ r.place }}</span>
+                <span style="width: 60px; aspect-ratio: 4 / 3; border-radius: 8px; background: {{ r.cover }}; box-shadow: 0 4px 8px rgba(14,60,90,.25);"></span>
+                <span style="display: flex; flex-direction: column; min-width: 0;"><span style="font-weight: 700; font-size: 16px; line-height: 1.15;">{{ r.title }}</span><span style="font-size: 12.5px; color: #3f5a6b; font-weight: 600;">{{ r.sub }}</span></span>
+                <span style="display: flex; gap: 4px; align-items: flex-end; height: 30px;"><sc-for list="{{ r.bars }}" as="b" hint-placeholder-count="5"><span style="width: 14px; display: flex; flex-direction: column; justify-content: flex-end; height: 100%;"><span style="border-radius: 7px 7px 0 0; background: {{ b.c }}; height: {{ b.h }}; min-height: 3px;"></span></span></sc-for></span>
+                <span style="justify-self: end; min-width: 44px; padding: 5px 10px; border-radius: 999px; background: {{ r.pillBg }}; color: {{ r.pillInk }}; font-weight: 700; font-size: 16px; text-align: center; border: 1px solid rgba(16,40,58,.14); box-sizing: border-box; font-variant-numeric: tabular-nums;">{{ r.score }}</span>
+              </div>
+            </sc-for>
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12.5px; color: #3f5a6b; font-weight: 600;"><span>Spielwirbel-Score: Veto-Kurve über 1–5, nicht der reine Durchschnitt <i class="ti ti-info-circle"></i></span><a href="#" style="color: #a3392b; font-weight: 700;">Session löschen</a></div>
+          </div>
+          <div style="display: flex; gap: 14px; align-items: flex-start;">
+            <a href="#" style="flex: 1; padding: 16px 18px; display: flex; align-items: center; justify-content: center; gap: 12px; border-radius: 999px; background: #0e6690; color: #f7fbfc; font-weight: 700; font-size: 18px; box-shadow: 0 10px 20px rgba(14,60,90,.3); min-height: 44px;"><i class="ti ti-tornado" style="font-size: 24px;"></i>Noch eine Runde</a>
+            <a href="#" style="padding: 16px 18px; display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: 999px; border: 1.5px solid #a9c4d1; background: #f7fbfc; color: #10283a; font-weight: 700; font-size: 16px; min-height: 44px;"><i class="ti ti-share"></i>Teilen</a>
+            <span style="display: flex; flex-direction: column; align-items: center; gap: 6px;">
+              <a href="#" style="width: 150px; height: 220px; flex: none; border-radius: 12px; overflow: hidden; position: relative; background: linear-gradient(180deg, #eef7fa 0%, #e2f0f5 56%, #7fb4d3 56%, #2f6d94 100%); border: 1px solid #c9dde6; box-shadow: 0 10px 24px rgba(14,60,90,.16); color: #10283a; display: block;">
+                <span style="position: absolute; left: 50%; bottom: 84px; width: 80px; height: 32px; margin-left: -46px; border-radius: 50% 60% 40% 45% / 100% 100% 35% 40%; background: linear-gradient(180deg, #2f6d94, #1f4f72);"></span>
+                <span style="position: absolute; left: 50%; bottom: 98px; width: 24px; height: 20px; margin-left: 28px; background: #1f4f72; clip-path: polygon(0 42%, 60% 30%, 100% 0, 82% 50%, 100% 100%, 60% 70%, 0 58%); transform: rotate(-8deg);"></span>
+                <span style="position: absolute; left: 50%; bottom: 100px; width: 4px; height: 4px; margin-left: -30px; border-radius: 50%; background: #f7fbfc;"></span>
+                <span style="position: absolute; left: 0; right: 0; bottom: 0; padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 2px; background: #f7fbfc;">
+                  <span style="font-size: 10.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #0e6690;">Donnerstagsrunde</span>
+                  <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 14px; line-height: 1.15;">Nordlichter</span>
+                  <span style="font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: space-between;"><span>Jonas hat gewonnen</span><span style="padding: 1px 7px; border-radius: 999px; background: #f2e394;">4,8</span></span>
+                </span>
+              </a>
+              <span style="font-size: 12px; font-weight: 700; color: #3f5a6b;">Karte teilen · PNG</span>
+            </span>
+          </div>
+        </div>
+      </div>
+      <div style="position: absolute; left: 128px; right: 40px; bottom: 0; height: 42px; display: flex; align-items: center; gap: 14px; font-size: 12.5px; font-weight: 600; color: #3f5a6b; border-top: 1px solid #c9dde6;"><a href="#" style="display: inline-flex; align-items: center; min-height: 32px; padding: 0 4px;">FAQ</a><a href="#" style="display: inline-flex; align-items: center; min-height: 32px; padding: 0 4px;">Kontakt</a><a href="#" style="display: inline-flex; align-items: center; min-height: 32px; padding: 0 4px;">Impressum</a><a href="#" style="display: inline-flex; align-items: center; min-height: 32px; padding: 0 4px;">Datenschutz</a><a href="#" style="display: inline-flex; align-items: center; min-height: 32px; padding: 0 4px;">Nutzungsbedingungen</a><span style="margin-left: auto; display: inline-flex; align-items: center; gap: 6px;"><i class="ti ti-eye-off"></i>Kein Tracking · EU-Hosting</span><img src="../../../public/icons/powered-by-bgg.png" alt="Powered by BGG" style="width: 100px; height: auto;"></div>
+    </div>
+  </div>
+
+  <div data-screen-label="O4.5 Mehrere Tische" style="display: flex; flex-direction: column; gap: 10px;">
+    <div style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #3f5a6b; max-width: 1440px; line-height: 1.4;">O4.5 · Mehrere Tische: aus einer Session werden zwei, jedes mit eigener Muschel und eigenem Ergebnis. Ein Tisch kann schon fertig sein, während das andere noch wertet.</div>
+    <div style="width: 1440px; height: 900px; position: relative; overflow: hidden; border-radius: 6px; font-size: 16px; line-height: 1.45; background-color: #e4f1f5; background-image: radial-gradient(600px 320px at 22% 14%, rgba(255,255,255,.7), transparent 70%); box-shadow: 0 18px 44px rgba(14,60,90,.18); color: #10283a;">
+      <div style="position: absolute; left: 0; right: 0; top: 0; height: 60px; display: flex; align-items: center; gap: 18px; padding: 0 28px; background: #f7fbfc; border-bottom: 1px solid #c9dde6; z-index: 3;">
+        <a href="#" style="display: inline-flex; align-items: center; gap: 10px; color: #10283a;"><span style="width: 34px; height: 34px; border-radius: 50%; background: #0e6690; color: #f7fbfc; display: grid; place-items: center;"><i class="ti ti-tornado" style="font-size: 18px;"></i></span><span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 20px;">Spielwirbel</span></a>
+        <span style="font-size: 15px; font-weight: 600; color: #3f5a6b; display: inline-flex; align-items: center; gap: 8px;"><a href="#">Familie Berger</a> <i class="ti ti-chevron-right" style="font-size: 12px;"></i> <strong style="color: #10283a; font-weight: 700;">Zwei Tische · 20. Sep</strong></span>
+        <span style="margin-left: auto; display: flex; gap: 10px; align-items: center;">
+          <span style="font-size: 14px; font-weight: 700; color: #10283a; border: 1.5px solid #a9c4d1; border-radius: 999px; padding: 7px 14px; display: inline-flex; gap: 6px; align-items: center; min-height: 36px; box-sizing: border-box;"><i class="ti ti-world" style="font-size: 15px;"></i>Deutsch <i class="ti ti-chevron-down" style="font-size: 12px;"></i></span>
+          <span style="width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: #d7e9f0; color: #10283a;"><i class="ti ti-user" style="font-size: 17px;"></i></span>
+        </span>
+      </div>
+      <nav style="position: absolute; left: 0; top: 60px; bottom: 42px; width: 104px; display: flex; flex-direction: column; gap: 6px; padding: 18px 10px; box-sizing: border-box; background: #f7fbfc; border-right: 1px solid #c9dde6; z-index: 3;">
+        <sc-for list="{{ rail }}" as="r" hint-placeholder-count="5">
+          <a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 4px; border-radius: 14px; background: {{ r.bg }}; color: #10283a; font-size: 11.5px; font-weight: 700; margin-top: {{ r.mt }}; min-height: 56px; justify-content: center;"><i class="ti {{ r.icon }}" style="font-size: 22px; color: {{ r.ink }};"></i>{{ r.label }}</a>
+        </sc-for>
+      </nav>
+      <div style="position: absolute; left: 136px; right: 40px; top: 84px; bottom: 52px; display: flex; flex-direction: column; gap: 20px;">
+        <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+          <h1 style="margin: 0; font-family: 'Comfortaa'; font-weight: 700; font-size: 30px; line-height: 1;">Zwei Tische</h1>
+          <span style="font-size: 15px; font-weight: 600; color: #3f5a6b;">6 Personen, zwei Tische — jeder Tisch wertet für sich.</span>
+          <span style="margin-left: auto; display: flex; gap: 10px;">
+            <span style="padding: 10px 17px; border-radius: 999px; border: 1.5px solid #a9c4d1; font-weight: 700; font-size: 14px; min-height: 40px; display: inline-flex; align-items: center; gap: 7px;"><i class="ti ti-arrows-shuffle"></i>Tische neu mischen</span>
+            <span style="padding: 10px 17px; border-radius: 999px; background: #cfe6ef; color: #10283a; font-weight: 700; font-size: 14px; min-height: 40px; display: inline-flex; align-items: center; gap: 7px;"><i class="ti ti-plus"></i>Dritter Tisch</span>
+          </span>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start;">
+          <sc-for list="{{ boats }}" as="b" hint-placeholder-count="2">
+            <div style="display: flex; flex-direction: column; gap: 16px; padding: 22px 24px; background: #f7fbfc; border: {{ b.border }}; border-radius: 24px; box-shadow: 0 14px 34px rgba(14,60,90,.12);">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 23px;">{{ b.name }}</span>
+                <span style="padding: 6px 13px; border-radius: 999px; background: {{ b.stateBg }}; color: {{ b.stateInk }}; font-weight: 700; font-size: 12.5px; letter-spacing: .06em; text-transform: uppercase;">{{ b.state }}</span>
+                <span style="margin-left: auto; font-size: 13.5px; font-weight: 600; color: #3f5a6b;">{{ b.count }}</span>
+              </div>
+              <div style="display: flex; gap: 12px;">
+                <sc-for list="{{ b.seats }}" as="s" hint-placeholder-count="3">
+                  <span style="display: flex; flex-direction: column; align-items: center; gap: 5px; width: 62px;">
+                    <span style="position: relative; width: 50px; height: 50px; border-radius: 50%; background: #f7fbfc; border: 5px solid {{ s.color }}; box-sizing: border-box; display: grid; place-items: center; font-weight: 700; font-size: 15px; box-shadow: {{ s.shadow }};">{{ s.ini }}<sc-if value="{{ s.won }}" hint-placeholder-val="{{ false }}"><i class="ti ti-crown" style="position: absolute; top: -24px; left: 50%; transform: translateX(-50%) rotate(-8deg); font-size: 26px; color: #8a6a10;"></i></sc-if></span>
+                    <span style="font-size: 12px; font-weight: 700; line-height: 1.1; text-align: center;">{{ s.name }}</span>
+                  </span>
+                </sc-for>
+              </div>
+              <sc-if value="{{ b.done }}" hint-placeholder-val="{{ false }}">
+                <div style="display: flex; align-items: center; gap: 14px; padding: 14px 16px; background: #f2e394; border-radius: 18px;">
+                  <span style="width: 76px; border-radius: 8px; overflow: hidden; flex: none; box-shadow: 0 5px 10px rgba(14,60,90,.25);"><span style="display: block; aspect-ratio: 4/3; background: {{ b.cover }};"></span></span>
+                  <span style="display: flex; flex-direction: column; gap: 1px; min-width: 0;">
+                    <span style="font-size: 11.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;">Gespielt</span>
+                    <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 19px; line-height: 1.1;">{{ b.game }}</span>
+                    <span style="font-size: 13px; font-weight: 600;">{{ b.winner }} hat gewonnen</span>
+                  </span>
+                  <span style="margin-left: auto; padding: 5px 12px; border-radius: 999px; background: #10283a; color: #f7fbfc; font-weight: 700; font-size: 17px; font-variant-numeric: tabular-nums;">{{ b.score }}</span>
+                </div>
+              </sc-if>
+              <sc-if value="{{ b.running }}" hint-placeholder-val="{{ false }}">
+                <div style="display: flex; align-items: center; gap: 14px; padding: 14px 16px; background: #eaf4f8; border: 1px dashed #8fb3c4; border-radius: 18px;">
+                  <span style="display: flex; gap: 8px; flex: none;">
+                    <span style="width: 58px; aspect-ratio: 4/3; border-radius: 8px; background: linear-gradient(180deg, #1c4a66, #123a52); box-shadow: 0 5px 10px rgba(14,60,90,.25);"></span>
+                    <span style="width: 58px; aspect-ratio: 4/3; border-radius: 8px; background: linear-gradient(180deg, #1c4a66, #123a52); box-shadow: 0 5px 10px rgba(14,60,90,.25);"></span>
+                    <span style="width: 58px; aspect-ratio: 4/3; border-radius: 8px; background: linear-gradient(180deg, #1c4a66, #123a52); box-shadow: 0 5px 10px rgba(14,60,90,.25);"></span>
+                  </span>
+                  <span style="display: flex; flex-direction: column; gap: 2px;">
+                    <span style="font-weight: 700; font-size: 16px;">Kai wertet noch</span>
+                    <span style="font-size: 13px; font-weight: 600; color: #3f5a6b;">2 von 3 Personen sind durch</span>
+                  </span>
+                </div>
+              </sc-if>
+              <div style="display: flex; gap: 10px;">
+                <span style="flex: 1; padding: 12px 16px; border-radius: 999px; background: {{ b.ctaBg }}; color: {{ b.ctaInk }}; font-weight: 700; font-size: 15px; text-align: center; min-height: 44px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; gap: 8px;">{{ b.cta }}</span>
+                <span style="width: 44px; height: 44px; border-radius: 50%; background: #d7e9f0; display: grid; place-items: center; font-size: 19px; flex: none;"><i class="ti ti-dots"></i></span>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="margin-top: auto; display: flex; align-items: center; gap: 14px; padding: 16px 20px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 20px;">
+          <i class="ti ti-info-circle" style="font-size: 22px; color: #0e6690;"></i>
+          <span style="font-size: 14px; font-weight: 600; color: #3f5a6b; line-height: 1.5;">Beide Tische landen als <strong style="color: #10283a;">zwei getrennte Sessions</strong> in der Chronik, mit demselben Datum. Die Pokale zählen beide.</span>
+        </div>
+      </div>
+      <div style="position: absolute; left: 128px; right: 40px; bottom: 0; height: 42px; display: flex; align-items: center; gap: 14px; font-size: 12.5px; font-weight: 600; color: #3f5a6b; border-top: 1px solid #c9dde6;"><a href="#" style="display: inline-flex; align-items: center; min-height: 32px; padding: 0 4px;">FAQ</a><a href="#" style="display: inline-flex; align-items: center; min-height: 32px; padding: 0 4px;">Kontakt</a><a href="#" style="display: inline-flex; align-items: center; min-height: 32px; padding: 0 4px;">Impressum</a><a href="#" style="display: inline-flex; align-items: center; min-height: 32px; padding: 0 4px;">Datenschutz</a><a href="#" style="display: inline-flex; align-items: center; min-height: 32px; padding: 0 4px;">Nutzungsbedingungen</a><span style="margin-left: auto; display: inline-flex; align-items: center; gap: 6px;"><i class="ti ti-eye-off"></i>Kein Tracking · EU-Hosting</span><img src="../../../public/icons/powered-by-bgg.png" alt="Powered by BGG" style="width: 100px; height: auto;"></div>
+    </div>
+  </div>
+
+  <div data-screen-label="O4.6 Übergabe" style="max-width: 1240px; background: #10283a; color: #eaf4f8; border-radius: 22px; padding: 24px 28px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 14px 34px rgba(14,60,90,.2);">
+    <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 20px; color: #f7fbfc;">Was O5 von hier mitnimmt</span>
+    <span style="font-size: 15px; line-height: 1.65; max-width: 100ch;">Die Schleife hat drei Tiefen: hell für alles Offene, <strong style="color: #f7fbfc;">Muschel</strong> für den Topf, <strong style="color: #f7fbfc;">Tiefe</strong> (#1c4a66 → #123a52) für alles Verdeckte — Rückseiten, Sichtblende, ungewertete Karten. Diese drei reichen; Ocean bekommt keine vierte Fläche. Die Sichtblende ist der einzige ganzflächig dunkle Screen. Der Anmeldeweg in O5 bleibt hell.</span>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1540,&quot;height&quot;:1000},&quot;motion&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Ritual&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const ini = (n) => n.slice(0, 2).toUpperCase();
+    const cover = (h) => `linear-gradient(145deg, oklch(.6 .13 ${h}), oklch(.36 .12 ${h + 30}))`;
+    const fmt = (v) => v.toFixed(1).replace('.', ',');
+    const people = ['#c6522c', '#198663', '#726bc7', '#a66815', '#c34d74', '#2f6f9e', '#54821d', '#993556'];
+    const names = ['Marco', 'Jonas', 'Lea', 'Tim'];
+    const winsN = [5, 9, 7, 2];
+
+    const rail = [
+      { label: 'Start', icon: 'ti-home' }, { label: 'Regal', icon: 'ti-cards' },
+      { label: 'Chronik', icon: 'ti-history' }, { label: 'Pokale', icon: 'ti-trophy' },
+      { label: 'Einstellungen', icon: 'ti-settings' },
+    ].map((r, i) => ({ ...r, bg: i === 0 ? '#cfe6ef' : 'transparent', ink: i === 0 ? '#0e6690' : '#3f5a6b', mt: i === 4 ? 'auto' : '0' }));
+
+    const setupSeats = [
+      ...names.map((n, i) => ({
+        name: n, ini: ini(n), op: i === 3 ? '.6' : '1',
+        border: i === 3 ? '2px dashed #8fb3c4' : `5px solid ${people[i]}`,
+        bg: i === 3 ? 'transparent' : '#f7fbfc',
+        shadow: i === 3 ? 'none' : '0 4px 10px rgba(14,60,90,.15)',
+        state: i === 3 ? 'heute nicht dabei' : 'spielt mit',
+      })),
+      { name: 'Gast', ini: '+', op: '.9', border: '2px dashed #8fb3c4', bg: 'transparent', shadow: 'none', state: 'wertet mit, gehört nicht zur Runde' },
+    ];
+
+    const G = [
+      ['Nordlichter', 200], ['Moorgeister', 160], ['Kartographen des Nordens', 150], ['Sternenhafen', 280],
+      ['Glutkessel', 30], ['Salzwiesen', 120], ['Der letzte Leuchtturm', 250], ['Rost & Regen', 220], ['Zinnober', 20],
+    ];
+    const clamPos = [[30, 22, -12], [140, 16, 8], [250, 26, -5], [360, 20, 12], [85, 88, 6], [195, 84, -10], [305, 92, 9], [140, 150, -7], [250, 152, 5]];
+    const clamGames = G.map(([, h], i) => ({ cover: cover(h), x: clamPos[i][0] + 'px', y: clamPos[i][1] + 'px', rot: clamPos[i][2] + 'deg' }));
+
+    const pearlBg = 'radial-gradient(circle at 32% 28%, #ffffff 0%, #f3f9fb 30%, #d7e9f0 70%, #b9d4e0 100%)';
+    const pearl = (s) => s === 'done'
+      ? { bg: pearlBg, border: '1px solid #a9c4d1', ring: 'none' }
+      : s === 'now' ? { bg: pearlBg, border: '1px solid #726bc7', ring: '0 0 0 3px rgba(114,107,199,.3)' }
+      : { bg: 'transparent', border: '2px solid #a9c4d1', ring: 'none' };
+    const voteSeats = names.map((n, i) => ({
+      name: n, ini: ini(n), color: people[i], op: i === 2 ? '1' : '.7',
+      shadow: i === 2 ? '0 0 0 6px rgba(114,107,199,.28), 0 4px 10px rgba(14,60,90,.15)' : '0 4px 10px rgba(14,60,90,.15)',
+      cards: (i < 2 ? ['done', 'done', 'done'] : i === 2 ? ['done', 'now', 'todo'] : ['todo', 'todo', 'todo']).map(pearl),
+    }));
+    const relaySeats = names.map((n, i) => ({
+      ini: ini(n), color: people[i], op: i === 2 ? '1' : '.5',
+      state: i < 2 ? 'fertig' : i === 2 ? 'ist dran' : 'wartet',
+    }));
+
+    const ramp = [
+      { bg: '#23305c', ink: '#f7fbfc' }, { bg: '#35609a', ink: '#f7fbfc' }, { bg: '#6a9fd0', ink: '#10283a' },
+      { bg: '#b7d4ee', ink: '#10283a' }, { bg: '#f2e394', ink: '#10283a' },
+    ];
+    const stop = (s) => (s < 1 ? { bg: '#4a1942', ink: '#f7fbfc' } : ramp[Math.min(4, Math.max(0, Math.round(s) - 1))]);
+    const faces = ['ti-mood-cry', 'ti-mood-sad', 'ti-mood-neutral', 'ti-mood-smile', 'ti-mood-crazy-happy'];
+    const bubbleBg = 'radial-gradient(circle at 32% 28%, #ffffff 0%, #f3f9fb 30%, #d7e9f0 70%, #b9d4e0 100%)';
+    const moods = faces.map((face, i) => {
+      const sel = i === 3, st = ramp[i];
+      return {
+        n: i + 1, face,
+        bg: sel ? st.bg : bubbleBg, ink: sel ? st.ink : '#10283a',
+        border: sel ? '3px solid #f7fbfc' : '2px solid #a9c4d1',
+        shadow: sel ? '0 0 0 6px #0e6690, 0 12px 24px rgba(14,60,90,.28)' : 'inset 0 -4px 8px rgba(14,102,144,.12), 0 6px 12px rgba(14,60,90,.12)',
+        tf: sel ? 'translateY(-8px) scale(1.06)' : 'none',
+      };
+    });
+
+    const resultSeats = names.map((n, i) => ({
+      name: n, ini: ini(n), color: people[i], won: i === 1,
+      sub: i === 1 ? 'hat gewonnen · 9. Sieg' : winsN[i] + ' Siege',
+      subColor: i === 1 ? '#8a6a10' : '#3f5a6b',
+      shadow: i === 1 ? '0 0 0 6px rgba(242,227,148,.8), 0 4px 10px rgba(14,60,90,.15)' : '0 4px 10px rgba(14,60,90,.15)',
+    }));
+    const bars = (dist) => { const m = Math.max(...dist, 1); return dist.map((c, i) => ({ c: ramp[i].bg, h: Math.round((c / m) * 100) + '%' })); };
+    const resultRows = [
+      { place: 1, title: 'Nordlichter', sub: 'Gehört Marco · gespielt, Sieg vergeben', score: 4.8, dist: [0, 0, 0, 1, 3], h: 200, bg: '#f2e394', border: '1px solid #ddcd78' },
+      { place: 2, title: 'Kartographen des Nordens', sub: 'Gehört Lea', score: 3.8, dist: [0, 0, 2, 1, 1], h: 150, bg: '#ffffff', border: '1px solid #dfebf1' },
+      { place: 3, title: 'Rost & Regen', sub: 'Gehört Tim · 1× gar nicht', score: 2.9, dist: [1, 1, 1, 1, 0], h: 220, bg: '#ffffff', border: '1px solid #dfebf1' },
+    ].map((r) => { const st = stop(r.score); return { ...r, cover: cover(r.h), bars: bars(r.dist), score: fmt(r.score), pillBg: st.bg, pillInk: st.ink }; });
+
+    const boatNames = [['Oma Hilde', 'Paul', 'Mia'], ['Nils', 'Sarah', 'Kai']];
+    const boats = [
+      {
+        name: 'Tisch 1', state: 'Fertig', stateBg: '#cde7dc', stateInk: '#10283a', count: '3 Personen',
+        done: true, running: false, game: 'Moorgeister', winner: 'Mia', score: '4,6', cover: cover(160),
+        cta: 'Ergebnis ansehen', ctaBg: '#cfe6ef', ctaInk: '#10283a', border: '1px solid #c9dde6', winIdx: 2,
+      },
+      {
+        name: 'Tisch 2', state: 'Wertet noch', stateBg: '#f2e394', stateInk: '#10283a', count: '3 Personen',
+        done: false, running: true, cta: 'Weiterwerten', ctaBg: '#0e6690', ctaInk: '#f7fbfc', border: '2px solid #0e6690', winIdx: -1,
+      },
+    ].map((b, bi) => ({
+      ...b,
+      seats: boatNames[bi].map((n, i) => ({
+        name: n, ini: ini(n), color: people[(bi * 3 + i) % 8], won: b.winIdx === i,
+        shadow: b.winIdx === i ? '0 0 0 5px rgba(242,227,148,.8), 0 4px 10px rgba(14,60,90,.15)' : '0 4px 10px rgba(14,60,90,.15)',
+      })),
+    }));
+
+    const reduce = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const motion = (this.props.motion ?? true) && !reduce;
+    const mkBubbles = (dots, key) => React.createElement('span', { style: { position: 'absolute', inset: 0, pointerEvents: 'none' } },
+      dots.map(([x, y, s, dur, delay], i) => React.createElement('span', { key: key + i, style: {
+        position: 'absolute', left: x + '%', top: y + '%', width: s + 'px', height: s + 'px', borderRadius: '50%',
+        background: 'radial-gradient(circle at 30% 30%, rgba(255,255,255,.95), rgba(255,255,255,.35) 45%, rgba(14,102,144,.15) 75%, rgba(14,102,144,.4))',
+        border: '1px solid rgba(255,255,255,.35)',
+        animation: motion ? `o4rise ${dur}s ease-in ${delay}s infinite` : 'none',
+        transform: motion ? 'none' : `translate(${i % 2 ? 4 : -3}px, -${90 + (i % 3) * 30}px)`, opacity: motion ? 1 : .8,
+      } })));
+    const bubbles = mkBubbles([[12, 82, 12, 9, 0], [28, 88, 8, 11, 1.6], [44, 84, 15, 10, .6], [62, 90, 9, 12, 2.4], [78, 86, 13, 9.5, 1.1], [90, 92, 7, 11, 2.8]], 'a');
+    const bubbles2 = mkBubbles([[22, 60, 14, 7, 0], [34, 66, 9, 9, 1.4], [46, 58, 18, 8, .5], [60, 64, 10, 10, 2.2], [72, 56, 14, 7.5, 1], [82, 62, 8, 9.5, 1.8], [90, 58, 12, 8.5, .3]], 'b');
+
+    return { rail, setupSeats, clamGames, voteSeats, relaySeats, moods, resultSeats, resultRows, boats, bubbles, bubbles2 };
+  }
+}
+</script>
+</body>
+</html>
