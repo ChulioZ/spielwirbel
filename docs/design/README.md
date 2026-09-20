@@ -22,8 +22,8 @@ map.
 
 The issues that implement the programme start at #1184 (the design layer) and
 end at #1202 (the flip); #1203–#1206 are one placeholder epic per remaining
-design, and Ocean's slices are #1209–#1221 (its epic #1207 closes when Ocean is
-enabled). The decisions behind them are in the handover's §1 and in the issues
+design. **Ocean's slices are #1210–#1222**, filed from the package in PR #1209;
+its epic #1207 closes when Ocean is enabled. The decisions behind them are in the handover's §1 and in the issues
 themselves; do not re-derive them.
 
 ## Opening a sheet
