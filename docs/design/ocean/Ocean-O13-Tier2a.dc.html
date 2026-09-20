@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="design_doc_mode" content="canvas">
+  <link rel="stylesheet" href="../../../public/fonts/tabler-icons.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #cfe0e7; font-family: 'Figtree', sans-serif; }
+    a { color: #0e6690; text-decoration: none; }
+    a:hover { color: #0a4f70; text-decoration: underline; }
+  </style>
+</helmet>
+<div style="display: flex; flex-direction: column; gap: 40px; padding: 44px; width: max-content; color: #10283a; background-color: #e4f1f5; background-image: radial-gradient(900px 500px at 18% 0%, rgba(255,255,255,.7), transparent 65%), radial-gradient(900px 600px at 86% 40%, rgba(255,255,255,.5), transparent 70%);">
+
+  <div data-screen-label="O13 Kopf" style="max-width: 1240px; display: flex; flex-direction: column; gap: 12px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 22px; padding: 26px 30px; box-shadow: 0 14px 34px rgba(14,60,90,.14);">
+    <div style="display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;">
+      <span style="font-weight: 700; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: #f7fbfc; background: #0e6690; border-radius: 999px; padding: 5px 12px;">O13</span>
+      <h1 style="margin: 0; font-family: 'Comfortaa'; font-weight: 700; font-size: 36px; line-height: 1.05;">Chronik · Pokale · Mitglied · Nicht im Regal — Ocean</h1>
+      <span style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #3f5a6b;">20.09.2026 · Phase 2, Brief 11 von 13</span>
+    </div>
+    <p style="margin: 0; font-size: 16px; line-height: 1.55; max-width: 92ch; color: #3f5a6b;">Stufe 2, erster Teil: die vier Unterseiten, die von der Runde aus verlinkt sind — Chronik mit Periodenrückblick, Pokale, die Seite einer Person, die drei Listen nicht im Regal und die Könnte euch gefallen. Alle im Gerüst aus O3, kein neues Bauteil.</p>
+    <div style="display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; background: #f7ded6; border-radius: 14px; font-size: 13px; line-height: 1.55; color: #10283a;"><i class="ti ti-alert-triangle" style="font-size: 18px; color: #a3392b; flex: none; margin-top: 1px;"></i><span><strong>Vokabular-Revert 20.09.2026:</strong> Bucht → <strong>Runde</strong> · Küste (Navigation) → <strong>Start</strong> · Riff → <strong>Regal</strong> · Gezeiten → <strong>Chronik</strong> · Perlenkette → <strong>Pokale</strong> · Tauchgang → <strong>Session</strong> · Perle / „hat die Perle“ → <strong>Sieg / „hat gewonnen“</strong> · Boje → <strong>Mitglied</strong> · Jenseits des Riffs → <strong>Nicht im Regal</strong> · Strandgut → <strong>Aussortiert</strong> · Gehoben → <strong>Durchgespielt</strong> · Am Horizont → <strong>Wunschliste</strong> · Flaschenpost → <strong>Könnte euch gefallen</strong> · Werft → <strong>Kümmerliste</strong> · Echolot → <strong>Ergebnis</strong> · Tauchkarte → <strong>Wertungskarte</strong> · Mehrere Boote → <strong>Mehrere Tische</strong> · „Wer taucht mit?“ → <strong>„Wer spielt mit?“</strong>. Eigen bleiben nur: <strong>Muschel · Abtauchen · auftauchen · in der Tiefe · „Wie viele holen wir hoch?“</strong> (<a href="Ocean-O9-Vokabular.dc.html" style="display: inline-flex; align-items: center; min-height: 24px; padding: 0 3px;">O9</a>).</span></div>
+  </div>
+
+  <div data-screen-label="O13.1 Chronik" style="display: flex; flex-direction: column; gap: 10px;">
+    <div style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #3f5a6b; max-width: 1440px; line-height: 1.4;">O13.1 · Die Chronik: Sessions nach Monaten, links der Verlauf als Kurve, rechts der Rückblick auf den Zeitraum</div>
+    <div style="width: 1440px; height: 900px; position: relative; overflow: hidden; border-radius: 6px; background-color: #e4f1f5; background-image: radial-gradient(600px 320px at 22% 14%, rgba(255,255,255,.7), transparent 70%); box-shadow: 0 18px 44px rgba(14,60,90,.18);">
+      <div style="position: absolute; left: 0; right: 0; top: 0; height: 60px; display: flex; align-items: center; gap: 18px; padding: 0 28px; background: #f7fbfc; border-bottom: 1px solid #c9dde6; z-index: 3;">
+        <a href="#" style="display: inline-flex; align-items: center; gap: 10px; color: #10283a;"><span style="width: 34px; height: 34px; border-radius: 50%; background: #0e6690; color: #f7fbfc; display: grid; place-items: center;"><i class="ti ti-tornado" style="font-size: 18px;"></i></span><span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 20px;">Spielwirbel</span></a>
+        <span style="font-size: 15px; font-weight: 600; color: #3f5a6b; display: inline-flex; align-items: center; gap: 8px;"><a href="#" style="display: inline-flex; align-items: center; min-height: 24px;">Start</a> <i class="ti ti-chevron-right" style="font-size: 12px;"></i> <a href="#" style="display: inline-flex; align-items: center; min-height: 24px;">Donnerstagsrunde</a> <i class="ti ti-chevron-right" style="font-size: 12px;"></i> <strong style="color: #10283a;">Chronik</strong></span>
+        <span style="margin-left: auto; display: flex; gap: 10px; align-items: center;">
+          <span style="font-size: 14px; font-weight: 700; border: 1.5px solid #a9c4d1; border-radius: 999px; padding: 7px 14px; display: inline-flex; gap: 6px; align-items: center; min-height: 36px; box-sizing: border-box;"><i class="ti ti-world" style="font-size: 15px;"></i>Deutsch <i class="ti ti-chevron-down" style="font-size: 12px;"></i></span>
+          <span style="width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: #d7e9f0;"><i class="ti ti-mail" style="font-size: 17px;"></i></span>
+          <span style="width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: #d7e9f0;"><i class="ti ti-user" style="font-size: 17px;"></i></span>
+        </span>
+      </div>
+      <nav style="position: absolute; left: 0; top: 60px; bottom: 42px; width: 104px; display: flex; flex-direction: column; gap: 6px; padding: 18px 10px; box-sizing: border-box; background: #f7fbfc; border-right: 1px solid #c9dde6; z-index: 3;">
+        <sc-for list="{{ railTides }}" as="r" hint-placeholder-count="5">
+          <a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 4px; border-radius: 14px; background: {{ r.bg }}; color: #10283a; font-size: 11.5px; font-weight: 700; margin-top: {{ r.mt }}; min-height: 56px; justify-content: center;"><i class="ti {{ r.icon }}" style="font-size: 22px; color: {{ r.ink }};"></i>{{ r.label }}</a>
+        </sc-for>
+      </nav>
+      <div style="position: absolute; left: 136px; right: 40px; top: 84px; bottom: 52px; display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 30px; align-items: start;">
+        <div style="display: flex; flex-direction: column; gap: 14px; min-width: 0;">
+          <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+            <h1 style="margin: 0; font-family: 'Comfortaa'; font-weight: 700; font-size: 28px; line-height: 1;">Die Chronik <span style="font-family: 'Figtree'; font-size: 15px; font-weight: 700; color: #3f5a6b; letter-spacing: .08em;">· 23 SESSIONS</span></h1>
+            <span style="padding: 9px 15px; border-radius: 999px; background: #cfe6ef; font-weight: 700; font-size: 14px; min-height: 40px; display: inline-flex; align-items: center; gap: 6px;">2026 <i class="ti ti-chevron-down" style="font-size: 13px;"></i></span>
+            <span style="padding: 9px 15px; border-radius: 999px; background: #cfe6ef; font-weight: 700; font-size: 14px; min-height: 40px; display: inline-flex; align-items: center; gap: 6px;"><i class="ti ti-filter"></i>Alle Spiele</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 10px; padding: 18px 20px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 20px; box-shadow: 0 6px 18px rgba(14,60,90,.1);">
+            <span style="font-weight: 700; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: #0e6690;">Sessions pro Monat</span>
+            <span style="display: flex; align-items: flex-end; gap: 8px; height: 76px;">
+              <sc-for list="{{ pulse }}" as="p" hint-placeholder-count="12">
+                <span style="flex: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; height: 100%; gap: 5px;">
+                  <span style="font-size: 11px; font-weight: 700; color: #3f5a6b;">{{ p.c }}</span>
+                  <span style="width: 100%; min-height: 4px; border-radius: 7px 7px 0 0; background: {{ p.bg }}; height: {{ p.h }};"></span>
+                  <span style="font-size: 11px; font-weight: 700; color: #3f5a6b;">{{ p.m }}</span>
+                </span>
+              </sc-for>
+            </span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 10px; overflow: hidden;">
+            <sc-for list="{{ months }}" as="mo" hint-placeholder-count="3">
+              <div style="display: flex; flex-direction: column; gap: 9px;">
+                <span style="display: flex; align-items: center; gap: 12px;"><span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 19px;">{{ mo.name }}</span><span style="flex: 1; height: 1px; background: #c9dde6;"></span><span style="font-size: 13px; font-weight: 700; color: #3f5a6b;">{{ mo.count }}</span></span>
+                <sc-for list="{{ mo.dives }}" as="d" hint-placeholder-count="2">
+                  <a href="#" style="display: grid; grid-template-columns: 66px minmax(0, 1fr) 190px 64px 30px; gap: 14px; align-items: center; padding: 8px 14px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 16px; color: #10283a; box-shadow: 0 4px 12px rgba(14,60,90,.07);">
+                    <span style="width: 66px; aspect-ratio: 4/3; border-radius: 8px; background: {{ d.cover }}; box-shadow: 0 4px 8px rgba(14,60,90,.22);"></span>
+                    <span style="display: flex; flex-direction: column; gap: 2px; min-width: 0;">
+                      <span style="font-weight: 700; font-size: 16.5px; line-height: 1.2;">{{ d.title }}</span>
+                      <span style="font-size: 13px; font-weight: 600; color: #3f5a6b;">{{ d.date }} · {{ d.people }}</span>
+                    </span>
+                    <span style="display: flex; align-items: center; gap: 8px;">
+                      <span style="position: relative; width: 36px; height: 36px; border-radius: 50%; background: #f7fbfc; border: 4px solid {{ d.color }}; box-sizing: border-box; display: grid; place-items: center; font-weight: 700; font-size: 12px; flex: none;">{{ d.ini }}<i class="ti ti-crown" style="position: absolute; top: -18px; left: 50%; transform: translateX(-50%) rotate(-8deg); font-size: 18px; color: #8a6a10;"></i></span>
+                      <span style="font-size: 13.5px; font-weight: 600; color: #3f5a6b;">{{ d.winner }} hat gewonnen</span>
+                    </span>
+                    <span style="justify-self: end; min-width: 46px; padding: 5px 11px; border-radius: 999px; background: {{ d.pillBg }}; color: {{ d.pillInk }}; font-weight: 700; font-size: 15px; text-align: center; border: 1px solid rgba(16,40,58,.14); box-sizing: border-box; font-variant-numeric: tabular-nums;">{{ d.score }}</span>
+                    <i class="ti ti-chevron-right" style="color: #0e6690; font-size: 18px; justify-self: end;"></i>
+                  </a>
+                </sc-for>
+                <sc-if value="{{ mo.hasMore }}" hint-placeholder-val="{{ false }}">
+                  <a href="#" style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 8px 0; font-weight: 700; font-size: 13.5px; color: #0e6690; min-height: 32px;">{{ mo.moreLabel }} <i class="ti ti-chevron-right" style="font-size: 16px;"></i></a>
+                </sc-if>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <div style="display: flex; flex-direction: column; gap: 12px; padding: 20px 22px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 20px; box-shadow: 0 6px 18px rgba(14,60,90,.1);">
+            <span style="display: flex; align-items: baseline; justify-content: space-between;"><span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 19px;">Rückblick 2026</span><span style="font-size: 12.5px; font-weight: 700; color: #0e6690;">Teilen →</span></span>
+            <sc-for list="{{ recap }}" as="r" hint-placeholder-count="5">
+              <span style="display: flex; align-items: baseline; gap: 12px; padding: 5px 0; border-top: 1px solid #dfebf1;">
+                <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 22px; min-width: 58px;">{{ r.n }}</span>
+                <span style="font-size: 13.5px; font-weight: 600; color: #3f5a6b; line-height: 1.35;">{{ r.what }}</span>
+              </span>
+            </sc-for>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 10px; padding: 20px 22px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 20px; box-shadow: 0 6px 18px rgba(14,60,90,.1);">
+            <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 19px;">Am häufigsten gespielt</span>
+            <sc-for list="{{ topGames }}" as="t" hint-placeholder-count="4">
+              <a href="#" style="display: flex; align-items: center; gap: 11px; padding: 5px 0; border-top: 1px solid #dfebf1; color: #10283a; min-height: 40px;">
+                <span style="width: 52px; aspect-ratio: 4/3; border-radius: 7px; background: {{ t.cover }}; flex: none; box-shadow: 0 3px 6px rgba(14,60,90,.2);"></span>
+                <span style="display: flex; flex-direction: column; min-width: 0;"><span style="font-weight: 700; font-size: 14.5px;">{{ t.title }}</span><span style="font-size: 12.5px; font-weight: 600; color: #3f5a6b;">{{ t.times }}</span></span>
+                <span style="margin-left: auto; padding: 4px 10px; border-radius: 999px; background: {{ t.pillBg }}; color: {{ t.pillInk }}; font-weight: 700; font-size: 14px; font-variant-numeric: tabular-nums;">{{ t.score }}</span>
+              </a>
+            </sc-for>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px; padding: 14px 18px; background: #eaf4f8; border-radius: 18px;">
+            <i class="ti ti-info-circle" style="font-size: 20px; color: #0e6690; flex: none;"></i>
+            <span style="font-size: 13px; font-weight: 600; color: #3f5a6b; line-height: 1.5;">Auch Spiele aus dem Aussortiert bleiben hier stehen — eine Session verschwindet nur, wenn ihr ihn löscht.</span>
+          </div>
+        </div>
+      </div>
+      <div style="position: absolute; left: 128px; right: 40px; bottom: 0; height: 42px; display: flex; align-items: center; gap: 14px; font-size: 12.5px; font-weight: 600; color: #3f5a6b; border-top: 1px solid #c9dde6;"><a href="#" style="display: inline-flex; align-items: center; min-height: 32px; padding: 0 4px;">FAQ</a><a href="#" style="display: inline-flex; align-items: center; min-height: 32px; padding: 0 4px;">Kontakt</a><a href="#" style="display: inline-flex; align-items: center; min-height: 32px; padding: 0 4px;">Impressum</a><a href="#" style="display: inline-flex; align-items: center; min-height: 32px; padding: 0 4px;">Datenschutz</a><a href="#" style="display: inline-flex; align-items: center; min-height: 32px; padding: 0 4px;">Nutzungsbedingungen</a><span style="margin-left: auto; display: inline-flex; align-items: center; gap: 6px;"><i class="ti ti-eye-off"></i>Kein Tracking · EU-Hosting</span><img src="../../../public/icons/powered-by-bgg.png" alt="Powered by BGG" style="width: 100px; height: auto;"></div>
+    </div>
+  </div>
+
+  <div data-screen-label="O13.2 Pokale" style="display: flex; flex-direction: column; gap: 10px;">
+    <div style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #3f5a6b; max-width: 1440px; line-height: 1.4;">O13.2 · Die Pokale: kein Podest, keine Medaillen — ein Balken je Person, so lang wie ihre Siege. Darunter die kleinen Auszeichnungen.</div>
+    <div style="width: 1440px; height: 900px; position: relative; overflow: hidden; border-radius: 6px; background-color: #e4f1f5; background-image: radial-gradient(600px 320px at 22% 14%, rgba(255,255,255,.7), transparent 70%); box-shadow: 0 18px 44px rgba(14,60,90,.18);">
+      <div style="position: absolute; left: 0; right: 0; top: 0; height: 60px; display: flex; align-items: center; gap: 18px; padding: 0 28px; background: #f7fbfc; border-bottom: 1px solid #c9dde6; z-index: 3;">
+        <a href="#" style="display: inline-flex; align-items: center; gap: 10px; color: #10283a;"><span style="width: 34px; height: 34px; border-radius: 50%; background: #0e6690; color: #f7fbfc; display: grid; place-items: center;"><i class="ti ti-tornado" style="font-size: 18px;"></i></span><span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 20px;">Spielwirbel</span></a>
+        <span style="font-size: 15px; font-weight: 600; color: #3f5a6b; display: inline-flex; align-items: center; gap: 8px;"><a href="#" style="display: inline-flex; align-items: center; min-height: 24px;">Donnerstagsrunde</a> <i class="ti ti-chevron-right" style="font-size: 12px;"></i> <strong style="color: #10283a;">Pokale</strong></span>
+        <span style="margin-left: auto; display: flex; gap: 10px; align-items: center;">
+          <span style="font-size: 14px; font-weight: 700; border: 1.5px solid #a9c4d1; border-radius: 999px; padding: 7px 14px; display: inline-flex; gap: 6px; align-items: center; min-height: 36px; box-sizing: border-box;"><i class="ti ti-world" style="font-size: 15px;"></i>Deutsch <i class="ti ti-chevron-down" style="font-size: 12px;"></i></span>
+          <span style="width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: #d7e9f0;"><i class="ti ti-user" style="font-size: 17px;"></i></span>
+        </span>
+      </div>
+      <nav style="position: absolute; left: 0; top: 60px; bottom: 42px; width: 104px; display: flex; flex-direction: column; gap: 6px; padding: 18px 10px; box-sizing: border-box; background: #f7fbfc; border-right: 1px solid #c9dde6; z-index: 3;">
+        <sc-for list="{{ railPearls }}" as="r" hint-placeholder-count="5">
+          <a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 4px; border-radius: 14px; background: {{ r.bg }}; color: #10283a; font-size: 11.5px; font-weight: 700; margin-top: {{ r.mt }}; min-height: 56px; justify-content: center;"><i class="ti {{ r.icon }}" style="font-size: 22px; color: {{ r.ink }};"></i>{{ r.label }}</a>
+        </sc-for>
+      </nav>
+      <div style="position: absolute; left: 136px; right: 40px; top: 84px; bottom: 52px; display: flex; flex-direction: column; gap: 22px;">
+        <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+          <h1 style="margin: 0; font-family: 'Comfortaa'; font-weight: 700; font-size: 30px; line-height: 1;">Die Pokale</h1>
+          <span style="font-size: 15px; font-weight: 600; color: #3f5a6b;">Seit Oktober 2025 · 23 Sessions</span>
+          <span style="margin-left: auto; display: flex; gap: 10px;">
+            <span style="padding: 9px 15px; border-radius: 999px; background: #cfe6ef; font-weight: 700; font-size: 14px; min-height: 40px; display: inline-flex; align-items: center; gap: 6px;">Gesamt <i class="ti ti-chevron-down" style="font-size: 13px;"></i></span>
+            <span style="padding: 9px 15px; border-radius: 999px; border: 1.5px solid #a9c4d1; font-weight: 700; font-size: 14px; min-height: 40px; display: inline-flex; align-items: center; gap: 6px;"><i class="ti ti-share"></i>Teilen</span>
+          </span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <sc-for list="{{ standings }}" as="s" hint-placeholder-count="4">
+            <div style="display: grid; grid-template-columns: 66px minmax(0, 1fr) 150px; gap: 20px; align-items: center; padding: 16px 22px; background: {{ s.bg }}; border: {{ s.border }}; border-radius: 22px; box-shadow: 0 6px 18px rgba(14,60,90,.1);">
+              <span style="position: relative; width: 66px; height: 66px; border-radius: 50%; background: #f7fbfc; border: 6px solid {{ s.color }}; box-sizing: border-box; display: grid; place-items: center; font-weight: 700; font-size: 20px;">{{ s.ini }}<sc-if value="{{ s.lead }}" hint-placeholder-val="{{ false }}"><i class="ti ti-crown" style="position: absolute; top: -30px; left: 50%; transform: translateX(-50%) rotate(-8deg); font-size: 32px; color: #8a6a10;"></i></sc-if></span>
+              <span style="display: flex; flex-direction: column; gap: 8px; min-width: 0;">
+                <span style="display: flex; align-items: baseline; gap: 12px;"><span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 23px;">{{ s.name }}</span><span style="font-size: 13.5px; font-weight: 600; color: #3f5a6b;">{{ s.note }}</span></span>
+                <span style="display: flex; align-items: center; gap: 12px;">
+                  <span style="flex: 1; height: 16px; border-radius: 999px; background: #d7e9f0; overflow: hidden;"><span style="display: block; height: 100%; border-radius: 999px; background: {{ s.color }}; width: {{ s.barW }};"></span></span>
+                  <span style="font-size: 13px; font-weight: 600; color: #3f5a6b; min-width: 128px;">{{ s.rate }}</span>
+                </span>
+              </span>
+              <span style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px;">
+                <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 34px; line-height: 1;">{{ s.n }}</span>
+                <span style="font-size: 13px; font-weight: 600; color: #3f5a6b;">{{ s.wordSieg }}</span>
+              </span>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <span style="font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #0e6690;">Kleine Auszeichnungen · aus der Chronik errechnet, nicht vergeben</span>
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;">
+            <sc-for list="{{ badges }}" as="b" hint-placeholder-count="4">
+              <div style="display: flex; align-items: center; gap: 14px; padding: 16px 18px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 18px;">
+                <span style="width: 48px; height: 48px; border-radius: 50%; background: #d7e9f0; color: #0e6690; display: grid; place-items: center; font-size: 23px; flex: none;"><i class="ti {{ b.icon }}"></i></span>
+                <span style="display: flex; flex-direction: column; gap: 1px; min-width: 0;">
+                  <span style="font-weight: 700; font-size: 15px;">{{ b.title }}</span>
+                  <span style="font-size: 12.5px; font-weight: 600; color: #3f5a6b; line-height: 1.4;">{{ b.who }}</span>
+                </span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="margin-top: auto; display: flex; align-items: center; gap: 12px; padding: 14px 20px; background: #eaf4f8; border-radius: 18px;">
+          <i class="ti ti-info-circle" style="font-size: 20px; color: #0e6690;"></i>
+          <span style="font-size: 13.5px; font-weight: 600; color: #3f5a6b; line-height: 1.5;">Ein Sieg pro gewonnener Session — mehr Regeln gibt es nicht. Wer neu dazukommt, startet bei null und steht trotzdem in der Liste, nicht darunter.</span>
+        </div>
+      </div>
+      <div style="position: absolute; left: 128px; right: 40px; bottom: 0; height: 42px; display: flex; align-items: center; gap: 14px; font-size: 12.5px; font-weight: 600; color: #3f5a6b; border-top: 1px solid #c9dde6;"><a href="#" style="display: inline-flex; align-items: center; min-height: 32px; padding: 0 4px;">FAQ</a><a href="#" style="display: inline-flex; align-items: center; min-height: 32px; padding: 0 4px;">Kontakt</a><a href="#" style="display: inline-flex; align-items: center; min-height: 32px; padding: 0 4px;">Impressum</a><a href="#" style="display: inline-flex; align-items: center; min-height: 32px; padding: 0 4px;">Datenschutz</a><a href="#" style="display: inline-flex; align-items: center; min-height: 32px; padding: 0 4px;">Nutzungsbedingungen</a><span style="margin-left: auto; display: inline-flex; align-items: center; gap: 6px;"><i class="ti ti-eye-off"></i>Kein Tracking · EU-Hosting</span><img src="../../../public/icons/powered-by-bgg.png" alt="Powered by BGG" style="width: 100px; height: auto;"></div>
+    </div>
+  </div>
+
+  <div data-screen-label="O13.3 Nicht im Regal" style="display: flex; flex-direction: column; gap: 10px;">
+    <div style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #3f5a6b; max-width: 1440px; line-height: 1.4;">O13.3 · Nicht im Regal: die drei Listen als Segmente auf einer Seite — plus die Könnte euch gefallen, die etwas anderes ist und darum eine eigene Spalte bekommt</div>
+    <div style="width: 1440px; height: 900px; position: relative; overflow: hidden; border-radius: 6px; background-color: #e4f1f5; background-image: radial-gradient(600px 320px at 22% 14%, rgba(255,255,255,.7), transparent 70%); box-shadow: 0 18px 44px rgba(14,60,90,.18);">
+      <div style="position: absolute; left: 0; right: 0; top: 0; height: 60px; display: flex; align-items: center; gap: 18px; padding: 0 28px; background: #f7fbfc; border-bottom: 1px solid #c9dde6; z-index: 3;">
+        <a href="#" style="display: inline-flex; align-items: center; gap: 10px; color: #10283a;"><span style="width: 34px; height: 34px; border-radius: 50%; background: #0e6690; color: #f7fbfc; display: grid; place-items: center;"><i class="ti ti-tornado" style="font-size: 18px;"></i></span><span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 20px;">Spielwirbel</span></a>
+        <span style="font-size: 15px; font-weight: 600; color: #3f5a6b; display: inline-flex; align-items: center; gap: 8px;"><a href="#" style="display: inline-flex; align-items: center; min-height: 24px;">Donnerstagsrunde</a> <i class="ti ti-chevron-right" style="font-size: 12px;"></i> <a href="#" style="display: inline-flex; align-items: center; min-height: 24px;">Regal</a> <i class="ti ti-chevron-right" style="font-size: 12px;"></i> <strong style="color: #10283a;">Nicht im Regal</strong></span>
+        <span style="margin-left: auto; display: flex; gap: 10px; align-items: center;">
+          <span style="font-size: 14px; font-weight: 700; border: 1.5px solid #a9c4d1; border-radius: 999px; padding: 7px 14px; display: inline-flex; gap: 6px; align-items: center; min-height: 36px; box-sizing: border-box;"><i class="ti ti-world" style="font-size: 15px;"></i>Deutsch <i class="ti ti-chevron-down" style="font-size: 12px;"></i></span>
+          <span style="width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: #d7e9f0;"><i class="ti ti-user" style="font-size: 17px;"></i></span>
+        </span>
+      </div>
+      <nav style="position: absolute; left: 0; top: 60px; bottom: 42px; width: 104px; display: flex; flex-direction: column; gap: 6px; padding: 18px 10px; box-sizing: border-box; background: #f7fbfc; border-right: 1px solid #c9dde6; z-index: 3;">
+        <sc-for list="{{ railShelf }}" as="r" hint-placeholder-count="5">
+          <a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 4px; border-radius: 14px; background: {{ r.bg }}; color: #10283a; font-size: 11.5px; font-weight: 700; margin-top: {{ r.mt }}; min-height: 56px; justify-content: center;"><i class="ti {{ r.icon }}" style="font-size: 22px; color: {{ r.ink }};"></i>{{ r.label }}</a>
+        </sc-for>
+      </nav>
+      <div style="position: absolute; left: 136px; right: 40px; top: 84px; bottom: 52px; display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 30px; align-items: start;">
+        <div style="display: flex; flex-direction: column; gap: 18px; min-width: 0;">
+          <h1 style="margin: 0; font-family: 'Comfortaa'; font-weight: 700; font-size: 30px; line-height: 1;">Nicht im Regal</h1>
+          <span style="display: inline-flex; padding: 5px; border-radius: 999px; background: #d7e9f0; gap: 3px; align-self: flex-start;">
+            <span style="padding: 10px 20px; border-radius: 999px; background: #f7fbfc; font-weight: 700; font-size: 14.5px; box-shadow: 0 2px 6px rgba(14,60,90,.16); min-height: 40px; display: inline-flex; align-items: center;">Aussortiert · 2</span>
+            <span style="padding: 10px 20px; border-radius: 999px; color: #3f5a6b; font-weight: 700; font-size: 14.5px; min-height: 40px; display: inline-flex; align-items: center;">Durchgespielt · 1</span>
+            <span style="padding: 10px 20px; border-radius: 999px; color: #3f5a6b; font-weight: 700; font-size: 14.5px; min-height: 40px; display: inline-flex; align-items: center;">Wunschliste · 4</span>
+          </span>
+          <span style="font-size: 14.5px; font-weight: 600; color: #3f5a6b; line-height: 1.55; max-width: 76ch;">Aussortiert, aber nicht vergessen: Aussortiert zählt nicht mehr für die Muschel, steht aber weiter in der Chronik. Zurückholen geht jederzeit und sofort.</span>
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <sc-for list="{{ driftwood }}" as="d" hint-placeholder-count="2">
+              <div style="display: grid; grid-template-columns: 96px minmax(0, 1fr) auto; gap: 18px; align-items: center; padding: 14px 18px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 18px; box-shadow: 0 4px 12px rgba(14,60,90,.07);">
+                <span style="width: 96px; aspect-ratio: 4/3; border-radius: 10px; background: {{ d.cover }}; box-shadow: 0 5px 10px rgba(14,60,90,.22); filter: saturate(.55);"></span>
+                <span style="display: flex; flex-direction: column; gap: 3px; min-width: 0;">
+                  <span style="font-weight: 700; font-size: 18px; line-height: 1.2;">{{ d.title }}</span>
+                  <span style="font-size: 13.5px; font-weight: 600; color: #3f5a6b;">{{ d.meta }}</span>
+                  <span style="font-size: 13px; font-weight: 600; color: #3f5a6b;">{{ d.reason }}</span>
+                </span>
+                <span style="display: flex; gap: 10px;">
+                  <span style="padding: 11px 18px; border-radius: 999px; background: #0e6690; color: #f7fbfc; font-weight: 700; font-size: 14.5px; min-height: 44px; display: inline-flex; align-items: center;">Zurück ins Regal</span>
+                  <span style="width: 44px; height: 44px; border-radius: 50%; background: #d7e9f0; display: grid; place-items: center; font-size: 19px;"><i class="ti ti-dots"></i></span>
+                </span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <div style="display: flex; flex-direction: column; gap: 12px; padding: 20px 22px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 20px; box-shadow: 0 6px 18px rgba(14,60,90,.1);">
+            <span style="display: flex; align-items: center; gap: 10px;"><i class="ti ti-sparkles" style="font-size: 20px; color: #0e6690;"></i><span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 19px;">Könnte euch gefallen</span></span>
+            <span style="font-size: 13px; font-weight: 600; color: #3f5a6b; line-height: 1.5;">Vorschläge aus euren eigenen Daten — kein fremder Katalog, keine Werbung.</span>
+            <sc-for list="{{ bottles }}" as="b" hint-placeholder-count="3">
+              <a href="#" style="display: flex; gap: 12px; align-items: center; padding: 8px 0; border-top: 1px solid #dfebf1; color: #10283a; min-height: 44px;">
+                <span style="width: 58px; aspect-ratio: 4/3; border-radius: 8px; background: {{ b.cover }}; flex: none; box-shadow: 0 3px 7px rgba(14,60,90,.2);"></span>
+                <span style="display: flex; flex-direction: column; gap: 2px; min-width: 0;">
+                  <span style="font-weight: 700; font-size: 15px; line-height: 1.2;">{{ b.title }}</span>
+                  <span style="font-size: 12.5px; font-weight: 600; color: #3f5a6b; line-height: 1.4;">{{ b.why }}</span>
+                </span>
+                <span style="margin-left: auto; width: 34px; height: 34px; border-radius: 50%; background: #d7e9f0; color: #0e6690; display: grid; place-items: center; font-size: 17px; flex: none;"><i class="ti {{ b.action }}"></i></span>
+              </a>
+            </sc-for>
+            <span style="font-size: 12.5px; font-weight: 600; color: #3f5a6b; line-height: 1.5; padding-top: 8px; border-top: 1px solid #dfebf1;">Die Blase bedeutet „ins Regal“, das Herz „auf die Wunschliste“. Was ihr wegwischt, kommt sechs Monate nicht wieder.</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 8px; padding: 16px 20px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 20px;">
+            <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 17px;">Wunschliste · 4</span>
+            <sc-for list="{{ horizon }}" as="h" hint-placeholder-count="4">
+              <span style="display: flex; align-items: center; gap: 10px; padding: 5px 0; border-top: 1px solid #dfebf1; min-height: 34px;">
+                <i class="ti ti-heart" style="font-size: 16px; color: #c34d74;"></i>
+                <span style="font-weight: 700; font-size: 14.5px;">{{ h.title }}</span>
+                <span style="margin-left: auto; font-size: 12.5px; font-weight: 600; color: #3f5a6b;">{{ h.who }}</span>
+              </span>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+      <div style="position: absolute; left: 128px; right: 40px; bottom: 0; height: 42px; display: flex; align-items: center; gap: 14px; font-size: 12.5px; font-weight: 600; color: #3f5a6b; border-top: 1px solid #c9dde6;"><a href="#" style="display: inline-flex; align-items: center; min-height: 32px; padding: 0 4px;">FAQ</a><a href="#" style="display: inline-flex; align-items: center; min-height: 32px; padding: 0 4px;">Kontakt</a><a href="#" style="display: inline-flex; align-items: center; min-height: 32px; padding: 0 4px;">Impressum</a><a href="#" style="display: inline-flex; align-items: center; min-height: 32px; padding: 0 4px;">Datenschutz</a><a href="#" style="display: inline-flex; align-items: center; min-height: 32px; padding: 0 4px;">Nutzungsbedingungen</a><span style="margin-left: auto; display: inline-flex; align-items: center; gap: 6px;"><i class="ti ti-eye-off"></i>Kein Tracking · EU-Hosting</span><img src="../../../public/icons/powered-by-bgg.png" alt="Powered by BGG" style="width: 100px; height: auto;"></div>
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 30px; align-items: flex-start; flex-wrap: wrap;">
+    <div data-screen-label="O13.4 Mitglied Desktop" style="display: flex; flex-direction: column; gap: 10px;">
+      <div style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #3f5a6b; width: 780px; line-height: 1.4;">O13.4 · Die Seite einer Person in der Runde — was sie mitbringt, wie sie wertet, was sie gewonnen hat</div>
+      <div style="width: 780px; padding: 26px 28px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 22px; box-shadow: 0 14px 34px rgba(14,60,90,.12); display: flex; flex-direction: column; gap: 20px; box-sizing: border-box;">
+        <div style="display: flex; align-items: center; gap: 18px;">
+          <span style="position: relative; width: 84px; height: 84px; border-radius: 50%; background: #f7fbfc; border: 7px solid #198663; box-sizing: border-box; display: grid; place-items: center; font-weight: 700; font-size: 26px; flex: none;">JO<i class="ti ti-crown" style="position: absolute; top: -34px; left: 50%; transform: translateX(-50%) rotate(-8deg); font-size: 34px; color: #8a6a10;"></i></span>
+          <span style="display: flex; flex-direction: column; gap: 3px;">
+            <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 30px; line-height: 1.1;">Jonas</span>
+            <span style="font-size: 14.5px; font-weight: 600; color: #3f5a6b;">In der Runde seit Oktober 2025 · Farbe Seegras</span>
+            <span style="font-size: 14.5px; font-weight: 700; color: #8a6a10;">Führt mit 9 Siegen</span>
+          </span>
+          <span style="margin-left: auto; display: flex; gap: 10px;">
+            <span style="padding: 11px 18px; border-radius: 999px; border: 1.5px solid #a9c4d1; font-weight: 700; font-size: 14.5px; min-height: 44px; display: inline-flex; align-items: center;">Farbe ändern</span>
+            <span style="width: 44px; height: 44px; border-radius: 50%; background: #d7e9f0; display: grid; place-items: center; font-size: 19px;"><i class="ti ti-dots"></i></span>
+          </span>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;">
+          <sc-for list="{{ memberStats }}" as="s" hint-placeholder-count="4">
+            <span style="display: flex; flex-direction: column; gap: 2px; padding: 14px 16px; background: #eaf4f8; border-radius: 16px;">
+              <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 26px; line-height: 1;">{{ s.n }}</span>
+              <span style="font-size: 12.5px; font-weight: 600; color: #3f5a6b; line-height: 1.35;">{{ s.what }}</span>
+            </span>
+          </sc-for>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <span style="font-weight: 700; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: #0e6690;">Bringt mit · 5 Spiele</span>
+            <sc-for list="{{ brings }}" as="b" hint-placeholder-count="4">
+              <a href="#" style="display: flex; align-items: center; gap: 10px; padding: 7px 0; border-top: 1px solid #dfebf1; color: #10283a; min-height: 44px;">
+                <span style="width: 52px; aspect-ratio: 4/3; border-radius: 7px; background: {{ b.cover }}; flex: none; box-shadow: 0 3px 6px rgba(14,60,90,.2);"></span>
+                <span style="font-weight: 700; font-size: 14.5px;">{{ b.title }}</span>
+                <span style="margin-left: auto; padding: 3px 9px; border-radius: 999px; background: {{ b.pillBg }}; color: {{ b.pillInk }}; font-weight: 700; font-size: 13px; font-variant-numeric: tabular-nums;">{{ b.score }}</span>
+              </a>
+            </sc-for>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <span style="font-weight: 700; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: #0e6690;">Wie Jonas wertet</span>
+            <div style="display: flex; align-items: flex-end; gap: 12px; height: 110px; padding-top: 6px;">
+              <sc-for list="{{ memberDist }}" as="d" hint-placeholder-count="5">
+                <span style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; justify-content: flex-end;">
+                  <span style="font-size: 12.5px; font-weight: 700; color: #3f5a6b;">{{ d.n }}</span>
+                  <span style="width: 100%; border-radius: 9px 9px 0 0; background: {{ d.c }}; height: {{ d.h }}; min-height: 4px;"></span>
+                  <span style="width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: {{ d.c }}; color: {{ d.ink }}; font-size: 17px; flex: none;"><i class="ti {{ d.face }}"></i></span>
+                </span>
+              </sc-for>
+            </div>
+            <span style="font-size: 12.5px; font-weight: 600; color: #3f5a6b; line-height: 1.5;">Jonas wertet mild — nur einmal „gar nicht“ in 23 Sessionsn.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div data-screen-label="O13.5 Chronik Telefon" style="display: flex; flex-direction: column; gap: 10px;">
+      <div style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #3f5a6b; width: 390px; line-height: 1.4;">O13.5 · Chronik am Telefon: Monatsüberschriften kleben beim Scrollen</div>
+      <div style="width: 390px; height: 844px; position: relative; overflow: hidden; border-radius: 34px; background-color: #e4f1f5; box-shadow: 0 18px 44px rgba(14,60,90,.22);">
+        <div style="position: absolute; left: 0; right: 0; top: 0; height: 52px; display: flex; align-items: center; gap: 10px; padding: 0 16px; background: #f7fbfc; border-bottom: 1px solid #c9dde6; z-index: 3;">
+          <span style="width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: #d7e9f0;"><i class="ti ti-chevron-left" style="font-size: 19px;"></i></span>
+          <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 17px;">Chronik</span>
+          <span style="margin-left: auto; display: flex; gap: 6px;"><span style="width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: #d7e9f0;"><i class="ti ti-filter" style="font-size: 17px;"></i></span><span style="width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: #d7e9f0;"><i class="ti ti-share" style="font-size: 17px;"></i></span></span>
+        </div>
+        <div style="position: absolute; left: 0; right: 0; top: 52px; bottom: 76px; padding: 12px 16px; display: flex; flex-direction: column; gap: 12px; overflow: hidden; box-sizing: border-box;">
+          <div style="display: flex; flex-direction: column; gap: 8px; padding: 14px 16px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 18px;">
+            <span style="font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #0e6690;">Rückblick 2026</span>
+            <span style="display: flex; gap: 14px; flex-wrap: wrap;">
+              <span style="display: flex; flex-direction: column;"><span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 22px; line-height: 1;">23</span><span style="font-size: 11.5px; font-weight: 600; color: #3f5a6b;">Sessions</span></span>
+              <span style="display: flex; flex-direction: column;"><span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 22px; line-height: 1;">14</span><span style="font-size: 11.5px; font-weight: 600; color: #3f5a6b;">Spiele</span></span>
+              <span style="display: flex; flex-direction: column;"><span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 22px; line-height: 1;">4,2</span><span style="font-size: 11.5px; font-weight: 600; color: #3f5a6b;">Durchschnitt</span></span>
+            </span>
+          </div>
+          <sc-for list="{{ phoneMonths }}" as="mo" hint-placeholder-count="2">
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <span style="display: flex; align-items: center; gap: 10px; padding: 6px 0; background: #e4f1f5;"><span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 16px;">{{ mo.name }}</span><span style="flex: 1; height: 1px; background: #c9dde6;"></span><span style="font-size: 12px; font-weight: 700; color: #3f5a6b;">{{ mo.count }}</span></span>
+              <sc-for list="{{ mo.dives }}" as="d" hint-placeholder-count="2">
+                <a href="#" style="display: flex; align-items: center; gap: 11px; padding: 10px 13px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 15px; color: #10283a; min-height: 44px;">
+                  <span style="width: 56px; aspect-ratio: 4/3; border-radius: 7px; background: {{ d.cover }}; flex: none; box-shadow: 0 3px 6px rgba(14,60,90,.2);"></span>
+                  <span style="display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1;">
+                    <span style="font-weight: 700; font-size: 14.5px; line-height: 1.2;">{{ d.title }}</span>
+                    <span style="font-size: 12px; font-weight: 600; color: #3f5a6b;">{{ d.date }} · {{ d.winner }} hat gewonnen</span>
+                  </span>
+                  <span style="padding: 4px 9px; border-radius: 999px; background: {{ d.pillBg }}; color: {{ d.pillInk }}; font-weight: 700; font-size: 13.5px; flex: none; font-variant-numeric: tabular-nums;">{{ d.score }}</span>
+                </a>
+              </sc-for>
+              <sc-if value="{{ mo.hasMore }}" hint-placeholder-val="{{ false }}">
+                <a href="#" style="display: flex; align-items: center; justify-content: center; gap: 7px; padding: 6px 0; font-weight: 700; font-size: 13px; color: #0e6690; min-height: 32px;">{{ mo.moreLabel }} <i class="ti ti-chevron-right" style="font-size: 15px;"></i></a>
+              </sc-if>
+            </div>
+          </sc-for>
+        </div>
+        <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 76px; display: flex; background: #f7fbfc; border-top: 1px solid #c9dde6; padding: 6px 8px 14px; box-sizing: border-box; z-index: 4;">
+          <sc-for list="{{ dock2 }}" as="d" hint-placeholder-count="4">
+            <a href="#" style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; border-radius: 16px; background: {{ d.bg }}; color: #10283a; min-height: 56px;"><i class="ti {{ d.icon }}" style="font-size: 23px; color: {{ d.ink }};"></i><span style="font-size: 11.5px; font-weight: 700;">{{ d.label }}</span></a>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div data-screen-label="O13.6 Übergabe" style="max-width: 1240px; background: #10283a; color: #eaf4f8; border-radius: 22px; padding: 24px 28px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 14px 34px rgba(14,60,90,.2);">
+    <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 20px; color: #f7fbfc;">Was O14 von hier mitnimmt</span>
+    <span style="font-size: 15px; line-height: 1.65; max-width: 100ch;">Stufe 2 erfindet nichts: dasselbe Gerüst, dieselbe Karte, dieselbe Blase am Cover. Zwei Muster kommen dazu und gelten auch für O14 — die <strong style="color: #f7fbfc;">Monatsüberschrift mit Linie</strong> als Gliederung langer Listen, und die <strong style="color: #f7fbfc;">Zahlenkachel</strong> (große Comfortaa-Zahl, kleine Erklärung) für alles Gezählte. Die drei Listen nicht im Regal sind eine Seite mit Segmenten, keine drei Seiten — die Könnte euch gefallen steht daneben, weil sie Vorschläge macht statt zu verwalten.</span>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1540,&quot;height&quot;:1000}}">
+class Component extends DCLogic {
+  renderVals() {
+    const ini = (n) => n.slice(0, 2).toUpperCase();
+    const cover = (h) => `linear-gradient(145deg, oklch(.6 .13 ${h}), oklch(.36 .12 ${h + 30}))`;
+    const fmt = (v) => v.toFixed(1).replace('.', ',');
+    const people = ['#c6522c', '#198663', '#726bc7', '#a66815', '#c34d74', '#2f6f9e', '#54821d', '#993556'];
+    const names = ['Marco', 'Jonas', 'Lea', 'Tim'];
+    const winsN = [5, 9, 7, 2];
+
+    const rail = (active) => [
+      { label: 'Start', icon: 'ti-home' }, { label: 'Regal', icon: 'ti-cards' },
+      { label: 'Chronik', icon: 'ti-history' }, { label: 'Pokale', icon: 'ti-trophy' },
+      { label: 'Einstellungen', icon: 'ti-settings' },
+    ].map((r, i) => ({ ...r, bg: i === active ? '#cfe6ef' : 'transparent', ink: i === active ? '#0e6690' : '#3f5a6b', mt: i === 4 ? 'auto' : '0' }));
+
+    const mkDock = (active) => [
+      { label: 'Start', icon: 'ti-home' }, { label: 'Regal', icon: 'ti-cards' },
+      { label: 'Chronik', icon: 'ti-history' }, { label: 'Pokale', icon: 'ti-trophy' },
+    ].map((d, i) => ({ ...d, bg: i === active ? '#cfe6ef' : 'transparent', ink: i === active ? '#0e6690' : '#3f5a6b' }));
+
+    const ramp = [
+      { bg: '#23305c', ink: '#f7fbfc' }, { bg: '#35609a', ink: '#f7fbfc' }, { bg: '#6a9fd0', ink: '#10283a' },
+      { bg: '#b7d4ee', ink: '#10283a' }, { bg: '#f2e394', ink: '#10283a' },
+    ];
+    const stop = (s) => (s < 1 ? { bg: '#4a1942', ink: '#f7fbfc' } : ramp[Math.min(4, Math.max(0, Math.round(s) - 1))]);
+    const art = {
+      portrait: 'linear-gradient(200deg, oklch(.72 .14 90) 0 38%, oklch(.45 .13 250) 38% 100%)',
+      busy: 'repeating-linear-gradient(48deg, oklch(.52 .16 20) 0 14px, oklch(.42 .15 30) 14px 26px)',
+      wide: 'linear-gradient(180deg, oklch(.82 .09 210) 0 46%, oklch(.5 .1 195) 46% 68%, oklch(.32 .07 200) 68% 100%)',
+      dark: 'radial-gradient(120% 90% at 30% 10%, oklch(.42 .1 300), oklch(.22 .07 290) 70%)',
+      pale: 'linear-gradient(145deg, oklch(.93 .05 120), oklch(.74 .1 140))',
+    };
+
+    const monthLabels = ['O', 'N', 'D', 'J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S'];
+    const counts = [1, 3, 2, 2, 1, 0, 2, 3, 2, 4, 1, 2];
+    const pulse = counts.map((c, i) => ({
+      c, m: monthLabels[i],
+      h: Math.max(6, Math.round((c / 4) * 100)) + '%',
+      bg: c === 0 ? '#c9dde6' : '#0e6690',
+    }));
+
+    const dive = (title, coverBg, date, winnerIdx, score, ppl) => {
+      const st = stop(score);
+      return {
+        title, cover: coverBg, date, people: ppl, winner: names[winnerIdx], ini: ini(names[winnerIdx]),
+        color: people[winnerIdx], score: fmt(score), pillBg: st.bg, pillInk: st.ink,
+      };
+    };
+    const months = [
+      { name: 'September 2026', count: '2 Sessions', dives: [
+        dive('Nordlichter', cover(200), '14. Sep', 1, 4.8, '4 Personen'),
+        dive('Moorgeister', art.dark, '3. Sep', 2, 4.4, '3 Personen'),
+      ] },
+      { name: 'August 2026', count: '1 Session', dives: [
+        dive('Salzwiesen', art.wide, '21. Aug', 0, 3.9, '5 Personen'),
+      ] },
+      { name: 'Juli 2026', count: '4 Sessions', dives: [
+        dive('Kartographen des Nordens', cover(150), '30. Jul', 2, 4.2, '4 Personen'),
+        dive('Rost & Regen', cover(220), '17. Jul', 3, 2.9, '4 Personen'),
+      ] },
+    ];
+    for (const mo of months) {
+      const shown = mo.dives.length;
+      const total = parseInt(mo.count, 10);
+      mo.hasMore = total > shown;
+      mo.moreLabel = 'Alle ' + total + ' ansehen';
+    }
+    const phoneMonths = [
+      { name: 'September 2026', count: '2', dives: months[0].dives },
+      { name: 'August 2026', count: '1', dives: months[1].dives },
+      { name: 'Juli 2026', count: '4', dives: months[2].dives },
+    ].map((mo) => ({ ...mo, hasMore: parseInt(mo.count, 10) > mo.dives.length, moreLabel: 'Alle ' + mo.count + ' ansehen' }));
+
+    const recap = [
+      { n: '23', what: 'Sessions in zwölf Monaten' },
+      { n: '14', what: 'verschiedene Spiele gespielt' },
+      { n: '4,2', what: 'Durchschnitt aller Wertungen' },
+      { n: '9', what: 'Siege für Jonas — die meisten' },
+      { n: '1×', what: '„gar nicht“ — für Rost & Regen' },
+    ];
+    const topGames = [
+      { title: 'Nordlichter', times: '4× gespielt', score: 4.8, cover: cover(200) },
+      { title: 'Moorgeister', times: '3× gespielt', score: 4.4, cover: art.dark },
+      { title: 'Kartographen des Nordens', times: '3× gespielt', score: 4.2, cover: cover(150) },
+      { title: 'Salzwiesen', times: '2× gespielt', score: 3.9, cover: art.wide },
+    ].map((t) => { const st = stop(t.score); return { ...t, score: fmt(t.score), pillBg: st.bg, pillInk: st.ink }; });
+
+    const maxWin = Math.max(...winsN);
+    const standings = [1, 2, 0, 3].map((i, rank) => ({
+      name: names[i], ini: ini(names[i]), color: people[i], n: winsN[i],
+      barW: Math.round((winsN[i] / maxWin) * 100) + '%',
+      wordSieg: winsN[i] === 1 ? 'Sieg' : 'Siege',
+      lead: rank === 0,
+      note: rank === 0 ? 'führt seit Mai' : rank === 3 ? 'seit Juni dabei' : '',
+      rate: Math.round((winsN[i] / 23) * 100) + ' % der Sessions',
+      bg: rank === 0 ? '#f2e394' : '#f7fbfc',
+      border: rank === 0 ? '1px solid #ddcd78' : '1px solid #c9dde6',
+    }));
+
+    const badges = [
+      { icon: 'ti-flame', title: 'Drei am Stück', who: 'Jonas · Juli 2026' },
+      { icon: 'ti-mood-crazy-happy', title: 'Wertet am mildesten', who: 'Lea · Schnitt 4,4' },
+      { icon: 'ti-cards', title: 'Bringt die meisten Spiele', who: 'Marco · 5 im Regal' },
+      { icon: 'ti-clock', title: 'Längster Session', who: 'Rost & Regen · 120 Min' },
+    ];
+
+    const driftwood = [
+      { title: 'Zinnober', meta: '3–5 · 50 Min · gehört Tim', reason: 'Aussortieren gelegt am 2. Sep — „zu lang für Donnerstag“', cover: cover(20) },
+      { title: 'Wolkenpfad', meta: '2–4 · 35 Min · gehört Lea', reason: 'Aussortieren gelegt am 14. Jun', cover: cover(300) },
+    ];
+    const bottles = [
+      { title: 'Der letzte Leuchtturm', why: 'Liegt im Regal, war aber noch nie dran', cover: art.pale, action: 'ti-tornado' },
+      { title: 'Sternenhafen', why: 'Ähnlich wie Nordlichter, das ihr mögt', cover: art.portrait, action: 'ti-tornado' },
+      { title: 'Kupferzeit', why: 'Seit 8 Monaten nicht gespielt', cover: art.busy, action: 'ti-tornado' },
+      ];
+    const horizon = [
+      { title: 'Salzkontor', who: 'Lea' }, { title: 'Hafenrunde', who: 'Marco' },
+      { title: 'Dünen & Deiche', who: 'Jonas' }, ];
+
+    const memberStats = [
+      { n: '9', what: 'Siege' }, { n: '23', what: 'Sessions dabei' },
+      { n: '5', what: 'Spiele im Regal' }, { n: '4,4', what: 'wertet im Schnitt' },
+    ];
+    const brings = [
+      { title: 'Nordlichter', score: 4.8, cover: cover(200) },
+      { title: 'Sternenhafen', score: 4.1, cover: art.portrait },
+      { title: 'Glutkessel', score: 4.0, cover: art.busy },
+      { title: 'Der letzte Leuchtturm', score: 3.6, cover: art.pale },
+    ].map((b) => { const st = stop(b.score); return { ...b, score: fmt(b.score), pillBg: st.bg, pillInk: st.ink }; });
+    const faces = ['ti-mood-cry', 'ti-mood-sad', 'ti-mood-neutral', 'ti-mood-smile', 'ti-mood-crazy-happy'];
+    const mdRaw = [1, 2, 9, 21, 18];
+    const mdMax = Math.max(...mdRaw);
+    const memberDist = mdRaw.map((n, i) => ({ n, c: ramp[i].bg, ink: ramp[i].ink, face: faces[i], h: Math.round((n / mdMax) * 100) + '%' }));
+
+    return {
+      railTides: rail(2), railPearls: rail(3), railShelf: rail(1), dock2: mkDock(2),
+      pulse, months, phoneMonths, recap, topGames, standings, badges,
+      driftwood, bottles, horizon, memberStats, brings, memberDist,
+    };
+  }
+}
+</script>
+</body>
+</html>

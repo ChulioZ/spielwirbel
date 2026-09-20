@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="design_doc_mode" content="canvas">
+  <link rel="stylesheet" href="../../../public/fonts/tabler-icons.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #cfe0e7; font-family: 'Figtree', sans-serif; }
+    a { color: #0e6690; text-decoration: none; }
+    a:hover { color: #0a4f70; text-decoration: underline; }
+  </style>
+</helmet>
+<div style="display: flex; flex-direction: column; gap: 40px; padding: 44px; width: max-content; color: #10283a; background-color: #e4f1f5; background-image: radial-gradient(900px 500px at 18% 0%, rgba(255,255,255,.7), transparent 65%), radial-gradient(900px 600px at 86% 40%, rgba(255,255,255,.5), transparent 70%);">
+
+  <div data-screen-label="O8 Kopf" style="max-width: 1240px; display: flex; flex-direction: column; gap: 12px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 22px; padding: 26px 30px; box-shadow: 0 14px 34px rgba(14,60,90,.14);">
+    <div style="display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;">
+      <span style="font-weight: 700; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: #f7fbfc; background: #0e6690; border-radius: 999px; padding: 5px 12px;">O8</span>
+      <h1 style="margin: 0; font-family: 'Comfortaa'; font-weight: 700; font-size: 36px; line-height: 1.05;">Farben gemessen · Score-Rampe · Rückblickkarte — Ocean</h1>
+      <span style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #3f5a6b;">20.09.2026 · Phase 2, Brief 8 von 13</span>
+    </div>
+    <p style="margin: 0; font-size: 16px; line-height: 1.55; max-width: 92ch; color: #3f5a6b;">Dieses Blatt <strong style="color: #10283a;">misst nur</strong> — die Werte selbst stehen in O1. Drei Fragen: Tragen die acht Personenfarben auf jeder Ocean-Fläche? Stimmt die Score-Rampe von Tiefsee bis Sonnenlicht? Und wie sieht die Rückblickkarte aus, die eine Runde teilt?</p>
+    <div style="display: flex; flex-wrap: wrap; gap: 10px; font-size: 13px; font-weight: 600;">
+      <span style="background: #f7ded6; border-radius: 999px; padding: 6px 13px; color: #a3392b; font-weight: 700;"><i class="ti ti-alert-triangle"></i> Befund: sechs von acht Personenfarben liegen bei 4,3:1 — sie tragen keinen Text unter 24 px</span>
+      <span style="background: #d7e9f0; border-radius: 999px; padding: 6px 13px;"><i class="ti ti-check" style="color: #1a6b4a;"></i> Alle Score-Stufen ≥ 5,4:1 mit ihrer festgelegten Textfarbe</span>
+    </div>
+    <div style="display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; background: #f7ded6; border-radius: 14px; font-size: 13px; line-height: 1.55; color: #10283a;"><i class="ti ti-alert-triangle" style="font-size: 18px; color: #a3392b; flex: none; margin-top: 1px;"></i><span><strong>Vokabular-Revert 20.09.2026:</strong> Bucht → <strong>Runde</strong> · Küste (Navigation) → <strong>Start</strong> · Riff → <strong>Regal</strong> · Gezeiten → <strong>Chronik</strong> · Perlenkette → <strong>Pokale</strong> · Tauchgang → <strong>Session</strong> · Perle / „hat die Perle“ → <strong>Sieg / „hat gewonnen“</strong> · Boje → <strong>Mitglied</strong> · Jenseits des Riffs → <strong>Nicht im Regal</strong> · Strandgut → <strong>Aussortiert</strong> · Gehoben → <strong>Durchgespielt</strong> · Am Horizont → <strong>Wunschliste</strong> · Flaschenpost → <strong>Könnte euch gefallen</strong> · Werft → <strong>Kümmerliste</strong> · Echolot → <strong>Ergebnis</strong> · Tauchkarte → <strong>Wertungskarte</strong> · Mehrere Boote → <strong>Mehrere Tische</strong> · „Wer taucht mit?“ → <strong>„Wer spielt mit?“</strong>. Eigen bleiben nur: <strong>Muschel · Abtauchen · auftauchen · in der Tiefe · „Wie viele holen wir hoch?“</strong> (<a href="Ocean-O9-Vokabular.dc.html" style="display: inline-flex; align-items: center; min-height: 24px; padding: 0 3px;">O9</a>).</span></div>
+  </div>
+
+  <div data-screen-label="O8.1 Personenfarben" style="display: flex; flex-direction: column; gap: 14px;">
+    <div style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #3f5a6b; line-height: 1.4;">O8.1 · Jede der acht Farben auf jeder Fläche, die Ocean hat — gemessen gegen die dichteste Stelle, nicht gegen den Mittelwert</div>
+    <div style="display: flex; flex-direction: column; gap: 0; width: 1240px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 20px; overflow: hidden; box-shadow: 0 6px 18px rgba(14,60,90,.1);">
+      <div style="display: grid; grid-template-columns: 190px repeat(5, 1fr) 150px; gap: 0; background: #d7e9f0; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #10283a;">
+        <span style="padding: 12px 16px;">Farbe</span>
+        <span style="padding: 12px 10px; text-align: center;">Als Ring</span>
+        <span style="padding: 12px 10px; text-align: center;">Als Fläche</span>
+        <span style="padding: 12px 10px; text-align: center;">Als Tidenlinie</span>
+        <span style="padding: 12px 10px; text-align: center;">Als Balken</span>
+        <span style="padding: 12px 10px; text-align: center;">Als Text 15 px — in Tinte</span>
+        <span style="padding: 12px 14px; text-align: right;">Auf #f7fbfc</span>
+      </div>
+      <sc-for list="{{ peopleRows }}" as="p" hint-placeholder-count="8">
+        <div style="display: grid; grid-template-columns: 190px repeat(5, 1fr) 150px; gap: 0; align-items: center; border-top: 1px solid #dfebf1; background: {{ p.rowBg }};">
+          <span style="padding: 12px 16px; display: flex; align-items: center; gap: 10px;"><span style="width: 24px; height: 24px; border-radius: 50%; background: {{ p.c }}; flex: none;"></span><span style="display: flex; flex-direction: column; line-height: 1.2;"><span style="font-weight: 700; font-size: 14.5px;">{{ p.name }}</span><span style="font-family: ui-monospace, Menlo, monospace; font-size: 11.5px; color: #3f5a6b;">{{ p.c }}</span></span></span>
+          <span style="padding: 10px; display: grid; place-items: center;"><span style="width: 44px; height: 44px; border-radius: 50%; background: #f7fbfc; border: 5px solid {{ p.c }}; box-sizing: border-box; display: grid; place-items: center; font-weight: 700; font-size: 14px; color: #10283a;">{{ p.ini }}</span></span>
+          <span style="padding: 10px; display: grid; place-items: center;"><span style="width: 44px; height: 44px; border-radius: 50%; background: {{ p.c }}; display: grid; place-items: center; font-weight: 700; font-size: 14px; color: #ffffff;">{{ p.ini }}</span></span>
+          <span style="padding: 10px; display: grid; place-items: center;"><span style="display: block; width: 84px; height: 12px; background-image: radial-gradient(circle at 50% 100%, {{ p.c }} 5px, transparent 6px); background-size: 20px 12px; background-repeat: repeat-x;"></span></span>
+          <span style="padding: 10px; display: grid; place-items: center;"><span style="display: flex; gap: 3px; align-items: flex-end; height: 34px;"><span style="width: 10px; height: 14px; border-radius: 4px 4px 0 0; background: {{ p.c }};"></span><span style="width: 10px; height: 26px; border-radius: 4px 4px 0 0; background: {{ p.c }};"></span><span style="width: 10px; height: 34px; border-radius: 4px 4px 0 0; background: {{ p.c }};"></span></span></span>
+          <span style="padding: 10px; display: grid; place-items: center; text-align: center;"><span style="display: inline-flex; align-items: center; gap: 8px;"><span style="width: 14px; height: 14px; border-radius: 50%; background: {{ p.c }}; flex: none;"></span><span style="font-size: 15px; font-weight: 700; color: #10283a;">{{ p.name }}</span></span></span>
+          <span style="padding: 10px 14px; text-align: right; display: flex; flex-direction: column; gap: 2px; align-items: flex-end;"><span style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; font-weight: 700; color: {{ p.verdictInk }};">{{ p.ratio }}</span><span style="font-size: 11px; font-weight: 700; color: {{ p.verdictInk }};">{{ p.verdict }}</span></span>
+        </div>
+      </sc-for>
+    </div>
+    <div style="display: flex; gap: 16px; align-items: flex-start; width: 1240px;">
+      <div style="flex: 1; display: flex; gap: 14px; align-items: flex-start; padding: 18px 20px; background: #f7ded6; border-radius: 18px;">
+        <i class="ti ti-alert-triangle" style="font-size: 24px; color: #a3392b; flex: none;"></i>
+        <span style="font-size: 14px; line-height: 1.6; color: #10283a;"><strong>Die Regel für Ocean:</strong> Personenfarbe ist <strong>Ring, Fläche, Tidenlinie, Balken</strong> — nie Text unter 24 px. Wo ein Name farbig erscheinen soll (Wertungskarte, Sichtblende), steht er bei <strong>26 px</strong> und in der abgedunkelten Variante, sonst in <code style="font-family: ui-monospace, Menlo, monospace;">#10283a</code>. Gefüllte Kreise tragen immer weiße Initialen, und die Füllung ist dann nur für Diagramme da, nie für Mitglieder.</span>
+      </div>
+      <div style="width: 420px; display: flex; flex-direction: column; gap: 10px; padding: 18px 20px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 18px;">
+        <span style="font-weight: 700; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: #0e6690;">Die abgedunkelte Variante</span>
+        <sc-for list="{{ darkNames }}" as="d" hint-placeholder-count="3">
+          <span style="display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 4px 0; border-bottom: 1px solid #dfebf1;"><span style="font-size: 26px; font-weight: 700; color: {{ d.dark }};">{{ d.name }}</span><span style="font-family: ui-monospace, Menlo, monospace; font-size: 11.5px; font-weight: 700; color: #1a6b4a;">{{ d.ratio }}</span></span>
+        </sc-for>
+        <span style="font-size: 12.5px; font-weight: 600; color: #3f5a6b; line-height: 1.5;">Nur für den einen Fall „wer ist gerade dran“ — zwei Stufen dunkler als die Ringfarbe, gleiche Familie.</span>
+      </div>
+    </div>
+  </div>
+
+  <div data-screen-label="O8.2 Score-Rampe" style="display: flex; flex-direction: column; gap: 14px;">
+    <div style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #3f5a6b; line-height: 1.4;">O8.2 · Die Rampe an jedem Ort, an dem ein Score auftaucht — Blase am Cover, Pille in der Tabelle, Balken im Ergebnis, Zahl im Detail</div>
+    <div style="display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap;">
+      <div style="width: 610px; display: flex; flex-direction: column; gap: 14px; padding: 20px 22px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 20px; box-shadow: 0 6px 18px rgba(14,60,90,.1);">
+        <span style="font-weight: 700; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: #0e6690;">Sechs Stufen, jede mit fester Textfarbe</span>
+        <sc-for list="{{ rampRows }}" as="r" hint-placeholder-count="6">
+          <div style="display: grid; grid-template-columns: 74px 1fr 120px 90px; gap: 12px; align-items: center; padding: 8px 0; border-bottom: 1px solid #dfebf1;">
+            <span style="height: 44px; border-radius: 12px; background: {{ r.bg }}; color: {{ r.ink }}; display: grid; place-items: center; font-weight: 700; font-size: 18px; border: 1px solid rgba(16,40,58,.14); box-sizing: border-box; font-variant-numeric: tabular-nums;">{{ r.label }}</span>
+            <span style="display: flex; flex-direction: column; line-height: 1.25;"><span style="font-weight: 700; font-size: 15px;">{{ r.name }}</span><span style="font-size: 12.5px; font-weight: 600; color: #3f5a6b;">{{ r.use }}</span></span>
+            <span style="font-family: ui-monospace, Menlo, monospace; font-size: 12px; color: #3f5a6b;">{{ r.bg }}</span>
+            <span style="font-family: ui-monospace, Menlo, monospace; font-size: 12.5px; font-weight: 700; color: #1a6b4a; text-align: right;">{{ r.ratio }}</span>
+          </div>
+        </sc-for>
+        <span style="font-size: 12.5px; font-weight: 600; color: #3f5a6b; line-height: 1.55;">Die Rampe ist <strong style="color: #10283a;">nicht linear hell</strong>: sie steigt von Tiefsee zu Sonnenlicht wie Licht im Wasser. Zwischen 3 und 4 kippt die Textfarbe von Papier auf Tinte — darum ist sie pro Stufe festgelegt und wird nie berechnet.</span>
+      </div>
+      <div style="width: 600px; display: flex; flex-direction: column; gap: 16px;">
+        <div style="display: flex; flex-direction: column; gap: 12px; padding: 20px 22px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 20px; box-shadow: 0 6px 18px rgba(14,60,90,.1);">
+          <span style="font-weight: 700; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: #0e6690;">Am Cover: die Blase an der Ecke</span>
+          <div style="display: flex; gap: 16px;">
+            <sc-for list="{{ pillDemo }}" as="p" hint-placeholder-count="4">
+              <span style="position: relative; width: 120px; border-radius: 14px; overflow: visible; background: #ffffff; border: 1px solid #c9dde6; box-shadow: 0 5px 14px rgba(14,60,90,.12);">
+                <span style="display: block; aspect-ratio: 4/3; border-radius: 13px 13px 0 0; background: {{ p.cover }};"></span>
+                <span style="display: block; padding: 8px 10px 10px; font-weight: 700; font-size: 13px;">{{ p.title }}</span>
+                <span style="position: absolute; right: -6px; top: -10px; min-width: 40px; height: 40px; padding: 0 10px; border-radius: 999px; background: {{ p.bg }}; color: {{ p.ink }}; font-weight: 700; font-size: 14px; display: grid; place-items: center; border: 2px solid #ffffff; box-sizing: border-box; box-shadow: 0 4px 10px rgba(14,60,90,.22); font-variant-numeric: tabular-nums;">{{ p.score }}</span>
+              </span>
+            </sc-for>
+          </div>
+          <span style="font-size: 12.5px; font-weight: 600; color: #3f5a6b; line-height: 1.55;">Der weiße 2-px-Rand ist Pflicht: er hält die Blase auf jedem Cover lesbar, auch auf hellem Bild. Ein Spiel ohne Wertung zeigt <strong style="color: #10283a;">„neu“</strong> in Vertiefung — keine 0,0.</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 12px; padding: 20px 22px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 20px; box-shadow: 0 6px 18px rgba(14,60,90,.1);">
+          <span style="font-weight: 700; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: #0e6690;">Das Veto: „1× gar nicht“</span>
+          <div style="display: grid; grid-template-columns: 30px 56px minmax(0,1fr) auto 64px; gap: 12px; align-items: center; padding: 10px 12px; border-radius: 14px; background: #ffffff; border: 1px solid #dfebf1;">
+            <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 20px; text-align: center;">3</span>
+            <span style="width: 56px; aspect-ratio: 4/3; border-radius: 8px; background: linear-gradient(145deg, oklch(.6 .13 220), oklch(.36 .12 250));"></span>
+            <span style="display: flex; flex-direction: column;"><span style="font-weight: 700; font-size: 15px;">Rost &amp; Regen</span><span style="font-size: 12.5px; font-weight: 600; color: #a3392b;">Gehört Tim · 1× gar nicht</span></span>
+            <span style="display: flex; gap: 4px; align-items: flex-end; height: 28px;"><span style="width: 13px; height: 28px; border-radius: 6px 6px 0 0; background: #23305c;"></span><span style="width: 13px; height: 28px; border-radius: 6px 6px 0 0; background: #35609a;"></span><span style="width: 13px; height: 28px; border-radius: 6px 6px 0 0; background: #6a9fd0;"></span><span style="width: 13px; height: 28px; border-radius: 6px 6px 0 0; background: #b7d4ee;"></span><span style="width: 13px; height: 3px; border-radius: 6px 6px 0 0; background: #f2e394;"></span></span>
+            <span style="justify-self: end; padding: 5px 10px; border-radius: 999px; background: #6a9fd0; color: #10283a; font-weight: 700; font-size: 16px; border: 1px solid rgba(16,40,58,.14); font-variant-numeric: tabular-nums;">2,9</span>
+          </div>
+          <span style="font-size: 12.5px; font-weight: 600; color: #3f5a6b; line-height: 1.55;">Ein einzelnes „gar nicht“ zieht den Score nach unten, ohne das Spiel zu streichen — das ist die Veto-Kurve. Die Zeile sagt es <strong style="color: #10283a;">wörtlich wie die App</strong>: „1× gar nicht“, nicht „ein Veto“. Nur wenn der Score unter 1 fällt, greift Tintenfisch.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div data-screen-label="O8.3 Rückblickkarte" style="display: flex; flex-direction: column; gap: 14px;">
+    <div style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #3f5a6b; line-height: 1.4;">O8.3 · Die Rückblickkarte: was eine Runde teilt, wenn sie etwas teilt — drei Formate, ein Bild</div>
+    <div style="display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap;">
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <span style="font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #0e6690;">Hochformat 1080 × 1350 · geteilt nach einer Session</span>
+        <div style="width: 380px; height: 475px; position: relative; overflow: hidden; border-radius: 18px; background: linear-gradient(180deg, #eef7fa 0%, #dcecf2 46%, #7fb4d3 46%, #2f6d94 100%); box-shadow: 0 18px 44px rgba(14,60,90,.2); color: #10283a;">
+          <span style="position: absolute; left: 24px; top: 24px; display: inline-flex; align-items: center; gap: 8px; padding: 7px 14px; border-radius: 999px; background: rgba(247,251,252,.95); font-weight: 700; font-size: 13px;"><span style="width: 20px; height: 20px; border-radius: 50%; background: #0e6690; color: #f7fbfc; display: grid; place-items: center;"><i class="ti ti-tornado" style="font-size: 12px;"></i></span>Donnerstagsrunde</span>
+          <span style="position: absolute; left: 50%; top: 110px; transform: translateX(-50%); width: 200px; border-radius: 12px; overflow: hidden; box-shadow: 0 18px 32px rgba(14,60,90,.4); transform: translateX(-50%) rotate(-4deg);">
+            <span style="display: block; aspect-ratio: 4/3; background: linear-gradient(145deg, oklch(.58 .12 200), oklch(.36 .11 230));"></span>
+          </span>
+          <span style="position: absolute; left: 130px; bottom: 122px; width: 120px; height: 48px; border-radius: 50% 60% 40% 45% / 100% 100% 35% 40%; background: linear-gradient(180deg, #2f6d94, #1f4f72);"></span>
+          <span style="position: absolute; left: 240px; bottom: 138px; width: 36px; height: 30px; background: #1f4f72; clip-path: polygon(0 42%, 60% 30%, 100% 0, 82% 50%, 100% 100%, 60% 70%, 0 58%); transform: rotate(-8deg);"></span>
+          <span style="position: absolute; left: 152px; bottom: 148px; width: 6px; height: 6px; border-radius: 50%; background: #f7fbfc;"></span>
+          <span style="position: absolute; left: 0; right: 0; bottom: 0; padding: 18px 22px 20px; display: flex; flex-direction: column; gap: 5px; background: #f7fbfc;">
+            <span style="font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #0e6690;">14. September 2026 · Session Nr. 23</span>
+            <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 26px; line-height: 1.1;">Nordlichter</span>
+            <span style="display: flex; align-items: center; gap: 10px; margin-top: 2px;">
+              <span style="width: 34px; height: 34px; border-radius: 50%; background: #f7fbfc; border: 4px solid #198663; box-sizing: border-box; display: grid; place-items: center; font-weight: 700; font-size: 12px;">JO</span>
+              <span style="font-size: 15px; font-weight: 700;">Jonas hat gewonnen</span>
+              <span style="margin-left: auto; padding: 5px 13px; border-radius: 999px; background: #f2e394; font-weight: 700; font-size: 19px; font-variant-numeric: tabular-nums;">4,8</span>
+            </span>
+            <span style="font-size: 11.5px; font-weight: 600; color: #3f5a6b; margin-top: 4px;">spielwirbel.app · Kein Tracking · EU-Hosting</span>
+          </span>
+        </div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <span style="font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #0e6690;">Querformat 1200 × 630 · Link-Vorschau — Text auf deckendem Band</span>
+        <div style="width: 480px; height: 252px; position: relative; overflow: hidden; border-radius: 14px; background: linear-gradient(180deg, #eef7fa 0%, #dcecf2 60%, #7fb4d3 60%, #2f6d94 100%); box-shadow: 0 14px 34px rgba(14,60,90,.2); display: flex; align-items: center; gap: 0; box-sizing: border-box; color: #10283a;">
+          <span style="width: 196px; height: 100%; flex: none; display: grid; place-items: center; padding: 24px;"><span style="width: 100%; border-radius: 10px; overflow: hidden; box-shadow: 0 12px 24px rgba(14,60,90,.35);"><span style="display: block; aspect-ratio: 4/3; background: linear-gradient(145deg, oklch(.58 .12 200), oklch(.36 .11 230));"></span></span></span>
+          <span style="flex: 1; height: 100%; background: #f7fbfc; display: flex; flex-direction: column; justify-content: center; gap: 5px; padding: 24px 26px; min-width: 0; box-sizing: border-box;">
+            <span style="font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #0e6690;">Donnerstagsrunde · 14. Sep 2026</span>
+            <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 26px; line-height: 1.1;">Nordlichter wurde gespielt.</span>
+            <span style="font-size: 15px; font-weight: 700;">Jonas hat gewonnen · 4,8</span>
+            <span style="font-size: 12px; font-weight: 600; color: #3f5a6b; margin-top: 4px;">spielwirbel.app</span>
+          </span>
+        </div>
+        <div style="width: 480px; display: flex; flex-direction: column; gap: 10px; margin-top: 10px; padding: 18px 20px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 18px;">
+          <span style="font-weight: 700; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: #0e6690;">Was nie auf die Karte kommt</span>
+          <span style="font-size: 13.5px; font-weight: 600; color: #3f5a6b; line-height: 1.6;">Keine Nachnamen, keine Gesichter, keine Wertungen einzelner Personen, kein Ort, keine Uhrzeit. Auf der Karte stehen: Runde, Datum, Spiel, wer gewonnen hat, der Score — und wer nicht geteilt werden will, taucht gar nicht auf. <strong style="color: #10283a;">Teilen erzeugt ein Bild, keinen offenen Link in eure Chronik.</strong></span>
+        </div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <span style="font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #0e6690;">Jahresrückblick · dieselbe Form, mehr Zahlen</span>
+        <div style="width: 300px; height: 475px; position: relative; overflow: hidden; border-radius: 18px; background: linear-gradient(180deg, #eef7fa 0%, #cfe3ec 100%); box-shadow: 0 18px 44px rgba(14,60,90,.2); padding: 24px 22px; box-sizing: border-box; display: flex; flex-direction: column; gap: 14px; color: #10283a;">
+          <span style="font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #0e6690;">Donnerstagsrunde · 2026</span>
+          <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 25px; line-height: 1.12;">Ein Jahr unter Wasser</span>
+          <sc-for list="{{ yearStats }}" as="y" hint-placeholder-count="5">
+            <span style="display: flex; align-items: baseline; gap: 10px; padding: 7px 0; border-bottom: 1px solid rgba(16,40,58,.12);">
+              <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 26px; min-width: 56px;">{{ y.n }}</span>
+              <span style="font-size: 13.5px; font-weight: 600; color: #3f5a6b; line-height: 1.3;">{{ y.what }}</span>
+            </span>
+          </sc-for>
+          <span style="margin-top: auto; display: flex; align-items: center; gap: 10px;">
+            <span style="width: 40px; height: 40px; border-radius: 50%; background: #f7fbfc; border: 5px solid #198663; box-sizing: border-box; display: grid; place-items: center; font-weight: 700; font-size: 13px;">JO</span>
+            <span style="display: flex; flex-direction: column; line-height: 1.2;"><span style="font-weight: 700; font-size: 15px;">Jonas</span><span style="font-size: 12.5px; font-weight: 600; color: #3f5a6b;">führt mit 9 Siegen</span></span>
+          </span>
+          <span style="font-size: 11px; font-weight: 600; color: #3f5a6b;">spielwirbel.app</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div data-screen-label="O8.4 Übergabe" style="max-width: 1240px; background: #10283a; color: #eaf4f8; border-radius: 22px; padding: 24px 28px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 14px 34px rgba(14,60,90,.2);">
+    <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 20px; color: #f7fbfc;">Was O9 von hier mitnimmt</span>
+    <span style="font-size: 15px; line-height: 1.65; max-width: 100ch;">Gemessen, nicht neu erfunden: alle Farben stammen aus O1. Zwei Ergebnisse gehen in die Umsetzung — <strong style="color: #f7fbfc;">Personenfarbe trägt keinen kleinen Text</strong> (sechs von acht liegen bei 4,3:1), und die <strong style="color: #f7fbfc;">Score-Textfarbe ist pro Stufe festgelegt</strong>, nie aus der Helligkeit berechnet. Die Rückblickkarte hat drei Formate und zeigt nie mehr als Runde, Datum, Spiel, Sieg, Score. O9 legt fest, wie das alles heißt.</span>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1340,&quot;height&quot;:1000}}">
+class Component extends DCLogic {
+  renderVals() {
+    const cover = (h) => `linear-gradient(145deg, oklch(.6 .13 ${h}), oklch(.36 .12 ${h + 30}))`;
+    const peopleRows = [
+      { name: 'Koralle', c: '#c6522c', ini: 'MA', ratio: '4,3:1', ok: false },
+      { name: 'Seegras', c: '#198663', ini: 'JO', ratio: '4,3:1', ok: false },
+      { name: 'Seeigel', c: '#726bc7', ini: 'LE', ratio: '4,3:1', ok: false },
+      { name: 'Bernstein', c: '#a66815', ini: 'TI', ratio: '4,3:1', ok: false },
+      { name: 'Anemone', c: '#c34d74', ini: 'AY', ratio: '4,3:1', ok: false },
+      { name: 'Lagune', c: '#2f6f9e', ini: 'BE', ratio: '5,1:1', ok: true },
+      { name: 'Tang', c: '#54821d', ini: 'CH', ratio: '4,3:1', ok: false },
+      { name: 'Purpur', c: '#993556', ini: 'NI', ratio: '6,6:1', ok: true },
+    ].map((p) => ({
+      ...p,
+      verdict: p.ok ? 'trägt Text' : 'kein Text < 24 px',
+      verdictInk: p.ok ? '#1a6b4a' : '#a3392b',
+      rowBg: p.ok ? '#f4faf7' : '#f7fbfc',
+    }));
+
+    const darkNames = [
+      { name: 'Lea', dark: '#4a4396', ratio: '7,9:1' },
+      { name: 'Marco', dark: '#8a3418', ratio: '7,4:1' },
+      { name: 'Tim', dark: '#6f440a', ratio: '7,6:1' },
+    ];
+
+    const ramp = [
+      { bg: '#23305c', ink: '#f7fbfc', name: 'Tiefsee', label: '1,0', use: 'Wertung 1 · niemand will', ratio: '12,1:1' },
+      { bg: '#35609a', ink: '#f7fbfc', name: 'Dämmerzone', label: '2,0', use: 'Wertung 2', ratio: '6,0:1' },
+      { bg: '#6a9fd0', ink: '#10283a', name: 'Freiwasser', label: '3,0', use: 'Wertung 3 · geht so', ratio: '5,4:1' },
+      { bg: '#b7d4ee', ink: '#10283a', name: 'Flachwasser', label: '4,0', use: 'Wertung 4', ratio: '11,0:1' },
+      { bg: '#f2e394', ink: '#10283a', name: 'Sonnenlicht', label: '5,0', use: 'Wertung 5 · unbedingt', ratio: '13,3:1' },
+      { bg: '#4a1942', ink: '#f7fbfc', name: 'Tintenfisch', label: '0,8', use: 'Score unter 1 — mit „gar nicht“', ratio: '13,6:1' },
+    ];
+
+    const pillDemo = [
+      { title: 'Nordlichter', score: '4,8', cover: cover(200), bg: '#f2e394', ink: '#10283a' },
+      { title: 'Salzwiesen', score: '3,9', cover: 'linear-gradient(180deg, oklch(.82 .09 210) 0 46%, oklch(.5 .1 195) 46% 68%, oklch(.32 .07 200) 68% 100%)', bg: '#b7d4ee', ink: '#10283a' },
+      { title: 'Wolkenpfad', score: '2,7', cover: cover(300), bg: '#6a9fd0', ink: '#10283a' },
+      { title: 'Hafenmeister', score: 'neu', cover: 'repeating-linear-gradient(135deg, #eaf4f8 0 10px, #dfedf3 10px 20px)', bg: '#d7e9f0', ink: '#0e6690' },
+    ];
+
+    const yearStats = [
+      { n: '23', what: 'Sessions' }, { n: '14', what: 'verschiedene Spiele' },
+      { n: '4,2', what: 'Durchschnitt aller Wertungen' }, { n: '9', what: 'Siege für Jonas' },
+      { n: '1×', what: 'gar nicht — für Rost & Regen' },
+    ];
+
+    return { peopleRows, darkNames, rampRows: ramp, pillDemo, yearStats };
+  }
+}
+</script>
+</body>
+</html>

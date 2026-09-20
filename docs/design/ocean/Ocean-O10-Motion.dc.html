@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="design_doc_mode" content="canvas">
+  <link rel="stylesheet" href="../../../public/fonts/tabler-icons.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #cfe0e7; font-family: 'Figtree', sans-serif; }
+    a { color: #0e6690; text-decoration: none; }
+    a:hover { color: #0a4f70; text-decoration: underline; }
+    @keyframes oRise { 0% { transform: translateY(0) translateX(0); opacity: 0; } 12% { opacity: 1; } 55% { transform: translateY(-46px) translateX(6px); } 100% { transform: translateY(-96px) translateX(-3px); opacity: 0; } }
+    @keyframes oClamOpen { 0%, 12% { transform: rotate(0deg); } 40%, 100% { transform: rotate(-16deg); } }
+    @keyframes oSink { 0%, 10% { transform: translateY(0) scale(1); opacity: 1; } 55% { transform: translateY(56px) scale(.84); opacity: .7; } 100% { transform: translateY(96px) scale(.7); opacity: 0; } }
+    @keyframes oWhale { 0% { transform: translateY(70px) rotate(-3deg); } 60% { transform: translateY(-8px) rotate(1deg); } 80% { transform: translateY(3px) rotate(0deg); } 100% { transform: translateY(0) rotate(0deg); } }
+    @keyframes oTide { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+    @keyframes oPick { 0% { transform: translateY(0) scale(1); } 45% { transform: translateY(-14px) scale(1.1); } 100% { transform: translateY(-8px) scale(1.06); } }
+    @keyframes oSheet { 0% { transform: translateY(100%); } 100% { transform: translateY(0); } }
+    @keyframes oToast { 0% { transform: translateY(20px); opacity: 0; } 15%, 85% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(8px); opacity: 0; } }
+    @keyframes oShimmer { 0%, 100% { opacity: .4; } 50% { opacity: .85; } }
+    @keyframes oPearlIn { 0% { transform: scale(0) translateY(-18px); opacity: 0; } 60% { transform: scale(1.18) translateY(0); opacity: 1; } 100% { transform: scale(1) translateY(0); opacity: 1; } }
+    @keyframes oSpin { to { transform: rotate(360deg); } }
+  </style>
+</helmet>
+<div style="display: flex; flex-direction: column; gap: 40px; padding: 44px; width: max-content; color: #10283a; background-color: #e4f1f5; background-image: radial-gradient(900px 500px at 18% 0%, rgba(255,255,255,.7), transparent 65%), radial-gradient(900px 600px at 86% 40%, rgba(255,255,255,.5), transparent 70%);">
+
+  <div data-screen-label="O10 Kopf" style="max-width: 1240px; display: flex; flex-direction: column; gap: 12px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 22px; padding: 26px 30px; box-shadow: 0 14px 34px rgba(14,60,90,.14);">
+    <div style="display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;">
+      <span style="font-weight: 700; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: #f7fbfc; background: #0e6690; border-radius: 999px; padding: 5px 12px;">O10</span>
+      <h1 style="margin: 0; font-family: 'Comfortaa'; font-weight: 700; font-size: 36px; line-height: 1.05;">Bewegung — Ocean</h1>
+      <span style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #3f5a6b;">20.09.2026 · Phase 2, Brief 10 von 13</span>
+    </div>
+    <p style="margin: 0; font-size: 16px; line-height: 1.55; max-width: 92ch; color: #3f5a6b;">Zehn Bewegungen, jede mit einem <strong style="color: #10283a;">statischen Endbild</strong> daneben. Ocean bewegt sich wie Wasser: nichts springt, nichts federt zurück, alles hat Trägheit. Eine Bewegung darf <strong style="color: #10283a;">nie</strong> Voraussetzung sein, um etwas zu verstehen — sie erklärt nur, was gerade passiert ist.</p>
+    <div style="display: flex; flex-wrap: wrap; gap: 10px; font-size: 13px; font-weight: 600;">
+      <span style="background: #d7e9f0; border-radius: 999px; padding: 6px 13px;"><i class="ti ti-check" style="color: #1a6b4a;"></i> Endbild = das, was bei reduzierter Bewegung sofort steht</span>
+      <span style="background: #d7e9f0; border-radius: 999px; padding: 6px 13px;"><i class="ti ti-check" style="color: #1a6b4a;"></i> Kein Überschwingen, keine Federn, kein Blinken</span>
+      <span style="background: #d7e9f0; border-radius: 999px; padding: 6px 13px;"><i class="ti ti-check" style="color: #1a6b4a;"></i> Nichts über 900 ms außer Zierblasen</span>
+    </div>
+    <div style="display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; background: #f7ded6; border-radius: 14px; font-size: 13px; line-height: 1.55; color: #10283a;"><i class="ti ti-alert-triangle" style="font-size: 18px; color: #a3392b; flex: none; margin-top: 1px;"></i><span><strong>Vokabular-Revert 20.09.2026:</strong> Bucht → <strong>Runde</strong> · Küste (Navigation) → <strong>Start</strong> · Riff → <strong>Regal</strong> · Gezeiten → <strong>Chronik</strong> · Perlenkette → <strong>Pokale</strong> · Tauchgang → <strong>Session</strong> · Perle / „hat die Perle“ → <strong>Sieg / „hat gewonnen“</strong> · Boje → <strong>Mitglied</strong> · Jenseits des Riffs → <strong>Nicht im Regal</strong> · Strandgut → <strong>Aussortiert</strong> · Gehoben → <strong>Durchgespielt</strong> · Am Horizont → <strong>Wunschliste</strong> · Flaschenpost → <strong>Könnte euch gefallen</strong> · Werft → <strong>Kümmerliste</strong> · Echolot → <strong>Ergebnis</strong> · Tauchkarte → <strong>Wertungskarte</strong> · Mehrere Boote → <strong>Mehrere Tische</strong> · „Wer taucht mit?“ → <strong>„Wer spielt mit?“</strong>. Eigen bleiben nur: <strong>Muschel · Abtauchen · auftauchen · in der Tiefe · „Wie viele holen wir hoch?“</strong> (<a href="Ocean-O9-Vokabular.dc.html" style="display: inline-flex; align-items: center; min-height: 24px; padding: 0 3px;">O9</a>).</span></div>
+  </div>
+
+  <div data-screen-label="O10.1 Abtauchen" style="display: flex; flex-direction: column; gap: 14px;">
+    <div style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #3f5a6b; line-height: 1.4;">O10.1 · Das Ritual: die Muschel öffnet sich, die gezogenen Spiele sinken ab, Blasen steigen. 900 ms, einmal — der Rest des Bildschirms bleibt ruhig.</div>
+    <div style="display: flex; gap: 20px; align-items: stretch; flex-wrap: wrap;">
+      <div style="width: 610px; display: flex; flex-direction: column; gap: 12px; padding: 22px 24px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 22px; box-shadow: 0 6px 18px rgba(14,60,90,.1); box-sizing: border-box;">
+        <span style="font-weight: 700; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: #0e6690;">In Bewegung</span>
+        <div style="position: relative; height: 300px; border-radius: 18px; overflow: hidden; background: linear-gradient(180deg, #eef7fa, #cfe3ec);">
+          <span style="position: absolute; left: 50%; top: 40px; width: 230px; height: 108px; margin-left: -115px; transform-origin: 50% 100%; border-radius: 115px 115px 0 0 / 108px 108px 0 0; background: repeating-conic-gradient(from 200deg at 50% 100%, #f3ebdd 0 5deg, #e2d2b8 5deg 10deg); border: 3px solid #d8c6a6; border-bottom: none; box-sizing: border-box; animation: oClamOpen 2.6s ease-in-out infinite;"></span>
+          <span style="position: absolute; left: 50%; top: 140px; width: 230px; height: 130px; margin-left: -115px; border-radius: 0 0 115px 115px / 0 0 130px 130px; background: repeating-conic-gradient(from 100deg at 50% 0%, #f7efe2 0 5deg, #e8dac2 5deg 10deg); border: 3px solid #d8c6a6; box-sizing: border-box; box-shadow: 0 18px 28px rgba(14,60,90,.2);"></span>
+          <span style="position: absolute; left: 50%; top: 120px; width: 74px; margin-left: -110px; border-radius: 8px; overflow: hidden; box-shadow: 0 8px 14px rgba(14,60,90,.3); animation: oSink 2.6s ease-in infinite;"><span style="display: block; aspect-ratio: 4/3; background: linear-gradient(145deg, oklch(.6 .13 200), oklch(.36 .12 230));"></span></span>
+          <span style="position: absolute; left: 50%; top: 120px; width: 74px; margin-left: -37px; border-radius: 8px; overflow: hidden; box-shadow: 0 8px 14px rgba(14,60,90,.3); animation: oSink 2.6s ease-in .12s infinite;"><span style="display: block; aspect-ratio: 4/3; background: linear-gradient(145deg, oklch(.6 .13 150), oklch(.36 .12 180));"></span></span>
+          <span style="position: absolute; left: 50%; top: 120px; width: 74px; margin-left: 36px; border-radius: 8px; overflow: hidden; box-shadow: 0 8px 14px rgba(14,60,90,.3); animation: oSink 2.6s ease-in .24s infinite;"><span style="display: block; aspect-ratio: 4/3; background: linear-gradient(145deg, oklch(.6 .13 30), oklch(.36 .12 60));"></span></span>
+          <span style="position: absolute; left: 22%; bottom: 20px; width: 12px; height: 12px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #fff, rgba(255,255,255,.4) 50%, rgba(14,102,144,.35)); border: 1px solid rgba(14,102,144,.3); animation: oRise 3s ease-in infinite;"></span>
+          <span style="position: absolute; left: 44%; bottom: 14px; width: 8px; height: 8px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #fff, rgba(255,255,255,.4) 50%, rgba(14,102,144,.35)); border: 1px solid rgba(14,102,144,.3); animation: oRise 3.6s ease-in .8s infinite;"></span>
+          <span style="position: absolute; left: 72%; bottom: 18px; width: 14px; height: 14px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #fff, rgba(255,255,255,.4) 50%, rgba(14,102,144,.35)); border: 1px solid rgba(14,102,144,.3); animation: oRise 3.2s ease-in 1.6s infinite;"></span>
+        </div>
+        <span style="font-size: 13px; font-weight: 600; color: #3f5a6b; line-height: 1.55;">Muschel <code style="font-family: ui-monospace, Menlo, monospace; background: #d7e9f0; border-radius: 4px; padding: 1px 5px;">rotate(-16°)</code> um die Unterkante, 420 ms · Karten sinken versetzt (0 / 120 / 240 ms), je 520 ms · Blasen sind Zierde und laufen weiter.</span>
+      </div>
+      <div style="width: 610px; display: flex; flex-direction: column; gap: 12px; padding: 22px 24px; background: #f7fbfc; border: 1px dashed #8fb3c4; border-radius: 22px; box-sizing: border-box;">
+        <span style="font-weight: 700; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: #0e6690;">Endbild · reduzierte Bewegung</span>
+        <div style="position: relative; height: 300px; border-radius: 18px; overflow: hidden; background: linear-gradient(180deg, #eef7fa, #cfe3ec);">
+          <span style="position: absolute; left: 50%; top: 40px; width: 230px; height: 108px; margin-left: -115px; transform-origin: 50% 100%; transform: rotate(-16deg); border-radius: 115px 115px 0 0 / 108px 108px 0 0; background: repeating-conic-gradient(from 200deg at 50% 100%, #f3ebdd 0 5deg, #e2d2b8 5deg 10deg); border: 3px solid #d8c6a6; border-bottom: none; box-sizing: border-box;"></span>
+          <span style="position: absolute; left: 50%; top: 140px; width: 230px; height: 130px; margin-left: -115px; border-radius: 0 0 115px 115px / 0 0 130px 130px; background: repeating-conic-gradient(from 100deg at 50% 0%, #f7efe2 0 5deg, #e8dac2 5deg 10deg); border: 3px solid #d8c6a6; box-sizing: border-box; box-shadow: 0 18px 28px rgba(14,60,90,.2);"></span>
+          <span style="position: absolute; left: 50%; bottom: 22px; transform: translateX(-50%); display: flex; gap: 10px;">
+            <span style="width: 74px; border-radius: 8px; overflow: hidden; box-shadow: 0 8px 14px rgba(14,60,90,.3);"><span style="display: block; aspect-ratio: 4/3; background: linear-gradient(145deg, oklch(.6 .13 200), oklch(.36 .12 230));"></span></span>
+            <span style="width: 74px; border-radius: 8px; overflow: hidden; box-shadow: 0 8px 14px rgba(14,60,90,.3);"><span style="display: block; aspect-ratio: 4/3; background: linear-gradient(145deg, oklch(.6 .13 150), oklch(.36 .12 180));"></span></span>
+            <span style="width: 74px; border-radius: 8px; overflow: hidden; box-shadow: 0 8px 14px rgba(14,60,90,.3);"><span style="display: block; aspect-ratio: 4/3; background: linear-gradient(145deg, oklch(.6 .13 30), oklch(.36 .12 60));"></span></span>
+          </span>
+        </div>
+        <span style="font-size: 13px; font-weight: 600; color: #3f5a6b; line-height: 1.55;">Muschel offen, drei Karten unten, keine Blasen. <strong style="color: #10283a;">Dieses Bild ist die Wahrheit</strong> — die Bewegung führt nur dorthin.</span>
+      </div>
+    </div>
+  </div>
+
+  <div data-screen-label="O10.2 Der Wal" style="display: flex; flex-direction: column; gap: 14px;">
+    <div style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #3f5a6b; line-height: 1.4;">O10.2 · Der Wal taucht auf: 700 ms von unten, leichtes Nachwiegen, dann steht er. Einmal pro Ergebnis, nie in Schleife.</div>
+    <div style="display: flex; gap: 20px; align-items: stretch; flex-wrap: wrap;">
+      <div style="width: 610px; display: flex; flex-direction: column; gap: 12px; padding: 22px 24px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 22px; box-shadow: 0 6px 18px rgba(14,60,90,.1); box-sizing: border-box;">
+        <span style="font-weight: 700; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: #0e6690;">In Bewegung</span>
+        <div style="position: relative; height: 260px; border-radius: 18px; overflow: hidden; background: linear-gradient(180deg, #eef7fa, #e2f0f5);">
+          <span style="position: absolute; left: 60px; bottom: 80px; width: 250px; height: 140px; animation: oWhale 3.2s ease-out infinite;">
+            <span style="position: absolute; left: 0; bottom: 0; width: 200px; height: 80px; border-radius: 50% 60% 40% 45% / 100% 100% 35% 40%; background: linear-gradient(180deg, #2f6d94 0%, #1f4f72 60%, #163a55 100%);"></span>
+            <span style="position: absolute; left: 186px; bottom: 34px; width: 58px; height: 48px; background: #1f4f72; clip-path: polygon(0 42%, 60% 30%, 100% 0, 82% 50%, 100% 100%, 60% 70%, 0 58%); transform: rotate(-8deg);"></span>
+            <span style="position: absolute; left: 36px; bottom: 44px; width: 8px; height: 8px; border-radius: 50%; background: #f7fbfc; box-shadow: inset -2px 0 0 #10283a;"></span>
+            <span style="position: absolute; left: 24px; bottom: 60px; width: 150px; border-radius: 8px; overflow: hidden; box-shadow: 0 12px 20px rgba(14,60,90,.35); transform: rotate(-5deg);"><span style="display: block; aspect-ratio: 4/3; background: linear-gradient(145deg, oklch(.58 .12 200), oklch(.36 .11 230));"></span></span>
+          </span>
+          <span style="position: absolute; left: 0; right: 0; bottom: 0; height: 100px; background: linear-gradient(180deg, rgba(127,180,211,.72), rgba(42,106,151,.92));"></span>
+          <span style="position: absolute; left: 0; right: 0; bottom: 94px; height: 12px; background-image: radial-gradient(circle at 50% 100%, rgba(127,180,211,.72) 7px, transparent 8px); background-size: 24px 12px; background-repeat: repeat-x;"></span>
+        </div>
+        <span style="font-size: 13px; font-weight: 600; color: #3f5a6b; line-height: 1.55;">Aufsteigen 700 ms <code style="font-family: ui-monospace, Menlo, monospace; background: #d7e9f0; border-radius: 4px; padding: 1px 5px;">cubic-bezier(.2,.8,.3,1)</code>, ein Nachwiegen von 3 px, dann Stillstand. Kein Sprung über die Wasserlinie, kein Platschen.</span>
+      </div>
+      <div style="width: 610px; display: flex; flex-direction: column; gap: 12px; padding: 22px 24px; background: #f7fbfc; border: 1px dashed #8fb3c4; border-radius: 22px; box-sizing: border-box;">
+        <span style="font-weight: 700; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: #0e6690;">Endbild · reduzierte Bewegung</span>
+        <div style="position: relative; height: 260px; border-radius: 18px; overflow: hidden; background: linear-gradient(180deg, #eef7fa, #e2f0f5);">
+          <span style="position: absolute; left: 60px; bottom: 80px; width: 250px; height: 140px;">
+            <span style="position: absolute; left: 0; bottom: 0; width: 200px; height: 80px; border-radius: 50% 60% 40% 45% / 100% 100% 35% 40%; background: linear-gradient(180deg, #2f6d94 0%, #1f4f72 60%, #163a55 100%);"></span>
+            <span style="position: absolute; left: 186px; bottom: 34px; width: 58px; height: 48px; background: #1f4f72; clip-path: polygon(0 42%, 60% 30%, 100% 0, 82% 50%, 100% 100%, 60% 70%, 0 58%); transform: rotate(-8deg);"></span>
+            <span style="position: absolute; left: 36px; bottom: 44px; width: 8px; height: 8px; border-radius: 50%; background: #f7fbfc; box-shadow: inset -2px 0 0 #10283a;"></span>
+            <span style="position: absolute; left: 24px; bottom: 60px; width: 150px; border-radius: 8px; overflow: hidden; box-shadow: 0 12px 20px rgba(14,60,90,.35); transform: rotate(-5deg);"><span style="display: block; aspect-ratio: 4/3; background: linear-gradient(145deg, oklch(.58 .12 200), oklch(.36 .11 230));"></span></span>
+          </span>
+          <span style="position: absolute; left: 0; right: 0; bottom: 0; height: 100px; background: linear-gradient(180deg, rgba(127,180,211,.72), rgba(42,106,151,.92));"></span>
+          <span style="position: absolute; left: 0; right: 0; bottom: 94px; height: 12px; background-image: radial-gradient(circle at 50% 100%, rgba(127,180,211,.72) 7px, transparent 8px); background-size: 24px 12px; background-repeat: repeat-x;"></span>
+        </div>
+        <span style="font-size: 13px; font-weight: 600; color: #3f5a6b; line-height: 1.55;">Derselbe Wal, sofort an seinem Platz. Das Ergebnis steht ohnehin als Text darüber — die Bewegung ist Zugabe, nie Information.</span>
+      </div>
+    </div>
+  </div>
+
+  <div data-screen-label="O10.3 Die acht kleinen" style="display: flex; flex-direction: column; gap: 14px;">
+    <div style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #3f5a6b; line-height: 1.4;">O10.3 · Die acht kleinen Bewegungen — links laufend, rechts ihr Endbild</div>
+    <div style="display: grid; grid-template-columns: repeat(2, 610px); gap: 18px;">
+
+      <div style="display: flex; flex-direction: column; gap: 10px; padding: 20px 22px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 20px; box-shadow: 0 6px 18px rgba(14,60,90,.1);">
+        <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 17px;">Wertung wählen · 260 ms</span>
+        <div style="display: flex; gap: 24px; align-items: flex-end; padding: 14px 0 6px;">
+          <span style="flex: 1; display: flex; justify-content: space-around; align-items: flex-end;">
+            <sc-for list="{{ moodsIdle }}" as="m" hint-placeholder-count="5">
+              <span style="width: 54px; height: 54px; border-radius: 50%; display: grid; place-items: center; background: {{ m.bg }}; border: {{ m.border }}; box-sizing: border-box; box-shadow: {{ m.shadow }}; color: {{ m.ink }}; font-size: 28px; animation: {{ m.anim }};"><i class="ti {{ m.face }}"></i></span>
+            </sc-for>
+          </span>
+          <span style="width: 1px; height: 60px; background: #dfebf1;"></span>
+          <span style="flex: 1; display: flex; justify-content: space-around; align-items: flex-end;">
+            <sc-for list="{{ moodsEnd }}" as="m" hint-placeholder-count="5">
+              <span style="width: 54px; height: 54px; border-radius: 50%; display: grid; place-items: center; background: {{ m.bg }}; border: {{ m.border }}; box-sizing: border-box; box-shadow: {{ m.shadow }}; color: {{ m.ink }}; font-size: 28px; transform: {{ m.tf }};"><i class="ti {{ m.face }}"></i></span>
+            </sc-for>
+          </span>
+        </div>
+        <span style="font-size: 12.5px; font-weight: 600; color: #3f5a6b; line-height: 1.5;">Die gewählte Blase steigt 8 px, wächst auf 1,06 und füllt sich in der Skalenfarbe. Ohne Bewegung: sie ist einfach gefüllt und hat den Ring.</span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 10px; padding: 20px 22px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 20px; box-shadow: 0 6px 18px rgba(14,60,90,.1);">
+        <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 17px;">Sieg kommt dazu · 420 ms</span>
+        <div style="display: flex; gap: 24px; align-items: center; padding: 18px 0 10px;">
+          <span style="flex: 1; display: flex; align-items: center; gap: 8px;">
+            <span style="width: 30px; height: 30px; border-radius: 50%; background: #f7fbfc; border: 4px solid #198663; box-sizing: border-box; display: grid; place-items: center; font-size: 10px; font-weight: 700;">JO</span>
+            <span style="display: flex; gap: 5px; align-items: center;">
+              <span style="width: 16px; height: 16px; border-radius: 50%; background: radial-gradient(circle at 32% 28%, #ffffff 0%, #f3f9fb 30%, #d7e9f0 70%, #b9d4e0 100%); box-shadow: 0 1px 3px rgba(14,60,90,.35);"></span>
+              <span style="width: 16px; height: 16px; border-radius: 50%; background: radial-gradient(circle at 32% 28%, #ffffff 0%, #f3f9fb 30%, #d7e9f0 70%, #b9d4e0 100%); box-shadow: 0 1px 3px rgba(14,60,90,.35);"></span>
+              <span style="width: 16px; height: 16px; border-radius: 50%; background: radial-gradient(circle at 32% 28%, #ffffff 0%, #f3f9fb 30%, #d7e9f0 70%, #b9d4e0 100%); box-shadow: 0 1px 3px rgba(14,60,90,.35);"></span>
+              <span style="width: 16px; height: 16px; border-radius: 50%; background: radial-gradient(circle at 32% 28%, #ffffff 0%, #f3f9fb 30%, #d7e9f0 70%, #b9d4e0 100%); box-shadow: 0 0 0 4px rgba(242,227,148,.7), 0 1px 3px rgba(14,60,90,.35); animation: oPearlIn 2.4s ease-out infinite;"></span>
+            </span>
+          </span>
+          <span style="width: 1px; height: 40px; background: #dfebf1;"></span>
+          <span style="flex: 1; display: flex; align-items: center; gap: 8px;">
+            <span style="width: 30px; height: 30px; border-radius: 50%; background: #f7fbfc; border: 4px solid #198663; box-sizing: border-box; display: grid; place-items: center; font-size: 10px; font-weight: 700;">JO</span>
+            <span style="display: flex; gap: 5px;">
+              <span style="width: 16px; height: 16px; border-radius: 50%; background: radial-gradient(circle at 32% 28%, #ffffff 0%, #f3f9fb 30%, #d7e9f0 70%, #b9d4e0 100%); box-shadow: 0 1px 3px rgba(14,60,90,.35);"></span>
+              <span style="width: 16px; height: 16px; border-radius: 50%; background: radial-gradient(circle at 32% 28%, #ffffff 0%, #f3f9fb 30%, #d7e9f0 70%, #b9d4e0 100%); box-shadow: 0 1px 3px rgba(14,60,90,.35);"></span>
+              <span style="width: 16px; height: 16px; border-radius: 50%; background: radial-gradient(circle at 32% 28%, #ffffff 0%, #f3f9fb 30%, #d7e9f0 70%, #b9d4e0 100%); box-shadow: 0 1px 3px rgba(14,60,90,.35);"></span>
+              <span style="width: 16px; height: 16px; border-radius: 50%; background: radial-gradient(circle at 32% 28%, #ffffff 0%, #f3f9fb 30%, #d7e9f0 70%, #b9d4e0 100%); box-shadow: 0 0 0 4px rgba(242,227,148,.7), 0 1px 3px rgba(14,60,90,.35);"></span>
+            </span>
+          </span>
+        </div>
+        <span style="font-size: 12.5px; font-weight: 600; color: #3f5a6b; line-height: 1.5;">Die neue Sieg wächst von 0 auf 1,18 und fällt auf 1 zurück — die einzige Stelle mit leichtem Überschwingen, weil sie eine Belohnung ist.</span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 10px; padding: 20px 22px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 20px; box-shadow: 0 6px 18px rgba(14,60,90,.1);">
+        <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 17px;">Sheet von unten · 320 ms</span>
+        <div style="display: flex; gap: 24px; align-items: flex-end; height: 130px;">
+          <span style="flex: 1; position: relative; height: 100%; border-radius: 14px; overflow: hidden; background: #e4f1f5;">
+            <span style="position: absolute; inset: 0; background: rgba(16,40,58,.28);"></span>
+            <span style="position: absolute; left: 0; right: 0; bottom: 0; height: 72px; background: #f7fbfc; border-radius: 16px 16px 0 0; box-shadow: 0 -10px 24px rgba(14,60,90,.2); animation: oSheet 2.4s ease-out infinite; display: flex; flex-direction: column; align-items: center; padding-top: 8px; gap: 6px;"><span style="width: 36px; height: 4px; border-radius: 999px; background: #c9dde6;"></span><span style="font-weight: 700; font-size: 13px;">Filter</span></span>
+          </span>
+          <span style="flex: 1; position: relative; height: 100%; border-radius: 14px; overflow: hidden; background: #e4f1f5;">
+            <span style="position: absolute; inset: 0; background: rgba(16,40,58,.28);"></span>
+            <span style="position: absolute; left: 0; right: 0; bottom: 0; height: 72px; background: #f7fbfc; border-radius: 16px 16px 0 0; box-shadow: 0 -10px 24px rgba(14,60,90,.2); display: flex; flex-direction: column; align-items: center; padding-top: 8px; gap: 6px;"><span style="width: 36px; height: 4px; border-radius: 999px; background: #c9dde6;"></span><span style="font-weight: 700; font-size: 13px;">Filter</span></span>
+          </span>
+        </div>
+        <span style="font-size: 12.5px; font-weight: 600; color: #3f5a6b; line-height: 1.5;">Der Schleier blendet in 160 ms ein, das Sheet fährt 320 ms hoch. Ohne Bewegung erscheinen beide sofort — nie als Sprung mitten im Weg.</span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 10px; padding: 20px 22px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 20px; box-shadow: 0 6px 18px rgba(14,60,90,.1);">
+        <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 17px;">Toast · 4 s stehen</span>
+        <div style="display: flex; gap: 24px; align-items: center; height: 130px;">
+          <span style="flex: 1; display: grid; place-items: center;">
+            <span style="display: inline-flex; align-items: center; gap: 10px; padding: 11px 16px; border-radius: 999px; background: #10283a; color: #f7fbfc; font-weight: 600; font-size: 13px; box-shadow: 0 12px 24px rgba(14,60,90,.3); animation: oToast 4s ease-in-out infinite;"><i class="ti ti-archive" style="font-size: 16px;"></i>Zinnober ist aussortiert.<span style="font-weight: 700; color: #9ed4ee;">Rückgängig</span></span>
+          </span>
+          <span style="width: 1px; height: 60px; background: #dfebf1;"></span>
+          <span style="flex: 1; display: grid; place-items: center;">
+            <span style="display: inline-flex; align-items: center; gap: 10px; padding: 11px 16px; border-radius: 999px; background: #10283a; color: #f7fbfc; font-weight: 600; font-size: 13px; box-shadow: 0 12px 24px rgba(14,60,90,.3);"><i class="ti ti-archive" style="font-size: 16px;"></i>Zinnober ist aussortiert.<span style="font-weight: 700; color: #9ed4ee;">Rückgängig</span></span>
+          </span>
+        </div>
+        <span style="font-size: 12.5px; font-weight: 600; color: #3f5a6b; line-height: 1.5;">20 px von unten, 180 ms. Steht 4 s, mit „Rückgängig“ 7 s. Ohne Bewegung erscheint und verschwindet er hart — die Standzeit bleibt gleich.</span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 10px; padding: 20px 22px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 20px; box-shadow: 0 6px 18px rgba(14,60,90,.1);">
+        <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 17px;">Tidenlinie · 6 s, endlos</span>
+        <div style="display: flex; gap: 24px; align-items: center; height: 130px;">
+          <span style="flex: 1; position: relative; height: 90px; border-radius: 14px; overflow: hidden; background: linear-gradient(180deg, #eef7fa 0 52%, #8fc0da 52%, #4f8fbb 100%);">
+            <span style="position: absolute; left: 0; right: 0; top: 40px; height: 12px; background-image: radial-gradient(circle at 50% 100%, #c6522c 5px, transparent 6px); background-size: 20px 12px; background-repeat: repeat-x; animation: oTide 6s ease-in-out infinite;"></span>
+          </span>
+          <span style="flex: 1; position: relative; height: 90px; border-radius: 14px; overflow: hidden; background: linear-gradient(180deg, #eef7fa 0 52%, #8fc0da 52%, #4f8fbb 100%);">
+            <span style="position: absolute; left: 0; right: 0; top: 40px; height: 12px; background-image: radial-gradient(circle at 50% 100%, #c6522c 5px, transparent 6px); background-size: 20px 12px; background-repeat: repeat-x;"></span>
+          </span>
+        </div>
+        <span style="font-size: 12.5px; font-weight: 600; color: #3f5a6b; line-height: 1.5;">Die einzige Dauerbewegung: ±6 px in 6 s, auf der Küste und nirgends sonst. Sie trägt keine Information — bei reduzierter Bewegung steht sie still.</span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 10px; padding: 20px 22px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 20px; box-shadow: 0 6px 18px rgba(14,60,90,.1);">
+        <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 17px;">Laden · Puls &amp; Kreisel</span>
+        <div style="display: flex; gap: 24px; align-items: center; height: 130px;">
+          <span style="flex: 1; display: flex; flex-direction: column; gap: 8px;">
+            <span style="display: flex; gap: 10px; align-items: center;"><span style="width: 48px; aspect-ratio: 4/3; border-radius: 7px; background: #e2edf2; animation: oShimmer 1.4s ease-in-out infinite;"></span><span style="flex: 1; display: flex; flex-direction: column; gap: 5px;"><span style="height: 11px; width: 70%; border-radius: 999px; background: #e2edf2; animation: oShimmer 1.4s ease-in-out .15s infinite;"></span><span style="height: 9px; width: 45%; border-radius: 999px; background: #e2edf2; animation: oShimmer 1.4s ease-in-out .3s infinite;"></span></span></span>
+            <span style="display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; color: #3f5a6b;"><span style="width: 16px; height: 16px; border-radius: 50%; border: 2px solid #c9dde6; border-top-color: #0e6690; animation: oSpin .9s linear infinite;"></span>lädt …</span>
+          </span>
+          <span style="width: 1px; height: 60px; background: #dfebf1;"></span>
+          <span style="flex: 1; display: flex; flex-direction: column; gap: 8px;">
+            <span style="display: flex; gap: 10px; align-items: center;"><span style="width: 48px; aspect-ratio: 4/3; border-radius: 7px; background: #e2edf2; opacity: .6;"></span><span style="flex: 1; display: flex; flex-direction: column; gap: 5px;"><span style="height: 11px; width: 70%; border-radius: 999px; background: #e2edf2; opacity: .6;"></span><span style="height: 9px; width: 45%; border-radius: 999px; background: #e2edf2; opacity: .6;"></span></span></span>
+            <span style="display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; color: #3f5a6b;"><i class="ti ti-clock" style="font-size: 15px; color: #0e6690;"></i>lädt …</span>
+          </span>
+        </div>
+        <span style="font-size: 12.5px; font-weight: 600; color: #3f5a6b; line-height: 1.5;">Platzhalter pulsen zwischen 40 % und 85 %. Ohne Bewegung: 60 % Deckkraft, still — und der Kreisel wird zur Uhr-Glyphe.</span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 10px; padding: 20px 22px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 20px; box-shadow: 0 6px 18px rgba(14,60,90,.1);">
+        <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 17px;">Karte umdrehen · 380 ms</span>
+        <div style="display: flex; gap: 24px; align-items: center; height: 130px;">
+          <span style="flex: 1; display: flex; gap: 10px; justify-content: center; align-items: center;">
+            <span style="width: 78px; aspect-ratio: 4/3; border-radius: 9px; background: linear-gradient(180deg, #1c4a66, #123a52); box-shadow: 0 6px 12px rgba(14,60,90,.3);"></span>
+            <i class="ti ti-arrow-right" style="font-size: 20px; color: #0e6690;"></i>
+            <span style="width: 20px; height: 58px; border-radius: 4px; background: linear-gradient(90deg, #1c4a66, #2f6d94); box-shadow: 0 6px 12px rgba(14,60,90,.3);"></span>
+            <i class="ti ti-arrow-right" style="font-size: 20px; color: #0e6690;"></i>
+            <span style="width: 78px; border-radius: 9px; overflow: hidden; box-shadow: 0 6px 12px rgba(14,60,90,.3);"><span style="display: block; aspect-ratio: 4/3; background: linear-gradient(145deg, oklch(.6 .13 150), oklch(.36 .12 180));"></span></span>
+          </span>
+          <span style="width: 1px; height: 60px; background: #dfebf1;"></span>
+          <span style="flex: 1; display: grid; place-items: center;">
+            <span style="width: 78px; border-radius: 9px; overflow: hidden; box-shadow: 0 6px 12px rgba(14,60,90,.3);"><span style="display: block; aspect-ratio: 4/3; background: linear-gradient(145deg, oklch(.6 .13 150), oklch(.36 .12 180));"></span></span>
+          </span>
+        </div>
+        <span style="font-size: 12.5px; font-weight: 600; color: #3f5a6b; line-height: 1.5;">Beim Aufdecken dreht die Karte um die Y-Achse, Tiefe → Cover. Ohne Bewegung liegt sie offen da; die Reihenfolge des Aufdeckens bleibt trotzdem sichtbar.</span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 10px; padding: 20px 22px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 20px; box-shadow: 0 6px 18px rgba(14,60,90,.1);">
+        <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 17px;">Zierblasen · endlos, überall</span>
+        <div style="display: flex; gap: 24px; align-items: center; height: 130px;">
+          <span style="flex: 1; position: relative; height: 110px; border-radius: 14px; overflow: hidden; background: linear-gradient(180deg, #eef7fa, #cfe3ec);">
+            <span style="position: absolute; left: 20%; bottom: 6px; width: 10px; height: 10px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #fff, rgba(255,255,255,.4) 50%, rgba(14,102,144,.35)); border: 1px solid rgba(14,102,144,.3); animation: oRise 3s ease-in infinite;"></span>
+            <span style="position: absolute; left: 48%; bottom: 4px; width: 7px; height: 7px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #fff, rgba(255,255,255,.4) 50%, rgba(14,102,144,.35)); border: 1px solid rgba(14,102,144,.3); animation: oRise 3.8s ease-in 1s infinite;"></span>
+            <span style="position: absolute; left: 74%; bottom: 8px; width: 12px; height: 12px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #fff, rgba(255,255,255,.4) 50%, rgba(14,102,144,.35)); border: 1px solid rgba(14,102,144,.3); animation: oRise 3.4s ease-in 2s infinite;"></span>
+          </span>
+          <span style="flex: 1; position: relative; height: 110px; border-radius: 14px; overflow: hidden; background: linear-gradient(180deg, #eef7fa, #cfe3ec);">
+            <span style="position: absolute; left: 20%; top: 18px; width: 10px; height: 10px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #fff, rgba(255,255,255,.4) 50%, rgba(14,102,144,.35)); border: 1px solid rgba(14,102,144,.3); opacity: .85;"></span>
+            <span style="position: absolute; left: 48%; top: 40px; width: 7px; height: 7px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #fff, rgba(255,255,255,.4) 50%, rgba(14,102,144,.35)); border: 1px solid rgba(14,102,144,.3); opacity: .85;"></span>
+            <span style="position: absolute; left: 74%; top: 26px; width: 12px; height: 12px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #fff, rgba(255,255,255,.4) 50%, rgba(14,102,144,.35)); border: 1px solid rgba(14,102,144,.3); opacity: .85;"></span>
+          </span>
+        </div>
+        <span style="font-size: 12.5px; font-weight: 600; color: #3f5a6b; line-height: 1.5;">Die einzige Bewegung ohne Anlass — höchstens neun Blasen gleichzeitig, nie über Text, nie über einem Knopf. Ohne Bewegung stehen sie verteilt im Bild.</span>
+      </div>
+
+    </div>
+  </div>
+
+  <div data-screen-label="O10.4 Regeln" style="max-width: 1240px; display: flex; gap: 20px; flex-wrap: wrap;">
+    <div style="flex: 1; min-width: 590px; display: flex; flex-direction: column; gap: 12px; padding: 22px 24px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 20px; box-shadow: 0 6px 18px rgba(14,60,90,.1);">
+      <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 19px;">Zeiten und Kurven</span>
+      <sc-for list="{{ timings }}" as="t" hint-placeholder-count="6">
+        <span style="display: flex; align-items: baseline; justify-content: space-between; gap: 14px; padding: 7px 0; border-top: 1px solid #dfebf1;">
+          <span style="font-size: 14.5px; font-weight: 700;">{{ t.what }}</span>
+          <span style="font-family: ui-monospace, Menlo, monospace; font-size: 12.5px; color: #3f5a6b; text-align: right;">{{ t.spec }}</span>
+        </span>
+      </sc-for>
+    </div>
+    <div style="flex: 1; min-width: 590px; display: flex; flex-direction: column; gap: 12px; padding: 22px 24px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 20px; box-shadow: 0 6px 18px rgba(14,60,90,.1);">
+      <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 19px;">Was Ocean nicht tut</span>
+      <sc-for list="{{ nevers }}" as="n" hint-placeholder-count="6">
+        <span style="display: flex; align-items: flex-start; gap: 10px; padding: 7px 0; border-top: 1px solid #dfebf1;">
+          <i class="ti ti-x" style="font-size: 17px; color: #a3392b; margin-top: 3px; flex: none;"></i>
+          <span style="font-size: 14px; font-weight: 600; color: #3f5a6b; line-height: 1.5;">{{ n }}</span>
+        </span>
+      </sc-for>
+    </div>
+  </div>
+
+  <div data-screen-label="O10.5 Übergabe" style="max-width: 1240px; background: #10283a; color: #eaf4f8; border-radius: 22px; padding: 24px 28px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 14px 34px rgba(14,60,90,.2);">
+    <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 20px; color: #f7fbfc;">Was O13 von hier mitnimmt</span>
+    <span style="font-size: 15px; line-height: 1.65; max-width: 100ch;">Jede Bewegung hier hat ein Endbild, und das Endbild ist der Screen, den O3–O7 zeigen — es gibt keine Ansicht, die nur animiert existiert. Zwei Dauerbewegungen sind erlaubt (Tidenlinie, Zierblasen), beide ohne Informationswert, beide abschaltbar. Stufe 2 in O13 und O14 bekommt <strong style="color: #f7fbfc;">keine eigenen Bewegungen</strong> — Chronik, Pokale und Einstellungen benutzen nur Sheet, Toast und Laden von hier.</span>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1340,&quot;height&quot;:1000}}">
+class Component extends DCLogic {
+  renderVals() {
+    const ramp = [
+      { bg: '#23305c', ink: '#f7fbfc' }, { bg: '#35609a', ink: '#f7fbfc' }, { bg: '#6a9fd0', ink: '#10283a' },
+      { bg: '#b7d4ee', ink: '#10283a' }, { bg: '#f2e394', ink: '#10283a' },
+    ];
+    const faces = ['ti-mood-cry', 'ti-mood-sad', 'ti-mood-neutral', 'ti-mood-smile', 'ti-mood-crazy-happy'];
+    const bubbleBg = 'radial-gradient(circle at 32% 28%, #ffffff 0%, #f3f9fb 30%, #d7e9f0 70%, #b9d4e0 100%)';
+    const mk = (animated) => faces.map((face, i) => {
+      const sel = i === 3, st = ramp[i];
+      return {
+        face,
+        bg: sel ? st.bg : bubbleBg, ink: sel ? st.ink : '#10283a',
+        border: sel ? '3px solid #f7fbfc' : '2px solid #a9c4d1',
+        shadow: sel ? '0 0 0 4px #0e6690, 0 8px 16px rgba(14,60,90,.28)' : 'inset 0 -3px 6px rgba(14,102,144,.12), 0 4px 9px rgba(14,60,90,.12)',
+        tf: sel ? 'translateY(-8px) scale(1.06)' : 'none',
+        anim: sel && animated ? 'oPick 2.2s ease-out infinite' : 'none',
+      };
+    });
+
+    const timings = [
+      { what: 'Abtauchen (Muschel + Karten)', spec: '900 ms gesamt · cubic-bezier(.2,.8,.3,1)' },
+      { what: 'Wal auftauchen', spec: '700 ms · cubic-bezier(.2,.8,.3,1)' },
+      { what: 'Wertung wählen', spec: '260 ms · ease-out' },
+      { what: 'Sieg kommt dazu', spec: '420 ms · ease-out, Überschwingen auf 1,18' },
+      { what: 'Sheet / Popover / Dialog', spec: '320 ms hoch · 200 ms zu · Schleier 160 ms' },
+      { what: 'Toast', spec: '180 ms rein · 4 s (7 s mit Rückgängig) · 180 ms raus' },
+      { what: 'Karte umdrehen', spec: '380 ms · ease-in-out' },
+      { what: 'Tidenlinie · Zierblasen', spec: '6 s · 3–4 s · endlos, ohne Informationswert' },
+    ];
+
+    const nevers = [
+      'Keine Parallaxe beim Scrollen — das Wasser liegt still, der Inhalt bewegt sich.',
+      'Kein Federn oder Zurückschwingen, außer bei der neuen Sieg.',
+      'Kein Blinken, kein Pulsieren als Aufmerksamkeitsruf — dafür gibt es Toasts.',
+      'Keine Bewegung, die etwas mitteilt, das nicht auch als Text dasteht.',
+      'Keine Animation über 900 ms, außer den beiden Zierbewegungen.',
+      'Keine Bewegung auf der Wertungskarte, außer der gewählten Blase — dort wird gelesen und entschieden.',
+    ];
+
+    return { moodsIdle: mk(true), moodsEnd: mk(false), timings, nevers };
+  }
+}
+</script>
+</body>
+</html>

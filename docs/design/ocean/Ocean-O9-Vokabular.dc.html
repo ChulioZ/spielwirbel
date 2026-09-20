@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="design_doc_mode" content="canvas">
+  <link rel="stylesheet" href="../../../public/fonts/tabler-icons.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #cfe0e7; font-family: 'Figtree', sans-serif; }
+    a { color: #0e6690; text-decoration: none; }
+    a:hover { color: #0a4f70; text-decoration: underline; }
+  </style>
+</helmet>
+<div style="display: flex; flex-direction: column; gap: 40px; padding: 44px; width: max-content; color: #10283a; background-color: #e4f1f5; background-image: radial-gradient(900px 500px at 18% 0%, rgba(255,255,255,.7), transparent 65%), radial-gradient(900px 600px at 86% 40%, rgba(255,255,255,.5), transparent 70%);">
+
+  <div data-screen-label="O9 Kopf" style="max-width: 1240px; display: flex; flex-direction: column; gap: 12px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 22px; padding: 26px 30px; box-shadow: 0 14px 34px rgba(14,60,90,.14);">
+    <div style="display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;">
+      <span style="font-weight: 700; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: #f7fbfc; background: #0e6690; border-radius: 999px; padding: 5px 12px;">O9</span>
+      <h1 style="margin: 0; font-family: 'Comfortaa'; font-weight: 700; font-size: 36px; line-height: 1.05;">Vokabular — Ocean</h1>
+      <span style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #3f5a6b;">20.09.2026 · Phase 2, Brief 9 von 13 · <strong style="color: #a3392b;">nach dem Revert-Durchgang</strong></span>
+    </div>
+    <div style="display: flex; gap: 14px; align-items: flex-start; padding: 16px 18px; background: #f7ded6; border-radius: 16px;">
+      <i class="ti ti-alert-triangle" style="font-size: 22px; color: #a3392b; flex: none;"></i>
+      <span style="font-size: 14.5px; line-height: 1.6; color: #10283a;"><strong>Dieses Blatt war falsch und ist ersetzt.</strong> Die erste Fassung zeigte 19 Umbenennungen als Merkmal von Ocean. Sie beruhte auf dem Konzeptblatt, das laut Vokabular-Addendum (<code style="font-family: ui-monospace, Menlo, monospace;">handover-vokabular-2026-09-20.md</code>, §4) <strong>unter der zurückgezogenen Regel</strong> entstand. Gültig ist: <strong>Substantive und Navigation sind Spielwirbels, das Thema trägt nur Ritual und Dekor.</strong> Alle 14 Ocean-Dateien haben den Revert-Durchgang bekommen; dieses Blatt listet ihn.</span>
+    </div>
+    <p style="margin: 0; font-size: 16px; line-height: 1.55; max-width: 92ch; color: #3f5a6b;">Ocean benennt jetzt <strong style="color: #10283a;">fünf</strong> Dinge eigen statt neunzehn — und braucht damit fast kein Glossar mehr. Was das Design trägt, ist nicht mehr die Sprache, sondern das <strong style="color: #10283a;">Bild</strong>: Wasser, Muschel, Blasen, Wal, Tidenlinie.</p>
+  </div>
+
+  <div data-screen-label="O9.1 Der Revert" style="display: flex; flex-direction: column; gap: 14px;">
+    <div style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #3f5a6b; line-height: 1.4;">O9.1 · Was zurückgenommen wurde — die Liste, mit der der Durchgang über alle 14 Dateien gelaufen ist</div>
+    <div style="width: 1240px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 20px; overflow: hidden; box-shadow: 0 6px 18px rgba(14,60,90,.1);">
+      <div style="display: grid; grid-template-columns: 250px 250px minmax(0, 1fr); background: #d7e9f0; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;">
+        <span style="padding: 12px 16px;">War (Konzept)</span>
+        <span style="padding: 12px 16px;">Ist (Spielwirbel)</span>
+        <span style="padding: 12px 16px;">Nach welcher Regel</span>
+      </div>
+      <sc-for list="{{ reverts }}" as="r" hint-placeholder-count="16">
+        <div style="display: grid; grid-template-columns: 250px 250px minmax(0, 1fr); align-items: baseline; border-top: 1px solid #dfebf1;">
+          <span style="padding: 10px 16px; font-size: 15px; font-weight: 600; color: #a3392b; text-decoration: line-through;">{{ r.was }}</span>
+          <span style="padding: 10px 16px; font-size: 15.5px; font-weight: 700;">{{ r.ist }}</span>
+          <span style="padding: 10px 16px; font-size: 13.5px; font-weight: 600; color: #3f5a6b; line-height: 1.45;">{{ r.rule }}</span>
+        </div>
+      </sc-for>
+    </div>
+    <span style="font-size: 13px; font-weight: 600; color: #3f5a6b; line-height: 1.55; max-width: 100ch;">Dazu die Sätze: „Wer taucht mit?" → <strong style="color: #10283a;">„Wer spielt mit?"</strong> · „taucht mit" → „spielt mit" · „3 weitere fehlen, weil ihre Besitzer nicht mittauchen." → „… nicht mitspielen." · „In welcher Bucht wird heute gespielt?" → <strong style="color: #10283a;">„Welche Runde spielt heute?"</strong> · „Spiel ins Riff setzen" → „Spiel hinzufügen" · „Neue Bucht anlegen" → „Neue Runde gründen" · „4× getaucht" → „4× gespielt".</span>
+  </div>
+
+  <div style="display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap;">
+    <div data-screen-label="O9.2 Was bleibt" style="width: 610px; display: flex; flex-direction: column; gap: 12px; padding: 22px 24px; background: #f7fbfc; border: 1.5px solid #cde7dc; border-radius: 20px; box-sizing: border-box;">
+      <span style="display: flex; align-items: center; gap: 10px;"><i class="ti ti-check" style="font-size: 20px; color: #1a6b4a;"></i><span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 19px;">Was Ocean eigen nennen darf · 5</span></span>
+      <span style="font-size: 13px; font-weight: 600; color: #3f5a6b; line-height: 1.5;">Genau die Stellen aus §2 des Addendums — nicht mehr.</span>
+      <sc-for list="{{ keeps }}" as="k" hint-placeholder-count="5">
+        <div style="display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 13px; align-items: start; padding: 11px 0; border-top: 1px solid #dfebf1;">
+          <span style="width: 40px; height: 40px; border-radius: 12px; background: #d7e9f0; color: #0e6690; display: grid; place-items: center; font-size: 19px;"><i class="ti {{ k.icon }}"></i></span>
+          <span style="display: flex; flex-direction: column; gap: 3px;">
+            <span style="display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;"><span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 17px;">{{ k.word }}</span><span style="font-size: 12.5px; font-weight: 600; color: #0e6690;">{{ k.en }}</span></span>
+            <span style="font-size: 13.5px; font-weight: 600; color: #3f5a6b; line-height: 1.45;">{{ k.why }}</span>
+          </span>
+        </div>
+      </sc-for>
+    </div>
+
+    <div data-screen-label="O9.3 Glossar" style="width: 610px; display: flex; flex-direction: column; gap: 12px; padding: 22px 24px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 20px; box-shadow: 0 6px 18px rgba(14,60,90,.1); box-sizing: border-box;">
+      <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 20px;">Das Glossar schrumpft auf einen Absatz</span>
+      <span style="font-size: 13.5px; font-weight: 600; color: #3f5a6b; line-height: 1.55;">Vorher: eine eigene Seite in den Einstellungen plus vier Einführungskarten beim ersten Start. Beides <strong style="color: #10283a;">entfällt</strong> — es gibt nichts mehr zu erklären, was nicht auf dem Bildschirm steht.</span>
+      <div style="display: flex; flex-direction: column; gap: 6px; padding: 16px 18px; background: #eaf4f8; border-radius: 16px; margin-top: 4px;">
+        <span style="font-size: 11.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #0e6690;">Einstellungen → Hilfe · so sieht der ganze Eintrag aus</span>
+        <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 17px; margin-top: 4px;">Wörter in Ocean</span>
+        <span style="font-size: 14px; font-weight: 600; color: #3f5a6b; line-height: 1.6;">Die <strong style="color: #10283a;">Muschel</strong> ist der Topf: dort sammeln sich die Spiele, die heute in Frage kommen. <strong style="color: #10283a;">Abtauchen</strong> startet die Session und zieht die Spiele. Was noch niemand gewertet hat, liegt <strong style="color: #10283a;">in der Tiefe</strong> und <strong style="color: #10283a;">taucht auf</strong>, sobald alle durch sind. Alles andere heißt in Ocean wie überall: Runde, Regal, Session, Chronik, Pokale.</span>
+      </div>
+      <span style="font-size: 12.5px; font-weight: 600; color: #3f5a6b; line-height: 1.55; padding-top: 10px; border-top: 1px solid #dfebf1;">Test nach §3: Jedes der fünf Wörter ist <strong style="color: #10283a;">ohne Glossar verständlich</strong> — die Muschel ist gezeichnet und zählt „9 Spiele", „Abtauchen" sitzt als einziger Primärknopf in ihrer Mitte, „in der Tiefe" steht unter verdeckten Karten, die dunkel sind.</span>
+    </div>
+  </div>
+
+  <div data-screen-label="O9.4 Sätze" style="display: flex; flex-direction: column; gap: 14px;">
+    <div style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #3f5a6b; line-height: 1.4;">O9.4 · Die Sätze, die oft vorkommen — DE und EN, nach dem Revert</div>
+    <div style="width: 1240px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 20px; overflow: hidden; box-shadow: 0 6px 18px rgba(14,60,90,.1);">
+      <div style="display: grid; grid-template-columns: 220px minmax(0, 1fr) minmax(0, 1fr) 92px; background: #d7e9f0; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;">
+        <span style="padding: 12px 16px;">Wo</span>
+        <span style="padding: 12px 16px;">Deutsch</span>
+        <span style="padding: 12px 16px;">English</span>
+        <span style="padding: 12px 16px; text-align: right;">Herkunft</span>
+      </div>
+      <sc-for list="{{ phrases }}" as="p" hint-placeholder-count="12">
+        <div style="display: grid; grid-template-columns: 220px minmax(0, 1fr) minmax(0, 1fr) 92px; align-items: baseline; border-top: 1px solid #dfebf1;">
+          <span style="padding: 10px 16px; font-size: 13.5px; font-weight: 600; color: #3f5a6b;">{{ p.where }}</span>
+          <span style="padding: 10px 16px; font-size: 15px; font-weight: 700;">{{ p.de }}</span>
+          <span style="padding: 10px 16px; font-size: 14.5px; font-weight: 600; color: #3f5a6b;">{{ p.en }}</span>
+          <span style="padding: 10px 16px; font-size: 11.5px; font-weight: 700; text-align: right; color: {{ p.ink }};">{{ p.src }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div data-screen-label="O9.5 Tonfall" style="max-width: 1240px; display: flex; gap: 20px; flex-wrap: wrap;">
+    <div style="flex: 1; min-width: 590px; display: flex; flex-direction: column; gap: 12px; padding: 22px 24px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 20px; box-shadow: 0 6px 18px rgba(14,60,90,.1);">
+      <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 19px;">Tonfall: ruhig, nicht verspielt</span>
+      <span style="font-size: 13.5px; font-weight: 600; color: #3f5a6b; line-height: 1.55;">Das Bild ist Wasser, nicht Piraterie. Kein „Ahoi", keine Seemannssprache. Und seit dem Revert gilt zusätzlich: <strong style="color: #10283a;">die Metapher trägt keine Substantive mehr</strong> — sie lebt in Fläche, Form und Bewegung.</span>
+      <sc-for list="{{ tone }}" as="t" hint-placeholder-count="6">
+        <div style="display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 12px; align-items: start; padding: 9px 0; border-top: 1px solid #dfebf1;">
+          <i class="ti {{ t.icon }}" style="font-size: 19px; color: {{ t.ink }}; margin-top: 2px;"></i>
+          <span style="display: flex; flex-direction: column; gap: 2px;">
+            <span style="font-size: 15px; font-weight: 700; color: {{ t.ink }};">{{ t.text }}</span>
+            <span style="font-size: 13px; font-weight: 600; color: #3f5a6b; line-height: 1.45;">{{ t.note }}</span>
+          </span>
+        </div>
+      </sc-for>
+    </div>
+    <div style="flex: 1; min-width: 590px; display: flex; flex-direction: column; gap: 12px; padding: 22px 24px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 20px; box-shadow: 0 6px 18px rgba(14,60,90,.1);">
+      <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 19px;">Was das Design jetzt trägt</span>
+      <span style="font-size: 13.5px; font-weight: 600; color: #3f5a6b; line-height: 1.55;">Die Sorge beim Revert war, dass Ocean ohne seine Wörter verschwindet. Es verschwindet nicht — es war nie die Sprache, die es hell und weit gemacht hat:</span>
+      <sc-for list="{{ carries }}" as="c" hint-placeholder-count="6">
+        <span style="display: flex; align-items: flex-start; gap: 12px; padding: 9px 0; border-top: 1px solid #dfebf1;">
+          <i class="ti {{ c.icon }}" style="font-size: 19px; color: #0e6690; margin-top: 2px; flex: none;"></i>
+          <span style="display: flex; flex-direction: column; gap: 2px;"><span style="font-weight: 700; font-size: 14.5px;">{{ c.what }}</span><span style="font-size: 13px; font-weight: 600; color: #3f5a6b; line-height: 1.45;">{{ c.note }}</span></span>
+        </span>
+      </sc-for>
+    </div>
+  </div>
+
+  <div data-screen-label="O9.6 Übergabe" style="max-width: 1240px; background: #10283a; color: #eaf4f8; border-radius: 22px; padding: 24px 28px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 14px 34px rgba(14,60,90,.2);">
+    <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 20px; color: #f7fbfc;">Was die übrigen Designs von hier mitnehmen</span>
+    <span style="font-size: 15px; line-height: 1.65; max-width: 100ch;">Ocean war der Testfall dafür, wie viel Thema ein Design verträgt — die Antwort ist: <strong style="color: #f7fbfc;">fünf Wörter</strong>. Für Brücke, Programmheft, Forest und Run heißt das: die Revert-Listen in §4 des Addendums gelten <strong style="color: #f7fbfc;">vor</strong> dem ersten Brief, nicht nach dem letzten. Das Konzeptblatt eines Designs ist ab jetzt <strong style="color: #f7fbfc;">keine Vokabularquelle</strong> — es zeigt Material, Form und Ritual, die Wörter kommen aus dem Addendum. Der Tisch war von Anfang an konform, weil er nichts umbenennt; Ocean musste den Umweg gehen.</span>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1340,&quot;height&quot;:1000}}">
+class Component extends DCLogic {
+  renderVals() {
+    const R = (was, ist, rule) => ({ was, ist, rule });
+    const reverts = [
+      R('Die Bucht', 'Die Runde', '§1 · die Gruppe heißt in jedem Design Runde'),
+      R('Die Küste (als Navigationswort)', 'Start', '§1 · Navigationswörter. Als Zierzeile neben der Wortmarke bleibt „Die Küste · deine Runden“'),
+      R('Das Riff', 'Das Regal', '§1 · Regal und „Spiel / Spiele“'),
+      R('Die Gezeiten', 'Die Chronik', '§1 · die zwei Unterseiten'),
+      R('Die Perlenkette', 'Pokale', '§1 · die zwei Unterseiten'),
+      R('Der Tauchgang', 'Die Session', '§1 · Ereignis und Abstimmung'),
+      R('Die Perle / „hat die Perle“', 'Sieg / „hat gewonnen“', '§1 · das Ergebnis. Auch als Bild gestrichen — die Zierform ist jetzt die Blase'),
+      R('Die Boje', 'Mitglied', '§1 · die Personenwörter'),
+      R('Jenseits des Riffs', 'Nicht im Regal', '§1 · die Gruppe der drei Listen'),
+      R('Strandgut', 'Aussortiert', '§1 · die drei Listen'),
+      R('Gehoben', 'Durchgespielt', '§1 · die drei Listen'),
+      R('Am Horizont', 'Wunschliste', '§1 · die drei Listen'),
+      R('Flaschenpost', 'Könnte euch gefallen', '§1 · Empfehlungen'),
+      R('Die Werft', 'Kümmerliste', '§1 · Hub-Blöcke'),
+      R('Das Echolot', 'Das Ergebnis', 'Entscheidung des Auftraggebers — der Tisch durfte „Die Tafel“ behalten, Ocean nicht'),
+      R('Die Tauchkarte', 'Die Wertungskarte', '§1 · jede sekundäre Bezeichnung'),
+      R('Mehrere Boote', 'Mehrere Tische', '§1 · jede sekundäre Aktion'),
+    ];
+
+    const keeps = [
+      { word: 'Die Muschel', en: 'The clam', icon: 'ti-dice-5', why: '§2 · das Gefäßwort für den Topf. „9 Spiele in der Muschel“ — „Spiele“ bleibt darin stehen.' },
+      { word: 'Wie viele holen wir hoch?', en: 'How many do we bring up?', icon: 'ti-arrow-back-up', why: '§2 · die Anzahlfrage, die „Wie viele wirbeln?“ ersetzt.' },
+      { word: 'Abtauchen', en: 'Dive in', icon: 'ti-tornado', why: '§2 · beide Hauptknöpfe — auf dem Hub und im Setup. Der Seitentitel bleibt „Neue Session“.' },
+      { word: 'auftauchen', en: 'surface', icon: 'ti-eye-off', why: '§2 · das Aufdeckverb der Wertungskarte. „Dann tauchen sie auf.“' },
+      { word: 'In der Tiefe', en: 'In the deep', icon: 'ti-arrow-down', why: '§2-Dekor · beschreibt verdeckte Karten, steht nie auf einem Knopf oder im Dock.' },
+    ];
+
+    const P = (where, de, en, src) => ({ where, de, en, src, ink: src === 'App' ? '#1a6b4a' : src === '§2' ? '#0e6690' : '#3f5a6b' });
+    const phrases = [
+      P('Lobby, Begrüßung', 'Willkommen an der Küste.', 'Welcome to the coast.', '§2'),
+      P('Lobby, Frage', 'Welche Runde spielt heute?', 'Which round is playing today?', 'App'),
+      P('Lobby, Zierzeile', 'Die Küste · deine Runden', 'The coast · your rounds', '§2'),
+      P('Hub, Hauptaktion', 'Abtauchen', 'Dive in', '§2'),
+      P('Setup, Titel', 'Neue Session', 'New session', 'App'),
+      P('Setup, Anwesenheit', 'Wer spielt mit?', 'Who’s playing?', 'App'),
+      P('Setup, fehlende Spiele', '3 weitere fehlen, weil ihre Besitzer nicht mitspielen.', '3 more are missing because their owners aren’t playing.', 'App'),
+      P('Setup, Anzahl', 'Wie viele holen wir hoch?', 'How many do we bring up?', '§2'),
+      P('Wertungskarte, Frage', 'Wie gern möchtest du das spielen?', 'How much do you want to play this?', 'App'),
+      P('Wertungskarte, Skala', 'gar nicht — unbedingt', 'not at all — absolutely', 'App'),
+      P('Wertungskarte, verdeckt', 'Die anderen zwei Spiele bleiben in der Tiefe, bis alle gewertet haben. Dann tauchen sie auf.', 'The other two stay in the deep until everyone has voted. Then they surface.', '§2'),
+      P('Ergebnis, Überschrift', '„Nordlichter“ wurde gespielt. Jonas hat gewonnen!', '“Nordlichter” was played. Jonas won!', 'App'),
+      P('Ergebnis, Veto', '1× gar nicht', '1× not at all', 'App'),
+      P('Ergebnis, weiter', 'Noch eine Runde', 'Another round', 'App'),
+    ];
+
+    const tone = [
+      { icon: 'ti-check', ink: '#1a6b4a', text: '„Abtauchen“', note: 'Ein Verb, Imperativ, kein Ausruf — und eines von nur fünf Themenwörtern.' },
+      { icon: 'ti-x', ink: '#a3392b', text: '„Leinen los, Käpt’n!“', note: 'Seemannssprache und Rollenspiel — nicht Ocean.' },
+      { icon: 'ti-check', ink: '#1a6b4a', text: '„Jonas hat gewonnen“', note: 'Die Standardwörter, in Oceans Typografie gesetzt.' },
+      { icon: 'ti-x', ink: '#a3392b', text: '„Jonas hat die Perle“', note: 'Genau der Fehler, den der Revert behoben hat: ein Ergebniswort umgedichtet.' },
+      { icon: 'ti-check', ink: '#1a6b4a', text: '„3 weitere fehlen, weil ihre Besitzer nicht mitspielen.“', note: 'Wörtlich aus der App — Hilfszeilen werden nie umgeschrieben.' },
+      { icon: 'ti-x', ink: '#a3392b', text: '„Ozeanische Spielefreude erwartet dich“', note: 'Werbesprech. Ocean beschreibt, es verkauft nicht.' },
+    ];
+
+    const carries = [
+      { icon: 'ti-droplet', what: 'Die helle Fläche', note: 'Seite #e4f1f5, Karten darüber — der Gegenpol zum Tisch, ganz ohne ein einziges Wort.' },
+      { icon: 'ti-dice-5', what: 'Die Muschel', note: 'Der Topf ist gezeichnet: er öffnet sich, die Spiele sinken hinein. Das erklärt sich selbst.' },
+      { icon: 'ti-medal', what: 'Die Blase', note: 'Trägt den Score an der Ecke, die fünf Gesichter, die Anzahl — eine Form für alles Runde.' },
+      { icon: 'ti-fish', what: 'Der Wal', note: 'Das Ergebnisbild. Er taucht mit dem gespielten Spiel auf dem Rücken auf.' },
+      { icon: 'ti-wave-sine', what: 'Die Tidenlinie', note: 'Trägt die Markerfarbe der Runde auf jeder Kachel der Lobby.' },
+      { icon: 'ti-file-text', what: 'Comfortaa', note: 'Runde Endungen. Die Schrift macht mehr Ocean als jedes Substantiv es je getan hat.' },
+    ];
+
+    return { reverts, keeps, phrases, tone, carries };
+  }
+}
+</script>
+</body>
+</html>

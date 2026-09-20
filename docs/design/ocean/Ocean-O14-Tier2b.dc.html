@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="design_doc_mode" content="canvas">
+  <link rel="stylesheet" href="../../../public/fonts/tabler-icons.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #cfe0e7; font-family: 'Figtree', sans-serif; }
+    a { color: #0e6690; text-decoration: none; }
+    a:hover { color: #0a4f70; text-decoration: underline; }
+  </style>
+</helmet>
+<div style="display: flex; flex-direction: column; gap: 40px; padding: 44px; width: max-content; color: #10283a; background-color: #e4f1f5; background-image: radial-gradient(900px 500px at 18% 0%, rgba(255,255,255,.7), transparent 65%), radial-gradient(900px 600px at 86% 40%, rgba(255,255,255,.5), transparent 70%);">
+
+  <div data-screen-label="O14 Kopf" style="max-width: 1240px; display: flex; flex-direction: column; gap: 12px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 22px; padding: 26px 30px; box-shadow: 0 14px 34px rgba(14,60,90,.14);">
+    <div style="display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;">
+      <span style="font-weight: 700; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: #f7fbfc; background: #0e6690; border-radius: 999px; padding: 5px 12px;">O14</span>
+      <h1 style="margin: 0; font-family: 'Comfortaa'; font-weight: 700; font-size: 36px; line-height: 1.05;">Konto · Leute · Posteingang · Einstellungen — Ocean</h1>
+      <span style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #3f5a6b;">20.09.2026 · Phase 2, Brief 12 von 13</span>
+    </div>
+    <p style="margin: 0; font-size: 16px; line-height: 1.55; max-width: 92ch; color: #3f5a6b;">Der zweite Teil von Stufe 2: das eigene Profil, Freunde und ihr Strom, der Posteingang, „Was ist neu“, Statistiken über alle Runden hinweg und die Einstellungen einer Runde mit der Markerwahl. Damit ist Ocean vollständig — bis auf die Overlays in O15.</p>
+    <div style="display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; background: #f7ded6; border-radius: 14px; font-size: 13px; line-height: 1.55; color: #10283a;"><i class="ti ti-alert-triangle" style="font-size: 18px; color: #a3392b; flex: none; margin-top: 1px;"></i><span><strong>Vokabular-Revert 20.09.2026:</strong> Bucht → <strong>Runde</strong> · Küste (Navigation) → <strong>Start</strong> · Riff → <strong>Regal</strong> · Gezeiten → <strong>Chronik</strong> · Perlenkette → <strong>Pokale</strong> · Tauchgang → <strong>Session</strong> · Perle / „hat die Perle“ → <strong>Sieg / „hat gewonnen“</strong> · Boje → <strong>Mitglied</strong> · Jenseits des Riffs → <strong>Nicht im Regal</strong> · Strandgut → <strong>Aussortiert</strong> · Gehoben → <strong>Durchgespielt</strong> · Am Horizont → <strong>Wunschliste</strong> · Flaschenpost → <strong>Könnte euch gefallen</strong> · Werft → <strong>Kümmerliste</strong> · Echolot → <strong>Ergebnis</strong> · Tauchkarte → <strong>Wertungskarte</strong> · Mehrere Boote → <strong>Mehrere Tische</strong> · „Wer taucht mit?“ → <strong>„Wer spielt mit?“</strong>. Eigen bleiben nur: <strong>Muschel · Abtauchen · auftauchen · in der Tiefe · „Wie viele holen wir hoch?“</strong> (<a href="Ocean-O9-Vokabular.dc.html" style="display: inline-flex; align-items: center; min-height: 24px; padding: 0 3px;">O9</a>).</span></div>
+  </div>
+
+  <div data-screen-label="O14.1 Rundeneinstellungen" style="display: flex; flex-direction: column; gap: 10px;">
+    <div style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #3f5a6b; max-width: 1440px; line-height: 1.4;">O14.1 · Rundeneinstellungen: Name, Marker, Leute, Regeln, Gefahrenzone. Der Marker ist das Einzige, das für alle gilt — auch für die, die ein anderes Design haben.</div>
+    <div style="width: 1440px; height: 900px; position: relative; overflow: hidden; border-radius: 6px; background-color: #e4f1f5; background-image: radial-gradient(600px 320px at 22% 14%, rgba(255,255,255,.7), transparent 70%); box-shadow: 0 18px 44px rgba(14,60,90,.18);">
+      <div style="position: absolute; left: 0; right: 0; top: 0; height: 60px; display: flex; align-items: center; gap: 18px; padding: 0 28px; background: #f7fbfc; border-bottom: 1px solid #c9dde6; z-index: 3;">
+        <a href="#" style="display: inline-flex; align-items: center; gap: 10px; color: #10283a;"><span style="width: 34px; height: 34px; border-radius: 50%; background: #0e6690; color: #f7fbfc; display: grid; place-items: center;"><i class="ti ti-tornado" style="font-size: 18px;"></i></span><span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 20px;">Spielwirbel</span></a>
+        <span style="font-size: 15px; font-weight: 600; color: #3f5a6b; display: inline-flex; align-items: center; gap: 8px;"><a href="#" style="display: inline-flex; align-items: center; min-height: 24px;">Donnerstagsrunde</a> <i class="ti ti-chevron-right" style="font-size: 12px;"></i> <strong style="color: #10283a;">Einstellungen</strong></span>
+        <span style="margin-left: auto; display: flex; gap: 10px; align-items: center;">
+          <span style="font-size: 14px; font-weight: 700; border: 1.5px solid #a9c4d1; border-radius: 999px; padding: 7px 14px; display: inline-flex; gap: 6px; align-items: center; min-height: 36px; box-sizing: border-box;"><i class="ti ti-world" style="font-size: 15px;"></i>Deutsch <i class="ti ti-chevron-down" style="font-size: 12px;"></i></span>
+          <span style="width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: #d7e9f0;"><i class="ti ti-user" style="font-size: 17px;"></i></span>
+        </span>
+      </div>
+      <nav style="position: absolute; left: 0; top: 60px; bottom: 42px; width: 104px; display: flex; flex-direction: column; gap: 6px; padding: 18px 10px; box-sizing: border-box; background: #f7fbfc; border-right: 1px solid #c9dde6; z-index: 3;">
+        <sc-for list="{{ railSettings }}" as="r" hint-placeholder-count="5">
+          <a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 4px; border-radius: 14px; background: {{ r.bg }}; color: #10283a; font-size: 11.5px; font-weight: 700; margin-top: {{ r.mt }}; min-height: 56px; justify-content: center;"><i class="ti {{ r.icon }}" style="font-size: 22px; color: {{ r.ink }};"></i>{{ r.label }}</a>
+        </sc-for>
+      </nav>
+      <div style="position: absolute; left: 136px; right: 40px; top: 84px; bottom: 52px; display: grid; grid-template-columns: minmax(0, 1fr) 420px; gap: 30px; align-items: start;">
+        <div style="display: flex; flex-direction: column; gap: 18px; min-width: 0;">
+          <h1 style="margin: 0; font-family: 'Comfortaa'; font-weight: 700; font-size: 27px; line-height: 1;">Rundeneinstellungen</h1>
+          <div style="display: flex; flex-direction: column; gap: 12px; padding: 16px 22px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 20px; box-shadow: 0 6px 18px rgba(14,60,90,.1);">
+            <span style="font-weight: 700; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: #0e6690;">Name &amp; Marker</span>
+            <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 700; color: #3f5a6b;">Rundenname
+              <input type="text" value="Donnerstagsrunde" style="font-family: 'Figtree', sans-serif; font-weight: 600; font-size: 16px; color: #10283a; background: #ffffff; border: 1.5px solid #a9c4d1; border-radius: 12px; padding: 12px 14px; min-height: 44px;">
+            </label>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+              <span style="font-size: 13px; font-weight: 700; color: #3f5a6b;">Farbmarker — die Tidenlinie dieser Runde</span>
+              <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                <sc-for list="{{ markers }}" as="m" hint-placeholder-count="8">
+                  <span style="display: flex; flex-direction: column; align-items: center; gap: 5px; width: 70px;">
+                    <span style="width: 46px; height: 46px; border-radius: 50%; background: {{ m.c }}; box-shadow: {{ m.ring }}; display: grid; place-items: center; color: #ffffff; font-size: 24px;"><sc-if value="{{ m.picked }}" hint-placeholder-val="{{ false }}"><i class="ti ti-check"></i></sc-if></span>
+                    <span style="font-size: 12px; font-weight: 700; text-align: center; line-height: 1.15;">{{ m.name }}</span>
+                  </span>
+                </sc-for>
+              </div>
+              <span style="font-size: 12.5px; font-weight: 600; color: #3f5a6b; line-height: 1.5;">Gilt für alle in der Runde, auch bei anderem Design. Zierde, nie Bedeutungsträger.</span>
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 10px; padding: 16px 22px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 20px; box-shadow: 0 6px 18px rgba(14,60,90,.1);">
+            <span style="font-weight: 700; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: #0e6690;">Mitglieder · 4</span>
+            <sc-for list="{{ memberRows }}" as="m" hint-placeholder-count="4">
+              <span style="display: flex; align-items: center; gap: 12px; padding: 4px 0; border-top: 1px solid #dfebf1; min-height: 40px;">
+                <span style="width: 38px; height: 38px; border-radius: 50%; background: #f7fbfc; border: 4px solid {{ m.color }}; box-sizing: border-box; display: grid; place-items: center; font-weight: 700; font-size: 14px; flex: none;">{{ m.ini }}</span>
+                <span style="display: flex; flex-direction: column; line-height: 1.2;"><span style="font-weight: 700; font-size: 16px;">{{ m.name }}</span><span style="font-size: 12.5px; font-weight: 600; color: #3f5a6b;">{{ m.role }}</span></span>
+                <span style="margin-left: auto; display: flex; gap: 8px; align-items: center;">
+                  <span style="padding: 8px 14px; border-radius: 999px; background: #d7e9f0; font-weight: 700; font-size: 13px; min-height: 36px; display: inline-flex; align-items: center; gap: 6px;">{{ m.rights }} <i class="ti ti-chevron-down" style="font-size: 12px;"></i></span>
+                  <span style="width: 36px; height: 36px; border-radius: 50%; background: #d7e9f0; display: grid; place-items: center; font-size: 17px;"><i class="ti ti-dots"></i></span>
+                </span>
+              </span>
+            </sc-for>
+            <span style="display: flex; gap: 10px; margin-top: 4px;">
+              <span style="padding: 11px 18px; border-radius: 999px; background: #0e6690; color: #f7fbfc; font-weight: 700; font-size: 14.5px; min-height: 44px; display: inline-flex; align-items: center; gap: 7px;"><i class="ti ti-link"></i>Einladungslink</span>
+              <span style="padding: 11px 18px; border-radius: 999px; border: 1.5px solid #a9c4d1; font-weight: 700; font-size: 14.5px; min-height: 44px; display: inline-flex; align-items: center;">Platz dazu</span>
+            </span>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <div style="display: flex; flex-direction: column; gap: 14px; padding: 20px 22px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 20px; box-shadow: 0 6px 18px rgba(14,60,90,.1);">
+            <span style="font-weight: 700; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: #0e6690;">Wie ihr spielen wollt</span>
+            <sc-for list="{{ toggles }}" as="t" hint-placeholder-count="4">
+              <span style="display: flex; align-items: flex-start; gap: 12px; padding: 9px 0; border-top: 1px solid #dfebf1; min-height: 44px;">
+                <span style="width: 52px; height: 30px; border-radius: 999px; background: {{ t.bg }}; display: flex; align-items: center; padding: 3px; box-sizing: border-box; flex: none; margin-top: 2px;"><span style="width: 24px; height: 24px; border-radius: 50%; background: #f7fbfc; margin-left: {{ t.ml }}; box-shadow: 0 2px 4px rgba(14,60,90,.3);"></span></span>
+                <span style="display: flex; flex-direction: column; gap: 2px;"><span style="font-weight: 700; font-size: 14.5px;">{{ t.title }}</span><span style="font-size: 12.5px; font-weight: 600; color: #3f5a6b; line-height: 1.45;">{{ t.body }}</span></span>
+              </span>
+            </sc-for>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 12px; padding: 20px 22px; background: #f7fbfc; border: 1.5px solid #e3cbc6; border-radius: 20px;">
+            <span style="font-weight: 700; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: #a3392b;">Gefahrenzone</span>
+            <span style="display: flex; align-items: center; gap: 12px; padding: 8px 0; border-top: 1px solid #f0dcd8; min-height: 44px;">
+              <span style="display: flex; flex-direction: column;"><span style="font-weight: 700; font-size: 14.5px;">Runde verlassen</span><span style="font-size: 12.5px; font-weight: 600; color: #3f5a6b;">Deine Siege bleiben in der Chronik stehen.</span></span>
+              <span style="margin-left: auto; padding: 10px 16px; border-radius: 999px; border: 1.5px solid #a3392b; color: #a3392b; font-weight: 700; font-size: 14px; min-height: 40px; display: inline-flex; align-items: center;">Verlassen</span>
+            </span>
+            <span style="display: flex; align-items: center; gap: 12px; padding: 8px 0; border-top: 1px solid #f0dcd8; min-height: 44px;">
+              <span style="display: flex; flex-direction: column;"><span style="font-weight: 700; font-size: 14.5px;">Runde löschen</span><span style="font-size: 12.5px; font-weight: 600; color: #3f5a6b;">Regal, Chronik und Pokale sind dann weg — für alle.</span></span>
+              <span style="margin-left: auto; padding: 10px 16px; border-radius: 999px; background: #a3392b; color: #fdf4f2; font-weight: 700; font-size: 14px; min-height: 40px; display: inline-flex; align-items: center;">Löschen</span>
+            </span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px; padding: 14px 18px; background: #eaf4f8; border-radius: 18px;">
+            <i class="ti ti-download" style="font-size: 20px; color: #0e6690; flex: none;"></i>
+            <span style="font-size: 13px; font-weight: 600; color: #3f5a6b; line-height: 1.5;"><strong style="color: #10283a;">Alles herunterladen:</strong> Regal, Chronik, Wertungen als CSV und JSON. Ohne Nachfrage, ohne Wartezeit.</span>
+          </div>
+        </div>
+      </div>
+      <div style="position: absolute; left: 128px; right: 40px; bottom: 0; height: 42px; display: flex; align-items: center; gap: 14px; font-size: 12.5px; font-weight: 600; color: #3f5a6b; border-top: 1px solid #c9dde6;"><a href="#" style="display: inline-flex; align-items: center; min-height: 32px; padding: 0 4px;">FAQ</a><a href="#" style="display: inline-flex; align-items: center; min-height: 32px; padding: 0 4px;">Kontakt</a><a href="#" style="display: inline-flex; align-items: center; min-height: 32px; padding: 0 4px;">Impressum</a><a href="#" style="display: inline-flex; align-items: center; min-height: 32px; padding: 0 4px;">Datenschutz</a><a href="#" style="display: inline-flex; align-items: center; min-height: 32px; padding: 0 4px;">Nutzungsbedingungen</a><span style="margin-left: auto; display: inline-flex; align-items: center; gap: 6px;"><i class="ti ti-eye-off"></i>Kein Tracking · EU-Hosting</span><img src="../../../public/icons/powered-by-bgg.png" alt="Powered by BGG" style="width: 100px; height: auto;"></div>
+    </div>
+  </div>
+
+  <div data-screen-label="O14.2 Leute & Strom" style="display: flex; flex-direction: column; gap: 10px;">
+    <div style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #3f5a6b; max-width: 1440px; line-height: 1.4;">O14.2 · Leute und ihr Strom: wer mit wem spielt, was in den anderen Runden passiert ist. Kein Herz, kein Kommentar — nur Sichtbarkeit.</div>
+    <div style="width: 1440px; height: 900px; position: relative; overflow: hidden; border-radius: 6px; background-color: #e4f1f5; background-image: radial-gradient(600px 320px at 22% 14%, rgba(255,255,255,.7), transparent 70%); box-shadow: 0 18px 44px rgba(14,60,90,.18);">
+      <div style="position: absolute; left: 0; right: 0; top: 0; height: 60px; display: flex; align-items: center; gap: 18px; padding: 0 28px; background: #f7fbfc; border-bottom: 1px solid #c9dde6; z-index: 3;">
+        <a href="#" style="display: inline-flex; align-items: center; gap: 10px; color: #10283a;"><span style="width: 34px; height: 34px; border-radius: 50%; background: #0e6690; color: #f7fbfc; display: grid; place-items: center;"><i class="ti ti-tornado" style="font-size: 18px;"></i></span><span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 20px;">Spielwirbel</span></a>
+        <span style="font-size: 15px; font-weight: 600; color: #3f5a6b; display: inline-flex; align-items: center; gap: 8px;"><a href="#" style="display: inline-flex; align-items: center; min-height: 24px;">Start</a> <i class="ti ti-chevron-right" style="font-size: 12px;"></i> <strong style="color: #10283a;">Leute</strong></span>
+        <span style="margin-left: auto; display: flex; gap: 10px; align-items: center;">
+          <span style="font-size: 14px; font-weight: 700; border: 1.5px solid #a9c4d1; border-radius: 999px; padding: 7px 14px; display: inline-flex; gap: 6px; align-items: center; min-height: 36px; box-sizing: border-box;"><i class="ti ti-world" style="font-size: 15px;"></i>Deutsch <i class="ti ti-chevron-down" style="font-size: 12px;"></i></span>
+          <span style="width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: #0e6690; color: #f7fbfc;"><i class="ti ti-mail" style="font-size: 17px;"></i></span>
+          <span style="width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: #d7e9f0;"><i class="ti ti-user" style="font-size: 17px;"></i></span>
+        </span>
+      </div>
+      <div style="position: absolute; left: 40px; right: 40px; top: 84px; bottom: 52px; display: grid; grid-template-columns: 340px minmax(0, 1fr) 400px; gap: 28px; align-items: start;">
+        <div style="display: flex; flex-direction: column; gap: 14px; padding: 20px 22px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 20px; box-shadow: 0 6px 18px rgba(14,60,90,.1);">
+          <span style="display: flex; align-items: baseline; justify-content: space-between;"><span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 19px;">Leute · 6</span><span style="font-size: 12.5px; font-weight: 700; color: #0e6690;">Suchen</span></span>
+          <sc-for list="{{ friends }}" as="f" hint-placeholder-count="6">
+            <a href="#" style="display: flex; align-items: center; gap: 12px; padding: 8px 0; border-top: 1px solid #dfebf1; color: #10283a; min-height: 48px;">
+              <span style="width: 42px; height: 42px; border-radius: 50%; background: #f7fbfc; border: 5px solid {{ f.color }}; box-sizing: border-box; display: grid; place-items: center; font-weight: 700; font-size: 13px; flex: none;">{{ f.ini }}</span>
+              <span style="display: flex; flex-direction: column; line-height: 1.2; min-width: 0;"><span style="font-weight: 700; font-size: 15px;">{{ f.name }}</span><span style="font-size: 12.5px; font-weight: 600; color: #3f5a6b;">{{ f.shared }}</span></span>
+            </a>
+          </sc-for>
+          <span style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 11px; border-radius: 999px; border: 1.5px dashed #8fb3c4; color: #0e6690; font-weight: 700; font-size: 14px; min-height: 44px; margin-top: 4px;"><i class="ti ti-plus"></i>Jemanden einladen</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 16px; min-width: 0;">
+          <div style="display: flex; align-items: center; gap: 14px;">
+            <h1 style="margin: 0; font-family: 'Comfortaa'; font-weight: 700; font-size: 28px; line-height: 1;">Was gerade läuft</h1>
+            <span style="padding: 8px 14px; border-radius: 999px; background: #cfe6ef; font-weight: 700; font-size: 13.5px; min-height: 36px; display: inline-flex; align-items: center; gap: 6px;">Alle Runden <i class="ti ti-chevron-down" style="font-size: 12px;"></i></span>
+          </div>
+          <sc-for list="{{ feed }}" as="f" hint-placeholder-count="4">
+            <div style="display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 14px; align-items: start; padding: 16px 18px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 18px; box-shadow: 0 4px 12px rgba(14,60,90,.07);">
+              <span style="width: 44px; height: 44px; border-radius: 50%; background: #f7fbfc; border: 5px solid {{ f.color }}; box-sizing: border-box; display: grid; place-items: center; font-weight: 700; font-size: 13.5px;">{{ f.ini }}</span>
+              <span style="display: flex; flex-direction: column; gap: 8px; min-width: 0;">
+                <span style="font-size: 15px; line-height: 1.45;"><strong>{{ f.who }}</strong> {{ f.what }}</span>
+                <sc-if value="{{ f.hasGame }}" hint-placeholder-val="{{ false }}">
+                  <span style="display: flex; align-items: center; gap: 11px; padding: 10px 12px; background: #eaf4f8; border-radius: 14px;">
+                    <span style="width: 58px; aspect-ratio: 4/3; border-radius: 7px; background: {{ f.cover }}; flex: none; box-shadow: 0 3px 7px rgba(14,60,90,.2);"></span>
+                    <span style="display: flex; flex-direction: column;"><span style="font-weight: 700; font-size: 14.5px;">{{ f.game }}</span><span style="font-size: 12.5px; font-weight: 600; color: #3f5a6b;">{{ f.gameMeta }}</span></span>
+                    <sc-if value="{{ f.hasScore }}" hint-placeholder-val="{{ false }}">
+                      <span style="margin-left: auto; padding: 4px 11px; border-radius: 999px; background: {{ f.pillBg }}; color: {{ f.pillInk }}; font-weight: 700; font-size: 14.5px; font-variant-numeric: tabular-nums;">{{ f.score }}</span>
+                    </sc-if>
+                  </span>
+                </sc-if>
+                <span style="font-size: 12.5px; font-weight: 600; color: #3f5a6b;">{{ f.when }} · {{ f.cove }}</span>
+              </span>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <div style="display: flex; flex-direction: column; gap: 12px; padding: 20px 22px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 20px; box-shadow: 0 6px 18px rgba(14,60,90,.1);">
+            <span style="display: flex; align-items: center; gap: 9px;"><i class="ti ti-mail" style="font-size: 19px; color: #0e6690;"></i><span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 19px;">Posteingang</span><span style="margin-left: auto; padding: 3px 10px; border-radius: 999px; background: #a3392b; color: #fdf4f2; font-weight: 700; font-size: 12.5px;">2</span></span>
+            <sc-for list="{{ inbox }}" as="i" hint-placeholder-count="3">
+              <div style="display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 11px; align-items: start; padding: 8px 0; border-top: 1px solid #dfebf1;">
+                <span style="width: 36px; height: 36px; border-radius: 50%; background: {{ i.iconBg }}; color: {{ i.iconInk }}; display: grid; place-items: center; font-size: 18px;"><i class="ti {{ i.icon }}"></i></span>
+                <span style="display: flex; flex-direction: column; gap: 6px; min-width: 0;">
+                  <span style="font-size: 14px; line-height: 1.45; font-weight: {{ i.weight }};">{{ i.text }}</span>
+                  <sc-if value="{{ i.hasActions }}" hint-placeholder-val="{{ false }}">
+                    <span style="display: flex; gap: 8px;"><span style="padding: 8px 14px; border-radius: 999px; background: #0e6690; color: #f7fbfc; font-weight: 700; font-size: 13px; min-height: 36px; display: inline-flex; align-items: center;">{{ i.yes }}</span><span style="padding: 8px 14px; border-radius: 999px; border: 1.5px solid #a9c4d1; font-weight: 700; font-size: 13px; min-height: 36px; display: inline-flex; align-items: center;">{{ i.no }}</span></span>
+                  </sc-if>
+                  <span style="font-size: 12px; font-weight: 600; color: #3f5a6b;">{{ i.when }}</span>
+                </span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 10px; padding: 20px 22px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 20px; box-shadow: 0 6px 18px rgba(14,60,90,.1);">
+            <span style="display: flex; align-items: center; gap: 9px;"><i class="ti ti-sparkles" style="font-size: 19px; color: #0e6690;"></i><span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 19px;">Was ist neu</span></span>
+            <sc-for list="{{ news }}" as="n" hint-placeholder-count="2">
+              <span style="display: flex; flex-direction: column; gap: 1px; padding: 7px 0; border-top: 1px solid #dfebf1;">
+                <span style="font-size: 11.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #0e6690;">{{ n.date }}</span>
+                <span style="font-weight: 700; font-size: 14.5px;">{{ n.title }}</span>
+                <span style="font-size: 13px; font-weight: 600; color: #3f5a6b; line-height: 1.45;">{{ n.body }}</span>
+              </span>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+      <div style="position: absolute; left: 40px; right: 40px; bottom: 0; height: 42px; display: flex; align-items: center; gap: 14px; font-size: 12.5px; font-weight: 600; color: #3f5a6b; border-top: 1px solid #c9dde6;"><a href="#" style="display: inline-flex; align-items: center; min-height: 32px; padding: 0 4px;">FAQ</a><a href="#" style="display: inline-flex; align-items: center; min-height: 32px; padding: 0 4px;">Kontakt</a><a href="#" style="display: inline-flex; align-items: center; min-height: 32px; padding: 0 4px;">Impressum</a><a href="#" style="display: inline-flex; align-items: center; min-height: 32px; padding: 0 4px;">Datenschutz</a><a href="#" style="display: inline-flex; align-items: center; min-height: 32px; padding: 0 4px;">Nutzungsbedingungen</a><span style="margin-left: auto; display: inline-flex; align-items: center; gap: 6px;"><i class="ti ti-eye-off"></i>Kein Tracking · EU-Hosting</span><img src="../../../public/icons/powered-by-bgg.png" alt="Powered by BGG" style="width: 100px; height: auto;"></div>
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 30px; align-items: flex-start; flex-wrap: wrap;">
+    <div data-screen-label="O14.3 Mein Konto" style="display: flex; flex-direction: column; gap: 10px;">
+      <div style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #3f5a6b; width: 700px; line-height: 1.4;">O14.3 · Mein Konto: Name, Anmeldung, Sprache, Design, Daten. Alles auf einer Seite, nichts versteckt.</div>
+      <div style="width: 700px; padding: 26px 28px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 22px; box-shadow: 0 14px 34px rgba(14,60,90,.12); display: flex; flex-direction: column; gap: 18px; box-sizing: border-box;">
+        <div style="display: flex; align-items: center; gap: 16px;">
+          <span style="width: 72px; height: 72px; border-radius: 50%; background: #f7fbfc; border: 6px solid #726bc7; box-sizing: border-box; display: grid; place-items: center; font-weight: 700; font-size: 23px; flex: none;">LE</span>
+          <span style="display: flex; flex-direction: column; gap: 2px;">
+            <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 26px; line-height: 1.1;">Lea</span>
+            <span style="font-size: 14px; font-weight: 600; color: #3f5a6b;">lea@beispiel.de · seit Oktober 2025</span>
+            <span style="font-size: 14px; font-weight: 600; color: #3f5a6b;">In 2 Runden · 7 Siege gesamt</span>
+          </span>
+          <span style="margin-left: auto; padding: 11px 18px; border-radius: 999px; border: 1.5px solid #a9c4d1; font-weight: 700; font-size: 14.5px; min-height: 44px; display: inline-flex; align-items: center;">Bearbeiten</span>
+        </div>
+        <sc-for list="{{ account }}" as="a" hint-placeholder-count="6">
+          <span style="display: flex; align-items: center; gap: 14px; padding: 13px 0; border-top: 1px solid #dfebf1; min-height: 52px;">
+            <span style="width: 40px; height: 40px; border-radius: 12px; background: #d7e9f0; color: #0e6690; display: grid; place-items: center; font-size: 19px; flex: none;"><i class="ti {{ a.icon }}"></i></span>
+            <span style="display: flex; flex-direction: column; gap: 1px; min-width: 0;"><span style="font-weight: 700; font-size: 15.5px;">{{ a.title }}</span><span style="font-size: 12.5px; font-weight: 600; color: #3f5a6b; line-height: 1.4;">{{ a.body }}</span></span>
+            <span style="margin-left: auto; display: inline-flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; color: #0e6690; flex: none;">{{ a.value }} <i class="ti ti-chevron-right" style="font-size: 16px;"></i></span>
+          </span>
+        </sc-for>
+        <div style="display: flex; align-items: center; gap: 12px; padding: 14px 18px; background: #eaf4f8; border-radius: 16px;">
+          <i class="ti ti-eye-off" style="font-size: 20px; color: #0e6690;"></i>
+          <span style="font-size: 13px; font-weight: 600; color: #3f5a6b; line-height: 1.5;">Kein Tracking, keine Werbung, Server in der EU. Was ihr spielt, bleibt in eurer Runde.</span>
+        </div>
+      </div>
+    </div>
+
+    <div data-screen-label="O14.4 Statistik" style="display: flex; flex-direction: column; gap: 10px;">
+      <div style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #3f5a6b; width: 700px; line-height: 1.4;">O14.4 · Statistiken über alle Runden: nur Zahlen, die eine Frage beantworten, die jemand wirklich hat</div>
+      <div style="width: 700px; padding: 26px 28px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 22px; box-shadow: 0 14px 34px rgba(14,60,90,.12); display: flex; flex-direction: column; gap: 20px; box-sizing: border-box;">
+        <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 24px;">Deine Zahlen</span>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;">
+          <sc-for list="{{ stats }}" as="s" hint-placeholder-count="6">
+            <span style="display: flex; flex-direction: column; gap: 2px; padding: 16px 18px; background: #eaf4f8; border-radius: 16px;">
+              <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 28px; line-height: 1;">{{ s.n }}</span>
+              <span style="font-size: 12.5px; font-weight: 600; color: #3f5a6b; line-height: 1.35;">{{ s.what }}</span>
+            </span>
+          </sc-for>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <span style="font-weight: 700; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: #0e6690;">Mit wem du am häufigsten spielst</span>
+          <sc-for list="{{ withWhom }}" as="w" hint-placeholder-count="4">
+            <span style="display: flex; align-items: center; gap: 12px; padding: 8px 0; border-top: 1px solid #dfebf1;">
+              <span style="width: 38px; height: 38px; border-radius: 50%; background: #f7fbfc; border: 4px solid {{ w.color }}; box-sizing: border-box; display: grid; place-items: center; font-weight: 700; font-size: 12.5px; flex: none;">{{ w.ini }}</span>
+              <span style="font-weight: 700; font-size: 15px; min-width: 70px;">{{ w.name }}</span>
+              <span style="flex: 1; height: 12px; border-radius: 999px; background: #d7e9f0; position: relative; overflow: hidden;"><span style="position: absolute; left: 0; top: 0; bottom: 0; width: {{ w.pct }}; border-radius: 999px; background: {{ w.color }};"></span></span>
+              <span style="font-size: 13.5px; font-weight: 700; color: #3f5a6b; min-width: 76px; text-align: right;">{{ w.n }}</span>
+            </span>
+          </sc-for>
+        </div>
+        <span style="font-size: 12.5px; font-weight: 600; color: #3f5a6b; line-height: 1.55; padding-top: 12px; border-top: 1px solid #dfebf1;">Keine Punkte, keine Ligen, kein Vergleich mit Fremden. Alles hier rechnet sich aus euren eigenen Sessionsn und verlässt eure Runden nie.</span>
+      </div>
+    </div>
+  </div>
+
+  <div data-screen-label="O14.5 Übergabe" style="max-width: 1240px; background: #10283a; color: #eaf4f8; border-radius: 22px; padding: 24px 28px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 14px 34px rgba(14,60,90,.2);">
+    <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 20px; color: #f7fbfc;">Was O15 von hier mitnimmt</span>
+    <span style="font-size: 15px; line-height: 1.65; max-width: 100ch;">Stufe 2 ist vollständig und braucht kein eigenes Bauteil — nur die <strong style="color: #f7fbfc;">Zeile mit Glyphe, Titel, Erklärung und Wert rechts</strong> als Muster für Einstellungslisten, und die <strong style="color: #f7fbfc;">Gefahrenzone</strong> mit eigener Kante statt roter Fläche. Was hier überall angedeutet ist — Markerwahl, Rechte ändern, Einladungslink, Runde löschen, Posteingang beantworten — sind Overlays. O15 zeichnet sie: Sheets, Popover, Dialoge, Toasts und das „…“-Menü.</span>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1540,&quot;height&quot;:1000}}">
+class Component extends DCLogic {
+  renderVals() {
+    const ini = (n) => n.slice(0, 2).toUpperCase();
+    const cover = (h) => `linear-gradient(145deg, oklch(.6 .13 ${h}), oklch(.36 .12 ${h + 30}))`;
+    const fmt = (v) => v.toFixed(1).replace('.', ',');
+    const people = ['#c6522c', '#198663', '#726bc7', '#a66815', '#c34d74', '#2f6f9e', '#54821d', '#993556'];
+    const names = ['Marco', 'Jonas', 'Lea', 'Tim'];
+
+    const railSettings = [
+      { label: 'Start', icon: 'ti-home' }, { label: 'Regal', icon: 'ti-cards' },
+      { label: 'Chronik', icon: 'ti-history' }, { label: 'Pokale', icon: 'ti-trophy' },
+      { label: 'Einstellungen', icon: 'ti-settings' },
+    ].map((r, i) => ({ ...r, bg: i === 4 ? '#cfe6ef' : 'transparent', ink: i === 4 ? '#0e6690' : '#3f5a6b', mt: i === 4 ? 'auto' : '0' }));
+
+    const markerNames = ['Koralle', 'Seegras', 'Seeigel', 'Bernstein', 'Anemone', 'Lagune', 'Tang', 'Purpur'];
+    const markers = people.map((c, i) => ({
+      c, name: markerNames[i], picked: i === 0,
+      ring: i === 0 ? '0 0 0 4px #f7fbfc, 0 0 0 7px #0e6690, 0 6px 12px rgba(14,60,90,.25)' : '0 4px 10px rgba(14,60,90,.2)',
+    }));
+
+    const memberRows = names.map((n, i) => ({
+      name: n, ini: ini(n), color: people[i],
+      role: i === 0 ? 'hat die Runde angelegt' : i === 3 ? 'seit Juni dabei' : 'seit Oktober 2025',
+      rights: i === 0 ? 'Alles' : 'Mitspielen',
+    }));
+
+    const toggles = [
+      { title: 'Geheime Wertung', body: 'Karten bleiben verdeckt, bis alle gewertet haben.', on: true },
+      { title: 'Gäste dürfen werten', body: 'Wer nicht zur Runde gehört, kann trotzdem mitspielen.', on: true },
+      { title: 'Nur Spiele der Anwesenden', body: 'Die Muschel überspringt Spiele abwesender Besitzer.', on: true },
+      { title: 'Vorschläge zeigen', body: 'Könnte euch gefallen und „Wie wär’s mit“ erscheinen in der Runde.', on: false },
+    ].map((t) => ({ ...t, bg: t.on ? '#0e6690' : '#d3e2e8', ml: t.on ? 'auto' : '0' }));
+
+    const friendNames = ['Marco', 'Jonas', 'Tim', 'Aylin', 'Ben', 'Chris'];
+    const friends = friendNames.map((n, i) => ({
+      name: n, ini: ini(n), color: people[i % 8],
+      shared: i < 3 ? 'Donnerstagsrunde' : 'WG Kastanienallee',
+    }));
+
+    const ramp = [
+      { bg: '#23305c', ink: '#f7fbfc' }, { bg: '#35609a', ink: '#f7fbfc' }, { bg: '#6a9fd0', ink: '#10283a' },
+      { bg: '#b7d4ee', ink: '#10283a' }, { bg: '#f2e394', ink: '#10283a' },
+    ];
+    const stop = (s) => (s < 1 ? { bg: '#4a1942', ink: '#f7fbfc' } : ramp[Math.min(4, Math.max(0, Math.round(s) - 1))]);
+    const art = {
+      dark: 'radial-gradient(120% 90% at 30% 10%, oklch(.42 .1 300), oklch(.22 .07 290) 70%)',
+      wide: 'linear-gradient(180deg, oklch(.82 .09 210) 0 46%, oklch(.5 .1 195) 46% 68%, oklch(.32 .07 200) 68% 100%)',
+    };
+
+    const feedRaw = [
+      { who: 'Jonas', ci: 1, what: 'hat gewonnen geholt.', game: 'Nordlichter', gameMeta: 'Donnerstagsrunde · 4 Personen', score: 4.8, cover: cover(200), when: 'vor 5 Tagen', cove: 'Donnerstagsrunde' },
+      { who: 'Aylin', ci: 4, what: 'hat eine Session gestartet — du bist noch dran.', game: '', gameMeta: '', score: null, cover: '', when: 'heute, 19:12', cove: 'WG Kastanienallee' },
+      { who: 'Marco', ci: 0, what: 'hat ein Spiel ins Regal gesetzt.', game: 'Sternenhafen', gameMeta: '1–4 · 60 Min', score: null, cover: art.wide, when: 'vor 6 Tagen', cove: 'Donnerstagsrunde' },
+      { who: 'Tim', ci: 3, what: 'hat Zinnober ins Aussortiert gelegt.', game: '', gameMeta: '', score: null, cover: '', when: 'vor 2 Wochen', cove: 'Donnerstagsrunde' },
+      ];
+    const feed = feedRaw.map((f) => {
+      const st = f.score !== null ? stop(f.score) : null;
+      return {
+        ...f, ini: ini(f.who), color: people[f.ci],
+        hasGame: !!f.game, hasScore: f.score !== null,
+        score: f.score !== null ? fmt(f.score) : '',
+        pillBg: st ? st.bg : 'transparent', pillInk: st ? st.ink : '#10283a',
+      };
+    });
+
+    const inbox = [
+      { icon: 'ti-user-plus', iconBg: '#d7e9f0', iconInk: '#0e6690', text: 'Aylin lädt dich in die Runde „WG Kastanienallee“ ein.', hasActions: true, yes: 'Annehmen', no: 'Ablehnen', when: 'vor 2 Stunden', weight: '700' },
+      { icon: 'ti-player-play', iconBg: '#f2e394', iconInk: '#10283a', text: 'In der WG Kastanienallee läuft eine Abstimmung — du bist noch dran.', hasActions: true, yes: 'Jetzt werten', no: 'Später', when: 'heute, 19:12', weight: '700' },
+      { icon: 'ti-crown', iconBg: '#d7e9f0', iconInk: '#8a6a10', text: 'Jonas hat gewonnen bei „Nordlichter“ geholt.', hasActions: false, yes: '', no: '', when: 'vor 5 Tagen', weight: '600' },
+      ];
+
+    const news = [
+      { date: '18. September', title: 'Mehrere Tische', body: 'Eine Session lässt sich auf zwei oder drei Tische aufteilen — jeder wertet für sich.' },
+      { date: '2. September', title: 'Könnte euch gefallen erklärt sich', body: 'Jeder Vorschlag sagt jetzt, warum er kommt.' },
+      ];
+
+    const account = [
+      { icon: 'ti-user', title: 'Name', body: 'So sehen dich die anderen in der Runde', value: 'Lea' },
+      { icon: 'ti-fingerprint', title: 'Anmeldung', body: 'Passkey eingerichtet · Passwort als Rückweg', value: 'Passkey' },
+      { icon: 'ti-world', title: 'Sprache', body: '9 Sprachen · wirkt nur für dich', value: 'Deutsch' },
+      { icon: 'ti-wave-sine', title: 'Design', body: 'Gehört dem Konto, nicht der Runde', value: 'Ocean' },
+      { icon: 'ti-flag', title: 'Benachrichtigungen', body: 'Nur Einladungen und laufende Abstimmungen', value: '2 an' },
+      { icon: 'ti-download', title: 'Deine Daten', body: 'Herunterladen als CSV und JSON · Konto löschen', value: 'Verwalten' },
+    ];
+
+    const stats = [
+      { n: '31', what: 'Sessions insgesamt' }, { n: '7', what: 'Siege' },
+      { n: '2', what: 'Runden' }, { n: '19', what: 'verschiedene Spiele' },
+      { n: '4,4', what: 'wertest du im Schnitt' }, { n: '1×', what: '„gar nicht“ gegeben' },
+    ];
+    const withWhom = [
+      { name: 'Jonas', ci: 1, n: '23 Sessions', pct: '100%' },
+      { name: 'Marco', ci: 0, n: '21 Sessions', pct: '91%' },
+      { name: 'Tim', ci: 3, n: '12 Sessions', pct: '52%' },
+      { name: 'Aylin', ci: 4, n: '4 Sessions', pct: '17%' },
+    ].map((w) => ({ ...w, ini: ini(w.name), color: people[w.ci] }));
+
+    return { railSettings, markers, memberRows, toggles, friends, feed, inbox, news, account, stats, withWhom };
+  }
+}
+</script>
+</body>
+</html>

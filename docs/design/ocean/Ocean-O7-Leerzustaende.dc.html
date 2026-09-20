@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="design_doc_mode" content="canvas">
+  <link rel="stylesheet" href="../../../public/fonts/tabler-icons.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #cfe0e7; font-family: 'Figtree', sans-serif; }
+    a { color: #0e6690; text-decoration: none; }
+    a:hover { color: #0a4f70; text-decoration: underline; }
+  </style>
+</helmet>
+<div style="display: flex; flex-direction: column; gap: 40px; padding: 44px; width: max-content; color: #10283a; background-color: #e4f1f5; background-image: radial-gradient(900px 500px at 18% 0%, rgba(255,255,255,.7), transparent 65%), radial-gradient(900px 600px at 86% 40%, rgba(255,255,255,.5), transparent 70%);">
+
+  <div data-screen-label="O7 Kopf" style="max-width: 1240px; display: flex; flex-direction: column; gap: 12px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 22px; padding: 26px 30px; box-shadow: 0 14px 34px rgba(14,60,90,.14);">
+    <div style="display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;">
+      <span style="font-weight: 700; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: #f7fbfc; background: #0e6690; border-radius: 999px; padding: 5px 12px;">O7</span>
+      <h1 style="margin: 0; font-family: 'Comfortaa'; font-weight: 700; font-size: 36px; line-height: 1.05;">Leer und jung — Ocean</h1>
+      <span style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #3f5a6b;">20.09.2026 · Phase 2, Brief 7 von 13</span>
+    </div>
+    <p style="margin: 0; font-size: 16px; line-height: 1.55; max-width: 92ch; color: #3f5a6b;">Die meisten Runden sind am Anfang leer, und danach lange jung. Drei Regeln für Ocean: <strong style="color: #10283a;">(1)</strong> ein leerer Zustand sagt, was als Nächstes passiert — keine Traurigkeit, keine Ausrufezeichen. <strong style="color: #10283a;">(2)</strong> Er zeigt <em>eine</em> Handlung, höchstens eine zweite als Nebenweg. <strong style="color: #10283a;">(3)</strong> Kein leerer Screen ist grau: Ocean ist ohnehin hell, ein leeres Regal ist einfach Wasser.</p>
+    <div style="display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; background: #f7ded6; border-radius: 14px; font-size: 13px; line-height: 1.55; color: #10283a;"><i class="ti ti-alert-triangle" style="font-size: 18px; color: #a3392b; flex: none; margin-top: 1px;"></i><span><strong>Vokabular-Revert 20.09.2026:</strong> Bucht → <strong>Runde</strong> · Küste (Navigation) → <strong>Start</strong> · Riff → <strong>Regal</strong> · Gezeiten → <strong>Chronik</strong> · Perlenkette → <strong>Pokale</strong> · Tauchgang → <strong>Session</strong> · Perle / „hat die Perle“ → <strong>Sieg / „hat gewonnen“</strong> · Boje → <strong>Mitglied</strong> · Jenseits des Riffs → <strong>Nicht im Regal</strong> · Strandgut → <strong>Aussortiert</strong> · Gehoben → <strong>Durchgespielt</strong> · Am Horizont → <strong>Wunschliste</strong> · Flaschenpost → <strong>Könnte euch gefallen</strong> · Werft → <strong>Kümmerliste</strong> · Echolot → <strong>Ergebnis</strong> · Tauchkarte → <strong>Wertungskarte</strong> · Mehrere Boote → <strong>Mehrere Tische</strong> · „Wer taucht mit?“ → <strong>„Wer spielt mit?“</strong>. Eigen bleiben nur: <strong>Muschel · Abtauchen · auftauchen · in der Tiefe · „Wie viele holen wir hoch?“</strong> (<a href="Ocean-O9-Vokabular.dc.html" style="display: inline-flex; align-items: center; min-height: 24px; padding: 0 3px;">O9</a>).</span></div>
+  </div>
+
+  <div data-screen-label="O7.1 Leerzustände Desktop" style="display: flex; flex-direction: column; gap: 14px;">
+    <div style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #3f5a6b; line-height: 1.4;">O7.1 · Die acht leeren Zustände, wie sie im Inhaltsbereich des Desktops stehen</div>
+    <div style="display: grid; grid-template-columns: repeat(2, 600px); gap: 20px;">
+      <sc-for list="{{ empties }}" as="e" hint-placeholder-count="8">
+        <div style="display: flex; flex-direction: column; gap: 14px; padding: 30px 32px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 22px; box-shadow: 0 6px 18px rgba(14,60,90,.1); align-items: center; text-align: center; min-height: 260px; justify-content: center; box-sizing: border-box;">
+          <span style="font-size: 11.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #0e6690; align-self: flex-start;">{{ e.where }}</span>
+          <span style="{{ e.artStyle }}">{{ e.art }}</span>
+          <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 22px; line-height: 1.15;">{{ e.title }}</span>
+          <span style="font-size: 14.5px; font-weight: 600; color: #3f5a6b; line-height: 1.5; max-width: 46ch;">{{ e.body }}</span>
+          <span style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 4px;">
+            <span style="padding: 12px 20px; border-radius: 999px; background: #0e6690; color: #f7fbfc; font-weight: 700; font-size: 15px; min-height: 44px; display: inline-flex; align-items: center; gap: 8px;">{{ e.cta }}</span>
+            <sc-if value="{{ e.hasAlt }}" hint-placeholder-val="{{ false }}">
+              <span style="padding: 12px 20px; border-radius: 999px; border: 1.5px solid #a9c4d1; font-weight: 700; font-size: 15px; min-height: 44px; display: inline-flex; align-items: center;">{{ e.alt }}</span>
+            </sc-if>
+          </span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 30px; align-items: flex-start; flex-wrap: wrap;">
+
+    <div data-screen-label="O7.2 Erste Runde" style="display: flex; flex-direction: column; gap: 10px;">
+      <div style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #3f5a6b; width: 390px; line-height: 1.4;">O7.2 · Ganz am Anfang: die Küste ohne eine einzige Runde</div>
+      <div style="width: 390px; height: 844px; position: relative; overflow: hidden; border-radius: 34px; background: linear-gradient(180deg, #eef7fa 0%, #dcecf2 55%, #cfe3ec 100%); box-shadow: 0 18px 44px rgba(14,60,90,.22);">
+        <div style="position: absolute; left: 0; right: 0; top: 0; height: 52px; display: flex; align-items: center; gap: 10px; padding: 0 16px; background: #f7fbfc; border-bottom: 1px solid #c9dde6;">
+          <span style="width: 30px; height: 30px; border-radius: 50%; background: #0e6690; color: #f7fbfc; display: grid; place-items: center;"><i class="ti ti-tornado" style="font-size: 16px;"></i></span>
+          <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 18px;">Start</span>
+          <span style="margin-left: auto; display: flex; gap: 6px;"><span style="width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: #d7e9f0;"><i class="ti ti-world" style="font-size: 17px;"></i></span><span style="width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: #d7e9f0;"><i class="ti ti-user" style="font-size: 17px;"></i></span></span>
+        </div>
+        <div style="position: absolute; left: 0; right: 0; top: 52px; bottom: 76px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 30px; box-sizing: border-box; text-align: center;">
+          <span style="position: relative; width: 190px; height: 130px;">
+            <span style="position: absolute; left: 10px; top: 0; width: 170px; height: 62px; border-radius: 85px 85px 0 0 / 62px 62px 0 0; background: repeating-conic-gradient(from 200deg at 50% 100%, #f3ebdd 0 5deg, #e2d2b8 5deg 10deg); border: 3px solid #d8c6a6; border-bottom: none; box-sizing: border-box;"></span>
+            <span style="position: absolute; left: 10px; top: 54px; width: 170px; height: 76px; border-radius: 0 0 85px 85px / 0 0 76px 76px; background: repeating-conic-gradient(from 100deg at 50% 0%, #f7efe2 0 5deg, #e8dac2 5deg 10deg); border: 3px solid #d8c6a6; box-sizing: border-box; box-shadow: 0 14px 22px rgba(14,60,90,.18);"></span>
+          </span>
+          <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 26px; line-height: 1.15;">Noch keine Runde.</span>
+          <span style="font-size: 15px; font-weight: 600; color: #3f5a6b; line-height: 1.5;">Leg eine an, lade die Leute ein, mit denen du spielst — der Rest wächst von allein.</span>
+          <span style="display: flex; flex-direction: column; gap: 10px; width: 100%; margin-top: 6px;">
+            <span style="display: flex; align-items: center; justify-content: center; gap: 9px; padding: 16px; border-radius: 999px; background: #0e6690; color: #f7fbfc; font-weight: 700; font-size: 17px; min-height: 44px; box-shadow: 0 12px 24px rgba(14,60,90,.3);"><i class="ti ti-plus" style="font-size: 20px;"></i>Erste Runde gründen</span>
+            <span style="display: flex; align-items: center; justify-content: center; gap: 9px; padding: 14px; border-radius: 999px; border: 1.5px solid #a9c4d1; background: #f7fbfc; font-weight: 700; font-size: 15px; min-height: 44px;"><i class="ti ti-cards" style="font-size: 18px; color: #0e6690;"></i>Erst mal umsehen</span>
+          </span>
+        </div>
+        <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 76px; display: flex; background: #f7fbfc; border-top: 1px solid #c9dde6; padding: 6px 8px 14px; box-sizing: border-box;">
+          <sc-for list="{{ dockDim }}" as="d" hint-placeholder-count="4">
+            <span style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; border-radius: 16px; background: {{ d.bg }}; color: {{ d.ink }}; min-height: 56px; opacity: {{ d.op }};"><i class="ti {{ d.icon }}" style="font-size: 23px;"></i><span style="font-size: 11.5px; font-weight: 700;">{{ d.label }}</span></span>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+
+    <div data-screen-label="O7.3 Junge Runde" style="display: flex; flex-direction: column; gap: 10px;">
+      <div style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #3f5a6b; width: 390px; line-height: 1.4;">O7.3 · Junge Runde: Spiele da, noch keine Session — die Muschel ist trotzdem der Mittelpunkt</div>
+      <div style="width: 390px; height: 844px; position: relative; overflow: hidden; border-radius: 34px; background-color: #e4f1f5; background-image: radial-gradient(360px 220px at 20% 8%, rgba(255,255,255,.75), transparent 70%); box-shadow: 0 18px 44px rgba(14,60,90,.22);">
+        <div style="position: absolute; left: 0; right: 0; top: 0; height: 52px; display: flex; align-items: center; gap: 10px; padding: 0 16px; background: #f7fbfc; border-bottom: 1px solid #c9dde6;">
+          <span style="width: 30px; height: 30px; border-radius: 50%; background: #0e6690; color: #f7fbfc; display: grid; place-items: center;"><i class="ti ti-tornado" style="font-size: 16px;"></i></span>
+          <span style="display: flex; flex-direction: column; line-height: 1.1;"><span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 17px;">Familie Berger</span><span style="font-size: 11.5px; font-weight: 600; color: #3f5a6b;">seit gestern</span></span>
+          <span style="margin-left: auto; display: flex; gap: 6px;"><span style="width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: #d7e9f0;"><i class="ti ti-mail" style="font-size: 17px;"></i></span><span style="width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: #d7e9f0;"><i class="ti ti-user" style="font-size: 17px;"></i></span></span>
+        </div>
+        <div style="position: absolute; left: 0; right: 0; top: 52px; bottom: 76px; padding: 14px 16px; display: flex; flex-direction: column; gap: 16px; overflow: hidden; box-sizing: border-box;">
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <sc-for list="{{ youngSeats }}" as="m" hint-placeholder-count="3">
+              <span style="display: flex; flex-direction: column; align-items: center; gap: 4px; width: 58px;">
+                <span style="width: 46px; height: 46px; border-radius: 50%; background: #f7fbfc; border: 5px solid {{ m.color }}; box-sizing: border-box; display: grid; place-items: center; font-weight: 700; font-size: 14px;">{{ m.ini }}</span>
+                <span style="font-size: 11px; font-weight: 700; line-height: 1.1;">{{ m.name }}</span>
+                <span style="font-size: 10.5px; font-weight: 600; color: #3f5a6b;">0 Siege</span>
+              </span>
+            </sc-for>
+            <span style="display: flex; flex-direction: column; align-items: center; gap: 4px; width: 58px; color: #0e6690;">
+              <span style="width: 46px; height: 46px; border-radius: 50%; border: 2px dashed #8fb3c4; display: grid; place-items: center; font-size: 19px; box-sizing: border-box;"><i class="ti ti-plus"></i></span>
+              <span style="font-size: 11px; font-weight: 700;">Platz dazu</span>
+            </span>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+            <div style="position: relative; width: 240px; height: 216px;">
+              <span style="position: absolute; left: 8px; top: 0; width: 224px; height: 104px; border-radius: 112px 112px 0 0 / 104px 104px 0 0; background: repeating-conic-gradient(from 200deg at 50% 100%, #f3ebdd 0 5deg, #e2d2b8 5deg 10deg); border: 3px solid #d8c6a6; border-bottom: none; box-sizing: border-box;"></span>
+              <span style="position: absolute; left: 8px; top: 88px; width: 224px; height: 128px; border-radius: 0 0 112px 112px / 0 0 128px 128px; background: repeating-conic-gradient(from 100deg at 50% 0%, #f7efe2 0 5deg, #e8dac2 5deg 10deg); border: 3px solid #d8c6a6; box-sizing: border-box; box-shadow: 0 18px 28px rgba(14,60,90,.2);"></span>
+              <span style="position: absolute; left: 56px; top: 48px; width: 128px; height: 128px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; background: radial-gradient(circle at 32% 28%, #ffffff 0%, #f3f9fb 30%, #d7e9f0 70%, #b9d4e0 100%); color: #10283a; box-shadow: 0 12px 24px rgba(14,60,90,.32);">
+                <i class="ti ti-tornado" style="font-size: 34px; color: #0e6690;"></i>
+                <span style="font-weight: 700; font-size: 18px; line-height: 1;">Abtauchen</span>
+              </span>
+            </div>
+            <span style="font-size: 14px; font-weight: 700; text-align: center; line-height: 1.4;">31 Spiele im Regal.<br><span style="font-weight: 600; color: #3f5a6b;">Der erste Session steht noch aus.</span></span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 8px; padding: 14px 16px; background: #f7fbfc; border: 1px dashed #8fb3c4; border-radius: 18px;">
+            <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 16px;">Wie wär’s mit</span>
+            <span style="font-size: 13.5px; font-weight: 600; color: #3f5a6b; line-height: 1.5;">Vorschläge gibt es ab dem zweiten Session — vorher weiß Spielwirbel noch nichts über euren Geschmack.</span>
+          </div>
+          <div style="display: flex; gap: 10px;">
+            <span style="flex: 1; display: flex; flex-direction: column; gap: 5px; padding: 12px 14px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 18px;">
+              <span style="display: flex; justify-content: space-between; align-items: baseline;"><span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 15px;">Das Regal</span><span style="font-size: 12px; font-weight: 700; color: #0e6690;">31 →</span></span>
+              <span style="display: flex; gap: 4px;"><sc-for list="{{ youngShelf }}" as="g" hint-placeholder-count="4"><span style="width: 32px; aspect-ratio: 4/3; border-radius: 5px; background: {{ g.cover }};"></span></sc-for></span>
+            </span>
+            <span style="flex: 1; display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 18px;">
+              <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 15px;">Chronik</span>
+              <span style="font-size: 12.5px; font-weight: 600; color: #3f5a6b; line-height: 1.4;">Noch keine Sessions — hier entsteht euer Verlauf.</span>
+            </span>
+          </div>
+        </div>
+        <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 76px; display: flex; background: #f7fbfc; border-top: 1px solid #c9dde6; padding: 6px 8px 14px; box-sizing: border-box;">
+          <sc-for list="{{ dock0 }}" as="d" hint-placeholder-count="4">
+            <span style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; border-radius: 16px; background: {{ d.bg }}; color: #10283a; min-height: 56px;"><i class="ti {{ d.icon }}" style="font-size: 23px; color: {{ d.ink }};"></i><span style="font-size: 11.5px; font-weight: 700;">{{ d.label }}</span></span>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+
+    <div data-screen-label="O7.4 Beispielrunde" style="display: flex; flex-direction: column; gap: 10px;">
+      <div style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #3f5a6b; width: 700px; line-height: 1.4;">O7.4 · Die Beispielrunde: wer sich erst umsehen will, bekommt eine gefüllte Runde mit Bändchen — und einen Knopf, sie wieder loszuwerden</div>
+      <div style="width: 700px; display: flex; flex-direction: column; gap: 16px;">
+        <div style="display: flex; align-items: center; gap: 14px; padding: 14px 18px; background: #f2e394; border-radius: 18px; box-shadow: 0 6px 18px rgba(14,60,90,.1);">
+          <i class="ti ti-sparkles" style="font-size: 22px;"></i>
+          <span style="display: flex; flex-direction: column;"><span style="font-weight: 700; font-size: 15.5px;">Das ist die Beispielrunde.</span><span style="font-size: 13px; font-weight: 600;">Alles hier ist erfunden — du kannst nichts kaputtmachen.</span></span>
+          <span style="margin-left: auto; display: flex; gap: 8px;"><span style="padding: 10px 16px; border-radius: 999px; background: #10283a; color: #f7fbfc; font-weight: 700; font-size: 14px; min-height: 40px; display: inline-flex; align-items: center;">Eigene Runde anlegen</span><span style="padding: 10px 16px; border-radius: 999px; border: 1.5px solid rgba(16,40,58,.3); font-weight: 700; font-size: 14px; min-height: 40px; display: inline-flex; align-items: center;">Beispiel entfernen</span></span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 12px; padding: 20px 22px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 20px; box-shadow: 0 6px 18px rgba(14,60,90,.1);">
+          <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 18px;">Was in der Beispielrunde steckt</span>
+          <sc-for list="{{ sampleRows }}" as="s" hint-placeholder-count="5">
+            <span style="display: flex; align-items: center; gap: 12px; padding: 9px 0; border-top: 1px solid #dfebf1; font-size: 14.5px;">
+              <i class="ti {{ s.icon }}" style="font-size: 19px; color: #0e6690; width: 24px; flex: none;"></i>
+              <span style="font-weight: 700;">{{ s.what }}</span>
+              <span style="margin-left: auto; font-weight: 600; color: #3f5a6b; text-align: right;">{{ s.detail }}</span>
+            </span>
+          </sc-for>
+          <span style="font-size: 13px; font-weight: 600; color: #3f5a6b; line-height: 1.5; padding-top: 6px; border-top: 1px solid #dfebf1;">Die Beispieldaten tragen <strong style="color: #10283a;">erfundene Namen und Platzhalter-Cover</strong> — nie echte Spiele mit echten Bildern, damit niemand sie für seine eigenen hält. Entfernen löscht sie restlos; eigene Runden bleiben unberührt.</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div data-screen-label="O7.5 Fehler" style="display: flex; flex-direction: column; gap: 14px;">
+    <div style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #3f5a6b; line-height: 1.4;">O7.5 · Wenn etwas nicht da ist, statt nie da gewesen zu sein — Fehler sind Leerzustände mit einem zweiten Versuch</div>
+    <div style="display: grid; grid-template-columns: repeat(3, 400px); gap: 18px;">
+      <sc-for list="{{ errors }}" as="e" hint-placeholder-count="3">
+        <div style="display: flex; flex-direction: column; gap: 12px; padding: 24px 26px; background: #f7fbfc; border: 1px solid #c9dde6; border-radius: 20px; box-shadow: 0 6px 18px rgba(14,60,90,.1); align-items: center; text-align: center; min-height: 220px; justify-content: center; box-sizing: border-box;">
+          <span style="width: 54px; height: 54px; border-radius: 50%; background: {{ e.iconBg }}; color: {{ e.iconInk }}; display: grid; place-items: center; font-size: 26px;"><i class="ti {{ e.icon }}"></i></span>
+          <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 19px; line-height: 1.2;">{{ e.title }}</span>
+          <span style="font-size: 14px; font-weight: 600; color: #3f5a6b; line-height: 1.5;">{{ e.body }}</span>
+          <span style="display: flex; gap: 9px; margin-top: 2px;"><span style="padding: 11px 18px; border-radius: 999px; background: #0e6690; color: #f7fbfc; font-weight: 700; font-size: 14.5px; min-height: 44px; display: inline-flex; align-items: center;">{{ e.cta }}</span><span style="padding: 11px 18px; border-radius: 999px; border: 1.5px solid #a9c4d1; font-weight: 700; font-size: 14.5px; min-height: 44px; display: inline-flex; align-items: center;">{{ e.alt }}</span></span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div data-screen-label="O7.6 Übergabe" style="max-width: 1240px; background: #10283a; color: #eaf4f8; border-radius: 22px; padding: 24px 28px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 14px 34px rgba(14,60,90,.2);">
+    <span style="font-family: 'Comfortaa'; font-weight: 700; font-size: 20px; color: #f7fbfc;">Was O8 von hier mitnimmt</span>
+    <span style="font-size: 15px; line-height: 1.65; max-width: 100ch;">Ein Leerzustand hat immer dieselben fünf Teile: Ort (Kicker) · Bild aus dem eigenen Vokabular (Muschel, Sieg, leere Tidenlinie — nie ein generisches Icon) · eine Aussage als Überschrift · ein Satz, der sagt was passiert · eine Handlung, höchstens zwei. Fehler benutzen dieselbe Form, tauschen nur das Bild gegen ein Zeichen und die Handlung gegen „Nochmal“. Nichts davon ist grau: Flächen bleiben <code style="font-family: ui-monospace, Menlo, monospace;">#f7fbfc</code>, gestrichelte Kanten markieren „hier kommt noch etwas hin“.</span>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1320,&quot;height&quot;:1000}}">
+class Component extends DCLogic {
+  renderVals() {
+    const ini = (n) => n.slice(0, 2).toUpperCase();
+    const cover = (h) => `linear-gradient(145deg, oklch(.6 .13 ${h}), oklch(.36 .12 ${h + 30}))`;
+    const people = ['#c6522c', '#198663', '#726bc7', '#a66815', '#c34d74', '#2f6f9e', '#54821d', '#993556'];
+
+    const pearl = 'display: block; width: 62px; height: 62px; border-radius: 50%; background: radial-gradient(circle at 32% 28%, #ffffff 0%, #f3f9fb 30%, #d7e9f0 70%, #b9d4e0 100%); box-shadow: 0 8px 16px rgba(14,60,90,.25);';
+    const hollow = 'display: grid; place-items: center; width: 62px; height: 62px; border-radius: 50%; border: 2px dashed #8fb3c4; color: #0e6690; font-size: 28px;';
+    const band = 'display: block; width: 120px; height: 14px; background-image: radial-gradient(circle at 50% 100%, #a9c4d1 6px, transparent 7px); background-size: 24px 14px; background-repeat: repeat-x;';
+
+    const empties = [
+      { where: 'Das Regal', art: '', artStyle: pearl, title: 'Das Regal ist noch leer.', body: 'Setzt euer erstes Spiel ins Regal — oder übernehmt eine ganze Sammlung von BoardGameGeek.', cta: 'Spiel hinzufügen', alt: 'Von BGG übernehmen', hasAlt: true },
+      { where: 'Die Runde', art: '', artStyle: hollow + ' width: 62px;', title: 'Ihr seid noch zu zweit.', body: 'Ladet die anderen ein — mit einem Link, ohne Konto­zwang. Wer nur mitwertet, braucht keinen Platz.', cta: 'Leute einladen', alt: 'Gast dazu', hasAlt: true },
+      { where: 'Chronik', art: '', artStyle: band, title: 'Noch keine Session.', body: 'Nach dem ersten Abtauchen steht hier, was ihr gespielt habt, wer gewonnen hat und wie es ankam.', cta: 'Abtauchen', alt: '', hasAlt: false },
+      { where: 'Pokale', art: '', artStyle: 'display: block; width: 150px; height: 20px; background-image: radial-gradient(circle at 50% 50%, #dbe9ef 8px, transparent 9px); background-size: 30px 20px; background-repeat: repeat-x;', title: 'Noch kein Sieg.', body: 'Die Liste wächst mit jede Session. Wer gewinnt, bekommt einen Sieg — mehr Regeln gibt es nicht.', cta: 'Abtauchen', alt: '', hasAlt: false },
+      { where: 'Könnte euch gefallen', art: '', artStyle: hollow, title: 'Noch keine Vorschläge.', body: 'Spielwirbel schlägt erst vor, wenn es euch kennt — ab dem zweiten Session. Bis dahin entscheidet die Muschel.', cta: 'Zum Regal', alt: '', hasAlt: false },
+      { where: 'Aussortiert', art: '', artStyle: hollow, title: 'Nichts aussortiert.', body: 'Spiele, die ihr nicht mehr spielen wollt, landen hier — sie bleiben in der Chronik und lassen sich zurückholen.', cta: 'Zum Regal', alt: '', hasAlt: false },
+      { where: 'Wunschliste', art: '', artStyle: hollow, title: 'Die Wunschliste ist leer.', body: 'Was ihr noch nicht habt, aber haben wollt, kommt auf die Wunschliste. Taucht es im Regal auf, verschwindet es hier.', cta: 'Spiel suchen', alt: '', hasAlt: false },
+      { where: 'Die Kümmerliste', art: '', artStyle: 'display: grid; place-items: center; width: 62px; height: 62px; border-radius: 50%; background: #cde7dc; color: #1a6b4a; font-size: 30px;', title: 'Nichts zu tun.', body: 'Alle Spiele haben ein Bild, alle Sessions ein Ergebnis. Die Kümmerliste meldet sich, wenn etwas fehlt.', cta: 'Zur Runde', alt: '', hasAlt: false },
+    ];
+
+    const mkDock = (active, dim) => [
+      { label: 'Start', icon: 'ti-home' }, { label: 'Regal', icon: 'ti-cards' },
+      { label: 'Chronik', icon: 'ti-history' }, { label: 'Pokale', icon: 'ti-trophy' },
+    ].map((d, i) => ({
+      ...d, bg: i === active ? '#cfe6ef' : 'transparent',
+      ink: i === active ? '#0e6690' : '#3f5a6b',
+      op: dim && i !== active ? '.45' : '1',
+    }));
+
+    const youngSeats = ['Oma Hilde', 'Paul', 'Mia'].map((n, i) => ({ name: n, ini: ini(n), color: people[i] }));
+    const youngShelf = [90, 160, 220, 280].map((h) => ({ cover: cover(h) }));
+
+    const sampleRows = [
+      { icon: 'ti-users', what: '4 erfundene Leute', detail: 'Ada, Bruno, Cleo, Dev' },
+      { icon: 'ti-cards', what: '9 Spiele im Regal', detail: 'mit Platzhalter-Covern' },
+      { icon: 'ti-history', what: '6 Sessions', detail: 'über vier Monate verteilt' },
+      { icon: 'ti-trophy', what: 'Eine Pokale', detail: 'Cleo führt mit 3' },
+      { icon: 'ti-tool', what: 'Eine offene Aufgabe', detail: 'damit die Kümmerliste nicht leer ist' },
+    ];
+
+    const errors = [
+      { icon: 'ti-alert-triangle', iconBg: '#f7ded6', iconInk: '#a3392b', title: 'BGG antwortet nicht.', body: 'Die Suche bei BoardGameGeek ist gerade nicht erreichbar. Euer Regal ist davon nicht betroffen.', cta: 'Nochmal', alt: 'Von Hand anlegen' },
+      { icon: 'ti-search', iconBg: '#d7e9f0', iconInk: '#0e6690', title: 'Kein Treffer für „nordlicth“.', body: 'Vielleicht ein Tippfehler — oder das Spiel steht nicht bei BGG.', cta: 'Suche ändern', alt: 'Von Hand anlegen' },
+      { icon: 'ti-unlink', iconBg: '#f7ded6', iconInk: '#a3392b', title: 'Keine Verbindung.', body: 'Die letzte Ansicht ist noch da, Änderungen warten. Sobald das Netz zurück ist, gehen sie raus.', cta: 'Nochmal versuchen', alt: 'Offline weiter' },
+    ];
+
+    return { empties, dock0: mkDock(0, false), dockDim: mkDock(0, true), youngSeats, youngShelf, sampleRows, errors };
+  }
+}
+</script>
+</body>
+</html>
