@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="design_doc_mode" content="canvas">
+  <link rel="stylesheet" href="../../../public/fonts/tabler-icons.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Manrope:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #2b1e0d; font-family: 'Manrope', sans-serif; }
+    a { color: #f0cf86; text-decoration: none; display: inline-block; padding: 4px 0; }
+    a:hover { color: #fbe6b4; text-decoration: underline; }
+  </style>
+</helmet>
+<div style="display: flex; flex-direction: column; gap: 44px; padding: 44px; width: max-content; background-color: #3b2a12; background-image: repeating-linear-gradient(180deg, rgba(255,255,255,.035) 0 2px, transparent 2px 7px), radial-gradient(120% 80% at 30% 0%, rgba(240,207,134,.10), transparent 60%); color: #f6ecd8;">
+
+  <div data-screen-label="T5 Kopf" style="max-width: 1440px; display: flex; flex-direction: column; gap: 14px; background: linear-gradient(180deg, #f8f3e7, #efe7d5); color: #2f2620; border-radius: 4px; padding: 26px 30px; box-shadow: 0 14px 30px rgba(0,0,0,.45);">
+    <div style="display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;">
+      <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: #6b4210; background: #f0cf86; border-radius: 3px; padding: 5px 10px;">T5</span>
+      <h1 style="margin: 0; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 38px; line-height: 1.05;">Konto, Anmeldung, Design-Wahl — Der Tisch</h1>
+      <span style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #6b5a45;">baut auf T1</span>
+    </div>
+    <p style="margin: 0; font-size: 16px; line-height: 1.55; max-width: 92ch; color: #4a4038;">Anmelden, registrieren, Passkey · das Konto mit Design-Wahl · und die <strong>Auswahlkarte</strong>, die jedem bestehenden Konto beim Start einmal gezeigt wird: sieben Plakate, jedes im eigenen Material. Klassisch steht zuerst, weil es das ist, was die Leute schon kennen.</p>
+  </div>
+
+  <div data-screen-label="T5.1 Anmelden" style="display: flex; flex-direction: column; gap: 10px;">
+    <span style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #dcb587;">1 · Anmelden · Registrieren · Passkey (Desktop 1440)</span>
+    <div style="width: 1440px; min-height: 900px; border-radius: 4px; background: #3b2a12; box-shadow: 0 20px 50px rgba(0,0,0,.5); display: flex; overflow: hidden;">
+      <div style="width: 620px; flex: none; background: radial-gradient(90% 120% at 30% 0%, #2f6b4d, #1c4531 74%); padding: 44px 44px 34px; display: flex; flex-direction: column; gap: 22px; border-right: 5px solid #9a6d2b;">
+        <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 17px; letter-spacing: .14em; text-transform: uppercase; color: #3b2a12; background: linear-gradient(180deg, #f6d795, #d9a951); border-radius: 3px; padding: 6px 13px; align-self: flex-start;">Spielwirbel</span>
+        <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 42px; line-height: 1.08;">Wer am Tisch sitzt,<br>entscheidet mit.</span>
+        <span style="font-size: 16px; line-height: 1.6; color: #eaf6ec; max-width: 44ch;">Regal füllen, Session wirbeln, geheim werten — und danach weiß die Chronik, was gespielt wurde und wer gewonnen hat.</span>
+        <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 6px;">
+          <sc-for list="{{ sellingPoints }}" as="p" hint-placeholder-count="3">
+            <span style="display: flex; align-items: center; gap: 12px; font-size: 15px; font-weight: 600;">
+              <span style="width: 38px; height: 38px; border-radius: 50%; background: rgba(240,207,134,.18); border: 1px solid #f0cf86; color: #f0cf86; display: grid; place-items: center; font-size: 19px; flex: none;"><i class="{{ p.icon }}"></i></span>
+              {{ p.label }}
+            </span>
+          </sc-for>
+        </div>
+        <span style="margin-top: auto; display: flex; align-items: center; gap: 14px; font-size: 13px; font-weight: 700;">
+          <span style="display: inline-flex; align-items: center; gap: 7px;"><i class="ti ti-lock" style="color: #a8dcb4;"></i> Kein Tracking · EU-Hosting</span>
+          <span style="display: inline-flex; align-items: center; background: #f8f3e7; border-radius: 3px; padding: 5px 9px;"><img src="../../../public/icons/powered-by-bgg.png" alt="Powered by BGG" style="display: block; width: 110px; height: auto;"></span>
+        </span>
+      </div>
+      <div style="flex: 1; padding: 44px 60px; display: flex; flex-direction: column; gap: 22px; align-items: stretch;">
+        <div style="display: inline-flex; align-self: flex-start; background: #32230f; border: 1px solid #b98a55; border-radius: 4px; padding: 3px; gap: 3px;">
+          <span style="min-height: 42px; display: inline-flex; align-items: center; padding: 0 20px; border-radius: 3px; background: linear-gradient(180deg, #f6d795, #d9a951); color: #3b2a12; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 15px;">Anmelden</span>
+          <span style="min-height: 42px; display: inline-flex; align-items: center; padding: 0 20px; border-radius: 3px; color: #f0cf86; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 15px;">Registrieren</span>
+        </div>
+        <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 30px;">Willkommen zurück.</span>
+        <button style="min-height: 60px; display: flex; align-items: center; justify-content: center; gap: 12px; border-radius: 4px; border: 1px solid #a87a2e; background: linear-gradient(180deg, #f6d795, #d9a951); color: #3b2a12; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 19px; cursor: pointer; box-shadow: 0 3px 0 #8a6224;"><i class="ti ti-lock" style="font-size: 22px;"></i> Mit Passkey anmelden</button>
+        <span style="display: flex; align-items: center; gap: 14px; color: #dcb587; font-size: 13px; font-weight: 700;">
+          <span style="flex: 1; height: 1px; background: rgba(240,207,134,.25);"></span> oder mit E-Mail <span style="flex: 1; height: 1px; background: rgba(240,207,134,.25);"></span>
+        </span>
+        <label style="display: flex; flex-direction: column; gap: 7px; font-size: 13px; font-weight: 700; color: #e2c496;">E-Mail
+          <input type="text" value="lea@beispiel.de" style="font-family: 'Manrope', sans-serif; font-weight: 600; font-size: 16px; color: #2f2620; background: #f8f3e7; border: 1px solid #a87a2e; border-radius: 4px; padding: 13px 14px; min-height: 48px; box-shadow: inset 0 2px 4px rgba(0,0,0,.18);">
+        </label>
+        <label style="display: flex; flex-direction: column; gap: 7px; font-size: 13px; font-weight: 700; color: #e2c496;">Passwort
+          <span style="display: flex; align-items: center; gap: 10px; background: #f8f3e7; border: 1px solid #a87a2e; border-radius: 4px; padding: 0 14px; min-height: 48px; box-shadow: inset 0 2px 4px rgba(0,0,0,.18);">
+            <span style="flex: 1; font-weight: 700; font-size: 18px; color: #2f2620; letter-spacing: .18em;">••••••••••</span>
+            <i class="ti ti-eye-off" style="color: #8d6436; font-size: 20px;"></i>
+          </span>
+        </label>
+        <div style="display: flex; align-items: center; gap: 14px;">
+          <label style="display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; min-height: 32px;">
+            <span style="width: 24px; height: 24px; border-radius: 3px; background: linear-gradient(180deg, #f6d795, #d9a951); border: 1px solid #a87a2e; color: #3b2a12; display: grid; place-items: center; font-size: 16px;"><i class="ti ti-check"></i></span>
+            Angemeldet bleiben
+          </label>
+          <a href="#" style="margin-left: auto; font-size: 14px; font-weight: 700;">Passwort vergessen?</a>
+        </div>
+        <button style="min-height: 54px; border-radius: 4px; border: 1px solid #b98a55; background: #5b4128; color: #f6ecd8; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 18px; cursor: pointer;">Anmelden</button>
+        <div style="background: #4a3423; border: 1px solid rgba(240,207,134,.22); border-radius: 4px; padding: 16px 18px; display: flex; align-items: center; gap: 14px;">
+          <i class="ti ti-mail" style="font-size: 24px; color: #f0cf86;"></i>
+          <span style="display: flex; flex-direction: column;">
+            <span style="font-weight: 700; font-size: 15px;">Lieber ohne Passwort?</span>
+            <span style="font-size: 13px; font-weight: 600; color: #dcb587;">Wir schicken einen Anmeldelink an die E-Mail-Adresse.</span>
+          </span>
+          <span style="margin-left: auto; min-height: 44px; padding: 0 16px; display: inline-flex; align-items: center; border-radius: 4px; background: #5b4128; border: 1px solid #b98a55; font-weight: 700; font-size: 14px; flex: none;">Link schicken</span>
+        </div>
+        <span style="font-size: 13px; font-weight: 600; color: #dcb587; line-height: 1.6;">Mit der Anmeldung gelten die <a href="#">Nutzungsbedingungen</a> und die <a href="#">Datenschutzerklärung</a>.</span>
+      </div>
+    </div>
+  </div>
+
+  <div data-screen-label="T5.2 Konto" style="display: flex; flex-direction: column; gap: 10px;">
+    <span style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #dcb587;">2 · Konto — Design-Wahl liegt hier, nicht in den Rundeneinstellungen</span>
+    <div style="width: 1440px; min-height: 900px; border-radius: 4px; background: #3b2a12; box-shadow: 0 20px 50px rgba(0,0,0,.5); display: flex; flex-direction: column; overflow: hidden;">
+      <div style="height: 60px; display: flex; align-items: center; gap: 18px; padding: 0 28px; background: #2f2109; border-bottom: 1px solid rgba(240,207,134,.25); flex: none;">
+        <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 15px; letter-spacing: .14em; text-transform: uppercase; color: #3b2a12; background: linear-gradient(180deg, #f6d795, #d9a951); border-radius: 3px; padding: 5px 11px;">Spielwirbel</span>
+        <span style="margin-left: auto; display: flex; align-items: center; gap: 14px;">
+          <span style="display: inline-flex; align-items: center; gap: 6px; font-weight: 700; font-size: 13px; border: 1px solid rgba(240,207,134,.45); border-radius: 999px; padding: 5px 12px;">Deutsch <i class="ti ti-chevron-down" style="font-size: 15px; color: #f0cf86;"></i></span>
+          <i class="ti ti-mail" style="font-size: 22px; color: #f0cf86;"></i>
+          <span style="display: inline-flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px;"><span style="width: 32px; height: 32px; border-radius: 50%; background: #198663; color: #fff; display: grid; place-items: center; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 12px;">LE</span> Lea</span>
+        </span>
+      </div>
+      <div style="flex: 1; padding: 30px 34px 34px; display: flex; flex-direction: column; gap: 22px; max-width: 1180px;">
+        <span style="display: inline-flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; color: #f0cf86;"><i class="ti ti-chevron-left" style="font-size: 18px;"></i> Zurück zu Meine Runden</span>
+        <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 34px;">Konto</span>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start;">
+          <div style="background: #4a3423; border: 1px solid rgba(240,207,134,.22); border-radius: 4px; padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+            <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 21px;">Du</span>
+            <span style="display: flex; align-items: center; gap: 14px;">
+              <span style="width: 64px; height: 64px; border-radius: 50%; background: #198663; border: 2px solid #f0cf86; color: #fff; display: grid; place-items: center; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 24px;">LE</span>
+              <span style="display: flex; flex-direction: column; gap: 3px;">
+                <span style="font-weight: 700; font-size: 17px;">Lea Brandt</span>
+                <span style="font-size: 13px; font-weight: 600; color: #e2c496;">lea@beispiel.de · seit Mai 2025</span>
+              </span>
+              <span style="margin-left: auto; min-height: 44px; padding: 0 15px; display: inline-flex; align-items: center; gap: 8px; border-radius: 4px; background: #5b4128; border: 1px solid #b98a55; font-weight: 700; font-size: 14px;"><i class="ti ti-pencil" style="color: #f0cf86;"></i> Bearbeiten</span>
+            </span>
+            <div style="height: 1px; background: rgba(240,207,134,.14);"></div>
+            <sc-for list="{{ accountRows }}" as="a" hint-placeholder-count="5">
+              <span style="display: flex; align-items: center; gap: 12px; min-height: 46px; font-size: 15px; font-weight: 600;">
+                <i class="{{ a.icon }}" style="color: #f0cf86; font-size: 20px;"></i>
+                <span style="display: flex; flex-direction: column;">
+                  {{ a.label }}
+                  <span style="font-size: 12px; font-weight: 600; color: #dcb587;">{{ a.hint }}</span>
+                </span>
+                <span style="margin-left: auto; font-weight: 700; font-size: 13px; color: #e2c496;">{{ a.value }}</span>
+                <i class="ti ti-chevron-right" style="color: #dcb587; font-size: 18px;"></i>
+              </span>
+            </sc-for>
+          </div>
+          <div style="background: #4a3423; border: 1px solid rgba(240,207,134,.22); border-radius: 4px; padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+            <span style="display: flex; align-items: baseline; gap: 10px;">
+              <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 21px;">Design</span>
+              <span style="font-size: 13px; font-weight: 600; color: #e2c496;">Gilt für dich, nicht für die Runde</span>
+            </span>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+              <sc-for list="{{ designs }}" as="d" hint-placeholder-count="7">
+                <span style="border-radius: 4px; overflow: hidden; border: {{ d.pickBorder }}; box-shadow: {{ d.pickShadow }};">
+                  <span style="display: block; height: 66px; background: {{ d.poster }}; padding: 9px 11px;">
+                    <span style="{{ d.wordStyle }}">{{ d.word }}</span>
+                  </span>
+                  <span style="display: flex; align-items: center; gap: 7px; padding: 8px 11px; background: #5b4128; min-height: 40px;">
+                    <span style="font-weight: 700; font-size: 13px;">{{ d.name }}</span>
+                    <i class="{{ d.check }}" style="margin-left: auto; color: #f0cf86; font-size: 17px;"></i>
+                  </span>
+                </span>
+              </sc-for>
+            </div>
+            <span style="font-size: 12px; font-weight: 600; color: #dcb587; line-height: 1.55;">Klassisch ist das Design, mit dem Spielwirbel angefangen hat — es bleibt immer wählbar. Ein Wechsel ändert nur Aussehen und Wortwahl der Rituale, nie wo etwas liegt.</span>
+            <button style="min-height: 48px; border-radius: 4px; border: 1px solid #a87a2e; background: linear-gradient(180deg, #f6d795, #d9a951); color: #3b2a12; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 17px; cursor: pointer; box-shadow: 0 3px 0 #8a6224;">Der Tisch übernehmen</button>
+          </div>
+        </div>
+        <div style="background: #4a3423; border: 1px solid rgba(240,207,134,.22); border-radius: 4px; padding: 18px 20px; display: flex; align-items: center; gap: 16px;">
+          <i class="ti ti-cards" style="font-size: 26px; color: #f0cf86;"></i>
+          <span style="display: flex; flex-direction: column;">
+            <span style="font-weight: 700; font-size: 16px;">BoardGameGeek</span>
+            <span style="font-size: 13px; font-weight: 600; color: #dcb587;">Nutzername verknüpfen, um eine Sammlung in ein Regal zu übernehmen. Die Sammlung muss öffentlich sein.</span>
+          </span>
+          <span style="margin-left: auto; display: flex; align-items: center; gap: 10px; flex: none;">
+            <span style="display: flex; align-items: center; background: #f8f3e7; border: 1px solid #a87a2e; border-radius: 4px; padding: 0 13px; min-height: 44px; font-weight: 600; font-size: 14px; color: #2f2620; width: 200px;">leabrandt</span>
+            <span style="min-height: 44px; padding: 0 16px; display: inline-flex; align-items: center; border-radius: 4px; background: #5b4128; border: 1px solid #b98a55; font-weight: 700; font-size: 14px;">Speichern</span>
+          </span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 14px; background: #4b2f26; border: 1px solid #8f2f22; border-radius: 4px; padding: 16px 20px;">
+          <i class="ti ti-alert-triangle" style="font-size: 24px; color: #f59c86;"></i>
+          <span style="display: flex; flex-direction: column;">
+            <span style="font-weight: 700; font-size: 15px;">Konto löschen</span>
+            <span style="font-size: 13px; font-weight: 600; color: #f0c4b6;">Deine Wertungen bleiben anonym in den Runden, in denen du gespielt hast.</span>
+          </span>
+          <span style="margin-left: auto; min-height: 44px; padding: 0 16px; display: inline-flex; align-items: center; border-radius: 4px; background: #8f2f22; border: 1px solid #b5432a; color: #fdf4e4; font-weight: 700; font-size: 14px; flex: none;">Löschen</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div data-screen-label="T5.3 Auswahlkarte" style="display: flex; flex-direction: column; gap: 10px;">
+    <span style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #dcb587;">3 · Auswahlkarte beim ersten Start — sieben Plakate, jedes im eigenen Material</span>
+    <div style="width: 1440px; min-height: 900px; border-radius: 4px; background: #241806; box-shadow: 0 20px 50px rgba(0,0,0,.5); display: flex; align-items: center; justify-content: center; padding: 40px; overflow: hidden;">
+      <div style="width: 1240px; background: linear-gradient(180deg, #f8f3e7, #efe7d5); color: #2f2620; border-radius: 8px; box-shadow: 0 28px 64px rgba(0,0,0,.6); border: 1px solid #a87a2e; overflow: hidden;">
+        <div style="padding: 26px 30px 20px; display: flex; align-items: flex-end; gap: 20px; border-bottom: 1px solid rgba(47,38,32,.16);">
+          <span style="display: flex; flex-direction: column; gap: 6px;">
+            <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: #7a4a28;">Neu in Spielwirbel</span>
+            <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 34px; line-height: 1.08;">Wähl dir ein Design.</span>
+            <span style="font-size: 15px; font-weight: 600; color: #4a4038; max-width: 88ch;">Alles liegt weiter an derselben Stelle — Regal, Chronik, Pokale, Session wirbeln. Es sieht nur anders aus, und die Rituale heißen anders. Du kannst jederzeit im Konto wechseln.</span>
+          </span>
+          <span style="margin-left: auto; display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 15px; border-radius: 4px; border: 1px solid rgba(47,38,32,.25); font-weight: 700; font-size: 14px; flex: none;">Später entscheiden</span>
+        </div>
+        <div style="padding: 24px 30px 28px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;">
+          <sc-for list="{{ posters }}" as="p" hint-placeholder-count="7">
+            <span style="border-radius: 6px; overflow: hidden; border: {{ p.border }}; box-shadow: {{ p.shadow }}; background: #fff; display: flex; flex-direction: column;">
+              <span style="display: block; height: 196px; background: {{ p.poster }}; padding: 16px; position: relative;">
+                <span style="{{ p.wordStyle }}">{{ p.word }}</span>
+                <span style="{{ p.subStyle }}">{{ p.sub }}</span>
+              </span>
+              <span style="padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 6px; background: #f8f3e7; flex: 1;">
+                <span style="display: flex; align-items: center; gap: 8px;">
+                  <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 18px;">{{ p.name }}</span>
+                  <span style="{{ p.badgeStyle }}">{{ p.badge }}</span>
+                </span>
+                <span style="font-size: 13px; font-weight: 600; line-height: 1.45; color: #4a4038;">{{ p.desc }}</span>
+                <span style="font-size: 12px; font-weight: 700; color: #7a4a28; margin-top: auto; padding-top: 8px;">{{ p.words }}</span>
+                <span style="min-height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 4px; background: {{ p.btnBg }}; border: 1px solid {{ p.btnBorder }}; color: {{ p.btnInk }}; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 15px;">{{ p.btn }}</span>
+              </span>
+            </span>
+          </sc-for>
+          <span style="border-radius: 6px; border: 1px dashed rgba(47,38,32,.3); background: #efe7d5; display: flex; flex-direction: column; justify-content: center; gap: 8px; padding: 20px; text-align: center;">
+            <i class="ti ti-palette" style="font-size: 30px; color: #7a4a28;"></i>
+            <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 17px;">Später mehr</span>
+            <span style="font-size: 13px; font-weight: 600; color: #4a4038; line-height: 1.45;">Neue Designs kommen dazu. Deine Wahl bleibt, bis du sie änderst.</span>
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div data-screen-label="T5.4 Telefon" style="display: flex; flex-direction: column; gap: 10px;">
+    <span style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #dcb587;">4 · Telefon 390 — Anmelden und die Auswahlkarte als Sheet</span>
+    <div style="display: flex; gap: 26px; align-items: flex-start;">
+      <div style="width: 390px; min-height: 844px; border-radius: 34px; background: radial-gradient(110% 80% at 50% 0%, #2f6b4d, #1c4531 70%); box-shadow: 0 20px 50px rgba(0,0,0,.55), inset 0 0 0 1px rgba(240,207,134,.25); display: flex; flex-direction: column; padding: 22px 18px 26px; gap: 18px; overflow: hidden;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-weight: 700; font-size: 13px;">19:12</span>
+          <span style="margin-left: auto; font-weight: 700; font-size: 12px; border: 1px solid rgba(246,236,216,.45); border-radius: 999px; padding: 3px 9px;">DE</span>
+        </div>
+        <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 15px; letter-spacing: .14em; text-transform: uppercase; color: #3b2a12; background: linear-gradient(180deg, #f6d795, #d9a951); border-radius: 3px; padding: 6px 12px; align-self: flex-start;">Spielwirbel</span>
+        <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 30px; line-height: 1.1;">Wer am Tisch sitzt, entscheidet mit.</span>
+        <div style="display: inline-flex; align-self: stretch; background: rgba(0,0,0,.25); border: 1px solid #b98a55; border-radius: 4px; padding: 3px; gap: 3px;">
+          <span style="flex: 1; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; border-radius: 3px; background: linear-gradient(180deg, #f6d795, #d9a951); color: #3b2a12; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 15px;">Anmelden</span>
+          <span style="flex: 1; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; border-radius: 3px; color: #f0cf86; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 15px;">Registrieren</span>
+        </div>
+        <button style="min-height: 56px; display: flex; align-items: center; justify-content: center; gap: 10px; border-radius: 4px; border: 1px solid #a87a2e; background: linear-gradient(180deg, #f6d795, #d9a951); color: #3b2a12; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 18px; cursor: pointer; box-shadow: 0 3px 0 #8a6224;"><i class="ti ti-lock" style="font-size: 21px;"></i> Mit Passkey anmelden</button>
+        <span style="display: flex; align-items: center; gap: 12px; color: #cfe6d6; font-size: 12px; font-weight: 700;"><span style="flex: 1; height: 1px; background: rgba(240,207,134,.3);"></span> oder mit E-Mail <span style="flex: 1; height: 1px; background: rgba(240,207,134,.3);"></span></span>
+        <span style="display: flex; align-items: center; background: #f8f3e7; border: 1px solid #a87a2e; border-radius: 4px; padding: 0 13px; min-height: 48px; font-weight: 600; font-size: 15px; color: #2f2620;">lea@beispiel.de</span>
+        <span style="display: flex; align-items: center; gap: 10px; background: #f8f3e7; border: 1px solid #a87a2e; border-radius: 4px; padding: 0 13px; min-height: 48px;">
+          <span style="flex: 1; font-weight: 700; font-size: 17px; color: #2f2620; letter-spacing: .18em;">••••••••</span>
+          <i class="ti ti-eye-off" style="color: #8d6436; font-size: 19px;"></i>
+        </span>
+        <button style="min-height: 52px; border-radius: 4px; border: 1px solid #b98a55; background: #5b4128; color: #f6ecd8; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 17px; cursor: pointer;">Anmelden</button>
+        <span style="margin-top: auto; font-size: 12px; font-weight: 600; color: #eaf6ec; line-height: 1.6; text-align: center;">Mit der Anmeldung gelten die <a href="#" style="color: #f6ecd8;">Nutzungsbedingungen</a> und die <a href="#" style="color: #f6ecd8;">Datenschutzerklärung</a>.<br>Kein Tracking · EU-Hosting</span>
+      </div>
+
+      <div style="width: 390px; min-height: 844px; border-radius: 34px; background: #241806; box-shadow: 0 20px 50px rgba(0,0,0,.55), inset 0 0 0 1px rgba(240,207,134,.25); display: flex; flex-direction: column; justify-content: flex-end; overflow: hidden;">
+        <div style="background: linear-gradient(180deg, #f8f3e7, #efe7d5); color: #2f2620; border-radius: 12px 12px 0 0; padding: 10px 0 18px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 -14px 34px rgba(0,0,0,.55); max-height: 780px;">
+          <span style="align-self: center; width: 44px; height: 4px; border-radius: 999px; background: rgba(47,38,32,.3);"></span>
+          <span style="padding: 0 18px; display: flex; flex-direction: column; gap: 4px;">
+            <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #7a4a28;">Neu in Spielwirbel</span>
+            <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 25px; line-height: 1.1;">Wähl dir ein Design.</span>
+            <span style="font-size: 13px; font-weight: 600; color: #4a4038; line-height: 1.5;">Alles bleibt an derselben Stelle. Wechseln geht jederzeit im Konto.</span>
+          </span>
+          <div style="padding: 0 18px; display: flex; flex-direction: column; gap: 10px;">
+            <sc-for list="{{ posters }}" as="p" hint-placeholder-count="7">
+              <span style="display: flex; align-items: center; gap: 12px; min-height: 76px; padding: 9px; border-radius: 6px; background: #f8f3e7; border: {{ p.border }};">
+                <span style="width: 58px; height: 58px; border-radius: 4px; background: {{ p.poster }}; flex: none; display: grid; place-items: center; overflow: hidden;"><span style="{{ p.tileStyle }}">{{ p.word }}</span></span>
+                <span style="display: flex; flex-direction: column; gap: 2px; min-width: 0;">
+                  <span style="display: flex; align-items: center; gap: 7px;"><span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 16px;">{{ p.name }}</span><span style="{{ p.badgeStyle }}">{{ p.badge }}</span></span>
+                  <span style="font-size: 12px; font-weight: 600; color: #4a4038; line-height: 1.4;">{{ p.descShort }}</span>
+                </span>
+                <i class="{{ p.radio }}" style="margin-left: auto; font-size: 22px; color: #7a4a28; flex: none;"></i>
+              </span>
+            </sc-for>
+          </div>
+          <div style="padding: 4px 18px 0; display: flex; flex-direction: column; gap: 9px;">
+            <button style="min-height: 52px; border-radius: 4px; border: 1px solid #a87a2e; background: linear-gradient(180deg, #f6d795, #d9a951); color: #3b2a12; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 17px; cursor: pointer; box-shadow: 0 3px 0 #8a6224;">Der Tisch übernehmen</button>
+            <span style="min-height: 44px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: #6b5a45;">Später entscheiden</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div data-screen-label="T5.5 Übergabe" style="max-width: 1440px; background: #4a3423; border: 1px solid rgba(240,207,134,.28); border-radius: 4px; padding: 22px 26px; display: flex; flex-direction: column; gap: 10px;">
+    <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 20px;">Was T5 entscheidet</span>
+    <span style="font-size: 15px; line-height: 1.6; color: #f0e3c8; max-width: 100ch;">Die Anmeldung ist zweigeteilt: links das Versprechen auf Filz, rechts das Formular auf Holz — <strong>Passkey steht oben</strong> als Primärweg, E-Mail und Magic Link darunter. Die <strong>Design-Wahl gehört ins Konto</strong>, nicht in die Rundeneinstellungen: ein Mensch sieht sein Design in allen Runden. Die Auswahlkarte zeigt sieben Plakate in ihrem eigenen Material, jedes mit einem Satz Beschreibung und seinen Ritualwörtern; <strong>Klassisch steht zuerst und trägt „Wie bisher“</strong>, damit niemand das Gefühl hat, etwas zu verlieren. Am Telefon wird die Karte ein Sheet mit Zeilen statt Plakaten — 58-px-Materialkachel, Name, ein Satz, Radio.</span>
+    <span style="font-size: 14px; line-height: 1.6; color: #dcb587;">Offen: T12 baut die ausgeloggten Flächen (Landing, Login-Seite, Recht, FAQ, Glossar, Kontakt, Abstimmungslink) · T14 nimmt Profil, Freunde, Posteingang und „Was ist neu“.</span>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1540}}">
+class Component extends DCLogic {
+  renderVals() {
+    const bricolage = "font-family: 'Bricolage Grotesque'; font-weight: 800;";
+
+    const sellingPoints = [
+      { icon: 'ti ti-layout-grid', label: 'Euer Regal an einem Ort — Titel und Cover von BGG' },
+      { icon: 'ti ti-tornado', label: 'Session wirbeln: auslosen, geheim werten, fertig' },
+      { icon: 'ti ti-history', label: 'Chronik und Pokale führen Buch, ohne dass ihr etwas tippt' },
+    ];
+
+    const accountRows = [
+      { label: 'Passkey', hint: 'Anmelden ohne Passwort, auf diesem Gerät', value: '1 Gerät', icon: 'ti ti-lock' },
+      { label: 'Passwort ändern', hint: 'Zuletzt geändert im März', value: '', icon: 'ti ti-lock-off' },
+      { label: 'Benachrichtigungen', hint: 'Einladungen, geteilte Sessions', value: 'E-Mail', icon: 'ti ti-mail' },
+      { label: 'Sprache', hint: 'Gilt für dich in jeder Runde', value: 'Deutsch', icon: 'ti ti-world' },
+      { label: 'Spielerkarte öffentlich', hint: 'Für Freundschaften sichtbar', value: 'an', icon: 'ti ti-user-circle' },
+    ];
+
+    // Sieben Designs, jedes im eigenen Material — Plakate für die Auswahlkarte
+    const defs = [
+      {
+        name: 'Klassisch', badge: 'Wie bisher', current: true,
+        poster: 'linear-gradient(180deg, #f6f3ec, #eae5d9)',
+        word: 'Spielwirbel', sub: 'Welche Runde spielt heute?',
+        wordStyle: "font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 25px; color: #c2410c; display: block;",
+        subStyle: 'font-weight: 600; font-size: 13px; color: #6b6358; display: block; margin-top: 8px;',
+        tileStyle: "font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 13px; color: #c2410c;",
+        desc: 'Das Spielwirbel, das ihr kennt: helles Papier, orange Akzente, nichts Neues zu lernen.',
+        words: 'Topf · Session wirbeln · Loswirbeln',
+        descShort: 'Helles Papier, orange Akzente',
+      },
+      {
+        name: 'Der Tisch', badge: 'Ausgewählt', picked: true,
+        poster: 'radial-gradient(90% 120% at 30% 10%, #2f6b4d, #1c4531 72%)',
+        word: 'Der Tisch', sub: 'Filz, Messing, Würfel',
+        wordStyle: `${bricolage} font-size: 25px; color: #f0cf86; display: block;`,
+        subStyle: 'font-weight: 600; font-size: 13px; color: #eaf6ec; display: block; margin-top: 8px;',
+        tileStyle: `${bricolage} font-size: 12px; color: #f0cf86;`,
+        desc: 'Ein Spielecafé: jede Runde ein Tisch mit Plätzen, der Topf in der Mitte, Messing an den Kanten.',
+        words: 'Der Topf · Session wirbeln · Loswirbeln',
+        descShort: 'Filz, Messing, Plätze am Tisch',
+      },
+      {
+        name: 'Das Programmheft', badge: '', 
+        poster: 'linear-gradient(180deg, #f4f1e8, #e8e3d6)',
+        word: 'EXTRA\nBLATT', sub: 'Ausgabe Nr. 24',
+        wordStyle: `${bricolage} font-size: 27px; line-height: .95; color: #1c1a17; white-space: pre-line; display: block;`,
+        subStyle: 'font-weight: 700; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #e8451c; display: block; margin-top: 8px;',
+        tileStyle: `${bricolage} font-size: 11px; line-height: .95; color: #1c1a17; white-space: pre-line; text-align: center;`,
+        desc: 'Eine Zeitung, die euer Spielen setzt: Schlagzeile, Spalten, Ausgabennummer, Zinnober als Akzent.',
+        words: 'Topf · Session wirbeln → · Loswirbeln →',
+        descShort: 'Zeitung, Schlagzeile, Spalten',
+      },
+      {
+        name: 'Die Brücke', badge: '',
+        poster: 'linear-gradient(180deg, #0b1b2a, #142c3f)',
+        word: 'MISSION', sub: 'T+ 00:14:52 · Orbit stabil',
+        wordStyle: "font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 24px; letter-spacing: .12em; color: #6fe3d0; display: block;",
+        subStyle: 'font-family: ui-monospace, Menlo, monospace; font-size: 11px; color: #9fc4d8; display: block; margin-top: 8px;',
+        tileStyle: "font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 10px; letter-spacing: .1em; color: #6fe3d0;",
+        desc: 'Die Kommandobrücke: dunkle Konsolen, Statuszeilen, Zündung statt Startknopf.',
+        words: 'Pool · Mission starten · Zündung',
+        descShort: 'Dunkle Konsolen, Statuszeilen',
+      },
+      {
+        name: 'Der Run', badge: '',
+        poster: 'linear-gradient(180deg, #120d1a, #241537)',
+        word: 'RUN', sub: '▲ ALARM · Wieder online.',
+        wordStyle: "font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 34px; letter-spacing: .04em; color: #ff4d8d; display: block;",
+        subStyle: 'font-family: ui-monospace, Menlo, monospace; font-size: 11px; color: #8be9fd; display: block; margin-top: 8px;',
+        tileStyle: "font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 14px; color: #ff4d8d;",
+        desc: 'Neon und Nacht: harte Kanten, Warnfarben, „Los.“ als Startwort.',
+        words: 'Drop · Run starten · Los.',
+        descShort: 'Neon, harte Kanten, „Los.“',
+      },
+      {
+        name: 'Forest', badge: '',
+        poster: 'linear-gradient(180deg, #ecf1e4, #d7e3c8)',
+        word: 'Forest', sub: 'Blätter, Licht, ein Stumpf',
+        wordStyle: "font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 26px; color: #356427; display: block;",
+        subStyle: 'font-weight: 600; font-size: 13px; color: #47603a; display: block; margin-top: 8px;',
+        tileStyle: "font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 12px; color: #356427;",
+        desc: 'Helles Laub: weiches Grün, Bäume am Rand, der Stumpf als Gefäß, Glühwürmchen beim Sieg.',
+        words: 'Stumpf · Session wirbeln · Loswirbeln',
+        descShort: 'Helles Laub, weiches Grün',
+      },
+      {
+        name: 'Ocean', badge: '',
+        poster: 'linear-gradient(180deg, #e4f1f5, #c3dfe9)',
+        word: 'Ocean', sub: 'Blau, Blasen, ein Wal',
+        wordStyle: "font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 26px; color: #0e6690; display: block;",
+        subStyle: 'font-weight: 600; font-size: 13px; color: #29566b; display: block; margin-top: 8px;',
+        tileStyle: "font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 12px; color: #0e6690;",
+        desc: 'Helles Wasser: ruhiges Blau, Blasen, die Muschel als Gefäß, ein Wal, der beim Sieg auftaucht.',
+        words: 'Muschel · Session wirbeln · Loswirbeln',
+        descShort: 'Helles Wasser, ruhiges Blau',
+      },
+    ];
+
+    const posters = defs.map((d) => ({
+      ...d,
+      border: d.picked ? '3px solid #a87a2e' : '1px solid rgba(47,38,32,.2)',
+      shadow: d.picked ? '0 10px 24px rgba(0,0,0,.3)' : '0 4px 12px rgba(0,0,0,.15)',
+      badgeStyle: d.badge
+        ? `font-weight: 800; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; padding: 3px 7px; border-radius: 3px; background: ${d.picked ? '#f0cf86' : '#e7dcc4'}; color: ${d.picked ? '#6b4a10' : '#6b5a45'};`
+        : 'display: none;',
+      btn: d.picked ? 'Ausgewählt' : 'Auswählen',
+      btnBg: d.picked ? 'linear-gradient(180deg, #f6d795, #d9a951)' : 'transparent',
+      btnBorder: d.picked ? '#a87a2e' : 'rgba(47,38,32,.25)',
+      btnInk: d.picked ? '#3b2a12' : '#2f2620',
+      radio: d.picked ? 'ti ti-circle-check' : 'ti ti-user-circle',
+      check: d.picked ? 'ti ti-check' : 'ti',
+      pickBorder: d.picked ? '2px solid #f0cf86' : '1px solid rgba(240,207,134,.25)',
+      pickShadow: d.picked ? '0 0 0 3px rgba(240,207,134,.25)' : 'none',
+    }));
+
+    const designs = posters.map((p) => ({
+      name: p.name, poster: p.poster, word: p.word, check: p.check,
+      wordStyle: p.tileStyle, pickBorder: p.pickBorder, pickShadow: p.pickShadow,
+    }));
+
+    return { sellingPoints, accountRows, posters, designs };
+  }
+}
+
+</script>
+</body>
+</html>

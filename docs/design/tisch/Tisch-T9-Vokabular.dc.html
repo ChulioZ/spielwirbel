@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="design_doc_mode" content="canvas">
+  <link rel="stylesheet" href="../../../public/fonts/tabler-icons.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Manrope:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #2b1e0d; font-family: 'Manrope', sans-serif; }
+    a { color: #f0cf86; text-decoration: none; display: inline-block; padding: 4px 0; }
+    a:hover { color: #fbe6b4; text-decoration: underline; }
+  </style>
+</helmet>
+<div style="display: flex; flex-direction: column; gap: 36px; padding: 44px; width: max-content; background-color: #3b2a12; background-image: repeating-linear-gradient(180deg, rgba(255,255,255,.035) 0 2px, transparent 2px 7px), radial-gradient(120% 80% at 30% 0%, rgba(240,207,134,.10), transparent 60%); color: #f6ecd8;">
+
+  <div data-screen-label="T9 Kopf" style="max-width: 1240px; display: flex; flex-direction: column; gap: 14px; background: linear-gradient(180deg, #f8f3e7, #efe7d5); color: #2f2620; border-radius: 4px; padding: 26px 30px; box-shadow: 0 14px 30px rgba(0,0,0,.45);">
+    <div style="display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;">
+      <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: #6b4210; background: #f0cf86; border-radius: 3px; padding: 5px 10px;">T9</span>
+      <h1 style="margin: 0; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 38px; line-height: 1.05;">Vokabular und Glossar — Der Tisch</h1>
+      <span style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #6b5a45;">DE + EN · baut auf T3, T4</span>
+    </div>
+    <p style="margin: 0; font-size: 16px; line-height: 1.55; max-width: 92ch; color: #4a4038;">Der Tisch nutzt <strong>kein eigenes Vokabular</strong>. Er benennt nichts um: Gefäß, Startverben und Aufdeckwort sind Spielwirbels Standardwörter, die hier nur besonders gut passen — das Thema steckt vollständig im Material. Deshalb hat der Tisch <strong>keinen Glossareintrag</strong>; erklärt werden muss nichts.</p>
+    <div style="display: flex; flex-wrap: wrap; gap: 10px; font-size: 13px; font-weight: 700;">
+      <span style="background: #e7dcc4; border-radius: 3px; padding: 6px 11px;">0 umbenannte Wörter</span>
+      <span style="background: #e7dcc4; border-radius: 3px; padding: 6px 11px;">0 umbenannte Substantive</span>
+      <span style="background: #e7dcc4; border-radius: 3px; padding: 6px 11px;">Kein Abendwort in keiner Sprache</span>
+    </div>
+  </div>
+
+  <div data-screen-label="T9.1 Thema" style="display: flex; flex-direction: column; gap: 14px;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 22px;">1 · Die Formulierungen, die der Tisch prägt — alle aus dem Standard</span>
+      <span style="flex: 1; height: 1px; background: linear-gradient(90deg, rgba(240,207,134,.5), transparent);"></span>
+    </div>
+    <div style="max-width: 1240px; background: #4a3423; border: 1px solid rgba(240,207,134,.22); border-radius: 4px; overflow: hidden;">
+      <div style="display: grid; grid-template-columns: 190px 1fr 1fr 260px; gap: 14px; padding: 12px 20px; background: #32230f; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #f0cf86;">
+        <span>Stelle</span><span>Deutsch</span><span>English</span><span>Regel</span>
+      </div>
+      <sc-for list="{{ themed }}" as="t" hint-placeholder-count="6">
+        <div style="display: grid; grid-template-columns: 190px 1fr 1fr 260px; gap: 14px; padding: 14px 20px; border-bottom: 1px solid rgba(240,207,134,.12); align-items: start;">
+          <span style="font-weight: 700; font-size: 14px; color: #e2c496;">{{ t.place }}</span>
+          <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 16px; line-height: 1.35;">{{ t.de }}</span>
+          <span style="font-family: 'Bricolage Grotesque'; font-weight: 700; font-size: 16px; line-height: 1.35; color: #f0cf86;">{{ t.en }}</span>
+          <span style="font-size: 12px; font-weight: 600; line-height: 1.5; color: #dcb587;">{{ t.rule }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div data-screen-label="T9.2 Standard" style="display: flex; flex-direction: column; gap: 14px;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 22px;">2 · Was Spielwirbel bleibt</span>
+      <span style="flex: 1; height: 1px; background: linear-gradient(90deg, rgba(240,207,134,.5), transparent);"></span>
+      <span style="font-size: 12px; color: #e2c496;">Diese Wörter stehen im Tisch genauso wie in Klassisch</span>
+    </div>
+    <div style="display: flex; flex-wrap: wrap; gap: 14px; max-width: 1240px;">
+      <sc-for list="{{ standard }}" as="g" hint-placeholder-count="6">
+        <div style="width: 396px; background: #4a3423; border: 1px solid rgba(240,207,134,.22); border-radius: 4px; padding: 16px 18px; display: flex; flex-direction: column; gap: 10px;">
+          <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: #e2c496;">{{ g.title }}</span>
+          <sc-for list="{{ g.rows }}" as="r" hint-placeholder-count="4">
+            <span style="display: flex; align-items: baseline; gap: 10px; border-bottom: 1px solid rgba(240,207,134,.1); padding-bottom: 6px;">
+              <span style="font-weight: 700; font-size: 14px; min-width: 0;">{{ r.de }}</span>
+              <span style="margin-left: auto; font-weight: 600; font-size: 13px; color: #f0cf86; text-align: right;">{{ r.en }}</span>
+            </span>
+          </sc-for>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div data-screen-label="T9.3 Sätze" style="display: flex; flex-direction: column; gap: 14px;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 22px;">3 · Die Sätze, die im Tisch stehen</span>
+      <span style="flex: 1; height: 1px; background: linear-gradient(90deg, rgba(240,207,134,.5), transparent);"></span>
+    </div>
+    <div style="display: flex; gap: 16px; flex-wrap: wrap; max-width: 1240px;">
+      <sc-for list="{{ sentences }}" as="s" hint-placeholder-count="8">
+        <div style="width: 396px; background: linear-gradient(180deg, #f8f3e7, #efe7d5); color: #2f2620; border-radius: 4px; padding: 16px 18px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 8px 18px rgba(0,0,0,.3);">
+          <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #7a4a28;">{{ s.where }}</span>
+          <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 18px; line-height: 1.3;">{{ s.de }}</span>
+          <span style="font-size: 14px; font-weight: 600; line-height: 1.45; color: #4a4038;">{{ s.en }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div data-screen-label="T9.4 Glossar" style="display: flex; gap: 16px; flex-wrap: wrap;">
+    <div style="width: 612px; background: linear-gradient(180deg, #f8f3e7, #efe7d5); color: #2f2620; border-radius: 4px; padding: 24px 26px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 14px 30px rgba(0,0,0,.4);">
+      <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 24px;">Glossarseite · Der Tisch</span>
+      <span style="font-size: 14px; font-weight: 600; line-height: 1.6; color: #4a4038;"><strong>Der Tisch benennt nichts um</strong> — das steht dort als einziger Satz. Die vier Einträge unten sind die <em>allgemeinen</em> Spielwirbel-Erklärungen und gelten in jedem Design; sie stehen hier nur, damit die Wortlaute an einer Stelle nachlesbar sind.</span>
+      <sc-for list="{{ glossaryDe }}" as="g" hint-placeholder-count="4">
+        <span style="display: flex; flex-direction: column; gap: 3px; border-top: 1px solid rgba(47,38,32,.16); padding-top: 10px;">
+          <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 16px;">{{ g.term }}</span>
+          <span style="font-size: 14px; font-weight: 600; line-height: 1.5; color: #4a4038;">{{ g.text }}</span>
+        </span>
+      </sc-for>
+    </div>
+    <div style="width: 612px; background: #4a3423; border: 1px solid rgba(240,207,134,.22); border-radius: 4px; padding: 24px 26px; display: flex; flex-direction: column; gap: 14px;">
+      <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 24px; color: #f0cf86;">Glossary · The Table</span>
+      <span style="font-size: 14px; font-weight: 600; line-height: 1.6; color: #e2c496;">The English source we hand to translation. Seven more locales follow from it; every themed word has an obvious equivalent, no puns.</span>
+      <sc-for list="{{ glossaryEn }}" as="g" hint-placeholder-count="4">
+        <span style="display: flex; flex-direction: column; gap: 3px; border-top: 1px solid rgba(240,207,134,.14); padding-top: 10px;">
+          <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 16px;">{{ g.term }}</span>
+          <span style="font-size: 14px; font-weight: 600; line-height: 1.5; color: #f0e3c8;">{{ g.text }}</span>
+        </span>
+      </sc-for>
+    </div>
+  </div>
+
+  <div data-screen-label="T9.5 Verbote" style="max-width: 1240px; display: flex; gap: 16px; flex-wrap: wrap;">
+    <div style="flex: 1; min-width: 500px; background: #4b2f26; border: 1px solid #8f2f22; border-radius: 4px; padding: 20px 22px; display: flex; flex-direction: column; gap: 10px;">
+      <span style="display: flex; align-items: center; gap: 9px;"><i class="ti ti-ban" style="color: #f59c86; font-size: 21px;"></i><span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 19px;">Was im Tisch nicht vorkommt</span></span>
+      <sc-for list="{{ forbidden }}" as="f" hint-placeholder-count="5">
+        <span style="display: flex; align-items: baseline; gap: 10px; font-size: 14px; font-weight: 600; line-height: 1.5;">
+          <span style="font-weight: 700; color: #f7c0ae;">{{ f.bad }}</span>
+          <span style="color: #f0c4b6;">→ {{ f.good }}</span>
+        </span>
+      </sc-for>
+      <span style="font-size: 12px; font-weight: 600; color: #f0c4b6; line-height: 1.55; padding-top: 4px;">„Spielabend“, „Abend“, „game night“ und jedes Wort für Tageszeit sind als Name für eine Session in allen neun Sprachen verboten — ein Test prüft das. „Heute Abend“ als Zeitangabe über einem Knopf ist erlaubt, als Bezeichnung der Sache nicht.</span>
+    </div>
+    <div style="flex: 1; min-width: 500px; background: #4a3423; border: 1px solid rgba(240,207,134,.22); border-radius: 4px; padding: 20px 22px; display: flex; flex-direction: column; gap: 10px;">
+      <span style="display: flex; align-items: center; gap: 9px;"><i class="ti ti-check" style="color: #a8dcb4; font-size: 21px;"></i><span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 19px;">Dekoration ohne Bedeutung</span></span>
+      <span style="font-size: 14px; font-weight: 600; line-height: 1.6; color: #f0e3c8;">Erlaubt, weil niemand sie braucht, um etwas zu finden: <strong>„Spielecafé · deine Tische“</strong> neben dem Wortzeichen, <strong>„Tisch 1 · Wohnzimmer“</strong> als Beschriftung bei mehreren Tischen, <strong>„Sonntag, 20.09.“</strong> als Kicker über dem Ergebnis. Nie auf einem Knopf, nie in der Schiene, nie im Dock — und keine Nummer vor einem Spiel- oder Personennamen.</span>
+      <span style="font-size: 12px; font-weight: 600; color: #dcb587; line-height: 1.55;">Der Tisch verzichtet bewusst auf dekorative Notation wie Ausgabennummern oder Statuszeilen: das Material trägt hier das Thema, nicht die Typografie.</span>
+    </div>
+  </div>
+
+  <div data-screen-label="T9.6 Übergabe" style="max-width: 1240px; background: #4a3423; border: 1px solid rgba(240,207,134,.28); border-radius: 4px; padding: 22px 26px; display: flex; flex-direction: column; gap: 10px;">
+    <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 20px;">Was T9 entscheidet</span>
+    <span style="font-size: 15px; line-height: 1.6; color: #f0e3c8; max-width: 100ch;">Der Tisch benennt <strong>nichts</strong> um: „Der Topf“, „Session wirbeln“, „Loswirbeln“ und „aufdecken“ sind die Standardwörter der App und stehen hier nur besonders passend. Dazu kommen die Skalenenden „gar nicht / unbedingt“, die überall mitlaufen, wo eine Wertung erklärt wird — auch in der Tafel („1× gar nicht“) und in der Chronik. Alles andere ist Spielwirbels Wortschatz, unverändert. Englisch: <em>The pot · Spin up a session · Spin it · reveal · not at all / absolutely</em>. Ein Glossareintrag entfällt: Designs bekommen ihn nur, wenn sie wirklich umbenennen (Brücke, Run). Für den Tisch steht auf der Glossarseite ein Satz — „Der Tisch benennt nichts um.“</span>
+    <span style="font-size: 14px; line-height: 1.6; color: #dcb587;">Offen: T12 setzt diese Wörter in FAQ und Glossarseite · die sieben weiteren Sprachen werden aus der englischen Spalte übersetzt.</span>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1340}}">
+class Component extends DCLogic {
+  renderVals() {
+    const themed = [
+      { place: 'Das Gefäß', de: 'Der Topf · „9 Spiele im Topf“', en: 'The pot · “9 games in the pot”', rule: 'Das Wort „Spiele“ bleibt im Gefäß stehen. Der Topf ist gezeichnet, deshalb versteht man ihn ohne Glossar.' },
+      { place: 'Zählfrage', de: 'Wie viele wirbeln?', en: 'How many do we spin?', rule: 'Ersetzt die Standardfrage nach der Anzahl; steht direkt am Stepper.' },
+      { place: 'Hauptaktion im Hub', de: 'Session wirbeln', en: 'Spin up a session', rule: 'Mit Wirbel-Glyphe, an der Stelle der Primäraktion. „Neue Session“ bleibt als Seitentitel.' },
+      { place: 'Startknopf im Setup', de: 'Loswirbeln', en: 'Spin it', rule: 'Der eine Knopf am Ende des Setups.' },
+      { place: 'Wertungsfrage', de: 'Wie gern spielst du das heute?', en: 'How much do you want to play this today?', rule: 'Gesichter und 1–5 bleiben; die Frage ist die einzige themennahe Formulierung auf der Karte.' },
+      { place: 'Skalenenden', de: 'gar nicht · unbedingt', en: 'not at all · absolutely', rule: 'Läuft überall mit: Tafel, Score-Erklärung, Chronik. Veto heißt „kein Veto“ in der Tafel.' },
+      { place: 'Aufdecken', de: 'aufdecken · „Alle haben gewertet — aufdecken“', en: 'reveal · “Everyone has rated — reveal”', rule: 'Das Wort für den Moment, in dem die Wertungen sichtbar werden.' },
+    ];
+
+    const standard = [
+      {
+        title: 'Gruppe, Regal, Session',
+        rows: [
+          { de: 'Runde · Neue Runde gründen', en: 'Round · Start a new round' },
+          { de: 'Regal · Spiel / Spiele', en: 'Shelf · Game / games' },
+          { de: 'Session · Abstimmung', en: 'Session · Vote' },
+          { de: 'Sieger · hat gewonnen · Gespielt', en: 'Winner · won · Played' },
+        ],
+      },
+      {
+        title: 'Navigation',
+        rows: [
+          { de: 'Start · Regal · Chronik · Pokale', en: 'Start · Shelf · Chronicle · Trophies' },
+          { de: 'Einstellungen · Design · Tags · Einladen', en: 'Settings · Design · Tags · Invite' },
+          { de: 'Zurück', en: 'Back' },
+          { de: 'Meine Runden', en: 'My rounds' },
+        ],
+      },
+      {
+        title: 'Menschen',
+        rows: [
+          { de: 'Mitglieder · Plätze · Gäste', en: 'Members · Seats · Guests' },
+          { de: 'Platz dazu', en: 'Add a seat' },
+          { de: 'Wer spielt mit?', en: 'Who’s playing?' },
+          { de: 'spielt mit · heute nicht dabei', en: 'playing · not in today' },
+        ],
+      },
+      {
+        title: 'Regal-Aktionen',
+        rows: [
+          { de: 'Spiel hinzufügen', en: 'Add a game' },
+          { de: 'Von BGG übernehmen', en: 'Import from BGG' },
+          { de: 'Gehört Lea', en: 'Lea’s copy' },
+          { de: 'Auswählen · Filter · Sortiert', en: 'Select · Filter · Sorted' },
+        ],
+      },
+      {
+        title: 'Nicht im Regal',
+        rows: [
+          { de: 'Nicht im Regal', en: 'Off the shelf' },
+          { de: 'Aussortiert · Durchgespielt', en: 'Let go · Finished' },
+          { de: 'Wunschliste', en: 'Wish list' },
+          { de: 'Könnte euch gefallen', en: 'You might like' },
+        ],
+      },
+      {
+        title: 'Hub-Blöcke und Korrekturen',
+        rows: [
+          { de: 'Kümmerliste · Rundenpuls', en: 'To-do list · Round pulse' },
+          { de: 'Wie wär’s mit · Zuletzt gespielt', en: 'How about · Last played' },
+          { de: 'Sieger ändern · Anderes Spiel', en: 'Change winner · Different game' },
+          { de: 'Zurücksetzen · Noch eine Runde · Teilen', en: 'Reset · One more round · Share' },
+        ],
+      },
+    ];
+
+    const sentences = [
+      { where: 'Lobby', de: 'Schön, dass ihr da seid. Welche Runde spielt heute?', en: 'Good to see you. Which round is playing today?' },
+      { where: 'Setup', de: 'Platz antippen = mitspielen', en: 'Tap a seat to play' },
+      { where: 'Topf', de: '3 weitere fehlen, weil ihre Besitzer nicht mitspielen', en: '3 more are missing because their owners aren’t playing' },
+      { where: 'Wertungskarte', de: 'Geheim · die anderen schauen weg', en: 'Secret · everyone else looks away' },
+      { where: 'Wertungskarte', de: 'Die anderen Wertungen bleiben verdeckt, bis alle gewertet haben.', en: 'The other ratings stay hidden until everyone has rated.' },
+      { where: 'Ergebnis', de: '„Nordlichter“ wurde gespielt. Jonas hat gewonnen.', en: '“Nordlichter” was played. Jonas won.' },
+      { where: 'Leeres Regal', de: 'Der Topf ist noch leer. Gewirbelt wird aus dem Regal.', en: 'The pot is still empty. We spin from the shelf.' },
+      { where: 'Gesperrter Knopf', de: 'Session wirbeln · ab 2 Spielen', en: 'Spin up a session · from 2 games on' },
+    ];
+
+    const glossaryDe = [
+      { term: 'Der Topf', text: 'Im Tisch heißt der Auslosetopf „Der Topf“ — er liegt in der Mitte des Tisches und enthält die Spiele, aus denen gewirbelt wird. Was drin liegt, bestimmen die Filter und wer mitspielt.' },
+      { term: 'Session wirbeln · Loswirbeln', text: '„Session wirbeln“ startet eine neue Session; „Loswirbeln“ ist der Knopf, der am Ende des Setups die Spiele zieht. Die Seite selbst heißt weiter „Neue Session“.' },
+      { term: 'Wie gern spielst du das heute?', text: 'Die Frage auf der Wertungskarte. Gewertet wird geheim mit den fünf Gesichtern von 1 („gar nicht“) bis 5 („unbedingt“). Ein 1er wird in der Tafel als „1× gar nicht“ ausgewiesen.' },
+      { term: 'Aufdecken', text: 'Wenn alle gewertet haben, wird aufgedeckt: erst dann sind die Wertungen der anderen sichtbar und die Tafel zeigt Sieger und Score.' },
+    ];
+
+    const glossaryEn = [
+      { term: 'The pot', text: 'In The Table the draw pot is simply “the pot” — it sits in the middle of the table and holds the games we spin from. Filters and who is playing decide what goes in.' },
+      { term: 'Spin up a session · Spin it', text: '“Spin up a session” starts a new session; “Spin it” is the button that draws the games at the end of setup. The page itself is still called “New session”.' },
+      { term: 'How much do you want to play this today?', text: 'The question on the rating card. Rating is secret, with the five faces from 1 (“not at all”) to 5 (“absolutely”). A 1 is shown in the results table as “1× not at all”.' },
+      { term: 'Reveal', text: 'Once everyone has rated, the ratings are revealed: only then are the others’ ratings visible and the table shows the winner and the score.' },
+    ];
+
+    const forbidden = [
+      { bad: 'Spielabend, Abend, game night', good: 'Session' },
+      { bad: 'Am Tisch (für die Mitgliederliste)', good: 'Mitglieder' },
+      { bad: 'Neuen Tisch aufstellen', good: 'Neue Runde gründen' },
+      { bad: 'Zum Tisch (als Navigation)', good: 'Start' },
+      { bad: 'Wer sitzt heute am Tisch?', good: 'Wer spielt mit?' },
+      { bad: 'Partie, Partien', good: 'Session, Sessions' },
+    ];
+
+    return { themed, standard, sentences, glossaryDe, glossaryEn, forbidden };
+  }
+}
+
+</script>
+</body>
+</html>

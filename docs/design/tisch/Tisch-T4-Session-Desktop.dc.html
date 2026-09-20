@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="design_doc_mode" content="canvas">
+  <link rel="stylesheet" href="../../../public/fonts/tabler-icons.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Manrope:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #2b1e0d; font-family: 'Manrope', sans-serif; }
+    a { color: #f0cf86; text-decoration: none; display: inline-block; padding: 4px 0; }
+    a:hover { color: #fbe6b4; text-decoration: underline; }
+  </style>
+</helmet>
+<div style="display: flex; flex-direction: column; gap: 44px; padding: 44px; width: max-content; background-color: #3b2a12; background-image: repeating-linear-gradient(180deg, rgba(255,255,255,.035) 0 2px, transparent 2px 7px), radial-gradient(120% 80% at 30% 0%, rgba(240,207,134,.10), transparent 60%); color: #f6ecd8;">
+
+  <div data-screen-label="T4 Kopf" style="max-width: 1440px; display: flex; flex-direction: column; gap: 14px; background: linear-gradient(180deg, #f8f3e7, #efe7d5); color: #2f2620; border-radius: 4px; padding: 26px 30px; box-shadow: 0 14px 30px rgba(0,0,0,.45);">
+    <div style="display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;">
+      <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: #6b4210; background: #f0cf86; border-radius: 3px; padding: 5px 10px;">T4</span>
+      <h1 style="margin: 0; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 38px; line-height: 1.05;">Session-Screens, Desktop 1440 — Der Tisch</h1>
+      <span style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #6b5a45;">baut auf T1–T3</span>
+    </div>
+    <p style="margin: 0; font-size: 16px; line-height: 1.55; max-width: 92ch; color: #4a4038;">Der Ablauf einer Session am großen Bildschirm: Wer spielt mit und was liegt im {{ gefaessWort }} · die Wertungskarte, wenn ein Gerät herumgeht · die Live-Abstimmung, wenn jede Person ihr eigenes Gerät nimmt · das Ergebnis · und das Ergebnis über mehrere Tische. Die Schiene bleibt an ihrem Platz, <strong>außer auf der Wertungskarte</strong> — die läuft wie am Telefon als Vollbild, damit niemand mitliest.</p>
+  </div>
+
+  <div data-screen-label="T4.1 Setup" style="display: flex; flex-direction: column; gap: 10px;">
+    <span style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #dcb587;">1 · Neue Session — Plätze links, {{ gefaessWort }} rechts, eine Aktion</span>
+    <div style="width: 1440px; min-height: 900px; border-radius: 4px; background: #3b2a12; box-shadow: 0 20px 50px rgba(0,0,0,.5); display: flex; flex-direction: column; overflow: hidden;">
+      <div style="height: 60px; display: flex; align-items: center; gap: 18px; padding: 0 28px; background: #2f2109; border-bottom: 1px solid rgba(240,207,134,.25); flex: none;">
+        <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 15px; letter-spacing: .14em; text-transform: uppercase; color: #3b2a12; background: linear-gradient(180deg, #f6d795, #d9a951); border-radius: 3px; padding: 5px 11px;">Spielwirbel</span>
+        <span style="margin-left: auto; display: flex; align-items: center; gap: 14px;">
+          <span style="display: inline-flex; align-items: center; gap: 6px; font-weight: 700; font-size: 13px; border: 1px solid rgba(240,207,134,.45); border-radius: 999px; padding: 5px 12px;">Deutsch <i class="ti ti-chevron-down" style="font-size: 15px; color: #f0cf86;"></i></span>
+          <i class="ti ti-mail" style="font-size: 22px; color: #f0cf86;"></i>
+          <span style="display: inline-flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px;"><span style="width: 32px; height: 32px; border-radius: 50%; background: #198663; color: #fff; display: grid; place-items: center; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 12px;">LE</span> Lea</span>
+        </span>
+      </div>
+      <div style="display: flex; flex: 1;">
+        <div style="width: 216px; flex: none; background: #32230f; border-right: 3px solid #9a6d2b; padding: 22px 16px; display: flex; flex-direction: column; gap: 18px;">
+          <span style="display: flex; flex-direction: column; gap: 3px;">
+            <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 21px; line-height: 1.1;">Donnerstagsrunde</span>
+            <span style="font-size: 12px; font-weight: 700; color: #e2c496;">6 Mitglieder · 12 Spiele</span>
+          </span>
+          <div style="display: flex; flex-direction: column; gap: 7px;">
+            <sc-for list="{{ rail }}" as="r" hint-placeholder-count="5">
+              <span style="display: flex; align-items: center; gap: 11px; min-height: 44px; padding: 0 12px; border-radius: 3px; background: {{ r.bg }}; border: {{ r.border }}; color: {{ r.ink }}; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 15px;"><i class="{{ r.icon }}" style="font-size: 20px;"></i> {{ r.label }}</span>
+            </sc-for>
+          </div>
+        </div>
+        <div style="flex: 1; padding: 26px 28px 30px; display: flex; flex-direction: column; gap: 20px;">
+          <div style="display: flex; align-items: baseline; gap: 14px;">
+            <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 32px;">Neue Session</span>
+            <span style="font-weight: 700; font-size: 14px; color: #e2c496;">Schritt 1 von 3 · Donnerstag, 20.09.</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 520px 1fr; gap: 22px; align-items: start;">
+            <div style="background: #4a3423; border: 1px solid rgba(240,207,134,.22); border-radius: 4px; padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+              <span style="display: flex; align-items: baseline; gap: 10px;"><span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 23px;">Wer spielt mit?</span><span style="font-size: 13px; font-weight: 600; color: #e2c496;">Platz antippen = mitspielen</span></span>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 9px;">
+                <sc-for list="{{ seats }}" as="s" hint-placeholder-count="6">
+                  <span style="display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 0 12px; border-radius: 4px; background: {{ s.bg }}; border: {{ s.border }};">
+                    <span style="position: relative; width: 38px; height: 38px; flex: none;">
+                      <span style="position: absolute; inset: 0; border-radius: 50%; background: {{ s.dot }}; color: #fff; display: grid; place-items: center; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 14px;">{{ s.ini }}</span>
+                      <i class="{{ s.away }}" style="position: absolute; right: -4px; bottom: -3px; width: 18px; height: 18px; border-radius: 50%; background: #3b2a12; border: 1px solid #b98a55; color: #f0cf86; font-size: 11px; display: {{ s.awayShow }}; place-items: center;"></i>
+                    </span>
+                    <span style="display: flex; flex-direction: column;">
+                      <span style="font-weight: 700; font-size: 15px;">{{ s.name }}</span>
+                      <span style="font-size: 12px; font-weight: 600; color: {{ s.stateInk }};">{{ s.state }}</span>
+                    </span>
+                    <i class="{{ s.check }}" style="margin-left: auto; color: #f0cf86; font-size: 21px;"></i>
+                  </span>
+                </sc-for>
+              </div>
+              <div style="display: flex; gap: 9px;">
+                <span style="flex: 1; min-height: 44px; display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: 4px; background: #5b4128; border: 1px solid #b98a55; font-weight: 700; font-size: 14px;"><i class="ti ti-user-plus" style="color: #f0cf86;"></i> Jemand ohne Spiele?</span>
+                <span style="flex: 1; min-height: 44px; display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: 4px; background: #5b4128; border: 1px solid #b98a55; font-weight: 700; font-size: 14px;"><i class="ti ti-users" style="color: #f0cf86;"></i> Teams</span>
+                <span style="flex: 1; min-height: 44px; display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: 4px; background: #5b4128; border: 1px solid #b98a55; font-weight: 700; font-size: 14px;"><i class="ti ti-arrows-split" style="color: #f0cf86;"></i> Mehrere Tische</span>
+              </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+              <div style="background: #4a3423; border: 1px solid rgba(240,207,134,.22); border-radius: 4px; padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+                <span style="display: flex; align-items: baseline; gap: 10px;">
+                  <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 23px;">{{ gefaessWortLang }}</span>
+                  <span style="font-size: 14px; font-weight: 700; color: #e2c496;">9 Spiele im {{ gefaessWort }}</span>
+                  <span style="margin-left: auto; display: inline-flex; align-items: center; gap: 7px; min-height: 36px; padding: 0 12px; border-radius: 4px; background: #5b4128; border: 1px solid #b98a55; font-weight: 700; font-size: 13px;"><i class="ti ti-filter" style="color: #f0cf86;"></i> Filter <span style="font-weight: 800; font-size: 11px; color: #3b2a12; background: #f0cf86; border-radius: 999px; padding: 1px 7px;">2</span></span>
+                </span>
+                <span style="display: flex; gap: 8px; flex-wrap: wrap;">
+                  <span style="display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 0 13px; border-radius: 999px; background: linear-gradient(180deg, #f6d795, #d9a951); border: 1px solid #a87a2e; color: #3b2a12; font-weight: 700; font-size: 13px;"><i class="ti ti-users"></i> 4 Spieler <i class="ti ti-x" style="font-size: 14px;"></i></span>
+                  <span style="display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 0 13px; border-radius: 999px; background: linear-gradient(180deg, #f6d795, #d9a951); border: 1px solid #a87a2e; color: #3b2a12; font-weight: 700; font-size: 13px;"><i class="ti ti-clock"></i> unter 60 min <i class="ti ti-x" style="font-size: 14px;"></i></span>
+                  <span style="display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 0 13px; border-radius: 999px; background: #5b4128; border: 1px solid #b98a55; font-weight: 700; font-size: 13px;"><i class="ti ti-star" style="color: #f0cf86;"></i> Score ab 4,0</span>
+                </span>
+                <div style="display: flex; gap: 11px; flex-wrap: wrap;">
+                  <sc-for list="{{ pot }}" as="p" hint-placeholder-count="9">
+                    <span style="width: 88px; display: flex; flex-direction: column; gap: 6px;">
+                      <span style="width: 88px; height: {{ p.h }}; border-radius: 3px; background: {{ p.bg }}; box-shadow: 0 5px 11px rgba(0,0,0,.45); display: flex; align-items: flex-end; padding: 8px;"><span style="{{ p.titleStyle }}">{{ p.coverTitle }}</span></span>
+                      <span style="font-size: 11px; font-weight: 700; line-height: 1.25;">{{ p.title }}</span>
+                    </span>
+                  </sc-for>
+                </div>
+                <span style="font-size: 13px; font-weight: 600; color: #dcb587;">3 weitere fehlen, weil ihre Besitzer nicht mitspielen</span>
+              </div>
+              <div style="background: #4a3423; border: 1px solid rgba(240,207,134,.22); border-radius: 4px; padding: 16px 20px; display: flex; align-items: center; gap: 20px;">
+                <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 19px;">Wie viele wirbeln?</span>
+                <span style="display: flex; align-items: center; background: #5b4128; border: 1px solid #b98a55; border-radius: 4px; overflow: hidden;">
+                  <span style="width: 48px; height: 48px; display: grid; place-items: center; color: #f0cf86; font-size: 22px;"><i class="ti ti-minus"></i></span>
+                  <span style="width: 56px; text-align: center; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 24px; font-variant-numeric: tabular-nums;">3</span>
+                  <span style="width: 48px; height: 48px; display: grid; place-items: center; color: #f0cf86; font-size: 22px;"><i class="ti ti-plus"></i></span>
+                </span>
+                <button style="margin-left: auto; min-height: 60px; padding: 0 30px; display: inline-flex; align-items: center; gap: 12px; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 23px; color: #3b2a12; background: linear-gradient(180deg, #f6d795, #d9a951); border: 1px solid #a87a2e; border-radius: 4px; cursor: pointer; box-shadow: 0 3px 0 #8a6224, 0 12px 24px rgba(0,0,0,.4);"><i class="ti ti-tornado" style="font-size: 26px;"></i> Loswirbeln</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div data-screen-label="T4.2 Wertungskarte" style="display: flex; flex-direction: column; gap: 10px;">
+    <span style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #dcb587;">2 · Wertungskarte, ein Gerät geht herum — Vollbild ohne Schiene</span>
+    <div style="width: 1440px; min-height: 900px; border-radius: 4px; background: radial-gradient(90% 120% at 50% -10%, #2f6b4d, #1c4531 72%); box-shadow: 0 20px 50px rgba(0,0,0,.5); display: flex; flex-direction: column; padding: 34px 40px 40px; gap: 26px; overflow: hidden;">
+      <div style="display: flex; align-items: center; gap: 16px;">
+        <span style="width: 44px; height: 44px; display: grid; place-items: center; color: #f0cf86; margin-left: -8px;"><i class="ti ti-chevron-left" style="font-size: 26px;"></i></span>
+        <span style="display: flex; flex-direction: column;">
+          <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 22px;">Lea wertet</span>
+          <span style="font-size: 13px; font-weight: 700; color: #cfe6d6;">Spiel 2 von 3 · Person 1 von 4 · Donnerstagsrunde</span>
+        </span>
+        <span style="margin-left: auto; display: flex; align-items: center; gap: 14px;">
+          <span style="display: flex; gap: 6px;">
+            <span style="width: 13px; height: 13px; border-radius: 50%; background: #f0cf86;"></span>
+            <span style="width: 13px; height: 13px; border-radius: 50%; background: #f0cf86; box-shadow: 0 0 0 4px rgba(240,207,134,.3);"></span>
+            <span style="width: 13px; height: 13px; border-radius: 50%; background: rgba(240,207,134,.3); border: 1px solid #f0cf86;"></span>
+          </span>
+          <span style="display: inline-flex; align-items: center; gap: 7px; font-weight: 700; font-size: 13px; color: #f6ecd8; border: 1px solid rgba(240,207,134,.5); border-radius: 999px; padding: 6px 13px;"><i class="ti ti-eye-off" style="color: #f0cf86;"></i> Geheim · die anderen schauen weg</span>
+        </span>
+      </div>
+      <div style="align-self: center; width: 920px; background: linear-gradient(180deg, #f8f3e7, #efe7d5); color: #2f2620; border-radius: 8px; padding: 30px 34px; display: flex; flex-direction: column; gap: 22px; box-shadow: 0 24px 52px rgba(0,0,0,.5);">
+        <div style="display: flex; align-items: center; gap: 26px;">
+          <span style="width: 176px; height: 232px; border-radius: 3px; background: linear-gradient(150deg, #7a5b2f, #42301a); flex: none; box-shadow: 0 8px 18px rgba(0,0,0,.4); display: flex; align-items: flex-start; padding: 16px;"><span style="font-weight: 700; font-size: 17px; letter-spacing: .02em; text-transform: uppercase; color: #f3e3c6;">Kartographen</span></span>
+          <span style="display: flex; flex-direction: column; gap: 8px;">
+            <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 44px; line-height: 1.02;">Kartographen</span>
+            <span style="font-size: 16px; font-weight: 600; color: #6b5a45;">2–5 Spieler · 45 min · Gehört Jonas</span>
+            <span style="font-family: 'Bricolage Grotesque'; font-weight: 700; font-size: 25px; line-height: 1.2; padding-top: 6px;">Wie gern spielst du das heute?</span>
+          </span>
+        </div>
+        <div style="display: flex; gap: 12px;">
+          <sc-for list="{{ voteCards }}" as="v" hint-placeholder-count="5">
+            <span style="flex: 1; min-height: 132px; border-radius: 4px; background: {{ v.bg }}; border: {{ v.border }}; box-shadow: {{ v.shadow }}; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px; cursor: pointer;">
+              <i class="{{ v.face }}" style="font-size: 42px; color: {{ v.ink }};"></i>
+              <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 23px; color: {{ v.ink }};">{{ v.n }}</span>
+              <span style="font-size: 13px; font-weight: 700; color: {{ v.ink }};">{{ v.label }}</span>
+            </span>
+          </sc-for>
+        </div>
+        <div style="display: flex; align-items: center; gap: 16px;">
+          <span style="font-size: 14px; font-weight: 600; color: #4a4038;">Die anderen Wertungen bleiben verdeckt, bis alle gewertet haben.</span>
+          <button style="margin-left: auto; min-height: 52px; padding: 0 30px; border-radius: 4px; border: 1px solid #a87a2e; background: linear-gradient(180deg, #f6d795, #d9a951); color: #3b2a12; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 20px; cursor: pointer; box-shadow: 0 3px 0 #8a6224;">Weiter</button>
+        </div>
+      </div>
+      <span style="align-self: center; font-size: 13px; font-weight: 600; color: #cfe6d6;">Danach das Gerät weitergeben — Jonas ist als nächster dran.</span>
+    </div>
+  </div>
+
+  <div data-screen-label="T4.3 Live-Abstimmung" style="display: flex; flex-direction: column; gap: 10px;">
+    <span style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #dcb587;">3 · Live-Abstimmung — jede Person am eigenen Gerät</span>
+    <div style="width: 1440px; min-height: 900px; border-radius: 4px; background: #3b2a12; box-shadow: 0 20px 50px rgba(0,0,0,.5); display: flex; flex-direction: column; overflow: hidden;">
+      <div style="height: 60px; display: flex; align-items: center; gap: 18px; padding: 0 28px; background: #2f2109; border-bottom: 1px solid rgba(240,207,134,.25); flex: none;">
+        <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 15px; letter-spacing: .14em; text-transform: uppercase; color: #3b2a12; background: linear-gradient(180deg, #f6d795, #d9a951); border-radius: 3px; padding: 5px 11px;">Spielwirbel</span>
+        <span style="margin-left: auto; display: flex; align-items: center; gap: 14px;">
+          <span style="display: inline-flex; align-items: center; gap: 6px; font-weight: 700; font-size: 13px; border: 1px solid rgba(240,207,134,.45); border-radius: 999px; padding: 5px 12px;">Deutsch <i class="ti ti-chevron-down" style="font-size: 15px; color: #f0cf86;"></i></span>
+          <i class="ti ti-mail" style="font-size: 22px; color: #f0cf86;"></i>
+          <span style="display: inline-flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px;"><span style="width: 32px; height: 32px; border-radius: 50%; background: #198663; color: #fff; display: grid; place-items: center; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 12px;">LE</span> Lea</span>
+        </span>
+      </div>
+      <div style="display: flex; flex: 1;">
+        <div style="width: 216px; flex: none; background: #32230f; border-right: 3px solid #9a6d2b; padding: 22px 16px; display: flex; flex-direction: column; gap: 18px;">
+          <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 21px; line-height: 1.1;">Donnerstagsrunde</span>
+          <div style="display: flex; flex-direction: column; gap: 7px;">
+            <sc-for list="{{ rail }}" as="r" hint-placeholder-count="5">
+              <span style="display: flex; align-items: center; gap: 11px; min-height: 44px; padding: 0 12px; border-radius: 3px; background: {{ r.bg }}; border: {{ r.border }}; color: {{ r.ink }}; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 15px;"><i class="{{ r.icon }}" style="font-size: 20px;"></i> {{ r.label }}</span>
+            </sc-for>
+          </div>
+        </div>
+        <div style="flex: 1; padding: 26px 28px 30px; display: flex; flex-direction: column; gap: 22px;">
+          <div style="display: flex; align-items: baseline; gap: 14px;">
+            <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 32px;">Abstimmung läuft</span>
+            <span style="font-weight: 700; font-size: 15px; color: #e2c496;">3 Spiele · 4 Personen · geheim</span>
+            <span style="margin-left: auto; display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 14px; border-radius: 4px; background: #5b4128; border: 1px solid #b98a55; font-weight: 700; font-size: 14px;"><i class="ti ti-refresh" style="color: #f0cf86;"></i> Aktualisiert sich selbst</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 380px; gap: 22px; align-items: start;">
+            <div style="display: flex; flex-direction: column; gap: 14px;">
+              <sc-for list="{{ liveRows }}" as="l" hint-placeholder-count="4">
+                <div style="background: #4a3423; border: 1px solid rgba(240,207,134,.22); border-radius: 4px; padding: 16px 18px; display: flex; align-items: center; gap: 16px;">
+                  <span style="width: 48px; height: 48px; border-radius: 50%; background: {{ l.bg }}; border: 2px solid rgba(240,207,134,.7); color: #fff; display: grid; place-items: center; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 17px; flex: none;">{{ l.ini }}</span>
+                  <span style="display: flex; flex-direction: column; gap: 3px;">
+                    <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 19px;">{{ l.name }}</span>
+                    <span style="font-size: 13px; font-weight: 600; color: {{ l.stateInk }};">{{ l.state }}</span>
+                  </span>
+                  <span style="margin-left: auto; display: flex; align-items: center; gap: 8px;">
+                    <sc-for list="{{ l.dots }}" as="d" hint-placeholder-count="3">
+                      <span style="width: 30px; height: 30px; border-radius: 4px; background: {{ d.bg }}; border: {{ d.border }}; display: grid; place-items: center; color: {{ d.ink }}; font-size: 15px;"><i class="{{ d.icon }}"></i></span>
+                    </sc-for>
+                    <span style="width: 122px; text-align: right; font-weight: 700; font-size: 13px; color: #e2c496;">{{ l.progress }}</span>
+                  </span>
+                </div>
+              </sc-for>
+              <div style="background: #4a3423; border: 1px dashed rgba(240,207,134,.4); border-radius: 4px; padding: 16px 18px; display: flex; align-items: center; gap: 14px;">
+                <i class="ti ti-user-plus" style="font-size: 24px; color: #f0cf86;"></i>
+                <span style="display: flex; flex-direction: column;">
+                  <span style="font-weight: 700; font-size: 15px;">Mia stimmt ohne Konto ab</span>
+                  <span style="font-size: 12px; font-weight: 600; color: #dcb587;">Über den Link · sieht nur die Karten, nichts von der Runde</span>
+                </span>
+              </div>
+            </div>
+            <div style="background: linear-gradient(180deg, #f8f3e7, #efe7d5); color: #2f2620; border-radius: 4px; padding: 20px; display: flex; flex-direction: column; gap: 14px; align-items: center; box-shadow: 0 14px 30px rgba(0,0,0,.45);">
+              <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 19px; align-self: flex-start;">Am eigenen Gerät mitstimmen</span>
+              <span style="width: 200px; height: 200px; background: #2f2620; border-radius: 4px; display: grid; place-items: center; color: #f8f3e7; font-family: ui-monospace, Menlo, monospace; font-size: 12px; text-align: center; line-height: 1.5;">QR-Code<br>(zur Laufzeit erzeugt)</span>
+              <span style="align-self: stretch; display: flex; align-items: center; gap: 9px; background: #fffaf0; border: 1px solid #a87a2e; border-radius: 4px; padding: 0 12px; min-height: 44px; font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #4a4038;">spielwirbel.app/vote/8f3q<i class="ti ti-copy" style="margin-left: auto; font-size: 18px; color: #7a4a28;"></i></span>
+              <span style="font-size: 13px; font-weight: 600; color: #4a4038; line-height: 1.5;">Der Link braucht kein Konto. Wer ihn hat, wertet die drei Spiele — und sieht sonst nichts von der Runde.</span>
+              <button style="align-self: stretch; min-height: 48px; border-radius: 4px; border: 1px solid #a87a2e; background: linear-gradient(180deg, #f6d795, #d9a951); color: #3b2a12; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 17px; cursor: pointer; box-shadow: 0 3px 0 #8a6224;">Ergebnis zeigen</button>
+              <span style="font-size: 12px; font-weight: 600; color: #8f2f22;">Erst möglich, wenn alle gewertet haben — 1 Person fehlt.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div data-screen-label="T4.4 Ergebnis" style="display: flex; flex-direction: column; gap: 10px;">
+    <span style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #dcb587;">4 · Ergebnis — Standardsatz, Tafel mit Goldzeile, Aktionen</span>
+    <div style="width: 1440px; min-height: 900px; border-radius: 4px; background: #3b2a12; box-shadow: 0 20px 50px rgba(0,0,0,.5); display: flex; flex-direction: column; overflow: hidden;">
+      <div style="height: 60px; display: flex; align-items: center; gap: 18px; padding: 0 28px; background: #2f2109; border-bottom: 1px solid rgba(240,207,134,.25); flex: none;">
+        <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 15px; letter-spacing: .14em; text-transform: uppercase; color: #3b2a12; background: linear-gradient(180deg, #f6d795, #d9a951); border-radius: 3px; padding: 5px 11px;">Spielwirbel</span>
+        <span style="margin-left: auto; display: flex; align-items: center; gap: 14px;">
+          <span style="display: inline-flex; align-items: center; gap: 6px; font-weight: 700; font-size: 13px; border: 1px solid rgba(240,207,134,.45); border-radius: 999px; padding: 5px 12px;">Deutsch <i class="ti ti-chevron-down" style="font-size: 15px; color: #f0cf86;"></i></span>
+          <i class="ti ti-mail" style="font-size: 22px; color: #f0cf86;"></i>
+          <span style="display: inline-flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px;"><span style="width: 32px; height: 32px; border-radius: 50%; background: #198663; color: #fff; display: grid; place-items: center; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 12px;">LE</span> Lea</span>
+        </span>
+      </div>
+      <div style="display: flex; flex: 1;">
+        <div style="width: 216px; flex: none; background: #32230f; border-right: 3px solid #9a6d2b; padding: 22px 16px; display: flex; flex-direction: column; gap: 18px;">
+          <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 21px; line-height: 1.1;">Donnerstagsrunde</span>
+          <div style="display: flex; flex-direction: column; gap: 7px;">
+            <sc-for list="{{ rail }}" as="r" hint-placeholder-count="5">
+              <span style="display: flex; align-items: center; gap: 11px; min-height: 44px; padding: 0 12px; border-radius: 3px; background: {{ r.bg }}; border: {{ r.border }}; color: {{ r.ink }}; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 15px;"><i class="{{ r.icon }}" style="font-size: 20px;"></i> {{ r.label }}</span>
+            </sc-for>
+          </div>
+        </div>
+        <div style="flex: 1; display: flex; flex-direction: column;">
+          <div style="background: radial-gradient(80% 160% at 30% -40%, #2f6b4d, #1c4531 74%); border-bottom: 5px solid #9a6d2b; padding: 26px 28px 24px; display: flex; align-items: flex-end; gap: 28px;">
+            <span style="display: flex; flex-direction: column; gap: 8px;">
+              <span style="display: inline-flex; align-items: center; gap: 8px; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: #f6ecd8;"><i class="ti ti-confetti" style="font-size: 16px; color: #f0cf86;"></i> Sonntag, 20.09. · Donnerstagsrunde</span>
+              <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 46px; line-height: 1.06;">„Nordlichter“ wurde gespielt. <span style="color: #f0cf86;">Jonas</span> hat gewonnen.</span>
+            </span>
+            <span style="margin-left: auto; display: flex; gap: 12px; flex: none;">
+              <sc-for list="{{ present }}" as="p" hint-placeholder-count="4">
+                <span style="display: flex; flex-direction: column; align-items: center; gap: 5px; width: 64px;">
+                  <span style="position: relative; width: 50px; height: 50px;">
+                    <span style="position: absolute; inset: 0; border-radius: 50%; background: {{ p.bg }}; border: 2px solid #f0cf86; color: #fff; display: grid; place-items: center; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 17px;">{{ p.ini }}</span>
+                    <i class="{{ p.crown }}" style="position: absolute; left: 50%; top: -15px; transform: translateX(-50%); font-size: 17px; color: #f0cf86;"></i>
+                  </span>
+                  <span style="font-size: 12px; font-weight: 700;">{{ p.name }}</span>
+                </span>
+              </sc-for>
+            </span>
+          </div>
+          <div style="padding: 24px 28px 30px; display: flex; flex-direction: column; gap: 18px;">
+            <div style="display: grid; grid-template-columns: 1fr 330px; gap: 22px; align-items: start;">
+              <div style="background: linear-gradient(180deg, #f8f3e7, #efe7d5); color: #2f2620; border-radius: 4px; overflow: hidden; box-shadow: 0 12px 26px rgba(0,0,0,.4);">
+                <div style="display: grid; grid-template-columns: 54px 1fr 210px 96px 116px; align-items: center; gap: 12px; padding: 11px 18px; background: #3b2a12; color: #f0cf86; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 12px; letter-spacing: .12em; text-transform: uppercase;">
+                  <span>Platz</span><span>Spiel</span><span>Wertungen</span><span style="text-align: right;">Score</span><span></span>
+                </div>
+                <sc-for list="{{ tafel }}" as="row" hint-placeholder-count="3">
+                  <div style="display: grid; grid-template-columns: 54px 1fr 210px 96px 116px; align-items: center; gap: 12px; padding: 14px 18px; background: {{ row.bg }}; border-bottom: 1px solid rgba(47,38,32,.12);">
+                    <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 20px;">{{ row.rank }}</span>
+                    <span style="display: flex; align-items: center; gap: 11px;">
+                      <span style="width: 32px; height: 42px; border-radius: 2px; background: {{ row.cover }}; flex: none;"></span>
+                      <span style="display: flex; flex-direction: column;">
+                        <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 17px;">{{ row.title }}</span>
+                        <span style="font-size: 12px; color: #4a3423;">{{ row.owner }}</span>
+                      </span>
+                    </span>
+                    <span style="display: flex; align-items: flex-end; gap: 5px;">
+                      <sc-for list="{{ row.dist }}" as="d" hint-placeholder-count="5">
+                        <span style="width: 34px; display: flex; flex-direction: column; align-items: center; gap: 3px;">
+                          <span style="width: 24px; height: {{ d.h }}; background: {{ d.bg }}; border-radius: 2px 2px 0 0;"></span>
+                          <i class="{{ d.face }}" style="font-size: 14px; color: #6b5a45;"></i>
+                        </span>
+                      </sc-for>
+                    </span>
+                    <span style="text-align: right; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 24px; font-variant-numeric: tabular-nums;">{{ row.score }}</span>
+                    <span style="display: flex; justify-content: flex-end;">
+                      <span style="display: inline-flex; align-items: center; gap: 5px; font-weight: 800; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: {{ row.tagInk }}; background: {{ row.tagBg }}; border: 1px solid {{ row.tagBorder }}; border-radius: 3px; padding: 5px 9px;"><i class="{{ row.tagIcon }}"></i> {{ row.tag }}</span>
+                    </span>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 12px;">
+                <button style="min-height: 56px; border-radius: 4px; border: 1px solid #a87a2e; background: linear-gradient(180deg, #f6d795, #d9a951); color: #3b2a12; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 20px; cursor: pointer; box-shadow: 0 3px 0 #8a6224;">Noch eine Runde</button>
+                <span style="display: flex; gap: 10px;">
+                  <span style="flex: 1; min-height: 46px; display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: 4px; background: #5b4128; border: 1px solid #b98a55; font-weight: 700; font-size: 14px;"><i class="ti ti-share" style="color: #f0cf86;"></i> Teilen</span>
+                  <span style="flex: 1; min-height: 46px; display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: 4px; background: #5b4128; border: 1px solid #b98a55; font-weight: 700; font-size: 14px;"><i class="ti ti-dots" style="color: #f0cf86;"></i> Mehr</span>
+                </span>
+                <div style="background: #4a3423; border: 1px solid rgba(240,207,134,.22); border-radius: 4px; padding: 14px 16px; display: flex; flex-direction: column; gap: 9px;">
+                  <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: #e2c496;">Falls etwas anders lief</span>
+                  <span style="display: flex; align-items: center; gap: 9px; min-height: 40px; font-weight: 700; font-size: 14px;"><i class="ti ti-trophy" style="color: #f0cf86; font-size: 18px;"></i> Sieger ändern</span>
+                  <span style="display: flex; align-items: center; gap: 9px; min-height: 40px; font-weight: 700; font-size: 14px;"><i class="ti ti-arrows-split" style="color: #f0cf86; font-size: 18px;"></i> Anderes Spiel gespielt</span>
+                  <span style="display: flex; align-items: center; gap: 9px; min-height: 40px; font-weight: 700; font-size: 14px;"><i class="ti ti-refresh" style="color: #f0cf86; font-size: 18px;"></i> Zurücksetzen</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div data-screen-label="T4.5 Mehrere Tische" style="display: flex; flex-direction: column; gap: 10px;">
+    <span style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #dcb587;">5 · Mehrere Tische — ein Ergebnis pro Tisch, eine Chronik</span>
+    <div style="width: 1440px; min-height: 900px; border-radius: 4px; background: #3b2a12; box-shadow: 0 20px 50px rgba(0,0,0,.5); display: flex; flex-direction: column; overflow: hidden;">
+      <div style="height: 60px; display: flex; align-items: center; gap: 18px; padding: 0 28px; background: #2f2109; border-bottom: 1px solid rgba(240,207,134,.25); flex: none;">
+        <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 15px; letter-spacing: .14em; text-transform: uppercase; color: #3b2a12; background: linear-gradient(180deg, #f6d795, #d9a951); border-radius: 3px; padding: 5px 11px;">Spielwirbel</span>
+        <span style="margin-left: auto; display: flex; align-items: center; gap: 14px;">
+          <span style="display: inline-flex; align-items: center; gap: 6px; font-weight: 700; font-size: 13px; border: 1px solid rgba(240,207,134,.45); border-radius: 999px; padding: 5px 12px;">Deutsch <i class="ti ti-chevron-down" style="font-size: 15px; color: #f0cf86;"></i></span>
+          <i class="ti ti-mail" style="font-size: 22px; color: #f0cf86;"></i>
+          <span style="display: inline-flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px;"><span style="width: 32px; height: 32px; border-radius: 50%; background: #198663; color: #fff; display: grid; place-items: center; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 12px;">LE</span> Lea</span>
+        </span>
+      </div>
+      <div style="display: flex; flex: 1;">
+        <div style="width: 216px; flex: none; background: #32230f; border-right: 3px solid #9a6d2b; padding: 22px 16px; display: flex; flex-direction: column; gap: 18px;">
+          <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 21px; line-height: 1.1;">Donnerstagsrunde</span>
+          <div style="display: flex; flex-direction: column; gap: 7px;">
+            <sc-for list="{{ rail }}" as="r" hint-placeholder-count="5">
+              <span style="display: flex; align-items: center; gap: 11px; min-height: 44px; padding: 0 12px; border-radius: 3px; background: {{ r.bg }}; border: {{ r.border }}; color: {{ r.ink }}; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 15px;"><i class="{{ r.icon }}" style="font-size: 20px;"></i> {{ r.label }}</span>
+            </sc-for>
+          </div>
+        </div>
+        <div style="flex: 1; padding: 26px 28px 30px; display: flex; flex-direction: column; gap: 20px;">
+          <div style="display: flex; align-items: baseline; gap: 14px;">
+            <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 32px;">Zwei Tische, eine Session</span>
+            <span style="font-weight: 700; font-size: 15px; color: #e2c496;">8 Personen · 20.09. · beide Ergebnisse gehen in dieselbe Chronik</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 22px; align-items: start;">
+            <sc-for list="{{ multi }}" as="m" hint-placeholder-count="2">
+              <div style="border-radius: 4px; overflow: hidden; box-shadow: 0 14px 30px rgba(0,0,0,.45);">
+                <div style="background: {{ m.felt }}; border-bottom: 4px solid #9a6d2b; padding: 18px 20px; display: flex; flex-direction: column; gap: 10px;">
+                  <span style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: #f6ecd8;">{{ m.label }}</span>
+                    <span style="margin-left: auto; display: flex; gap: 7px;">
+                      <sc-for list="{{ m.people }}" as="p" hint-placeholder-count="4">
+                        <span style="position: relative; width: 36px; height: 36px;">
+                          <span style="position: absolute; inset: 0; border-radius: 50%; background: {{ p.bg }}; border: 2px solid #f0cf86; color: #fff; display: grid; place-items: center; font-weight: 800; font-size: 12px;">{{ p.ini }}</span>
+                          <i class="{{ p.crown }}" style="position: absolute; left: 50%; top: -13px; transform: translateX(-50%); font-size: 14px; color: #f0cf86;"></i>
+                        </span>
+                      </sc-for>
+                    </span>
+                  </span>
+                  <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 27px; line-height: 1.1;">„{{ m.game }}“ wurde gespielt. <span style="color: #f0cf86;">{{ m.winner }}</span> hat gewonnen.</span>
+                </div>
+                <div style="background: linear-gradient(180deg, #f8f3e7, #efe7d5); color: #2f2620;">
+                  <sc-for list="{{ m.rows }}" as="row" hint-placeholder-count="3">
+                    <span style="display: flex; align-items: center; gap: 11px; padding: 12px 18px; background: {{ row.bg }}; border-bottom: 1px solid rgba(47,38,32,.12);">
+                      <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 17px; width: 18px;">{{ row.rank }}</span>
+                      <span style="width: 28px; height: 36px; border-radius: 2px; background: {{ row.cover }}; flex: none;"></span>
+                      <span style="display: flex; flex-direction: column;">
+                        <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 16px;">{{ row.title }}</span>
+                        <span style="font-size: 11px; color: #4a3423;">{{ row.owner }}</span>
+                      </span>
+                      <span style="margin-left: auto; display: flex; align-items: center; gap: 9px;">
+                        <span style="display: inline-flex; align-items: center; gap: 5px; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 12px; color: {{ row.pillInk }}; background: {{ row.pillBg }}; border: 1px solid rgba(0,0,0,.4); border-radius: 999px; padding: 3px 9px; font-variant-numeric: tabular-nums;"><i class="{{ row.face }}" style="font-size: 12px;"></i> {{ row.score }}</span>
+                        <span style="width: 74px; text-align: right; font-size: 11px; font-weight: 700; color: #6b5a45;">{{ row.tag }}</span>
+                      </span>
+                    </span>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="background: #4a3423; border: 1px solid rgba(240,207,134,.22); border-radius: 4px; padding: 16px 20px; display: flex; align-items: center; gap: 18px;">
+            <i class="ti ti-arrows-split" style="font-size: 24px; color: #f0cf86;"></i>
+            <span style="font-size: 14px; font-weight: 600; line-height: 1.55; max-width: 84ch; color: #f0e3c8;">Zwei Tische heißt: zwei Abstimmungen, zwei Sieger, ein Eintrag in der Chronik mit beiden Tafeln untereinander. Die Pokale zählen beide Siege. Wer an keinem Tisch sitzt, bleibt als Platz sichtbar — „heute nicht dabei“.</span>
+            <span style="margin-left: auto; display: flex; gap: 10px; flex: none;">
+              <span style="min-height: 46px; padding: 0 16px; display: inline-flex; align-items: center; gap: 8px; border-radius: 4px; background: #5b4128; border: 1px solid #b98a55; font-weight: 700; font-size: 14px;"><i class="ti ti-share" style="color: #f0cf86;"></i> Beide teilen</span>
+              <button style="min-height: 46px; padding: 0 20px; border-radius: 4px; border: 1px solid #a87a2e; background: linear-gradient(180deg, #f6d795, #d9a951); color: #3b2a12; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 16px; cursor: pointer;">Noch eine Runde</button>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div data-screen-label="T4.6 Übergabe" style="max-width: 1440px; background: #4a3423; border: 1px solid rgba(240,207,134,.28); border-radius: 4px; padding: 22px 26px; display: flex; flex-direction: column; gap: 10px;">
+    <span style="font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 20px;">Was T4 entscheidet</span>
+    <span style="font-size: 15px; line-height: 1.6; color: #f0e3c8; max-width: 100ch;">Setup ist zweispaltig: links die Plätze (52 px, zwei Spalten), rechts der {{ gefaessWort }} als Kachelfeld mit Filtern und darunter die Zählfrage neben dem einen Knopf. Die <strong>Wertungskarte ist auch am Desktop Vollbild ohne Schiene</strong> — dieselbe Ausnahme wie am Telefon, aus demselben Grund. Die Live-Abstimmung stellt die Personen als Zeilen mit einem Feld pro Spiel dar (gewertet · dran · offen), daneben QR und Link; „Ergebnis zeigen“ bleibt gesperrt, solange jemand fehlt, und sagt warum. Das Ergebnis trägt die Schlagzeile auf Filz und die Tafel auf Papier, Korrekturen liegen rechts in einem eigenen Kasten statt in einem „…“-Menü. Mehrere Tische spiegeln diese Struktur zweimal nebeneinander.</span>
+    <span style="font-size: 14px; line-height: 1.6; color: #dcb587;">Offen: T6 nimmt Live-Abstimmung und Tische auf 390 · T7 zeigt die Session ohne genug Spiele und die erste Session überhaupt · T10 baut Topf-Füllen, Countdown und Aufdecken als Bewegung.</span>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;gefaessWort&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Topf&quot;,&quot;Schale&quot;,&quot;Hut&quot;],&quot;default&quot;:&quot;Topf&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Wortstand&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const P = this.props;
+    const cover = (a, b) => `linear-gradient(150deg, ${a}, ${b})`;
+    const faces = ['ti-mood-cry', 'ti-mood-sad', 'ti-mood-neutral', 'ti-mood-smile', 'ti-mood-crazy-happy'];
+    const labels = ['gar nicht', 'eher nicht', 'kann ich', 'gern', 'unbedingt'];
+    const pillRamp = ['#8f2f22', '#a05a1f', '#b8a12e', '#8dbf46', '#b8e08a'];
+    const pillInk = ['#fdf4e4', '#fdf4e4', '#2a1a08', '#2a1a08', '#2a1a08'];
+    const barRamp = ['#8f2f22', '#a05a1f', '#8d7a1c', '#5f8b2a', '#23602b'];
+    const C = { lea: '#198663', jonas: '#c6522c', mia: '#726bc7', tom: '#a66815', ada: '#2f6f9e', ben: '#54821d', ida: '#c34d74', nils: '#993556' };
+    const bricolage = "font-family: 'Bricolage Grotesque'; font-weight: 800;";
+
+    const rail = [
+      ['Start', 'ti ti-home'], ['Regal', 'ti ti-layout-grid'], ['Chronik', 'ti ti-history'],
+      ['Pokale', 'ti ti-trophy'], ['Einstellungen', 'ti ti-settings'],
+    ].map(([label, icon]) => ({
+      label, icon,
+      bg: label === 'Start' ? 'linear-gradient(180deg, #f6d795, #d9a951)' : 'transparent',
+      border: label === 'Start' ? '1px solid #a87a2e' : '1px solid rgba(240,207,134,.28)',
+      ink: label === 'Start' ? '#3b2a12' : '#f0cf86',
+    }));
+
+    const seatDefs = [
+      ['Lea', C.lea, 1], ['Jonas', C.jonas, 1], ['Mia', C.mia, 1],
+      ['Tom', C.tom, 0], ['Ada', C.ada, 1], ['Ben', C.ben, 0],
+    ];
+    const seats = seatDefs.map(([name, bg, on]) => ({
+      name, ini: name.slice(0, 2).toUpperCase(),
+      dot: on ? bg : '#5a4a35',
+      bg: on ? '#5b4128' : '#3f2d18',
+      border: on ? '1px solid #dcb587' : '1px dashed rgba(240,207,134,.38)',
+      state: on ? 'spielt mit' : 'heute nicht dabei',
+      stateInk: on ? '#e2c496' : '#dcb587',
+      check: on ? 'ti ti-circle-check' : 'ti',
+      away: on ? 'ti' : 'ti ti-user-x',
+      awayShow: on ? 'none' : 'grid',
+    }));
+
+    const potArt = [
+      ['Nordlichter', 'NORD\nLICHTER', cover('#2f5d7a', '#14324a'), '112px', `${bricolage} font-size: 13px; line-height: .95; color: #eaf2f7; white-space: pre-line;`],
+      ['Kartographen', 'Kartographen', cover('#7a5b2f', '#42301a'), '98px', 'font-weight: 700; font-size: 11px; letter-spacing: .04em; text-transform: uppercase; color: #f3e3c6;'],
+      ['Die Insel', 'DIE\nINSEL', 'radial-gradient(70% 70% at 30% 25%, #a2508f, #3a1a34 80%)', '120px', `${bricolage} font-size: 16px; line-height: .9; color: #ffe9fb; white-space: pre-line;`],
+      ['Zugvögel', 'zugvögel', cover('#3f5d2f', '#22331a'), '90px', 'font-weight: 700; font-size: 12px; letter-spacing: .1em; color: #e4f0d8;'],
+      ['Hafenmeister', 'HAFEN—\nMEISTER', 'linear-gradient(0deg, #14324a 0 46%, #2f5d7a 46%)', '106px', `${bricolage} font-size: 12px; line-height: 1.05; color: #eaf2f7; white-space: pre-line;`],
+      ['Rattenkönig', 'Rattenkönig', 'repeating-linear-gradient(135deg, #5b4128 0 9px, #4a3423 9px 18px)', '100px', `${bricolage} font-size: 12px; line-height: 1.15; color: #f0cf86;`],
+      ['Turmbau', 'TURMBAU', 'linear-gradient(90deg, #8f4a22 0 34%, #d9a951 34%)', '124px', `${bricolage} font-size: 13px; color: #2b1a08;`],
+      ['Mondgarten', 'Mond\ngarten', 'radial-gradient(60% 60% at 70% 20%, #e8dcb0, #4a5b2f 75%)', '114px', `${bricolage} font-size: 14px; line-height: 1; color: #23310f; white-space: pre-line;`],
+      ['Wolkenpost', 'wolkenpost', 'linear-gradient(180deg, #cfe2ef 0 58%, #6a93ad 58%)', '92px', 'font-weight: 700; font-size: 12px; color: #17303f;'],
+    ];
+    const pot = potArt.map(([title, coverTitle, bg, h, titleStyle]) => ({ title, coverTitle, bg, h, titleStyle }));
+
+    const voteCards = faces.map((face, i) => {
+      const sel = i === 3;
+      return {
+        face: 'ti ' + face, n: String(i + 1), label: labels[i],
+        bg: sel ? 'linear-gradient(180deg, #f6d795, #d9a951)' : '#e7dcc4',
+        border: sel ? '1px solid #a87a2e' : '1px solid rgba(47,38,32,.18)',
+        shadow: sel ? '0 3px 0 #8a6224' : 'none',
+        ink: '#2f2620',
+      };
+    });
+
+    const liveDefs = [
+      ['Lea', C.lea, [1, 1, 1], 'fertig · 3 von 3', '#a8dcb4'],
+      ['Jonas', C.jonas, [1, 1, 0], 'wertet gerade', '#f0cf86'],
+      ['Ada', C.ada, [1, 0, 0], 'wertet gerade', '#f0cf86'],
+      ['Mia', C.mia, [0, 0, 0], 'noch nicht gestartet', '#dcb587'],
+    ];
+    const liveRows = liveDefs.map(([name, bg, dots, state, stateInk]) => ({
+      name, bg, state, stateInk, ini: name.slice(0, 2).toUpperCase(),
+      progress: dots.filter(Boolean).length + ' von 3 gewertet',
+      dots: dots.map((d) => ({
+        bg: d ? 'linear-gradient(180deg, #f6d795, #d9a951)' : 'transparent',
+        border: d ? '1px solid #a87a2e' : '1px dashed rgba(240,207,134,.5)',
+        ink: d ? '#3b2a12' : '#dcb587',
+        icon: d ? 'ti ti-check' : 'ti ti-hourglass',
+      })),
+    }));
+
+    const present = [
+      { name: 'Jonas', ini: 'JO', bg: C.jonas, crown: 'ti ti-crown' },
+      { name: 'Lea', ini: 'LE', bg: C.lea, crown: 'ti' },
+      { name: 'Ada', ini: 'AD', bg: C.ada, crown: 'ti' },
+      { name: 'Mia', ini: 'MI', bg: C.mia, crown: 'ti' },
+    ];
+
+    const dist = (counts) => counts.map((c, i) => ({ bg: barRamp[i], h: (8 + c * 10) + 'px', face: 'ti ' + faces[i] }));
+    const tafel = [
+      { rank: '1', title: 'Nordlichter', owner: 'Gehört Lea', score: '4,8', tag: 'Gespielt', tagIcon: 'ti ti-check', dist: dist([0, 0, 1, 1, 2]), cover: cover('#2f5d7a', '#14324a'), bg: 'linear-gradient(90deg, #f6e3b4, #f0cf86)', tagBg: '#23543c', tagInk: '#eaf6ec', tagBorder: '#3f7a5c' },
+      { rank: '2', title: 'Kartographen', owner: 'Gehört Jonas', score: '4,1', tag: '', tagIcon: 'ti', dist: dist([0, 1, 1, 1, 1]), cover: cover('#7a5b2f', '#42301a'), bg: '#f8f3e7', tagBg: 'transparent', tagInk: 'transparent', tagBorder: 'transparent' },
+      { rank: '3', title: 'Zugvögel', owner: 'Gehört Lea', score: '2,4', tag: '1× gar nicht', tagIcon: 'ti ti-ban', dist: dist([2, 1, 1, 0, 0]), cover: cover('#3f5d2f', '#22331a'), bg: '#efe7d5', tagBg: '#f7e0d6', tagInk: '#8f2f22', tagBorder: '#d9a99a' },
+    ];
+
+    const pill = (stop) => ({ pillBg: pillRamp[stop - 1], pillInk: pillInk[stop - 1], face: 'ti ' + faces[stop - 1] });
+    const multi = [
+      {
+        label: 'Tisch 1 · Wohnzimmer', felt: 'radial-gradient(80% 160% at 30% -40%, #2f6b4d, #1c4531 74%)',
+        game: 'Nordlichter', winner: 'Jonas',
+        people: [
+          { ini: 'JO', bg: C.jonas, crown: 'ti ti-crown' }, { ini: 'LE', bg: C.lea, crown: 'ti' },
+          { ini: 'AD', bg: C.ada, crown: 'ti' }, { ini: 'MI', bg: C.mia, crown: 'ti' },
+        ],
+        rows: [
+          Object.assign({ rank: '1', title: 'Nordlichter', owner: 'Gehört Lea', score: '4,8', tag: 'Gespielt', cover: cover('#2f5d7a', '#14324a'), bg: 'linear-gradient(90deg, #f6e3b4, #f0cf86)' }, pill(5)),
+          Object.assign({ rank: '2', title: 'Kartographen', owner: 'Gehört Jonas', score: '4,1', tag: '', cover: cover('#7a5b2f', '#42301a'), bg: '#f8f3e7' }, pill(4)),
+          Object.assign({ rank: '3', title: 'Zugvögel', owner: 'Gehört Lea', score: '2,4', tag: '1× gar nicht', cover: cover('#3f5d2f', '#22331a'), bg: '#efe7d5' }, pill(2)),
+        ],
+      },
+      {
+        label: 'Tisch 2 · Küche', felt: 'radial-gradient(80% 160% at 30% -40%, #5d4a7a, #33264a 74%)',
+        game: 'Die Insel', winner: 'Ida',
+        people: [
+          { ini: 'ID', bg: C.ida, crown: 'ti ti-crown' }, { ini: 'NI', bg: C.nils, crown: 'ti' },
+          { ini: 'TO', bg: C.tom, crown: 'ti' }, { ini: 'BE', bg: C.ben, crown: 'ti' },
+        ],
+        rows: [
+          Object.assign({ rank: '1', title: 'Die Insel', owner: 'Gehört Mia', score: '4,5', tag: 'Gespielt', cover: 'radial-gradient(70% 70% at 30% 25%, #a2508f, #3a1a34 80%)', bg: 'linear-gradient(90deg, #f6e3b4, #f0cf86)' }, pill(5)),
+          Object.assign({ rank: '2', title: 'Turmbau', owner: 'Gehört Ben', score: '3,8', tag: '', cover: 'linear-gradient(90deg, #8f4a22 0 34%, #d9a951 34%)', bg: '#f8f3e7' }, pill(4)),
+          Object.assign({ rank: '3', title: 'Wolkenpost', owner: 'Gehört Ida', score: '3,0', tag: '', cover: 'linear-gradient(180deg, #cfe2ef 0 58%, #6a93ad 58%)', bg: '#efe7d5' }, pill(3)),
+        ],
+      },
+    ];
+
+    const wort = P.gefaessWort ?? 'Topf';
+    return {
+      rail, seats, pot, voteCards, liveRows, present, tafel, multi,
+      gefaessWort: wort,
+      gefaessWortLang: wort === 'Topf' ? 'Der Topf' : (wort === 'Schale' ? 'Die Schale' : 'Der Hut'),
+    };
+  }
+}
+
+</script>
+</body>
+</html>

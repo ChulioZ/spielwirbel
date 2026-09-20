@@ -783,6 +783,18 @@ railway.json         Railway build/deploy config (see docs/deploy-railway.md)
 The frontend files are plain `<script>`s that share one global scope; **load
 order matters** (see `index.html`).
 
+## Design programme (`docs/design/`)
+
+Since 2026-09-19 the app is moving from per-round colour schemes and worlds to
+**per-user designs** (issues #1183–#1207). Everything that decides how that
+works lives under `docs/design/`, not in this file: the handover that fixes the
+information architecture every design shares, the vocabulary rule (nouns and
+navigation are Spielwirbel's, only the ritual may be themed), the review of the
+first design package („Der Tisch", `docs/design/tisch/`), the audit script that
+measured it, and the procedure for taking the next package to issues. The
+sheets in `docs/design/tisch/` are design references rendered by a small
+runtime, not app code — see `docs/design/README.md` for how to open them.
+
 ## Development scripts, testing and CI
 
 ```bash
