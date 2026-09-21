@@ -27,7 +27,7 @@
  * See .claude/rules/frontend-build-cache-busting.md.
  */
 
-const CACHE = 'spielwirbel-shell-v298';
+const CACHE = 'spielwirbel-shell-v299';
 
 // Everything the app needs to boot offline. Kept in sync with the <script>/<link>
 // order in index.html; each entry must be a real, servable path or install fails
@@ -43,6 +43,12 @@ const CACHE = 'spielwirbel-shell-v298';
 const SHELL = [
   '/index.html',
   '/styles.css',
+  // Per-design override stylesheets (#1184). Shell assets like any other:
+  // precached so a design works offline, and listed here rather than left to
+  // the cache-first handler because design.js injects them at runtime — an
+  // unlisted one would be fetched from the network on first wear and then
+  // cached forever under whatever it happened to get.
+  '/css/designs/tisch.css',
   '/manifest.webmanifest',
   '/fonts/tabler-icons.css',
   '/js/error-report.js',
@@ -74,6 +80,8 @@ const SHELL = [
   '/js/member-active.js',
   '/js/round-designs.js',
   '/js/round-theme.js',
+  '/js/designs.js',
+  '/js/design.js',
   '/js/round-roles.js',
   '/js/draw-pool.js',
   '/js/provider-info-fields.js',

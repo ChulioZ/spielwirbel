@@ -170,3 +170,55 @@ test('a copied-through asset change plus a CACHE bump changes the built sw.js (#
     'the built sw.js must differ, or no browser ever detects a service-worker update'
   );
 });
+
+/* Per-design override stylesheets (#1184). Three things have to hold together
+   and each fails silently on its own — see
+   .claude/rules/design-stylesheets-are-shell-assets.md. The stylesheet's href
+   is built by design.js at RUNTIME, so unlike every other asset here it is not
+   referenced from any REWRITE_FILES document: the only thing that can point at
+   the hashed name is the literal in designs.js, which means the css has to be
+   hashed BEFORE the js that names it. */
+test('hashes public/css/** and rewrites the reference inside designs.js', () => {
+  const css = Object.keys(manifest).filter((k) => k.startsWith('/css/'));
+  assert.ok(css.length >= 1, 'at least one design stylesheet is hashed');
+  for (const orig of css) {
+    assert.match(manifest[orig], HASH, `${orig} carries a content hash`);
+    assert.ok(!fs.existsSync(path.join(OUT, orig)), `the un-hashed ${orig} is removed`);
+  }
+
+  // The whole point of the two-phase order: designs.js must name the HASHED
+  // stylesheet. Pointing at the source path would 404 in production only.
+  const designs = read(manifest['/js/designs.js']);
+  for (const orig of css) {
+    assert.ok(!designs.includes(`'${orig}'`) && !designs.includes(`"${orig}"`),
+      `designs.js still names the un-hashed ${orig} — the css must be hashed before the js`);
+    assert.ok(designs.includes(manifest[orig]),
+      `designs.js must point at ${manifest[orig]}`);
+  }
+});
+
+test('a design stylesheet change moves BOTH its own hash and designs.js\'s', () => {
+  /* The subtler half of the same ordering rule. Rewriting js AFTER hashing it
+     would leave designs.js's filename derived from its pre-rewrite bytes, so a
+     stylesheet change would change the file's CONTENT under an unchanged name —
+     and the cache-first shell would keep serving the old pointer. Both hashes
+     must move, and so must the derived cache name. */
+  const TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'build-css-'));
+  after(() => fs.rmSync(TMP, { recursive: true, force: true }));
+  const mirror = path.join(TMP, 'public');
+  fs.cpSync(SRC, mirror, { recursive: true });
+
+  const sheet = path.join(mirror, 'css', 'designs', 'tisch.css');
+  fs.writeFileSync(sheet, fs.readFileSync(sheet, 'utf8') + '\n:root[data-design="tisch"] { --radius-sm: 7px; }\n');
+
+  const out2 = path.join(TMP, 'dist');
+  const second = build({ srcDir: mirror, outDir: out2 });
+
+  assert.notEqual(second.manifest['/css/designs/tisch.css'], manifest['/css/designs/tisch.css'],
+    'the stylesheet\'s own hash must move');
+  assert.notEqual(second.manifest['/js/designs.js'], manifest['/js/designs.js'],
+    'designs.js names the stylesheet, so its hash must move with it');
+  assert.notEqual(second.cache, cache, 'the derived service-worker cache name must move too');
+  assert.ok(fs.readFileSync(path.join(out2, second.manifest['/js/designs.js']), 'utf8')
+    .includes(second.manifest['/css/designs/tisch.css']), 'and it must point at the new name');
+});

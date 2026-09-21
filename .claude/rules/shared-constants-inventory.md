@@ -522,6 +522,35 @@ failure is a phone in somebody's hand on a real evening. Where the palette bug
 surfaced as a 400 the same day, this one would surface as „der Code geht nicht"
 weeks later, with no way to tell which half was wrong.
 
+**The twentieth is `public/js/designs.js`** (#1184): the USER design registry —
+which designs an account may wear, each one's page/accent/scheme and override
+stylesheet, the `enabled` gate and `FACE_DESIGN`. `lib/app.js` requires it so
+`GET /api/config` can report the selectable ids, and `lib/routes/account.js`
+will validate `PATCH /me { design }` against the same list (#1186).
+
+It is the plain offer/validate shape, but the **gate** is what makes the copy
+dangerous rather than merely untidy: whether a design exists is decided
+server-side (`production` → `enabled` only), so a hand-copied client list would
+let the picker offer a design the server refuses, and — far worse in the other
+direction — a hand-copied *server* list would advertise an unfinished design on
+the live instance, which is the one thing `enabled` exists to prevent. Neither
+drift errors: the first 400s a request the UI thought was valid (the palette
+bug), the second simply ships a half-built look to real users.
+
+Its own trap is that the flag is a **parameter, not a read of `process.env`**.
+This file runs in the browser too, where `NODE_ENV` does not exist, so
+`selectableDesigns()` takes `{ production }` and the caller supplies it —
+`process.env.NODE_ENV === 'production'` in `lib/app.js`, and nothing at all on
+the client, which learns the answer from `/api/config`. A convenience default
+that read the env would silently report the *dev* set from a production server
+in any context where the var is unset, which is precisely the direction that
+leaks an unfinished design.
+
+Note what deliberately stayed **out**: the design's *colours* are here, but its
+layout is in `public/css/designs/<id>.css`, which no backend reads at all — and
+must not grow colour tokens, because the contrast suite resolves them from this
+registry (`.claude/rules/design-stylesheets-are-shell-assets.md`).
+
 **Each new instance must be named above.** `test/rule-enumerations.test.js`
 asserts every `require('../public/js/…')` under `lib/routes/` and `lib/` appears
 in it, because the list had already gone stale by one before anyone noticed. The

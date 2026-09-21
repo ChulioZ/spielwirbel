@@ -2,6 +2,10 @@
 
 'use strict';
 
+// The user's design (#1184) first, so nothing paints undesigned: applyDesign
+// runs synchronously and only the optional `?design=` review flag waits on
+// GET /api/config.
+initDesign();
 initLocale();
 applyStaticTexts();
 setupLangPicker();

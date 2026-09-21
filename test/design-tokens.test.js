@@ -320,8 +320,10 @@ test('the tag variants retired in #242 stay deleted', () => {
   }
 });
 
-/* `color-scheme` follows the DESIGN, not the OS. Dark is a per-round design
-   here (#904), so without an explicit declaration a dark round on a light OS
+/* `color-scheme` follows the DESIGN, not the OS. Dark is a design here — per
+   round since #904 and per USER since #1184, which is why the dark block is
+   keyed on data-scheme rather than on either registry — so without an explicit
+   declaration a dark round on a light OS
    renders its native <select> popup, scrollbars and form-control defaults
    light — measured on the Sci-Fi world with computed `color-scheme: normal`
    (2026-09-06 UI audit). The light value on :root is the other half: a light

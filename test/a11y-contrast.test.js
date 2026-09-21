@@ -36,10 +36,27 @@ const {
 // escaping these checks. (#903 replaced a regex over views-round-detail.js; the
 // registry is a dependency-free module precisely so this file can require it.)
 const { DESIGNS } = require('../public/js/round-designs');
+const { DESIGN_REGISTRY } = require('../public/js/designs');
 const { MEMBER_COLORS } = require('../public/js/member-colors');
 assert.ok(DESIGNS.length >= 11, 'expected the nine palettes plus the two worlds');
 
-const THEMES = DESIGNS.map(tokensFor);
+/* BOTH registries (#1184). A design is per USER now as well as per round, and a
+   user design's colours land on exactly the same tokens — so it is folded into
+   the ONE list every sweep below loops, rather than getting a few assertions of
+   its own. Every check in this file therefore covers a new design for free,
+   which is the same reason #903 made the round registry requirable.
+
+   Only the entries that DECLARE colours: Klassisch is the :root default itself
+   and has no page/accent to resolve (test/design-layer.test.js pins that), so
+   it is already measured as the light half of every assertion here.
+
+   A user design's own override stylesheet (public/css/designs/<id>.css) is NOT
+   read here — `tokensFor` resolves against styles.css — which is precisely why
+   those files must carry no colour. See
+   .claude/rules/design-stylesheets-are-shell-assets.md. */
+const USER_DESIGNS = DESIGN_REGISTRY.filter((d) => d.page && d.accent);
+
+const THEMES = DESIGNS.concat(USER_DESIGNS).map(tokensFor);
 
 // A rule whose selector may be one MEMBER of a grouped, newline-separated
 // selector — bodyOf() compares the whole text and would miss it.
@@ -53,6 +70,14 @@ const name = (t) => `${t.design.id}${t.dark ? ' (dark)' : ''}`;
 test('the registry ships designs in BOTH directions, or none of the checks below mean anything', () => {
   assert.ok(THEMES.some((t) => t.dark), 'no dark design ships — the dark half of every check below is vacuous');
   assert.ok(THEMES.some((t) => !t.dark), 'no light design ships');
+  // And that the USER registry really is in the loop. Without this, dropping
+  // the concat above would leave every sweep green while measuring only the
+  // round designs — the failure mode #1184's whole seam exists under.
+  assert.ok(USER_DESIGNS.length >= 1,
+    'no user design declares colours — this file is back to covering one registry');
+  for (const d of USER_DESIGNS) {
+    assert.ok(THEMES.some((t) => t.design.id === d.id), `${d.id} is not being measured`);
+  }
 });
 
 /* `scheme` is DECLARED in round-designs.js rather than measured off the page,
@@ -69,6 +94,45 @@ test('every design that LOOKS dark says so, and every design that says so looks 
 
 const AA_TEXT = 4.5; // normal-size text
 const AA_LARGE = 3.0; // >=24px, or >=18.66px bold
+
+/* WCAG 1.4.3's large-text carve-out, as an EXPLICIT named branch (#1184).
+ *
+ * Until now every site that used AA_LARGE picked the constant by hand and put
+ * the size and weight in a prose comment beside it (".gd-ring__num is 24px/700
+ * -> large text"). That is where the carve-out actually lives, so nothing could
+ * check it and nothing stopped a site from claiming it for 16px text — the one
+ * way this whole file could be wrong in the *lenient* direction, which is the
+ * direction no failing assertion can find.
+ *
+ * The thresholds are the SC's own, taken as written (operator decision): 24px
+ * regular, or 18.66px bold. `bold` is >= 700 — the spec says "bold", and this
+ * codebase only ever uses 600 or 700, so 600 deliberately does NOT qualify.
+ * Passing the size in means a retune that shrinks a label moves its bar
+ * automatically instead of silently keeping the concession.
+ */
+const LARGE_PX = 24;
+const LARGE_BOLD_PX = 18.66;
+function barFor({ px, weight = 400 }) {
+  const large = px >= LARGE_PX || (weight >= 700 && px >= LARGE_BOLD_PX);
+  return large ? AA_LARGE : AA_TEXT;
+}
+
+test('the large-text carve-out is applied to large text and nothing else', () => {
+  /* The branch's own self-test. Both directions are needed: only the negatives
+     prove it grants the concession rather than always granting it — which is
+     what a check written the obvious way (assert the two large cases pass) is
+     completely blind to. */
+  assert.equal(barFor({ px: 24 }), AA_LARGE, '24px regular is large');
+  assert.equal(barFor({ px: 32 }), AA_LARGE);
+  assert.equal(barFor({ px: 18.66, weight: 700 }), AA_LARGE, '18.66px bold is large');
+  assert.equal(barFor({ px: 22, weight: 700 }), AA_LARGE);
+
+  assert.equal(barFor({ px: 23.9 }), AA_TEXT, 'just under 24px regular is NOT large');
+  assert.equal(barFor({ px: 18.65, weight: 700 }), AA_TEXT, 'just under 18.66px bold is NOT large');
+  assert.equal(barFor({ px: 22, weight: 600 }), AA_TEXT, '600 is semibold; the SC says bold');
+  assert.equal(barFor({ px: 14 }), AA_TEXT);
+  assert.equal(barFor({ px: 16, weight: 700 }), AA_TEXT, 'bold does not make small text large');
+});
 
 /* One place to collect "colour X on background Y, per design" so a failure names
    the design, the pair and the number rather than just going red. */
@@ -317,7 +381,7 @@ test('every rating clears AA-large as ring text on each design page', () => {
   const failures = [];
   for (const t of THEMES) {
     for (const avg of SWEEP) {
-      // .gd-ring__num is 24px/700 -> large text; the ring stroke is a graphical
+      // .gd-ring__num is 24px/700 -> large text (barFor); the ring stroke is a graphical
       // object. Both sit at the 3:1 bar.
       const ratio = contrast(avgRgb(avg, t.dark), t.page);
       if (ratio < AA_LARGE) failures.push(`${name(t)} Ø${avg.toFixed(1)} = ${ratio.toFixed(2)}:1`);
@@ -388,16 +452,22 @@ test('the stamp paints each line in the token its contrast was measured for', ()
     '22px/700 is what puts the date at the 3:1 AA-large bar rather than 4.5:1');
 });
 
+// 22px/700. The instructive one: 22px is UNDER the 24px regular threshold, so
+// this line qualifies only because it is bold — drop it to 600 and the branch
+// correctly demands 4.5:1, which is exactly what the weight assertion above
+// pins in the stylesheet. The SC 1.4.11 bars elsewhere in this file
+// deliberately do NOT go through barFor: non-text contrast is 3:1 at any size.
+const DATE_BAR = barFor({ px: 22, weight: 700 });
 test('the stamp date clears AA-large in every score colour, on every design', () => {
   const failures = [];
   for (const t of THEMES) {
     for (const avg of SWEEP) {
       const ink = avgRgb(avg, t.dark);
       const ratio = contrast(ink, stampFill(t, ink));
-      if (ratio < AA_LARGE) failures.push(`${name(t)} \u00d8${avg.toFixed(1)} = ${ratio.toFixed(2)}:1`);
+      if (ratio < DATE_BAR) failures.push(`${name(t)} \u00d8${avg.toFixed(1)} = ${ratio.toFixed(2)}:1`);
     }
   }
-  assert.deepEqual(failures, [], `.stamp__date is 22px/700 --sc on a tint of itself; needs ${AA_LARGE}:1`);
+  assert.deepEqual(failures, [], `.stamp__date is 22px/700 --sc on a tint of itself; needs ${DATE_BAR}:1`);
 });
 
 test('the stamp body lines clear AA on the reddest and the greenest fill alike', () => {
@@ -877,6 +947,27 @@ test('the winners\' gold fill clears AA too, at its higher alpha', () => {
     `the winners' rows fill at ${(alpha * 100).toFixed(0)}% --gold over --surface; body text on it needs ${AA_TEXT}:1`);
 });
 
+/* The tripwire for the premise above (#1184). Several grounds in this file are
+   composited against the STANDARD light --surface because the screens they
+   describe — home, the lobby, the account screens — used to be un-themable.
+   They are not any more: applyDesign() puts the user's design on <html>, so a
+   dark one takes those screens dark everywhere at once.
+
+   Nothing ships today because the only dark user design is `enabled: false`.
+   Enabling one is a one-line PR (#1202), and that PR must land these grounds
+   with it — so this fails at exactly that moment, naming the design, rather
+   than letting a re-derivation nobody remembers slip through a diff that
+   changes one boolean. */
+test('no ENABLED user design is dark — several grounds above assume home is light', () => {
+  const darkEnabled = DESIGN_REGISTRY
+    .filter((d) => d.enabled && d.scheme === 'dark')
+    .map((d) => d.id);
+  assert.deepEqual(darkEnabled, [],
+    'a dark user design is now selectable, so the un-themed screens are no longer light: '
+    + 're-derive the home tile motif ground (and any sibling compositing against the standard '
+    + '--surface) per user design before enabling it');
+});
+
 /* The dock's world motif (#1082). The dock is the one element on a phone that is
    on screen every second, which is why the world now reaches it — and it is
    therefore also the one where a motif under the labels is least escapable.
@@ -927,6 +1018,15 @@ test('the dock motif leaves its labels over AA on every design', () => {
    That scoping is a premise, so it is pinned below rather than assumed: widen
    the dark block to .round-card and this test's ground is wrong, which should
    be loud.
+
+   #1184 WIDENED IT FROM THE OTHER SIDE, and the pin could not see that. Home is
+   still un-themed by any ROUND, but the un-themed surfaces now wear the USER's
+   design, so `:root[data-scheme="dark"]` applies on home whenever the account
+   has picked a dark one — and the lobby's --surface is then dark, not the
+   standard white this test composites against. It is still correct today only
+   because no dark user design is ENABLED; the test directly below is the
+   tripwire for that, because "the premise is fine for now" is the sentence that
+   rots.
 
    It shipped at .16 from #1082 until #1138, i.e. at 4.44:1 on Chess — under the
    bar, and on a LIGHT world rather than one of the dark ones #1138 was about.
