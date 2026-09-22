@@ -212,16 +212,24 @@ test('the gold row states its ink for every descendant, with the chart key as th
  *
  * Scanned over the source because there is nowhere else to see it: jsdom applies
  * no stylesheet, so a DOM test of a pill cannot tell an inline fill from a token
- * one. The pattern is deliberately loose about what is between `background:` and
- * the call — it is the two FUNCTION NAMES that matter, and a shape this scan has
- * not seen is exactly what it would otherwise miss.
+ * one.
+ *
+ * WHAT IT CANNOT SEE, stated rather than left to be discovered: it matches a
+ * direct CALL next to the property, so a site that assigns the colour to a
+ * variable first — `const sc = avgColor(x)` … `style="color:${sc}"` — is
+ * invisible to it. That is not hypothetical; landing-moments.js was written
+ * that way and this scan passed straight over it while the shape it bans sat
+ * three lines below the call (found reviewing #1191; the site is converted, so
+ * none remains). Closing that needs dataflow, not a regex, so the honest guard
+ * is this one plus the knowledge of its edge — and a deliberate revert of any
+ * NEW site, per .claude/rules/source-scanning-guards-enumerate-shapes.md.
  */
 test('no view paints a score straight onto an element', () => {
   const dir = path.join(__dirname, '..', 'public', 'js');
   const files = fs.readdirSync(dir).filter((f) => f.endsWith('.js'));
   assert.ok(files.length > 40, `scanned ${files.length} files — the directory walk is wrong`);
 
-  const INLINE = /(?:background|borderColor|background-color)\s*(?::|=)[^;'"`]*\b(?:avgColor|scoreColor)\s*\(/;
+  const INLINE = /(?:background|borderColor|background-color|color)\s*(?::|=)[^;'"`]*\b(?:avgColor|scoreColor)\s*\(/;
   const offenders = files
     .map((f) => [f, fs.readFileSync(path.join(dir, f), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '')])
     .filter(([, text]) => INLINE.test(text))
@@ -232,6 +240,7 @@ test('no view paints a score straight onto an element', () => {
   // Anti-vacuous: the scan must actually be able to see the shape it bans.
   assert.ok(INLINE.test('style="background:${scoreColor(x)}"'), 'the pattern no longer matches the banned shape');
   assert.ok(INLINE.test("b.style.background = avgColor(n);"), 'the pattern misses the property-assignment shape');
+  assert.ok(INLINE.test('style="color:${scoreColor(x)}"'), 'the pattern misses an inline text colour');
   assert.ok(!INLINE.test('style="--sc:${scoreColor(x)}"'), 'the pattern flags the shape it is meant to allow');
 });
 
