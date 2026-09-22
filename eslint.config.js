@@ -382,6 +382,10 @@ const frontendGlobals = {
   selectableDesigns: 'readonly', selectableDesignIds: 'readonly', isSelectableDesign: 'readonly',
   activeDesign: 'readonly', designScheme: 'readonly', loadDesignStylesheet: 'readonly',
   applyDesign: 'readonly', requestedDesign: 'readonly', initDesign: 'readonly',
+  DESIGN_CHOOSER_REVISION: 'readonly', applyAccountDesign: 'readonly',
+  offeredDesigns: 'readonly', designTile: 'readonly', renderDesignPicker: 'readonly',
+  maybeShowDesignChooser: 'readonly', showDesignChooser: 'readonly',
+  buildDesignSection: 'readonly',
   showBackground: 'readonly', showGameDetail: 'readonly',
   // game-editors.js (#968 — the five field editors, split out of
   // views-round-detail.js; each takes an explicit context)

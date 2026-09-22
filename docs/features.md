@@ -747,6 +747,17 @@ What the app does, in detail. For a short overview see the
   at all — otherwise "signed-in" would include an account anyone gets in one
   unauthenticated request. Pictures are visible to real signed-in accounts only,
   and are reportable from the profile and from a feed tile.
+- **Design (per user)** – *one design today; more behind a code gate* (issues
+  #1184, #1186). A design is the look the whole app wears **for you** — not for
+  the round, unlike the round palettes and worlds, which are unchanged. It is
+  picked under **Konto → Design** and applies on every screen and every device
+  you sign in on; an account that has never been asked gets a one-time card
+  offering the choice, with „Später entscheiden" as a full answer. *Klassisch* —
+  the look the app started with — stays selectable for good. Which designs exist
+  is decided in code (`public/js/designs.js`), and today only Klassisch is
+  enabled outside development, so the picker and the card stay out of the way
+  until the rest of the programme lands (`docs/design/README.md`). An instance
+  running **without accounts** keeps the choice on the device instead.
 - **Entdecken** – *live by default; PUBLIC_STATS_ENABLED=false takes it down* (issue #564). Publishes
   the whole instance at a glance: how many rounds, players, shelf games and
   played sessions it holds, plus the games on the most shelves and the ones most

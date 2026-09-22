@@ -85,22 +85,72 @@ function applyDesign(id) {
 }
 
 // TEMPORARY (#1184): `?design=<id>` is how an unfinished design is opened for
-// review until the account field and the picker land (#1186). It is not a
-// back door — the id has to appear in the set GET /api/config reports, and the
-// server builds that set from `enabled` under NODE_ENV=production. So in
-// production this flag can only ever select a design that is already live.
+// review. It is not a back door — the id has to appear in the set GET
+// /api/config reports, and the server builds that set from `enabled` under
+// NODE_ENV=production. So in production this flag can only ever select a design
+// that is already live.
 function requestedDesign() {
   try {
     return new URLSearchParams(window.location.search).get('design') || '';
   } catch { return ''; }
 }
 
-// Applied synchronously first, so nothing renders undesigned while the config
-// request is in flight; the query flag then re-applies once the server has said
-// which designs exist. Until #1186 there is no stored per-account design, so
-// the face is the only starting point.
+/* THE DEVICE FALLBACK (#1186), for an instance running with accounts OFF.
+   A self-hosted, shared-password instance has no account to hang the choice on,
+   so the design lives on the device instead — the same shape and the same
+   guards as the locale in i18n.js.
+
+   try/catch on BOTH sides: localStorage throws outright in a Safari private
+   window and wherever site data is blocked, and a design preference is not worth
+   a boot that dies before the first render
+   (.claude/rules/preview-pane-paint-artifacts.md's family — the browser lying
+   about storage rather than about pixels). A value this build has never heard of
+   reads as nothing, so a retired design leaves the page on the face rather than
+   unpainted. */
+const DEVICE_DESIGN_KEY = 'design';
+
+function storedDesign() {
+  try {
+    return localStorage.getItem(DEVICE_DESIGN_KEY) || '';
+  } catch { return ''; }
+}
+
+function storeDesign(id) {
+  try {
+    localStorage.setItem(DEVICE_DESIGN_KEY, id);
+  } catch { /* private mode / blocked site data: the choice just does not persist */ }
+}
+
+/* Wear the design the SESSION says to, and answer which one that is.
+
+   Called from bootApp once the account state is resolved, from enterApp after a
+   login, and from the picker after a change — i.e. every point at which the
+   answer can differ from what boot painted. Deliberately tolerant of being
+   called when nothing has changed: applyDesign is idempotent.
+
+   The precedence is accounts-first and it matters. With accounts ON, the stored
+   account field is the whole answer and the device key is not consulted at all —
+   otherwise a user who picked Tisch on their laptop would keep seeing a stale
+   device value on it after switching to Klassisch on their phone. With accounts
+   OFF there is no account, so the device key IS the answer.
+
+   `?design=` still wins over both, because its whole job is to preview a design
+   without storing anything (and the server has already vetted it). */
+function applyAccountDesign() {
+  if (typeof accountsActive === 'function' && accountsActive()) {
+    const me = typeof accountUser !== 'undefined' ? accountUser : null;
+    return applyDesign((me && me.design) || FACE_DESIGN);
+  }
+  return applyDesign(storedDesign() || FACE_DESIGN);
+}
+
+// Applied synchronously first, so nothing renders undesigned while the account
+// probe and the config request are in flight. The device key is read here
+// because it costs nothing and removes a visible repaint on an accounts-off
+// instance; with accounts on it is absent, so this resolves to the face and
+// applyAccountDesign() settles it a moment later.
 function initDesign() {
-  applyDesign(FACE_DESIGN);
+  applyDesign(storedDesign() || FACE_DESIGN);
   const wanted = requestedDesign();
   if (!wanted || wanted === activeDesignId) return;
   withAppConfig((cfg) => {
