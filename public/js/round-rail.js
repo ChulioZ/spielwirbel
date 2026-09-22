@@ -177,48 +177,33 @@ function buildRoundRail(round, activeTab, sub, offShelf) {
   const archive = h(`<div class="rail__group">
        <div class="rail__label">${esc(t('rail.archive'))}</div>
      </div>`);
-  archive.appendChild(railItem({
-    icon: 'ti-trash',
-    label: t('retired.link', { n: round.games.filter((g) => g.retired).length }),
-    path: roundPath(rid, 'retired'),
-    onNav: () => showRetired(rid),
-    current: ownEntry === 'retired',
-    inside: offShelf === 'retired',
-  }));
-  archive.appendChild(railItem({
-    icon: 'ti-circle-check',
-    label: t('completed.link', { n: round.games.filter((g) => g.completed).length }),
-    path: roundPath(rid, 'completed'),
-    onNav: () => showCompleted(rid),
-    current: ownEntry === 'completed',
-    inside: offShelf === 'completed',
-  }));
-  archive.appendChild(railItem({
-    icon: 'ti-heart',
-    label: t('wish.link', { n: round.games.filter((g) => g.wish).length }),
-    path: roundPath(rid, 'wishlist'),
-    onNav: () => showWishlist(rid),
-    current: ownEntry === 'wishlist',
-    inside: offShelf === 'wishlist',
-  }));
+  // The rows themselves come from off-shelf.js (#1185) — same four, same
+  // counts, same order as the Regal's sheet and the hub's „Nicht im Regal"
+  // group. What stays here is the only thing that is the RAIL's: which row is
+  // current, and which one claims the detail page of a game sitting in it.
+  //
   // Recommendations (#682) sit in this group rather than in a fourth one: the
   // label is literally "Nicht im Regal", and a game the round does not own is
-  // the furthest thing from being on the shelf. It carries no count — the other
-  // three number the round's OWN games, while this one would number a list the
-  // round has never seen, which is a promise rather than an inventory.
+  // the furthest thing from being on the shelf. It carries no count — off-shelf.js
+  // states why — and no `inside`, because no game detail page belongs to it.
   //
   // It MUST be here, not only in the Regal footer: that footer is `rail-owned`,
   // so from 1280px up it is display:none and the rail is the only way in. #682
   // shipped without this row and the feature was unreachable on a desktop-width
   // window — see .claude/rules/responsive-content-width.md, which is exactly the
   // "walk the width transitions" check that was skipped.
-  archive.appendChild(railItem({
-    icon: 'ti-sparkles',
-    label: t('suggest.link'),
-    path: roundPath(rid, 'recommendations'),
-    onNav: () => showRecommendations(rid),
-    current: ownEntry === 'recommendations',
-  }));
+  offShelfEntries(round).forEach(({ icon, label, sub, go, count }) => {
+    archive.appendChild(railItem({
+      icon,
+      label,
+      path: roundPath(rid, sub),
+      onNav: go,
+      current: ownEntry === sub,
+      // Only a list of the round's OWN games can hold a game detail page, which
+      // is exactly the set off-shelf.js gives a count.
+      inside: count !== null && offShelf === sub,
+    }));
+  });
   rail.appendChild(archive);
 
   // --- Settings: ONE row, standing for the whole group (#581). It briefly held

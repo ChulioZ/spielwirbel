@@ -93,10 +93,11 @@ function podiumColumns(items) {
 
    THE PEDESTAL'S LABEL IS THIS FUNCTION'S, not the caller's, and it carries the
    rank and the tie and NOTHING ELSE. It used to carry the win count too, read
-   off `shown[0]` — sound only while the ranking IS the win count, which #895
-   ends by ranking on the Siegwertung while still showing the raw count. Tie-mates
-   then differ, so the count belongs to the member (the entry), and the step
-   states only what is true of everyone standing on it. Only the marker's WORDING
+   off `shown[0]`, which was sound only while the ranking IS the win count —
+   #895 broke that by ranking on the Siegwertung, and although the ranking is a
+   win count again (2026-09-22) the split stays: a step is a rank, the count
+   belongs to the member, and the step may state only what is true of everyone
+   standing on it. Only the marker's WORDING
    comes in as `sharedLabel`, because a module Node can require has no `t()`. */
 function podiumColHtml(col, entryHtml, sharedLabel) {
   // An empty slot holding the crown's centre: no pedestal, no crown, and nothing

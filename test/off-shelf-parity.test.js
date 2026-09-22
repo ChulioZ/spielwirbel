@@ -2,6 +2,13 @@
 
 /* Every off-shelf screen the Regal offers below 1280px must ALSO have a rail entry.
  *
+ * Since #1185 there is a THIRD surface — the hub's „Nicht im Regal" group on the
+ * Start tab — and all three render one shared list, so the parity below can no
+ * longer drift by construction. The hub's own half is in
+ * test/hub-previews.test.js; this file keeps the Regal↔rail pair it was written
+ * for, because that is the pair where a missing entry makes a screen genuinely
+ * unreachable at a width.
+ *
  * The two are not alternatives, they are the same navigation at two widths: the
  * Regal's control is `.rail-owned`, so from 1280px up it is `display: none` and
  * the rail is the ONLY way in. A link present in one and missing from the other
@@ -104,9 +111,14 @@ test('every off-shelf screen the Regal offers is also reachable from the rail', 
     `hidden from 1280px up and absent from the rail, so unreachable on a desktop: ${missing.join(', ')}`,
   );
 
-  // Same COUNTS, not merely the same destinations: the two surfaces each derive
-  // their own numbers from round.games, so one of them can silently start
-  // counting a different set (or stop counting at all) while parity above holds.
+  /* Same COUNTS, not merely the same destinations.
+
+     #1185 made this structural rather than checked: both surfaces — and the
+     hub's „Nicht im Regal" group, a third one — now render offShelfEntries()
+     (public/js/off-shelf.js) instead of each building its own array with its own
+     `round.games.filter(...)`. The assertion stays, and is worth more than it
+     looks: it is what notices if any surface goes back to deriving its own, which
+     is how the third one would have arrived by default. */
   const drifted = sheet.filter((r) => rail.get(r.href) !== r.text);
   assert.deepEqual(
     drifted.map((r) => `${r.href}: sheet "${r.text}" vs rail "${rail.get(r.href)}"`),

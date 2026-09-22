@@ -441,22 +441,8 @@ setup screen and the Regal POST `…/provider-info` for a game that can never
 complete, with no error anywhere. Its two guards carry a `Provider` prefix
 because a classic script's top-level `const` is a global.
 
-**The sixteenth is `public/js/win-score.js`** (#1089): `memberWinScores` and
-`memberGameWinScores`, the Siegwertung and its per-game partition. Shared LOGIC,
-and it reaches the server for one reason — `lib/user-stats.js` aggregates a
-member's record across every round an account has a seat in, and the Siegwertung
-is a term of that record. It is listed as its own entry rather than under
-`vote-score.js`'s paragraph, which merely mentions it, because the check below
-reads the entry list.
-
-Its trap is the one `vote-score.js` describes for `tileValue`, one function over:
-`partyGroupsOf` is an **injected** parameter with no default, because a party is
-the unit the score is computed over and a hand-written "group the seats" stand-in
-would return plausible, confidently wrong numbers with nothing red. The Node
-caller must pass the real `sessionPartyGroups` out of `session-people.js`.
-
-**The seventeenth is `public/js/member-stats.js`** (#1089): `memberStats`, one
-member's whole record in one round — sessions joined, wins, win rate, Siegwertung,
+**The sixteenth is `public/js/member-stats.js`** (#1089): `memberStats`, one
+member's whole record in one round — sessions joined, wins, win rate,
 average rating given, favourite and strongest game. It is the `draw-pool.js`
 direction taken as far as it goes: not a value and not a predicate but a whole
 derivation, shared because the account profile (`/u/:username`) shows the SAME
@@ -465,11 +451,11 @@ would let the member page and the profile state different numbers for one person
 — each labelled „Siegquote", neither wrong-looking, with no error anywhere.
 
 It carries the trap that this direction of sharing creates, and it is worth
-stating because the obvious fix is forbidden here: `memberStats` reads six
+stating because the obvious fix is forbidden here: `memberStats` reads four
 siblings off the shared global scope (`sessionEnding`, `sessionPartyCount`,
-`sessionPartyGroups`, `memberWinScores`, `memberGameWinScores`, `isNameableGame`),
+`sessionPartyGroups`, `isNameableGame`),
 and **a public/js file cannot require() a sibling**. So they are **injected** as a
-`deps` object, the shape recap.js, period-recap.js and win-score.js already use,
+`deps` object, the shape recap.js and period-recap.js already use,
 with the browser falling back to the globals when the argument is omitted. That
 fallback is safe only because the failure is loud in the other direction: under
 Node the globals do not exist at all, so a caller who forgets `deps` gets a
@@ -482,7 +468,14 @@ across seats and a rating mean cannot be un-weighted, so the account-wide figure
 are recomputed from counts rather than from the per-seat rates, and the favourite
 game is picked once over the merged set rather than once per round.
 
-**The eighteenth is `public/js/error-report.js`** (#1149): `CLIENT_ERROR_KINDS`,
+It also exports **`BEST_GAME_MIN_PLAYS`** (2026-09-22), the floor „Stärkstes
+Spiel" ranks above, and that one IS a plain shared value: the member page ranks
+per round against it and `lib/user-stats.js` ranks the MERGED per-game totals
+against it, so a hand-copied second number would make a game qualify on one
+screen and not the other with nothing red. The tile it gates replaced the
+per-game Siegwertung when that measure was withdrawn from the whole app.
+
+**The seventeenth is `public/js/error-report.js`** (#1149): `CLIENT_ERROR_KINDS`,
 the fault kinds a browser may report, plus `CLIENT_ERROR_MESSAGE_MAX` and
 `isClientErrorPathShape`. The client OFFERS them (the two window handlers and
 the four explicit call sites) and `lib/routes/client-error.js` VALIDATES against
@@ -507,7 +500,7 @@ Note what deliberately did **not** join it: `uaEngine` lives in
 request's own header and the client never sends one — it is not shared at all,
 and putting it here would export a function with no second reader.
 
-**The nineteenth is `public/js/vote-path.js`** (#1170): `votePath`, the path a
+**The eighteenth is `public/js/vote-path.js`** (#1170): `votePath`, the path a
 shared vote link lives at. It is the only entry where neither side *validates*
 anything — both sides BUILD. The client builds the URL it hands around
 (`views-session-live.js` via the share sheet, `router.js` when it reflects the
@@ -522,7 +515,7 @@ failure is a phone in somebody's hand on a real evening. Where the palette bug
 surfaced as a 400 the same day, this one would surface as „der Code geht nicht"
 weeks later, with no way to tell which half was wrong.
 
-**The twentieth is `public/js/designs.js`** (#1184): the USER design registry —
+**The nineteenth is `public/js/designs.js`** (#1184): the USER design registry —
 which designs an account may wear, each one's page/accent/scheme and override
 stylesheet, the `enabled` gate and `FACE_DESIGN`. `lib/app.js` requires it so
 `GET /api/config` can report the selectable ids, and `lib/routes/account.js`

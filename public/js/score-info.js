@@ -1,17 +1,20 @@
-/* Spielwirbel – the ⓘ sheets that explain a derived number (#893, #895).
+/* Spielwirbel – the ⓘ sheets that explain a derived number (#893).
 
-   TWO SHEETS, ONE MECHANISM. It opened as the Spielwirbel-Score's explainer and
-   #895 added the Siegwertung's, which wants the identical „button → openSheet"
-   shape — so the topic became a parameter rather than a near-identical second
-   module (.claude/rules/shared-constants-across-the-stack.md's reasoning, one
-   level up: a copy of this file would drift in its focus trap and its Escape
-   path, not in a constant). The file and the `.score-info` CSS class keep their
-   original names: the class is the shared style hook for the dot and is pinned
-   by name in test/score-results-view.test.js, so renaming only the module would
-   make the naming less consistent, not more.
+   ONE SHEET, AND THE MECHANISM IS STILL A REGISTRY. It opened as the
+   Spielwirbel-Score's explainer, #895 added the Siegwertung's, and 2026-09-22
+   withdrew that measure and its topic again — so the table is back to a single
+   entry. The parameterised shape stays: a second explainer wants the identical
+   „button → openSheet" wiring, and a copy of this file would drift in its focus
+   trap and its Escape path rather than in a constant
+   (.claude/rules/shared-constants-across-the-stack.md's reasoning, one level
+   up). The file and the `.score-info` CSS class keep their original names: the
+   class is the shared style hook for the dot and is pinned by name in
+   test/score-results-view.test.js, so renaming only the module would make the
+   naming less consistent, not more.
 
-   Everything below is about the Spielwirbel-Score specifically; the Siegwertung
-   entry follows the same rules — principle, no formula, one per screen.
+   A SECOND TOPIC MUST EARN ITSELF. The one that existed was removed with the
+   number it explained, and the lesson it left is that a figure needing a
+   paragraph is a figure to reconsider before it is a figure to document.
 
    The score replaces a number every user had already learned to read, so it
    owes an explanation somewhere. Two surfaces carry it, and they do different
@@ -62,7 +65,10 @@ const INFO_SHEETS = {
     // the ramp and the play lift in the same register: what happens, not how.
     body: ['score.infoBody', 'score.infoThin', 'score.infoPlays'],
   },
-  win: { title: 'win.infoTitle', open: 'win.infoOpen', body: ['win.infoBody'] },
+  // The `win` topic explained the Siegwertung and went with it on 2026-09-22 —
+  // its three keys are gone from every lang/*.js, so an entry left here would
+  // render key names into a sheet. There is one topic again; keep it that way
+  // unless a measure genuinely owes an explanation.
 };
 
 // The ⓘ trigger, as an HTML string so it can be interpolated into a template

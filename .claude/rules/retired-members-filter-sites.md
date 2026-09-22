@@ -5,7 +5,6 @@ paths:
   - "public/js/seat-picker.js"
   - "public/js/team-picker.js"
   - "public/js/views-pokale.js"
-  - "public/js/win-score.js"
   - "public/js/recap.js"
   - "public/js/owner-picker.js"
   - "public/js/round-rail.js"
@@ -37,7 +36,7 @@ filter `activeMembers()` (`public/js/member-active.js`):
 | `views-session.js`, `direct-session.js` | who is seated when a session starts |
 | `seat-picker.js` | the seat ring |
 | `team-picker.js` | who can be put in a team |
-| `views-pokale.js`, `win-score.js` | standings, streaks, trophies |
+| `views-pokale.js` | standings, streaks, trophies |
 | `recap.js` | the "two members disagree about most" card |
 | `round-rail.js`, `views-round-start.js` | the member strips |
 | `views-member.js` | die Tischkarte's „Am Tisch" seat strip (#1074) — the screen that is BOTH halves of this rule: a retired member is absent from the strip and still is the page's own subject, or there would be no way to bring them back |
@@ -45,8 +44,8 @@ filter `activeMembers()` (`public/js/member-active.js`):
 | `views-round-actions.js` | the free seats an invitation may fill |
 | `bgg-import.js`, `regal-bulk.js`, `views-round-lookup.js` | whether an owner field is worth showing at all |
 
-**Three of those files spell the predicate out instead of calling the helper** —
-`recap.js`, `owner-picker.js` and `win-score.js` — because they are `require`d
+**Two of those files spell the predicate out instead of calling the helper** —
+`recap.js` and `owner-picker.js` — because they are `require`d
 from Node, and a `public/js` file cannot `require` a sibling. That is the same
 constraint that makes `shelfScoreOf` and `tileValue` injected parameters. It is
 one predicate, not a list or a formula, so the copy is licensed; if it ever

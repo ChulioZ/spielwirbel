@@ -174,9 +174,11 @@ What the app does, in detail. For a short overview see the
   of the same game. A round with too few linked games is told so rather than
   shown a confident guess.
   A game is active, retired, completed or wished-for, never two at once. All
-  three lists — and the recommendations beside them — are reached from „Nicht im
-  Regal" in the shelf's header on a phone or tablet, and from the left rail's own
-  group from 1280px up. Every row on those lists
+  three lists — and the recommendations beside them — are reached from a „Nicht im
+  Regal" group on the round's Start tab, from the same-named control in the
+  shelf's header on a phone or tablet, and from the left rail's own group from
+  1280px up. The four entries, and the counts beside them, are defined once and
+  rendered by all three, so they cannot drift apart. Every row on those lists
   opens the game's own detail page, so a game keeps its full editing surface —
   title, cover, player range, tags — after it has left the shelf; the page then
   offers only the way back onto it. The distinction carries through to the Pokale tab: a
@@ -254,14 +256,13 @@ What the app does, in detail. For a short overview see the
 - **Members** – each member has a detail page (opened from the Start hero row,
   the Pokale podium, or a session's participant list): **one card in that
   member's own colour** carrying the whole record — wins, sessions joined, win
-  rate, Siegwertung, average rating given, their strongest game (the one they
-  hold the highest Siegwertung in) and their favorite game. The card wears that
-  colour rather than merely being tinted by it: the **win rate is the ring
-  around the avatar**, sweeping into place once when the page opens; the
-  member's **initials stand as a watermark** in the card's corner; the
-  Siegwertung grows as a bar from the centre, right for a positive score and
-  left for a negative one; and the two game tiles stand as **boxes** with a
-  ribbon naming which is which. The name is renamed
+  rate, average rating given, their strongest game (the one they win most often
+  when they play it, over at least three contested evenings) and their favorite
+  game. The card wears that colour rather than merely being tinted by it: the
+  **win rate is the ring around the avatar**, sweeping into place once when the
+  page opens; the member's **initials stand as a watermark** in the card's
+  corner; and the two game tiles stand as **boxes** with a ribbon naming which
+  is which. The name is renamed
   in place, the avatar colour is picked by **clicking the avatar**, and the rare
   seat actions (claiming or releasing a seat, revoking a grantee's access,
   removing someone from the round or deleting an unused seat) live in a
@@ -292,8 +293,17 @@ What the app does, in detail. For a short overview see the
     winner *or* an ending leaves the list — games with no cover, games with no
     player count; each deep-linking to the fix), a „**heute vor N Jahren**"
     anniversary when one falls on today, and a teaser from the recommendations
-    screen. Every card renders nothing at all when it has nothing to say, so a
-    young round sees none of them.
+    screen. Below the derived cards, a **preview of each of the round's other
+    sections** — the shelf as a handful of covers with its count, the standings'
+    top three, and how many evenings there have been with the date of the last —
+    each opening that section. Under all of it, the „Nicht im Regal" group
+    (Aussortiert · Durchgespielt · Wunschliste · Könnte euch gefallen) and one
+    Einstellungen entry. Every card renders nothing at all when it has nothing
+    to say, so a young round sees none of them: the Pokale and Chronik previews
+    arrive with the round's first played session, and the shelf preview once the
+    shelf outgrows the handful of covers it shows — before that the hero's own
+    count already says everything the strip could. Only the off-shelf group is
+    always there, because a list is not less worth reaching for being empty.
   - **Regal** (shelf) – the game collection as a card grid with one „Filter"
     control holding both the custom-tag chips and the imported-BGG-metadata
     filters (see Sessions below), a search pill, sorting
@@ -325,17 +335,19 @@ What the app does, in detail. For a short overview see the
     most, and every member's own favourite. Pokale is the all-time record; the
     time-scoped view of the same idea is the Chronik's period recap above.
 
-    The standings rank on the **Siegwertung**, not on the raw number of wins:
-    each win is weighted by the size of the field it beat, so beating four
-    people counts for more than beating one, merely turning up earns nothing,
-    and an evening played alone is worth exactly zero. The podium is simply the
-    top three places — a member with a negative Siegwertung stands if they are in
-    them, and the only reason to be listed below the stage is being fourth. Each
-    entry shows the Siegwertung with the raw win count beside it, and the line
-    below the stage shows both as well. A member who has taken part in no session
-    at all is not ranked. The winning-streak tile skips solo evenings for the same
-    reason it already skipped nights a guest won: an evening that was not a
-    contest can neither break nor extend a streak.
+    The standings rank on the **number of wins**, and each entry shows that
+    count and nothing else. The podium is simply the top three places, so a
+    member who has played and never won stands if they are in them — on „0
+    Siege" — and the only reason to be listed below the stage is being fourth.
+    A member who has taken part in no decided session at all is not ranked.
+
+    A win counts wherever it happened, an evening played alone included. That is
+    a deliberate trade: weighting a win by the size of the field it beat is
+    fairer and was how the standings worked for a while, but it needed a
+    paragraph to explain and left everyone but the leader on a negative number,
+    which a leaderboard cannot afford. The winning-streak tile still skips solo
+    evenings, for the reason it already skipped nights a guest won: an evening
+    that was not a contest can neither break nor extend a streak.
 - **Sessions (hot-seat voting)** – pick who is playing tonight, optionally narrow
   the collection, and draw a random set of candidate games — only games whose
   player range fits the number of joining members are eligible. Narrowing happens
@@ -379,8 +391,12 @@ What the app does, in detail. For a short overview see the
   way, and each person's ratings are saved the moment they give them: one
   **1–5** scale per drawn game, from „gar nicht" to „unbedingt". Rating is **one
   tap per game** — the face you press is the answer, and the card moves on by
-  itself after a short beat. The card's only other control is an undo in its
-  top-left corner, which reopens the last game with its rating still chosen.
+  itself after a short beat. The rating card runs **full-screen**: no top bar and
+  no section navigation, so the device holds one game and one question while the
+  person beside you waits for it. The card's only other control is an undo in its
+  top-left corner, which reopens the last game with its rating still chosen and is
+  also the way back out. The handover screen, the lobby and the result keep the
+  bar.
   Three ways in, freely mixed within one evening:
   - **pass the device around** – tap whoever is next, a handover screen names
     them so nobody peeks, and when they are done the lobby leads with the next
@@ -706,17 +722,17 @@ What the app does, in detail. For a short overview see the
   (issue #1089). „Mein Profil" in the account menu — and the handle on the Konto
   screen — open your own profile. It carries your **play record aggregated over
   every round you hold a seat in**, your own and ones shared with you: sessions
-  played, wins, win rate, Siegwertung, your average rating given, the number of
-  rounds and of distinct games played, and your favourite and strongest game. A
+  played, wins, win rate, your average rating given, the number of rounds and
+  of distinct games played, and your favourite and strongest game. A
   game that sits on the shelf in several rounds counts once — entries are merged
   by their provider id, or by title when neither carries one. Below that is your
   own activity feed, with no cutoff. Accepted friends see the same record unless
   you switch it off (Konto → Profil; on by default); strangers and pending
   requests never do, and you always see your own. The record names **no round,
   no other member and no individual session or rating** — only figures and at
-  most two game titles. Since #1132 it is the five figures of the card's strip —
-  wins, win rate, sessions, Siegwertung (with its own bar) and your average
-  rating given — while the two that describe breadth rather than performance, the
+  most two game titles. Since #1132 it is the four figures of the card's strip —
+  wins, win rate, sessions and your average rating given — while the two that
+  describe breadth rather than performance, the
   round and game counts, are the line under your name. The favourite and
   strongest game are the two ribboned boxes at the foot of the card.
 - **Profile pictures** – *accounts mode only* (issue #841). An account can upload

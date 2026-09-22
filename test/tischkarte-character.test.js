@@ -109,44 +109,19 @@ test('the watermark is the member\'s initials, and is hidden from assistive tech
 
 /* --------------------------------- the bar -------------------------------- */
 
-test('the Siegwertung bar follows the sign and the magnitude', async (t) => {
+test('no figure carries a bar — the Siegwertung it belonged to is gone', async (t) => {
+  /* `.member-bar` was the Siegwertung's own encoding: a track with a centre
+     mark, filled left or right by the sign. The measure was withdrawn on
+     2026-09-22 (operator) and the bar went with it, because every remaining
+     figure is a plain count, a percentage or an average — none of which has a
+     direction to lean.
+
+     Asserted as an absence so the bar cannot drift back onto a figure it does
+     not describe: a half-filled track beside „Siegquote 50 %" would read as a
+     second, different statement about the same number. */
   const dom = await show(t, contested());
-  const bar = dom.app.querySelector('.member-bar');
-  assert.ok(bar, 'the Siegwertung figure carries no bar');
-  assert.equal(bar.getAttribute('aria-hidden'), 'true', 'the number beside it is the statement');
-
-  const w = (el) => Number(/--w:\s*([\d.]+)%/.exec(el.getAttribute('style'))[1]);
-  assert.ok(w(bar) >= 0 && w(bar) <= 50, `--w ${w(bar)} is outside the half it may fill`);
-});
-
-test('the bar is clamped to the half, and a negative score leans the other way', async (t) => {
-  /* ±2.0 fills the half. A runaway score must not paint past the track, and the
-     direction is a class rather than a negative width. */
-  const dom = await show(t, contested());
-  const mk = (score) => {
-    const w = Math.min(50, Math.abs(score) * 25);
-    return { w, neg: score < 0 };
-  };
-  assert.equal(mk(2).w, 50, '±2.0 fills the half exactly');
-  assert.equal(mk(9).w, 50, 'a runaway score is clamped');
-  assert.equal(mk(1.4).w, 35);
-  assert.equal(mk(-1.4).neg, true);
-  assert.ok(dom.app.querySelector('.member-bar'));
-});
-
-test('a score of exactly 0 shows the TRACK, not a missing bar', async (t) => {
-  /* `memberStats` returns 0 rather than undefined for a member with no
-     sessions — my first version of this test assumed undefined and was wrong,
-     not the code. 0 is a real statement („even"), and the acceptance criterion
-     asks for the track with the centre mark and no fill. A bar that vanished at
-     0 would read as "no data" for a member who has plenty. */
-  const dom = await show(t);
-  const st = dom.run(`memberStats(${JSON.stringify(roundFixture())}, '${MID}')`);
-  assert.equal(st.winScore, 0, 'the fixture no longer produces a zero score');
-  const bar = dom.app.querySelector('.member-bar');
-  assert.ok(bar, 'a zero score dropped the track entirely');
-  assert.match(bar.getAttribute('style'), /--w:\s*0\.0%/, 'the fill must be empty, not absent');
-  assert.ok(!bar.classList.contains('member-bar--neg'), '0 leans neither way');
+  assert.equal(dom.app.querySelector('.member-bar'), null,
+    'a figure grew a bar again — check what it claims to encode');
 });
 
 /* ------------------------------- the boxes -------------------------------- */

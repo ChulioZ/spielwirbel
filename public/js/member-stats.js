@@ -16,7 +16,7 @@
    (sessions are the single source of truth, like the game rating averages).
 
    `deps` is the six sibling helpers this function needs, INJECTED (#1089) —
-   the same shape recap.js, period-recap.js and win-score.js already use, and
+   the same shape recap.js and period-recap.js already use, and
    for the same reason: a public/js file cannot require() a sibling, so a
    function that must also run under Node has to be handed them. `lib/user-stats.js`
    passes the real modules; the browser omits the argument and the shared global
@@ -26,13 +26,18 @@
    here where `wireGameCardHead` refuses one: under Node the globals do not
    exist at all, so omitting `deps` throws a ReferenceError on the first call
    rather than quietly taking a second code path. */
+/* The floor „Stärkstes Spiel" ranks above. Three, because at two contested
+   plays a perfect record is a coin toss and the tile would name whichever game
+   the member happened to win first — and because a member has to be able to
+   REACH it: most rounds play a given box a handful of times a year, so a higher
+   floor would leave the tile empty for almost everybody. */
+const BEST_GAME_MIN_PLAYS = 3;
+
 function memberStats(round, mid, deps) {
   const d = deps || {
     sessionEnding,
     sessionPartyCount,
     sessionPartyGroups,
-    memberWinScores,
-    memberGameWinScores,
     isNameableGame,
   };
   const finished = round.sessions.filter((s) => s.finished);
@@ -66,13 +71,6 @@ function memberStats(round, mid, deps) {
   // contested, and an average of per-seat rates is a different — wrong — number
   // whenever the seats saw different numbers of contests.
 
-  // The Siegwertung, the measure the Ruhmeshalle now ranks on (#895). Shown
-  // here UNCLAMPED, negatives included, unlike the Pokale tab: this is the
-  // member's own stats page rather than a leaderboard, the number sits beside
-  // the rate it explains, and clamping it would make one person's figure
-  // disagree with the standings they are reading it against.
-  const winScore = d.memberWinScores(round, d.sessionPartyGroups)[mid];
-
   // Every numeric rating this member has given, and the per-game averages used
   // to find their favorite game (only games that still exist in the round and
   // that a taste stat may name — `isNameableGame`, recap.js, which this page
@@ -92,12 +90,12 @@ function memberStats(round, mid, deps) {
 
      `entry()` returns null for a game the round no longer holds, or one a taste
      stat may not name — so the bar is applied once, at the only door in. */
-  const perGame = {}; // gameId -> { game, ratings: [], winScore }
+  const perGame = {}; // gameId -> { game, ratings: [], plays, gameWins }
   const entry = (gid) => {
     if (perGame[gid]) return perGame[gid];
     const game = round.games.find((g) => g.id === gid && d.isNameableGame(g));
     if (!game) return null;
-    perGame[gid] = { game, ratings: [], winScore: null };
+    perGame[gid] = { game, ratings: [], plays: 0, gameWins: 0 };
     return perGame[gid];
   };
   round.sessions.forEach((s) => {
@@ -111,6 +109,18 @@ function memberStats(round, mid, deps) {
       if (e) e.ratings.push(r);
     });
   });
+  /* Per-game contest tally, feeding the tile below and the cross-round merge in
+     lib/user-stats.js. Over `contested` rather than `joined`, for the reason the
+     tile's own comment gives. `entry()` applies the nameability bar, so a game
+     the round no longer holds simply never appears. */
+  contested.forEach((s) => {
+    if (!s.chosenGameId) return;
+    const e = entry(s.chosenGameId);
+    if (!e) return;
+    e.plays += 1;
+    if ((s.winnerIds || []).includes(mid)) e.gameWins += 1;
+  });
+
   const avgGiven = allRatings.length
     ? allRatings.reduce((a, b) => a + b, 0) / allRatings.length
     : null;
@@ -130,35 +140,45 @@ function memberStats(round, mid, deps) {
     }
   });
 
-  /* „Stärkstes Spiel" (#920): the same Siegwertung above, partitioned by the
-     game that was played. It is a TERM of that total rather than a second
-     measure, so the two tiles can never disagree — and it needs none of #894's
-     shrinkage for the same reason `win-score.js` gives: a sum, not a rate.
+  /* „Stärkstes Spiel" (#920): the game this member wins most OFTEN when they
+     play it — wins over contested plays, not a raw count.
+
+     It was the per-game Siegwertung until #1185's follow-up, when that measure
+     was withdrawn from the whole app (operator, 2026-09-22): fair and hard to
+     read, and in most rounds all but one person carried a negative number. A
+     rate says the same thing in a form nobody has to have explained.
+
+     THE DENOMINATOR IS `contested`, the same one `winRate` uses — a solo night
+     is not a contest, and „Kein Sieger"/„Fortsetzung folgt" are not either, so
+     counting them would make a member who logs solo plays unbeatable. That is
+     the trap #895 was originally written to close, and a per-game rate walks
+     straight into it unless it borrows the same denominator.
+
+     BEST_GAME_MIN_PLAYS is what stops one lucky win topping the tile: at two
+     plays a perfect record is a coin toss, and the tile would name whatever
+     game the member happened to win first. Below the floor a game is not
+     ranked at all rather than ranked low — an unproven game is not a weak one.
+
+     Ties are broken by PLAYS before sharing the tile: two games both at 100 %
+     are not equal evidence, and without this the tile would routinely show
+     three games nobody has played more than three times. Only a genuine tie in
+     both rate and plays shares.
 
      Same nameability bar as the favourite, and deliberately so: a retired game
      may not be NAMED by a stat tile even though it still counts toward the
-     Siegwertung beside it. That is the opposite call from `avgGiven` (#643),
-     which counts every rating including retired games — the split is between
-     measuring and naming, not between two filters.
-
-     Ties share the tile, like `favorite`. A member with no qualifying game
-     leaves `bestScore` at null, which is what the empty state keys off: 0 is a
-     real answer here (a solo-only game scores exactly 0) and must not be
-     mistaken for "nothing". */
-  const perGameWin = d.memberGameWinScores(round, mid, d.sessionPartyGroups);
+     rate beside it — the split is between measuring and naming (#643). */
   let bestGames = [];
   let bestScore = null;
-  // Iterated in `perGameWin`'s OWN key order, not `perGame`'s, so which of two
-  // tied games leads the tile is unchanged by the merge above.
-  Object.keys(perGameWin).forEach((gid) => {
-    const e = entry(gid);
-    if (!e) return;
-    const v = perGameWin[gid];
-    e.winScore = v;
-    if (bestScore === null || v > bestScore) {
-      bestScore = v;
+  let bestPlays = 0;
+  Object.keys(perGame).forEach((gid) => {
+    const e = perGame[gid];
+    if (e.plays < BEST_GAME_MIN_PLAYS) return;
+    const rate = e.gameWins / e.plays;
+    if (bestScore === null || rate > bestScore || (rate === bestScore && e.plays > bestPlays)) {
+      bestScore = rate;
+      bestPlays = e.plays;
       bestGames = [e.game];
-    } else if (v === bestScore) {
+    } else if (rate === bestScore && e.plays === bestPlays) {
       bestGames.push(e.game);
     }
   });
@@ -167,12 +187,12 @@ function memberStats(round, mid, deps) {
     wins,
     joined: joined.length,
     winRate,
-    winScore,
     avgGiven,
     favorite,
     favAvg,
     bestGames,
     bestScore,
+    bestPlays,
     /* Raw material for the account-wide aggregate (#1089), additive: the member
        page reads none of it. The two contest counts are what make Σ wins / Σ
        contested computable across seats, the two rating totals what make a
@@ -191,5 +211,5 @@ function memberStats(round, mid, deps) {
    function rather than a second copy of the arithmetic.
    .claude/rules/shared-constants-inventory.md carries the entry. */
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { memberStats };
+  module.exports = { memberStats, BEST_GAME_MIN_PLAYS };
 }

@@ -41,6 +41,114 @@
 // AFTER, which is the exact unearned interruption this design exists to avoid.
 const NEWS = [
   /*
+   * Clears the bar on the SECOND half rather than the first. The previews are a
+   * restructure of a screen that already existed — worth describing, not worth a
+   * dot on its own. The full-screen rating card is the capability: a shared phone
+   * going round the table now shows one game and one question, with nothing on it
+   * that leaves the vote, which is a thing the card could not do before.
+   */
+  {
+    revision: '2026-09-22',
+    de: {
+      title: 'Die Abstimmung läuft jetzt bildschirmfüllend — und der Start-Tab zeigt, was in der Runde steckt',
+      body: 'Während des Wertens füllt die Karte den ganzen Bildschirm: keine '
+        + 'obere Leiste, keine Navigation, nur das Spiel und die Frage. Das Gerät '
+        + 'kann so ohne Sorge weitergegeben werden — der Pfeil oben links bleibt '
+        + 'der Weg zurück. Der Start-Tab einer Runde zeigt außerdem neu eine '
+        + 'Vorschau auf Regal, Pokale und Chronik: ein paar Cover mit Anzahl, die '
+        + 'oberen drei der Ruhmeshalle, und wie viele Sessions es gab. Darunter '
+        + 'liegen unter „Nicht im Regal" Aussortiert, Durchgespielt, Wunschliste '
+        + 'und Könnte euch gefallen beieinander.',
+    },
+    en: {
+      title: 'Voting now fills the screen — and the Start tab shows what is in the round',
+      body: 'While you are rating, the card fills the whole screen: no top bar, no '
+        + 'navigation, just the game and the question. That makes a shared device '
+        + 'safe to hand on — the arrow in the top left is still the way back. A '
+        + "round's Start tab also previews Regal, Pokale and Chronik now: a few "
+        + 'covers with the count, the top three of the standings, and how many '
+        + 'sessions there have been. Below that, „Nicht im Regal" gathers '
+        + 'Aussortiert, Durchgespielt, Wunschliste and Könnte euch gefallen in one '
+        + 'place.',
+    },
+    es: {
+      title: 'La votación ocupa ahora toda la pantalla, y la pestaña Inicio muestra lo que hay en el grupo',
+      body: 'Mientras valoras, la tarjeta ocupa toda la pantalla: sin barra '
+        + 'superior y sin navegación, solo el juego y la pregunta. Así el móvil '
+        + 'compartido se puede pasar sin miedo; la flecha de arriba a la izquierda '
+        + 'sigue siendo la salida. La pestaña Inicio de un grupo muestra además '
+        + 'una vista previa de Regal, Pokale y Chronik: unas portadas con el '
+        + 'número, los tres primeros de la clasificación y cuántas '
+        + 'sesiones ha habido. Debajo, «Nicht im Regal» reúne Aussortiert, '
+        + 'Durchgespielt, Wunschliste y Könnte euch gefallen.',
+    },
+    fr: {
+      title: "Le vote occupe maintenant tout l'écran, et l'onglet Accueil montre ce qu'il y a dans le groupe",
+      body: "Pendant que vous notez, la carte occupe tout l'écran : pas de barre "
+        + "du haut, pas de navigation, juste le jeu et la question. Le téléphone "
+        + "partagé se passe ainsi sans crainte ; la flèche en haut à gauche reste "
+        + "la sortie. L'onglet Accueil d'un groupe présente aussi un aperçu de "
+        + "Regal, Pokale et Chronik : quelques jaquettes avec le nombre, les trois "
+        + "premiers du classement, et le nombre de sessions. En dessous, "
+        + "« Nicht im Regal » rassemble Aussortiert, Durchgespielt, Wunschliste et "
+        + "Könnte euch gefallen.",
+    },
+    it: {
+      title: 'La votazione ora occupa tutto lo schermo, e la scheda Inizio mostra cosa c\'è nel gruppo',
+      body: 'Mentre valuti, la carta occupa tutto lo schermo: nessuna barra in '
+        + 'alto, nessuna navigazione, solo il gioco e la domanda. Così il telefono '
+        + 'condiviso si passa senza timori; la freccia in alto a sinistra resta la '
+        + 'via d\'uscita. La scheda Inizio di un gruppo mostra inoltre un\'anteprima '
+        + 'di Regal, Pokale e Chronik: alcune copertine con il numero, i primi tre '
+        + 'della classifica e quante sessioni ci sono state. Sotto, «Nicht im '
+        + 'Regal» raccoglie Aussortiert, Durchgespielt, Wunschliste e Könnte euch '
+        + 'gefallen.',
+    },
+    nl: {
+      title: 'Stemmen vult nu het hele scherm, en het tabblad Start laat zien wat er in de groep zit',
+      body: 'Terwijl je waardeert, vult de kaart het hele scherm: geen bovenbalk, '
+        + 'geen navigatie, alleen het spel en de vraag. Zo kan een gedeelde '
+        + 'telefoon zonder zorgen worden doorgegeven; de pijl linksboven blijft de '
+        + 'weg terug. Het tabblad Start van een groep laat daarnaast een voorbeeld '
+        + 'zien van Regal, Pokale en Chronik: een paar covers met het aantal, de '
+        + 'top drie van de ranglijst, en hoeveel sessies er zijn geweest. '
+        + 'Daaronder brengt „Nicht im Regal" Aussortiert, Durchgespielt, '
+        + 'Wunschliste en Könnte euch gefallen samen.',
+    },
+    pt: {
+      title: 'A votação ocupa agora todo o ecrã, e o separador Início mostra o que há no grupo',
+      body: 'Enquanto avalias, o cartão ocupa todo o ecrã: sem barra superior e '
+        + 'sem navegação, apenas o jogo e a pergunta. Assim o telemóvel partilhado '
+        + 'passa de mão em mão sem receios; a seta em cima à esquerda continua a '
+        + 'ser a saída. O separador Início de um grupo mostra também uma '
+        + 'pré-visualização de Regal, Pokale e Chronik: algumas capas com o '
+        + 'número, os três primeiros da classificação e quantas sessões '
+        + 'houve. Abaixo, «Nicht im Regal» reúne Aussortiert, Durchgespielt, '
+        + 'Wunschliste e Könnte euch gefallen.',
+    },
+    fi: {
+      title: 'Äänestys täyttää nyt koko ruudun, ja Aloitus-välilehti näyttää mitä porukassa on',
+      body: 'Kun arvioit, kortti täyttää koko ruudun: ei yläpalkkia eikä '
+        + 'navigointia, vain peli ja kysymys. Yhteistä puhelinta voi näin '
+        + 'kierrättää huoletta; vasemman ylänurkan nuoli on yhä tie takaisin. '
+        + 'Porukan Aloitus-välilehti näyttää lisäksi esikatselun Regalista, '
+        + 'Pokalesta ja Chronikista: muutama kansi ja lukumäärä, kärkisijojen '
+        + 'kolme kärkeä sekä montako sessiota on ollut. Sen alla „Nicht im Regal" '
+        + 'kokoaa yhteen Aussortiert, Durchgespielt, Wunschliste ja Könnte euch '
+        + 'gefallen.',
+    },
+    ko: {
+      title: '투표 화면이 전체 화면으로 바뀌고, 시작 탭에서 라운드 전체를 미리 볼 수 있습니다',
+      body: '평가하는 동안 카드가 화면 전체를 채웁니다. 상단 바도 내비게이션도 없이 '
+        + '게임과 질문만 남으므로, 함께 쓰는 기기를 마음 놓고 건넬 수 있습니다. 왼쪽 '
+        + '위 화살표는 그대로 돌아가는 길입니다. 라운드의 시작 탭에서는 Regal, '
+        + 'Pokale, Chronik을 미리 볼 수도 있습니다. 표지 몇 장과 개수, 순위 상위 '
+        + '3명, 그리고 지금까지의 세션 수입니다. 그 아래 „Nicht im Regal"에 '
+        + 'Aussortiert, Durchgespielt, Wunschliste, Könnte euch gefallen이 함께 '
+        + '모여 있습니다.',
+    },
+  },
+  /*
    * Clears the bar: an account's own record ACROSS rounds did not exist before.
    * Every round computed a per-seat record on its member page, but nobody could
    * see the sum — a player in three rounds had three unconnected records — and
@@ -54,7 +162,7 @@ const NEWS = [
       title: 'Dein eigenes Profil, mit deiner Bilanz über alle Runden',
       body: 'Über „Mein Profil" im Konto-Menü kommst du jetzt auf deine eigene '
         + 'Profilseite. Dort steht deine Bilanz über alle Runden zusammen, eigene '
-        + 'wie geteilte: Sessions, Siege, Siegquote, Siegwertung, deine '
+        + 'wie geteilte: Sessions, Siege, Siegquote, deine '
         + 'durchschnittliche Wertung, dein Lieblingsspiel und dein stärkstes '
         + 'Spiel — ein Spiel, das in mehreren Runden im Regal steht, zählt dabei '
         + 'als eins. Darunter siehst du deine eigenen Aktivitäten. Befreundete '
@@ -66,7 +174,7 @@ const NEWS = [
       title: 'Your own profile, with your record across every round',
       body: 'Your account menu now has „My profile", which opens your own profile '
         + 'page. It carries your record across all your rounds, your own and '
-        + 'shared ones alike: sessions, wins, win rate, win score, your average '
+        + 'shared ones alike: sessions, wins, win rate, your average '
         + 'rating, your favourite game and your strongest game — a game on the '
         + 'shelf in several rounds counts once. Your own activity is listed '
         + 'below it. Accepted friends see the same record; a switch in your '
@@ -77,8 +185,8 @@ const NEWS = [
       title: 'Tu propio perfil, con tu balance de todos los grupos',
       body: 'El menú de tu cuenta tiene ahora «Mi perfil», que abre tu propia '
         + 'página de perfil. Allí está tu balance de todos tus grupos, propios y '
-        + 'compartidos: sesiones, victorias, porcentaje de victorias, puntuación '
-        + 'de victorias, tu valoración media, tu juego favorito y tu juego más '
+        + 'compartidos: sesiones, victorias, porcentaje de victorias, '
+        + 'tu valoración media, tu juego favorito y tu juego más '
         + 'fuerte: un juego que esté en la estantería de varios grupos cuenta una '
         + 'sola vez. Debajo aparece tu propia actividad. Tus amistades aceptadas '
         + 'ven el mismo balance; un interruptor en tu cuenta lo desactiva. El '
@@ -90,7 +198,7 @@ const NEWS = [
       body: 'Le menu de ton compte propose désormais « Mon profil », qui ouvre ta '
         + 'propre page de profil. On y trouve ton bilan sur tous tes groupes, les '
         + 'tiens comme ceux partagés : sessions, victoires, taux de victoires, '
-        + 'score de victoires, ta note moyenne, ton jeu préféré et ton jeu le plus '
+        + 'ta note moyenne, ton jeu préféré et ton jeu le plus '
         + 'fort — un jeu présent dans l\'étagère de plusieurs groupes ne compte '
         + 'qu\'une fois. Ton activité est listée en dessous. Tes amis acceptés '
         + 'voient le même bilan ; un interrupteur dans ton compte le désactive. Le '
@@ -102,7 +210,7 @@ const NEWS = [
       body: 'Nel menu del tuo account trovi ora «Il mio profilo», che apre la tua '
         + 'pagina di profilo. Lì c\'è il tuo bilancio su tutti i tuoi gruppi, i '
         + 'tuoi e quelli condivisi: sessioni, vittorie, percentuale di vittorie, '
-        + 'punteggio vittorie, la tua valutazione media, il tuo gioco preferito e '
+        + 'la tua valutazione media, il tuo gioco preferito e '
         + 'il tuo gioco più forte — un gioco presente nello scaffale di più gruppi '
         + 'conta una volta sola. Sotto trovi le tue attività. Le amicizie accettate '
         + 'vedono lo stesso bilancio; un interruttore nell\'account lo disattiva. '
@@ -113,7 +221,7 @@ const NEWS = [
       title: 'Je eigen profiel, met je balans over alle groepen',
       body: 'In je accountmenu staat nu „Mijn profiel", dat je eigen profielpagina '
         + 'opent. Daar staat je balans over al je groepen, eigen en gedeelde: '
-        + 'sessies, overwinningen, winstpercentage, winstwaardering, je gemiddelde '
+        + 'sessies, overwinningen, winstpercentage, je gemiddelde '
         + 'waardering, je lievelingsspel en je sterkste spel — een spel dat in '
         + 'meerdere groepen in de kast staat, telt één keer. Daaronder staat je '
         + 'eigen activiteit. Geaccepteerde vrienden zien dezelfde balans; een '
@@ -124,7 +232,7 @@ const NEWS = [
       title: 'O teu próprio perfil, com o teu balanço de todos os grupos',
       body: 'O menu da tua conta passa a ter «O meu perfil», que abre a tua própria '
         + 'página de perfil. Aí está o teu balanço de todos os teus grupos, '
-        + 'próprios e partilhados: sessões, vitórias, taxa de vitórias, pontuação '
+        + 'próprios e partilhados: sessões, vitórias, taxa de vitórias, '
         + 'de vitórias, a tua avaliação média, o teu jogo preferido e o teu jogo '
         + 'mais forte — um jogo que esteja na estante de vários grupos conta uma '
         + 'vez. Por baixo aparece a tua própria atividade. As amizades aceites '
@@ -135,7 +243,7 @@ const NEWS = [
       title: 'Oma profiilisi ja tilastosi kaikista ryhmistä',
       body: 'Tilivalikossa on nyt „Oma profiili", josta avautuu oma profiilisivusi. '
         + 'Siinä näkyy tilastosi kaikista ryhmistäsi, omista ja jaetuista: sessiot, '
-        + 'voitot, voittoprosentti, voittopisteet, keskimääräinen arviosi, '
+        + 'voitot, voittoprosentti, keskimääräinen arviosi, '
         + 'lempipelisi ja vahvin pelisi — useamman ryhmän hyllyssä oleva peli '
         + 'lasketaan kerran. Alla näkyy oma toimintasi. Hyväksytyt kaverit näkevät '
         + 'saman tilaston; tilin asetuksista sen voi kytkeä pois. Profiili ei '
@@ -146,7 +254,7 @@ const NEWS = [
       title: '모든 그룹을 합친 전적을 담은 내 프로필',
       body: '계정 메뉴에 „내 프로필"이 추가되어 내 프로필 페이지를 열 수 있습니다. '
         + '내 그룹과 공유받은 그룹을 모두 합친 전적이 표시됩니다: 세션, 승리, 승률, '
-        + '승점, 내가 준 평균 평점, 좋아하는 게임, 가장 강한 게임 — 여러 그룹의 '
+        + '내가 준 평균 평점, 좋아하는 게임, 가장 강한 게임 — 여러 그룹의 '
         + '책장에 있는 같은 게임은 하나로 셉니다. 그 아래에는 내 활동이 나옵니다. '
         + '수락된 친구도 같은 전적을 볼 수 있으며, 계정 설정의 스위치로 끌 수 '
         + '있습니다. 프로필은 그룹 이름, 함께 플레이한 사람, 개별 세션을 절대 '

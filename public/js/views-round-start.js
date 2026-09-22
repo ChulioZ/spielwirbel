@@ -293,6 +293,12 @@ function renderStartTab(round, activeGames) {
     hubPulseCard(round, activeGames),
     hubCareCard(round, activeGames),
     hubAnniversaryCard(round),
+    // The three sub-page previews (#1185, hub-previews.js), LAST in the grid:
+    // "what is over there" is a weaker claim on the reader than "play this
+    // tonight". Same null-or-nothing contract as the four above.
+    hubRegalPreview(round, activeGames),
+    hubPokalePreview(round),
+    hubChronikPreview(round),
   ].forEach((card) => { if (card) grid.appendChild(cardSlot(card)); });
 
   // From 1280px up the rail owns the hero and the big CTA above, so a round with
@@ -401,6 +407,14 @@ function renderStartTab(round, activeGames) {
   // would double the round read for a card that is often empty. Deliberately
   // not awaited — this renderer is synchronous and the tab must not wait on it.
   renderRecoTeaser(round.id, grid);
+
+  /* „Nicht im Regal" (#1185): the four off-shelf destinations under one heading,
+     at EVERY width — below the grid because they are navigation rather than
+     content, above the quick actions because they are destinations rather than
+     tasks. Unconditional, unlike every card above: a screen is not less
+     reachable for being empty, and the Wunschliste of a round that has never
+     used one is exactly where someone goes to start. */
+  app.appendChild(hubOffShelfGroup(round));
 
   // Quick actions: quieter secondary tasks below the fold.
   const actions = h('<div class="hub-actions"></div>');
@@ -583,9 +597,9 @@ function hubCareCard(round, activeGames) {
     });
   };
 
-  // The winnerless rows first: a played evening with no winner is skipped
-  // entirely by the Siegwertung (win-score.js), so it is the gap that costs the
-  // most and the one nothing else on any screen mentions.
+  // The winnerless rows first: a played evening with no winner leaves the
+  // standings, the win rate and the member records untouched, so it is the gap
+  // that costs the most and the one nothing else on any screen mentions.
   section(
     list.winnerlessTotal, 'hub.care.winnerOne', 'hub.care.winner', list.winnerless,
     (s) => {

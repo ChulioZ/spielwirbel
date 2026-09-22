@@ -202,23 +202,14 @@ async function showMember(rid, mid) {
          ${extra || ''}
          <span class="member-figure__label">${esc(label)}</span>
        </div>`);
-  /* The Siegwertung's bar (#1075): the Tafel's row-fill idea (#1056) at figure
-     size. It grows FROM THE CENTRE — right in the member's tone for a positive
-     score, left in --placeholder for a negative one — so the sign is a
-     direction rather than a glyph to read. The number stays the statement; the
-     bar is the glance.
-     `--w` is the half-width as a percentage: ±2.0 fills the half, and it is
-     clamped so a runaway score cannot paint past the track. */
-  const winBar = (score) => {
-    if (score === undefined || score === null) return '';
-    const w = Math.min(50, Math.abs(score) * 25);
-    return `<span class="member-bar${score < 0 ? ' member-bar--neg' : ''}" style="--w:${w.toFixed(1)}%" aria-hidden="true"></span>`;
-  };
+  /* FOUR figures, and none of them carries a bar. `.member-bar` (#1075) was the
+     Siegwertung's own encoding — a track filled left or right by the sign — and
+     it went with the measure on 2026-09-22. Every figure here is a count, a
+     percentage or an average, none of which has a direction to lean, so a bar
+     beside one would be a second and different claim about the same number. */
   figures.appendChild(figure(t('member.wins'), String(st.wins)));
   figures.appendChild(figure(t('member.winRate'), st.winRate === null ? '–' : Math.round(st.winRate * 100) + '%'));
   figures.appendChild(figure(t('member.sessions'), String(st.joined)));
-  figures.appendChild(figure(t('member.winScore'), st.winScore === undefined ? '–' : fmtSigned(st.winScore),
-    winBar(st.winScore)));
   figures.appendChild(figure(t('member.avgGiven'), st.avgGiven === null ? '–' : 'Ø ' + fmtAvg(st.avgGiven)));
 
   const cards = card.querySelector('.member-card__games');
@@ -268,25 +259,25 @@ async function showMember(rid, mid) {
     return card;
   };
 
-  /* ti-sword: `ti-medal` is already this screen's Siegwertung and `ti-crown`
-     is the Pokale podium's, and a card under an icon that already means
-     something else reads as the same statistic shown twice. The codepoint was
-     read from the bundled woff2's own cmap and the glyph looked at on screen —
-     a wrong-but-present one draws a plausible OTHER icon with nothing red
-     (.claude/rules/tabler-icon-codepoints.md).
+  /* ti-sword: `ti-crown` is the Pokale podium's, and a card under an icon that
+     already means something else reads as the same statistic shown twice. The
+     codepoint was read from the bundled woff2's own cmap and the glyph looked
+     at on screen — a wrong-but-present one draws a plausible OTHER icon with
+     nothing red (.claude/rules/tabler-icon-codepoints.md).
 
-     The sub-line is `fmtSigned`, matching the Siegwertung tile this decomposes
-     — and it is shown for a negative or zero best too. This is the member's own
-     stats page, not a leaderboard, so a „−0,3" is the honest answer rather than
-     something to hide; `bestScore === null` (no qualifying game at all) is the
-     only empty state. */
+     The sub-line is the win RATE plus the plays it rests on („67 % · 3×"), not
+     the rate alone: a bare percentage invites the reading that 100 % means
+     unbeatable, and the count is what says how much to trust it. A 0 % best is
+     shown honestly — this is the member's own page, not a leaderboard — and
+     `bestScore === null` (no game at or above BEST_GAME_MIN_PLAYS) is the only
+     empty state. */
   cards.appendChild(
     gameCard(
       'member-stats__best',
       'ti-sword',
       t('member.bestGame'),
       st.bestGames,
-      st.bestScore === null ? '' : fmtSigned(st.bestScore),
+      st.bestScore === null ? '' : bestGameSub(st),
       t('member.bestGameNone'),
       t('member.ribbonBest')
     )
@@ -604,5 +595,19 @@ function openAddMember(anchor, round) {
     row.appendChild(okBtn);
     el.appendChild(row);
     return () => input.focus();
+  });
+}
+
+/* „Stärkstes Spiel"'s sub-line, shared with the profile (views-profile.js),
+   which shows the same tile over an account-wide merge of the same figures.
+
+   Rate AND plays, never the rate alone: „100 %" off three evenings and off
+   thirty are not the same claim, and the tile has no other room to say which
+   one the reader is looking at. Percent formatting matches the „Siegquote"
+   figure two tiles up, so the two numbers read as the same kind of thing. */
+function bestGameSub(st) {
+  return t('member.bestGameSub', {
+    pct: Math.round(st.bestScore * 100) + '%',
+    n: st.bestPlays,
   });
 }

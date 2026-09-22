@@ -35,7 +35,7 @@ const frontendGlobals = {
   pluralRules: 'readonly', pluralCategory: 'readonly',
   fmtDateTime: 'readonly', fmtDate: 'readonly', fmtMonth: 'readonly', fmtMonthKey: 'readonly', fmtMoney: 'readonly',
   fmtRelativeDays: 'readonly',
-  fmtAvg: 'readonly', fmtSigned: 'readonly', fmtCount: 'readonly',
+  fmtAvg: 'readonly', fmtCount: 'readonly',
   // live-region.js (issue #1168) — the two aria-live regions, split out of core.js
   toastEl: 'readonly', toastTimer: 'writable', toast: 'readonly',
   srLiveEl: 'readonly', announceTimer: 'writable', announce: 'readonly',
@@ -44,6 +44,7 @@ const frontendGlobals = {
   currentView: 'writable', h: 'readonly', esc: 'readonly',
   cardSlot: 'readonly', slotOf: 'readonly',
   api: 'readonly', setContext: 'readonly', setDocTitle: 'readonly',
+  voteScreen: 'readonly',
   backRow: 'readonly', joinNames: 'readonly',
   // doc-title.js
   docTitle: 'readonly', DOC_TITLE_SEP: 'readonly', DOC_TITLE_BRAND_SEP: 'readonly',
@@ -167,9 +168,6 @@ const frontendGlobals = {
   VOTE_ADVANCE_MS: 'readonly', VOTE_ADVANCE_REDUCED_MS: 'readonly',
   VOTE_TAP_GUARD_MS: 'readonly',
   voteAdvanceMs: 'readonly', createVoteAdvance: 'readonly',
-  // win-score.js (issue #895): the Siegwertung
-  sessionWinScores: 'readonly', memberWinScores: 'readonly',
-  memberGameWinScores: 'readonly',
   // session-people.js (issue #458)
   MAX_SESSION_GUESTS: 'readonly', GUEST_NAME_MAX: 'readonly', MIN_TEAM_SIZE: 'readonly',
   sessionPeople: 'readonly', personLabel: 'readonly',
@@ -406,10 +404,19 @@ const frontendGlobals = {
   hubPresetChips: 'readonly', hubPulseCard: 'readonly', hubCareCard: 'readonly',
   hubAnniversaryCard: 'readonly', renderRecoTeaser: 'readonly',
   editableRoundName: 'readonly',
+  // off-shelf.js (#1185) — the four off-shelf destinations, one definition
+  offShelfEntries: 'readonly',
+  // hub-previews.js (#1185) — the hub's three sub-page previews + „Nicht im Regal"
+  HUB_PREVIEW_COVERS: 'readonly', HUB_PREVIEW_RANKS: 'readonly',
+  hubShelfWorthPreviewing: 'readonly',
+  hubPreviewCard: 'readonly', hubRegalPreview: 'readonly',
+  hubPokalePreview: 'readonly', hubChronikPreview: 'readonly',
+  hubOffShelfGroup: 'readonly',
   createRegalBulk: 'readonly', openBulkPicker: 'readonly',
   renderRegalTab: 'readonly', renderChronikTab: 'readonly', renderPokaleTab: 'readonly',
   CHRONIK_MILESTONES: 'readonly', chronikTier: 'readonly',
   pokaleStatCard: 'readonly', pokaleGameCard: 'readonly', recapGames: 'readonly',
+  roundStandings: 'readonly',
   gameCardHead: 'readonly', wireGameCardHead: 'readonly',
   renderRecapSection: 'readonly', renderPeriodRecapSection: 'readonly',
   canShareRecapImage: 'readonly', shareRecapCard: 'readonly',
@@ -425,7 +432,7 @@ const frontendGlobals = {
   // views-member.js
   showMember: 'readonly',
   // member-stats.js (#1075 — split out of views-member.js)
-  memberStats: 'readonly',
+  memberStats: 'readonly', BEST_GAME_MIN_PLAYS: 'readonly', bestGameSub: 'readonly',
   openAddMember: 'readonly', addMemberBtn: 'readonly',
   // views-session.js
   showStartSession: 'readonly', startVoting: 'readonly', showResults: 'readonly',

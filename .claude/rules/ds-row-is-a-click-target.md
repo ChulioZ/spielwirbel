@@ -80,6 +80,38 @@ while unread (clicking marks it read). It interpolates the modifier for the read
 state *and* adds it inside that handler, because a row read while the user is
 looking at it crosses from one state to the other on screen.
 
+## A NEW host must reuse an existing host's row class, not invent a parallel one
+
+`.ds-row__main` is `display: block` by default — deliberately, because the
+Chronik rows stack a date over a status. Every host that wants **icon beside
+label** therefore scopes its own rule, and they are enumerated in one grouped
+selector:
+
+```css
+.rs-row .ds-row__main,
+.wish-pick__row .ds-row__main,
+.off-shelf__row .ds-row__main { display: flex; align-items: center; gap: 10px; min-width: 0; }
+```
+
+So a second host rendering the *same rows* under a fresh class inherits the
+component and silently misses that rule: the icon sits flush against the label,
+nothing errors, and the markup is identical to the host that looks right. Met on
+#1185 — the hub's „Nicht im Regal" group was written with a parallel
+`hub-offshelf__row` and rendered exactly that way; it uses `off-shelf__row`, the
+Regal sheet's own class, and the two are one component in two hosts.
+
+**No test can see it**: jsdom applies no external stylesheet, so a rendered-DOM
+spec asserting the rows, hrefs and labels passes against the wrong spacing. The
+CSS-text helpers cannot see it either — the rule is present and correct; what is
+missing is a *selector* nobody wrote. Only a browser shows it, which is why a
+new host gets one look at real pixels.
+
+The rule: **reuse the class when the rows are the same component; add your
+selector to that grouped rule when they genuinely are not.** A parallel class is
+a second definition of one row, and pinning the shared class in the spec
+(`assert.ok(row.classList.contains('off-shelf__row'))`) is what stops it coming
+back — the pixels are unassertable, the class is not.
+
 ## Verifying a change here
 
 Computed style, not pixels — a cursor does not appear in a screenshot and the

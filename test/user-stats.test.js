@@ -21,6 +21,7 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 
 const { store } = require('./helpers');
+const { BEST_GAME_MIN_PLAYS } = require('../public/js/member-stats');
 const { accountStats, gameKey } = require('../lib/user-stats');
 
 const UID = 'u-ada';
@@ -232,8 +233,8 @@ test('the payload carries numbers and game titles only — no round, member or t
 
   const st = await accountStats(UID);
   assert.deepEqual(Object.keys(st).sort(), [
-    'avgGiven', 'bestGames', 'bestScore', 'favAvg', 'favorite',
-    'gamesPlayed', 'rounds', 'sessions', 'winRate', 'winScore', 'wins',
+    'avgGiven', 'bestGames', 'bestPlays', 'bestScore', 'favAvg', 'favorite',
+    'gamesPlayed', 'rounds', 'sessions', 'winRate', 'wins',
   ]);
   // A game tile carries what it draws with and nothing that identifies where it
   // was played — no game id either, which would be meaningless off its round.
@@ -247,6 +248,41 @@ test('the payload carries numbers and game titles only — no round, member or t
 
 // --- empty and unknown ------------------------------------------------------
 
+test('the play floor is applied to the MERGED total, and a thin game is unranked', async () => {
+  /* „Stärkstes Spiel" is a win rate with a floor of BEST_GAME_MIN_PLAYS
+     (member-stats.js), and across rounds the floor has to be applied to the SUM
+     — a game played twice in each of two rounds is four plays of one game, and
+     `gameKey` merged it precisely so that it would be. Applying the floor
+     per seat would leave it unranked in both halves and therefore absent.
+
+     The floor is read from the implementation rather than restated: a case
+     written against "three" stops testing the boundary the day the number moves. */
+  reset();
+  seatUser();
+  // Two different game IDS with the same TITLE — that is what gameKey merges,
+  // and using one id in both rounds would not exercise the merge at all.
+  const two = (prefix, gid) => [played(`${prefix}1`, gid), played(`${prefix}2`, gid)];
+  round({ games: [game('g1', 'Azul')], sessions: two('a', 'g1') });
+  round({ games: [game('g9', 'Azul')], sessions: two('b', 'g9') });
+
+  const st = await accountStats(UID);
+  assert.ok(BEST_GAME_MIN_PLAYS > 2 && BEST_GAME_MIN_PLAYS <= 4,
+    `this case straddles the floor only while it is 3 or 4 — it is ${BEST_GAME_MIN_PLAYS}`);
+  assert.deepEqual(st.bestGames.map((g) => g.title), ['Azul'],
+    'two plays in each of two rounds is four plays of one game');
+  assert.equal(st.bestPlays, 4, 'and the tile states the merged count');
+  assert.equal(st.bestScore, 1);
+});
+
+test('a game below the merged floor is absent, not ranked at its rate', async () => {
+  reset();
+  seatUser();
+  round({ games: [game('g1', 'Azul')], sessions: [played('s1', 'g1'), played('s2', 'g1')] });
+  const st = await accountStats(UID);
+  assert.deepEqual(st.bestGames, [], 'two plays is under the floor — unproven is not weak');
+  assert.equal(st.bestScore, null);
+});
+
 test('an account with no seat gets a real zero record; an unknown one gets null', async () => {
   reset();
   seatUser();
@@ -256,7 +292,7 @@ test('an account with no seat gets a real zero record; an unknown one gets null'
   // null rather than 0: "never been in a contest" is not "never wins" (#1075).
   assert.equal(st.winRate, null);
   assert.equal(st.avgGiven, null);
-  assert.equal(st.bestScore, null, '0 is a real Siegwertung, so absence must not read as one');
+  assert.equal(st.bestScore, null, '0 % is a real rate, so absence must not read as one');
 
   assert.equal(await accountStats('nobody-at-all'), null);
 });

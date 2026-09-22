@@ -314,7 +314,7 @@ function roundPulse(round, activeGames, opts, deps) {
    half-filled range is a game nobody will be offered at most table sizes.
 
    IT SAYS NOTHING UNTIL THE ROUND HAS PLAYED. Every row here is about a feature
-   the group is already using — the Siegwertung, a filtered draw, recognising a
+   the group is already using — the standings, a filtered draw, recognising a
    box in a list — and none of them bites before the first session. Without the
    floor a brand-new round of two hand-typed games meets a „Kümmerliste"
    nagging about two missing covers as its very first content, which is both

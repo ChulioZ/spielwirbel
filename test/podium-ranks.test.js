@@ -174,18 +174,27 @@ test('a SHARED step lays its members sideways — the tie may only grow WIDTH', 
   assert.ok(shared < solo, `a shared step shrinks its avatars (${shared} vs ${solo})`);
 });
 
-test('a shared step drops the RAW COUNT, keeping the number it is ranked by', () => {
-  /* The view emits both numbers on every entry and CSS decides which fits
-     (#895). Without this rule a chip carries „+2,0 · 12 Siege" — roughly twice
-     the fixed width „3 Siege" already took out of a 108px phone step — so every
-     name on a crowded step ellipsises away and #897's lying-down buys nothing.
+test('a shared step hides NOTHING — an entry reads the same lying down', () => {
+  /* The view emitted two numbers per entry while #895 ranked on the Siegwertung
+     and printed the raw count beside it, and CSS dropped the count here: a chip
+     carrying „+2,0 · 12 Siege" is roughly twice the fixed width „3 Siege"
+     already took out of a 108px phone step, so every name on a crowded step
+     ellipsised away and #897's lying-down bought nothing.
+
+     With one number (2026-09-22) there is nothing to drop, and the property is
+     stronger than the rule it replaces: upright and sideways say the same thing
+     by construction rather than by a `display: none` somebody has to keep in
+     step with the markup.
+
      Asserted as text because jsdom applies no external stylesheet, so no
      rendered-DOM spec in the suite can see it
      (`.claude/rules/testing-views-under-jsdom.md`). */
-  assert.match(bodyOf('.podium__col--multi .podium__winsraw'), /display:\s*none/,
-    'the count must give way on a shared step, or the name does');
-  assert.equal(bodyOf('.podium__col--multi .podium__score'), null,
-    'the score is the half that must never be hidden — it is what the step ranks on');
+  assert.equal(bodyOf('.podium__col--multi .podium__winsraw'), null,
+    'a shared step hides part of an entry again — what is it hiding, and does the upright form still agree?');
+  assert.equal(bodyOf('.podium__score'), null, 'the Siegwertung span is gone with the measure');
+  // Anti-vacuous: the shared-step block itself must still exist, or the two
+  // assertions above are satisfied by the selector family having been deleted.
+  assert.ok(bodyOf('.podium__col--multi .podium__wins'), 'the shared-step rules are gone entirely');
 });
 
 test('an entry is a DEFINITE box, so covers stay uniform and names clip', () => {
@@ -319,26 +328,27 @@ test('tied members share ONE step, sideways, and nobody is capped', async (t) =>
 });
 
 test('every member carries their OWN win count; the step carries only the rank', async (t) => {
-  /* The count used to be the pedestal's label, read off `shown[0]` — sound only
-     while the ranking IS the win count, which #895 ends by ranking on the
-     Siegwertung while still showing the raw count. */
+  /* The count used to be the PEDESTAL's label, read off `shown[0]` — which is
+     wrong even now that the ranking is the win count again, because a step can
+     be SHARED and its members need not hold the same number: a tie is decided
+     on the printed value, so two members on one step do agree today, but the
+     step is a rank and the count belongs to the member. Keeping them separate
+     is what let #895 rank on one number and print another at all. */
   const dom = await pokale(t, memberList(4), { m1: 2, m2: 1, m3: 1, m4: 1 });
   const cols = [...dom.app.querySelectorAll('.podium__col')];
   const lead = cols.find((el) => el.classList.contains('podium__col--1'));
   const tied = cols.find((el) => el.classList.contains('podium__col--2'));
 
   const leadWins = lead.querySelector('.podium__wins');
-  /* An UPRIGHT entry — one member alone on a step — has a whole line, so it
-     carries both numbers: the Siegwertung it is ranked by and the raw count
-     that explains why 12 Siege can sit below 5. */
-  // 2 wins in 5 four-party nights: 2·(3/4) − 3·(1/4) = +0,8.
-  assert.match(leadWins.textContent, /^\+0,8 · 2 Siege$/, 'both numbers, score first');
-  assert.match(leadWins.getAttribute('title'), /2 Siege/, 'the phrase it stands for stays one hover away');
-  /* On a SHARED step the raw count is what gives way (styles.css), so the
-     markup must still carry it — hiding it is CSS's call, not the view's. */
+  /* ONE number per entry since 2026-09-22 — the win count the step is ranked
+     on. It carried the Siegwertung plus the raw count, with CSS hiding the
+     count on a shared step because two numbers do not fit a phone pedestal; so
+     the upright and sideways presentations said different things. They cannot
+     now, which is the property below. */
+  assert.match(leadWins.textContent, /^2 Siege$/, 'the entry states its own count, and only that');
+  assert.match(leadWins.getAttribute('title'), /2 Siege/, 'the phrase stays one hover away');
   const chip = tied.querySelector('.podium__entry .podium__wins');
-  assert.ok(chip.querySelector('.podium__score'), 'the score is the half that always shows');
-  assert.ok(chip.querySelector('.podium__winsraw'), 'the count must be present for CSS to hide');
+  assert.match(chip.textContent, /^1 Sieg$/, 'a shared step reads exactly as an upright entry does');
   assert.equal(tied.querySelectorAll('.podium__wins').length, 3,
     'a shared step states the count once PER MEMBER, not once for the step');
   for (const el of tied.querySelectorAll('.podium__base')) {
@@ -389,14 +399,19 @@ test('members ranked below the third step still appear in the rest line', async 
 test('a member who has never won STANDS, rather than leaving a step empty', async (t) => {
   /* Reversed by operator decision (2026-09-04) after live family use: a winless
      member used to be filtered off the stage, which left ranks unclaimed while
-     they were named below with no visible reason. They are third here, on a
-     negative Siegwertung, and the stage is full.
+     they were named below with no visible reason.
 
-     See `.claude/rules/rank-encodings-must-not-be-growable-by-ties.md`. */
+     THE INVARIANT SURVIVED THE MEASURE. It was written against the Siegwertung,
+     where the winless member stood on a negative number; ranking on win counts
+     they stand on „0 Siege", which reads better and is the same rule —
+     `.claude/rules/an-unclaimed-step-is-a-claim.md`. The tempting filter under
+     a count is „has won at least once", and it is the same mistake in a new
+     costume: it would paint an empty third riser in any round where only two
+     people have ever won. */
   const dom = await pokale(t, memberList(3), { m1: 2, m2: 1 });
   assert.deepEqual([...dom.app.querySelectorAll('.podium__entry')].map((e) => e.dataset.mid), ['m2', 'm1', 'm3']);
   assert.equal(dom.app.querySelector('.podium__col--spacer'), null, 'every step is claimed');
   assert.equal(dom.app.querySelector('.podium__rest'), null, 'nobody is left below a full stage');
   const third = [...dom.app.querySelectorAll('.podium__col')][2];
-  assert.match(third.querySelector('.podium__winsraw').textContent, /0 Siege/, 'winless, and said so');
+  assert.match(third.querySelector('.podium__wins').textContent, /0 Siege/, 'winless, and said so');
 });
