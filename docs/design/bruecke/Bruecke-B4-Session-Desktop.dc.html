@@ -26,7 +26,7 @@
       <h1 style="margin: 0; font-family: 'Chakra Petch'; font-weight: 700; font-size: 34px; line-height: 1.05; text-transform: uppercase;">Session-Screens · Desktop 1440</h1>
       <span style="font-family: 'IBM Plex Mono'; font-size: 13px; color: #9aa8c0;">Brief 4 von 13</span>
     </div>
-    <p style="margin: 0; font-size: 15px; line-height: 1.55; max-width: 92ch; color: #b8c2d6;">Die Schleife von der Zündung bis „Noch eine Runde“. Auch hier trägt jeder Screen die Abschnittslinks aus <a href="Bruecke-B3-Runde-Desktop.dc.html" style="display: inline-flex; align-items: center; min-height: 24px; padding: 0 3px;">B3</a> — man kommt aus jeder Phase zu Start, Regal, Chronik, Pokale und Einstellungen, ohne die Session zu verlieren; ein Verlassen mitten in der Abstimmung wird als Sheet abgefangen (<a href="Bruecke-B15b-Dialoge.dc.html" style="display: inline-flex; align-items: center; min-height: 24px; padding: 0 3px;">B15b</a>).</p>
+    <p style="margin: 0; font-size: 15px; line-height: 1.55; max-width: 92ch; color: #b8c2d6;">Die Schleife von der Zündung bis „Noch eine Runde“. Auch hier trägt jeder Screen die Abschnittslinks aus <a href="Bruecke-B3-Runde-Desktop.dc.html" style="display: inline-flex; align-items: center; min-height: 24px; padding: 0 3px;">B3</a> — man kommt aus jeder Phase zu Start, Regal, Chronik, Pokale und Einstellungen, ohne die Session zu verlieren; ein Verlassen mitten in der Abstimmung wird als Sheet abgefangen (<a href="Bruecke-B15b-Dialoge.dc.html" style="display: inline-flex; align-items: center; min-height: 24px; padding: 0 3px;">B15b</a>). Zwei Screens tragen die geteilte Abstimmung: <strong style="color: #dfe7f5;">B4.5 Geteilte Wertung</strong> (jede Person am eigenen Telefon, Link und QR-Code am Tisch) und <strong style="color: #dfe7f5;">B4.6 Sichtblende</strong> — die Sichtblende im Ein-Gerät-Modus, die keine Wertung, keinen Score und kein Spiel der Person davor zeigt.</p>
   </div>
 
   <div data-screen-label="B4.1 Neue Session" style="display: flex; flex-direction: column; gap: 10px;">
@@ -40,7 +40,7 @@
       </div>
       <div style="position: relative; z-index: 2; flex: none; height: 44px; display: flex; align-items: stretch; gap: 4px; padding: 0 32px; background: #0b1220; border-bottom: 1px solid #24324a;">
         <sc-for list="{{ nav }}" as="n" hint-placeholder-count="5"><a href="#" style="display: inline-flex; align-items: center; padding: 0 16px; border-bottom: 2px solid {{ n.edge }}; color: {{ n.ink }}; font-family: 'IBM Plex Mono'; font-size: 12px; letter-spacing: .14em; text-transform: uppercase;">{{ n.label }}</a></sc-for>
-        <span style="margin-left: auto; display: inline-flex; align-items: center; gap: 14px; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #9aa8c0;"><span style="color: #35e0ff;">01 Wer spielt mit?</span> ▸ 2 Pool ▸ 3 Zündung</span>
+        <span style="margin-left: auto; display: inline-flex; align-items: center; gap: 14px; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #9aa8c0;"><span style="color: #35e0ff;">1 Wer spielt mit?</span> ▸ 2 Pool ▸ 3 Zündung</span>
       </div>
       <div style="position: relative; z-index: 2; flex: 1; padding: 22px 32px; display: flex; flex-direction: column; gap: 18px; min-height: 0;">
         <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 30px;">
@@ -237,6 +237,109 @@
     </div>
   </div>
 
+  <div data-screen-label="B4.5 Geteilte Wertung" style="display: flex; flex-direction: column; gap: 10px;">
+    <span style="font-family: 'IBM Plex Mono'; font-size: 12px; color: #9aa8c0;">B4.5 · Geteilte Wertung — jede Person am eigenen Telefon, dieser Screen liegt am Tisch</span>
+    <div style="width: 1440px; height: 860px; position: relative; overflow: hidden; background: radial-gradient(90% 60% at 50% 0%, #10203a, #070b14 70%); border: 1px solid #24324a; font-size: 15px; display: flex; flex-direction: column;">
+      <span style="position: absolute; inset: 0; pointer-events: none; background-image: radial-gradient(rgba(53,224,255,.14) 1px, transparent 1.3px); background-size: 28px 28px; mask-image: radial-gradient(80% 70% at 50% 40%, #000 20%, transparent 100%);"></span>
+      <div style="position: relative; z-index: 2; flex: none; height: 52px; display: flex; align-items: center; gap: 22px; padding: 0 32px; background: #0b1220; border-bottom: 1px solid #24324a;">
+        <a href="#" style="display: flex; align-items: center; gap: 10px; font-family: 'Chakra Petch'; font-weight: 700; font-size: 18px; letter-spacing: .2em; text-transform: uppercase; color: #35e0ff;"><span style="width: 10px; height: 10px; background: #35e0ff; box-shadow: 0 0 10px #35e0ff;"></span>Spielwirbel</a>
+        <span style="font-family: 'IBM Plex Mono'; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #9aa8c0;">Flotte / Übersicht</span>
+        <span style="margin-left: auto; display: flex; gap: 10px; align-items: center; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #9aa8c0;"><a href="#" style="min-height: 28px; display: inline-flex; align-items: center; border: 1px solid #24324a; padding: 0 10px; color: #dfe7f5;"><i class="ti ti-world" style="margin-right: 6px;"></i> DE</a><a href="#" style="min-height: 28px; display: inline-flex; align-items: center; border: 1px solid #24324a; padding: 0 10px; color: #dfe7f5;"><i class="ti ti-mail" style="margin-right: 6px;"></i> Postfach 2</a><a href="#" style="min-height: 28px; display: inline-flex; align-items: center; border: 1px solid #24324a; padding: 0 10px; color: #dfe7f5;">Marco</a></span>
+      </div>
+      <div style="position: relative; z-index: 2; flex: none; height: 44px; display: flex; align-items: stretch; gap: 4px; padding: 0 32px; background: #0b1220; border-bottom: 1px solid #24324a;">
+        <sc-for list="{{ nav }}" as="n" hint-placeholder-count="5"><a href="#" style="display: inline-flex; align-items: center; padding: 0 16px; border-bottom: 2px solid {{ n.edge }}; color: {{ n.ink }}; font-family: 'IBM Plex Mono'; font-size: 12px; letter-spacing: .14em; text-transform: uppercase;">{{ n.label }}</a></sc-for>
+        <span style="margin-left: auto; display: inline-flex; align-items: center; gap: 8px; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #9aa8c0;">Eingehendes Signal <span style="width: 8px; height: 8px; background: #4ade80; box-shadow: 0 0 10px #4ade80;"></span> 2 von 4</span>
+      </div>
+      <div style="position: relative; z-index: 2; flex: 1; padding: 22px 32px 26px; display: flex; flex-direction: column; gap: 18px; min-height: 0;">
+        <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 30px;">
+          <span style="display: flex; flex-direction: column; gap: 6px;">
+            <h1 style="margin: 0; font-family: 'Chakra Petch'; font-weight: 700; font-size: 54px; line-height: 1; text-transform: uppercase; letter-spacing: .02em;">Abstimmung läuft</h1>
+            <span style="font-size: 17px; color: #b8c2d6;">3 Spiele ausgelost. Alle stimmen ab, dann kommt das Finale.</span>
+          </span>
+          <a href="#" style="min-height: 44px; display: inline-flex; align-items: center; gap: 8px; border: 1px solid #24324a; padding: 0 16px; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #dfe7f5;">Abstimmung beenden</a>
+        </div>
+        <div style="flex: 1; min-height: 0; display: grid; grid-template-columns: 380px 1fr 360px; gap: 22px;">
+          <div style="position: relative; display: flex; flex-direction: column; gap: 8px; padding: 16px 18px; background: #0e1626; border: 1px solid #24324a; min-height: 0;">
+            <span style="position: absolute; left: -1px; top: -1px; width: 14px; height: 14px; border-left: 2px solid #35e0ff; border-top: 2px solid #35e0ff;"></span>
+            <span style="display: flex; justify-content: space-between; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: #9aa8c0;"><span>Wer spielt mit?</span><span><span style="color: #4ade80;">2 abgestimmt</span> · 2 offen</span></span>
+            <sc-for list="{{ lobbyPeople }}" as="p" hint-placeholder-count="4">
+              <span style="display: grid; grid-template-columns: 12px 44px 1fr auto; gap: 12px; align-items: center; min-height: 52px; border-bottom: 1px solid #1c2740;">
+                <span style="width: 10px; height: 10px; border-radius: 50%; background: {{ p.led }}; box-shadow: {{ p.ledGlow }};"></span>
+                <span style="width: 44px; height: 44px; border: 1px solid {{ p.color }}; display: grid; place-items: center; font-family: 'Chakra Petch'; font-weight: 700; font-size: 18px; color: {{ p.color }};">{{ p.ini }}</span>
+                <span style="display: flex; flex-direction: column; gap: 2px;"><span style="font-family: 'Chakra Petch'; font-weight: 600; font-size: 20px; text-transform: uppercase;">{{ p.name }}</span><span style="font-family: 'IBM Plex Mono'; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: #9aa8c0;">{{ p.device }}</span></span>
+                <span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: {{ p.stateInk }};">{{ p.state }}</span>
+              </span>
+            </sc-for>
+            <span style="display: flex; align-items: center; gap: 10px; min-height: 44px; margin-top: 6px; padding: 0 12px; background: #17233a; border-left: 3px solid #4ade80; font-size: 14px; color: #dfe7f5;"><i class="ti ti-check" style="color: #4ade80;"></i> Deine Stimme ist da. Fehlen noch die anderen.</span>
+            <span style="margin-top: auto; font-size: 13px; color: #b8c2d6; line-height: 1.5;">Niemand sieht die Werte der anderen. Erst wenn alle abgestimmt haben, wird entschlüsselt.</span>
+          </div>
+          <div style="position: relative; display: flex; flex-direction: column; gap: 16px; padding: 24px 26px; background: #0e1626; border: 1px solid #35e0ff; min-height: 0;">
+            <span style="position: absolute; right: -1px; top: -1px; width: 14px; height: 14px; border-right: 2px solid #35e0ff; border-top: 2px solid #35e0ff;"></span><span style="position: absolute; right: -1px; bottom: -1px; width: 14px; height: 14px; border-right: 2px solid #35e0ff; border-bottom: 2px solid #35e0ff;"></span>
+            <span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: #35e0ff;">Link zum Abstimmen teilen</span>
+            <span style="font-size: 16px; color: #b8c2d6; line-height: 1.5;">Jede Person wertet am eigenen Telefon. Link schicken oder Code scannen — kein Konto nötig.</span>
+            <span style="display: flex; gap: 10px; align-items: stretch;">
+              <span style="flex: 1; min-height: 48px; display: flex; align-items: center; padding: 0 14px; background: #070b14; border: 1px solid #24324a; font-family: 'IBM Plex Mono'; font-size: 14px; color: #dfe7f5; overflow: hidden; white-space: nowrap;">spielwirbel.app/vote/4KQ-92X</span>
+              <a href="#" style="min-height: 48px; display: inline-flex; align-items: center; gap: 8px; padding: 0 18px; background: #35e0ff; color: #070b14; font-family: 'Chakra Petch'; font-weight: 700; font-size: 17px; letter-spacing: .06em; text-transform: uppercase;"><i class="ti ti-share"></i> Teilen</a>
+            </span>
+            <span style="display: inline-flex; align-self: flex-start; align-items: center; gap: 8px; min-height: 28px; padding: 0 10px; border: 1px solid #4ade80; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #4ade80;"><i class="ti ti-check"></i> Link kopiert — teile ihn mit der Runde.</span>
+            <span style="flex: 1; min-height: 0; display: grid; grid-template-columns: auto 1fr; gap: 20px; align-items: center; border-top: 1px solid #1c2740; padding-top: 16px;">
+              <span style="position: relative; display: block; width: 212px; height: 212px; background: #dfe7f5; border: 1px solid #24324a;"><span style="position: absolute; inset: 16px; background-image: repeating-conic-gradient(#070b14 0% 25%, #dfe7f5 0% 50%); background-size: 20px 20px;"></span><span style="position: absolute; left: 16px; top: 16px; width: 50px; height: 50px; background: #070b14; box-shadow: inset 0 0 0 10px #070b14, inset 0 0 0 20px #dfe7f5;"></span><span style="position: absolute; right: 16px; top: 16px; width: 50px; height: 50px; background: #070b14; box-shadow: inset 0 0 0 10px #070b14, inset 0 0 0 20px #dfe7f5;"></span><span style="position: absolute; left: 16px; bottom: 16px; width: 50px; height: 50px; background: #070b14; box-shadow: inset 0 0 0 10px #070b14, inset 0 0 0 20px #dfe7f5;"></span></span>
+              <span style="display: flex; flex-direction: column; gap: 6px;">
+                <span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 30px; line-height: 1.05; text-transform: uppercase;">QR-Code</span>
+                <span style="font-size: 16px; color: #b8c2d6;">Scannen und mitbewerten</span>
+                <span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #9aa8c0; line-height: 1.7; margin-top: 6px;">Gilt nur für diese Session<br>Läuft mit „Abstimmung beenden“ ab</span>
+              </span>
+            </span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 10px; padding: 16px 18px; background: #0e1626; border: 1px solid #24324a; min-height: 0;">
+            <span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: #9aa8c0;">An diesem Gerät abstimmen</span>
+            <span style="font-size: 14px; color: #b8c2d6; line-height: 1.5;">Wer kein Telefon dabei hat, wertet hier — mit Sichtblende zwischen den Personen.</span>
+            <sc-for list="{{ lobbyHere }}" as="h" hint-placeholder-count="2">
+              <a href="#" style="display: grid; grid-template-columns: 38px 1fr 20px; gap: 12px; align-items: center; min-height: 52px; padding: 0 12px; border: 1px solid {{ h.color }}; color: #dfe7f5;">
+                <span style="width: 34px; height: 34px; border: 1px solid {{ h.color }}; display: grid; place-items: center; font-family: 'Chakra Petch'; font-weight: 700; font-size: 15px; color: {{ h.color }};">{{ h.ini }}</span>
+                <span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 19px; text-transform: uppercase;">Für {{ h.name }}</span>
+                <i class="ti ti-arrow-right" style="color: #9aa8c0;"></i>
+              </a>
+            </sc-for>
+            <a href="#" style="min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1px dashed rgba(53,224,255,.5); color: #35e0ff; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase;">Weiter zu Lea <i class="ti ti-arrow-right"></i></a>
+            <span style="margin-top: auto; display: flex; flex-direction: column; gap: 8px;">
+              <span style="font-family: 'IBM Plex Mono'; font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: #9aa8c0;">Wenn alle durch sind</span>
+              <a href="#" style="display: flex; align-items: center; justify-content: center; min-height: 56px; background: #ffb020; color: #070b14; font-family: 'Chakra Petch'; font-weight: 700; font-size: 20px; letter-spacing: .08em; text-transform: uppercase;">Jetzt abstimmen</a>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div data-screen-label="B4.6 Sichtblende" style="display: flex; flex-direction: column; gap: 10px;">
+    <span style="font-family: 'IBM Plex Mono'; font-size: 12px; color: #9aa8c0;">B4.6 · Sichtblende — Sichtblende im Ein-Gerät-Modus, zeigt keine Werte</span>
+    <div style="width: 1440px; height: 760px; position: relative; overflow: hidden; background: radial-gradient(90% 60% at 50% 0%, #10203a, #070b14 70%); border: 1px solid #24324a; font-size: 15px; display: flex; flex-direction: column;">
+      <span style="position: absolute; inset: 0; pointer-events: none; background-image: radial-gradient(rgba(53,224,255,.14) 1px, transparent 1.3px); background-size: 28px 28px; mask-image: radial-gradient(80% 70% at 50% 40%, #000 20%, transparent 100%);"></span>
+      <div style="position: relative; z-index: 2; flex: none; height: 52px; display: flex; align-items: center; gap: 22px; padding: 0 32px; background: #0b1220; border-bottom: 1px solid #24324a;">
+        <a href="#" style="display: flex; align-items: center; gap: 10px; font-family: 'Chakra Petch'; font-weight: 700; font-size: 18px; letter-spacing: .2em; text-transform: uppercase; color: #35e0ff;"><span style="width: 10px; height: 10px; background: #35e0ff; box-shadow: 0 0 10px #35e0ff;"></span>Spielwirbel</a>
+        <span style="font-family: 'IBM Plex Mono'; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #9aa8c0;">Flotte / Übersicht</span>
+        <span style="margin-left: auto; display: flex; gap: 10px; align-items: center; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #9aa8c0;"><a href="#" style="min-height: 28px; display: inline-flex; align-items: center; border: 1px solid #24324a; padding: 0 10px; color: #dfe7f5;"><i class="ti ti-world" style="margin-right: 6px;"></i> DE</a><a href="#" style="min-height: 28px; display: inline-flex; align-items: center; border: 1px solid #24324a; padding: 0 10px; color: #dfe7f5;"><i class="ti ti-mail" style="margin-right: 6px;"></i> Postfach 2</a><a href="#" style="min-height: 28px; display: inline-flex; align-items: center; border: 1px solid #24324a; padding: 0 10px; color: #dfe7f5;">Marco</a></span>
+      </div>
+      <div style="position: relative; z-index: 2; flex: none; height: 44px; display: flex; align-items: stretch; gap: 4px; padding: 0 32px; background: #0b1220; border-bottom: 1px solid #24324a;">
+        <sc-for list="{{ nav }}" as="n" hint-placeholder-count="5"><a href="#" style="display: inline-flex; align-items: center; padding: 0 16px; border-bottom: 2px solid {{ n.edge }}; color: {{ n.ink }}; font-family: 'IBM Plex Mono'; font-size: 12px; letter-spacing: .14em; text-transform: uppercase;">{{ n.label }}</a></sc-for>
+        <span style="margin-left: auto; display: inline-flex; align-items: center; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #9aa8c0;">Übergabe · 3 von 4</span>
+      </div>
+      <div style="position: relative; z-index: 2; flex: 1; display: grid; place-items: center; padding: 40px; min-height: 0;">
+        <span style="position: absolute; inset: 0; background: repeating-linear-gradient(135deg, rgba(53,224,255,.05) 0 12px, transparent 12px 24px);"></span>
+        <div style="position: relative; display: flex; flex-direction: column; align-items: center; gap: 22px; max-width: 900px; text-align: center; padding: 48px 60px; background: #0e1626; border: 1px solid #35e0ff; box-shadow: 0 0 70px rgba(53,224,255,.15);">
+          <span style="position: absolute; left: -1px; top: -1px; width: 18px; height: 18px; border-left: 2px solid #35e0ff; border-top: 2px solid #35e0ff;"></span><span style="position: absolute; right: -1px; top: -1px; width: 18px; height: 18px; border-right: 2px solid #35e0ff; border-top: 2px solid #35e0ff;"></span><span style="position: absolute; left: -1px; bottom: -1px; width: 18px; height: 18px; border-left: 2px solid #35e0ff; border-bottom: 2px solid #35e0ff;"></span><span style="position: absolute; right: -1px; bottom: -1px; width: 18px; height: 18px; border-right: 2px solid #35e0ff; border-bottom: 2px solid #35e0ff;"></span>
+          <span style="display: inline-flex; align-items: center; gap: 10px; font-family: 'IBM Plex Mono'; font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: #35e0ff;"><span style="width: 8px; height: 8px; background: #35e0ff; box-shadow: 0 0 10px #35e0ff;"></span>Eingehendes Signal</span>
+          <span style="width: 96px; height: 96px; border: 1px solid #a49cf0; display: grid; place-items: center; font-family: 'Chakra Petch'; font-weight: 700; font-size: 44px; color: #a49cf0;">L</span>
+          <h1 style="margin: 0; font-family: 'Chakra Petch'; font-weight: 700; font-size: 76px; line-height: 1; text-transform: uppercase; letter-spacing: .02em; text-wrap: balance;">Lea, du bist dran!</h1>
+          <p style="margin: 0; font-size: 24px; line-height: 1.4; color: #b8c2d6;">Die anderen schauen kurz weg.</p>
+          <a href="#" style="display: inline-flex; align-items: center; gap: 16px; min-height: 76px; padding: 0 48px; background: #ffb020; color: #070b14; font-family: 'Chakra Petch'; font-weight: 700; font-size: 34px; letter-spacing: .08em; text-transform: uppercase; box-shadow: 0 0 40px rgba(255,176,32,.35);">Los geht’s ›</a>
+          <span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #9aa8c0; line-height: 1.7;">Keine Wertung, kein Score, kein Spielname von Jonas auf diesem Screen<br>Die Blende bleibt, bis Lea selbst tippt</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1500,&quot;height&quot;:980}}">
@@ -294,6 +397,19 @@ class Component extends DCLogic {
       { name: 'Tim', ini: 'T', color: MU, op: '.55', cells: ['open', 'open', 'open'].map((s) => cell(s, MU)), state: 'heute nicht dabei' },
     ];
 
+    const lobbyPeople = [
+      { name: 'Marco', ini: 'M', color: P[0], done: true, device: 'eigenes Telefon · du' },
+      { name: 'Jonas', ini: 'J', color: P[1], done: true, device: 'eigenes Telefon' },
+      { name: 'Lea', ini: 'L', color: P[2], done: false, device: 'eigenes Telefon' },
+      { name: 'Gast', ini: '+', color: P[4], done: false, device: 'an diesem Gerät' },
+    ].map((p) => ({
+      ...p, state: p.done ? 'abgestimmt' : 'offen', stateInk: p.done ? GR : AM,
+      led: p.done ? GR : '#24324a', ledGlow: p.done ? '0 0 8px ' + GR : 'none',
+    }));
+    const lobbyHere = [
+      { name: 'Lea', ini: 'L', color: P[2] }, { name: 'Gast', ini: '+', color: P[4] },
+    ];
+
     const report = [
       { place: '1', title: 'Nordlichter', sub: 'Gehört Marco · gespielt', score: 4.8, dist: [0, 0, 0, 1, 3], h: 200, win: true },
       { place: '2', title: 'Kartographen des Nordens', sub: 'Gehört Lea', score: 3.8, dist: [0, 0, 2, 1, 1], h: 150, win: false },
@@ -308,7 +424,7 @@ class Component extends DCLogic {
       { name: 'Tisch 2', meta: '3 spielen mit', pool: '5', probes: 2, note: 'Aylin, Ben und ein Gast. Gäste bringen keine Spiele ein, bewerten aber mit.', seats: ['Aylin', 'Ben', 'Gast'].map((n, i) => ({ name: n, ini: n[0], color: P[i + 4] })) },
     ];
 
-    return { nav: navOf('Start'), navChronik: navOf('Chronik'), members, manifest, setupActions, pool, probes, thrust, voteStatus, report, tables };
+    return { nav: navOf('Start'), navChronik: navOf('Chronik'), members, manifest, setupActions, pool, probes, thrust, voteStatus, lobbyPeople, lobbyHere, report, tables };
   }
 }
 </script>

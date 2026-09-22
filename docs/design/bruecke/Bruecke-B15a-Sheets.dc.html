@@ -120,9 +120,9 @@
       <div style="display: flex; flex-direction: column; gap: 10px;">
         <span style="font-family: 'IBM Plex Mono'; font-size: 12px; color: #9aa8c0;">Sortieren — am Auslöser</span>
         <div style="width: 340px; display: flex; flex-direction: column; gap: 8px;">
-          <span style="align-self: flex-start; min-height: 36px; display: inline-flex; align-items: center; padding: 0 12px; border: 1px solid #35e0ff; color: #35e0ff; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase;">Sortiert: Score ▾</span>
+          <span style="align-self: flex-start; min-height: 36px; display: inline-flex; align-items: center; padding: 0 12px; border: 1px solid #35e0ff; color: #35e0ff; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase;">Sortiert: Bewertung ▾</span>
           <div style="background: #141d30; border: 1px solid #35e0ff; display: flex; flex-direction: column;">
-            <sc-for list="{{ sortOptions }}" as="s" hint-placeholder-count="5">
+            <sc-for list="{{ sortOptions }}" as="s" hint-placeholder-count="3">
               <a href="#" style="display: grid; grid-template-columns: 1fr 20px; gap: 10px; align-items: center; min-height: 44px; padding: 0 14px; border-bottom: 1px solid #1c2740; color: {{ s.ink }}; font-size: 14px;">{{ s.label }}<i class="ti {{ s.icon }}" style="color: #35e0ff;"></i></a>
             </sc-for>
           </div>
@@ -201,16 +201,15 @@ class Component extends DCLogic {
     ];
 
     const sortOptions = [
-      { label: 'Score, absteigend', on: true }, { label: 'Score, aufsteigend', on: false },
-      { label: 'Zuletzt gespielt', on: false }, { label: 'Name A–Z', on: false }, { label: 'Dauer', on: false },
+      { label: 'Zufällig', on: false }, { label: 'Name', on: false }, { label: 'Bewertung', on: true },
     ].map((s) => ({ label: s.label, ink: s.on ? '#dfe7f5' : '#b8c2d6', icon: s.on ? 'ti-check' : '' }));
 
     const locales = [
       { code: 'DE', label: 'Deutsch', on: true }, { code: 'EN', label: 'English', on: false },
-      { code: 'FR', label: 'Français', on: false }, { code: 'ES', label: 'Español', on: false },
+      { code: 'ES', label: 'Español', on: false }, { code: 'FR', label: 'Français', on: false },
       { code: 'IT', label: 'Italiano', on: false }, { code: 'NL', label: 'Nederlands', on: false },
-      { code: 'PL', label: 'Polski', on: false }, { code: 'PT', label: 'Português', on: false },
-      { code: 'SV', label: 'Svenska', on: false },
+      { code: 'PT', label: 'Português', on: false }, { code: 'FI', label: 'Suomi', on: false },
+      { code: 'KO', label: '한국어', on: false },
     ].map((l) => ({ ...l, ink: l.on ? '#dfe7f5' : '#b8c2d6', icon: l.on ? 'ti-check' : '' }));
 
     const scoreRamp = [

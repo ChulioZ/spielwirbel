@@ -20,9 +20,13 @@ sind gemessen, nicht blind.
 ## Urteil
 
 **Abgenommen.** Runde 1 meldete fünf systemische, sechs Wort- und drei
-IA-Funde; Runde 2 hat **alle vierzehn nachgemessen bestätigt**. Die Brücke geht
-in die Umsetzung. Fünf kleine Funde aus Runde 2 sind nicht blockierend und
-werden in den Issues getragen.
+IA-Funde; Runde 2 hat **alle vierzehn nachgemessen bestätigt**. Runde 3 hat die
+fünf Restfunde abgeräumt und **die geteilte Wertung und die Sichtblende
+nachgeliefert** — zwei Screens, deren Fehlen diese Prüfung in den ersten beiden
+Runden übersehen hatte. Die Brücke geht in die Umsetzung.
+
+Das Paket wurde nach Runde 2 bereits übernommen (PR #1234); Runde 3 ändert sechs
+der sechzehn Blätter.
 
 | | Runde 1 | Runde 2 |
 |---|---|---|
@@ -81,10 +85,70 @@ Zeitangabe.
 
 ---
 
-## Offen, nicht blockierend — in den Issues getragen
+## Runde 3 — die zwei fehlenden Screens und die fünf Funde
 
-Nichts davon hält die Umsetzung auf; jede Zeile gehört in die betroffene
-Implementierungs-Issue, damit niemand sie aus den Blättern neu herleiten muss.
+Nach Runde 2 fiel beim Filen der Issues auf, dass die **geteilte Wertung**
+fehlte: Handover §2, Session-Schleife Punkt 2, verlangt sie ausdrücklich
+(„each person on their own phone via link/QR — #1170"), Tisch zeichnet sie als
+**T4.3** und **T6.5**, Ocean als **O4.3** — die Brücke hatte keine. **Das ist
+ein Versäumnis dieser Prüfung, nicht der Umsetzung:** Runde 1 und 2 haben die
+Abschnittsleiste, das Dock, die Hub-Blöcke und die Wertungskarte geprüft, aber
+die Session-Schleife nie Punkt für Punkt abgehakt — genau die Lehre, die die
+Ocean-Prüfung aufgeschrieben hat, angewandt auf den Block, den niemand abhakte.
+
+Runde 3 liefert vier Screens nach und räumt alle fünf Funde aus Runde 2 ab.
+Sechs Blätter geändert, neun unberührt.
+
+| Nachgeliefert | Was gemessen wurde |
+|---|---|
+| **B4.5 / B6.9 Geteilte Wertung** | Kein Kontrastfehler. Die Bedienelemente liegen bei **44–48 px** („Zurück" 44, „Weiter zu Lea" 46, „Abstimmung beenden" 46, „Teilen" 48); die Personenzeilen sind **328×47** mit dem 38-px-Kürzel darin, also ist die Zeile das Ziel. Kopfleiste und Dock stehen — richtig, die Live-Abstimmung ist nach Tisch C1 kein Vollbild. **Dreizehn Strings wörtlich aus `lang/de.js`**: `lobby.title`, `lobby.sub`, `lobby.close`, `lobby.voted`, `lobby.waiting`, `lobby.yourVoteIn`, `lobby.share`, `lobby.shareCopied`, `lobby.qr`, `lobby.qrHint`, `lobby.hereLabel`, `lobby.voteHere`, `lobby.next`, `lobby.voteNow`. |
+| **B4.6 / B6.10 Sichtblende** | `vote.turn`, `vote.handoverSub`, `vote.go` wörtlich. Das Telefon (B6.10) trägt **weder Kopfleiste noch Dock** — richtig, die Blende gehört zur Wertungskarte. Beide Blätter schreiben ausdrücklich an den Screen, dass keine Wertung, kein Score und kein Spielname der vorherigen Person darauf steht. |
+
+| Fund aus Runde 2 | Runde 3, nachgemessen |
+|---|---|
+| **R2-1** Sortier-Popover | **Behoben.** „Sortiert: **Bewertung**", Optionen exakt **Zufällig · Name · Bewertung**. |
+| **R2-2** Sprachwähler | **Behoben.** DE EN ES FR IT NL PT **FI Suomi** **KO 한국어** — die neun aus `locales.js`. |
+| **R2-3** vier erfundene Strings | **Behoben.** „À régler", „Avoimet asiat", „Démarrer", „Aloitus"; die alten vier kommen nicht mehr vor. Die Messtabelle ist **neu gerechnet**, nicht nachgebessert: „Rundenname 16 → 19" (jetzt ist Finnisch die längere Sprache) und „Frage der Wertungskarte 43 → 48" (weil die Frage nun das Spiel trägt). |
+| **R2-4** Wertungsfrage ohne Spiel | **Behoben.** « …pour ce **jeu** aujourd'hui ? » · „…**tälle pelille** tänään?". |
+| **R2-5** führende Nullen | **Behoben.** Schrittleiste „1 ▸ 2 ▸ 3", „09 Siege" weg. Der einzige verbliebene `0\d`-Treffer ist B1s Gegenbeispiel „Nie ‚09 Einheiten'" — die Dokumentation der Regel. |
+
+Regression geprüft: Hexwerte unverändert 28 undeklariert (dieselbe Ausnahmeliste,
+**kein neuer Wert**), alle **58** Glyphen im Repo-Subset, kein Abendwort. Das
+Messgerät wurde auch in dieser Runde kontrolliert (B4, drei eingefärbte Knoten,
+genau drei gemeldet).
+
+### Bei der Übernahme berichtigt
+
+- **„spielwirbel.de/w/4KQ-92X"** auf B4.5 — die Domain ist **spielwirbel.app**
+  und die Route **`/vote/:token`** (`lib/routes/sessions.js:593`); Tisch T6.5
+  zeichnet sie korrekt als `spielwirbel.app/vote/8f3q`. Es war der einzige
+  String der neuen Screens, der nicht abgeschrieben war — auf dem Screen, dessen
+  Zweck dieser Link ist.
+- **„Übergabe" → „Sichtblende"** für B4.6 und B6.10. **Das war ein Fehler im
+  Prüfauftrag, nicht in der Umsetzung**, und er geht auf eine falsche Lesart
+  dieser Prüfung zurück: in Tisch und Ocean heißt das **letzte Panel jedes
+  Blattes** „Übergabe" (T4.6, T6.7, O4.6, O6.8 … — „Was T4 entscheidet"), es ist
+  die Zusammenfassung des Briefs und **kein Screen**. Der Prüfauftrag hat diese
+  Panels für gezeichnete Geräte-Übergaben gehalten und den Namen so
+  weitergegeben. Das einzige echte Vorbild für die Blende ist **Oceans O6.5
+  „Sichtblende"**; Tisch hat gar keine. Der Name folgt jetzt Ocean, damit
+  „Übergabe" paketübergreifend eine Bedeutung behält.
+
+### Offen — eine Entscheidung
+
+**B4.6 Sichtblende trägt am Desktop die volle Kopfleiste und die fünf
+Abschnittslinks.** Ocean zeichnet seine Blende (O6.5) ohne Navigation, und eine
+Blende, von der die vorherige Person in die Runde wegnavigieren kann, ist
+zumindest merkwürdig. Das Telefon (B6.10) ist korrekt nackt. Der Prüfauftrag hat
+die Chrome-Frage nur für das Telefon gestellt — also wieder eine Lücke der
+Vorgabe, keine der Umsetzung. Entweder so lassen (Desktop = geteilter
+Bildschirm, die Navigation bleibt) oder die Leisten streichen; in der
+Session-Issue vermerkt.
+
+## Offen, nicht blockierend — aus Runde 2, in Runde 3 abgeräumt
+
+Alle fünf sind behoben (Tabelle oben). Der Wortlaut bleibt hier stehen, weil die
+Begründungen für die Umsetzung weiterhin gelten.
 
 | # | Wo | Was | Getragen von |
 |---|---|---|---|
