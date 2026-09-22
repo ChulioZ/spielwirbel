@@ -501,7 +501,12 @@ function randomOrderedGames(round, activeGames) {
 // stored value stays a member-colors.js hex and lib/routes/members.js keeps
 // validating the same eight (.claude/rules/shared-constants-across-the-stack.md).
 // A color-mix() is a legal inline background, so this needs no second palette.
-const MEMBER_LIFT = '42%';
+// THE AMOUNT is a TOKEN (#1188): 42% was picked against near-black pages, and
+// on Der Tisch's walnut --surface the darkest tone prints at 4.20:1 as a voter
+// name. The shipped value is the var()'s FALLBACK, so a design that declares
+// nothing is byte-for-byte unchanged; test/a11y-contrast.test.js resolves the
+// percentage per design, so one that moves it is measured where it moved to.
+const MEMBER_LIFT = 'var(--member-lift, 42%)';
 function memberTone(color) {
   return isDarkScheme() ? `color-mix(in oklab, ${color}, #fff ${MEMBER_LIFT})` : color;
 }

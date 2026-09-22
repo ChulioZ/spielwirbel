@@ -1,27 +1,339 @@
-/* Der Tisch — override stylesheet (#1184, STUB).
+/* Der Tisch — the override stylesheet (#1188, T1 + T8).
  *
- * The first per-design stylesheet, and for now only enough of one to prove the
- * path works end to end: fetched on demand by design.js the first time the
- * design is worn, precached in sw.js's SHELL, content-hashed by the optional
- * production build, and folded into the derived cache name so a change to this
- * file invalidates the installed shell.
+ * Source: docs/design/tisch/Tisch-T1-Komponenten.dc.html ("T1.1 Tokens") for
+ * every value here, and Tisch-T8-Farben.dc.html for the measurements. T1 is the
+ * SOURCE and T8 only measures — the review (docs/design/pruefung-tisch-2026-09-20.md,
+ * finding A8) found 81 hexes in T2-T14 that T1 did not know, so a value that is
+ * not in T1 does not belong in this file either. Add it to the package first.
  *
- * The real Tisch token set and its layout arrive with #1188 (T1/T8). Until
- * then this file carries PLACEHOLDER layout tokens only — a table's cards sit
- * squarer than Klassisch's — and deliberately NO colour.
+ * WHAT THIS FILE IS ALLOWED TO CONTAIN HAS CHANGED, and the old rule is still
+ * right for every design that does not need this. The #1184 stub said "no
+ * colour here, ever, unless the contrast harness learns to read design
+ * stylesheets first" — so #1188 taught it. test/support/theme.js now resolves a
+ * token through three blocks in the browser's own order (this file, then
+ * styles.css's dark block, then :root), so everything below is swept by
+ * test/a11y-contrast.test.js exactly like a :root token.
  *
- * No colour here, ever, unless the contrast harness learns to read design
- * stylesheets first. test/a11y-contrast.test.js resolves each design's tokens
- * out of styles.css from the registry's `page`/`accent`/`scheme`
- * (test/support/theme.js), so a colour declared in this file would ship
- * unmeasured — which is exactly the class of regression #145 was about. The
- * design's two colours therefore live in public/js/designs.js. See that file's
- * header.
+ * That ordering is a fact about the LOADER, not about the selectors:
+ * `:root[data-design="tisch"]` and `:root[data-scheme="dark"]` are both (0,2,0),
+ * so they tie on specificity and source order decides — and design.js appends
+ * this sheet's <link> after styles.css. Do not raise the specificity here to
+ * "make sure": a rule at (0,3,0) would also outrank the INLINE-adjacent
+ * component rules it has no business beating. See
+ * .claude/rules/design-stylesheets-are-shell-assets.md.
+ *
+ * Two things that are NOT here and must not move here:
+ *   - --page-bg and --brand. applyBackground() writes them as inline custom
+ *     properties on <html>, which outrank every stylesheet, so a copy here
+ *     would be dead text that reads as the source of truth. They are the
+ *     registry's `page`/`accent` (public/js/designs.js).
+ *   - Screen layout. #1188 is tokens + shared components; the twelve screen
+ *     issues are #1189-#1200.
  */
 
+/* The design's VOICE — scheme-independent, so it survives into a round that is
+   still wearing its own palette. Fonts and radii are what make a screen read as
+   Der Tisch even where the colours below do not apply. */
 :root[data-design="tisch"] {
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
-  --radius-xl: 18px;
+  /* ---- Schrift. Bricolage Grotesque for display, Manrope for text; both OFL,
+     both self-hosted, declared in styles.css beside the world faces. Only the
+     weights that ship are ever asked for (500/700/800 and 500/600/700), so the
+     browser can never synthesise a faux-bold. */
+  /* How far a member's colour is lifted toward white before it is painted on
+     this design (memberTone, core.js). The shipped 42% was picked against
+     near-black pages; on walnut --surface the darkest of the eight prints as a
+     voter name at 4.20:1. 48% clears every one of the eight at 4.73:1 while
+     leaving the dark initials on the lifted disc at 6.84:1. */
+  --member-lift: 48%;
+
+  --font: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Bricolage Grotesque", "Manrope", -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* ---- Radien. T1 is square: 73 of its rules are 4px and 25 are 3px. The
+     pill radius stays, because T1 uses it too (13 rules) — a score pill and an
+     avatar are still round here. */
+  --radius-sm: 3px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+  --radius-xl: 8px;
+}
+
+/* The design's COLOURS, and the gate is load-bearing rather than tidy.
+ *
+ * Until the flip (#1202) a ROUND still overrides --page-bg and --brand with its
+ * own palette, inline on <html>, and applyBackground() sets data-scheme from
+ * THAT design rather than from the user's (round-theme.js). So inside a round
+ * on a light palette the page goes light while <html> still says
+ * data-design="tisch" — and an ungated block left Der Tisch's paper --ink
+ * #f6ecd8 on a #eaf1ea page, and its near-black --on-accent on that round's
+ * dark green accent. Measured in a browser on a seeded demo round; it is the
+ * catastrophic direction, and no spec could have seen it, because the harness
+ * resolves a design against its OWN page by construction.
+ *
+ * Gating on the scheme makes the colours apply exactly where they cohere:
+ * outside a round (setScheme(null) falls back to the user design, i.e. dark),
+ * and in a round whose own design is dark. In a LIGHT round the block simply
+ * does not match, and the round's palette resolves exactly as it does under
+ * Klassisch — which is the documented transition behaviour: a round's design
+ * wins while it is applied.
+ *
+ * The remaining combination is a dark WORLD round under Der Tisch, where these
+ * tokens meet that world's page. That one is legible by construction rather
+ * than by luck: every world page is darker than Nussbaum and every ink here is
+ * light, so each pair can only measure higher than the figures below. #1202
+ * retires round designs and the question with them.
+ *
+ * Specificity (0,3,0), so it beats styles.css's dark block (0,2,0) outright
+ * rather than on source order. test/support/theme.js reads this block first for
+ * a dark design. */
+:root[data-design="tisch"][data-scheme="dark"] {
+  /* ---- Flächen. A dark design, so the neutral ramp runs UPWARD: --surface
+     sits above the page rather than below it, and the ordering
+     soft < sunken < line < control-edge is what the components rely on
+     (.claude/rules/dark-scheme-neutral-ramp-runs-upward.md).
+
+     --surface and --control-fill are LITERALS rather than lifts off the page,
+     because T1 names them: Nussbaum #3b2a12 -> Fläche #4a3423 -> Gehoben
+     #5b4128 is a wood, not a grey wash, and deriving it would drift the hue
+     the moment the page is retuned. --sunken/--sunken-soft/--line stay derived
+     from the dark block: they are hairlines and wells, they measure 1.32-1.54:1
+     against this --surface (light ships 1.20-1.43), and nothing in T1 names
+     them. */
+  --surface: #4a3423;
+  --control-fill: #5b4128;
+
+  /* The UI-control border. T1's "Kante" section states the bar as ">= 3:1 über
+     #b98a55" and that is this token. It is NOT the hairline --line, which stays
+     derived: SC 1.4.11 binds a boundary only where it identifies a control.
+
+     Measured against all three grounds: page 4.48:1, --surface 3.78:1,
+     --control-fill 3.06:1. The last one is the tight one, and it is tight on
+     purpose — the hover affordance moves to --brand (4.37:1 on the same fill),
+     so an edge much stronger than this would make a control get FAINTER under
+     the pointer, which is the regression #1140 records. If --control-fill is
+     ever retuned, re-measure this pair first. */
+  --control-edge: #b98a55;
+
+  /* The fallback GLYPH tone (empty image box, guest avatar dash, theme-card
+     lines). The dark block's 53% is not enough HERE, and the reason is the page
+     rather than the token: Nussbaum is far lighter than the four night-coloured
+     worlds that percentage was picked against (luminance .026 vs .010), so the
+     same mix lands closer to its grounds — 2.68:1 on --sunken, against a 3:1
+     bar. 62% clears every one of its four grounds (worst 3.38:1 on --sunken).
+     Same re-pick-per-ground move as the dark block itself. */
+  --placeholder: color-mix(in oklab, var(--page-bg), var(--shade) 62%);
+
+  /* ---- Schrift. Papier on wood. The three steps are T1's Ink / Ink weich /
+     Ink schwach; the app has two tokens, so "Ink schwach" is carried by
+     --placeholder's neighbours rather than by a third ink. */
+  --ink: #f6ecd8;
+  /* T1's "Ink weich" is #e2c496, and this is that value LIFTED 30% toward
+     --ink — a measured correction in the review's own A-series style, found
+     implementing T1 against the app's shipped washes.
+
+     Why: the winners' rows fill at 22% --gold over --surface, an alpha tuned
+     against the app's mid-amber #d99a06. Der Tisch's gold is a pale cream, so
+     the same 22% lands lighter (#6c5337) and #e2c496 measures 4.29:1 on it.
+     The alpha is shipped and tuned and a new design moves its own value rather
+     than lowering it, so this is the value that moves. #e8d0aa is 4.79:1 there
+     and higher than #e2c496 on every other ground (page 9.20, --surface 7.77,
+     --control-fill 6.29), i.e. the correction only ever adds contrast. */
+  --ink-soft: #e8d0aa;
+
+  /* The ink a saturated fill carries. Brass, gold and every semantic tone here
+     is LIGHT, so this is the walnut page itself — the flip
+     .claude/rules/dark-designs-and-the-on-accent-flip.md §1 describes, spelled
+     with T1's own value instead of the generic near-black. */
+  --on-accent: #2a1a08;
+  --on-accent-dark: #2a1a08;
+
+  /* ---- Semantik. All three are TEXT as well as fills (.link-btn paints them
+     straight on the page), so each is T1's light member of its pair rather than
+     the deep fill tone beside it: #a8dcb4 "Bestätigung als Schrift/Icon auf
+     Holz", #e8c168 "Kümmerliste", #f59c86 "Akzent als Schrift auf Holz". The
+     deep partners (#23543c, #8f2f22) are fills only and are the ramp's ends
+     below. */
+  --good: #a8dcb4;
+  --warn: #e8c168;
+  --danger: #f59c86;
+
+  /* ---- Gold. T1's rank family: "Siegerzeile, Pokale, Krone — nie Aktion".
+     Distinct from --brand, which is brass and IS the action colour.
+
+     --gold-ink is review finding A2, and it is the one value here that
+     overrides a measurement rather than a preference: the package painted the
+     winners' sub-line in #6b5a45 on the gold row at 4.40:1. "Auf Gold nur eine
+     Tinte: #4a3423" — 7.7:1. There is no second ink on gold. */
+  --gold: #f0cf86;
+  --gold-ink: #4a3423;
+  --gold-deep: #d9a951;
+  --gold-soft: #3f2d18;
+  --gold-edge: #9a6d2b;
+
+  /* ---- Filz. The table's own surface: the default marker colour, and the
+     ground the hub and the dock sit on. The eight felts themselves live in the
+     registry (public/js/designs.js `markers`), because a round's marker is an
+     INDEX and the registry is what keeps that index design-neutral; these two
+     are the default felt's stops, needed here because rules reference them.
+
+     THE BINDING RULE ON FELT (review finding A1, and it generalises to every
+     design): gold is a DISPLAY and GLYPH colour on felt, never text under
+     24 px. On the light stop of Tannenfilz gold measures 4.20:1. Text below
+     24 px on felt is --felt-ink (#f6ecd8, 5.38:1). The dock's 12 px labels are
+     exactly the case this exists for. */
+  --felt: #2f6b4d;
+  --felt-deep: #1c4531;
+  --felt-ink: #f6ecd8;
+  --felt-ink-soft: #cfe6d6;
+  /* The ACTIVE chip on felt, finding A3: paper on the package's #4e7b56 read
+     4.17:1, so the fill darkens until it carries paper at AA. */
+  --felt-chip-on: #3f6a48;
+
+  /* ---- Papier. The one place Der Tisch inverts its own scheme: an overlay is
+     a printed card laid on the table, so a sheet, dialog, popover and menu are
+     light on a dark app. Declared as tokens HERE rather than as literals on
+     that subtree, because only this block is resolved by
+     test/support/theme.js — a colour in a descendant rule ships unmeasured
+     however correct it looks, which is the whole point of
+     test/design-layer.test.js's two sweeps. The pairs are measured by name in
+     test/a11y-contrast.test.js. */
+  --paper: #f8f3e7;
+  --paper-raised: #efe7d5;
+  --paper-ink: #2f2620;
+  --paper-ink-soft: #4a4038;
+  --paper-edge: #8d6436;
+  /* Review finding A4: the package's tertiary ink #8d5a36 measured 4.23:1 on
+     the raised paper. #7a4a28 is 5.19:1. */
+  --paper-faint: #7a4a28;
+
+  /* ---- Holz. The no-cover placeholder's two stops and the grain it is ruled
+     with — T1's wood, which `.cover-ph` paints instead of --placeholder
+     (.claude/rules/cover-ph-owns-the-coverless-game-glyph.md). */
+  --wood-light: #5b4128;
+  --wood-deep: #3f2d18;
+  --wood-grain: rgba(0, 0, 0, 0.14);
+  /* The brass-lit top edge and the shadows' black, as tokens so the elevation
+     ramp below carries no literal either. */
+  --brass-sheen: rgba(240, 207, 134, 0.06);
+  --brass-sheen-strong: rgba(240, 207, 134, 0.10);
+  --cast: rgba(0, 0, 0, 0.35);
+  --cast-soft: rgba(0, 0, 0, 0.30);
+  --cast-deep: rgba(0, 0, 0, 0.45);
+
+  /* ---- Der Tisch's score ramp (T8.2), the five tile values plus the veto
+     tone below 1. Encoded as tokens and measured by test/a11y-contrast.test.js
+     alongside the ink each stop carries.
+
+     WHAT READS THEM TODAY: the contrast loop, and nothing else. Every score
+     pill in the app takes its fill from an INLINE style computed by avgColor()
+     (round-theme.js), an HSL ramp that branches on the scheme — so pointing it
+     at these stops is a render-time JS change across ~15 call sites and lands
+     with the screens that draw them (#1191). They are declared now, and
+     measured now, because T1 is the source for T2-T15 and the review's whole
+     finding was that a value measured late is a value corrected late. Do not
+     delete them as unused CSS. */
+  --score-1: #8f2f22;
+  --score-2: #a05a1f;
+  --score-3: #b8a12e;
+  --score-4: #8dbf46;
+  --score-5: #b8e08a;
+  --score-veto: #6a2118;
+  /* The ink each half of that ramp carries. The low two are dark fills taking
+     paper; the high three are light fills taking walnut. */
+  --score-ink-low: #fdf4e4;
+  --score-ink-high: #2a1a08;
+  --score-veto-ink: #fdeee8;
+
+  /* ---- Tiefe. Wood takes a harder shadow than paper does: the app's ramp is
+     tuned for a light page, and at 0.06-0.12 alpha it disappears entirely on
+     Nussbaum. Same three steps, same structure (sharp key over soft ambient),
+     roughly tripled. The inset highlight is T1's brass-lit top edge. */
+  --shadow-1: 0 1px 2px var(--cast), inset 0 1px 0 var(--brass-sheen);
+  --shadow-2: 0 6px 14px var(--cast-soft), 0 1px 2px var(--cast);
+  --shadow-3: 0 14px 30px var(--cast-deep), inset 0 1px 0 var(--brass-sheen-strong);
+}
+
+/* ---------------------------------------------------------------------------
+   Components. Everything that follows exists because a TOKEN could not say it.
+   Anything a token already carries — and that is most of the app — is absent
+   from this file on purpose: the token block above repaints it.
+   --------------------------------------------------------------------------- */
+
+/* Review finding A7, as a rule rather than as eight separate fixes: a text link
+   is a 24 px target. The package had footer links at 17-19 px and toast actions
+   at 18. WCAG 2.2 SC 2.5.8 is met through padding so nothing moves visually at
+   the top of the line box. */
+:root[data-design="tisch"] .link-btn,
+:root[data-design="tisch"] .site-footer a,
+:root[data-design="tisch"] .toast button {
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* The footer's rows are 32 px, per the same finding. */
+:root[data-design="tisch"] .site-footer a { line-height: 32px; }
+
+/* T1.10: the BGG badge is artwork with its own light ground, so on wood it sits
+   on a carrier rather than straight on the page. Without this the badge's own
+   white lettering lands on Nussbaum and its logo loses its edge entirely. */
+:root[data-design="tisch"] .site-footer__bgg {
+  background: var(--ink);
+  border-radius: var(--radius-sm);
+  padding: 4px 6px;
+}
+
+/* The wood no-cover placeholder (T1). `.cover-ph` owns the coverless game box
+   and brings its own gradient — see
+   .claude/rules/cover-ph-owns-the-coverless-game-glyph.md — so the tone has to
+   be replaced here rather than left to --placeholder, which never paints there. */
+:root[data-design="tisch"] .cover-ph {
+  background:
+    repeating-linear-gradient(
+      92deg,
+      var(--wood-grain) 0 3px,
+      transparent 3px 11px),
+    linear-gradient(160deg, var(--wood-light), var(--wood-deep));
+}
+
+/* Felt: the table surface the hub and the dock sit on. The gradient is T8.1's
+   own — a radial from the light stop to the deep one — and the ink on it is
+   paper, never gold (finding A1). */
+:root[data-design="tisch"] .tafel {
+  background: radial-gradient(120% 130% at 40% -10%, var(--felt), var(--felt-deep) 74%);
+  color: var(--felt-ink);
+}
+
+/* An active chip ON felt takes the darkened fill, not the felt's own tone
+   (finding A3). Off felt the chip follows --brand like every other design. */
+:root[data-design="tisch"] .tafel .chip[aria-pressed="true"],
+:root[data-design="tisch"] .tafel .chip.is-on {
+  background: var(--felt-chip-on);
+  color: var(--felt-ink);
+  border-color: var(--control-edge);
+}
+
+/* An overlay re-POINTS the app's tokens at the paper family declared above, so
+   everything inside it — buttons, fields, chips, rows — follows without a rule
+   of its own. Nothing here is a literal: the values are measured by name in
+   test/a11y-contrast.test.js, which a descendant rule's own hex could not be.
+ *
+ * --on-accent is deliberately NOT re-pointed, and the reflex to do it is
+ * wrong. The flip is a property of the FILL, not of the ground behind it:
+ * --brand is brass, which is light on paper exactly as it is light on wood, so
+ * its ink stays dark in both. Pointing it at the paper family put a near-white
+ * #fdf4e4 on brass at 1.97:1 — measured, by the paper check in
+ * test/a11y-contrast.test.js. */
+:root[data-design="tisch"] .sheet,
+:root[data-design="tisch"] .dialog,
+:root[data-design="tisch"] .popover,
+:root[data-design="tisch"] .menu {
+  --surface: var(--paper);
+  --control-fill: var(--paper-raised);
+  --ink: var(--paper-ink);
+  --ink-soft: var(--paper-ink-soft);
+  --control-edge: var(--paper-edge);
+  --placeholder: var(--paper-faint);
+  background: linear-gradient(180deg, var(--paper), var(--paper-raised));
+  color: var(--ink);
 }

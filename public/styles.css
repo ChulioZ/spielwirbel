@@ -26,6 +26,24 @@
 @font-face { font-family: 'Creepster'; font-style: normal; font-weight: 400 800; font-display: swap; src: url('fonts/creepster-latin-400-normal.woff2') format('woff2'); }
 @font-face { font-family: 'Alfa Slab One'; font-style: normal; font-weight: 400 800; font-display: swap; src: url('fonts/alfa-slab-one-latin-400-normal.woff2') format('woff2'); }
 @font-face { font-family: 'Cinzel'; font-style: normal; font-weight: 400 800; font-display: swap; src: url('fonts/cinzel-latin-700-normal.woff2') format('woff2'); }
+/* Der Tisch's two faces (#1188, T1): Bricolage Grotesque for display, Manrope
+   for text. Declared here beside the world faces rather than in
+   public/css/designs/tisch.css for two reasons — the url() is resolved against
+   THIS file, which is the only path scripts/build.js rewrites for fonts, and a
+   face declared in a design sheet would not exist until that sheet is injected,
+   i.e. after first paint. @font-face downloads nothing on its own, so an
+   account on Klassisch fetches neither.
+
+   Every weight the design asks for is declared, so the browser never has to
+   synthesise one — see .claude/rules/world-artwork-masks-and-single-weight-faces.md
+   for what a missing weight does to a display face. Licences:
+   LICENSE-bricolage-grotesque.txt, LICENSE-manrope.txt (both OFL 1.1). */
+@font-face { font-family: 'Bricolage Grotesque'; font-style: normal; font-weight: 500; font-display: swap; src: url('fonts/bricolage-grotesque-latin-500-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Bricolage Grotesque'; font-style: normal; font-weight: 700; font-display: swap; src: url('fonts/bricolage-grotesque-latin-700-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Bricolage Grotesque'; font-style: normal; font-weight: 800; font-display: swap; src: url('fonts/bricolage-grotesque-latin-800-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Manrope'; font-style: normal; font-weight: 500; font-display: swap; src: url('fonts/manrope-latin-500-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Manrope'; font-style: normal; font-weight: 600; font-display: swap; src: url('fonts/manrope-latin-600-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Manrope'; font-style: normal; font-weight: 700; font-display: swap; src: url('fonts/manrope-latin-700-normal.woff2') format('woff2'); }
 
 :root {
   /* Native UI — the <select> popup, scrollbars, form-control defaults — follows
