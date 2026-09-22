@@ -129,9 +129,11 @@ here from `round.members` would silently drop guests and flatten teams, so
   see §11's affinity-ranked-contributors bullet (#798) for why the remedies
   differ.
 
-  **The ladder is `retired -1.0` / `rated (avg-1)/2` / `unrated 0.6` (#799), plus
-  an additive play bonus of up to `1.0` on the two non-retired arms (#778, §12),
-  and both ends were re-tuned away from the obvious values.** Unrated used to be
+  **The ladder is `retired -1.0` / `rated 0.6 + (score-3)/2, floored at -0.5` /
+  `unrated 0.6 fading with the round's history` (#799, re-anchored by #1227 —
+  §15), plus an additive play bonus of up to `1.0` on the two non-retired arms
+  (#778, §12), and both ends were re-tuned away from the obvious values.**
+  Unrated used to be
   `1.0` — exactly what a game rated 3.0 earns, and more than anything below it.
   Since a rating only exists where somebody voted in a *voting* session, every
   other route onto the shelf (the BGG import, a manual add, a direct-pick
@@ -497,6 +499,12 @@ as hard as a staple forty votes agree on. (It was the round's OWN prior until
   deleted rather than left asserting a property of a mechanism that no longer
   exists. What is still guarded, and now by the constant itself, is the
   PROPERTY: `test/recommend.test.js` asserts one 😐 vote beats no vote at all.
+  Since #1227 that assertion must be read against the round's **effective** rung
+  (`buildShelfIndex(round).unrated`), not against `A_NEUTRAL` — the rated rung is
+  now anchored AT the neutral constant, so a unanimous „passt schon" ties 0,6
+  exactly and beats only the faded rung a round with history actually carries.
+  Pointed at the constant, the spec would assert `0.6 > 0.6` and fail for the
+  right reading of the wrong number.
 
 ## 12. Plays are a PROFILE input, not a scored term (#778)
 
@@ -520,7 +528,8 @@ all** — `0.1414213562373095`. Byte-identical.
   independent facts about the same game.
 - **The retired arm short-circuits before the bonus is read.** Twenty nights do
   not soften "we got rid of it" — the state ordering §5 describes is unchanged.
-- **The ceiling moves from 2.0 to 3.0 and NO weight needed re-tuning.** Nothing
+- **The ceiling moves from 2.0 to 3.0 — 2,43 since #1227's re-anchor (§15) — and
+  NO weight needed re-tuning.** Nothing
   downstream reads the magnitude: `accumulate`/`normalize` are L2-normalised and
   `weightedMean` divides by its own weights, so only ratios reach a score. Check
   that property before changing any rung — it is what makes the ladder cheap to
@@ -664,3 +673,112 @@ for, arrived at by wording rather than by a model.
 conditions), `.claude/rules/break-the-code-on-purpose.md` (every assertion above
 was seen red against a deliberate break), `.claude/rules/session-teams.md` §4,
 `.claude/rules/shared-constants-across-the-stack.md`.
+
+## 15. A formula survived the SCALE changing underneath it (#1227)
+
+`gameAffinity`'s rated rung read `(score - 1) / 2` from #682 to #1227, with a
+comment reading `(avg-1)/2 — 0.0 at 1, 1.0 at 3, 2.0 at 5` and a variable named
+`avg`. That was exactly right while `ownRating` returned the **raw mean of 1–5
+ratings**: 1 was unanimous „gar nicht" and therefore affinity 0.
+
+**#893 changed `ownRating` to return the Spielwirbel-Score** — `TILE_VALUE`
+`[-5, 1, 3, 4, 5]` — and the formula stayed. Nothing broke, nothing went red,
+and the ladder still looked untouched, because `TILE_VALUE` prices „passt schon"
+at 3 and the two scales agree there:
+
+| unanimous, 20 voters | old anchor | the comment's claim | after #1227 |
+|---|---|---|---|
+| gar nicht | −0,50 | +0,00 | −0,50 (floor) |
+| **nicht so** | **+0,17** | +0,50 | **−0,23** |
+| passt schon | +1,00 | +1,00 | **+0,60** |
+| gut | +1,42 | +1,50 | +1,02 |
+| begeistert | +1,83 | +2,00 | +1,43 |
+
+The zero crossing had silently moved from *unanimous „gar nicht"* to *unanimous
+„nicht so"*, because `TILE_VALUE[2]` is exactly the **1 the formula subtracts**.
+So a game twenty people agreed they did not enjoy still scored **+0,17** and
+kept pulling the profile toward games like it. The rung is now anchored at the
+neutral tile — `A_NEUTRAL + (score - PRIOR_DEFAULT) / 2`, floored at
+`RATED_FLOOR` — so below `PRIOR_DEFAULT` a game pulls the profile *away* from
+itself, which is what a bad verdict means.
+
+**This is the class of bug this whole file exists for** (§0's premise): every
+mistake in `lib/recommend.js` is a plausible wrong list, never an error. The
+specific shape to recognise — **a formula whose constants were calibrated
+against a scale that a later issue replaced** — has one tell, and it is the
+tell that hid this one: *the calibration point the two scales share stays
+correct*, so the ladder reads fine at exactly the value a reader spot-checks.
+
+Two corollaries when you next touch either end:
+
+- **A comment naming a scale is a claim about another file.** `avg` and
+  `0.0 at 1` were both wrong for two months and no test could see it. When you
+  change what a shared function RETURNS, grep for the callers' comments, not
+  just their code (`.claude/rules/token-friendly-source-files.md` — this is the
+  *value* half of that rule, not the path half).
+- **`A_UNRATED` is gone; the name is `A_NEUTRAL`.** §13's third bullet still
+  narrates #894's deleted `UNRATED_EQUIV` floor as derived from
+  `A_UNRATED × 2 + 1` — kept as history, but the constant no longer exists.
+
+### The unrated rung now FADES, and why a smaller constant is not the same fix
+
+`A_UNRATED = 0.6` × the never-played part of the shelf is a **constant** block of
+profile mass, while the play history only ever grows *within* the shelf. Measured
+on three rounds sharing one 40-game shelf with disjoint 8-game histories: 19,2
+units from 32 unplayed entries against 22,0 from the eight they actually play — a
+**47 % shelf share that barely moves however long the round runs** (45 % at 160
+evenings). On a **direct-pick** round it is worse and it *inverts*: the played
+block froze permanently **below** the shelf at 0,56 : 0,83.
+
+So `buildShelfIndex` hands `gameAffinity` a rung rather than a constant:
+`A_NEUTRAL × (UNRATED_HALF / (UNRATED_HALF + n))` over the round's played
+sessions, `UNRATED_HALF = 25`.
+
+- **The SHAPE is the change, not the value.** A flat 0,2 reaches the same end
+  state but arrives there immediately — which is exactly the young-round case the
+  shelf rung exists for. At 0 sessions the rung is unchanged, so a
+  collection-import round scores byte-identically to before (pinned as a literal
+  list in `test/recommend.test.js`).
+- **Dropping it to 0 was measured and rejected.** It survives a direct-pick round
+  (plays are additive) but collapses a pure collection-import round to **no
+  profile at all** — no mechanic components, no target weight.
+- **Which sessions count: non-cancelled, skipping split parents** — the same two
+  exclusions `partyDistribution` applies, for the same reason (#796: a twelve-
+  person evening split across three tables is three played sessions, not four).
+- **It counts SESSIONS, not plays.** A round that plays one game weekly for a
+  year has a year of history, not one game's worth.
+
+### The measurement in the issue that did NOT reproduce — and what replaced it
+
+#1227 argues part 2 from a **shared-title count in a top-24** across three
+rounds. The *mechanism* reproduces to the decimal (19,2 / 22,0 / 47 %). The list
+figures do not: rebuilt on three independently constructed corpora, the **old**
+code separated two disjoint histories just as completely as the new one, because
+a cosine ranking over hundreds of graded candidates reorders entirely on any tilt
+at all, however small.
+
+That matters beyond this issue. An overlap assertion written from the issue's
+table would have been **green against the very code #1227 replaces** — the
+`.claude/rules/break-the-code-on-purpose.md` trap, reached by faithfully
+following a spec. The spec asserts the profile's **composition** instead (the
+played block's mechanic component against the shelf's), which is what the issue
+actually argues from and is fixture-stable.
+
+**Generalise it:** a top-N overlap is a *saturating* instrument — it answers
+"did the ranking move at all", not "by how much" — so it cannot measure a change
+of degree. Reach for the quantity the change is about.
+
+### What is deliberately NOT changed
+
+The play bonus is **additive** and the rungs are not floors on the total, so ten
+nights can lift a game rated „gar nicht" to a **positive** affinity (measured:
++0,50, contributing +0,118 to the mechanic vector and setting `targetWeight` /
+`targetTime`). That is §12's revealed-preference argument working as designed —
+they keep choosing it — and it is written down here so a future session does not
+read the ladder as an unconditional claim and „fix" it.
+
+The slope (`/ 2`) is an approved starting value like the six weights, and a
+steeper one is not free: at `/ 1` a unanimous „nicht so" reaches −1,07 and
+inverts the `A_RETIRED` invariant. `UNRATED_HALF = 25` has the same standing — a
+different half-life is a constant change, a different **curve** is a scope
+change.

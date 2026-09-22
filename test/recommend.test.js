@@ -36,7 +36,9 @@ const {
   W_PLAYS,
   PLAY_SCALE_FLOOR,
   A_RETIRED,
-  A_UNRATED,
+  A_NEUTRAL,
+  RATED_FLOOR,
+  UNRATED_HALF,
 } = require('../lib/recommend');
 
 /* --------------------------------- fixtures -------------------------------- */
@@ -203,18 +205,20 @@ test('a game state outranks its ratings, and the ladder is retired < rated-low <
   // A retired game usually carries votes; letting them speak would make "we
   // threw this out" read as an ordinary five-star opinion.
   assert.equal(aff(g('gr', { retired: true })), -1, 'retired -> -1.0, ahead of any rating');
-  assert.equal(aff(g('ghigh')), 1.2, 'rated 5 by one voter -> 1.2 (bare rung 2.0)');
-  assert.equal(aff(g('gmid')), 1, 'rated 3 by one voter -> 1.0, the prior itself, so shrinkage is a no-op');
-  // Since #893 a lone „gar nicht" scores −5, which the clamp in `gameAffinity`
-  // floors at 0 before the ladder arithmetic. Shrinkage lifts it off that clamp
-  // here, but it stays the bottom rung of the three, which is what the clamp is
-  // for: a game the round still owns and dislikes must not outrank-in-reverse
-  // one they actually threw out.
-  assert.equal(aff(g('glow')), 0.2, 'rated 1 by one voter -> 0.2 (bare rung -0.5)');
-  assert.equal(aff(g('gnone')), 0.6, 'owned, unrated -> 0.6, and shrinkage never touches it');
+  assert.equal(aff(g('ghigh')), 0.8, 'rated 5 by one voter -> shrunk to 3.4, so 0.6 + 0.2');
+  assert.equal(aff(g('gmid')), 0.6, 'rated 3 by one voter -> exactly the prior, so exactly A_NEUTRAL');
+  // Since #893 a lone „gar nicht" scores −5; shrinkage lifts it to 1.4, which
+  // the #1227 anchor prices at 0.6 + (1.4 - 3) / 2. Negative, because the round
+  // said so — and still above `A_RETIRED`, which is the invariant the floor
+  // exists for: a game they own and dislike must not outrank-in-reverse one they
+  // actually threw out.
+  assert.equal(aff(g('glow')), -0.2, 'rated 1 by one voter -> shrunk to 1.4, so 0.6 - 0.8');
+  // ONE evening of history, so the rung has already ticked off A_NEUTRAL:
+  // 0.6 x 25/26. That it is not 0.6 here is the decay, visible at n = 1.
+  assert.equal(aff(g('gnone')), 0.58, 'owned, unrated -> the round\'s effective rung, not the constant');
   // Completed is deliberately NOT a state: the game was played through, so its
   // ratings still count.
-  assert.equal(aff(g('ghigh', { completed: true })), 1.2);
+  assert.equal(aff(g('ghigh', { completed: true })), 0.8);
 
   /* #894's own interaction, pinned as a RELATION rather than a row: one neutral
      vote must never rank a game below never having been rated.
@@ -226,7 +230,12 @@ test('a game state outranks its ratings, and the ladder is retired < rated-low <
      above the break-even by construction, so the floor could never bind again.
      What is asserted is therefore the PROPERTY, which is what mattered — the
      mechanism guaranteeing it changed underneath. */
-  assert.ok(aff(g('gmid')) > A_UNRATED, 'one 😐 vote must beat no vote at all');
+  // Against the round's EFFECTIVE rung, not the bare constant: since #1227 the
+  // rated rung is anchored AT `A_NEUTRAL`, so a neutral vote ties the constant
+  // exactly and only beats the rung a round with history actually carries. A
+  // spec left pointing at `A_NEUTRAL` would assert 0.6 > 0.6 and fail for the
+  // right reading of the wrong number.
+  assert.ok(aff(g('gmid')) > shelf.unrated, 'one 😐 vote must beat no vote at all');
 
   // The RELATION, not the literals (#799): a shelf entry nobody has voted on is
   // a real signal but a weaker one than any game the round has formed an opinion
@@ -267,15 +276,18 @@ test('a game state outranks its ratings, and the ladder is retired < rated-low <
   // round falls below PRIOR_MIN_GAMES — it shrinks toward PRIOR_DEFAULT. That
   // makes `gmid` the cleanest possible illustration of the ramp: a game rated
   // exactly the prior is shrunk to exactly itself, so its rung is untouched.
-  assert.equal(pAff(g('ghigh')), 2.2, 'rated 5 at max plays -> 1.2 + the full bonus');
-  assert.equal(pAff(g('gnone')), 1.6, 'unrated at max plays -> 1.6');
-  assert.equal(pAff(g('gmid')), 1, 'rated 3 on a shelf whose prior IS 3 -> 1.0, shrinkage a no-op');
+  assert.equal(pAff(g('ghigh')), 1.8, 'rated 5 at max plays -> 0.8 + the full bonus');
+  // Twelve played evenings here, so the rung is 0.6 x 25/37 = 0.41 — the same
+  // game is worth less to the profile than in the idle round above, which is
+  // the whole of #1227 part 2.
+  assert.equal(pAff(g('gnone')), 1.41, 'unrated at max plays -> the faded rung + 1.0');
+  assert.equal(pAff(g('gmid')), 0.6, 'rated 3 on a shelf whose prior IS 3 -> exactly A_NEUTRAL');
 
   // Stated as the composition too, so a future re-tune of either constant keeps
   // a spec that says what the arithmetic IS rather than what it happened to be.
   // The unrated rung is the one #894 leaves untouched — there is no score to
   // shrink — so it still reads as the two constants added.
-  assert.equal(pAff(g('gnone')), A_UNRATED + W_PLAYS);
+  assert.equal(pAff(g('gnone')), Math.round((playedShelf.unrated + W_PLAYS) * 100) / 100);
   // The revealed-preference point, and the reason W_PLAYS is set as high as it
   // is: a game the round keeps putting on the table outranks an unplayed shelf
   // entry even when nobody has rated it above the middle of the scale. This is
@@ -304,7 +316,7 @@ test('lowering the unrated rung shifts profile mass onto the games the round RAT
      rung this case is about is what a game rated 5 earns — but the affinity it
      actually reads is SHRUNK, so with a single voter each rated game sits four
      fifths of the way back to the prior and the ratio would be measuring
-     `SHRINK_M` rather than `A_UNRATED`. `SHRINK_M` is "roughly one table's worth
+     `SHRINK_M` rather than the unrated rung. `SHRINK_M` is "roughly one table's worth
      of votes", so four voters is exactly the fixture that lets the rung speak:
      {5,5,5,5} shrinks to 4,0, i.e. affinity 1,5.
 
@@ -325,18 +337,304 @@ test('lowering the unrated rung shifts profile mass onto the games the round RAT
   ];
   const profile = profileOf(round, corpus);
   const ratio = profile.mechanics.Rated / profile.mechanics.Unrated;
-  /* 3 × 1,5 against 5 × 0,6 is 1,5:1. The number to hold it against is what the
-     OLD rung would give on the identical fixture: 3 × 1,5 against 5 × 1,0 is
-     0,9:1 — the unrated block would actually OUTWEIGH the rated one, which is
-     the defect #799 fixed. So this literal is on the correct side of 1 and the
-     alternative is on the wrong side of it, which is what makes it a test of
-     the rung rather than of the fixture. */
-  assert.equal(Math.round(ratio * 1e6) / 1e6, 1.5, `rated:unrated mass was ${ratio}:1`);
-  // …and the same thing said in the normalised units the cosine actually reads
-  // (0,83 / 0,55 here). The old rung inverts BOTH of these on this fixture —
-  // 0,67 / 0,74 — so neither bound can be satisfied by it.
-  assert.ok(profile.mechanics.Rated > 0.8, `rated component ${profile.mechanics.Rated}`);
-  assert.ok(profile.mechanics.Unrated < 0.6, `unrated component ${profile.mechanics.Unrated}`);
+  /* {5,5,5,5} shrinks to 4,0, which the #1227 anchor prices at 0,6 + (4 − 3)/2 =
+     1,1; the round has one evening behind it, so the unrated rung has already
+     ticked to 0,6 × 25/26 = 0,577. That is 3 × 1,1 against 5 × 0,577 — 1,144:1.
+
+     The number to hold it against is what the PRE-#799 rung would give on the
+     identical fixture: 3 × 1,1 against 5 × 1,0 is 0,66:1 — the unrated block
+     would actually OUTWEIGH the rated one, which is the defect #799 fixed. So
+     this literal is on the correct side of 1 and the alternative is on the wrong
+     side of it, which is what makes it a test of the rung rather than of the
+     fixture. #1227 compressed both rungs (1,5 → 1,1 and 0,6 → 0,577) and left
+     that property intact, which is the thing to re-check when either moves. */
+  assert.equal(Math.round(ratio * 1e6) / 1e6, 1.144, `rated:unrated mass was ${ratio}:1`);
+  // …and the same thing said in the normalised units the cosine actually reads.
+  // The pre-#799 rung inverts BOTH of these on this fixture — 0,55 / 0,84 — so
+  // neither bound can be satisfied by it.
+  assert.ok(profile.mechanics.Rated > 0.7, `rated component ${profile.mechanics.Rated}`);
+  assert.ok(profile.mechanics.Unrated < 0.7, `unrated component ${profile.mechanics.Unrated}`);
+  assert.ok(profile.mechanics.Rated > profile.mechanics.Unrated, 'the rated block leads');
+});
+
+/* ------------------------- the #1227 affinity ladder ------------------------ */
+
+/*
+ * The ladder's own arithmetic, measured at the five tiles x five voter counts.
+ *
+ * A HAND-BUILT ROUND rather than `shelfRound`, because the thing under test is
+ * the ladder and nothing else: the game is never chosen, so the play bonus is
+ * zero throughout and each cell shows its bare rung.
+ */
+const unanimous = (tile, voters) => {
+  const members = Array.from({ length: voters }, (_, i) => ({ id: `m${i}`, name: `M${i}` }));
+  const votes = {};
+  members.forEach((m) => { votes[m.id] = { gx: { rating: tile } }; });
+  return {
+    members,
+    games: [{ id: 'gx', title: 'X' }],
+    sessions: [{ id: 's1', gameIds: ['gx'], memberIds: members.map((m) => m.id), votes }],
+  };
+};
+const tileAffinity = (tile, voters) => {
+  const r = unanimous(tile, voters);
+  return Math.round(gameAffinity(r.games[0], buildPlayScale(r), buildShelfIndex(r)) * 100) / 100;
+};
+
+test('a verdict below the neutral tile is NEGATIVE once the evidence is in (#1227)', () => {
+  /*
+   * The defect this issue exists for. `gameAffinity` read `(score - 1) / 2`,
+   * which was right while `ownRating` returned the raw mean of 1–5 ratings — 1
+   * was unanimous „gar nicht" and therefore affinity 0. #893 moved it to the
+   * Spielwirbel-Score over `TILE_VALUE` ([-5, 1, 3, 4, 5]) and the formula
+   * stayed, so the zero crossing silently became unanimous „nicht so":
+   * `TILE_VALUE[2]` is exactly the 1 being subtracted. Measured on the old
+   * anchor, twenty people agreeing they did not enjoy a game left it at +0,17 —
+   * still pulling the profile toward games like it.
+   *
+   * „passt schon" reading +1,00 under BOTH anchors is the coincidence that hid
+   * it, which is why this case is written at „nicht so" and not at the tile the
+   * two scales happen to agree on.
+   */
+  assert.equal(tileAffinity(2, 20), -0.23, 'twenty „nicht so" must pull AWAY — it read +0.17');
+  assert.equal(tileAffinity(1, 20), -0.5, 'twenty „gar nicht" sit on RATED_FLOOR');
+  assert.equal(tileAffinity(3, 20), 0.6, 'twenty „passt schon" land exactly on A_NEUTRAL');
+  assert.equal(tileAffinity(4, 20), 1.02, 'twenty „gut"');
+  assert.equal(tileAffinity(5, 20), 1.43, 'twenty „begeistert"');
+});
+
+test('the neutral tile, the neutral rung and a fresh round are ONE number (#1227)', () => {
+  /*
+   * `vote-score.js` sets `PRIOR_DEFAULT` precisely so „wir wissen es noch nicht"
+   * and „keiner hat was dagegen" are the same number. The old anchor broke that
+   * by 67 %: `A_UNRATED` 0,6 corresponded to a score of 2,2 while the neutral
+   * VOTE scored 3 and earned +1,00, so „everyone shrugged" outweighed „nobody
+   * has an opinion". Asserted in literals, and as the identity rather than as
+   * three separate numbers that happen to coincide.
+   */
+  const fresh = buildShelfIndex({ games: [], sessions: [] });
+  assert.equal(A_NEUTRAL, 0.6);
+  assert.equal(fresh.unrated, 0.6, 'a round with no history sits exactly on A_NEUTRAL');
+  assert.equal(tileAffinity(3, 20), fresh.unrated, 'and a unanimous „passt schon" ties it');
+});
+
+test('no rated verdict, at any evidence, ever reaches A_RETIRED (#1227)', () => {
+  /*
+   * „We got rid of it" must stay the round's sharpest negative — a game they own
+   * and dislike sits between that and „no opinion", never below it. `RATED_FLOOR`
+   * is what guarantees it; the slope is the dial that would break it (measured:
+   * at `/ 1` a unanimous „nicht so" reaches −1,07 and inverts this).
+   *
+   * Swept rather than spot-checked, because the binding cell is not obvious in
+   * advance — it is the lowest tile at the highest evidence, and a future
+   * re-tune moves which one that is.
+   */
+  for (const tile of [1, 2, 3, 4, 5]) {
+    for (const voters of [1, 2, 4, 12, 20]) {
+      const a = tileAffinity(tile, voters);
+      assert.ok(a > A_RETIRED, `tile ${tile} x ${voters} voters read ${a}, at or under A_RETIRED`);
+    }
+  }
+  assert.equal(RATED_FLOOR, -0.5, 'and the floor itself is above A_RETIRED by half a rung');
+  assert.ok(RATED_FLOOR > A_RETIRED);
+});
+
+test('shrinkage still protects a single bad evening (#1227)', () => {
+  /*
+   * The property to CHECK rather than assume: re-anchoring the ladder must not
+   * turn one person's bad night into the round's verdict. One „gar nicht" reads
+   * −0,20 — negative, but well off the floor twenty of them reach — and one
+   * „nicht so" stays positive, below the rung a fresh round pays for no opinion
+   * at all.
+   *
+   * A unanimous „nicht so" reaches EXACTLY zero at the sixth voter — shrinkage
+   * puts the score on 1,8 there, which the anchor prices at 0,6 − 0,6 — and
+   * turns negative at the seventh. (#1227 says "crosses zero at the sixth";
+   * measured, six is the zero itself, which is the sharper fact and the one
+   * worth pinning: it is where the round stops being merely unenthusiastic.)
+   */
+  assert.equal(tileAffinity(1, 1), -0.2, 'one „gar nicht" must not reach RATED_FLOOR');
+  const oneMeh = tileAffinity(2, 1);
+  assert.equal(oneMeh, 0.4);
+  assert.ok(oneMeh > 0, 'one „nicht so" is not yet a negative verdict');
+  assert.ok(oneMeh < A_NEUTRAL, 'but it already ranks below never having been rated');
+  assert.ok(tileAffinity(2, 5) > 0, 'five „nicht so" are still a positive signal');
+  assert.equal(tileAffinity(2, 6), 0, 'the sixth lands exactly on zero');
+  assert.ok(tileAffinity(2, 7) < 0, 'and the seventh turns the verdict negative');
+});
+
+/* ------------------- the unrated rung fades with history -------------------- */
+
+// `n` played evenings, each a direct pick of the same game, so the only thing
+// that varies is the session COUNT.
+const withSessions = (n, over = {}) => ({
+  members: [{ id: 'm1', name: 'A' }],
+  games: [{ id: 'g1', title: 'One' }],
+  sessions: Array.from({ length: n }, (_, i) => ({
+    id: `s${i}`, gameIds: ['g1'], memberIds: ['m1'], votes: {},
+    chosenGameId: 'g1', finished: true, done: true, cancelled: false,
+  })),
+  ...over,
+});
+
+test('the unrated rung is A_NEUTRAL at zero sessions and halves at the half-life (#1227)', () => {
+  /*
+   * THE CURVE IN LITERALS, never in terms of `UNRATED_HALF`
+   * (.claude/rules/recommendation-scoring.md §14): written as
+   * `A_NEUTRAL * (UNRATED_HALF / (UNRATED_HALF + n))` the assertion holds at
+   * every value of the constant and pins nothing at all.
+   *
+   * 25 evenings is exactly half, 75 exactly a quarter — the two points that say
+   * it is a hyperbola with THIS half-life rather than any decaying shape.
+   */
+  assert.equal(UNRATED_HALF, 25, 'the half-life the literals below are read at');
+  assert.equal(buildShelfIndex(withSessions(0)).unrated, 0.6);
+  assert.equal(buildShelfIndex(withSessions(25)).unrated, 0.3);
+  assert.equal(buildShelfIndex(withSessions(75)).unrated, 0.15);
+  // …and monotone in between, which no three points can say on their own.
+  let previous = Infinity;
+  for (let n = 0; n <= 120; n += 1) {
+    const rung = buildShelfIndex(withSessions(n)).unrated;
+    assert.ok(rung < previous, `the rung rose at n = ${n}`);
+    previous = rung;
+  }
+});
+
+test('cancelled evenings and split parents do not age the shelf rung (#1227)', () => {
+  /*
+   * `playedSessionCount`'s two exclusions, in literals so the decay cannot be
+   * satisfied by a count that merely LOOKS right. Both are `partyDistribution`'s
+   * and both are load-bearing: a cancelled night never happened, and a split
+   * parent (#796) is one evening whose children carry the real tables — counting
+   * it too would age the rung faster than the round actually plays.
+   *
+   * Twenty-five real evenings put the rung on exactly half, which is the value
+   * every arm below has to reproduce.
+   */
+  const half = 0.3;
+  assert.equal(buildShelfIndex(withSessions(25)).unrated, half);
+
+  const withCancelled = withSessions(25);
+  withCancelled.sessions.push(...Array.from({ length: 40 }, (_, i) => ({
+    id: `c${i}`, gameIds: ['g1'], memberIds: ['m1'], votes: {}, cancelled: true,
+  })));
+  assert.equal(buildShelfIndex(withCancelled).unrated, half, '40 cancelled nights are not history');
+
+  const withSplit = withSessions(25);
+  withSplit.sessions.push(...Array.from({ length: 40 }, (_, i) => ({
+    id: `p${i}`, gameIds: ['g1'], memberIds: ['m1'], votes: {},
+    childSessionIds: [`p${i}a`, `p${i}b`], finished: true,
+  })));
+  assert.equal(buildShelfIndex(withSplit).unrated, half, 'a split parent is counted by its children');
+});
+
+test('a round with a history is profiled by what it PLAYS, not by what it owns (#1227)', () => {
+  /*
+   * Part 2's whole point, asserted as the profile's COMPOSITION rather than as
+   * an overlap between two recommendation lists.
+   *
+   * WHY NOT THE LISTS. The issue's own measurement is a shared-title count in a
+   * top-24, and it does not survive being rebuilt: on three independently
+   * constructed corpora the old code separated two disjoint histories just as
+   * completely as the new one, because a cosine ranking over 600 graded
+   * candidates reorders entirely on any tilt at all, however small. So an
+   * overlap assertion would have been green against the very code this issue
+   * replaces — the .claude/rules/break-the-code-on-purpose.md trap, reached by
+   * following the spec. The composition is the claim the issue actually argues
+   * from ("47 % shelf share that barely moves"), and it is fixture-stable.
+   *
+   * Eight games the round plays and rates against thirty-two it merely owns.
+   * Under the old constant rung the two blocks FROZE at 0,77 : 0,64 — the shelf
+   * keeping a permanent grip on a round that had played 160 evenings.
+   */
+  const shelf = Array.from({ length: 40 }, (_, i) => ({
+    id: `g${i + 1}`, title: `Owned ${i + 1}`, source: { provider: 'bgg', externalId: `o${i + 1}` },
+  }));
+  const table = ['m1', 'm2', 'm3', 'm4'];
+  const corpus = new Map(Array.from({ length: 40 }, (_, i) => {
+    const e = entry(`o${i + 1}`, { info: info({ mechanics: [i < 8 ? 'Played' : 'Shelf'] }) });
+    return [e.externalId, e];
+  }));
+  const round = (n) => ({
+    id: 'r1', name: 'R', members: table.map((id) => ({ id, name: id })), games: shelf,
+    sessions: Array.from({ length: n }, (_, k) => {
+      const gid = `g${(k % 8) + 1}`;
+      return {
+        id: `s${k}`, gameIds: [gid], memberIds: table,
+        votes: Object.fromEntries(table.map((m) => [m, { [gid]: { rating: 5 } }])),
+        chosenGameId: gid, finished: true, done: true, cancelled: false,
+      };
+    }),
+  });
+  const at = (n) => buildProfile(round(n), corpus).mechanics;
+  const r2 = (x) => Math.round(x * 100) / 100;
+
+  // A round with NO history is untouched: the shelf is all it knows.
+  assert.equal(r2(at(0).Played), 0.24);
+  assert.equal(r2(at(0).Shelf), 0.97);
+  // By the half-life the games they play have taken the lead…
+  assert.ok(at(24).Played > at(24).Shelf, `24 evenings: ${r2(at(24).Played)} vs ${r2(at(24).Shelf)}`);
+  // …and it keeps widening, which is the half the old constant could not do.
+  assert.ok(at(160).Shelf < at(64).Shelf, 'the shelf must keep receding, not settle');
+  assert.ok(r2(at(160).Shelf) < 0.2, `160 evenings still read Shelf ${r2(at(160).Shelf)} — it used to freeze at 0.63`);
+});
+
+test('a collection-import round is scored EXACTLY as it was before #1227', () => {
+  /*
+   * The young-round path is the thing both halves had to leave alone: a round
+   * that imported a shelf and has never played is all unrated games, and
+   * dropping the rung outright (measured and rejected in the issue) would have
+   * collapsed it to no profile at all.
+   *
+   * Pinned as the literal list the PRE-#1227 code produced on this fixture,
+   * captured before the change — scores to the thousandth, which is what the
+   * route rounds to. Either half leaking into this case moves them.
+   */
+  const games = Array.from({ length: 8 }, (_, i) => ({
+    id: `g${i + 1}`, title: `Owned ${i + 1}`, source: { provider: 'bgg', externalId: `o${i + 1}` },
+  }));
+  const corpus = [
+    ...Array.from({ length: 8 }, (_, i) => entry(`o${i + 1}`, { info: info({ mechanics: ['M1'] }) })),
+    ...Array.from({ length: 20 }, (_, i) => entry(`c${i + 1}`, {
+      rank: 100 + i,
+      info: info({ mechanics: i % 2 ? ['M1'] : ['M2'], weight: 2 + (i % 4) * 0.5 }),
+    })),
+  ];
+  const out = recommend(
+    { id: 'r1', name: 'R', members: [{ id: 'm1', name: 'A' }], games, sessions: [] },
+    corpus,
+    { limit: 6 },
+  );
+  assert.deepEqual(out.recommendations.map((r) => [r.externalId, r.score]), [
+    ['c3', 0.585], ['c7', 0.585], ['c11', 0.585], ['c15', 0.585], ['c19', 0.585], ['c4', 0.548],
+  ]);
+});
+
+test('a DIRECT-PICK round is still profiled from its plays (#778 stays served)', () => {
+  /*
+   * The case the rejected "drop the rung to 0" alternative would have improved
+   * and the decay must not break: those evenings write no votes (`votes: {}`),
+   * so every game they play most lands on the UNRATED rung — the one #1227 is
+   * fading. The plays are additive, so it survives; measured, the played block
+   * overtakes the shelf at around the half-life, where it used to freeze
+   * permanently BELOW it (0,56 : 0,83 from 24 evenings onward).
+   */
+  const shelf = Array.from({ length: 40 }, (_, i) => ({
+    id: `g${i + 1}`, title: `Owned ${i + 1}`, source: { provider: 'bgg', externalId: `o${i + 1}` },
+  }));
+  const corpus = new Map(Array.from({ length: 40 }, (_, i) => {
+    const e = entry(`o${i + 1}`, { info: info({ mechanics: [i < 8 ? 'Played' : 'Shelf'] }) });
+    return [e.externalId, e];
+  }));
+  const round = (n) => ({
+    id: 'r1', name: 'R', members: ['m1', 'm2', 'm3', 'm4'].map((id) => ({ id, name: id })),
+    games: shelf,
+    sessions: Array.from({ length: n }, (_, k) => directPick(`s${k}`, `g${(k % 8) + 1}`)),
+  });
+  const at = (n) => buildProfile(round(n), corpus).mechanics;
+  assert.ok(at(8).Played > at(0).Played, 'direct picks still reach the profile');
+  assert.ok(at(64).Played > at(64).Shelf, `64 direct-pick evenings: ${at(64).Played} vs ${at(64).Shelf}`);
+  assert.ok(at(160).Played > at(64).Played, 'and the play signal keeps growing');
 });
 
 /* ---------------------------------- plays ---------------------------------- */
@@ -368,13 +666,19 @@ test('plays move the profile mass by the exact ratio the bonus implies (#778)', 
   /*
    * The ratio, not the normalised value: L2 divides both components by a common
    * scalar and so cannot move it, where a bare component also folds in the
-   * vector length. One game played to the maximum reaches 0.6 + 1.0 = 1.6
-   * against its unplayed shelfmates' 0.6 — seven of them, so 1.6 : 4.2.
+   * vector length.
+   *
+   * Three played evenings, so since #1227 the unrated rung has faded to
+   * 0,6 × 25/28 = 0,5357. The played game reaches that plus the full bonus —
+   * 1,5357 — against seven unplayed shelfmates at 0,5357 each, i.e. 3,75. The
+   * bonus is unchanged; what moved is the rung both sides are measured in, and
+   * the ratio RISES (0,381 → 0,410) because the denominator faded while the
+   * numerator kept its 1,0.
    */
   const played = shelfRound({ sessions: [1, 2, 3].map((i) => directPick(`s${i}`, 'g1')) });
   const profile = profileOf(played, playCorpus());
   const ratio = profile.mechanics.Played / profile.mechanics.Shelf;
-  assert.equal(Math.round(ratio * 1e6) / 1e6, Math.round((1.6 / (7 * 0.6)) * 1e6) / 1e6, `played:shelf mass was ${ratio}`);
+  assert.equal(Math.round(ratio * 1e6) / 1e6, 0.409524, `played:shelf mass was ${ratio}`);
 });
 
 test('plays pull the complexity and time targets toward what the round actually plays (#778)', () => {
@@ -402,7 +706,8 @@ test('a single evening is not a favourite — the play scale has a floor (#778)'
   const round = shelfRound({ sessions: [directPick('s1', 'g1')] });
   const scale = buildPlayScale(round);
   assert.equal(scale.denominator, PLAY_SCALE_FLOOR, 'one play must not set the denominator to 1');
-  assert.equal(gameAffinity(round.games[0], scale, buildShelfIndex(round)), A_UNRATED + W_PLAYS / PLAY_SCALE_FLOOR);
+  const shelf1 = buildShelfIndex(round);
+  assert.equal(gameAffinity(round.games[0], scale, shelf1), shelf1.unrated + W_PLAYS / PLAY_SCALE_FLOOR);
 });
 
 test('a RETIRED game does not set the play denominator, however often it was played (#778)', () => {
@@ -426,7 +731,7 @@ test('a RETIRED game does not set the play denominator, however often it was pla
   const scale = buildPlayScale(round);
   assert.equal(scale.denominator, 3, 'the retired game must not set the scale');
   const shelf20 = buildShelfIndex(round);
-  assert.equal(gameAffinity(round.games[1], scale, shelf20), A_UNRATED + W_PLAYS, 'g1 still earns the full bonus');
+  assert.equal(gameAffinity(round.games[1], scale, shelf20), shelf20.unrated + W_PLAYS, 'g1 still earns the full bonus');
   assert.equal(gameAffinity(round.games[0], scale, shelf20), A_RETIRED, 'and 20 plays do not soften the retirement');
 });
 
@@ -472,7 +777,8 @@ test('a cancelled evening and a deleted game contribute no plays (#778)', () => 
   const scale = buildPlayScale(round);
   assert.equal(scale.denominator, 3, 'neither a cancelled evening nor a deleted game may set the scale');
   assert.equal(scale.counts.get('g2') || 0, 0, 'a cancelled evening is not a play');
-  assert.equal(gameAffinity(round.games[1], scale, buildShelfIndex(round)), A_UNRATED, 'g2 saw 15 cancelled nights and earns nothing');
+  const shelfC = buildShelfIndex(round);
+  assert.equal(gameAffinity(round.games[1], scale, shelfC), shelfC.unrated, 'g2 saw 15 cancelled nights and earns nothing');
 });
 
 test('a DRAWN winner counts as a play exactly like a direct pick (#778)', () => {
@@ -1308,11 +1614,29 @@ test('a reason line can never name a RETIRED game', () => {
 });
 
 test('a retired game is FILTERED OUT, not merely outranked, when a slot is free', () => {
-  // Owned 1 is rated, for the same reason as the sibling above (#799): one
-  // unrated game at 0.6 against a retired one at -1.0 leaves M-x NEGATIVE, so no
-  // mechanics reason fires at all and the case would stop testing the filter.
+  /*
+   * Owned 1 is rated AND played, for the same reason as the sibling above
+   * (#799): M-x is carried by exactly two games — Owned 1 and the retired one at
+   * −1.0 — so unless Owned 1 clears that, the component is NEGATIVE, no mechanics
+   * reason fires at all, and the case stops testing the filter it is named for.
+   *
+   * One voter used to be enough; since #1227 it is not. A lone „begeistert"
+   * shrinks to 3,4 and the re-anchored rung prices that at 0,8, which loses to
+   * −1,0. A full table (shrunk to 4,0 → 1,1) plus the play bonus puts it at 2,1,
+   * which is a margin rather than a coin-flip — and the fixture now says out
+   * loud that it depends on one.
+   */
+  const table = ['m1', 'm2', 'm3', 'm4'];
   const round = shelfRound({
-    sessions: [{ id: 's1', gameIds: ['g1'], memberIds: ['m1'], votes: { m1: { g1: { rating: 5 } } } }],
+    sessions: [
+      {
+        id: 's1',
+        gameIds: ['g1'],
+        memberIds: table,
+        votes: Object.fromEntries(table.map((m) => [m, { g1: { rating: 5 } }])),
+      },
+      ...[1, 2, 3].map((i) => directPick(`p${i}`, 'g1')),
+    ],
   });
   round.games.push({ id: 'gr', title: 'Thrown out', retired: true, source: { provider: 'bgg', externalId: 'orx' } });
   /*
