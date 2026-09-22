@@ -1,24 +1,27 @@
 'use strict';
 
-/* The Ruhmeshalle ranks PLAY, not attendance (#895) — asserted by rendering the
- * two screens rather than by matching their source
+/* The Ruhmeshalle ranks on the RAW WIN COUNT — asserted by rendering the two
+ * screens rather than by matching their source
  * (`.claude/rules/testing-views-under-jsdom.md`).
  *
- * The fixture reproduces the actual defect: Dan logs five solo plays into the
- * round and wins one of four group nights, so his RAW count (6) is three times
- * Anna's (2) and he topped the podium — a total nobody playing in a group could
- * contest, because there is no denominator and no cap. Under the Siegwertung
- * his solo nights are worth exactly zero and he falls off the stage entirely.
+ * It ranked on the Siegwertung from #895 until 2026-09-22, when that measure was
+ * withdrawn from the whole app (operator): fair, and disqualified by being both
+ * hard to explain and — because it is zero-sum over each night — negative for
+ * everyone but the leader in most rounds.
  *
- * Every group night seats all four members, so p = 4 throughout:
+ * THE FIXTURE IS THE ONE #895 WAS WRITTEN AGAINST, kept deliberately, because
+ * the trade-off it measures is now the ACCEPTED behaviour rather than the bug.
+ * Dan logs five solo plays and wins one of four group nights, so his count is 6
+ * against Anna's 2 and he tops the stage having won one contest to her two.
  *
- *   Anna  2 wins, 2 losses ->  2·(3/4) − 2·(1/4) = +1,0   (the only one above chance)
- *   Ben   1 win,  3 losses ->  1·(3/4) − 3·(1/4) =  0,0
- *   Dan   1 win,  3 losses, + 5 solo ->            0,0
- *   Clara 0 wins, 4 losses ->            −4·(1/4) = −1,0
+ *   Anna  2 wins      Ben 1 win      Dan 1 win + 5 solo = 6      Clara 0 wins
  *
- * Dan and Ben landing on exactly 0,0 is deliberate: it pins that the podium
- * filter is `> 0` and not `>= 0`, and that a member at chance is not celebrated.
+ * That was offered as a choice — count only CONTESTED wins, which removes it
+ * with no weighting and nothing to explain — and declined, because it makes
+ * „Siege" two different numbers on two screens (operator, 2026-09-22). So the
+ * case below asserts the distortion AS THE INTENDED ORDER; if it ever goes red,
+ * somebody has quietly added a contest filter and that is a decision to make
+ * out loud, not a fix.
  */
 
 const { test } = require('node:test');
@@ -104,18 +107,13 @@ const rankOfOnStage = (dom, mid) => {
 };
 
 test('the podium fills its three steps rather than leaving them empty', async (t) => {
-  /* OPERATOR DECISION, 2026-09-04, from live family use: the score-based filter
-     („nobody below chance stands") left one member alone on rank 1 with ranks 2
-     and 3 EMPTY, and everyone else named below the stage with no visible reason
-     for being there. Seeing yourself on the podium with a negative Siegwertung
-     is better than seeing the places unclaimed.
-
-     So the podium is now simply THE TOP THREE PLACES, and the only reason to be
-     under it is being fourth. Nothing about that needs explaining on screen,
-     which is what the score filter could never manage. */
-  /* The reported shape exactly: three members, one of whom has never won. Under
-     the score filter only Anna stood, on rank 1, with ranks 2 and 3 empty and
-     the other two named below. */
+  /* #913's invariant, restated for a win count: no step is ever left EMPTY by a
+     rule the reader cannot see. It was reported from live family use — one
+     member alone on rank 1 with ranks 2 and 3 empty, everyone else named below
+     with no visible reason — and the cause was a threshold on a number nobody
+     could see. Ranking on wins, the steps fill from the top with whoever has
+     won, and the only reason to be under the stage is having won nothing or
+     being fourth. Both explain themselves. */
   const three = ['anna', 'dan', 'clara'];
   const nights = [night(['anna'], three), night(['anna'], three), night(['dan'], three)];
   const dom = await pokale(t, roundWith(nights, three));
@@ -125,66 +123,67 @@ test('the podium fills its three steps rather than leaving them empty', async (t
     'every step is claimed — no member may be kept off the stage by their score');
   assert.equal(rankOfOnStage(dom, 'anna'), 1);
   assert.equal(rankOfOnStage(dom, 'dan'), 2);
-  assert.equal(rankOfOnStage(dom, 'clara'), 3, 'winless, negative, and standing');
-  assert.match(dom.app.textContent, /−1,0|-1,0/, 'her negative Siegwertung is shown, not hidden');
+  assert.equal(rankOfOnStage(dom, 'clara'), 3, 'winless, and standing on „0 Siege"');
+  assert.match(dom.app.textContent, /0 Siege/, 'her count is shown rather than her being hidden');
   assert.equal(dom.app.querySelector('.podium__rest'), null, 'nobody is left below a stage with room');
 });
 
 test('an empty step is only ever a TIE consuming the place, never a filter', async (t) => {
-  /* The one case that still leaves a step unclaimed, and it is honest: Ben and
-     Dan tie for 2nd, so by competition ranking (1224) there IS no third place
-     and the next member is fourth. That is #836/#889's painted riser saying
-     „nobody stands below the shared step", which predates #895 and is a true
-     statement about the ranking rather than a hidden rule about the score. */
-  const dom = await pokale(t, roundWith([...group, ...solos]));
-  assert.equal(rankOfOnStage(dom, 'ben'), 2);
-  assert.equal(rankOfOnStage(dom, 'dan'), 2);
-  const spacer = dom.app.querySelector('.podium__col--3.podium__col--spacer');
-  assert.ok(spacer, 'the tie consumed rank 3');
-  assert.deepEqual(inRest(dom), ['clara'], 'and the next member is genuinely fourth');
+  /* The one case that leaves a step unclaimed, and it is honest: two members tie
+     for 1st, so by competition ranking (1224) there IS no second place and the
+     next member is third. That is #836/#889's painted riser saying „nobody
+     stands below the shared step" — a true statement about the ranking rather
+     than a hidden rule about a score. */
+  const tie = [night(['anna'], MEMBERS), night(['anna'], MEMBERS),
+    night(['ben'], MEMBERS), night(['ben'], MEMBERS), night(['dan'], MEMBERS)];
+  const dom = await pokale(t, roundWith(tie));
+  assert.equal(rankOfOnStage(dom, 'anna'), 1);
+  assert.equal(rankOfOnStage(dom, 'ben'), 1);
+  assert.ok(dom.app.querySelector('.podium__col--2.podium__col--spacer'), 'the tie consumed rank 2');
+  assert.equal(rankOfOnStage(dom, 'dan'), 3, 'and the next member is genuinely third');
 });
 
-test('six wins do not outrank two when five of them were solo', async (t) => {
-  /* THE DEFECT, stated as the ordering it broke. Dan holds SIX wins to Anna's
-     two and used to top the stage on the raw count; his five solo nights are
-     worth nothing, so his one win in four contested nights leaves him at
-     exactly chance and a step below her.
+test('six wins DO outrank two when five of them were solo — the accepted trade-off', async (t) => {
+  /* #895's defect, now the intended behaviour (operator, 2026-09-22). Dan holds
+     six wins to Anna's two and tops the stage, having won ONE contest to her two.
 
-     Asserted as "below Anna", not as "off the podium" — he is genuinely the
-     round's joint second and the podium says so. Tuning the fixture until the
-     stronger-sounding claim held would be exactly the trap in
-     `.claude/rules/redefining-a-measure-invalidates-its-fixtures.md`. */
+     Asserted rather than deleted, and asserted in the direction that hurts,
+     because this is the shape somebody will one day read as a bug and "fix"
+     with a contest filter. It is a decision — see roundStandings' comment in
+     views-pokale.js — so if this goes red the filter came back, and that needs
+     saying out loud rather than merging. The alternative was offered and
+     declined: counting only contested wins removes the distortion with no
+     weighting and nothing to explain, at the cost of „Siege" meaning two
+     different numbers on two screens. */
   const dom = await pokale(t, roundWith([...group, ...solos]));
-  assert.equal(rankOfOnStage(dom, 'anna'), 1, 'two contested wins in four take the crown');
-  assert.equal(rankOfOnStage(dom, 'dan'), 2, 'six wins, five of them solo, do not');
+  assert.equal(rankOfOnStage(dom, 'dan'), 1, 'six wins take the crown, five of them solo');
+  assert.equal(rankOfOnStage(dom, 'anna'), 2, 'two contested wins in four do not');
 });
 
-test('a solo night moves nobody — the standings ignore the whole block', async (t) => {
+test('a solo night DOES move the standings — the same trade-off from the other side', async (t) => {
+  // The mirror of the case above: the solo block is what changes the order, so
+  // removing it must change it back. Without the five solo nights Dan is second
+  // on one win and Anna leads on two.
   const withSolos = await pokale(t, roundWith([...group, ...solos]));
   const without = await pokale(t, roundWith(group));
-  assert.deepEqual(onStage(withSolos), onStage(without));
-  assert.deepEqual(inRest(withSolos).sort(), inRest(without).sort());
-  assert.equal(
-    withSolos.app.querySelector('.podium__score').textContent,
-    without.app.querySelector('.podium__score').textContent
-  );
+  assert.equal(rankOfOnStage(withSolos, 'dan'), 1);
+  assert.equal(rankOfOnStage(without, 'anna'), 1, 'without them Anna leads again');
+  assert.equal(rankOfOnStage(without, 'dan'), 2);
 });
 
 // ---- the balanced round keeps its stage -------------------------------------
 
 test('an evenly matched round still has a podium — everyone shares the top step', async (t) => {
-  /* The Siegwertung is zero-sum over the parties at a table, so a round whose
-     wins are PERFECTLY even puts every member at exactly 0,0. Filtered on
-     "above chance" that emptied the stage outright, and the two-person case is
-     the one that matters: a couple who win half each would never see a podium
-     at all, at any number of nights. The filter is therefore "not BELOW
-     chance" — which is also the invariant the tab actually promises, since it
-     is what keeps a negative number off the screen. */
+  /* A round whose wins are perfectly even puts every member on the same count,
+     so they share one step. The two-person case is the one that matters: a
+     couple who win half each must still see a podium, at any number of nights.
+     Under the Siegwertung this was the case that emptied the stage outright,
+     because every member sat at exactly 0,0 and the filter was „above chance". */
   const even = [night(['anna'], MEMBERS), night(['ben'], MEMBERS), night(['dan'], MEMBERS), night(['clara'], MEMBERS)];
   const dom = await pokale(t, roundWith(even));
-  assert.deepEqual(onStage(dom).sort(), ['anna', 'ben', 'clara', 'dan'], 'all four are exactly at chance and tied');
+  assert.deepEqual(onStage(dom).sort(), ['anna', 'ben', 'clara', 'dan'], 'all four hold one win and are tied');
   assert.ok(dom.app.querySelector('.podium--single'), 'one distinct place occupied is the shared top step (#879)');
-  assert.equal(dom.app.querySelector('.podium__score').textContent, '0,0', 'at chance prints without a sign');
+  assert.match(dom.app.querySelector('.podium__wins').textContent, /1 Sieg\b/);
 });
 
 test('two evenly matched members still have a podium', async (t) => {
@@ -194,22 +193,24 @@ test('two evenly matched members still have a podium', async (t) => {
   assert.deepEqual(onStage(dom).sort(), ['anna', 'dan']);
 });
 
-test('being at chance buys a step but never promotes anyone', async (t) => {
-  /* The relaxation must not let a member at 0,0 share the crown with someone
-     genuinely ahead. Dan and Ben sit at chance BEHIND Anna, so they hold rank 2
-     together while she keeps rank 1 alone. */
-  const dom = await pokale(t, roundWith([...group, ...solos]));
+test('a tie behind a lone leader never shares the crown', async (t) => {
+  /* Ben and Clara tie on one win behind Anna's two, so they hold rank 2 together
+     while she keeps rank 1 alone — the stage must not promote a tied pair onto
+     the crowned step. */
+  const nights = [night(['anna'], MEMBERS), night(['anna'], MEMBERS),
+    night(['ben'], MEMBERS), night(['clara'], MEMBERS)];
+  const dom = await pokale(t, roundWith(nights));
   assert.equal(dom.app.querySelector('.podium--single'), null, 'a lone leader is not the shared-step stage');
   assert.equal(rankOfOnStage(dom, 'ben'), 2);
-  assert.equal(rankOfOnStage(dom, 'dan'), 2);
+  assert.equal(rankOfOnStage(dom, 'clara'), 2);
   const crown = [...dom.app.querySelectorAll('.podium__col')].find((c) => c.querySelector('.ti-crown'));
   assert.deepEqual([...crown.querySelectorAll('.podium__entry')].map((e) => e.dataset.mid), ['anna']);
 });
 
-test('a member who has never played does not stand at chance', async (t) => {
-  /* The other half of the filter. Someone with no sessions has no terms in the
-     sum and scores exactly 0 too — without the `wins > 0` guard they would
-     stand on the stage having never turned up. */
+test('a member who has never played does not stand at zero', async (t) => {
+  /* The other half of the filter. Someone who took part in no decided night has
+     won nothing and lost nothing; without the record guard they would stand at
+     zero having never turned up, above everyone who played and lost. */
   const dom = await pokale(t, roundWith(group, [...MEMBERS, 'never']));
   assert.ok(!onStage(dom).includes('never'));
   assert.ok(inRest(dom).includes('never'));
@@ -217,40 +218,49 @@ test('a member who has never played does not stand at chance', async (t) => {
 
 // ---- what the stage prints --------------------------------------------------
 
-test('an upright entry carries the score first and the raw count beside it', async (t) => {
+test('an entry carries its own win count, and the same text upright or sideways', async (t) => {
+  /* ONE number per entry since 2026-09-22. It carried the Siegwertung plus the
+     raw count, with `.podium__col--multi` hiding the count on a shared step
+     because two numbers do not fit a 108px phone pedestal — so the upright and
+     sideways presentations said different things. With one number they cannot,
+     and that is the property worth pinning: an entry on a shared step must read
+     exactly as it would alone. */
   const dom = await pokale(t, roundWith([...group, ...solos]));
-  // Scoped to the CROWNED column: it is the one holding a single member, and an
-  // upright entry is exactly the case that prints both numbers.
   const crown = [...dom.app.querySelectorAll('.podium__col')].find((c) => c.querySelector('.ti-crown'));
   const wins = crown.querySelector('.podium__entry .podium__wins');
-  assert.equal(wins.querySelector('.podium__score').textContent, '+1,0');
-  assert.match(wins.querySelector('.podium__winsraw').textContent, /2 Siege/);
-  assert.match(wins.getAttribute('title'), /2 Siege/);
+  assert.match(wins.textContent, /6 Siege/, "Dan's count, the figure the step is ranked on");
+  assert.match(wins.getAttribute('title'), /6 Siege/);
+  assert.equal(wins.querySelector('.podium__score'), null, 'the Siegwertung span is gone');
+  assert.equal(wins.querySelector('.podium__winsraw'), null, 'and so is the count it used to sit beside');
+
+  // A SHARED step, where the entries lie sideways: same text, no second number
+  // that CSS has to hide.
+  const tie = [night(['anna'], MEMBERS), night(['ben'], MEMBERS)];
+  const two = await pokale(t, roundWith(tie));
+  const top = [...two.app.querySelectorAll('.podium__col--1 .podium__entry .podium__wins')];
+  assert.equal(top.length, 2, 'fixture does not produce a shared TOP step');
+  for (const el of top) assert.match(el.textContent, /1 Sieg\b/);
 });
 
-test('the rest line states the score it is ordered by, beside the raw count', async (t) => {
-  /* It is ordered by Siegwertung, so printing only win counts made the order
-     look arbitrary — „5 Siege" above „6 Siege" reads as a sorting bug. Now that
-     a negative number is shown on the stage there is no reason to hide it one
-     line below it either. */
+test('the rest line states the count it is ordered by', async (t) => {
   const many = [...group, ...solos, night(['anna'], MEMBERS), night(['ben'], MEMBERS)];
   const dom = await pokale(t, roundWith(many, [...MEMBERS, 'ida']));
   const rest = dom.app.querySelector('.podium__rest');
   assert.ok(rest, 'a fifth member has to land below a three-step stage');
-  assert.ok(rest.querySelector('.podium__score'), 'the rest line states the Siegwertung');
-  assert.match(rest.textContent, /Siege/, 'and still states the raw count beside it');
+  assert.match(rest.textContent, /Siege|Sieg\b/, 'the rest line states the win count');
+  assert.equal(rest.querySelector('.podium__score'), null, 'and no longer a Siegwertung beside it');
 });
 
-test('the standings explain themselves through the ⓘ', async (t) => {
+test('the standings need NO ⓘ — a win count explains itself', async (t) => {
+  /* The ⓘ existed because the Siegwertung owed an explanation: it was a number
+     the group had not seen before, and `win.infoBody` was a paragraph. A count
+     of wins needs none, and the whole `win` topic went with the measure.
+
+     Asserted as an absence so that reintroducing an explainer here is a
+     deliberate act — if a future measure owes one, it owes a rule file too. */
   const dom = await pokale(t, roundWith(group));
   const info = dom.app.querySelector('.section-head [data-info-topic]');
-  assert.ok(info, 'the Siegwertung needs an explanation somewhere on the screen');
-  assert.equal(info.dataset.infoTopic, 'win');
-  info.click();
-  const sheet = dom.document.querySelector('.sheet[role="dialog"]');
-  assert.ok(sheet, 'the ⓘ opens a sheet');
-  assert.match(sheet.textContent, /Siegwertung/);
-  assert.doesNotMatch(sheet.textContent, /Spielwirbel-Score/, 'it must not open the GAME score sheet');
+  assert.equal(info, null, 'the standings grew an explainer for a plain win count');
 });
 
 // ---- the Siegesserie --------------------------------------------------------
@@ -289,11 +299,11 @@ test('a guest is never in the standings, however much they win', async (t) => {
 
 // ---- the member page --------------------------------------------------------
 
-test('the member page rates Dan on contested nights only, and shows his Siegwertung', async (t) => {
+test('the member page rates Dan on contested nights only', async (t) => {
   const round = roundWith([...group, ...solos]);
   const dom = boot(t, round);
   await dom.call('showMember', RID, 'dan');
-  /* ONE shape since #1074: the five figures were split across a hero band
+  /* ONE shape since #1074: the figures were split across a hero band
      (#995's `.member-head__stat`) and `.pokale-card`s under a „Statistiken"
      heading, and die Tischkarte put them in one strip. The two-shape read this
      replaced existed because reading only the cards would have made the two
@@ -303,7 +313,7 @@ test('the member page rates Dan on contested nights only, and shows his Siegwert
     c.querySelector('.member-figure__label').textContent,
     c.querySelector('.member-figure__value').textContent,
   ]);
-  assert.equal(pairs.length, 5, 'the figure strip lost a figure, so a valueOf() below reads undefined');
+  assert.equal(pairs.length, 4, 'the figure strip lost a figure, so a valueOf() below reads undefined');
   const valueOf = (key) => (pairs.find(([l]) => l === dom.run(`t('${key}')`)) || [])[1];
 
   // Six wins over nine finished nights would read 67 %; over the four CONTESTED
@@ -312,11 +322,13 @@ test('the member page rates Dan on contested nights only, and shows his Siegwert
   // solo logger.
   assert.equal(valueOf('member.winRate'), '25%');
   assert.equal(valueOf('member.wins'), '6', 'the raw count is a factual record and is unchanged');
-  assert.equal(valueOf('member.winScore'), '0,0');
+  // The Siegwertung figure that stood here was withdrawn on 2026-09-22 with the
+  // measure; the strip is wins / rate / sessions / average rating.
+  assert.equal(valueOf('member.winScore'), undefined, 'the Siegwertung figure is gone');
   // …and each figure appears exactly ONCE. #995 relocated two of them and #1074
   // merged the shapes; both were relocations rather than copies, so a number
   // stated twice on one screen is the regression either would hide behind.
-  ['member.wins', 'member.winRate', 'member.winScore'].forEach((key) => {
+  ['member.wins', 'member.winRate'].forEach((key) => {
     const label = dom.run(`t('${key}')`);
     assert.equal(pairs.filter(([l]) => l === label).length, 1, `${key} is stated twice`);
   });

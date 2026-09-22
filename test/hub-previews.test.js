@@ -22,7 +22,7 @@ const game = (id, extra = {}) => ({
   id, title: 'Spiel ' + id, minPlayers: 2, maxPlayers: 4, image: 'c.jpg',
   createdAt: '2026-01-0' + (id % 9 + 1) + 'T10:00:00.000Z', ...extra,
 });
-const play = (id, gid, when, winnerIds = ['m1'], memberIds = ['m1', 'm2']) => ({
+const play = (id, gid, when, winnerIds = ['m1'], memberIds = ['m1', 'm2', 'm3']) => ({
   id, createdAt: when, done: true, finished: true,
   gameIds: [gid], chosenGameId: gid, winnerIds, memberIds,
   votes: { m1: { [gid]: { rating: 5 } }, m2: { [gid]: { rating: 4 } } },
@@ -45,18 +45,24 @@ const busyRound = (over = {}) => ({
   id: 'r1',
   name: 'Freitagsrunde',
   background: null,
-  members: [{ id: 'm1', name: 'Anna' }, { id: 'm2', name: 'Ben' }],
+  members: [{ id: 'm1', name: 'Anna' }, { id: 'm2', name: 'Ben' }, { id: 'm3', name: 'Cem' }],
   games: [
     ...Array.from({ length: 8 }, (_, i) => game(10 + i)),
     game(30, { retired: true, retiredAt: '2026-02-01T10:00:00.000Z' }),
     game(31, { completed: true, completedAt: '2026-02-02T10:00:00.000Z' }),
     game(32, { wish: true, wishAt: '2026-02-03T10:00:00.000Z' }),
   ],
+  /* Anna 3, Ben 1, Cem 1 — a TIE for second, which is what makes the ranking
+     assertion discriminating. Tie-aware places run 1, 2, 2 while a naive
+     index+1 runs 1, 2, 3, so a preview that numbers its own rows instead of
+     reading `rankOf` is visible. Measured: without the tie the two agree and
+     the assertion passes against either. */
   sessions: [
-    play(900, 10, '2026-03-01T18:00:00.000Z', ['m1'], ['m1']),
-    play(901, 11, '2026-04-01T18:00:00.000Z', ['m1'], ['m1']),
-    play(903, 13, '2026-04-15T18:00:00.000Z', ['m1'], ['m1']),
+    play(900, 10, '2026-03-01T18:00:00.000Z', ['m1']),
+    play(901, 11, '2026-04-01T18:00:00.000Z', ['m1']),
+    play(903, 13, '2026-04-15T18:00:00.000Z', ['m1']),
     play(902, 12, '2026-05-02T18:00:00.000Z', ['m2']),
+    play(904, 14, '2026-05-03T18:00:00.000Z', ['m3']),
   ],
   tags: [],
   ...over,
@@ -131,14 +137,23 @@ test('the Pokale preview ranks the same members, in the same places, as the Poka
   }));
   assert.ok(expected.length >= 2, 'fixture has fewer than two ranked members — the order is untested');
   /* The precondition that makes the assertion below discriminating at all: the
-     two candidate derivations must ORDER THESE MEMBERS DIFFERENTLY, or a preview
-     that re-ranks by raw win count passes. Asserted rather than trusted, because
-     it is a property of the fixture and fixtures get edited. */
-  const byWins = [...standings.winners].sort((a, b) => standings.wins[b.id] - standings.wins[a.id]);
-  assert.notDeepEqual(
-    byWins.map((m) => m.name), [...standings.winners].map((m) => m.name),
-    'the fixture ranks the same by Siegwertung and by raw wins, so this test cannot see a second derivation',
-  );
+     members must not all hold the SAME count, or any ordering passes. Asserted
+     rather than trusted, because it is a property of the fixture and fixtures
+     get edited.
+
+     It used to assert something stronger — that the Siegwertung and the raw
+     count ordered these members differently — which was the right guard while
+     two measures existed. With one measure the drift to watch for is a preview
+     that sorts or places on its own, which the deepEqual below catches because
+     `rankOf` is tie-aware and a naive index would not be. */
+  const counts = [...standings.winners].map((m) => standings.wins[m.id]);
+  assert.ok(new Set(counts).size > 1,
+    `every ranked member holds ${counts[0]} wins, so any order passes — check the fixture`);
+  /* And the places must not simply be 1..n, or a preview numbering its own rows
+     passes. The fixture holds a tie for second (1, 2, 2) for exactly this. */
+  const places = [...standings.winners].map((m) => standings.rankOf[m.id]);
+  assert.notDeepEqual(places, places.map((_, i) => i + 1),
+    'the fixture has no tie, so `rankOf` and a naive index agree and this cannot see the difference');
   const shown = [...card.querySelectorAll('.hub-preview__rank')].map((row) => ({
     place: row.querySelector('.hub-preview__place').textContent.trim(),
     name: row.querySelector('.hub-preview__name').textContent.trim(),
@@ -153,13 +168,13 @@ test('the Chronik preview counts finished sessions and dates the newest', (t) =>
   assert.ok(card, 'no Chronik preview on a round with a history');
   assert.equal(
     card.querySelector('.hub-preview__sub').textContent.trim(),
-    dom.run("tn(4, 'home.chip.sessionsOne', 'home.chip.sessions')"),
+    dom.run("tn(5, 'home.chip.sessionsOne', 'home.chip.sessions')"),
   );
   /* Dated by `createdAt` — when the evening was played — which is what the
      Chronik itself orders by. `finishedAt` moves every time an old session is
      re-finished, so reading it here would make the preview disagree with the
      list it previews (.claude/rules/server-computed-calendar-periods.md §7). */
-  const expected = dom.run("fmtDate('2026-05-02T18:00:00.000Z')");
+  const expected = dom.run("fmtDate('2026-05-03T18:00:00.000Z')");
   assert.equal(
     card.querySelector('.hub-preview__last').textContent.trim(),
     dom.run(`t('hub.preview.chronikLast', { date: ${JSON.stringify(expected)} })`),

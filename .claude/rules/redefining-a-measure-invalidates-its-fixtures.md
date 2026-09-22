@@ -1,10 +1,8 @@
 ---
 paths:
-  - "public/js/win-score.js"
   - "public/js/vote-score.js"
   - "public/js/game-stats.js"
   - "test/podium-ranks.test.js"
-  - "test/win-score.test.js"
   - "test/vote-score.test.js"
 ---
 # Redefining a measure invalidates every fixture that fed the OLD one — starting with the fields nobody looked at
@@ -102,6 +100,6 @@ implementation shows that it stopped discriminating.
 **Related:** `.claude/rules/break-the-code-on-purpose.md` (the "fixture too small
 to fail" family this belongs to), `.claude/rules/session-teams.md` (a party is
 the unit any such denominator counts), `.claude/rules/shared-constants-across-the-stack.md`
-(`vote-score.js` / `win-score.js`, the measures themselves),
+(`vote-score.js`, the measure itself),
 `.claude/rules/rank-encodings-must-not-be-growable-by-ties.md` (the component
 whose specs this was found in).

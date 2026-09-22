@@ -116,16 +116,19 @@ test('no contested session at all renders the plain tone ring, never a 0 % gauge
   assert.equal(ring.getAttribute('style'), null, 'a --pct on a gauge-less ring is a statistic nobody made');
 });
 
-test('the strip is the Tischkarte\'s five; Runden and Spiele move into the meta line', async (t_) => {
+test('the strip is the Tischkarte\'s four; Runden and Spiele move into the meta line', async (t_) => {
   const dom = bootWith(t_, self());
   await dom.call('showProfile', 'ada');
 
+  /* Four since 2026-09-22: the Siegwertung figure, and the Tafel row fill it
+     carried, were withdrawn with the measure (operator). Every figure left is a
+     count, a percentage or an average — none has a direction to lean, so the
+     bar would be a second statement about a number that does not make one. */
   assert.deepEqual(figureLabels(dom.app), [
-    t('member.wins'), t('member.winRate'), t('member.sessions'),
-    t('member.winScore'), t('member.avgGiven'),
+    t('member.wins'), t('member.winRate'), t('member.sessions'), t('member.avgGiven'),
   ]);
-  // The Siegwertung carries the Tafel's row fill at figure size.
-  assert.ok(dom.app.querySelector('.profile-card .member-bar'), 'the Siegwertung lost its bar');
+  assert.equal(dom.app.querySelector('.profile-card .member-bar'), null,
+    'a figure grew a bar again — check what it claims to encode');
 
   const meta = dom.app.querySelector('.profile-card__meta').textContent;
   assert.ok(meta.includes(t('profile.memberSince', { when: 'Januar 2026' })), `meta line: ${meta}`);

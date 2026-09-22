@@ -35,7 +35,7 @@ const frontendGlobals = {
   pluralRules: 'readonly', pluralCategory: 'readonly',
   fmtDateTime: 'readonly', fmtDate: 'readonly', fmtMonth: 'readonly', fmtMonthKey: 'readonly', fmtMoney: 'readonly',
   fmtRelativeDays: 'readonly',
-  fmtAvg: 'readonly', fmtSigned: 'readonly', fmtCount: 'readonly',
+  fmtAvg: 'readonly', fmtCount: 'readonly',
   // live-region.js (issue #1168) — the two aria-live regions, split out of core.js
   toastEl: 'readonly', toastTimer: 'writable', toast: 'readonly',
   srLiveEl: 'readonly', announceTimer: 'writable', announce: 'readonly',
@@ -168,9 +168,6 @@ const frontendGlobals = {
   VOTE_ADVANCE_MS: 'readonly', VOTE_ADVANCE_REDUCED_MS: 'readonly',
   VOTE_TAP_GUARD_MS: 'readonly',
   voteAdvanceMs: 'readonly', createVoteAdvance: 'readonly',
-  // win-score.js (issue #895): the Siegwertung
-  sessionWinScores: 'readonly', memberWinScores: 'readonly',
-  memberGameWinScores: 'readonly',
   // session-people.js (issue #458)
   MAX_SESSION_GUESTS: 'readonly', GUEST_NAME_MAX: 'readonly', MIN_TEAM_SIZE: 'readonly',
   sessionPeople: 'readonly', personLabel: 'readonly',
@@ -435,7 +432,7 @@ const frontendGlobals = {
   // views-member.js
   showMember: 'readonly',
   // member-stats.js (#1075 — split out of views-member.js)
-  memberStats: 'readonly',
+  memberStats: 'readonly', BEST_GAME_MIN_PLAYS: 'readonly', bestGameSub: 'readonly',
   openAddMember: 'readonly', addMemberBtn: 'readonly',
   // views-session.js
   showStartSession: 'readonly', startVoting: 'readonly', showResults: 'readonly',

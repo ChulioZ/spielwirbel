@@ -2,10 +2,9 @@
 paths:
   - "public/js/views-pokale.js"
   - "public/js/podium.js"
-  - "public/js/win-score.js"
   - "public/js/ranking.js"
   - "test/podium-ranks.test.js"
-  - "test/pokale-win-score-view.test.js"
+  - "test/pokale-standings-view.test.js"
 ---
 # An unclaimed slot in a ranked visual is itself a CLAIM — never let a hidden threshold create one
 

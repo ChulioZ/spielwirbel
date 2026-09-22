@@ -90,9 +90,15 @@ const ROUND = {
     { id: 'g1', title: 'Ark Nova', image: IMAGE, tagIds: [] },
     { id: 'g2', title: 'Azul', tagIds: [] },
   ],
+  /* THREE nights, not two: „Stärkstes Spiel" is a win RATE with a floor of
+     BEST_GAME_MIN_PLAYS contested plays (member-stats.js), so a two-night
+     fixture leaves that tile empty and this file's cover assertions have
+     nothing to look at. Ark Nova is still the only game ever chosen, so
+     Meistgespielt and the Staubfänger are unchanged. */
   sessions: [
     played('s1', '2026-07-01T20:00:00.000Z', VOTES),
     played('s2', '2026-07-02T20:00:00.000Z'),
+    played('s3', '2026-07-03T20:00:00.000Z'),
   ],
 };
 

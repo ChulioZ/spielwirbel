@@ -597,9 +597,9 @@ function hubCareCard(round, activeGames) {
     });
   };
 
-  // The winnerless rows first: a played evening with no winner is skipped
-  // entirely by the Siegwertung (win-score.js), so it is the gap that costs the
-  // most and the one nothing else on any screen mentions.
+  // The winnerless rows first: a played evening with no winner leaves the
+  // standings, the win rate and the member records untouched, so it is the gap
+  // that costs the most and the one nothing else on any screen mentions.
   section(
     list.winnerlessTotal, 'hub.care.winnerOne', 'hub.care.winner', list.winnerless,
     (s) => {

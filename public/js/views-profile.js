@@ -229,20 +229,12 @@ function renderProfileCard(p, reload) {
          ${extra || ''}
          <span class="member-figure__label">${esc(label)}</span>
        </div>`));
-  /* The Siegwertung's bar (#1075): the Tafel's row-fill idea at figure size. It
-     grows FROM THE CENTRE — right in the account's tone for a positive score,
-     left in --placeholder for a negative one — so the sign is a direction
-     rather than a glyph to read. `--w` is the half-width as a percentage,
-     clamped so a runaway score cannot paint past the track. */
-  const winBar = (score) => {
-    if (score === undefined || score === null) return '';
-    const w = Math.min(50, Math.abs(score) * 25);
-    return `<span class="member-bar${score < 0 ? ' member-bar--neg' : ''}" style="--w:${w.toFixed(1)}%" aria-hidden="true"></span>`;
-  };
+  /* Four figures, no bar — the same call the member page makes, and for the same
+     reason: `.member-bar` was the Siegwertung's encoding and went with it on
+     2026-09-22. See views-member.js. */
   figure(t('member.wins'), String(st.wins));
   figure(t('member.winRate'), st.winRate === null ? '–' : Math.round(st.winRate * 100) + '%');
   figure(t('member.sessions'), String(st.sessions));
-  figure(t('member.winScore'), fmtSigned(st.winScore), winBar(st.winScore));
   figure(t('member.avgGiven'), st.avgGiven === null ? '–' : 'Ø ' + fmtAvg(st.avgGiven));
   card.appendChild(figures);
 
@@ -273,10 +265,11 @@ function renderProfileCard(p, reload) {
     games.forEach((g) => list.appendChild(h(`<span class="pokale-game">${esc(g.title)}</span>`)));
     return tile;
   };
-  // Ties share the tile, as on the member page. `bestScore === null` is the only
-  // empty state for the strongest game: 0 is a real Siegwertung.
+  /* Ties share the tile, as on the member page. `bestScore === null` is the only
+     empty state — 0 is a real win RATE (a game played often and never won), and
+     a game below BEST_GAME_MIN_PLAYS is unranked rather than zero. */
   cards.appendChild(gameCard('ti-sword', t('member.bestGame'), st.bestGames,
-    st.bestScore === null ? t('member.bestGameNone') : fmtSigned(st.bestScore), t('member.ribbonBest')));
+    st.bestScore === null ? t('member.bestGameNone') : bestGameSub(st), t('member.ribbonBest')));
   cards.appendChild(gameCard('ti-heart', t('member.favorite'), st.favorite,
     st.favAvg === null ? t('member.favoriteNone') : 'Ø ' + fmtAvg(st.favAvg), t('member.ribbonFav')));
   card.appendChild(cards);

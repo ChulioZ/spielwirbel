@@ -130,7 +130,7 @@ function hubRegalPreview(round, activeGames) {
    top three ENTRIES rather than the top three PLACES — two members tied for
    first take two of them. That is what the podium shows too. */
 function hubPokalePreview(round) {
-  const { winners, rankOf, scores } = roundStandings(round);
+  const { winners, rankOf, wins } = roundStandings(round);
   if (!winners.length) return null;
   const card = hubPreviewCard(round, { icon: 'ti-trophy', titleKey: 'hub.tab.pokale', tab: 'pokale' });
   const body = card.querySelector('.hub-card__body');
@@ -139,7 +139,7 @@ function hubPokalePreview(round) {
          <span class="hub-preview__place">${rankOf[m.id]}</span>
          <span class="avatar hub-preview__avatar" style="background:${memberColor(round, m.id)}">${avatarFace(initials(m.name), { userId: m.userId })}</span>
          <span class="hub-preview__name">${esc(m.name)}</span>
-         <span class="hub-preview__score">${esc(fmtSigned(scores[m.id]))}</span>
+         <span class="hub-preview__score">${esc(tn(wins[m.id], 'pokale.winsOne', 'pokale.wins'))}</span>
        </div>`));
   });
   return card;

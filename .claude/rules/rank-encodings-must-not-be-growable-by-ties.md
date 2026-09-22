@@ -65,23 +65,29 @@ Two supporting decisions, both measured rather than chosen:
   name truncated to three characters. It is not a cosmetic call: the alternative
   to the compact form is a second line, and a second line is height.
 
-  **WHICH number changed in #895**, from the win count (`3×`) to the Siegwertung
-  (`+0,8`) the step now ranks on. Both are in the markup of every entry and CSS
-  chooses: an upright entry has a whole line and prints `+2,8 · 4 Siege`;
-  `.podium__col--multi .podium__winsraw` hides the count on a shared step.
+  **WHICH number has changed twice.** #895 moved it from the win count (`3×`) to
+  the Siegwertung (`+0,8`), carrying BOTH in the markup and letting CSS choose —
+  an upright entry printed `+2,8 · 4 Siege` while
+  `.podium__col--multi .podium__winsraw` dropped the count on a shared step.
+  2026-09-22 withdrew the Siegwertung from the whole app (operator: too hard to
+  explain, and negative for everyone but the leader in most rounds), so the win
+  count is the one number again and nothing is hidden anywhere.
+
   Measured at 375px on a three-way tie — the third row is why the issue's literal
-  „both numbers on each entry" was not built:
+  „both numbers on each entry" was never built, and it is the row to re-read
+  before putting a second number back:
 
   ```
   form              number   name left   chip height
-  2×      (#897)      14px       52px       28px
-  +0,8    (#895)      25px       42px       28px    ← shipped
+  2×      (#897)      14px       52px       28px    ← shipped again
+  +0,8    (#895)      25px       42px       28px
   +0,8 · 2 Siege      75px        0px       28px    ← name gone entirely
   ```
 
-  The count is the right half to drop: it explains why 12 Siege can rank below 5,
-  which only arises ACROSS steps, and step-mates are tied by definition. It
-  survives as the entry's `title`.
+  With one number the upright and sideways presentations say the same thing by
+  construction, rather than by a `display: none` somebody has to keep in step
+  with the markup — which is strictly better than the rule it replaced. The full
+  phrase still survives as the entry's `title`.
 - **The tie marker („geteilt") is on the pedestal, and it wraps.** So the step's
   height is a bet on the longest locale — see
   `.claude/rules/percent-sizes-under-a-shrink-to-fit-flex-item.md`, which owns

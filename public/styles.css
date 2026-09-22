@@ -6583,40 +6583,7 @@ a.k-tile:focus-visible,
 }
 @media (max-width: 520px) { .member-card__mark { font-size: 140px; } }
 
-/* 3. THE SIEGWERTUNG'S BAR — the Tafel's row fill at figure size. It grows from
-   the CENTRE so the sign reads as a direction rather than a glyph, and the
-   centre mark stays visible at a score of exactly 0, which is the state that
-   otherwise looks like a missing bar. */
-.member-bar {
-  position: relative;
-  display: block;
-  height: 6px;
-  margin: 6px 0 2px;
-  border-radius: var(--radius-pill);
-  background: color-mix(in oklab, var(--m-tone) 16%, var(--surface));
-}
-.member-bar::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 50%;
-  width: var(--w, 0%);
-  border-radius: var(--radius-pill);
-  background: var(--m-tone);
-}
-.member-bar--neg::before { left: auto; right: 50%; background: var(--placeholder); }
-.member-bar::after {
-  content: '';
-  position: absolute;
-  top: -1px;
-  bottom: -1px;
-  left: calc(50% - 1px);
-  width: 2px;
-  background: var(--surface);
-}
-
-/* 4. THE TWO GAME TILES STAND AS BOXES. A zero-blur colour-mix edge — the side
+/* 3. THE TWO GAME TILES STAND AS BOXES. A zero-blur colour-mix edge — the side
    of a thing rather than the space under it, which is why the elevation ramp
    has nothing to offer it and why test/design-tokens.test.js exempts the shape
    by construction rather than by name. The hover lift is the one place a real
@@ -7946,10 +7913,9 @@ kbd {
   overflow-wrap: anywhere;
   text-align: center;
 }
-/* Both numbers belong to the MEMBER, never to the step — step-mates share a
-   Siegwertung and hold different raw counts, since #895 ranks on the former. */
+/* The count belongs to the MEMBER, never to the step: a step is a rank, and
+   anything true of one member rather than of the place goes in the entry. */
 .podium__wins { font-size: var(--text-xs); font-weight: 700; color: var(--ink-soft); }
-.podium__score { color: var(--ink); }
 /* A SHARED step lays its members down into chips, and that is what keeps a
    crowded place short: a chip is ~32px against an upright card's ~90px, so the
    column grows by a third of what a stack would cost it and the winner's
@@ -7978,15 +7944,16 @@ kbd {
   overflow-wrap: normal;
 }
 .podium__col--multi .podium__wins { flex: 0 0 auto; }
-/* THE RAW COUNT IS WHAT GIVES WAY ON A SHARED STEP (#895), leaving the
-   Siegwertung the entries are ranked by. The fixed part of a chip is what
-   crushes the name — „3 Siege" already took 48 of a 108px phone step's width,
-   and „+2,0 · 12 Siege" takes twice that — so carrying both here would undo
-   exactly what #897 lying-down bought. It is also the right half to drop: the
-   count exists to explain why 12 Siege ranks below 5, which only ever needs
-   answering ACROSS steps, and step-mates are by definition tied. The full
-   phrase survives as the entry's `title`. */
-.podium__col--multi .podium__winsraw { display: none; }
+/* NOTHING IS HIDDEN ON A SHARED STEP ANY MORE. An entry carried two numbers
+   while #895 ranked on the Siegwertung and printed the raw count beside it, and
+   `.podium__col--multi .podium__winsraw { display: none }` dropped the count
+   here — the fixed part of a chip is what crushes the name, and „+2,0 · 12
+   Siege" takes twice the width of „3 Siege" on a 108px phone step.
+
+   With one number (2026-09-22) there is nothing to drop, and the upright and
+   sideways presentations say the same thing by construction rather than by a
+   rule somebody has to keep true. If a second number ever comes back, this is
+   where it has to give way again. */
 .podium__col--multi .podium__entries { gap: 5px 10px; }
 /* The pedestal. It states the RANK and, when the place is shared, that it is
    shared — and nothing else; anything true of one member rather than of the
