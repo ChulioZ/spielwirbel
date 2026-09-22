@@ -18,12 +18,15 @@ map.
 | `tisch/` | The reviewed „Der Tisch" package (V2, sixteen sheets T1–T15b), one HTML sheet per brief, plus the runtime that renders them and the package's own README. |
 | `pruefung-ocean-2026-09-20.md` | The review of the second package (Ocean), over two rounds. Its closing section is binding for every later package — in particular that the audit tool over-reports on gradient-led designs (see step 2). |
 | `ocean/` | The reviewed „Ocean“ package (fifteen sheets O1–O15b plus the concept sheet), same shape as `tisch/`. |
+| `pruefung-bruecke-2026-09-22.md` | The review of the third package (Die Brücke), over two rounds. Its closing section adds four rules for the remaining designs — in particular that a word finding binds to the **package**, not to the screen it was spotted on, and that icons and locales are checked against the **repo**, never against the previous package. |
+| `bruecke/` | The reviewed „Die Brücke“ package (sixteen sheets B1–B16 plus the concept sheet), same shape as `tisch/`. B16 is the density sheet — twelve seats, a 42-game shelf, a tie and two long locales. |
 | `tools/audit.js` | The contrast + hit-size audit that measured the Tisch sheets (see below). |
 
 The issues that implement the programme start at #1184 (the design layer) and
 end at #1202 (the flip); #1203–#1206 are one placeholder epic per remaining
 design. **Ocean's slices are #1210–#1222**, filed from the package in PR #1209;
-its epic #1207 closes when Ocean is enabled. The decisions behind them are in the handover's §1 and in the issues
+its epic #1207 closes when Ocean is enabled. Die Brücke's package landed the
+same way; its epic is **#1204**. The decisions behind them are in the handover's §1 and in the issues
 themselves; do not re-derive them.
 
 ## Opening a sheet
@@ -37,6 +40,7 @@ must be served from the **repository root**:
 python3 -m http.server 3199
 # then open http://localhost:3199/docs/design/tisch/Tisch-T3-Runde-Desktop.dc.html
 #   or http://localhost:3199/docs/design/ocean/Ocean-O3-Runde-Desktop.dc.html
+#   or http://localhost:3199/docs/design/bruecke/Bruecke-B3-Runde-Desktop.dc.html
 ```
 
 Opening a sheet as a `file://` URL renders a static snapshot with `{{ … }}`
@@ -88,6 +92,23 @@ is the procedure that produced #1188–#1200 for Der Tisch.
    darkest-pixel rule invented 19 further ghosts, among them every member
    initial whose box includes its colour ring. Report both: `mode` is the
    finding, a `mode`-passes/`p10`-fails split is a box that straddles something.
+
+   The inverse also happens and reads as a severe failure: a **`mode` far below
+   the floor with a tiny `share` while `p10` passes** is text inside its own
+   coloured border — the border wins the mode because the glyphs are
+   transparent. On Brücke that was a green „Gespielt" stamp at `mode` 1.00,
+   `share` 0.11, `p10` 10.66. Rule of thumb: **`share` under ~0.3 and `p10`
+   passing → read the markup, don't report it.**
+
+   **`audit.js`'s hit-size pass only sees `button`, `a[href]`, `input`,
+   `select` and ARIA roles.** A package that draws its controls as plain `div`s
+   is therefore *vacuously* clean — Brücke has **zero** `<button>` against
+   Tisch T1's 36 and Ocean O1's 24, and its nine real target failures (including
+   a 34 px back control on the vote card) were invisible to the tool. Always run
+   a second sweep over control-*shaped* boxes: an element with its own
+   background or border, a short label or a lone icon, and no block-level child.
+   Report the shapes and judge them — a desktop live-vote top bar sits at the
+   24 px floor, not 44.
 3. **Check the words** against `handover-vokabular-2026-09-20.md` §1 (never
    renamed) and §2 (may be themed), the evening-word ban, and the app's own
    strings (`public/js/lang/de.js`): the three hub presets, the veto reason
@@ -97,9 +118,28 @@ is the procedure that produced #1188–#1200 for Der Tisch.
    and three previews, five entries reachable on every desktop round screen,
    exactly four in the phone dock, the vote card full-screen with a ≥ 44 px back
    control, the top bar (language · inbox · account) everywhere else.
+
+   **Tick the list against the DOM, not against the rendered text.** An entry
+   may be an icon with no text at all — Brücke's phone-hub settings entry is a
+   bare `ti-settings` in the top bar, which a word-level sweep reports as a
+   missing IA block. Where a screen looks like it is missing something, list its
+   `i.ti` classes before writing it up.
 5. **Check the source.** Every hex value used in X2–X15 must be declared in X1;
    the marker colours and the score ramp live in X1 and are only *measured* in
    X8. Two sheets citing different contrast numbers for one pair is a finding.
+   Exempt, per Tisch A8 and Ocean R4: `#000`/`#fff`, the poster colours of the
+   *other* designs on the chooser screen, and colour-vision simulations.
+
+   **Check icons and locales against the repo, never against the package.** A
+   package inherits the previous one's `public/` copy, and those copies drift:
+   Brücke shipped Ocean's `tabler-icons.css` (108 rules — `anchor`, `droplet`,
+   `wave-sine` added, `qrcode` missing, which the app uses at
+   `views-session-live.js:329`) and validated „adds no glyph" against it, while
+   the repo declares 106. The two lists that settle it are
+   `public/fonts/tabler-icons.css` and `public/js/locales.js` — the app's nine
+   locales are en de es fr it nl pt **fi ko**, and Brücke's language picker
+   drew Polish and Swedish instead. Never commit a package's `public/` folder;
+   the sheets point at the real one via `../../../public/`.
 6. **Write the review** in `pruefung-tisch-2026-09-20.md`'s format (or
    `pruefung-ocean-2026-09-20.md`'s, which adds the round-1/round-2 table): systemic
    findings (source sheet + every sheet they reach) first, then words and

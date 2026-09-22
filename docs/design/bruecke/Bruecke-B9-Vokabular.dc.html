@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="design_doc_mode" content="canvas">
+  <link rel="stylesheet" href="../../../public/fonts/tabler-icons.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #070b14; font-family: 'IBM Plex Sans', sans-serif; }
+    a { color: #35e0ff; text-decoration: none; }
+    a:hover { color: #8aeeff; text-decoration: underline; }
+  </style>
+</helmet>
+<div style="display: flex; flex-direction: column; gap: 40px; padding: 44px; width: max-content; color: #dfe7f5; background-color: #070b14; background-image: radial-gradient(1200px 600px at 50% 0%, #10203a, transparent 70%);">
+
+  <div data-screen-label="B9 Kopf" style="max-width: 1240px; display: flex; flex-direction: column; gap: 12px; background: #0e1626; border: 1px solid #24324a; padding: 24px 28px;">
+    <div style="display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;">
+      <span style="font-family: 'IBM Plex Mono'; font-weight: 600; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: #070b14; background: #35e0ff; padding: 5px 12px;">B9</span>
+      <h1 style="margin: 0; font-family: 'Chakra Petch'; font-weight: 700; font-size: 34px; line-height: 1.05; text-transform: uppercase;">Vokabular &amp; Glossar</h1>
+      <span style="font-family: 'IBM Plex Mono'; font-size: 13px; color: #9aa8c0;">Brief 9 von 13 · DE + EN</span>
+    </div>
+    <p style="margin: 0; font-size: 15px; line-height: 1.55; max-width: 92ch; color: #b8c2d6;">Die Regel in einem Satz: <strong style="color: #dfe7f5;">Die Substantive und die Navigation gehören Spielwirbel. Das Ritual gehört dem Thema.</strong> Die Brücke trägt zusammen mit dem Run das meiste Thema — aber nur an den sieben Stellen, die §2 des Addendums freigibt. Alles andere steht im Wortlaut der App.</p>
+    <div style="display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; background: #17233a; border-left: 3px solid #4ade80; font-size: 13px; line-height: 1.55;"><i class="ti ti-check" style="font-size: 18px; color: #4ade80; flex: none; margin-top: 1px;"></i><span><strong style="color: #4ade80;">V0 ist angewandt.</strong> Der Revert aus §4 steckt bereits im Konzeptblatt <a href="Konzept-E-Die-Bruecke.dc.html" style="display: inline-flex; align-items: center; min-height: 24px; padding: 0 3px;">E</a>; B1–B15b sind darauf gebaut und führen keinen einzigen zurückgenommenen Begriff mehr. Dieses Blatt ist die Nachweisliste, nicht ein neuer Vorschlag.</span></div>
+  </div>
+
+  <div data-screen-label="B9.1 Eigen" style="display: flex; flex-direction: column; gap: 14px;">
+    <div style="display: flex; align-items: center; gap: 12px;"><span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 22px; text-transform: uppercase; letter-spacing: .06em;">1 · Was die Brücke eigen nennen darf</span><span style="flex: 1; height: 1px; background: linear-gradient(90deg, #35e0ff, transparent);"></span></div>
+    <div style="max-width: 1360px; display: flex; flex-direction: column; gap: 1px; background: #24324a; border: 1px solid #24324a;">
+      <div style="display: grid; grid-template-columns: 180px 1fr 240px 240px; gap: 1px; background: #24324a;">
+        <sc-for list="{{ ownHead }}" as="h" hint-placeholder-count="4"><span style="background: #0b1220; padding: 11px 14px; font-family: 'IBM Plex Mono'; font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: #9aa8c0;">{{ h }}</span></sc-for>
+      </div>
+      <sc-for list="{{ ownWords }}" as="w" hint-placeholder-count="7">
+        <div style="display: grid; grid-template-columns: 180px 1fr 240px 240px; gap: 1px; background: #24324a;">
+          <span style="background: #0e1626; padding: 13px 14px; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #35e0ff;">{{ w.place }}</span>
+          <span style="background: #0e1626; padding: 13px 14px; font-size: 14px; line-height: 1.5;">{{ w.de }}</span>
+          <span style="background: #0e1626; padding: 13px 14px; font-size: 14px; line-height: 1.5; color: #b8c2d6;">{{ w.en }}</span>
+          <span style="background: #0e1626; padding: 13px 14px; font-size: 12px; line-height: 1.5; color: #9aa8c0;">{{ w.note }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div data-screen-label="B9.2 Standard" style="display: flex; flex-direction: column; gap: 14px;">
+    <div style="display: flex; align-items: center; gap: 12px;"><span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 22px; text-transform: uppercase; letter-spacing: .06em;">2 · Was Spielwirbel bleibt — und was dafür wich</span><span style="flex: 1; height: 1px; background: linear-gradient(90deg, #35e0ff, transparent);"></span></div>
+    <div style="max-width: 1360px; display: flex; flex-direction: column; gap: 1px; background: #24324a; border: 1px solid #24324a;">
+      <div style="display: grid; grid-template-columns: 200px 1fr 1fr 220px; gap: 1px; background: #24324a;">
+        <sc-for list="{{ revertHead }}" as="h" hint-placeholder-count="4"><span style="background: #0b1220; padding: 11px 14px; font-family: 'IBM Plex Mono'; font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: #9aa8c0;">{{ h }}</span></sc-for>
+      </div>
+      <sc-for list="{{ reverted }}" as="r" hint-placeholder-count="12">
+        <div style="display: grid; grid-template-columns: 200px 1fr 1fr 220px; gap: 1px; background: #24324a;">
+          <span style="background: #0e1626; padding: 12px 14px; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #9aa8c0;">{{ r.place }}</span>
+          <span style="background: #0e1626; padding: 12px 14px; font-size: 14px; line-height: 1.5; color: #9aa8c0; text-decoration: line-through;">{{ r.was }}</span>
+          <span style="background: #0e1626; padding: 12px 14px; font-size: 14px; line-height: 1.5; font-weight: 600;">{{ r.now }}</span>
+          <span style="background: #0e1626; padding: 12px 14px; font-size: 13px; line-height: 1.5; color: #b8c2d6;">{{ r.en }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div data-screen-label="B9.3 Mitlaufen" style="display: flex; flex-direction: column; gap: 14px;">
+    <div style="display: flex; align-items: center; gap: 12px;"><span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 22px; text-transform: uppercase; letter-spacing: .06em;">3 · Wo „Schub“ mitlaufen muss</span><span style="flex: 1; height: 1px; background: linear-gradient(90deg, #35e0ff, transparent);"></span></div>
+    <p style="margin: 0; max-width: 92ch; font-size: 14px; line-height: 1.55; color: #b8c2d6;">Wenn die Wertungskarte ihre Skala umbenennt, folgt das Wort überall dorthin, wo diese Skala wieder auftaucht. Ein Design, das nur die Karte umbenennt und in der Ergebnistabelle „1× Veto“ schreibt, ist inkonsistent — das ist beim Tisch aus der Prüfung gekommen.</p>
+    <div style="display: flex; flex-wrap: wrap; gap: 12px; max-width: 1360px;">
+      <sc-for list="{{ propagation }}" as="p" hint-placeholder-count="6">
+        <div style="width: 330px; background: #0e1626; border: 1px solid #24324a; padding: 16px 18px; display: flex; flex-direction: column; gap: 8px;">
+          <span style="font-family: 'IBM Plex Mono'; font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: #35e0ff;">{{ p.where }}</span>
+          <span style="font-size: 15px; line-height: 1.45; color: #dfe7f5;">{{ p.text }}</span>
+          <span style="font-size: 12px; line-height: 1.45; color: #9aa8c0; border-top: 1px solid #1c2740; padding-top: 8px;">EN · {{ p.en }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div data-screen-label="B9.4 Glossar" style="display: flex; flex-direction: column; gap: 14px;">
+    <div style="display: flex; align-items: center; gap: 12px;"><span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 22px; text-transform: uppercase; letter-spacing: .06em;">4 · Das Glossar, wie es in der App steht</span><span style="flex: 1; height: 1px; background: linear-gradient(90deg, #35e0ff, transparent);"></span></div>
+    <p style="margin: 0; max-width: 92ch; font-size: 14px; line-height: 1.55; color: #b8c2d6;">Ein kurzer Abschnitt in den FAQ — nur die Stellen, an denen die Brücke ein eigenes Wort benutzt. Alles andere braucht keine Erklärung, weil nichts anderes umbenannt ist. Jedes Wort hier muss ohne dieses Glossar vom Screen her verständlich sein; das Glossar ist die Rückversicherung, nicht die Bedienungsanleitung.</p>
+    <div style="display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-start;">
+      <div style="width: 640px; background: #0e1626; border: 1px solid #24324a; padding: 24px 28px; display: flex; flex-direction: column; gap: 14px;">
+        <span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 26px; text-transform: uppercase;">Wörter in der Brücke</span>
+        <span style="font-size: 14px; line-height: 1.55; color: #b8c2d6;">Du hast als Design „Die Brücke“ gewählt. Sie nennt ein paar Handgriffe anders — die Sachen selbst heißen überall gleich.</span>
+        <sc-for list="{{ glossary }}" as="g" hint-placeholder-count="5">
+          <div style="display: flex; flex-direction: column; gap: 3px; border-top: 1px solid #1c2740; padding-top: 12px;">
+            <span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 19px; text-transform: uppercase; color: #35e0ff;">{{ g.term }}</span>
+            <span style="font-size: 15px; line-height: 1.5;">{{ g.desc }}</span>
+          </div>
+        </sc-for>
+      </div>
+      <div style="width: 640px; background: #0e1626; border: 1px solid #24324a; padding: 24px 28px; display: flex; flex-direction: column; gap: 14px;">
+        <span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 26px; text-transform: uppercase;">Words in The Bridge</span>
+        <span style="font-size: 14px; line-height: 1.55; color: #b8c2d6;">You picked “The Bridge” as your design. It names a few actions differently — the things themselves are called the same everywhere.</span>
+        <sc-for list="{{ glossaryEn }}" as="g" hint-placeholder-count="5">
+          <div style="display: flex; flex-direction: column; gap: 3px; border-top: 1px solid #1c2740; padding-top: 12px;">
+            <span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 19px; text-transform: uppercase; color: #35e0ff;">{{ g.term }}</span>
+            <span style="font-size: 15px; line-height: 1.5;">{{ g.desc }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+
+  <div data-screen-label="B9.5 Verboten" style="display: flex; flex-direction: column; gap: 14px;">
+    <div style="display: flex; align-items: center; gap: 12px;"><span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 22px; text-transform: uppercase; letter-spacing: .06em;">5 · Was nie geht</span><span style="flex: 1; height: 1px; background: linear-gradient(90deg, #ff6b85, transparent);"></span></div>
+    <div style="display: flex; flex-wrap: wrap; gap: 12px; max-width: 1360px;">
+      <sc-for list="{{ forbidden }}" as="f" hint-placeholder-count="6">
+        <div style="width: 330px; background: #0e1626; border: 1px solid #24324a; border-left: 3px solid #ff6b85; padding: 16px 18px; display: flex; flex-direction: column; gap: 7px;">
+          <span style="font-family: 'IBM Plex Mono'; font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: #ff8fa3;">{{ f.rule }}</span>
+          <span style="font-size: 14px; line-height: 1.5; color: #dfe7f5;">{{ f.why }}</span>
+          <span style="font-size: 12px; line-height: 1.5; color: #9aa8c0; font-family: 'IBM Plex Mono';">{{ f.example }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1460,&quot;height&quot;:900}}">
+class Component extends DCLogic {
+  renderVals() {
+    const ownHead = ['Stelle', 'Deutsch', 'English', 'Warum erlaubt'];
+    const ownWords = [
+      { place: 'Das Gefäß', de: 'Pool · „9 Spiele im Pool“ · Zählfrage „Sonden · wie viele werden gezogen?“', en: 'Pool · “9 games in the pool” · “Probes · how many are drawn?”', note: '§2 Gefäßwort. „Spiel/Spiele“ bleibt darin stehen — nie „9 Einheiten“.' },
+      { place: 'Hauptaktion 1', de: 'Mission starten', en: 'Start mission', note: '§2 Knopf auf dem Hub. Der Seitentitel bleibt „Neue Session“.' },
+      { place: 'Hauptaktion 2', de: 'Zündung', en: 'Ignition', note: '§2 Knopf im Setup. Ersetzt „Loswirbeln“, nicht den Seitentitel.' },
+      { place: 'Wertungskarte', de: '„Wie viel Schub gibst du diesem Spiel heute?“ · kein Schub / volle Kraft', en: '“How much thrust do you give this game today?” · no thrust / full power', note: '§2 Frage und Skalenenden. Die fünf Gesichter und 1–5 bleiben global.' },
+      { place: 'Aufdecken', de: 'entschlüsseln · „wird entschlüsselt“', en: 'decrypt · “will be decrypted”', note: '§2 Aufdeckverb. Das Ergebnis selbst heißt Ergebnis.' },
+      { place: 'Begrüßung', de: '„Willkommen zurück an Bord.“ · „Flotte / Übersicht“ neben dem Wortzeichen', en: '“Welcome back aboard.” · “Fleet / Overview”', note: '§2 Lobby-Stimme. Die Frage darunter bleibt „Welche Runde spielt heute?“.' },
+      { place: 'Hinweiskarte', de: 'Kicker „Eingehendes Signal“ über dem Titel', en: 'Kicker “Incoming signal”', note: '§2 Kicker. Der Titel darunter bleibt „Abstimmung läuft · Familie Berger“.' },
+      { place: 'Zierzeilen', de: '„T+ 00:14:52 · Orbit stabil“ · „Mission 24 · Crew 4“ unter dem Rundennamen', en: '“T+ 00:14:52 · orbit stable” · “Mission 24 · Crew 4”', note: '§2 Zier. Nie auf einem Knopf, Etikett oder im Dock, nie vor einem Namen.' },
+      { place: 'Zierüberschrift', de: 'Missionskontrolle (über dem Startbereich des Hubs)', en: 'Mission control', note: '§2 Zier. Keine Navigation, kein Etikett — nur Aufschrift des Paneels.' },
+    ];
+
+    const revertHead = ['Stelle', 'Konzept sagte', 'Steht jetzt da', 'English'];
+    const reverted = [
+      { place: 'Die Gruppe', was: 'Schiff · „Schiff registrieren“', now: 'Runde · „Neue Runde gründen“', en: 'Round · “Start a new round”' },
+      { place: 'Lobby-Frage', was: '„Welches Schiff nimmt heute Kurs?“', now: '„Welche Runde spielt heute?“', en: '“Which round is playing today?”' },
+      { place: 'Das Regal', was: 'Frachtraum · Einheiten', now: 'Regal · Spiel / Spiele', en: 'Shelf · game / games' },
+      { place: 'Die Personen', was: 'Crew · an Bord · Crew-Mitglied', now: 'Mitglieder · spielt mit · Platz dazu', en: 'Members · playing · Add a seat' },
+      { place: 'Setup-Titel', was: 'Crew-Manifest', now: 'Wer spielt mit?', en: 'Who’s playing?' },
+      { place: 'Das Ereignis', was: 'Mission / Startsequenz als Seitentitel', now: 'Session · Neue Session', en: 'Session · New session' },
+      { place: 'Die Abstimmung', was: 'Sondierung', now: 'Abstimmung', en: 'Vote' },
+      { place: 'Der Ausgang', was: 'Kommandant · „Landung bestätigt“', now: 'Sieger · „hat gewonnen“ · Gespielt', en: 'Winner · “won” · Played' },
+      { place: 'Unterseiten', was: 'Logbuch · Auszeichnungen', now: 'Chronik · Pokale', en: 'History · Trophies' },
+      { place: 'Off-Regal', was: 'Quarantäne: Ausgemustert · Abgeschlossen · Bestellt', now: 'Nicht im Regal: Aussortiert · Durchgespielt · Wunschliste', en: 'Not on the shelf: Retired · Finished · Wishlist' },
+      { place: 'Empfehlungen', was: 'Navigationsvorschlag · Empfohlen', now: 'Wie wär’s mit · Könnte euch gefallen', en: 'How about · You might like' },
+      { place: 'Aufgabenblock', was: 'Wartung', now: 'Kümmerliste', en: 'To-do list' },
+      { place: 'Navigation', was: 'Brotkrume „Flotte / … / Frachtraum“ · „Zurück zur Brücke“', now: 'Start · Regal · Chronik · Pokale · Einstellungen · „Zurück“', en: 'Home · Shelf · History · Trophies · Settings · “Back”' },
+      { place: 'Sekundäraktionen', was: 'Einheit hinzufügen · BGG-Import · Mehrere Schiffe · Nächste Mission · Protokoll löschen', now: 'Spiel hinzufügen · Von BGG übernehmen · Mehrere Tische · Noch eine Runde · Session löschen', en: 'Add game · Import from BGG · Multiple tables · One more round · Delete session' },
+      { place: 'Besitz', was: 'Eigner', now: 'Gehört Lea', en: 'Lea’s game' },
+      { place: 'Kennungen', was: 'CRG-03 vor dem Spielnamen', now: 'nur der Spielname', en: 'the game name only' },
+    ];
+
+    const propagation = [
+      { where: 'Wertungskarte', text: '„Wie viel Schub gibst du diesem Spiel heute?“', en: '“How much thrust do you give this game today?”' },
+      { where: 'Skalenenden', text: '← kein Schub · volle Kraft →', en: '← no thrust · full power →' },
+      { where: 'Ergebnistabelle · Spaltenkopf', text: 'Schub 1 · 2 · 3 · 4 · 5', en: 'Thrust 1 · 2 · 3 · 4 · 5' },
+      { where: 'Ergebnistabelle · Zeile', text: 'Gehört Tim · 1× kein Schub', en: 'Tim’s game · 1× no thrust' },
+      { where: 'Spieldetail', text: 'Viermal gespielt · nie „kein Schub“', en: 'Played four times · never “no thrust”' },
+      { where: 'Pokale', text: 'Meiste Vetos: Rost &amp; Regen — dreimal „kein Schub“', en: 'Most vetoes: Rost &amp; Regen — three times “no thrust”' },
+      { where: 'Mitgliedsseite', text: 'Gibt selten „kein Schub“ · Ø Schub 4,3', en: 'Rarely gives “no thrust” · avg. thrust 4.3' },
+      { where: 'Score-Erklärung', text: 'Der Spielwirbel-Score gewichtet „kein Schub“ stärker als die übrigen Stufen.', en: 'The Spielwirbel score weights “no thrust” more heavily than the other steps.' },
+    ];
+
+    const glossary = [
+      { term: 'Pool', desc: 'Die Spiele, aus denen heute gezogen werden kann. Es sind die Spiele derer, die mitspielen — wer heute nicht dabei ist, dessen Spiele bleiben im Regal.' },
+      { term: 'Sonden', desc: 'Wie viele Spiele aus dem Pool gezogen werden. Drei Sonden heißt: über drei Spiele wird abgestimmt.' },
+      { term: 'Mission starten', desc: 'Startet eine neue Session — der große Knopf auf der Startseite deiner Runde.' },
+      { term: 'Zündung', desc: 'Zieht die Spiele und startet die Abstimmung. Danach bewertet jeder verdeckt.' },
+      { term: 'Schub', desc: 'Deine Bewertung von 1 bis 5: wie gern du dieses Spiel heute spielen würdest. 1 ist „kein Schub“, 5 ist „volle Kraft“.' },
+      { term: 'Entschlüsseln', desc: 'Sobald alle bewertet haben, werden die Wertungen aufgedeckt und das Ergebnis steht fest.' },
+    ];
+    const glossaryEn = [
+      { term: 'Pool', desc: 'The games today’s draw can pick from. It holds the games of everyone who is playing — if someone sits this one out, their games stay on the shelf.' },
+      { term: 'Probes', desc: 'How many games get drawn from the pool. Three probes means you vote on three games.' },
+      { term: 'Start mission', desc: 'Starts a new session — the big button on your round’s home screen.' },
+      { term: 'Ignition', desc: 'Draws the games and opens the vote. After that, everyone rates in secret.' },
+      { term: 'Thrust', desc: 'Your rating from 1 to 5: how much you’d like to play this game today. 1 is “no thrust”, 5 is “full power”.' },
+      { term: 'Decrypt', desc: 'Once everyone has rated, the ratings are revealed and the result is in.' },
+    ];
+
+    const forbidden = [
+      { rule: 'Kein Abendwort für die Session', why: 'Kein Design darf die Session Abend, Spielabend, game night oder tonight nennen — ein Test verbietet das in allen neun Sprachen.', example: '„Heute Abend“ als Titel → „Neue Session“' },
+      { rule: 'Kein Thema auf der Navigation', why: 'Die fünf Abschnittslinks und die vier Dock-Einträge tragen nie ein Brücken-Wort, auch nicht als Zusatz.', example: '„Deck“, „Brücke“, „Zum Schiff“ → Start' },
+      { rule: 'Keine Kennung vor einem Namen', why: 'Eine Katalognummer steht nie vor oder anstelle eines Spiel- oder Personennamens.', example: '„CRG-03 Kartographen“ → „Kartographen des Nordens“' },
+      { rule: 'Keine Klammern auf Bedienelementen', why: 'Keine eckigen Klammern, Schrägstriche oder Unterstriche auf Knöpfen, Etiketten oder Filtern.', example: '„[Filter]“ → „Filter“' },
+      { rule: 'Kein eigenes Wort für Personen', why: 'Mitglieder, Plätze, Gäste — das sind die Wörter der App, in jedem Design.', example: '„Crew“ als Etikett → „Mitglieder“ (nur die Zierzeile „Crew 4“ bleibt)' },
+      { rule: 'Kein Wort, das das Glossar braucht', why: 'Ist ein eigenes Wort ohne die Erklärung nicht verständlich, wird das Standardwort benutzt.', example: '„Sondierung“ war nicht lesbar → „Abstimmung“' },
+      { rule: 'Keine umgeschriebene Schlagzeile', why: 'Das Ergebnis nennt Spiel, „wurde gespielt“, Name, „hat gewonnen“ — die Typografie darf gestalten, der Satz nicht wandern.', example: '„Landung bestätigt — Kommandant Jonas.“ → „„Nordlichter“ wurde gespielt. Jonas hat gewonnen.“' },
+      { rule: 'Keine unübersetzbaren Wortspiele', why: 'Jedes eigene Wort braucht ein naheliegendes Gegenstück in acht weiteren Sprachen.', example: 'Zündung → Ignition · Schub → Thrust' },
+    ];
+
+    return { ownHead, ownWords, revertHead, reverted, propagation, glossary, glossaryEn, forbidden };
+  }
+}
+</script>
+</body>
+</html>
