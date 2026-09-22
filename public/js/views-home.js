@@ -215,15 +215,27 @@ function renderLobbyList(rounds) {
        one <a>, so a nested control would be a link inside a link. The visible
        glyph is bare "+N"; the localized wording is the accessible label. */
     const moreLabel = rest > 0 ? tn(rest, 'home.moreMembersOne', 'home.moreMembers') : '';
+    /* `--seat-i` / `--seat-n` are design-NEUTRAL position hints (#1189): which
+       seat this is, and how many there are. Nothing in styles.css reads either,
+       so Klassisch's overlapping stack is exactly what it has always been — but
+       a design whose lobby tile is a round TABLE needs to place each seat on
+       the rim, and the angle depends on the count, which CSS cannot ask for.
+       Written here rather than derived in the stylesheet for the same reason
+       markerStyle() is written here: the value is per-element data, and an
+       inline custom property is how this app hands that to CSS.
+
+       The "+N" bubble counts as a seat and gets an index of its own — on the
+       rim it reads as the places that did not fit, which is exactly what it is. */
+    const seatCount = seats.length + (rest > 0 ? 1 : 0);
     const stack =
       seats
         .map(
-          (m) =>
-            `<span class="avatar" style="background:${memberColor(r, m.id)}" title="${esc(m.name)}">${avatarFace(initials(m.name), { userId: m.userId })}</span>`
+          (m, i) =>
+            `<span class="avatar" style="--seat-i:${i};background:${memberColor(r, m.id)}" title="${esc(m.name)}">${avatarFace(initials(m.name), { userId: m.userId })}</span>`
         )
         .join('') +
       (rest > 0
-        ? `<span class="avatar avatar-stack__more" title="${esc(moreLabel)}" aria-label="${esc(moreLabel)}">+${rest}</span>`
+        ? `<span class="avatar avatar-stack__more" style="--seat-i:${seats.length}" title="${esc(moreLabel)}" aria-label="${esc(moreLabel)}">+${rest}</span>`
         : '');
 
     let lastLine = '';
@@ -271,7 +283,7 @@ function renderLobbyList(rounds) {
          <span class="round-card__body">
            <span class="round-card__name">${esc(r.name)}${r.shared ? ` <span class="round-card__shared"><i class="ti ti-users" aria-hidden="true"></i> ${esc(t('home.shared'))}</span>` : ''}</span>
            <span class="round-card__meta">
-             <span class="avatar-stack">${stack}</span>
+             <span class="avatar-stack" style="--seat-n:${seatCount}">${stack}</span>
              <span class="stat-chip"><i class="ti ti-cards" aria-hidden="true"></i>${esc(tn(r.gameCount, 'home.chip.gamesOne', 'home.chip.games'))}</span>
              <span class="stat-chip"><i class="ti ti-confetti" aria-hidden="true"></i>${esc(tn(r.playedCount, 'home.chip.sessionsOne', 'home.chip.sessions'))}</span>
            </span>

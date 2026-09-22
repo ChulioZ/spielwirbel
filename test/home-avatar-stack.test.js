@@ -74,8 +74,20 @@ test('a round bigger than the cap renders exactly cap avatars plus one +N bubble
   assert.equal(more[0].textContent.trim(), `+${15 - n}`, 'the bubble does not show the true remainder');
 
   /* The bubble must not be mistakable for a member: no palette colour, and no
-     inline background at all (which is how a member avatar gets its swatch). */
-  assert.equal(more[0].getAttribute('style'), null, 'the overflow bubble carries an inline style — it will read as a member swatch');
+     inline BACKGROUND at all (which is how a member avatar gets its swatch).
+
+     It carries an inline style since #1189 — `--seat-i`, the design-neutral seat
+     position hint every child of the stack gets, so a design whose lobby tile is
+     a round table can place it on the rim. So the assertion moved from "the
+     attribute is absent" to "the attribute declares nothing but seat hints",
+     which is the invariant the comment above always stated. A `background` here
+     is still the defect, and so is anything else nobody has thought about. */
+  const inline = more[0].getAttribute('style') || '';
+  assert.deepEqual(
+    inline.split(';').map((d) => d.split(':')[0].trim()).filter(Boolean).filter((prop) => !/^--seat-/.test(prop)),
+    [],
+    'the overflow bubble declares an inline property that is not a seat hint — a background there will read as a member swatch'
+  );
   assert.ok(!MEMBER_COLORS.some((c) => more[0].outerHTML.includes(c)), 'the overflow bubble paints a member palette colour');
 });
 
