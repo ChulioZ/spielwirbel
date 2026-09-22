@@ -168,9 +168,28 @@ function showSessionLobby(round, session, handedOn) {
   // WHO has voted, never WHAT they voted — the values are redacted server-side
   // while the session is open (lib/session-votes.js) and this screen is exactly
   // why: it has to show progress without revealing a single rating.
+  //
+  /* The two extra children are Der Tisch's row form (T4.3/T6.5), hidden under
+     Klassisch until a design asks for them — the same shape #1191 used.
+
+     They render the person's state SPREAD over the games rather than per-game
+     progress, and that is the honest reading rather than a simplification: a
+     column is submitted in one POST at the end of the card run
+     (`saveVotes` below), so `votedIds` is the only thing that exists and it is
+     binary. The sheet's middle state („wertet gerade", two of three filled)
+     has no data behind it anywhere in the app, and inventing one would mean
+     writing a partial column — which is exactly what the redactor exists to
+     stop being observable. So a box is filled when the person is done and open
+     when they are not, and the count beside it says the same thing in words. */
   const peopleEl = root.querySelector('#lvPeople');
   people.forEach((p) => {
     const done = voted.has(p.id);
+    // aria-hidden: the state line and the count already carry this in words, so
+    // announcing N boxes per person would triple the reading of the list for
+    // nothing. The boxes are the glanceable form of a fact already spoken.
+    const dots = games.map(() => `<span class="live-person__dot${done ? ' is-done' : ''}">
+          <i class="ti ${done ? 'ti-check' : 'ti-hourglass'}" aria-hidden="true"></i>
+        </span>`).join('');
     const chip = h(`<div class="live-person${done ? ' is-voted' : ''}">
         <span class="live-person__avatar" style="background:${personColor(round, p)}">${avatarFace(initials(p.name), { userId: p.userId })}</span>
         <span class="live-person__name">${esc(personLabel(p))}</span>
@@ -178,9 +197,34 @@ function showSessionLobby(round, session, handedOn) {
           <i class="ti ${done ? 'ti-check' : 'ti-hourglass'}" aria-hidden="true"></i>
           ${esc(t(done ? 'lobby.voted' : 'lobby.waiting'))}
         </span>
+        <span class="live-person__dots" aria-hidden="true">${dots}</span>
+        <span class="live-person__progress">${esc(t('lobby.progress', {
+          n: done ? games.length : 0,
+          total: games.length,
+        }))}</span>
       </div>`);
     peopleEl.appendChild(chip);
   });
+
+  /* The account-free voters, as one note rather than a badge per row (T4.3).
+     Named from `session.guests`, which is the only thing the app actually knows:
+     a guest is a participant with no account by construction (#532), so they can
+     only be voting through the link. Who is holding the link is NOT knowable —
+     any participant may claim any open name on it — so the note says what is
+     true of the guests and does not claim to identify the device. */
+  const guests = (session.guests || []).filter((g) => people.some((p) => p.id === g.id));
+  if (guests.length) {
+    peopleEl.appendChild(h(`<div class="live-vote__guests">
+        <i class="ti ti-user-plus" aria-hidden="true"></i>
+        <span class="live-vote__guests-main">
+          <span class="live-vote__guests-title">${esc(tn(guests.length, 'lobby.guestVoterOne', 'lobby.guestVoter', {
+            names: joinNames(guests.map((g) => g.name)),
+            n: guests.length,
+          }))}</span>
+          <span class="live-vote__guests-note">${esc(t('lobby.guestVoterNote'))}</span>
+        </span>
+      </div>`));
+  }
 
   const actions = root.querySelector('#lvActions');
 
@@ -280,6 +324,25 @@ function showSessionLobby(round, session, handedOn) {
     actions.appendChild(list);
   }
 
+  /* „Am eigenen Gerät mitstimmen" (T4.3/T6.5): the share controls and the action
+     that ends the voting, as one paper block beside the people.
+
+     A SIBLING of the actions column, not a child of it. It reads like a child —
+     everything in it was one before this issue — but on a desktop T4.3 puts the
+     panel beside the people while the voting actions stay under them, and a
+     nested panel cannot be placed in a grid its parent owns. Placing it from
+     inside the column instead needs `display: contents` on the column plus an
+     explicit `grid-row` on the panel, and that row number is a count of who has
+     voted and whether anyone is mid-hand-over — i.e. it is right on one session
+     and wrong on the next.
+
+     What that costs is the 12px the actions column gave these children for free,
+     so the panel restates it (styles.css). The head renders only while someone
+     is still open — with every vote in, „Am eigenen Gerät mitstimmen" is a
+     heading over a sharing offer nobody needs, and the panel is then just the
+     closing action. */
+  const panel = h('<div class="live-vote__panel"></div>');
+
   // Share the session as a link (#652), so people WITHOUT an account can vote
   // from their own phone. Offered above the close button and below the voting
   // actions: it is what you reach for while people are still arriving, not what
@@ -288,6 +351,10 @@ function showSessionLobby(round, session, handedOn) {
   // The link is minted on demand rather than with the draw — most sessions never
   // need one, and a token that exists is a token that can leak.
   if (pending.length) {
+    panel.appendChild(h(`<div class="live-vote__panel-head">
+        <h2 class="live-vote__panel-title">${esc(t('lobby.panelTitle'))}</h2>
+        <p class="live-vote__panel-note">${esc(t('lobby.panelNote'))}</p>
+      </div>`));
     const shareRow = h('<div class="live-vote__share-row"></div>');
     const share = h(`<button class="btn live-vote__share">
         <i class="ti ti-link" aria-hidden="true"></i> ${esc(t('lobby.share'))}
@@ -330,7 +397,7 @@ function showSessionLobby(round, session, handedOn) {
       </button>`);
     qr.addEventListener('click', () => showVoteQrSheet(round, session));
     shareRow.appendChild(qr);
-    actions.appendChild(shareRow);
+    panel.appendChild(shareRow);
   }
 
   // Closing is available at every point, not only once everyone is in: someone
@@ -358,7 +425,33 @@ function showSessionLobby(round, session, handedOn) {
       showSessionLobby(round, session);
     }
   });
-  actions.appendChild(close);
+  panel.appendChild(close);
+
+  /* Who the group is still waiting for (T4.3/T6.5), under an ENABLED button.
+
+     The package draws this two ways and they disagree: T4.3 has „Ergebnis
+     zeigen" gold and live with the line beneath it, T6.5 has the same button
+     `disabled`. The enabled reading is the one that ships, because the app
+     already decided this question the other way and for a reason the sheets do
+     not overturn — closing is available at every point so that someone who never
+     turns up cannot hold the evening hostage (see the button above). So the line
+     is information, not an explanation of a lock, and its wording states the
+     fact rather than promising that the action becomes possible later.
+
+     Named while the list is short enough for a name to help, counted after that:
+     six names is a paragraph, and the reader's question at that size is „how
+     many", not „who". */
+  if (pending.length) {
+    const names = joinNames(pending.map((p) => personLabel(p)));
+    const reason = pending.length === 1
+      ? t('lobby.waitingForOne', { name: names })
+      : pending.length <= 3
+        ? t('lobby.waitingForNamed', { n: pending.length, names })
+        : t('lobby.waitingForMany', { n: pending.length });
+    panel.appendChild(h(`<p class="live-vote__waiting">${esc(reason)}</p>`));
+  }
+
+  root.appendChild(panel);
 
   // Below the actions: what you can do comes first, what already happened after.
   const log = renderSessionLog(round, session);

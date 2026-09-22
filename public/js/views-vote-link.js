@@ -100,6 +100,29 @@ const voteLinkColor = (person) => person.color || 'var(--ink-soft)';
 async function showVoteLink(token) {
   currentView = () => showVoteLink(token);
   syncUrl(votePath(token));
+
+  /* The FACE design, never the viewer's (#1192, T12.5).
+   *
+   * This is the app's one public, account-free surface, so it has to wear the
+   * app's public face — and until this line it wore whatever the *browser* was
+   * carrying. `bootApp()` calls `applyAccountDesign()` before routing, so a link
+   * opened by someone who happens to have an account rendered the invitation in
+   * that person's own private design; measured on a seeded account wearing Der
+   * Tisch while the instance's face was Klassisch. Nothing looked broken, which
+   * is why it needed measuring rather than reading: a design applied is a design
+   * that renders correctly.
+   *
+   * FACE_DESIGN rather than a read of `/api/config`: `lib/app.js` builds
+   * `cfg.faceDesign` FROM this very constant (the nineteenth entry in
+   * .claude/rules/shared-constants-inventory.md), so the two cannot disagree —
+   * and the constant is synchronous, where the config round-trip would paint the
+   * wrong design first and correct it a moment later, on the one screen with no
+   * second chance to make an impression.
+   *
+   * It runs on every render because `currentView` re-enters here on a language
+   * change, which is also the only way back onto this screen without a reload. */
+  applyDesign(FACE_DESIGN);
+
   // No round name in the tab title — the tab is visible to anyone glancing at the
   // phone, and the round name is the group's own. The app's default pitch title
   // is what a public page should carry anyway.

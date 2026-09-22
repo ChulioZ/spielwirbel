@@ -104,6 +104,40 @@ height is the rank), and zero overhang on the tie marker in **every locale shipp
 320px as well as 375px**. That is one probe per width (swap the label text,
 compare the two rects), not five browser sessions.
 
+## The same circularity in GRID, where the container is an `auto` TRACK
+
+Everything above is about a flex item. Grid has its own version and it is easier
+to walk into, because the item does not *look* shrink-to-fit — it looks like a
+cell in a table.
+
+A `%` on a grid item resolves against its **grid area**. When that area's track
+is `auto`, the track is sized from the item's own content, so the two define
+each other and the browser resolves the percentage against an under-determined
+width rather than failing.
+
+```css
+.live-person { grid-template-columns: auto minmax(0, 1fr) auto 122px; }
+.live-person__dots { display: flex; flex-wrap: wrap; max-width: 40%; }  /* WRONG */
+```
+
+Measured on #1192 at 1440px: the third track came out **102px** (three 30px
+boxes and two gaps, correct) while `max-width: 40%` resolved to **41px** — so
+the flex line wrapped, the boxes stacked **vertically**, and every row went from
+78px to **132px**. Nothing was missing and nothing errored: a vertical strip of
+status boxes reads as a deliberate meter, which is the same "plausible wrong
+answer" this file opens with.
+
+**Use an absolute cap when the track is `auto`** (`max-width: 180px` — five
+boxes and four gaps). A `px` value has something to wrap against; a `%` does
+not. If the cap must be relative, make the track definite first
+(`minmax(0, 320px)`) so the percentage has a width to mean something.
+
+**Probe the HEIGHT, not the width** — the width is the value that lies. A child
+taller than one line inside a row you expect to be one line is a wrapped flex
+line, i.e. a cap that resolved under its own content. And
+`getComputedStyle(row).gridTemplateColumns` reports the **used** track sizes, so
+the circularity is directly readable: 102px of track against a 41px cap.
+
 **Related:** `.claude/rules/popover-width-is-shrink-to-fit.md` (the same
 shrink-to-fit sizing one container over, where a `max-width` clamps nothing),
 `.claude/rules/flex-none-cancels-flex-wrap.md` (the other `min-width: 0` trap),

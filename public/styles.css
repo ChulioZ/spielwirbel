@@ -9537,8 +9537,44 @@ kbd {
 .session-log__when { flex: none; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
 .session-log__what { min-width: 0; }
 
-.live-vote__actions { display: flex; flex-direction: column; gap: 12px; }
+.live-vote__actions { display: flex; flex-direction: column; gap: var(--live-actions-gap); }
 .live-vote__done { margin: 0; }
+
+/* Der Tisch's row form and its paper panel (#1192, T4.3/T6.5), rendered by the
+   view for every design and drawn by that one only — the shape #1191 used for
+   the score bars, and for the same reason: a view that branched on the active
+   design would put the registry in the render path of a screen that has no
+   business knowing which design is worn.
+
+   The five below are new content, so Klassisch hides them outright. The panel
+   is NOT new content — it only groups children Klassisch already laid out — so
+   instead of hiding it, it reproduces the column those children came out of:
+   the same direction, the same 12px between them, and the same 12px above the
+   first of them that the actions column's own gap used to supply. Under today's
+   look this screen therefore does not move by a pixel, while the panel is a real
+   box Der Tisch can place beside the people.
+
+   The three 12px values are ONE value: `--live-actions-gap`, which the actions
+   column itself reads. Written twice they would drift the first time anyone
+   retunes the column, and the drift is a 2px seam nobody would file.
+
+   Declared on `.live-vote` rather than on `:root`: it is one screen's spacing,
+   not an app token, and this file keeps its whole token vocabulary in the single
+   `:root` block at the top — a second one 9500 lines down reads as a token
+   somebody forgot to move, and is exactly what a later tidy-up would move or
+   drop. Both readers are inside `.live-vote`, and custom properties inherit. */
+.live-vote { --live-actions-gap: 12px; }
+.live-person__dots,
+.live-person__progress,
+.live-vote__guests,
+.live-vote__panel-head,
+.live-vote__waiting { display: none; }
+.live-vote__panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--live-actions-gap);
+  margin-top: var(--live-actions-gap);
+}
 /* The one-off "what was this?" line on the vote-link done step (#1169). A
    sentence, not a card: no surface, no border, no button — the visitor is on
    somebody else's session and gets one quiet offer, or none. The top margin is
