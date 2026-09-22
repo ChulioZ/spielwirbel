@@ -591,37 +591,27 @@
   color: var(--on-accent);
 }
 
-/* --- The dock, as the table's edge (T2.6) ---------------------------------
-   Not a floating pill above the page but the bottom of the screen: the felt
-   runs to all three edges and the brass rim closes it at the top, so a phone
-   reads the app as a table you are sitting at.
+/* --- The dock (T2.6) ------------------------------------------------------
+   Everything the felt and the brass say is shared; the GEOMETRY is not, and
+   that split is the correction rather than tidiness. `.dock` is one element
+   with three presentations (.claude/rules/responsive-hub-tabs.md): the phone's
+   floating bar below 860px, an in-flow `width: fit-content` pill from 860 to
+   1279, and `display: none` above that, where the rail takes over. T2.6's 86px
+   bar with `flex: 1` entries is drawn for the FIRST of those — applied to the
+   in-flow pill it produced an 86px felt block as wide as its own content with
+   four stretched entries inside it.
 
-   86px tall with 58px entries, icon AND word — T2.6 states all three, and the
-   word is what stops the four entries from being a rebus. */
+   So the look is unconditional and the bar is scoped to the phone. */
 :root[data-design="tisch"][data-scheme="dark"] .dock {
-  left: 0;
-  right: 0;
-  bottom: 0;
-  transform: none;
   gap: 0;
-  height: 86px;
-  align-items: flex-start;
-  padding: 8px 6px 0;
   background:
     var(--felt-weave),
     linear-gradient(180deg, var(--felt), var(--felt-deep));
   border: 0;
   border-top: 3px solid var(--gold-edge);
-  border-radius: 0;
   box-shadow: 0 -10px 24px var(--cast-deep);
 }
 :root[data-design="tisch"][data-scheme="dark"] .dock__item {
-  flex: 1;
-  min-width: 44px;
-  min-height: 58px;
-  justify-content: center;
-  gap: 3px;
-  padding: 0 4px;
   border-radius: var(--radius-md);
   /* Finding A1 again, and the dock's 12px labels are the case it was written
      for: paper on felt, never gold. 5.38:1 on the light stop. */
@@ -633,6 +623,31 @@
 }
 :root[data-design="tisch"][data-scheme="dark"] .dock__item:not(.is-active):hover {
   background: var(--felt-chip-on);
+}
+
+/* The phone bar itself: not a floating pill above the page but the bottom of
+   the screen, so a phone reads the app as a table you are sitting at. 86px tall
+   with 58px entries, icon AND word — T2.6 states all three, and the word is
+   what stops the four entries from being a rebus. */
+@media (max-width: 859px) {
+  :root[data-design="tisch"][data-scheme="dark"] .dock {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    transform: none;
+    height: 86px;
+    align-items: flex-start;
+    padding: 8px 6px 0;
+    border-radius: 0;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .dock__item {
+    flex: 1;
+    min-width: 44px;
+    min-height: 58px;
+    justify-content: center;
+    gap: 3px;
+    padding: 0 4px;
+  }
 }
 
 /* --- The lobby: felt strips on a phone (T6.1) -----------------------------
