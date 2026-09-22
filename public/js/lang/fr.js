@@ -569,6 +569,7 @@ I18N.fr = {
   'detail.edition': 'Édition : {edition}',
   'detail.pasteImage': 'Coller une nouvelle image',
   'detail.imageHint': 'Copie une image, puis colle-la ici.',
+  'detail.ratersTitle': 'Qui a donné quelle note',
   'detail.relatedTitle': 'Sessions associées',
   'detail.relatedEmpty': 'Ce jeu n’a encore fait partie d’aucune session.',
   'detail.played': 'joué',

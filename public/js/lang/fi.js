@@ -538,6 +538,7 @@ I18N.fi = {
   'detail.edition': 'Laitos: {edition}',
   'detail.pasteImage': 'Liitä uusi kuva',
   'detail.imageHint': 'Kopioi kuva ja liitä se tähän.',
+  'detail.ratersTitle': 'Kuka arvioi ja miten',
   'detail.relatedTitle': 'Liittyvät sessiot',
   'detail.relatedEmpty': 'Tämä peli ei ole vielä ollut yhdessäkään sessiossa.',
   'detail.played': 'pelattu',

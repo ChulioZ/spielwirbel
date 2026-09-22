@@ -568,6 +568,7 @@ I18N.es = {
   'detail.edition': 'Edición: {edition}',
   'detail.pasteImage': 'Pegar una imagen nueva',
   'detail.imageHint': 'Copia una imagen y pégala aquí.',
+  'detail.ratersTitle': 'Quién lo valoró y cómo',
   'detail.relatedTitle': 'Sesiones relacionadas',
   'detail.relatedEmpty': 'Este juego todavía no ha estado en ninguna sesión.',
   'detail.played': 'jugado',

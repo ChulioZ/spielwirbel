@@ -91,6 +91,50 @@ function rawGameStats(round, gameId) {
   return { avg, ...scoreFields(ratings), count: ratings.length, sessions };
 }
 
+/* WHO rated this game, and how they rate it on average (#1190) — the
+   „Wer wie gewertet hat" row on the Spielepass.
+
+   The loop is `rawGameStats`'s, deliberately, down to the session filter and the
+   `Number.isFinite` admission: the row sits directly under the game's score and
+   its whole job is to explain that number, so it has to be built from exactly
+   the votes the number is built from. Written as a second pass rather than
+   folded into `rawGameStats` because every other caller of that function wants
+   one figure for the game and would carry this list for nothing.
+
+   A person's figure is their MEAN across sessions (operator decision,
+   2026-09-22), not their latest vote — the averages are then the same
+   quantities the game's own `avg` is made of, and a reader can see where 3,9
+   came from. `face` is that mean ROUNDED, because a mood is one of five glyphs;
+   `avg` keeps the unrounded value for display.
+
+   IDENTITY IS THE SESSION'S, NOT A PERSON'S. Members group by their member id,
+   which is stable. A guest's id belongs to one session (#458), so a visitor at
+   two evenings is two entries — which is all the app actually knows: it has no
+   cross-session guest identity, and inventing one by name would claim two
+   different people are the same because they share a first name. They carry the
+   „(Gast)" marker like everywhere else, through personLabel(). */
+function gameRaters(round, gameId) {
+  const byPerson = new Map();
+  round.sessions.forEach((s) => {
+    if (!s.gameIds.includes(gameId)) return;
+    sessionPeople(round, s).forEach((p) => {
+      const v = (s.votes[p.id] || {})[gameId];
+      if (!v || !Number.isFinite(v.rating)) return;
+      const seen = byPerson.get(p.id);
+      if (seen) { seen.sum += v.rating; seen.n += 1; return; }
+      byPerson.set(p.id, { person: p, sum: v.rating, n: 1 });
+    });
+  });
+  return [...byPerson.values()]
+    .map(({ person, sum, n }) => {
+      const avg = sum / n;
+      return { person, avg, n, face: Math.max(1, Math.min(RATING_MAX, Math.round(avg))) };
+    })
+    // Warmest first, then by name so a tie is stable rather than insertion-ordered
+    // (a re-render must not reshuffle faces).
+    .sort((a, b) => b.avg - a.avg || a.person.name.localeCompare(b.person.name));
+}
+
 // The raw stats plus the shelf's verdict on them (#894). `score` becomes the
 // shrunk value because at shelf scope the shrunk score simply IS the score —
 // the pill, the ring and the Pokale cards all read this one field, so the

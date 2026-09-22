@@ -587,6 +587,7 @@ I18N.de = {
   'detail.edition': 'Ausgabe: {edition}',
   'detail.pasteImage': 'Neues Bild einfügen',
   'detail.imageHint': 'Kopiere ein Bild und füge es hier ein.',
+  'detail.ratersTitle': 'Wer wie gewertet hat',
   'detail.relatedTitle': 'Verwandte Sessions',
   'detail.relatedEmpty': 'Dieses Spiel war noch in keiner Session.',
   'detail.played': 'gespielt',

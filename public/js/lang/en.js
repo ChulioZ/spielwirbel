@@ -586,6 +586,7 @@ I18N.en = {
   'detail.edition': 'Edition: {edition}',
   'detail.pasteImage': 'Paste new image',
   'detail.imageHint': 'Copy an image, then paste it here.',
+  'detail.ratersTitle': 'Who rated it how',
   'detail.relatedTitle': 'Related sessions',
   'detail.relatedEmpty': 'This game has not been in any session yet.',
   'detail.played': 'played',
