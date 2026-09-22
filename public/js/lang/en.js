@@ -975,6 +975,7 @@ I18N.en = {
   'result.stamp': 'Played',
   'result.wonSeatsOne': 'won',
   'result.wonSeats': 'won',
+  'result.corrections': 'If it went differently',
   'result.change': 'Change',
   'result.done': 'Done',
   'result.voteTitleOne': 'The vote · {n} game',

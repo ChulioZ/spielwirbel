@@ -176,7 +176,7 @@ function renderChronikTab(round, activities) {
     let pill = '';
     if (chosen) {
       const sst = gameStatsForSession(round, s, chosen.id);
-      if (sst.score !== null) pill = `<span class="score-pill" style="background:${scoreColor(sst.score)}">${fmtAvg(displayScore(sst.score))}</span>`;
+      if (sst.score !== null) pill = `<span class="score-pill" style="--sc:${scoreColor(sst.score)}" data-stop="${scoreStop(sst.score)}">${fmtAvg(displayScore(sst.score))}</span>`;
     }
 
     const parts = [];

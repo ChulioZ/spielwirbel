@@ -86,15 +86,6 @@ function mount(t, { reduced = false } = {}) {
   return { dom, clock, stage };
 }
 
-/* jsdom canonicalises a `color`/`background` value while leaving a CUSTOM
-   property spelled as written, so the two must be compared through the DOM
-   rather than as strings. */
-function asColor(dom, value) {
-  const probe = dom.document.createElement('span');
-  probe.style.color = value;
-  return probe.style.color;
-}
-
 /* ------------------------------- the scenes ------------------------------- */
 
 test('the three scenes are the app’s own markup, not a look-alike', (t) => {
@@ -159,11 +150,16 @@ test('the ranked rows carry the app’s own fill arithmetic', (t) => {
   // ones. A stage with its own ramp would look right and mean nothing.
   const sc = rows[0].style.getPropertyValue('--sc');
   assert.equal(sc, dom.run('avgColor(4.7)'));
-  // …and the big number is that same statement about that same score. Compared
-  // through the DOM's own normalisation: a custom property keeps the author's
-  // spelling while `color` is canonicalised, so the raw strings differ while the
-  // colours agree.
-  assert.equal(rows[0].querySelector('.score-big').style.color, asColor(dom, sc));
+  // …and the big number makes that same statement about that same score, now by
+  // READING the row's --sc rather than by restating it inline (#1191): an
+  // inline `color` is the one thing a design cannot repaint, and this stage is
+  // the face design's own shop window. So what is pinned is that the numeral
+  // adds no colour of its own — the value it will take is the `--sc` asserted
+  // one line above, and `.score-big` reads it in styles.css. jsdom applies no
+  // stylesheet, so the resolved colour is not observable here; the CSS half is
+  // covered by test/tisch-session.test.js.
+  assert.equal(rows[0].querySelector('.score-big').style.color, '',
+    'an inline colour here would make this the one score no design can repaint');
 
   // Ranked 1-2-3 with the rank-colour hook, so a reader sees places rather than
   // three anonymous rows.
@@ -258,16 +254,23 @@ test('the gold has landed before the winner is lifted', (t) => {
   assert.ok(lift >= race + 3600, `the lift at ${lift}ms interrupts the 3.6s gold that starts at ${race}ms`);
 });
 
-test('the selected face takes its colour inline, the way the click handler sets it', (t) => {
+test('the selected face carries its colour as --sc, which is what a design can repaint', (t) => {
   const { dom, stage, clock } = mount(t);
   clock.tick(3000);
   const mood = stage.querySelectorAll('.mood')[3];
-  const want = asColor(dom, dom.run('avgColor(4)'));
 
-  // Inline, because an inline background is what beats every rule a design or a
-  // world could write — the same two writes views-session.js makes.
-  assert.equal(mood.style.background, want);
-  assert.equal(mood.style.borderColor, want);
+  /* As a custom PROPERTY, not as an inline `background` (#1191). The inline
+     form was the point until a design needed to repaint the chosen face — Der
+     Tisch draws it as its brass plate — and an inline background is precisely
+     what no stylesheet can beat. `.mood.is-selected` in styles.css reads `--sc`,
+     so the rendered colour is unchanged while the rule is now overridable.
+
+     Compared as WRITTEN, never canonicalised: a custom property is not a colour
+     to the CSSOM, so jsdom stores the string exactly as the view spelled it —
+     which is also why nothing in this file normalises colours any more, now
+     that every score travels as a property rather than as an inline fill. */
+  assert.equal(mood.style.getPropertyValue('--sc'), dom.run('avgColor(4)'));
+  assert.equal(mood.style.background, '', 'an inline background would beat every rule a design could write');
 });
 
 /* --------------------------- reduced motion ------------------------------ */

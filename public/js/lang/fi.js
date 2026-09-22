@@ -888,6 +888,7 @@ I18N.fi = {
   'result.stamp': 'Pelattu',
   'result.wonSeatsOne': 'voitti',
   'result.wonSeats': 'voittivat',
+  'result.corrections': 'Jos meni toisin',
   'result.change': 'Vaihda',
   'result.done': 'Valmis',
   'result.voteTitleOne': 'Äänestys · {n} peli',

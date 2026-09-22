@@ -924,6 +924,7 @@ I18N.it = {
   'result.stamp': 'Giocato',
   'result.wonSeatsOne': 'ha vinto',
   'result.wonSeats': 'hanno vinto',
+  'result.corrections': 'Se è andata diversamente',
   'result.change': 'Modifica',
   'result.done': 'Fatto',
   'result.voteTitleOne': 'La votazione · {n} gioco',

@@ -917,6 +917,7 @@ I18N.nl = {
   'result.stamp': 'Gespeeld',
   'result.wonSeatsOne': 'heeft gewonnen',
   'result.wonSeats': 'hebben gewonnen',
+  'result.corrections': 'Als het anders liep',
   'result.change': 'Wijzigen',
   'result.done': 'Klaar',
   'result.voteTitleOne': 'De stemming · {n} spel',

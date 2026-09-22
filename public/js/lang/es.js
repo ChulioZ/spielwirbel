@@ -931,6 +931,7 @@ I18N.es = {
   'result.stamp': 'Jugado',
   'result.wonSeatsOne': 'ha ganado',
   'result.wonSeats': 'han ganado',
+  'result.corrections': 'Si fue de otra manera',
   'result.change': 'Cambiar',
   'result.done': 'Listo',
   'result.voteTitleOne': 'La votación · {n} juego',

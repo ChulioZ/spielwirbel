@@ -925,6 +925,7 @@ I18N.fr = {
   'result.stamp': 'Joué',
   'result.wonSeatsOne': 'a gagné',
   'result.wonSeats': 'ont gagné',
+  'result.corrections': 'Si ça s’est passé autrement',
   'result.change': 'Modifier',
   'result.done': 'Terminé',
   'result.voteTitleOne': 'Le vote · {n} jeu',

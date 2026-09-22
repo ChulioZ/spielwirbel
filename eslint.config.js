@@ -96,6 +96,9 @@ const frontendGlobals = {
   applyBackground: 'readonly', setThemeColor: 'readonly', avgColor: 'readonly',
   setScheme: 'readonly', isDarkScheme: 'readonly',
   scoreColor: 'readonly', displayScore: 'readonly',
+  // #1191: the RUNG of a design's discrete score ramp, the siblings of the two
+  // colour functions above — rampStop takes a rating, scoreStop a score.
+  rampStop: 'readonly', scoreStop: 'readonly',
   scoreReason: 'readonly',
   // score-info.js (issue #893)
   infoButton: 'readonly', wireInfoButtons: 'readonly', openInfoSheet: 'readonly', INFO_SHEETS: 'readonly',

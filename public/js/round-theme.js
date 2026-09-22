@@ -243,3 +243,42 @@ function avgColor(avg) {
   const light = dark ? AVG_LIGHT_DARK + 10 * off : AVG_LIGHT - 10 * off;
   return `hsl(${hue}, 60%, ${light}%)`;
 }
+
+/* WHICH RUNG of a design's score ramp a value lands on (#1191, T8.2).
+ *
+ * `avgColor` above is a CONTINUOUS ramp: every value between 0 and 5 gets its
+ * own hue. A design may instead ship a ramp of discrete STOPS — Der Tisch does,
+ * and its two halves are tuned separately, pills rising light with alternating
+ * ink, bars darker so they read on paper. A continuous function cannot express
+ * that, and a design's stylesheet cannot compute it: the value lives in JS.
+ *
+ * So the JS states the RUNG and the CSS states the COLOUR. A site that used to
+ * write an inline `background`/`color` now writes `--sc` (the continuous value,
+ * which stays the default), and one that a design must repaint PER RUNG writes
+ * `data-stop` beside it — today the distribution bars and the score pills.
+ *
+ * `--sc` is DATA, not the override point: an inline custom property beats a
+ * stylesheet rule for that same property exactly as an inline `background`
+ * does, so a design sets `--sc-fill`, which the stylesheet reads in front of
+ * `--sc` and which nothing writes inline
+ * (.claude/rules/inline-custom-properties-cannot-be-overridden.md).
+ *
+ * Returns a STRING, because 'veto' is one of the rungs: below 1 a badly vetoed
+ * game is not "a bad 1", it is off the scale, and T8.2 gives it its own tone.
+ * Null in, null out — a game nobody rated has no rung and gets no attribute,
+ * which is what keeps `[data-stop]` from matching an empty row.
+ *
+ * Named for the RAMP, not for the score: `scoreColor`'s sibling in
+ * game-stats.js is `scoreStop`, which feeds a score's DISPLAYED value in
+ * here. Two names because they take two different domains — the same split
+ * `avgColor`/`scoreColor` already has, and the reason that split exists.
+ *
+ * RATING_MIN/RATING_MAX come from rating-faces.js, which loads AFTER this file.
+ * They are read inside the body, never at load time, so the shared-scope
+ * load-order trap does not bite (.claude/rules/frontend-script-load-order.md).
+ */
+function rampStop(value) {
+  if (value === null || value === undefined || Number.isNaN(Number(value))) return null;
+  if (value < RATING_MIN) return 'veto';
+  return String(Math.min(RATING_MAX, Math.round(value)));
+}

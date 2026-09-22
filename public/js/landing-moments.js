@@ -206,12 +206,16 @@ function lmRow(entry, place) {
   const pct = Math.round((entry.score / RATING_MAX) * 1000) / 10;
   const sc = avgColor(entry.score);
   const dur = (0.5 + entry.score * 0.32).toFixed(2);
+  /* The numeral carries NO inline colour: the row already states this exact
+     value as `--sc` and `.score-big` reads it (#1191). An inline `color` would
+     make this the one score in the app a design could not repaint — and it is
+     on the FACE design's own shop window, which is the worst place for it. */
   return `<div class="trow" style="--pct:${pct}%;--sc:${sc};--dur:${dur}s">
       <span class="trow__rank trow__rank--${place}">${place}</span>
       <span class="trow__img">${coverPlaceholder(lmGame(entry.title))}</span>
       <div class="trow__main"><span class="trow__title">${esc(entry.title)}</span></div>
       <div class="trow__score">
-        <div class="score-big" style="color:${sc}">${esc(fmtAvg(entry.score))}</div>
+        <div class="score-big">${esc(fmtAvg(entry.score))}</div>
         <div class="score-label">${esc(t('score.name'))}</div>
       </div>
       <div class="trow__action"></div>
@@ -300,13 +304,13 @@ function renderLandingMoments() {
   const tisch = stage.querySelector('.tisch');
 
   /* The one thing the click handler does that markup cannot: the selected face
-     takes the rating's traffic-light colour INLINE, because an inline
-     background is what beats every rule a design or a world could write. Same
-     two writes as views-session.js's mood loop. */
+     takes the rating's colour. As `--sc`, never as an inline `background` —
+     this screen is the FACE design's shop window, so the one surface that must
+     stay repaintable by a design is exactly this one (#1191). Same write as
+     views-session.js's mood loop. */
   const selectFace = () => {
     mood.classList.add('is-selected');
-    mood.style.background = avgColor(LM_VOTE);
-    mood.style.borderColor = avgColor(LM_VOTE);
+    mood.style.setProperty('--sc', avgColor(LM_VOTE));
   };
 
   const rest = () => { tisch.hidden = false; };
