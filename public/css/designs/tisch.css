@@ -2363,3 +2363,291 @@
     gap: 22px;
   }
 }
+
+/* ---- Live-Abstimmung (#1192, T4.3 Live-Abstimmung + T6.5 Live) ------------
+ *
+ * The screen where each person rates on their own device. Two things change
+ * shape from Klassisch: the participants stop being chips in an auto-fill grid
+ * and become full-width ROWS carrying one status box per drawn game, and the
+ * sharing controls plus the action that ends the voting are gathered onto one
+ * sheet of paper laid on the table.
+ *
+ * WHAT THE BOXES MEAN, because the sheet promises more than the app can keep.
+ * T4.3 draws three states per game (gewertet · dran · offen) and its own data
+ * has Jonas at [1,1,0]. The app has no such thing: a person's column is written
+ * in ONE request at the end of their card run, so `votedIds` is binary and a
+ * partial column never exists on the server at all. The boxes therefore show
+ * the person's state spread over the games — all filled or all open — and the
+ * count beside them says the same thing in words. Inventing the middle state
+ * would mean persisting a half-finished column, which is exactly what
+ * lib/session-votes.js redacts to keep the second voter from reading the first.
+ */
+:root[data-design="tisch"][data-scheme="dark"] .live-vote__people {
+  /* One column. The sheet's rows carry an avatar, a name over a state line, N
+     boxes and a count — that is a line of content, not a tile, and the shipped
+     280px auto-fill track would cut it in three at the rail width. */
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+}
+
+/* A row rather than a chip: the avatar spans both text lines, the name sits
+   over its state, and the boxes and count are pushed to the far edge.
+
+   A GRID and not a nested wrapper, deliberately. Stacking the name over the
+   state line the obvious way means wrapping the two in a `__who` element, which
+   changes the markup Klassisch lays out as a single flex line — and this file
+   is not allowed to cost that screen anything. Two explicit columns plus
+   `grid-row` on the avatar does the same job from the design side alone. */
+:root[data-design="tisch"][data-scheme="dark"] .live-person {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 14px;
+  row-gap: 2px;
+  padding: 14px 16px;
+  border-color: var(--control-edge);
+}
+:root[data-design="tisch"][data-scheme="dark"] .live-person__avatar {
+  grid-row: 1 / 3;
+  width: 44px;
+  height: 44px;
+  font-size: var(--text-lg);
+  /* T4.3's ring. It is what separates a member tone from the walnut behind it
+     when the two are close — the darkest of the eight is not far off --surface. */
+  border: 2px solid var(--brass-sheen-strong);
+}
+:root[data-design="tisch"][data-scheme="dark"] .live-person__name {
+  grid-column: 2;
+  grid-row: 1;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--text-lg);
+}
+:root[data-design="tisch"][data-scheme="dark"] .live-person__state {
+  grid-column: 2;
+  grid-row: 2;
+  justify-self: start;
+}
+/* The boxes span both rows at the right edge, beside the count. */
+:root[data-design="tisch"][data-scheme="dark"] .live-person__dots {
+  display: flex;
+  grid-column: 3;
+  grid-row: 1 / 3;
+  align-items: center;
+  gap: 6px;
+  /* A long draw wraps rather than squeezing the name column; the count beside
+     it is the authoritative reading either way.
+
+     THE CAP IS px AND NOT %. A percentage here resolves against the grid AREA,
+     whose track is `auto` — i.e. sized from this item's own content — so the
+     two define each other: measured, `max-width: 40%` came out at 41px against
+     a 102px track and stacked three 30px boxes vertically, taking the row from
+     78px to 132px. Nothing errors, the boxes are all present, and it reads as a
+     deliberate vertical meter. 180px is five boxes and four gaps, so an
+     ordinary three-game draw is one line and a long one wraps against a width
+     that actually exists. */
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  max-width: 180px;
+}
+:root[data-design="tisch"][data-scheme="dark"] .live-person__dot {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--control-edge);
+  color: var(--ink-soft);
+  font-size: var(--text-md);
+}
+:root[data-design="tisch"][data-scheme="dark"] .live-person__dot.is-done {
+  background: linear-gradient(180deg, var(--brass-hi), var(--gold-deep));
+  border: 1px solid var(--gold-edge);
+  color: var(--on-accent);
+}
+/* Revealed only at the rail width, in the block at the foot of this file — on a
+   phone T6.5 drops the count and keeps the boxes, because the row has ~200px of
+   text column there and a second right-hand element eats it. The state line
+   under the name already carries the same words. The geometry is declared here
+   beside its siblings; the `display` that switches it on is what is width-gated,
+   so the two cannot drift into a column with no content or content with no
+   column. */
+:root[data-design="tisch"][data-scheme="dark"] .live-person__progress {
+  grid-column: 4;
+  grid-row: 1 / 3;
+  font-weight: 700;
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+/* The accent edge Klassisch puts on a settled chip is dropped: with a filled
+   box per game the row already states it twice, and a third signal on a
+   full-width row reads as a selected state rather than a finished one. */
+:root[data-design="tisch"][data-scheme="dark"] .live-person.is-voted {
+  background: var(--surface);
+  border-color: var(--control-edge);
+}
+:root[data-design="tisch"][data-scheme="dark"] .live-person.is-voted .live-person__state { color: var(--good); }
+
+/* The account-free voters (T4.3), dashed because it is a note about the list
+   rather than a member of it. */
+:root[data-design="tisch"][data-scheme="dark"] .live-vote__guests {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px dashed var(--control-edge);
+  border-radius: var(--radius-md);
+}
+:root[data-design="tisch"][data-scheme="dark"] .live-vote__guests > .ti {
+  flex: none;
+  font-size: 24px;
+  /* Glyph, not text — finding A1 allows gold here and not on the lines below. */
+  color: var(--gold);
+}
+:root[data-design="tisch"][data-scheme="dark"] .live-vote__guests-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+:root[data-design="tisch"][data-scheme="dark"] .live-vote__guests-title { font-weight: 700; }
+:root[data-design="tisch"][data-scheme="dark"] .live-vote__guests-note {
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+}
+
+/* „Am eigenen Gerät mitstimmen": the paper panel.
+ *
+ * `display: block` undoes the `contents` styles.css gives it, which is what
+ * makes the box exist at all — everything else here paints a sheet of paper on
+ * the walnut.
+ *
+ * THE OVERLAY LESSON APPLIES (overlay-surface-flip-strands-the-status-tokens):
+ * this changes MATERIAL, so every ink inside it must be a paper ink. The three
+ * status tokens are tuned against walnut and are wrong here — --danger lands at
+ * 1.90:1 on cream — so the waiting line below names --veto-tag-ink, the
+ * package's own red for paper, rather than --danger. --surface is re-pointed
+ * for the same reason: the share buttons inside are .btn, which fills from it.
+ */
+:root[data-design="tisch"][data-scheme="dark"] .live-vote__panel {
+  /* Anything but `contents` makes the box exist; flex is what lays it out. */
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: linear-gradient(180deg, var(--paper), var(--paper-raised));
+  border-radius: var(--radius-md);
+  padding: 20px;
+  box-shadow: 0 14px 30px var(--cast-deep);
+
+  --surface: var(--paper);
+  --control-fill: var(--paper-raised);
+  --ink: var(--paper-ink);
+  --ink-soft: var(--paper-ink-soft);
+  --control-edge: var(--paper-edge);
+  --placeholder: var(--paper-faint);
+
+  color: var(--paper-ink);
+}
+:root[data-design="tisch"][data-scheme="dark"] .live-vote__panel-head {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+:root[data-design="tisch"][data-scheme="dark"] .live-vote__panel-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--text-xl);
+  color: var(--paper-ink);
+}
+:root[data-design="tisch"][data-scheme="dark"] .live-vote__panel-note {
+  margin: 0;
+  font-size: var(--text-md);
+  line-height: 1.5;
+  color: var(--paper-ink-soft);
+}
+/* The two sharing controls stay side by side on paper; the close button below
+   them is the panel's one full-width action. */
+:root[data-design="tisch"][data-scheme="dark"] .live-vote__share-row { gap: 10px; }
+:root[data-design="tisch"][data-scheme="dark"] .live-vote__close { width: 100%; }
+/* Who the group is still waiting for. Under an ENABLED button — the app keeps
+   closing available at every point so a no-show cannot hold the evening
+   hostage, and T4.3 draws it live too (T6.5 draws it `disabled`; the two sheets
+   disagree and this is the reading that ships). So the line is information, and
+   it is centred under the action it annotates rather than aligned with the
+   panel's prose above. */
+:root[data-design="tisch"][data-scheme="dark"] .live-vote__waiting {
+  display: block;
+  margin: 0;
+  text-align: center;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  line-height: 1.45;
+  color: var(--veto-tag-ink);
+}
+
+@media (min-width: 1280px) {
+  /* T4.3's fourth column: „2 von 3 gewertet" spelled out beside the boxes. The
+     122px is the sheet's own width for it and it is a FLOOR as well as a cap —
+     the string is the longest thing in the column in every shipped locale, and
+     letting it size itself would make the right edge of the list ragged from
+     row to row as the numbers change. */
+  :root[data-design="tisch"][data-scheme="dark"] .live-person {
+    grid-template-columns: auto minmax(0, 1fr) auto 122px;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .live-person__progress { display: block; }
+
+  /* T4.3 is two columns: the roster left, the paper panel right. What carries
+     the split is `.live-vote__actions` — the panel lives inside it (so that
+     Klassisch keeps its single column through `display: contents`), and rather
+     than lifting the panel out of that column on this width, the WHOLE column
+     becomes the right-hand one.
+
+     That is not a compromise, it is the better reading: „Jetzt abstimmen" and
+     the hot-seat buttons are actions, the panel is actions, and the sheet's
+     right column is where this screen's actions live. The alternative —
+     `display: contents` on the actions plus an explicit `grid-row` on the panel
+     — places the panel against a row count that changes with who has voted and
+     whether anyone is being handed the device, which is the failure the Tafel
+     block at the top of this media query already records.
+
+     `align-items: start` keeps the panel the height of its own content: a sheet
+     of paper stretched down a twelve-person list is a wall, not a panel. */
+  :root[data-design="tisch"][data-scheme="dark"] .live-vote:has(.live-vote__panel) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 380px;
+    gap: 22px;
+    align-items: start;
+  }
+  /* The head and the log are the screen's full width; only the three middle
+     blocks are columns. `> ` so a `.page-head` inside the panel could never
+     match one of these. */
+  :root[data-design="tisch"][data-scheme="dark"] .live-vote > .page-head,
+  :root[data-design="tisch"][data-scheme="dark"] .live-vote > .session-log {
+    grid-column: 1 / -1;
+  }
+  /* The roster and the voting actions stack in column one; the panel is column
+     two, starting level with the roster.
+
+     `grid-row: 2` is a literal, and it is safe here in a way the earlier
+     attempt was not: `.live-vote`'s children are a fixed five — head, people,
+     actions, panel, log — so the roster is row two on every session. What was
+     unsafe was placing the panel against a row count INSIDE the actions
+     column, which varies with who has voted. test/tisch-live-vote.test.js pins
+     that child order, so inserting a sixth block goes red here rather than
+     silently sliding the panel down a row. */
+  :root[data-design="tisch"][data-scheme="dark"] .live-vote__people,
+  :root[data-design="tisch"][data-scheme="dark"] .live-vote__actions {
+    grid-column: 1;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .live-vote__panel {
+    grid-column: 2;
+    grid-row: 2;
+    /* The 12px that stands in for the actions column's gap on a phone is the
+       wrong instrument beside the roster, where the panel is its own column. */
+    margin-top: 0;
+  }
+}
