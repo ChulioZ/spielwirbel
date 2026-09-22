@@ -74,10 +74,18 @@ the override is total and the literal is reached by exactly one host — the
 
 That matters because the two hosts have unrelated grounds. The poster carries
 its world's own page inline and its bar is the accent *name* painted on the
-accent *wash*. The home tile sits on the **unthemed** lobby — home calls
+accent *wash*. The home tile sits on the lobby, which carries no ROUND design — home calls
 `applyBackground(null)`, and #904's dark block is scoped to `:root` and
 `.theme-card` precisely so a dark round's tile does not turn dark — so its
 ground is the standard `--surface` and its bar is `--ink-soft` body text.
+
+**Since #1184 that last step holds only while no dark USER design is enabled.**
+`applyBackground(null)` now means "fall back to the user's design" rather than
+"clear to the `:root` defaults", so a dark one puts `data-scheme="dark"` on
+`<html>` and the lobby's `--surface` goes dark with it — a different ground for
+the same literal. Nothing ships yet (`enabled: false`), and
+`test/a11y-contrast.test.js` carries a named tripwire that fails the moment one
+is enabled. Re-derive the `.150` before citing it under a dark design.
 Deriving the fallback from the backdrop alpha, which is what the issue asked
 for, would have put a `.42` wash under that body text.
 

@@ -50,12 +50,21 @@ function setWorld(world) {
 // A dark design (#904) lives on <html data-scheme="dark">, the sibling hook to
 // data-world and set the same way. It carries no ornament: everything it does
 // is a TOKEN override in styles.css, so no view and no component rule ever asks
-// which scheme it is in. Cleared when the design is light — or when there is no
-// design at all, which is what keeps home, login, the landing page and the
-// account screens light while one of the rounds they list is dark.
+// which scheme it is in.
+//
+// THREE states since #1184, not two, and the third is the whole point. A round
+// design says 'dark' or 'light' and wins outright — rounds keep their palettes
+// until the flip (#1202). `null` means "this screen has no round design", which
+// is NOT the same as "light": it resolves to the USER design's scheme
+// (design.js), so a dark design stays dark on home, the account screens and
+// every other surface outside a round. Collapsing the two would leave a dark
+// user design with light --surface and --ink on half the app — a dark page with
+// light-mode ink on it, which is the one failure this signature exists to
+// prevent.
 function setScheme(scheme) {
   const el = document.documentElement;
-  if (scheme === 'dark') el.dataset.scheme = 'dark';
+  const dark = scheme === 'dark' || (scheme == null && designScheme() === 'dark');
+  if (dark) el.dataset.scheme = 'dark';
   else delete el.dataset.scheme;
 }
 
@@ -82,23 +91,39 @@ function setThemeColor(accent) {
 function applyBackground(bg) {
   const root = document.documentElement.style;
   const design = resolveDesign(bg);
+  const themed = !!(bg && bg.type === 'theme' && bg.page && bg.accent);
+  const legacy = !!(bg && bg.type === 'color' && bg.color);
   setWorld(design && design.world);
-  setScheme(design && design.scheme);
-  if (bg && bg.type === 'theme' && bg.page && bg.accent) {
+  // A round design states its own scheme; a LEGACY colour round is light by
+  // construction (it predates dark designs entirely). Only "no round design at
+  // all" passes null, which setScheme resolves to the user design's.
+  setScheme(themed ? ((design && design.scheme) || 'light') : (legacy ? 'light' : null));
+  if (themed) {
     const accent = resolveAccent(bg);
     root.setProperty('--page-bg', design ? design.page : bg.page);
     root.setProperty('--brand', accent);
     setThemeColor(accent);
-  } else if (bg && bg.type === 'color' && bg.color) {
+  } else if (legacy) {
     // Legacy stored design: only a page color, standard accent.
     root.setProperty('--page-bg', bg.color);
     root.removeProperty('--brand');
     setThemeColor(STANDARD_ACCENT);
   } else {
-    // No design -> fall back to the :root defaults.
-    root.removeProperty('--page-bg');
-    root.removeProperty('--brand');
-    setThemeColor(STANDARD_ACCENT);
+    // No ROUND design -> the USER design's (#1184), not the :root defaults.
+    // Klassisch declares no colours — it IS the :root default — so its entry
+    // takes the removeProperty branch and the page comes out byte-for-byte as
+    // it did before this seam existed. That is the whole reason the registry
+    // leaves Klassisch colourless rather than restating the two hexes.
+    const user = activeDesign();
+    if (user && user.page && user.accent) {
+      root.setProperty('--page-bg', user.page);
+      root.setProperty('--brand', user.accent);
+      setThemeColor(user.accent);
+    } else {
+      root.removeProperty('--page-bg');
+      root.removeProperty('--brand');
+      setThemeColor(STANDARD_ACCENT);
+    }
   }
 }
 

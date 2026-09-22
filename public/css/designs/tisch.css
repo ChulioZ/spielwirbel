@@ -1,0 +1,27 @@
+/* Der Tisch — override stylesheet (#1184, STUB).
+ *
+ * The first per-design stylesheet, and for now only enough of one to prove the
+ * path works end to end: fetched on demand by design.js the first time the
+ * design is worn, precached in sw.js's SHELL, content-hashed by the optional
+ * production build, and folded into the derived cache name so a change to this
+ * file invalidates the installed shell.
+ *
+ * The real Tisch token set and its layout arrive with #1188 (T1/T8). Until
+ * then this file carries PLACEHOLDER layout tokens only — a table's cards sit
+ * squarer than Klassisch's — and deliberately NO colour.
+ *
+ * No colour here, ever, unless the contrast harness learns to read design
+ * stylesheets first. test/a11y-contrast.test.js resolves each design's tokens
+ * out of styles.css from the registry's `page`/`accent`/`scheme`
+ * (test/support/theme.js), so a colour declared in this file would ship
+ * unmeasured — which is exactly the class of regression #145 was about. The
+ * design's two colours therefore live in public/js/designs.js. See that file's
+ * header.
+ */
+
+:root[data-design="tisch"] {
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+}

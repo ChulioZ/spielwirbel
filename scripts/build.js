@@ -58,20 +58,30 @@ function hashedRel(rel, hash) {
   return rel.slice(0, -ext.length) + '.' + hash + ext;
 }
 
+function walkExt(dir, outDir, ext, out) {
+  if (!fs.existsSync(dir)) return out;
+  for (const name of fs.readdirSync(dir)) {
+    const abs = path.join(dir, name);
+    if (fs.statSync(abs).isDirectory()) walkExt(abs, outDir, ext, out);
+    else if (name.endsWith(ext)) out.push(path.relative(outDir, abs));
+  }
+  return out;
+}
+
+const toPosix = (rels) => rels.map((p) => p.split(path.sep).join('/'));
+
+// The per-design override stylesheets (#1184), hashed BEFORE the js — see the
+// two-phase note on build(). public/css/** only; styles.css is the app shell's
+// own sheet and is referenced from HTML, so it rides with the js phase.
+function cssAssetsToHash(outDir) {
+  return toPosix(walkExt(path.join(outDir, 'css'), outDir, '.css', []));
+}
+
 // Collect the assets to hash: every *.js under <out>/js plus <out>/styles.css.
 function assetsToHash(outDir) {
-  const out = [];
-  const jsDir = path.join(outDir, 'js');
-  const walk = (dir) => {
-    for (const name of fs.readdirSync(dir)) {
-      const abs = path.join(dir, name);
-      if (fs.statSync(abs).isDirectory()) walk(abs);
-      else if (name.endsWith('.js')) out.push(path.relative(outDir, abs));
-    }
-  };
-  if (fs.existsSync(jsDir)) walk(jsDir);
+  const out = walkExt(path.join(outDir, 'js'), outDir, '.js', []);
   if (fs.existsSync(path.join(outDir, 'styles.css'))) out.push('styles.css');
-  return out.map((p) => p.split(path.sep).join('/')); // posix rels
+  return toPosix(out);
 }
 
 function minify(rel, code) {
@@ -133,15 +143,30 @@ function build({ srcDir = DEFAULT_SRC, outDir = DEFAULT_OUT } = {}) {
     filter: (src) => !path.basename(src).startsWith('.'),
   });
 
+  // TWO PHASES, and the order is load-bearing (#1184). A design's override
+  // stylesheet is referenced from public/js/designs.js as a quoted literal, so
+  // it has to be hashed FIRST and its new name rewritten into the js sources
+  // before they are minified and hashed themselves. Hash them the other way
+  // round and designs.js would keep pointing at '/css/designs/tisch.css', whose
+  // un-hashed copy this loop deletes — a 404 that only ever appears in a built
+  // deploy. Rewriting js AFTER hashing it is not an option either: the content
+  // would change under a filename already derived from it, so a stylesheet
+  // change would silently not move designs.js's own hash.
   const manifest = {};
-  for (const rel of assetsToHash(outDir)) {
-    const abs = path.join(outDir, rel);
-    const minified = Buffer.from(minify(rel, fs.readFileSync(abs, 'utf8')));
-    const hRel = hashedRel(rel, sha8(minified));
-    fs.writeFileSync(path.join(outDir, hRel), minified);
-    fs.rmSync(abs); // drop the un-hashed copy
-    manifest['/' + rel] = '/' + hRel;
-  }
+  const hashInto = (rels, rewriteWith) => {
+    for (const rel of rels) {
+      const abs = path.join(outDir, rel);
+      let code = fs.readFileSync(abs, 'utf8');
+      if (rewriteWith) code = rewriteRefs(code, rewriteWith);
+      const minified = Buffer.from(minify(rel, code));
+      const hRel = hashedRel(rel, sha8(minified));
+      fs.writeFileSync(path.join(outDir, hRel), minified);
+      fs.rmSync(abs); // drop the un-hashed copy
+      manifest['/' + rel] = '/' + hRel;
+    }
+  };
+  hashInto(cssAssetsToHash(outDir), null);
+  hashInto(assetsToHash(outDir), { ...manifest });
 
   const cache = deriveCache(manifest, sourceCache(outDir));
   for (const name of REWRITE_FILES) {
@@ -157,7 +182,7 @@ function build({ srcDir = DEFAULT_SRC, outDir = DEFAULT_OUT } = {}) {
   return { manifest, cache, outDir };
 }
 
-module.exports = { build, hashedRel, rewriteRefs, deriveCache, sha8 };
+module.exports = { build, hashedRel, rewriteRefs, deriveCache, sha8, cssAssetsToHash };
 
 if (require.main === module) {
   const { manifest, cache, outDir } = build();

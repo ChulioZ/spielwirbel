@@ -378,6 +378,12 @@ const frontendGlobals = {
   recReasonText: 'readonly', recFacts: 'readonly', recEmptyKey: 'readonly',
   showArchive: 'readonly', ARCHIVES: 'readonly',
   PALETTES: 'readonly', WORLDS: 'readonly', DESIGNS: 'readonly', resolveDesign: 'readonly', designIcon: 'readonly',
+  // designs.js + design.js (#1184 — the per-USER design layer, distinct from the
+  // per-ROUND registry above; the two coexist until the flip, #1202)
+  DESIGN_REGISTRY: 'readonly', FACE_DESIGN: 'readonly', designById: 'readonly',
+  selectableDesigns: 'readonly', selectableDesignIds: 'readonly', isSelectableDesign: 'readonly',
+  activeDesign: 'readonly', designScheme: 'readonly', loadDesignStylesheet: 'readonly',
+  applyDesign: 'readonly', requestedDesign: 'readonly', initDesign: 'readonly',
   showBackground: 'readonly', showGameDetail: 'readonly',
   // game-editors.js (#968 — the five field editors, split out of
   // views-round-detail.js; each takes an explicit context)

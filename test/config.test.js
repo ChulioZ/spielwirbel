@@ -35,6 +35,7 @@ const request = require('supertest');
 
 const { app } = require('./helpers');
 const { createApp } = require('../lib/app');
+const { selectableDesignIds, FACE_DESIGN, DESIGN_REGISTRY } = require('../public/js/designs');
 
 const MAIL_ENV = { SMTP_HOST: 'smtp.example.test', SMTP_USER: 'u', SMTP_PASS: 'p', MAIL_FROM: 'no-reply@example.com' };
 // The guest demo (#427) is off in this file: the shared app's env has no
@@ -44,12 +45,24 @@ const MAIL_ENV = { SMTP_HOST: 'smtp.example.test', SMTP_USER: 'u', SMTP_PASS: 'p
 // public, ungated response unnoticed.
 // `expansionsPerGame: null` throughout: this file's shared app runs with
 // accounts off, so quotas are inert (lib/quota.js `enforced()`).
-const OFF = { footer: false, donateUrl: null, demo: false, expansionsPerGame: null };
+// `designs`/`faceDesign` (#1184) are in every expectation below because the
+// deepEqual assertions pin the WHOLE shape. Outside production the server
+// reports every REGISTERED design, enabled or not, so an unfinished one can be
+// opened for review — which is why `tisch` is here while it is `enabled: false`.
+// The production half is its own test at the bottom.
+const OFF = {
+  footer: false,
+  donateUrl: null,
+  demo: false,
+  expansionsPerGame: null,
+  designs: selectableDesignIds({ production: false }),
+  faceDesign: FACE_DESIGN,
+};
 
 test.afterEach(() => {
   for (const k of ['SMTP_HOST', 'SMTP_USER', 'SMTP_PASS', 'MAIL_FROM', 'IMPRESSUM_ADDRESS', 'IMPRESSUM_EMAIL',
     'AUTH_PASSWORD', 'ACCOUNTS_ENABLED', 'SESSION_SECRET', 'ADMIN_PASSWORD',
-    'BGG_API_TOKEN', 'DONATE_URL', 'MAX_EXPANSIONS_PER_GAME']) {
+    'BGG_API_TOKEN', 'DONATE_URL', 'MAX_EXPANSIONS_PER_GAME', 'NODE_ENV']) {
     delete process.env[k];
   }
 });
@@ -93,7 +106,7 @@ test('mail + full identity enable the footer; env is read per request', async ()
   process.env.IMPRESSUM_ADDRESS = 'Musterweg 1, 12345 Musterstadt';
   process.env.IMPRESSUM_EMAIL = 'kontakt@example.test';
   const on = await request(app).get('/api/config');
-  assert.deepEqual(on.body, { footer: true, donateUrl: null, demo: false, expansionsPerGame: null });
+  assert.deepEqual(on.body, { ...OFF, footer: true });
   // Same app instance, no rebuild: unsetting one input flips it back off.
   delete process.env.IMPRESSUM_ADDRESS;
   const off = await request(app).get('/api/config');
@@ -103,7 +116,7 @@ test('mail + full identity enable the footer; env is read per request', async ()
 test('DONATE_URL is echoed as donateUrl, independent of the footer (#173)', async () => {
   process.env.DONATE_URL = 'https://ko-fi.com/spielwirbel';
   const on = await request(app).get('/api/config');
-  assert.deepEqual(on.body, { footer: false, donateUrl: 'https://ko-fi.com/spielwirbel', demo: false, expansionsPerGame: null });
+  assert.deepEqual(on.body, { ...OFF, donateUrl: 'https://ko-fi.com/spielwirbel' });
   // Read per request: unsetting it hides the button again without a rebuild.
   delete process.env.DONATE_URL;
   const off = await request(app).get('/api/config');
@@ -125,7 +138,7 @@ test('reachable without a session under the shared-password gate', async () => {
   assert.equal(gated.status, 401);
   const res = await request(gatedApp).get('/api/config');
   assert.equal(res.status, 200);
-  assert.deepEqual(res.body, { footer: false, donateUrl: 'https://ko-fi.com/spielwirbel', demo: false, expansionsPerGame: null });
+  assert.deepEqual(res.body, { ...OFF, donateUrl: 'https://ko-fi.com/spielwirbel' });
 });
 
 test('reachable without a token in accounts mode', async () => {
@@ -139,7 +152,7 @@ test('reachable without a token in accounts mode', async () => {
   assert.equal(res.status, 200);
   // 40 rather than null here, unlike every other case in this file: accounts
   // mode is precisely where quotas are enforced (lib/quota.js).
-  assert.deepEqual(res.body, { footer: false, donateUrl: 'https://ko-fi.com/spielwirbel', demo: false, expansionsPerGame: 40 });
+  assert.deepEqual(res.body, { ...OFF, donateUrl: 'https://ko-fi.com/spielwirbel', expansionsPerGame: 40 });
 });
 
 /* The one quota the client is told up front (#1143). Its own test rather than
@@ -192,4 +205,37 @@ test('no secret value ever appears in the response', async () => {
     assert.equal(serialized.includes(value), false, `${name} leaked into /api/config`);
     assert.equal(serialized.includes(value.slice(0, 8)), false, `${name} leaked a prefix`);
   }
+});
+
+/* The user-design gate (#1184). It lives in code, not in an env var, and it is
+   the SERVER that applies it — so this endpoint is the whole enforcement point
+   for "an unfinished design does not exist in production". Its own test rather
+   than another deepEqual line, for the reason expansionsPerGame has one: what
+   can go wrong is invisible to an assertion against a constant, namely
+   reporting the full registry on a production instance.
+
+   Note the assertions are derived from `enabled` rather than from the literal
+   ['klassisch'], so enabling a design (the one-line PR #1202 makes) does not
+   silently turn this into a test of nothing. */
+test('production reports only the enabled designs; outside it, the whole registry', async () => {
+  const enabled = DESIGN_REGISTRY.filter((d) => d.enabled).map((d) => d.id);
+  const unfinished = DESIGN_REGISTRY.filter((d) => !d.enabled).map((d) => d.id);
+  assert.ok(unfinished.length >= 1,
+    'no unfinished design ships — the production half of this test is vacuous');
+
+  process.env.NODE_ENV = 'production';
+  const prod = await request(app).get('/api/config');
+  assert.deepEqual(prod.body.designs, enabled, 'production must not advertise an unfinished design');
+  for (const id of unfinished) {
+    assert.equal(prod.body.designs.includes(id), false, `${id} is not enabled and must not be offered`);
+  }
+
+  delete process.env.NODE_ENV;
+  const dev = await request(app).get('/api/config');
+  assert.deepEqual(dev.body.designs, enabled.concat(unfinished),
+    'outside production every registered design is selectable, so an unfinished one can be reviewed');
+
+  // The face is a design that actually exists, in both directions — a face the
+  // server does not offer would leave every logged-out surface unpainted.
+  assert.ok(prod.body.designs.includes(prod.body.faceDesign), 'the face must be an enabled design in production');
 });

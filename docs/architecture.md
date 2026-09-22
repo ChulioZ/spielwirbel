@@ -24,6 +24,31 @@ behind these choices — and why they are not up for casual revision — are in
   `dist/` with content-hashed, minified JS/CSS for production; the server serves
   it only under `NODE_ENV=production`. It exists purely to bust stale asset
   caches after a deploy — not a bundler or framework.
+- **Designs are per USER, and one design may be a whole layout** (issue #1184).
+  Until now a design was per *round* and was only ever two colours: a page tone
+  and an accent, written as inline custom properties by `applyBackground()`. The
+  designs the programme ships (`docs/design/`) change layout as well as colour,
+  so they need a root hook every rule can key off and a stylesheet of their own:
+  `<html data-design="…">`, set by `applyDesign()` (`public/js/design.js`) from
+  the registry in `public/js/designs.js`, with one **override stylesheet per
+  design under `public/css/designs/`, injected on first wear** rather than
+  shipped in `index.html`. Klassisch has no override file — `styles.css` *is*
+  Klassisch — and declares no colours, which is what makes "today's look is
+  unchanged" a property of the code rather than a coincidence of two hexes.
+
+  Three consequences worth knowing before touching any of it. **A design's
+  colours live in the registry, its layout in the stylesheet**, because the
+  contrast suite resolves each design's tokens from `page`/`accent`/`scheme`
+  against `styles.css` — a colour in an override file would ship unmeasured.
+  **The round and user layers coexist** until the flip (#1202): a round's stored
+  design still wins while it is applied, and "no round design here" now means
+  "fall back to the user's design" rather than "clear to the `:root` defaults",
+  which is why `setScheme` has three states. And **the gate is in code, not an
+  env var** — each registry entry carries `enabled`, the server strips the
+  disabled ones under `NODE_ENV=production` and reports the rest on
+  `GET /api/config`, so enabling a design is a one-line PR. See
+  `.claude/rules/design-stylesheets-are-shell-assets.md` for the two cache
+  traps that come with a runtime-injected shell asset.
 - **Hardening:** [helmet](https://helmetjs.github.io/) sets security headers
   (CSP, `X-Content-Type-Options`, frame options, HSTS) and
   [express-rate-limit](https://express-rate-limit.mintlify.app/) caps requests
@@ -385,6 +410,10 @@ public/
   kontakt.html       standalone public contact form (bilingual, no login needed)
   admin.html         standalone operator moderation page (needs ADMIN_PASSWORD)
   styles.css
+  css/
+    designs/         one override stylesheet per USER design (#1184), fetched
+                     on demand by js/design.js; Klassisch has none, because
+      tisch.css      styles.css IS Klassisch
   manifest.webmanifest  PWA manifest (installable app metadata + icons)
   robots.txt         crawl policy; every noindex page stays crawl-ALLOWED (#510)
   sitemap.xml        the four public URLs, on the canonical host
@@ -500,6 +529,14 @@ public/
                      pair, the data-world and data-scheme root attributes,
                      <meta name="theme-color">, and the rating ramp that
                      flips with the scheme (issue #956)
+    designs.js       the USER design registry (#1184): which designs an
+                     account may wear, each one's page/accent/scheme and
+                     override stylesheet, the `enabled` gate and the face
+                     design. Required by lib/app.js so GET /api/config and
+                     the client work from one list
+    design.js        applying a user design: <html data-design>, the
+                     on-demand stylesheet link, and the tokens
+                     round-theme.js falls back to outside a round (#1184)
     round-roles.js   the owner/co-owner/editor ladder and what each may do,
                      required by lib/round-access.js so the views hide exactly
                      what the server refuses (issue #137)
