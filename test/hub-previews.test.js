@@ -74,6 +74,9 @@ const youngRound = () => ({
 
 const activeOf = (r) => r.games.filter((g) => !g.retired && !g.completed && !g.wish);
 
+// One long-lived window for the pure-helper assertions, which render nothing.
+const dom0 = loadApp({ locale: 'de' });
+
 function hub(t, round) {
   const dom = loadApp({ locale: 'de' });
   t.after(() => dom.close());
@@ -197,27 +200,52 @@ test('ONE link per preview — a card is not a nest of interactive rows', (t) =>
   }
 });
 
-test('a young round meets no previews at all', (t) => {
+test('a young round with a two-game shelf meets no previews at all', (t) => {
   /* The load-bearing rule views-round-start.js's header states, extended to the
      previews: a brand-new round meets the CTA and nothing else. Pokale and
-     Chronik have nothing to show before the first evening by construction; the
-     Regal is gated on the same condition deliberately, because the hero chip
-     already states the count and a strip of placeholder tiles under a duplicated
-     number is not worth a card. */
+     Chronik have nothing to show before the first evening; the Regal's own
+     threshold is the strip — six tiles that ARE the whole shelf restate the hero
+     chip two lines above them. */
   const dom = hub(t, youngRound());
   assert.equal(dom.app.querySelectorAll('.hub-preview').length, 0,
-    'a round that has never played was sold a preview of a screen it has been on all along');
-  assert.equal(dom.run('hubPreviewsEarned')(youngRound()), false);
-  assert.equal(dom.run('hubPreviewsEarned')(busyRound()), true);
+    'a two-game round was sold a preview of a shelf its hero already counts');
 });
 
-test('an unplayed DRAW does not earn the previews either', (t) => {
-  // `finished`, not `done`: a session whose voting has closed but which nobody
-  // has recorded a result for is not an evening the round has played.
+test('a BIG shelf earns its preview with no session played — the case the gate exists for', (t) => {
+  /* The regression this pins (operator, 2026-09-22): the Regal was briefly gated
+     on the round having played, so a round that had just imported its whole BGG
+     collection — the fullest shelf in the app — was shown no shelf preview at
+     all, while Pokale and Chronik correctly showed none. The shelf's own size is
+     what decides, and history has nothing to do with it. */
   const r = youngRound();
-  r.sessions = [{ id: 's9', createdAt: '2026-06-01T18:00:00.000Z', done: true, finished: false, gameIds: ['10'], votes: {} }];
+  r.games = Array.from({ length: 40 }, (_, i) => game(100 + i));
+  assert.equal(r.sessions.length, 0, 'fixture must have no history, or it proves nothing');
   const dom = hub(t, r);
-  assert.equal(dom.app.querySelectorAll('.hub-preview').length, 0);
+  const titles = [...dom.app.querySelectorAll('.hub-preview .hub-card__title')].map((e) => e.textContent.trim());
+  assert.deepEqual(titles, [dom.run("t('hub.tab.regal')")],
+    'a 40-game shelf with no history gets the Regal preview and ONLY that one');
+});
+
+test('the shelf threshold IS the strip size, not a number of its own', (t) => {
+  // Derived rather than picked: a preview of everything is not a preview, so the
+  // card earns its place exactly when the shelf outgrows what the strip shows.
+  const n = dom0.run('HUB_PREVIEW_COVERS');
+  assert.equal(dom0.run('hubShelfWorthPreviewing')(new Array(n).fill({})), false);
+  assert.equal(dom0.run('hubShelfWorthPreviewing')(new Array(n + 1).fill({})), true);
+  t.diagnostic(`strip holds ${n}`);
+});
+
+test('the OFF-SHELF states never count toward that threshold', (t) => {
+  // Seven games, three of them off the shelf: the preview must read the active
+  // four and stay away, or it previews a screen the Regal does not show.
+  const r = youngRound();
+  r.games = [
+    ...Array.from({ length: 4 }, (_, i) => game(100 + i)),
+    game(200, { retired: true }), game(201, { completed: true }), game(202, { wish: true }),
+  ];
+  const dom = hub(t, r);
+  assert.equal(dom.app.querySelectorAll('.hub-preview').length, 0,
+    'off-shelf games pushed a four-game shelf over the threshold');
 });
 
 // ------------------------------------------------------- „Nicht im Regal"

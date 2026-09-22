@@ -300,9 +300,11 @@ What the app does, in detail. For a short overview see the
     each opening that section. Under all of it, the „Nicht im Regal" group
     (Aussortiert · Durchgespielt · Wunschliste · Könnte euch gefallen) and one
     Einstellungen entry. Every card renders nothing at all when it has nothing
-    to say, so a young round sees none of them — the previews arrive with the
-    round's first played session, and only the off-shelf group is always there,
-    because a list is not less worth reaching for being empty.
+    to say, so a young round sees none of them: the Pokale and Chronik previews
+    arrive with the round's first played session, and the shelf preview once the
+    shelf outgrows the handful of covers it shows — before that the hero's own
+    count already says everything the strip could. Only the off-shelf group is
+    always there, because a list is not less worth reaching for being empty.
   - **Regal** (shelf) – the game collection as a card grid with one „Filter"
     control holding both the custom-tag chips and the imported-BGG-metadata
     filters (see Sessions below), a search pill, sorting

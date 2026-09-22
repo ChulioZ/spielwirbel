@@ -39,23 +39,26 @@ const HUB_PREVIEW_COVERS = 6;
 // what the preview is a preview OF.
 const HUB_PREVIEW_RANKS = 3;
 
-/* THE THREE PREVIEWS ARRIVE TOGETHER, once the round has played at least once.
+/* WHAT EARNS A PREVIEW IS PER SECTION, not one condition for all three.
 
-   Pokale and Chronik have nothing to show before that by construction. The
-   Regal does — it has games the moment one is added — and gating it on the same
-   condition is a deliberate choice rather than an oversight:
+   Pokale and Chronik have nothing to show before the round's first played
+   session, and say so by returning null from their own renderers.
 
-   - The hero already states the count („8 Spiele"), so on a round with no
-     history the preview's only ORIGINAL content is the covers, and a strip of
-     placeholder tiles under a duplicated number is not worth a card.
-   - It keeps ONE rule instead of three. A brand-new round must meet the screen
-     it met before — the CTA and nothing else — and „was a session played" is the
-     condition that says so, in the same terms #869's stand-in already uses.
+   The Regal is different and was briefly gated on the same condition, which was
+   wrong in the case that matters most: a round that has just imported two
+   hundred games from BGG and not yet played has the fullest shelf in the app and
+   would have been shown no shelf preview at all (operator, 2026-09-22).
 
-   So a round that has imported two hundred games and not yet played reaches its
-   shelf through the dock, the rail and the hero chip, and is not sold a preview
-   of a screen it has been on all along. */
-const hubPreviewsEarned = (round) => round.sessions.some((s) => s.finished);
+   So the Regal's own question is whether the strip TELLS the reader anything.
+   The hero already states the count, so a card whose six tiles are the whole
+   shelf restates what is two lines above it — a preview of everything is not a
+   preview. Once the shelf outgrows the strip, "six of twenty-three" is real
+   information, and the card earns its place.
+
+   The threshold is therefore the strip's own size rather than a number somebody
+   picked: change HUB_PREVIEW_COVERS and this moves with it, because it is the
+   same fact. */
+const hubShelfWorthPreviewing = (activeGames) => activeGames.length > HUB_PREVIEW_COVERS;
 
 /* One preview card: a titled section whose only control is the „öffnen" link
    at its foot.
@@ -91,7 +94,7 @@ function hubPreviewCard(round, { icon, titleKey, sub, tab }) {
    preview of a different screen. Newest first, so adding a game visibly
    changes the card. */
 function hubRegalPreview(round, activeGames) {
-  if (!activeGames.length || !hubPreviewsEarned(round)) return null;
+  if (!hubShelfWorthPreviewing(activeGames)) return null;
   const card = hubPreviewCard(round, {
     icon: 'ti-cards',
     titleKey: 'hub.tab.regal',

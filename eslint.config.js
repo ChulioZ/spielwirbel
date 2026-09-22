@@ -411,6 +411,7 @@ const frontendGlobals = {
   offShelfEntries: 'readonly',
   // hub-previews.js (#1185) — the hub's three sub-page previews + „Nicht im Regal"
   HUB_PREVIEW_COVERS: 'readonly', HUB_PREVIEW_RANKS: 'readonly',
+  hubShelfWorthPreviewing: 'readonly',
   hubPreviewCard: 'readonly', hubRegalPreview: 'readonly',
   hubPokalePreview: 'readonly', hubChronikPreview: 'readonly',
   hubOffShelfGroup: 'readonly',
