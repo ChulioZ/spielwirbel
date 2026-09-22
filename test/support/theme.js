@@ -28,7 +28,10 @@
      that, on this design". */
 
 const assert = require('node:assert/strict');
-const { bodyOf, bodyOfIn } = require('./css');
+const fs = require('node:fs');
+const path = require('node:path');
+const { ROOT, bodyOf, bodyOfIn, rulesOf } = require('./css');
+const { DESIGN_REGISTRY } = require('../../public/js/designs');
 
 // --- WCAG 2.1 relative luminance + contrast ratio ---------------------------
 const srgb = (v) => {
@@ -110,21 +113,88 @@ const mixOklab = (a, b, pA) => {
 const composite = (fg, bg, alpha) =>
   rgb(fg).map((v, i) => Math.round(v * alpha + rgb(bg)[i] * (1 - alpha)));
 
-// --- the two token blocks ---------------------------------------------------
+// --- the token blocks -------------------------------------------------------
+/* Three sources, in the browser's own order (#1188).
+
+   Until Der Tisch every design was a `page` + an `accent` and NOTHING else, so
+   `styles.css` was the whole cascade and this file read two blocks out of it.
+   Tisch overrides the derived tokens themselves — walnut `--surface`, paper
+   `--ink`, its own gold family — from `public/css/designs/tisch.css`, and a
+   colour this resolver cannot see is a colour that ships unmeasured, which is
+   the #145 regression `.claude/rules/design-stylesheets-are-shell-assets.md`
+   was written to prevent. So the resolver reads that sheet too.
+
+   PRECEDENCE, and why it is this way round: `:root[data-design="tisch"]` and
+   `:root[data-scheme="dark"]` have the SAME specificity — `:root` plus one
+   attribute, (0,2,0) — so nothing about the selectors decides between them.
+   What decides is source order, and `design.js` appends the design's <link>
+   to <head> after `styles.css`. The design block therefore wins, and this
+   ordering is a fact about the loader rather than about the selectors:
+   `.claude/rules/design-stylesheets-are-shell-assets.md`. */
+
+/* id -> { root, scheme, all }. Kept apart rather than pre-joined, because which
+   halves apply depends on the DESIGN: a light design must not read a
+   `[data-scheme="dark"]` block. `all` is the union, for a guard that asks what a
+   design declares at all rather than what resolves for it. */
+const DESIGN_BLOCKS = new Map();
+for (const design of DESIGN_REGISTRY) {
+  if (!design.stylesheet) continue;
+  const file = path.join(ROOT, 'public', design.stylesheet.replace(/^\//, ''));
+  const rules = rulesOf(fs.readFileSync(file, 'utf8').replace(/\/\*[\s\S]*?\*\//g, ''));
+  const root = bodyOfIn(`:root[data-design="${design.id}"]`, rules);
+  /* A design may ALSO qualify a block by scheme, and Der Tisch does: until the
+     flip a round still overrides --page-bg/--brand with its own palette, so an
+     ungated colour block would put a dark design's paper ink on a light round's
+     page. Its colours therefore live in
+     `:root[data-design="<id>"][data-scheme="dark"]` while its fonts and radii
+     stay unconditional — see that file's own comment for the measurement.
+
+     Read in the browser's order, most specific first, which for the only shape
+     that exists is also source order. */
+  const scheme = bodyOfIn(`:root[data-design="${design.id}"][data-scheme="dark"]`, rules);
+  /* An absent block is not an empty one. `bodyOfIn` answers null for a selector
+     that is not there, and falling through to :root would resolve every token
+     to Klassisch's value — a complete, plausible answer to the wrong question,
+     which is the failure shape in
+     `.claude/rules/cssrules-walk-is-blind-under-nesting.md`. A design that ships
+     a stylesheet declares at least one of these; say so loudly if it stops. */
+  assert.ok(root || scheme,
+    `${design.stylesheet} declares no :root[data-design="${design.id}"] block — has the hook moved?`);
+  DESIGN_BLOCKS.set(design.id, {
+    root: root || '',
+    scheme: scheme || '',
+    all: [scheme, root].filter(Boolean).join('\n'),
+  });
+}
+
 
 const ROOT_BLOCK = bodyOf(':root');
 const DARK_BLOCK = bodyOfIn(':root[data-scheme="dark"]');
 assert.ok(ROOT_BLOCK, 'styles.css declares no :root block');
 assert.ok(DARK_BLOCK, 'styles.css declares no :root[data-scheme="dark"] block — has the hook moved?');
 
-/* The declared text of one custom property, for a design's scheme. A dark design
-   reads the dark block FIRST and falls through to :root for everything it does
-   not override, which is exactly the cascade the browser runs. */
-function declaration(name, dark) {
+/* The declared text of one custom property, for a design. The design's own
+   override sheet wins, then the dark block when the design is dark, then
+   :root — which is exactly the cascade the browser runs (see above).
+
+   `design` is optional so the helper still answers the sheet-only question the
+   design-token specs ask of it. */
+/* The design's own blocks that APPLY, most specific first. The scheme-qualified
+   one is included only for a design of that scheme — a light design reading a
+   dark block would resolve a colour the browser would never paint for it. */
+function designBlocks(design, dark) {
+  const b = design && DESIGN_BLOCKS.get(design.id);
+  if (!b) return [];
+  return (dark ? [b.scheme, b.root] : [b.root]).filter(Boolean);
+}
+
+function declaration(name, dark, design) {
   const re = new RegExp(`(?:^|[;{\\s])${name}:\\s*([^;]+);`);
-  const inDark = dark && DARK_BLOCK.match(re);
-  const m = inDark || ROOT_BLOCK.match(re);
-  assert.ok(m, `${name} is declared in neither :root nor the dark block`);
+  const blocks = designBlocks(design, dark);
+  if (dark) blocks.push(DARK_BLOCK);
+  blocks.push(ROOT_BLOCK);
+  const m = blocks.map((b) => b.match(re)).find(Boolean);
+  assert.ok(m, `${name} is declared in neither :root, the dark block nor the design sheet`);
   return m[1].trim().replace(/\s+/g, ' ');
 }
 
@@ -159,9 +229,30 @@ function evaluate(expr, design) {
   assert.equal(args[0], 'in oklab', `${s} does not interpolate in oklab`);
   assert.equal(args.length, 3, `${s} is not a two-colour mix`);
 
+  /* A side of the mix: a colour, optionally followed by its percentage. Since
+     #1188 that percentage may itself be a `var(--x, <fallback>)` — memberTone()
+     emits `color-mix(in oklab, <hex>, #fff var(--member-lift, 42%))` so a design
+     can lift its own people further without re-tuning the four shipped worlds.
+     Resolved through the same block order as a colour token, so a design that
+     declares it is measured at ITS value and one that does not falls back to
+     the literal in the var() — which is the value that ships. */
+  const percent = (raw) => {
+    const lit = /^(\d+(?:\.\d+)?)%$/.exec(raw);
+    if (lit) return Number(lit[1]) / 100;
+    const v = /^var\((--[\w-]+)(?:,\s*(\d+(?:\.\d+)?)%)?\)$/.exec(raw);
+    assert.ok(v, `cannot read ${JSON.stringify(raw)} as a percentage`);
+    const dark = design && design.scheme === 'dark';
+    const declared = designBlocks(design, dark)
+      .concat(dark ? [DARK_BLOCK] : [], [ROOT_BLOCK])
+      .map((b) => b.match(new RegExp(`(?:^|[;{\\s])${v[1]}:\\s*(\\d+(?:\\.\\d+)?)%`)))
+      .find(Boolean);
+    if (declared) return Number(declared[1]) / 100;
+    assert.ok(v[2], `${v[1]} is declared nowhere and carries no fallback`);
+    return Number(v[2]) / 100;
+  };
   const part = (a) => {
-    const p = /\s(\d+(?:\.\d+)?)%$/.exec(a);
-    return { color: p ? a.slice(0, p.index).trim() : a, pct: p ? Number(p[1]) / 100 : null };
+    const p = /\s((?:\d+(?:\.\d+)?%)|(?:var\([^)]*\)))$/.exec(a);
+    return { color: p ? a.slice(0, p.index).trim() : a, pct: p ? percent(p[1]) : null };
   };
   const A = part(args[1]);
   const B = part(args[2]);
@@ -178,7 +269,7 @@ function evaluate(expr, design) {
 function token(name, design) {
   if (name === '--page-bg') return hex(design.page);
   if (name === '--brand') return hex(design.accent);
-  return evaluate(declaration(name, design.scheme === 'dark'), design);
+  return evaluate(declaration(name, design.scheme === 'dark', design), design);
 }
 
 /* Every token a contrast check needs, resolved for one design. Named rather than
@@ -233,5 +324,5 @@ function alphaOf(expr) {
 module.exports = {
   contrast, luminance, hex, toHex, hsl, mixOklab, composite, rgb,
   declaration, evaluate, token, tokensFor, alphaOf,
-  ROOT_BLOCK, DARK_BLOCK,
+  ROOT_BLOCK, DARK_BLOCK, DESIGN_BLOCKS,
 };

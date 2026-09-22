@@ -71,16 +71,39 @@ stylesheet has no markup to derive from: the whole point is that design.js
 injects it. So there is nothing to generalise the derivation from, and the
 omission stays a discipline.)
 
-## The colours do NOT go in these files
+## The colours: `:root[data-design]` only, and nowhere else in the file
 
-Stated here because it is the first thing a design author reaches for.
-`test/a11y-contrast.test.js` resolves each design's tokens out of `styles.css`
-from the registry's `page`/`accent`/`scheme` (`test/support/theme.js`), so a
-colour declared in a design's own stylesheet is **invisible to the contrast
-suite** and ships unmeasured — the #145 class of regression, on a surface nobody
-has looked at yet. Colours in `designs.js`, layout in the stylesheet. A design
-that genuinely needs to override a derived token (`--surface`, `--ink`, …) has to
-teach the harness to read design stylesheets first.
+**This section used to say "no colours here, ever". #1188 did the thing that
+paragraph named as the price** — it taught `test/support/theme.js` to read these
+files — so the rule moved rather than disappearing, and the new line is sharper
+than the old one.
+
+`test/support/theme.js` resolves a token through the design's own
+`:root[data-design="<id>"]` block (and its `[data-scheme="dark"]` half) **before**
+`styles.css`. So a colour declared **in that block** is measured by the whole
+contrast suite exactly like a `:root` token, and Der Tisch's walnut `--surface`
+and paper `--ink` live there.
+
+Everywhere else in the file the old reasoning is untouched: the resolver does not
+look at component rules, so a colour on one **ships unmeasured** — the #145 class
+of regression, on a surface nobody has looked at yet. Hence:
+
+- **Every component rule reads `var(--x)` and never a literal.** That is not a
+  style preference; it is what forces a colour up into the block the harness
+  reads. `test/design-layer.test.js` sweeps for both a literal and a token
+  *shadow* outside the root blocks, and neither guard covers the other's case.
+- **A token declared there must also be MEASURED**, which is not the same as
+  resolvable. `test/a11y-contrast.test.js` pairs the design-specific families
+  (felt, paper, score ramp) by name and then asserts that no design token is left
+  without a pair — so a new one fails until it is given one.
+- `--page-bg` and `--brand` still belong in `designs.js`: `applyBackground()`
+  writes them inline on `<html>`, so a copy here would be dead text reading as
+  the source of truth.
+
+**The colour block is gated on the design's scheme**, and that is load-bearing
+rather than tidy — an ungated one puts a dark design's paper ink on a light
+round's page:
+`.claude/rules/design-colour-blocks-are-scheme-gated.md`.
 
 **Related:** `.claude/rules/pwa-service-worker.md` (the `SHELL`/`CACHE` contract
 this is an instance of, and the snippet for verifying a shell-asset change in a
@@ -89,4 +112,6 @@ and why the `CACHE` literal is in the digest),
 `.claude/rules/frontend-helper-modules-and-coverage.md` (the four wiring points
 any new `public/js` file needs — `design.js` deliberately has no
 `module.exports`), `.claude/rules/accessibility-contrast-and-modals.md` (the
-suite the last section protects).
+suite the last section protects),
+`.claude/rules/design-colour-blocks-are-scheme-gated.md` (what a colour block
+must be gated on, and the voice/colour split).

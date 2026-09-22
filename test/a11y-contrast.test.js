@@ -50,10 +50,15 @@ assert.ok(DESIGNS.length >= 11, 'expected the nine palettes plus the two worlds'
    and has no page/accent to resolve (test/design-layer.test.js pins that), so
    it is already measured as the light half of every assertion here.
 
-   A user design's own override stylesheet (public/css/designs/<id>.css) is NOT
-   read here — `tokensFor` resolves against styles.css — which is precisely why
-   those files must carry no colour. See
-   .claude/rules/design-stylesheets-are-shell-assets.md. */
+   A user design's own override stylesheet (public/css/designs/<id>.css) IS read
+   here since #1188: `tokensFor` resolves a token through the design's
+   `:root[data-design="<id>"]` block before styles.css's two, so Der Tisch's
+   walnut --surface and paper --ink are measured by every sweep below without
+   any of them being edited. That block is the ONLY part of the file the
+   resolver sees — a colour on a component rule is still invisible, which is
+   what test/design-layer.test.js's two sweeps enforce, and the coverage guard
+   at the end of this file closes the remaining gap: resolvable is not the same
+   as measured. See .claude/rules/design-stylesheets-are-shell-assets.md. */
 const USER_DESIGNS = DESIGN_REGISTRY.filter((d) => d.page && d.accent);
 
 const THEMES = DESIGNS.concat(USER_DESIGNS).map(tokensFor);
@@ -560,14 +565,20 @@ test('the worn edge never fades the stamp border below the 3:1 non-text bar', ()
 /* What a palette hex is actually PAINTED as, via the shipped memberTone(): the
    stored hex on a light design, lifted toward white on a dark one (#904). Run
    rather than restated, for the reason avgColor is. */
-function memberTone(color, dark) {
-  setScheme(dark);
-  return evaluate(APP.run(`memberTone(${JSON.stringify(color)})`), THEMES[0].design);
+/* Takes the DESIGN, not just its scheme. It used to evaluate against
+   THEMES[0].design — harmless while the only design-dependent thing in the
+   emitted mix was the scheme boolean deciding whether there was a mix at all,
+   and wrong since #1188 made the lift itself a token: a `var(--member-lift)`
+   resolved against Klassisch reports every design at the shipped 42% fallback,
+   including one that declares its own. */
+function memberTone(color, design) {
+  setScheme(design.scheme === 'dark');
+  return evaluate(APP.run(`memberTone(${JSON.stringify(color)})`), design);
 }
 
 test('every member tone carries its initials at AA, on every design', () => {
   assert.deepEqual(sweep((t) => MEMBER_COLORS.map((c) => [
-    `${c} initials`, t.onAccent, memberTone(c, t.dark),
+    `${c} initials`, t.onAccent, memberTone(c, t.design),
   ])), [], '.avatar / .nr-seat__avatar render --on-accent initials on these');
 });
 
@@ -581,7 +592,7 @@ test('every member tone clears AA as the voter name printed on the vote card', (
      On a dark one the stored hexes would land near 1.6:1 on the lifted surface,
      which is what memberTone()'s lift is for. */
   assert.deepEqual(sweep((t) => MEMBER_COLORS.map((c) => [
-    `${c} as the voter name`, memberTone(c, t.dark), t.surface,
+    `${c} as the voter name`, memberTone(c, t.design), t.surface,
   ])), [], '.vote__who draws the person in their own tone on the .vote card');
 });
 
@@ -790,11 +801,38 @@ test('the seal\'s padlock clears the 3:1 non-text bar, and the pair cannot flip 
     `the padlock is a non-text graphic and needs ${AA_LARGE}:1 against the seal it sits on`);
 
   /* And the pair must be scheme-INDEPENDENT, which is the property that makes
-     one ratio enough. Asserted as "every design agrees" rather than by reading
-     the dark block, so it holds however the tokens are later expressed. */
-  const ratios = new Set(THEMES.map((t) =>
-    contrast(evaluate(ink[1], t.design), evaluate(fill[1], t.design)).toFixed(2)));
-  assert.equal(ratios.size, 1, `the seal pair differs per design (${[...ratios].join(', ')}) — one of the two now flips`);
+     one ratio per design enough.
+
+     Until #1188 this was asserted as "every design agrees on one ratio", which
+     was a stronger statement than the guard needed and stopped being true the
+     moment a design owned its own gold: Der Tisch's rank family is the
+     package's (--gold #f0cf86, --gold-ink #4a3423, 7.74:1) rather than the
+     app's #d99a06/#6b3405 at 4.05:1. Both are correct and neither flips.
+
+     So the invariant is restated as what it always meant — read the same
+     design's pair under BOTH schemes and require them to agree — which still
+     fails on the mistake it was written for. `--gold-deep` is the obvious
+     wrong reach and DOES flip (#92400e light, #f0c25c dark), so substituting
+     it reddens this per design rather than only in aggregate. */
+  const flips = [];
+  for (const t of THEMES) {
+    /* Only a design that could appear in EITHER scheme — i.e. one whose tokens
+       come from styles.css alone. A design with a scheme-gated block of its own
+       (#1188) has no light appearance at all, so reading it "under light" would
+       resolve tokens the browser would never paint for it, and any difference
+       found would be an artefact of the probe rather than a flip. Those designs
+       cannot flip by construction: each of the two tokens is declared once, in
+       the one block that applies to them. */
+    const own = DESIGN_BLOCKS.get(t.design.id);
+    if (own && own.scheme) continue;
+    const under = (dark) => contrast(
+      evaluate(ink[1], { ...t.design, scheme: dark ? 'dark' : 'light' }),
+      evaluate(fill[1], { ...t.design, scheme: dark ? 'dark' : 'light' })).toFixed(2);
+    if (under(false) !== under(true)) flips.push(`${name(t)} (${under(false)} light / ${under(true)} dark)`);
+  }
+  assert.ok(THEMES.length - flips.length > 5, 'too few designs reached the flip check — it is going vacuous');
+  assert.deepEqual(flips, [],
+    'the seal is one fill in both schemes, so neither half of the pair may follow the scheme');
 });
 
 test('the curtain still reads as darker than the page it covers', () => {
@@ -1394,4 +1432,176 @@ test('hovering a control never WEAKENS its edge', () => {
     }
   }
   assert.deepEqual(failures.slice(0, 6), [], 'the hover border is fainter than the resting one');
+});
+
+
+// --- a design's OWN colour tokens (#1188) ------------------------------------
+/* Everything above measures the tokens styles.css declares. A design may also
+   declare tokens of its own — Der Tisch's felt, its paper overlay family and
+   its score ramp — and those are resolvable by `token()` but belong to no pair
+   any sweep above knows about. Measured here by name, and then the coverage
+   guard below asserts that NO design token is left out of this section.
+
+   Written as "the design that declares it" rather than "Tisch", so a second
+   design declaring `--paper` is measured for free and one that declares
+   something new fails the coverage guard instead of shipping unmeasured. */
+const { token, DESIGN_BLOCKS } = require('./support/theme');
+
+const declares = (t, name) => {
+  const block = DESIGN_BLOCKS.get(t.design.id);
+  return Boolean(block && new RegExp(`(?:^|[;{\\s])${name}:`).test(block.all));
+};
+const withToken = (name) => THEMES.filter((t) => declares(t, name));
+
+test('a design that declares a PAPER overlay family keeps every pair on it at AA', () => {
+  /* An overlay in Der Tisch is a printed card on a wood table, so `.sheet`,
+     `.dialog`, `.popover` and `.menu` re-point --surface/--ink/--control-* at
+     this family. That re-point lives on a component rule, which the resolver
+     cannot follow — so the pairs are measured here, against the tokens the
+     rule points at. Keep this in step with that rule in tisch.css. */
+  const hosts = withToken('--paper');
+  assert.ok(hosts.length >= 1, 'no design declares --paper — this test is vacuous');
+  const failures = [];
+  for (const t of hosts) {
+    const v = (n) => token(n, t.design);
+    const pairs = [
+      ['--paper-ink on --paper', v('--paper-ink'), v('--paper'), AA_TEXT],
+      ['--paper-ink on --paper-raised', v('--paper-ink'), v('--paper-raised'), AA_TEXT],
+      ['--paper-ink-soft on --paper', v('--paper-ink-soft'), v('--paper'), AA_TEXT],
+      ['--paper-ink-soft on --paper-raised', v('--paper-ink-soft'), v('--paper-raised'), AA_TEXT],
+      // Review finding A4 — the tertiary ink on the RAISED paper is the one
+      // that measured 4.23:1 in the package.
+      ['--paper-faint on --paper-raised', v('--paper-faint'), v('--paper-raised'), AA_TEXT],
+      /* There is deliberately no `--paper-on-accent`. The ink on a saturated
+         fill is a property of the fill, not of the ground behind it — brass is
+         light on paper exactly as on wood — so the overlay leaves --on-accent
+         alone and the global sweep above already covers that pair. Adding one
+         measured 1.97:1, which is how the absence became deliberate. */
+      // …and the control edge has to identify a control against both paper grounds.
+      ['--paper-edge on --paper', v('--paper-edge'), v('--paper'), AA_LARGE],
+      ['--paper-edge on --paper-raised', v('--paper-edge'), v('--paper-raised'), AA_LARGE],
+    ];
+    for (const [label, fg, bg, bar] of pairs) {
+      const ratio = contrast(fg, bg);
+      if (ratio < bar) failures.push(`${name(t)} — ${label} = ${ratio.toFixed(2)}:1 (bar ${bar})`);
+    }
+  }
+  assert.deepEqual(failures, [], 'the overlay inverts the scheme on a subtree; its pairs get the same bars');
+});
+
+test('a design that declares a FELT keeps its own ink on it, and keeps the accent off it below 24px', () => {
+  /* Review finding A1, as a measurement rather than as prose. Gold on the light
+     stop of Tannenfilz is 4.20:1, so gold is a DISPLAY colour on felt and text
+     under 24px uses --felt-ink. Both halves are asserted: the paper ink clears
+     AA, and the accent is checked only against the large-text bar — if it ever
+     cleared AA_TEXT the rule could be relaxed, and if it drops under AA_LARGE
+     it cannot even be a heading. */
+  const hosts = withToken('--felt');
+  assert.ok(hosts.length >= 1, 'no design declares --felt — this test is vacuous');
+  const failures = [];
+  for (const t of hosts) {
+    const v = (n) => token(n, t.design);
+    // The LIGHT stop is the critical ground: the felt is a gradient down to
+    // --felt-deep, so anything clearing the light end clears the whole sweep.
+    for (const [label, fg, bar] of [
+      ['--felt-ink', v('--felt-ink'), AA_TEXT],
+      ['--felt-ink-soft', v('--felt-ink-soft'), AA_TEXT],
+      /* The display carve-out is GOLD and only gold. --brand is measured here
+         too and is NOT in this list on purpose: brass on Tannenfilz is 2.93:1,
+         below even the large-text bar, so the accent has no place on the table
+         surface at any size. That is why the felt family carries its own ink
+         and its own active-chip fill (finding A3) instead of borrowing the
+         accent, and it is a finding beyond the review — A1 measured gold on
+         felt and nobody measured brass. */
+      ['--gold as display type only', v('--gold'), AA_LARGE],
+    ]) {
+      const ratio = contrast(fg, v('--felt'));
+      if (ratio < bar) failures.push(`${name(t)} — ${label} on --felt = ${ratio.toFixed(2)}:1 (bar ${bar})`);
+    }
+    // Finding A3: an ACTIVE chip on felt darkens until it carries the felt ink.
+    const chip = contrast(v('--felt-ink'), v('--felt-chip-on'));
+    if (chip < AA_TEXT) failures.push(`${name(t)} — --felt-ink on --felt-chip-on = ${chip.toFixed(2)}:1`);
+  }
+  assert.deepEqual(failures, [], 'text on the table surface is the design\'s own ink, never its accent');
+});
+
+test('a design that declares its own SCORE ramp carries a legible number on every stop', () => {
+  /* T8.2. The ramp is six fills — a veto tone below 1, then the five tile
+     values — each with the ink its half of the ramp takes. */
+  const hosts = withToken('--score-1');
+  assert.ok(hosts.length >= 1, 'no design declares a score ramp — this test is vacuous');
+  const failures = [];
+  for (const t of hosts) {
+    const v = (n) => token(n, t.design);
+    const stops = [
+      ['--score-veto', v('--score-veto'), v('--score-veto-ink')],
+      ['--score-1', v('--score-1'), v('--score-ink-low')],
+      ['--score-2', v('--score-2'), v('--score-ink-low')],
+      ['--score-3', v('--score-3'), v('--score-ink-high')],
+      ['--score-4', v('--score-4'), v('--score-ink-high')],
+      ['--score-5', v('--score-5'), v('--score-ink-high')],
+    ];
+    for (const [label, fill, ink] of stops) {
+      const ratio = contrast(ink, fill);
+      if (ratio < AA_TEXT) failures.push(`${name(t)} — ${label} = ${ratio.toFixed(2)}:1`);
+    }
+    /* And the ramp must be ORDERED by lightness, which is what carries it for a
+       colour-blind reader (T8.3 simulates deuteran/protan/tritan and relies on
+       exactly this). Asserted on luminance, where the CVD simulation's own
+       point is that hue may not be. */
+    const ls = ['--score-1', '--score-2', '--score-3', '--score-4', '--score-5'].map((n) => luminance(v(n)));
+    for (let i = 1; i < ls.length; i += 1) {
+      if (ls[i] <= ls[i - 1]) failures.push(`${name(t)} — the ramp does not brighten from ${i} to ${i + 1}`);
+    }
+  }
+  assert.deepEqual(failures, [], 'the score ramp is read by its number and by its lightness');
+});
+
+test('every colour token a design declares is measured by one of the checks above', () => {
+  /* The guard that makes #1188's move safe. A design's root block is now
+     RESOLVABLE by test/support/theme.js, and test/design-layer.test.js pushes
+     every colour in the file up into it — but resolvable is not measured, and a
+     token nobody pairs is exactly the unmeasured colour that whole rule exists
+     to prevent, one layer along.
+
+     So: every colour token a design declares must be either one styles.css also
+     declares (in which case the sweeps above already cover it, because
+     `tokensFor` resolves it for this design) or named here as measured.
+
+     A NEW token therefore fails this test until it is given a pair. That is the
+     intended cost — adding one is adding a colour to the app. */
+  const appCss = require('node:fs')
+    .readFileSync(require('node:path').join(__dirname, '..', 'public', 'styles.css'), 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, '');
+  const inApp = new Set([...appCss.matchAll(/(^|[;{\s])(--[a-z0-9-]+)\s*:/gm)].map((m) => m[2]));
+
+  // The design-specific tokens the three tests above put in a pair.
+  const MEASURED = new Set([
+    '--paper', '--paper-raised', '--paper-ink', '--paper-ink-soft',
+    '--paper-edge', '--paper-faint',
+    '--felt', '--felt-deep', '--felt-ink', '--felt-ink-soft', '--felt-chip-on',
+    '--score-1', '--score-2', '--score-3', '--score-4', '--score-5',
+    '--score-veto', '--score-ink-low', '--score-ink-high', '--score-veto-ink',
+  ]);
+  /* Not colours, so not this test's business: a lift PERCENTAGE, and the four
+     compositing alphas the elevation ramp is built from. The alphas are painted
+     over a ground this file cannot know (a shadow falls on whatever is behind
+     the card), and they can only ever DARKEN it — which is the safe direction
+     for every pair already measured on that ground. */
+  const NOT_A_COLOUR = /^--(member-lift|cast|cast-soft|cast-deep|brass-sheen|brass-sheen-strong)$/;
+
+  const unmeasured = [];
+  for (const t of THEMES) {
+    const block = DESIGN_BLOCKS.get(t.design.id);
+    if (!block) continue;
+    for (const m of block.all.matchAll(/(^|[;{\s])(--[a-z0-9-]+)\s*:/gm)) {
+      const tok = m[2];
+      if (inApp.has(tok) || MEASURED.has(tok) || NOT_A_COLOUR.test(tok)) continue;
+      // A layout token is not a colour either — radii, sizes, fonts, durations.
+      if (/^--(radius|text|w|dur|ease|font|rail|dock)/.test(tok)) continue;
+      unmeasured.push(`${name(t)} -> ${tok}`);
+    }
+  }
+  assert.deepEqual(unmeasured, [],
+    'these design tokens are resolvable but no check measures them — give each one a pair above');
 });

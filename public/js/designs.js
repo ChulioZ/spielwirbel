@@ -10,14 +10,21 @@
    two drift. Every other design states its two colours here and ships its
    layout in public/css/designs/<id>.css, loaded on demand by design.js.
 
-   WHY THE COLOURS LIVE HERE AND NOT IN THE STYLESHEET. test/a11y-contrast.test.js
-   resolves every token FOR A DESIGN out of styles.css given `page`, `accent` and
-   `scheme` (test/support/theme.js). A colour declared in a design's own override
-   file is therefore invisible to that suite — it would ship unmeasured, which is
-   exactly the regression #145 was about. So: colours here, layout there. A
-   design that genuinely needs to override a DERIVED token (--surface, --ink, …)
-   has to teach the harness to read design stylesheets first; that is a note for
-   #1188, not a thing to do quietly.
+   WHY THESE TWO COLOURS LIVE HERE. applyBackground() writes `page` and `accent`
+   as INLINE custom properties on <html>, which outrank every stylesheet — so a
+   copy of either in a design's own file would be dead text that reads as the
+   source of truth.
+
+   The DERIVED tokens (--surface, --ink, the gold family) are a different
+   question, and #1188 answered it: test/support/theme.js now resolves a token
+   through the design's own `:root[data-design="<id>"]` block before styles.css,
+   so a colour declared THERE is swept by the contrast suite exactly like a
+   :root token. Der Tisch uses that for its walnut surface and paper ink. What
+   is still forbidden is a colour anywhere ELSE in the file — the resolver does
+   not read component rules, so one there ships unmeasured, which is exactly the
+   regression #145 was about. See
+   .claude/rules/design-stylesheets-are-shell-assets.md and
+   .claude/rules/design-colour-blocks-are-scheme-gated.md.
 
    `enabled` is the gate, in code rather than in an env var (operator decision
    2026-09-20: a switch that is never true before the flip and never false after
@@ -86,28 +93,33 @@ const DESIGN_REGISTRY = [
     ],
     enabled: true,
   },
-  // A STUB (#1184). The gold is the reviewed package's dominant accent
-  // (docs/design/tisch/), but no Tisch screen exists yet: its stylesheet holds
-  // placeholder layout tokens only, and the real T1/T8 token set lands with
-  // #1188. `enabled: false` keeps it out of production entirely.
-  //
-  // The felt is DARKER than the package's `#3f6a48` surface tone, and that is a
-  // measurement rather than a preference: styles.css's dark block derives
-  // --surface, --sunken and both inks from --page-bg, so three of the app's
-  // tuned washes (the winners' 22% gold, the dock's 14% brand, the friend
-  // tile's 11% cover) put --ink-soft below 4.5:1 once the page rises much past
-  // Obsidian's luminance. Measured with the whole contrast suite: `#131d17`
-  // fails those three at 4.28-4.39:1 and this clears all 52 checks. Those
-  // alphas are shipped and tuned, so a NEW design moves its own page rather
-  // than lowering them — each of the three test messages says so. #1188 picks
-  // the real felt against the same suite.
+  /* Der Tisch (#1188), from docs/design/tisch/Tisch-T1-Komponenten.dc.html.
+     Still `enabled: false` — the screens are #1189-#1200 and the flip is #1202.
+
+     THE PAGE IS NUSSBAUM, not the near-black the #1184 stub carried. A dark
+     design's page is the reference every contrast in the app is measured
+     against, and this one sits much higher than the four night-coloured worlds
+     (luminance .026 against Obsidian's .010) — so the tuned alpha washes and the
+     dark block's neutral percentages land closer together on it, and two derived
+     tokens have to be re-picked in tisch.css rather than inherited. That is
+     recorded there, at the tokens themselves.
+
+     THE ACCENT IS MESSING, not the gold the stub used. Gold #f0cf86 is T1's
+     RANK colour — „Siegerzeile, Pokale, Krone — nie Aktion" — and --brand is the
+     app's action colour: every primary button, active chip and .link-btn. The
+     two jobs are not the same one, so gold stays in the gold family (below, in
+     the stylesheet) and brass carries --brand. Brass also satisfies the dark
+     constraint --brand has and gold's job does not: it is light enough to read
+     as link text on the page (6.4:1) while taking dark ink as a fill (6.4:1),
+     which is the flip .claude/rules/dark-designs-and-the-on-accent-flip.md §1
+     describes. */
   {
     id: 'tisch',
     labelKey: 'design.tisch.name',
     descKey: 'design.tisch.desc',
     scheme: 'dark',
-    page: '#0f1712',
-    accent: '#f0cf86',
+    page: '#3b2a12',
+    accent: '#d9a951',
     stylesheet: '/css/designs/tisch.css',
     // The eight FELTS of docs/design/tisch/Tisch-T8-Farben.dc.html -> "T8.1
     // Filze", in the package's own order, so index 0 is Tannenfilz — the

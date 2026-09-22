@@ -231,13 +231,29 @@ test('with no flag, boot applies the face synchronously and asks nothing', (t) =
    put its --surface in its own file ships an unmeasured contrast pair, which is
    exactly the #145 class of regression on a surface nobody has looked at yet.
 
+   #1188 MOVED THE LINE, and did not remove it. test/support/theme.js now
+   resolves a token through the design's own `:root[data-design="<id>"]` block
+   before styles.css, so a colour declared THERE is measured exactly like a
+   :root token — which is what let Der Tisch own its walnut --surface and its
+   paper --ink. Everywhere else in the file the old reasoning is untouched: a
+   descendant rule is not in the harness's field of view, so a colour in one
+   still ships unmeasured.
+
+   So both sweeps below now ask "outside the design's own root block?" rather
+   than "in this file at all?".
+
    Two halves, because either alone is porous, and that is measured rather than
    assumed (.claude/rules/redundant-guards-make-each-other-untestable.md — a
    deliberate break that reddens nothing means one of them is dead weight).
-   Adding `--tisch-felt-edge: #1a2b1f` reddens ONLY the literal sweep; adding
-   `--surface: var(--sunken)` — a shadow with no literal in it — reddens ONLY
-   the token sweep. Neither guard covers the other's case, so do not merge
-   them. */
+   Putting `--tisch-felt-edge: #1a2b1f` on a component rule reddens ONLY the
+   literal sweep; putting `--surface: var(--sunken)` there — a shadow with no
+   literal in it — reddens ONLY the token sweep. Neither covers the other's
+   case, so do not merge them.
+
+   The third guard is in test/a11y-contrast.test.js: a colour token declared in
+   a design's root block is RESOLVABLE, which is not the same as measured, so
+   that file asserts every one of them appears in a named pair. Without it this
+   change would have traded an unmeasured colour for an unmeasured token. */
 
 const fs = require('node:fs');
 const path = require('node:path');
@@ -247,6 +263,47 @@ const stripComments = (css) => css.replace(/\/\*[\s\S]*?\*\//g, '');
 const designSheets = () => fs.readdirSync(CSS_DIR)
   .filter((f) => f.endsWith('.css'))
   .map((f) => [f, stripComments(fs.readFileSync(path.join(CSS_DIR, f), 'utf8'))]);
+
+/* A sheet split into [its own :root[data-design] block, everything else].
+   Brace-matched rather than regexed, because the block legitimately contains
+   `color-mix(…)` and a lazy match would end at the first `}` inside one. The
+   design id is taken from the FILENAME, so a block keyed on some other
+   design's id lands in `rest` and is judged there — which is correct: it would
+   never be resolved for this design either. */
+function splitRoot(file, css) {
+  const id = file.replace(/\.css$/, '');
+  /* EVERY root block, not the first: a design may split its tokens into an
+     unconditional block (fonts, radii) and a scheme-qualified one (its
+     colours), which is what Der Tisch does and why this loops. Cutting only
+     the first would leave the colour block in `rest`, where both sweeps would
+     then report every one of its values as an unmeasured literal. */
+  let root = '';
+  let rest = '';
+  let from = 0;
+  for (;;) {
+    const at = css.indexOf(`:root[data-design="${id}"]`, from);
+    // A DESCENDANT rule (`:root[data-design="x"] .sheet`) is a component rule,
+    // not a root block, and belongs in `rest`.
+    if (at === -1) { rest += css.slice(from); break; }
+    const open = css.indexOf('{', at);
+    if (css.slice(at, open).replace(`:root[data-design="${id}"]`, '').trim()
+      .replace(/^\[data-scheme="[a-z]+"\]$/, '') !== '') {
+      rest += css.slice(from, open + 1);
+      from = open + 1;
+      continue;
+    }
+    let depth = 1;
+    let i = open + 1;
+    for (; i < css.length && depth > 0; i += 1) {
+      if (css[i] === '{') depth += 1;
+      else if (css[i] === '}') depth -= 1;
+    }
+    rest += css.slice(from, at);
+    root += css.slice(open + 1, i - 1);
+    from = i;
+  }
+  return { root, rest };
+}
 
 test('every registered design with a stylesheet has one, and every stylesheet a design', () => {
   // Anti-vacuous, and it binds both ways: an empty directory would make the two
@@ -258,7 +315,7 @@ test('every registered design with a stylesheet has one, and every stylesheet a 
   assert.deepEqual(onDisk, declared, 'public/css/designs/ and the registry disagree about which files exist');
 });
 
-test('no design stylesheet re-declares a token the contrast harness resolves', () => {
+test('no design stylesheet re-declares a colour token OUTSIDE its resolved root block', () => {
   /* Derived from styles.css rather than from a list written here: the set of
      tokens the harness reads is whatever :root and the dark block declare, so a
      token added there is covered without anyone remembering this file. An
@@ -270,15 +327,28 @@ test('no design stylesheet re-declares a token the contrast harness resolves', (
 
   const clashes = [];
   for (const [file, css] of designSheets()) {
-    for (const m of css.matchAll(/(^|[;{\s])(--[a-z0-9-]+)\s*:/gm)) {
+    const { root, rest } = splitRoot(file, css);
+    const own = new Set([...root.matchAll(/(^|[;{\s])(--[a-z0-9-]+)\s*:/gm)].map((m) => m[2]));
+    for (const m of rest.matchAll(/(^|[;{\s])(--[a-z0-9-]+)\s*:\s*([^;}]+)/gm)) {
       // Layout tokens are the POINT of these files; only a token styles.css
       // also declares can shadow a value the harness measured.
-      if (resolved.has(m[2]) && COLOUR_TOKENS.test(m[2])) clashes.push(`${file} -> ${m[2]}`);
+      if (!resolved.has(m[2]) || !COLOUR_TOKENS.test(m[2])) continue;
+      /* A RE-POINT is allowed, and is how a subtree flips scheme: an overlay in
+         Der Tisch is a paper card on a wood table, so `.sheet` sets
+         `--surface: var(--paper)`. That is legible — the value it resolves to
+         is declared in the root block, where the harness reads it, and
+         test/a11y-contrast.test.js measures the paper pairs by name. What stays
+         banned is a value the harness cannot follow: a literal, or a var()
+         into a token this design never declares. */
+      const repoint = /^var\((--[a-z0-9-]+)\)$/.exec(m[3].trim());
+      if (repoint && own.has(repoint[1])) continue;
+      clashes.push(`${file} -> ${m[2]}: ${m[3].trim()}`);
     }
   }
   assert.deepEqual(clashes, [],
-    'these design stylesheets shadow a colour token the contrast suite resolves from styles.css, '
-    + 'so the shadowed value ships unmeasured — put the design\'s colours in public/js/designs.js');
+    'these design stylesheets shadow a colour token OUTSIDE their :root[data-design] block, '
+    + 'where test/support/theme.js cannot see it — declare it in that block instead, '
+    + 'or point the component rule at a token that is declared there');
 });
 
 /* The colour tokens specifically: everything the app paints ink, fills and
@@ -287,17 +357,39 @@ test('no design stylesheet re-declares a token the contrast harness resolves', (
    them. */
 const COLOUR_TOKENS = /^--(page-bg|brand|accent|bg|surface|ink|on-accent|shade|sunken|line|control|placeholder|good|warn|danger|gold|stage|scrim|page-glow)/;
 
-test('no design stylesheet contains a colour literal at all', () => {
-  /* The half the token sweep cannot see: a design inventing its own
-     `--tisch-felt-edge: #1a2b1f` declares a token styles.css never heard of, so
-     it clashes with nothing — and paints an unmeasured colour all the same. */
+test('no design stylesheet contains a colour literal outside its resolved root block', () => {
+  /* The half the token sweep cannot see: a component rule inventing its own
+     `--tisch-felt-edge: #1a2b1f`, or simply writing `color: #8d6436`, declares
+     a colour styles.css never heard of, so it clashes with nothing — and paints
+     an unmeasured colour all the same.
+
+     Every component rule in a design sheet therefore reads `var(--x)` and
+     nothing else. That is not a style preference: it is what forces a colour up
+     into the one block the harness reads. */
   const found = [];
   for (const [file, css] of designSheets()) {
-    for (const m of css.matchAll(/#[0-9a-fA-F]{3,8}\b|\b(?:rgba?|hsla?|oklch|oklab|color-mix)\s*\(/g)) {
+    const { rest } = splitRoot(file, css);
+    for (const m of rest.matchAll(/#[0-9a-fA-F]{3,8}\b|\b(?:rgba?|hsla?|oklch|oklab|color-mix)\s*\(/g)) {
       found.push(`${file} -> ${m[0]}`);
     }
   }
   assert.deepEqual(found, [],
-    'a design stylesheet declares a colour, which the contrast suite cannot resolve: '
-    + 'a design\'s colours belong in public/js/designs.js (see its header)');
+    'a design stylesheet paints a colour outside its :root[data-design] block, where the '
+    + 'contrast suite cannot resolve it — hoist it into that block as a token and '
+    + 'reference it with var()');
+});
+
+test('a design\'s root block is real — the two sweeps above are not passing by splitting everything away', () => {
+  /* splitRoot() decides what both sweeps look at, so a bug in it that returned
+     an empty `rest` would make each of them vacuously green while a sheet
+     painted whatever it liked. Assert the split found a block AND left the
+     component rules behind. */
+  const sheets = designSheets();
+  assert.ok(sheets.length >= 1, 'no design stylesheet on disk');
+  for (const [file, css] of sheets) {
+    const { root, rest } = splitRoot(file, css);
+    assert.ok(root.includes('--'), `${file}: no :root[data-design] block found — did the hook move?`);
+    assert.ok(rest.includes(':root[data-design'),
+      `${file}: nothing but the root block survived the split — the sweeps above would be vacuous`);
+  }
 });
