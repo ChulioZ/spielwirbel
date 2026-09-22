@@ -816,11 +816,21 @@ test('the seal\'s padlock clears the 3:1 non-text bar, and the pair cannot flip 
      it reddens this per design rather than only in aggregate. */
   const flips = [];
   for (const t of THEMES) {
+    /* Only a design that could appear in EITHER scheme — i.e. one whose tokens
+       come from styles.css alone. A design with a scheme-gated block of its own
+       (#1188) has no light appearance at all, so reading it "under light" would
+       resolve tokens the browser would never paint for it, and any difference
+       found would be an artefact of the probe rather than a flip. Those designs
+       cannot flip by construction: each of the two tokens is declared once, in
+       the one block that applies to them. */
+    const own = DESIGN_BLOCKS.get(t.design.id);
+    if (own && own.scheme) continue;
     const under = (dark) => contrast(
       evaluate(ink[1], { ...t.design, scheme: dark ? 'dark' : 'light' }),
       evaluate(fill[1], { ...t.design, scheme: dark ? 'dark' : 'light' })).toFixed(2);
     if (under(false) !== under(true)) flips.push(`${name(t)} (${under(false)} light / ${under(true)} dark)`);
   }
+  assert.ok(THEMES.length - flips.length > 5, 'too few designs reached the flip check — it is going vacuous');
   assert.deepEqual(flips, [],
     'the seal is one fill in both schemes, so neither half of the pair may follow the scheme');
 });
@@ -1439,7 +1449,7 @@ const { token, DESIGN_BLOCKS } = require('./support/theme');
 
 const declares = (t, name) => {
   const block = DESIGN_BLOCKS.get(t.design.id);
-  return Boolean(block && new RegExp(`(?:^|[;{\\s])${name}:`).test(block));
+  return Boolean(block && new RegExp(`(?:^|[;{\\s])${name}:`).test(block.all));
 };
 const withToken = (name) => THEMES.filter((t) => declares(t, name));
 
@@ -1584,7 +1594,7 @@ test('every colour token a design declares is measured by one of the checks abov
   for (const t of THEMES) {
     const block = DESIGN_BLOCKS.get(t.design.id);
     if (!block) continue;
-    for (const m of block.matchAll(/(^|[;{\s])(--[a-z0-9-]+)\s*:/gm)) {
+    for (const m of block.all.matchAll(/(^|[;{\s])(--[a-z0-9-]+)\s*:/gm)) {
       const tok = m[2];
       if (inApp.has(tok) || MEASURED.has(tok) || NOT_A_COLOUR.test(tok)) continue;
       // A layout token is not a colour either — radii, sizes, fonts, durations.

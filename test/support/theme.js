@@ -132,9 +132,11 @@ const composite = (fg, bg, alpha) =>
    ordering is a fact about the loader rather than about the selectors:
    `.claude/rules/design-stylesheets-are-shell-assets.md`. */
 
+/* id -> { root, scheme, all }. Kept apart rather than pre-joined, because which
+   halves apply depends on the DESIGN: a light design must not read a
+   `[data-scheme="dark"]` block. `all` is the union, for a guard that asks what a
+   design declares at all rather than what resolves for it. */
 const DESIGN_BLOCKS = new Map();
-// The scheme-qualified half on its own, for a guard that needs to tell them apart.
-const DESIGN_SCHEME_BLOCKS = new Map();
 for (const design of DESIGN_REGISTRY) {
   if (!design.stylesheet) continue;
   const file = path.join(ROOT, 'public', design.stylesheet.replace(/^\//, ''));
@@ -158,8 +160,11 @@ for (const design of DESIGN_REGISTRY) {
      a stylesheet declares at least one of these; say so loudly if it stops. */
   assert.ok(root || scheme,
     `${design.stylesheet} declares no :root[data-design="${design.id}"] block — has the hook moved?`);
-  DESIGN_BLOCKS.set(design.id, [scheme, root].filter(Boolean).join('\n'));
-  DESIGN_SCHEME_BLOCKS.set(design.id, scheme || '');
+  DESIGN_BLOCKS.set(design.id, {
+    root: root || '',
+    scheme: scheme || '',
+    all: [scheme, root].filter(Boolean).join('\n'),
+  });
 }
 
 
@@ -174,11 +179,18 @@ assert.ok(DARK_BLOCK, 'styles.css declares no :root[data-scheme="dark"] block �
 
    `design` is optional so the helper still answers the sheet-only question the
    design-token specs ask of it. */
+/* The design's own blocks that APPLY, most specific first. The scheme-qualified
+   one is included only for a design of that scheme — a light design reading a
+   dark block would resolve a colour the browser would never paint for it. */
+function designBlocks(design, dark) {
+  const b = design && DESIGN_BLOCKS.get(design.id);
+  if (!b) return [];
+  return (dark ? [b.scheme, b.root] : [b.root]).filter(Boolean);
+}
+
 function declaration(name, dark, design) {
   const re = new RegExp(`(?:^|[;{\\s])${name}:\\s*([^;]+);`);
-  const blocks = [];
-  const own = design && DESIGN_BLOCKS.get(design.id);
-  if (own) blocks.push(own);
+  const blocks = designBlocks(design, dark);
   if (dark) blocks.push(DARK_BLOCK);
   blocks.push(ROOT_BLOCK);
   const m = blocks.map((b) => b.match(re)).find(Boolean);
@@ -229,11 +241,9 @@ function evaluate(expr, design) {
     if (lit) return Number(lit[1]) / 100;
     const v = /^var\((--[\w-]+)(?:,\s*(\d+(?:\.\d+)?)%)?\)$/.exec(raw);
     assert.ok(v, `cannot read ${JSON.stringify(raw)} as a percentage`);
-    const declared = [
-      design && DESIGN_BLOCKS.get(design.id),
-      design && design.scheme === 'dark' ? DARK_BLOCK : null,
-      ROOT_BLOCK,
-    ].filter(Boolean)
+    const dark = design && design.scheme === 'dark';
+    const declared = designBlocks(design, dark)
+      .concat(dark ? [DARK_BLOCK] : [], [ROOT_BLOCK])
       .map((b) => b.match(new RegExp(`(?:^|[;{\\s])${v[1]}:\\s*(\\d+(?:\\.\\d+)?)%`)))
       .find(Boolean);
     if (declared) return Number(declared[1]) / 100;
@@ -314,5 +324,5 @@ function alphaOf(expr) {
 module.exports = {
   contrast, luminance, hex, toHex, hsl, mixOklab, composite, rgb,
   declaration, evaluate, token, tokensFor, alphaOf,
-  ROOT_BLOCK, DARK_BLOCK, DESIGN_BLOCKS, DESIGN_SCHEME_BLOCKS,
+  ROOT_BLOCK, DARK_BLOCK, DESIGN_BLOCKS,
 };
