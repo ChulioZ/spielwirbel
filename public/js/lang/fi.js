@@ -971,7 +971,7 @@ I18N.fi = {
   'theme.burg': 'Linna',
   'round.marker': 'Värimerkki',
   'marker.title': 'Värimerkki',
-  'marker.note': 'Jokaisella ryhmällä on yksi väri. Kaikki ryhmässä näkevät sen — kukin omassa ulkoasussaan.',
+  'marker.note': 'Jokaisella porukalla on yksi väri. Kaikki porukassa näkevät sen — kukin omassa ulkoasussaan.',
   'marker.tisch.tannenfilz': 'Kuusihuopa',
   'marker.tisch.kobaltfilz': 'Kobolttihuopa',
   'marker.tisch.burgunderfilz': 'Viinipunainen huopa',
