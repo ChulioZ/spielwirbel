@@ -136,9 +136,9 @@ function buildRoundRail(round, activeTab, sub, offShelf) {
   // rail widths and read as a stray label above the tickets, modifying a button
   // that is no longer next to them.
   //
-  // Called rather than duplicated: `hubPresetChips` lives in
-  // views-round-start.js, which loads after this file — safe because this runs
-  // at render time, never at load time
+  // Called rather than duplicated: `hubPresetChips` lives in hub-cards.js
+  // (views-round-start.js until #1189 split it), which loads after this file —
+  // safe because this runs at render time, never at load time
   // (.claude/rules/frontend-script-load-order.md).
   if (activeGames.length) {
     const presets = hubPresetChips(round, activeGames);

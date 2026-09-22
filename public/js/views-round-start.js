@@ -1,22 +1,21 @@
 /* Spielwirbel – the round hub's Start tab (#923, split out of views-round.js).
 
    The launchpad: identity, the one big CTA, the tickets that carry the latest
-   story — and, below them, the card grid that gives the tab content of its own.
-   Before #923 a settled round met a ticket and a button here, and above 1280px
-   the rail had taken even those, which is what `.empty--rail-gap` was invented
-   to paper over.
+   story — and the grid those tickets sit above. Before #923 a settled round met
+   a ticket and a button here, and above 1280px the rail had taken even those,
+   which is what `.empty--rail-gap` was invented to paper over.
 
-   Everything the cards say is DERIVED on demand from the round payload this
-   screen already holds (public/js/hub-insights.js) — no new field, no new
-   table, no extra request. The one exception is the recommendations teaser,
-   which fetches after first paint and renders nothing if anything at all goes
-   wrong; see renderRecoTeaser at the bottom.
+   THE CARDS THEMSELVES LEFT IN #1189, for hub-cards.js — the seam the banner
+   in this file had marked since #923, taken when the file crossed its budget
+   (.claude/rules/token-friendly-source-files.md). What is left is the tab: what
+   it composes, in what order, and the three things that decide whether a block
+   appears at all. The card renderers, their shared frame and the preset chips
+   are next door; the three sub-page previews went to hub-previews.js in #1185.
 
-   THE LOAD-BEARING RULE FOR EVERY CARD: it renders NOTHING when it has nothing
-   to say — no heading, no empty container, no skeleton. A brand-new round with
-   three games and no session must meet the screen it met before, not six empty
-   boxes. Each renderer below returns null for that case and the caller appends
-   only what came back.
+   THE LOAD-BEARING RULE EVERY CARD FOLLOWS: it renders NOTHING when it has
+   nothing to say. A brand-new round with three games and no session must meet
+   the screen it met before, not six empty boxes — so each renderer returns null
+   for that case and the loop below appends only what came back.
 
    Part of the frontend; all files share one global script scope. Loaded right
    after views-round.js. */
@@ -65,6 +64,18 @@ function renderStartTab(round, activeGames) {
     makeMemberLink(el, rid, m.id);
     hero.querySelector('.hero__members').appendChild(el);
   });
+
+  /* `--seat-i` / `--seat-n` are design-NEUTRAL position hints (#1189), written
+     LAST so every seat the strip ends up holding is counted: the members, the
+     „+" and the retired tail. Nothing in styles.css reads either, so Klassisch's
+     strip is the flex line it has always been — but a design that lays the seats
+     out as an ARC on the table's edge needs to know which seat this is and how
+     many there are, and the offset of one depends on the count, which CSS
+     cannot ask for. Same shape as markerStyle(): per-element data handed to CSS
+     as an inline custom property. */
+  const seatRow = hero.querySelector('.hero__members');
+  seatRow.style.setProperty('--seat-n', seatRow.children.length);
+  [...seatRow.children].forEach((el, i) => el.style.setProperty('--seat-i', i));
 
   const startBtn = h(
     `<button class="btn btn--primary hub-cta rail-owned"><i class="ti ti-tornado" aria-hidden="true"></i>${esc(t('round.startSession'))}</button>`
@@ -435,265 +446,4 @@ function renderStartTab(round, activeGames) {
   actions.appendChild(addGameBtn);
   actions.appendChild(settingsBtn);
   app.appendChild(actions);
-}
-
-
-// =================== Start tab: the card grid (#923) ===================
-
-/* The siblings hub-insights.js needs, gathered in one place so the six cards
-   below cannot each assemble a slightly different set. Every entry is the app's
-   own function, passed through rather than restated — the injection shape
-   hub-insights.js's header explains. */
-const hubDeps = () => ({
-  outcomeOf: sessionOutcome,
-  endingOf: sessionEnding,
-  monthKeyOf: periodKeyOf,
-  dayIndexOf,
-  monthsBetween,
-  neutralScore: PRIOR_DEFAULT,
-  filterOptions: metadataFilterOptions,
-  normalizeMetadata: normalizeMetadataFilters,
-  fitsMetadata: fitsMetadataFilters,
-});
-
-// One card frame. The title is a real <h2> so the grid reads as a set of
-// labelled regions to a screen reader rather than as a wall of links.
-function hubCard(icon, title) {
-  return h(`<section class="hub-card">
-       <h2 class="hub-card__title">${iconText(icon, title)}</h2>
-       <div class="hub-card__body"></div>
-     </section>`);
-}
-
-/* a) Spielvorschläge — the positive mirror of the retirement banner.
-
-   `exclude` is the id set that banner is proposing in this same render, so the
-   screen cannot recommend and nag the same game. */
-function hubSuggestCard(round, activeGames, statsByGame, exclude) {
-  const rows = gameSuggestions(
-    round, activeGames, { statsByGame, exclude }, hubDeps()
-  );
-  if (!rows.length) return null;
-  const card = hubCard('ti-bulb', t('hub.suggest.title'));
-  const body = card.querySelector('.hub-card__body');
-  rows.forEach(({ game, reason }) => {
-    const why =
-      reason.kind === 'longAgo'
-        ? tn(reason.months, 'hub.suggest.longAgoOne', 'hub.suggest.longAgo')
-        : t('hub.suggest.' + reason.kind);
-    const row = h(`<a class="hub-row">
-         <span class="hub-row__main">
-           <span class="hub-row__title">${esc(game.title)}</span>
-           <span class="hub-row__sub">${esc(why)}</span>
-         </span>
-         <i class="ti ti-chevron-right hub-row__go" aria-hidden="true"></i>
-       </a>`);
-    navLink(row, gamePath(round.id, game.id), () => showGameDetail(round.id, game.id));
-    body.appendChild(row);
-  });
-  return card;
-}
-
-/* b) Schnellstart-Presets — chips under the big CTA that open the session setup
-   with the draw already narrowed.
-
-   They sit at the CTA rather than in the grid because they are a modifier on
-   the one action this screen exists for, not a module of their own.
-
-   NOTHING IS PERSISTED HERE. `lastSessionFilters` is written server-side by the
-   draw itself (POST …/sessions), so an exploratory tap that never draws leaves
-   the round's remembered preset exactly as it was — which is a property of
-   where the write lives, not a guard this code has to remember. */
-function hubPresetChips(round, activeGames) {
-  const chips = quickPresets(activeGames, hubDeps());
-  if (!chips.length) return null;
-  const row = h(`<div class="hub-presets" role="group" aria-label="${esc(t('hub.preset.label'))}"></div>`);
-  // The Start tab's copy is `rail-owned` (see the caller); the rail builds its
-  // own from the same function, so the two can never offer different chips.
-  chips.forEach((chip) => {
-    const btn = h(`<button class="chip hub-preset">${esc(t('hub.preset.' + chip.id))}</button>`);
-    btn.addEventListener('click', () => showStartSession(round, { metadata: chip.metadata }));
-    row.appendChild(btn);
-  });
-  return row;
-}
-
-/* c) Rundenpuls — how often the round meets, when it last did, and how much of
-   the shelf has ever reached the table.
-
-   The bars are CSS only. The app ships no chart library and must not gain one
-   for twelve numbers (#923 scope): each bar is a <span> with a height
-   percentage, which is also why the whole row degrades to readable text when
-   styles fail to load. */
-function hubPulseCard(round, activeGames) {
-  const pulse = roundPulse(round, activeGames, {}, hubDeps());
-  if (!pulse) return null;
-  const card = hubCard('ti-activity', t('hub.pulse.title'));
-  const body = card.querySelector('.hub-card__body');
-  const peak = Math.max(...pulse.months.map((m) => m.count), 1);
-  // `month: 'narrow'` gives one letter per bar, which is what makes twelve of
-  // them fit a 280px card at every locale. The full month name rides along as
-  // the accessible name, so the axis is never only a letter.
-  const narrow = (at) => new Date(at).toLocaleString(localeTag(locale), { month: 'narrow' });
-  const bars = pulse.months
-    .map((m) => {
-      const label = t('hub.pulse.barLabel', { month: fmtMonth(new Date(m.at).toISOString()), n: m.count });
-      return `<span class="pulse-bar" title="${esc(label)}">
-           <span class="pulse-bar__fill" style="height:${Math.round((m.count / peak) * 100)}%"></span>
-           <span class="pulse-bar__tick" aria-hidden="true">${esc(narrow(m.at))}</span>
-         </span>`;
-    })
-    .join('');
-  body.appendChild(h(`<div class="pulse-bars" role="img" aria-label="${esc(tn(pulse.total, 'hub.pulse.sessionsOne', 'hub.pulse.sessions'))}">${bars}</div>`));
-
-  const facts = [tn(pulse.total, 'hub.pulse.sessionsOne', 'hub.pulse.sessions')];
-  if (pulse.daysSinceLast !== null) {
-    facts.push(
-      pulse.daysSinceLast === 0
-        ? t('hub.pulse.lastToday')
-        : tn(pulse.daysSinceLast, 'hub.pulse.lastDaysOne', 'hub.pulse.lastDays')
-    );
-  }
-  body.appendChild(h(`<p class="muted hub-card__facts">${esc(facts.join(' · '))}</p>`));
-
-  // Shelf coverage links into the Regal, because that is where the untouched
-  // games are — the number is only useful if it is one tap from acting on it.
-  if (pulse.neverPlayed > 0) {
-    const link = h(`<a class="hub-row hub-row--quiet">
-         <span class="hub-row__main"><span class="hub-row__sub">${esc(t('hub.pulse.coverage', { n: pulse.neverPlayed, total: pulse.shelfSize }))}</span></span>
-         <i class="ti ti-chevron-right hub-row__go" aria-hidden="true"></i>
-       </a>`);
-    navLink(link, roundPath(round.id, 'regal'), () => showRound(round.id, 'regal'));
-    body.appendChild(link);
-  }
-  return card;
-}
-
-/* d) Kümmerliste — gaps that quietly degrade other features, each row a link to
-   the screen that fixes it.
-
-   Guarded on `game.edit` even though every grantee role clears that floor today,
-   for the reason the discard control above states: the routes behind these fixes
-   decide on a capability, so the card that points at them asks the same
-   question — a re-tightening tomorrow then removes the card instead of leaving
-   a list of things the reader is not allowed to do. */
-function hubCareCard(round, activeGames) {
-  if (!roundCan(round, 'game.edit')) return null;
-  const list = careList(round, activeGames, hubDeps());
-  if (list.empty) return null;
-  const card = hubCard('ti-tool', t('hub.care.title'));
-  const body = card.querySelector('.hub-card__body');
-
-  const section = (total, one, many, rows, label, href, go) => {
-    if (!total) return;
-    body.appendChild(h(`<div class="hub-care__head">${esc(tn(total, one, many))}</div>`));
-    rows.forEach((item) => {
-      const row = h(`<a class="hub-row hub-row--quiet">
-           <span class="hub-row__main"><span class="hub-row__sub">${esc(label(item))}</span></span>
-           <i class="ti ti-chevron-right hub-row__go" aria-hidden="true"></i>
-         </a>`);
-      navLink(row, href(item), () => go(item));
-      body.appendChild(row);
-    });
-  };
-
-  // The winnerless rows first: a played evening with no winner leaves the
-  // standings, the win rate and the member records untouched, so it is the gap
-  // that costs the most and the one nothing else on any screen mentions.
-  section(
-    list.winnerlessTotal, 'hub.care.winnerOne', 'hub.care.winner', list.winnerless,
-    (s) => {
-      const g = round.games.find((x) => x.id === s.chosenGameId);
-      return g ? t('hub.care.winnerRow', { game: g.title, when: fmtDate(s.createdAt) }) : fmtDate(s.createdAt);
-    },
-    (s) => resultsPath(round.id, s.id),
-    (s) => showResults(round, s)
-  );
-  section(
-    list.noRangeTotal, 'hub.care.rangeOne', 'hub.care.range', list.noRange,
-    (g) => g.title, (g) => gamePath(round.id, g.id), (g) => showGameDetail(round.id, g.id)
-  );
-  section(
-    list.coverlessTotal, 'hub.care.coverOne', 'hub.care.cover', list.coverless,
-    (g) => g.title, (g) => gamePath(round.id, g.id), (g) => showGameDetail(round.id, g.id)
-  );
-  return card;
-}
-
-/* e) „Heute vor einem Jahr" — rare by construction: on 364 days of the year
-   this returns null and nothing is rendered at all. */
-function hubAnniversaryCard(round) {
-  const found = anniversary(round, {}, hubDeps());
-  if (!found) return null;
-  const { session, game, years } = found;
-  const card = hubCard('ti-confetti', tn(years, 'hub.anniv.yearsOne', 'hub.anniv.years'));
-  // Winners resolve against the session's OWN people, so a guest winner is named
-  // and marked here exactly as on the ticket above (#458).
-  const people = sessionPeople(round, session);
-  const names = (session.winnerIds || [])
-    .map((wid) => personLabel(people.find((p) => p.id === wid)))
-    .filter(Boolean);
-  const row = h(`<a class="hub-row">
-       <span class="hub-row__main">
-         <span class="hub-row__title">${esc(game.title)}</span>
-         <span class="hub-row__sub">${names.length ? esc(t('result.winners', { names: joinNames(names) })) : (endingText(session) || esc(fmtDate(session.createdAt)))}</span>
-       </span>
-       <i class="ti ti-chevron-right hub-row__go" aria-hidden="true"></i>
-     </a>`);
-  navLink(row, resultsPath(round.id, session.id), () => showResults(round, session));
-  card.querySelector('.hub-card__body').appendChild(row);
-  return card;
-}
-
-/* f) Empfehlungs-Teaser — one or two rows from the recommendations screen
-   (#682), which below 1280px is reachable only from the desktop rail and is
-   therefore effectively invisible on a phone.
-
-   FETCHED AFTER FIRST PAINT, never in showRound's Promise.all: the route does a
-   full getRound plus the corpus join, so putting it on the critical path would
-   double the round read for a card that is often empty.
-
-   It answers 200 with an empty list — not 404 — for a round below the profile
-   floor, an instance with no corpus, and an instance with no BGG_API_TOKEN. All
-   three, and any error at all, degrade to rendering nothing; the reader loses a
-   teaser they never knew was coming.
-
-   The reason lines go through `recReasonText`, the recommendations screen's own
-   phrasing of the server's terms. A second opinion here is precisely the drift
-   .claude/rules/shared-constants-across-the-stack.md exists for. */
-async function renderRecoTeaser(rid, grid) {
-  let data;
-  try { data = await api('GET', `/api/rounds/${rid}/recommendations`); }
-  catch { return; }
-  const recs = (data && data.recommendations) || [];
-  if (!recs.length) return;
-  // The tab may have been left while the fetch was in flight — a re-render, a
-  // tab switch, a navigation. The grid is then detached and appending to it
-  // would build a card nobody can ever see, on top of a round that may not even
-  // be on screen any more.
-  if (!grid.isConnected) return;
-  const card = hubCard('ti-sparkles', t('suggest.title'));
-  const body = card.querySelector('.hub-card__body');
-  recs.slice(0, 2).forEach((rec) => {
-    const why = (rec.reasons || []).map(recReasonText).filter(Boolean)[0] || '';
-    const row = h(`<div class="hub-row hub-row--static">
-         <span class="hub-row__main">
-           <span class="hub-row__title">${esc(rec.title)}</span>
-           ${why ? `<span class="hub-row__sub">${esc(why)}</span>` : ''}
-         </span>
-       </div>`);
-    body.appendChild(row);
-  });
-  const more = h(`<a class="hub-row hub-row--quiet">
-       <span class="hub-row__main"><span class="hub-row__sub">${esc(t('hub.reco.more'))}</span></span>
-       <i class="ti ti-chevron-right hub-row__go" aria-hidden="true"></i>
-     </a>`);
-  navLink(more, roundPath(rid, 'recommendations'), () => showRecommendations(rid));
-  body.appendChild(more);
-  grid.appendChild(cardSlot(card));
-  // This card is content, so the #869 stand-in above is no longer standing in
-  // for an empty pane. It was rendered before the fetch resolved — the only
-  // ordering available for something deliberately kept off the critical path.
-  const gap = grid.parentNode && grid.parentNode.querySelector('.empty--rail-gap');
-  if (gap) gap.remove();
 }

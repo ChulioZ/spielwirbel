@@ -717,8 +717,11 @@ public/
                      (Freundeskreis / Entdecken / news) — plus new round
     views-round.js        round hub SHELL: the Start/Regal/Chronik/Pokale tab
                           strip, the round fetch, the inline round-name editor
-    views-round-start.js  Start tab: hero, the one big CTA and its quick-start
-                          chips, the tickets, and the derived card grid (#923)
+    views-round-start.js  Start tab: hero, the one big CTA, the tickets, and
+                          what the tab composes below them (#923)
+    hub-cards.js          the Start tab's card renderers, their shared frame and
+                          the quick-start chips, split out of the above at its
+                          own #923 seam (issue #1189)
     hub-previews.js       the hub's previews of Regal, Pokale and Chronik, and
                           its „Nicht im Regal" group (issue #1185)
     views-regal.js        Regal tab: the games library (search, filters, grid)

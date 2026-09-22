@@ -56,6 +56,23 @@
   --radius-md: 4px;
   --radius-lg: 6px;
   --radius-xl: 8px;
+
+  /* ---- Maße (#1189). --dock-clearance follows the dock's own 86px bar (T2.6)
+     plus the gap the phone layout leaves under it.
+
+     THE RAIL KEEPS THE APP'S SHIPPED 260px, and T3.2's 216 is deliberately not
+     taken. That number is drawn for the sheet's rail, which holds five links
+     and nothing else — the CTA and the preset chips are on the felt band there.
+     This design keeps them in the rail (see the deviation note further down),
+     and at 216 the three longest labels wrap: „Session wirbeln" onto two lines,
+     „Durchgespielt (0)" and „Wunschliste (0)" likewise. A width is a function of
+     what the column holds, so taking the sheet's number without its composition
+     is how a measurement becomes a defect.
+
+     Geometry, so unconditional — this applies in a light round too, where the
+     colours below do not. A clearance that changed with the scheme would move
+     the page's foot on entering a round. */
+  --dock-clearance: 104px;
 }
 
 /* The design's COLOURS, and the gate is load-bearing rather than tidy.
@@ -189,6 +206,40 @@
      4.17:1, so the fill darkens until it carries paper at AA. */
   --felt-chip-on: #3f6a48;
 
+  /* The weave the felt is ruled with (#1189, T2.1/T3.2). DARKENING, and the
+     package's is not: T2.1 rules the stage with rgba(255,255,255,.035), and on
+     Tannenfilz's light stop that grained pixel puts --felt-ink-soft at 4.43:1
+     — under AA, measured. A darker weave reads the same and can only ever ADD
+     contrast for a light ink, which is also what keeps every felt pair already
+     in test/a11y-contrast.test.js valid: the ungrained stop stays the worst
+     case by construction. Same choice #1188 made for --wood-grain. */
+  --felt-grain: rgba(0, 0, 0, 0.07);
+
+  /* The brass PLATE's light stop (#1189). T1 paints every primary surface —
+     the CTA, the active rail row, the active dock entry, a round's name plate —
+     as `linear-gradient(180deg, #f6d795, #d9a951)`, i.e. this over --brand.
+     A gradient, not a flat fill, because the plate is meant to read as a milled
+     piece of metal catching the light; the flat --brand alone reads as a
+     coloured rectangle. --on-accent measures 12.06:1 here and 7.80:1 on the
+     deep stop, and the rim --gold-edge is 3.28:1 on it. */
+  --brass-hi: #f6d795;
+
+  /* THE PLATE'S DEEP STOP IS --gold-deep AND NOT --brand, although the two hold
+     the same hex today. Measured in a browser on the lobby (#1189): a round
+     still wearing a WORLD writes that world's accent as an inline --brand on
+     its own tile (views-home.js, #903), so a plate built on --brand came out
+     brass-to-GREEN on a Forest round — the design's one "this is the thing
+     itself" surface, tinted by whichever round it happened to be on. Inside a
+     dark world round the same would reach the hub CTA. --gold-deep is a design
+     token no round can write, so the metal is the design's everywhere. */
+
+  /* T1's Zinnober — „laufende Abstimmung, Gefahr, Marke". The one place #1189
+     needs it is the „Abstimmung läuft" kicker, which sits on a PAPER card
+     (T3.1/T6.1), so it is measured against both paper grounds (5.58:1 and
+     5.02:1) rather than against wood. --danger is this hue's LIGHT member and
+     is the one that goes on wood; the two are not interchangeable. */
+  --accent-deep: #ab3c22;
+
   /* ---- Papier. The one place Der Tisch inverts its own scheme: an overlay is
      a printed card laid on the table, so a sheet, dialog, popover and menu are
      light on a dark app. Declared as tokens HERE rather than as literals on
@@ -274,10 +325,27 @@
 /* The footer's rows are 32 px, per the same finding. */
 :root[data-design="tisch"] .site-footer a { line-height: 32px; }
 
+/* THE COMPONENT RULES BELOW ARE SCHEME-GATED TOO, and #1188 shipped five of
+   them ungated (corrected in #1189). The token rule
+   (.claude/rules/design-colour-blocks-are-scheme-gated.md) is about the token
+   BLOCK; it applies just as hard to a rule that READS one of those tokens,
+   because in a light round the block does not match and the token does not
+   exist. `background: var(--felt)` is then invalid, and the sharpest case is
+   the overlay below: `--surface: var(--paper)` makes --surface invalid at
+   computed-value time, so every descendant reading it falls back to `unset` —
+   a sheet with transparent fills, on a light round, under Der Tisch.
+
+   `.link-btn`, `.site-footer a` and `.toast button` stay UNGATED on purpose:
+   finding A7 is a 24px target, i.e. pure geometry with no token in it, and it
+   belongs to the design's voice like the fonts and the radii.
+
+   test/tisch-hub-lobby.test.js derives this rather than listing it: a rule
+   referencing a token declared only in the gated block must itself be gated. */
+
 /* T1.10: the BGG badge is artwork with its own light ground, so on wood it sits
    on a carrier rather than straight on the page. Without this the badge's own
    white lettering lands on Nussbaum and its logo loses its edge entirely. */
-:root[data-design="tisch"] .site-footer__bgg {
+:root[data-design="tisch"][data-scheme="dark"] .site-footer__bgg {
   background: var(--ink);
   border-radius: var(--radius-sm);
   padding: 4px 6px;
@@ -287,7 +355,7 @@
    and brings its own gradient — see
    .claude/rules/cover-ph-owns-the-coverless-game-glyph.md — so the tone has to
    be replaced here rather than left to --placeholder, which never paints there. */
-:root[data-design="tisch"] .cover-ph {
+:root[data-design="tisch"][data-scheme="dark"] .cover-ph {
   background:
     repeating-linear-gradient(
       92deg,
@@ -299,15 +367,15 @@
 /* Felt: the table surface the hub and the dock sit on. The gradient is T8.1's
    own — a radial from the light stop to the deep one — and the ink on it is
    paper, never gold (finding A1). */
-:root[data-design="tisch"] .tafel {
+:root[data-design="tisch"][data-scheme="dark"] .tafel {
   background: radial-gradient(120% 130% at 40% -10%, var(--felt), var(--felt-deep) 74%);
   color: var(--felt-ink);
 }
 
 /* An active chip ON felt takes the darkened fill, not the felt's own tone
    (finding A3). Off felt the chip follows --brand like every other design. */
-:root[data-design="tisch"] .tafel .chip[aria-pressed="true"],
-:root[data-design="tisch"] .tafel .chip.is-on {
+:root[data-design="tisch"][data-scheme="dark"] .tafel .chip[aria-pressed="true"],
+:root[data-design="tisch"][data-scheme="dark"] .tafel .chip.is-on {
   background: var(--felt-chip-on);
   color: var(--felt-ink);
   border-color: var(--control-edge);
@@ -324,10 +392,10 @@
  * its ink stays dark in both. Pointing it at the paper family put a near-white
  * #fdf4e4 on brass at 1.97:1 — measured, by the paper check in
  * test/a11y-contrast.test.js. */
-:root[data-design="tisch"] .sheet,
-:root[data-design="tisch"] .dialog,
-:root[data-design="tisch"] .popover,
-:root[data-design="tisch"] .menu {
+:root[data-design="tisch"][data-scheme="dark"] .sheet,
+:root[data-design="tisch"][data-scheme="dark"] .dialog,
+:root[data-design="tisch"][data-scheme="dark"] .popover,
+:root[data-design="tisch"][data-scheme="dark"] .menu {
   --surface: var(--paper);
   --control-fill: var(--paper-raised);
   --ink: var(--paper-ink);
@@ -336,4 +404,626 @@
   --placeholder: var(--paper-faint);
   background: linear-gradient(180deg, var(--paper), var(--paper-raised));
   color: var(--ink);
+}
+
+/* ===========================================================================
+   #1189 — the round HUB and the LOBBY, at 390 and at 1440.
+
+   Sources: Tisch-T2-Phone-Kern.dc.html (T2.1 Hub oben, T2.2 Hub unten, T2.6
+   Dock), Tisch-T3-Runde-Desktop.dc.html (T3.1 Lobby, T3.2 Hub) and
+   Tisch-T6-Phone-Rest.dc.html (T6.1 Lobby).
+
+   EVERY rule below is qualified with [data-scheme="dark"], and that is not
+   symmetry with the token block above — it is the same load-bearing gate for
+   the same reason. A round on a light palette still writes its own page inline
+   and clears the scheme (.claude/rules/design-colour-blocks-are-scheme-gated.md),
+   and these rules reference --felt, --paper and --brass-hi, which are declared
+   ONLY in the dark block. Ungated, a light round would get the felt stage's
+   geometry with none of its colours — a bleeding, border-less band of bare page
+   with the seats arced over nothing — and, worse, the overlay's re-pointed
+   --surface would go invalid at computed-value time and take every sheet's
+   fills with it. Gated, such a round keeps today's hub exactly.
+
+   NO LITERALS ANYWHERE BELOW — not a hex, not an rgba(), not a color-mix().
+   test/design-layer.test.js sweeps for all three outside the root blocks,
+   because the contrast harness reads only those blocks and a colour here would
+   ship unmeasured.
+   =========================================================================== */
+
+/* The weave, as a token-only value so the gradient carries no literal. Declared
+   as its own custom property rather than inlined because `repeating-linear-
+   gradient` needs the alpha twice and a var() is the only way to say it once. */
+:root[data-design="tisch"][data-scheme="dark"] .hero,
+:root[data-design="tisch"][data-scheme="dark"] .round-card,
+:root[data-design="tisch"][data-scheme="dark"] .dock {
+  --felt-weave: repeating-linear-gradient(48deg, var(--felt-grain) 0 2px, transparent 2px 5px);
+}
+
+/* --- The felt stage (T2.1, T3.2) ------------------------------------------
+   The round's table, as the top of its own screen. `.hero` already holds the
+   three things the stage carries — the round's name, its seats and its counts
+   — so the stage is that element given a ground rather than a new block in the
+   markup.
+
+   It BLEEDS: the negative inline margin cancels `.app`'s own padding so the
+   felt reaches the column's edges instead of floating as a card, which is what
+   makes it read as a surface the app sits on. The 520px block below re-states
+   it against the narrow padding; the two numbers have to move together. */
+:root[data-design="tisch"][data-scheme="dark"] .hero {
+  position: relative;
+  margin: -24px -20px 22px;
+  padding: 16px 20px 26px;
+  /* The marker IS the felt (#1187): a round paints its own table. --marker is
+     on :root inside a round and absent everywhere else, so the fallback is the
+     design's default felt — which is also the right answer for a round still
+     wearing a world, where markerColors() returns null by design. */
+  background:
+    var(--felt-weave),
+    radial-gradient(120% 130% at 50% -10%, var(--marker, var(--felt)), var(--marker-deep, var(--felt-deep)) 74%);
+  color: var(--felt-ink);
+  /* The table's rim. T2.1 draws 12px and T3.2 draws 5px; 5 is the value that
+     ships at both widths, because T2.1's 12 is measured on a 250px stage that
+     fills a third of the screen and this one is content-height. */
+  border-bottom: 5px solid var(--gold-edge);
+  box-shadow: inset 0 -14px 26px var(--cast-deep);
+}
+/* The round's name, in the design's display face at the stage's own size. */
+:root[data-design="tisch"][data-scheme="dark"] .hero h1 {
+  font-size: var(--text-3xl);
+  color: var(--felt-ink);
+}
+/* The counts stop being chips and become T2.1's one kicker line: „6 Mitglieder ·
+   12 Spiele · 23 Sessions". A chip is a control's shape, and these are not
+   controls — on felt they read as two buttons that do nothing. The separator is
+   generated, so the DOM keeps two independent chips and a locale that needs a
+   different order is unaffected. --felt-ink-soft measures 4.79:1 on the light
+   stop (the ungrained worst case; the weave darkens). */
+:root[data-design="tisch"][data-scheme="dark"] .hero__chips {
+  gap: 0;
+  margin-top: 10px;
+  font-size: var(--text-sm);
+  color: var(--felt-ink-soft);
+}
+:root[data-design="tisch"][data-scheme="dark"] .hero__chips .stat-chip {
+  background: none;
+  padding: 0;
+  color: inherit;
+}
+:root[data-design="tisch"][data-scheme="dark"] .hero__chips .stat-chip + .stat-chip::before {
+  content: '·';
+  margin: 0 8px;
+}
+:root[data-design="tisch"][data-scheme="dark"] .hero__chips .ti { color: var(--gold); }
+
+/* --- The seats, as an arc on the table's edge (T2.1) ----------------------
+   The one gesture on this screen that CSS cannot derive on its own: the offset
+   of a seat depends on how many seats there are. views-round-start.js writes a
+   design-NEUTRAL `--seat-i` per seat and `--seat-n` on the row (the same shape
+   markerStyle() uses); nothing in styles.css reads either, so Klassisch's strip
+   is the flex line it has always been.
+
+   sin() over (i + 0.5) / n gives the bulge: the outermost seats sit on the
+   line, the middle ones ride up. `--seat-i` is a GLOBAL index, so a row that
+   wraps (a round may hold 50 members) carries the tail of the same curve onto
+   its second line rather than starting a new arc — a gentle stagger, which is
+   the right degradation. Do not "fix" it into one arc per line: two arcs read
+   as two tables. */
+:root[data-design="tisch"][data-scheme="dark"] .hero__members {
+  gap: 10px;
+  margin-top: 18px;
+  padding-bottom: 14px;
+}
+:root[data-design="tisch"][data-scheme="dark"] .hero__members > * {
+  transform: translateY(calc(-14px * sin(calc((var(--seat-i, 0) + 0.5) / var(--seat-n, 1) * 180deg))));
+}
+/* A seat is a piece on the table, so it takes the gold ring T2.1 draws rather
+   than the page-coloured cut-out `.avatar` wears on a card. */
+:root[data-design="tisch"][data-scheme="dark"] .hero__members .avatar {
+  width: 44px;
+  height: 44px;
+  font-size: 15px; /* glyph, not type */
+  border-color: var(--gold);
+  box-shadow: var(--shadow-2);
+}
+/* The „+" seat keeps the dashed treatment that means "free", in the felt's own
+   inks — --placeholder is a wood tone and disappears on green. It carries no
+   visible caption in the app (its name is its aria-label), so the bar here is
+   SC 1.4.11's 3:1 for a control boundary, not 4.5:1 for text: --gold is 4.20:1
+   on the felt's light stop and --felt-ink 5.38:1. */
+:root[data-design="tisch"][data-scheme="dark"] .hero__members .avatar--add {
+  background: none;
+  border-color: var(--gold);
+  color: var(--felt-ink);
+}
+:root[data-design="tisch"][data-scheme="dark"] .hero__members .avatar--add:hover {
+  color: var(--gold);
+  border-color: var(--gold);
+}
+:root[data-design="tisch"][data-scheme="dark"] .hero__members .avatar--retired {
+  box-shadow: none;
+  border-color: var(--control-edge);
+}
+
+/* --- The one action, as a brass plate (T2.1, T3.2) ------------------------
+   Scoped to the two elements that ARE this action — the hub's CTA and the
+   rail's copy of it — and not to `.btn--primary`, which would repaint every
+   primary button in the app. Those belong to the screens that hold them
+   (#1190-#1200).
+
+   The hard 3px edge under the plate is what makes it read as a milled piece
+   sitting proud of the table rather than as a coloured rectangle. */
+:root[data-design="tisch"][data-scheme="dark"] .hub-cta,
+:root[data-design="tisch"][data-scheme="dark"] .rail__cta {
+  min-height: 60px;
+  background: linear-gradient(180deg, var(--brass-hi), var(--gold-deep));
+  border: 1px solid var(--gold-edge);
+  color: var(--on-accent);
+  box-shadow: 0 3px 0 var(--gold-edge), var(--shadow-2);
+}
+:root[data-design="tisch"][data-scheme="dark"] .hub-cta:hover:not(:disabled),
+:root[data-design="tisch"][data-scheme="dark"] .rail__cta:hover:not(:disabled) {
+  background: linear-gradient(180deg, var(--brass-hi), var(--brass-hi));
+}
+/* Pressed: the plate sinks onto the table and its edge goes with it. */
+:root[data-design="tisch"][data-scheme="dark"] .hub-cta:active:not(:disabled),
+:root[data-design="tisch"][data-scheme="dark"] .rail__cta:active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 var(--gold-edge);
+}
+
+/* The quick-start presets, ON the stage. Finding A1 decides the ink: gold is
+   4.20:1 on the felt's light stop, so a chip label is --felt-ink and gold is
+   left to the glyph — measured 5.32:1 on the rendered chip.
+
+   The fill is --felt-chip-on, the darkened tone finding A3 tuned so paper
+   clears AA on it. T2.1 draws one of the three chips in brass, which reads as a
+   selected state the app does not have: a preset is a one-shot that opens the
+   session setup already narrowed, and nothing is ever "on". So brass is the
+   HOVER here instead, which is the state that does exist. */
+:root[data-design="tisch"][data-scheme="dark"] .hub-presets .chip {
+  background: var(--felt-chip-on);
+  border-color: var(--gold);
+  color: var(--felt-ink);
+}
+:root[data-design="tisch"][data-scheme="dark"] .hub-presets .chip:hover {
+  background: linear-gradient(180deg, var(--brass-hi), var(--gold-deep));
+  border-color: var(--gold-edge);
+  color: var(--on-accent);
+}
+
+/* --- The dock, as the table's edge (T2.6) ---------------------------------
+   Not a floating pill above the page but the bottom of the screen: the felt
+   runs to all three edges and the brass rim closes it at the top, so a phone
+   reads the app as a table you are sitting at.
+
+   86px tall with 58px entries, icon AND word — T2.6 states all three, and the
+   word is what stops the four entries from being a rebus. */
+:root[data-design="tisch"][data-scheme="dark"] .dock {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  transform: none;
+  gap: 0;
+  height: 86px;
+  align-items: flex-start;
+  padding: 8px 6px 0;
+  background:
+    var(--felt-weave),
+    linear-gradient(180deg, var(--felt), var(--felt-deep));
+  border: 0;
+  border-top: 3px solid var(--gold-edge);
+  border-radius: 0;
+  box-shadow: 0 -10px 24px var(--cast-deep);
+}
+:root[data-design="tisch"][data-scheme="dark"] .dock__item {
+  flex: 1;
+  min-width: 44px;
+  min-height: 58px;
+  justify-content: center;
+  gap: 3px;
+  padding: 0 4px;
+  border-radius: var(--radius-md);
+  /* Finding A1 again, and the dock's 12px labels are the case it was written
+     for: paper on felt, never gold. 5.38:1 on the light stop. */
+  color: var(--felt-ink);
+}
+:root[data-design="tisch"][data-scheme="dark"] .dock__item.is-active {
+  background: linear-gradient(180deg, var(--brass-hi), var(--gold-deep));
+  color: var(--on-accent);
+}
+:root[data-design="tisch"][data-scheme="dark"] .dock__item:not(.is-active):hover {
+  background: var(--felt-chip-on);
+}
+
+/* --- The lobby: felt strips on a phone (T6.1) -----------------------------
+   Each round is its own small table: a felt head carrying the name plate, the
+   seats and the counts, closed by a brass edge, with a paper slip under it
+   saying what was played last. The emblem the app's tile leads with goes —
+   the felt IS the round's colour here, so a second swatch of the same hex
+   beside it says nothing. */
+:root[data-design="tisch"][data-scheme="dark"] .round-card {
+  align-items: stretch;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+  background:
+    var(--felt-weave),
+    radial-gradient(120% 130% at 40% -10%, var(--marker, var(--felt)), var(--marker-deep, var(--felt-deep)) 74%);
+  border: 0;
+  color: var(--felt-ink);
+  box-shadow: var(--shadow-2);
+}
+:root[data-design="tisch"][data-scheme="dark"] .round-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-3);
+}
+/* The emblem goes on a phone: the felt strip IS the round's colour, so a second
+   swatch of the same hex beside it says nothing. From 1100px up it comes back
+   as the table itself — see the block further down. */
+:root[data-design="tisch"][data-scheme="dark"] .round-card__emblem,
+:root[data-design="tisch"][data-scheme="dark"] .round-card__chev { display: none; }
+:root[data-design="tisch"][data-scheme="dark"] .round-card__body {
+  gap: 8px;
+  padding: 14px 16px;
+}
+/* The name on its brass plate, exactly the CTA's metal — one plate treatment
+   for everything this design wants read as "the thing itself". */
+:root[data-design="tisch"][data-scheme="dark"] .round-card__name {
+  align-self: flex-start;
+  background: linear-gradient(180deg, var(--brass-hi), var(--gold-deep));
+  color: var(--on-accent);
+  border-radius: var(--radius-sm);
+  padding: 5px 11px;
+}
+:root[data-design="tisch"][data-scheme="dark"] .round-card__shared {
+  background: var(--felt-chip-on);
+  color: var(--felt-ink);
+}
+:root[data-design="tisch"][data-scheme="dark"] .round-card__meta { gap: 8px; }
+:root[data-design="tisch"][data-scheme="dark"] .round-card .avatar {
+  border-color: var(--gold);
+}
+:root[data-design="tisch"][data-scheme="dark"] .round-card .avatar-stack__more {
+  background: var(--felt-chip-on);
+  color: var(--felt-ink);
+}
+:root[data-design="tisch"][data-scheme="dark"] .round-card .stat-chip {
+  background: none;
+  padding: 0;
+  color: var(--felt-ink-soft);
+}
+/* The paper slip. It leaves the body's padding with a negative margin so it
+   reaches the tile's edges — a strip of printed card under the felt, which is
+   what T6.1 draws and what makes the two halves read as different materials
+   rather than as one box with a lighter stripe. */
+:root[data-design="tisch"][data-scheme="dark"] .round-card__last {
+  margin: 6px -16px -14px;
+  padding: 10px 14px;
+  min-height: 44px;
+  border-top: 3px solid var(--gold-edge);
+  background: linear-gradient(180deg, var(--paper), var(--paper-raised));
+  color: var(--paper-ink);
+}
+:root[data-design="tisch"][data-scheme="dark"] .round-card__last .ti { color: var(--gold-edge); }
+:root[data-design="tisch"][data-scheme="dark"] .round-card__last--plain .ti { color: var(--paper-faint); }
+
+/* „Neue Runde gründen" keeps the dashed outline it already has, in the
+   design's own gold rather than the brand tint. */
+:root[data-design="tisch"][data-scheme="dark"] .round-card--new {
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  min-height: 56px;
+  padding: 14px;
+  background: none;
+  border: 2px dashed var(--gold-edge);
+  color: var(--gold);
+  box-shadow: none;
+}
+:root[data-design="tisch"][data-scheme="dark"] .round-card--new:hover {
+  background: var(--sunken);
+  border-color: var(--gold);
+  transform: none;
+}
+
+/* --- The „Abstimmung läuft" notice (T3.1, T6.1) ---------------------------
+   A vote already running is the one thing on the lobby that is not a
+   destination but an appointment, so it is printed on paper and laid on the
+   table. Zinnober carries the kicker — 5.58:1 on --paper — which is the value
+   T1 declares for exactly this ("laufende Abstimmung"). */
+:root[data-design="tisch"][data-scheme="dark"] .home-resume .ticket {
+  background: linear-gradient(180deg, var(--paper), var(--paper-raised));
+  border-color: var(--paper-edge);
+  color: var(--paper-ink);
+  box-shadow: var(--shadow-3);
+}
+:root[data-design="tisch"][data-scheme="dark"] .home-resume .ticket--live {
+  box-shadow: inset 3px 0 0 0 var(--accent-deep), var(--shadow-3);
+}
+:root[data-design="tisch"][data-scheme="dark"] .home-resume .ticket__label,
+:root[data-design="tisch"][data-scheme="dark"] .home-resume .ticket--live .ticket__label {
+  color: var(--accent-deep);
+}
+:root[data-design="tisch"][data-scheme="dark"] .home-resume .ticket__meta,
+:root[data-design="tisch"][data-scheme="dark"] .home-resume .ticket__names {
+  color: var(--paper-ink-soft);
+}
+:root[data-design="tisch"][data-scheme="dark"] .home-resume .ticket__stub {
+  color: var(--paper-ink);
+  border-left-color: var(--paper-edge);
+}
+:root[data-design="tisch"][data-scheme="dark"] .home-resume .ticket__stub .ti { color: var(--gold-edge); }
+
+/* --- „Nicht im Regal" (#1185) ---------------------------------------------
+   One heading over the four off-shelf destinations, at every width. Set in the
+   design's uppercase kicker rather than the app's muted label, so the group
+   reads as a printed section head on the wood. */
+:root[data-design="tisch"][data-scheme="dark"] .hub-offshelf__title {
+  font-family: var(--font-display);
+  letter-spacing: .12em;
+  color: var(--ink-soft);
+}
+
+/* --- Narrow: the stage's bleed follows `.app`'s own padding ---------------
+   Two numbers that have to move together: `.app` drops to 16/14 below 520px,
+   so the stage's negative margin does too, or the felt stops short of the
+   screen edge by 6px on exactly the width the design was drawn for. */
+@media (max-width: 520px) {
+  :root[data-design="tisch"][data-scheme="dark"] .hero {
+    margin: -16px -14px 22px;
+    padding: 14px 14px 24px;
+  }
+}
+
+/* --- Desktop: the round tables in the lobby (T3.1) ------------------------
+   Above 1100px a round stops being a row and becomes what it is: a table in a
+   café, seen from above. The felt disc carries the round's marker, the seats
+   sit on its rim, the name is a brass plate laid in the middle, and the paper
+   slip with the last game is dropped at its foot.
+
+   1100 rather than 1280: home renders no rail, so the lobby's own grid is the
+   only thing deciding this width, and at 1100 it already fits three 268px
+   tables with room to spare. */
+@media (min-width: 1100px) {
+  :root[data-design="tisch"][data-scheme="dark"] .lobby-list {
+    grid-template-columns: repeat(auto-fill, minmax(268px, 1fr));
+    gap: 30px 20px;
+  }
+  /* --ring-r is the seat ring's radius and --table-y the disc's centre; both
+     are read by the seat rule below, so a bigger table needs one edit. */
+  :root[data-design="tisch"][data-scheme="dark"] .round-card {
+    --table-d: 244px;
+    --table-y: 170px;
+    --ring-r: 130px;
+    position: relative;
+    isolation: isolate;
+    display: block;
+    height: 392px;
+    overflow: visible;
+    background: none;
+    box-shadow: none;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .round-card:hover { transform: none; box-shadow: none; }
+  /* The table itself is the EMBLEM, grown — not a pseudo-element on the card.
+     Measured in a browser (#1189): `:is(.theme-card, .round-card)[data-world]::before`
+     is the world motif's slot on a lobby tile, at `opacity: .14; z-index: -1`,
+     so a disc drawn there came out 14% transparent and behind the card on every
+     round still wearing a world. Two of four tiles on the demo lobby.
+
+     The emblem is the better host anyway: it already IS the round's colour mark
+     — a 56px swatch filled from --marker — so growing it into the table says
+     the same thing at the size this screen wants, and the world keeps its
+     motif slot. Its inline `background` (views-home.js writes the flat marker
+     there) needs no fighting: the ::before below covers the whole box. What it
+     DOES need is the radius, or the inline fill shows at the square's corners.
+
+     The brass rim is the classic transparent-border trick: the felt paints to
+     the padding box and the metal to the border box, so one node gives a ring
+     and a disc with no inset shadow fighting the gradient. */
+  :root[data-design="tisch"][data-scheme="dark"] .round-card__emblem {
+    display: block;
+    position: absolute;
+    /* BELOW the card's own content, and the pair is one decision. A positioned
+       box paints after in-flow content, so at `z-index: auto` the table covered
+       the name plate and the counts outright — boxes in the right places,
+       nothing visible, which reads as the text having failed to render.
+       `isolation` on the card is what makes -1 safe: it bounds the negative
+       index to this card's stacking context, so the disc can never slide behind
+       the lobby or the page. The world motif's own ::before sits at -1 in the
+       same context and, being the first child, paints under the disc. */
+    z-index: -1;
+    left: 50%;
+    top: var(--table-y);
+    width: var(--table-d);
+    height: var(--table-d);
+    margin: calc(var(--table-d) / -2) 0 0 calc(var(--table-d) / -2);
+    border-radius: 50%;
+  }
+  /* The design glyph goes: the brass plate sits exactly where it was. */
+  :root[data-design="tisch"][data-scheme="dark"] .round-card__emblem .ti { display: none; }
+  :root[data-design="tisch"][data-scheme="dark"] .round-card__emblem::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    box-sizing: border-box;
+    border: 11px solid transparent;
+    border-radius: 50%;
+    background:
+      var(--felt-weave) padding-box,
+      radial-gradient(120% 90% at 50% 32%, var(--marker, var(--felt)), var(--marker-deep, var(--felt-deep)) 76%) padding-box,
+      linear-gradient(180deg, var(--gold-deep), var(--gold-edge)) border-box;
+    box-shadow: var(--shadow-3), inset 0 8px 20px var(--cast-deep);
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .round-card:hover .round-card__emblem::before { box-shadow: var(--shadow-3), inset 0 8px 20px var(--cast-soft); }
+  /* The name plate and the counts under it STACK IN FLOW rather than each being
+     placed on the table, and that is a correction rather than a preference: the
+     plate is centred on the disc, so its top edge depends on how many lines the
+     round's name takes, and a separately-placed counts row cannot know. Measured
+     — „Spieleabend (Demo)" wraps to two lines, putting the plate's foot at y=201
+     and the counts at y=192, printed through each other. In flow they can only
+     ever follow it.
+
+     `.round-card__body` therefore stays STATIC, which is also what keeps it from
+     becoming the seats' containing block: `.avatar-stack` is `display: contents`,
+     so each seat resolves against `.round-card` and rides the rim. Giving the
+     body a `position` here is the one edit that breaks the ring. */
+  :root[data-design="tisch"][data-scheme="dark"] .round-card__body {
+    align-items: center;
+    text-align: center;
+    gap: 7px;
+    /* Starts the pair a little above the disc's centre so it reads as centred
+       ON the table at one line, and grows downward from there at two. */
+    padding: calc(var(--table-y) - 30px) 0 0;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .round-card .avatar-stack { display: contents; }
+  /* `align-self` is RESET, not merely re-stated: the phone strip hugs its plate
+     to the left edge, and an unset `align-self: flex-start` left it there when
+     the strip became a table — half of it off the card, measured. */
+  :root[data-design="tisch"][data-scheme="dark"] .round-card__name { align-self: center; max-width: 176px; }
+  :root[data-design="tisch"][data-scheme="dark"] .round-card__meta { justify-content: center; color: var(--felt-ink); }
+  /* The seats, on the rim. Same `--seat-i` / `--seat-n` pair the hub's arc
+     reads (views-home.js writes it here), around a full turn instead of along
+     a half one, starting at twelve o'clock. Absolutely positioned against the
+     card because both `.round-card__body` and `.avatar-stack` are `contents`
+     and therefore not containing blocks. */
+  :root[data-design="tisch"][data-scheme="dark"] .round-card .avatar-stack .avatar {
+    --seat-a: calc(var(--seat-i, 0) / var(--seat-n, 1) * 1turn - 0.25turn);
+    position: absolute;
+    left: calc(50% + var(--ring-r) * cos(var(--seat-a)));
+    top: calc(var(--table-y) + var(--ring-r) * sin(var(--seat-a)));
+    width: 46px;
+    height: 46px;
+    margin: -23px 0 0 -23px;
+    font-size: 15px; /* glyph, not type */
+    box-shadow: var(--shadow-2);
+  }
+  /* The slip, dropped at the table's foot with the small rotation T3.1 gives
+     it — a piece of paper that was put down, not printed in place. */
+  :root[data-design="tisch"][data-scheme="dark"] .round-card__last {
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    width: var(--table-d);
+    margin: 0;
+    transform: translateX(-50%) rotate(-1.2deg);
+    border: 0;
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-2);
+  }
+  /* The new-round table is the same disc, drawn as an empty place. */
+  :root[data-design="tisch"][data-scheme="dark"] .round-card--new {
+    height: 392px;
+    padding: 0;
+    border: 0;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .round-card--new::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: var(--table-y);
+    width: var(--table-d);
+    height: var(--table-d);
+    margin: calc(var(--table-d) / -2) 0 0 calc(var(--table-d) / -2);
+    box-sizing: border-box;
+    border: 3px dashed var(--gold-edge);
+    border-radius: 50%;
+    background: none;
+    box-shadow: none;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .round-card--new:hover::before { border-color: var(--gold); }
+  /* The label rides in the middle of that empty place rather than at the card's
+     own centre, which sits 26px lower. */
+  :root[data-design="tisch"][data-scheme="dark"] .round-card--new > * {
+    position: relative;
+    top: calc(var(--table-y) - 196px);
+  }
+}
+
+/* --- Desktop: the rail as the brass rail, the stage as the table (T3.2) ---
+   ONE DELIBERATE DEVIATION FROM THE SHEET, and it is worth stating because a
+   later slice may want to revisit it. T3.2 puts the seats, the CTA and the
+   presets together on a felt band spanning the content column. The app has put
+   the CTA and the presets in the RAIL since #923, with the pane's copies marked
+   `rail-owned`, and moving them back into the column is a DOM change with two
+   costs this issue should not pay: `.app > *` carries the content cap at this
+   width (a wrapper would have to be added to every one of those rules), and the
+   Start tab's single <h1> is the rail's copy of the round name (#638), so the
+   band cannot carry the name either.
+
+   What ships instead: the band is the table with the round's people on it, and
+   the rail is the table's edge — identity, the one action and the sections. The
+   hero is re-shown here (it is `rail-owned`, hence the specificity), minus the
+   name and counts the rail already carries, so neither is said twice. */
+@media (min-width: 1280px) {
+  :root[data-design="tisch"][data-scheme="dark"] .app .hero.rail-owned { display: block; }
+  :root[data-design="tisch"][data-scheme="dark"] .app .hero.rail-owned h1,
+  :root[data-design="tisch"][data-scheme="dark"] .app .hero.rail-owned .hero__chips { display: none; }
+  :root[data-design="tisch"][data-scheme="dark"] .hero {
+    margin: -24px 0 22px;
+    padding: 24px 30px 26px;
+    min-height: 150px;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .hero__members {
+    gap: 14px;
+    margin-top: 0;
+    padding-bottom: 0;
+  }
+  /* No arc at this width: T3.2 lines the seats up along the band's top edge,
+     which is what a table seen from the side looks like. The rule is reset
+     rather than left unmatched so a resize needs no re-render. */
+  :root[data-design="tisch"][data-scheme="dark"] .hero__members > * { transform: none; }
+  :root[data-design="tisch"][data-scheme="dark"] .hero__members .avatar {
+    width: 52px;
+    height: 52px;
+    font-size: 18px; /* glyph, not type */
+  }
+
+  :root[data-design="tisch"][data-scheme="dark"] .rail {
+    top: 74px;
+    padding: 22px 18px;
+    background: var(--sunken);
+    border-right: 3px solid var(--gold-edge);
+    border-radius: var(--radius-md);
+    gap: 16px;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .rail__name { font-size: var(--text-2xl); }
+  :root[data-design="tisch"][data-scheme="dark"] .rail__members { display: none; }
+  :root[data-design="tisch"][data-scheme="dark"] .rail__chips {
+    gap: 0;
+    font-size: var(--text-xs);
+    color: var(--ink-soft);
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .rail__chips .stat-chip {
+    background: none;
+    padding: 0;
+    color: inherit;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .rail__chips .stat-chip + .stat-chip::before {
+    content: '·';
+    margin: 0 6px;
+  }
+  /* A rail row is a plate waiting to be struck: an outlined blank at rest, the
+     brass plate when it is the screen you are on. --gold measures 9.16:1 on the
+     page tone this ground is derived from. */
+  :root[data-design="tisch"][data-scheme="dark"] .rail__item {
+    min-height: 44px;
+    padding: 0 12px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-display);
+    font-weight: 700;
+    color: var(--gold);
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .rail__item:hover { border-color: var(--gold); background: var(--control-fill); }
+  :root[data-design="tisch"][data-scheme="dark"] .rail__item.is-active {
+    background: linear-gradient(180deg, var(--brass-hi), var(--gold-deep));
+    border-color: var(--gold-edge);
+    color: var(--on-accent);
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .rail__label {
+    font-family: var(--font-display);
+    letter-spacing: .12em;
+    color: var(--ink-soft);
+  }
 }

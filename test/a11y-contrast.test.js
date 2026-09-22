@@ -1453,6 +1453,25 @@ const declares = (t, name) => {
 };
 const withToken = (name) => THEMES.filter((t) => declares(t, name));
 
+/* The VALUE a design declares for a token, as written. `token()` resolves a
+   colour; this is for the two cases where the text itself is the subject — an
+   alpha the resolver has no ground to composite against. */
+const declaredIn = (t, name) => {
+  const block = DESIGN_BLOCKS.get(t.design.id);
+  const m = block && new RegExp(`(?:^|[;{\\s])${name}:\\s*([^;}]+)`).exec(block.all);
+  return m ? m[1].trim() : null;
+};
+
+/* `rgba(r, g, b, a)` -> [[r, g, b], a]. Deliberately NOT alphaOf(), which reads
+   a `color-mix(… , transparent)`: the compositing alphas in a design sheet are
+   written as rgba literals (the --cast and --brass-sheen families), so a mix
+   parser would assert on every one of them. */
+const rgbaParts = (expr) => {
+  const m = /^rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)(?:[,/\s]+([\d.]+))?\s*\)$/.exec(expr);
+  assert.ok(m, `${expr} is not an rgba() literal`);
+  return [[+m[1], +m[2], +m[3]], m[4] === undefined ? 1 : +m[4]];
+};
+
 test('a design that declares a PAPER overlay family keeps every pair on it at AA', () => {
   /* An overlay in Der Tisch is a printed card on a wood table, so `.sheet`,
      `.dialog`, `.popover` and `.menu` re-point --surface/--ink/--control-* at
@@ -1521,8 +1540,72 @@ test('a design that declares a FELT keeps its own ink on it, and keeps the accen
     // Finding A3: an ACTIVE chip on felt darkens until it carries the felt ink.
     const chip = contrast(v('--felt-ink'), v('--felt-chip-on'));
     if (chip < AA_TEXT) failures.push(`${name(t)} — --felt-ink on --felt-chip-on = ${chip.toFixed(2)}:1`);
+
+    /* The WEAVE the felt is ruled with (#1189), composited over the light stop
+       — which is the pixel a glyph actually lands on, and the reason this is
+       measured rather than excluded as decoration. The package's own weave is
+       white at 3.5%, and on that grained pixel --felt-ink-soft measures 4.43:1:
+       under AA, from a gradient nobody thinks of as a colour. A darkening weave
+       can only ADD contrast for a light ink, so it is also what keeps the three
+       ungrained pairs above the worst case. */
+    const grain = declaredIn(t, '--felt-grain');
+    if (grain) {
+      const [tone, alpha] = rgbaParts(grain);
+      const ruled = composite(tone, v('--felt'), alpha);
+      for (const [label, fg, bar] of [
+        ['--felt-ink', v('--felt-ink'), AA_TEXT],
+        ['--felt-ink-soft', v('--felt-ink-soft'), AA_TEXT],
+        ['--gold as display type only', v('--gold'), AA_LARGE],
+      ]) {
+        const ratio = contrast(fg, ruled);
+        if (ratio < bar) failures.push(`${name(t)} — ${label} on the RULED felt = ${ratio.toFixed(2)}:1 (bar ${bar})`);
+      }
+    }
   }
   assert.deepEqual(failures, [], 'text on the table surface is the design\'s own ink, never its accent');
+});
+
+test('a design that declares a brass PLATE carries its ink and its rim on it', () => {
+  /* #1189. The plate is the design's one "this is the thing itself" surface —
+     the hub CTA, the active rail row, the active dock entry, a round's name on
+     its table — and it is a GRADIENT from --brass-hi down to --brand, so the
+     ink has to clear the light stop as well as the accent the global sweep
+     already covers. The rim is a boundary that identifies a control, so it
+     takes SC 1.4.11's 3:1 rather than the text bar. */
+  const hosts = withToken('--brass-hi');
+  assert.ok(hosts.length >= 1, 'no design declares --brass-hi — this test is vacuous');
+  const failures = [];
+  for (const t of hosts) {
+    const v = (n) => token(n, t.design);
+    for (const [label, fg, bg, bar] of [
+      ['--on-accent on --brass-hi', v('--on-accent'), v('--brass-hi'), AA_TEXT],
+      ['--gold-edge on --brass-hi (the rim)', v('--gold-edge'), v('--brass-hi'), AA_LARGE],
+    ]) {
+      const ratio = contrast(fg, bg);
+      if (ratio < bar) failures.push(`${name(t)} — ${label} = ${ratio.toFixed(2)}:1 (bar ${bar})`);
+    }
+  }
+  assert.deepEqual(failures, [], 'the plate gradient must carry one ink across both of its stops');
+});
+
+test('a design that declares a deep ACCENT measures it where it is used: on paper', () => {
+  /* #1189. T1's Zinnober is „laufende Abstimmung, Gefahr, Marke", and the
+     surface it labels is the „Abstimmung läuft" card, which is PAPER laid on
+     the table. So it is measured against the paper family and not against the
+     page — the light member of the same hue (--danger) is the one that goes on
+     wood, and the global sweep already covers that. Getting the two the wrong
+     way round is legible in neither place. */
+  const hosts = withToken('--accent-deep');
+  assert.ok(hosts.length >= 1, 'no design declares --accent-deep — this test is vacuous');
+  const failures = [];
+  for (const t of hosts) {
+    const v = (n) => token(n, t.design);
+    for (const [label, bg] of [['--paper', v('--paper')], ['--paper-raised', v('--paper-raised')]]) {
+      const ratio = contrast(v('--accent-deep'), bg);
+      if (ratio < AA_TEXT) failures.push(`${name(t)} — --accent-deep on ${label} = ${ratio.toFixed(2)}:1`);
+    }
+  }
+  assert.deepEqual(failures, [], 'the deep accent is a kicker on paper, so it takes the text bar there');
 });
 
 test('a design that declares its own SCORE ramp carries a legible number on every stop', () => {
@@ -1580,6 +1663,9 @@ test('every colour token a design declares is measured by one of the checks abov
     '--paper', '--paper-raised', '--paper-ink', '--paper-ink-soft',
     '--paper-edge', '--paper-faint',
     '--felt', '--felt-deep', '--felt-ink', '--felt-ink-soft', '--felt-chip-on',
+    // #1189: the weave (composited over the felt's light stop), the plate's
+    // light gradient stop, and the deep accent the paper kicker takes.
+    '--felt-grain', '--brass-hi', '--accent-deep',
     '--score-1', '--score-2', '--score-3', '--score-4', '--score-5',
     '--score-veto', '--score-ink-low', '--score-ink-high', '--score-veto-ink',
   ]);
