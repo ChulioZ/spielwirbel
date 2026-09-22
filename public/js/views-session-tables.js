@@ -186,7 +186,7 @@ async function showTableBuilder(round, session, gamesHint) {
         )
         : null;
       const pill = fb && fb.avg !== null
-        ? `<span class="score-pill spotlight__pill" style="background:${scoreColor(fb.avg)}">${esc(fmtAvg(displayScore(fb.avg)))}</span>`
+        ? `<span class="score-pill spotlight__pill" style="--sc:${scoreColor(fb.avg)}" data-stop="${scoreStop(fb.avg)}">${esc(fmtAvg(displayScore(fb.avg)))}</span>`
         : '';
       const card = h(`<a class="spotlight spotlight--table${outcome === 'played' ? '' : ' is-off'}">
            <div class="spotlight__kicker">
@@ -311,7 +311,7 @@ async function showTableBuilder(round, session, gamesHint) {
              </div>
              <div class="tables-card__seats"></div>
              <div class="tables-card__meta">
-               <span class="score-pill"${fb.avg === null ? '' : ` style="background:${scoreColor(fb.avg)}"`}>${fb.avg === null ? '–' : fmtAvg(displayScore(fb.avg))}</span>
+               <span class="score-pill"${fb.avg === null ? '' : ` style="--sc:${scoreColor(fb.avg)}" data-stop="${scoreStop(fb.avg)}"`}>${fb.avg === null ? '–' : fmtAvg(displayScore(fb.avg))}</span>
                <span class="tables-card__low">${esc(t('tables.lowest', { n: fb.lowest === null ? '–' : fb.lowest }))}</span>
                <span class="tables-card__size">${esc(tn(size, 'tables.partiesOne', 'tables.parties'))}</span>
              </div>

@@ -258,16 +258,21 @@ test('the gold has landed before the winner is lifted', (t) => {
   assert.ok(lift >= race + 3600, `the lift at ${lift}ms interrupts the 3.6s gold that starts at ${race}ms`);
 });
 
-test('the selected face takes its colour inline, the way the click handler sets it', (t) => {
+test('the selected face carries its colour as --sc, which is what a design can repaint', (t) => {
   const { dom, stage, clock } = mount(t);
   clock.tick(3000);
   const mood = stage.querySelectorAll('.mood')[3];
-  const want = asColor(dom, dom.run('avgColor(4)'));
 
-  // Inline, because an inline background is what beats every rule a design or a
-  // world could write — the same two writes views-session.js makes.
-  assert.equal(mood.style.background, want);
-  assert.equal(mood.style.borderColor, want);
+  /* As a custom PROPERTY, not as an inline `background` (#1191). The inline
+     form was the point until a design needed to repaint the chosen face — Der
+     Tisch draws it as its brass plate — and an inline background is precisely
+     what no stylesheet can beat. `.mood.is-selected` in styles.css reads `--sc`,
+     so the rendered colour is unchanged while the rule is now overridable.
+
+     Compared as WRITTEN rather than through asColor(): a custom property is not
+     a colour to the CSSOM, so jsdom stores the string verbatim. */
+  assert.equal(mood.style.getPropertyValue('--sc'), dom.run('avgColor(4)'));
+  assert.equal(mood.style.background, '', 'an inline background would beat every rule a design could write');
 });
 
 /* --------------------------- reduced motion ------------------------------ */

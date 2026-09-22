@@ -964,6 +964,7 @@ function startVoting(round, session, games, people, opts = {}) {
         <div class="vote__who"><button class="vote__undo" id="backBtn" type="button" aria-label="${esc(t('vote.back'))}" title="${esc(t('vote.back'))}"><i class="ti ti-arrow-back-up" aria-hidden="true"></i></button>${esc(t('vote.who'))} <strong style="color:${color}">${esc(personLabel(person))}</strong></div>
         <div class="vote__img" ${imgStyle}>${fallback}</div>
         <h1 class="vote__title" tabindex="-1">${esc(game.title)}</h1>
+        <div class="vote__secret"><i class="ti ti-eye-off" aria-hidden="true"></i> ${esc(t('vote.handoverSub'))}</div>
         <div class="vote__q" id="voteQ">${esc(t('vote.question'))}</div>
         <div class="rating" role="group" aria-labelledby="voteQ"></div>
         <div class="rating-scale"><span>${esc(t('vote.scaleLow'))}</span><span>${esc(t('vote.scaleHigh'))}</span></div>
@@ -1005,8 +1006,12 @@ function startVoting(round, session, games, people, opts = {}) {
            <i class="ti ${ratingFace(n)}" aria-hidden="true"></i><span class="mood__n">${n}</span>
          </button>`);
       if (sel) {
-        b.style.background = avgColor(n);
-        b.style.borderColor = avgColor(n);
+        /* --sc, not an inline `background`: an inline background is precisely
+           what a design CANNOT override, and Der Tisch paints the chosen face
+           as its brass plate rather than in the ramp's colour (#1191, T2.4).
+           The continuous colour stays the default in CSS, so nothing moves
+           under Klassisch. */
+        b.style.setProperty('--sc', avgColor(n));
       }
       if (wanted && wanted.kind === 'mood' && wanted.n === n) restore = b;
       b.addEventListener('click', () => {
@@ -1535,9 +1540,15 @@ async function showResults(round, session, gamesHint, reveal, plain) {
         // ramp: as TEXT on the page the tightest point of the ramp is ~4.58:1,
         // and a per-round theme moves the surface under it. A glyph is a
         // non-text UI component, so it sits at the 3:1 bar instead.
-        return `<div class="bar-col" title="${esc(title)}">
-             <div class="bar-track"><div class="bar" style="height:${Math.round((c / maxBar) * 100)}%;background:${avgColor(n)}"></div></div>
-             <div class="bar-axis"><i class="ti ${ratingFace(n)}" aria-hidden="true" style="color:${avgColor(n)}"></i><span class="bar-axis__n">${n}</span></div>
+        /* `--sc` + `data-stop` rather than two inline colours (#1191). T8.2
+           ships the bar half of a ramp DARKER than the pill half, because these
+           sit on paper while a pill carries its own ink — so a design has to be
+           able to repaint the fill and the glyph, and an inline `background`
+           would beat every rule it could write. The continuous colour stays the
+           default, so Klassisch is unchanged. */
+        return `<div class="bar-col" title="${esc(title)}" style="--sc:${avgColor(n)}" data-stop="${rampStop(n)}">
+             <div class="bar-track"><div class="bar" style="height:${Math.round((c / maxBar) * 100)}%"></div></div>
+             <div class="bar-axis"><i class="ti ${ratingFace(n)}" aria-hidden="true"></i><span class="bar-axis__n">${n}</span></div>
            </div>`;
       })
       .join('');
@@ -1593,7 +1604,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
          ${hasVotes ? `<div class="trow__bars">${bars}</div>` : ''}
          <div class="trow__score">
            ${!hasVotes ? '' : `
-           <div class="score-big"${r.count ? ` style="color:${scoreColor(r.score)}"` : ''}>${r.count ? fmtAvg(r.shown) : '–'}</div>
+           <div class="score-big"${r.count ? ` style="--sc:${scoreColor(r.score)}"` : ''}>${r.count ? fmtAvg(r.shown) : '–'}</div>
            ${scoreLabel}`}
          </div>
          <div class="trow__action"></div>
@@ -1978,6 +1989,18 @@ async function showResults(round, session, gamesHint, reveal, plain) {
           ? iconText(meta.icon, t(meta.line))
           : iconText('ti-check', t('result.playedNoWinner'))}</div>`));
       }
+      /* „Falls etwas anders lief" (T4.4): the three controls that CORRECT a
+         settled record — change the winner, say another game was played, reset
+         — are a labelled group rather than three loose buttons. Only in this
+         state: while the evening is still running the same element holds „Als
+         gespielt markieren", which is not a correction, and while the winner
+         picker is open it holds „Fertig".
+
+         Rendered on every design and hidden by styles.css, the same "render it,
+         let CSS decide" shape the pool and the dock use. The alternative — a
+         `::before` carrying the words — cannot be translated into the shipped
+         locales at all. */
+      actions.appendChild(h(`<span class="tisch__actions-label">${esc(t('result.corrections'))}</span>`));
       const change = h(`<button class="btn btn--ghost btn--sm">${esc(t('result.change'))}</button>`);
       change.addEventListener('click', () => { pickerOpen = true; renderTisch(); });
       actions.appendChild(change);

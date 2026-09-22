@@ -300,13 +300,13 @@ function renderLandingMoments() {
   const tisch = stage.querySelector('.tisch');
 
   /* The one thing the click handler does that markup cannot: the selected face
-     takes the rating's traffic-light colour INLINE, because an inline
-     background is what beats every rule a design or a world could write. Same
-     two writes as views-session.js's mood loop. */
+     takes the rating's colour. As `--sc`, never as an inline `background` —
+     this screen is the FACE design's shop window, so the one surface that must
+     stay repaintable by a design is exactly this one (#1191). Same write as
+     views-session.js's mood loop. */
   const selectFace = () => {
     mood.classList.add('is-selected');
-    mood.style.background = avgColor(LM_VOTE);
-    mood.style.borderColor = avgColor(LM_VOTE);
+    mood.style.setProperty('--sc', avgColor(LM_VOTE));
   };
 
   const rest = () => { tisch.hidden = false; };

@@ -1640,6 +1640,83 @@ test('a design that declares its own SCORE ramp carries a legible number on ever
   assert.deepEqual(failures, [], 'the score ramp is read by its number and by its lightness');
 });
 
+test('a design that declares a BAR ramp carries every rung on paper and on the gold row', () => {
+  /* T8.2's other half (#1191), and the sheet is explicit that there are two:
+     „Die Score-Rampe bleibt zweigeteilt (Pillen hell steigend mit wechselnder
+     Tinte, Balken dunkler für Papier)". A pill carries its own ink and may be
+     pale; a bar is drawn ON a ground and has to read against it.
+
+     Three grounds, because a distribution column appears on all three: the
+     Tafel's two paper stops and — on the WINNING row — the gold. The gold is
+     the tight one and it is the reason two of the package's five stops were
+     corrected; measuring only against paper would have passed both. */
+  const hosts = withToken('--bar-1');
+  assert.ok(hosts.length >= 1, 'no design declares a bar ramp — this test is vacuous');
+  const failures = [];
+  for (const t of hosts) {
+    const v = (n) => token(n, t.design);
+    for (const ground of ['--paper', '--paper-raised', '--gold']) {
+      for (let n = 1; n <= 5; n += 1) {
+        const ratio = contrast(v(`--bar-${n}`), v(ground));
+        // AA_LARGE is the 3:1 bar; a bar and its axis glyph are graphical
+        // objects (SC 1.4.11), not type. The numeral under them is --ink-soft
+        // and is covered by the paper pairs above.
+        if (ratio < AA_LARGE) failures.push(`${name(t)} — --bar-${n} on ${ground} = ${ratio.toFixed(2)}:1`);
+      }
+    }
+  }
+  assert.deepEqual(failures, [], 'a distribution bar must read on paper AND on the gold winning row');
+
+  /* And this ramp is deliberately NOT asserted to brighten monotonically, which
+     is the one difference from the pill ramp above. Its order is carried by
+     each column's POSITION and HEIGHT and by an always-visible axis naming the
+     rung with the voter's own mood face — so the good end can be a deep green,
+     which is what lets every rung stay dark enough for the paper it sits on.
+     Stated here so the omission reads as a decision rather than as a gap. */
+});
+
+test('a design that declares row TAGS carries each one\'s ink on its own fill', () => {
+  /* The two markers the Tafel prints at a row's edge (#1191, T4.4): „Gespielt"
+     on a finished game and the veto pill „1× gar nicht" on a vetoed one. Both
+     are fills with an ink of their own — they cannot borrow --good/--danger,
+     which this design tunes as the LIGHT members of their pairs for walnut,
+     and these sit on paper. Text, so the 4.5:1 bar.
+
+     Their BORDERS are not measured and must not be: each is a decorative
+     hairline on a non-interactive label, so SC 1.4.11 does not bind it, and a
+     rule strong enough to clear 3:1 would make the tag read as a button. */
+  const hosts = withToken('--played-tag');
+  assert.ok(hosts.length >= 1, 'no design declares row tags — this test is vacuous');
+  const failures = [];
+  for (const t of hosts) {
+    const v = (n) => token(n, t.design);
+    for (const [fill, ink] of [['--played-tag', '--played-tag-ink'], ['--veto-tag', '--veto-tag-ink']]) {
+      const ratio = contrast(v(ink), v(fill));
+      if (ratio < AA_TEXT) failures.push(`${name(t)} — ${ink} on ${fill} = ${ratio.toFixed(2)}:1`);
+    }
+  }
+  assert.deepEqual(failures, [], 'a row tag states a fact and has to be readable on its own fill');
+});
+
+test('a design whose gold row is a SWEEP carries one ink across both its stops', () => {
+  /* Review finding A2 — „Auf Gold nur eine Tinte" — measured at both ends
+     rather than at one. The winning row is a gradient from --gold-hi to --gold
+     (#1191), so a single ink is only a rule if it holds on the pale stop too;
+     that is the end nobody checks, because the deep one looks like the hard
+     case and is not. */
+  const hosts = withToken('--gold-hi');
+  assert.ok(hosts.length >= 1, 'no design declares a gold sweep — this test is vacuous');
+  const failures = [];
+  for (const t of hosts) {
+    const v = (n) => token(n, t.design);
+    for (const stop of ['--gold-hi', '--gold']) {
+      const ratio = contrast(v('--gold-ink'), v(stop));
+      if (ratio < AA_TEXT) failures.push(`${name(t)} — --gold-ink on ${stop} = ${ratio.toFixed(2)}:1`);
+    }
+  }
+  assert.deepEqual(failures, [], 'the winning row has one ink, so it must hold on both stops');
+});
+
 test('every colour token a design declares is measured by one of the checks above', () => {
   /* The guard that makes #1188's move safe. A design's root block is now
      RESOLVABLE by test/support/theme.js, and test/design-layer.test.js pushes
@@ -1668,6 +1745,11 @@ test('every colour token a design declares is measured by one of the checks abov
     '--felt-grain', '--brass-hi', '--accent-deep',
     '--score-1', '--score-2', '--score-3', '--score-4', '--score-5',
     '--score-veto', '--score-ink-low', '--score-ink-high', '--score-veto-ink',
+    // #1191: T8.2's other ramp (bars, measured on paper AND on the gold row),
+    // the gold sweep's pale stop, and the two row tags with their own inks.
+    '--bar-1', '--bar-2', '--bar-3', '--bar-4', '--bar-5',
+    '--gold-hi',
+    '--played-tag', '--played-tag-ink', '--veto-tag', '--veto-tag-ink',
   ]);
   /* Not colours, so not this test's business: a lift PERCENTAGE, and the four
      compositing alphas the elevation ramp is built from. The alphas are painted
@@ -1675,6 +1757,12 @@ test('every colour token a design declares is measured by one of the checks abov
      the card), and they can only ever DARKEN it — which is the safe direction
      for every pair already measured on that ground. */
   const NOT_A_COLOUR = /^--(member-lift|cast|cast-soft|cast-deep|brass-sheen|brass-sheen-strong)$/;
+  /* A hairline on a NON-INTERACTIVE label. SC 1.4.11 binds a boundary only
+     where it identifies a control, and these two identify a printed tag — so
+     there is no bar to measure them against, and inventing one would push them
+     to a weight that reads as a button (#1191). Listed rather than folded into
+     NOT_A_COLOUR above, because they ARE colours; what they are not is a pair. */
+  const DECORATIVE_EDGE = /^--(played-tag-edge|veto-tag-edge)$/;
 
   const unmeasured = [];
   for (const t of THEMES) {
@@ -1683,6 +1771,7 @@ test('every colour token a design declares is measured by one of the checks abov
     for (const m of block.all.matchAll(/(^|[;{\s])(--[a-z0-9-]+)\s*:/gm)) {
       const tok = m[2];
       if (inApp.has(tok) || MEASURED.has(tok) || NOT_A_COLOUR.test(tok)) continue;
+      if (DECORATIVE_EDGE.test(tok)) continue;
       // A layout token is not a colour either — radii, sizes, fonts, durations.
       if (/^--(radius|text|w|dur|ease|font|rail|dock)/.test(tok)) continue;
       unmeasured.push(`${name(t)} -> ${tok}`);

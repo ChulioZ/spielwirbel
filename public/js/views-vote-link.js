@@ -249,8 +249,12 @@ function renderVoteLinkCards(token, ballot, person) {
            <i class="ti ${ratingFace(n)}" aria-hidden="true"></i><span class="mood__n">${n}</span>
          </button>`);
       if (sel) {
-        b.style.background = avgColor(n);
-        b.style.borderColor = avgColor(n);
+        /* --sc, not an inline `background`: an inline background is precisely
+           what a design CANNOT override, and Der Tisch paints the chosen face
+           as its brass plate rather than in the ramp's colour (#1191, T2.4).
+           The continuous colour stays the default in CSS, so nothing moves
+           under Klassisch. */
+        b.style.setProperty('--sc', avgColor(n));
       }
       b.addEventListener('click', () => {
         // The JS half of the double-tap guard — identical to the wizard's, and

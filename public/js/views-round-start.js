@@ -184,7 +184,7 @@ function renderStartTab(round, activeGames) {
       let pill = '';
       if (game) {
         const sst = gameStatsForSession(round, session, game.id);
-        if (sst.score !== null) pill = `<span class="score-pill" style="background:${scoreColor(sst.score)}">${fmtAvg(displayScore(sst.score))}</span>`;
+        if (sst.score !== null) pill = `<span class="score-pill" style="--sc:${scoreColor(sst.score)}" data-stop="${scoreStop(sst.score)}">${fmtAvg(displayScore(sst.score))}</span>`;
       }
       const title = game ? esc(game.title) : esc(t('round.inProgressDeciding'));
       const ticket = h(`<a class="ticket ticket--live">
@@ -245,7 +245,7 @@ function renderStartTab(round, activeGames) {
     const fallback = coverPlaceholder(game);
     const pill =
       sst.avg !== null
-        ? `<span class="score-pill" style="background:${scoreColor(sst.score)}">${fmtAvg(displayScore(sst.score))}</span>`
+        ? `<span class="score-pill" style="--sc:${scoreColor(sst.score)}" data-stop="${scoreStop(sst.score)}">${fmtAvg(displayScore(sst.score))}</span>`
         : '';
     /* The stub's icon names what is written under it — the convention the three
        live stubs above follow, and the one this ticket broke (#1106): the trophy

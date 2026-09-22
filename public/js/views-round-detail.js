@@ -352,7 +352,7 @@ async function showGameDetail(rid, gameId) {
   const shown = st.score === null ? null : displayScore(st.score);
   if (!sparse && !game.wish) {
     const pill = st.score !== null
-      ? `<span class="score-pill score-pill--lg" style="background:${scoreColor(st.score)}"
+      ? `<span class="score-pill score-pill--lg" style="--sc:${scoreColor(st.score)}" data-stop="${scoreStop(st.score)}"
                aria-label="${esc(`${t('score.name')}: ${fmtAvg(shown)}`)}">${fmtAvg(shown)}</span>`
       : `<span class="score-pill score-pill--lg score-pill--none">${esc(t('games.scoreNew'))}</span>`;
     const badge = h(`<div class="gd-score">${pill}${infoButton('score')}</div>`);
@@ -697,7 +697,7 @@ async function showGameDetail(rid, gameId) {
       // overriding this issue's own acceptance criterion).
       const scoreCell =
         sst.avg !== null
-          ? `<span class="score-pill" style="background:${scoreColor(sst.score)}">${fmtAvg(displayScore(sst.score))}</span>`
+          ? `<span class="score-pill" style="--sc:${scoreColor(sst.score)}" data-stop="${scoreStop(sst.score)}">${fmtAvg(displayScore(sst.score))}</span>`
           : '';
       // The ink is how the evening went for this game. Usually that is the
       // score it earned there — but a game the round CHOSE and played without

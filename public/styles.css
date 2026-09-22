@@ -3003,7 +3003,13 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
   position: absolute;
   top: 8px;
   right: 8px;
-  color: var(--on-accent);
+  /* Fill and ink both via tokens rather than an inline `background` (#1191):
+     T8.2's pill ramp alternates its INK across the ramp — light on the two deep
+     stops, walnut on the three pale ones — which no single rule can express
+     while the fill arrives inline. `--sc` is scoreColor()'s continuous value and
+     `data-stop` the rung, so a design overrides both together. */
+  background: var(--sc-fill, var(--sc));
+  color: var(--sc-ink, var(--on-accent));
   font-family: var(--font-display);
   font-weight: 700;
   font-size: var(--text-sm);
@@ -4997,6 +5003,13 @@ a.k-tile:focus-visible,
   font-size: 64px; /* glyph, not type */
 }
 .vote__title { text-align: center; font-size: var(--text-2xl); font-weight: 800; padding: 6px 20px; margin: 0; }
+/* „Die anderen schauen kurz weg." ON the card (#1191). Klassisch already says
+   it one screen earlier, on the handover, so showing it twice would be a change
+   to a design this issue does not touch — Der Tisch merges the two screens'
+   jobs and prints it here instead. Rendered on every design and revealed by the
+   one that wants it: `display: none` also takes it out of the accessibility
+   tree, so no reader hears it twice either. */
+.vote__secret { display: none; }
 .vote__q { text-align: center; color: var(--ink-soft); margin: 6px 20px; }
 
 .rating { display: flex; justify-content: center; gap: 10px; padding: 8px 20px 4px; }
@@ -5401,9 +5414,24 @@ a.k-tile:focus-visible,
   background: var(--sunken);
   display: flex; align-items: flex-end;
 }
-/* The fill only — its colour is inline, from avgColor(n). No min-height: a rung
-   with no votes must be the empty track, not a stub that reads as one vote. */
-.trow__bars .bar { width: 100%; border-radius: 4px 4px 0 0; }
+/* The fill only. Its colour comes from `--sc` on the COLUMN — set inline from
+   avgColor(n), so the continuous ramp is still the default — rather than from an
+   inline `background` on the fill itself: an inline background is what a design
+   cannot override, and T8.2 gives Der Tisch a bar ramp of its own, darker than
+   its pill ramp because these sit on paper (#1191). `data-stop` on the column
+   is the rung a design keys that override off.
+
+   `--sc-fill` IN FRONT OF `--sc`, and the indirection is not decoration: `--sc`
+   arrives INLINE, and an inline custom property beats a stylesheet rule for
+   that same property exactly as an inline `background` beats a rule for the
+   background. So a design cannot override `--sc`; it sets `--sc-fill`, which
+   nothing writes inline, and the fallback keeps the continuous ramp when no
+   design does. Measured on #1191 — the first cut set `--sc` from the stop rules
+   and rendered the app's own ramp with every test green.
+
+   No min-height: a rung with no votes must be the empty track, not a stub that
+   reads as one vote. */
+.trow__bars .bar { width: 100%; border-radius: 4px 4px 0 0; background: var(--sc-fill, var(--sc)); }
 /* The axis. Colour carries the scale on the glyph (a non-text UI component, 3:1)
    while the numeral stays --ink-soft — the ramp as TEXT only just clears 4.5:1
    at its tightest point, and a per-round theme moves the surface under it. */
@@ -5411,7 +5439,7 @@ a.k-tile:focus-visible,
   display: flex; flex-direction: column; align-items: center; line-height: 1;
   color: var(--ink-soft);
 }
-.trow__bars .bar-axis .ti { font-size: 14px; /* glyph, not type */ }
+.trow__bars .bar-axis .ti { font-size: 14px; color: var(--sc-fill, var(--sc)); /* glyph, not type */ }
 .trow__bars .bar-axis__n { font-size: var(--text-xs); font-weight: 700; }
 .trow__score { grid-area: score; text-align: right; }
 /* The action column. Nothing here is ever `disabled`: a control that cannot act
@@ -5503,7 +5531,10 @@ a.k-tile:focus-visible,
   }
 }
 
-.score-big { font-size: var(--text-3xl); font-weight: 800; color: var(--brand-strong); line-height: 1; }
+/* `--sc` falls back to --brand-strong for the one caller that writes no score
+   (a row nobody rated prints „–"), so the numeral keeps today's colour while a
+   design that wants it in plain ink can say so (#1191). */
+.score-big { font-size: var(--text-3xl); font-weight: 800; color: var(--sc, var(--brand-strong)); line-height: 1; }
 .score-label { font-size: var(--text-sm); color: var(--ink-soft); }
 /* Why this score is what it is — „1× gar nicht" (#893). Deliberately quiet: it
    only explains a number the reader is already looking at, and is not a call to
@@ -5837,6 +5868,11 @@ a.k-tile:focus-visible,
 .tisch__note--warn { color: var(--warn-ink, var(--ink)); }
 .tisch__prompt { color: var(--ink-soft); margin: 4px 0 10px; }
 .tisch__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 14px; }
+/* „Falls etwas anders lief" — the label T4.4 groups the three correction
+   controls under. Same arrangement as `.vote__secret` above: rendered always,
+   shown by the design that asks for it, because the words have to come from the
+   locale files rather than from a `content:`. */
+.tisch__actions-label { display: none; }
 /* The record, as a picture: the winners as seats. A gold ring rather than a
    trophy line, because a face is the thing worth recognising months later. */
 .tisch__seats { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 10px; }
@@ -9355,7 +9391,15 @@ kbd {
 .mood .ti { font-size: 28px; /* glyph, not type */ }
 .mood__n { font-family: var(--font-display); font-size: var(--text-xs); font-weight: 700; }
 .mood:hover { border-color: var(--brand); transform: translateY(-2px); }
-.mood.is-selected { color: var(--on-accent); transform: scale(1.08); }
+/* `--sc` is written inline by the mood loop (views-session.js), so the fill is
+   still avgColor(n) by default and a design can repaint the chosen face without
+   fighting an inline `background` — Der Tisch makes it its brass plate (#1191). */
+.mood.is-selected {
+  background: var(--sc);
+  border-color: var(--sc);
+  color: var(--on-accent);
+  transform: scale(1.08);
+}
 /* ---- Per-device voting (#209) ----
    The setup toggle and the lobby that replaces the hot-seat wizard for a session
    collecting votes from several devices. Named `live-vote`, deliberately NOT

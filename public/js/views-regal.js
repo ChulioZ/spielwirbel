@@ -246,7 +246,7 @@ function renderRegalTab(round, activeGames) {
         : tn(st.plays, 'score.evidencePlaysOne', 'score.evidencePlays', { n: st.plays });
       const scorePill =
         score !== null
-          ? `<span class="score-pill" style="background:${scoreColor(score)}" title="${esc(evidence)}">${fmtAvg(displayScore(score))}</span>`
+          ? `<span class="score-pill" style="--sc:${scoreColor(score)}" data-stop="${scoreStop(score)}" title="${esc(evidence)}">${fmtAvg(displayScore(score))}</span>`
           : `<span class="score-pill score-pill--none">${esc(t('games.scoreNew'))}</span>`;
       // What the round owns for this game (#653) — no badge at zero, so a shelf
       // of plain base boxes looks exactly as it always did.

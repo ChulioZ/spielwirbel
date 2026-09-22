@@ -301,6 +301,15 @@ const displayScore = (score) => Math.max(SCORE_MIN, score);
 // for anything on the score scale, which reaches below 1.
 const scoreColor = (score) => avgColor(displayScore(score));
 
+// The RUNG of a design's discrete ramp the same score lands on (#1191) — this
+// pair is `avgColor`/`rampStop` one domain over, and exists for the same reason
+// the pair above does. A site that needs a design to repaint it PER RUNG writes
+// `data-stop: scoreStop(x)` beside its `--sc`; one that only needs the value
+// (the row fill, the big numeral) writes `--sc` alone. Never re-derive the rung
+// from `displayScore` by hand at a call site — that is how the colour and the
+// stop come to disagree about which rung a score is on.
+const scoreStop = (score) => rampStop(displayScore(score));
+
 // Why this score is what it is, in a few words — „1× gar nicht" (#893).
 //
 // This is the PRIMARY explanation of the number, not the ⓘ sheet: it explains

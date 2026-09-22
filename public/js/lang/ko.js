@@ -868,6 +868,7 @@ I18N.ko = {
   'result.stamp': '플레이함',
   'result.wonSeatsOne': '승리',
   'result.wonSeats': '승리',
+  'result.corrections': '다르게 진행됐다면',
   'result.change': '바꾸기',
   'result.done': '완료',
   'result.voteTitleOne': '투표 · 게임 {n}개',

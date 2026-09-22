@@ -965,6 +965,7 @@ I18N.de = {
   'result.stamp': 'Gespielt',
   'result.wonSeatsOne': 'hat gewonnen',
   'result.wonSeats': 'haben gewonnen',
+  'result.corrections': 'Falls etwas anders lief',
   'result.change': 'Ändern',
   'result.done': 'Fertig',
   'result.voteTitleOne': 'Die Abstimmung · {n} Spiel',
