@@ -19,7 +19,7 @@ map.
 | `pruefung-ocean-2026-09-20.md` | The review of the second package (Ocean), over two rounds. Its closing section is binding for every later package — in particular that the audit tool over-reports on gradient-led designs (see step 2). |
 | `ocean/` | The reviewed „Ocean“ package (fifteen sheets O1–O15b plus the concept sheet), same shape as `tisch/`. |
 | `pruefung-bruecke-2026-09-22.md` | The review of the third package (Die Brücke), over two rounds. Its closing section adds four rules for the remaining designs — in particular that a word finding binds to the **package**, not to the screen it was spotted on, and that icons and locales are checked against the **repo**, never against the previous package. |
-| `bruecke/` | The reviewed „Die Brücke“ package (sixteen sheets B1–B16 plus the concept sheet), same shape as `tisch/`. B16 is the density sheet — twelve seats, a 42-game shelf, a tie and two long locales. |
+| `bruecke/` | The reviewed „Die Brücke“ package (sixteen sheets B1–B16 plus the concept sheet), same shape as `tisch/`. B16 is the density sheet — twelve seats, a 42-game shelf, a tie and two long locales. The shared vote and the pass-device blind arrived in round 3 as B4.5/B6.9 and B4.6/B6.10. |
 | `tools/audit.js` | The contrast + hit-size audit that measured the Tisch sheets (see below). |
 
 The issues that implement the programme start at #1184 (the design layer) and
@@ -124,6 +124,20 @@ is the procedure that produced #1188–#1200 for Der Tisch.
    bare `ti-settings` in the top bar, which a word-level sweep reports as a
    missing IA block. Where a screen looks like it is missing something, list its
    `i.ti` classes before writing it up.
+
+   **Tick the SESSION LOOP too — all four numbered items of §2, not just the
+   vote card.** The rail, the dock, the hub blocks and the vote card are the
+   easy half and the one everybody checks. Brücke shipped two accepted review
+   rounds with **no live shared vote at all** (§2 item 2: "each person on their
+   own phone via link/QR — #1170"), and it surfaced only when the slice issues
+   had nothing to cite. Enumerate the screens per package and diff them against
+   Tisch's, which is the structural reference every design is cut from.
+
+   **Careful with „Übergabe": it is the name of the closing summary panel on
+   every Tisch and Ocean sheet** ("Was T4 entscheidet"), not a screen. Reading
+   those ids as drawn handover screens is what made the Brücke review overstate
+   its own finding. The pass-device blind is Ocean's **O6.5 „Sichtblende"**, and
+   Tisch has none.
 5. **Check the source.** Every hex value used in X2–X15 must be declared in X1;
    the marker colours and the score ramp live in X1 and are only *measured* in
    X8. Two sheets citing different contrast numbers for one pair is a finding.

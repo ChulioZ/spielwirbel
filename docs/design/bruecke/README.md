@@ -1,8 +1,90 @@
 # Übergabepaket „Die Brücke“ — B1 bis B16
 
 Datum: 2026-09-22 · Phase 2, Design 2 von 5 (Reihenfolge O → **B** → P → F → R)
-Stand: **nach Prüfrunde 1**, alle Funde aus A, B und C eingearbeitet.
+Stand: **nach Runde 3**, alle Funde aus Runde 1 und Runde 2 eingearbeitet.
 Erzeugt von Claude Design für die Überführung in GitHub-Issues durch Claude Code.
+
+---
+
+## Stand nach Runde 3
+
+Runde 3 (`vorgaben/bruecke-runde-3-auftrag.md`) war klein und abschließend: **zwei
+fehlende Screens** plus die fünf nicht blockierenden Funde aus Runde 2.
+
+**Die zwei fehlenden Screens — vier Blätter, angehängt statt umnummeriert**
+
+Der Fund ist ein Versäumnis der Prüfung, nicht der Umsetzung: geprüft wurden
+Abschnittsleiste, Dock, Hub-Blöcke und Wertungskarte — die **Session-Schleife aus
+§2** wurde nie Punkt für Punkt abgehakt. Genau die Lehre aus der Ocean-Rückgabe,
+angewandt auf den Block, den niemand abgehakt hat.
+
+| Neu | Was |
+|---|---|
+| **B4.5 Geteilte Wertung** (Desktop 1440) | Die Ansicht, die am Tisch liegt: wer abgestimmt hat, wer offen ist, Teilen-Link, QR-Code (CSS-Platzhalter) und der Weg, an diesem Gerät für jemanden zu werten. |
+| **B4.6 Sichtblende** (Desktop 1440) | Die Sichtblende im Ein-Gerät-Modus. Zeigt keine Wertung, keinen Score, kein Spiel der Person davor. |
+| **B6.9 Geteilte Wertung** (Telefon 390) | Dasselbe am Telefon, **mit** Dock. |
+| **B6.10 Sichtblende** (Telefon 390) | Dasselbe am Telefon, **ohne** Dock und ohne Kopfleiste — die Blende gehört zur Wertungskarte, nicht zur Navigation. |
+
+Die Nummerierung der vorhandenen Screens ist unangetastet: B4.3 bleibt Ergebnis,
+B4.4 bleibt Mehrere Tische. Die Wörter sind aus `public/js/lang/de.js`
+abgeschrieben (`lobby.*` und `vote.*`), nicht erfunden — „Abstimmung läuft",
+„abgestimmt / offen", „Jetzt abstimmen", „An diesem Gerät abstimmen",
+„Für {name}", „Weiter zu {name}", „Abstimmung beenden", „Link zum Abstimmen
+teilen", „Link kopiert — teile ihn mit der Runde.", „QR-Code", „Scannen und
+mitbewerten", „{Name}, du bist dran!", „Die anderen schauen kurz weg.",
+„Los geht's ›". Themenwörter sind an diesen Stellen nicht erlaubt; eigen bleiben
+nur Kicker („Eingehendes Signal") und Zierlinien.
+
+**Die fünf Funde aus Runde 2 — alle eingearbeitet**
+
+- **R2-1 · B15a.5 Popover** — Label auf „Sortiert: **Bewertung**", Liste auf die
+  drei Optionen, die `views-regal.js` hat: **Zufällig · Name · Bewertung**. Der
+  Fund aus Runde 1 war an einen Screen gebunden statt ans Paket.
+- **R2-2 · B15a.5 Sprachwähler** — Polnisch und Schwedisch raus, **Suomi** und
+  **한국어** rein. Jetzt die neun aus `public/js/locales.js`: de en es fr it nl pt fi ko.
+- **R2-3 · B16.4** — Vier erfundene Strings auf die echten: FR Kümmerliste
+  **„À régler"**, FI **„Avoimet asiat"**, FR-Dock **„Démarrer"**, FI-Dock
+  **„Aloitus"**. Messtabelle neu gerechnet (siehe unten).
+- **R2-4 · B16.4** — Die Wertungsfrage trägt in beiden Sprachen wieder das
+  Substantiv: « …pour ce **jeu** aujourd'hui ? » · „…**tälle pelille** tänään?".
+- **R2-5 · B1.1 · B2.3 · B4.1** — Drei führende Nullen, die D7 überlebt hatten:
+  „09 Siege" im `mono-micro`-Musterwort und die Schrittleiste „01 Wer spielt mit?"
+  auf zwei Blättern. Die Leiste liest jetzt 1 · 2 · 3.
+
+Die zwei freiwilligen Kleinigkeiten sind mitgemacht: FR-Rundenname auf
+« Groupe du jeudi » (ohne den Abend, den „Donnerstagsrunde" nicht hat), und die
+Beschriftung von `ink-dim` steht auf dem gemessenen **4,4:1** statt 3,3:1 — knapp
+unter dem Text-Floor, deshalb bleibt sie auf Gesperrt und leere Rasterzellen
+beschränkt.
+
+**Was die Messtabelle in B16.4 jetzt sagt**
+
+| Gemessen | DE | längere Sprache |
+|---|---|---|
+| Rundenname | 16 | 19 (FI „Torstain peliseurue") |
+| Frage der Wertungskarte | 43 | 48 (FI, mit Substantiv) |
+| Skalenende links | 10 | 13 |
+| Dock-Eintrag längster | 7 | 10 (FR „Historique") |
+
+**Welche Regeln in Runde 3 gegriffen haben**
+
+Von den **neun Regeln der Tisch-Prüfung** (vollständig in B1 abgehakt) waren
+vier hier einschlägig: **(4)** Trefferflächen — jeder Personeneintrag, „Für
+{name}", „Jetzt abstimmen" und der Weiter-Knopf liegen auf 44 px · **(5)** Wörter
+aus der App abschreiben statt paraphrasieren — der ganze `lobby.*`/`vote.*`-Satz,
+und R2-1 bis R2-4 · **(7)** Wertungskarte ohne Dock und Kopfleiste — deshalb hat
+B6.10 beides nicht · **(9)** eigene Kontrastzahlen prüfen, bevor sie zitiert
+werden — daher die Korrektur von `ink-dim`.
+
+Von der **Ocean-Rückgabe** (drei Lehren im Text, plus die Icon-Falle aus A5 —
+vier, wenn man sie mitzählt) haben alle vier gegriffen: **(1)** alle neun Regeln
+statt vier · **(2)** die IA-Prüfliste Block für Block abhaken — genau das hat die
+fehlende Session-Schleife gefunden · **(3)** nach dem Revert den Text lesen —
+daher R2-5 · **(A5)** Icons gegen das Repo prüfen, nicht gegen die Paketkopie:
+der Auftrag nennt `ti-qrcode` als im Repo-Subset vorhanden, im gebündelten
+`tabler-icons.css` dieses Pakets ist er aber nicht deklariert und rendert als
+Nichts. Die geteilte Wertung kommt deshalb ohne Glyph-Abhängigkeit aus — ihr
+QR-Platzhalter ist CSS (siehe „Icon-Subset").
 
 ---
 
@@ -39,9 +121,9 @@ Die Prüfung von Claude Code (`vorgaben/pruefung-bruecke-runde-1.md`) lautet **�
 | `Bruecke-B1-Komponenten.dc.html` | Bauteile und Tokens — **die einzige Token-Quelle** |
 | `Bruecke-B2-Phone-Kern.dc.html` | Telefon 390: Start, Hub, Neue Session, Abstimmung, Ergebnis, Regal |
 | `Bruecke-B3-Runde-Desktop.dc.html` | Hub 1440 + Unterseiten Regal, Chronik, Pokale |
-| `Bruecke-B4-Session-Desktop.dc.html` | Setup, Abstimmung, Ergebnis, Mehrere Tische |
+| `Bruecke-B4-Session-Desktop.dc.html` | Setup, Abstimmung, Ergebnis, Mehrere Tische, **Geteilte Wertung, Sichtblende** |
 | `Bruecke-B5-Konto.dc.html` | Anmelden, Design-Wähler (7 Designs), Auswahl-Sheet, Kontoseite |
-| `Bruecke-B6-Phone-Rest.dc.html` | Telefon: Chronik, Pokale, Spieldetail, Spiel hinzufügen, Mitglied, Einstellungen, Nicht im Regal, Empfehlungen |
+| `Bruecke-B6-Phone-Rest.dc.html` | Telefon: Chronik, Pokale, Spieldetail, Spiel hinzufügen, Mitglied, Einstellungen, Nicht im Regal, Empfehlungen, **Geteilte Wertung, Sichtblende** |
 | `Bruecke-B7-Leerzustaende.dc.html` | Leere und junge Zustände, beide Breiten |
 | `Bruecke-B8-Farben.dc.html` | Personenfarben, Score-Verlauf, Farbfehlsichtigkeit, Rückblickkarte |
 | `Bruecke-B9-Vokabular.dc.html` | Vokabular und Glossar, DE + EN |
@@ -52,10 +134,10 @@ Die Prüfung von Claude Code (`vorgaben/pruefung-bruecke-runde-1.md`) lautet **�
 | `Bruecke-B15b-Dialoge.dc.html` | Dialoge, Toasts, „…"-Menü |
 | `Bruecke-B16-Dichte.dc.html` | **Nachgereicht zu Runde 1 (C3):** 12 Personen mit Gästen und Teams, Regal mit 42 Spielen, Unentschieden, Französisch und Finnisch |
 | `Konzept-E-Die-Bruecke.dc.html` | Das Konzeptblatt, mit angewandtem V0-Revert |
-| `support.js`, `public/fonts`, `public/icons` | Laufzeit und Assets — **nicht ins Repo übernehmen**, siehe „Icon-Subset" |
+| `support.js` | Laufzeit — **nicht ins Repo übernehmen** |
 | `vorgaben/` | Handover, Vokabular-Addendum, Projektregeln, die beiden Prüfungen |
 
-Jede Datei öffnet direkt im Browser. Relative Pfade zu `support.js` und `public/` sind erhalten.
+**`public/` liegt diesem Paket nicht mehr bei** (Runde-3-Auftrag §4): die mitgelieferte Kopie war Oceans und ist auseinandergelaufen. Im Repo zeigen die Blätter per `../../../public/` auf das echte Verzeichnis; lokal öffnen sie ohne Icon-Font und ohne BGG-Logo.
 
 ---
 
@@ -71,7 +153,7 @@ bar           #0b1220      Kopfleiste und Dock
 line          #24324a      Kante · hairline #1c2740
 
 ink           #dfe7f5  14,5:1      ink-2  #b8c2d6  10,1:1
-ink-muted     #9aa8c0   7,5:1      ink-dim #5d6a82  3,3:1 (nur Nicht-Text)
+ink-muted     #9aa8c0   7,5:1      ink-dim #5d6a82  4,4:1 (nur Nicht-Text)
 
 accent (cyan) #35e0ff  11,4:1      action (amber) #ffb020  9,9:1
 ok (grün)     #4ade80  10,4:1      alert (rot)    #ff6b85   6,6:1
@@ -124,6 +206,14 @@ user-plus · users · world · x
 mood-cry · mood-sad · mood-neutral · mood-smile · mood-crazy-happy · mood-empty
 ```
 
+**Der QR-Code braucht keinen Glyphen.** Der Runde-3-Auftrag nennt `ti-qrcode` als
+im Repo-Subset vorhanden — im gebündelten `tabler-icons.css` dieses Pakets ist er
+aber nicht deklariert und rendert als Nichts. Statt die Falle aus A5 zu
+wiederholen, zeichnen B4.5 und B6.9 den Code als **Platzhalter aus CSS**: helle
+Fläche, Modulraster, drei Suchmuster in den Ecken, rechtwinklig wie alles andere.
+Die Umsetzung ersetzt ihn durch den echten, generierten Code — `ti-qrcode` ist
+für das Design keine Abhängigkeit.
+
 `rocket` trägt „Mission starten", `bolt` die Zündung, `planet` den Pool und die Sonden — die drei Stellen, an denen die Brücke ein eigenes Wort hat, bekommen auch ein eigenes Zeichen.
 
 **Zwei Dinge beim Commit:**
@@ -163,11 +253,13 @@ Die meisten sind unauffällig. Drei sind es nicht und gehören in die Prüfung: 
 
 ---
 
-## Was in Runde 2 zu prüfen ist
+## Was offen bleibt
 
-Runde 1 hat A, B und C abgeräumt. Offen bleibt:
+Runde 2 hat die vierzehn Funde aus Runde 1 nachgemessen bestätigt, Runde 3 die zwei
+fehlenden Screens und die fünf Nachzügler geschlossen. Für die Umsetzungs-Issues
+bleibt:
 
-1. **D7 nachzählen.** Die führenden Nullen sind über alle fünfzehn Blätter gestrichen — bitte gegenprüfen, dass keine Zählung übersehen wurde und dass „T+ 00:14:52" als Zeitangabe richtig stehen geblieben ist.
+1. **Die geteilte Wertung als Produktfrage.** B4.5 und B6.9 setzen: der Link gilt nur für diese Session und läuft mit „Abstimmung beenden" ab; wer kein Telefon dabei hat, wird an diesem Gerät durchgereicht (B4.6, B6.10). Beides ist eine Setzung aus §2, Punkt 2 — kein Detail aus dem Handover.
 2. **B16 gegenlesen.** Die drei Regeln, die die Dichtebelege erzwungen haben, standen vorher nirgends: Rasterumbruch der Plätze ab neun Personen, Buchstabensprung und Schübe im Regal ab 30 Spielen, Stufenabfall versaler Titel ab 22 Zeichen. Sie gehören ins Produkt, nicht nur ins Design.
 3. **Das Unentschieden als Produktfrage.** B16.3 zeichnet: beide bekommen einen vollen Sieg, keine Bruchzahl, die Serie läuft für beide weiter. Bei gleichem Score wird das ältere Spiel gezogen. Beides ist eine Setzung, keine Vorgabe aus dem Handover.
 4. **Die Personenfarben in der echten App gegenprüfen** — B8 misst gegen die hier gezeichneten Gründe, nicht gegen die gerenderte Anwendung.
