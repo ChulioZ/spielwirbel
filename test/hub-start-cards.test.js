@@ -96,11 +96,18 @@ test('an established round gets suggestion, pulse and care cards, in the phone o
   const r = busyRound();
   dom.call('renderStartTab', r, r.games);
   const titles = [...dom.app.querySelectorAll('.hub-card__title')].map((el) => el.textContent.trim());
-  assert.equal(titles.length, 3, 'expected exactly the three derivable cards for this fixture');
+  // The three DERIVED cards, then the three sub-page previews (#1185). Asserted
+  // as the exact set in the exact order, not as a subset: this is the spec that
+  // notices a card rendering when it has nothing to say, so a `.includes` here
+  // would give up the only completeness check the grid has.
+  assert.equal(titles.length, 6, 'expected exactly the three derivable cards and the three previews');
   assert.deepEqual(
     titles,
-    [dom.run("t('hub.suggest.title')"), dom.run("t('hub.pulse.title')"), dom.run("t('hub.care.title')")],
-    'DOM order is the phone order, and it is action-first',
+    [
+      dom.run("t('hub.suggest.title')"), dom.run("t('hub.pulse.title')"), dom.run("t('hub.care.title')"),
+      dom.run("t('hub.tab.regal')"), dom.run("t('hub.tab.pokale')"), dom.run("t('hub.tab.chronik')"),
+    ],
+    'DOM order is the phone order: action-first, then "what is over there"',
   );
   // With content in the pane, the stand-in for the rail gap must be gone.
   assert.equal(dom.app.querySelector('.empty--rail-gap'), null, 'the stand-in rendered beside real content');

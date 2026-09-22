@@ -1365,6 +1365,93 @@ a.hub-row:hover { background: var(--sunken-soft); }
 .hub-row--quiet .hub-row__sub { color: var(--muted); }
 .hub-row__go { color: var(--muted); flex: none; }
 .hub-row--static { cursor: default; }
+
+/* ---- The three sub-page previews (#1185, hub-previews.js) ---------------- */
+
+/* A preview is a hub-card with one link at its foot, so it inherits the card
+   frame and adds only the strip, the rows and that link. `margin-top: auto`
+   pins the link to the bottom edge however tall the body turns out, which is
+   what keeps three previews of different content reading as one set in the
+   column flow. */
+.hub-preview { display: flex; flex-direction: column; }
+.hub-preview__sub { font-size: var(--text-sm); color: var(--muted); }
+.hub-preview__open {
+  margin-top: auto;
+  padding-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--brand);
+}
+.hub-preview__open .ti { font-size: var(--text-md); }
+.hub-preview__open:hover { text-decoration: underline; }
+
+/* The Regal strip. `flex-wrap` rather than a grid: the count is capped at six
+   and a tile is a fixed 40px, so wrapping is the whole layout and needs no
+   track definition. `position: relative` is NOT optional — a cover placeholder
+   is `position: absolute; inset: 0` and lands on the viewport without a
+   positioned host (.claude/rules/absolutely-positioned-components-escape-a-new-host.md). */
+.hub-preview__covers { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.hub-preview__cover {
+  position: relative;
+  width: 40px;
+  aspect-ratio: 1;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  background-size: cover;
+  background-position: center;
+  overflow: hidden;
+  flex: none;
+}
+
+/* A standings row. Not a `.ds-row`: that component promises a click
+   (.claude/rules/ds-row-is-a-click-target.md) and these rows are inert — the
+   card's one link is at its foot. */
+.hub-preview__rank {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 0;
+  font-size: var(--text-sm);
+}
+.hub-preview__place {
+  flex: none;
+  width: 18px;
+  font-weight: 700;
+  color: var(--muted);
+  text-align: right;
+}
+.hub-preview__avatar { width: 24px; height: 24px; font-size: var(--text-xs); flex: none; }
+/* The name is the only part that may shrink, so a long one ellipsises instead of
+   pushing the score out of the card. `min-width: 0` is what lets it
+   (.claude/rules/percent-sizes-under-a-shrink-to-fit-flex-item.md). */
+.hub-preview__name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hub-preview__score { flex: none; font-weight: 700; font-variant-numeric: tabular-nums; }
+.hub-preview__last { font-size: var(--text-sm); color: var(--muted); margin-top: 6px; }
+
+/* ---- „Nicht im Regal" on the hub (#1185) -------------------------------- */
+
+/* The heading IS the group, so the four rows carry no count of their own beyond
+   the one in each label — the V1 Tisch sheet's mistake was a fifth „Nicht im
+   Regal" row inside the group of that name. */
+.hub-offshelf { margin-top: 26px; }
+.hub-offshelf__title {
+  margin: 0 0 10px;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
 .hub-care__head {
   font-size: var(--text-sm);
   font-weight: 700;
@@ -3075,6 +3162,22 @@ body.auth-screen .topbar__home,
 body.auth-screen #feedbackBtn,
 body.auth-screen .topbar__context { display: none; }
 
+/* The rating step runs full-screen (#1185): the vote card is the only thing on
+   the device, and the back control inside it (.vote__undo, 44px) is the only way
+   out. Toggled by voteScreen() in core.js.
+
+   The WHOLE bar, not its pieces like auth-screen above: the language picker is
+   the one control that survives an auth screen, and mid-vote it is noise on a
+   card whose text is four words. Everything the bar offers — inbox, account,
+   feedback, support — is a way to leave a flow that has unsaved votes in it.
+
+   The dock deliberately has NO rule here. startVoting() never renders one, so a
+   hide would be a selector that can never match — a guard nobody could observe
+   failing (.claude/rules/redundant-guards-make-each-other-untestable.md). The
+   ABSENCE is asserted in test/vote-card-fullscreen.test.js instead, which is
+   what would notice if a future change started rendering one. */
+body.vote-screen .topbar { display: none; }
+
 .auth {
   min-height: calc(100vh - 180px);
   display: flex;
@@ -4722,7 +4825,13 @@ a.k-tile:focus-visible,
 /* Icon + label on ONE line. Scoped, because the bare `.ds-row__main` stacks its
    children on purpose — the Chronik rows put a date over a status, so making it
    a flex row globally would lay those out side by side (the same reasoning that
-   scopes `.provider-row .ds-row__main` below). */
+   scopes `.provider-row .ds-row__main` below).
+
+   `.off-shelf__row` has TWO hosts since #1185 — the Regal's sheet and the hub's
+   „Nicht im Regal" group — and they deliberately share the class rather than
+   each having their own. The rows are one component; a second class would have
+   to re-declare this rule, which is the drift that makes an icon sit flush
+   against its label on whichever host nobody looked at. */
 .rs-row .ds-row__main,
 .wish-pick__row .ds-row__main,
 .off-shelf__row .ds-row__main { display: flex; align-items: center; gap: 10px; min-width: 0; }

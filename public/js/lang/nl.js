@@ -141,6 +141,9 @@ I18N.nl = {
   'hub.anniv.yearsOne': 'Vandaag een jaar geleden',
   'hub.anniv.years': 'Vandaag {n} jaar geleden',
   'hub.reco.more': 'Alle aanbevelingen bekijken',
+  'hub.preview.open': 'openen',
+  'hub.preview.openNamed': '{title} openen',
+  'hub.preview.chronikLast': 'Laatst op {date}',
 
   'rail.archive': 'Uit de kast',
   'rail.settings': 'Instellingen',

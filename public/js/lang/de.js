@@ -132,6 +132,9 @@ I18N.de = {
   'hub.anniv.yearsOne': 'Heute vor einem Jahr',
   'hub.anniv.years': 'Heute vor {n} Jahren',
   'hub.reco.more': 'Alle Empfehlungen ansehen',
+  'hub.preview.open': 'öffnen',
+  'hub.preview.openNamed': '{title} öffnen',
+  'hub.preview.chronikLast': 'Zuletzt am {date}',
 
   // Group headings in the desktop navigation rail (from 1280px up).
   // Steht über den drei Listen, die NICHT das Regal sind: die zwei Archive und

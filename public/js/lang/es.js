@@ -130,6 +130,9 @@ I18N.es = {
   'hub.anniv.yearsOne': 'Hoy hace un año',
   'hub.anniv.years': 'Hoy hace {n} años',
   'hub.reco.more': 'Ver todas las recomendaciones',
+  'hub.preview.open': 'abrir',
+  'hub.preview.openNamed': 'Abrir {title}',
+  'hub.preview.chronikLast': 'Última vez el {date}',
 
   'rail.archive': 'Fuera de la estantería',
   'rail.settings': 'Ajustes',

@@ -131,6 +131,9 @@ I18N.en = {
   'hub.anniv.yearsOne': 'One year ago today',
   'hub.anniv.years': '{n} years ago today',
   'hub.reco.more': 'See all recommendations',
+  'hub.preview.open': 'open',
+  'hub.preview.openNamed': 'Open {title}',
+  'hub.preview.chronikLast': 'Last played on {date}',
 
   // Group headings in the desktop navigation rail (from 1280px up).
   // Heads the three lists that are NOT the shelf: the two archives and the wish

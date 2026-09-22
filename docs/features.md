@@ -174,9 +174,11 @@ What the app does, in detail. For a short overview see the
   of the same game. A round with too few linked games is told so rather than
   shown a confident guess.
   A game is active, retired, completed or wished-for, never two at once. All
-  three lists — and the recommendations beside them — are reached from „Nicht im
-  Regal" in the shelf's header on a phone or tablet, and from the left rail's own
-  group from 1280px up. Every row on those lists
+  three lists — and the recommendations beside them — are reached from a „Nicht im
+  Regal" group on the round's Start tab, from the same-named control in the
+  shelf's header on a phone or tablet, and from the left rail's own group from
+  1280px up. The four entries, and the counts beside them, are defined once and
+  rendered by all three, so they cannot drift apart. Every row on those lists
   opens the game's own detail page, so a game keeps its full editing surface —
   title, cover, player range, tags — after it has left the shelf; the page then
   offers only the way back onto it. The distinction carries through to the Pokale tab: a
@@ -292,8 +294,15 @@ What the app does, in detail. For a short overview see the
     winner *or* an ending leaves the list — games with no cover, games with no
     player count; each deep-linking to the fix), a „**heute vor N Jahren**"
     anniversary when one falls on today, and a teaser from the recommendations
-    screen. Every card renders nothing at all when it has nothing to say, so a
-    young round sees none of them.
+    screen. Below the derived cards, a **preview of each of the round's other
+    sections** — the shelf as a handful of covers with its count, the standings'
+    top three, and how many evenings there have been with the date of the last —
+    each opening that section. Under all of it, the „Nicht im Regal" group
+    (Aussortiert · Durchgespielt · Wunschliste · Könnte euch gefallen) and one
+    Einstellungen entry. Every card renders nothing at all when it has nothing
+    to say, so a young round sees none of them — the previews arrive with the
+    round's first played session, and only the off-shelf group is always there,
+    because a list is not less worth reaching for being empty.
   - **Regal** (shelf) – the game collection as a card grid with one „Filter"
     control holding both the custom-tag chips and the imported-BGG-metadata
     filters (see Sessions below), a search pill, sorting
@@ -379,8 +388,12 @@ What the app does, in detail. For a short overview see the
   way, and each person's ratings are saved the moment they give them: one
   **1–5** scale per drawn game, from „gar nicht" to „unbedingt". Rating is **one
   tap per game** — the face you press is the answer, and the card moves on by
-  itself after a short beat. The card's only other control is an undo in its
-  top-left corner, which reopens the last game with its rating still chosen.
+  itself after a short beat. The rating card runs **full-screen**: no top bar and
+  no section navigation, so the device holds one game and one question while the
+  person beside you waits for it. The card's only other control is an undo in its
+  top-left corner, which reopens the last game with its rating still chosen and is
+  also the way back out. The handover screen, the lobby and the result keep the
+  bar.
   Three ways in, freely mixed within one evening:
   - **pass the device around** – tap whoever is next, a handover screen names
     them so nobody peeks, and when they are done the lobby leads with the next

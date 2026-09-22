@@ -140,6 +140,9 @@ I18N.fr = {
   'hub.anniv.yearsOne': 'Il y a un an aujourd’hui',
   'hub.anniv.years': 'Il y a {n} ans aujourd’hui',
   'hub.reco.more': 'Voir toutes les recommandations',
+  'hub.preview.open': 'ouvrir',
+  'hub.preview.openNamed': 'Ouvrir {title}',
+  'hub.preview.chronikLast': 'Dernière fois le {date}',
 
   'rail.archive': 'Hors de l’étagère',
   'rail.settings': 'Réglages',

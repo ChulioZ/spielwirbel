@@ -511,6 +511,10 @@ public/
                      on the table, how often the round meets, what is quietly
                      broken, and what was played on this day in a past year
                      (issue #923)
+    off-shelf.js     the four off-shelf destinations (Aussortiert, Durchgespielt,
+                     Wunschliste, Könnte euch gefallen) with their counts — one
+                     definition, used by the Regal's sheet, the rail and the
+                     hub's „Nicht im Regal" group (issue #1185)
     cover.js         deterministic per-title gradient for games with no cover
     cover-size.js    rewrites provider cover URLs to a frame-appropriate size
     tag-icons.js     the curated tag-icon set (mirrors lib/tag-icons.js)
@@ -694,8 +698,8 @@ public/
                      in-app on a plain click, so Cmd/middle-click opens a new
                      tab and "Copy link address" works (issue #330)
     round-rail.js    the desktop navigation rail (from 1280px): round identity,
-                     the four sections, the two archives + the Wunschliste, and
-                     one Einstellungen entry
+                     the four sections, the off-shelf rows (from off-shelf.js),
+                     and one Einstellungen entry
     landing-moments.js  the landing hero's stage: the app's own pot, vote and
                      Tafel played once from the shipped components and their own
                      keyframes (issue #1091)
@@ -708,6 +712,8 @@ public/
                           strip, the round fetch, the inline round-name editor
     views-round-start.js  Start tab: hero, the one big CTA and its quick-start
                           chips, the tickets, and the derived card grid (#923)
+    hub-previews.js       the hub's previews of Regal, Pokale and Chronik, and
+                          its „Nicht im Regal" group (issue #1185)
     views-regal.js        Regal tab: the games library (search, filters, grid)
     regal-bulk.js         the Regal's selection mode and its four bulk actions
                           (tags, owners, retire, delete), lifted out of

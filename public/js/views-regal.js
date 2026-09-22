@@ -385,18 +385,12 @@ function openOffShelfSheet(round) {
   backdrop.addEventListener('mousedown', (e) => { if (e.target === backdrop) dismiss(); });
   backdrop.querySelector('.sheet__close').addEventListener('click', dismiss);
 
-  // Same icons, labels and counts as the rail's rows — the two are one
-  // navigation at two widths, which is what test/off-shelf-parity.test.js
-  // pins. Recommendations carry no count deliberately: the other three number
-  // the round's OWN games, while this one would number a list the round has
-  // never seen (see the comment at round-rail.js's suggest row).
+  // Icons, labels and counts come from off-shelf.js, so this sheet, the rail
+  // and the hub's „Nicht im Regal" group cannot disagree about which rows exist
+  // or what they count — what test/off-shelf-parity.test.js used to have to
+  // compare between two hand-built arrays.
   const list = backdrop.querySelector('.off-shelf');
-  [
-    { icon: 'ti-trash', label: t('retired.link', { n: round.games.filter((g) => g.retired).length }), sub: 'retired', go: () => showRetired(rid) },
-    { icon: 'ti-circle-check', label: t('completed.link', { n: round.games.filter((g) => g.completed).length }), sub: 'completed', go: () => showCompleted(rid) },
-    { icon: 'ti-heart', label: t('wish.link', { n: round.games.filter((g) => g.wish).length }), sub: 'wishlist', go: () => showWishlist(rid) },
-    { icon: 'ti-sparkles', label: t('suggest.link'), sub: 'recommendations', go: () => showRecommendations(rid) },
-  ].forEach(({ icon, label, sub, go }) => {
+  offShelfEntries(round).forEach(({ icon, label, sub, go }) => {
     // Real <a href> (#330), so ⌘/middle-click still open them in a new tab.
     // `class` FIRST, like every other .ds-row site — test/ds-row-affordance.test.js
     // matches on `<a\s+class="ds-row…"`, so an attribute in front of it makes the

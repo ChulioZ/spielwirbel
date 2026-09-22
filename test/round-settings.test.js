@@ -183,7 +183,7 @@ test('the rail carries no destructive round action', () => {
    so the rail was a second, longer navigation model competing with the single
    entry every width below 1280px uses. (One of those routed screens, Provider,
    went away with #744.) */
-test('the rail settings group is a single Einstellungen entry', () => {
+test('the rail settings group is a single Einstellungen entry', async (t) => {
   const rail = bodyOfFn(RAIL, 'buildRoundRail');
   assert.match(rail, /roundPath\(rid, 'settings'\)/, 'the rail lost its way into the settings screen');
   for (const [needle, what] of [
@@ -194,9 +194,25 @@ test('the rail settings group is a single Einstellungen entry', () => {
   ]) {
     assert.doesNotMatch(rail, needle, `the rail duplicates "${what}", which lives inside the settings screen (#581)`);
   }
-  // Anti-vacuous: the archives are NOT part of that group and must survive.
-  assert.match(rail, /roundPath\(rid, 'retired'\)/, 'the rail lost its retired archive');
-  assert.match(rail, /roundPath\(rid, 'completed'\)/, 'the rail lost its completed archive');
+  /* Anti-vacuous: the archives are NOT part of that group and must survive.
+
+     Asserted against the RENDERED rail rather than against its source. #1185
+     moved the four off-shelf rows into offShelfEntries() (off-shelf.js), so the
+     literal `roundPath(rid, 'retired')` this used to grep for no longer appears
+     in this file — and a floor that greps for one way of BUILDING a row goes
+     quiet the moment the row is built another way, while the row itself is fine.
+     That is the shape `.claude/rules/source-scanning-guards-enumerate-shapes.md`
+     is about, seen from the side where the guard over-reports safety. The href
+     is the invariant; how the rail arrives at it is not. */
+  const dom = loadApp();
+  t.after(() => dom.close());
+  dom.set('api', async () => roundFixture());
+  dom.set('accountsActive', () => true);
+  await dom.call('showRound', 1, 'start');
+  const hrefs = [...dom.app.querySelectorAll('.rail a[href]')].map((a) => a.getAttribute('href'));
+  for (const seg of ['retired', 'completed', 'wishlist', 'recommendations']) {
+    assert.ok(hrefs.includes(`/round/1/${seg}`), `the rail lost its "${seg}" off-shelf row`);
+  }
 });
 
 /* The two marker states are not interchangeable. On Tags the entry must be

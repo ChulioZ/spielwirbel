@@ -118,6 +118,9 @@ I18N.fi = {
   'hub.anniv.yearsOne': 'Tasan vuosi sitten tänään',
   'hub.anniv.years': '{n} vuotta sitten tänään',
   'hub.reco.more': 'Katso kaikki suositukset',
+  'hub.preview.open': 'avaa',
+  'hub.preview.openNamed': 'Avaa {title}',
+  'hub.preview.chronikLast': 'Viimeksi {date}',
 
   'rail.archive': 'Pois hyllystä',
   'rail.settings': 'Asetukset',

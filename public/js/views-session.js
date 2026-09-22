@@ -922,6 +922,14 @@ function startVoting(round, session, games, people, opts = {}) {
     // which game is on screen to anyone glancing at the handover device.
     setDocTitle(t('vote.crumb'), round.name);
 
+    /* The rating step runs full-screen (#1185): chrome off for a `vote` step, back
+       on for the handover. The ONLY setter — every way out of the wizard lands on
+       a screen that calls setContext(), which clears it (core.js). Deliberately
+       not re-cleared in finish()/guardLeave()/onPopstate: a second clear would be
+       a guard that can never be observed failing, so neither could be trusted
+       (.claude/rules/redundant-guards-make-each-other-untestable.md). */
+    voteScreen(step.type === 'vote');
+
     // Handover screen: full color card in the person's color.
     if (step.type === 'intro') {
       const color = personColor(round, step.person);

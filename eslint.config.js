@@ -44,6 +44,7 @@ const frontendGlobals = {
   currentView: 'writable', h: 'readonly', esc: 'readonly',
   cardSlot: 'readonly', slotOf: 'readonly',
   api: 'readonly', setContext: 'readonly', setDocTitle: 'readonly',
+  voteScreen: 'readonly',
   backRow: 'readonly', joinNames: 'readonly',
   // doc-title.js
   docTitle: 'readonly', DOC_TITLE_SEP: 'readonly', DOC_TITLE_BRAND_SEP: 'readonly',
@@ -406,10 +407,18 @@ const frontendGlobals = {
   hubPresetChips: 'readonly', hubPulseCard: 'readonly', hubCareCard: 'readonly',
   hubAnniversaryCard: 'readonly', renderRecoTeaser: 'readonly',
   editableRoundName: 'readonly',
+  // off-shelf.js (#1185) — the four off-shelf destinations, one definition
+  offShelfEntries: 'readonly',
+  // hub-previews.js (#1185) — the hub's three sub-page previews + „Nicht im Regal"
+  HUB_PREVIEW_COVERS: 'readonly', HUB_PREVIEW_RANKS: 'readonly',
+  hubPreviewCard: 'readonly', hubRegalPreview: 'readonly',
+  hubPokalePreview: 'readonly', hubChronikPreview: 'readonly',
+  hubOffShelfGroup: 'readonly',
   createRegalBulk: 'readonly', openBulkPicker: 'readonly',
   renderRegalTab: 'readonly', renderChronikTab: 'readonly', renderPokaleTab: 'readonly',
   CHRONIK_MILESTONES: 'readonly', chronikTier: 'readonly',
   pokaleStatCard: 'readonly', pokaleGameCard: 'readonly', recapGames: 'readonly',
+  roundStandings: 'readonly',
   gameCardHead: 'readonly', wireGameCardHead: 'readonly',
   renderRecapSection: 'readonly', renderPeriodRecapSection: 'readonly',
   canShareRecapImage: 'readonly', shareRecapCard: 'readonly',

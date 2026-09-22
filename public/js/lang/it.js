@@ -139,6 +139,9 @@ I18N.it = {
   'hub.anniv.yearsOne': 'Un anno fa oggi',
   'hub.anniv.years': '{n} anni fa oggi',
   'hub.reco.more': 'Vedi tutti i consigli',
+  'hub.preview.open': 'apri',
+  'hub.preview.openNamed': 'Apri {title}',
+  'hub.preview.chronikLast': 'Ultima volta il {date}',
 
   'rail.archive': 'Fuori dallo scaffale',
   'rail.settings': 'Impostazioni',

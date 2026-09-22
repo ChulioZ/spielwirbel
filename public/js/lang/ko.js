@@ -119,6 +119,9 @@ I18N.ko = {
   'hub.anniv.yearsOne': '딱 일 년 전 오늘',
   'hub.anniv.years': '{n}년 전 오늘',
   'hub.reco.more': '추천 전체 보기',
+  'hub.preview.open': '열기',
+  'hub.preview.openNamed': '{title} 열기',
+  'hub.preview.chronikLast': '마지막 플레이: {date}',
 
   'rail.archive': '선반 밖',
   'rail.settings': '설정',

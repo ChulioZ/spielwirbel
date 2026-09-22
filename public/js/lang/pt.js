@@ -143,6 +143,9 @@ I18N.pt = {
   'hub.anniv.yearsOne': 'Há um ano, neste dia',
   'hub.anniv.years': 'Há {n} anos, neste dia',
   'hub.reco.more': 'Ver todas as recomendações',
+  'hub.preview.open': 'abrir',
+  'hub.preview.openNamed': 'Abrir {title}',
+  'hub.preview.chronikLast': 'Última vez em {date}',
 
   'rail.archive': 'Fora da estante',
   'rail.settings': 'Configurações',

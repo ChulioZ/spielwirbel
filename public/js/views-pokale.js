@@ -122,35 +122,23 @@ const recapGames = (round, ids) => ids.map((id) => round.games.find((g) => g.id 
 // --- Pokale tab: hall of fame — member podium and fun stats, all computed
 // on demand from sessions (single source of truth, like the rating averages).
 // The Rückblick (#484) is appended as a second section at the end.
-function renderPokaleTab(round) {
+/* The round's standings — the Siegwertung ranking, extracted from
+   renderPokaleTab so the hub's Pokale PREVIEW (#1185) shows the same order,
+   the same places and the same numbers as the page it previews.
+
+   Two screens each deriving a ranking from the same sessions is the
+   `.claude/rules/shared-constants-across-the-stack.md` shape one domain over:
+   nothing goes red when they drift, and the preview quietly contradicts the
+   page one tap away.
+
+   Returns { wins, scores, ranked, winners, rankOf }:
+     wins    member id -> raw win count (what the group recognises)
+     scores  member id -> Siegwertung  (what the ranking actually uses)
+     ranked  every active member, best Siegwertung first
+     winners those of `ranked` with any record at all (see hasRecord below)
+     rankOf  member id -> tie-aware place, for `winners` only */
+function roundStandings(round) {
   const finished = round.sessions.filter((s) => s.finished);
-
-  const sec = h('<div class="section"></div>');
-  // The ⓘ explains the Siegwertung (#895) — the standings rank on a number the
-  // group has not seen before, so it owes an explanation somewhere. One per
-  // screen, beside the heading the standings sit under.
-  const head = h(`<div class="section-head"><h1>${esc(t('pokale.title'))} ${infoButton('win')}</h1></div>`);
-  wireInfoButtons(head);
-  sec.appendChild(head);
-
-  if (finished.length === 0) {
-    sec.appendChild(emptyState({ icon: 'ti-trophy', title: t('pokale.emptyTitle'), text: t('pokale.empty') }));
-    app.appendChild(sec);
-    return;
-  }
-
-  // The group's accumulated taste, derived on demand from the session votes
-  // (#484). Read here for the best-rated card and again by the Rückblick
-  // section appended at the end of this tab.
-  // The shelf index is built once here and handed to the recap, so „das
-  // bestbewertete Spiel" names the game the Regal actually puts at the top —
-  // one ranking of one shelf, not two (#894).
-  const shelfIndex = roundScoreIndex(round);
-  const recap = roundRecap(round, sessionPeople, (gid) => {
-    const st = shelfIndex.byGame[gid];
-    return st ? st.score : null;
-  });
-
   // Wins per member (a night can have several winners). Keyed by round member,
   // so a guest win is dropped by the `wid in wins` guard below — deliberately:
   // the standings are the permanent group's leaderboard, and a one-evening
@@ -208,6 +196,39 @@ function renderPokaleTab(round) {
   const places = computePlaces(winners.map((m) => ({ shown: scores[m.id], count: 1 })));
   const rankOf = {};
   winners.forEach((m, i) => (rankOf[m.id] = places[i]));
+  return { wins, scores, ranked, winners, rankOf };
+}
+
+function renderPokaleTab(round) {
+  const finished = round.sessions.filter((s) => s.finished);
+
+  const sec = h('<div class="section"></div>');
+  // The ⓘ explains the Siegwertung (#895) — the standings rank on a number the
+  // group has not seen before, so it owes an explanation somewhere. One per
+  // screen, beside the heading the standings sit under.
+  const head = h(`<div class="section-head"><h1>${esc(t('pokale.title'))} ${infoButton('win')}</h1></div>`);
+  wireInfoButtons(head);
+  sec.appendChild(head);
+
+  if (finished.length === 0) {
+    sec.appendChild(emptyState({ icon: 'ti-trophy', title: t('pokale.emptyTitle'), text: t('pokale.empty') }));
+    app.appendChild(sec);
+    return;
+  }
+
+  // The group's accumulated taste, derived on demand from the session votes
+  // (#484). Read here for the best-rated card and again by the Rückblick
+  // section appended at the end of this tab.
+  // The shelf index is built once here and handed to the recap, so „das
+  // bestbewertete Spiel" names the game the Regal actually puts at the top —
+  // one ranking of one shelf, not two (#894).
+  const shelfIndex = roundScoreIndex(round);
+  const recap = roundRecap(round, sessionPeople, (gid) => {
+    const st = shelfIndex.byGame[gid];
+    return st ? st.score : null;
+  });
+
+  const { wins, scores, ranked, winners, rankOf } = roundStandings(round);
 
   // Podium columns by rank: left = 2, center = 1, right = 3. A COLUMN IS A
   // RANK, NOT A MEMBER (#836) — tied members share one step rather than

@@ -250,6 +250,26 @@ async function fetchRoundFresh(rid) {
 // textContent, so a round name needs no escaping.
 function setContext(label) {
   context.textContent = label || '';
+  // Every screen that NAMES itself in the top bar is by definition a screen that
+  // wants a top bar, so arriving anywhere clears the immersive rating step below.
+  // That is the whole teardown: one setter, one clearer, and the clearer sits on
+  // the call every view already makes rather than on a list of exit paths
+  // somebody has to keep complete (finish(), guardLeave(), the popstate finale
+  // branch, opts.onSaved — four chances to forget one, and forgetting one leaves
+  // the app with no top bar at all).
+  voteScreen(false);
+}
+
+/* The rating step runs FULL-SCREEN (#1185): no top bar, no dock. A root class the
+   chrome honours, exactly like `body.auth-screen` (views-auth.js) — CSS does the
+   hiding, so nothing here has to know which pieces of chrome exist.
+
+   Only the RATING step. The handover screen, the live vote, the finale and the
+   results all keep the bar; each of them calls setContext above, so each of them
+   clears this on the way in without a line of its own. `startVoting`'s render()
+   is the only setter. */
+function voteScreen(on) {
+  document.body.classList.toggle('vote-screen', !!on);
 }
 
 // The browser tab / window title for the current screen (#522), the sibling of
