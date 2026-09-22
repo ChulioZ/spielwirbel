@@ -33,6 +33,7 @@ const { scoreTally } = require('../../public/js/vote-score');
 // hand-copied expectation of it (#921).
 const { PROVIDER_INFO_FIELDS } = require('../../public/js/provider-info-fields');
 const { fitsPlayerCount } = require('../../public/js/draw-pool');
+const { markerIndexFromId } = require('../../public/js/round-marker');
 
 // A fresh identifier per call, so a suite run against a PERSISTENT database
 // can't collide with an earlier run's rows. Uses crypto rather than
@@ -232,6 +233,9 @@ module.exports = function repoContract(repo) {
       sessionCount: 2,
       playedCount: 1,
       background: null,
+      // Stamped at creation (#1187), and carried by the summary because the
+      // home tile paints from it.
+      marker: markerIndexFromId(round.id),
       lastPlayed: {
         gameTitle: 'Catan',
         // winnerIds order preserved; the unknown id is dropped, not blanked.
@@ -2099,6 +2103,29 @@ module.exports = function repoContract(repo) {
     assert.deepEqual(second.previous, { type: 'theme', page: 'p', accent: 'a' });
     assert.deepEqual((await repo.getRound(T, round.id)).background, { type: 'none' });
     assert.equal(await repo.setBackground(T, 'missing', { type: 'none' }), null);
+  });
+
+  test('setMarker stores an index 0-7; a fresh round already carries one (#1187)', async () => {
+    const round = await freshRound();
+    // createRound stamps it, so `marker` is never absent on a round this backend
+    // created — and it is always PRESENT (may be null) on one that predates it,
+    // which is the key contract `background` has.
+    assert.equal(markerIndexFromId(round.id), round.marker);
+    assert.ok(Object.prototype.hasOwnProperty.call(await repo.getRoundMeta(T, round.id), 'marker'));
+
+    assert.deepEqual(await repo.setMarker(T, round.id, 6), { marker: 6 });
+    assert.equal((await repo.getRound(T, round.id)).marker, 6);
+    assert.equal((await repo.getRoundMeta(T, round.id)).marker, 6);
+    const summary = (await repo.listRoundSummaries(T)).find((r) => r.id === round.id);
+    assert.equal(summary.marker, 6, 'the home tile paints from the summary read');
+
+    // Index 0 is a real marker, so it must survive as 0 rather than as "unset" —
+    // the reason the column carries no DEFAULT.
+    assert.deepEqual(await repo.setMarker(T, round.id, 0), { marker: 0 });
+    assert.equal((await repo.getRound(T, round.id)).marker, 0);
+
+    assert.equal(await repo.setMarker(T, 'missing', 3), null);
+    assert.equal(await repo.setMarker(OTHER, round.id, 3), null, 'another tenant cannot mark this round');
   });
 
   test('addTag creates and dedupes; deleteTag unassigns from every game (#238)', async () => {

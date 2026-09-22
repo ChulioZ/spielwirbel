@@ -402,7 +402,10 @@ lib/
                                              claimed participant's votes — the
                                              account-free half of #209/#612)
     activities.js    …/activities           (list the feed [GET], delete an entry)
-    background.js    …/background           (set the design)
+    marker.js        …/marker               (PATCH the round's colour marker,
+                                             0-7 — issue #1187) and, until the
+                                             flip (#1202), the retired
+                                             …/background (set the design)
     tags.js          …/tags                 (create a custom tag [deduped], set its icon, delete one)
 public/
   index.html
@@ -529,6 +532,11 @@ public/
                      resolver every view and the recap card look a stored
                      design up through — by id, then by the legacy page hex
                      (issue #903)
+    round-marker.js  a round's COLOUR MARKER (#1187): the design-neutral
+                     index 0-7, the table mapping every retired design onto
+                     one, the id hash that assigns one at creation, and the
+                     resolver. Required by both repo backends and by
+                     lib/routes/marker.js
     round-theme.js   how a design reaches the page: the --page-bg/--brand
                      pair, the data-world and data-scheme root attributes,
                      <meta name="theme-color">, and the rating ramp that

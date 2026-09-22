@@ -421,7 +421,7 @@ null, because the seed is the one caller that can afford to fail loudly at
 require time, and `test/demo-seed.test.js` asserts each seeded design round-trips
 through `resolveDesign()` with the registry's own page and accent.
 
-Note what deliberately did **not** join it: `lib/routes/background.js` still
+Note what deliberately did **not** join it: `lib/routes/marker.js` still
 stores a design id **without** checking it against this list. That is not an
 oversight and must not be "fixed" — an unknown id already resolves to the plain
 palette on the client, and validating server-side would turn a render-time
@@ -550,6 +550,23 @@ Note what deliberately stayed **out**: the design's *colours* are here, but its
 layout is in `public/css/designs/<id>.css`, which no backend reads at all — and
 must not grow colour tokens, because the contrast suite resolves them from this
 registry (`.claude/rules/design-stylesheets-are-shell-assets.md`).
+
+**The twentieth is `public/js/round-marker.js`** (#1187): a round's colour
+marker — `MARKER_COUNT`, the legacy design-id → index table, the id hash that
+assigns one at creation, and `resolveMarker`. Both repo backends require it to
+stamp `marker` in `createRound`, and `lib/routes/marker.js` validates `PATCH
+…/marker` against the same `MARKER_COUNT`; the frontend loads it as a
+shared-scope script.
+
+Its trap is the one the design registry next door does not have: here the client
+and the server really do **write the same number**, so a hand-copied bound would
+fail in the *quiet* direction. A server that still said 8 while a design set grew
+would accept an index no design can render, and the four surfaces would paint
+`undefined` — no 400, no error, just an uncoloured round. Hence `MARKER_COUNT` in
+the schema rather than `.max(7)`, and hence the whole file being dependency-free:
+it deliberately does **not** resolve a legacy design itself (that needs
+`round-designs.js`), so `resolveMarker` takes the already-resolved id as an
+argument and stays requirable from Node.
 
 **Each new instance must be named above.** `test/rule-enumerations.test.js`
 asserts every `require('../public/js/…')` under `lib/routes/` and `lib/` appears

@@ -376,17 +376,24 @@ const frontendGlobals = {
   recReasonText: 'readonly', recFacts: 'readonly', recEmptyKey: 'readonly',
   showArchive: 'readonly', ARCHIVES: 'readonly',
   PALETTES: 'readonly', WORLDS: 'readonly', DESIGNS: 'readonly', resolveDesign: 'readonly', designIcon: 'readonly',
+  // round-marker.js (#1187): a round's colour marker, the one thing a round
+  // still owns about its own look. Design-neutral by construction, so it is
+  // listed with neither registry above.
+  MARKER_COUNT: 'readonly', LEGACY_MARKER_INDEX: 'readonly', markerIndexFromId: 'readonly',
+  isMarkerIndex: 'readonly', resolveMarker: 'readonly',
+  roundMarker: 'readonly', markerColors: 'readonly', applyMarker: 'readonly', markerStyle: 'readonly',
   // designs.js + design.js (#1184 — the per-USER design layer, distinct from the
   // per-ROUND registry above; the two coexist until the flip, #1202)
   DESIGN_REGISTRY: 'readonly', FACE_DESIGN: 'readonly', designById: 'readonly',
   selectableDesigns: 'readonly', selectableDesignIds: 'readonly', isSelectableDesign: 'readonly',
+  designMarkers: 'readonly', markerOf: 'readonly', markerInk: 'readonly', DEFAULT_MARKER_INK: 'readonly',
   activeDesign: 'readonly', designScheme: 'readonly', loadDesignStylesheet: 'readonly',
   applyDesign: 'readonly', requestedDesign: 'readonly', initDesign: 'readonly',
   DESIGN_CHOOSER_REVISION: 'readonly', applyAccountDesign: 'readonly',
   offeredDesigns: 'readonly', designTile: 'readonly', renderDesignPicker: 'readonly',
   maybeShowDesignChooser: 'readonly', showDesignChooser: 'readonly',
   buildDesignSection: 'readonly',
-  showBackground: 'readonly', showGameDetail: 'readonly',
+  showMarker: 'readonly', showGameDetail: 'readonly',
   // game-editors.js (#968 — the five field editors, split out of
   // views-round-detail.js; each takes an explicit context)
   openPlayersPopover: 'readonly', openOwnersPopover: 'readonly',

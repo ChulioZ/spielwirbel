@@ -204,7 +204,7 @@ function resolveRoute(pathname) {
     if (sub === 'completed') return () => showCompleted(rid);
     if (sub === 'wishlist') return () => showWishlist(rid);
     if (sub === 'recommendations') return () => showRecommendations(rid);
-    if (sub === 'design') return () => showBackground(rid);
+    if (sub === 'design') return () => showMarker(rid);
     if (sub === 'tags') return () => showTags(rid);
     if (sub === 'settings') return () => showRoundSettings(rid);
     if (sub === 'game' && parts[3]) return () => showGameDetail(rid, parts[3]);

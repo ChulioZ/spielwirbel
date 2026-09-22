@@ -252,11 +252,22 @@ function renderLobbyList(rounds) {
     // emblem's ink: the block in styles.css is scoped to :root and .theme-card,
     // so the tile does not turn dark. One dark tile in a light lobby would read
     // as a patchwork rather than as an identity.
+    //
+    // A round that is NOT on a world carries its colour MARKER instead (#1187):
+    // the emblem is filled from --marker rather than from a stored accent, so
+    // the tile shows the round's colour in the viewer's own design. For a
+    // palette round the two are the same hex by construction — Klassisch's eight
+    // markers ARE the eight palette accents — which is what makes this switch
+    // invisible to every round that has one.
     const design = resolveDesign(r.background);
     const schemeAttr = design && design.scheme ? ` data-scheme="${esc(design.scheme)}"` : '';
-    const worldAttrs = (design && design.world ? ` data-world="${esc(design.world)}" style="--brand:${design.accent}"` : '') + schemeAttr;
+    const marker = markerStyle(r);
+    const worldAttrs = (design && design.world
+      ? ` data-world="${esc(design.world)}" style="--brand:${design.accent}"`
+      : (marker ? ` style="${marker}"` : '')) + schemeAttr;
+    const emblemFill = marker ? 'var(--marker)' : themeAccent(r.background);
     const card = h(`<a class="round-card"${worldAttrs}>
-         <span class="round-card__emblem" style="background:${themeAccent(r.background)}"><i class="ti ${designIcon(r.background)}" aria-hidden="true"></i></span>
+         <span class="round-card__emblem" style="background:${emblemFill}"><i class="ti ${designIcon(r.background)}" aria-hidden="true"></i></span>
          <span class="round-card__body">
            <span class="round-card__name">${esc(r.name)}${r.shared ? ` <span class="round-card__shared"><i class="ti ti-users" aria-hidden="true"></i> ${esc(t('home.shared'))}</span>` : ''}</span>
            <span class="round-card__meta">

@@ -59,7 +59,7 @@ async function showRound(rid, tab) {
         : [],
     ]);
   } catch { return showHome(); }
-  applyBackground(round.background);
+  applyBackground(round.background, round);
   setContext(round.name);
   // The four hub tabs share one view, so they share one title line and differ
   // only in the tab label — which is what makes them distinguishable in a tab

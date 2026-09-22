@@ -9,7 +9,7 @@ async function showMember(rid, mid) {
   let round;
   try { round = await fetchRound(rid); }
   catch { return showHome(); }
-  applyBackground(round.background);
+  applyBackground(round.background, round);
   const member = round.members.find((m) => m.id === mid);
   if (!member) return showRound(rid);
   setContext(round.name);

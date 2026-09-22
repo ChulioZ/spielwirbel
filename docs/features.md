@@ -515,7 +515,18 @@ What the app does, in detail. For a short overview see the
   and every other per-session number are deliberately **not** shrunk: there `n`
   is the whole electorate rather than a sample. The game's own page shows the
   score alone, with an ⓘ explaining the principle.
-- **Designs** – per round, pick a colour scheme (page tone + accent); the
+- **Colour marker** – each round carries **one colour**, picked under
+  Einstellungen → Farbmarker and shown to everyone in the round: on the lobby
+  tile, beside the round's name in the top bar, on the session screens and along
+  the head of the recap card a group shares. It is **not** a design — the colour
+  is stored as one of eight *slots*, and each design paints those slots in its
+  own way, so the same round reads as the green one whichever look you are
+  wearing. A new round is given one automatically (issue #1187).
+- **Designs (per round)** – *retired, still rendered.* Rounds no longer choose a
+  design; one already on a palette or a world keeps it until the programme's
+  flip (issue #1202), and a legacy palette maps onto the matching marker. The
+  rest of this entry describes what those rounds still show.
+  Pick a colour scheme (page tone + accent); the
   whole UI derives from it — surfaces, shadows, the dark "stage" of the
   finale, and the mobile browser / installed-app chrome around the page.
   A design can be **light or dark**: Obsidian is a plain dark scheme, and the
@@ -642,7 +653,7 @@ What the app does, in detail. For a short overview see the
   user-less member, or a fresh one) and their **role**. Two roles are on offer:
   - **Mitspielen** (player) – the default, and everything a round is normally
     for: start sessions and vote in them, add and edit games, retire or complete
-    them, manage seats, tags and the round's design.
+    them, manage seats, tags and the round's colour marker.
   - **Mitverwaltung** (co-manager) – all of that, plus the destructive actions:
     delete a session, delete a Chronik entry, delete an archived game, and
     rename the round.

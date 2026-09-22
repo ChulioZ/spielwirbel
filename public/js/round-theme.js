@@ -88,7 +88,15 @@ function setThemeColor(accent) {
 // derives from these two custom properties via CSS color-mix (see styles.css).
 // A world sets the same two and adds only the root attribute (setWorld), so its
 // ornaments are additive over the tokens and a palette is a world with none.
-function applyBackground(bg) {
+/* `round` is optional and carries ONE thing: the colour marker (#1187). It is a
+   second parameter rather than a second call at each of the ten round screens
+   because the failure modes are not symmetric — a screen that forgets to pass it
+   shows no marker, while a screen that forgets a separate applyMarker() call
+   would keep the PREVIOUS round's colour, which is both worse and invisible.
+   Every out-of-round screen already calls this with one argument, so leaving a
+   round clears the marker without anyone having to remember to. */
+function applyBackground(bg, round) {
+  applyMarker(round || null);
   const root = document.documentElement.style;
   const design = resolveDesign(bg);
   const themed = !!(bg && bg.type === 'theme' && bg.page && bg.accent);
@@ -124,6 +132,75 @@ function applyBackground(bg) {
       root.removeProperty('--brand');
       setThemeColor(STANDARD_ACCENT);
     }
+  }
+}
+
+/* ------------------------------- Colour marker ------------------------------ */
+
+/* The round's marker, resolved for the design the VIEWER is wearing (#1187).
+   One place does the legacy lookup for the whole frontend, because
+   round-marker.js is dependency-free on purpose and cannot call resolveDesign
+   itself — see its header. */
+function roundMarker(round) {
+  const design = resolveDesign(round && round.background);
+  return resolveMarker(round, { designId: design && design.id });
+}
+
+/* The two hexes a marker paints with, or NULL when this round must keep
+   rendering the way it does today.
+
+   That null is the whole of the pre-flip contract (operator decision
+   2026-09-22). A round sitting on a retired WORLD — Burg, Forest, Sci-Fi — goes
+   on showing its emblem, its backdrop and its ornament framing until the flip
+   (#1202) deletes the world CSS; nineteen rounds deliberately picked one, and
+   swapping their tile for "the nearest palette colour" would be a visible,
+   unannounced downgrade shipped by an issue whose own scope says worlds stay as
+   they are. Palette rounds and new rounds render from the marker, where the
+   colour is the palette's own accent and the switch is therefore invisible.
+
+   Reading the design from the ACTIVE design (not from the round) is the point
+   of the indirection: the same round is Salbei to someone on Klassisch and
+   Tannenfilz to someone on Der Tisch. */
+function markerColors(round) {
+  const design = resolveDesign(round && round.background);
+  if (design && design.world) return null;
+  const id = (activeDesign() || {}).id || FACE_DESIGN;
+  const marker = markerOf(id, roundMarker(round));
+  // The ink travels WITH the colour: a marker is a dark fill in every design, so
+  // its ink must not flip with the scheme the way --on-accent does. See
+  // markerInk() in designs.js for the measurement.
+  return marker && { ...marker, ink: markerInk(id) };
+}
+
+// An inline `style` fragment for one round, used where many rounds are on screen
+// at once and a root property cannot serve them all (the lobby grid). Empty
+// string for a world round, so the attribute simply is not written.
+function markerStyle(round) {
+  const m = markerColors(round);
+  return m ? `--marker:${m.color};--marker-deep:${m.deep};--marker-ink:${m.ink}` : '';
+}
+
+// Put the round's marker on the document root, beside --page-bg/--brand. Called
+// with null on every screen that is not inside a round, so leaving a round never
+// leaks its colour onto home — the same clearing discipline setWorld() has.
+function applyMarker(round) {
+  const root = document.documentElement.style;
+  const m = round ? markerColors(round) : null;
+  // `data-marked` is the SELECTOR half: CSS cannot ask whether a custom property
+  // is set, so every marker rule keys off this attribute and reads --marker
+  // inside. Same shape as data-world and data-scheme, and cleared the same way,
+  // so a screen outside a round can never paint a leftover band.
+  const el = document.documentElement;
+  if (m) {
+    root.setProperty('--marker', m.color);
+    root.setProperty('--marker-deep', m.deep);
+    root.setProperty('--marker-ink', m.ink);
+    el.dataset.marked = '';
+  } else {
+    root.removeProperty('--marker');
+    root.removeProperty('--marker-deep');
+    root.removeProperty('--marker-ink');
+    delete el.dataset.marked;
   }
 }
 

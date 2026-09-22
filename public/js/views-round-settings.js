@@ -9,7 +9,7 @@
    concern, and on a phone it was reachable only by switching tabs and scrolling
    past the entire month-grouped history.
 
-   Since #956 it also HOLDS showBackground/showTags, the two sub-screens its own
+   Since #956 it also HOLDS showMarker (the design picker until #1187) and showTags, the two sub-screens its own
    row list links to. They came from views-round-detail.js, where they were an
    independently editable concern sitting inside a file past its size budget
    (.claude/rules/token-friendly-source-files.md).
@@ -33,7 +33,7 @@ async function showRoundSettings(rid) {
   let round;
   try { round = await fetchRound(rid); }
   catch { return showHome(); }
-  applyBackground(round.background);
+  applyBackground(round.background, round);
   setContext(round.name);
   setDocTitle(t('rail.settings'), round.name);
 
@@ -48,7 +48,7 @@ async function showRoundSettings(rid) {
   const nav = h('<div class="ds-list"></div>');
   [
     { icon: 'ti-tags', label: t('round.tags'), sub: 'tags', go: () => showTags(rid) },
-    { icon: 'ti-palette', label: t('round.design'), sub: 'design', go: () => showBackground(rid) },
+    { icon: 'ti-palette', label: t('round.marker'), sub: 'design', go: () => showMarker(rid) },
   ].forEach(({ icon, label, sub, go }) => {
     const row = h(`<a class="ds-row rs-row">
          <div class="ds-row__main"><i class="ti ${icon}" aria-hidden="true"></i><span>${esc(label)}</span></div>
@@ -130,110 +130,77 @@ async function showRoundSettings(rid) {
 // list above, so they belong with the screen that offers them rather than beside
 // the game detail view they had nothing to do with.
 
-async function showBackground(rid) {
-  currentView = () => showBackground(rid);
+async function showMarker(rid) {
+  currentView = () => showMarker(rid);
   syncUrl(roundPath(rid, 'design'));
   app.innerHTML = '<p class="muted">…</p>';
   let round;
   try { round = await fetchRound(rid); }
   catch { return showHome(); }
-  applyBackground(round.background);
+  applyBackground(round.background, round);
   setContext(round.name);
-  setDocTitle(t('round.design'), round.name);
+  setDocTitle(t('round.marker'), round.name);
 
   app.innerHTML = '';
   renderSubScreenTabs(round, 'design');
   app.appendChild(backRow(() => showRound(rid)));
-  app.appendChild(h(`<div class="page-head"><h1>${esc(t('design.title'))}</h1></div>`));
+  app.appendChild(h(`<div class="page-head"><h1>${esc(t('marker.title'))}</h1></div>`));
 
-  // Which card is active. A design that matches nothing — a legacy plain colour
-  // or a hand-edited hex — de-selects Standard without selecting anything else,
-  // exactly as the hex-only lookup did before ids existed (#903).
-  const bg = round.background;
-  const current = resolveDesign(bg);
-  const stored = Boolean(bg && bg.type === 'theme' && bg.page);
+  /* Eight swatches, and they are the ACTIVE design's eight (#1187). A round
+     stores only an index, so this screen shows what the chooser will paint for
+     the person looking at it — someone on Der Tisch picks between felts, someone
+     on Klassisch between the palette accents, and both are choosing the same
+     index. Falling back to FACE_DESIGN keeps the screen renderable on a
+     self-hosted instance with no accounts, where there is no active design at
+     all.
 
-  // Two groups: the colour palettes, then the worlds. Each card is a tiny live
-  // preview — page background, an accent "button", a text line and the accent
-  // dot. A world card also carries data-world plus its OWN --brand, so the
-  // ornament rules paint its backdrop, frame and display face in its accent
-  // rather than in the round's (see "Worlds" in styles.css).
-  [
-    { titleKey: 'design.group.colors', noteKey: 'design.note', designs: PALETTES },
-    { titleKey: 'design.group.worlds', noteKey: 'design.worlds.note', designs: WORLDS, posters: true },
-  ].forEach((group) => {
-    const sec = h(`<div class="section"><h2>${esc(t(group.titleKey))}</h2></div>`);
-    sec.appendChild(h(`<div class="muted" style="margin-bottom:14px">${esc(t(group.noteKey))}</div>`));
-    const grid = h(`<div class="theme-cards${group.posters ? ' theme-cards--worlds' : ''}"></div>`);
-    group.designs.forEach((th) => {
-      const active = th.std ? !stored : Boolean(current && current.id === th.id);
-      const worldAttr = th.world ? ` data-world="${esc(th.world)}"` : '';
-      // A dark design previews as a dark CARD, inside whatever scheme the round
-      // is in (#904) — the token block matches .theme-card[data-scheme] as well
-      // as :root. Both tokens it derives from go inline for that reason: a dark
-      // card needs its own --page-bg to lift a --surface and sink a --line off,
-      // and every card needs --brand so an ornament paints the design it names.
-      const schemeAttr = th.scheme ? ` data-scheme="${esc(th.scheme)}"` : '';
-      const style = `background:${th.page};--page-bg:${th.page};--brand:${th.accent}`;
-      const label = esc(t(th.labelKey));
-      const check = `<span class="theme-card__check" style="background:${th.accent}"><i class="ti ti-check" aria-hidden="true"></i></span>`;
-      /* A world is a POSTER, a palette a swatch (#1085). The picker is the one
-         screen whose whole job is choosing a world, and the shared swatch — a
-         152x106 box, the name at --text-sm — showed the seven at their most
-         alike. The poster gives the world its crown art across the top and its
-         name at display size in its own face; the grey filler lines go, since
-         there is real art to show instead. The framed bar and the check are the
-         palette card's, unchanged, so choosing still reads the same. */
-      const face = th.world
-        ? `<span class="theme-card__crown"></span>
-         <span class="theme-card__body">
-           <span class="theme-card__name" style="color:${th.accent}">${label}</span>
-           <span class="theme-card__bar" style="background:${th.accent}"></span>
-         </span>`
-        : `<span class="theme-card__bar" style="background:${th.accent}"></span>
-         <span class="theme-card__line"></span>
-         <span class="theme-card__line theme-card__line--short"></span>
-         <span class="theme-card__name" style="color:${th.accent}">${label}</span>`;
-      const sw = h(`<button class="theme-card${th.world ? ' theme-card--world' : ''}${active ? ' is-active' : ''}"${worldAttr}${schemeAttr} aria-pressed="${active}" style="${style}" title="${label}">
-         ${face}
-         ${check}
+     This screen was the DESIGN picker until #1187: seventeen cards, a palette
+     group and a world poster grid. Rounds no longer own a design, so the worlds
+     are no longer offered — the ones already on a round keep rendering until the
+     flip (#1202) deletes the world CSS, which is why round-theme.js still
+     resolves them. */
+  const active = activeDesign();
+  const designId = (active && active.id) || FACE_DESIGN;
+  const markers = designMarkers(designId);
+  const ink = markerInk(designId);
+  const current = roundMarker(round);
+
+  const sec = h('<div class="section"></div>');
+  sec.appendChild(h(`<div class="muted" style="margin-bottom:14px">${esc(t('marker.note'))}</div>`));
+  const grid = h('<div class="marker-cards"></div>');
+  markers.forEach((m, i) => {
+    const on = i === current;
+    const label = esc(t(m.labelKey));
+    // The same three tokens a round carries (round-theme.js's markerStyle), so
+    // the swatch is painted by what the four surfaces read rather than by hexes
+    // this screen spells for itself. --marker-ink is the check glyph's, and it
+    // is per design rather than per scheme — see markerInk() in designs.js.
+    const sw = h(`<button class="marker-card${on ? ' is-active' : ''}" type="button"
+         aria-pressed="${on}" style="--marker:${m.color};--marker-deep:${m.deep};--marker-ink:${ink}" title="${label}">
+         <span class="marker-card__fill"><i class="ti ti-check" aria-hidden="true"></i></span>
+         <span class="marker-card__name">${label}</span>
        </button>`);
-      sw.addEventListener('click', async () => {
-        const payload = th.std
-          ? { type: 'none' }
-          : { type: 'theme', id: th.id, page: th.page, accent: th.accent };
-        try {
-          const saved = await api('POST', `/api/rounds/${rid}/background`, payload);
-          applyBackground(saved.background);
-          /* Re-render, rather than sweeping the active class by hand.
-
-             Until #904 a design change was purely CSS — applyBackground() moved
-             two custom properties and every tone on screen followed — so the
-             only thing left to update was which card reads as chosen. A dark
-             design also flips two things JS resolves AT RENDER TIME: the member
-             tone on every avatar (memberTone) and the rating ramp (avgColor).
-             Those were painted inline while the old scheme was in force, so
-             without a redraw the rail's avatars keep light-scheme discs and
-             carry the dark scheme's near-black initials — measured: unreadable,
-             on the one screen where the design can change.
-
-             The cache has to be seeded first: fetchRound() serves the SWR copy,
-             which still holds the OLD background, so a bare currentView() would
-             repaint the previous design and only correct itself when the
-             revalidation landed. The route answers with `{ background }` alone,
-             hence the patch rather than a swrStore.set of the response. */
-          const key = 'round:' + rid;
-          const cached = swrStore.get(key);
-          if (cached) swrStore.set(key, { ...cached, background: saved.background });
-          toast(t('design.toast.set'));
-          currentView();
-        } catch (e) { toast(e.message); }
-      });
-      grid.appendChild(sw);
+    sw.addEventListener('click', async () => {
+      if (on) return;
+      try {
+        const saved = await api('PATCH', `/api/rounds/${rid}/marker`, { index: i });
+        /* Seed the SWR cache before re-rendering, for the reason the design
+           picker documented before it: fetchRound() answers from the cached
+           copy, which still holds the OLD marker, so a bare currentView() would
+           repaint the previous colour and only correct itself once the
+           revalidation landed. The route answers with `{ marker }` alone, hence
+           the patch rather than a swrStore.set of the response. */
+        const key = 'round:' + rid;
+        const cached = swrStore.get(key);
+        if (cached) swrStore.set(key, { ...cached, marker: saved.marker });
+        toast(t('marker.toast.set'));
+        currentView();
+      } catch (e) { toast(e.message); }
     });
-    sec.appendChild(grid);
-    app.appendChild(sec);
+    grid.appendChild(sw);
   });
+  sec.appendChild(grid);
+  app.appendChild(sec);
 }
 
 // =================== Tags (custom round tags, #238) ===================
@@ -248,7 +215,7 @@ async function showTags(rid) {
   let round;
   try { round = await fetchRound(rid); }
   catch { return showHome(); }
-  applyBackground(round.background);
+  applyBackground(round.background, round);
   setContext(round.name);
   setDocTitle(t('tags.title'), round.name);
 
