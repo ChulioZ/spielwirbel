@@ -1292,10 +1292,18 @@
      that order is also the tab order on every other width. The import is
      addressed as the row's first child rather than by a class of its own: it is
      the only `.link-btn` that can hold that position (the selection toggle and
-     „Nicht im Regal" are appended after the search), and when the round cannot
-     import at all the first child is the search, which this does not match. */
+     „Nicht im Regal" are appended after the search).
+
+     PREDICATED ON THE SEARCH PILL, and that is not belt-and-braces. The three
+     archive screens share `.section-tools` (views-archive.js) and their first
+     child is a `.link-btn` too — but they carry no search, so nothing there
+     claims a full line and the reason for this rule does not exist. Without the
+     guard the Wunschliste's „Spiel hinzufügen" would be banished to a row of its
+     own below the import button, on a screen this issue does not even lay out.
+     `:has(.search-pill)` states the precondition the rule was argued from
+     instead of a position that happens to coincide on one screen. */
   :root[data-design="tisch"][data-scheme="dark"] .section-tools .search-pill { order: -1; }
-  :root[data-design="tisch"][data-scheme="dark"] .section-tools > .link-btn:first-child {
+  :root[data-design="tisch"][data-scheme="dark"] .section-tools:has(.search-pill) > .link-btn:first-child {
     order: 1;
     flex: 1 0 100%;
   }

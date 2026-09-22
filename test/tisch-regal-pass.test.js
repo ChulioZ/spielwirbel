@@ -123,3 +123,36 @@ test('the duplicate hint is readable on the sheet\'s paper, where --warn is not'
     + 'for the overlay (#1195), this rule is redundant — delete it and this test with it, '
     + 'rather than leaving a fix whose reason has gone.');
 });
+
+/* 3 — THE PHONE TOOLBAR'S REORDER, and the screen it must NOT reach.
+ *
+ * `.section-tools` is shared: the Regal fills it with a search field, a sort,
+ * the ⓘ, a selection toggle and „Nicht im Regal", and the three archive screens
+ * (views-archive.js) fill it with one or two plain buttons. On a phone the
+ * Regal's search claims a full line, which strands the BGG-import button — the
+ * row's first child — on a line of its own ABOVE the field it has nothing to do
+ * with. `order` moves it below the chips.
+ *
+ * On the archive screens that reason does not exist: no search, nothing
+ * claiming a line, and their first child is a `.link-btn` too. Addressed by
+ * position alone, the rule would banish the Wunschliste's „Spiel hinzufügen"
+ * to its own row — a layout change on a screen this issue lists as out of
+ * scope, arriving through a selector that looks screen-specific and is not.
+ *
+ * So the rule is predicated on the SEARCH PILL, which is the thing its argument
+ * actually rests on. This test pins the predicate rather than the effect,
+ * because the effect is pixels and jsdom applies no stylesheet.
+ */
+test('the phone toolbar reorder is predicated on the search pill, not on a position', () => {
+  const phone = SHEET.match(/@media \(max-width: 859px\)\s*\{([\s\S]*?)\n\}/g) || [];
+  const block = phone.find((b) => b.includes('.section-tools'));
+  assert.ok(block, 'the phone toolbar block is gone');
+
+  const reorder = block
+    .split('\n')
+    .filter((l) => /\.link-btn:first-child/.test(l));
+  assert.equal(reorder.length, 1, `expected one first-child rule, found ${reorder.length}`);
+  assert.match(reorder[0], /\.section-tools:has\(\.search-pill\)\s*>\s*\.link-btn:first-child/,
+    'an unguarded `.section-tools > .link-btn:first-child` also matches the three archive '
+    + 'screens, whose first child is a .link-btn and which carry no search to make room for');
+});
