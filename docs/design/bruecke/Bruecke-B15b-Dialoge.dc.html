@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="design_doc_mode" content="canvas">
+  <link rel="stylesheet" href="../../../public/fonts/tabler-icons.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #070b14; font-family: 'IBM Plex Sans', sans-serif; }
+    a { color: #35e0ff; text-decoration: none; }
+    a:hover { color: #8aeeff; text-decoration: underline; }
+  </style>
+</helmet>
+<div style="display: flex; flex-direction: column; gap: 40px; padding: 44px; width: max-content; color: #dfe7f5; background-color: #070b14; background-image: radial-gradient(1200px 600px at 50% 0%, #10203a, transparent 70%);">
+
+  <div data-screen-label="B15b Kopf" style="max-width: 1240px; display: flex; flex-direction: column; gap: 12px; background: #0e1626; border: 1px solid #24324a; padding: 24px 28px;">
+    <div style="display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;">
+      <span style="font-family: 'IBM Plex Mono'; font-weight: 600; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: #070b14; background: #35e0ff; padding: 5px 12px;">B15b</span>
+      <h1 style="margin: 0; font-family: 'Chakra Petch'; font-weight: 700; font-size: 34px; line-height: 1.05; text-transform: uppercase;">Dialoge · Toasts · „…“-Menü</h1>
+      <span style="font-family: 'IBM Plex Mono'; font-size: 13px; color: #9aa8c0;">Brief 13b von 13 · letzter Brief der Brücke</span>
+    </div>
+    <p style="margin: 0; font-size: 15px; line-height: 1.55; max-width: 92ch; color: #b8c2d6;">Ein <strong style="color: #dfe7f5;">Dialog</strong> erscheint nur, wenn etwas verloren gehen kann. Seine Überschrift ist die Frage, nicht ein Wort; der bestätigende Knopf sagt, was passiert („Session löschen“), nie „OK“. Zerstörende Knöpfe sind rot umrandet, nie rot gefüllt — eine große rote Fläche lädt zum Klicken ein.</p>
+  </div>
+
+  <div data-screen-label="B15b.1 Dialoge" style="display: flex; flex-direction: column; gap: 14px;">
+    <div style="display: flex; align-items: center; gap: 12px;"><span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 22px; text-transform: uppercase; letter-spacing: .06em;">1 · Dialoge</span><span style="flex: 1; height: 1px; background: linear-gradient(90deg, #35e0ff, transparent);"></span></div>
+    <div style="display: flex; gap: 16px; flex-wrap: wrap; max-width: 1500px;">
+      <sc-for list="{{ dialogs }}" as="d" hint-placeholder-count="5">
+        <div style="width: 470px; background: #141d30; border: 1px solid {{ d.edge }}; padding: 24px 26px; display: flex; flex-direction: column; gap: 14px;">
+          <span style="display: flex; align-items: center; gap: 10px; font-family: 'IBM Plex Mono'; font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: {{ d.kickerInk }};"><i class="ti {{ d.icon }}" style="font-size: 16px;"></i>{{ d.kicker }}</span>
+          <span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 26px; line-height: 1.1; text-transform: uppercase;">{{ d.title }}</span>
+          <span style="font-size: 15px; line-height: 1.55; color: #b8c2d6;">{{ d.body }}</span>
+          <span style="display: flex; gap: 10px; margin-top: 4px;">
+            <a href="#" style="flex: 1; min-height: 48px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #24324a; color: #dfe7f5; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase;">{{ d.cancel }}</a>
+            <a href="#" style="flex: 2; min-height: 48px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid {{ d.okEdge }}; background: {{ d.okBg }}; color: {{ d.okInk }}; font-family: 'Chakra Petch'; font-weight: 700; font-size: 16px; letter-spacing: .08em; text-transform: uppercase;">{{ d.ok }}</a>
+          </span>
+          <span style="font-size: 12px; line-height: 1.5; color: #9aa8c0; border-top: 1px solid #1c2740; padding-top: 10px;">{{ d.note }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div data-screen-label="B15b.2 Toasts" style="display: flex; flex-direction: column; gap: 14px;">
+    <div style="display: flex; align-items: center; gap: 12px;"><span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 22px; text-transform: uppercase; letter-spacing: .06em;">2 · Toasts</span><span style="flex: 1; height: 1px; background: linear-gradient(90deg, #35e0ff, transparent);"></span></div>
+    <p style="margin: 0; max-width: 92ch; font-size: 14px; line-height: 1.55; color: #b8c2d6;">Erscheinen unten links über dem Dock, <strong style="color: #dfe7f5;">ohne Bewegung</strong>, und bleiben 6 Sekunden — mit „Rückgängig“ 10. Nie mehr als einer gleichzeitig; ein neuer ersetzt den alten. Ein Toast ist nie der einzige Ort, an dem eine Information steht.</p>
+    <div style="display: flex; gap: 14px; flex-wrap: wrap; max-width: 1500px;">
+      <sc-for list="{{ toasts }}" as="t" hint-placeholder-count="6">
+        <div style="width: 470px; display: flex; flex-direction: column; gap: 8px;">
+          <span style="font-family: 'IBM Plex Mono'; font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: #9aa8c0;">{{ t.when }}</span>
+          <div style="display: grid; grid-template-columns: 4px 24px 1fr auto; gap: 12px; align-items: center; min-height: 56px; padding: 12px 16px 12px 0; background: #141d30; border: 1px solid #24324a;">
+            <span style="width: 4px; height: 100%; min-height: 40px; background: {{ t.tone }};"></span>
+            <i class="ti {{ t.icon }}" style="font-size: 19px; color: {{ t.tone }};"></i>
+            <span style="font-size: 14px; line-height: 1.45;">{{ t.text }}</span>
+            <a href="#" style="min-height: 32px; display: {{ t.actionDisplay }}; align-items: center; padding: 0 10px; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #35e0ff;">{{ t.action }}</a>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div data-screen-label="B15b.3 Menü" style="display: flex; flex-direction: column; gap: 14px;">
+    <div style="display: flex; align-items: center; gap: 12px;"><span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 22px; text-transform: uppercase; letter-spacing: .06em;">3 · Das „…“-Menü</span><span style="flex: 1; height: 1px; background: linear-gradient(90deg, #35e0ff, transparent);"></span></div>
+    <div style="display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-start;">
+      <sc-for list="{{ menus }}" as="m" hint-placeholder-count="3">
+        <div style="width: 340px; display: flex; flex-direction: column; gap: 8px;">
+          <span style="font-family: 'IBM Plex Mono'; font-size: 12px; color: #9aa8c0;">{{ m.where }}</span>
+          <span style="align-self: flex-start; width: 36px; height: 36px; display: grid; place-items: center; border: 1px solid #35e0ff; color: #35e0ff;"><i class="ti ti-dots"></i></span>
+          <div style="background: #141d30; border: 1px solid #35e0ff; display: flex; flex-direction: column;">
+            <sc-for list="{{ m.items }}" as="i" hint-placeholder-count="4">
+              <a href="#" style="display: grid; grid-template-columns: 24px 1fr; gap: 12px; align-items: center; min-height: 44px; padding: 0 14px; border-bottom: 1px solid #1c2740; color: {{ i.ink }}; font-size: 14px;"><i class="ti {{ i.icon }}" style="font-size: 17px; color: {{ i.iconInk }};"></i>{{ i.label }}</a>
+            </sc-for>
+          </div>
+        </div>
+      </sc-for>
+      <div style="width: 380px; background: #0e1626; border: 1px solid #24324a; padding: 20px 22px; display: flex; flex-direction: column; gap: 10px;">
+        <span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #35e0ff;">Regeln für das Menü</span>
+        <sc-for list="{{ menuRules }}" as="r" hint-placeholder-count="5"><span style="display: flex; gap: 9px; font-size: 13px; line-height: 1.5; color: #b8c2d6;"><i class="ti ti-minus" style="color: #35e0ff; flex: none; margin-top: 3px;"></i>{{ r }}</span></sc-for>
+      </div>
+    </div>
+  </div>
+
+  <div data-screen-label="B15b.4 Abschluss" style="max-width: 1240px; display: flex; flex-direction: column; gap: 12px; background: #0e1626; border: 1px solid #4ade80; padding: 22px 26px;">
+    <span style="display: flex; align-items: center; gap: 10px; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: #4ade80;"><i class="ti ti-flag" style="font-size: 17px;"></i>Die Brücke ist durchgezeichnet</span>
+    <span style="font-size: 15px; line-height: 1.55; color: #b8c2d6;">B1 bis B15b liegen vor. Die Blätter in Reihenfolge: <a href="Bruecke-B1-Komponenten.dc.html" style="display: inline-flex; align-items: center; min-height: 24px; padding: 0 3px;">B1 Bauteile</a> · <a href="Bruecke-B2-Phone-Kern.dc.html" style="display: inline-flex; align-items: center; min-height: 24px; padding: 0 3px;">B2 Telefon-Kern</a> · <a href="Bruecke-B3-Runde-Desktop.dc.html" style="display: inline-flex; align-items: center; min-height: 24px; padding: 0 3px;">B3 Runde</a> · <a href="Bruecke-B4-Session-Desktop.dc.html" style="display: inline-flex; align-items: center; min-height: 24px; padding: 0 3px;">B4 Session</a> · <a href="Bruecke-B5-Konto.dc.html" style="display: inline-flex; align-items: center; min-height: 24px; padding: 0 3px;">B5 Konto</a> · <a href="Bruecke-B6-Phone-Rest.dc.html" style="display: inline-flex; align-items: center; min-height: 24px; padding: 0 3px;">B6 Telefon-Rest</a> · <a href="Bruecke-B7-Leerzustaende.dc.html" style="display: inline-flex; align-items: center; min-height: 24px; padding: 0 3px;">B7 Leerzustände</a> · <a href="Bruecke-B8-Farben.dc.html" style="display: inline-flex; align-items: center; min-height: 24px; padding: 0 3px;">B8 Farben</a> · <a href="Bruecke-B9-Vokabular.dc.html" style="display: inline-flex; align-items: center; min-height: 24px; padding: 0 3px;">B9 Vokabular</a> · <a href="Bruecke-B10-Motion.dc.html" style="display: inline-flex; align-items: center; min-height: 24px; padding: 0 3px;">B10 Bewegung</a> · <a href="Bruecke-B13-Tier2a.dc.html" style="display: inline-flex; align-items: center; min-height: 24px; padding: 0 3px;">B13 Stufe 2a</a> · <a href="Bruecke-B14-Tier2b.dc.html" style="display: inline-flex; align-items: center; min-height: 24px; padding: 0 3px;">B14 Stufe 2b</a> · <a href="Bruecke-B15a-Sheets.dc.html" style="display: inline-flex; align-items: center; min-height: 24px; padding: 0 3px;">B15a Sheets</a> · B15b.</span>
+    <span style="font-size: 14px; line-height: 1.55; color: #9aa8c0; border-top: 1px solid #24324a; padding-top: 12px;"><strong style="color: #ffb020;">Ungeprüft.</strong> Alle 14 Blätter sind in einem Zug entstanden, auf ausdrücklichen Wunsch des Auftraggebers und ohne die sonst übliche Prüfrunde zwischen den Briefs. Die Messwerte in B8 sind gerechnet, aber nicht im Browser nachgemessen; Wortlaute sind gegen das Vokabular-Addendum geschrieben, aber nicht Zeile für Zeile gegen den Code der App geprüft. Beides gehört in die erste Prüfrunde.</span>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1540,&quot;height&quot;:900}}">
+class Component extends DCLogic {
+  renderVals() {
+    const CY = '#35e0ff', AM = '#ffb020', GR = '#4ade80', RD = '#ff6b85', MU = '#9aa8c0';
+
+    const dialogs = [
+      { kicker: 'Nicht umkehrbar', icon: 'ti-alert-triangle', kickerInk: '#ff8fa3', edge: RD,
+        title: 'Session löschen?', body: 'Die Session vom 14.09.2026 verschwindet aus der Chronik, mit allen Bewertungen. Jonas’ Sieg zählt danach nicht mehr in den Pokalen.',
+        cancel: 'Abbrechen', ok: 'Session löschen', okEdge: RD, okBg: 'transparent', okInk: '#ff8fa3',
+        note: 'Rot als Umriss, nicht als Fläche. Der Text nennt die Folge, nicht nur die Handlung.' },
+      { kicker: 'Nicht umkehrbar', icon: 'ti-alert-triangle', kickerInk: '#ff8fa3', edge: RD,
+        title: 'Runde verlassen?', body: 'Du siehst Donnerstagsrunde danach nicht mehr. Deine vier Spiele bleiben im Regal der Runde, deine Siege bleiben in den Pokalen stehen.',
+        cancel: 'Abbrechen', ok: 'Runde verlassen', okEdge: RD, okBg: 'transparent', okInk: '#ff8fa3',
+        note: 'Sagt ausdrücklich, was bleibt — sonst nimmt man an, alles verschwinde.' },
+      { kicker: 'Abstimmung läuft', icon: 'ti-lock', kickerInk: AM, edge: AM,
+        title: 'Abstimmung verlassen?', body: 'Du hast 1 von 3 Spielen gewertet. Die Session bleibt offen; du kannst über die Hinweiskarte auf der Startseite zurückkehren.',
+        cancel: 'Hierbleiben', ok: 'Verlassen', okEdge: '#24324a', okBg: 'transparent', okInk: '#dfe7f5',
+        note: 'Fängt die Abschnittslinks während der Abstimmung ab. Nichts geht verloren, deshalb kein Rot.' },
+      { kicker: 'Ändert das Ergebnis', icon: 'ti-pencil', kickerInk: CY, edge: CY,
+        title: 'Sieger ändern?', body: 'Statt Jonas gewinnt Lea. Die Pokale und die Serien beider werden neu gerechnet. Die Bewertungen bleiben, wie sie sind.',
+        cancel: 'Abbrechen', ok: 'Lea eintragen', okEdge: AM, okBg: AM, okInk: '#070b14',
+        note: 'Kein Warnfall — deshalb Amber gefüllt. Der Knopf nennt den neuen Zustand, nicht „Speichern“.' },
+      { kicker: 'Zurücksetzen', icon: 'ti-refresh', kickerInk: AM, edge: AM,
+        title: 'Session zurücksetzen?', body: 'Die drei gezogenen Spiele und alle Bewertungen werden verworfen. Die Session bleibt bestehen und beginnt wieder bei „Wer spielt mit?“.',
+        cancel: 'Abbrechen', ok: 'Zurücksetzen', okEdge: AM, okBg: 'transparent', okInk: AM,
+        note: 'Zwischen Löschen und Ändern: verliert Daten, aber nicht die Session. Amber als Umriss.' },
+      { kicker: 'Verbindung', icon: 'ti-unlink', kickerInk: AM, edge: AM,
+        title: 'Keine Verbindung', body: 'Deine Wertung ist auf diesem Gerät gespeichert und geht raus, sobald du wieder online bist. Die anderen sehen sie erst dann.',
+        cancel: 'Schließen', ok: 'Erneut versuchen', okEdge: CY, okBg: 'transparent', okInk: CY,
+        note: 'Der einzige Dialog ohne Wahl zwischen zwei Wegen — er berichtet und bietet einen Versuch an.' },
+    ];
+
+    const toasts = [
+      { when: 'Nach dem Aussortieren', tone: AM, icon: 'ti-archive', text: 'Rost & Regen ist aussortiert.', action: 'Rückgängig', actionDisplay: 'inline-flex' },
+      { when: 'Nach dem Hinzufügen', tone: GR, icon: 'ti-check', text: 'Nordlichter steht jetzt im Regal.', action: 'Ansehen', actionDisplay: 'inline-flex' },
+      { when: 'Nach dem Teilen', tone: GR, icon: 'ti-link', text: 'Einladungslink kopiert.', action: '', actionDisplay: 'none' },
+      { when: 'Nach dem Abstimmen, offline', tone: AM, icon: 'ti-unlink', text: 'Wertung gespeichert — geht raus, sobald du online bist.', action: '', actionDisplay: 'none' },
+      { when: 'Fehlgeschlagen', tone: RD, icon: 'ti-alert-triangle', text: 'Das Spiel konnte nicht von BGG übernommen werden.', action: 'Erneut', actionDisplay: 'inline-flex' },
+      { when: 'Nach dem Löschen', tone: RD, icon: 'ti-trash', text: 'Die Session vom 14.09. ist gelöscht.', action: '', actionDisplay: 'none' },
+    ];
+
+    const item = (icon, label, tone) => ({ icon, label, ink: tone === 'bad' ? '#ff8fa3' : '#dfe7f5', iconInk: tone === 'bad' ? RD : tone === 'warn' ? AM : CY });
+    const menus = [
+      { where: 'Auf einem Spiel im Regal', items: [item('ti-planet', 'In den Pool'), item('ti-pencil', 'Bearbeiten'), item('ti-tags', 'Tag vergeben'), item('ti-archive', 'Aussortieren', 'warn'), item('ti-check', 'Als durchgespielt markieren', 'warn')] },
+      { where: 'Auf einem Ergebnis', items: [item('ti-share', 'Teilen'), item('ti-pencil', 'Sieger ändern'), item('ti-dice-5', 'Anderes Spiel eintragen'), item('ti-refresh', 'Zurücksetzen', 'warn'), item('ti-trash', 'Session löschen', 'bad')] },
+      { where: 'Auf einer Runde', items: [item('ti-settings', 'Einstellungen'), item('ti-user-plus', 'Einladen'), item('ti-download', 'Daten exportieren'), item('ti-logout', 'Runde verlassen', 'bad')] },
+    ];
+
+    const menuRules = [
+      'Höchstens fünf Einträge. Was öfter gebraucht wird, steht als Knopf auf dem Screen.',
+      'Zerstörendes steht unten, mit rotem Symbol und rotem Text — und öffnet immer einen Dialog.',
+      'Kein Untermenü, keine zweite Ebene.',
+      'Jeder Eintrag hat ein Symbol; das Symbol allein steht nie ohne Wort.',
+      'Das Menü heißt überall „…“ und sitzt rechts in der Kopfleiste des Objekts, das es betrifft.',
+    ];
+
+    return { dialogs, toasts, menus, menuRules };
+  }
+}
+</script>
+</body>
+</html>

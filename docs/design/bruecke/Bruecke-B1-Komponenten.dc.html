@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="design_doc_mode" content="canvas">
+  <link rel="stylesheet" href="../../../public/fonts/tabler-icons.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #070b14; font-family: 'IBM Plex Sans', sans-serif; }
+    a { color: #35e0ff; text-decoration: none; }
+    a:hover { color: #8aeeff; text-decoration: underline; }
+  </style>
+</helmet>
+<div style="display: flex; flex-direction: column; gap: 44px; padding: 44px; width: max-content; color: #dfe7f5; background-color: #070b14; background-image: radial-gradient(1200px 600px at 50% 0%, #10203a, transparent 70%);">
+
+  <div data-screen-label="B1 Kopf" style="max-width: 1240px; display: flex; flex-direction: column; gap: 14px; background: #0e1626; border: 1px solid #24324a; padding: 26px 30px;">
+    <div style="display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;">
+      <span style="font-family: 'IBM Plex Mono'; font-weight: 600; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: #070b14; background: #35e0ff; padding: 5px 12px;">B1</span>
+      <h1 style="margin: 0; font-family: 'Chakra Petch'; font-weight: 700; font-size: 38px; line-height: 1.05; text-transform: uppercase; letter-spacing: .02em;">Bauteile &amp; Tokens — Die Brücke</h1>
+      <span style="font-family: 'IBM Plex Mono'; font-size: 13px; color: #9aa8c0;">22.09.2026 · Phase 2, Design 2, Brief 1 von 13</span>
+    </div>
+    <p style="margin: 0; font-size: 16px; line-height: 1.55; max-width: 92ch; color: #b8c2d6;">Ein Blatt, keine Screens: Tokens, Schrift, Bauteile, Zustände. Die Brücke ist ein <strong style="color: #dfe7f5;">dunkles</strong> Design — die Flächen liegen als schwach erhellte Paneele über dem Nachtgrund, Tiefe kommt aus Kanten, Eckwinkeln und Leuchten, nie aus Schatten. Alles hier ist die Quelle für B2–B16.</p>
+    <div style="display: flex; flex-wrap: wrap; gap: 10px; font-size: 13px; font-weight: 600;">
+      <span style="background: #17233a; padding: 6px 13px;"><i class="ti ti-check" style="color: #4ade80;"></i> Kontraste nach WCAG 2.2 wie geschrieben</span>
+      <span style="background: #17233a; padding: 6px 13px;"><i class="ti ti-check" style="color: #4ade80;"></i> Ziele ≥ 24 px · 44 px auf Wertungskarte und Dock</span>
+      <span style="background: #17233a; padding: 6px 13px;"><i class="ti ti-check" style="color: #4ade80;"></i> 2 Schnitte, beide OFL · Tabler-Subset</span>
+      <span style="background: #3a1520; padding: 6px 13px; color: #ff9db1; font-weight: 700;"><i class="ti ti-alert-triangle"></i> Die acht Personenfarben sind für dunklen Grund zu dunkel — B1 setzt eine aufgehellte Reihe, B8 misst sie</span>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 7px; font-size: 14px; line-height: 1.55; color: #b8c2d6; border-top: 1px solid #24324a; padding-top: 12px;"><span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #35e0ff;">Alle neun Regeln der Tisch-Prüfung — ab Brief 1, keine ausgelassen</span><span><strong style="color: #dfe7f5;">(1)</strong> B1 ist die einzige Token-Quelle; B8 misst nur, Platzhalter-Cover sind keine Token. · <strong style="color: #dfe7f5;">(2)</strong> Akzent- und Personenfarbe tragen Text erst ab 24 px oder als Glyphe; auf der Personenfläche steht Tinte. · <strong style="color: #dfe7f5;">(3)</strong> Kein Text auf einem Cover — Titel und Meta auf ein deckendes Band. · <strong style="color: #dfe7f5;">(4)</strong> Textlinks 24 px, Fußzeilen 32 px, Toast-Aktionen 24 px — als Token hier, nicht als Einzelfund. · <strong style="color: #dfe7f5;">(5)</strong> Wörter aus der App abschreiben statt paraphrasieren; Erfundenes sichtbar als Beispiel kennzeichnen. · <strong style="color: #dfe7f5;">(6)</strong> Glossar nur, wenn es etwas zu erklären gibt (<a href="Bruecke-B9-Vokabular.dc.html" style="display: inline-flex; align-items: center; min-height: 24px; padding: 0 3px;">B9</a>). · <strong style="color: #dfe7f5;">(7)</strong> Wertungskarte ist Vollbild ohne Dock und Kopfleiste, „Zurück“ ≥ 44 px. · <strong style="color: #dfe7f5;">(8)</strong> Die Overlays stehen in jeder Brief-Liste (<a href="Bruecke-B15a-Sheets.dc.html" style="display: inline-flex; align-items: center; min-height: 24px; padding: 0 3px;">B15a</a>, <a href="Bruecke-B15b-Dialoge.dc.html" style="display: inline-flex; align-items: center; min-height: 24px; padding: 0 3px;">B15b</a>). · <strong style="color: #dfe7f5;">(9)</strong> Eigene Kontrastzahlen prüfen, bevor sie zitiert werden — ein Blatt rechnet, die anderen zitieren es.</span></div>
+    <div style="display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; background: #17233a; border-left: 3px solid #ffb020; font-size: 13px; line-height: 1.55;"><i class="ti ti-world" style="font-size: 18px; color: #ffb020; flex: none; margin-top: 1px;"></i><span><strong style="color: #ffb020;">Vokabular — Stand nach V0.</strong> Der Revert ist im Konzeptblatt E bereits angewandt; B1–B16 starten von den Standardwörtern. Es bleiben nur die von §2 erlaubten Stellen eigen: Gefäß <strong>Pool</strong> mit der Zählfrage „Sonden · wie viele werden gezogen?“ · die zwei Hauptaktionen <strong>Mission starten</strong> und <strong>Zündung</strong> · die Wertungskarte „Wie viel Schub gibst du diesem Spiel heute?“ mit <strong>kein Schub / volle Kraft</strong> und dem Aufdeckverb <strong>entschlüsseln</strong> · die Begrüßung „Willkommen zurück an Bord.“ und „Flotte / Übersicht“ neben dem Wortzeichen · der Kicker <strong>Eingehendes Signal</strong> · die Zierzeilen „T+ 00:14:52 · Orbit stabil“ und „Mission 24 · Crew 4“. <strong style="color: #dfe7f5;">Reverted und hier nirgends mehr:</strong> Frachtraum, Einheiten, Crew als Personenwort, Logbuch, Auszeichnungen, Kommandant, Quarantäne, Navigationsvorschlag, Wartung, Schiff registrieren, Sondierung. Volle Liste in <a href="Bruecke-B9-Vokabular.dc.html" style="display: inline-flex; align-items: center; min-height: 24px; padding: 0 3px;">B9</a>.</span></div>
+  </div>
+
+  <div data-screen-label="B1.1 Tokens" style="display: flex; flex-direction: column; gap: 18px;">
+    <div style="display: flex; align-items: center; gap: 12px;"><span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 22px; text-transform: uppercase; letter-spacing: .06em;">1 · Tokens</span><span style="flex: 1; height: 1px; background: linear-gradient(90deg, #35e0ff, transparent);"></span></div>
+    <sc-for list="{{ tokenGroups }}" as="g" hint-placeholder-count="5">
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <div style="font-family: 'IBM Plex Mono'; font-weight: 600; font-size: 12px; letter-spacing: .16em; text-transform: uppercase; color: #35e0ff;">{{ g.title }}</div>
+        <div style="display: flex; flex-wrap: wrap; gap: 12px; max-width: 1240px;">
+          <sc-for list="{{ g.items }}" as="t" hint-placeholder-count="5">
+            <div style="width: 236px; background: #0e1626; border: 1px solid #24324a;">
+              <div style="height: 62px; background: {{ t.bg }}; border-bottom: 1px solid #24324a; display: flex; align-items: flex-end; justify-content: flex-end; padding: 6px 9px;"><span style="font-family: 'IBM Plex Mono'; font-size: 11px; font-weight: 600; color: {{ t.chipInk }};">{{ t.sample }}</span></div>
+              <div style="padding: 10px 12px; display: flex; flex-direction: column; gap: 3px;">
+                <span style="font-family: 'IBM Plex Mono'; font-size: 12px; font-weight: 600; color: #dfe7f5;">{{ t.name }}</span>
+                <span style="font-size: 12px; line-height: 1.45; color: #9aa8c0;">{{ t.use }}</span>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-for>
+    <div style="max-width: 1240px; font-size: 13px; line-height: 1.6; color: #b8c2d6; background: #0e1626; border: 1px solid #24324a; padding: 14px 18px;"><strong style="color: #dfe7f5;">Flächenregel.</strong> Kein Verlauf auf einem Paneel. Der einzige Verlauf im Design ist der Seitengrund (radial, <span style="font-family: 'IBM Plex Mono';">#10203a → #070b14</span>) und das Punktraster darüber, beide hinter allem und ohne Text. Paneele sind flach <span style="font-family: 'IBM Plex Mono';">#0e1626</span>, Kanten <span style="font-family: 'IBM Plex Mono';">#24324a</span>, Trennlinien innerhalb eines Paneels <span style="font-family: 'IBM Plex Mono';">#1c2740</span>. Leuchten (<span style="font-family: 'IBM Plex Mono';">box-shadow</span> in Akzentfarbe) sind Zier und tragen nie Bedeutung allein.</div>
+  </div>
+
+  <div data-screen-label="B1.2 Schrift" style="display: flex; flex-direction: column; gap: 18px;">
+    <div style="display: flex; align-items: center; gap: 12px;"><span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 22px; text-transform: uppercase; letter-spacing: .06em;">2 · Schrift</span><span style="flex: 1; height: 1px; background: linear-gradient(90deg, #35e0ff, transparent);"></span></div>
+    <div style="display: flex; gap: 14px; flex-wrap: wrap; max-width: 1240px;">
+      <div style="flex: 1; min-width: 380px; background: #0e1626; border: 1px solid #24324a; padding: 20px 24px; display: flex; flex-direction: column; gap: 8px;">
+        <span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #35e0ff;">Anzeige · Chakra Petch 600/700 · OFL</span>
+        <span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 44px; line-height: 1; text-transform: uppercase; letter-spacing: .02em;">Donnerstagsrunde</span>
+        <span style="font-size: 13px; line-height: 1.55; color: #b8c2d6;">Nur versal, nur für Titel, Namen von Runden und Spielen, Zahlen im Ergebnis. Kein Fließtext. Zwei Gewichte, kein faux bold. Die technische Kante der Schrift trägt das Thema — deshalb braucht kein Bauteil eine zweite Zierschrift.</span>
+      </div>
+      <div style="flex: 1; min-width: 380px; background: #0e1626; border: 1px solid #24324a; padding: 20px 24px; display: flex; flex-direction: column; gap: 8px;">
+        <span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #35e0ff;">Lauftext · IBM Plex Sans 400/500/600 · OFL</span>
+        <span style="font-size: 20px; line-height: 1.45;">Drei Spiele im Pool, Nordlichter mit 4,8 gezogen.</span>
+        <span style="font-size: 13px; line-height: 1.55; color: #b8c2d6;">Alles, was ein Mensch liest: Hilfszeilen, Beschreibungen, Fehler, leere Zustände. Mindestens 13 px, im Screen nie unter 14 px. <strong style="color: #dfe7f5;">IBM Plex Mono</strong> ist derselbe Schriftschnitt, kein dritter: nur für Notation — Kicker, Zähler, Zierzeilen, Spaltenköpfe, versal mit <span style="font-family: 'IBM Plex Mono';">letter-spacing .14–.18em</span>. Nie für einen Satz.<br><br><strong style="color: #dfe7f5;">Die harte Untergrenze ist 10 px</strong> (<span style="font-family: 'IBM Plex Mono';">mono-micro</span>), und sie gilt nur für Zeichen, die keinen Satz bilden: Zähler unter einem Kürzel, Monatsbuchstaben unter einem Balken, Achsenbeschriftung. Alles, was man liest statt abliest, beginnt bei 11 px (Notation) oder 13 px (Text). Nichts im Design ist kleiner als 10 px — auch nicht in einem Telefonrahmen, auch nicht in einer Legende.</span>
+      </div>
+    </div>
+    <div style="display: flex; flex-wrap: wrap; gap: 12px; max-width: 1240px;">
+      <sc-for list="{{ typeScale }}" as="s" hint-placeholder-count="7">
+        <div style="background: #0e1626; border: 1px solid #24324a; padding: 12px 16px; display: flex; flex-direction: column; gap: 6px; min-width: 172px;">
+          <span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .12em; color: #9aa8c0;">{{ s.token }}</span>
+          <span style="font-family: {{ s.family }}; font-weight: {{ s.weight }}; font-size: {{ s.px }}; line-height: 1.1; text-transform: {{ s.tt }};">{{ s.sample }}</span>
+          <span style="font-size: 12px; color: #9aa8c0;">{{ s.use }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div data-screen-label="B1.3 Zeichen" style="display: flex; flex-direction: column; gap: 18px;">
+    <div style="display: flex; align-items: center; gap: 12px;"><span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 22px; text-transform: uppercase; letter-spacing: .06em;">3 · Zeichen &amp; Zier</span><span style="flex: 1; height: 1px; background: linear-gradient(90deg, #35e0ff, transparent);"></span></div>
+    <div style="display: flex; flex-wrap: wrap; gap: 12px; max-width: 1240px;">
+      <sc-for list="{{ icons }}" as="i" hint-placeholder-count="12">
+        <div style="width: 148px; background: #0e1626; border: 1px solid #24324a; padding: 14px 12px; display: flex; flex-direction: column; align-items: center; gap: 7px; text-align: center;">
+          <i class="ti {{ i.cls }}" style="font-size: 26px; color: #35e0ff;"></i>
+          <span style="font-family: 'IBM Plex Mono'; font-size: 10px; letter-spacing: .08em; color: #9aa8c0;">{{ i.cls }}</span>
+          <span style="font-size: 12px; line-height: 1.35; color: #dfe7f5;">{{ i.use }}</span>
+        </div>
+      </sc-for>
+    </div>
+    <div style="display: flex; gap: 14px; flex-wrap: wrap; max-width: 1240px;">
+      <div style="position: relative; width: 300px; background: #0e1626; border: 1px solid #24324a; padding: 20px; display: flex; flex-direction: column; gap: 8px;">
+        <span style="position: absolute; left: -1px; top: -1px; width: 14px; height: 14px; border-left: 2px solid #35e0ff; border-top: 2px solid #35e0ff;"></span><span style="position: absolute; right: -1px; bottom: -1px; width: 14px; height: 14px; border-right: 2px solid #35e0ff; border-bottom: 2px solid #35e0ff;"></span>
+        <span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #35e0ff;">Eckwinkel</span>
+        <span style="font-size: 13px; line-height: 1.5; color: #b8c2d6;">Zwei gegenüberliegende Winkel = das Paneel, auf das der Blick zuerst soll. Vier Winkel = die eine Hauptfläche eines Screens, höchstens einmal pro Screen. Kein Winkel = alle übrigen Paneele.</span>
+      </div>
+      <div style="width: 300px; background: #0e1626; border: 1px solid #24324a; padding: 20px; display: flex; flex-direction: column; gap: 8px;">
+        <span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #35e0ff;">Punktraster</span>
+        <span style="display: block; height: 52px; background-image: radial-gradient(rgba(53,224,255,.14) 1px, transparent 1.3px); background-size: 28px 28px; border: 1px solid #1c2740;"></span>
+        <span style="font-size: 13px; line-height: 1.5; color: #b8c2d6;">Nur auf dem Seitengrund, nie in einem Paneel, nie hinter Text. 28 px Raster, mit weicher Maske zur Mitte.</span>
+      </div>
+      <div style="width: 300px; background: #0e1626; border: 1px solid #24324a; padding: 20px; display: flex; flex-direction: column; gap: 8px;">
+        <span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #35e0ff;">Scanlinien auf Covern</span>
+        <span style="position: relative; display: block; height: 52px; background: repeating-linear-gradient(180deg, rgba(0,0,0,.22) 0 1px, transparent 1px 4px), linear-gradient(160deg, oklch(.55 .12 200), oklch(.3 .1 230)); border: 1px solid #24324a;"></span>
+        <span style="font-size: 13px; line-height: 1.5; color: #b8c2d6;">Nur auf Coverflächen. <strong style="color: #dfe7f5;">Nie Text darauf</strong> — Titel und Meta stehen auf einem deckenden Band darunter oder darüber (Regel 2).</span>
+      </div>
+      <div style="width: 300px; background: #0e1626; border: 1px solid #24324a; padding: 20px; display: flex; flex-direction: column; gap: 8px;">
+        <span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #ffb020;">Zierzeilen</span>
+        <span style="font-family: 'IBM Plex Mono'; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #9aa8c0; line-height: 1.8;">T+ 00:14:52 · Orbit stabil<br>Mission 24 · Crew 4</span>
+        <span style="font-size: 13px; line-height: 1.5; color: #b8c2d6;">Erlaubt als Dekor in der Kopfleiste und unter dem Rundennamen. <strong style="color: #dfe7f5;">Nie auf einem Knopf, einem Etikett oder im Dock</strong>, nie vor einem Spiel- oder Personennamen.</span>
+      </div>
+    </div>
+  </div>
+
+  <div data-screen-label="B1.4 Bauteile" style="display: flex; flex-direction: column; gap: 18px;">
+    <div style="display: flex; align-items: center; gap: 12px;"><span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 22px; text-transform: uppercase; letter-spacing: .06em;">4 · Bauteile</span><span style="flex: 1; height: 1px; background: linear-gradient(90deg, #35e0ff, transparent);"></span></div>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 14px; max-width: 1240px; align-items: flex-start;">
+      <div style="background: #0e1626; border: 1px solid #24324a; padding: 18px 20px; display: flex; flex-direction: column; gap: 12px;">
+        <span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #35e0ff;">Knöpfe · Höhe 44 px, ≥ 24 px immer</span>
+        <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
+          <span style="display: inline-flex; align-items: center; gap: 10px; height: 44px; padding: 0 22px; background: #ffb020; color: #070b14; font-family: 'Chakra Petch'; font-weight: 700; font-size: 18px; letter-spacing: .08em; text-transform: uppercase; box-shadow: 0 0 26px rgba(255,176,32,.35);">Zündung <i class="ti ti-arrow-right"></i></span>
+          <span style="display: inline-flex; align-items: center; height: 44px; padding: 0 20px; border: 1px solid #35e0ff; color: #35e0ff; font-family: 'Chakra Petch'; font-weight: 700; font-size: 16px; letter-spacing: .08em; text-transform: uppercase;">Spiel hinzufügen</span>
+          <span style="display: inline-flex; align-items: center; height: 36px; padding: 0 14px; border: 1px solid #24324a; color: #dfe7f5; font-family: 'IBM Plex Mono'; font-size: 12px; letter-spacing: .14em; text-transform: uppercase;">Teilen</span>
+          <span style="display: inline-flex; align-items: center; height: 36px; padding: 0 14px; border: 1px solid #ffb020; color: #ffb020; font-family: 'IBM Plex Mono'; font-size: 12px; letter-spacing: .14em; text-transform: uppercase;">&lt; 60 Min <i class="ti ti-x" style="margin-left: 6px;"></i></span>
+          <span style="display: inline-flex; align-items: center; height: 36px; padding: 0 14px; border: 1px solid #1c2740; color: #5d6a82; font-family: 'IBM Plex Mono'; font-size: 12px; letter-spacing: .14em; text-transform: uppercase;">Gesperrt</span>
+        </div>
+        <span style="font-size: 12px; line-height: 1.5; color: #9aa8c0; max-width: 62ch;">Amber ist die eine Hauptaktion pro Screen (Zündung, Mission starten, Noch eine Runde). Cyan-Umriss ist die zweite Ebene. Alles Weitere ist ein Draht in <span style="font-family: 'IBM Plex Mono';">#24324a</span>. Gesperrt verliert die Leuchte, nicht nur die Deckkraft.</span>
+      </div>
+
+      <div style="background: #0e1626; border: 1px solid #24324a; padding: 18px 20px; display: flex; flex-direction: column; gap: 12px; width: 420px;">
+        <span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #35e0ff;">Platz · Mitglied · Gast</span>
+        <sc-for list="{{ seats }}" as="s" hint-placeholder-count="4">
+          <span style="display: grid; grid-template-columns: 12px 44px 1fr auto; gap: 12px; align-items: center; min-height: 44px; border-bottom: 1px solid #1c2740; opacity: {{ s.op }};">
+            <span style="width: 10px; height: 10px; border-radius: 50%; background: {{ s.led }}; box-shadow: {{ s.ledGlow }};"></span>
+            <span style="width: 44px; height: 44px; border: 1px solid {{ s.color }}; display: grid; place-items: center; font-family: 'Chakra Petch'; font-weight: 700; font-size: 18px; color: {{ s.color }};">{{ s.ini }}</span>
+            <span style="font-family: 'Chakra Petch'; font-weight: 600; font-size: 19px; text-transform: uppercase;">{{ s.name }}</span>
+            <span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: {{ s.stateInk }};">{{ s.state }}</span>
+          </span>
+        </sc-for>
+        <span style="font-size: 12px; line-height: 1.5; color: #9aa8c0;">Der Zustand steht als Wort da, nicht nur als Leuchtpunkt. „Platz antippen = mitspielen“ ist die Hilfszeile darunter, im Wortlaut der App.</span>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 14px; max-width: 1240px; align-items: flex-start;">
+      <div style="background: #0e1626; border: 1px solid #24324a; padding: 18px 20px; display: flex; flex-direction: column; gap: 12px; width: 430px;">
+        <span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #35e0ff;">Der Pool · Gefäß und Zähler</span>
+        <div style="display: grid; grid-template-columns: 150px 1fr; gap: 18px; align-items: center;">
+          <span style="display: flex; flex-direction: column;"><span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 104px; line-height: .86; color: #35e0ff; text-shadow: 0 0 30px rgba(53,224,255,.45);">9</span><span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: #9aa8c0;">Spiele im Pool</span></span>
+          <span style="display: flex; flex-direction: column; gap: 8px;">
+            <span style="display: flex; gap: 7px;"><sc-for list="{{ probes }}" as="p" hint-placeholder-count="5"><span style="width: 44px; height: 52px; border: 1px solid {{ p.edge }}; background: {{ p.bg }}; box-shadow: {{ p.glow }}; display: grid; place-items: center; font-family: 'Chakra Petch'; font-weight: 700; font-size: 20px; color: {{ p.ink }};">{{ p.n }}</span></sc-for></span>
+            <span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #9aa8c0;">Sonden · wie viele werden gezogen?</span>
+            <span style="font-size: 13px; line-height: 1.5; color: #b8c2d6;">„Spiel/Spiele“ bleibt im Gefäß stehen. <strong style="color: #dfe7f5;">Nie</strong> „09 Einheiten“.</span>
+          </span>
+        </div>
+        <span style="font-size: 12px; line-height: 1.5; color: #9aa8c0; border-top: 1px solid #1c2740; padding-top: 10px;">Filterreihe, Zahl und die Zeile „N weitere fehlen, weil ihre Besitzer nicht mitspielen“ gehören zum Pool und stehen auf jedem Screen, der ihn zeigt.</span>
+      </div>
+
+      <div style="background: #0e1626; border: 1px solid #24324a; padding: 18px 20px; display: flex; flex-direction: column; gap: 12px; width: 560px;">
+        <span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #35e0ff;">Wertungskarte · fünf Gesichter, Ziel 44 px</span>
+        <span style="font-size: 20px; font-weight: 500; line-height: 1.3;">Wie viel Schub gibst du diesem Spiel heute?</span>
+        <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px;">
+          <sc-for list="{{ thrust }}" as="t" hint-placeholder-count="5">
+            <span style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+              <span style="width: 100%; min-height: 76px; display: flex; align-items: flex-end;"><span style="width: 100%; height: {{ t.h }}; min-height: 44px; background: {{ t.bg }}; border: 1px solid {{ t.edge }}; box-shadow: {{ t.glow }}; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; color: {{ t.ink }};"><i class="ti {{ t.face }}" style="font-size: 22px;"></i><span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 20px;">{{ t.n }}</span></span></span>
+              <span style="font-family: 'IBM Plex Mono'; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: {{ t.labelInk }}; text-align: center;">{{ t.label }}</span>
+            </span>
+          </sc-for>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .16em; text-transform: uppercase;"><span style="color: #ff8fa3;">← kein Schub</span><span style="color: #35e0ff;">volle Kraft →</span></div>
+        <span style="font-size: 12px; line-height: 1.5; color: #9aa8c0;">Die fünf Tabler-Gesichter und die Zahlen 1–5 bleiben global. „kein Schub / volle Kraft“ ist die Brücken-Benennung der Skalenenden und <strong style="color: #dfe7f5;">wandert mit</strong>: in die Ergebnistabelle („1× kein Schub“), in die Score-Erklärung, in die Chronik.</span>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 14px; max-width: 1240px; align-items: flex-start;">
+      <div style="background: #0e1626; border: 1px solid #24324a; padding: 18px 20px; display: flex; flex-direction: column; gap: 10px; width: 600px;">
+        <span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #35e0ff;">Spielkarte im Regal · Titel auf deckendem Band</span>
+        <div style="display: flex; gap: 12px;">
+          <sc-for list="{{ cards }}" as="c" hint-placeholder-count="3">
+            <span style="width: 176px; display: flex; flex-direction: column; border: 1px solid #24324a; background: #0e1626;">
+              <span style="position: relative; display: block; aspect-ratio: 4 / 3; background: repeating-linear-gradient(180deg, rgba(0,0,0,.22) 0 1px, transparent 1px 4px), {{ c.cover }};"></span>
+              <span style="display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; background: #0e1626; border-top: 1px solid #24324a;">
+                <span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 15px; line-height: 1.1; text-transform: uppercase; text-wrap: balance;">{{ c.title }}</span>
+                <span style="display: flex; justify-content: space-between; align-items: baseline;"><span style="font-family: 'IBM Plex Mono'; font-size: 10px; letter-spacing: .1em; color: #9aa8c0;">{{ c.meta }}</span><span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 24px; line-height: 1; color: {{ c.sc }};">{{ c.score }}</span></span>
+                <span style="display: block; height: 4px; background: #1c2740;"><span style="display: block; height: 100%; width: {{ c.pct }}; background: {{ c.sc }};"></span></span>
+              </span>
+            </span>
+          </sc-for>
+        </div>
+        <span style="font-size: 12px; line-height: 1.5; color: #9aa8c0;">Das Cover trägt nie Text (Regel 2). Der Score steht bei 24 px, also darf er die Rampenfarbe tragen; der Balken wiederholt ihn, damit die Farbe nicht allein steht.</span>
+      </div>
+
+      <div style="background: #0e1626; border: 1px solid #24324a; padding: 18px 20px; display: flex; flex-direction: column; gap: 10px; width: 610px;">
+        <span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #35e0ff;">Kopfleiste &amp; Dock — auf jedem Screen</span>
+        <span style="display: flex; align-items: center; gap: 16px; height: 52px; padding: 0 16px; background: #0b1220; border: 1px solid #24324a; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #9aa8c0;">
+          <span style="display: flex; align-items: center; gap: 8px; font-family: 'Chakra Petch'; font-weight: 700; font-size: 16px; letter-spacing: .2em; color: #35e0ff;"><span style="width: 9px; height: 9px; background: #35e0ff; box-shadow: 0 0 10px #35e0ff;"></span>Spielwirbel</span>
+          <span>Flotte / Übersicht</span>
+          <span style="margin-left: auto; display: flex; gap: 8px; align-items: center;"><span style="border: 1px solid #24324a; padding: 5px 9px; color: #dfe7f5;">DE</span><span style="border: 1px solid #24324a; padding: 5px 9px; color: #dfe7f5;"><i class="ti ti-mail"></i></span><span style="border: 1px solid #24324a; padding: 5px 9px; color: #dfe7f5;">Marco</span></span>
+        </span>
+        <span style="display: flex; gap: 10px; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase;"><sc-for list="{{ navLinks }}" as="n" hint-placeholder-count="5"><span style="min-height: 24px; display: inline-flex; align-items: center; padding: 4px 10px; border-bottom: 2px solid {{ n.edge }}; color: {{ n.ink }};">{{ n.label }}</span></sc-for></span>
+        <span style="display: flex; background: #0b1220; border: 1px solid #24324a;"><sc-for list="{{ dock }}" as="d" hint-placeholder-count="4"><span style="flex: 1; min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; color: {{ d.ink }}; border-top: 2px solid {{ d.edge }};"><i class="ti {{ d.icon }}" style="font-size: 20px;"></i><span style="font-family: 'IBM Plex Mono'; font-size: 10px; letter-spacing: .1em; text-transform: uppercase;">{{ d.label }}</span></span></sc-for></span>
+        <span style="font-size: 12px; line-height: 1.5; color: #9aa8c0;">Desktop: die fünf Abschnittslinks <strong style="color: #dfe7f5;">Start · Regal · Chronik · Pokale · Einstellungen</strong> auf jedem Rundenscreen, auch in der Session. Telefon: Dock mit genau vier — Start · Regal · Chronik · Pokale, 56 px hoch, Einstellungen sitzt im Kopf. Die Navigationswörter sind nie thematisch.</span>
+      </div>
+    </div>
+  </div>
+
+  <div data-screen-label="B1.5 Zustände" style="display: flex; flex-direction: column; gap: 18px;">
+    <div style="display: flex; align-items: center; gap: 12px;"><span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 22px; text-transform: uppercase; letter-spacing: .06em;">5 · Zustände</span><span style="flex: 1; height: 1px; background: linear-gradient(90deg, #35e0ff, transparent);"></span></div>
+    <div style="display: flex; flex-wrap: wrap; gap: 12px; max-width: 1240px;">
+      <sc-for list="{{ states }}" as="s" hint-placeholder-count="6">
+        <div style="width: 238px; background: #0e1626; border: 1px solid #24324a; padding: 16px; display: flex; flex-direction: column; gap: 9px;">
+          <span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: {{ s.tone }};">{{ s.name }}</span>
+          <span style="display: inline-flex; align-items: center; justify-content: center; min-height: 40px; padding: 0 16px; border: 1px solid {{ s.edge }}; background: {{ s.bg }}; box-shadow: {{ s.glow }}; color: {{ s.ink }}; font-family: 'Chakra Petch'; font-weight: 700; font-size: 15px; letter-spacing: .06em; text-transform: uppercase;">Mission starten</span>
+          <span style="font-size: 12px; line-height: 1.5; color: #9aa8c0;">{{ s.note }}</span>
+        </div>
+      </sc-for>
+    </div>
+    <div style="max-width: 1240px; font-size: 13px; line-height: 1.6; color: #b8c2d6; background: #0e1626; border: 1px solid #24324a; padding: 14px 18px;"><strong style="color: #dfe7f5;">Fokus.</strong> Sichtbarer Ring in Cyan, 2 px, 2 px Abstand — auf dunklem Grund reicht ein Rahmen, kein Schatten. Er sitzt außerhalb der Fläche, damit er auf Amber ebenso trägt wie auf einem Draht. <strong style="color: #dfe7f5;">Bewegung</strong> hat überall einen statischen Endzustand (<a href="Bruecke-B10-Motion.dc.html" style="display: inline-flex; align-items: center; min-height: 24px; padding: 0 3px;">B10</a>): bei <span style="font-family: 'IBM Plex Mono';">prefers-reduced-motion</span> erscheint das Ergebnis der Animation sofort, nichts pulsiert dauerhaft.</div>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1400,&quot;height&quot;:900}}">
+class Component extends DCLogic {
+  renderVals() {
+    const CY = '#35e0ff', AM = '#ffb020', GR = '#4ade80', RD = '#ff6b85', MU = '#9aa8c0';
+    const SUR = '#0e1626', LINE = '#24324a';
+    const cover = (h) => `linear-gradient(160deg, oklch(.55 .12 ${h}), oklch(.3 .1 ${h + 30}))`;
+    const fmt = (v) => v.toFixed(1).replace('.', ',');
+
+    const tokenGroups = [
+      { title: 'Grund und Fläche', items: [
+        { name: 'page', bg: 'radial-gradient(120% 90% at 50% 0%, #10203a, #070b14 70%)', sample: '#070b14', chipInk: '#9aa8c0', use: 'Seitengrund, der einzige Verlauf im Design' },
+        { name: 'surface', bg: SUR, sample: '#0e1626', chipInk: '#9aa8c0', use: 'jedes Paneel, flach, nie mit Verlauf' },
+        { name: 'surface-raised', bg: '#141d30', sample: '#141d30', chipInk: '#9aa8c0', use: 'Sheet, Dialog, Popover über einem Paneel' },
+        { name: 'bar', bg: '#0b1220', sample: '#0b1220', chipInk: '#9aa8c0', use: 'Kopfleiste und Dock, dunkler als das Paneel' },
+        { name: 'line', bg: LINE, sample: '#24324a', chipInk: '#dfe7f5', use: 'Kante eines Paneels, Umriss eines Drahtknopfs' },
+        { name: 'hairline', bg: '#1c2740', sample: '#1c2740', chipInk: '#9aa8c0', use: 'Trennlinie innerhalb eines Paneels' },
+      ] },
+      { title: 'Schriftfarben — gemessen auf #0e1626', items: [
+        { name: 'ink', bg: '#dfe7f5', sample: '14,5:1', chipInk: '#070b14', use: 'Titel und Fließtext' },
+        { name: 'ink-2', bg: '#b8c2d6', sample: '10,1:1', chipInk: '#070b14', use: 'zweite Ebene, längere Absätze' },
+        { name: 'ink-muted', bg: MU, sample: '7,5:1', chipInk: '#070b14', use: 'Notation, Kicker, Meta — ab 11 px zulässig' },
+        { name: 'ink-dim', bg: '#5d6a82', sample: '3,3:1', chipInk: '#dfe7f5', use: 'nur Gesperrt und leere Rasterzellen, nie Fließtext' },
+      ] },
+      { title: 'Akzente', items: [
+        { name: 'accent', bg: CY, sample: '11,4:1', chipInk: '#070b14', use: 'Kicker, Zahlen, Umriss der zweiten Aktion' },
+        { name: 'action', bg: AM, sample: '9,9:1', chipInk: '#070b14', use: 'die eine Hauptaktion pro Screen' },
+        { name: 'ok', bg: GR, sample: '10,4:1', chipInk: '#070b14', use: 'bereit, gewertet, Stempel „Gespielt“' },
+        { name: 'alert', bg: RD, sample: '6,6:1', chipInk: '#070b14', use: 'kein Schub, Veto, zerstörende Aktion' },
+      ] },
+      { title: 'Personenfarben — für dunklen Grund aufgehellt (B8 misst)', items: [
+        { name: 'p1 · #c6522c', bg: '#f08a5d', sample: '7,3:1', chipInk: '#070b14', use: 'Original 4,0:1 auf #0e1626 — zu dunkel für Text' },
+        { name: 'p2 · #198663', bg: '#3fbf95', sample: '7,8:1', chipInk: '#070b14', use: 'Original 4,0:1 — Ton gehalten, Helligkeit angehoben' },
+        { name: 'p3 · #726bc7', bg: '#a49cf0', sample: '7,4:1', chipInk: '#070b14', use: 'Original 4,0:1 — Ton gehalten' },
+        { name: 'p4 · #a66815', bg: '#e0a03c', sample: '8,0:1', chipInk: '#070b14', use: 'Original 4,0:1 — Ton gehalten' },
+        { name: 'p5 · #c34d74', bg: '#f08aa8', sample: '7,7:1', chipInk: '#070b14', use: 'Original 4,0:1 — Ton gehalten' },
+        { name: 'p6 · #2f6f9e', bg: '#6bb3e0', sample: '7,9:1', chipInk: '#070b14', use: 'Original 3,3:1 — Ton gehalten' },
+        { name: 'p7 · #54821d', bg: '#9cc44a', sample: '9,0:1', chipInk: '#070b14', use: 'Original 4,0:1 — Ton gehalten' },
+        { name: 'p8 · #993556', bg: '#e07a9a', sample: '6,4:1', chipInk: '#070b14', use: 'Original 2,6:1 — verfehlte sogar 3:1' },
+      ] },
+      { title: 'Raster und Kante', items: [
+        { name: 'radius', bg: '#0e1626', sample: '0', chipInk: '#dfe7f5', use: 'keine Rundung — das Design ist rechtwinklig' },
+        { name: 'space', bg: '#141d30', sample: '4 · 8 · 12 · 18 · 24', chipInk: '#dfe7f5', use: 'Abstände, Vielfache von 2' },
+        { name: 'gutter', bg: '#141d30', sample: '24 px', chipInk: '#dfe7f5', use: 'Spaltenabstand Desktop; Rand 48 px' },
+        { name: 'target-min', bg: '#141d30', sample: '24 px', chipInk: '#dfe7f5', use: 'jedes Bedienelement, auch ein Textlink' },
+        { name: 'target-key', bg: '#141d30', sample: '44 px', chipInk: '#dfe7f5', use: 'Wertungskarte inkl. „Zurück“, Dock, Plätze' },
+        { name: 'target-field', bg: '#141d30', sample: '44 px', chipInk: '#dfe7f5', use: 'Eingabefeld — das Feld selbst, nicht sein Rahmen' },
+        { name: 'target-foot', bg: '#141d30', sample: '32 px', chipInk: '#dfe7f5', use: 'Fußzeilenlinks' },
+      ] },
+    ];
+
+    const typeScale = [
+      { token: 'display-xl', family: "'Chakra Petch'", weight: 700, px: '58px', tt: 'uppercase', sample: 'Regal', use: 'Seitentitel Desktop' },
+      { token: 'display-l', family: "'Chakra Petch'", weight: 700, px: '40px', tt: 'uppercase', sample: 'Nordlichter', use: 'Schlagzeile Ergebnis, Titel Telefon' },
+      { token: 'display-m', family: "'Chakra Petch'", weight: 700, px: '26px', tt: 'uppercase', sample: 'Donnerstagsrunde', use: 'Kartentitel, Rundenname' },
+      { token: 'display-s', family: "'Chakra Petch'", weight: 600, px: '19px', tt: 'uppercase', sample: 'Jonas', use: 'Personenname, Knopf' },
+      { token: 'body-l', family: "'IBM Plex Sans'", weight: 400, px: '20px', tt: 'none', sample: 'Wie viel Schub?', use: 'Frage der Wertungskarte' },
+      { token: 'body', family: "'IBM Plex Sans'", weight: 400, px: '15px', tt: 'none', sample: 'Gehört Lea · 45 Min', use: 'Lauftext, Hilfszeilen' },
+      { token: 'body-s', family: "'IBM Plex Sans'", weight: 400, px: '13px', tt: 'none', sample: 'Zuletzt vor 5 Tagen', use: 'Meta, kleinste Lesegröße' },
+      { token: 'mono-kicker', family: "'IBM Plex Mono'", weight: 600, px: '11px', tt: 'uppercase', sample: 'Eingehendes Signal', use: 'Notation, versal, .16em' },
+      { token: 'mono-micro', family: "'IBM Plex Mono'", weight: 400, px: '10px', tt: 'uppercase', sample: '09 Siege', use: 'Untergrenze · nur Zähler und Achsen' },
+    ];
+
+    const icons = [
+      { cls: 'ti-rocket', use: 'Mission starten' }, { cls: 'ti-bolt', use: 'Zündung' },
+      { cls: 'ti-planet', use: 'Pool, Sonden' }, { cls: 'ti-lock', use: 'verdeckt' },
+      { cls: 'ti-lock-off', use: 'entschlüsseln' }, { cls: 'ti-cards', use: 'Regal' },
+      { cls: 'ti-history', use: 'Chronik' }, { cls: 'ti-trophy', use: 'Pokale' },
+      { cls: 'ti-layout-grid', use: 'Start' }, { cls: 'ti-settings', use: 'Einstellungen' },
+      { cls: 'ti-tool', use: 'Kümmerliste' }, { cls: 'ti-mail', use: 'Postfach' },
+      { cls: 'ti-users', use: 'Mitglieder' }, { cls: 'ti-plus', use: 'Platz dazu, hinzufügen' },
+      { cls: 'ti-share', use: 'Teilen' }, { cls: 'ti-filter', use: 'Filter' },
+      { cls: 'ti-download', use: 'Von BGG übernehmen' }, { cls: 'ti-checkbox', use: 'Auswählen' },
+      { cls: 'ti-arrow-right', use: 'weiter' }, { cls: 'ti-arrow-left', use: 'Zurück' },
+      { cls: 'ti-dots', use: '„…“-Menü' }, { cls: 'ti-info-circle', use: 'Score erklären' },
+      { cls: 'ti-alert-triangle', use: 'Warnung' }, { cls: 'ti-trash', use: 'Session löschen' },
+      { cls: 'ti-mood-cry', use: 'Wertung 1' }, { cls: 'ti-mood-sad', use: 'Wertung 2' },
+      { cls: 'ti-mood-neutral', use: 'Wertung 3' }, { cls: 'ti-mood-smile', use: 'Wertung 4' },
+      { cls: 'ti-mood-crazy-happy', use: 'Wertung 5' }, { cls: 'ti-world', use: 'Sprache' },
+    ];
+
+    const P = ['#f08a5d', '#6bb3e0', '#a49cf0', '#e0a03c'];
+    const seats = [
+      { name: 'Marco', ini: 'M', color: P[0], op: '1', led: GR, ledGlow: '0 0 8px ' + GR, state: 'spielt mit', stateInk: GR },
+      { name: 'Jonas', ini: 'J', color: P[1], op: '1', led: GR, ledGlow: '0 0 8px ' + GR, state: 'spielt mit', stateInk: GR },
+      { name: 'Tim', ini: 'T', color: MU, op: '.55', led: '#24324a', ledGlow: 'none', state: 'heute nicht dabei', stateInk: MU },
+      { name: 'Gast', ini: '+', color: MU, op: '.8', led: '#24324a', ledGlow: 'none', state: 'nur diese Session', stateInk: MU },
+    ];
+
+    const probes = [1, 2, 3, 4, 5].map((n) => {
+      const on = n <= 3;
+      return { n, edge: on ? AM : LINE, bg: on ? 'rgba(255,176,32,.16)' : 'transparent', glow: on ? '0 0 16px rgba(255,176,32,.3)' : 'none', ink: on ? AM : MU };
+    });
+
+    const ramp = [RD, AM, MU, GR, CY];
+    const faces = ['ti-mood-cry', 'ti-mood-sad', 'ti-mood-neutral', 'ti-mood-smile', 'ti-mood-crazy-happy'];
+    const tLabels = ['kein Schub', 'wenig', 'mittel', 'viel', 'volle Kraft'];
+    const thrust = ramp.map((c, i) => {
+      const sel = i === 3;
+      return { n: i + 1, h: [58, 68, 80, 92, 100][i] + '%', bg: sel ? c : 'transparent', edge: c, glow: sel ? '0 0 24px ' + c : 'none', ink: sel ? '#070b14' : c, face: faces[i], label: tLabels[i], labelInk: sel ? '#dfe7f5' : MU };
+    });
+
+    const scCol = (s) => s >= 4 ? CY : s >= 3.5 ? GR : AM;
+    const cards = [
+      { title: 'Nordlichter', meta: '2–5 · 90 Min', score: 4.8, h: 200 },
+      { title: 'Moorgeister', meta: '3–6 · 40 Min', score: 4.4, h: 160 },
+      { title: 'Rost & Regen', meta: '2–6 · 120 Min', score: 3.3, h: 220 },
+    ].map((c) => ({ ...c, cover: cover(c.h), sc: scCol(c.score), pct: Math.round(c.score / 5 * 100) + '%', score: fmt(c.score) }));
+
+    const navLinks = [
+      { label: 'Start', ink: '#dfe7f5', edge: CY },
+      { label: 'Regal', ink: MU, edge: 'transparent' },
+      { label: 'Chronik', ink: MU, edge: 'transparent' },
+      { label: 'Pokale', ink: MU, edge: 'transparent' },
+      { label: 'Einstellungen', ink: MU, edge: 'transparent' },
+    ];
+    const dock = [
+      { label: 'Start', icon: 'ti-layout-grid', ink: CY, edge: CY },
+      { label: 'Regal', icon: 'ti-cards', ink: MU, edge: 'transparent' },
+      { label: 'Chronik', icon: 'ti-history', ink: MU, edge: 'transparent' },
+      { label: 'Pokale', icon: 'ti-trophy', ink: MU, edge: 'transparent' },
+    ];
+
+    const states = [
+      { name: 'Ruhe', tone: MU, bg: AM, edge: AM, ink: '#070b14', glow: '0 0 26px rgba(255,176,32,.3)', note: 'Amber deckend, Ink #070b14 — 9,9:1.' },
+      { name: 'Überfahren', tone: MU, bg: '#ffc451', edge: '#ffc451', ink: '#070b14', glow: '0 0 34px rgba(255,176,32,.5)', note: 'Heller und stärkere Leuchte, keine Bewegung.' },
+      { name: 'Gedrückt', tone: MU, bg: '#e09710', edge: '#e09710', ink: '#070b14', glow: 'none', note: 'Dunkler, Leuchte aus — der Knopf sinkt ein.' },
+      { name: 'Fokus', tone: CY, bg: AM, edge: AM, ink: '#070b14', glow: '0 0 0 2px #070b14, 0 0 0 4px ' + CY, note: 'Cyan-Ring außen, trägt auf jedem Grund.' },
+      { name: 'Gesperrt', tone: MU, bg: 'transparent', edge: '#1c2740', ink: '#5d6a82', glow: 'none', note: 'Keine Leuchte, kein Amber — 3,3:1, nur Nicht-Text.' },
+      { name: 'Lädt', tone: MU, bg: 'transparent', edge: AM, ink: AM, glow: 'none', note: 'Umriss bleibt, Füllung läuft von links ein; Endzustand = gefüllt.' },
+    ];
+
+    return { tokenGroups, typeScale, icons, seats, probes, thrust, cards, navLinks, dock, states };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="design_doc_mode" content="canvas">
+  <link rel="stylesheet" href="../../../public/fonts/tabler-icons.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #070b14; font-family: 'IBM Plex Sans', sans-serif; }
+    a { color: #35e0ff; text-decoration: none; }
+    a:hover { color: #8aeeff; text-decoration: underline; }
+  </style>
+</helmet>
+<div style="display: flex; flex-direction: column; gap: 44px; padding: 44px; width: max-content; color: #dfe7f5; background-color: #070b14; background-image: radial-gradient(1200px 600px at 50% 0%, #10203a, transparent 70%);">
+
+  <div data-screen-label="B5 Kopf" style="max-width: 1240px; display: flex; flex-direction: column; gap: 12px; background: #0e1626; border: 1px solid #24324a; padding: 24px 28px;">
+    <div style="display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;">
+      <span style="font-family: 'IBM Plex Mono'; font-weight: 600; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: #070b14; background: #35e0ff; padding: 5px 12px;">B5</span>
+      <h1 style="margin: 0; font-family: 'Chakra Petch'; font-weight: 700; font-size: 34px; line-height: 1.05; text-transform: uppercase;">Konto · Anmelden, Design wählen</h1>
+      <span style="font-family: 'IBM Plex Mono'; font-size: 13px; color: #9aa8c0;">Brief 5 von 13</span>
+    </div>
+    <p style="margin: 0; font-size: 15px; line-height: 1.55; max-width: 92ch; color: #b8c2d6;">Das Design gehört dem <strong style="color: #dfe7f5;">Konto</strong>, nicht der Runde. Diese Screens zeigen die Brücke als gewähltes Design — die Anmeldeflächen selbst gehören dem Gesicht „Der Tisch“ und stehen hier nur, weil ein Konto, das die Brücke gewählt hat, sie nach dem Abmelden wiedersieht. Der Wähler zeigt alle sieben Designs; <strong style="color: #dfe7f5;">Klassisch</strong> bleibt dauerhaft wählbar.</p>
+  </div>
+
+  <div style="display: flex; gap: 28px; flex-wrap: wrap; align-items: flex-start;">
+
+    <div data-screen-label="B5.1 Anmelden" style="display: flex; flex-direction: column; gap: 10px;">
+      <span style="font-family: 'IBM Plex Mono'; font-size: 12px; color: #9aa8c0;">B5.1 · Anmelden — im gewählten Design</span>
+      <div style="width: 560px; height: 620px; position: relative; overflow: hidden; background: radial-gradient(120% 70% at 50% 0%, #10203a, #070b14 70%); border: 1px solid #24324a; display: flex; flex-direction: column;">
+        <span style="position: absolute; inset: 0; pointer-events: none; background-image: radial-gradient(rgba(53,224,255,.14) 1px, transparent 1.3px); background-size: 28px 28px; mask-image: radial-gradient(80% 70% at 50% 40%, #000 20%, transparent 100%);"></span>
+        <div style="position: relative; z-index: 2; flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 18px; padding: 40px;">
+          <span style="display: flex; align-items: center; gap: 10px; font-family: 'Chakra Petch'; font-weight: 700; font-size: 20px; letter-spacing: .2em; text-transform: uppercase; color: #35e0ff;"><span style="width: 11px; height: 11px; background: #35e0ff; box-shadow: 0 0 12px #35e0ff;"></span>Spielwirbel</span>
+          <span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 38px; line-height: 1.05; text-transform: uppercase;">Willkommen zurück an Bord.</span>
+          <div style="position: relative; display: flex; flex-direction: column; gap: 14px; padding: 24px; background: #0e1626; border: 1px solid #24324a;">
+            <span style="position: absolute; left: -1px; top: -1px; width: 14px; height: 14px; border-left: 2px solid #35e0ff; border-top: 2px solid #35e0ff;"></span><span style="position: absolute; right: -1px; bottom: -1px; width: 14px; height: 14px; border-right: 2px solid #35e0ff; border-bottom: 2px solid #35e0ff;"></span>
+            <label style="display: flex; flex-direction: column; gap: 6px;"><span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #9aa8c0;">E-Mail</span><input value="marco@beispiel.de" style="min-height: 44px; padding: 0 12px; background: #0b1220; border: 1px solid #24324a; font: inherit; font-size: 15px; color: #dfe7f5; outline: none;"></label>
+            <label style="display: flex; flex-direction: column; gap: 6px;"><span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #9aa8c0;">Passwort</span><input type="password" value="xxxxxxxxxxx" style="min-height: 44px; padding: 0 12px; background: #0b1220; border: 1px solid #24324a; font: inherit; font-size: 15px; color: #dfe7f5; outline: none;"></label>
+            <a href="#" style="align-self: flex-start; min-height: 24px; display: inline-flex; align-items: center; font-size: 13px;">Passwort vergessen?</a>
+            <a href="#" style="display: flex; align-items: center; justify-content: center; min-height: 52px; background: #ffb020; color: #070b14; font-family: 'Chakra Petch'; font-weight: 700; font-size: 20px; letter-spacing: .08em; text-transform: uppercase; box-shadow: 0 0 26px rgba(255,176,32,.3);">Anmelden</a>
+            <span style="font-size: 14px; color: #b8c2d6; text-align: center;">Noch kein Konto? <a href="#" style="display: inline-flex; align-items: center; min-height: 24px; padding: 0 3px;">Registrieren</a></span>
+          </div>
+          <span style="display: flex; gap: 14px; align-items: center; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #9aa8c0;"><a href="#" style="color: #9aa8c0; min-height: 24px; display: inline-flex; align-items: center;"><i class="ti ti-world" style="margin-right: 6px;"></i> DE</a><span style="margin-left: auto;">Kein Tracking · EU-Hosting</span></span>
+        </div>
+      </div>
+    </div>
+
+    <div data-screen-label="B5.2 Design wählen" style="display: flex; flex-direction: column; gap: 10px;">
+      <span style="font-family: 'IBM Plex Mono'; font-size: 12px; color: #9aa8c0;">B5.2 · Design wählen — sieben Karten, das eigene markiert</span>
+      <div style="width: 860px; height: 620px; position: relative; overflow: hidden; background: radial-gradient(120% 70% at 50% 0%, #10203a, #070b14 70%); border: 1px solid #24324a; display: flex; flex-direction: column;">
+        <span style="position: absolute; inset: 0; pointer-events: none; background-image: radial-gradient(rgba(53,224,255,.14) 1px, transparent 1.3px); background-size: 28px 28px; mask-image: radial-gradient(80% 70% at 50% 40%, #000 20%, transparent 100%);"></span>
+        <div style="position: relative; z-index: 2; flex: none; height: 52px; display: flex; align-items: center; gap: 20px; padding: 0 26px; background: #0b1220; border-bottom: 1px solid #24324a;">
+          <a href="#" style="display: flex; align-items: center; min-height: 24px; gap: 10px; font-family: 'Chakra Petch'; font-weight: 700; font-size: 17px; letter-spacing: .2em; text-transform: uppercase; color: #35e0ff;"><span style="width: 9px; height: 9px; background: #35e0ff; box-shadow: 0 0 10px #35e0ff;"></span>Spielwirbel</a>
+          <span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #9aa8c0;">Konto / Design</span>
+          <a href="#" style="margin-left: auto; min-height: 28px; display: inline-flex; align-items: center; border: 1px solid #24324a; padding: 0 10px; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #dfe7f5;">Marco</a>
+        </div>
+        <div style="position: relative; z-index: 2; flex: 1; padding: 22px 26px; display: flex; flex-direction: column; gap: 16px; min-height: 0;">
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 36px; line-height: 1; text-transform: uppercase;">Design</span>
+            <span style="font-size: 14px; color: #b8c2d6;">Gilt für dein Konto, in allen Runden. Die anderen sehen ihr eigenes.</span>
+          </div>
+          <div style="flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; align-content: start;">
+            <sc-for list="{{ designs }}" as="d" hint-placeholder-count="7">
+              <a href="#" style="display: flex; flex-direction: column; border: 1px solid {{ d.edge }}; background: #0e1626; color: #dfe7f5; position: relative;">
+                <span style="display: block; height: 96px; background: {{ d.swatch }}; border-bottom: 1px solid {{ d.edge }};"></span>
+                <span style="display: flex; flex-direction: column; gap: 3px; padding: 10px 12px;">
+                  <span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 16px; text-transform: uppercase; line-height: 1.1;">{{ d.name }}</span>
+                  <span style="font-family: 'IBM Plex Mono'; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: #9aa8c0;">{{ d.scheme }}</span>
+                </span>
+                <span style="position: absolute; right: 8px; top: 8px; display: {{ d.markDisplay }}; align-items: center; gap: 5px; min-height: 24px; padding: 0 8px; background: #35e0ff; color: #070b14; font-family: 'IBM Plex Mono'; font-size: 10px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase;"><i class="ti ti-check"></i> Deins</span>
+              </a>
+            </sc-for>
+          </div>
+          <span style="font-size: 13px; color: #b8c2d6;">Das Design wechselt sofort. Inhalte, Runden und Ergebnisse bleiben, wo sie sind.</span>
+        </div>
+      </div>
+    </div>
+
+    <div data-screen-label="B5.3 Auswahl-Sheet" style="display: flex; flex-direction: column; gap: 10px;">
+      <span style="font-family: 'IBM Plex Mono'; font-size: 12px; color: #9aa8c0;">B5.3 · Auswahl-Sheet am Telefon — dieselbe Liste, ein Finger</span>
+      <div style="width: 390px; height: 620px; position: relative; overflow: hidden; background: radial-gradient(120% 60% at 50% 0%, #10203a, #070b14 70%); border: 1px solid #24324a; display: flex; flex-direction: column; justify-content: flex-end;">
+        <span style="position: absolute; inset: 0; background: rgba(7,11,20,.7);"></span>
+        <div style="position: relative; z-index: 2; display: flex; flex-direction: column; gap: 12px; padding: 18px; background: #141d30; border-top: 1px solid #35e0ff;">
+          <span style="width: 44px; height: 4px; background: #24324a; align-self: center;"></span>
+          <span style="display: flex; justify-content: space-between; align-items: baseline;"><span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 24px; text-transform: uppercase;">Design</span><a href="#" style="min-height: 32px; display: inline-flex; align-items: center; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #9aa8c0;">Schließen</a></span>
+          <sc-for list="{{ designs }}" as="d" hint-placeholder-count="7">
+            <a href="#" style="display: grid; grid-template-columns: 56px 1fr auto; gap: 12px; align-items: center; min-height: 56px; padding: 8px 10px; border: 1px solid {{ d.edge }}; color: #dfe7f5;">
+              <span style="width: 56px; height: 38px; background: {{ d.swatch }}; border: 1px solid #24324a;"></span>
+              <span style="display: flex; flex-direction: column;"><span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 17px; text-transform: uppercase;">{{ d.name }}</span><span style="font-family: 'IBM Plex Mono'; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: #9aa8c0;">{{ d.scheme }}</span></span>
+              <span style="display: {{ d.markDisplay }}; color: #35e0ff;"><i class="ti ti-check" style="font-size: 20px;"></i></span>
+            </a>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+
+    <div data-screen-label="B5.4 Einstellungen" style="display: flex; flex-direction: column; gap: 10px;">
+      <span style="font-family: 'IBM Plex Mono'; font-size: 12px; color: #9aa8c0;">B5.4 · Konto — Profil, Sprache, Design, Datenschutz</span>
+      <div style="width: 560px; height: 620px; position: relative; overflow: hidden; background: radial-gradient(120% 70% at 50% 0%, #10203a, #070b14 70%); border: 1px solid #24324a; display: flex; flex-direction: column;">
+        <span style="position: absolute; inset: 0; pointer-events: none; background-image: radial-gradient(rgba(53,224,255,.14) 1px, transparent 1.3px); background-size: 28px 28px; mask-image: radial-gradient(80% 70% at 50% 40%, #000 20%, transparent 100%);"></span>
+        <div style="position: relative; z-index: 2; flex: none; height: 52px; display: flex; align-items: center; gap: 18px; padding: 0 24px; background: #0b1220; border-bottom: 1px solid #24324a;">
+          <a href="#" style="min-height: 32px; display: inline-flex; align-items: center; gap: 6px; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #dfe7f5;"><i class="ti ti-arrow-left"></i> Zurück</a>
+          <span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #9aa8c0;">Konto</span>
+        </div>
+        <div style="position: relative; z-index: 2; flex: 1; padding: 22px 24px; display: flex; flex-direction: column; gap: 14px; min-height: 0;">
+          <div style="display: flex; align-items: center; gap: 14px;">
+            <span style="width: 60px; height: 60px; border: 1px solid #f08a5d; display: grid; place-items: center; font-family: 'Chakra Petch'; font-weight: 700; font-size: 26px; color: #f08a5d;">M</span>
+            <span style="display: flex; flex-direction: column;"><span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 28px; text-transform: uppercase; line-height: 1;">Marco</span><span style="font-size: 13px; color: #b8c2d6;">marco@beispiel.de</span></span>
+          </div>
+          <sc-for list="{{ settings }}" as="s" hint-placeholder-count="6">
+            <a href="#" style="display: grid; grid-template-columns: 28px 1fr auto; gap: 12px; align-items: center; min-height: 52px; padding: 0 14px; background: #0e1626; border: 1px solid #24324a; color: #dfe7f5;">
+              <i class="ti {{ s.icon }}" style="font-size: 19px; color: #35e0ff;"></i>
+              <span style="display: flex; flex-direction: column;"><span style="font-size: 15px; font-weight: 500;">{{ s.label }}</span><span style="font-size: 12px; color: #9aa8c0;">{{ s.value }}</span></span>
+              <i class="ti ti-chevron-right" style="color: #9aa8c0;"></i>
+            </a>
+          </sc-for>
+          <a href="#" style="margin-top: auto; display: flex; align-items: center; justify-content: center; min-height: 44px; border: 1px solid #ff6b85; color: #ff8fa3; font-family: 'IBM Plex Mono'; font-size: 12px; letter-spacing: .14em; text-transform: uppercase;">Abmelden</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1400,&quot;height&quot;:760}}">
+class Component extends DCLogic {
+  renderVals() {
+    const CY = '#35e0ff', LINE = '#24324a';
+    const designs = [
+      { name: 'Die Brücke', scheme: 'Dunkel · deins', swatch: 'radial-gradient(120% 90% at 50% 0%, #10203a, #070b14 70%)', mine: true },
+      { name: 'Der Tisch', scheme: 'Dunkel', swatch: 'linear-gradient(160deg, #2a2118, #17120c)', mine: false },
+      { name: 'Der Run', scheme: 'Dunkel', swatch: 'linear-gradient(160deg, #1a1030, #0a0616)', mine: false },
+      { name: 'Das Programmheft', scheme: 'Hell', swatch: 'linear-gradient(160deg, #f4f1e8, #e2ddcd)', mine: false },
+      { name: 'Ocean', scheme: 'Hell', swatch: 'linear-gradient(160deg, #e4f1f5, #cfe0e7)', mine: false },
+      { name: 'Forest', scheme: 'Hell', swatch: 'linear-gradient(160deg, #ecf1e4, #d4dfc6)', mine: false },
+      { name: 'Klassisch', scheme: 'Hell · immer wählbar', swatch: 'linear-gradient(160deg, #fdf6ec, #f0d9b8)', mine: false },
+    ].map((d) => ({ ...d, edge: d.mine ? CY : LINE, markDisplay: d.mine ? 'inline-flex' : 'none' }));
+
+    const settings = [
+      { icon: 'ti-user', label: 'Profil', value: 'Name, Bild, Farbe' },
+      { icon: 'ti-palette', label: 'Design', value: 'Die Brücke' },
+      { icon: 'ti-world', label: 'Sprache', value: 'Deutsch · 9 verfügbar' },
+      { icon: 'ti-message', label: 'Benachrichtigungen', value: 'Abstimmung läuft, Ergebnis da' },
+      { icon: 'ti-shield', label: 'Datenschutz', value: 'Kein Tracking · EU-Hosting' },
+      { icon: 'ti-download', label: 'Daten exportieren', value: 'Alle Runden als Datei' },
+    ];
+
+    return { designs, settings };
+  }
+}
+</script>
+</body>
+</html>

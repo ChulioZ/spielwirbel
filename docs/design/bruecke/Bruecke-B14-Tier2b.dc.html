@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="design_doc_mode" content="canvas">
+  <link rel="stylesheet" href="../../../public/fonts/tabler-icons.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #070b14; font-family: 'IBM Plex Sans', sans-serif; }
+    a { color: #35e0ff; text-decoration: none; }
+    a:hover { color: #8aeeff; text-decoration: underline; }
+  </style>
+</helmet>
+<div style="display: flex; flex-direction: column; gap: 40px; padding: 44px; width: max-content; color: #dfe7f5; background-color: #070b14; background-image: radial-gradient(1200px 600px at 50% 0%, #10203a, transparent 70%);">
+
+  <div data-screen-label="B14 Kopf" style="max-width: 1240px; display: flex; flex-direction: column; gap: 12px; background: #0e1626; border: 1px solid #24324a; padding: 24px 28px;">
+    <div style="display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;">
+      <span style="font-family: 'IBM Plex Mono'; font-weight: 600; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: #070b14; background: #35e0ff; padding: 5px 12px;">B14</span>
+      <h1 style="margin: 0; font-family: 'Chakra Petch'; font-weight: 700; font-size: 34px; line-height: 1.05; text-transform: uppercase;">Stufe 2, Teil 2</h1>
+      <span style="font-family: 'IBM Plex Mono'; font-size: 13px; color: #9aa8c0;">Brief 12 von 13 · Profil · Freunde · Postfach · Was ist neu · Statistik · Rundeneinstellungen</span>
+    </div>
+    <p style="margin: 0; font-size: 15px; line-height: 1.55; max-width: 92ch; color: #b8c2d6;">Die Flächen, die zum <strong style="color: #dfe7f5;">Konto</strong> gehören statt zu einer Runde. Sie liegen außerhalb der Abschnittslinks: hier führt die Kopfleiste, und der Weg zurück heißt „Zurück zu meinen Runden“. Der Markerwähler sitzt bei den Rundeneinstellungen und benutzt die aufgehellte Reihe aus <a href="Bruecke-B8-Farben.dc.html" style="display: inline-flex; align-items: center; min-height: 24px; padding: 0 3px;">B8</a>.</p>
+  </div>
+
+  <div data-screen-label="B14.1 Profil" style="display: flex; flex-direction: column; gap: 10px;">
+    <span style="font-family: 'IBM Plex Mono'; font-size: 12px; color: #9aa8c0;">B14.1 · Profil — das eigene Konto über alle Runden hinweg</span>
+    <div style="width: 1440px; height: 820px; position: relative; overflow: hidden; background: radial-gradient(90% 60% at 50% 0%, #10203a, #070b14 70%); border: 1px solid #24324a; font-size: 15px; display: flex; flex-direction: column;">
+      <span style="position: absolute; inset: 0; pointer-events: none; background-image: radial-gradient(rgba(53,224,255,.14) 1px, transparent 1.3px); background-size: 28px 28px; mask-image: radial-gradient(80% 70% at 50% 40%, #000 20%, transparent 100%);"></span>
+      <div style="position: relative; z-index: 2; flex: none; height: 52px; display: flex; align-items: center; gap: 22px; padding: 0 32px; background: #0b1220; border-bottom: 1px solid #24324a;">
+        <a href="#" style="display: flex; align-items: center; gap: 10px; font-family: 'Chakra Petch'; font-weight: 700; font-size: 18px; letter-spacing: .2em; text-transform: uppercase; color: #35e0ff;"><span style="width: 10px; height: 10px; background: #35e0ff; box-shadow: 0 0 10px #35e0ff;"></span>Spielwirbel</a>
+        <a href="#" style="display: inline-flex; align-items: center; min-height: 24px; font-family: 'IBM Plex Mono'; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #9aa8c0;">← Zurück zu meinen Runden</a>
+        <span style="margin-left: auto; display: flex; gap: 10px; align-items: center; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase;"><a href="#" style="min-height: 28px; display: inline-flex; align-items: center; border: 1px solid #24324a; padding: 0 10px; color: #dfe7f5;"><i class="ti ti-world" style="margin-right: 6px;"></i> DE</a><a href="#" style="min-height: 28px; display: inline-flex; align-items: center; border: 1px solid #24324a; padding: 0 10px; color: #dfe7f5;"><i class="ti ti-mail" style="margin-right: 6px;"></i> Postfach 2</a><a href="#" style="min-height: 28px; display: inline-flex; align-items: center; border: 1px solid #35e0ff; padding: 0 10px; color: #35e0ff;">Marco</a></span>
+      </div>
+      <div style="position: relative; z-index: 2; flex: none; height: 44px; display: flex; align-items: stretch; gap: 4px; padding: 0 32px; background: #0b1220; border-bottom: 1px solid #24324a;">
+        <sc-for list="{{ accountNav }}" as="n" hint-placeholder-count="5"><a href="#" style="display: inline-flex; align-items: center; padding: 0 16px; border-bottom: 2px solid {{ n.edge }}; color: {{ n.ink }}; font-family: 'IBM Plex Mono'; font-size: 12px; letter-spacing: .14em; text-transform: uppercase;">{{ n.label }}</a></sc-for>
+      </div>
+      <div style="position: relative; z-index: 2; flex: 1; padding: 22px 32px 26px; display: grid; grid-template-columns: 420px 1fr; gap: 24px; min-height: 0;">
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <div style="position: relative; display: flex; flex-direction: column; gap: 14px; padding: 22px 24px; background: #0e1626; border: 1px solid #24324a;">
+            <span style="position: absolute; left: -1px; top: -1px; width: 14px; height: 14px; border-left: 2px solid #35e0ff; border-top: 2px solid #35e0ff;"></span>
+            <span style="display: flex; align-items: center; gap: 16px;"><span style="width: 76px; height: 76px; border: 1px solid #f08a5d; display: grid; place-items: center; font-family: 'Chakra Petch'; font-weight: 700; font-size: 32px; color: #f08a5d;">M</span><span style="display: flex; flex-direction: column; gap: 2px;"><span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 34px; line-height: 1; text-transform: uppercase;">Marco</span><span style="font-size: 13px; color: #b8c2d6;">marco@beispiel.de</span></span></span>
+            <label style="display: flex; flex-direction: column; gap: 6px;"><span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #9aa8c0;">Anzeigename</span><input value="Marco" style="min-height: 44px; padding: 0 12px; background: #0b1220; border: 1px solid #24324a; font: inherit; font-size: 15px; color: #dfe7f5; outline: none;"></label>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #9aa8c0;">Deine Farbe</span>
+              <span style="display: flex; gap: 8px; flex-wrap: wrap;"><sc-for list="{{ markerColors }}" as="c" hint-placeholder-count="8"><a href="#" style="width: 44px; height: 44px; background: {{ c.hex }}; border: 2px solid {{ c.edge }}; display: grid; place-items: center; color: #070b14;"><i class="ti {{ c.icon }}" style="font-size: 18px;"></i></a></sc-for></span>
+              <span style="font-size: 12px; color: #b8c2d6;">Gilt in allen Runden, in denen die Farbe noch frei ist.</span>
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 10px; padding: 18px 20px; background: #0e1626; border: 1px solid #24324a;">
+            <span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: #9aa8c0;">Über alle Runden</span>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+              <sc-for list="{{ profileStats }}" as="s" hint-placeholder-count="4"><span style="display: flex; flex-direction: column; gap: 2px;"><span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 30px; line-height: 1; color: {{ s.ink }};">{{ s.value }}</span><span style="font-family: 'IBM Plex Mono'; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: #9aa8c0;">{{ s.label }}</span></span></sc-for>
+            </div>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 14px; min-height: 0;">
+          <div style="display: flex; flex-direction: column; gap: 10px; padding: 18px 20px; background: #0e1626; border: 1px solid #24324a;">
+            <span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: #9aa8c0;">Deine Runden · 3</span>
+            <sc-for list="{{ myRounds }}" as="r" hint-placeholder-count="3">
+              <a href="#" style="display: grid; grid-template-columns: 1fr 160px 120px 90px; gap: 16px; align-items: center; min-height: 52px; border-bottom: 1px solid #1c2740; color: #dfe7f5;">
+                <span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 19px; text-transform: uppercase;">{{ r.name }}</span>
+                <span style="font-family: 'IBM Plex Mono'; font-size: 11px; color: #9aa8c0;">{{ r.meta }}</span>
+                <span style="font-size: 13px; color: #b8c2d6;">{{ r.role }}</span>
+                <span style="text-align: right; font-family: 'Chakra Petch'; font-weight: 700; font-size: 22px; color: {{ r.winsInk }};">{{ r.wins }}</span>
+              </a>
+            </sc-for>
+          </div>
+          <div style="flex: 1; display: flex; flex-direction: column; gap: 10px; padding: 18px 20px; background: #0e1626; border: 1px solid #24324a; min-height: 0;">
+            <span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: #9aa8c0;">Konto</span>
+            <sc-for list="{{ accountRows }}" as="a" hint-placeholder-count="5">
+              <a href="#" style="display: grid; grid-template-columns: 28px 1fr auto; gap: 14px; align-items: center; min-height: 52px; border-bottom: 1px solid #1c2740; color: #dfe7f5;">
+                <i class="ti {{ a.icon }}" style="font-size: 19px; color: #35e0ff;"></i>
+                <span style="display: flex; flex-direction: column;"><span style="font-size: 15px; font-weight: 500;">{{ a.label }}</span><span style="font-size: 12px; color: #9aa8c0;">{{ a.value }}</span></span>
+                <i class="ti ti-chevron-right" style="color: #9aa8c0;"></i>
+              </a>
+            </sc-for>
+            <span style="margin-top: auto; display: flex; gap: 10px;"><a href="#" style="min-height: 44px; display: inline-flex; align-items: center; padding: 0 16px; border: 1px solid #24324a; color: #dfe7f5; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase;">Abmelden</a><a href="#" style="min-height: 44px; display: inline-flex; align-items: center; padding: 0 16px; border: 1px solid #ff6b85; color: #ff8fa3; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase;">Konto löschen</a></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div data-screen-label="B14.2 Freunde" style="display: flex; flex-direction: column; gap: 10px;">
+    <span style="font-family: 'IBM Plex Mono'; font-size: 12px; color: #9aa8c0;">B14.2 · Freunde und Feed — was in den Runden passiert, in denen du bist</span>
+    <div style="width: 1440px; height: 820px; position: relative; overflow: hidden; background: radial-gradient(90% 60% at 50% 0%, #10203a, #070b14 70%); border: 1px solid #24324a; font-size: 15px; display: flex; flex-direction: column;">
+      <span style="position: absolute; inset: 0; pointer-events: none; background-image: radial-gradient(rgba(53,224,255,.14) 1px, transparent 1.3px); background-size: 28px 28px; mask-image: radial-gradient(80% 70% at 50% 40%, #000 20%, transparent 100%);"></span>
+      <div style="position: relative; z-index: 2; flex: none; height: 52px; display: flex; align-items: center; gap: 22px; padding: 0 32px; background: #0b1220; border-bottom: 1px solid #24324a;">
+        <a href="#" style="display: flex; align-items: center; gap: 10px; font-family: 'Chakra Petch'; font-weight: 700; font-size: 18px; letter-spacing: .2em; text-transform: uppercase; color: #35e0ff;"><span style="width: 10px; height: 10px; background: #35e0ff; box-shadow: 0 0 10px #35e0ff;"></span>Spielwirbel</a>
+        <a href="#" style="display: inline-flex; align-items: center; min-height: 24px; font-family: 'IBM Plex Mono'; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #9aa8c0;">← Zurück zu meinen Runden</a>
+        <span style="margin-left: auto; display: flex; gap: 10px; align-items: center; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase;"><a href="#" style="min-height: 28px; display: inline-flex; align-items: center; border: 1px solid #24324a; padding: 0 10px; color: #dfe7f5;">Marco</a></span>
+      </div>
+      <div style="position: relative; z-index: 2; flex: none; height: 44px; display: flex; align-items: stretch; gap: 4px; padding: 0 32px; background: #0b1220; border-bottom: 1px solid #24324a;">
+        <sc-for list="{{ friendsNav }}" as="n" hint-placeholder-count="5"><a href="#" style="display: inline-flex; align-items: center; padding: 0 16px; border-bottom: 2px solid {{ n.edge }}; color: {{ n.ink }}; font-family: 'IBM Plex Mono'; font-size: 12px; letter-spacing: .14em; text-transform: uppercase;">{{ n.label }}</a></sc-for>
+      </div>
+      <div style="position: relative; z-index: 2; flex: 1; padding: 22px 32px 26px; display: grid; grid-template-columns: 1fr 380px; gap: 24px; min-height: 0;">
+        <div style="display: flex; flex-direction: column; gap: 14px; min-height: 0;">
+          <h1 style="margin: 0; font-family: 'Chakra Petch'; font-weight: 700; font-size: 44px; line-height: 1; text-transform: uppercase;">Was lief</h1>
+          <sc-for list="{{ feed }}" as="f" hint-placeholder-count="6">
+            <a href="#" style="display: grid; grid-template-columns: 44px 1fr auto; gap: 16px; align-items: center; min-height: 68px; padding: 12px 18px; background: #0e1626; border: 1px solid #24324a; color: #dfe7f5;">
+              <span style="width: 44px; height: 44px; border: 1px solid {{ f.color }}; display: grid; place-items: center; font-family: 'Chakra Petch'; font-weight: 700; font-size: 18px; color: {{ f.color }};">{{ f.ini }}</span>
+              <span style="display: flex; flex-direction: column; gap: 2px;"><span style="font-size: 15px; line-height: 1.4;">{{ f.text }}</span><span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #9aa8c0;">{{ f.where }} · {{ f.when }}</span></span>
+              <span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 26px; color: {{ f.scoreInk }};">{{ f.score }}</span>
+            </a>
+          </sc-for>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 14px; min-height: 0;">
+          <div style="display: flex; flex-direction: column; gap: 10px; padding: 18px 20px; background: #0e1626; border: 1px solid #24324a;">
+            <span style="display: flex; justify-content: space-between; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: #9aa8c0;"><span>Mit wem du spielst</span><span>9</span></span>
+            <sc-for list="{{ friends }}" as="p" hint-placeholder-count="6">
+              <a href="#" style="display: grid; grid-template-columns: 36px 1fr auto; gap: 12px; align-items: center; min-height: 46px; border-bottom: 1px solid #1c2740; color: #dfe7f5;">
+                <span style="width: 36px; height: 36px; border: 1px solid {{ p.color }}; display: grid; place-items: center; font-family: 'Chakra Petch'; font-weight: 700; font-size: 15px; color: {{ p.color }};">{{ p.ini }}</span>
+                <span style="display: flex; flex-direction: column;"><span style="font-family: 'Chakra Petch'; font-weight: 600; font-size: 16px; text-transform: uppercase;">{{ p.name }}</span><span style="font-family: 'IBM Plex Mono'; font-size: 10px; color: #9aa8c0;">{{ p.shared }}</span></span>
+                <span style="font-family: 'IBM Plex Mono'; font-size: 11px; color: #9aa8c0;">{{ p.sessions }}</span>
+              </a>
+            </sc-for>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 8px; padding: 18px 20px; background: #0e1626; border: 1px solid #24324a;">
+            <span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: #9aa8c0;">Einladen</span>
+            <span style="font-size: 13px; color: #b8c2d6; line-height: 1.5;">Teile den Link deiner Runde. Wer ihn öffnet, landet direkt auf der Runde und kann einen Platz nehmen.</span>
+            <a href="#" style="min-height: 44px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #35e0ff; color: #35e0ff; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase;"><i class="ti ti-share" style="margin-right: 8px;"></i> Einladungslink kopieren</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div data-screen-label="B14.3 Postfach & Neu" style="display: flex; flex-direction: column; gap: 10px;">
+    <span style="font-family: 'IBM Plex Mono'; font-size: 12px; color: #9aa8c0;">B14.3 · Postfach und „Was ist neu“ — beide als Paneel, das die Kopfleiste öffnet</span>
+    <div style="display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-start;">
+      <div style="width: 480px; background: #141d30; border: 1px solid #24324a; display: flex; flex-direction: column;">
+        <div style="flex: none; display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid #24324a;">
+          <span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 22px; text-transform: uppercase;">Postfach</span>
+          <span style="display: flex; gap: 10px; align-items: center;"><a href="#" style="min-height: 28px; display: inline-flex; align-items: center; font-family: 'IBM Plex Mono'; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #35e0ff;">Alle gelesen</a><a href="#" style="width: 28px; height: 28px; display: grid; place-items: center; color: #9aa8c0;"><i class="ti ti-x"></i></a></span>
+        </div>
+        <div style="display: flex; flex-direction: column;">
+          <sc-for list="{{ inbox }}" as="m" hint-placeholder-count="5">
+            <a href="#" style="display: grid; grid-template-columns: 10px 1fr; gap: 12px; align-items: flex-start; min-height: 68px; padding: 14px 20px; border-bottom: 1px solid #1c2740; color: #dfe7f5; background: {{ m.bg }};">
+              <span style="width: 8px; height: 8px; margin-top: 6px; background: {{ m.dot }};"></span>
+              <span style="display: flex; flex-direction: column; gap: 3px;">
+                <span style="display: flex; justify-content: space-between; gap: 12px;"><span style="font-family: 'IBM Plex Mono'; font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: {{ m.kickerInk }};">{{ m.kicker }}</span><span style="font-family: 'IBM Plex Mono'; font-size: 10px; color: #9aa8c0;">{{ m.when }}</span></span>
+                <span style="font-size: 15px; line-height: 1.4; font-weight: {{ m.weight }};">{{ m.text }}</span>
+                <span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #35e0ff;">{{ m.action }}</span>
+              </span>
+            </a>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="width: 480px; background: #141d30; border: 1px solid #24324a; display: flex; flex-direction: column;">
+        <div style="flex: none; display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid #24324a;">
+          <span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 22px; text-transform: uppercase;">Was ist neu</span>
+          <a href="#" style="width: 28px; height: 28px; display: grid; place-items: center; color: #9aa8c0;"><i class="ti ti-x"></i></a>
+        </div>
+        <div style="display: flex; flex-direction: column; padding: 18px 20px; gap: 18px;">
+          <sc-for list="{{ changelog }}" as="c" hint-placeholder-count="3">
+            <div style="display: flex; flex-direction: column; gap: 7px;">
+              <span style="display: flex; align-items: baseline; gap: 10px;"><span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 18px; text-transform: uppercase;">{{ c.title }}</span><span style="font-family: 'IBM Plex Mono'; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #9aa8c0;">{{ c.date }}</span></span>
+              <span style="font-size: 14px; line-height: 1.5; color: #b8c2d6;">{{ c.text }}</span>
+            </div>
+          </sc-for>
+          <a href="#" style="min-height: 44px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #24324a; color: #dfe7f5; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase;">Alle Änderungen</a>
+        </div>
+      </div>
+
+      <div style="width: 400px; background: #0e1626; border: 1px solid #24324a; padding: 20px 22px; display: flex; flex-direction: column; gap: 12px;">
+        <span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #35e0ff;">Regeln für beide</span>
+        <sc-for list="{{ overlayRules }}" as="r" hint-placeholder-count="4"><span style="display: flex; gap: 9px; font-size: 13px; line-height: 1.5; color: #b8c2d6;"><i class="ti ti-minus" style="color: #35e0ff; flex: none; margin-top: 3px;"></i>{{ r }}</span></sc-for>
+      </div>
+    </div>
+  </div>
+
+  <div data-screen-label="B14.4 Statistik" style="display: flex; flex-direction: column; gap: 10px;">
+    <span style="font-family: 'IBM Plex Mono'; font-size: 12px; color: #9aa8c0;">B14.4 · Statistik — dieselben Zahlen wie im Rückblick, aber über alle Runden und ohne Teilen</span>
+    <div style="width: 1440px; height: 820px; position: relative; overflow: hidden; background: radial-gradient(90% 60% at 50% 0%, #10203a, #070b14 70%); border: 1px solid #24324a; font-size: 15px; display: flex; flex-direction: column;">
+      <span style="position: absolute; inset: 0; pointer-events: none; background-image: radial-gradient(rgba(53,224,255,.14) 1px, transparent 1.3px); background-size: 28px 28px; mask-image: radial-gradient(80% 70% at 50% 40%, #000 20%, transparent 100%);"></span>
+      <div style="position: relative; z-index: 2; flex: none; height: 52px; display: flex; align-items: center; gap: 22px; padding: 0 32px; background: #0b1220; border-bottom: 1px solid #24324a;">
+        <a href="#" style="display: flex; align-items: center; gap: 10px; font-family: 'Chakra Petch'; font-weight: 700; font-size: 18px; letter-spacing: .2em; text-transform: uppercase; color: #35e0ff;"><span style="width: 10px; height: 10px; background: #35e0ff; box-shadow: 0 0 10px #35e0ff;"></span>Spielwirbel</a>
+        <a href="#" style="display: inline-flex; align-items: center; min-height: 24px; font-family: 'IBM Plex Mono'; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #9aa8c0;">← Zurück zu meinen Runden</a>
+        <span style="margin-left: auto; display: flex; gap: 10px; align-items: center; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase;"><a href="#" style="min-height: 28px; display: inline-flex; align-items: center; border: 1px solid #24324a; padding: 0 10px; color: #dfe7f5;">Marco</a></span>
+      </div>
+      <div style="position: relative; z-index: 2; flex: none; height: 44px; display: flex; align-items: stretch; gap: 4px; padding: 0 32px; background: #0b1220; border-bottom: 1px solid #24324a;">
+        <sc-for list="{{ statsNav }}" as="n" hint-placeholder-count="5"><a href="#" style="display: inline-flex; align-items: center; padding: 0 16px; border-bottom: 2px solid {{ n.edge }}; color: {{ n.ink }}; font-family: 'IBM Plex Mono'; font-size: 12px; letter-spacing: .14em; text-transform: uppercase;">{{ n.label }}</a></sc-for>
+      </div>
+      <div style="position: relative; z-index: 2; flex: 1; padding: 22px 32px 26px; display: flex; flex-direction: column; gap: 18px; min-height: 0;">
+        <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 30px;">
+          <h1 style="margin: 0; font-family: 'Chakra Petch'; font-weight: 700; font-size: 48px; line-height: 1; text-transform: uppercase;">Statistik</h1>
+          <span style="display: flex; gap: 8px;"><a href="#" style="min-height: 36px; display: inline-flex; align-items: center; border: 1px solid #24324a; padding: 0 12px; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #dfe7f5;">Alle Runden ▾</a><a href="#" style="min-height: 36px; display: inline-flex; align-items: center; border: 1px solid #24324a; padding: 0 12px; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #dfe7f5;">Seit Beginn ▾</a></span>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px;">
+          <sc-for list="{{ bigStats }}" as="s" hint-placeholder-count="5">
+            <span style="display: flex; flex-direction: column; gap: 2px; padding: 16px 18px; background: #0e1626; border: 1px solid #24324a;"><span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 38px; line-height: 1; color: {{ s.ink }};">{{ s.value }}</span><span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #9aa8c0;">{{ s.label }}</span></span>
+          </sc-for>
+        </div>
+        <div style="flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+          <div style="display: flex; flex-direction: column; gap: 10px; padding: 18px 20px; background: #0e1626; border: 1px solid #24324a; min-height: 0;">
+            <span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: #9aa8c0;">Wie du wertest · über alle Runden</span>
+            <span style="display: flex; gap: 12px; align-items: flex-end; height: 150px;"><sc-for list="{{ myDist }}" as="d" hint-placeholder-count="5"><span style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 7px; height: 100%; justify-content: flex-end;"><span style="font-family: 'IBM Plex Mono'; font-size: 12px; color: #9aa8c0;">{{ d.count }}</span><span style="width: 100%; background: {{ d.color }}; height: {{ d.h }};"></span><i class="ti {{ d.face }}" style="font-size: 20px; color: {{ d.color }};"></i></span></sc-for></span>
+            <span style="font-size: 13px; color: #b8c2d6; line-height: 1.5;">Du gibst im Schnitt 3,9 Schub — etwas zurückhaltender als der Rundendurchschnitt von 4,1.</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 10px; padding: 18px 20px; background: #0e1626; border: 1px solid #24324a; min-height: 0;">
+            <span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: #9aa8c0;">Deine liebsten Spiele</span>
+            <sc-for list="{{ favourites }}" as="f" hint-placeholder-count="5">
+              <span style="display: grid; grid-template-columns: 1fr 140px 60px; gap: 14px; align-items: center; min-height: 44px; border-bottom: 1px solid #1c2740;">
+                <span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 17px; text-transform: uppercase;">{{ f.title }}</span>
+                <span style="display: block; height: 6px; background: #1c2740;"><span style="display: block; height: 100%; width: {{ f.pct }}; background: #35e0ff;"></span></span>
+                <span style="text-align: right; font-family: 'Chakra Petch'; font-weight: 700; font-size: 20px; color: #35e0ff;">{{ f.avg }}</span>
+              </span>
+            </sc-for>
+            <span style="margin-top: auto; font-size: 12px; color: #9aa8c0;">Dein persönlicher Schnitt, nicht der Spielwirbel-Score der Runde.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div data-screen-label="B14.5 Rundeneinstellungen" style="display: flex; flex-direction: column; gap: 10px;">
+    <span style="font-family: 'IBM Plex Mono'; font-size: 12px; color: #9aa8c0;">B14.5 · Einstellungen der Runde — mit dem Markerwähler</span>
+    <div style="width: 1440px; height: 820px; position: relative; overflow: hidden; background: radial-gradient(90% 60% at 50% 0%, #10203a, #070b14 70%); border: 1px solid #24324a; font-size: 15px; display: flex; flex-direction: column;">
+      <span style="position: absolute; inset: 0; pointer-events: none; background-image: radial-gradient(rgba(53,224,255,.14) 1px, transparent 1.3px); background-size: 28px 28px; mask-image: radial-gradient(80% 70% at 50% 40%, #000 20%, transparent 100%);"></span>
+      <div style="position: relative; z-index: 2; flex: none; height: 52px; display: flex; align-items: center; gap: 22px; padding: 0 32px; background: #0b1220; border-bottom: 1px solid #24324a;">
+        <a href="#" style="display: flex; align-items: center; gap: 10px; font-family: 'Chakra Petch'; font-weight: 700; font-size: 18px; letter-spacing: .2em; text-transform: uppercase; color: #35e0ff;"><span style="width: 10px; height: 10px; background: #35e0ff; box-shadow: 0 0 10px #35e0ff;"></span>Spielwirbel</a>
+        <span style="font-family: 'IBM Plex Mono'; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #9aa8c0;">Flotte / Übersicht</span>
+        <span style="margin-left: auto; display: flex; gap: 10px; align-items: center; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase;"><a href="#" style="min-height: 28px; display: inline-flex; align-items: center; border: 1px solid #24324a; padding: 0 10px; color: #dfe7f5;">Marco</a></span>
+      </div>
+      <div style="position: relative; z-index: 2; flex: none; height: 44px; display: flex; align-items: stretch; gap: 4px; padding: 0 32px; background: #0b1220; border-bottom: 1px solid #24324a;">
+        <sc-for list="{{ navSettings }}" as="n" hint-placeholder-count="5"><a href="#" style="display: inline-flex; align-items: center; padding: 0 16px; border-bottom: 2px solid {{ n.edge }}; color: {{ n.ink }}; font-family: 'IBM Plex Mono'; font-size: 12px; letter-spacing: .14em; text-transform: uppercase;">{{ n.label }}</a></sc-for>
+        <span style="margin-left: auto; display: inline-flex; align-items: center; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #9aa8c0;">Donnerstagsrunde</span>
+      </div>
+      <div style="position: relative; z-index: 2; flex: 1; padding: 22px 32px 26px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; min-height: 0;">
+        <div style="display: flex; flex-direction: column; gap: 14px; min-height: 0;">
+          <h1 style="margin: 0; font-family: 'Chakra Petch'; font-weight: 700; font-size: 48px; line-height: 1; text-transform: uppercase;">Einstellungen</h1>
+          <div style="display: flex; flex-direction: column; gap: 12px; padding: 18px 20px; background: #0e1626; border: 1px solid #24324a;">
+            <span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: #9aa8c0;">Runde</span>
+            <label style="display: flex; flex-direction: column; gap: 6px;"><span style="font-size: 13px; color: #b8c2d6;">Name</span><input value="Donnerstagsrunde" style="min-height: 44px; padding: 0 12px; background: #0b1220; border: 1px solid #24324a; font: inherit; font-size: 15px; color: #dfe7f5; outline: none;"></label>
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              <span style="font-size: 13px; color: #b8c2d6;">Tags · 6 vergeben</span>
+              <span style="display: flex; gap: 6px; flex-wrap: wrap;"><sc-for list="{{ tagList }}" as="t" hint-placeholder-count="6"><span style="min-height: 32px; display: inline-flex; align-items: center; gap: 6px; padding: 0 10px; border: 1px solid #24324a; font-family: 'IBM Plex Mono'; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: #dfe7f5;">{{ t }}<i class="ti ti-x" style="color: #9aa8c0;"></i></span></sc-for><a href="#" style="min-height: 32px; display: inline-flex; align-items: center; padding: 0 10px; border: 1px dashed rgba(53,224,255,.5); color: #35e0ff; font-family: 'IBM Plex Mono'; font-size: 10px; letter-spacing: .1em; text-transform: uppercase;"><i class="ti ti-plus"></i></a></span>
+            </div>
+          </div>
+          <div style="flex: 1; display: flex; flex-direction: column; gap: 10px; padding: 18px 20px; background: #0e1626; border: 1px solid #24324a; min-height: 0;">
+            <span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: #9aa8c0;">Mitglieder · 4</span>
+            <sc-for list="{{ settingMembers }}" as="m" hint-placeholder-count="4">
+              <span style="display: grid; grid-template-columns: 38px 1fr auto auto; gap: 12px; align-items: center; min-height: 48px; border-bottom: 1px solid #1c2740;">
+                <span style="width: 38px; height: 38px; border: 1px solid {{ m.color }}; display: grid; place-items: center; font-family: 'Chakra Petch'; font-weight: 700; font-size: 16px; color: {{ m.color }};">{{ m.ini }}</span>
+                <span style="font-family: 'Chakra Petch'; font-weight: 600; font-size: 17px; text-transform: uppercase;">{{ m.name }}</span>
+                <a href="#" style="min-height: 30px; display: inline-flex; align-items: center; padding: 0 10px; border: 1px solid #24324a; font-family: 'IBM Plex Mono'; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: #dfe7f5;">Farbe</a>
+                <a href="#" style="min-height: 30px; display: inline-flex; align-items: center; padding: 0 10px; border: 1px solid #24324a; font-family: 'IBM Plex Mono'; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: #9aa8c0;">Entfernen</a>
+              </span>
+            </sc-for>
+            <a href="#" style="min-height: 44px; display: inline-flex; align-items: center; gap: 10px; color: #35e0ff; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase;"><span style="width: 38px; height: 38px; border: 1px dashed rgba(53,224,255,.5); display: grid; place-items: center;"><i class="ti ti-plus"></i></span>Platz dazu</a>
+            <a href="#" style="margin-top: auto; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #ff6b85; color: #ff8fa3; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase;">Runde löschen</a>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 14px; min-height: 0;">
+          <div style="position: relative; display: flex; flex-direction: column; gap: 14px; padding: 20px 22px; background: #0e1626; border: 1px solid #24324a;">
+            <span style="position: absolute; right: -1px; top: -1px; width: 14px; height: 14px; border-right: 2px solid #35e0ff; border-top: 2px solid #35e0ff;"></span>
+            <span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 24px; text-transform: uppercase;">Markerfarbe · Lea</span>
+            <span style="font-size: 14px; color: #b8c2d6; line-height: 1.5;">Acht Farben, in jeder Runde einmal vergeben. Die Brücke zeigt sie aufgehellt, damit sie auf dunklem Grund tragen — gespeichert wird der Originalwert.</span>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
+              <sc-for list="{{ markerPicker }}" as="m" hint-placeholder-count="8">
+                <a href="#" style="display: flex; flex-direction: column; gap: 7px; padding: 12px; border: 1px solid {{ m.edge }}; background: #0b1220; color: #dfe7f5; opacity: {{ m.op }};">
+                  <span style="height: 44px; background: {{ m.hex }}; display: grid; place-items: center; color: #070b14;"><i class="ti {{ m.icon }}" style="font-size: 20px;"></i></span>
+                  <span style="font-family: 'IBM Plex Mono'; font-size: 10px; letter-spacing: .08em; color: #9aa8c0;">{{ m.state }}</span>
+                </a>
+              </sc-for>
+            </div>
+          </div>
+          <div style="flex: 1; display: flex; flex-direction: column; gap: 10px; padding: 18px 20px; background: #0e1626; border: 1px solid #24324a; min-height: 0;">
+            <span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: #9aa8c0;">Vorschau in der Runde</span>
+            <span style="display: flex; gap: 10px; flex-wrap: wrap;"><sc-for list="{{ settingMembers }}" as="m" hint-placeholder-count="4"><span style="display: inline-flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 14px; border: 1px solid {{ m.color }};"><span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 16px; color: {{ m.color }};">{{ m.ini }}</span><span style="font-size: 15px;">{{ m.name }}</span></span></sc-for></span>
+            <span style="margin-top: auto; font-size: 13px; color: #b8c2d6; line-height: 1.5;">Der Name steht immer in Weiß, die Farbe im Rahmen — so bleibt er lesbar, auch wenn zwei Farben nah beieinanderliegen. <a href="Bruecke-B8-Farben.dc.html" style="display: inline-flex; align-items: center; min-height: 24px; padding: 0 3px;">Messwerte in B8</a>.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1500,&quot;height&quot;:920}}">
+class Component extends DCLogic {
+  renderVals() {
+    const CY = '#35e0ff', AM = '#ffb020', GR = '#4ade80', RD = '#ff6b85', MU = '#9aa8c0';
+    const P = ['#f08a5d', '#3fbf95', '#a49cf0', '#e0a03c', '#f08aa8', '#6bb3e0', '#9cc44a', '#e07a9a'];
+    const faces = ['ti-mood-cry', 'ti-mood-sad', 'ti-mood-neutral', 'ti-mood-smile', 'ti-mood-crazy-happy'];
+    const ramp = [RD, AM, MU, GR, CY];
+    const distOf = (counts) => counts.map((c, i) => ({ count: c, color: ramp[i], face: faces[i], h: Math.max(3, Math.round(c / Math.max(...counts, 1) * 100)) + '%' }));
+
+    const navOf = (items, active) => items.map((label) => ({ label, ink: label === active ? '#dfe7f5' : MU, edge: label === active ? CY : 'transparent' }));
+    const accountItems = ['Profil', 'Freunde', 'Statistik', 'Postfach', 'Einstellungen'];
+    const roundItems = ['Start', 'Regal', 'Chronik', 'Pokale', 'Einstellungen'];
+
+    const markerColors = P.map((hex, i) => ({ hex, edge: i === 0 ? '#dfe7f5' : 'transparent', icon: i === 0 ? 'ti-check' : '' }));
+
+    const profileStats = [
+      { value: '3', label: 'Runden', ink: '#dfe7f5' },
+      { value: '41', label: 'Sessions', ink: '#dfe7f5' },
+      { value: '12', label: 'Siege', ink: CY },
+      { value: '3,9', label: 'Ø Schub', ink: '#dfe7f5' },
+    ];
+    const myRounds = [
+      { name: 'Donnerstagsrunde', meta: '12 Spiele · 23 Sessions', role: 'Gegründet von dir', wins: '5', winsInk: CY },
+      { name: 'Familie Berger', meta: '31 Spiele · 58 Sessions', role: 'Mitglied', wins: '4', winsInk: '#dfe7f5' },
+      { name: 'WG Kastanienallee', meta: '9 Spiele · 4 Sessions', role: 'Mitglied', wins: '3', winsInk: '#dfe7f5' },
+    ];
+    const accountRows = [
+      { icon: 'ti-palette', label: 'Design', value: 'Die Brücke' },
+      { icon: 'ti-world', label: 'Sprache', value: 'Deutsch · 9 verfügbar' },
+      { icon: 'ti-message', label: 'Benachrichtigungen', value: 'Abstimmung läuft, Ergebnis da' },
+      { icon: 'ti-shield', label: 'Datenschutz', value: 'Kein Tracking · EU-Hosting' },
+      { icon: 'ti-download', label: 'Daten exportieren', value: 'Alle Runden als Datei' },
+    ];
+
+    const feed = [
+      { ini: 'J', color: P[5], text: 'Jonas hat Nordlichter gewonnen.', where: 'Donnerstagsrunde', when: 'vor 5 Tagen', score: '4,8', scoreInk: CY },
+      { ini: 'H', color: P[4], text: 'Hilde hat Salzwiesen gewonnen — dritter Sieg in Folge.', where: 'Familie Berger', when: 'vor 6 Tagen', score: '4,1', scoreInk: '#dfe7f5' },
+      { ini: 'L', color: P[2], text: 'Lea hat Tiefes Wasser auf die Wunschliste gesetzt.', where: 'Donnerstagsrunde', when: 'vor 1 Woche', score: '', scoreInk: MU },
+      { ini: 'A', color: P[1], text: 'Aylin hat Moorgeister gewonnen — erste Session der Runde.', where: 'WG Kastanienallee', when: 'vor 3 Wochen', score: '4,4', scoreInk: '#dfe7f5' },
+      { ini: 'M', color: P[0], text: 'Du hast Rost & Regen aussortiert.', where: 'Donnerstagsrunde', when: 'im Mai', score: '', scoreInk: MU },
+    ];
+    const friends = [
+      { name: 'Jonas', ini: 'J', color: P[5], shared: 'Donnerstagsrunde', sessions: '23' },
+      { name: 'Lea', ini: 'L', color: P[2], shared: 'Donnerstagsrunde', sessions: '23' },
+      { name: 'Tim', ini: 'T', color: P[3], shared: 'Donnerstagsrunde', sessions: '19' },
+      { name: 'Hilde', ini: 'H', color: P[4], shared: 'Familie Berger', sessions: '58' },
+      { name: 'Aylin', ini: 'A', color: P[1], shared: 'WG Kastanienallee', sessions: '4' },
+      { name: 'Ben', ini: 'B', color: P[6], shared: 'WG Kastanienallee', sessions: '4' },
+    ];
+
+    const inbox = [
+      { kicker: 'Eingehendes Signal', kickerInk: AM, when: 'jetzt', text: 'Abstimmung läuft · Familie Berger — deine Bewertung fehlt noch.', action: 'Jetzt abstimmen →', dot: AM, bg: 'rgba(255,176,32,.07)', weight: '600' },
+      { kicker: 'Ergebnis', kickerInk: CY, when: 'vor 5 Tagen', text: '„Nordlichter“ wurde gespielt. Jonas hat gewonnen.', action: 'Ergebnis ansehen →', dot: CY, bg: 'transparent', weight: '600' },
+      { kicker: 'Einladung', kickerInk: MU, when: 'vor 2 Wochen', text: 'Aylin hat dich zu WG Kastanienallee eingeladen.', action: 'Angenommen', dot: '#24324a', bg: 'transparent', weight: '400' },
+      { kicker: 'Kümmerliste', kickerInk: MU, when: 'vor 3 Wochen', text: 'Das Ergebnis der Session vom 24.08. fehlt noch.', action: 'Sieger eintragen →', dot: '#24324a', bg: 'transparent', weight: '400' },
+      { kicker: 'Neu', kickerInk: MU, when: 'im August', text: 'Es gibt jetzt sieben Designs zur Auswahl.', action: 'Was ist neu →', dot: '#24324a', bg: 'transparent', weight: '400' },
+    ];
+    const changelog = [
+      { title: 'Sieben Designs', date: '18.09.2026', text: 'Jedes Konto wählt sein eigenes Design — die anderen in deiner Runde sehen ihres. Klassisch bleibt dauerhaft wählbar.' },
+      { title: 'Mehrere Tische', date: '04.08.2026', text: 'Große Runden können eine Session auf zwei Tische aufteilen. Jeder Tisch zieht aus seinem eigenen Pool.' },
+      { title: 'Nicht im Regal', date: '19.06.2026', text: 'Aussortiert, Durchgespielt und Wunschliste sind jetzt drei getrennte Listen statt einer.' },
+    ];
+    const overlayRules = [
+      'Beide öffnen sich aus der Kopfleiste und decken nie den ganzen Screen ab.',
+      'Ungelesen wird durch den Punkt und den fetten Satz gezeigt, nie durch Farbe allein.',
+      'Jede Zeile führt genau irgendwohin — eine Nachricht ohne Ziel wird nicht verschickt.',
+      'Kein Zähler über 99. Danach steht „99+“, und die Liste bleibt chronologisch.',
+    ];
+
+    const bigStats = [
+      { value: '41', label: 'Sessions', ink: '#dfe7f5' },
+      { value: '12', label: 'Siege', ink: CY },
+      { value: '29', label: 'Verschiedene Spiele', ink: '#dfe7f5' },
+      { value: '3,9', label: 'Ø Schub', ink: '#dfe7f5' },
+      { value: '4', label: '× kein Schub', ink: '#dfe7f5' },
+    ];
+    const myDist = distOf([4, 9, 22, 47, 31]);
+    const favourites = [
+      { title: 'Nordlichter', avg: '4,9', pct: '98%' },
+      { title: 'Moorgeister', avg: '4,6', pct: '92%' },
+      { title: 'Salzwiesen', avg: '4,3', pct: '86%' },
+      { title: 'Sternenhafen', avg: '4,0', pct: '80%' },
+      { title: 'Glutkessel', avg: '3,8', pct: '76%' },
+    ];
+
+    const tagList = ['Strategie', 'Familientauglich', 'Unter 60 Min', 'Kooperativ', 'Zu zweit', 'Party'];
+    const settingMembers = [
+      { name: 'Marco', ini: 'M', color: P[0] }, { name: 'Jonas', ini: 'J', color: P[5] },
+      { name: 'Lea', ini: 'L', color: P[2] }, { name: 'Tim', ini: 'T', color: P[3] },
+    ];
+    const markerPicker = P.map((hex, i) => {
+      const taken = [0, 5, 3].includes(i);
+      const mine = i === 2;
+      return { hex, edge: mine ? CY : '#24324a', op: taken ? '.4' : '1', icon: mine ? 'ti-check' : taken ? 'ti-lock' : '', state: mine ? 'Deine Farbe' : taken ? 'Vergeben' : 'Frei' };
+    });
+
+    return {
+      accountNav: navOf(accountItems, 'Profil'),
+      friendsNav: navOf(accountItems, 'Freunde'),
+      statsNav: navOf(accountItems, 'Statistik'),
+      navSettings: navOf(roundItems, 'Einstellungen'),
+      markerColors, profileStats, myRounds, accountRows,
+      feed, friends, inbox, changelog, overlayRules,
+      bigStats, myDist, favourites,
+      tagList, settingMembers, markerPicker,
+    };
+  }
+}
+</script>
+</body>
+</html>

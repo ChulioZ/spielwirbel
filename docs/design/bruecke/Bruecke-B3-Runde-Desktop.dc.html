@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="design_doc_mode" content="canvas">
+  <link rel="stylesheet" href="../../../public/fonts/tabler-icons.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #070b14; font-family: 'IBM Plex Sans', sans-serif; }
+    a { color: #35e0ff; text-decoration: none; }
+    a:hover { color: #8aeeff; text-decoration: underline; }
+  </style>
+</helmet>
+<div style="display: flex; flex-direction: column; gap: 44px; padding: 44px; width: max-content; color: #dfe7f5; background-color: #070b14; background-image: radial-gradient(1200px 600px at 50% 0%, #10203a, transparent 70%);">
+
+  <div data-screen-label="B3 Kopf" style="max-width: 1240px; display: flex; flex-direction: column; gap: 12px; background: #0e1626; border: 1px solid #24324a; padding: 24px 28px;">
+    <div style="display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;">
+      <span style="font-family: 'IBM Plex Mono'; font-weight: 600; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: #070b14; background: #35e0ff; padding: 5px 12px;">B3</span>
+      <h1 style="margin: 0; font-family: 'Chakra Petch'; font-weight: 700; font-size: 34px; line-height: 1.05; text-transform: uppercase;">Rundenscreens · Desktop 1440</h1>
+      <span style="font-family: 'IBM Plex Mono'; font-size: 13px; color: #9aa8c0;">Brief 3 von 13</span>
+    </div>
+    <p style="margin: 0; font-size: 15px; line-height: 1.55; max-width: 92ch; color: #b8c2d6;">Der Hub trägt alles aus der IA-Prüfliste auf <strong style="color: #dfe7f5;">einem</strong> Screen: Mitglieder mit Namen, Siegen und „Platz dazu“ · die eine Aktion mit ihren drei Schnellfiltern · Zuletzt gespielt · Wie wär’s mit · Rundenpuls · Kümmerliste · Vorschauen auf Regal, Chronik und Pokale · die vier Einstiege „Nicht im Regal“ · Einstellungen. Darunter die drei Unterseiten, die die Vorschauen öffnen.</p>
+    <div style="display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; background: #17233a; border-left: 3px solid #35e0ff; font-size: 13px; line-height: 1.55;"><i class="ti ti-arrows-split" style="font-size: 18px; color: #35e0ff; flex: none; margin-top: 1px;"></i><span><strong style="color: #35e0ff;">Dauerhafte Navigation.</strong> Die Brücke nimmt das Modell der <em>Abschnittslinks</em>: eine Leiste unter der Kopfleiste mit <strong style="color: #dfe7f5;">Start · Regal · Chronik · Pokale · Einstellungen</strong>, auf jedem Rundenscreen an derselben Stelle, auch auf den Session-Screens in <a href="Bruecke-B4-Session-Desktop.dc.html" style="display: inline-flex; align-items: center; min-height: 24px; padding: 0 3px;">B4</a>. Sie ersetzt die Brotkrume des Konzeptblatts. Die Kopfleiste darüber trägt überall Sprache, Postfach und Konto.</span></div>
+  </div>
+
+  <div data-screen-label="B3.1 Hub" style="display: flex; flex-direction: column; gap: 10px;">
+    <span style="font-family: 'IBM Plex Mono'; font-size: 12px; color: #9aa8c0;">B3.1 · Die Runde — der Hub</span>
+    <div style="width: 1440px; height: 980px; position: relative; overflow: hidden; background: radial-gradient(90% 60% at 50% 0%, #10203a, #070b14 70%); border: 1px solid #24324a; font-size: 15px; display: flex; flex-direction: column;">
+      <span style="position: absolute; inset: 0; pointer-events: none; background-image: radial-gradient(rgba(53,224,255,.14) 1px, transparent 1.3px); background-size: 28px 28px; mask-image: radial-gradient(80% 70% at 50% 40%, #000 20%, transparent 100%);"></span>
+      <div style="position: relative; z-index: 2; flex: none; height: 52px; display: flex; align-items: center; gap: 22px; padding: 0 32px; background: #0b1220; border-bottom: 1px solid #24324a;">
+        <a href="#" style="display: flex; align-items: center; gap: 10px; font-family: 'Chakra Petch'; font-weight: 700; font-size: 18px; letter-spacing: .2em; text-transform: uppercase; color: #35e0ff;"><span style="width: 10px; height: 10px; background: #35e0ff; box-shadow: 0 0 10px #35e0ff;"></span>Spielwirbel</a>
+        <span style="font-family: 'IBM Plex Mono'; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #9aa8c0;">Flotte / Übersicht</span>
+        <span style="margin-left: auto; display: flex; gap: 10px; align-items: center; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #9aa8c0;"><span style="margin-right: 10px;">T+ 00:14:52 · Orbit stabil</span><a href="#" style="min-height: 28px; display: inline-flex; align-items: center; border: 1px solid #24324a; padding: 0 10px; color: #dfe7f5;"><i class="ti ti-world" style="margin-right: 6px;"></i> DE</a><a href="#" style="min-height: 28px; display: inline-flex; align-items: center; border: 1px solid #24324a; padding: 0 10px; color: #dfe7f5;"><i class="ti ti-mail" style="margin-right: 6px;"></i> Postfach 2</a><a href="#" style="min-height: 28px; display: inline-flex; align-items: center; border: 1px solid #24324a; padding: 0 10px; color: #dfe7f5;">Marco</a></span>
+      </div>
+      <div style="position: relative; z-index: 2; flex: none; height: 44px; display: flex; align-items: stretch; gap: 4px; padding: 0 32px; background: #0b1220; border-bottom: 1px solid #24324a;">
+        <sc-for list="{{ navHub }}" as="n" hint-placeholder-count="5"><a href="#" style="display: inline-flex; align-items: center; padding: 0 16px; border-bottom: 2px solid {{ n.edge }}; color: {{ n.ink }}; font-family: 'IBM Plex Mono'; font-size: 12px; letter-spacing: .14em; text-transform: uppercase;">{{ n.label }}</a></sc-for>
+        <span style="margin-left: auto; display: inline-flex; align-items: center; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #9aa8c0;">Mission 24 · Crew 4 · seit 10/2025</span>
+      </div>
+      <div style="position: relative; z-index: 2; flex: 1; padding: 22px 32px 26px; display: grid; grid-template-columns: 300px 1fr 340px; grid-template-rows: auto 1fr; gap: 18px 22px; min-height: 0;">
+        <div style="grid-column: 1 / -1; display: flex; align-items: flex-end; justify-content: space-between; gap: 30px;">
+          <h1 style="margin: 0; font-family: 'Chakra Petch'; font-weight: 700; font-size: 54px; line-height: 1; text-transform: uppercase; letter-spacing: .02em;">Donnerstagsrunde</h1>
+          <span style="font-family: 'IBM Plex Mono'; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #9aa8c0;">12 Spiele · 23 Sessions</span>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 16px; min-height: 0;">
+          <div style="position: relative; display: flex; flex-direction: column; gap: 10px; padding: 16px 18px; background: #0e1626; border: 1px solid #24324a;">
+            <span style="position: absolute; left: -1px; top: -1px; width: 14px; height: 14px; border-left: 2px solid #35e0ff; border-top: 2px solid #35e0ff;"></span>
+            <span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: #9aa8c0;">Mitglieder · 4</span>
+            <sc-for list="{{ members }}" as="m" hint-placeholder-count="4">
+              <a href="#" style="display: grid; grid-template-columns: 38px 1fr auto; gap: 12px; align-items: center; min-height: 40px; color: #dfe7f5;">
+                <span style="width: 38px; height: 38px; border: 1px solid {{ m.color }}; display: grid; place-items: center; font-family: 'Chakra Petch'; font-weight: 700; font-size: 16px; color: {{ m.color }};">{{ m.ini }}</span>
+                <span style="font-family: 'Chakra Petch'; font-weight: 600; font-size: 17px; text-transform: uppercase;">{{ m.name }}</span>
+                <span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .1em; color: #9aa8c0;">{{ m.wins }} Siege</span>
+              </a>
+            </sc-for>
+            <a href="#" style="display: flex; align-items: center; gap: 12px; min-height: 40px; color: #35e0ff; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase;"><span style="width: 38px; height: 38px; border: 1px dashed rgba(53,224,255,.5); display: grid; place-items: center;"><i class="ti ti-plus"></i></span>Platz dazu</a>
+          </div>
+          <a href="#" style="display: flex; flex-direction: column; gap: 8px; padding: 16px 18px; background: #0e1626; border: 1px solid #24324a; color: #dfe7f5;">
+            <span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: #9aa8c0;">Rundenpuls</span>
+            <span style="display: flex; gap: 4px; align-items: flex-end; height: 58px;"><sc-for list="{{ pulse }}" as="p" hint-placeholder-count="12"><span style="flex: 1; display: flex; flex-direction: column; justify-content: flex-end; height: 100%; gap: 4px;"><span style="background: #35e0ff; height: {{ p.h }};"></span><span style="font-family: 'IBM Plex Mono'; font-size: 10px; text-align: center; color: #9aa8c0;">{{ p.m }}</span></span></sc-for></span>
+            <span style="font-size: 13px; color: #b8c2d6; line-height: 1.5;">Vor 5 Tagen gespielt.<br>23 Sessions in 12 Monaten.<br>2 von 12 Spielen waren noch nie dran.</span>
+          </a>
+          <div style="margin-top: auto; display: flex; flex-direction: column; gap: 7px; padding: 16px 18px; background: #0e1626; border: 1px solid #24324a;">
+            <span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: #ffb020;"><i class="ti ti-tool"></i> Kümmerliste</span>
+            <a href="#" style="display: flex; flex-direction: column; min-height: 24px; justify-content: center; font-size: 14px; line-height: 1.4; color: #dfe7f5;">2 Spiele ohne Bild<span style="font-family: 'IBM Plex Mono'; font-size: 11px; color: #9aa8c0;">Hafenmeister · Kupferzeit</span></a>
+            <a href="#" style="display: flex; flex-direction: column; min-height: 24px; justify-content: center; font-size: 14px; line-height: 1.4; color: #dfe7f5;">1 Session ohne eingetragenes Ergebnis<span style="font-family: 'IBM Plex Mono'; font-size: 11px; color: #9aa8c0;">Glutkessel · 24.08.</span></a>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 16px; min-height: 0;">
+          <div style="position: relative; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 20px; background: #0e1626; border: 1px solid #24324a; min-height: 0;">
+            <span style="position: absolute; left: -1px; top: -1px; width: 14px; height: 14px; border-left: 2px solid #35e0ff; border-top: 2px solid #35e0ff;"></span><span style="position: absolute; right: -1px; top: -1px; width: 14px; height: 14px; border-right: 2px solid #35e0ff; border-top: 2px solid #35e0ff;"></span><span style="position: absolute; left: -1px; bottom: -1px; width: 14px; height: 14px; border-left: 2px solid #35e0ff; border-bottom: 2px solid #35e0ff;"></span><span style="position: absolute; right: -1px; bottom: -1px; width: 14px; height: 14px; border-right: 2px solid #35e0ff; border-bottom: 2px solid #35e0ff;"></span>
+            <span style="position: absolute; left: 18px; top: 15px; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: #9aa8c0;">Missionskontrolle</span>
+            <span style="position: absolute; right: 18px; top: 15px; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: #4ade80;">Bereit</span>
+            <span style="position: relative; width: 300px; height: 300px; border-radius: 50%; border: 1px solid rgba(53,224,255,.35); display: grid; place-items: center;">
+              <span style="position: absolute; inset: 48px; border-radius: 50%; border: 1px dashed rgba(53,224,255,.4);"></span>
+              <span style="position: absolute; inset: 96px; border-radius: 50%; border: 1px solid rgba(53,224,255,.35);"></span>
+              <span style="position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: rgba(53,224,255,.2);"></span><span style="position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: rgba(53,224,255,.2);"></span>
+              <a href="#" style="position: relative; width: 156px; height: 156px; border-radius: 50%; background: #ffb020; color: #070b14; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-align: center; box-shadow: 0 0 40px rgba(255,176,32,.45);"><i class="ti ti-rocket" style="font-size: 36px;"></i><span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 17px; letter-spacing: .08em; text-transform: uppercase; line-height: 1.1;">Mission<br>starten</span></a>
+            </span>
+            <span style="display: flex; gap: 8px;"><sc-for list="{{ presets }}" as="p" hint-placeholder-count="3"><a href="#" style="min-height: 32px; display: inline-flex; align-items: center; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; border: 1px solid #24324a; padding: 0 12px; color: #dfe7f5;">{{ p }}</a></sc-for></span>
+            <span style="font-size: 13px; color: #b8c2d6; text-align: center; max-width: 440px;">Mitglieder festlegen, Spiele in den Pool, Sonden ziehen — dann bewertet jeder verdeckt.</span>
+          </div>
+          <a href="#" style="flex: none; display: grid; grid-template-columns: 118px 1fr auto; gap: 18px; align-items: center; padding: 14px 18px; background: #0e1626; border: 1px solid #24324a; color: #dfe7f5;">
+            <span style="width: 118px; height: 88px; background: repeating-linear-gradient(180deg, rgba(0,0,0,.2) 0 1px, transparent 1px 4px), linear-gradient(160deg, oklch(.55 .12 200), oklch(.3 .1 230)); border: 1px solid #24324a;"></span>
+            <span style="display: flex; flex-direction: column; gap: 4px;"><span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #35e0ff;">Zuletzt gespielt · 14.09.2026</span><span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 24px; text-transform: uppercase; line-height: 1.1;">„Nordlichter“ wurde gespielt. Jonas hat gewonnen.</span><span style="font-size: 13px; color: #b8c2d6;">3 Spiele im Pool, Nordlichter mit 4,8 gezogen. Jonas’ neunter Sieg, der zweite in Folge. · <span style="color: #35e0ff;">Ergebnis ansehen →</span></span></span>
+            <span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 40px; color: #35e0ff;">4,8</span>
+          </a>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 16px; min-height: 0;">
+          <div style="display: flex; flex-direction: column; gap: 8px; padding: 16px 18px; background: #0e1626; border: 1px solid #24324a;">
+            <span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: #9aa8c0;">Wie wär’s mit</span>
+            <sc-for list="{{ suggestions }}" as="s" hint-placeholder-count="3"><a href="#" style="display: grid; grid-template-columns: 24px 1fr; gap: 8px; align-items: baseline; min-height: 40px; color: #dfe7f5; border-bottom: 1px solid #1c2740;"><span style="font-family: 'IBM Plex Mono'; font-size: 11px; color: #35e0ff;">{{ s.n }}</span><span><span style="display: block; font-weight: 600; font-size: 14px;">{{ s.title }}</span><span style="display: block; font-size: 12px; color: #b8c2d6;">{{ s.why }}</span></span></a></sc-for>
+          </div>
+          <a href="#" style="display: flex; flex-direction: column; gap: 8px; padding: 16px 18px; background: #0e1626; border: 1px solid #24324a; color: #dfe7f5;">
+            <span style="display: flex; justify-content: space-between; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: #9aa8c0;"><span>Regal</span><span style="color: #35e0ff;">12 Spiele →</span></span>
+            <sc-for list="{{ shelfTop }}" as="g" hint-placeholder-count="5">
+              <span style="display: grid; grid-template-columns: 1fr 42px; gap: 10px; align-items: center;"><span style="display: flex; flex-direction: column; gap: 4px;"><span style="font-size: 13px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ g.title }}</span><span style="display: block; height: 3px; background: #1c2740;"><span style="display: block; height: 100%; width: {{ g.pct }}; background: {{ g.sc }};"></span></span></span><span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 16px; text-align: right; color: {{ g.sc }};">{{ g.score }}</span></span>
+            </sc-for>
+          </a>
+          <a href="#" style="display: flex; flex-direction: column; gap: 8px; padding: 16px 18px; background: #0e1626; border: 1px solid #24324a; color: #dfe7f5;">
+            <span style="display: flex; justify-content: space-between; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: #9aa8c0;"><span>Pokale</span><span style="color: #35e0ff;">Alle →</span></span>
+            <sc-for list="{{ standings }}" as="s" hint-placeholder-count="4"><span style="display: grid; grid-template-columns: 58px 1fr 24px; gap: 10px; align-items: center; font-size: 13px;"><span style="font-family: 'Chakra Petch'; font-weight: 600; text-transform: uppercase;">{{ s.name }}</span><span style="display: block; height: 6px; background: #1c2740;"><span style="display: block; height: 100%; width: {{ s.pct }}; background: {{ s.color }};"></span></span><span style="font-family: 'IBM Plex Mono'; font-size: 12px; text-align: right;">{{ s.wins }}</span></span></sc-for>
+          </a>
+          <a href="#" style="display: flex; flex-direction: column; gap: 6px; padding: 16px 18px; background: #0e1626; border: 1px solid #24324a; color: #dfe7f5;">
+            <span style="display: flex; justify-content: space-between; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: #9aa8c0;"><span>Chronik</span><span style="color: #35e0ff;">23 Sessions →</span></span>
+            <span style="font-size: 13px; color: #b8c2d6; line-height: 1.5;">Letzte drei: Nordlichter · Salzwiesen · Moorgeister</span>
+          </a>
+          <div style="margin-top: auto; display: flex; flex-direction: column; gap: 6px; padding: 14px 18px; background: #0e1626; border: 1px solid #24324a; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; line-height: 1.9;">
+            <span style="letter-spacing: .18em; color: #9aa8c0;">Nicht im Regal</span>
+            <span style="display: flex; flex-wrap: wrap; gap: 4px 14px;"><a href="#" style="color: #dfe7f5; min-height: 24px; display: inline-flex; align-items: center;">Aussortiert 2</a><a href="#" style="color: #dfe7f5; min-height: 24px; display: inline-flex; align-items: center;">Durchgespielt 1</a><a href="#" style="color: #dfe7f5; min-height: 24px; display: inline-flex; align-items: center;">Wunschliste 4</a></span>
+            <a href="#" style="color: #35e0ff; min-height: 24px; display: inline-flex; align-items: center;">Könnte euch gefallen →</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div data-screen-label="B3.2 Regal" style="display: flex; flex-direction: column; gap: 10px;">
+    <span style="font-family: 'IBM Plex Mono'; font-size: 12px; color: #9aa8c0;">B3.2 · Regal — Unterseite, erreicht über die Vorschau im Hub</span>
+    <div style="width: 1440px; height: 900px; position: relative; overflow: hidden; background: radial-gradient(90% 60% at 50% 0%, #10203a, #070b14 70%); border: 1px solid #24324a; font-size: 15px; display: flex; flex-direction: column;">
+      <span style="position: absolute; inset: 0; pointer-events: none; background-image: radial-gradient(rgba(53,224,255,.14) 1px, transparent 1.3px); background-size: 28px 28px; mask-image: radial-gradient(80% 70% at 50% 40%, #000 20%, transparent 100%);"></span>
+      <div style="position: relative; z-index: 2; flex: none; height: 52px; display: flex; align-items: center; gap: 22px; padding: 0 32px; background: #0b1220; border-bottom: 1px solid #24324a;">
+        <a href="#" style="display: flex; align-items: center; gap: 10px; font-family: 'Chakra Petch'; font-weight: 700; font-size: 18px; letter-spacing: .2em; text-transform: uppercase; color: #35e0ff;"><span style="width: 10px; height: 10px; background: #35e0ff; box-shadow: 0 0 10px #35e0ff;"></span>Spielwirbel</a>
+        <span style="font-family: 'IBM Plex Mono'; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #9aa8c0;">Flotte / Übersicht</span>
+        <span style="margin-left: auto; display: flex; gap: 10px; align-items: center; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #9aa8c0;"><a href="#" style="min-height: 28px; display: inline-flex; align-items: center; border: 1px solid #24324a; padding: 0 10px; color: #dfe7f5;"><i class="ti ti-world" style="margin-right: 6px;"></i> DE</a><a href="#" style="min-height: 28px; display: inline-flex; align-items: center; border: 1px solid #24324a; padding: 0 10px; color: #dfe7f5;"><i class="ti ti-mail" style="margin-right: 6px;"></i> Postfach 2</a><a href="#" style="min-height: 28px; display: inline-flex; align-items: center; border: 1px solid #24324a; padding: 0 10px; color: #dfe7f5;">Marco</a></span>
+      </div>
+      <div style="position: relative; z-index: 2; flex: none; height: 44px; display: flex; align-items: stretch; gap: 4px; padding: 0 32px; background: #0b1220; border-bottom: 1px solid #24324a;">
+        <sc-for list="{{ navRegal }}" as="n" hint-placeholder-count="5"><a href="#" style="display: inline-flex; align-items: center; padding: 0 16px; border-bottom: 2px solid {{ n.edge }}; color: {{ n.ink }}; font-family: 'IBM Plex Mono'; font-size: 12px; letter-spacing: .14em; text-transform: uppercase;">{{ n.label }}</a></sc-for>
+        <span style="margin-left: auto; display: inline-flex; align-items: center; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #9aa8c0;">Donnerstagsrunde</span>
+      </div>
+      <div style="position: relative; z-index: 2; flex: 1; padding: 22px 32px 26px; display: flex; flex-direction: column; gap: 18px; min-height: 0;">
+        <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 30px;">
+          <h1 style="margin: 0; font-family: 'Chakra Petch'; font-weight: 700; font-size: 54px; line-height: 1; text-transform: uppercase; letter-spacing: .02em;">Regal <span style="font-size: 20px; color: #9aa8c0;">· 12 Spiele</span></h1>
+          <span style="display: flex; gap: 8px; align-items: center;">
+            <label style="display: inline-flex; align-items: center; gap: 10px; min-height: 36px; padding: 0 12px; background: #0e1626; border: 1px solid #24324a; min-width: 240px;"><i class="ti ti-search" style="color: #35e0ff;"></i><input placeholder="Spiele suchen" style="flex: 1; align-self: stretch; min-height: 36px; border: none; background: none; font: inherit; font-size: 13px; color: #dfe7f5; outline: none;"></label>
+            <a href="#" style="min-height: 36px; display: inline-flex; align-items: center; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; border: 1px solid #24324a; padding: 0 12px; color: #dfe7f5;">Sortiert: Bewertung ▾</a>
+            <a href="#" style="min-height: 36px; display: inline-flex; align-items: center; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; border: 1px solid #24324a; padding: 0 12px; color: #dfe7f5;"><i class="ti ti-filter" style="margin-right: 6px;"></i> Filter</a>
+            <a href="#" style="min-height: 36px; display: inline-flex; align-items: center; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; border: 1px solid #ffb020; padding: 0 12px; color: #ffb020;">&lt; 60 Min ×</a>
+            <a href="#" style="min-height: 36px; display: inline-flex; align-items: center; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; border: 1px solid #35e0ff; padding: 0 12px; color: #35e0ff;">+ Spiel hinzufügen</a>
+          </span>
+        </div>
+        <div style="flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(6, 1fr); gap: 18px; align-content: start;">
+          <sc-for list="{{ shelfAll }}" as="g" hint-placeholder-count="12">
+            <a href="#" style="display: flex; flex-direction: column; border: 1px solid #24324a; background: #0e1626; color: #dfe7f5;">
+              <span style="display: block; aspect-ratio: 4 / 3; background: repeating-linear-gradient(180deg, rgba(0,0,0,.22) 0 1px, transparent 1px 4px), {{ g.cover }};"></span>
+              <span style="display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; border-top: 1px solid #24324a;">
+                <span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 15px; line-height: 1.1; text-transform: uppercase; text-wrap: balance;">{{ g.title }}</span>
+                <span style="display: flex; justify-content: space-between; align-items: baseline;"><span style="font-family: 'IBM Plex Mono'; font-size: 10px; color: #9aa8c0;">{{ g.meta }}</span><span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 24px; line-height: 1; color: {{ g.sc }};">{{ g.score }}</span></span>
+                <span style="display: block; height: 4px; background: #1c2740;"><span style="display: block; height: 100%; width: {{ g.pct }}; background: {{ g.sc }};"></span></span>
+              </span>
+            </a>
+          </sc-for>
+        </div>
+        <a href="#" style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #9aa8c0; min-height: 24px; display: inline-flex; align-items: center;">Nicht im Regal: Aussortiert 2 · Durchgespielt 1 · Wunschliste 4 · <span style="color: #35e0ff; margin-left: 6px;">Könnte euch gefallen →</span></a>
+      </div>
+    </div>
+  </div>
+
+  <div data-screen-label="B3.3 Chronik" style="display: flex; flex-direction: column; gap: 10px;">
+    <span style="font-family: 'IBM Plex Mono'; font-size: 12px; color: #9aa8c0;">B3.3 · Chronik — jede Session eine Zeile, fehlende Ergebnisse in Amber</span>
+    <div style="width: 1440px; height: 900px; position: relative; overflow: hidden; background: radial-gradient(90% 60% at 50% 0%, #10203a, #070b14 70%); border: 1px solid #24324a; font-size: 15px; display: flex; flex-direction: column;">
+      <span style="position: absolute; inset: 0; pointer-events: none; background-image: radial-gradient(rgba(53,224,255,.14) 1px, transparent 1.3px); background-size: 28px 28px; mask-image: radial-gradient(80% 70% at 50% 40%, #000 20%, transparent 100%);"></span>
+      <div style="position: relative; z-index: 2; flex: none; height: 52px; display: flex; align-items: center; gap: 22px; padding: 0 32px; background: #0b1220; border-bottom: 1px solid #24324a;">
+        <a href="#" style="display: flex; align-items: center; gap: 10px; font-family: 'Chakra Petch'; font-weight: 700; font-size: 18px; letter-spacing: .2em; text-transform: uppercase; color: #35e0ff;"><span style="width: 10px; height: 10px; background: #35e0ff; box-shadow: 0 0 10px #35e0ff;"></span>Spielwirbel</a>
+        <span style="font-family: 'IBM Plex Mono'; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #9aa8c0;">Flotte / Übersicht</span>
+        <span style="margin-left: auto; display: flex; gap: 10px; align-items: center; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #9aa8c0;"><a href="#" style="min-height: 28px; display: inline-flex; align-items: center; border: 1px solid #24324a; padding: 0 10px; color: #dfe7f5;"><i class="ti ti-world" style="margin-right: 6px;"></i> DE</a><a href="#" style="min-height: 28px; display: inline-flex; align-items: center; border: 1px solid #24324a; padding: 0 10px; color: #dfe7f5;"><i class="ti ti-mail" style="margin-right: 6px;"></i> Postfach 2</a><a href="#" style="min-height: 28px; display: inline-flex; align-items: center; border: 1px solid #24324a; padding: 0 10px; color: #dfe7f5;">Marco</a></span>
+      </div>
+      <div style="position: relative; z-index: 2; flex: none; height: 44px; display: flex; align-items: stretch; gap: 4px; padding: 0 32px; background: #0b1220; border-bottom: 1px solid #24324a;">
+        <sc-for list="{{ navChronik }}" as="n" hint-placeholder-count="5"><a href="#" style="display: inline-flex; align-items: center; padding: 0 16px; border-bottom: 2px solid {{ n.edge }}; color: {{ n.ink }}; font-family: 'IBM Plex Mono'; font-size: 12px; letter-spacing: .14em; text-transform: uppercase;">{{ n.label }}</a></sc-for>
+        <span style="margin-left: auto; display: inline-flex; align-items: center; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #9aa8c0;">Donnerstagsrunde</span>
+      </div>
+      <div style="position: relative; z-index: 2; flex: 1; padding: 22px 32px 26px; display: flex; flex-direction: column; gap: 18px; min-height: 0;">
+        <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 30px;">
+          <h1 style="margin: 0; font-family: 'Chakra Petch'; font-weight: 700; font-size: 54px; line-height: 1; text-transform: uppercase; letter-spacing: .02em;">Chronik <span style="font-size: 20px; color: #9aa8c0;">· 23 Sessions</span></h1>
+          <span style="display: flex; gap: 8px; align-items: center;">
+            <a href="#" style="min-height: 36px; display: inline-flex; align-items: center; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; border: 1px solid #24324a; padding: 0 12px; color: #dfe7f5;">Zeitraum: 12 Monate ▾</a>
+            <a href="#" style="min-height: 36px; display: inline-flex; align-items: center; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; border: 1px solid #24324a; padding: 0 12px; color: #dfe7f5;"><i class="ti ti-filter" style="margin-right: 6px;"></i> Filter</a>
+            <a href="#" style="min-height: 36px; display: inline-flex; align-items: center; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; border: 1px solid #24324a; padding: 0 12px; color: #dfe7f5;"><i class="ti ti-share" style="margin-right: 6px;"></i> Teilen</a>
+          </span>
+        </div>
+        <div style="flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px;">
+          <div style="display: grid; grid-template-columns: 130px 1fr 220px 150px 90px; gap: 16px; font-family: 'IBM Plex Mono'; font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: #9aa8c0; border-bottom: 1px solid #24324a; padding-bottom: 8px;">
+            <span>Datum</span><span>Spiel</span><span>Sieger</span><span>Spiele gezogen</span><span style="text-align: right;">Score</span>
+          </div>
+          <sc-for list="{{ sessions }}" as="s" hint-placeholder-count="6">
+            <a href="#" style="display: grid; grid-template-columns: 130px 1fr 220px 150px 90px; gap: 16px; align-items: center; min-height: 58px; border-bottom: 1px solid #1c2740; color: #dfe7f5;">
+              <span style="font-family: 'IBM Plex Mono'; font-size: 13px; color: #9aa8c0;">{{ s.date }}</span>
+              <span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 19px; text-transform: uppercase;">{{ s.game }}</span>
+              <span style="display: flex; flex-direction: column;"><span style="font-family: 'Chakra Petch'; font-weight: 600; font-size: 16px; text-transform: uppercase; color: {{ s.winInk }};">{{ s.winnerLine }}</span><span style="font-family: 'IBM Plex Mono'; font-size: 11px; color: #9aa8c0;">{{ s.note }}</span></span>
+              <span style="font-size: 13px; color: #b8c2d6;">{{ s.drawn }}</span>
+              <span style="text-align: right; font-family: 'Chakra Petch'; font-weight: 700; font-size: 26px; color: {{ s.sc }};">{{ s.score }}</span>
+            </a>
+          </sc-for>
+        </div>
+        <a href="#" style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #35e0ff; min-height: 24px; display: inline-flex; align-items: center;">Rückblick · 12 Monate ansehen →</a>
+      </div>
+    </div>
+  </div>
+
+  <div data-screen-label="B3.4 Pokale" style="display: flex; flex-direction: column; gap: 10px;">
+    <span style="font-family: 'IBM Plex Mono'; font-size: 12px; color: #9aa8c0;">B3.4 · Pokale — Siege, Serien, Bestmarken der Runde</span>
+    <div style="width: 1440px; height: 900px; position: relative; overflow: hidden; background: radial-gradient(90% 60% at 50% 0%, #10203a, #070b14 70%); border: 1px solid #24324a; font-size: 15px; display: flex; flex-direction: column;">
+      <span style="position: absolute; inset: 0; pointer-events: none; background-image: radial-gradient(rgba(53,224,255,.14) 1px, transparent 1.3px); background-size: 28px 28px; mask-image: radial-gradient(80% 70% at 50% 40%, #000 20%, transparent 100%);"></span>
+      <div style="position: relative; z-index: 2; flex: none; height: 52px; display: flex; align-items: center; gap: 22px; padding: 0 32px; background: #0b1220; border-bottom: 1px solid #24324a;">
+        <a href="#" style="display: flex; align-items: center; gap: 10px; font-family: 'Chakra Petch'; font-weight: 700; font-size: 18px; letter-spacing: .2em; text-transform: uppercase; color: #35e0ff;"><span style="width: 10px; height: 10px; background: #35e0ff; box-shadow: 0 0 10px #35e0ff;"></span>Spielwirbel</a>
+        <span style="font-family: 'IBM Plex Mono'; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #9aa8c0;">Flotte / Übersicht</span>
+        <span style="margin-left: auto; display: flex; gap: 10px; align-items: center; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #9aa8c0;"><a href="#" style="min-height: 28px; display: inline-flex; align-items: center; border: 1px solid #24324a; padding: 0 10px; color: #dfe7f5;"><i class="ti ti-world" style="margin-right: 6px;"></i> DE</a><a href="#" style="min-height: 28px; display: inline-flex; align-items: center; border: 1px solid #24324a; padding: 0 10px; color: #dfe7f5;"><i class="ti ti-mail" style="margin-right: 6px;"></i> Postfach 2</a><a href="#" style="min-height: 28px; display: inline-flex; align-items: center; border: 1px solid #24324a; padding: 0 10px; color: #dfe7f5;">Marco</a></span>
+      </div>
+      <div style="position: relative; z-index: 2; flex: none; height: 44px; display: flex; align-items: stretch; gap: 4px; padding: 0 32px; background: #0b1220; border-bottom: 1px solid #24324a;">
+        <sc-for list="{{ navPokale }}" as="n" hint-placeholder-count="5"><a href="#" style="display: inline-flex; align-items: center; padding: 0 16px; border-bottom: 2px solid {{ n.edge }}; color: {{ n.ink }}; font-family: 'IBM Plex Mono'; font-size: 12px; letter-spacing: .14em; text-transform: uppercase;">{{ n.label }}</a></sc-for>
+        <span style="margin-left: auto; display: inline-flex; align-items: center; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #9aa8c0;">Donnerstagsrunde</span>
+      </div>
+      <div style="position: relative; z-index: 2; flex: 1; padding: 22px 32px 26px; display: flex; flex-direction: column; gap: 18px; min-height: 0;">
+        <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 30px;">
+          <h1 style="margin: 0; font-family: 'Chakra Petch'; font-weight: 700; font-size: 54px; line-height: 1; text-transform: uppercase; letter-spacing: .02em;">Pokale <span style="font-size: 20px; color: #9aa8c0;">· 23 Sessions gewertet</span></h1>
+          <span style="display: flex; gap: 8px; align-items: center;">
+            <a href="#" style="min-height: 36px; display: inline-flex; align-items: center; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; border: 1px solid #24324a; padding: 0 12px; color: #dfe7f5;">Zeitraum: alle ▾</a>
+            <a href="#" style="min-height: 36px; display: inline-flex; align-items: center; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; border: 1px solid #24324a; padding: 0 12px; color: #dfe7f5;"><i class="ti ti-share" style="margin-right: 6px;"></i> Teilen</a>
+          </span>
+        </div>
+        <div style="flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 380px; gap: 22px; align-items: start;">
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <sc-for list="{{ trophies }}" as="t" hint-placeholder-count="4">
+              <div style="display: grid; grid-template-columns: 56px 200px 1fr 90px; gap: 18px; align-items: center; background: #0e1626; border: 1px solid #24324a; padding: 14px 18px;">
+                <span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 30px; color: {{ t.rankInk }};">{{ t.rank }}</span>
+                <span style="display: flex; align-items: center; gap: 12px;"><span style="width: 40px; height: 40px; border: 1px solid {{ t.color }}; display: grid; place-items: center; font-family: 'Chakra Petch'; font-weight: 700; font-size: 17px; color: {{ t.color }};">{{ t.ini }}</span><span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 22px; text-transform: uppercase;">{{ t.name }}</span></span>
+                <span style="display: flex; flex-direction: column; gap: 5px;"><span style="display: block; height: 8px; background: #1c2740;"><span style="display: block; height: 100%; width: {{ t.pct }}; background: {{ t.color }};"></span></span><span style="font-family: 'IBM Plex Mono'; font-size: 11px; color: #9aa8c0;">{{ t.sub }}</span></span>
+                <span style="text-align: right; font-family: 'Chakra Petch'; font-weight: 700; font-size: 32px;">{{ t.wins }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <sc-for list="{{ awards }}" as="a" hint-placeholder-count="3">
+              <div style="display: flex; flex-direction: column; gap: 5px; background: #0e1626; border: 1px solid #24324a; padding: 16px 18px;">
+                <span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #9aa8c0;">{{ a.title }}</span>
+                <span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 28px; text-transform: uppercase; line-height: 1.05;">{{ a.value }}</span>
+                <span style="font-size: 13px; color: #b8c2d6;">{{ a.sub }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1500,&quot;height&quot;:1040}}">
+class Component extends DCLogic {
+  renderVals() {
+    const CY = '#35e0ff', AM = '#ffb020', GR = '#4ade80', MU = '#9aa8c0', LINE = '#24324a', SUR = '#0e1626', HAIR = '#1c2740';
+    const P = ['#f08a5d', '#6bb3e0', '#a49cf0', '#e0a03c'];
+    const cover = (h) => `linear-gradient(160deg, oklch(.55 .12 ${h}), oklch(.3 .1 ${h + 30}))`;
+    const fmt = (v) => v.toFixed(1).replace('.', ',');
+    const pad = (n) => String(n).padStart(1, "");
+    const scCol = (s) => s === null ? MU : s >= 4 ? CY : s >= 3.5 ? GR : AM;
+
+    const nav = (active) => ['Start', 'Regal', 'Chronik', 'Pokale', 'Einstellungen']
+      .map((label) => ({ label, ink: label === active ? '#dfe7f5' : MU, edge: label === active ? CY : 'transparent' }));
+
+    const names = ['Marco', 'Jonas', 'Lea', 'Tim'];
+    const winsN = [5, 9, 7, 2];
+    const members = names.map((n, i) => ({ name: n, ini: n[0], color: P[i], wins: pad(winsN[i]) }));
+    const monthsN = ['O', 'N', 'D', 'J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S'];
+    const pulse = [1, 3, 2, 2, 1, 0, 2, 3, 2, 4, 1, 2].map((c, i) => ({ m: monthsN[i], h: Math.max(4, Math.round((c / 4) * 100)) + '%' }));
+    const presets = ['Unter 60 Min', 'Leichte Kost', 'Familientauglich'];
+    const suggestions = [
+      { n: '1', title: 'Salzwiesen', why: 'Seit 3 Monaten nicht gespielt' },
+      { n: '2', title: 'Moorgeister', why: 'Kam gut an und war lange nicht dran' },
+      { n: '3', title: 'Hafenmeister', why: 'Steht im Regal, war aber noch nie dran' },
+    ];
+    const standings = [[1, 9], [2, 7], [0, 5], [3, 2]].map(([i, w]) => ({ name: names[i], color: P[i], wins: pad(w), pct: Math.round(w / 9 * 100) + '%' }));
+
+    const G = [
+      ['Nordlichter', 4.8, 200, '2–5 · 90 Min'], ['Moorgeister', 4.4, 160, '3–6 · 40 Min'],
+      ['Kartographen des Nordens', 4.2, 150, '2–4 · 45 Min'], ['Sternenhafen', 4.1, 280, '1–4 · 60 Min'],
+      ['Glutkessel', 4.0, 30, '2–4 · 30 Min'], ['Salzwiesen', 3.9, 120, '2–5 · 75 Min'],
+      ['Der letzte Leuchtturm', 3.6, 250, '1–2 · 20 Min'], ['Rost & Regen', 3.3, 220, '2–6 · 120 Min'],
+      ['Zinnober', 3.1, 20, '3–5 · 50 Min'], ['Wolkenpfad', 2.7, 300, '2–4 · 35 Min'],
+      ['Hafenmeister', null, 240, '2–4 · 60 Min'], ['Kupferzeit', null, 50, '1–4 · 90 Min'],
+    ];
+    const shelfTop = G.slice(0, 5).map(([title, score]) => ({ title, score: fmt(score), sc: scCol(score), pct: Math.round(score / 5 * 100) + '%' }));
+    const shelfAll = G.map(([title, score, hue, meta]) => ({ title, meta, cover: cover(hue), score: score === null ? 'NEU' : fmt(score), sc: scCol(score), pct: score === null ? '0%' : Math.round(score / 5 * 100) + '%' }));
+
+    const sessionData = [
+      { date: '14.09.2026', game: 'Nordlichter', winner: 'Jonas', score: 4.8, n: 3, note: '9. Sieg · Serie 2' },
+      { date: '07.09.2026', game: 'Salzwiesen', winner: 'Lea', score: 4.1, n: 2, note: '7. Sieg' },
+      { date: '31.08.2026', game: 'Moorgeister', winner: 'Marco', score: 4.4, n: 3, note: '5. Sieg' },
+      { date: '24.08.2026', game: 'Glutkessel', winner: null, score: 4.0, n: 2, note: 'Ergebnis fehlt' },
+      { date: '17.08.2026', game: 'Sternenhafen', winner: 'Jonas', score: 4.1, n: 4, note: '8. Sieg' },
+      { date: '10.08.2026', game: 'Zinnober', winner: 'Lea', score: 3.1, n: 3, note: '1× kein Schub' },
+    ];
+    const sessions = sessionData.map((s) => ({
+      date: s.date, game: s.game, note: s.note, drawn: s.n + ' Spiele',
+      winnerLine: s.winner ? s.winner + ' hat gewonnen' : 'Sieger fehlt',
+      winInk: s.winner ? '#dfe7f5' : AM,
+      score: fmt(s.score), sc: scCol(s.score),
+    }));
+
+    const trophies = [
+      { name: 'Jonas', wins: 9, sub: 'Serie 2 · liebstes Spiel Nordlichter', color: P[1] },
+      { name: 'Lea', wins: 7, sub: 'liebstes Spiel Salzwiesen', color: P[2] },
+      { name: 'Marco', wins: 5, sub: 'liebstes Spiel Moorgeister', color: P[0] },
+      { name: 'Tim', wins: 2, sub: 'liebstes Spiel Rost & Regen', color: P[3] },
+    ].map((t, i) => ({ ...t, ini: t.name[0], rank: pad(i + 1), rankInk: i === 0 ? CY : MU, pct: Math.round(t.wins / 9 * 100) + '%' }));
+
+    const awards = [
+      { title: 'Bestes Spiel', value: 'Nordlichter', sub: '4,8 · viermal gespielt' },
+      { title: 'Längste Serie', value: 'Jonas · 3', sub: 'Februar bis März 2026' },
+      { title: 'Meiste Vetos', value: 'Rost & Regen', sub: 'Dreimal „kein Schub“' },
+    ];
+
+    return {
+      navHub: nav('Start'), navRegal: nav('Regal'), navChronik: nav('Chronik'), navPokale: nav('Pokale'),
+      members, pulse, presets, suggestions, standings, shelfTop, shelfAll, sessions, trophies, awards,
+    };
+  }
+}
+</script>
+</body>
+</html>
