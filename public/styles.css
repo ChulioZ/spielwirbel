@@ -9556,8 +9556,14 @@ kbd {
 
    The three 12px values are ONE value: `--live-actions-gap`, which the actions
    column itself reads. Written twice they would drift the first time anyone
-   retunes the column, and the drift is a 2px seam nobody would file. */
-:root { --live-actions-gap: 12px; }
+   retunes the column, and the drift is a 2px seam nobody would file.
+
+   Declared on `.live-vote` rather than on `:root`: it is one screen's spacing,
+   not an app token, and this file keeps its whole token vocabulary in the single
+   `:root` block at the top — a second one 9500 lines down reads as a token
+   somebody forgot to move, and is exactly what a later tidy-up would move or
+   drop. Both readers are inside `.live-vote`, and custom properties inherit. */
+.live-vote { --live-actions-gap: 12px; }
 .live-person__dots,
 .live-person__progress,
 .live-vote__guests,

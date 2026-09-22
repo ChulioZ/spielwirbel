@@ -264,6 +264,26 @@ test('the panel reproduces the actions column spacing from one shared value', as
   // A literal anywhere in the rule is the drift this is guarding against.
   assert.ok(!/\d+px/.test(panelRule), `the panel must not hard-code a spacing: ${panelRule.trim()}`);
 
+  /* And SOMETHING both of them inherit from has to declare it. Two `var()`
+     readers are not evidence on their own: a typo in the declaring selector
+     leaves this test green while the property resolves to nothing and both gaps
+     silently collapse to zero — the shape
+     .claude/rules/hidden-attribute-vs-display-rule.md describes, where the
+     assertion is about the file and the failure is about the cascade.
+
+     Checked structurally rather than by name: the declaring selector must be an
+     ANCESTOR of both readers, which for this file's BEM is exactly "a prefix of
+     each reader's class". That still holds if the token moves up to a wrapper. */
+  const declarer = new RegExp(`([.\\w-]+)\\s*\\{[^{}]*--live-actions-gap:\\s*[^;}]+`).exec(APP);
+  assert.ok(declarer, '--live-actions-gap is declared somewhere in styles.css');
+  const owner = declarer[1];
+  for (const reader of ['.live-vote__actions', '.live-vote__panel']) {
+    assert.ok(
+      reader === owner || reader.startsWith(owner + '__') || owner === ':root',
+      `${owner} does not enclose ${reader}, so the shared gap never reaches it`
+    );
+  }
+
   const dom = await lobby(t, { session: sessionFixture({ votedIds: ['m1'] }) });
   const panel = dom.app.querySelector('.live-vote__panel');
   assert.ok(panel, 'the panel is rendered');
