@@ -34,10 +34,13 @@
 
 'use strict';
 
-// One row per design. `labelKey` is deliberately absent until the picker exists
-// (#1186): nothing renders a design's name yet, and nine locales' worth of dead
-// keys would be added blind. `markers` (the eight round colours each design
-// renders in its own way) belongs to #1187 for the same reason.
+// One row per design. `labelKey`/`descKey` name the i18n keys the picker renders
+// (#1186). Both are EXPLICIT fields rather than keys assembled from the id, so a
+// grep for 'design.tisch.name' finds the registry row AND the nine lang files —
+// an assembled key is invisible to exactly the search that would catch a missing
+// translation (.claude/rules/source-scanning-guards-enumerate-shapes.md).
+// `markers` (the eight round colours each design renders in its own way)
+// belongs to #1187.
 //
 // `stylesheet` is a LITERAL, quoted path on purpose. The production build
 // (#141) content-hashes public/css/** and rewrites quoted references to it, and
@@ -50,7 +53,12 @@ const DESIGN_REGISTRY = [
   // so applyDesign clears the two inline properties instead of restating them —
   // which is also what makes "Klassisch renders exactly as before" provable
   // rather than merely likely.
-  { id: 'klassisch', enabled: true },
+  {
+    id: 'klassisch',
+    labelKey: 'design.klassisch.name',
+    descKey: 'design.klassisch.desc',
+    enabled: true,
+  },
   // A STUB (#1184). The gold is the reviewed package's dominant accent
   // (docs/design/tisch/), but no Tisch screen exists yet: its stylesheet holds
   // placeholder layout tokens only, and the real T1/T8 token set lands with
@@ -68,6 +76,8 @@ const DESIGN_REGISTRY = [
   // the real felt against the same suite.
   {
     id: 'tisch',
+    labelKey: 'design.tisch.name',
+    descKey: 'design.tisch.desc',
     scheme: 'dark',
     page: '#0f1712',
     accent: '#f0cf86',
@@ -75,6 +85,16 @@ const DESIGN_REGISTRY = [
     enabled: false,
   },
 ];
+
+/* Which run of the first-start chooser an account has seen (#1186). A REVISION
+   rather than a boolean, so adding a design later can ask everyone once more by
+   moving this string — a boolean would make that impossible without a data
+   migration, which the JSON backend does not do (CLAUDE.md).
+
+   Stamped SERVER-side (POST /design-chooser-seen), never sent by the client, for
+   the same reason newsRevision() is: a client that chose its own value could
+   claim to have seen a run that does not exist and silence the chooser forever. */
+const DESIGN_CHOOSER_REVISION = '2026-09-22';
 
 // The design a logged-OUT surface wears — the landing page, the login screen,
 // the legal pages. Klassisch until the flip (#1202) moves the face to Tisch.
@@ -105,7 +125,7 @@ function isSelectableDesign(id, opts) {
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
-    DESIGN_REGISTRY, FACE_DESIGN, designById,
+    DESIGN_REGISTRY, FACE_DESIGN, DESIGN_CHOOSER_REVISION, designById,
     selectableDesigns, selectableDesignIds, isSelectableDesign,
   };
 }

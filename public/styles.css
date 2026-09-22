@@ -4715,6 +4715,73 @@ a.k-tile:focus-visible,
 .konto-notify { display: flex; flex-direction: column; gap: 10px; margin-bottom: 30px; }
 .konto-notify__intro { margin: 0 0 2px; }
 .konto-notify__row { flex-wrap: nowrap; }
+/* The per-user design picker (#1186) — the Konto section and the one-time
+   chooser sheet render the same list, so it is styled once here.
+
+   THE TWO TILE DEFAULTS ARE KLASSISCH'S :root COLOURS, deliberately restated.
+   Every other design writes --tile-page/--tile-accent inline from its registry
+   row, but Klassisch declares none — it IS the :root block at the top of this
+   file, and designs.js's header says why saying so twice in JS would drift. A
+   copy in CSS is the licensed shape instead (TAG_ICONS, not the palette bug):
+   test/design-picker.test.js asserts these two values still equal :root's
+   --page-bg and --brand, so a retune that touches one goes red naming both
+   (.claude/rules/shared-constants-across-the-stack.md).
+
+   `--tile-*` and not the live tokens, because a tile must show the design it
+   OFFERS while the page is wearing a different one. */
+.konto-design { margin-bottom: 30px; }
+.konto-design__foot { margin: 10px 0 0; font-size: var(--text-sm); }
+/* auto-fit over a min track, NOT a viewport media query: this list renders both
+   inside a ~460px sheet and full-width on the Konto screen, so a `min-width:
+   640px` breakpoint would put two columns in the sheet at desktop widths and
+   squeeze each card to ~200px. The container decides instead. */
+.design-picker { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); }
+/* A column, so the tile reads as the card's own material rather than as an icon
+   beside a label — and so the name and description get the card's full width at
+   every size this list is rendered at. */
+.design-card {
+  --tile-page: #f4f1ea;
+  --tile-accent: #c2410c;
+  display: flex; flex-direction: column; gap: 10px;
+  padding: 12px; border: 2px solid var(--line); border-radius: var(--radius);
+  background: var(--surface); cursor: pointer;
+}
+.design-card.is-on { border-color: var(--brand); }
+/* The radio drives the state and stays reachable, but the card is the visual
+   control — so it is hidden from sight only, never from the accessibility tree
+   or the tab order (.claude/rules/accessibility-contrast-and-modals.md). */
+.design-card input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.design-card:has(input:focus-visible) { outline: 2px solid var(--brand); outline-offset: 2px; }
+.design-card__body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.design-card__name { font-weight: 600; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.design-card__badge {
+  font-size: var(--text-xs); font-weight: 600; padding: 1px 7px; border-radius: var(--radius-pill);
+  background: color-mix(in oklab, var(--brand) 12%, var(--surface)); color: var(--brand-strong);
+}
+.design-card__desc { font-size: var(--text-sm); color: var(--ink-soft); }
+/* The material tile: the design's page with its accent laid across one corner,
+   which is the smallest thing that reads as "a different look" rather than as a
+   colour swatch. */
+.design-tile {
+  flex: 0 0 auto; height: 64px; border-radius: 10px;
+  border: 1px solid color-mix(in oklab, var(--shade) 12%, transparent);
+  background: linear-gradient(135deg, var(--tile-page) 58%, var(--tile-accent) 58%);
+}
+/* `.sheet--dialog.design-chooser`, not `.design-chooser` alone: .sheet--dialog's
+   own 460px cap is (0,1,0) and declared later in this file, so a single class
+   here loses on source order. The same two-class shape .sheet--list uses. */
+.sheet--dialog.design-chooser { max-width: 560px; }
+.design-chooser__kicker {
+  margin: 0; font-size: var(--text-sm); font-weight: 600; color: var(--brand-strong);
+  text-transform: uppercase; letter-spacing: .04em;
+}
+.design-chooser__list { margin: 14px 0 0; }
+.design-chooser__foot { margin: 12px 0 0; font-size: var(--text-sm); }
+/* The kicker sits above the heading, so this head stacks instead of laying the
+   title beside a close button — the chooser deliberately has none, because both
+   of its answers have to record that it was seen. */
+.sheet__head.sheet__head--stacked { display: block; }
+
 /* Passkeys (#418). The rows are .ds-row + .ds-row--static — they do nothing
    themselves, and the two link-btns at the right edge carry the whole
    affordance (.claude/rules/ds-row-is-a-click-target.md). */

@@ -34,6 +34,9 @@ const { USERNAME_MIN, USERNAME_MAX, RESERVED_USERNAMES } = require('../public/js
 // — the specs below inject fixture entries into it, because the shipped list is
 // empty and every assertion about the seen-state would otherwise be vacuous.
 const news = require('../public/js/news');
+// The design registry the route validates against, imported from the same file
+// — a hand-copied id list here would pass against a route that had drifted.
+const designs = require('../public/js/designs');
 
 const EMAIL = 'user@example.com';
 const USERNAME = 'user_one';
@@ -1189,11 +1192,15 @@ test('PATCH /me leaves the handle alone when the key is absent, and never expose
   // `statsVisible` (#1089) rides on every account as a real boolean, defaulting
   // ON like the two notify keys — it governs whether accepted friends see this
   // account's play statistics on its profile.
+  // `design` + `designChooserSeen` (#1186) ride on every account as well: the
+  // first RESOLVED against this instance's selectable set rather than echoed
+  // (a design enabled only outside production must not be handed out), the
+  // second a revision string or null.
   assert.deepEqual(Object.keys(res.body).sort(),
     ['acceptedTermsRevision', 'avatar', 'bgStats', 'bggUsername', 'createdAt', 'demo',
-      'demoExpiresAt', 'email', 'emailVerified', 'id', 'lastSeenNewsRevision',
-      'notifyFriendRequests', 'notifyRoundInvitations', 'pendingEmail', 'statsVisible',
-      'termsRevision', 'username']);
+      'demoExpiresAt', 'design', 'designChooserSeen', 'email', 'emailVerified', 'id',
+      'lastSeenNewsRevision', 'notifyFriendRequests', 'notifyRoundInvitations',
+      'pendingEmail', 'statsVisible', 'termsRevision', 'username']);
   assert.equal(res.body.demo, false);
   assert.equal(res.body.demoExpiresAt, null);
 
@@ -1260,6 +1267,133 @@ test('the BG Stats opt-in is OFF until the account turns it on (#485)', async ()
   assert.equal((await patchMe(acc.accessToken, { bgStats: true })).body.bgStats, true);
   assert.equal((await getMe(acc.accessToken)).body.bgStats, true, 'and it persists');
   assert.equal((await patchMe(acc.accessToken, { bgStats: false })).body.bgStats, false);
+});
+
+/* ------------------------- the per-user design (#1186) ---------------------- */
+
+/* NODE_ENV drives `enabled`, and every route resolves it per request, so a spec
+   can move production's answer under the SAME app object. Restored in a finally
+   so a failing assertion cannot leak the setting into the rest of the file —
+   node --test runs one process per file, and a leaked 'production' would change
+   the behaviour of specs that never mention designs. */
+async function asProduction(fn) {
+  const before = process.env.NODE_ENV;
+  process.env.NODE_ENV = 'production';
+  try { return await fn(); } finally {
+    if (before === undefined) delete process.env.NODE_ENV; else process.env.NODE_ENV = before;
+  }
+}
+
+test('#1186: a new account wears the face and has not seen the chooser', async () => {
+  const acc = await freshAccount('design-new@example.com');
+  const body = (await getMe(acc.accessToken)).body;
+  assert.equal(body.design, designs.FACE_DESIGN);
+  assert.equal(body.designChooserSeen, null, 'a new account is owed the chooser');
+});
+
+test('#1186: PATCH /me stores a selectable design and refuses everything else', async () => {
+  const acc = await freshAccount('design-patch@example.com');
+
+  // 'tisch' is registered but NOT enabled, so it is selectable outside
+  // production and refused inside it — the gate the whole registry exists for.
+  assert.equal((await patchMe(acc.accessToken, { design: 'tisch' })).body.design, 'tisch');
+  assert.equal((await getMe(acc.accessToken)).body.design, 'tisch', 'and it persists');
+
+  for (const junk of ['nope', '', 7, null, {}, ['tisch']]) {
+    const res = await patchMe(acc.accessToken, { design: junk });
+    assert.equal(res.status, 400, `${JSON.stringify(junk)} must be refused`);
+    assert.equal(res.body.error, 'invalid_design');
+  }
+  assert.equal((await getMe(acc.accessToken)).body.design, 'tisch', 'a refusal changes nothing');
+
+  // An OMITTED key leaves it alone, like every other field on this route.
+  assert.equal((await patchMe(acc.accessToken, { bgStats: true })).body.design, 'tisch');
+});
+
+test('#1186: in production an unenabled design is refused AND not handed back', async () => {
+  const acc = await freshAccount('design-prod@example.com');
+  // Stored while it was selectable — the exact state a design built on a dev
+  // instance leaves behind, and the one the projection has to defuse.
+  assert.equal((await patchMe(acc.accessToken, { design: 'tisch' })).body.design, 'tisch');
+
+  await asProduction(async () => {
+    const res = await patchMe(acc.accessToken, { design: 'tisch' });
+    assert.equal(res.status, 400);
+    assert.equal(res.body.error, 'invalid_design');
+    // The sharper half: the STORED value is still 'tisch', and the projection
+    // must not hand it out — applyDesign() on the client is policy-free, so an
+    // echoed id would put an unfinished design on a production page.
+    assert.equal((await getMe(acc.accessToken)).body.design, designs.FACE_DESIGN);
+  });
+
+  assert.equal((await getMe(acc.accessToken)).body.design, 'tisch',
+    'outside production the stored value is offered again');
+});
+
+test('#1186: the chooser-seen stamp is the SERVER\'s revision, and the pick is optional', async () => {
+  const acc = await freshAccount('design-chooser@example.com');
+
+  // A client-supplied revision must not be honoured: one that could name its own
+  // would claim to have seen a run that does not exist and silence the chooser
+  // for good — including the next one, which is why this is a revision at all.
+  const seen = await request(app).post('/api/account/design-chooser-seen')
+    .set('Authorization', `Bearer ${acc.accessToken}`)
+    .send({ designChooserSeen: '1999-01-01' });
+  assert.equal(seen.status, 200);
+  assert.equal(seen.body.designChooserSeen, designs.DESIGN_CHOOSER_REVISION);
+  assert.equal(seen.body.design, designs.FACE_DESIGN, 'declining changes no design');
+
+  // ...and with a pick, both halves land in the one request.
+  const picked = await request(app).post('/api/account/design-chooser-seen')
+    .set('Authorization', `Bearer ${acc.accessToken}`)
+    .send({ design: 'tisch' });
+  assert.equal(picked.body.design, 'tisch');
+  assert.equal(picked.body.designChooserSeen, designs.DESIGN_CHOOSER_REVISION);
+
+  const bad = await request(app).post('/api/account/design-chooser-seen')
+    .set('Authorization', `Bearer ${acc.accessToken}`)
+    .send({ design: 'not-a-design' });
+  assert.equal(bad.status, 400);
+  assert.equal(bad.body.error, 'invalid_design');
+  assert.equal((await getMe(acc.accessToken)).body.design, 'tisch', 'and nothing was written');
+});
+
+test('#1186: an account predating the design fields reads the face and an unseen chooser', async () => {
+  const acc = await freshAccount('design-legacy@example.com');
+
+  // The genuine legacy shape: the keys are ABSENT, not null. updateUser is an
+  // Object.assign and cannot remove one, so go through the store.
+  const record = store.data.users.find((u) => u.id === acc.uid);
+  delete record.design;
+  delete record.designChooserSeen;
+  store.saveData();
+  const stored = store.data.users.find((u) => u.id === acc.uid);
+  assert.equal('design' in stored, false, 'the key is really gone');
+  assert.equal('designChooserSeen' in stored, false, 'the key is really gone');
+
+  const body = (await getMe(acc.accessToken)).body;
+  // The dangerous direction is the SECOND one. `design` reads the face under any
+  // plausible spelling, but a `designChooserSeen` resolved to the current
+  // revision — the shape `acceptedTermsRevision` legitimately uses one field
+  // over — would mean the one screen that tells people designs exist never
+  // reaches a single account that predates it
+  // (.claude/rules/defaulted-account-fields-need-a-legacy-shape-spec.md).
+  assert.equal(body.design, designs.FACE_DESIGN);
+  assert.equal(body.designChooserSeen, null);
+});
+
+test('#1186: a demo account may change its design, unlike its avatar', async (t) => {
+  process.env.DEMO_ENABLED = 'true';
+  t.after(() => { delete process.env.DEMO_ENABLED; });
+  const res = await request(app).post('/api/account/demo').send({});
+  assert.equal(res.status, 200);
+  assert.equal(res.body.user.design, designs.FACE_DESIGN);
+  assert.equal(res.body.user.designChooserSeen, null,
+    'a visitor trying the app is exactly who the chooser is for');
+
+  const patched = await patchMe(res.body.accessToken, { design: 'tisch' });
+  assert.equal(patched.status, 200, 'the avatar route refuses a demo; this one must not');
+  assert.equal(patched.body.design, 'tisch');
 });
 
 test('#841: an account predating the profile picture answers null, not an absent key', async () => {

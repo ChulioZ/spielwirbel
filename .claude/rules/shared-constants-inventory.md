@@ -518,8 +518,15 @@ weeks later, with no way to tell which half was wrong.
 **The nineteenth is `public/js/designs.js`** (#1184): the USER design registry —
 which designs an account may wear, each one's page/accent/scheme and override
 stylesheet, the `enabled` gate and `FACE_DESIGN`. `lib/app.js` requires it so
-`GET /api/config` can report the selectable ids, and `lib/routes/account.js`
-will validate `PATCH /me { design }` against the same list (#1186).
+`GET /api/config` can report the selectable ids; since #1186
+`lib/routes/account.js` validates `PATCH /me { design }` and
+`POST /design-chooser-seen` against the same list, `lib/demo.js` writes
+`FACE_DESIGN` at mint, and `lib/me-projection.js` RESOLVES the stored id against
+it on the way out — the half worth knowing, because `applyDesign()` on the
+client is deliberately policy-free, so a projection that merely echoed the
+stored value would put a design built on a dev instance onto a production page.
+It also carries `DESIGN_CHOOSER_REVISION`, which the server stamps and only the
+client compares (the `news.js` split).
 
 It is the plain offer/validate shape, but the **gate** is what makes the copy
 dangerous rather than merely untidy: whether a design exists is decided

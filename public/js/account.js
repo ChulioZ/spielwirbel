@@ -70,6 +70,16 @@ function linkToken() {
 // main.js so i18n/core/views are all loaded.
 async function bootApp() {
   if ((await initAccounts()) === 'rate_limited') return showRateLimited();
+  /* The account's design (#1186), the moment the account state is known and
+     before the first view renders. main.js has already painted synchronously —
+     the face, or the device key on an accounts-off instance — so this is the
+     only point at which a logged-in account's own choice can take effect
+     without the first screen flashing something else.
+
+     Every early return below (the mail landings, the login bounce, the landing
+     page) is a LOGGED-OUT surface, which wears the face by definition, so this
+     one call covers them all by running first. */
+  applyAccountDesign();
   const path = location.pathname;
   // '/v' and '/r' are the short links the account mails carry (#434); the long
   // '/verify-email' and '/reset-password' forms are the pre-#434 shape. Since
@@ -117,6 +127,14 @@ async function bootApp() {
   authScreen(false);
   setupAccountUi();
   routeTo(path);
+  /* The chooser (#1186), for the COLD LOAD of an already-signed-in account —
+     enterApp covers the other entry, a fresh login. Both are needed and neither
+     covers the other: this path never calls enterApp, and a login never comes
+     through here. Last, so the sheet opens over a rendered screen rather than
+     over the „…" placeholder. A logged-out visitor and an accounts-off instance
+     have no `accountUser`, so the call is a no-op for them — correct, since
+     there is nothing to store the answer on. */
+  maybeShowDesignChooser(accountUser);
 }
 
 async function initAccounts() {
@@ -155,6 +173,13 @@ async function initAccounts() {
 function enterApp() {
   authScreen(false);
   setupAccountUi();
+  // The account that just signed in may wear a different design than the face
+  // the login screen was on (#1186). bootApp's call ran before there was a
+  // session, so this is the second of the two points where the answer changes.
+  applyAccountDesign();
+  // ...and if they have never been asked, ask once. After the design is
+  // applied, so the sheet opens ON the design it is offering to change.
+  maybeShowDesignChooser(accountUser);
   const next = pendingPath || '/';
   pendingPath = null;
   routeTo(next);

@@ -541,6 +541,9 @@ public/
     design.js        applying a user design: <html data-design>, the
                      on-demand stylesheet link, and the tokens
                      round-theme.js falls back to outside a round (#1184)
+    design-picker.js the design cards the Konto screen and the one-time
+                     first-start chooser both render, that chooser sheet,
+                     and the Konto section (#1186)
     round-roles.js   the owner/co-owner/editor ladder and what each may do,
                      required by lib/round-access.js so the views hide exactly
                      what the server refuses (issue #137)

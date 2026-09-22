@@ -76,6 +76,15 @@ async function showAccount() {
   app.appendChild(h(`<h2 class="konto-section__h">${esc(t('konto.profile.title'))}</h2>`));
   app.appendChild(buildProfileStatsForm(me));
 
+  /* The design this account wears (#1186). Above the BGG handle and below the
+     profile block, which is where T5.2 puts it — and the placement carries the
+     point the section heading's hint states in words: a design is yours, not the
+     round's, unlike every colour choice the app has offered until now.
+
+     A DEMO gets it: the route accepts the change and a visitor trying the app is
+     exactly who a design chooser is for. */
+  app.appendChild(buildDesignSection(me));
+
   app.appendChild(h(`<h2 class="konto-section__h">${esc(t('konto.bgg.title'))}</h2>`));
   app.appendChild(buildBggForm(me.bggUsername));
 
