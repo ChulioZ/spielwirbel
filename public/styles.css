@@ -6364,6 +6364,41 @@ a.k-tile:focus-visible,
    and fades the corner text, which would put the measured numbers above out by
    an amount nothing checks. */
 .gd-history { min-width: 0; }
+
+/* „Wer wie gewertet hat" (#1190): one tile per person behind the game's score —
+   avatar, the mood their average rounds to, the average itself, the name.
+   A strip of equal tiles rather than a list, because the question it answers is
+   a comparison ("who likes this and who does not"), which rows make you read
+   sequentially and a strip lets you scan.
+
+   `auto-fill` with a 78px floor, so four people fit a phone's column and the
+   tiles neither stretch to half the page for two raters nor shrink below the
+   avatar for ten. */
+.gd-raters { min-width: 0; }
+.raters { display: grid; grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: 8px; }
+.rater {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 10px 6px;
+  border-radius: var(--radius-md);
+  background: var(--sunken);
+  min-width: 0;
+}
+.rater__face { font-size: 22px; /* glyph, not type */ color: var(--ink-soft); }
+.rater__n { font-family: var(--font-display); font-weight: 700; font-size: var(--text-lg); font-variant-numeric: tabular-nums; }
+/* The name is the tile's only variable-length part, so it is the only thing
+   allowed to truncate — everything above it is a fixed glyph or a 3-character
+   number, and a wrapping name would make the tiles different heights. */
+.rater__who {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--text-xs);
+  color: var(--ink-soft);
+}
 .stamps { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
 .stamp {
   --sc: var(--ink-soft);

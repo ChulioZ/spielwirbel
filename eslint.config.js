@@ -90,6 +90,7 @@ const frontendGlobals = {
   randomOrderCache: 'readonly', randomOrderedGames: 'readonly',
   gameStatsForSession: 'readonly', gameStats: 'readonly',
   rawGameStats: 'readonly', shelveStats: 'readonly', roundScoreIndex: 'readonly',
+  gameRaters: 'readonly',
   retireRecommendations: 'readonly', minimizedRecs: 'readonly',
   STANDARD_ACCENT: 'readonly',
   applyBackground: 'readonly', setThemeColor: 'readonly', avgColor: 'readonly',

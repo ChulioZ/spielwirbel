@@ -39,6 +39,15 @@ is this, on this design" at all. The combination that fails is one design's
 tokens over *another's* page, which is not a design in the registry and so is
 not a row in any sweep. Every check was green.
 
+**The same blind spot has a second instance, one layer in**, and this file's
+framing hides it: the trap here is one design's tokens over ANOTHER design's
+page, so it reads as being about a combination that only the transition
+produces. It is not. A design's own overlay changes material — Der Tisch's
+sheets are paper where its page is walnut — and the tokens that block forgets
+are its own, on its own surface, permanently.
+`.claude/rules/overlay-surface-flip-strands-the-status-tokens.md` has the three
+that get forgotten and why the list looks complete without them.
+
 ## The rule
 
 Split the stylesheet in two:
@@ -126,4 +135,7 @@ two cache traps, and the "no colours here" rule this supersedes),
 property of the FILL, not of the ground — an overlay that flips the scheme on a
 subtree must not re-point it),
 `.claude/rules/routed-screens-apply-the-round-design.md` (the call that puts the
-round's palette on `<html>` in the first place).
+round's palette on `<html>` in the first place),
+`.claude/rules/overlay-surface-flip-strands-the-status-tokens.md` (the same
+blind spot inside ONE design, plus the contrast sweep that looped only one of
+the two design registries).

@@ -35,6 +35,7 @@ const rulesUnder = (re) => rulesOf(mediaBlocks()
   .filter(([query]) => re.test(query)).map(([, css]) => css).join('\n'));
 const { contrast, composite, tokensFor } = require('./support/theme');
 const { DESIGNS } = require('../public/js/round-designs');
+const { DESIGN_REGISTRY } = require('../public/js/designs');
 const { COVER_HERO } = require('../public/js/cover-size');
 
 const RID = 'r1';
@@ -149,7 +150,28 @@ test('the cover glow stays under the opacity that would break the text contrast 
      decision about the hero rather than a derivation one. */
   const FLOOR = 3.9;
   const failures = [];
-  for (const design of DESIGNS) {
+  /* Both families of design, and the second half was MISSING until #1190.
+     `DESIGNS` is round-designs.js — what a ROUND can wear. Since #1184 an
+     ACCOUNT wears a design of its own, out of a different registry, and Der
+     Tisch is the first of those to override `--surface` in its own stylesheet
+     (#1188). So the band's ground stopped being a value this sweep had seen:
+     the loop reported four designs and the page could render a fifth, which is
+     precisely the hole the sibling test below was written to close and could
+     not, because it reads styles.css only.
+
+     Nothing was wrong on Der Tisch — walnut with paper `--ink-soft` measures
+     4.78:1 under the binding white cover, better than any light design — but
+     that is a fact nobody had checked, on the argument that mattered: the
+     shipped 0.16 was derived when `--surface` was white and an arbitrary cover
+     could only DARKEN it. On this design it can only lighten. The next design
+     to declare a surface is swept by construction rather than by remembering.
+
+     Klassisch has no stylesheet and no scheme — it IS the :root default, which
+     the light members of `DESIGNS` already stand for — so it has nothing here
+     for tokensFor() to resolve. */
+  const registry = DESIGN_REGISTRY.filter((d) => d.stylesheet);
+  assert.ok(registry.length, 'no account design ships a stylesheet — has the registry changed shape?');
+  for (const design of [...DESIGNS, ...registry]) {
     const t = tokensFor(design);
     for (const [what, cover] of [['a black cover', [0, 0, 0]], ['a white cover', [255, 255, 255]]]) {
       const ratio = contrast(t.inkSoft, composite(cover, t.surface, alpha));
