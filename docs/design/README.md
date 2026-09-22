@@ -25,8 +25,10 @@ map.
 The issues that implement the programme start at #1184 (the design layer) and
 end at #1202 (the flip); #1203–#1206 are one placeholder epic per remaining
 design. **Ocean's slices are #1210–#1222**, filed from the package in PR #1209;
-its epic #1207 closes when Ocean is enabled. Die Brücke's package landed the
-same way; its epic is **#1204**. The decisions behind them are in the handover's §1 and in the issues
+its epic #1207 closes when Ocean is enabled. **Die Brücke's slices are
+#1237–#1249**, filed from the package in PR #1234 (round 2) and PR #1236
+(round 3, which added the shared vote and the blind); its epic #1204 closes when
+Die Brücke is enabled. The decisions behind them are in the handover's §1 and in the issues
 themselves; do not re-derive them.
 
 ## Opening a sheet
