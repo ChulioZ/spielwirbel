@@ -43,7 +43,7 @@ async function showTableBuilder(round, session, gamesHint) {
      `applyBackground` line, so a split evening used to render on the Standard
      palette with no accent, no world and no victory scene. Idempotent, so
      arriving from the hub pays nothing for it. */
-  applyBackground(round.background);
+  applyBackground(round.background, round);
   currentView = () => showTableBuilder(round, session, gamesHint);
   syncUrl(resultsPath(round.id, session.id));
   setContext(round.name);

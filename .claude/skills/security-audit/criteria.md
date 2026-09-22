@@ -179,7 +179,7 @@ that a generic scanner does not know about.
   A new write route that reads `req.body.x` without a schema is a finding. #547 finished
   the #213 sweep, so every write route now reaches zod — but **three deliberate shapes do
   not go through `validateBody`, and none of them is a finding** (audit 2026-08-04):
-  `lib/routes/background.js` parses a `.catch({ type: 'none' })` union and therefore
+  `lib/routes/marker.js` parses a `.catch({ type: 'none' })` union and therefore
   **never 400s** (a malformed design falls back to "default" — the pre-zod behaviour, kept
   on purpose); `lib/routes/account.js` applies its field schemas through `safeParse`
   helpers (`validEmail`/`validPassword`/`validUsername`/`validBggUsername`) because it

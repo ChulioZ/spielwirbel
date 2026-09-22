@@ -360,6 +360,7 @@ const SOURCE_PATH_HISTORY = new Set([
   'test/legacy-retire-flag-ignored.test.js -> test/vote-zero-counts.test.js', // replaced, and named as such (#909)
   'test/admin-router-composition.test.js -> lib/routes/admin.js',             // the split this spec exists to pin (#996)
   'test/token-budget.test.js -> lib/routes/admin.js',                         // two allowlist reasons citing the pre-split file (#996)
+  'test/route-body-validation.test.js -> lib/routes/background.js',           // became lib/routes/marker.js (#1187)
 ]);
 
 /* This table necessarily SPELLS every dead path, so the file defining it cites

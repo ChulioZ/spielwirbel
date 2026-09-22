@@ -536,6 +536,24 @@ h1, h2, h3 { font-family: var(--font-display); }
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* The round's marker in the top bar (#1187): a bar before the round's name, on
+   every screen inside that round. `[data-marked]` is set by applyMarker() and
+   cleared on every screen outside one — CSS cannot ask whether --marker is set,
+   so the attribute is the selector and the property is the value.
+
+   A fill and never a text colour: the eight markers are tuned to carry ink, not
+   to BE ink on the page, which is the same rule every design's own package
+   states for its marker (handover §5, rule 2). */
+[data-marked] .topbar__context::before {
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 1em;
+  margin-right: 8px;
+  vertical-align: -0.12em;
+  border-radius: 2px;
+  background: var(--marker);
+}
 .lang-picker {
   margin-left: auto;
   flex: none;
@@ -5216,6 +5234,20 @@ a.k-tile:focus-visible,
   margin-bottom: 10px;
 }
 .tafel__title { font-size: var(--text-lg); margin: 0; }
+/* The marker under the result's heading (#1187) — the same band the setup
+   screen's pool title carries, so the two halves of one session are marked
+   alike. `display: block` is load-bearing: an ::after on an inline-level box
+   would sit beside the text rather than under it. */
+[data-marked] .tafel__title::after,
+[data-marked] .setup-panel__title::after {
+  content: '';
+  display: block;
+  width: 46px;
+  height: 4px;
+  margin-top: 8px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--marker), var(--marker-deep));
+}
 /* Only while nothing is chosen — `updateChosen` owns the attribute. The
    attribute alone would lose to the author `display` above it, so it is spelled
    out (.claude/rules/hidden-attribute-vs-display-rule.md). */
@@ -9911,6 +9943,45 @@ kbd {
   border-top: 1px solid var(--line);
 }
 .rec-ignored__name { font-size: var(--text-sm); }
+
+/* ---- The round's colour marker (#1187) ----
+   Eight swatches: the marker as a FILL with its deep stop under it, the way the
+   four surfaces paint it. The tile is the swatch — there is no page preview to
+   show, because a marker no longer decides the page. */
+.marker-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+}
+.marker-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 0 10px;
+  overflow: hidden;
+  background: var(--surface);
+  border: 2px solid var(--control-edge);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  text-align: center;
+}
+.marker-card:hover { border-color: var(--marker); }
+.marker-card.is-active { border-color: var(--marker); box-shadow: var(--shadow-1); }
+/* The fill carries the check GLYPH, and that is the one place ink sits on a
+   marker today — hence the contrast loop in test/a11y-contrast.test.js over
+   every design's sixteen stops. --marker-ink, NOT --on-accent: a marker is a
+   dark fill in every design and does not flip with the scheme, so neither may
+   its ink (.claude/rules/theme-derived-colors.md, the --gold-ink case). */
+.marker-card__fill {
+  display: grid;
+  place-items: center;
+  height: 58px;
+  background: linear-gradient(160deg, var(--marker), var(--marker-deep));
+  color: var(--marker-ink);
+  font-size: var(--text-xl);
+}
+.marker-card:not(.is-active) .marker-card__fill .ti { visibility: hidden; }
+.marker-card__name { font-size: var(--text-sm); font-weight: 600; padding: 0 8px; }
 
 /* ---- Design studio: theme preview cards ---- */
 .theme-cards {

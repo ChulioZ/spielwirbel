@@ -118,7 +118,11 @@ const MOUNTS = [
   ['/members', '../lib/routes/members'],
   ['/sessions', '../lib/routes/sessions'],
   ['/activities', '../lib/routes/activities'],
-  ['/background', '../lib/routes/background'],
+  // One module, two routers (#1187) — the marker route and the retired design
+  // route it shares a file with. Listed separately so each mount's own verb is
+  // what the guards below see.
+  ['/marker', '../lib/routes/marker', 'marker'],
+  ['/background', '../lib/routes/marker', 'background'],
   ['/tags', '../lib/routes/tags'],
   ['/lookup', '../lib/routes/lookup'],
   ['/recommendations', '../lib/routes/recommendations'],
@@ -141,8 +145,9 @@ test('MOUNTS covers every round sub-router the app actually mounts', () => {
 
 function registeredMutatingRoutes() {
   const out = [];
-  for (const [prefix, mod] of MOUNTS) {
-    for (const layer of require(mod).stack || []) {
+  for (const [prefix, mod, key] of MOUNTS) {
+    const mounted = key ? require(mod)[key] : require(mod);
+    for (const layer of mounted.stack || []) {
       if (!layer.route) continue;
       // A sub-router's own '/' becomes the mount itself ('/games'), matching how
       // the table spells it; the rounds router's '/:rid' becomes the bare '/'.

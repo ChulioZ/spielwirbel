@@ -28,7 +28,7 @@ const {
 } = require('./support/css');
 const { loadApp } = require('./support/dom');
 const {
-  contrast, luminance, hsl, composite, evaluate, tokensFor, alphaOf, mixOklab, toHex,
+  contrast, luminance, hsl, composite, evaluate, tokensFor, alphaOf, mixOklab, toHex, rgb,
 } = require('./support/theme');
 
 // Every design a round can pick — the palettes AND the worlds — required off
@@ -36,7 +36,7 @@ const {
 // escaping these checks. (#903 replaced a regex over views-round-detail.js; the
 // registry is a dependency-free module precisely so this file can require it.)
 const { DESIGNS } = require('../public/js/round-designs');
-const { DESIGN_REGISTRY } = require('../public/js/designs');
+const { DESIGN_REGISTRY, markerInk } = require('../public/js/designs');
 const { MEMBER_COLORS } = require('../public/js/member-colors');
 assert.ok(DESIGNS.length >= 11, 'expected the nine palettes plus the two worlds');
 
@@ -78,6 +78,53 @@ test('the registry ships designs in BOTH directions, or none of the checks below
   for (const d of USER_DESIGNS) {
     assert.ok(THEMES.some((t) => t.design.id === d.id), `${d.id} is not being measured`);
   }
+});
+
+/* The round MARKER (#1187). Every design maps the same index 0-7 onto its own
+   eight colours, and every one of those is a FILL that carries the design's
+   `--on-accent` ink — in the picker's swatch today, and in whatever each design
+   paints on the four surfaces. So the whole cross-product is swept, not just
+   the design whose screens exist.
+
+   It is the 4.5:1 TEXT bar rather than the 3:1 non-text one, deliberately. The
+   glyph on the swatch is a check mark carrying the "this is the chosen one"
+   state, and a marker is also each design's licence to put a label on the
+   colour — Tisch's package states the same bar for paper ink on a felt, with
+   Ockerfilz at 4.56:1 as its tightest. Holding the strict bar here costs
+   nothing today and removes a judgement someone would otherwise re-derive per
+   design (.claude/rules/theme-derived-colors.md).
+
+   The ink is the design's `markerInk`, NOT its `--on-accent`. A marker is a
+   dark fill in every design and does not flip with the scheme, so its ink must
+   not either — measured: under Der Tisch, `--on-accent` is near-black and put
+   the picker's check glyph at 2.81:1 on Tannenfilz. That is the `--gold-ink`
+   case in .claude/rules/theme-derived-colors.md, and it is why this sweep found
+   a real defect rather than merely passing. */
+test('every design\u2019s eight markers carry its own ink at 4.5:1', () => {
+  const fails = [];
+  let checked = 0;
+  for (const d of DESIGN_REGISTRY) {
+    const ink = rgb(markerInk(d.id));
+    const markers = d.markers || [];
+    assert.equal(markers.length, 8, `${d.id} declares ${markers.length} markers`);
+    for (const m of markers) {
+      // The swatch is a gradient from `color` to `deep`, so the LIGHT stop is
+      // the critical ground for ink on a dark design and the deep one for a
+      // light design — measure both rather than guessing which way a design
+      // runs.
+      for (const stop of [m.color, m.deep]) {
+        checked++;
+        // rgb(): `contrast` compares TRIPLES, and a hex string handed to it
+        // returns NaN — which is never < 4.5, so this whole sweep passed against
+        // a marker at 1.2:1 until it was broken on purpose
+        // (.claude/rules/break-the-code-on-purpose.md).
+        const ratio = contrast(ink, rgb(stop));
+        if (ratio < 4.5) fails.push(`${d.id}/${m.key} ${stop}: ${ratio.toFixed(2)}:1`);
+      }
+    }
+  }
+  assert.equal(checked, DESIGN_REGISTRY.length * 16, 'the sweep did not cover every design');
+  assert.deepEqual(fails, [], `markers below AA for their own ink:\n${fails.join('\n')}`);
 });
 
 /* `scheme` is DECLARED in round-designs.js rather than measured off the page,

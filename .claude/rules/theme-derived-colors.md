@@ -117,6 +117,22 @@ what makes one number sufficient. Both halves were taken red separately: the
 first on `#fff`/`--gold-deep`/`--gold-edge`, the second on a pair that flips
 while still clearing the bar (`--gold-deep` on `--gold-soft`, 6.37 vs 7.88).
 
+**The second instance is the round MARKER (#1187), and it generalises the rule
+past the gold family.** Every marker in `public/js/designs.js` is a dark,
+saturated tone — Klassisch's eight are the palette accents, Der Tisch's are its
+felts — and the round's colour is deliberately the same in every design, so the
+fill does not flip. `--on-accent` was the reflex there too, and under Der Tisch
+(a dark design, so near-black ink) it put the picker's check glyph at **2.81:1**
+on Tannenfilz.
+
+So a design declares `markerInk` (default `#ffffff`; Tisch states its package's
+paper `#f6ecd8`), and it reaches the page as `--marker-ink` beside `--marker`
+and `--marker-deep`. The transferable half: **"does this fill flip?" is the
+question, not "is this token in the gold family?"** — any surface a design paints
+identically in both schemes needs an ink chosen once, and
+`.claude/rules/nan-passes-every-threshold-guard.md` records how nearly that
+measurement was missed.
+
 **The decorative exemption was considered and not taken.** The badge is
 `aria-hidden` and the stage copy carries the meaning, so SC 1.4.11 arguably
 exempts it — but the glyph is the thing that says „sealed", and because `--gold`
@@ -128,7 +144,7 @@ exemption is the right answer when the fix has blast radius; this one had none.
 The registry is `public/js/round-designs.js` — `PALETTES`, `WORLDS` and
 `resolveDesign(bg)`, which finds a design by its stable `id` first and by the
 legacy page hex second (palettes only: a hex-only round predates worlds). The
-stored shape is `{ type: 'theme', id, page, accent }`. `lib/routes/background.js`
+stored shape is `{ type: 'theme', id, page, accent }`. `lib/routes/marker.js`
 NAMES `id` in its zod object because that object strips unknown keys, and stores
 it without validating it against the list — an unknown id resolves to the plain
 palette client-side, so the list is not a cross-boundary contract.

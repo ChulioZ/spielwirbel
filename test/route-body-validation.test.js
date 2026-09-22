@@ -46,7 +46,9 @@ const ALLOW = {
   'admin/index.js POST /login': 'a single password field, compared constant-time',
   // Its own zod union with `.catch` — a malformed design becomes the default
   // rather than a 400, which is what the client would do with an unknown one.
-  'background.js POST /': 'own zod schema with .catch (unknown design -> default)',
+  // Renamed lib/routes/background.js -> marker.js in #1187: the retired design
+  // route now shares a file with the marker route that replaced it.
+  'marker.js POST /': 'own zod schema with .catch (unknown design -> default)',
   // The honeypot is read beside validateBody, deliberately outside the schema so
   // a filled-in field is not reported as a validation error to the bot.
   'games.js POST /': 'multipart (multer) form: the fields arrive as strings and buildSource/buildEdition own them',
@@ -54,7 +56,20 @@ const ALLOW = {
   'sessions.js POST /:sid/choice': 'null-or-string legacy contract (#532): `null` clears, anything else is coerced',
 };
 
-const HANDLER = /^router\.(get|post|put|patch|delete)\('([^']*)'/gm;
+/* Any router-shaped receiver, not the literal name `router` (#1187). A file may
+   define more than one — lib/routes/marker.js has the marker router and the
+   retired design router it replaced — and the second one was INVISIBLE to this
+   scan while looking perfectly ordinary in the source. Measured: with the name
+   pinned, `background.post('/')` went unseen and this spec reported the whole
+   surface as covered.
+
+   `.claude/rules/source-scanning-guards-enumerate-shapes.md` is the general
+   case: what a source scan covers is whatever its regex happens to accept, and
+   the shape it misses is invisible from a green run. Nothing but a router is
+   declared at the top level of these files, so widening the receiver costs no
+   false positives — and the `handlers > 60` floor below is what would catch a
+   pattern that stopped matching altogether. */
+const HANDLER = /^[A-Za-z_$][\w$]*\.(get|post|put|patch|delete)\('([^']*)'/gm;
 
 test('every mutating route that reads req.body validates it, or is allowlisted with a reason', () => {
   /* RECURSIVE since #996, and the reason is the whole point of this file: that

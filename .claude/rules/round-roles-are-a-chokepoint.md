@@ -24,7 +24,7 @@ so the value never appears in `round_grants.role`.
 |---|---|
 | `owner` | everything |
 | `coowner` | everything below, plus delete a **played** session, delete a Chronik entry, delete a game, rename the round |
-| `editor` | run sessions (start, vote, close, finish, cancel, share a vote link, **discard one whose voting is still open**), manage the shelf, seats, tags and the design |
+| `editor` | run sessions (start, vote, close, finish, cancel, share a vote link, **discard one whose voting is still open**), manage the shelf, seats, tags and the colour marker (#1187, the design it replaced) |
 
 Four things stay **owner-only for every grantee role, co-owners included**, and
 the split is deliberate: a co-owner is trusted with the round's *content*, never

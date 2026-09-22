@@ -50,6 +50,9 @@
 // fault rather than as a small month.
 const RECAP_CARD_W = 540;
 const RECAP_CARD_PAD = 40;
+// The marker bar along the card's head (#1187). Under the card's own padding, so
+// nothing has to move to make room for it.
+const RECAP_CARD_MARKER_H = 8;
 // Block geometry, shared by the measuring pass and the drawing pass so the two
 // cannot disagree about where the card ends.
 const RECAP_CARD_GAP = 14;
@@ -104,6 +107,20 @@ function recapToken(name, fallback) {
   const resolved = recapColor(getComputedStyle(probe).color);
   probe.remove();
   return resolved || fallback;
+}
+
+/* The round's marker, or null (#1187). Read off the ROOT's custom property
+   rather than through recapToken(): `color: var(--marker)` with the property
+   unset is invalid-at-computed-value-time, so the probe would inherit the page's
+   ink and hand back a plausible, wrong marker. getPropertyValue answers '' for
+   "not set", which is the distinction this needs — and null is a real answer
+   here, because a round still on a retired world carries no marker until the
+   flip (round-theme.js's markerColors). */
+function recapMarker() {
+  const root = getComputedStyle(document.documentElement);
+  const color = recapColor(root.getPropertyValue('--marker').trim());
+  const deep = recapColor(root.getPropertyValue('--marker-deep').trim());
+  return color ? { color, deep: deep || color } : null;
 }
 
 function recapPalette() {
@@ -292,6 +309,20 @@ function drawRecapCard(ctx, model, height, world = {}) {
     ctx.rotate(Math.PI);
     ctx.drawImage(frame, 0, 0, fw, fh);
     ctx.restore();
+  }
+
+  // The round's marker along the card's head (#1187) — the fourth surface it
+  // paints, and the one that leaves the app: whoever receives the image sees the
+  // same colour the round wears on screen. Drawn LAST of the head marks so the
+  // world's frame corner cannot sit on top of it, and full-bleed rather than
+  // inset, so it reads as the card's edge rather than as a stray rule.
+  const marker = recapMarker();
+  if (marker) {
+    const bar = ctx.createLinearGradient(0, 0, W, 0);
+    bar.addColorStop(0, marker.color);
+    bar.addColorStop(1, marker.deep);
+    ctx.fillStyle = bar;
+    ctx.fillRect(0, 0, W, RECAP_CARD_MARKER_H);
   }
 
   let y = pad + 26;

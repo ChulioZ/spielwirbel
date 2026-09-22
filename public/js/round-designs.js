@@ -21,7 +21,7 @@
 
    Dependency-free with the module.exports guard so the specs and the contrast
    harness can require it (.claude/rules/frontend-helper-modules-and-coverage.md).
-   The SERVER deliberately does not: lib/routes/background.js stores the id
+   The SERVER deliberately does not: lib/routes/marker.js stores the id
    without checking it against this list, because an unknown id resolves to the
    plain palette here, and a server-side check would turn the list into a
    cross-boundary contract (.claude/rules/shared-constants-across-the-stack.md). */

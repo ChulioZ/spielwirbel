@@ -32,7 +32,6 @@ const forest = WORLDS.find((w) => w.id === 'forest');
 const scifi = WORLDS.find((w) => w.id === 'scifi');
 const salbei = PALETTES.find((p) => p.id === 'salbei');
 const stored = (d) => ({ type: 'theme', id: d.id, page: d.page, accent: d.accent });
-const flush = () => new Promise((r) => setImmediate(r));
 
 // ---- the DOM hook --------------------------------------------------------
 
@@ -78,7 +77,7 @@ test('the id wins over a stale colour snapshot; an unknown id keeps the stored c
   assert.equal(root.style.getPropertyValue('--page-bg'), '#123456');
 });
 
-// ---- the design screen ---------------------------------------------------
+// ---- fixtures ------------------------------------------------------------
 
 function roundFixture(background) {
   return {
@@ -87,121 +86,11 @@ function roundFixture(background) {
   };
 }
 
-async function openDesign(t, background) {
-  const dom = loadApp({ locale: 'de' });
-  t.after(() => dom.close());
-  const posts = [];
-  /* The stub PERSISTS the design, like the server does. It matters since #904:
-     choosing a design now re-renders the screen, and the SWR revalidation that
-     follows would otherwise hand back the ORIGINAL background and undo the
-     change — a fixture artefact that reads exactly like the bug the redraw is
-     there to fix. */
-  let savedBg = background;
-  dom.set('api', async (method, url, body) => {
-    if (method === 'POST') { posts.push({ url, body }); savedBg = body; return { background: body }; }
-    if (/\/activities$/.test(url)) return [];
-    if (/^\/api\/rounds\/[^/]+$/.test(url)) return roundFixture(savedBg);
-    if (url === '/api/rounds') return [roundFixture(savedBg)];
-    return {};
-  });
-  dom.set('accountsActive', () => false);
-  dom.set('isLoggedIn', () => false);
-  dom.set('toast', () => {});
-  await dom.call('showBackground', 'r1');
-  return { dom, posts };
-}
-
-test('the design screen shows Farben and Welten, and only a world card carries the hook', async (t) => {
-  const { dom } = await openDesign(t, null);
-  const headings = [...dom.app.querySelectorAll('.section > h2')].map((el) => el.textContent);
-  assert.deepEqual(headings, ['Farben', 'Welten']);
-
-  const cards = [...dom.app.querySelectorAll('.theme-card')];
-  assert.equal(cards.length, PALETTES.length + WORLDS.length);
-  assert.equal(dom.app.querySelectorAll('.theme-card[data-world]').length, WORLDS.length);
-  assert.equal(dom.app.querySelectorAll('.theme-card:not([data-world])').length, PALETTES.length,
-    'a palette card must not carry data-world, or the ornament rules would dress it');
-  for (const w of WORLDS) {
-    const card = dom.app.querySelector(`.theme-card[data-world="${w.id}"]`);
-    assert.ok(card, `${w.id} has no card`);
-    assert.ok(card.classList.contains('theme-card--world'));
-    // Its own accent, so its backdrop and frame preview ITS world inside any round.
-    assert.match(card.getAttribute('style'), new RegExp(`--brand:${w.accent}`));
-    assert.equal(card.textContent.trim(), dom.run(`t('${w.labelKey}')`));
-  }
-  assert.equal(cards[0].getAttribute('aria-pressed'), 'true', 'Standard is active on an undesigned round');
-});
-
-test('choosing a world saves its id, applies it at once and sweeps the active state across both groups', async (t) => {
-  const { dom, posts } = await openDesign(t, null);
-  dom.app.querySelector('.theme-card[data-world="forest"]').click();
-  await flush();
-
-  // Through JSON: the body was built inside the jsdom realm, whose Object is
-  // not this realm's, and strict deepEqual compares prototypes.
-  assert.deepEqual(JSON.parse(JSON.stringify(posts)), [{ url: '/api/rounds/r1/background', body: stored(forest) }]);
-  assert.equal(dom.document.documentElement.dataset.world, 'forest');
-  // Re-queried, not held from before the click: the screen is REDRAWN now (see
-  // below), so the elements captured earlier are detached and would report the
-  // pre-click state forever.
-  assert.equal(dom.app.querySelector('.theme-card[data-world="forest"]').getAttribute('aria-pressed'), 'true');
-  assert.equal(dom.app.querySelector('.theme-card').getAttribute('aria-pressed'), 'false',
-    'the palette group must let go of Standard');
-});
-
-test('choosing a design REDRAWS the screen, so the tones resolved in JS follow it', async (t) => {
-  /* The one thing a design change could not do before #904: a dark design flips
-     memberTone() and avgColor(), both of which paint inline AT RENDER TIME. Left
-     un-redrawn, the rail's avatars keep the light scheme's dark discs and take
-     the dark scheme's near-black initials — unreadable, on the one screen where
-     a design can change. Measured in a browser before this was added. */
-  const { dom } = await openDesign(t, null);
-  const before = dom.app.querySelector('.theme-cards');
-  dom.app.querySelector('.theme-card[data-world="scifi"]').click();
-  await flush();
-
-  assert.notEqual(dom.app.querySelector('.theme-cards'), before, 'the screen was not re-rendered');
-  /* And the redraw must not repaint the PREVIOUS design: fetchRound() serves the
-     SWR copy, which still holds the old background until the click handler seeds
-     it. Without that seed this lands back on Standard for a beat. */
-  assert.equal(dom.document.documentElement.dataset.scheme, 'dark');
-  assert.equal(dom.document.documentElement.dataset.world, 'scifi');
-});
-
-test('a round on a world reopens the design screen with that world active', async (t) => {
-  const { dom } = await openDesign(t, stored(scifi));
-  const active = [...dom.app.querySelectorAll('.theme-card[aria-pressed="true"]')];
-  assert.equal(active.length, 1);
-  assert.equal(active[0].dataset.world, 'scifi');
-  assert.equal(dom.document.documentElement.dataset.world, 'scifi');
-});
-
-test('a world card is a POSTER: crown art across the top, the name at display size, no filler lines', async (t) => {
-  /* The picker is the one screen whose whole job is choosing a world, and the
-     swatch showed the seven at their most alike (measured 2026-09-13: a
-     152x106 card, the name at --text-sm, the art nowhere). */
-  const { dom } = await openDesign(t, null);
-  const grids = [...dom.app.querySelectorAll('.theme-cards')];
-  assert.equal(grids.length, 2);
-  assert.equal(grids[0].classList.contains('theme-cards--worlds'), false,
-    'the Farben group keeps its small cards');
-  assert.ok(grids[1].classList.contains('theme-cards--worlds'),
-    'the Welten group did not get the poster tracks');
-
-  for (const w of WORLDS) {
-    const card = dom.app.querySelector(`.theme-card[data-world="${w.id}"]`);
-    assert.ok(card.querySelector('.theme-card__crown'), `${w.id} shows no crown art`);
-    assert.ok(card.querySelector('.theme-card__body > .theme-card__name'), `${w.id} has no poster body`);
-    assert.ok(card.querySelector('.theme-card__bar'), `${w.id} lost its framed accent bar`);
-    assert.equal(card.querySelectorAll('.theme-card__line').length, 0,
-      "the grey lines are the swatch's filler — a poster shows the world instead");
-    // The art is decoration inside a button whose whole label is still the name.
-    assert.equal(card.textContent.trim(), dom.run(`t('${w.labelKey}')`));
-  }
-  const pal = dom.app.querySelector('.theme-card:not([data-world])');
-  assert.equal(pal.querySelector('.theme-card__crown'), null, 'a palette card grew a crown');
-  assert.equal(pal.querySelectorAll('.theme-card__line').length, 2, 'the Farben cards changed shape');
-});
+/* The design PICKER's five specs lived here until #1187, which replaced that
+   screen with the marker picker — rounds no longer choose a design. They moved
+   to test/round-marker.test.js in their new form; what stays in this file is the
+   rendering of the worlds already on a round, which survives until the flip
+   (#1202) deletes the world CSS. */
 
 // ---- the home tile -------------------------------------------------------
 
