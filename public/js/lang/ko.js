@@ -530,6 +530,7 @@ I18N.ko = {
   'detail.edition': '에디션: {edition}',
   'detail.pasteImage': '새 이미지 붙여넣기',
   'detail.imageHint': '이미지를 복사한 다음 여기에 붙여넣으세요.',
+  'detail.ratersTitle': '누가 어떻게 평가했나',
   'detail.relatedTitle': '관련 세션',
   'detail.relatedEmpty': '이 게임은 아직 어떤 세션에도 오르지 않았어요.',
   'detail.played': '플레이함',

@@ -1042,3 +1042,415 @@
     color: var(--ink-soft);
   }
 }
+
+/* ===========================================================================
+   #1190 — T3.3/T3.4/T3.5 (desktop) and T6.2/T6.4 (phone): the Regal, the
+   Spielepass and the add-game lookup.
+
+   The one idea the whole slice hangs on: a shelf is BOARDS, and a game is an
+   object standing on one. Everything below serves that — the plank, the
+   removal of the card frame, the hard cast under each cover — and where the
+   app's markup could not be bent into the sheet's composition, the deviation
+   is written down at the rule rather than quietly absorbed.
+   --------------------------------------------------------------------------- */
+
+/* --- The boards (T3.3, T6.2) ----------------------------------------------
+   The plank is drawn as ONE repeating background on the grid, not as a
+   per-card pseudo-element, and that is the load-bearing choice in this
+   section.
+
+   A per-card plank is the obvious route and it cannot work: `.cards` has a
+   column gap, so each card's plank would stop at its own edge and the board
+   would come out as a dotted line of segments. Widening each segment by half
+   the gap to make them butt runs into `.game-card`'s `content-visibility:
+   auto` (#198), which grants paint containment — the overhang is clipped at
+   the card box, silently, on exactly the cards that are off screen.
+
+   A background tile has neither problem: it spans the grid's full width
+   including the gaps, it is one paint, and it needs no element. The price is
+   that every row must be the same height, which is why `grid-auto-rows` is
+   pinned and the title is clamped below. That is not a workaround — a shelf
+   whose boards sat at different heights per row would not read as a shelf. */
+:root[data-design="tisch"][data-scheme="dark"] .cards {
+  /* The cover box, the body under it, and the plank. The row PITCH is derived
+     from all three, so retuning any one of them keeps the planks aligned —
+     the failure mode of a hand-written pitch is a board drifting a few pixels
+     into the covers a dozen rows down, which only shows on a long shelf. */
+  --shelf-cover: 124px;
+  --shelf-body: 52px;
+  --shelf-plank: 12px;
+  --shelf-clear: 20px;
+  --shelf-row: calc(var(--shelf-cover) + var(--shelf-body));
+  --shelf-pitch: calc(var(--shelf-row) + var(--shelf-plank) + var(--shelf-clear));
+
+  /* The app's 220px floor yields four columns at 1440 — a card grid. T3.3 draws
+     124px boxes, i.e. eight to a board, and the count is what makes it read as
+     a shelf rather than as four posters. The floor is the cover width plus the
+     room a two-line title needs beside it. */
+  grid-template-columns: repeat(auto-fill, minmax(138px, 1fr));
+  grid-auto-rows: var(--shelf-row);
+  row-gap: calc(var(--shelf-plank) + var(--shelf-clear));
+  column-gap: 20px;
+  /* Room for the LAST board. Without it the final tile's plank starts exactly
+     at the element's bottom edge and is clipped away entirely — a shelf whose
+     bottom row floats. Background paints into the padding box, so this is all
+     it takes. */
+  padding-bottom: var(--shelf-plank);
+  background-image: linear-gradient(
+    180deg,
+    transparent 0 var(--shelf-row),
+    var(--brass-hi) var(--shelf-row),
+    var(--gold-edge) calc(var(--shelf-row) + var(--shelf-plank)),
+    transparent calc(var(--shelf-row) + var(--shelf-plank))
+  );
+  background-size: 100% var(--shelf-pitch);
+  background-repeat: repeat-y;
+}
+/* A shelf showing a "nothing matched" line has no boards to draw: that child is
+   not a card, so it would sit in a 226px cell with a plank under it as though
+   it were one. The grid goes back to auto rows with it. */
+:root[data-design="tisch"][data-scheme="dark"] .cards:has(> .games-nomatch) {
+  grid-auto-rows: auto;
+  padding-bottom: 0;
+  background-image: none;
+}
+
+/* The game stops being a card and becomes the box itself: no frame, no fill,
+   no radius — the board behind it is the surface. `content-visibility` is
+   deliberately left alone, so the #198 skip still applies to a 42-game shelf. */
+:root[data-design="tisch"][data-scheme="dark"] .game-card {
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+/* The cover, standing. A fixed height rather than the app's 4/3 ratio, because
+   the row pitch above has to be a constant and a ratio makes it a function of
+   the column width. The blurred-copy layers (#181) are KEPT: covers arrive from
+   BGG at every ratio, and on walnut the bleed reads as the box's own colour on
+   its backing card rather than as the halo it is on a light page.
+
+   The cast is short and tight on purpose. A wide soft shadow is clipped by the
+   card's paint containment at the cell's edges; at this blur the clipped part
+   is under the neighbouring gap and invisible, which is the same reason the
+   plank is not drawn here. */
+:root[data-design="tisch"][data-scheme="dark"] .game-card__img {
+  aspect-ratio: auto;
+  height: var(--shelf-cover);
+  border-radius: var(--radius-sm);
+  background: var(--wood-deep);
+  box-shadow: 0 5px 9px var(--cast-deep), inset 0 0 0 1px var(--wood-grain);
+}
+/* The title sits ON the board, not in a body: no padding box, clamped to two
+   lines so the row pitch holds. Three lines of a long title would push the
+   plank down through the next row's covers. */
+:root[data-design="tisch"][data-scheme="dark"] .game-card__body {
+  padding: 9px 1px 0;
+  gap: 3px;
+}
+:root[data-design="tisch"][data-scheme="dark"] .game-card__title {
+  font-size: var(--text-sm);
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+/* The card's lift on hover is the box being tipped off the board, not a
+   paper card rising: the rotation goes, the travel stays. */
+:root[data-design="tisch"][data-scheme="dark"] .game-card--clickable:hover {
+  box-shadow: none;
+  transform: translateY(-3px);
+}
+:root[data-design="tisch"][data-scheme="dark"] .game-card--clickable:hover .game-card__img {
+  box-shadow: 0 9px 16px var(--cast-deep), inset 0 0 0 1px var(--gold-edge);
+}
+
+/* An empty slot on the board rather than a dashed card — it fills the cell the
+   grid gives it, so the plank under it stays continuous. */
+:root[data-design="tisch"][data-scheme="dark"] .add-tile {
+  height: var(--shelf-cover);
+  align-self: start;
+  border-radius: var(--radius-sm);
+  border-style: dashed;
+  border-color: var(--gold-edge);
+  background: none;
+  color: var(--ink-soft);
+  font-family: var(--font-display);
+}
+:root[data-design="tisch"][data-scheme="dark"] .add-tile:hover {
+  background: var(--control-fill);
+  color: var(--ink);
+}
+
+/* T7.7's density rule, without a line of JS and without a threshold in shared
+   code: `:has()` asks the grid how many games are standing on it. The count is
+   live, because renderGames() replaces the grid's children with exactly the
+   cards passing the search and filters — so a 60-game shelf filtered to eight
+   goes back to the roomy boards, which is the behaviour the rule is for.
+
+   `a.game-card` rather than `:nth-child`: the add tile is a <button> and the
+   "nothing matched" line a <div>, so type selection counts games and nothing
+   else. */
+:root[data-design="tisch"][data-scheme="dark"] .cards:has(> a.game-card:nth-of-type(40)) {
+  --shelf-cover: 76px;
+  --shelf-body: 46px;
+  grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+  column-gap: 12px;
+  row-gap: calc(var(--shelf-plank) + var(--shelf-clear));
+}
+:root[data-design="tisch"][data-scheme="dark"] .cards:has(> a.game-card:nth-of-type(40)) .game-card__title {
+  font-size: var(--text-xs);
+}
+
+/* --- The Regal's toolbar (T3.3 desktop, T6.2 phone) -----------------------
+   Search is a paper slip — the one light surface on this screen, because it is
+   the one place you write. Everything beside it is an outlined wooden control.
+
+   `.section-tools` already holds the search, the sort, the ⓘ, the selection
+   toggle and the "Nicht im Regal" link in that order, and it already wraps. So
+   the desktop half is a repaint and only the phone half needs a layout. */
+:root[data-design="tisch"][data-scheme="dark"] .search-pill {
+  background: var(--paper);
+  border-color: var(--paper-edge);
+  border-radius: var(--radius-md);
+  color: var(--paper-ink-soft);
+  min-height: 42px;
+}
+:root[data-design="tisch"][data-scheme="dark"] .search-pill .ti { color: var(--paper-faint); }
+:root[data-design="tisch"][data-scheme="dark"] .search-pill input {
+  color: var(--paper-ink);
+  font-weight: 600;
+}
+/* The placeholder is the label until you type, so it takes the tertiary paper
+   ink rather than the UA's grey — review finding A4's value, which is the one
+   this design has measured on a raised paper ground. */
+:root[data-design="tisch"][data-scheme="dark"] .search-pill input::placeholder {
+  color: var(--paper-faint);
+  opacity: 1;
+}
+:root[data-design="tisch"][data-scheme="dark"] .search-pill:focus-within {
+  border-color: var(--gold-edge);
+  box-shadow: 0 0 0 3px var(--gold-soft);
+}
+:root[data-design="tisch"][data-scheme="dark"] .section-tools .sort-select {
+  min-height: 42px;
+  background-color: var(--control-fill);
+  border-color: var(--control-edge);
+  border-radius: var(--radius-md);
+  color: var(--ink);
+  font-weight: 700;
+}
+/* The tools row's links read as controls here, not as text links: on a board
+   a bare link has nothing to sit on. `.link-btn` keeps the 24px floor the
+   voice section gives it (review finding A7) — this only adds the plate. */
+:root[data-design="tisch"][data-scheme="dark"] .section-tools .link-btn {
+  min-height: 42px;
+  padding: 0 13px;
+  border: 1px solid var(--control-edge);
+  border-radius: var(--radius-md);
+  background: var(--control-fill);
+  color: var(--ink);
+  font-weight: 700;
+}
+:root[data-design="tisch"][data-scheme="dark"] .section-tools .link-btn:hover {
+  border-color: var(--gold);
+  background: var(--gold-soft);
+}
+:root[data-design="tisch"][data-scheme="dark"] .section-tools .link-btn .ti { color: var(--gold); }
+
+/* Phone: the search takes its own line and the rest become one chip row, which
+   is what T6.2 draws. `flex: 1 1 0` rather than `auto`, so the three chips are
+   equal thirds whatever their labels say — Finnish and Portuguese are the long
+   ones and they wrap inside their own chip instead of stealing the row. */
+@media (max-width: 859px) {
+  :root[data-design="tisch"][data-scheme="dark"] .section-tools { gap: 8px; }
+  :root[data-design="tisch"][data-scheme="dark"] .section-tools .search-pill {
+    flex: 1 0 100%;
+    width: 100%;
+    min-height: 44px;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .section-tools .sort-select,
+  :root[data-design="tisch"][data-scheme="dark"] .section-tools .link-btn {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 40px;
+    justify-content: center;
+    border-radius: 999px;
+    font-size: var(--text-xs);
+    line-height: 1.2;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .section-tools .link-btn { padding: 4px 10px; }
+  /* T6.2 puts the search on top and exactly three chips under it. The app has a
+     fourth control the sheet never saw — the BGG collection import — and in DOM
+     order it comes FIRST, so with the search claiming a full line it was pushed
+     onto a line of its own ABOVE the search: a stretched 362px chip over the
+     field it is not related to.
+
+     `order` fixes the reading without touching the DOM, which matters because
+     that order is also the tab order on every other width. The import is
+     addressed as the row's first child rather than by a class of its own: it is
+     the only `.link-btn` that can hold that position (the selection toggle and
+     „Nicht im Regal" are appended after the search), and when the round cannot
+     import at all the first child is the search, which this does not match. */
+  :root[data-design="tisch"][data-scheme="dark"] .section-tools .search-pill { order: -1; }
+  :root[data-design="tisch"][data-scheme="dark"] .section-tools > .link-btn:first-child {
+    order: 1;
+    flex: 1 0 100%;
+  }
+}
+
+/* --- The Spielepass (T3.4 desktop, T6.3 phone) ----------------------------
+   The app has laid this screen out as a two-page spread since #1039 — the game
+   on the left page, the round's table on the right — which is the composition
+   T3.4 draws. So this is a repaint rather than a layout, and the sheet's own
+   arrangement (cover left, title and score right, „Wer wie gewertet hat" under
+   them) is already what renders.
+
+   ONE DEVIATION, and it is the sheet's own rule that decides it. T3.4 and T6.3
+   put the score BESIDE the title; the app puts it on the cover's top-right
+   corner, where every Regal card also puts it (#1039 moved it there on purpose,
+   so the shelf and the page state the number in the same place). Review finding
+   A6 bans TEXT on a cover — the pill is not text on a cover, it is an opaque
+   chip, which is the remedy A6 itself prescribes — so the app's placement stays
+   and the two screens keep agreeing. */
+:root[data-design="tisch"][data-scheme="dark"] .gd-head {
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--gold-edge);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-2);
+}
+/* The title in the display face, at the size T3.4 draws it. */
+:root[data-design="tisch"][data-scheme="dark"] .gd-info h1 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: -.01em;
+  margin-bottom: 10px;
+}
+/* The cover is a box standing on the page, like every box on the boards — same
+   rim, same cast, so the shelf and the page show one object. */
+:root[data-design="tisch"][data-scheme="dark"] .gd-img {
+  border-radius: var(--radius-sm);
+  box-shadow: 0 10px 20px var(--cast-deep), inset 0 0 0 1px var(--wood-grain);
+}
+/* The meta chips, on the walnut of the card — an opaque ground, never the
+   cover (A6). `--gd-cover`'s wash does reach here at 16%; that layer is
+   measured against this design's surface and ink in test/game-detail-hero.js. */
+:root[data-design="tisch"][data-scheme="dark"] .gd-chips .chip,
+:root[data-design="tisch"][data-scheme="dark"] .gd-chips .btn--sm {
+  border-radius: var(--radius-sm);
+  border-color: var(--control-edge);
+  background: var(--control-fill);
+  font-weight: 700;
+}
+/* „Gespielt in" — each evening a paper slip laid on the table, which is what a
+   stamp already is; here it gets the design's paper rather than a tint of the
+   page. The double rule stays: it is the stamp's whole idea. */
+:root[data-design="tisch"][data-scheme="dark"] .stamp { color: var(--paper-ink); }
+:root[data-design="tisch"][data-scheme="dark"] .stamp::before {
+  background: var(--paper);
+  border-color: var(--paper-edge);
+  border-radius: var(--radius-sm);
+}
+:root[data-design="tisch"][data-scheme="dark"] .stamp--muted { color: var(--paper-ink-soft); }
+:root[data-design="tisch"][data-scheme="dark"] .stamp__status,
+:root[data-design="tisch"][data-scheme="dark"] .stamp__win { color: var(--paper-ink-soft); }
+:root[data-design="tisch"][data-scheme="dark"] .stamp__date {
+  font-family: var(--font-display);
+  color: var(--paper-ink);
+}
+/* „Wer wie gewertet hat" (T3.4, T6.3): the band is a tray laid on the table and
+   each person a counter in it — brass-rimmed avatar, gold mood, the average in
+   the display face. T3.4 draws the heading as a small letterspaced label rather
+   than a title, which is what tells the band from the two sections beside it. */
+:root[data-design="tisch"][data-scheme="dark"] .gd-raters h2 {
+  font-size: var(--text-xs);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+:root[data-design="tisch"][data-scheme="dark"] .rater {
+  border-radius: var(--radius-sm);
+  background: var(--control-fill);
+  border: 1px solid var(--line);
+}
+/* The rim is what makes a person read as a counter rather than a photo, and it
+   is the same brass edge the seats wear on the hub (#1189). */
+:root[data-design="tisch"][data-scheme="dark"] .rater .avatar {
+  border: 2px solid var(--gold-edge);
+}
+/* Gold as a GLYPH colour, which is the one job review finding A1 leaves it: the
+   mood is 22px of icon, never text, and the number beside it stays in --ink. */
+:root[data-design="tisch"][data-scheme="dark"] .rater__face { color: var(--gold); }
+:root[data-design="tisch"][data-scheme="dark"] .rater__n { font-family: var(--font-display); }
+
+/* The action bar is the table's near edge: walnut, closed by a brass rule. */
+:root[data-design="tisch"][data-scheme="dark"] .gd-bar {
+  border-radius: var(--radius-md);
+  border-top: 3px solid var(--gold-edge);
+  box-shadow: var(--shadow-3);
+}
+
+/* --- Add a game: the lookup (T3.5 desktop, T6.4 phone) --------------------
+   The panel itself is already paper — `.sheet` took the overlay treatment in
+   #1188 — so what is left is the suggestion list inside it, which still renders
+   in the app's own tints over that paper.
+
+   T3.5 draws the desktop presentation as a centred panel over a scrim, which is
+   exactly what `.sheet--dialog` is; the app uses ONE presentation at both widths
+   (a bottom sheet on a phone) rather than the popover the issue's summary names,
+   because this panel holds text inputs and an anchored popover cannot
+   (.claude/rules/popover-vs-sheet-editors.md). */
+:root[data-design="tisch"][data-scheme="dark"] .lookup__menu {
+  background: var(--paper);
+  border-color: var(--paper-edge);
+  border-radius: var(--radius-md);
+}
+:root[data-design="tisch"][data-scheme="dark"] .lookup__pick { color: var(--paper-ink); }
+/* Hover and the keyboard highlight are one look on purpose in the app, and that
+   stays; what changes is the material — a raised slip with a brass edge instead
+   of an accent tint, which on paper would be brass-on-cream. */
+:root[data-design="tisch"][data-scheme="dark"] .lookup__pick:hover,
+:root[data-design="tisch"][data-scheme="dark"] .lookup__pick.is-active {
+  background: var(--paper-raised);
+  border-color: var(--gold-edge);
+}
+:root[data-design="tisch"][data-scheme="dark"] .lookup__year { color: var(--paper-ink-soft); }
+:root[data-design="tisch"][data-scheme="dark"] .lookup__msg { color: var(--paper-ink-soft); }
+/* A hit's thumbnail is a small standing box, like every cover in this design. */
+:root[data-design="tisch"][data-scheme="dark"] .lookup__thumb {
+  border-radius: var(--radius-sm);
+  background: var(--wood-deep);
+  box-shadow: 0 2px 5px var(--cast), inset 0 0 0 1px var(--wood-grain);
+}
+:root[data-design="tisch"][data-scheme="dark"] .lookup__thumb--none .ti { color: var(--paper-faint); }
+/* „steht schon im Regal" — review finding A4, whose subject is precisely this
+   line: T3.5 and T6.4 draw the state in #6b5a45 on raised paper, which the
+   review measured at 4,23:1 and corrected to „#7a4a28 oder dunkler". That value
+   is `--paper-faint`, declared in the token block for this reason.
+
+   It is NOT `--warn`, which is what the app paints here on every other design,
+   and the swap is a fix rather than a restyle: inside a sheet `--surface` flips
+   to paper while `--warn` keeps the amber tuned for walnut, so the hint renders
+   at 1,55:1 on cream — invisible, on the one line whose whole job is to be read
+   before you add a game twice. T1 backs the reading: its warn #e8c168 is listed
+   as a FILL carrying dark ink („Kümmerliste"), never as a text colour, which is
+   the same rule A1 states for gold.
+
+   The three status tokens are wrong on paper for the same reason and are NOT
+   fixed here — `--good` and `--danger` measure 1,90:1 and worse in every
+   overlay, and re-pointing them needs a T1 value per token plus a decision on
+   whether warn stays a fill. That is the sheets-and-dialogs slice's (#1195).
+
+   The chevron-style `:not(.is-on)` margin rule in styles.css is untouched: this
+   changes the ink, not whether the line reserves space.
+
+   SCOPED TO `.sheet`, not to the class. `--paper-faint` is a colour for a paper
+   ground; on the walnut page it would measure 1,57:1. The hint has exactly one
+   render site and it is inside this sheet (views-round-lookup.js), so the
+   qualifier costs nothing today — and if the line is ever reused on the page
+   itself, it correctly keeps the app's own colour instead of silently taking a
+   paper ink onto wood. */
+:root[data-design="tisch"][data-scheme="dark"] .sheet .field__hint--dup { color: var(--paper-faint); }

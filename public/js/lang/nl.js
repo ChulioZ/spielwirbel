@@ -564,6 +564,7 @@ I18N.nl = {
   'detail.edition': 'Editie: {edition}',
   'detail.pasteImage': 'Nieuwe afbeelding plakken',
   'detail.imageHint': 'Kopieer een afbeelding en plak die hier.',
+  'detail.ratersTitle': 'Wie wat heeft beoordeeld',
   'detail.relatedTitle': 'Bijbehorende sessies',
   'detail.relatedEmpty': 'Dit spel was nog in geen enkele sessie.',
   'detail.played': 'gespeeld',

@@ -107,6 +107,9 @@ const GLYPH_LITERALS = [
   // a glyph or number sized to its own small box
   '.trow__bars .bar-axis .ti',
   '.stage__voter-check .ti', '.stage__seal > .ti', '.mood .ti',
+  // the same five moods on the Spielepass's „Wer wie gewertet hat" tile (#1190),
+  // sized to the tile rather than to the type scale, exactly like `.mood .ti`
+  '.rater__face',
   '.fchip__x',
   '.game-card__pick',
   // large standalone marks
