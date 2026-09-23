@@ -3037,8 +3037,13 @@
    tidiness: `.demo-banner__cta` and `__terms` are --brand, `.ti` is --warn, and
    all three of those are LIGHT on this design (brass, brass, and T1's
    Kümmerliste yellow) — i.e. on a brass band they would be a strip of text
-   that is very nearly invisible. Measured before the flip: --brand on
-   --brass-hi is 1.31:1. */
+   that is very nearly invisible. Measured on the un-flipped pair: --brand is
+   1.55:1 on --brass-hi and 1.00:1 on --gold-deep, where it IS the stop, and
+   --warn is 1.23:1 on --brass-hi. Flipped: 12.06:1 and 7.80:1.
+
+   The hover goes to --gold-ink, the gold family's own dark ink (8.34:1 and
+   5.39:1), rather than to --brand-strong, which is brass lifted toward white
+   and would be the same mistake one state over. */
 :root[data-design="tisch"][data-scheme="dark"] .demo-banner {
   background: linear-gradient(180deg, var(--brass-hi), var(--gold-deep));
   border-bottom: 3px solid var(--gold-edge);

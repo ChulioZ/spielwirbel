@@ -93,8 +93,8 @@ test('every ink the demo banner carries is answered for on brass', () => {
   /* The banderole is the brass plate, so its ink is --on-accent. Every child
      styles.css gives a colour to is then standing on brass wearing a colour
      tuned for walnut — and on this design --brand and --warn are both LIGHT,
-     so those children would be very nearly invisible (--brand on --brass-hi
-     measures 1.31:1).
+     so those children would be very nearly invisible: --brand measures 1.55:1
+     on --brass-hi and 1.00:1 on --gold-deep, where it IS the stop.
 
      DERIVED from styles.css, never listed: a child added to the banner later
      inherits this check instead of needing someone to remember this file. The
