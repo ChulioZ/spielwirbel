@@ -60,7 +60,12 @@ function boot({ design = 'tisch' } = {}) {
   return dom;
 }
 
-const calls = (dom, m) => JSON.parse(dom.run(`JSON.stringify(__calls.filter((c) => c.m === ${JSON.stringify(m)}).map((c) => c.a.map((x) => (x && x.d) ? { path: x.d.slice(0, 12) } : (x && x._src) ? { img: x._src } : (typeof x === 'object' ? '[obj]' : x))))`));
+// The page-side script is a constant: every call is serialized once and the
+// method filter runs here, so no test value is ever spliced into code the
+// page evaluates (CodeQL js/bad-code-sanitization).
+const calls = (dom, m) => JSON.parse(dom.run('JSON.stringify(__calls.map((c) => [c.m, c.a.map((x) => (x && x.d) ? { path: x.d.slice(0, 12) } : (x && x._src) ? { img: x._src } : (typeof x === \'object\' ? \'[obj]\' : x))]))'))
+  .filter(([name]) => name === m)
+  .map(([, args]) => args);
 
 const SESSION = {
   roundName: 'Donnerstagsrunde', when: '20.09.2026', cancelled: false, playedTitle: 'Nordlichter',
