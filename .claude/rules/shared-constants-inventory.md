@@ -521,7 +521,8 @@ stylesheet, the `enabled` gate and `FACE_DESIGN`. `lib/app.js` requires it so
 `GET /api/config` can report the selectable ids; since #1186
 `lib/routes/account.js` validates `PATCH /me { design }` and
 `POST /design-chooser-seen` against the same list, `lib/demo.js` writes
-`FACE_DESIGN` at mint, and `lib/me-projection.js` RESOLVES the stored id against
+`FACE_DESIGN` at mint, `lib/faq.js` and `lib/legal.js` stamp `FACE_DESIGN`
+onto the standalone pages' `<html data-design>` (#1198), and `lib/me-projection.js` RESOLVES the stored id against
 it on the way out — the half worth knowing, because `applyDesign()` on the
 client is deliberately policy-free, so a projection that merely echoed the
 stored value would put a design built on a dev instance onto a production page.

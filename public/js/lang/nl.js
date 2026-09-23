@@ -1468,6 +1468,10 @@ I18N.nl = {
   'landing.cta.title': 'De volgende keer discussieert er niemand meer over.',
   'landing.faq.q': 'Nog vragen?',
   'landing.faq.link': 'Lees de FAQ',
+  // The design band (#1198), shown only by a design that asks for it (Der Tisch as the face).
+  // {n} is how many designs the instance offers (GET /api/config), so it never overclaims.
+  'landing.designs.title': '{n} ontwerpen, één app.',
+  'landing.designs.desc': 'Elk account kiest zijn eigen ontwerp. Alles staat in elk ervan op dezelfde plek — het ziet er alleen anders uit.',
 
   'demo.banner.text': 'Je probeert Spielwirbel uit in een demogroep. Die wordt automatisch verwijderd — niets hiervan blijft bewaard.',
   'demo.banner.cta': 'Gratis registreren',

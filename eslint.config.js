@@ -538,7 +538,10 @@ module.exports = [
       // registry still knows from one it does not. Named ONE BY ONE rather than
       // by spreading frontendGlobals — the whole point of this block is that a
       // page script reaching for an SPA global is a no-undef error.
-      globals: { ...globals.browser, resolveDesign: 'readonly' },
+      // `FACE_DESIGN` (#1198): login.html and kontakt.html load the
+      // dependency-free designs.js so js/pages/face.js can stamp the face design
+      // onto <html> before the body paints. Same one-by-one reasoning.
+      globals: { ...globals.browser, resolveDesign: 'readonly', FACE_DESIGN: 'readonly' },
     },
   },
   {

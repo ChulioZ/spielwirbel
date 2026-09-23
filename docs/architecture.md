@@ -440,6 +440,8 @@ public/
       kontakt.js     kontakt.html's own script (the bilingual contact form)
       admin.js       admin.html's own script, so no privileged code ships in
                      the SPA
+      face.js        stamps FACE_DESIGN onto login.html's and kontakt.html's
+                     <html data-design> from <head>, after designs.js (#1198)
     error-report.js  browser-side fault reporting (#1149): the fault-kind enum,
                      the route-shape redaction and the bounded reporter — loads
                      FIRST, shared with the backend, which requires it

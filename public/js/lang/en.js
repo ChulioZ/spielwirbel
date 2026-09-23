@@ -1570,6 +1570,10 @@ I18N.en = {
   'landing.cta.title': 'Next time, nobody argues about it.',
   'landing.faq.q': 'Still wondering?',
   'landing.faq.link': 'Read the FAQ',
+  // The design band (#1198), shown only by a design that asks for it (Der Tisch as the face).
+  // {n} is how many designs the instance offers (GET /api/config), so it never overclaims.
+  'landing.designs.title': '{n} designs, one app.',
+  'landing.designs.desc': 'Every account picks its own design. Everything sits in the same place in each of them — it just looks different.',
 
   // Guest demo mode (#427). The banner is PERSISTENT (not a toast), so its
   // wording has to stay true for the whole session and must never let the

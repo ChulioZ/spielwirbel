@@ -3089,3 +3089,308 @@
 :root[data-design="tisch"][data-scheme="dark"] .rail__name {
   overflow-wrap: break-word;
 }
+
+/* ===========================================================================
+   #1198 — Der Tisch as SPIELWIRBEL'S FACE: the logged-out landing and the
+   logged-out statistics, at 390 and at 1440.
+
+   Source: Tisch-T12-Oeffentlich.dc.html, T12.1. (T12.2 legal/FAQ and T12.3
+   Kontakt are standalone documents with their own token copy — lib/legal.js,
+   lib/faq.js, public/kontakt.html, public/login.html — because they never load
+   this file. T12.4 is the intent page, #1171, which does not exist yet. T12.5
+   shipped with #1192.)
+
+   HOW THIS REACHES A VISITOR. A logged-out visitor wears FACE_DESIGN
+   (designs.js; applyAccountDesign resolves to it with no account), so every
+   rule below applies exactly when the face is Der Tisch — the face is
+   Klassisch until the flip (#1202), and under Klassisch none of these
+   selectors matches. (A signed-in account wearing Der Tisch that opens the
+   landing sees it too, which is correct: it is their design.)
+
+   The page stops being felt to every edge. #1193 put the sign-in on felt, and
+   the landing inherited it through `body.auth-screen` — right for one card,
+   wrong for a long page: felt is T1's TABLE, the one surface the thing happens
+   on, and a whole scrolling page of it leaves no table to point at. T12.1
+   draws the claim on felt and everything after it on walnut, so the page goes
+   back to wood and the hero becomes the table.
+
+   PAINT, apart from one element the issue asks for by name: the design band
+   (T12.1's „Sieben Designs, eine App."). Its markup is views-landing.js's,
+   off in styles.css, on here. Three things the sheet draws that are
+   deliberately NOT built, per the operator's #1193 ruling that „the sheet's
+   intent is the design, not the ordering":
+   - T12.1's new claim „Wer am Tisch sitzt, entscheidet mit." and its new
+     sub-line. The hero keeps the app's own copy, which is also what index.html
+     serves to crawlers (test/landing-copy.test.js pins the two together).
+   - The two static phone frames. The hero keeps the SHIPPED three moments
+     (.claude/rules/landing-character-is-shipped-moments.md) — a drawn frame
+     with invented rows is the metaphor #438 and #1091 removed.
+   - The nav's „So läuft es / FAQ / Glossar" links. The top bar keeps its
+     language picker and „Anmelden", and there is no glossary page.
+   =========================================================================== */
+
+/* --- The page: walnut, lit from above -------------------------------------
+   Beats #1193's felt through `:has()`, one class more specific, so the
+   sign-in screens stay on felt. The ruling is T12's own canvas: brass
+   hairlines 2px on, 5px off, under a warm pool at the top.
+
+   `.stats-cta` is the logged-out /entdecken, which wears the same auth-screen
+   chrome and inherited the felt the same way — with its register link in
+   brass ON the felt, 2.93:1 (A1). On walnut that link is 6.4:1. */
+:root[data-design="tisch"][data-scheme="dark"] body.auth-screen:has(.landing, .stats-cta) {
+  background-color: var(--page-bg);
+  background-image:
+    repeating-linear-gradient(180deg, var(--brass-sheen) 0 2px, transparent 2px 7px),
+    radial-gradient(120% 60% at 30% 0%, var(--brass-sheen-strong), transparent 60%);
+}
+
+/* --- The hero, as the table (T12.1) ----------------------------------------
+   Felt with the weave, a brass rail along its foot, and the whole claim in
+   paper ink: review finding A1 bars gold and brass as text under 24px on
+   felt, and the brass --brand every link here would inherit measures 2.93:1
+   on Tannenfilz. So every colour inside is re-stated rather than inherited. */
+:root[data-design="tisch"][data-scheme="dark"] .landing-hero {
+  padding: 28px 18px 32px;
+  border-radius: var(--radius-md);
+  border-bottom: 5px solid var(--gold-edge);
+  background-color: var(--felt-deep);
+  background-image:
+    var(--felt-weave),
+    radial-gradient(70% 130% at 22% -10%, var(--felt), var(--felt-deep) 72%);
+  color: var(--felt-ink);
+  box-shadow: var(--shadow-3);
+}
+@media (min-width: 1024px) {
+  :root[data-design="tisch"][data-scheme="dark"] .landing-hero { padding: 48px 40px 44px; }
+}
+
+/* The wordmark on the brass PLATE, T12.1's „SPIELWIRBEL" stamp. --on-accent on
+   the plate is 12.06:1 on the light stop and 7.80:1 on the deep one — the same
+   plate and the same ink as the hub CTA (#1189). */
+:root[data-design="tisch"][data-scheme="dark"] .landing-hero__brand {
+  display: inline-flex;
+  padding: 5px 12px;
+  border: 1px solid var(--gold-edge);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(180deg, var(--brass-hi), var(--gold-deep));
+  color: var(--on-accent);
+  font-weight: 800;
+  font-size: var(--text-md);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+:root[data-design="tisch"][data-scheme="dark"] .landing-hero__brand .ti { font-size: var(--text-xl); }
+
+:root[data-design="tisch"][data-scheme="dark"] .landing-hero__title {
+  font-weight: 800;
+  line-height: 1.04;
+  color: var(--felt-ink);
+}
+@media (min-width: 1024px) {
+  /* T12.1 sets the claim at 56px. The shared clamp stops at 44px, which is
+     tuned to Klassisch's rounder face; Bricolage at 800 carries the larger. */
+  :root[data-design="tisch"][data-scheme="dark"] .landing-hero__title { font-size: 56px; }
+}
+:root[data-design="tisch"][data-scheme="dark"] .landing-hero__sub,
+:root[data-design="tisch"][data-scheme="dark"] .landing-hero .landing-offer__note,
+:root[data-design="tisch"][data-scheme="dark"] .landing-hero .landing-offer__alt,
+:root[data-design="tisch"][data-scheme="dark"] .landing-hero .landing-moments__caption {
+  color: var(--felt-ink-soft);
+}
+:root[data-design="tisch"][data-scheme="dark"] .landing-hero__sub { font-weight: 600; }
+/* „kostenlos registrieren": a link on felt, so paper ink and an underline —
+   the underline is what keeps it a link once it stops being brass. */
+:root[data-design="tisch"][data-scheme="dark"] .landing-hero .landing-offer__alt .link-btn {
+  color: var(--felt-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* The trust row, as T12.1's quiet line on felt rather than pills: the pill's
+   --sunken-soft ground is a walnut wash that reads as a hole in the cloth.
+   Paper ink, gold glyphs — A1 allows gold as a GLYPH on felt. */
+:root[data-design="tisch"][data-scheme="dark"] .landing-hero .landing-chip {
+  color: var(--felt-ink);
+  font-weight: 700;
+}
+/* Below 720 styles.css already runs the claims as one ·-separated line; its
+   separator takes --ink-soft, which is a walnut ink, so it follows the felt. */
+:root[data-design="tisch"][data-scheme="dark"] .landing-hero .landing-offer__trust li::before {
+  color: var(--felt-ink-soft);
+}
+@media (min-width: 720px) {
+  :root[data-design="tisch"][data-scheme="dark"] .landing-hero .landing-chip {
+    padding: 4px 6px 4px 0;
+    border: 0;
+    background: none;
+  }
+}
+:root[data-design="tisch"][data-scheme="dark"] .landing-hero .landing-chip .ti { color: var(--gold); }
+/* Pills could sit centred under a left-aligned column and still read as a
+   group; a bare line of text cannot, so it follows the column's edge once the
+   hero is two columns. Geometry only, so ungated. */
+@media (min-width: 1024px) {
+  :root[data-design="tisch"] .landing-hero .landing-offer__trust { justify-content: flex-start; }
+}
+
+/* „Code öffentlich einsehbar" is not on the face (#1198's scope names it).
+   Hidden, not deleted: Klassisch keeps the chip exactly as it was, and whether
+   Klassisch drops it too is the operator's call, not this slice's. Ungated on
+   purpose — it names no colour, so it holds wherever the design is worn. */
+:root[data-design="tisch"] .landing-offer__source { display: none; }
+
+/* --- The claims, as walnut boards with a brass plate (T12.1) ------------- */
+:root[data-design="tisch"][data-scheme="dark"] .landing-claim {
+  padding: 18px;
+  border: 1px solid var(--gold-soft);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+}
+:root[data-design="tisch"][data-scheme="dark"] .landing-claim__icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(180deg, var(--brass-hi), var(--gold-deep));
+  color: var(--on-accent);
+  font-size: 23px; /* glyph, not type */
+}
+:root[data-design="tisch"][data-scheme="dark"] .landing-claim__title {
+  font-weight: 800;
+  font-size: var(--text-lg);
+  margin-top: 2px;
+}
+:root[data-design="tisch"][data-scheme="dark"] .landing-claim__desc { color: var(--ink-soft); font-weight: 600; }
+
+/* Section heads in the display face at full weight, T12.1's heads. Voice, not
+   colour, so ungated like the fonts. */
+:root[data-design="tisch"] .landing-section__title { font-weight: 800; }
+
+/* --- The walkthrough's numbers, as felt medallions in a brass ring --------
+   T12.1's step marker, and the same object as the empty-state medallion
+   (#1194) and the lobby emblem (#1189). The numeral is something a reader
+   reads, so it is held to the text rule on felt and takes paper ink (A1)
+   rather than the sheet's gold. */
+:root[data-design="tisch"][data-scheme="dark"] .landing-step__num {
+  box-sizing: border-box;
+  width: 40px;
+  height: 40px;
+  border: 3px solid transparent;
+  background:
+    var(--felt-weave) padding-box,
+    radial-gradient(120% 90% at 50% 32%, var(--felt), var(--felt-deep) 76%) padding-box,
+    linear-gradient(180deg, var(--gold-deep), var(--gold-edge)) border-box;
+  color: var(--felt-ink);
+  font-weight: 800;
+  font-size: 19px; /* glyph, not type */
+}
+:root[data-design="tisch"][data-scheme="dark"] .landing-walk__title { font-weight: 800; }
+:root[data-design="tisch"][data-scheme="dark"] .landing-walk__desc { color: var(--ink-soft); font-weight: 600; }
+/* The three phone shots are captures, so they get the table's frame rather
+   than a hairline: a brass rim and a deep cast lift them off the wood. */
+:root[data-design="tisch"][data-scheme="dark"] .landing-walk .landing-shot {
+  border: 1px solid var(--gold-edge);
+  box-shadow: var(--shadow-3);
+}
+
+/* --- The design band (T12.1) ----------------------------------------------
+   Off in styles.css; on here, and only once it has content. mountLandingDesigns
+   fills it from GET /api/config and removes it when there is nothing to choose
+   between, but a failed request leaves it EMPTY, and an empty felt band would
+   be a bar with nothing on it. */
+:root[data-design="tisch"][data-scheme="dark"] .landing-designs:not(:empty) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 20px 28px;
+  padding: 24px 20px;
+  border: 1px solid var(--gold-soft);
+  border-radius: var(--radius-md);
+  background-color: var(--felt-deep);
+  background-image:
+    var(--felt-weave),
+    radial-gradient(60% 140% at 15% 0%, var(--felt), var(--felt-deep) 74%);
+  color: var(--felt-ink);
+}
+@media (min-width: 1024px) {
+  :root[data-design="tisch"][data-scheme="dark"] .landing-designs:not(:empty) {
+    flex-wrap: nowrap;
+    padding: 28px 32px;
+  }
+}
+:root[data-design="tisch"][data-scheme="dark"] .landing-designs__text { flex: 1 1 320px; }
+:root[data-design="tisch"][data-scheme="dark"] .landing-designs__title {
+  margin: 0 0 8px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--text-2xl);
+  line-height: 1.15;
+  color: var(--felt-ink);
+}
+:root[data-design="tisch"][data-scheme="dark"] .landing-designs__desc {
+  margin: 0;
+  max-width: 70ch;
+  font-weight: 600;
+  line-height: 1.55;
+  color: var(--felt-ink-soft);
+}
+:root[data-design="tisch"][data-scheme="dark"] .landing-designs__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+/* Each poster is the design's OWN material, from --tile-page/--tile-accent —
+   the registry colours designTile() writes inline, with Klassisch's defaults
+   shared from styles.css — so a design added to the registry needs no rule.
+   The name sits BELOW the poster, on felt, in paper ink: printed ON the poster
+   it would have to clear every design's page with one ink, Klassisch's cream
+   among them. */
+:root[data-design="tisch"][data-scheme="dark"] .landing-design {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 76px;
+}
+:root[data-design="tisch"][data-scheme="dark"] .landing-design .design-tile {
+  display: block;
+  width: 64px;
+  height: 80px;
+  border: 1px solid var(--gold-edge);
+  border-radius: var(--radius-md);
+  background:
+    linear-gradient(180deg, transparent 0 74%, var(--tile-accent) 74%),
+    var(--tile-page);
+  box-shadow: var(--shadow-2);
+}
+:root[data-design="tisch"][data-scheme="dark"] .landing-design__name {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: center;
+  color: var(--felt-ink);
+}
+
+/* --- The logged-out statistics (the landing's block and /entdecken) -------
+   Scoped to `body.auth-screen`, so the SIGNED-IN statistics (#1197) are not
+   reached from here. The counters become walnut tallies with the number in
+   gold at the display weight — on walnut, where gold is 9:1 and more, not on
+   felt, where A1 would forbid it. */
+:root[data-design="tisch"][data-scheme="dark"] body.auth-screen .stats-counter {
+  padding: 10px 14px;
+  border: 1px solid var(--gold-soft);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+:root[data-design="tisch"][data-scheme="dark"] body.auth-screen .stats-counter__num {
+  font-family: var(--font-display);
+  font-weight: 800;
+  color: var(--gold);
+}
+:root[data-design="tisch"][data-scheme="dark"] body.auth-screen .stats-card {
+  border-color: var(--gold-soft);
+  background: var(--surface);
+}

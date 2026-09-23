@@ -27,6 +27,12 @@
        app's primary UI language — and self-contained. Inline styles are allowed
        by the CSP (style-src 'unsafe-inline'); the script must be an external
        file because script-src is 'self' only. -->
+  <!-- The FACE design (#1198), stamped onto <html data-design> before the body
+       parses, so the page never paints Klassisch and then repaints. Both are
+       'self' scripts, as the CSP requires; designs.js is dependency-free and
+       only declares the registry. See js/pages/face.js. -->
+  <script src="/js/designs.js"></script>
+  <script src="/js/pages/face.js"></script>
   <style>
     /* The tokens below mirror public/styles.css so this page reads as the same
        product as the app (issue #595, following the #391 contact-page
@@ -61,6 +67,47 @@
       --font-display-std: "Baloo 2", "Nunito", -apple-system, BlinkMacSystemFont, sans-serif;
       --font-display: var(--font-display-std);
     }
+    /* DER TISCH AS THE FACE (#1198). A second copy, of Der Tisch's tokens this
+       time, applied only when <html data-design="tisch"> — i.e. only once
+       FACE_DESIGN (js/designs.js) names it. Until the flip (#1202) nothing
+       matches and the page is exactly the Klassisch one above. Every value is
+       Der Tisch's own resolved token (the registry's page/accent, then
+       css/designs/tisch.css, then styles.css's dark block), pinned by
+       test/standalone-page-brand.test.js, which also requires this block to
+       redeclare every name the Klassisch copy declares, so no Klassisch value
+       leaks through. */
+    :root[data-design="tisch"] {
+      --page-bg: #3b2a12;
+      --brand: #d9a951;
+      --surface: #4a3423;
+      --ink: #f6ecd8;
+      --ink-soft: #e8d0aa;
+      --danger: #f59c86;
+      --shade: #fff;
+      --line: color-mix(in oklab, var(--page-bg), var(--shade) 21%);
+      --brand-strong: color-mix(in oklab, var(--brand), var(--shade) 13%);
+      --page-glow: color-mix(in oklab, var(--brand) 7%, transparent);
+      --radius-md: 4px;
+      --radius-lg: 6px;
+      --shadow-2: 0 6px 14px var(--cast-soft), 0 1px 2px var(--cast);
+      --font: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-display-std: "Baloo 2", "Nunito", -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-display: "Bricolage Grotesque", "Manrope", -apple-system, BlinkMacSystemFont, sans-serif;
+      --on-accent: #2a1a08;
+      --paper: #f8f3e7;
+      --paper-ink: #2f2620;
+      --paper-edge: #8d6436;
+      --felt: #2f6b4d;
+      --felt-deep: #1c4531;
+      --felt-grain: rgba(0, 0, 0, 0.07);
+      --gold: #f0cf86;
+      --gold-deep: #d9a951;
+      --gold-edge: #9a6d2b;
+      --brass-hi: #f6d795;
+      --cast: rgba(0, 0, 0, 0.35);
+      --cast-soft: rgba(0, 0, 0, 0.30);
+      --cast-deep: rgba(0, 0, 0, 0.45);
+    }
     /* Only the three weights this page actually uses (the app declares seven).
        Same self-hosted files under /fonts/ — no new origin, so the CSP is
        untouched and the "no third-party fonts" claim test/footer-trust.test.js
@@ -70,6 +117,14 @@
     @font-face { font-family: 'Nunito'; font-style: normal; font-weight: 600; font-display: swap; src: url('/fonts/nunito-latin-600-normal.woff2') format('woff2'); }
     @font-face { font-family: 'Baloo 2'; font-style: normal; font-weight: 700; font-display: swap; src: url('/fonts/baloo-2-latin-700-normal.woff2') format('woff2'); }
 
+    /* Der Tisch's two faces (#1198), for the face block below. Declared always,
+       fetched only when a rule actually uses them — so under Klassisch not one
+       of these five files is downloaded. */
+    @font-face { font-family: 'Manrope'; font-style: normal; font-weight: 500; font-display: swap; src: url('/fonts/manrope-latin-500-normal.woff2') format('woff2'); }
+    @font-face { font-family: 'Manrope'; font-style: normal; font-weight: 600; font-display: swap; src: url('/fonts/manrope-latin-600-normal.woff2') format('woff2'); }
+    @font-face { font-family: 'Manrope'; font-style: normal; font-weight: 700; font-display: swap; src: url('/fonts/manrope-latin-700-normal.woff2') format('woff2'); }
+    @font-face { font-family: 'Bricolage Grotesque'; font-style: normal; font-weight: 700; font-display: swap; src: url('/fonts/bricolage-grotesque-latin-700-normal.woff2') format('woff2'); }
+    @font-face { font-family: 'Bricolage Grotesque'; font-style: normal; font-weight: 800; font-display: swap; src: url('/fonts/bricolage-grotesque-latin-800-normal.woff2') format('woff2'); }
     * { box-sizing: border-box; }
     body {
       margin: 0;
@@ -151,6 +206,41 @@
     .error[hidden] { display: none; }
     .foot { margin-top: 1.5rem; text-align: center; font-size: 0.85rem; }
     .foot a { color: var(--ink-soft); }
+    /* ---- Der Tisch (#1198, T5.4's sign-in and T12's materials) ----
+       The form stands on the table: felt to every edge, the card a walnut
+       plank with a brass rim, the field printed paper and the button the brass
+       plate. Only colours and materials move; the markup is untouched. */
+    :root[data-design="tisch"] body {
+      background-color: var(--felt-deep);
+      background-image:
+        repeating-linear-gradient(48deg, var(--felt-grain) 0 2px, transparent 2px 5px),
+        radial-gradient(120% 90% at 50% 0%, var(--felt), var(--felt-deep) 72%);
+    }
+    :root[data-design="tisch"] .card {
+      border-color: var(--gold-edge);
+      box-shadow: 0 18px 40px var(--cast-deep);
+    }
+    /* Gold, the brand's own mark rather than an action; 24px at 800 on walnut. */
+    :root[data-design="tisch"] h1 { color: var(--gold); font-weight: 800; }
+    :root[data-design="tisch"] input {
+      background: var(--paper);
+      color: var(--paper-ink);
+      border-color: var(--paper-edge);
+    }
+    :root[data-design="tisch"] input:focus { outline-color: var(--gold); border-color: var(--gold-edge); }
+    :root[data-design="tisch"] button {
+      border: 1px solid var(--gold-edge);
+      border-bottom-width: 3px;
+      border-radius: var(--radius-md);
+      background: linear-gradient(180deg, var(--brass-hi), var(--gold-deep));
+      color: var(--on-accent);
+      font-weight: 800;
+    }
+    :root[data-design="tisch"] button:hover { background: var(--gold-deep); }
+    :root[data-design="tisch"] .foot a { color: var(--ink-soft); }
+    /* Review finding A7 on the footer links: a 24px target, through the box
+       rather than the type, so nothing moves on the line. */
+    :root[data-design="tisch"] .foot a { display: inline-block; min-height: 24px; line-height: 24px; }
   </style>
 </head>
 <body>
