@@ -36,6 +36,7 @@ const path = require('path');
 const { app } = require('./helpers');
 const { loadApp } = require('./support/dom');
 const { SUPPORTED_LOCALES } = require('../public/js/locales');
+const { FACE_DESIGN, designById } = require('../public/js/designs');
 const { metadataFilterOptions, hasMetadataFilterOptions } = require('../public/js/draw-pool');
 const { METADATA } = require('../scripts/landing-seed-data');
 
@@ -56,10 +57,25 @@ const REQUIRED_SHOTS = ['shelfPhone', 'vote', 'result'];
 // The LANDING_SHOTS table, read out of the view rather than restated here — a
 // test constant hand-copied from the thing under test proves nothing
 // (.claude/rules/shared-constants-across-the-stack.md). Returns
-// { <locale>: [{ name, src, w, h }] }.
-function declaredShots() {
-  const table = VIEW.match(/const LANDING_SHOTS = \{([\s\S]*?)\n\};\n/);
-  assert.ok(table, 'views-landing.js still declares a LANDING_SHOTS table');
+// { <locale>: [{ name, src, w, h }] }. `table` names which design's table (#1199:
+// one per design whose app the landing can show — see designTables()).
+function declaredShots(table = 'LANDING_SHOTS') {
+  const found = [...VIEW.matchAll(new RegExp(`const ${table} = \\{([\\s\\S]*?)\\n\\};\\n`, 'g'))];
+  assert.equal(found.length, 1, `views-landing.js declares exactly one ${table} table`);
+  return parseTable(found[0][1]);
+}
+
+// Which table each design shows — LANDING_SHOT_SETS, parsed rather than restated.
+function designTables() {
+  const m = VIEW.match(/const LANDING_SHOT_SETS = \{([^}]*)\};/);
+  assert.ok(m, 'views-landing.js declares LANDING_SHOT_SETS');
+  const sets = Object.fromEntries([...m[1].matchAll(/(\w+):\s*(\w+)/g)].map(([, design, table]) => [design, table]));
+  assert.ok(Object.keys(sets).length >= 2, 'at least Klassisch’s and Der Tisch’s sets are declared');
+  return sets;
+}
+
+function parseTable(body) {
+  const table = [null, body];
   const byLocale = {};
   for (const [, locale, body] of table[1].matchAll(/(\w+):\s*\{([\s\S]*?)\n {2}\},/g)) {
     byLocale[locale] = [...body.matchAll(
@@ -82,10 +98,13 @@ function captureMetadata() {
   return METADATA;
 }
 
-// Flattened, for the assertions that don't care which locale an asset belongs to.
+// Flattened, for the assertions that don't care which locale — or which design's
+// set — an asset belongs to. Every design's table, so a Tisch file that is
+// missing, mis-sized or over budget is caught exactly like a Klassisch one.
 function allShots() {
-  return Object.entries(declaredShots())
-    .flatMap(([locale, shots]) => shots.map((s) => ({ ...s, locale })));
+  return Object.entries(designTables()).flatMap(([design, table]) =>
+    Object.entries(declaredShots(table))
+      .flatMap(([locale, shots]) => shots.map((s) => ({ ...s, locale, design }))));
 }
 
 // Minimal WebP dimension reader — enough for the chunk types Chrome's encoder
@@ -112,25 +131,58 @@ function webpSize(buf) {
   throw new Error(`unsupported WebP chunk ${fourcc}`);
 }
 
-test('every supported locale has a complete screenshot set', () => {
-  const byLocale = declaredShots();
-  for (const locale of SUPPORTED_LOCALES) {
-    const shots = byLocale[locale];
-    assert.ok(shots, `LANDING_SHOTS has no set for the shipped locale '${locale}'`);
-    assert.deepEqual(
-      shots.map((s) => s.name).sort(),
-      [...REQUIRED_SHOTS].sort(),
-      `the '${locale}' set must declare exactly ${REQUIRED_SHOTS.join(', ')}`
-    );
+test('every supported locale has a complete screenshot set, in every design\u2019s table', () => {
+  for (const table of Object.values(designTables())) {
+    const byLocale = declaredShots(table);
+    for (const locale of SUPPORTED_LOCALES) {
+      const shots = byLocale[locale];
+      assert.ok(shots, `${table} has no set for the shipped locale '${locale}'`);
+      assert.deepEqual(
+        shots.map((s) => s.name).sort(),
+        [...REQUIRED_SHOTS].sort(),
+        `the ${table} '${locale}' set must declare exactly ${REQUIRED_SHOTS.join(', ')}`
+      );
+    }
+    // …and nothing may ship a set for a locale the app does not offer: that asset
+    // is dead weight in the repo and nothing would ever render it.
+    for (const locale of Object.keys(byLocale)) {
+      assert.ok(
+        SUPPORTED_LOCALES.includes(locale),
+        `${table} declares a set for '${locale}', which is not a shipped locale`
+      );
+    }
   }
-  // …and nothing may ship a set for a locale the app does not offer: that asset
-  // is dead weight in the repo and nothing would ever render it.
-  for (const locale of Object.keys(byLocale)) {
-    assert.ok(
-      SUPPORTED_LOCALES.includes(locale),
-      `LANDING_SHOTS declares a set for '${locale}', which is not a shipped locale`
-    );
+});
+
+test('every design with a set is registered, and the FACE has one (#1199)', () => {
+  // The landing shows the face's app. The flip (#1202) moves FACE_DESIGN, and
+  // landingShotSet() falls back to Klassisch's pictures for a design without a
+  // set — silently, on the most public page there is. So the face must own a set.
+  const sets = designTables();
+  for (const design of Object.keys(sets)) {
+    assert.ok(designById(design), `LANDING_SHOT_SETS names '${design}', which is not a registered design`);
   }
+  assert.ok(sets[FACE_DESIGN], `the face (${FACE_DESIGN}) has no landing screenshot set`);
+  assert.equal(sets.klassisch, 'LANDING_SHOTS', 'Klassisch keeps the set production serves today');
+  // Every set lives in its own folder, so two designs can never overwrite each
+  // other's files — and Klassisch's stays exactly where it always was.
+  for (const shot of allShots()) {
+    const want = shot.design === 'klassisch' ? /^\/img\/landing-/ : new RegExp(`^/img/${shot.design}/landing-`);
+    assert.match(shot.src, want, `${shot.src} belongs to ${shot.design}'s folder`);
+  }
+});
+
+test('the landing shows the worn design’s pictures, and the face’s by default', () => {
+  const dom = loadApp({ locale: 'fr' });
+  try {
+    const src = () => dom.run('landingShots().vote.src');
+    assert.equal(src(), declaredShots('LANDING_SHOTS').fr.find((s) => s.name === 'vote').src,
+      'a visitor wearing the face (Klassisch today) sees today’s pictures');
+    dom.call('applyDesign', 'tisch');
+    assert.equal(src(), declaredShots('LANDING_SHOTS_TISCH').fr.find((s) => s.name === 'vote').src);
+    dom.call('applyDesign', 'no-such-design');
+    assert.match(src(), /^\/img\/landing-vote\.fr\.webp$/, 'an unknown design falls back to the face');
+  } finally { dom.close(); }
 });
 
 test('every landing screenshot the view references is actually served', async () => {
@@ -160,7 +212,10 @@ test("each locale's screenshot set stays inside its weight budget", () => {
   // and the walkthrough's first step share one <img src>, and the other two are
   // the steps beside it — where the retired <picture> used to fetch one of two
   // shelf widths, so the budget binds harder than it did.
-  for (const [locale, shots] of Object.entries(declaredShots())) {
+  // Per DESIGN too: a visitor downloads one design's set, never two.
+  const perSet = Object.values(designTables())
+    .flatMap((table) => Object.entries(declaredShots(table)).map(([l, v]) => [`${table}/${l}`, v]));
+  for (const [locale, shots] of perSet) {
     const bytes = shots.reduce(
       (sum, s) => sum + fs.statSync(path.join(ROOT, 'public', s.src)).size,
       0
@@ -264,14 +319,16 @@ test('the render sites read the set through the locale resolver, never a fixed o
   // `LANDING_SHOTS.de.shelfPhone` left behind renders a valid page in the wrong
   // language — no error, no broken image, just the half-translated result #457
   // exists to remove. So: the table is read exactly once, by the resolver.
+  // Since #1199 the table is picked per design first (landingShotSet), then
+  // subscripted by locale — still in exactly one place.
   assert.match(
     VIEW,
-    /function landingShots\(\)\s*\{\s*\n\s*return LANDING_SHOTS\[getLocale\(\)\]/,
+    /function landingShots\(\)\s*\{\s*\n\s*const set = landingShotSet\(\);\s*\n\s*return set\[getLocale\(\)\]/,
     'landingShots() resolves the set from getLocale()'
   );
-  const uses = [...VIEW.matchAll(/LANDING_SHOTS\[/g)];
-  assert.equal(uses.length, 2, 'LANDING_SHOTS is subscripted only inside landingShots()');
-  assert.doesNotMatch(VIEW, /LANDING_SHOTS\.\w/, 'no render site reaches into a fixed locale');
+  assert.equal([...VIEW.matchAll(/\bset\[/g)].length, 2, 'the chosen set is subscripted only inside landingShots()');
+  assert.doesNotMatch(VIEW, /LANDING_SHOTS(?:_TISCH)?\[/, 'no render site subscripts a table directly');
+  assert.doesNotMatch(VIEW, /LANDING_SHOTS(?:_TISCH)?\.\w/, 'no render site reaches into a fixed locale');
 });
 
 test('the screenshots are informative images, not decoration', () => {

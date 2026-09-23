@@ -133,6 +133,71 @@ const LANDING_SHOTS = {
   },
 };
 
+// Der Tisch's set (#1199), shot by `scripts/capture-landing-shots.js
+// --design=tisch` over the same per-locale seed, into public/img/tisch/. Same
+// three shots and the same phone width; the heights are the design's own —
+// its vote card stacks five full-width faces, so that crop is derived from the
+// card rather than held at Klassisch's fixed point (the script says why).
+const LANDING_SHOTS_TISCH = {
+  en: {
+    shelfPhone: { src: '/img/tisch/landing-shelf-phone.en.webp', w: 624, h: 1246 },
+    vote: { src: '/img/tisch/landing-vote.en.webp', w: 624, h: 1330 },
+    result: { src: '/img/tisch/landing-result.en.webp', w: 624, h: 1578 },
+  },
+  de: {
+    shelfPhone: { src: '/img/tisch/landing-shelf-phone.de.webp', w: 624, h: 1246 },
+    vote: { src: '/img/tisch/landing-vote.de.webp', w: 624, h: 1309 },
+    result: { src: '/img/tisch/landing-result.de.webp', w: 624, h: 1717 },
+  },
+  es: {
+    shelfPhone: { src: '/img/tisch/landing-shelf-phone.es.webp', w: 624, h: 1246 },
+    vote: { src: '/img/tisch/landing-vote.es.webp', w: 624, h: 1330 },
+    result: { src: '/img/tisch/landing-result.es.webp', w: 624, h: 1640 },
+  },
+  fr: {
+    shelfPhone: { src: '/img/tisch/landing-shelf-phone.fr.webp', w: 624, h: 1246 },
+    vote: { src: '/img/tisch/landing-vote.fr.webp', w: 624, h: 1330 },
+    result: { src: '/img/tisch/landing-result.fr.webp', w: 624, h: 1669 },
+  },
+  it: {
+    shelfPhone: { src: '/img/tisch/landing-shelf-phone.it.webp', w: 624, h: 1246 },
+    vote: { src: '/img/tisch/landing-vote.it.webp', w: 624, h: 1330 },
+    result: { src: '/img/tisch/landing-result.it.webp', w: 624, h: 1669 },
+  },
+  nl: {
+    shelfPhone: { src: '/img/tisch/landing-shelf-phone.nl.webp', w: 624, h: 1246 },
+    vote: { src: '/img/tisch/landing-vote.nl.webp', w: 624, h: 1330 },
+    result: { src: '/img/tisch/landing-result.nl.webp', w: 624, h: 1699 },
+  },
+  pt: {
+    shelfPhone: { src: '/img/tisch/landing-shelf-phone.pt.webp', w: 624, h: 1246 },
+    vote: { src: '/img/tisch/landing-vote.pt.webp', w: 624, h: 1330 },
+    result: { src: '/img/tisch/landing-result.pt.webp', w: 624, h: 1669 },
+  },
+  fi: {
+    shelfPhone: { src: '/img/tisch/landing-shelf-phone.fi.webp', w: 624, h: 1246 },
+    vote: { src: '/img/tisch/landing-vote.fi.webp', w: 624, h: 1330 },
+    result: { src: '/img/tisch/landing-result.fi.webp', w: 624, h: 1640 },
+  },
+  ko: {
+    shelfPhone: { src: '/img/tisch/landing-shelf-phone.ko.webp', w: 624, h: 1246 },
+    vote: { src: '/img/tisch/landing-vote.ko.webp', w: 624, h: 1309 },
+    result: { src: '/img/tisch/landing-result.ko.webp', w: 624, h: 1578 },
+  },
+};
+
+// Which set the page shows: the design the landing is WEARING, which is the
+// face (FACE_DESIGN) for every logged-out visitor — so production keeps
+// Klassisch's pictures until the flip (#1202) moves the face, and Der Tisch's
+// appear the moment it does, with no second edit here. A design without a set
+// of its own shows Klassisch's rather than nothing.
+const LANDING_SHOT_SETS = { klassisch: LANDING_SHOTS, tisch: LANDING_SHOTS_TISCH };
+
+function landingShotSet() {
+  const worn = typeof activeDesign === 'function' ? activeDesign().id : FACE_DESIGN;
+  return LANDING_SHOT_SETS[worn] || LANDING_SHOTS;
+}
+
 // The set for the active locale, resolved at RENDER time — showLanding() sets
 // currentView, and the top-bar picker re-runs it after setLocale(), so reading
 // getLocale() here is the whole language-switch mechanism.
@@ -142,7 +207,8 @@ const LANDING_SHOTS = {
 // screenshots yet shows somebody else's product, which is a great deal better
 // than an empty box in the hero.
 function landingShots() {
-  return LANDING_SHOTS[getLocale()] || LANDING_SHOTS[SUPPORTED_LOCALES[0]];
+  const set = landingShotSet();
+  return set[getLocale()] || set[SUPPORTED_LOCALES[0]];
 }
 
 // The public repository, linked from the "code out in the open" trust chip

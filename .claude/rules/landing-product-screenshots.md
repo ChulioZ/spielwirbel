@@ -4,6 +4,7 @@ paths:
   - "public/js/views-landing.js"
   - "test/landing-shots.test.js"
   - "scripts/capture-landing-shots.js"
+  - "scripts/cdp.js"
   - "scripts/landing-seed-data.js"
 ---
 # Regenerating the landing-page product screenshots (#438, #457, #669, #1090)
@@ -447,6 +448,33 @@ since `game-info.js` has no exports guard). That is the whole of §3a expressed 
 an assertion: a future edit dropping the metadata cannot silently reshoot the ⓘ
 and the disclosure back out of the images. It says nothing about whether either
 was in frame — the crop can still exclude them, and only your eyes catch that.
+
+## 6a. One set PER DESIGN since #1199 — the landing shows the face's app
+
+`--design=tisch` shoots Der Tisch's set into `public/img/tisch/`
+(`LANDING_SHOTS_TISCH`); `landingShotSet()` picks by the design the landing is
+wearing, which is the face for every visitor — so production keeps Klassisch's
+pictures until the flip (#1202) and switches with no second edit.
+`test/landing-shots.test.js` walks every table in `LANDING_SHOT_SETS` and fails
+if the FACE has none (the resolver would silently fall back to Klassisch's).
+
+Three things differ for a non-Klassisch run, each learned by looking:
+
+- **The design is a localStorage key**, written beside the locale in
+  `setLocale()` (open mode = the device's choice), and asserted per shot in
+  `assertLocale()` — a run that fell back to the face would commit nine Klassisch
+  pictures into the Tisch folder with every test green.
+- **Its vote crop is DERIVED, not the #669 fixed point.** Der Tisch stacks five
+  full-width face rows, so the card runs to ~794–839px at every viewport (measured
+  at 720/820/880 — the bottom never moved) and 720 slices the fifth face off.
+  `voteCrop()` cuts 24px below the card and re-derives after setting the viewport,
+  like `resultCrop()`.
+- **The round's marker is pinned to index 0** (Tannenfilz) for a design run: a
+  new round's marker is hashed from its id, so each locale's felt came out a
+  different colour. Klassisch's seed is left exactly as it was.
+
+`LANDING_SHOTS_PORT` / `LANDING_SHOTS_CDP_PORT` override 3199/9333 so a second
+run elsewhere does not fight this one for the ports.
 
 ## 7. These images are deliberately NOT in the service worker's `SHELL`
 

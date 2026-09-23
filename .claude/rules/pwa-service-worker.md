@@ -15,6 +15,9 @@ Non-obvious things that will bite if you forget them:
   `SHELL` too, or the SW silently fails to install (no offline, no error the user
   sees). `test/pwa.test.js` guards this: it parses `SHELL` out of `sw.js` and
   asserts every entry is actually served.
+  **Keep apostrophes out of comments inside `SHELL`** — that test (and
+  `scripts/build.js`'s rewrite) reads entries as `'…'` pairs, so a comment saying
+  "Der Tisch's marks" became a bogus entry that 404ed (#1199).
 
 - **Bump `CACHE` when any shell asset changes — in production too.** Assets are
   served **cache-first**, so a changed `styles.css`/`*.js` would be served stale
@@ -58,7 +61,13 @@ Non-obvious things that will bite if you forget them:
 - **Icons are generated, committed PNGs.** There's no image tooling in the repo;
   the icons were rasterized once (a white die on the brand `#c2410c`) and
   committed as static files. Regenerate with a script if the brand changes; don't
-  add an image build step just for icons.
+  add an image build step just for icons. **Since #1199 each design brings its
+  own** — Der Tisch's live in `public/icons/tisch/`, rendered by
+  `scripts/render-design-marks.js` — and a non-face design's manifest is served
+  by `lib/web-manifest.js` (`?design=<id>`), not by this file. Only the two marks
+  the page itself renders while the design is worn (its favicon and 192) are in
+  `SHELL`; the rest are fetched by the OS at install time, online by definition.
+  See `.claude/rules/design-marks-follow-the-face.md`.
 
 ## Verifying a shell-asset change in a browser (the cache-first trap)
 

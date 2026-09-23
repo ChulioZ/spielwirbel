@@ -49,6 +49,11 @@ tokens at all — an HTML attribute, its own test file, and a question ("does th
 themed thing live outside the stylesheet?") a session asks without needing the
 derivation rules beside it.
 
+**The manifest follows the same rule per design (#1199).** A non-face design's
+manifest comes from `lib/web-manifest.js`, and its `theme_color` is that design's
+**accent** — the value `applyBackground` writes into the meta when the design is
+worn — with `background_color` its page. Klassisch's stays the static file.
+
 **Related:** `.claude/rules/theme-derived-colors.md` (everything that IS a token),
 `.claude/rules/dark-designs-and-the-on-accent-flip.md` (a dark design changes the
 page, and deliberately not this).

@@ -420,6 +420,10 @@ function drawRecapCard(ctx, model, height, world = {}) {
 // Render the card to a PNG Blob. Rejects rather than resolving null, so the
 // caller's catch is the one place a failure is reported.
 async function recapCardBlob(model) {
+  // A design with a card of its own draws that instead (#1199) — Der Tisch's
+  // felt-headed card, recap-card-tisch.js. Same model, same caller, same
+  // catch; everything below is the classic card, unchanged.
+  if (designCard() === 'tisch') return tischCardBlob('period', model);
   // Constraint 2 — see the header. `document.fonts` is present in every browser
   // this app supports; the guard is for a stray environment without it.
   if (document.fonts && document.fonts.ready) await document.fonts.ready;

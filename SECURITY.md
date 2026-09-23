@@ -59,6 +59,12 @@ Security issues especially relevant given the current architecture:
   *instance* warn/error buffer behind `GET /api/admin/logs`, or reaching any
   round, session or account data through it. That the endpoint accepts reports
   from unauthenticated callers at all is **by design** and is not a finding.
+- **The per-design web manifest** (`GET /manifest.webmanifest?design=<id>`,
+  `lib/web-manifest.js`, #1199) — a read route outside the gate, as open as the
+  static file it stands in front of. It reads no account and no round; the id is
+  checked against the instance's selectable designs, so the in-scope findings
+  are reflecting any request input into the response, or getting a design that
+  is not released on this instance (`enabled: false` in production) served.
 - Auth/session bypass — forging or replaying access/refresh tokens, the shared
   session cookie, or the `/uploads` cookie gate (see
   [`.claude/rules/accounts-mode-gate.md`](.claude/rules/accounts-mode-gate.md),

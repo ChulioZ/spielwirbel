@@ -2,7 +2,10 @@
 paths:
   - "public/js/recap-card.js"
   - "public/js/views-chronik.js"
+  - "public/js/recap-card-tisch.js"
+  - "public/js/card-glyphs.js"
   - "test/recap-card-tint.test.js"
+  - "test/recap-card-tisch.test.js"
 ---
 # WebKit taints a canvas on `createPattern(svgImage)` — `drawImage` of the same SVG is clean
 
@@ -67,6 +70,23 @@ nothing.
   tainting explicitly and correctly, and concluded the code was safe — the gap
   was between "same-origin" and "what WebKit taints on", not an oversight about
   origins. A correct-looking rationale in a comment is not a check.
+
+## Der Tisch's card (#1199) sidesteps the whole class
+
+`public/js/recap-card-tisch.js` draws no SVG and no pattern at all: surfaces are
+gradients and flat fills, the wood grain is stamped stripes, and every icon —
+faces, crown, check, whirl — is a `Path2D` fill of the bundled Tabler outline
+(`public/js/card-glyphs.js`), which needs no image decode and no font load. The
+one image is the same-origin BGG badge PNG via `drawImage`. Exported in headless
+Chromium **and** a headless WKWebView (non-persistent store) for a session, a
+split session and a period recap: all clean. `test/recap-card-tisch.test.js`
+pins the mechanism, the same way the spec below does.
+
+It paints from a **copy** of Der Tisch's tokens, not the live cascade — the
+names (`--page-bg`, `--gold`, `--ink`) are shared by every design, so under a
+round still on its own light palette the dark block is off and a live read
+returned Klassisch's cream and orange (measured). The copy is licensed by a
+parity test against `test/support/theme.js`.
 
 `test/recap-card-tint.test.js` is what stands in for the engine: jsdom has no 2d
 context and Node has no WebKit, so it asserts the **mechanism** — that the

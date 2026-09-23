@@ -56,6 +56,14 @@
 // ('/css/designs/' + id + '.css') would survive the build unrewritten and 404,
 // because the un-hashed copy is deleted. See
 // .claude/rules/design-stylesheets-are-shell-assets.md.
+//
+// `marks` (#1199) is the design's brand assets: the manifest's icons, the
+// favicon, the apple-touch icon and the link-preview image. Every design brings
+// its own (operator decision after the Tisch review, T11.2), and three readers
+// share this one list — the manifest route (lib/web-manifest.js), design.js,
+// which re-points the head's <link>s when a design is worn, and
+// test/design-marks.test.js, which checks every file exists at the size it
+// declares. Paths are literals for the same build reason `stylesheet` is.
 const DESIGN_REGISTRY = [
   // Today's look. No `page`/`accent`: styles.css's :root already is Klassisch,
   // so applyDesign clears the two inline properties instead of restating them —
@@ -91,6 +99,19 @@ const DESIGN_REGISTRY = [
       { key: 'schiefer', labelKey: 'theme.schiefer', color: '#33688f', deep: '#254c69' },
       { key: 'pfirsich', labelKey: 'theme.pfirsich', color: '#b34d2e', deep: '#843922' },
     ],
+    // Today's marks, EXACTLY as public/manifest.webmanifest and index.html's head
+    // declare them — test/design-marks.test.js pins both equalities, so this row
+    // cannot drift from the files production already serves. The white die on
+    // orange stays Klassisch's for good (T11.2: "keinen stillen Markenwechsel").
+    marks: {
+      icons: [
+        { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
+        { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
+      ],
+      favicon: { href: '/icons/icon-192.png', sizes: '192x192' },
+      appleTouch: '/icons/apple-touch-icon.png',
+      og: '/icons/og-image.png',
+    },
     enabled: true,
   },
   /* Der Tisch (#1188), from docs/design/tisch/Tisch-T1-Komponenten.dc.html.
@@ -142,6 +163,23 @@ const DESIGN_REGISTRY = [
       { key: 'taubenfilz', labelKey: 'marker.tisch.taubenfilz', color: '#44525c', deep: '#262f36' },
       { key: 'ockerfilz', labelKey: 'marker.tisch.ockerfilz', color: '#7a6a2f', deep: '#443a1a' },
     ],
+    // T11.2: felt with the gold whirl, no brass edge (it smears into a grey rim
+    // at 16px). The 192/512 pair is full-bleed like Klassisch's; the maskable
+    // one is its own file because its whirl has to sit inside the inner 60%.
+    // Rendered by scripts/render-design-marks.js — never hand-edited.
+    marks: {
+      icons: [
+        { src: '/icons/tisch/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+        { src: '/icons/tisch/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+        { src: '/icons/tisch/icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+      ],
+      favicon: { href: '/icons/tisch/favicon-32.png', sizes: '32x32' },
+      appleTouch: '/icons/tisch/apple-touch-icon.png',
+      og: '/icons/tisch/og-image.png',
+    },
+    // Which recap-card layout the share buttons draw while this design is worn
+    // (recap-card-tisch.js). Absent = the classic card, unchanged.
+    card: 'tisch',
     enabled: false,
   },
 ];
@@ -200,6 +238,32 @@ function designById(id) {
   return DESIGN_REGISTRY.find((d) => d.id === id) || null;
 }
 
+/* The brand marks a design wears, falling back to the face's — a design added
+   without its own marks shows the face's icons rather than none. */
+function designMarks(id) {
+  const design = designById(id);
+  return (design && design.marks) || designById(FACE_DESIGN).marks;
+}
+
+/* The manifest URL a page wearing `id` links to (#1199).
+
+   The FACE gets the bare path, so a logged-out page, the standalone pages that
+   hard-code it (login.html, kontakt.html, the FAQ) and today's index.html all
+   agree on one URL. Any other design names itself in the query, and the route
+   (lib/web-manifest.js) answers with that design's icons and colours — or with
+   the face's, if the id is not selectable on this instance.
+
+   A query parameter rather than a credentialed fetch of "the account's design":
+   the page already KNOWS which design it wears, so the server never has to read
+   an account to answer, the response is the same for everyone who asks for the
+   same URL (cacheable, no Vary), and the access cookie keeps its one narrow job
+   (the /uploads gate). The PR for #1199 records the trade-off. */
+function manifestHref(id) {
+  const design = designById(id);
+  if (!design || design.id === FACE_DESIGN) return '/manifest.webmanifest';
+  return '/manifest.webmanifest?design=' + encodeURIComponent(design.id);
+}
+
 // The designs that may be applied at all. `production` is passed in rather than
 // read off process.env here, because this file also runs in the browser, where
 // there is no such thing — the server decides and tells the client through GET
@@ -221,7 +285,7 @@ function isSelectableDesign(id, opts) {
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
-    DESIGN_REGISTRY, FACE_DESIGN, DESIGN_CHOOSER_REVISION, designById,
+    DESIGN_REGISTRY, FACE_DESIGN, DESIGN_CHOOSER_REVISION, designById, designMarks, manifestHref,
     designMarkers, markerOf, markerInk, DEFAULT_MARKER_INK,
     selectableDesigns, selectableDesignIds, isSelectableDesign,
   };

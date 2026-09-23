@@ -27,7 +27,7 @@
  * See .claude/rules/frontend-build-cache-busting.md.
  */
 
-const CACHE = 'spielwirbel-shell-v309';
+const CACHE = 'spielwirbel-shell-v310';
 
 // Everything the app needs to boot offline. Kept in sync with the <script>/<link>
 // order in index.html; each entry must be a real, servable path or install fails
@@ -130,6 +130,8 @@ const SHELL = [
   '/js/recap.js',
   '/js/period-recap.js',
   '/js/recap-card.js',
+  '/js/card-glyphs.js',
+  '/js/recap-card-tisch.js',
   '/js/hub-insights.js',
   '/js/lookup-cover.js',
   '/js/vote-path.js',
@@ -181,6 +183,15 @@ const SHELL = [
   '/js/pwa.js',
   '/icons/icon-192.png',
   '/icons/icon-512.png',
+  // (No apostrophes in comments here: the SHELL parsers read quote pairs.)
+  // Der Tisch marks (#1199): only the two the PAGE itself renders while the
+  // design is worn — the favicon design.js points <link rel="icon"> at, and the
+  // 192 the manifest names first. The 512s, the apple-touch icon and the
+  // link-preview image are fetched by the OS or a scraper at install/share time,
+  // online by definition, so precaching them would cost every installed user
+  // ~170 KB for nothing.
+  '/icons/tisch/favicon-32.png',
+  '/icons/tisch/icon-192.png',
   '/icons/powered-by-bgg.png',
 ];
 

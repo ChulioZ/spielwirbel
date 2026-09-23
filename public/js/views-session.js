@@ -1321,6 +1321,15 @@ async function showResults(round, session, gamesHint, reveal, plain) {
       // of the bare „wurde gespielt." every winnerless night used to get (#1038).
       ending: sessionEnding(session),
       rows: rows.map((r) => ({ title: r.game.title, score: r.shown, count: r.count, place: r.place })),
+      // Who sat at the table, for a design that shares a CARD (#1199) — the
+      // same people this screen lists under the headline, with the member
+      // colour it paints them in. The text share ignores it.
+      people: people.map((p) => ({
+        name: personLabel(p),
+        initials: initials(p.name),
+        color: p.guest ? null : memberHex(round, p.id),
+        winner: winnerIds.includes(p.id),
+      })),
     }));
     head.appendChild(shareBtn);
   }
@@ -2196,6 +2205,7 @@ async function shareResult(model) {
   // joinNames is passed in so the shared headline is byte-identical to the h1
   // above it ("Anna und Ben", not "Anna, Ben") — see session-share.js.
   const text = sessionShareText(model, t, joinNames, tn, fmtAvg);
+  if (designCard() && await shareResultCard(model, text)) return;
   if (navigator.share) {
     try {
       await navigator.share({ text });
