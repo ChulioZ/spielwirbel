@@ -243,6 +243,23 @@ test('picking a swatch PATCHes the index and re-renders with it pressed', async 
   assert.equal(pressed, 5, 'the redraw must read the new marker, not the stale cached round');
 });
 
+/* #1197's acceptance criterion: „picking updates the lobby tile without
+   reload". The lobby reads its OWN SWR key, which is fresh for 5s after the
+   first visit — so the sequence that matters is lobby -> pick -> lobby within
+   that window, where the list is served from cache with no revalidation. */
+test('a pick reaches the lobby tile at once, not after the list goes stale', async (t) => {
+  const { dom } = open(t);
+  await dom.call('showHome');
+  const tile = () => dom.document.querySelector('.round-card:not(.round-card--new)');
+  assert.match(tile().getAttribute('style'), new RegExp(`--marker:${designMarkers('klassisch')[2].color}`));
+  await dom.call('showMarker', 'r1');
+  dom.app.querySelectorAll('.marker-card')[5].click();
+  await flush();
+  await dom.call('showHome');
+  assert.match(tile().getAttribute('style'), new RegExp(`--marker:${designMarkers('klassisch')[5].color}`),
+    'the lobby must draw the felt just picked, not the cached list’s');
+});
+
 test('the marker reaches the document root inside a round and is cleared outside it', async (t) => {
   const { dom } = open(t);
   const root = dom.document.documentElement;
