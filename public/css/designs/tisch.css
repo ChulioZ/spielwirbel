@@ -528,6 +528,33 @@
   --felt-weave: repeating-linear-gradient(48deg, var(--felt-grain) 0 2px, transparent 2px 5px);
 }
 
+/* The demo's diagonal hatch (#1194, T7.6) — the second of the two things that
+   must stop a demo round being mistaken for one of your own, the banderole
+   below being the first.
+
+   It is NOT declared with a default here, unlike the weave above. A felt
+   surface names it as `var(--felt-hatch, none)`, so the fallback IS the
+   default: `none` is a valid <bg-image>, an ordinary round paints nothing in
+   that layer, and there is exactly ONE mechanism rather than a declaration and
+   a fallback that both have to survive. A second copy would also be the
+   dangerous kind — drop the declaration and every felt background in the file
+   goes invalid at once, with no error.
+
+   Set on `body`, so it INHERITS to whichever surfaces name it instead of each
+   of them needing a second selector.
+
+   DARKENING, where T7.6's hatch is gold at 14%. Same correction --felt-grain
+   records above and for the same measured reason: the felt carries light inks,
+   so a lightening band lowers their contrast against the stop they were
+   measured on, while a darkening one can only ever raise it — which is what
+   keeps every felt pair in test/a11y-contrast.test.js valid without
+   re-measuring a hatched variant of each. --cast-soft rather than a new token:
+   it is already this file's "a shadow falls on this" alpha, and the hatch
+   reads as exactly that. */
+:root[data-design="tisch"][data-scheme="dark"] body.has-demo-banner {
+  --felt-hatch: repeating-linear-gradient(135deg, var(--cast-soft) 0 7px, transparent 7px 26px);
+}
+
 /* --- The felt stage (T2.1, T3.2) ------------------------------------------
    The round's table, as the top of its own screen. `.hero` already holds the
    three things the stage carries — the round's name, its seats and its counts
@@ -547,6 +574,7 @@
      design's default felt — which is also the right answer for a round still
      wearing a world, where markerColors() returns null by design. */
   background:
+    var(--felt-hatch, none),
     var(--felt-weave),
     radial-gradient(120% 130% at 50% -10%, var(--marker, var(--felt)), var(--marker-deep, var(--felt-deep)) 74%);
   color: var(--felt-ink);
@@ -601,9 +629,29 @@
   gap: 10px;
   margin-top: 18px;
   padding-bottom: 14px;
+  /* THE ARC FLATTENS AS THE TABLE FILLS (#1194, T7.7). The amplitude was a
+     fixed 14px, which is right for the four to six seats a round usually has
+     and wrong for twelve: the row wraps, the second line carries the tail of
+     the same curve, and the result reads as two ragged waves rather than as a
+     table. T7.7 lays twelve seats out flat.
+
+     A falloff rather than a threshold, because a cliff at one count would make
+     adding a member jolt the whole row. The three numbers are read off the two
+     ends: the arc is exactly what shipped up to NINE seats — eight members
+     plus the „+", comfortably past an ordinary round, so nobody's table
+     changes — and reaches zero at thirteen, which is T7.7's twelve members
+     plus the „+". 3.5px per seat is what joins those two points. `--seat-n`
+     counts the row's children, so the „+" and any retired tail are in it.
+
+     Declared HERE and read below rather than appended as a later rule: the
+     1280px block resets this transform to `none` (T3.2 lines the seats up
+     along the band's edge), and @media buys no specificity — so a second,
+     later rule at the same weight would win at every width and put the arc
+     back on desktop. */
+  --seat-lift: clamp(0px, calc((13 - var(--seat-n, 1)) * 3.5px), 14px);
 }
 :root[data-design="tisch"][data-scheme="dark"] .hero__members > * {
-  transform: translateY(calc(-14px * sin(calc((var(--seat-i, 0) + 0.5) / var(--seat-n, 1) * 180deg))));
+  transform: translateY(calc(-1 * var(--seat-lift) * sin(calc((var(--seat-i, 0) + 0.5) / var(--seat-n, 1) * 180deg))));
 }
 /* A seat is a piece on the table, so it takes the gold ring T2.1 draws rather
    than the page-coloured cut-out `.avatar` wears on a card. */
@@ -2842,4 +2890,202 @@
    on --paper-raised. */
 :root[data-design="tisch"][data-scheme="dark"] .design-chooser__kicker {
   color: var(--gold-ink);
+}
+
+/* ===========================================================================
+   #1194 — the EMPTY and YOUNG states, the demo's banderole, and the two
+   density cases.
+
+   Source: Tisch-T7-Leerzustaende.dc.html (T7.1–T7.7). T7.8 states the
+   principle this whole section implements: „ein leerer Tisch ist kein Fehler,
+   sondern eine Einladung — der Filz bleibt, das Messing bleibt, es fehlen nur
+   die Spiele." So nothing here draws a grey „no data" box; the empty table is
+   itself the picture.
+
+   PAINT ONLY, and on this brief that boundary does real work, because T7 is
+   the sheet that invents the most. Four of its screens are built out of copy
+   and gating the app does not have — „Serien und Trends zeigen wir ab der
+   dritten Session", „Ein Podium braucht drei Sessions", the „Nächster Schritt"
+   card, the demo's four-row summary and its „Gefällt dir das?" invitation.
+   Each of those is a new string in nine locales plus a new threshold in shared
+   code, i.e. a feature wearing a design's clothes. They are deliberately NOT
+   built (operator decision on #1193: „the sheet's intent is the design, not the
+   ordering"), and the slice that owns each is named in the PR rather than
+   guessed at here.
+
+   What IS taken is the material: the medallion becomes the table, the demo
+   wears brass, the locked plate stops being a 45%-opacity ghost, and the two
+   density cases the app actually fails are fixed.
+
+   Same gate and same no-literals rule as every section above.
+   =========================================================================== */
+
+/* --- The empty state, as the empty table (T7.1–T7.4) ----------------------
+   `.empty` (js/empty-state.js, #869) and `.lobby-cta` already share their
+   medallion, title and sub-line in styles.css, so one rule re-materials every
+   screen that shows one — the hub's rail gap, Regal, Chronik, Pokale,
+   „Wie wär's mit", the tag list and the three off-shelf lists.
+
+   The ground moves from `--brand-tint-soft` to the walnut `--surface`: the
+   wash exists so a content-light screen has something to look at, and on this
+   design the wood already is that. It is also the stronger pair — --ink-soft
+   measures 7.77:1 on --surface against the 5.35:1 the wash was tuned to.
+
+   The dashed edge STAYS dashed and becomes --control-edge: dashed is what says
+   „something belongs here and does not exist yet" everywhere in this design
+   (the „+" seat, the add tile, „Neue Runde gründen"), and --control-edge is
+   3.78:1 on --surface, which is the bar for `.lobby-cta` — that one is a link,
+   so its boundary identifies a control (SC 1.4.11). */
+:root[data-design="tisch"][data-scheme="dark"] .empty,
+:root[data-design="tisch"][data-scheme="dark"] .lobby-cta {
+  background: var(--surface);
+  border-color: var(--control-edge);
+  color: var(--ink-soft);
+}
+:root[data-design="tisch"][data-scheme="dark"] .lobby-cta:hover {
+  background: var(--control-fill);
+  border-color: var(--gold);
+}
+
+/* THE MEDALLION IS THE TABLE — the one gesture this brief adds. A brass ring
+   around a disc of the round's own felt, with the glyph in gold at its centre:
+   the same object `.round-card__emblem` already draws in the desktop lobby
+   (#1189), so a young round's screens and its lobby tile show one thing rather
+   than two.
+
+   Built as a transparent BORDER with two background clips rather than as
+   padding, exactly like that emblem — the border area carries the brass, the
+   padding box carries the felt. `--marker` first, so a round that has chosen a
+   felt keeps it here too, falling back to the design's default outside one.
+
+   Gold on felt is 4.20:1, which review finding A1 bans for text and allows for
+   a GLYPH — and this is a 40px glyph, so it is also over 1.4.3's large-text
+   floor twice over. */
+:root[data-design="tisch"][data-scheme="dark"] .empty__icon,
+:root[data-design="tisch"][data-scheme="dark"] .lobby-cta__icon {
+  box-sizing: border-box;
+  width: 96px;
+  height: 96px;
+  margin-bottom: 18px;
+  border: 8px solid transparent;
+  background:
+    var(--felt-weave) padding-box,
+    radial-gradient(120% 90% at 50% 32%, var(--marker, var(--felt)), var(--marker-deep, var(--felt-deep)) 76%) padding-box,
+    linear-gradient(180deg, var(--gold-deep), var(--gold-edge)) border-box;
+  color: var(--gold);
+  font-size: 40px; /* glyph, not type */
+  box-shadow: var(--shadow-3), inset 0 8px 20px var(--cast-deep);
+}
+/* The lobby's own is the screen's whole picture — T7.1 draws it at 176px on a
+   390px phone, i.e. nearly half the width. This is that, held to a size that
+   still leaves the card's title and action above the fold on a short phone. */
+:root[data-design="tisch"][data-scheme="dark"] .lobby-cta__icon {
+  width: 140px;
+  height: 140px;
+  border-width: 11px;
+  font-size: 58px; /* glyph, not type */
+}
+/* „Neue Runde gründen" is the one action on an empty lobby, so it takes the
+   brass plate rather than staying a line of brass text — the same treatment
+   `.hub-cta` wears, because it is the same kind of thing. */
+:root[data-design="tisch"][data-scheme="dark"] .lobby-cta__action {
+  margin-top: 22px;
+  padding: 12px 24px;
+  border: 1px solid var(--gold-edge);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(180deg, var(--brass-hi), var(--gold-deep));
+  color: var(--on-accent);
+  box-shadow: 0 3px 0 var(--gold-edge), var(--shadow-2);
+}
+
+/* --- The locked plate (T7.3) ----------------------------------------------
+   „Session wirbeln" on a round with no games. styles.css disables every `.btn`
+   with `opacity: .45`, which on this design fades the whole milled plate —
+   brass, rim, cast and ink together — into a ghost of itself: the one object
+   the screen is built around, half dissolved, on precisely the screen a new
+   round spends its first week in.
+
+   T7.3 draws it as a plate that is simply NOT LIT: wood instead of brass, a
+   plain rim, and the label still readable — --ink-soft is 6.29:1 on
+   --control-fill, where the 45%-opacity composite measured 2.2:1.
+
+   THE CAST INVERTS, and that is the part doing the work rather than the
+   colour. The live plate sits proud of the table on a hard 3px edge; this one
+   is pressed INTO it. A sunken plate cannot be pressed further, so it reads as
+   unavailable without needing to be faded — which matters here because
+   removing the opacity also removes the app's only visual "this is disabled",
+   and wood alone would read as a perfectly ordinary secondary button.
+
+   The REASON stays in the `title` attribute the app already sets
+   („Erst Spiele hinzufügen"). T7.3 prints it under the button; that is markup
+   and belongs to whoever gives the hub its next content pass. */
+:root[data-design="tisch"][data-scheme="dark"] .hub-cta:disabled,
+:root[data-design="tisch"][data-scheme="dark"] .rail__cta:disabled {
+  opacity: 1;
+  background: var(--control-fill);
+  border-color: var(--control-edge);
+  color: var(--ink-soft);
+  box-shadow: inset 0 2px 5px var(--cast-deep);
+}
+
+/* --- The demo, as a brass banderole and a hatched table (T7.6) ------------
+   The demo must never be mistaken for a round of one's own, and T7.6 says it
+   twice: a brass band across the top, and a diagonal hatch in the felt.
+
+   The banderole is the plate, so its ink is --on-accent — 12.06:1 on the light
+   stop and 7.80:1 on the deep one. Every child follows it, and that is not
+   tidiness: `.demo-banner__cta` and `__terms` are --brand, `.ti` is --warn, and
+   all three of those are LIGHT on this design (brass, brass, and T1's
+   Kümmerliste yellow) — i.e. on a brass band they would be a strip of text
+   that is very nearly invisible. Measured on the un-flipped pair: --brand is
+   1.55:1 on --brass-hi and 1.00:1 on --gold-deep, where it IS the stop, and
+   --warn is 1.23:1 on --brass-hi. Flipped: 12.06:1 and 7.80:1.
+
+   The hover goes to --gold-ink, the gold family's own dark ink (8.34:1 and
+   5.39:1), rather than to --brand-strong, which is brass lifted toward white
+   and would be the same mistake one state over. */
+:root[data-design="tisch"][data-scheme="dark"] .demo-banner {
+  background: linear-gradient(180deg, var(--brass-hi), var(--gold-deep));
+  border-bottom: 3px solid var(--gold-edge);
+  color: var(--on-accent);
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+:root[data-design="tisch"][data-scheme="dark"] .demo-banner .ti,
+:root[data-design="tisch"][data-scheme="dark"] .demo-banner__terms,
+:root[data-design="tisch"][data-scheme="dark"] .demo-banner__cta {
+  color: var(--on-accent);
+}
+:root[data-design="tisch"][data-scheme="dark"] .demo-banner__terms:hover,
+:root[data-design="tisch"][data-scheme="dark"] .demo-banner__cta:hover {
+  color: var(--gold-ink);
+}
+
+/* --- The two density cases (T7.7) ----------------------------------------
+   T7.7's 40-game shelf is already done — #1190's
+   `:has(> a.game-card:nth-of-type(40))` rule. Its seat half is declared on
+   `.hero__members` above, beside the arc it retunes, for the specificity
+   reason recorded there. What is left is the third case, measured in a browser
+   at 1440 on a 12-member round with a 34-character name. */
+
+/* A LONG ROUND NAME BREAKS RATHER THAN OVERFLOWING. The desktop rail is 260px
+   wide and prints the round's name in the display face at --text-2xl;
+   „Donnerstagsrunde im Spielecafé Nord" measured scrollWidth 242 against
+   clientWidth 221, i.e. „Donnerstagsrunde" is one word wider than the rail and
+   bled out of it. Klassisch does not have this: its display face is narrower
+   and set two steps smaller, so it fits — which is why the fix belongs here
+   rather than in styles.css.
+
+   T7.7's own instruction is „auf zwei Zeilen brechen, statt zu kürzen", so
+   this is `overflow-wrap`, never an ellipsis: a round's name is how people tell
+   their rounds apart, and the part that identifies it is as often at the end as
+   at the start.
+
+   `break-word` rather than `anywhere`, which is the same result here and a
+   different one elsewhere: `anywhere` also shrinks the element's min-content
+   width, so it would let a name break mid-word wherever the rail is put under
+   pressure. `break-word` breaks only a word that has nowhere else to go, which
+   is exactly this case. */
+:root[data-design="tisch"][data-scheme="dark"] .rail__name {
+  overflow-wrap: break-word;
 }
