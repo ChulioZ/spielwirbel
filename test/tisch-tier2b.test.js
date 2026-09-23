@@ -130,12 +130,20 @@ test('the felt picker paints every swatch in its own marker', () => {
  * signed-in scope and the standalone-screen scope; the anti-vacuous floor
  * counts the rules actually checked. Only THIS section is swept — #1198
  * styles the logged-out face in the same file, deliberately without the
- * scope — and it is found by its first rule, since comments are stripped.
+ * scope. The section is cut out of the UNSTRIPPED file between its own banner
+ * and the next one, not "from here to the end": every later slice appends a
+ * section to this file, and #1198's logged-out statistics rules landing after
+ * this one would otherwise be swept as if they were this slice's.
  */
 test('every statistics rule is scoped to the signed-in standalone screen', () => {
-  const from = RAW.indexOf(':root[data-design="tisch"][data-scheme="dark"] .profile-card {');
+  const SOURCE = fs.readFileSync(path.join(__dirname, '..', 'public', 'css', 'designs', 'tisch.css'), 'utf8');
+  const from = SOURCE.indexOf('#1197 — the SPIELERKARTE');
   assert.ok(from > 0, 'the #1197 section is gone — this check is vacuous');
-  const stats = rulesOf(RAW.slice(from)).filter(([sel]) => /\.stats-/.test(sel));
+  const next = SOURCE.indexOf('/* ====', from);
+  const raw = SOURCE.slice(from, next < 0 ? undefined : next);
+  // `from` sits inside the banner, so drop the rest of it before stripping.
+  const section = raw.slice(raw.indexOf('*/') + 2).replace(/\/\*[\s\S]*?\*\//g, '');
+  const stats = rulesOf(section).filter(([sel]) => /\.stats-/.test(sel));
   assert.ok(stats.length >= 5, `only ${stats.length} statistics rules found — this check is vacuous`);
   for (const [sel] of stats) {
     for (const part of sel.split(',').map(norm)) {
