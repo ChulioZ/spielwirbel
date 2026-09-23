@@ -49,7 +49,7 @@ function openBulkPicker({ title, hint, okDisabled = false }, build, onOk) {
       </div>
     </div>`);
   const sheet = backdrop.querySelector('.sheet');
-  const okBtn = h(`<button type="button" class="btn btn--primary"${okDisabled ? ' disabled' : ''}>${esc(t('common.ok'))}</button>`);
+  const okBtn = h(`<button type="button" class="btn btn--primary"${okDisabled ? ' disabled' : ''}>${esc(t('common.apply'))}</button>`);
   const result = build(sheet, okBtn);
 
   document.body.appendChild(backdrop);

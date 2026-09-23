@@ -1499,6 +1499,26 @@ test('a design that declares a PAPER overlay family keeps every pair on it at AA
       // …and the control edge has to identify a control against both paper grounds.
       ['--paper-edge on --paper', v('--paper-edge'), v('--paper'), AA_LARGE],
       ['--paper-edge on --paper-raised', v('--paper-edge'), v('--paper-raised'), AA_LARGE],
+      /* #1195: the rest of the overlay's re-point. The two status inks are
+         text on every paper ground an overlay has — including --paper-sunken,
+         which is now what --sunken/--sunken-soft resolve to inside one (a chip
+         ground, the close disc). --warn and --accent take --paper-faint, so
+         that token is measured on the two new grounds as well. */
+      ...['--paper', '--paper-raised', '--paper-sunken'].flatMap((g) => [
+        [`--paper-good on ${g}`, v('--paper-good'), v(g), AA_TEXT],
+        [`--paper-danger on ${g}`, v('--paper-danger'), v(g), AA_TEXT],
+        [`--paper-ink on ${g}`, v('--paper-ink'), v(g), AA_TEXT],
+        [`--paper-ink-soft on ${g}`, v('--paper-ink-soft'), v(g), AA_TEXT],
+      ]),
+      ['--paper-faint on --paper', v('--paper-faint'), v('--paper'), AA_TEXT],
+      ['--paper-faint on --paper-sunken', v('--paper-faint'), v('--paper-sunken'), AA_TEXT],
+      // --brand-tint resolves to --gold-hi inside an overlay: the menu's hover.
+      ['--paper-ink on --gold-hi', v('--paper-ink'), v('--gold-hi'), AA_TEXT],
+      // The destructive button: paper on the red fill, and the fill itself has
+      // to identify the control against the paper (SC 1.4.11), since its rim is
+      // decorative.
+      ['--paper-danger-ink on --paper-danger', v('--paper-danger-ink'), v('--paper-danger'), AA_TEXT],
+      ['--paper-danger on --paper', v('--paper-danger'), v('--paper'), AA_LARGE],
     ];
     for (const [label, fg, bg, bar] of pairs) {
       const ratio = contrast(fg, bg);
@@ -1750,6 +1770,9 @@ test('every colour token a design declares is measured by one of the checks abov
     '--bar-1', '--bar-2', '--bar-3', '--bar-4', '--bar-5',
     '--gold-hi',
     '--played-tag', '--played-tag-ink', '--veto-tag', '--veto-tag-ink',
+    // #1195: the overlay's status inks, its darkest paper ground, and the
+    // destructive button's fill ink.
+    '--paper-good', '--paper-danger', '--paper-danger-ink', '--paper-sunken',
   ]);
   /* Not colours, so not this test's business: a lift PERCENTAGE, and the four
      compositing alphas the elevation ramp is built from. The alphas are painted
@@ -1762,7 +1785,10 @@ test('every colour token a design declares is measured by one of the checks abov
      there is no bar to measure them against, and inventing one would push them
      to a weight that reads as a button (#1191). Listed rather than folded into
      NOT_A_COLOUR above, because they ARE colours; what they are not is a pair. */
-  const DECORATIVE_EDGE = /^--(played-tag-edge|veto-tag-edge)$/;
+  /* #1195 added two more of the same kind: the destructive button's rim (the
+     red FILL identifies that control, measured above) and the paper hairline
+     between rows and under a head, which separates and identifies nothing. */
+  const DECORATIVE_EDGE = /^--(played-tag-edge|veto-tag-edge|paper-danger-edge|paper-line)$/;
 
   const unmeasured = [];
   for (const t of THEMES) {

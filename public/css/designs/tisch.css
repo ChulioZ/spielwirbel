@@ -257,6 +257,36 @@
      the raised paper. #7a4a28 is 5.19:1. */
   --paper-faint: #7a4a28;
 
+  /* ---- The rest of the paper family (#1195). The overlay rule further down
+     re-points a token at each of these; they are declared HERE for the reason
+     the six above are — only this block is resolved by test/support/theme.js.
+
+     The two STATUS inks. `--good` and `--danger` above are the LIGHT members of
+     their pairs, tuned for wood, and on the sheet's cream they measured 1.90:1
+     and worse (.claude/rules/overlay-surface-flip-strands-the-status-tokens.md).
+     These are T1's deep partners, which T1 already names as the ink on paper:
+     7.89:1 / 7.30:1 on paper, 6.42:1 / 5.94:1 on the darkest paper ground below.
+     `--warn` has no twin on purpose — T1 lists its #e8c168 as a FILL carrying
+     dark ink, never as text — so inside an overlay it takes --paper-faint, the
+     answer #1190 already gave its one warn line (finding A4). */
+  --paper-good: #23543c;
+  --paper-danger: #8f2f22;
+  /* The DESTRUCTIVE button's fill is --paper-danger itself (T15b: „rot gefüllt,
+     Papierschrift"); this is the paper it carries (7.41:1) and its rim. The rim
+     is decorative — the fill identifies the control against the paper at
+     7.30:1, so SC 1.4.11 is met by the fill and never by the edge. */
+  --paper-danger-ink: #fdf4e4;
+  --paper-danger-edge: #b5432a;
+  /* T1's close-button disc and chip ground: one step below --paper-raised. The
+     app's --sunken/--sunken-soft are mixed from the WALNUT page at :root, so
+     inside a sheet they painted a dark disc under a dark × (the close button in
+     every Tisch overlay, since #1188). */
+  --paper-sunken: #e7dcc4;
+  /* The paper hairline: T1's rgba(47,38,32,…) — the paper ink at low alpha —
+     between rows and under a head. Decorative (it separates rows, it identifies
+     no control), and it can only DARKEN the paper it sits on. */
+  --paper-line: rgba(47, 38, 32, 0.16);
+
   /* ---- Holz. The no-cover placeholder's two stops and the grain it is ruled
      with — T1's wood, which `.cover-ph` paints instead of --placeholder
      (.claude/rules/cover-ph-owns-the-coverless-game-glyph.md). */
@@ -486,6 +516,9 @@
   --page-bg: var(--paper);
   background: linear-gradient(180deg, var(--paper), var(--paper-raised));
   color: var(--ink);
+  /* The rest of the list — the status inks, --accent, --line, --sunken and the
+     brand tints — is #1195's second rule on these four selectors, at the end of
+     the file with the overlay slice that found them. */
 }
 
 /* ===========================================================================
@@ -3088,4 +3121,357 @@
    is exactly this case. */
 :root[data-design="tisch"][data-scheme="dark"] .rail__name {
   overflow-wrap: break-word;
+}
+
+/* ===========================================================================
+   #1195 — the OVERLAYS: sheets and their popover twins, the confirm dialog,
+   the toast and the „…" menu.
+
+   Source: Tisch-T15a-Sheets.dc.html and Tisch-T15b-Dialoge.dc.html. T15a's
+   rule is „eine Form, zwei Auftritte": on a phone a sheet from below, on a
+   desktop a popover at its trigger — same content, same order, same buttons,
+   and only three things differ (the grip, the title size, the anchoring). The
+   app already HAS that split for its eight editors (`openEditor`, the 860px
+   line, .claude/rules/popover-vs-sheet-editors.md), so this section paints the
+   two halves rather than inventing a third presentation; every other overlay
+   in the app is a dialog at both widths, which is what T15b draws for them.
+
+   OPERATOR DECISION on #1195: T15b's „Rückgängig statt Nachfrage" policy is
+   NOT adopted. Every confirmation the app asks today is still asked, and this
+   paints them to T15b's anatomy — the title is the question, the text the
+   consequence, the button the verb, a destructive button red-filled on the
+   right. The title/text split is confirm-dialog.js's splitConfirmQuestion,
+   which lifts the question sentence each message already opens with; nothing
+   here or there adds copy.
+
+   What this does NOT build, and why, is in the PR: a title and × on the
+   anchored popover (a new control), T15b's toast tones and its „Rückgängig"
+   action (toast() carries no type and no action — every call site would have
+   to say which it is), errors that stay until dismissed (the same), the felt
+   marker picker (it is a SCREEN, not an overlay), and T15a's per-sheet row
+   bodies wherever the app's sheet is a form rather than a list.
+
+   Every rule is scheme-gated, including the geometry: the paper these rules
+   dress only exists while the colour block applies, and a docked sheet whose
+   paper did not apply would be a new shape in the round's own palette.
+   =========================================================================== */
+
+/* --- The rest of the overlay's re-point ------------------------------------
+   The #1188 overlay rule above re-points the six MATERIAL tokens. These are the
+   tokens its descendants also paint from and that were still tuned for walnut —
+   .claude/rules/overlay-surface-flip-strands-the-status-tokens.md's question
+   („which properties do my DESCENDANTS paint from"), answered for the rest of
+   the list. Each one was a visible defect in some Tisch overlay:
+
+     --good / --danger   the LIGHT members of their pairs: 1.90:1 and worse on
+                         cream. `.btn--danger` in every confirm dialog wrote its
+                         verb in #f59c86 on paper.
+     --warn              a FILL colour in T1, never text — so the answer #1190
+                         gave its one warn line (--paper-faint), for all of them.
+     --accent            `.link-btn` is --accent, i.e. brass: 2:1 on paper.
+     --sunken(-soft)     mixed from the WALNUT page at :root, so the close
+                         button's disc and every chip ground inside a sheet
+                         were dark wood under the dark paper ink.
+     --line              the same mix: a brown rule on cream, heavier than T1's
+                         hairline.
+     --brand-tint(-soft) mixed from walnut --surface: the menu's hover painted a
+                         dark row under dark ink.
+     --brand-edge, --bg  the same mix; see the note on the last two lines.
+
+   A second rule on the same four selectors rather than an edit to the first, so
+   the #1188 block keeps reading as the material list it is; the two are one
+   decision and the first carries a pointer here. */
+:root[data-design="tisch"][data-scheme="dark"] .sheet,
+:root[data-design="tisch"][data-scheme="dark"] .dialog,
+:root[data-design="tisch"][data-scheme="dark"] .popover,
+:root[data-design="tisch"][data-scheme="dark"] .menu {
+  --good: var(--paper-good);
+  --danger: var(--paper-danger);
+  --warn: var(--paper-faint);
+  --accent: var(--paper-faint);
+  --sunken: var(--paper-sunken);
+  --sunken-soft: var(--paper-sunken);
+  --line: var(--paper-line);
+  --brand-tint: var(--gold-hi);
+  --brand-tint-soft: var(--paper-raised);
+  /* The last two tokens :root mixes from the page or the surface. --brand-edge
+     is the focus ring's colour (`0 0 0 3px var(--brand-edge)`), brass over
+     walnut; the rim token is its paper counterpart. --bg has no reader today and
+     is re-pointed so it cannot become the next --page-bg: test/tisch-overlays.test.js
+     derives this list from styles.css, and a token left out fails there. */
+  --brand-edge: var(--gold-edge);
+  --bg: var(--paper);
+}
+
+/* --- The sheet: edge, head and close (T15a.0) ------------------------------
+   18px edge, a 20px display title, a 34px close disc with a hairline rim. The
+   title size is the SHEET's at both widths: the app's centred dialog above
+   640px is the same element, and T15a gives the small-caps title only to the
+   anchored popover, which has no title at all (see the header). */
+/* A SHEET is flat paper, where the popover, dialog and menu keep #1188's
+   paper-to-raised sweep. The sheet's sticky head and action bar need an opaque
+   ground and take it from --page-bg, i.e. flat --paper (#1193) — so over the
+   sweep they painted as two lighter slabs, visible as a band under the title
+   and a lighter rectangle behind the buttons (seen at 390 and 1440 on the
+   confirm dialog). One flat tone makes the bars disappear into the sheet, which
+   is what a sticky bar is for. */
+:root[data-design="tisch"][data-scheme="dark"] .sheet {
+  padding: 0 18px;
+  background: var(--paper);
+}
+:root[data-design="tisch"][data-scheme="dark"] .sheet__head h2 {
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+:root[data-design="tisch"][data-scheme="dark"] .sheet__close {
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--line);
+  color: var(--ink);
+}
+:root[data-design="tisch"][data-scheme="dark"] .sheet__close:hover {
+  background: var(--paper-raised);
+}
+
+/* Buttons: 48px in a sheet's action bar (T15a), 44px in a dialog's (T15b). A
+   floor, never a height — `.btn` keeps its own padding, border-bottom „base"
+   and press compensation, which this must not disturb
+   (test/button-press-compensation.test.js). */
+:root[data-design="tisch"][data-scheme="dark"] .sheet__actions .btn { min-height: 48px; }
+:root[data-design="tisch"][data-scheme="dark"] .sheet__actions--confirm .btn { min-height: 44px; }
+
+/* The ONE primary action is the brass plate — the hub CTA's material at a
+   sheet's scale, so an overlay's commit reads as the same object as the table's
+   own. Covers both presentations of an editor: its commit is a `.btn--primary`
+   whether `openEditor` put it in a sheet or in a popover. */
+:root[data-design="tisch"][data-scheme="dark"] :is(.sheet, .popover) .btn--primary {
+  background: linear-gradient(180deg, var(--brass-hi), var(--gold-deep));
+  border-color: var(--gold-edge);
+  color: var(--on-accent);
+}
+:root[data-design="tisch"][data-scheme="dark"] :is(.sheet, .popover) .btn--primary:hover:not(:disabled) {
+  background: var(--brass-hi);
+  border-color: var(--gold-edge);
+}
+
+/* DESTRUCTIVE is red-FILLED (T15b rule 4), not the app's red outline: on paper
+   the outline's ink was the wood-tuned #f59c86 at 1.90:1. The hover restates
+   the fill because `.btn:hover` would otherwise swap it for --brand-tint-soft,
+   i.e. a paper button with paper-coloured text. */
+:root[data-design="tisch"][data-scheme="dark"] .sheet .btn--danger,
+:root[data-design="tisch"][data-scheme="dark"] .sheet .btn--danger:hover:not(:disabled) {
+  background: var(--paper-danger);
+  border-color: var(--paper-danger-edge);
+  color: var(--paper-danger-ink);
+}
+
+/* --- The phone appearance: a sheet from below, with a grip ------------------
+   T15a docks every sheet to the bottom edge on a phone. The app does that for
+   the add-game and direct-play sheets already; its EDITORS (`openEditor`, the
+   half of the split that is a popover on a desktop) were centred dialogs below
+   860px too. `.sheet-backdrop--editor` (sheet.js) names exactly those, so they
+   dock here and nothing else moves: the confirm dialog stays centred (T15b
+   draws it the same at both widths), and so do the scanning-list dialogs,
+   which `openEditor(…, { list: true })` keeps off the class.
+
+   639px is the app's own sheet breakpoint (`.sheet-backdrop` turns into a
+   padded, centring box at 640), so a docked editor and a docked add-game sheet
+   change shape at the same width.
+
+   The grip hangs off the STICKY head rather than off the sheet, because the
+   sheet is its own scroll container and a pseudo-element on it would scroll
+   away with the content. The head is `position: sticky`, which already makes it
+   the containing block for an absolute child. */
+@media (max-width: 639px) {
+  :root[data-design="tisch"][data-scheme="dark"] .sheet-backdrop--editor {
+    align-items: flex-end;
+    padding: 0;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .sheet-backdrop--editor > .sheet {
+    width: 100%;
+    max-width: none;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    border-bottom: none;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] :is(.sheet-backdrop:not(.sheet-backdrop--center), .sheet-backdrop--editor) > .sheet > .sheet__head {
+    padding-top: 24px;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] :is(.sheet-backdrop:not(.sheet-backdrop--center), .sheet-backdrop--editor) > .sheet > .sheet__head::before {
+    content: '';
+    position: absolute;
+    top: 9px;
+    left: 50%;
+    width: 42px;
+    height: 4px;
+    margin-left: -21px;
+    border-radius: 999px;
+    background: var(--paper-edge);
+    /* T1 draws the grip in the paper ink at 30%; the edge token at this opacity
+       is that tone without a new colour, and it is decoration — it names no
+       control (the whole head is the drag affordance), so it takes no bar. */
+    opacity: 0.45;
+  }
+}
+
+/* --- The desktop appearance: the popover at its trigger --------------------
+   Paper with a brass rim (T15a draws #a87a2e; --gold-edge is T1's rim token for
+   the same edge on the plate). The 300px width is already the app's
+   `.popover { max-width: 300px }`, so nothing here re-sizes the card — and must
+   not: the tags, owners and cover cards carry their own caps
+   (.claude/rules/popover-vs-sheet-editors.md §4). */
+:root[data-design="tisch"][data-scheme="dark"] .popover {
+  border-color: var(--gold-edge);
+  border-radius: var(--radius-xl);
+}
+
+/* --- The confirm dialog (T15b.1) -------------------------------------------
+   420px, the question at 22px, the consequence at 15px in the soft ink, the
+   verb on the right. `.sheet[role="alertdialog"]` is confirmDialog's own
+   signature — no other sheet in the app is an alertdialog — so no new class
+   was needed to reach it. Compounded with `.sheet--dialog` to beat that
+   class's 460px on specificity rather than on source order.
+
+   CANCEL has no fill (T15b rule 3: „Abbrechen steht links und ohne Fläche"),
+   and keeps the paper edge so it still reads as a button at 4.73:1. */
+:root[data-design="tisch"][data-scheme="dark"] .sheet.sheet--dialog[role="alertdialog"] {
+  max-width: 420px;
+  padding: 0 24px;
+}
+:root[data-design="tisch"][data-scheme="dark"] .sheet[role="alertdialog"] .sheet__head h2 {
+  font-size: 22px;
+}
+:root[data-design="tisch"][data-scheme="dark"] .confirm-dialog__body {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.55;
+  color: var(--ink-soft);
+}
+/* T15b's dialog buttons are 15px with a 16px inset — a step under the sheet's
+   48px commit, because a dialog carries TWO. At the app's 18px/20px metrics
+   „Abbrechen" + „Aussortieren" measured wider than a 390px dialog's 310px of
+   content, so the row wrapped and the destructive verb landed UNDER the cancel,
+   i.e. not on the right. Only the inline padding moves: the vertical padding
+   and the bottom „base" stay the press mechanic's. A verb long enough to wrap
+   anyway still wraps — the row is `.toolbar`, and a clipped verb is worse. */
+:root[data-design="tisch"][data-scheme="dark"] .sheet__actions--confirm .btn {
+  font-size: 15px;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+:root[data-design="tisch"][data-scheme="dark"] .sheet__actions--confirm .btn:not(.btn--primary, .btn--danger) {
+  background: transparent;
+}
+:root[data-design="tisch"][data-scheme="dark"] .sheet__actions--confirm .btn:not(.btn--primary, .btn--danger):hover {
+  background: var(--paper-raised);
+}
+
+/* --- The „…" menu, in all four appearances (T15b.5) ------------------------
+   Flush 42px rows on paper, a hairline between them, the icon at 17px — and the
+   ORDER, which is fillMenu's (popover.js): change, share, undoable, and last
+   the destructive rows, in red with a rule above. The red is painted by
+   `data-kind`, not by the app's tone classes, because a tone class says what
+   colour a row was given and the kind says what the row DOES; on this design
+   an „Aussortieren" that raises a red question is red, and a completion that
+   raises none is plain ink however the app tinted it.
+
+   `overflow: clip` only while the card is NOT clamped: a clamped popover has
+   to scroll itself (`.popover--clamped`), and a clip here would out-rank it. */
+:root[data-design="tisch"][data-scheme="dark"] .popover--menu {
+  padding: 0;
+  gap: 0;
+  border-radius: var(--radius-md);
+}
+:root[data-design="tisch"][data-scheme="dark"] .popover--menu:not(.popover--clamped) { overflow: clip; }
+:root[data-design="tisch"][data-scheme="dark"] .popover--menu .popover__opt {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 42px;
+  padding: 0 13px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  font-weight: 600;
+  color: var(--ink);
+}
+:root[data-design="tisch"][data-scheme="dark"] .popover--menu .popover__opt:last-child { border-bottom: 0; }
+:root[data-design="tisch"][data-scheme="dark"] .popover--menu .popover__opt .ti { font-size: 17px; }
+:root[data-design="tisch"][data-scheme="dark"] .popover--menu .popover__opt[data-kind="destructive"] {
+  color: var(--danger);
+}
+:root[data-design="tisch"][data-scheme="dark"] .popover--menu .popover__opt:not([data-kind="destructive"]) + .popover__opt[data-kind="destructive"] {
+  border-top: 1px solid var(--control-edge);
+}
+
+/* --- Rows in a list sheet (T15a) --------------------------------------------
+   The scanning lists — BGG import, „Spiele verschieben", the wish and
+   off-shelf pickers — are `.ds-row`s, and T15a draws a sheet's rows as raised
+   slips on the sheet's paper rather than as the page's cards: 44px, a hairline,
+   the raised tone. A picked row keeps the app's own treatment (a brass edge on
+   --brand-tint-soft, which the re-point above makes the same raised paper), so
+   the rule leaves it alone rather than out-ranking it. */
+:root[data-design="tisch"][data-scheme="dark"] .sheet .ds-row:not(.ds-row--picked) {
+  min-height: 44px;
+  background: var(--paper-raised);
+  border-color: var(--line);
+}
+
+/* --- When a sheet cannot deliver (T15b.6) -----------------------------------
+   T15b draws a sheet's failure as the sheet's own empty state — a raised,
+   centred card with the headline in the display face — never as a dialog. The
+   BGG import is the sheet with the most of them (nothing marked owned, the
+   collection private, BGG queueing or down, an unknown handle) and renders
+   every one through `.bgg-import__msg`; the add-game lookup's no-hit and
+   BGG-down lines are its dropdown's `.lookup__msg`, which #1190 already
+   painted. The icon disc T15b puts above the headline is not drawn: it is a
+   new element, and the headline reads without it. */
+:root[data-design="tisch"][data-scheme="dark"] .sheet .bgg-import__msg {
+  margin: 4px 0 12px;
+  padding: 20px 16px;
+  text-align: center;
+  background: var(--paper-raised);
+  border-radius: var(--radius-md);
+}
+:root[data-design="tisch"][data-scheme="dark"] .sheet .bgg-import__msg > p:first-child {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1.25;
+  color: var(--ink);
+}
+
+/* --- The toast (T15b.4) -----------------------------------------------------
+   A walnut plank with a brass rim — T15b's NEUTRAL tone, for every toast. Its
+   green „done" and red „error" tones are not painted: `toast()` is handed a
+   bare string at ~200 call sites, success and failure alike (every
+   `catch (e) { toast(e.message) }` is one), so a tone would have to be guessed
+   and a guessed green on an error is worse than no tone at all.
+
+   One at a time is already the app's behaviour — one element, replaced text.
+
+   Seat: over the dock on a phone (the dock's 86px bar plus its gap is
+   --dock-clearance), and from 1280px — where the rail replaces the dock —
+   bottom LEFT, aligned with the rail's own left edge rather than the window's,
+   because the shell is centred and at 1800px+ the window edge is far from
+   anything. The 26px radius the app uses to keep a wrapped message from
+   painting as an ellipse (test/toast-shape.test.js) is replaced by T1's square
+   corner, which cannot degenerate at any height. */
+:root[data-design="tisch"][data-scheme="dark"] .toast {
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--control-edge);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-3);
+  font-weight: 700;
+  text-align: left;
+}
+@media (max-width: 859px) {
+  :root[data-design="tisch"][data-scheme="dark"] .toast { bottom: var(--dock-clearance); }
+}
+@media (min-width: 1280px) {
+  :root[data-design="tisch"][data-scheme="dark"] .toast {
+    left: max(20px, calc((100vw - var(--w-shell)) / 2 + 20px));
+    transform: none;
+  }
 }

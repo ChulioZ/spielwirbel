@@ -118,7 +118,11 @@ test('the RETIRE dialog on the real detail screen says what pressing it does', a
   // The three claims, read off the DOM the user actually sees — so a string
   // reverted to the bare question reddens HERE by name, not only in the table
   // sweep above.
-  assert.match(body.textContent, /Azul/, 'the dialog no longer names the game');
+  // Since #1195 the question is the dialog's TITLE and the rest is the text
+  // under it (splitConfirmQuestion), so the game is named in the heading and the
+  // three consequences are the body — the anatomy T15b draws.
+  const heading = body.closest('.sheet').querySelector('.sheet__head h2');
+  assert.match(heading.textContent, /Azul/, 'the dialog\'s question no longer names the game');
   assert.match(body.textContent, /Regal/, 'the dialog does not say the game leaves the shelf');
   assert.match(body.textContent, /Auslosung/, 'the dialog does not say it stops being drawn');
   assert.match(body.textContent, /zurückholen/, 'the dialog does not say it can be brought back');
