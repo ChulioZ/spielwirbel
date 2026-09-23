@@ -369,9 +369,19 @@
 /* Review finding A7, as a rule rather than as eight separate fixes: a text link
    is a 24 px target. The package had footer links at 17-19 px and toast actions
    at 18. WCAG 2.2 SC 2.5.8 is met through padding so nothing moves visually at
-   the top of the line box. */
+   the top of the line box.
+
+   `.auth__terms a` joined the list in #1193: A7 names „Passwort vergessen?"
+   on T5.1, which is a `.link-btn` and was already covered, but the two legal
+   links in the same card sit inside a paragraph and were not. They are the
+   one member of this list that cannot wrap — an inline-flex box is atomic —
+   so a label wider than the line would overflow the card instead of
+   breaking. Measured at 390px, where the line is 304px, over all eighteen
+   labels in the nine shipped locales: the widest is French « politique de
+   confidentialité » at 177px, and every link comes out at exactly 24px. */
 :root[data-design="tisch"] .link-btn,
 :root[data-design="tisch"] .site-footer a,
+:root[data-design="tisch"] .auth__terms a,
 :root[data-design="tisch"] .toast button {
   min-height: 24px;
   display: inline-flex;
@@ -458,6 +468,22 @@
   --ink-soft: var(--paper-ink-soft);
   --control-edge: var(--paper-edge);
   --placeholder: var(--paper-faint);
+  /* --page-bg joined the list in #1193, and its absence was a defect in every
+     sheet in the app rather than a choice. `.sheet__head` and `.sheet__actions`
+     are STICKY, so they need an opaque backdrop for the content to scroll
+     under, and both take `background: var(--page-bg)` — which is an inline
+     property on <html> that nothing here re-pointed. The two bars therefore
+     painted WALNUT on top of the paper, and the paper ink this rule sets was
+     left on them: the chooser's own „Wähl dir ein Design." measured 1.08:1.
+
+     Re-pointing the property rather than repainting the two bars, because the
+     other six things that read --page-bg inside an overlay — the timeline dot,
+     the dial's hub, a marker's ring, two fade-to-page bars — all want the
+     overlay's ground for the same reason, and would each need a rule of their
+     own. Nothing re-derives: --line, --sunken and --control-edge are mixed from
+     --page-bg on :root, so they are substituted there and inherit as resolved
+     values, not as live references. */
+  --page-bg: var(--paper);
   background: linear-gradient(180deg, var(--paper), var(--paper-raised));
   color: var(--ink);
 }
@@ -2650,4 +2676,170 @@
        wrong instrument beside the roster, where the panel is its own column. */
     margin-top: 0;
   }
+}
+
+/* ===========================================================================
+   #1193 — ANMELDEN, KONTO and the DESIGN-WAHL, at 390 and at 1440.
+
+   Sources: Tisch-T5-Konto.dc.html (T5.1 Anmelden, T5.2 Konto, T5.3
+   Auswahlkarte, T5.4 Telefon).
+
+   Three things the sheet draws that this slice deliberately does NOT build,
+   by the operator's decision (2026-09-22) that „the sheet's intent is the
+   design, not the ordering":
+
+   - T5.1 puts the passkey button ABOVE the e-mail form as the primary way in.
+     It stays where it is, below the submit — and therefore stays the raised
+     wood control, with the gold reserved for the form's own primary. Two gold
+     buttons stacked, the lower one louder, is worse than either order.
+   - T5.1 and T5.4 head the card with an „Anmelden | Registrieren" segmented
+     control. The app's two cross-links keep their place at the foot of the
+     card and are skinned there.
+   - T5.1's „Lieber ohne Passwort? · Link schicken" card has no feature behind
+     it at all. This app has no magic-link login — the only mailed links are
+     verify, reset and address-change — so there is nothing here to paint.
+
+   What IS taken from the sheet is its MATERIALS and where each one belongs:
+   the sign-in on felt, the form on a walnut plank, the design posters printed
+   on paper. Every one of those lands on an element the app already renders,
+   so this slice adds no markup and no copy — it is paint from end to end.
+   =========================================================================== */
+
+/* --- The sign-in plank (T5.1, T5.4) ---------------------------------------
+   T5.4 stands the sign-in on the table itself: felt to every edge, with the
+   form on a plank of the same walnut every other screen is cut from. The PAGE
+   is repainted rather than `.auth` given a bleeding margin, because the felt
+   has to reach past `.app`'s gutter and under the footer, which a margin on
+   the centred card cannot do.
+
+   This is T5.4's reading, and it ships at BOTH widths. T5.1 splits the 1440
+   card into a 620px felt promise beside the form, and that is not buildable
+   here: the card's children are flat siblings with no wrapper to make a
+   column of, and the promise panel's content — three selling points, the
+   trust line, the BGG badge — does not exist on this screen at all. A grid
+   would have to share row heights between the two halves, so the heading
+   stack would be spaced out by whichever form it sits next to, differently on
+   login and register. The promise copy belongs to the public surfaces (#1198)
+   that own the landing's pitch; when it lands, the split is one wrapper away. */
+:root[data-design="tisch"][data-scheme="dark"] body.auth-screen {
+  background-color: var(--felt-deep);
+  background-image:
+    var(--felt-weave),
+    radial-gradient(120% 90% at 50% 0%, var(--felt), var(--felt-deep) 72%);
+}
+
+/* The form's own plank. --surface is already the walnut T5.1 draws the right
+   half in, so only the rim and the cast are missing: a gold edge, a shadow
+   deep enough to lift the plank off the felt, and the grain hairline the
+   other wooden panels in this file carry.
+
+   The card is FLAT --surface and deliberately not the
+   `--wood-light -> --surface` gradient that reads more like a plank: at the
+   light stop --wood-light (#5b4128) brass link text measures 4.37:1, under
+   the 4.5 floor. That number is the one the token block calls „tight on
+   purpose" for a control FILL, where SC 1.4.11's 3:1 binds; it is not a
+   ground for text, and `.auth__links` climbs to the top of the card on the
+   short screens (forgot-password, the two mail landings). --surface is the
+   ground every other text colour in this design was measured against. */
+:root[data-design="tisch"][data-scheme="dark"] .auth__card {
+  background: var(--surface);
+  border-color: var(--gold-edge);
+  box-shadow: 0 18px 40px var(--cast-deep), inset 0 0 0 1px var(--wood-grain);
+}
+
+/* The mark at the head of the card. Gold rather than the brass --brand it
+   inherits: this is the brand's own glyph, not an action, and T5.1 prints the
+   wordmark in the gold plate. A1 permits it without qualification — the
+   restriction there is on gold as TEXT under 24px, and this is a 34px glyph. */
+:root[data-design="tisch"][data-scheme="dark"] .auth__logo { color: var(--gold); }
+
+/* T5.1's „oder mit E-Mail" rule. The two flex-grown borders take the gold at
+   its lowest weight; the label itself stays --ink-soft rather than following
+   them, because at --text-sm gold is exactly the text A1 rules out. */
+:root[data-design="tisch"][data-scheme="dark"] .auth__or::before,
+:root[data-design="tisch"][data-scheme="dark"] .auth__or::after {
+  background: var(--gold-soft);
+}
+
+/* --- The design posters (T5.2, T5.3, T5.4) ---------------------------------
+   T5.3 makes every design a printed bill: its own material across the head,
+   then the name, a badge and one sentence on the paper below. The card
+   already carries exactly those two halves in that order, so the change is
+   that the tile stops being an inset swatch beside the text and becomes the
+   card's head — `padding: 0` on the card, the padding moved onto the body.
+
+   The list renders in two grounds and this rule has to hold in both: on wood
+   in the Konto section, and on paper inside the first-start chooser, where
+   the overlay rule above has already re-pointed --surface. Nothing here names
+   a ground, so both follow. */
+:root[data-design="tisch"][data-scheme="dark"] .design-card {
+  padding: 0;
+  gap: 0;
+  /* --control-edge, not the hairline --line it inherits: the card IS the
+     control here — it wraps the radio that picks the design — and the token
+     block's „Kante" note is explicit that a boundary identifying a control is
+     what SC 1.4.11 binds. A hairline would also lose the poster's own edge
+     against the material it now carries to the card's corners. */
+  border-color: var(--control-edge);
+}
+:root[data-design="tisch"][data-scheme="dark"] .design-card__body {
+  padding: 11px 13px 13px;
+  gap: 3px;
+}
+
+/* The poster itself. Both colours come from the design's OWN registry entry,
+   inline on the card as --tile-page / --tile-accent, so this one rule prints
+   seven different materials and a design added later needs no rule at all.
+   The accent stops being a corner wedge and becomes the bill's bottom band,
+   which is what makes it read as printed matter rather than as a swatch.
+
+   Klassisch declares neither property — it IS `:root` — so it falls through
+   to the defaults `.design-card` states in styles.css, and its page tone
+   #f4f1ea is the one T5.3 asks for.
+
+   The field is FLAT --tile-page rather than a wash toward the accent, because
+   a wash needs a color-mix() and test/design-layer.test.js refuses one outside
+   the two root blocks — the contrast suite resolves tokens by name there and
+   cannot see an expression buried in a component rule. That constraint is
+   right here for a second reason: --tile-page belongs to whichever design the
+   card is FOR, so anything mixed into it would have to be design-neutral, and
+   this sheet has no neutral to offer. */
+:root[data-design="tisch"][data-scheme="dark"] .design-tile {
+  height: 96px;
+  border: 0;
+  border-radius: 0;
+  background:
+    linear-gradient(180deg, transparent 0 76%, var(--tile-accent) 76%),
+    var(--tile-page);
+}
+
+/* The chosen one. Gold is the rank colour and this is a mark of state, not an
+   action — and as an EDGE it is outside A1's reach, which binds gold as text.
+   The ring doubles the 2px border rather than replacing it, so the card does
+   not move between states. */
+:root[data-design="tisch"][data-scheme="dark"] .design-card.is-on {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 2px var(--gold-soft), var(--shadow-2);
+}
+
+/* The „Wie bisher" badge on Klassisch's poster. Its ground follows --surface,
+   so it is wood in the Konto section and paper inside the chooser sheet — but
+   its ink is --brand-strong, which is brass lifted 13% toward white and is
+   therefore light in BOTH. On paper that measured 1.62:1.
+
+   --ink rather than a gold: it is the one ink the overlay already re-points,
+   so the badge is legible on either ground without a second rule, and the
+   tinted pill keeps carrying the accent. */
+:root[data-design="tisch"][data-scheme="dark"] .design-card__badge {
+  color: var(--ink);
+}
+
+/* T5.3's „Neu in Spielwirbel" kicker. Same shape as the badge above and the
+   same cause: --brand-strong is brass lifted toward white, and this kicker
+   only ever renders inside the chooser sheet, i.e. only ever on paper, where
+   it measured 1.75:1. --gold-ink is the gold family's own dark ink — the warm
+   brown T5.3 prints the kicker in — and measures 10.50:1 on --paper, 9.44:1
+   on --paper-raised. */
+:root[data-design="tisch"][data-scheme="dark"] .design-chooser__kicker {
+  color: var(--gold-ink);
 }

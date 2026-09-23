@@ -7,7 +7,7 @@ paths:
   - "test/support/theme.js"
 ---
 
-# An overlay that changes MATERIAL must re-point `--good`/`--warn`/`--danger` too
+# An overlay that changes MATERIAL strands every token it did not list
 
 Der Tisch's sheets, dialogs, popovers and menus are **paper**, where its page is
 walnut. #1188 wrote that as one block, and the block reads complete:
@@ -69,6 +69,38 @@ twin.
 Until the trio is re-pointed, a rule painting one of them on the overlay's ground
 must name a token that was measured *there*: `--paper-faint` for Der Tisch, which
 is review finding A4's own corrected value.
+
+## The second one: what a STICKY descendant paints from (#1193)
+
+The same block, the same shape, one axis further out. `.sheet__head` and
+`.sheet__actions` are `position: sticky`, so each needs an **opaque** backdrop
+for the sheet's content to scroll under — and both take it from `--page-bg`:
+
+```css
+.sheet__head, .sheet__actions { background: var(--page-bg); }   /* styles.css */
+```
+
+`--page-bg` is an inline custom property on `<html>` carrying the design's PAGE
+colour, and the overlay block did not re-point it. So both bars painted
+**walnut on top of the paper**, wearing the paper ink the block sets three lines
+above: the design chooser's own „Wähl dir ein Design." measured **1.08:1**, in
+every sheet in the app, from #1188 until #1193.
+
+It is a harder miss than the status trio, because `--page-bg` is not a token of
+the subtree at all — it is the *page's*, and re-pointing the page inside a sheet
+reads like a category error until you notice who consumes it. The same six other
+consumers (a timeline dot, the dial's hub, a marker's ring, two fade-to-page
+bars) all want the overlay's ground for the same reason.
+
+**So widen the question: not "which of MY tokens are now on the wrong ground",
+but "which properties do my DESCENDANTS paint from".** An opaque backdrop on a
+sticky bar is the common case, and it is invisible precisely because the bar is
+correct — it is doing exactly what a sticky bar must.
+
+`test/tisch-konto.test.js` derives this rather than pinning the property name: it
+reads whatever `.sheet__head`/`.sheet__actions` paint from in `styles.css` and
+requires the overlay to answer for each. Rename `--page-bg`, or give one bar a
+different source, and the test follows.
 
 ## The guard hole beside it: TWO registries, one sweep
 
