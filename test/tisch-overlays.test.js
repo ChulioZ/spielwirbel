@@ -401,7 +401,8 @@ test('the three status inks are re-pointed at the paper family inside an overlay
 test('a destructive button in a sheet is red-FILLED, at rest and under the pointer', () => {
   const rule = gated(`${GATE} .sheet .btn--danger:hover`);
   assert.equal(rule.length, 1, 'the destructive rule no longer covers :hover — `.btn:hover` repaints it as paper');
-  assert.match(rule[0][0], new RegExp(`${GATE.replace(/[[\]]/g, '\\$&')} \\.sheet \\.btn--danger,`),
+  // A plain substring, not a regex built from the selector: nothing to escape.
+  assert.ok(rule[0][0].replace(/\s+/g, ' ').includes(`${GATE} .sheet .btn--danger,`),
     'the resting state is not in the same rule');
   assert.match(rule[0][1], /background:\s*var\(--paper-danger\)/);
   assert.match(rule[0][1], /color:\s*var\(--paper-danger-ink\)/);
@@ -421,8 +422,9 @@ test('on a phone the editor docks to the bottom edge and carries a grip on its s
 test('the menu paints by what an item DOES, with a rule above the destructive group', () => {
   assert.equal(gated('.popover__opt[data-kind="destructive"]').length >= 2, true,
     'the destructive colour or its rule is no longer keyed on data-kind');
-  const red = gated(`.popover--menu .popover__opt[data-kind="destructive"] {`.replace(' {', ''))
-    .find(([sel]) => /\]\s*$/.test(sel.trim()));
+  const red = gated('.popover--menu .popover__opt[data-kind="destructive"]')
+    .find(([sel]) => sel.trim().endsWith('[data-kind="destructive"]'));
+  assert.ok(red, 'the destructive row has no colour rule of its own');
   assert.match(red[1], /color:\s*var\(--danger\)/);
   const ruleAbove = gated(':not([data-kind="destructive"]) + .popover__opt[data-kind="destructive"]');
   assert.equal(ruleAbove.length, 1, 'no rule separates the destructive group');
