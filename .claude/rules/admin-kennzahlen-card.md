@@ -55,11 +55,11 @@ seeds rounds/accounts with recognisable names and asserts every field of
 without anyone remembering the test exists.
 
 **#941 made that sweep RECURSE TO THE LEAVES, and swept the KEYS too**, since a
-payload field is no longer always a scalar — the two-level form reported a nested
-block as "not a number" the moment the design histogram appeared. #1124's
-`adoption` block inherited that for free, which is the point. Keys matter as well
-as values, and not theoretically: the histogram is keyed by the **stored design
-id**, the one thing on these cards that comes from data rather than from code.
+payload field is no longer always a scalar. Keys matter as well as values: #941's
+design histogram was keyed by the **stored design id**, i.e. by data. #1201's
+`designAdoption` replaced it keyed by the registry's OFFERED ids — each account
+folded onto the design `/me` resolves it to (`lib/account-design.js`) — which is
+the shape for any nested block: never key by a stored value.
 
 **The tempting fix to either sweep is an allowlist of known-safe or known-nested
 fields. Do not add one** — it has to be maintained by the same person who just
