@@ -24,9 +24,39 @@
  * Part of the frontend; all files share one global script scope (load order: see
  * index.html). */
 
+/* --- Der Tisch's row lists (#1273, T15a) --------------------------------------
+   T15a draws every form sheet as a head over ROWS — 44px raised slips, each a
+   label with its value or control — and at most one primary action, a full-width
+   48px plate under them. Under Der Tisch the players, owners and cover editors
+   build that composition; every other design keeps the Klassisch body byte for
+   byte, which is why each builder branches ONCE at the top rather than sprinkling
+   the design through its markup.
+
+   The rows change where a control sits, never what it does: a toggle stays an
+   `aria-pressed` button, a field stays a field, a commit still commits. Both
+   presentations (the 390 sheet and the 1440 popover) get the same rows in the
+   same order — T15a's „gleicher Inhalt, gleiche Reihenfolge, gleiche Knöpfe". */
+
+// A row that IS a button — an action the editor used to offer as a second
+// `.btn`, demoted to a row so the editor keeps exactly one primary.
+function editorRowButton(icon, label, tone) {
+  return h(`<button type="button" class="editor-row${tone ? ' editor-row--' + tone : ''}">
+      <i class="ti ${icon} editor-row__icon" aria-hidden="true"></i>
+      <span class="editor-row__label">${esc(label)}</span>
+    </button>`);
+}
+
+// The one primary action, under the rows.
+function editorActions(primary) {
+  const bar = h('<div class="editor-actions"></div>');
+  bar.appendChild(primary);
+  return bar;
+}
+
 function openPlayersPopover(ctx, anchor) {
   const { game, updateGame } = ctx;
   openEditor(anchor, 'players', t('detail.onboard.players'), (el, close) => {
+    const tisch = designIs('tisch');
     const min = h('<input class="input" inputmode="numeric" />');
     const max = h('<input class="input" inputmode="numeric" />');
     if (Number.isInteger(game.minPlayers)) min.value = game.minPlayers;
@@ -49,6 +79,22 @@ function openPlayersPopover(ctx, anchor) {
     [min, max].forEach((inp) => inp.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') { e.preventDefault(); save(); }
     }));
+    if (tisch) {
+      // One row, „Personen (min.–max.)" and the pair — the label the add-game
+      // form already uses for the same two fields. The fields get the names
+      // their placeholders only suggest; a placeholder is not a label.
+      min.placeholder = t('addGame.minPlayersPlaceholder');
+      max.placeholder = t('addGame.maxPlayersPlaceholder');
+      min.setAttribute('aria-label', t('addGame.minPlayersPlaceholder'));
+      max.setAttribute('aria-label', t('addGame.maxPlayersPlaceholder'));
+      const row = h(`<div class="editor-row" role="group" aria-labelledby="ppPlayersLabel">
+          <span class="editor-row__label" id="ppPlayersLabel">${esc(t('addGame.playersLabel'))}</span>
+          <span class="editor-row__control"></span>
+        </div>`);
+      row.querySelector('.editor-row__control').append(min, h('<span aria-hidden="true">–</span>'), max);
+      el.append(row, editorActions(okBtn));
+      return () => { min.focus(); min.select(); };
+    }
     const row = h('<div class="pp-row"></div>');
     row.appendChild(min);
     row.appendChild(h('<span>–</span>'));
@@ -57,6 +103,31 @@ function openPlayersPopover(ctx, anchor) {
     el.appendChild(row);
     return () => { min.focus(); min.select(); };
   });
+}
+
+// The owners as T15a's person rows (Der Tisch): avatar, name, a tick when the
+// seat owns the box. Same contract as renderOwnerChips in owner-picker.js — a
+// live `selected` Set, an `aria-pressed` toggle per seat, retired seats left
+// out — built here rather than there because this editor is its only caller;
+// the add-game and BGG-import sheets keep the chips.
+function renderOwnerRows(round, selected) {
+  const wrap = h('<div class="editor-rows"></div>');
+  const members = ((round && round.members) || []).filter((m) => !m.retired);
+  wrap.hidden = members.length === 0;
+  members.forEach((m) => {
+    const row = h(`<button type="button" class="editor-row editor-row--toggle" aria-pressed="${selected.has(m.id)}">`
+      + `<span class="editor-row__avatar avatar" style="background:${esc(memberColor(round, m.id))}">`
+      + `${avatarFace(initials(m.name), { userId: m.userId })}</span>`
+      + `<span class="editor-row__label">${esc(m.name)}</span>`
+      + '<i class="ti ti-check editor-row__tick" aria-hidden="true"></i></button>');
+    row.addEventListener('click', () => {
+      if (selected.has(m.id)) selected.delete(m.id);
+      else selected.add(m.id);
+      row.setAttribute('aria-pressed', String(selected.has(m.id)));
+    });
+    wrap.appendChild(row);
+  });
+  return wrap;
 }
 
 // Who owns the box (#971). Built like the tags popover next to it — chips over
@@ -69,12 +140,14 @@ function openOwnersPopover(ctx, anchor) {
   const { round, game, updateGame } = ctx;
   openEditor(anchor, 'owners', t('detail.onboard.owners'), (el, close) => {
     const selected = new Set(game.ownerIds || []);
-    el.appendChild(renderOwnerChips(round, selected));
+    const tisch = designIs('tisch');
+    el.appendChild(tisch ? renderOwnerRows(round, selected) : renderOwnerChips(round, selected));
     const okBtn = h(`<button class="btn btn--primary">${esc(t('common.apply'))}</button>`);
     okBtn.addEventListener('click', () => {
       close();
       updateGame({ ownerIds: [...selected] });
     });
+    if (tisch) { el.appendChild(editorActions(okBtn)); return; }
     const row = h('<div class="pp-row"></div>');
     row.appendChild(okBtn);
     el.appendChild(row);
@@ -162,6 +235,11 @@ function openTagsPopover(ctx, anchor) {
 function openImagePopover(ctx, anchor) {
   const { rid, game, updateGame, refresh } = ctx;
   openEditor(anchor, 'image', t('detail.onboard.cover'), (el, close) => {
+    // Under Der Tisch the secondary ways to a cover are ROWS and pasting is the
+    // one primary, under them (T15a); every other design keeps the buttons in
+    // the order they always had. `rows` is where the secondaries go.
+    const tisch = designIs('tisch');
+    const rows = tisch ? h('<div class="editor-rows"></div>') : el;
     const paste = h(`<button class="btn btn--primary">${esc(t('detail.pasteImage'))}</button>`);
     paste.addEventListener('click', async () => {
       const blob = await readClipboardImage();
@@ -169,7 +247,7 @@ function openImagePopover(ctx, anchor) {
       close();
       updateGame({ imageBlob: blob });
     });
-    el.appendChild(paste);
+    if (!tisch) el.appendChild(paste);
 
     // Re-fetch the cover from the provider this game is linked to (#518).
     // Offered whether or not there is a cover today, so it doubles as a repair
@@ -189,7 +267,9 @@ function openImagePopover(ctx, anchor) {
       // width sized the whole image-editor popover
       // (.claude/rules/popover-width-is-shrink-to-fit.md), while the toast has
       // room and reads better spelled out.
-      const fetchBtn = h(`<button class="btn">${esc(t('detail.coverFromProvider', { provider: providerLabelShort(game.source.provider) }))}</button>`);
+      const fetchLabel = t('detail.coverFromProvider', { provider: providerLabelShort(game.source.provider) });
+      const fetchBtn = tisch ? editorRowButton('ti-download', fetchLabel)
+        : h(`<button class="btn">${esc(fetchLabel)}</button>`);
       fetchBtn.addEventListener('click', async () => {
         close();
         try {
@@ -207,7 +287,7 @@ function openImagePopover(ctx, anchor) {
           toast(known ? t(known, { provider: prov }) : e.message);
         }
       });
-      el.appendChild(fetchBtn);
+      rows.appendChild(fetchBtn);
     }
 
     // Pick one of the game's BGG edition covers (#519) — the printing on this
@@ -219,7 +299,7 @@ function openImagePopover(ctx, anchor) {
       // 300px `.popover` default. Compounded in CSS so it beats `.popover`
       // on specificity rather than on source order.
       el.classList.add('has-covers');
-      el.appendChild(editionCoverPicker(rid, game.source.externalId, game.image || null, async (c) => {
+      rows.appendChild(editionCoverPicker(rid, game.source.externalId, game.image || null, async (c) => {
         close();
         // The pick's edition rides along with its URL (#742) — the picker has
         // always handed back `{ edition, year, languages }` and every caller
@@ -230,9 +310,16 @@ function openImagePopover(ctx, anchor) {
     }
 
     if (game.image) {
-      const rm = h(`<button class="btn btn--ghost">${esc(t('addGame.removeImage'))}</button>`);
+      const rm = tisch ? editorRowButton('ti-trash', t('addGame.removeImage'), 'danger')
+        : h(`<button class="btn btn--ghost">${esc(t('addGame.removeImage'))}</button>`);
       rm.addEventListener('click', () => { close(); updateGame({ removeImage: true }); });
-      el.appendChild(rm);
+      rows.appendChild(rm);
+    }
+    if (tisch) {
+      // A cover-less game with no provider link has no secondary at all, and an
+      // empty rows box would still cost the card its gap.
+      if (rows.children.length) el.appendChild(rows);
+      el.appendChild(editorActions(paste));
     }
     el.appendChild(h(`<div class="muted popover__hint">${esc(t('detail.imageHint'))}</div>`));
   });

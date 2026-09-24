@@ -14,6 +14,9 @@
    THE LOAD-BEARING RULE FOR EVERY CARD: it renders NOTHING when it has nothing
    to say — no heading, no empty container, no skeleton. Each renderer below
    returns null for that case and the caller appends only what came back.
+   Der Tisch's young round (#1269) is not an exception to it: „ab wann es Zahlen
+   gibt" IS something to say, and it is said once per card rather than as an
+   empty box — see hubSentenceCard.
 
    Part of the frontend; all files share one global script scope. Loaded before
    views-round-start.js, which calls every one of these at RENDER time, so the
@@ -52,6 +55,46 @@ function hubCard(icon, title) {
      </section>`);
 }
 
+/* A YOUNG round (#1269): nothing has been drawn yet, or everything that was got
+   cancelled. Der Tisch's young states key off this one question, so the
+   invitation, the CTA's label and the two sentence cards cannot disagree about
+   whether the round has started. A draw still being voted on is NOT young — it
+   has its own ticket, and „Erste Session wirbeln" beside it would be wrong. */
+function roundIsYoung(round) {
+  return !(round.sessions || []).some((s) => sessionOutcome(s) !== 'cancelled');
+}
+
+/* A card that says one sentence instead of a number (T7.4). Der Tisch only:
+   T7's rule is „wo Zahlen fehlen, steht kein „0" und keine leere Achse, sondern
+   ein Satz, ab wann es Zahlen gibt". Klassisch never reaches this. */
+function hubSentenceCard(icon, title, text) {
+  const card = hubCard(icon, title);
+  card.classList.add('hub-card--sentence');
+  card.querySelector('.hub-card__body').appendChild(h(`<p class="hub-card__facts">${esc(text)}</p>`));
+  return card;
+}
+
+/* Der Tisch's invitation for a round with games and no session (T7.4, #1269):
+   how many games are ready, a strip of their covers, and why there are no
+   scores yet. The one next step is the CTA directly above it, which reads
+   „Erste Session wirbeln" in the same state. */
+function hubYoungCard(round, activeGames) {
+  if (!designIs('tisch') || !activeGames.length || !roundIsYoung(round)) return null;
+  const card = hubCard('ti-cards', tn(activeGames.length, 'hub.young.readyOne', 'hub.young.ready'));
+  card.classList.add('hub-card--young');
+  const body = card.querySelector('.hub-card__body');
+  // aria-hidden for the reason hubRegalPreview's strip is: the title already
+  // says what is here, and a cover is not something this card offers to open.
+  const strip = h('<div class="hub-preview__covers" aria-hidden="true"></div>');
+  activeGames.slice(0, HUB_PREVIEW_COVERS).forEach((game) => {
+    const style = game.image ? ` style="background-image:url('${coverUrl(game.image, COVER_THUMB)}')"` : '';
+    strip.appendChild(h(`<span class="hub-preview__cover"${style}>${game.image ? '' : coverPlaceholder(game)}</span>`));
+  });
+  body.appendChild(strip);
+  body.appendChild(h(`<p class="hub-card__facts">${esc(t('hub.young.readyText'))}</p>`));
+  return card;
+}
+
 /* a) Spielvorschläge — the positive mirror of the retirement banner.
 
    `exclude` is the id set that banner is proposing in this same render, so the
@@ -60,7 +103,19 @@ function hubSuggestCard(round, activeGames, statsByGame, exclude) {
   const rows = gameSuggestions(
     round, activeGames, { statsByGame, exclude }, hubDeps()
   );
-  if (!rows.length) return null;
+  if (!rows.length) {
+    /* Der Tisch says WHEN instead of saying nothing (T7.4, #1269) — but only
+       for the one reason it can state truthfully: a young round whose shelf is
+       under the floor. The sheet's „Vorschläge brauchen Wertungen" is not that
+       reason (the app suggests unrated games), so it is not the copy. Every
+       other empty answer keeps returning null; later thresholds are #1280's. */
+    if (designIs('tisch') && roundIsYoung(round) && activeGames.length
+      && activeGames.length < SUGGEST_MIN_SHELF) {
+      return hubSentenceCard('ti-bulb', t('hub.suggest.title'),
+        tn(SUGGEST_MIN_SHELF, 'hub.young.suggestOne', 'hub.young.suggest'));
+    }
+    return null;
+  }
   const card = hubCard('ti-bulb', t('hub.suggest.title'));
   const body = card.querySelector('.hub-card__body');
   rows.forEach(({ game, reason }) => {
@@ -114,7 +169,16 @@ function hubPresetChips(round, activeGames) {
    styles fail to load. */
 function hubPulseCard(round, activeGames) {
   const pulse = roundPulse(round, activeGames, {}, hubDeps());
-  if (!pulse) return null;
+  if (!pulse) {
+    // Der Tisch's young round gets the sentence, never a „0" (T7.4, #1269).
+    // The count is the pulse's own floor, so the copy cannot promise numbers
+    // sooner than roundPulse() will draw them.
+    if (designIs('tisch') && roundIsYoung(round) && activeGames.length) {
+      return hubSentenceCard('ti-activity', t('hub.pulse.title'),
+        tn(PULSE_MIN_SESSIONS, 'hub.young.pulseOne', 'hub.young.pulse'));
+    }
+    return null;
+  }
   const card = hubCard('ti-activity', t('hub.pulse.title'));
   const body = card.querySelector('.hub-card__body');
   if (designIs('tisch')) return hubPulseTiles(round, card, pulse);

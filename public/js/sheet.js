@@ -159,11 +159,37 @@ function usesEditorSheet() {
 // This widens `.claude/rules/popover-vs-sheet-editors.md`: a menu of buttons may
 // be a popover at every width, and a scanning list may be a dialog at every
 // width. Everything in between still takes the 860px split.
+/* Der Tisch's desktop appearance of an editor (#1273, T15a): the popover is the
+   SAME form as the phone's sheet, „nur ohne Griff, mit Kapitälchen-Titel" — so it
+   carries the sheet's title and its ×, which every other design's popover does
+   without. Prepended before `build` runs, so it is the card's first child and
+   the builder's content follows it unchanged; it is `flex: none` in tisch.css,
+   so a capped card (tags, owners, filter) still gives way through the child it
+   always did, and nothing here touches a card's width
+   (.claude/rules/popover-vs-sheet-editors.md §4).
+
+   The × calls the `close` openPopover handed over, i.e. closePopover — the one
+   funnel that restores focus to the trigger and then fires `onClose`, so a
+   caller's `aria-expanded` follows this exit like the other five (§2b).
+   `role="dialog"` + `aria-label` because a visible heading inside a group of
+   controls is not by itself the group's name. */
+function editorPopoverHead(el, title, close) {
+  el.setAttribute('role', 'dialog');
+  el.setAttribute('aria-label', title);
+  const head = h(`<div class="popover__head">
+      <h2 class="popover__title">${esc(title)}</h2>
+      <button type="button" class="popover__close" aria-label="${esc(t('common.close'))}"><i class="ti ti-x" aria-hidden="true"></i></button>
+    </div>`);
+  head.querySelector('.popover__close').addEventListener('click', () => close());
+  el.appendChild(head);
+}
+
 function openEditor(anchor, variant, title, build, onClose, opts) {
   const list = !!(opts && opts.list);
   if (!list && !usesEditorSheet()) {
     return openPopover(anchor, (el, close) => {
       el.classList.add('popover--' + variant);
+      if (designIs('tisch')) editorPopoverHead(el, title, close);
       return build(el, close);
     }, onClose);
   }
