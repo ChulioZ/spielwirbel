@@ -1340,6 +1340,13 @@ I18N.nl = {
   'konto.title': 'Account',
   'konto.menu': 'Account',
   'konto.identity': 'Jouw gegevens',
+  // Der Tisch's Konto dashboard (#1265): the „Du" card and the setting rows' values.
+  'konto.du.title': 'Jij',
+  'konto.du.since': 'sinds {date}',
+  'konto.row.on': 'aan',
+  'konto.row.off': 'uit',
+  'konto.row.partly': 'deels',
+  'konto.row.pending': 'in afwachting',
   'konto.email.title': 'E-mailadres wijzigen',
   'konto.email.intro': 'Je adres is je inlognaam en de enige manier om je wachtwoord te herstellen. We sturen een bevestigingslink naar het nieuwe adres — tot je die opent verandert er niets.',
   'konto.email.pendingIntro': 'Er wacht een wijziging op bevestiging. Tot dan log je gewoon in met je huidige adres.',

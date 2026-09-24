@@ -95,7 +95,12 @@ function renderDesignPicker(cfg, current, onPick) {
    The pick is saved IMMEDIATELY, with no save button. It is a preference with a
    visible effect and an obvious undo (pick the other card), which is the same
    shape the notify and stats toggles use — a Save button here would leave the
-   page already wearing a design the account does not hold. */
+   page already wearing a design the account does not hold.
+
+   A stored pick re-renders the screen HERE rather than through applyDesign's
+   central re-render (#1266): the new design may compose Konto differently
+   (#1265's dashboard), and the element that held focus is replaced, so focus
+   goes back to the radio just chosen. Hence the `{ rendering: true }` commit. */
 function buildDesignSection(me) {
   const wrap = h('<div class="konto-design"></div>');
   withAppConfig((cfg) => {
@@ -108,14 +113,19 @@ function buildDesignSection(me) {
       // authority on which designs exist, and it may have retired one since
       // this screen loaded. A PREVIEW until the server agrees: committing here
       // would re-render the page from the not-yet-updated account, with the old
-      // card checked. applyAccountDesign() below commits and re-renders.
+      // card checked. The commit below comes after the account is updated.
       applyDesign(id, { preview: true });
       try {
         const updated = await accountApi('PATCH', '/me', { design: id });
         accountUser = updated;
         me.design = updated.design;
-        applyAccountDesign();
+        applyAccountDesign({ rendering: true });
         toast(t('konto.design.saved'));
+        if (currentView) {
+          await currentView();
+          const picked = document.querySelector('.design-picker input:checked');
+          if (picked) picked.focus();
+        }
       } catch (ex) {
         // Revert the paint, then re-render so the radios agree with what is
         // actually stored — leaving the refused card checked over a reverted

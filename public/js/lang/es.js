@@ -1371,6 +1371,13 @@ I18N.es = {
   'konto.title': 'Cuenta',
   'konto.menu': 'Cuenta',
   'konto.identity': 'Tus datos',
+  // Der Tisch's Konto dashboard (#1265): the „Du" card and the setting rows' values.
+  'konto.du.title': 'Tú',
+  'konto.du.since': 'desde {date}',
+  'konto.row.on': 'activado',
+  'konto.row.off': 'desactivado',
+  'konto.row.partly': 'en parte',
+  'konto.row.pending': 'pendiente',
   'konto.email.title': 'Cambiar la dirección de correo',
   'konto.email.intro': 'Tu dirección es tu nombre de acceso y la única forma de restablecer la contraseña. Enviamos un enlace de confirmación a la nueva dirección: hasta que lo abras, no cambia nada.',
   'konto.email.pendingIntro': 'Hay un cambio esperando confirmación. Hasta entonces sigues entrando con tu dirección actual.',

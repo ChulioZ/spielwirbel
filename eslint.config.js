@@ -298,6 +298,11 @@ const frontendGlobals = {
   // inbox-mail opt-outs (issue #618) + the BG Stats opt-in (issue #485), which
   // share one account-preference toggle row
   buildNotifyForm: 'readonly', buildPrefToggle: 'readonly', buildBgStatsForm: 'readonly',
+  // views-account-tisch.js (issue #1265): Konto as Der Tisch's dashboard
+  renderKontoDashboard: 'readonly', buildKontoDuCard: 'readonly',
+  kontoToggleValue: 'readonly', kontoRow: 'readonly', buildKontoBggCard: 'readonly',
+  // …and the three views-account.js builders it is the first other file to call
+  buildInstallSection: 'readonly', buildAvatarForm: 'readonly', buildProfileStatsForm: 'readonly',
   // support.js (issue #173)
   showSupport: 'readonly', initSupport: 'readonly', setupSupportUi: 'readonly',
   // confirm-dialog.js (issue #939): the themed replacement for window.confirm

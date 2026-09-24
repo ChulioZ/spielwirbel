@@ -1415,6 +1415,13 @@ I18N.de = {
   'konto.title': 'Konto',
   'konto.menu': 'Konto',
   'konto.identity': 'Deine Daten',
+  // Der Tisch's Konto dashboard (#1265): the „Du" card and the setting rows' values.
+  'konto.du.title': 'Du',
+  'konto.du.since': 'seit {date}',
+  'konto.row.on': 'an',
+  'konto.row.off': 'aus',
+  'konto.row.partly': 'teilweise',
+  'konto.row.pending': 'offen',
   'konto.email.title': 'E-Mail-Adresse ändern',
   'konto.email.intro': 'Deine Adresse ist dein Anmeldename und der einzige Weg, dein Passwort zurückzusetzen. Wir schicken einen Bestätigungslink an die neue Adresse — bis du ihn öffnest, bleibt alles beim Alten.',
   'konto.email.pendingIntro': 'Eine Änderung wartet auf Bestätigung. Bis dahin meldest du dich weiter mit deiner bisherigen Adresse an.',

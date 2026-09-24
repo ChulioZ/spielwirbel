@@ -201,12 +201,14 @@ function storeDesign(id) {
 
    `?design=` still wins over both, because its whole job is to preview a design
    without storing anything (and the server has already vetted it). */
-function applyAccountDesign() {
+// `opts` passes through to applyDesign — the Konto picker commits with
+// `{ rendering: true }` because it re-renders its own screen (and restores focus).
+function applyAccountDesign(opts) {
   if (typeof accountsActive === 'function' && accountsActive()) {
     const me = typeof accountUser !== 'undefined' ? accountUser : null;
-    return applyDesign((me && me.design) || FACE_DESIGN);
+    return applyDesign((me && me.design) || FACE_DESIGN, opts);
   }
-  return applyDesign(storedDesign() || FACE_DESIGN);
+  return applyDesign(storedDesign() || FACE_DESIGN, opts);
 }
 
 // Applied synchronously first, so nothing renders undesigned while the account

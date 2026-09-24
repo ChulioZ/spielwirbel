@@ -178,6 +178,7 @@ const SHELL = [
   '/js/views-friends.js',
   '/js/views-profile.js',
   '/js/views-account.js',
+  '/js/views-account-tisch.js',
   '/js/router.js',
   '/js/main.js',
   '/js/pwa.js',
