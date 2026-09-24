@@ -258,3 +258,43 @@ test('#1186: a localStorage that throws does not take the boot with it', (t) => 
   dom.run('storeDesign("tisch")'); // must not throw
   assert.equal(dom.run('applyAccountDesign()'), FACE_DESIGN);
 });
+
+/* ------------- re-rendering the screen on a committed change (#1266) ------------- */
+
+test('the chooser re-renders the screen underneath once, on the answer, never on a preview', async (t) => {
+  const me = { id: 'u1', design: FACE_DESIGN, designChooserSeen: null };
+  const dom = boot(t, { me });
+  dom.set('accountApi', (method, path, body) => Promise.resolve({ ...me, design: body.design || me.design, designChooserSeen: DESIGN_CHOOSER_REVISION }));
+  dom.run(`applyDesign(${JSON.stringify(FACE_DESIGN)}); designViewsReady(); globalThis.__renders = 0; currentView = () => { globalThis.__renders++; }`);
+
+  dom.call('maybeShowDesignChooser', me);
+  const sheet = dom.document.querySelector('.design-chooser');
+  const tisch = sheet.querySelectorAll('.design-card')[1].querySelector('input');
+  tisch.checked = true;
+  tisch.dispatchEvent(new dom.window.Event('change'));
+  assert.equal(dom.run('globalThis.__renders'), 0, 'a preview must not rebuild anything');
+
+  sheet.querySelector('#designChooserGo').click();
+  await flush();
+  assert.equal(dom.run('globalThis.__renders'), 1, 'the screen built under the old design is rebuilt under the kept one');
+});
+
+test('the Konto picker re-renders only once the server has taken the pick', async (t) => {
+  const me = { id: 'u1', design: FACE_DESIGN };
+  const dom = boot(t, { me });
+  let resolve;
+  dom.set('accountApi', () => new dom.window.Promise((r) => { resolve = r; }));
+  dom.run(`applyDesign(${JSON.stringify(FACE_DESIGN)}); designViewsReady(); globalThis.__renders = 0; currentView = () => { globalThis.__renders++; }`);
+  const section = dom.call('buildDesignSection', dom.get('accountUser'));
+  dom.document.body.appendChild(section);
+  const tisch = section.querySelectorAll('.design-card')[1].querySelector('input');
+  tisch.checked = true;
+  tisch.dispatchEvent(new dom.window.Event('change'));
+  await flush();
+  assert.equal(dom.run('globalThis.__renders'), 0,
+    'in flight: re-rendering now would redraw the picker from the old account, old card checked');
+  resolve({ ...me, design: 'tisch' });
+  await flush();
+  assert.equal(dom.run('globalThis.__renders'), 1);
+  assert.equal(dom.document.documentElement.dataset.design, 'tisch');
+});

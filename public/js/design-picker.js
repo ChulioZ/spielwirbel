@@ -106,8 +106,10 @@ function buildDesignSection(me) {
       // Applied before the request, so the card the user tapped is what they
       // see while it is in flight. A refusal reverts below — the server is the
       // authority on which designs exist, and it may have retired one since
-      // this screen loaded.
-      applyDesign(id);
+      // this screen loaded. A PREVIEW until the server agrees: committing here
+      // would re-render the page from the not-yet-updated account, with the old
+      // card checked. applyAccountDesign() below commits and re-renders.
+      applyDesign(id, { preview: true });
       try {
         const updated = await accountApi('PATCH', '/me', { design: id });
         accountUser = updated;
@@ -119,6 +121,8 @@ function buildDesignSection(me) {
         // actually stored — leaving the refused card checked over a reverted
         // page is the one state that tells the user nothing. `auth` has already
         // bounced to login, so it gets no toast (the shape buildPrefToggle uses).
+        // The pick was only previewed, so the revert commits nothing and
+        // re-renders nothing — hence the explicit currentView() below.
         applyAccountDesign();
         if (ex.message !== 'auth') {
           toast(t(ex.message === 'invalid_design' ? 'konto.design.invalid' : 'auth.error.network'));
@@ -175,7 +179,7 @@ function showDesignChooser(cfg, me, onDone) {
   const before = (me && me.design) || FACE_DESIGN;
   let chosen = before;
   backdrop.querySelector('.design-chooser__list')
-    .appendChild(renderDesignPicker(cfg, chosen, (id) => { chosen = id; applyDesign(id); }));
+    .appendChild(renderDesignPicker(cfg, chosen, (id) => { chosen = id; applyDesign(id, { preview: true }); }));
   document.body.appendChild(backdrop);
 
   // `settled` guards a genuinely multi-path exit: the two buttons call finish()
