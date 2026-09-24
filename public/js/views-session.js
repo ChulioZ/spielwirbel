@@ -14,7 +14,10 @@
 
    Nothing here persists it. `lastSessionFilters` is written server-side by the
    draw itself, so an exploratory tap that never draws leaves the round's
-   remembered preset untouched. */
+   remembered preset untouched.
+
+   One key is NOT a filter: `memberIds` (#1275) seats exactly those members
+   instead of everyone — see `joining` below. */
 function showStartSession(round, prefill) {
   currentView = () => showStartSession(round, prefill);
   // Reached either from the hub CTA or by backing out of the wizard; either way
@@ -139,7 +142,14 @@ function showStartSession(round, prefill) {
   // by their player count.
   // Retired members are not offered a seat (#1006); every past session's
   // participant list keeps resolving them through sessionPeople().
-  const joining = new Set(activeMembers(round).map((m) => m.id));
+  // `prefill.memberIds` (#1275) narrows that to the people who sat down last
+  // time — Der Tisch's „Noch eine Session". Intersected with the active seats,
+  // so a member retired since cannot come back through it, and ignored when
+  // nothing survives: an empty table is not a sensible place to start from.
+  const seatIds = activeMembers(round).map((m) => m.id);
+  const lastTable = prefill && Array.isArray(prefill.memberIds)
+    ? seatIds.filter((id) => prefill.memberIds.includes(id)) : [];
+  const joining = new Set(lastTable.length ? lastTable : seatIds);
   // Seats that are here WITHOUT their shelf (#1002): somebody came straight from
   // work, or the evening is at someone else's place. Empty by default, because
   // that is the normal evening — see the chip row further down for why this is
@@ -1210,6 +1220,11 @@ async function showResults(round, session, gamesHint, reveal, plain) {
      neighbours, and that row is still part of a ranking. A session nobody voted
      in is not a ranking at all. */
   const hasVotes = sessionHasVotes(session);
+  /* Der Tisch composes this screen differently (#1275, T2.5/T4.4): compact rows
+     under a header row, the people on the felt head, and a foot of its own. The
+     markup lives in result-tafel-tisch.js; every branch below is on this one
+     flag, and Klassisch is the path it leaves alone. */
+  const tischLook = designIs('tisch');
 
   /* The „aussortiert" / „durchgespielt" badge (#250). Shared by the ranking row
      and the table band (#1107) rather than written twice: the band is the ONLY
@@ -1325,46 +1340,52 @@ async function showResults(round, session, gamesHint, reveal, plain) {
   // second child — but that alone parks it at the right edge only while the
   // title is SHORT. `page-head--result` above is what makes it hold for the
   // finished-session sentence too, which is every archived session (#1055).
-  if (canShareResult()) {
+  // The model is built at CLICK time, never up front: choosing a game,
+  // finishing, recording winners and cancelling all mutate this closure's
+  // state in place (updateChosen/renderTisch re-render only fragments), so a
+  // text captured at render would share a result the user has since changed.
+  const shareNow = !canShareResult() ? null : () => shareResult({
+    roundName: round.name,
+    when,
+    cancelled,
+    playedTitle: chosenId ? (games.find((g) => g.id === chosenId) || {}).title || null : null,
+    winnerNames: winnerIds.map((wid) => personLabel(people.find((p) => p.id === wid))).filter(Boolean),
+    // So the shared headline says „Verloren" where the screen does, instead
+    // of the bare „wurde gespielt." every winnerless night used to get (#1038).
+    ending: sessionEnding(session),
+    rows: rows.map((r) => ({ title: r.game.title, score: r.shown, count: r.count, place: r.place })),
+    // Who sat at the table, for a design that shares a CARD (#1199) — the
+    // same people this screen lists under the headline, with the member
+    // colour it paints them in. The text share ignores it.
+    people: people.map((p) => ({
+      name: personLabel(p),
+      initials: initials(p.name),
+      color: p.guest ? null : memberHex(round, p.id),
+      winner: winnerIds.includes(p.id),
+    })),
+  });
+  // Der Tisch carries „Teilen" in the foot instead, beside the next evening
+  // (T2.5, T4.4 — see fillTischResultFoot).
+  if (shareNow && !tischLook) {
     const shareBtn = h(`<button class="btn btn--ghost">${iconText('ti-share', t('share.button'))}</button>`);
-    // The model is built at CLICK time, never up front: choosing a game,
-    // finishing, recording winners and cancelling all mutate this closure's
-    // state in place (updateChosen/renderTisch re-render only fragments), so a
-    // text captured at render would share a result the user has since changed.
-    shareBtn.addEventListener('click', () => shareResult({
-      roundName: round.name,
-      when,
-      cancelled,
-      playedTitle: chosenId ? (games.find((g) => g.id === chosenId) || {}).title || null : null,
-      winnerNames: winnerIds.map((wid) => personLabel(people.find((p) => p.id === wid))).filter(Boolean),
-      // So the shared headline says „Verloren" where the screen does, instead
-      // of the bare „wurde gespielt." every winnerless night used to get (#1038).
-      ending: sessionEnding(session),
-      rows: rows.map((r) => ({ title: r.game.title, score: r.shown, count: r.count, place: r.place })),
-      // Who sat at the table, for a design that shares a CARD (#1199) — the
-      // same people this screen lists under the headline, with the member
-      // colour it paints them in. The text share ignores it.
-      people: people.map((p) => ({
-        name: personLabel(p),
-        initials: initials(p.name),
-        color: p.guest ? null : memberHex(round, p.id),
-        winner: winnerIds.includes(p.id),
-      })),
-    }));
+    shareBtn.addEventListener('click', shareNow);
     head.appendChild(shareBtn);
   }
 
   // Who took part in this session — the people whose votes make up the result.
+  let peopleEl = null;
   if (people.length) {
     // A guest has no member page, so their entry is a <span>, not an <a>: an
     // anchor with no href is neither focusable nor styled as a link, so emitting
     // one would leave dead markup behind (.claude/rules/in-app-nav-links.md).
-    const peopleEl = h(`<div class="result-people">
+    // Der Tisch adds a crown to every piece and a `data-pid` for
+    // paintTischCrowns to find it by; Klassisch's markup is byte-for-byte as it was.
+    peopleEl = h(`<div class="result-people">
          <span class="result-people__label">${esc(t('result.participants'))}</span>
          <span class="result-people__list">${people
            .map(
-             (p) => `<${p.guest ? 'span' : 'a'} class="result-people__person"${p.guest ? '' : ` data-mid="${esc(p.id)}"`}>
-                <span class="avatar${p.guest ? ' avatar--guest' : ''}"${p.guest ? '' : ` style="background:${memberColor(round, p.id)}"`}>${avatarFace(initials(p.name), { userId: p.userId })}</span>
+             (p) => `<${p.guest ? 'span' : 'a'} class="result-people__person"${p.guest ? '' : ` data-mid="${esc(p.id)}"`}${tischLook ? ` data-pid="${esc(p.id)}"` : ''}>
+                ${tischLook ? tischPersonCrown() : ''}<span class="avatar${p.guest ? ' avatar--guest' : ''}"${p.guest ? '' : ` style="background:${memberColor(round, p.id)}"`}>${avatarFace(initials(p.name), { userId: p.userId })}</span>
                 <span class="result-people__name">${esc(personLabel(p))}</span>
               </${p.guest ? 'span' : 'a'}>`
            )
@@ -1374,7 +1395,10 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     peopleEl.querySelectorAll('.result-people__person[data-mid]').forEach((el) => {
       makeMemberLink(el, round.id, el.dataset.mid);
     });
-    screen.appendChild(peopleEl);
+    // Under Der Tisch „Wer dabei war" sits ON the felt head, under its sentence,
+    // as the sheet draws it (T2.5, T4.4).
+    if (tischLook) head.firstElementChild.appendChild(peopleEl);
+    else screen.appendChild(peopleEl);
   }
 
   // Who played together (#575). Listed as its own row rather than folded into
@@ -1457,6 +1481,9 @@ async function showResults(round, session, gamesHint, reveal, plain) {
   // (#614). Writing into a detached node is fine — it is in the document by the
   // time anything can click it.
   const cancelWrap = h('<div class="cancel-area"></div>');
+  // Der Tisch's foot takes the place of that footer row (#1275); built here for
+  // the same reason, and filled by renderTischFoot.
+  const tischFoot = tischLook ? h('<div class="result-foot" hidden></div>') : null;
 
   /* Die Tafel (#1056) — the ranked rows, carrying the celebration themselves.
 
@@ -1480,6 +1507,16 @@ async function showResults(round, session, gamesHint, reveal, plain) {
      </div>`);
   screen.appendChild(tafel);
   const tafelHint = tafel.querySelector('.tafel__hint');
+  // Der Tisch's column-header row (#1275). Only over a ranking: a session nobody
+  // voted in lists candidates, with no votes or score to head (#915). The
+  // score's ⓘ moves up beside the heading, because the row's „Spielwirbel-Score"
+  // label it used to ride is exactly what the header's „Score" replaces.
+  if (tischLook && hasVotes) {
+    if (rows.some((r) => r.count)) {
+      tafel.querySelector('.tafel__title').insertAdjacentHTML('afterend', infoButton('score'));
+    }
+    tafel.appendChild(tischTafelCols());
+  }
   /* The phone's one CTA (#1057). Desktop gets NO action bar: a sticky bar inside
      a column that fits never sticks and reads as one more card, which is why the
      deep-dive's first prototype had an invisible one. A thumb zone is a physical
@@ -1622,7 +1659,12 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     // together, the short ones land first and the winner's completes last.
     const raceVar = reveal && r.count ? `--dur:${(0.5 + r.shown * 0.32).toFixed(2)}s;` : '';
     const rankClass = r.place && r.place <= 3 ? ` trow__rank--${r.place}` : '';
-    const row = h(`<div class="trow${reveal ? ' is-race' : ''}" style="${fillVars}${raceVar}">
+    const row = tischLook ? tischTrow({
+      row: r, gameId: g.id, hasVotes, bars, rankClass, imgStyle, fallback,
+      rowClass: `trow${reveal ? ' is-race' : ''}`, rowStyle: `${fillVars}${raceVar}`,
+      title: g.title, badge: retiredBadge, ownersLine,
+      whyLine: r.count && scoreReason(r) ? `<div class="score-why">${esc(scoreReason(r))}</div>` : '',
+    }) : h(`<div class="trow${reveal ? ' is-race' : ''}" style="${fillVars}${raceVar}">
          <span class="trow__rank${rankClass}">${r.place || ''}</span>
          <a class="trow__img" ${imgStyle}>${fallback}</a>
          <div class="trow__main">
@@ -1780,21 +1822,43 @@ async function showResults(round, session, gamesHint, reveal, plain) {
   // chosen, and undoable like the finish reset. Rendered as a `link-btn` in the
   // footer next to „Session löschen" (#614) — the rare escape hatch, not a peer
   // of the result it used to sit above.
+  // The two cancel actions and the delete, as closures both footers call — the
+  // Klassisch link row below and Der Tisch's „Mehr" menu (#1275) — so the two
+  // designs cannot drift apart on what cancelling or deleting actually does.
+  async function setCancelled(next) {
+    try {
+      await api('POST', `/api/rounds/${round.id}/sessions/${session.id}/cancel`, { cancelled: next });
+      cancelled = next;
+      session.cancelled = next;
+      if (!next) session.cancelledAt = null;
+      toast(t(next ? 'result.toast.cancelled' : 'result.toast.cancelUndone'));
+      updateChosen();
+    } catch (e) { toast(e.message); }
+  }
+  async function confirmCancel() {
+    if (!await confirmDialog({
+      body: t('result.cancelConfirm'), confirmLabel: t('result.cancel'), icon: 'ti-x',
+    })) return;
+    await setCancelled(true);
+  }
+  async function deleteThisSession() {
+    if (!await confirmDialog({
+      body: t('sessions.deleteConfirm', { when }),
+      confirmLabel: t('result.deleteSession'), icon: 'ti-trash',
+    })) return;
+    try {
+      await api('DELETE', `/api/rounds/${round.id}/sessions/${session.id}`);
+      toast(t('sessions.deleted'));
+      showRound(round.id);
+    } catch (e) { toast(e.message); }
+  }
+
   function renderCancel() {
     cancelWrap.innerHTML = '';
     if (finished || chosenId) return;
     if (cancelled) {
       const undo = h(`<button class="link-btn">${esc(t('result.cancelUndo'))}</button>`);
-      undo.addEventListener('click', async () => {
-        try {
-          await api('POST', `/api/rounds/${round.id}/sessions/${session.id}/cancel`, { cancelled: false });
-          cancelled = false;
-          session.cancelled = false;
-          session.cancelledAt = null;
-          toast(t('result.toast.cancelUndone'));
-          updateChosen();
-        } catch (e) { toast(e.message); }
-      });
+      undo.addEventListener('click', () => setCancelled(false));
       cancelWrap.appendChild(undo);
     } else {
       // „Session abbrechen" alone, with the reason („Kein Spiel gefällt") moved
@@ -1803,20 +1867,39 @@ async function showResults(round, session, gamesHint, reveal, plain) {
       // present, so the title supplies the accessible DESCRIPTION and not the
       // name — SC 2.5.3 is unaffected.
       const btn = h(`<button class="link-btn" title="${esc(t('result.cancelHint'))}">${iconText('ti-x', t('result.cancel'))}</button>`);
-      btn.addEventListener('click', async () => {
-        if (!await confirmDialog({
-          body: t('result.cancelConfirm'), confirmLabel: t('result.cancel'), icon: 'ti-x',
-        })) return;
-        try {
-          await api('POST', `/api/rounds/${round.id}/sessions/${session.id}/cancel`, { cancelled: true });
-          cancelled = true;
-          session.cancelled = true;
-          toast(t('result.toast.cancelled'));
-          updateChosen();
-        } catch (e) { toast(e.message); }
-      });
+      btn.addEventListener('click', confirmCancel);
       cancelWrap.appendChild(btn);
     }
+  }
+
+  /* Der Tisch's foot (#1275): „Noch eine Session" once this one is settled,
+     „Teilen", and „Mehr" holding what Klassisch's footer row offers — cancel
+     (or its undo) while no game is chosen, and delete for a co-owner. Refilled
+     from renderTisch, which every phase change reaches.
+
+     „Noch eine Session" opens the setup PREFILLED with tonight's members
+     (operator question 1, decided unilaterally — see the PR): the same people
+     sitting down again is the common case, and a plain setup would seat every
+     member of the round. Guests are not carried: they were named for this
+     session only, and the setup's guest list is the place to add them again. */
+  function renderTischFoot() {
+    if (!tischFoot) return;
+    const more = [];
+    if (!finished && !chosenId) {
+      more.push(cancelled
+        ? { icon: 'ti-arrow-back-up', label: t('result.cancelUndo'), kind: 'undoable', run: () => setCancelled(false) }
+        : { icon: 'ti-x', label: t('result.cancel'), kind: 'destructive', run: confirmCancel });
+    }
+    if (roundCan(round, 'session.delete')) {
+      more.push({ icon: 'ti-trash', label: t('result.deleteSession'), kind: 'destructive', run: deleteThisSession });
+    }
+    const memberIds = people.filter((p) => !p.guest).map((p) => p.id);
+    fillTischResultFoot(tischFoot, {
+      again: finished || cancelled ? () => showStartSession(round, { memberIds }) : null,
+      againDisabled: !round.games.some(isActiveGame),
+      share: shareNow,
+      more,
+    });
   }
 
   /* Der Tisch (#1057). One builder for all three states of the chosen game, so
@@ -1833,6 +1916,12 @@ async function showResults(round, session, gamesHint, reveal, plain) {
      state of its own beyond `pickerOpen`. */
   function renderTisch() {
     updateTitle();
+    // Der Tisch's crowns and foot follow every phase change, and this is the
+    // one function all of them reach — including the early return below.
+    if (tischLook) {
+      paintTischCrowns(peopleEl, winnerIds);
+      renderTischFoot();
+    }
     rowRefs.forEach(({ gameId, ownersEl }) => {
       // The table band states the same fact with more context, so the chosen
       // row's own line stands down rather than saying it twice on one screen.
@@ -2133,6 +2222,12 @@ async function showResults(round, session, gamesHint, reveal, plain) {
   // row until #623 moved that control to the top of the content, so this is now
   // simply the final block; the #561 constraint it was phrased against
   // ("nothing belongs after a back link") is satisfied by construction.
+  // Der Tisch ends on its own foot instead, which carries the same two actions
+  // behind „Mehr" (renderTischFoot) — still the last block on the screen.
+  if (tischFoot) {
+    screen.appendChild(tischFoot);
+    return;
+  }
   const footer = h('<div class="section result-footer"></div>');
   footer.appendChild(cancelWrap);
   // #137: deleting a played evening destroys its votes, result and winners for
@@ -2140,17 +2235,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
   // write — it is reversible and is part of running the session.
   if (roundCan(round, 'session.delete')) {
     const delBtn = h(`<button class="link-btn" style="color:var(--danger)">${esc(t('result.deleteSession'))}</button>`);
-    delBtn.addEventListener('click', async () => {
-      if (!await confirmDialog({
-        body: t('sessions.deleteConfirm', { when }),
-        confirmLabel: t('result.deleteSession'), icon: 'ti-trash',
-      })) return;
-      try {
-        await api('DELETE', `/api/rounds/${round.id}/sessions/${session.id}`);
-        toast(t('sessions.deleted'));
-        showRound(round.id);
-      } catch (e) { toast(e.message); }
-    });
+    delBtn.addEventListener('click', deleteThisSession);
     footer.appendChild(delBtn);
   }
   screen.appendChild(footer);

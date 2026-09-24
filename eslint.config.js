@@ -477,6 +477,9 @@ const frontendGlobals = {
   showTableBuilder: 'readonly', tableStateFrom: 'readonly', tablePeopleIds: 'readonly',
   tableCoverBg: 'readonly',
   renderTischSplit: 'readonly', renderTischTable: 'readonly', renderTischTableTafel: 'readonly', // #1270
+  // result-tafel-tisch.js (issue #1275): Der Tisch's result Tafel and foot
+  tischTafelCols: 'readonly', tischTrow: 'readonly', tischPersonCrown: 'readonly',
+  paintTischCrowns: 'readonly', fillTischResultFoot: 'readonly',
   // views-session-live.js
   showSessionLobby: 'readonly', stopLobbyPoll: 'readonly', mySeatIn: 'readonly',
   sessionGames: 'readonly', LOBBY_POLL_MS: 'readonly', lobbyPoll: 'writable',

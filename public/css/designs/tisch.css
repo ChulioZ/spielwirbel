@@ -2712,11 +2712,46 @@
 :root[data-design="tisch"][data-scheme="dark"] .result-people .avatar {
   border: 2px solid var(--gold);
 }
+/* ON the felt head since #1275 — views-session.js puts the line under the
+   sentence — so its type takes the felt's measured pair rather than the
+   walnut's, exactly as the date line above it does. */
+:root[data-design="tisch"][data-scheme="dark"] .page-head--result .result-people { margin: 14px 0 0; }
+:root[data-design="tisch"][data-scheme="dark"] .page-head--result .result-people__label { color: var(--felt-ink-soft); }
+:root[data-design="tisch"][data-scheme="dark"] .page-head--result .result-people__name { color: var(--felt-ink); }
+/* Room above the pieces for the crowns. */
+:root[data-design="tisch"][data-scheme="dark"] .page-head--result .result-people__list { padding-top: 10px; }
+/* The crown a winner wears (T2.5, T4.4) — the split tables' crown, at the same
+   size and in the same gold, which the contrast suite holds as a display colour
+   on every felt. `visibility` rather than `display` so a crown appearing when a
+   winner is recorded moves nothing else on the head. */
+:root[data-design="tisch"][data-scheme="dark"] .result-people__person { position: relative; }
+:root[data-design="tisch"][data-scheme="dark"] .result-people__crown {
+  position: absolute;
+  left: 14px; /* the 28px piece's centre */
+  top: -13px;
+  transform: translateX(-50%);
+  font-size: 13px; /* glyph, not type */
+  color: var(--gold);
+  visibility: hidden;
+}
+:root[data-design="tisch"][data-scheme="dark"] .result-people__person.is-winner .result-people__crown { visibility: visible; }
 
-/* --- The result: the Tafel on paper (T2.5, T4.4) --------------------------
+/* --- The result: the compact Tafel on paper (T2.5, T4.4 — #1275) ----------
    The ranking is a printed sheet laid on the table — the same inversion the
    vote card and every overlay make, declared the same way so the measured paper
-   pairs carry it and nothing has to be repainted token by token. */
+   pairs carry it and nothing has to be repainted token by token.
+
+   What is printed on it is Der Tisch's own markup (result-tafel-tisch.js), not
+   the app's row painted over: a column-header row — Platz · Spiel · Wertungen ·
+   Score — over one COMPACT line per game ending in a score pill. The per-game
+   distribution recedes behind the „Wertungen" count, which is a disclosure.
+
+   The sheet is ONE grid and every line on it a SUBGRID of it. That is what
+   keeps the header's labels over their columns: each row sizing its own `auto`
+   tracks would let one row's „Spielen" button or a wider pill shift every cell
+   left of it off its label. The gold group is a subgrid too, so its rows share
+   the same tracks as the rest. The two-digit rank and a 32px cover are fixed;
+   the votes, the pill and the action size to the widest of their column. */
 :root[data-design="tisch"][data-scheme="dark"] .tafel {
   --surface: var(--paper);
   --ink: var(--paper-ink);
@@ -2728,6 +2763,148 @@
   border-radius: var(--radius-md);
   padding: 14px;
   box-shadow: 0 12px 26px var(--cast-deep);
+}
+/* The grid is the RESULT screen’s: the landing page prints a `.tafel` too
+   (landing-moments.js), in the app’s own row markup, which these tracks would
+   scatter. */
+:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel {
+  display: grid;
+  grid-template-columns: 22px 32px minmax(0, 1fr) auto auto auto;
+  column-gap: 8px;
+}
+/* The `display: grid` above outranks styles.css's `.tafel[hidden]` — the gate a
+   vote-less single-game session uses (#1107) — so it is restated here
+   (.claude/rules/hidden-attribute-vs-display-rule.md). */
+:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel[hidden] { display: none; }
+:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel > *,
+:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel-top > * { grid-column: 1 / -1; }
+:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel-top,
+:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow,
+:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel__cols {
+  display: grid;
+  grid-template-columns: subgrid;
+  column-gap: 8px;
+}
+/* The header row. `aria-hidden` in the markup, so it is type only; the rows say
+   what their cells are themselves. --paper-faint is the measured label ink on
+   both paper stops. */
+:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel__cols {
+  padding: 0 8px 6px;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--text-xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--paper-faint);
+}
+/* A label must NOT size its column. „WERTUNGEN" is ~90px against a ~40px count,
+   and as an `auto` track's content it took the width straight out of the title
+   column (measured at 390: titles squeezed to 62px). So every label is a
+   zero-width box that its text overflows — into the empty header space beside
+   it, never into another label: „Platz" spills right over the cover column,
+   which is why „Spiel" starts at the TITLE; „Wertungen" is pinned to its
+   column's RIGHT edge and spills left over the title column's empty header;
+   „Score" is pinned to its column's LEFT edge and spills right over the action
+   column's. The two therefore grow AWAY from each other, which is what holds
+   for the long locales too (es „Valoraciones" · „Puntuación"). The cells under
+   them sit at the same edges (`justify-self` below). */
+:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel__col {
+  display: flex;
+  width: 0;
+  white-space: nowrap;
+}
+:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel__col--place { grid-column: 1; }
+:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel__col--game { grid-column: 3; }
+:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel__col--votes {
+  justify-self: end;
+  justify-content: flex-end;
+}
+:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel__col--votes { grid-column: 4; }
+:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel__col--score { grid-column: 5; }
+/* One compact line: every cell pinned to ROW 1 of its own column, because the
+   app's row places them by `grid-area` names this grid does not define. The
+   distribution is the one cell left to auto-placement, so it drops below
+   whatever occupies the lines above it — and it is LAST in the DOM for the
+   same reason it is last on screen. */
+:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow {
+  grid-template-rows: none;
+  grid-template-areas: none;
+  row-gap: 0;
+  padding: 8px;
+  align-items: center;
+}
+:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .trow__rank {
+  grid-column: 1;
+  grid-row: 1;
+  position: static;
+  font-size: var(--text-lg);
+}
+:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .trow__img {
+  grid-column: 2;
+  grid-row: 1;
+  width: 32px;
+  height: 32px;
+  font-size: 16px; /* glyph, not type */
+}
+:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .trow__main { grid-column: 3; grid-row: 1; }
+:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .trow__votes { grid-column: 4; grid-row: 1; justify-self: end; }
+:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .trow__pill {
+  grid-column: 5;
+  grid-row: 1;
+  justify-self: start;
+  position: static;
+}
+:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .trow__action { grid-column: 6; grid-row: 1; }
+:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .play-btn { margin-top: 0; }
+:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .trow__bars {
+  grid-column: 3 / -1;
+  grid-row: auto;
+  margin-top: 8px;
+}
+/* `.trow__bars` is `display: flex` in styles.css, which beats the attribute —
+   and the disclosure IS the attribute. */
+:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .trow__bars[hidden] { display: none; }
+:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .trow__title { font-size: var(--text-md); }
+:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .trow__owners { font-size: var(--text-xs); }
+/* The „Wertungen" count, and the disclosure that opens the distribution under
+   the row. A control on paper, so the paper's own edge and ink; 32px keeps it
+   over the 24px target floor (SC 2.5.8) without growing the line. */
+:root[data-design="tisch"][data-scheme="dark"] .trow__votes {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 0 6px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--paper-ink);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+:root[data-design="tisch"][data-scheme="dark"] .trow__votes .ti { font-size: 12px; /* glyph, not type */ }
+:root[data-design="tisch"][data-scheme="dark"] .trow__votes[aria-expanded="true"] .ti { transform: rotate(180deg); }
+:root[data-design="tisch"][data-scheme="dark"] .trow__votes--none {
+  border-color: transparent;
+  color: var(--paper-faint);
+  cursor: default;
+}
+/* While the evening is still choosing, a phone row's action is a „Spielen"
+   button or the „Auf dem Tisch" chip — ~100px that would leave the title ~60.
+   So on a phone that action takes a line of its own under the title (and the
+   `…` with it); a settled session's rows keep their one line, where the action
+   is the `…` alone. */
+@media (max-width: 639px) {
+  :root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow:has(.play-btn, .trow__chip) .trow__action {
+    grid-column: 3 / -1;
+    grid-row: 2;
+    justify-content: flex-start;
+    margin-top: 6px;
+  }
 }
 :root[data-design="tisch"][data-scheme="dark"] .tafel__title {
   font-family: var(--font-display);
@@ -2747,6 +2924,25 @@
 :root[data-design="tisch"][data-scheme="dark"] .tafel .trow__title {
   font-family: var(--font-display);
   font-weight: 800;
+}
+/* The row's „…" is a `.btn`, which Tisch paints as a walnut tile — on the paper
+   Tafel that put the paper's ink on a dark fill (~1.3:1). It is drawn like
+   `.trow__votes` beside it instead: no fill and a rule. It sets NO ink of its
+   own — the glyph inherits the row's (paper ink, or --gold-ink on the gold
+   row), because an ink here would outrank the gold row's single-ink sweep. */
+:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .trow__menu {
+  background: transparent;
+  border: 1px solid var(--line);
+  box-shadow: none;
+}
+/* The chosen row's ring. styles.css draws it as an INSET box-shadow, which
+   paints with the row's background, so the score fill (`.trow::before`) lay
+   over it and only the part past --pct showed. An outline paints above the
+   row's content; --gold-edge holds 3:1 on paper where brass does not. */
+:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow.is-chosen {
+  box-shadow: none;
+  outline: 2px solid var(--gold-edge);
+  outline-offset: -2px;
 }
 :root[data-design="tisch"][data-scheme="dark"] .tafel .trow__img {
   border-radius: var(--radius-sm);
@@ -2799,8 +2995,17 @@
    above, which is how it survives it. */
 :root[data-design="tisch"][data-scheme="dark"] .tafel .tafel-top .trow .bar-axis .ti { color: var(--sc-fill, var(--sc)); }
 
-/* --- The result: the distribution, in T8.2's BAR ramp ---------------------
-   Both halves come off `--sc` on the column, which the row writes inline from
+/* The pill on the GOLD row keeps its own ink, like the veto tag below: the
+   single-ink rule is about the row's TYPE, and a pill carries its own ground —
+   the deep rungs take a light ink that --gold-ink would put at ~2:1. More
+   specific than the sweep, which is how it survives it. */
+:root[data-design="tisch"][data-scheme="dark"] .tafel .tafel-top .trow .score-pill,
+:root[data-design="tisch"][data-scheme="dark"] .tafel .tafel-top .trow .score-pill * { color: var(--sc-ink, var(--on-accent)); }
+
+/* --- The result: the distribution, opened from „Wertungen" (#1275) ---------
+   No longer printed on every row: it sits below its row, hidden until that
+   row's count is pressed (the disclosure above), in T8.2's BAR ramp. Both
+   halves come off `--sc` on the column, which the row writes inline from
    avgColor(n) — so this is one rule per rung rather than a JS branch per
    design. The track is the paper's own well; the fill and the glyph are the
    ramp, which is the darker of T8.2's two because these are drawn on paper and
@@ -2818,10 +3023,12 @@
    type. Same split the app makes on every other design. */
 :root[data-design="tisch"][data-scheme="dark"] .trow__bars .bar-axis__n { color: var(--paper-ink-soft); }
 
-/* The score. Plain paper ink, NOT the ramp — T2.5 and T4.4 both print it that
-   way, and they are right to: as text on cream a pale ramp stop would be
-   unreadable (--score-5 measures 1,34:1 there), and the number is already
-   named by the bars beside it. `--sc` arrives inline and is simply not read.
+/* The score as a bare NUMBER — which since #1275 only the landing page's Tafel
+   prints (landing-moments.js): the result screen's compact rows carry a pill
+   with its own ground instead, painted by the pill ramp further down. As text
+   the number stays plain paper ink, NOT the ramp: on cream a pale ramp stop
+   would be unreadable (--score-5 measures 1,34:1 there). `--sc` arrives inline
+   and is simply not read.
 
    The winning row's numeral is covered by the single-ink sweep above, so this
    is the non-winning case. */
@@ -2937,6 +3144,32 @@
   font-size: var(--text-md);
 }
 :root[data-design="tisch"][data-scheme="dark"] .tisch__actions .ti { color: var(--gold); }
+
+/* The foot (#1275): „Noch eine Session" with „Teilen" and „Mehr" beside it,
+   the split tables' foot in the same materials. On a phone the one action takes
+   the full width and the two quieter ones share the line under it — the three
+   side by side need ~370px of a 334px column. The `[hidden]` rule restores the
+   attribute this `display` outranks: the foot is hidden while it holds nothing. */
+:root[data-design="tisch"][data-scheme="dark"] .result-foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 18px 0;
+}
+:root[data-design="tisch"][data-scheme="dark"] .result-foot[hidden] { display: none; }
+:root[data-design="tisch"][data-scheme="dark"] .result-foot .btn {
+  flex: 1 1 0;
+  min-height: 46px;
+  font-size: var(--text-md);
+  padding-inline: 12px;
+}
+:root[data-design="tisch"][data-scheme="dark"] .result-foot .result-foot__again { flex-basis: 100%; }
+:root[data-design="tisch"][data-scheme="dark"] .result-foot .btn--ghost {
+  background: var(--control-fill);
+  border-color: var(--control-edge);
+  color: var(--ink);
+}
+:root[data-design="tisch"][data-scheme="dark"] .result-foot .btn--ghost .ti { color: var(--gold); }
 
 /* --- Several tables (T4.5, T6.6) — one result per table (#1270) ------------
    renderTischSplit() (views-session-tables.js) builds this under Der Tisch in
@@ -3277,6 +3510,24 @@
     width: 100%;
     max-width: 180px;
   }
+
+  /* The compact Tafel at T4.4's size (#1275): a 36px cover and a wider gutter,
+     still one line per game. The gap is restated on the subgrids because each
+     states its own (see the phone block). */
+  :root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel {
+    grid-template-columns: 26px 36px minmax(0, 1fr) auto auto auto;
+    column-gap: 12px;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel-top,
+  :root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow,
+  :root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel__cols { column-gap: 12px; }
+  :root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow { padding: 10px; }
+  :root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel__cols { padding-inline: 10px; }
+  :root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .trow__img { width: 36px; height: 36px; }
+  /* The foot's three actions on one line at the column's right edge. */
+  :root[data-design="tisch"][data-scheme="dark"] .result-foot { justify-content: flex-end; }
+  :root[data-design="tisch"][data-scheme="dark"] .result-foot .btn,
+  :root[data-design="tisch"][data-scheme="dark"] .result-foot .result-foot__again { flex: none; padding-inline: 18px; }
 
   /* Two tables side by side (T4.5). `.split-tables` is already a grid in the
      app; what this states is that at the rail width it is exactly two columns,
