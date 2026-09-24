@@ -1528,6 +1528,39 @@ test('a design that declares a PAPER overlay family keeps every pair on it at AA
   assert.deepEqual(failures, [], 'the overlay inverts the scheme on a subtree; its pairs get the same bars');
 });
 
+test('the Chronik session strip keeps its date column at AA on wood and on paper (#1271)', () => {
+  /* The strip's date column changes ground with the width (tisch.css): on a
+     desktop it stands on the walnut PAGE beside the paper and takes --gold; on
+     a phone it moves INTO the paper, where the day is the paper ink and the
+     month --accent-deep. The strip re-points --ink on a component rule the
+     resolver cannot follow, so each pair is named here. The folded
+     shelf-change run's dashed --gold-edge rim is the only thing marking it as a
+     control on the wood (SC 1.4.11). */
+  const hosts = withToken('--paper');
+  assert.ok(hosts.length >= 1, 'no design declares --paper — this test is vacuous');
+  const failures = [];
+  let checked = 0;
+  for (const t of hosts) {
+    const v = (n) => token(n, t.design);
+    for (const [label, fg, bg, bar] of [
+      ['date --gold on --page-bg', v('--gold'), v('--page-bg'), AA_TEXT],
+      ['day --paper-ink on --paper', v('--paper-ink'), v('--paper'), AA_TEXT],
+      ['day --paper-ink on --paper-raised', v('--paper-ink'), v('--paper-raised'), AA_TEXT],
+      ['month --accent-deep on --paper', v('--accent-deep'), v('--paper'), AA_TEXT],
+      ['month --accent-deep on --paper-raised', v('--accent-deep'), v('--paper-raised'), AA_TEXT],
+      ['run rim --gold-edge on --page-bg', v('--gold-edge'), v('--page-bg'), AA_LARGE],
+    ]) {
+      checked++;
+      const ratio = contrast(fg, bg);
+      // `!(ratio >= bar)`, not `ratio < bar`: a NaN from a wrong-shaped token
+      // must fail here rather than pass (nan-passes-every-threshold-guard.md).
+      if (!(ratio >= bar)) failures.push(`${name(t)} — ${label} = ${ratio.toFixed(2)}:1 (bar ${bar})`);
+    }
+  }
+  assert.ok(checked >= 6, 'no strip pair was measured');
+  assert.deepEqual(failures, [], 'the Chronik strip\'s date column and run rim must clear their bars');
+});
+
 test('a design that declares a FELT keeps its own ink on it, and keeps the accent off it below 24px', () => {
   /* Review finding A1, as a measurement rather than as prose. Gold on the light
      stop of Tannenfilz is 4.20:1, so gold is a DISPLAY colour on felt and text
