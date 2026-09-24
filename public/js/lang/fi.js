@@ -1405,6 +1405,8 @@ I18N.fi = {
   'landing.shot.shelfAlt': 'Kuvakaappaus: porukan pelihylly Spielwirbelissä — pelit ruutuina ja niiden Spielwirbel-pisteet, vieressä navigaatio Aloitus, hylly, historia ja palkinnot.',
   'landing.shot.voteAlt': 'Kuvakaappaus: äänestys Spielwirbelissä — arvottu peli ja kysymys ”kuinka mielelläsi pelaisit tämän?” sekä viiden ilmeen asteikko 1:stä (”en lainkaan”) 5:een (”ehdottomasti”).',
   'landing.shot.resultAlt': 'Kuvakaappaus: session tulos Spielwirbelissä — ylhäällä pelattu peli ”pelattu”-leimalla ja voittaja, sen alla tuloslistan alku ja eniten ääniä saaneen pelin Spielwirbel-pisteet.',
+  'landing.desktop.alt': 'Kuvakaappaus: porukan aloitussivu Spielwirbelissä leveällä näytöllä — vasemmalla navigaatio ja painike session aloittamiseen, vieressä viimeksi pelattu peli, ehdotus, porukan pulssi, hylly, palkinnot ja historia.',
+  'landing.desktop.caption': 'Yhtä kotonaan isolla näytöllä kuin pienellä.',
   'landing.moments.label': 'Näin sessio etenee: potti, äänestys, tulos',
   'landing.moments.pot': 'Pelejä arvotaan potista',
   'landing.moments.vote': 'Lea arvioi, sitten laite siirtyy eteenpäin',

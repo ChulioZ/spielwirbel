@@ -3562,6 +3562,26 @@ body.vote-screen .topbar { display: none; }
   background: var(--surface);
 }
 
+/* The desktop band (#1199): one wide capture of the round hub right under the
+   hero, so the page stops reading as phone-only (operator decision 2026-09-24).
+   It takes the page's width, capped at 1200px, and NEVER a hero column: that is
+   where #1090 retired the last wide capture, whose labels shrank to ~9px in
+   660–800px. At 1200 the 1440-wide layout renders at 0.83x, app text at
+   ~11–12px. On a phone it just scales down with the column — it is not read
+   there, it shows that a desktop layout exists. The img carries .landing-shot
+   too, so it takes that frame; only the band's own geometry lives here. */
+.landing-desktop__figure {
+  margin: 0 auto;
+  max-width: 1200px;
+}
+.landing-desktop__caption {
+  margin: 20px 0 0;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  color: var(--ink);
+}
+
 .landing-section__title {
   font-family: var(--font-display);
   font-size: var(--text-2xl);

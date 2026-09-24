@@ -59,6 +59,32 @@ function loadDesignStylesheet(design) {
   document.head.appendChild(link);
 }
 
+/* The head's brand links follow the design (#1199): the manifest (so an install
+   takes this design's icon and theme colour), the favicon and the apple-touch
+   icon (which iOS reads off the DOM at "Add to Home Screen" time — there is no
+   manifest step to hook).
+
+   Written only when the value actually differs. For the face that is never:
+   index.html ships exactly the face's marks (test/design-marks.test.js pins
+   the equality), so a Klassisch visitor's head is not touched at all — and a
+   manifest <link> whose href is re-set is a manifest the browser may re-fetch.
+
+   The link-preview image is deliberately not here: scrapers never run this
+   script, so og:image is whatever index.html says, which is the face's. */
+function setHeadLink(selector, href, sizes) {
+  const link = document.querySelector(selector);
+  if (!link || !href) return;
+  if (link.getAttribute('href') !== href) link.setAttribute('href', href);
+  if (sizes && link.getAttribute('sizes') !== sizes) link.setAttribute('sizes', sizes);
+}
+
+function applyDesignMarks(design) {
+  const marks = designMarks(design.id);
+  setHeadLink('link[rel="manifest"]', manifestHref(design.id));
+  setHeadLink('link[rel="icon"]', marks.favicon.href, marks.favicon.sizes);
+  setHeadLink('link[rel="apple-touch-icon"]', marks.appleTouch);
+}
+
 // Wear a design. An unknown id falls back to the face rather than throwing: the
 // only callers are boot and (from #1186) the picker, and a stored id whose
 // design has since been retired must not leave the app unpainted.
@@ -80,6 +106,7 @@ function applyDesign(id) {
   activeDesignId = design.id;
   document.documentElement.dataset.design = design.id;
   loadDesignStylesheet(design);
+  applyDesignMarks(design);
   applyBackground(null);
   return design.id;
 }

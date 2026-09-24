@@ -1535,6 +1535,8 @@ I18N.en = {
   'landing.shot.shelfAlt': 'Screenshot: a group’s game shelf in Spielwirbel — games as tiles with their Spielwirbel score, next to the navigation for Start, shelf, chronicle and trophies.',
   'landing.shot.voteAlt': 'Screenshot: voting in Spielwirbel — a drawn game with the question “how much do you want to play this?” and a scale of five faces running from 1 (“not at all”) to 5 (“absolutely”).',
   'landing.shot.resultAlt': 'Screenshot: a session’s result in Spielwirbel — at the top the game that was played, with its “played” stamp and the winner, and below it the start of the ranking with the winning game’s Spielwirbel score.',
+  'landing.desktop.alt': 'Screenshot: a round’s start page in Spielwirbel on a wide screen — on the left the navigation with the button to start a session, and beside it the last game played, a suggestion, the round’s pulse, the shelf, trophies and chronicle.',
+  'landing.desktop.caption': 'Just as much at home on a big screen as on a small one.',
   // The hero stage (#1091): the captions under the app's own three moments.
   'landing.moments.label': 'How a session goes: pot, vote, result',
   'landing.moments.pot': 'Games are drawn from the pot',

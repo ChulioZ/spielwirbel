@@ -60,11 +60,18 @@ const LANDING_WALK = [
 // in .claude/rules/landing-product-screenshots.md). Three things about them are
 // load-bearing:
 //
-//  - All three are PHONE shots since #1090. The set used to carry a 1280-wide
-//    desktop shelf capture for the hero's wide branch; at the 660–800px the
-//    two-column hero gives it, its tile labels shrink to ~9px, so the hero shows
-//    the phone shot at every width and the wide capture is retired. That also
-//    removes the <picture> element and its breakpoint.
+//  - The walkthrough's three are PHONE shots since #1090. The set used to carry
+//    a 1280-wide desktop shelf capture for the hero's wide branch; at the
+//    660–800px the two-column hero gives it, its tile labels shrink to ~9px, so
+//    that capture was retired along with its <picture> and breakpoint.
+//  - `desktop` (#1199) is the one wide capture, and it is back for a reason the
+//    retired one never served: with only phones on the page, the app read as
+//    phone-only (operator decision, 2026-09-24). It does NOT go back into the
+//    hero column — that was #1090's problem, not the capture's. It gets a band of
+//    its own under the hero at close to the page's full width (max 1200 CSS px
+//    for a 1440-wide layout, so app text lands at ~11–12px), the size at which a
+//    desktop screenshot is legible at all. On a phone it simply scales down:
+//    there it is not read, it is the evidence that a desktop layout exists.
 //  - Every declared width/height is the asset's REAL pixel size, so the hero
 //    reserves its box before the image lands (no layout shift above the fold).
 //    test/landing-shots.test.js reads the dimensions back out of the files.
@@ -90,48 +97,131 @@ const LANDING_SHOTS = {
     shelfPhone: { src: '/img/landing-shelf-phone.en.webp', w: 624, h: 1246 },
     vote: { src: '/img/landing-vote.en.webp', w: 624, h: 1152 },
     result: { src: '/img/landing-result.en.webp', w: 624, h: 1384 },
+    desktop: { src: '/img/landing-desktop.en.webp', w: 1800, h: 1125 },
   },
   de: {
     shelfPhone: { src: '/img/landing-shelf-phone.de.webp', w: 624, h: 1246 },
     vote: { src: '/img/landing-vote.de.webp', w: 624, h: 1152 },
     result: { src: '/img/landing-result.de.webp', w: 624, h: 1384 },
+    desktop: { src: '/img/landing-desktop.de.webp', w: 1800, h: 1125 },
   },
   es: {
     shelfPhone: { src: '/img/landing-shelf-phone.es.webp', w: 624, h: 1246 },
     vote: { src: '/img/landing-vote.es.webp', w: 624, h: 1152 },
     result: { src: '/img/landing-result.es.webp', w: 624, h: 1446 },
+    desktop: { src: '/img/landing-desktop.es.webp', w: 1800, h: 1125 },
   },
   fr: {
     shelfPhone: { src: '/img/landing-shelf-phone.fr.webp', w: 624, h: 1246 },
     vote: { src: '/img/landing-vote.fr.webp', w: 624, h: 1152 },
     result: { src: '/img/landing-result.fr.webp', w: 624, h: 1446 },
+    desktop: { src: '/img/landing-desktop.fr.webp', w: 1800, h: 1125 },
   },
   it: {
     shelfPhone: { src: '/img/landing-shelf-phone.it.webp', w: 624, h: 1246 },
     vote: { src: '/img/landing-vote.it.webp', w: 624, h: 1152 },
     result: { src: '/img/landing-result.it.webp', w: 624, h: 1446 },
+    desktop: { src: '/img/landing-desktop.it.webp', w: 1800, h: 1125 },
   },
   nl: {
     shelfPhone: { src: '/img/landing-shelf-phone.nl.webp', w: 624, h: 1246 },
     vote: { src: '/img/landing-vote.nl.webp', w: 624, h: 1152 },
     result: { src: '/img/landing-result.nl.webp', w: 624, h: 1443 },
+    desktop: { src: '/img/landing-desktop.nl.webp', w: 1800, h: 1125 },
   },
   pt: {
     shelfPhone: { src: '/img/landing-shelf-phone.pt.webp', w: 624, h: 1246 },
     vote: { src: '/img/landing-vote.pt.webp', w: 624, h: 1152 },
     result: { src: '/img/landing-result.pt.webp', w: 624, h: 1384 },
+    desktop: { src: '/img/landing-desktop.pt.webp', w: 1800, h: 1125 },
   },
   fi: {
     shelfPhone: { src: '/img/landing-shelf-phone.fi.webp', w: 624, h: 1246 },
     vote: { src: '/img/landing-vote.fi.webp', w: 624, h: 1152 },
     result: { src: '/img/landing-result.fi.webp', w: 624, h: 1446 },
+    desktop: { src: '/img/landing-desktop.fi.webp', w: 1800, h: 1125 },
   },
   ko: {
     shelfPhone: { src: '/img/landing-shelf-phone.ko.webp', w: 624, h: 1246 },
     vote: { src: '/img/landing-vote.ko.webp', w: 624, h: 1152 },
     result: { src: '/img/landing-result.ko.webp', w: 624, h: 1346 },
+    desktop: { src: '/img/landing-desktop.ko.webp', w: 1800, h: 1125 },
   },
 };
+
+// Der Tisch's set (#1199), shot by `scripts/capture-landing-shots.js
+// --design=tisch` over the same per-locale seed, into public/img/tisch/. Same
+// four shots and the same widths; the heights are the design's own —
+// its vote card stacks five full-width faces, so that crop is derived from the
+// card rather than held at Klassisch's fixed point (the script says why).
+const LANDING_SHOTS_TISCH = {
+  en: {
+    shelfPhone: { src: '/img/tisch/landing-shelf-phone.en.webp', w: 624, h: 1246 },
+    vote: { src: '/img/tisch/landing-vote.en.webp', w: 624, h: 1330 },
+    result: { src: '/img/tisch/landing-result.en.webp', w: 624, h: 1578 },
+    desktop: { src: '/img/tisch/landing-desktop.en.webp', w: 1800, h: 1126 },
+  },
+  de: {
+    shelfPhone: { src: '/img/tisch/landing-shelf-phone.de.webp', w: 624, h: 1246 },
+    vote: { src: '/img/tisch/landing-vote.de.webp', w: 624, h: 1309 },
+    result: { src: '/img/tisch/landing-result.de.webp', w: 624, h: 1717 },
+    desktop: { src: '/img/tisch/landing-desktop.de.webp', w: 1800, h: 1165 },
+  },
+  es: {
+    shelfPhone: { src: '/img/tisch/landing-shelf-phone.es.webp', w: 624, h: 1246 },
+    vote: { src: '/img/tisch/landing-vote.es.webp', w: 624, h: 1330 },
+    result: { src: '/img/tisch/landing-result.es.webp', w: 624, h: 1640 },
+    desktop: { src: '/img/tisch/landing-desktop.es.webp', w: 1800, h: 1126 },
+  },
+  fr: {
+    shelfPhone: { src: '/img/tisch/landing-shelf-phone.fr.webp', w: 624, h: 1246 },
+    vote: { src: '/img/tisch/landing-vote.fr.webp', w: 624, h: 1330 },
+    result: { src: '/img/tisch/landing-result.fr.webp', w: 624, h: 1669 },
+    desktop: { src: '/img/tisch/landing-desktop.fr.webp', w: 1800, h: 1175 },
+  },
+  it: {
+    shelfPhone: { src: '/img/tisch/landing-shelf-phone.it.webp', w: 624, h: 1246 },
+    vote: { src: '/img/tisch/landing-vote.it.webp', w: 624, h: 1330 },
+    result: { src: '/img/tisch/landing-result.it.webp', w: 624, h: 1669 },
+    desktop: { src: '/img/tisch/landing-desktop.it.webp', w: 1800, h: 1175 },
+  },
+  nl: {
+    shelfPhone: { src: '/img/tisch/landing-shelf-phone.nl.webp', w: 624, h: 1246 },
+    vote: { src: '/img/tisch/landing-vote.nl.webp', w: 624, h: 1330 },
+    result: { src: '/img/tisch/landing-result.nl.webp', w: 624, h: 1699 },
+    desktop: { src: '/img/tisch/landing-desktop.nl.webp', w: 1800, h: 1125 },
+  },
+  pt: {
+    shelfPhone: { src: '/img/tisch/landing-shelf-phone.pt.webp', w: 624, h: 1246 },
+    vote: { src: '/img/tisch/landing-vote.pt.webp', w: 624, h: 1330 },
+    result: { src: '/img/tisch/landing-result.pt.webp', w: 624, h: 1669 },
+    desktop: { src: '/img/tisch/landing-desktop.pt.webp', w: 1800, h: 1165 },
+  },
+  fi: {
+    shelfPhone: { src: '/img/tisch/landing-shelf-phone.fi.webp', w: 624, h: 1246 },
+    vote: { src: '/img/tisch/landing-vote.fi.webp', w: 624, h: 1330 },
+    result: { src: '/img/tisch/landing-result.fi.webp', w: 624, h: 1640 },
+    desktop: { src: '/img/tisch/landing-desktop.fi.webp', w: 1800, h: 1165 },
+  },
+  ko: {
+    shelfPhone: { src: '/img/tisch/landing-shelf-phone.ko.webp', w: 624, h: 1246 },
+    vote: { src: '/img/tisch/landing-vote.ko.webp', w: 624, h: 1309 },
+    result: { src: '/img/tisch/landing-result.ko.webp', w: 624, h: 1578 },
+    desktop: { src: '/img/tisch/landing-desktop.ko.webp', w: 1800, h: 1125 },
+  },
+};
+
+// Which set the page shows: the design the landing is WEARING, which is the
+// face (FACE_DESIGN) for every logged-out visitor — so production keeps
+// Klassisch's pictures until the flip (#1202) moves the face, and Der Tisch's
+// appear the moment it does, with no second edit here. A design without a set
+// of its own shows Klassisch's rather than nothing.
+const LANDING_SHOT_SETS = { klassisch: LANDING_SHOTS, tisch: LANDING_SHOTS_TISCH };
+
+function landingShotSet() {
+  const worn = typeof activeDesign === 'function' ? activeDesign().id : FACE_DESIGN;
+  return LANDING_SHOT_SETS[worn] || LANDING_SHOTS;
+}
 
 // The set for the active locale, resolved at RENDER time — showLanding() sets
 // currentView, and the top-bar picker re-runs it after setLocale(), so reading
@@ -142,7 +232,8 @@ const LANDING_SHOTS = {
 // screenshots yet shows somebody else's product, which is a great deal better
 // than an empty box in the hero.
 function landingShots() {
-  return LANDING_SHOTS[getLocale()] || LANDING_SHOTS[SUPPORTED_LOCALES[0]];
+  const set = landingShotSet();
+  return set[getLocale()] || set[SUPPORTED_LOCALES[0]];
 }
 
 // The public repository, linked from the "code out in the open" trust chip
@@ -315,6 +406,22 @@ function showLanding() {
            the walkthrough explains it, rather than both doing the second thing.
            (No backticks in here: this comment is inside a template literal.) -->
       <div class="landing-hero__visual" id="landingMoments"></div>
+    </section>
+
+    <!-- The desktop band (#1199): the one wide capture, at close to the page's
+         full width rather than in the hero column that retired its predecessor
+         (#1090 - see LANDING_SHOTS). Lazy: on a phone it sits a screen below the
+         fold, and on a desktop it is within the browser's lazy-load distance of
+         the first viewport anyway, so it costs a desktop visitor nothing. The
+         width/height reserve its box. (No backticks in here: this comment is
+         inside a template literal.) -->
+    <section class="landing-desktop">
+      <figure class="landing-desktop__figure">
+        <img class="landing-shot landing-desktop__shot" src="${shots.desktop.src}"
+             width="${shots.desktop.w}" height="${shots.desktop.h}"
+             alt="${esc(t('landing.desktop.alt'))}" loading="lazy" decoding="async" />
+        <figcaption class="landing-desktop__caption">${esc(t('landing.desktop.caption'))}</figcaption>
+      </figure>
     </section>
 
     <!-- The strip holds no focusable content, so below 720px — where it becomes

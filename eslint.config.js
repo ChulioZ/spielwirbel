@@ -397,6 +397,12 @@ const frontendGlobals = {
   activeDesign: 'readonly', designScheme: 'readonly', loadDesignStylesheet: 'readonly',
   applyDesign: 'readonly', requestedDesign: 'readonly', initDesign: 'readonly',
   DESIGN_CHOOSER_REVISION: 'readonly', applyAccountDesign: 'readonly',
+  // #1199 — a design's brand marks and the manifest URL that carries them.
+  designMarks: 'readonly', manifestHref: 'readonly',
+  // card-glyphs.js + recap-card-tisch.js (#1199) — Der Tisch's share card.
+  CARD_GLYPHS: 'readonly', CARD_GLYPH_BOX: 'readonly', CARD_FACES: 'readonly',
+  tischCardBlob: 'readonly', designCard: 'readonly', shareResultCard: 'readonly',
+  recapColor: 'readonly', recapMarker: 'readonly',
   offeredDesigns: 'readonly', designTile: 'readonly', renderDesignPicker: 'readonly',
   maybeShowDesignChooser: 'readonly', showDesignChooser: 'readonly',
   buildDesignSection: 'readonly',

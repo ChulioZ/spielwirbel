@@ -1444,6 +1444,8 @@ I18N.it = {
   'landing.shot.shelfAlt': 'Schermata: lo scaffale di giochi di un gruppo in Spielwirbel — i giochi come riquadri con il loro punteggio Spielwirbel, accanto alla navigazione per Avvia, scaffale, cronologia e trofei.',
   'landing.shot.voteAlt': 'Schermata: la votazione in Spielwirbel — un gioco estratto con la domanda «quanta voglia hai di giocarci?» e una scala di cinque faccine da 1 («per niente») a 5 («assolutamente»).',
   'landing.shot.resultAlt': 'Schermata: il risultato di una sessione in Spielwirbel — in alto il gioco a cui si è giocato, con il timbro «giocato» e il vincitore; sotto, l’inizio della classifica con il punteggio Spielwirbel del gioco più votato.',
+  'landing.desktop.alt': 'Schermata: la pagina iniziale di un gruppo in Spielwirbel su uno schermo largo — a sinistra la navigazione con il pulsante per avviare una sessione; accanto, l’ultimo gioco giocato, un suggerimento, il ritmo del gruppo, lo scaffale, i trofei e la cronologia.',
+  'landing.desktop.caption': 'A suo agio su uno schermo grande come su uno piccolo.',
   'landing.moments.label': 'Come va una sessione: urna, votazione, risultato',
   'landing.moments.pot': 'Dall’urna vengono estratti dei giochi',
   'landing.moments.vote': 'Lea valuta, poi il dispositivo passa oltre',

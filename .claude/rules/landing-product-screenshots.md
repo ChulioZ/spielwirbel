@@ -4,9 +4,11 @@ paths:
   - "public/js/views-landing.js"
   - "test/landing-shots.test.js"
   - "scripts/capture-landing-shots.js"
+  - "scripts/cdp.js"
+  - "scripts/landing-desktop-shot.js"
   - "scripts/landing-seed-data.js"
 ---
-# Regenerating the landing-page product screenshots (#438, #457, #669, #1090)
+# Regenerating the landing-page product screenshots (#438, #457, #669, #1090, #1199)
 
 **Since #1091 the hero shows no screenshot at all** — it plays the app's own
 pot, vote and Tafel live from the shipped components
@@ -17,6 +19,11 @@ shots are now the **walkthrough's** alone, which changes two things below:
 about sizing "the hero's box" is history, kept because it is the reasoning
 behind the crops that are still shipped. The set itself, the capture script and
 every step of the procedure are unchanged.
+
+**Since #1199 there is a fourth shot per locale, `desktop`** — the round hub at
+1440 wide, shown as one wide band directly under the hero, so the page stops
+reading as a phone-only app (operator decision 2026-09-24). §5a has why it does
+not repeat the #1090 problem that retired the last wide capture.
 
 The logged-out landing page's three-step walkthrough shows real
 screenshots of the app
@@ -30,7 +37,7 @@ repo and no build step here.
 at every image:
 
 ```bash
-node scripts/capture-landing-shots.js          # all three shots, every locale
+node scripts/capture-landing-shots.js          # all four shots, every locale
 node scripts/capture-landing-shots.js --probe  # measure geometry, write nothing
 ```
 
@@ -348,6 +355,33 @@ rounding is not a rule you can predict from the arithmetic. Declare what the fil
 says, which is what `test/landing-shots.test.js` reads back out of the WebP
 header.)
 
+## 5a. The desktop band (#1199) — the wide capture is back, in a place it can be read
+
+#1090 was right about the hero and says nothing about the capture: a 1440-wide
+layout shown at 660–800px renders its labels at ~9px, so it cannot live in a
+hero column. The band gives it the page's own width instead —
+`.landing-desktop__figure` caps at **1200px**, i.e. 0.83× of the layout, app text
+at ~11–12px — and `test/landing-shots.test.js` pins that cap at ≥ 1100px and that
+no rule places the band inside `.landing-hero`. On a phone it just scales down:
+there it is evidence that a desktop layout exists, not something to read.
+
+What the capture does, in `scripts/landing-desktop-shot.js` (its own file
+because `capture-landing-shots.js` sits at the 700-line source budget):
+
+| | value | why |
+|---|---|---|
+| screen | `/round/<rid>`, the Start tab | rail + stage, the app's own front door; the crop refuses a page with no rail or no start CTA |
+| viewport | 1440 × **derived**, floor 900 | cut 24px below the `.rail` BOX, not its last entry — Der Tisch frames the rail as a panel whose padding runs ~22px past the entry, and the first Tisch run sliced its bottom edge off |
+| `deviceScaleFactor` | **1.25** → 1800 px wide | 1.5× the 1200px the band renders at; a 2× (2880 px) capture roughly triples the bytes for a picture seen at arm's length |
+| order | shot FIRST | the vote shot's wizard leaves a live draw behind, which the Start tab would then show as an unfinished-session ticket |
+
+Measured 2026-09-24: Klassisch is 1800×1125 in every locale (its rail ends at
+830–874, under the floor); Der Tisch 1800×1125–1175, because its rail panel is
+taller and its labels wrap to two lines in five locales. Heights differ per asset the way the
+result shot's do, and the band is width-bound, so they do not have to agree.
+Weight is 60–78 KB per file, budgeted **separately** (`DESKTOP_BUDGET`, 120 KB)
+so the walkthrough's 200 KB cap stays exactly as strict as it was.
+
 ### The result crop cannot be a constant — `resultCrop()` measures it per locale
 
 §4's method is "measure once, then hold the number". That does not converge for
@@ -400,7 +434,8 @@ new badge" was true before it and is the kind of prose that rots silently.
 hand-copied duplicate — `.claude/rules/shared-constants-across-the-stack.md`) and
 asserts each path is served, that the declared `width`/`height` equal the file's
 **real** pixels, that **every** `SUPPORTED_LOCALES` entry has a complete set of
-three (and that no set exists for a locale the app doesn't offer), that the
+four — the three walkthrough shots and `desktop` (and that no set exists for a
+locale the app doesn't offer), that the
 render sites go through `landingShots()` rather than a hardcoded locale, and that
 each locale's weight stays under budget. All were verified by breaking the code
 on purpose.
@@ -448,9 +483,37 @@ an assertion: a future edit dropping the metadata cannot silently reshoot the �
 and the disclosure back out of the images. It says nothing about whether either
 was in frame — the crop can still exclude them, and only your eyes catch that.
 
+## 6a. One set PER DESIGN since #1199 — the landing shows the face's app
+
+`--design=tisch` shoots Der Tisch's set into `public/img/tisch/`
+(`LANDING_SHOTS_TISCH`); `landingShotSet()` picks by the design the landing is
+wearing, which is the face for every visitor — so production keeps Klassisch's
+pictures until the flip (#1202) and switches with no second edit.
+`test/landing-shots.test.js` walks every table in `LANDING_SHOT_SETS` and fails
+if the FACE has none (the resolver would silently fall back to Klassisch's).
+
+Three things differ for a non-Klassisch run, each learned by looking:
+
+- **The design is a localStorage key**, written beside the locale in
+  `setLocale()` (open mode = the device's choice), and asserted per shot in
+  `assertLocale()` — a run that fell back to the face would commit nine Klassisch
+  pictures into the Tisch folder with every test green.
+- **Its vote crop is DERIVED, not the #669 fixed point.** Der Tisch stacks five
+  full-width face rows, so the card runs to ~794–839px at every viewport (measured
+  at 720/820/880 — the bottom never moved) and 720 slices the fifth face off.
+  `voteCrop()` cuts 24px below the card and re-derives after setting the viewport,
+  like `resultCrop()`.
+- **The round's marker is pinned to index 0** (Tannenfilz) for a design run: a
+  new round's marker is hashed from its id, so each locale's felt came out a
+  different colour. Klassisch's seed is left exactly as it was.
+
+`LANDING_SHOTS_PORT` / `LANDING_SHOTS_CDP_PORT` override 3199/9333 so a second
+run elsewhere does not fight this one for the ports.
+
 ## 7. These images are deliberately NOT in the service worker's `SHELL`
 
-Only a logged-**out** visitor ever sees the landing page, so precaching them
+The desktop band's captures are no exception, and add ~70 KB per locale to the
+argument. Only a logged-**out** visitor ever sees the landing page, so precaching them
 would cost every installed user ~120 KB for images their app never renders — the
 same reasoning that keeps `og-image.png` out. Since #457 that is ~120 KB **per
 locale**, of which any one visitor renders at most one set, so the argument only

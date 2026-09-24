@@ -1373,6 +1373,8 @@ I18N.ko = {
   'landing.shot.shelfAlt': '스크린샷: Spielwirbel에 담긴 어느 모임의 게임 선반 — Spielwirbel 점수와 함께 타일로 늘어선 게임들, 그 옆에 시작·선반·기록·트로피 내비게이션이 있어요.',
   'landing.shot.voteAlt': '스크린샷: Spielwirbel의 투표 화면 — 뽑힌 게임 하나와 “이 게임을 얼마나 하고 싶으세요?”라는 질문, 그리고 1(“전혀”)부터 5(“정말로”)까지 다섯 개의 표정 눈금이 보여요.',
   'landing.shot.resultAlt': '스크린샷: Spielwirbel의 세션 결과 — 위쪽에는 “플레이함” 도장과 승자가 표시된, 실제로 플레이한 게임이 있고 그 아래에는 1위 게임의 Spielwirbel 점수와 함께 순위가 시작돼요.',
+  'landing.desktop.alt': '스크린샷: 넓은 화면에서 본 Spielwirbel의 모임 시작 페이지 — 왼쪽에는 세션 시작 버튼이 있는 내비게이션이, 그 옆에는 마지막으로 플레이한 게임, 추천, 모임 활동, 선반, 트로피, 기록이 있어요.',
+  'landing.desktop.caption': '큰 화면에서도 작은 화면에서처럼 편하게.',
   'landing.moments.label': '세션 진행 방식: 후보, 투표, 결과',
   'landing.moments.pot': '후보에서 게임을 뽑아요',
   'landing.moments.vote': 'Lea가 평가한 뒤 기기를 넘겨요',

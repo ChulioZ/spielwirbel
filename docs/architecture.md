@@ -143,6 +143,11 @@ lib/
   quota.js           per-tenant state caps — rounds/tenant, games/round,
                      tags/round, members/round (issue #139; inert unless
                      ACCOUNTS_ENABLED)
+  web-manifest.js    GET /manifest.webmanifest per design (#1199): the face's
+                     static file untouched, or — for ?design=<a selectable id>
+                     — that design's icons, theme and splash colour. Reads no
+                     account; mounted in front of express.static, as open as
+                     the file
   faq.js             the server-rendered FAQ page, one language per page in
                      every shipped locale (#1088), with each answer an instance
                      cannot honestly give gated out (issue #489)
@@ -421,19 +426,26 @@ public/
     designs/         one override stylesheet per USER design (#1184), fetched
                      on demand by js/design.js; Klassisch has none, because
       tisch.css      styles.css IS Klassisch
-  manifest.webmanifest  PWA manifest (installable app metadata + icons)
+  manifest.webmanifest  PWA manifest (installable app metadata + icons) — the
+                     face's; other designs get theirs from lib/web-manifest.js
   robots.txt         crawl policy; every noindex page stays crawl-ALLOWED (#510)
   sitemap.xml        the four public URLs, on the canonical host
   sw.js              service worker: precache the app shell, offline fallback
   fonts/             self-hosted fonts + Tabler icon set
   icons/             PWA / home-screen app icons (192, 512, apple-touch), the
                      "Powered by BGG" attribution logo shown in the footer, and
-                     og-image.png (the 1200×630 card link previews show)
+                     og-image.png (the 1200×630 card link previews show) —
+                     Klassisch's marks
+    tisch/           Der Tisch's own marks (#1199): felt + gold whirl icons, a
+                     maskable one, apple-touch, favicon and its og-image.png,
+                     rendered by scripts/render-design-marks.js
   img/               product screenshots on the logged-out landing page — the
                      shelf, the voting screen and a session result, all phone
                      width, one set per UI locale (landing-*.<locale>.webp),
                      generated once from throwaway data and committed (see
                      .claude/rules/)
+    tisch/           the same three shots with the app wearing Der Tisch
+                     (#1199), shown once the face moves to it
   js/
     pages/           scripts for the standalone HTML pages above. Each is a
                      self-contained IIFE loaded by its OWN document only, so it
@@ -516,6 +528,13 @@ public/
     recap-card.js    draws that period recap onto a canvas and hands it out as a
                      PNG the user shares — never any cover art, which may not be
                      redistributed and would taint the canvas (issue #800)
+    card-glyphs.js   the Tabler outlines a canvas draws (whirl, crown, check,
+                     the five faces) as Path2D data, read once out of the
+                     bundled woff2 — a canvas never loads the icon font (#1199)
+    recap-card-tisch.js
+                     Der Tisch's share card (#1199): one 1080×1350 layout for a
+                     session, a split session and a period recap, drawn when
+                     that design is worn — felt head, played game, people, Tafel
     hub-insights.js  the Start tab's derivations: which games are worth putting
                      on the table, how often the round meets, what is quietly
                      broken, and what was played on this day in a past year
@@ -816,7 +835,18 @@ scripts/
   capture-landing-shots.js
                      regenerates the committed landing-page product screenshots
                      (public/img/landing-*.webp) — seeds a throwaway dataset and
-                     drives headless Chrome over CDP, one run for every locale
+                     drives headless Chrome over CDP, one run for every locale;
+                     --design=tisch shoots Der Tisch's set into public/img/tisch/
+  landing-desktop-shot.js
+                     that run's one desktop capture — the round hub at 1440 wide
+                     for the band under the landing hero (#1199) — its viewport,
+                     probe and crop
+  cdp.js             the dependency-free Chrome DevTools Protocol client both
+                     image scripts drive headless Chrome with
+  render-design-marks.js
+                     renders a design's app icons, favicon and link-preview
+                     image to the PNGs its registry row names (#1199), with
+                     headless Chrome over CDP and the design's own tokens
   landing-seed-data.js
                      the per-locale seed that run puts in (round name, seats,
                      tags, invented titles, provider metadata) — a flat table,

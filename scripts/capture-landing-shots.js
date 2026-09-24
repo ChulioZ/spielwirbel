@@ -3,7 +3,7 @@
 /*
  * Regenerate the landing-page product screenshots (#438, #457, #669).
  *
- *   node scripts/capture-landing-shots.js            # all three shots, every locale
+ *   node scripts/capture-landing-shots.js            # all four shots, every locale
  *   node scripts/capture-landing-shots.js vote       # just the vote card
  *   node scripts/capture-landing-shots.js --probe    # measure geometry, write nothing
  *
@@ -34,19 +34,37 @@
  * an error page, or of the wrong locale, passes all of it.
  */
 
-const { execFile, spawn } = require('child_process');
+const { spawn } = require('child_process');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
 const { RATINGS, RESULT_RATINGS, MEMBERS, METADATA, SEEDS } = require('./landing-seed-data');
 
-const ROOT = path.join(__dirname, '..');
-const OUT_DIR = path.join(ROOT, 'public', 'img');
-const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+const { designById } = require('../public/js/designs');
 
-const PORT = 3199;
-const CDP_PORT = 9333;
+const ROOT = path.join(__dirname, '..');
+const { connectCdp } = require('./cdp');
+const desktopShot = require('./landing-desktop-shot');
+
+/* WHICH DESIGN the app wears in the pictures (#1199): `--design=tisch` shoots
+   Der Tisch's set into public/img/tisch/, the default shoots Klassisch's into
+   public/img/ exactly as before. One set per design because the landing shows
+   the FACE's app (views-landing.js landingShots), and the face moves to Der
+   Tisch at the flip (#1202) — the Tisch set has to exist before then.
+
+   The capture runs in open mode (no accounts), where the design is the
+   DEVICE's choice (design.js storedDesign), so wearing one is a localStorage
+   key written next to the locale in setLocale — no account, no login. */
+const DESIGN = (process.argv.find((a) => a.startsWith('--design=')) || '--design=klassisch').slice('--design='.length);
+const OUT_DIR = DESIGN === 'klassisch'
+  ? path.join(ROOT, 'public', 'img')
+  : path.join(ROOT, 'public', 'img', DESIGN);
+
+// Overridable so a second run (another worktree, another agent) does not fight
+// this one for the ports.
+const PORT = Number(process.env.LANDING_SHOTS_PORT) || 3199;
+const CDP_PORT = Number(process.env.LANDING_SHOTS_CDP_PORT) || 9333;
 const BASE = `http://127.0.0.1:${PORT}`;
 
 // The three viewports, all PHONE-shaped since #1090. The set used to carry a
@@ -78,12 +96,15 @@ const VIEWPORTS = {
   // The results screen (#1090), same phone width as the other two. Its height is
   // a FLOOR, not the crop: resultCrop() below measures the real cut per locale.
   result: { width: 390, height: 720, deviceScaleFactor: 1.6, mobile: true },
+  // The band under the hero (#1199): the one desktop capture, 1440 wide. Its
+  // height is a floor too — scripts/landing-desktop-shot.js derives the cut.
+  desktop: desktopShot.VIEWPORT,
 };
 
 // Shot name -> committed file stem. A map rather than the nested ternary this
 // replaced: that form silently wrote every unknown shot to `landing-vote`, which
 // is exactly the mistake adding a fourth shot would make.
-const FILE_STEM = { shelfPhone: 'shelf-phone', vote: 'vote', result: 'result' };
+const FILE_STEM = { shelfPhone: 'shelf-phone', vote: 'vote', result: 'result', desktop: 'desktop' };
 
 // WebP quality. 84 lands each locale's set at ~120 KB against the 200 KB
 // per-locale budget test/landing-shots.test.js enforces.
@@ -183,6 +204,13 @@ async function seedRound(locale) {
   const round = await api('POST', '/api/rounds', { name: seed.round, members: seed.members || MEMBERS });
   const rid = round.id;
   const memberIds = round.members.map((m) => m.id);
+  // A new round's marker is hashed from its id, so each locale's round would
+  // wear a different felt — purple in German, blue in Finnish. For a design whose
+  // marker IS the ground of whole screens (Der Tisch's felt), pin the design's
+  // default (index 0, Tannenfilz: the face T11.3 draws) so the nine sets read as
+  // one product. Klassisch's marker is a thin bar and its committed sets were
+  // shot without this, so its seed is left exactly as it was.
+  if (DESIGN !== 'klassisch') await api('PATCH', `/api/rounds/${rid}/marker`, { index: 0 });
 
   const tags = [];
   for (const name of seed.tags) tags.push(await api('POST', `/api/rounds/${rid}/tags`, { name }));
@@ -319,66 +347,15 @@ function stopServer(child) {
 
 /* ------------------------------------------------------------------ the CDP */
 
-// ~40 lines instead of a dependency: Node has a global WebSocket, and headless
-// Chrome speaks CDP over one. This is not optional convenience — `chrome
-// --screenshot` FLOORS the CSS viewport at 500px regardless of --window-size, so
-// a "390px" capture is really a 390-wide crop of a 500-wide layout with every
-// phone breakpoint unfired. Emulation.setDeviceMetricsOverride is the only way
-// to set the viewport exactly.
-async function connectCdp() {
-  const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'cdp-'));
-  const chrome = execFile(CHROME, [
-    '--headless=new', '--disable-gpu', '--hide-scrollbars', '--no-first-run',
-    `--remote-debugging-port=${CDP_PORT}`, `--user-data-dir=${profile}`, 'about:blank',
-  ]);
-  cleanups.push(() => { chrome.kill(); fs.rmSync(profile, { recursive: true, force: true }); });
-
-  let target = null;
-  for (let i = 0; i < 100 && !target; i++) {
-    try {
-      const list = await (await fetch(`http://127.0.0.1:${CDP_PORT}/json/list`)).json();
-      target = list.find((t) => t.type === 'page');
-    } catch { /* not up yet */ }
-    if (!target) await sleep(100);
+// The client lives in scripts/cdp.js (shared with render-design-marks.js); its
+// header says why a dependency-free CDP client and not `chrome --screenshot`.
+// Teardown goes through this script's own registry, since fail() exits.
+async function openCdp() {
+  try {
+    return await connectCdp({ port: CDP_PORT, onCleanup: (fn) => cleanups.push(fn) });
+  } catch (err) {
+    return fail(err.message);
   }
-  if (!target) return fail('Chrome did not expose a CDP page target');
-
-  const ws = new WebSocket(target.webSocketDebuggerUrl);
-  await new Promise((resolve, reject) => {
-    ws.addEventListener('open', resolve, { once: true });
-    ws.addEventListener('error', reject, { once: true });
-  });
-
-  let nextId = 0;
-  const pending = new Map();
-  const listeners = new Set();
-  ws.addEventListener('message', (ev) => {
-    const msg = JSON.parse(ev.data);
-    if (msg.id != null && pending.has(msg.id)) {
-      const { resolve, reject } = pending.get(msg.id);
-      pending.delete(msg.id);
-      if (msg.error) reject(new Error(`${msg.error.message} (${JSON.stringify(msg.error.data || '')})`));
-      else resolve(msg.result);
-    } else if (msg.method) {
-      for (const fn of [...listeners]) fn(msg);
-    }
-  });
-
-  const send = (method, params) => new Promise((resolve, reject) => {
-    const id = ++nextId;
-    pending.set(id, { resolve, reject });
-    ws.send(JSON.stringify({ id, method, params: params || {} }));
-  });
-
-  const once = (method) => new Promise((resolve) => {
-    const fn = (msg) => { if (msg.method === method) { listeners.delete(fn); resolve(msg.params); } };
-    listeners.add(fn);
-  });
-
-  cleanups.push(() => ws.close());
-  await send('Page.enable');
-  await send('Runtime.enable');
-  return { send, once };
 }
 
 // Evaluate in the page and return the value. awaitPromise so a probe can await
@@ -409,12 +386,18 @@ async function navigate(cdp, url) {
 async function setLocale(cdp, locale) {
   await navigate(cdp, `${BASE}/`);
   await evaluate(cdp, `localStorage.setItem('locale', ${JSON.stringify(locale)})`);
+  // The design rides on the same boot-time read, for the same reason.
+  await evaluate(cdp, `localStorage.setItem('design', ${JSON.stringify(DESIGN)})`);
 }
 
-// The one cheap proof the capture is in the language you think it is.
+// The one cheap proof the capture is in the language — and the design — you
+// think it is. A Tisch run that silently fell back to the face would commit
+// nine Klassisch pictures into the Tisch folder, and every test would pass.
 async function assertLocale(cdp, locale) {
   const lang = await evaluate(cdp, 'document.documentElement.lang');
   if (lang !== locale) fail(`page renders lang="${lang}" but ${locale} was requested`);
+  const design = await evaluate(cdp, 'document.documentElement.dataset.design');
+  if (design !== DESIGN) fail(`page wears design="${design}" but ${DESIGN} was requested`);
 }
 
 // Geometry probe (§4): a crop slicing through a LABEL looks broken, one slicing
@@ -447,7 +430,7 @@ async function probeGeometry(cdp) {
       rowBottoms: rows.map((r) => r.bottom),
       docHeight: document.documentElement.scrollHeight,
     };
-  })()`);
+  })()`).then(async (geom) => ({ ...geom, desktop: await evaluate(cdp, desktopShot.PROBE) }));
 }
 
 // The result crop is the one height this script does NOT fix in VIEWPORTS, and
@@ -474,12 +457,34 @@ function resultCrop(geom, locale) {
   return Math.round(rowBottoms[0] + gap / 2);
 }
 
+/* Der Tisch's vote card is NOT the fixed point Klassisch's is (#1199). T2.4
+   stacks the five faces as full-width rows on a phone, so the card runs to
+   794-839px whatever the viewport — measured at 720, 820 and 880, the bottom
+   never moved — and 720 slices the fifth face off. Its height also moves with
+   the drawn game (a title that wraps adds a line, and the draw is random), so a
+   constant has the result shot's problem. Hence the result shot's answer: cut
+   a fixed breath below the card's own bottom, re-derived after the viewport is
+   set so a card that DID size itself would fail loudly rather than be sliced. */
+function voteCrop(geom, locale) {
+  if (!geom.voteBottom) fail(`the ${locale} vote screen has no .vote card to measure`);
+  return geom.voteBottom + 24;
+}
+
+// Which shots are cut where the page says rather than at their VIEWPORTS
+// height. Klassisch's vote crop stays the #669 fixed point; Der Tisch's cannot.
+const DERIVED_CROPS = {
+  result: resultCrop,
+  desktop: desktopShot.desktopCrop,
+  ...(DESIGN === 'klassisch' ? {} : { vote: voteCrop }),
+};
+
 async function capture(cdp, shot, locale, probeOnly) {
   await cdp.send('Emulation.setDeviceMetricsOverride', VIEWPORTS[shot]);
   let geom = await probeGeometry(cdp);
   let metrics = VIEWPORTS[shot];
-  if (shot === 'result') {
-    metrics = { ...VIEWPORTS.result, height: resultCrop(geom, locale) };
+  const derive = DERIVED_CROPS[shot];
+  if (derive) {
+    metrics = { ...VIEWPORTS[shot], height: derive(geom, locale) };
     await cdp.send('Emulation.setDeviceMetricsOverride', metrics);
     // Re-probe and re-derive: the viewport change is what the screenshot is
     // taken at, so the cut has to be checked against the layout it actually
@@ -487,15 +492,15 @@ async function capture(cdp, shot, locale, probeOnly) {
     // asserting that is cheaper than assuming it, and a future screen that DOES
     // size itself would otherwise slice a title silently.
     geom = await probeGeometry(cdp);
-    const again = resultCrop(geom, locale);
+    const again = derive(geom, locale);
     if (again !== metrics.height) {
-      fail(`the ${locale} result layout moved when the viewport was set `
+      fail(`the ${locale} ${shot} layout moved when the viewport was set `
         + `(${metrics.height} -> ${again}) — the crop is not a fixed point`);
     }
   }
   console.log(`  ${locale}/${shot}  rail=${geom.railBottom} vote=${geom.voteBottom} nav=${geom.navBottom} `
     + `tisch=${geom.tischBottom} rows=${JSON.stringify(geom.rowBottoms.slice(0, 6))} `
-    + `doc=${geom.docHeight} cards=${JSON.stringify(geom.cardRows.slice(0, 8))}`);
+    + `doc=${geom.docHeight} cards=${JSON.stringify(geom.cardRows.slice(0, 8))} desk=${JSON.stringify(geom.desktop)}`);
   if (probeOnly) return;
 
   const { data } = await cdp.send('Page.captureScreenshot', { format: 'webp', quality: QUALITY });
@@ -625,8 +630,12 @@ async function assertResultScreen(cdp) {
 async function main() {
   const args = process.argv.slice(2);
   const probeOnly = args.includes('--probe');
+  if (!designById(DESIGN)) fail(`unknown design '${DESIGN}'`);
+  fs.mkdirSync(OUT_DIR, { recursive: true });
   const only = args.filter((a) => !a.startsWith('--'));
-  const shots = only.length ? only : ['shelfPhone', 'vote', 'result'];
+  // Desktop FIRST: the vote shot's wizard leaves a live draw behind, which the
+  // Start tab would then show as an unfinished session ticket.
+  const shots = only.length ? only : ['desktop', 'shelfPhone', 'vote', 'result'];
   for (const s of shots) if (!VIEWPORTS[s]) fail(`unknown shot '${s}' (have: ${Object.keys(VIEWPORTS).join(', ')})`);
 
   const dataDir = tempDataDir();
@@ -648,7 +657,7 @@ async function main() {
     console.log(`  wrote provider metadata onto ${writeProviderMetadata(dataDir)} games`);
     await startServer(dataDir);
 
-    const cdp = await connectCdp();
+    const cdp = await openCdp();
     for (const locale of Object.keys(SEEDS)) {
       await setLocale(cdp, locale);
       const { rid, sessionIds } = rounds[locale];
@@ -668,6 +677,10 @@ async function main() {
           await cdp.send('Emulation.setDeviceMetricsOverride', VIEWPORTS.result);
           await navigate(cdp, `${BASE}/round/${rid}/session/${sessionIds[2]}`);
           await assertResultScreen(cdp);
+        } else if (shot === 'desktop') {
+          // The hub's Start tab; desktopCrop() refuses a page with no rail/CTA.
+          await cdp.send('Emulation.setDeviceMetricsOverride', VIEWPORTS.desktop);
+          await navigate(cdp, `${BASE}/round/${rid}`);
         } else {
           await navigate(cdp, `${BASE}/round/${rid}/regal`);
         }

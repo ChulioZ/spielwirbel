@@ -134,6 +134,13 @@ swept for a hex. Two assertions there are the non-obvious ones: the face block
 must redeclare every name the Klassisch block declares (else a Klassisch value
 leaks through), and every `var()` it reads must be declared inside it.
 
+**`TISCH_CARD_TOKENS` (`public/js/recap-card-tisch.js`, #1199) is the third**:
+a canvas cannot read a design's tokens off the cascade when that design's colour
+block is not in force (the names are shared, so it silently reads another
+design's), so Der Tisch's share card paints from a copy that
+`test/recap-card-tisch.test.js` compares, value for value, against what
+`test/support/theme.js` resolves for the design.
+
 Use this as precedent only under the same condition: *sharing is structurally
 impossible*, not merely inconvenient. A copy that could have been a `require()`
 is still the palette bug.

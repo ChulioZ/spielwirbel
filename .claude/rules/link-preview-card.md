@@ -78,6 +78,16 @@ asserts the opt-out on the card *and* that `icon-512.png` still answers
 `same-origin` — the second assertion is what keeps the first from being
 vacuously true.
 
+## One card per design since #1199 — `index.html` carries the FACE's
+
+Each design's registry row names its own `og-image.png` (Der Tisch's lives in
+`public/icons/tisch/` and is rendered by `scripts/render-design-marks.js`). A
+scraper runs no script, so the head can only ever carry one: the **face's**, and
+`test/design-marks.test.js` pins `og:image`/`twitter:image` to it — the flip
+(#1202) moves the tags or goes red. The CORP opt-out in `assetCacheHeaders` keys
+on the basename, so every design's card gets it. See
+`.claude/rules/design-marks-follow-the-face.md`.
+
 ## Redrawing `public/icons/og-image.png`
 
 There is no image tooling in the repo (same stance as the PWA icons — generated

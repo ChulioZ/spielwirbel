@@ -549,6 +549,13 @@ that read the env would silently report the *dev* set from a production server
 in any context where the var is unset, which is precisely the direction that
 leaks an unfinished design.
 
+**Since #1199 its rows also carry `marks`** — each design's app icons, favicon,
+apple-touch icon and link-preview image — and `lib/web-manifest.js` is a third
+backend reader: `GET /manifest.webmanifest?design=<id>` answers only for an id
+`isSelectableDesign` accepts under the same `{ production }` flag, so the gate
+above is also what keeps an unreleased design's icons off a live install
+(`.claude/rules/design-marks-follow-the-face.md`).
+
 Note what deliberately stayed **out**: the design's *colours* are here, but its
 layout is in `public/css/designs/<id>.css`, which no backend reads at all — and
 must not grow colour tokens, because the contrast suite resolves them from this

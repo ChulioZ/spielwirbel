@@ -4561,3 +4561,37 @@
   border-color: var(--gold-soft);
   background: var(--surface);
 }
+
+/* ===========================================================================
+   #1199 — the landing's DESKTOP band under Der Tisch (operator decision
+   2026-09-24: one wide desktop capture under the hero, so the page does not
+   read as phone-only). Markup and geometry are views-landing.js's and
+   styles.css's; this is paint only.
+
+   The capture is walnut on walnut, so a hairline alone would lose it in the
+   page. It gets the design band's material instead — a felt mat with a brass
+   rim, the table the picture is laid on — and the image itself the phone
+   shots' brass frame. The caption sits on the felt, so it is paper ink: gold
+   and brass are barred as text under 24px on felt (review finding A1).
+   =========================================================================== */
+:root[data-design="tisch"][data-scheme="dark"] .landing-desktop__figure {
+  padding: 14px 14px 18px;
+  border: 1px solid var(--gold-soft);
+  border-radius: var(--radius-md);
+  background-color: var(--felt-deep);
+  background-image:
+    var(--felt-weave),
+    radial-gradient(60% 140% at 15% 0%, var(--felt), var(--felt-deep) 74%);
+  box-shadow: var(--shadow-3);
+}
+@media (min-width: 1024px) {
+  :root[data-design="tisch"][data-scheme="dark"] .landing-desktop__figure { padding: 24px 24px 26px; }
+}
+:root[data-design="tisch"][data-scheme="dark"] .landing-desktop__shot {
+  border: 1px solid var(--gold-edge);
+  box-shadow: var(--shadow-3);
+}
+:root[data-design="tisch"][data-scheme="dark"] .landing-desktop__caption {
+  font-weight: 800;
+  color: var(--felt-ink);
+}
