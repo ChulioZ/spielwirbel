@@ -156,18 +156,17 @@ function tischVoteCard({ person, count, roundName, gameN, gameTotal, secret, gam
 }
 
 /* T12.5's opening on the link: the wordmark on its brass plate, whose round
-   this is, and what the link can and cannot see. It replaces the claim step's
-   page head under Der Tisch; the h1 stays an h1.
+   this is, and that no account is needed. It replaces the claim step's page
+   head under Der Tisch; the h1 stays an h1.
 
-   The promise is deliberately narrower than the sheet's („… und niemand sieht,
-   wie du gewertet hast"): after the reveal a round DOES see who rated what (the
-   Spielepass's „Wer wie gewertet hat"), so that sentence would be untrue. What
-   is true is the lobby's own panel note — the link shows the drawn games and
-   nothing else of the round. */
+   The sheet also makes a privacy promise („… und niemand sieht, wie du
+   gewertet hast"). It is untrue — after the reveal a round DOES see who rated
+   what (the Spielepass's „Wer wie gewertet hat") — so the operator dropped the
+   promise outright rather than soften it (merge interview, 2026-09-24). */
 function tischVoteLinkIntro(ballot) {
   return h(`<header class="vote-link-intro">
       <span class="vote-link-intro__mark">${esc(t('app.title'))}</span>
       <h1 class="vote-link-intro__title">${esc(t('voteLink.introFor', { round: ballot.roundName }))}</h1>
-      <p class="vote-link-intro__note">${esc(tn(ballot.games.length, 'voteLink.introNoteOne', 'voteLink.introNote', { n: ballot.games.length }))}</p>
+      <p class="vote-link-intro__note">${esc(t('voteLink.introNote'))}</p>
     </header>`);
 }

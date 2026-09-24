@@ -954,8 +954,7 @@ I18N.en = {
   'voteLink.deadTitle': 'This link leads nowhere',
   'voteLink.deadBody': 'Voting is over, or the link is wrong. Best to ask the group.',
   'voteLink.introFor': 'You are rating for “{round}”.',
-  'voteLink.introNoteOne': 'No account needed. You only see the drawn game — nothing else of the round.',
-  'voteLink.introNote': 'No account needed. You only see the {n} drawn games — nothing else of the round.',
+  'voteLink.introNote': 'No account needed.',
   // The session log (#209). It names the ACCOUNT, never the device: the server
   // sees which account sent a request and cannot know who was holding the
   // hardware. "Anna voted for Ben" is therefore something we can stand behind;

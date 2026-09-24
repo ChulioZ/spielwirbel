@@ -221,8 +221,10 @@ test('Der Tisch: the vote link opens on the felt intro and rates on the composed
   assert.equal(text(intro.querySelector('.vote-link-intro__mark')), 'Spielwirbel');
   assert.equal(intro.querySelector('h1').className, 'vote-link-intro__title', 'the heading stays an h1');
   assert.equal(text(intro.querySelector('h1')), 'Du wertest für „Donnerstagsrunde“.');
-  assert.equal(text(intro.querySelector('.vote-link-intro__note')),
-    'Kein Konto nötig. Du siehst nur die 2 ausgelosten Spiele — sonst nichts von der Runde.');
+  // The sheet's privacy promise („nobody sees how you rated") is false once
+  // the vote resolves, so the operator dropped the promise outright (merge
+  // interview, 2026-09-24): the note says only that no account is needed.
+  assert.equal(text(intro.querySelector('.vote-link-intro__note')), 'Kein Konto nötig.');
   assert.ok(dom.app.querySelector('#vlClaim .live-vote__hotseat-btn'), 'the claim list is still there');
 
   dom.call('renderVoteLinkCards', 'tok', BALLOT, BALLOT.people[0]);

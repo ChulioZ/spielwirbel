@@ -949,8 +949,7 @@ I18N.de = {
   'voteLink.deadTitle': 'Dieser Link führt ins Leere',
   'voteLink.deadBody': 'Die Abstimmung ist vorbei, oder der Link stimmt nicht. Frag am besten in der Runde nach.',
   'voteLink.introFor': 'Du wertest für „{round}“.',
-  'voteLink.introNoteOne': 'Kein Konto nötig. Du siehst nur das ausgeloste Spiel — sonst nichts von der Runde.',
-  'voteLink.introNote': 'Kein Konto nötig. Du siehst nur die {n} ausgelosten Spiele — sonst nichts von der Runde.',
+  'voteLink.introNote': 'Kein Konto nötig.',
   // Der Session-Verlauf (#209). Er benennt das KONTO, nicht das Gerät: der
   // Server sieht, welcher Account eine Anfrage geschickt hat, und kann nicht
   // wissen, wer das Gerät gerade in der Hand hielt. „Anna hat für Ben
