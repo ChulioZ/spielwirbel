@@ -32,12 +32,18 @@ let seatGuestSeq = 0;
 //    one: an absent-means-no-guests default would render a ring with no „+" seat
 //    that looks finished and silently cannot take a visitor.
 //
+//  - `opts.stateLines` (#1267, Der Tisch's setup only) gives each member seat a
+//    visible state line — „spielt mit" / „heute nicht dabei" — and a tick, so the
+//    state is TEXT rather than fill and a dashed piece alone (WCAG 1.4.1). The
+//    line is part of the button's content and therefore of its accessible name.
+//    Off by default: the ring and the direct-play sheet render exactly as before.
+//
 // Returns the wrapper to append where needed: the ring plus the guest-name input
 // that unfolds under it. It exposed a `refreshSeats()` until #1016 — the guest
 // list lived outside the picker then, so a caller had to be able to redraw it.
 // The ring owns that list now, so there is nothing left for an outside caller to
 // tell it, and a redraw hook nobody calls is a second way to render the ring.
-function renderSeatPicker(round, joining, onChange, guestList) {
+function renderSeatPicker(round, joining, onChange, guestList, opts = {}) {
   const addId = 'seatGuestAdd' + ++seatGuestSeq;
   const wrap = h(`<div class="nr-seats">
       <div class="nr-table">
@@ -154,12 +160,21 @@ function renderSeatPicker(round, joining, onChange, guestList) {
       // announced as a bare name and whether that member is playing tonight is
       // conveyed by color and a "+" glyph alone — unusable without sight, on the
       // control that decides who is in the session.
+      // With state lines the name is stated explicitly: the name and the line
+      // are adjacent inline spans, and an accessible name computed from content
+      // runs them together („Annaspielt mit"). The label says both, cleanly.
+      const state = opts.stateLines
+        ? t(joined ? 'startSession.seatStateIn' : 'startSession.seatStateOut')
+        : null;
       const seat = h(`<button type="button" class="nr-seat${joined ? '' : ' nr-seat--out'}"
-           aria-pressed="${joined}" title="${esc(m.name)}">
+           aria-pressed="${joined}" title="${esc(m.name)}"${state ? ` aria-label="${esc(`${m.name}, ${state}`)}"` : ''}>
            <span class="nr-seat__avatar"${joined ? ` style="background:${memberColor(round, m.id)}"` : ''}>${
              joined ? avatarFace(initials(m.name), { userId: m.userId }) : '<i class="ti ti-plus" aria-hidden="true"></i>'
            }</span>
-           <span class="nr-seat__name">${esc(m.name)}</span>
+           <span class="nr-seat__name">${esc(m.name)}</span>${state
+             ? `<span class="nr-seat__state">${esc(state)}</span>`
+               + (joined ? '<i class="ti ti-circle-check nr-seat__tick" aria-hidden="true"></i>' : '')
+             : ''}
          </button>`);
       seat.addEventListener('click', () => {
         if (joining.has(m.id)) {

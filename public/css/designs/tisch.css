@@ -2180,8 +2180,9 @@
   gap: 6px;
 }
 /* The ring and its centre label are the picture, so they go with it. The label
-   („4 von 6 spielen mit") is restated by the bar's own summary at the foot of
-   this column, so nothing is lost with it. */
+   („4 von 6 spielen mit") is restated by the summary under „Loswirbeln" at the
+   foot of the pot, and every seat states its own state since #1267, so
+   nothing is lost with it. */
 :root[data-design="tisch"][data-scheme="dark"] .setup-grid--session .nr-table__ring,
 :root[data-design="tisch"][data-scheme="dark"] .setup-grid--session .nr-table__center {
   display: none;
@@ -2189,18 +2190,28 @@
 /* A seat is a row: piece, name over state, tick. 44px is the sheet's phone
    value and the hit-target floor; the 1280px block below takes it to T4.1's 52.
    `overflow: hidden` + `min-width: 0` so a long name ellipses inside its own
-   column instead of widening the grid. */
+   column instead of widening the grid.
+
+   A GRID, not a flex row, since #1267 gave the seat its state line: the name
+   and the line under it share the middle column while the piece and the tick
+   span both rows. The picker renders them as siblings in exactly that reading
+   order — piece, name, state, tick — so placing them by column moves nothing
+   out of DOM order. The line is the button's own text, i.e. part of its
+   accessible name, which is what lets state stop being colour-only (WCAG 1.4.1).
+   Guests' „Gast" line and the owner's „du" marker take the same middle column. */
 :root[data-design="tisch"][data-scheme="dark"] .setup-grid--session .nr-seat {
   position: static;
   width: auto;
   margin: 0;
   min-height: 44px;
   min-width: 0;
-  flex-direction: row;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-content: center;
   align-items: center;
-  justify-content: flex-start;
-  gap: 8px;
-  padding: 0 9px;
+  justify-content: stretch;
+  gap: 0 8px;
+  padding: 4px 9px;
   border-radius: var(--radius-sm);
   background: var(--control-fill);
   border: 1px solid var(--control-edge);
@@ -2214,11 +2225,48 @@
   background: transparent;
   border-style: dashed;
 }
+/* The app fades an out-seat's NAME (`opacity: .6`, styles.css) because on the
+   ring the name is all it has. Here the state line says „heute nicht dabei" in
+   words, so the name keeps full ink — the fade put it at a marginal ~4.6:1 on
+   the panel for no information the line does not already give (#1267). */
+:root[data-design="tisch"][data-scheme="dark"] .setup-grid--session .nr-seat--out .nr-seat__name { opacity: 1; }
 :root[data-design="tisch"][data-scheme="dark"] .setup-grid--session .nr-seat__avatar {
   width: 32px;
   height: 32px;
   border-width: 2px;
   flex: none;
+  grid-column: 1;
+  grid-row: 1 / span 2;
+}
+:root[data-design="tisch"][data-scheme="dark"] .setup-grid--session .nr-seat__name,
+:root[data-design="tisch"][data-scheme="dark"] .setup-grid--session .nr-seat__state,
+:root[data-design="tisch"][data-scheme="dark"] .setup-grid--session .nr-seat__you,
+:root[data-design="tisch"][data-scheme="dark"] .setup-grid--session .nr-seat__guest {
+  grid-column: 2;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* „spielt mit" / „heute nicht dabei" — T2.3/T4.1's state line. --ink-soft on
+   both grounds a seat can have (the in-seat's --control-fill and the out-seat's
+   panel --surface), measured in test/tisch-setup-panels.test.js. */
+:root[data-design="tisch"][data-scheme="dark"] .setup-grid--session .nr-seat__state {
+  /* Wraps rather than ellipsing: it is the state, and „heute nicht dabei" does
+     not fit a 390px phone's half-width seat on one line. */
+  white-space: normal;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--ink-soft);
+  text-align: left;
+}
+/* The tick is the glyph beside the words, never instead of them — gold, the
+   design's non-text accent, at the row's right edge. */
+:root[data-design="tisch"][data-scheme="dark"] .setup-grid--session .nr-seat__tick {
+  grid-column: 3;
+  grid-row: 1 / span 2;
+  font-size: 20px;
+  color: var(--gold);
 }
 /* Name and state stack in the middle column and share the row's remaining
    width. The name loses the arc's 64px cap — that number exists because a seat
@@ -2240,10 +2288,15 @@
    as one more person. */
 :root[data-design="tisch"][data-scheme="dark"] .setup-grid--session .nr-seat--add {
   grid-column: 1 / -1;
+  grid-template-columns: auto auto;
   justify-content: center;
+  align-items: center;
   border-style: dashed;
   background: transparent;
 }
+/* The „+" seat has no state line, so its piece takes one row, not two — a
+   spanning piece beside a one-line label lifts the label off its centre. */
+:root[data-design="tisch"][data-scheme="dark"] .setup-grid--session .nr-seat--add .nr-seat__avatar { grid-row: 1; }
 
 /* --- Setup: the three exception chips as brass buttons (T2.3, T4.1) -------
    „Jemand ohne Spiele? · Teams · Mehrere Tische" — one row of equal thirds on
@@ -2275,16 +2328,100 @@
 :root[data-design="tisch"][data-scheme="dark"] .setup-addons__chip.is-on .ti { color: var(--on-accent); }
 
 /* --- Setup: „Der Topf" (T2.3, T4.1) ---------------------------------------
-   The pool panel becomes a vessel standing on the table: a walnut card with its
-   filter chips, its tiles and the sentence about the boxes that stayed home.
+   Since #1267 the setup is the sheet's TWO PANELS rather than a painted single
+   column: views-session-setup-tisch.js wraps the seats' column in one framed
+   panel („Wer spielt mit?") and the pool's pieces in a second, a <section>
+   headed „Der Topf" with the count beside the heading. The filter bar and the
+   tile panel live INSIDE that frame, so they lose their own — a frame in a
+   frame is the one thing both sheets never draw.
+
    The app renders the pool twice and lets width pick one (views-session.js);
-   this dresses whichever one is on screen, so the two cannot diverge. */
+   this dresses whichever one is on screen, so the two cannot diverge. The
+   frame below stays for any `.setup-panel` outside the setup (the landing's
+   pot scene draws one). */
 :root[data-design="tisch"][data-scheme="dark"] .setup-panel,
 :root[data-design="tisch"][data-scheme="dark"] .setup-filterbar {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
   box-shadow: var(--shadow-1);
+}
+/* Both panels: one walnut frame each, and a heading row of title + quiet
+   companion text on a baseline — „Wer spielt mit? · Platz antippen =
+   mitspielen", „Der Topf · 9 Spiele im Topf". */
+:root[data-design="tisch"][data-scheme="dark"] .tisch-setup__panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-1);
+  padding: 12px 14px;
+  margin-bottom: 12px;
+}
+:root[data-design="tisch"][data-scheme="dark"] .tisch-setup__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 10px;
+  margin-bottom: 8px;
+}
+:root[data-design="tisch"][data-scheme="dark"] .tisch-setup__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--text-xl);
+  color: var(--ink);
+}
+:root[data-design="tisch"][data-scheme="dark"] .tisch-setup__sub,
+:root[data-design="tisch"][data-scheme="dark"] .tisch-pot__count {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+/* The count in the heading row is the app's two-span numeral (views-session.js
+   `potCount`), set here as one quiet phrase — the sheets print „9 Spiele im
+   Topf", not a display figure. */
+:root[data-design="tisch"][data-scheme="dark"] .tisch-pot__count .pool-count,
+:root[data-design="tisch"][data-scheme="dark"] .tisch-pot__count .pool-count__label {
+  font: inherit;
+  color: inherit;
+}
+/* The phone strip carried its own numeral because the panel stating it was not
+   rendered below 860px. The heading row states it at every width now, so the
+   strip keeps only the covers — the count is never said twice. */
+:root[data-design="tisch"][data-scheme="dark"] .tisch-pot .pool-hint .pool-count-group { display: none; }
+:root[data-design="tisch"][data-scheme="dark"] .tisch-pot .setup-filterbar,
+:root[data-design="tisch"][data-scheme="dark"] .tisch-pot .setup-panel {
+  background: none;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  margin: 0 0 8px;
+}
+/* The round's colour marker (#1187) sits under the pot's title now — the
+   element the app hangs it on (`.setup-panel__title`) is not rendered here. */
+:root[data-design="tisch"][data-scheme="dark"][data-marked] .tisch-pot .tisch-setup__title::after {
+  content: '';
+  display: block;
+  width: 46px;
+  height: 4px;
+  margin-top: 6px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--marker), var(--marker-deep));
+}
+/* The date line („Donnerstag, 24.09."; the sheet's „Schritt 1 von 3" is left
+   out on purpose — views-session-setup-tisch.js says why) beside the page's <h1>, on its
+   baseline (T4.1); on a phone it wraps under it, which is where T2.3 prints it. */
+:root[data-design="tisch"][data-scheme="dark"] .page-head:has(.tisch-setup__step) {
+  justify-content: flex-start;
+  align-items: baseline;
+  gap: 2px 14px;
+}
+:root[data-design="tisch"][data-scheme="dark"] .tisch-setup__step {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--ink-soft);
 }
 :root[data-design="tisch"][data-scheme="dark"] .setup-panel__title {
   font-family: var(--font-display);
@@ -2317,6 +2454,21 @@
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
+}
+/* T2.3's line under the action — „4 spielen mit · 3 von 9 Spielen werden
+   gezogen". views-session-setup-tisch.js moves it AFTER the button in the DOM,
+   so it is placed on a row of its own below everything else rather than in the
+   app's slot beside the count, which would put it visually before the button it
+   follows in the reading order. `grid-row: auto` with a full-width span lands
+   it on the first row with every track free: row 3 on a phone, row 2 from
+   860px up, where the button shares row 1 with the count. */
+:root[data-design="tisch"][data-scheme="dark"] .setup-grid--tisch .setup-bar__summary {
+  grid-column: 1 / -1;
+  grid-row: auto;
+  text-align: center;
+  font-family: inherit;
+  font-size: var(--text-xs);
+  font-weight: 600;
 }
 :root[data-design="tisch"][data-scheme="dark"] .setup-bar__count label {
   font-family: var(--font-display);
@@ -2457,11 +2609,206 @@
   font-size: var(--text-lg);
   color: var(--paper-ink);
 }
+/* --- The composed card (#1268, T2.4 / T4.2 / T12.5) ------------------------
+   `.vote--tisch` is the root vote-card-tisch.js builds under this design, for
+   the hot-seat card and the link card alike: a HEADER ON THE FELT (back, who,
+   „Spiel 2 von 3 · Person 1 von 4", a dot per game, the secrecy pill), the
+   paper CARD (cover beside title and meta, the question, the faces), and on a
+   shared device the HAND-OFF line. The `.vote` rules above stay for the one
+   surface that still draws the Klassisch shape under this design — the
+   landing's static vote scene (landing-moments.js) — so here the root goes
+   back to being the table and the paper moves down to `.vote__card`.
+
+   Everything on the felt is --felt-ink and nothing else: the felt here is the
+   ROUND'S MARKER (body.vote-screen above), and --felt-ink is this design's
+   markerInk, which test/a11y-contrast.test.js holds at 4.5:1 on all eight.
+   --felt-ink-soft and gold are only measured on the default felt, so neither
+   carries text here (test/tisch-vote-card.test.js pins that). The dots are
+   the one gold thing, and they are aria-hidden glyphs repeating the count. */
+:root[data-design="tisch"][data-scheme="dark"] .vote.vote--tisch {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 560px;
+  padding: 0;
+  background: none;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  overflow: visible;
+  color: var(--felt-ink);
+}
+/* The link card has no `body.vote-screen` (it keeps the language picker), so
+   it brings its own piece of felt to stand on — the default felt, since a
+   ballot carries no marker. */
+:root[data-design="tisch"][data-scheme="dark"] body:not(.vote-screen) .vote.vote--tisch,
+:root[data-design="tisch"][data-scheme="dark"] .vote-link-intro {
+  padding: 16px;
+  border-radius: var(--radius-xl);
+  background:
+    var(--felt-weave),
+    radial-gradient(90% 120% at 50% -10%, var(--felt), var(--felt-deep) 72%);
+  color: var(--felt-ink);
+}
+:root[data-design="tisch"][data-scheme="dark"] .vote-felt {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+}
+/* The back control, out of Klassisch's corner and into the header's first
+   slot: 44px stays (the target floor), the border goes (T2.4 draws a bare
+   chevron), the position goes back to the flow. The size is restated because
+   styles.css reads it from --undo-size, which only `.vote__who` declares — and
+   the Tisch header is not inside one (measured: 22px without this). */
+:root[data-design="tisch"][data-scheme="dark"] .vote--tisch .vote__undo {
+  position: static;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border: none;
+  color: var(--felt-ink);
+}
+:root[data-design="tisch"][data-scheme="dark"] .vote-felt__who { flex: 1; min-width: 0; }
+:root[data-design="tisch"][data-scheme="dark"] .vote-felt__name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--text-md);
+}
+:root[data-design="tisch"][data-scheme="dark"] .vote-felt__count {
+  margin: 0;
+  font-size: var(--text-xs);
+  font-weight: 700;
+}
+/* T4.2 names the round after the counters; T2.4 has no room for it. */
+:root[data-design="tisch"][data-scheme="dark"] .vote-felt__round { display: none; }
+:root[data-design="tisch"][data-scheme="dark"] .vote-felt__dots { display: flex; gap: 5px; }
+:root[data-design="tisch"][data-scheme="dark"] .vote-felt__dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  border: 1px solid var(--gold);
+}
+:root[data-design="tisch"][data-scheme="dark"] .vote-felt__dot.is-done,
+:root[data-design="tisch"][data-scheme="dark"] .vote-felt__dot.is-current { background: var(--gold); }
+:root[data-design="tisch"][data-scheme="dark"] .vote-felt__dot.is-current {
+  box-shadow: 0 0 0 3px var(--gold-edge);
+}
+/* The secrecy line moves out of the card and onto the felt as T4.2's pill. On
+   a phone it takes its own line under the header row — the last thing in the
+   header's DOM, so wrapping it keeps reading order and picture in step. */
+:root[data-design="tisch"][data-scheme="dark"] .vote--tisch .vote__secret {
+  flex-basis: 100%;
+  justify-content: flex-start;
+  padding: 0 0 0 56px;
+  color: var(--felt-ink);
+}
+:root[data-design="tisch"][data-scheme="dark"] .vote__card {
+  --surface: var(--paper);
+  --ink: var(--paper-ink);
+  --ink-soft: var(--paper-ink-soft);
+  --line: var(--paper-edge);
+  --sunken: var(--paper-raised);
+  display: grid;
+  grid-template-columns: 86px minmax(0, 1fr);
+  /* The two 1fr rows centre title and meta against the cover's height. */
+  grid-template-rows: 1fr auto auto 1fr auto auto;
+  grid-template-areas:
+    "img ."
+    "img title"
+    "img meta"
+    "img ."
+    "q q"
+    "rating rating";
+  column-gap: 14px;
+  padding: 18px;
+  border-radius: var(--radius-xl);
+  background: linear-gradient(180deg, var(--paper), var(--paper-raised));
+  box-shadow: 0 18px 36px var(--cast-deep);
+  color: var(--paper-ink);
+}
+:root[data-design="tisch"][data-scheme="dark"] .vote--tisch .vote__img {
+  grid-area: img;
+  align-self: center;
+  width: 86px;
+  height: 114px;
+  aspect-ratio: auto;
+  margin: 0;
+  font-size: var(--text-3xl);
+}
+:root[data-design="tisch"][data-scheme="dark"] .vote--tisch .vote__title {
+  grid-area: title;
+  padding: 0;
+  text-align: left;
+  font-size: var(--text-2xl);
+  line-height: 1.05;
+}
+:root[data-design="tisch"][data-scheme="dark"] .vote__meta {
+  grid-area: meta;
+  margin: 4px 0 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--paper-ink-soft);
+}
+:root[data-design="tisch"][data-scheme="dark"] .vote--tisch .vote__q {
+  grid-area: q;
+  margin: 14px 0 0;
+  text-align: left;
+}
+:root[data-design="tisch"][data-scheme="dark"] .vote--tisch .rating {
+  grid-area: rating;
+  padding: 12px 0 0;
+}
+:root[data-design="tisch"][data-scheme="dark"] .vote__handoff {
+  margin: 0;
+  text-align: center;
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+/* T12.5: the link opens on the table — the wordmark on its brass plate (the
+   same plate as the sign-in's, --on-accent at 12.06:1 / 7.80:1), then whose
+   round it is and what the link can see, all in --felt-ink. */
+:root[data-design="tisch"][data-scheme="dark"] .vote-link-intro {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding: 22px 18px;
+}
+:root[data-design="tisch"][data-scheme="dark"] .vote-link-intro__mark {
+  align-self: flex-start;
+  padding: 5px 11px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(180deg, var(--brass-hi), var(--gold-deep));
+  color: var(--on-accent);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--text-sm);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+:root[data-design="tisch"][data-scheme="dark"] .vote-link-intro__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--text-2xl);
+  line-height: 1.12;
+  color: var(--felt-ink);
+}
+:root[data-design="tisch"][data-scheme="dark"] .vote-link-intro__note {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  line-height: 1.5;
+}
+
 /* The five faces. A ROW each on a phone (T2.4) — face, word, number — because
    five 64px tiles across 390px leaves each one 8px of label; and five COLUMNS
-   from the tablet width up (T4.2), where there is room for the tile. The rows
-   are what the app's flex row becomes by wrapping direction, so no markup
-   differs between the two. */
+   from the tablet width up (T4.2), where there is room for the tile. The word
+   is `.mood__word`, which only vote-card-tisch.js renders (#1268); the rows
+   are what the app's flex row becomes by wrapping direction, so the phone and
+   the desktop share one markup. */
 :root[data-design="tisch"][data-scheme="dark"] .rating {
   flex-direction: column;
   gap: 8px;
@@ -2479,6 +2826,11 @@
   background: var(--paper-raised);
   border: 1px solid var(--paper-edge);
   color: var(--paper-ink);
+}
+:root[data-design="tisch"][data-scheme="dark"] .rating .mood__word {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--text-md);
 }
 /* The number goes to the far end of the row, which is where T2.4 puts it. */
 :root[data-design="tisch"][data-scheme="dark"] .rating .mood__n {
@@ -2560,11 +2912,46 @@
 :root[data-design="tisch"][data-scheme="dark"] .result-people .avatar {
   border: 2px solid var(--gold);
 }
+/* ON the felt head since #1275 — views-session.js puts the line under the
+   sentence — so its type takes the felt's measured pair rather than the
+   walnut's, exactly as the date line above it does. */
+:root[data-design="tisch"][data-scheme="dark"] .page-head--result .result-people { margin: 14px 0 0; }
+:root[data-design="tisch"][data-scheme="dark"] .page-head--result .result-people__label { color: var(--felt-ink-soft); }
+:root[data-design="tisch"][data-scheme="dark"] .page-head--result .result-people__name { color: var(--felt-ink); }
+/* Room above the pieces for the crowns. */
+:root[data-design="tisch"][data-scheme="dark"] .page-head--result .result-people__list { padding-top: 10px; }
+/* The crown a winner wears (T2.5, T4.4) — the split tables' crown, at the same
+   size and in the same gold, which the contrast suite holds as a display colour
+   on every felt. `visibility` rather than `display` so a crown appearing when a
+   winner is recorded moves nothing else on the head. */
+:root[data-design="tisch"][data-scheme="dark"] .result-people__person { position: relative; }
+:root[data-design="tisch"][data-scheme="dark"] .result-people__crown {
+  position: absolute;
+  left: 14px; /* the 28px piece's centre */
+  top: -13px;
+  transform: translateX(-50%);
+  font-size: 13px; /* glyph, not type */
+  color: var(--gold);
+  visibility: hidden;
+}
+:root[data-design="tisch"][data-scheme="dark"] .result-people__person.is-winner .result-people__crown { visibility: visible; }
 
-/* --- The result: the Tafel on paper (T2.5, T4.4) --------------------------
+/* --- The result: the compact Tafel on paper (T2.5, T4.4 — #1275) ----------
    The ranking is a printed sheet laid on the table — the same inversion the
    vote card and every overlay make, declared the same way so the measured paper
-   pairs carry it and nothing has to be repainted token by token. */
+   pairs carry it and nothing has to be repainted token by token.
+
+   What is printed on it is Der Tisch's own markup (result-tafel-tisch.js), not
+   the app's row painted over: a column-header row — Platz · Spiel · Wertungen ·
+   Score — over one COMPACT line per game ending in a score pill. The per-game
+   distribution recedes behind the „Wertungen" count, which is a disclosure.
+
+   The sheet is ONE grid and every line on it a SUBGRID of it. That is what
+   keeps the header's labels over their columns: each row sizing its own `auto`
+   tracks would let one row's „Spielen" button or a wider pill shift every cell
+   left of it off its label. The gold group is a subgrid too, so its rows share
+   the same tracks as the rest. The two-digit rank and a 32px cover are fixed;
+   the votes, the pill and the action size to the widest of their column. */
 :root[data-design="tisch"][data-scheme="dark"] .tafel {
   --surface: var(--paper);
   --ink: var(--paper-ink);
@@ -2576,6 +2963,148 @@
   border-radius: var(--radius-md);
   padding: 14px;
   box-shadow: 0 12px 26px var(--cast-deep);
+}
+/* The grid is the RESULT screen’s: the landing page prints a `.tafel` too
+   (landing-moments.js), in the app’s own row markup, which these tracks would
+   scatter. */
+:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel {
+  display: grid;
+  grid-template-columns: 22px 32px minmax(0, 1fr) auto auto auto;
+  column-gap: 8px;
+}
+/* The `display: grid` above outranks styles.css's `.tafel[hidden]` — the gate a
+   vote-less single-game session uses (#1107) — so it is restated here
+   (.claude/rules/hidden-attribute-vs-display-rule.md). */
+:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel[hidden] { display: none; }
+:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel > *,
+:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel-top > * { grid-column: 1 / -1; }
+:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel-top,
+:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow,
+:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel__cols {
+  display: grid;
+  grid-template-columns: subgrid;
+  column-gap: 8px;
+}
+/* The header row. `aria-hidden` in the markup, so it is type only; the rows say
+   what their cells are themselves. --paper-faint is the measured label ink on
+   both paper stops. */
+:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel__cols {
+  padding: 0 8px 6px;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--text-xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--paper-faint);
+}
+/* A label must NOT size its column. „WERTUNGEN" is ~90px against a ~40px count,
+   and as an `auto` track's content it took the width straight out of the title
+   column (measured at 390: titles squeezed to 62px). So every label is a
+   zero-width box that its text overflows — into the empty header space beside
+   it, never into another label: „Platz" spills right over the cover column,
+   which is why „Spiel" starts at the TITLE; „Wertungen" is pinned to its
+   column's RIGHT edge and spills left over the title column's empty header;
+   „Score" is pinned to its column's LEFT edge and spills right over the action
+   column's. The two therefore grow AWAY from each other, which is what holds
+   for the long locales too (es „Valoraciones" · „Puntuación"). The cells under
+   them sit at the same edges (`justify-self` below). */
+:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel__col {
+  display: flex;
+  width: 0;
+  white-space: nowrap;
+}
+:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel__col--place { grid-column: 1; }
+:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel__col--game { grid-column: 3; }
+:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel__col--votes {
+  justify-self: end;
+  justify-content: flex-end;
+}
+:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel__col--votes { grid-column: 4; }
+:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel__col--score { grid-column: 5; }
+/* One compact line: every cell pinned to ROW 1 of its own column, because the
+   app's row places them by `grid-area` names this grid does not define. The
+   distribution is the one cell left to auto-placement, so it drops below
+   whatever occupies the lines above it — and it is LAST in the DOM for the
+   same reason it is last on screen. */
+:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow {
+  grid-template-rows: none;
+  grid-template-areas: none;
+  row-gap: 0;
+  padding: 8px;
+  align-items: center;
+}
+:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .trow__rank {
+  grid-column: 1;
+  grid-row: 1;
+  position: static;
+  font-size: var(--text-lg);
+}
+:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .trow__img {
+  grid-column: 2;
+  grid-row: 1;
+  width: 32px;
+  height: 32px;
+  font-size: 16px; /* glyph, not type */
+}
+:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .trow__main { grid-column: 3; grid-row: 1; }
+:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .trow__votes { grid-column: 4; grid-row: 1; justify-self: end; }
+:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .trow__pill {
+  grid-column: 5;
+  grid-row: 1;
+  justify-self: start;
+  position: static;
+}
+:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .trow__action { grid-column: 6; grid-row: 1; }
+:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .play-btn { margin-top: 0; }
+:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .trow__bars {
+  grid-column: 3 / -1;
+  grid-row: auto;
+  margin-top: 8px;
+}
+/* `.trow__bars` is `display: flex` in styles.css, which beats the attribute —
+   and the disclosure IS the attribute. */
+:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .trow__bars[hidden] { display: none; }
+:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .trow__title { font-size: var(--text-md); }
+:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .trow__owners { font-size: var(--text-xs); }
+/* The „Wertungen" count, and the disclosure that opens the distribution under
+   the row. A control on paper, so the paper's own edge and ink; 32px keeps it
+   over the 24px target floor (SC 2.5.8) without growing the line. */
+:root[data-design="tisch"][data-scheme="dark"] .trow__votes {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 0 6px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--paper-ink);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+:root[data-design="tisch"][data-scheme="dark"] .trow__votes .ti { font-size: 12px; /* glyph, not type */ }
+:root[data-design="tisch"][data-scheme="dark"] .trow__votes[aria-expanded="true"] .ti { transform: rotate(180deg); }
+:root[data-design="tisch"][data-scheme="dark"] .trow__votes--none {
+  border-color: transparent;
+  color: var(--paper-faint);
+  cursor: default;
+}
+/* While the evening is still choosing, a phone row's action is a „Spielen"
+   button or the „Auf dem Tisch" chip — ~100px that would leave the title ~60.
+   So on a phone that action takes a line of its own under the title (and the
+   `…` with it); a settled session's rows keep their one line, where the action
+   is the `…` alone. */
+@media (max-width: 639px) {
+  :root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow:has(.play-btn, .trow__chip) .trow__action {
+    grid-column: 3 / -1;
+    grid-row: 2;
+    justify-content: flex-start;
+    margin-top: 6px;
+  }
 }
 :root[data-design="tisch"][data-scheme="dark"] .tafel__title {
   font-family: var(--font-display);
@@ -2595,6 +3124,25 @@
 :root[data-design="tisch"][data-scheme="dark"] .tafel .trow__title {
   font-family: var(--font-display);
   font-weight: 800;
+}
+/* The row's „…" is a `.btn`, which Tisch paints as a walnut tile — on the paper
+   Tafel that put the paper's ink on a dark fill (~1.3:1). It is drawn like
+   `.trow__votes` beside it instead: no fill and a rule. It sets NO ink of its
+   own — the glyph inherits the row's (paper ink, or --gold-ink on the gold
+   row), because an ink here would outrank the gold row's single-ink sweep. */
+:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .trow__menu {
+  background: transparent;
+  border: 1px solid var(--line);
+  box-shadow: none;
+}
+/* The chosen row's ring. styles.css draws it as an INSET box-shadow, which
+   paints with the row's background, so the score fill (`.trow::before`) lay
+   over it and only the part past --pct showed. An outline paints above the
+   row's content; --gold-edge holds 3:1 on paper where brass does not. */
+:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow.is-chosen {
+  box-shadow: none;
+  outline: 2px solid var(--gold-edge);
+  outline-offset: -2px;
 }
 :root[data-design="tisch"][data-scheme="dark"] .tafel .trow__img {
   border-radius: var(--radius-sm);
@@ -2647,8 +3195,17 @@
    above, which is how it survives it. */
 :root[data-design="tisch"][data-scheme="dark"] .tafel .tafel-top .trow .bar-axis .ti { color: var(--sc-fill, var(--sc)); }
 
-/* --- The result: the distribution, in T8.2's BAR ramp ---------------------
-   Both halves come off `--sc` on the column, which the row writes inline from
+/* The pill on the GOLD row keeps its own ink, like the veto tag below: the
+   single-ink rule is about the row's TYPE, and a pill carries its own ground —
+   the deep rungs take a light ink that --gold-ink would put at ~2:1. More
+   specific than the sweep, which is how it survives it. */
+:root[data-design="tisch"][data-scheme="dark"] .tafel .tafel-top .trow .score-pill,
+:root[data-design="tisch"][data-scheme="dark"] .tafel .tafel-top .trow .score-pill * { color: var(--sc-ink, var(--on-accent)); }
+
+/* --- The result: the distribution, opened from „Wertungen" (#1275) ---------
+   No longer printed on every row: it sits below its row, hidden until that
+   row's count is pressed (the disclosure above), in T8.2's BAR ramp. Both
+   halves come off `--sc` on the column, which the row writes inline from
    avgColor(n) — so this is one rule per rung rather than a JS branch per
    design. The track is the paper's own well; the fill and the glyph are the
    ramp, which is the darker of T8.2's two because these are drawn on paper and
@@ -2666,10 +3223,12 @@
    type. Same split the app makes on every other design. */
 :root[data-design="tisch"][data-scheme="dark"] .trow__bars .bar-axis__n { color: var(--paper-ink-soft); }
 
-/* The score. Plain paper ink, NOT the ramp — T2.5 and T4.4 both print it that
-   way, and they are right to: as text on cream a pale ramp stop would be
-   unreadable (--score-5 measures 1,34:1 there), and the number is already
-   named by the bars beside it. `--sc` arrives inline and is simply not read.
+/* The score as a bare NUMBER — which since #1275 only the landing page's Tafel
+   prints (landing-moments.js): the result screen's compact rows carry a pill
+   with its own ground instead, painted by the pill ramp further down. As text
+   the number stays plain paper ink, NOT the ramp: on cream a pale ramp stop
+   would be unreadable (--score-5 measures 1,34:1 there). `--sc` arrives inline
+   and is simply not read.
 
    The winning row's numeral is covered by the single-ink sweep above, so this
    is the non-winning case. */
@@ -2785,6 +3344,32 @@
   font-size: var(--text-md);
 }
 :root[data-design="tisch"][data-scheme="dark"] .tisch__actions .ti { color: var(--gold); }
+
+/* The foot (#1275): „Noch eine Session" with „Teilen" and „Mehr" beside it,
+   the split tables' foot in the same materials. On a phone the one action takes
+   the full width and the two quieter ones share the line under it — the three
+   side by side need ~370px of a 334px column. The `[hidden]` rule restores the
+   attribute this `display` outranks: the foot is hidden while it holds nothing. */
+:root[data-design="tisch"][data-scheme="dark"] .result-foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 18px 0;
+}
+:root[data-design="tisch"][data-scheme="dark"] .result-foot[hidden] { display: none; }
+:root[data-design="tisch"][data-scheme="dark"] .result-foot .btn {
+  flex: 1 1 0;
+  min-height: 46px;
+  font-size: var(--text-md);
+  padding-inline: 12px;
+}
+:root[data-design="tisch"][data-scheme="dark"] .result-foot .result-foot__again { flex-basis: 100%; }
+:root[data-design="tisch"][data-scheme="dark"] .result-foot .btn--ghost {
+  background: var(--control-fill);
+  border-color: var(--control-edge);
+  color: var(--ink);
+}
+:root[data-design="tisch"][data-scheme="dark"] .result-foot .btn--ghost .ti { color: var(--gold); }
 
 /* --- Several tables (T4.5, T6.6) — one result per table (#1270) ------------
    renderTischSplit() (views-session-tables.js) builds this under Der Tisch in
@@ -3051,10 +3636,21 @@
   :root[data-design="tisch"][data-scheme="dark"] .setup-grid--session .nr-seat__name {
     font-size: var(--text-md);
   }
+  /* T4.1's two panels at the rail width: 20px of padding and the 23px display
+     titles. The two-column grid itself is the app's own from 860px up; what
+     the rail changes is that the setup now sits BESIDE navigation (#1267). */
+  :root[data-design="tisch"][data-scheme="dark"] .tisch-setup__panel {
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .tisch-setup__title { font-size: var(--text-2xl); }
 
   /* The vote card at T4.2's width, with the five faces as COLUMNS: a tile each,
-     face over number over word, 132px tall. There is room for the tile here and
-     the row form exists only because a phone has none. */
+     face over word over number, 132px tall. T4.2 draws the number above the
+     word; the tile keeps the phone's DOM order instead, because moving it would
+     take an `order:` and the reading order would then disagree with the
+     picture. There is room for the tile here and the row form exists only
+     because a phone has none. */
   :root[data-design="tisch"][data-scheme="dark"] .vote { max-width: 920px; }
   :root[data-design="tisch"][data-scheme="dark"] .rating {
     flex-direction: row;
@@ -3071,6 +3667,44 @@
   }
   :root[data-design="tisch"][data-scheme="dark"] .rating .mood__n { margin-left: 0; }
   :root[data-design="tisch"][data-scheme="dark"] .rating-scale { padding-inline: 32px; }
+
+  /* T4.2's composed card (#1268): the header in one row with the round's name
+     and the pill beside the dots, the cover at 176px beside a title block that
+     now holds the question too, the faces a full-width row under both. */
+  :root[data-design="tisch"][data-scheme="dark"] .vote.vote--tisch { max-width: 920px; gap: 26px; }
+  :root[data-design="tisch"][data-scheme="dark"] .vote-felt { flex-wrap: nowrap; gap: 16px; }
+  :root[data-design="tisch"][data-scheme="dark"] .vote-felt__name { font-size: var(--text-xl); }
+  :root[data-design="tisch"][data-scheme="dark"] .vote-felt__count { font-size: var(--text-sm); }
+  :root[data-design="tisch"][data-scheme="dark"] .vote-felt__round { display: inline; }
+  :root[data-design="tisch"][data-scheme="dark"] .vote-felt__dot { width: 13px; height: 13px; }
+  :root[data-design="tisch"][data-scheme="dark"] .vote--tisch .vote__secret {
+    flex-basis: auto;
+    padding: 6px 13px;
+    border: 1px solid var(--gold-edge);
+    border-radius: var(--radius-pill);
+    font-family: var(--font);
+    font-weight: 700;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .vote__card {
+    grid-template-columns: 176px minmax(0, 1fr);
+    grid-template-rows: 1fr auto auto auto 1fr auto;
+    grid-template-areas:
+      "img ."
+      "img title"
+      "img meta"
+      "img q"
+      "img ."
+      "rating rating";
+    column-gap: 26px;
+    padding: 30px 34px;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .vote--tisch .vote__img { width: 176px; height: 232px; }
+  :root[data-design="tisch"][data-scheme="dark"] .vote--tisch .vote__title { font-size: var(--text-4xl); }
+  :root[data-design="tisch"][data-scheme="dark"] .vote__meta { font-size: var(--text-md); }
+  :root[data-design="tisch"][data-scheme="dark"] .vote--tisch .vote__q { margin-top: 12px; font-size: var(--text-xl); }
+  :root[data-design="tisch"][data-scheme="dark"] .vote--tisch .rating { padding: 22px 0 0; }
 
   /* T4.4's two columns: the ranking on the left, the chosen box and its
      corrections on the right. The head, the people and everything from the log
@@ -3117,6 +3751,24 @@
     width: 100%;
     max-width: 180px;
   }
+
+  /* The compact Tafel at T4.4's size (#1275): a 36px cover and a wider gutter,
+     still one line per game. The gap is restated on the subgrids because each
+     states its own (see the phone block). */
+  :root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel {
+    grid-template-columns: 26px 36px minmax(0, 1fr) auto auto auto;
+    column-gap: 12px;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel-top,
+  :root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow,
+  :root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel__cols { column-gap: 12px; }
+  :root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow { padding: 10px; }
+  :root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel__cols { padding-inline: 10px; }
+  :root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .trow__img { width: 36px; height: 36px; }
+  /* The foot's three actions on one line at the column's right edge. */
+  :root[data-design="tisch"][data-scheme="dark"] .result-foot { justify-content: flex-end; }
+  :root[data-design="tisch"][data-scheme="dark"] .result-foot .btn,
+  :root[data-design="tisch"][data-scheme="dark"] .result-foot .result-foot__again { flex: none; padding-inline: 18px; }
 
   /* Two tables side by side (T4.5). `.split-tables` is already a grid in the
      app; what this states is that at the rail width it is exactly two columns,
@@ -4087,20 +4739,26 @@
    die Spiele." So nothing here draws a grey „no data" box; the empty table is
    itself the picture.
 
-   PAINT ONLY, and on this brief that boundary does real work, because T7 is
-   the sheet that invents the most. Four of its screens are built out of copy
-   and gating the app does not have — „Serien und Trends zeigen wir ab der
-   dritten Session", „Ein Podium braucht drei Sessions", the „Nächster Schritt"
-   card, the demo's four-row summary and its „Gefällt dir das?" invitation.
-   Each of those is a new string in nine locales plus a new threshold in shared
-   code, i.e. a feature wearing a design's clothes. They are deliberately NOT
-   built (operator decision on #1193: „the sheet's intent is the design, not the
-   ordering"), and the slice that owns each is named in the PR rather than
-   guessed at here.
+   #1194 built the MATERIAL: the medallion becomes the table, the demo wears
+   brass, the locked plate stops being a 45%-opacity ghost, and the two density
+   cases the app actually fails are fixed. It stopped there on a reading of
+   #1193 that the operator corrected on 2026-09-24 — „a design owns its layout";
+   what #1193 ruled out is only an incidental reordering of identical controls,
+   never a composition the design wants. So T7's markup is built, slice by
+   slice:
 
-   What IS taken is the material: the medallion becomes the table, the demo
-   wears brass, the locked plate stops being a 45%-opacity ghost, and the two
-   density cases the app actually fails are fixed.
+   - #1269 (the young round) — T7.3's empty table as the 0-game hub's
+     centrepiece with „Spiel hinzufügen" / „Von BGG übernehmen", the locked
+     plate's reason printed ON the plate, T7.4's „Erste Session wirbeln" and
+     invitation card, a sentence instead of a zero in Rundenpuls and „Wie wär's
+     mit", and T7.1's second way into an empty lobby. The rules are under „The
+     young round" below. It keeps the app's own threshold (one game), not the
+     sheet's „ab 2 Spielen".
+   - #1280 (still open) — T7.2's „Nächster Schritt" card, T7.5's later
+     thresholds („Serien und Trends ab der dritten Session", „Ein Podium braucht
+     drei Sessions") and T7.6's demo summary with its „Gefällt dir das?"
+     invitation. Each is a new string plus a new threshold in shared code; it
+     touches hubPulseCard and renderLobbyList again.
 
    Same gate and same no-literals rule as every section above.
    =========================================================================== */
@@ -4201,9 +4859,8 @@
    removing the opacity also removes the app's only visual "this is disabled",
    and wood alone would read as a perfectly ordinary secondary button.
 
-   The REASON stays in the `title` attribute the app already sets
-   („Erst Spiele hinzufügen"). T7.3 prints it under the button; that is markup
-   and belongs to whoever gives the hub its next content pass. */
+   The REASON is printed on the plate since #1269 (`.hub-cta__reason`, in
+   styles.css — every design prints it since the #1269 merge interview). */
 :root[data-design="tisch"][data-scheme="dark"] .hub-cta:disabled,
 :root[data-design="tisch"][data-scheme="dark"] .rail__cta:disabled {
   opacity: 1;
@@ -4212,6 +4869,44 @@
   color: var(--ink-soft);
   box-shadow: inset 0 2px 5px var(--cast-deep);
 }
+
+/* --- The young round (T7.1, T7.3, T7.4; #1269) ----------------------------
+   The markup half of T7 for a round that has not started yet — see
+   views-round-start.js (tischEmptyTable, the reason on the plate),
+   hub-cards.js (the invitation and the sentence cards) and views-home.js
+   (tischLobbyAlt). Every colour here is one the section above already
+   measured: the empty table is `.empty`'s walnut with --ink-soft (7.77:1),
+   the plate's reason inherits the locked plate's --ink-soft on --control-fill
+   (6.29:1).
+
+   T7.3 draws the reason at the plate's far end on ONE line. That does not
+   survive the app's plate: at 390 the label is --text-xl and the German reason
+   alone is 130px, so side by side the label wrapped to two lines (measured, a
+   91px plate). So the plate wraps and the reason takes its own line under the
+   label. That layout, and the empty table's, are every design's since the
+   #1269 merge interview and live in styles.css (`.hub-cta__reason`,
+   `.empty--table`, `.empty__actions`); what stays here is Der Tisch's own
+   placement in the ≥1280 felt band. */
+/* From 1280 up `.hub-stage` is the felt band's two-column grid (#1262). The
+   table spans it, between the seats and the plate, so the plate keeps its
+   column and its reason reads beside it exactly as on the phone. */
+@media (min-width: 1280px) {
+  :root[data-design="tisch"][data-scheme="dark"] .hub-stage > .empty--table {
+    grid-column: 1 / -1;
+    margin: 0 0 20px;
+  }
+}
+/* The empty lobby's second way in (T7.1): „Ich wurde eingeladen" as a wood
+   plate under the brass one. (The sheet's demo line is left out — see
+   views-home.js's tischLobbyAlt.) */
+:root[data-design="tisch"][data-scheme="dark"] .lobby-alt {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 14px;
+  text-align: center;
+}
+:root[data-design="tisch"][data-scheme="dark"] .lobby-alt__invited { justify-content: center; }
 
 /* --- The demo, as a brass banderole and a hatched table (T7.6) ------------
    The demo must never be mistaken for a round of one's own, and T7.6 says it
@@ -4343,6 +5038,12 @@
      --brand-tint(-soft) mixed from walnut --surface: the menu's hover painted a
                          dark row under dark ink.
      --brand-edge, --bg  the same mix; see the note on the last two lines.
+     --brand-ink         #1260: the TEXT half of the brand. ~70 rules in
+                         styles.css paint text in --brand or --brand-strong,
+                         brass on paper at ~2:1. --brand itself cannot move here
+                         — it is also the active chip's FILL, which stays brass —
+                         so those rules read `var(--brand-ink, var(--brand…))`
+                         and only this block declares it (see its line below).
 
    A second rule on the same four selectors rather than an edit to the first, so
    the #1188 block keeps reading as the material list it is; the two are one
@@ -4367,6 +5068,19 @@
      derives this list from styles.css, and a token left out fails there. */
   --brand-edge: var(--gold-edge);
   --bg: var(--paper);
+  /* The brand's TEXT ink, --accent's answer for the same reason (T1's tertiary
+     ink, AA on every paper ground and on the --gold-hi tint). Declared ONLY
+     here, never on :root: styles.css reads it with the brand as the fallback,
+     so outside a Tisch overlay the fallback resolves against the element's own
+     --brand — which a home round card re-declares inline. A :root alias would
+     be substituted there once and hand every card the page's brand instead.
+     test/tisch-brand-ink.test.js pins both halves. */
+  --brand-ink: var(--paper-faint);
+  /* Its NON-TEXT twin: the ten focus OUTLINES styles.css draws in the brand
+     read `var(--brand-ring, var(--brand))`, same shape, same reason — brass on
+     paper is ~2:1, under SC 1.4.11's 3:1 for a focus indicator. --gold-edge is
+     the ink --brand-edge (the box-shadow ring) already takes above. */
+  --brand-ring: var(--gold-edge);
 }
 
 /* --- The sheet: edge, head and close (T15a.0) ------------------------------
@@ -5429,14 +6143,18 @@
    PAINT ONLY, under the #1193 ruling („the sheet's intent is the design, not
    the ordering"). T14 draws a good deal the app does not have, and each of
    those is a feature or new copy in nine locales rather than a colour:
-     - T14.1's three rounds as felt strips, „Karte teilen" and the stats
-       toggle. A profile deliberately carries NO round data (it is read across
-       a tenant boundary — lib/routes/profile.js), there is no card to share,
-       and the toggle already lives on Konto (#1193).
-     - T14.2's „3 neu" / „Alle gelesen" head, the icon tile per row and the
-       „geteilte Session" item. The inbox has no mark-all action and no such
-       item type; invitation and friend request already differ by the action
-       on the right, which is exactly the distinction T14.6 asks for.
+     - T14.1's LAYOUT is built since #1272 — friends as pills, the add control
+       as a button in the head, the feed as rows with the cover at the right,
+       and the stats switch mirrored onto the own card (Konto keeps its own;
+       both are one builder and one PATCH). What stays drawn-only is data or
+       feature: the three rounds as felt strips (a profile carries NO round
+       data — it is read across a tenant boundary, lib/routes/profile.js),
+       the pills' round counts (the same boundary; a pill notes `since`
+       instead), and „Karte teilen" (there is no profile card to share).
+     - T14.2's LAYOUT is built since #1272 — an icon tile per row type and the
+       actions stacked. Still drawn-only: the „3 neu" / „Alle gelesen" head
+       (the inbox has no mark-all action; operator-dropped) and the „geteilte
+       Session" item (no such item type exists).
      - T14.3's „Neu / Besser / Behoben" badges and the felt head band. A NEWS
        entry has no kind (public/js/news.js), and the head is the shared
        `.lobby-head`, which no screen-specific rule reaches without :has().
@@ -5540,6 +6258,31 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* The stats switch on the OWN card (#1272, T14.1's last plate): an eye glyph,
+   then Konto's own form — its intro line and its checkbox row — on one raised
+   plate. The form keeps its Klassisch column spacing on Konto, so its 30px
+   bottom margin is taken off only here. --ink on --control-fill 8.02:1, the
+   intro's --ink-soft 6.29:1, the gold glyph 6.26:1 (3:1 binds for a glyph). */
+:root[data-design="tisch"] .profile-card__vis {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-top: 16px;
+  padding: 14px 18px;
+  border-radius: var(--radius-md);
+}
+:root[data-design="tisch"] .profile-card__vis > .konto-notify { flex: 1; min-width: 0; margin-bottom: 0; gap: 6px; }
+:root[data-design="tisch"] .profile-card__vis .konto-notify__intro { margin: 0; font-size: var(--text-sm); }
+:root[data-design="tisch"] .profile-card__vis .konto-notify__row { padding: 0; border: 0; background: none; box-shadow: none; }
+:root[data-design="tisch"] .profile-card__vis-icon { flex: none; font-size: 22px; line-height: 1; padding-top: 2px; }
+:root[data-design="tisch"][data-scheme="dark"] .profile-card__vis {
+  background: var(--control-fill);
+  border: 1px solid var(--line);
+  color: var(--ink);
+}
+:root[data-design="tisch"][data-scheme="dark"] .profile-card__vis .konto-notify__intro { color: var(--ink-soft); }
+:root[data-design="tisch"][data-scheme="dark"] .profile-card__vis-icon { color: var(--gold); }
+
 /* --- Der Freundeskreis and its feed (T14.1, right) --------------------------
    People are walnut plates with the face in a gold rim — T14.1 draws every
    friend's initials inside a 2px #f0cf86 ring, and the rim is what makes a
@@ -5552,6 +6295,51 @@
   box-shadow: 0 0 0 2px var(--gold);
 }
 :root[data-design="tisch"][data-scheme="dark"] a.k-tile:hover { border-color: var(--gold); }
+
+/* The head carries T14.1's add button beside the title (#1272). It WRAPS, so
+   at 390 a long localised title pushes the button to its own line instead of
+   squeezing it; DOM order is title then button, which is the reading order. */
+:root[data-design="tisch"] .friends-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+}
+:root[data-design="tisch"] .friends-head h1 { margin: 0; }
+:root[data-design="tisch"] .friends-search { display: inline-flex; align-items: center; gap: 8px; }
+/* --gold on the raised control fill is 6.26:1 — a glyph, so 3:1 binds. */
+:root[data-design="tisch"][data-scheme="dark"] .friends-search .ti { color: var(--gold); }
+:root[data-design="tisch"] .friends-search__form { max-width: 520px; margin: -8px 0 22px; }
+
+/* Friends as T14.1's pills: face in a gold rim, name, a short note. They
+   wrap like words, row-major, so the roster reads in its own order. The name
+   wraps rather than truncating (the .k-tile__name lesson); the pill takes
+   `max-width: 100%` so one long handle cannot push the page sideways at 390.
+   --ink on --surface 9.91:1, the note's --ink-soft 7.77:1. */
+:root[data-design="tisch"] .k-pills { display: flex; flex-wrap: wrap; gap: 10px; }
+:root[data-design="tisch"] .k-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 44px;
+  max-width: 100%;
+  min-width: 0;
+  padding: 4px 14px 4px 5px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: inherit;
+}
+:root[data-design="tisch"] .k-pill .avatar { flex: none; width: 34px; height: 34px; font-size: 12px; }
+:root[data-design="tisch"] .k-pill__name { font-weight: 700; overflow-wrap: anywhere; }
+:root[data-design="tisch"] .k-pill__note { font-size: var(--text-xs); font-weight: 600; }
+:root[data-design="tisch"][data-scheme="dark"] .k-pill { background: var(--surface); color: var(--ink); }
+:root[data-design="tisch"][data-scheme="dark"] .k-pill .avatar { box-shadow: 0 0 0 2px var(--gold); }
+:root[data-design="tisch"][data-scheme="dark"] .k-pill__note { color: var(--ink-soft); }
+:root[data-design="tisch"][data-scheme="dark"] a.k-pill:hover { border-color: var(--gold); }
+:root[data-design="tisch"] a.k-pill:hover .k-pill__name { text-decoration: underline; }
+/* The pill is the roster's only control, so it carries the ring the tile does. */
+:root[data-design="tisch"] a.k-pill:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
 
 /* The „＋" slot takes the dashed --control-edge every „something belongs here"
    affordance in this design carries (#1194). It is a control, so its
@@ -5600,6 +6388,35 @@
 }
 :root[data-design="tisch"][data-scheme="dark"] .e-tile__img { box-shadow: 0 0 0 1px var(--line); }
 
+/* The Freundeskreis feed as T14.1's rows (#1272): face, sentence and time,
+   the cover standing upright at the right. Row-major in two columns from
+   1024px, so the wide pane holds twice the news without the sentence running
+   900px long — newest-first still reads newest-first, the .stamps argument
+   (.claude/rules/tiles-vs-lists.md). Collapsed to eight below 1024 exactly as
+   the tiles are, behind the same expander. */
+:root[data-design="tisch"] .feed-list--rows { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
+@media (min-width: 1024px) {
+  :root[data-design="tisch"] .feed-list--rows { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 1023px) {
+  :root[data-design="tisch"] .e-feed:not(.is-open) .feed-row:nth-of-type(n + 9) { display: none; }
+}
+/* Above 1024 nothing is collapsed, so the expander has nothing to open — and
+   styles.css's `.e-feed__more { display: none }` there loses to this design's
+   own `.link-btn { display: inline-flex }` (the 24px-target rule, which
+   outranks it). Compounded here so it wins on specificity rather than on
+   source order. Found on #1272: „Alle 26 Aktivitäten" stood under a feed already
+   showing all 26, on the Freundeskreis and every profile, since #1188. */
+@media (min-width: 1024px) {
+  :root[data-design="tisch"] .e-feed .e-feed__more { display: none; }
+}
+:root[data-design="tisch"] .feed-row { align-items: flex-start; }
+:root[data-design="tisch"] .feed-row__face { flex: none; width: 38px; height: 38px; font-size: 13px; }
+/* A box stands, it does not lie: 28 × 36, as T14.1 and T14.4 draw it. */
+:root[data-design="tisch"] .feed-row__cover { width: 28px; height: 36px; align-self: center; }
+:root[data-design="tisch"][data-scheme="dark"] .feed-row__face { box-shadow: 0 0 0 2px var(--gold); }
+:root[data-design="tisch"][data-scheme="dark"] .feed-row__cover { box-shadow: 0 0 0 1px var(--line); }
+
 /* --- Der Posteingang (T14.2) ----------------------------------------------
    An UNREAD row is the raised plate with the gold edge — T14.2's invitation
    — and a read one lies flat. The actionable kinds are then told apart by
@@ -5624,6 +6441,52 @@
   font-weight: 700;
 }
 :root[data-design="tisch"][data-scheme="dark"] .inbox-row.inbox-row--unread .ds-row__date { font-weight: 800; }
+
+/* T14.2's composition (#1272): the per-type icon tile leads, the text takes
+   the middle, and the actions STACK at the right — „Annehmen" over
+   „Ablehnen". Top-aligned, because a two-line title and a stacked pair are
+   different heights and centring would float the tile off the title. The row
+   stays one line at every width (the Klassisch wrap at 520px is undone here):
+   stacking is what makes the actions narrow enough to fit beside the text. */
+:root[data-design="tisch"] .inbox-row--tisch.ds-row { align-items: flex-start; flex-wrap: nowrap; gap: 13px; }
+:root[data-design="tisch"] .inbox-row--tisch .ds-row__main { flex: 1; min-width: 0; }
+:root[data-design="tisch"] .inbox-row--tisch .inbox-invite__actions {
+  flex: none;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+}
+:root[data-design="tisch"] .inbox-row--tisch .inbox-invite__actions .link-btn { min-height: 36px; justify-content: center; }
+/* On a phone a 136px action column beside the text left the title 126px and
+   made each row 207px tall (measured at 390). So the two typed rows WRAP
+   there: tile and text on the first line, the still-stacked actions under the
+   text, indented to it. DOM order is unchanged, so reading order is too. */
+@media (max-width: 520px) {
+  :root[data-design="tisch"] .inbox-row--round-invitation.ds-row,
+  :root[data-design="tisch"] .inbox-row--friend-request.ds-row { flex-wrap: wrap; row-gap: 10px; }
+  :root[data-design="tisch"] .inbox-row--round-invitation .ds-row__main,
+  :root[data-design="tisch"] .inbox-row--friend-request .ds-row__main { flex-basis: calc(100% - 53px); }
+  :root[data-design="tisch"] .inbox-row--tisch .inbox-invite__actions { flex: 1 0 calc(100% - 53px); margin-left: 53px; }
+}
+:root[data-design="tisch"] .inbox-row__icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  font-size: 20px; /* glyph, not type */
+}
+/* The invitation's tile is the brass one (T14.2): --gold-ink on --gold is
+   7.74:1. Every other kind takes the raised fill with a gold glyph, 6.26:1 —
+   a glyph, where 3:1 binds. */
+:root[data-design="tisch"][data-scheme="dark"] .inbox-row__icon { background: var(--control-fill); color: var(--gold); }
+/* An UNREAD row is itself raised to --control-fill, so there the default tile
+   drops one level to --surface — otherwise it vanishes on exactly the rows that
+   matter (found in the #1272 merge interview). Before the invitation's gold
+   rule on purpose: equal specificity, so source order keeps that one gold. */
+:root[data-design="tisch"][data-scheme="dark"] .inbox-row--unread .inbox-row__icon { background: var(--surface); }
+:root[data-design="tisch"][data-scheme="dark"] .inbox-row--round-invitation .inbox-row__icon { background: var(--gold); color: var(--gold-ink); }
 
 /* --- „Was ist neu" (T14.3) -------------------------------------------------
    Dated, not versioned: the date stands in its own gold column and the entry

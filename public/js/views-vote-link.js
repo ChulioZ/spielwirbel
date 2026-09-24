@@ -177,6 +177,9 @@ function renderVoteLinkClaim(token, ballot) {
         <div class="field__label">${esc(t('voteLink.pick'))}</div>
       </div>
     </div>`);
+  // Der Tisch opens the link on its felt intro (T12.5, #1268) — the wordmark,
+  // whose round this is, and what the link can see — in the page head's place.
+  if (designIs('tisch')) root.querySelector('.page-head').replaceWith(tischVoteLinkIntro(ballot));
 
   // Initials, never `avatarFace()`. The ballot carries no `userId` by design
   // (#1169 settled it as a boolean `linked` instead), and AVATAR_CACHE is filled
@@ -233,21 +236,42 @@ function renderVoteLinkCards(token, ballot, person) {
   // leave it where the user put it.
   let focusTitle = false;
 
-  function render() {
-    const game = games[idx];
-    const current = votes[game.id] || { rating: null };
-    const color = voteLinkColor(person);
+  function klassischCard(game) {
     const imgStyle = game.image ? `style="background-image:url('${coverUrl(game.image, COVER_HERO)}')"` : '';
-
-    app.innerHTML = '';
-    const card = h(`<div class="vote vote--split">
-        <div class="vote__who"><button class="vote__undo" id="backBtn" type="button" aria-label="${esc(t('vote.back'))}" title="${esc(t('vote.back'))}"><i class="ti ti-arrow-back-up" aria-hidden="true"></i></button>${esc(t('voteLink.youAre'))} <strong style="color:${color}">${esc(personLabel(person))}</strong></div>
+    return h(`<div class="vote vote--split">
+        <div class="vote__who"><button class="vote__undo" id="backBtn" type="button" aria-label="${esc(t('vote.back'))}" title="${esc(t('vote.back'))}"><i class="ti ti-arrow-back-up" aria-hidden="true"></i></button>${esc(t('voteLink.youAre'))} <strong style="color:${voteLinkColor(person)}">${esc(personLabel(person))}</strong></div>
         <div class="vote__img" ${imgStyle}>${coverPlaceholder(game)}</div>
         <h1 class="vote__title" tabindex="-1">${esc(game.title)}</h1>
         <div class="vote__q" id="voteQ">${esc(t('vote.question'))}</div>
         <div class="rating" role="group" aria-labelledby="voteQ"></div>
         <div class="rating-scale"><span>${esc(t('vote.scaleLow'))}</span><span>${esc(t('vote.scaleHigh'))}</span></div>
       </div>`);
+  }
+
+  /* Der Tisch's card (#1268), the hot-seat composition minus the parts that
+     only mean something on a shared device: no person count (the ballot's
+     people are not a queue), no secrecy pill and no hand-off line — this is
+     the voter's own phone. The owner is left out of the meta line because the
+     ballot deliberately carries no members to resolve it against. */
+  function tischCard(game) {
+    return tischVoteCard({
+      person,
+      count: t('vote.gameOf', { n: idx + 1, total: games.length }),
+      roundName: ballot.roundName,
+      gameN: idx + 1,
+      gameTotal: games.length,
+      secret: false,
+      game,
+      meta: voteMetaLine(game, null),
+      handoff: '',
+    });
+  }
+
+  function render() {
+    const game = games[idx];
+    const current = votes[game.id] || { rating: null };
+    app.innerHTML = '';
+    const card = designIs('tisch') ? tischCard(game) : klassischCard(game);
 
     // Same info affordance as the wizard's card (#717) — the ballot projection
     // carries weight and #724's metadata, so a link voter gets the same facts. It deliberately carries NO `rating`, so there is nothing to
@@ -267,19 +291,7 @@ function renderVoteLinkCards(token, ballot, person) {
     // had one.
     const ratingEl = card.querySelector('.rating');
     for (let n = RATING_MIN; n <= RATING_MAX; n++) {
-      const sel = current.rating === n;
-      const b = h(`<button class="mood${sel ? ' is-selected' : ''}"
-           aria-pressed="${sel}" aria-label="${esc(t('vote.ratingLabel', { n, max: RATING_MAX }))}">
-           <i class="ti ${ratingFace(n)}" aria-hidden="true"></i><span class="mood__n">${n}</span>
-         </button>`);
-      if (sel) {
-        /* --sc, not an inline `background`: an inline background is precisely
-           what a design CANNOT override, and Der Tisch paints the chosen face
-           as its brass plate rather than in the ramp's colour (#1191, T2.4).
-           The continuous colour stays the default in CSS, so nothing moves
-           under Klassisch. */
-        b.style.setProperty('--sc', avgColor(n));
-      }
+      const b = voteMoodButton(n, current.rating === n);
       b.addEventListener('click', () => {
         // The JS half of the double-tap guard — identical to the wizard's, and
         // the reason both cards take their beat from one file (#1168).
