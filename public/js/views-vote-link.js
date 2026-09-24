@@ -272,6 +272,9 @@ function renderVoteLinkCards(token, ballot, person) {
     const current = votes[game.id] || { rating: null };
     app.innerHTML = '';
     const card = designIs('tisch') ? tischCard(game) : klassischCard(game);
+    // The same tip as the wizard's card (#1200, T10.3) — `focusTitle` is this
+    // surface's "the beat delivered this card", so the two cannot disagree.
+    if (designIs('tisch') && focusTitle) card.classList.add('is-tipped');
 
     // Same info affordance as the wizard's card (#717) — the ballot projection
     // carries weight and #724's metadata, so a link voter gets the same facts. It deliberately carries NO `rating`, so there is nothing to
