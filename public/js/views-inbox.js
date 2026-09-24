@@ -60,9 +60,35 @@ function afterRemove() {
 // are typed items with accept/decline actions (the friend one lives in
 // views-friends.js); anything else renders as a generic notification.
 function renderInboxItem(item) {
-  if (item.type === 'round_invitation') return renderInvitationItem(item);
-  if (item.type === 'friend_request') return renderFriendRequestItem(item);
-  return renderGenericItem(item);
+  const row = item.type === 'round_invitation' ? renderInvitationItem(item)
+    : item.type === 'friend_request' ? renderFriendRequestItem(item)
+      : renderGenericItem(item);
+  if (designIs('tisch')) composeTischInboxRow(row, item);
+  return row;
+}
+
+/* Der Tisch composes every row as T14.2 draws it (#1272): an icon tile per
+   TYPE at the left, the row's time under its text, and the actions stacked —
+   „Annehmen" over „Ablehnen" — rather than side by side. Decorated here, once,
+   rather than in each of the three renderers, so the accept/decline wiring
+   those renderers own is untouched: the same buttons, the same handlers.
+
+   The tile is decorative (`aria-hidden`); the row's own title still names the
+   type in words. The time is added to the two typed rows only — the generic row
+   has carried its timestamp as its second line all along. */
+const INBOX_TISCH_ICONS = {
+  round_invitation: 'ti-user-plus',
+  friend_request: 'ti-users',
+};
+function composeTischInboxRow(row, item) {
+  const kind = INBOX_TISCH_ICONS[item.type] ? item.type : 'notice';
+  const icon = INBOX_TISCH_ICONS[item.type] || 'ti-mail';
+  row.classList.add('inbox-row--tisch', `inbox-row--${kind.replace('_', '-')}`);
+  row.prepend(h(`<span class="inbox-row__icon" aria-hidden="true"><i class="ti ${icon}"></i></span>`));
+  if (kind !== 'notice' && item.createdAt) {
+    row.querySelector('.ds-row__main').appendChild(
+      h(`<div class="ds-row__status muted inbox-row__when">${esc(fmtDateTime(item.createdAt))}</div>`));
+  }
 }
 
 // A round-sharing invitation (#207): accept routes into the now-shared round;

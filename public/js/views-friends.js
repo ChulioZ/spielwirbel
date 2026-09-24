@@ -65,7 +65,13 @@ async function showFriends(opts) {
      renders NO navigation at all, which is the licence: widening it moves no
      rail and no dock, the same argument the setup forms use. */
   const screen = h('<div class="friends-screen"></div>');
-  screen.appendChild(h(`<div class="lobby-head"><h1>${esc(t('friends.title'))}</h1></div>`));
+  const head = h(`<div class="lobby-head"><h1>${esc(t('friends.title'))}</h1></div>`);
+  screen.appendChild(head);
+  /* Der Tisch composes the roster as T14.1 draws it (#1272): the add control is
+     a button in the HEAD rather than the roster's last tile, and friends are
+     pills. Klassisch never enters this branch — its DOM is the path below. */
+  const tisch = designIs('tisch');
+  if (tisch) addFriendSearchButton(head);
 
   /* ORDER IS THE FEATURE, and it survives the rebuild: a request is the one
      thing on this screen somebody is waiting on, so it leads whatever the
@@ -88,15 +94,21 @@ async function showFriends(opts) {
   }
 
   const roster = renderBand(t('friends.rosterTitle'), lists.friends.length);
-  const tiles = h('<div class="k-tiles"></div>');
-  lists.friends.forEach((f) => tiles.appendChild(renderPersonTile(f, feed.events)));
-  tiles.appendChild(renderAddTile());
-  roster.appendChild(tiles);
+  if (tisch) {
+    roster.appendChild(renderPersonPills(lists.friends));
+  } else {
+    const tiles = h('<div class="k-tiles"></div>');
+    lists.friends.forEach((f) => tiles.appendChild(renderPersonTile(f, feed.events)));
+    tiles.appendChild(renderAddTile());
+    roster.appendChild(tiles);
+  }
   screen.appendChild(roster);
 
   const news = renderBand(t('friends.newsTitle'));
   if (feed.events.length) {
-    const tiled = renderFeedTiles(feed.events);
+    // Der Tisch lists the feed as T14.1's rows — author, sentence, cover on the
+    // right — where Klassisch tiles it (#1136). Same events, same collapse.
+    const tiled = renderFeedTiles(feed.events, tisch ? { rows: true } : undefined);
     // „Alle anzeigen" from the home tile promises every event; below 1024 the
     // grid collapses to eight, so the link has to open it already expanded.
     if (o.feed === 'all') tiled.classList.add('is-open');
@@ -202,46 +214,107 @@ function renderAddTile() {
        </span>
      </button>`);
   tile.addEventListener('click', () => {
-    // The placeholder is not the label (WCAG 2.2 SC 3.3.2/4.1.2): it disappears
-    // on the first keystroke and screen readers announce an unnamed edit field.
-    // There is no visible label to point a <label for> at, so the name goes on
-    // the control itself and says what the field is FOR.
-    //
-    // `friendHandle`, not `friendUser`, and the three data-* opt-outs: this
-    // field names ANOTHER account, so a saved login is never the right answer —
-    // but Safari offered one anyway, because `autocomplete="off"` is ignored for
-    // anything its heuristics read as a login form and an id containing "user"
-    // is one of the things they read (#1077). The one-input-plus-submit shape
-    // those heuristics also key on is unchanged by the tile, so the id and the
-    // opt-outs are the whole mitigation here. See
-    // .claude/rules/password-managers-ignore-autocomplete-off.md.
-    const form = h(`<form class="k-tile k-tile--adding friends-add">
-         <input class="input" id="friendHandle" type="text" autocomplete="off" spellcheck="false"
-                autocapitalize="none" maxlength="30" aria-label="${esc(t('friends.addLabel'))}"
-                data-1p-ignore data-lpignore="true" data-bwignore
-                placeholder="${esc(t('friends.addPlaceholder'))}" />
-         <button class="btn btn--primary btn--sm" type="submit">${esc(t('friends.addSubmit'))}</button>
-       </form>`);
+    const form = buildFriendAddForm('k-tile k-tile--adding friends-add');
     tile.replaceWith(form);
-    const input = form.querySelector('#friendHandle');
-    input.focus();
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const username = input.value.trim();
-      if (!username) return toast(t('friends.needUsername'));
-      const btn = form.querySelector('button[type="submit"]');
-      btn.disabled = true;
-      try {
-        await accountApi('POST', '/friends', { username });
-        toast(t('friends.toast.sent', { user: username }));
-        showFriends();
-      } catch (err) {
-        toast(friendSendError(err.message));
-        btn.disabled = false;
-      }
-    });
+    form.querySelector('#friendHandle').focus();
   });
   return tile;
+}
+
+/* The add form itself, shared by Klassisch's „＋" tile and Der Tisch's head
+   button (#1272) so there is ONE field and ONE submit path — the id, the
+   password-manager opt-outs and the error mapping below are all load-bearing,
+   and a second copy is where one of them would quietly go missing. */
+function buildFriendAddForm(cls) {
+  // The placeholder is not the label (WCAG 2.2 SC 3.3.2/4.1.2): it disappears
+  // on the first keystroke and screen readers announce an unnamed edit field.
+  // There is no visible label to point a <label for> at, so the name goes on
+  // the control itself and says what the field is FOR.
+  //
+  // `friendHandle`, not `friendUser`, and the three data-* opt-outs: this
+  // field names ANOTHER account, so a saved login is never the right answer —
+  // but Safari offered one anyway, because `autocomplete="off"` is ignored for
+  // anything its heuristics read as a login form and an id containing "user"
+  // is one of the things they read (#1077). The one-input-plus-submit shape
+  // those heuristics also key on is unchanged by the tile, so the id and the
+  // opt-outs are the whole mitigation here. See
+  // .claude/rules/password-managers-ignore-autocomplete-off.md.
+  const form = h(`<form class="${cls}">
+       <input class="input" id="friendHandle" type="text" autocomplete="off" spellcheck="false"
+              autocapitalize="none" maxlength="30" aria-label="${esc(t('friends.addLabel'))}"
+              data-1p-ignore data-lpignore="true" data-bwignore
+              placeholder="${esc(t('friends.addPlaceholder'))}" />
+       <button class="btn btn--primary btn--sm" type="submit">${esc(t('friends.addSubmit'))}</button>
+     </form>`);
+  const input = form.querySelector('#friendHandle');
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const username = input.value.trim();
+    if (!username) return toast(t('friends.needUsername'));
+    const btn = form.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    try {
+      await accountApi('POST', '/friends', { username });
+      toast(t('friends.toast.sent', { user: username }));
+      showFriends();
+    } catch (err) {
+      toast(friendSendError(err.message));
+      btn.disabled = false;
+    }
+  });
+  return form;
+}
+
+/* ------------------------------ Der Tisch (#1272) --------------------------- */
+
+/* T14.1's „Freund suchen" in the screen's head. It opens the SAME add form the
+   Klassisch tile opens, as a row right under the head — the head has no room
+   for a field and a submit button beside the title. A second press only
+   re-focuses the open field rather than stacking a second form (the `#friendHandle`
+   id must stay unique). The label is the tile's own „Freund*in hinzufügen":
+   the field adds by exact username, and „suchen" would promise a search this
+   app deliberately does not offer (usernames are not enumerable). */
+function addFriendSearchButton(head) {
+  head.classList.add('friends-head');
+  const btn = h(`<button type="button" class="btn btn--sm friends-search" aria-expanded="false">
+      <i class="ti ti-user-plus" aria-hidden="true"></i><span>${esc(t('friends.addTile'))}</span>
+    </button>`);
+  btn.addEventListener('click', () => {
+    let form = head.parentNode && head.parentNode.querySelector('.friends-search__form');
+    if (!form) {
+      form = buildFriendAddForm('friends-add friends-search__form');
+      head.after(form);
+      btn.setAttribute('aria-expanded', 'true');
+    }
+    form.querySelector('#friendHandle').focus();
+  });
+  head.appendChild(btn);
+}
+
+/* Friends as T14.1's pills: face in a gold rim, the name, and one short note.
+   Each pill is still THE link to that profile, with the same accessible name
+   shape as the tile (name, then its line) — the pill is the tile re-composed,
+   not a new control.
+
+   The note is `since`, which the friends payload has always carried. The sheet
+   draws a round COUNT there, and a friendship shares no round data
+   (lib/routes/profile.js, .claude/rules/account-profiles.md) — so the one
+   figure that would match the picture is exactly the one that may not cross.
+   No wash either: a 44px pill has no side for the cover to bleed into. */
+function renderPersonPills(friends) {
+  if (!friends.length) return h(`<p class="muted empty-note">${esc(t('friends.home.noneTitle'))}</p>`);
+  const list = h('<div class="k-pills"></div>');
+  friends.forEach((p) => {
+    const name = p.username || '';
+    const note = p.since ? `<span class="k-pill__note">${esc(t('friends.card.since', { when: fmtMonth(p.since) }))}</span>` : '';
+    const inner = `${friendAvatar(p.username, p.avatar)}<span class="k-pill__name">${friendName(p.username)}</span>${note}`;
+    const pill = name
+      ? h(`<a class="k-pill" href="${esc(profilePath(name))}">${inner}</a>`)
+      : h(`<div class="k-pill k-pill--dead">${inner}</div>`);
+    if (name) navLink(pill, profilePath(name), () => showProfile(name));
+    list.appendChild(pill);
+  });
+  return list;
 }
 
 /* ------------------------------ account profile ---------------------------- */

@@ -181,13 +181,60 @@ function renderFeedTile(ev, opts) {
   return tile;
 }
 
+/* Der Tisch's feed row (#1272, T14.1 „Was bei den anderen läuft"): the author's
+   face first, the sentence and its time, and the game's cover standing at the
+   right edge like a box on the table. It is the row form's content re-composed —
+   the same `feedText` sentence and the same report entry point — with the
+   person moved off the cover's corner into a column of their own, which the
+   sheet draws and a Tisch row has the width for.
+
+   The cover only when the event carries one. Every feed event names a game, but
+   `coverUrl` is what the allowlisted payload holds for it (lib/feed-events.js),
+   and nothing is added to reach a cover the event does not already carry — so a
+   game with no art gets no box rather than an empty one. aria-hidden: the
+   sentence beside it already names the game. */
+function renderFeedRow(ev) {
+  const cover = ev.coverUrl
+    ? `<span class="feed-item__img feed-row__cover" aria-hidden="true" style="background-image:url('${coverUrl(ev.coverUrl, COVER_THUMB)}')"></span>`
+    : '';
+  const row = h(`<div class="feed-item feed-row">
+      ${friendAvatar(ev.username, ev.avatar, 'feed-row__face')}
+      <div class="feed-item__body">
+        <div class="feed-item__text">${feedText(ev)}</div>
+        <div class="feed-item__time muted">${esc(fmtDateTime(ev.at))}</div>
+      </div>
+      ${cover}
+    </div>`);
+  const url = feedReportUrl({
+    username: ev.username,
+    subject: t('friends.feed.reportSubject', {
+      user: ev.username || '',
+      game: ev.title || '',
+      date: fmtDateTime(ev.at),
+    }),
+  });
+  if (url) {
+    const btn = h(`<button class="feed-item__report" type="button"
+        aria-label="${esc(t('friends.feed.report'))}" title="${esc(t('friends.feed.report'))}">
+        <i class="ti ti-flag" aria-hidden="true"></i></button>`);
+    btn.addEventListener('click', () => window.open(url, '_blank', 'noopener'));
+    row.appendChild(btn);
+  }
+  return row;
+}
+
 /* The grid plus its expander. EVERY tile is rendered and the collapse is CSS,
    never a slice: a width read once at render time is wrong the moment the window
-   changes, and these screens re-render only on an action. */
+   changes, and these screens re-render only on an action.
+
+   `opts.rows` lays the same events out as Der Tisch's rows (#1272), under the
+   same expander and the same eight-then-more collapse, so „Alle anzeigen" from
+   the home tile keeps its promise under either design. */
 function renderFeedTiles(events, opts) {
   const wrap = h('<div class="e-feed"></div>');
-  const grid = h('<div class="e-grid"></div>');
-  events.forEach((ev) => grid.appendChild(renderFeedTile(ev, opts)));
+  const rows = !!(opts && opts.rows);
+  const grid = h(rows ? '<div class="feed-list feed-list--rows"></div>' : '<div class="e-grid"></div>');
+  events.forEach((ev) => grid.appendChild(rows ? renderFeedRow(ev) : renderFeedTile(ev, opts)));
   wrap.appendChild(grid);
   if (events.length > FEED_TILES_COLLAPSED) {
     const more = h(`<button type="button" class="link-btn e-feed__more">${esc(t('friends.feedMore', { count: events.length }))}</button>`);
