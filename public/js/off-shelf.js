@@ -45,3 +45,29 @@ function offShelfEntries(round) {
     { sub: 'recommendations', icon: 'ti-sparkles', count: null, label: t('suggest.link'), go: () => showRecommendations(rid) },
   ];
 }
+
+/* The same four destinations as SEGMENTS at the head of each of their own
+   screens (#1196, Der Tisch T13.3) — the fourth presentation of the one list, so
+   it cannot disagree with the other three about which rows exist or what they
+   count.
+
+   NAVIGATION, NOT A MERGED SCREEN. T13.3 draws the three lists side by side on
+   one screen with the recommendations below; the app keeps one route per list
+   (the rail, the Regal's sheet, the hub group and every deep link all name
+   them), so each segment is a real link to its own route and `aria-current`
+   marks the screen you are on — the rail's own semantics for the same rows.
+
+   Rendered for every design and `display: none` in styles.css: a design opts in
+   by showing it (tisch.css). Klassisch reaches the same four through the rail
+   and the Regal, and a second navigation strip there is a decision for that
+   design rather than a side effect of this one. */
+function offShelfSegments(round, activeSub) {
+  const nav = h(`<nav class="offshelf-seg" aria-label="${esc(t('rail.archive'))}"></nav>`);
+  offShelfEntries(round).forEach(({ icon, label, sub, go }) => {
+    const on = sub === activeSub;
+    const seg = h(`<a class="offshelf-seg__item${on ? ' is-on' : ''}"${on ? ' aria-current="page"' : ''}>${iconText(icon, label)}</a>`);
+    navLink(seg, roundPath(round.id, sub), go);
+    nav.appendChild(seg);
+  });
+  return nav;
+}

@@ -386,9 +386,9 @@ async function showMember(rid, mid) {
     // No confirm, deliberately: this only nulls the link and „Das bin ich“ one
     // click later puts it back. Unlike „Zugriff entfernen“ below, which cuts
     // another person's access to the round and they cannot undo it themselves.
-    menuItems.push(['ti-user-x', t('member.unclaim'), 'popover__opt--muted', () => seatPatch(null)]);
+    menuItems.push({ icon: 'ti-user-x', label: t('member.unclaim'), cls: 'popover__opt--muted', kind: 'undoable', run: () => seatPatch(null) });
   } else if (roundCan(round, 'round.shares.manage') && member.userId) {
-    menuItems.push(['ti-lock-off', t('share.revoke'), 'popover__opt--warn', async () => {
+    menuItems.push({ icon: 'ti-lock-off', label: t('share.revoke'), cls: 'popover__opt--warn', kind: 'destructive', run: async () => {
       if (!await confirmDialog({
         body: t('share.revokeConfirm', { name: member.name }), confirmLabel: t('share.revoke'),
       })) return;
@@ -396,7 +396,7 @@ async function showMember(rid, mid) {
         await api('DELETE', `/api/rounds/${rid}/shares/${member.userId}`);
         showMember(rid, mid); // re-render: the seat is now unlinked
       } catch (e) { toast(e.message); }
-    }]);
+    } });
   }
 
   /* Retire / restore this seat, and — only where there is demonstrably nothing
@@ -417,15 +417,15 @@ async function showMember(rid, mid) {
   });
 
   if (member.retired) {
-    menuItems.push(['ti-arrow-back-up', t('member.restore'), '', async () => {
+    menuItems.push({ icon: 'ti-arrow-back-up', label: t('member.restore'), kind: 'undoable', run: async () => {
       try {
         await api('POST', `/api/rounds/${rid}/members/${mid}/retire`, { retired: false });
         toast(t('member.toast.restored', { name: member.name }));
         showMember(rid, mid);
       } catch (e) { toast(e.message); }
-    }]);
+    } });
   } else {
-    menuItems.push(['ti-user-minus', t('member.retire'), 'popover__opt--warn', async () => {
+    menuItems.push({ icon: 'ti-user-minus', label: t('member.retire'), cls: 'popover__opt--warn', kind: 'destructive', run: async () => {
       /* The two follow-up questions, asked ONLY when they apply — each is a real
          consequence the user cannot see from here.
 
@@ -469,10 +469,10 @@ async function showMember(rid, mid) {
         toast(t('member.toast.retired', { name: member.name }));
         showMember(rid, mid);
       } catch (e) { toast(e.message); }
-    }]);
+    } });
   }
   if (!myVotes && roundCan(round, 'round.delete')) {
-    menuItems.push(['ti-trash', t('member.delete'), 'popover__opt--warn', async () => {
+    menuItems.push({ icon: 'ti-trash', label: t('member.delete'), cls: 'popover__opt--warn', kind: 'destructive', run: async () => {
       if (!await confirmDialog({
         body: t('member.deleteConfirm', { name: member.name }),
         confirmLabel: t('member.delete'), icon: 'ti-trash',
@@ -482,7 +482,7 @@ async function showMember(rid, mid) {
         toast(t('member.toast.deleted', { name: member.name }));
         showRound(rid);
       } catch (e) { toast(e.message); }
-    }]);
+    } });
   }
 
   if (menuItems.length) {
@@ -495,14 +495,8 @@ async function showMember(rid, mid) {
     // a backdrop tap, Back, the page scroll that tears a popover down) and
     // leaves the trigger claiming a panel that is gone.
     menuBtn.addEventListener('click', () => {
-      openPopover(menuBtn, (el, close) => {
-        el.classList.add('popover--menu');
-        menuItems.forEach(([icon, label, cls, run]) => {
-          const b = h(`<button class="popover__opt ${cls}"><i class="ti ${icon}" aria-hidden="true"></i> ${esc(label)}</button>`);
-          b.addEventListener('click', () => { close(); run(); });
-          el.appendChild(b);
-        });
-      }, () => menuBtn.setAttribute('aria-expanded', 'false'));
+      openPopover(menuBtn, (el, close) => fillMenu(el, menuItems, close),
+        () => menuBtn.setAttribute('aria-expanded', 'false'));
       menuBtn.setAttribute('aria-expanded', 'true');
     });
     back.appendChild(menuBtn);
@@ -570,7 +564,7 @@ function openAddMember(anchor, round) {
     // the new-round form both omit it) and the route sets no ceiling either, so a
     // cap here alone would be cosmetic and asymmetric.
     const input = h(`<input class="input" placeholder="${esc(t('member.addPlaceholder'))}" />`);
-    const okBtn = h(`<button class="btn btn--primary">${esc(t('common.ok'))}</button>`);
+    const okBtn = h(`<button class="btn btn--primary">${esc(t('common.add'))}</button>`);
     const save = async () => {
       const name = input.value.trim();
       // Client-side first so a blank name never round-trips; the route validates

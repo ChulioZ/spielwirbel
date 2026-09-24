@@ -1499,6 +1499,26 @@ test('a design that declares a PAPER overlay family keeps every pair on it at AA
       // …and the control edge has to identify a control against both paper grounds.
       ['--paper-edge on --paper', v('--paper-edge'), v('--paper'), AA_LARGE],
       ['--paper-edge on --paper-raised', v('--paper-edge'), v('--paper-raised'), AA_LARGE],
+      /* #1195: the rest of the overlay's re-point. The two status inks are
+         text on every paper ground an overlay has — including --paper-sunken,
+         which is now what --sunken/--sunken-soft resolve to inside one (a chip
+         ground, the close disc). --warn and --accent take --paper-faint, so
+         that token is measured on the two new grounds as well. */
+      ...['--paper', '--paper-raised', '--paper-sunken'].flatMap((g) => [
+        [`--paper-good on ${g}`, v('--paper-good'), v(g), AA_TEXT],
+        [`--paper-danger on ${g}`, v('--paper-danger'), v(g), AA_TEXT],
+        [`--paper-ink on ${g}`, v('--paper-ink'), v(g), AA_TEXT],
+        [`--paper-ink-soft on ${g}`, v('--paper-ink-soft'), v(g), AA_TEXT],
+      ]),
+      ['--paper-faint on --paper', v('--paper-faint'), v('--paper'), AA_TEXT],
+      ['--paper-faint on --paper-sunken', v('--paper-faint'), v('--paper-sunken'), AA_TEXT],
+      // --brand-tint resolves to --gold-hi inside an overlay: the menu's hover.
+      ['--paper-ink on --gold-hi', v('--paper-ink'), v('--gold-hi'), AA_TEXT],
+      // The destructive button: paper on the red fill, and the fill itself has
+      // to identify the control against the paper (SC 1.4.11), since its rim is
+      // decorative.
+      ['--paper-danger-ink on --paper-danger', v('--paper-danger-ink'), v('--paper-danger'), AA_TEXT],
+      ['--paper-danger on --paper', v('--paper-danger'), v('--paper'), AA_LARGE],
     ];
     for (const [label, fg, bg, bar] of pairs) {
       const ratio = contrast(fg, bg);
@@ -1717,6 +1737,34 @@ test('a design whose gold row is a SWEEP carries one ink across both its stops',
   assert.deepEqual(failures, [], 'the winning row has one ink, so it must hold on both stops');
 });
 
+test('a design that declares Pokale PLINTHS carries their one ink on all six stops', () => {
+  /* #1196, T13.2 — review finding A5: „Dunkle Tinte #2f2109 auf allen drei
+     Sockeln". The three plinths are gradients, so a stop-by-stop sweep is the
+     only way the finding's "all three" is actually true: the package's own deep
+     bronze stop carried that ink at 3.48:1 and is corrected in tisch.css.
+
+     The caption is 11-12px uppercase, so the plain text bar. The rank numeral
+     is large and would pass on 3:1, but it takes the same ink, so the stricter
+     bar covers both. Gold is the brass plate itself (--brass-hi -> --gold-deep),
+     which is why those two tokens are in the list. */
+  const hosts = withToken('--plinth-ink');
+  assert.ok(hosts.length >= 1, 'no design declares plinths — this test is vacuous');
+  const STOPS = [
+    '--brass-hi', '--gold-deep',
+    '--plinth-silver-hi', '--plinth-silver',
+    '--plinth-bronze-hi', '--plinth-bronze',
+  ];
+  const failures = [];
+  for (const t of hosts) {
+    const v = (n) => token(n, t.design);
+    for (const stop of STOPS) {
+      const ratio = contrast(v('--plinth-ink'), v(stop));
+      if (ratio < AA_TEXT) failures.push(`${name(t)} — --plinth-ink on ${stop} = ${ratio.toFixed(2)}:1`);
+    }
+  }
+  assert.deepEqual(failures, [], 'a plinth caption has to be readable on every stop of every plinth');
+});
+
 test('every colour token a design declares is measured by one of the checks above', () => {
   /* The guard that makes #1188's move safe. A design's root block is now
      RESOLVABLE by test/support/theme.js, and test/design-layer.test.js pushes
@@ -1750,6 +1798,13 @@ test('every colour token a design declares is measured by one of the checks abov
     '--bar-1', '--bar-2', '--bar-3', '--bar-4', '--bar-5',
     '--gold-hi',
     '--played-tag', '--played-tag-ink', '--veto-tag', '--veto-tag-ink',
+    // #1195: the overlay's status inks, its darkest paper ground, and the
+    // destructive button's fill ink.
+    '--paper-good', '--paper-danger', '--paper-danger-ink', '--paper-sunken',
+    // #1196: the Pokale plinths' silver and bronze stops and their one ink
+    // (gold is --brass-hi/--gold-deep, measured by the same check).
+    '--plinth-silver-hi', '--plinth-silver', '--plinth-bronze-hi', '--plinth-bronze',
+    '--plinth-ink',
   ]);
   /* Not colours, so not this test's business: a lift PERCENTAGE, and the four
      compositing alphas the elevation ramp is built from. The alphas are painted
@@ -1760,9 +1815,13 @@ test('every colour token a design declares is measured by one of the checks abov
   /* A hairline on a NON-INTERACTIVE label. SC 1.4.11 binds a boundary only
      where it identifies a control, and these two identify a printed tag — so
      there is no bar to measure them against, and inventing one would push them
-     to a weight that reads as a button (#1191). Listed rather than folded into
+     to a weight that reads as a button (#1191). The plinth's hairline (#1196)
+     is the same case: a plinth is a picture of a rank, not a control. Listed rather than folded into
      NOT_A_COLOUR above, because they ARE colours; what they are not is a pair. */
-  const DECORATIVE_EDGE = /^--(played-tag-edge|veto-tag-edge)$/;
+  /* #1195 added two more of the same kind: the destructive button's rim (the
+     red FILL identifies that control, measured above) and the paper hairline
+     between rows and under a head, which separates and identifies nothing. */
+  const DECORATIVE_EDGE = /^--(played-tag-edge|veto-tag-edge|paper-danger-edge|paper-line|plinth-edge)$/;
 
   const unmeasured = [];
   for (const t of THEMES) {

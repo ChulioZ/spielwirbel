@@ -185,6 +185,10 @@ const settle = async () => {
 const sheet = () => dom.document.querySelector('.sheet-backdrop .sheet');
 const ownerChips = () => [...sheet().querySelectorAll('.filter-chips .chip')];
 const chipFor = (name) => ownerChips().find((c) => c.textContent.includes(name));
+// The commit verb (#1195 retired the bare „OK" — T15b: the button names the
+// verb). Read from the locale rather than hand-copied, so a retune of the word
+// moves this with it.
+const APPLY = dom.run("t('common.apply')");
 const sheetBtn = (label) => [...sheet().querySelectorAll('.sheet__actions .btn')]
   .find((b) => b.textContent.trim() === label);
 
@@ -232,7 +236,7 @@ test('picking owners sends exactly the selected games and the chosen seats', asy
   chipFor('Anna').click();
   chipFor('Ben').click();
   chipFor('Ben').click(); // toggled back off — only Anna should travel
-  sheetBtn('OK').click();
+  sheetBtn(APPLY).click();
   await settle();
 
   assert.equal(confirms.length, 1);
@@ -247,13 +251,13 @@ test('picking owners sends exactly the selected games and the chosen seats', asy
 
 /* An empty pick is the CLEAR, and it gets its own wording: "set the owners of 3
    games to ''" is not a sentence, and this is the half worth a warning. */
-test('OK with nobody picked sends the clear, under its own confirm', async () => {
+test('Übernehmen with nobody picked sends the clear, under its own confirm', async () => {
   const { posts, confirms, confirmOpts } = spy();
   regal(OWNERS_ROUND);
   toggleBtn().click();
   cardFor('Azul').click();
   act('owners').click();
-  sheetBtn('OK').click();
+  sheetBtn(APPLY).click();
   await settle();
 
   assert.equal(posts().length, 1);
@@ -308,7 +312,7 @@ test('the tags action opens a picker over the round\'s tags, all three neutral',
   // differ, so any preselected state would be a claim about all of them.
   assert.ok([...sheet().querySelectorAll('.bulk-tags__chips .chip')]
     .every((c) => !c.classList.contains('is-on') && !c.classList.contains('is-excluded')));
-  assert.equal(sheetBtn('OK').disabled, true, 'nothing picked is an unfinished sentence, not a no-op');
+  assert.equal(sheetBtn(APPLY).disabled, true, 'nothing picked is an unfinished sentence, not a no-op');
 
   sheetBtn('Abbrechen').click();
   await settle();
@@ -326,7 +330,7 @@ test('one click adds, two removes, three leaves the tag out of both lists', asyn
   tagChipFor('Kurz').click(); tagChipFor('Kurz').click(); // remove
   assert.ok(tagChipFor('Kenner').classList.contains('is-on'));
   assert.ok(tagChipFor('Kurz').classList.contains('is-excluded'));
-  sheetBtn('OK').click();
+  sheetBtn(APPLY).click();
   await settle();
 
   assert.match(confirms[0], /Kenner/, 'the confirm must name the tags, not just a count');
@@ -349,7 +353,7 @@ test('a third click returns the chip to neutral and sends neither instruction', 
   chip.click(); chip.click(); chip.click();           // add -> remove -> neutral
   assert.ok(!tagChipFor('Kurz').classList.contains('is-on'));
   assert.ok(!tagChipFor('Kurz').classList.contains('is-excluded'));
-  sheetBtn('OK').click();
+  sheetBtn(APPLY).click();
   await settle();
 
   assert.deepEqual([...posts()[0].body.addTagIds], ['t1']);

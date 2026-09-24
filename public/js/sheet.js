@@ -167,7 +167,12 @@ function openEditor(anchor, variant, title, build, onClose, opts) {
       return build(el, close);
     }, onClose);
   }
-  const backdrop = h(`<div class="sheet-backdrop sheet-backdrop--center">
+  // `sheet-backdrop--editor` names the half of the split a design may present
+  // differently: the SAME overlay that is an anchored popover above 860px. Der
+  // Tisch (#1195) docks it to the bottom edge on a phone, the one appearance its
+  // T15a draws for it; every other design ignores the class, and a `list`
+  // editor never carries it — that one is a dialog at every width.
+  const backdrop = h(`<div class="sheet-backdrop sheet-backdrop--center${list ? '' : ' sheet-backdrop--editor'}">
       <div class="sheet sheet--dialog${list ? ' sheet--list' : ''}" role="dialog" aria-modal="true" aria-label="${esc(title)}">
         <div class="sheet__head">
           <h2>${esc(title)}</h2>

@@ -120,14 +120,8 @@ async function showProfile(username) {
     // `aria-expanded` is synced through openPopover's onClose rather than by
     // wrapping `close`: the wrapped form misses four of the six exits.
     menuBtn.addEventListener('click', () => {
-      openPopover(menuBtn, (el, close) => {
-        el.classList.add('popover--menu');
-        items.forEach(([icon, label, cls, run]) => {
-          const b = h(`<button class="popover__opt ${cls}"><i class="ti ${icon}" aria-hidden="true"></i> ${esc(label)}</button>`);
-          b.addEventListener('click', () => { close(); run(); });
-          el.appendChild(b);
-        });
-      }, () => menuBtn.setAttribute('aria-expanded', 'false'));
+      openPopover(menuBtn, (el, close) => fillMenu(el, items, close),
+        () => menuBtn.setAttribute('aria-expanded', 'false'));
       menuBtn.setAttribute('aria-expanded', 'true');
     });
     back.appendChild(menuBtn);
@@ -353,8 +347,8 @@ function renderProfileState(row, p, reload) {
   return row.appendChild(send);
 }
 
-/* The „…" menu's items, as the Tischkarte builds them: `[icon, label, class,
-   run]`. Each is an action done at most once per account, which is exactly what
+/* The „…" menu's items, in the shape `fillMenu` takes (popover.js): `{ icon,
+   label, cls, kind, run }`, where `kind` decides the row's place (#1195). Each is an action done at most once per account, which is exactly what
    the menu is for — they were a link in the middle of the page („Entfernen") and
    a lone flag button under the head („Melden").
 
@@ -369,7 +363,7 @@ function profileMenuItems(p, reload) {
   if (p.self) return items;
 
   if (p.friendship === 'friends') {
-    items.push(['ti-user-minus', t('friends.unfriend'), 'popover__opt--warn', async () => {
+    items.push({ icon: 'ti-user-minus', label: t('friends.unfriend'), cls: 'popover__opt--warn', kind: 'destructive', run: async () => {
       if (!await confirmDialog({
         body: t('friends.unfriendConfirm', { name: p.username || t('friends.unknownUser') }),
         confirmLabel: t('friends.unfriend'),
@@ -379,15 +373,17 @@ function profileMenuItems(p, reload) {
         toast(t('friends.toast.removed'));
         reload();
       } catch { toast(t('friends.err.generic')); }
-    }]);
+    } });
   } else if (p.friendship === 'outgoing') {
-    items.push(['ti-user-x', t('friends.cancel'), 'popover__opt--muted', async () => {
+    items.push({ icon: 'ti-user-x', label: t('friends.cancel'), cls: 'popover__opt--muted', kind: 'undoable', run: async () => {
       try { await accountApi('POST', `/friends/${p.friendshipId}/decline`); } catch {}
       reload();
-    }]);
+    } });
   }
 
   const report = accountReportButton(p.username);
-  if (report) items.push(['ti-flag', t('friends.reportAccount'), '', () => report.click()]);
+  // Neither hands the account on nor takes anything away, so it sits in the
+  // neutral middle group — above the destructive unfriend.
+  if (report) items.push({ icon: 'ti-flag', label: t('friends.reportAccount'), kind: 'undoable', run: () => report.click() });
   return items;
 }
