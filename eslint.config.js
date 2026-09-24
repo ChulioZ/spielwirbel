@@ -394,7 +394,7 @@ const frontendGlobals = {
   DESIGN_REGISTRY: 'readonly', FACE_DESIGN: 'readonly', designById: 'readonly',
   selectableDesigns: 'readonly', selectableDesignIds: 'readonly', isSelectableDesign: 'readonly',
   designMarkers: 'readonly', markerOf: 'readonly', markerInk: 'readonly', DEFAULT_MARKER_INK: 'readonly',
-  activeDesign: 'readonly', designScheme: 'readonly', loadDesignStylesheet: 'readonly',
+  activeDesign: 'readonly', designIs: 'readonly', designScheme: 'readonly', loadDesignStylesheet: 'readonly',
   applyDesign: 'readonly', requestedDesign: 'readonly', initDesign: 'readonly',
   DESIGN_CHOOSER_REVISION: 'readonly', applyAccountDesign: 'readonly',
   // #1199 — a design's brand marks and the manifest URL that carries them.

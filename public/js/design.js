@@ -38,6 +38,16 @@ function activeDesign() {
   return designById(activeDesignId) || designById(FACE_DESIGN);
 }
 
+// THE one question a view asks when a design composes a screen differently
+// (#1262 and its sibling Tisch structure issues): "is this design worn right
+// now?". Every branch in a view goes through here rather than reading
+// <html data-design> itself, so there is one place that answers it and one
+// grep that finds every screen a design restructures. Klassisch is never
+// branched on — its DOM is the default path, untouched.
+function designIs(id) {
+  return activeDesign().id === id;
+}
+
 // 'dark' or 'light' for the design in force. round-theme.js's setScheme uses it
 // as the fallback, which is what keeps a dark user design dark on home, the
 // account screens and every other surface outside a round.

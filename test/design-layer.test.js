@@ -393,3 +393,19 @@ test('a design\'s root block is real — the two sweeps above are not passing by
       `${file}: nothing but the root block survived the split — the sweeps above would be vacuous`);
   }
 });
+
+/* ------------------------------ designIs (#1262) ----------------------------- */
+
+test('designIs answers for the design in force, and only that one', () => {
+  const dom = loadApp({ locale: 'de' });
+  dom.run('applyDesign("tisch")');
+  assert.equal(dom.run('designIs("tisch")'), true);
+  assert.equal(dom.run('designIs("klassisch")'), false);
+  dom.run('applyDesign("klassisch")');
+  assert.equal(dom.run('designIs("tisch")'), false);
+  assert.equal(dom.run('designIs("klassisch")'), true);
+  // An unknown id falls back to the face, so the predicate never reports a
+  // design that is not actually painted.
+  dom.run('applyDesign("a-design-that-was-retired")');
+  assert.equal(dom.run('designIs("' + FACE_DESIGN + '")'), true);
+});
