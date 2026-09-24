@@ -220,3 +220,20 @@ test('tisch.css spans the empty table across the ≥1280 band', () => {
   assert.match(bodyOf(T + '.hub-stage > .empty--table', rulesOf(wide)) || '', /grid-column:\s*1\s*\/\s*-1/,
     'from 1280 the table must span the band’s grid, or it lands in the plate’s column');
 });
+
+// A locked CTA that prints its reason cannot also be faded: `.btn:disabled`'s
+// 0.45 opacity put „ab dem ersten Spiel" at ~2:1. So the hub CTA reads as
+// unavailable by being SUNKEN instead — Der Tisch's answer, taken for every
+// design in the #1269 merge interview — with --ink-soft on --sunken,
+// a pair test/a11y-contrast.test.js already measures in every theme.
+const STYLES = fs.readFileSync(path.join(__dirname, '..', 'public/styles.css'), 'utf8')
+  .replace(/\/\*[\s\S]*?\*\//g, '');
+
+test('the locked hub CTA is sunken, not faded, so the reason on it is legible', () => {
+  const b = bodyOf('.btn.hub-cta:disabled', rulesOf(STYLES)) || '';
+  assert.match(b, /opacity:\s*1\b/, 'the fade must be undone, or the reason reads at ~2:1');
+  assert.match(b, /background:\s*var\(--sunken\)/);
+  assert.match(b, /border-style:\s*dashed/, 'a solid white plate reads as a live secondary button');
+  assert.match(b, /color:\s*var\(--ink-soft\)/);
+  assert.match(b, /box-shadow:\s*inset\b/, 'without the fade, the inset cast is what says "unavailable"');
+});

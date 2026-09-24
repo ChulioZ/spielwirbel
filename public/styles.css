@@ -1286,6 +1286,20 @@ h1, h2, h3 { font-family: var(--font-display); }
   font-weight: 600;
   text-align: center;
 }
+/* …and so it cannot also be FADED: `.btn:disabled`'s 0.45 opacity put the
+   reason at ~2:1. The locked hub CTA reads as unavailable by being SUNKEN
+   instead — no brand fill, pressed into the page — which is Der Tisch's answer
+   too (tisch.css, "THE CAST INVERTS"). (0,3,0), so it outranks both
+   `.btn:disabled` and `.btn--primary`; the rail's own CTA keeps the fade. */
+.btn.hub-cta:disabled {
+  opacity: 1;
+  background: var(--sunken);
+  border-style: dashed;
+  border-color: var(--control-edge);
+  border-bottom-width: 1.5px;
+  color: var(--ink-soft);
+  box-shadow: inset 0 2px 5px color-mix(in oklab, var(--shade) 14%, transparent);
+}
 
 /* Quieter secondary tasks under the launchpad content. */
 .hub-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 26px; }
