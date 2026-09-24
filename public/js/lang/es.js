@@ -793,6 +793,7 @@ I18N.es = {
   'tables.sameChronik': 'todos los resultados van al mismo historial',
   'tables.sentenceOpen': '«{game}» sigue en curso.',
   'tables.shareAll': 'Compartir todas las mesas',
+  'tables.oneMore': 'Una sesión más',
   'share.tables': 'Las mesas:',
   'share.table': '{title}: {names}',
   'sessions.split': 'Repartida',

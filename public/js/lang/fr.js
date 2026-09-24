@@ -790,6 +790,7 @@ I18N.fr = {
   'tables.sameChronik': 'tous les résultats vont dans le même historique',
   'tables.sentenceOpen': '« {game} » est toujours en cours.',
   'tables.shareAll': 'Partager toutes les tables',
+  'tables.oneMore': 'Encore une session',
   'share.tables': 'Les tables :',
   'share.table': '{title} : {names}',
   'sessions.split': 'Répartie',

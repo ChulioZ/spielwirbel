@@ -475,7 +475,10 @@ function renderTischSplit(round, session, games, children) {
     }));
     foot.appendChild(shareBtn);
   }
-  const startBtn = h(`<button type="button" class="btn btn--primary">${iconText('ti-tornado', t('round.startSession'))}</button>`);
+  // „Noch eine Session", not the hub's „Session wirbeln": after a night that
+  // just ended the sheet's words are „one more" (T4.5), and „Runde" is the
+  // group here, so it reads Session (operator decision, 2026-09-24).
+  const startBtn = h(`<button type="button" class="btn btn--primary">${iconText('ti-tornado', t('tables.oneMore'))}</button>`);
   startBtn.addEventListener('click', () => showStartSession(round));
   if (!round.games.some(isActiveGame)) {
     startBtn.disabled = true;

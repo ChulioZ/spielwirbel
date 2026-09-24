@@ -759,6 +759,7 @@ I18N.fi = {
   'tables.sameChronik': 'kaikki tulokset menevät samaan historiaan',
   'tables.sentenceOpen': '”{game}” on yhä käynnissä.',
   'tables.shareAll': 'Jaa kaikki pöydät',
+  'tables.oneMore': 'Vielä yksi sessio',
   'share.tables': 'Pöydät:',
   'share.table': '{title}: {names}',
   'sessions.split': 'Jaettu',

@@ -787,6 +787,7 @@ I18N.pt = {
   'tables.sameChronik': 'todos os resultados vão para o mesmo histórico',
   'tables.sentenceOpen': '“{game}” ainda está em andamento.',
   'tables.shareAll': 'Compartilhar todas as mesas',
+  'tables.oneMore': 'Mais uma sessão',
   'share.tables': 'As mesas:',
   'share.table': '{title}: {names}',
   'sessions.split': 'Dividida',

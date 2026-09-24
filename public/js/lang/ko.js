@@ -743,6 +743,7 @@ I18N.ko = {
   'tables.sameChronik': '모든 결과가 같은 기록에 남아요',
   'tables.sentenceOpen': '“{game}” 진행 중이에요.',
   'tables.shareAll': '모든 테이블 공유',
+  'tables.oneMore': '세션 한 번 더',
   'share.tables': '테이블:',
   'share.table': '{title}: {names}',
   'sessions.split': '나눔',

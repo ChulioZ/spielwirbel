@@ -816,6 +816,7 @@ I18N.en = {
   'tables.sameChronik': 'every result goes into the same history',
   'tables.sentenceOpen': '“{game}” is still running.',
   'tables.shareAll': 'Share all tables',
+  'tables.oneMore': 'One more session',
   'share.tables': 'The tables:',
   'share.table': '{title}: {names}',
   'sessions.split': 'Split',

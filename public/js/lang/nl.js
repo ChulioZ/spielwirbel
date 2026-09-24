@@ -785,6 +785,7 @@ I18N.nl = {
   'tables.sameChronik': 'alle uitslagen komen in dezelfde geschiedenis',
   'tables.sentenceOpen': '“{game}” loopt nog.',
   'tables.shareAll': 'Alle tafels delen',
+  'tables.oneMore': 'Nog een sessie',
   'share.tables': 'De tafels:',
   'share.table': '{title}: {names}',
   'sessions.split': 'Gesplitst',

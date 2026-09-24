@@ -814,6 +814,7 @@ I18N.de = {
   'tables.sameChronik': 'alle Ergebnisse stehen in derselben Chronik',
   'tables.sentenceOpen': '„{game}“ läuft noch.',
   'tables.shareAll': 'Alle Tische teilen',
+  'tables.oneMore': 'Noch eine Session',
   'share.tables': 'Die Tische:',
   'share.table': '{title}: {names}',
   'sessions.split': 'Aufgeteilt',

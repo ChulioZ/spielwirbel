@@ -789,6 +789,7 @@ I18N.it = {
   'tables.sameChronik': 'tutti i risultati finiscono nella stessa cronologia',
   'tables.sentenceOpen': '«{game}» è ancora in corso.',
   'tables.shareAll': 'Condividi tutti i tavoli',
+  'tables.oneMore': 'Un\'altra sessione',
   'share.tables': 'I tavoli:',
   'share.table': '{title}: {names}',
   'sessions.split': 'Divisa',

@@ -201,6 +201,8 @@ test('the foot shares every table at once and starts the next session', async (t
   assert.equal(shared.length, 1);
   assert.equal(shared[0].outcome, 'split');
   assert.deepEqual(shared[0].tables.map((tb) => tb.title), ['Catan', 'Azul']);
+  // „Noch eine Session" (operator decision 2026-09-24), not the hub's wording.
+  assert.equal(text(start), 'Noch eine Session');
   start.click();
   assert.deepEqual(started, [7]);
   // The foot is the last thing before the log/footer, and there is exactly one.
