@@ -29,10 +29,18 @@ function renderRegalTab(round, activeGames) {
   const { byGame: statsByGame } = roundScoreIndex(round, activeGames);
 
   const gamesSec = h('<div class="section"></div>');
+  // Der Tisch composes this head as T3.3/T6.2 draw it (#1278): a display title
+  // „Regal" with the count beside it, one row of controls, and the gold „Spiel
+  // hinzufügen" — which replaces the dashed tile closing the grid. Every other
+  // design keeps the section-label head below, unchanged.
+  const tisch = designIs('tisch');
   // h1, not h3: on the Regal/Chronik/Pokale tabs this is the top-level heading of
   // the view — only the Start tab renders the round-name hero (#145). The
   // section-label look is unchanged; `.section-head :is(h1,h2,h3)` styles it.
-  const gamesHead = h(`<div class="section-head"><h1>${esc(t('games.title', { n: activeGames.length }))}</h1><div class="section-tools"></div></div>`);
+  const title = tisch
+    ? `<div class="regal-title"><h1>${esc(t('hub.tab.regal'))}</h1><span class="regal-title__count">${esc(tn(activeGames.length, 'home.chip.gamesOne', 'home.chip.games'))}</span></div>`
+    : `<h1>${esc(t('games.title', { n: activeGames.length }))}</h1>`;
+  const gamesHead = h(`<div class="section-head${tisch ? ' regal-head' : ''}">${title}<div class="section-tools"></div></div>`);
   const gamesTools = gamesHead.querySelector('.section-tools');
   gamesSec.appendChild(gamesHead);
 
@@ -48,20 +56,30 @@ function renderRegalTab(round, activeGames) {
   // Bulk-import a linked BoardGameGeek collection (#481). Filling a shelf one
   // game at a time is the most tedious part of setting a round up, so the entry
   // point is offered where that tedium is felt: as a tile beside "add a game"
-  // while the Regal is empty, and as a persistent header action once it isn't.
+  // while the Regal is empty, and as a persistent header action once it isn't
+  // (under Der Tisch, as a row in the add sheet instead — see below).
   const importTile = h(`<button class="add-tile">
        <i class="ti ti-download" aria-hidden="true"></i>
        <span>${esc(t('bggImport.tile'))}</span>
      </button>`);
   importTile.addEventListener('click', () => showBggImport(round));
 
+  // Under Der Tisch the gold button is THE add action, so the dashed tile goes.
+  // The empty shelf keeps its import tile: that is the empty state's offer, not
+  // the toolbar's (#1278 moved only the toolbar's import into the add sheet).
+  const gridAddTile = tisch ? [] : [addTile];
+
   if (activeGames.length === 0) {
     gamesSec.appendChild(emptyState({ icon: 'ti-cards', title: t('games.emptyTitle'), text: t('games.empty') }));
-    grid.appendChild(addTile);
+    grid.append(...gridAddTile);
     if (canImportBgg()) grid.appendChild(importTile);
     gamesSec.appendChild(grid);
   } else {
-    if (canImportBgg()) {
+    // Not under Der Tisch (#1278): T3.3 has no slot for it, and the add sheet
+    // already offers the same import as a row (add-game-search.js, behind the
+    // same canImportBgg() gate), so the toolbar holds exactly the sheet's
+    // controls and nothing becomes unreachable.
+    if (canImportBgg() && !tisch) {
       // Two spellings of one label, switched by width in CSS (#621) — the full
       // wording is ~269px, most of a 320px phone's content column. Both strings
       // already exist for the empty-Regal tile, so this needs no new i18n key.
@@ -106,6 +124,9 @@ function renderRegalTab(round, activeGames) {
       cards: () => cardById,
       refresh: () => renderGames(),
     });
+    // A hook for Der Tisch's phone row, which draws this toggle as a glyph chip
+    // while it is off (T6.2 has no room for a fourth worded chip).
+    if (tisch) bulk.button.classList.add('regal-select');
     gamesTools.appendChild(bulk.button);
 
 
@@ -195,6 +216,7 @@ function renderRegalTab(round, activeGames) {
 
     const tagSection = roundTags.length ? buildTagSection() : null;
     let filterPanel = null;
+    let toolTrigger = null;
     // A tag chip changes the applied-filter chips the bar renders, so it has to
     // be told; the metadata controls resync themselves through the panel's
     // onChange.
@@ -209,9 +231,19 @@ function renderRegalTab(round, activeGames) {
       // handed straight back in, and the tag section node is MOVED into the new
       // panel rather than rebuilt.
       if (filterPanel) filterPanel.el.remove();
-      filterPanel = renderFilterPanel(activeGames, regalFilters.metadata, () => renderGames(), tagSection);
+      filterPanel = renderFilterPanel(activeGames, regalFilters.metadata, () => renderGames(), tagSection,
+        tisch ? { countBadge: true } : undefined);
       if (filterPanel) filterWrap.appendChild(filterPanel.el);
       filterWrap.hidden = !filterPanel;
+      // Der Tisch lifts the trigger into the toolbar's one row, between the ⓘ
+      // and „Auswählen" (T3.3's order); the applied chips stay below the head.
+      // The node is MOVED, so the panel's own listener and its popover anchor
+      // come with it — and a remount must take the old one out of the row.
+      if (tisch) {
+        if (toolTrigger) toolTrigger.remove();
+        toolTrigger = filterPanel ? filterPanel.el.querySelector('.fbar__trigger') : null;
+        if (toolTrigger) gamesTools.insertBefore(toolTrigger, bulk.button);
+      }
     };
     mountFilterPanel();
 
@@ -309,11 +341,11 @@ function renderRegalTab(round, activeGames) {
         const msg = query.trim()
           ? t('games.noMatch', { q: query.trim() })
           : t('games.noMatchFilters');
-        grid.replaceChildren(h(`<div class="muted games-nomatch">${esc(msg)}</div>`), ...(bulk.isSelecting() ? [] : [addTile]));
+        grid.replaceChildren(h(`<div class="muted games-nomatch">${esc(msg)}</div>`), ...(bulk.isSelecting() ? [] : gridAddTile));
         bulk.sync();
         return;
       }
-      grid.replaceChildren(...cards, ...(bulk.isSelecting() ? [] : [addTile]));
+      grid.replaceChildren(...cards, ...(bulk.isSelecting() ? [] : gridAddTile));
       bulk.sync();
     }
 
@@ -352,6 +384,23 @@ function renderRegalTab(round, activeGames) {
   const offShelfBtn = h(`<button class="link-btn${designIs('tisch') ? '' : ' rail-owned'}" type="button"><i class="ti ti-archive" aria-hidden="true"></i> <span>${esc(t('rail.archive'))}</span></button>`);
   offShelfBtn.addEventListener('click', () => openOffShelfSheet(round));
   gamesTools.appendChild(offShelfBtn);
+
+  // Der Tisch's gold „Spiel hinzufügen" (#1278). TWO buttons, one per layout,
+  // and that is what keeps DOM order equal to visual order (WCAG 2.4.3): T3.3
+  // ends the toolbar row with it, T6.2 puts it UNDER the shelf, sticky above the
+  // dock. A sticky box only sticks within its parent, so the phone's copy has
+  // to live after the grid — the toolbar's would scroll away with the head.
+  // CSS shows exactly one at any width, and `display: none` drops the other
+  // from the accessibility tree, so no width announces two.
+  if (tisch) {
+    const addBtn = (where) => {
+      const b = h(`<button type="button" class="btn btn--primary regal-add regal-add--${where}"><i class="ti ti-plus" aria-hidden="true"></i> <span>${esc(t('round.addGame'))}</span></button>`);
+      b.addEventListener('click', () => showAddGame(round));
+      return b;
+    };
+    gamesTools.appendChild(addBtn('bar'));
+    gamesSec.appendChild(addBtn('dock'));
+  }
 
   app.appendChild(gamesSec);
   // "Spiele verschieben" and "Einladen" used to sit in a footer below the grid
