@@ -1437,6 +1437,8 @@ I18N.nl = {
   'landing.shot.shelfAlt': 'Schermafbeelding: de spellenkast van een groep in Spielwirbel — spellen als tegels met hun Spielwirbel-score, naast de navigatie voor Start, kast, geschiedenis en trofeeën.',
   'landing.shot.voteAlt': 'Schermafbeelding: stemmen in Spielwirbel — een getrokken spel met de vraag “hoe graag zou je dit willen spelen?” en een schaal van vijf gezichten van 1 (“helemaal niet”) tot 5 (“heel graag”).',
   'landing.shot.resultAlt': 'Schermafbeelding: de uitslag van een sessie in Spielwirbel — bovenaan het gespeelde spel met de stempel “gespeeld” en de winnaar, daaronder het begin van de uitslag met de Spielwirbel-score van het winnende spel.',
+  'landing.desktop.alt': 'Schermafbeelding: de startpagina van een groep in Spielwirbel op een breed scherm — links de navigatie met de knop om een sessie te starten, ernaast het laatst gespeelde spel, een suggestie, de puls van de groep, de kast, trofeeën en geschiedenis.',
+  'landing.desktop.caption': 'Net zo goed thuis op een groot scherm als op een klein.',
   'landing.moments.label': 'Zo verloopt een sessie: pot, stemming, uitslag',
   'landing.moments.pot': 'Er worden spellen uit de pot getrokken',
   'landing.moments.vote': 'Lea beoordeelt, dan gaat het apparaat door',

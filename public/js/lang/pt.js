@@ -1439,6 +1439,8 @@ I18N.pt = {
   'landing.shot.shelfAlt': 'Captura de tela: a estante de jogos de um grupo no Spielwirbel — jogos como blocos com a pontuação Spielwirbel, ao lado da navegação para Início, estante, histórico e troféus.',
   'landing.shot.voteAlt': 'Captura de tela: a votação no Spielwirbel — um jogo sorteado com a pergunta “quanta vontade você tem de jogar isso?” e uma escala de cinco carinhas indo de 1 (“nenhuma”) a 5 (“muita”).',
   'landing.shot.resultAlt': 'Captura de tela: o resultado de uma sessão no Spielwirbel — em cima o jogo que foi jogado, com o carimbo “jogado” e o vencedor; abaixo, o início da classificação com a pontuação Spielwirbel do jogo mais votado.',
+  'landing.desktop.alt': 'Captura de tela: a página inicial de um grupo no Spielwirbel numa tela larga — à esquerda, a navegação com o botão para iniciar uma sessão; ao lado, o último jogo jogado, uma sugestão, o pulso do grupo, a estante, os troféus e o histórico.',
+  'landing.desktop.caption': 'Tão à vontade numa tela grande quanto numa pequena.',
   'landing.moments.label': 'Como decorre uma sessão: sorteio, votação, resultado',
   'landing.moments.pot': 'Os jogos saem do sorteio',
   'landing.moments.vote': 'A Lea avalia e o dispositivo passa adiante',

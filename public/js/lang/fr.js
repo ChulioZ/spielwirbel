@@ -1445,6 +1445,8 @@ I18N.fr = {
   'landing.shot.shelfAlt': 'Capture d’écran : l’étagère de jeux d’un groupe dans Spielwirbel — les jeux en tuiles avec leur score Spielwirbel, à côté de la navigation vers Démarrer, l’étagère, l’historique et les trophées.',
   'landing.shot.voteAlt': 'Capture d’écran : le vote dans Spielwirbel — un jeu tiré avec la question « à quel point as-tu envie d’y jouer ? » et une échelle de cinq visages allant de 1 (« pas du tout ») à 5 (« absolument »).',
   'landing.shot.resultAlt': 'Capture d’écran : le résultat d’une session dans Spielwirbel — en haut le jeu joué, avec son tampon « joué » et le gagnant ; en dessous, le début du classement avec le score Spielwirbel du jeu arrivé en tête.',
+  'landing.desktop.alt': 'Capture d’écran : la page d’accueil d’un groupe dans Spielwirbel sur un grand écran — à gauche, la navigation avec le bouton pour démarrer une session ; à côté, le dernier jeu joué, une suggestion, le pouls du groupe, l’étagère, les trophées et l’historique.',
+  'landing.desktop.caption': 'Aussi à l’aise sur un grand écran que sur un petit.',
   'landing.moments.label': 'Le déroulement d’une session : le chapeau, le vote, le résultat',
   'landing.moments.pot': 'On tire des jeux du chapeau',
   'landing.moments.vote': 'Lea note, puis l’appareil passe au suivant',

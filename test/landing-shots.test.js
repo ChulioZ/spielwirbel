@@ -34,7 +34,7 @@ const fs = require('fs');
 const path = require('path');
 
 const { app } = require('./helpers');
-const { loadApp } = require('./support/dom');
+const { loadApp, translator } = require('./support/dom');
 const { SUPPORTED_LOCALES } = require('../public/js/locales');
 const { FACE_DESIGN, designById } = require('../public/js/designs');
 const { metadataFilterOptions, hasMetadataFilterOptions } = require('../public/js/draw-pool');
@@ -45,14 +45,23 @@ const VIEW = fs.readFileSync(path.join(ROOT, 'public/js/views-landing.js'), 'utf
 
 // Per-locale weight budget: what one visitor's landing page can cost. Generous
 // next to today's ~120 KB per set so an honest re-crop never trips it, small
-// enough that a full-resolution screenshot does.
+// enough that a full-resolution screenshot does. It covers the WALKTHROUGH's
+// three phone shots — the budget it always was.
 const WEIGHT_BUDGET = 200 * 1024;
 
-// The three entries every locale owes — the walkthrough's three steps, in the
-// order it renders them (#1090). Named here rather than derived from one
-// locale's set, or a locale missing `result` would define the requirement as
-// "the two I happen to have".
-const REQUIRED_SHOTS = ['shelfPhone', 'vote', 'result'];
+// The desktop band's one capture (#1199), budgeted on its own: ~60–80 KB at
+// 1800 px wide today, so 120 KB leaves an honest re-crop room while a 2x
+// capture (2880 px) or a PNG trips it. Separate rather than folded into the
+// walkthrough's cap, because raising that cap to make room would have let the
+// three phone shots grow by the desktop's share unnoticed.
+const DESKTOP_BUDGET = 120 * 1024;
+
+// The four entries every locale owes — the walkthrough's three steps, in the
+// order it renders them (#1090), and the desktop band's capture (#1199). Named
+// here rather than derived from one locale's set, or a locale missing `result`
+// would define the requirement as "the two I happen to have".
+const WALK_SHOTS = ['shelfPhone', 'vote', 'result'];
+const REQUIRED_SHOTS = [...WALK_SHOTS, 'desktop'];
 
 // The LANDING_SHOTS table, read out of the view rather than restated here — a
 // test constant hand-copied from the thing under test proves nothing
@@ -215,7 +224,9 @@ test("each locale's screenshot set stays inside its weight budget", () => {
   // Per DESIGN too: a visitor downloads one design's set, never two.
   const perSet = Object.values(designTables())
     .flatMap((table) => Object.entries(declaredShots(table)).map(([l, v]) => [`${table}/${l}`, v]));
-  for (const [locale, shots] of perSet) {
+  for (const [locale, all] of perSet) {
+    const shots = all.filter((s) => WALK_SHOTS.includes(s.name));
+    assert.equal(shots.length, WALK_SHOTS.length, `'${locale}' has its three walkthrough shots`);
     const bytes = shots.reduce(
       (sum, s) => sum + fs.statSync(path.join(ROOT, 'public', s.src)).size,
       0
@@ -224,6 +235,21 @@ test("each locale's screenshot set stays inside its weight budget", () => {
       bytes <= WEIGHT_BUDGET,
       `the '${locale}' screenshots total ${(bytes / 1024).toFixed(0)} KB, budget is ${WEIGHT_BUDGET / 1024} KB`
     );
+  }
+});
+
+test('each desktop capture stays inside its own weight budget (#1199)', () => {
+  const desktops = allShots().filter((s) => s.name === 'desktop');
+  // Anti-vacuous: one per locale per design, or a table that lost its entries
+  // would pass over nothing.
+  assert.equal(desktops.length, SUPPORTED_LOCALES.length * Object.keys(designTables()).length);
+  for (const shot of desktops) {
+    const bytes = fs.statSync(path.join(ROOT, 'public', shot.src)).size;
+    assert.ok(bytes <= DESKTOP_BUDGET,
+      `${shot.src} is ${(bytes / 1024).toFixed(0)} KB, budget is ${DESKTOP_BUDGET / 1024} KB`);
+    // …and it IS a desktop capture: the band exists to show the wide layout, so
+    // a phone-shaped file under this name would pass every other assertion.
+    assert.ok(shot.w > shot.h, `${shot.src} is ${shot.w}x${shot.h} — the desktop band needs a landscape capture`);
   }
 });
 
@@ -283,6 +309,24 @@ test('every narrow landing block stops below the hero visual\u2019s own breakpoi
   assert.ok(checked > 0, 'found at least one narrow landing @media block to check');
 });
 
+test('the desktop band is given close to the page width, not a column (#1199)', () => {
+  // #1090 retired the last wide capture because the hero column gave it
+  // 660–800px, where its labels shrank to ~9px. The band's whole licence is the
+  // width it gets instead, and that is a CSS fact jsdom cannot see — so the cap
+  // is read from the stylesheet (comments stripped: a prose mention of the class
+  // must not satisfy the match).
+  const css = fs
+    .readFileSync(path.join(ROOT, 'public/styles.css'), 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, '');
+  const rule = css.match(/\.landing-desktop__figure \{([^}]*)\}/);
+  assert.ok(rule, '.landing-desktop__figure is declared');
+  const cap = rule[1].match(/max-width:\s*(\d+)px/);
+  assert.ok(cap, 'the band caps its width in px');
+  // 1440 CSS px of layout at >= 1100 renders app text at >= ~10.5px.
+  assert.ok(Number(cap[1]) >= 1100, `the band is capped at ${cap[1]}px — too narrow to read a desktop capture`);
+  assert.doesNotMatch(css, /\.landing-hero[^{]*\.landing-desktop/, 'no rule places the band inside the hero');
+});
+
 test('the walkthrough renders all three shots to ONE height (#1090)', () => {
   // The three crops are not one aspect ratio and cannot be made into one: each
   // is cut where that screen has whitespace to cut in, and the result shot's cut
@@ -310,7 +354,7 @@ test('the walkthrough renders all three shots to ONE height (#1090)', () => {
 
   // …and the heights really do differ, so the rule above is not decoration. A
   // set that happened to be uniform would make it vacuous.
-  const heights = new Set(allShots().map((s) => s.h));
+  const heights = new Set(allShots().filter((s) => WALK_SHOTS.includes(s.name)).map((s) => s.h));
   assert.ok(heights.size > 1, 'the shots have different heights — that is why the cap exists');
 });
 
@@ -343,6 +387,15 @@ test('the screenshots are informative images, not decoration', () => {
   const altKeys = [...walk[1].matchAll(/'(landing\.shot\.\w+)'/g)].map((m) => m[1]);
   assert.deepEqual(altKeys, ['landing.shot.shelfAlt', 'landing.shot.voteAlt', 'landing.shot.resultAlt']);
   assert.match(VIEW, /alt="\$\{esc\(t\(altKey\)\)\}"/, 'the walkthrough renders its alt from the table');
+  // The desktop band's capture is informative too (#1199), in every language —
+  // its alt says what the wide layout holds, which is the band's whole point.
+  assert.match(VIEW, /alt="\$\{esc\(t\('landing\.desktop\.alt'\)\)\}"/,
+    'the desktop band renders a translated alt');
+  for (const locale of SUPPORTED_LOCALES) {
+    const alt = translator(locale)('landing.desktop.alt');
+    assert.ok(alt !== 'landing.desktop.alt' && alt.length > 40,
+      `'${locale}' has a real alt for the desktop capture, got: ${alt}`);
+  }
   // The hero holds no image at all since #1091 — it plays the app's own moments
   // — so the pre-#438 failure it used to guard against (an aria-hidden hero
   // picture) cannot recur there. What replaces the assertion is its inverse: the

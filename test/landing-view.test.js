@@ -238,3 +238,36 @@ test('the claims strip is six one-line claims, not a grid of cards', async (t) =
       `a claim line must stay a line, got ${desc.length} chars: ${desc}`);
   }
 });
+
+test('the desktop band sits right under the hero, in the design the page wears (#1199)', async (t) => {
+  // Operator decision 2026-09-24: phone captures alone read as a phone-only app,
+  // so ONE wide desktop capture follows the hero. Its position is the decision
+  // — directly after the hero, before the walkthrough — and it is the HUB at
+  // desktop width, never back in the hero column (#1090 retired a wide capture
+  // there because its labels shrank to ~9px).
+  for (const [design, folder] of [['klassisch', '/img/'], ['tisch', '/img/tisch/']]) {
+    const dom = boot(t);
+    dom.call('applyDesign', design);
+    await dom.call('showLanding');
+    await settle();
+
+    const band = dom.document.querySelector('.landing-hero + .landing-desktop');
+    assert.ok(band, `${design}: the band is the hero's next sibling`);
+    assert.equal(dom.document.querySelectorAll('.landing-desktop').length, 1);
+    assert.equal(dom.document.querySelector('.landing-hero .landing-desktop__shot'), null,
+      'the wide capture stays out of the hero column');
+
+    const img = band.querySelector('figure img.landing-desktop__shot');
+    assert.equal(img.getAttribute('src'), `${folder}landing-desktop.de.webp`,
+      `${design}: the band shows the worn design's capture, in the page's locale`);
+    // The reserved box: without both attributes the image lands late and moves
+    // the walkthrough below it.
+    assert.ok(Number(img.getAttribute('width')) > Number(img.getAttribute('height')),
+      'a landscape box is reserved from the real asset size');
+    assert.equal(img.getAttribute('loading'), 'lazy');
+    assert.ok((img.getAttribute('alt') || '').length > 40, 'an informative alt, not decoration');
+    assert.equal(img.getAttribute('aria-hidden'), null);
+    const caption = band.querySelector('figcaption').textContent.trim();
+    assert.ok(caption.length > 0 && !caption.startsWith('landing.'), `${design}: a translated caption`);
+  }
+});

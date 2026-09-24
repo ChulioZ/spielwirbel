@@ -837,6 +837,10 @@ scripts/
                      (public/img/landing-*.webp) — seeds a throwaway dataset and
                      drives headless Chrome over CDP, one run for every locale;
                      --design=tisch shoots Der Tisch's set into public/img/tisch/
+  landing-desktop-shot.js
+                     that run's one desktop capture — the round hub at 1440 wide
+                     for the band under the landing hero (#1199) — its viewport,
+                     probe and crop
   cdp.js             the dependency-free Chrome DevTools Protocol client both
                      image scripts drive headless Chrome with
   render-design-marks.js

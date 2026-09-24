@@ -3,7 +3,7 @@
 /*
  * Regenerate the landing-page product screenshots (#438, #457, #669).
  *
- *   node scripts/capture-landing-shots.js            # all three shots, every locale
+ *   node scripts/capture-landing-shots.js            # all four shots, every locale
  *   node scripts/capture-landing-shots.js vote       # just the vote card
  *   node scripts/capture-landing-shots.js --probe    # measure geometry, write nothing
  *
@@ -45,6 +45,7 @@ const { designById } = require('../public/js/designs');
 
 const ROOT = path.join(__dirname, '..');
 const { connectCdp } = require('./cdp');
+const desktopShot = require('./landing-desktop-shot');
 
 /* WHICH DESIGN the app wears in the pictures (#1199): `--design=tisch` shoots
    Der Tisch's set into public/img/tisch/, the default shoots Klassisch's into
@@ -95,12 +96,15 @@ const VIEWPORTS = {
   // The results screen (#1090), same phone width as the other two. Its height is
   // a FLOOR, not the crop: resultCrop() below measures the real cut per locale.
   result: { width: 390, height: 720, deviceScaleFactor: 1.6, mobile: true },
+  // The band under the hero (#1199): the one desktop capture, 1440 wide. Its
+  // height is a floor too — scripts/landing-desktop-shot.js derives the cut.
+  desktop: desktopShot.VIEWPORT,
 };
 
 // Shot name -> committed file stem. A map rather than the nested ternary this
 // replaced: that form silently wrote every unknown shot to `landing-vote`, which
 // is exactly the mistake adding a fourth shot would make.
-const FILE_STEM = { shelfPhone: 'shelf-phone', vote: 'vote', result: 'result' };
+const FILE_STEM = { shelfPhone: 'shelf-phone', vote: 'vote', result: 'result', desktop: 'desktop' };
 
 // WebP quality. 84 lands each locale's set at ~120 KB against the 200 KB
 // per-locale budget test/landing-shots.test.js enforces.
@@ -426,7 +430,7 @@ async function probeGeometry(cdp) {
       rowBottoms: rows.map((r) => r.bottom),
       docHeight: document.documentElement.scrollHeight,
     };
-  })()`);
+  })()`).then(async (geom) => ({ ...geom, desktop: await evaluate(cdp, desktopShot.PROBE) }));
 }
 
 // The result crop is the one height this script does NOT fix in VIEWPORTS, and
@@ -470,6 +474,7 @@ function voteCrop(geom, locale) {
 // height. Klassisch's vote crop stays the #669 fixed point; Der Tisch's cannot.
 const DERIVED_CROPS = {
   result: resultCrop,
+  desktop: desktopShot.desktopCrop,
   ...(DESIGN === 'klassisch' ? {} : { vote: voteCrop }),
 };
 
@@ -495,7 +500,7 @@ async function capture(cdp, shot, locale, probeOnly) {
   }
   console.log(`  ${locale}/${shot}  rail=${geom.railBottom} vote=${geom.voteBottom} nav=${geom.navBottom} `
     + `tisch=${geom.tischBottom} rows=${JSON.stringify(geom.rowBottoms.slice(0, 6))} `
-    + `doc=${geom.docHeight} cards=${JSON.stringify(geom.cardRows.slice(0, 8))}`);
+    + `doc=${geom.docHeight} cards=${JSON.stringify(geom.cardRows.slice(0, 8))} desk=${JSON.stringify(geom.desktop)}`);
   if (probeOnly) return;
 
   const { data } = await cdp.send('Page.captureScreenshot', { format: 'webp', quality: QUALITY });
@@ -628,7 +633,9 @@ async function main() {
   if (!designById(DESIGN)) fail(`unknown design '${DESIGN}'`);
   fs.mkdirSync(OUT_DIR, { recursive: true });
   const only = args.filter((a) => !a.startsWith('--'));
-  const shots = only.length ? only : ['shelfPhone', 'vote', 'result'];
+  // Desktop FIRST: the vote shot's wizard leaves a live draw behind, which the
+  // Start tab would then show as an unfinished session ticket.
+  const shots = only.length ? only : ['desktop', 'shelfPhone', 'vote', 'result'];
   for (const s of shots) if (!VIEWPORTS[s]) fail(`unknown shot '${s}' (have: ${Object.keys(VIEWPORTS).join(', ')})`);
 
   const dataDir = tempDataDir();
@@ -670,6 +677,10 @@ async function main() {
           await cdp.send('Emulation.setDeviceMetricsOverride', VIEWPORTS.result);
           await navigate(cdp, `${BASE}/round/${rid}/session/${sessionIds[2]}`);
           await assertResultScreen(cdp);
+        } else if (shot === 'desktop') {
+          // The hub's Start tab; desktopCrop() refuses a page with no rail/CTA.
+          await cdp.send('Emulation.setDeviceMetricsOverride', VIEWPORTS.desktop);
+          await navigate(cdp, `${BASE}/round/${rid}`);
         } else {
           await navigate(cdp, `${BASE}/round/${rid}/regal`);
         }
