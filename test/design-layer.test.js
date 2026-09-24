@@ -409,3 +409,49 @@ test('designIs answers for the design in force, and only that one', () => {
   dom.run('applyDesign("a-design-that-was-retired")');
   assert.equal(dom.run('designIs("' + FACE_DESIGN + '")'), true);
 });
+
+/* ------------------- re-rendering on a design change (#1266) ------------------ */
+/* A screen that branches on designIs() builds its markup once. Without a
+ * re-render, a design change while it is on display leaves the old markup under
+ * the new stylesheet. The three cases below are the ones where a re-render
+ * would be WRONG, and each is a way the obvious "just call currentView()" fix
+ * breaks: before the first route (it would render the default home view over
+ * the cold load), during a chooser preview (it would rebuild the chooser and
+ * lose the pick), and from inside a view's own render (it would re-enter). */
+
+const spyRenders = (dom) => { dom.run('globalThis.__renders = 0; currentView = () => { globalThis.__renders++; }'); };
+const renders = (dom) => dom.run('globalThis.__renders');
+
+test('a committed design change re-renders the screen, once, and only once a route has rendered', (t) => {
+  const dom = boot(t);
+  dom.run('applyDesign("klassisch")');
+  spyRenders(dom);
+  dom.run('applyDesign("tisch")');
+  assert.equal(renders(dom), 0, 'before the first route there is no screen to re-render');
+  dom.run('designViewsReady()');
+  dom.run('applyDesign("klassisch")');
+  assert.equal(renders(dom), 1, 'a real change re-renders');
+  dom.run('applyDesign("klassisch")');
+  assert.equal(renders(dom), 1, 'the same design again is not a change');
+});
+
+test('a preview repaints without committing, so the save re-renders the screen underneath', (t) => {
+  const dom = boot(t);
+  dom.run('applyDesign("klassisch"); designViewsReady()');
+  spyRenders(dom);
+  dom.run('applyDesign("tisch", { preview: true })');
+  assert.equal(root(dom).dataset.design, 'tisch', 'the preview is painted');
+  assert.equal(renders(dom), 0, 'a preview never re-renders');
+  dom.run('applyDesign("tisch")');
+  assert.equal(renders(dom), 1, 'committing the previewed design re-renders what was built under the old one');
+});
+
+test('a view that sets the design as part of its own render does not re-enter itself', (t) => {
+  const dom = boot(t);
+  dom.run('applyDesign("tisch"); designViewsReady()');
+  spyRenders(dom);
+  dom.run('applyDesign("klassisch", { rendering: true })');
+  assert.equal(renders(dom), 0);
+  dom.run('applyDesign("klassisch")');
+  assert.equal(renders(dom), 0, 'and the design it rendered under is now the committed one');
+});

@@ -89,10 +89,81 @@ function setError(card, msg) {
 // clearTokens() first, so isLoggedIn() is already false by then.
 const authScreensAvailable = () => accountsActive() && !isLoggedIn();
 
+/* Der Tisch's sign-in (#1266, T5.1 / T5.4). The design composes login and
+   register as a SPLIT SCREEN: a felt promise panel beside the walnut form, and
+   the form headed by an „Anmelden | Registrieren" segmented control in place
+   of the logo and the two cross-links. Every other design — Klassisch above
+   all — takes the `false` branch of each ternary below and renders exactly the
+   markup it always has.
+
+   What the split does NOT change: the passkey stays below the submit (the
+   operator's 2026-09-24 ruling names that exact reordering as not the design's
+   to make), forgot-password keeps its link, and the sheet's „Link schicken"
+   card is not drawn at all — there is no magic-link login behind it. */
+
+// Only these two screens take the split; forgot-password and the terminal
+// screens keep the single card, which the sheet never redraws.
+const authSplit = () => designIs('tisch');
+
+// The promise panel: decorative copy only, no control in it. The BGG badge is
+// an image rather than a link on purpose — the site footer under this very
+// card already carries the linked badge, and a link here would put a tab stop
+// between the visitor and the form they came for.
+function authPromiseHtml() {
+  const points = [
+    ['ti-layout-grid', 'auth.promise.pointShelf'],
+    ['ti-tornado', 'auth.promise.pointWhirl'],
+    ['ti-history', 'auth.promise.pointChronicle'],
+  ];
+  return `<div class="auth-promise">
+      <p class="auth-promise__plate">${esc(t('app.title'))}</p>
+      <p class="auth-promise__claim">${esc(t('auth.promise.claim'))}</p>
+      <p class="auth-promise__lede">${esc(t('auth.promise.lede'))}</p>
+      <ul class="auth-promise__points">${points.map(([icon, key]) =>
+        `<li><span class="auth-promise__icon"><i class="ti ${icon}" aria-hidden="true"></i></span>${esc(t(key))}</li>`).join('')}</ul>
+      <p class="auth-promise__trust">
+        <span class="auth-promise__claimlet"><i class="ti ti-eye-off" aria-hidden="true"></i>${esc(t('auth.promise.noTracking'))}</span>
+        <span class="auth-promise__claimlet" data-operator-only hidden><i class="ti ti-shield" aria-hidden="true"></i>${esc(t('auth.promise.eu'))}</span>
+        <img class="auth-promise__bgg" src="/icons/powered-by-bgg.png" width="900" height="264" alt="Powered by BGG" />
+      </p>
+    </div>`;
+}
+
+// The segmented control. Links, not a tablist: each segment is a route with
+// its own URL (#501), so history, deep links and a new-tab click behave
+// exactly as the cross-links they replace. The current one is inert (navLink
+// with no handler) and marked aria-current.
+function authSegHtml() {
+  return `<nav class="auth-seg" aria-label="${esc(t('auth.seg.label'))}">
+        <a class="auth-seg__item" data-seg="login">${esc(t('auth.seg.login'))}</a>
+        <a class="auth-seg__item" data-seg="register">${esc(t('auth.seg.register'))}</a>
+      </nav>`;
+}
+
+function wireAuthSplit(card, current) {
+  const go = { login: () => showLogin(), register: () => showRegister() };
+  card.querySelectorAll('.auth-seg__item').forEach((seg) => {
+    const which = seg.dataset.seg;
+    const on = which === current;
+    if (on) seg.setAttribute('aria-current', 'page');
+    seg.classList.toggle('is-on', on);
+    navLink(seg, `/${which}`, on ? undefined : go[which]);
+  });
+  // The EU-hosting claim is true only of the operator's configured instance —
+  // the same gate, and the same flag, as the landing's chip (views-landing.js).
+  const eu = card.closest('.auth').querySelector('.auth-promise [data-operator-only]');
+  if (eu) withAppConfig((cfg) => { eu.hidden = !(cfg && cfg.footer); });
+}
+
+// Wrap a split screen's form beside the promise; a single card is returned as-is.
+const authFrame = (split, formHtml) =>
+  (split ? `<div class="auth-split">${authPromiseHtml()}${formHtml}</div>` : formHtml);
+
 function showLogin() {
   if (!authScreensAvailable()) return showHome();
-  openAuth(showLogin, `<form class="auth__card" autocomplete="on">
-      <div class="auth__logo"><i class="ti ti-tornado" aria-hidden="true"></i></div>
+  const split = authSplit();
+  openAuth(showLogin, authFrame(split, `<form class="auth__card" autocomplete="on">
+      ${split ? authSegHtml() : '<div class="auth__logo"><i class="ti ti-tornado" aria-hidden="true"></i></div>'}
       <h1 class="auth__title">${esc(t('auth.login.title'))}</h1>
       <p class="auth__sub muted">${esc(t('auth.login.sub'))}</p>
       <div class="field">
@@ -124,15 +195,16 @@ function showLogin() {
       </div>
       <div class="auth__links">
         <button class="link-btn" type="button" id="toForgot">${esc(t('auth.login.forgot'))}</button>
-        <button class="link-btn" type="button" id="toRegister">${esc(t('auth.login.toRegister'))}</button>
+        ${split ? '' : `<button class="link-btn" type="button" id="toRegister">${esc(t('auth.login.toRegister'))}</button>`}
       </div>
-    </form>`, (card) => {
+    </form>`), (card) => {
     const form = card.closest('.auth').querySelector('form');
     const ident = card.querySelector('#authEmail');
     const pw = card.querySelector('#authPassword');
     const submit = card.querySelector('button[type=submit]');
     card.querySelector('#toForgot').addEventListener('click', showForgot);
-    card.querySelector('#toRegister').addEventListener('click', showRegister);
+    if (split) wireAuthSplit(card, 'login');
+    else card.querySelector('#toRegister').addEventListener('click', showRegister);
     wirePasskeyLogin(card);
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -206,8 +278,9 @@ function wirePasskeyLogin(card) {
 
 function showRegister() {
   if (!authScreensAvailable()) return showHome();
-  openAuth(showRegister, `<form class="auth__card" autocomplete="on">
-      <div class="auth__logo"><i class="ti ti-tornado" aria-hidden="true"></i></div>
+  const split = authSplit();
+  openAuth(showRegister, authFrame(split, `<form class="auth__card" autocomplete="on">
+      ${split ? authSegHtml() : '<div class="auth__logo"><i class="ti ti-tornado" aria-hidden="true"></i></div>'}
       <h1 class="auth__title">${esc(t('auth.register.title'))}</h1>
       <p class="auth__sub muted">${esc(t('auth.register.sub'))}</p>
       <div class="field">
@@ -246,16 +319,17 @@ function showRegister() {
         <a href="/nutzungsbedingungen" target="_blank" rel="noopener">${esc(t('auth.register.termsLinkLabel'))}</a>.
         ${esc(t('auth.register.privacyPre'))}
         <a href="/datenschutz" target="_blank" rel="noopener">${esc(t('auth.register.privacyLinkLabel'))}</a>.</p>
-      <div class="auth__links">
+      ${split ? '' : `<div class="auth__links">
         <button class="link-btn" type="button" id="toLogin">${esc(t('auth.register.toLogin'))}</button>
-      </div>
-    </form>`, (card) => {
+      </div>`}
+    </form>`), (card) => {
     const form = card.closest('.auth').querySelector('form');
     const email = card.querySelector('#regEmail');
     const user = card.querySelector('#regUser');
     const pw = card.querySelector('#regPw');
     const submit = card.querySelector('button[type=submit]');
-    card.querySelector('#toLogin').addEventListener('click', showLogin);
+    if (split) wireAuthSplit(card, 'register');
+    else card.querySelector('#toLogin').addEventListener('click', showLogin);
     // Reveal the legal line only where those pages resolve (see the markup above).
     const termsLine = card.querySelector('.auth__terms');
     if (termsLine) withAppConfig((cfg) => { termsLine.hidden = !(cfg && cfg.footer); });

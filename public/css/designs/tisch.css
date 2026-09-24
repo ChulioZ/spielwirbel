@@ -3276,25 +3276,26 @@
    Sources: Tisch-T5-Konto.dc.html (T5.1 Anmelden, T5.2 Konto, T5.3
    Auswahlkarte, T5.4 Telefon).
 
-   Three things the sheet draws that this slice deliberately does NOT build,
-   by the operator's decision (2026-09-22) that „the sheet's intent is the
-   design, not the ordering":
+   Two things the sheet draws that are deliberately NOT built:
 
    - T5.1 puts the passkey button ABOVE the e-mail form as the primary way in.
-     It stays where it is, below the submit — and therefore stays the raised
-     wood control, with the gold reserved for the form's own primary. Two gold
-     buttons stacked, the lower one louder, is worse than either order.
-   - T5.1 and T5.4 head the card with an „Anmelden | Registrieren" segmented
-     control. The app's two cross-links keep their place at the foot of the
-     card and are skinned there.
+     It stays where it is, below the submit. That is the operator's own example
+     (ruling of 2026-09-24): swapping passkey and password is an incidental
+     reordering of identical controls, not the design owning its layout, and an
+     order that changed with the design would be nonsense. Staying below also
+     keeps it the raised wood control, with the gold reserved for the form's
+     own primary.
    - T5.1's „Lieber ohne Passwort? · Link schicken" card has no feature behind
      it at all. This app has no magic-link login — the only mailed links are
-     verify, reset and address-change — so there is nothing here to paint.
+     verify, reset and address-change — so there is nothing here to paint. A
+     magic-link login would be a feature, decided on its own.
 
-   What IS taken from the sheet is its MATERIALS and where each one belongs:
-   the sign-in on felt, the form on a walnut plank, the design posters printed
-   on paper. Every one of those lands on an element the app already renders,
-   so this slice adds no markup and no copy — it is paint from end to end.
+   What IS taken from the sheet: its MATERIALS (the sign-in on felt, the form
+   on a walnut plank, the design posters printed on paper) and, since #1266,
+   T5.1's COMPOSITION — the split screen and the segmented control, in the
+   block after the plank below. That half is markup, built in views-auth.js
+   behind designIs('tisch'); #1193's reading that the segmented control was
+   out of scope is withdrawn by that issue.
    =========================================================================== */
 
 /* --- The sign-in plank (T5.1, T5.4) ---------------------------------------
@@ -3304,15 +3305,10 @@
    has to reach past `.app`'s gutter and under the footer, which a margin on
    the centred card cannot do.
 
-   This is T5.4's reading, and it ships at BOTH widths. T5.1 splits the 1440
-   card into a 620px felt promise beside the form, and that is not buildable
-   here: the card's children are flat siblings with no wrapper to make a
-   column of, and the promise panel's content — three selling points, the
-   trust line, the BGG badge — does not exist on this screen at all. A grid
-   would have to share row heights between the two halves, so the heading
-   stack would be spaced out by whichever form it sits next to, differently on
-   login and register. The promise copy belongs to the public surfaces (#1198)
-   that own the landing's pitch; when it lands, the split is one wrapper away. */
+   The felt page ships at every width and on every auth screen. On login and
+   register the form additionally sits beside T5.1's promise panel — the
+   split block below (#1266) — while forgot-password and the terminal screens
+   keep the single plank the sheet never redraws. */
 :root[data-design="tisch"][data-scheme="dark"] body.auth-screen {
   background-color: var(--felt-deep);
   background-image:
@@ -3351,6 +3347,236 @@
 :root[data-design="tisch"][data-scheme="dark"] .auth__or::before,
 :root[data-design="tisch"][data-scheme="dark"] .auth__or::after {
   background: var(--gold-soft);
+}
+
+/* --- The split sign-in (#1266, T5.1 at 1440, T5.4 at 390) -----------------
+   Login and register only (views-auth.js `authFrame`): a felt PROMISE panel
+   beside the walnut form, and the form headed by an „Anmelden | Registrieren"
+   segmented control in place of the logo and the two cross-links.
+
+   DOM order is the picture's order at both widths — the panel comes first,
+   so it sits LEFT of the form on a desktop and ABOVE it on a phone. Nothing
+   here reorders anything (no `order`, no grid placement).
+
+   Below 860px the panel collapses to T5.4's reading, the wordmark plate and
+   the claim above the card; the lede, the selling points and the trust line
+   are decoration a phone has no room for, and the footer under the card
+   already carries the trust claims and the linked BGG badge. */
+:root[data-design="tisch"][data-scheme="dark"] .auth-split {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: 100%;
+  max-width: 420px;
+}
+:root[data-design="tisch"][data-scheme="dark"] .auth-split .auth__card {
+  max-width: none;
+}
+:root[data-design="tisch"][data-scheme="dark"] .auth-promise {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  color: var(--felt-ink);
+}
+:root[data-design="tisch"][data-scheme="dark"] .auth-promise p { margin: 0; }
+/* The wordmark on the brass plate — the same metal as the hub's CTA and the
+   round cards' name plates. --on-accent on the plate: 12.06:1 / 7.80:1 on its
+   two stops (the token block's own figures). */
+:root[data-design="tisch"][data-scheme="dark"] .auth-promise__plate {
+  align-self: flex-start;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(180deg, var(--brass-hi), var(--gold-deep));
+  color: var(--on-accent);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--text-sm);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+/* The claim is --felt-ink, never gold: A1 rules gold out as text on the
+   felt's light stop (4.20:1), and at 30px it would pass only as large text —
+   the ink clears normal-text AA on both stops. 30px at every width, not the
+   sheet's 42: T5.1's panel is 620px wide, the app's column puts ~400 there,
+   and at 40px the claim broke over four lines (measured at 1440). */
+:root[data-design="tisch"][data-scheme="dark"] .auth-promise__claim {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--text-3xl);
+  line-height: 1.1;
+}
+:root[data-design="tisch"][data-scheme="dark"] .auth-promise__lede,
+:root[data-design="tisch"][data-scheme="dark"] .auth-promise__points,
+:root[data-design="tisch"][data-scheme="dark"] .auth-promise__trust {
+  display: none;
+}
+
+/* The segmented control (T1.5's tray, the same one the off-shelf lists head
+   themselves with): the current route struck as the brass plate, the other
+   gold on the sunken wood. Full width on a phone, where T5.4 stretches it;
+   as wide as its labels beside the panel. */
+:root[data-design="tisch"][data-scheme="dark"] .auth-seg {
+  display: flex;
+  gap: 3px;
+  margin: 0 0 18px;
+  padding: 3px;
+  border: 1px solid var(--control-edge);
+  border-radius: var(--radius-md);
+  background: var(--sunken);
+}
+:root[data-design="tisch"][data-scheme="dark"] .auth-seg__item {
+  display: inline-flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  /* 12px, not the sheet's 20, and a label may WRAP inside its 44px: at 360px
+     the Spanish pair („Iniciar sesión | Registrarse") overran the tray by 3px
+     at 18px padding, and by 19px at 320 even at 12. Measured over all nine
+     locales at 320 and 360, nothing overflows now. The desktop tray is as
+     wide as its labels, so it takes the sheet's padding back below. */
+  min-width: 0;
+  padding: 4px 12px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  font-weight: 800;
+  line-height: 1.15;
+  text-align: center;
+  color: var(--gold);
+  text-decoration: none;
+}
+:root[data-design="tisch"][data-scheme="dark"] .auth-seg__item:hover:not(.is-on) {
+  background: var(--control-fill);
+}
+:root[data-design="tisch"][data-scheme="dark"] .auth-seg__item.is-on {
+  background: linear-gradient(180deg, var(--brass-hi), var(--gold-deep));
+  color: var(--on-accent);
+  cursor: default;
+}
+/* The heading stack reads from the left edge in the split, under the tray,
+   as T5.1 sets „Willkommen zurück." — centred, it would float between a
+   left-aligned control and left-aligned fields. */
+:root[data-design="tisch"][data-scheme="dark"] .auth-split .auth__title,
+:root[data-design="tisch"][data-scheme="dark"] .auth-split .auth__sub {
+  text-align: left;
+}
+:root[data-design="tisch"][data-scheme="dark"] .auth-split .auth__title {
+  margin-top: 0;
+}
+
+@media (min-width: 860px) {
+  /* One board: the felt panel and the walnut form share a gold rim and one
+     cast, so the pair reads as a single piece set down on the table rather
+     than two cards that happen to touch. The form's own rim and cast go —
+     the board carries them. */
+  :root[data-design="tisch"][data-scheme="dark"] .auth-split {
+    flex-direction: row;
+    align-items: stretch;
+    gap: 0;
+    max-width: none;
+    border: 1px solid var(--gold-edge);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: 0 18px 40px var(--cast-deep);
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .auth-split .auth__card {
+    flex: 1;
+    min-width: 0;
+    padding: 40px 44px;
+    border: 0;
+    border-radius: 0;
+    box-shadow: inset 0 0 0 1px var(--wood-grain);
+  }
+  /* T5.1's 620 of 1440 is 43%; the app's column is 1000 wide, so the panel
+     takes the same share rather than the same pixels. The 5px brass rule
+     between the two halves is the sheet's own. */
+  :root[data-design="tisch"][data-scheme="dark"] .auth-promise {
+    flex: 0 0 44%;
+    gap: 20px;
+    padding: 40px 36px 30px;
+    border-right: 5px solid var(--gold-edge);
+    background-color: var(--felt-deep);
+    background-image:
+      var(--felt-weave),
+      radial-gradient(90% 120% at 30% 0%, var(--felt), var(--felt-deep) 74%);
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .auth-promise__lede {
+    display: block;
+    max-width: 44ch;
+    font-size: var(--text-md);
+    line-height: 1.6;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .auth-promise__points {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 4px 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: var(--text-md);
+    font-weight: 600;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .auth-promise__points li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  /* Gold on the DEEP felt is a glyph on its own disc, not text, so A1 does
+     not bind; the 1px gold ring is the disc's edge. */
+  :root[data-design="tisch"][data-scheme="dark"] .auth-promise__icon {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 38px;
+    height: 38px;
+    border: 1px solid var(--gold);
+    border-radius: 50%;
+    background: var(--felt-deep);
+    color: var(--gold);
+    font-size: 19px;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .auth-promise__trust {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 16px;
+    margin-top: auto;
+    padding-top: 8px;
+    font-size: var(--text-sm);
+    font-weight: 700;
+    color: var(--felt-ink-soft);
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .auth-promise__claimlet {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+  }
+  /* Ships `hidden` and is revealed only on the operator's configured instance
+     (views-auth.js): the display rule above would otherwise beat the attribute
+     and publish „EU-Hosting" everywhere
+     (.claude/rules/hidden-attribute-vs-display-rule.md). */
+  :root[data-design="tisch"][data-scheme="dark"] .auth-promise__claimlet[hidden] {
+    display: none;
+  }
+  /* The badge keeps its paper ground: the PNG is drawn for a light page. */
+  :root[data-design="tisch"][data-scheme="dark"] .auth-promise__bgg {
+    display: block;
+    width: 110px;
+    height: auto;
+    padding: 5px 9px;
+    border-radius: var(--radius-sm);
+    background: var(--paper);
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .auth-seg {
+    align-self: flex-start;
+    width: fit-content;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .auth-seg__item {
+    flex: none;
+    padding: 0 20px;
+    white-space: nowrap;
+  }
 }
 
 /* --- The design posters (T5.2, T5.3, T5.4) ---------------------------------

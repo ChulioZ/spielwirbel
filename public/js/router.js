@@ -231,6 +231,8 @@ function routeTo(pathname) {
     resolveRoute(pathname)();
   } finally {
     routing = false;
+    // From here on a committed design change has a screen to re-render.
+    designViewsReady();
   }
 }
 
