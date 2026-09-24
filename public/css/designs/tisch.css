@@ -4304,16 +4304,22 @@
    which lifts the question sentence each message already opens with; nothing
    here or there adds copy.
 
-   What this does NOT build, and why, is in the PR: a title and × on the
-   anchored popover (a new control), T15b's toast tones and its „Rückgängig"
-   action (toast() carries no type and no action — every call site would have
-   to say which it is), errors that stay until dismissed (the same), the felt
-   marker picker (it is a SCREEN, not an overlay), and T15a's per-sheet row
-   bodies wherever the app's sheet is a form rather than a list.
+   What this does NOT build, and why, is in the PR: T15b's toast tones and its
+   „Rückgängig" action (toast() carries no type and no action — every call site
+   would have to say which it is), errors that stay until dismissed (the same),
+   and the felt marker picker (it is a SCREEN, not an overlay). The popover's
+   title and × and the form editors' row bodies, which #1195 left out, were
+   built by #1273 — see „The desktop appearance" and „Rows" below.
 
    Every rule is scheme-gated, including the geometry: the paper these rules
    dress only exists while the colour block applies, and a docked sheet whose
-   paper did not apply would be a new shape in the round's own palette.
+   paper did not apply would be a new shape in the round's own palette. The
+   one exception is #1273's popover head and editor rows: those are MARKUP the
+   JS builds whenever the design is worn, so their geometry must hold in a
+   light round too, where the gated block does not match. They paint from the
+   app's own tokens (--control-fill, --line, --accent, --brand-edge …), which
+   the overlay re-point above turns into the paper family on this design and
+   which stay the round's palette elsewhere — never from a --paper-* name.
    =========================================================================== */
 
 /* --- The rest of the overlay's re-point ------------------------------------
@@ -4367,7 +4373,7 @@
    18px edge, a 20px display title, a 34px close disc with a hairline rim. The
    title size is the SHEET's at both widths: the app's centred dialog above
    640px is the same element, and T15a gives the small-caps title only to the
-   anchored popover, which has no title at all (see the header). */
+   anchored popover, whose head is below (#1273). */
 /* A SHEET is flat paper, where the popover, dialog and menu keep #1188's
    paper-to-raised sweep. The sheet's sticky head and action bar need an opaque
    ground and take it from --page-bg, i.e. flat --paper (#1193) — so over the
@@ -4479,10 +4485,59 @@
    the same edge on the plate). The 300px width is already the app's
    `.popover { max-width: 300px }`, so nothing here re-sizes the card — and must
    not: the tags, owners and cover cards carry their own caps
-   (.claude/rules/popover-vs-sheet-editors.md §4). */
+   (.claude/rules/popover-vs-sheet-editors.md §4).
+
+   An EDITOR's popover carries T15a's head (#1273): the sheet's title in 15px
+   small caps and its ×, over a hairline — `editorPopoverHead` in sheet.js,
+   built only under this design. The head bleeds to the card's edge through the
+   card's own 8px padding, and it is `flex: none`: the capped cards (tags,
+   owners, filter) give way through a designated child, and a head that shrank
+   with them would clip the title before the list lost a row. The „…" menus
+   (`.popover--menu`) never go through openEditor, so they carry no head.
+   Ungated, and painted from app tokens — see this section's header. */
 :root[data-design="tisch"][data-scheme="dark"] .popover {
   border-color: var(--gold-edge);
   border-radius: var(--radius-xl);
+}
+:root[data-design="tisch"] .popover__head {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: -8px -8px 4px;
+  padding: 6px 6px 6px 14px;
+  border-bottom: 1px solid var(--line);
+}
+:root[data-design="tisch"] .popover__title {
+  margin: 0;
+  min-width: 0;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+/* 26px as drawn — past the 24px floor of SC 2.5.8 — in the soft paper ink. */
+:root[data-design="tisch"] .popover__close {
+  flex: none;
+  margin-left: auto;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--ink-soft);
+  font-size: 16px;
+  cursor: pointer;
+}
+:root[data-design="tisch"] .popover__close:hover {
+  background: var(--sunken);
+  color: var(--ink);
 }
 
 /* --- The confirm dialog (T15b.1) -------------------------------------------
@@ -4564,7 +4619,7 @@
   border-top: 1px solid var(--control-edge);
 }
 
-/* --- Rows in a list sheet (T15a) --------------------------------------------
+/* --- Rows: the list sheets and the form editors (T15a) ---------------------
    The scanning lists — BGG import, „Spiele verschieben", the wish and
    off-shelf pickers — are `.ds-row`s, and T15a draws a sheet's rows as raised
    slips on the sheet's paper rather than as the page's cards: 44px, a hairline,
@@ -4575,6 +4630,151 @@
   min-height: 44px;
   background: var(--paper-raised);
   border-color: var(--line);
+}
+
+/* The FORM editors' rows (#1273) — players, owners and the cover editor, which
+   game-editors.js builds as `.editor-row`s under this design only. The same
+   raised slip in both presentations (`.editor` in the phone's sheet, the
+   `.popover--*` card at its trigger), because T15a's content does not change
+   between the two. A row is a label with its value or control; one that IS a
+   button carries an icon and the action's own words; a toggle (the owners)
+   says its state with a tick, never with the fill alone.
+
+   UNGATED, unlike the rules around them, because the markup exists whenever the
+   design is worn — in a light round too, until the flip (#1202). Every colour
+   is an app token the overlay re-point turns into paper here: --control-fill is
+   --paper-raised, --accent is --paper-faint, --brand-edge is --gold-edge. */
+:root[data-design="tisch"] .editor-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+:root[data-design="tisch"] .editor-rows[hidden] { display: none; }
+:root[data-design="tisch"] .editor-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  min-height: 44px;
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--control-fill);
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.3;
+  text-align: left;
+}
+:root[data-design="tisch"] button.editor-row { cursor: pointer; }
+:root[data-design="tisch"] button.editor-row:hover { background: var(--brand-tint); }
+:root[data-design="tisch"] .editor-row__label { flex: 1 1 auto; min-width: 0; }
+:root[data-design="tisch"] .editor-row__icon {
+  flex: none;
+  width: 30px;
+  text-align: center;
+  font-size: 19px;
+  color: var(--accent);
+}
+:root[data-design="tisch"] .editor-row--danger,
+:root[data-design="tisch"] .editor-row--danger .editor-row__icon { color: var(--danger); }
+:root[data-design="tisch"] .editor-row__avatar {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  font-size: 12px;
+}
+/* The tick is the state: hidden (not absent, so the row does not reflow when it
+   toggles) while the seat does not own the box. The brass rim beside it is the
+   second cue, never the only one. */
+:root[data-design="tisch"] .editor-row__tick {
+  flex: none;
+  margin-left: auto;
+  font-size: 18px;
+  color: var(--accent);
+  visibility: hidden;
+}
+:root[data-design="tisch"] .editor-row[aria-pressed="true"] { border-color: var(--brand-edge); }
+:root[data-design="tisch"] .editor-row[aria-pressed="true"] .editor-row__tick { visibility: visible; }
+/* The players row keeps its two fields — a stepper-like pair stays a pair of
+   fields; only its seat moved into the row. */
+:root[data-design="tisch"] .editor-row__control {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+/* The app's `.input` is a 51px field — in a 44px row it made the row 65px.
+   Only the block padding moves (the 18px text stays, which is what keeps iOS
+   from zooming on focus); the field takes the plain paper so it reads as a
+   well in the raised slip rather than as part of it. */
+:root[data-design="tisch"] .editor-row__control .input {
+  width: 56px;
+  padding: 4px 8px;
+  text-align: center;
+  background: var(--surface);
+}
+/* The edition-cover picker's toggle is cover-picker.js's own `.link-btn`, shared
+   with the add-game and import sheets; inside the cover EDITOR it stands as one
+   of the rows, so it is dressed as one here rather than re-built. */
+:root[data-design="tisch"] :is(.popover--image, .editor--image) .cover-picker__toggle {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  min-height: 44px;
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--control-fill);
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+}
+:root[data-design="tisch"] :is(.popover--image, .editor--image) .cover-picker__toggle .ti {
+  width: 30px;
+  text-align: center;
+  font-size: 19px;
+  color: var(--accent);
+}
+/* The one primary, under the rows: a full-width plate, 48px in a sheet (T15a's
+   „Knöpfe 48 px") and the app's own button height in the smaller popover. */
+:root[data-design="tisch"] .editor-actions {
+  display: flex;
+  margin-top: 4px;
+}
+:root[data-design="tisch"] .editor-actions .btn { flex: 1 1 auto; }
+:root[data-design="tisch"] .sheet .editor-actions .btn { min-height: 48px; }
+/* The owners card gives way through its row list, exactly as it did through its
+   chip row: popover-only, because the sheet scrolls itself
+   (.claude/rules/popover-vs-sheet-editors.md §4). */
+:root[data-design="tisch"] .popover--owners .editor-rows {
+  flex: 1 1 auto;
+  min-height: 44px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* The FILTER panel keeps its controls — selects, a tri-state chip cloud per
+   vocabulary, a checkbox — because each one's semantics is the filter's (a
+   tri-state chip is not a check row). What T15a changes is their seat: each
+   select row and each chip section stands on a raised slip, so the panel reads
+   as the same row list as the three editors above. */
+:root[data-design="tisch"] :is(.popover--filter, .editor--filter) :is(.mfilter__row, .mfilter__group, .fpanel__group) {
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--control-fill);
+}
+:root[data-design="tisch"] :is(.popover--filter, .editor--filter) .fpanel__body { gap: 8px; }
+:root[data-design="tisch"] :is(.popover--filter, .editor--filter) .mfilter { gap: 8px; }
+:root[data-design="tisch"] :is(.popover--filter, .editor--filter) .fpanel__group + .mfilter {
+  border-top: 0;
+  padding-top: 0;
 }
 
 /* --- When a sheet cannot deliver (T15b.6) -----------------------------------
