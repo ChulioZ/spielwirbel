@@ -507,7 +507,7 @@ const NEWS = [
    */
   {
     revision: '2026-09-07',
-    kind: 'new',
+    kind: 'improved',
     de: {
       title: 'Welten: Wald und Sci-Fi als Design',
       body: 'Unter Design gibt es neben den Farben jetzt Welten. Wald und Sci-Fi '
@@ -622,7 +622,7 @@ const NEWS = [
    */
   {
     revision: '2026-09-05',
-    kind: 'new',
+    kind: 'improved',
     de: {
       title: 'Spiele in eine andere Runde kopieren',
       body: 'Ein Spiel kann jetzt in mehreren Runden stehen. In den '
