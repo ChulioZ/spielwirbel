@@ -35,7 +35,7 @@ function openPlayersPopover(ctx, anchor) {
       const digits = inp.value.replace(/\D/g, '');
       if (inp.value !== digits) inp.value = digits;
     }));
-    const okBtn = h(`<button class="btn btn--primary">${esc(t('common.ok'))}</button>`);
+    const okBtn = h(`<button class="btn btn--primary">${esc(t('common.apply'))}</button>`);
     const save = () => {
       const mn = parseInt(min.value, 10);
       const mx = parseInt(max.value, 10);
@@ -70,7 +70,7 @@ function openOwnersPopover(ctx, anchor) {
   openEditor(anchor, 'owners', t('detail.onboard.owners'), (el, close) => {
     const selected = new Set(game.ownerIds || []);
     el.appendChild(renderOwnerChips(round, selected));
-    const okBtn = h(`<button class="btn btn--primary">${esc(t('common.ok'))}</button>`);
+    const okBtn = h(`<button class="btn btn--primary">${esc(t('common.apply'))}</button>`);
     okBtn.addEventListener('click', () => {
       close();
       updateGame({ ownerIds: [...selected] });
@@ -138,7 +138,7 @@ function openTagsPopover(ctx, anchor) {
     input.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') { e.preventDefault(); create(); }
     });
-    const okBtn = h(`<button class="btn btn--primary">${esc(t('common.ok'))}</button>`);
+    const okBtn = h(`<button class="btn btn--primary">${esc(t('common.apply'))}</button>`);
     // OK commits unsubmitted input first (#249): typing a name and hitting OK
     // without clicking Hinzufügen used to discard it silently.
     okBtn.addEventListener('click', async () => {

@@ -6,7 +6,7 @@
  * nothing in the suite drove it before this: the route specs prove what the
  * server SENDS, and nothing proved what the panel DOES with it. That gap is
  * exactly where the panel's own additions live — which card a tile lands on, the
- * design histogram's label resolution, the breakdown lines, the shares and their
+ * per-account design tile, the breakdown lines, the shares and their
  * zero-denominator guard, and the storage card. The server has an opinion about
  * none of it (`.claude/rules/admin-kennzahlen-card.md`: the server reports facts,
  * the row builders hold the opinions).
@@ -24,9 +24,10 @@ const { JSDOM } = require('jsdom');
 
 const ROOT = path.join(__dirname, '..');
 
-// SIX design keys, one more than the old „+N weitere" cap, so a re-capped list
-// would visibly lose one.
-const DESIGNS = { forest: 4, '#f4f1ea': 2, 'not-a-design': 1, none: 3, collage: 1, ocean: 1 };
+// Per ACCOUNT since #1201, keyed by the offered designs in registry order. The
+// counts sum to `adoption.accountsTotal` (40), never to `accounts.total` (42) —
+// the two are made to disagree below on purpose.
+const DESIGNS = { klassisch: 31, tisch: 9 };
 
 const STATUS = (over = {}) => ({
   metrics: {
@@ -54,7 +55,7 @@ const STATUS = (over = {}) => ({
       // Sums to roundsTotal, which the tile's own test asserts.
       roundsByFinished: { none: 5, one: 3, many: 2 },
     },
-    designs: { ...DESIGNS },
+    designAdoption: { byDesign: { ...DESIGNS }, switchedBack: 3 },
     social: { sharedRounds: 2, invitationsOpen: 1, friendships: 5 },
     demo: { live: 1, max: 5 },
     mail: { sent: 2, limit: 200 },
@@ -70,12 +71,11 @@ async function panel(routes = {}) {
   const html = fs.readFileSync(path.join(ROOT, 'public/admin.html'), 'utf8');
   /* `runScripts: 'dangerously'` and real <script> ELEMENTS, not `window.eval`.
      jsdom's eval does not put a script's top-level function declarations on the
-     window — so `resolveDesign` came back undefined and every design read
-     „unbekannt", which looks exactly like the resolver being broken. A real
-     browser does create those globals from a classic script, so this is the
-     harness matching the page rather than a workaround. The page's own
-     <script src> tags are not fetched (no `resources: 'usable'`), which is why
-     the two this test needs are injected below. */
+     window, while a real browser does create those globals from a classic
+     script — so this is the harness matching the page rather than a
+     workaround. The page's own <script src> tags are not fetched (no
+     `resources: 'usable'`), which is why the one this test needs is injected
+     below. */
   const dom = new JSDOM(html, { runScripts: 'dangerously', url: 'https://example.test/admin.html' });
   const w = dom.window;
   /* `/me` is the boot probe: the page only enters the panel (and therefore only
@@ -100,7 +100,7 @@ async function panel(routes = {}) {
     const failed = answer && answer.__fail;
     return { ok: !failed, status: failed || 200, json: async () => answer };
   };
-  for (const src of ['public/js/round-designs.js', 'public/js/pages/admin.js']) {
+  for (const src of ['public/js/pages/admin.js']) {
     const el = w.document.createElement('script');
     el.textContent = fs.readFileSync(path.join(ROOT, src), 'utf8');
     w.document.body.appendChild(el);
@@ -257,42 +257,41 @@ test('no adoption tile carries a verdict', async (t) => {
   }
 });
 
-/* --------------------------- the design histogram ------------------------- */
+/* ------------------------ the design tile (#1201) ------------------------ */
 
-test('designs are resolved by the PANEL, and an unknown id reads „unbekannt"', async (t) => {
-  /* The server sends a raw histogram keyed by the stored id and never checks it
-     against the registry — round-designs.js's header says so, so that the design
-     list never becomes a cross-boundary contract. */
+test('Designs counts ACCOUNTS per design, headlined by the switch-back share', async (t) => {
+  /* The per-round histogram (#941) is gone: once designs belong to accounts, a
+     round's stored background says nothing about what anybody sees. Every line
+     divides by `adoption.accountsTotal` (40), NOT `accounts.total` (42) — the
+     fixture makes the two disagree so a renderer reaching for the instance-wide
+     figure cannot pass. */
   const { doc, dom } = await panel();
   t.after(() => dom.window.close());
   const row = adoptionTiles(doc).find((x) => x.label === 'Designs');
   assert.ok(row, 'no Designs row');
-  // 10 rounds on this card, 3 of them wearing nothing.
-  assert.equal(row.value, '7 / 10');
-  const lines = Object.fromEntries(row.breakdown);
-  assert.equal(lines.forest, '4', 'a known world is named by its id');
-  assert.equal(lines.standard, '2',
-    'a LEGACY hex-only round resolves through the page-colour path to its design');
-  assert.equal(lines['ohne Design'], '3');
-  assert.equal(lines.Collage, '1');
-  assert.equal(lines.unbekannt, '1',
-    'an id the registry no longer knows must read „unbekannt", not echo the stored string');
-  assert.equal('not-a-design' in lines, false,
-    'the raw unknown id was echoed back as though it were a design');
+  assert.equal(row.value, '3 / 40', 'the headline is the switch-back share of the card\'s accounts');
+  assert.match(row.note, /zurückgewechselt/);
+  assert.match(row.note, /von 40/, 'the note must say what the share is out of');
+  assert.deepEqual(row.breakdown, [['klassisch', '31 / 40'], ['tisch', '9 / 40']],
+    'one line per offered design, in the order the server sent them');
+  assert.equal(row.pill, 'pill', 'an adoption share carries the neutral pill');
 });
 
-test('the design list is UNCAPPED — every entry renders', async (t) => {
-  /* The old „+N weitere" tail hid entries for a list bounded by a code-owned
-     registry, which cannot grow without a code change. SIX keys in the fixture,
-     one past the old cap of five. */
-  const { doc, dom } = await panel();
+test('the round histogram does not come back beside the account tile', async (t) => {
+  /* An absence assertion over the RENDERED page: a stale `designs` block in the
+     payload must not resurrect „ohne Design"/„Collage" lines, which only ever
+     described rounds. */
+  const { doc, dom } = await panel({
+    '/status': { status: STATUS({ designs: { forest: 4, none: 3, collage: 1 } }) },
+  });
   t.after(() => dom.window.close());
-  const row = adoptionTiles(doc).find((x) => x.label === 'Designs');
-  assert.equal(row.breakdown.length, Object.keys(DESIGNS).length,
-    `the list was truncated: ${row.breakdown.map((l) => l.join(' ')).join(', ')}`);
-  assert.equal(/weitere/.test(JSON.stringify(row.breakdown)), false, 'the „+N weitere" tail is back');
-  const counts = row.breakdown.map(([, n]) => Number(n));
-  assert.deepEqual(counts, [...counts].sort((a, b) => b - a), 'biggest first');
+  const text = doc.getElementById('adoptionGrid').textContent;
+  for (const gone of ['ohne Design', 'Collage', 'forest', 'unbekannt', 'Runden mit Design']) {
+    assert.equal(text.includes(gone), false, `„${gone}" — the per-round histogram is back`);
+  }
+  const html = fs.readFileSync(path.join(ROOT, 'public/admin.html'), 'utf8');
+  assert.equal(/round-designs\.js/.test(html), false,
+    'admin.html still loads the round registry the old histogram resolved labels with');
 });
 
 /* ------------------------------ the new shares ---------------------------- */
@@ -355,7 +354,7 @@ test('a fresh instance renders „—", never „0 / 0" or NaN', async (t) => {
     rounds: { total: 0 },
     content: { games: 0, activeGames: 0, members: 0, sessions: 0, sessionsFinished: 0 },
     adoption: Object.fromEntries(Object.keys(zero.adoption).map((k) => [k, 0])),
-    designs: {},
+    designAdoption: { byDesign: { klassisch: 0 }, switchedBack: 0 },
     social: { sharedRounds: 0, invitationsOpen: 0, friendships: 0 },
   };
   const { doc, dom } = await panel({ '/status': { status: STATUS(empty) } });
@@ -371,8 +370,8 @@ test('a fresh instance renders „—", never „0 / 0" or NaN', async (t) => {
   for (const label of ['Regal-Nutzung', 'Designs', 'Sessions']) {
     assert.equal(rows.find((x) => x.label === label).value, '—', `${label} did not render —`);
   }
-  assert.deepEqual(rows.find((x) => x.label === 'Designs').breakdown, [],
-    'an empty histogram renders no lines');
+  assert.deepEqual(rows.find((x) => x.label === 'Designs').breakdown, [['klassisch', '—']],
+    'an offered design keeps its line on an empty instance, as „—" rather than 0 / 0');
 });
 
 /* ------------------------------ the storage card -------------------------- */
@@ -466,7 +465,9 @@ test('every share divides by the ADOPTION denominator, not the instance-wide one
   const denominatorOf = (v) => (v === '—' ? null : Number(v.split('/')[1].trim()));
 
   assert.equal(denominatorOf(byLabel['Regal-Nutzung'].value), 10, 'Regal-Nutzung used rounds.total');
-  assert.equal(denominatorOf(byLabel.Designs.value), 10, 'Designs used rounds.total');
+  // Per ACCOUNT since #1201, so its denominator is accountsTotal (40), never the
+  // instance-wide accounts.total (42).
+  assert.equal(denominatorOf(byLabel.Designs.value), 40, 'Designs used accounts.total');
   assert.equal(denominatorOf(byLabel['Teilen & Freunde'].value), 10,
     'Teilen & Freunde used rounds.total');
   assert.equal(denominatorOf(byLabel['Spiele-Quellen & Titelbilder'].value), 80,

@@ -709,8 +709,12 @@ if (!process.env.DATABASE_URL) {
       'the session adoption figures were empty without the admin escape — not reading under atx()');
     assert.ok(out.adoption.roundsWithTags >= 1,
       'the round adoption figures were empty without the admin escape');
-    assert.ok(Object.values(out.designs).reduce((a, b) => a + b, 0) >= 1,
-      'the design histogram was invisible without the admin escape');
+    /* The design tile (#1201) reads `users`, which carries no RLS — so it is
+       plain knex, not atx(), and must still come back under a plain role. The
+       seeded account above wears the face, so a zero would be a dropped read. */
+    assert.ok(Object.values(out.designAdoption.byDesign).reduce((a, b) => a + b, 0) >= 1,
+      'the design tile saw no account under a plain role');
+    assert.equal(typeof out.designAdoption.switchedBack, 'number');
     assert.equal(typeof out.adoption.roundsWithRetired, 'number');
     assert.equal(typeof out.accounts.withAvatar, 'number');
     // session_vote_links is deliberately NOT RLS-scoped, so this one is read on

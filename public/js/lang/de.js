@@ -15,12 +15,14 @@ I18N.de = {
   'footer.trustNoTracking': 'Kein Tracking, keine Werbung, keine Fremd-Skripte',
   'common.back': 'Zurück',
   'common.delete': 'Löschen',
-  'common.ok': 'OK',
+  'common.apply': 'Übernehmen',
+  'common.add': 'Hinzufügen',
   'common.close': 'Schließen',
   'common.cancel': 'Abbrechen',
   'common.confirm': 'Bestätigen',
-  // Neutrale Überschrift des Bestätigungsdialogs (#939) – das echte Verb
-  // steht auf dem Button, die ganze Frage im Text darunter.
+  // Neutrale Überschrift des Bestätigungsdialogs (#939) – nur noch der
+  // Rückfall: seit #1195 wird die Frage selbst zur Überschrift, sofern die
+  // Meldung eine enthält (splitConfirmQuestion, confirm-dialog.js).
   'common.confirmTitle': 'Bitte bestätigen',
   'common.overwrite': 'Überschreiben',
 

@@ -27,13 +27,15 @@ the card used to come from somewhere else: `m.rounds.total`, `m.content.games`,
 `m.content.sessions`, `m.accounts.total`. Those are instance-wide by design —
 `lib/public-stats.js` reads three of them for the PUBLIC landing counters, and
 an operator hidden from `peaks` would be blind to the quota they are about to
-hit. Filter one side only and the card reports „Designs 140 %".
+hit. Filter one side only and the card reports „Teilen & Freunde 140 %".
 
 So `adoption` carries **its own four totals** — `accountsTotal`, `roundsTotal`,
 `gamesTotal`, `sessionsTotal` — plus `accountsWithAvatar`, an adoption-scoped
 twin of the accounts block's own figure. `adoptionRows()` reads only those.
-`designs` and `social` take the exclusion in place, because both render as
-shares on that same card; nothing else reads them.
+`designAdoption` and `social` take the exclusion in place, because both render
+as shares on that same card; nothing else reads them. `designAdoption` (#1201)
+divides by `accountsTotal` — it counts ACCOUNTS, not rounds, since designs moved
+from rounds to accounts, and its per-design rows sum to exactly that total.
 
 **With the variable unset all of them equal their instance-wide twin**, which is
 what makes this look like a no-op and is not one: a renderer that reached for

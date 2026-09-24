@@ -74,6 +74,18 @@ module's own header and views-session.js's hold-out comment both spell out
 `if (!confirm(msg)) return;`. A raw-text scan flags the places that document the
 rule (`.claude/rules/source-scanning-guards-enumerate-shapes.md`).
 
+## 5. The heading is lifted out of `body` — so a spec reading the body loses the question
+
+Since #1195 a dialog with no explicit `title` splits its `body` at the first
+sentence-ending „?" outside quotation marks (`splitConfirmQuestion`): the
+question becomes the `<h2>` and the `aria-label`, the rest becomes
+`.confirm-dialog__body`. A spec asserting that the dialog *names the game* must
+therefore read the heading, not the body — the body now holds only the
+consequence, and `test/archive-confirm-copy.test.js` went red on exactly that.
+The split tracks quotes because the question usually quotes a user-authored
+title, which may itself contain a „?"; a message with no question mark keeps
+the neutral `common.confirmTitle` and its whole text as the body.
+
 **Related:** `.claude/rules/sheet-history-back-dismissal.md` (the async pop this
 resolves through), `.claude/rules/overlay-page-lock.md` (the lock `keepLock`
 protects on a replace), `.claude/rules/session-flow-history.md` §"Verifying a

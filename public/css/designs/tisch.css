@@ -257,6 +257,36 @@
      the raised paper. #7a4a28 is 5.19:1. */
   --paper-faint: #7a4a28;
 
+  /* ---- The rest of the paper family (#1195). The overlay rule further down
+     re-points a token at each of these; they are declared HERE for the reason
+     the six above are — only this block is resolved by test/support/theme.js.
+
+     The two STATUS inks. `--good` and `--danger` above are the LIGHT members of
+     their pairs, tuned for wood, and on the sheet's cream they measured 1.90:1
+     and worse (.claude/rules/overlay-surface-flip-strands-the-status-tokens.md).
+     These are T1's deep partners, which T1 already names as the ink on paper:
+     7.89:1 / 7.30:1 on paper, 6.42:1 / 5.94:1 on the darkest paper ground below.
+     `--warn` has no twin on purpose — T1 lists its #e8c168 as a FILL carrying
+     dark ink, never as text — so inside an overlay it takes --paper-faint, the
+     answer #1190 already gave its one warn line (finding A4). */
+  --paper-good: #23543c;
+  --paper-danger: #8f2f22;
+  /* The DESTRUCTIVE button's fill is --paper-danger itself (T15b: „rot gefüllt,
+     Papierschrift"); this is the paper it carries (7.41:1) and its rim. The rim
+     is decorative — the fill identifies the control against the paper at
+     7.30:1, so SC 1.4.11 is met by the fill and never by the edge. */
+  --paper-danger-ink: #fdf4e4;
+  --paper-danger-edge: #b5432a;
+  /* T1's close-button disc and chip ground: one step below --paper-raised. The
+     app's --sunken/--sunken-soft are mixed from the WALNUT page at :root, so
+     inside a sheet they painted a dark disc under a dark × (the close button in
+     every Tisch overlay, since #1188). */
+  --paper-sunken: #e7dcc4;
+  /* The paper hairline: T1's rgba(47,38,32,…) — the paper ink at low alpha —
+     between rows and under a head. Decorative (it separates rows, it identifies
+     no control), and it can only DARKEN the paper it sits on. */
+  --paper-line: rgba(47, 38, 32, 0.16);
+
   /* ---- Holz. The no-cover placeholder's two stops and the grain it is ruled
      with — T1's wood, which `.cover-ph` paints instead of --placeholder
      (.claude/rules/cover-ph-owns-the-coverless-game-glyph.md). */
@@ -334,6 +364,35 @@
      test/support/theme.js. --gold-ink carries 9.17:1 here and 7.74:1 on the
      deep stop, so the row's single ink holds across the whole sweep. */
   --gold-hi: #f6e3b4;
+
+  /* ---- The Pokale PLINTHS (#1196, T13.2): „Gold, Silber, Bronze als
+     Sockelton, nicht als Avatar-Ring". Gold is the brass plate itself
+     (--brass-hi -> --gold-deep); silver and bronze are T13.2's own stops, which
+     T1 does not list — the one A8-style gap left in the package, taken from the
+     sheet that draws them (T3.2's hub preview repeats the same four hexes) rather
+     than invented.
+
+     ONE INK ON EVERY PLINTH, the numeral and the caption alike: review finding
+     A5 replaced the sheet's #6b4a10 caption (3.73:1 on gold, 3.85:1 on silver)
+     with #2f2109 „auf allen drei Sockeln". The sheet kept a second, lighter
+     #3b2a12 for the numeral; one ink is darker and simpler, the same move A2
+     made for the gold row.
+
+     --plinth-bronze IS CORRECTED, and A5's fix alone does not reach it: the
+     sheet's deep bronze stop #a06b42 carries #2f2109 at 3.48:1. #b77e51 is the
+     same hue and saturation (HSL 26deg / 42%) lifted to 52% lightness — the
+     smallest step that clears 4.5:1 (4.56:1). The caption sits near the TOP of
+     the plinth, i.e. on the pale stop, but the worst stop counts: a tie label
+     wraps to two lines on a narrow phone and walks down the gradient.
+     test/a11y-contrast.test.js holds all six stops. */
+  --plinth-silver-hi: #e8e2d4;
+  --plinth-silver: #b9b3a4;
+  --plinth-bronze-hi: #d9a37a;
+  --plinth-bronze: #b77e51;
+  --plinth-ink: #2f2109;
+  /* The plinth's hairline (T1's #8a6224). Decorative: a plinth is a picture of
+     a rank, not a control, so SC 1.4.11 does not bind it. */
+  --plinth-edge: #8a6224;
 
   /* The two row TAGS the Tafel prints at its right edge (T4.4), as fills with
      their own ink — the same shape as the score pills, and for the same reason
@@ -486,6 +545,9 @@
   --page-bg: var(--paper);
   background: linear-gradient(180deg, var(--paper), var(--paper-raised));
   color: var(--ink);
+  /* The rest of the list — the status inks, --accent, --line, --sunken and the
+     brand tints — is #1195's second rule on these four selectors, at the end of
+     the file with the overlay slice that found them. */
 }
 
 /* ===========================================================================
@@ -3085,9 +3147,1120 @@
    different one elsewhere: `anywhere` also shrinks the element's min-content
    width, so it would let a name break mid-word wherever the rail is put under
    pressure. `break-word` breaks only a word that has nowhere else to go, which
-   is exactly this case. */
+   is exactly this case.
+
+   Hyphenated where the language allows (#1197's screenshots showed
+   „Donnerstagsrun / de" without it): `hyphens` reads <html lang>, which
+   i18n.js keeps on the active locale, and `break-word` stays the fallback for a
+   word no dictionary can split. Both spellings, as Safari < 17 only knows the
+   prefix. */
 :root[data-design="tisch"][data-scheme="dark"] .rail__name {
   overflow-wrap: break-word;
+  -webkit-hyphens: auto;
+  hyphens: auto;
+}
+
+/* ===========================================================================
+   #1195 — the OVERLAYS: sheets and their popover twins, the confirm dialog,
+   the toast and the „…" menu.
+
+   Source: Tisch-T15a-Sheets.dc.html and Tisch-T15b-Dialoge.dc.html. T15a's
+   rule is „eine Form, zwei Auftritte": on a phone a sheet from below, on a
+   desktop a popover at its trigger — same content, same order, same buttons,
+   and only three things differ (the grip, the title size, the anchoring). The
+   app already HAS that split for its eight editors (`openEditor`, the 860px
+   line, .claude/rules/popover-vs-sheet-editors.md), so this section paints the
+   two halves rather than inventing a third presentation; every other overlay
+   in the app is a dialog at both widths, which is what T15b draws for them.
+
+   OPERATOR DECISION on #1195: T15b's „Rückgängig statt Nachfrage" policy is
+   NOT adopted. Every confirmation the app asks today is still asked, and this
+   paints them to T15b's anatomy — the title is the question, the text the
+   consequence, the button the verb, a destructive button red-filled on the
+   right. The title/text split is confirm-dialog.js's splitConfirmQuestion,
+   which lifts the question sentence each message already opens with; nothing
+   here or there adds copy.
+
+   What this does NOT build, and why, is in the PR: a title and × on the
+   anchored popover (a new control), T15b's toast tones and its „Rückgängig"
+   action (toast() carries no type and no action — every call site would have
+   to say which it is), errors that stay until dismissed (the same), the felt
+   marker picker (it is a SCREEN, not an overlay), and T15a's per-sheet row
+   bodies wherever the app's sheet is a form rather than a list.
+
+   Every rule is scheme-gated, including the geometry: the paper these rules
+   dress only exists while the colour block applies, and a docked sheet whose
+   paper did not apply would be a new shape in the round's own palette.
+   =========================================================================== */
+
+/* --- The rest of the overlay's re-point ------------------------------------
+   The #1188 overlay rule above re-points the six MATERIAL tokens. These are the
+   tokens its descendants also paint from and that were still tuned for walnut —
+   .claude/rules/overlay-surface-flip-strands-the-status-tokens.md's question
+   („which properties do my DESCENDANTS paint from"), answered for the rest of
+   the list. Each one was a visible defect in some Tisch overlay:
+
+     --good / --danger   the LIGHT members of their pairs: 1.90:1 and worse on
+                         cream. `.btn--danger` in every confirm dialog wrote its
+                         verb in #f59c86 on paper.
+     --warn              a FILL colour in T1, never text — so the answer #1190
+                         gave its one warn line (--paper-faint), for all of them.
+     --accent            `.link-btn` is --accent, i.e. brass: 2:1 on paper.
+     --sunken(-soft)     mixed from the WALNUT page at :root, so the close
+                         button's disc and every chip ground inside a sheet
+                         were dark wood under the dark paper ink.
+     --line              the same mix: a brown rule on cream, heavier than T1's
+                         hairline.
+     --brand-tint(-soft) mixed from walnut --surface: the menu's hover painted a
+                         dark row under dark ink.
+     --brand-edge, --bg  the same mix; see the note on the last two lines.
+
+   A second rule on the same four selectors rather than an edit to the first, so
+   the #1188 block keeps reading as the material list it is; the two are one
+   decision and the first carries a pointer here. */
+:root[data-design="tisch"][data-scheme="dark"] .sheet,
+:root[data-design="tisch"][data-scheme="dark"] .dialog,
+:root[data-design="tisch"][data-scheme="dark"] .popover,
+:root[data-design="tisch"][data-scheme="dark"] .menu {
+  --good: var(--paper-good);
+  --danger: var(--paper-danger);
+  --warn: var(--paper-faint);
+  --accent: var(--paper-faint);
+  --sunken: var(--paper-sunken);
+  --sunken-soft: var(--paper-sunken);
+  --line: var(--paper-line);
+  --brand-tint: var(--gold-hi);
+  --brand-tint-soft: var(--paper-raised);
+  /* The last two tokens :root mixes from the page or the surface. --brand-edge
+     is the focus ring's colour (`0 0 0 3px var(--brand-edge)`), brass over
+     walnut; the rim token is its paper counterpart. --bg has no reader today and
+     is re-pointed so it cannot become the next --page-bg: test/tisch-overlays.test.js
+     derives this list from styles.css, and a token left out fails there. */
+  --brand-edge: var(--gold-edge);
+  --bg: var(--paper);
+}
+
+/* --- The sheet: edge, head and close (T15a.0) ------------------------------
+   18px edge, a 20px display title, a 34px close disc with a hairline rim. The
+   title size is the SHEET's at both widths: the app's centred dialog above
+   640px is the same element, and T15a gives the small-caps title only to the
+   anchored popover, which has no title at all (see the header). */
+/* A SHEET is flat paper, where the popover, dialog and menu keep #1188's
+   paper-to-raised sweep. The sheet's sticky head and action bar need an opaque
+   ground and take it from --page-bg, i.e. flat --paper (#1193) — so over the
+   sweep they painted as two lighter slabs, visible as a band under the title
+   and a lighter rectangle behind the buttons (seen at 390 and 1440 on the
+   confirm dialog). One flat tone makes the bars disappear into the sheet, which
+   is what a sticky bar is for. */
+:root[data-design="tisch"][data-scheme="dark"] .sheet {
+  padding: 0 18px;
+  background: var(--paper);
+}
+:root[data-design="tisch"][data-scheme="dark"] .sheet__head h2 {
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+:root[data-design="tisch"][data-scheme="dark"] .sheet__close {
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--line);
+  color: var(--ink);
+}
+:root[data-design="tisch"][data-scheme="dark"] .sheet__close:hover {
+  background: var(--paper-raised);
+}
+
+/* Buttons: 48px in a sheet's action bar (T15a), 44px in a dialog's (T15b). A
+   floor, never a height — `.btn` keeps its own padding, border-bottom „base"
+   and press compensation, which this must not disturb
+   (test/button-press-compensation.test.js). */
+:root[data-design="tisch"][data-scheme="dark"] .sheet__actions .btn { min-height: 48px; }
+:root[data-design="tisch"][data-scheme="dark"] .sheet__actions--confirm .btn { min-height: 44px; }
+
+/* The ONE primary action is the brass plate — the hub CTA's material at a
+   sheet's scale, so an overlay's commit reads as the same object as the table's
+   own. Covers both presentations of an editor: its commit is a `.btn--primary`
+   whether `openEditor` put it in a sheet or in a popover. */
+:root[data-design="tisch"][data-scheme="dark"] :is(.sheet, .popover) .btn--primary {
+  background: linear-gradient(180deg, var(--brass-hi), var(--gold-deep));
+  border-color: var(--gold-edge);
+  color: var(--on-accent);
+}
+:root[data-design="tisch"][data-scheme="dark"] :is(.sheet, .popover) .btn--primary:hover:not(:disabled) {
+  background: var(--brass-hi);
+  border-color: var(--gold-edge);
+}
+
+/* DESTRUCTIVE is red-FILLED (T15b rule 4), not the app's red outline: on paper
+   the outline's ink was the wood-tuned #f59c86 at 1.90:1. The hover restates
+   the fill because `.btn:hover` would otherwise swap it for --brand-tint-soft,
+   i.e. a paper button with paper-coloured text. */
+:root[data-design="tisch"][data-scheme="dark"] .sheet .btn--danger,
+:root[data-design="tisch"][data-scheme="dark"] .sheet .btn--danger:hover:not(:disabled) {
+  background: var(--paper-danger);
+  border-color: var(--paper-danger-edge);
+  color: var(--paper-danger-ink);
+}
+
+/* --- The phone appearance: a sheet from below, with a grip ------------------
+   T15a docks every sheet to the bottom edge on a phone. The app does that for
+   the add-game and direct-play sheets already; its EDITORS (`openEditor`, the
+   half of the split that is a popover on a desktop) were centred dialogs below
+   860px too. `.sheet-backdrop--editor` (sheet.js) names exactly those, so they
+   dock here and nothing else moves: the confirm dialog stays centred (T15b
+   draws it the same at both widths), and so do the scanning-list dialogs,
+   which `openEditor(…, { list: true })` keeps off the class.
+
+   639px is the app's own sheet breakpoint (`.sheet-backdrop` turns into a
+   padded, centring box at 640), so a docked editor and a docked add-game sheet
+   change shape at the same width.
+
+   The grip hangs off the STICKY head rather than off the sheet, because the
+   sheet is its own scroll container and a pseudo-element on it would scroll
+   away with the content. The head is `position: sticky`, which already makes it
+   the containing block for an absolute child. */
+@media (max-width: 639px) {
+  :root[data-design="tisch"][data-scheme="dark"] .sheet-backdrop--editor {
+    align-items: flex-end;
+    padding: 0;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .sheet-backdrop--editor > .sheet {
+    width: 100%;
+    max-width: none;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    border-bottom: none;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] :is(.sheet-backdrop:not(.sheet-backdrop--center), .sheet-backdrop--editor) > .sheet > .sheet__head {
+    padding-top: 24px;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] :is(.sheet-backdrop:not(.sheet-backdrop--center), .sheet-backdrop--editor) > .sheet > .sheet__head::before {
+    content: '';
+    position: absolute;
+    top: 9px;
+    left: 50%;
+    width: 42px;
+    height: 4px;
+    margin-left: -21px;
+    border-radius: 999px;
+    background: var(--paper-edge);
+    /* T1 draws the grip in the paper ink at 30%; the edge token at this opacity
+       is that tone without a new colour, and it is decoration — it names no
+       control (the whole head is the drag affordance), so it takes no bar. */
+    opacity: 0.45;
+  }
+}
+
+/* --- The desktop appearance: the popover at its trigger --------------------
+   Paper with a brass rim (T15a draws #a87a2e; --gold-edge is T1's rim token for
+   the same edge on the plate). The 300px width is already the app's
+   `.popover { max-width: 300px }`, so nothing here re-sizes the card — and must
+   not: the tags, owners and cover cards carry their own caps
+   (.claude/rules/popover-vs-sheet-editors.md §4). */
+:root[data-design="tisch"][data-scheme="dark"] .popover {
+  border-color: var(--gold-edge);
+  border-radius: var(--radius-xl);
+}
+
+/* --- The confirm dialog (T15b.1) -------------------------------------------
+   420px, the question at 22px, the consequence at 15px in the soft ink, the
+   verb on the right. `.sheet[role="alertdialog"]` is confirmDialog's own
+   signature — no other sheet in the app is an alertdialog — so no new class
+   was needed to reach it. Compounded with `.sheet--dialog` to beat that
+   class's 460px on specificity rather than on source order.
+
+   CANCEL has no fill (T15b rule 3: „Abbrechen steht links und ohne Fläche"),
+   and keeps the paper edge so it still reads as a button at 4.73:1. */
+:root[data-design="tisch"][data-scheme="dark"] .sheet.sheet--dialog[role="alertdialog"] {
+  max-width: 420px;
+  padding: 0 24px;
+}
+:root[data-design="tisch"][data-scheme="dark"] .sheet[role="alertdialog"] .sheet__head h2 {
+  font-size: 22px;
+}
+:root[data-design="tisch"][data-scheme="dark"] .confirm-dialog__body {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.55;
+  color: var(--ink-soft);
+}
+/* T15b's dialog buttons are 15px with a 16px inset — a step under the sheet's
+   48px commit, because a dialog carries TWO. At the app's 18px/20px metrics
+   „Abbrechen" + „Aussortieren" measured wider than a 390px dialog's 310px of
+   content, so the row wrapped and the destructive verb landed UNDER the cancel,
+   i.e. not on the right. Only the inline padding moves: the vertical padding
+   and the bottom „base" stay the press mechanic's. A verb long enough to wrap
+   anyway still wraps — the row is `.toolbar`, and a clipped verb is worse. */
+:root[data-design="tisch"][data-scheme="dark"] .sheet__actions--confirm .btn {
+  font-size: 15px;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+:root[data-design="tisch"][data-scheme="dark"] .sheet__actions--confirm .btn:not(.btn--primary, .btn--danger) {
+  background: transparent;
+}
+:root[data-design="tisch"][data-scheme="dark"] .sheet__actions--confirm .btn:not(.btn--primary, .btn--danger):hover {
+  background: var(--paper-raised);
+}
+
+/* --- The „…" menu, in all four appearances (T15b.5) ------------------------
+   Flush 42px rows on paper, a hairline between them, the icon at 17px — and the
+   ORDER, which is fillMenu's (popover.js): change, share, undoable, and last
+   the destructive rows, in red with a rule above. The red is painted by
+   `data-kind`, not by the app's tone classes, because a tone class says what
+   colour a row was given and the kind says what the row DOES; on this design
+   an „Aussortieren" that raises a red question is red, and a completion that
+   raises none is plain ink however the app tinted it.
+
+   `overflow: clip` only while the card is NOT clamped: a clamped popover has
+   to scroll itself (`.popover--clamped`), and a clip here would out-rank it. */
+:root[data-design="tisch"][data-scheme="dark"] .popover--menu {
+  padding: 0;
+  gap: 0;
+  border-radius: var(--radius-md);
+}
+:root[data-design="tisch"][data-scheme="dark"] .popover--menu:not(.popover--clamped) { overflow: clip; }
+:root[data-design="tisch"][data-scheme="dark"] .popover--menu .popover__opt {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 42px;
+  padding: 0 13px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  font-weight: 600;
+  color: var(--ink);
+}
+:root[data-design="tisch"][data-scheme="dark"] .popover--menu .popover__opt:last-child { border-bottom: 0; }
+:root[data-design="tisch"][data-scheme="dark"] .popover--menu .popover__opt .ti { font-size: 17px; }
+:root[data-design="tisch"][data-scheme="dark"] .popover--menu .popover__opt[data-kind="destructive"] {
+  color: var(--danger);
+}
+:root[data-design="tisch"][data-scheme="dark"] .popover--menu .popover__opt:not([data-kind="destructive"]) + .popover__opt[data-kind="destructive"] {
+  border-top: 1px solid var(--control-edge);
+}
+
+/* --- Rows in a list sheet (T15a) --------------------------------------------
+   The scanning lists — BGG import, „Spiele verschieben", the wish and
+   off-shelf pickers — are `.ds-row`s, and T15a draws a sheet's rows as raised
+   slips on the sheet's paper rather than as the page's cards: 44px, a hairline,
+   the raised tone. A picked row keeps the app's own treatment (a brass edge on
+   --brand-tint-soft, which the re-point above makes the same raised paper), so
+   the rule leaves it alone rather than out-ranking it. */
+:root[data-design="tisch"][data-scheme="dark"] .sheet .ds-row:not(.ds-row--picked) {
+  min-height: 44px;
+  background: var(--paper-raised);
+  border-color: var(--line);
+}
+
+/* --- When a sheet cannot deliver (T15b.6) -----------------------------------
+   T15b draws a sheet's failure as the sheet's own empty state — a raised,
+   centred card with the headline in the display face — never as a dialog. The
+   BGG import is the sheet with the most of them (nothing marked owned, the
+   collection private, BGG queueing or down, an unknown handle) and renders
+   every one through `.bgg-import__msg`; the add-game lookup's no-hit and
+   BGG-down lines are its dropdown's `.lookup__msg`, which #1190 already
+   painted. The icon disc T15b puts above the headline is not drawn: it is a
+   new element, and the headline reads without it. */
+:root[data-design="tisch"][data-scheme="dark"] .sheet .bgg-import__msg {
+  margin: 4px 0 12px;
+  padding: 20px 16px;
+  text-align: center;
+  background: var(--paper-raised);
+  border-radius: var(--radius-md);
+}
+:root[data-design="tisch"][data-scheme="dark"] .sheet .bgg-import__msg > p:first-child {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1.25;
+  color: var(--ink);
+}
+
+/* --- The toast (T15b.4) -----------------------------------------------------
+   A walnut plank with a brass rim — T15b's NEUTRAL tone, for every toast. Its
+   green „done" and red „error" tones are not painted: `toast()` is handed a
+   bare string at ~200 call sites, success and failure alike (every
+   `catch (e) { toast(e.message) }` is one), so a tone would have to be guessed
+   and a guessed green on an error is worse than no tone at all.
+
+   One at a time is already the app's behaviour — one element, replaced text.
+
+   Seat: over the dock on a phone (the dock's 86px bar plus its gap is
+   --dock-clearance), and from 1280px — where the rail replaces the dock —
+   bottom LEFT, aligned with the rail's own left edge rather than the window's,
+   because the shell is centred and at 1800px+ the window edge is far from
+   anything. The 26px radius the app uses to keep a wrapped message from
+   painting as an ellipse (test/toast-shape.test.js) is replaced by T1's square
+   corner, which cannot degenerate at any height. */
+:root[data-design="tisch"][data-scheme="dark"] .toast {
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--control-edge);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-3);
+  font-weight: 700;
+  text-align: left;
+}
+@media (max-width: 859px) {
+  :root[data-design="tisch"][data-scheme="dark"] .toast { bottom: var(--dock-clearance); }
+}
+@media (min-width: 1280px) {
+  :root[data-design="tisch"][data-scheme="dark"] .toast {
+    left: max(20px, calc((100vw - var(--w-shell)) / 2 + 20px));
+    transform: none;
+  }
+}
+
+/* ===========================================================================
+   #1196 — TIER 2a: the Chronik with its period recap, the Pokale, the member
+   page, the off-shelf lists and the recommendations, at 390 and at 1440.
+
+   Source: Tisch-T13-Tier2a.dc.html (T13.1–T13.5). T13.6 names the materials
+   this section lays down: the Chronik is „ein Stapel Papierstreifen auf Holz",
+   the recap „eine Filzkarte", the Pokale „ein Podium aus Messingsockeln … über
+   einer Tafel", the awards „Messingplaketten".
+
+   PAINT, plus ONE piece of markup the sheet genuinely needs: the off-shelf
+   segment strip (offShelfSegments, off-shelf.js), which styles.css hides and
+   this file shows. Everything else T13 draws that the app does not have is
+   deliberately NOT built, per the #1193 ruling („the sheet's intent is the
+   design, not the ordering") — the Pokale standings Tafel with its five
+   columns, the Chronik's year picker and „Ältere Sessions", its „Nur mit
+   mir / Nur Siege / Mit Veto" filter, the member page's rating distribution,
+   and the one screen that merges the three lists with the recommendations as a
+   band beneath them. Each is a new query or a new string in nine locales; the
+   PR names them.
+
+   Same gate and same no-literals rule as every section above.
+   =========================================================================== */
+
+/* --- The Chronik: paper strips on wood (T13.1, T13.5) ---------------------
+   The timeline's rail and its dots become brass: the one vertical line on the
+   screen is the edge of the table the strips are laid on. */
+:root[data-design="tisch"][data-scheme="dark"] .timeline::before {
+  background: var(--gold-edge);
+}
+:root[data-design="tisch"][data-scheme="dark"] .tl-dot--session,
+:root[data-design="tisch"][data-scheme="dark"] .tl-dot.tl-dot--milestone {
+  background: var(--gold);
+}
+/* The month in the brass, as T13.1 prints the date: the display face, set as a
+   kicker. --gold on the walnut page is 9.16:1; this is WOOD, not felt, so
+   review finding A1's under-24px ban does not reach it. */
+:root[data-design="tisch"][data-scheme="dark"] .tl-month {
+  color: var(--gold);
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+/* A played session is a STRIP OF PAPER laid on the wood — the material every
+   Tisch overlay already is, so a strip reads as the same printed card rather
+   than as a new component.
+
+   THE STRIP RE-POINTS THE INKS IT CARRIES, for the reason the overlay block
+   above does (.claude/rules/overlay-surface-flip-strands-the-status-tokens.md):
+   everything inside was tuned for walnut. Walked descendant by descendant —
+   the meta line reads --ink-soft, a cancelled session's line an INLINE
+   `color: var(--danger)` (views-chronik.js), whose walnut value is 1.90:1 on
+   paper, and the title --brand-strong, brass lifted toward white. --danger goes
+   to --accent-deep, T1's Zinnober, measured on both paper stops (5.58/5.02:1);
+   the title is set to the paper ink outright.
+
+   What is deliberately NOT re-pointed: --placeholder. The one thing that reads
+   it is the state glyph in `.session-card__img`, whose box keeps its own
+   --sunken ground — wood set into the paper — and the pair it was measured on
+   travels with it. The score pill carries its own ink by construction. */
+:root[data-design="tisch"][data-scheme="dark"] .timeline .session-card {
+  --ink: var(--paper-ink);
+  --ink-soft: var(--paper-ink-soft);
+  --danger: var(--accent-deep);
+  gap: 14px;
+  padding: 12px 14px;
+  border-color: transparent;
+  border-radius: var(--radius-md);
+  background: linear-gradient(180deg, var(--paper), var(--paper-raised));
+  color: var(--ink);
+  box-shadow: var(--shadow-2);
+}
+:root[data-design="tisch"][data-scheme="dark"] .timeline .session-card:hover {
+  box-shadow: var(--shadow-3);
+}
+:root[data-design="tisch"][data-scheme="dark"] .timeline .session-card__title {
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-weight: 800;
+}
+/* The cover stands UP, as a box on a table does: T13.1's 44x58 on desktop,
+   T13.5's 30x40 on a phone (drawn a step larger there, so the no-cover glyph
+   still fits). The app's square 54px thumb crops every box to a square, which
+   on paper reads as a sticker rather than as the game. */
+:root[data-design="tisch"][data-scheme="dark"] .timeline .session-card__img {
+  width: 44px;
+  height: 58px;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-1);
+}
+@media (max-width: 520px) {
+  :root[data-design="tisch"][data-scheme="dark"] .timeline .session-card__img {
+    width: 34px;
+    height: 46px;
+  }
+}
+
+/* --- The period recap: a felt card that leads to the share card (T13.1) ----
+   The one thing on the Chronik made to leave the app, so it is the table
+   itself — the same felt, weave and marker as the hub's stage — and its share
+   action is the brass plate.
+
+   Only what stands DIRECTLY on the felt changes ink. The cards inside are wood
+   on felt and keep the walnut pairs they were measured on. The stat chips are a
+   SHADOW pressed into the felt (T13.1 draws them at black 22%) carrying the
+   paper ink: a darkening fill can only raise a light ink's contrast against the
+   felt it sits on — the --felt-grain argument — so it holds on every marker
+   felt, where --felt-chip-on is a fixed green that read as a foreign object on
+   a burgundy table (seen in the browser, not guessed). */
+:root[data-design="tisch"][data-scheme="dark"] .precap {
+  padding: 20px;
+  border: 1px solid var(--gold-edge);
+  border-radius: var(--radius-md);
+  background:
+    var(--felt-hatch, none),
+    var(--felt-weave),
+    radial-gradient(90% 140% at 30% -20%, var(--marker, var(--felt)), var(--marker-deep, var(--felt-deep)) 74%);
+  color: var(--felt-ink);
+  box-shadow: var(--shadow-2);
+}
+:root[data-design="tisch"][data-scheme="dark"] .precap h2 {
+  color: var(--felt-ink);
+}
+:root[data-design="tisch"][data-scheme="dark"] .precap .recap__lead,
+:root[data-design="tisch"][data-scheme="dark"] .precap .precap__thin {
+  color: var(--felt-ink-soft);
+}
+:root[data-design="tisch"][data-scheme="dark"] .precap .stat-chip {
+  background: var(--cast-soft);
+  color: var(--felt-ink);
+}
+/* The picker stays a wooden control, but its fill barely separates from the
+   felt, so the EDGE is what identifies it (SC 1.4.11) — and --control-edge is
+   tuned for wood. --gold is 4.20:1 on the felt's light stop: banned for small
+   text by finding A1, comfortably over the 3:1 a boundary takes. */
+:root[data-design="tisch"][data-scheme="dark"] .precap .precap__picker {
+  border-color: var(--gold);
+}
+/* „Teilen" is the brass plate: the recap exists to become the share card
+   (T11), so this is the action the whole card leads to. Written for rest AND
+   hover because `.btn:hover` re-grounds the button with the brand wash, which
+   would put the plate's dark ink on translucent brass over felt. */
+:root[data-design="tisch"][data-scheme="dark"] .precap .precap__share,
+:root[data-design="tisch"][data-scheme="dark"] .precap .precap__share:hover {
+  border-color: var(--gold-edge);
+  background: linear-gradient(180deg, var(--brass-hi), var(--gold-deep));
+  color: var(--on-accent);
+}
+:root[data-design="tisch"][data-scheme="dark"] .precap .precap__share:hover {
+  box-shadow: var(--shadow-2);
+}
+
+/* Desktop: the recap moves BESIDE the timeline, as T13.1 draws it — a 380px
+   column to the right of the strips instead of a band above them. The shell is
+   already a [rail | content] grid from 1280px (styles.css); this adds the third
+   track only on a screen that HAS a recap, so every other round screen keeps
+   its two.
+
+   `grid-row: 1 / span 999` for the reason the rail spans that way: with only
+   implicit rows, `1 / -1` resolves to the first line, the recap would sit in
+   row 1 alone and make that row as tall as itself — dropping a gap under the
+   timeline's first block. The recap comes first in the DOM, so the reading
+   order (recap, then history) is unchanged by the move. */
+@media (min-width: 1280px) {
+  :root[data-design="tisch"][data-scheme="dark"] .app:has(> .precap) {
+    grid-template-columns: var(--rail-w) minmax(0, 1fr) 380px;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .app:has(> .precap) > .precap {
+    grid-column: 3;
+    grid-row: 1 / span 999;
+    align-self: start;
+  }
+}
+
+/* --- The Pokale: a brass podium over the felt (T13.2, T13.5) ---------------
+   The stage is felt with the table's rim along its bottom edge, so the plinths
+   stand ON the rim rather than floating on the page. `.podium` already bottom-
+   aligns its columns (styles.css), which is what puts every plinth's foot on
+   that edge.
+
+   NOT in a round still wearing a WORLD: `[data-world] .podium` owns this box's
+   padding and its ::before for the world's floor art (#1083), and felt under a
+   world floor would be two grounds fighting for one strip. There the plinths
+   below still apply, on the world's own floor. */
+:root[data-design="tisch"][data-scheme="dark"]:not([data-world]) .podium {
+  gap: 16px;
+  margin: 8px 0 22px;
+  padding: 28px 16px 0;
+  border-bottom: 5px solid var(--gold-edge);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  background:
+    var(--felt-hatch, none),
+    var(--felt-weave),
+    radial-gradient(90% 160% at 50% -40%, var(--marker, var(--felt)), var(--marker-deep, var(--felt-deep)) 74%);
+  color: var(--felt-ink);
+}
+/* On a phone the felt gives the plinths back the width it took. A shared step
+   lays its members down as chips whose NAME is what gives way (styles.css), so
+   every pixel of stage padding comes straight out of the names — none here, as
+   in styles.css. At 16px a side
+   and a 16px gap, a two-way tie at 390px read „M." and „B.". */
+@media (max-width: 520px) {
+  :root[data-design="tisch"][data-scheme="dark"]:not([data-world]) .podium {
+    gap: 10px;
+    padding: 22px 0 0;
+  }
+}
+/* The win count stands on felt, so it takes the felt's soft ink — the pair the
+   hub stage's kicker line already carries (4.79:1 on the light stop). */
+:root[data-design="tisch"][data-scheme="dark"]:not([data-world]) .podium__wins {
+  color: var(--felt-ink-soft);
+}
+:root[data-design="tisch"][data-scheme="dark"] .podium__avatar {
+  box-shadow: var(--shadow-3);
+}
+
+/* The PLINTHS — gold, silver, bronze as the plinth's own tone, one ink on all
+   three (review finding A5, with the bronze stop corrected beside the tokens).
+   The HEIGHTS are not touched: they are the rank encoding, sized so the
+   shortest step still holds the longest locale's tie label on two lines, and
+   test/podium-ranks.test.js compares them with the risers. */
+:root[data-design="tisch"][data-scheme="dark"] .podium__base {
+  border: 1px solid var(--plinth-edge);
+  border-bottom: 0;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  color: var(--plinth-ink);
+  box-shadow: inset 0 1px 0 var(--brass-sheen-strong);
+}
+:root[data-design="tisch"][data-scheme="dark"] .podium__col--1 .podium__base {
+  background: linear-gradient(180deg, var(--brass-hi), var(--gold-deep));
+}
+:root[data-design="tisch"][data-scheme="dark"] .podium__col--2 .podium__base {
+  background: linear-gradient(180deg, var(--plinth-silver-hi), var(--plinth-silver));
+}
+:root[data-design="tisch"][data-scheme="dark"] .podium__col--3 .podium__base {
+  background: linear-gradient(180deg, var(--plinth-bronze-hi), var(--plinth-bronze));
+}
+:root[data-design="tisch"][data-scheme="dark"] .podium__rank {
+  font-weight: 800;
+}
+/* An UNHELD rank is a plinth nobody has cast yet: raw wood with a dashed rim,
+   the mark this design uses everywhere for „something belongs here and does
+   not exist yet" (the „+" seat, the add tile, the empty state). Full opacity —
+   styles.css fades its riser to 0.75 so it cannot read as occupied, and here
+   wood against metal already says that. */
+:root[data-design="tisch"][data-scheme="dark"] .podium__col--spacer {
+  opacity: 1;
+  border: 1px dashed var(--control-edge);
+  border-bottom: 0;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  background: linear-gradient(180deg, var(--wood-light), var(--wood-deep));
+}
+
+/* The awards are BRASS PLAQUES on wood: the card stays walnut, the icon becomes
+   the struck plate (T13.2's 42px square). Only a card without a cover has an
+   icon row — a cover-led card moves its icon into the eyebrow — so this is the
+   stat cards, the member page's empty game tiles and nothing else.
+
+   The cast skips the member page's two tiles: they stand as BOXES on a
+   zero-blur edge in the member's tone (#1075), and a cast here would replace
+   that edge outright — this rule out-specifies theirs. */
+:root[data-design="tisch"][data-scheme="dark"] .pokale-card {
+  border-radius: var(--radius-md);
+}
+:root[data-design="tisch"][data-scheme="dark"] .pokale-cards:not(.member-card__games) > .pokale-card {
+  box-shadow: var(--shadow-1);
+}
+:root[data-design="tisch"][data-scheme="dark"] .pokale-card__icon {
+  display: inline-grid;
+  place-items: center;
+  align-self: flex-start;
+  width: 42px;
+  height: 42px;
+  border: 1px solid var(--gold-edge);
+  border-radius: var(--radius-md);
+  background: linear-gradient(180deg, var(--brass-hi), var(--gold-deep));
+  color: var(--on-accent);
+}
+
+/* --- The member page (T13.4, T13.5) ---------------------------------------
+   The identity block becomes the felt band across the card's head — T13.4's
+   header with the table's rim under it — and the four figures become wooden
+   tiles below it. `.member-card` only: die Spielerkarte (`.profile-card`)
+   shares the frame and is T14's slice.
+
+   It BLEEDS to the card's edges, so the negative margins are the card's own
+   padding and move with it at 520px.
+
+   THE WATERMARK IS HIDDEN, not moved. #1075 measured its alpha against the
+   member's wash as the ground under the name, and the felt replaces that
+   ground; carried onto the felt it would be decoration under text with no
+   measurement behind it. The member's colour stays where it is load-bearing —
+   the avatar, the win-rate ring, the state chip and the game tiles' edge. */
+:root[data-design="tisch"][data-scheme="dark"] .member-card .member-card__id {
+  margin: -26px -24px 0;
+  padding: 26px 24px 22px;
+  border-bottom: 5px solid var(--gold-edge);
+  background:
+    var(--felt-hatch, none),
+    var(--felt-weave),
+    radial-gradient(70% 150% at 20% -30%, var(--marker, var(--felt)), var(--marker-deep, var(--felt-deep)) 74%);
+  color: var(--felt-ink);
+}
+:root[data-design="tisch"][data-scheme="dark"] .member-card .member-card__mark {
+  display: none;
+}
+:root[data-design="tisch"][data-scheme="dark"] .member-card .member-card__figures {
+  gap: 12px;
+  padding-top: 0;
+  border-top: 0;
+}
+:root[data-design="tisch"][data-scheme="dark"] .member-card .member-figure {
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--control-fill);
+}
+@media (max-width: 520px) {
+  :root[data-design="tisch"][data-scheme="dark"] .member-card .member-card__id {
+    margin: -20px -16px 0;
+    padding: 20px 16px 18px;
+  }
+  /* T13.5 sets the four figures two by two; `1 1 96px` would put three on the
+     first row and leave the fourth alone on the second. */
+  :root[data-design="tisch"][data-scheme="dark"] .member-card .member-figure {
+    flex-basis: calc(50% - 6px);
+  }
+}
+/* „Gehört Jonas" — the boxes this member brings, on a walnut panel of their
+   own, as T13.4 draws it beside the record. */
+:root[data-design="tisch"][data-scheme="dark"] .app > .section:has(> .member-games) {
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+}
+
+/* --- The off-shelf lists and the recommendations (T13.3) -------------------
+   The segment strip is T1.5's control: a sunken wooden tray, the current
+   screen struck as the brass plate, the others gold on wood (wood, not felt,
+   so A1 does not bind). Each segment is a real link to its own route.
+
+   ONE ROW THAT SCROLLS rather than wraps: four labels in Finnish do not fit
+   390px, and a segmented control broken over two lines stops reading as one
+   choice among four. The tray is as wide as its segments and no wider. */
+:root[data-design="tisch"][data-scheme="dark"] .offshelf-seg {
+  display: flex;
+  gap: 3px;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 0 16px;
+  padding: 3px;
+  overflow-x: auto;
+  border: 1px solid var(--control-edge);
+  border-radius: var(--radius-md);
+  background: var(--sunken);
+}
+:root[data-design="tisch"][data-scheme="dark"] .offshelf-seg__item {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 800;
+  white-space: nowrap;
+  color: var(--gold);
+  text-decoration: none;
+}
+:root[data-design="tisch"][data-scheme="dark"] .offshelf-seg__item:hover {
+  background: var(--control-fill);
+}
+:root[data-design="tisch"][data-scheme="dark"] .offshelf-seg__item.is-on {
+  background: linear-gradient(180deg, var(--brass-hi), var(--gold-deep));
+  color: var(--on-accent);
+}
+
+/* The rows: wood cards with the list's own glyph in brass, and the covers
+   standing up like the Chronik's (T13.3 draws them portrait, at the app's own
+   row height here). */
+:root[data-design="tisch"][data-scheme="dark"] .archive-row,
+:root[data-design="tisch"][data-scheme="dark"] .rec-card {
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-1);
+}
+:root[data-design="tisch"][data-scheme="dark"] .archive-row__meta .ti {
+  color: var(--gold);
+}
+:root[data-design="tisch"][data-scheme="dark"] .archive-row__img,
+:root[data-design="tisch"][data-scheme="dark"] .rec-card__img {
+  width: 48px;
+  height: 64px;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-1);
+}
+
+/* ===========================================================================
+   #1197 — the SPIELERKARTE, the FREUNDESKREIS and its feed, the POSTEINGANG,
+   „WAS IST NEU", the signed-in STATISTIK, and the round's EINSTELLUNGEN with
+   the felt picker.
+
+   Source: Tisch-T14-Tier2b.dc.html (T14.1–T14.5). T14.6 states the brief in
+   one line — „Filz gehört der Runde, Design gehört dem Konto" — and that is
+   the one idea this section adds to the six screens: felt appears where
+   something is the TABLE's (the profile's head, the felt picker), and every
+   per-account surface is walnut and brass.
+
+   PAINT ONLY, under the #1193 ruling („the sheet's intent is the design, not
+   the ordering"). T14 draws a good deal the app does not have, and each of
+   those is a feature or new copy in nine locales rather than a colour:
+     - T14.1's three rounds as felt strips, „Karte teilen" and the stats
+       toggle. A profile deliberately carries NO round data (it is read across
+       a tenant boundary — lib/routes/profile.js), there is no card to share,
+       and the toggle already lives on Konto (#1193).
+     - T14.2's „3 neu" / „Alle gelesen" head, the icon tile per row and the
+       „geteilte Session" item. The inbox has no mark-all action and no such
+       item type; invitation and friend request already differ by the action
+       on the right, which is exactly the distinction T14.6 asks for.
+     - T14.3's „Neu / Besser / Behoben" badges and the felt head band. A NEWS
+       entry has no kind (public/js/news.js), and the head is the shared
+       `.lobby-head`, which no screen-specific rule reaches without :has().
+     - T14.4's three top-five lists. The payload is one podium per metric
+       (lib/public-stats.js), so each card stays one game.
+     - T14.5's two-column composition with the picker, the tags and the
+       invite link INLINE on the settings screen, the „Übernehmen" button and
+       the sentence „Der Filz gehört der Runde — nicht dir.". The screen links
+       to its sub-screens (#561/#956), a swatch applies on the tap, and the
+       app's own sentence (`marker.note`) already says the same thing without
+       naming a design.
+   The logged-OUT statistics are #1198's (the face); every statistics rule
+   below is scoped off `body.auth-screen` for that reason.
+
+   Same gate and same no-literals rule as every section above; every ground
+   used below is a token the contrast suite already measures, and the few
+   pairs it does not are measured in the comment beside them.
+   =========================================================================== */
+
+/* --- Die Spielerkarte (T14.1) ---------------------------------------------
+   The card becomes a walnut plank with a gold rim and the account's name on a
+   band of felt across its head, closed by the 5px brass rim the hub's felt
+   stage wears (#1189). Scoped to `.profile-card` alone: `.member-card` shares
+   the frame by selector in styles.css, and the member page is #1196's.
+
+   The m-tone WASH gives way to flat --surface. On this design the felt band
+   is what carries the head, and a tone mixed into walnut below it reads as a
+   stain rather than a colour. The account's tone is still everywhere it
+   means something — the ring, the chip, the ribbons, the tiles' side. */
+:root[data-design="tisch"][data-scheme="dark"] .profile-card {
+  background: var(--surface);
+  box-shadow: var(--shadow-3), inset 0 0 0 1px var(--gold-edge);
+  border-radius: var(--radius-md);
+}
+
+/* The felt head. Bled to the card's edges by the card's own padding
+   (26px 24px, 20px 16px on a phone — styles.css), so the head's content sits
+   exactly where it sat before. Paper ink on it, never gold (finding A1), and
+   the meta line takes --felt-ink-soft: --ink-soft is measured on wood, not on
+   felt. */
+:root[data-design="tisch"][data-scheme="dark"] .profile-card .member-card__id {
+  margin: -26px -24px 22px;
+  padding: 26px 24px;
+  background-color: var(--felt-deep);
+  background-image:
+    var(--felt-weave),
+    radial-gradient(70% 150% at 20% -30%, var(--felt), var(--felt-deep) 74%);
+  border-bottom: 5px solid var(--gold-edge);
+  color: var(--felt-ink);
+}
+@media (max-width: 520px) {
+  :root[data-design="tisch"][data-scheme="dark"] .profile-card .member-card__id {
+    margin: -20px -16px 18px;
+    padding: 20px 16px;
+  }
+}
+:root[data-design="tisch"][data-scheme="dark"] .profile-card .member-card__who h1 { color: var(--felt-ink); }
+:root[data-design="tisch"][data-scheme="dark"] .profile-card .profile-card__meta { color: var(--felt-ink-soft); }
+:root[data-design="tisch"][data-scheme="dark"] .profile-card .profile-card__meta strong { color: var(--felt-ink); }
+
+/* The face sits in a gold rim on the felt (T14.1's 3px #f0cf86) instead of
+   the --surface ring it wears on wood — a glyph-class use of gold on felt,
+   which is exactly what A1 permits. */
+:root[data-design="tisch"][data-scheme="dark"] .profile-card .member-avatar {
+  box-shadow: 0 0 0 3px var(--gold), 0 8px 18px var(--cast-deep);
+}
+
+/* The watermark goes. It is the Tischkarte's device for putting the account's
+   colour into a text-free corner (#1075), and here that corner is felt: an
+   11% tone over the band would muddy the one surface this design uses to say
+   "this is the table", and its alpha was bounded against the wash this
+   section removes. */
+:root[data-design="tisch"][data-scheme="dark"] .profile-card .member-card__mark { display: none; }
+
+/* The figures as T14.1's tiles: one raised walnut plate each, four across,
+   the value in the display face. Two across on a phone, where four ~75px
+   tiles would break „Ø Wertung" onto two lines. The strip's m-tone rule goes;
+   the tiles are the separation now. --ink on --control-fill is 8.02:1, the
+   pair every control in this design already carries. */
+:root[data-design="tisch"][data-scheme="dark"] .profile-card .member-card__figures {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+@media (max-width: 520px) {
+  :root[data-design="tisch"][data-scheme="dark"] .profile-card .member-card__figures {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+:root[data-design="tisch"][data-scheme="dark"] .profile-card .member-figure {
+  padding: 13px 15px;
+  background: var(--control-fill);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+}
+:root[data-design="tisch"][data-scheme="dark"] .profile-card .member-figure__value {
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- Der Freundeskreis and its feed (T14.1, right) --------------------------
+   People are walnut plates with the face in a gold rim — T14.1 draws every
+   friend's initials inside a 2px #f0cf86 ring, and the rim is what makes a
+   row of faces read as seats at one table rather than as a list of dots.
+   The tiles keep --surface: `.k-tile__art`'s cover-wash alpha is a ceiling
+   measured over --surface (styles.css), so that ground is not free to move. */
+:root[data-design="tisch"][data-scheme="dark"] .k-tile .avatar,
+:root[data-design="tisch"][data-scheme="dark"] .k-card .avatar,
+:root[data-design="tisch"][data-scheme="dark"] .e-tile__who .avatar {
+  box-shadow: 0 0 0 2px var(--gold);
+}
+:root[data-design="tisch"][data-scheme="dark"] a.k-tile:hover { border-color: var(--gold); }
+
+/* The „＋" slot takes the dashed --control-edge every „something belongs here"
+   affordance in this design carries (#1194). It is a control, so its
+   boundary has to clear 3:1; the tile is transparent, so it sits on the page,
+   where --control-edge measures 4.48:1. */
+:root[data-design="tisch"][data-scheme="dark"] .k-tile--add { border-color: var(--control-edge); }
+:root[data-design="tisch"][data-scheme="dark"] .k-tile--add:hover {
+  border-color: var(--gold);
+  color: var(--ink);
+}
+
+/* An incoming request is the one raised thing on the screen (T14.1's „Timo
+   will befreundet sein"): the gold edge and the raised fill T1 gives an
+   actionable object, in place of Klassisch's brand wash — which here is
+   brass at a few percent over walnut and simply disappears. Outgoing keeps
+   its quiet left edge, because it waits on nobody here. */
+:root[data-design="tisch"][data-scheme="dark"] .k-card--incoming {
+  background: var(--control-fill);
+  border-color: var(--gold);
+  border-left-color: var(--gold);
+}
+
+/* THE RAISED FILL TAKES THE BRASS OFF ITS LINKS, and this is the constraint
+   that decides the two plates above and below rather than a detail of them.
+   A `.link-btn` is --brand text, and --brand on --control-fill is 4.37:1 —
+   the pair the token block calls „tight on purpose" for a control EDGE, where
+   3:1 binds; as text it is under AA. So „Ablehnen", „Zurückziehen" and the
+   dismiss glyph drop to --ink-soft on a raised plate (6.29:1), which is also
+   T14.2's own „Ablehnen" — a soft ink beside the brass button, not a second
+   brass thing. The hover goes to --ink. */
+:root[data-design="tisch"][data-scheme="dark"] .k-card--incoming .link-btn,
+:root[data-design="tisch"][data-scheme="dark"] .inbox-row.inbox-row--unread .link-btn {
+  color: var(--ink-soft);
+}
+:root[data-design="tisch"][data-scheme="dark"] .k-card--incoming .link-btn:hover,
+:root[data-design="tisch"][data-scheme="dark"] .inbox-row.inbox-row--unread .link-btn:hover {
+  color: var(--ink);
+}
+
+/* The feed's tiles: the title in the display face, so a wall of events reads
+   as headlines rather than as body copy, and the cover as a box with a
+   hairline edge. Nothing is written on the cover (finding A6). */
+:root[data-design="tisch"][data-scheme="dark"] .e-tile__title {
+  font-family: var(--font-display);
+  font-weight: 800;
+}
+:root[data-design="tisch"][data-scheme="dark"] .e-tile__img { box-shadow: 0 0 0 1px var(--line); }
+
+/* --- Der Posteingang (T14.2) ----------------------------------------------
+   An UNREAD row is the raised plate with the gold edge — T14.2's invitation
+   — and a read one lies flat. The actionable kinds are then told apart by
+   what stands on the right: a brass „Annehmen" and a quiet „Ablehnen" for an
+   invitation or a request, a lone dismiss glyph for a plain notice. That is
+   T14.6's own distinction and the app already renders it; the paint's job is
+   only to stop every row carrying the same weight.
+
+   The unread dot moves to T1's Zinnober — „laufende Abstimmung, Gefahr,
+   Marke" — rather than staying brass beside a brass button, where it read as
+   part of the control. --danger is that hue's LIGHT member, the one that goes
+   on wood: 4.47:1 on the raised fill and 5.53:1 on --surface against the 3:1
+   a non-text mark needs (SC 1.4.11). The state is also carried by the
+   aria-label and the bolder title, never by the colour alone. */
+:root[data-design="tisch"][data-scheme="dark"] .inbox-row.inbox-row--unread {
+  background: var(--control-fill);
+  border-color: var(--gold);
+}
+:root[data-design="tisch"][data-scheme="dark"] .inbox-row__dot { background: var(--danger); }
+:root[data-design="tisch"][data-scheme="dark"] .inbox-row .ds-row__date {
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+:root[data-design="tisch"][data-scheme="dark"] .inbox-row.inbox-row--unread .ds-row__date { font-weight: 800; }
+
+/* --- „Was ist neu" (T14.3) -------------------------------------------------
+   Dated, not versioned: the date stands in its own gold column and the entry
+   hangs off a brass hairline beside it. Gold is TEXT here, and that is
+   allowed on WOOD — A1 restricts gold under 24px on FELT, where it is 4.20:1;
+   on the walnut page it measures 9.16:1.
+
+   The column starts at 600px. Below that the date keeps its place above the
+   title, because a 7.5em column would leave the entry's own text ~230px on a
+   390px screen for no gain in reading order. */
+:root[data-design="tisch"][data-scheme="dark"] .news-entry__date {
+  font-family: var(--font-display);
+  font-weight: 800;
+  color: var(--gold);
+}
+:root[data-design="tisch"][data-scheme="dark"] .news-entry { border-left-color: var(--gold-edge); }
+@media (min-width: 600px) {
+  :root[data-design="tisch"][data-scheme="dark"] .news-entry {
+    display: grid;
+    grid-template-columns: 7.5em minmax(0, 1fr);
+    column-gap: 14px;
+    border-left: 0;
+    padding-left: 0;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .news-entry__date { grid-row: 1 / span 2; margin: 2px 0 0; }
+  :root[data-design="tisch"][data-scheme="dark"] .news-entry__title,
+  :root[data-design="tisch"][data-scheme="dark"] .news-entry__body {
+    grid-column: 2;
+    border-left: 2px solid var(--gold-edge);
+    padding-left: 14px;
+  }
+  /* The title's bottom margin would open a gap in the hairline, so the same
+     distance moves inside the box. */
+  :root[data-design="tisch"][data-scheme="dark"] .news-entry__title { margin: 0; padding-bottom: 6px; }
+}
+
+/* --- Die Statistik, signed in (T14.4) ---------------------------------------
+   Only the standalone screen's block (`.app > .stats-block`), and only for a
+   signed-in visitor: the landing's copy and the logged-out /entdecken are the
+   face, which #1198 dresses, and the home panel's cards sit in a dashboard
+   tile on its own --sunken ground (styles.css).
+
+   Each podium card becomes T14.4's walnut plate with its label in the display
+   face under a gold glyph, and the counters become the same raised plates as
+   the Spielerkarte's figures — one family for "a number about you" and "a
+   number about everyone". Nothing names a round or a person, as before. */
+:root[data-design="tisch"][data-scheme="dark"] body:not(.auth-screen) .app > .stats-block .stats-card,
+:root[data-design="tisch"][data-scheme="dark"] body:not(.auth-screen) .app > .stats-block .stats-counter {
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-1);
+}
+:root[data-design="tisch"][data-scheme="dark"] body:not(.auth-screen) .app > .stats-block .stats-counter {
+  background: var(--control-fill);
+}
+:root[data-design="tisch"][data-scheme="dark"] body:not(.auth-screen) .app > .stats-block .stats-counter__num {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+:root[data-design="tisch"][data-scheme="dark"] body:not(.auth-screen) .app > .stats-block .stats-card__label {
+  font-family: var(--font-display);
+  font-weight: 800;
+}
+:root[data-design="tisch"][data-scheme="dark"] body:not(.auth-screen) .app > .stats-block .stats-card__label .ti {
+  color: var(--gold);
+}
+/* The cover as T14.4's upright box — a game box stands, it does not lie in a
+   square — and the wood placeholder when the provider sent none. */
+:root[data-design="tisch"][data-scheme="dark"] body:not(.auth-screen) .app > .stats-block .stats-card__cover {
+  width: 44px;
+  height: 56px;
+  border-radius: var(--radius-sm);
+}
+:root[data-design="tisch"][data-scheme="dark"] body:not(.auth-screen) .app > .stats-block .stats-card__cover--none {
+  background:
+    repeating-linear-gradient(92deg, var(--wood-grain) 0 3px, transparent 3px 11px),
+    linear-gradient(160deg, var(--wood-light), var(--wood-deep));
+}
+
+/* --- Die Einstellungen der Runde (T14.5) ------------------------------------
+   The row list becomes T14.5's settings rows: each a walnut plate with its
+   glyph in gold, the chevron quiet, the edge lighting to brass under the
+   pointer. Gold as a glyph on wood needs no carve-out at all. */
+:root[data-design="tisch"][data-scheme="dark"] .rs-row .ds-row__main { font-weight: 700; }
+:root[data-design="tisch"][data-scheme="dark"] .rs-row .ds-row__main .ti {
+  color: var(--gold);
+  font-size: var(--text-lg);
+}
+:root[data-design="tisch"][data-scheme="dark"] .rs-row:hover { border-color: var(--gold-edge); }
+
+/* The danger zone as T14.5's own plate: the alert tone as a real edge, where
+   Klassisch's 25% mix of --danger into walnut comes out as a line nobody can
+   find. --danger is T1's „Akzent als Schrift auf Holz" (5.53:1 on
+   --surface), and the heading above the plate already wears it. */
+:root[data-design="tisch"][data-scheme="dark"] .rs-danger { border-color: var(--danger); }
+
+/* --- The felt picker (T14.5 „Filz der Runde") -------------------------------
+   Eight pieces of felt, four to a row from 600px, each cut the way every felt
+   surface in this design is — the radial from the light stop to the deep one,
+   with the weave — and named underneath rather than on the swatch. The chosen
+   one takes the 3px gold rim with a brass ring outside it; the check glyph
+   stays, in `--marker-ink` (paper: 5.38:1 on Tannenfilz's light stop, 4.56:1
+   on Ockerfilz, the tightest — T8.1's own figures, asserted by
+   test/a11y-contrast.test.js over all eight).
+
+   The card around each swatch goes: T14.5 draws the felt and its name, and
+   the tile's own border was a second frame round the first. The swatch is
+   the target, and its 1px --control-edge is what identifies it as a control
+   against the page (4.48:1). */
+:root[data-design="tisch"][data-scheme="dark"] .marker-card {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  gap: 6px;
+}
+:root[data-design="tisch"][data-scheme="dark"] .marker-card__fill {
+  height: 56px;
+  border: 1px solid var(--control-edge);
+  border-radius: var(--radius-md);
+  background-image:
+    var(--felt-weave),
+    radial-gradient(120% 130% at 40% -10%, var(--marker), var(--marker-deep) 74%);
+}
+:root[data-design="tisch"][data-scheme="dark"] .marker-card:hover .marker-card__fill { border-color: var(--gold); }
+:root[data-design="tisch"][data-scheme="dark"] .marker-card.is-active { box-shadow: none; }
+:root[data-design="tisch"][data-scheme="dark"] .marker-card.is-active .marker-card__fill {
+  border: 3px solid var(--gold);
+  box-shadow: 0 0 0 2px var(--gold-edge);
+}
+:root[data-design="tisch"][data-scheme="dark"] .marker-card__name {
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+:root[data-design="tisch"][data-scheme="dark"] .marker-card.is-active .marker-card__name { color: var(--ink); }
+@media (min-width: 600px) {
+  :root[data-design="tisch"][data-scheme="dark"] .marker-cards {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    max-width: 640px;
+  }
 }
 
 /* ===========================================================================

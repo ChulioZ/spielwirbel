@@ -848,7 +848,7 @@ async function showGameDetail(rid, gameId) {
   // verbatim.
   const menuItems = [];
   if (!game.retired && !game.completed && !game.wish) {
-    menuItems.push(['ti-trash', t('detail.retire'), 'popover__opt--warn', async () => {
+    menuItems.push({ icon: 'ti-trash', label: t('detail.retire'), cls: 'popover__opt--warn', kind: 'destructive', run: async () => {
       if (!await confirmDialog({
         body: t('detail.retireConfirm', { title: game.title }),
         confirmLabel: t('detail.retire'), icon: 'ti-trash',
@@ -858,8 +858,8 @@ async function showGameDetail(rid, gameId) {
         toast(t('games.retired', { title: game.title }));
         showGameDetail(rid, gameId);
       } catch (e) { toast(e.message); }
-    }]);
-    menuItems.push(['ti-circle-check', t('detail.complete'), 'popover__opt--good', async () => {
+    } });
+    menuItems.push({ icon: 'ti-circle-check', label: t('detail.complete'), cls: 'popover__opt--good', kind: 'undoable', run: async () => {
       if (!await confirmDialog({
         body: t('detail.completeConfirm', { title: game.title }),
         confirmLabel: t('detail.complete'), icon: 'ti-circle-check', danger: false,
@@ -869,11 +869,11 @@ async function showGameDetail(rid, gameId) {
         toast(t('games.completed', { title: game.title }));
         showGameDetail(rid, gameId);
       } catch (e) { toast(e.message); }
-    }]);
+    } });
   }
   if (game.source) {
     const provider = providerLabel(game.source.provider);
-    menuItems.push(['ti-unlink', t('detail.unlinkProvider'), 'popover__opt--muted', async () => {
+    menuItems.push({ icon: 'ti-unlink', label: t('detail.unlinkProvider'), cls: 'popover__opt--muted', kind: 'destructive', run: async () => {
       // Only a hotlinked provider cover is dropped with the link; the member's
       // own upload is kept, so the two wordings must not be swapped.
       const ownUpload = typeof game.image === 'string' && game.image.startsWith('/uploads/');
@@ -887,7 +887,7 @@ async function showGameDetail(rid, gameId) {
         toast(t('detail.toast.unlinked'));
         showGameDetail(rid, gameId);
       } catch (e) { toast(e.message); }
-    }]);
+    } });
   }
   if (menuItems.length) {
     back.classList.add('back-row--split');
@@ -899,14 +899,8 @@ async function showGameDetail(rid, gameId) {
     // a backdrop tap, Back, the page scroll that tears a popover down) and
     // leaves the trigger claiming a panel that is gone.
     menuBtn.addEventListener('click', () => {
-      openPopover(menuBtn, (el, close) => {
-        el.classList.add('popover--menu');
-        menuItems.forEach(([icon, label, cls, run]) => {
-          const b = h(`<button class="popover__opt ${cls}"><i class="ti ${icon}" aria-hidden="true"></i> ${esc(label)}</button>`);
-          b.addEventListener('click', () => { close(); run(); });
-          el.appendChild(b);
-        });
-      }, () => menuBtn.setAttribute('aria-expanded', 'false'));
+      openPopover(menuBtn, (el, close) => fillMenu(el, menuItems, close),
+        () => menuBtn.setAttribute('aria-expanded', 'false'));
       menuBtn.setAttribute('aria-expanded', 'true');
     });
     back.appendChild(menuBtn);
