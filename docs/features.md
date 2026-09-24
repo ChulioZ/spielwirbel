@@ -320,7 +320,9 @@ What the app does, in detail. For a short overview see the
     *Stempelkarte* — one rubber stamp per session, inked in the score that game
     earned that evening, muted for an evening it was not taken to — with a
     **Jetzt spielen** launcher pinned at its foot. The rarer actions
-    (Aussortieren, Durchgespielt, unlinking the provider) live in a „…" menu.
+    (Durchgespielt, Aussortieren, unlinking the provider) live in a „…" menu —
+    and every „…" menu in the app keeps one order: change, share, what can be
+    undone, and last whatever asks a destructive question (#1195).
   - **Chronik** – one month-grouped timeline of everything that happened:
     games added / retired / restored and session outcomes. Above the timeline,
     a **period recap** sums up one calendar month or year — sessions played,

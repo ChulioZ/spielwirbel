@@ -121,6 +121,19 @@ silently:
   like a different product. `#fff`/`#000` stay allowed — the app's own rules use
   those two inline.
 
+**#1198 gave every one of these pages a SECOND copy — the face design's.** A
+design marked `face: true` in `public/js/designs.js` (Der Tisch) must be
+carried as a `:root[data-design="<id>"]` block, pinned against that design's
+own resolved tokens through `test/support/theme.js`, and switched on by
+`<html data-design>` — stamped from `FACE_DESIGN` on the server for `/faq` and
+the legal pages, and by `js/pages/face.js` in `<head>` for the two static ones,
+never by a `GET /api/config` round-trip (the page would paint Klassisch first).
+`lib/legal.js` joined `PAGES` then with a face copy only: its Klassisch look
+predates the tokens and stays as literals, so only its face-scoped rules are
+swept for a hex. Two assertions there are the non-obvious ones: the face block
+must redeclare every name the Klassisch block declares (else a Klassisch value
+leaks through), and every `var()` it reads must be declared inside it.
+
 **`TISCH_CARD_TOKENS` (`public/js/recap-card-tisch.js`, #1199) is the third**:
 a canvas cannot read a design's tokens off the cascade when that design's colour
 block is not in force (the names are shared, so it silently reads another

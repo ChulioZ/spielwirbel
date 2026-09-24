@@ -396,6 +396,14 @@ function showLanding() {
       <ul class="landing-claims">${claims}</ul>
     </section>
 
+    <!-- The design band (#1198, T12.1). EMPTY here and filled by
+         mountLandingDesigns below, which removes it outright when the instance
+         offers fewer than two designs. styles.css keeps it display: none, so
+         Klassisch renders exactly as before; a design that wants it (Der Tisch
+         as the face) shows it from its own stylesheet. (No backticks in here:
+         this comment is inside a template literal.) -->
+    <section class="landing-section landing-designs" id="landingDesigns"></section>
+
     <!-- Instance-wide statistics (#564). An EMPTY placeholder: mountLandingStats
          fills it once GET /api/stats/public answers, and removes it outright
          when there is nothing to publish — so an instance with the feature off
@@ -427,4 +435,41 @@ function showLanding() {
   // Not awaited: the landing page must render at once, and the block appears
   // (or its placeholder disappears) when the payload lands.
   mountLandingStats(view.querySelector('#landingStats'));
+  mountLandingDesigns(view.querySelector('#landingDesigns'));
+}
+
+/* The design band (#1198, T12.1): every design an account may wear, as a row of
+   small posters under one line of copy. It prepares the first-start chooser
+   (#1186) so that choosing a look is not a surprise.
+
+   THE COUNT COMES FROM THE SERVER, never from the sheet. T12.1 says „Sieben" —
+   true of the finished programme, false of every instance before it: production
+   offers only the designs that are `enabled` (designs.js), and a public page
+   promising seven looks while the chooser offers two is a claim the next click
+   contradicts. So the heading takes {n} from GET /api/config's `designs`, the
+   posters are exactly those designs, and fewer than two removes the band — one
+   design is not a choice, which is the same bar buildDesignSection sets.
+
+   Built whatever the design worn, and SHOWN only by a design that asks for it:
+   styles.css keeps `.landing-designs` at display: none, which is what keeps
+   Klassisch byte-for-byte today's page. offeredDesigns/designTile live in
+   design-picker.js, which loads before this file and is only called here, at
+   render time (.claude/rules/frontend-script-load-order.md). */
+function mountLandingDesigns(section) {
+  withAppConfig((cfg) => {
+    if (!section.isConnected) return;
+    const designs = offeredDesigns(cfg);
+    if (designs.length < 2) { section.remove(); return; }
+    section.appendChild(h(`<div class="landing-designs__text">
+        <h2 class="landing-designs__title">${esc(t('landing.designs.title', { n: designs.length }))}</h2>
+        <p class="landing-designs__desc">${esc(t('landing.designs.desc'))}</p>
+      </div>`));
+    const list = h('<ul class="landing-designs__list"></ul>');
+    for (const design of designs) {
+      const item = h(`<li class="landing-design"><span class="landing-design__name">${esc(t(design.labelKey))}</span></li>`);
+      item.insertBefore(designTile(design), item.firstChild);
+      list.appendChild(item);
+    }
+    section.appendChild(list);
+  });
 }

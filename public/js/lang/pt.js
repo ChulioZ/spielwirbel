@@ -37,7 +37,8 @@ I18N.pt = {
   'footer.trustNoTracking': 'Sem rastreamento, sem anúncios, sem scripts de terceiros',
   'common.back': 'Voltar',
   'common.delete': 'Excluir',
-  'common.ok': 'OK',
+  'common.apply': 'Aplicar',
+  'common.add': 'Adicionar',
   'common.close': 'Fechar',
   'common.cancel': 'Cancelar',
   'common.confirm': 'Confirmar',
@@ -1470,6 +1471,10 @@ I18N.pt = {
   'landing.cta.title': 'Da próxima vez, ninguém discute por causa disso.',
   'landing.faq.q': 'Ainda com dúvidas?',
   'landing.faq.link': 'Leia o FAQ',
+  // The design band (#1198), shown only by a design that asks for it (Der Tisch as the face).
+  // {n} is how many designs the instance offers (GET /api/config), so it never overclaims.
+  'landing.designs.title': '{n} designs, um app.',
+  'landing.designs.desc': 'Cada conta escolhe o próprio design. Tudo fica no mesmo lugar em cada um — só a aparência muda.',
 
   'demo.banner.text': 'Você está testando o Spielwirbel em um grupo de demonstração. Ele é excluído automaticamente — nada aqui é guardado.',
   'demo.banner.cta': 'Cadastre-se de graça',

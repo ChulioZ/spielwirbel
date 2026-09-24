@@ -12,7 +12,8 @@ I18N.fi = {
   'footer.trustNoTracking': 'Ei seurantaa, ei mainoksia, ei kolmannen osapuolen skriptejä',
   'common.back': 'Takaisin',
   'common.delete': 'Poista',
-  'common.ok': 'OK',
+  'common.apply': 'Käytä',
+  'common.add': 'Lisää',
   'common.close': 'Sulje',
   'common.cancel': 'Peruuta',
   'common.confirm': 'Vahvista',
@@ -1436,6 +1437,10 @@ I18N.fi = {
   'landing.cta.title': 'Ensi kerralla siitä ei enää väitellä.',
   'landing.faq.q': 'Vieläkö jokin mietityttää?',
   'landing.faq.link': 'Lue UKK',
+  // The design band (#1198), shown only by a design that asks for it (Der Tisch as the face).
+  // {n} is how many designs the instance offers (GET /api/config), so it never overclaims.
+  'landing.designs.title': '{n} ulkoasua, yksi sovellus.',
+  'landing.designs.desc': 'Jokainen tili valitsee oman ulkoasunsa. Kaikki on jokaisessa samassa paikassa – vain ulkonäkö vaihtuu.',
 
   'demo.banner.text': 'Kokeilet Spielwirbeliä demoporukassa. Se poistetaan automaattisesti — mitään täällä ei säilytetä.',
   'demo.banner.cta': 'Rekisteröidy ilmaiseksi',

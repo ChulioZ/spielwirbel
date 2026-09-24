@@ -66,9 +66,16 @@ text colour — the same rule review finding A1 states for gold — so a design 
 legitimately answer "this token is not text here" instead of supplying a paper
 twin.
 
-Until the trio is re-pointed, a rule painting one of them on the overlay's ground
-must name a token that was measured *there*: `--paper-faint` for Der Tisch, which
-is review finding A4's own corrected value.
+**#1195 re-pointed the trio**, the way this section prescribes: `--good` and
+`--danger` at T1's deep partners (`--paper-good`, `--paper-danger`), and `--warn`
+at `--paper-faint` rather than a twin, because T1 says warn is not text. It found
+five more on the way — `--accent`, `--sunken(-soft)`, `--line`, the brand tints
+and `--brand-edge` — every one of them a `:root` mix of `--page-bg` or `--surface`,
+i.e. substituted against the walnut and inherited into the sheet as a finished
+colour. So the guard is DERIVED now: `test/tisch-overlays.test.js` lists every
+`:root` token whose value reads `var(--page-bg)` or `var(--surface)` and requires
+the overlay to re-point each. A new token of that shape fails there by name; the
+status trio, which is NOT derived from the page, keeps its own explicit test.
 
 ## The second one: what a STICKY descendant paints from (#1193)
 

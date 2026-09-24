@@ -13,7 +13,8 @@ I18N.ko = {
   'footer.trustNoTracking': '추적 없음, 광고 없음, 외부 스크립트 없음',
   'common.back': '뒤로',
   'common.delete': '삭제',
-  'common.ok': '확인',
+  'common.apply': '적용',
+  'common.add': '추가',
   'common.close': '닫기',
   'common.cancel': '취소',
   'common.confirm': '확인',
@@ -1404,6 +1405,10 @@ I18N.ko = {
   'landing.cta.title': '다음부터는 아무도 그걸로 다투지 않아요.',
   'landing.faq.q': '아직 궁금한 게 있나요?',
   'landing.faq.link': '자주 묻는 질문 보기',
+  // The design band (#1198), shown only by a design that asks for it (Der Tisch as the face).
+  // {n} is how many designs the instance offers (GET /api/config), so it never overclaims.
+  'landing.designs.title': '디자인 {n}가지, 앱은 하나.',
+  'landing.designs.desc': '계정마다 자기 디자인을 고릅니다. 모든 것은 어느 디자인에서나 같은 자리에 있고, 모습만 달라집니다.',
   'demo.banner.text': '지금 Spielwirbel을 데모 모임으로 체험하고 계세요. 자동으로 삭제되며, 여기에 남는 건 아무것도 없어요.',
   'demo.banner.cta': '무료로 가입하기',
   'demo.banner.terms': '이용약관이 적용돼요.',

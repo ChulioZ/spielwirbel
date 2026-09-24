@@ -36,6 +36,49 @@
 
 'use strict';
 
+/* The dialog's anatomy (#1195, T15b): the TITLE is the question, the text under
+   it the consequence, the button the verb. Every caller already writes its
+   message in that order — „„Azul“ aussortieren? Weg aus Regal und Auslosung —
+   jederzeit zurückholen." — so the split needs no new copy: the question is the
+   text up to its first sentence-ending question mark, and the rest is what
+   follows from it. Before this the heading was the neutral „Bitte bestätigen"
+   on every dialog, which told the reader nothing the button did not.
+
+   Three guards, each against a message that exists or plausibly will:
+     - the mark must END a sentence — followed by whitespace or the end — so
+       nothing is split mid-token;
+     - it must sit OUTSIDE quotation marks, because the question usually names
+       a game, and a title like „Wer war's? Das Spiel" must not be cut in two.
+       Tracked as a stack over the pairs the nine locales use („“ “” «» ‹› 「」
+       and the ASCII ones); German's closing “ is English's opening one, which
+       is why the open quote's closer is tested before any opener is;
+     - no mark at all (a locale phrasing it as a statement) returns null, and
+       the caller keeps the neutral heading with the whole message as the text.
+
+   A message whose question comes LAST („Es fehlen noch 3 Stimmen. Trotzdem
+   beenden?") becomes a two-sentence heading. Accepted rather than cut at the
+   preceding full stop: dates in these messages carry full stops too („vom
+   19.09.") and a sentence splitter that misreads one would put half a date in
+   the heading. Pure — no DOM — so a spec can call it directly. */
+function splitConfirmQuestion(text) {
+  const s = String(text || '');
+  const closes = { '„': '“”', '«': '»', '‹': '›', '「': '」', '“': '”', '"': '"', '\'': '\'' };
+  const stack = [];
+  for (let i = 0; i < s.length; i++) {
+    const c = s[i];
+    const top = stack[stack.length - 1];
+    if (top && closes[top].includes(c)) { stack.pop(); continue; }
+    // An apostrophe inside a word („war's") is not a quotation mark, so an
+    // ASCII ' only OPENS after whitespace or at the start of the message.
+    if (c === '\'' && i > 0 && !/\s/.test(s[i - 1])) continue;
+    if (closes[c]) { stack.push(c); continue; }
+    if ((c === '?' || c === '？') && !stack.length && (i === s.length - 1 || /\s/.test(s[i + 1]))) {
+      return { question: s.slice(0, i + 1).trim(), rest: s.slice(i + 1).trim() };
+    }
+  }
+  return null;
+}
+
 /* Ask the user to confirm an action. Resolves true only when they press the
    confirm button; every dismissal path — the × button, the backdrop, Escape and
    browser Back — resolves false, so a call site reads exactly like the
@@ -44,8 +87,9 @@
      if (!await confirmDialog({ body: t('round.deleteConfirm', { name }) })) return;
 
    @param {object}  o
-   @param {string}  o.body          the question, as plain text (the old confirm message)
-   @param {string} [o.title]        dialog heading; defaults to a neutral one
+   @param {string}  o.body          the question, as plain text (the old confirm message);
+                                    its question sentence becomes the heading
+   @param {string} [o.title]        dialog heading; overrides that split
    @param {string} [o.confirmLabel] the real verb; defaults to a neutral "confirm"
    @param {boolean}[o.danger=true]  style the confirm button as destructive
    @param {string} [o.icon]         Tabler class for the confirm button
@@ -54,7 +98,11 @@
 function confirmDialog(o) {
   const opts = o || {};
   const danger = opts.danger !== false;
-  const title = opts.title || t('common.confirmTitle');
+  // An explicit title wins and leaves the body whole; otherwise the question
+  // is lifted out of the body into the heading (splitConfirmQuestion, above).
+  const split = opts.title ? null : splitConfirmQuestion(opts.body);
+  const title = opts.title || (split ? split.question : t('common.confirmTitle'));
+  const bodyText = split ? split.rest : (opts.body || '');
   const label = opts.confirmLabel || t('common.confirm');
   const icon = opts.icon || (danger ? 'ti-alert-triangle' : 'ti-check');
 
@@ -72,7 +120,7 @@ function confirmDialog(o) {
             <h2>${esc(title)}</h2>
             <button class="sheet__close" type="button" aria-label="${esc(t('common.close'))}"><i class="ti ti-x" aria-hidden="true"></i></button>
           </div>
-          <p class="confirm-dialog__body">${esc(opts.body || '')}</p>
+          <p class="confirm-dialog__body">${esc(bodyText)}</p>
           <div class="confirm-dialog__opts"></div>
           <div class="toolbar sheet__actions sheet__actions--confirm">
             <button class="btn" type="button" data-act="cancel">${esc(t('common.cancel'))}</button>

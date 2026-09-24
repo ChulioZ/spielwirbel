@@ -15,12 +15,14 @@ I18N.de = {
   'footer.trustNoTracking': 'Kein Tracking, keine Werbung, keine Fremd-Skripte',
   'common.back': 'Zurück',
   'common.delete': 'Löschen',
-  'common.ok': 'OK',
+  'common.apply': 'Übernehmen',
+  'common.add': 'Hinzufügen',
   'common.close': 'Schließen',
   'common.cancel': 'Abbrechen',
   'common.confirm': 'Bestätigen',
-  // Neutrale Überschrift des Bestätigungsdialogs (#939) – das echte Verb
-  // steht auf dem Button, die ganze Frage im Text darunter.
+  // Neutrale Überschrift des Bestätigungsdialogs (#939) – nur noch der
+  // Rückfall: seit #1195 wird die Frage selbst zur Überschrift, sofern die
+  // Meldung eine enthält (splitConfirmQuestion, confirm-dialog.js).
   'common.confirmTitle': 'Bitte bestätigen',
   'common.overwrite': 'Überschreiben',
 
@@ -1564,6 +1566,10 @@ I18N.de = {
   // and the questions it does not answer get one clearly-labelled way out.
   'landing.faq.q': 'Noch Fragen?',
   'landing.faq.link': 'Häufige Fragen lesen',
+  // The design band (#1198), shown only by a design that asks for it (Der Tisch as the face).
+  // {n} is how many designs the instance offers (GET /api/config), so it never overclaims.
+  'landing.designs.title': '{n} Designs, eine App.',
+  'landing.designs.desc': 'Jedes Konto wählt sein eigenes Design. Alles liegt überall an derselben Stelle – es sieht nur anders aus.',
 
   // Guest demo mode (#427). The banner is PERSISTENT (not a toast), so its
   // wording has to stay true for the whole session and must never let the

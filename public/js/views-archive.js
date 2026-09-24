@@ -102,6 +102,9 @@ async function showArchive(rid, kind, seg = kind) {
   // The URL segment, not `kind` — it is what HUB_TAB_OF is keyed by.
   renderSubScreenTabs(round, seg);
   app.appendChild(backRow(() => showRound(rid, 'regal')));
+  // The four off-shelf screens as segments (#1196); shown only where a design
+  // asks for them — see offShelfSegments in off-shelf.js.
+  app.appendChild(offShelfSegments(round, seg));
   const head = h(`<div class="page-head"><div>
          <h1>${esc(t(`${kind}.title`))}</h1>
          <div class="muted">${esc(round.name)}</div>

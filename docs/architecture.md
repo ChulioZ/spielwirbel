@@ -253,6 +253,10 @@ lib/
                      per-recipient throttle and coalescing
   legal.js           server-rendered Impressum / privacy policy /
                      Nutzungsbedingungen in DE + EN (issues #134/#140)
+  account-design.js  which design an account wears (resolved against the
+                     registry's `enabled` gate) and when a change counts as
+                     going back to Klassisch — shared by /me, the two design
+                     routes and the operator's „Designs" tile (issue #1201)
   me-projection.js   the ONE description of what a client may see about an
                      account (issue #785) — answered by GET /me and by all
                      three endpoints that start a session (password login,
@@ -452,6 +456,8 @@ public/
       kontakt.js     kontakt.html's own script (the bilingual contact form)
       admin.js       admin.html's own script, so no privileged code ships in
                      the SPA
+      face.js        stamps FACE_DESIGN onto login.html's and kontakt.html's
+                     <html data-design> from <head>, after designs.js (#1198)
     error-report.js  browser-side fault reporting (#1149): the fault-kind enum,
                      the route-shape redaction and the bounded reporter — loads
                      FIRST, shared with the backend, which requires it

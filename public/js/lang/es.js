@@ -21,7 +21,8 @@ I18N.es = {
   'footer.trustNoTracking': 'Sin rastreo, sin anuncios, sin scripts de terceros',
   'common.back': 'Atrás',
   'common.delete': 'Eliminar',
-  'common.ok': 'Aceptar',
+  'common.apply': 'Aplicar',
+  'common.add': 'Añadir',
   'common.close': 'Cerrar',
   'common.cancel': 'Cancelar',
   'common.confirm': 'Confirmar',
@@ -1512,6 +1513,10 @@ I18N.es = {
   'landing.cta.title': 'La próxima vez, nadie discute.',
   'landing.faq.q': '¿Te queda alguna duda?',
   'landing.faq.link': 'Lee las preguntas frecuentes',
+  // The design band (#1198), shown only by a design that asks for it (Der Tisch as the face).
+  // {n} is how many designs the instance offers (GET /api/config), so it never overclaims.
+  'landing.designs.title': '{n} diseños, una app.',
+  'landing.designs.desc': 'Cada cuenta elige su propio diseño. Todo está en el mismo sitio en cada uno; solo cambia el aspecto.',
 
   // Modo demostración (#427). El aviso es PERMANENTE (no un mensaje pasajero),
   // así que su texto tiene que seguir siendo cierto durante toda la sesión y no

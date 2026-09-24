@@ -51,6 +51,47 @@ function repositionPopover() {
   if (activePopover && activePopover.place) activePopover.place();
 }
 
+/* The „…" menu (#1195, T15b). Four screens build one — game detail, the
+   member's Tischkarte, a result row, a profile — and each used to push its rows
+   in whatever order its branches happened to run, so the same kind of action
+   sat at a different height on each. The ORDER is now a property of the item:
+
+     edit → share → undoable → destructive
+
+   i.e. change the thing, hand it on, do something that can be taken back, and
+   last — below a rule in designs that draw one — whatever cannot. An item is
+   `destructive` exactly when its action raises a DANGER confirm (confirmDialog
+   without `danger: false`): "red in the menu" and "asks a red question" are one
+   decision, so the two can never disagree about the same action.
+
+   Stable within a kind, so two items of one kind keep the order their screen
+   wrote them in. An unknown kind sorts with `undoable` rather than throwing: a
+   menu that fails to open is worse than one row in the middle group, and
+   test/tisch-overlays.test.js asserts every real call site names a known one. */
+const MENU_KINDS = ['edit', 'share', 'undoable', 'destructive'];
+function menuRank(kind) {
+  const i = MENU_KINDS.indexOf(kind);
+  return i === -1 ? MENU_KINDS.indexOf('undoable') : i;
+}
+function sortMenuItems(items) {
+  return items
+    .map((item, i) => ({ item, i }))
+    .sort((a, b) => (menuRank(a.item.kind) - menuRank(b.item.kind)) || (a.i - b.i))
+    .map(({ item }) => item);
+}
+/* Fill an open popover with the menu rows. `items` are
+   `{ icon, label, kind, cls?, run }`; `cls` is the row's tone class
+   (`popover__opt--warn` …), which the app's own designs still paint by — the
+   `data-kind` is for a design that paints by meaning instead (Der Tisch). */
+function fillMenu(el, items, close) {
+  el.classList.add('popover--menu');
+  sortMenuItems(items).forEach(({ icon, label, kind, cls, run }) => {
+    const b = h(`<button class="popover__opt${cls ? ' ' + cls : ''}" data-kind="${esc(kind || 'undoable')}"><i class="ti ${icon}" aria-hidden="true"></i> ${esc(label)}</button>`);
+    b.addEventListener('click', () => { close(); run(); });
+    el.appendChild(b);
+  });
+}
+
 // `build(el, close)` may return a callback, which runs once the popover is in
 // the document AND positioned. Anything that needs a live element — above all
 // `input.focus()` — belongs there: build() itself runs on a detached node, so a

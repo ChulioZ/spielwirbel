@@ -315,8 +315,9 @@ the **quota ceilings paired with the highest value anyone currently holds**
 against each, and the Node version the answering process is running.
 **Funktionsnutzung** answers "is any of this being used": how many accounts exist
 (verified / unverified / suspended), and then one share per feature — rounds using
-the archive, the played shelf or the wishlist; rounds wearing a design, carrying
-their own tags or shared with someone; games linked to a provider, wearing a
+the archive, the played shelf or the wishlist; which design accounts wear, and
+how many went back to Klassisch after trying another; rounds carrying their own
+tags or shared with someone; games linked to a provider, wearing a
 cover, owned by a named person or carrying expansions; sessions with guests, with
 teams or opened through a shared vote link; accounts with a passkey, a BGG
 username or a profile picture. Every adoption figure is stated as `n / total`
