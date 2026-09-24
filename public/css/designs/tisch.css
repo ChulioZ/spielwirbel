@@ -4406,12 +4406,6 @@
   :root[data-design="tisch"] .landing-hero .landing-offer__trust { justify-content: flex-start; }
 }
 
-/* „Code öffentlich einsehbar" is not on the face (#1198's scope names it).
-   Hidden, not deleted: Klassisch keeps the chip exactly as it was, and whether
-   Klassisch drops it too is the operator's call, not this slice's. Ungated on
-   purpose — it names no colour, so it holds wherever the design is worn. */
-:root[data-design="tisch"] .landing-offer__source { display: none; }
-
 /* --- The claims, as walnut boards with a brass plate (T12.1) ------------- */
 :root[data-design="tisch"][data-scheme="dark"] .landing-claim {
   padding: 18px;

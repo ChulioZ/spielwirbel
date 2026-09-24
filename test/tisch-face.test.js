@@ -58,14 +58,14 @@ test('#1198: only Der Tisch turns the band on, and only once it has content', ()
   assert.deepEqual(bare.map(([s]) => s), []);
 });
 
-test('#1198: „Code öffentlich einsehbar" leaves the trust row under Der Tisch only', () => {
-  const hide = rulesMatching('.landing-offer__source');
-  assert.equal(hide.length, 1, 'expected exactly one rule for the source chip');
-  assert.match(hide[0][0], /^:root\[data-design="tisch"\]/);
-  assert.match(hide[0][1], /display:\s*none/);
-  // …and styles.css does not touch the hook, so Klassisch keeps the chip.
-  const css = fs.readFileSync(path.join(__dirname, '..', 'public', 'styles.css'), 'utf8');
-  assert.ok(!/landing-offer__source/.test(css.replace(/\/\*[\s\S]*?\*\//g, '')));
+/* Operator decision in #1198's merge interview (2026-09-24): „Code öffentlich
+   einsehbar" stays in the trust row in EVERY design, the face included — the
+   issue's „without Quellcode offen" was overruled. So nothing in the design
+   sheet may hide a trust-row item, whatever hook it would reach it by. */
+test('#1198: the face keeps every trust-row item, „Code öffentlich einsehbar" included', () => {
+  const hides = RULES.filter(([sel, body]) =>
+    /landing-offer__(trust|source)|landing-chip--link/.test(sel) && /display\s*:\s*none/.test(body));
+  assert.deepEqual(hides.map(([s]) => s), [], 'a Tisch rule hides part of the trust row');
 });
 
 /* ---- the band, rendered --------------------------------------------------- */

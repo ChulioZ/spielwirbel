@@ -191,7 +191,7 @@ function renderLandingOffer(opts) {
         ${trust ? `<ul class="landing-offer__trust">
           <li class="landing-chip"><i class="ti ti-heart" aria-hidden="true"></i>${esc(t('landing.trust.free'))}</li>
           <li class="landing-chip"><i class="ti ti-eye-off" aria-hidden="true"></i>${esc(t('landing.trust.noTracking'))}</li>
-          <li class="landing-offer__source"><a class="landing-chip landing-chip--link" href="${LANDING_REPO_URL}"
+          <li><a class="landing-chip landing-chip--link" href="${LANDING_REPO_URL}"
                  target="_blank" rel="noopener noreferrer"><i class="ti ti-code" aria-hidden="true"></i>${esc(t('landing.trust.source'))}</a></li>
           <li class="landing-chip" data-operator-only hidden><i class="ti ti-shield" aria-hidden="true"></i>${esc(t('landing.trust.eu'))}</li>
         </ul>` : ''}
