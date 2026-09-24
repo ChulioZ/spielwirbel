@@ -136,6 +136,10 @@ function hubPokalePreview(round) {
      where the other two previews show their count. Derived from the same
      `rankOf`, so a shared first place says so instead of naming one of them. */
   let sub = null;
+  /* Below YOUNG_ROUND_PODIUM_FROM (T7.5, #1280) Der Tisch names the leader and
+     says when the podium comes, instead of ranking three places off one or two
+     evenings — the Pokale tab's own gate, so preview and page agree. */
+  const young = designIs('tisch') && youngRoundPlayed(round, hubDeps()) < YOUNG_ROUND_PODIUM_FROM;
   if (designIs('tisch')) {
     const leaders = winners.filter((m) => rankOf[m.id] === 1);
     sub = leaders.length === 1
@@ -144,7 +148,7 @@ function hubPokalePreview(round) {
   }
   const card = hubPreviewCard(round, { icon: 'ti-trophy', titleKey: 'hub.tab.pokale', sub, tab: 'pokale' });
   const body = card.querySelector('.hub-card__body');
-  winners.slice(0, HUB_PREVIEW_RANKS).forEach((m) => {
+  winners.filter((m) => !young || rankOf[m.id] === 1).slice(0, HUB_PREVIEW_RANKS).forEach((m) => {
     body.appendChild(h(`<div class="hub-preview__rank">
          <span class="hub-preview__place">${rankOf[m.id]}</span>
          <span class="avatar hub-preview__avatar" style="background:${memberColor(round, m.id)}">${avatarFace(initials(m.name), { userId: m.userId })}</span>
@@ -152,6 +156,10 @@ function hubPokalePreview(round) {
          <span class="hub-preview__score">${esc(tn(wins[m.id], 'pokale.winsOne', 'pokale.wins'))}</span>
        </div>`));
   });
+  // `hub-preview__last`'s type, so the phone tile shows it as its second line.
+  if (young) {
+    body.appendChild(h(`<div class="hub-preview__last hub-preview__threshold">${esc(tn(YOUNG_ROUND_PODIUM_FROM, 'pokale.young.podiumOne', 'pokale.young.podium'))}</div>`));
+  }
   return card;
 }
 

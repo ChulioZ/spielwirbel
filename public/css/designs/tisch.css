@@ -5013,11 +5013,15 @@
      mit", and T7.1's second way into an empty lobby. The rules are under „The
      young round" below. It keeps the app's own threshold (one game), not the
      sheet's „ab 2 Spielen".
-   - #1280 (still open) — T7.2's „Nächster Schritt" card, T7.5's later
-     thresholds („Serien und Trends ab der dritten Session", „Ein Podium braucht
-     drei Sessions") and T7.6's demo summary with its „Gefällt dir das?"
-     invitation. Each is a new string plus a new threshold in shared code; it
-     touches hubPulseCard and renderLobbyList again.
+   - #1280 (the young round's later steps) — T7.2's invite slip and
+     „Nächster Schritt" card in a one-round lobby, T7.5's thresholds (the
+     Rundenpuls from the first session with „Serien und Trends … ab 3
+     Sessions", the streak card held until then, „Ein Podium braucht 3
+     Sessions." on the preview and the Pokale tab — both numbers are
+     YOUNG_ROUND_* in hub-insights.js), and T7.6's demo summary with its
+     „Gefällt dir das?" invitation. The rules are under „The one-round lobby,
+     the thresholds, the demo" and beside the demo's banderole. Nothing in T7
+     is left unbuilt.
 
    Same gate and same no-literals rule as every section above.
    =========================================================================== */
@@ -5167,6 +5171,136 @@
 }
 :root[data-design="tisch"][data-scheme="dark"] .lobby-alt__invited { justify-content: center; }
 
+/* --- The one-round lobby, the thresholds, the demo (T7.2, T7.5, T7.6; #1280)
+   Markup in views-home.js (lobbyInviteSlip, tischNextStep), hub-cards.js
+   (the pulse's threshold sentence, hubDemoSummary, hubDemoInvite),
+   hub-previews.js and views-pokale.js (pokaleYoungLead). Every pair is one
+   test/a11y-contrast.test.js already holds (#1280's own test names them):
+   --ink / --ink-soft on --surface, --ink on --control-fill, --gold glyphs on
+   --surface, and the paper slip's --paper-ink on --paper.
+
+   The pulse, preview and Pokale pieces live INSIDE a round, where the design's
+   colours apply only while the round's own design is dark — so their layout is
+   unconditional and their colours are the generic tokens, which resolve under
+   either scheme. The lobby is always outside a round. */
+
+/* T7.2's second slip: the same printed paper as `.round-card__last`, one
+   strip lower. When both are there the upper one stops reaching the tile's
+   foot (its negative bottom margin) and the two share an edge. */
+:root[data-design="tisch"][data-scheme="dark"] .round-card__invite {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 6px -16px -14px;
+  padding: 10px 14px;
+  min-height: 44px;
+  border-top: 3px solid var(--gold-edge);
+  background: linear-gradient(180deg, var(--paper), var(--paper-raised));
+  color: var(--paper-ink);
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+:root[data-design="tisch"][data-scheme="dark"] .round-card__invite .ti { color: var(--gold-edge); font-size: 19px; /* glyph, not type */ }
+:root[data-design="tisch"][data-scheme="dark"] .round-card__last:has(+ .round-card__invite) { margin-bottom: 0; }
+:root[data-design="tisch"][data-scheme="dark"] .round-card__last + .round-card__invite { margin-top: 0; border-top-width: 1px; }
+/* From 1100 up the tile is a table and the slip is dropped at its foot like
+   `.round-card__last`; the last-played slip, when there is one, moves up a
+   slip's height so the two lie one above the other rather than on top. */
+@media (min-width: 1100px) {
+  :root[data-design="tisch"][data-scheme="dark"] .round-card__invite {
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    width: var(--table-d);
+    margin: 0;
+    transform: translateX(-50%) rotate(0.8deg);
+    border: 0;
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-2);
+    text-align: left;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .round-card__last:has(+ .round-card__invite) { bottom: 52px; }
+}
+
+/* „Nächster Schritt" (T7.2): a wood card under the lobby grid, its two steps
+   as full-width rows. Buttons, not links — each opens a sheet. */
+:root[data-design="tisch"] .next-step {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 14px;
+  padding: 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  color: var(--ink);
+}
+:root[data-design="tisch"] .next-step__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 4px;
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+}
+:root[data-design="tisch"] .next-step__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 8px;
+  margin: 0 -8px;
+  background: none;
+  border: 0;
+  border-radius: var(--radius-sm);
+  color: inherit;
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+:root[data-design="tisch"] .next-step__row:hover { background: var(--control-fill); }
+:root[data-design="tisch"] .next-step__row:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+:root[data-design="tisch"] .next-step__go { margin-left: auto; }
+:root[data-design="tisch"][data-scheme="dark"] .next-step__title .ti,
+:root[data-design="tisch"][data-scheme="dark"] .next-step__row .ti { color: var(--gold); }
+@media (min-width: 1100px) {
+  :root[data-design="tisch"] .next-step { max-width: 420px; }
+}
+
+/* T7.5's sentences: the pulse card's closing line, and the Pokale preview's
+   second line (which borrows `.hub-preview__last`'s type). */
+:root[data-design="tisch"] .hub-card__threshold { color: var(--ink-soft); line-height: 1.5; }
+
+/* T7.5's leader block on the Pokale tab: the crowned avatar(s) beside the
+   leader line and the sentence, on a wood card where the podium would stand. */
+:root[data-design="tisch"] .pokale-young {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 18px 0 12px;
+  padding: 18px 16px 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+:root[data-design="tisch"] .pokale-young__who { display: flex; gap: 8px; flex: none; }
+:root[data-design="tisch"] .pokale-young__seat { position: relative; display: block; }
+:root[data-design="tisch"] .pokale-young__avatar { width: 44px; height: 44px; font-size: 15px; /* glyph, not type */ }
+:root[data-design="tisch"] .pokale-young__crown {
+  position: absolute;
+  left: 50%;
+  top: -13px;
+  transform: translateX(-50%);
+  color: var(--brand);
+  font-size: 15px; /* glyph, not type */
+}
+:root[data-design="tisch"][data-scheme="dark"] .pokale-young__crown { color: var(--gold); }
+:root[data-design="tisch"] .pokale-young__text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+:root[data-design="tisch"] .pokale-young__lead { color: var(--ink); font-weight: 700; }
+:root[data-design="tisch"] .pokale-young__when { color: var(--ink-soft); font-size: var(--text-sm); }
+
 /* --- The demo, as a brass banderole and a hatched table (T7.6) ------------
    The demo must never be mistaken for a round of one's own, and T7.6 says it
    twice: a brass band across the top, and a diagonal hatch in the felt.
@@ -5199,6 +5333,40 @@
 :root[data-design="tisch"][data-scheme="dark"] .demo-banner__cta:hover {
   color: var(--gold-ink);
 }
+
+/* The demo round's condensed summary (T7.6, #1280): what is behind each tab as
+   one wood row per destination — icon, name, a hint, the figure at the far end
+   — above the „Gefällt dir das?" card (`.hub-card--demo-invite`, an ordinary
+   hub card whose button is `.btn`). Colours are the generic tokens, because a
+   demo round's own design may still be light before the flip. */
+:root[data-design="tisch"] .hub-demo { display: flex; flex-direction: column; gap: 8px; }
+:root[data-design="tisch"] .hub-demo__row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 52px;
+  padding: 10px 13px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  color: var(--ink);
+  text-decoration: none;
+}
+:root[data-design="tisch"] .hub-demo__row:hover { background: var(--control-fill); }
+:root[data-design="tisch"] .hub-demo__row > .ti { color: var(--brand-ink, var(--brand)); font-size: 19px; /* glyph, not type */ }
+:root[data-design="tisch"][data-scheme="dark"] .hub-demo__row > .ti { color: var(--gold); }
+:root[data-design="tisch"] .hub-demo__main { display: flex; flex-direction: column; min-width: 0; }
+:root[data-design="tisch"] .hub-demo__label { font-weight: 700; }
+:root[data-design="tisch"] .hub-demo__hint { color: var(--ink-soft); font-size: var(--text-xs); }
+:root[data-design="tisch"] .hub-demo__value {
+  margin-left: auto;
+  color: var(--ink-soft);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+:root[data-design="tisch"] .hub-card--demo-invite .hub-demo__cta { margin-top: 12px; align-self: stretch; justify-content: center; }
 
 /* --- The two density cases (T7.7) ----------------------------------------
    T7.7's 40-game shelf is already done — #1190's
