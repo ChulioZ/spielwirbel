@@ -189,6 +189,11 @@
   const params = new URLSearchParams(location.search);
   const initialCategory = params.get('category') || '';
   const feedbackPath = (params.get('path') || '').slice(0, 200);
+  // Which one-time prompt opened the form (#1172), if any. Passed through raw
+  // and capped like the page's other free-form params: the server owns the
+  // allowlist (public/js/feedback-link.js) and drops an unknown value, so a copy
+  // here would be the second list the shared file exists to prevent.
+  const feedbackSource = (params.get('source') || '').slice(0, 40);
   // The feed's report button (#559) additionally prefills who and what is being
   // reported. Both are capped exactly like contactSchema caps them, so a
   // hand-edited deep link can't produce a form whose submit can only 400.
@@ -299,7 +304,11 @@
             goodFaith: fields.goodFaith.checked,
           } : {}),
           // `lang` is the DE/EN display choice, never the reported locale (#993).
-          ...(category === 'feedback' ? { path: feedbackPath, ...(locale ? { locale } : {}) } : {}),
+          ...(category === 'feedback' ? {
+            path: feedbackPath,
+            ...(locale ? { locale } : {}),
+            ...(feedbackSource ? { source: feedbackSource } : {}),
+          } : {}),
           website: fields.website.value, // honeypot (empty for real users)
         }),
       });

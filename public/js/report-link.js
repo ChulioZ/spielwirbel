@@ -31,6 +31,13 @@ function setContactAvailable(flag) {
   contactAvailable = !!flag;
 }
 
+// The same gate, read by the one-time feedback prompts (feedback-prompt.js,
+// #1172): a prompt whose button opens a page saying the channel is unavailable
+// is worse than no prompt, exactly as for the report button below.
+function isContactAvailable() {
+  return contactAvailable;
+}
+
 // Cut to `max` characters with a visible ellipsis, so the reporter can see the
 // subject was clipped and edit it before sending.
 function clip(value, max) {
@@ -61,5 +68,5 @@ function feedReportUrl(opts) {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { feedReportUrl, setContactAvailable, REPORT_SUBJECT_MAX, REPORT_USERNAME_MAX };
+  module.exports = { feedReportUrl, setContactAvailable, isContactAvailable, REPORT_SUBJECT_MAX, REPORT_USERNAME_MAX };
 }

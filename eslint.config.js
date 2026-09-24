@@ -51,7 +51,13 @@ const frontendGlobals = {
   // popover-fit.js (issue #739)
   popoverFit: 'readonly', popoverRoom: 'readonly', POPOVER_GAP: 'readonly',
   // report-link.js
-  feedReportUrl: 'readonly', setContactAvailable: 'readonly',
+  feedReportUrl: 'readonly', setContactAvailable: 'readonly', isContactAvailable: 'readonly',
+  // feedback-link.js + feedback-prompt.js (issue #1172)
+  FEEDBACK_SOURCES: 'readonly', isFeedbackSource: 'readonly', feedbackUrl: 'readonly',
+  FEEDBACK_ASKED_KEY: 'readonly', FEEDBACK_ASKED_MAX: 'readonly',
+  readFeedbackAsked: 'readonly', feedbackAsked: 'readonly', markFeedbackAsked: 'readonly',
+  isFirstResultSession: 'readonly', feedbackPromptAllowed: 'readonly', feedbackCard: 'readonly',
+  buildFeedbackOffer: 'readonly', buildImportFeedbackPrompt: 'readonly',
   // views-friends.js (#1092)
   renderPersonCard: 'readonly', renderPersonTile: 'readonly', personTileLine: 'readonly',
   renderAddTile: 'readonly', renderBand: 'readonly',

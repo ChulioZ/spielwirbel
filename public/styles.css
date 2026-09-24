@@ -4970,7 +4970,8 @@ a.k-tile:focus-visible,
    (theme-derived-colors.md), which is also what keeps #544's oklab migration
    from acquiring two more srgb color-mixes to retune. */
 .install-section,
-.install-offer {
+.install-offer,
+.feedback-offer {
   background: var(--brand-tint-soft);
   border: 1px solid var(--brand-edge);
   border-radius: var(--radius-md);
@@ -4978,13 +4979,20 @@ a.k-tile:focus-visible,
 }
 .install-section { margin: 24px 0 30px; }
 .install-offer { margin-top: 32px; }
+/* The one-time feedback prompt (#1172) takes the install card's slot on a
+   round's first result, and ends a first BGG import — so it wears the same
+   panel. In the import sheet it follows the done message, hence the smaller
+   gap there. */
+.feedback-offer { margin-top: 32px; }
+.bgg-import .feedback-offer { margin: 12px 0 16px; }
 /* Beats .konto-section__h's own 24px/10px (0,1,0) on specificity, not on source
    order — the heading sits INSIDE the panel here, where that margin would push
    it off its own background (label-rows-lose-to-field-label.md). */
 .install-section h2,
 .install-offer h2 { margin: 0 0 8px; font-size: var(--text-lg); }
 .install-section p,
-.install-offer p { margin: 0 0 12px; }
+.install-offer p,
+.feedback-offer p { margin: 0 0 12px; }
 .install-actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
 
 /* ===== Round Einstellungen screen (#561) ===== */

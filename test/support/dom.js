@@ -223,9 +223,10 @@ const flush = () => new Promise((resolve) => setImmediate(resolve));
 const KONTAKT_HTML = fs.readFileSync(path.join(ROOT, 'public', 'kontakt.html'), 'utf8');
 const KONTAKT_JS = fs.readFileSync(path.join(JS_DIR, 'pages', 'kontakt.js'), 'utf8');
 
-function loadKontakt({ saved, pageLang, systemLanguage = 'en-US', fetch, storageBlocked } = {}) {
+function loadKontakt({ saved, pageLang, systemLanguage = 'en-US', fetch, storageBlocked, search = '' } = {}) {
   const dom = new JSDOM(KONTAKT_HTML, {
-    url: 'https://spielwirbel.app/kontakt.html',
+    // `search` is the deep link's query ('?category=feedback&source=…', #1172).
+    url: 'https://spielwirbel.app/kontakt.html' + search,
     runScripts: 'outside-only',
   });
   if (saved !== undefined) dom.window.localStorage.setItem('locale', saved);

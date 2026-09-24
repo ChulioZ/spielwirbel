@@ -1606,6 +1606,12 @@ I18N.nl = {
   'a11y.roundNav': 'Navigatie van de groep',
 
   'feedback.button': 'Feedback',
+  // One-time prompts that open the same form (#1172): after a round's first
+  // session result, and after an account's first BGG collection import.
+  'feedback.prompt.session': 'Hoe ging jullie eerste sessie? Eén regel is genoeg.',
+  'feedback.prompt.import': 'Is de import goed gegaan? Eén regel is genoeg.',
+  'feedback.prompt.cta': 'Feedback geven',
+  'feedback.prompt.dismiss': 'Nee, bedankt',
 
   'support.button': 'Spielwirbel steunen',
   'support.title': 'Spielwirbel steunen',

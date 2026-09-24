@@ -721,6 +721,11 @@ public/
     install-prompt.js stashes the browser's install event and decides which
                      install affordance a screen may offer — a real button, the
                      iOS Share-sheet steps, or nothing (issue #616)
+    feedback-link.js the feedback-form deep link and the prompt `source`
+                     values — shared with lib/routes/contact.js (issue #1172)
+    feedback-prompt.js the two one-time feedback prompts (a round's first
+                     result, an account's first BGG import) and their
+                     once-per-device flags (issue #1172)
     focus-trap.js    keeps Tab inside an open sheet + restores focus on close
     page-lock.js     freezes the page behind an open sheet, so it can't scroll
                      away underneath it (issue #622)

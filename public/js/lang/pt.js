@@ -1608,6 +1608,12 @@ I18N.pt = {
   'a11y.roundNav': 'Navegação do grupo',
 
   'feedback.button': 'Comentários',
+  // One-time prompts that open the same form (#1172): after a round's first
+  // session result, and after an account's first BGG collection import.
+  'feedback.prompt.session': 'Como correu a vossa primeira sessão? Uma linha chega.',
+  'feedback.prompt.import': 'A importação correu bem? Uma linha chega.',
+  'feedback.prompt.cta': 'Dar feedback',
+  'feedback.prompt.dismiss': 'Não, obrigado',
 
   'support.button': 'Apoiar o Spielwirbel',
   'support.title': 'Apoiar o Spielwirbel',

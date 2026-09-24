@@ -600,6 +600,12 @@ What the app does, in detail. For a short overview see the
   address so the operator can reply is optional, for every category. The operator
   reads what comes in from the moderation panel (see below) — there is no
   third-party feedback service and no analytics script involved.
+  The app also **asks once**, at the two moments someone has an opinion (issue
+  #1172): a round's first session result shows a one-line feedback card in place
+  of the install offer, and an account's first BoardGameGeek collection import
+  ends on the same question. Each is shown once per round / account on a device
+  (never to a demo, never where the contact channel is off), and the submission
+  records which prompt it came from so the operator can tell them apart.
 - **FAQ** – a public page at `/faq` (issue #489), linked from the site footer and
   from the bottom of the logged-out landing page, answering what people ask
   before signing up: whether everyone needs an account, whether it is really

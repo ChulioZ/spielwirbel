@@ -578,6 +578,20 @@ it deliberately does **not** resolve a legacy design itself (that needs
 `round-designs.js`), so `resolveMarker` takes the already-resolved id as an
 argument and stays requirable from Node.
 
+**The twenty-first is `public/js/feedback-link.js`** (#1172): `FEEDBACK_SOURCES`,
+the values naming which one-time prompt opened the feedback form
+(`first_session`, `import`), plus `feedbackUrl`, the one builder for the
+`/kontakt.html?category=feedback…` link the top-bar button and both prompts use.
+`lib/routes/contact.js` requires `isFeedbackSource` to validate `source`.
+
+It has the `locales.js` failure mode exactly: the route is **lenient** and drops
+an unknown value rather than 400ing, so a drifted server copy would lose the one
+field telling the operator which prompt a message came from — with the message
+still stored and nothing red anywhere. The standalone `kontakt.js` page passes
+the query value through raw for the same reason it passes `locale` raw: a copy on
+that page would be the second list. `test/feedback-prompt.test.js` round-trips
+every entry of the real object.
+
 **Each new instance must be named above.** `test/rule-enumerations.test.js`
 asserts every `require('../public/js/…')` under `lib/routes/` and `lib/` appears
 in it, because the list had already gone stale by one before anyone noticed. The

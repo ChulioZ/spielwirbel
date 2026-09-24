@@ -265,13 +265,32 @@ async function showBggImport(round, status = 'own') {
         });
         const res = await api('POST', `/api/rounds/${round.id}/lookup/import?provider=bgg&status=${status}`, { externalIds: ids, covers, editions, ownerIds: [...selectedOwnerIds] });
         imported = imported || res.imported > 0;
-        toast(tn(res.imported, 'bggImport.toast.doneOne', 'bggImport.toast.done'));
+        const done = tn(res.imported, 'bggImport.toast.doneOne', 'bggImport.toast.done');
+        // The account's first import that added anything asks, once, whether it
+        // worked (#1172) — in the sheet, which stays open for it, rather than as
+        // a toast nobody can act on. Every later import closes as before.
+        const ask = res.imported > 0 ? buildImportFeedbackPrompt() : null;
+        if (ask) {
+          renderImportDone(done, ask);
+          return;
+        }
+        toast(done);
         dismiss();
       } catch (e) {
         submit.disabled = false;
         toast(bggImportError(e.message));
       }
     });
+  }
+
+  // The import's end state when it carries the feedback prompt (#1172): what
+  // happened, the prompt, and the one way on. The close control is the same
+  // `dismiss`, so the Regal (or the wish list) still refreshes behind it.
+  function renderImportDone(doneText, prompt) {
+    body.replaceChildren(msg(doneText, null, 'ti-circle-check'), prompt);
+    const bar = h(`<div class="toolbar sheet__actions"><button class="btn btn--primary btn--lg bgg-import__done">${esc(t('common.close'))}</button></div>`);
+    bar.querySelector('button').addEventListener('click', dismiss);
+    body.appendChild(bar);
   }
 
   // --- load -----------------------------------------------------------------

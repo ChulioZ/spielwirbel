@@ -1767,6 +1767,18 @@
 
   // ---- feedback (#260) -----------------------------------------------------
 
+  // The operator-facing name of a feedback `source` (#1172), or null for none.
+  // The panel is German-only (#268); an unknown value is shown raw rather than
+  // hidden, since the server only stores values it allowlists.
+  const FEEDBACK_SOURCE_LABELS = {
+    first_session: 'Nach der ersten Session',
+    import: 'Nach dem Sammlungsimport',
+  };
+  const feedbackSourceLabel = (source) => {
+    if (!source) return null;
+    return Object.hasOwn(FEEDBACK_SOURCE_LABELS, source) ? FEEDBACK_SOURCE_LABELS[source] : String(source);
+  };
+
   // In-app user feedback, newest first. Since #275 the message is redactable
   // too: it is user-authored free text like any other, so it can carry the same
   // illegal content a game title can.
@@ -1787,6 +1799,8 @@
         pairs: [
           ['Pfad', ctx.path || null],
           ['Sprache', ctx.locale || null],
+          // Which one-time prompt produced it (#1172); absent = the top-bar button.
+          ['Anlass', feedbackSourceLabel(ctx.source)],
           ['Tenant', ctx.tenantId || null],
           // Only present when the submitter explicitly opted in; anonymous is
           // the default, so an em dash here is the normal case, not missing data.
@@ -1803,7 +1817,7 @@
       // is never interpreted as markup on this privileged page. The full wording,
       // with the submitter's own line breaks, is in the dialog.
       cell(row, truncate(f.message, 90)).style.wordBreak = 'break-word';
-      cell(row, [ctx.path, ctx.locale, ctx.tenantId].filter(Boolean).join(' · ') || '—');
+      cell(row, [feedbackSourceLabel(ctx.source), ctx.path, ctx.locale, ctx.tenantId].filter(Boolean).join(' · ') || '—');
       cell(row, ctx.email || '—');
       return row;
     },

@@ -324,7 +324,9 @@ username or a profile picture. Every adoption figure is stated as `n / total`
 against the population it is measured in, never as a bare count. Every field is a
 count — **no secret value and no personal data is ever returned**, and demo
 tenants are excluded from everything but their own row. A **Feedback** card shows what users sent through the contact form's
-Feedback category (with the sender's address only where they provided one).
+Feedback category (with the sender's address only where they provided one),
+and — for a message sent from one of the two one-time prompts (#1172) — which
+prompt produced it („Nach der ersten Session", „Nach dem Sammlungsimport").
 The Feedback and Protokoll cards page rather than truncate (`100 von 342`,
 **Mehr laden**) and export *every* entry as UTF-8 CSV (BOM included, so Excel
 renders umlauts correctly).

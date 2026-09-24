@@ -1538,6 +1538,12 @@ I18N.ko = {
   'a11y.hubTabs': '모임 섹션',
   'a11y.roundNav': '모임 내비게이션',
   'feedback.button': '피드백',
+  // One-time prompts that open the same form (#1172): after a round's first
+  // session result, and after an account's first BGG collection import.
+  'feedback.prompt.session': '첫 세션은 어땠나요? 한 줄이면 충분해요.',
+  'feedback.prompt.import': '가져오기는 잘 됐나요? 한 줄이면 충분해요.',
+  'feedback.prompt.cta': '피드백 보내기',
+  'feedback.prompt.dismiss': '괜찮아요',
   'support.button': 'Spielwirbel 후원하기',
   'support.title': 'Spielwirbel 후원하기',
   'support.body': 'Spielwirbel은 무료고, 광고도 추적도 없어요 — 함께 플레이하는 즐거움을 위해 만들었어요. 이 앱이 마음에 드신다면 작은 후원으로 운영 비용을 도와주실 수 있어요.',

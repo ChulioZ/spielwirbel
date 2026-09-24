@@ -1614,6 +1614,12 @@ I18N.fr = {
   'a11y.roundNav': 'Navigation du groupe',
 
   'feedback.button': 'Retour d’expérience',
+  // One-time prompts that open the same form (#1172): after a round's first
+  // session result, and after an account's first BGG collection import.
+  'feedback.prompt.session': 'Comment s’est passée votre première session ? Une ligne suffit.',
+  'feedback.prompt.import': 'L’import s’est-il bien passé ? Une ligne suffit.',
+  'feedback.prompt.cta': 'Donner mon avis',
+  'feedback.prompt.dismiss': 'Non merci',
 
   'support.button': 'Soutenir Spielwirbel',
   'support.title': 'Soutenir Spielwirbel',

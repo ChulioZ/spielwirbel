@@ -1724,6 +1724,12 @@ I18N.de = {
   // The feedback button (aria-label) opens the contact form since #321; the
   // in-app sheet's keys were removed with it.
   'feedback.button': 'Feedback',
+  // One-time prompts that open the same form (#1172): after a round's first
+  // session result, and after an account's first BGG collection import.
+  'feedback.prompt.session': 'Wie lief eure erste Session? Eine Zeile reicht.',
+  'feedback.prompt.import': 'Hat der Import gepasst? Eine Zeile reicht.',
+  'feedback.prompt.cta': 'Feedback geben',
+  'feedback.prompt.dismiss': 'Nein danke',
 
   'support.button': 'Spielwirbel unterstützen',
   'support.title': 'Spielwirbel unterstützen',

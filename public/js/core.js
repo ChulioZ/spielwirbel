@@ -421,10 +421,10 @@ function initFooter() {
         // load-order trap (.claude/rules/frontend-script-load-order.md).
         setContactAvailable(true);
         fb.addEventListener('click', () => {
-          const q = new URLSearchParams({ category: 'feedback', path: location.pathname });
           // Open in a new tab (#390) so the SPA stays loaded behind the contact
-          // page; noopener prevents a window.opener leak.
-          window.open('/kontakt.html?' + q.toString(), '_blank', 'noopener');
+          // page; noopener prevents a window.opener leak. No source: the button
+          // is the unprompted path (feedback-link.js, #1172).
+          window.open(feedbackUrl(location.pathname), '_blank', 'noopener');
         });
       }
       // Support link (#173): same config fetch, same degradation — no URL (or

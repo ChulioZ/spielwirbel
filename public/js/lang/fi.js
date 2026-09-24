@@ -1574,6 +1574,12 @@ I18N.fi = {
   'a11y.roundNav': 'Porukan navigaatio',
 
   'feedback.button': 'Palaute',
+  // One-time prompts that open the same form (#1172): after a round's first
+  // session result, and after an account's first BGG collection import.
+  'feedback.prompt.session': 'Miten ensimmäinen sessionne meni? Yksi rivi riittää.',
+  'feedback.prompt.import': 'Onnistuiko tuonti? Yksi rivi riittää.',
+  'feedback.prompt.cta': 'Anna palautetta',
+  'feedback.prompt.dismiss': 'Ei kiitos',
 
   'support.button': 'Tue Spielwirbeliä',
   'support.title': 'Tue Spielwirbeliä',

@@ -2221,8 +2221,12 @@ async function showResults(round, session, gamesHint, reveal, plain) {
   // One install nudge (#616), at the one moment the app has just delivered
   // something. Above the footer, because the footer's two controls are how you
   // throw this evening away and nothing may push them off the end of the screen.
-  const installOffer = buildInstallOffer(reveal);
-  if (installOffer) screen.appendChild(installOffer);
+  // On a round's FIRST result the slot asks for feedback instead (#1172) —
+  // instead of, never beside: two asides stacked under one result is the
+  // attention cost the prompt was budgeted against. The install card returns on
+  // the next session exactly as before (feedback-prompt.js).
+  const aside = buildFeedbackOffer(reveal, round, session) || buildInstallOffer(reveal);
+  if (aside) screen.appendChild(aside);
 
   // The two ways to get rid of this session, together and last on the screen:
   // cancel (reversible, destroys nothing) before delete (permanent). Both sit
