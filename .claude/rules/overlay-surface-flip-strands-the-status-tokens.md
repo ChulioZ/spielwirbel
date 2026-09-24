@@ -109,6 +109,14 @@ reads whatever `.sheet__head`/`.sheet__actions` paint from in `styles.css` and
 requires the overlay to answer for each. Rename `--page-bg`, or give one bar a
 different source, and the test follows.
 
+## The third one: a token that is BOTH a fill and an ink (#1260)
+
+`--brand` is the active chip's fill (stays brass) *and* ~70 rules' text colour
+(brass on paper, ~2:1), so it cannot be re-pointed. Split the use: text sites read
+`var(--brand-ink, var(--brand(-strong)))`, only the overlay declares `--brand-ink`,
+never a `:root` alias (`.claude/rules/root-alias-custom-property-is-substituted-once.md`);
+focus outlines take the twin `--brand-ring`; `test/tisch-brand-ink.test.js` sweeps both.
+
 ## The guard hole beside it: TWO registries, one sweep
 
 `test/game-detail-hero.test.js` derives the game-detail cover wash's safe opacity

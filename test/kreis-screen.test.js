@@ -385,7 +385,7 @@ test('both roster controls declare a focus ring, not the UA default', () => {
     ['.k-tile--add:focus-visible', 'the „＋" tile']]) {
     const hit = rules.find(([sel]) => sel.split(',').some((s) => s.trim() === needle));
     assert.ok(hit, `${what} declares no :focus-visible rule`);
-    assert.match(hit[1], /outline:\s*2px solid var\(--brand\)/,
+    assert.match(hit[1], /outline:\s*2px solid var\((?:--brand-ring,\s*var\()?--brand\)/,
       `${what}'s focus ring is not the app's brand outline`);
   }
 });
