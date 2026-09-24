@@ -377,7 +377,7 @@ const frontendGlobals = {
   editionCoverPicker: 'readonly',
   TAG_ICONS: 'readonly', tagIconClass: 'readonly',
   // views-home.js
-  showHome: 'readonly', showNewRound: 'readonly',
+  showHome: 'readonly', showNewRound: 'readonly', tischLobbyAlt: 'readonly',
   // views-round.js (hub + Start tab) and its siblings loaded right after it:
   // views-regal.js, views-chronik.js, views-pokale.js, views-archive.js,
   // views-round-detail.js, views-round-settings.js, views-round-actions.js,
@@ -434,6 +434,9 @@ const frontendGlobals = {
   hubPresetChips: 'readonly', hubPulseCard: 'readonly', hubCareCard: 'readonly',
   hubAnniversaryCard: 'readonly', renderRecoTeaser: 'readonly',
   editableRoundName: 'readonly',
+  // #1269 — Der Tisch's young-round states (hub-cards.js, views-round-start.js)
+  roundIsYoung: 'readonly', hubSentenceCard: 'readonly', hubYoungCard: 'readonly',
+  hubEmptyTable: 'readonly',
   // off-shelf.js (#1185) — the four off-shelf destinations, one definition
   offShelfEntries: 'readonly', offShelfSegments: 'readonly',
   // hub-previews.js (#1185) — the hub's three sub-page previews + „Nicht im Regal"
