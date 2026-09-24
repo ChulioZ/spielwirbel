@@ -1708,9 +1708,133 @@
    Search is a paper slip — the one light surface on this screen, because it is
    the one place you write. Everything beside it is an outlined wooden control.
 
-   `.section-tools` already holds the search, the sort, the ⓘ, the selection
-   toggle and the "Nicht im Regal" link in that order, and it already wraps. So
-   the desktop half is a repaint and only the phone half needs a layout. */
+   Since #1278 this is the sheet's composition and not a repaint of the app's:
+   views-regal.js builds a different head under Der Tisch — the display title
+   „Regal" with its count, then ONE row holding search, sort, ⓘ, the filter
+   trigger (lifted out of the panel below), „Auswählen", „Nicht im Regal" and the
+   gold „Spiel hinzufügen". The BGG import is not in it: the add sheet carries
+   the same import as a row (#1264), so the row holds exactly T3.3's controls.
+   DOM order is the drawn order, so no rule here uses `order`. */
+/* The head: title left, the row to its right at desktop and under it on a
+   phone. Geometry, so ungated — a light round keeps the same composition in
+   the round's own colours. */
+:root[data-design="tisch"] .regal-head { align-items: center; gap: 12px 20px; }
+:root[data-design="tisch"] .regal-title {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  min-width: 0;
+}
+:root[data-design="tisch"] .regal-head .regal-title h1 {
+  font-family: var(--font-display);
+  font-size: var(--text-3xl);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: 0;
+  text-transform: none;
+}
+:root[data-design="tisch"] .regal-title__count {
+  font-size: var(--text-md);
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+/* The count badge the lifted trigger carries (T3.3's „Filter 2"). Hidden when
+   no filter is on — `display` is set only on the visible state, so the
+   `hidden` attribute is not outranked (hidden-attribute-vs-display-rule.md). */
+:root[data-design="tisch"] .fbar__count:not([hidden]) {
+  display: inline-block;
+  min-width: 20px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: var(--text-xs);
+  font-weight: 800;
+  line-height: 1.4;
+  text-align: center;
+}
+/* The applied-filter chips stay below the head; with the trigger lifted out,
+   an empty `.fbar` would still cost the wrapper's margin. */
+:root[data-design="tisch"] .regal-filter:has(.fbar__chips[hidden]) { display: none; }
+/* The gold add button: the toolbar's copy at desktop, the phone's copy under
+   the shelf. Exactly one is displayed at any width, and `display: none` takes
+   the other out of the accessibility tree too. */
+:root[data-design="tisch"] .regal-add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 16px;
+  font-size: var(--text-md);
+  font-weight: 800;
+  white-space: nowrap;
+}
+:root[data-design="tisch"] .regal-add .ti { font-size: 18px; }
+:root[data-design="tisch"] .regal-add--dock { display: none; }
+@media (max-width: 859px) {
+  :root[data-design="tisch"] .regal-head .regal-title h1 { font-size: var(--text-xl); }
+  :root[data-design="tisch"] .regal-title__count { font-size: var(--text-sm); }
+  :root[data-design="tisch"] .regal-add--bar { display: none; }
+  /* T6.2: a full-width plate under the last board, sticky above the dock while
+     the shelf scrolls. It is IN FLOW after the grid, so at the end of the
+     scroll it sits below the last row instead of over it — the bottom padding
+     the issue asks for is the button's own box. `--dock-clearance` is the
+     dock's 86px bar plus its gap; the plate floats in that gap. */
+  :root[data-design="tisch"] .regal-add--dock {
+    display: flex;
+    position: sticky;
+    bottom: calc(var(--dock-clearance) - 8px);
+    z-index: 5;
+    width: 100%;
+    min-height: 52px;
+    margin-top: 18px;
+    font-size: var(--text-lg);
+  }
+}
+:root[data-design="tisch"][data-scheme="dark"] .regal-add {
+  background: linear-gradient(180deg, var(--brass-hi), var(--gold-deep));
+  border: 1px solid var(--gold-edge);
+  color: var(--on-accent);
+  border-radius: var(--radius-md);
+  box-shadow: 0 3px 0 var(--gold-edge), var(--shadow-2);
+}
+:root[data-design="tisch"][data-scheme="dark"] .regal-add:hover:not(:disabled) {
+  background: linear-gradient(180deg, var(--brass-hi), var(--brass-hi));
+  border-color: var(--gold-edge);
+}
+/* Pressed: the plate sinks, as the hub's CTA does. The border stays 1px, so
+   `.btn:active`'s border shrink and its compensating margin are both undone —
+   otherwise a 1px border "shrinking" to 1.5px would shove the row below down. */
+:root[data-design="tisch"][data-scheme="dark"] .regal-add:active:not(:disabled) {
+  transform: translateY(2px);
+  border-bottom-width: 1px;
+  margin-bottom: var(--press-mb);
+  box-shadow: 0 1px 0 var(--gold-edge);
+}
+/* The title in the design's ink, not the section-label's softer one: T3.3 and
+   T6.2 draw „Regal" as the screen's name and the count as the secondary line. */
+:root[data-design="tisch"][data-scheme="dark"] .regal-head .regal-title h1 { color: var(--ink); }
+:root[data-design="tisch"][data-scheme="dark"] .regal-title__count { color: var(--ink-soft); }
+:root[data-design="tisch"][data-scheme="dark"] .section-tools .fbar__trigger {
+  min-height: 42px;
+  padding: 0 13px;
+  border: 1px solid var(--control-edge);
+  border-radius: var(--radius-md);
+  background: var(--control-fill);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: var(--text-sm);
+}
+:root[data-design="tisch"][data-scheme="dark"] .section-tools .fbar__trigger .ti { color: var(--gold); }
+:root[data-design="tisch"][data-scheme="dark"] .section-tools .fbar__trigger:hover,
+:root[data-design="tisch"][data-scheme="dark"] .section-tools .fbar__trigger[aria-expanded="true"] {
+  border-color: var(--gold);
+  background: var(--gold-soft);
+  color: var(--ink);
+}
+:root[data-design="tisch"][data-scheme="dark"] .fbar__count {
+  background: var(--gold);
+  color: var(--on-accent);
+}
 :root[data-design="tisch"][data-scheme="dark"] .search-pill {
   background: var(--paper);
   border-color: var(--paper-edge);
@@ -1782,30 +1906,37 @@
     line-height: 1.2;
   }
   :root[data-design="tisch"][data-scheme="dark"] .section-tools .link-btn { padding: 4px 10px; }
-  /* T6.2 puts the search on top and exactly three chips under it. The app has a
-     fourth control the sheet never saw — the BGG collection import — and in DOM
-     order it comes FIRST, so with the search claiming a full line it was pushed
-     onto a line of its own ABOVE the search: a stretched 362px chip over the
-     field it is not related to.
-
-     `order` fixes the reading without touching the DOM, which matters because
-     that order is also the tab order on every other width. The import is
-     addressed as the row's first child rather than by a class of its own: it is
-     the only `.link-btn` that can hold that position (the selection toggle and
-     „Nicht im Regal" are appended after the search).
-
-     PREDICATED ON THE SEARCH PILL, and that is not belt-and-braces. The three
-     archive screens share `.section-tools` (views-archive.js) and their first
-     child is a `.link-btn` too — but they carry no search, so nothing there
-     claims a full line and the reason for this rule does not exist. Without the
-     guard the Wunschliste's „Spiel hinzufügen" would be banished to a row of its
-     own below the import button, on a screen this issue does not even lay out.
-     `:has(.search-pill)` states the precondition the rule was argued from
-     instead of a position that happens to coincide on one screen. */
-  :root[data-design="tisch"][data-scheme="dark"] .section-tools .search-pill { order: -1; }
-  :root[data-design="tisch"][data-scheme="dark"] .section-tools:has(.search-pill) > .link-btn:first-child {
-    order: 1;
-    flex: 1 0 100%;
+  /* The lifted filter trigger is one more chip in the row. (The `order` rules
+     that used to live here put the BGG import back under the search; #1278
+     took the import out of this row, so the search is first in the DOM and the
+     drawn order needs no help.) */
+  /* Four worded chips do not fit 390px: „Bewertung" clipped to „Bewe". T6.2
+     draws three, so „Auswählen" becomes a 40px glyph chip while it is off —
+     its word stays in the accessibility tree through the same clip `.sr-only`
+     uses, so the button keeps its name — and gets its word back once
+     selecting, when „Fertig" is the one thing the row must say. The sort takes
+     the room it frees. */
+  :root[data-design="tisch"][data-scheme="dark"] .section-tools .sort-select { flex-grow: 1.4; }
+  :root[data-design="tisch"][data-scheme="dark"] .section-tools .regal-select:not(.is-active) {
+    flex: 0 0 40px;
+    padding: 0;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .section-tools .regal-select:not(.is-active) .tools-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .section-tools .fbar__trigger {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 40px;
+    justify-content: center;
+    border-radius: 999px;
+    font-size: var(--text-xs);
+    padding: 4px 10px;
   }
 }
 

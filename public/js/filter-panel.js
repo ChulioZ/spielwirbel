@@ -464,12 +464,16 @@ function renderFilterPanel(games, state, onChange, tagSection, opts) {
   const el = h(`<div class="fbar">
       <button type="button" class="fbar__trigger" aria-expanded="false">
         <i class="ti ti-filter" aria-hidden="true"></i>
-        <span>${esc(t('games.filter'))}</span>
+        <span>${esc(t('games.filter'))}</span>${opts && opts.countBadge ? '<span class="fbar__count" aria-hidden="true" hidden></span>' : ''}
       </button>
       <div class="fbar__chips"></div>
     </div>`);
   const trigger = el.querySelector('.fbar__trigger');
   const chipRow = el.querySelector('.fbar__chips');
+  // Der Tisch's Regal lifts the trigger into its toolbar (#1278), away from the
+  // applied chips, so the trigger itself has to state how many are on — T3.3's
+  // „Filter 2". aria-hidden: the trigger's aria-label already says it.
+  const countBadge = el.querySelector('.fbar__count');
 
   // The open overlay's body, or null. Also the answer to `isOpen()`, so there is
   // one fact rather than a flag that can disagree with the DOM.
@@ -494,6 +498,10 @@ function renderFilterPanel(games, state, onChange, tagSection, opts) {
   function sync() {
     const chips = activeFilterChips(state, tagSection, partyCount());
     trigger.setAttribute('aria-label', t('games.filterLabel', { n: chips.length }));
+    if (countBadge) {
+      countBadge.textContent = String(chips.length);
+      countBadge.hidden = chips.length === 0;
+    }
     chipRow.replaceChildren(...chips.map(appliedChip));
     // `.fbar__chips` declares its own `display`, so the attribute alone would not
     // hide it and an empty row would still cost the bar's gap
