@@ -117,6 +117,14 @@ function buildRoundRail(round, activeTab, sub, offShelf) {
   id.querySelector('.rail__members').appendChild(addMemberBtn(round));
   rail.appendChild(id);
 
+  /* Der Tisch's rail is identity plus the FIVE links — Start, the three
+     sections and Einstellungen (T3.2, #1262). The one action and its presets sit
+     on the hub's felt band, and the four off-shelf destinations are the hub's
+     count tiles, so the rail repeating them would be the same control twice on
+     one screen. On the other tabs the CTA is one tap away on Start — the phone's
+     shape at every width. Klassisch keeps all of it, byte for byte. */
+  const lean = designIs('tisch');
+
   // --- The one big action, reachable from every section rather than only from
   // the Start tab (which is where it has to stay on a phone).
   const cta = h(
@@ -127,7 +135,7 @@ function buildRoundRail(round, activeTab, sub, offShelf) {
     cta.disabled = true;
     cta.title = t('round.startSessionDisabled');
   }
-  rail.appendChild(cta);
+  if (!lean) rail.appendChild(cta);
 
   // The quick-start chips belong to that button (#923), so they follow it up
   // here. The Start tab renders its own copy and marks it `rail-owned`, which
@@ -140,7 +148,7 @@ function buildRoundRail(round, activeTab, sub, offShelf) {
   // (views-round-start.js until #1189 split it), which loads after this file —
   // safe because this runs at render time, never at load time
   // (.claude/rules/frontend-script-load-order.md).
-  if (activeGames.length) {
+  if (!lean && activeGames.length) {
     const presets = hubPresetChips(round, activeGames);
     if (presets) rail.appendChild(presets);
   }
@@ -204,7 +212,7 @@ function buildRoundRail(round, activeTab, sub, offShelf) {
       inside: count !== null && offShelf === sub,
     }));
   });
-  rail.appendChild(archive);
+  if (!lean) rail.appendChild(archive);
 
   // --- Settings: ONE row, standing for the whole group (#581). It briefly held
   // six — Tags, Provider, Design, Spiele verschieben, Einladen and the screen

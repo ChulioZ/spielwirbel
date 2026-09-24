@@ -123,6 +123,13 @@ I18N.de = {
   'hub.pulse.lastDaysOne': 'Gestern gespielt',
   'hub.pulse.lastDays': 'Vor {n} Tagen gespielt',
   'hub.pulse.coverage': '{n} von {total} Spielen waren noch nie dran',
+  // Der Tisch's Rundenpuls tiles (#1263): the label under each number.
+  'hub.pulse.tile.sessionsOne': 'Session in 12 Monaten',
+  'hub.pulse.tile.sessions': 'Sessions in 12 Monaten',
+  'hub.pulse.tile.daysOne': 'Tag her',
+  'hub.pulse.tile.days': 'Tage her',
+  'hub.pulse.tile.neverOne': 'ungespielt',
+  'hub.pulse.tile.never': 'ungespielt',
   'hub.care.title': 'Kümmerliste',
   'hub.care.winnerOne': '{n} Session ohne eingetragenes Ergebnis',
   'hub.care.winner': '{n} Sessions ohne eingetragenes Ergebnis',
@@ -137,6 +144,10 @@ I18N.de = {
   'hub.preview.open': 'öffnen',
   'hub.preview.openNamed': '{title} öffnen',
   'hub.preview.chronikLast': 'Zuletzt am {date}',
+  // Der Tisch's Pokale tile and seat captions (#1262/#1263).
+  'hub.preview.pokaleLead': '{name} führt',
+  'hub.preview.pokaleLeadTie': '{n} teilen Platz 1',
+  'hub.seat.add': 'Platz dazu',
 
   // Group headings in the desktop navigation rail (from 1280px up).
   // Steht über den drei Listen, die NICHT das Regal sind: die zwei Archive und
@@ -184,6 +195,7 @@ I18N.de = {
   // Der Zeitraum-Rückblick (#800): ein Monat oder ein Jahr, teilbar als Bild.
   'periodRecap.title': 'Monat & Jahr',
   'periodRecap.lead': 'Wähle einen Monat oder ein Jahr — und teile, was ihr gespielt habt.',
+  'periodRecap.entry': 'Rückblick {period}',
   'periodRecap.pickerLabel': 'Zeitraum',
   'periodRecap.months': 'Monate',
   'periodRecap.years': 'Jahre',
@@ -221,6 +233,12 @@ I18N.de = {
   'chronik.filter.changes': 'Regal-Änderungen',
   'chronik.empty': 'Eure erste Session schreibt den ersten Eintrag.',
   'chronik.emptyTitle': 'Noch nichts passiert',
+  'chronik.countOne': '{n} Session seit {month}',
+  'chronik.count': '{n} Sessions seit {month}',
+  'chronik.seatedOne': '{n} dabei',
+  'chronik.seated': '{n} dabei',
+  'chronik.changesOne': '{n} Regal-Änderung',
+  'chronik.changes': '{n} Regal-Änderungen',
   'activity.delete': 'Aktivität löschen',
   'activity.deleteConfirm': 'Diese Aktivität löschen?',
   'activity.deleted': 'Aktivität gelöscht',
@@ -799,6 +817,15 @@ I18N.de = {
   'tables.toast.splitOne': 'Auf {n} Tisch aufgeteilt',
   'tables.parentLabel': 'Aufgeteilte Session',
   'tables.openParent': 'Aufteilung ansehen',
+  // Der Tisch's several-tables result (#1270, T4.5/T6.6).
+  'tables.headDone': '{n} Tische, eine Session',
+  'tables.headDoneOne': '{n} Tisch, eine Session',
+  'tables.people': '{n} Personen',
+  'tables.peopleOne': '{n} Person',
+  'tables.sameChronik': 'alle Ergebnisse stehen in derselben Chronik',
+  'tables.sentenceOpen': '„{game}“ läuft noch.',
+  'tables.shareAll': 'Alle Tische teilen',
+  'tables.oneMore': 'Noch eine Session',
   'share.tables': 'Die Tische:',
   'share.table': '{title}: {names}',
   'sessions.split': 'Aufgeteilt',
