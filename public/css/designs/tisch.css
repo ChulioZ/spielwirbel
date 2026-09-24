@@ -3522,30 +3522,29 @@
    the recap „eine Filzkarte", the Pokale „ein Podium aus Messingsockeln … über
    einer Tafel", the awards „Messingplaketten".
 
-   PAINT, plus ONE piece of markup the sheet genuinely needs: the off-shelf
-   segment strip (offShelfSegments, off-shelf.js), which styles.css hides and
-   this file shows. Everything else T13 draws that the app does not have is
-   deliberately NOT built, per the #1193 ruling („the sheet's intent is the
-   design, not the ordering") — the Pokale standings Tafel with its five
-   columns, the Chronik's year picker and „Ältere Sessions", its „Nur mit
-   mir / Nur Siege / Mit Veto" filter, the member page's rating distribution,
-   and the one screen that merges the three lists with the recommendations as a
-   band beneath them. Each is a new query or a new string in nine locales; the
-   PR names them.
+   PAINT, plus the markup the sheet genuinely needs. #1196 shipped this as
+   paint only, reading the #1193 ruling as „the sheet's intent is the design,
+   not the ordering". The operator corrected that reading on 2026-09-24: a
+   design OWNS its layout, and only an incidental reordering of identical
+   controls (the passkey/password swap) is not copied. So the structure T13
+   draws is built where it is the design's intent — the Chronik's session
+   strips and its phone recap entry are #1271, below; the off-shelf segment
+   strip (offShelfSegments, off-shelf.js) was the first. The Pokale standings
+   Tafel, the member page's rating distribution and the merged lists screen are
+   their own issues.
+
+   DROPPED by the operator, and not to be built from this sheet: the Chronik's
+   year picker, its „Ältere Sessions" button, its „Nur mit mir / Nur Siege /
+   Mit Veto" filter, and the recap's four fixed rows.
 
    Same gate and same no-literals rule as every section above.
    =========================================================================== */
 
 /* --- The Chronik: paper strips on wood (T13.1, T13.5) ---------------------
-   The timeline's rail and its dots become brass: the one vertical line on the
-   screen is the edge of the table the strips are laid on. */
-:root[data-design="tisch"][data-scheme="dark"] .timeline::before {
-  background: var(--gold-edge);
-}
-:root[data-design="tisch"][data-scheme="dark"] .tl-dot--session,
-:root[data-design="tisch"][data-scheme="dark"] .tl-dot.tl-dot--milestone {
-  background: var(--gold);
-}
+   #1196 painted the timeline's rail and dots brass; #1271 retired both under
+   this design (the #1271 block below). T13.1 draws no rail inside the page:
+   the brass DATE COLUMN is the timeline's axis, and the one vertical line is
+   the rail's own edge. */
 /* The month in the brass, as T13.1 prints the date: the display face, set as a
    kicker. --gold on the walnut page is 9.16:1; this is WOOD, not felt, so
    review finding A1's under-24px ban does not reach it. */
@@ -3685,6 +3684,186 @@
     grid-row: 1 / span 999;
     align-self: start;
   }
+}
+
+/* --- #1271: the SESSIONS carry the Chronik (T13.1, T13.5) ----------------
+   Markup from views-chronik.js under designIs('tisch'): each session is a
+   `.session-card--strip` — [date | cover | title + meta | faces | pill] — runs
+   of shelf changes fold behind one `.tl-run` disclosure, and on a phone the
+   recap is one `.precap__entry` line over its `.precap__panel`.
+
+   LAYOUT is gated on the design alone, COLOUR on the design's scheme, for the
+   reason design-colour-blocks-are-scheme-gated.md gives: until the flip a
+   round on a light palette still owns the page, and the strips must still be
+   strips there — on the app's own surface, with the date inside the card. */
+
+/* The date column replaces the rail and its dots: two axes for one timeline
+   read as a mistake. The dots stay in the DOM (Klassisch's markup, shared). */
+:root[data-design="tisch"] .timeline { padding-left: 0; }
+:root[data-design="tisch"] .timeline::before,
+:root[data-design="tisch"] .timeline .tl-dot { display: none; }
+
+:root[data-design="tisch"] .timeline .session-card--strip {
+  display: grid;
+  grid-template-columns: 44px auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  column-gap: 14px;
+}
+/* A direct child now, so the pill must be told it is inline — its base rule
+   pins it to a cover's corner (absolutely-positioned-components-escape-a-new-host.md). */
+:root[data-design="tisch"] .session-card--strip > .score-pill { position: static; }
+:root[data-design="tisch"] .session-card__date {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+}
+:root[data-design="tisch"] .session-card__day {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 800;
+}
+:root[data-design="tisch"] .session-card__mon {
+  font-size: var(--text-xs);
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+/* Faces overlap like the lobby's stack; a paper-coloured ring keeps each disc
+   separate where they cross. 30px: a strip is one row, the cover sets it. */
+:root[data-design="tisch"] .session-card__faces .avatar {
+  width: 30px;
+  height: 30px;
+  font-size: 11px; /* glyph, not type — two initials in a 30px disc */
+  box-shadow: 0 0 0 2px var(--surface);
+}
+:root[data-design="tisch"] .session-card__faces .avatar:not(:first-child) { margin-left: -5px; }
+
+/* Desktop: the date stands ON THE WOOD beside the strip, as T13.1 draws it.
+   The paper is the strip's ::before, inset past the date column, so the one
+   <a> still spans date and strip (a bigger target, one accessible name) while
+   only the strip reads as paper. isolation keeps the -1 layer inside the link
+   rather than behind the page (z-index-negative-pseudo-paints-over-its-own-background.md). */
+@media (min-width: 521px) {
+  :root[data-design="tisch"][data-scheme="dark"] .timeline .session-card--strip {
+    position: relative;
+    isolation: isolate;
+    padding-left: 0;
+    background: none;
+    box-shadow: none;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .timeline .session-card--strip::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 0 58px;
+    z-index: -1;
+    border-radius: var(--radius-md);
+    background: linear-gradient(180deg, var(--paper), var(--paper-raised));
+    box-shadow: var(--shadow-2);
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .timeline .session-card--strip:hover {
+    box-shadow: none;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .timeline .session-card--strip:hover::before {
+    box-shadow: var(--shadow-3);
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .session-card--strip .session-card__img { margin-left: 16px; }
+  /* The date stands on walnut, not paper, so it takes the brass rather than
+     the paper ink the strip re-points: --gold on the walnut page, 9.16:1 (the
+     month kicker's measured pair). --gold is not re-pointed by the strip. */
+  :root[data-design="tisch"][data-scheme="dark"] .session-card--strip .session-card__date {
+    color: var(--gold);
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .session-card__faces .avatar {
+    box-shadow: 0 0 0 2px var(--paper);
+  }
+}
+
+/* Phone (T13.5): the date moves INTO the paper, the faces go — „Jonas · 4
+   dabei" carries them in text — and the cover shrinks to the phone's 34px. */
+@media (max-width: 520px) {
+  :root[data-design="tisch"] .timeline .session-card--strip {
+    grid-template-columns: 34px auto minmax(0, 1fr) auto;
+    column-gap: 10px;
+  }
+  :root[data-design="tisch"] .session-card--strip .session-card__faces { display: none; }
+  /* „3 Spiele bewertet" goes too, as T13.5 draws the line — it is the one
+     part of the meta the results screen states in full, and on a phone it
+     wrapped every strip to two lines. */
+  :root[data-design="tisch"] .session-card--strip .session-card__rated { display: none; }
+  /* On paper: the day in the paper ink, the month in T1's Zinnober —
+     --accent-deep, 5.58/5.02:1 on the two paper stops (measured for the
+     strip's cancelled line above). */
+  :root[data-design="tisch"][data-scheme="dark"] .session-card--strip .session-card__day { color: var(--ink); }
+  :root[data-design="tisch"][data-scheme="dark"] .session-card--strip .session-card__mon { color: var(--accent-deep); }
+}
+
+/* Shelf changes RECEDE: no card of their own, just a line on the wood. The
+   milestone's icon chip keeps its tint, so a „durchgespielt" still stands out
+   among the adds. */
+:root[data-design="tisch"] .timeline .tl-act,
+:root[data-design="tisch"] .timeline .tl-act.tl-act--milestone,
+:root[data-design="tisch"] .timeline .tl-act.tl-act--add {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+:root[data-design="tisch"] .tl-run__toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 40px;
+  padding: 6px 14px;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: var(--text-sm);
+  text-align: left;
+  cursor: pointer;
+}
+:root[data-design="tisch"] .tl-run__label { flex: 1; min-width: 0; }
+:root[data-design="tisch"] .tl-run__toggle[aria-expanded="true"] .tl-run__chev { transform: rotate(180deg); }
+/* :not([hidden]) — a display rule on the list would otherwise beat the
+   attribute that keeps it folded (hidden-attribute-vs-display-rule.md). */
+:root[data-design="tisch"] .tl-run__list:not([hidden]) {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 4px;
+}
+:root[data-design="tisch"][data-scheme="dark"] .tl-run__toggle { border-color: var(--gold-edge); }
+
+/* The phone's recap: ONE felt line that opens the section in place (T13.5).
+   From 521px the line is gone and the panel is the section it always was. */
+:root[data-design="tisch"] .precap__entry { display: none; }
+@media (max-width: 520px) {
+  :root[data-design="tisch"] .precap.precap--entry { padding: 0; }
+  :root[data-design="tisch"] .precap__entry {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-height: 52px;
+    padding: 12px 18px;
+    border: 0;
+    background: none;
+    color: inherit;
+    font-family: var(--font-display);
+    font-size: var(--text-md);
+    font-weight: 800;
+    text-align: left;
+    cursor: pointer;
+  }
+  :root[data-design="tisch"] .precap__entry-label { flex: 1; min-width: 0; }
+  :root[data-design="tisch"] .precap--entry:not(.is-open) > .precap__panel { display: none; }
+  :root[data-design="tisch"] .precap--entry.is-open > .precap__panel { padding: 0 18px 18px; }
+  :root[data-design="tisch"] .precap--entry.is-open .precap__entry-chev { transform: rotate(180deg); }
+  /* The felt's own ink, the pair the section's <h2> is measured on. */
+  :root[data-design="tisch"][data-scheme="dark"] .precap__entry { color: var(--felt-ink); }
 }
 
 /* --- The Pokale: a brass podium over the felt (T13.2, T13.5) ---------------
