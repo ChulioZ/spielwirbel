@@ -20,6 +20,10 @@ I18N.ko = {
   'common.confirm': '확인',
   'common.confirmTitle': '확인해 주세요',
   'common.overwrite': '덮어쓰기',
+  // The toast's controls (#1261): the × that dismisses an error toast, and the
+  // generic label for a toast's undo action.
+  'toast.dismiss': '알림 닫기',
+  'toast.undo': '실행 취소',
 
   'home.docTitle': '내 모임',
   'home.greeting': '반가워요.',

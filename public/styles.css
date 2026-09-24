@@ -7797,9 +7797,13 @@ a.k-tile:focus-visible,
   border: 0;
 }
 
-/* Hidden by default via the class, NOT the `hidden` attribute: the element is a
-   permanent aria-live region (#145) and must stay in the accessibility tree, so
-   only `.is-on` decides whether it is painted. */
+/* Hidden by default via the class, NOT the `hidden` attribute: the box holds
+   two permanent aria-live regions (#145, #1261) that must stay in the
+   accessibility tree, so only `.is-on` decides whether it is SEEN — and it does
+   so by opacity rather than `display: none`, which would take the regions out of
+   the tree too and make every toast the "appears together with its text" case
+   (.claude/rules/accessibility-contrast-and-modals.md §4). Resting, the box is
+   empty, transparent and click-through. */
 .toast {
   position: fixed;
   bottom: 24px; left: 50%; transform: translateX(-50%);
@@ -7828,9 +7832,51 @@ a.k-tile:focus-visible,
   text-align: center;
   box-shadow: var(--shadow-2); font-weight: 600;
   z-index: 50;
-  display: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
 }
-.toast.is-on { display: block; }
+.toast.is-on { opacity: 1; pointer-events: auto; }
+/* Only the region that is speaking has text. The silent one is an empty flex
+   item, i.e. zero wide — which is why the spacing below is margins on the glyph
+   and the buttons and never a `gap`, which would space the empty one too. And
+   not `display: contents` for the empty one either: engines have dropped such
+   elements from the accessibility tree, which is the one thing a live region
+   cannot afford. */
+.toast__msg { min-width: 0; }
+
+/* The tones (#1261). Each is the neutral toast's own construction — a text
+   token as the plank, --surface as the ink — so the pair is one the semantic
+   sweep in test/a11y-contrast.test.js already holds at AA on every design, in
+   both schemes. A tone always brings a glyph as well (toast() in
+   live-region.js), so red/green is never the only cue (WCAG 1.4.1). */
+.toast--success { background: var(--good); }
+.toast--error { background: var(--danger); }
+.toast__icon { font-size: var(--text-xl); margin-inline-end: 10px; flex: none; }
+
+/* T15b's action („Rückgängig") and an error's dismiss ×. Both are >= 24px
+   targets (WCAG 2.2 SC 2.5.8) and paint in the toast's own ink, so their
+   contrast is the message's; the focus ring is that ink too. */
+.toast__action,
+.toast__close {
+  flex: none;
+  min-height: 24px;
+  min-width: 24px;
+  margin-inline-start: 12px;
+  padding: 0 4px;
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+.toast__action { font-weight: 800; text-decoration: underline; text-underline-offset: 3px; }
+.toast__close { display: inline-flex; align-items: center; justify-content: center; font-size: var(--text-lg); margin-inline-end: -10px; }
+.toast__action:focus-visible,
+.toast__close:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
 
 /* ---- Diverses ---- */
 .spacer { height: 12px; }

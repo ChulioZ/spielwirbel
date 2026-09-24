@@ -25,6 +25,10 @@ I18N.de = {
   // Meldung eine enthält (splitConfirmQuestion, confirm-dialog.js).
   'common.confirmTitle': 'Bitte bestätigen',
   'common.overwrite': 'Überschreiben',
+  // The toast's controls (#1261): the × that dismisses an error toast, and the
+  // generic label for a toast's undo action.
+  'toast.dismiss': 'Meldung schließen',
+  'toast.undo': 'Rückgängig',
 
   // Der Tab-Titel der Lobby (#522). Nicht 'home.greeting' — das ist eine
   // Begrüßung und sagt nicht, welcher Tab das ist.

@@ -174,7 +174,7 @@ async function showArchive(rid, kind, seg = kind) {
           await api('POST', a.endpoint(rid, g.id), a.body);
           toast(t(`${kind}.restored`, { title: g.title }));
           showArchive(rid, kind, seg);
-        } catch (e) { toast(e.message); }
+        } catch (e) { toast(e.message, { tone: 'error' }); }
       });
       // #137: deleting a game takes its whole rating history with it, so it is
       // co-owner and up — the button is absent below that, hence the null check.
@@ -188,7 +188,7 @@ async function showArchive(rid, kind, seg = kind) {
           await api('DELETE', `/api/rounds/${rid}/games/${g.id}`);
           toast(t(`${kind}.deleted`, { title: g.title }));
           showArchive(rid, kind, seg);
-        } catch (e) { toast(e.message); }
+        } catch (e) { toast(e.message, { tone: 'error' }); }
       });
       list.appendChild(row);
     });
@@ -259,7 +259,7 @@ function setupArchiveSelection(round, kind, seg, list, tools) {
       showArchive(rid, kind, seg);
     } catch (e) {
       delBtn.disabled = false;
-      toast(e.message);
+      toast(e.message, { tone: 'error' });
     }
   });
 
@@ -322,7 +322,7 @@ async function attachWishedExpansion(round, game, base, done) {
     toast(t('wish.acquired', { title: game.title, base: base.title }));
     done();
   } catch (e) {
-    toast(e.message === 'quota_expansions' ? t('detail.toast.expansionQuota') : e.message);
+    toast(e.message === 'quota_expansions' ? t('detail.toast.expansionQuota') : e.message, { tone: 'error' });
   }
 }
 
@@ -360,7 +360,7 @@ async function createBaseThenAttach(round, game, parent, done) {
   try {
     base = await api('POST', `/api/rounds/${round.id}/games`, fd);
   } catch (e) {
-    return toast(e.message === 'quota_games' ? t('addGame.toast.quota') : e.message);
+    return toast(e.message === 'quota_games' ? t('addGame.toast.quota') : e.message, { tone: 'error' });
   }
   try {
     await api('POST', `/api/rounds/${round.id}/games/${game.id}/acquire-expansion`, { baseGameId: base.id });
@@ -368,7 +368,7 @@ async function createBaseThenAttach(round, game, parent, done) {
   } catch (e) {
     // The base game did land, so say what actually happened rather than
     // reporting a failure that would send the user looking for a missing game.
-    toast(e.message === 'quota_expansions' ? t('detail.toast.expansionQuota') : e.message);
+    toast(e.message === 'quota_expansions' ? t('detail.toast.expansionQuota') : e.message, { tone: 'error' });
   }
   done();
 }

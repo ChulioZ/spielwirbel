@@ -586,7 +586,7 @@ async function readClipboardImage() {
     // outright by some engines and permission states, which is worth knowing
     // rather than guessing from "paste doesn't work for me".
     reportClientError('clipboard_read', err);
-    toast(t('addGame.toast.pasteFail'));
+    toast(t('addGame.toast.pasteFail'), { tone: 'error' });
     return null;
   }
 }

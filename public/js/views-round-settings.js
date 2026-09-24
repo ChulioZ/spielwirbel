@@ -103,7 +103,7 @@ async function showRoundSettings(rid) {
       try {
         await api('DELETE', `/api/rounds/${rid}/shares/${accountUser.id}`);
         showHome();
-      } catch (e) { toast(e.message); }
+      } catch (e) { toast(e.message, { tone: 'error' }); }
     });
     danger.appendChild(leaveBtn);
   } else {
@@ -116,7 +116,7 @@ async function showRoundSettings(rid) {
       try {
         await api('DELETE', '/api/rounds/' + rid);
         showHome();
-      } catch (e) { toast(e.message); }
+      } catch (e) { toast(e.message, { tone: 'error' }); }
     });
     danger.appendChild(delBtn);
   }
@@ -204,7 +204,7 @@ async function showMarker(rid) {
         }
         toast(t('marker.toast.set'));
         currentView();
-      } catch (e) { toast(e.message); }
+      } catch (e) { toast(e.message, { tone: 'error' }); }
     });
     grid.appendChild(sw);
   });
@@ -257,7 +257,7 @@ async function showTags(rid) {
       const tag = await api('POST', `/api/rounds/${rid}/tags`, { name, icon: picker.get() });
       toast(existingIds.has(tag.id) ? t('tags.toast.exists') : t('tags.toast.added'));
       showTags(rid);
-    } catch (e) { toast(e.message === 'quota_tags' ? t('tags.toast.quota') : e.message); }
+    } catch (e) { toast(e.message === 'quota_tags' ? t('tags.toast.quota') : e.message, { tone: 'error' }); }
   };
   // Select the submit button explicitly: the icon-picker trigger (#293) is also
   // a <button> and sits earlier in the row, so a bare `querySelector('button')`
@@ -301,7 +301,7 @@ async function showTags(rid) {
           // `tags_changed` means another tab created or deleted a tag, so this
           // list is stale by definition and there is nothing local worth
           // keeping — take the server's.
-          toast(e.message === 'tags_changed' ? t('tags.toast.changed') : e.message);
+          toast(e.message === 'tags_changed' ? t('tags.toast.changed') : e.message, { tone: 'error' });
           showTags(rid);
           throw e; // stop the chain; the view is being rebuilt under it
         }
@@ -385,7 +385,7 @@ async function showTags(rid) {
             toast(t('tags.toast.updated'));
             showTags(rid);
           } catch (e) {
-            toast(e.message === 'tag_name_taken' ? t('tags.toast.nameTaken') : e.message);
+            toast(e.message === 'tag_name_taken' ? t('tags.toast.nameTaken') : e.message, { tone: 'error' });
           }
         };
         editor.querySelector('.btn--primary').addEventListener('click', save);
@@ -416,7 +416,7 @@ async function showTags(rid) {
           await api('DELETE', `/api/rounds/${rid}/tags/${tg.id}`);
           toast(t('tags.toast.deleted'));
           showTags(rid);
-        } catch (e) { toast(e.message); }
+        } catch (e) { toast(e.message, { tone: 'error' }); }
       });
       row.querySelector('.ds-row__meta').appendChild(del);
       rows.set(tg.id, row);

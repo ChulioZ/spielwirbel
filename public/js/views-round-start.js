@@ -193,7 +193,7 @@ function renderStartTab(round, activeGames) {
           toast(t('round.toast.draftDiscarded'));
           await fetchRoundFresh(round.id);
           showRound(round.id, 'start');
-        } catch (e) { toast(e.message); }
+        } catch (e) { toast(e.message, { tone: 'error' }); }
       });
       app.appendChild(discard);
     });
@@ -452,9 +452,9 @@ function renderStartTab(round, activeGames) {
         })) return;
         try {
           await api('POST', `/api/rounds/${round.id}/games/${game.id}/retire`, { retired: true });
-          toast(t('games.retired', { title: game.title }));
+          toast(t('games.retired', { title: game.title }), { tone: 'success' });
           showRound(round.id);
-        } catch (e) { toast(e.message); }
+        } catch (e) { toast(e.message, { tone: 'error' }); }
       });
       list.appendChild(item);
     });

@@ -336,7 +336,7 @@ function renderProfileState(row, p, reload) {
         refreshInboxBadge();
         reload();
       } catch (err) {
-        toast(err.message === 'quota_friends' ? t('friends.err.quotaFriends') : t('friends.err.generic'));
+        toast(err.message === 'quota_friends' ? t('friends.err.quotaFriends') : t('friends.err.generic'), { tone: 'error' });
       }
     });
     decline.addEventListener('click', async () => {
@@ -363,7 +363,7 @@ function renderProfileState(row, p, reload) {
       toast(t('friends.toast.sent', { user: p.username }));
       reload();
     } catch (err) {
-      toast(friendSendError(err.message));
+      toast(friendSendError(err.message), { tone: 'error' });
       send.disabled = false;
     }
   });
@@ -395,7 +395,7 @@ function profileMenuItems(p, reload) {
         await accountApi('DELETE', `/friends/${p.friendshipId}`);
         toast(t('friends.toast.removed'));
         reload();
-      } catch { toast(t('friends.err.generic')); }
+      } catch { toast(t('friends.err.generic'), { tone: 'error' }); }
     } });
   } else if (p.friendship === 'outgoing') {
     items.push({ icon: 'ti-user-x', label: t('friends.cancel'), cls: 'popover__opt--muted', kind: 'undoable', run: async () => {

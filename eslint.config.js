@@ -37,7 +37,9 @@ const frontendGlobals = {
   fmtRelativeDays: 'readonly',
   fmtAvg: 'readonly', fmtCount: 'readonly',
   // live-region.js (issue #1168) — the two aria-live regions, split out of core.js
-  toastEl: 'readonly', toastTimer: 'writable', toast: 'readonly',
+  toastEl: 'readonly', toastStatusEl: 'readonly', toastAlertEl: 'readonly', toastTimer: 'writable', toast: 'readonly',
+  TOAST_TONES: 'readonly', TOAST_ICONS: 'readonly', TOAST_MS: 'readonly', TOAST_ACTION_MS: 'readonly',
+  toastReturnFocus: 'writable', toastButton: 'readonly', clearToast: 'readonly', hideToast: 'readonly',
   srLiveEl: 'readonly', announceTimer: 'writable', announce: 'readonly',
   // core.js
   app: 'readonly', context: 'readonly',

@@ -5258,10 +5258,9 @@
    which lifts the question sentence each message already opens with; nothing
    here or there adds copy.
 
-   What this does NOT build, and why, is in the PR: T15b's toast tones and its
-   „Rückgängig" action (toast() carries no type and no action — every call site
-   would have to say which it is), errors that stay until dismissed (the same),
-   and the felt marker picker (it is a SCREEN, not an overlay). The popover's
+   What this does NOT build, and why, is in the PR: the felt marker picker (it
+   is a SCREEN, not an overlay). T15b's toast tones, its „Rückgängig" action and
+   errors that stay until dismissed were built by #1261 — see „The toast" below. The popover's
    title and × and the form editors' row bodies, which #1195 left out, were
    built by #1273 — see „The desktop appearance" and „Rows" below.
 
@@ -5798,13 +5797,18 @@
 }
 
 /* --- The toast (T15b.4) -----------------------------------------------------
-   A walnut plank with a brass rim — T15b's NEUTRAL tone, for every toast. Its
-   green „done" and red „error" tones are not painted: `toast()` is handed a
-   bare string at ~200 call sites, success and failure alike (every
-   `catch (e) { toast(e.message) }` is one), so a tone would have to be guessed
-   and a guessed green on an error is worse than no tone at all.
+   A walnut plank with a brass rim — T15b's NEUTRAL tone. Since #1261 toast()
+   takes a tone, and the other two are T15b's own hexes, which this file already
+   holds under other names: the green „done" plank is exactly the played tag
+   (#23543c / #3f7a5c / #eaf6ec, glyph in --good #a8dcb4) and the red „error"
+   one exactly the veto fill (#6a2118 / #fdeee8), rimmed in the paper danger
+   edge (the sheet's #a5382a is one step off it) with its glyph in --danger.
+   Re-using them rather than declaring --toast-* copies keeps one value per
+   colour; their pairs are measured by name in test/a11y-contrast.test.js.
 
-   One at a time is already the app's behaviour — one element, replaced text.
+   An error stays until its × is pressed; the action („Rückgängig") is T15b's
+   underlined 13px text button at the end of the plank. One at a time is the
+   app's behaviour — one element, replaced content.
 
    Seat: over the dock on a phone (the dock's 86px bar plus its gap is
    --dock-clearance), and from 1280px — where the rail replaces the dock —
@@ -5821,6 +5825,22 @@
   box-shadow: var(--shadow-3);
   font-weight: 700;
   text-align: left;
+}
+:root[data-design="tisch"][data-scheme="dark"] .toast--success {
+  background: var(--played-tag);
+  color: var(--played-tag-ink);
+  border-color: var(--played-tag-edge);
+}
+:root[data-design="tisch"][data-scheme="dark"] .toast--success .toast__icon { color: var(--good); }
+:root[data-design="tisch"][data-scheme="dark"] .toast--error {
+  background: var(--score-veto);
+  color: var(--score-veto-ink);
+  border-color: var(--paper-danger-edge);
+}
+:root[data-design="tisch"][data-scheme="dark"] .toast--error .toast__icon { color: var(--danger); }
+:root[data-design="tisch"][data-scheme="dark"] .toast__action {
+  font-size: 13px;
+  font-weight: 700;
 }
 @media (max-width: 859px) {
   :root[data-design="tisch"][data-scheme="dark"] .toast { bottom: var(--dock-clearance); }

@@ -495,7 +495,7 @@ async function showNewRound() {
       const round = await api('POST', '/api/rounds', body);
       toast(body.importFromRoundId ? t('newRound.toast.createdImported') : t('newRound.toast.created'));
       showRound(round.id);
-    } catch (e) { toast(e.message === 'quota_rounds' ? t('newRound.toast.quota') : e.message); }
+    } catch (e) { toast(e.message === 'quota_rounds' ? t('newRound.toast.quota') : e.message, { tone: 'error' }); }
   });
 
   nameInput.focus();

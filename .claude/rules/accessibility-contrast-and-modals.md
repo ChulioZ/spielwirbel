@@ -120,10 +120,10 @@ Adding `aria-live` to it as it stood would have changed nothing audible.
 Two things to carry to a third one:
 
 - **`display: none` also removes the element from the tree**, so "visibility is a
-  class" is not on its own the fix — `.toast`'s own class *is* a display toggle,
-  which is in tension with the "stays permanently in the tree" reason given
-  above. `#dupHint` is therefore rendered at all times and its **empty state is
-  the hidden state**; `.is-on` carries only spacing. Prefer that shape.
+  class" is not on its own the fix. `#dupHint` is rendered at all times and its
+  **empty state is the hidden state**; the toast (#1261) hides by `opacity` with
+  two always-rendered regions inside (`role="status"`, and `role="alert"` for an
+  error — two fixed regions, never one whose role is swapped). Prefer that shape.
 - **An always-rendered empty hint must cost no layout space**, or the sheet gains
   a permanent gap. `#dupHint` gets that free today from margin collapsing (zero
   height, last child of `.field`), which is an accident worth knowing rather than

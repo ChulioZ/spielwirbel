@@ -44,6 +44,10 @@ I18N.pt = {
   'common.confirm': 'Confirmar',
   'common.confirmTitle': 'Confirme, por favor',
   'common.overwrite': 'Substituir',
+  // The toast's controls (#1261): the × that dismisses an error toast, and the
+  // generic label for a toast's undo action.
+  'toast.dismiss': 'Fechar o aviso',
+  'toast.undo': 'Desfazer',
 
   'home.docTitle': 'Meus grupos',
   'home.greeting': 'Que bom ver você.',

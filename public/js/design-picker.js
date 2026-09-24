@@ -135,7 +135,7 @@ function buildDesignSection(me) {
         // re-renders nothing — hence the explicit currentView() below.
         applyAccountDesign();
         if (ex.message !== 'auth') {
-          toast(t(ex.message === 'invalid_design' ? 'konto.design.invalid' : 'auth.error.network'));
+          toast(t(ex.message === 'invalid_design' ? 'konto.design.invalid' : 'auth.error.network'), { tone: 'error' });
           if (currentView) currentView();
         }
       }
