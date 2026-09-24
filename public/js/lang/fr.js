@@ -130,6 +130,13 @@ I18N.fr = {
   'hub.pulse.lastDaysOne': 'Joué hier',
   'hub.pulse.lastDays': 'Joué il y a {n} jours',
   'hub.pulse.coverage': '{n} jeux sur {total} n’ont jamais été joués',
+  // Der Tisch's Rundenpuls tiles (#1263): the label under each number.
+  'hub.pulse.tile.sessionsOne': 'session en 12 mois',
+  'hub.pulse.tile.sessions': 'sessions en 12 mois',
+  'hub.pulse.tile.daysOne': 'jour écoulé',
+  'hub.pulse.tile.days': 'jours écoulés',
+  'hub.pulse.tile.neverOne': 'jamais joué',
+  'hub.pulse.tile.never': 'jamais joués',
   'hub.care.title': 'À régler',
   'hub.care.winnerOne': '{n} session sans résultat enregistré',
   'hub.care.winner': '{n} sessions sans résultat enregistré',
@@ -144,6 +151,10 @@ I18N.fr = {
   'hub.preview.open': 'ouvrir',
   'hub.preview.openNamed': 'Ouvrir {title}',
   'hub.preview.chronikLast': 'Dernière fois le {date}',
+  // Der Tisch's Pokale tile and seat captions (#1262/#1263).
+  'hub.preview.pokaleLead': '{name} en tête',
+  'hub.preview.pokaleLeadTie': '{n} ex æquo en tête',
+  'hub.seat.add': 'Une place de plus',
 
   'rail.archive': 'Hors de l’étagère',
   'rail.settings': 'Réglages',

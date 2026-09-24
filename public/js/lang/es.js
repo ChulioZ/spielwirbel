@@ -120,6 +120,13 @@ I18N.es = {
   'hub.pulse.lastDaysOne': 'Jugado ayer',
   'hub.pulse.lastDays': 'Jugado hace {n} días',
   'hub.pulse.coverage': '{n} de {total} juegos nunca se han jugado',
+  // Der Tisch's Rundenpuls tiles (#1263): the label under each number.
+  'hub.pulse.tile.sessionsOne': 'sesión en 12 meses',
+  'hub.pulse.tile.sessions': 'sesiones en 12 meses',
+  'hub.pulse.tile.daysOne': 'día atrás',
+  'hub.pulse.tile.days': 'días atrás',
+  'hub.pulse.tile.neverOne': 'sin jugar',
+  'hub.pulse.tile.never': 'sin jugar',
   'hub.care.title': 'Cabos sueltos',
   'hub.care.winnerOne': '{n} sesión sin resultado anotado',
   'hub.care.winner': '{n} sesiones sin resultado anotado',
@@ -134,6 +141,10 @@ I18N.es = {
   'hub.preview.open': 'abrir',
   'hub.preview.openNamed': 'Abrir {title}',
   'hub.preview.chronikLast': 'Última vez el {date}',
+  // Der Tisch's Pokale tile and seat captions (#1262/#1263).
+  'hub.preview.pokaleLead': '{name} va en cabeza',
+  'hub.preview.pokaleLeadTie': '{n} empatados en cabeza',
+  'hub.seat.add': 'Añadir sitio',
 
   'rail.archive': 'Fuera de la estantería',
   'rail.settings': 'Ajustes',

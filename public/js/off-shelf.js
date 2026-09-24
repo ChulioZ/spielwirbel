@@ -31,18 +31,20 @@ function offShelfEntries(round) {
   const games = round.games || [];
   /* One row per state, and the COUNT IS DERIVED ONCE per row — `count` and the
      `{n}` in `label` must never be two filters over the same field, which is the
-     bug this whole file exists to remove, one scope in. */
+     bug this whole file exists to remove, one scope in. `name` is the same
+     destination WITHOUT its count, for a presentation that shows the count as a
+     separate figure (Der Tisch's count tiles, #1262) rather than in the label. */
   const counted = [
-    { sub: 'retired', icon: 'ti-trash', key: 'retired.link', flag: (g) => g.retired, go: () => showRetired(rid) },
-    { sub: 'completed', icon: 'ti-circle-check', key: 'completed.link', flag: (g) => g.completed, go: () => showCompleted(rid) },
-    { sub: 'wishlist', icon: 'ti-heart', key: 'wish.link', flag: (g) => g.wish, go: () => showWishlist(rid) },
-  ].map(({ sub, icon, key, flag, go }) => {
+    { sub: 'retired', icon: 'ti-trash', key: 'retired.link', nameKey: 'retired.title', flag: (g) => g.retired, go: () => showRetired(rid) },
+    { sub: 'completed', icon: 'ti-circle-check', key: 'completed.link', nameKey: 'completed.title', flag: (g) => g.completed, go: () => showCompleted(rid) },
+    { sub: 'wishlist', icon: 'ti-heart', key: 'wish.link', nameKey: 'wish.title', flag: (g) => g.wish, go: () => showWishlist(rid) },
+  ].map(({ sub, icon, key, nameKey, flag, go }) => {
     const count = games.filter(flag).length;
-    return { sub, icon, count, label: t(key, { n: count }), go };
+    return { sub, icon, count, label: t(key, { n: count }), name: t(nameKey), go };
   });
   return [
     ...counted,
-    { sub: 'recommendations', icon: 'ti-sparkles', count: null, label: t('suggest.link'), go: () => showRecommendations(rid) },
+    { sub: 'recommendations', icon: 'ti-sparkles', count: null, label: t('suggest.link'), name: t('suggest.link'), go: () => showRecommendations(rid) },
   ];
 }
 

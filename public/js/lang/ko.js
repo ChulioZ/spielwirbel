@@ -109,6 +109,13 @@ I18N.ko = {
   'hub.pulse.lastDaysOne': '어제 플레이함',
   'hub.pulse.lastDays': '{n}일 전 플레이함',
   'hub.pulse.coverage': '전체 {total}개 중 {n}개는 아직 플레이한 적이 없어요',
+  // Der Tisch's Rundenpuls tiles (#1263): the label under each number.
+  'hub.pulse.tile.sessionsOne': '세션 (12개월)',
+  'hub.pulse.tile.sessions': '세션 (12개월)',
+  'hub.pulse.tile.daysOne': '일 전',
+  'hub.pulse.tile.days': '일 전',
+  'hub.pulse.tile.neverOne': '미플레이',
+  'hub.pulse.tile.never': '미플레이',
   'hub.care.title': '남은 일',
   'hub.care.winnerOne': '결과가 기록되지 않은 세션 {n}회',
   'hub.care.winner': '결과가 기록되지 않은 세션 {n}회',
@@ -123,6 +130,10 @@ I18N.ko = {
   'hub.preview.open': '열기',
   'hub.preview.openNamed': '{title} 열기',
   'hub.preview.chronikLast': '마지막 플레이: {date}',
+  // Der Tisch's Pokale tile and seat captions (#1262/#1263).
+  'hub.preview.pokaleLead': '{name} 선두',
+  'hub.preview.pokaleLeadTie': '{n}명 공동 선두',
+  'hub.seat.add': '자리 추가',
 
   'rail.archive': '선반 밖',
   'rail.settings': '설정',

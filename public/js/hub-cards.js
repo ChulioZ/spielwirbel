@@ -117,6 +117,7 @@ function hubPulseCard(round, activeGames) {
   if (!pulse) return null;
   const card = hubCard('ti-activity', t('hub.pulse.title'));
   const body = card.querySelector('.hub-card__body');
+  if (designIs('tisch')) return hubPulseTiles(round, card, pulse);
   const peak = Math.max(...pulse.months.map((m) => m.count), 1);
   // `month: 'narrow'` gives one letter per bar, which is what makes twelve of
   // them fit a 280px card at every locale. The full month name rides along as
@@ -153,6 +154,40 @@ function hubPulseCard(round, activeGames) {
     navLink(link, roundPath(round.id, 'regal'), () => showRound(round.id, 'regal'));
     body.appendChild(link);
   }
+  return card;
+}
+
+/* Der Tisch's Rundenpuls (T2.2, T3.2; #1263): three stat tiles — a number over
+   its label — instead of the bars and the fact sentence. A stat tile is number
+   plus label, not a sentence, so this is its own markup rather than CSS faking
+   tiles out of the paragraph above.
+
+   The same three facts the Klassisch card states, from the same roundPulse():
+   the sessions of the last twelve months, the days since the last one, and the
+   games never played. The sheet's middle tile is „Schnitt" — a round-wide
+   average nothing in the app computes; the days-since tile stands in for it
+   until the operator says which average that is (see the PR). The bars go:
+   the sheet draws none, and the count they sum to is the first tile.
+
+   „ungespielt" is the link into the Regal whenever it is non-zero, exactly as
+   the Klassisch coverage row is — the number is only useful one tap from
+   acting on it. */
+function hubPulseTiles(round, card, pulse) {
+  const tiles = h('<div class="pulse-tiles"></div>');
+  const tile = (n, label, tag = 'div') => h(
+    `<${tag} class="pulse-tile"><span class="pulse-tile__n">${esc(String(n))}</span><span class="pulse-tile__label">${esc(label)}</span></${tag}>`
+  );
+  tiles.appendChild(tile(pulse.total, tn(pulse.total, 'hub.pulse.tile.sessionsOne', 'hub.pulse.tile.sessions')));
+  if (pulse.daysSinceLast !== null) {
+    tiles.appendChild(tile(pulse.daysSinceLast, tn(pulse.daysSinceLast, 'hub.pulse.tile.daysOne', 'hub.pulse.tile.days')));
+  }
+  const never = tile(pulse.neverPlayed, tn(pulse.neverPlayed, 'hub.pulse.tile.neverOne', 'hub.pulse.tile.never'),pulse.neverPlayed > 0 ? 'a' : 'div');
+  if (pulse.neverPlayed > 0) {
+    never.classList.add('pulse-tile--link');
+    navLink(never, roundPath(round.id, 'regal'), () => showRound(round.id, 'regal'));
+  }
+  tiles.appendChild(never);
+  card.querySelector('.hub-card__body').appendChild(tiles);
   return card;
 }
 

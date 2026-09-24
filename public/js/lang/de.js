@@ -123,6 +123,13 @@ I18N.de = {
   'hub.pulse.lastDaysOne': 'Gestern gespielt',
   'hub.pulse.lastDays': 'Vor {n} Tagen gespielt',
   'hub.pulse.coverage': '{n} von {total} Spielen waren noch nie dran',
+  // Der Tisch's Rundenpuls tiles (#1263): the label under each number.
+  'hub.pulse.tile.sessionsOne': 'Session in 12 Monaten',
+  'hub.pulse.tile.sessions': 'Sessions in 12 Monaten',
+  'hub.pulse.tile.daysOne': 'Tag her',
+  'hub.pulse.tile.days': 'Tage her',
+  'hub.pulse.tile.neverOne': 'ungespielt',
+  'hub.pulse.tile.never': 'ungespielt',
   'hub.care.title': 'Kümmerliste',
   'hub.care.winnerOne': '{n} Session ohne eingetragenes Ergebnis',
   'hub.care.winner': '{n} Sessions ohne eingetragenes Ergebnis',
@@ -137,6 +144,10 @@ I18N.de = {
   'hub.preview.open': 'öffnen',
   'hub.preview.openNamed': '{title} öffnen',
   'hub.preview.chronikLast': 'Zuletzt am {date}',
+  // Der Tisch's Pokale tile and seat captions (#1262/#1263).
+  'hub.preview.pokaleLead': '{name} führt',
+  'hub.preview.pokaleLeadTie': '{n} teilen Platz 1',
+  'hub.seat.add': 'Platz dazu',
 
   // Group headings in the desktop navigation rail (from 1280px up).
   // Steht über den drei Listen, die NICHT das Regal sind: die zwei Archive und

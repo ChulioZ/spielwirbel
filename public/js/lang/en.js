@@ -121,6 +121,13 @@ I18N.en = {
   'hub.pulse.lastDaysOne': 'Played yesterday',
   'hub.pulse.lastDays': 'Played {n} days ago',
   'hub.pulse.coverage': '{n} of {total} games have never been played',
+  // Der Tisch's Rundenpuls tiles (#1263): the label under each number.
+  'hub.pulse.tile.sessionsOne': 'session in 12 months',
+  'hub.pulse.tile.sessions': 'sessions in 12 months',
+  'hub.pulse.tile.daysOne': 'day ago',
+  'hub.pulse.tile.days': 'days ago',
+  'hub.pulse.tile.neverOne': 'unplayed',
+  'hub.pulse.tile.never': 'unplayed',
   'hub.care.title': 'Loose ends',
   'hub.care.winnerOne': '{n} session with no result recorded',
   'hub.care.winner': '{n} sessions with no result recorded',
@@ -135,6 +142,10 @@ I18N.en = {
   'hub.preview.open': 'open',
   'hub.preview.openNamed': 'Open {title}',
   'hub.preview.chronikLast': 'Last played on {date}',
+  // Der Tisch's Pokale tile and seat captions (#1262/#1263).
+  'hub.preview.pokaleLead': '{name} leads',
+  'hub.preview.pokaleLeadTie': '{n} share first place',
+  'hub.seat.add': 'Add a seat',
 
   // Group headings in the desktop navigation rail (from 1280px up).
   // Heads the three lists that are NOT the shelf: the two archives and the wish

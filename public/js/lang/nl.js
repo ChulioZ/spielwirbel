@@ -131,6 +131,13 @@ I18N.nl = {
   'hub.pulse.lastDaysOne': 'Gisteren gespeeld',
   'hub.pulse.lastDays': '{n} dagen geleden gespeeld',
   'hub.pulse.coverage': '{n} van de {total} spellen zijn nog nooit gespeeld',
+  // Der Tisch's Rundenpuls tiles (#1263): the label under each number.
+  'hub.pulse.tile.sessionsOne': 'sessie in 12 maanden',
+  'hub.pulse.tile.sessions': 'sessies in 12 maanden',
+  'hub.pulse.tile.daysOne': 'dag geleden',
+  'hub.pulse.tile.days': 'dagen geleden',
+  'hub.pulse.tile.neverOne': 'nooit gespeeld',
+  'hub.pulse.tile.never': 'nooit gespeeld',
   'hub.care.title': 'Losse eindjes',
   'hub.care.winnerOne': '{n} sessie zonder vastgelegd resultaat',
   'hub.care.winner': '{n} sessies zonder vastgelegd resultaat',
@@ -145,6 +152,10 @@ I18N.nl = {
   'hub.preview.open': 'openen',
   'hub.preview.openNamed': '{title} openen',
   'hub.preview.chronikLast': 'Laatst op {date}',
+  // Der Tisch's Pokale tile and seat captions (#1262/#1263).
+  'hub.preview.pokaleLead': '{name} staat bovenaan',
+  'hub.preview.pokaleLeadTie': '{n} delen de eerste plaats',
+  'hub.seat.add': 'Plek erbij',
 
   'rail.archive': 'Uit de kast',
   'rail.settings': 'Instellingen',

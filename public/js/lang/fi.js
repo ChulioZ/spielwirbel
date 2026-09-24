@@ -108,6 +108,13 @@ I18N.fi = {
   'hub.pulse.lastDaysOne': 'Pelattu eilen',
   'hub.pulse.lastDays': 'Pelattu {n} päivää sitten',
   'hub.pulse.coverage': '{n} peliä {total} pelistä on vielä pelaamatta',
+  // Der Tisch's Rundenpuls tiles (#1263): the label under each number.
+  'hub.pulse.tile.sessionsOne': 'sessio 12 kuukaudessa',
+  'hub.pulse.tile.sessions': 'sessiota 12 kuukaudessa',
+  'hub.pulse.tile.daysOne': 'päivä sitten',
+  'hub.pulse.tile.days': 'päivää sitten',
+  'hub.pulse.tile.neverOne': 'pelaamaton',
+  'hub.pulse.tile.never': 'pelaamatonta',
   'hub.care.title': 'Avoimet asiat',
   'hub.care.winnerOne': '{n} sessio ilman kirjattua tulosta',
   'hub.care.winner': '{n} sessiota ilman kirjattua tulosta',
@@ -122,6 +129,10 @@ I18N.fi = {
   'hub.preview.open': 'avaa',
   'hub.preview.openNamed': 'Avaa {title}',
   'hub.preview.chronikLast': 'Viimeksi {date}',
+  // Der Tisch's Pokale tile and seat captions (#1262/#1263).
+  'hub.preview.pokaleLead': '{name} johtaa',
+  'hub.preview.pokaleLeadTie': '{n} jakaa kärkipaikan',
+  'hub.seat.add': 'Lisää paikka',
 
   'rail.archive': 'Pois hyllystä',
   'rail.settings': 'Asetukset',
