@@ -299,7 +299,7 @@ const frontendGlobals = {
   // share one account-preference toggle row
   buildNotifyForm: 'readonly', buildPrefToggle: 'readonly', buildBgStatsForm: 'readonly',
   // views-account-tisch.js (issue #1265): Konto as Der Tisch's dashboard
-  renderKontoDashboard: 'readonly', kontoRestructure: 'readonly', buildKontoDuCard: 'readonly',
+  renderKontoDashboard: 'readonly', buildKontoDuCard: 'readonly',
   kontoToggleValue: 'readonly', kontoRow: 'readonly', buildKontoBggCard: 'readonly',
   // …and the three views-account.js builders it is the first other file to call
   buildInstallSection: 'readonly', buildAvatarForm: 'readonly', buildProfileStatsForm: 'readonly',
@@ -399,7 +399,7 @@ const frontendGlobals = {
   DESIGN_REGISTRY: 'readonly', FACE_DESIGN: 'readonly', designById: 'readonly',
   selectableDesigns: 'readonly', selectableDesignIds: 'readonly', isSelectableDesign: 'readonly',
   designMarkers: 'readonly', markerOf: 'readonly', markerInk: 'readonly', DEFAULT_MARKER_INK: 'readonly',
-  activeDesign: 'readonly', designIs: 'readonly', designScheme: 'readonly', loadDesignStylesheet: 'readonly',
+  activeDesign: 'readonly', designIs: 'readonly', designViewsReady: 'readonly', designScheme: 'readonly', loadDesignStylesheet: 'readonly',
   applyDesign: 'readonly', requestedDesign: 'readonly', initDesign: 'readonly',
   DESIGN_CHOOSER_REVISION: 'readonly', applyAccountDesign: 'readonly',
   // #1199 — a design's brand marks and the manifest URL that carries them.
@@ -469,6 +469,7 @@ const frontendGlobals = {
   // views-session-tables.js (issue #796)
   showTableBuilder: 'readonly', tableStateFrom: 'readonly', tablePeopleIds: 'readonly',
   tableCoverBg: 'readonly',
+  renderTischSplit: 'readonly', renderTischTable: 'readonly', renderTischTableTafel: 'readonly', // #1270
   // views-session-live.js
   showSessionLobby: 'readonly', stopLobbyPoll: 'readonly', mySeatIn: 'readonly',
   sessionGames: 'readonly', LOBBY_POLL_MS: 'readonly', lobbyPoll: 'writable',

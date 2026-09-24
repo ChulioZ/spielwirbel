@@ -30,6 +30,20 @@
 // hand-edited page could carry is not a thing to trust as a registry key.
 let activeDesignId = FACE_DESIGN;
 
+// The design the screen on display was RENDERED under, and whether any screen
+// has been rendered yet. Distinct from activeDesignId because a chooser preview
+// repaints without committing: the screen underneath still carries the markup of
+// the committed design, and it is the committed one a save has to compare with.
+let committedDesignId = FACE_DESIGN;
+let designViewsAreReady = false;
+
+// Called by routeTo() once the first screen has rendered. Before that there is
+// nothing to re-render, and currentView() is still its showHome default — so a
+// re-render during boot would paint the home screen over the cold load.
+function designViewsReady() {
+  designViewsAreReady = true;
+}
+
 // The registry entry round-theme.js falls back to when a screen has no round
 // design of its own. Klassisch's entry carries no page/accent on purpose, so
 // the caller's "does it have colours?" check clears the inline properties and
@@ -111,13 +125,27 @@ function applyDesignMarks(design) {
 // "no ROUND design here", which round-theme.js now resolves to this design's
 // tokens. Keeping it as the single writer of --page-bg/--brand is what stops
 // the two layers from fighting over the same two properties.
-function applyDesign(id) {
+//
+// A screen that branches on designIs() builds its markup once, so a COMMITTED
+// change re-renders the current screen (#1266) — otherwise it keeps the old
+// markup under the new stylesheet. Two callers opt out:
+// - `{ preview: true }` — the chooser's live preview. It repaints only and
+//   commits nothing, so the save that follows re-renders the screen underneath;
+//   re-rendering on each preview would rebuild the chooser and lose the pick.
+// - `{ rendering: true }` — a view setting the design as part of its OWN render
+//   (the vote-link page). It commits without re-rendering, or the view would
+//   re-enter itself through currentView().
+function applyDesign(id, { preview = false, rendering = false } = {}) {
   const design = designById(id) || designById(FACE_DESIGN);
   activeDesignId = design.id;
   document.documentElement.dataset.design = design.id;
   loadDesignStylesheet(design);
   applyDesignMarks(design);
   applyBackground(null);
+  if (preview) return design.id;
+  const changed = design.id !== committedDesignId;
+  committedDesignId = design.id;
+  if (changed && !rendering && designViewsAreReady) currentView();
   return design.id;
 }
 
@@ -173,12 +201,14 @@ function storeDesign(id) {
 
    `?design=` still wins over both, because its whole job is to preview a design
    without storing anything (and the server has already vetted it). */
-function applyAccountDesign() {
+// `opts` passes through to applyDesign — the Konto picker commits with
+// `{ rendering: true }` because it re-renders its own screen (and restores focus).
+function applyAccountDesign(opts) {
   if (typeof accountsActive === 'function' && accountsActive()) {
     const me = typeof accountUser !== 'undefined' ? accountUser : null;
-    return applyDesign((me && me.design) || FACE_DESIGN);
+    return applyDesign((me && me.design) || FACE_DESIGN, opts);
   }
-  return applyDesign(storedDesign() || FACE_DESIGN);
+  return applyDesign(storedDesign() || FACE_DESIGN, opts);
 }
 
 // Applied synchronously first, so nothing renders undesigned while the account

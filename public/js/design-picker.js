@@ -97,9 +97,11 @@ function renderDesignPicker(cfg, current, onPick) {
    shape the notify and stats toggles use — a Save button here would leave the
    page already wearing a design the account does not hold.
 
-   `onSaved` (#1265) runs once a pick is stored: the Konto screen uses it to
-   re-render when the new design composes that screen differently. */
-function buildDesignSection(me, onSaved) {
+   A stored pick re-renders the screen HERE rather than through applyDesign's
+   central re-render (#1266): the new design may compose Konto differently
+   (#1265's dashboard), and the element that held focus is replaced, so focus
+   goes back to the radio just chosen. Hence the `{ rendering: true }` commit. */
+function buildDesignSection(me) {
   const wrap = h('<div class="konto-design"></div>');
   withAppConfig((cfg) => {
     if (offeredDesigns(cfg).length < 2) return;
@@ -109,20 +111,28 @@ function buildDesignSection(me, onSaved) {
       // Applied before the request, so the card the user tapped is what they
       // see while it is in flight. A refusal reverts below — the server is the
       // authority on which designs exist, and it may have retired one since
-      // this screen loaded.
-      applyDesign(id);
+      // this screen loaded. A PREVIEW until the server agrees: committing here
+      // would re-render the page from the not-yet-updated account, with the old
+      // card checked. The commit below comes after the account is updated.
+      applyDesign(id, { preview: true });
       try {
         const updated = await accountApi('PATCH', '/me', { design: id });
         accountUser = updated;
         me.design = updated.design;
-        applyAccountDesign();
+        applyAccountDesign({ rendering: true });
         toast(t('konto.design.saved'));
-        if (onSaved) onSaved(updated);
+        if (currentView) {
+          await currentView();
+          const picked = document.querySelector('.design-picker input:checked');
+          if (picked) picked.focus();
+        }
       } catch (ex) {
         // Revert the paint, then re-render so the radios agree with what is
         // actually stored — leaving the refused card checked over a reverted
         // page is the one state that tells the user nothing. `auth` has already
         // bounced to login, so it gets no toast (the shape buildPrefToggle uses).
+        // The pick was only previewed, so the revert commits nothing and
+        // re-renders nothing — hence the explicit currentView() below.
         applyAccountDesign();
         if (ex.message !== 'auth') {
           toast(t(ex.message === 'invalid_design' ? 'konto.design.invalid' : 'auth.error.network'));
@@ -179,7 +189,7 @@ function showDesignChooser(cfg, me, onDone) {
   const before = (me && me.design) || FACE_DESIGN;
   let chosen = before;
   backdrop.querySelector('.design-chooser__list')
-    .appendChild(renderDesignPicker(cfg, chosen, (id) => { chosen = id; applyDesign(id); }));
+    .appendChild(renderDesignPicker(cfg, chosen, (id) => { chosen = id; applyDesign(id, { preview: true }); }));
   document.body.appendChild(backdrop);
 
   // `settled` guards a genuinely multi-path exit: the two buttons call finish()

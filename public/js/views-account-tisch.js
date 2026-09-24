@@ -23,18 +23,6 @@
 
 'use strict';
 
-// After a design pick is stored: re-render if the screen's COMPOSITION changed.
-// Picking Klassisch on the dashboard (or Der Tisch on the plain column) would
-// otherwise leave one design's markup under the other's paint until the next
-// navigation. Focus goes back to the radio just chosen, since the re-render
-// replaced the element that held it.
-async function kontoRestructure(wasTisch) {
-  if (designIs('tisch') === wasTisch || !currentView) return;
-  await currentView();
-  const picked = document.querySelector('.design-picker input:checked');
-  if (picked) picked.focus();
-}
-
 function renderKontoDashboard(me) {
   const dash = h('<div class="konto-dash"></div>');
   dash.appendChild(buildKontoDuCard(me));
@@ -42,7 +30,9 @@ function renderKontoDashboard(me) {
   // The Design card IS the section: buildDesignSection fills it only when the
   // instance offers a choice, and an empty card is hidden by tisch.css rather
   // than framing nothing.
-  const design = buildDesignSection(me, () => kontoRestructure(true));
+  // A stored pick re-renders the screen from buildDesignSection itself, so
+  // switching to Klassisch rebuilds this dashboard as the plain column.
+  const design = buildDesignSection(me);
   design.classList.add('konto-card', 'konto-card--design');
   dash.appendChild(design);
 

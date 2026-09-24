@@ -90,7 +90,7 @@ async function showAccount() {
      exactly who a design chooser is for. */
   // The callback re-renders when a pick changes which COMPOSITION this screen
   // should have (#1265): picking Der Tisch here must land on its dashboard.
-  app.appendChild(buildDesignSection(me, () => kontoRestructure(false)));
+  app.appendChild(buildDesignSection(me));
 
   app.appendChild(h(`<h2 class="konto-section__h">${esc(t('konto.bgg.title'))}</h2>`));
   app.appendChild(buildBggForm(me.bggUsername));
