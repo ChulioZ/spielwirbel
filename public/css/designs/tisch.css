@@ -6562,6 +6562,27 @@
 :root[data-design="tisch"][data-scheme="dark"] .profile-card__vis .konto-notify__intro { color: var(--ink-soft); }
 :root[data-design="tisch"][data-scheme="dark"] .profile-card__vis-icon { color: var(--gold); }
 
+/* „Dein Rückblick" on the own profile (#1147). The ROUND's recap is laid on
+   the round's felt (.precap, T13 above); this one is the ACCOUNT's, so by T14.6
+   („Filz gehört der Runde, Design gehört dem Konto") it is a walnut plank with
+   the Spielerkarte's gold rim instead — no felt, no marker. The share button is
+   the same brass plate as the Chronik's, for the same reason: the section
+   exists to become the card. Every ground and ink here is a pair the Spielerkarte
+   above already uses (--surface / --ink / --ink-soft, brass under --on-accent). */
+:root[data-design="tisch"][data-scheme="dark"] .arecap {
+  padding: 20px;
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-2), inset 0 0 0 1px var(--gold-edge);
+}
+:root[data-design="tisch"][data-scheme="dark"] .arecap .precap__picker { border-color: var(--gold); }
+:root[data-design="tisch"][data-scheme="dark"] .arecap .precap__share,
+:root[data-design="tisch"][data-scheme="dark"] .arecap .precap__share:hover {
+  border-color: var(--gold-edge);
+  background: linear-gradient(180deg, var(--brass-hi), var(--gold-deep));
+  color: var(--on-accent);
+}
+
 /* --- Der Freundeskreis and its feed (T14.1, right) --------------------------
    People are walnut plates with the face in a gold rim — T14.1 draws every
    friend's initials inside a 2px #f0cf86 ring, and the rim is what makes a
