@@ -911,6 +911,9 @@ I18N.es = {
   'voteLink.appNoteCta': 'Crear tu propio grupo',
   'voteLink.deadTitle': 'Este enlace no lleva a ninguna parte',
   'voteLink.deadBody': 'La votación ha terminado, o el enlace es incorrecto. Lo mejor es preguntarle al grupo.',
+  'voteLink.introFor': 'Valoras para «{round}».',
+  'voteLink.introNoteOne': 'No necesitas cuenta. Solo ves el juego sorteado — nada más de la ronda.',
+  'voteLink.introNote': 'No necesitas cuenta. Solo ves los {n} juegos sorteados — nada más de la ronda.',
   // El registro de la sesión (#209). Nombra la CUENTA, nunca el dispositivo: el
   // servidor ve qué cuenta envió una petición y no puede saber quién tenía el
   // aparato en la mano.
@@ -951,6 +954,15 @@ I18N.es = {
   'vote.ratingLabel': '{n} de {max}',
   'vote.scaleLow': 'nada',
   'vote.scaleHigh': 'muchísimo',
+  'vote.scale2': 'más bien no',
+  'vote.scale3': 'me vale',
+  'vote.scale4': 'con gusto',
+  'vote.ratingLabelWord': '{n} de {max} – {word}',
+  'vote.rates': 'Valora {name}',
+  'vote.gameOf': 'Juego {n} de {total}',
+  'vote.personOf': 'Persona {n} de {total}',
+  'vote.handoffNext': 'Después pasa el dispositivo — le toca a {name}.',
+  'vote.handoffLast': 'Después ya habréis terminado todos — y llega el resultado.',
   'vote.toast.saved': 'Resultados guardados',
 
   'finale.crumb': 'Final',

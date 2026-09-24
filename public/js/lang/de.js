@@ -941,6 +941,9 @@ I18N.de = {
   'voteLink.appNoteCta': 'Eigene Runde starten',
   'voteLink.deadTitle': 'Dieser Link führt ins Leere',
   'voteLink.deadBody': 'Die Abstimmung ist vorbei, oder der Link stimmt nicht. Frag am besten in der Runde nach.',
+  'voteLink.introFor': 'Du wertest für „{round}“.',
+  'voteLink.introNoteOne': 'Kein Konto nötig. Du siehst nur das ausgeloste Spiel — sonst nichts von der Runde.',
+  'voteLink.introNote': 'Kein Konto nötig. Du siehst nur die {n} ausgelosten Spiele — sonst nichts von der Runde.',
   // Der Session-Verlauf (#209). Er benennt das KONTO, nicht das Gerät: der
   // Server sieht, welcher Account eine Anfrage geschickt hat, und kann nicht
   // wissen, wer das Gerät gerade in der Hand hielt. „Anna hat für Ben
@@ -984,6 +987,15 @@ I18N.de = {
   'vote.ratingLabel': '{n} von {max}',
   'vote.scaleLow': 'gar nicht',
   'vote.scaleHigh': 'unbedingt',
+  'vote.scale2': 'eher nicht',
+  'vote.scale3': 'kann ich',
+  'vote.scale4': 'gern',
+  'vote.ratingLabelWord': '{n} von {max} – {word}',
+  'vote.rates': '{name} wertet',
+  'vote.gameOf': 'Spiel {n} von {total}',
+  'vote.personOf': 'Person {n} von {total}',
+  'vote.handoffNext': 'Danach das Gerät weitergeben — {name} ist als Nächstes dran.',
+  'vote.handoffLast': 'Danach sind alle durch — dann kommt das Ergebnis.',
   'vote.toast.saved': 'Ergebnisse gespeichert',
 
   'finale.crumb': 'Finale',

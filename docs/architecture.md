@@ -789,6 +789,10 @@ public/
     views-member.js  member detail page (die Tischkarte: the Siegquote ring,
                      the initials watermark, the figure strip and its
                      the two game boxes; name/colour editing)
+    vote-card-tisch.js Der Tisch's vote card (#1268): the felt header, the card
+                     with cover and meta, the worded faces, the hand-off line
+                     and the vote link's felt intro; both vote cards build
+                     their faces through its voteMoodButton()
     views-session.js session setup, the rating cards, finale, results
     views-session-tables.js the multi-table builder and, once confirmed, the split
                      summary linking to the evening's tables (issue #796)
