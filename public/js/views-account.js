@@ -40,6 +40,11 @@ async function showAccount() {
   app.innerHTML = '';
   app.appendChild(h(`<div class="lobby-head"><h1>${esc(t('konto.title'))}</h1></div>`));
 
+  // Der Tisch composes this screen as a dashboard (#1265, T5.2/T5.4) out of the
+  // SAME builders below — views-account-tisch.js. Klassisch continues here,
+  // untouched.
+  if (designIs('tisch')) return renderKontoDashboard(me);
+
   app.appendChild(h(`<h2 class="konto-section__h">${esc(t('konto.identity'))}</h2>`));
   const facts = h('<div class="konto-facts"></div>');
   // A guest demo (#427) has no e-mail — the stored address is a synthetic,
@@ -83,6 +88,8 @@ async function showAccount() {
 
      A DEMO gets it: the route accepts the change and a visitor trying the app is
      exactly who a design chooser is for. */
+  // The callback re-renders when a pick changes which COMPOSITION this screen
+  // should have (#1265): picking Der Tisch here must land on its dashboard.
   app.appendChild(buildDesignSection(me));
 
   app.appendChild(h(`<h2 class="konto-section__h">${esc(t('konto.bgg.title'))}</h2>`));
@@ -159,7 +166,11 @@ async function showAccount() {
    .claude/rules/shared-constants-across-the-stack.md describes (both sides read
    AVATAR_MAX_BYTES from one file, so they cannot disagree about the number the
    message states). */
-function buildAvatarForm(me) {
+/* `who` (#1265) is an optional node placed right after the preview on every
+   render: Der Tisch's „Du" card puts the name and address there, between the
+   picture and its buttons, so DOM order stays the visual order. Klassisch
+   passes nothing and renders exactly as before. */
+function buildAvatarForm(me, who) {
   const wrap = h('<div class="konto-avatar"></div>');
   // `.konto-error` is the screen's own inline error line (the auth cards and
   // every other Konto form use it). Empty is its hidden state, so clearing is
@@ -173,6 +184,7 @@ function buildAvatarForm(me) {
     wrap.appendChild(h(`<span class="avatar konto-avatar__preview" style="background:${color}" aria-hidden="true">${
       avatarFace(initials(me.username || '?'), { src: avatar })
     }</span>`));
+    if (who) wrap.appendChild(who);
 
     const actions = h('<div class="konto-avatar__actions"></div>');
     // The input is `hidden` and driven by a real <button>, NOT by a <label for>.

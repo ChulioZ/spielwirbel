@@ -818,6 +818,7 @@ public/
                      colour carrying its play record (#1089, rebuilt in #1132),
                      the state action, the „…" menu and the tiled activity feed
     views-account.js Konto settings: identity + change password (#482; accounts mode only)
+    views-account-tisch.js Konto as Der Tisch's dashboard: „Du" card of setting rows, Design card, BGG + danger cards (#1265)
     router.js        URL ↔ view routing (History API): deep links, reloads
     main.js          bootstrap: route from the current URL              (loads last)
     pwa.js           registers the service worker (installable + offline)

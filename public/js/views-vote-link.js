@@ -120,8 +120,9 @@ async function showVoteLink(token) {
    * second chance to make an impression.
    *
    * It runs on every render because `currentView` re-enters here on a language
-   * change, which is also the only way back onto this screen without a reload. */
-  applyDesign(FACE_DESIGN);
+   * change, which is also the only way back onto this screen without a reload.
+   * `rendering`: this IS the render, so the design change must not re-enter it. */
+  applyDesign(FACE_DESIGN, { rendering: true });
 
   // No round name in the tab title — the tab is visible to anyone glancing at the
   // phone, and the round name is the group's own. The app's default pitch title

@@ -345,7 +345,11 @@ function renderRegalTab(round, activeGames) {
   // only populated when the shelf has games, and an empty shelf can still have a
   // full Wunschliste or Aussortiert — i.e. it would vanish exactly where it is
   // most needed.
-  const offShelfBtn = h(`<button class="link-btn rail-owned" type="button"><i class="ti ti-archive" aria-hidden="true"></i> <span>${esc(t('rail.archive'))}</span></button>`);
+  //
+  // NOT `rail-owned` under Der Tisch: that rail carries no off-shelf group
+  // (#1262), so at desktop this button is the Regal's own way to the four —
+  // T3.3 draws it in the toolbar at 1440.
+  const offShelfBtn = h(`<button class="link-btn${designIs('tisch') ? '' : ' rail-owned'}" type="button"><i class="ti ti-archive" aria-hidden="true"></i> <span>${esc(t('rail.archive'))}</span></button>`);
   offShelfBtn.addEventListener('click', () => openOffShelfSheet(round));
   gamesTools.appendChild(offShelfBtn);
 
@@ -364,6 +368,8 @@ function renderRegalTab(round, activeGames) {
 // popover-vs-sheet split exists because an anchored popover cannot hold a text
 // input on a phone (.claude/rules/popover-vs-sheet-editors.md) — this holds only
 // links, so it never needs it. Shape copied from pickExpansionBase (#664).
+// Under Der Tisch the trigger is not `rail-owned` (#1262), so this same centred
+// dialog serves the desktop too — still one presentation, just at every width.
 function openOffShelfSheet(round) {
   const rid = round.id;
   const backdrop = h(`<div class="sheet-backdrop sheet-backdrop--center">
