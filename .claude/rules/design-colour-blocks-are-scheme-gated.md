@@ -94,6 +94,13 @@ finding A7) is pure geometry and belongs to the voice, like the fonts and radii.
 the design declares only inside its gated block, against every rule that reads
 one — so a design added tomorrow is covered without anyone editing a list.
 
+**The inverse: markup a view BUILDS under `designIs()` must NOT be gated.** The
+JS branch fires in a light round too, where the gated block does not match, so
+#1273's editor rows came out as bare UA buttons there. Their rules sit on the
+bare hook and paint from app tokens the overlay re-point already maps to paper
+(`--control-fill`, `--accent`, `--brand-edge`) — never from a `--paper-*` name,
+which is unset outside the block. `test/tisch-form-sheets.test.js` pins both.
+
 ## A design's decoration must not take a pseudo-element the app already owns
 
 Found the same day, and it is the neighbouring trap rather than this one.

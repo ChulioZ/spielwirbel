@@ -376,7 +376,7 @@ test('the button triggers keep their pill/frame look, and .tag--empty keeps its 
   // existing overlay, which was written for a focusable frame before one existed.
   const ring = bodyOf('.tag--edit:focus-visible,\n.gd-title:focus-visible,\n.gd-img--edit:focus-visible');
   assert.ok(ring, 'the shared :focus-visible ring for the three triggers is gone');
-  assert.match(ring, /outline:\s*2px solid var\(--brand\)/);
+  assert.match(ring, /outline:\s*2px solid var\((?:--brand-ring,\s*var\()?--brand\)/);
   assert.ok(bodyOf('.gd-img--edit:hover .gd-img__edit,\n.gd-img--edit:focus-visible .gd-img__edit'),
     'the cover overlay no longer reveals on focus');
 });
