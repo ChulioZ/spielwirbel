@@ -684,6 +684,18 @@ function showStartSession(round, prefill) {
     if (joining.size === 0) return toast(t('startSession.toast.noMembers'));
     if (pool().length === 0) return toast(t('startSession.toast.noGames'));
     drawing = true;
+    /* Der Tisch's second motion ritual (#1200, T10.2): the pot's glyph turns ONCE
+       on the press. It never holds the lobby — #1122 removed exactly that — so
+       on a fast connection the lobby replaces it mid-turn, which is correct:
+       the turn is feedback on the press, not a wait. Removed and re-added so a
+       second draw after a failed one turns again. The rest of the ritual, the
+       drawn games dealt out, is the lobby's `data-dealt` below. */
+    if (tisch) {
+      const goBtn = form.querySelector('#go');
+      goBtn.classList.remove('is-whirling');
+      void goBtn.offsetWidth; // restart the animation
+      goBtn.classList.add('is-whirling');
+    }
     try {
       const data = await api('POST', `/api/rounds/${round.id}/sessions`, {
         count,
@@ -709,7 +721,7 @@ function showStartSession(round, prefill) {
       // shareable link for everyone voting from their own phone — so there is no
       // longer a mode to choose before the draw. The drawn games stay secret: the
       // lobby renders a COUNT, never a title.
-      showSessionLobby(round, data.session);
+      showSessionLobby(round, data.session, false, tisch);
     } catch (e) {
       toast(e.message);
     } finally {
