@@ -17,8 +17,21 @@ const chronikTier = (type) =>
 
 const CHRONIK_FILTERS = ['all', 'sessions', 'changes'];
 
+/* Der Tisch lays the Chronik out as the SESSIONS (#1271, T13.1/T13.5): each is
+   a paper strip with a brass date column, the players' faces and the score
+   pill, and the shelf changes between them recede. Everything below that
+   branches on it goes through one flag, read once per render; Klassisch takes
+   the untouched path.
+
+   How many faces a strip shows before the "+N" count — T13.1 draws four, and
+   a strip is one row, so a big table must not push the pill off it. */
+const CHRONIK_STRIP_FACES = 4;
+// Unique ids for the collapsed shelf-change runs' aria-controls.
+let chronikRunSeq = 0;
+
 function renderChronikTab(round, activities) {
   const rid = round.id;
+  const tisch = designIs('tisch');
   const loadCover = createCoverLoader(); // lazy session thumbs (#198)
 
   // The chip choice persists for the session but is scoped to one round — the
@@ -126,7 +139,19 @@ function renderChronikTab(round, activities) {
   // about structure, not level sequencing), and the screen's name in the title
   // bar comes from setDocTitle (.claude/rules/per-view-document-title.md).
   const sec = h('<div class="section"></div>');
-  sec.appendChild(h(`<div class="section-head"><h1>${esc(t('chronik.title'))}</h1></div>`));
+  const secHead = h(`<div class="section-head"><h1>${esc(t('chronik.title'))}</h1></div>`);
+  // Der Tisch names what the page IS beside its title — „23 Sessions seit Mai
+  // 2025" (T13.1). Counted exactly as the rail beside it counts (round-rail.js:
+  // every FINISHED session), not over the strips: a cancelled night is listed
+  // but was never played, and counting it put „7" here beside the rail's „6".
+  if (tisch) {
+    const counted = round.sessions.filter((s) => s.finished);
+    if (counted.length) {
+      const since = counted.reduce((a, s) => (s.createdAt < a ? s.createdAt : a), counted[0].createdAt);
+      secHead.appendChild(h(`<span class="chronik__count">${esc(tn(counted.length, 'chronik.countOne', 'chronik.count', { month: fmtMonth(since) }))}</span>`));
+    }
+  }
+  sec.appendChild(secHead);
 
   // Filter chips: everything / sessions only / shelf changes only. `is-on` is
   // driven by the remembered choice rather than hard-coded onto "all", or the
@@ -180,7 +205,9 @@ function renderChronikTab(round, activities) {
     }
 
     const parts = [];
-    if (chosen) parts.push(esc(when));
+    // Under Der Tisch the date has its own column, so the meta line does not
+    // repeat it.
+    if (chosen && !tisch) parts.push(esc(when));
     if (outcome === 'split') parts.push(iconText('ti-layout-grid', t('sessions.split')));
     // A winnerless night says HOW it ended where it has one (#1038); an
     // unrecorded one still reads „Gespielt", which is all that is known about it.
@@ -191,7 +218,12 @@ function renderChronikTab(round, activities) {
     // „1 Spiel bewertet" over zero votes (#915). Omitted entirely there rather
     // than reworded: the card then reads „3. September · ✓ Gespielt", which is
     // the whole truth about that evening.
-    if (sessionHasVotes(s)) parts.push(esc(tn(s.gameIds.length, 'sessions.ratedOne', 'sessions.rated')));
+    // „4 dabei" (T13.1): the faces are aria-hidden, so the count is what a
+    // screen reader hears for them — in the text, not only in the picture.
+    if (tisch && sPeople.length) parts.push(esc(tn(sPeople.length, 'chronik.seatedOne', 'chronik.seated')));
+    const rated = sessionHasVotes(s) ? esc(tn(s.gameIds.length, 'sessions.ratedOne', 'sessions.rated')) : '';
+    if (tisch) return buildSessionStrip(s, { when, chosen, sPeople, thumbIcon, title, pill, parts, rated });
+    if (rated) parts.push(rated);
 
     const card = h(`<a class="session-card">
          <div class="session-card__img">${thumbIcon}</div>
@@ -203,6 +235,67 @@ function renderChronikTab(round, activities) {
     if (chosen && chosen.image) loadCover(card.querySelector('.session-card__img'), coverUrl(chosen.image, COVER_THUMB));
     navLink(card, resultsPath(round.id, s.id), () => showResults(round, s));
     return card;
+  }
+
+  /* Der Tisch's session strip (#1271, T13.1/T13.5). Same link, same target and
+     the same words as the Klassisch card; what changes is the composition:
+     [date column | cover | title + meta | faces | score pill]. The date comes
+     FIRST in the DOM because it is first in the picture — on a phone it sits
+     inside the paper, on a desktop on the wood beside it (tisch.css), and
+     either way it is read first. */
+  function buildSessionStrip(s, { when, chosen, sPeople, thumbIcon, title, pill, parts, rated }) {
+    const d = new Date(s.createdAt);
+    const tag = localeTag(locale);
+    const day = d.toLocaleString(tag, { day: '2-digit' });
+    const mon = d.toLocaleString(tag, { month: 'short' });
+    const seats = sPeople.slice(0, CHRONIK_STRIP_FACES);
+    const rest = sPeople.length - seats.length;
+    // aria-hidden: the meta line carries „N dabei" in text, and a link whose
+    // name spells out every initial reads as noise.
+    const faces = seats.length
+      ? `<span class="avatar-stack session-card__faces" aria-hidden="true">${seats
+        .map((p) => `<span class="avatar${p.guest ? ' avatar--guest' : ''}" style="background:${personColor(round, p)}">${avatarFace(initials(p.name), {})}</span>`)
+        .join('')}${rest > 0 ? `<span class="avatar avatar-stack__more">+${rest}</span>` : ''}</span>`
+      : '';
+    const card = h(`<a class="session-card session-card--strip">
+         <time class="session-card__date" datetime="${esc(s.createdAt)}" title="${esc(when)}"><span class="session-card__day">${esc(day)}</span><span class="session-card__mon">${esc(mon)}</span></time>
+         <div class="session-card__img">${thumbIcon}</div>
+         <div class="session-card__body">
+           <div class="session-card__title">${title}</div>
+           <div class="session-card__meta">${parts.join(' · ')}${rated ? `<span class="session-card__rated">${parts.length ? ' · ' : ''}${rated}</span>` : ''}</div>
+         </div>
+         ${faces}${pill}
+       </a>`);
+    if (chosen && chosen.image) loadCover(card.querySelector('.session-card__img'), coverUrl(chosen.image, COVER_THUMB));
+    navLink(card, resultsPath(round.id, s.id), () => showResults(round, s));
+    return card;
+  }
+
+  /* Shelf changes recede under Der Tisch (#1271): a run of two or more
+     consecutive changes inside one month folds behind ONE quiet disclosure
+     („5 Regal-Änderungen"), so the sessions carry the page. Nothing is hidden
+     for good — the button expands the same rows, delete buttons and links the
+     Klassisch timeline shows. A lone change stays in place as a light row:
+     folding a single line behind a button would cost a tap to read one line. */
+  function buildChangeRun(run) {
+    const id = `tl-run-${++chronikRunSeq}`;
+    const wrap = h(`<div class="tl-run">
+         <button type="button" class="tl-run__toggle" aria-expanded="false" aria-controls="${id}">
+           <i class="ti ti-cards" aria-hidden="true"></i>
+           <span class="tl-run__label">${esc(tn(run.length, 'chronik.changesOne', 'chronik.changes'))}</span>
+           <i class="ti ti-chevron-down tl-run__chev" aria-hidden="true"></i>
+         </button>
+         <div class="tl-run__list" id="${id}" hidden></div>
+       </div>`);
+    const toggle = wrap.querySelector('.tl-run__toggle');
+    const list = wrap.querySelector('.tl-run__list');
+    run.forEach((e) => list.appendChild(buildItem(e)));
+    toggle.addEventListener('click', () => {
+      const open = toggle.getAttribute('aria-expanded') !== 'true';
+      toggle.setAttribute('aria-expanded', String(open));
+      list.hidden = !open;
+    });
+    return wrap;
   }
 
   function buildActivityRow(e) {
@@ -267,28 +360,46 @@ function renderChronikTab(round, activities) {
       tl.appendChild(emptyState({ icon: 'ti-history', title: t('chronik.emptyTitle'), text: t('chronik.empty') }));
       return;
     }
+    // Only the unfiltered view folds: with „Regal-Änderungen" chosen, the
+    // changes ARE the page, and one disclosure per month would hide all of it.
+    const fold = tisch && chronikFilter === 'all';
     let lastMonth = '';
-    visible.forEach((e) => {
+    for (let i = 0; i < visible.length;) {
+      const e = visible[i];
       const month = fmtMonth(e.at);
       if (month !== lastMonth) {
         lastMonth = month;
         tl.appendChild(h(`<div class="tl-month">${esc(month)}</div>`));
       }
-      const dot = e.kind === 'session' ? ' tl-dot--session'
-        : chronikTier(e.type) === 'milestone' ? ' tl-dot--milestone' : '';
-      const item = h(`<div class="tl-item"><span class="tl-dot${dot}"></span></div>`);
-      item.appendChild(e.kind === 'session' ? buildSessionCard(e.session) : buildActivityRow(e));
-      // The tables of a split evening, indented under the parent they came from
-      // (#796). Newest-first everywhere else in this timeline, but a split's
-      // tables are siblings of one moment, so they keep their creation order.
-      const kids = e.kind === 'session' ? childrenOf.get(e.session.id) : null;
-      if (kids && kids.length) {
-        const nest = h('<div class="tl-nest"></div>');
-        kids.forEach((child) => nest.appendChild(buildSessionCard(child)));
-        item.appendChild(nest);
+      if (fold && e.kind === 'activity') {
+        let j = i + 1;
+        while (j < visible.length && visible[j].kind === 'activity' && fmtMonth(visible[j].at) === month) j++;
+        if (j - i > 1) {
+          tl.appendChild(buildChangeRun(visible.slice(i, j)));
+          i = j;
+          continue;
+        }
       }
-      tl.appendChild(item);
-    });
+      tl.appendChild(buildItem(e));
+      i++;
+    }
+  }
+
+  function buildItem(e) {
+    const dot = e.kind === 'session' ? ' tl-dot--session'
+      : chronikTier(e.type) === 'milestone' ? ' tl-dot--milestone' : '';
+    const item = h(`<div class="tl-item"><span class="tl-dot${dot}"></span></div>`);
+    item.appendChild(e.kind === 'session' ? buildSessionCard(e.session) : buildActivityRow(e));
+    // The tables of a split evening, indented under the parent they came from
+    // (#796). Newest-first everywhere else in this timeline, but a split's
+    // tables are siblings of one moment, so they keep their creation order.
+    const kids = e.kind === 'session' ? childrenOf.get(e.session.id) : null;
+    if (kids && kids.length) {
+      const nest = h('<div class="tl-nest"></div>');
+      kids.forEach((child) => nest.appendChild(buildSessionCard(child)));
+      item.appendChild(nest);
+    }
+    return item;
   }
   renderTimeline();
   // Deleting (or leaving) the round used to end this timeline, and it was the one
@@ -320,8 +431,32 @@ function renderPeriodRecapSection(round, activities) {
   const idOf = (p) => `${p.kind}:${p.key}`;
 
   const sec = h('<div class="section precap"></div>');
-  sec.appendChild(h(`<div class="section-head"><h2>${esc(t('periodRecap.title'))}</h2></div>`));
-  sec.appendChild(h(`<p class="muted recap__lead">${esc(t('periodRecap.lead'))}</p>`));
+  /* Der Tisch on a phone (#1271, T13.5): the recap is ONE felt line at the top
+     of the Chronik — „Rückblick September 2026" — that opens the full section
+     in place. The same section, not a second copy of it: the line is a
+     disclosure over the panel below it, and from 521px up tisch.css hides the
+     line and shows the panel as always (the desktop column is T13.1's). */
+  let panel = sec;
+  let entryLabel = null;
+  if (designIs('tisch')) {
+    sec.classList.add('precap--entry');
+    const entry = h(`<button type="button" class="precap__entry" aria-expanded="false" aria-controls="precap-panel">
+         <i class="ti ti-history" aria-hidden="true"></i>
+         <span class="precap__entry-label"></span>
+         <i class="ti ti-chevron-down precap__entry-chev" aria-hidden="true"></i>
+       </button>`);
+    entryLabel = entry.querySelector('.precap__entry-label');
+    panel = h('<div class="precap__panel" id="precap-panel"></div>');
+    entry.addEventListener('click', () => {
+      const open = !sec.classList.contains('is-open');
+      sec.classList.toggle('is-open', open);
+      entry.setAttribute('aria-expanded', String(open));
+    });
+    sec.appendChild(entry);
+    sec.appendChild(panel);
+  }
+  panel.appendChild(h(`<div class="section-head"><h2>${esc(t('periodRecap.title'))}</h2></div>`));
+  panel.appendChild(h(`<p class="muted recap__lead">${esc(t('periodRecap.lead'))}</p>`));
 
   // Two groups rather than one flat list: a round three years in has 36 months,
   // and „2026" sitting between „März 2026" and „Februar 2026" reads as a month
@@ -338,10 +473,10 @@ function renderPeriodRecapSection(round, activities) {
        </select>
      </div>`);
   const picker = head.querySelector('.precap__picker');
-  sec.appendChild(head);
+  panel.appendChild(head);
 
   const body = h('<div class="precap__body"></div>');
-  sec.appendChild(body);
+  panel.appendChild(body);
 
   const currentPeriod = () => periods.find((p) => idOf(p) === picker.value) || periods[0];
 
@@ -393,6 +528,9 @@ function renderPeriodRecapSection(round, activities) {
     const period = currentPeriod();
     const rec = periodRecap(round, activities, period, deps);
     body.innerHTML = '';
+    // The phone's one-line entry names the period the panel shows, so it
+    // follows the picker.
+    if (entryLabel) entryLabel.textContent = t('periodRecap.entry', { period: labelOf(period) });
 
     const chip = (icon, text) =>
       h(`<span class="stat-chip"><i class="ti ${icon}" aria-hidden="true"></i>${esc(text)}</span>`);

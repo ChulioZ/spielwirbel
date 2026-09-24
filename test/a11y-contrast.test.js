@@ -1553,6 +1553,39 @@ test('Der Tisch\'s hub tiles keep their figures and labels at AA on the grounds 
   assert.deepEqual(failures, []);
 });
 
+test('the Chronik session strip keeps its date column at AA on wood and on paper (#1271)', () => {
+  /* The strip's date column changes ground with the width (tisch.css): on a
+     desktop it stands on the walnut PAGE beside the paper and takes --gold; on
+     a phone it moves INTO the paper, where the day is the paper ink and the
+     month --accent-deep. The strip re-points --ink on a component rule the
+     resolver cannot follow, so each pair is named here. The folded
+     shelf-change run's dashed --gold-edge rim is the only thing marking it as a
+     control on the wood (SC 1.4.11). */
+  const hosts = withToken('--paper');
+  assert.ok(hosts.length >= 1, 'no design declares --paper — this test is vacuous');
+  const failures = [];
+  let checked = 0;
+  for (const t of hosts) {
+    const v = (n) => token(n, t.design);
+    for (const [label, fg, bg, bar] of [
+      ['date --gold on --page-bg', v('--gold'), v('--page-bg'), AA_TEXT],
+      ['day --paper-ink on --paper', v('--paper-ink'), v('--paper'), AA_TEXT],
+      ['day --paper-ink on --paper-raised', v('--paper-ink'), v('--paper-raised'), AA_TEXT],
+      ['month --accent-deep on --paper', v('--accent-deep'), v('--paper'), AA_TEXT],
+      ['month --accent-deep on --paper-raised', v('--accent-deep'), v('--paper-raised'), AA_TEXT],
+      ['run rim --gold-edge on --page-bg', v('--gold-edge'), v('--page-bg'), AA_LARGE],
+    ]) {
+      checked++;
+      const ratio = contrast(fg, bg);
+      // `!(ratio >= bar)`, not `ratio < bar`: a NaN from a wrong-shaped token
+      // must fail here rather than pass (nan-passes-every-threshold-guard.md).
+      if (!(ratio >= bar)) failures.push(`${name(t)} — ${label} = ${ratio.toFixed(2)}:1 (bar ${bar})`);
+    }
+  }
+  assert.ok(checked >= 6, 'no strip pair was measured');
+  assert.deepEqual(failures, [], 'the Chronik strip\'s date column and run rim must clear their bars');
+});
+
 test('a design that declares a FELT keeps its own ink on it, and keeps the accent off it below 24px', () => {
   /* Review finding A1, as a measurement rather than as prose. Gold on the light
      stop of Tannenfilz is 4.20:1, so gold is a DISPLAY colour on felt and text
@@ -1760,6 +1793,33 @@ test('a design whose gold row is a SWEEP carries one ink across both its stops',
     }
   }
   assert.deepEqual(failures, [], 'the winning row has one ink, so it must hold on both stops');
+});
+
+test('a design’s gold holds as DISPLAY type on every one of its felts', () => {
+  /* #1270, T4.5: each table of a split session sits on its own felt — the
+     design's markers, one per table — and at the rail width the winners' names
+     in its sentence are printed in --gold at 26px/800. Finding A1 limits gold on
+     felt to display size, so the bar is the large-text one, measured on BOTH
+     stops of all eight felts (a table can land on any of them). Ockerfilz's
+     light stop is the tightest, at 3.56:1. Below the rail width the sentence is
+     smaller and the names take the felt's own ink, which the marker sweep
+     above already measures. */
+  const hosts = withToken('--gold').filter((t) => (DESIGN_REGISTRY.find((d) => d.id === t.design.id) || {}).markers);
+  assert.ok(hosts.length >= 1, 'no design declares gold and felts — this test is vacuous');
+  const failures = [];
+  let checked = 0;
+  for (const t of hosts) {
+    const gold = token('--gold', t.design);
+    for (const m of DESIGN_REGISTRY.find((d) => d.id === t.design.id).markers) {
+      for (const stop of [m.color, m.deep]) {
+        checked++;
+        const ratio = contrast(gold, rgb(stop));
+        if (ratio < barFor({ px: 26, weight: 800 })) failures.push(`${name(t)} — --gold on ${m.key} ${stop} = ${ratio.toFixed(2)}:1`);
+      }
+    }
+  }
+  assert.ok(checked >= 16, 'the sweep did not reach the felts');
+  assert.deepEqual(failures, [], 'gold names on a table’s felt must read as large text');
 });
 
 test('a design that declares Pokale PLINTHS carries their one ink on all six stops', () => {
