@@ -193,6 +193,15 @@ async function showMarker(rid) {
         const key = 'round:' + rid;
         const cached = swrStore.get(key);
         if (cached) swrStore.set(key, { ...cached, marker: saved.marker });
+        /* …and the LOBBY's list, for the same reason one screen over (#1197).
+           `rounds` is its own SWR key, and inside its 5s freshness window
+           showHome() serves it without revalidating — so going back to the
+           lobby right after a pick drew the tile in the OLD felt, and it only
+           corrected itself on a later visit. */
+        const list = swrStore.get('rounds');
+        if (Array.isArray(list)) {
+          swrStore.set('rounds', list.map((r) => (r && r.id === rid ? { ...r, marker: saved.marker } : r)));
+        }
         toast(t('marker.toast.set'));
         currentView();
       } catch (e) { toast(e.message); }

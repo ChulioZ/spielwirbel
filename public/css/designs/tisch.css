@@ -3147,9 +3147,17 @@
    different one elsewhere: `anywhere` also shrinks the element's min-content
    width, so it would let a name break mid-word wherever the rail is put under
    pressure. `break-word` breaks only a word that has nowhere else to go, which
-   is exactly this case. */
+   is exactly this case.
+
+   Hyphenated where the language allows (#1197's screenshots showed
+   „Donnerstagsrun / de" without it): `hyphens` reads <html lang>, which
+   i18n.js keeps on the active locale, and `break-word` stays the fallback for a
+   word no dictionary can split. Both spellings, as Safari < 17 only knows the
+   prefix. */
 :root[data-design="tisch"][data-scheme="dark"] .rail__name {
   overflow-wrap: break-word;
+  -webkit-hyphens: auto;
+  hyphens: auto;
 }
 
 /* ===========================================================================
@@ -3903,4 +3911,354 @@
   height: 64px;
   border-radius: var(--radius-sm);
   box-shadow: var(--shadow-1);
+}
+
+/* ===========================================================================
+   #1197 — the SPIELERKARTE, the FREUNDESKREIS and its feed, the POSTEINGANG,
+   „WAS IST NEU", the signed-in STATISTIK, and the round's EINSTELLUNGEN with
+   the felt picker.
+
+   Source: Tisch-T14-Tier2b.dc.html (T14.1–T14.5). T14.6 states the brief in
+   one line — „Filz gehört der Runde, Design gehört dem Konto" — and that is
+   the one idea this section adds to the six screens: felt appears where
+   something is the TABLE's (the profile's head, the felt picker), and every
+   per-account surface is walnut and brass.
+
+   PAINT ONLY, under the #1193 ruling („the sheet's intent is the design, not
+   the ordering"). T14 draws a good deal the app does not have, and each of
+   those is a feature or new copy in nine locales rather than a colour:
+     - T14.1's three rounds as felt strips, „Karte teilen" and the stats
+       toggle. A profile deliberately carries NO round data (it is read across
+       a tenant boundary — lib/routes/profile.js), there is no card to share,
+       and the toggle already lives on Konto (#1193).
+     - T14.2's „3 neu" / „Alle gelesen" head, the icon tile per row and the
+       „geteilte Session" item. The inbox has no mark-all action and no such
+       item type; invitation and friend request already differ by the action
+       on the right, which is exactly the distinction T14.6 asks for.
+     - T14.3's „Neu / Besser / Behoben" badges and the felt head band. A NEWS
+       entry has no kind (public/js/news.js), and the head is the shared
+       `.lobby-head`, which no screen-specific rule reaches without :has().
+     - T14.4's three top-five lists. The payload is one podium per metric
+       (lib/public-stats.js), so each card stays one game.
+     - T14.5's two-column composition with the picker, the tags and the
+       invite link INLINE on the settings screen, the „Übernehmen" button and
+       the sentence „Der Filz gehört der Runde — nicht dir.". The screen links
+       to its sub-screens (#561/#956), a swatch applies on the tap, and the
+       app's own sentence (`marker.note`) already says the same thing without
+       naming a design.
+   The logged-OUT statistics are #1198's (the face); every statistics rule
+   below is scoped off `body.auth-screen` for that reason.
+
+   Same gate and same no-literals rule as every section above; every ground
+   used below is a token the contrast suite already measures, and the few
+   pairs it does not are measured in the comment beside them.
+   =========================================================================== */
+
+/* --- Die Spielerkarte (T14.1) ---------------------------------------------
+   The card becomes a walnut plank with a gold rim and the account's name on a
+   band of felt across its head, closed by the 5px brass rim the hub's felt
+   stage wears (#1189). Scoped to `.profile-card` alone: `.member-card` shares
+   the frame by selector in styles.css, and the member page is #1196's.
+
+   The m-tone WASH gives way to flat --surface. On this design the felt band
+   is what carries the head, and a tone mixed into walnut below it reads as a
+   stain rather than a colour. The account's tone is still everywhere it
+   means something — the ring, the chip, the ribbons, the tiles' side. */
+:root[data-design="tisch"][data-scheme="dark"] .profile-card {
+  background: var(--surface);
+  box-shadow: var(--shadow-3), inset 0 0 0 1px var(--gold-edge);
+  border-radius: var(--radius-md);
+}
+
+/* The felt head. Bled to the card's edges by the card's own padding
+   (26px 24px, 20px 16px on a phone — styles.css), so the head's content sits
+   exactly where it sat before. Paper ink on it, never gold (finding A1), and
+   the meta line takes --felt-ink-soft: --ink-soft is measured on wood, not on
+   felt. */
+:root[data-design="tisch"][data-scheme="dark"] .profile-card .member-card__id {
+  margin: -26px -24px 22px;
+  padding: 26px 24px;
+  background-color: var(--felt-deep);
+  background-image:
+    var(--felt-weave),
+    radial-gradient(70% 150% at 20% -30%, var(--felt), var(--felt-deep) 74%);
+  border-bottom: 5px solid var(--gold-edge);
+  color: var(--felt-ink);
+}
+@media (max-width: 520px) {
+  :root[data-design="tisch"][data-scheme="dark"] .profile-card .member-card__id {
+    margin: -20px -16px 18px;
+    padding: 20px 16px;
+  }
+}
+:root[data-design="tisch"][data-scheme="dark"] .profile-card .member-card__who h1 { color: var(--felt-ink); }
+:root[data-design="tisch"][data-scheme="dark"] .profile-card .profile-card__meta { color: var(--felt-ink-soft); }
+:root[data-design="tisch"][data-scheme="dark"] .profile-card .profile-card__meta strong { color: var(--felt-ink); }
+
+/* The face sits in a gold rim on the felt (T14.1's 3px #f0cf86) instead of
+   the --surface ring it wears on wood — a glyph-class use of gold on felt,
+   which is exactly what A1 permits. */
+:root[data-design="tisch"][data-scheme="dark"] .profile-card .member-avatar {
+  box-shadow: 0 0 0 3px var(--gold), 0 8px 18px var(--cast-deep);
+}
+
+/* The watermark goes. It is the Tischkarte's device for putting the account's
+   colour into a text-free corner (#1075), and here that corner is felt: an
+   11% tone over the band would muddy the one surface this design uses to say
+   "this is the table", and its alpha was bounded against the wash this
+   section removes. */
+:root[data-design="tisch"][data-scheme="dark"] .profile-card .member-card__mark { display: none; }
+
+/* The figures as T14.1's tiles: one raised walnut plate each, four across,
+   the value in the display face. Two across on a phone, where four ~75px
+   tiles would break „Ø Wertung" onto two lines. The strip's m-tone rule goes;
+   the tiles are the separation now. --ink on --control-fill is 8.02:1, the
+   pair every control in this design already carries. */
+:root[data-design="tisch"][data-scheme="dark"] .profile-card .member-card__figures {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+@media (max-width: 520px) {
+  :root[data-design="tisch"][data-scheme="dark"] .profile-card .member-card__figures {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+:root[data-design="tisch"][data-scheme="dark"] .profile-card .member-figure {
+  padding: 13px 15px;
+  background: var(--control-fill);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+}
+:root[data-design="tisch"][data-scheme="dark"] .profile-card .member-figure__value {
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- Der Freundeskreis and its feed (T14.1, right) --------------------------
+   People are walnut plates with the face in a gold rim — T14.1 draws every
+   friend's initials inside a 2px #f0cf86 ring, and the rim is what makes a
+   row of faces read as seats at one table rather than as a list of dots.
+   The tiles keep --surface: `.k-tile__art`'s cover-wash alpha is a ceiling
+   measured over --surface (styles.css), so that ground is not free to move. */
+:root[data-design="tisch"][data-scheme="dark"] .k-tile .avatar,
+:root[data-design="tisch"][data-scheme="dark"] .k-card .avatar,
+:root[data-design="tisch"][data-scheme="dark"] .e-tile__who .avatar {
+  box-shadow: 0 0 0 2px var(--gold);
+}
+:root[data-design="tisch"][data-scheme="dark"] a.k-tile:hover { border-color: var(--gold); }
+
+/* The „＋" slot takes the dashed --control-edge every „something belongs here"
+   affordance in this design carries (#1194). It is a control, so its
+   boundary has to clear 3:1; the tile is transparent, so it sits on the page,
+   where --control-edge measures 4.48:1. */
+:root[data-design="tisch"][data-scheme="dark"] .k-tile--add { border-color: var(--control-edge); }
+:root[data-design="tisch"][data-scheme="dark"] .k-tile--add:hover {
+  border-color: var(--gold);
+  color: var(--ink);
+}
+
+/* An incoming request is the one raised thing on the screen (T14.1's „Timo
+   will befreundet sein"): the gold edge and the raised fill T1 gives an
+   actionable object, in place of Klassisch's brand wash — which here is
+   brass at a few percent over walnut and simply disappears. Outgoing keeps
+   its quiet left edge, because it waits on nobody here. */
+:root[data-design="tisch"][data-scheme="dark"] .k-card--incoming {
+  background: var(--control-fill);
+  border-color: var(--gold);
+  border-left-color: var(--gold);
+}
+
+/* THE RAISED FILL TAKES THE BRASS OFF ITS LINKS, and this is the constraint
+   that decides the two plates above and below rather than a detail of them.
+   A `.link-btn` is --brand text, and --brand on --control-fill is 4.37:1 —
+   the pair the token block calls „tight on purpose" for a control EDGE, where
+   3:1 binds; as text it is under AA. So „Ablehnen", „Zurückziehen" and the
+   dismiss glyph drop to --ink-soft on a raised plate (6.29:1), which is also
+   T14.2's own „Ablehnen" — a soft ink beside the brass button, not a second
+   brass thing. The hover goes to --ink. */
+:root[data-design="tisch"][data-scheme="dark"] .k-card--incoming .link-btn,
+:root[data-design="tisch"][data-scheme="dark"] .inbox-row.inbox-row--unread .link-btn {
+  color: var(--ink-soft);
+}
+:root[data-design="tisch"][data-scheme="dark"] .k-card--incoming .link-btn:hover,
+:root[data-design="tisch"][data-scheme="dark"] .inbox-row.inbox-row--unread .link-btn:hover {
+  color: var(--ink);
+}
+
+/* The feed's tiles: the title in the display face, so a wall of events reads
+   as headlines rather than as body copy, and the cover as a box with a
+   hairline edge. Nothing is written on the cover (finding A6). */
+:root[data-design="tisch"][data-scheme="dark"] .e-tile__title {
+  font-family: var(--font-display);
+  font-weight: 800;
+}
+:root[data-design="tisch"][data-scheme="dark"] .e-tile__img { box-shadow: 0 0 0 1px var(--line); }
+
+/* --- Der Posteingang (T14.2) ----------------------------------------------
+   An UNREAD row is the raised plate with the gold edge — T14.2's invitation
+   — and a read one lies flat. The actionable kinds are then told apart by
+   what stands on the right: a brass „Annehmen" and a quiet „Ablehnen" for an
+   invitation or a request, a lone dismiss glyph for a plain notice. That is
+   T14.6's own distinction and the app already renders it; the paint's job is
+   only to stop every row carrying the same weight.
+
+   The unread dot moves to T1's Zinnober — „laufende Abstimmung, Gefahr,
+   Marke" — rather than staying brass beside a brass button, where it read as
+   part of the control. --danger is that hue's LIGHT member, the one that goes
+   on wood: 4.47:1 on the raised fill and 5.53:1 on --surface against the 3:1
+   a non-text mark needs (SC 1.4.11). The state is also carried by the
+   aria-label and the bolder title, never by the colour alone. */
+:root[data-design="tisch"][data-scheme="dark"] .inbox-row.inbox-row--unread {
+  background: var(--control-fill);
+  border-color: var(--gold);
+}
+:root[data-design="tisch"][data-scheme="dark"] .inbox-row__dot { background: var(--danger); }
+:root[data-design="tisch"][data-scheme="dark"] .inbox-row .ds-row__date {
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+:root[data-design="tisch"][data-scheme="dark"] .inbox-row.inbox-row--unread .ds-row__date { font-weight: 800; }
+
+/* --- „Was ist neu" (T14.3) -------------------------------------------------
+   Dated, not versioned: the date stands in its own gold column and the entry
+   hangs off a brass hairline beside it. Gold is TEXT here, and that is
+   allowed on WOOD — A1 restricts gold under 24px on FELT, where it is 4.20:1;
+   on the walnut page it measures 9.16:1.
+
+   The column starts at 600px. Below that the date keeps its place above the
+   title, because a 7.5em column would leave the entry's own text ~230px on a
+   390px screen for no gain in reading order. */
+:root[data-design="tisch"][data-scheme="dark"] .news-entry__date {
+  font-family: var(--font-display);
+  font-weight: 800;
+  color: var(--gold);
+}
+:root[data-design="tisch"][data-scheme="dark"] .news-entry { border-left-color: var(--gold-edge); }
+@media (min-width: 600px) {
+  :root[data-design="tisch"][data-scheme="dark"] .news-entry {
+    display: grid;
+    grid-template-columns: 7.5em minmax(0, 1fr);
+    column-gap: 14px;
+    border-left: 0;
+    padding-left: 0;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .news-entry__date { grid-row: 1 / span 2; margin: 2px 0 0; }
+  :root[data-design="tisch"][data-scheme="dark"] .news-entry__title,
+  :root[data-design="tisch"][data-scheme="dark"] .news-entry__body {
+    grid-column: 2;
+    border-left: 2px solid var(--gold-edge);
+    padding-left: 14px;
+  }
+  /* The title's bottom margin would open a gap in the hairline, so the same
+     distance moves inside the box. */
+  :root[data-design="tisch"][data-scheme="dark"] .news-entry__title { margin: 0; padding-bottom: 6px; }
+}
+
+/* --- Die Statistik, signed in (T14.4) ---------------------------------------
+   Only the standalone screen's block (`.app > .stats-block`), and only for a
+   signed-in visitor: the landing's copy and the logged-out /entdecken are the
+   face, which #1198 dresses, and the home panel's cards sit in a dashboard
+   tile on its own --sunken ground (styles.css).
+
+   Each podium card becomes T14.4's walnut plate with its label in the display
+   face under a gold glyph, and the counters become the same raised plates as
+   the Spielerkarte's figures — one family for "a number about you" and "a
+   number about everyone". Nothing names a round or a person, as before. */
+:root[data-design="tisch"][data-scheme="dark"] body:not(.auth-screen) .app > .stats-block .stats-card,
+:root[data-design="tisch"][data-scheme="dark"] body:not(.auth-screen) .app > .stats-block .stats-counter {
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-1);
+}
+:root[data-design="tisch"][data-scheme="dark"] body:not(.auth-screen) .app > .stats-block .stats-counter {
+  background: var(--control-fill);
+}
+:root[data-design="tisch"][data-scheme="dark"] body:not(.auth-screen) .app > .stats-block .stats-counter__num {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+:root[data-design="tisch"][data-scheme="dark"] body:not(.auth-screen) .app > .stats-block .stats-card__label {
+  font-family: var(--font-display);
+  font-weight: 800;
+}
+:root[data-design="tisch"][data-scheme="dark"] body:not(.auth-screen) .app > .stats-block .stats-card__label .ti {
+  color: var(--gold);
+}
+/* The cover as T14.4's upright box — a game box stands, it does not lie in a
+   square — and the wood placeholder when the provider sent none. */
+:root[data-design="tisch"][data-scheme="dark"] body:not(.auth-screen) .app > .stats-block .stats-card__cover {
+  width: 44px;
+  height: 56px;
+  border-radius: var(--radius-sm);
+}
+:root[data-design="tisch"][data-scheme="dark"] body:not(.auth-screen) .app > .stats-block .stats-card__cover--none {
+  background:
+    repeating-linear-gradient(92deg, var(--wood-grain) 0 3px, transparent 3px 11px),
+    linear-gradient(160deg, var(--wood-light), var(--wood-deep));
+}
+
+/* --- Die Einstellungen der Runde (T14.5) ------------------------------------
+   The row list becomes T14.5's settings rows: each a walnut plate with its
+   glyph in gold, the chevron quiet, the edge lighting to brass under the
+   pointer. Gold as a glyph on wood needs no carve-out at all. */
+:root[data-design="tisch"][data-scheme="dark"] .rs-row .ds-row__main { font-weight: 700; }
+:root[data-design="tisch"][data-scheme="dark"] .rs-row .ds-row__main .ti {
+  color: var(--gold);
+  font-size: var(--text-lg);
+}
+:root[data-design="tisch"][data-scheme="dark"] .rs-row:hover { border-color: var(--gold-edge); }
+
+/* The danger zone as T14.5's own plate: the alert tone as a real edge, where
+   Klassisch's 25% mix of --danger into walnut comes out as a line nobody can
+   find. --danger is T1's „Akzent als Schrift auf Holz" (5.53:1 on
+   --surface), and the heading above the plate already wears it. */
+:root[data-design="tisch"][data-scheme="dark"] .rs-danger { border-color: var(--danger); }
+
+/* --- The felt picker (T14.5 „Filz der Runde") -------------------------------
+   Eight pieces of felt, four to a row from 600px, each cut the way every felt
+   surface in this design is — the radial from the light stop to the deep one,
+   with the weave — and named underneath rather than on the swatch. The chosen
+   one takes the 3px gold rim with a brass ring outside it; the check glyph
+   stays, in `--marker-ink` (paper: 5.38:1 on Tannenfilz's light stop, 4.56:1
+   on Ockerfilz, the tightest — T8.1's own figures, asserted by
+   test/a11y-contrast.test.js over all eight).
+
+   The card around each swatch goes: T14.5 draws the felt and its name, and
+   the tile's own border was a second frame round the first. The swatch is
+   the target, and its 1px --control-edge is what identifies it as a control
+   against the page (4.48:1). */
+:root[data-design="tisch"][data-scheme="dark"] .marker-card {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  gap: 6px;
+}
+:root[data-design="tisch"][data-scheme="dark"] .marker-card__fill {
+  height: 56px;
+  border: 1px solid var(--control-edge);
+  border-radius: var(--radius-md);
+  background-image:
+    var(--felt-weave),
+    radial-gradient(120% 130% at 40% -10%, var(--marker), var(--marker-deep) 74%);
+}
+:root[data-design="tisch"][data-scheme="dark"] .marker-card:hover .marker-card__fill { border-color: var(--gold); }
+:root[data-design="tisch"][data-scheme="dark"] .marker-card.is-active { box-shadow: none; }
+:root[data-design="tisch"][data-scheme="dark"] .marker-card.is-active .marker-card__fill {
+  border: 3px solid var(--gold);
+  box-shadow: 0 0 0 2px var(--gold-edge);
+}
+:root[data-design="tisch"][data-scheme="dark"] .marker-card__name {
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+:root[data-design="tisch"][data-scheme="dark"] .marker-card.is-active .marker-card__name { color: var(--ink); }
+@media (min-width: 600px) {
+  :root[data-design="tisch"][data-scheme="dark"] .marker-cards {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    max-width: 640px;
+  }
 }

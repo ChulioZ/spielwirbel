@@ -192,6 +192,13 @@ test('a long round name breaks in the rail instead of bleeding out of it', () =>
      and the identifying part is as often at the end as at the start. */
   const name = bodiesFor('.rail__name');
   assert.equal(declaredValue(name, 'overflow-wrap'), 'break-word');
+  /* …and where the language allows it, the break is a HYPHENATED one: without
+     this a single long word split as „Donnerstagsrun / de" (seen at 1440 on
+     #1197's screenshots). `hyphens` needs <html lang>, which i18n.js sets to the
+     active locale; break-word stays as the fallback for a word no dictionary
+     can split. Both spellings, because Safari before 17 knows only the prefix. */
+  assert.equal(declaredValue(name, 'hyphens'), 'auto', 'a long word breaks at a syllable, with a hyphen');
+  assert.equal(declaredValue(name, '-webkit-hyphens'), 'auto', 'and in older Safari too');
   assert.equal(declaredValue(name, 'text-overflow'), null, 'the name must not be truncated');
   assert.equal(declaredValue(name, 'white-space'), null, 'the name must be allowed to wrap');
 });
