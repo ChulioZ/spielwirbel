@@ -72,7 +72,9 @@ async function showProfile(username) {
      exemption itself: capped at 900 it would leave the „…" menu ~250px inside
      the page's right edge (the #543/#577 lesson). */
   const screen = h('<div class="profile-screen"></div>');
-  screen.appendChild(renderProfileCard(p, reload));
+  const card = renderProfileCard(p, reload);
+  if (p.self && designIs('tisch')) addProfileStatsSwitch(card);
+  screen.appendChild(card);
 
   // On a FRIEND's profile, say what the record is and what it is not — the
   // aggregate names no round, no other member and no individual session, and
@@ -269,6 +271,27 @@ function renderProfileCard(p, reload) {
   card.appendChild(cards);
 
   return card;
+}
+
+/* Der Tisch puts the visibility switch ON the own Spielerkarte (#1272, T14.1:
+   „Bilanz für Freundschaften sichtbar"), because this is the screen whose
+   contents it governs. It is a MIRROR of the Konto control, not a move: Konto
+   keeps its own, and both are `buildProfileStatsForm` — the same builder, the
+   same PATCH /me, the same cached-/me update — so there is one save path and
+   the two can never disagree about what was stored.
+
+   The state comes from the cached /me (`accountUser`), which is what the Konto
+   builder keeps in step on every save. When it holds no boolean (the cache is
+   not loaded yet) the switch is left out rather than rendered in a guessed
+   state: a toggle showing the wrong position is worse than one reached via
+   Konto. Klassisch never gets here. */
+function addProfileStatsSwitch(card) {
+  if (!accountUser || typeof accountUser.statsVisible !== 'boolean') return;
+  const wrap = h(`<div class="profile-card__vis">
+      <span class="profile-card__vis-icon" aria-hidden="true"><i class="ti ti-eye-off"></i></span>
+    </div>`);
+  wrap.appendChild(buildProfileStatsForm(accountUser));
+  card.appendChild(wrap);
 }
 
 /* The state row: at most one chip, and at most the ONE action the viewer's
