@@ -24,7 +24,7 @@ const { loadApp, flush } = require('./support/dom');
    printing two identical-looking values. Round-tripping through JSON is the
    cheapest way to compare what a stub actually RECEIVED. */
 const plain = (v) => JSON.parse(JSON.stringify(v));
-const { bodyOf, declaredValue } = require('./support/css');
+const { bodyOf, bodyOfIn, declaredValue } = require('./support/css');
 const {
   DESIGN_REGISTRY, FACE_DESIGN, DESIGN_CHOOSER_REVISION, designById,
 } = require('../public/js/designs');
@@ -55,7 +55,7 @@ test('#1186: the .design-card tile defaults ARE Klassisch\'s :root colours', () 
      TAG_ICONS shape: a copy plus a parity assertion that goes red on a one-sided
      edit). Retune --brand and this names both values. */
   const root = bodyOf(':root');
-  const card = bodyOf('.design-card');
+  const card = bodyOfIn('.design-card');
   assert.equal(declaredValue(card, '--tile-page'), declaredValue(root, '--page-bg'));
   assert.equal(declaredValue(card, '--tile-accent'), declaredValue(root, '--brand'));
   // Anti-vacuous: an empty string on both sides would satisfy the two above.

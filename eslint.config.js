@@ -536,11 +536,15 @@ module.exports = [
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: 'script',
-      // Browser globals only — NOT frontendGlobals. The whole point of this
-      // block is that a page script reaching for an SPA global is a no-undef
-      // error. (admin.js read `resolveDesign` from round-designs.js until the
-      // per-round design histogram gave way to the per-account tile, #1201.)
-      globals: { ...globals.browser },
+      // Browser globals, plus the ONE SPA-adjacent name a page script may read —
+      // NOT frontendGlobals. The whole point of this block is that a page script
+      // reaching for an SPA global is a no-undef error. (admin.js read
+      // `resolveDesign` from round-designs.js until the per-round design
+      // histogram gave way to the per-account tile, #1201.)
+      // `FACE_DESIGN` (#1198): login.html and kontakt.html load the
+      // dependency-free designs.js so js/pages/face.js can stamp the face design
+      // onto <html> before the body paints.
+      globals: { ...globals.browser, FACE_DESIGN: 'readonly' },
     },
   },
   {

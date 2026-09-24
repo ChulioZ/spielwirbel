@@ -3747,6 +3747,14 @@ body.vote-screen .topbar { display: none; }
 .landing-claim__title { font-family: var(--font-display); font-size: var(--text-md); margin: 6px 0 2px; color: var(--ink); }
 .landing-claim__desc { font-size: var(--text-md); line-height: 1.45; margin: 0; }
 
+/* The design band (#1198). Klassisch does not show it — this page is exactly
+   what it was before the band existed — so it is off here and a design that
+   wants it (Der Tisch as the face, public/css/designs/tisch.css) turns it on.
+   A plain `display: none` rather than the `hidden` attribute, so there is no
+   attribute/display pair to keep in step
+   (.claude/rules/hidden-attribute-vs-display-rule.md). */
+.landing-designs { display: none; }
+
 .landing-close { text-align: center; }
 /* The FAQ line under the closing CTA (#489). Subordinate to the button above it
    — smaller, muted — so it reads as a way out for the undecided rather than as a
@@ -4781,9 +4789,14 @@ a.k-tile:focus-visible,
 /* A column, so the tile reads as the card's own material rather than as an icon
    beside a label — and so the name and description get the card's full width at
    every size this list is rendered at. */
-.design-card {
+/* The landing's design band (#1198) prints the same posters, so it shares the
+   two defaults rather than restating them — one licensed copy, not two. */
+.design-card,
+.landing-design {
   --tile-page: #f4f1ea;
   --tile-accent: #c2410c;
+}
+.design-card {
   display: flex; flex-direction: column; gap: 10px;
   padding: 12px; border: 2px solid var(--line); border-radius: var(--radius);
   background: var(--surface); cursor: pointer;

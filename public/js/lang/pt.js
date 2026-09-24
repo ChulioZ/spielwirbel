@@ -1471,6 +1471,10 @@ I18N.pt = {
   'landing.cta.title': 'Da próxima vez, ninguém discute por causa disso.',
   'landing.faq.q': 'Ainda com dúvidas?',
   'landing.faq.link': 'Leia o FAQ',
+  // The design band (#1198), shown only by a design that asks for it (Der Tisch as the face).
+  // {n} is how many designs the instance offers (GET /api/config), so it never overclaims.
+  'landing.designs.title': '{n} designs, um app.',
+  'landing.designs.desc': 'Cada conta escolhe o próprio design. Tudo fica no mesmo lugar em cada um — só a aparência muda.',
 
   'demo.banner.text': 'Você está testando o Spielwirbel em um grupo de demonstração. Ele é excluído automaticamente — nada aqui é guardado.',
   'demo.banner.cta': 'Cadastre-se de graça',

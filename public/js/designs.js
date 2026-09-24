@@ -121,6 +121,15 @@ const DESIGN_REGISTRY = [
     page: '#3b2a12',
     accent: '#d9a951',
     stylesheet: '/css/designs/tisch.css',
+    // May be the FACE (#1198): the four pages outside the SPA — login.html,
+    // kontakt.html, /faq and the legal pages — carry a copy of this design's
+    // tokens under `:root[data-design="tisch"]`, because they never load its
+    // stylesheet. test/standalone-page-brand.test.js requires that copy of every
+    // design marked here, pins each value against this design's own resolved
+    // token, and refuses a FACE_DESIGN that is neither Klassisch nor marked —
+    // so the flip (#1202) cannot move the face onto a design the public pages
+    // would render as Klassisch.
+    face: true,
     // The eight FELTS of docs/design/tisch/Tisch-T8-Farben.dc.html -> "T8.1
     // Filze", in the package's own order, so index 0 is Tannenfilz — the
     // default the sheet marks. `color` is the felt's light gradient stop and
@@ -158,6 +167,14 @@ const DESIGN_CHOOSER_REVISION = '2026-09-22';
 
 // The design a logged-OUT surface wears — the landing page, the login screen,
 // the legal pages. Klassisch until the flip (#1202) moves the face to Tisch.
+//
+// The pages OUTSIDE the SPA read it too (#1198), and none of them waits for
+// GET /api/config to do it, because every one would then paint Klassisch and
+// repaint a moment later: /faq and the legal pages are server-rendered and
+// stamp it onto <html data-design> in lib/faq.js / lib/legal.js, and
+// login.html / kontakt.html load this file plus js/pages/face.js in <head>,
+// synchronously, before the body exists. Each page carries its own copy of
+// the tokens of every design marked `face: true` above.
 const FACE_DESIGN = 'klassisch';
 
 /* The ink a design writes ON its markers, and the one place the default lives.
