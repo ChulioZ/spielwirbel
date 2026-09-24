@@ -4375,6 +4375,11 @@
      be substituted there once and hand every card the page's brand instead.
      test/tisch-brand-ink.test.js pins both halves. */
   --brand-ink: var(--paper-faint);
+  /* Its NON-TEXT twin: the ten focus OUTLINES styles.css draws in the brand
+     read `var(--brand-ring, var(--brand))`, same shape, same reason — brass on
+     paper is ~2:1, under SC 1.4.11's 3:1 for a focus indicator. --gold-edge is
+     the ink --brand-edge (the box-shadow ring) already takes above. */
+  --brand-ring: var(--gold-edge);
 }
 
 /* --- The sheet: edge, head and close (T15a.0) ------------------------------

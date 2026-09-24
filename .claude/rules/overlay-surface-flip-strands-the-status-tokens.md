@@ -115,7 +115,7 @@ different source, and the test follows.
 (brass on paper, ~2:1), so it cannot be re-pointed. Split the use: text sites read
 `var(--brand-ink, var(--brand(-strong)))`, only the overlay declares `--brand-ink`,
 never a `:root` alias (`.claude/rules/root-alias-custom-property-is-substituted-once.md`);
-`test/tisch-brand-ink.test.js` sweeps every `color` and fails naming the rule.
+focus outlines take the twin `--brand-ring`; `test/tisch-brand-ink.test.js` sweeps both.
 
 ## The guard hole beside it: TWO registries, one sweep
 

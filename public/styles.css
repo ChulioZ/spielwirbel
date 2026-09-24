@@ -1923,7 +1923,7 @@ a.hub-row:hover { background: var(--sunken-soft); }
   padding: 8px 12px;
   cursor: pointer;
 }
-.sort-select:focus { outline: 2px solid var(--brand); border-color: var(--brand); }
+.sort-select:focus { outline: 2px solid var(--brand-ring, var(--brand)); border-color: var(--brand); }
 
 /* Filter chips: type (radio-like) and duration (multi-toggle). */
 .filter-chips {
@@ -2515,7 +2515,7 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
   color: var(--brand-ink, var(--brand));
 }
 .lobby-cta:hover { background: var(--brand-tint-soft); border-color: var(--brand); }
-.lobby-cta:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.lobby-cta:focus-visible { outline: 2px solid var(--brand-ring, var(--brand)); outline-offset: 2px; }
 
 /* ---- New round: members take seats around the table ---- */
 /* Fluid since #1015, so the ring can use the room the session setup's people
@@ -2960,7 +2960,7 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
    Shared affordance: pointer cursor and a keyboard focus ring; per-element
    hover cues are defined next to each element. */
 .game-link { cursor: pointer; }
-.game-link:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: var(--radius-sm); }
+.game-link:focus-visible { outline: 2px solid var(--brand-ring, var(--brand)); outline-offset: 2px; border-radius: var(--radius-sm); }
 /* Text titles underline on hover; image/tile targets get a brand ring. */
 .trow__title.game-link:hover,
 .pokale-game__title.game-link:hover,
@@ -2985,7 +2985,7 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
 
 /* Member links: avatars get a brand ring, name text underlines on hover. */
 .member-link { cursor: pointer; }
-.member-link:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: 50%; }
+.member-link:focus-visible { outline: 2px solid var(--brand-ring, var(--brand)); outline-offset: 2px; border-radius: 50%; }
 .avatar.member-link { transition: box-shadow var(--dur-base) var(--ease-out); }
 .avatar.member-link:hover { box-shadow: 0 0 0 3px var(--brand-edge); }
 .result-people__person.member-link:focus-visible,
@@ -3181,7 +3181,7 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
   background: var(--control-fill);
   color: var(--ink);
 }
-.input:focus, .select:focus { outline: 2px solid var(--brand); border-color: var(--brand); }
+.input:focus, .select:focus { outline: 2px solid var(--brand-ring, var(--brand)); border-color: var(--brand); }
 .row { display: flex; gap: 10px; align-items: center; }
 .row .input { flex: 1; }
 
@@ -4442,7 +4442,7 @@ a.k-tile:hover .k-tile__name { text-decoration: underline; }
    with the band would have left the one control on the screen relying on the UA
    default, unlike every sibling (`.lobby-cta`, `.game-link`, `.member-link`). */
 a.k-tile:focus-visible,
-.k-tile--add:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.k-tile--add:focus-visible { outline: 2px solid var(--brand-ring, var(--brand)); outline-offset: 2px; }
 /* Content above the art. `.k-tile__art` is the one child that must NOT be
    lifted, and it is excluded by being absolutely positioned rather than by a
    selector — a `:not()` here would be one more thing to keep in step. */
@@ -4826,7 +4826,7 @@ a.k-tile:focus-visible,
    control — so it is hidden from sight only, never from the accessibility tree
    or the tab order (.claude/rules/accessibility-contrast-and-modals.md). */
 .design-card input { position: absolute; width: 1px; height: 1px; opacity: 0; }
-.design-card:has(input:focus-visible) { outline: 2px solid var(--brand); outline-offset: 2px; }
+.design-card:has(input:focus-visible) { outline: 2px solid var(--brand-ring, var(--brand)); outline-offset: 2px; }
 .design-card__body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .design-card__name { font-weight: 600; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .design-card__badge {
@@ -6238,7 +6238,7 @@ a.k-tile:focus-visible,
    style across the app. The UA default would do, but not consistently. */
 .tag--edit:focus-visible,
 .gd-title:focus-visible,
-.gd-img--edit:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.gd-img--edit:focus-visible { outline: 2px solid var(--brand-ring, var(--brand)); outline-offset: 2px; }
 .tag--empty {
   background: transparent;
   border: 1px dashed var(--brand-edge, var(--line));
@@ -7535,7 +7535,7 @@ a.k-tile:focus-visible,
   font-weight: 600;
 }
 .bgg-import__present-head:focus-visible {
-  outline: 2px solid var(--brand);
+  outline: 2px solid var(--brand-ring, var(--brand));
   outline-offset: 2px;
   border-radius: var(--radius-sm);
 }
@@ -8060,7 +8060,7 @@ kbd {
   border-radius: var(--radius-md);
   padding: 7px 4px;
 }
-.stepper__val:focus { outline: 2px solid var(--brand); border-color: var(--brand); }
+.stepper__val:focus { outline: 2px solid var(--brand-ring, var(--brand)); border-color: var(--brand); }
 .stepper-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 
 /* ---- The podium (Pokale members) ---- */

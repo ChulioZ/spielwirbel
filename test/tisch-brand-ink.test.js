@@ -75,6 +75,30 @@ test('every brand-coloured TEXT rule in styles.css reads the brand through --bra
   assert.ok(mapped >= 70, `only ${mapped} brand text rules found — the sweep has stopped seeing them`);
 });
 
+/* The non-text twin: a focus OUTLINE in the brand is brass on paper too, under
+   SC 1.4.11's 3:1. Same shape, its own token, so a ring and a label can be
+   tuned apart. `outline` and `outline-color` both; the lookbehind keeps
+   `outline-offset` and friends out by requiring the colour-bearing names. */
+const outlineDecls = (body) => [...body.matchAll(/(?<![-\w])outline(?:-color)?\s*:\s*([^;]+)/g)].map((m) => m[1].trim());
+const unmappedRing = (value) => [...value.matchAll(BRAND_REF)]
+  .filter((m) => !value.slice(0, m.index).endsWith('var(--brand-ring, '));
+
+test('every brand-coloured focus OUTLINE in styles.css reads the brand through --brand-ring', () => {
+  const failures = [];
+  let mapped = 0;
+  for (const [selector, body] of rulesOf(CSS)) {
+    for (const value of outlineDecls(body)) {
+      if (!new RegExp(BRAND_REF.source).test(value)) continue;
+      if (unmappedRing(value).length) failures.push(`${selector} { outline: ${value} }`);
+      else mapped++;
+    }
+  }
+  assert.deepEqual(failures, [],
+    'a brand focus outline that would draw brass on a Tisch overlay\'s paper — wrap it as var(--brand-ring, var(--brand)):\n  '
+    + failures.join('\n  '));
+  assert.ok(mapped >= 10, `only ${mapped} brand outline rules found — the sweep has stopped seeing them`);
+});
+
 test('no Tisch rule scoped to an overlay paints text from the raw brand', () => {
   const failures = [];
   for (const [selector, body] of rulesOf(TISCH)) {
@@ -86,24 +110,27 @@ test('no Tisch rule scoped to an overlay paints text from the raw brand', () => 
   assert.deepEqual(failures, []);
 });
 
-test('Klassisch: nothing outside the Tisch overlay rule declares --brand-ink, so every use falls back to the brand', () => {
-  const declaring = (css) => rulesOf(css).filter(([, body]) => /(?:^|[;{\s])--brand-ink\s*:/.test(body)).map(([s]) => s);
-  assert.deepEqual(declaring(CSS), [],
-    'styles.css declares --brand-ink — a :root alias is substituted once and breaks a round card\'s own --brand');
-  const inTisch = declaring(TISCH);
-  assert.ok(inTisch.length >= 1, 'the Tisch overlay rule no longer declares --brand-ink');
-  for (const selector of inTisch) {
-    for (const part of selector.split(',').map((s) => s.trim())) {
-      assert.ok(OVERLAYS.some((o) => part === `${GATE} ${o}`),
-        `--brand-ink is declared on ${part}, which is not one of the scheme-gated overlay selectors`);
+for (const name of ['--brand-ink', '--brand-ring']) {
+  test(`Klassisch: nothing outside the Tisch overlay rule declares ${name}, so every use falls back to the brand`, () => {
+    const declaring = (css) => rulesOf(css)
+      .filter(([, body]) => new RegExp(`(?:^|[;{\\s])${name}\\s*:`).test(body)).map(([s]) => s);
+    assert.deepEqual(declaring(CSS), [],
+      `styles.css declares ${name} — a :root alias is substituted once and breaks a round card's own --brand`);
+    const inTisch = declaring(TISCH);
+    assert.ok(inTisch.length >= 1, `the Tisch overlay rule no longer declares ${name}`);
+    for (const selector of inTisch) {
+      for (const part of selector.split(',').map((s) => s.trim())) {
+        assert.ok(OVERLAYS.some((o) => part === `${GATE} ${o}`),
+          `${name} is declared on ${part}, which is not one of the scheme-gated overlay selectors`);
+      }
     }
-  }
-  // And the other designs' sheets: none of them may declare it either.
-  const dir = path.join(ROOT, 'public/css/designs');
-  for (const f of fs.readdirSync(dir).filter((n) => n.endsWith('.css') && n !== 'tisch.css')) {
-    assert.deepEqual(declaring(strip(fs.readFileSync(path.join(dir, f), 'utf8'))), [], `${f} declares --brand-ink`);
-  }
-});
+    // And the other designs' sheets: none of them may declare it either.
+    const dir = path.join(ROOT, 'public/css/designs');
+    for (const f of fs.readdirSync(dir).filter((n) => n.endsWith('.css') && n !== 'tisch.css')) {
+      assert.deepEqual(declaring(strip(fs.readFileSync(path.join(dir, f), 'utf8'))), [], `${f} declares ${name}`);
+    }
+  });
+}
 
 test('the ink the overlay gives --brand-ink is AA on every ground brand text sits on in a Tisch overlay', () => {
   const tisch = DESIGN_REGISTRY.find((d) => d.id === 'tisch');
@@ -141,4 +168,21 @@ test('the ink the overlay gives --brand-ink is AA on every ground brand text sit
   assert.deepEqual(failures, []);
   // And the defect this fixes is real: the raw brand on paper fails.
   assert.ok(contrast(v('--brand'), paper) < 3, 'brass on paper passes — the premise of #1260 moved');
+});
+
+test('the ring the overlay gives --brand-ring clears the 3:1 non-text bar on every paper ground', () => {
+  const tisch = DESIGN_REGISTRY.find((d) => d.id === 'tisch');
+  const body = rulesOf(TISCH)
+    .filter(([s, b]) => s.includes(`${GATE} .sheet`) && /--brand-ring\s*:/.test(b))
+    .map(([, b]) => b).join(';');
+  const m = /(?:^|[;{\s])--brand-ring\s*:\s*var\((--[\w-]+)\)/.exec(body);
+  assert.ok(m, 'the overlay rule does not map --brand-ring to a token');
+  const v = (n) => token(n, tisch);
+  // A focus outline sits on the overlay's own grounds: the sheet, a field's
+  // raised fill (offset 0 on .input/.select) and the sunken chip ground.
+  const failures = ['--paper', '--paper-raised', '--paper-sunken']
+    .map((g) => [g, contrast(v(m[1]), v(g))])
+    .filter(([, r]) => r < 3)
+    .map(([g, r]) => `${m[1]} on ${g}: ${r.toFixed(2)}:1`);
+  assert.deepEqual(failures, []);
 });
