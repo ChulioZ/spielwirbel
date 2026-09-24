@@ -259,38 +259,6 @@
     return 'ok';
   }
 
-  /* Turn the raw design histogram into one labelled line per design, biggest
-     first — uncapped since #1124. The list is bounded by the registry in
-     public/js/round-designs.js plus collage/none and a single „unbekannt"
-     bucket, so it cannot grow without a code change; the old „+N weitere" tail
-     hid entries for a list that was never going to be long.
-
-     `resolveDesign` comes from public/js/round-designs.js, which this page now
-     loads: it is dependency-free with the module.exports guard, and a page
-     script is its own eslint block — it must NOT be added to index.html's SPA
-     scope for this (.claude/rules/frontend-helper-modules-and-coverage.md). */
-  function designLabel(key) {
-    if (key === 'none') return 'ohne Design';
-    if (key === 'collage') return 'Collage';
-    /* The design's own STABLE ID is the label. `resolveDesign` hands back a
-       `labelKey` (an i18n key like `theme.forest`) and this page ships no
-       translation table — it is German-only by design — so resolving is used
-       for what it can actually answer: does the registry still know this id?
-       If not, the round is wearing something the app cannot draw, and saying
-       „unbekannt" is the honest report rather than echoing the stored string
-       back as though it were a design. */
-    const hit = typeof resolveDesign === 'function'
-      ? (resolveDesign({ type: 'theme', id: key }) || resolveDesign({ type: 'theme', page: key }))
-      : null;
-    return hit ? hit.id : 'unbekannt';
-  }
-
-  function designLines(hist) {
-    return Object.entries(hist)
-      .sort((a, b) => b[1] - a[1])
-      .map(([k, n]) => [designLabel(k), String(n)]);
-  }
-
   /* „n / total", the ONLY shape an adoption figure may take (#1124). A bare
      count is what this card was cleaned of: „18 Runden" cannot be read without
      knowing how many rounds there are, and the reader of an operator panel is
@@ -406,16 +374,23 @@
         ['Wunschliste', String(a.roundsWithWish)],
       ]]);
 
-    /* What rounds are wearing. The SERVER sends a raw histogram keyed by the
-       stored id (or a legacy page hex, or 'collage'/'none') and never resolves
-       it — round-designs.js's header says the stored id is deliberately not
-       validated against the registry, so that the list never becomes a
-       cross-boundary contract. Resolving happens HERE, and an id the registry
-       does not know falls back to „unbekannt" rather than disappearing. */
-    const designed = rounds - (m.designs.none || 0);
-    rows.push(['Designs', null, share(designed, rounds),
-      `Runden mit Design (von ${rounds})`,
-      designLines(m.designs)]);
+    /* Which design ACCOUNTS wear (#1201) — the per-user successor of the
+       per-round histogram, which stopped meaning anything once designs moved
+       from rounds to accounts. Keyed by the designs this instance offers, in
+       registry order, so the keys come from code; an offered design nobody
+       wears still gets its line, which is the one reading this tile exists to
+       show before the flip (#1202).
+
+       The headline is the SWITCH-BACK share: accounts that went from another
+       design back to Klassisch and are still on it. Low or high it is not a
+       fault, so the pill stays neutral like every tile on this card. The
+       design's stable id is the line's label — this page is German-only and
+       ships no translation table, so a label map here would be a second copy
+       of the registry to keep in step. */
+    const byDesign = m.designAdoption.byDesign;
+    rows.push(['Designs', null, share(m.designAdoption.switchedBack, accounts),
+      `Konten, die zu Klassisch zurückgewechselt sind (von ${accounts})`,
+      Object.entries(byDesign).map(([id, n]) => [id, share(n, accounts)])]);
 
     rows.push(['Teilen & Freunde', null, share(m.social.sharedRounds, rounds),
       `geteilte Runden (von ${rounds})`, [

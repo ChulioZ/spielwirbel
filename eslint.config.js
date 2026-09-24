@@ -222,6 +222,9 @@ const frontendGlobals = {
   themeAccent: 'readonly', resolveAccent: 'readonly',
   activePopover: 'writable', closePopover: 'readonly', openPopover: 'readonly',
   repositionPopover: 'readonly',
+  // the „…" menu's one builder and its order (issue #1195)
+  MENU_KINDS: 'readonly', fillMenu: 'readonly', sortMenuItems: 'readonly', menuRank: 'readonly',
+  splitConfirmQuestion: 'readonly',
   readClipboardImage: 'readonly', shuffled: 'readonly', iconText: 'readonly',
   createCoverLoader: 'readonly',
   makeGameLink: 'readonly', makeMemberLink: 'readonly',
@@ -533,12 +536,11 @@ module.exports = [
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: 'script',
-      // `resolveDesign` (#941): public/admin.html loads the dependency-free
-      // round-designs.js so the Kennzahlen card can tell a design id the
-      // registry still knows from one it does not. Named ONE BY ONE rather than
-      // by spreading frontendGlobals — the whole point of this block is that a
-      // page script reaching for an SPA global is a no-undef error.
-      globals: { ...globals.browser, resolveDesign: 'readonly' },
+      // Browser globals only — NOT frontendGlobals. The whole point of this
+      // block is that a page script reaching for an SPA global is a no-undef
+      // error. (admin.js read `resolveDesign` from round-designs.js until the
+      // per-round design histogram gave way to the per-account tile, #1201.)
+      globals: { ...globals.browser },
     },
   },
   {

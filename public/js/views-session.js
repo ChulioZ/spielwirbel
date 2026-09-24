@@ -1686,14 +1686,14 @@ async function showResults(round, session, gamesHint, reveal, plain) {
       actionEl.appendChild(btn);
     }
     const menuBtn = h(`<button type="button" class="btn btn--sm trow__menu" aria-label="${esc(t('result.more'))}" aria-expanded="false"><i class="ti ti-dots" aria-hidden="true"></i></button>`);
-    const items = [['ti-external-link', t('result.openGame'), () => showGameDetail(round.id, gameId)]];
+    const items = [{ icon: 'ti-external-link', label: t('result.openGame'), kind: 'edit', run: () => showGameDetail(round.id, gameId) }];
     // Un-choosing is how a live session changes its mind; it was the second tap
     // on „Spielen" before the chip replaced that button.
     // Not for a solo direct-play session: with one game there is nothing else to
     // choose, and with the Tafel gone there would be no way back (#1107). The
     // escape hatch stays „Session löschen" in the footer.
     if (isChosen && !finished && !cancelled && !isSoloDirectPlay()) {
-      items.push(['ti-x', t('result.clearChoice'), async () => {
+      items.push({ icon: 'ti-x', label: t('result.clearChoice'), kind: 'undoable', run: async () => {
         try {
           await api('POST', `/api/rounds/${round.id}/sessions/${session.id}/choice`, { gameId: null });
           chosenId = null;
@@ -1701,22 +1701,16 @@ async function showResults(round, session, gamesHint, reveal, plain) {
           updateChosen();
           toast(t('result.toast.choiceCleared'));
         } catch (e) { toast(e.message); }
-      }]);
+      } });
     }
-    items.push(['ti-trash', t('result.removeGame'), () => removeGame(game)]);
+    items.push({ icon: 'ti-trash', label: t('result.removeGame'), kind: 'destructive', run: () => removeGame(game) });
     // Buttons only, so this is a popover at every width — the account menu's
     // case, not the editors' (.claude/rules/popover-vs-sheet-editors.md §2b).
     // `aria-expanded` is synced through openPopover's onClose rather than by
     // wrapping `close`: the wrapped form misses four of the six exits.
     menuBtn.addEventListener('click', () => {
-      openPopover(menuBtn, (el, close) => {
-        el.classList.add('popover--menu');
-        items.forEach(([icon, label, run]) => {
-          const b = h(`<button class="popover__opt"><i class="ti ${icon}" aria-hidden="true"></i> ${esc(label)}</button>`);
-          b.addEventListener('click', () => { close(); run(); });
-          el.appendChild(b);
-        });
-      }, () => menuBtn.setAttribute('aria-expanded', 'false'));
+      openPopover(menuBtn, (el, close) => fillMenu(el, items, close),
+        () => menuBtn.setAttribute('aria-expanded', 'false'));
       menuBtn.setAttribute('aria-expanded', 'true');
     });
     actionEl.appendChild(menuBtn);

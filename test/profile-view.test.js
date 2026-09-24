@@ -188,7 +188,8 @@ test('a friendship with no date renders NO chip, not a wrong one', async (t_) =>
   assert.equal(dom.app.querySelector('.member-card__chip'), null);
   assert.equal(dom.app.textContent.includes(t('friends.pending')), false);
   // The relationship is still legible: the menu offers to end it.
-  assert.deepEqual(await menuLabels(dom), [t('friends.unfriend'), t('friends.reportAccount')]);
+  // Destructive last (#1195, fillMenu): the report sits above the unfriend.
+  assert.deepEqual(await menuLabels(dom), [t('friends.reportAccount'), t('friends.unfriend')]);
 });
 
 test('a demo account is told why, instead of being given a button that must fail', async (t_) => {
@@ -213,7 +214,7 @@ test('the rare actions live in the „…" menu, and your own profile has none',
   await friend.call('showProfile', 'bo');
   assert.equal(friend.app.querySelector('.member-avatar__pen'), null,
     'the pen edits YOUR picture — it must not appear on someone else\'s profile');
-  assert.deepEqual(await menuLabels(friend), [t('friends.unfriend'), t('friends.reportAccount')]);
+  assert.deepEqual(await menuLabels(friend), [t('friends.reportAccount'), t('friends.unfriend')]);
 
   const out = bootWith(t_, stranger({ friendship: 'outgoing', friendshipId: 'f1' }));
   await out.call('showProfile', 'bo');
