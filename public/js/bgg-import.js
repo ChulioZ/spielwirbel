@@ -62,8 +62,10 @@ async function showBggImport(round, status = 'own') {
 
   // --- the states -----------------------------------------------------------
 
-  const msg = (text, hint) => h(`<div class="bgg-import__msg">
-      <p>${esc(text)}</p>${hint ? `<p class="muted">${esc(hint)}</p>` : ''}
+  // Under Der Tisch every state wears T15b's icon disc above its headline
+  // (#1281) — decorative, so aria-hidden; Klassisch's markup is unchanged.
+  const msg = (text, hint, icon = 'ti-alert-triangle') => h(`<div class="bgg-import__msg">
+      ${designIs('tisch') ? `<span class="sheet-disc" aria-hidden="true"><i class="ti ${icon}"></i></span>` : ''}<p>${esc(text)}</p>${hint ? `<p class="muted">${esc(hint)}</p>` : ''}
     </div>`);
 
   // Link (or correct) the BGG handle without leaving the sheet. The Konto screen
@@ -71,7 +73,7 @@ async function showBggImport(round, status = 'own') {
   // to come back is a flow nobody completes.
   function renderLinkForm(current, errorText) {
     body.replaceChildren();
-    if (errorText) body.appendChild(msg(errorText));
+    if (errorText) body.appendChild(msg(errorText, null, 'ti-user-x'));
     const form = h(`<form class="bgg-import__link">
         <div class="field">
           <label for="bggName">${esc(t('bggImport.handleLabel'))}</label>
@@ -132,7 +134,7 @@ async function showBggImport(round, status = 'own') {
     if (!fresh.length) {
       // The message already says everything the intro would, so it replaces it
       // rather than following a line reading "… 0 noch nicht im Regal".
-      body.replaceChildren(msg(t('bggImport.allPresent')));
+      body.replaceChildren(msg(t('bggImport.allPresent'), null, 'ti-circle-check'));
       body.appendChild(presentSection());
       return;
     }
@@ -286,7 +288,7 @@ async function showBggImport(round, status = 'own') {
     if (res.state === 'no_username') return renderLinkForm('', null);
     if (res.state === 'invalid_user') return renderLinkForm('', t('bggImport.unknownUser'));
     if (res.state === 'queued') {
-      body.replaceChildren(msg(t('bggImport.queued'), t('bggImport.queuedHint')));
+      body.replaceChildren(msg(t('bggImport.queued'), t('bggImport.queuedHint'), 'ti-hourglass'));
       const retry = h(`<div class="toolbar sheet__actions"><button class="btn btn--primary btn--lg">${esc(t('bggImport.retry'))}</button></div>`);
       retry.querySelector('button').addEventListener('click', () => load());
       body.appendChild(retry);
@@ -296,8 +298,8 @@ async function showBggImport(round, status = 'own') {
       // The empty state has to name the shelf it looked at, or "nothing marked
       // as owned" is simply wrong advice for someone whose wishlist is empty.
       body.replaceChildren(wish
-        ? msg(t('bggImport.wishEmpty'), t('bggImport.wishEmptyHint'))
-        : msg(t('bggImport.empty'), t('bggImport.emptyHint')));
+        ? msg(t('bggImport.wishEmpty'), t('bggImport.wishEmptyHint'), 'ti-heart')
+        : msg(t('bggImport.empty'), t('bggImport.emptyHint'), 'ti-cards'));
       return;
     }
     renderPicker(res.games);

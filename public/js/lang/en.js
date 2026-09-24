@@ -1250,6 +1250,10 @@ I18N.en = {
   // is aria-hidden, or a screen reader meets a nameless element.
   'news.menuUnseen': 'What’s new (new entries)',
   'news.empty': 'New things land here. Right now there’s nothing to report.',
+  // Der Tisch's badge per entry (#1281), one per NEWS `kind`.
+  'news.kind.new': 'New',
+  'news.kind.improved': 'Improved',
+  'news.kind.fixed': 'Fixed',
   // Discover — instance-wide statistics (issue #564). Game titles come from the
   // provider, never from a user-typed title, which is why `stats.note` says
   // explicitly that only linked games are counted.

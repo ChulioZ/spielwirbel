@@ -1241,6 +1241,10 @@ I18N.de = {
   // ist aria-hidden, sonst begegnet eine Vorlesehilfe einem namenlosen Element.
   'news.menuUnseen': 'Was ist neu (neue Einträge)',
   'news.empty': 'Hier steht, was es Neues gibt. Im Moment ist alles beim Alten.',
+  // Der Tisch's badge per entry (#1281), one per NEWS `kind`.
+  'news.kind.new': 'Neu',
+  'news.kind.improved': 'Besser',
+  'news.kind.fixed': 'Behoben',
   // Entdecken — instanzweite Statistiken (issue #564). Die Spieltitel kommen vom
   // Anbieter, nie aus einem selbst getippten Titel, daher spricht `stats.note`
   // ausdrücklich nur von verknüpften Spielen.

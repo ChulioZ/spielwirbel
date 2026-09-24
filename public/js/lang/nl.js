@@ -1183,6 +1183,10 @@ I18N.nl = {
   'news.menu': 'Wat is er nieuw',
   'news.menuUnseen': 'Wat is er nieuw (nieuwe items)',
   'news.empty': 'Nieuwe dingen komen hier te staan. Op dit moment valt er niets te melden.',
+  // Der Tisch's badge per entry (#1281), one per NEWS `kind`.
+  'news.kind.new': 'Nieuw',
+  'news.kind.improved': 'Verbeterd',
+  'news.kind.fixed': 'Opgelost',
   'stats.title': 'Ontdekken',
   'stats.menu': 'Ontdekken',
   'stats.sub': 'Wat er op dit moment overal op Spielwirbel gespeeld en goed beoordeeld wordt.',

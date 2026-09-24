@@ -182,7 +182,7 @@ test('no „Was ist neu" entry names the session an evening', () => {
 
   for (const entry of NEWS) {
     for (const [lang, content] of Object.entries(entry)) {
-      if (lang === 'revision') continue;
+      if (lang === 'revision' || lang === 'kind') continue; // `kind`: #1281, not a locale
       assert.ok(RULES[lang], `news entry ${entry.revision} is written in unknown locale '${lang}'`);
       for (const [field, value] of Object.entries(content)) {
         scanned += 1;

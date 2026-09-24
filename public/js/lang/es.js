@@ -1202,6 +1202,10 @@ I18N.es = {
   'news.menu': 'Novedades',
   'news.menuUnseen': 'Novedades (entradas nuevas)',
   'news.empty': 'Aquí aparecerán las novedades. Ahora mismo no hay nada que contar.',
+  // Der Tisch's badge per entry (#1281), one per NEWS `kind`.
+  'news.kind.new': 'Nuevo',
+  'news.kind.improved': 'Mejorado',
+  'news.kind.fixed': 'Corregido',
   // Descubrir — estadísticas de toda la instancia (#564). Los títulos vienen
   // del proveedor, nunca de un título escrito a mano: por eso `stats.note` dice
   // expresamente que solo cuentan los juegos vinculados.
