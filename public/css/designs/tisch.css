@@ -1811,23 +1811,90 @@
 
 /* --- The Spielepass (T3.4 desktop, T6.3 phone) ----------------------------
    The app has laid this screen out as a two-page spread since #1039 — the game
-   on the left page, the round's table on the right — which is the composition
-   T3.4 draws. So this is a repaint rather than a layout, and the sheet's own
-   arrangement (cover left, title and score right, „Wer wie gewertet hat" under
-   them) is already what renders.
+   on the left page, the round's table on the right — and T3.4 keeps that. What
+   the design composes differently (#1274, view branches on designIs('tisch')):
 
-   ONE DEVIATION, and it is the sheet's own rule that decides it. T3.4 and T6.3
-   put the score BESIDE the title; the app puts it on the cover's top-right
-   corner, where every Regal card also puts it (#1039 moved it there on purpose,
-   so the shelf and the page state the number in the same place). Review finding
-   A6 bans TEXT on a cover — the pill is not text on a cover, it is an opaque
-   chip, which is the remedy A6 itself prescribes — so the app's placement stays
-   and the two screens keep agreeing. */
+   - the score is a NUMERAL beside the title (`.gd-titleline`), not #1039's
+     pill on the cover — that pill was a Klassisch decision and does not bind
+     here; the numeral also keeps every glyph off the raw cover (review A6);
+   - „Wer wie gewertet hat" leads the right page and „Verwandte Sessions"
+     follows as a dated LIST with winners (`.gd-plays`), not the stamp strip;
+   - the „…" items are an „Aktionen" panel above the bar (`.gd-actions`), a
+     2×2 grid on the phone, and the „…" itself is gone;
+   - on the phone the cover is a full-bleed, half-height header and the title
+     line under it is an OPAQUE walnut band, so the title's contrast never
+     depends on the cover (measured in test/tisch-spielepass.test.js). */
 :root[data-design="tisch"][data-scheme="dark"] .gd-head {
   border: 1px solid var(--line);
   border-top: 3px solid var(--gold-edge);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-2);
+}
+/* The title line: title left, the score numeral right, as T3.4 and T6.3 set
+   it. `min-width: 0` on the heading so a long title wraps instead of pushing
+   the numeral out of the card. */
+:root[data-design="tisch"][data-scheme="dark"] .gd-titleline {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px 20px;
+  margin-bottom: 10px;
+}
+:root[data-design="tisch"][data-scheme="dark"] .gd-titleline h1 { flex: 1 1 auto; min-width: 0; margin-bottom: 0; }
+:root[data-design="tisch"][data-scheme="dark"] .gd-bignum {
+  flex: none;
+  max-width: 45%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+}
+:root[data-design="tisch"][data-scheme="dark"] .gd-bignum__n {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(2.5rem, 4.5vw, 3.5rem);
+  line-height: 1;
+  letter-spacing: -.02em;
+  color: var(--ink);
+}
+:root[data-design="tisch"][data-scheme="dark"] .gd-bignum__n--none { font-size: var(--text-2xl); color: var(--ink-soft); }
+:root[data-design="tisch"][data-scheme="dark"] .gd-bignum__cap {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 4px 6px;
+  margin-top: 6px;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+/* The count on its own line under the name, so the ⓘ stays beside the word it
+   explains instead of wrapping onto a line of its own. */
+:root[data-design="tisch"][data-scheme="dark"] .gd-bignum__ev {
+  font-size: var(--text-xs);
+  color: var(--ink-soft);
+}
+/* The phone's header (T6.3): the cover full-bleed across the card at half
+   height, and the title line under it on an opaque walnut band. 700px is the
+   breakpoint styles.css already stacks the card at. */
+@media (max-width: 700px) {
+  :root[data-design="tisch"][data-scheme="dark"] .gd-head { padding: 0; gap: 0; }
+  :root[data-design="tisch"][data-scheme="dark"] .gd-img {
+    aspect-ratio: auto;
+    height: clamp(200px, 42vh, 360px);
+    border-radius: 0;
+    box-shadow: none;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .gd-edition { margin: 8px 20px 0; }
+  :root[data-design="tisch"][data-scheme="dark"] .gd-info { padding: 0 20px 20px; }
+  :root[data-design="tisch"][data-scheme="dark"] .gd-info > h1:first-child { margin-top: 16px; }
+  :root[data-design="tisch"][data-scheme="dark"] .gd-titleline {
+    margin: 0 -20px 14px;
+    padding: 14px 20px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+  }
 }
 /* The title in the display face, at the size T3.4 draws it. */
 :root[data-design="tisch"][data-scheme="dark"] .gd-info h1 {
@@ -1893,6 +1960,63 @@
    mood is 22px of icon, never text, and the number beside it stays in --ink. */
 :root[data-design="tisch"][data-scheme="dark"] .rater__face { color: var(--gold); }
 :root[data-design="tisch"][data-scheme="dark"] .rater__n { font-family: var(--font-display); }
+
+/* „Verwandte Sessions" as T3.4 lists it: one hairline row per session — the
+   winner's counter, the date, who won, the evening's pill. 44px rows, so each
+   is a comfortable target for the results link it is. */
+:root[data-design="tisch"][data-scheme="dark"] .gd-plays { list-style: none; margin: 0; padding: 0; }
+:root[data-design="tisch"][data-scheme="dark"] .gd-play + .gd-play { border-top: 1px solid var(--line); }
+:root[data-design="tisch"][data-scheme="dark"] .gd-play__link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 6px 2px;
+  color: var(--ink);
+  text-decoration: none;
+}
+:root[data-design="tisch"][data-scheme="dark"] .gd-play__link:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; border-radius: var(--radius-sm); }
+:root[data-design="tisch"][data-scheme="dark"] .gd-play .avatar { flex: none; width: 28px; height: 28px; font-size: 11px; }
+:root[data-design="tisch"][data-scheme="dark"] .gd-play__dot { flex: none; width: 28px; height: 28px; }
+:root[data-design="tisch"][data-scheme="dark"] .gd-play__date { flex: none; font-weight: 700; font-variant-numeric: tabular-nums; }
+:root[data-design="tisch"][data-scheme="dark"] .gd-play__what {
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: right;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+:root[data-design="tisch"][data-scheme="dark"] .gd-play--muted .gd-play__date { color: var(--ink-soft); font-weight: 600; }
+:root[data-design="tisch"][data-scheme="dark"] .gd-play .score-pill { position: static; flex: none; }
+
+/* „Aktionen" (T3.4): the page menu's items as buttons, in fillMenu's order.
+   Red is painted by `data-kind`, as in the menu (T15b.5) — a row that raises a
+   red question is red. A 2×2 grid wherever the spread is one column (T6.3). */
+:root[data-design="tisch"][data-scheme="dark"] .gd-actions__grid { display: flex; flex-wrap: wrap; gap: 8px; }
+:root[data-design="tisch"][data-scheme="dark"] .gd-act {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  font-size: var(--text-sm);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--control-edge);
+  background: var(--control-fill);
+  color: var(--ink);
+  font-weight: 700;
+}
+:root[data-design="tisch"][data-scheme="dark"] .gd-act[data-kind="destructive"] {
+  /* On --surface, not --control-fill: --danger measures 4.47:1 on the fill
+     and 5.53:1 here (test/tisch-spielepass.test.js). */
+  background: var(--surface);
+  color: var(--danger);
+  border-color: var(--danger);
+}
+@media (max-width: 859px) {
+  :root[data-design="tisch"][data-scheme="dark"] .gd-actions__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  :root[data-design="tisch"][data-scheme="dark"] .gd-act { justify-content: center; }
+}
 
 /* The action bar is the table's near edge: walnut, closed by a brass rule. */
 :root[data-design="tisch"][data-scheme="dark"] .gd-bar {
