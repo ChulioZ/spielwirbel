@@ -1483,6 +1483,11 @@ async function showResults(round, session, gamesHint, reveal, plain) {
      cold load, a Chronik visit or a shared link replays nothing. Its sibling flag
      gated the stamp's press, which #1122 removed. */
   let freshChoice = false;
+  /* Der Tisch's fifth motion ritual (#1200, T10.5): true for the one render
+     that follows a finish the reader just recorded — the transition into
+     `finished`, never a winner change on an already-finished session, never a
+     cold load of one. renderTisch() consumes it, exactly like freshChoice. */
+  let freshStamp = false;
 
   // Cancel session (the alternative to choosing a game; see renderCancel).
   // Created here because updateChosen() -> renderCancel() runs below while the
@@ -1941,10 +1946,15 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     // Cleared on every pass and re-set below only for the one render that earned
     // it: an attribute left behind would re-run the animation on the next write.
     tischSlot.removeAttribute('data-unroll');
+    tischSlot.removeAttribute('data-stamped');
     tisch.hidden = !chosenId;
     tischBar.hidden = true;
-    if (!chosenId) { freshChoice = false; return; }
+    if (!chosenId) { freshChoice = false; freshStamp = false; return; }
     if (freshChoice) { tischSlot.setAttribute('data-unroll', ''); freshChoice = false; }
+    if (freshStamp) {
+      if (tischLook && finished) tischSlot.setAttribute('data-stamped', '');
+      freshStamp = false;
+    }
     const game = games.find((g) => g.id === chosenId);
     /* Three states, matching the three render branches below exactly — the
        picker is a sub-state of `done`, not a fourth one: the finish is already
@@ -2187,6 +2197,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
         // tap needs no second field to replace it (#1038).
         ...(nextEnding ? { ending: nextEnding } : {}),
       });
+      if (!finished) freshStamp = true;
       finished = true;
       winnerIds = saved.winnerIds.slice(); // filtered server-side
       // Read back from the server, never from the argument: it is the side that
