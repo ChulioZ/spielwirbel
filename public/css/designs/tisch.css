@@ -1901,15 +1901,17 @@
   box-shadow: var(--shadow-3);
 }
 
-/* --- Add a game: the lookup (T3.5 desktop, T6.4 phone) --------------------
-   The panel itself is already paper — `.sheet` took the overlay treatment in
-   #1188 — so what is left is the suggestion list inside it, which still renders
-   in the app's own tints over that paper.
+/* --- Add a game: the lookup DROPDOWN (#1190) --------------------------------
+   Since #1264 Der Tisch's add-game sheet no longer opens on the form: it opens
+   on the search-first step below (T3.5/T6.4), whose hits are an inline list,
+   not this dropdown. What still renders the dropdown under Der Tisch is the
+   form that step hands over to („Selbst eintragen", whose title field keeps its
+   lookup) and the link-provider sheet — so these rules paint the suggestion
+   list for those two, in paper over the paper panel.
 
-   T3.5 draws the desktop presentation as a centred panel over a scrim, which is
-   exactly what `.sheet--dialog` is; the app uses ONE presentation at both widths
-   (a bottom sheet on a phone) rather than the popover the issue's summary names,
-   because this panel holds text inputs and an anchored popover cannot
+   One presentation at both widths (a bottom sheet on a phone, a centred panel
+   over a scrim above 640px) rather than an anchored popover, because the panel
+   holds a text input and an anchored popover cannot
    (.claude/rules/popover-vs-sheet-editors.md). */
 :root[data-design="tisch"][data-scheme="dark"] .lookup__menu {
   background: var(--paper);
@@ -1962,6 +1964,185 @@
    itself, it correctly keeps the app's own colour instead of silently taking a
    paper ink onto wood. */
 :root[data-design="tisch"][data-scheme="dark"] .sheet .field__hint--dup { color: var(--paper-faint); }
+
+/* --- Add a game: SEARCH FIRST (#1264 — T3.5 desktop, T6.4 phone) -----------
+   add-game-search.js. The sheet opens on a query field carrying its hit count,
+   lists the hits as rows that each hold their own state and action, and ends on
+   two secondary ways out (the BGG import, „Selbst eintragen") — T15a's „where
+   two ways are equally important, both stand as secondary rows and the primary
+   action stays the search result".
+
+   GEOMETRY IS UNGATED, COLOUR IS NOT. This markup exists only under Der Tisch,
+   so a Tisch user inside a round still wearing a LIGHT palette (until the flip,
+   #1202) gets it too — without these rules it would be an unstyled list. So the
+   layout below applies on any scheme and reads only the app's own tokens
+   (--surface, --ink, --line …), which the overlay rule above re-points at the
+   paper family in a dark Tisch sheet and which are the round's own in a light
+   one. The one colour that is Tisch's alone (the state ink) is scheme-gated,
+   exactly like everything else in this file. */
+:root[data-design="tisch"] .add-search__query {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 50px;
+  margin: 2px 0 10px;
+  padding: 0 14px;
+  background: var(--surface);
+  border: 1px solid var(--control-edge);
+  border-radius: var(--radius-md);
+}
+/* The sheet draws the field with its brass halo on: it is always the focused
+   control there. The ring is the app's own focus token, on the WRAPPER, because
+   the input inside is borderless — which is also why the input may drop its own
+   outline: the indicator moved one box out rather than disappearing. */
+:root[data-design="tisch"] .add-search__query:focus-within {
+  box-shadow: 0 0 0 3px var(--brand-edge);
+}
+:root[data-design="tisch"] .add-search__query > .ti { font-size: 20px; color: var(--ink-soft); }
+:root[data-design="tisch"] .add-search__input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  padding: 12px 0;
+  font: inherit;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--ink);
+  outline: none;
+}
+:root[data-design="tisch"] .add-search__input::placeholder { color: var(--placeholder); font-weight: 500; }
+:root[data-design="tisch"] .add-search__count {
+  flex: none;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+/* The status line — the idle hint, „Suche läuft …", no hits, BGG down. It is a
+   live region, so it is never hidden: only its margin goes when it is empty. */
+:root[data-design="tisch"] .add-search__msg { margin: 0 0 10px; font-size: 14px; color: var(--ink-soft); }
+:root[data-design="tisch"] .add-search__msg:empty { margin: 0; }
+:root[data-design="tisch"] .add-search__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+:root[data-design="tisch"] .add-search__row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 76px;
+  padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+}
+/* A game that is already where this sheet would put it sits one step DOWN in
+   the paper, the way T3.5 draws „Nordlichter" — the row reads as settled. */
+:root[data-design="tisch"] .add-search__row.is-held { background: var(--sunken); }
+/* A small standing box, like every cover in this design. BGG's search carries no
+   image, so this is almost always the no-cover placeholder (cover.js). */
+:root[data-design="tisch"] .add-search__cover {
+  position: relative;
+  flex: none;
+  width: 44px;
+  height: 58px;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-1);
+}
+:root[data-design="tisch"] .add-search__cover img { display: block; width: 100%; height: 100%; object-fit: cover; }
+:root[data-design="tisch"] .add-search__cover .cover-ph .ti { font-size: 20px; }
+:root[data-design="tisch"] .add-search__text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+:root[data-design="tisch"] .add-search__title {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+:root[data-design="tisch"] .add-search__meta { font-size: 13px; font-weight: 600; color: var(--ink-soft); }
+:root[data-design="tisch"] .add-search__state { font-size: 12px; font-weight: 700; color: var(--ink-soft); }
+/* T3.5/T6.4 set the state in the design's tertiary brown — --paper-faint, the
+   A4 value this section already uses for the typed-title hint, measured on
+   both paper grounds a row can have in test/a11y-contrast.test.js. */
+:root[data-design="tisch"][data-scheme="dark"] .sheet .add-search__state { color: var(--paper-faint); }
+:root[data-design="tisch"] .add-search__add,
+:root[data-design="tisch"] .add-search__held {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 40px;
+  padding: 0 15px;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 800;
+  border-radius: var(--radius-md);
+}
+/* „Im Regal" is not a control, so it is drawn as the button's outline with
+   nothing in it — the shape says where the action would be, the empty fill says
+   there is none. aria-hidden in the markup: the state line says the same. */
+:root[data-design="tisch"] .add-search__held {
+  border: 1px solid var(--line);
+  color: var(--ink-soft);
+}
+:root[data-design="tisch"] .add-search__ways {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+:root[data-design="tisch"] .add-search__way {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 15px;
+  font-size: 14px;
+}
+/* T3.5 pins the panel below the header instead of centring it: a centred panel
+   would re-centre — i.e. jump — every time a result list arrives or empties
+   under the person typing. */
+@media (min-width: 640px) {
+  :root[data-design="tisch"] .sheet-backdrop:has(> .add-search) {
+    align-items: flex-start;
+    padding-top: 92px;
+  }
+}
+/* The phone composition (T6.4): tighter rows, the state under the title, and
+   the action as a 44px square with its icon alone. The add button keeps its
+   words in its aria-label („Hinzufügen: {title}"), so hiding the visible label
+   loses nothing a screen reader hears. The two ways out share the row. */
+@media (max-width: 639px) {
+  :root[data-design="tisch"] .add-search__row { gap: 11px; min-height: 68px; padding: 8px 10px; }
+  :root[data-design="tisch"] .add-search__cover { width: 38px; height: 50px; }
+  :root[data-design="tisch"] .add-search__title { font-size: 15px; }
+  :root[data-design="tisch"] .add-search__meta,
+  :root[data-design="tisch"] .add-search__state { font-size: 12px; }
+  :root[data-design="tisch"] .add-search__input { font-size: 16px; }
+  :root[data-design="tisch"] .add-search__add,
+  :root[data-design="tisch"] .add-search__held { width: 44px; min-height: 44px; padding: 0; font-size: 20px; }
+  :root[data-design="tisch"] .add-search__act-label { display: none; }
+  :root[data-design="tisch"] .add-search__ways { gap: 8px; }
+  /* Content-sized and unbroken: the two share a row where both labels fit and
+     each takes a whole row where they do not (the French wish pair), rather than
+     halving the row and breaking „Von BGG übernehmen" over two lines. */
+  :root[data-design="tisch"] .add-search__way { flex: 1 1 auto; justify-content: center; padding: 0 12px; font-size: 13px; white-space: nowrap; }
+}
 
 /* ===========================================================================
    THE SESSION LOOP (#1191) — setup, vote card, result, several tables.

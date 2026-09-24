@@ -361,6 +361,7 @@ const frontendGlobals = {
   bgStatsPlayDate: 'readonly', bgStatsGuestId: 'readonly', bgStatsTeamLabel: 'readonly',
   bgStatsBggId: 'readonly', bgStatsPlay: 'readonly', bgStatsPlayUrl: 'readonly',
   scoreHit: 'readonly', foldTitle: 'readonly', existingTitleState: 'readonly',
+  rankLookupHits: 'readonly', hitShelfState: 'readonly',
   gameHue: 'readonly', coverPlaceholder: 'readonly',
   // empty-state.js (issue #869)
   emptyState: 'readonly',
@@ -386,7 +387,7 @@ const frontendGlobals = {
   showRound: 'readonly', showRetired: 'readonly', showCompleted: 'readonly',
   showWishlist: 'readonly', showRecommendations: 'readonly',
   recReasonText: 'readonly', recFacts: 'readonly', recEmptyKey: 'readonly',
-  showArchive: 'readonly', ARCHIVES: 'readonly',
+  showArchive: 'readonly', ARCHIVES: 'readonly', acquireWishedExpansion: 'readonly',
   PALETTES: 'readonly', WORLDS: 'readonly', DESIGNS: 'readonly', resolveDesign: 'readonly', designIcon: 'readonly',
   // round-marker.js (#1187): a round's colour marker, the one thing a round
   // still owns about its own look. Design-neutral by construction, so it is
@@ -456,6 +457,9 @@ const frontendGlobals = {
   startDirectSession: 'readonly',
   showLinkProvider: 'readonly', attachLookup: 'readonly', searchProvider: 'readonly',
   lookupDetail: 'readonly',
+  searchAllProviders: 'readonly',
+  // add-game-search.js (#1264): Der Tisch's search-first add step + the form it hands over to
+  showAddGameSearch: 'readonly', showAddGameForm: 'readonly',
   providerLabel: 'readonly', providerLabelShort: 'readonly',
   PROVIDER_LABELS: 'readonly', PROVIDER_LABELS_SHORT: 'readonly', LOOKUP_PROVIDERS: 'readonly', MAX_SUGGESTIONS: 'readonly',
   // views-member.js

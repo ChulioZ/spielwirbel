@@ -775,6 +775,8 @@ public/
     views-round-actions.js  the two sheets that screen opens: move games, invite
     views-round-lookup.js the two lookup sheets: add a game, link an existing
                           game to a provider
+    add-game-search.js  Der Tisch's search-first add step: hits as rows with
+                        their own state, then the BGG import or the form (#1264)
     bgg-import.js    the one-shot BoardGameGeek collection import: the
                      account gate, the owned/wish picker, the error
                      phrasing (#481, moved out in #956)

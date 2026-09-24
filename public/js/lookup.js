@@ -80,6 +80,31 @@ function lookupDetail(rid, r) {
   return api('GET', `/api/rounds/${rid}/lookup/game?provider=${encodeURIComponent(r.provider)}&id=${encodeURIComponent(r.providerId)}&lang=${encodeURIComponent(getLocale())}`);
 }
 
+// Query every provider in parallel and report the merged, ranked rows each time
+// one settles: onUpdate({ rows, pending, anyFulfilled }). Rendered
+// *progressively* — a fast provider's hits show before a slow one answers — and
+// one provider failing only leaves its own hits out.
+//
+// The fan-out both result presentations share (#1264): attachLookup's dropdown
+// and Der Tisch's inline result list (add-game-search.js). Superseding an older
+// query is the CALLER's job — each keeps its own sequence number and ignores an
+// update that arrives for a search it has since replaced.
+function searchAllProviders(rid, q, onUpdate) {
+  const hits = []; // accumulates across providers as each resolves
+  let pending = LOOKUP_PROVIDERS.length;
+  let anyFulfilled = false;
+  LOOKUP_PROVIDERS.forEach((provider, prio) => {
+    searchProvider(rid, provider, q).then((list) => {
+      anyFulfilled = true;
+      list.forEach((r, order) => hits.push(Object.assign({ score: scoreHit(r.title, q), prio, order }, r)));
+    }, () => { /* provider failed — leave its hits out, others still render */ })
+      .then(() => {
+        pending--;
+        onUpdate({ rows: rankLookupHits(hits, MAX_SUGGESTIONS), pending, anyFulfilled });
+      });
+  });
+}
+
 // Unique per attached lookup, so the option ids `aria-activedescendant` points
 // at can never collide (both sheets hard-code the same `#lookupMenu` id).
 let lookupSeq = 0;
@@ -232,9 +257,6 @@ function attachLookup(round, input, menu, onPick, onInput) {
   function runSearch(q) {
     const seq = ++searchSeq;
     showMenuMsg(t('lookup.searching'));
-    const hits = []; // accumulates across providers as each resolves
-    let pending = active.length;
-    let anyFulfilled = false;
 
     // One row per hit, ranked by how well its title answers the query. Re-run on
     // every arrival so a late provider's rows slot in place.
@@ -244,12 +266,8 @@ function attachLookup(round, input, menu, onPick, onInput) {
     // into one row made every hit but the survivor impossible to link at all —
     // there is no "show more" and no way to type an id. The year is what tells
     // the rows apart, the same disambiguator BGG's own search uses.
-    function render() {
+    function render({ rows, pending, anyFulfilled }) {
       if (seq !== searchSeq) return; // a newer keystroke superseded this search
-      const rows = hits.slice()
-        .sort((a, b) => b.score - a.score || a.prio - b.prio ||
-          (a.title || '').trim().length - (b.title || '').trim().length || a.order - b.order)
-        .slice(0, MAX_SUGGESTIONS);
       if (!rows.length) {
         if (pending > 0) return showMenuMsg(t('lookup.searching'));
         return showMenuMsg(anyFulfilled ? t('lookup.noResults') : t('lookup.error'));
@@ -300,14 +318,7 @@ function attachLookup(round, input, menu, onPick, onInput) {
       setActive(lookupOptionIndex(options, activeRef));
     }
 
-    active.forEach((provider, prio) => {
-      searchProvider(rid, provider, q).then((list) => {
-        if (seq !== searchSeq) return;
-        anyFulfilled = true;
-        list.forEach((r, order) => hits.push(Object.assign({ score: scoreHit(r.title, q), prio, order }, r)));
-      }, () => { /* provider failed — leave its hits out, others still render */ })
-        .then(() => { pending--; render(); });
-    });
+    searchAllProviders(rid, q, render);
   }
 
   input.addEventListener('input', () => {

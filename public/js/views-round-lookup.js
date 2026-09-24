@@ -13,7 +13,23 @@
 // sheet throughout — the lookup, the cover, the player range and the tags are
 // exactly as useful for a game the group wants as for one they own — so only the
 // wording, the POST field and where dismissing returns to differ.
-function showAddGame(round, { wish = false } = {}) {
+//
+// Der Tisch composes this step differently (#1264, T3.5/T6.4): it opens on a
+// search with a result list, and this form is its „Selbst eintragen" branch.
+// Every entry point calls showAddGame, so the design decides here and nowhere
+// else; Klassisch goes straight to the form, exactly as before.
+function showAddGame(round, opts = {}) {
+  if (designIs('tisch')) return showAddGameSearch(round, opts);
+  return showAddGameForm(round, opts);
+}
+
+// The form itself. `title` prefills the title field — the query Der Tisch's
+// search step hands over when the person chooses to enter the game themselves;
+// `hit` is a search result that step hands over instead, and the form fills
+// itself from it exactly as picking that suggestion here would; `dirty` says
+// that step already changed the shelf, so dismissing this form must re-render
+// the screen behind it just as if the form had added a game itself.
+function showAddGameForm(round, { wish = false, title = '', hit = null, dirty = false } = {}) {
   const sheetTitle = wish ? t('addGame.wishTitle') : t('addGame.title');
   const back = wish ? () => showWishlist(round.id) : () => showRound(round.id, 'regal');
   const backdrop = h(`<div class="sheet-backdrop">
@@ -92,7 +108,7 @@ function showAddGame(round, { wish = false } = {}) {
   // Games added via "Speichern & weiteres" keep the sheet open, so the Regal
   // behind it is only re-rendered when the sheet is finally dismissed. Track
   // whether any game was added while open and refresh on every close path.
-  let addedWhileOpen = false;
+  let addedWhileOpen = dirty;
   const dismiss = () => {
     closeSheet(addedWhileOpen ? back : undefined);
   };
@@ -456,7 +472,14 @@ function showAddGame(round, { wish = false } = {}) {
   }
   form.querySelector('#save').addEventListener('click', () => save(false));
   form.querySelector('#saveMore').addEventListener('click', () => save(true));
+  // A handed-over query is a starting point, not a lookup pick: no provider is
+  // linked, so the dup hint is the only thing it should wake.
+  if (title) {
+    titleInput.value = title;
+    refreshDupHint();
+  }
   form.querySelector('#title').focus();
+  if (hit) pickSuggestion(hit);
 }
 
 // =================== Link an existing game to a provider (issue #74) ===================

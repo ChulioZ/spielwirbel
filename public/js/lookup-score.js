@@ -1,7 +1,10 @@
 /* Spielwirbel – title comparison: how well a provider hit's title answers the
-   typed query (scoreHit), and whether a typed title is already on the round's
-   shelf (existingTitleState). Both fold through the same foldTitle, which is
-   why they share a file. Pure and dependency-free, so it works both as a
+   typed query (scoreHit), the order the merged hits are shown in
+   (rankLookupHits), whether a typed title is already on the round's shelf
+   (existingTitleState), and where a picked hit already sits in the round
+   (hitShelfState). The first three fold through the same foldTitle, which is
+   why they share a file; the fourth is existingTitleState's id-based twin.
+   Pure and dependency-free, so it works both as a
    shared-scope frontend script (browser global) and as a CommonJS module the
    test suite can require. Load order: see index.html (before
    lookup.js). */
@@ -77,6 +80,52 @@ function existingTitleState(games, title) {
   return archived;
 }
 
+// The order merged provider hits are shown in, capped at `max`: best title
+// match first, then registry priority, then the shorter title (a base game
+// before its "…: Big Box"), then the provider's own order. Each hit carries the
+// `score`/`prio`/`order` searchAllProviders (lookup.js) stamped on it.
+//
+// Shared by the dropdown (attachLookup) and Der Tisch's inline result list
+// (#1264), so the two can never rank one query differently. Pure, and returns
+// a new array — the caller's accumulator keeps growing as providers arrive.
+function rankLookupHits(hits, max) {
+  return (hits || []).slice()
+    .sort((a, b) => b.score - a.score || a.prio - b.prio ||
+      (a.title || '').trim().length - (b.title || '').trim().length || a.order - b.order)
+    .slice(0, max);
+}
+
+// Where a provider hit already sits in this round (#1264): 'shelf' | 'wish' |
+// 'archived' | null. Der Tisch's search-first add sheet draws one state per
+// result row from it — „Im Regal", „Auf der Wunschliste", or an add button.
+//
+// Matched on the provider link (`game.source`), deliberately NOT on the title
+// the way existingTitleState is. That one is an advisory hint and can afford to
+// be over-eager; this one decides whether a row offers its add button at all,
+// and BGG holds several distinct games under one exact name („Scout", #790) —
+// a title match would take the button off every one of them. A manually
+// entered game with no link therefore matches nothing, and the typed-title
+// hint in the „Selbst eintragen" form is still there to catch it.
+//
+// The shelf wins over a wish and a wish over the archive, so every game is
+// checked rather than returning on the first match: to the person adding, a
+// game that is on the shelf is on the shelf, whatever else is also true.
+function hitShelfState(games, hit) {
+  if (!hit || !hit.provider || hit.providerId == null) return null;
+  const id = String(hit.providerId);
+  let wish = false;
+  let archived = false;
+  for (const g of games || []) {
+    const src = g && g.source;
+    if (!src || src.provider !== hit.provider || String(src.externalId) !== id) continue;
+    if (g.wish) wish = true;
+    else if (g.retired || g.completed) archived = true;
+    else return 'shelf';
+  }
+  if (wish) return 'wish';
+  return archived ? 'archived' : null;
+}
+
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { scoreHit, foldTitle, existingTitleState };
+  module.exports = { scoreHit, foldTitle, existingTitleState, rankLookupHits, hitShelfState };
 }
