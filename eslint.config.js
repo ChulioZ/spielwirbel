@@ -245,7 +245,6 @@ const frontendGlobals = {
   startDemo: 'readonly', setupDemoBanner: 'readonly',
   setupTermsBanner: 'readonly',
   enterDemo: 'readonly', resumeDemo: 'readonly', endDemo: 'readonly',
-  demoFromAccount: 'readonly', signOut: 'readonly',
   authErrorKey: 'readonly',
   probeMe: 'readonly', refreshAccessToken: 'readonly', onSessionLost: 'readonly',
   logout: 'readonly', linkToken: 'readonly', bootApp: 'readonly',
@@ -437,7 +436,7 @@ const frontendGlobals = {
   editableRoundName: 'readonly',
   // #1269 — Der Tisch's young-round states (hub-cards.js, views-round-start.js)
   roundIsYoung: 'readonly', hubSentenceCard: 'readonly', hubYoungCard: 'readonly',
-  tischEmptyTable: 'readonly',
+  hubEmptyTable: 'readonly',
   // off-shelf.js (#1185) — the four off-shelf destinations, one definition
   offShelfEntries: 'readonly', offShelfSegments: 'readonly',
   // hub-previews.js (#1185) — the hub's three sub-page previews + „Nicht im Regal"

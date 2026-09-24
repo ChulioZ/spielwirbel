@@ -17,12 +17,13 @@
    the screen it met before, not six empty boxes — so each renderer returns null
    for that case and the loop below appends only what came back.
 
-   Der Tisch's YOUNG round (#1269, T7.3/T7.4) does not contradict that rule. The
-   rule is about not showing six empty boxes; T7 asks instead for ONE named next
-   step — the empty table with its two actions on a 0-game round, the invitation
-   card and a sentence per card („ab wann es Zahlen gibt") once games exist but
-   no session does. Each is a single statement of what comes next, never an
-   empty container. Klassisch keeps the screen it has always had.
+   The YOUNG round (#1269, T7.3/T7.4) does not contradict that rule. The rule is
+   about not showing six empty boxes; T7 asks instead for ONE named next step —
+   the empty table with its two actions on a 0-game round (every design since
+   the #1269 merge interview), and under Der Tisch the invitation card and a
+   sentence per card („ab wann es Zahlen gibt") once games exist but no session
+   does. Each is a single statement of what comes next, never an empty
+   container.
 
    Part of the frontend; all files share one global script scope. Loaded right
    after views-round.js. */
@@ -99,13 +100,14 @@ function renderStartTab(round, activeGames) {
      presets are the ONLY ones at every width — one control, one place, one tab
      stop. */
   const railOwned = tisch ? '' : ' rail-owned';
-  /* Der Tisch's young round (T7.3, T7.4; #1269). A 0-game round gets the EMPTY
-     TABLE between the seats and the locked plate — the sheet's centrepiece, with
-     the two ways to fill it. A round with games and no session yet has the CTA
-     say „Erste Session wirbeln"; the invitation card in the grid carries the
-     count. The threshold is the app's own — one active game — not the sheet's
-     „ab 2 Spielen" (operator default on #1269). */
-  if (tisch && activeGames.length === 0) stage.appendChild(tischEmptyTable(round));
+  /* The young round (T7.3, T7.4; #1269). A 0-game round gets the EMPTY TABLE
+     right before the locked button, with the two ways to fill it — in EVERY
+     design: Klassisch's phone hub had the same dead end (operator, #1269 merge
+     interview). Under Der Tisch a round with games and no session yet also has
+     the CTA say „Erste Session wirbeln"; the invitation card in the grid carries
+     the count. The threshold is the app's own — one active game — not the
+     sheet's „ab 2 Spielen" (operator default on #1269). */
+  if (activeGames.length === 0) stage.appendChild(hubEmptyTable(round));
   const ctaLabel = tisch && activeGames.length && roundIsYoung(round)
     ? t('hub.young.firstCta') : t('round.startSession');
   const startBtn = h(
@@ -114,17 +116,13 @@ function renderStartTab(round, activeGames) {
   startBtn.addEventListener('click', () => showStartSession(round));
   if (activeGames.length === 0) {
     startBtn.disabled = true;
-    if (tisch) {
-      /* The reason is VISIBLE on the plate (T7.3), where Klassisch keeps it in a
-         `title` — which no touch screen shows and no screen reader reliably
-         reads. aria-hidden inside the button so the name stays „Session
-         wirbeln", and referenced by aria-describedby so it is still announced,
-         as the description (a hidden node is included when referenced). */
-      startBtn.appendChild(h(`<span class="hub-cta__reason" id="hub-cta-reason" aria-hidden="true">${esc(t('hub.young.lock'))}</span>`));
-      startBtn.setAttribute('aria-describedby', 'hub-cta-reason');
-    } else {
-      startBtn.title = t('round.startSessionDisabled');
-    }
+    /* The reason is VISIBLE on the button (T7.3), in every design — it used to
+       be a `title`, which no touch screen shows and no screen reader reliably
+       reads. aria-hidden inside the button so the name stays „Session
+       wirbeln", and referenced by aria-describedby so it is still announced,
+       as the description (a hidden node is included when referenced). */
+    startBtn.appendChild(h(`<span class="hub-cta__reason" id="hub-cta-reason" aria-hidden="true">${esc(t('hub.young.lock'))}</span>`));
+    startBtn.setAttribute('aria-describedby', 'hub-cta-reason');
   }
   stage.appendChild(startBtn);
 
@@ -385,7 +383,7 @@ function renderStartTab(round, activeGames) {
   // Safe because the rail renders no tickets of its own. Since #923 it asks the
   // detached grid the same way, for the same reason: a card is content, so a
   // pane holding one is not the bare page this stand-in exists for.
-  // Der Tisch's empty table (#1269) is already that stand-in, at every width.
+  // The empty table (#1269) is already that stand-in, at every width.
   if (!app.querySelector('.ticket') && !grid.querySelector('.hub-card')
     && !app.querySelector('.empty--table')) {
     const gap = emptyState({
@@ -506,10 +504,10 @@ function renderStartTab(round, activeGames) {
     `<a class="btn rail-owned"><i class="ti ti-settings" aria-hidden="true"></i> ${esc(t('rail.settings'))}</a>`
   );
   navLink(settingsBtn, roundPath(rid, 'settings'), () => showRoundSettings(rid));
-  // Under Der Tisch a 0-game round's empty table already carries „Spiel
-  // hinzufügen" as its primary action; a second copy two screens down would be
-  // the same control twice (#1269).
-  if (!(tisch && activeGames.length === 0)) actions.appendChild(addGameBtn);
+  // A 0-game round's empty table already carries „Spiel hinzufügen" as its
+  // primary action; a second copy two screens down would be the same control
+  // twice (#1269).
+  if (activeGames.length) actions.appendChild(addGameBtn);
   actions.appendChild(settingsBtn);
   app.appendChild(actions);
 }
@@ -555,15 +553,16 @@ function tischSeatHints(round, seatRow) {
   });
 }
 
-/* Der Tisch's EMPTY TABLE (T7.3, #1269): a 0-game round's centrepiece — the
-   felt medallion (#1194's `.empty` material), „Der Topf ist noch leer", a
-   sentence, and the two ways to fill the pot. The same `emptyState` every other
-   empty screen uses, plus its actions, so the material is one rule.
+/* The EMPTY TABLE (T7.3, #1269): a 0-game round's one next step — „Der Topf ist
+   noch leer", a sentence, and the two ways to fill the pot. The same
+   `emptyState` every other empty screen uses, plus its actions, so each design
+   paints it with the material it already gives `.empty` (Der Tisch's felt
+   medallion, #1194). Every design since the #1269 merge interview.
 
    „Von BGG übernehmen" only where the import exists (canImportBgg — accounts
    mode), and the sentence drops its BGG half with it: copy that points at a
    button which is not there is the kind of promise T7 exists to stop making. */
-function tischEmptyTable(round) {
+function hubEmptyTable(round) {
   const bgg = canImportBgg();
   const table = emptyState({
     icon: 'ti-tornado',

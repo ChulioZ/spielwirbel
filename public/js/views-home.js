@@ -62,25 +62,19 @@ async function showHome() {
 
 /* Der Tisch's empty lobby offers a SECOND way in (T7.1, #1269): „Ich wurde
    eingeladen" — someone who was invited lands here first and would otherwise
-   only find the inbox by its top-bar icon — and „Oder erst gucken: Demo-Runde
-   ansehen". Siblings of `.lobby-cta`, never children: that card is one <a>, and
-   a control inside a link is invalid.
+   only find the inbox by its top-bar icon. A sibling of `.lobby-cta`, never a
+   child: that card is one <a>, and a control inside a link is invalid.
 
-   Only for a signed-in account (the caller checks): the inbox and the demo both
-   exist only in accounts mode. The demo line is rendered HIDDEN and revealed
-   when /api/config says demos answer — a link that 404s is worse than none, the
-   landing page's reasoning — and never inside a demo, where it would offer the
-   thing you are already looking at. */
+   Only for a signed-in account (the caller checks): the inbox exists only in
+   accounts mode. The sheet's „Oder erst gucken: Demo-Runde ansehen" is left out
+   on purpose (operator, #1269 merge interview): only a signed-in account sees
+   this lobby, and with one login slot the demo would sign a brand-new account
+   out of itself. */
 function tischLobbyAlt() {
   const alt = h(`<div class="lobby-alt">
        <a class="btn lobby-alt__invited"><i class="ti ti-mail" aria-hidden="true"></i> ${esc(t('home.alt.invited'))}</a>
-       <p class="lobby-alt__demo" hidden>${esc(t('home.alt.demoLead'))} <button class="link-btn">${esc(t('home.alt.demo'))}</button></p>
      </div>`);
   navLink(alt.querySelector('.lobby-alt__invited'), '/inbox', () => showInbox());
-  const demo = alt.querySelector('.lobby-alt__demo');
-  const btn = demo.querySelector('button');
-  btn.addEventListener('click', () => demoFromAccount(btn));
-  if (!isDemoAccount()) withAppConfig((cfg) => { if (cfg && cfg.demo) demo.hidden = false; });
   return alt;
 }
 

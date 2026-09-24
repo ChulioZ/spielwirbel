@@ -1272,6 +1272,20 @@ h1, h2, h3 { font-family: var(--font-display); }
   border-radius: var(--radius-lg);
 }
 .hub-cta .ti { font-size: var(--text-2xl); }
+/* A locked CTA says WHY on its face (#1269) — a `title` shows on no touch
+   screen. The label wraps and the reason takes its own line under it, still on
+   the button: side by side, the label wrapped at 390 (measured under Tisch). */
+.hub-cta:disabled {
+  flex-wrap: wrap;
+  row-gap: 2px;
+}
+.hub-cta__reason {
+  flex-basis: 100%;
+  font-family: var(--font);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-align: center;
+}
 
 /* Quieter secondary tasks under the launchpad content. */
 .hub-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 26px; }
@@ -3161,6 +3175,30 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
    broken by moving code the way the `.rail-owned` specificity trap above was. */
 .empty--rail-gap { display: none; }
 @media (min-width: 1280px) { .empty--rail-gap { display: block; } }
+/* A 0-game round's EMPTY TABLE (#1269): one `.empty` with the two ways to fill
+   the pot, right before the locked CTA — in every design. It is also the
+   ≥1280 stand-in, so the view drops `.empty--rail-gap` when it renders. The
+   actions stack on a phone (each a full-width target) and sit side by side
+   once there is room; a reading measure keeps the sentence a two-line thought
+   across a wide pane. */
+.empty--table { margin: 0 0 18px; }
+.empty--table .empty__text {
+  max-width: 46ch;
+  margin-inline: auto;
+}
+.empty__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
+}
+.empty__actions .btn { justify-content: center; }
+@media (min-width: 560px) {
+  .empty__actions {
+    flex-direction: row;
+    justify-content: center;
+  }
+}
 
 /* ---- Formulare ---- */
 .field { margin-bottom: 18px; }

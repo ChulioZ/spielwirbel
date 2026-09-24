@@ -192,20 +192,12 @@ async function accountApi(method, path, body, _retried) {
   return res.status === 204 ? null : res.json();
 }
 
-// End this session server-side and forget it locally, without choosing a next
-// screen. Split out of logout() (#1269) for the empty lobby's demo link, which
-// signs out and then enters a demo — minting one over a live session would
-// strand the account's refresh token instead of revoking it.
-async function signOut() {
+async function logout() {
   try { await authFetch('/logout', { refreshToken: getRefreshToken() }); } catch {}
   clearTokens();
   invalidateRoundCache(); // the next login may be a different account/tenant
   resetAvatarCache();     // ...and so must the faces resolved for it (#841)
   accountUser = null;
-}
-
-async function logout() {
-  await signOut();
   setupAccountUi();
   // The landing page, not the login card (#501). A deliberate logout is a
   // departure, and showLanding() owns '/', so the address bar stops naming the

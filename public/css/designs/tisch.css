@@ -4859,8 +4859,8 @@
    removing the opacity also removes the app's only visual "this is disabled",
    and wood alone would read as a perfectly ordinary secondary button.
 
-   The REASON is printed on the plate since #1269 (`.hub-cta__reason`, below),
-   where Klassisch keeps it in a `title`. */
+   The REASON is printed on the plate since #1269 (`.hub-cta__reason`, in
+   styles.css — every design prints it since the #1269 merge interview). */
 :root[data-design="tisch"][data-scheme="dark"] .hub-cta:disabled,
 :root[data-design="tisch"][data-scheme="dark"] .rail__cta:disabled {
   opacity: 1;
@@ -4877,48 +4877,16 @@
    (tischLobbyAlt). Every colour here is one the section above already
    measured: the empty table is `.empty`'s walnut with --ink-soft (7.77:1),
    the plate's reason inherits the locked plate's --ink-soft on --control-fill
-   (6.29:1), and the lobby's demo line is --ink-soft on the page.
+   (6.29:1).
 
    T7.3 draws the reason at the plate's far end on ONE line. That does not
    survive the app's plate: at 390 the label is --text-xl and the German reason
    alone is 130px, so side by side the label wrapped to two lines (measured, a
    91px plate). So the plate wraps and the reason takes its own line under the
-   label — still ON the plate, still one object — which also holds for the
-   longer locales without a per-language tweak. */
-:root[data-design="tisch"][data-scheme="dark"] .hub-cta:disabled {
-  flex-wrap: wrap;
-  row-gap: 2px;
-}
-:root[data-design="tisch"][data-scheme="dark"] .hub-cta__reason {
-  flex-basis: 100%;
-  font-family: var(--font);
-  font-size: var(--text-sm);
-  font-weight: 600;
-  text-align: center;
-}
-/* The empty table sits between the seats and the locked plate, and its two
-   actions stack on a phone (each a full-width target) and sit side by side
-   once there is room — the same two buttons T7.3 draws under the sentence. */
-:root[data-design="tisch"][data-scheme="dark"] .empty--table { margin: 0 0 18px; }
-/* Across the 1048px band the sentence ran as one line; a reading measure keeps
-   it the two-line thought T7.3 sets under the medallion. */
-:root[data-design="tisch"][data-scheme="dark"] .empty--table .empty__text {
-  max-width: 46ch;
-  margin-inline: auto;
-}
-:root[data-design="tisch"][data-scheme="dark"] .empty__actions {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 20px;
-}
-:root[data-design="tisch"][data-scheme="dark"] .empty__actions .btn { justify-content: center; }
-@media (min-width: 560px) {
-  :root[data-design="tisch"][data-scheme="dark"] .empty__actions {
-    flex-direction: row;
-    justify-content: center;
-  }
-}
+   label. That layout, and the empty table's, are every design's since the
+   #1269 merge interview and live in styles.css (`.hub-cta__reason`,
+   `.empty--table`, `.empty__actions`); what stays here is Der Tisch's own
+   placement in the ≥1280 felt band. */
 /* From 1280 up `.hub-stage` is the felt band's two-column grid (#1262). The
    table spans it, between the seats and the plate, so the plate keeps its
    column and its reason reads beside it exactly as on the phone. */
@@ -4929,10 +4897,8 @@
   }
 }
 /* The empty lobby's second way in (T7.1): „Ich wurde eingeladen" as a wood
-   plate under the brass one, then the quiet demo line. The demo line ships
-   `hidden` until /api/config says demos answer, and this rule gives it a
-   display — so the attribute needs its own rule back
-   (.claude/rules/hidden-attribute-vs-display-rule.md). */
+   plate under the brass one. (The sheet's demo line is left out — see
+   views-home.js's tischLobbyAlt.) */
 :root[data-design="tisch"][data-scheme="dark"] .lobby-alt {
   display: flex;
   flex-direction: column;
@@ -4941,12 +4907,6 @@
   text-align: center;
 }
 :root[data-design="tisch"][data-scheme="dark"] .lobby-alt__invited { justify-content: center; }
-:root[data-design="tisch"][data-scheme="dark"] .lobby-alt__demo {
-  display: block;
-  margin: 0;
-  color: var(--ink-soft);
-}
-:root[data-design="tisch"][data-scheme="dark"] .lobby-alt__demo[hidden] { display: none; }
 
 /* --- The demo, as a brass banderole and a hatched table (T7.6) ------------
    The demo must never be mistaken for a round of one's own, and T7.6 says it

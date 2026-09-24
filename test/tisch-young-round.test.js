@@ -17,7 +17,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const { loadApp, flush } = require('./support/dom');
+const { loadApp } = require('./support/dom');
 const { rulesOf, bodyOf, mediaBlocks } = require('./support/css');
 
 const game = (id) => ({ id, title: 'Spiel ' + id, minPlayers: 2, maxPlayers: 4, createdAt: '2026-01-0' + (id % 9 + 1) + 'T10:00:00.000Z' });
@@ -47,17 +47,24 @@ const cardTitles = (dom) => [...dom.app.querySelectorAll('.hub-cards .hub-card__
 
 // ------------------------------------------------------------- Klassisch
 
-test('Klassisch 0-game hub is unchanged: title-only reason, rail-gap stand-in, both quick actions', async (t) => {
+// The operator widened this in the merge interview (2026-09-24): Klassisch's
+// phone 0-game hub had the same dead end — a faded button whose reason was a
+// `title` no touch screen shows, and no next step. So the empty table and the
+// visible reason are the APP's now; only the young-round sentences stay Tisch's.
+test('Klassisch 0-game hub gets the empty table and the visible reason too', async (t) => {
   const dom = await hub(t, null, round());
   const cta = pane(dom).find((el) => el.matches('.hub-cta'));
   assert.ok(cta && cta.disabled, 'the Klassisch CTA must stay a direct, disabled child of #app');
-  assert.equal(cta.title, 'Erst Spiele hinzufügen');
-  assert.equal(cta.textContent.trim(), 'Session wirbeln');
-  assert.equal(cta.hasAttribute('aria-describedby'), false);
-  assert.equal(dom.app.querySelector('.hub-cta__reason'), null, 'the visible reason leaked into Klassisch');
-  assert.equal(dom.app.querySelector('.empty--table'), null, 'the empty table leaked into Klassisch');
-  assert.ok(dom.app.querySelector('.empty--rail-gap'), 'Klassisch lost its #869 stand-in');
-  assert.equal(dom.app.querySelectorAll('.hub-actions > *').length, 2, 'Klassisch keeps „Spiel hinzufügen" and Einstellungen');
+  assert.equal(cta.hasAttribute('title'), false, 'the reason is on the button now, not in a tooltip');
+  assert.equal(cta.getAttribute('aria-describedby'), 'hub-cta-reason');
+  assert.equal(cta.querySelector('.hub-cta__reason').textContent, 'ab dem ersten Spiel');
+  const table = dom.app.querySelector('.empty--table');
+  assert.ok(table, 'Klassisch shows no next step on a 0-game round');
+  assert.equal(table.nextElementSibling, cta, 'the table sits right before the locked button');
+  assert.equal(table.querySelectorAll('.empty__actions .btn').length, 2);
+  assert.equal(dom.app.querySelector('.empty--rail-gap'), null, 'the table IS the stand-in; two would stack');
+  assert.deepEqual([...dom.app.querySelectorAll('.hub-actions > *')].map((el) => el.textContent.trim()), ['Einstellungen'],
+    '„Spiel hinzufügen" lives on the table now, not twice');
 });
 
 test('Klassisch with games and no session: no invitation, no sentence cards, the usual label', async (t) => {
@@ -132,7 +139,7 @@ test('Der Tisch round with games and no session: first-session label, invitation
   const sentences = [...dom.app.querySelectorAll('.hub-card--sentence .hub-card__facts')].map((p) => p.textContent);
   assert.deepEqual(sentences, [
     'Vorschläge gibt es ab 6 Spielen im Regal.',
-    'Zahlen gibt es ab 2 Sessions. Bis dahin bleibt hier Platz — keine Null.',
+    'Zahlen gibt es ab 2 Sessions.',
   ], 'each sentence must state the threshold the code actually applies');
   assert.equal(dom.app.querySelector('.pulse-tiles, .pulse-bars'), null, 'a young round drew a zero');
 });
@@ -195,34 +202,11 @@ test('Der Tisch empty lobby offers „Ich wurde eingeladen" as a link to the inb
   const invited = alt.querySelector('a.lobby-alt__invited');
   assert.equal(invited.getAttribute('href'), '/inbox');
   assert.match(invited.textContent, /Ich wurde eingeladen/);
-  const demo = alt.querySelector('.lobby-alt__demo');
-  assert.equal(demo.hidden, false, 'demos answer here, so the demo line shows');
-  assert.equal(demo.querySelector('button').textContent, 'Demo-Runde ansehen');
-});
-
-test('Der Tisch empty lobby hides the demo line where demos are off, and inside a demo', async (t) => {
-  const off = await lobby(t, 'tisch', { demo: false });
-  assert.equal(off.app.querySelector('.lobby-alt__demo').hidden, true);
-  const inDemo = await lobby(t, 'tisch', { demoAccount: true });
-  assert.equal(inDemo.app.querySelector('.lobby-alt__demo').hidden, true);
-});
-
-test('the demo link confirms, signs out, then starts the demo — and does nothing if declined', async (t) => {
-  const dom = await lobby(t, 'tisch');
-  const calls = [];
-  let answer = false;
-  dom.set('confirmDialog', async (o) => { calls.push(['confirm', o.confirmLabel]); return answer; });
-  dom.set('signOut', async () => { calls.push(['signOut']); });
-  dom.set('startDemo', async (busy) => { calls.push(['startDemo', busy === undefined]); });
-  const btn = dom.app.querySelector('.lobby-alt__demo button');
-  btn.click();
-  await flush();
-  assert.deepEqual(calls.map((c) => [...c]), [['confirm', 'Abmelden und ansehen']], 'declining must not sign anyone out');
-  answer = true;
-  btn.click();
-  await flush(); await flush();
-  assert.deepEqual(calls.slice(1).map((c) => [...c]), [['confirm', 'Abmelden und ansehen'], ['signOut'], ['startDemo', true]],
-    'sign out BEFORE the mint, and hand startDemo no busy button so a failure lands on the landing page');
+  // No demo line (operator, merge interview 2026-09-24): only a signed-in
+  // account sees this lobby, and the app holds one login — viewing the demo
+  // would sign a brand-new account out of itself.
+  assert.equal(alt.querySelector('.lobby-alt__demo'), null, 'the demo line is gone');
+  assert.equal(alt.querySelectorAll('a, button').length, 1, '„Ich wurde eingeladen" is the only second way in');
 });
 
 // ------------------------------------------------------------- the CSS half
@@ -231,10 +215,8 @@ const TISCH = fs.readFileSync(path.join(__dirname, '..', 'public/css/designs/tis
   .replace(/\/\*[\s\S]*?\*\//g, '');
 const T = ':root[data-design="tisch"][data-scheme="dark"] ';
 
-test('tisch.css spans the empty table across the ≥1280 band and restores [hidden] on the demo line', () => {
+test('tisch.css spans the empty table across the ≥1280 band', () => {
   const wide = mediaBlocks(TISCH).filter(([q]) => /min-width:\s*1280px/.test(q)).map(([, css]) => css).join('\n');
   assert.match(bodyOf(T + '.hub-stage > .empty--table', rulesOf(wide)) || '', /grid-column:\s*1\s*\/\s*-1/,
     'from 1280 the table must span the band’s grid, or it lands in the plate’s column');
-  assert.match(bodyOf(T + '.lobby-alt__demo[hidden]', rulesOf(TISCH)) || '', /display:\s*none/,
-    '`.lobby-alt__demo` has a display rule, so the hidden attribute needs its own');
 });
