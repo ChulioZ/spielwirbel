@@ -522,7 +522,8 @@ stylesheet, the `enabled` gate and `FACE_DESIGN`. `lib/app.js` requires it so
 `lib/routes/account.js` validates `PATCH /me { design }` and
 `POST /design-chooser-seen` against the same list, `lib/demo.js` writes
 `FACE_DESIGN` at mint, and `lib/me-projection.js` RESOLVES the stored id against
-it on the way out — the half worth knowing, because `applyDesign()` on the
+it on the way out (through `lib/account-design.js` since #1201, which the
+operator's design tile and the switch-back stamp share) — the half worth knowing, because `applyDesign()` on the
 client is deliberately policy-free, so a projection that merely echoed the
 stored value would put a design built on a dev instance onto a production page.
 It also carries `DESIGN_CHOOSER_REVISION`, which the server stamps and only the

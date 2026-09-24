@@ -248,6 +248,10 @@ lib/
                      per-recipient throttle and coalescing
   legal.js           server-rendered Impressum / privacy policy /
                      Nutzungsbedingungen in DE + EN (issues #134/#140)
+  account-design.js  which design an account wears (resolved against the
+                     registry's `enabled` gate) and when a change counts as
+                     going back to Klassisch — shared by /me, the two design
+                     routes and the operator's „Designs" tile (issue #1201)
   me-projection.js   the ONE description of what a client may see about an
                      account (issue #785) — answered by GET /me and by all
                      three endpoints that start a session (password login,
