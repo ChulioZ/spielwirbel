@@ -266,3 +266,19 @@ test('the felt header, the hand-off line and the intro set text only in --felt-i
   const bad = colours.filter(([, v]) => v !== 'var(--felt-ink)');
   assert.deepEqual(bad, [], 'text on the marker felt must be --felt-ink');
 });
+
+/* 9 — THE BACK CONTROL KEEPS ITS 44px TARGET IN THE HEADER.
+ *
+ * styles.css sizes `.vote__undo` from --undo-size, which only `.vote__who`
+ * declares. The Tisch header is not inside one, so without its own size the
+ * control collapsed to 22px (measured in a browser) — under WCAG 2.5.5's 44px
+ * floor on the only way back out of a card.
+ */
+test('the header\'s back control states its own 44px size', () => {
+  const css = fs.readFileSync(path.join(__dirname, '..', 'public', 'css', 'designs', 'tisch.css'), 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, '');
+  const hit = rulesOf(css).find(([sel]) => sel.trim().endsWith('.vote--tisch .vote__undo'));
+  assert.ok(hit, 'the Tisch undo rule is missing');
+  assert.match(hit[1], /(^|[;\s])width:\s*44px/);
+  assert.match(hit[1], /(^|[;\s])height:\s*44px/);
+});
