@@ -3461,6 +3461,51 @@
 :root[data-design="tisch"][data-scheme="dark"] .tafel .tafel-top .trow .score-pill,
 :root[data-design="tisch"][data-scheme="dark"] .tafel .tafel-top .trow .score-pill * { color: var(--sc-ink, var(--on-accent)); }
 
+/* --- Motion ritual 4a: the reveal — the race, then the gold sweep (#1200, T10.4)
+   „Auflösen" already marks the reveal (views-session.js: `.is-race` on every row
+   with `--dur` inline, `.is-reveal` on the gold group), so this is CSS alone
+   and keyed on nothing new. First the data, then the award, in that order:
+
+   1. THE RACE, retimed. The app's own (#1056) runs `--dur` = 0.5s + score ×
+      0.32s, up to 2.1s — past the 900ms ceiling T10 sets for this design. Here
+      it is scaled by 0.42, so the winner lands by 0.88s and every row keeps
+      its place in the order (the short ones still land first).
+   2. THE SWEEP. Once the winner's fill has landed, one streak of light crosses
+      the gold row, left to right, 800ms, once. On a pseudo-element BEHIND the
+      row's content (`z-index: -1` inside the row's own isolation), so it passes
+      over brass and never over text — T10's own condition for legibility. It
+      ends off the row's far edge, so its last frame shows nothing, which is the
+      reduced-motion picture. Scheme-gated like every rule that reads a
+      design token (.claude/rules/design-colour-blocks-are-scheme-gated.md),
+      and painted from --paper itself: the gradient's own falloff is the
+      softness, so no second colour literal is needed.
+   3. `tafel-gold` stood down. The app's 3.6s tint of the gold GROUP has nothing
+      to tint here — the row carries the gold — and its `both` fill left the
+      group's box painted --gold-soft behind the kicker, over this design's
+      transparent ground. So Der Tisch takes the rest state instead: `none` is
+      the static state, never a keyframe parked mid-way. */
+:root[data-design="tisch"] .result-screen .tafel-top.is-reveal { animation: none; }
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-design="tisch"] .result-screen .trow.is-race::before {
+    animation-duration: calc(var(--dur, 1s) * 0.42);
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel-top.is-reveal .trow::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(100deg, transparent 42%, var(--paper) 50%, transparent 58%) no-repeat;
+    background-size: 250% 100%;
+    animation: tisch-gold-sweep 800ms ease-in-out calc(var(--dur, 1s) * 0.42) both;
+  }
+  /* 113% → -13%: with the image at 250% of the row, those two positions put the
+     streak just outside the left and the right edge respectively. */
+  @keyframes tisch-gold-sweep {
+    from { background-position: 113% 0; }
+    to { background-position: -13% 0; }
+  }
+}
+
 /* --- The result: the distribution, opened from „Wertungen" (#1275) ---------
    No longer printed on every row: it sits below its row, hidden until that
    row's count is pressed (the disclosure above), in T8.2's BAR ramp. Both
@@ -3481,6 +3526,30 @@
    TEXT, and the bar ramp is tuned to 3:1 as a graphical object, not to 4.5:1 as
    type. Same split the app makes on every other design. */
 :root[data-design="tisch"][data-scheme="dark"] .trow__bars .bar-axis__n { color: var(--paper-ink-soft); }
+
+/* --- Motion ritual 4b: the distribution rises when opened (#1200, T10.4) ----
+   The bars T10 draws rising are this distribution, which on Der Tisch is behind
+   the row's „Wertungen" disclosure — so they rise when the reader opens it, the
+   reader's own click, never on arrival. A `display: none` → shown switch starts
+   an element's animations afresh, so the disclosure's own `hidden` is the whole
+   trigger; there is no JS. 460ms per bar from the baseline, 70ms apart by rung,
+   capped at the sixth: 460 + 5 × 70 = 810ms. `scale` rather than `height`: the
+   fill's height is its value (inline), and the individual property composes
+   with it instead of replacing it. No end frame. */
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-design="tisch"] .result-screen .trow__bars:not([hidden]) .bar {
+    transform-origin: bottom;
+    animation: tisch-bar-rise 460ms cubic-bezier(0.2, 0.8, 0.2, 1) calc(var(--rise-i, 0) * 70ms) both;
+  }
+  :root[data-design="tisch"] .result-screen .trow__bars .bar-col:nth-child(2) { --rise-i: 1; }
+  :root[data-design="tisch"] .result-screen .trow__bars .bar-col:nth-child(3) { --rise-i: 2; }
+  :root[data-design="tisch"] .result-screen .trow__bars .bar-col:nth-child(4) { --rise-i: 3; }
+  :root[data-design="tisch"] .result-screen .trow__bars .bar-col:nth-child(5) { --rise-i: 4; }
+  :root[data-design="tisch"] .result-screen .trow__bars .bar-col:nth-child(n + 6) { --rise-i: 5; }
+  @keyframes tisch-bar-rise {
+    from { scale: 1 0; }
+  }
+}
 
 /* The score as a bare NUMBER — which since #1275 only the landing page's Tafel
    prints (landing-moments.js): the result screen's compact rows carry a pill
