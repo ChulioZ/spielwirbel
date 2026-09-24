@@ -163,7 +163,7 @@ whole shape: the design that keeps a list out of the parity test is also what
 stops anything noticing when the locale set moves past it — seven languages
 shipped and the screen kept handing their readers English. `test/news-locales.test.js`
 derives the required set from `locales.js` instead, and rejects a key that is
-neither `revision` nor a shipped locale (a `kr:` typo would otherwise fall back
+neither `revision`, `kind` (#1281) nor a shipped locale (a `kr:` typo would otherwise fall back
 in silence).
 
 **The eighth is `public/js/round-roles.js`** (#137): the owner/co-owner/editor

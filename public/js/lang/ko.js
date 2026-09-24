@@ -1088,6 +1088,10 @@ I18N.ko = {
   'news.menu': '새로운 소식',
   'news.menuUnseen': '새로운 소식 (새 항목 있음)',
   'news.empty': '새로운 것이 생기면 여기에 올라와요. 지금은 전할 소식이 없어요.',
+  // Der Tisch's badge per entry (#1281), one per NEWS `kind`.
+  'news.kind.new': '새 기능',
+  'news.kind.improved': '개선',
+  'news.kind.fixed': '수정',
   'stats.title': '둘러보기',
   'stats.menu': '둘러보기',
   'stats.sub': '지금 Spielwirbel 전체에서 무엇을 플레이하고 무엇이 좋은 평가를 받는지 보여 드려요.',

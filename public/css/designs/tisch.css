@@ -4583,22 +4583,45 @@
    BGG import is the sheet with the most of them (nothing marked owned, the
    collection private, BGG queueing or down, an unknown handle) and renders
    every one through `.bgg-import__msg`; the add-game lookup's no-hit and
-   BGG-down lines are its dropdown's `.lookup__msg`, which #1190 already
-   painted. The icon disc T15b puts above the headline is not drawn: it is a
-   new element, and the headline reads without it. */
-:root[data-design="tisch"][data-scheme="dark"] .sheet .bgg-import__msg {
+   BGG-down lines are, since #1264, the search-first sheet's own status line
+   (`.add-search__msg`), which takes the same card while it reports a failure
+   (`.is-fail`: „Nichts gefunden", „nicht erreichbar") and stays a plain line
+   for „Tippen für Vorschläge" and „Suche…".
+
+   The ICON DISC above the headline (#1281) is `.sheet-disc`, rendered by the
+   two views under Der Tisch only and aria-hidden — the headline says it all.
+   A gold coin with the brass rim: the rim is what bounds it on paper (--gold
+   on --paper-raised is 1.22:1, --gold-edge 3.71:1), and the glyph is the one
+   ink gold takes (--gold-ink, 7.74:1). The headline is `p:first-of-type`, not
+   `:first-child`, because the disc now comes first. */
+:root[data-design="tisch"][data-scheme="dark"] .sheet .bgg-import__msg,
+:root[data-design="tisch"][data-scheme="dark"] .sheet .add-search__msg.is-fail {
   margin: 4px 0 12px;
   padding: 20px 16px;
   text-align: center;
   background: var(--paper-raised);
   border-radius: var(--radius-md);
 }
-:root[data-design="tisch"][data-scheme="dark"] .sheet .bgg-import__msg > p:first-child {
+:root[data-design="tisch"][data-scheme="dark"] .sheet .bgg-import__msg > p:first-of-type,
+:root[data-design="tisch"][data-scheme="dark"] .sheet .add-search__msg.is-fail > p {
   font-family: var(--font-display);
   font-size: 17px;
   font-weight: 800;
   line-height: 1.25;
   color: var(--ink);
+}
+:root[data-design="tisch"][data-scheme="dark"] .sheet .add-search__msg.is-fail > p { margin: 0; }
+:root[data-design="tisch"][data-scheme="dark"] .sheet .sheet-disc {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 12px;
+  border-radius: 50%;
+  background: var(--gold);
+  border: 2px solid var(--gold-edge);
+  color: var(--gold-ink);
+  font-size: 24px;
 }
 
 /* --- The toast (T15b.4) -----------------------------------------------------
@@ -5237,9 +5260,6 @@
        „geteilte Session" item. The inbox has no mark-all action and no such
        item type; invitation and friend request already differ by the action
        on the right, which is exactly the distinction T14.6 asks for.
-     - T14.3's „Neu / Besser / Behoben" badges and the felt head band. A NEWS
-       entry has no kind (public/js/news.js), and the head is the shared
-       `.lobby-head`, which no screen-specific rule reaches without :has().
      - T14.4's three top-five lists. The payload is one podium per metric
        (lib/public-stats.js), so each card stays one game.
      - T14.5's two-column composition with the picker, the tags and the
@@ -5433,7 +5453,66 @@
 
    The column starts at 600px. Below that the date keeps its place above the
    title, because a 7.5em column would leave the entry's own text ~230px on a
-   390px screen for no gain in reading order. */
+   390px screen for no gain in reading order.
+
+   #1281 adds what #1197 had to leave out. The HEAD lies on felt: views-news.js
+   and views-stats.js give it `.lobby-head--felt` under Der Tisch (the
+   signed-in statistics share the rule — T14.4 below). A rounded band inside
+   the content column rather than a bleed: the page's padding is not the
+   head's to copy, and the Spielerkarte's bleed shows what that costs. Paper
+   ink on felt, never gold (finding A1): --felt-ink 5.38:1 and --felt-ink-soft
+   4.79:1 on the light stop, the worst case since the weave only darkens.
+
+   The BADGE per entry („Neu / Besser / Behoben", NEWS `kind`) sits inside the
+   date line, so it follows the date into the gold column. Three grounds, all
+   measured: Neu on --felt-chip-on with --felt-ink (5.32:1), Besser on --gold
+   with --gold-ink (7.74:1), Behoben on the raised --control-fill with --ink
+   (8.02:1). */
+:root[data-design="tisch"][data-scheme="dark"] .lobby-head--felt {
+  padding: 22px 24px 20px;
+  border-radius: var(--radius-md);
+  background-color: var(--felt-deep);
+  background-image:
+    var(--felt-weave),
+    radial-gradient(70% 150% at 20% -30%, var(--felt), var(--felt-deep) 74%);
+  border-bottom: 5px solid var(--gold-edge);
+  box-shadow: var(--shadow-1);
+  color: var(--felt-ink);
+}
+@media (max-width: 520px) {
+  :root[data-design="tisch"][data-scheme="dark"] .lobby-head--felt { padding: 18px 16px 16px; }
+}
+:root[data-design="tisch"][data-scheme="dark"] .lobby-head--felt h1 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  color: var(--felt-ink);
+}
+:root[data-design="tisch"][data-scheme="dark"] .lobby-head--felt .lobby-head__sub { color: var(--felt-ink-soft); }
+:root[data-design="tisch"][data-scheme="dark"] .news-entry__kind {
+  display: inline-block;
+  margin-left: 4px;
+  padding: 2px 9px;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.4;
+  letter-spacing: 0.04em;
+  vertical-align: 1px;
+}
+:root[data-design="tisch"][data-scheme="dark"] .news-entry__kind--new {
+  background: var(--felt-chip-on);
+  color: var(--felt-ink);
+}
+:root[data-design="tisch"][data-scheme="dark"] .news-entry__kind--improved {
+  background: var(--gold);
+  color: var(--gold-ink);
+}
+:root[data-design="tisch"][data-scheme="dark"] .news-entry__kind--fixed {
+  background: var(--control-fill);
+  box-shadow: inset 0 0 0 1px var(--gold-edge);
+  color: var(--ink);
+}
 :root[data-design="tisch"][data-scheme="dark"] .news-entry__date {
   font-family: var(--font-display);
   font-weight: 800;
@@ -5449,6 +5528,8 @@
     padding-left: 0;
   }
   :root[data-design="tisch"][data-scheme="dark"] .news-entry__date { grid-row: 1 / span 2; margin: 2px 0 0; }
+  /* In the 7.5em column the badge takes its own line under the date. */
+  :root[data-design="tisch"][data-scheme="dark"] .news-entry__kind { display: table; margin: 6px 0 0; }
   :root[data-design="tisch"][data-scheme="dark"] .news-entry__title,
   :root[data-design="tisch"][data-scheme="dark"] .news-entry__body {
     grid-column: 2;
@@ -5469,7 +5550,38 @@
    Each podium card becomes T14.4's walnut plate with its label in the display
    face under a gold glyph, and the counters become the same raised plates as
    the Spielerkarte's figures — one family for "a number about you" and "a
-   number about everyone". Nothing names a round or a person, as before. */
+   number about everyone". Nothing names a round or a person, as before.
+
+   The head is T14.3's felt band (#1281), carrying the BGG badge the sheet
+   puts beside the title: the podiums count BGG-linked games only, so the
+   attribution sits with the screen's name. The badge is artwork with its own
+   light ground, so it rides a paper plate exactly like the sign-in screen's
+   (`.auth-promise__bgg`) — the plate is 5.69:1 on the felt. From 600px the
+   head is a two-column grid and the badge stands right of the title and the
+   line under it (the news head has no badge, so its h1 simply fills column
+   one); below that it follows them. DOM order is title, line, badge. */
+:root[data-design="tisch"][data-scheme="dark"] .lobby-head--felt .lobby-head__bgg {
+  display: block;
+  width: 110px;
+  height: auto;
+  margin-top: 14px;
+  padding: 5px 9px;
+  border-radius: var(--radius-sm);
+  background: var(--paper);
+}
+@media (min-width: 600px) {
+  :root[data-design="tisch"][data-scheme="dark"] .lobby-head--felt {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 20px;
+    align-items: center;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .lobby-head--felt > .lobby-head__bgg {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    margin: 0;
+  }
+}
 :root[data-design="tisch"][data-scheme="dark"] body:not(.auth-screen) .app > .stats-block .stats-card,
 :root[data-design="tisch"][data-scheme="dark"] body:not(.auth-screen) .app > .stats-block .stats-counter {
   border-radius: var(--radius-md);

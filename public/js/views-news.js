@@ -39,7 +39,11 @@ async function showNews() {
   applyBackground(null);
 
   app.innerHTML = '';
-  app.appendChild(h(`<div class="lobby-head"><h1>${esc(t('news.title'))}</h1></div>`));
+  // Der Tisch lays the head on felt (T14.3, #1281). A modifier class of its
+  // own rather than `.lobby-head` reached through :has(), and only under that
+  // design — Klassisch's markup stays byte-identical.
+  const felt = designIs('tisch') ? ' lobby-head--felt' : '';
+  app.appendChild(h(`<div class="lobby-head${felt}"><h1>${esc(t('news.title'))}</h1></div>`));
 
   if (!NEWS.length) {
     // An honest empty state, not a placeholder entry. The list starts empty and
@@ -60,10 +64,18 @@ async function showNews() {
 
 // One entry. The revision doubles as its date — it is a plain ISO day, which is
 // what makes that free rather than a second field to keep in step.
+//
+// Der Tisch adds a „Neu / Besser / Behoben" badge (T14.3, #1281) INSIDE the
+// date line, so it travels with the date at both widths — above the title on a
+// phone, in the gold column beside it from 600px — and the reading order is
+// the DOM order everywhere (WCAG 2.4.3). Klassisch renders no badge.
 function renderNewsEntry(entry) {
   const text = newsText(entry, getLocale()) || {};
+  const badge = designIs('tisch') && entry.kind
+    ? ` <span class="news-entry__kind news-entry__kind--${esc(entry.kind)}">${esc(t('news.kind.' + entry.kind))}</span>`
+    : '';
   return h(`<article class="news-entry">
-      <p class="news-entry__date muted">${esc(fmtDate(entry.revision))}</p>
+      <p class="news-entry__date muted">${esc(fmtDate(entry.revision))}${badge}</p>
       <h2 class="news-entry__title">${esc(text.title || '')}</h2>
       <p class="news-entry__body">${esc(text.body || '')}</p>
     </article>`);

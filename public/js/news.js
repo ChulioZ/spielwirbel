@@ -32,7 +32,13 @@
    THE BAR FOR ADDING AN ENTRY IS HIGH, and it is stated in
    .claude/rules/keep-readme-current.md: a genuinely new user-facing CAPABILITY,
    nothing else. Every entry spends attention the Nutzungsbedingungen §11 terms
-   notice also needs, so this list is a budget, not a log. */
+   notice also needs, so this list is a budget, not a log.
+
+   EVERY ENTRY HAS A `kind` (#1281): 'new' for a capability that did not exist,
+   'improved' for an existing one that now does more, 'fixed' for a repair big
+   enough to clear the bar above (rare by construction). Der Tisch prints it as
+   a „Neu / Besser / Behoben" badge (`news.kind.*` in lang/*.js); Klassisch
+   does not render it. test/tisch-news-stats-disc.test.js makes it required. */
 
 'use strict';
 
@@ -49,6 +55,7 @@ const NEWS = [
    */
   {
     revision: '2026-09-22',
+    kind: 'improved',
     de: {
       title: 'Die Abstimmung läuft jetzt bildschirmfüllend — und der Start-Tab zeigt, was in der Runde steckt',
       body: 'Während des Wertens füllt die Karte den ganzen Bildschirm: keine '
@@ -158,6 +165,7 @@ const NEWS = [
    */
   {
     revision: '2026-09-15',
+    kind: 'new',
     de: {
       title: 'Dein eigenes Profil, mit deiner Bilanz über alle Runden',
       body: 'Über „Mein Profil" im Konto-Menü kommst du jetzt auf deine eigene '
@@ -270,6 +278,7 @@ const NEWS = [
    */
   {
     revision: '2026-09-13',
+    kind: 'new',
     de: {
       title: 'Mitglieder aus der Runde entfernen',
       body: 'Gruppen verändern sich, und bisher konnte die Mitgliederliste einer '
@@ -370,6 +379,7 @@ const NEWS = [
    */
   {
     revision: '2026-09-08',
+    kind: 'new',
     de: {
       title: 'Wem gehört das Spiel?',
       body: 'Beim Anlegen eines Spiels, beim Übernehmen von BoardGameGeek und auf '
@@ -497,6 +507,7 @@ const NEWS = [
    */
   {
     revision: '2026-09-07',
+    kind: 'new',
     de: {
       title: 'Welten: Wald und Sci-Fi als Design',
       body: 'Unter Design gibt es neben den Farben jetzt Welten. Wald und Sci-Fi '
@@ -611,6 +622,7 @@ const NEWS = [
    */
   {
     revision: '2026-09-05',
+    kind: 'new',
     de: {
       title: 'Spiele in eine andere Runde kopieren',
       body: 'Ein Spiel kann jetzt in mehreren Runden stehen. In den '
@@ -706,6 +718,7 @@ const NEWS = [
    */
   {
     revision: '2026-09-04',
+    kind: 'improved',
     de: {
       title: 'Der Spielwirbel-Score löst den Ø ab',
       body: 'Die Bewertung eines Spiels ist jetzt mehr als der Durchschnitt: '
@@ -795,6 +808,7 @@ const NEWS = [
    */
   {
     revision: '2026-08-30',
+    kind: 'new',
     de: {
       title: 'Profilbild für dein Konto',
       body: 'Du kannst deinem Konto jetzt im Kontobereich ein Bild geben. Es '
@@ -883,6 +897,7 @@ const NEWS = [
    */
   {
     revision: '2026-08-29',
+    kind: 'new',
     de: {
       title: 'Rückblick auf einen Monat oder ein Jahr',
       body: 'In der Chronik könnt ihr jetzt einen einzelnen Monat oder ein ganzes '
@@ -957,6 +972,7 @@ const NEWS = [
    */
   {
     revision: '2026-08-28',
+    kind: 'improved',
     de: {
       title: 'Regal in einem Rutsch aufräumen',
       body: 'Im Regal gibt es jetzt „Auswählen": Spiele antippen, Suche und Filter '
@@ -1032,6 +1048,7 @@ const NEWS = [
    */
   {
     revision: '2026-08-21',
+    kind: 'new',
     de: {
       title: 'Mehrere Tische in einer Session',
       body: 'Zu viele für ein Spiel? Setzt beim Auslosen einen Haken bei „Mehrere '
@@ -1103,6 +1120,7 @@ const NEWS = [
    */
   {
     revision: '2026-08-14',
+    kind: 'new',
     de: {
       title: 'Das könnte euch auch gefallen',
       body: 'Im Regal einer Runde steht jetzt unten „Könnte euch gefallen": Spiele, '
@@ -1172,6 +1190,7 @@ const NEWS = [
    */
   {
     revision: '2026-08-13',
+    kind: 'new',
     de: {
       title: 'Entdecken',
       body: 'Unter „Entdecken" steht jetzt, was auf Spielwirbel insgesamt los ist: '
@@ -1234,7 +1253,7 @@ const NEWS = [
         + '놓여 있고, 특히 자주 플레이되며, 특히 좋은 평가를 받는지 보여 줍니다. 이 메뉴에서 페이지를 찾을 수 있습니다.',
     },
   },
-  // { revision: '2026-08-20',
+  // { revision: '2026-08-20', kind: 'new', // or 'improved' / 'fixed'
   //   de: { title: 'Kurzer Titel', body: 'Was man jetzt tun kann.' },
   //   en: { title: 'Short title', body: 'What you can do now.' },
   //   es: { … }, fr: { … }, it: { … }, nl: { … }, pt: { … }, fi: { … }, ko: { … } },

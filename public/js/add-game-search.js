@@ -88,10 +88,19 @@ function showAddGameSearch(round, { wish = false } = {}) {
   const gamesNow = () => localGames;
   let rows = [];
 
-  // Both live regions stay in the tree and only their TEXT changes, so every
-  // change is announced (.claude/rules/accessibility-contrast-and-modals.md §4).
-  function setStatus(text, hits) {
-    msg.textContent = text || '';
+  // Both live regions stay in the tree and only their CONTENT changes, so
+  // every change is announced (.claude/rules/accessibility-contrast-and-modals.md §4).
+  // A failure (`icon` given) is T15b's card: an aria-hidden icon disc above
+  // the line, so the announced text is the same words either way (#1281).
+  function setStatus(text, hits, icon) {
+    msg.classList.toggle('is-fail', !!icon);
+    if (icon) {
+      msg.replaceChildren(
+        h(`<span class="sheet-disc" aria-hidden="true"><i class="ti ${icon}"></i></span>`),
+        h(`<p>${esc(text)}</p>`));
+    } else {
+      msg.textContent = text || '';
+    }
     count.textContent = hits;
   }
 
@@ -189,7 +198,8 @@ function showAddGameSearch(round, { wish = false } = {}) {
       } else if (pending > 0) {
         setStatus(t('lookup.searching'), '');
       } else {
-        setStatus(anyFulfilled ? t('lookup.noResults') : t('lookup.error'), '');
+        setStatus(anyFulfilled ? t('lookup.noResults') : t('lookup.error'), '',
+          anyFulfilled ? 'ti-search' : 'ti-alert-triangle');
       }
     });
   }

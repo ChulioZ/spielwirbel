@@ -1150,6 +1150,10 @@ I18N.it = {
   'news.menu': 'Novità',
   'news.menuUnseen': 'Novità (nuove voci)',
   'news.empty': 'Le novità compaiono qui. Al momento non c’è nulla da segnalare.',
+  // Der Tisch's badge per entry (#1281), one per NEWS `kind`.
+  'news.kind.new': 'Nuovo',
+  'news.kind.improved': 'Migliorato',
+  'news.kind.fixed': 'Corretto',
   'stats.title': 'Esplora',
   'stats.menu': 'Esplora',
   'stats.sub': 'A cosa si gioca e cosa viene valutato bene su Spielwirbel in questo momento.',

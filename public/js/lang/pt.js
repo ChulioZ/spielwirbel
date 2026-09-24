@@ -1145,6 +1145,10 @@ I18N.pt = {
   'news.menu': 'Novidades',
   'news.menuUnseen': 'Novidades (entradas novas)',
   'news.empty': 'As novidades aparecem aqui. No momento não há nada a relatar.',
+  // Der Tisch's badge per entry (#1281), one per NEWS `kind`.
+  'news.kind.new': 'Novo',
+  'news.kind.improved': 'Melhorado',
+  'news.kind.fixed': 'Corrigido',
   'stats.title': 'Descobrir',
   'stats.menu': 'Descobrir',
   'stats.sub': 'O que anda sendo jogado e bem avaliado no Spielwirbel agora.',

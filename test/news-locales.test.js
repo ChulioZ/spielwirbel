@@ -44,11 +44,13 @@ test('every entry is written in every shipped locale', () => {
   }
 });
 
-test('no entry carries a key that is neither `revision` nor a shipped locale', () => {
+test('no entry carries a key that is neither `revision`, `kind` nor a shipped locale', () => {
   /* The half a "has every locale" check misses: `kr:` instead of `ko:` satisfies
      nothing and breaks nothing — newsText() falls back to English and the screen
      renders, so the typo ships and reads as a missing translation forever. */
-  const allowed = new Set(['revision', ...SUPPORTED_LOCALES]);
+  // `kind` (#1281) is the one non-locale field besides the revision; its values
+  // are pinned in test/tisch-news-stats-disc.test.js.
+  const allowed = new Set(['revision', 'kind', ...SUPPORTED_LOCALES]);
   for (const entry of NEWS) {
     for (const key of Object.keys(entry)) {
       assert.ok(allowed.has(key),

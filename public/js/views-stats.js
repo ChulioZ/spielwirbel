@@ -235,9 +235,15 @@ async function showEntdecken() {
   showLoginLink(loggedOut);
 
   app.innerHTML = '';
-  app.appendChild(h(`<div class="lobby-head">
+  // Signed in under Der Tisch, the head lies on felt and carries the BGG badge
+  // (T14.4, #1281): the podiums are BGG-linked games only, so the attribution
+  // belongs with the screen's own title. The logged-out screen is the face
+  // (#1198) and keeps the plain head, as does Klassisch — byte-identical.
+  const felt = !loggedOut && designIs('tisch');
+  app.appendChild(h(`<div class="lobby-head${felt ? ' lobby-head--felt' : ''}">
       <h1>${esc(t('stats.title'))}</h1>
-      <div class="muted lobby-head__sub">${esc(t('stats.sub'))}</div>
+      <div class="muted lobby-head__sub">${esc(t('stats.sub'))}</div>${felt ? `
+      <img class="lobby-head__bgg" src="/icons/powered-by-bgg.png" width="900" height="264" alt="Powered by BGG" />` : ''}
     </div>`));
 
   const stats = await loadPublicStats();

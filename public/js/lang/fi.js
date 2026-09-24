@@ -1114,6 +1114,10 @@ I18N.fi = {
   'news.menu': 'Mitä uutta',
   'news.menuUnseen': 'Mitä uutta (uusia merkintöjä)',
   'news.empty': 'Uudet asiat päätyvät tänne. Juuri nyt ei ole kerrottavaa.',
+  // Der Tisch's badge per entry (#1281), one per NEWS `kind`.
+  'news.kind.new': 'Uutta',
+  'news.kind.improved': 'Parannettu',
+  'news.kind.fixed': 'Korjattu',
   'stats.title': 'Löydä',
   'stats.menu': 'Löydä',
   'stats.sub': 'Mitä Spielwirbelissä pelataan ja arvioidaan hyvin juuri nyt.',
