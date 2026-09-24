@@ -1,0 +1,240 @@
+'use strict';
+
+/* Der Tisch gives a YOUNG round the sheet's centrepiece (#1269, T7.1/T7.3/T7.4):
+ * the empty table on a 0-game hub with a visible lock reason on the plate, the
+ * „Erste Session wirbeln" invitation and a sentence per card once games exist
+ * but no session does, and a second way into an empty lobby.
+ *
+ * Every piece is a markup branch on designIs('tisch'), so each screen is
+ * rendered twice through the real view — once under Klassisch, asserting the
+ * structure it has always had, and once under Der Tisch. The CSS half (where
+ * the table sits in the ≥1280 band, the [hidden] guard) is pinned as text at
+ * the end, since jsdom applies no stylesheet.
+ */
+
+const { test } = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+
+const { loadApp, flush } = require('./support/dom');
+const { rulesOf, bodyOf, mediaBlocks } = require('./support/css');
+
+const game = (id) => ({ id, title: 'Spiel ' + id, minPlayers: 2, maxPlayers: 4, createdAt: '2026-01-0' + (id % 9 + 1) + 'T10:00:00.000Z' });
+
+const round = ({ games = 0, sessions = [] } = {}) => ({
+  id: 'r1',
+  name: 'Sonntagsrunde',
+  background: null,
+  members: [{ id: 'm1', name: 'Lea' }, { id: 'm2', name: 'Jo' }],
+  games: Array.from({ length: games }, (_, i) => game(10 + i)),
+  sessions,
+  tags: [],
+});
+
+async function hub(t, design, r, { accounts = true } = {}) {
+  const dom = loadApp({ locale: 'de' });
+  t.after(() => dom.close());
+  if (design) dom.run(`applyDesign(${JSON.stringify(design)})`);
+  dom.set('accountsActive', () => accounts);
+  dom.set('api', async (method, url) => (/recommendations/.test(url) ? { recommendations: [] } : r));
+  await dom.call('showRound', r.id, 'start');
+  return dom;
+}
+
+const pane = (dom) => [...dom.app.children].filter((el) => !el.matches('.rail, .dock'));
+const cardTitles = (dom) => [...dom.app.querySelectorAll('.hub-cards .hub-card__title')].map((el) => el.textContent.trim());
+
+// ------------------------------------------------------------- Klassisch
+
+test('Klassisch 0-game hub is unchanged: title-only reason, rail-gap stand-in, both quick actions', async (t) => {
+  const dom = await hub(t, null, round());
+  const cta = pane(dom).find((el) => el.matches('.hub-cta'));
+  assert.ok(cta && cta.disabled, 'the Klassisch CTA must stay a direct, disabled child of #app');
+  assert.equal(cta.title, 'Erst Spiele hinzufügen');
+  assert.equal(cta.textContent.trim(), 'Session wirbeln');
+  assert.equal(cta.hasAttribute('aria-describedby'), false);
+  assert.equal(dom.app.querySelector('.hub-cta__reason'), null, 'the visible reason leaked into Klassisch');
+  assert.equal(dom.app.querySelector('.empty--table'), null, 'the empty table leaked into Klassisch');
+  assert.ok(dom.app.querySelector('.empty--rail-gap'), 'Klassisch lost its #869 stand-in');
+  assert.equal(dom.app.querySelectorAll('.hub-actions > *').length, 2, 'Klassisch keeps „Spiel hinzufügen" and Einstellungen');
+});
+
+test('Klassisch with games and no session: no invitation, no sentence cards, the usual label', async (t) => {
+  const dom = await hub(t, null, round({ games: 3 }));
+  const cta = pane(dom).find((el) => el.matches('.hub-cta'));
+  assert.equal(cta.textContent.trim(), 'Session wirbeln');
+  assert.equal(dom.app.querySelector('.hub-card--young, .hub-card--sentence'), null);
+  assert.deepEqual(cardTitles(dom), [], 'a young Klassisch round still meets no card at all');
+});
+
+// ------------------------------------------------------------- Der Tisch, 0 games
+
+test('Der Tisch 0-game hub: the empty table sits between the seats and the plate, with both actions', async (t) => {
+  const dom = await hub(t, 'tisch', round());
+  const stage = dom.app.querySelector('.hub-stage');
+  assert.deepEqual([...stage.children].map((el) => el.classList.contains('empty--table') ? 'table' : el.classList[0]),
+    ['hero', 'table', 'btn'], 'hero → empty table → plate is the sheet’s reading order');
+  const table = stage.querySelector('.empty--table');
+  assert.equal(table.querySelector('.empty__title').textContent, 'Der Topf ist noch leer');
+  assert.match(table.querySelector('.empty__text').textContent, /von BGG\.$/);
+  const actions = [...table.querySelectorAll('.empty__actions > button')].map((b) => b.textContent.trim());
+  assert.deepEqual(actions, ['Spiel hinzufügen', 'Von BGG übernehmen']);
+  assert.equal(dom.app.querySelector('.empty--rail-gap'), null, 'the table IS the stand-in — no second empty box');
+  assert.equal([...dom.app.querySelectorAll('.hub-actions > *')].some((b) => /Spiel hinzufügen/.test(b.textContent)), false,
+    '„Spiel hinzufügen" is on the table — the quick action would be the same control twice');
+});
+
+test('Der Tisch 0-game hub without accounts offers no BGG import and says nothing about it', async (t) => {
+  const dom = await hub(t, 'tisch', round(), { accounts: false });
+  const table = dom.app.querySelector('.empty--table');
+  assert.equal(table.querySelectorAll('.empty__actions > button').length, 1);
+  assert.doesNotMatch(table.textContent, /BGG/);
+});
+
+test('Der Tisch empty table actions open the add-game sheet and the BGG import', async (t) => {
+  const dom = await hub(t, 'tisch', round());
+  const seen = [];
+  dom.set('showAddGame', (r) => seen.push(['add', r.id]));
+  dom.set('showBggImport', (r) => seen.push(['bgg', r.id]));
+  dom.app.querySelectorAll('.empty--table .empty__actions > button').forEach((b) => b.click());
+  assert.deepEqual(seen.map((x) => [...x]), [['add', 'r1'], ['bgg', 'r1']]);
+});
+
+test('Der Tisch prints the lock reason on the plate and links it as the description', async (t) => {
+  const dom = await hub(t, 'tisch', round());
+  const cta = dom.app.querySelector('.hub-stage > .hub-cta');
+  assert.ok(cta.disabled);
+  const reason = cta.querySelector('.hub-cta__reason');
+  assert.ok(reason, 'no visible reason on the locked plate');
+  assert.equal(reason.textContent, 'ab dem ersten Spiel', 'the copy must state the app’s real threshold — one game');
+  assert.equal(cta.getAttribute('aria-describedby'), reason.id);
+  assert.equal(dom.document.getElementById(reason.id), reason, 'aria-describedby must resolve');
+  assert.equal(reason.getAttribute('aria-hidden'), 'true', 'the reason would otherwise join the button’s NAME');
+  assert.equal(cta.title, '', 'a title would repeat the reason as a tooltip');
+});
+
+// ------------------------------------------------------------- Der Tisch, games but no session
+
+test('Der Tisch round with games and no session: first-session label, invitation first, sentences instead of zeros', async (t) => {
+  const dom = await hub(t, 'tisch', round({ games: 3 }));
+  const cta = dom.app.querySelector('.hub-stage > .hub-cta');
+  assert.equal(cta.disabled, false);
+  assert.equal(cta.textContent.trim(), 'Erste Session wirbeln');
+  assert.equal(cta.querySelector('.hub-cta__reason'), null);
+
+  assert.deepEqual(cardTitles(dom).slice(0, 3), ['3 Spiele stehen bereit', 'Wie wär’s mit', 'Rundenpuls'],
+    'the invitation leads, then the two sentence cards in the grid’s own order');
+  const young = dom.app.querySelector('.hub-card--young');
+  assert.equal(young.querySelectorAll('.hub-preview__cover').length, 3);
+  assert.equal(young.querySelector('.hub-preview__covers').getAttribute('aria-hidden'), 'true');
+
+  const sentences = [...dom.app.querySelectorAll('.hub-card--sentence .hub-card__facts')].map((p) => p.textContent);
+  assert.deepEqual(sentences, [
+    'Vorschläge gibt es ab 6 Spielen im Regal.',
+    'Zahlen gibt es ab 2 Sessions. Bis dahin bleibt hier Platz — keine Null.',
+  ], 'each sentence must state the threshold the code actually applies');
+  assert.equal(dom.app.querySelector('.pulse-tiles, .pulse-bars'), null, 'a young round drew a zero');
+});
+
+test('Der Tisch young round with a full shelf shows real suggestions, not a sentence', async (t) => {
+  const dom = await hub(t, 'tisch', round({ games: 8 }));
+  const suggest = [...dom.app.querySelectorAll('.hub-card')].find((c) => /Wie wär/.test(c.textContent));
+  assert.ok(suggest.querySelector('.hub-row'), 'a shelf past the floor suggests games — the sentence would be false');
+  assert.equal(suggest.classList.contains('hub-card--sentence'), false);
+});
+
+test('Der Tisch round that has played is not young: no invitation, no sentences, the usual label', async (t) => {
+  const played = {
+    id: 900, createdAt: new Date(Date.now() - 5 * 86400000).toISOString(), done: true, finished: true,
+    gameIds: [10], chosenGameId: 10, winnerIds: ['m1'], memberIds: ['m1', 'm2'], votes: {},
+  };
+  const dom = await hub(t, 'tisch', round({ games: 3, sessions: [played] }));
+  assert.equal(dom.app.querySelector('.hub-stage > .hub-cta').textContent.trim(), 'Session wirbeln');
+  assert.equal(dom.app.querySelector('.hub-card--young, .hub-card--sentence'), null,
+    'the thresholds past the first session are #1280’s, not a sentence here');
+});
+
+test('a cancelled draw leaves a round young; a running one does not', async (t) => {
+  const cancelled = { id: 901, createdAt: '2026-09-01T10:00:00.000Z', done: true, cancelled: true, gameIds: [10], memberIds: ['m1'], votes: {} };
+  const dom = await hub(t, 'tisch', round({ games: 3, sessions: [cancelled] }));
+  assert.equal(dom.app.querySelector('.hub-stage > .hub-cta').textContent.trim(), 'Erste Session wirbeln');
+  assert.equal(dom.run('roundIsYoung({ sessions: [{ done: false }] })'), false);
+  assert.equal(dom.run('roundIsYoung({ sessions: [] })'), true);
+});
+
+// ------------------------------------------------------------- the empty lobby
+
+async function lobby(t, design, { loggedIn = true, demo = true, demoAccount = false } = {}) {
+  const dom = loadApp({ locale: 'de' });
+  t.after(() => dom.close());
+  if (design) dom.run(`applyDesign(${JSON.stringify(design)})`);
+  dom.set('api', async () => []);
+  dom.set('accountApi', async () => ({ items: [] }));
+  dom.set('accountsActive', () => true);
+  dom.set('isLoggedIn', () => loggedIn);
+  dom.set('isDemoAccount', () => demoAccount);
+  dom.set('withAppConfig', (cb) => cb({ demo }));
+  await dom.call('showHome');
+  return dom;
+}
+
+test('Klassisch empty lobby is unchanged: the create card and nothing beside it', async (t) => {
+  const dom = await lobby(t, null);
+  assert.ok(dom.app.querySelector('.lobby-cta'));
+  assert.equal(dom.app.querySelector('.lobby-alt'), null, 'the second way in leaked into Klassisch');
+});
+
+test('Der Tisch empty lobby offers „Ich wurde eingeladen" as a link to the inbox, beside the create card', async (t) => {
+  const dom = await lobby(t, 'tisch');
+  const cta = dom.app.querySelector('.lobby-cta');
+  const alt = dom.app.querySelector('.lobby-alt');
+  assert.ok(alt, 'no second way in');
+  assert.equal(cta.nextElementSibling, alt, 'a sibling right after the card — never inside the <a>');
+  assert.equal(cta.contains(alt), false);
+  const invited = alt.querySelector('a.lobby-alt__invited');
+  assert.equal(invited.getAttribute('href'), '/inbox');
+  assert.match(invited.textContent, /Ich wurde eingeladen/);
+  const demo = alt.querySelector('.lobby-alt__demo');
+  assert.equal(demo.hidden, false, 'demos answer here, so the demo line shows');
+  assert.equal(demo.querySelector('button').textContent, 'Demo-Runde ansehen');
+});
+
+test('Der Tisch empty lobby hides the demo line where demos are off, and inside a demo', async (t) => {
+  const off = await lobby(t, 'tisch', { demo: false });
+  assert.equal(off.app.querySelector('.lobby-alt__demo').hidden, true);
+  const inDemo = await lobby(t, 'tisch', { demoAccount: true });
+  assert.equal(inDemo.app.querySelector('.lobby-alt__demo').hidden, true);
+});
+
+test('the demo link confirms, signs out, then starts the demo — and does nothing if declined', async (t) => {
+  const dom = await lobby(t, 'tisch');
+  const calls = [];
+  let answer = false;
+  dom.set('confirmDialog', async (o) => { calls.push(['confirm', o.confirmLabel]); return answer; });
+  dom.set('signOut', async () => { calls.push(['signOut']); });
+  dom.set('startDemo', async (busy) => { calls.push(['startDemo', busy === undefined]); });
+  const btn = dom.app.querySelector('.lobby-alt__demo button');
+  btn.click();
+  await flush();
+  assert.deepEqual(calls.map((c) => [...c]), [['confirm', 'Abmelden und ansehen']], 'declining must not sign anyone out');
+  answer = true;
+  btn.click();
+  await flush(); await flush();
+  assert.deepEqual(calls.slice(1).map((c) => [...c]), [['confirm', 'Abmelden und ansehen'], ['signOut'], ['startDemo', true]],
+    'sign out BEFORE the mint, and hand startDemo no busy button so a failure lands on the landing page');
+});
+
+// ------------------------------------------------------------- the CSS half
+
+const TISCH = fs.readFileSync(path.join(__dirname, '..', 'public/css/designs/tisch.css'), 'utf8')
+  .replace(/\/\*[\s\S]*?\*\//g, '');
+const T = ':root[data-design="tisch"][data-scheme="dark"] ';
+
+test('tisch.css spans the empty table across the ≥1280 band and restores [hidden] on the demo line', () => {
+  const wide = mediaBlocks(TISCH).filter(([q]) => /min-width:\s*1280px/.test(q)).map(([, css]) => css).join('\n');
+  assert.match(bodyOf(T + '.hub-stage > .empty--table', rulesOf(wide)) || '', /grid-column:\s*1\s*\/\s*-1/,
+    'from 1280 the table must span the band’s grid, or it lands in the plate’s column');
+  assert.match(bodyOf(T + '.lobby-alt__demo[hidden]', rulesOf(TISCH)) || '', /display:\s*none/,
+    '`.lobby-alt__demo` has a display rule, so the hidden attribute needs its own');
+});

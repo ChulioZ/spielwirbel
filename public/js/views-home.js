@@ -51,11 +51,37 @@ async function showHome() {
        </a>`);
     navLink(cta, '/round/new', () => showNewRound());
     app.appendChild(cta);
+    const alt = designIs('tisch') && onboard ? tischLobbyAlt() : null;
+    if (alt) app.appendChild(alt);
   } else {
     app.appendChild(renderLobbyList(rounds));
   }
 
   app.appendChild(renderHomeDash());
+}
+
+/* Der Tisch's empty lobby offers a SECOND way in (T7.1, #1269): „Ich wurde
+   eingeladen" — someone who was invited lands here first and would otherwise
+   only find the inbox by its top-bar icon — and „Oder erst gucken: Demo-Runde
+   ansehen". Siblings of `.lobby-cta`, never children: that card is one <a>, and
+   a control inside a link is invalid.
+
+   Only for a signed-in account (the caller checks): the inbox and the demo both
+   exist only in accounts mode. The demo line is rendered HIDDEN and revealed
+   when /api/config says demos answer — a link that 404s is worse than none, the
+   landing page's reasoning — and never inside a demo, where it would offer the
+   thing you are already looking at. */
+function tischLobbyAlt() {
+  const alt = h(`<div class="lobby-alt">
+       <a class="btn lobby-alt__invited"><i class="ti ti-mail" aria-hidden="true"></i> ${esc(t('home.alt.invited'))}</a>
+       <p class="lobby-alt__demo" hidden>${esc(t('home.alt.demoLead'))} <button class="link-btn">${esc(t('home.alt.demo'))}</button></p>
+     </div>`);
+  navLink(alt.querySelector('.lobby-alt__invited'), '/inbox', () => showInbox());
+  const demo = alt.querySelector('.lobby-alt__demo');
+  const btn = demo.querySelector('button');
+  btn.addEventListener('click', () => demoFromAccount(btn));
+  if (!isDemoAccount()) withAppConfig((cfg) => { if (cfg && cfg.demo) demo.hidden = false; });
+  return alt;
 }
 
 /* How many resume tickets the screen offers at once, across ALL rounds (#842).

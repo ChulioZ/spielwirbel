@@ -82,6 +82,27 @@ async function startDemo(busy) {
   return enterDemo();
 }
 
+// The demo from INSIDE an account (#1269, the empty lobby's „Oder erst gucken").
+// A demo is its own guest account and there is one token slot, so looking at it
+// means leaving this one — which the user is told, and confirms, first. Signing
+// out properly (signOut revokes the refresh token) rather than letting the mint
+// overwrite the tokens, which would strand a live session server-side.
+//
+// startDemo gets NO busy button on purpose: by then the account is gone, so a
+// failed mint must route to '/' (the landing page for a logged-out visitor)
+// rather than re-enable a button on a lobby that no longer belongs to anyone.
+async function demoFromAccount(btn) {
+  if (!await confirmDialog({
+    title: t('home.alt.demoConfirmTitle'),
+    body: t('home.alt.demoConfirm'),
+    confirmLabel: t('home.alt.demoGo'),
+    danger: false,
+  })) return;
+  if (btn) btn.disabled = true;
+  await signOut();
+  return startDemo();
+}
+
 // Land in the demo. Home rather than whatever path the visitor arrived at:
 // /demo is not a view, and enterApp() would otherwise try to route to it.
 function enterDemo() {

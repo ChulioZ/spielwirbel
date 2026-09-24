@@ -4087,20 +4087,26 @@
    die Spiele." So nothing here draws a grey „no data" box; the empty table is
    itself the picture.
 
-   PAINT ONLY, and on this brief that boundary does real work, because T7 is
-   the sheet that invents the most. Four of its screens are built out of copy
-   and gating the app does not have — „Serien und Trends zeigen wir ab der
-   dritten Session", „Ein Podium braucht drei Sessions", the „Nächster Schritt"
-   card, the demo's four-row summary and its „Gefällt dir das?" invitation.
-   Each of those is a new string in nine locales plus a new threshold in shared
-   code, i.e. a feature wearing a design's clothes. They are deliberately NOT
-   built (operator decision on #1193: „the sheet's intent is the design, not the
-   ordering"), and the slice that owns each is named in the PR rather than
-   guessed at here.
+   #1194 built the MATERIAL: the medallion becomes the table, the demo wears
+   brass, the locked plate stops being a 45%-opacity ghost, and the two density
+   cases the app actually fails are fixed. It stopped there on a reading of
+   #1193 that the operator corrected on 2026-09-24 — „a design owns its layout";
+   what #1193 ruled out is only an incidental reordering of identical controls,
+   never a composition the design wants. So T7's markup is built, slice by
+   slice:
 
-   What IS taken is the material: the medallion becomes the table, the demo
-   wears brass, the locked plate stops being a 45%-opacity ghost, and the two
-   density cases the app actually fails are fixed.
+   - #1269 (the young round) — T7.3's empty table as the 0-game hub's
+     centrepiece with „Spiel hinzufügen" / „Von BGG übernehmen", the locked
+     plate's reason printed ON the plate, T7.4's „Erste Session wirbeln" and
+     invitation card, a sentence instead of a zero in Rundenpuls and „Wie wär's
+     mit", and T7.1's second way into an empty lobby. The rules are under „The
+     young round" below. It keeps the app's own threshold (one game), not the
+     sheet's „ab 2 Spielen".
+   - #1280 (still open) — T7.2's „Nächster Schritt" card, T7.5's later
+     thresholds („Serien und Trends ab der dritten Session", „Ein Podium braucht
+     drei Sessions") and T7.6's demo summary with its „Gefällt dir das?"
+     invitation. Each is a new string plus a new threshold in shared code; it
+     touches hubPulseCard and renderLobbyList again.
 
    Same gate and same no-literals rule as every section above.
    =========================================================================== */
@@ -4201,9 +4207,8 @@
    removing the opacity also removes the app's only visual "this is disabled",
    and wood alone would read as a perfectly ordinary secondary button.
 
-   The REASON stays in the `title` attribute the app already sets
-   („Erst Spiele hinzufügen"). T7.3 prints it under the button; that is markup
-   and belongs to whoever gives the hub its next content pass. */
+   The REASON is printed on the plate since #1269 (`.hub-cta__reason`, below),
+   where Klassisch keeps it in a `title`. */
 :root[data-design="tisch"][data-scheme="dark"] .hub-cta:disabled,
 :root[data-design="tisch"][data-scheme="dark"] .rail__cta:disabled {
   opacity: 1;
@@ -4212,6 +4217,84 @@
   color: var(--ink-soft);
   box-shadow: inset 0 2px 5px var(--cast-deep);
 }
+
+/* --- The young round (T7.1, T7.3, T7.4; #1269) ----------------------------
+   The markup half of T7 for a round that has not started yet — see
+   views-round-start.js (tischEmptyTable, the reason on the plate),
+   hub-cards.js (the invitation and the sentence cards) and views-home.js
+   (tischLobbyAlt). Every colour here is one the section above already
+   measured: the empty table is `.empty`'s walnut with --ink-soft (7.77:1),
+   the plate's reason inherits the locked plate's --ink-soft on --control-fill
+   (6.29:1), and the lobby's demo line is --ink-soft on the page.
+
+   T7.3 draws the reason at the plate's far end on ONE line. That does not
+   survive the app's plate: at 390 the label is --text-xl and the German reason
+   alone is 130px, so side by side the label wrapped to two lines (measured, a
+   91px plate). So the plate wraps and the reason takes its own line under the
+   label — still ON the plate, still one object — which also holds for the
+   longer locales without a per-language tweak. */
+:root[data-design="tisch"][data-scheme="dark"] .hub-cta:disabled {
+  flex-wrap: wrap;
+  row-gap: 2px;
+}
+:root[data-design="tisch"][data-scheme="dark"] .hub-cta__reason {
+  flex-basis: 100%;
+  font-family: var(--font);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-align: center;
+}
+/* The empty table sits between the seats and the locked plate, and its two
+   actions stack on a phone (each a full-width target) and sit side by side
+   once there is room — the same two buttons T7.3 draws under the sentence. */
+:root[data-design="tisch"][data-scheme="dark"] .empty--table { margin: 0 0 18px; }
+/* Across the 1048px band the sentence ran as one line; a reading measure keeps
+   it the two-line thought T7.3 sets under the medallion. */
+:root[data-design="tisch"][data-scheme="dark"] .empty--table .empty__text {
+  max-width: 46ch;
+  margin-inline: auto;
+}
+:root[data-design="tisch"][data-scheme="dark"] .empty__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
+}
+:root[data-design="tisch"][data-scheme="dark"] .empty__actions .btn { justify-content: center; }
+@media (min-width: 560px) {
+  :root[data-design="tisch"][data-scheme="dark"] .empty__actions {
+    flex-direction: row;
+    justify-content: center;
+  }
+}
+/* From 1280 up `.hub-stage` is the felt band's two-column grid (#1262). The
+   table spans it, between the seats and the plate, so the plate keeps its
+   column and its reason reads beside it exactly as on the phone. */
+@media (min-width: 1280px) {
+  :root[data-design="tisch"][data-scheme="dark"] .hub-stage > .empty--table {
+    grid-column: 1 / -1;
+    margin: 0 0 20px;
+  }
+}
+/* The empty lobby's second way in (T7.1): „Ich wurde eingeladen" as a wood
+   plate under the brass one, then the quiet demo line. The demo line ships
+   `hidden` until /api/config says demos answer, and this rule gives it a
+   display — so the attribute needs its own rule back
+   (.claude/rules/hidden-attribute-vs-display-rule.md). */
+:root[data-design="tisch"][data-scheme="dark"] .lobby-alt {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 14px;
+  text-align: center;
+}
+:root[data-design="tisch"][data-scheme="dark"] .lobby-alt__invited { justify-content: center; }
+:root[data-design="tisch"][data-scheme="dark"] .lobby-alt__demo {
+  display: block;
+  margin: 0;
+  color: var(--ink-soft);
+}
+:root[data-design="tisch"][data-scheme="dark"] .lobby-alt__demo[hidden] { display: none; }
 
 /* --- The demo, as a brass banderole and a hatched table (T7.6) ------------
    The demo must never be mistaken for a round of one's own, and T7.6 says it
