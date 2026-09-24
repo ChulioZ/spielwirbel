@@ -6290,6 +6290,32 @@
   color: var(--on-accent);
 }
 
+/* The plaques stand BESIDE the stage from 1280px (#1276, T13.2): the podium
+   and its summary line on the left, the award plaques in a 340px column on the
+   right, as the sheet draws them. `.pokale-split` exists only under this design
+   (renderPokaleTab), and below 1280px it is a plain block, so the plaques follow
+   the podium — the DOM order is the reading order at every width and nothing
+   here reorders anything. Flex rather than a two-track grid so a round with no
+   award yet (the column is not rendered at all) gets the full width back rather
+   than an empty 340px track. The plaque column is one card wide, so the shared
+   auto-fit grid collapses to a single track there. */
+@media (min-width: 1280px) {
+  :root[data-design="tisch"][data-scheme="dark"] .pokale-split {
+    display: flex;
+    align-items: flex-start;
+    gap: 22px;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .pokale-split__stage {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .pokale-split > .pokale-cards {
+    flex: 0 0 340px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+  }
+}
+
 /* --- The member page (T13.4, T13.5) ---------------------------------------
    The identity block becomes the felt band across the card's head — T13.4's
    header with the table's rim under it — and the four figures become wooden
@@ -6303,7 +6329,12 @@
    member's wash as the ground under the name, and the felt replaces that
    ground; carried onto the felt it would be decoration under text with no
    measurement behind it. The member's colour stays where it is load-bearing —
-   the avatar, the win-rate ring, the state chip and the game tiles' edge. */
+   the avatar, the win-rate ring, the state chip and the game tiles' edge.
+
+   #1276 adds the two pieces of T13.4 that are STRUCTURE rather than paint (the
+   corrected ruling in the #1196 header above): the attendance line under the
+   name, and „Gehört Jonas" as a panel inside the card. Both are built by
+   showMember under this design only; Klassisch's DOM has neither. */
 :root[data-design="tisch"][data-scheme="dark"] .member-card .member-card__id {
   margin: -26px -24px 0;
   padding: 26px 24px 22px;
@@ -6339,14 +6370,85 @@
     flex-basis: calc(50% - 6px);
   }
 }
-/* „Gehört Jonas" — the boxes this member brings, on a walnut panel of their
-   own, as T13.4 draws it beside the record. */
-:root[data-design="tisch"][data-scheme="dark"] .app > .section:has(> .member-games) {
+/* „21 von 23 Sessions dabei" on the felt, under the name (T13.4). The full
+   felt ink rather than --felt-ink-soft: the band's ground is the round's MARKER
+   when it has one, and only the felt's own stops are measured for the soft ink
+   (hero__chips' 4.79:1); --felt-ink is the pair every text on this band uses. */
+:root[data-design="tisch"][data-scheme="dark"] .member-card .member-card__attendance {
+  margin: 6px 0 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--felt-ink);
+}
+/* „Gehört Jonas" (#1276, T13.4): the boxes this member brings, as a walnut
+   panel INSIDE the card, beside the two game tiles from 860px — where the sheet
+   draws its (operator-dropped) rating panel. Stacked below that, owned boxes
+   first, which is also the DOM order. */
+:root[data-design="tisch"][data-scheme="dark"] .member-card .member-card__lower {
+  display: grid;
+  gap: 18px;
+  margin-top: 22px;
+}
+:root[data-design="tisch"][data-scheme="dark"] .member-card .member-card__lower > .member-card__games {
+  margin-top: 0;
+}
+@media (min-width: 860px) {
+  :root[data-design="tisch"][data-scheme="dark"] .member-card .member-card__lower {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+  /* One tile per row in a half-width column; the shared 2-up from 560px would
+     put two 150px tiles side by side. */
+  :root[data-design="tisch"][data-scheme="dark"] .member-card .member-card__lower > .member-card__games {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+:root[data-design="tisch"][data-scheme="dark"] .member-owned {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   padding: 18px;
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
   background: var(--surface);
   box-shadow: var(--shadow-1);
+}
+:root[data-design="tisch"][data-scheme="dark"] .member-owned__title {
+  margin: 0 0 4px;
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 800;
+}
+/* One row per box, the whole row the link (48px, the touch floor): the cover
+   standing up as the Chronik strips draw it, the title, the shelf's pill. */
+:root[data-design="tisch"][data-scheme="dark"] .member-owned__row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 48px;
+  color: inherit;
+}
+:root[data-design="tisch"][data-scheme="dark"] .member-owned__cover {
+  position: relative; /* anchors + clips the .cover-ph gradient layer (#256) */
+  overflow: hidden;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 42px;
+  border-radius: var(--radius-sm);
+  background: var(--sunken) center/cover no-repeat;
+  box-shadow: var(--shadow-1);
+  font-size: 16px; /* glyph, not type */
+}
+:root[data-design="tisch"][data-scheme="dark"] .member-owned__name {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+:root[data-design="tisch"][data-scheme="dark"] .member-owned__row .score-pill {
+  flex: none;
 }
 
 /* --- The off-shelf lists and the recommendations (T13.3) -------------------

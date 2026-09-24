@@ -641,6 +641,10 @@ I18N.es = {
   'member.favoriteNone': 'Todavía sin valoraciones',
   'member.ownedTitleOne': '{n} juego de {name}',
   'member.ownedTitle': '{n} juegos de {name}',
+  // Der Tisch's attendance line under a member's name (#1276): sessions this
+  // member took part in, of the round's finished ones. Plural follows {total}.
+  'member.attendanceOne': 'En {n} de {total} sesión',
+  'member.attendance': 'En {n} de {total} sesiones',
   'member.noSessions': 'Todavía no ha estado en ninguna sesión',
   'member.saved': 'Guardado',
   'member.claim': 'Soy yo',
