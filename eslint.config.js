@@ -423,7 +423,7 @@ const frontendGlobals = {
   hubAnniversaryCard: 'readonly', renderRecoTeaser: 'readonly',
   editableRoundName: 'readonly',
   // off-shelf.js (#1185) — the four off-shelf destinations, one definition
-  offShelfEntries: 'readonly',
+  offShelfEntries: 'readonly', offShelfSegments: 'readonly',
   // hub-previews.js (#1185) — the hub's three sub-page previews + „Nicht im Regal"
   HUB_PREVIEW_COVERS: 'readonly', HUB_PREVIEW_RANKS: 'readonly',
   hubShelfWorthPreviewing: 'readonly',

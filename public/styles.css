@@ -9886,6 +9886,13 @@ kbd {
 }
 
 /* ---- Archive rows ---- */
+/* The off-shelf SEGMENTS (#1196, offShelfSegments in off-shelf.js). Hidden in
+   the app's own design, which reaches the same four screens through the rail and
+   the Regal; a design that draws them as a segment strip turns them on
+   (tisch.css). Kept in the markup rather than built by the design, because a
+   stylesheet cannot add a link — and a second copy of the list in a design would
+   be the drift off-shelf.js exists to prevent. */
+.offshelf-seg { display: none; }
 .archive-list { display: flex; flex-direction: column; gap: 12px; }
 .archive-row {
   display: flex;

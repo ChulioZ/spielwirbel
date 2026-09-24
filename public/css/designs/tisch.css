@@ -365,6 +365,35 @@
      deep stop, so the row's single ink holds across the whole sweep. */
   --gold-hi: #f6e3b4;
 
+  /* ---- The Pokale PLINTHS (#1196, T13.2): „Gold, Silber, Bronze als
+     Sockelton, nicht als Avatar-Ring". Gold is the brass plate itself
+     (--brass-hi -> --gold-deep); silver and bronze are T13.2's own stops, which
+     T1 does not list — the one A8-style gap left in the package, taken from the
+     sheet that draws them (T3.2's hub preview repeats the same four hexes) rather
+     than invented.
+
+     ONE INK ON EVERY PLINTH, the numeral and the caption alike: review finding
+     A5 replaced the sheet's #6b4a10 caption (3.73:1 on gold, 3.85:1 on silver)
+     with #2f2109 „auf allen drei Sockeln". The sheet kept a second, lighter
+     #3b2a12 for the numeral; one ink is darker and simpler, the same move A2
+     made for the gold row.
+
+     --plinth-bronze IS CORRECTED, and A5's fix alone does not reach it: the
+     sheet's deep bronze stop #a06b42 carries #2f2109 at 3.48:1. #b77e51 is the
+     same hue and saturation (HSL 26deg / 42%) lifted to 52% lightness — the
+     smallest step that clears 4.5:1 (4.56:1). The caption sits near the TOP of
+     the plinth, i.e. on the pale stop, but the worst stop counts: a tie label
+     wraps to two lines on a narrow phone and walks down the gradient.
+     test/a11y-contrast.test.js holds all six stops. */
+  --plinth-silver-hi: #e8e2d4;
+  --plinth-silver: #b9b3a4;
+  --plinth-bronze-hi: #d9a37a;
+  --plinth-bronze: #b77e51;
+  --plinth-ink: #2f2109;
+  /* The plinth's hairline (T1's #8a6224). Decorative: a plinth is a picture of
+     a rank, not a control, so SC 1.4.11 does not bind it. */
+  --plinth-edge: #8a6224;
+
   /* The two row TAGS the Tafel prints at its right edge (T4.4), as fills with
      their own ink — the same shape as the score pills, and for the same reason
      they cannot be --good/--danger: those two are the LIGHT members of their
@@ -3474,4 +3503,404 @@
     left: max(20px, calc((100vw - var(--w-shell)) / 2 + 20px));
     transform: none;
   }
+}
+
+/* ===========================================================================
+   #1196 — TIER 2a: the Chronik with its period recap, the Pokale, the member
+   page, the off-shelf lists and the recommendations, at 390 and at 1440.
+
+   Source: Tisch-T13-Tier2a.dc.html (T13.1–T13.5). T13.6 names the materials
+   this section lays down: the Chronik is „ein Stapel Papierstreifen auf Holz",
+   the recap „eine Filzkarte", the Pokale „ein Podium aus Messingsockeln … über
+   einer Tafel", the awards „Messingplaketten".
+
+   PAINT, plus ONE piece of markup the sheet genuinely needs: the off-shelf
+   segment strip (offShelfSegments, off-shelf.js), which styles.css hides and
+   this file shows. Everything else T13 draws that the app does not have is
+   deliberately NOT built, per the #1193 ruling („the sheet's intent is the
+   design, not the ordering") — the Pokale standings Tafel with its five
+   columns, the Chronik's year picker and „Ältere Sessions", its „Nur mit
+   mir / Nur Siege / Mit Veto" filter, the member page's rating distribution,
+   and the one screen that merges the three lists with the recommendations as a
+   band beneath them. Each is a new query or a new string in nine locales; the
+   PR names them.
+
+   Same gate and same no-literals rule as every section above.
+   =========================================================================== */
+
+/* --- The Chronik: paper strips on wood (T13.1, T13.5) ---------------------
+   The timeline's rail and its dots become brass: the one vertical line on the
+   screen is the edge of the table the strips are laid on. */
+:root[data-design="tisch"][data-scheme="dark"] .timeline::before {
+  background: var(--gold-edge);
+}
+:root[data-design="tisch"][data-scheme="dark"] .tl-dot--session,
+:root[data-design="tisch"][data-scheme="dark"] .tl-dot.tl-dot--milestone {
+  background: var(--gold);
+}
+/* The month in the brass, as T13.1 prints the date: the display face, set as a
+   kicker. --gold on the walnut page is 9.16:1; this is WOOD, not felt, so
+   review finding A1's under-24px ban does not reach it. */
+:root[data-design="tisch"][data-scheme="dark"] .tl-month {
+  color: var(--gold);
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+/* A played session is a STRIP OF PAPER laid on the wood — the material every
+   Tisch overlay already is, so a strip reads as the same printed card rather
+   than as a new component.
+
+   THE STRIP RE-POINTS THE INKS IT CARRIES, for the reason the overlay block
+   above does (.claude/rules/overlay-surface-flip-strands-the-status-tokens.md):
+   everything inside was tuned for walnut. Walked descendant by descendant —
+   the meta line reads --ink-soft, a cancelled session's line an INLINE
+   `color: var(--danger)` (views-chronik.js), whose walnut value is 1.90:1 on
+   paper, and the title --brand-strong, brass lifted toward white. --danger goes
+   to --accent-deep, T1's Zinnober, measured on both paper stops (5.58/5.02:1);
+   the title is set to the paper ink outright.
+
+   What is deliberately NOT re-pointed: --placeholder. The one thing that reads
+   it is the state glyph in `.session-card__img`, whose box keeps its own
+   --sunken ground — wood set into the paper — and the pair it was measured on
+   travels with it. The score pill carries its own ink by construction. */
+:root[data-design="tisch"][data-scheme="dark"] .timeline .session-card {
+  --ink: var(--paper-ink);
+  --ink-soft: var(--paper-ink-soft);
+  --danger: var(--accent-deep);
+  gap: 14px;
+  padding: 12px 14px;
+  border-color: transparent;
+  border-radius: var(--radius-md);
+  background: linear-gradient(180deg, var(--paper), var(--paper-raised));
+  color: var(--ink);
+  box-shadow: var(--shadow-2);
+}
+:root[data-design="tisch"][data-scheme="dark"] .timeline .session-card:hover {
+  box-shadow: var(--shadow-3);
+}
+:root[data-design="tisch"][data-scheme="dark"] .timeline .session-card__title {
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-weight: 800;
+}
+/* The cover stands UP, as a box on a table does: T13.1's 44x58 on desktop,
+   T13.5's 30x40 on a phone (drawn a step larger there, so the no-cover glyph
+   still fits). The app's square 54px thumb crops every box to a square, which
+   on paper reads as a sticker rather than as the game. */
+:root[data-design="tisch"][data-scheme="dark"] .timeline .session-card__img {
+  width: 44px;
+  height: 58px;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-1);
+}
+@media (max-width: 520px) {
+  :root[data-design="tisch"][data-scheme="dark"] .timeline .session-card__img {
+    width: 34px;
+    height: 46px;
+  }
+}
+
+/* --- The period recap: a felt card that leads to the share card (T13.1) ----
+   The one thing on the Chronik made to leave the app, so it is the table
+   itself — the same felt, weave and marker as the hub's stage — and its share
+   action is the brass plate.
+
+   Only what stands DIRECTLY on the felt changes ink. The cards inside are wood
+   on felt and keep the walnut pairs they were measured on. The stat chips are a
+   SHADOW pressed into the felt (T13.1 draws them at black 22%) carrying the
+   paper ink: a darkening fill can only raise a light ink's contrast against the
+   felt it sits on — the --felt-grain argument — so it holds on every marker
+   felt, where --felt-chip-on is a fixed green that read as a foreign object on
+   a burgundy table (seen in the browser, not guessed). */
+:root[data-design="tisch"][data-scheme="dark"] .precap {
+  padding: 20px;
+  border: 1px solid var(--gold-edge);
+  border-radius: var(--radius-md);
+  background:
+    var(--felt-hatch, none),
+    var(--felt-weave),
+    radial-gradient(90% 140% at 30% -20%, var(--marker, var(--felt)), var(--marker-deep, var(--felt-deep)) 74%);
+  color: var(--felt-ink);
+  box-shadow: var(--shadow-2);
+}
+:root[data-design="tisch"][data-scheme="dark"] .precap h2 {
+  color: var(--felt-ink);
+}
+:root[data-design="tisch"][data-scheme="dark"] .precap .recap__lead,
+:root[data-design="tisch"][data-scheme="dark"] .precap .precap__thin {
+  color: var(--felt-ink-soft);
+}
+:root[data-design="tisch"][data-scheme="dark"] .precap .stat-chip {
+  background: var(--cast-soft);
+  color: var(--felt-ink);
+}
+/* The picker stays a wooden control, but its fill barely separates from the
+   felt, so the EDGE is what identifies it (SC 1.4.11) — and --control-edge is
+   tuned for wood. --gold is 4.20:1 on the felt's light stop: banned for small
+   text by finding A1, comfortably over the 3:1 a boundary takes. */
+:root[data-design="tisch"][data-scheme="dark"] .precap .precap__picker {
+  border-color: var(--gold);
+}
+/* „Teilen" is the brass plate: the recap exists to become the share card
+   (T11), so this is the action the whole card leads to. Written for rest AND
+   hover because `.btn:hover` re-grounds the button with the brand wash, which
+   would put the plate's dark ink on translucent brass over felt. */
+:root[data-design="tisch"][data-scheme="dark"] .precap .precap__share,
+:root[data-design="tisch"][data-scheme="dark"] .precap .precap__share:hover {
+  border-color: var(--gold-edge);
+  background: linear-gradient(180deg, var(--brass-hi), var(--gold-deep));
+  color: var(--on-accent);
+}
+:root[data-design="tisch"][data-scheme="dark"] .precap .precap__share:hover {
+  box-shadow: var(--shadow-2);
+}
+
+/* Desktop: the recap moves BESIDE the timeline, as T13.1 draws it — a 380px
+   column to the right of the strips instead of a band above them. The shell is
+   already a [rail | content] grid from 1280px (styles.css); this adds the third
+   track only on a screen that HAS a recap, so every other round screen keeps
+   its two.
+
+   `grid-row: 1 / span 999` for the reason the rail spans that way: with only
+   implicit rows, `1 / -1` resolves to the first line, the recap would sit in
+   row 1 alone and make that row as tall as itself — dropping a gap under the
+   timeline's first block. The recap comes first in the DOM, so the reading
+   order (recap, then history) is unchanged by the move. */
+@media (min-width: 1280px) {
+  :root[data-design="tisch"][data-scheme="dark"] .app:has(> .precap) {
+    grid-template-columns: var(--rail-w) minmax(0, 1fr) 380px;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .app:has(> .precap) > .precap {
+    grid-column: 3;
+    grid-row: 1 / span 999;
+    align-self: start;
+  }
+}
+
+/* --- The Pokale: a brass podium over the felt (T13.2, T13.5) ---------------
+   The stage is felt with the table's rim along its bottom edge, so the plinths
+   stand ON the rim rather than floating on the page. `.podium` already bottom-
+   aligns its columns (styles.css), which is what puts every plinth's foot on
+   that edge.
+
+   NOT in a round still wearing a WORLD: `[data-world] .podium` owns this box's
+   padding and its ::before for the world's floor art (#1083), and felt under a
+   world floor would be two grounds fighting for one strip. There the plinths
+   below still apply, on the world's own floor. */
+:root[data-design="tisch"][data-scheme="dark"]:not([data-world]) .podium {
+  gap: 16px;
+  margin: 8px 0 22px;
+  padding: 28px 16px 0;
+  border-bottom: 5px solid var(--gold-edge);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  background:
+    var(--felt-hatch, none),
+    var(--felt-weave),
+    radial-gradient(90% 160% at 50% -40%, var(--marker, var(--felt)), var(--marker-deep, var(--felt-deep)) 74%);
+  color: var(--felt-ink);
+}
+/* On a phone the felt gives the plinths back the width it took. A shared step
+   lays its members down as chips whose NAME is what gives way (styles.css), so
+   every pixel of stage padding comes straight out of the names — none here, as
+   in styles.css. At 16px a side
+   and a 16px gap, a two-way tie at 390px read „M." and „B.". */
+@media (max-width: 520px) {
+  :root[data-design="tisch"][data-scheme="dark"]:not([data-world]) .podium {
+    gap: 10px;
+    padding: 22px 0 0;
+  }
+}
+/* The win count stands on felt, so it takes the felt's soft ink — the pair the
+   hub stage's kicker line already carries (4.79:1 on the light stop). */
+:root[data-design="tisch"][data-scheme="dark"]:not([data-world]) .podium__wins {
+  color: var(--felt-ink-soft);
+}
+:root[data-design="tisch"][data-scheme="dark"] .podium__avatar {
+  box-shadow: var(--shadow-3);
+}
+
+/* The PLINTHS — gold, silver, bronze as the plinth's own tone, one ink on all
+   three (review finding A5, with the bronze stop corrected beside the tokens).
+   The HEIGHTS are not touched: they are the rank encoding, sized so the
+   shortest step still holds the longest locale's tie label on two lines, and
+   test/podium-ranks.test.js compares them with the risers. */
+:root[data-design="tisch"][data-scheme="dark"] .podium__base {
+  border: 1px solid var(--plinth-edge);
+  border-bottom: 0;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  color: var(--plinth-ink);
+  box-shadow: inset 0 1px 0 var(--brass-sheen-strong);
+}
+:root[data-design="tisch"][data-scheme="dark"] .podium__col--1 .podium__base {
+  background: linear-gradient(180deg, var(--brass-hi), var(--gold-deep));
+}
+:root[data-design="tisch"][data-scheme="dark"] .podium__col--2 .podium__base {
+  background: linear-gradient(180deg, var(--plinth-silver-hi), var(--plinth-silver));
+}
+:root[data-design="tisch"][data-scheme="dark"] .podium__col--3 .podium__base {
+  background: linear-gradient(180deg, var(--plinth-bronze-hi), var(--plinth-bronze));
+}
+:root[data-design="tisch"][data-scheme="dark"] .podium__rank {
+  font-weight: 800;
+}
+/* An UNHELD rank is a plinth nobody has cast yet: raw wood with a dashed rim,
+   the mark this design uses everywhere for „something belongs here and does
+   not exist yet" (the „+" seat, the add tile, the empty state). Full opacity —
+   styles.css fades its riser to 0.75 so it cannot read as occupied, and here
+   wood against metal already says that. */
+:root[data-design="tisch"][data-scheme="dark"] .podium__col--spacer {
+  opacity: 1;
+  border: 1px dashed var(--control-edge);
+  border-bottom: 0;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  background: linear-gradient(180deg, var(--wood-light), var(--wood-deep));
+}
+
+/* The awards are BRASS PLAQUES on wood: the card stays walnut, the icon becomes
+   the struck plate (T13.2's 42px square). Only a card without a cover has an
+   icon row — a cover-led card moves its icon into the eyebrow — so this is the
+   stat cards, the member page's empty game tiles and nothing else.
+
+   The cast skips the member page's two tiles: they stand as BOXES on a
+   zero-blur edge in the member's tone (#1075), and a cast here would replace
+   that edge outright — this rule out-specifies theirs. */
+:root[data-design="tisch"][data-scheme="dark"] .pokale-card {
+  border-radius: var(--radius-md);
+}
+:root[data-design="tisch"][data-scheme="dark"] .pokale-cards:not(.member-card__games) > .pokale-card {
+  box-shadow: var(--shadow-1);
+}
+:root[data-design="tisch"][data-scheme="dark"] .pokale-card__icon {
+  display: inline-grid;
+  place-items: center;
+  align-self: flex-start;
+  width: 42px;
+  height: 42px;
+  border: 1px solid var(--gold-edge);
+  border-radius: var(--radius-md);
+  background: linear-gradient(180deg, var(--brass-hi), var(--gold-deep));
+  color: var(--on-accent);
+}
+
+/* --- The member page (T13.4, T13.5) ---------------------------------------
+   The identity block becomes the felt band across the card's head — T13.4's
+   header with the table's rim under it — and the four figures become wooden
+   tiles below it. `.member-card` only: die Spielerkarte (`.profile-card`)
+   shares the frame and is T14's slice.
+
+   It BLEEDS to the card's edges, so the negative margins are the card's own
+   padding and move with it at 520px.
+
+   THE WATERMARK IS HIDDEN, not moved. #1075 measured its alpha against the
+   member's wash as the ground under the name, and the felt replaces that
+   ground; carried onto the felt it would be decoration under text with no
+   measurement behind it. The member's colour stays where it is load-bearing —
+   the avatar, the win-rate ring, the state chip and the game tiles' edge. */
+:root[data-design="tisch"][data-scheme="dark"] .member-card .member-card__id {
+  margin: -26px -24px 0;
+  padding: 26px 24px 22px;
+  border-bottom: 5px solid var(--gold-edge);
+  background:
+    var(--felt-hatch, none),
+    var(--felt-weave),
+    radial-gradient(70% 150% at 20% -30%, var(--marker, var(--felt)), var(--marker-deep, var(--felt-deep)) 74%);
+  color: var(--felt-ink);
+}
+:root[data-design="tisch"][data-scheme="dark"] .member-card .member-card__mark {
+  display: none;
+}
+:root[data-design="tisch"][data-scheme="dark"] .member-card .member-card__figures {
+  gap: 12px;
+  padding-top: 0;
+  border-top: 0;
+}
+:root[data-design="tisch"][data-scheme="dark"] .member-card .member-figure {
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--control-fill);
+}
+@media (max-width: 520px) {
+  :root[data-design="tisch"][data-scheme="dark"] .member-card .member-card__id {
+    margin: -20px -16px 0;
+    padding: 20px 16px 18px;
+  }
+  /* T13.5 sets the four figures two by two; `1 1 96px` would put three on the
+     first row and leave the fourth alone on the second. */
+  :root[data-design="tisch"][data-scheme="dark"] .member-card .member-figure {
+    flex-basis: calc(50% - 6px);
+  }
+}
+/* „Gehört Jonas" — the boxes this member brings, on a walnut panel of their
+   own, as T13.4 draws it beside the record. */
+:root[data-design="tisch"][data-scheme="dark"] .app > .section:has(> .member-games) {
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+}
+
+/* --- The off-shelf lists and the recommendations (T13.3) -------------------
+   The segment strip is T1.5's control: a sunken wooden tray, the current
+   screen struck as the brass plate, the others gold on wood (wood, not felt,
+   so A1 does not bind). Each segment is a real link to its own route.
+
+   ONE ROW THAT SCROLLS rather than wraps: four labels in Finnish do not fit
+   390px, and a segmented control broken over two lines stops reading as one
+   choice among four. The tray is as wide as its segments and no wider. */
+:root[data-design="tisch"][data-scheme="dark"] .offshelf-seg {
+  display: flex;
+  gap: 3px;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 0 16px;
+  padding: 3px;
+  overflow-x: auto;
+  border: 1px solid var(--control-edge);
+  border-radius: var(--radius-md);
+  background: var(--sunken);
+}
+:root[data-design="tisch"][data-scheme="dark"] .offshelf-seg__item {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 800;
+  white-space: nowrap;
+  color: var(--gold);
+  text-decoration: none;
+}
+:root[data-design="tisch"][data-scheme="dark"] .offshelf-seg__item:hover {
+  background: var(--control-fill);
+}
+:root[data-design="tisch"][data-scheme="dark"] .offshelf-seg__item.is-on {
+  background: linear-gradient(180deg, var(--brass-hi), var(--gold-deep));
+  color: var(--on-accent);
+}
+
+/* The rows: wood cards with the list's own glyph in brass, and the covers
+   standing up like the Chronik's (T13.3 draws them portrait, at the app's own
+   row height here). */
+:root[data-design="tisch"][data-scheme="dark"] .archive-row,
+:root[data-design="tisch"][data-scheme="dark"] .rec-card {
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-1);
+}
+:root[data-design="tisch"][data-scheme="dark"] .archive-row__meta .ti {
+  color: var(--gold);
+}
+:root[data-design="tisch"][data-scheme="dark"] .archive-row__img,
+:root[data-design="tisch"][data-scheme="dark"] .rec-card__img {
+  width: 48px;
+  height: 64px;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-1);
 }

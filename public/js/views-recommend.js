@@ -145,6 +145,7 @@ async function showRecommendations(rid) {
   app.innerHTML = '';
   renderSubScreenTabs(round, 'recommendations');
   app.appendChild(backRow(() => showRound(rid, 'regal')));
+  app.appendChild(offShelfSegments(round, 'recommendations')); // #1196, see off-shelf.js
   app.appendChild(h(`<div class="page-head"><div>
        <h1>${esc(t('suggest.title'))}</h1>
        <div class="muted">${esc(round.name)}</div>
