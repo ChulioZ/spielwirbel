@@ -821,6 +821,13 @@ I18N.pt = {
   'startSession.crumb': 'Sessão',
   'startSession.title': 'Nova sessão',
   'startSession.membersLabel': 'Quem vai jogar?',
+  // Der Tisch's setup (#1267): step line, seat states, the pot's heading and the draw summary.
+  'startSession.seatsTapHint': 'Toque num lugar para jogar',
+  'startSession.seatStateIn': 'joga',
+  'startSession.seatStateOut': 'hoje não está',
+  'startSession.potHeading': 'O sorteio',
+  'startSession.drawOfOne': '{n} de {total} jogos será sorteado',
+  'startSession.drawOf': '{n} de {total} jogos serão sorteados',
   'startSession.membersNote': 'O número de jogadores filtra os jogos.',
   'startSession.tableCountOne': '{n} jogando',
   'startSession.tableCount': '{n} jogando',

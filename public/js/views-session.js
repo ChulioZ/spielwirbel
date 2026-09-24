@@ -27,7 +27,18 @@ function showStartSession(round, prefill) {
   setContext(round.name);
   setDocTitle(t('startSession.title'), round.name);
   app.innerHTML = '';
-  app.appendChild(h(`<div class="page-head"><h1>${esc(t('startSession.title'))}</h1></div>`));
+  const head = h(`<div class="page-head"><h1>${esc(t('startSession.title'))}</h1></div>`);
+  app.appendChild(head);
+  // Der Tisch composes this screen as two panels with the rail kept (#1267);
+  // Klassisch is the default path below and never branches.
+  const tisch = designIs('tisch');
+  if (tisch) {
+    // The rail's rename and „+" re-render through currentView(), and the
+    // `round` this closure holds is a snapshot — so under the rail the screen
+    // re-reads the round rather than redrawing a stale name or seat list.
+    currentView = () => fetchRoundFresh(round.id)
+      .then((fresh) => showStartSession(fresh, prefill), () => showStartSession(round, prefill));
+  }
 
   const activeGames = round.games.filter(isActiveGame);
 
@@ -97,6 +108,7 @@ function showStartSession(round, prefill) {
       </div>
     </div>`);
   app.appendChild(form);
+  if (tisch) composeTischSetup(round, head, form);
 
   // Custom-tag filter (#238, tri-state #241): all ignored by default = no tag
   // filter. Map<tagId, 'include'|'exclude'>; included tags combine per
@@ -295,8 +307,9 @@ function showStartSession(round, prefill) {
     // Deliberately not a live region: the ring centre and the panel title already
     // state these two numbers, and a third announcement on every seat tap would
     // talk over the ownersNote below, which IS one.
-    barSummary.textContent = tn(joining.size + guests.length,
-      'startSession.tableCountOne', 'startSession.tableCount') + ' · ' + headline;
+    barSummary.textContent = tisch
+      ? tischDrawSummary(joining.size + guests.length, games.length, parseInt(form.querySelector('#count').value, 10))
+      : tn(joining.size + guests.length, 'startSession.tableCountOne', 'startSession.tableCount') + ' · ' + headline;
 
     // Tile panel (860px up). An empty pool needs its own line: a grid with no
     // tiles reads as a broken panel rather than as "nothing matches yet".
@@ -364,7 +377,7 @@ function showStartSession(round, prefill) {
     // two of the three chips can change from a click on the ring.
     addons.relabelAddons();
     updateHint();
-  }, guestList);
+  }, guestList, { stateLines: tisch });
   seatTable.setAttribute('role', 'group');
   seatTable.setAttribute('aria-labelledby', 'seatsLabel');
   const multiTableNote = form.querySelector('#multiTableNote');
@@ -646,8 +659,15 @@ function showStartSession(round, prefill) {
     btn.addEventListener('click', () => {
       const cur = parseInt(countInput.value, 10);
       countInput.value = Math.max(1, (Number.isInteger(cur) ? cur : 1) + parseInt(btn.dataset.d, 10));
+      // Der Tisch's summary states the drawn number (T2.3), so it follows it.
+      if (tisch) updateHint();
     });
   });
+  // …and it was first written before the remembered count was loaded above.
+  if (tisch) {
+    countInput.addEventListener('input', updateHint);
+    updateHint();
+  }
 
   /* The draw is in flight. #1122 removed the whirl this was written for, which
      SHRINKS the double-press window to the request itself rather than closing it:
