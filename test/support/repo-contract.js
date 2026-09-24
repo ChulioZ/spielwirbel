@@ -34,6 +34,8 @@ const { scoreTally } = require('../../public/js/vote-score');
 const { PROVIDER_INFO_FIELDS } = require('../../public/js/provider-info-fields');
 const { fitsPlayerCount } = require('../../public/js/draw-pool');
 const { markerIndexFromId } = require('../../public/js/round-marker');
+// The offered design ids the #1201 tile is keyed by — required, never hand-copied.
+const { selectableDesignIds } = require('../../public/js/designs');
 
 // A fresh identifier per call, so a suite run against a PERSISTENT database
 // can't collide with an earlier run's rows. Uses crypto rather than
@@ -4652,8 +4654,9 @@ module.exports = function repoContract(repo) {
       // is reduced or Number()-ed in JS is a number whatever SQL returned, and
       // the fields that would actually catch a dropped cast are the ones nobody
       // remembers to add.
-      /* RECURSES to the leaves since #941, which added a design histogram (and
-         two history series, since removed by #1124). Stopping at the first level
+      /* RECURSES to the leaves since #941, which added a nested design block
+         (a per-round histogram then, per-account since #1201) and two history
+         series, since removed by #1124. Stopping at the first level
          would have reported a nested block as "not a number" — and the tempting
          fix, an allowlist of known-nested fields, has to be maintained by
          whoever just added the nesting. Recursing has no such gap. */
@@ -4687,11 +4690,19 @@ module.exports = function repoContract(repo) {
         tenantId: demoTenant, roundId: demoRound.id, sessionId: demoSession.id,
       });
 
+      // A demo that went back to Klassisch — demos may change their design
+      // (#1186), and the tile must still never count one.
+      await repo.createUser({
+        ...userFields(), tenantId: demoTenant, demo: true, createdAt: daysAgo(1),
+        design: 'klassisch', designSwitchedBack: true,
+      });
+
       const m = await repo.instanceMetrics();
       assert.deepEqual(m.rounds, mid.rounds);
       assert.deepEqual(m.content, mid.content);
       assert.deepEqual(m.accounts, mid.accounts);
       assert.deepEqual(m.adoption, mid.adoption, 'a demo tenant must not move an adoption figure');
+      assert.deepEqual(m.designAdoption, mid.designAdoption, 'a demo account must not move the design tile');
     });
 
     await t.test('the social counts see accepted rows only, never a demo one', async () => {
@@ -4801,29 +4812,65 @@ module.exports = function repoContract(repo) {
         'a round in two shelf states is one round using the shelf, not two');
     });
 
-    await t.test('the design histogram keys on the RAW id, and never resolves it', async () => {
-      /* The server must not check a stored id against the registry —
-         round-designs.js's header says so, and the panel resolves labels
-         instead. An unknown id must therefore survive as itself rather than
-         being folded into 'none'. */
-      const mid = await repo.instanceMetrics();
-      const tn = `dz-${Math.random().toString(16).slice(2)}`;
-      const plain = await repo.createRound(tn, { name: 'Ohne', members: ['Ann'] });
-      const forest = await repo.createRound(tn, { name: 'Wald', members: ['Ann'] });
-      const legacy = await repo.createRound(tn, { name: 'Alt', members: ['Ann'] });
-      const alien = await repo.createRound(tn, { name: 'Fremd', members: ['Ann'] });
-      await repo.setBackground(tn, forest.id, { type: 'theme', id: 'forest', page: '#f7f2e9', accent: '#2f6b3f' });
-      await repo.setBackground(tn, legacy.id, { type: 'theme', page: '#eef4ff', accent: '#3b5bdb' });
-      await repo.setBackground(tn, alien.id, { type: 'theme', id: 'not-a-design', page: '#fff', accent: '#000' });
+    /* ---- #1201: which design ACCOUNTS wear ------------------------------- */
 
-      const d = (await repo.instanceMetrics()).designs;
-      const was = mid.designs;
-      const delta = (k) => (d[k] || 0) - (was[k] || 0);
-      assert.equal(delta('forest'), 1, 'a world counts under its id');
-      assert.equal(delta('#eef4ff'), 1, 'a legacy hex-only round counts under its page hex');
-      assert.equal(delta('not-a-design'), 1, 'an unknown id survives as itself');
-      assert.equal(delta('none'), 1, 'a round with no design counts under none');
-      assert.ok(plain);
+    // Every stored shape an account can carry, each on its own tenant. `absent`
+    // is the account predating #1186 — userFields() writes no `design` key, so
+    // the legacy shape is the default here rather than something to build.
+    const designAccounts = async () => {
+      const mk = (over) => repo.createUser({
+        ...userFields(), tenantId: `dsn-${Math.random().toString(16).slice(2)}`, ...over,
+      });
+      await mk({});                                                   // absent -> klassisch
+      await mk({ design: 'klassisch', designSwitchedBack: false });
+      await mk({ design: 'tisch', designSwitchedBack: false });
+      await mk({ design: 'not-a-design' });                           // unknown -> klassisch
+      await mk({ design: 'klassisch', designSwitchedBack: true });    // went back, stayed
+      await mk({ design: 'tisch', designSwitchedBack: true });        // went back, tried again
+      // A STRING 'true' is not the flag. Postgres' ->> would read it as 'true';
+      // the jsonb comparison must agree with the JSON backend's `=== true`.
+      await mk({ design: 'klassisch', designSwitchedBack: 'true' });
+    };
+
+    await t.test('design adoption counts ACCOUNTS by the design they are SHOWN', async () => {
+      /* Resolved exactly as /me resolves it (lib/account-design.js): an absent
+         key and an id this instance does not offer both count as the face. The
+         KEYS are the offered ids, never a stored string — a stored 'not-a-design'
+         must not appear, which is what keeps user-reachable text off the card. */
+      const mid = await repo.instanceMetrics();
+      await designAccounts();
+      const m = await repo.instanceMetrics();
+      const d = (k) => m.designAdoption.byDesign[k] - mid.designAdoption.byDesign[k];
+
+      assert.deepEqual(Object.keys(m.designAdoption.byDesign), selectableDesignIds({ production: false }),
+        'one key per offered design, in registry order, and nothing else');
+      assert.equal(d('klassisch'), 5, 'absent, klassisch x3 and an unknown id all wear Klassisch');
+      assert.equal(d('tisch'), 2);
+      assert.equal(m.designAdoption.switchedBack - mid.designAdoption.switchedBack, 1,
+        'only the flag AND a current Klassisch counts — not a return to Tisch, not a string');
+      const sum = (o) => Object.values(o).reduce((a, b) => a + b, 0);
+      assert.equal(sum(m.designAdoption.byDesign), m.adoption.accountsTotal,
+        'every account the card measures wears exactly one design');
+    });
+
+    await t.test('in production an unoffered design counts as the face, like /me', async () => {
+      /* Before the flip only Klassisch is enabled, so a Tisch picked on a dev
+         instance is a stored value production never shows. The tile must report
+         what the account SEES — otherwise it would count Tisch users on an
+         instance where nobody can be one. */
+      await designAccounts();
+      const was = process.env.NODE_ENV;
+      process.env.NODE_ENV = 'production';
+      let m;
+      try {
+        m = await repo.instanceMetrics();
+      } finally {
+        if (was === undefined) delete process.env.NODE_ENV; else process.env.NODE_ENV = was;
+      }
+      assert.deepEqual(Object.keys(m.designAdoption.byDesign), selectableDesignIds({ production: true }));
+      const sum = (o) => Object.values(o).reduce((a, b) => a + b, 0);
+      assert.equal(sum(m.designAdoption.byDesign), m.adoption.accountsTotal,
+        'the unoffered accounts were dropped rather than folded into the face');
     });
 
     /* ---- #1124: the adoption figures ------------------------------------- */
@@ -5041,7 +5088,9 @@ module.exports = function repoContract(repo) {
       await repo.createSession(tn, r.id, {
         gameIds: [], votes: {}, createdAt: daysAgo(1), finished: true, winnerIds: ['m1'],
       });
-      await repo.createUser({ ...userFields(), tenantId: tn, bgStats: true });
+      await repo.createUser({
+        ...userFields(), tenantId: tn, bgStats: true, design: 'klassisch', designSwitchedBack: true,
+      });
 
       const plain = await repo.instanceMetrics();
       process.env.ADMIN_EXCLUDE_TENANTS = tn;
@@ -5058,8 +5107,9 @@ module.exports = function repoContract(repo) {
       }
       assert.equal(plain.adoption.funnel.played - hidden.adoption.funnel.played, 1);
       assert.equal(plain.adoption.roundsByFinished.one - hidden.adoption.roundsByFinished.one, 1);
-      assert.equal(plain.designs.none - (hidden.designs.none || 0), 1,
-        'the design histogram is rendered as a share on the same card and must follow it');
+      assert.equal(plain.designAdoption.byDesign.klassisch - hidden.designAdoption.byDesign.klassisch, 1,
+        'the design tile divides by accountsTotal on the same card and must follow it');
+      assert.equal(plain.designAdoption.switchedBack - hidden.designAdoption.switchedBack, 1);
 
       /* …and NOTHING outside that card moves. lib/public-stats.js reads
          `content` for the public landing counters, and an operator hidden from

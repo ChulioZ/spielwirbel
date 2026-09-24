@@ -274,17 +274,19 @@ test('every metric is a number — no name, address or id reaches the card', asy
   for (const secret of ['GEHEIMER-RUNDENNAME', 'GEHEIMER-NAME', 'GEHEIMER-TITEL', 'GEHEIME-ADRESSE', 'GEHEIMER-NUTZER', tenant]) {
     assert.equal(serialized.includes(secret), false, `${secret} reached the metrics payload`);
   }
-  /* RECURSES TO THE LEAVES since #941, which added a design histogram (and two
+  /* RECURSES TO THE LEAVES since #941, which added a nested design block (and two
      history objects, since removed by #1124). The old two-level form reported a
      nested block as "not a number" the moment nesting appeared — and the tempting fix is an
      allowlist of known-nested fields, which is exactly wrong: it has to be
      maintained by the same person who just added the nesting, i.e. by the
      person who would also be adding the leak. Recursion has no such gap.
 
-     KEYS are swept too, not just values. The design histogram is keyed by a
-     stored design id, and an id is the one thing on this card that comes from
-     data rather than from code — a histogram keyed by something user-authored
-     would put that text in the payload with every value still a tidy number. */
+     KEYS are swept too, not just values. #941's per-round histogram was keyed
+     by a STORED design id, the one thing on this card that came from data
+     rather than from code — a block keyed by something user-authored would put
+     that text in the payload with every value still a tidy number. #1201's
+     per-account tile is keyed by the registry's offered ids instead, which is
+     the safe shape; the sweep stays so the next nested block is held to it. */
   const leaves = (node, path) => {
     for (const [k, v] of Object.entries(node)) {
       assert.equal(typeof k, 'string');
@@ -298,14 +300,14 @@ test('every metric is a number — no name, address or id reaches the card', asy
 test('a name planted in a metrics KEY is caught, not just in a value', async () => {
   /* The recursion above walks keys as well as values; this proves the sweep
      actually looks at them. Without it the recursion could quietly stop
-     checking keys and every assertion would still pass — the design histogram
-     is keyed by a stored id, so a key is a real route for user text onto this
-     card. Driven against a hand-built payload rather than the live one, because
+     checking keys and every assertion would still pass — a nested block keyed
+     by a stored value (as #941's design histogram was) is a real route for user
+     text onto this card. Driven against a hand-built payload rather than the live one, because
      the point is the SWEEP, not today's data. */
   const planted = {
     accounts: { total: 1 },
     adoption: { gamesLinked: 0 },
-    designs: { 'GEHEIMER-DESIGNNAME': 2 },
+    designAdoption: { byDesign: { 'GEHEIMER-DESIGNNAME': 2 } },
   };
   const serialized = JSON.stringify(planted);
   assert.equal(serialized.includes('GEHEIMER-DESIGNNAME'), true,
