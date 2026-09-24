@@ -2703,6 +2703,48 @@
    T1 lists as a fill and never as type. */
 :root[data-design="tisch"][data-scheme="dark"] .pool-owners-note { color: var(--ink-soft); }
 
+/* --- Motion ritual 1: the pot fills (#1200, T10.1) -------------------------
+   A game that ENTERS the pot is thrown onto the table from outside and lands in
+   its place. views-session.js marks only the entering ones (`.is-thrown`, a
+   `data-throw` direction 0–4 and its index as `--throw-i`), never the ones
+   already there, and never on the screen's first paint — so this is feedback
+   on a seat tap or a loosened filter, not an entry animation (#1122).
+
+   Timing against T10's own numbers: the sheet runs 620ms per card staggered
+   90ms, which is 980ms for its five — over the 900ms the same sheet sets as the
+   ceiling. So 540ms, the stagger kept at 90ms, and capped at the fifth card:
+   540 + 4 × 90 = 900 however many games a seat tap brings in.
+
+   No `to` frame on purpose: the end is whatever the tile's rest state is, so
+   the motion cannot end anywhere a reduced-motion reader would not see at once.
+   The shelf's thumbs ride the same keyframe at a third of the reach — their
+   strip clips at 64px, and a full-length throw would be mostly out of view.
+   Nothing here touches `pointer-events`: the pot is not a control. */
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-design="tisch"] .pool-tile.is-thrown,
+  :root[data-design="tisch"] .pool-thumb.is-thrown {
+    animation: tisch-pot-throw 540ms cubic-bezier(0.2, 0.8, 0.2, 1) calc(min(var(--throw-i, 0), 4) * 90ms) both;
+  }
+  :root[data-design="tisch"] .pool-tile.is-thrown { --throw-reach: 150px; }
+  :root[data-design="tisch"] .pool-thumb.is-thrown { --throw-reach: 48px; }
+  /* From the four corners and the top — the directions the seats sit in. */
+  :root[data-design="tisch"] .is-thrown[data-throw="0"] { --throw-x: -1; --throw-y: -0.6; --throw-r: -26deg; }
+  :root[data-design="tisch"] .is-thrown[data-throw="1"] { --throw-x: 1; --throw-y: -0.55; --throw-r: 22deg; }
+  :root[data-design="tisch"] .is-thrown[data-throw="2"] { --throw-x: -0.8; --throw-y: 0.65; --throw-r: 16deg; }
+  :root[data-design="tisch"] .is-thrown[data-throw="3"] { --throw-x: 0.95; --throw-y: 0.65; --throw-r: -20deg; }
+  :root[data-design="tisch"] .is-thrown[data-throw="4"] { --throw-x: 0; --throw-y: -0.8; --throw-r: 8deg; }
+  @keyframes tisch-pot-throw {
+    from {
+      transform:
+        translate(calc(var(--throw-x, 0) * var(--throw-reach, 0px)), calc(var(--throw-y, 0) * var(--throw-reach, 0px)))
+        rotate(var(--throw-r, 0deg))
+        scale(0.9);
+      opacity: 0;
+    }
+    55% { opacity: 1; }
+  }
+}
+
 /* --- Setup: the count question and the one action (T2.3, T4.1) ------------
    „Wie viele wirbeln?" beside the stepper, „Loswirbeln" as the brass plate —
    the same plate as the hub CTA, which is the design's "this is the thing
