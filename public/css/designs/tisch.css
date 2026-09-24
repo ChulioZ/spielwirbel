@@ -1101,6 +1101,19 @@
 :root[data-design="tisch"] .pulse-tile--link:hover { border-color: var(--brand); }
 :root[data-design="tisch"][data-scheme="dark"] .pulse-tile--link:hover { border-color: var(--gold); }
 
+/* --- The Regal-Steckbrief (#1173) -----------------------------------------
+   On the Start card the seat bands are the Rundenpuls's stat tiles — five of
+   them, one per table size, so the same `.pulse-tiles` track rule lays them out
+   (views-shelf-profile.js reuses the markup rather than restating it). A band
+   under three games is a GAP: a dashed edge in every scheme, and its number in
+   gold where the felt tokens are in force. The bars on the screen take gold on
+   the dark scheme too; below it they keep styles.css's --brand. */
+:root[data-design="tisch"] .shelf-tile--gap { border: 1px dashed var(--line); }
+:root[data-design="tisch"][data-scheme="dark"] .shelf-tile--gap .pulse-tile__n,
+:root[data-design="tisch"][data-scheme="dark"] .shelf-bar--gap .shelf-bar__n,
+:root[data-design="tisch"][data-scheme="dark"] .shelf-gap .ti { color: var(--gold); }
+:root[data-design="tisch"][data-scheme="dark"] .shelf-bar__fill { background: var(--gold); }
+
 /* --- The card grid, and the previews as tiles (T2.2 phone, T3.2 desktop) ---
    Der Tisch's grid is a ROW-MAJOR grid rather than Klassisch's column flow, at
    every width: T3.2 reads its six previews left to right, and the phone column

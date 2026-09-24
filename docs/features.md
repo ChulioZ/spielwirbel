@@ -291,7 +291,13 @@ What the app does, in detail. For a short overview see the
     one, how much of the shelf has ever reached the table), a **Kümmerliste**
     (played sessions with **no result recorded at all** — one that records a
     winner *or* an ending leaves the list — games with no cover, games with no
-    player count; each deep-linking to the fix), a „**heute vor N Jahren**"
+    player count; each deep-linking to the fix), a **Regal-Steckbrief** once
+    eight or more games carry BoardGameGeek data (how many games seat each table
+    size from 2 to 6+, counting owned expansions, and the gaps a draw will hit —
+    „Für 6+ Personen: nur 2 Spiele", „Über 120 Min.: kein Spiel"; it opens a
+    screen with every band — players, playing time, weight — the leading
+    mechanics and categories, and a „Teilen" that draws the profile as an image
+    on the device, issue #1173), a „**heute vor N Jahren**"
     anniversary when one falls on today, and a teaser from the recommendations
     screen. Below the derived cards, a **preview of each of the round's other
     sections** — the shelf as a handful of covers with its count, the standings'

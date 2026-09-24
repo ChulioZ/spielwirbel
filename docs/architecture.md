@@ -539,6 +539,12 @@ public/
                      on the table, how often the round meets, what is quietly
                      broken, and what was played on this day in a past year
                      (issue #923)
+    shelf-profile.js the Regal-Steckbrief's builder: the active shelf's seat,
+                     playing-time and weight bands, its top mechanics and
+                     categories, and the gaps under three games (issue #1173)
+    shelf-profile-card.js
+                     the Steckbrief as a shareable PNG — flat fills, no SVG, no
+                     pattern, the same-origin BGG badge (issue #1173)
     off-shelf.js     the four off-shelf destinations (Aussortiert, Durchgespielt,
                      Wunschliste, Könnte euch gefallen) with their counts — one
                      definition, used by the Regal's sheet, the rail and the
@@ -750,6 +756,9 @@ public/
     hub-previews.js       the hub's previews of Regal, Pokale and Chronik, and
                           its „Nicht im Regal" group (issue #1185)
     views-regal.js        Regal tab: the games library (search, filters, grid)
+    views-shelf-profile.js
+                          the Regal-Steckbrief: its Start card, its screen
+                          (/round/:rid/shelf-profile) and its share (#1173)
     regal-bulk.js         the Regal's selection mode and its four bulk actions
                           (tags, owners, retire, delete), lifted out of
                           views-regal.js so each is editable on its own (#1000)

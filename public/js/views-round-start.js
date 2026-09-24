@@ -348,6 +348,9 @@ function renderStartTab(round, activeGames) {
     hubSuggestCard(round, activeGames, statsByGame, nagged),
     hubPulseCard(round, activeGames),
     hubCareCard(round, activeGames),
+    // The Regal-Steckbrief (#1173, views-shelf-profile.js): what the shelf adds
+    // up to. Null below its threshold of games with provider data.
+    hubShelfProfileCard(round, activeGames),
     hubAnniversaryCard(round),
   ].forEach((card) => { if (card) grid.appendChild(cardSlot(card)); });
   // The three sub-page previews (#1185, hub-previews.js), LAST in the grid:

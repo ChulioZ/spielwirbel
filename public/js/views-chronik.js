@@ -608,7 +608,14 @@ async function shareRecapCard(period, model) {
     toast(t('periodRecap.toast.failed'));
     return;
   }
-  const name = `spielwirbel-${period.key}.png`;
+  await deliverShareImage(blob, `spielwirbel-${period.key}.png`);
+}
+
+// Hand a finished PNG to the user's own share sheet, or save it where the
+// browser has no file sharing. Shared by the recap's card and the
+// Regal-Steckbrief's (#1173, views-shelf-profile.js), so the two cannot drift
+// apart on the load-bearing details below.
+async function deliverShareImage(blob, name) {
   if (navigator.canShare && navigator.share && typeof File !== 'undefined') {
     const file = new File([blob], name, { type: 'image/png' });
     // canShare must be asked about THIS file: a browser can advertise
