@@ -659,7 +659,7 @@ test('the Wunschliste state chip clears AA on every theme', () => {
   assert.ok(chip, 'the .tag--wish rule was not found');
   assert.match(chip, /background:\s*var\(--brand-tint\)/,
     'the wish chip no longer washes with --brand-tint, so the numbers below do not apply to it');
-  assert.match(chip, /color:\s*var\(--brand-strong\)/,
+  assert.match(chip, /color:\s*var\((?:--brand-ink,\s*var\()?--brand-strong\)/,
     'the wish chip label must stay --brand-strong: plain --brand drops to 4.33:1 on Salbei');
 
   assert.deepEqual(sweep((t) => [['the wish chip', t.brandStrong, t.brandTint]]), [],
@@ -695,7 +695,7 @@ test('the applied-filter chip has a border that clears the 3:1 non-text bar on e
 
   assert.match(chip, /background:\s*var\(--brand-tint\)/,
     'the chip no longer washes with --brand-tint, so the reasoning above does not apply to it');
-  assert.match(chip, /color:\s*var\(--brand-strong\)/,
+  assert.match(chip, /color:\s*var\((?:--brand-ink,\s*var\()?--brand-strong\)/,
     'the chip label must stay --brand-strong: plain --brand on a brand tint drops to 4.33:1 on Salbei');
 
   const declared = /border:\s*[\d.]+px\s+solid\s+(var\(--[\w-]+\)|#[0-9a-f]{3,8})/i.exec(chip);
@@ -735,7 +735,7 @@ test('the Chronik milestone row keeps its label, its meta line AND its icon at A
   assert.ok(chip, 'the .tl-act--milestone .tl-act__icon rule was not found');
   assert.match(chip, /background:\s*var\(--brand-tint\)/,
     'the icon chip no longer washes with --brand-tint, so the numbers below do not apply to it');
-  assert.match(chip, /color:\s*var\(--brand-strong\)/,
+  assert.match(chip, /color:\s*var\((?:--brand-ink,\s*var\()?--brand-strong\)/,
     'the icon glyph must stay --brand-strong: plain --brand drops to 4.33:1 on Salbei');
 
   assert.deepEqual(sweep((t) => [

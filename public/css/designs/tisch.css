@@ -4337,6 +4337,12 @@
      --brand-tint(-soft) mixed from walnut --surface: the menu's hover painted a
                          dark row under dark ink.
      --brand-edge, --bg  the same mix; see the note on the last two lines.
+     --brand-ink         #1260: the TEXT half of the brand. ~70 rules in
+                         styles.css paint text in --brand or --brand-strong,
+                         brass on paper at ~2:1. --brand itself cannot move here
+                         — it is also the active chip's FILL, which stays brass —
+                         so those rules read `var(--brand-ink, var(--brand…))`
+                         and only this block declares it (see its line below).
 
    A second rule on the same four selectors rather than an edit to the first, so
    the #1188 block keeps reading as the material list it is; the two are one
@@ -4361,6 +4367,14 @@
      derives this list from styles.css, and a token left out fails there. */
   --brand-edge: var(--gold-edge);
   --bg: var(--paper);
+  /* The brand's TEXT ink, --accent's answer for the same reason (T1's tertiary
+     ink, AA on every paper ground and on the --gold-hi tint). Declared ONLY
+     here, never on :root: styles.css reads it with the brand as the fallback,
+     so outside a Tisch overlay the fallback resolves against the element's own
+     --brand — which a home round card re-declares inline. A :root alias would
+     be substituted there once and hand every card the page's brand instead.
+     test/tisch-brand-ink.test.js pins both halves. */
+  --brand-ink: var(--paper-faint);
 }
 
 /* --- The sheet: edge, head and close (T15a.0) ------------------------------
