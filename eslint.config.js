@@ -36,6 +36,8 @@ const frontendGlobals = {
   fmtDateTime: 'readonly', fmtDate: 'readonly', fmtMonth: 'readonly', fmtMonthKey: 'readonly', fmtMoney: 'readonly',
   fmtRelativeDays: 'readonly',
   fmtAvg: 'readonly', fmtCount: 'readonly',
+  // reorder-drag.js (issue #1180) — the one wrapper around vendor/sortable.min.js
+  reorderOptions: 'readonly', reorderDrop: 'readonly', makeReorderable: 'readonly',
   // live-region.js (issue #1168) — the two aria-live regions, split out of core.js
   toastEl: 'readonly', toastTimer: 'writable', toast: 'readonly',
   srLiveEl: 'readonly', announceTimer: 'writable', announce: 'readonly',
@@ -512,7 +514,14 @@ module.exports = [
   // docs/design/** holds design references, not app code: a generated React
   // runtime (support.js) and a browser-only audit script that is loaded into a
   // rendered sheet by hand. Neither runs in the app (docs/design/README.md).
-  { ignores: ['node_modules/**', 'data/**', 'dist/**', 'docs/design/**'] },
+  // public/js/vendor/** is third-party code committed verbatim (#1180 —
+  // SortableJS, minified). It is not ours to lint, and it must not be edited
+  // to satisfy a rule either: test/reorder-drag.test.js asserts it stays
+  // byte-identical to the copy in node_modules. Its one global (`Sortable`)
+  // is declared with a `/* global */` comment in the single file that names
+  // it, js/reorder-drag.js, rather than in frontendGlobals — so no other
+  // script can reach for the library without going through that wrapper.
+  { ignores: ['node_modules/**', 'data/**', 'dist/**', 'docs/design/**', 'public/js/vendor/**'] },
   js.configs.recommended,
   {
     // Empty `catch {}` is a deliberate "swallow and keep the default" idiom here.

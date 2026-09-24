@@ -318,28 +318,48 @@ async function showTags(rid) {
       });
     };
 
+    // An open inline editor is inserted AFTER its own row, so moving rows
+    // around would strand it beside a different tag. Reordering is not
+    // editing — close it.
+    const closeEditors = () => list.querySelectorAll('.tag-edit').forEach((el) => el.remove());
+
+    // The model half of a move, shared by the arrows and the drag (#1180): the
+    // drag has already moved the DOM node by the time it reports, so the node
+    // is the caller's business and only the order, the ends and the save are
+    // common.
+    const applyOrder = (from, to) => {
+      order.splice(to, 0, order.splice(from, 1)[0]);
+      syncEnds();
+      persist();
+    };
+
     const move = (tagId, delta, pressed, partner) => {
       const from = order.indexOf(tagId);
       const to = from + delta;
       if (from < 0 || to < 0 || to >= order.length) return;
-      // An open inline editor is inserted AFTER its own row, so moving rows
-      // around would strand it beside a different tag. Reordering is not
-      // editing — close it.
-      list.querySelectorAll('.tag-edit').forEach((el) => el.remove());
-      order.splice(to, 0, order.splice(from, 1)[0]);
+      closeEditors();
+      applyOrder(from, to);
       const row = rows.get(tagId);
       // After the splice the tag that swapped places with this one sits at the
       // OLD index, in both directions.
       const swapped = rows.get(order[from]);
       if (delta < 0) swapped.before(row); else swapped.after(row);
-      syncEnds();
       // Re-inserting the row detaches it, which drops focus — so pressing
       // „nach vorne" three times would otherwise move three different tags one
       // place each instead of one tag three places. When the move just disabled
       // the pressed button (the tag reached an end), hand focus to its partner
       // rather than letting it fall to the document.
       (pressed.disabled ? partner : pressed).focus();
-      persist();
+    };
+
+    // Dragging a tile (#1180), beside the arrows rather than instead of them —
+    // they stay the keyboard path and the SC 2.5.7 single-pointer alternative.
+    // A sighted user watches the tile land; the silent live region tells a
+    // screen-reader user where it went.
+    const drop = (from, to) => {
+      const { name } = tags.find((x) => x.id === order[from]);
+      applyOrder(from, to);
+      announce(t('tags.moved', { name, position: to + 1, count: order.length }));
     };
 
     tags.forEach((tg) => {
@@ -422,7 +442,16 @@ async function showTags(rid) {
       rows.set(tg.id, row);
       list.appendChild(row);
     });
-    if (tags.length > 1) syncEnds();
+    if (tags.length > 1) {
+      syncEnds();
+      list.classList.add('is-reorderable');
+      makeReorderable(list, {
+        itemSelector: '.tag-row',
+        filterSelector: '.tag-act',
+        onStart: closeEditors,
+        onMove: drop,
+      });
+    }
     sec.appendChild(list);
   }
   app.appendChild(sec);

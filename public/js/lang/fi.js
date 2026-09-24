@@ -1107,6 +1107,7 @@ I18N.fi = {
   'tags.edit': 'Muokkaa tunnistetta',
   'tags.moveEarlier': 'Siirrä tagia eteenpäin',
   'tags.moveLater': 'Siirrä tagia taaksepäin',
+  'tags.moved': '”{name}” on nyt sijalla {position}/{count}.',
   'tags.toast.changed': 'Tagit muuttuivat sillä välin – ladattu uudelleen.',
   'tags.save': 'Tallenna',
   'tags.toast.updated': 'Tunniste päivitetty',

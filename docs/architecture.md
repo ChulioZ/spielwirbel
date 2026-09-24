@@ -712,6 +712,13 @@ public/
     tag-chips.js     the tri-state custom-tag filter shared by the Regal and
                      the start-session screen: chips, mode + bulk toggles,
                      icon picker, match predicate (issue #956)
+    vendor/sortable.min.js  SortableJS, committed verbatim — the app's one
+                     vendored library, byte-identical to the `sortablejs`
+                     devDependency (a test asserts it) so Dependabot tracks it;
+                     its MIT LICENSE sits beside it (issue #1180)
+    reorder-drag.js  the one wrapper around it: drag a tile into place, as a
+                     second way to do what the Tags screen's arrows do; owns
+                     every Sortable option (issue #1180)
     game-stats.js    what a game is worth to a round — the score fields, the
                      per-session and per-round rollups, the shelf index, the
                      retirement recommendations, and how a score prints

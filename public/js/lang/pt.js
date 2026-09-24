@@ -1138,6 +1138,7 @@ I18N.pt = {
   'tags.edit': 'Editar etiqueta',
   'tags.moveEarlier': 'Mover a etiqueta para a frente',
   'tags.moveLater': 'Mover a etiqueta para trás',
+  'tags.moved': '«{name}» está agora na posição {position} de {count}.',
   'tags.toast.changed': 'As etiquetas mudaram entretanto – recarregadas.',
   'tags.save': 'Guardar',
   'tags.toast.updated': 'Etiqueta atualizada',

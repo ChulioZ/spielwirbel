@@ -1196,6 +1196,7 @@ I18N.en = {
   'tags.edit': 'Edit tag',
   'tags.moveEarlier': 'Move tag earlier',
   'tags.moveLater': 'Move tag later',
+  'tags.moved': '“{name}” moved to position {position} of {count}.',
   'tags.toast.changed': 'The tags changed in the meantime – reloaded.',
   'tags.save': 'Save',
   'tags.toast.updated': 'Tag updated',

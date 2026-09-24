@@ -249,7 +249,9 @@ What the app does, in detail. For a short overview see the
   by id rather than by name. A rename onto a name the round already uses is
   refused rather than merging the two tags. Deleting a tag simply unassigns it
   from every game. A round can also put its tags in the **order it wants**: two
-  arrows on each tile of the Tags screen move a tag earlier or later, and that
+  arrows on each tile of the Tags screen move a tag earlier or later — or the
+  tile can simply be **dragged** into place (with a mouse at once, on a touch
+  screen after a short press-and-hold, so a plain swipe still scrolls) — and that
   one order is what every surface listing tags then shows — the tiles, the
   game-detail chips, the Regal bulk-assign sheet, the filter panel and the draw
   presets. A newly created tag still lands at the end.
