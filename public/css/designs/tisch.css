@@ -1143,8 +1143,9 @@
 :root[data-design="tisch"] .hub-previews .hub-preview__last {
   margin: 0;
   font-size: var(--text-xs);
-  /* Named rather than left to styles.css's `var(--muted)`, which no stylesheet
-     of the app declares — it resolves to nothing and the line inherits --ink. */
+  /* Named here rather than inherited from styles.css's hub rules, which read an
+     undeclared `var(--muted)` until #1262/#1263 (test/css-vars-declared.test.js
+     now guards that). */
   color: var(--ink-soft);
   overflow-wrap: break-word;
   hyphens: auto;
