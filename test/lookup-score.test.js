@@ -3,7 +3,7 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 
-const { scoreHit, foldTitle, existingTitleState } = require('../public/js/lookup-score');
+const { scoreHit, foldTitle, existingTitleState, rankLookupHits, hitShelfState } = require('../public/js/lookup-score');
 
 // The reported repro (#317): the query carries a stray " - " the title spells
 // as ":", so the whitespace split used to yield a dead "-" token that no word
@@ -131,4 +131,42 @@ test('an empty title does not match a game whose title also folds to nothing', (
 test('existingTitleState tolerates a missing games list and malformed rows', () => {
   assert.equal(existingTitleState(undefined, 'Catan'), null);
   assert.equal(existingTitleState([null, {}, { title: null }], 'Catan'), null);
+});
+
+/* ---- rankLookupHits / hitShelfState (#1264) ---- */
+
+test('rankLookupHits orders by score, then provider, then the shorter title, and caps', () => {
+  const hits = [
+    { title: 'Catan: Big Box', score: 4, prio: 0, order: 0 },
+    { title: 'Catan', score: 4, prio: 0, order: 1 },
+    { title: 'Die Siedler', score: 1, prio: 0, order: 2 },
+    { title: 'Catan', score: 5, prio: 1, order: 0 },
+  ];
+  const ranked = rankLookupHits(hits, 3);
+  assert.deepEqual(ranked.map((r) => [r.title, r.prio]), [['Catan', 1], ['Catan', 0], ['Catan: Big Box', 0]]);
+  // A new array: the caller's accumulator keeps its own order.
+  assert.equal(hits[0].title, 'Catan: Big Box');
+  assert.deepEqual(rankLookupHits(undefined, 5), []);
+});
+
+test('hitShelfState reads the provider link: shelf beats wish beats archive', () => {
+  const hit = { provider: 'bgg', providerId: 13, title: 'Catan' };
+  const src = { provider: 'bgg', externalId: '13' };
+  assert.equal(hitShelfState([{ source: src }], hit), 'shelf');
+  assert.equal(hitShelfState([{ source: src, wish: true }], hit), 'wish');
+  assert.equal(hitShelfState([{ source: src, retired: true }], hit), 'archived');
+  assert.equal(hitShelfState([{ source: src, completed: true }], hit), 'archived');
+  assert.equal(hitShelfState([{ source: src, retired: true }, { source: src, wish: true }], hit), 'wish');
+  assert.equal(hitShelfState([{ source: src, wish: true }, { source: src }], hit), 'shelf');
+});
+
+test('hitShelfState never matches on a title, another provider or a missing link', () => {
+  const hit = { provider: 'bgg', providerId: '13', title: 'Catan' };
+  assert.equal(hitShelfState([{ title: 'Catan' }], hit), null, 'a same-titled game with no link is a different game (#790)');
+  assert.equal(hitShelfState([{ source: { provider: 'steam', externalId: '13' } }], hit), null);
+  assert.equal(hitShelfState([{ source: { provider: 'bgg', externalId: '14' } }], hit), null);
+  assert.equal(hitShelfState([null, {}], hit), null);
+  assert.equal(hitShelfState(undefined, hit), null);
+  assert.equal(hitShelfState([{ source: { provider: 'bgg', externalId: '13' } }], null), null);
+  assert.equal(hitShelfState([{ source: { provider: 'bgg', externalId: 'undefined' } }], { provider: 'bgg' }), null);
 });

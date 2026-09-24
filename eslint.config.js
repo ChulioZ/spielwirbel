@@ -356,6 +356,7 @@ const frontendGlobals = {
   bgStatsPlayDate: 'readonly', bgStatsGuestId: 'readonly', bgStatsTeamLabel: 'readonly',
   bgStatsBggId: 'readonly', bgStatsPlay: 'readonly', bgStatsPlayUrl: 'readonly',
   scoreHit: 'readonly', foldTitle: 'readonly', existingTitleState: 'readonly',
+  rankLookupHits: 'readonly', hitShelfState: 'readonly',
   gameHue: 'readonly', coverPlaceholder: 'readonly',
   // empty-state.js (issue #869)
   emptyState: 'readonly',
@@ -451,6 +452,9 @@ const frontendGlobals = {
   startDirectSession: 'readonly',
   showLinkProvider: 'readonly', attachLookup: 'readonly', searchProvider: 'readonly',
   lookupDetail: 'readonly',
+  searchAllProviders: 'readonly',
+  // add-game-search.js (#1264): Der Tisch's search-first add step + the form it hands over to
+  showAddGameSearch: 'readonly', addPlayersFromDetail: 'readonly', showAddGameForm: 'readonly',
   providerLabel: 'readonly', providerLabelShort: 'readonly',
   PROVIDER_LABELS: 'readonly', PROVIDER_LABELS_SHORT: 'readonly', LOOKUP_PROVIDERS: 'readonly', MAX_SUGGESTIONS: 'readonly',
   // views-member.js
