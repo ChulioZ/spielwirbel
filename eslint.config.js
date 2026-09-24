@@ -464,6 +464,7 @@ const frontendGlobals = {
   // views-session-tables.js (issue #796)
   showTableBuilder: 'readonly', tableStateFrom: 'readonly', tablePeopleIds: 'readonly',
   tableCoverBg: 'readonly',
+  renderTischSplit: 'readonly', renderTischTable: 'readonly', renderTischTableTafel: 'readonly', // #1270
   // views-session-live.js
   showSessionLobby: 'readonly', stopLobbyPoll: 'readonly', mySeatIn: 'readonly',
   sessionGames: 'readonly', LOBBY_POLL_MS: 'readonly', lobbyPoll: 'writable',
