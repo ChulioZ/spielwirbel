@@ -136,6 +136,46 @@ const OFF_SHELF_LISTS = [
 // The off-shelf list a game sits in, or null while it is on the shelf.
 const offShelfListOf = (game) => OFF_SHELF_LISTS.find((l) => l.holds(game)) || null;
 
+// =================== Der Tisch's Spielepass pieces (#1274) ===================
+//
+// Two small builders the view calls only under Der Tisch, top-level so a spec
+// can reach them and so showGameDetail's flow stays one read.
+
+// The score as a NUMERAL beside the title (T3.4, T6.3) — „4,8" over
+// „Spielwirbel-Score · 5 Bewertungen" and the ⓘ. Where Klassisch keeps #1039's
+// cover pill, this design states the number on the title's own line, which is
+// also what keeps it off the cover (review finding A6: no text on a raw cover).
+// The count is the sheet's „aus 5 Wertungen"; a played-but-unrated game says
+// so instead, and an unscored one prints the Regal's „neu".
+function tischScoreNumeral(st, shown) {
+  const scored = st.score !== null;
+  let evidence = '';
+  if (st.count > 0) evidence = tn(st.count, 'score.evidenceOne', 'score.evidence');
+  else if (st.plays > 0) evidence = tn(st.plays, 'score.evidencePlaysOne', 'score.evidencePlays');
+  return h(`<div class="gd-bignum">
+       <span class="gd-bignum__n${scored ? '' : ' gd-bignum__n--none'}">${esc(scored ? fmtAvg(shown) : t('games.scoreNew'))}</span>
+       <span class="gd-bignum__cap">${esc(t('score.name'))} ${infoButton('score')}</span>
+       ${evidence ? `<span class="gd-bignum__ev">${esc(evidence)}</span>` : ''}
+     </div>`);
+}
+
+// One row of „Verwandte Sessions" as Der Tisch lists it: the winner's counter,
+// the date, who won — or, for a session that did not end in a win for this game,
+// the same status line the stamp prints — and the evening's score pill. The
+// avatar is the FIRST winner's (initials, for the reason the raters band gives);
+// every winner is named in the text beside it.
+function tischPlayRow(round, s, { picked, status, winners, scoreCell }) {
+  const first = winners[0];
+  const who = first
+    ? `<span class="avatar${first.guest ? ' avatar--guest' : ''}" style="background:${personColor(round, first)}" aria-hidden="true">${avatarFace(initials(first.name), {})}</span>`
+    : '<span class="gd-play__dot" aria-hidden="true"></span>';
+  const names = winners.map(personLabel).filter(Boolean);
+  const what = names.length
+    ? esc(tn(names.length, 'detail.playWonOne', 'detail.playWonMany', { names: names.join(', ') }))
+    : status;
+  return h(`<li class="gd-play${picked ? '' : ' gd-play--muted'}"><a class="gd-play__link">${who}<span class="gd-play__date">${esc(fmtDate(s.createdAt))}</span><span class="gd-play__what">${what}</span>${scoreCell}</a></li>`);
+}
+
 // =================== Game detail ===================
 
 async function showGameDetail(rid, gameId) {
@@ -155,6 +195,10 @@ async function showGameDetail(rid, gameId) {
   setDocTitle(game.title, round.name);
 
   const st = gameStats(round, gameId);
+  // Der Tisch composes this screen as T3.4/T6.3 draw it (#1274): the score as a
+  // numeral beside the title, „Verwandte Sessions" as a dated list, the „…"
+  // items as an Aktionen panel. Every branch below reads this one flag.
+  const tisch = designIs('tisch');
   const coverCss = game.image ? `url('${coverUrl(game.image, COVER_HERO)}')` : '';
   const imgStyle = coverCss ? `style="background-image:${coverCss}"` : '';
   const fallback = coverPlaceholder(game);
@@ -350,7 +394,11 @@ async function showGameDetail(rid, gameId) {
   // plays yet — would leave that page with no score affordance at all, where
   // the same game's shelf card still says „neu".
   const shown = st.score === null ? null : displayScore(st.score);
-  if (!sparse && !game.wish) {
+  let scoreBig = null;
+  if (!sparse && !game.wish && tisch) {
+    scoreBig = tischScoreNumeral(st, shown);
+    wireInfoButtons(scoreBig);
+  } else if (!sparse && !game.wish) {
     const pill = st.score !== null
       ? `<span class="score-pill score-pill--lg" style="--sc:${scoreColor(st.score)}" data-stop="${scoreStop(st.score)}"
                aria-label="${esc(`${t('score.name')}: ${fmtAvg(shown)}`)}">${fmtAvg(shown)}</span>`
@@ -383,6 +431,14 @@ async function showGameDetail(rid, gameId) {
     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); startTitleEdit(titleEl); }
   });
   h1.append(titleEl);
+  // Der Tisch: the numeral stands BESIDE the title (T3.4, T6.3), on one opaque
+  // line — the band that keeps the title's contrast independent of the cover
+  // on the phone's half-height header. Title first in the DOM, as it reads.
+  if (scoreBig) {
+    const line = h('<div class="gd-titleline"></div>');
+    h1.replaceWith(line);
+    line.append(h1, scoreBig);
+  }
 
   // The chips move OUT of the <h1> (#1039). They were appended into the heading
   // so they could sit beside the title's last line; the row is now its own flex
@@ -659,19 +715,22 @@ async function showGameDetail(rid, gameId) {
     // "1. Juni 2026, 19:00" is ~230px against a 150px stamp, and the minute an
     // evening started is not what a stamp records. The full timestamp is on the
     // results screen the stamp links to.
-    const list = h('<div class="stamps"></div>');
+    // Der Tisch draws it as a dated LIST (T3.4, T6.3) — one row per session,
+    // the winner's counter, the date, who won — so it is a real <ul>. Same
+    // rows, same order, same links as the stamps; only the presentation forks.
+    const list = h(tisch ? '<ul class="gd-plays"></ul>' : '<div class="stamps"></div>');
     related.slice(0, 15).forEach((s) => {
       const sst = gameStatsForSession(round, s, gameId);
       const picked = s.chosenGameId === gameId;
       let status;
       let winner = '';
+      let winners = [];
       if (picked) {
         // Session people, not round members, so a guest winner still resolves
         // (marked as a guest) rather than vanishing from the line (#458).
         const sPeople = sessionPeople(round, s);
-        const names = (s.winnerIds || [])
-          .map((wid) => personLabel(sPeople.find((p) => p.id === wid)))
-          .filter(Boolean);
+        winners = (s.winnerIds || []).map((wid) => sPeople.find((p) => p.id === wid)).filter(Boolean);
+        const names = winners.map(personLabel).filter(Boolean);
         status = s.finished
           ? (endingText(s) || `<i class="ti ti-circle-check" aria-hidden="true"></i> ${esc(t('detail.played'))}`)
           : esc(t('detail.chosen'));
@@ -710,6 +769,12 @@ async function showGameDetail(rid, gameId) {
       // it a 5". Read off avgColor() rather than written as a hex, so a retune
       // of the ramp carries this with it (.claude/rules/theme-derived-colors.md).
       const PLAYED_UNRATED = 4.5;
+      if (tisch) {
+        const row = tischPlayRow(round, s, { picked, status, winners: s.finished ? winners : [], scoreCell });
+        navLink(row.querySelector('a'), resultsPath(round.id, s.id), () => showResults(round, s));
+        list.appendChild(row);
+        return;
+      }
       // An evening this game was NOT taken to has nothing to say about it and
       // borrows no colour: `--sc` falls through to the stylesheet's `--ink-soft`.
       const ink = picked
@@ -735,7 +800,9 @@ async function showGameDetail(rid, gameId) {
     });
     sec.appendChild(list);
   }
-  if (!sparse && !game.wish) rightPage.appendChild(sec);
+  // Under Der Tisch the band of raters leads and the history follows (T3.4,
+  // T6.3), so it is appended after the raters block below instead of here.
+  if (!sparse && !game.wish && !tisch) rightPage.appendChild(sec);
   /* „Wer wie gewertet hat" (#1190, T3.4/T6.3) — who is behind the number the
      left page prints, as one tile per person: their avatar, the mood their
      average rounds to, and that average.
@@ -786,6 +853,7 @@ async function showGameDetail(rid, gameId) {
     votesSec.appendChild(strip);
     rightPage.appendChild(votesSec);
   }
+  if (!sparse && !game.wish && tisch) rightPage.appendChild(sec);
 
 
   // The one action, alone in a bar at the foot of the right page (#1039). It
@@ -889,7 +957,15 @@ async function showGameDetail(rid, gameId) {
       } catch (e) { toast(e.message); }
     } });
   }
-  if (menuItems.length) {
+  // Der Tisch shows the same list as an „Aktionen" panel above the bar (T3.4;
+  // a 2×2 grid on the phone, T6.3) — and then drops „…": every item is already
+  // a button on the screen, and T15b does not repeat those in the menu.
+  if (menuItems.length && tisch) {
+    const panel = h(`<div class="section gd-actions"><h2>${esc(t('detail.actionsTitle'))}</h2><div class="gd-actions__grid"></div></div>`);
+    panel.querySelector('.gd-actions__grid')
+      .append(...menuItemButtons(menuItems, () => {}, { base: 'btn btn--sm gd-act', tone: false }));
+    rightPage.insertBefore(panel, bar);
+  } else if (menuItems.length) {
     back.classList.add('back-row--split');
     const menuBtn = h(`<button type="button" class="btn btn--sm gd-menu" aria-label="${esc(t('detail.moreActions'))}" aria-expanded="false"><i class="ti ti-dots" aria-hidden="true"></i></button>`);
     // Buttons only, so this is a popover at EVERY width — the account menu's

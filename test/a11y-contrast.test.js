@@ -659,7 +659,7 @@ test('the Wunschliste state chip clears AA on every theme', () => {
   assert.ok(chip, 'the .tag--wish rule was not found');
   assert.match(chip, /background:\s*var\(--brand-tint\)/,
     'the wish chip no longer washes with --brand-tint, so the numbers below do not apply to it');
-  assert.match(chip, /color:\s*var\(--brand-strong\)/,
+  assert.match(chip, /color:\s*var\((?:--brand-ink,\s*var\()?--brand-strong\)/,
     'the wish chip label must stay --brand-strong: plain --brand drops to 4.33:1 on Salbei');
 
   assert.deepEqual(sweep((t) => [['the wish chip', t.brandStrong, t.brandTint]]), [],
@@ -695,7 +695,7 @@ test('the applied-filter chip has a border that clears the 3:1 non-text bar on e
 
   assert.match(chip, /background:\s*var\(--brand-tint\)/,
     'the chip no longer washes with --brand-tint, so the reasoning above does not apply to it');
-  assert.match(chip, /color:\s*var\(--brand-strong\)/,
+  assert.match(chip, /color:\s*var\((?:--brand-ink,\s*var\()?--brand-strong\)/,
     'the chip label must stay --brand-strong: plain --brand on a brand tint drops to 4.33:1 on Salbei');
 
   const declared = /border:\s*[\d.]+px\s+solid\s+(var\(--[\w-]+\)|#[0-9a-f]{3,8})/i.exec(chip);
@@ -735,7 +735,7 @@ test('the Chronik milestone row keeps its label, its meta line AND its icon at A
   assert.ok(chip, 'the .tl-act--milestone .tl-act__icon rule was not found');
   assert.match(chip, /background:\s*var\(--brand-tint\)/,
     'the icon chip no longer washes with --brand-tint, so the numbers below do not apply to it');
-  assert.match(chip, /color:\s*var\(--brand-strong\)/,
+  assert.match(chip, /color:\s*var\((?:--brand-ink,\s*var\()?--brand-strong\)/,
     'the icon glyph must stay --brand-strong: plain --brand drops to 4.33:1 on Salbei');
 
   assert.deepEqual(sweep((t) => [
@@ -1526,6 +1526,30 @@ test('a design that declares a PAPER overlay family keeps every pair on it at AA
     }
   }
   assert.deepEqual(failures, [], 'the overlay inverts the scheme on a subtree; its pairs get the same bars');
+});
+
+test('Der Tisch\'s editor rows keep their marks and a red label legible under the pointer (#1273)', () => {
+  /* T15a's form rows (tisch.css „Rows"): a row that is a button lifts to
+     --brand-tint on hover, which the overlay re-points at --gold-hi. The row's
+     icon and the owners' state tick are --paper-faint (non-text, 3:1), and the
+     cover editor's „Bild entfernen" row writes its label in --danger, i.e.
+     --paper-danger inside an overlay (text, 4.5:1). Their RESTING grounds are
+     --paper-raised, which the paper-family test above already holds. */
+  const hosts = withToken('--paper');
+  assert.ok(hosts.length >= 1, 'no design declares --paper — this test is vacuous');
+  const failures = [];
+  for (const t of hosts) {
+    const v = (n) => token(n, t.design);
+    for (const [label, fg, bg, bar] of [
+      ['--paper-faint on --gold-hi (row icon / tick, hovered)', v('--paper-faint'), v('--gold-hi'), AA_LARGE],
+      ['--paper-danger on --gold-hi (destructive row, hovered)', v('--paper-danger'), v('--gold-hi'), AA_TEXT],
+      ['--paper-faint on --paper-raised (row icon / tick)', v('--paper-faint'), v('--paper-raised'), AA_LARGE],
+    ]) {
+      const ratio = contrast(fg, bg);
+      if (!(ratio >= bar)) failures.push(`${name(t)} — ${label} = ${ratio.toFixed(2)}:1 (bar ${bar})`);
+    }
+  }
+  assert.deepEqual(failures, []);
 });
 
 test('Der Tisch\'s hub tiles keep their figures and labels at AA on the grounds they sit on (#1262/#1263)', () => {

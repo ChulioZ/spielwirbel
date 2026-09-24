@@ -109,7 +109,7 @@ const frontendGlobals = {
   renderSeatPicker: 'readonly', createGuestList: 'readonly', renderTeamPicker: 'readonly',
   renderSetupAddons: 'readonly',
   hasGameInfo: 'readonly', gameInfoButton: 'readonly', openGameInfoSheet: 'readonly',
-  gameGlanceFacts: 'readonly', gameInfoRest: 'readonly',
+  gameGlanceFacts: 'readonly', gameInfoRest: 'readonly', playtimeText: 'readonly',
   wantsGameInfo: 'readonly', mergeGameInfo: 'readonly',
   foldGameInfoList: 'readonly', refreshShelfGameInfo: 'readonly',
   // username-policy.js
@@ -223,7 +223,7 @@ const frontendGlobals = {
   activePopover: 'writable', closePopover: 'readonly', openPopover: 'readonly',
   repositionPopover: 'readonly',
   // the „…" menu's one builder and its order (issue #1195)
-  MENU_KINDS: 'readonly', fillMenu: 'readonly', sortMenuItems: 'readonly', menuRank: 'readonly',
+  MENU_KINDS: 'readonly', fillMenu: 'readonly', menuItemButtons: 'readonly', sortMenuItems: 'readonly', menuRank: 'readonly',
   splitConfirmQuestion: 'readonly',
   readClipboardImage: 'readonly', shuffled: 'readonly', iconText: 'readonly',
   createCoverLoader: 'readonly',
@@ -377,7 +377,7 @@ const frontendGlobals = {
   editionCoverPicker: 'readonly',
   TAG_ICONS: 'readonly', tagIconClass: 'readonly',
   // views-home.js
-  showHome: 'readonly', showNewRound: 'readonly',
+  showHome: 'readonly', showNewRound: 'readonly', tischLobbyAlt: 'readonly',
   // views-round.js (hub + Start tab) and its siblings loaded right after it:
   // views-regal.js, views-chronik.js, views-pokale.js, views-archive.js,
   // views-round-detail.js, views-round-settings.js, views-round-actions.js,
@@ -434,6 +434,9 @@ const frontendGlobals = {
   hubPresetChips: 'readonly', hubPulseCard: 'readonly', hubCareCard: 'readonly',
   hubAnniversaryCard: 'readonly', renderRecoTeaser: 'readonly',
   editableRoundName: 'readonly',
+  // #1269 — Der Tisch's young-round states (hub-cards.js, views-round-start.js)
+  roundIsYoung: 'readonly', hubSentenceCard: 'readonly', hubYoungCard: 'readonly',
+  hubEmptyTable: 'readonly',
   // off-shelf.js (#1185) — the four off-shelf destinations, one definition
   offShelfEntries: 'readonly', offShelfSegments: 'readonly',
   // hub-previews.js (#1185) — the hub's three sub-page previews + „Nicht im Regal"
@@ -467,13 +470,22 @@ const frontendGlobals = {
   // member-stats.js (#1075 — split out of views-member.js)
   memberStats: 'readonly', BEST_GAME_MIN_PLAYS: 'readonly', bestGameSub: 'readonly',
   openAddMember: 'readonly', addMemberBtn: 'readonly',
+  // vote-card-tisch.js (issue #1268): Der Tisch's vote card + the link intro
+  VOTE_WORD_KEYS: 'readonly', voteWord: 'readonly', voteMoodButton: 'readonly', voteTurn: 'readonly',
+  voteHandoffLine: 'readonly', voteMetaLine: 'readonly', tischVoteCard: 'readonly', tischVoteLinkIntro: 'readonly',
   // views-session.js
   showStartSession: 'readonly', startVoting: 'readonly', showResults: 'readonly',
   showFinale: 'readonly', canShareResult: 'readonly', shareResult: 'readonly',
+  // views-session-setup-tisch.js (issue #1267): Der Tisch's setup composition
+  composeTischSetup: 'readonly', tischDrawSummary: 'readonly',
+  tischSetupDateLine: 'readonly',
   // views-session-tables.js (issue #796)
   showTableBuilder: 'readonly', tableStateFrom: 'readonly', tablePeopleIds: 'readonly',
   tableCoverBg: 'readonly',
   renderTischSplit: 'readonly', renderTischTable: 'readonly', renderTischTableTafel: 'readonly', // #1270
+  // result-tafel-tisch.js (issue #1275): Der Tisch's result Tafel and foot
+  tischTafelCols: 'readonly', tischTrow: 'readonly', tischPersonCrown: 'readonly',
+  paintTischCrowns: 'readonly', fillTischResultFoot: 'readonly',
   // views-session-live.js
   showSessionLobby: 'readonly', stopLobbyPoll: 'readonly', mySeatIn: 'readonly',
   sessionGames: 'readonly', LOBBY_POLL_MS: 'readonly', lobbyPoll: 'writable',

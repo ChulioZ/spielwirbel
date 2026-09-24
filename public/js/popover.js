@@ -85,10 +85,21 @@ function sortMenuItems(items) {
    `data-kind` is for a design that paints by meaning instead (Der Tisch). */
 function fillMenu(el, items, close) {
   el.classList.add('popover--menu');
-  sortMenuItems(items).forEach(({ icon, label, kind, cls, run }) => {
-    const b = h(`<button class="popover__opt${cls ? ' ' + cls : ''}" data-kind="${esc(kind || 'undoable')}"><i class="ti ${icon}" aria-hidden="true"></i> ${esc(label)}</button>`);
+  menuItemButtons(items, close).forEach((b) => el.appendChild(b));
+}
+/* The rows themselves, sorted, as buttons — for fillMenu, and for a screen that
+   shows the SAME list as buttons on the page instead of behind „…" (Der Tisch's
+   Spielepass „Aktionen" panel, #1274). One builder, so order, kind and the
+   confirm each `run` raises cannot fork between the two presentations.
+
+   `base` is the row class; a panel passes its own and drops the tone `cls`,
+   which is popover-row paint (`popover__opt--warn` …) and means nothing on a
+   button. `data-kind` stays on both — it is what Der Tisch paints by. */
+function menuItemButtons(items, close, { base = 'popover__opt', tone = true } = {}) {
+  return sortMenuItems(items).map(({ icon, label, kind, cls, run }) => {
+    const b = h(`<button class="${base}${tone && cls ? ' ' + cls : ''}" data-kind="${esc(kind || 'undoable')}"><i class="ti ${icon}" aria-hidden="true"></i> ${esc(label)}</button>`);
     b.addEventListener('click', () => { close(); run(); });
-    el.appendChild(b);
+    return b;
   });
 }
 
