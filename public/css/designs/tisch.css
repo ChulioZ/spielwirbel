@@ -2506,10 +2506,14 @@
 }
 /* The back control, out of Klassisch's corner and into the header's first
    slot: 44px stays (the target floor), the border goes (T2.4 draws a bare
-   chevron), the position goes back to the flow. */
+   chevron), the position goes back to the flow. The size is restated because
+   styles.css reads it from --undo-size, which only `.vote__who` declares — and
+   the Tisch header is not inside one (measured: 22px without this). */
 :root[data-design="tisch"][data-scheme="dark"] .vote--tisch .vote__undo {
   position: static;
   flex: none;
+  width: 44px;
+  height: 44px;
   border: none;
   color: var(--felt-ink);
 }
