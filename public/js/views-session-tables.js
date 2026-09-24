@@ -66,10 +66,27 @@ async function showTableBuilder(round, session, gamesHint) {
   app.innerHTML = '';
   renderSubScreenTabs(round, 'session');
   app.appendChild(backRow(() => showRound(round.id)));
+  // The finished split's tables, resolved against the round (see
+  // renderSplitSummary for why the stored ids are never trusted as-is).
+  const children = done
+    ? sessionChildIds(session).map((sid) => (round.sessions || []).find((s) => s.id === sid)).filter(Boolean)
+    : [];
+  // Der Tisch composes the finished split as ONE screen about the session
+  // (#1270, T4.5/T6.6): „2 Tische, eine Session" over who was there and where
+  // the results go, instead of Klassisch's heading plus a banner saying the
+  // same thing twice. Klassisch keeps its head byte-for-byte.
+  const tischSplit = done && children.length > 0 && designIs('tisch');
+  const subline = tischSplit
+    ? [
+      tn(people.length, 'tables.peopleOne', 'tables.people'),
+      when,
+      t('tables.sameChronik'),
+    ].join(' · ')
+    : tn(games.length, 'result.subtitleOne', 'result.subtitle', { when });
   app.appendChild(
-    h(`<div class="page-head"><div>
-         <h1>${esc(heading)}</h1>
-         <div class="muted">${esc(tn(games.length, 'result.subtitleOne', 'result.subtitle', { when }))}</div>
+    h(`<div class="page-head${tischSplit ? ' page-head--tables' : ''}"><div>
+         <h1>${esc(tischSplit ? tn(children.length, 'tables.headDoneOne', 'tables.headDone') : heading)}</h1>
+         <div class="muted">${esc(subline)}</div>
        </div></div>`)
   );
 
@@ -108,9 +125,10 @@ async function showTableBuilder(round, session, gamesHint) {
      list is built by resolving each id against the round and dropping what is
      gone, rather than trusting the stored array's length. */
   function renderSplitSummary() {
-    const children = sessionChildIds(session)
-      .map((sid) => (round.sessions || []).find((s) => s.id === sid))
-      .filter(Boolean);
+    if (tischSplit) {
+      body.appendChild(renderTischSplit(round, session, games, children));
+      return;
+    }
     body.appendChild(
       h(`<div class="chosen-banner is-set">${iconText('ti-layout-grid', tn(children.length, 'tables.splitOne', 'tables.split'))}</div>`)
     );
@@ -410,6 +428,160 @@ async function showTableBuilder(round, session, gamesHint) {
       } catch (e) { toast(e.message); }
     }
   }
+}
+
+/* ---- Der Tisch: one result per table (#1270, T4.5 desktop / T6.6 phone) ----
+   Each table is the result screen in miniature: its own felt head — the table's
+   label, the people at it (a crown over whoever won) and the result screen's
+   standard sentence — over a paper Tafel of that table's ranking. A footer
+   carries „Alle Tische teilen" and the round's start action.
+
+   THE TAFEL IS DERIVED, and it has to be. A split session holds ONE vote — the
+   parent's — and each child is a direct-pick session created with `votes: {}`
+   (lib/session-split.js). So a table's ranking is the parent's draw scored with
+   only that table's seated people, through `tableFeedback`: the SAME function
+   and the same curve the builder chose this split on, and the one the Klassisch
+   card's pill already prints. A guest's child id is freshly minted, so their
+   vote is not attributable and counts as NEUTRAL_RATING — exactly as the pill
+   treats it. Nothing is stored; a different reading of the same votes would be
+   a second opinion of the split, which is what the Klassisch card avoids too.
+
+   Returns a fragment; the caller owns where it goes. */
+function renderTischSplit(round, session, games, children) {
+  const frag = document.createDocumentFragment();
+  const voted = sessionHasVotes(session);
+  const baseMarker = roundMarker(round);
+  const list = h('<div class="split-tables split-tables--tisch"></div>');
+  children.forEach((child, index) => {
+    list.appendChild(renderTischTable(round, session, games, children, child, index, voted, baseMarker));
+  });
+  frag.appendChild(list);
+
+  // The foot (T4.5, T6.6). Same share model as Klassisch's button — one message
+  // covering every table, which IS „both" — and the round's own start action,
+  // gated exactly as the hub gates it. Rendered only when there is something to
+  // put in it, so the footer never stands empty.
+  const foot = h('<div class="split-tables__foot"></div>');
+  if (canShareResult()) {
+    const shareBtn = h(`<button type="button" class="btn btn--ghost">${iconText('ti-share', t('tables.shareAll'))}</button>`);
+    shareBtn.addEventListener('click', () => shareResult({
+      roundName: round.name,
+      when: fmtDateTime(session.createdAt),
+      outcome: 'split',
+      tables: children.map((child) => ({
+        title: (round.games.find((g) => g.id === child.chosenGameId) || {}).title || t('tables.gameGone'),
+        names: sessionPeople(round, child).map(personLabel).join(', '),
+      })),
+    }));
+    foot.appendChild(shareBtn);
+  }
+  const startBtn = h(`<button type="button" class="btn btn--primary">${iconText('ti-tornado', t('round.startSession'))}</button>`);
+  startBtn.addEventListener('click', () => showStartSession(round));
+  if (!round.games.some(isActiveGame)) {
+    startBtn.disabled = true;
+    startBtn.title = t('round.startSessionDisabled');
+  }
+  foot.appendChild(startBtn);
+  frag.appendChild(foot);
+  return frag;
+}
+
+function renderTischTable(round, session, games, children, child, index, voted, baseMarker) {
+  const game = round.games.find((g) => g.id === child.chosenGameId);
+  const gname = game ? game.title : t('tables.gameGone');
+  const seated = sessionPeople(round, child);
+  const outcome = sessionOutcome(child);
+  const winners = new Set(child.winnerIds || []);
+
+  // The standard sentence — the result screen's own keys (views-session.js
+  // updateTitle), so a table says what that table's result screen says. The
+  // winners' names are cut out of the escaped string and put back inside a span,
+  // which is what lets the design set them apart without a second copy of the
+  // sentence's grammar.
+  const MARK = '\u0001';
+  let sentence;
+  const names = seated.filter((p) => winners.has(p.id)).map(personLabel);
+  if (outcome === 'cancelled') sentence = esc(t('result.titleCancelled'));
+  else if (outcome !== 'played') sentence = esc(t('tables.sentenceOpen', { game: gname }));
+  else if (names.length) {
+    sentence = esc(tn(names.length, 'result.titleWonOne', 'result.titleWonMany', { game: gname, names: MARK }))
+      .replace(MARK, `<span class="split-table__winners">${esc(joinNames(names))}</span>`);
+  } else {
+    const meta = ENDING_LABELS[sessionEnding(child)];
+    sentence = esc(meta ? t(meta.title, { game: gname }) : t('result.titlePlayed', { game: gname }));
+  }
+
+  // Each table on its own felt: the round's marker for the first, the design's
+  // next felts for the rest, so two tables read as two tables. Every felt's
+  // light and deep stop is swept against --felt-ink by test/a11y-contrast.test.js.
+  const felt = markerOf(activeDesign().id, (baseMarker + index) % MARKER_COUNT);
+  const feltStyle = felt ? ` style="--marker:${felt.color};--marker-deep:${felt.deep}"` : '';
+  const pips = seated.map((p) => `<span class="split-table__person${winners.has(p.id) ? ' is-winner' : ''}" title="${esc(personLabel(p))}">
+       ${winners.has(p.id) ? '<i class="ti ti-crown split-table__crown" aria-hidden="true"></i>' : ''}
+       <span class="avatar${p.guest ? ' avatar--guest' : ''}"${p.guest ? '' : ` style="background:${memberColor(round, p.id)}"`}>${avatarFace(initials(p.name), { userId: p.userId })}</span>
+     </span>`).join('');
+
+  const table = h(`<article class="split-table${outcome === 'played' ? '' : ' is-off'}">
+       <a class="split-table__head"${feltStyle}>
+         <span class="split-table__top">
+           <span class="split-table__label">${esc(t('tables.tableLabel', { n: index + 1 }))}</span>
+           <span class="split-table__people" aria-hidden="true">${pips}</span>
+         </span>
+         <span class="split-table__sentence">${sentence}</span>
+         <span class="sr-only">${esc(t('result.participants'))}: ${esc(seated.map(personLabel).join(', '))}</span>
+       </a>
+     </article>`);
+  navLink(table.querySelector('.split-table__head'), resultsPath(round.id, child.id), () => showResults(round, child));
+
+  // A cancelled table played nothing, so it has nothing to rank; nor does a
+  // split nobody voted on — a table of neutral fallbacks is not a ranking.
+  if (voted && outcome !== 'cancelled' && games.length) {
+    table.appendChild(renderTischTableTafel(round, session, games, children, child, seated));
+  }
+  return table;
+}
+
+function renderTischTableTafel(round, session, games, children, child, seated) {
+  const personIds = seated.map((p) => p.id);
+  const rows = games.map((g) => {
+    const fb = tableFeedback({ gameId: g.id, personIds }, session.votes || {}, tileValue);
+    const score = fb.avg === null ? 0 : fb.avg;
+    return { game: g, score, shown: displayScore(score), count: personIds.length };
+  });
+  rows.sort((a, b) => b.score - a.score);
+  computePlaces(rows).forEach((place, i) => { rows[i].place = place; });
+  // Three rows, as both sheets draw it — plus the game this table actually
+  // played when the ranking put it lower, at its real place, so the Tafel never
+  // hides the one row the head's sentence is about.
+  const shown = rows.slice(0, 3);
+  const played = rows.find((r) => r.game.id === child.chosenGameId);
+  if (played && !shown.includes(played)) shown.push(played);
+
+  const tafel = h(`<div class="split-table__tafel"></div>`);
+  shown.forEach((r) => {
+    const g = r.game;
+    const here = g.id === child.chosenGameId;
+    // A game the draw sent to ANOTHER table says which — otherwise a top row
+    // that was not played here reads as a mistake.
+    const elsewhere = here ? -1 : children.findIndex((c) => c !== child && c.chosenGameId === g.id);
+    const tag = here
+      ? t('sessions.played')
+      : elsewhere >= 0 ? t('tables.tableLabel', { n: elsewhere + 1 }) : '';
+    const bringers = boxBringers(round, child, g, shelfParty);
+    const row = h(`<div class="split-row${here ? ' is-played' : ''}">
+         <span class="split-row__rank">${r.place || ''}</span>
+         <span class="split-row__img"${tableCoverBg(g)}>${coverPlaceholder(g)}</span>
+         <span class="split-row__main">
+           <a class="split-row__title">${esc(g.title)}</a>
+           ${bringers.length ? `<span class="split-row__owners">${esc(t('result.ownedBy', { names: bringers.join(', ') }))}</span>` : ''}
+         </span>
+         <span class="score-pill split-row__pill" style="--sc:${scoreColor(r.score)}" data-stop="${scoreStop(r.score)}">${esc(fmtAvg(r.shown))}</span>
+         <span class="split-row__tag">${esc(tag)}</span>
+       </div>`);
+    makeGameLink(row.querySelector('.split-row__title'), round.id, g.id);
+    tafel.appendChild(row);
+  });
+  return tafel;
 }
 
 // Covers are painted straight onto the tile rather than lazily (#198): this

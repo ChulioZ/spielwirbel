@@ -1737,6 +1737,33 @@ test('a design whose gold row is a SWEEP carries one ink across both its stops',
   assert.deepEqual(failures, [], 'the winning row has one ink, so it must hold on both stops');
 });
 
+test('a design’s gold holds as DISPLAY type on every one of its felts', () => {
+  /* #1270, T4.5: each table of a split session sits on its own felt — the
+     design's markers, one per table — and at the rail width the winners' names
+     in its sentence are printed in --gold at 26px/800. Finding A1 limits gold on
+     felt to display size, so the bar is the large-text one, measured on BOTH
+     stops of all eight felts (a table can land on any of them). Ockerfilz's
+     light stop is the tightest, at 3.56:1. Below the rail width the sentence is
+     smaller and the names take the felt's own ink, which the marker sweep
+     above already measures. */
+  const hosts = withToken('--gold').filter((t) => (DESIGN_REGISTRY.find((d) => d.id === t.design.id) || {}).markers);
+  assert.ok(hosts.length >= 1, 'no design declares gold and felts — this test is vacuous');
+  const failures = [];
+  let checked = 0;
+  for (const t of hosts) {
+    const gold = token('--gold', t.design);
+    for (const m of DESIGN_REGISTRY.find((d) => d.id === t.design.id).markers) {
+      for (const stop of [m.color, m.deep]) {
+        checked++;
+        const ratio = contrast(gold, rgb(stop));
+        if (ratio < barFor({ px: 26, weight: 800 })) failures.push(`${name(t)} — --gold on ${m.key} ${stop} = ${ratio.toFixed(2)}:1`);
+      }
+    }
+  }
+  assert.ok(checked >= 16, 'the sweep did not reach the felts');
+  assert.deepEqual(failures, [], 'gold names on a table’s felt must read as large text');
+});
+
 test('a design that declares Pokale PLINTHS carries their one ink on all six stops', () => {
   /* #1196, T13.2 — review finding A5: „Dunkle Tinte #2f2109 auf allen drei
      Sockeln". The three plinths are gradients, so a stop-by-stop sweep is the
