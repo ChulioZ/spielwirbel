@@ -1242,6 +1242,13 @@ I18N.ko = {
   'konto.title': '계정',
   'konto.menu': '계정',
   'konto.identity': '내 정보',
+  // Der Tisch's Konto dashboard (#1265): the „Du" card and the setting rows' values.
+  'konto.du.title': '나',
+  'konto.du.since': '{date}부터',
+  'konto.row.on': '켬',
+  'konto.row.off': '끔',
+  'konto.row.partly': '일부',
+  'konto.row.pending': '대기 중',
   'konto.email.title': '이메일 주소 변경',
   'konto.email.intro': '이메일 주소는 로그인 아이디이자 비밀번호를 재설정할 수 있는 유일한 수단입니다. 새 주소로 확인 링크를 보내 드리며, 그 링크를 열기 전까지는 아무것도 바뀌지 않습니다.',
   'konto.email.pendingIntro': '확인을 기다리는 변경이 있습니다. 그때까지는 기존 주소로 계속 로그인할 수 있습니다.',

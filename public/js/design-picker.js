@@ -95,8 +95,11 @@ function renderDesignPicker(cfg, current, onPick) {
    The pick is saved IMMEDIATELY, with no save button. It is a preference with a
    visible effect and an obvious undo (pick the other card), which is the same
    shape the notify and stats toggles use — a Save button here would leave the
-   page already wearing a design the account does not hold. */
-function buildDesignSection(me) {
+   page already wearing a design the account does not hold.
+
+   `onSaved` (#1265) runs once a pick is stored: the Konto screen uses it to
+   re-render when the new design composes that screen differently. */
+function buildDesignSection(me, onSaved) {
   const wrap = h('<div class="konto-design"></div>');
   withAppConfig((cfg) => {
     if (offeredDesigns(cfg).length < 2) return;
@@ -114,6 +117,7 @@ function buildDesignSection(me) {
         me.design = updated.design;
         applyAccountDesign();
         toast(t('konto.design.saved'));
+        if (onSaved) onSaved(updated);
       } catch (ex) {
         // Revert the paint, then re-render so the radios agree with what is
         // actually stored — leaving the refused card checked over a reverted

@@ -1270,6 +1270,13 @@ I18N.fi = {
   'konto.title': 'Tili',
   'konto.menu': 'Tili',
   'konto.identity': 'Omat tiedot',
+  // Der Tisch's Konto dashboard (#1265): the „Du" card and the setting rows' values.
+  'konto.du.title': 'Sinä',
+  'konto.du.since': '{date} alkaen',
+  'konto.row.on': 'päällä',
+  'konto.row.off': 'pois',
+  'konto.row.partly': 'osittain',
+  'konto.row.pending': 'odottaa',
   'konto.email.title': 'Vaihda sähköpostiosoite',
   'konto.email.intro': 'Osoitteesi on kirjautumistunnuksesi ja ainoa tapa palauttaa salasana. Lähetämme vahvistuslinkin uuteen osoitteeseen — mikään ei muutu ennen kuin avaat sen.',
   'konto.email.pendingIntro': 'Muutos odottaa vahvistusta. Siihen asti kirjaudut edelleen nykyisellä osoitteellasi.',

@@ -2794,25 +2794,30 @@
    Sources: Tisch-T5-Konto.dc.html (T5.1 Anmelden, T5.2 Konto, T5.3
    Auswahlkarte, T5.4 Telefon).
 
-   Three things the sheet draws that this slice deliberately does NOT build,
-   by the operator's decision (2026-09-22) that „the sheet's intent is the
-   design, not the ordering":
+   #1193 was the PAINT slice: it took the sheet's materials — the sign-in on
+   felt, the form on a walnut plank, the design posters printed on paper — onto
+   elements the app already rendered, and added no markup and no copy. It was
+   written under a reading of the operator's #1193 ruling that turned out to be
+   a misunderstanding. The corrected ruling (2026-09-24): a design OWNS ITS
+   LAYOUT. Where the sheet's composition is the design's intent, Der Tisch
+   builds it, markup included; only an incidental reordering of identical
+   controls is not copied.
 
-   - T5.1 puts the passkey button ABOVE the e-mail form as the primary way in.
-     It stays where it is, below the submit — and therefore stays the raised
-     wood control, with the gold reserved for the form's own primary. Two gold
-     buttons stacked, the lower one louder, is worse than either order.
-   - T5.1 and T5.4 head the card with an „Anmelden | Registrieren" segmented
-     control. The app's two cross-links keep their place at the foot of the
-     card and are skinned there.
+   So what the sheet composes and this block does not is owned elsewhere now,
+   not declined:
+
+   - T5.1's passkey button ABOVE the e-mail form is the ruling's own example of
+     an incidental reordering, and stays where the app puts it. It keeps the
+     raised wood control, with the gold reserved for the form's primary.
+   - T5.1's split screen and its „Anmelden | Registrieren" segmented control
+     are the sign-in's composition — #1266.
+   - T5.2's two-column dashboard (the „Du" card of setting rows beside the
+     Design card, the BoardGameGeek row card, the danger card) is Konto's
+     composition — #1265, the block after this one.
+   - T5.3's posters with their own wordmark and button — #1277.
    - T5.1's „Lieber ohne Passwort? · Link schicken" card has no feature behind
-     it at all. This app has no magic-link login — the only mailed links are
-     verify, reset and address-change — so there is nothing here to paint.
-
-   What IS taken from the sheet is its MATERIALS and where each one belongs:
-   the sign-in on felt, the form on a walnut plank, the design posters printed
-   on paper. Every one of those lands on an element the app already renders,
-   so this slice adds no markup and no copy — it is paint from end to end.
+     it at all: this app has no magic-link login. That is a feature question,
+     not a layout one.
    =========================================================================== */
 
 /* --- The sign-in plank (T5.1, T5.4) ---------------------------------------
@@ -2953,6 +2958,235 @@
 :root[data-design="tisch"][data-scheme="dark"] .design-chooser__kicker {
   color: var(--gold-ink);
 }
+
+/* ===========================================================================
+   #1265 — KONTO as the sheet's DASHBOARD (T5.2 at 1440, T5.4 at 390).
+
+   The markup is views-account-tisch.js's, built only while this design is
+   worn: a „Du" card (identity, then every setting as a disclosure row showing
+   its current value), the Design card, the BoardGameGeek row card, the install
+   nudge when there is one, and the danger card — in that DOM order. Every form
+   inside is the Klassisch builder, unchanged.
+
+   Two columns only from the rail breakpoint, and only for the first two cards
+   (Du | Design); everything after them spans. Below 1280 the cards stack in
+   DOM order, so there is no grid placement anywhere that could make the
+   reading order disagree with the picture.
+
+   GEOMETRY is gated on the design alone, like the dock clearance at the top of
+   this file: the markup exists whenever Der Tisch is worn, so the layout that
+   holds it must too. COLOURS keep the scheme gate every other paint rule here
+   carries.
+   =========================================================================== */
+:root[data-design="tisch"] .konto-dash {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+:root[data-design="tisch"] .konto-card {
+  margin: 0;
+  padding: 18px 20px;
+  border-radius: var(--radius-lg);
+}
+/* The Design card is buildDesignSection's own wrapper, filled only when the
+   instance offers more than one design. Empty, it would frame nothing. */
+:root[data-design="tisch"] .konto-card--design:empty { display: none; }
+/* T5.2 sets the hint on the heading's line: „Design  Gilt für dich, nicht für
+   die Runde". Both stay the section's own elements, in their own order. */
+:root[data-design="tisch"] .konto-card--design > .konto-section__h {
+  display: inline;
+  margin: 0 10px 0 0;
+  font-family: var(--font-display);
+}
+:root[data-design="tisch"] .konto-card--design > .konto-section__h + .muted {
+  display: inline;
+  margin: 0;
+  font-size: var(--text-sm);
+}
+:root[data-design="tisch"] .konto-card--design > .design-picker { margin-top: 14px; }
+:root[data-design="tisch"] .konto-card__h {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 14px;
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+}
+
+/* --- The „Du" card -------------------------------------------------------
+   The picture form's own wrapper becomes the identity head: picture, then the
+   name and address buildAvatarForm was handed, then its buttons — T5.2's
+   avatar · name · „Bearbeiten" line, in DOM order. */
+:root[data-design="tisch"] .konto-card--du .konto-avatar {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px 16px;
+  margin: 0 0 8px;
+  padding-bottom: 16px;
+}
+:root[data-design="tisch"] .konto-card--du .konto-avatar__preview {
+  width: 64px;
+  height: 64px;
+  font-size: 23px; /* glyph, not type — the same 0.36 ratio styles.css uses at 72 */
+}
+:root[data-design="tisch"] .konto-card--du .konto-avatar > .konto-error { grid-column: 1 / -1; }
+:root[data-design="tisch"] .konto-du__who {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+:root[data-design="tisch"] .konto-du__name {
+  font-weight: 700;
+  font-size: var(--text-md);
+  overflow-wrap: anywhere;
+}
+:root[data-design="tisch"] .konto-du__meta {
+  font-size: var(--text-sm);
+  overflow-wrap: anywhere;
+}
+:root[data-design="tisch"] .konto-du__demo { margin: 12px 0 0; font-size: var(--text-sm); }
+
+/* The rows. A 44px floor for the target (SC 2.5.8 wants 24; the sheet draws
+   ~60), and a four-track grid so every value and chevron lines up down the
+   card whatever the label length. */
+:root[data-design="tisch"] .konto-row__h {
+  margin: 0;
+  font: inherit;
+}
+:root[data-design="tisch"] .konto-row__btn {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) auto 16px;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 52px;
+  padding: 6px 6px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+:root[data-design="tisch"] .konto-row__icon { font-size: 20px; }
+:root[data-design="tisch"] .konto-row__label {
+  font-weight: 600;
+  font-size: var(--text-md);
+  overflow-wrap: anywhere;
+}
+:root[data-design="tisch"] .konto-row__value {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-align: right;
+}
+:root[data-design="tisch"] .konto-row__chev { transition: transform 0.15s ease; }
+:root[data-design="tisch"] .konto-row__btn[aria-expanded="true"] .konto-row__chev { transform: rotate(90deg); }
+@media (prefers-reduced-motion: reduce) {
+  :root[data-design="tisch"] .konto-row__chev { transition: none; }
+}
+/* The panel opens under its row, indented to the label's edge so it reads as
+   belonging to it. The builders' own 30px section spacing is the Klassisch
+   column's rhythm, not a panel's. */
+:root[data-design="tisch"] .konto-row__panel { padding: 4px 6px 18px 40px; }
+:root[data-design="tisch"] .konto-row__panel > .konto-notify,
+:root[data-design="tisch"] .konto-row__panel > .konto-pw { margin-bottom: 0; }
+
+/* --- The BoardGameGeek row card and the danger card ---------------------- */
+:root[data-design="tisch"] .konto-card--bgg .konto-pw { margin: 0; }
+:root[data-design="tisch"] .konto-dash > .install-section { margin: 0; }
+/* The danger card is buildDeleteSection's own `.konto-danger` block, so it
+   keeps that block's --danger tint from styles.css (resolved on this design's
+   walnut) instead of taking the plain card ground below. */
+:root[data-design="tisch"] .konto-card--danger { padding: 16px 20px; }
+:root[data-design="tisch"] .konto-card--danger .konto-card__h { margin-bottom: 6px; }
+/* T5.2 sets the consequence as the card's sub-line, not as body copy. */
+:root[data-design="tisch"] .konto-card--danger p { font-size: var(--text-sm); }
+
+@media (max-width: 520px) {
+  :root[data-design="tisch"] .konto-card { padding: 16px; }
+  /* The picture's buttons drop under the name rather than squeezing it. */
+  :root[data-design="tisch"] .konto-card--du .konto-avatar { grid-template-columns: auto minmax(0, 1fr); }
+  :root[data-design="tisch"] .konto-card--du .konto-avatar__actions { grid-column: 1 / -1; }
+  :root[data-design="tisch"] .konto-row__panel { padding-left: 6px; }
+}
+
+/* From 860 the two row cards take T5.2's one-line shape: what it is on the
+   left, the control on the right. DOM order already reads that way. */
+@media (min-width: 860px) {
+  :root[data-design="tisch"] .konto-card--bgg {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
+    gap: 0 24px;
+    align-items: start;
+  }
+  :root[data-design="tisch"] .konto-card--bgg .konto-card__h { margin: 30px 0 0; }
+  /* The field and „Speichern" on one line, as T5.2 draws them. `.field` steps
+     aside (display: contents) so its label, input and hint join the form's own
+     grid — the button then sits beside the INPUT rather than beside the whole
+     field. The focus order is unchanged: input, then button. */
+  :root[data-design="tisch"] .konto-card--bgg .konto-pw {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0 10px;
+    align-items: center;
+  }
+  :root[data-design="tisch"] .konto-card--bgg .konto-pw .field { display: contents; }
+  :root[data-design="tisch"] .konto-card--bgg .konto-pw .field > * { grid-column: 1; }
+  :root[data-design="tisch"] .konto-card--bgg .konto-pw .field__hint { margin: 6px 0 0; }
+  :root[data-design="tisch"] .konto-card--bgg .konto-pw .konto-error { grid-column: 1 / -1; }
+  :root[data-design="tisch"] .konto-card--bgg .konto-pw button { grid-column: 2; grid-row: 2; }
+  :root[data-design="tisch"] .konto-card--danger {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0 24px;
+    align-items: center;
+  }
+  :root[data-design="tisch"] .konto-card--danger p { margin: 0; }
+  :root[data-design="tisch"] .konto-card--danger .btn { grid-column: 2; grid-row: 1 / span 2; }
+}
+
+@media (min-width: 1280px) {
+  /* Out of the 900px reading measure, like the other two-column screens: Konto
+     renders no navigation at all (it is a main page — no rail, no dock, no back
+     row), so widening it moves nothing. The heading goes WITH the cards: it is
+     a sibling, and capped it centres at 900 while the cards start at the
+     pane's edge — 250px between a label and what it labels (the #543 lesson).
+     (0,5,1) against the cap's (0,3,0). */
+  :root[data-design="tisch"] .app:has(.konto-dash) > *:not(.rail):not(.dock):is(.lobby-head, .konto-dash) {
+    max-width: var(--w-detail);
+  }
+  :root[data-design="tisch"] .konto-dash {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 20px;
+  }
+  :root[data-design="tisch"] .konto-dash > :not(.konto-card--du):not(.konto-card--design) { grid-column: 1 / -1; }
+  /* No design to choose (one offered): the „Du" card takes the row alone. */
+  :root[data-design="tisch"] .konto-dash:has(> .konto-card--design:empty) { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Paint. The cards are walnut planks on the page, like every other panel on
+   this design; the danger card is excluded because it carries its own tint. */
+:root[data-design="tisch"][data-scheme="dark"] .konto-card:not(.konto-card--danger) {
+  background: var(--surface);
+  border: 1px solid var(--gold-edge);
+  box-shadow: var(--shadow-2), inset 0 0 0 1px var(--wood-grain);
+}
+:root[data-design="tisch"][data-scheme="dark"] .konto-card--du .konto-avatar { border-bottom: 1px solid var(--gold-edge); }
+:root[data-design="tisch"][data-scheme="dark"] .konto-du__meta,
+:root[data-design="tisch"][data-scheme="dark"] .konto-row__value,
+:root[data-design="tisch"][data-scheme="dark"] .konto-row__chev,
+:root[data-design="tisch"][data-scheme="dark"] .konto-row__icon { color: var(--ink-soft); }
+:root[data-design="tisch"][data-scheme="dark"] .konto-row__btn:hover { background: var(--control-fill); }
+:root[data-design="tisch"][data-scheme="dark"] .konto-row__btn:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+:root[data-design="tisch"][data-scheme="dark"] .konto-card--bgg .konto-card__h .ti { color: var(--gold); }
 
 /* ===========================================================================
    #1194 — the EMPTY and YOUNG states, the demo's banderole, and the two

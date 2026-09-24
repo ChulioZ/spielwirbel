@@ -1310,6 +1310,13 @@ I18N.fr = {
   'konto.title': 'Compte',
   'konto.menu': 'Compte',
   'konto.identity': 'Tes informations',
+  // Der Tisch's Konto dashboard (#1265): the „Du" card and the setting rows' values.
+  'konto.du.title': 'Toi',
+  'konto.du.since': 'depuis {date}',
+  'konto.row.on': 'activé',
+  'konto.row.off': 'désactivé',
+  'konto.row.partly': 'en partie',
+  'konto.row.pending': 'en attente',
   'konto.email.title': 'Changer l’adresse e-mail',
   'konto.email.intro': 'Ton adresse est ton identifiant et le seul moyen de réinitialiser ton mot de passe. Nous envoyons un lien de confirmation à la nouvelle adresse — tant que tu ne l’ouvres pas, rien ne change.',
   'konto.email.pendingIntro': 'Un changement attend d’être confirmé. D’ici là tu continues à te connecter avec ton adresse actuelle.',
