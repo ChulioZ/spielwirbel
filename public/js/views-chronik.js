@@ -141,13 +141,14 @@ function renderChronikTab(round, activities) {
   const sec = h('<div class="section"></div>');
   const secHead = h(`<div class="section-head"><h1>${esc(t('chronik.title'))}</h1></div>`);
   // Der Tisch names what the page IS beside its title — „23 Sessions seit Mai
-  // 2025" (T13.1). Counted over the same top-level entries the timeline lists,
-  // so the number and the strips below it can never disagree.
+  // 2025" (T13.1). Counted exactly as the rail beside it counts (round-rail.js:
+  // every FINISHED session), not over the strips: a cancelled night is listed
+  // but was never played, and counting it put „7" here beside the rail's „6".
   if (tisch) {
-    const listed = entries.filter((e) => e.kind === 'session');
-    if (listed.length) {
-      const since = listed[listed.length - 1].at;
-      secHead.appendChild(h(`<span class="chronik__count">${esc(tn(listed.length, 'chronik.countOne', 'chronik.count', { month: fmtMonth(since) }))}</span>`));
+    const counted = round.sessions.filter((s) => s.finished);
+    if (counted.length) {
+      const since = counted.reduce((a, s) => (s.createdAt < a ? s.createdAt : a), counted[0].createdAt);
+      secHead.appendChild(h(`<span class="chronik__count">${esc(tn(counted.length, 'chronik.countOne', 'chronik.count', { month: fmtMonth(since) }))}</span>`));
     }
   }
   sec.appendChild(secHead);

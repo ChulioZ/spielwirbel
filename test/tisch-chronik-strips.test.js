@@ -195,3 +195,17 @@ test('Tisch: the recap has a one-line entry that opens the SAME section in place
   assert.equal(entry.getAttribute('aria-expanded'), 'false');
   assert.ok(!recap.classList.contains('is-open'));
 });
+
+test('Tisch: the page count agrees with the rail — a cancelled session is listed but not counted', (t) => {
+  // The rail's „N Sessions" counts FINISHED sessions (round-rail.js); the
+  // Chronik's heading sat beside it and counted every strip, so a round with
+  // one cancelled night read „7" beside „6" on the same screen.
+  const dom = loadApp({ locale: 'de' });
+  t.after(() => dom.close());
+  dom.run('applyDesign("tisch")');
+  const cancelled = { ...played('s0', '2026-06-15T12:00:00.000Z'), finished: false, cancelled: true, done: true, winnerIds: [], chosenGameId: null };
+  dom.call('renderChronikTab', { ...ROUND, sessions: [...ROUND.sessions, cancelled] }, ACTIVITIES);
+  assert.equal(timeline(dom).querySelectorAll('.session-card').length, 4, 'the cancelled night is still in the list');
+  assert.match(dom.app.querySelector('.section-head .chronik__count').textContent, /^3 Sessions seit Juli 2026$/,
+    'counted as the rail counts: finished sessions, and since the first of those');
+});
