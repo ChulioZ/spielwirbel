@@ -1885,9 +1885,9 @@
 :root[data-design="tisch"][data-scheme="dark"] .section-tools .link-btn .ti { color: var(--gold); }
 
 /* Phone: the search takes its own line and the rest become one chip row, which
-   is what T6.2 draws. `flex: 1 1 0` rather than `auto`, so the three chips are
-   equal thirds whatever their labels say — Finnish and Portuguese are the long
-   ones and they wrap inside their own chip instead of stealing the row. */
+   is what T6.2 draws. The chips size to their labels and share what is left;
+   a label never wraps inside its chip, the row breaks onto a second line
+   instead when a locale needs it (Finnish, Portuguese). */
 @media (max-width: 859px) {
   :root[data-design="tisch"][data-scheme="dark"] .section-tools { gap: 8px; }
   :root[data-design="tisch"][data-scheme="dark"] .section-tools .search-pill {
@@ -1897,9 +1897,13 @@
   }
   :root[data-design="tisch"][data-scheme="dark"] .section-tools .sort-select,
   :root[data-design="tisch"][data-scheme="dark"] .section-tools .link-btn {
-    flex: 1 1 0;
-    min-width: 0;
+    /* A label never breaks inside its chip — the ROW wraps instead. At a zero
+       basis the chips split the row evenly and „Nicht im Regal" stood on three
+       lines in its pill (found in the #1278 merge interview). */
+    flex: 1 1 auto;
+    white-space: nowrap;
     min-height: 40px;
+    gap: 6px; /* flex drops the space between icon and label */
     justify-content: center;
     border-radius: 999px;
     font-size: var(--text-xs);
@@ -1930,8 +1934,8 @@
     white-space: nowrap;
   }
   :root[data-design="tisch"][data-scheme="dark"] .section-tools .fbar__trigger {
-    flex: 1 1 0;
-    min-width: 0;
+    flex: 1 1 auto;
+    white-space: nowrap;
     min-height: 40px;
     justify-content: center;
     border-radius: 999px;

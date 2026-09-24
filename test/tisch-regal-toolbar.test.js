@@ -238,3 +238,20 @@ test('CSS: the toolbar no longer reorders anything (DOM order is the drawn order
   assert.doesNotMatch(SHEET, /\.section-tools \.search-pill \{ order:/);
   assert.doesNotMatch(SHEET, /\.section-tools:has\(\.search-pill\)/);
 });
+
+// Found in the merge interview (2026-09-24): with every chip at `flex: 1 1 0`
+// the row split 374px evenly and „Nicht im Regal" wrapped onto THREE lines
+// inside its pill. A label never breaks inside a chip now; the ROW wraps
+// instead, which holds for the long locales (fi, pt) without a per-language
+// tweak.
+test('CSS: on a phone a toolbar chip never wraps its label; the row wraps instead', () => {
+  const H = ':root[data-design="tisch"][data-scheme="dark"] ';
+  const at = SHEET.indexOf(H + '.section-tools .sort-select,\n  ' + H + '.section-tools .link-btn {');
+  assert.ok(at > 0, 'the phone chip rule moved');
+  const body = SHEET.slice(SHEET.indexOf('{', at) + 1, SHEET.indexOf('}', at));
+  assert.match(body, /white-space:\s*nowrap/);
+  assert.doesNotMatch(body, /flex:\s*1 1 0\b/, 'a zero basis shares the row evenly and squeezes the long label');
+  const trig = SHEET.indexOf(H + '.section-tools .fbar__trigger {\n    flex:');
+  assert.ok(trig > 0, 'the phone filter-chip rule moved');
+  assert.match(SHEET.slice(trig, SHEET.indexOf('}', trig)), /white-space:\s*nowrap/);
+});
