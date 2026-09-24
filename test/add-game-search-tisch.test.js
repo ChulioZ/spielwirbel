@@ -138,7 +138,7 @@ test('Tisch: each row carries its own state, read from the provider link', async
 
   const wish = row('Nordland');
   assert.equal(wish.querySelector('.add-search__state').textContent, 'Auf der Wunschliste');
-  assert.ok(wish.querySelector('.add-search__add'), 'a wished game can still be added to the shelf');
+  assert.ok(wish.querySelector('.add-search__shelve'), 'a wished game is moved onto the shelf, not added again');
 
   const archived = row('Nordwind');
   assert.equal(archived.querySelector('.add-search__state').textContent, 'Im Archiv dieser Runde');
@@ -160,42 +160,65 @@ test('Tisch wish variant: on the list and on the shelf are both held', async (t)
   assert.ok(row('Nordlicht-Expedition').querySelector('.add-search__add'));
 });
 
-test('Tisch: „Hinzufügen" adds the hit directly, as pick + „Speichern" would', async (t) => {
-  const { dom, calls, toasts, row, input } = await searched(t, { detail: { minPlayers: 1, maxPlayers: 5, imageUrl: 'https://cf.geekdo-images.com/x.jpg' } });
+test('Tisch: „Hinzufügen" opens the form prefilled with the hit, as a lookup pick would', async (t) => {
+  // Operator decision 2026-09-24: a hit is a starting point, not a save — the
+  // form opens filled (title, players, provider link, cover) so tags, owners
+  // and the edition can be set before anything is stored.
+  const { dom, calls, row } = await searched(t, { detail: { minPlayers: 1, maxPlayers: 5, imageUrl: 'https://cf.geekdo-images.com/x.jpg' } });
   row('Nordlicht-Expedition').querySelector('.add-search__add').click();
+  await flush();
+  await flush();
+  const sheet = sheetOf(dom);
+  assert.equal(dom.document.querySelectorAll('.sheet').length, 1, 'the form must REPLACE the search step');
+  assert.equal(sheet.querySelector('.add-search__list'), null);
+  assert.equal(calls.filter((c) => c.method === 'POST').length, 0, 'opening the form stores nothing');
+  // BGG's search title wins over the detail's primary name (pickedTitle, #117).
+  assert.equal(sheet.querySelector('#title').value, 'Nordlicht-Expedition');
+  assert.equal(sheet.querySelector('#minPlayers').value, '1');
+  assert.equal(sheet.querySelector('#maxPlayers').value, '5');
+
+  sheet.querySelector('#save').click();
   await flush();
   await flush();
   const post = calls.find((c) => c.method === 'POST');
-  assert.ok(post, 'nothing was posted');
+  assert.ok(post, 'Speichern posted nothing');
   assert.equal(post.url, '/api/rounds/1/games');
-  const fd = post.body;
-  // BGG's search title wins over the detail's primary name (pickedTitle, #117).
-  assert.equal(fd.get('title'), 'Nordlicht-Expedition');
-  assert.equal(fd.get('minPlayers'), '1');
-  assert.equal(fd.get('maxPlayers'), '5');
-  assert.equal(fd.get('imageUrl'), 'https://cf.geekdo-images.com/x.jpg');
-  assert.equal(fd.get('sourceProvider'), 'bgg');
-  assert.equal(fd.get('sourceExternalId'), '303');
-  assert.equal(fd.get('sourceUrl'), 'https://boardgamegeek.com/boardgame/303');
-  assert.deepEqual(fd.getAll('ownerIds'), ['m1'], 'the seat\'s owner preset must ride along, as in the form');
-  assert.equal(fd.get('wish'), null);
-  assert.deepEqual(toasts, ['„Nordlicht-Expedition“ ist im Regal.']);
-  // The row now reads as held, and focus is back in the query for the next one.
-  assert.equal(row('Nordlicht-Expedition').querySelector('.add-search__add'), null);
-  assert.equal(dom.document.activeElement, input);
+  assert.equal(post.body.get('sourceProvider'), 'bgg');
+  assert.equal(post.body.get('sourceExternalId'), '303');
+  assert.equal(post.body.get('wish'), null);
 });
 
-test('Tisch wish variant: the direct add posts a wish without owners', async (t) => {
-  const { calls, row } = await searched(t, { wish: true });
+test('Tisch wish variant: the prefilled form still files a wish', async (t) => {
+  const { dom, calls, row } = await searched(t, { wish: true });
   row('Nordlicht-Expedition').querySelector('.add-search__add').click();
   await flush();
   await flush();
-  const fd = calls.find((c) => c.method === 'POST').body;
+  sheetOf(dom).querySelector('#save').click();
+  await flush();
+  await flush();
+  const fd = calls.find((c) => c.method === 'POST' && c.url.endsWith('/games')).body;
   assert.equal(fd.get('wish'), 'true');
-  assert.deepEqual(fd.getAll('ownerIds'), []);
-  // No player range from BGG: the form's own defaults, never an invented range.
-  assert.equal(fd.get('minPlayers'), '2');
-  assert.equal(fd.get('maxPlayers'), '4');
+  assert.equal(fd.get('sourceExternalId'), '303');
+});
+
+test('Tisch: a wished hit offers „Ins Regal" and moves THAT game, not a copy', async (t) => {
+  // Operator decision 2026-09-24: the wish moves onto the shelf with the
+  // wishlist's own action, so the round never ends up with the game twice.
+  const { dom, calls, row, toasts } = await searched(t);
+  const btn = row('Nordland').querySelector('.add-search__shelve');
+  assert.ok(btn, 'a wished hit must offer „Ins Regal"');
+  assert.equal(row('Nordland').querySelector('.add-search__add'), null, 'and not a second „Hinzufügen"');
+  assert.equal(btn.getAttribute('aria-label'), 'Ins Regal: Nordland');
+  btn.click();
+  await flush();
+  await flush();
+  assert.deepEqual(calls.filter((c) => c.method === 'POST').map((c) => [c.url, JSON.stringify(c.body)]),
+    [['/api/rounds/1/games/12/wish', '{"wish":false}']]);
+  assert.equal(toasts.length, 1);
+  const moved = row('Nordland');
+  assert.ok(moved.classList.contains('is-held'), 'the row now reads as on the shelf');
+  assert.equal(moved.querySelector('.add-search__state').textContent, 'Steht schon im Regal');
+  assert.equal(dom.document.querySelectorAll('.sheet').length, 1, 'the search step stays open for the next one');
 });
 
 test('Tisch: „Selbst eintragen" reaches the whole form with the query handed over', async (t) => {

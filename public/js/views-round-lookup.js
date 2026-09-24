@@ -25,9 +25,11 @@ function showAddGame(round, opts = {}) {
 
 // The form itself. `title` prefills the title field — the query Der Tisch's
 // search step hands over when the person chooses to enter the game themselves;
-// `dirty` says that step already added a game, so dismissing this form must
-// re-render the screen behind it just as if the form had added one itself.
-function showAddGameForm(round, { wish = false, title = '', dirty = false } = {}) {
+// `hit` is a search result that step hands over instead, and the form fills
+// itself from it exactly as picking that suggestion here would; `dirty` says
+// that step already changed the shelf, so dismissing this form must re-render
+// the screen behind it just as if the form had added a game itself.
+function showAddGameForm(round, { wish = false, title = '', hit = null, dirty = false } = {}) {
   const sheetTitle = wish ? t('addGame.wishTitle') : t('addGame.title');
   const back = wish ? () => showWishlist(round.id) : () => showRound(round.id, 'regal');
   const backdrop = h(`<div class="sheet-backdrop">
@@ -477,6 +479,7 @@ function showAddGameForm(round, { wish = false, title = '', dirty = false } = {}
     refreshDupHint();
   }
   form.querySelector('#title').focus();
+  if (hit) pickSuggestion(hit);
 }
 
 // =================== Link an existing game to a provider (issue #74) ===================

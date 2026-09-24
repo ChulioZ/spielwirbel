@@ -53,8 +53,9 @@ function showAddGameSearch(round, { wish = false } = {}) {
   const sheet = backdrop.querySelector('.sheet');
   document.body.appendChild(backdrop);
 
-  // Games added from a row keep the sheet open, so the screen behind is only
-  // re-rendered when the sheet is dismissed — the form's own rule (#34).
+  // A wish moved onto the shelf from a row keeps the sheet open, so the screen
+  // behind is only re-rendered when the sheet is dismissed — the form's own
+  // rule (#34).
   let addedWhileOpen = false;
   const dismiss = () => closeSheet(addedWhileOpen ? back : undefined);
   const onKey = (e) => {
@@ -80,10 +81,11 @@ function showAddGameSearch(round, { wish = false } = {}) {
   sheet.querySelector('#addSearchSelf').addEventListener('click', () =>
     showAddGameForm(round, { wish, title: input.value.trim(), dirty: addedWhileOpen }));
 
-  // What this sheet added, as the provider links the row state is read from.
-  // Kept locally rather than pushed into `round`, the caller's cached object.
-  const added = [];
-  const gamesNow = () => (round.games || []).concat(added);
+  // The round's games as this sheet has changed them (a wish moved onto the
+  // shelf), which is what the row state is read from. A local copy rather than
+  // edits to `round`, the caller's cached object.
+  const localGames = (round.games || []).map((g) => Object.assign({}, g));
+  const gamesNow = () => localGames;
   let rows = [];
 
   // Both live regions stay in the tree and only their TEXT changes, so every
@@ -102,9 +104,12 @@ function showAddGameSearch(round, { wish = false } = {}) {
 
   // A row offers its add button unless the game is already where this sheet
   // would put it: on the shelf, or — for a wish — on the shelf or the list.
-  // An archived game and, on the shelf variant, a wished one keep the button:
-  // adding either is what the form allows today.
+  // An archived game keeps the button: adding it is what the form allows today.
+  // A WISHED game on the shelf variant offers „Ins Regal" instead, which moves
+  // that very game over (operator decision 2026-09-24) — adding it would leave
+  // the round holding it twice, once on each list.
   const held = (state) => state === 'shelf' || (wish && state === 'wish');
+  const shelvable = (state) => !wish && state === 'wish';
 
   function renderRows() {
     list.replaceChildren(...rows.map((hit) => {
@@ -118,7 +123,9 @@ function showAddGameSearch(round, { wish = false } = {}) {
       // says the same words, and a screen reader should hear them once.
       const act = held(state)
         ? `<span class="add-search__held" aria-hidden="true"><i class="ti ti-check"></i><span class="add-search__act-label">${esc(heldLabel)}</span></span>`
-        : `<button type="button" class="btn btn--primary add-search__add" aria-label="${esc(t('addGame.row.addNamed', { title: hit.title }))}"><i class="ti ti-plus" aria-hidden="true"></i><span class="add-search__act-label">${esc(t('addGame.row.add'))}</span></button>`;
+        : shelvable(state)
+          ? `<button type="button" class="btn btn--primary add-search__shelve" aria-label="${esc(t('addGame.row.shelveNamed', { title: hit.title }))}"><i class="ti ti-cards" aria-hidden="true"></i><span class="add-search__act-label">${esc(t('wish.restore'))}</span></button>`
+          : `<button type="button" class="btn btn--primary add-search__add" aria-label="${esc(t('addGame.row.addNamed', { title: hit.title }))}"><i class="ti ti-plus" aria-hidden="true"></i><span class="add-search__act-label">${esc(t('addGame.row.add'))}</span></button>`;
       const li = h(`<li class="add-search__row${held(state) ? ' is-held' : ''}">
           <span class="add-search__cover">${cover}</span>
           <span class="add-search__text">
@@ -128,53 +135,43 @@ function showAddGameSearch(round, { wish = false } = {}) {
           </span>
           ${act}
         </li>`);
-      const btn = li.querySelector('.add-search__add');
-      if (btn) btn.addEventListener('click', () => addHit(hit, btn));
+      // „Hinzufügen" opens the form filled from this hit (operator decision
+      // 2026-09-24): a hit is a starting point, so tags, owners and the edition
+      // cover can be set before anything is stored. It REPLACES this sheet, the
+      // same way „Selbst eintragen" does.
+      const add = li.querySelector('.add-search__add');
+      if (add) add.addEventListener('click', () => showAddGameForm(round, { wish, hit, dirty: addedWhileOpen }));
+      const shelve = li.querySelector('.add-search__shelve');
+      if (shelve) shelve.addEventListener('click', () => shelveWish(hit, shelve));
       return li;
     }));
   }
 
-  // The direct add: the form's pick (lookupDetail + pickedTitle + applyDetail)
-  // and its save, in one step.
-  async function addHit(hit, btn) {
+  // „Ins Regal" on a wished hit: the wishlist's own action on the game the hit
+  // matched (views-archive.js), including its road for a wished EXPANSION, which
+  // becomes an entry on its base game rather than a game of its own.
+  async function shelveWish(hit, btn) {
+    const g = localGames.find((x) => x.wish && x.source && x.source.provider === hit.provider
+      && String(x.source.externalId) === String(hit.providerId));
+    if (!g) return;
+    const moved = () => {
+      g.wish = false;
+      addedWhileOpen = true;
+      renderRows();
+      input.focus();
+    };
+    if (Array.isArray(g.expansionOf)) return acquireWishedExpansion(round, g, moved);
     btn.disabled = true;
-    btn.setAttribute('aria-busy', 'true');
-    const release = () => { btn.disabled = false; btn.removeAttribute('aria-busy'); };
-    let d;
     try {
-      d = await lookupDetail(round.id, hit);
-    } catch {
-      release();
-      return toast(t('lookup.error'));
-    }
-    const title = pickedTitle(hit, d);
-    if (!title) { release(); return toast(t('lookup.error')); }
-    const { minPlayers, maxPlayers } = addPlayersFromDetail(d);
-    const fd = new FormData();
-    fd.append('title', title);
-    fd.append('minPlayers', minPlayers);
-    fd.append('maxPlayers', maxPlayers);
-    if (wish) fd.append('wish', 'true');
-    else ownerPresetFor(round, currentUserId()).forEach((x) => fd.append('ownerIds', x));
-    const imageUrl = d.imageUrl || hit.thumbnail;
-    if (imageUrl) fd.append('imageUrl', imageUrl);
-    fd.append('sourceProvider', hit.provider);
-    fd.append('sourceExternalId', hit.providerId);
-    if (d.url) fd.append('sourceUrl', d.url);
-    try {
-      await api('POST', `/api/rounds/${round.id}/games`, fd);
+      await api('POST', `/api/rounds/${round.id}/games/${g.id}/wish`, { wish: false });
     } catch (e) {
-      release();
-      return toast(e.message === 'quota_games' ? t('addGame.toast.quota') : e.message);
+      btn.disabled = false;
+      return toast(e.message);
     }
-    added.push({ title, wish, source: { provider: hit.provider, externalId: String(hit.providerId) } });
-    addedWhileOpen = true;
-    toast(t(wish ? 'addGame.toast.addedWish' : 'addGame.toast.addedShelf', { title }));
+    toast(t('wish.restored', { title: g.title }));
     // The re-render swaps the button for the held badge, so the focus it had
-    // would fall to <body>. Land it on the query instead: the next thing a
-    // person adding several games does is type the next title.
-    renderRows();
-    input.focus();
+    // would fall to <body>. Land it on the query instead.
+    moved();
   }
 
   let timer;
@@ -219,16 +216,4 @@ function showAddGameSearch(round, { wish = false } = {}) {
 
   idle();
   input.focus();
-}
-
-// The player range a direct add sends: the provider's, with the form's own
-// defaults (2–4) for what it leaves out — exactly what a pick followed by
-// „Speichern" sends from the form. A known min with an unknown max caps max at
-// min, as applyDetail does, rather than inventing a range.
-function addPlayersFromDetail(d) {
-  const minKnown = Number.isInteger(d && d.minPlayers);
-  let min = minKnown ? d.minPlayers : 2;
-  let max = Number.isInteger(d && d.maxPlayers) ? d.maxPlayers : (minKnown ? min : 4);
-  if (max < min) min = max;
-  return { minPlayers: min, maxPlayers: max };
 }
