@@ -223,7 +223,7 @@ const frontendGlobals = {
   activePopover: 'writable', closePopover: 'readonly', openPopover: 'readonly',
   repositionPopover: 'readonly',
   // the „…" menu's one builder and its order (issue #1195)
-  MENU_KINDS: 'readonly', fillMenu: 'readonly', sortMenuItems: 'readonly', menuRank: 'readonly',
+  MENU_KINDS: 'readonly', fillMenu: 'readonly', menuItemButtons: 'readonly', sortMenuItems: 'readonly', menuRank: 'readonly',
   splitConfirmQuestion: 'readonly',
   readClipboardImage: 'readonly', shuffled: 'readonly', iconText: 'readonly',
   createCoverLoader: 'readonly',
