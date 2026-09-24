@@ -849,7 +849,6 @@ I18N.de = {
   'startSession.title': 'Neue Session',
   'startSession.membersLabel': 'Wer spielt mit?',
   // Der Tisch's setup (#1267): step line, seat states, the pot's heading and the draw summary.
-  'startSession.stepLine': 'Schritt {n} von {total} · {date}',
   'startSession.seatsTapHint': 'Platz antippen = mitspielen',
   'startSession.seatStateIn': 'spielt mit',
   'startSession.seatStateOut': 'heute nicht dabei',

@@ -144,8 +144,10 @@ test('Der Tisch lays the setup out as two headed panels in reading order', async
   }
   assert.deepEqual([...q(dom, '.setup-bar').children].map((c) => c.id || c.className), ['setup-bar__count', 'go', 'barSummary']);
 
-  // The step line heads the page.
-  assert.match(q(dom, '.page-head .tisch-setup__step').textContent, /^Schritt 1 von 3 · \S+, \d\d\.\d\d\.$/);
+  // The date line heads the page — the date alone. The sheet's „Schritt 1 von 3"
+  // counter was dropped (operator, 2026-09-24): no later screen continues it,
+  // and the vote card's own „Spiel 2 von 3" would read as its step 2.
+  assert.match(q(dom, '.page-head .tisch-setup__step').textContent, /^\S+, \d\d\.\d\d\.$/);
 });
 
 test('each seat states its state in words, and its accessible name carries it', async (t) => {

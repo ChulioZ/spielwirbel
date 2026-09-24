@@ -2409,7 +2409,8 @@
   border-radius: 2px;
   background: linear-gradient(90deg, var(--marker), var(--marker-deep));
 }
-/* „Schritt 1 von 3 · Donnerstag, 24.09." beside the page's <h1>, on its
+/* The date line („Donnerstag, 24.09."; the sheet's „Schritt 1 von 3" is left
+   out on purpose — views-session-setup-tisch.js says why) beside the page's <h1>, on its
    baseline (T4.1); on a phone it wraps under it, which is where T2.3 prints it. */
 :root[data-design="tisch"][data-scheme="dark"] .page-head:has(.tisch-setup__step) {
   justify-content: flex-start;

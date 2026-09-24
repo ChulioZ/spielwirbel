@@ -794,7 +794,6 @@ I18N.fi = {
   'startSession.title': 'Uusi sessio',
   'startSession.membersLabel': 'Ketkä pelaavat?',
   // Der Tisch's setup (#1267): step line, seat states, the pot's heading and the draw summary.
-  'startSession.stepLine': 'Vaihe {n}/{total} · {date}',
   'startSession.seatsTapHint': 'Napauta paikkaa pelataksesi',
   'startSession.seatStateIn': 'pelaa',
   'startSession.seatStateOut': 'ei mukana tänään',

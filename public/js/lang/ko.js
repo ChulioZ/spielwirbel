@@ -778,7 +778,6 @@ I18N.ko = {
   'startSession.title': '새 세션',
   'startSession.membersLabel': '누가 플레이하나요?',
   // Der Tisch's setup (#1267): step line, seat states, the pot's heading and the draw summary.
-  'startSession.stepLine': '{total}단계 중 {n}단계 · {date}',
   'startSession.seatsTapHint': '자리를 누르면 참여해요',
   'startSession.seatStateIn': '참여',
   'startSession.seatStateOut': '오늘은 불참',

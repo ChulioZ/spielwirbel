@@ -820,7 +820,6 @@ I18N.nl = {
   'startSession.title': 'Nieuwe sessie',
   'startSession.membersLabel': 'Wie speelt er mee?',
   // Der Tisch's setup (#1267): step line, seat states, the pot's heading and the draw summary.
-  'startSession.stepLine': 'Stap {n} van {total} · {date}',
   'startSession.seatsTapHint': 'Tik op een plek om mee te spelen',
   'startSession.seatStateIn': 'speelt mee',
   'startSession.seatStateOut': 'vandaag niet erbij',

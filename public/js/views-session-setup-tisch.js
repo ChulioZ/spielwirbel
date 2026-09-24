@@ -18,16 +18,13 @@
 
 'use strict';
 
-// setup → vote → result. The lobby and the vote card are one stage (people
-// vote), and the finale reveal is how the result arrives rather than a stage of
-// its own, which is how the sheet counts it too.
-const SESSION_FLOW_STEPS = 3;
-
-// „Schritt 1 von 3 · Donnerstag, 24.09." — the date is TODAY, because the
-// session this screen draws is created now and carries now as its date.
-function tischSetupStepLine(now = new Date()) {
-  const date = now.toLocaleDateString(localeTag(locale), { weekday: 'long', day: '2-digit', month: '2-digit' });
-  return t('startSession.stepLine', { n: 1, total: SESSION_FLOW_STEPS, date });
+// „Donnerstag, 24.09." — the date is TODAY, because the session this screen
+// draws is created now and carries now as its date. The sheet prefixes it with
+// „Schritt 1 von 3"; that counter is deliberately left out (operator,
+// 2026-09-24): no later screen continues it, and the vote card's own
+// „Spiel 2 von 3" would read as its step 2.
+function tischSetupDateLine(now = new Date()) {
+  return now.toLocaleDateString(localeTag(locale), { weekday: 'long', day: '2-digit', month: '2-digit' });
 }
 
 // T2.3's line under the action: „4 spielen mit · 3 von 9 Spielen werden
@@ -52,7 +49,7 @@ function tischDrawSummary(people, potSize, count) {
    - the bar's summary moves BELOW the button, which is where T2.3 prints it.
    The ids stay, because showStartSession() finds every node by id after this. */
 function composeTischSetup(round, head, form) {
-  head.appendChild(h(`<p class="tisch-setup__step">${esc(tischSetupStepLine())}</p>`));
+  head.appendChild(h(`<p class="tisch-setup__step">${esc(tischSetupDateLine())}</p>`));
   form.classList.add('setup-grid--tisch');
 
   const main = form.querySelector('.setup-grid__main');

@@ -825,7 +825,6 @@ I18N.fr = {
   'startSession.title': 'Nouvelle session',
   'startSession.membersLabel': 'Qui joue ?',
   // Der Tisch's setup (#1267): step line, seat states, the pot's heading and the draw summary.
-  'startSession.stepLine': 'Étape {n} sur {total} · {date}',
   'startSession.seatsTapHint': 'Touchez une place pour jouer',
   'startSession.seatStateIn': 'joue',
   'startSession.seatStateOut': 'pas là aujourd’hui',
