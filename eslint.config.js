@@ -109,7 +109,7 @@ const frontendGlobals = {
   renderSeatPicker: 'readonly', createGuestList: 'readonly', renderTeamPicker: 'readonly',
   renderSetupAddons: 'readonly',
   hasGameInfo: 'readonly', gameInfoButton: 'readonly', openGameInfoSheet: 'readonly',
-  gameGlanceFacts: 'readonly', gameInfoRest: 'readonly',
+  gameGlanceFacts: 'readonly', gameInfoRest: 'readonly', playtimeText: 'readonly',
   wantsGameInfo: 'readonly', mergeGameInfo: 'readonly',
   foldGameInfoList: 'readonly', refreshShelfGameInfo: 'readonly',
   // username-policy.js
@@ -471,13 +471,22 @@ const frontendGlobals = {
   // member-stats.js (#1075 — split out of views-member.js)
   memberStats: 'readonly', BEST_GAME_MIN_PLAYS: 'readonly', bestGameSub: 'readonly',
   openAddMember: 'readonly', addMemberBtn: 'readonly',
+  // vote-card-tisch.js (issue #1268): Der Tisch's vote card + the link intro
+  VOTE_WORD_KEYS: 'readonly', voteWord: 'readonly', voteMoodButton: 'readonly', voteTurn: 'readonly',
+  voteHandoffLine: 'readonly', voteMetaLine: 'readonly', tischVoteCard: 'readonly', tischVoteLinkIntro: 'readonly',
   // views-session.js
   showStartSession: 'readonly', startVoting: 'readonly', showResults: 'readonly',
   showFinale: 'readonly', canShareResult: 'readonly', shareResult: 'readonly',
+  // views-session-setup-tisch.js (issue #1267): Der Tisch's setup composition
+  composeTischSetup: 'readonly', tischDrawSummary: 'readonly',
+  tischSetupDateLine: 'readonly',
   // views-session-tables.js (issue #796)
   showTableBuilder: 'readonly', tableStateFrom: 'readonly', tablePeopleIds: 'readonly',
   tableCoverBg: 'readonly',
   renderTischSplit: 'readonly', renderTischTable: 'readonly', renderTischTableTafel: 'readonly', // #1270
+  // result-tafel-tisch.js (issue #1275): Der Tisch's result Tafel and foot
+  tischTafelCols: 'readonly', tischTrow: 'readonly', tischPersonCrown: 'readonly',
+  paintTischCrowns: 'readonly', fillTischResultFoot: 'readonly',
   // views-session-live.js
   showSessionLobby: 'readonly', stopLobbyPoll: 'readonly', mySeatIn: 'readonly',
   sessionGames: 'readonly', LOBBY_POLL_MS: 'readonly', lobbyPoll: 'writable',
