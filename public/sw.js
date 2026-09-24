@@ -171,6 +171,7 @@ const SHELL = [
   '/js/views-session.js',
   '/js/views-session-tables.js',
   '/js/views-session-live.js',
+  '/js/views-session-setup-tisch.js',
   '/js/views-vote-link.js',
   '/js/views-inbox.js',
   '/js/views-news.js',
