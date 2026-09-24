@@ -935,6 +935,40 @@ function startVoting(round, session, games, people, opts = {}) {
   // into the middle of the card.
   let refocus = null;
 
+  // The card as Klassisch has always drawn it: progress, who, cover, title,
+  // question, faces, the two-ended scale.
+  function klassischCard(person, game, color) {
+    const imgStyle = game.image ? `style="background-image:url('${coverUrl(game.image, COVER_HERO)}')"` : '';
+    return h(`<div class="vote vote--split">
+        ${progressBar()}
+        <div class="vote__who"><button class="vote__undo" id="backBtn" type="button" aria-label="${esc(t('vote.back'))}" title="${esc(t('vote.back'))}"><i class="ti ti-arrow-back-up" aria-hidden="true"></i></button>${esc(t('vote.who'))} <strong style="color:${color}">${esc(personLabel(person))}</strong></div>
+        <div class="vote__img" ${imgStyle}>${coverPlaceholder(game)}</div>
+        <h1 class="vote__title" tabindex="-1">${esc(game.title)}</h1>
+        <div class="vote__secret"><i class="ti ti-eye-off" aria-hidden="true"></i> ${esc(t('vote.handoverSub'))}</div>
+        <div class="vote__q" id="voteQ">${esc(t('vote.question'))}</div>
+        <div class="rating" role="group" aria-labelledby="voteQ"></div>
+        <div class="rating-scale"><span>${esc(t('vote.scaleLow'))}</span><span>${esc(t('vote.scaleHigh'))}</span></div>
+      </div>`);
+  }
+
+  // Der Tisch's composition (#1268, T2.4/T4.2): header on the felt, the card,
+  // the hand-off line — built in vote-card-tisch.js, fed from this closure.
+  function tischCard(person, game) {
+    const turn = voteTurn(round, session, order, person);
+    const n = games.indexOf(game) + 1;
+    return tischVoteCard({
+      person,
+      count: `${t('vote.gameOf', { n, total: games.length })} · ${t('vote.personOf', { n: turn.n, total: turn.total })}`,
+      roundName: round.name,
+      gameN: n,
+      gameTotal: games.length,
+      secret: true,
+      game,
+      meta: voteMetaLine(game, round),
+      handoff: voteHandoffLine(turn, !opts.skipIntro),
+    });
+  }
+
   function render() {
     const step = steps[idx];
     const total = steps.length;
@@ -985,20 +1019,8 @@ function startVoting(round, session, games, people, opts = {}) {
     const current = votes[person.id][game.id] || { rating: null };
     const color = personColor(round, person);
 
-    const imgStyle = game.image ? `style="background-image:url('${coverUrl(game.image, COVER_HERO)}')"` : '';
-    const fallback = coverPlaceholder(game);
-
     app.innerHTML = '';
-    const card = h(`<div class="vote vote--split">
-        ${progressBar()}
-        <div class="vote__who"><button class="vote__undo" id="backBtn" type="button" aria-label="${esc(t('vote.back'))}" title="${esc(t('vote.back'))}"><i class="ti ti-arrow-back-up" aria-hidden="true"></i></button>${esc(t('vote.who'))} <strong style="color:${color}">${esc(personLabel(person))}</strong></div>
-        <div class="vote__img" ${imgStyle}>${fallback}</div>
-        <h1 class="vote__title" tabindex="-1">${esc(game.title)}</h1>
-        <div class="vote__secret"><i class="ti ti-eye-off" aria-hidden="true"></i> ${esc(t('vote.handoverSub'))}</div>
-        <div class="vote__q" id="voteQ">${esc(t('vote.question'))}</div>
-        <div class="rating" role="group" aria-labelledby="voteQ"></div>
-        <div class="rating-scale"><span>${esc(t('vote.scaleLow'))}</span><span>${esc(t('vote.scaleHigh'))}</span></div>
-      </div>`);
+    const card = designIs('tisch') ? tischCard(person, game) : klassischCard(person, game, color);
 
     // Info affordance (#717): the provider metadata behind a small ⓘ in the
     // title line, so the height-budgeted card gains no extra row
@@ -1027,22 +1049,9 @@ function startVoting(round, session, games, people, opts = {}) {
     const ratingEl = card.querySelector('.rating');
     for (let n = RATING_MIN; n <= RATING_MAX; n++) {
       const sel = current.rating === n;
-      // aria-pressed carries the choice (#145): the selected face is otherwise
-      // marked only by its traffic-light fill, so nothing announced which rating
-      // was picked — on the app's central action. The label spells out the scale
-      // too; a bare "1" gave no hint of what the number meant or how far it ran.
-      const b = h(`<button class="mood${sel ? ' is-selected' : ''}"
-           aria-pressed="${sel}" aria-label="${esc(t('vote.ratingLabel', { n, max: RATING_MAX }))}">
-           <i class="ti ${ratingFace(n)}" aria-hidden="true"></i><span class="mood__n">${n}</span>
-         </button>`);
-      if (sel) {
-        /* --sc, not an inline `background`: an inline background is precisely
-           what a design CANNOT override, and Der Tisch paints the chosen face
-           as its brass plate rather than in the ramp's colour (#1191, T2.4).
-           The continuous colour stays the default in CSS, so nothing moves
-           under Klassisch. */
-        b.style.setProperty('--sc', avgColor(n));
-      }
+      // aria-pressed + a label that spells out the scale (#145), the word too
+      // under Der Tisch — one builder for both cards (vote-card-tisch.js).
+      const b = voteMoodButton(n, sel);
       if (wanted && wanted.kind === 'mood' && wanted.n === n) restore = b;
       b.addEventListener('click', () => {
         /* The guard, and the whole safety story of #1168: this is what makes

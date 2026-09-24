@@ -109,7 +109,7 @@ const frontendGlobals = {
   renderSeatPicker: 'readonly', createGuestList: 'readonly', renderTeamPicker: 'readonly',
   renderSetupAddons: 'readonly',
   hasGameInfo: 'readonly', gameInfoButton: 'readonly', openGameInfoSheet: 'readonly',
-  gameGlanceFacts: 'readonly', gameInfoRest: 'readonly',
+  gameGlanceFacts: 'readonly', gameInfoRest: 'readonly', playtimeText: 'readonly',
   wantsGameInfo: 'readonly', mergeGameInfo: 'readonly',
   foldGameInfoList: 'readonly', refreshShelfGameInfo: 'readonly',
   // username-policy.js
@@ -467,6 +467,9 @@ const frontendGlobals = {
   // member-stats.js (#1075 — split out of views-member.js)
   memberStats: 'readonly', BEST_GAME_MIN_PLAYS: 'readonly', bestGameSub: 'readonly',
   openAddMember: 'readonly', addMemberBtn: 'readonly',
+  // vote-card-tisch.js (issue #1268): Der Tisch's vote card + the link intro
+  VOTE_WORD_KEYS: 'readonly', voteWord: 'readonly', voteMoodButton: 'readonly', voteTurn: 'readonly',
+  voteHandoffLine: 'readonly', voteMetaLine: 'readonly', tischVoteCard: 'readonly', tischVoteLinkIntro: 'readonly',
   // views-session.js
   showStartSession: 'readonly', startVoting: 'readonly', showResults: 'readonly',
   showFinale: 'readonly', canShareResult: 'readonly', shareResult: 'readonly',

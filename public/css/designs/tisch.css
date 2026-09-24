@@ -2609,11 +2609,206 @@
   font-size: var(--text-lg);
   color: var(--paper-ink);
 }
+/* --- The composed card (#1268, T2.4 / T4.2 / T12.5) ------------------------
+   `.vote--tisch` is the root vote-card-tisch.js builds under this design, for
+   the hot-seat card and the link card alike: a HEADER ON THE FELT (back, who,
+   „Spiel 2 von 3 · Person 1 von 4", a dot per game, the secrecy pill), the
+   paper CARD (cover beside title and meta, the question, the faces), and on a
+   shared device the HAND-OFF line. The `.vote` rules above stay for the one
+   surface that still draws the Klassisch shape under this design — the
+   landing's static vote scene (landing-moments.js) — so here the root goes
+   back to being the table and the paper moves down to `.vote__card`.
+
+   Everything on the felt is --felt-ink and nothing else: the felt here is the
+   ROUND'S MARKER (body.vote-screen above), and --felt-ink is this design's
+   markerInk, which test/a11y-contrast.test.js holds at 4.5:1 on all eight.
+   --felt-ink-soft and gold are only measured on the default felt, so neither
+   carries text here (test/tisch-vote-card.test.js pins that). The dots are
+   the one gold thing, and they are aria-hidden glyphs repeating the count. */
+:root[data-design="tisch"][data-scheme="dark"] .vote.vote--tisch {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 560px;
+  padding: 0;
+  background: none;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  overflow: visible;
+  color: var(--felt-ink);
+}
+/* The link card has no `body.vote-screen` (it keeps the language picker), so
+   it brings its own piece of felt to stand on — the default felt, since a
+   ballot carries no marker. */
+:root[data-design="tisch"][data-scheme="dark"] body:not(.vote-screen) .vote.vote--tisch,
+:root[data-design="tisch"][data-scheme="dark"] .vote-link-intro {
+  padding: 16px;
+  border-radius: var(--radius-xl);
+  background:
+    var(--felt-weave),
+    radial-gradient(90% 120% at 50% -10%, var(--felt), var(--felt-deep) 72%);
+  color: var(--felt-ink);
+}
+:root[data-design="tisch"][data-scheme="dark"] .vote-felt {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+}
+/* The back control, out of Klassisch's corner and into the header's first
+   slot: 44px stays (the target floor), the border goes (T2.4 draws a bare
+   chevron), the position goes back to the flow. The size is restated because
+   styles.css reads it from --undo-size, which only `.vote__who` declares — and
+   the Tisch header is not inside one (measured: 22px without this). */
+:root[data-design="tisch"][data-scheme="dark"] .vote--tisch .vote__undo {
+  position: static;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border: none;
+  color: var(--felt-ink);
+}
+:root[data-design="tisch"][data-scheme="dark"] .vote-felt__who { flex: 1; min-width: 0; }
+:root[data-design="tisch"][data-scheme="dark"] .vote-felt__name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--text-md);
+}
+:root[data-design="tisch"][data-scheme="dark"] .vote-felt__count {
+  margin: 0;
+  font-size: var(--text-xs);
+  font-weight: 700;
+}
+/* T4.2 names the round after the counters; T2.4 has no room for it. */
+:root[data-design="tisch"][data-scheme="dark"] .vote-felt__round { display: none; }
+:root[data-design="tisch"][data-scheme="dark"] .vote-felt__dots { display: flex; gap: 5px; }
+:root[data-design="tisch"][data-scheme="dark"] .vote-felt__dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  border: 1px solid var(--gold);
+}
+:root[data-design="tisch"][data-scheme="dark"] .vote-felt__dot.is-done,
+:root[data-design="tisch"][data-scheme="dark"] .vote-felt__dot.is-current { background: var(--gold); }
+:root[data-design="tisch"][data-scheme="dark"] .vote-felt__dot.is-current {
+  box-shadow: 0 0 0 3px var(--gold-edge);
+}
+/* The secrecy line moves out of the card and onto the felt as T4.2's pill. On
+   a phone it takes its own line under the header row — the last thing in the
+   header's DOM, so wrapping it keeps reading order and picture in step. */
+:root[data-design="tisch"][data-scheme="dark"] .vote--tisch .vote__secret {
+  flex-basis: 100%;
+  justify-content: flex-start;
+  padding: 0 0 0 56px;
+  color: var(--felt-ink);
+}
+:root[data-design="tisch"][data-scheme="dark"] .vote__card {
+  --surface: var(--paper);
+  --ink: var(--paper-ink);
+  --ink-soft: var(--paper-ink-soft);
+  --line: var(--paper-edge);
+  --sunken: var(--paper-raised);
+  display: grid;
+  grid-template-columns: 86px minmax(0, 1fr);
+  /* The two 1fr rows centre title and meta against the cover's height. */
+  grid-template-rows: 1fr auto auto 1fr auto auto;
+  grid-template-areas:
+    "img ."
+    "img title"
+    "img meta"
+    "img ."
+    "q q"
+    "rating rating";
+  column-gap: 14px;
+  padding: 18px;
+  border-radius: var(--radius-xl);
+  background: linear-gradient(180deg, var(--paper), var(--paper-raised));
+  box-shadow: 0 18px 36px var(--cast-deep);
+  color: var(--paper-ink);
+}
+:root[data-design="tisch"][data-scheme="dark"] .vote--tisch .vote__img {
+  grid-area: img;
+  align-self: center;
+  width: 86px;
+  height: 114px;
+  aspect-ratio: auto;
+  margin: 0;
+  font-size: var(--text-3xl);
+}
+:root[data-design="tisch"][data-scheme="dark"] .vote--tisch .vote__title {
+  grid-area: title;
+  padding: 0;
+  text-align: left;
+  font-size: var(--text-2xl);
+  line-height: 1.05;
+}
+:root[data-design="tisch"][data-scheme="dark"] .vote__meta {
+  grid-area: meta;
+  margin: 4px 0 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--paper-ink-soft);
+}
+:root[data-design="tisch"][data-scheme="dark"] .vote--tisch .vote__q {
+  grid-area: q;
+  margin: 14px 0 0;
+  text-align: left;
+}
+:root[data-design="tisch"][data-scheme="dark"] .vote--tisch .rating {
+  grid-area: rating;
+  padding: 12px 0 0;
+}
+:root[data-design="tisch"][data-scheme="dark"] .vote__handoff {
+  margin: 0;
+  text-align: center;
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+/* T12.5: the link opens on the table — the wordmark on its brass plate (the
+   same plate as the sign-in's, --on-accent at 12.06:1 / 7.80:1), then whose
+   round it is and what the link can see, all in --felt-ink. */
+:root[data-design="tisch"][data-scheme="dark"] .vote-link-intro {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding: 22px 18px;
+}
+:root[data-design="tisch"][data-scheme="dark"] .vote-link-intro__mark {
+  align-self: flex-start;
+  padding: 5px 11px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(180deg, var(--brass-hi), var(--gold-deep));
+  color: var(--on-accent);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--text-sm);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+:root[data-design="tisch"][data-scheme="dark"] .vote-link-intro__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--text-2xl);
+  line-height: 1.12;
+  color: var(--felt-ink);
+}
+:root[data-design="tisch"][data-scheme="dark"] .vote-link-intro__note {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  line-height: 1.5;
+}
+
 /* The five faces. A ROW each on a phone (T2.4) — face, word, number — because
    five 64px tiles across 390px leaves each one 8px of label; and five COLUMNS
-   from the tablet width up (T4.2), where there is room for the tile. The rows
-   are what the app's flex row becomes by wrapping direction, so no markup
-   differs between the two. */
+   from the tablet width up (T4.2), where there is room for the tile. The word
+   is `.mood__word`, which only vote-card-tisch.js renders (#1268); the rows
+   are what the app's flex row becomes by wrapping direction, so the phone and
+   the desktop share one markup. */
 :root[data-design="tisch"][data-scheme="dark"] .rating {
   flex-direction: column;
   gap: 8px;
@@ -2631,6 +2826,11 @@
   background: var(--paper-raised);
   border: 1px solid var(--paper-edge);
   color: var(--paper-ink);
+}
+:root[data-design="tisch"][data-scheme="dark"] .rating .mood__word {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--text-md);
 }
 /* The number goes to the far end of the row, which is where T2.4 puts it. */
 :root[data-design="tisch"][data-scheme="dark"] .rating .mood__n {
@@ -3446,8 +3646,11 @@
   :root[data-design="tisch"][data-scheme="dark"] .tisch-setup__title { font-size: var(--text-2xl); }
 
   /* The vote card at T4.2's width, with the five faces as COLUMNS: a tile each,
-     face over number over word, 132px tall. There is room for the tile here and
-     the row form exists only because a phone has none. */
+     face over word over number, 132px tall. T4.2 draws the number above the
+     word; the tile keeps the phone's DOM order instead, because moving it would
+     take an `order:` and the reading order would then disagree with the
+     picture. There is room for the tile here and the row form exists only
+     because a phone has none. */
   :root[data-design="tisch"][data-scheme="dark"] .vote { max-width: 920px; }
   :root[data-design="tisch"][data-scheme="dark"] .rating {
     flex-direction: row;
@@ -3464,6 +3667,44 @@
   }
   :root[data-design="tisch"][data-scheme="dark"] .rating .mood__n { margin-left: 0; }
   :root[data-design="tisch"][data-scheme="dark"] .rating-scale { padding-inline: 32px; }
+
+  /* T4.2's composed card (#1268): the header in one row with the round's name
+     and the pill beside the dots, the cover at 176px beside a title block that
+     now holds the question too, the faces a full-width row under both. */
+  :root[data-design="tisch"][data-scheme="dark"] .vote.vote--tisch { max-width: 920px; gap: 26px; }
+  :root[data-design="tisch"][data-scheme="dark"] .vote-felt { flex-wrap: nowrap; gap: 16px; }
+  :root[data-design="tisch"][data-scheme="dark"] .vote-felt__name { font-size: var(--text-xl); }
+  :root[data-design="tisch"][data-scheme="dark"] .vote-felt__count { font-size: var(--text-sm); }
+  :root[data-design="tisch"][data-scheme="dark"] .vote-felt__round { display: inline; }
+  :root[data-design="tisch"][data-scheme="dark"] .vote-felt__dot { width: 13px; height: 13px; }
+  :root[data-design="tisch"][data-scheme="dark"] .vote--tisch .vote__secret {
+    flex-basis: auto;
+    padding: 6px 13px;
+    border: 1px solid var(--gold-edge);
+    border-radius: var(--radius-pill);
+    font-family: var(--font);
+    font-weight: 700;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .vote__card {
+    grid-template-columns: 176px minmax(0, 1fr);
+    grid-template-rows: 1fr auto auto auto 1fr auto;
+    grid-template-areas:
+      "img ."
+      "img title"
+      "img meta"
+      "img q"
+      "img ."
+      "rating rating";
+    column-gap: 26px;
+    padding: 30px 34px;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .vote--tisch .vote__img { width: 176px; height: 232px; }
+  :root[data-design="tisch"][data-scheme="dark"] .vote--tisch .vote__title { font-size: var(--text-4xl); }
+  :root[data-design="tisch"][data-scheme="dark"] .vote__meta { font-size: var(--text-md); }
+  :root[data-design="tisch"][data-scheme="dark"] .vote--tisch .vote__q { margin-top: 12px; font-size: var(--text-xl); }
+  :root[data-design="tisch"][data-scheme="dark"] .vote--tisch .rating { padding: 22px 0 0; }
 
   /* T4.4's two columns: the ranking on the left, the chosen box and its
      corrections on the right. The head, the people and everything from the log
