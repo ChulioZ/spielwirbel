@@ -1577,6 +1577,30 @@ test('Der Tisch\'s hub tiles keep their figures and labels at AA on the grounds 
   assert.deepEqual(failures, []);
 });
 
+test('Der Tisch\'s app chrome keeps the plate, the kicker and the account name at AA (#1279)', () => {
+  /* The top bar is walnut (--wood-deep) under Der Tisch; the wordmark sits on
+     the brass plate (a --brass-hi → --gold-deep gradient, so both stops are
+     measured); the lobby kicker is --ink-soft both in the bar and, on a phone,
+     on the page; the account name is --ink on the button's --control-fill. */
+  const hosts = withToken('--wood-deep').filter((t) => declares(t, '--brass-hi'));
+  assert.ok(hosts.length >= 1, 'no design declares the walnut bar and the brass plate — this test is vacuous');
+  const failures = [];
+  for (const t of hosts) {
+    const v = (n) => token(n, t.design);
+    for (const [label, fg, bg] of [
+      ['plate --on-accent on --brass-hi', v('--on-accent'), v('--brass-hi')],
+      ['plate --on-accent on --gold-deep', v('--on-accent'), v('--gold-deep')],
+      ['bar kicker --ink-soft on --wood-deep', v('--ink-soft'), v('--wood-deep')],
+      ['lobby kicker --ink-soft on --page-bg', v('--ink-soft'), v('--page-bg')],
+      ['account name --ink on --control-fill', v('--ink'), v('--control-fill')],
+    ]) {
+      const ratio = contrast(fg, bg);
+      if (!(ratio >= AA_TEXT)) failures.push(`${name(t)} — ${label} = ${ratio.toFixed(2)}:1`);
+    }
+  }
+  assert.deepEqual(failures, []);
+});
+
 test('the Chronik session strip keeps its date column at AA on wood and on paper (#1271)', () => {
   /* The strip's date column changes ground with the width (tisch.css): on a
      desktop it stands on the walnut PAGE beside the paper and takes --gold; on

@@ -48,6 +48,8 @@ I18N.pt = {
   'home.docTitle': 'Meus grupos',
   'home.greeting': 'Que bom ver você.',
   'home.sub': 'Qual grupo joga hoje?',
+  // Der Tisch only (#1279): the lobby voice beside the wordmark.
+  'home.tischKicker': 'Café de jogos · suas mesas',
   'home.shared': 'Compartilhado',
   'home.newRound': 'Criar um novo grupo',
   'home.empty.title': 'Nenhum grupo de jogo ainda.',
@@ -1604,6 +1606,9 @@ I18N.pt = {
   'a11y.home': 'Spielwirbel – ir para a tela inicial',
   'a11y.language': 'Idioma',
   'a11y.account': 'Conta',
+  // Der Tisch shows the account NAME on the button (#1279), so the name must
+  // be part of its accessible name (WCAG 2.5.3 Label in Name).
+  'a11y.accountNamed': 'Conta: {name}',
   'a11y.hubTabs': 'Seções do grupo',
   'a11y.roundNav': 'Navegação do grupo',
 

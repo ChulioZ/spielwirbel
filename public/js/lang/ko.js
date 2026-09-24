@@ -24,6 +24,8 @@ I18N.ko = {
   'home.docTitle': '내 모임',
   'home.greeting': '반가워요.',
   'home.sub': '오늘은 어느 모임이 플레이하나요?',
+  // Der Tisch only (#1279): the lobby voice beside the wordmark.
+  'home.tischKicker': '보드게임 카페 · 나의 테이블',
   'home.shared': '공유됨',
   'home.newRound': '새 모임 시작하기',
   'home.empty.title': '아직 게임 모임이 없어요.',
@@ -1535,6 +1537,9 @@ I18N.ko = {
   'a11y.home': 'Spielwirbel – 홈 화면으로',
   'a11y.language': '언어',
   'a11y.account': '계정',
+  // Der Tisch shows the account NAME on the button (#1279), so the name must
+  // be part of its accessible name (WCAG 2.5.3 Label in Name).
+  'a11y.accountNamed': '계정: {name}',
   'a11y.hubTabs': '모임 섹션',
   'a11y.roundNav': '모임 내비게이션',
   'feedback.button': '피드백',

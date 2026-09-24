@@ -42,6 +42,8 @@ I18N.fr = {
   'home.docTitle': 'Mes groupes',
   'home.greeting': 'Content de te voir.',
   'home.sub': 'Quel groupe joue aujourd’hui ?',
+  // Der Tisch only (#1279): the lobby voice beside the wordmark.
+  'home.tischKicker': 'Café ludique · tes tables',
   'home.shared': 'Partagé',
   'home.newRound': 'Créer un groupe',
   'home.empty.title': 'Aucun groupe pour l’instant.',
@@ -1610,6 +1612,9 @@ I18N.fr = {
   'a11y.home': 'Spielwirbel – aller à l’écran d’accueil',
   'a11y.language': 'Langue',
   'a11y.account': 'Compte',
+  // Der Tisch shows the account NAME on the button (#1279), so the name must
+  // be part of its accessible name (WCAG 2.5.3 Label in Name).
+  'a11y.accountNamed': 'Compte : {name}',
   'a11y.hubTabs': 'Sections du groupe',
   'a11y.roundNav': 'Navigation du groupe',
 

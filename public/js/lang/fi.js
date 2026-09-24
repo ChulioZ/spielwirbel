@@ -23,6 +23,8 @@ I18N.fi = {
   'home.docTitle': 'Omat porukat',
   'home.greeting': 'Mukava nähdä.',
   'home.sub': 'Mikä porukka pelaa tänään?',
+  // Der Tisch only (#1279): the lobby voice beside the wordmark.
+  'home.tischKicker': 'Pelikahvila · sinun pöytäsi',
   'home.shared': 'Jaettu',
   'home.newRound': 'Aloita uusi porukka',
   'home.empty.title': 'Ei vielä yhtään peliporukkaa.',
@@ -1570,6 +1572,9 @@ I18N.fi = {
   'a11y.home': 'Spielwirbel – siirry aloitusnäkymään',
   'a11y.language': 'Kieli',
   'a11y.account': 'Tili',
+  // Der Tisch shows the account NAME on the button (#1279), so the name must
+  // be part of its accessible name (WCAG 2.5.3 Label in Name).
+  'a11y.accountNamed': 'Tili: {name}',
   'a11y.hubTabs': 'Porukan osiot',
   'a11y.roundNav': 'Porukan navigaatio',
 

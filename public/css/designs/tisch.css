@@ -941,6 +941,106 @@
   transform: none;
 }
 
+/* --- The app chrome: brass plate, lobby voice, the account's face (#1279) ---
+   Every T3/T6 frame draws the top bar the same way: a walnut strip on a brass
+   rim, the wordmark on a brass PLATE (the one plate treatment, see
+   .round-card__name), and the account as avatar + name. The plate is the home
+   link's own text, so it translates nowhere and its accessible name is still
+   the a11y.home label core.js sets.
+
+   Below 521px styles.css drops the wordmark to the tornado glyph (the bar does
+   not fit both); the plate keeps that trade and becomes a small brass tile
+   around the glyph. From 521px up the glyph goes and the word is the plate. */
+:root[data-design="tisch"][data-scheme="dark"] .topbar {
+  background: var(--wood-deep);
+  border-bottom: 3px solid var(--gold-edge);
+}
+/* No `display` here, deliberately: the link is a flex item (so already
+   blockified), and at (0,4,0) any display would beat styles.css's
+   `body.auth-screen .topbar__home { display: none }` and put the plate on the
+   sign-in screens, which keep only the language picker. */
+:root[data-design="tisch"][data-scheme="dark"] .topbar__home {
+  flex: none;
+  font-weight: 800;
+  font-size: var(--text-md);
+  line-height: 1.2;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--on-accent);
+  background: linear-gradient(180deg, var(--brass-hi), var(--gold-deep));
+  border-radius: var(--radius-sm);
+  padding: 6px 13px;
+  text-decoration: none;
+  box-shadow: var(--shadow-1);
+}
+@media (min-width: 521px) {
+  :root[data-design="tisch"][data-scheme="dark"] .topbar__home .ti { display: none; }
+}
+@media (max-width: 520px) {
+  :root[data-design="tisch"][data-scheme="dark"] .topbar__home {
+    padding: 5px 7px;
+    font-size: var(--text-xl);
+    letter-spacing: 0;
+  }
+}
+/* The lobby's sub-brand line, „Spielecafé · deine Tische". T3.1 sets it in the
+   bar beside the plate; T6.1's phone has no wordmark in its bar and prints it
+   above the greeting instead. showHome renders both (the bar's through
+   setContext's 'kicker' kind), and exactly one is shown per width. */
+:root[data-design="tisch"][data-scheme="dark"] .topbar__context--kicker {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: var(--text-md);
+  color: var(--ink-soft);
+}
+:root[data-design="tisch"][data-scheme="dark"] .lobby-head__kicker {
+  margin: 0 0 3px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--text-sm);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+@media (max-width: 767px) {
+  :root[data-design="tisch"][data-scheme="dark"] .topbar__context--kicker { display: none; }
+}
+@media (min-width: 768px) {
+  :root[data-design="tisch"][data-scheme="dark"] .lobby-head__kicker { display: none; }
+}
+/* The account as avatar + name (account-chrome.js renderAccountFace). The name
+   shows from 768px only: T6.1's phone bar draws the avatar alone, and the 390px
+   bar already holds the plate, the picker and up to four icon buttons.
+   `:not([hidden])` because `.topbar__acct` deliberately declares no `display`
+   — a bare `display: inline-flex` here would put the button back on screen
+   for a logged-out visitor (.claude/rules/hidden-attribute-vs-display-rule.md). */
+:root[data-design="tisch"][data-scheme="dark"] .topbar__acct--face:not([hidden]) {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px;
+  border-radius: 999px;
+}
+:root[data-design="tisch"][data-scheme="dark"] .topbar__avatar {
+  width: 32px;
+  height: 32px;
+  border: 0;
+}
+:root[data-design="tisch"][data-scheme="dark"] .topbar__name {
+  display: none;
+  max-width: 14ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--ink);
+}
+@media (min-width: 768px) {
+  :root[data-design="tisch"][data-scheme="dark"] .topbar__acct--face:not([hidden]) { padding: 3px 12px 3px 3px; }
+  :root[data-design="tisch"][data-scheme="dark"] .topbar__name { display: block; }
+}
+
 /* --- The „Abstimmung läuft" notice (T3.1, T6.1) ---------------------------
    A vote already running is the one thing on the lobby that is not a
    destination but an appointment, so it is printed on paper and laid on the
@@ -1268,13 +1368,14 @@
   /* --ring-r is the seat ring's radius and --table-y the disc's centre; both
      are read by the seat rule below, so a bigger table needs one edit. */
   :root[data-design="tisch"][data-scheme="dark"] .round-card {
+    --card-h: 392px;
     --table-d: 244px;
     --table-y: 170px;
     --ring-r: 130px;
     position: relative;
     isolation: isolate;
     display: block;
-    height: 392px;
+    height: var(--card-h);
     overflow: visible;
     background: none;
     box-shadow: none;
@@ -1386,10 +1487,33 @@
     border-radius: var(--radius-sm);
     box-shadow: var(--shadow-2);
   }
-  /* The new-round table is the same disc, drawn as an empty place. */
-  :root[data-design="tisch"][data-scheme="dark"] .round-card--new {
-    height: 392px;
+  /* The new-round table is the same disc, drawn as an empty place, with its
+     label laid in the middle of it (#1279).
+
+     The label was drawn ABOVE the circle at 1280/1440 until #1279: the
+     `.round-card` rule above turns every tile into `display: block`, the phone
+     rule's flex centring on `.round-card--new` tied with it at (0,4,0) and lost
+     on source order, so the icon and the text flowed from the card's top edge —
+     y≈0–26 against a circle spanning 48–292. The old nudge, `> * { top: … }`,
+     could not rescue it: it moved the `<i>` and never the label, which is a
+     bare TEXT node that no element selector reaches.
+
+     So: compounded to (0,5,0), a centred flex column, and a content box made
+     exactly 2·--table-y tall by the bottom padding — i.e. centred on the
+     circle's own centre, whatever the label's line count. The side padding
+     holds the label to the disc's width less 28px each side, so a long locale
+     wraps inside the circle rather than across its rim. */
+  :root[data-design="tisch"][data-scheme="dark"] .round-card.round-card--new {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: var(--card-h);
     padding: 0;
+    padding-bottom: calc(var(--card-h) - 2 * var(--table-y));
+    padding-inline: calc(50% - var(--table-d) / 2 + 28px);
+    text-align: center;
     border: 0;
   }
   :root[data-design="tisch"][data-scheme="dark"] .round-card--new::before {
@@ -1407,12 +1531,6 @@
     box-shadow: none;
   }
   :root[data-design="tisch"][data-scheme="dark"] .round-card--new:hover::before { border-color: var(--gold); }
-  /* The label rides in the middle of that empty place rather than at the card's
-     own centre, which sits 26px lower. */
-  :root[data-design="tisch"][data-scheme="dark"] .round-card--new > * {
-    position: relative;
-    top: calc(var(--table-y) - 196px);
-  }
 }
 
 /* --- Desktop: the rail as the brass rail, the band as the table (T3.2) -----

@@ -29,6 +29,8 @@ I18N.en = {
   'home.docTitle': 'My rounds',
   'home.greeting': 'Good to see you.',
   'home.sub': 'Which round is playing today?',
+  // Der Tisch only (#1279): the lobby voice beside the wordmark.
+  'home.tischKicker': 'Game café · your tables',
   'home.shared': 'Shared',
   'home.newRound': 'Start a new round',
   'home.empty.title': 'No game round yet.',
@@ -1723,6 +1725,9 @@ I18N.en = {
   'a11y.home': 'Spielwirbel – go to home screen',
   'a11y.language': 'Language',
   'a11y.account': 'Account',
+  // Der Tisch shows the account NAME on the button (#1279), so the name must
+  // be part of its accessible name (WCAG 2.5.3 Label in Name).
+  'a11y.accountNamed': 'Account: {name}',
   'a11y.hubTabs': 'Round sections',
   'a11y.roundNav': 'Round navigation',
 

@@ -46,6 +46,8 @@ I18N.nl = {
   'home.docTitle': 'Mijn groepen',
   'home.greeting': 'Fijn dat je er weer bent.',
   'home.sub': 'Welke groep speelt er vandaag?',
+  // Der Tisch only (#1279): the lobby voice beside the wordmark.
+  'home.tischKicker': 'Spellencafé · jouw tafels',
   'home.shared': 'Gedeeld',
   'home.newRound': 'Een nieuwe groep starten',
   'home.empty.title': 'Nog geen speelgroep.',
@@ -1602,6 +1604,9 @@ I18N.nl = {
   'a11y.home': 'Spielwirbel – naar het beginscherm',
   'a11y.language': 'Taal',
   'a11y.account': 'Account',
+  // Der Tisch shows the account NAME on the button (#1279), so the name must
+  // be part of its accessible name (WCAG 2.5.3 Label in Name).
+  'a11y.accountNamed': 'Account: {name}',
   'a11y.hubTabs': 'Onderdelen van de groep',
   'a11y.roundNav': 'Navigatie van de groep',
 

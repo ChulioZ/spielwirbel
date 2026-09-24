@@ -12,7 +12,10 @@ async function showHome() {
   if (accountsActive() && !isLoggedIn()) return showLanding();
   currentView = () => showHome();
   syncUrl('/');
-  setContext(''); // home: no round context
+  // Home has no round context. Der Tisch fills the slot with its lobby voice
+  // instead (#1279: „Spielecafé · deine Tische" beside the wordmark, T3.1).
+  const tisch = designIs('tisch');
+  setContext(tisch ? t('home.tischKicker') : '', tisch ? 'kicker' : undefined);
   setDocTitle(t('home.docTitle'));
   applyBackground(null); // home: default background
   app.innerHTML = '<p class="muted">…</p>';
@@ -22,7 +25,11 @@ async function showHome() {
 
   app.innerHTML = '';
   app.appendChild(
-    h(`<div class="lobby-head">
+    // The same line again for the PHONE (T6.1 prints it above the greeting and
+    // has no wordmark in its bar): tisch.css shows exactly one of the two per
+    // width, so a screen reader meets it once. Klassisch renders neither.
+    h(`<div class="lobby-head">${tisch ? `
+         <p class="lobby-head__kicker">${esc(t('home.tischKicker'))}</p>` : ''}
          <h1>${esc(t('home.greeting'))}</h1>
          <div class="muted lobby-head__sub">${esc(t('home.sub'))}</div>
        </div>`)
