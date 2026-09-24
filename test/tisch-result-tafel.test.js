@@ -332,3 +332,29 @@ test('the grid is scoped to the result screen, and gives back the attributes it 
   assert.match(body('.result-screen .tafel .trow .trow__bars[hidden]'), /display:\s*none/);
   assert.match(body('.result-foot[hidden]'), /display:\s*none/);
 });
+
+// Found in the merge interview (2026-09-24), present on main before this PR: the
+// row's „…" is a `.btn`, so under Tisch it took the walnut button fill with the
+// paper's ink on it — a dark glyph on a dark tile, ~1.3:1, under the 3:1 a
+// control needs. On the paper Tafel it is drawn the way `.trow__votes` is.
+test('the row menu on the paper Tafel has no fill and inherits the row’s ink', () => {
+  const b = body('.result-screen .tafel .trow .trow__menu');
+  assert.ok(b, 'no Tisch rule for the row menu on the result Tafel');
+  assert.match(b, /background:\s*transparent/);
+  // No ink of its own: it would outrank the gold row's single-ink sweep
+  // (test/tisch-session.test.js), putting paper ink on the gold row.
+  assert.doesNotMatch(b, /(^|;)\s*color:/);
+  assert.match(b, /border:\s*1px solid var\(--line\)/);
+});
+
+// The chosen row's ring was an INSET box-shadow, which paints with the row's
+// background — so the score fill (`.trow::before`) covered it and only the
+// stretch past --pct showed, as a stray bracket on the right. An outline paints
+// above the row's content, so the ring is whole at every --pct.
+test('the chosen row is ringed by an outline, which the score fill cannot cover', () => {
+  const b = body('.result-screen .tafel .trow.is-chosen');
+  assert.ok(b, 'no Tisch rule for the chosen row');
+  assert.match(b, /box-shadow:\s*none/);
+  assert.match(b, /outline:\s*2px solid var\(--gold-edge\)/);
+  assert.match(b, /outline-offset:\s*-2px/);
+});
