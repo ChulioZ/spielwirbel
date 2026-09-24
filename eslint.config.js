@@ -470,6 +470,9 @@ const frontendGlobals = {
   // views-session.js
   showStartSession: 'readonly', startVoting: 'readonly', showResults: 'readonly',
   showFinale: 'readonly', canShareResult: 'readonly', shareResult: 'readonly',
+  // views-session-setup-tisch.js (issue #1267): Der Tisch's setup composition
+  composeTischSetup: 'readonly', tischDrawSummary: 'readonly',
+  tischSetupDateLine: 'readonly',
   // views-session-tables.js (issue #796)
   showTableBuilder: 'readonly', tableStateFrom: 'readonly', tablePeopleIds: 'readonly',
   tableCoverBg: 'readonly',

@@ -777,6 +777,13 @@ I18N.ko = {
   'startSession.crumb': '세션',
   'startSession.title': '새 세션',
   'startSession.membersLabel': '누가 플레이하나요?',
+  // Der Tisch's setup (#1267): step line, seat states, the pot's heading and the draw summary.
+  'startSession.seatsTapHint': '자리를 누르면 참여해요',
+  'startSession.seatStateIn': '참여',
+  'startSession.seatStateOut': '오늘은 불참',
+  'startSession.potHeading': '후보',
+  'startSession.drawOfOne': '게임 {total}개 중 {n}개를 뽑아요',
+  'startSession.drawOf': '게임 {total}개 중 {n}개를 뽑아요',
   'startSession.membersNote': '인원수에 따라 게임이 걸러져요.',
   'startSession.tableCountOne': '{n}명 플레이',
   'startSession.tableCount': '{n}명 플레이',

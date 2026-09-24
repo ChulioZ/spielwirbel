@@ -2180,8 +2180,9 @@
   gap: 6px;
 }
 /* The ring and its centre label are the picture, so they go with it. The label
-   („4 von 6 spielen mit") is restated by the bar's own summary at the foot of
-   this column, so nothing is lost with it. */
+   („4 von 6 spielen mit") is restated by the summary under „Loswirbeln" at the
+   foot of the pot, and every seat states its own state since #1267, so
+   nothing is lost with it. */
 :root[data-design="tisch"][data-scheme="dark"] .setup-grid--session .nr-table__ring,
 :root[data-design="tisch"][data-scheme="dark"] .setup-grid--session .nr-table__center {
   display: none;
@@ -2189,18 +2190,28 @@
 /* A seat is a row: piece, name over state, tick. 44px is the sheet's phone
    value and the hit-target floor; the 1280px block below takes it to T4.1's 52.
    `overflow: hidden` + `min-width: 0` so a long name ellipses inside its own
-   column instead of widening the grid. */
+   column instead of widening the grid.
+
+   A GRID, not a flex row, since #1267 gave the seat its state line: the name
+   and the line under it share the middle column while the piece and the tick
+   span both rows. The picker renders them as siblings in exactly that reading
+   order — piece, name, state, tick — so placing them by column moves nothing
+   out of DOM order. The line is the button's own text, i.e. part of its
+   accessible name, which is what lets state stop being colour-only (WCAG 1.4.1).
+   Guests' „Gast" line and the owner's „du" marker take the same middle column. */
 :root[data-design="tisch"][data-scheme="dark"] .setup-grid--session .nr-seat {
   position: static;
   width: auto;
   margin: 0;
   min-height: 44px;
   min-width: 0;
-  flex-direction: row;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-content: center;
   align-items: center;
-  justify-content: flex-start;
-  gap: 8px;
-  padding: 0 9px;
+  justify-content: stretch;
+  gap: 0 8px;
+  padding: 4px 9px;
   border-radius: var(--radius-sm);
   background: var(--control-fill);
   border: 1px solid var(--control-edge);
@@ -2214,11 +2225,48 @@
   background: transparent;
   border-style: dashed;
 }
+/* The app fades an out-seat's NAME (`opacity: .6`, styles.css) because on the
+   ring the name is all it has. Here the state line says „heute nicht dabei" in
+   words, so the name keeps full ink — the fade put it at a marginal ~4.6:1 on
+   the panel for no information the line does not already give (#1267). */
+:root[data-design="tisch"][data-scheme="dark"] .setup-grid--session .nr-seat--out .nr-seat__name { opacity: 1; }
 :root[data-design="tisch"][data-scheme="dark"] .setup-grid--session .nr-seat__avatar {
   width: 32px;
   height: 32px;
   border-width: 2px;
   flex: none;
+  grid-column: 1;
+  grid-row: 1 / span 2;
+}
+:root[data-design="tisch"][data-scheme="dark"] .setup-grid--session .nr-seat__name,
+:root[data-design="tisch"][data-scheme="dark"] .setup-grid--session .nr-seat__state,
+:root[data-design="tisch"][data-scheme="dark"] .setup-grid--session .nr-seat__you,
+:root[data-design="tisch"][data-scheme="dark"] .setup-grid--session .nr-seat__guest {
+  grid-column: 2;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* „spielt mit" / „heute nicht dabei" — T2.3/T4.1's state line. --ink-soft on
+   both grounds a seat can have (the in-seat's --control-fill and the out-seat's
+   panel --surface), measured in test/tisch-setup-panels.test.js. */
+:root[data-design="tisch"][data-scheme="dark"] .setup-grid--session .nr-seat__state {
+  /* Wraps rather than ellipsing: it is the state, and „heute nicht dabei" does
+     not fit a 390px phone's half-width seat on one line. */
+  white-space: normal;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--ink-soft);
+  text-align: left;
+}
+/* The tick is the glyph beside the words, never instead of them — gold, the
+   design's non-text accent, at the row's right edge. */
+:root[data-design="tisch"][data-scheme="dark"] .setup-grid--session .nr-seat__tick {
+  grid-column: 3;
+  grid-row: 1 / span 2;
+  font-size: 20px;
+  color: var(--gold);
 }
 /* Name and state stack in the middle column and share the row's remaining
    width. The name loses the arc's 64px cap — that number exists because a seat
@@ -2240,10 +2288,15 @@
    as one more person. */
 :root[data-design="tisch"][data-scheme="dark"] .setup-grid--session .nr-seat--add {
   grid-column: 1 / -1;
+  grid-template-columns: auto auto;
   justify-content: center;
+  align-items: center;
   border-style: dashed;
   background: transparent;
 }
+/* The „+" seat has no state line, so its piece takes one row, not two — a
+   spanning piece beside a one-line label lifts the label off its centre. */
+:root[data-design="tisch"][data-scheme="dark"] .setup-grid--session .nr-seat--add .nr-seat__avatar { grid-row: 1; }
 
 /* --- Setup: the three exception chips as brass buttons (T2.3, T4.1) -------
    „Jemand ohne Spiele? · Teams · Mehrere Tische" — one row of equal thirds on
@@ -2275,16 +2328,100 @@
 :root[data-design="tisch"][data-scheme="dark"] .setup-addons__chip.is-on .ti { color: var(--on-accent); }
 
 /* --- Setup: „Der Topf" (T2.3, T4.1) ---------------------------------------
-   The pool panel becomes a vessel standing on the table: a walnut card with its
-   filter chips, its tiles and the sentence about the boxes that stayed home.
+   Since #1267 the setup is the sheet's TWO PANELS rather than a painted single
+   column: views-session-setup-tisch.js wraps the seats' column in one framed
+   panel („Wer spielt mit?") and the pool's pieces in a second, a <section>
+   headed „Der Topf" with the count beside the heading. The filter bar and the
+   tile panel live INSIDE that frame, so they lose their own — a frame in a
+   frame is the one thing both sheets never draw.
+
    The app renders the pool twice and lets width pick one (views-session.js);
-   this dresses whichever one is on screen, so the two cannot diverge. */
+   this dresses whichever one is on screen, so the two cannot diverge. The
+   frame below stays for any `.setup-panel` outside the setup (the landing's
+   pot scene draws one). */
 :root[data-design="tisch"][data-scheme="dark"] .setup-panel,
 :root[data-design="tisch"][data-scheme="dark"] .setup-filterbar {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
   box-shadow: var(--shadow-1);
+}
+/* Both panels: one walnut frame each, and a heading row of title + quiet
+   companion text on a baseline — „Wer spielt mit? · Platz antippen =
+   mitspielen", „Der Topf · 9 Spiele im Topf". */
+:root[data-design="tisch"][data-scheme="dark"] .tisch-setup__panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-1);
+  padding: 12px 14px;
+  margin-bottom: 12px;
+}
+:root[data-design="tisch"][data-scheme="dark"] .tisch-setup__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 10px;
+  margin-bottom: 8px;
+}
+:root[data-design="tisch"][data-scheme="dark"] .tisch-setup__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--text-xl);
+  color: var(--ink);
+}
+:root[data-design="tisch"][data-scheme="dark"] .tisch-setup__sub,
+:root[data-design="tisch"][data-scheme="dark"] .tisch-pot__count {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+/* The count in the heading row is the app's two-span numeral (views-session.js
+   `potCount`), set here as one quiet phrase — the sheets print „9 Spiele im
+   Topf", not a display figure. */
+:root[data-design="tisch"][data-scheme="dark"] .tisch-pot__count .pool-count,
+:root[data-design="tisch"][data-scheme="dark"] .tisch-pot__count .pool-count__label {
+  font: inherit;
+  color: inherit;
+}
+/* The phone strip carried its own numeral because the panel stating it was not
+   rendered below 860px. The heading row states it at every width now, so the
+   strip keeps only the covers — the count is never said twice. */
+:root[data-design="tisch"][data-scheme="dark"] .tisch-pot .pool-hint .pool-count-group { display: none; }
+:root[data-design="tisch"][data-scheme="dark"] .tisch-pot .setup-filterbar,
+:root[data-design="tisch"][data-scheme="dark"] .tisch-pot .setup-panel {
+  background: none;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  margin: 0 0 8px;
+}
+/* The round's colour marker (#1187) sits under the pot's title now — the
+   element the app hangs it on (`.setup-panel__title`) is not rendered here. */
+:root[data-design="tisch"][data-scheme="dark"][data-marked] .tisch-pot .tisch-setup__title::after {
+  content: '';
+  display: block;
+  width: 46px;
+  height: 4px;
+  margin-top: 6px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--marker), var(--marker-deep));
+}
+/* The date line („Donnerstag, 24.09."; the sheet's „Schritt 1 von 3" is left
+   out on purpose — views-session-setup-tisch.js says why) beside the page's <h1>, on its
+   baseline (T4.1); on a phone it wraps under it, which is where T2.3 prints it. */
+:root[data-design="tisch"][data-scheme="dark"] .page-head:has(.tisch-setup__step) {
+  justify-content: flex-start;
+  align-items: baseline;
+  gap: 2px 14px;
+}
+:root[data-design="tisch"][data-scheme="dark"] .tisch-setup__step {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--ink-soft);
 }
 :root[data-design="tisch"][data-scheme="dark"] .setup-panel__title {
   font-family: var(--font-display);
@@ -2317,6 +2454,21 @@
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
+}
+/* T2.3's line under the action — „4 spielen mit · 3 von 9 Spielen werden
+   gezogen". views-session-setup-tisch.js moves it AFTER the button in the DOM,
+   so it is placed on a row of its own below everything else rather than in the
+   app's slot beside the count, which would put it visually before the button it
+   follows in the reading order. `grid-row: auto` with a full-width span lands
+   it on the first row with every track free: row 3 on a phone, row 2 from
+   860px up, where the button shares row 1 with the count. */
+:root[data-design="tisch"][data-scheme="dark"] .setup-grid--tisch .setup-bar__summary {
+  grid-column: 1 / -1;
+  grid-row: auto;
+  text-align: center;
+  font-family: inherit;
+  font-size: var(--text-xs);
+  font-weight: 600;
 }
 :root[data-design="tisch"][data-scheme="dark"] .setup-bar__count label {
   font-family: var(--font-display);
@@ -3051,6 +3203,14 @@
   :root[data-design="tisch"][data-scheme="dark"] .setup-grid--session .nr-seat__name {
     font-size: var(--text-md);
   }
+  /* T4.1's two panels at the rail width: 20px of padding and the 23px display
+     titles. The two-column grid itself is the app's own from 860px up; what
+     the rail changes is that the setup now sits BESIDE navigation (#1267). */
+  :root[data-design="tisch"][data-scheme="dark"] .tisch-setup__panel {
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .tisch-setup__title { font-size: var(--text-2xl); }
 
   /* The vote card at T4.2's width, with the five faces as COLUMNS: a tile each,
      face over number over word, 132px tall. There is room for the tile here and

@@ -823,6 +823,13 @@ I18N.it = {
   'startSession.crumb': 'Sessione',
   'startSession.title': 'Nuova sessione',
   'startSession.membersLabel': 'Chi gioca?',
+  // Der Tisch's setup (#1267): step line, seat states, the pot's heading and the draw summary.
+  'startSession.seatsTapHint': 'Tocca un posto per giocare',
+  'startSession.seatStateIn': 'gioca',
+  'startSession.seatStateOut': 'oggi non c’è',
+  'startSession.potHeading': 'L’urna',
+  'startSession.drawOfOne': '{n} gioco su {total} verrà estratto',
+  'startSession.drawOf': '{n} giochi su {total} verranno estratti',
   'startSession.membersNote': 'Il numero di giocatori filtra i giochi.',
   'startSession.tableCountOne': '{n} in gioco',
   'startSession.tableCount': '{n} in gioco',

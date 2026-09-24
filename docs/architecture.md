@@ -795,6 +795,8 @@ public/
     views-session-live.js the voting lobby every session opens (#655): who has voted, vote for
                      yourself or for anyone still open on this device, and end
                      the voting (issue #209)
+    views-session-setup-tisch.js Der Tisch's setup as two panels („Wer spielt mit?",
+                     „Der Topf"), the step line, the rail kept (#1267)
     views-vote-link.js the PUBLIC /vote/:token screen (#652): claim your name
                      from the participant list and rate the drawn games without
                      an account — the only view that runs logged out
