@@ -29,6 +29,15 @@ function renderStartTab(round, activeGames) {
   const { byGame: statsByGame } = roundScoreIndex(round, activeGames);
 
   const playedCount = round.sessions.filter((s) => s.finished).length;
+  /* Der Tisch composes the top of the hub as ONE felt band at desktop — seats,
+     the one action and its presets together (T3.2, #1262). So under that design
+     the three are gathered in a `.hub-stage` wrapper: DOM order is unchanged
+     (hero, CTA, presets — the phone order), and CSS alone decides whether the
+     band holds just the hero (below 1280) or all three (from 1280 up), so a
+     resize needs no re-render. Klassisch appends straight to `app`, exactly as
+     before. */
+  const tisch = designIs('tisch');
+  const stage = tisch ? app.appendChild(h('<div class="hub-stage"></div>')) : app;
   const hero = h(`<div class="hero rail-owned">
        <h1></h1>
        <div class="hero__members">${activeMembers(round)
@@ -42,7 +51,7 @@ function renderStartTab(round, activeGames) {
   // The name is inline-editable (#562); the rail's copy of this heading carries
   // the same affordance for widths where CSS hides the hero.
   hero.querySelector('h1').appendChild(editableRoundName(round));
-  app.appendChild(hero);
+  stage.appendChild(hero);
   // Each hero avatar opens that member's detail page. Queried before the "+" is
   // appended, so the index-to-member mapping cannot pick it up.
   hero.querySelectorAll('.hero__members .avatar').forEach((el, i) => {
@@ -76,16 +85,22 @@ function renderStartTab(round, activeGames) {
   const seatRow = hero.querySelector('.hero__members');
   seatRow.style.setProperty('--seat-n', seatRow.children.length);
   [...seatRow.children].forEach((el, i) => el.style.setProperty('--seat-i', i));
+  if (tisch) tischSeatHints(round, seatRow);
 
+  /* `rail-owned` only where the rail still carries its own copy. Der Tisch's
+     rail is identity plus the five links (#1262), so there the band's CTA and
+     presets are the ONLY ones at every width — one control, one place, one tab
+     stop. */
+  const railOwned = tisch ? '' : ' rail-owned';
   const startBtn = h(
-    `<button class="btn btn--primary hub-cta rail-owned"><i class="ti ti-tornado" aria-hidden="true"></i>${esc(t('round.startSession'))}</button>`
+    `<button class="btn btn--primary hub-cta${railOwned}"><i class="ti ti-tornado" aria-hidden="true"></i>${esc(t('round.startSession'))}</button>`
   );
   startBtn.addEventListener('click', () => showStartSession(round));
   if (activeGames.length === 0) {
     startBtn.disabled = true;
     startBtn.title = t('round.startSessionDisabled');
   }
-  app.appendChild(startBtn);
+  stage.appendChild(startBtn);
 
   // Quick-start presets (#923): the same draw, already narrowed. Directly under
   // the CTA because they modify it — and only when this shelf can actually
@@ -95,7 +110,10 @@ function renderStartTab(round, activeGames) {
     // `rail-owned`, exactly like the CTA above: from 1280px up the rail carries
     // both, and a chip row left behind here would modify a button that has left
     // the pane.
-    if (presets) { presets.classList.add('rail-owned'); app.appendChild(presets); }
+    if (presets) {
+      if (!tisch) presets.classList.add('rail-owned');
+      stage.appendChild(presets);
+    }
   }
 
   // "Vote in progress" tickets: a draw whose voting was abandoned before the
@@ -304,13 +322,27 @@ function renderStartTab(round, activeGames) {
     hubPulseCard(round, activeGames),
     hubCareCard(round, activeGames),
     hubAnniversaryCard(round),
-    // The three sub-page previews (#1185, hub-previews.js), LAST in the grid:
-    // "what is over there" is a weaker claim on the reader than "play this
-    // tonight". Same null-or-nothing contract as the four above.
+  ].forEach((card) => { if (card) grid.appendChild(cardSlot(card)); });
+  // The three sub-page previews (#1185, hub-previews.js), LAST in the grid:
+  // "what is over there" is a weaker claim on the reader than "play this
+  // tonight". Same null-or-nothing contract as the four above.
+  const previews = [
     hubRegalPreview(round, activeGames),
     hubPokalePreview(round),
     hubChronikPreview(round),
-  ].forEach((card) => { if (card) grid.appendChild(cardSlot(card)); });
+  ].filter(Boolean);
+  if (tisch && previews.length) {
+    /* Der Tisch lays the survivors out as ONE row of small tiles on a phone
+       (T2.2, #1263), so they share one slot: two survivors are two half-width
+       tiles, never three cells with a hole. From 1280 up the wrapper is
+       `display: contents` and each preview is a cell of the 3-wide grid
+       (T3.2) — same nodes, CSS picks the presentation. */
+    const row = h('<div class="card-slot hub-previews"></div>');
+    previews.forEach((card) => row.appendChild(card));
+    grid.appendChild(row);
+  } else {
+    previews.forEach((card) => grid.appendChild(cardSlot(card)));
+  }
 
   // From 1280px up the rail owns the hero and the big CTA above, so a round with
   // no ticket to show left the pane holding only `.hub-actions` — one visible
@@ -446,4 +478,45 @@ function renderStartTab(round, activeGames) {
   actions.appendChild(addGameBtn);
   actions.appendChild(settingsBtn);
   app.appendChild(actions);
+}
+
+/* Der Tisch's seat captions (T2.1, T3.2; #1262/#1263): a name under each seat,
+   the member's win count as a badge, a crown on whoever leads the standings and
+   „Platz dazu" under the „+". Tisch-only — Klassisch's strip stays the bare row
+   of discs it has always been, so this runs behind `designIs('tisch')` rather
+   than as a design-neutral hint every design pays for in its DOM.
+
+   The counts come from roundStandings() (views-pokale.js), never a second tally:
+   the seat that wears the crown and the Pokale's top step must be the same
+   person, and two derivations over the same sessions is the drift
+   `.claude/rules/shared-constants-across-the-stack.md` is about. A tie for first
+   crowns every member on that step — `rankOf` already says they share it.
+
+   The caption is REAL text inside the seat's link, so it also completes the
+   link's accessible name (the initials were all it had). The badge and crown
+   are aria-hidden: the count goes into the `title` beside the name it belongs
+   to, and the Pokale one tap away carry the full table. A zero is not badged —
+   a „0" on every newcomer is noise, not a record. */
+function tischSeatHints(round, seatRow) {
+  const { wins, rankOf } = roundStandings(round);
+  const caption = (el, text) => el.appendChild(h(`<span class="seat__cap">${esc(text)}</span>`));
+  const seats = [...seatRow.querySelectorAll(':scope > a.avatar:not(.avatar--retired)')];
+  activeMembers(round).forEach((m, i) => {
+    const el = seats[i];
+    if (!el) return;
+    caption(el, m.name);
+    const n = wins[m.id] || 0;
+    if (n === 0) return;
+    el.title = `${m.name} · ${tn(n, 'pokale.winsOne', 'pokale.wins')}`;
+    el.appendChild(h(`<span class="seat__wins" aria-hidden="true">${n}</span>`));
+    if (rankOf[m.id] === 1) el.appendChild(h('<i class="ti ti-crown seat__crown" aria-hidden="true"></i>'));
+  });
+  // aria-hidden: the „+" button's aria-label is its name, and would override a
+  // caption inside it anyway — this keeps the tree saying what it means.
+  const add = seatRow.querySelector(':scope > .avatar--add');
+  if (add) add.appendChild(h(`<span class="seat__cap" aria-hidden="true">${esc(t('hub.seat.add'))}</span>`));
+  const retired = (round.members || []).filter((m) => !memberIsActive(m));
+  seatRow.querySelectorAll(':scope > a.avatar--retired').forEach((el, i) => {
+    if (retired[i]) caption(el, retired[i].name);
+  });
 }

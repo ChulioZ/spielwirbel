@@ -1528,6 +1528,31 @@ test('a design that declares a PAPER overlay family keeps every pair on it at AA
   assert.deepEqual(failures, [], 'the overlay inverts the scheme on a subtree; its pairs get the same bars');
 });
 
+test('Der Tisch\'s hub tiles keep their figures and labels at AA on the grounds they sit on (#1262/#1263)', () => {
+  /* The Rundenpuls stat tiles paint a number in --ink and a label in --ink-soft
+     on --sunken; the off-shelf count tiles paint name and count in --ink on
+     --surface with a gold glyph, a non-text mark (SC 1.4.11, 3:1). The seat
+     captions and badges sit on the felt and on paper, whose pairs the two tests
+     beside this one already hold. Measured for every design that declares the
+     felt, i.e. every design that wears these tiles. */
+  const hosts = withToken('--felt');
+  assert.ok(hosts.length >= 1, 'no design declares --felt — this test is vacuous');
+  const failures = [];
+  for (const t of hosts) {
+    const v = (n) => token(n, t.design);
+    for (const [label, fg, bg, bar] of [
+      ['--ink on --sunken (tile figure)', v('--ink'), v('--sunken'), AA_TEXT],
+      ['--ink-soft on --sunken (tile label)', v('--ink-soft'), v('--sunken'), AA_TEXT],
+      ['--ink on --surface (count tile)', v('--ink'), v('--surface'), AA_TEXT],
+      ['--gold on --surface (tile glyph)', v('--gold'), v('--surface'), AA_LARGE],
+    ]) {
+      const ratio = contrast(fg, bg);
+      if (!(ratio >= bar)) failures.push(`${name(t)} — ${label} = ${ratio.toFixed(2)}:1 (bar ${bar})`);
+    }
+  }
+  assert.deepEqual(failures, []);
+});
+
 test('the Chronik session strip keeps its date column at AA on wood and on paper (#1271)', () => {
   /* The strip's date column changes ground with the width (tisch.css): on a
      desktop it stands on the walnut PAGE beside the paper and takes --gold; on

@@ -1397,9 +1397,9 @@ a.hub-row:hover { background: var(--sunken-soft); }
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.hub-row__sub { font-size: var(--text-sm); color: var(--muted); }
-.hub-row--quiet .hub-row__sub { color: var(--muted); }
-.hub-row__go { color: var(--muted); flex: none; }
+.hub-row__sub { font-size: var(--text-sm); color: var(--ink-soft); }
+.hub-row--quiet .hub-row__sub { color: var(--ink-soft); }
+.hub-row__go { color: var(--ink-soft); flex: none; }
 .hub-row--static { cursor: default; }
 
 /* ---- The three sub-page previews (#1185, hub-previews.js) ---------------- */
@@ -1410,7 +1410,7 @@ a.hub-row:hover { background: var(--sunken-soft); }
    what keeps three previews of different content reading as one set in the
    column flow. */
 .hub-preview { display: flex; flex-direction: column; }
-.hub-preview__sub { font-size: var(--text-sm); color: var(--muted); }
+.hub-preview__sub { font-size: var(--text-sm); color: var(--ink-soft); }
 .hub-preview__open {
   margin-top: auto;
   padding-top: 10px;
@@ -1456,7 +1456,7 @@ a.hub-row:hover { background: var(--sunken-soft); }
   flex: none;
   width: 18px;
   font-weight: 700;
-  color: var(--muted);
+  color: var(--ink-soft);
   text-align: right;
 }
 .hub-preview__avatar { width: 24px; height: 24px; font-size: var(--text-xs); flex: none; }
@@ -1471,7 +1471,7 @@ a.hub-row:hover { background: var(--sunken-soft); }
   white-space: nowrap;
 }
 .hub-preview__score { flex: none; font-weight: 700; font-variant-numeric: tabular-nums; }
-.hub-preview__last { font-size: var(--text-sm); color: var(--muted); margin-top: 6px; }
+.hub-preview__last { font-size: var(--text-sm); color: var(--ink-soft); margin-top: 6px; }
 
 /* ---- „Nicht im Regal" on the hub (#1185) -------------------------------- */
 
@@ -1485,7 +1485,7 @@ a.hub-row:hover { background: var(--sunken-soft); }
   font-weight: 700;
   letter-spacing: .04em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--ink-soft);
 }
 
 .hub-care__head {
@@ -1524,7 +1524,7 @@ a.hub-row:hover { background: var(--sunken-soft); }
   background: var(--brand);
   border-radius: 2px 2px 0 0;
 }
-.pulse-bar__tick { font-size: var(--text-xs); color: var(--muted); line-height: 1.2; }
+.pulse-bar__tick { font-size: var(--text-xs); color: var(--ink-soft); line-height: 1.2; }
 
 /* The quick-start chips (#923), directly under the big CTA they modify — in the
    pane below 1280px and in the rail above it, following that button either way. */
@@ -4818,7 +4818,7 @@ a.k-tile:focus-visible,
 }
 .design-card {
   display: flex; flex-direction: column; gap: 10px;
-  padding: 12px; border: 2px solid var(--line); border-radius: var(--radius);
+  padding: 12px; border: 2px solid var(--line); border-radius: var(--radius-lg);
   background: var(--surface); cursor: pointer;
 }
 .design-card.is-on { border-color: var(--brand); }
@@ -10100,7 +10100,7 @@ kbd {
   flex-wrap: wrap;
   padding: 12px 14px;
   border: 1px dashed var(--line);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
   color: var(--ink-soft);
   font-size: var(--text-sm);
 }

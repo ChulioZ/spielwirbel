@@ -132,7 +132,17 @@ function hubRegalPreview(round, activeGames) {
 function hubPokalePreview(round) {
   const { winners, rankOf, wins } = roundStandings(round);
   if (!winners.length) return null;
-  const card = hubPreviewCard(round, { icon: 'ti-trophy', titleKey: 'hub.tab.pokale', tab: 'pokale' });
+  /* Der Tisch's phone tile shows one line under the title (T2.2 „Jonas führt"),
+     where the other two previews show their count. Derived from the same
+     `rankOf`, so a shared first place says so instead of naming one of them. */
+  let sub = null;
+  if (designIs('tisch')) {
+    const leaders = winners.filter((m) => rankOf[m.id] === 1);
+    sub = leaders.length === 1
+      ? t('hub.preview.pokaleLead', { name: leaders[0].name })
+      : t('hub.preview.pokaleLeadTie', { n: leaders.length });
+  }
+  const card = hubPreviewCard(round, { icon: 'ti-trophy', titleKey: 'hub.tab.pokale', sub, tab: 'pokale' });
   const body = card.querySelector('.hub-card__body');
   winners.slice(0, HUB_PREVIEW_RANKS).forEach((m) => {
     body.appendChild(h(`<div class="hub-preview__rank">
@@ -181,6 +191,7 @@ function hubChronikPreview(round) {
    Rows come from off-shelf.js, so this group, the Regal's sheet and the rail
    offer the same four with the same counts by construction. */
 function hubOffShelfGroup(round) {
+  if (designIs('tisch')) return hubOffShelfTiles(round);
   // `rail-owned`, exactly like the hero, the CTA and the Einstellungen entry:
   // from 1280px up the rail carries these four rows, and a second copy in the
   // pane would offer the same navigation twice on one screen. Below that width
@@ -207,6 +218,37 @@ function hubOffShelfGroup(round) {
        </a>`);
     navLink(row, roundPath(round.id, sub), go);
     list.appendChild(row);
+  });
+  return group;
+}
+
+/* Der Tisch's „Nicht im Regal" (T2.2, T3.2; #1262/#1263): the same four
+   destinations as COUNT TILES — a 2×2 grid on a phone, one row of four at the
+   foot of the desktop hub. Same rows, same counts, same order as every other
+   presentation, because they come from the same offShelfEntries().
+
+   NOT `rail-owned`, unlike the Klassisch group: Der Tisch's rail is identity
+   plus the five links (#1262), so from 1280 up these tiles are the hub's only
+   way into the four lists.
+
+   The count is its own figure here, so the tile reads the count-free `name`
+   and the accessible name is the Klassisch label („Aussortiert (2)") — one
+   phrase to a screen reader rather than a word and a stray number.
+   Recommendations carry no count, for the reason off-shelf.js states. */
+function hubOffShelfTiles(round) {
+  const group = h(`<section class="hub-offshelf hub-offshelf--tiles">
+       <h2 class="hub-offshelf__title">${esc(t('rail.archive'))}</h2>
+       <div class="hub-offshelf__tiles"></div>
+     </section>`);
+  const grid = group.querySelector('.hub-offshelf__tiles');
+  offShelfEntries(round).forEach(({ icon, label, name, count, sub, go }) => {
+    const tile = h(`<a class="offshelf-tile" aria-label="${esc(label)}">
+         <i class="ti ${icon}" aria-hidden="true"></i>
+         <span class="offshelf-tile__name">${esc(name)}</span>
+         ${count === null ? '' : `<span class="offshelf-tile__n">${count}</span>`}
+       </a>`);
+    navLink(tile, roundPath(round.id, sub), go);
+    grid.appendChild(tile);
   });
   return group;
 }
