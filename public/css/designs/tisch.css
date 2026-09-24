@@ -6281,6 +6281,11 @@
    7.74:1. Every other kind takes the raised fill with a gold glyph, 6.26:1 —
    a glyph, where 3:1 binds. */
 :root[data-design="tisch"][data-scheme="dark"] .inbox-row__icon { background: var(--control-fill); color: var(--gold); }
+/* An UNREAD row is itself raised to --control-fill, so there the default tile
+   drops one level to --surface — otherwise it vanishes on exactly the rows that
+   matter (found in the #1272 merge interview). Before the invitation's gold
+   rule on purpose: equal specificity, so source order keeps that one gold. */
+:root[data-design="tisch"][data-scheme="dark"] .inbox-row--unread .inbox-row__icon { background: var(--surface); }
 :root[data-design="tisch"][data-scheme="dark"] .inbox-row--round-invitation .inbox-row__icon { background: var(--gold); color: var(--gold-ink); }
 
 /* --- „Was ist neu" (T14.3) -------------------------------------------------

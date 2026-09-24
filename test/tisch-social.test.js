@@ -434,3 +434,20 @@ test('the grounds and inks #1272 paints clear their bars on Der Tisch', () => {
   }
   assert.deepEqual(failures, []);
 });
+
+// Found in the merge interview (2026-09-24): an UNREAD row is raised to
+// --control-fill, which is also the default icon tile's fill — so on exactly
+// the rows that matter the tile vanished and the glyph floated bare. T14.2
+// draws the tile one level off its row; on a raised row that is --surface.
+// Equal specificity to the invitation's gold tile, so it must come first in
+// the file or it would repaint the invitation's gold too.
+test('an unread inbox row keeps its icon tile visible, and the invitation stays gold', () => {
+  const css = fs.readFileSync(path.join(__dirname, '..', 'public/css/designs/tisch.css'), 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, '');
+  const H = ':root[data-design="tisch"][data-scheme="dark"] ';
+  const unread = css.indexOf(H + '.inbox-row--unread .inbox-row__icon {');
+  const invite = css.indexOf(H + '.inbox-row--round-invitation .inbox-row__icon {');
+  assert.ok(unread > -1, 'no rule gives an unread row its own tile fill');
+  assert.match(css.slice(unread, css.indexOf('}', unread)), /background:\s*var\(--surface\)/);
+  assert.ok(invite > unread, 'the gold invitation tile must come after, or the unread rule repaints it');
+});
