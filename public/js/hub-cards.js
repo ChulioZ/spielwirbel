@@ -95,6 +95,64 @@ function hubYoungCard(round, activeGames) {
   return card;
 }
 
+/* Der Tisch's DEMO summary (T7.6, #1280): the demo round's three sub-pages as
+   one condensed list — what is behind each tab and how much of it there is —
+   in the place the three preview tiles take on every other round. The same
+   three destinations, so nothing becomes unreachable: each row is that
+   preview's link, and the tab strip / dock still carry all three.
+
+   The values are the previews' own figures (the shelf count, the played-
+   evening count, roundStandings' leader), never a second derivation. The
+   sheet's fourth row („Wie wär's mit") is left out: that card is on the same
+   screen, directly below, so the row would link to where the reader already
+   is. */
+function hubDemoSummary(round, activeGames) {
+  const list = h(`<nav class="hub-demo" aria-label="${esc(t('hub.demo.label'))}"></nav>`);
+  const { winners, rankOf } = roundStandings(round);
+  const leaders = winners.filter((m) => rankOf[m.id] === 1);
+  // `s.finished`, like hubChronikPreview — the count the Chronik lists.
+  const played = round.sessions.filter((s) => s.finished).length;
+  const lead = leaders.length === 1 ? t('hub.preview.pokaleLead', { name: leaders[0].name })
+    : leaders.length ? t('hub.preview.pokaleLeadTie', { n: leaders.length }) : '';
+  [
+    { tab: 'regal', icon: 'ti-layout-grid', value: tn(activeGames.length, 'home.chip.gamesOne', 'home.chip.games') },
+    { tab: 'chronik', icon: 'ti-history', value: tn(played, 'home.chip.sessionsOne', 'home.chip.sessions') },
+    { tab: 'pokale', icon: 'ti-trophy', value: lead },
+  ].forEach(({ tab, icon, value }) => {
+    const row = h(`<a class="hub-demo__row">
+         <i class="ti ${icon}" aria-hidden="true"></i>
+         <span class="hub-demo__main">
+           <span class="hub-demo__label">${esc(t('hub.tab.' + tab))}</span>
+           <span class="hub-demo__hint">${esc(t('hub.demo.hint.' + tab))}</span>
+         </span>
+         ${value ? `<span class="hub-demo__value">${esc(value)}</span>` : ''}
+       </a>`);
+    navLink(row, roundPath(round.id, tab), () => showRound(round.id, tab));
+    list.appendChild(row);
+  });
+  return list;
+}
+
+/* „Gefällt dir das?" (T7.6, #1280): the demo's one invitation to make it real.
+   The button is the banner's own exit (leaveDemoForRegister, demo-account.js)
+   rather than a second copy of it — the demo's tokens must be dropped before
+   the register screen opens, and a copy that forgot would hand a signed-in demo
+   session to the sign-up form.
+
+   The sheet's sentence („gehört niemandem und wird jede Nacht zurückgesetzt")
+   is not what the demo does — every visitor gets a demo account of their own,
+   deleted when it expires — so the copy states that instead. */
+function hubDemoInvite() {
+  const card = hubCard('ti-sparkles', t('hub.demo.inviteTitle'));
+  card.classList.add('hub-card--demo-invite');
+  const body = card.querySelector('.hub-card__body');
+  body.appendChild(h(`<p class="hub-card__facts">${esc(t('hub.demo.inviteText'))}</p>`));
+  const btn = h(`<button class="btn hub-demo__cta" type="button">${esc(t('hub.demo.inviteCta'))}</button>`);
+  btn.addEventListener('click', () => leaveDemoForRegister());
+  body.appendChild(btn);
+  return card;
+}
+
 /* a) Spielvorschläge — the positive mirror of the retirement banner.
 
    `exclude` is the id set that banner is proposing in this same render, so the
@@ -108,7 +166,8 @@ function hubSuggestCard(round, activeGames, statsByGame, exclude) {
        for the one reason it can state truthfully: a young round whose shelf is
        under the floor. The sheet's „Vorschläge brauchen Wertungen" is not that
        reason (the app suggests unrated games), so it is not the copy. Every
-       other empty answer keeps returning null; later thresholds are #1280's. */
+       other empty answer keeps returning null — #1280's thresholds are about
+       series and the podium, and have nothing to say about suggestions. */
     if (designIs('tisch') && roundIsYoung(round) && activeGames.length
       && activeGames.length < SUGGEST_MIN_SHELF) {
       return hubSentenceCard('ti-bulb', t('hub.suggest.title'),
@@ -168,20 +227,35 @@ function hubPresetChips(round, activeGames) {
    percentage, which is also why the whole row degrades to readable text when
    styles fail to load. */
 function hubPulseCard(round, activeGames) {
-  const pulse = roundPulse(round, activeGames, {}, hubDeps());
+  /* Der Tisch draws its tiles from the FIRST played evening (T7.5, #1280):
+     every tile is a real figure at one session, and the bars that need two
+     points to mean anything are Klassisch's alone. */
+  const tisch = designIs('tisch');
+  const floor = tisch ? 1 : PULSE_MIN_SESSIONS;
+  const pulse = roundPulse(round, activeGames, { minSessions: floor }, hubDeps());
   if (!pulse) {
     // Der Tisch's young round gets the sentence, never a „0" (T7.4, #1269).
     // The count is the pulse's own floor, so the copy cannot promise numbers
     // sooner than roundPulse() will draw them.
-    if (designIs('tisch') && roundIsYoung(round) && activeGames.length) {
+    if (tisch && roundIsYoung(round) && activeGames.length) {
       return hubSentenceCard('ti-activity', t('hub.pulse.title'),
-        tn(PULSE_MIN_SESSIONS, 'hub.young.pulseOne', 'hub.young.pulse'));
+        tn(floor, 'hub.young.pulseOne', 'hub.young.pulse'));
     }
     return null;
   }
   const card = hubCard('ti-activity', t('hub.pulse.title'));
   const body = card.querySelector('.hub-card__body');
-  if (designIs('tisch')) return hubPulseTiles(round, card, pulse);
+  if (tisch) {
+    hubPulseTiles(round, card, pulse);
+    /* Until the third played session the card says WHEN series come (T7.5;
+       the sheet's „und Trends" was dropped — the Tisch pulse has no trend
+       line, #1280 review) — the same YOUNG_ROUND_SERIES_FROM that holds back the Pokale streak
+       card, so the sentence cannot promise something already on screen. */
+    if (youngRoundPlayed(round, hubDeps()) < YOUNG_ROUND_SERIES_FROM) {
+      body.appendChild(h(`<p class="hub-card__facts hub-card__threshold">${esc(tn(YOUNG_ROUND_SERIES_FROM, 'hub.young.seriesOne', 'hub.young.series'))}</p>`));
+    }
+    return card;
+  }
   const peak = Math.max(...pulse.months.map((m) => m.count), 1);
   // `month: 'narrow'` gives one letter per bar, which is what makes twelve of
   // them fit a 280px card at every locale. The full month name rides along as

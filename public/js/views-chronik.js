@@ -499,7 +499,7 @@ function renderPeriodRecapSection(round, activities) {
   // — the session share button's rule (#526): the image can never claim more
   // than the section above it, because there is nothing else here to read.
   const shareModel = (period, rec) => ({
-    roundName: round.name,
+    heading: round.name,
     periodLabel: labelOf(period),
     sessions: rec.sessions,
     gamesPlayed: rec.gamesPlayed,
@@ -507,9 +507,7 @@ function renderPeriodRecapSection(round, activities) {
     playedSub: rec.topPlayed ? tn(rec.topPlayed.count, 'home.chip.sessionsOne', 'home.chip.sessions') : '',
     rated: rec.topRated ? recapGames(round, rec.topRated.gameIds).map((g) => g.title) : [],
     ratedScore: rec.topRated ? fmtAvg(displayScore(rec.topRated.score)) : '',
-    added: rec.added,
-    retired: rec.retired,
-    completed: rec.completed,
+    shelf: recapShelfEntries(rec),
   });
 
   if (canShareRecapImage()) {
@@ -592,7 +590,11 @@ function canShareRecapImage() {
 // Hand the card to the user's own picker, or save it. Nothing is ever sent
 // anywhere by us — the same trust shape as the session share text (#526): the
 // image is produced on the device and the USER chooses the recipient.
-async function shareRecapCard(period, model) {
+//
+// `name` is the downloaded file's name. The account's own recap (#1147) passes
+// one ending in `-me`, so its card and a round's card of the same month can sit
+// in one downloads folder without the second silently becoming "(1)".
+async function shareRecapCard(period, model, name = `spielwirbel-${period.key}.png`) {
   let blob;
   try {
     blob = await recapCardBlob(model);
@@ -608,7 +610,14 @@ async function shareRecapCard(period, model) {
     toast(t('periodRecap.toast.failed'));
     return;
   }
-  const name = `spielwirbel-${period.key}.png`;
+  await deliverShareImage(blob, name);
+}
+
+// Hand a finished PNG to the user's own share sheet, or save it where the
+// browser has no file sharing. Shared by the recap's card and the
+// Regal-Steckbrief's (#1173, views-shelf-profile.js), so the two cannot drift
+// apart on the load-bearing details below.
+async function deliverShareImage(blob, name) {
   if (navigator.canShare && navigator.share && typeof File !== 'undefined') {
     const file = new File([blob], name, { type: 'image/png' });
     // canShare must be asked about THIS file: a browser can advertise
