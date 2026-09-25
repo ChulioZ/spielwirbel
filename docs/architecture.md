@@ -772,6 +772,9 @@ public/
     hub-cards.js          the Start tab's card renderers, their shared frame and
                           the quick-start chips, split out of the above at its
                           own #923 seam (issue #1189)
+    ocean-hub.js          Ocean's composition of the lobby and the round hub:
+                          the hub's columns, the shell with the one action, the
+                          crew captions, the lobby tiles and notice (#1211)
     hub-previews.js       the hub's previews of Regal, Pokale and Chronik, and
                           its „Nicht im Regal" group (issue #1185)
     views-regal.js        Regal tab: the games library (search, filters, grid)

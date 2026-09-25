@@ -45,8 +45,19 @@ function renderStartTab(round, activeGames) {
      resize needs no re-render. Klassisch appends straight to `app`, exactly as
      before. */
   const tisch = designIs('tisch');
-  const stage = tisch ? app.appendChild(h('<div class="hub-stage"></div>')) : app;
-  const hero = h(`<div class="hero rail-owned">
+  /* Ocean composes the hub as three columns at desktop and one at a phone
+     (O3.2, O2.1; #1211): the crew, the shell with the one action, and the
+     previews — built as real DOM columns (ocean-hub.js) so the phone order IS
+     the DOM order and CSS only decides whether they sit side by side. */
+  const ocean = designIs('ocean');
+  const cols = ocean ? oceanHubFrame() : null;
+  if (cols) app.appendChild(cols.root);
+  const stage = tisch ? app.appendChild(h('<div class="hub-stage"></div>')) : ocean ? cols.crew : app;
+  // Where the one action and its presets go, and where the tickets and cards
+  // follow them. Both are the plain column everywhere but Ocean.
+  const launch = ocean ? cols.main : stage;
+  const feed = ocean ? cols.main : app;
+  const hero = h(`<div class="hero${ocean ? '' : ' rail-owned'}">
        <h1></h1>
        <div class="hero__members">${activeMembers(round)
          .map((m) => `<a class="avatar" style="background:${memberColor(round, m.id)}" title="${esc(m.name)}">${avatarFace(initials(m.name), { userId: m.userId })}</a>`)
@@ -94,12 +105,13 @@ function renderStartTab(round, activeGames) {
   seatRow.style.setProperty('--seat-n', seatRow.children.length);
   [...seatRow.children].forEach((el, i) => el.style.setProperty('--seat-i', i));
   if (tisch) tischSeatHints(round, seatRow);
+  if (ocean) oceanHeroCompose(round, hero);
 
   /* `rail-owned` only where the rail still carries its own copy. Der Tisch's
      rail is identity plus the five links (#1262), so there the band's CTA and
      presets are the ONLY ones at every width — one control, one place, one tab
      stop. */
-  const railOwned = tisch ? '' : ' rail-owned';
+  const railOwned = railIsLean() ? '' : ' rail-owned';
   /* The young round (T7.3, T7.4; #1269). A 0-game round gets the EMPTY TABLE
      right before the locked button, with the two ways to fill it — in EVERY
      design: Klassisch's phone hub had the same dead end (operator, #1269 merge
@@ -107,9 +119,11 @@ function renderStartTab(round, activeGames) {
      the CTA say „Erste Session wirbeln"; the invitation card in the grid carries
      the count. The threshold is the app's own — one active game — not the
      sheet's „ab 2 Spielen" (operator default on #1269). */
-  if (activeGames.length === 0) stage.appendChild(hubEmptyTable(round));
-  const ctaLabel = tisch && activeGames.length && roundIsYoung(round)
-    ? t('hub.young.firstCta') : t('round.startSession');
+  if (activeGames.length === 0) launch.appendChild(hubEmptyTable(round));
+  // Ocean's one themed verb, „Abtauchen" (O9 §2), on the one action.
+  const ctaLabel = ocean ? t('round.startSessionOcean')
+    : tisch && activeGames.length && roundIsYoung(round)
+      ? t('hub.young.firstCta') : t('round.startSession');
   const startBtn = h(
     `<button class="btn btn--primary hub-cta${railOwned}"><i class="ti ti-tornado" aria-hidden="true"></i>${esc(ctaLabel)}</button>`
   );
@@ -124,7 +138,7 @@ function renderStartTab(round, activeGames) {
     startBtn.appendChild(h(`<span class="hub-cta__reason" id="hub-cta-reason" aria-hidden="true">${esc(t('hub.young.lock'))}</span>`));
     startBtn.setAttribute('aria-describedby', 'hub-cta-reason');
   }
-  stage.appendChild(startBtn);
+  launch.appendChild(ocean ? oceanShell(startBtn) : startBtn);
 
   // Quick-start presets (#923): the same draw, already narrowed. Directly under
   // the CTA because they modify it — and only when this shelf can actually
@@ -135,8 +149,8 @@ function renderStartTab(round, activeGames) {
     // both, and a chip row left behind here would modify a button that has left
     // the pane.
     if (presets) {
-      if (!tisch) presets.classList.add('rail-owned');
-      stage.appendChild(presets);
+      if (!railIsLean()) presets.classList.add('rail-owned');
+      launch.appendChild(presets);
     }
   }
 
@@ -175,7 +189,7 @@ function renderStartTab(round, activeGames) {
       // or member — unlike the wizard it used to open, it renders whatever the
       // session still has and offers the actions that fit.
       ticket.addEventListener('click', () => showSessionLobby(round, session));
-      app.appendChild(ticket);
+      feed.appendChild(ticket);
 
       // Guarded even though every grantee role clears the floor today (#857):
       // the route decides on a capability, so the control has to ask the same
@@ -195,7 +209,7 @@ function renderStartTab(round, activeGames) {
           showRound(round.id, 'start');
         } catch (e) { toast(e.message, { tone: 'error' }); }
       });
-      app.appendChild(discard);
+      feed.appendChild(discard);
     });
 
   // "In progress" tickets: sessions whose voting is done but that have not yet
@@ -246,7 +260,7 @@ function renderStartTab(round, activeGames) {
       navLink(ticket, resultsPath(round.id, session.id), () => showResults(round, session));
       const parentId = groupKey(session);
       if (!parentId) {
-        app.appendChild(ticket);
+        feed.appendChild(ticket);
         return;
       }
       // One header per split evening, created by whichever of its tables is
@@ -260,7 +274,7 @@ function renderStartTab(round, activeGames) {
              <div class="split-group__body"></div>
            </div>`);
         navLink(group.querySelector('.split-group__head'), resultsPath(round.id, parentId), () => showResults(round, parent));
-        app.appendChild(group);
+        feed.appendChild(group);
         mounts.set(parentId, group.querySelector('.split-group__body'));
       }
       mounts.get(parentId).appendChild(ticket);
@@ -270,6 +284,10 @@ function renderStartTab(round, activeGames) {
   // exists. Delivers the emotional payoff above the fold; tap opens that result.
   // Ordered by `createdAt` — when the session was played — so this agrees with
   // the Chronik; `finishedAt` changes when an old session is re-finished.
+  /* Ocean sets „Zuletzt gespielt" and „Wie wär's mit" side by side under the
+     shell (O3.2) and stacked on a phone (O2.1): one wrapper, filled here and by
+     the suggestion card below, dropped again if neither has anything to say. */
+  const pair = ocean ? cols.main.appendChild(h('<div class="ocean-pair"></div>')) : null;
   const lastPlayed = round.sessions
     .filter((s) => s.finished && s.chosenGameId && round.games.some((g) => g.id === s.chosenGameId))
     .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)))[0];
@@ -318,7 +336,7 @@ function renderStartTab(round, activeGames) {
          </span>
        </a>`);
     navLink(ticket, resultsPath(round.id, lastPlayed.id), () => showResults(round, lastPlayed));
-    app.appendChild(ticket);
+    (ocean ? pair : app).appendChild(ticket);
   }
 
   // The retirement recommendations are resolved BEFORE the cards, because the
@@ -354,13 +372,21 @@ function renderStartTab(round, activeGames) {
   const demo = tisch && demoAccount;
   if (demo) grid.appendChild(cardSlot(hubDemoSummary(round, activeGames)));
   if (demoAccount) grid.appendChild(cardSlot(hubDemoInvite()));
+  // Ocean pulls two cards out of the grid: the suggestions into the pair above,
+  // the Kümmerliste into the preview column (O3.2's right column).
+  const suggest = hubSuggestCard(round, activeGames, statsByGame, nagged);
+  const care = hubCareCard(round, activeGames);
+  if (ocean) {
+    if (suggest) pair.appendChild(suggest);
+    if (!pair.children.length) pair.remove();
+  }
   [
     // Der Tisch's invitation (T7.4, #1269) leads — it is the one next step.
     // Null on every other round and on Klassisch, so that list is unchanged.
     hubYoungCard(round, activeGames),
-    hubSuggestCard(round, activeGames, statsByGame, nagged),
+    ocean ? null : suggest,
     hubPulseCard(round, activeGames),
-    hubCareCard(round, activeGames),
+    ocean ? null : care,
     // The Regal-Steckbrief (#1173, views-shelf-profile.js): what the shelf adds
     // up to. Null below its threshold of games with provider data.
     hubShelfProfileCard(round, activeGames),
@@ -374,7 +400,10 @@ function renderStartTab(round, activeGames) {
     hubPokalePreview(round),
     hubChronikPreview(round),
   ].filter(Boolean);
-  if (tisch && previews.length) {
+  if (ocean) {
+    previews.forEach((card) => cols.aside.appendChild(card));
+    if (care) cols.aside.appendChild(care);
+  } else if (tisch && previews.length) {
     /* Der Tisch lays the survivors out as ONE row of small tiles on a phone
        (T2.2, #1263), so they share one slot: two survivors are two half-width
        tiles, never three cells with a hole. From 1280 up the wrapper is
@@ -400,7 +429,8 @@ function renderStartTab(round, activeGames) {
   // detached grid the same way, for the same reason: a card is content, so a
   // pane holding one is not the bare page this stand-in exists for.
   // The empty table (#1269) is already that stand-in, at every width.
-  if (!app.querySelector('.ticket') && !grid.querySelector('.hub-card')
+  // Not under Ocean: its hero and shell stay in the pane at every width.
+  if (!ocean && !app.querySelector('.ticket') && !grid.querySelector('.hub-card')
     && !app.querySelector('.empty--table')) {
     const gap = emptyState({
       icon: 'ti-tornado',
@@ -477,7 +507,7 @@ function renderStartTab(round, activeGames) {
     if (recs.length > 5) {
       list.appendChild(h(`<div class="muted recommend-more">${esc(tn(recs.length - 5, 'rec.moreOne', 'rec.more'))}</div>`));
     }
-    app.appendChild(banner);
+    feed.appendChild(banner);
   }
 
   // The grid goes below the banner and above the quiet actions, and it is
@@ -488,7 +518,7 @@ function renderStartTab(round, activeGames) {
   // so an empty grid costs no margin and no gap — the "renders nothing when it
   // has nothing to say" rule, kept by CSS rather than by an append condition
   // that cannot see the future.
-  app.appendChild(grid);
+  feed.appendChild(grid);
 
   // Fetched AFTER this paint, never in showRound's Promise.all: the route does
   // a full getRound plus the corpus join, so putting it on the critical path
@@ -502,7 +532,9 @@ function renderStartTab(round, activeGames) {
      tasks. Unconditional, unlike every card above: a screen is not less
      reachable for being empty, and the Wunschliste of a round that has never
      used one is exactly where someone goes to start. */
-  app.appendChild(hubOffShelfGroup(round));
+  // Under Ocean it is the frame's fourth cell: the crew column's foot at desktop
+  // (O3.2), the end of the page on a phone.
+  (ocean ? cols.root : app).appendChild(hubOffShelfGroup(round));
 
   // Quick actions: quieter secondary tasks below the fold.
   const actions = h('<div class="hub-actions"></div>');
@@ -525,7 +557,9 @@ function renderStartTab(round, activeGames) {
   // twice (#1269).
   if (activeGames.length) actions.appendChild(addGameBtn);
   actions.appendChild(settingsBtn);
-  app.appendChild(actions);
+  // Ocean: the frame's last cell — the end of the page on a phone, under the
+  // centre column from 1280 (ocean.css).
+  (ocean ? cols.root : app).appendChild(actions);
 }
 
 /* Der Tisch's seat captions (T2.1, T3.2; #1262/#1263): a name under each seat,

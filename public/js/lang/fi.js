@@ -29,6 +29,9 @@ I18N.fi = {
   'home.sub': 'Mikä porukka pelaa tänään?',
   // Der Tisch only (#1279): the lobby voice beside the wordmark.
   'home.tischKicker': 'Pelikahvila · sinun pöytäsi',
+  // Ocean only (#1211): its sub-brand beside the wordmark and its lobby greeting.
+  'home.oceanKicker': 'Rannikko · sinun porukkasi',
+  'home.oceanGreeting': 'Tervetuloa rannikolle.',
   'home.shared': 'Jaettu',
   'home.newRound': 'Aloita uusi porukka',
   'home.empty.title': 'Ei vielä yhtään peliporukkaa.',
@@ -74,6 +77,8 @@ I18N.fi = {
 
   'round.tags': 'Tunnisteet',
   'round.startSession': 'Aloita sessio',
+  // Ocean only (#1211): the one action's themed verb (O9 §2).
+  'round.startSessionOcean': 'Sukella',
   'round.startEmptyTitle': 'Ei vielä sessioita',
   'round.startEmpty': 'Aloita ensimmäinen sessio — viimeksi pelattu näkyy tässä.',
   'round.startSessionDisabled': 'Lisää ensin pelejä',

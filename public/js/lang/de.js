@@ -37,6 +37,9 @@ I18N.de = {
   'home.sub': 'Welche Runde spielt heute?',
   // Der Tisch only (#1279): the lobby voice beside the wordmark.
   'home.tischKicker': 'Spielecafé · deine Tische',
+  // Ocean only (#1211): its sub-brand beside the wordmark and its lobby greeting.
+  'home.oceanKicker': 'Die Küste · deine Runden',
+  'home.oceanGreeting': 'Willkommen an der Küste.',
   'home.shared': 'Geteilt',
   'home.newRound': 'Neue Runde gründen',
   'home.empty.title': 'Noch keine Spielrunde angelegt.',
@@ -84,6 +87,8 @@ I18N.de = {
 
   'round.tags': 'Tags',
   'round.startSession': 'Session wirbeln',
+  // Ocean only (#1211): the one action's themed verb (O9 §2).
+  'round.startSessionOcean': 'Abtauchen',
   'round.startEmptyTitle': 'Noch keine Session',
   'round.startEmpty': 'Startet eure erste Session — danach steht hier, was zuletzt gespielt wurde.',
   'round.startSessionDisabled': 'Erst Spiele hinzufügen',
