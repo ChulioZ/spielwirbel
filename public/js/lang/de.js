@@ -31,6 +31,8 @@ I18N.de = {
   'home.docTitle': 'Meine Runden',
   'home.greeting': 'Schön, dass ihr da seid.',
   'home.sub': 'Welche Runde spielt heute?',
+  // Der Tisch only (#1279): the lobby voice beside the wordmark.
+  'home.tischKicker': 'Spielecafé · deine Tische',
   'home.shared': 'Geteilt',
   'home.newRound': 'Neue Runde gründen',
   'home.empty.title': 'Noch keine Spielrunde angelegt.',
@@ -1730,6 +1732,9 @@ I18N.de = {
   'a11y.home': 'Spielwirbel – zur Startseite',
   'a11y.language': 'Sprache',
   'a11y.account': 'Konto',
+  // Der Tisch shows the account NAME on the button (#1279), so the name must
+  // be part of its accessible name (WCAG 2.5.3 Label in Name).
+  'a11y.accountNamed': 'Konto: {name}',
   'a11y.hubTabs': 'Rundenbereiche',
   'a11y.roundNav': 'Rundennavigation',
 
