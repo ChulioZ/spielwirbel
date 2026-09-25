@@ -132,6 +132,36 @@ test('every design\u2019s eight markers carry its own ink at 4.5:1', () => {
   assert.deepEqual(fails, [], `markers below AA for their own ink:\n${fails.join('\n')}`);
 });
 
+/* A design's POSTER (#1277, designs.js `poster`): the bill the first-start
+   chooser prints for it under Der Tisch, painted inline from the registry.
+   Two inks, two bars, measured on BOTH ground stops since the bill is a
+   top-to-foot gradient and text can land anywhere on it:
+   - `ink` is the wordmark, only ever set at display size (≥ 20px, 800 — the
+     CSS half is pinned in test/design-posters-tisch.test.js), so large-text
+     3:1. That is what lets Der Tisch print its gold on felt, which T1's A1 rule
+     allows from 24px.
+   - `sub` is small text — the tagline, and the wordmark in the phone's 58px
+     tile — so 4.5:1. */
+test('every design’s poster inks clear their bars on both ground stops', () => {
+  const fails = [];
+  let checked = 0;
+  for (const d of DESIGN_REGISTRY.filter((x) => x.poster)) {
+    const { ground, ink, sub } = d.poster;
+    assert.equal(ground.length, 2, `${d.id}: a poster ground is two stops`);
+    for (const stop of ground) {
+      for (const [name, colour, bar] of [['ink', ink, 3], ['sub', sub, 4.5]]) {
+        checked++;
+        const ratio = contrast(rgb(colour), rgb(stop));
+        if (!(ratio >= bar)) fails.push(`${d.id} ${name} ${colour} on ${stop}: ${ratio.toFixed(2)}:1 < ${bar}`);
+      }
+    }
+  }
+  // Both shipped designs carry one; a floor rather than a count so a design
+  // added without its poster yet (the tile falls back) does not redden this.
+  assert.ok(checked >= 8, `anti-vacuous: only ${checked} pairs measured`);
+  assert.deepEqual(fails, [], `poster inks below their bar:\n${fails.join('\n')}`);
+});
+
 /* `scheme` is DECLARED in round-designs.js rather than measured off the page,
    so the registry stays the single statement of what a design is. The cost of
    declaring is that it can disagree with the colour — a dark page that forgot
