@@ -173,6 +173,16 @@ What the app does, in detail. For a short overview see the
   dropped rather than merely ranked lower, and a list never carries two editions
   of the same game. A round with too few linked games is told so rather than
   shown a confident guess.
+  Above the list sit up to **three spotlight tiles**, one game each, that the
+  list itself can never surface because it only ever asks "what is most like
+  you": **„Mal was ganz anderes"** (the taste match turned upside down, while
+  quality, weight, players and time still count — so it is still a game they
+  could play), **„Mal was Komplexeres"** or **„Mal was Leichteres"** (the round's
+  complexity centre moved half a step, upward below 3.0 and downward above it),
+  and **„Der Geheimtipp"** (scored normally, but only among the less-rated half of
+  the database, so the head of the list is not always the same global
+  favourites). A tile never repeats a title from the list below it, obeys every
+  filter and dismissal the list does, and carries the same actions.
   A game is active, retired, completed or wished-for, never two at once. All
   three lists — and the recommendations beside them — are reached from a „Nicht im
   Regal" group on the round's Start tab, from the same-named control in the

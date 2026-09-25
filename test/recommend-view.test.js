@@ -388,6 +388,68 @@ test('the BGG link shortens its visible text but keeps a containing name (#817)'
   );
 });
 
+/* ---------------------------- the spotlight tiles --------------------------- */
+
+const spots = () => [
+  rec({ key: 'different', externalId: '701', title: 'Unlike', reasons: [{ term: 'quality', rating: 8.1 }] }),
+  rec({ key: 'complexityUp', externalId: '702', title: 'Heavier', target: 2.4 }),
+  rec({ key: 'hidden', externalId: '703', title: 'Gem' }),
+];
+
+test('the three spotlight tiles render ABOVE the list, each captioned (#1228)', async (t) => {
+  const { dom } = await render(t, full({ recommendations: [rec()], spotlights: spots() }));
+  const section = dom.app.querySelector('.rec-spots');
+  assert.ok(section, 'the spotlight row is rendered');
+  const list = dom.app.querySelector('.rec-list');
+  // DOCUMENT_POSITION_FOLLOWING: the list comes after the tiles.
+  assert.ok(section.compareDocumentPosition(list) & 4, 'the tiles sit above the list');
+
+  const tiles = [...section.querySelectorAll('.rec-card--spot')];
+  assert.deepEqual(tiles.map((c) => c.querySelector('.rec-card__title').textContent.trim().split(' ')[0]), ['Unlike', 'Heavier', 'Gem']);
+  const caps = tiles.map((c) => c.querySelector('.rec-spot__title').textContent.trim());
+  assert.deepEqual(caps, [tDe('suggest.spotlight.different'), tDe('suggest.spotlight.complexityUp'), tDe('suggest.spotlight.hidden')]);
+  // The round's centre reaches the complexity caption, formatted for the reader.
+  assert.match(tiles[1].querySelector('.rec-spot__line').textContent, /2,4/);
+  // A tile is the list's own card: reasons and all three actions come with it.
+  assert.equal(tiles[0].querySelectorAll('.rec-card__why li').length, 1);
+  assert.ok(tiles[2].querySelector('[data-act="wish"]') && tiles[2].querySelector('[data-act="dismiss"]'));
+  assert.equal(tiles[2].querySelector('a.link-btn').getAttribute('href'), 'https://boardgamegeek.com/boardgame/999');
+  // The list itself is unaffected: its card carries no caption.
+  assert.equal(list.querySelector('.rec-spot__cap'), null);
+});
+
+test('the lighter complexity tile has its own caption (#1228)', async (t) => {
+  const { dom } = await render(t, full({
+    recommendations: [rec()],
+    spotlights: [rec({ key: 'complexityDown', externalId: '704', target: 3.6 })],
+  }));
+  assert.equal(dom.app.querySelector('.rec-spot__title').textContent.trim(), tDe('suggest.spotlight.complexityDown'));
+  assert.match(dom.app.querySelector('.rec-spot__line').textContent, /3,6/);
+});
+
+test('an unknown spotlight key renders no tile, and none at all means no row (#1228)', async (t) => {
+  const { dom } = await render(t, full({ recommendations: [rec()], spotlights: [rec({ key: 'mystery' })] }));
+  assert.equal(dom.app.querySelector('.rec-spots'), null);
+  const none = await render(t, full({ recommendations: [rec()], spotlights: [] }));
+  assert.equal(none.dom.app.querySelector('.rec-spots'), null);
+});
+
+test('an empty state never shows tiles, even if the payload carried some (#1228)', async (t) => {
+  const { dom } = await render(t, full({ recommendations: [], spotlights: spots() }));
+  assert.equal(dom.app.querySelector('.rec-spots'), null);
+  assert.equal(dom.app.querySelector('.empty p').textContent, tDe('suggest.empty.noneLeft'));
+});
+
+test('dismissing a TILE uses the same write and leaves the same undo (#1228)', async (t) => {
+  const { dom, calls } = await render(t, full({ recommendations: [rec()], spotlights: spots() }));
+  await click(dom.app.querySelector('.rec-card--spot [data-act="dismiss"]'));
+  const write = calls.find((c) => c.method === 'POST');
+  assert.equal(write.url, '/api/rounds/r1/recommendations/dismissed');
+  assert.equal(write.body.externalId, '701');
+  assert.equal(write.body.title, 'Unlike');
+  assert.ok(dom.app.querySelector('.rec-spots .rec-undone'), 'the undo row replaces the tile in place');
+});
+
 test('the shortened labels hold in English too (#817)', async (t) => {
   const { dom } = await render(t, full({ recommendations: [rec()] }), { locale: 'en' });
   const link = dom.app.querySelector('.rec-card a.link-btn');

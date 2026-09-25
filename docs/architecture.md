@@ -182,6 +182,10 @@ lib/
                      the deterministic weighted score that ranks the corpus
                      against it. Pure, no model, no outbound call — every
                      recommendation is a real BGG row that says why it is there
+  recommend-spotlights.js  the three spotlight tiles above that list (#1228):
+                     each re-scores the same candidates with ONE term altered
+                     (taste inverted, complexity shifted half a step, pool cut
+                     to rarely-rated rows) — scored in recommend.js's one pass
   corpus-cache.js    the corpus held in process memory for that scoring, so a
                      recommendation costs no multi-megabyte read per request;
                      dropped on every write lib/corpus.js makes, plus a TTL for

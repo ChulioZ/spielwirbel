@@ -1,11 +1,13 @@
 ---
 paths:
   - "lib/recommend.js"
+  - "lib/recommend-spotlights.js"
   - "lib/corpus-cache.js"
   - "lib/routes/recommendations.js"
   - "public/js/views-recommend.js"
   - "test/recommend.test.js"
   - "test/recommend-view.test.js"
+  - "test/recommend-spotlight.test.js"
 ---
 # The recommender (#682): a weighted score fails by RANKING, never by throwing
 
@@ -272,6 +274,20 @@ the ratings floor rather than the rank cap decides what is kept. Measured
 | 5,000 | 2.5 MB | 4 MB | 9.6 ms |
 | **17,483** | 8.9 MB | 10 MB | 27.7 ms |
 | 100,000 (the `num()` ceiling) | 50.4 MB | 68 MB | 171 ms |
+| **17,483, with the three spotlights (#1228)** | — | — | **29.2 ms** (27.5 without, same run) |
+
+The #1228 row was measured 2026-09-25 on a synthetic 17,483-row corpus (40 owned
+games, 30 runs, median), with the pre-#1228 `recommend()` timed in the same
+process as the control — so read the **difference**, not the absolute figure,
+which is a different machine from the 2026-08-14 rows. Two things decided it:
+
+- **The naive one-pass version cost +13 ms**, nearly all of it the complexity
+  tile's second `scoreCandidate` per candidate. The exact prune (§16) brought it
+  to +1.7 ms. Four independent walks would have been roughly four times the row
+  above.
+- **The Geheimtipp threshold is a walk plus a sort, ~0.8 ms**, paid once per
+  corpus snapshot and cached on the array `corpus-cache.js` hands out — so the
+  first request after a reload pays it and no other does.
 
 Two things that measurement settled and one it did not:
 
@@ -782,3 +798,37 @@ steeper one is not free: at `/ 1` a unanimous „nicht so" reaches −1,07 and
 inverts the `A_RETIRED` invariant. `UNRATED_HALF = 25` has the same standing — a
 different half-life is a constant change, a different **curve** is a scope
 change.
+
+## 16. The spotlights re-score with ONE term altered (#1228)
+
+Three tiles above the list, each the best candidate under one deliberate change:
+`different` inverts the two taste cosines, `complexity` shifts `targetWeight`
+half a step (up below 3.0, down at or above it), `hidden` restricts the pool to
+rows under the **median** `usersRated` of the enriched snapshot. The variants
+live in `lib/recommend-spotlights.js`; the pass that feeds them stays here.
+
+- **`scoreCandidate` has no variant branch, and the base list is pinned
+  byte-for-byte** (`test/recommend-spotlight.test.js`, a hash captured before
+  any spotlight code existed). A shallow profile copy that is accidentally
+  `Object.assign`ed onto the real profile reddens it — measured.
+- **`different` is a transform of the base terms, not a profile** — the one
+  departure from the issue's "every variant is a derived profile". A clamped,
+  rescaled cosine cannot be inverted by any vector: negating the profile scores
+  0 for every candidate, a flat term rather than an inverted one.
+- **The complexity prune must be a CEILING, never an estimate.** The shift moves
+  one term, so `base − complexity share + W_COMPLEXITY` bounds the shifted score;
+  a candidate whose bound cannot reach the shortlist is skipped unscored. A
+  brute-force spec re-scores every candidate and compares — dropping the
+  `+ W_COMPLEXITY` reddens exactly that one test.
+- **The median is corpus-relative on purpose, and only ever gates the hidden
+  POOL.** It never touches a score, so §7's invariance holds for the list. It was
+  NOT derived from a real dump (none is in the repo); re-measure `usersRated`'s
+  real distribution before retuning it.
+- **Every hard filter applies because the filters run before the pass offers
+  anything.** The owned-filter spec must check *every* owned id, not a planted
+  one: with the filter broken for the tiles only, the shelf's own rows win the
+  hidden tile ahead of the plant, so a spec naming the plant stays green.
+- **Reasons come from `reasonsFrom` minus the terms a tile must not claim** —
+  `different` drops both taste terms, `complexity` drops complexity (its winner
+  can sit AT the centre when quality outweighs the shift, and the line would then
+  read "your average is 2.4" under "Mal was Komplexeres").

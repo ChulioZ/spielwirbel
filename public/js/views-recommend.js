@@ -127,6 +127,165 @@ function recIgnoredSection(rid, dismissed) {
   return wrap;
 }
 
+// The three spotlight tiles (#1228). The server names the tile by KEY and sends
+// the round's centre for the complexity one; the caption and its one explanatory
+// line are built here, because they are the half that has to be translated. An
+// unknown key renders no tile at all rather than a caption-less card — the same
+// drop-don't-half-render rule as recReasonText.
+const REC_SPOTS = {
+  different: { icon: 'ti-arrows-shuffle', title: 'suggest.spotlight.different', line: 'suggest.spotlight.differentLine' },
+  complexityUp: { icon: 'ti-brain', title: 'suggest.spotlight.complexityUp', line: 'suggest.spotlight.complexityUpLine' },
+  complexityDown: { icon: 'ti-bolt', title: 'suggest.spotlight.complexityDown', line: 'suggest.spotlight.complexityDownLine' },
+  hidden: { icon: 'ti-world-search', title: 'suggest.spotlight.hidden', line: 'suggest.spotlight.hiddenLine' },
+};
+
+function recSpotCaption(rec) {
+  const spot = REC_SPOTS[rec.key];
+  return `<div class="rec-spot__cap">
+       <span class="rec-spot__title"><i class="ti ${spot.icon}" aria-hidden="true"></i> ${esc(t(spot.title))}</span>
+       <span class="rec-spot__line">${esc(t(spot.line, { target: fmtAvg(rec.target) }))}</span>
+     </div>`;
+}
+
+// Above the list, never instead of it: the server sends tiles only alongside a
+// list, and an empty state renders before this is reached. Absent (null) when
+// there is nothing to show, so a round the variants find nothing for pays no row.
+function recSpotlights(rid, spotlights) {
+  const known = spotlights.filter((s) => s && REC_SPOTS[s.key]);
+  if (!known.length) return null;
+  const section = h(`<section class="rec-spots" aria-labelledby="rec-spots-title">
+       <h2 class="rec-spots__title" id="rec-spots-title">${esc(t('suggest.spotlight.label'))}</h2>
+       <div class="rec-spots__row"></div>
+     </section>`);
+  const row = section.querySelector('.rec-spots__row');
+  known.forEach((s) => row.appendChild(recCard(rid, s, true)));
+  return section;
+}
+
+// One recommendation card — the list's and the spotlight tiles' alike (#1228),
+// so a tile carries the same facts, reasons and three actions, and the wish and
+// dismiss writes stay the one path they already were. `spot` adds the tile's
+// caption on top; everything below it is the list card unchanged.
+function recCard(rid, rec, spot = false) {
+  const reasons = (rec.reasons || []).map(recReasonText).filter(Boolean);
+  const facts = recFacts(rec);
+  // The BGG box art (#779), hotlinked like every other provider cover
+  // (.claude/rules/provider-cover-hotlinking.md) and already gated server-side
+  // by providerCoverUrl, so `rec.image` is either a vouched-for https URL or
+  // null. On this screen the cover is the recognition cue — the reader owns
+  // none of these games, so the title is all they have to go on otherwise.
+  //
+  // coverPlaceholder() returns '' when an image is present, so the frame stays
+  // one plain interpolation for both branches
+  // (.claude/rules/deterministic-cover-placeholders.md).
+  const imgStyle = rec.image ? ` style="background-image:url('${coverUrl(rec.image, COVER_THUMB)}')"` : '';
+  const card = h(`<div class="rec-card${spot ? ' rec-card--spot' : ''}">
+       ${spot ? recSpotCaption(rec) : ''}
+       <div class="rec-card__img"${imgStyle}>${coverPlaceholder({ title: rec.title, image: rec.image })}</div>
+       <div class="rec-card__body">
+         <div class="rec-card__title">${esc(rec.title)}${rec.year ? ` <span class="muted">(${esc(rec.year)})</span>` : ''}</div>
+         ${facts.length ? `<div class="muted rec-card__facts">${facts.join('<span class="rec-card__sep">·</span>')}</div>` : ''}
+         ${reasons.length ? `<ul class="rec-card__why">${reasons.map((r) => `<li>${esc(r)}</li>`).join('')}</ul>` : ''}
+       </div>
+       <!-- Two of the three actions carry a SHORT visible label (#817): spelled
+            out, the row wrapped to a second line on every card at 375px. The
+            names are preserved rather than dropped — dismiss is icon-only and
+            names itself via aria-label + title, and the link's aria-label
+            CONTAINS its visible „BGG" as WCAG 2.2 SC 2.5.3 requires. -->
+       <div class="rec-card__actions">
+         <button class="btn btn--primary" data-act="wish"><i class="ti ti-heart" aria-hidden="true"></i> ${esc(t('suggest.wish'))}</button>
+         <button class="link-btn link-btn--icon" data-act="dismiss" aria-label="${esc(t('suggest.dismiss'))}" title="${esc(t('suggest.dismiss'))}"><i class="ti ti-ban" aria-hidden="true"></i></button>
+         <a class="link-btn" target="_blank" rel="noopener noreferrer" aria-label="${esc(t('suggest.open'))}"><i class="ti ti-external-link" aria-hidden="true"></i> ${esc(t('suggest.openShort'))}</a>
+       </div>
+     </div>`);
+  card.querySelector('a.link-btn').href = rec.url;
+
+  card.querySelector('[data-act="wish"]').addEventListener('click', async (ev) => {
+    const btn = ev.currentTarget;
+    btn.disabled = true;
+    // The ordinary add-game write, not a route of its own: a recommendation
+    // accepted is exactly a wished game carrying its BGG link, so it flows
+    // through the pipeline #560/#664 already built — including the server-side
+    // provider-info fetch that fills the metadata the Regal filters on.
+    const fd = new FormData();
+    fd.append('title', rec.title);
+    // The corpus's own range, with the same fallback the add-game form uses
+    // when a provider states none: the route requires both, and a game the
+    // range is unknown for must stay drawable at every table size.
+    fd.append('minPlayers', String(rec.minPlayers || 1));
+    fd.append('maxPlayers', String(rec.maxPlayers || Math.max(rec.minPlayers || 1, 99)));
+    fd.append('wish', 'true');
+    fd.append('sourceProvider', 'bgg');
+    fd.append('sourceExternalId', rec.externalId);
+    fd.append('sourceUrl', rec.url);
+    // The card's own cover, or nothing (#789). Without it the wish row stores
+    // no image at all — the add is the only moment the URL is in hand, so the
+    // placeholder would then follow the game through the wish list, its detail
+    // page and the Regal until somebody hand-picked a cover.
+    //
+    // Not new trust in client input: the route re-validates it through
+    // providerCoverUrl, exactly as the add-game sheet's cover picker is
+    // (.claude/rules/provider-cover-hotlinking.md). `rec.image` has already
+    // been through that gate server-side (lib/recommend.js), so this hands
+    // back a URL the server itself vouched for one request ago.
+    if (rec.image) fd.append('imageUrl', rec.image);
+    try {
+      await api('POST', `/api/rounds/${rid}/games`, fd);
+      toast(t('suggest.wished', { title: rec.title }));
+      // Re-render rather than removing the card: the game is now owned, so it
+      // is excluded from the next scoring — and one more candidate moves into
+      // the list to take its place.
+      showRecommendations(rid);
+    } catch (e) {
+      btn.disabled = false;
+      toast(e.message, { tone: 'error' });
+    }
+  });
+  card.querySelector('[data-act="dismiss"]').addEventListener('click', async (ev) => {
+    const btn = ev.currentTarget;
+    btn.disabled = true;
+    try {
+      await api('POST', `/api/rounds/${rid}/recommendations/dismissed`, { externalId: rec.externalId, title: rec.title });
+    } catch (e) {
+      btn.disabled = false;
+      // The cap only ever binds on abuse (500 by default), but a raw
+      // `quota_dismissed` in a toast tells the reader nothing they can act on.
+      return toast(e.message === 'quota_dismissed' ? t('suggest.toast.quota') : e.message, { tone: 'error' });
+    }
+    toast(t('suggest.dismissed', { title: rec.title }));
+    // The card is REPLACED IN PLACE by a persistent undo row rather than the
+    // screen being re-rendered, and the undo deliberately does not live in the
+    // toast: toast() is a 2.2s aria-live region with no action slot, so a
+    // button inside it would take the only way back away again on a timer —
+    // and the app's own undo idiom (the session-cancel row in
+    // views-session.js) is in-place for exactly that reason.
+    //
+    // Not re-rendering also keeps the reader's place: re-scoring would pull a
+    // fresh candidate into the list and shift everything below the card they
+    // were just looking at.
+    const undone = h(`<div class="rec-undone">
+         <span class="rec-undone__name">${esc(t('suggest.dismissed', { title: rec.title }))}</span>
+         <button class="link-btn"><i class="ti ti-arrow-back-up" aria-hidden="true"></i> ${esc(t('suggest.undo'))}</button>
+       </div>`);
+    undone.querySelector('button').addEventListener('click', async (ev2) => {
+      ev2.currentTarget.disabled = true;
+      try {
+        await api('DELETE', `/api/rounds/${rid}/recommendations/dismissed/${encodeURIComponent(rec.externalId)}`);
+        // Back to the real card, not a re-render: the ranking is unchanged by
+        // an undo of something that never left it.
+        undone.replaceWith(card);
+        btn.disabled = false;
+      } catch (e) {
+        ev2.currentTarget.disabled = false;
+        toast(e.message, { tone: 'error' });
+      }
+    });
+    card.replaceWith(undone);
+  });
+
+  return card;
+}
+
 async function showRecommendations(rid) {
   currentView = () => showRecommendations(rid);
   syncUrl(roundPath(rid, 'recommendations'));
@@ -179,125 +338,11 @@ async function showRecommendations(rid) {
   // to misread as their own shelf.
   app.appendChild(h(`<p class="muted rec-lead">${esc(t('suggest.lead', { n: data.profileGames }))}</p>`));
 
+  const tiles = recSpotlights(rid, data.spotlights || []);
+  if (tiles) app.appendChild(tiles);
+
   const list = h('<div class="rec-list"></div>');
-  recs.forEach((rec) => {
-    const reasons = (rec.reasons || []).map(recReasonText).filter(Boolean);
-    const facts = recFacts(rec);
-    // The BGG box art (#779), hotlinked like every other provider cover
-    // (.claude/rules/provider-cover-hotlinking.md) and already gated server-side
-    // by providerCoverUrl, so `rec.image` is either a vouched-for https URL or
-    // null. On this screen the cover is the recognition cue — the reader owns
-    // none of these games, so the title is all they have to go on otherwise.
-    //
-    // coverPlaceholder() returns '' when an image is present, so the frame stays
-    // one plain interpolation for both branches
-    // (.claude/rules/deterministic-cover-placeholders.md).
-    const imgStyle = rec.image ? ` style="background-image:url('${coverUrl(rec.image, COVER_THUMB)}')"` : '';
-    const card = h(`<div class="rec-card">
-         <div class="rec-card__img"${imgStyle}>${coverPlaceholder({ title: rec.title, image: rec.image })}</div>
-         <div class="rec-card__body">
-           <div class="rec-card__title">${esc(rec.title)}${rec.year ? ` <span class="muted">(${esc(rec.year)})</span>` : ''}</div>
-           ${facts.length ? `<div class="muted rec-card__facts">${facts.join('<span class="rec-card__sep">·</span>')}</div>` : ''}
-           ${reasons.length ? `<ul class="rec-card__why">${reasons.map((r) => `<li>${esc(r)}</li>`).join('')}</ul>` : ''}
-         </div>
-         <!-- Two of the three actions carry a SHORT visible label (#817): spelled
-              out, the row wrapped to a second line on every card at 375px. The
-              names are preserved rather than dropped — dismiss is icon-only and
-              names itself via aria-label + title, and the link's aria-label
-              CONTAINS its visible „BGG" as WCAG 2.2 SC 2.5.3 requires. -->
-         <div class="rec-card__actions">
-           <button class="btn btn--primary" data-act="wish"><i class="ti ti-heart" aria-hidden="true"></i> ${esc(t('suggest.wish'))}</button>
-           <button class="link-btn link-btn--icon" data-act="dismiss" aria-label="${esc(t('suggest.dismiss'))}" title="${esc(t('suggest.dismiss'))}"><i class="ti ti-ban" aria-hidden="true"></i></button>
-           <a class="link-btn" target="_blank" rel="noopener noreferrer" aria-label="${esc(t('suggest.open'))}"><i class="ti ti-external-link" aria-hidden="true"></i> ${esc(t('suggest.openShort'))}</a>
-         </div>
-       </div>`);
-    card.querySelector('a.link-btn').href = rec.url;
-
-    card.querySelector('[data-act="wish"]').addEventListener('click', async (ev) => {
-      const btn = ev.currentTarget;
-      btn.disabled = true;
-      // The ordinary add-game write, not a route of its own: a recommendation
-      // accepted is exactly a wished game carrying its BGG link, so it flows
-      // through the pipeline #560/#664 already built — including the server-side
-      // provider-info fetch that fills the metadata the Regal filters on.
-      const fd = new FormData();
-      fd.append('title', rec.title);
-      // The corpus's own range, with the same fallback the add-game form uses
-      // when a provider states none: the route requires both, and a game the
-      // range is unknown for must stay drawable at every table size.
-      fd.append('minPlayers', String(rec.minPlayers || 1));
-      fd.append('maxPlayers', String(rec.maxPlayers || Math.max(rec.minPlayers || 1, 99)));
-      fd.append('wish', 'true');
-      fd.append('sourceProvider', 'bgg');
-      fd.append('sourceExternalId', rec.externalId);
-      fd.append('sourceUrl', rec.url);
-      // The card's own cover, or nothing (#789). Without it the wish row stores
-      // no image at all — the add is the only moment the URL is in hand, so the
-      // placeholder would then follow the game through the wish list, its detail
-      // page and the Regal until somebody hand-picked a cover.
-      //
-      // Not new trust in client input: the route re-validates it through
-      // providerCoverUrl, exactly as the add-game sheet's cover picker is
-      // (.claude/rules/provider-cover-hotlinking.md). `rec.image` has already
-      // been through that gate server-side (lib/recommend.js), so this hands
-      // back a URL the server itself vouched for one request ago.
-      if (rec.image) fd.append('imageUrl', rec.image);
-      try {
-        await api('POST', `/api/rounds/${rid}/games`, fd);
-        toast(t('suggest.wished', { title: rec.title }));
-        // Re-render rather than removing the card: the game is now owned, so it
-        // is excluded from the next scoring — and one more candidate moves into
-        // the list to take its place.
-        showRecommendations(rid);
-      } catch (e) {
-        btn.disabled = false;
-        toast(e.message, { tone: 'error' });
-      }
-    });
-    card.querySelector('[data-act="dismiss"]').addEventListener('click', async (ev) => {
-      const btn = ev.currentTarget;
-      btn.disabled = true;
-      try {
-        await api('POST', `/api/rounds/${rid}/recommendations/dismissed`, { externalId: rec.externalId, title: rec.title });
-      } catch (e) {
-        btn.disabled = false;
-        // The cap only ever binds on abuse (500 by default), but a raw
-        // `quota_dismissed` in a toast tells the reader nothing they can act on.
-        return toast(e.message === 'quota_dismissed' ? t('suggest.toast.quota') : e.message, { tone: 'error' });
-      }
-      toast(t('suggest.dismissed', { title: rec.title }));
-      // The card is REPLACED IN PLACE by a persistent undo row rather than the
-      // screen being re-rendered, and the undo deliberately does not live in the
-      // toast: toast() is a 2.2s aria-live region with no action slot, so a
-      // button inside it would take the only way back away again on a timer —
-      // and the app's own undo idiom (the session-cancel row in
-      // views-session.js) is in-place for exactly that reason.
-      //
-      // Not re-rendering also keeps the reader's place: re-scoring would pull a
-      // fresh candidate into the list and shift everything below the card they
-      // were just looking at.
-      const undone = h(`<div class="rec-undone">
-           <span class="rec-undone__name">${esc(t('suggest.dismissed', { title: rec.title }))}</span>
-           <button class="link-btn"><i class="ti ti-arrow-back-up" aria-hidden="true"></i> ${esc(t('suggest.undo'))}</button>
-         </div>`);
-      undone.querySelector('button').addEventListener('click', async (ev2) => {
-        ev2.currentTarget.disabled = true;
-        try {
-          await api('DELETE', `/api/rounds/${rid}/recommendations/dismissed/${encodeURIComponent(rec.externalId)}`);
-          // Back to the real card, not a re-render: the ranking is unchanged by
-          // an undo of something that never left it.
-          undone.replaceWith(card);
-          btn.disabled = false;
-        } catch (e) {
-          ev2.currentTarget.disabled = false;
-          toast(e.message, { tone: 'error' });
-        }
-      });
-      card.replaceWith(undone);
-    });
-
-    list.appendChild(card);
-  });
+  recs.forEach((rec) => list.appendChild(recCard(rid, rec)));
   app.appendChild(list);
 
   const ignored = recIgnoredSection(rid, data.dismissed || []);

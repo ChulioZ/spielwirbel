@@ -7272,6 +7272,27 @@
   box-shadow: var(--shadow-1);
 }
 
+/* The spotlight tiles (#1228). T13.3 draws no spotlight row, so this is the
+   sheet's own recommendations panel vocabulary applied to three cards rather
+   than an invented component: walnut, a brass-edged rim, the caption in gold
+   display type the way T13.3 sets „Könnte euch gefallen", and a hairline under
+   it — the tile's caption is a label on a card, not a second heading. A design
+   decision the operator has not made; the PR records it as one. */
+:root[data-design="tisch"][data-scheme="dark"] .rec-spots__title {
+  font-weight: 800;
+}
+:root[data-design="tisch"][data-scheme="dark"] .rec-card--spot {
+  border-color: var(--gold-edge);
+  box-shadow: var(--shadow-1), inset 0 3px 0 var(--gold-edge);
+}
+:root[data-design="tisch"][data-scheme="dark"] .rec-spot__cap {
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+}
+:root[data-design="tisch"][data-scheme="dark"] .rec-spot__title {
+  color: var(--gold);
+}
+
 /* ===========================================================================
    #1197 — the SPIELERKARTE, the FREUNDESKREIS and its feed, the POSTEINGANG,
    „WAS IST NEU", the signed-in STATISTIK, and the round's EINSTELLUNGEN with
