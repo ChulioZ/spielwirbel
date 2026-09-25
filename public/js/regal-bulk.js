@@ -228,7 +228,7 @@ function createRegalBulk(ctx) {
     } catch (e) {
       buttons.forEach((b) => { b.disabled = false; });
       syncSelection();
-      toast(e.message);
+      toast(e.message, { tone: 'error' });
     }
   }
   /* Set who owns the selected boxes (#972). The third bulk action, and the only
@@ -282,7 +282,7 @@ function createRegalBulk(ctx) {
     } catch (e) {
       buttons.forEach((b) => { b.disabled = false; });
       syncSelection();
-      toast(e.message);
+      toast(e.message, { tone: 'error' });
     }
   }
   /* Add and remove tags across the selection (#1000) — the fourth bulk action,
@@ -377,7 +377,7 @@ function createRegalBulk(ctx) {
     } catch (e) {
       buttons.forEach((b) => { b.disabled = false; });
       syncSelection();
-      toast(e.message);
+      toast(e.message, { tone: 'error' });
     }
   }
   const bulkTagsBtn = bulkBar.querySelector('[data-act="tags"]');

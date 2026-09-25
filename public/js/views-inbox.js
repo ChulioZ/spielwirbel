@@ -123,7 +123,7 @@ function renderInvitationItem(item) {
       // and stay on the inbox (afterRemove re-renders the empty state if needed).
       row.remove();
       afterRemove();
-      toast(e.message === 'seat_unavailable' ? t('inbox.invite.seatGone') : t('inbox.invite.failed'));
+      toast(e.message === 'seat_unavailable' ? t('inbox.invite.seatGone') : t('inbox.invite.failed'), { tone: 'error' });
     }
   });
 

@@ -249,7 +249,9 @@ What the app does, in detail. For a short overview see the
   by id rather than by name. A rename onto a name the round already uses is
   refused rather than merging the two tags. Deleting a tag simply unassigns it
   from every game. A round can also put its tags in the **order it wants**: two
-  arrows on each tile of the Tags screen move a tag earlier or later, and that
+  arrows on each tile of the Tags screen move a tag earlier or later — or the
+  tile can simply be **dragged** into place (with a mouse at once, on a touch
+  screen after a short press-and-hold, so a plain swipe still scrolls) — and that
   one order is what every surface listing tags then shows — the tiles, the
   game-detail chips, the Regal bulk-assign sheet, the filter panel and the draw
   presets. A newly created tag still lands at the end.
@@ -291,7 +293,13 @@ What the app does, in detail. For a short overview see the
     one, how much of the shelf has ever reached the table), a **Kümmerliste**
     (played sessions with **no result recorded at all** — one that records a
     winner *or* an ending leaves the list — games with no cover, games with no
-    player count; each deep-linking to the fix), a „**heute vor N Jahren**"
+    player count; each deep-linking to the fix), a **Regal-Steckbrief** once
+    eight or more games carry BoardGameGeek data (how many games seat each table
+    size from 2 to 6+, counting owned expansions, and the gaps a draw will hit —
+    „Für 6+ Personen: nur 2 Spiele", „Über 120 Min.: kein Spiel"; it opens a
+    screen with every band — players, playing time, weight — the leading
+    mechanics and categories, and a „Teilen" that draws the profile as an image
+    on the device, issue #1173), a „**heute vor N Jahren**"
     anniversary when one falls on today, and a teaser from the recommendations
     screen. Below the derived cards, a **preview of each of the round's other
     sections** — the shelf as a handful of covers with its count, the standings'
@@ -752,6 +760,15 @@ What the app does, in detail. For a short overview see the
   describe breadth rather than performance, the
   round and game counts, are the line under your name. The favourite and
   strongest game are the two ribboned boxes at the foot of the card.
+- **„Dein Rückblick"** – *accounts mode only* (issue #1147). Your own profile —
+  and only yours; friends never see it — has the Chronik's month/year picker for
+  **you**, across every round you sit in: how many sessions you played, how many
+  different games, your most-played game, the game **you** rated highest (your
+  own ratings, not the group's score) and the games you played for the first
+  time ever. It records what you played, not who won, so it carries no wins and
+  no win rate. Months are counted by your device's own calendar, exactly like the
+  Chronik's. „Teilen" makes the same shareable picture as the round recap, headed
+  with your username instead of a round name.
 - **Profile pictures** – *accounts mode only* (issue #841). An account can upload
   a picture, replace it or remove it again from the Konto screen; without one the
   app keeps showing the coloured tile with your initials, which also stands in if

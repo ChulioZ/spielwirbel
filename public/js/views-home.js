@@ -12,7 +12,10 @@ async function showHome() {
   if (accountsActive() && !isLoggedIn()) return showLanding();
   currentView = () => showHome();
   syncUrl('/');
-  setContext(''); // home: no round context
+  // Home has no round context. Der Tisch fills the slot with its lobby voice
+  // instead (#1279: „Spielecafé · deine Tische" beside the wordmark, T3.1).
+  const tisch = designIs('tisch');
+  setContext(tisch ? t('home.tischKicker') : '', tisch ? 'kicker' : undefined);
   setDocTitle(t('home.docTitle'));
   applyBackground(null); // home: default background
   app.innerHTML = '<p class="muted">…</p>';
@@ -22,7 +25,11 @@ async function showHome() {
 
   app.innerHTML = '';
   app.appendChild(
-    h(`<div class="lobby-head">
+    // The same line again for the PHONE (T6.1 prints it above the greeting and
+    // has no wordmark in its bar): tisch.css shows exactly one of the two per
+    // width, so a screen reader meets it once. Klassisch renders neither.
+    h(`<div class="lobby-head">${tisch ? `
+         <p class="lobby-head__kicker">${esc(t('home.tischKicker'))}</p>` : ''}
          <h1>${esc(t('home.greeting'))}</h1>
          <div class="muted lobby-head__sub">${esc(t('home.sub'))}</div>
        </div>`)
@@ -55,6 +62,8 @@ async function showHome() {
     if (alt) app.appendChild(alt);
   } else {
     app.appendChild(renderLobbyList(rounds));
+    const next = tischNextStep(rounds);
+    if (next) app.appendChild(next);
   }
 
   app.appendChild(renderHomeDash());
@@ -76,6 +85,54 @@ function tischLobbyAlt() {
      </div>`);
   navLink(alt.querySelector('.lobby-alt__invited'), '/inbox', () => showInbox());
   return alt;
+}
+
+/* A one-round lobby (T7.2, #1280) — Der Tisch only. The lobby of someone who
+   has just founded their first round is where the app stops holding their
+   hand; T7.2 gives it a second slip on the round's tile and a „Nächster
+   Schritt" card under the grid.
+
+   The slip says why the others matter, on the tile of a round that seats only
+   its founder. It is TEXT inside the tile's <a> (never a control — the tile is
+   one link), so it opens the round like the rest of the tile does. */
+function lobbyInviteSlip(rounds, r) {
+  if (!designIs('tisch') || rounds.length !== 1 || r.shared || (r.members || []).length > 1) return '';
+  return `<span class="round-card__invite"><i class="ti ti-user-plus" aria-hidden="true"></i>${esc(t('home.next.inviteSlip'))}</span>`;
+}
+
+/* The „Nächster Schritt" card: the round's shelf from BGG, and inviting the
+   others — the two steps that turn a founded round into one that plays. Only
+   for a round of one's own that has not played yet (a shared round's steps are
+   its owner's to take, and a round that has played is past this card), and
+   only where the steps exist: both need accounts mode (canImportBgg, the
+   invite sheet's own gate). With neither available there is no card at all
+   rather than an empty one.
+
+   The rows are <button>s because each opens a SHEET over the lobby, not a
+   route; each first fetches the round, since the sheets take the full round
+   and the lobby holds only its summary. */
+function tischNextStep(rounds) {
+  if (!designIs('tisch') || rounds.length !== 1) return null;
+  const r = rounds[0];
+  if (r.shared || r.playedCount > 0) return null;
+  const steps = [];
+  if (canImportBgg()) steps.push({ icon: 'ti-cards', key: 'home.next.bgg', open: (round) => showBggImport(round) });
+  if (accountsActive()) steps.push({ icon: 'ti-user-plus', key: 'home.next.invite', open: (round) => showInvite(round) });
+  if (!steps.length) return null;
+  const card = h(`<section class="next-step">
+       <h2 class="next-step__title"><i class="ti ti-bulb" aria-hidden="true"></i><span>${esc(t('home.next.title'))}</span></h2>
+     </section>`);
+  steps.forEach(({ icon, key, open }) => {
+    const row = h(`<button type="button" class="next-step__row">
+         <i class="ti ${icon}" aria-hidden="true"></i><span>${esc(t(key))}</span>
+         <i class="ti ti-chevron-right next-step__go" aria-hidden="true"></i>
+       </button>`);
+    row.addEventListener('click', async () => {
+      try { open(await fetchRoundFresh(r.id)); } catch (e) { toast(e.message, { tone: 'error' }); }
+    });
+    card.appendChild(row);
+  });
+  return card;
 }
 
 /* How many resume tickets the screen offers at once, across ALL rounds (#842).
@@ -307,7 +364,7 @@ function renderLobbyList(rounds) {
              <span class="stat-chip"><i class="ti ti-cards" aria-hidden="true"></i>${esc(tn(r.gameCount, 'home.chip.gamesOne', 'home.chip.games'))}</span>
              <span class="stat-chip"><i class="ti ti-confetti" aria-hidden="true"></i>${esc(tn(r.playedCount, 'home.chip.sessionsOne', 'home.chip.sessions'))}</span>
            </span>
-           ${lastLine}
+           ${lastLine}${lobbyInviteSlip(rounds, r)}
          </span>
          <i class="ti ti-chevron-right round-card__chev" aria-hidden="true"></i>
        </a>`);
@@ -495,7 +552,7 @@ async function showNewRound() {
       const round = await api('POST', '/api/rounds', body);
       toast(body.importFromRoundId ? t('newRound.toast.createdImported') : t('newRound.toast.created'));
       showRound(round.id);
-    } catch (e) { toast(e.message === 'quota_rounds' ? t('newRound.toast.quota') : e.message); }
+    } catch (e) { toast(e.message === 'quota_rounds' ? t('newRound.toast.quota') : e.message, { tone: 'error' }); }
   });
 
   nameInput.focus();

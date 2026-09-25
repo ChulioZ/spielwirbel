@@ -84,6 +84,11 @@ function assetsToHash(outDir) {
   return toPosix(out);
 }
 
+// A vendored library (js/vendor/**, #1180) is already minified by its authors
+// and pinned byte-for-byte by a parity test: re-minifying it only grew it and
+// made the served bytes differ from the release. It is hashed, never rewritten.
+const isVendored = (rel) => rel.startsWith('js/vendor/');
+
 function minify(rel, code) {
   if (rel.endsWith('.css')) {
     return esbuild.transformSync(code, { loader: 'css', minify: true }).code;
@@ -156,6 +161,15 @@ function build({ srcDir = DEFAULT_SRC, outDir = DEFAULT_OUT } = {}) {
   const hashInto = (rels, rewriteWith) => {
     for (const rel of rels) {
       const abs = path.join(outDir, rel);
+      if (isVendored(rel)) {
+        // Read as bytes: a utf8 round-trip is not guaranteed to be lossless.
+        const raw = fs.readFileSync(abs);
+        const hRel = hashedRel(rel, sha8(raw));
+        fs.writeFileSync(path.join(outDir, hRel), raw);
+        fs.rmSync(abs);
+        manifest['/' + rel] = '/' + hRel;
+        continue;
+      }
       let code = fs.readFileSync(abs, 'utf8');
       if (rewriteWith) code = rewriteRefs(code, rewriteWith);
       const minified = Buffer.from(minify(rel, code));

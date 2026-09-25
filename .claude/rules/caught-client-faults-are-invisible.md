@@ -1,6 +1,6 @@
 # A caught fault with NO SERVER INVOLVEMENT is invisible — the catch is the end of the story
 
-<!-- scope: global — the trap is a discipline applied while WRITING any client-side catch, anywhere under public/js/**, not only at the four sites that report today; a scoped rule that fails to load loses its protection silently. -->
+<!-- scope: global — the trap is a discipline applied while WRITING any client-side catch, anywhere under public/js/**, not only at the sites that report today; a scoped rule that fails to load loses its protection silently. -->
 
 `.claude/rules/client-errors-are-not-instance-faults.md` is about the server
 recording too much. This is the mirror: the client recording nothing.
@@ -36,7 +36,7 @@ believing itself safe, and three properties kept it that way:
 
 **When you write or edit a `catch` in `public/js/`, ask whether the server will
 hear about it.** If the answer is no, add a `reportClientError(kind, err)` call
-beside the existing toast — `public/js/error-report.js`, wired at four sites
+beside the existing toast — `public/js/error-report.js`, wired at six sites
 today. Keep the toast exactly as it is: this adds a report, it does not change
 what the user sees.
 

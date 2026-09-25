@@ -230,20 +230,34 @@ function recapPanel(ctx, x, y, w, h, fill) {
 // and the drawing can never disagree about where the card ends. Shelf numbers
 // that are zero are dropped — "0 aussortiert" is noise, the same call the
 // all-time Rückblick makes for its archive chip.
+//
+// The shelf entries and the two row labels come FROM THE MODEL (#1147), so one
+// renderer draws both cards: the round's recap passes its three shelf numbers
+// under „Regal", the account's own recap passes „neu ausprobiert" under its own
+// label and names its rated row after the account's own rating rather than the
+// group's score. The defaults are the round card's, so a model that says
+// nothing about them draws exactly what it always did.
 function recapCardBlocks(model) {
   const rows = [];
   if (model.played && model.played.length) {
     rows.push({ label: t('pokale.mostPlayed'), value: model.played.join(' · '), sub: model.playedSub });
   }
   if (model.rated && model.rated.length) {
-    rows.push({ label: t('pokale.bestRated'), value: model.rated.join(' · '), sub: model.ratedScore });
+    rows.push({ label: model.ratedLabel || t('pokale.bestRated'), value: model.rated.join(' · '), sub: model.ratedScore });
   }
-  const shelf = [
-    { n: model.added, label: t('periodRecap.label.added'), plus: true },
-    { n: model.retired, label: t('periodRecap.label.retired') },
-    { n: model.completed, label: t('periodRecap.label.completed') },
-  ].filter((s) => s.n > 0);
-  return { rows, shelf };
+  const shelf = (Array.isArray(model.shelf) ? model.shelf : []).filter((s) => s.n > 0);
+  return { rows, shelf, shelfLabel: model.shelfLabel || t('periodRecap.label.shelf') };
+}
+
+// The round recap's three shelf numbers, in the shape `recapCardBlocks` takes.
+// Shared by both designs' cards (recap-card-tisch.js reads it too), so the
+// round card cannot grow a fourth entry on one design only.
+function recapShelfEntries(rec) {
+  return [
+    { n: rec.added, label: t('periodRecap.label.added'), plus: true },
+    { n: rec.retired, label: t('periodRecap.label.retired') },
+    { n: rec.completed, label: t('periodRecap.label.completed') },
+  ];
 }
 
 // How tall this card has to be. The trailing term is the wordmark's own line
@@ -263,8 +277,11 @@ function recapCardHeight(model, scene) {
 }
 
 // `model` is what the view already computed for the screen:
-// { roundName, periodLabel, sessions, gamesPlayed, played: [titles],
-//   playedCount, rated: [titles], ratedScore, added, retired, completed }.
+// { heading, periodLabel, sessions, gamesPlayed, played: [titles], playedSub,
+//   rated: [titles], ratedScore, ratedLabel?, shelf: [{ n, label, plus }],
+//   shelfLabel? }. `heading` is the top line — the round's name on the
+// Chronik's card, the username on the account's own (#1147); it was
+// `roundName` until the second caller made that name a lie.
 // `world` is { backdrop, frame, scene, scale } — the three masks (any may be
 // null) loaded by recapCardBlob before this synchronous pass, and the
 // backing-store scale the tints are rendered at.
@@ -329,7 +346,7 @@ function drawRecapCard(ctx, model, height, world = {}) {
   ctx.textBaseline = 'alphabetic';
   ctx.fillStyle = p.inkSoft;
   ctx.font = recapFont(600, 16);
-  ctx.fillText(recapFit(ctx, model.roundName, inner), pad, y);
+  ctx.fillText(recapFit(ctx, model.heading, inner), pad, y);
 
   y += 44;
   ctx.fillStyle = p.brand;
@@ -357,7 +374,7 @@ function drawRecapCard(ctx, model, height, world = {}) {
   y += tileH + gap;
 
   // One row per named stat, each a panel with a label and its games.
-  const { rows, shelf } = recapCardBlocks(model);
+  const { rows, shelf, shelfLabel } = recapCardBlocks(model);
   rows.forEach((row) => {
     const rowH = RECAP_CARD_ROW_H;
     recapPanel(ctx, pad, y, inner, rowH, p.surface);
@@ -382,7 +399,7 @@ function drawRecapCard(ctx, model, height, world = {}) {
     recapPanel(ctx, pad, y, inner, rowH, p.surface);
     ctx.fillStyle = p.inkSoft;
     ctx.font = recapFont(600, 13);
-    ctx.fillText(t('periodRecap.label.shelf').toUpperCase(), pad + 20, y + 26);
+    ctx.fillText(recapFit(ctx, shelfLabel.toUpperCase(), inner - 40), pad + 20, y + 26);
     ctx.fillStyle = p.ink;
     ctx.font = recapFont(600, 17);
     ctx.fillText(
