@@ -43,8 +43,9 @@ async function showMember(rid, mid) {
   const mine = !!me && member.userId === me;
   // Der Tisch composes the card's head and foot differently (#1276, T13.4):
   // an attendance line under the name, and the owned boxes as a panel inside
-  // the card. Klassisch takes none of these branches.
-  const tisch = designIs('tisch');
+  // the card. Ocean takes the same two (#1218, O13.4 — „Bringt mit" beside the
+  // record). Klassisch takes none of these branches.
+  const panelled = designIs('tisch') || designIs('ocean');
 
   // Link or unlink this seat, then re-render into the other state. Shared by
   // „Das bin ich“ in the card and „Das bin ich nicht“ in the page menu.
@@ -146,7 +147,7 @@ async function showMember(rid, mid) {
      Absent with no finished session at all: „0 von 0" says nothing, and the
      state chip below already says „noch bei keiner Session dabei". */
   const finishedCount = round.sessions.filter((s) => s.finished).length;
-  if (tisch && finishedCount) {
+  if (panelled && finishedCount) {
     h1.after(h(`<p class="member-card__attendance">${esc(tn(finishedCount, 'member.attendanceOne', 'member.attendance', { n: st.joined, total: finishedCount }))}</p>`));
   }
 
@@ -328,7 +329,7 @@ async function showMember(rid, mid) {
      by the operator, and „Stärkstes Spiel" is shown nowhere else, so removing
      them would take away a block that is reachable today. Hidden at zero, as
      the Klassisch section is: the tiles then keep the card's full width. */
-  if (tisch && owned.length) {
+  if (panelled && owned.length) {
     const lower = h('<div class="member-card__lower"></div>');
     cards.replaceWith(lower);
     lower.appendChild(memberOwnedPanel(round, member, owned));
@@ -372,7 +373,7 @@ async function showMember(rid, mid) {
      owner, and „Spiele von Anna" over an empty grid on every member page would
      advertise a feature the round does not use — the same call the detail page's
      expansions section makes on a sparse page. */
-  if (owned.length && !tisch) {
+  if (owned.length && !panelled) {
     // This heading puts `{name}` after a preposition in most locales, which is
     // why the demo seed may not name a seat with a pronoun — „4 Spiele von Du"
     // is wrong German. See

@@ -26,12 +26,19 @@ const CHRONIK_FILTERS = ['all', 'sessions', 'changes'];
    How many faces a strip shows before the "+N" count — T13.1 draws four, and
    a strip is one row, so a big table must not push the pill off it. */
 const CHRONIK_STRIP_FACES = 4;
+
+/* Ocean lays the Chronik out as ROWS (#1218, O13.1/O13.5): [cover | title +
+   date | the winner's ring and crown | score bubble | chevron], under month
+   headings that carry their own session count, with the recap in a column
+   beside it from 1280px (ocean.css). The same link, target and words as the
+   Klassisch card; what moves is where each fact sits. */
 // Unique ids for the collapsed shelf-change runs' aria-controls.
 let chronikRunSeq = 0;
 
 function renderChronikTab(round, activities) {
   const rid = round.id;
   const tisch = designIs('tisch');
+  const ocean = designIs('ocean');
   const loadCover = createCoverLoader(); // lazy session thumbs (#198)
 
   // The chip choice persists for the session but is scoped to one round — the
@@ -144,7 +151,7 @@ function renderChronikTab(round, activities) {
   // 2025" (T13.1). Counted exactly as the rail beside it counts (round-rail.js:
   // every FINISHED session), not over the strips: a cancelled night is listed
   // but was never played, and counting it put „7" here beside the rail's „6".
-  if (tisch) {
+  if (tisch || ocean) {
     const counted = round.sessions.filter((s) => s.finished);
     if (counted.length) {
       const since = counted.reduce((a, s) => (s.createdAt < a ? s.createdAt : a), counted[0].createdAt);
@@ -222,6 +229,7 @@ function renderChronikTab(round, activities) {
     // screen reader hears for them — in the text, not only in the picture.
     if (tisch && sPeople.length) parts.push(esc(tn(sPeople.length, 'chronik.seatedOne', 'chronik.seated')));
     const rated = sessionHasVotes(s) ? esc(tn(s.gameIds.length, 'sessions.ratedOne', 'sessions.rated')) : '';
+    if (ocean) return buildSessionRow(s, { when, chosen, sPeople, thumbIcon, title, pill, outcome, rated });
     if (tisch) return buildSessionStrip(s, { when, chosen, sPeople, thumbIcon, title, pill, parts, rated });
     if (rated) parts.push(rated);
 
@@ -265,6 +273,46 @@ function renderChronikTab(round, activities) {
            <div class="session-card__meta">${parts.join(' · ')}${rated ? `<span class="session-card__rated">${parts.length ? ' · ' : ''}${rated}</span>` : ''}</div>
          </div>
          ${faces}${pill}
+       </a>`);
+    if (chosen && chosen.image) loadCover(card.querySelector('.session-card__img'), coverUrl(chosen.image, COVER_THUMB));
+    navLink(card, resultsPath(round.id, s.id), () => showResults(round, s));
+    return card;
+  }
+
+  /* Ocean's session row (#1218, O13.1/O13.5). The WHO sits in its own slot:
+     the first winner's ring with the crown over it, then „Jonas hat gewonnen".
+     A night without a winner puts how it ended there instead — the same words
+     the Klassisch meta line uses (split, ending, „Gespielt", cancelled), so no
+     session loses a fact by moving. The meta line keeps the date, the head
+     count and „N Spiele bewertet". On a phone the ring folds away and the
+     winner line wraps under the date (ocean.css): O13.5's two-line row. */
+  function buildSessionRow(s, { when, chosen, sPeople, thumbIcon, title, pill, outcome, rated }) {
+    const winners = (s.winnerIds || []).map((wid) => sPeople.find((p) => p.id === wid)).filter(Boolean);
+    let who;
+    if (outcome === 'split') who = iconText('ti-layout-grid', t('sessions.split'));
+    else if (winners.length) {
+      const lead = winners[0];
+      // aria-hidden: the sentence beside it names every winner in text.
+      const face = `<span class="session-card__crowned" aria-hidden="true"><span class="avatar${lead.guest ? ' avatar--guest' : ''}" style="background:${personColor(round, lead)}">${avatarFace(initials(lead.name), {})}</span><i class="ti ti-crown"></i></span>`;
+      who = `${face}<span class="session-card__won">${esc(tn(winners.length, 'chronik.wonOne', 'chronik.won', { names: winners.map(personLabel).join(', ') }))}</span>`;
+    } else if (s.finished) who = endingText(s) || iconText('ti-check', t('sessions.played'));
+    else if (outcome === 'cancelled') who = `<span class="session-card__cancelled">${iconText('ti-x', t('sessions.cancelled'))}</span>`;
+    // The month heading above already carries the year, so the row names the
+    // day only („14. Sep.", O13.1); the full date and time stay one hover away.
+    // A night with no game has the date as its TITLE, so it is not repeated.
+    const day = new Date(s.createdAt).toLocaleString(localeTag(locale), { day: 'numeric', month: 'short' });
+    const meta = chosen ? [`<time datetime="${esc(s.createdAt)}" title="${esc(when)}">${esc(day)}</time>`] : [];
+    if (sPeople.length) meta.push(esc(tn(sPeople.length, 'chronik.seatedOne', 'chronik.seated')));
+    if (rated) meta.push(rated);
+    const card = h(`<a class="session-card session-card--row">
+         <div class="session-card__img">${thumbIcon}</div>
+         <div class="session-card__body">
+           <div class="session-card__title">${title}</div>
+           <div class="session-card__meta">${meta.join(' · ')}</div>
+         </div>
+         <div class="session-card__who">${who || ''}</div>
+         ${pill}
+         <i class="ti ti-chevron-right session-card__chev" aria-hidden="true"></i>
        </a>`);
     if (chosen && chosen.image) loadCover(card.querySelector('.session-card__img'), coverUrl(chosen.image, COVER_THUMB));
     navLink(card, resultsPath(round.id, s.id), () => showResults(round, s));
@@ -362,14 +410,20 @@ function renderChronikTab(round, activities) {
     }
     // Only the unfiltered view folds: with „Regal-Änderungen" chosen, the
     // changes ARE the page, and one disclosure per month would hide all of it.
-    const fold = tisch && chronikFilter === 'all';
+    // Ocean folds the same way (#1218): O13.1 draws the sessions alone, and a
+    // month of shelf bookkeeping between two rows would bury them.
+    const fold = (tisch || ocean) && chronikFilter === 'all';
     let lastMonth = '';
     for (let i = 0; i < visible.length;) {
       const e = visible[i];
       const month = fmtMonth(e.at);
       if (month !== lastMonth) {
         lastMonth = month;
-        tl.appendChild(h(`<div class="tl-month">${esc(month)}</div>`));
+        // Ocean's month heading carries the month's session count after a
+        // hairline (O13.1 „Monatsüberschrift mit Linie"). Counted over what the
+        // filter shows, so „Regal-Änderungen" alone never claims sessions.
+        const played = ocean ? visible.filter((v) => v.kind === 'session' && fmtMonth(v.at) === month).length : 0;
+        tl.appendChild(h(`<div class="tl-month">${ocean ? `<span class="tl-month__name">${esc(month)}</span>${played ? `<span class="tl-month__count">${esc(tn(played, 'home.chip.sessionsOne', 'home.chip.sessions'))}</span>` : ''}` : esc(month)}</div>`));
       }
       if (fold && e.kind === 'activity') {
         let j = i + 1;
@@ -530,16 +584,23 @@ function renderPeriodRecapSection(round, activities) {
     // follows the picker.
     if (entryLabel) entryLabel.textContent = t('periodRecap.entry', { period: labelOf(period) });
 
-    const chip = (icon, text) =>
-      h(`<span class="stat-chip"><i class="ti ${icon}" aria-hidden="true"></i>${esc(text)}</span>`);
+    /* Ocean draws each total as a NUMBER TILE (#1218, O13.1/O13.5 „Zahlenkachel":
+       a big display-face figure over a small label). The labels are the ones the
+       share card already prints beside its figures (periodRecap.label.*), so the
+       tile and the PNG it shares cannot name a number two ways. Same five
+       figures, same non-zero rule — only the presentation differs. */
+    const ocean = designIs('ocean');
+    const chip = ocean
+      ? (icon, text, n, label) => h(`<span class="stat-chip stat-chip--tile"><span class="stat-chip__n">${esc(String(n))}</span><span class="stat-chip__label">${esc(t(label))}</span></span>`)
+      : (icon, text) => h(`<span class="stat-chip"><i class="ti ${icon}" aria-hidden="true"></i>${esc(text)}</span>`);
     const totals = h('<div class="recap__totals"></div>');
-    totals.appendChild(chip('ti-confetti', tn(rec.sessions, 'home.chip.sessionsOne', 'home.chip.sessions')));
-    totals.appendChild(chip('ti-cards', tn(rec.gamesPlayed, 'periodRecap.playedOne', 'periodRecap.played')));
+    totals.appendChild(chip('ti-confetti', tn(rec.sessions, 'home.chip.sessionsOne', 'home.chip.sessions'), rec.sessions, 'periodRecap.label.sessions'));
+    totals.appendChild(chip('ti-cards', tn(rec.gamesPlayed, 'periodRecap.playedOne', 'periodRecap.played'), rec.gamesPlayed, 'periodRecap.label.gamesPlayed'));
     // Only the non-zero shelf numbers, the call the Rückblick's archive chip
     // already makes: "0 aussortiert" is noise on a quiet month.
-    if (rec.added) totals.appendChild(chip('ti-plus', tn(rec.added, 'periodRecap.addedOne', 'periodRecap.added')));
-    if (rec.retired) totals.appendChild(chip('ti-trash', tn(rec.retired, 'periodRecap.retiredOne', 'periodRecap.retired')));
-    if (rec.completed) totals.appendChild(chip('ti-circle-check', tn(rec.completed, 'periodRecap.completedOne', 'periodRecap.completed')));
+    if (rec.added) totals.appendChild(chip('ti-plus', tn(rec.added, 'periodRecap.addedOne', 'periodRecap.added'), rec.added, 'periodRecap.label.added'));
+    if (rec.retired) totals.appendChild(chip('ti-trash', tn(rec.retired, 'periodRecap.retiredOne', 'periodRecap.retired'), rec.retired, 'periodRecap.label.retired'));
+    if (rec.completed) totals.appendChild(chip('ti-circle-check', tn(rec.completed, 'periodRecap.completedOne', 'periodRecap.completed'), rec.completed, 'periodRecap.label.completed'));
     body.appendChild(totals);
 
     // One loader per render of this body (#979) — renderBody re-runs on every

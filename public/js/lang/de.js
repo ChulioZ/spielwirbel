@@ -226,6 +226,8 @@ I18N.de = {
   'pokale.young.podium': 'Ein Podium braucht {n} Sessions.',
   'pokale.winsOne': '{n} Sieg',
   'pokale.wins': '{n} Siege',
+  'pokale.winWordOne': 'Sieg',
+  'pokale.winWord': 'Siege',
   // Marks a Pokale podium step held by more than one member (#891, #897) — the
   // tie label is the semantic half of "several people stand here", so podium.js
   // renders it rather than the view, and only its wording comes from here.
@@ -308,6 +310,8 @@ I18N.de = {
   'chronik.count': '{n} Sessions seit {month}',
   'chronik.seatedOne': '{n} dabei',
   'chronik.seated': '{n} dabei',
+  'chronik.wonOne': '{names} hat gewonnen',
+  'chronik.won': '{names} haben gewonnen',
   'chronik.changesOne': '{n} Regal-Änderung',
   'chronik.changes': '{n} Regal-Änderungen',
   'activity.delete': 'Aktivität löschen',

@@ -67,7 +67,9 @@ function offShelfSegments(round, activeSub) {
   const nav = h(`<nav class="offshelf-seg" aria-label="${esc(t('rail.archive'))}"></nav>`);
   offShelfEntries(round).forEach(({ icon, label, sub, go }) => {
     const on = sub === activeSub;
-    const seg = h(`<a class="offshelf-seg__item${on ? ' is-on' : ''}"${on ? ' aria-current="page"' : ''}>${iconText(icon, label)}</a>`);
+    // `data-sub` lets a design set the recommendations apart from the three
+    // lists (Ocean, #1218: O13.3 gives „Könnte euch gefallen" its own column).
+    const seg = h(`<a class="offshelf-seg__item${on ? ' is-on' : ''}" data-sub="${sub}"${on ? ' aria-current="page"' : ''}>${iconText(icon, label)}</a>`);
     navLink(seg, roundPath(round.id, sub), go);
     nav.appendChild(seg);
   });
