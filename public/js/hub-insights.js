@@ -42,6 +42,17 @@ const SUGGEST_RECENT_DAYS = 60;
 // before drawing them: one played session makes a chart of one bar.
 const PULSE_MONTHS = 12;
 const PULSE_MIN_SESSIONS = 2;
+/* Der Tisch's YOUNG-ROUND THRESHOLDS (#1280, T7.5). Below each, the screens
+   that would draw the thing say a sentence naming the threshold instead of
+   drawing a line from one or two points. ONE constant per threshold, read by
+   every site that gates on it or states it — the pulse card's sentence and the
+   Pokale streak card for the first, the Pokale preview and the Pokale tab for
+   the second — so the sentence and the gate cannot disagree
+   (test/tisch-young-thresholds.test.js pins every site to these names).
+   Counted in PLAYED sessions (youngRoundPlayed below), the same evenings the
+   pulse counts. */
+const YOUNG_ROUND_SERIES_FROM = 3;
+const YOUNG_ROUND_PODIUM_FROM = 3;
 // Rows per Kümmerliste section. The card names what to fix, it is not a report.
 const CARE_ROW_MAX = 3;
 
@@ -59,6 +70,11 @@ const CARE_ROW_MAX = 3;
 // directly), which is the second reason not to merge them.
 const hubPlayedSessions = (round, deps) =>
   (round.sessions || []).filter((s) => deps.outcomeOf(s) === 'played');
+
+// How many evenings a round has actually played — the count both young-round
+// thresholds above are compared against, at every site, so no two of them can
+// count a split parent or a cancelled draw differently.
+const youngRoundPlayed = (round, deps) => hubPlayedSessions(round, deps).length;
 
 // When each game was last actually put on the table, as a ms timestamp. A game
 // was PLAYED when it is a played session's `chosenGameId`; merely appearing in
@@ -282,7 +298,11 @@ function roundPulse(round, activeGames, opts, deps) {
      floor moved: the pulse is a claim about the last twelve months, so a round
      whose only evenings predate them has no pulse to draw. */
   const total = months.reduce((n, m) => n + m.count, 0);
-  if (total < PULSE_MIN_SESSIONS) return null;
+  // `o.minSessions` lowers the floor for Der Tisch, whose tiles are real
+  // figures from the first evening on (T7.5) — there is no bar chart to be
+  // drawn from one point. Klassisch passes nothing and keeps its two.
+  const floor = Number.isInteger(o.minSessions) && o.minSessions > 0 ? o.minSessions : PULSE_MIN_SESSIONS;
+  if (total < floor) return null;
 
   /* `daysSinceLast` deliberately looks past the window: once the card is on
      screen at all, "last played 400 days ago" is exactly the fact worth having.
@@ -377,6 +397,7 @@ function anniversary(round, opts, deps) {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     SUGGEST_MIN_SHELF, SUGGEST_RECENT_DAYS, PULSE_MONTHS, PULSE_MIN_SESSIONS, CARE_ROW_MAX,
+    YOUNG_ROUND_SERIES_FROM, YOUNG_ROUND_PODIUM_FROM, youngRoundPlayed,
     gameSuggestions, quickPresets, roundPulse, careList, anniversary,
   };
 }

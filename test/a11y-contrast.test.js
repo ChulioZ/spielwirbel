@@ -1631,6 +1631,36 @@ test('Der Tisch\'s app chrome keeps the plate, the kicker and the account name a
   assert.deepEqual(failures, []);
 });
 
+test('Der Tisch\'s young-round features keep their text at AA on the grounds they sit on (#1280)', () => {
+  /* T7.2 / T7.5 / T7.6 (tisch.css „The young round"): the „Nächster Schritt"
+     card, the demo summary rows, the Pokale leader block and the threshold
+     sentences are --ink / --ink-soft on --surface; a next-step row lifts to
+     --control-fill under the pointer; their glyphs and the leader's crown are
+     --gold (non-text, SC 1.4.11). The lobby's invite slip is the paper slip
+     `.round-card__last` already is — --paper-ink on the --paper gradient, with a
+     --gold-edge glyph. Measured for every design that declares both families. */
+  const hosts = withToken('--paper').filter((t) => token('--felt', t.design));
+  assert.ok(hosts.length >= 1, 'no design declares --paper and --felt — this test is vacuous');
+  const failures = [];
+  for (const t of hosts) {
+    const v = (n) => token(n, t.design);
+    for (const [label, fg, bg, bar] of [
+      ['--ink on --surface (row label, leader line)', v('--ink'), v('--surface'), AA_TEXT],
+      ['--ink-soft on --surface (threshold sentence, hint, value)', v('--ink-soft'), v('--surface'), AA_TEXT],
+      ['--ink on --control-fill (next-step row, hovered)', v('--ink'), v('--control-fill'), AA_TEXT],
+      ['--gold on --surface (row glyph, crown)', v('--gold'), v('--surface'), AA_LARGE],
+      ['--paper-ink on --paper (invite slip)', v('--paper-ink'), v('--paper'), AA_TEXT],
+      ['--paper-ink on --paper-raised (invite slip)', v('--paper-ink'), v('--paper-raised'), AA_TEXT],
+      ['--gold-edge on --paper (invite slip glyph)', v('--gold-edge'), v('--paper'), AA_LARGE],
+      ['--gold-edge on --paper-raised (invite slip glyph)', v('--gold-edge'), v('--paper-raised'), AA_LARGE],
+    ]) {
+      const ratio = contrast(fg, bg);
+      if (!(ratio >= bar)) failures.push(`${name(t)} — ${label} = ${ratio.toFixed(2)}:1 (bar ${bar})`);
+    }
+  }
+  assert.deepEqual(failures, []);
+});
+
 test('the Chronik session strip keeps its date column at AA on wood and on paper (#1271)', () => {
   /* The strip's date column changes ground with the width (tisch.css): on a
      desktop it stands on the walnut PAGE beside the paper and takes --gold; on

@@ -208,6 +208,41 @@ function roundStandings(round) {
   return { wins, ranked, winners, rankOf };
 }
 
+/* Der Tisch's leader line for a young round (T7.5, #1280): the crowned
+   leader(s) and „Ein Podium braucht 3 Sessions." in place of the podium.
+   Each named leader stays a link to their page, exactly as a podium entry is,
+   and `named` tells the caller who is already on screen — everyone else still
+   reaches the summary line below, so no member becomes unreachable. With no
+   decided evening yet there is nobody to name and only the sentence shows. */
+function pokaleYoungLead(round, winners, rankOf, wins) {
+  const leaders = winners.filter((m) => rankOf[m.id] === 1);
+  const el = h('<div class="pokale-young"></div>');
+  if (leaders.length) {
+    const who = h('<div class="pokale-young__who"></div>');
+    leaders.forEach((m) => {
+      const a = h(`<a class="pokale-young__seat" data-mid="${esc(m.id)}">
+           <span class="avatar pokale-young__avatar" style="background:${memberColor(round, m.id)}">${avatarFace(initials(m.name), { userId: m.userId })}</span>
+           <i class="ti ti-crown pokale-young__crown" aria-hidden="true"></i>
+         </a>`);
+      a.setAttribute('aria-label', m.name);
+      makeMemberLink(a, round.id, m.id);
+      who.appendChild(a);
+    });
+    el.appendChild(who);
+  }
+  const text = h('<div class="pokale-young__text"></div>');
+  if (leaders.length) {
+    const n = wins[leaders[0].id];
+    const line = leaders.length === 1
+      ? tn(n, 'pokale.young.leadOne', 'pokale.young.lead', { name: leaders[0].name })
+      : t('hub.preview.pokaleLeadTie', { n: leaders.length });
+    text.appendChild(h(`<span class="pokale-young__lead">${esc(line)}</span>`));
+  }
+  text.appendChild(h(`<span class="pokale-young__when">${esc(tn(YOUNG_ROUND_PODIUM_FROM, 'pokale.young.podiumOne', 'pokale.young.podium'))}</span>`));
+  el.appendChild(text);
+  return { el, named: new Set(leaders.map((m) => m.id)) };
+}
+
 function renderPokaleTab(round) {
   const finished = round.sessions.filter((s) => s.finished);
 
@@ -261,7 +296,15 @@ function renderPokaleTab(round) {
   // `.claude/rules/rank-encodings-must-not-be-growable-by-ties.md`.
   const podiumItems = winners.map((m) => ({ place: rankOf[m.id], member: m }));
   const { single, cols } = podiumColumns(podiumItems);
-  if (winners.length) {
+  /* Der Tisch's young round (T7.5, #1280): below YOUNG_ROUND_PODIUM_FROM the
+     leader is named and the sentence says when the podium comes — three steps
+     drawn off one or two evenings would rank people on noise. The same constant
+     gates the hub's Pokale preview, so preview and page agree. */
+  const played = youngRoundPlayed(round, hubDeps());
+  const young = designIs('tisch') && played < YOUNG_ROUND_PODIUM_FROM;
+  const youngLead = young ? pokaleYoungLead(round, winners, rankOf, wins) : null;
+  if (youngLead) sec.appendChild(youngLead.el);
+  if (winners.length && !young) {
     /* ONE number per entry again — the win count the step is ranked on.
        It carried the Siegwertung plus the raw count from #895 until 2026-09-22,
        with `.podium__col--multi` hiding the count on a shared step because two
@@ -294,7 +337,8 @@ function renderPokaleTab(round) {
      This is also where a member with NO win is named — „0 Siege" rather than
      absent — which is what keeps `winners`' „has won at least once" filter from
      making anyone invisible. */
-  const onPodium = new Set(cols.flatMap((c) => c.shown.map((it) => it.member.id)));
+  const onPodium = youngLead ? youngLead.named
+    : new Set(cols.flatMap((c) => c.shown.map((it) => it.member.id)));
   const rest = ranked.filter((m) => !onPodium.has(m.id));
   if (rest.length) {
     const line = rest
@@ -404,7 +448,11 @@ function renderPokaleTab(round) {
     } else break;
   }
   const streakM = streakMember && round.members.find((m) => m.id === streakMember);
-  if (streakM && streak >= 2) {
+  // Under Der Tisch a series waits for YOUNG_ROUND_SERIES_FROM (#1280) — the
+  // number the Rundenpuls card's sentence names, so it cannot promise a series
+  // this card is already showing.
+  const seriesHeld = designIs('tisch') && played < YOUNG_ROUND_SERIES_FROM;
+  if (streakM && streak >= 2 && !seriesHeld) {
     // The member name links to their detail page, like the podium above.
     cards.appendChild(
       pokaleStatCard(round, 'ti-bolt', t('pokale.streak'), streakM.name, t('pokale.streakN', { n: streak }), streakMember)

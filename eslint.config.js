@@ -242,7 +242,7 @@ const frontendGlobals = {
   accountsActive: 'readonly', isLoggedIn: 'readonly', authFetch: 'readonly',
   currentUserId: 'readonly', currentUsername: 'readonly',
   isDemoAccount: 'readonly', bgStatsEnabled: 'readonly', setCachedPref: 'readonly',
-  startDemo: 'readonly', setupDemoBanner: 'readonly',
+  startDemo: 'readonly', setupDemoBanner: 'readonly', leaveDemoForRegister: 'readonly',
   setupTermsBanner: 'readonly',
   enterDemo: 'readonly', resumeDemo: 'readonly', endDemo: 'readonly',
   authErrorKey: 'readonly',
@@ -347,6 +347,8 @@ const frontendGlobals = {
   PULSE_MONTHS: 'readonly', PULSE_MIN_SESSIONS: 'readonly', CARE_ROW_MAX: 'readonly',
   gameSuggestions: 'readonly', quickPresets: 'readonly', roundPulse: 'readonly',
   careList: 'readonly', anniversary: 'readonly',
+  YOUNG_ROUND_SERIES_FROM: 'readonly', YOUNG_ROUND_PODIUM_FROM: 'readonly',
+  youngRoundPlayed: 'readonly',
   RECAP_CARD_W: 'readonly', RECAP_CARD_PAD: 'readonly', RECAP_CARD_GAP: 'readonly',
   RECAP_CARD_TILE_H: 'readonly', RECAP_CARD_ROW_H: 'readonly', RECAP_CARD_SHELF_H: 'readonly',
   RECAP_CARD_SCENE_H: 'readonly',
@@ -437,6 +439,9 @@ const frontendGlobals = {
   // #1269 — Der Tisch's young-round states (hub-cards.js, views-round-start.js)
   roundIsYoung: 'readonly', hubSentenceCard: 'readonly', hubYoungCard: 'readonly',
   hubEmptyTable: 'readonly',
+  // #1280 — Der Tisch's young-round features (views-home.js, hub-cards.js, views-pokale.js)
+  lobbyInviteSlip: 'readonly', tischNextStep: 'readonly', hubDemoSummary: 'readonly',
+  hubDemoInvite: 'readonly', pokaleYoungLead: 'readonly',
   // off-shelf.js (#1185) — the four off-shelf destinations, one definition
   offShelfEntries: 'readonly', offShelfSegments: 'readonly',
   // hub-previews.js (#1185) — the hub's three sub-page previews + „Nicht im Regal"
