@@ -18,9 +18,9 @@
        that value as background_color, and #523 settled the question the other
        way — the SPA's tag tracks the round ACCENT, falling back to the brand. -->
   <link rel="manifest" href="/manifest.webmanifest" />
-  <meta name="theme-color" content="#c2410c" />
-  <link rel="icon" href="/icons/icon-192.png" sizes="192x192" type="image/png" />
-  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+  <meta name="theme-color" content="#d9a951" />
+  <link rel="icon" href="/icons/tisch/favicon-32.png" sizes="32x32" type="image/png" />
+  <link rel="apple-touch-icon" href="/icons/tisch/apple-touch-icon.png" />
   <!-- Standalone public contact page (issue #224), reachable WITHOUT login (it is
        the phone-free §5 DDG second channel). Intentionally independent of the
        SPA: bilingual in-page (DE authoritative + EN, toggled by /js/pages/kontakt.js),
@@ -66,8 +66,8 @@
     }
     /* DER TISCH AS THE FACE (#1198). A second copy, of Der Tisch's tokens this
        time, applied only when <html data-design="tisch"> — i.e. only once
-       FACE_DESIGN (js/designs.js) names it. Until the flip (#1202) nothing
-       matches and the page is exactly the Klassisch one above. Every value is
+       FACE_DESIGN (js/designs.js) names it, which it does since the flip
+       (#1202); with a Klassisch face the page is exactly the one above. Every value is
        Der Tisch's own resolved token (the registry's page/accent, then
        css/designs/tisch.css, then styles.css's dark block), pinned by
        test/standalone-page-brand.test.js, which also requires this block to
@@ -261,7 +261,7 @@
   <form class="card" id="contactForm" novalidate>
     <div class="topline">
       <div class="brand">
-        <img src="/icons/icon-192.png" alt="" width="32" height="32" />
+        <img src="/icons/tisch/icon-192.png" alt="" width="32" height="32" />
         <span>Spielwirbel</span>
       </div>
       <div class="langs" role="group" aria-label="Language">

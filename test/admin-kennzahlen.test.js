@@ -290,7 +290,9 @@ test('the round histogram does not come back beside the account tile', async (t)
     assert.equal(text.includes(gone), false, `„${gone}" — the per-round histogram is back`);
   }
   const html = fs.readFileSync(path.join(ROOT, 'public/admin.html'), 'utf8');
-  assert.equal(/round-designs\.js/.test(html), false,
+  // The round registry was deleted at the flip (#1202); admin.html must not
+  // reference it (a <script> for a 404 would be the only trace).
+  assert.equal(/round-desig/.test(html), false,
     'admin.html still loads the round registry the old histogram resolved labels with');
 });
 

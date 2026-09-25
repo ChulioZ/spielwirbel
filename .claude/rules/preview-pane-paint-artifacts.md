@@ -108,7 +108,7 @@ and screenshot only the resting state** — which is the thing to judge anyway.
 paints, so a `getComputedStyle` sample of a running keyframe reads the start
 value on every call until a screenshot forces a frame — measured on #905; the
 sampling recipe is in
-`.claude/rules/world-artwork-masks-and-single-weight-faces.md`.
+`.claude/rules/single-weight-display-faces.md` §3.
 
 **Toggling `data-scheme` at runtime updates the CUSTOM PROPERTY and not the
 value that USES it** (measured 2026-09-12, #1041). Setting
@@ -129,21 +129,14 @@ value that is not re-resolved, not this one rule. That reads exactly like a
 `color-mix()` on `--shade` having been written wrong, which is the one thing the
 probe exists to rule out.
 
-**Build the dark subtree instead, so nothing has to be re-resolved.** The app's
-second scheme hook is a class, so a fresh element under it is styled once with
-the scheme already in force:
-
-```js
-const card = document.createElement('div');
-card.className = 'theme-card';
-card.setAttribute('data-scheme', 'dark');
-card.innerHTML = '<div class="gd-cover"><button class="gd-img"></button></div>';
-document.body.appendChild(card);
-getComputedStyle(card.querySelector('.gd-img')).boxShadow   // oklab(0.99… / .16) ✅
-```
-
-Run the light case through the same factory as the control — a single dark
-reading proves nothing about which branch produced it.
+**Build the page under the scheme instead, so nothing has to be re-resolved.**
+The recipe that used to live here — a fresh `.theme-card[data-scheme="dark"]`
+subtree, styled once with the scheme in force — went with the design picker's
+theme cards at the flip (#1202); `<html>` is the only scheme hook left. So wear
+the design BEFORE the page renders: pick it on Konto (or `?design=<id>` on a
+dev instance) and `navigate`, rather than flipping the attribute on a page that
+has already painted. Run the other design through the same path as the control —
+a single dark reading proves nothing about which branch produced it.
 
 **The pane lies about focus as well as about pixels.** `document.hasFocus()` is
 permanently false there, so `element.blur()` moves `document.activeElement`

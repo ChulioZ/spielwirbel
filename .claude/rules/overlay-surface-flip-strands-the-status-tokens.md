@@ -120,8 +120,8 @@ focus outlines take the twin `--brand-ring`; `test/tisch-brand-ink.test.js` swee
 ## The guard hole beside it: TWO registries, one sweep
 
 `test/game-detail-hero.test.js` derives the game-detail cover wash's safe opacity
-across every design — and it looped `DESIGNS` (`round-designs.js`, what a ROUND
-wears) only. Since #1184 an **account** wears a design out of a *second*
+across every design — and it looped `DESIGNS` (the round design registry, what
+a ROUND wore) only. Since #1184 an **account** wears a design out of a *second*
 registry, and Der Tisch is the first of those to declare its own `--surface`
 (#1188). So the sweep reported four designs while the page could render a fifth.
 
@@ -135,11 +135,11 @@ at 4.78:1, better than any light design — but the shipped 0.16 was derived whe
 `--surface` was white and a cover could only **darken** it. On a dark design it
 can only lighten, so the argument had inverted while the number happened to hold.
 
-**So: a sweep over "every design" has to say which registry it means.** The two
-coexist deliberately until the flip (#1202) and will until every round loses its
-world, so this is not a transient. When you touch one of these loops, spread both
-lists into it and assert the second is non-empty — an empty filter is the failure
-this section is about, wearing a green tick.
+**So: a sweep over "every design" has to say which registry it means.** The flip
+(#1202) retired the round registry, so there is one list again
+(`DESIGN_REGISTRY`) — but the lesson outlives it: a sweep filtered to "designs
+with X" (a stylesheet, a page colour) must assert its filter is non-empty, or an
+empty filter is the failure this section is about, wearing a green tick.
 
 **Related:** `.claude/rules/design-colour-blocks-are-scheme-gated.md` (the
 voice/colour split, and why a rule reading a gated token is gated as hard as the

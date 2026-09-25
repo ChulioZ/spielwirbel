@@ -37,13 +37,12 @@ function tablePeopleIds(table, partyById) {
 }
 
 async function showTableBuilder(round, session, gamesHint) {
-  /* The round's design, for the same reason `showResults` applies it and not
+  /* The round's marker, for the same reason `showResults` applies it and not
      the hub (#940): this is a routed screen reached cold — a shared link, a
      reload, the Chronik — and `showResults` hands over to us BEFORE its own
-     `applyBackground` line, so a split evening used to render on the Standard
-     palette with no accent, no world and no victory scene. Idempotent, so
-     arriving from the hub pays nothing for it. */
-  applyBackground(round.background, round);
+     `applyMarker` line, so a split evening used to render without the round's
+     colour. Idempotent, so arriving from the hub pays nothing for it. */
+  applyMarker(round);
   currentView = () => showTableBuilder(round, session, gamesHint);
   syncUrl(resultsPath(round.id, session.id));
   setContext(round.name);
@@ -165,9 +164,7 @@ async function showTableBuilder(round, session, gamesHint) {
        confirming a split navigates to the hub, and every other way in is the
        Chronik, the hub's split group or a shared URL. A reveal would therefore
        replay on every single visit, which is what #940's note at
-       views-session.js:837 guards against. The world scene still renders — in
-       its resting end state, which is exactly what a cold load and a
-       reduced-motion reader see on the sibling screen too. */
+       views-session.js:837 guards against. */
     const list = h('<div class="split-tables"></div>');
     const STATE = {
       played: { key: 'sessions.played', icon: 'ti-crown' },

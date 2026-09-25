@@ -71,15 +71,14 @@ good Hangul face on every platform the app targets.
 
 Shipping one is not a near-miss decision: a single Noto Sans KR weight is around
 a megabyte, against ~16 KB for a Latin weight, and the app uses four body
-weights plus eight display faces. That is multiple MB downloaded by everyone to
+weights plus several display faces. That is multiple MB downloaded by everyone to
 serve one locale, for a face the reader's own device already has.
 
-The visible consequence is that a **world design's display face does not apply
-to Korean** — `[data-world] { --font-display: var(--world-font), …}` falls back
-per glyph, so the Sci-Fi and Horror worlds keep their ornaments and backdrops
-but render their Korean headings in the system face. Checked on the design
-screen at 390px: it reads as intended rather than as a bug. Don't "fix" it by
-adding a CJK webfont.
+The visible consequence is that a **design's Latin display face does not apply to
+Korean** — `--font-display` falls back per glyph, so Der Tisch's Bricolage
+headings render in the system face under `ko` (the round worlds, retired at
+#1202, behaved the same). Checked at 390px: it reads as intended rather than as a
+bug. Don't "fix" it by adding a CJK webfont.
 
 ## The particle convention: „을(를)", „이(가)", „은(는)"
 

@@ -82,7 +82,6 @@ I18N.de = {
   'newRound.toast.createdImported': 'Runde erstellt – Spiele übernommen',
   'newRound.toast.quota': 'Rundenlimit erreicht. Bitte lösche zuerst eine Runde.',
 
-  'round.design': 'Design',
   'round.tags': 'Tags',
   'round.startSession': 'Session wirbeln',
   'round.startEmptyTitle': 'Noch keine Session',
@@ -1184,10 +1183,6 @@ I18N.de = {
   'share.toast.copied': 'Ergebnis in die Zwischenablage kopiert',
   'share.toast.failed': 'Teilen hat nicht geklappt',
 
-  'design.crumb': 'Design',
-  'design.title': 'Design',
-  'design.note': 'Wähle ein Design für diese Runde. Hintergrund, Akzentfarbe und alle übrigen Töne passen sich gemeinsam an.',
-  'design.toast.set': 'Design gesetzt',
   'theme.standard': 'Standard',
   'theme.blaugrau': 'Blaugrau',
   'theme.salbei': 'Salbei',
@@ -1196,14 +1191,6 @@ I18N.de = {
   'theme.sand': 'Sand',
   'theme.schiefer': 'Schiefer',
   'theme.pfirsich': 'Pfirsich',
-  'theme.obsidian': 'Obsidian',
-  'theme.forest': 'Wald',
-  'theme.scifi': 'Sci-Fi',
-  'theme.ocean': 'Ozean',
-  'theme.chess': 'Schach',
-  'theme.horror': 'Grusel',
-  'theme.dinos': 'Dinosaurier',
-  'theme.burg': 'Burg',
   'round.marker': 'Farbmarker',
   'marker.title': 'Farbmarker',
   'marker.note': 'Jede Runde trägt eine Farbe. Alle in der Runde sehen sie – jede und jeder im eigenen Design.',
@@ -1215,9 +1202,6 @@ I18N.de = {
   'marker.tisch.moosfilz': 'Moosfilz',
   'marker.tisch.taubenfilz': 'Taubenfilz',
   'marker.tisch.ockerfilz': 'Ockerfilz',
-  'design.group.colors': 'Farben',
-  'design.group.worlds': 'Welten',
-  'design.worlds.note': 'Eine Welt bringt zu den Farben eine eigene Schrift, Verzierungen und einen Hintergrund mit.',
 
 
   'tags.crumb': 'Tags',

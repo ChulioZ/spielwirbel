@@ -378,8 +378,9 @@
        per-round histogram, which stopped meaning anything once designs moved
        from rounds to accounts. Keyed by the designs this instance offers, in
        registry order, so the keys come from code; an offered design nobody
-       wears still gets its line, which is the one reading this tile exists to
-       show before the flip (#1202).
+       wears still gets its line. Since the flip (#1202) an account that has not
+       answered the chooser counts under the face (Der Tisch), exactly as /me
+       resolves it.
 
        The headline is the SWITCH-BACK share: accounts that went from another
        design back to Klassisch and are still on it. Low or high it is not a

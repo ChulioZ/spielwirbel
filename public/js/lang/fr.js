@@ -91,7 +91,6 @@ I18N.fr = {
   'newRound.toast.createdImported': 'Groupe créé – jeux copiés',
   'newRound.toast.quota': 'Limite de groupes atteinte. Supprime d’abord un groupe.',
 
-  'round.design': 'Apparence',
   'round.tags': 'Étiquettes',
   'round.startSession': 'Démarrer une session',
   'round.startEmptyTitle': 'Pas encore de session',
@@ -1141,10 +1140,6 @@ I18N.fr = {
   'share.toast.copied': 'Résultat copié dans le presse-papiers',
   'share.toast.failed': 'Le partage n’a pas fonctionné',
 
-  'design.crumb': 'Apparence',
-  'design.title': 'Apparence',
-  'design.note': 'Choisis une apparence pour ce groupe. Le fond, la couleur d’accent et toutes les autres teintes s’adaptent ensemble.',
-  'design.toast.set': 'Apparence appliquée',
   'theme.standard': 'Standard',
   'theme.blaugrau': 'Gris-bleu',
   'theme.salbei': 'Sauge',
@@ -1153,14 +1148,6 @@ I18N.fr = {
   'theme.sand': 'Sable',
   'theme.schiefer': 'Ardoise',
   'theme.pfirsich': 'Pêche',
-  'theme.obsidian': 'Obsidienne',
-  'theme.forest': 'Forêt',
-  'theme.scifi': 'Science-fiction',
-  'theme.ocean': 'Océan',
-  'theme.chess': 'Échecs',
-  'theme.horror': 'Horreur',
-  'theme.dinos': 'Dinosaures',
-  'theme.burg': 'Château',
   'round.marker': 'Marqueur de couleur',
   'marker.title': 'Marqueur de couleur',
   'marker.note': 'Chaque ronde porte une couleur. Tout le monde dans la ronde la voit, chacun dans son propre design.',
@@ -1172,9 +1159,6 @@ I18N.fr = {
   'marker.tisch.moosfilz': 'Feutre mousse',
   'marker.tisch.taubenfilz': 'Feutre tourterelle',
   'marker.tisch.ockerfilz': 'Feutre ocre',
-  'design.group.colors': 'Couleurs',
-  'design.group.worlds': 'Mondes',
-  'design.worlds.note': 'Un monde ajoute aux couleurs sa propre police, des ornements et un fond.',
 
 
   'tags.crumb': 'Étiquettes',

@@ -13,8 +13,7 @@
 
    Design: Klassisch gets bars; Der Tisch gets its Start-card language — the seat
    bands as stat tiles (the Rundenpuls's `.pulse-tile`) on the card, the same bars
-   in felt/paper on the screen. No per-world styling: the worlds go with the flip
-   (#1202), so they inherit Klassisch's bars in their own --brand.
+   in felt/paper on the screen.
 
    Part of the frontend; all files share one global script scope. Loaded after
    views-round-start.js, which calls hubShelfProfileCard at RENDER time. */
@@ -193,7 +192,7 @@ async function showShelfProfile(rid) {
   let round;
   try { round = await fetchRound(rid); }
   catch { return showHome(); }
-  applyBackground(round.background, round);
+  applyMarker(round);
   setContext(round.name);
   setDocTitle(t('shelfProfile.title'), round.name);
 

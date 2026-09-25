@@ -261,17 +261,18 @@ test('the seeded shelf arrives with provider metadata, so the Regal offers its f
   });
 });
 
-test('each seeded round arrives in its own design, so the home screen shows the worlds', async () => {
+test('each seeded round arrives with its own colour marker, and no retired design', async () => {
   await withDemo({}, async () => {
     const app = createApp();
     const res = await startDemo(app, { locale: 'de' });
     const list = await request(app).get('/api/rounds').set(...auth(res));
-    // The home screen reads the design off the SUMMARY (views-home.js), which is
-    // a different read path from the full round — so asserting it here is what
-    // proves the backdrop, emblem and display face resolve on the tile itself.
+    // The lobby reads the marker off the SUMMARY (views-home.js), which is a
+    // different read path from the full round — so asserting it here is what
+    // proves the tile shows the seeded colour rather than the id's hash.
     seed.DEMO_ROUNDS.forEach((spec, i) => {
-      assert.deepStrictEqual(list.body[i].background, spec.design,
-        `round '${spec.key}': the home tile would render on the standard palette`);
+      assert.strictEqual(list.body[i].marker, spec.marker,
+        `round '${spec.key}': the lobby tile would show some other colour`);
+      assert.strictEqual(list.body[i].background, null, `round '${spec.key}': a retired design was written`);
     });
   });
 });

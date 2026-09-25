@@ -83,7 +83,7 @@ function faceVars(css, id) {
 }
 
 // What the SPA paints for `name` under `design`. --page-bg and --brand are the
-// registry's own page/accent, written inline by applyBackground() — styles.css's
+// registry's own page/accent, written inline by paintDesign() — styles.css's
 // :root value for them is Klassisch's and would be the wrong answer.
 function expected(name, design) {
   if (name === '--page-bg' && design.page) return design.page;

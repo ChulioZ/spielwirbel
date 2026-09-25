@@ -14,12 +14,15 @@
    it as a shared-scope script. One list, no copy
    (.claude/rules/shared-constants-across-the-stack.md).
 
-   WHY resolveMarker TAKES THE DESIGN ID RATHER THAN RESOLVING IT. The legacy
-   fallback has to turn a round's stored `background` into an index, and a
-   pre-#903 round carries only a page hex — resolving that needs
-   round-designs.js, which would make this file depend on another module and
-   break the guard above. So the caller resolves (round-theme.js's roundMarker()
-   does it in one place for the whole frontend) and hands the id in. */
+   THE RETIRED ROUND DESIGNS STILL MATTER, AS DATA (#1202). Rounds owned a
+   design — eight palettes, one dark palette, seven worlds — until the flip
+   removed every one of them from the code. The stored `background` blob stays on
+   the rounds that picked one (there is no migration, CLAUDE.md), and a round that
+   predates markers stores NO index. So the one thing left of a retired design is
+   the marker it becomes, decided here from the stored blob alone: by its `id`
+   (#903 and later), or by its page hex for a round saved before designs had ids.
+   Neither needs the retired registry, which is what lets this file stay
+   dependency-free. */
 
 'use strict';
 
@@ -41,10 +44,12 @@ const MARKER_COUNT = 8;
 
    This table is read-time only — there is no migration (CLAUDE.md), so a round
    that never picked a marker resolves through here on every render, for as long
-   as its `background` survives. It is deleted with the worlds at the flip
-   (#1202); until then an id missing from it is not an error, it falls through
-   to the deterministic default, which is why the specs enumerate all sixteen
-   rather than trusting the lookup to complain. */
+   as its `background` survives. It OUTLIVES the worlds on purpose: the flip
+   (#1202) deleted their code, but not the rounds that wore them, and a Forest
+   round that stored no index must still come out sage rather than whatever its
+   id hashes to. An id missing from it is not an error, it falls through to the
+   deterministic default, which is why the specs enumerate all sixteen rather
+   than trusting the lookup to complain. */
 const LEGACY_MARKER_INDEX = {
   // The eight light palettes, in their own order.
   standard: 0,
@@ -65,6 +70,29 @@ const LEGACY_MARKER_INDEX = {
   dinos: 2,    // #0f6b5f teal     → Salbei
   burg: 7,     // #e8825a ember    → Pfirsich
 };
+
+/* A round saved before designs had ids (pre-#903) stored only the palette's page
+   hex. Only the eight light palettes existed then, so only their pages appear
+   here — a world's page hex without an id was never a world. Lower-case, and
+   compared lower-cased, because the stored value came from a colour input. */
+const LEGACY_PAGE_DESIGN = {
+  '#f4f1ea': 'standard',
+  '#eef2f7': 'blaugrau',
+  '#eaf1ea': 'salbei',
+  '#f6ecf1': 'rose',
+  '#efedf8': 'lavendel',
+  '#f6efe2': 'sand',
+  '#e9eef3': 'schiefer',
+  '#f8ede6': 'pfirsich',
+};
+
+// The retired design id a stored `background` stands for, or null.
+function legacyDesignId(bg) {
+  if (!bg || bg.type !== 'theme') return null;
+  if (bg.id && Object.prototype.hasOwnProperty.call(LEGACY_MARKER_INDEX, bg.id)) return bg.id;
+  const page = bg.page ? String(bg.page).toLowerCase() : '';
+  return Object.prototype.hasOwnProperty.call(LEGACY_PAGE_DESIGN, page) ? LEGACY_PAGE_DESIGN[page] : null;
+}
 
 /* The marker a round gets when nothing else decides one: a stable hash of its
    id, so two rounds created in the same second do not both come out Standard
@@ -88,19 +116,16 @@ function markerIndexFromId(roundId) {
 const isMarkerIndex = (n) => Number.isInteger(n) && n >= 0 && n < MARKER_COUNT;
 
 /* The index a round renders with, in priority order: what it stored, then what
-   its retired design maps to, then the deterministic default. `designId` is the
-   round's RESOLVED design id (round-designs.js's resolveDesign), which is what
-   lets a pre-#903 round — page hex, no id — map correctly without this file
-   knowing any hexes. Pass nothing and a round with a legacy design falls through
-   to the hash, which is a sane colour but not its old one. */
-function resolveMarker(round, { designId } = {}) {
+   its retired design maps to, then the deterministic default. */
+function resolveMarker(round) {
   if (round && isMarkerIndex(round.marker)) return round.marker;
-  if (designId && Object.prototype.hasOwnProperty.call(LEGACY_MARKER_INDEX, designId)) {
-    return LEGACY_MARKER_INDEX[designId];
-  }
+  const designId = legacyDesignId(round && round.background);
+  if (designId) return LEGACY_MARKER_INDEX[designId];
   return markerIndexFromId(round && round.id);
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { MARKER_COUNT, LEGACY_MARKER_INDEX, markerIndexFromId, isMarkerIndex, resolveMarker };
+  module.exports = {
+    MARKER_COUNT, LEGACY_MARKER_INDEX, LEGACY_PAGE_DESIGN, legacyDesignId, markerIndexFromId, isMarkerIndex, resolveMarker,
+  };
 }

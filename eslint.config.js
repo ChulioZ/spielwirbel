@@ -97,7 +97,7 @@ const frontendGlobals = {
   gameRaters: 'readonly',
   retireRecommendations: 'readonly', minimizedRecs: 'readonly',
   STANDARD_ACCENT: 'readonly',
-  applyBackground: 'readonly', setThemeColor: 'readonly', avgColor: 'readonly',
+  paintDesign: 'readonly', setThemeColor: 'readonly', avgColor: 'readonly',
   setScheme: 'readonly', isDarkScheme: 'readonly',
   scoreColor: 'readonly', displayScore: 'readonly',
   // #1191: the RUNG of a design's discrete score ramp, the siblings of the two
@@ -223,7 +223,6 @@ const frontendGlobals = {
   COVER_EXT: 'readonly', COVER_MAX_PIXELS: 'readonly',
   sessionTeams: 'readonly', sessionParties: 'readonly',
   TEAM_TOKEN_MEMBER: 'readonly', TEAM_TOKEN_GUEST: 'readonly',
-  themeAccent: 'readonly', resolveAccent: 'readonly',
   activePopover: 'writable', closePopover: 'readonly', openPopover: 'readonly',
   repositionPopover: 'readonly',
   // the „…" menu's one builder and its order (issue #1195)
@@ -371,7 +370,6 @@ const frontendGlobals = {
   youngRoundPlayed: 'readonly',
   RECAP_CARD_W: 'readonly', RECAP_CARD_PAD: 'readonly', RECAP_CARD_GAP: 'readonly',
   RECAP_CARD_TILE_H: 'readonly', RECAP_CARD_ROW_H: 'readonly', RECAP_CARD_SHELF_H: 'readonly',
-  RECAP_CARD_SCENE_H: 'readonly',
   recapToken: 'readonly', recapPalette: 'readonly', recapFit: 'readonly',
   recapFont: 'readonly', recapPanel: 'readonly', recapCardBlocks: 'readonly',
   recapCardHeight: 'readonly', drawRecapCard: 'readonly', recapCardBlob: 'readonly',
@@ -414,16 +412,16 @@ const frontendGlobals = {
   showWishlist: 'readonly', showRecommendations: 'readonly',
   recReasonText: 'readonly', recFacts: 'readonly', recEmptyKey: 'readonly',
   showArchive: 'readonly', ARCHIVES: 'readonly', acquireWishedExpansion: 'readonly',
-  PALETTES: 'readonly', WORLDS: 'readonly', DESIGNS: 'readonly', resolveDesign: 'readonly', designIcon: 'readonly',
   // round-marker.js (#1187): a round's colour marker, the one thing a round
   // still owns about its own look. Design-neutral by construction, so it is
   // listed with neither registry above.
-  MARKER_COUNT: 'readonly', LEGACY_MARKER_INDEX: 'readonly', markerIndexFromId: 'readonly',
+  MARKER_COUNT: 'readonly', LEGACY_MARKER_INDEX: 'readonly', LEGACY_PAGE_DESIGN: 'readonly',
+  legacyDesignId: 'readonly', markerIndexFromId: 'readonly',
   isMarkerIndex: 'readonly', resolveMarker: 'readonly',
   roundMarker: 'readonly', markerColors: 'readonly', applyMarker: 'readonly', markerStyle: 'readonly',
   // designs.js + design.js (#1184 — the per-USER design layer, distinct from the
   // per-ROUND registry above; the two coexist until the flip, #1202)
-  DESIGN_REGISTRY: 'readonly', FACE_DESIGN: 'readonly', designById: 'readonly',
+  DESIGN_REGISTRY: 'readonly', FACE_DESIGN: 'readonly', CLASSIC_DESIGN: 'readonly', designById: 'readonly',
   selectableDesigns: 'readonly', selectableDesignIds: 'readonly', isSelectableDesign: 'readonly',
   designMarkers: 'readonly', markerOf: 'readonly', markerInk: 'readonly', DEFAULT_MARKER_INK: 'readonly',
   activeDesign: 'readonly', designIs: 'readonly', designViewsReady: 'readonly', designScheme: 'readonly', loadDesignStylesheet: 'readonly',
@@ -611,9 +609,7 @@ module.exports = [
       sourceType: 'script',
       // Browser globals, plus the ONE SPA-adjacent name a page script may read —
       // NOT frontendGlobals. The whole point of this block is that a page script
-      // reaching for an SPA global is a no-undef error. (admin.js read
-      // `resolveDesign` from round-designs.js until the per-round design
-      // histogram gave way to the per-account tile, #1201.)
+      // reaching for an SPA global is a no-undef error.
       // `FACE_DESIGN` (#1198): login.html and kontakt.html load the
       // dependency-free designs.js so js/pages/face.js can stamp the face design
       // onto <html> before the body paints.

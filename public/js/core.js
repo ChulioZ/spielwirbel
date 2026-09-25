@@ -489,7 +489,7 @@ function randomOrderedGames(round, activeGames) {
   return order.map((id) => activeGames.find((g) => g.id === id)).filter(Boolean);
 }
 
-// What a member's palette hex is PAINTED as under the round's scheme (#904).
+// What a member's palette hex is PAINTED as under the design's scheme (#904).
 // MEMBER_COLORS are fixed dark tones, tuned to carry white initials on a light
 // page (#145). On a dark page a dark disc sinks into the background, and the
 // same value is also drawn as TEXT — the voter's name on the vote screen — where
@@ -497,7 +497,7 @@ function randomOrderedGames(round, activeGames) {
 // itself while handing the ink flip to --on-accent, which this scheme has
 // already inverted.
 //
-// Render-time, exactly like resolveAccent(): nothing is stored lifted, so the
+// Render-time: nothing is stored lifted, so the
 // stored value stays a member-colors.js hex and lib/routes/members.js keeps
 // validating the same eight (.claude/rules/shared-constants-across-the-stack.md).
 // A color-mix() is a legal inline background, so this needs no second palette.
@@ -556,14 +556,6 @@ function initials(name) {
 // public/js/seat-picker.js (#1016) — it grew the guest seats and the „+" seat
 // that adds one, and it is a self-contained widget with two callers rather than
 // a shared helper. `initials()` above stays here: nine other surfaces use it.
-
-// Accent color of a round's stored design (fallback: the standard accent).
-// Works with both the full round object and the home-screen summary.
-function themeAccent(bg) {
-  // Same normalization as applyBackground, so a home-screen emblem never shows a
-  // different accent than the round screen it opens.
-  return bg && bg.type === 'theme' && bg.accent ? resolveAccent(bg) : STANDARD_ACCENT;
-}
 
 // Read a single image from the clipboard (used to set a cover image on click).
 // Returns a Blob, or null after showing a toast explaining what went wrong.

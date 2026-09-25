@@ -15,7 +15,7 @@
    Account-mode only: a logged-out visitor (or legacy mode) is sent home. Part of
    the shared frontend scope — loads after account.js/core.js and uses their
    helpers (accountApi/isLoggedIn/accountsActive/refreshInboxBadge, h/esc/app/t/
-   toast, syncUrl/setContext/applyBackground, coverUrl/fmtDateTime/initials). */
+   toast, syncUrl/setContext/applyMarker, coverUrl/fmtDateTime/initials). */
 
 'use strict';
 
@@ -49,7 +49,7 @@ async function showFriends(opts) {
   syncUrl('/freunde');
   setContext(t('friends.title'));
   setDocTitle(t('friends.title'));
-  applyBackground(null);
+  applyMarker(null);
   app.innerHTML = '<p class="muted">…</p>';
 
   let lists;
