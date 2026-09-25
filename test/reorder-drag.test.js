@@ -48,7 +48,11 @@ test('the vendored SortableJS is byte-identical to the devDependency (#1180)', (
 test('the vendored licence travels with the file (#1180)', () => {
   const src = fs.readFileSync(VENDORED, 'utf8');
   const { version } = require('sortablejs/package.json');
-  assert.match(src.slice(0, 200), new RegExp(`^/\\*! Sortable ${version.replace(/\./g, '\\.')} - MIT`),
+  // Escape every regex metacharacter, not just the dots (CodeQL
+  // js/incomplete-sanitization) — a version string is ours, but the escape
+  // should be the complete one wherever it is written.
+  const reEscape = (x) => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  assert.match(src.slice(0, 200), new RegExp(`^/\\*! Sortable ${reEscape(version)} - MIT`),
     'the /*! … MIT */ banner is the notice the production build ships verbatim');
   const lic = fs.readFileSync(path.join(ROOT, 'public', 'js', 'vendor', 'sortable.LICENSE.txt'));
   assert.ok(lic.equals(fs.readFileSync(path.join(path.dirname(UPSTREAM), 'LICENSE'))),
