@@ -4486,3 +4486,262 @@
     margin-top: 0;
   }
 }
+
+/* ===== #1216 — Leer, jung und Fehler: empty, young and error states ===== */
+/* Source: docs/design/ocean/Ocean-O7-Leerzustaende.dc.html. O7's three rules:
+   an empty state says what happens next, shows ONE action (a second at most as
+   a side road), and is never grey — an empty shelf is simply water. Its five
+   parts (O7.6): the place, a picture from Ocean's own vocabulary, a statement,
+   one sentence, one action. The place is the screen's own h1 directly above,
+   so it is not printed a second time inside the card.
+
+   Every rule here reads the gated colour block, so every rule is gated
+   (test/ocean-states.test.js). No new token: each pair is one the colour
+   block already measures, and the few measured on the rendered page are
+   stated where they are used. */
+
+/* --- The card (O7.1) -------------------------------------------------------
+   A surface card, centred, the picture above a Kartentitel and a sentence.
+   `.empty` is `emptyState()`'s one component, so every empty screen — the
+   Regal, the Chronik, the Pokale, the off-shelf lists, the suggestions, the
+   tags, the hub's empty table — takes this at once. The flex column replaces
+   the base's per-child margins with one gap. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 30px 24px;
+  border-radius: var(--radius-xl);
+  color: var(--ink-soft);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .empty > .empty__icon { margin: 0 0 2px; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .empty__title {
+  font-size: var(--text-xl);
+  line-height: 1.15;
+  color: var(--ink);
+}
+/* --ink-soft on --surface is 7.0:1 (the colour block's own figure). */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .empty__text {
+  margin: 0;
+  max-width: 46ch;
+  font-size: var(--text-md);
+  font-weight: 600;
+  line-height: 1.5;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .empty > .empty__actions {
+  align-self: stretch;
+  margin-top: 6px;
+}
+
+/* --- The pictures (O7.1) ----------------------------------------------------
+   „Bild aus dem eigenen Vokabular — nie ein generisches Icon": by default the
+   HOLLOW bubble, a dashed ring round the screen's own glyph — „gestrichelte
+   Kanten markieren: hier kommt noch etwas hin". The ring is decoration (the
+   title carries the meaning), so --bubble-rim is not held to 3:1; the glyph is
+   --brand, 6.1:1 on --surface. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .empty__icon {
+  width: 62px;
+  height: 62px;
+  background: transparent;
+  border: 2px dashed var(--bubble-rim);
+  box-shadow: none;
+  color: var(--brand);
+  font-size: 28px;
+}
+/* The Regal and the hub's empty table: the PEARL — the full bubble, because an
+   empty shelf is where the first game will land. The empty table keeps its
+   tornado (it echoes the shell's own glyph below it); the Regal's pearl is bare,
+   as O7.1 draws it. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) :is(.regal-head ~ .empty, .empty--table) > .empty__icon {
+  border: 0;
+  background: radial-gradient(circle at 32% 28%, var(--bubble-hi) 0%, var(--bubble-1) 30%, var(--bubble-2) 70%, var(--bubble-3) 100%);
+  box-shadow: 0 8px 16px var(--cast);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .regal-head ~ .empty > .empty__icon .ti { display: none; }
+/* The Chronik: an empty TIDE LINE — the scalloped band a session will one day
+   sit on. The Pokale: a row of trail bubbles, the wins still to come. Both are
+   pictures with no glyph; the trophy/history glyph is aria-hidden already. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) :is(.timeline > .empty, .empty:has(> .empty__icon .ti-trophy)) > .empty__icon {
+  height: 20px;
+  border: 0;
+  border-radius: 0;
+  background-repeat: repeat-x;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) :is(.timeline > .empty, .empty:has(> .empty__icon .ti-trophy)) > .empty__icon .ti { display: none; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .timeline > .empty > .empty__icon {
+  width: 120px;
+  background-image: radial-gradient(circle at 50% 100%, var(--bubble-rim) 6px, transparent 7px);
+  background-size: 24px 14px;
+  background-position: 0 100%;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .empty:has(> .empty__icon .ti-trophy) > .empty__icon {
+  width: 150px;
+  background-image: radial-gradient(circle at 50% 50%, var(--bubble-trail) 8px, transparent 9px);
+  background-size: 30px 20px;
+}
+
+/* --- The first round (O7.2) ---------------------------------------------------
+   The lobby with no round at all: no card, just the shell on the water, the
+   statement, a sentence and one pill. `.lobby-cta` stays ONE link (a control
+   inside it would be invalid), so the pill is its `__action` span painted as
+   the primary button — the whole block is still the one target. The shell is
+   two pseudo-elements on the medallion, whose glyph is aria-hidden. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .lobby-cta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 28px 16px;
+  background: transparent;
+  border: 0;
+  color: var(--ink-soft);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .lobby-cta:hover { background: transparent; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .lobby-cta > .lobby-cta__icon {
+  position: relative;
+  width: 190px;
+  height: 130px;
+  margin: 0 0 4px;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .lobby-cta > .lobby-cta__icon .ti { display: none; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .lobby-cta > .lobby-cta__icon::before,
+:root[data-design="ocean"]:not([data-scheme="dark"]) .lobby-cta > .lobby-cta__icon::after {
+  content: "";
+  position: absolute;
+  left: 10px;
+  width: 170px;
+  box-sizing: border-box;
+  border: 3px solid var(--shell-edge);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .lobby-cta > .lobby-cta__icon::before {
+  top: 0;
+  height: 62px;
+  border-bottom: 0;
+  border-radius: 85px 85px 0 0 / 62px 62px 0 0;
+  background: repeating-conic-gradient(from 200deg at 50% 100%, var(--sand) 0 5deg, var(--sand-deep) 5deg 10deg);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .lobby-cta > .lobby-cta__icon::after {
+  top: 54px;
+  height: 76px;
+  border-radius: 0 0 85px 85px / 0 0 76px 76px;
+  background: repeating-conic-gradient(from 100deg at 50% 0%, var(--sand-light) 0 5deg, var(--sand-deep-soft) 5deg 10deg);
+  box-shadow: 0 14px 22px var(--cast);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .lobby-cta__title { line-height: 1.15; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .lobby-cta__sub {
+  margin: 0;
+  max-width: 40ch;
+  font-size: var(--text-md);
+  font-weight: 600;
+  line-height: 1.5;
+}
+/* The pill: --on-accent on the accent, the primary button's own pair (6.3:1
+   measured on the rendered lobby). */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .lobby-cta__action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+  max-width: 360px;
+  width: 100%;
+  margin: 6px auto 0;
+  min-height: var(--target-button);
+  padding: 14px 20px;
+  box-sizing: border-box;
+  border-radius: var(--radius-pill);
+  background: var(--brand);
+  color: var(--on-accent);
+  box-shadow: 0 12px 24px var(--cast-button);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .lobby-cta:hover .lobby-cta__action { background: var(--brand-strong); }
+
+/* --- The young round (O7.3) --------------------------------------------------
+   Games on the shelf, no session yet: the shell stays the centre, and one line
+   under it says what is waiting. --ink and --ink-soft on the page clear AA on
+   every water stop the hub sits on (the colour block's figures: 8.7:1 and
+   above for --ink, 6.3:1 on the page for --ink-soft). */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .ocean-young {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  margin: 0;
+  text-align: center;
+  line-height: 1.4;
+  color: var(--ink);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .ocean-young__ready { font-weight: 700; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .ocean-young__none { font-weight: 600; color: var(--ink-soft); }
+
+/* --- The demo (O7.4) ---------------------------------------------------------
+   The Bändchen: the example round is marked in Ocean's sun, the one yellow the
+   design has, so it cannot be taken for a round of one's own. Every child takes
+   --ink — the base's --warn glyph and --brand links are not text-safe on the
+   sun. The register CTA becomes the sheet's dark pill (--surface on --ink).
+   Measured on the rendered page (#1216): --ink on --gold 11.7:1, --surface on
+   --ink 14.5:1, the pill against the band 11.7:1. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .demo-banner {
+  gap: 8px 14px;
+  padding: 10px 16px;
+  background: var(--gold);
+  border-bottom: 1px solid var(--gold-edge);
+  color: var(--ink);
+  font-weight: 600;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .demo-banner .ti,
+:root[data-design="ocean"]:not([data-scheme="dark"]) .demo-banner__terms { color: var(--ink); }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .demo-banner__terms:hover { color: var(--ink-soft); }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .demo-banner__cta {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target-control);
+  padding: 0 16px;
+  border-radius: var(--radius-pill);
+  background: var(--ink);
+  color: var(--surface);
+  text-decoration: none;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .demo-banner__cta:hover {
+  background: var(--brand-strong);
+  color: var(--surface);
+}
+
+/* --- When a search cannot deliver (O7.5) ---------------------------------------
+   „Fehler sind Leerzustände mit einem zweiten Versuch": the add-game search's
+   no-hit and BGG-down lines take the empty state's card inside the sheet — the
+   disc, the app's own message as the statement. The two ways on („Von BGG
+   übernehmen", „Selbst eintragen") are the sheet's own row directly below, so
+   the card carries no buttons of its own. A failure's disc is the danger pair
+   (--danger on --danger-soft, 5.0:1 measured — a glyph beside a headline);
+   „nothing found" keeps the calm blue one. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .sheet .add-search__msg.is-fail {
+  margin: 4px 0 14px;
+  padding: 22px 20px;
+  text-align: center;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-1);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .sheet .add-search__msg.is-fail > p {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--ink);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .sheet .add-search__msg.is-fail > .sheet-disc {
+  width: 54px;
+  height: 54px;
+  margin-bottom: 12px;
+  font-size: 26px;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .sheet .add-search__msg.is-fail > .sheet-disc:has(.ti-alert-triangle) {
+  background: var(--danger-soft);
+  color: var(--danger);
+}

@@ -39,3 +39,20 @@ function emptyState({ icon, title, text }) {
        <p class="empty__text">${esc(text)}</p>
      </div>`);
 }
+
+/* One ACTION on an empty state (#1216, Ocean O7.1): „ein leerer Zustand zeigt
+   eine Handlung, höchstens eine zweite als Nebenweg". Appended into the same
+   `.empty__actions` row the empty table (#1269) uses, so every design already
+   lays it out; only Ocean's call sites add one today, and Klassisch's empty
+   states stay notices.
+
+   A real <button> with the app's own label — the empty state never invents a
+   string, it lends the screen's existing action a second, nearer place. */
+function emptyStateAction(node, { icon, label, primary = false, onClick }) {
+  let row = node.querySelector(':scope > .empty__actions');
+  if (!row) row = node.appendChild(h('<div class="empty__actions"></div>'));
+  const btn = h(`<button type="button" class="btn${primary ? ' btn--primary' : ''}"><i class="ti ${esc(icon)}" aria-hidden="true"></i> ${esc(label)}</button>`);
+  btn.addEventListener('click', onClick);
+  row.appendChild(btn);
+  return btn;
+}

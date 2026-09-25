@@ -75,7 +75,14 @@ function renderRegalTab(round, activeGames) {
   // the toolbar's (#1278 moved only the toolbar's import into the add sheet).
   const gridAddTile = tisch ? [] : [addTile];
 
-  if (activeGames.length === 0) {
+  if (activeGames.length === 0 && ocean) {
+    /* Ocean's empty shelf (#1216, O7.1) carries its two ways in ON the card —
+       the same two tiles' labels and handlers, as the card's one action and its
+       side road — so the dashed tiles below would offer them a second time. */
+    const empty = gamesSec.appendChild(emptyState({ icon: 'ti-cards', title: t('games.emptyTitle'), text: t('games.empty') }));
+    emptyStateAction(empty, { icon: 'ti-plus', label: t('round.addGame'), primary: true, onClick: () => showAddGame(round) });
+    if (canImportBgg()) emptyStateAction(empty, { icon: 'ti-download', label: t('bggImport.tile'), onClick: () => showBggImport(round) });
+  } else if (activeGames.length === 0) {
     gamesSec.appendChild(emptyState({ icon: 'ti-cards', title: t('games.emptyTitle'), text: t('games.empty') }));
     grid.append(...gridAddTile);
     if (canImportBgg()) grid.appendChild(importTile);
@@ -424,11 +431,16 @@ function renderRegalTab(round, activeGames) {
   // toolbar on a tablet (O6.7), the round plus bubble on a phone (O6.2). All
   // are rendered and CSS shows one per width; `display: none` drops the others
   // from the accessibility tree, so no width announces two.
-  if (ocean) {
+  // An EMPTY shelf takes neither the pill nor the bubble (#1216): its empty
+  // state carries the add action itself, and a second one beside it is noise.
+  const oceanAdds = ocean && activeGames.length > 0;
+  if (oceanAdds) {
     const bar = h(`<button type="button" class="btn btn--primary btn--sm regal-add regal-add--bar"><i class="ti ti-plus" aria-hidden="true"></i> <span>${esc(t('round.addGame'))}</span></button>`);
     bar.addEventListener('click', () => showAddGame(round));
     gamesTools.appendChild(bar);
-    gamesSec.appendChild(oceanOffShelfBand(round));
+  }
+  if (ocean) gamesSec.appendChild(oceanOffShelfBand(round));
+  if (oceanAdds) {
     const fab = h(`<button type="button" class="regal-fab" aria-label="${esc(t('round.addGame'))}"><i class="ti ti-plus" aria-hidden="true"></i></button>`);
     fab.addEventListener('click', () => showAddGame(round));
     gamesSec.appendChild(fab);
