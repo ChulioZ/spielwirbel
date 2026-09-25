@@ -2982,6 +2982,8 @@
 :root[data-design="tisch"][data-scheme="dark"] .vote {
   --surface: var(--paper);
   --ink: var(--paper-ink);
+  --control-fill: var(--paper-raised); /* paper controls — see `.tafel` */
+  --control-edge: var(--paper-edge);
   --ink-soft: var(--paper-ink-soft);
   --line: var(--paper-edge);
   /* --sunken with them, and it is not decoration: it is the WELL token, and
@@ -3139,6 +3141,8 @@
 :root[data-design="tisch"][data-scheme="dark"] .vote__card {
   --surface: var(--paper);
   --ink: var(--paper-ink);
+  --control-fill: var(--paper-raised); /* paper controls — see `.tafel` */
+  --control-edge: var(--paper-edge);
   --ink-soft: var(--paper-ink-soft);
   --line: var(--paper-edge);
   --sunken: var(--paper-raised);
@@ -3390,6 +3394,12 @@
   --ink-soft: var(--paper-ink-soft);
   --line: var(--paper-edge);
   --sunken: var(--paper-raised);
+  /* A control on the paper is a PAPER control — the overlay block above re-points
+     these two for the same reason. Without them a `.btn` here (the row's
+     „Spielen") kept the felt's dark --control-fill under the paper ink this
+     block sets: 1.57:1, measured. */
+  --control-fill: var(--paper-raised);
+  --control-edge: var(--paper-edge);
   background: linear-gradient(180deg, var(--paper), var(--paper-raised));
   color: var(--paper-ink);
   border-radius: var(--radius-md);
@@ -3903,6 +3913,8 @@
   --ink: var(--paper-ink);
   --ink-soft: var(--paper-ink-soft);
   --line: var(--paper-edge);
+  --control-fill: var(--paper-raised); /* paper controls — see `.tafel` */
+  --control-edge: var(--paper-edge);
   background: linear-gradient(180deg, var(--paper), var(--paper-raised));
   color: var(--paper-ink);
 }
@@ -6481,6 +6493,8 @@
    travels with it. The score pill carries its own ink by construction. */
 :root[data-design="tisch"][data-scheme="dark"] .timeline .session-card {
   --ink: var(--paper-ink);
+  --control-fill: var(--paper-raised); /* paper controls — see `.tafel` */
+  --control-edge: var(--paper-edge);
   --ink-soft: var(--paper-ink-soft);
   --danger: var(--accent-deep);
   gap: 14px;
