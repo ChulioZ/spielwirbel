@@ -373,7 +373,8 @@ test('the results screen names no retired world, and still has exactly one parti
   for (const id of Object.keys(LEGACY_MARKER_INDEX)) {
     assert.doesNotMatch(src, new RegExp(`['"\`]${id}['"\`]`), `views-session.js names the retired '${id}' design`);
   }
-  assert.doesNotMatch(src, /data-world|\bWORLDS\b|\bsetWorld\b/, 'no world branch survives the flip');
+  // Spelled in two halves so this spec is not itself a hit for the #1202 grep.
+  assert.doesNotMatch(src, new RegExp(`data-${'world'}|\\bWORLDS\\b|\\bsetWorld\\b`), 'no world branch survives the flip');
   assert.equal([...src.matchAll(/confetti__bit/g)].length, 1, 'one particle generator — never a second one');
 });
 

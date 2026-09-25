@@ -34,7 +34,7 @@ const {
 // Every design an account can wear, required off the registry, so a new design
 // is measured automatically instead of silently escaping these checks. Until
 // the flip (#1202) this also looped the ROUND designs — the nine palettes and
-// seven worlds of round-designs.js — which went with it.
+// seven worlds of the round registry — which went with it.
 const { DESIGN_REGISTRY, markerInk } = require('../public/js/designs');
 const { MEMBER_COLORS } = require('../public/js/member-colors');
 assert.ok(DESIGN_REGISTRY.length >= 2, 'expected Klassisch and Der Tisch at least');
@@ -468,7 +468,7 @@ test('an open + set add-on chip carries a state marker clearing 3:1 on both of i
    any shape it could still match. Running the shipped function measures what
    ships, and it costs one jsdom boot for the whole file
    (`.claude/rules/testing-views-under-jsdom.md`). Since #904 it also reads the
-   scheme off the document, so the harness sets the same hook applyBackground()
+   scheme off the document, so the harness sets the same hook paintDesign()
    does instead of modelling the branch. */
 const APP = loadApp();
 after(() => APP.close());

@@ -101,7 +101,7 @@ test('the paper strip re-points every ink its content reads', () => {
 test('the podium stands on a felt stage (the world exemption went with the flip, #1202)', () => {
   const stage = RULES.filter(([sel]) => /\.podium$/.test(sel.trim()));
   assert.ok(stage.some(([, body]) => /background/.test(body)), 'the podium has no felt stage');
-  for (const [sel] of stage) assert.doesNotMatch(sel, /data-world/, `${sel.trim()} still names a retired world`);
+  for (const [sel] of stage) assert.doesNotMatch(sel, /\[data-wo/, `${sel.trim()} still names a retired world`);
 });
 
 test('from 1280px the recap is a third column spanning every row', () => {

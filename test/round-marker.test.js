@@ -298,7 +298,7 @@ for (const design of ['klassisch', 'tisch']) {
     const tile = dom.document.querySelector('.round-card:not(.round-card--new)');
     const want = designMarkers(design)[LEGACY_MARKER_INDEX.forest];
     assert.match(tile.getAttribute('style'), new RegExp(`--marker:${want.color}`));
-    assert.equal(tile.hasAttribute('data-world'), false, 'no world hook survives the flip');
+    assert.equal(tile.dataset.world, undefined, 'no world hook survives the flip');
     assert.equal(/--brand/.test(tile.getAttribute('style')), false, 'the world accent is not written');
     assert.equal(tile.querySelector('.round-card__emblem').style.background, 'var(--marker)');
     assert.ok(tile.querySelector('.round-card__emblem .ti-tornado'), 'the app glyph, not a world icon');

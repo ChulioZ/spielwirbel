@@ -23,7 +23,7 @@
  * .claude/rules/design-stylesheets-are-shell-assets.md.
  *
  * Two things that are NOT here and must not move here:
- *   - --page-bg and --brand. applyBackground() writes them as inline custom
+ *   - --page-bg and --brand. paintDesign() writes them as inline custom
  *     properties on <html>, which outrank every stylesheet, so a copy here
  *     would be dead text that reads as the source of truth. They are the
  *     registry's `page`/`accent` (public/js/designs.js).
@@ -5990,7 +5990,7 @@
    light round too, where the gated block does not match. They paint from the
    app's own tokens (--control-fill, --line, --accent, --brand-edge …), which
    the overlay re-point above turns into the paper family on this design and
-   which stay the round's palette elsewhere — never from a --paper-* name.
+   which stay the design's own elsewhere — never from a --paper-* name.
    =========================================================================== */
 
 /* --- The rest of the overlay's re-point ------------------------------------

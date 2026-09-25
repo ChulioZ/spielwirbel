@@ -164,9 +164,7 @@ async function showTableBuilder(round, session, gamesHint) {
        confirming a split navigates to the hub, and every other way in is the
        Chronik, the hub's split group or a shared URL. A reveal would therefore
        replay on every single visit, which is what #940's note at
-       views-session.js:837 guards against. The world scene still renders — in
-       its resting end state, which is exactly what a cold load and a
-       reduced-motion reader see on the sibling screen too. */
+       views-session.js:837 guards against. */
     const list = h('<div class="split-tables"></div>');
     const STATE = {
       played: { key: 'sessions.played', icon: 'ti-crown' },

@@ -45,9 +45,8 @@
   color-scheme: light;
   /* The design's two colours: page background + accent. Everything else is
      derived from them so the whole UI matches. Written as inline custom
-     properties on <html> by applyBackground (round-theme.js) — from the ROUND's
-     design inside a round, and from the USER's everywhere else (#1184). The
-     values below are Klassisch, which is why its registry entry declares no
+     properties on <html> by paintDesign (round-theme.js) from the design the
+     ACCOUNT wears (#1184; rounds own no design since #1202). The values below are Klassisch, which is why its registry entry declares no
      colours of its own: this block IS that design. */
   --page-bg: #f4f1ea;
   --brand: #c2410c;       /* accent color */
@@ -187,8 +186,8 @@
      #e9eef3 — measuring against white alone is too lenient and was how --good
      (3.3:1 on white) and, less obviously, --warn and --danger (4.3/4.1:1 on
      Schiefer) all shipped below AA (#145). These three land at 4.54–4.55:1
-     there. Re-check against the darkest design page (round-designs.js), not white, if you retune
-     them or add a darker theme. */
+     there. Re-check against every design's page (public/js/designs.js), not white, if you
+     retune them or add a design. */
   --good: #117c38;
   --warn: #ae5009;
   --danger: #d02424;
@@ -444,7 +443,7 @@ body {
   color: var(--ink);
   /* Calm, theme-derived backdrop: a soft accent glow falling from the top and
      a barely-there neutral paper grain over the page color. Both react to the
-     round's design purely via --brand/--page-bg — no JS involved. */
+     worn design purely via --brand/--page-bg — no JS involved. */
   background-color: var(--page-bg);
   background-image:
     radial-gradient(120% 70% at 50% 0%, var(--page-glow), transparent 70%),
@@ -2947,7 +2946,7 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
    — same game, same colour; different games, visibly different colours.
 
    Both stops derive from --brand (per .claude/rules/theme-derived-colors.md),
-   so the placeholders follow the round's design instead of fighting it. The
+   so the placeholders follow the worn design instead of fighting it. The
    base rule below is the fallback: a theme-derived light→dark brand wash with
    no per-game hue variety. Browsers with relative colour syntax additionally
    rotate the hue by --cover-h, which is what actually makes two games differ.
@@ -2974,7 +2973,7 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
    rather than used as an absolute hue: a full 360° spin makes every round look
    the same (the brand hue stops mattering) and puts cold blues on a warm theme.
    A band keeps two games clearly different while the whole shelf still reads as
-   belonging to this round's design. */
+   belonging to the worn design. */
 @supports (color: oklch(from red l c h)) {
   .cover-ph {
     --cover-shift: calc((var(--cover-h, 180) - 180) * 0.45);
@@ -3124,7 +3123,7 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
 .tag .ti { font-size: var(--text-xs); vertical-align: -1px; }
 /* Neutral (theme-derived) metadata pill. It used to be a fixed `#e0f2fe`/
    `#075985` blue, which sat right next to the accent-derived `.tag--custom` on
-   the game-detail head — one chip following the round's theme, its neighbour
+   the game-detail head — one chip following the design's, its neighbour
    staying blue on all eight of them. The retired `.tag--platform` two lines
    below carried a comment citing theme-derived-colors.md for exactly this
    reason; this pill was simply missed in that pass.
@@ -3344,10 +3343,9 @@ body.vote-screen .topbar { display: none; }
 /* ---- Logged-out landing page (issue #322, rebuilt in #1090) ---- */
 /* Renders in accounts mode for a logged-out visitor at GET /. Reuses the
    .auth-screen body class (which hides the top-bar home/context/feedback), but
-   lays out scrollable marketing sections instead of one centred card. Carries no
-   round design of its own (applyBackground(null)), so since #1184 it renders in
-   the visitor's own design — Klassisch unless one has been picked; every colour
-   is theme-derived (.claude/rules/theme-derived-colors.md). */
+   lays out scrollable marketing sections instead of one centred card. It renders
+   in the visitor's design — the face, Der Tisch since #1202, for a logged-out
+   visitor; every colour is theme-derived (.claude/rules/theme-derived-colors.md). */
 .landing {
   max-width: var(--w-landing);
   margin: 0 auto;
@@ -6346,7 +6344,7 @@ a.k-tile:focus-visible,
    sessions list when a game has no cover, rating, session or tag. One solid
    surface with a clear invitation reads as intentional, where the same page
    made of four near-empty widgets read as broken. Tinted off --brand so it
-   belongs to the round's design (.claude/rules/theme-derived-colors.md). */
+   belongs to the worn design (.claude/rules/theme-derived-colors.md). */
 .gd-onboard {
   margin-top: 18px;
   padding: 20px;
@@ -7351,7 +7349,7 @@ a.k-tile:focus-visible,
    It is NOT the only signal: `.ds-row--picked` already carries the border and
    the tint, and the checkbox stays, so state is never on colour alone
    (.claude/rules/accessibility-contrast-and-modals.md §3). Both colours come
-   from the round's theme tokens rather than a literal
+   from the design's tokens rather than a literal
    (.claude/rules/theme-derived-colors.md), which is also why the unticked spine
    is `--sunken` and not a fixed grey: on a dark design it has to be the lighter
    of the two.
