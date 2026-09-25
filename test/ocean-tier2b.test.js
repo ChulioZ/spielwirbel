@@ -273,8 +273,14 @@ test('Klassisch renders Konto without cards', async (t) => {
 // --- the stylesheet -----------------------------------------------------------
 
 const SHEET = read('public/css/designs/ocean.css')
-  .replace(/\/\*[\s\S]*?\*\//g, (c) => (c.includes('===== #1219') ? '/*#1219*/' : ''));
-const SECTION = SHEET.slice(SHEET.indexOf('/*#1219*/') + '/*#1219*/'.length);
+  .replace(/\/\*[\s\S]*?\*\//g, (c) => {
+    if (c.includes('===== #1219')) return '/*#1219*/';
+    return c.startsWith('/* ===== #') ? '/*§*/' : '';
+  });
+// The section runs to the NEXT section header, not to the end of the file: a
+// later slice's rules are not #1219's (#1218's spec learned this from #1221).
+const AFTER = SHEET.slice(SHEET.indexOf('/*#1219*/') + '/*#1219*/'.length);
+const SECTION = AFTER.includes('/*§*/') ? AFTER.slice(0, AFTER.indexOf('/*§*/')) : AFTER;
 const GATE = ':root[data-design="ocean"]:not([data-scheme="dark"])';
 
 function topLevelParts(selector) {
