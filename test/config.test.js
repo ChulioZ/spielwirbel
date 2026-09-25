@@ -55,6 +55,9 @@ const OFF = {
   donateUrl: null,
   demo: false,
   expansionsPerGame: null,
+  // Saved session filters (#1328): ALWAYS numbers, accounts on or off — that
+  // cap bounds the hub's chip row, not abuse (lib/quota.js).
+  savedFilters: { perRound: 6, nameMax: 40 },
   designs: selectableDesignIds({ production: false }),
   faceDesign: FACE_DESIGN,
 };

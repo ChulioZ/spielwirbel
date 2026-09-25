@@ -27,8 +27,9 @@
 /* --- Der Tisch's row lists (#1273, T15a) --------------------------------------
    T15a draws every form sheet as a head over ROWS — 44px raised slips, each a
    label with its value or control — and at most one primary action, a full-width
-   48px plate under them. Under Der Tisch the players, owners and cover editors
-   build that composition; every other design keeps the Klassisch body byte for
+   48px plate under them. Under Der Tisch — and Ocean, whose O15a draws the same
+   form (#1217, `formSheetDesign` in sheet.js) — the players, owners and cover
+   editors build that composition; every other design keeps the Klassisch body byte for
    byte, which is why each builder branches ONCE at the top rather than sprinkling
    the design through its markup.
 
@@ -56,7 +57,7 @@ function editorActions(primary) {
 function openPlayersPopover(ctx, anchor) {
   const { game, updateGame } = ctx;
   openEditor(anchor, 'players', t('detail.onboard.players'), (el, close) => {
-    const tisch = designIs('tisch');
+    const formRows = formSheetDesign();
     const min = h('<input class="input" inputmode="numeric" />');
     const max = h('<input class="input" inputmode="numeric" />');
     if (Number.isInteger(game.minPlayers)) min.value = game.minPlayers;
@@ -79,7 +80,7 @@ function openPlayersPopover(ctx, anchor) {
     [min, max].forEach((inp) => inp.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') { e.preventDefault(); save(); }
     }));
-    if (tisch) {
+    if (formRows) {
       // One row, „Personen (min.–max.)" and the pair — the label the add-game
       // form already uses for the same two fields. The fields get the names
       // their placeholders only suggest; a placeholder is not a label.
@@ -140,14 +141,14 @@ function openOwnersPopover(ctx, anchor) {
   const { round, game, updateGame } = ctx;
   openEditor(anchor, 'owners', t('detail.onboard.owners'), (el, close) => {
     const selected = new Set(game.ownerIds || []);
-    const tisch = designIs('tisch');
-    el.appendChild(tisch ? renderOwnerRows(round, selected) : renderOwnerChips(round, selected));
+    const formRows = formSheetDesign();
+    el.appendChild(formRows ? renderOwnerRows(round, selected) : renderOwnerChips(round, selected));
     const okBtn = h(`<button class="btn btn--primary">${esc(t('common.apply'))}</button>`);
     okBtn.addEventListener('click', () => {
       close();
       updateGame({ ownerIds: [...selected] });
     });
-    if (tisch) { el.appendChild(editorActions(okBtn)); return; }
+    if (formRows) { el.appendChild(editorActions(okBtn)); return; }
     const row = h('<div class="pp-row"></div>');
     row.appendChild(okBtn);
     el.appendChild(row);
@@ -238,8 +239,8 @@ function openImagePopover(ctx, anchor) {
     // Under Der Tisch the secondary ways to a cover are ROWS and pasting is the
     // one primary, under them (T15a); every other design keeps the buttons in
     // the order they always had. `rows` is where the secondaries go.
-    const tisch = designIs('tisch');
-    const rows = tisch ? h('<div class="editor-rows"></div>') : el;
+    const formRows = formSheetDesign();
+    const rows = formRows ? h('<div class="editor-rows"></div>') : el;
     const paste = h(`<button class="btn btn--primary">${esc(t('detail.pasteImage'))}</button>`);
     paste.addEventListener('click', async () => {
       const blob = await readClipboardImage();
@@ -247,7 +248,7 @@ function openImagePopover(ctx, anchor) {
       close();
       updateGame({ imageBlob: blob });
     });
-    if (!tisch) el.appendChild(paste);
+    if (!formRows) el.appendChild(paste);
 
     // Re-fetch the cover from the provider this game is linked to (#518).
     // Offered whether or not there is a cover today, so it doubles as a repair
@@ -268,7 +269,7 @@ function openImagePopover(ctx, anchor) {
       // (.claude/rules/popover-width-is-shrink-to-fit.md), while the toast has
       // room and reads better spelled out.
       const fetchLabel = t('detail.coverFromProvider', { provider: providerLabelShort(game.source.provider) });
-      const fetchBtn = tisch ? editorRowButton('ti-download', fetchLabel)
+      const fetchBtn = formRows ? editorRowButton('ti-download', fetchLabel)
         : h(`<button class="btn">${esc(fetchLabel)}</button>`);
       fetchBtn.addEventListener('click', async () => {
         close();
@@ -310,12 +311,12 @@ function openImagePopover(ctx, anchor) {
     }
 
     if (game.image) {
-      const rm = tisch ? editorRowButton('ti-trash', t('addGame.removeImage'), 'danger')
+      const rm = formRows ? editorRowButton('ti-trash', t('addGame.removeImage'), 'danger')
         : h(`<button class="btn btn--ghost">${esc(t('addGame.removeImage'))}</button>`);
       rm.addEventListener('click', () => { close(); updateGame({ removeImage: true }); });
       rows.appendChild(rm);
     }
-    if (tisch) {
+    if (formRows) {
       // A cover-less game with no provider link has no secondary at all, and an
       // empty rows box would still cost the card its gap.
       if (rows.children.length) el.appendChild(rows);

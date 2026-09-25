@@ -19,7 +19,8 @@
 // Every entry point calls showAddGame, so the design decides here and nowhere
 // else; Klassisch goes straight to the form, exactly as before.
 function showAddGame(round, opts = {}) {
-  if (designIs('tisch')) return showAddGameSearch(round, opts);
+  // Ocean draws the same search-first step (#1212, O3.5/O6.4).
+  if (designIs('tisch') || designIs('ocean')) return showAddGameSearch(round, opts);
   return showAddGameForm(round, opts);
 }
 

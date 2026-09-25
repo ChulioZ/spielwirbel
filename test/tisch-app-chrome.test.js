@@ -19,7 +19,12 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const { loadApp } = require('./support/dom');
-const { rulesOf, mediaBlocks } = require('./support/css');
+const { rulesOf, mediaBlocks, bodyOf } = require('./support/css');
+const theme = require('./support/theme');
+const { DESIGN_REGISTRY } = require('../public/js/designs');
+const { MEMBER_COLORS } = require('../public/js/member-colors');
+
+const TISCH_DESIGN = DESIGN_REGISTRY.find((d) => d.id === 'tisch');
 
 const SHEET = fs
   .readFileSync(path.join(__dirname, '..', 'public', 'css', 'designs', 'tisch.css'), 'utf8')
@@ -90,6 +95,26 @@ test('switching Tisch → Klassisch restores the Klassisch account button byte f
   assert.equal(acct(dom).innerHTML, KLASSISCH_ACCOUNT);
   assert.equal(acct(dom).className, 'topbar__acct');
   assert.equal(acct(dom).getAttribute('aria-label'), 'Konto');
+});
+
+test('the „Was ist neu" dot is the SAME node, lit, across Tisch → Klassisch → Tisch (#1326)', (t) => {
+  // renderAccountFace MOVES #newsDot, never rebuilds it — a rebuilt one would
+  // come back unlit, and the badge would silently stop showing after a switch.
+  const dom = boot(t, 'tisch');
+  login(dom);
+  dom.call('setupAccountUi');
+  dom.call('setNewsDot', true);
+  const dot = dom.document.getElementById('newsDot');
+  assert.ok(acct(dom).querySelector('.topbar__avatar'), 'precondition: Tisch drew its face');
+  for (const design of ['klassisch', 'tisch']) {
+    dom.call('applyDesign', design);
+    const now = dom.document.getElementById('newsDot');
+    assert.equal(now, dot, `the dot was rebuilt on the switch to ${design}`);
+    assert.equal(now.parentElement, acct(dom), `the dot left the account button on ${design}`);
+    assert.equal(now.hidden, false, `the dot went dark on the switch to ${design}`);
+  }
+  dom.call('setNewsDot', false);
+  assert.equal(dot.hidden, true, 'setNewsDot no longer reaches the moved dot');
 });
 
 /* --------------------------------- Tisch ---------------------------------- */
@@ -202,5 +227,66 @@ test('the chrome rules are scheme-gated and the account face keeps `hidden` work
   // { display: none }` and puts it on the sign-in screens.
   for (const [sel, body] of chrome.filter(([s]) => /\.topbar__home$/.test(s.trim()))) {
     assert.doesNotMatch(body, /display:/, `${sel} would show the plate on the auth screens`);
+  }
+});
+
+/* ------------------------- the news / inbox badge (#1326) ------------------ */
+
+const TISCH = ':root[data-design="tisch"][data-scheme="dark"]';
+const badgeRule = (sel) => {
+  const hits = rulesOf(SHEET).filter(([s]) => s === `${TISCH} ${sel}`);
+  assert.equal(hits.length, 1, `expected exactly one Tisch rule for ${sel}`);
+  return hits[0][1];
+};
+const decl = (body, prop) => {
+  const m = new RegExp(`(?:^|;|\\s)${prop}:\\s*([^;]+)`).exec(body);
+  return m ? m[1].trim() : null;
+};
+
+test('Tisch: both top-bar dots are ringed 14px badges, and the account one sits on the avatar', () => {
+  const dot = badgeRule('.topbar-dot');
+  assert.equal(decl(dot, 'width'), '14px');
+  assert.equal(decl(dot, 'height'), '14px');
+  assert.equal(decl(dot, 'background'), 'var(--danger)');
+  assert.equal(decl(dot, 'border'), '2px solid var(--control-fill)');
+  assert.equal(decl(dot, 'display'), null, 'a display would defeat the dot\'s `hidden` toggle');
+  // Anchored from the LEFT to the 32px disc (3px padding), so the badge is on
+  // the avatar's top-right at every width instead of on the pill's rim.
+  const face = badgeRule('.topbar__acct--face .topbar-dot');
+  assert.equal(decl(face, 'top'), '1px');
+  assert.equal(decl(face, 'left'), '23px');
+  assert.equal(decl(face, 'right'), 'auto', 'styles.css\'s right: 3px would stretch the badge across the pill');
+});
+
+test('Tisch: every boundary of the badge clears 3:1 — disc | ring and ring | core (SC 1.4.11)', (t) => {
+  /* No flat colour clears 3:1 against both the lifted discs and --control-fill
+     (the tisch.css comment has why), so the RING carries the disc side. The
+     tokens are read out of the shipped rule and the discs out of the shipped
+     memberTone(), so a retune of either lands here. */
+  const body = badgeRule('.topbar-dot');
+  const core = theme.evaluate(decl(body, 'background'), TISCH_DESIGN);
+  const ring = theme.evaluate(decl(body, 'border').replace(/^2px solid /, ''), TISCH_DESIGN);
+  const fill = theme.token('--control-fill', TISCH_DESIGN);
+  const dom = boot(t, 'tisch');
+  const failures = [];
+  const ringCore = theme.contrast(ring, core);
+  if (ringCore < 3) failures.push(`core on ring ${ringCore.toFixed(2)}`);
+  for (const c of MEMBER_COLORS) {
+    const disc = theme.evaluate(dom.run(`memberTone(${JSON.stringify(c)})`), TISCH_DESIGN);
+    const r = theme.contrast(ring, disc);
+    if (r < 3) failures.push(`ring on ${c} disc ${r.toFixed(2)}`);
+  }
+  // The ring IS the button fill, so on the fill side the core is the boundary.
+  const onFill = theme.contrast(core, fill);
+  if (onFill < 3) failures.push(`core on --control-fill ${onFill.toFixed(2)}`);
+  assert.deepEqual(failures, []);
+});
+
+test('Klassisch: styles.css\'s .topbar-dot is exactly what it was', () => {
+  const body = bodyOf('.topbar-dot');
+  assert.ok(body, 'the Klassisch .topbar-dot rule is gone');
+  for (const [prop, value] of [['position', 'absolute'], ['top', '3px'], ['right', '3px'], ['width', '8px'],
+    ['height', '8px'], ['border-radius', '50%'], ['background', 'var(--brand)'], ['border', '1px solid var(--surface)']]) {
+    assert.equal(decl(body, prop), value, `Klassisch .topbar-dot ${prop} changed`);
   }
 });

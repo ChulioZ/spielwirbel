@@ -35,6 +35,9 @@ I18N.en = {
   'home.sub': 'Which round is playing today?',
   // Der Tisch only (#1279): the lobby voice beside the wordmark.
   'home.tischKicker': 'Game café · your tables',
+  // Ocean only (#1211): its sub-brand beside the wordmark and its lobby greeting.
+  'home.oceanKicker': 'The coast · your rounds',
+  'home.oceanGreeting': 'Welcome to the coast.',
   'home.shared': 'Shared',
   'home.newRound': 'Start a new round',
   'home.empty.title': 'No game round yet.',
@@ -82,6 +85,8 @@ I18N.en = {
 
   'round.tags': 'Tags',
   'round.startSession': 'Start session',
+  // Ocean only (#1211): the one action's themed verb (O9 §2).
+  'round.startSessionOcean': 'Dive in',
   'round.startEmptyTitle': 'No session yet',
   'round.startEmpty': 'Start your first session — what you last played will show up here.',
   'round.startSessionDisabled': 'Add games first',
@@ -123,6 +128,28 @@ I18N.en = {
   'hub.preset.light': 'Something light',
   'hub.preset.meaty': 'Something meaty',
   'hub.preset.family': 'Family friendly',
+  // Saved session filters (#1328): saved from the session setup screen,
+  // shown as the hub's quick-start chips, managed in Einstellungen.
+  'savedFilters.save': 'Save filter',
+  'savedFilters.nameLabel': 'Filter name',
+  'savedFilters.namePlaceholder': 'e.g. Short & co-op',
+  'savedFilters.submit': 'Save',
+  'savedFilters.hint': 'Saves the tags, filters, count and who is playing. Guests are not saved.',
+  'savedFilters.limit': 'At most {n} filters per round',
+  'savedFilters.title': 'Saved filters',
+  'savedFilters.empty': 'No saved filters yet – save one from “Start session”.',
+  'savedFilters.rename': 'Rename',
+  'savedFilters.delete': 'Delete',
+  'savedFilters.deleteConfirm': 'Delete the filter “{name}”?',
+  'savedFilters.moveUp': 'Move up',
+  'savedFilters.moveDown': 'Move down',
+  'savedFilters.toast.saved': 'Filter saved',
+  'savedFilters.toast.renamed': 'Filter renamed',
+  'savedFilters.toast.deleted': 'Filter deleted',
+  'savedFilters.toast.nameMissing': 'Give the filter a name',
+  'savedFilters.toast.nameTaken': 'This round already has a filter with that name',
+  'savedFilters.toast.quota': 'This round already has the maximum number of filters',
+  'savedFilters.toast.changed': 'The filters changed in the meantime – reloaded.',
   'hub.pulse.title': 'Round pulse',
   'hub.young.lock': 'from your first game',
   'hub.young.emptyTitle': 'The pot is still empty',
@@ -364,6 +391,7 @@ I18N.en = {
   'games.sort.name': 'Name',
   'games.sort.rating': 'Rating',
   'games.sortLabel': 'Sort order',
+  'games.sortedBy': 'Sorted by:',
   'games.noMatchFilters': 'No games match the filters.',
   'games.retire': 'Retire',
   'games.scoreNew': 'new',
@@ -979,6 +1007,7 @@ I18N.en = {
   // disabled state too. It must never read as though the round were missing
   // something: a round of names without accounts is the normal configuration.
   'startSession.barCount': 'How many to draw?',
+  'startSession.countQuestionOcean': 'How many do we bring up?',
   'startSession.available': '{n} games in the pot',
   'startSession.availableOne': '{n} game in the pot',
   // The pot's numeral is set apart typographically from the noun it counts, so
@@ -986,6 +1015,9 @@ I18N.en = {
   // slice would assume every locale puts {n} first (#1017).
   'startSession.potLabel': 'games in the pot',
   'startSession.potLabelOne': 'game in the pot',
+  // Ocean (#1213): the pot is the Muschel, one of the design's five themed words.
+  'startSession.potLabelOcean': 'games in the shell',
+  'startSession.potLabelOceanOne': 'game in the shell',
   'startSession.ownersHidden': '{n} more games are missing because their owners are not playing.',
   'startSession.ownersHiddenOne': '{n} more game is missing because its owner is not playing.',
   'startSession.poolEmpty': 'No game matches these settings yet.',
@@ -1103,6 +1135,13 @@ I18N.en = {
   'vote.personOf': 'Person {n} of {total}',
   'vote.handoffNext': 'Then pass the device on — {name} is up next.',
   'vote.handoffLast': 'Then everyone is done — the result comes next.',
+  // Ocean's desktop vote card (#1213, O4.2): who has rated, and what is still below.
+  'vote.raterDone': 'has rated',
+  'vote.raterNow': 'rating now',
+  'vote.raterOpen': 'still to rate',
+  'vote.deepOcean': 'Still in the deep',
+  'vote.deepTextOceanOne': '{n} more card is waiting below. The result only surfaces once the vote is over.',
+  'vote.deepTextOcean': '{n} more cards are waiting below. The result only surfaces once the vote is over.',
   'vote.toast.saved': 'Results saved',
 
   'finale.crumb': 'Finale',
@@ -1347,6 +1386,8 @@ I18N.en = {
   'stats.plays.many': '{n} sessions',
   'stats.ratedOne': 'Score {score} — {n} rating',
   'stats.rated': 'Score {score} — {n} ratings',
+  'stats.ratedPlaysOne': '{rated} · {n} session',
+  'stats.ratedPlays': '{rated} · {n} sessions',
   'stats.counter.players': 'players',
   'stats.counter.rounds': 'rounds',
   'stats.counter.games': 'games',
@@ -1609,6 +1650,7 @@ I18N.en = {
   'design.tisch.short': 'Felt, brass, seats at the table',
   'design.ocean.name': 'Ocean',
   'design.ocean.desc': 'Bright and open: rounds, members, wins — and a whale.',
+  'design.ocean.short': 'Bright water, open space',
   'design.chooser.kicker': 'New in Spielwirbel',
   'design.chooser.title': 'Pick a design.',
   'design.chooser.body': 'Everything stays where it is — shelf, chronicle, trophies, spinning up a session. It just looks different. You can switch any time in your account.',
@@ -1616,6 +1658,7 @@ I18N.en = {
   'design.chooser.skip': 'Decide later',
   'design.chooser.confirm': 'Use this design',
   'design.chooser.confirmNamed': 'Use {name}',
+  'design.chooser.pickedNamed': 'You picked {name}.',
   'design.chooser.moreTitle': 'More to come',
   'design.poster.pick': 'Choose',
   'design.poster.picked': 'Selected',

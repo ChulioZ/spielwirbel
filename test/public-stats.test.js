@@ -9,6 +9,7 @@ const publicStats = require('../lib/public-stats');
 const bgg = require('../lib/providers/bgg');
 const scheduler = require('../lib/scheduler');
 const repo = require('../lib/repo');
+const { playCounts, scoreRatings, shelfScore, SCORE_MIN } = require('../public/js/vote-score');
 
 /*
  * Instance-wide public statistics (#564).
@@ -721,6 +722,119 @@ test('#928 plays lift the published score, using the all-time count', async () =
   // game's {4,4,4} shrinks to 3,4, which is what it would have won with.
   assert.equal(built.games.bestRated.score, 3.9);
   assert.equal(built.games.bestRated.ratings, 3);
+});
+
+/* THE PODIUM PRINTS THE REGAL'S NUMBER — unfinished plays included (#1329).
+
+   #928 made the claim that this podium and a round's own shelf are the same
+   number by construction, and the aggregate broke it by counting a play only
+   when its session was FINISHED. The Regal counts with `playCounts`: every
+   non-cancelled session with a `chosenGameId`, finished or not. A direct pick
+   left open (nobody tapped „Beenden") is a play on the shelf and was not one
+   here, so the public score sat below the round's own.
+
+   The fixture needs UNFINISHED plays or it cannot tell the two definitions
+   apart: 2 finished + 4 open direct picks of a game rated once at 3. The Regal
+   reads six plays (4,2); the finished-only count read two (3,8).
+
+   The expected value is computed from the round's own sessions through the
+   Regal's own pieces — `playCounts` and the shared curve — rather than as a
+   literal, so it is the Regal's definition being compared against and not a
+   number copied from an implementation. */
+test('#1329 the podium score equals the Regal score when some plays are unfinished', async () => {
+  openContentFloors();
+  stubProvider();
+  const round = track(await createRound(request, { name: 'Offenrunde', members: ['Ann', 'Bo'] }));
+  const game = (await request(app).post(`/api/rounds/${round.id}/games`).send({
+    title: 'Getippt', minPlayers: '1', maxPlayers: '4',
+    sourceProvider: 'bgg', sourceExternalId: 'thing-open',
+  })).body;
+  const ids = (await request(app).get(`/api/rounds/${round.id}`)).body.members.map((m) => m.id);
+  const ok = async (res) => {
+    assert.equal(res.status, 200, `fixture step failed: ${JSON.stringify(res.body)}`);
+    return res;
+  };
+  // One drawn evening that only rates the game — no choice, so no play.
+  const { session } = (await request(app).post(`/api/rounds/${round.id}/sessions`).send({
+    count: 1, memberIds: ids,
+  })).body;
+  await ok(await request(app).post(`/api/rounds/${round.id}/sessions/${session.id}/results`).send({
+    votes: { [ids[0]]: { [game.id]: { rating: 3 } } },
+  }));
+  // Six direct picks; only the first two are finished.
+  for (let i = 0; i < 6; i += 1) {
+    const s = (await request(app).post(`/api/rounds/${round.id}/sessions`).send({
+      gameId: game.id, memberIds: ids,
+    })).body.session;
+    if (i < 2) {
+      await ok(await request(app).post(`/api/rounds/${round.id}/sessions/${s.id}/finish`).send({
+        finished: true, winnerIds: [],
+      }));
+    }
+  }
+
+  const fresh = (await request(app).get(`/api/rounds/${round.id}`)).body;
+  const plays = playCounts(fresh).get(game.id);
+  assert.equal(plays, 6, 'the fixture really has six plays on the shelf');
+  const ratings = [];
+  fresh.sessions.forEach((s) => Object.values(s.votes || {}).forEach((pv) => {
+    const v = (pv || {})[game.id];
+    if (v && Number.isFinite(v.rating)) ratings.push(v.rating);
+  }));
+  const sc = scoreRatings(ratings);
+  const regal = Math.round(Math.max(SCORE_MIN, shelfScore(sc.score, sc.count, plays)) * 10) / 10;
+
+  const built = await rebuild();
+  assert.equal(built.games.bestRated.title, 'Provider-Titel thing-open');
+  assert.equal(built.games.bestRated.score, regal, 'Discover and the Regal print different numbers');
+  assert.equal(built.games.bestRated.plays, 6, 'the line shows the plays that lifted the score');
+  // The most-played tiles are NOT this count: they stay finished-only (#1059).
+  assert.equal(built.games.playedAll.plays, 2, 'the all-time card counts finished plays only');
+});
+
+/* PLAYS ARE EVIDENCE FOR THE GATE (#1329). A game rated once and played a lot
+   has a shelf score its plays earned, and a floor counting ratings alone kept
+   it off the podium however much it was played. At the DEFAULT rating floor
+   (5) — the production shape, with the spread at 1 as production sets it — one
+   rating plus four plays clears it, and one rating plus three does not. */
+test('#1329 ratings plus plays clear the evidence floor; ratings alone no longer have to', async () => {
+  process.env.PUBLIC_STATS_MIN_RATING_TENANTS = '1';
+  stubProvider();
+  const round = track(await createRound(request, { name: 'Belegrunde', members: ['Ann'] }));
+  const game = (await request(app).post(`/api/rounds/${round.id}/games`).send({
+    title: 'Getippt', minPlayers: '1', maxPlayers: '4',
+    sourceProvider: 'bgg', sourceExternalId: 'thing-evidence',
+  })).body;
+  const ids = (await request(app).get(`/api/rounds/${round.id}`)).body.members.map((m) => m.id);
+  const { session } = (await request(app).post(`/api/rounds/${round.id}/sessions`).send({
+    count: 1, memberIds: ids,
+  })).body;
+  const res = await request(app).post(`/api/rounds/${round.id}/sessions/${session.id}/results`).send({
+    votes: { [ids[0]]: { [game.id]: { rating: 4 } } },
+  });
+  assert.equal(res.status, 200);
+  const pick = async (gameId = game.id) => (await request(app).post(`/api/rounds/${round.id}/sessions`).send({
+    gameId, memberIds: ids,
+  })).body.session;
+  /* A second game, NEVER rated and played eight times. Its lifted prior
+     (~4,6) is above the rated game's score, and eight plays clear the evidence
+     floor on their own — so only the `ratings.count > 0` clause keeps it off a
+     card called „Bestbewertet", and a build without it names this game below. */
+  const unrated = (await request(app).post(`/api/rounds/${round.id}/games`).send({
+    title: 'Getippt', minPlayers: '1', maxPlayers: '4',
+    sourceProvider: 'bgg', sourceExternalId: 'thing-unrated-staple',
+  })).body;
+  for (let i = 0; i < 8; i += 1) await pick(unrated.id);
+
+  for (let i = 0; i < 3; i += 1) await pick();
+  assert.equal('bestRated' in ((await rebuild()).games || {}), false, '1 rating + 3 plays is under the floor of 5');
+
+  await pick();
+  const bestRated = ((await rebuild()).games || {}).bestRated;
+  assert.ok(bestRated, '1 rating + 4 plays is five pieces of evidence');
+  assert.equal(bestRated.title, 'Provider-Titel thing-evidence', 'a never-rated game took the best-rated podium');
+  assert.equal(bestRated.ratings, 1);
+  assert.equal(bestRated.plays, 4);
 });
 
 /* -------------------- the all-time podium (#1035) --------------------------- */

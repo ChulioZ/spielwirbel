@@ -37,6 +37,9 @@ I18N.de = {
   'home.sub': 'Welche Runde spielt heute?',
   // Der Tisch only (#1279): the lobby voice beside the wordmark.
   'home.tischKicker': 'Spielecafé · deine Tische',
+  // Ocean only (#1211): its sub-brand beside the wordmark and its lobby greeting.
+  'home.oceanKicker': 'Die Küste · deine Runden',
+  'home.oceanGreeting': 'Willkommen an der Küste.',
   'home.shared': 'Geteilt',
   'home.newRound': 'Neue Runde gründen',
   'home.empty.title': 'Noch keine Spielrunde angelegt.',
@@ -84,6 +87,8 @@ I18N.de = {
 
   'round.tags': 'Tags',
   'round.startSession': 'Session wirbeln',
+  // Ocean only (#1211): the one action's themed verb (O9 §2).
+  'round.startSessionOcean': 'Abtauchen',
   'round.startEmptyTitle': 'Noch keine Session',
   'round.startEmpty': 'Startet eure erste Session — danach steht hier, was zuletzt gespielt wurde.',
   'round.startSessionDisabled': 'Erst Spiele hinzufügen',
@@ -125,6 +130,28 @@ I18N.de = {
   'hub.preset.light': 'Leichte Kost',
   'hub.preset.meaty': 'Anspruchsvoll',
   'hub.preset.family': 'Familientauglich',
+  // Saved session filters (#1328): saved from the session setup screen,
+  // shown as the hub's quick-start chips, managed in Einstellungen.
+  'savedFilters.save': 'Filter speichern',
+  'savedFilters.nameLabel': 'Name des Filters',
+  'savedFilters.namePlaceholder': 'z. B. Kurz & kooperativ',
+  'savedFilters.submit': 'Speichern',
+  'savedFilters.hint': 'Speichert Tags, Filter, Anzahl und wer mitspielt. Gäste werden nicht gespeichert.',
+  'savedFilters.limit': 'Maximal {n} Filter pro Runde',
+  'savedFilters.title': 'Gespeicherte Filter',
+  'savedFilters.empty': 'Noch keine gespeicherten Filter – speichere einen unter „Session wirbeln".',
+  'savedFilters.rename': 'Umbenennen',
+  'savedFilters.delete': 'Löschen',
+  'savedFilters.deleteConfirm': 'Filter „{name}" löschen?',
+  'savedFilters.moveUp': 'Nach oben',
+  'savedFilters.moveDown': 'Nach unten',
+  'savedFilters.toast.saved': 'Filter gespeichert',
+  'savedFilters.toast.renamed': 'Filter umbenannt',
+  'savedFilters.toast.deleted': 'Filter gelöscht',
+  'savedFilters.toast.nameMissing': 'Gib dem Filter einen Namen',
+  'savedFilters.toast.nameTaken': 'Diese Runde hat schon einen Filter mit diesem Namen',
+  'savedFilters.toast.quota': 'Diese Runde hat schon die maximale Zahl an Filtern',
+  'savedFilters.toast.changed': 'Die Filter wurden inzwischen geändert – neu geladen.',
   'hub.pulse.title': 'Rundenpuls',
   'hub.young.lock': 'ab dem ersten Spiel',
   'hub.young.emptyTitle': 'Der Topf ist noch leer',
@@ -366,6 +393,7 @@ I18N.de = {
   'games.sort.name': 'Name',
   'games.sort.rating': 'Bewertung',
   'games.sortLabel': 'Sortierung',
+  'games.sortedBy': 'Sortiert:',
   'games.noMatchFilters': 'Keine Spiele passen zu den Filtern.',
   'games.retire': 'Aussortieren',
   'games.scoreNew': 'neu',
@@ -974,6 +1002,7 @@ I18N.de = {
   // auch im deaktivierten Zustand. Er darf nie klingen, als fehle der Runde
   // etwas: eine Runde aus Namen ohne Konten ist die normale Konfiguration.
   'startSession.barCount': 'Wie viele wirbeln?',
+  'startSession.countQuestionOcean': 'Wie viele holen wir hoch?',
   'startSession.available': '{n} Spiele im Topf',
   'startSession.availableOne': '{n} Spiel im Topf',
   // The pot's numeral is set apart typographically from the noun it counts, so
@@ -981,6 +1010,9 @@ I18N.de = {
   // slice would assume every locale puts {n} first (#1017).
   'startSession.potLabel': 'Spiele im Topf',
   'startSession.potLabelOne': 'Spiel im Topf',
+  // Ocean (#1213): the pot is the Muschel, one of the design's five themed words.
+  'startSession.potLabelOcean': 'Spiele in der Muschel',
+  'startSession.potLabelOceanOne': 'Spiel in der Muschel',
   'startSession.ownersHidden': '{n} weitere Spiele fehlen, weil ihre Besitzer nicht mitspielen.',
   'startSession.ownersHiddenOne': '{n} weiteres Spiel fehlt, weil sein Besitzer nicht mitspielt.',
   'startSession.poolEmpty': 'Zu diesen Einstellungen passt noch kein Spiel.',
@@ -1085,7 +1117,7 @@ I18N.de = {
   'vote.scaleLow': 'gar nicht',
   'vote.scaleHigh': 'unbedingt',
   'vote.scale2': 'eher nicht',
-  'vote.scale3': 'kann ich',
+  'vote.scale3': 'wäre okay',
   'vote.scale4': 'gern',
   'vote.ratingLabelWord': '{n} von {max} – {word}',
   'vote.rates': '{name} wertet',
@@ -1093,6 +1125,13 @@ I18N.de = {
   'vote.personOf': 'Person {n} von {total}',
   'vote.handoffNext': 'Danach das Gerät weitergeben — {name} ist als Nächstes dran.',
   'vote.handoffLast': 'Danach sind alle durch — dann kommt das Ergebnis.',
+  // Ocean's desktop vote card (#1213, O4.2): who has rated, and what is still below.
+  'vote.raterDone': 'hat gewertet',
+  'vote.raterNow': 'wertet gerade',
+  'vote.raterOpen': 'noch offen',
+  'vote.deepOcean': 'Noch in der Tiefe',
+  'vote.deepTextOceanOne': 'Noch {n} Karte wartet unten. Das Ergebnis taucht erst auf, wenn die Abstimmung vorbei ist.',
+  'vote.deepTextOcean': 'Noch {n} Karten warten unten. Das Ergebnis taucht erst auf, wenn die Abstimmung vorbei ist.',
   'vote.toast.saved': 'Ergebnisse gespeichert',
 
   'finale.crumb': 'Finale',
@@ -1338,6 +1377,11 @@ I18N.de = {
   'stats.plays.many': '{n} Sessions',
   'stats.ratedOne': 'Score {score} — {n} Bewertung',
   'stats.rated': 'Score {score} — {n} Bewertungen',
+  // The best-rated line with the plays that lifted its score (#1329).
+  // {rated} is the stats.ratedOne/stats.rated line above, already
+  // inflected for the rating count; {n} is the play count.
+  'stats.ratedPlaysOne': '{rated} · {n} Session',
+  'stats.ratedPlays': '{rated} · {n} Sessions',
   'stats.counter.players': 'Spieler*innen',
   'stats.counter.rounds': 'Runden',
   'stats.counter.games': 'Spiele',
@@ -1601,6 +1645,7 @@ I18N.de = {
   'design.tisch.short': 'Filz, Messing, Plätze am Tisch',
   'design.ocean.name': 'Ocean',
   'design.ocean.desc': 'Hell und weit: Runden, Mitglieder, Siege — und ein Wal.',
+  'design.ocean.short': 'Helles Wasser, viel Weite',
   'design.chooser.kicker': 'Neu in Spielwirbel',
   'design.chooser.title': 'Wähl dir ein Design.',
   'design.chooser.body': 'Alles liegt weiter an derselben Stelle — Regal, Chronik, Pokale, Session wirbeln. Es sieht nur anders aus. Du kannst jederzeit im Konto wechseln.',
@@ -1608,6 +1653,7 @@ I18N.de = {
   'design.chooser.skip': 'Später entscheiden',
   'design.chooser.confirm': 'Design übernehmen',
   'design.chooser.confirmNamed': '{name} übernehmen',
+  'design.chooser.pickedNamed': 'Du hast {name} gewählt.',
   'design.chooser.moreTitle': 'Später mehr',
   'design.poster.pick': 'Auswählen',
   'design.poster.picked': 'Ausgewählt',

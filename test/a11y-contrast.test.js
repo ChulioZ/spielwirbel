@@ -59,6 +59,11 @@ assert.ok(DESIGN_REGISTRY.length >= 2, 'expected Klassisch and Der Tisch at leas
 const USER_DESIGNS = DESIGN_REGISTRY.filter((d) => d.page && d.accent);
 
 const THEMES = DESIGN_REGISTRY.map(tokensFor);
+// styles.css as text, comments stripped, for the few rules this file reads
+// directly (.claude/rules/css-text-assertions-strip-comments.md).
+const APP_CSS_TEXT = require('node:fs')
+  .readFileSync(require('node:path').join(__dirname, '..', 'public', 'styles.css'), 'utf8')
+  .replace(/\/\*[\s\S]*?\*\//g, '');
 
 // A rule whose selector may be one MEMBER of a grouped, newline-separated
 // selector — bodyOf() compares the whole text and would miss it.
@@ -862,18 +867,37 @@ test('the finale stage keeps its sub-line and its note legible on every theme', 
      this file passed while the darkest text on the darkest screen quietly lost a
      fifth of its headroom.
 
-     KNOWN GAP, deliberately pinned below AA: `.stage__note` is 12px/700 in
-     --stage-faint and measures ~3.58:1, i.e. it does NOT meet the 4.5 bar for
-     normal text. That predates this change (3.59:1 in sRGB) and fixing it means
-     choosing a lighter tone, which is a design decision about the finale rather
-     than a derivation one. The floor below is therefore a NON-REGRESSION guard,
-     not a pass — do not read a green here as "the note is accessible". */
-  const FAINT_FLOOR = 3.5;
-  // .stage__sub (16px/700) and .stage__voter-name (12px/800) both take --stage-muted.
+     The finale's note (`.stage__note`, 12px/700) used to take a third tone,
+     --stage-faint, at ~3.58:1 — a known gap pinned below AA here. The operator
+     chose to close it (2026-09-25): the note takes --stage-muted, so the token
+     is gone and the check below covers the note too. */
+  // .stage__sub (16px/700), .stage__voter-name (12px/800) and .stage__note (12px/700).
   assert.deepEqual(sweep((t) => [['--stage-muted', t.stageMuted, t.stageBg]]), [],
     `--stage-muted must clear ${AA_TEXT}:1 on the stage`);
-  assert.deepEqual(sweep((t) => [['--stage-faint', t.stageFaint, t.stageBg]], FAINT_FLOOR), [],
-    `--stage-faint must not fall below ${FAINT_FLOOR}:1 on the stage`);
+  const note = /\.stage__note\s*\{[^}]*color\s*:\s*var\((--[\w-]+)\)/.exec(APP_CSS_TEXT);
+  assert.ok(note, 'no .stage__note colour found in styles.css');
+  assert.equal(note[1], '--stage-muted', 'the finale note must read in the stage\'s AA ink');
+});
+
+test('the Tafel\'s place numerals clear AA text on every design\'s surface', () => {
+  /* 18px/800 numerals, so AA text. They were the medal glyph tints (#9ca3af,
+     #b3703a): 2.5:1 and 3.9:1 on Klassisch's white. Read out of styles.css so a
+     retune is measured, not trusted. Der Tisch prints its Tafel on PAPER and
+     overrides both (--paper-silver/--paper-bronze, measured with the paper
+     family), so its walnut --surface is not their ground. */
+  const ink = (n) => {
+    const m = new RegExp(`\\.trow__rank--${n}\\s*\\{\\s*color\\s*:\\s*(#[0-9a-fA-F]{6})`).exec(APP_CSS_TEXT);
+    assert.ok(m, `no .trow__rank--${n} colour in styles.css`);
+    return m[1];
+  };
+  const [silver, bronze] = [ink(2), ink(3)];
+  // Place 1 reads a token rather than a hex; name it, then measure what it resolves to.
+  assert.match(APP_CSS_TEXT, /\.trow__rank--1\s*\{\s*color\s*:\s*var\(--gold-deep\)/, 'place 1 left --gold-deep');
+  assert.deepEqual(sweep((t) => (name(t).startsWith('tisch') ? [] : [
+    ['place 1 on the surface', t.goldDeep, t.surface],
+    ['place 2 on the surface', rgb(silver), t.surface],
+    ['place 3 on the surface', rgb(bronze), t.surface],
+  ])), []);
 });
 
 test('the seal\'s padlock clears the 3:1 non-text bar, and the pair cannot flip apart', () => {
@@ -1508,6 +1532,13 @@ test('a design that declares a PAPER overlay family keeps every pair on it at AA
       ]),
       ['--paper-faint on --paper', v('--paper-faint'), v('--paper'), AA_TEXT],
       ['--paper-faint on --paper-sunken', v('--paper-faint'), v('--paper-sunken'), AA_TEXT],
+      // The Tafel's place numerals 2 and 3 (18px, so AA text), on every paper
+      // ground a row can show — including --paper-sunken, the well token a row
+      // hover or a score fill could lay under them.
+      ...['--paper', '--paper-raised', '--paper-sunken'].flatMap((g) => [
+        [`--paper-silver on ${g}`, v('--paper-silver'), v(g), AA_TEXT],
+        [`--paper-bronze on ${g}`, v('--paper-bronze'), v(g), AA_TEXT],
+      ]),
       // --brand-tint resolves to --gold-hi inside an overlay: the menu's hover.
       ['--paper-ink on --gold-hi', v('--paper-ink'), v('--gold-hi'), AA_TEXT],
       // The destructive button: paper on the red fill, and the fill itself has
@@ -2136,7 +2167,7 @@ test('every colour token a design declares is measured by one of the checks abov
   // The design-specific tokens the three tests above put in a pair.
   const MEASURED = new Set([
     '--paper', '--paper-raised', '--paper-ink', '--paper-ink-soft',
-    '--paper-edge', '--paper-faint',
+    '--paper-edge', '--paper-faint', '--paper-silver', '--paper-bronze',
     '--felt', '--felt-deep', '--felt-ink', '--felt-ink-soft', '--felt-chip-on',
     // #1189: the weave (composited over the felt's light stop), the plate's
     // light gradient stop, and the deep accent the paper kicker takes.

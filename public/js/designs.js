@@ -84,6 +84,11 @@
 //                  what the chooser must not do. Absent: the design's
 //                  `page`/`accent` through the tile's --tile-* defaults.
 //
+// `glyph` (#1215) is the design's own SIGN — a Tabler class the Ocean chooser
+// prints on each design's postcard (O5.3 / O5.5: „Jedes Design hat ein eigenes
+// Zeichen … kein stiller Markenwechsel"). Klassisch keeps the die it has always
+// worn. Optional: a row without one falls back to the palette glyph.
+//
 // `poster` is NOT a set of tokens and is never applied to the page — which is
 // why Klassisch may state one while still declaring no `page`/`accent` (it IS
 // :root, and restating those would drift). test/a11y-contrast.test.js sweeps
@@ -102,6 +107,7 @@ const DESIGN_REGISTRY = [
     // T5.3 prints Klassisch's bill with the BRAND rather than the design's
     // name: it is the look Spielwirbel has always had.
     wordmarkKey: 'app.title',
+    glyph: 'ti-dice-3',
     taglineKey: 'design.klassisch.tagline',
     shortKey: 'design.klassisch.short',
     ritualKeys: ['startSession.potHeading', 'round.startSession', 'startSession.draw'],
@@ -174,6 +180,7 @@ const DESIGN_REGISTRY = [
     labelKey: 'design.tisch.name',
     descKey: 'design.tisch.desc',
     // No wordmarkKey: T5.3's bill says „Der Tisch", which is the name.
+    glyph: 'ti-chess',
     taglineKey: 'design.tisch.tagline',
     shortKey: 'design.tisch.short',
     ritualKeys: ['startSession.potHeading', 'round.startSession', 'startSession.draw'],
@@ -252,6 +259,17 @@ const DESIGN_REGISTRY = [
     id: 'ocean',
     labelKey: 'design.ocean.name',
     descKey: 'design.ocean.desc',
+    /* The postcard (#1215, O5.3/O5.4): the wave is Ocean's sign (README point
+       9 — `ti-shell` does not exist in this font). The poster runs Gischt to
+       Küstenwasser, O1's own two ends of the water: the accent wordmark a
+       Tisch-worn chooser prints on it is 3.6:1 on the coast stop, over the 3:1
+       display bar, and the ink subline is 8.7:1 there — swept by
+       test/a11y-contrast.test.js with every other poster. No ritualKeys: Ocean
+       renames nothing the app says yet (O9), so it has no words of its own to
+       print. */
+    glyph: 'ti-wave-sine',
+    shortKey: 'design.ocean.short',
+    poster: { ground: ['#eef7fa', '#a9c9d8'], ink: '#0e6690', sub: '#10283a' },
     page: '#e4f1f5',
     accent: '#0e6690',
     stylesheet: '/css/designs/ocean.css',
