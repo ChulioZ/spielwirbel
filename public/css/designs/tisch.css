@@ -246,6 +246,13 @@
   /* Review finding A4: the package's tertiary ink #8d5a36 measured 4.23:1 on
      the raised paper. #7a4a28 is 5.19:1. */
   --paper-faint: #7a4a28;
+  /* The Tafel's place numerals 2 and 3 on paper. The app's own medal tints
+     (styles.css `.trow__rank--2/--3`, #9ca3af and #b3703a) are drawn for no
+     ground in particular and measured 2.06:1 and 3.22:1 on the raised paper —
+     under AA for an 18px numeral. Same metals, pressed dark enough to read:
+     silver 5.32:1, bronze 5.50:1 on --paper-raised. */
+  --paper-silver: #575e68;
+  --paper-bronze: #8a4b1c;
 
   /* ---- The rest of the paper family (#1195). The overlay rule further down
      re-points a token at each of these; they are declared HERE for the reason
@@ -2294,6 +2301,23 @@
   color: var(--danger);
   border-color: var(--danger);
 }
+/* The same answer for every other red-inked button ON THE FELT: „Diese Runde
+   löschen" (Einstellungen), „Endgültig löschen" (Aussortiert) and the quiet
+   „Von der Liste nehmen" (Wunschliste — a plain `.btn` with the danger ink set
+   inline, hence the `[data-act]` hook). Each sat on --control-fill at 4.47:1.
+   Hover keeps the ground, because `.btn:hover` would swap in --brand-tint-soft.
+   Inside an overlay `.sheet .btn--danger` is more specific and red-FILLS the
+   button instead, which is the paper answer (#1195) — and it only stays more
+   specific because these are two plain selectors: an `:is()` taking both would
+   carry the second's weight and out-rank the sheet's red fill. */
+:root[data-design="tisch"][data-scheme="dark"] .btn--danger,
+:root[data-design="tisch"][data-scheme="dark"] .btn--danger:hover:not(:disabled) {
+  background: var(--surface);
+}
+:root[data-design="tisch"][data-scheme="dark"] .archive-row__actions .btn[data-act="delete"],
+:root[data-design="tisch"][data-scheme="dark"] .archive-row__actions .btn[data-act="delete"]:hover:not(:disabled) {
+  background: var(--surface);
+}
 @media (max-width: 859px) {
   :root[data-design="tisch"][data-scheme="dark"] .gd-actions__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
   :root[data-design="tisch"][data-scheme="dark"] .gd-act { justify-content: center; }
@@ -3539,6 +3563,17 @@
   position: static;
   font-size: var(--text-lg);
 }
+/* Places 2 and 3 in paper-strength metal (see --paper-silver). Place 1 needs no
+   rule: the winners sit in the gold group, where the single-ink sweep below
+   gives every cell --gold-ink. `.tafel` alone, not `.result-screen .tafel`: the
+   landing page prints the same Tafel. */
+:root[data-design="tisch"][data-scheme="dark"] .tafel .trow__rank--2 { color: var(--paper-silver); }
+:root[data-design="tisch"][data-scheme="dark"] .tafel .trow__rank--3 { color: var(--paper-bronze); }
+
+/* The finale's note („Noch kennt niemand das Ergebnis …") is real text at
+   --text-xs, and styles.css paints it --stage-faint: 3.86:1 on Der Tisch's
+   stage, measured. --stage-muted is the stage's readable secondary ink. */
+:root[data-design="tisch"][data-scheme="dark"] .stage__note { color: var(--stage-muted); }
 :root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .trow__img {
   grid-column: 2;
   grid-row: 1;
@@ -6092,6 +6127,38 @@
      read `var(--brand-ring, var(--brand))`, same shape, same reason — brass on
      paper is ~2:1, under SC 1.4.11's 3:1 for a focus indicator. --gold-edge is
      the ink --brand-edge (the box-shadow ring) already takes above. */
+  --brand-ring: var(--gold-edge);
+}
+
+/* The same answer for the paper IN THE PAGE. The overlays are not the only
+   paper in Der Tisch: the result Tafel, the vote card, the split-table Tafel,
+   the live-vote panel and the Chronik's session cards flip --surface and --ink
+   too — and each block named its own grounds and inks and stopped there. Every
+   token the overlay above re-points for being mixed from the walnut, or for
+   being an ink tuned against it, reached those surfaces as walnut. The one the
+   operator saw: the Tafel's „auf dem Tisch" chip (`.trow__chip`) paints its
+   ground from --brand-tint-soft, so it stayed a dark walnut pill under the
+   gold row's --gold-ink — 1.12:1, measured.
+
+   `:where()` keeps this rule at the gate's specificity, BELOW each surface's
+   own block, so a value a surface chose for itself (the Tafel's --line, the
+   session card's --danger) still wins; this only fills what was left out.
+   test/tisch-overlays.test.js derives the list from styles.css and the overlay,
+   so a surface added tomorrow without it fails by name. */
+:root[data-design="tisch"][data-scheme="dark"] :where(.vote, .vote__card, .tafel, .split-table__tafel, .live-vote__panel, .timeline .session-card) {
+  --good: var(--paper-good);
+  --danger: var(--paper-danger);
+  --warn: var(--paper-faint);
+  --accent: var(--paper-faint);
+  --sunken: var(--paper-sunken);
+  --sunken-soft: var(--paper-sunken);
+  --line: var(--paper-line);
+  --placeholder: var(--paper-faint);
+  --brand-tint: var(--gold-hi);
+  --brand-tint-soft: var(--paper-raised);
+  --brand-edge: var(--gold-edge);
+  --bg: var(--paper);
+  --brand-ink: var(--paper-faint);
   --brand-ring: var(--gold-edge);
 }
 
