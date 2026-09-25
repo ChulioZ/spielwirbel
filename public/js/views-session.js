@@ -688,6 +688,25 @@ function showStartSession(round, prefill) {
     updateHint();
   }
 
+  /* „Filter speichern" (#1328), under the pool it describes — beside the owners
+     note, i.e. inside Der Tisch's pot, where the filter bar lives too. It saves
+     what the screen shows NOW, in the draw's own body shape, so the server
+     resolves both through one function (lib/draw-filters.js). Seats travel;
+     guests, teams and „ohne Spiele" deliberately do not — they are this
+     evening's facts, not the group's recurring draw. */
+  ownersNote.after(renderSaveFilterAction(round, () => {
+    const cur = parseInt(countInput.value, 10);
+    return {
+      count: Number.isFinite(cur) && cur >= 1 ? cur : 1,
+      tagIds: [...selectedTags].filter(([, s]) => s === 'include').map(([id]) => id),
+      excludeTagIds: [...selectedTags].filter(([, s]) => s === 'exclude').map(([id]) => id),
+      tagMode: tagFilterState.tagMode,
+      metadata: metaFilters,
+      multiTable: tableState.multiTable,
+      memberIds: [...joining],
+    };
+  }));
+
   /* The draw is in flight. #1122 removed the whirl this was written for, which
      SHRINKS the double-press window to the request itself rather than closing it:
      the button is still not disabled while the POST runs, so a second press on a

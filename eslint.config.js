@@ -445,6 +445,10 @@ const frontendGlobals = {
   openTagsPopover: 'readonly', openImagePopover: 'readonly',
   openExpansionEditor: 'readonly', saveExpansions: 'readonly', showAddGame: 'readonly',
   setExpansionsCap: 'readonly',
+  // saved-filters.js (#1328) — the hub chips, the setup save control, the
+  // Einstellungen list
+  setSavedFilterLimits: 'readonly', savedFilterPrefill: 'readonly',
+  renderSaveFilterAction: 'readonly', renderSavedFiltersSection: 'readonly',
   OFF_SHELF_LISTS: 'readonly', offShelfListOf: 'readonly',
   showTags: 'readonly', showTransferGames: 'readonly',
   showInvite: 'readonly', inviteError: 'readonly', insertFriendPicker: 'readonly',

@@ -162,7 +162,10 @@ round (`MAX_GAMES_PER_ROUND`, default 1000), custom tags per round
 (`MAX_TAGS_PER_ROUND`, default 30), member seats per round
 (`MAX_MEMBERS_PER_ROUND`, default 50), expansions per game
 (`MAX_EXPANSIONS_PER_GAME`, default 40), and dismissed recommendations per round
-(`MAX_DISMISSED_RECOMMENDATIONS_PER_ROUND`, default 500, issue #782). Per
+(`MAX_DISMISSED_RECOMMENDATIONS_PER_ROUND`, default 500, issue #782). One
+per-round cap applies in **every** mode, accounts on or off: saved session
+filters (`MAX_SAVED_FILTERS_PER_ROUND`, default 6, issue #1328), because it
+bounds the hub's quick-start chip row rather than abuse. Per
 **account** rather than per
 tenant: accepted friends (`MAX_FRIENDS_PER_USER`, default 500), open outgoing
 friend requests (`MAX_FRIEND_REQUESTS_PER_USER`, default 50) and passkeys
@@ -177,6 +180,9 @@ One of them is also told to the client: `GET /api/config` reports
 ceiling („3 von 40 im Regal") instead of letting the user find out from the 403
 after pressing Übernehmen (issue #1143). It reports `null` where quotas are inert,
 so a self-hosted round is shown a bare count rather than a limit nothing applies.
+It also reports `savedFilters: { perRound, nameMax }` — always numbers, since that
+cap applies in every mode — so the session setup disables „Filter speichern" at
+the ceiling with a visible reason (issue #1328).
 
 Require a login: set `AUTH_PASSWORD=…` (and optionally `SESSION_SECRET=…`) to gate
 the whole app behind a single shared password — an unauthenticated visitor gets a
@@ -318,7 +324,7 @@ against each, and the Node version the answering process is running.
 the archive, the played shelf or the wishlist; which design accounts wear (an
 account that has not answered the design chooser counts under the face, Der
 Tisch, exactly as it sees it), and how many went back to Klassisch; rounds carrying their own
-tags or shared with someone; games linked to a provider, wearing a
+tags, keeping saved session filters or shared with someone; games linked to a provider, wearing a
 cover, owned by a named person or carrying expansions; sessions with guests, with
 teams or opened through a shared vote link; accounts with a passkey, a BGG
 username or a profile picture. Every adoption figure is stated as `n / total`

@@ -571,6 +571,17 @@ blob alone — the design id, or a pre-#903 page hex through `LEGACY_PAGE_DESIGN
 are the historical record of sixteen designs that no longer exist in code:
 change an entry and every legacy round mapped through it changes colour.
 
+**The twenty-first is `public/js/member-active.js`** (#1006, required
+server-side since #1328): `activeMembers`, which seats are still playing.
+The session setup screen offers only those seats, and
+`lib/routes/saved-filters.js` stores only those in a saved filter's
+`memberIds`. It is the logic half again, in its smallest form — a one-line
+`!m.retired` — and that is exactly why it is required rather than restated: a
+hand-written copy on the server would be "obviously the same" until a second
+off-the-table state joined `retired`, and then a saved filter would keep a seat
+the screen no longer offers, which the setup screen would silently drop on use
+with nothing to say why.
+
 **Each new instance must be named above.** `test/rule-enumerations.test.js`
 asserts every `require('../public/js/…')` under `lib/routes/` and `lib/` appears
 in it, because the list had already gone stale by one before anyone noticed. The

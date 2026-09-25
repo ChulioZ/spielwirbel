@@ -1588,6 +1588,17 @@ a.hub-row:hover { background: var(--sunken-soft); }
    pane below 1280px and in the rail above it, following that button either way. */
 .hub-presets { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
 .rail .hub-presets { margin: -6px 0 4px; }
+/* A SAVED filter's chip (#1328) carries a user-authored name of up to 40
+   characters, where the built-ins are two short words. Capped and ellipsised
+   on ONE line rather than wrapped: a wrapped chip is a taller chip, and in the
+   rail or Der Tisch's felt band a two-line pill reads as two controls. The full
+   name stays the button's text (its accessible name) and its `title`.
+   `min-width: 0` on both is what lets the flex item shrink below its text at
+   all — without it `text-overflow` never fires. Unscoped on purpose: every
+   design renders this one row, and a design that restyles the chip inherits the
+   truncation instead of re-deriving it. */
+.chip.hub-preset--saved { max-width: min(100%, 16em); min-width: 0; }
+.hub-preset__name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 /* ≤520px: stretched buttons, so a wrap reads as a deliberate stack instead of
    two ragged pills — the `.sheet__actions` narrow rule's reasoning, applied to
    the page-level action rows (`.toolbar` likewise). */
@@ -5110,7 +5121,8 @@ a.k-tile:focus-visible,
    against its label on whichever host nobody looked at. */
 .rs-row .ds-row__main,
 .wish-pick__row .ds-row__main,
-.off-shelf__row .ds-row__main { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.off-shelf__row .ds-row__main,
+.saved-filter-row .ds-row__main { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .rs-row .ds-row__meta,
 .wish-pick__row .ds-row__meta,
 .off-shelf__row .ds-row__meta { color: var(--ink-soft); }
@@ -7551,6 +7563,15 @@ a.k-tile:focus-visible,
    not. */
 .ds-list--tiles > .tag-edit { grid-column: 1 / -1; }
 .tag-edit { display: flex; flex-direction: column; gap: 10px; }
+
+/* Saved session filters (#1328): the setup screen's „Filter speichern" row
+   and the Einstellungen list. The row reuses the tag screen's `.tag-act`
+   buttons and inline `.tag-edit` editor, so only its own spacing is here. */
+.setup-save { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; margin-top: 10px; }
+.setup-save__reason { margin: 0; font-size: var(--text-sm); }
+.saved-filters__empty { margin: 0 0 8px; }
+.saved-filter-row__name { min-width: 0; overflow-wrap: anywhere; }
+.saved-filter-row .ds-row__meta { display: flex; align-items: center; gap: 2px; flex: none; }
 .tag-act {
   flex: none;
   border: none;
