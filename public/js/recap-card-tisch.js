@@ -635,7 +635,11 @@ async function shareResultCard(model, text) {
   if (!(navigator.canShare && navigator.share && typeof File !== 'undefined')) return false;
   let blob;
   try {
-    blob = await tischCardBlob(model.outcome === 'split' ? 'split' : 'session', model);
+    // Ocean's card (#1220) picks its proportion from the screen; its spec
+    // handles a split session itself.
+    blob = designCard() === 'ocean'
+      ? await oceanCardBlob(oceanShareKind(), model)
+      : await tischCardBlob(model.outcome === 'split' ? 'split' : 'session', model);
   } catch (err) {
     reportClientError('recap_export', err);
     return false;

@@ -7713,15 +7713,15 @@
    different heights and centring would float the tile off the title. The row
    stays one line at every width (the Klassisch wrap at 520px is undone here):
    stacking is what makes the actions narrow enough to fit beside the text. */
-:root[data-design="tisch"] .inbox-row--tisch.ds-row { align-items: flex-start; flex-wrap: nowrap; gap: 13px; }
-:root[data-design="tisch"] .inbox-row--tisch .ds-row__main { flex: 1; min-width: 0; }
-:root[data-design="tisch"] .inbox-row--tisch .inbox-invite__actions {
+:root[data-design="tisch"] .inbox-row--composed.ds-row { align-items: flex-start; flex-wrap: nowrap; gap: 13px; }
+:root[data-design="tisch"] .inbox-row--composed .ds-row__main { flex: 1; min-width: 0; }
+:root[data-design="tisch"] .inbox-row--composed .inbox-invite__actions {
   flex: none;
   flex-direction: column;
   align-items: stretch;
   gap: 6px;
 }
-:root[data-design="tisch"] .inbox-row--tisch .inbox-invite__actions .link-btn { min-height: 36px; justify-content: center; }
+:root[data-design="tisch"] .inbox-row--composed .inbox-invite__actions .link-btn { min-height: 36px; justify-content: center; }
 /* On a phone a 136px action column beside the text left the title 126px and
    made each row 207px tall (measured at 390). So the two typed rows WRAP
    there: tile and text on the first line, the still-stacked actions under the
@@ -7731,7 +7731,7 @@
   :root[data-design="tisch"] .inbox-row--friend-request.ds-row { flex-wrap: wrap; row-gap: 10px; }
   :root[data-design="tisch"] .inbox-row--round-invitation .ds-row__main,
   :root[data-design="tisch"] .inbox-row--friend-request .ds-row__main { flex-basis: calc(100% - 53px); }
-  :root[data-design="tisch"] .inbox-row--tisch .inbox-invite__actions { flex: 1 0 calc(100% - 53px); margin-left: 53px; }
+  :root[data-design="tisch"] .inbox-row--composed .inbox-invite__actions { flex: 1 0 calc(100% - 53px); margin-left: 53px; }
 }
 :root[data-design="tisch"] .inbox-row__icon {
   flex: none;

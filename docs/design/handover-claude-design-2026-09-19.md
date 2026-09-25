@@ -54,7 +54,7 @@ All seven looks share this structure. A design may change *how* it looks, never 
 - the off-shelf entry points: Aussortiert · Durchgespielt · Wunschliste · Könnte euch gefallen
 - settings entry (Einstellungen: name, marker colour, tags, invite, transfer)
 
-**Sub-pages of a round:** Regal (`views-regal.js`, with search, sort, filter panel, bulk select, BGG import, add tile), Chronik (`views-chronik.js`, sessions list + period recap + share), Pokale (`views-pokale.js`, podium + standings), the three off-shelf lists + recommendations (`views-archive.js`, `views-recommend.js`), game detail „Spielepass" (`views-round-detail.js`), add-game lookup (`views-round-lookup.js`), member page (`views-member.js`), round settings (`views-round-settings.js`).
+**Sub-pages of a round:** Regal (`views-regal.js`, with search, sort, filter panel, bulk select, BGG import, add tile), Chronik (`views-chronik.js`, sessions list; the period recap + share moved to `views-period-recap.js` in #1345), Pokale (`views-pokale.js`, podium + standings), the three off-shelf lists + recommendations (`views-archive.js`, `views-recommend.js`), game detail „Spielepass" (`views-round-detail.js`), add-game lookup (`views-round-lookup.js`), member page (`views-member.js`), round settings (`views-round-settings.js`).
 
 **Reachability rule:** on desktop every round screen carries a persistent way to Hub · Regal · Chronik · Pokale · Einstellungen (Programmheft's section links are the model; a rail or breadcrumb is fine if all five are one click away). On phones the existing dock holds exactly Hub · Regal · Chronik · Pokale.
 

@@ -293,7 +293,12 @@ function renderPokaleTab(round) {
   }
 
   if (finished.length === 0) {
-    sec.appendChild(emptyState({ icon: 'ti-trophy', title: t('pokale.emptyTitle'), text: t('pokale.empty') }));
+    const empty = sec.appendChild(emptyState({ icon: 'ti-trophy', title: t('pokale.emptyTitle'), text: t('pokale.empty') }));
+    // Ocean's one next step (#1216, O7.1), as on the Chronik: the hub's own
+    // „Abtauchen", only where there is a game to draw from.
+    if (ocean && round.games.some(isActiveGame)) {
+      emptyStateAction(empty, { icon: 'ti-tornado', label: t('round.startSessionOcean'), primary: true, onClick: () => showStartSession(round) });
+    }
     app.appendChild(sec);
     return;
   }

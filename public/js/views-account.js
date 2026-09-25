@@ -111,6 +111,7 @@ async function showAccount() {
   if (me.demo) {
     app.appendChild(h(`<h2 class="konto-section__h">${esc(t('konto.demo.title'))}</h2>`));
     app.appendChild(h(`<p class="muted">${esc(t('konto.demo.note'))}</p>`));
+    if (designIs('ocean')) composeKontoCards();
     return;
   }
 
@@ -154,6 +155,29 @@ async function showAccount() {
   // menu, and it holds no password to re-authenticate with anyway.
   app.appendChild(h(`<h2 class="konto-section__h konto-section__h--danger">${esc(t('konto.delete.title'))}</h2>`));
   app.appendChild(buildDeleteSection(me));
+  if (designIs('ocean')) composeKontoCards();
+}
+
+/* Ocean's Konto (#1219, O14.3 „Alles auf einer Seite, nichts versteckt"): every
+   section a card of its own, built AFTER the shared screen out of its own nodes,
+   so the forms and their handlers are exactly Klassisch's. Each
+   `h2.konto-section__h` opens a card that takes the siblings up to the next one.
+   Two sections already carry their own frame: the design card (#1215,
+   `.konto-design`) is left as it is, and the install section, which holds its
+   heading inside it, only takes the card's class. The deletion card keeps a
+   danger edge. */
+function composeKontoCards() {
+  let card = null;
+  [...app.children].forEach((el) => {
+    if (el.matches('.konto-design')) { card = null; return; }
+    if (el.matches('.install-section')) { el.classList.add('konto-card'); card = null; return; }
+    if (el.matches('h2.konto-section__h')) {
+      const danger = el.classList.contains('konto-section__h--danger');
+      card = h(`<section class="konto-card${danger ? ' konto-card--danger' : ''}"></section>`);
+      el.before(card);
+    }
+    if (card) card.appendChild(el);
+  });
 }
 
 /* Upload, replace and remove the account's profile picture (#841).

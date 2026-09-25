@@ -1503,6 +1503,9 @@ async function showResults(round, session, gamesHint, reveal, plain) {
   const shareNow = !canShareResult() ? null : () => shareResult({
     roundName: round.name,
     when,
+    // The DATE alone, for a card that must not print the time of day (Ocean,
+    // O8.3 — „keine Uhrzeit"). `when` keeps the time for the text share.
+    day: fmtDate(session.createdAt),
     cancelled,
     playedTitle: chosenId ? (games.find((g) => g.id === chosenId) || {}).title || null : null,
     winnerNames: winnerIds.map((wid) => personLabel(people.find((p) => p.id === wid))).filter(Boolean),

@@ -388,7 +388,7 @@ const frontendGlobals = {
   rankLookupHits: 'readonly', hitShelfState: 'readonly',
   gameHue: 'readonly', coverPlaceholder: 'readonly',
   // empty-state.js (issue #869)
-  emptyState: 'readonly',
+  emptyState: 'readonly', emptyStateAction: 'readonly',
   coverUrl: 'readonly', COVER_THUMB: 'readonly', COVER_CARD: 'readonly',
   COVER_HERO: 'readonly', COVER_RESIZERS: 'readonly',
   providerMatchCover: 'readonly', pickedTitle: 'readonly',
@@ -435,6 +435,9 @@ const frontendGlobals = {
   recapColor: 'readonly', recapMarker: 'readonly',
   // …and the four the Regal-Steckbrief's card (#1173) paints Der Tisch with.
   tischPalette: 'readonly', tischCardFelts: 'readonly', tischFont: 'readonly', tischBadge: 'readonly',
+  // recap-card-ocean.js (#1220) — Ocean's share card in three formats; the
+  // two helpers tischWrap/tischBadge it reuses are recap-card-tisch.js's.
+  oceanCardBlob: 'readonly', oceanShareKind: 'readonly', tischWrap: 'readonly',
   offeredDesigns: 'readonly', designTile: 'readonly', renderDesignPicker: 'readonly',
   maybeShowDesignChooser: 'readonly', showDesignChooser: 'readonly',
   buildDesignSection: 'readonly',
@@ -469,7 +472,7 @@ const frontendGlobals = {
   hubEmptyTable: 'readonly',
   // ocean-hub.js (#1211) — Ocean's lobby tiles and round hub composition
   oceanHubFrame: 'readonly', oceanShell: 'readonly', oceanHeroCompose: 'readonly',
-  oceanRoundCard: 'readonly', oceanResumeNotice: 'readonly',
+  oceanRoundCard: 'readonly', oceanResumeNotice: 'readonly', oceanYoungLine: 'readonly',
   // #1280 — Der Tisch's young-round features (views-home.js, hub-cards.js, views-pokale.js)
   lobbyInviteSlip: 'readonly', lobbyNextStep: 'readonly', hubDemoSummary: 'readonly',
   hubDemoInvite: 'readonly', pokaleYoungLead: 'readonly',
@@ -487,7 +490,11 @@ const frontendGlobals = {
   pokaleStatCard: 'readonly', pokaleGameCard: 'readonly', recapGames: 'readonly',
   roundStandings: 'readonly',
   gameCardHead: 'readonly', wireGameCardHead: 'readonly',
-  renderRecapSection: 'readonly', renderPeriodRecapSection: 'readonly',
+  renderRecapSection: 'readonly',
+  // views-period-recap.js (#1345, split out of views-chronik.js) — the Chronik's
+  // per-period recap section and the share delivery its card, the account recap
+  // and the Regal-Steckbrief go out through
+  renderPeriodRecapSection: 'readonly',
   canShareRecapImage: 'readonly', shareRecapCard: 'readonly', deliverShareImage: 'readonly',
   // views-shelf-profile.js (#1173) — the Regal-Steckbrief's card, screen and share
   shelfProfileDeps: 'readonly', SHELF_DIM_TITLES: 'readonly', shelfSeatName: 'readonly',

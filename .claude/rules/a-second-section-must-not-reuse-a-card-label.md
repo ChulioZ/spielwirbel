@@ -2,6 +2,7 @@
 paths:
   - "public/js/views-pokale.js"
   - "public/js/views-chronik.js"
+  - "public/js/views-period-recap.js"
   - "public/js/views-round*.js"
   - "public/js/views-member.js"
 ---
