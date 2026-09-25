@@ -1716,6 +1716,47 @@ test('Der Tisch\'s young-round features keep their text at AA on the grounds the
   assert.deepEqual(failures, []);
 });
 
+test('Klassisch\'s young-round pieces keep their text at AA and the crown at 3:1, on every design (#1318)', () => {
+  /* styles.css's own copies of the #1280 pieces: the „Nächster Schritt" card,
+     the Pokale leader block and the two threshold sentences. Each pair is read
+     off the RULE — the token its declaration names — rather than restated, so a
+     retune of one of these rules is measured as written. The crown is an
+     aria-hidden glyph (SC 1.4.11, 3:1). */
+  const KEY = {
+    '--ink': 'ink', '--ink-soft': 'inkSoft', '--surface': 'surface',
+    '--sunken-soft': 'sunkenSoft', '--gold-deep': 'goldDeep',
+  };
+  const tok = (sel, prop) => {
+    const body = bodyOf(sel);
+    assert.ok(body, `${sel} is gone from styles.css`);
+    const m = new RegExp(`(?:^|[;\\s])${prop}:\\s*var\\((--[\\w-]+)\\)`).exec(body);
+    assert.ok(m && KEY[m[1]], `${sel} ${prop} does not name a measured token`);
+    return KEY[m[1]];
+  };
+  const pairs = [
+    ['next-step card ink', tok('.next-step', 'color'), tok('.next-step', 'background'), AA_TEXT],
+    ['next-step row, hovered', tok('.next-step', 'color'), tok('.next-step__row:hover', 'background'), AA_TEXT],
+    ['leader line', tok('.pokale-young__lead', 'color'), tok('.pokale-young', 'background'), AA_TEXT],
+    ['leader sentence', tok('.pokale-young__when', 'color'), tok('.pokale-young', 'background'), AA_TEXT],
+    ['pulse threshold sentence', tok('.hub-card__threshold', 'color'), tok('.hub-card', 'background'), AA_TEXT],
+    ['leader crown', tok('.pokale-young__crown', 'color'), tok('.pokale-young', 'background'), AA_LARGE],
+  ];
+  const failures = [];
+  let checked = 0;
+  for (const t of THEMES) {
+    for (const [label, fg, bg, bar] of pairs) {
+      const ratio = contrast(t[fg], t[bg]);
+      checked++;
+      if (!(ratio >= bar)) failures.push(`${name(t)} — ${label} = ${ratio.toFixed(2)}:1 (bar ${bar})`);
+    }
+  }
+  // The floor counts DESIGNS, not a fixed number: #1202 retires the round
+  // palettes, which would leave `pairs.length * 10` unreachable while every
+  // pair is still measured. Klassisch + Der Tisch is the smallest honest set.
+  assert.ok(THEMES.length >= 2 && checked === pairs.length * THEMES.length, 'the sweep measured almost nothing');
+  assert.deepEqual(failures, []);
+});
+
 test('the Chronik session strip keeps its date column at AA on wood and on paper (#1271)', () => {
   /* The strip's date column changes ground with the width (tisch.css): on a
      desktop it stands on the walnut PAGE beside the paper and takes --gold; on

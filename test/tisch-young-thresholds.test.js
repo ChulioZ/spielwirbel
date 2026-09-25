@@ -1,6 +1,8 @@
 'use strict';
 
-/* Der Tisch's young-round features (#1280, T7.2 / T7.5 / T7.6):
+/* The young-round features (#1280, T7.2 / T7.5 / T7.6), built for Der Tisch
+ * and moved to every design by #1318 where they are app features rather than
+ * paint:
  *
  *   - T7.5: until the third played session the Rundenpuls carries a sentence
  *     instead of series, the Pokale streak card waits, and the
@@ -11,9 +13,11 @@
  *   - T7.6: the demo's hub condenses its three previews into one list and
  *     carries the „Gefällt dir das?" invitation.
  *
- * Every branch is a designIs('tisch') gate, so each screen is rendered twice
- * through the real view: under Klassisch asserting the structure it has always
- * had, and under Der Tisch. The two thresholds are pinned twice as well — by
+ * Since #1318 the thresholds and the next-step card hold under every design,
+ * and the demo invitation too; only the invite slip on the lobby tile and the
+ * condensed demo list stay Tisch composition. So each screen is rendered under
+ * Klassisch AND Der Tisch through the real view. The two thresholds are pinned
+ * twice as well — by
  * value at the boundary (2 → 3 sessions) on every site, and by NAME in the
  * source, so a site cannot quietly grow its own literal 3.
  */
@@ -104,10 +108,35 @@ test('every site gates on the shared constant, never on a literal', () => {
 
 // ------------------------------------------------------------- T7.5, the hub
 
-test('Klassisch hub after one session: no pulse card, a normal Pokale preview, no threshold anywhere', async (t) => {
+const klassischPokalePreview = (dom) =>
+  dom.app.querySelector('.hub-cards .hub-preview .hub-card__title .ti-trophy').closest('.hub-preview');
+
+test('Klassisch hub after one session: the pulse is a sentence, and the Pokale preview names only the leader (#1318)', async (t) => {
   const dom = await hub(t, null, round(1));
-  assert.equal(cardByTitle(dom, 'Rundenpuls'), undefined, 'Klassisch’s pulse still needs two sessions');
-  assert.equal(dom.app.querySelector('.hub-card__threshold, .hub-preview__threshold, .hub-demo'), null);
+  const pulse = cardByTitle(dom, 'Rundenpuls');
+  assert.equal(pulse.querySelector('.pulse-bars'), null, 'Klassisch’s bar chart waits for three sessions');
+  assert.match(pulse.textContent, new RegExp(`${YOUNG_ROUND_SERIES_FROM} Sessions`));
+  const card = klassischPokalePreview(dom);
+  assert.deepEqual([...card.querySelectorAll('.hub-preview__name')].map((e) => e.textContent), ['Anna'],
+    'no second and third place off one evening');
+  assert.equal(card.querySelector('.hub-preview__threshold').textContent, PODIUM);
+  assert.equal(card.querySelector('.hub-preview__sub'), null, 'the „führt" sub-line is Der Tisch’s phone tile');
+  assert.equal(dom.app.querySelector('.hub-demo, .hub-card--demo-invite'), null);
+});
+
+test('Klassisch hub at two sessions: the pulse is a sentence, and the bar chart waits for three (#1318)', async (t) => {
+  const two = await hub(t, null, round(YOUNG_ROUND_SERIES_FROM - 1));
+  const pulse = cardByTitle(two, 'Rundenpuls');
+  assert.ok(pulse, 'a played round still gets the card');
+  assert.equal(pulse.querySelector('.pulse-bars'), null, 'no bar chart off two evenings');
+  assert.match(pulse.textContent, new RegExp(`${YOUNG_ROUND_SERIES_FROM} Sessions`), 'the sentence names the threshold');
+  const three = await hub(t, null, round(YOUNG_ROUND_SERIES_FROM));
+  const drawn = cardByTitle(three, 'Rundenpuls');
+  assert.ok(drawn.querySelector('.pulse-bars'), 'the bars arrive at three');
+  assert.equal(drawn.querySelector('.hub-card__threshold'), null);
+  const card = klassischPokalePreview(three);
+  assert.equal(card.querySelector('.hub-preview__threshold'), null);
+  assert.ok(card.querySelectorAll('.hub-preview__rank').length > 1, 'the ranking is back');
 });
 
 test('Der Tisch hub after one session: real pulse tiles plus the series sentence', async (t) => {
@@ -145,11 +174,24 @@ test('Der Tisch Pokale preview from the threshold on ranks as before', async (t)
 
 // ------------------------------------------------------------- T7.5, the Pokale tab
 
-test('Klassisch Pokale tab after one session keeps its podium and its streak card', async (t) => {
-  const dom = await pokale(t, null, round(2));
-  assert.ok(dom.app.querySelector('.podium'), 'Klassisch lost its podium');
+test('Klassisch Pokale tab below the threshold: the crowned leader and the sentence, no podium, no streak (#1318)', async (t) => {
+  const dom = await pokale(t, null, round(YOUNG_ROUND_PODIUM_FROM - 1));
+  assert.equal(dom.app.querySelector('.podium'), null, 'a podium off two evenings');
+  const young = dom.app.querySelector('.pokale-young');
+  assert.ok(young, 'Klassisch names the leader too');
+  assert.equal(young.querySelector('.pokale-young__lead').textContent, 'Anna führt mit 2 Siegen');
+  assert.equal(young.querySelector('.pokale-young__when').textContent, PODIUM);
+  assert.equal(young.querySelector('a.pokale-young__seat').getAttribute('href'), '/round/r1/member/m1');
+  assert.deepEqual([...dom.app.querySelectorAll('.podium__rest-name')].map((e) => e.dataset.mid), ['m2', 'm3'],
+    'everyone not named stays reachable');
+  assert.doesNotMatch(dom.app.textContent, /Siegesserie/, 'the streak waits for the series threshold');
+});
+
+test('Klassisch Pokale tab from the threshold on: the podium and the streak are back', async (t) => {
+  const dom = await pokale(t, null, round(YOUNG_ROUND_PODIUM_FROM));
+  assert.ok(dom.app.querySelector('.podium'));
   assert.equal(dom.app.querySelector('.pokale-young'), null);
-  assert.match(dom.app.textContent, /Siegesserie/, 'Klassisch’s streak card shows from two in a row, as before');
+  assert.match(dom.app.textContent, /Siegesserie/);
 });
 
 test('Der Tisch Pokale tab below the threshold: the crowned leader and the sentence, no podium, no streak', async (t) => {
@@ -204,12 +246,37 @@ async function lobby(t, design, rounds, { accounts = true } = {}) {
   return dom;
 }
 
-test('Klassisch one-round lobby is unchanged: no slip, no next-step card', async (t) => {
+test('Klassisch one-round lobby: the next-step card under the grid, but no Tisch slip on the tile (#1318)', async (t) => {
   const dom = await lobby(t, null, [summary()]);
   const card = dom.app.querySelector('.round-card:not(.round-card--new)');
   assert.deepEqual([...card.querySelector('.round-card__body').children].map((el) => el.className),
-    ['round-card__name', 'round-card__meta'], 'the Klassisch tile gained a child');
-  assert.equal(dom.app.querySelector('.next-step'), null);
+    ['round-card__name', 'round-card__meta'], 'the invite slip is Der Tisch’s paper, out of scope for Klassisch');
+  const next = dom.app.querySelector('.next-step');
+  assert.ok(next, 'Klassisch shows the next steps too');
+  assert.equal(dom.app.querySelector('.lobby-list').nextElementSibling, next, 'right under the grid');
+  assert.equal(next.querySelector('h2').textContent, 'Nächster Schritt');
+  assert.deepEqual([...next.querySelectorAll('button.next-step__row')].map((b) => b.textContent.trim()),
+    ['Regal von BGG holen', 'Mitglieder einladen']);
+});
+
+test('Klassisch next-step rows open the two sheets, and the card keeps the same gates', async (t) => {
+  const dom = await lobby(t, null, [summary()]);
+  const seen = [];
+  dom.set('fetchRoundFresh', async (rid) => ({ id: rid, full: true }));
+  dom.set('showBggImport', (r) => seen.push(['bgg', r.id, r.full]));
+  dom.set('showInvite', (r) => seen.push(['invite', r.id, r.full]));
+  for (const row of dom.app.querySelectorAll('.next-step__row')) row.click();
+  await new Promise((r) => setTimeout(r, 0));
+  assert.deepEqual(seen.map((x) => [...x]), [['bgg', 'r1', true], ['invite', 'r1', true]]);
+
+  const played = await lobby(t, null, [summary({ playedCount: 1 })]);
+  assert.equal(played.app.querySelector('.next-step'), null, 'a round that has played is past this card');
+  const two = await lobby(t, null, [summary(), summary({ id: 'r2', name: 'Zweite' })]);
+  assert.equal(two.app.querySelector('.next-step'), null, 'only a ONE-round lobby');
+  const shared = await lobby(t, null, [summary({ shared: true, role: 'editor' })]);
+  assert.equal(shared.app.querySelector('.next-step'), null, 'a shared round’s steps are its owner’s');
+  const noAccounts = await lobby(t, null, [summary()], { accounts: false });
+  assert.equal(noAccounts.app.querySelector('.next-step'), null, 'neither step exists without accounts');
 });
 
 test('Der Tisch one-round lobby: the invite slip on the tile and the next-step card under the grid', async (t) => {
@@ -256,8 +323,22 @@ test('Der Tisch invite slip only on a round that seats its founder alone', async
 
 // ------------------------------------------------------------- T7.6, the demo
 
-test('Klassisch demo hub is unchanged: the previews, no summary, no invitation', async (t) => {
+test('Klassisch demo hub: the invitation leads the grid, the three previews stay (#1318)', async (t) => {
   const dom = await hub(t, null, round(4), { demo: true });
+  const grid = dom.app.querySelector('.hub-cards');
+  const first = grid.children[0].firstElementChild;
+  assert.ok(first.matches('.hub-card--demo-invite'), 'the invitation leads the grid');
+  assert.equal(first.querySelector('h2').textContent.trim(), 'Gefällt dir das?');
+  assert.equal(dom.app.querySelector('.hub-demo'), null, 'the condensed list is Der Tisch’s composition');
+  assert.equal(dom.app.querySelectorAll('.hub-preview').length, 3, 'Klassisch keeps its three previews');
+  let left = 0;
+  dom.set('leaveDemoForRegister', () => { left++; });
+  first.querySelector('button.hub-demo__cta').click();
+  assert.equal(left, 1, 'the invitation is the banner’s own exit');
+});
+
+test('Klassisch hub that is not a demo has no invitation', async (t) => {
+  const dom = await hub(t, null, round(4));
   assert.equal(dom.app.querySelector('.hub-demo, .hub-card--demo-invite'), null);
   assert.equal(dom.app.querySelectorAll('.hub-preview').length, 3);
 });

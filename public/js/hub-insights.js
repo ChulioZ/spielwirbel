@@ -300,7 +300,8 @@ function roundPulse(round, activeGames, opts, deps) {
   const total = months.reduce((n, m) => n + m.count, 0);
   // `o.minSessions` lowers the floor for Der Tisch, whose tiles are real
   // figures from the first evening on (T7.5) — there is no bar chart to be
-  // drawn from one point. Klassisch passes nothing and keeps its two.
+  // drawn from one point. Klassisch passes YOUNG_ROUND_SERIES_FROM (#1318);
+  // the default below only serves a caller that passes nothing.
   const floor = Number.isInteger(o.minSessions) && o.minSessions > 0 ? o.minSessions : PULSE_MIN_SESSIONS;
   if (total < floor) return null;
 
