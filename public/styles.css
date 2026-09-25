@@ -175,9 +175,10 @@
   /* The finale stage: a dark "curtain" tinted with the accent, so it matches
      every theme. --stage-bg keeps 18%: it mixes into a dark anchor rather than
      a pure one, so its shift is chromatic (~5/255) and no percentage tunes it
-     out. The three that dilute a light tone INTO that dark bg do re-tune —
+     out. The ones that dilute a light tone INTO that dark bg do re-tune —
      same darker-per-percent effect as above, and here it costs contrast:
-     unretuned, --stage-muted drops 5.48 -> 5.12 and --stage-faint 3.59 -> 3.30. */
+     unretuned, --stage-muted drops 5.48 -> 5.12. (A third, --stage-faint, sat at
+     3.59:1 under the finale's note; it is gone — the note takes --stage-muted.) */
   --stage-anchor: #201a15;
   --stage-bg: color-mix(in oklab, var(--brand) 18%, var(--stage-anchor));
   /* #fff, not --shade: the stage is a dark curtain under BOTH schemes, so
@@ -186,7 +187,6 @@
   --stage-line: color-mix(in oklab, #fff 18%, var(--stage-bg));
   --stage-ink: color-mix(in oklab, var(--brand) 8%, #f7f2e9);
   --stage-muted: color-mix(in oklab, var(--stage-ink) 65%, var(--stage-bg));
-  --stage-faint: color-mix(in oklab, var(--stage-ink) 48%, var(--stage-bg));
 
   --ink: #2b2620;
   --ink-soft: #6b6358;
@@ -5560,9 +5560,14 @@ a.k-tile:focus-visible,
   text-align: center;
   color: var(--ink-soft);
 }
-.trow__rank--1 { color: var(--gold); }
-.trow__rank--2 { color: #9ca3af; }
-.trow__rank--3 { color: #b3703a; }
+.trow__rank--1 { color: var(--gold-deep); }
+.trow__rank--2 { color: #575e68; }
+.trow__rank--3 { color: #8a4b1c; }
+/* The places are NUMERALS, not medal glyphs, so they are held to text contrast:
+   the medal tints `.rank-medal` keeps below measured 2.20:1 (--gold), 2.5:1 and
+   3.9:1 here on white. Same metals, pressed dark enough to read — 2 and 3 are
+   the values Der Tisch's paper Tafel takes too (--paper-silver/--paper-bronze);
+   Der Tisch's gold row gives place 1 --gold-ink through its single-ink sweep. */
 .trow__img {
   grid-area: cover;
   align-self: center;
@@ -9992,7 +9997,7 @@ kbd {
 }
 .stage__voter-check .ti { font-size: 10px; /* glyph, not type */ }
 .stage__voter-name { font-size: var(--text-xs); font-weight: 800; color: var(--stage-muted); }
-.stage__note { font-size: var(--text-xs); font-weight: 700; color: var(--stage-faint); margin-top: 12px; }
+.stage__note { font-size: var(--text-xs); font-weight: 700; color: var(--stage-muted); margin-top: 12px; }
 
 /* ---- Results: podium reveal + confetti ---- */
 /* Who joined the session — avatar + name chips under the result header. */
