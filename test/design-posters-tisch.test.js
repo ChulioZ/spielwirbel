@@ -199,6 +199,10 @@ test('Tisch (phone): a row per design — tile, name, one sentence, radio — an
   assert.deepEqual(shape(rows[0]), ['span.design-tile.design-tile--bill', 'span.design-row__body', 'input.']);
   assert.equal(rows[0].querySelector('.design-row__desc').textContent, T('design.klassisch.short'));
   assert.equal(rows[1].querySelector('.design-row__desc').textContent, T('design.tisch.short'));
+  // #1277 review: the 58px tile prints the design's NAME, never the wordmark —
+  // „Spielwirbel" in 12px broke mid-word into „Spielwir / bel" there.
+  assert.equal(rows[0].querySelector('.design-tile__word').textContent, T('design.klassisch.name'));
+  assert.equal(rows[1].querySelector('.design-tile__word').textContent, T('design.tisch.name'));
   // The 58px tile prints the wordmark only — a tagline would not fit.
   assert.equal(rows[0].querySelector('.design-tile__sub'), null);
   assert.equal(sheet.querySelector('.design-rows input:checked').value, 'tisch');

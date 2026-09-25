@@ -65,7 +65,10 @@ function designTile(design) {
 
    aria-hidden like the tile: it is the PICTURE of the material. The name, the
    sentence and the ritual words beside it carry everything it says. */
-function designBill(design, { tagline = false } = {}) {
+// `name: true` prints the design's NAME instead of its wordmark — the phone
+// row's 58px tile, where a one-word wordmark like „Spielwirbel" only fits by
+// breaking mid-word (#1277 review). The name is short by construction.
+function designBill(design, { tagline = false, name = false } = {}) {
   const bill = designTile(design);
   bill.classList.add('design-tile--bill');
   const poster = design.poster;
@@ -75,7 +78,7 @@ function designBill(design, { tagline = false } = {}) {
     bill.style.setProperty('--poster-ink', poster.ink);
     bill.style.setProperty('--poster-sub', poster.sub);
   }
-  bill.appendChild(h(`<span class="design-tile__word">${esc(t(design.wordmarkKey || design.labelKey))}</span>`));
+  bill.appendChild(h(`<span class="design-tile__word">${esc(t((!name && design.wordmarkKey) || design.labelKey))}</span>`));
   if (tagline && design.taglineKey) {
     bill.appendChild(h(`<span class="design-tile__sub">${esc(t(design.taglineKey))}</span>`));
   }
@@ -278,7 +281,7 @@ function designPosterSheet(cfg, current) {
         </span>
         <input type="radio" name="designRow" value="${esc(design.id)}"${on ? ' checked' : ''}>
       </label>`);
-    row.insertBefore(designBill(design), row.firstChild);
+    row.insertBefore(designBill(design, { name: true }), row.firstChild);
     rows.appendChild(row);
   }
   // T5.3's closing tile: a promise, not a control — it names no design and

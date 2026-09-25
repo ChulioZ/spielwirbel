@@ -4916,16 +4916,16 @@
   width: 58px;
   height: 58px;
   flex: none;
-  padding: 4px;
+  padding: 2px;
   align-items: center;
   justify-content: center;
   border: 0;
   border-radius: var(--radius-sm);
 }
-/* 12px is SMALL text, so the tile sets its wordmark in the poster's small-text
+/* 11px is SMALL text, so the tile sets its name in the poster's small-text
    ink rather than the display ink the 25px poster may use (the Tisch gold is
    only legal on felt from 24px — T1's A1 rule). */
-:root[data-design="tisch"] .design-row .design-tile__word { font-size: 12px; line-height: 1; text-align: center; }
+:root[data-design="tisch"] .design-row .design-tile__word { font-size: 11px; line-height: 1; text-align: center; overflow-wrap: normal; word-break: normal; }
 :root[data-design="tisch"][data-scheme="dark"] .design-row .design-tile__word { color: var(--poster-sub, var(--tile-accent)); }
 :root[data-design="tisch"] .design-row__body { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
 :root[data-design="tisch"] .design-row__name {
@@ -4939,12 +4939,30 @@
 }
 :root[data-design="tisch"] .design-row__desc { font-size: var(--text-sm); line-height: 1.4; }
 :root[data-design="tisch"] .design-row input { width: 22px; height: 22px; margin: 0; flex: none; }
+/* Drawn, not native: under the dark scheme Chrome paints an UNCHECKED native
+   radio as a solid dark disc, which on this paper sheet read as the selected
+   one (#1277 review). An empty ring vs a ring with a dot, both in the row's own
+   ink, so the pair holds whatever the sheet's ground is. */
+:root[data-design="tisch"] .design-row input[type="radio"] {
+  appearance: none;
+  color: inherit; /* a form control does not inherit it — it took the dark scheme's white field text */
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+}
+:root[data-design="tisch"] .design-row input[type="radio"]:checked {
+  background: radial-gradient(circle, currentColor 0 5px, transparent 5.5px);
+}
+:root[data-design="tisch"] .design-row input[type="radio"]:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}
 :root[data-design="tisch"][data-scheme="dark"] .design-row {
   background: var(--surface);
   border-color: var(--control-edge);
 }
 :root[data-design="tisch"][data-scheme="dark"] .design-row.is-on { border-color: var(--gold); }
-:root[data-design="tisch"][data-scheme="dark"] .design-row input { accent-color: var(--gold-ink); }
 @media (max-width: 639px) {
   :root[data-design="tisch"] .design-posters,
   :root[data-design="tisch"] .design-chooser__skip { display: none; }
