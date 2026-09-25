@@ -228,16 +228,22 @@ function hubPresetChips(round, activeGames) {
    styles fail to load. */
 function hubPulseCard(round, activeGames) {
   /* Der Tisch draws its tiles from the FIRST played evening (T7.5, #1280):
-     every tile is a real figure at one session, and the bars that need two
-     points to mean anything are Klassisch's alone. */
+     every tile is a real figure at one session. Klassisch's bar chart waits
+     for YOUNG_ROUND_SERIES_FROM (#1318 merge interview, 2026-09-25) — a chart
+     off one or two evenings is the same noise the podium and the streak card
+     already wait out, so all three share one threshold. */
   const tisch = designIs('tisch');
-  const floor = tisch ? 1 : PULSE_MIN_SESSIONS;
+  const floor = tisch ? 1 : YOUNG_ROUND_SERIES_FROM;
   const pulse = roundPulse(round, activeGames, { minSessions: floor }, hubDeps());
   if (!pulse) {
-    // Der Tisch's young round gets the sentence, never a „0" (T7.4, #1269).
-    // The count is the pulse's own floor, so the copy cannot promise numbers
-    // sooner than roundPulse() will draw them.
-    if (tisch && roundIsYoung(round) && activeGames.length) {
+    // A young round gets the sentence, never a „0" (T7.4, #1269) — Der Tisch
+    // from its empty table on, Klassisch once something has been played (its
+    // empty hub keeps the card off, as it always did). The count is the
+    // pulse's own floor, so the copy cannot promise numbers sooner than
+    // roundPulse() will draw them.
+    const say = tisch ? roundIsYoung(round) : youngRoundPlayed(round, hubDeps()) > 0
+      && youngRoundPlayed(round, hubDeps()) < floor;
+    if (say && activeGames.length) {
       return hubSentenceCard('ti-activity', t('hub.pulse.title'),
         tn(floor, 'hub.young.pulseOne', 'hub.young.pulse'));
     }
@@ -294,7 +300,9 @@ function hubPulseCard(round, activeGames) {
     navLink(link, roundPath(round.id, 'regal'), () => showRound(round.id, 'regal'));
     body.appendChild(link);
   }
-  if (young) body.appendChild(threshold());
+  // No series sentence here: the bars only exist from YOUNG_ROUND_SERIES_FROM
+  // on, so a drawn Klassisch pulse is never young. Left out deliberately —
+  // a guard for a state this branch cannot enter would be untestable.
   return card;
 }
 

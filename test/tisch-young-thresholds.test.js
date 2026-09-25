@@ -111,9 +111,11 @@ test('every site gates on the shared constant, never on a literal', () => {
 const klassischPokalePreview = (dom) =>
   dom.app.querySelector('.hub-cards .hub-preview .hub-card__title .ti-trophy').closest('.hub-preview');
 
-test('Klassisch hub after one session: no pulse yet, and the Pokale preview names only the leader (#1318)', async (t) => {
+test('Klassisch hub after one session: the pulse is a sentence, and the Pokale preview names only the leader (#1318)', async (t) => {
   const dom = await hub(t, null, round(1));
-  assert.equal(cardByTitle(dom, 'Rundenpuls'), undefined, 'Klassisch’s bar chart still needs two sessions');
+  const pulse = cardByTitle(dom, 'Rundenpuls');
+  assert.equal(pulse.querySelector('.pulse-bars'), null, 'Klassisch’s bar chart waits for three sessions');
+  assert.match(pulse.textContent, new RegExp(`${YOUNG_ROUND_SERIES_FROM} Sessions`));
   const card = klassischPokalePreview(dom);
   assert.deepEqual([...card.querySelectorAll('.hub-preview__name')].map((e) => e.textContent), ['Anna'],
     'no second and third place off one evening');
@@ -122,15 +124,16 @@ test('Klassisch hub after one session: no pulse yet, and the Pokale preview name
   assert.equal(dom.app.querySelector('.hub-demo, .hub-card--demo-invite'), null);
 });
 
-test('Klassisch hub at two sessions: the bar chart closes on the series sentence, which goes at three (#1318)', async (t) => {
+test('Klassisch hub at two sessions: the pulse is a sentence, and the bar chart waits for three (#1318)', async (t) => {
   const two = await hub(t, null, round(YOUNG_ROUND_SERIES_FROM - 1));
   const pulse = cardByTitle(two, 'Rundenpuls');
-  assert.ok(pulse.querySelector('.pulse-bars'), 'Klassisch keeps its bars');
-  const body = pulse.querySelector('.hub-card__body');
-  assert.ok(body.lastElementChild.matches('.hub-card__threshold'), 'the sentence closes the card, after the figures');
-  assert.equal(body.lastElementChild.textContent, SERIES);
+  assert.ok(pulse, 'a played round still gets the card');
+  assert.equal(pulse.querySelector('.pulse-bars'), null, 'no bar chart off two evenings');
+  assert.match(pulse.textContent, new RegExp(`${YOUNG_ROUND_SERIES_FROM} Sessions`), 'the sentence names the threshold');
   const three = await hub(t, null, round(YOUNG_ROUND_SERIES_FROM));
-  assert.equal(cardByTitle(three, 'Rundenpuls').querySelector('.hub-card__threshold'), null);
+  const drawn = cardByTitle(three, 'Rundenpuls');
+  assert.ok(drawn.querySelector('.pulse-bars'), 'the bars arrive at three');
+  assert.equal(drawn.querySelector('.hub-card__threshold'), null);
   const card = klassischPokalePreview(three);
   assert.equal(card.querySelector('.hub-preview__threshold'), null);
   assert.ok(card.querySelectorAll('.hub-preview__rank').length > 1, 'the ranking is back');
