@@ -52,6 +52,44 @@ function designTile(design) {
   return tile;
 }
 
+/* A design's BILL (#1277): the same tile, printed — its wordmark and, on a
+   poster, its tagline, in the design's own poster colours. Built only under a
+   design that composes the chooser as posters (Der Tisch), so designTile above
+   and every Klassisch surface stay byte-for-byte what they were.
+
+   Painted from registry DATA, never from the offered design's stylesheet: the
+   chooser shows every design at once while the page wears one, and loading
+   seven stylesheets to draw seven posters would also apply them. Every field is
+   optional (designs.js lists the fallbacks), so a design added before it ships
+   its poster copy still prints a bill with its name on its own page tone.
+
+   aria-hidden like the tile: it is the PICTURE of the material. The name, the
+   sentence and the ritual words beside it carry everything it says. */
+// `name: true` prints the design's NAME instead of its wordmark — the phone
+// row's 58px tile, where a one-word wordmark like „Spielwirbel" only fits by
+// breaking mid-word (#1277 review). The name is short by construction.
+function designBill(design, { tagline = false, name = false } = {}) {
+  const bill = designTile(design);
+  bill.classList.add('design-tile--bill');
+  const poster = design.poster;
+  if (poster) {
+    bill.style.setProperty('--poster-top', poster.ground[0]);
+    bill.style.setProperty('--poster-foot', poster.ground[1]);
+    bill.style.setProperty('--poster-ink', poster.ink);
+    bill.style.setProperty('--poster-sub', poster.sub);
+  }
+  bill.appendChild(h(`<span class="design-tile__word">${esc(t((!name && design.wordmarkKey) || design.labelKey))}</span>`));
+  if (tagline && design.taglineKey) {
+    bill.appendChild(h(`<span class="design-tile__sub">${esc(t(design.taglineKey))}</span>`));
+  }
+  return bill;
+}
+
+// The words a design says at the table, or '' when it names none.
+function designRitualWords(design) {
+  return (design.ritualKeys || []).map((key) => t(key)).join(' · ');
+}
+
 /* The card list. `current` is the design in force, `onPick` is handed the id of
    whatever the user chose — the caller owns persisting it, because the Konto
    screen and the chooser sheet write it through different endpoints.
@@ -72,7 +110,10 @@ function renderDesignPicker(cfg, current, onPick) {
           <span class="design-card__desc">${esc(t(design.descKey))}</span>
         </span>
       </label>`);
-    card.insertBefore(designTile(design), card.querySelector('.design-card__body'));
+    // Der Tisch prints the Konto cards as T5.2's small bills (wordmark, no
+    // tagline); Klassisch keeps its swatch.
+    card.insertBefore(designIs('tisch') ? designBill(design) : designTile(design),
+      card.querySelector('.design-card__body'));
     card.querySelector('input').addEventListener('change', () => {
       for (const other of list.querySelectorAll('.design-card')) other.classList.remove('is-on');
       card.classList.add('is-on');
@@ -135,7 +176,7 @@ function buildDesignSection(me) {
         // re-renders nothing — hence the explicit currentView() below.
         applyAccountDesign();
         if (ex.message !== 'auth') {
-          toast(t(ex.message === 'invalid_design' ? 'konto.design.invalid' : 'auth.error.network'));
+          toast(t(ex.message === 'invalid_design' ? 'konto.design.invalid' : 'auth.error.network'), { tone: 'error' });
           if (currentView) currentView();
         }
       }
@@ -167,8 +208,108 @@ function maybeShowDesignChooser(me, onDone) {
   });
 }
 
+/* The chooser as POSTERS (#1277, T5.3 at 1440, T5.4 at 390) — Der Tisch's
+   composition of the same question, built only while it is worn.
+
+   BOTH presentations are in the DOM and the stylesheet shows one per width
+   (the app's own 640px sheet breakpoint), because they are different CONTROLS,
+   not one control restyled:
+
+   - from 640, a grid of posters, each with ITS OWN button — one press is the
+     answer, so there is nothing to confirm (T5.3);
+   - below it, a radio row per design and ONE commit button under them (T5.4),
+     because a 76px row is too small to carry a second target beside its
+     radio.
+
+   The hidden one is display:none, so it is out of the tab order and the
+   accessibility tree rather than merely out of sight. „Später entscheiden"
+   likewise exists twice: top right with the posters, under the commit button
+   on the phone — each in its own presentation, so DOM order stays visual order.
+
+   NO live preview, unlike the Klassisch chooser: this markup is Der Tisch's,
+   styled by Der Tisch's stylesheet, so previewing another design would repaint
+   the sheet in rules that do not know it. The bills ARE the preview — that is
+   what painting them from the registry is for. */
+function designPosterSheet(cfg, current) {
+  const designs = offeredDesigns(cfg);
+  const badge = (design) => {
+    if (design.id === FACE_DESIGN) return `<span class="design-card__badge">${esc(t('design.klassisch.badge'))}</span>`;
+    if (design.id === current) return `<span class="design-card__badge">${esc(t('design.poster.picked'))}</span>`;
+    return '';
+  };
+  const backdrop = h(`<div class="sheet-backdrop">
+      <div class="sheet design-chooser design-chooser--posters" role="dialog" aria-modal="true" aria-labelledby="designChooserTitle">
+        <div class="sheet__head design-chooser__head">
+          <div class="design-chooser__intro">
+            <p class="design-chooser__kicker">${esc(t('design.chooser.kicker'))}</p>
+            <h2 id="designChooserTitle">${esc(t('design.chooser.title'))}</h2>
+            <p class="muted design-chooser__body">${esc(t('design.chooser.body'))}</p>
+          </div>
+          <button type="button" class="btn btn--ghost design-chooser__skip" id="designChooserSkip">${esc(t('design.chooser.skip'))}</button>
+        </div>
+        <ul class="design-posters"></ul>
+        <div class="design-rows" role="radiogroup" aria-labelledby="designChooserTitle"></div>
+        <div class="design-chooser__commit">
+          <button type="button" class="btn btn--primary btn--lg" id="designChooserGo"></button>
+          <button type="button" class="btn btn--ghost" id="designChooserSkipRow">${esc(t('design.chooser.skip'))}</button>
+        </div>
+      </div>
+    </div>`);
+
+  const posters = backdrop.querySelector('.design-posters');
+  const rows = backdrop.querySelector('.design-rows');
+  for (const design of designs) {
+    const on = design.id === current;
+    const name = t(design.labelKey);
+    const words = designRitualWords(design);
+    const poster = h(`<li class="design-poster${on ? ' is-on' : ''}">
+        <div class="design-poster__body">
+          <h3 class="design-poster__name">${esc(name)}${badge(design)}</h3>
+          <p class="design-poster__desc">${esc(t(design.descKey))}</p>
+          ${words ? `<p class="design-poster__words">${esc(words)}</p>` : ''}
+          <button type="button" class="btn ${on ? 'btn--primary' : 'btn--ghost'} design-poster__pick" data-design="${esc(design.id)}">${
+  esc(t(on ? 'design.poster.picked' : 'design.poster.pick'))}<span class="sr-only"> — ${esc(name)}</span></button>
+        </div>
+      </li>`);
+    poster.insertBefore(designBill(design, { tagline: true }), poster.firstChild);
+    posters.appendChild(poster);
+
+    const row = h(`<label class="design-row${on ? ' is-on' : ''}">
+        <span class="design-row__body">
+          <span class="design-row__name">${esc(name)}${badge(design)}</span>
+          <span class="design-row__desc">${esc(t(design.shortKey || design.descKey))}</span>
+        </span>
+        <input type="radio" name="designRow" value="${esc(design.id)}"${on ? ' checked' : ''}>
+      </label>`);
+    row.insertBefore(designBill(design, { name: true }), row.firstChild);
+    rows.appendChild(row);
+  }
+  // T5.3's closing tile: a promise, not a control — it names no design and
+  // offers nothing to press, so it is a list item with text and no button.
+  posters.appendChild(h(`<li class="design-poster design-poster--later">
+      <i class="ti ti-palette" aria-hidden="true"></i>
+      <span class="design-poster__name">${esc(t('design.chooser.moreTitle'))}</span>
+      <span class="design-poster__desc">${esc(t('design.chooser.later'))}</span>
+    </li>`));
+  return backdrop;
+}
+
+// The phone's commit button names what it will keep, as T5.4 prints it.
+function labelDesignCommit(button, id) {
+  const design = designById(id) || designById(FACE_DESIGN);
+  button.textContent = t('design.chooser.confirmNamed', { name: t(design.labelKey) });
+}
+
 function showDesignChooser(cfg, me, onDone) {
-  const backdrop = h(`<div class="sheet-backdrop sheet-backdrop--center">
+  const before = (me && me.design) || FACE_DESIGN;
+  // `chosen` is what gets STORED on the answer.
+  let chosen = before;
+  const posters = designIs('tisch');
+  let backdrop;
+  if (posters) {
+    backdrop = designPosterSheet(cfg, before);
+  } else {
+    backdrop = h(`<div class="sheet-backdrop sheet-backdrop--center">
       <div class="sheet sheet--dialog design-chooser" role="dialog" aria-modal="true" aria-labelledby="designChooserTitle">
         <div class="sheet__head sheet__head--stacked">
           <p class="design-chooser__kicker">${esc(t('design.chooser.kicker'))}</p>
@@ -183,16 +324,15 @@ function showDesignChooser(cfg, me, onDone) {
         </div>
       </div>
     </div>`);
-  // Applied live as the user moves through the cards — what a design IS is what
-  // it looks like, and a preview is exactly what a sentence describing one
-  // cannot replace. `chosen` is what gets STORED on confirm.
-  const before = (me && me.design) || FACE_DESIGN;
-  let chosen = before;
-  backdrop.querySelector('.design-chooser__list')
-    .appendChild(renderDesignPicker(cfg, chosen, (id) => { chosen = id; applyDesign(id, { preview: true }); }));
+    // Applied live as the user moves through the cards — what a design IS is
+    // what it looks like, and a preview is exactly what a sentence describing
+    // one cannot replace.
+    backdrop.querySelector('.design-chooser__list')
+      .appendChild(renderDesignPicker(cfg, chosen, (id) => { chosen = id; applyDesign(id, { preview: true }); }));
+  }
   document.body.appendChild(backdrop);
 
-  // `settled` guards a genuinely multi-path exit: the two buttons call finish()
+  // `settled` guards a genuinely multi-path exit: the buttons call finish()
   // directly, while Escape and the history Back arrive through closeSheet's
   // onClose. It is set BEFORE closeSheet() so finish's own call cannot re-enter
   // through that callback and fire the request twice.
@@ -202,7 +342,10 @@ function showDesignChooser(cfg, me, onDone) {
     settled = true;
     // Revert first when declining, so „Später entscheiden" leaves the account
     // exactly as it was rather than silently keeping the last card previewed.
+    // The posters preview nothing, so a kept poster is painted HERE instead —
+    // at once, rather than one round trip later.
     if (!keep) applyDesign(before);
+    else if (posters) applyDesign(chosen, { preview: true });
     closeSheet();
     // ONE request either way. Storing the pick and the seen-stamp separately
     // would leave a window in which the chooser has been answered and not
@@ -219,6 +362,26 @@ function showDesignChooser(cfg, me, onDone) {
   const onKey = (e) => { if (e.key === 'Escape') closeSheet(); };
   document.addEventListener('keydown', onKey, true);
   openSheet(backdrop, onKey, () => finish(false));
+  const go = backdrop.querySelector('#designChooserGo');
   backdrop.querySelector('#designChooserSkip').addEventListener('click', () => finish(false));
-  backdrop.querySelector('#designChooserGo').addEventListener('click', () => finish(true));
+  go.addEventListener('click', () => finish(true));
+  if (!posters) return;
+
+  // A poster's own button IS the answer (T5.3) — including the one on the
+  // design already worn, which keeps it and records the chooser as seen.
+  for (const pick of backdrop.querySelectorAll('.design-poster__pick')) {
+    pick.addEventListener('click', () => { chosen = pick.dataset.design; finish(true); });
+  }
+  // A row only selects (T5.4); the commit button under the list answers.
+  labelDesignCommit(go, chosen);
+  for (const radio of backdrop.querySelectorAll('.design-row input')) {
+    radio.addEventListener('change', () => {
+      chosen = radio.value;
+      for (const row of backdrop.querySelectorAll('.design-row')) {
+        row.classList.toggle('is-on', row.contains(radio));
+      }
+      labelDesignCommit(go, chosen);
+    });
+  }
+  backdrop.querySelector('#designChooserSkipRow').addEventListener('click', () => finish(false));
 }

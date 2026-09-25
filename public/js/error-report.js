@@ -40,6 +40,9 @@ const CLIENT_ERROR_KINDS = [
   'uncaught',
   'unhandled_rejection',
   'recap_export',
+  // The Regal-Steckbrief's share image (#1173) — the same canvas export, a
+  // different site, so the operator can tell which card failed.
+  'shelf_profile_export',
   'clipboard_read',
   'sw_register',
   'storage_unavailable',
@@ -72,7 +75,7 @@ const CLIENT_ERROR_SCREENS = [
 ];
 const CLIENT_ERROR_ROUND_TABS = [
   'start', 'regal', 'chronik', 'pokale', 'retired', 'completed', 'wishlist',
-  'recommendations', 'design', 'tags', 'settings',
+  'recommendations', 'shelf-profile', 'design', 'tags', 'settings',
 ];
 const CLIENT_ERROR_ROUND_ITEMS = ['game', 'member', 'session'];
 

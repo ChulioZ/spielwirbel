@@ -114,7 +114,7 @@ async function showTableBuilder(round, session, gamesHint) {
         await api('DELETE', `/api/rounds/${round.id}/sessions/${session.id}`);
         toast(t('sessions.deleted'));
         showRound(round.id);
-      } catch (e) { toast(e.message); }
+      } catch (e) { toast(e.message, { tone: 'error' }); }
     });
     footer.appendChild(delBtn);
     app.appendChild(footer);
@@ -425,7 +425,7 @@ async function showTableBuilder(round, session, gamesHint) {
         toast(tn(payload.length, 'tables.toast.splitOne', 'tables.toast.split'));
         await fetchRoundFresh(round.id);
         showRound(round.id, 'start');
-      } catch (e) { toast(e.message); }
+      } catch (e) { toast(e.message, { tone: 'error' }); }
     }
   }
 }

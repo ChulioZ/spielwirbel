@@ -243,13 +243,13 @@ async function fetchRoundFresh(rid) {
   return round;
 }
 
-// Top-bar context label (#348). Plain, non-clickable text: the current round's
-// name while inside a round, empty on the home/auth screens. It is context, not
-// navigation — the brand mark is the sole "home" affordance, and the rail/tabs
-// plus each sub-screen's own heading carry the rest of the wayfinding. Uses
-// textContent, so a round name needs no escaping.
-function setContext(label) {
+// Top-bar context label (#348). Plain text (textContent, no escaping needed): the
+// round's name inside a round, empty elsewhere — context, not navigation; the
+// brand mark is the sole "home" affordance. `kind` 'kicker' marks Der Tisch's
+// lobby voice on home (#1279); every other caller's label clears that mark.
+function setContext(label, kind) {
   context.textContent = label || '';
+  context.classList.toggle('topbar__context--kicker', kind === 'kicker');
   // Every screen that NAMES itself in the top bar is by definition a screen that
   // wants a top bar, so arriving anywhere clears the immersive rating step below.
   // That is the whole teardown: one setter, one clearer, and the clearer sits on
@@ -342,7 +342,7 @@ function applyStaticTexts() {
   document.getElementById('langPicker').setAttribute('aria-label', t('a11y.language'));
   document.getElementById('feedbackBtn').setAttribute('aria-label', t('feedback.button'));
   document.getElementById('supportBtn').setAttribute('aria-label', t('support.button'));
-  document.getElementById('accountBtn').setAttribute('aria-label', t('a11y.account'));
+  document.getElementById('accountBtn').setAttribute('aria-label', accountBtnLabel());
   // The one TEXT control in the bar (#1090) — it reuses the landing hero's old
   // secondary-CTA key rather than gaining one of its own, because it is the same
   // word for the same destination and a second string could only ever drift.
@@ -586,7 +586,7 @@ async function readClipboardImage() {
     // outright by some engines and permission states, which is worth knowing
     // rather than guessing from "paste doesn't work for me".
     reportClientError('clipboard_read', err);
-    toast(t('addGame.toast.pasteFail'));
+    toast(t('addGame.toast.pasteFail'), { tone: 'error' });
     return null;
   }
 }

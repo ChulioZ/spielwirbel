@@ -287,8 +287,27 @@ function showStartSession(round, prefill) {
      count to a screen reader exactly as it always did. */
   const potCount = (n) => `<span class="pool-count-group"><span class="pool-count">${n}</span> `
     + `<span class="pool-count__label">${esc(tn(n, 'startSession.potLabelOne', 'startSession.potLabel'))}</span></span>`;
+  /* Der Tisch's first motion ritual (#1200, T10.1): a game that ENTERS the pot
+     is thrown in from outside, staggered. Only an entering one — the first
+     render records what is already there and throws nothing, because a screen
+     arriving in motion reads as one still loading (#1122); after that, a seat
+     tap or a loosened filter that adds games throws exactly those. The index is
+     all this writes: the stagger, its cap and the five directions live in
+     tisch.css beside the pot, so dropping the ritual is one block there and
+     this. Klassisch never gets a mark, so its markup is what it was. */
+  let potSeen = null;
+  const potThrows = (games) => {
+    const marks = new Map();
+    if (tisch && potSeen) games.forEach((g) => { if (!potSeen.has(g.id)) marks.set(g.id, marks.size); });
+    potSeen = new Set(games.map((g) => g.id));
+    return marks;
+  };
+  const throwClass = (marks, g) => (marks.has(g.id) ? ' is-thrown' : '');
+  const throwAttr = (marks, g) => (marks.has(g.id) ? ` data-throw="${marks.get(g.id) % 5}"` : '');
+  const throwDecl = (marks, g) => (marks.has(g.id) ? `--throw-i:${marks.get(g.id)}` : '');
   const updateHint = () => {
     const games = pool();
+    const marks = potThrows(games);
     // Resolved once: both presentations must always report the same number, and
     // two tn() calls is two places for that to stop being true.
     const headline = tn(games.length, 'startSession.availableOne', 'startSession.available');
@@ -300,7 +319,7 @@ function showStartSession(round, prefill) {
     // is, so a capped one hides part of the pot outright. The strip still lives
     // INSIDE the filter bar (#1015), so it costs no row of its own.
     const shelf = games
-      .map((g) => `<span class="pool-thumb"${styleAttr(coverDecl(g, COVER_THUMB))} title="${esc(g.title)}">${coverPlaceholder(g)}</span>`)
+      .map((g) => `<span class="pool-thumb${throwClass(marks, g)}"${throwAttr(marks, g)}${styleAttr(coverDecl(g, COVER_THUMB), throwDecl(marks, g))} title="${esc(g.title)}">${coverPlaceholder(g)}</span>`)
       .join('');
     hint.innerHTML = potCount(games.length) + `<span class="pool-shelf">${shelf}</span>`;
 
@@ -317,7 +336,7 @@ function showStartSession(round, prefill) {
     poolGrid.innerHTML = games.length
       ? games
           .map(
-            (g) => `<span class="pool-tile" title="${esc(g.title)}">
+            (g) => `<span class="pool-tile${throwClass(marks, g)}"${throwAttr(marks, g)}${styleAttr(throwDecl(marks, g))} title="${esc(g.title)}">
                  <span class="pool-tile__img"${styleAttr(coverDecl(g, COVER_CARD))}>${coverPlaceholder(g)}</span>
                  <span class="pool-tile__name">${esc(g.title)}</span>
                </span>`
@@ -684,6 +703,18 @@ function showStartSession(round, prefill) {
     if (joining.size === 0) return toast(t('startSession.toast.noMembers'));
     if (pool().length === 0) return toast(t('startSession.toast.noGames'));
     drawing = true;
+    /* Der Tisch's second motion ritual (#1200, T10.2): the pot's glyph turns ONCE
+       on the press. It never holds the lobby — #1122 removed exactly that — so
+       on a fast connection the lobby replaces it mid-turn, which is correct:
+       the turn is feedback on the press, not a wait. Removed and re-added so a
+       second draw after a failed one turns again. The rest of the ritual, the
+       drawn games dealt out, is the lobby's `data-dealt` below. */
+    if (tisch) {
+      const goBtn = form.querySelector('#go');
+      goBtn.classList.remove('is-whirling');
+      void goBtn.offsetWidth; // restart the animation
+      goBtn.classList.add('is-whirling');
+    }
     try {
       const data = await api('POST', `/api/rounds/${round.id}/sessions`, {
         count,
@@ -709,9 +740,9 @@ function showStartSession(round, prefill) {
       // shareable link for everyone voting from their own phone — so there is no
       // longer a mode to choose before the draw. The drawn games stay secret: the
       // lobby renders a COUNT, never a title.
-      showSessionLobby(round, data.session);
+      showSessionLobby(round, data.session, false, tisch);
     } catch (e) {
-      toast(e.message);
+      toast(e.message, { tone: 'error' });
     } finally {
       // The guard covers the FLIGHT. On success the lobby has already replaced
       // this screen by the time this runs, so releasing it here cannot reopen the
@@ -1021,6 +1052,12 @@ function startVoting(round, session, games, people, opts = {}) {
 
     app.innerHTML = '';
     const card = designIs('tisch') ? tischCard(person, game) : klassischCard(person, game, color);
+    /* Der Tisch's third motion ritual (#1200, T10.3): a card the BEAT delivered
+       tips in about its middle axis — the hand-over, and the turn itself is the
+       privacy screen. `wanted.kind === 'title'` is exactly "the advance brought
+       this card", so arriving by Back, a language switch or the first card never
+       tips. The motion is tisch.css's; nothing here waits for it. */
+    if (designIs('tisch') && wanted && wanted.kind === 'title') card.classList.add('is-tipped');
 
     // Info affordance (#717): the provider metadata behind a small ⓘ in the
     // title line, so the height-budgeted card gains no extra row
@@ -1130,7 +1167,7 @@ function startVoting(round, session, games, people, opts = {}) {
       // Nobody sees the result yet: the finale gate gathers everyone first.
       finaleArgs = [fresh, savedSession, games];
       showFinale(...finaleArgs);
-    } catch (e) { finishing = false; toast(e.message); }
+    } catch (e) { finishing = false; toast(e.message, { tone: 'error' }); }
   }
 
   go(0);
@@ -1721,7 +1758,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
       const fresh = await fetchRoundFresh(round.id);
       const sess = fresh.sessions.find((s) => s.id === session.id) || session;
       showResults(fresh, sess, games);
-    } catch (e) { toast(e.message); }
+    } catch (e) { toast(e.message, { tone: 'error' }); }
   }
 
   /* One action column per row, rebuilt by `updateChosen` whenever the phase
@@ -1766,7 +1803,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
             });
           }
           toast(t('result.toast.willPlay', { title: game.title }));
-        } catch (e) { toast(e.message); }
+        } catch (e) { toast(e.message, { tone: 'error' }); }
       });
       actionEl.appendChild(btn);
     }
@@ -1785,7 +1822,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
           session.chosenGameId = null;
           updateChosen();
           toast(t('result.toast.choiceCleared'));
-        } catch (e) { toast(e.message); }
+        } catch (e) { toast(e.message, { tone: 'error' }); }
       } });
     }
     items.push({ icon: 'ti-trash', label: t('result.removeGame'), kind: 'destructive', run: () => removeGame(game) });
@@ -1847,7 +1884,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
       if (!next) session.cancelledAt = null;
       toast(t(next ? 'result.toast.cancelled' : 'result.toast.cancelUndone'));
       updateChosen();
-    } catch (e) { toast(e.message); }
+    } catch (e) { toast(e.message, { tone: 'error' }); }
   }
   async function confirmCancel() {
     if (!await confirmDialog({
@@ -1864,7 +1901,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
       await api('DELETE', `/api/rounds/${round.id}/sessions/${session.id}`);
       toast(t('sessions.deleted'));
       showRound(round.id);
-    } catch (e) { toast(e.message); }
+    } catch (e) { toast(e.message, { tone: 'error' }); }
   }
 
   function renderCancel() {
@@ -2036,7 +2073,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
             session.chosenGameId = null;
             updateChosen();
             toast(t('result.toast.choiceCleared'));
-          } catch (e) { toast(e.message); }
+          } catch (e) { toast(e.message, { tone: 'error' }); }
         });
         actions.appendChild(other);
       }
@@ -2155,7 +2192,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
           session.finishedAt = null; // the server clears it too; keep the copy honest
           toast(t('result.toast.reset'));
           updateChosen();
-        } catch (e) { toast(e.message); }
+        } catch (e) { toast(e.message, { tone: 'error' }); }
       });
       actions.appendChild(resetBtn);
 
@@ -2213,7 +2250,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
       session.finishedAt = saved.finishedAt || session.finishedAt;
       toast(t('result.toast.saved'));
       renderTisch();
-    } catch (e) { toast(e.message); }
+    } catch (e) { toast(e.message, { tone: 'error' }); }
   }
 
   updateChosen();
@@ -2339,8 +2376,8 @@ async function shareResult(model) {
   }
   try {
     await navigator.clipboard.writeText(text);
-    toast(t('share.toast.copied'));
+    toast(t('share.toast.copied'), { tone: 'success' });
   } catch {
-    toast(t('share.toast.failed'));
+    toast(t('share.toast.failed'), { tone: 'error' });
   }
 }

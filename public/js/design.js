@@ -142,6 +142,9 @@ function applyDesign(id, { preview = false, rendering = false } = {}) {
   loadDesignStylesheet(design);
   applyDesignMarks(design);
   applyBackground(null);
+  // The top bar's account button is chrome outside every view, so no re-render
+  // reaches it: its face follows the design here — previews included (#1279).
+  renderAccountFace();
   if (preview) return design.id;
   const changed = design.id !== committedDesignId;
   committedDesignId = design.id;

@@ -88,9 +88,22 @@ const SPLIT = {
   tables: [{ title: 'Nordlichter', names: 'Jonas, Lea' }, { title: 'Azul', names: 'Ida, Ben' }],
 };
 const PERIOD = {
-  roundName: 'Donnerstagsrunde', periodLabel: 'Sommer 2026', sessions: 14, gamesPlayed: 9,
+  heading: 'Donnerstagsrunde', periodLabel: 'Sommer 2026', sessions: 14, gamesPlayed: 9,
   played: ['Nordlichter'], playedSub: '5 Sessions', rated: ['Kartographen'], ratedScore: '4,6',
-  added: 6, retired: 0, completed: 2,
+  // What recapShelfEntries() hands the Chronik's card (views-chronik.js).
+  shelf: [
+    { n: 6, label: 'hinzugefügt', plus: true },
+    { n: 0, label: 'aussortiert' },
+    { n: 2, label: 'durchgespielt' },
+  ],
+};
+// The account's own recap (#1147): the username on top, its own labels, and
+// „neu ausprobiert" where the round card lists its shelf.
+const PERSONAL = {
+  heading: 'ada', periodLabel: 'März 2026', sessions: 5, gamesPlayed: 3,
+  played: ['Azul'], playedSub: '3 Sessions', rated: ['Brass'], ratedScore: 'Ø 5',
+  ratedLabel: 'Am besten bewertet', shelfLabel: 'Neu ausprobiert',
+  shelf: [{ n: 2, label: 'neue Spiele' }],
 };
 
 const spec = (dom, kind, model) => JSON.parse(dom.run(`JSON.stringify(tischCardSpec(${JSON.stringify(kind)}, ${JSON.stringify(model)}))`));
@@ -151,6 +164,11 @@ test('split and period specs carry what their screens share, and nothing new', (
     assert.equal(period.feature.stamp, 'Meistgespielt');
     assert.equal(period.rows.length, 2, 'best rated + the shelf line');
     assert.ok(!/aussortiert/.test(period.rows[1].title), 'a zero shelf figure is dropped, like the classic card');
+
+    const own = spec(dom, 'period', PERSONAL);
+    assert.equal(own.kicker, 'ada', 'the personal card is headed by the username');
+    assert.equal(own.rows[0].title, 'Am besten bewertet · Brass', 'the rated row carries the model’s own label');
+    assert.equal(own.rows[1].title, 'Neu ausprobiert · 2 neue Spiele', 'the shelf row is the model’s, not the round’s');
   } finally { dom.close(); }
 });
 

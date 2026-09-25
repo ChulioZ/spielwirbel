@@ -97,6 +97,6 @@ function startDirectSession(round, game) {
         teams: teamPicker.teamPayload(), // guests by POSITION in `guests` (#575)
       });
       closeSheet(() => showResults(round, data.session, data.games));
-    } catch (e) { toast(e.message); }
+    } catch (e) { toast(e.message, { tone: 'error' }); }
   });
 }

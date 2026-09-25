@@ -30,7 +30,7 @@ async function showMember(rid, mid) {
       toast(t('member.saved'));
       showMember(rid, mid);
     } catch (e) {
-      toast(e.message);
+      toast(e.message, { tone: 'error' });
     }
   }
 
@@ -41,6 +41,10 @@ async function showMember(rid, mid) {
   const ownHex = memberHex(round, mid);
   const me = currentUserId();
   const mine = !!me && member.userId === me;
+  // Der Tisch composes the card's head and foot differently (#1276, T13.4):
+  // an attendance line under the name, and the owned boxes as a panel inside
+  // the card. Klassisch takes none of these branches.
+  const tisch = designIs('tisch');
 
   // Link or unlink this seat, then re-render into the other state. Shared by
   // „Das bin ich“ in the card and „Das bin ich nicht“ in the page menu.
@@ -51,7 +55,7 @@ async function showMember(rid, mid) {
     } catch (e) {
       toast(e.message === 'seat_taken' ? t('member.toast.seatTaken')
         : e.message === 'already_seated' ? t('member.toast.alreadySeated')
-          : e.message);
+          : e.message, { tone: 'error' });
     }
   };
 
@@ -128,6 +132,23 @@ async function showMember(rid, mid) {
     });
   });
   h1.appendChild(nameEl);
+
+  /* „21 von 23 Sessions dabei" under the name (Der Tisch, #1276, T13.4) — the
+     share of the round's finished sessions this member took part in, over the
+     same `st.joined` the „Sessions" figure prints, so the two cannot disagree.
+     Plural follows the TOTAL, the noun it counts.
+
+     The sheet leads it with „In der Donnerstagsrunde seit Mai 2025". That half
+     is NOT built: a member carries no join date, and a first-session proxy
+     reads wrong for anyone who sat at the table long before they played. A
+     stored date is new data, so it is the operator's call (#1276's PR).
+
+     Absent with no finished session at all: „0 von 0" says nothing, and the
+     state chip below already says „noch bei keiner Session dabei". */
+  const finishedCount = round.sessions.filter((s) => s.finished).length;
+  if (tisch && finishedCount) {
+    h1.after(h(`<p class="member-card__attendance">${esc(tn(finishedCount, 'member.attendanceOne', 'member.attendance', { n: st.joined, total: finishedCount }))}</p>`));
+  }
 
   /* The colour picker moved BEHIND the avatar (#1074). It was the second block
      on the page, above the record — 94px of chrome answering a question asked
@@ -294,6 +315,26 @@ async function showMember(rid, mid) {
     )
   );
 
+  /* The boxes this member brings — read here, above the card's foot, because
+     Der Tisch sets them INSIDE the card; Klassisch still renders them as the
+     section after it (see „3 Spiele von Anna" below for the filter's reasons). */
+  const owned = round.games
+    .filter((g) => isActiveGame(g) && (g.ownerIds || []).includes(mid))
+    .sort((a, b) => a.title.localeCompare(b.title, getLocale(), { sensitivity: 'base' }));
+
+  /* „Gehört Jonas" (Der Tisch, #1276, T13.4): the owned boxes as a panel beside
+     the two game tiles, where the sheet draws them beside the record. The two
+     tiles stay — the sheet's second panel (the rating distribution) was dropped
+     by the operator, and „Stärkstes Spiel" is shown nowhere else, so removing
+     them would take away a block that is reachable today. Hidden at zero, as
+     the Klassisch section is: the tiles then keep the card's full width. */
+  if (tisch && owned.length) {
+    const lower = h('<div class="member-card__lower"></div>');
+    cards.replaceWith(lower);
+    lower.appendChild(memberOwnedPanel(round, member, owned));
+    lower.appendChild(cards);
+  }
+
   /* „Am Tisch“ — the round's other seats in the card's foot, below 1280px only.
      ACTIVE members (`activeMembers`): a forward-facing strip, so a retired
      member is absent from it while still being reachable as this page's own
@@ -331,10 +372,7 @@ async function showMember(rid, mid) {
      owner, and „Spiele von Anna" over an empty grid on every member page would
      advertise a feature the round does not use — the same call the detail page's
      expansions section makes on a sparse page. */
-  const owned = round.games
-    .filter((g) => isActiveGame(g) && (g.ownerIds || []).includes(mid))
-    .sort((a, b) => a.title.localeCompare(b.title, getLocale(), { sensitivity: 'base' }));
-  if (owned.length) {
+  if (owned.length && !tisch) {
     // This heading puts `{name}` after a preposition in most locales, which is
     // why the demo seed may not name a seat with a pronoun — „4 Spiele von Du"
     // is wrong German. See
@@ -395,7 +433,7 @@ async function showMember(rid, mid) {
       try {
         await api('DELETE', `/api/rounds/${rid}/shares/${member.userId}`);
         showMember(rid, mid); // re-render: the seat is now unlinked
-      } catch (e) { toast(e.message); }
+      } catch (e) { toast(e.message, { tone: 'error' }); }
     } });
   }
 
@@ -422,7 +460,7 @@ async function showMember(rid, mid) {
         await api('POST', `/api/rounds/${rid}/members/${mid}/retire`, { retired: false });
         toast(t('member.toast.restored', { name: member.name }));
         showMember(rid, mid);
-      } catch (e) { toast(e.message); }
+      } catch (e) { toast(e.message, { tone: 'error' }); }
     } });
   } else {
     menuItems.push({ icon: 'ti-user-minus', label: t('member.retire'), cls: 'popover__opt--warn', kind: 'destructive', run: async () => {
@@ -468,7 +506,7 @@ async function showMember(rid, mid) {
         await api('POST', `/api/rounds/${rid}/members/${mid}/retire`, { retired: true });
         toast(t('member.toast.retired', { name: member.name }));
         showMember(rid, mid);
-      } catch (e) { toast(e.message); }
+      } catch (e) { toast(e.message, { tone: 'error' }); }
     } });
   }
   if (!myVotes && roundCan(round, 'round.delete')) {
@@ -481,7 +519,7 @@ async function showMember(rid, mid) {
         await api('DELETE', `/api/rounds/${rid}/members/${mid}`);
         toast(t('member.toast.deleted', { name: member.name }));
         showRound(rid);
-      } catch (e) { toast(e.message); }
+      } catch (e) { toast(e.message, { tone: 'error' }); }
     } });
   }
 
@@ -528,7 +566,7 @@ async function showMember(rid, mid) {
           await api('PATCH', `/api/rounds/${rid}/shares/${member.userId}`, { role });
           field.querySelector('#shareRoleHint').textContent = t('share.role.' + role + '.hint');
           toast(t('share.roleSaved', { name: member.name }));
-        } catch (e) { toast(e.message); }
+        } catch (e) { toast(e.message, { tone: 'error' }); }
       });
       app.appendChild(field);
     }).catch(() => {});
@@ -579,7 +617,7 @@ function openAddMember(anchor, round) {
         // "+" can be clicked from the Regal, the Chronik or a sub-screen too.
         currentView();
       } catch (e) {
-        toast(e.message === 'quota_members' ? t('member.toast.quota') : e.message);
+        toast(e.message === 'quota_members' ? t('member.toast.quota') : e.message, { tone: 'error' });
       }
     };
     okBtn.addEventListener('click', save);
@@ -590,6 +628,35 @@ function openAddMember(anchor, round) {
     el.appendChild(row);
     return () => input.focus();
   });
+}
+
+/* „Gehört <Name>" — Der Tisch's owned-games panel (#1276, T13.4): one row per
+   box, its cover standing up, its title, and the shelf score as the Regal pill
+   prints it, so the number a member sees here is the one the shelf ranks by.
+
+   The heading is the Klassisch section's own („3 Spiele von Anna"), not a new
+   sentence: one concept keeps one string in nine languages. Each row is one
+   link to the game. */
+function memberOwnedPanel(round, member, owned) {
+  const index = roundScoreIndex(round, owned);
+  const panel = h(`<div class="member-owned">
+       <h2 class="member-owned__title">${esc(tn(owned.length, 'member.ownedTitleOne', 'member.ownedTitle', { name: member.name }))}</h2>
+     </div>`);
+  owned.forEach((g) => {
+    const score = index.byGame[g.id] ? index.byGame[g.id].score : null;
+    const pill = score !== null
+      ? `<span class="score-pill" style="--sc:${scoreColor(score)}" data-stop="${scoreStop(score)}">${fmtAvg(displayScore(score))}</span>`
+      : `<span class="score-pill score-pill--none">${esc(t('games.scoreNew'))}</span>`;
+    const style = g.image ? ` style="background-image:url('${coverUrl(g.image, COVER_THUMB)}')"` : '';
+    const row = h(`<a class="member-owned__row">
+         <span class="member-owned__cover"${style}>${coverPlaceholder(g)}</span>
+         <span class="member-owned__name">${esc(g.title)}</span>
+         ${pill}
+       </a>`);
+    makeGameLink(row, round.id, g.id);
+    panel.appendChild(row);
+  });
+  return panel;
 }
 
 /* „Stärkstes Spiel"'s sub-line, shared with the profile (views-profile.js),

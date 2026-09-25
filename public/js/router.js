@@ -204,6 +204,7 @@ function resolveRoute(pathname) {
     if (sub === 'completed') return () => showCompleted(rid);
     if (sub === 'wishlist') return () => showWishlist(rid);
     if (sub === 'recommendations') return () => showRecommendations(rid);
+    if (sub === 'shelf-profile') return () => showShelfProfile(rid);
     if (sub === 'design') return () => showMarker(rid);
     if (sub === 'tags') return () => showTags(rid);
     if (sub === 'settings') return () => showRoundSettings(rid);
