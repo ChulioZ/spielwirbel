@@ -151,21 +151,6 @@ const SOURCE_ALLOW = {
   'test/prices.test.js': 'judged 2026-08-13 — one suite for one route (GET …/prices) plus the cache, cooldown, stored-fallback and sweep behind it; crossed by #742\'s edition specs. Every spec shares one stub/fixture kit AND the process-wide price cache, whose per-spec-external-id discipline is stated once at the top of the file — splitting it is how two files quietly reuse an id and answer each other from the first one\'s entry',
 
   // recorded — not yet judged against the seam test
-  // (views-round-lookup.js was on this list from 2026-07-30 until #956 SPLIT it
-  //  three ways — lookup.js (the search-as-you-type control), bgg-import.js and
-  //  direct-session.js — taking it 1350 -> 635 and under the budget.)
-  // (core.js was on this list from 2026-07-30 until #956 SPLIT it four ways —
-  //  round-theme.js, popover.js, tag-chips.js and game-stats.js — taking it
-  //  1397 -> 679, back UNDER the 700-line budget. The entry is gone rather than
-  //  re-recorded, which the still-over-budget assertion below enforces.)
-  // (views-round-tabs.js was the ninth, and #528 SPLIT it: views-regal.js,
-  // views-chronik.js, views-pokale.js, views-archive.js and
-  // views-round-actions.js — the last holding the two sheets whose entry points
-  // #561 had already moved to the Einstellungen screen. All five land well under
-  // the budget, so the entry is gone rather than re-judged.)
-  // (views-chronik.js was recorded 2026-09-25 at 715 lines, crossed by #1218;
-  //  #1345 SPLIT the period recap and the share delivery out into
-  //  views-period-recap.js, taking it 715 -> ~465. The entry is gone.)
   'public/js/pages/admin.js': 'recorded 2026-09-15 at 1723 lines — 1519 when last recorded on 2026-09-07, grown by #941 and then #1124, both in the metrics half — on the list since 2026-07-30, never judged: the whole operator panel as one IIFE on its own standalone page. #970 owns the judgement and the wiring-pattern decision it needs, which #1124 deliberately left alone',
   'public/js/views-round-detail.js': 'judged 2026-09-24 — ~975 lines (#1274 added Der Tisch\u2019s Spielepass composition — two small top-level builders and three design branches inside the same render flow, so the seam test answers as before; 908 at 2026-09-22, 878 at the 2026-09-14 judgement; #1190 added the „Wer wie gewertet hat\u2019 band, which is one more block in the same render flow and belongs to it for the same reason the rest does), down from 1222 by #968, which took the five FIELD EDITORS (players, owners, tags, cover, expansions) into game-editors.js. That was the last seam BETWEEN concerns: #956 had already moved the sheet layer and the design/tag screens out, and what #967 could not finish was the seam INSIDE showGameDetail. Now judged rather than recorded, because the remainder is ONE CONCERN in the seam test\'s sense — the hero card, the score ring, the action row and the related-sessions list are not independently editable, they are one screen\'s render flow from top to bottom, and a change to any of them is a change to the page. That is the same shape the audit looked at in views-session.js (start -> vote -> finale -> results) and deliberately left alone. Splitting further would cut a cohesive flow into files that must be read together, which the budget exists to prevent rather than to cause. The five editors were the opposite case: each is edited on its own, each goes through the shared openEditor, and each closed over the same handful of values — which is why they now take one explicit context instead',
   'public/js/views-account.js': 'recorded 2026-09-07 at 704 lines — on the list since 2026-09-05: the Konto screen: profile, password, e-mail prefs, BG Stats, passkeys and the delete flow. Crossed at 702 by #939 converting the passkey confirm, which is a four-line change, not the cause — the seam (the delete sheet, or the passkey list) is visible and unjudged',
