@@ -209,7 +209,8 @@ async function showMarker(rid) {
    stores only an index, so the picker shows what the chooser will paint for the
    person looking at it — someone on Der Tisch picks between felts, someone on
    Klassisch between the palette accents, someone on Ocean between the person
-   colours (member-colors.js, read by designs.js as PERSON_COLORS) — and all of
+   colours (member-colors.js; designs.js carries the copy that
+   test/design-tokens.test.js pins) — and all of
    them are choosing the same index. Falling back to FACE_DESIGN keeps it
    renderable on a self-hosted instance with no accounts, where there is no
    active design at all.

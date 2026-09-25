@@ -29,15 +29,6 @@ it heads the list rather than living only in the rule's own example: the check
 below reads *this* section, so an instance mentioned only over there is not
 covered by anything.
 
-Since #1219 it has a third reader: Ocean's eight round markers ARE the person
-colours, so `public/js/designs.js` takes them as `PERSON_COLORS` — the global in
-the browser, a `require('./member-colors')` under Node. That is the one sibling
-require in `public/js`, allowed because the browser never reaches it (every page
-that loads `designs.js` loads `member-colors.js` first, `login.html` and
-`kontakt.html` included); a page that forgets fails loudly on `require`. It
-replaced a hand-copied hex list that only `test/design-tokens.test.js`'s parity
-assertion held in line.
-
 **The second is `public/js/locales.js`** (#504): the shipped UI locales,
 offered by the language picker and validated by `lib/routes/contact.js` for the
 feedback-metadata `locale`. It replaced a hand-copied `['de', 'en']` in that

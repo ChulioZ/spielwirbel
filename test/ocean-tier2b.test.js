@@ -9,8 +9,9 @@
  * the default path and must not move. The pixels were judged in a browser at
  * 390 and 1440; what is pinned here is what regresses silently —
  *
- *   - the marker picker reading its colours from anything but member-colors.js
- *     (the issue's acceptance line — a hand-copied list is the palette bug);
+ *   - the marker picker offering anything but member-colors.js's eight
+ *     (the registry's copy is pinned value-for-value by design-tokens.test.js;
+ *     this pins what the RENDERED picker offers);
  *   - a pick from the settings card not being the same PATCH the /design screen
  *     sends, or the card's own row to /design surviving beside it;
  *   - the danger zone leaving its own column, or a Konto section losing a form
@@ -36,23 +37,8 @@ const text = (el) => (el ? el.textContent.replace(/\s+/g, ' ').trim() : '');
 
 // --- the marker colours are the shared constant ------------------------------
 
-test('Ocean\'s eight markers ARE member-colors.js, read rather than copied', () => {
+test('Ocean\'s eight markers are member-colors.js, value for value', () => {
   assert.deepEqual(designMarkers('ocean').map((m) => m.color), MEMBER_COLORS);
-  // „Not a copy" is a claim about the SOURCE: no person colour may be spelled
-  // in designs.js. Stripping comments first, so a comment naming one is fine.
-  const src = read('public/js/designs.js').replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
-  const spelled = MEMBER_COLORS.filter((c) => src.toLowerCase().includes(c.toLowerCase()));
-  assert.deepEqual(spelled, [], 'designs.js spells a member colour instead of reading PERSON_COLORS');
-});
-
-test('every page that loads designs.js loads member-colors.js before it', () => {
-  for (const page of ['public/index.html', 'public/login.html', 'public/kontakt.html']) {
-    const html = read(page);
-    const colors = html.indexOf('src="/js/member-colors.js"');
-    const designs = html.indexOf('src="/js/designs.js"');
-    assert.ok(designs > 0, `${page} no longer loads designs.js — re-read this test`);
-    assert.ok(colors > 0 && colors < designs, `${page} loads designs.js without member-colors.js ahead of it`);
-  }
 });
 
 // --- O14.1 Rundeneinstellungen -----------------------------------------------

@@ -4879,8 +4879,8 @@
 
 /* The marker picker (O14.1): eight discs with their names under them, the
    picked one ringed in the surface and then the accent. The colours are the
-   eight PERSON colours, read from member-colors.js through designs.js
-   (PERSON_COLORS) — none is spelled here: the disc paints --marker, which the
+   eight PERSON colours (member-colors.js, copied into designs.js and pinned
+   there by design-tokens.test.js) — none is spelled here: the disc paints --marker, which the
    picker writes inline per swatch. The check is --marker-ink (white), 4.5:1 or
    better on all eight (designs.js). */
 :root[data-design="ocean"]:not([data-scheme="dark"]) .rs-card--marker .marker-cards {
