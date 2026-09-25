@@ -258,7 +258,7 @@ function buildFriendAddForm(cls) {
       toast(t('friends.toast.sent', { user: username }));
       showFriends();
     } catch (err) {
-      toast(friendSendError(err.message));
+      toast(friendSendError(err.message), { tone: 'error' });
       btn.disabled = false;
     }
   });
@@ -463,7 +463,7 @@ function renderPersonCard(p, state) {
         refreshInboxBadge();
         showFriends();
       } catch (err) {
-        toast(err.message === 'quota_friends' ? t('friends.err.quotaFriends') : t('friends.err.generic'));
+        toast(err.message === 'quota_friends' ? t('friends.err.quotaFriends') : t('friends.err.generic'), { tone: 'error' });
       }
     });
     meta.querySelector('.friend-req__decline').addEventListener('click', async () => {
@@ -571,7 +571,7 @@ function renderFriendRequestItem(item) {
     } catch (e) {
       row.remove();
       afterRemove();
-      toast(e.message === 'quota_friends' ? t('friends.err.quotaFriends') : t('inbox.friend.failed'));
+      toast(e.message === 'quota_friends' ? t('friends.err.quotaFriends') : t('inbox.friend.failed'), { tone: 'error' });
     }
   });
   row.querySelector('.inbox-friend__decline').addEventListener('click', async () => {

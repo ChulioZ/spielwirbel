@@ -38,6 +38,10 @@ I18N.fr = {
   'common.confirm': 'Confirmer',
   'common.confirmTitle': 'Confirmation',
   'common.overwrite': 'Remplacer',
+  // The toast's controls (#1261): the × that dismisses an error toast, and the
+  // generic label for a toast's undo action.
+  'toast.dismiss': 'Fermer le message',
+  'toast.undo': 'Annuler',
 
   'home.docTitle': 'Mes groupes',
   'home.greeting': 'Content de te voir.',

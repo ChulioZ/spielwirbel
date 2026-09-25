@@ -30,7 +30,7 @@ async function showMember(rid, mid) {
       toast(t('member.saved'));
       showMember(rid, mid);
     } catch (e) {
-      toast(e.message);
+      toast(e.message, { tone: 'error' });
     }
   }
 
@@ -55,7 +55,7 @@ async function showMember(rid, mid) {
     } catch (e) {
       toast(e.message === 'seat_taken' ? t('member.toast.seatTaken')
         : e.message === 'already_seated' ? t('member.toast.alreadySeated')
-          : e.message);
+          : e.message, { tone: 'error' });
     }
   };
 
@@ -433,7 +433,7 @@ async function showMember(rid, mid) {
       try {
         await api('DELETE', `/api/rounds/${rid}/shares/${member.userId}`);
         showMember(rid, mid); // re-render: the seat is now unlinked
-      } catch (e) { toast(e.message); }
+      } catch (e) { toast(e.message, { tone: 'error' }); }
     } });
   }
 
@@ -460,7 +460,7 @@ async function showMember(rid, mid) {
         await api('POST', `/api/rounds/${rid}/members/${mid}/retire`, { retired: false });
         toast(t('member.toast.restored', { name: member.name }));
         showMember(rid, mid);
-      } catch (e) { toast(e.message); }
+      } catch (e) { toast(e.message, { tone: 'error' }); }
     } });
   } else {
     menuItems.push({ icon: 'ti-user-minus', label: t('member.retire'), cls: 'popover__opt--warn', kind: 'destructive', run: async () => {
@@ -506,7 +506,7 @@ async function showMember(rid, mid) {
         await api('POST', `/api/rounds/${rid}/members/${mid}/retire`, { retired: true });
         toast(t('member.toast.retired', { name: member.name }));
         showMember(rid, mid);
-      } catch (e) { toast(e.message); }
+      } catch (e) { toast(e.message, { tone: 'error' }); }
     } });
   }
   if (!myVotes && roundCan(round, 'round.delete')) {
@@ -519,7 +519,7 @@ async function showMember(rid, mid) {
         await api('DELETE', `/api/rounds/${rid}/members/${mid}`);
         toast(t('member.toast.deleted', { name: member.name }));
         showRound(rid);
-      } catch (e) { toast(e.message); }
+      } catch (e) { toast(e.message, { tone: 'error' }); }
     } });
   }
 
@@ -566,7 +566,7 @@ async function showMember(rid, mid) {
           await api('PATCH', `/api/rounds/${rid}/shares/${member.userId}`, { role });
           field.querySelector('#shareRoleHint').textContent = t('share.role.' + role + '.hint');
           toast(t('share.roleSaved', { name: member.name }));
-        } catch (e) { toast(e.message); }
+        } catch (e) { toast(e.message, { tone: 'error' }); }
       });
       app.appendChild(field);
     }).catch(() => {});
@@ -617,7 +617,7 @@ function openAddMember(anchor, round) {
         // "+" can be clicked from the Regal, the Chronik or a sub-screen too.
         currentView();
       } catch (e) {
-        toast(e.message === 'quota_members' ? t('member.toast.quota') : e.message);
+        toast(e.message === 'quota_members' ? t('member.toast.quota') : e.message, { tone: 'error' });
       }
     };
     okBtn.addEventListener('click', save);

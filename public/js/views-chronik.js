@@ -345,7 +345,7 @@ function renderChronikTab(round, activities) {
         await api('DELETE', `/api/rounds/${rid}/activities/${e.id}`);
         toast(t('activity.deleted'));
         showRound(rid, 'chronik');
-      } catch (err) { toast(err.message); }
+      } catch (err) { toast(err.message, { tone: 'error' }); }
     });
     return row;
   }
@@ -607,7 +607,7 @@ async function shareRecapCard(period, model, name = `spielwirbel-${period.key}.p
     // The toast is unchanged — this adds a report, it does not change what the
     // user sees.
     reportClientError('recap_export', err);
-    toast(t('periodRecap.toast.failed'));
+    toast(t('periodRecap.toast.failed'), { tone: 'error' });
     return;
   }
   await deliverShareImage(blob, name);

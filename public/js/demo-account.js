@@ -54,7 +54,7 @@ async function startDemo(busy) {
     // Back should return to. Since #501 that also supersedes the manual
     // history.replaceState this used to do before showLanding().
     else routeTo('/');
-    toast(t(key));
+    toast(t(key), { tone: 'error' });
   };
 
   let res;

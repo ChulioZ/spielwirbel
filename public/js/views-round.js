@@ -217,7 +217,7 @@ function editableRoundName(round) {
         // refreshes the top-bar context label, which shows the round's name.
         currentView();
       } catch (e) {
-        toast(e.message);
+        toast(e.message, { tone: 'error' });
         input.replaceWith(el);
       }
     };

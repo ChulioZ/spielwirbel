@@ -23,6 +23,10 @@ I18N.en = {
   // the button and the whole question is in the body below it.
   'common.confirmTitle': 'Please confirm',
   'common.overwrite': 'Overwrite',
+  // The toast's controls (#1261): the × that dismisses an error toast, and the
+  // generic label for a toast's undo action.
+  'toast.dismiss': 'Dismiss message',
+  'toast.undo': 'Undo',
 
   // The lobby's tab title (#522). Not 'home.greeting' — that one is a welcome
   // ("Good to see you."), which says nothing about which tab it is.

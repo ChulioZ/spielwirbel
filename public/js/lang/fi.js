@@ -19,6 +19,10 @@ I18N.fi = {
   'common.confirm': 'Vahvista',
   'common.confirmTitle': 'Vahvista vielä',
   'common.overwrite': 'Korvaa',
+  // The toast's controls (#1261): the × that dismisses an error toast, and the
+  // generic label for a toast's undo action.
+  'toast.dismiss': 'Sulje ilmoitus',
+  'toast.undo': 'Kumoa',
 
   'home.docTitle': 'Omat porukat',
   'home.greeting': 'Mukava nähdä.',

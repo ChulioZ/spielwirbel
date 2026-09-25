@@ -117,7 +117,7 @@ function recIgnoredSection(rid, dismissed) {
           showRecommendations(rid);
         } catch (e) {
           ev.currentTarget.disabled = false;
-          toast(e.message);
+          toast(e.message, { tone: 'error' });
         }
       });
       list.appendChild(row);
@@ -140,7 +140,7 @@ async function showRecommendations(rid) {
 
   let data;
   try { data = await api('GET', `/api/rounds/${rid}/recommendations`); }
-  catch (e) { return toast(e.message); }
+  catch (e) { return toast(e.message, { tone: 'error' }); }
 
   app.innerHTML = '';
   renderSubScreenTabs(round, 'recommendations');
@@ -251,7 +251,7 @@ async function showRecommendations(rid) {
         showRecommendations(rid);
       } catch (e) {
         btn.disabled = false;
-        toast(e.message);
+        toast(e.message, { tone: 'error' });
       }
     });
     card.querySelector('[data-act="dismiss"]').addEventListener('click', async (ev) => {
@@ -263,7 +263,7 @@ async function showRecommendations(rid) {
         btn.disabled = false;
         // The cap only ever binds on abuse (500 by default), but a raw
         // `quota_dismissed` in a toast tells the reader nothing they can act on.
-        return toast(e.message === 'quota_dismissed' ? t('suggest.toast.quota') : e.message);
+        return toast(e.message === 'quota_dismissed' ? t('suggest.toast.quota') : e.message, { tone: 'error' });
       }
       toast(t('suggest.dismissed', { title: rec.title }));
       // The card is REPLACED IN PLACE by a persistent undo row rather than the
@@ -290,7 +290,7 @@ async function showRecommendations(rid) {
           btn.disabled = false;
         } catch (e) {
           ev2.currentTarget.disabled = false;
-          toast(e.message);
+          toast(e.message, { tone: 'error' });
         }
       });
       card.replaceWith(undone);

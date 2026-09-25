@@ -273,6 +273,61 @@ test('the semantic colours clear AA as text on every design page and card', () =
   ])), [], 'used as text on --surface and directly on --page-bg');
 });
 
+/* The toast's three tones (#1261). Read off the RULES rather than restated: each
+   pair is "the token the rule paints the text in, on the token it paints the
+   plank in", so a retuned rule is measured as written. The ink and both buttons
+   inherit the toast's `color`, so one text pair per tone covers all three. */
+const toastVar = (body, prop) => {
+  const m = new RegExp(`(?:^|[;{\\s])${prop}:\\s*var\\((--[a-z0-9-]+)\\)`).exec(body || '');
+  return m && m[1];
+};
+
+test('every toast tone keeps its message at AA on every design (Klassisch rules)', () => {
+  const base = bodyOf('.toast');
+  const ink = toastVar(base, 'color');
+  const planks = {
+    neutral: toastVar(base, 'background'),
+    success: toastVar(bodyOf('.toast--success'), 'background'),
+    error: toastVar(bodyOf('.toast--error'), 'background'),
+  };
+  assert.ok(ink && Object.values(planks).every(Boolean), `a toast rule no longer paints from a token: ${JSON.stringify({ ink, planks })}`);
+  assert.deepEqual(sweep((t) => Object.entries(planks).map(([tone, bg]) => [
+    `${tone} toast: ${ink} on ${bg}`, token(ink, t.design), token(bg, t.design),
+  ])), [], 'the toast text, its action and its × all paint in the toast ink');
+});
+
+test('Der Tisch paints each toast tone from its own planks, at AA for the text and 3:1 for the glyph (T15b.4)', () => {
+  const hosts = THEMES.filter((t) => DESIGN_REGISTRY.find((d) => d.id === t.design.id && d.stylesheet));
+  assert.ok(hosts.some((t) => t.design.id === 'tisch'), 'Der Tisch is no longer a user design with a stylesheet — this test is vacuous');
+  const failures = [];
+  let checked = 0;
+  for (const t of hosts) {
+    const sheet = require('node:fs').readFileSync(
+      require('node:path').join(__dirname, '..', 'public', t.design.stylesheet.replace(/^\//, '')), 'utf8',
+    ).replace(/\/\*[\s\S]*?\*\//g, '');
+    const rules = rulesOf(sheet);
+    const gate = `:root[data-design="${t.design.id}"][data-scheme="dark"]`;
+    for (const tone of ['', '--success', '--error']) {
+      const plank = bodyOf(`${gate} .toast${tone}`, rules);
+      if (!plank) continue;
+      const bg = toastVar(plank, 'background');
+      const fg = toastVar(plank, 'color');
+      assert.ok(bg && fg, `${t.design.id} .toast${tone} paints its plank or ink from a literal`);
+      const pairs = [[`.toast${tone} text`, fg, AA_TEXT]];
+      const icon = toastVar(bodyOf(`${gate} .toast${tone} .toast__icon`, rules), 'color');
+      if (icon) pairs.push([`.toast${tone} glyph`, icon, AA_LARGE]);
+      for (const [label, ink, bar] of pairs) {
+        checked += 1;
+        const ratio = contrast(token(ink, t.design), token(bg, t.design));
+        if (!(ratio >= bar)) failures.push(`${name(t)} — ${label}: ${ink} on ${bg} = ${ratio.toFixed(2)}:1 (bar ${bar})`);
+      }
+    }
+  }
+  // Neutral text, two tones' text and two glyphs, for Der Tisch at least.
+  assert.ok(checked >= 5, `only ${checked} toast pairs were found in the design sheets — has a selector moved?`);
+  assert.deepEqual(failures, []);
+});
+
 test('the gold family keeps its label legible on its own wash and on the card', () => {
   /* Trophies and winners: --gold-deep is the text, --gold-soft the surface under
      it. Both flip on a dark design (a pale-yellow chip carrying near-black text

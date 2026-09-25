@@ -42,6 +42,10 @@ I18N.nl = {
   'common.confirm': 'Bevestigen',
   'common.confirmTitle': 'Even bevestigen',
   'common.overwrite': 'Overschrijven',
+  // The toast's controls (#1261): the × that dismisses an error toast, and the
+  // generic label for a toast's undo action.
+  'toast.dismiss': 'Melding sluiten',
+  'toast.undo': 'Ongedaan maken',
 
   'home.docTitle': 'Mijn groepen',
   'home.greeting': 'Fijn dat je er weer bent.',

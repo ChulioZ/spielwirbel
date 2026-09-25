@@ -37,6 +37,10 @@ I18N.it = {
   'common.confirm': 'Conferma',
   'common.confirmTitle': 'Conferma richiesta',
   'common.overwrite': 'Sovrascrivi',
+  // The toast's controls (#1261): the × that dismisses an error toast, and the
+  // generic label for a toast's undo action.
+  'toast.dismiss': 'Chiudi il messaggio',
+  'toast.undo': 'Annulla',
 
   'home.docTitle': 'I miei gruppi',
   'home.greeting': 'Che piacere rivederti.',
