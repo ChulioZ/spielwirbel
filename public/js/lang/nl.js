@@ -385,6 +385,7 @@ I18N.nl = {
   'games.sort.name': 'Naam',
   'games.sort.rating': 'Beoordeling',
   'games.sortLabel': 'Sorteervolgorde',
+  'games.sortedBy': 'Gesorteerd op:',
   'games.noMatchFilters': 'Geen spellen die aan de filters voldoen.',
   'games.retire': 'Opzijleggen',
   'games.scoreNew': 'nieuw',

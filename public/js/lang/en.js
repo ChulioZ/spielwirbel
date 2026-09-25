@@ -387,6 +387,7 @@ I18N.en = {
   'games.sort.name': 'Name',
   'games.sort.rating': 'Rating',
   'games.sortLabel': 'Sort order',
+  'games.sortedBy': 'Sorted by:',
   'games.noMatchFilters': 'No games match the filters.',
   'games.retire': 'Retire',
   'games.scoreNew': 'new',

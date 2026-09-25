@@ -388,6 +388,7 @@ I18N.fr = {
   'games.sort.name': 'Nom',
   'games.sort.rating': 'Note',
   'games.sortLabel': 'Ordre de tri',
+  'games.sortedBy': 'Trié par :',
   'games.noMatchFilters': 'Aucun jeu ne correspond aux filtres.',
   'games.retire': 'Retirer',
   'games.scoreNew': 'nouveau',

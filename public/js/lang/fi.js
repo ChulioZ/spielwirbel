@@ -362,6 +362,7 @@ I18N.fi = {
   'games.sort.name': 'Nimi',
   'games.sort.rating': 'Arvio',
   'games.sortLabel': 'Järjestys',
+  'games.sortedBy': 'Järjestys:',
   'games.noMatchFilters': 'Mikään peli ei vastaa suodattimia.',
   'games.retire': 'Karsi',
   'games.scoreNew': 'uusi',
