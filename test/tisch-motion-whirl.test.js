@@ -145,6 +145,10 @@ for (const [name, selector, timing] of [
     const body = gated[0][1];
     assert.match(body, timing);
     assert.doesNotMatch(body, /infinite|pointer-events/);
+    // A forwards fill (`both`/`forwards`) holds an identity transform on every
+    // element for good once the ritual is over; `backwards` covers the stagger
+    // delay without that (aligned with Ocean's O10.1 at the #1351 interview).
+    assert.doesNotMatch(body, /\b(both|forwards)\b/, 'no forwards fill: nothing is held after the ritual');
     const frames = keyframes(name);
     assert.ok(frames, 'the keyframes exist');
     assert.doesNotMatch(frames, /(^|[\s}])(to|100%)\s*\{/, 'no end frame: it ends on the rest state');
