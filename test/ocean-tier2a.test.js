@@ -215,9 +215,16 @@ test('each segment names its destination, so a design can set the suggestions ap
 
 // --- the stylesheet --------------------------------------------------------
 
+// The section runs to the NEXT section header, not to the end of the file: a
+// later slice's rules are not #1218's, and #1221's `@keyframes` steps (`from`)
+// carry no gate by construction — they are not rules that read tokens.
 const SHEET = fs.readFileSync(path.join(__dirname, '..', 'public/css/designs/ocean.css'), 'utf8')
-  .replace(/\/\*[\s\S]*?\*\//g, (c) => (c.includes('===== #1218') ? '/*#1218*/' : ''));
-const SECTION = SHEET.slice(SHEET.indexOf('/*#1218*/') + '/*#1218*/'.length);
+  .replace(/\/\*[\s\S]*?\*\//g, (c) => {
+    if (c.includes('===== #1218')) return '/*#1218*/';
+    return c.startsWith('/* ===== #') ? '/*§*/' : '';
+  });
+const AFTER_1218 = SHEET.slice(SHEET.indexOf('/*#1218*/') + '/*#1218*/'.length);
+const SECTION = AFTER_1218.includes('/*§*/') ? AFTER_1218.slice(0, AFTER_1218.indexOf('/*§*/')) : AFTER_1218;
 const GATE = ':root[data-design="ocean"]:not([data-scheme="dark"])';
 
 // A selector list split at its TOP-LEVEL commas only — `:has(> a, > b)` is one part.

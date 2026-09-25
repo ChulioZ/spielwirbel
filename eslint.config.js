@@ -525,6 +525,7 @@ const frontendGlobals = {
   // views-session-ocean.js (issue #1213): Ocean's setup, vote sides and result columns
   oceanWorn: 'readonly', OCEAN_COUNT_BUBBLES: 'readonly', composeOceanSetup: 'readonly', paintOceanCount: 'readonly',
   oceanVoteSides: 'readonly', composeOceanResult: 'readonly', oceanBlind: 'readonly', composeOceanLobby: 'readonly',
+  oceanDive: 'readonly', // #1221, O10.1
   // views-session-tables.js (issue #796)
   showTableBuilder: 'readonly', tableStateFrom: 'readonly', tablePeopleIds: 'readonly',
   tableCoverBg: 'readonly',
