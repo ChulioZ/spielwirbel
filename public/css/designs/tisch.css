@@ -1029,6 +1029,39 @@
   :root[data-design="tisch"][data-scheme="dark"] .topbar__acct--face:not([hidden]) { padding: 3px 12px 3px 3px; }
   :root[data-design="tisch"][data-scheme="dark"] .topbar__name { display: block; }
 }
+/* The unseen-news and unread-inbox dots as BADGES (#1326). styles.css's
+   `.topbar-dot` is an 8px --brand speck in the corner of a 10px-radius square;
+   on this pill that corner is the curved brass rim, and --brand IS the rim's
+   hue, so the dot vanished into the border it sat across.
+
+   The colour cannot be made to clear 3:1 on its own. The lifted account discs
+   (memberTone, --member-lift) are mid-light — relative luminance ~.40–.50 —
+   and the button's --control-fill is ~.06, so a flat fill ≥ 3:1 against the
+   fill is ≤ 1.2:1 against a disc and vice versa; no token sits in between.
+   The RING carries the disc side instead: --control-fill against every
+   MEMBER_COLORS disc measures 3.83–4.65:1, and --danger (T1's Zinnober, the
+   „Marke" hue, not the brass) against that ring is 4.47:1. Each boundary of
+   the badge therefore clears SC 1.4.11, on any disc and on a photo avatar too.
+   The ring is the button's own fill, so the badge reads as cut out of the
+   disc; test/tisch-app-chrome.test.js measures the pairs from these tokens.
+
+   No `display`: the dots are toggled by `hidden` (setNewsDot/setInboxDot). */
+:root[data-design="tisch"][data-scheme="dark"] .topbar-dot {
+  width: 14px;
+  height: 14px;
+  background: var(--danger);
+  border: 2px solid var(--control-fill);
+}
+/* On the face, the account dot is anchored to the 32px AVATAR rather than to
+   the pill: its centre sits on the disc's 45° point, (19 + 11.3, 19 − 11.3)
+   from the padding box, given the 3px padding. Measured from the LEFT so it is
+   the same spot at every width — the pill grows rightward by the name from
+   768px, and the phone face is the disc alone. */
+:root[data-design="tisch"][data-scheme="dark"] .topbar__acct--face .topbar-dot {
+  top: 1px;
+  right: auto;
+  left: 23px;
+}
 
 /* --- The „Abstimmung läuft" notice (T3.1, T6.1) ---------------------------
    A vote already running is the one thing on the lobby that is not a
