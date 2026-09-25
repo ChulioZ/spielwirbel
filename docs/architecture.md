@@ -797,8 +797,11 @@ public/
     regal-bulk.js         the Regal's selection mode and its four bulk actions
                           (tags, owners, retire, delete), lifted out of
                           views-regal.js so each is editable on its own (#1000)
-    views-chronik.js      Chronik tab: the month-grouped session/shelf timeline,
-                          and the shareable month/year recap above it
+    views-chronik.js      Chronik tab: the month-grouped session/shelf timeline
+    views-period-recap.js
+                          the Chronik's shareable month/year recap section, and
+                          the share delivery its card (and the account recap's
+                          and the Regal-Steckbrief's) goes out through (#1345)
     views-pokale.js       Pokale tab: podium + fun stats, and the Rückblick
     views-archive.js      the three off-shelf screens (retired / completed /
                           Wunschliste) through one renderer
