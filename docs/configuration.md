@@ -324,7 +324,7 @@ against each, and the Node version the answering process is running.
 the archive, the played shelf or the wishlist; which design accounts wear (an
 account that has not answered the design chooser counts under the face, Der
 Tisch, exactly as it sees it), and how many went back to Klassisch; rounds carrying their own
-tags or shared with someone; games linked to a provider, wearing a
+tags, keeping saved session filters or shared with someone; games linked to a provider, wearing a
 cover, owned by a named person or carrying expansions; sessions with guests, with
 teams or opened through a shared vote link; accounts with a passkey, a BGG
 username or a profile picture. Every adoption figure is stated as `n / total`

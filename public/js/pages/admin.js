@@ -419,7 +419,7 @@
         ['mit Vote-Link', share(a.sessionsWithVoteLink, sessions)],
       ]]);
 
-    rows.push(['Konto-Funktionen & eigene Tags', null,
+    rows.push(['Konto-Funktionen, eigene Tags & Filter', null,
       share(a.accountsWithPasskey, accounts),
       `Konten mit Passkey (von ${accounts})`, [
         ['BGG-Konto', share(a.accountsWithBggUsername, accounts)],
@@ -433,6 +433,7 @@
            implying a per-account answer the data cannot give. */
         ['ohne Runde (nach Tenant)', share(a.accountsWithoutRound, accounts)],
         ['Runden mit eigenen Tags', share(a.roundsWithTags, rounds)],
+        ['Runden mit gespeicherten Filtern', share(a.roundsWithSavedFilters, rounds)],
       ]]);
 
     /* THE SESSION FUNNEL (#1174) — the one tile about the core loop rather than

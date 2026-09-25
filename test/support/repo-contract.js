@@ -4964,7 +4964,7 @@ module.exports = function repoContract(repo) {
     // the first half of every one of these and fails only the second.
     const ADOPTION = [
       'roundsWithRetired', 'roundsWithCompleted', 'roundsWithWish', 'roundsWithAnyShelf',
-      'roundsWithTags', 'gamesLinked', 'gamesWithOwnCover', 'gamesWithProviderCover',
+      'roundsWithTags', 'roundsWithSavedFilters', 'gamesLinked', 'gamesWithOwnCover', 'gamesWithProviderCover',
       'gamesWithOwners', 'gamesWithExpansions', 'sessionsWithGuests', 'sessionsWithTeams',
       'sessionsWithVoteLink', 'accountsWithPasskey', 'accountsWithBggUsername',
     ];
@@ -4974,6 +4974,9 @@ module.exports = function repoContract(repo) {
       const tn = `ad-${Math.random().toString(16).slice(2)}`;
       const r = await repo.createRound(tn, { name: 'Genutzt', members: ['Ann'] });
       await repo.addTag(tn, r.id, 'Kurz', null);
+      await repo.createSavedFilter(tn, r.id, {
+        name: 'Kurz', tagIds: [], excludeTagIds: [], count: 3, memberIds: [r.members[0].id],
+      });
 
       // A linked game wearing the PROVIDER's cover.
       await repo.createGame(tn, r.id, gameFields({
@@ -5167,6 +5170,9 @@ module.exports = function repoContract(repo) {
       const tn = `ex-${Math.random().toString(16).slice(2)}`;
       const r = await repo.createRound(tn, { name: 'Ausgenommen', members: ['Ann'] });
       await repo.addTag(tn, r.id, 'Kurz', null);
+      await repo.createSavedFilter(tn, r.id, {
+        name: 'Kurz', tagIds: [], excludeTagIds: [], count: 3, memberIds: [r.members[0].id],
+      });
       await repo.createGame(tn, r.id, gameFields({ title: 'Eins', image: '/uploads/e.webp' }));
       await repo.createSession(tn, r.id, {
         gameIds: [], votes: {}, createdAt: daysAgo(1), finished: true, winnerIds: ['m1'],
@@ -5186,7 +5192,7 @@ module.exports = function repoContract(repo) {
       }
 
       for (const key of ['roundsTotal', 'gamesTotal', 'sessionsTotal', 'accountsTotal',
-        'roundsWithTags', 'gamesWithOwnCover', 'accountsWithBgStats']) {
+        'roundsWithTags', 'roundsWithSavedFilters', 'gamesWithOwnCover', 'accountsWithBgStats']) {
         assert.equal(plain.adoption[key] - hidden.adoption[key], 1, `${key} was not excluded`);
       }
       assert.equal(plain.adoption.funnel.played - hidden.adoption.funnel.played, 1);
