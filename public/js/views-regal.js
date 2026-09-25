@@ -378,10 +378,11 @@ function renderRegalTab(round, activeGames) {
   // full Wunschliste or Aussortiert — i.e. it would vanish exactly where it is
   // most needed.
   //
-  // NOT `rail-owned` under Der Tisch: that rail carries no off-shelf group
-  // (#1262), so at desktop this button is the Regal's own way to the four —
-  // T3.3 draws it in the toolbar at 1440.
-  const offShelfBtn = h(`<button class="link-btn${designIs('tisch') ? '' : ' rail-owned'}" type="button"><i class="ti ti-archive" aria-hidden="true"></i> <span>${esc(t('rail.archive'))}</span></button>`);
+  // NOT `rail-owned` under a lean rail (railIsLean, round-rail.js): Der Tisch's
+  // (#1262) and Ocean's Reling (#1211) carry no off-shelf group, so at desktop
+  // this button is the Regal's own way to the four — T3.3 draws it in the
+  // toolbar at 1440, and O3's „Vom Regal führt ein Weg zu Nicht im Regal".
+  const offShelfBtn = h(`<button class="link-btn${railIsLean() ? '' : ' rail-owned'}" type="button"><i class="ti ti-archive" aria-hidden="true"></i> <span>${esc(t('rail.archive'))}</span></button>`);
   offShelfBtn.addEventListener('click', () => openOffShelfSheet(round));
   gamesTools.appendChild(offShelfBtn);
 

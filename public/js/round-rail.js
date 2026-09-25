@@ -38,6 +38,17 @@ const RAIL_SETTINGS_SUB = ['settings', 'tags', 'design'];
 // that owns them, as the strip must) would light up two things at once.
 const RAIL_OWN_ENTRY = ['retired', 'completed', 'wishlist', 'recommendations', ...RAIL_SETTINGS_SUB];
 
+/* Does the rail carry ONLY navigation — no CTA, no presets, no off-shelf rows?
+   Der Tisch's rail is identity plus the five links (#1262); Ocean's Reling is
+   the five links alone (#1211, O3.2 „Reling 104 px"). Every screen that marks
+   an element `rail-owned` because "the rail carries a copy" has to ask this,
+   or the element vanishes from 1280px up with no copy anywhere — the Regal's
+   off-shelf trigger is the one that did (views-regal.js). One question, so a
+   third lean design is one line here rather than a hunt for every caller. */
+function railIsLean() {
+  return designIs('tisch') || designIs('ocean');
+}
+
 // One rail row. `sub` decides the marker, and the two states are NOT
 // interchangeable — the same distinction the sections below draw (#331):
 //   current -> you are ON this screen: "page", and click-inert, like the active
@@ -77,6 +88,14 @@ function buildRoundRail(round, activeTab, sub, offShelf) {
 
   const rail = h(`<aside class="rail" aria-label="${esc(t('a11y.roundNav'))}"></aside>`);
 
+  /* Ocean's Reling (#1211, O3.1/O3.2) is 104px of navigation and nothing else:
+     the five links, icon over label. The round's identity lives in the page
+     instead — the hub's own crew column carries the name, the seats and the
+     „+", and the top bar names the round on every other screen — so the hero
+     is NOT `rail-owned` under Ocean (views-round-start.js) and keeps the
+     Start tab's one <h1> at every width. */
+  const reling = designIs('ocean');
+
   // --- Identity. The hero this mirrors stays on the Start tab for narrow
   // screens, where there is no rail to carry it; CSS hides it here instead.
   //
@@ -115,7 +134,7 @@ function buildRoundRail(round, activeTab, sub, offShelf) {
   // Add a seat (#563). The hero this mirrors is hidden at rail widths, so without
   // an entry here the action would exist only below 1280px.
   id.querySelector('.rail__members').appendChild(addMemberBtn(round));
-  rail.appendChild(id);
+  if (!reling) rail.appendChild(id);
 
   /* Der Tisch's rail is identity plus the FIVE links — Start, the three
      sections and Einstellungen (T3.2, #1262). The one action and its presets sit
@@ -123,7 +142,7 @@ function buildRoundRail(round, activeTab, sub, offShelf) {
      count tiles, so the rail repeating them would be the same control twice on
      one screen. On the other tabs the CTA is one tap away on Start — the phone's
      shape at every width. Klassisch keeps all of it, byte for byte. */
-  const lean = designIs('tisch');
+  const lean = railIsLean();
 
   // --- The one big action, reachable from every section rather than only from
   // the Start tab (which is where it has to stay on a phone).

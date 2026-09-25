@@ -52,6 +52,9 @@ I18N.nl = {
   'home.sub': 'Welke groep speelt er vandaag?',
   // Der Tisch only (#1279): the lobby voice beside the wordmark.
   'home.tischKicker': 'Spellencafé · jouw tafels',
+  // Ocean only (#1211): its sub-brand beside the wordmark and its lobby greeting.
+  'home.oceanKicker': 'De kust · jouw groepen',
+  'home.oceanGreeting': 'Welkom aan de kust.',
   'home.shared': 'Gedeeld',
   'home.newRound': 'Een nieuwe groep starten',
   'home.empty.title': 'Nog geen speelgroep.',
@@ -97,6 +100,8 @@ I18N.nl = {
 
   'round.tags': 'Labels',
   'round.startSession': 'Sessie starten',
+  // Ocean only (#1211): the one action's themed verb (O9 §2).
+  'round.startSessionOcean': 'Duiken',
   'round.startEmptyTitle': 'Nog geen sessie',
   'round.startEmpty': 'Start je eerste sessie — wat jullie laatst speelden komt hier te staan.',
   'round.startSessionDisabled': 'Voeg eerst spellen toe',

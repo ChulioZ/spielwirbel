@@ -30,6 +30,9 @@ I18N.ko = {
   'home.sub': '오늘은 어느 모임이 플레이하나요?',
   // Der Tisch only (#1279): the lobby voice beside the wordmark.
   'home.tischKicker': '보드게임 카페 · 나의 테이블',
+  // Ocean only (#1211): its sub-brand beside the wordmark and its lobby greeting.
+  'home.oceanKicker': '해안 · 나의 모임',
+  'home.oceanGreeting': '해안에 오신 걸 환영해요.',
   'home.shared': '공유됨',
   'home.newRound': '새 모임 시작하기',
   'home.empty.title': '아직 게임 모임이 없어요.',
@@ -75,6 +78,8 @@ I18N.ko = {
 
   'round.tags': '태그',
   'round.startSession': '세션 시작',
+  // Ocean only (#1211): the one action's themed verb (O9 §2).
+  'round.startSessionOcean': '잠수하기',
   'round.startEmptyTitle': '아직 세션이 없어요',
   'round.startEmpty': '첫 세션을 시작해 보세요 — 마지막으로 플레이한 게임이 여기에 표시돼요.',
   'round.startSessionDisabled': '먼저 게임을 추가하세요',

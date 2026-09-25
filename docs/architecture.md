@@ -782,6 +782,9 @@ public/
     hub-cards.js          the Start tab's card renderers, their shared frame and
                           the quick-start chips, split out of the above at its
                           own #923 seam (issue #1189)
+    ocean-hub.js          Ocean's composition of the lobby and the round hub:
+                          the hub's columns, the shell with the one action, the
+                          crew captions, the lobby tiles and notice (#1211)
     saved-filters.js      a round's saved session filters (#1328): the chip's
                           prefill, the setup screen's „Filter speichern" sheet
                           and the Einstellungen list

@@ -35,6 +35,9 @@ I18N.en = {
   'home.sub': 'Which round is playing today?',
   // Der Tisch only (#1279): the lobby voice beside the wordmark.
   'home.tischKicker': 'Game café · your tables',
+  // Ocean only (#1211): its sub-brand beside the wordmark and its lobby greeting.
+  'home.oceanKicker': 'The coast · your rounds',
+  'home.oceanGreeting': 'Welcome to the coast.',
   'home.shared': 'Shared',
   'home.newRound': 'Start a new round',
   'home.empty.title': 'No game round yet.',
@@ -82,6 +85,8 @@ I18N.en = {
 
   'round.tags': 'Tags',
   'round.startSession': 'Start session',
+  // Ocean only (#1211): the one action's themed verb (O9 §2).
+  'round.startSessionOcean': 'Dive in',
   'round.startEmptyTitle': 'No session yet',
   'round.startEmpty': 'Start your first session — what you last played will show up here.',
   'round.startSessionDisabled': 'Add games first',

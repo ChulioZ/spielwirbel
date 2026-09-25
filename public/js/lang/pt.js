@@ -54,6 +54,9 @@ I18N.pt = {
   'home.sub': 'Qual grupo joga hoje?',
   // Der Tisch only (#1279): the lobby voice beside the wordmark.
   'home.tischKicker': 'Café de jogos · suas mesas',
+  // Ocean only (#1211): its sub-brand beside the wordmark and its lobby greeting.
+  'home.oceanKicker': 'A costa · seus grupos',
+  'home.oceanGreeting': 'Boas-vindas à costa.',
   'home.shared': 'Compartilhado',
   'home.newRound': 'Criar um novo grupo',
   'home.empty.title': 'Nenhum grupo de jogo ainda.',
@@ -99,6 +102,8 @@ I18N.pt = {
 
   'round.tags': 'Etiquetas',
   'round.startSession': 'Iniciar sessão',
+  // Ocean only (#1211): the one action's themed verb (O9 §2).
+  'round.startSessionOcean': 'Mergulhar',
   'round.startEmptyTitle': 'Nenhuma sessão ainda',
   'round.startEmpty': 'Comece a sua primeira sessão — o que vocês jogaram por último aparece aqui.',
   'round.startSessionDisabled': 'Adicione jogos primeiro',
