@@ -2,6 +2,7 @@
 paths:
   - "public/js/recap-card.js"
   - "public/js/views-chronik.js"
+  - "public/js/views-period-recap.js"
   - "public/js/recap-card-tisch.js"
   - "public/js/recap-card-ocean.js"
   - "public/js/card-glyphs.js"

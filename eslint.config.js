@@ -490,7 +490,11 @@ const frontendGlobals = {
   pokaleStatCard: 'readonly', pokaleGameCard: 'readonly', recapGames: 'readonly',
   roundStandings: 'readonly',
   gameCardHead: 'readonly', wireGameCardHead: 'readonly',
-  renderRecapSection: 'readonly', renderPeriodRecapSection: 'readonly',
+  renderRecapSection: 'readonly',
+  // views-period-recap.js (#1345, split out of views-chronik.js) — the Chronik's
+  // per-period recap section and the share delivery its card, the account recap
+  // and the Regal-Steckbrief go out through
+  renderPeriodRecapSection: 'readonly',
   canShareRecapImage: 'readonly', shareRecapCard: 'readonly', deliverShareImage: 'readonly',
   // views-shelf-profile.js (#1173) — the Regal-Steckbrief's card, screen and share
   shelfProfileDeps: 'readonly', SHELF_DIM_TITLES: 'readonly', shelfSeatName: 'readonly',

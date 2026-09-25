@@ -173,6 +173,7 @@ const SHELL = [
   '/js/views-round-start.js',
   '/js/regal-bulk.js',
   '/js/views-regal.js',
+  '/js/views-period-recap.js',
   '/js/views-shelf-profile.js',
   '/js/views-chronik.js',
   '/js/views-pokale.js',
