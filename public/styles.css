@@ -1554,6 +1554,41 @@ a.hub-row:hover { background: var(--sunken-soft); }
 }
 .pulse-bar__tick { font-size: var(--text-xs); color: var(--ink-soft); line-height: 1.2; }
 
+/* ---- The Regal-Steckbrief (#1173, views-shelf-profile.js) ----------------
+   Horizontal bars, CSS only, for the reason the pulse bars above state. Each
+   row is label | track | count on a three-track grid, so the counts line up in
+   one column however long a localized label is; the label WRAPS rather than
+   truncating (T7.7's +30 %, and Finnish is the long one). A band under three
+   games is a gap: its count takes the accent, and the gap list under it says
+   so in words — the colour is never the only carrier. No per-world rules: the
+   worlds go with the flip (#1202) and paint these bars in their own --brand. */
+.shelf-card__sub { font-size: var(--text-sm); font-weight: 600; color: var(--ink-soft); margin-bottom: 6px; }
+.shelf-bars { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.shelf-bar {
+  display: grid;
+  grid-template-columns: minmax(4.5em, 7.5em) minmax(0, 1fr) 2.5ch;
+  align-items: center;
+  gap: 10px;
+  font-size: var(--text-sm);
+}
+.shelf-bar__label { color: var(--ink-soft); font-weight: 600; line-height: 1.25; overflow-wrap: break-word; hyphens: auto; }
+.shelf-bar__track { height: 10px; border-radius: 5px; background: var(--sunken); overflow: hidden; }
+.shelf-bar__fill { display: block; height: 100%; border-radius: inherit; background: var(--brand); }
+.shelf-bar__n { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
+.shelf-bar--gap .shelf-bar__n { color: var(--brand-ink, var(--brand)); }
+.shelf-gaps { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: var(--text-sm); }
+.shelf-gap { display: flex; align-items: baseline; gap: 6px; }
+.shelf-gap .ti { flex: none; color: var(--brand-ink, var(--brand)); }
+/* The screen: the same panels as the Start card's frame, tiled. Unordered,
+   short panels you scan for one of — .claude/rules/tiles-vs-lists.md. */
+.shelf-head__share { flex: 0 0 auto; }
+.shelf-basis { margin: -8px 0 16px; }
+.shelf-profile { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; align-items: start; }
+.shelf-top { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: var(--text-sm); }
+.shelf-top__row { display: flex; justify-content: space-between; gap: 10px; }
+.shelf-top__name { min-width: 0; overflow-wrap: anywhere; }
+.shelf-top__n { flex: none; font-weight: 700; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+
 /* The quick-start chips (#923), directly under the big CTA they modify — in the
    pane below 1280px and in the rail above it, following that button either way. */
 .hub-presets { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
