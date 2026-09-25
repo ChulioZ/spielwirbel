@@ -134,7 +134,7 @@ rail takes over at 1280px, so the three presentations are genuinely different UI
 ## Prefer a test over a ticket
 
 `test/a11y-contrast.test.js` already computes contrast ratios from the real
-`DESIGNS` registry (`public/js/round-designs.js`), so a new palette or world is checked automatically. Any colour finding
+design registry (`public/js/designs.js`), so a new design is checked automatically. Any colour finding
 belongs there as an assertion, not in an issue. Structural findings that read from
 `styles.css` as text can follow `test/content-width.test.js` — parse via
 `test/support/css.js` and strip comments first, or the selector regex silently

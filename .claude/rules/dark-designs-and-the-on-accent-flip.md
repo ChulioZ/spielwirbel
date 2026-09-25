@@ -1,21 +1,23 @@
 ---
 paths:
   - "public/styles.css"
-  - "public/js/round-designs.js"
+  - "public/js/designs.js"
+  - "public/js/design.js"
   - "public/js/core.js"
   - "public/js/round-theme.js"
-  - "public/js/views-round-detail.js"
+  - "public/js/design-picker.js"
   - "public/js/recap-card.js"
   - "test/a11y-contrast.test.js"
   - "test/support/theme.js"
 ---
 # A dark design flips the INK on every fill — and two of those inks are resolved in JS
 
-A round's design may be dark since #904: `scheme: 'dark'` in `round-designs.js`,
-`<html data-scheme="dark">` from `applyBackground()` — which every routed
-screen must call itself, see
-`.claude/rules/routed-screens-apply-the-round-design.md` — and one token block in
-`styles.css`. The colour work is mechanical. The four things that are not
+A design may be dark since #904 — first a ROUND's, and since the flip (#1202),
+which retired round designs, an ACCOUNT's: `scheme: 'dark'` in `designs.js`,
+`<html data-scheme="dark">` from `paintDesign()` (called by `applyDesign()`), and
+one token block in `styles.css` plus the design's own scheme-gated block
+(`.claude/rules/design-colour-blocks-are-scheme-gated.md`). Der Tisch — the face,
+and what every account wears until it chooses — is dark. The colour work is mechanical. The four things that are not
 obvious cost real effort, and each is silent.
 
 ## 1. The accent must be LIGHT, so white-on-accent stops working
@@ -43,17 +45,19 @@ scheme off the document **at render time** and emit an inline colour. Everything
 else follows the tokens, so before #904 changing a design was pure CSS and
 nothing needed re-rendering.
 
-It does now, and the failure lands on the one screen where a design can change:
-choosing a dark design left the design screen's own rail avatars painted with
-light-scheme discs while `--on-accent` had already gone near-black — dark
-initials on a dark disc, unreadable, with no error anywhere. Measured in a
-browser; no test saw it, because every test rendered *after* the scheme was set.
+It does now, and the failure lands on the screen where a design changes: when
+rounds picked designs, choosing a dark one left the design screen's own rail
+avatars painted with light-scheme discs while `--on-accent` had already gone
+near-black — dark initials on a dark disc, unreadable, with no error anywhere.
+Measured in a browser; no test saw it, because every test rendered *after* the
+scheme was set.
 
-So the picker seeds the SWR cache and calls `currentView()`. **The seed is the
-half that is easy to miss**: `fetchRound()` serves the cached round, which still
-holds the OLD background, so a bare `currentView()` repaints the previous design
-and only corrects itself when the revalidation lands. The route answers with
-`{ background }` alone, so the cached round is patched rather than replaced.
+So a design change re-renders the screen: `applyDesign()` calls `currentView()`
+on a committed change (#1266), and the Konto picker re-renders its own screen
+(`public/js/design-picker.js`). The marker picker has the sibling trap one
+layer over: `fetchRound()` serves the cached round, which still holds the OLD
+marker, so it seeds the SWR cache before re-rendering
+(`public/js/views-round-settings.js` `showMarker`).
 
 The general rule: **anything that resolves a theme value in JS turns a design
 change into a re-render.** Prefer a token; when a token cannot do it (an HSL ramp

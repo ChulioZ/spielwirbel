@@ -429,7 +429,7 @@ What the app does, in detail. For a short overview see the
   as a **QR code** beside it, which is the faster of the two at a table: five
   phones scan the host's screen at once, where sharing means finding the group
   chat mid-evening. The code is drawn for the link currently in force and is
-  always dark-on-light, whatever design the round wears. Its holder
+  always dark-on-light, whatever design is worn. Its holder
   opens it, claims their own name from the session's participant list and rates
   the drawn games on their phone — no sign-up, nothing to install. The link is a
   capability for exactly that one session: it shows the round name, the drawn
@@ -535,45 +535,14 @@ What the app does, in detail. For a short overview see the
   the head of the recap card a group shares. It is **not** a design — the colour
   is stored as one of eight *slots*, and each design paints those slots in its
   own way, so the same round reads as the green one whichever look you are
-  wearing. A new round is given one automatically (issue #1187).
-- **Designs (per round)** – *retired, still rendered.* Rounds no longer choose a
-  design; one already on a palette or a world keeps it until the programme's
-  flip (issue #1202), and a legacy palette maps onto the matching marker. The
-  rest of this entry describes what those rounds still show.
-  Pick a colour scheme (page tone + accent); the
-  whole UI derives from it — surfaces, shadows, the dark "stage" of the
-  finale, and the mobile browser / installed-app chrome around the page.
-  A design can be **light or dark**: Obsidian is a plain dark scheme, and the
-  Sci-Fi, Horror and Burg worlds are dark too, with card surfaces, borders, text,
-  semantic colours and every ink-on-a-coloured-button re-derived for a night page.
-  **Worlds** (Forest, Sci-Fi, Ocean, Chess, Horror, Dinosaurs, Burg) go one step
-  further: each brings its own display typeface, a backdrop motif and ornament
-  framing on primary buttons, section headings, cards, empty states and the
-  finale stage, and reaches the round's home tile and its shareable recap card.
-  In the picker the worlds are **poster cards** — the world's own scenery across
-  the top of the card and its name in its own display face — so a group sees
-  what it is choosing; the plain colour schemes stay small swatches.
-  The round also **wears** its world on the screens you actually look at it on:
-  a crown of the world's own scenery above the round's name, the world's motif
-  behind the bottom navigation, the round's name in the world's face in the top
-  bar, and the world's mark on a game that has no cover art. The Pokale podium
-  stands on the world's own floor, and the recap card a group shares carries
-  the world's scene along its foot. When you set a session up, the pot of
-  eligible games sits in a vessel of the world's own — a tree stump in Forest, a
-  cauldron in Horror, a treasure chest in Burg, a teleporter pad in Sci-Fi, an
-  open clam in Ocean, an open games box in Chess and a nest of eggs in
-  Dinosaurs.
-  On the winner reveal a world plays
-  its own victory scene in place of the confetti — in Forest a tree grows
-  while fireflies drift up, in Sci-Fi a rocket lifts off past streaking stars,
-  in Ocean a whale surfaces among rising bubbles, in Chess the back rank is set
-  down on the board, in Horror a ghost drifts up over the graveyard while bats
-  flit past, in Dinosaurs the herd stomps into place as the volcano erupts, and
-  in Burg a dragon flies in over the castle wall as sparks rise
-  — and the scene's end state stays on the winners' group whenever the results
-  are opened again. Body text stays Nunito in every world; home, login, landing,
-  account and inbox stay standard — a dark round does not darken the lobby
-  around it.
+  wearing. A new round is given one automatically (issue #1187). A round that
+  wore one of the retired round designs and never picked a marker shows the
+  marker its old design maps to — a Salbei round stays sage under Klassisch, a
+  Forest round is sage there too (issue #1202).
+- **Designs (per round)** – *retired* (issue #1202). Rounds used to pick a
+  colour scheme or a world (Forest, Sci-Fi, Ocean, Chess, Horror, Dinosaurs,
+  Burg) with its own typeface and scenery; the look is now per person (see
+  **Design (per user)** below), and a round keeps only its colour marker.
 - **Languages** – German, English, Spanish, French, Italian, Dutch, Portuguese, Finnish and Korean, following the system language by
   default, switchable any time via the picker in the top bar.
 - **Shareable links & reload-safe navigation** – the URL reflects the current
@@ -632,10 +601,10 @@ What the app does, in detail. For a short overview see the
 - **Guest demo** – *accounts mode only*, when the operator sets
   `DEMO_ENABLED` (issues #427, #953). The landing page's primary action mints a
   throwaway account with **no e-mail and no password**: one request, and the
-  visitor is inside a fully writable tenant seeded with three rounds — a
-  three-person round on a world design with a played history, a two-player
-  shelf on a dark design, and a big group whose last session was split across
-  two tables with guests and a team — so every screen has something to show.
+  visitor is inside a fully writable tenant seeded with three rounds, each on
+  its own colour marker — a three-person round with a played history, a
+  two-player shelf, and a big group whose last session was split across two
+  tables with guests and a team — so every screen has something to show.
   A banner names it as a demo throughout; the tenant and everything in it are
   deleted after 24 hours, and demo accounts are excluded from the product
   counters and the public statistics. Registering from the banner starts a real
@@ -781,17 +750,21 @@ What the app does, in detail. For a short overview see the
   at all — otherwise "signed-in" would include an account anyone gets in one
   unauthenticated request. Pictures are visible to real signed-in accounts only,
   and are reportable from the profile and from a feed tile.
-- **Design (per user)** – *one design today; more behind a code gate* (issues
-  #1184, #1186). A design is the look the whole app wears **for you** — not for
-  the round, unlike the round palettes and worlds, which are unchanged. It is
-  picked under **Konto → Design** and applies on every screen and every device
-  you sign in on; an account that has never been asked gets a one-time card
-  offering the choice, with „Später entscheiden" as a full answer. *Klassisch* —
-  the look the app started with — stays selectable for good. Which designs exist
-  is decided in code (`public/js/designs.js`), and today only Klassisch is
-  enabled outside development, so the picker and the card stay out of the way
-  until the rest of the programme lands (`docs/design/README.md`). An instance
-  running **without accounts** keeps the choice on the device instead.
+- **Design (per user)** – *Der Tisch by default, Klassisch one tap away*
+  (issues #1184, #1186, #1202). A design is the look the whole app wears **for
+  you** — not for the round. Two are live: **Der Tisch** — dark felt, brass and
+  paper cards, as if everything lay on the games table — and **Klassisch**, the
+  look the app started with, which stays selectable for good. Since the flip
+  (#1202) Der Tisch is what every account wears until it chooses, and what a
+  logged-out visitor sees (landing, sign-in, FAQ, legal pages). An account that
+  has never been asked gets a one-time card offering the choice — „Wie bisher"
+  brings Klassisch back, „Später entscheiden" keeps Der Tisch — and the design
+  can be changed any time under **Konto → Design**; it applies on every screen
+  and every device you sign in on. Which designs exist is decided in code
+  (`public/js/designs.js`), so a design under construction stays off a live
+  instance until it is enabled (`docs/design/README.md`). An instance running
+  **without accounts** keeps the choice on the device instead, and starts on Der
+  Tisch.
 - **Entdecken** – *live by default; PUBLIC_STATS_ENABLED=false takes it down* (issue #564). Publishes
   the whole instance at a glance: how many rounds, players, shelf games and
   played sessions it holds, plus the games on the most shelves and the ones most

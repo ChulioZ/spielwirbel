@@ -26,9 +26,11 @@ registry row's `marks` (`public/js/designs.js`) and three things read them:
 A scraper (og:image) and an install that happens before any script runs only
 ever see `index.html`'s static tags. So those tags must be **the face's marks**
 (`FACE_DESIGN`), and `test/design-marks.test.js` asserts it tag by tag. The
-consequence is deliberate: **the flip (#1202) cannot move `FACE_DESIGN` without
-moving the head in the same change** — the one-line flip goes red until the icon,
-apple-touch, manifest and both image tags follow. That is the whole point; don't
+consequence is deliberate: **`FACE_DESIGN` cannot move without moving the head in
+the same change** — which is exactly what the flip (#1202) did, moving favicon,
+apple-touch, both image tags and `theme-color` to Der Tisch's marks along with
+the standalone pages' icons. The bare manifest URL answers with the face's
+derived manifest; Klassisch's static file answers `?design=klassisch`. That is the whole point; don't
 "fix" the test by reading the head from the registry at runtime (scrapers run no
 script, `.claude/rules/link-preview-card.md` §1).
 
@@ -39,8 +41,10 @@ manifest is fetched with credentials". It does not. The page already knows what
 it wears, so `manifestHref()` puts the id in the query and the server answers
 from the URL alone: no account read on an ungated route, the response identical
 for everyone asking the same URL (no `Vary`, cacheable), and the `/uploads`
-access cookie keeps its single job. The face gets the bare path, so the static
-file — bytes, headers, ETag — is exactly what production served before.
+access cookie keeps its single job. The face gets the bare path. A colourless
+design (Klassisch) is answered with the static file itself — bytes, headers, ETag;
+a design with its own colours (Der Tisch, the face since #1202) with the static
+file re-dressed in its icons and colours.
 
 An id that is not **selectable on this instance** falls back to the face. In
 production that means an unreleased design (`enabled: false`) cannot leak its

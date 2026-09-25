@@ -12,7 +12,8 @@ comment says so. That is exactly right for *"where does this rule live"* and
 exactly wrong for *"does this rule EXIST"*, because a sheet's media blocks are
 full of **grouped resets naming the very selectors an existence test looks up**.
 
-`public/styles.css` has one at the end of the worlds section:
+`public/styles.css` had one at the end of the round worlds' section (retired
+with the worlds at the flip, #1202 — the shape is what outlives them):
 
 ```css
 @media (prefers-contrast: more) {
@@ -24,7 +25,7 @@ full of **grouped resets naming the very selectors an existence test looks up**.
 }
 ```
 
-So `test/round-worlds.test.js`'s `slotBody('[data-world] .podium::before')` — a
+So the worlds' slot spec's `slotBody('[data-world] .podium::before')` — a
 lookup for *any* rule naming that selector in its group — finds the **reset**.
 Measured on #1083: deleting the podium floor's whole 20-line block left
 
