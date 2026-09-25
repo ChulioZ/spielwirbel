@@ -10318,6 +10318,68 @@ kbd {
 .rec-card__actions .btn { font-size: var(--text-sm); padding: 8px 14px; }
 .rec-source { margin-top: 18px; font-size: var(--text-sm); }
 
+/* The spotlight tiles (#1228): up to three one-game cards above the list, each
+   re-scored with one term altered. They ARE tiles where the list is not, and
+   tiles-vs-lists.md is why: three entries with no order between them (different,
+   complexity and hidden answer three unrelated questions), scanned for the one
+   that catches the eye — against a list that is a ranking.
+
+   One snapping row on a phone rather than a stack: three full cards stacked put
+   the list itself two screens down, which is the thing this screen is for. The
+   84% track (a plain percentage: a `minmax()` here never grows past its floor,
+   because a scrolling row has no free space to distribute) leaves the next tile
+   peeking in, so the row reads as scrollable.
+   From 860px it is a grid — `auto-fill`, so a round the variants found only two
+   games for keeps the tiles their width instead of ballooning one. */
+.rec-spots { margin: 0 0 20px; min-width: 0; }
+.rec-spots__title { font-family: var(--font-display); font-size: var(--text-md); margin: 0 0 8px; }
+.rec-spots__row {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: min(84%, 320px);
+  gap: 12px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 4px;
+}
+.rec-spots__row > .rec-card,
+.rec-spots__row > .rec-undone { scroll-snap-align: start; }
+@media (min-width: 860px) {
+  .rec-spots__row {
+    grid-auto-flow: row;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    overflow-x: visible;
+  }
+}
+/* The tile is the list's own card, so it inherits every action and the in-place
+   undo; only the caption on top and the stacking differ.
+   A GRID, not the list card's wrapping flex row: the row's tiles stretch to the
+   tallest, and a flex wrap cannot push its last line to the bottom — so the
+   actions sat at a different height in each tile and a short tile showed its
+   spare height under the BGG link. The 1fr middle row takes that height
+   instead, pinning the actions to the foot (#1228 merge interview). */
+.rec-card.rec-card--spot {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto 1fr auto;
+  align-items: start;
+  gap: 10px 14px;
+  border-color: color-mix(in oklab, var(--brand) 40%, var(--line));
+}
+.rec-card--spot .rec-card__body { min-width: 0; }
+.rec-card--spot .rec-card__actions { grid-column: 1 / -1; }
+.rec-spot__cap { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 2px; }
+.rec-spot__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  font-weight: 800;
+  color: var(--brand-ink, var(--brand));
+}
+.rec-spot__line { font-size: var(--text-sm); color: var(--ink-soft); }
+
 /* „Nicht interessiert" (#782). The dismissed card is replaced IN PLACE by this
    row rather than vanishing: the undo has to outlive the 2.2s toast, and a card
    that simply disappears gives the reader nothing to aim at if they mis-tapped.

@@ -44,7 +44,7 @@ async function seedCorpus(rows) {
       rank: r.rank ?? i + 1,
       rating: 7.6,
       bayesRating: r.bayesRating ?? 7,
-      usersRated: 4000,
+      usersRated: r.usersRated ?? 4000,
     })),
     { dumpDate: '2026-08-01', uploadedAt: '2026-08-14T00:00:00.000Z' },
   );
@@ -276,4 +276,44 @@ test('dismissing the same title twice is idempotent, and keeps the first decisio
 test('an unknown round is a 404, like every other round-scoped read', async () => {
   const res = await request(app).get('/api/rounds/nope/recommendations');
   assert.equal(res.status, 404);
+});
+
+test('the spotlight tiles ride the same read, each with its key and a BGG link (#1228)', async () => {
+  const round = await seedRound();
+  const candidates = [];
+  for (let i = 0; i < 40; i += 1) {
+    candidates.push({
+      externalId: String(500 + i),
+      name: `Candidate ${i}`,
+      rank: 100 + i,
+      bayesRating: 6 + (i % 10) * 0.25,
+      // Spread, so the Geheimtipp's median has something below it.
+      usersRated: 200 + i * 500,
+      info: info({
+        weight: 1.5 + (i % 8) * 0.4,
+        mechanics: i % 3 ? ['Worker Placement'] : ['Dice Rolling'],
+        categories: i % 4 ? ['Economic'] : ['Party Game'],
+      }),
+    });
+  }
+  await seedCorpus([...ownedRows(), ...candidates]);
+
+  const res = await request(app).get(`/api/rounds/${round.id}/recommendations`);
+  assert.equal(res.status, 200);
+  // The owned shelf sits at weight 3, i.e. AT the pivot, so the tile goes lighter.
+  assert.deepEqual(res.body.spotlights.map((s) => s.key), ['different', 'complexityDown', 'hidden']);
+  const listed = new Set(res.body.recommendations.map((r) => r.externalId));
+  res.body.spotlights.forEach((s) => {
+    assert.equal(s.url, `https://boardgamegeek.com/boardgame/${s.externalId}`);
+    assert.ok(!listed.has(s.externalId));
+  });
+  assert.equal(res.body.spotlights.find((s) => s.key === 'complexityDown').target, 3);
+});
+
+test('a round below the profile floor gets no spotlight tiles either (#1228)', async () => {
+  const round = await createRound(request, { name: 'Thin', members: ['A'] });
+  await seedCorpus([...ownedRows(), { externalId: '999', name: 'X', info: info() }]);
+  const res = await request(app).get(`/api/rounds/${round.id}/recommendations`);
+  assert.equal(res.status, 200);
+  assert.deepEqual(res.body.spotlights, []);
 });

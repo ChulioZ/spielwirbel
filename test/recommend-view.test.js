@@ -388,6 +388,68 @@ test('the BGG link shortens its visible text but keeps a containing name (#817)'
   );
 });
 
+/* ---------------------------- the spotlight tiles --------------------------- */
+
+const spots = () => [
+  rec({ key: 'different', externalId: '701', title: 'Unlike', reasons: [{ term: 'quality', rating: 8.1 }] }),
+  rec({ key: 'complexityUp', externalId: '702', title: 'Heavier', target: 2.4 }),
+  rec({ key: 'hidden', externalId: '703', title: 'Gem' }),
+];
+
+test('the three spotlight tiles render ABOVE the list, each captioned (#1228)', async (t) => {
+  const { dom } = await render(t, full({ recommendations: [rec()], spotlights: spots() }));
+  const section = dom.app.querySelector('.rec-spots');
+  assert.ok(section, 'the spotlight row is rendered');
+  const list = dom.app.querySelector('.rec-list');
+  // DOCUMENT_POSITION_FOLLOWING: the list comes after the tiles.
+  assert.ok(section.compareDocumentPosition(list) & 4, 'the tiles sit above the list');
+
+  const tiles = [...section.querySelectorAll('.rec-card--spot')];
+  assert.deepEqual(tiles.map((c) => c.querySelector('.rec-card__title').textContent.trim().split(' ')[0]), ['Unlike', 'Heavier', 'Gem']);
+  const caps = tiles.map((c) => c.querySelector('.rec-spot__title').textContent.trim());
+  assert.deepEqual(caps, [tDe('suggest.spotlight.different'), tDe('suggest.spotlight.complexityUp'), tDe('suggest.spotlight.hidden')]);
+  // The round's centre reaches the complexity caption, formatted for the reader.
+  assert.match(tiles[1].querySelector('.rec-spot__line').textContent, /2,4/);
+  // A tile is the list's own card: reasons and all three actions come with it.
+  assert.equal(tiles[0].querySelectorAll('.rec-card__why li').length, 1);
+  assert.ok(tiles[2].querySelector('[data-act="wish"]') && tiles[2].querySelector('[data-act="dismiss"]'));
+  assert.equal(tiles[2].querySelector('a.link-btn').getAttribute('href'), 'https://boardgamegeek.com/boardgame/999');
+  // The list itself is unaffected: its card carries no caption.
+  assert.equal(list.querySelector('.rec-spot__cap'), null);
+});
+
+test('the lighter complexity tile has its own caption (#1228)', async (t) => {
+  const { dom } = await render(t, full({
+    recommendations: [rec()],
+    spotlights: [rec({ key: 'complexityDown', externalId: '704', target: 3.6 })],
+  }));
+  assert.equal(dom.app.querySelector('.rec-spot__title').textContent.trim(), tDe('suggest.spotlight.complexityDown'));
+  assert.match(dom.app.querySelector('.rec-spot__line').textContent, /3,6/);
+});
+
+test('an unknown spotlight key renders no tile, and none at all means no row (#1228)', async (t) => {
+  const { dom } = await render(t, full({ recommendations: [rec()], spotlights: [rec({ key: 'mystery' })] }));
+  assert.equal(dom.app.querySelector('.rec-spots'), null);
+  const none = await render(t, full({ recommendations: [rec()], spotlights: [] }));
+  assert.equal(none.dom.app.querySelector('.rec-spots'), null);
+});
+
+test('an empty state never shows tiles, even if the payload carried some (#1228)', async (t) => {
+  const { dom } = await render(t, full({ recommendations: [], spotlights: spots() }));
+  assert.equal(dom.app.querySelector('.rec-spots'), null);
+  assert.equal(dom.app.querySelector('.empty p').textContent, tDe('suggest.empty.noneLeft'));
+});
+
+test('dismissing a TILE uses the same write and leaves the same undo (#1228)', async (t) => {
+  const { dom, calls } = await render(t, full({ recommendations: [rec()], spotlights: spots() }));
+  await click(dom.app.querySelector('.rec-card--spot [data-act="dismiss"]'));
+  const write = calls.find((c) => c.method === 'POST');
+  assert.equal(write.url, '/api/rounds/r1/recommendations/dismissed');
+  assert.equal(write.body.externalId, '701');
+  assert.equal(write.body.title, 'Unlike');
+  assert.ok(dom.app.querySelector('.rec-spots .rec-undone'), 'the undo row replaces the tile in place');
+});
+
 test('the shortened labels hold in English too (#817)', async (t) => {
   const { dom } = await render(t, full({ recommendations: [rec()] }), { locale: 'en' });
   const link = dom.app.querySelector('.rec-card a.link-btn');
@@ -395,4 +457,19 @@ test('the shortened labels hold in English too (#817)', async (t) => {
   assert.equal(link.textContent.trim(), 'BGG');
   assert.ok(link.getAttribute('aria-label').includes('BGG'), 'SC 2.5.3 holds in en as well');
   assert.equal(dom.app.querySelector('.rec-card [data-act="dismiss"]').textContent.trim(), '');
+});
+
+/* A spotlight row's tiles stretch to the tallest one, and their reason lines
+   differ in length — so as a wrapping flex row the actions landed at a
+   different height in each tile and a short tile showed its empty space below
+   the BGG link (#1228 merge interview). The tile is a three-row grid whose
+   middle row takes the spare height, which pins the actions to the foot. */
+test('a spotlight tile pins its actions to the bottom: a grid whose middle row absorbs the height', () => {
+  const { bodyOf } = require('./support/css');
+  const tile = bodyOf('.rec-card.rec-card--spot');  // compounded: it must beat .rec-card's display: flex
+  assert.match(tile, /display:\s*grid/, 'the tile is a grid, not a wrapping flex row');
+  assert.match(tile, /grid-template-rows:\s*auto\s+1fr\s+auto/, 'caption, a flexible middle, then the actions');
+  assert.match(bodyOf('.rec-card--spot .rec-card__actions'), /grid-column:\s*1\s*\/\s*-1/,
+    'the actions span the whole last row');
+  assert.match(bodyOf('.rec-spot__cap'), /grid-column:\s*1\s*\/\s*-1/, 'the caption spans the first row');
 });
