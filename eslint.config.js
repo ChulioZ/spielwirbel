@@ -498,7 +498,7 @@ const frontendGlobals = {
   showShelfProfile: 'readonly',
   activeSheet: 'writable', closeSheet: 'readonly', openSheet: 'readonly',
   handleSheetPop: 'readonly',
-  openEditor: 'readonly', usesEditorSheet: 'readonly', EDITOR_SHEET_BELOW: 'readonly',
+  openEditor: 'readonly', formSheetDesign: 'readonly', usesEditorSheet: 'readonly', EDITOR_SHEET_BELOW: 'readonly',
   renderPriceSection: 'readonly', renderPriceNoOffers: 'readonly', priceAge: 'readonly',
   startDirectSession: 'readonly',
   showLinkProvider: 'readonly', attachLookup: 'readonly', searchProvider: 'readonly',

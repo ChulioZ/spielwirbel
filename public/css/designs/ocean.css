@@ -256,6 +256,12 @@
   --shadow-2: 0 14px 34px var(--cast);
   --shadow-3: 0 22px 48px var(--cast-deep);
   --shadow-inset: inset 0 4px 10px var(--cast);
+
+  /* The overlay scrim (#1217, O15a „Schleier rgba(16,40,58,.34)"): --ink at
+     34%, the app's own derivation at a lighter step — water under paper is
+     dimmed, not blacked out. Here rather than in the #1217 section at the end
+     because it is a colour, and only this block is resolved and measured. */
+  --scrim: color-mix(in oklab, var(--ink) 34%, transparent);
 }
 
 /* ---------------------------------------------------------------------------
@@ -502,9 +508,10 @@
 }
 
 /* ---- The toast (O1.6): Klassisch's dark pill is already Ocean's; only the
-   action takes the light-blue ink, and the rim radius is the pill. */
+   action takes the light-blue ink. NOT the pill radius (removed by #1217): the
+   app's 26px already paints a one-line toast as a pill, and 999px turns a
+   wrapped one back into the ellipse #858 fixed (test/ocean-overlays.test.js). */
 :root[data-design="ocean"]:not([data-scheme="dark"]) .toast {
-  border-radius: var(--radius-pill);
   box-shadow: 0 14px 30px var(--cast-button);
 }
 :root[data-design="ocean"]:not([data-scheme="dark"]) .toast:not(.toast--success):not(.toast--error) .toast__action {
@@ -2730,4 +2737,410 @@
   justify-content: flex-end;
   gap: 10px;
   margin-top: 18px;
+}
+
+/* ===== #1217 — the overlays: sheets and popovers, dialogs, toasts, the „…" menu ===== */
+/* Source: Ocean-O15a-Sheets.dc.html and Ocean-O15b-Dialoge.dc.html. O15a's rule
+   is „eine Form, zwei Auftritte": a sheet from below on a phone, a popover at
+   the trigger on a desktop, and exactly three differences — the grip, the title
+   size (21px / 17px) and the anchoring. The app already HAS that split for its
+   editors (`openEditor`, the 860px line, .claude/rules/popover-vs-sheet-editors.md),
+   so this section paints the two halves, as Der Tisch's #1195 did, rather than
+   inventing a third presentation. Every other overlay stays what it is today: a
+   bottom sheet on a phone and a centred card above 640px — the only overlays
+   with no trigger to anchor to are exactly those.
+
+   Two pieces of MARKUP come with it, both shared with Der Tisch through
+   `formSheetDesign()` (sheet.js): the popover's title bar and the three form
+   editors' row lists. Their geometry below is UNGATED and paints from app tokens
+   (an Ocean token first where one exists, the app's as the fallback), so the
+   rows never come out as bare UA buttons if the colour gate fails to match
+   (.claude/rules/design-colour-blocks-are-scheme-gated.md, „the inverse").
+   Everything else reads Ocean's gated tokens and is gated.
+
+   Not built, and why (see the PR): O15b's „Rückgängig statt Nachfrage" split
+   (which actions confirm is behaviour, not paint — every confirm the app asks
+   today is still asked), the dialogs' „Tipp" note (no copy exists for it), and
+   the toast's „Hinweis"/„Fortschritt" types (the app has three tones). */
+
+/* --- The overlay's ground ---------------------------------------------------
+   A sheet is --surface (#1210), but its sticky head and action bar paint from
+   --page-bg — the WATER — so they sat on the paper as two tinted bands, the
+   #1193 defect one design over
+   (.claude/rules/overlay-surface-flip-strands-the-status-tokens.md).
+   Re-pointing the page inside the sheet makes both bars disappear into it. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .sheet {
+  --page-bg: var(--surface);
+  border-color: var(--line);
+}
+
+/* --- The phone's sheet: docked, with a grip ---------------------------------
+   The editors are centred dialogs below 860px in the app; O15a docks every
+   sheet to the bottom edge, so `.sheet-backdrop--editor` (the half of the split
+   that is a popover on a desktop) docks here exactly as Der Tisch's does. The
+   confirm dialog and the scanning-list dialogs keep their centre — O15b draws
+   the dialog the same at both widths, and a list dialog never carries the
+   class. 639px is the app's own sheet breakpoint.
+
+   The grip hangs off the STICKY head, because the sheet is its own scroll
+   container and a pseudo-element on the sheet would scroll away. It is
+   decoration — the whole head is the affordance — so it names no control. */
+@media (max-width: 639px) {
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .sheet-backdrop--editor {
+    align-items: flex-end;
+    padding: 0;
+  }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .sheet-backdrop--editor > .sheet {
+    width: 100%;
+    max-width: none;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    border-bottom: none;
+  }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) :is(.sheet-backdrop:not(.sheet-backdrop--center), .sheet-backdrop--editor) > .sheet > .sheet__head {
+    padding-top: 26px;
+  }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) :is(.sheet-backdrop:not(.sheet-backdrop--center), .sheet-backdrop--editor) > .sheet > .sheet__head::before {
+    content: '';
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    width: 44px;
+    height: 5px;
+    margin-left: -22px;
+    border-radius: var(--radius-pill);
+    background: var(--line);
+  }
+}
+
+/* The sheet's title: Comfortaa at 21px (O15a.1, difference 2). A confirm
+   dialog's question is 20px (O15b.2), below. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .sheet__head h2 {
+  font-size: 21px;
+  line-height: 1.2;
+}
+
+/* --- The desktop's popover (O15a.1, difference 3) -----------------------------
+   300px is already the app's `.popover { max-width }`, so nothing re-sizes the
+   card, and must not: tags, owners and covers carry their own caps. The
+   editor's head is the sheet's title at 17px with its ×; it bleeds to the card's edge through the card's own 8px padding and is
+   `flex: none`, so a capped card still gives way through the child it always
+   did. The account menu's `.popover__head` is a caption, not this — hence
+   `--editor`. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .popover { border-color: var(--line); }
+/* O15a's popover is 300px, and the card is shrink-to-fit
+   (.claude/rules/popover-width-is-shrink-to-fit.md): the cover editor measured
+   254px, so a FLOOR is what makes it the drawn width. A floor, not a width —
+   the edition-cover grid still widens its card to 520 (`.has-covers`), and the
+   viewport term keeps a narrow desktop window from overflowing. */
+:root[data-design="ocean"] .popover.popover--editor { min-width: min(300px, 100vw - 32px); }
+:root[data-design="ocean"] .popover__head--editor {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: -8px -8px 4px;
+  padding: 4px 4px 4px 16px;
+  /* No rule under the head (the app's `.popover__head` draws one): O15a draws
+     none, and the first row's own hairline sits 4px below — a doubled line. */
+  border-bottom: 0;
+}
+:root[data-design="ocean"] .popover__title {
+  margin: 0;
+  min-width: 0;
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--ink);
+  /* `.popover__head` sets `word-break: break-all` for the account menu's e-mail
+     caption, and the title inherits it, so a long title would break mid-word. keep-all
+     is `normal` for Latin and keeps Korean's word breaking (the :lang(ko) rule
+     this head would otherwise override), so it is right in every locale. */
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+:root[data-design="ocean"] .popover__close {
+  flex: none;
+  margin-left: auto;
+  min-width: var(--target-control);
+  min-height: var(--target-control);
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ink-soft);
+  font-size: 18px;
+  cursor: pointer;
+}
+:root[data-design="ocean"] .popover__close:hover {
+  background: var(--sunken-soft);
+  color: var(--ink);
+}
+
+/* --- Rows (O15a.2): the form editors ------------------------------------------
+   „Zeilen sind 44 px hoch, Glyphe links in einer 32-px-Kachel, Wert oder Haken
+   rechts." FLUSH rows under a hairline, where Der Tisch lays raised slips — the
+   one place the two packages draw the shared markup differently. Same rows in
+   both presentations, because O15a's content does not change between them. */
+:root[data-design="ocean"] .editor-rows {
+  display: flex;
+  flex-direction: column;
+}
+:root[data-design="ocean"] .editor-rows[hidden] { display: none; }
+:root[data-design="ocean"] .editor-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  min-height: 44px;
+  padding: 6px 4px;
+  border: 0;
+  border-top: 1px solid var(--line-soft, var(--line));
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: left;
+}
+:root[data-design="ocean"] button.editor-row { cursor: pointer; }
+:root[data-design="ocean"] button.editor-row:hover { background: var(--brand-tint-soft); }
+:root[data-design="ocean"] .editor-row__label { flex: 1 1 auto; min-width: 0; }
+/* The 32px tile: --brand on the soft sunken tone, the pair O15a draws
+   (#0e6690 on #d7e9f0); a destructive row takes the danger pair. */
+:root[data-design="ocean"] .editor-row__icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background: var(--sunken-soft);
+  color: var(--brand);
+  font-size: 17px;
+}
+:root[data-design="ocean"] .editor-row--danger { color: var(--danger); }
+:root[data-design="ocean"] .editor-row--danger .editor-row__icon {
+  background: var(--danger-soft, var(--sunken-soft));
+  color: var(--danger);
+}
+:root[data-design="ocean"] .editor-row__avatar {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  font-size: 12px;
+}
+/* The tick is the state (hidden, not absent, so a toggle never reflows the
+   row); the hover tint is never the only cue. */
+:root[data-design="ocean"] .editor-row__tick {
+  flex: none;
+  margin-left: auto;
+  font-size: 20px;
+  color: var(--brand);
+  visibility: hidden;
+}
+:root[data-design="ocean"] .editor-row[aria-pressed="true"] .editor-row__tick { visibility: visible; }
+:root[data-design="ocean"] .editor-row__control {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+:root[data-design="ocean"] .editor-row__control .input {
+  width: 60px;
+  padding: 4px 8px;
+  text-align: center;
+}
+/* The edition-cover picker's toggle stands as one of the cover editor's rows. */
+:root[data-design="ocean"] :is(.popover--image, .editor--image) .cover-picker__toggle {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  min-height: 44px;
+  padding: 6px 4px;
+  border-top: 1px solid var(--line-soft, var(--line));
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 700;
+  text-decoration: none;
+}
+:root[data-design="ocean"] :is(.popover--image, .editor--image) .cover-picker__toggle .ti {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background: var(--sunken-soft);
+  color: var(--brand);
+  font-size: 17px;
+}
+/* The ONE primary, under the rows, full width. */
+:root[data-design="ocean"] .editor-actions {
+  display: flex;
+  margin-top: 10px;
+}
+:root[data-design="ocean"] .editor-actions .btn { flex: 1 1 auto; }
+/* The owners card gives way through its row list, popover-only — the sheet
+   scrolls itself (.claude/rules/popover-vs-sheet-editors.md §4). */
+:root[data-design="ocean"] .popover--owners .editor-rows {
+  flex: 1 1 auto;
+  min-height: 44px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* The FILTER panel keeps its controls (a tri-state chip is not a check row);
+   O15a changes only their seat — each group is a row of the list, under the
+   same hairline as the editors. Generic on purpose: #1328's saved filters add
+   to this panel and inherit it. */
+/* flex-shrink: 0 because the desktop popover body is a capped, scrolling flex
+   column: an explicit min-height replaces the flex minimum, and without this
+   the groups shrink toward 44px and spill over each other (#1342, found on
+   Der Tisch; test/filter-panel-groups-dont-shrink.test.js). */
+:root[data-design="ocean"]:not([data-scheme="dark"]) :is(.popover--filter, .editor--filter) :is(.mfilter__row, .mfilter__group, .fpanel__group) {
+  flex-shrink: 0;
+  min-height: 44px;
+  padding-block: 8px;
+  border-top: 1px solid var(--line-soft);
+}
+/* The metadata block's own divider would double the hairline its first row
+   now draws (measured at 390: both carried a 1px top rule). */
+:root[data-design="ocean"]:not([data-scheme="dark"]) :is(.popover--filter, .editor--filter) .fpanel__group + .mfilter {
+  border-top: 0;
+  padding-top: 0;
+}
+
+/* The scanning lists (BGG import, „Spiele verschieben", the pickers) are
+   `.ds-row`s: a row is 44px, the sheet's row height. */
+:root[data-design="ocean"] .sheet .ds-row { min-height: 44px; }
+
+/* --- The confirm dialog (O15b.2) ----------------------------------------------
+   The title is the question (confirm-dialog.js lifts it out of copy that
+   already exists), the text the consequence in the soft ink, the button the
+   verb. „Abbrechen" has no fill and reads in the accent; the destructive verb
+   is red-FILLED and on the right. Only in a DIALOG: O15a says a destructive
+   action is never a sheet's primary, so a `.btn--danger` elsewhere in a sheet
+   keeps the app's red outline. The fill pair is the error toast's — --surface
+   on --danger — which the semantic sweep already measures on every design.
+   `.sheet[role="alertdialog"]` is confirmDialog's own signature. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .sheet.sheet--dialog[role="alertdialog"] {
+  max-width: 420px;
+  padding: 0 24px;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .sheet[role="alertdialog"] .sheet__head h2 { font-size: 20px; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .confirm-dialog__body {
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+/* O15b's dialog buttons are 15px with an 18px inset. At the app's metrics
+   „Abbrechen" + „Aussortieren" measured wider than a 390px dialog's 310px of
+   content, so the pair wrapped and the verb landed UNDER the cancel rather
+   than on its right (measured at 390, as Der Tisch's #1195 found). Only the
+   inline padding moves; the vertical padding is the press mechanic's. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .sheet__actions--confirm .btn {
+  font-size: 15px;
+  padding-left: 18px;
+  padding-right: 18px;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .sheet__actions--confirm .btn:not(.btn--primary, .btn--danger) {
+  background: transparent;
+  border-color: transparent;
+  color: var(--brand);
+  box-shadow: none;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .sheet__actions--confirm .btn:not(.btn--primary, .btn--danger):hover {
+  background: var(--sunken-soft);
+  color: var(--brand-strong);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .sheet__actions--confirm .btn--danger,
+:root[data-design="ocean"]:not([data-scheme="dark"]) .sheet__actions--confirm .btn--danger:hover:not(:disabled) {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: var(--surface);
+}
+/* The hover is restated rather than left to `.btn:hover`, which would swap the
+   fill for a tint under the light verb; it deepens instead. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .sheet__actions--confirm .btn--danger:hover:not(:disabled) {
+  background: var(--danger-strong);
+  border-color: var(--danger-strong);
+}
+
+/* --- The „…" menu (O15b.4) ----------------------------------------------------
+   44px rows with the glyph at 18px, in the ORDER fillMenu already gives
+   (change · share · undoable · destructive), each group under a hairline. The
+   red is painted by `data-kind`, not by the app's tone classes: a kind says what
+   the row DOES, and on this design what raises a red question is red and
+   nothing else is. The group rule is written per boundary because CSS cannot
+   compare two attributes; fillMenu sorts, so each boundary occurs once. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .popover--menu { gap: 0; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .popover--menu .popover__opt {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: var(--radius-sm);
+  color: var(--ink);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .popover--menu .popover__opt .ti {
+  flex: none;
+  width: 20px;
+  font-size: 18px;
+  text-align: center;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .popover--menu .popover__opt[data-kind="destructive"] { color: var(--danger); }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .popover--menu :is(
+  .popover__opt[data-kind="edit"] + .popover__opt:not([data-kind="edit"]),
+  .popover__opt[data-kind="share"] + .popover__opt:not([data-kind="share"]),
+  .popover__opt[data-kind="undoable"] + .popover__opt:not([data-kind="undoable"])
+) {
+  border-top-color: var(--line-soft);
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+/* --- When a sheet cannot deliver (O15a.3) --------------------------------------
+   „Wenn im Sheet etwas schiefgeht, bleibt es im Sheet — als Leerzustand, nie als
+   Dialog darüber": the headline centred under a 48px disc. The BGG import is the
+   sheet with the most of them and renders every one through `.bgg-import__msg`;
+   the disc is `.sheet-disc`, rendered under formSheetDesign() and aria-hidden —
+   the headline says it all. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .sheet .bgg-import__msg {
+  margin: 4px 0 12px;
+  padding: 20px 22px 24px;
+  text-align: center;
+  border-top: 1px solid var(--line-soft);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .sheet .bgg-import__msg > p:first-of-type {
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--ink);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .sheet .sheet-disc {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 10px;
+  border-radius: 50%;
+  background: var(--sunken-soft);
+  color: var(--brand);
+  font-size: 24px;
+}
+
+/* --- The toast (O15b.3) ---------------------------------------------------------
+   „Unten mittig, am Telefon über dem Dock. Nie mehr als einer gleichzeitig" —
+   one element with replaced content is already the app's behaviour. Below 860px
+   the dock is up, so the toast stands on it rather than behind it. The tones
+   are the app's three (--ink, --good, --danger planks under --surface ink),
+   which are O15b's hexes already. Actions are 24px (#1210's --target-text). */
+@media (max-width: 859px) {
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .toast { bottom: var(--dock-clearance); }
 }
