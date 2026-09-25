@@ -6555,8 +6555,16 @@
    vocabulary, a checkbox — because each one's semantics is the filter's (a
    tri-state chip is not a check row). What T15a changes is their seat: each
    select row and each chip section stands on a raised slip, so the panel reads
-   as the same row list as the three editors above. */
+   as the same row list as the three editors above.
+
+   `flex-shrink: 0` is load-bearing: the popover's body is a capped flex column
+   that scrolls, and the explicit `min-height` below REPLACES a flex item's
+   automatic content-size minimum. Without it, a panel taller than its cap
+   squeezed every slip toward 44px instead of scrolling, and the Tags slip's
+   chip cloud painted over the groups below it
+   (test/filter-panel-groups-dont-shrink.test.js). */
 :root[data-design="tisch"] :is(.popover--filter, .editor--filter) :is(.mfilter__row, .mfilter__group, .fpanel__group) {
+  flex-shrink: 0;
   min-height: 44px;
   padding: 8px 12px;
   border: 1px solid var(--line);
