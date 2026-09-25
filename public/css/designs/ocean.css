@@ -2999,7 +2999,12 @@
    O15a changes only their seat — each group is a row of the list, under the
    same hairline as the editors. Generic on purpose: #1328's saved filters add
    to this panel and inherit it. */
+/* flex-shrink: 0 because the desktop popover body is a capped, scrolling flex
+   column: an explicit min-height replaces the flex minimum, and without this
+   the groups shrink toward 44px and spill over each other (#1342, found on
+   Der Tisch; test/filter-panel-groups-dont-shrink.test.js). */
 :root[data-design="ocean"]:not([data-scheme="dark"]) :is(.popover--filter, .editor--filter) :is(.mfilter__row, .mfilter__group, .fpanel__group) {
+  flex-shrink: 0;
   min-height: 44px;
   padding-block: 8px;
   border-top: 1px solid var(--line-soft);
