@@ -388,7 +388,7 @@ const frontendGlobals = {
   rankLookupHits: 'readonly', hitShelfState: 'readonly',
   gameHue: 'readonly', coverPlaceholder: 'readonly',
   // empty-state.js (issue #869)
-  emptyState: 'readonly',
+  emptyState: 'readonly', emptyStateAction: 'readonly',
   coverUrl: 'readonly', COVER_THUMB: 'readonly', COVER_CARD: 'readonly',
   COVER_HERO: 'readonly', COVER_RESIZERS: 'readonly',
   providerMatchCover: 'readonly', pickedTitle: 'readonly',
@@ -469,7 +469,7 @@ const frontendGlobals = {
   hubEmptyTable: 'readonly',
   // ocean-hub.js (#1211) — Ocean's lobby tiles and round hub composition
   oceanHubFrame: 'readonly', oceanShell: 'readonly', oceanHeroCompose: 'readonly',
-  oceanRoundCard: 'readonly', oceanResumeNotice: 'readonly',
+  oceanRoundCard: 'readonly', oceanResumeNotice: 'readonly', oceanYoungLine: 'readonly',
   // #1280 — Der Tisch's young-round features (views-home.js, hub-cards.js, views-pokale.js)
   lobbyInviteSlip: 'readonly', lobbyNextStep: 'readonly', hubDemoSummary: 'readonly',
   hubDemoInvite: 'readonly', pokaleYoungLead: 'readonly',

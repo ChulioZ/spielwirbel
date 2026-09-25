@@ -131,6 +131,18 @@ function oceanRoundCard(r, { stack, seatCount, lastLine, invite }) {
      </a>`);
 }
 
+/* The young round's line under the shell (#1216, O7.3): a round with games and
+   no session yet still has the shell as its centre, and the line says what is
+   waiting — how many games stand ready, and that no session has been played.
+   Both halves are the app's own strings (Der Tisch's invitation count and the
+   Start tab's empty title), never a themed rewrite. */
+function oceanYoungLine(activeGames) {
+  return h(`<p class="ocean-young">
+       <strong class="ocean-young__ready">${esc(tn(activeGames.length, 'hub.young.readyOne', 'hub.young.ready'))}</strong>
+       <span class="ocean-young__none">${esc(t('round.startEmptyTitle'))}</span>
+     </p>`);
+}
+
 /* A session still running, as Ocean's notice (O3.1 top right, O6.1 first on
    the page): a bubble with the play glyph, the kicker naming the state and the
    round, the title, and when it started with the next step.
