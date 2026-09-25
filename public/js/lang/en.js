@@ -1003,6 +1003,7 @@ I18N.en = {
   // disabled state too. It must never read as though the round were missing
   // something: a round of names without accounts is the normal configuration.
   'startSession.barCount': 'How many to draw?',
+  'startSession.countQuestionOcean': 'How many do we bring up?',
   'startSession.available': '{n} games in the pot',
   'startSession.availableOne': '{n} game in the pot',
   // The pot's numeral is set apart typographically from the noun it counts, so
@@ -1010,6 +1011,9 @@ I18N.en = {
   // slice would assume every locale puts {n} first (#1017).
   'startSession.potLabel': 'games in the pot',
   'startSession.potLabelOne': 'game in the pot',
+  // Ocean (#1213): the pot is the Muschel, one of the design's five themed words.
+  'startSession.potLabelOcean': 'games in the shell',
+  'startSession.potLabelOceanOne': 'game in the shell',
   'startSession.ownersHidden': '{n} more games are missing because their owners are not playing.',
   'startSession.ownersHiddenOne': '{n} more game is missing because its owner is not playing.',
   'startSession.poolEmpty': 'No game matches these settings yet.',
@@ -1127,6 +1131,13 @@ I18N.en = {
   'vote.personOf': 'Person {n} of {total}',
   'vote.handoffNext': 'Then pass the device on — {name} is up next.',
   'vote.handoffLast': 'Then everyone is done — the result comes next.',
+  // Ocean's desktop vote card (#1213, O4.2): who has rated, and what is still below.
+  'vote.raterDone': 'has rated',
+  'vote.raterNow': 'rating now',
+  'vote.raterOpen': 'still to rate',
+  'vote.deepOcean': 'Still in the deep',
+  'vote.deepTextOceanOne': '{n} more card is waiting below. The result only surfaces once the vote is over.',
+  'vote.deepTextOcean': '{n} more cards are waiting below. The result only surfaces once the vote is over.',
   'vote.toast.saved': 'Results saved',
 
   'finale.crumb': 'Finale',

@@ -11,7 +11,7 @@
    the seam test in .claude/rules/token-friendly-source-files.md: the Start tab
    is one flow at 630 lines and the lobby another at 550, and a design's
    composition is independently editable from both. Same shape as Der Tisch's
-   result-tafel-tisch.js and vote-card-tisch.js.
+   result-tafel-composed.js and vote-card-composed.js.
 
    No module.exports: every function here builds DOM, so requiring it from Node
    would enter the coverage report almost entirely unreachable

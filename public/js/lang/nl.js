@@ -964,6 +964,7 @@ I18N.nl = {
   'startSession.teamDissolve': 'Team {name} opheffen',
   'startSession.toast.teamMin': 'Een team heeft minstens {n} mensen nodig',
   'startSession.barCount': 'Hoeveel trekken?',
+  'startSession.countQuestionOcean': 'Hoeveel halen we boven?',
   'startSession.available': '{n} spellen in de pot',
   'startSession.availableOne': '{n} spel in de pot',
   // The pot's numeral is set apart typographically from the noun it counts, so
@@ -971,6 +972,9 @@ I18N.nl = {
   // slice would assume every locale puts {n} first (#1017).
   'startSession.potLabel': 'spellen in de pot',
   'startSession.potLabelOne': 'spel in de pot',
+  // Ocean (#1213): the pot is the Muschel, one of the design's five themed words.
+  'startSession.potLabelOcean': 'spellen in de schelp',
+  'startSession.potLabelOceanOne': 'spel in de schelp',
   'startSession.ownersHidden': 'Er ontbreken nog {n} spellen omdat hun eigenaars niet meespelen.',
   'startSession.ownersHiddenOne': 'Er ontbreekt nog {n} spel omdat de eigenaar niet meespeelt.',
   'startSession.poolEmpty': 'Nog geen spel dat aan deze instellingen voldoet.',
@@ -1073,6 +1077,13 @@ I18N.nl = {
   'vote.personOf': 'Persoon {n} van {total}',
   'vote.handoffNext': 'Geef daarna het apparaat door — {name} is hierna aan de beurt.',
   'vote.handoffLast': 'Daarna is iedereen klaar — dan komt de uitslag.',
+  // Ocean's desktop vote card (#1213, O4.2): who has rated, and what is still below.
+  'vote.raterDone': 'heeft beoordeeld',
+  'vote.raterNow': 'beoordeelt nu',
+  'vote.raterOpen': 'nog te beoordelen',
+  'vote.deepOcean': 'Nog in de diepte',
+  'vote.deepTextOceanOne': 'Nog {n} kaart wacht beneden. De uitslag komt pas boven als de stemming voorbij is.',
+  'vote.deepTextOcean': 'Nog {n} kaarten wachten beneden. De uitslag komt pas boven als de stemming voorbij is.',
   'vote.toast.saved': 'Resultaten opgeslagen',
 
   'finale.crumb': 'Finale',

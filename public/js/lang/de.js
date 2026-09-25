@@ -998,6 +998,7 @@ I18N.de = {
   // auch im deaktivierten Zustand. Er darf nie klingen, als fehle der Runde
   // etwas: eine Runde aus Namen ohne Konten ist die normale Konfiguration.
   'startSession.barCount': 'Wie viele wirbeln?',
+  'startSession.countQuestionOcean': 'Wie viele holen wir hoch?',
   'startSession.available': '{n} Spiele im Topf',
   'startSession.availableOne': '{n} Spiel im Topf',
   // The pot's numeral is set apart typographically from the noun it counts, so
@@ -1005,6 +1006,9 @@ I18N.de = {
   // slice would assume every locale puts {n} first (#1017).
   'startSession.potLabel': 'Spiele im Topf',
   'startSession.potLabelOne': 'Spiel im Topf',
+  // Ocean (#1213): the pot is the Muschel, one of the design's five themed words.
+  'startSession.potLabelOcean': 'Spiele in der Muschel',
+  'startSession.potLabelOceanOne': 'Spiel in der Muschel',
   'startSession.ownersHidden': '{n} weitere Spiele fehlen, weil ihre Besitzer nicht mitspielen.',
   'startSession.ownersHiddenOne': '{n} weiteres Spiel fehlt, weil sein Besitzer nicht mitspielt.',
   'startSession.poolEmpty': 'Zu diesen Einstellungen passt noch kein Spiel.',
@@ -1117,6 +1121,13 @@ I18N.de = {
   'vote.personOf': 'Person {n} von {total}',
   'vote.handoffNext': 'Danach das Gerät weitergeben — {name} ist als Nächstes dran.',
   'vote.handoffLast': 'Danach sind alle durch — dann kommt das Ergebnis.',
+  // Ocean's desktop vote card (#1213, O4.2): who has rated, and what is still below.
+  'vote.raterDone': 'hat gewertet',
+  'vote.raterNow': 'wertet gerade',
+  'vote.raterOpen': 'noch offen',
+  'vote.deepOcean': 'Noch in der Tiefe',
+  'vote.deepTextOceanOne': 'Noch {n} Karte wartet unten. Das Ergebnis taucht erst auf, wenn die Abstimmung vorbei ist.',
+  'vote.deepTextOcean': 'Noch {n} Karten warten unten. Das Ergebnis taucht erst auf, wenn die Abstimmung vorbei ist.',
   'vote.toast.saved': 'Ergebnisse gespeichert',
 
   'finale.crumb': 'Finale',

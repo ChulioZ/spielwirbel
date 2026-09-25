@@ -42,7 +42,9 @@ const voteWord = (n) => t(VOTE_WORD_KEYS[n - RATING_MIN]);
    accessible NAME too: a reader hears „4 von 5 – gern", which is the part of
    the tile that means something. */
 function voteMoodButton(n, selected) {
-  const tisch = designIs('tisch');
+  // Ocean (#1213) composes its card from the same builder, words included; its
+  // stylesheet prints only the two end words under the faces.
+  const tisch = designIs('tisch') || oceanWorn();
   const label = tisch
     ? t('vote.ratingLabelWord', { n, max: RATING_MAX, word: voteWord(n) })
     : t('vote.ratingLabel', { n, max: RATING_MAX });
@@ -123,18 +125,18 @@ function voteMetaLine(game, round) {
    `.vote vote--split` stay on the root on purpose: `.app:has(> .vote--split)`
    centres the card on a wide screen (styles.css), and the beat's
    `.vote--advancing` lock is applied to whatever `app.querySelector('.vote')`
-   returns. tisch.css turns the split grid off for `.vote--tisch`.
+   returns. tisch.css turns the split grid off for `.vote--composed`.
 
    DOM order is reading order at every width: header (back, who, count, dots,
    pill), then the card (cover, title, meta, question, faces), then the line. */
-function tischVoteCard({ person, count, roundName, gameN, gameTotal, secret, game, meta, handoff }) {
+function composedVoteCard({ person, count, roundName, gameN, gameTotal, secret, game, meta, handoff }) {
   const dots = [];
   for (let i = 1; i <= gameTotal; i++) {
     const state = i < gameN ? ' is-done' : i === gameN ? ' is-current' : '';
     dots.push(`<span class="vote-felt__dot${state}"></span>`);
   }
   const imgStyle = game.image ? `style="background-image:url('${coverUrl(game.image, COVER_HERO)}')"` : '';
-  return h(`<div class="vote vote--split vote--tisch">
+  return h(`<div class="vote vote--split vote--composed">
       <div class="vote-felt">
         <button class="vote__undo" id="backBtn" type="button" aria-label="${esc(t('vote.back'))}" title="${esc(t('vote.back'))}"><i class="ti ti-chevron-left" aria-hidden="true"></i></button>
         <div class="vote-felt__who">
@@ -163,7 +165,7 @@ function tischVoteCard({ person, count, roundName, gameN, gameTotal, secret, gam
    gewertet hast"). It is untrue — after the reveal a round DOES see who rated
    what (the Spielepass's „Wer wie gewertet hat") — so the operator dropped the
    promise outright rather than soften it (merge interview, 2026-09-24). */
-function tischVoteLinkIntro(ballot) {
+function composedVoteLinkIntro(ballot) {
   return h(`<header class="vote-link-intro">
       <span class="vote-link-intro__mark">${esc(t('app.title'))}</span>
       <h1 class="vote-link-intro__title">${esc(t('voteLink.introFor', { round: ballot.roundName }))}</h1>

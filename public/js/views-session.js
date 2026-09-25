@@ -32,6 +32,9 @@ function showStartSession(round, prefill) {
   // Der Tisch composes this screen as two panels with the rail kept (#1267);
   // Klassisch is the default path below and never branches.
   const tisch = designIs('tisch');
+  // Ocean (#1213) re-composes the same form into three columns — seats, the
+  // Muschel, the count and „Abtauchen" (views-session-ocean.js).
+  const ocean = oceanWorn();
   if (tisch) {
     // The rail's rename and „+" re-render through currentView(), and the
     // `round` this closure holds is a snapshot — so under the rail the screen
@@ -109,6 +112,7 @@ function showStartSession(round, prefill) {
     </div>`);
   app.appendChild(form);
   if (tisch) composeTischSetup(round, head, form);
+  if (ocean) composeOceanSetup(form);
 
   // Custom-tag filter (#238, tri-state #241): all ignored by default = no tag
   // filter. Map<tagId, 'include'|'exclude'>; included tags combine per
@@ -286,7 +290,9 @@ function showStartSession(round, prefill) {
      The two spans still read as the full phrase, so the panel's <h2> states the
      count to a screen reader exactly as it always did. */
   const potCount = (n) => `<span class="pool-count-group"><span class="pool-count">${n}</span> `
-    + `<span class="pool-count__label">${esc(tn(n, 'startSession.potLabelOne', 'startSession.potLabel'))}</span></span>`;
+    + `<span class="pool-count__label">${esc(ocean
+      ? tn(n, 'startSession.potLabelOceanOne', 'startSession.potLabelOcean')
+      : tn(n, 'startSession.potLabelOne', 'startSession.potLabel'))}</span></span>`;
   /* Der Tisch's first motion ritual (#1200, T10.1): a game that ENTERS the pot
      is thrown in from outside, staggered. Only an entering one — the first
      render records what is already there and throws nothing, because a screen
@@ -326,7 +332,7 @@ function showStartSession(round, prefill) {
     // Deliberately not a live region: the ring centre and the panel title already
     // state these two numbers, and a third announcement on every seat tap would
     // talk over the ownersNote below, which IS one.
-    barSummary.textContent = tisch
+    barSummary.textContent = tisch || ocean
       ? tischDrawSummary(joining.size + guests.length, games.length, parseInt(form.querySelector('#count').value, 10))
       : tn(joining.size + guests.length, 'startSession.tableCountOne', 'startSession.tableCount') + ' · ' + headline;
 
@@ -379,6 +385,7 @@ function showStartSession(round, prefill) {
     // and the trigger's aria-label, and it is safe under an open overlay because
     // the chips live OUTSIDE it (unlike `mountFilterPanel`, which must not).
     if (filterPanel) filterPanel.sync();
+    if (ocean) paintOceanCount(form);
   };
   // Seats around the table: tap a member to toggle whether they join tonight,
   // tap the „+" seat to add a guest (#1016).
@@ -396,7 +403,7 @@ function showStartSession(round, prefill) {
     // two of the three chips can change from a click on the ring.
     addons.relabelAddons();
     updateHint();
-  }, guestList, { stateLines: tisch });
+  }, guestList, { stateLines: tisch || ocean });
   seatTable.setAttribute('role', 'group');
   seatTable.setAttribute('aria-labelledby', 'seatsLabel');
   const multiTableNote = form.querySelector('#multiTableNote');
@@ -678,12 +685,13 @@ function showStartSession(round, prefill) {
     btn.addEventListener('click', () => {
       const cur = parseInt(countInput.value, 10);
       countInput.value = Math.max(1, (Number.isInteger(cur) ? cur : 1) + parseInt(btn.dataset.d, 10));
-      // Der Tisch's summary states the drawn number (T2.3), so it follows it.
-      if (tisch) updateHint();
+      // Der Tisch's summary states the drawn number (T2.3), so it follows it —
+      // and so does Ocean's, with its count bubbles.
+      if (tisch || ocean) updateHint();
     });
   });
   // …and it was first written before the remembered count was loaded above.
-  if (tisch) {
+  if (tisch || ocean) {
     countInput.addEventListener('input', updateHint);
     updateHint();
   }
@@ -1002,11 +1010,13 @@ function startVoting(round, session, games, people, opts = {}) {
   }
 
   // Der Tisch's composition (#1268, T2.4/T4.2): header on the felt, the card,
-  // the hand-off line — built in vote-card-tisch.js, fed from this closure.
-  function tischCard(person, game) {
+  // the hand-off line — built in vote-card-composed.js, fed from this closure.
+  // Ocean (#1213, O2.3/O4.2) takes the same composition — header, card, faces
+  // with their words — and adds its two desktop side columns around the card.
+  function composedCard(person, game) {
     const turn = voteTurn(round, session, order, person);
     const n = games.indexOf(game) + 1;
-    return tischVoteCard({
+    const card = composedVoteCard({
       person,
       count: `${t('vote.gameOf', { n, total: games.length })} · ${t('vote.personOf', { n: turn.n, total: turn.total })}`,
       roundName: round.name,
@@ -1017,6 +1027,16 @@ function startVoting(round, session, games, people, opts = {}) {
       meta: voteMetaLine(game, round),
       handoff: voteHandoffLine(turn, !opts.skipIntro),
     });
+    if (oceanWorn()) {
+      // DOM order is the 1440 reading order: who has rated, the card, what is
+      // still below. Both columns are hidden below the desktop breakpoint.
+      const sides = oceanVoteSides(round, sessionPeople(round, session), person,
+        session.votedIds, games.length - n);
+      card.classList.add('vote--ocean');
+      card.querySelector('.vote__card').before(sides.raters);
+      if (sides.deep) card.querySelector('.vote__card').after(sides.deep);
+    }
+    return card;
   }
 
   function render() {
@@ -1070,7 +1090,7 @@ function startVoting(round, session, games, people, opts = {}) {
     const color = personColor(round, person);
 
     app.innerHTML = '';
-    const card = designIs('tisch') ? tischCard(person, game) : klassischCard(person, game, color);
+    const card = designIs('tisch') || oceanWorn() ? composedCard(person, game) : klassischCard(person, game, color);
     /* Der Tisch's third motion ritual (#1200, T10.3): a card the BEAT delivered
        tips in about its middle axis — the hand-over, and the turn itself is the
        privacy screen. `wanted.kind === 'title'` is exactly "the advance brought
@@ -1106,7 +1126,7 @@ function startVoting(round, session, games, people, opts = {}) {
     for (let n = RATING_MIN; n <= RATING_MAX; n++) {
       const sel = current.rating === n;
       // aria-pressed + a label that spells out the scale (#145), the word too
-      // under Der Tisch — one builder for both cards (vote-card-tisch.js).
+      // under Der Tisch — one builder for both cards (vote-card-composed.js).
       const b = voteMoodButton(n, sel);
       if (wanted && wanted.kind === 'mood' && wanted.n === n) restore = b;
       b.addEventListener('click', () => {
@@ -1286,9 +1306,12 @@ async function showResults(round, session, gamesHint, reveal, plain) {
   const hasVotes = sessionHasVotes(session);
   /* Der Tisch composes this screen differently (#1275, T2.5/T4.4): compact rows
      under a header row, the people on the felt head, and a foot of its own. The
-     markup lives in result-tafel-tisch.js; every branch below is on this one
-     flag, and Klassisch is the path it leaves alone. */
-  const tischLook = designIs('tisch');
+     markup lives in result-tafel-composed.js; every branch below is on this one
+     flag, and Klassisch is the path it leaves alone. Ocean (#1213, O2.4/O4.4)
+     shares the composition and arranges it in columns at the end
+     (composeOceanResult, views-session-ocean.js). */
+  const oceanLook = oceanWorn();
+  const tischLook = designIs('tisch') || oceanLook;
 
   /* The „aussortiert" / „durchgespielt" badge (#250). Shared by the ranking row
      and the table band (#1107) rather than written twice: the band is the ONLY
@@ -1429,7 +1452,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     })),
   });
   // Der Tisch carries „Teilen" in the foot instead, beside the next evening
-  // (T2.5, T4.4 — see fillTischResultFoot).
+  // (T2.5, T4.4 — see fillComposedResultFoot).
   if (shareNow && !tischLook) {
     const shareBtn = h(`<button class="btn btn--ghost">${iconText('ti-share', t('share.button'))}</button>`);
     shareBtn.addEventListener('click', shareNow);
@@ -1443,13 +1466,13 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     // anchor with no href is neither focusable nor styled as a link, so emitting
     // one would leave dead markup behind (.claude/rules/in-app-nav-links.md).
     // Der Tisch adds a crown to every piece and a `data-pid` for
-    // paintTischCrowns to find it by; Klassisch's markup is byte-for-byte as it was.
+    // paintComposedCrowns to find it by; Klassisch's markup is byte-for-byte as it was.
     peopleEl = h(`<div class="result-people">
          <span class="result-people__label">${esc(t('result.participants'))}</span>
          <span class="result-people__list">${people
            .map(
              (p) => `<${p.guest ? 'span' : 'a'} class="result-people__person"${p.guest ? '' : ` data-mid="${esc(p.id)}"`}${tischLook ? ` data-pid="${esc(p.id)}"` : ''}>
-                ${tischLook ? tischPersonCrown() : ''}<span class="avatar${p.guest ? ' avatar--guest' : ''}"${p.guest ? '' : ` style="background:${memberColor(round, p.id)}"`}>${avatarFace(initials(p.name), { userId: p.userId })}</span>
+                ${tischLook ? composedPersonCrown() : ''}<span class="avatar${p.guest ? ' avatar--guest' : ''}"${p.guest ? '' : ` style="background:${memberColor(round, p.id)}"`}>${avatarFace(initials(p.name), { userId: p.userId })}</span>
                 <span class="result-people__name">${esc(personLabel(p))}</span>
               </${p.guest ? 'span' : 'a'}>`
            )
@@ -1584,7 +1607,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     if (rows.some((r) => r.count)) {
       tafel.querySelector('.tafel__title').insertAdjacentHTML('afterend', infoButton('score'));
     }
-    tafel.appendChild(tischTafelCols());
+    tafel.appendChild(composedTafelCols());
   }
   /* The phone's one CTA (#1057). Desktop gets NO action bar: a sticky bar inside
      a column that fits never sticks and reads as one more card, which is why the
@@ -1727,7 +1750,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     // together, the short ones land first and the winner's completes last.
     const raceVar = reveal && r.count ? `--dur:${(0.5 + r.shown * 0.32).toFixed(2)}s;` : '';
     const rankClass = r.place && r.place <= 3 ? ` trow__rank--${r.place}` : '';
-    const row = tischLook ? tischTrow({
+    const row = tischLook ? composedTrow({
       row: r, gameId: g.id, hasVotes, bars, rankClass, imgStyle, fallback,
       rowClass: `trow${reveal ? ' is-race' : ''}`, rowStyle: `${fillVars}${raceVar}`,
       title: g.title, badge: retiredBadge, ownersLine,
@@ -1971,7 +1994,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
       more.push({ icon: 'ti-trash', label: t('result.deleteSession'), kind: 'destructive', run: deleteThisSession });
     }
     const memberIds = people.filter((p) => !p.guest).map((p) => p.id);
-    fillTischResultFoot(tischFoot, {
+    fillComposedResultFoot(tischFoot, {
       again: finished || cancelled ? () => showStartSession(round, { memberIds }) : null,
       againDisabled: !round.games.some(isActiveGame),
       share: shareNow,
@@ -2000,7 +2023,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     // Der Tisch's crowns and foot follow every phase change, and this is the
     // one function all of them reach — including the early return below.
     if (tischLook) {
-      paintTischCrowns(peopleEl, winnerIds);
+      paintComposedCrowns(peopleEl, winnerIds);
       renderTischFoot();
     }
     rowRefs.forEach(({ gameId, ownersEl }) => {
@@ -2332,6 +2355,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
   // behind „Mehr" (renderTischFoot) — still the last block on the screen.
   if (tischFoot) {
     screen.appendChild(tischFoot);
+    if (oceanLook) composeOceanResult(screen, head, peopleEl);
     return;
   }
   const footer = h('<div class="section result-footer"></div>');

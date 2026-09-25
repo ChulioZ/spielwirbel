@@ -938,10 +938,14 @@ I18N.fi = {
   'startSession.teamDissolve': 'Pura joukkue {name}',
   'startSession.toast.teamMin': 'Joukkueeseen tarvitaan vähintään {n} henkeä',
   'startSession.barCount': 'Montako arvotaan?',
+  'startSession.countQuestionOcean': 'Montako nostetaan pintaan?',
   'startSession.available': '{n} peliä potissa',
   'startSession.availableOne': '{n} peli potissa',
   'startSession.potLabel': 'peliä potissa',
   'startSession.potLabelOne': 'peli potissa',
+  // Ocean (#1213): the pot is the Muschel, one of the design's five themed words.
+  'startSession.potLabelOcean': 'peliä simpukassa',
+  'startSession.potLabelOceanOne': 'peli simpukassa',
   'startSession.ownersHidden': '{n} peliä puuttuu lisäksi, koska niiden omistajat eivät pelaa.',
   'startSession.ownersHiddenOne': '{n} peli puuttuu lisäksi, koska sen omistaja ei pelaa.',
   'startSession.poolEmpty': 'Mikään peli ei vielä vastaa näitä asetuksia.',
@@ -1044,6 +1048,13 @@ I18N.fi = {
   'vote.personOf': 'Henkilö {n}/{total}',
   'vote.handoffNext': 'Anna sitten laite eteenpäin — seuraavana vuorossa {name}.',
   'vote.handoffLast': 'Sen jälkeen kaikki ovat arvioineet — sitten tulee tulos.',
+  // Ocean's desktop vote card (#1213, O4.2): who has rated, and what is still below.
+  'vote.raterDone': 'on arvioinut',
+  'vote.raterNow': 'arvioi nyt',
+  'vote.raterOpen': 'arvioimatta',
+  'vote.deepOcean': 'Vielä syvyydessä',
+  'vote.deepTextOceanOne': 'Vielä {n} kortti odottaa syvällä. Tulos nousee pintaan vasta, kun äänestys on ohi.',
+  'vote.deepTextOcean': 'Vielä {n} korttia odottaa syvällä. Tulos nousee pintaan vasta, kun äänestys on ohi.',
   'vote.toast.saved': 'Tulokset tallennettu',
 
   'finale.crumb': 'Finaali',
