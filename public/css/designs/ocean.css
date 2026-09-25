@@ -1881,6 +1881,12 @@
    the picture both sheets draw. Sand rays fanning from the hinge, a 3px rim, a
    rounded belly; the covers lie in it, and its count is the pill on the lip. */
 :root[data-design="ocean"]:not([data-scheme="dark"]) .setup-grid--ocean .pool-hint { display: none; }
+/* „Filter speichern" goes icon-only below 860 (styles.css, #1346) and must keep
+   the full 44px target there — the design's `.btn--sm` rule sizes every small
+   button to the 40px `--target-control`, and it outranks the base rule. */
+@media (max-width: 859px) {
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .setup-filterbar .setup-save__btn { min-height: 44px; }
+}
 :root[data-design="ocean"]:not([data-scheme="dark"]) .ocean-muschel {
   display: flex;
   flex-direction: column;

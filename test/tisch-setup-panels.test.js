@@ -85,8 +85,9 @@ test('Klassisch renders exactly the setup it rendered before #1267', async (t) =
   // Taken from origin/main (6b42bc1) with this very fixture, before any #1267
   // edit. If this moves, the Klassisch screen moved — find out why before
   // updating it. Moved ONCE on purpose since: #1328 added the „Filter
-  // speichern" row under the owners note (b164e497d444db90 before it).
-  assert.equal(sha(fingerprint(dom)), '58a99d83fc6021f5');
+  // speichern" row under the owners note (b164e497d444db90 before it), and
+  // #1346 moved that button beside the Filter trigger (58a99d83fc6021f5 before).
+  assert.equal(sha(fingerprint(dom)), '7838a2a5a7d20674');
 
   // …and the parts #1267 touches, spelled out so a failure names them.
   assert.deepEqual([...dom.app.children].map((c) => c.className), ['page-head', 'setup-grid setup-grid--session']);
@@ -133,8 +134,8 @@ test('Der Tisch lays the setup out as two headed panels in reading order', async
   assert.equal(pot.querySelector('.tisch-setup__head #poolTitle').textContent.replace(/\s+/g, ' ').trim(), '4 Spiele im Topf');
   assert.deepEqual(
     [...pot.children].map((c) => c.id || c.className),
-    // #1328's „Filter speichern" sits last, under the pool it describes.
-    ['tisch-setup__head', 'setup-filterbar', 'setup-panel', 'poolReset', 'muted pool-owners-note', 'setup-save'],
+    // #1328's „Filter speichern" moved into the filter bar in #1346.
+    ['tisch-setup__head', 'setup-filterbar', 'setup-panel', 'poolReset', 'muted pool-owners-note'],
   );
   assert.equal(pot.querySelectorAll('h2').length, 1, 'the count must not be a second heading in the pot');
 

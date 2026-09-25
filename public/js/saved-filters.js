@@ -76,18 +76,20 @@ function savedFilterError(e) {
 
 // =================== The setup screen's save control ===================
 
-/* „Filter speichern" under the pool. `snapshot()` returns the screen's CURRENT
-   state as the draw body would carry it — the caller owns that state, this only
-   posts it. At the ceiling the button is disabled and says why in a visible
-   line, never in a `title` a touch screen cannot show (the #1269 reasoning for
-   the hub CTA's lock). */
+/* „Filter speichern", beside the Filter trigger (#1346). `snapshot()` returns
+   the screen's CURRENT state as the draw body would carry it — the caller owns
+   that state, this only posts it. At the ceiling the button is disabled and says
+   why in a visible line, never in a `title` a touch screen cannot show (the
+   #1269 reasoning for the hub CTA's lock).
+
+   Returns the button and the reason line SEPARATELY: the caller places them as
+   two items of the setup filter bar — the button on the trigger's line, the
+   reason on a line of its own after the chips — which one wrapper could not do.
+   The label is its own span so a phone can clip it visually and keep it as the
+   button's accessible name. */
 function renderSaveFilterAction(round, snapshot) {
-  const row = h(`<div class="setup-save">
-      <button type="button" class="btn btn--ghost btn--sm setup-save__btn" aria-describedby="saveFilterReason">${iconText('ti-bookmark', t('savedFilters.save'))}</button>
-      <p class="muted setup-save__reason" id="saveFilterReason"></p>
-    </div>`);
-  const btn = row.querySelector('.setup-save__btn');
-  const reason = row.querySelector('.setup-save__reason');
+  const btn = h(`<button type="button" class="btn btn--ghost btn--sm setup-save__btn" aria-describedby="saveFilterReason"><i class="ti ti-bookmark" aria-hidden="true"></i><span class="setup-save__label">${esc(t('savedFilters.save'))}</span></button>`);
+  const reason = h('<p class="muted setup-save__reason" id="saveFilterReason"></p>');
   const sync = () => {
     const full = savedFiltersFull(round);
     btn.disabled = full;
@@ -96,7 +98,7 @@ function renderSaveFilterAction(round, snapshot) {
   };
   btn.addEventListener('click', () => openSaveFilterSheet(round, snapshot(), sync));
   sync();
-  return row;
+  return { btn, reason };
 }
 
 function openSaveFilterSheet(round, body, onSaved) {

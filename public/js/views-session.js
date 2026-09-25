@@ -4,6 +4,47 @@
 
 // =================== Session: setup ===================
 
+/* Size the pool so „Loswirbeln" is on screen without scrolling (#1346).
+
+   The stylesheet's cap (`.setup-panel__body`, `100dvh - 500px`) is a CEILING
+   only: what the aside column holds besides the pool — filter bar, chip line,
+   title, reset link, owners note, the action bar, plus each design's own heads
+   and pills — varies with the round, the filters and the design, so no one
+   number holds. The page is measured instead, and the pool gives up exactly
+   the rows the button is short by.
+
+   Only ever SHRINKS, from the stylesheet's value (the inline cap is cleared
+   first), so a taller window gets its rows back on the next resize. Floor: one
+   whole row of tiles and a third of the next, so the pool still reads as a box
+   that scrolls rather than a strip; below that the page scrolls instead.
+
+   Skipped below 860px — Klassisch and Der Tisch render no tile panel there,
+   and Ocean's shell starts so low on a phone (y≈600 at 375×812) that even the
+   floor leaves the button below the fold, so shrinking would cost games and
+   win nothing — and when the pool is not ABOVE the button: Ocean's desktop
+   shell stands beside the bar, where shrinking it would move nothing. Window
+   `resize` rather than a ResizeObserver: the Browser pane fires none, and a
+   resize is the only thing besides updateHint() that moves these numbers. */
+const SETUP_FIT_SLACK = 16;
+function fitSetupPool(form) {
+  const pool = form.querySelector('#poolGrid');
+  const go = form.querySelector('#go');
+  if (!pool || !go) return;
+  pool.style.maxHeight = '';
+  const p = pool.getBoundingClientRect();
+  const b = go.getBoundingClientRect();
+  if (!p.width || p.bottom > b.top || !window.matchMedia('(min-width: 860px)').matches) return;
+  // Against the TOP of the document, so a resize while scrolled measures the
+  // same page a fresh render does.
+  const over = b.bottom + window.scrollY + SETUP_FIT_SLACK - document.documentElement.clientHeight;
+  const tile = pool.querySelector('.pool-tile');
+  if (over <= 0 || !tile) return;
+  const cs = getComputedStyle(pool);
+  const row = tile.getBoundingClientRect().height;
+  const floor = Math.ceil((parseFloat(cs.paddingTop) || 0) + row + 0.3 * (row + (parseFloat(cs.rowGap) || 0)));
+  pool.style.maxHeight = Math.max(floor, Math.floor(p.height - over)) + 'px';
+}
+
 /* `prefill` (#923) is a partial, shaped exactly like `round.lastSessionFilters`,
    that WINS over the stored preset for this entry only — the quick-start chips
    on the hub. It is a shallow merge at the top level, so a chip carrying
@@ -386,6 +427,7 @@ function showStartSession(round, prefill) {
     // the chips live OUTSIDE it (unlike `mountFilterPanel`, which must not).
     if (filterPanel) filterPanel.sync();
     if (ocean) paintOceanCount(form);
+    fitSetupPool(form);
   };
   // Seats around the table: tap a member to toggle whether they join tonight,
   // tap the „+" seat to add a guest (#1016).
@@ -624,6 +666,20 @@ function showStartSession(round, prefill) {
   // `display` outranks the UA sheet's, so `.fbar-mount[hidden]` restates it
   // (.claude/rules/hidden-attribute-vs-display-rule.md).
   const filterMount = form.querySelector('#filterMount');
+  // „Filter speichern" (#1328), placed beside the trigger since #1346. A rebuild
+  // below replaces the trigger, so the button is re-placed after every one.
+  // `.fbar` is `display: contents` here, so the trigger's next sibling is the
+  // next flex item of the bar — and the chip line, which takes a line of its
+  // own, follows the button rather than splitting it from the trigger. With
+  // nothing to filter by, the button stands where the mount does. The reason
+  // line always ends the bar, on a line of its own after the chips.
+  let saveAction = null;
+  const placeSave = () => {
+    if (!saveAction) return;
+    const trigger = filterPanel && filterPanel.el.querySelector('.fbar__trigger');
+    if (trigger) trigger.after(saveAction.btn); else filterMount.after(saveAction.btn);
+    filterMount.parentElement.appendChild(saveAction.reason);
+  };
   const mountFilterPanel = () => {
     // NEVER rebuild under an open overlay. The trigger is the node `place()` and
     // `openPopover`'s outside-click guard both hold as the anchor, so replacing
@@ -652,6 +708,7 @@ function showStartSession(round, prefill) {
     filterMount.replaceChildren();
     if (filterPanel) filterMount.appendChild(filterPanel.el);
     filterMount.hidden = !filterPanel;
+    placeSave();
   };
   mountFilterPanel();
 
@@ -696,13 +753,12 @@ function showStartSession(round, prefill) {
     updateHint();
   }
 
-  /* „Filter speichern" (#1328), under the pool it describes — beside the owners
-     note, i.e. inside Der Tisch's pot, where the filter bar lives too. It saves
-     what the screen shows NOW, in the draw's own body shape, so the server
-     resolves both through one function (lib/draw-filters.js). Seats travel;
-     guests, teams and „ohne Spiele" deliberately do not — they are this
-     evening's facts, not the group's recurring draw. */
-  ownersNote.after(renderSaveFilterAction(round, () => {
+  /* What „Filter speichern" saves: what the screen shows NOW, in the draw's own
+     body shape, so the server resolves both through one function
+     (lib/draw-filters.js). Seats travel; guests, teams and „ohne Spiele"
+     deliberately do not — they are this evening's facts, not the group's
+     recurring draw. Placed by placeSave() above. */
+  saveAction = renderSaveFilterAction(round, () => {
     const cur = parseInt(countInput.value, 10);
     return {
       count: Number.isFinite(cur) && cur >= 1 ? cur : 1,
@@ -713,7 +769,14 @@ function showStartSession(round, prefill) {
       multiTable: tableState.multiTable,
       memberIds: [...joining],
     };
-  }));
+  });
+  placeSave();
+  fitSetupPool(form);
+  const onResize = () => {
+    if (!form.isConnected) return window.removeEventListener('resize', onResize);
+    fitSetupPool(form);
+  };
+  window.addEventListener('resize', onResize);
 
   /* The draw is in flight. #1122 removed the whirl this was written for, which
      SHRINKS the double-press window to the request itself rather than closing it:
