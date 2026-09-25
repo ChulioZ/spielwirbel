@@ -11,7 +11,7 @@ client does with it. The ones touching **no server at all** are a blind spot by
 construction:
 
 ```js
-// public/js/views-chronik.js, before #1149
+// public/js/views-chronik.js, before #1149 (views-period-recap.js since #1345)
 } catch {                                // the error was not even bound
   toast(t('periodRecap.toast.failed'));  // and this is the only trace anywhere
   return;
