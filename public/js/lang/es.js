@@ -351,6 +351,7 @@ I18N.es = {
   'games.sort.name': 'Nombre',
   'games.sort.rating': 'Valoración',
   'games.sortLabel': 'Orden',
+  'games.sortedBy': 'Ordenado por:',
   'games.noMatchFilters': 'Ningún juego coincide con los filtros.',
   'games.retire': 'Retirar',
   'games.scoreNew': 'nuevo',

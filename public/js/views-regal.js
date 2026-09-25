@@ -34,13 +34,19 @@ function renderRegalTab(round, activeGames) {
   // hinzufügen" — which replaces the dashed tile closing the grid. Every other
   // design keeps the section-label head below, unchanged.
   const tisch = designIs('tisch');
+  // Ocean (#1212, O3.3/O6.2/O6.7) takes the same composed head — „Regal" with
+  // the count beside it — and the filter trigger lifted into the toolbar, and
+  // words the sort „Sortiert: Bewertung". It keeps the dashed add tile and
+  // brings its own ways off the shelf; ocean.css lays the rest out per width.
+  const ocean = designIs('ocean');
+  const composed = tisch || ocean;
   // h1, not h3: on the Regal/Chronik/Pokale tabs this is the top-level heading of
   // the view — only the Start tab renders the round-name hero (#145). The
   // section-label look is unchanged; `.section-head :is(h1,h2,h3)` styles it.
-  const title = tisch
+  const title = composed
     ? `<div class="regal-title"><h1>${esc(t('hub.tab.regal'))}</h1><span class="regal-title__count">${esc(tn(activeGames.length, 'home.chip.gamesOne', 'home.chip.games'))}</span></div>`
     : `<h1>${esc(t('games.title', { n: activeGames.length }))}</h1>`;
-  const gamesHead = h(`<div class="section-head${tisch ? ' regal-head' : ''}">${title}<div class="section-tools"></div></div>`);
+  const gamesHead = h(`<div class="section-head${composed ? ' regal-head' : ''}">${title}<div class="section-tools"></div></div>`);
   const gamesTools = gamesHead.querySelector('.section-tools');
   gamesSec.appendChild(gamesHead);
 
@@ -106,7 +112,16 @@ function renderRegalTab(round, activeGames) {
       </select>`);
     sortSel.value = gamesSort;
     gamesTools.appendChild(search);
-    gamesTools.appendChild(sortSel);
+    // Ocean prints the sort as a statement, „Sortiert: Bewertung" (O3.3). The
+    // prefix is a visible word beside the <select>, whose own aria-label is
+    // unchanged — so it is aria-hidden rather than a second name.
+    if (ocean) {
+      const sortWrap = h(`<span class="regal-sort"><span class="regal-sort__prefix" aria-hidden="true">${esc(t('games.sortedBy'))}</span></span>`);
+      sortWrap.appendChild(sortSel);
+      gamesTools.appendChild(sortWrap);
+    } else {
+      gamesTools.appendChild(sortSel);
+    }
     // The shelf's one ⓘ (#893) — beside the control that sorts on the score,
     // not on every pill in the grid.
     const scoreInfo = h(infoButton('score'));
@@ -232,14 +247,14 @@ function renderRegalTab(round, activeGames) {
       // panel rather than rebuilt.
       if (filterPanel) filterPanel.el.remove();
       filterPanel = renderFilterPanel(activeGames, regalFilters.metadata, () => renderGames(), tagSection,
-        tisch ? { countBadge: true } : undefined);
+        composed ? { countBadge: true } : undefined);
       if (filterPanel) filterWrap.appendChild(filterPanel.el);
       filterWrap.hidden = !filterPanel;
       // Der Tisch lifts the trigger into the toolbar's one row, between the ⓘ
       // and „Auswählen" (T3.3's order); the applied chips stay below the head.
       // The node is MOVED, so the panel's own listener and its popover anchor
       // come with it — and a remount must take the old one out of the row.
-      if (tisch) {
+      if (composed) {
         if (toolTrigger) toolTrigger.remove();
         toolTrigger = filterPanel ? filterPanel.el.querySelector('.fbar__trigger') : null;
         if (toolTrigger) gamesTools.insertBefore(toolTrigger, bulk.button);
@@ -292,7 +307,7 @@ function renderRegalTab(round, activeGames) {
              <span class="game-card__pick" aria-hidden="true"><i class="ti ti-check"></i></span>
            </div>
            <div class="game-card__body">
-             <div class="game-card__title">${esc(g.title)}</div>
+             <div class="game-card__title">${esc(g.title)}</div>${ocean ? cardMeta(g) : ''}
            </div>
          </a>`);
       if (g.image) loadCover(gc, coverUrl(g.image, COVER_CARD), gc.querySelector('.game-card__img'));
@@ -381,7 +396,9 @@ function renderRegalTab(round, activeGames) {
   // NOT `rail-owned` under Der Tisch: that rail carries no off-shelf group
   // (#1262), so at desktop this button is the Regal's own way to the four —
   // T3.3 draws it in the toolbar at 1440.
-  const offShelfBtn = h(`<button class="link-btn${designIs('tisch') ? '' : ' rail-owned'}" type="button"><i class="ti ti-archive" aria-hidden="true"></i> <span>${esc(t('rail.archive'))}</span></button>`);
+  // Nor under Ocean: its Reling carries the five tabs and nothing else (#1211),
+  // so the Regal brings its own way there at every width (#1212).
+  const offShelfBtn = h(`<button class="link-btn${composed ? '' : ' rail-owned'}" type="button"><i class="ti ti-archive" aria-hidden="true"></i> <span>${esc(t('rail.archive'))}</span></button>`);
   offShelfBtn.addEventListener('click', () => openOffShelfSheet(round));
   gamesTools.appendChild(offShelfBtn);
 
@@ -402,11 +419,71 @@ function renderRegalTab(round, activeGames) {
     gamesSec.appendChild(addBtn('dock'));
   }
 
+  // Ocean closes the shelf with the four ways off it (O3.3 draws them as a band
+  // of cards, O6.2 as one row above the dock), and puts „Spiel hinzufügen"
+  // where each width draws it: the dashed tile at desktop, a pill in the
+  // toolbar on a tablet (O6.7), the round plus bubble on a phone (O6.2). All
+  // are rendered and CSS shows one per width; `display: none` drops the others
+  // from the accessibility tree, so no width announces two.
+  if (ocean) {
+    const bar = h(`<button type="button" class="btn btn--primary btn--sm regal-add regal-add--bar"><i class="ti ti-plus" aria-hidden="true"></i> <span>${esc(t('round.addGame'))}</span></button>`);
+    bar.addEventListener('click', () => showAddGame(round));
+    gamesTools.appendChild(bar);
+    gamesSec.appendChild(oceanOffShelfBand(round));
+    const fab = h(`<button type="button" class="regal-fab" aria-label="${esc(t('round.addGame'))}"><i class="ti ti-plus" aria-hidden="true"></i></button>`);
+    fab.addEventListener('click', () => showAddGame(round));
+    gamesSec.appendChild(fab);
+  }
+
   app.appendChild(gamesSec);
   // "Spiele verschieben" and "Einladen" used to sit in a footer below the grid
   // too. Neither is a shelf concern — one consolidates two rounds, the other
   // shares the round — and both were findable only by scrolling past the whole
   // game grid, so they moved to the round's Einstellungen screen (#561).
+}
+
+// The meta line under an Ocean card's title (O3.3: „2–5 · 90 Min") — the
+// player range and the playing time the game already carries, nothing new.
+// The range is bare digits behind the people glyph, as the sheet prints it:
+// „3–7 Personen · 20–60 Min." wraps to two lines in a 170px box. The full
+// wording is what a screen reader hears (`.sr-only`), so the bare digits never
+// reach it unexplained. Empty when the game carries neither, so a hand-typed
+// game keeps a one-line body.
+function cardMeta(g) {
+  const hasPl = Number.isInteger(g.minPlayers) && Number.isInteger(g.maxPlayers);
+  const range = hasPl ? (g.minPlayers === g.maxPlayers ? String(g.minPlayers) : `${g.minPlayers}–${g.maxPlayers}`) : '';
+  const time = playtimeText(g);
+  if (!range && !time) return '';
+  const players = range
+    ? `<span aria-hidden="true"><i class="ti ti-users"></i> ${esc(range)}</span><span class="sr-only">${esc(playersText(g.minPlayers, g.maxPlayers))}</span>`
+    : '';
+  return `<div class="game-card__meta">${[players, time ? esc(time) : ''].filter(Boolean).join(' · ')}</div>`;
+}
+
+// Ocean's end of the shelf (#1212): the four off-shelf destinations as a band
+// of link cards (O3.3), and — the phone's presentation — one row that opens the
+// same list as a sheet (O6.2). Both are rendered; CSS shows one per width.
+// Entries come from off-shelf.js, like every other presentation of the four.
+function oceanOffShelfBand(round) {
+  const entries = offShelfEntries(round);
+  const wrap = h(`<nav class="regal-offshelf" aria-label="${esc(t('rail.archive'))}">
+      <h2 class="regal-offshelf__label">${esc(t('rail.archive'))}</h2>
+      <div class="regal-offshelf__band"></div>
+    </nav>`);
+  const band = wrap.querySelector('.regal-offshelf__band');
+  entries.forEach(({ icon, label, sub, go }) => {
+    const card = h(`<a class="regal-offshelf__card"><span class="regal-offshelf__icon"><i class="ti ${icon}" aria-hidden="true"></i></span><span>${esc(label)}</span></a>`);
+    navLink(card, roundPath(round.id, sub), go);
+    band.appendChild(card);
+  });
+  const row = h(`<button type="button" class="regal-offshelf__row">
+      <span class="regal-offshelf__icon"><i class="ti ti-archive" aria-hidden="true"></i></span>
+      <span class="regal-offshelf__text"><span class="regal-offshelf__name">${esc(t('rail.archive'))}</span><span class="regal-offshelf__sub">${esc(entries.map((e) => e.label).join(' · '))}</span></span>
+      <i class="ti ti-chevron-right" aria-hidden="true"></i>
+    </button>`);
+  row.addEventListener('click', () => openOffShelfSheet(round));
+  wrap.appendChild(row);
+  return wrap;
 }
 
 // The four off-shelf destinations, as a plain list sheet.

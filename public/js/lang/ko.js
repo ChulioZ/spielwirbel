@@ -336,6 +336,7 @@ I18N.ko = {
   'games.sort.name': '이름',
   'games.sort.rating': '평가',
   'games.sortLabel': '정렬 순서',
+  'games.sortedBy': '정렬:',
   'games.noMatchFilters': '필터에 맞는 게임이 없어요.',
   'games.retire': '정리하기',
   'games.scoreNew': '신규',

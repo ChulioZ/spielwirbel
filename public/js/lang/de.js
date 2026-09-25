@@ -362,6 +362,7 @@ I18N.de = {
   'games.sort.name': 'Name',
   'games.sort.rating': 'Bewertung',
   'games.sortLabel': 'Sortierung',
+  'games.sortedBy': 'Sortiert:',
   'games.noMatchFilters': 'Keine Spiele passen zu den Filtern.',
   'games.retire': 'Aussortieren',
   'games.scoreNew': 'neu',
