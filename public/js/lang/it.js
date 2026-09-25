@@ -92,6 +92,8 @@ I18N.it = {
 
   'round.tags': 'Etichette',
   'round.startSession': 'Avvia una sessione',
+  // Ocean only (#1211): the one action's themed verb (O9 §2).
+  'round.startSessionOcean': 'Tuffarsi',
   'round.startEmptyTitle': 'Ancora nessuna sessione',
   'round.startEmpty': 'Avviate la vostra prima sessione: qui vedrete poi cosa avete giocato per ultimo.',
   'round.startSessionDisabled': 'Aggiungi prima dei giochi',
@@ -940,6 +942,7 @@ I18N.it = {
   'startSession.teamDissolve': 'Sciogli la squadra {name}',
   'startSession.toast.teamMin': 'Una squadra ha bisogno di almeno {n} persone',
   'startSession.barCount': 'Quanti estrarre?',
+  'startSession.countQuestionOcean': 'Quanti ne tiriamo su?',
   'startSession.available': '{n} giochi nell’urna',
   'startSession.availableOne': '{n} gioco nell’urna',
   // The pot's numeral is set apart typographically from the noun it counts, so
@@ -947,6 +950,9 @@ I18N.it = {
   // slice would assume every locale puts {n} first (#1017).
   'startSession.potLabel': 'giochi nell’urna',
   'startSession.potLabelOne': 'gioco nell’urna',
+  // Ocean (#1213): the pot is the Muschel, one of the design's five themed words.
+  'startSession.potLabelOcean': 'giochi nella conchiglia',
+  'startSession.potLabelOceanOne': 'gioco nella conchiglia',
   'startSession.ownersHidden': 'Mancano altri {n} giochi perché i loro proprietari non giocano.',
   'startSession.ownersHiddenOne': 'Manca {n} altro gioco perché il suo proprietario non gioca.',
   'startSession.poolEmpty': 'Nessun gioco corrisponde ancora a queste impostazioni.',
@@ -1049,6 +1055,13 @@ I18N.it = {
   'vote.personOf': 'Persona {n} di {total}',
   'vote.handoffNext': 'Poi passa il dispositivo — tocca a {name}.',
   'vote.handoffLast': 'Poi avrete votato tutti — e arriva il risultato.',
+  // Ocean's desktop vote card (#1213, O4.2): who has rated, and what is still below.
+  'vote.raterDone': 'ha valutato',
+  'vote.raterNow': 'sta valutando',
+  'vote.raterOpen': 'ancora da valutare',
+  'vote.deepOcean': 'Ancora negli abissi',
+  'vote.deepTextOceanOne': 'Ancora {n} carta aspetta sul fondo. Il risultato riemerge solo a votazione finita.',
+  'vote.deepTextOcean': 'Ancora {n} carte aspettano sul fondo. Il risultato riemerge solo a votazione finita.',
   'vote.toast.saved': 'Risultati salvati',
 
   'finale.crumb': 'Finale',

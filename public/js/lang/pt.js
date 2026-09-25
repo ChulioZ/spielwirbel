@@ -99,6 +99,8 @@ I18N.pt = {
 
   'round.tags': 'Etiquetas',
   'round.startSession': 'Iniciar sessão',
+  // Ocean only (#1211): the one action's themed verb (O9 §2).
+  'round.startSessionOcean': 'Mergulhar',
   'round.startEmptyTitle': 'Nenhuma sessão ainda',
   'round.startEmpty': 'Comece a sua primeira sessão — o que vocês jogaram por último aparece aqui.',
   'round.startSessionDisabled': 'Adicione jogos primeiro',
@@ -938,6 +940,7 @@ I18N.pt = {
   'startSession.teamDissolve': 'Desfazer o time {name}',
   'startSession.toast.teamMin': 'Um time precisa de pelo menos {n} pessoas',
   'startSession.barCount': 'Quantos sortear?',
+  'startSession.countQuestionOcean': 'Quantos trazemos à tona?',
   'startSession.available': '{n} jogos no sorteio',
   'startSession.availableOne': '{n} jogo no sorteio',
   // The pot's numeral is set apart typographically from the noun it counts, so
@@ -945,6 +948,9 @@ I18N.pt = {
   // slice would assume every locale puts {n} first (#1017).
   'startSession.potLabel': 'jogos no sorteio',
   'startSession.potLabelOne': 'jogo no sorteio',
+  // Ocean (#1213): the pot is the Muschel, one of the design's five themed words.
+  'startSession.potLabelOcean': 'jogos na concha',
+  'startSession.potLabelOceanOne': 'jogo na concha',
   'startSession.ownersHidden': 'Faltam mais {n} jogos porque os donos deles não estão jogando.',
   'startSession.ownersHiddenOne': 'Falta mais {n} jogo porque o dono dele não está jogando.',
   'startSession.poolEmpty': 'Nenhum jogo combina com estas configurações ainda.',
@@ -1047,6 +1053,13 @@ I18N.pt = {
   'vote.personOf': 'Pessoa {n} de {total}',
   'vote.handoffNext': 'Depois passe o dispositivo — a vez é de {name}.',
   'vote.handoffLast': 'Depois todos terão avaliado — e vem o resultado.',
+  // Ocean's desktop vote card (#1213, O4.2): who has rated, and what is still below.
+  'vote.raterDone': 'já avaliou',
+  'vote.raterNow': 'avaliando agora',
+  'vote.raterOpen': 'falta avaliar',
+  'vote.deepOcean': 'Ainda nas profundezas',
+  'vote.deepTextOceanOne': 'Ainda falta {n} carta lá embaixo. O resultado só vem à tona quando a votação terminar.',
+  'vote.deepTextOcean': 'Ainda faltam {n} cartas lá embaixo. O resultado só vem à tona quando a votação terminar.',
   'vote.toast.saved': 'Resultados salvos',
 
   'finale.crumb': 'Grande final',

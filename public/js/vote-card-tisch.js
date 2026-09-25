@@ -42,7 +42,9 @@ const voteWord = (n) => t(VOTE_WORD_KEYS[n - RATING_MIN]);
    accessible NAME too: a reader hears „4 von 5 – gern", which is the part of
    the tile that means something. */
 function voteMoodButton(n, selected) {
-  const tisch = designIs('tisch');
+  // Ocean (#1213) composes its card from the same builder, words included; its
+  // stylesheet prints only the two end words under the faces.
+  const tisch = designIs('tisch') || oceanWorn();
   const label = tisch
     ? t('vote.ratingLabelWord', { n, max: RATING_MAX, word: voteWord(n) })
     : t('vote.ratingLabel', { n, max: RATING_MAX });

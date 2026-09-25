@@ -831,6 +831,9 @@ public/
                      the voting (issue #209)
     views-session-setup-tisch.js Der Tisch's setup as two panels („Wer spielt mit?",
                      „Der Topf"), the step line, the rail kept (#1267)
+    views-session-ocean.js Ocean's session loop (#1213): the setup in three columns
+                     with the Muschel, the vote card's desktop side columns, and
+                     the result arranged in columns
     views-vote-link.js the PUBLIC /vote/:token screen (#652): claim your name
                      from the participant list and rate the drawn games without
                      an account — the only view that runs logged out

@@ -74,7 +74,9 @@ async function showTableBuilder(round, session, gamesHint) {
   // (#1270, T4.5/T6.6): „2 Tische, eine Session" over who was there and where
   // the results go, instead of Klassisch's heading plus a banner saying the
   // same thing twice. Klassisch keeps its head byte-for-byte.
-  const tischSplit = done && children.length > 0 && designIs('tisch');
+  // Ocean (#1213, O4.5/O6.6) takes the same one-screen composition and paints
+  // each table as its own card in ocean.css.
+  const tischSplit = done && children.length > 0 && (designIs('tisch') || oceanWorn());
   const subline = tischSplit
     ? [
       tn(people.length, 'tables.peopleOne', 'tables.people'),
