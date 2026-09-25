@@ -805,6 +805,9 @@ function showStartSession(round, prefill) {
       void goBtn.offsetWidth; // restart the animation
       goBtn.classList.add('is-whirling');
     }
+    // Ocean's O10.1 „Abtauchen" (#1221): the Muschel opens once on the same
+    // press, under the same rule — views-session-ocean.js.
+    if (ocean) oceanDive(form);
     try {
       const data = await api('POST', `/api/rounds/${round.id}/sessions`, {
         count,
@@ -830,7 +833,7 @@ function showStartSession(round, prefill) {
       // shareable link for everyone voting from their own phone — so there is no
       // longer a mode to choose before the draw. The drawn games stay secret: the
       // lobby renders a COUNT, never a title.
-      showSessionLobby(round, data.session, false, tisch);
+      showSessionLobby(round, data.session, false, tisch || ocean);
     } catch (e) {
       toast(e.message, { tone: 'error' });
     } finally {

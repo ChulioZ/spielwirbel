@@ -82,6 +82,22 @@ function composeOceanSetup(form) {
   bar.appendChild(bar.querySelector('#barSummary'));
 }
 
+/* O10.1 „Abtauchen" (#1221), the press half: the Muschel opens ONCE on a press
+   that got past the draw's guards — the caller only reaches this after them, so
+   a refused draw never opens it. Like Der Tisch's pot turn it is feedback on the
+   press, never a wait (#1122): the lobby replaces the screen as soon as the draw
+   returns, mid-motion if need be, and sinks the drawn games into place there
+   (`data-dealt`, the other half). Removed and re-added so a second press after a
+   failed draw opens it again. The motion is ocean.css's; without it the class
+   is inert and the screen is exactly what it was. */
+function oceanDive(form) {
+  const shell = form.querySelector('.ocean-muschel');
+  if (!shell) return;
+  shell.classList.remove('is-diving');
+  void shell.offsetWidth; // restart the animation
+  shell.classList.add('is-diving');
+}
+
 // The count's bubbles: one per game that will be drawn, capped. Called from
 // updateHint(), which every count change reaches under Ocean.
 function paintOceanCount(form) {

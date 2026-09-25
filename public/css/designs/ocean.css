@@ -5242,3 +5242,51 @@
   font-weight: 600;
   line-height: 1.55;
 }
+
+/* ===== #1221 O10.1 — „Abtauchen": the Muschel opens, the drawn games sink ===== */
+/* Sheet: docs/design/ocean/Ocean-O10-Motion.dc.html, O10.1 and the rules in
+   O10.4 — 900ms at most, once, cubic-bezier(.2,.8,.3,1), no overshoot, no
+   loop, and the rest of the screen still.
+
+   Two halves on the two screens the draw crosses, the shape Der Tisch's T10.2
+   set (#1200), because the draw is one request between them and neither may
+   wait on the other (#1122):
+
+   1. The press. views-session-ocean.js's oceanDive() puts `.is-diving` on the
+      Muschel for a press that passed the draw's guards, and the shell swings
+      open about its hinge — the top edge, where its sand rays fan from — from
+      16° tipped toward the reader to flat, 420ms. O10.1's lid turns -16° in the
+      plane about ITS lower edge; this Muschel is drawn as the open base alone,
+      so the same 16° goes round the hinge it has.
+   2. The arrival. The one lobby render that comes straight from the draw
+      carries `data-dealt` (views-session-live.js), and each person's bubbles —
+      one per drawn game — sink into place from above, 520ms each, staggered
+      0 / 120 / 240ms by position and capped at the third: 240 + 520 = 760ms.
+      Every row sinks together, since each row's bubbles are the same games.
+
+   Neither has an end frame: both land on the element's own rest, which is the
+   Endbild reduced motion shows at once — outside the gate nothing here exists.
+   The sink fills `backwards` only (a later bubble waits hidden through its
+   delay); a forwards fill would hold `matrix(1,0,0,1,0,0)` on every bubble for
+   good, which looks the same and is not the resting screen.
+   Both elements are aria-hidden or pure picture; every name, state and button
+   paints finished, so nothing is learnt from the motion. Drop this section and
+   the classes are inert. The pearls O10.1 lets rise are decoration and belong
+   to the ambient bubbles, not to this ritual. */
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .ocean-muschel.is-diving .setup-panel {
+    transform-origin: 50% 0;
+    animation: ocean-shell-open 420ms cubic-bezier(0.2, 0.8, 0.3, 1);
+  }
+  @keyframes ocean-shell-open {
+    from { transform: perspective(1200px) rotateX(16deg); }
+  }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .live-vote--ocean[data-dealt] .live-person__dot {
+    animation: ocean-sink 520ms cubic-bezier(0.2, 0.8, 0.3, 1) calc(var(--sink-i, 0) * 120ms) backwards;
+  }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .live-vote--ocean[data-dealt] .live-person__dot:nth-child(2) { --sink-i: 1; }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .live-vote--ocean[data-dealt] .live-person__dot:nth-child(n + 3) { --sink-i: 2; }
+  @keyframes ocean-sink {
+    from { transform: translateY(-28px) scale(1.12); opacity: 0; }
+  }
+}

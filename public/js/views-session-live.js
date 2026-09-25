@@ -134,7 +134,7 @@ function renderSessionLog(round, session, { collapsed } = {}) {
 
    `dealt` is true only on the one arrival straight from „Loswirbeln" (#1200,
    T10.2): Der Tisch deals each person's boxes out as the drawn games laid on
-   the table. Deliberately NOT carried into `currentView` or the poll's
+   the table, and Ocean sinks its bubbles into place (#1221, O10.1). Deliberately NOT carried into `currentView` or the poll's
    re-render — a language switch or someone else's vote is not a draw. */
 function showSessionLobby(round, session, handedOn, dealt) {
   currentView = () => showSessionLobby(round, session, handedOn);
@@ -168,7 +168,7 @@ function showSessionLobby(round, session, handedOn, dealt) {
       <div class="live-vote__people" id="lvPeople"></div>
       <div class="live-vote__actions" id="lvActions"></div>
     </div>`);
-  if (dealt && designIs('tisch')) root.setAttribute('data-dealt', '');
+  if (dealt && (designIs('tisch') || oceanWorn())) root.setAttribute('data-dealt', '');
 
   // One chip per participant: name, their colour, and whether their vote is in.
   // WHO has voted, never WHAT they voted — the values are redacted server-side
