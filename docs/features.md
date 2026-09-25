@@ -9,7 +9,10 @@ What the app does, in detail. For a short overview see the
   rounds sit at the top as resume tickets — one tap back into the vote, or into
   the results screen if the vote is closed but the evening was never recorded —
   then the lobby of round cards (members, game/session counts, last result), then
-  a row of tiles for the Freundeskreis, Entdecken and „Was ist neu". A new
+  a row of tiles for the Freundeskreis, Entdecken and „Was ist neu". A lobby
+  holding just one round of your own that has never been played adds a
+  **„Nächster Schritt"** card under the grid — fetch the shelf from BGG, invite
+  the others — in accounts mode (issues #1280, #1318). A new
   round is set up on a playful "seats around the table" screen, optionally
   importing the games list from an existing round. The **name can be corrected
   later** — click it on the round's Start screen (or in the desktop rail) and
@@ -355,6 +358,14 @@ What the app does, in detail. For a short overview see the
     Siege" — and the only reason to be listed below the stage is being fourth.
     A member who has taken part in no decided session at all is not ranked.
 
+    **A young round gets no podium yet** (issues #1280, #1318): until the third
+    played session, three places drawn off one or two evenings would rank people
+    on noise, so the tab names the leader („Anna führt mit 2 Siegen", crowned
+    and linked to their page) and says „Ein Podium braucht 3 Sessions."; the
+    hub's Pokale preview does the same, the winning-streak tile waits for the
+    same third session, and the Rundenpuls closes on a sentence saying when
+    series come.
+
     A win counts wherever it happened, an evening played alone included. That is
     a deliberate trade: weighting a win by the size of the field it beat is
     fairer and was how the standings worked for a while, but it needed a
@@ -607,7 +618,8 @@ What the app does, in detail. For a short overview see the
   tables with guests and a team — so every screen has something to show.
   A banner names it as a demo throughout; the tenant and everything in it are
   deleted after 24 hours, and demo accounts are excluded from the product
-  counters and the public statistics. Registering from the banner starts a real
+  counters and the public statistics. Registering from the banner — or from the
+  „Gefällt dir das?" card leading each demo round's Start tab — starts a real
   account; nothing carries over.
 - **Changing your e-mail address** – *accounts mode only* (issue #1076). Under
   **Konto → „E-Mail-Adresse ändern“**, confirmed by a link sent to the **new**

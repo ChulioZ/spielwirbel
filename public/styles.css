@@ -1375,6 +1375,12 @@ h1, h2, h3 { font-family: var(--font-display); }
 .hub-card__title .ti { color: var(--brand-ink, var(--brand)); font-size: var(--text-lg); }
 .hub-card__facts { font-size: var(--text-sm); margin: 10px 0 0; }
 .hub-card__body { display: flex; flex-direction: column; }
+/* The young round's closing sentence on the Rundenpuls (#1280; every design
+   since #1318): muted, because it says when something comes rather than what
+   is there. The demo's „Gefällt dir das?" button sits under its text. Der
+   Tisch restates both in tisch.css. */
+.hub-card__threshold { color: var(--ink-soft); }
+.hub-demo__cta { margin-top: 12px; align-self: flex-start; }
 
 /* A row inside a card. Full-bleed to the card's padding edge so the hover tint
    reads as one band rather than as a floating rectangle. */
@@ -2387,6 +2393,58 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
 .lobby-list { display: grid; grid-template-columns: 1fr; gap: 14px; }
 @media (min-width: 860px) {
   .lobby-list { grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); }
+}
+
+/* „Nächster Schritt" (#1280; every design since #1318): a one-round lobby
+   whose round has never played gets its two next steps in a card under the
+   grid. Buttons, not links — each opens a sheet over the lobby. Rows are
+   `.hub-row`-shaped: full-bleed to the card's padding so the hover reads as one
+   band. Every property here is one tisch.css restates, so Der Tisch's card is
+   byte-for-byte what it was; the width cap is the one exception, and tisch.css
+   clears it back. */
+.next-step {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-top: 14px;
+  padding: 14px 16px 6px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  color: var(--ink);
+}
+.next-step__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 6px;
+  font-size: var(--text-md);
+}
+.next-step__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 16px;
+  margin: 0 -16px;
+  background: none;
+  border: 0;
+  border-radius: var(--radius-sm);
+  color: inherit;
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+.next-step__row + .next-step__row { border-top: 1px solid var(--line); }
+.next-step__row:hover { background: var(--sunken-soft); }
+.next-step__row:focus-visible { outline: 2px solid var(--brand-ring, var(--brand)); outline-offset: -2px; }
+.next-step__go { margin-left: auto; }
+/* One lobby tile's width from the breakpoint where the lobby becomes a grid,
+   so two short rows do not stretch their chevrons 1000px from their labels. */
+@media (min-width: 860px) {
+  .next-step { max-width: 420px; }
 }
 .round-card {
   display: flex;
@@ -8197,6 +8255,37 @@ kbd {
 }
 .stepper__val:focus { outline: 2px solid var(--brand-ring, var(--brand)); border-color: var(--brand); }
 .stepper-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+/* ---- The young round's leader block (Pokale, #1280; every design since #1318)
+   Below YOUNG_ROUND_PODIUM_FROM played sessions the podium is replaced by the
+   crowned leader(s), „Anna führt mit 2 Siegen" and when the podium comes. A
+   card where the stage would stand; the crown is decoration (aria-hidden, the
+   line names the leader) in the gold family that marks winners app-wide.
+   Every property is one tisch.css restates, so Der Tisch is untouched. */
+.pokale-young {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 18px 0 12px;
+  padding: 20px 16px 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+}
+.pokale-young__who { display: flex; gap: 8px; flex: none; }
+.pokale-young__seat { position: relative; display: block; }
+.pokale-young__avatar { width: 44px; height: 44px; font-size: 15px; /* glyph, not type */ }
+.pokale-young__crown {
+  position: absolute;
+  left: 50%;
+  top: -14px;
+  transform: translateX(-50%);
+  color: var(--gold-deep);
+  font-size: 15px; /* glyph, not type */
+}
+.pokale-young__text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.pokale-young__lead { color: var(--ink); font-weight: 700; }
+.pokale-young__when { color: var(--ink-soft); font-size: var(--text-sm); }
 
 /* ---- The podium (Pokale members) ---- */
 /* TWO constraints hold this shape, and they pull against each other.

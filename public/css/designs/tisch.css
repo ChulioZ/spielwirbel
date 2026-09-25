@@ -5722,7 +5722,7 @@
 :root[data-design="tisch"][data-scheme="dark"] .lobby-alt__invited { justify-content: center; }
 
 /* --- The one-round lobby, the thresholds, the demo (T7.2, T7.5, T7.6; #1280)
-   Markup in views-home.js (lobbyInviteSlip, tischNextStep), hub-cards.js
+   Markup in views-home.js (lobbyInviteSlip, lobbyNextStep), hub-cards.js
    (the pulse's threshold sentence, hubDemoSummary, hubDemoInvite),
    hub-previews.js and views-pokale.js (pokaleYoungLead). Every pair is one
    test/a11y-contrast.test.js already holds (#1280's own test names them):
@@ -5784,6 +5784,9 @@
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
   color: var(--ink);
+  /* styles.css caps Klassisch's card from 860px (#1318); Der Tisch's own cap
+     starts at 1100 below. */
+  max-width: none;
 }
 :root[data-design="tisch"] .next-step__title {
   display: flex;
