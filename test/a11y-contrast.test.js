@@ -1508,6 +1508,13 @@ test('a design that declares a PAPER overlay family keeps every pair on it at AA
       ]),
       ['--paper-faint on --paper', v('--paper-faint'), v('--paper'), AA_TEXT],
       ['--paper-faint on --paper-sunken', v('--paper-faint'), v('--paper-sunken'), AA_TEXT],
+      // The Tafel's place numerals 2 and 3 (18px, so AA text), on every paper
+      // ground a row can show — including --paper-sunken, the well token a row
+      // hover or a score fill could lay under them.
+      ...['--paper', '--paper-raised', '--paper-sunken'].flatMap((g) => [
+        [`--paper-silver on ${g}`, v('--paper-silver'), v(g), AA_TEXT],
+        [`--paper-bronze on ${g}`, v('--paper-bronze'), v(g), AA_TEXT],
+      ]),
       // --brand-tint resolves to --gold-hi inside an overlay: the menu's hover.
       ['--paper-ink on --gold-hi', v('--paper-ink'), v('--gold-hi'), AA_TEXT],
       // The destructive button: paper on the red fill, and the fill itself has
@@ -2136,7 +2143,7 @@ test('every colour token a design declares is measured by one of the checks abov
   // The design-specific tokens the three tests above put in a pair.
   const MEASURED = new Set([
     '--paper', '--paper-raised', '--paper-ink', '--paper-ink-soft',
-    '--paper-edge', '--paper-faint',
+    '--paper-edge', '--paper-faint', '--paper-silver', '--paper-bronze',
     '--felt', '--felt-deep', '--felt-ink', '--felt-ink-soft', '--felt-chip-on',
     // #1189: the weave (composited over the felt's light stop), the plate's
     // light gradient stop, and the deep accent the paper kicker takes.
