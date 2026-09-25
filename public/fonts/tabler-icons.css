@@ -126,6 +126,8 @@
 /* Codepoint read from THIS bundle's cmap (glyph name `info-circle`) — see
    .claude/rules/tabler-icon-codepoints.md. */
 .ti-info-circle::before { content: "\eac5"; }
+/* The Regal-Steckbrief (#1173) — glyph `id`, read from THIS bundle's cmap. */
+.ti-id::before { content: "\eac3"; }
 .ti-percentage::before { content: "\ecf4"; }
 .ti-lock-question::before { content: "\f931"; }
 .ti-mail-check::before { content: "\f939"; }

@@ -1554,6 +1554,41 @@ a.hub-row:hover { background: var(--sunken-soft); }
 }
 .pulse-bar__tick { font-size: var(--text-xs); color: var(--ink-soft); line-height: 1.2; }
 
+/* ---- The Regal-Steckbrief (#1173, views-shelf-profile.js) ----------------
+   Horizontal bars, CSS only, for the reason the pulse bars above state. Each
+   row is label | track | count on a three-track grid, so the counts line up in
+   one column however long a localized label is; the label WRAPS rather than
+   truncating (T7.7's +30 %, and Finnish is the long one). A band under three
+   games is a gap: its count takes the accent, and the gap list under it says
+   so in words — the colour is never the only carrier. No per-world rules: the
+   worlds go with the flip (#1202) and paint these bars in their own --brand. */
+.shelf-card__sub { font-size: var(--text-sm); font-weight: 600; color: var(--ink-soft); margin-bottom: 6px; }
+.shelf-bars { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.shelf-bar {
+  display: grid;
+  grid-template-columns: minmax(4.5em, 7.5em) minmax(0, 1fr) 2.5ch;
+  align-items: center;
+  gap: 10px;
+  font-size: var(--text-sm);
+}
+.shelf-bar__label { color: var(--ink-soft); font-weight: 600; line-height: 1.25; overflow-wrap: break-word; hyphens: auto; }
+.shelf-bar__track { height: 10px; border-radius: 5px; background: var(--sunken); overflow: hidden; }
+.shelf-bar__fill { display: block; height: 100%; border-radius: inherit; background: var(--brand); }
+.shelf-bar__n { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
+.shelf-bar--gap .shelf-bar__n { color: var(--brand-ink, var(--brand)); }
+.shelf-gaps { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: var(--text-sm); }
+.shelf-gap { display: flex; align-items: baseline; gap: 6px; }
+.shelf-gap .ti { flex: none; color: var(--brand-ink, var(--brand)); }
+/* The screen: the same panels as the Start card's frame, tiled. Unordered,
+   short panels you scan for one of — .claude/rules/tiles-vs-lists.md. */
+.shelf-head__share { flex: 0 0 auto; }
+.shelf-basis { margin: -8px 0 16px; }
+.shelf-profile { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; align-items: start; }
+.shelf-top { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: var(--text-sm); }
+.shelf-top__row { display: flex; justify-content: space-between; gap: 10px; }
+.shelf-top__name { min-width: 0; overflow-wrap: anywhere; }
+.shelf-top__n { flex: none; font-weight: 700; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+
 /* The quick-start chips (#923), directly under the big CTA they modify — in the
    pane below 1280px and in the rail above it, following that button either way. */
 .hub-presets { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
@@ -7490,6 +7525,36 @@ a.k-tile:focus-visible,
 .tag-act:disabled { opacity: .35; cursor: default; }
 .tag-act:disabled:hover { background: transparent; color: var(--ink-soft); }
 .tag-act--danger:hover { background: color-mix(in oklab, var(--danger) 12%, var(--surface)); color: var(--danger); }
+/* Drag a tag tile into place (#1180), beside the arrows above. No grip control:
+   the whole tile is the handle, and `grab` plus the lift on pick-up are the
+   affordance. `.is-reorderable` is set only when there is something to reorder.
+
+   (0,3,0) on purpose — the tile is a `.ds-row.ds-row--static` (0,2,0), whose
+   `cursor: default` says "not a click target", which stays true; this says
+   "a drag target", which it now is. The arrows/pencil/trash keep their own
+   `cursor: pointer` from `.tag-act`, so a pointer over a control still says
+   "press me" rather than "drag me".
+
+   No text selection and no iOS callout on the tile: a touch drag starts after a
+   short hold (`reorderOptions` in js/reorder-drag.js), which is exactly the
+   gesture WebKit otherwise answers with a selection loupe. The tile holds a
+   chip and a count, nothing anyone copies. */
+.ds-list--tiles.is-reorderable > .tag-row {
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+.ds-list--tiles.is-reorderable > .tag-row.is-drag-chosen { cursor: grabbing; }
+/* The slot the tile leaves behind while it travels: dimmed and dashed, so the
+   drop position reads as a hole rather than as a second copy of the tag. */
+.ds-list--tiles.is-reorderable > .tag-row.is-drag-ghost { opacity: .35; border-style: dashed; box-shadow: none; }
+/* The copy under the pointer (Sortable's fallback clone). Only a shadow: its
+   position is an inline `transform` Sortable rewrites on every move, so a
+   transform here would be overwritten, and a tilt was rejected elsewhere in the
+   app anyway. `--shadow-3` is per design, so Der Tisch lifts it in its own
+   felt-cast shadow rather than this sheet's grey one. */
+.tag-row.is-drag-lift { box-shadow: var(--shadow-3); cursor: grabbing; }
 .ds-row {
   display: flex;
   align-items: center;

@@ -129,21 +129,21 @@ function tischRuns(sentence, highlight) {
 function tischCardSpec(kind, model) {
   if (kind === 'period') {
     const rows = [];
+    // Labels and shelf entries through the classic card's own recapCardBlocks,
+    // so the two designs cannot disagree about what a period card lists — the
+    // round's three shelf numbers, or the account's „neu ausprobiert" (#1147).
+    const blocks = recapCardBlocks(model);
     if (model.rated && model.rated.length) {
-      rows.push({ rank: '', title: `${t('pokale.bestRated')} · ${model.rated.join(' · ')}`, pill: model.ratedScore, stop: null, gold: true });
+      rows.push({ rank: '', title: `${model.ratedLabel || t('pokale.bestRated')} · ${model.rated.join(' · ')}`, pill: model.ratedScore, stop: null, gold: true });
     }
-    const shelf = [
-      { n: model.added, label: t('periodRecap.label.added'), plus: true },
-      { n: model.retired, label: t('periodRecap.label.retired') },
-      { n: model.completed, label: t('periodRecap.label.completed') },
-    ].filter((s) => s.n > 0);
+    const shelf = blocks.shelf;
     if (shelf.length) {
-      rows.push({ rank: '', title: `${t('periodRecap.label.shelf')} · ${shelf.map((s) => `${s.plus ? '+' : ''}${s.n} ${s.label}`).join(' · ')}`, pill: null, stop: null, gold: false });
+      rows.push({ rank: '', title: `${blocks.shelfLabel} · ${shelf.map((s) => `${s.plus ? '+' : ''}${s.n} ${s.label}`).join(' · ')}`, pill: null, stop: null, gold: false });
     }
     return {
       kind,
       felts: 1,
-      kicker: model.roundName,
+      kicker: model.heading,
       headline: [{ text: model.periodLabel, gold: false }],
       subline: `${model.sessions} ${t('periodRecap.label.sessions')}`,
       feature: model.played && model.played.length ? {

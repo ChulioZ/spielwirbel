@@ -36,6 +36,8 @@ const frontendGlobals = {
   fmtDateTime: 'readonly', fmtDate: 'readonly', fmtMonth: 'readonly', fmtMonthKey: 'readonly', fmtMoney: 'readonly',
   fmtRelativeDays: 'readonly',
   fmtAvg: 'readonly', fmtCount: 'readonly',
+  // reorder-drag.js (issue #1180) — the one wrapper around vendor/sortable.min.js
+  reorderOptions: 'readonly', reorderDrop: 'readonly', makeReorderable: 'readonly',
   // live-region.js (issue #1168) — the two aria-live regions, split out of core.js
   toastEl: 'readonly', toastStatusEl: 'readonly', toastAlertEl: 'readonly', toastTimer: 'writable', toast: 'readonly',
   TOAST_TONES: 'readonly', TOAST_ICONS: 'readonly', TOAST_MS: 'readonly', TOAST_ACTION_MS: 'readonly',
@@ -244,7 +246,7 @@ const frontendGlobals = {
   accountsActive: 'readonly', isLoggedIn: 'readonly', authFetch: 'readonly',
   currentUserId: 'readonly', currentUsername: 'readonly',
   isDemoAccount: 'readonly', bgStatsEnabled: 'readonly', setCachedPref: 'readonly',
-  startDemo: 'readonly', setupDemoBanner: 'readonly',
+  startDemo: 'readonly', setupDemoBanner: 'readonly', leaveDemoForRegister: 'readonly',
   setupTermsBanner: 'readonly',
   enterDemo: 'readonly', resumeDemo: 'readonly', endDemo: 'readonly',
   authErrorKey: 'readonly',
@@ -261,7 +263,7 @@ const frontendGlobals = {
   showRateLimited: 'readonly',
   showAuthDone: 'readonly', buildResend: 'readonly', renderVerifyLanding: 'readonly',
   renderResetLanding: 'readonly', setupAccountUi: 'readonly',
-  accountApi: 'readonly', setupInboxUi: 'readonly', setInboxDot: 'readonly',
+  accountApi: 'readonly', setupInboxUi: 'readonly', renderAccountFace: 'readonly', accountBtnLabel: 'readonly', setInboxDot: 'readonly',
   refreshInboxBadge: 'readonly',
   // account.js — the „Was ist neu" dot (issue #741)
   hasUnseenNews: 'readonly', setNewsDot: 'readonly', markNewsSeen: 'readonly',
@@ -290,7 +292,8 @@ const frontendGlobals = {
   renderFeedTile: 'readonly', renderFeedTiles: 'readonly',
   // views-profile.js — the account profile (issue #558, rebuilt in #1132)
   showProfile: 'readonly', renderProfileCard: 'readonly', renderProfileState: 'readonly',
-  profileMenuItems: 'readonly',
+  profileMenuItems: 'readonly', profileGameTile: 'readonly',
+  renderAccountRecapSection: 'readonly', ACCOUNT_RECAP_NEW_SHOWN: 'readonly',
   friendRowMain: 'readonly', wireFriendRowMain: 'readonly',
   // views-account.js (issue #482)
   showAccount: 'readonly', renderKontoFact: 'readonly',
@@ -349,12 +352,33 @@ const frontendGlobals = {
   PULSE_MONTHS: 'readonly', PULSE_MIN_SESSIONS: 'readonly', CARE_ROW_MAX: 'readonly',
   gameSuggestions: 'readonly', quickPresets: 'readonly', roundPulse: 'readonly',
   careList: 'readonly', anniversary: 'readonly',
+  // shelf-profile.js (#1173) — the Regal-Steckbrief's builder
+  SHELF_PROFILE_MIN_GAMES: 'readonly', SHELF_PROFILE_FEW: 'readonly', SHELF_PROFILE_TOP: 'readonly',
+  SHELF_SEAT_BANDS: 'readonly', SHELF_SEAT_PROBE_MAX: 'readonly', SHELF_TIME_BANDS: 'readonly',
+  SHELF_WEIGHT_BANDS: 'readonly', shelfNum: 'readonly', shelfList: 'readonly',
+  shelfHasData: 'readonly', shelfSeatKnown: 'readonly', shelfSeatBands: 'readonly',
+  shelfDimension: 'readonly', shelfTop: 'readonly', shelfProfile: 'readonly',
+  // shelf-profile-card.js (#1173) — the Steckbrief's share image
+  SHELF_CARD_W: 'readonly', SHELF_CARD_SCALE: 'readonly', SHELF_CARD_PAD: 'readonly',
+  SHELF_CARD_HEAD_H: 'readonly', SHELF_CARD_ROW_H: 'readonly', SHELF_CARD_LIST_ROW_H: 'readonly',
+  SHELF_CARD_GAP: 'readonly', SHELF_CARD_FOOT_H: 'readonly', SHELF_CARD_MAX_GAPS: 'readonly',
+  shelfCardPalette: 'readonly', shelfCardFont: 'readonly', shelfDimH: 'readonly',
+  shelfListsH: 'readonly', shelfGapsH: 'readonly', shelfCardHeight: 'readonly',
+  shelfRect: 'readonly', drawShelfHead: 'readonly', drawShelfDim: 'readonly',
+  drawShelfLists: 'readonly', drawShelfGaps: 'readonly', drawShelfFoot: 'readonly',
+  drawShelfCard: 'readonly', shelfProfileCardBlob: 'readonly',
+  YOUNG_ROUND_SERIES_FROM: 'readonly', YOUNG_ROUND_PODIUM_FROM: 'readonly',
+  youngRoundPlayed: 'readonly',
   RECAP_CARD_W: 'readonly', RECAP_CARD_PAD: 'readonly', RECAP_CARD_GAP: 'readonly',
   RECAP_CARD_TILE_H: 'readonly', RECAP_CARD_ROW_H: 'readonly', RECAP_CARD_SHELF_H: 'readonly',
   RECAP_CARD_SCENE_H: 'readonly',
   recapToken: 'readonly', recapPalette: 'readonly', recapFit: 'readonly',
   recapFont: 'readonly', recapPanel: 'readonly', recapCardBlocks: 'readonly',
   recapCardHeight: 'readonly', drawRecapCard: 'readonly', recapCardBlob: 'readonly',
+  recapShelfEntries: 'readonly',
+  // account-recap.js (#1147) — „Dein Rückblick" on the own profile
+  accountPeriodsOf: 'readonly', accountRecap: 'readonly',
+  accountRecapGame: 'readonly', accountRecapByTitle: 'readonly',
   // session-share.js (issue #526) — internal helpers listed for the same reason.
   sessionShareText: 'readonly', shareRatingLines: 'readonly', shareHeadline: 'readonly',
   SHARE_MEDALS: 'readonly', SHARE_TROPHY: 'readonly', SHARE_ENDING_TITLES: 'readonly',
@@ -411,6 +435,8 @@ const frontendGlobals = {
   CARD_GLYPHS: 'readonly', CARD_GLYPH_BOX: 'readonly', CARD_FACES: 'readonly',
   tischCardBlob: 'readonly', designCard: 'readonly', shareResultCard: 'readonly',
   recapColor: 'readonly', recapMarker: 'readonly',
+  // …and the four the Regal-Steckbrief's card (#1173) paints Der Tisch with.
+  tischPalette: 'readonly', tischCardFelts: 'readonly', tischFont: 'readonly', tischBadge: 'readonly',
   offeredDesigns: 'readonly', designTile: 'readonly', renderDesignPicker: 'readonly',
   maybeShowDesignChooser: 'readonly', showDesignChooser: 'readonly',
   buildDesignSection: 'readonly',
@@ -439,6 +465,9 @@ const frontendGlobals = {
   // #1269 — Der Tisch's young-round states (hub-cards.js, views-round-start.js)
   roundIsYoung: 'readonly', hubSentenceCard: 'readonly', hubYoungCard: 'readonly',
   hubEmptyTable: 'readonly',
+  // #1280 — Der Tisch's young-round features (views-home.js, hub-cards.js, views-pokale.js)
+  lobbyInviteSlip: 'readonly', tischNextStep: 'readonly', hubDemoSummary: 'readonly',
+  hubDemoInvite: 'readonly', pokaleYoungLead: 'readonly',
   // off-shelf.js (#1185) — the four off-shelf destinations, one definition
   offShelfEntries: 'readonly', offShelfSegments: 'readonly',
   // hub-previews.js (#1185) — the hub's three sub-page previews + „Nicht im Regal"
@@ -454,7 +483,14 @@ const frontendGlobals = {
   roundStandings: 'readonly',
   gameCardHead: 'readonly', wireGameCardHead: 'readonly',
   renderRecapSection: 'readonly', renderPeriodRecapSection: 'readonly',
-  canShareRecapImage: 'readonly', shareRecapCard: 'readonly',
+  canShareRecapImage: 'readonly', shareRecapCard: 'readonly', deliverShareImage: 'readonly',
+  // views-shelf-profile.js (#1173) — the Regal-Steckbrief's card, screen and share
+  shelfProfileDeps: 'readonly', SHELF_DIM_TITLES: 'readonly', shelfSeatName: 'readonly',
+  shelfBandLabel: 'readonly', shelfGapText: 'readonly', shelfDims: 'readonly',
+  shelfBars: 'readonly', shelfGapList: 'readonly', shelfSeatTiles: 'readonly',
+  SHELF_CARD_GAPS: 'readonly', hubShelfProfileCard: 'readonly', shelfPanel: 'readonly',
+  shelfTopPanel: 'readonly', shelfShareModel: 'readonly', shareShelfProfile: 'readonly',
+  showShelfProfile: 'readonly',
   activeSheet: 'writable', closeSheet: 'readonly', openSheet: 'readonly',
   handleSheetPop: 'readonly',
   openEditor: 'readonly', usesEditorSheet: 'readonly', EDITOR_SHEET_BELOW: 'readonly',
@@ -514,7 +550,14 @@ module.exports = [
   // docs/design/** holds design references, not app code: a generated React
   // runtime (support.js) and a browser-only audit script that is loaded into a
   // rendered sheet by hand. Neither runs in the app (docs/design/README.md).
-  { ignores: ['node_modules/**', 'data/**', 'dist/**', 'docs/design/**'] },
+  // public/js/vendor/** is third-party code committed verbatim (#1180 —
+  // SortableJS, minified). It is not ours to lint, and it must not be edited
+  // to satisfy a rule either: test/reorder-drag.test.js asserts it stays
+  // byte-identical to the copy in node_modules. Its one global (`Sortable`)
+  // is declared with a `/* global */` comment in the single file that names
+  // it, js/reorder-drag.js, rather than in frontendGlobals — so no other
+  // script can reach for the library without going through that wrapper.
+  { ignores: ['node_modules/**', 'data/**', 'dist/**', 'docs/design/**', 'public/js/vendor/**'] },
   js.configs.recommended,
   {
     // Empty `catch {}` is a deliberate "swallow and keep the default" idiom here.

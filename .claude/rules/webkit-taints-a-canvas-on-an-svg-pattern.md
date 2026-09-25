@@ -4,6 +4,7 @@ paths:
   - "public/js/views-chronik.js"
   - "public/js/recap-card-tisch.js"
   - "public/js/card-glyphs.js"
+  - "public/js/shelf-profile-card.js"
   - "test/recap-card-tint.test.js"
   - "test/recap-card-tisch.test.js"
 ---
