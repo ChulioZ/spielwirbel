@@ -20,6 +20,7 @@ groups:
 | members per round | `lib/routes/members.js` | `quota_members` | #563 |
 | expansions per game | `lib/routes/games.js` | `quota_expansions` | #653 |
 | dismissed recommendations per round | `lib/routes/recommendations.js` | `quota_dismissed` | #782 |
+| saved session filters per round | `lib/routes/saved-filters.js` | `quota_filters` | #1328 |
 | accepted friends per user | `lib/routes/friends.js` | `quota_friends` | #325 |
 | open outgoing friend requests per user | `lib/routes/friends.js` | `quota_requests` | #325 |
 | passkeys per user | `lib/routes/passkeys.js` | `quota_passkeys` | #418 |
@@ -50,8 +51,16 @@ Things that will bite if you forget them:
   suddenly blocked. This mirrors how tenancy (#136) and onboarding (#138) gate
   their behaviour. Don't make a quota fire in legacy mode.
 
-- **`quota_dismissed` is the only cap checked INSIDE the repo mutator**, not in
-  its route. The dismissed list is deliberately absent from `getRoundMeta`
+  **The one deliberate exception is `quota_filters` (#1328).** It bounds a UI
+  surface — every saved filter is a chip in the hub's CTA row — not cost or
+  abuse, so a self-hosted round has the same row and gets the same ceiling. A
+  round could not be "already past" it before #1328 existed, so the reason
+  above for staying inert does not apply. Like `quota_dismissed` it is checked
+  INSIDE the repo mutator, and `GET /api/config` reports it as a number in every
+  mode (unlike `expansionsPerGame`, which is `null` when quotas are inert).
+
+- **`quota_dismissed` was the first cap checked INSIDE the repo mutator** (and
+  `quota_filters` the second, #1328, for the same reason), not in its route. The dismissed list is deliberately absent from `getRoundMeta`
   (#782), so the route would have to pull the whole round to count it — and the
   tags shape (`getRoundMeta` → count → `addTag`) is a read-then-write that two
   concurrent requests can race past the ceiling anyway. Passing the limit into

@@ -201,16 +201,44 @@ function hubSuggestCard(round, activeGames, statsByGame, exclude) {
    They sit at the CTA rather than in the grid because they are a modifier on
    the one action this screen exists for, not a module of their own.
 
+   TWO SOURCES, never mixed (#1328). A round with saved filters shows EXACTLY
+   those, in the order set in Einstellungen, labelled with their names; the
+   automatic `quickPresets` guesses are only the fallback for a round that has
+   saved none. Mixing them would put a group's own „Kinderrunde" beside a
+   generic „Leichte Kost" as if the app's guess were as deliberate as theirs.
+
+   ONE RENDERER FOR EVERY DESIGN. Klassisch's Start tab, its rail and Der
+   Tisch's felt band all call this function, and a design only STYLES
+   `.hub-presets` / `.chip.hub-preset` — it never builds its own row.
+   test/hub-saved-filters.test.js walks every registered design to hold that.
+
+   A saved chip is NOT gated like the built-ins (which drop a chip that would
+   narrow nothing or empty the pool): the group chose it, so it shows even when
+   it matches zero games today — and it is deliberately NOT muted either.
+   Deciding "matches zero" here would mean re-running the whole draw predicate
+   (tags, metadata, seats, box owners, multi-table) per chip on the hub, for an
+   answer the setup screen already gives honestly the moment the chip is
+   tapped: its pool count and its clear-filters control.
+
    NOTHING IS PERSISTED HERE. `lastSessionFilters` is written server-side by the
    draw itself (POST …/sessions), so an exploratory tap that never draws leaves
    the round's remembered preset exactly as it was — which is a property of
    where the write lives, not a guard this code has to remember. */
 function hubPresetChips(round, activeGames) {
-  const chips = quickPresets(activeGames, hubDeps());
-  if (!chips.length) return null;
+  const saved = Array.isArray(round.savedFilters) ? round.savedFilters : [];
+  const chips = saved.length ? [] : quickPresets(activeGames, hubDeps());
+  if (!saved.length && !chips.length) return null;
   const row = h(`<div class="hub-presets" role="group" aria-label="${esc(t('hub.preset.label'))}"></div>`);
   // The Start tab's copy is `rail-owned` (see the caller); the rail builds its
   // own from the same function, so the two can never offer different chips.
+  saved.forEach((sf) => {
+    // User text: escaped, and truncated by CSS only — the button's text stays
+    // the full name, so its accessible name is never the clipped one, and the
+    // `title` shows it to a pointer.
+    const btn = h(`<button class="chip hub-preset hub-preset--saved" title="${esc(sf.name)}"><span class="hub-preset__name">${esc(sf.name)}</span></button>`);
+    btn.addEventListener('click', () => showStartSession(round, savedFilterPrefill(sf)));
+    row.appendChild(btn);
+  });
   chips.forEach((chip) => {
     const btn = h(`<button class="chip hub-preset">${esc(t('hub.preset.' + chip.id))}</button>`);
     btn.addEventListener('click', () => showStartSession(round, { metadata: chip.metadata }));

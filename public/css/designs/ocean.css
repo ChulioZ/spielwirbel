@@ -511,6 +511,677 @@
   color: var(--toast-action);
 }
 
+/* ===== #1211 — Lobby, round hub and the Reling ===== */
+/* O2.1 / O2.5 (phone hub, dock), O3.1 / O3.2 (desktop lobby, hub), O6.1
+   (phone lobby). The markup Ocean composes is its own (ocean-hub.js, and the
+   designIs('ocean') branches in views-round-start.js, views-home.js,
+   hub-previews.js and round-rail.js); everything below lays it out.
+
+   Two kinds of rule, as in the component layer above: GEOMETRY is on the bare
+   hook (a size is a size in every scheme), and anything that reads a colour
+   token is gated with the colour block
+   (.claude/rules/design-colour-blocks-are-scheme-gated.md). Since the flip no
+   round writes the page, so both halves always match together under Ocean.
+
+   The Reling and the dock are the round SHELL: renderHubTabs() puts both on
+   every round screen, so Regal, Chronik, Pokale and Einstellungen wear them
+   with nothing of their own to do — their contents stay each slice's. */
+
+/* ---- The dock (O2.5): below 860 a bar along the bottom edge, four targets,
+   76px with the home-bar margin. The active target takes the Vertiefung and
+   the accent GLYPH; the label stays ink — „Akzentfarbe trägt hier keinen
+   Text", it is too small for it. From 860 to 1279 the same element is the
+   in-flow strip (styles.css), wearing the same states. */
+:root[data-design="ocean"] .dock__item {
+  font-family: var(--font);
+  font-size: var(--text-xs);
+  font-weight: 700;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .dock__item { color: var(--ink); }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .dock__item .ti { color: var(--ink-soft); }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .dock__item.is-active { background: var(--sunken); color: var(--ink); }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .dock__item.is-active .ti { color: var(--brand); }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .dock__item:not(.is-active):hover { background: var(--sunken-soft); }
+@media (max-width: 859px) {
+  :root[data-design="ocean"] .dock {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    transform: none;
+    gap: 2px;
+    min-height: 76px;
+    padding: 6px 8px calc(14px + env(safe-area-inset-bottom, 0px));
+    border-width: 1px 0 0;
+    border-radius: 0;
+  }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .dock {
+    background: var(--surface);
+    border-color: var(--line);
+    box-shadow: 0 -6px 18px var(--cast-soft);
+  }
+  :root[data-design="ocean"] .dock__item {
+    flex: 1;
+    justify-content: center;
+    gap: 3px;
+    min-height: 56px;
+    padding: 4px;
+    border-radius: var(--radius-lg);
+  }
+  :root[data-design="ocean"] .dock__item .ti { font-size: var(--text-xl); }
+  /* The bar is flush with the bottom edge rather than floating 18px above it,
+     so the clearance the page reserves follows the bar's own height. */
+  :root[data-design="ocean"] .app:has(.dock:not(.dock--sub)),
+  :root[data-design="ocean"] .app:has(.dock:not(.dock--sub)) + .site-footer { padding-bottom: 96px; }
+}
+@media (min-width: 860px) {
+  :root[data-design="ocean"] .dock { border-radius: var(--radius-lg); }
+  :root[data-design="ocean"] .dock__item { border-radius: var(--radius-md); }
+}
+
+/* ---- The Reling (O3.1/O3.2 „Reling 104 px"): from 1280 up, 104px of
+   navigation flush with the shell's left edge, running down from the top bar —
+   the five links, icon over label, Einstellungen at the foot. round-rail.js
+   builds it without identity, CTA, presets or off-shelf rows under Ocean.
+
+   The track is 84px and the Reling 104: it reaches 20px out over `.app`'s own
+   side padding to sit flush, and the 32px gap lands the content at 136, as the
+   sheet measures. Sticky under the top bar and one viewport tall, so the foot
+   entry stays on screen through a long Chronik. */
+@media (min-width: 1280px) {
+  :root[data-design="ocean"] .app:has(.rail) {
+    grid-template-columns: 84px minmax(0, 1fr);
+    column-gap: 32px;
+  }
+  :root[data-design="ocean"] .rail {
+    top: var(--ocean-bar, 65px);
+    width: 104px;
+    height: calc(100vh - var(--ocean-bar, 65px));
+    margin: -24px 0 0 -20px;
+    padding: 18px 6px;
+    gap: 6px;
+    box-sizing: border-box;
+    border-right: 1px solid transparent;
+  }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .rail {
+    background: var(--surface);
+    border-right-color: var(--line);
+  }
+  :root[data-design="ocean"] .rail__group { gap: 6px; }
+  :root[data-design="ocean"] .rail__group:last-child { margin-top: auto; }
+  :root[data-design="ocean"] .rail__item {
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    min-height: 56px;
+    padding: 10px 2px;
+    border-radius: var(--radius-lg);
+    font-size: var(--text-xs);
+    letter-spacing: 0;
+    line-height: 1.2;
+    text-align: center;
+  }
+  /* „Einstellungen", „Configurações": the longest labels are close to the
+     88px a Reling row has („Einstellungen" is ~81px at 12px bold). They wrap, and break inside a word only as a last
+     resort — never overflow the Reling's edge. */
+  :root[data-design="ocean"] .rail__item span { overflow-wrap: anywhere; hyphens: auto; }
+  :root[data-design="ocean"] .rail__item .ti { font-size: var(--text-xl); }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .rail__item { color: var(--ink); }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .rail__item .ti { color: var(--ink-soft); }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .rail__item:not(.is-active):hover { background: var(--sunken-soft); color: var(--ink); }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .rail__item.is-active { background: var(--sunken); color: var(--ink); }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .rail__item.is-active .ti { color: var(--brand); }
+}
+
+/* ---- The hub frame (O2.1 phone, O3.2 desktop). One column on a phone in the
+   DOM's own order; from 860 the previews move beside it; from 1280 the three
+   columns 250 / free / 320, with „Nicht im Regal" under the crew. */
+:root[data-design="ocean"] .ocean-hub { display: flex; flex-direction: column; gap: 16px; }
+:root[data-design="ocean"] :is(.ocean-hub__crew, .ocean-hub__main, .ocean-hub__aside) {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+@media (min-width: 860px) {
+  :root[data-design="ocean"] .ocean-hub {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 300px;
+    column-gap: 24px;
+    row-gap: 18px;
+    align-items: start;
+  }
+  :root[data-design="ocean"] .ocean-hub__crew { grid-column: 1; grid-row: 1; }
+  :root[data-design="ocean"] .ocean-hub__main { grid-column: 1; grid-row: 2; }
+  :root[data-design="ocean"] .ocean-hub__aside { grid-column: 2; grid-row: 1 / span 3; }
+  :root[data-design="ocean"] .ocean-hub > .hub-offshelf { grid-column: 1; grid-row: 3; }
+  :root[data-design="ocean"] .ocean-hub > .hub-actions { grid-column: 1; grid-row: 4; }
+}
+@media (min-width: 1280px) {
+  /* The hub spreads over the pane like O3.2; the reading cap is for prose.
+     (0,4,0) against the cap's (0,3,0). */
+  :root[data-design="ocean"] .app > .ocean-hub { max-width: none; }
+  :root[data-design="ocean"] .ocean-hub {
+    grid-template-columns: 250px minmax(0, 1fr) 320px;
+    grid-template-rows: auto 1fr;
+    column-gap: 28px;
+  }
+  :root[data-design="ocean"] .ocean-hub__crew { grid-column: 1; grid-row: 1; }
+  :root[data-design="ocean"] .ocean-hub__main { grid-column: 2; grid-row: 1 / span 2; gap: 22px; }
+  :root[data-design="ocean"] .ocean-hub__aside { grid-column: 3; grid-row: 1 / span 2; }
+  :root[data-design="ocean"] .ocean-hub > .hub-offshelf { grid-column: 1; grid-row: 2; }
+  :root[data-design="ocean"] .ocean-hub > .hub-actions { grid-column: 2; grid-row: 3; }
+}
+
+/* ---- The crew (O2.1 row, O3.2 list). The name, its tide line — the round's
+   MARKER as a row of dots, its one appearance on the hub — the two counts as a
+   quiet line, then the seats: a row with the name under each ring on a phone,
+   a list with the name and the win count beside it from 1280. */
+:root[data-design="ocean"] .ocean-hub .hero { margin: 0; }
+:root[data-design="ocean"] .ocean-hub .hero h1 { font-size: var(--text-2xl); line-height: 1.15; }
+:root[data-design="ocean"] .ocean-tide {
+  display: block;
+  width: 128px;
+  height: 10px;
+  margin-top: 6px;
+  background-size: 16px 10px;
+  background-repeat: repeat-x;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .ocean-tide {
+  background-image: radial-gradient(circle at 50% 100%, var(--marker, var(--brand)) 4px, transparent 5px);
+}
+:root[data-design="ocean"] .ocean-hub .hero__chips { gap: 0; margin-top: 6px; }
+:root[data-design="ocean"] .ocean-hub .hero__chips .stat-chip {
+  padding: 0;
+  background: none;
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+:root[data-design="ocean"] .ocean-hub .hero__chips .ti { display: none; }
+:root[data-design="ocean"] .ocean-hub .hero__chips .stat-chip + .stat-chip::before { content: '·'; margin: 0 6px; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .ocean-hub .hero__chips .stat-chip { color: var(--ink-soft); }
+
+:root[data-design="ocean"] .ocean-hub .hero__members {
+  gap: 30px 12px;
+  margin-top: 16px;
+  padding-bottom: 18px;
+}
+:root[data-design="ocean"] .ocean-hub .hero__members .avatar {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  border-width: 4px;
+  box-sizing: border-box;
+}
+:root[data-design="ocean"] .ocean-hub .hero__members .avatar--add { border-width: 2px; }
+:root[data-design="ocean"] .seat__text {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 64px;
+  font-family: var(--font);
+  line-height: 1.15;
+  pointer-events: none;
+}
+:root[data-design="ocean"] .seat__name {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--text-xs);
+  font-weight: 700;
+}
+:root[data-design="ocean"] .seat__wins { display: none; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .seat__name { color: var(--ink); }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .avatar--add .seat__name { color: var(--brand); }
+@media (min-width: 1280px) {
+  :root[data-design="ocean"] .ocean-hub .hero__members {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: flex-start;
+    gap: 14px;
+    padding-bottom: 0;
+  }
+  :root[data-design="ocean"] .ocean-hub .hero__members .avatar { width: 48px; height: 48px; border-width: 5px; }
+  :root[data-design="ocean"] .ocean-hub .hero__members .avatar--add { border-width: 2px; }
+  :root[data-design="ocean"] .seat__text {
+    top: 50%;
+    left: calc(100% + 12px);
+    transform: translateY(-50%);
+    align-items: flex-start;
+    max-width: 180px;
+  }
+  :root[data-design="ocean"] .seat__name { font-size: var(--text-lg); }
+  :root[data-design="ocean"] .avatar--add .seat__name { font-size: var(--text-md); }
+  :root[data-design="ocean"] .seat__wins {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .seat__wins { color: var(--ink-soft); }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .seat__wins .ti { color: var(--warn); }
+}
+
+/* ---- The shell (O1.9 „Knopfkern", O2.1, O3.2): two sand halves behind the
+   one action, which is the bubble. The halves carry no text and sit under the
+   bubble only. */
+:root[data-design="ocean"] .ocean-shell {
+  position: relative;
+  width: 190px;
+  height: 162px;
+  margin: 4px auto 0;
+  flex: none;
+}
+:root[data-design="ocean"] :is(.ocean-shell__lid, .ocean-shell__base) {
+  position: absolute;
+  left: 6px;
+  width: 178px;
+  box-sizing: border-box;
+  border: 3px solid transparent;
+}
+:root[data-design="ocean"] .ocean-shell__lid {
+  top: 0;
+  height: 78px;
+  border-bottom: 0;
+  border-radius: 89px 89px 0 0 / 78px 78px 0 0;
+}
+:root[data-design="ocean"] .ocean-shell__base {
+  top: 66px;
+  height: 96px;
+  border-radius: 0 0 89px 89px / 0 0 96px 96px;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .ocean-shell__lid {
+  border-color: var(--shell-edge);
+  background:
+    radial-gradient(circle at 50% 70%, var(--sand-light), transparent 55%),
+    repeating-conic-gradient(from 200deg at 50% 100%, var(--sand) 0 5deg, var(--sand-deep) 5deg 10deg);
+  box-shadow: inset 0 10px 20px var(--cast-soft);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .ocean-shell__base {
+  border-color: var(--shell-edge);
+  background:
+    radial-gradient(circle at 50% 10%, var(--sand-light), transparent 60%),
+    repeating-conic-gradient(from 100deg at 50% 0%, var(--sand-light) 0 5deg, var(--sand-deep-soft) 5deg 10deg);
+  box-shadow: 0 18px 28px var(--cast-deep);
+}
+/* The bubble. (0,6,0) so it outranks `.btn.hub-cta` (0,2,0), Ocean's own
+   `.btn--primary` pill (0,4,0) and `.btn:disabled` (0,5,0): the resting
+   `.btn` size, padding and radius are all replaced, because a bubble is none
+   of them. The name, the handler and the locked reason are the button's own. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .ocean-shell .btn.ocean-shell__pearl {
+  position: absolute;
+  left: 43px;
+  top: 34px;
+  width: 104px;
+  height: 104px;
+  min-height: 0;
+  margin: 0;
+  padding: 8px;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  gap: 2px;
+  border: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 32% 28%, var(--bubble-hi) 0%, var(--bubble-1) 30%, var(--bubble-2) 70%, var(--bubble-3) 100%);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: 0 12px 24px var(--cast-button), inset 0 -6px 12px var(--cast-soft);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .ocean-shell .btn.ocean-shell__pearl .ti {
+  font-size: var(--text-3xl);
+  color: var(--brand);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .ocean-shell .btn.ocean-shell__pearl:hover:not(:disabled) {
+  box-shadow: 0 14px 28px var(--cast-button), inset 0 -6px 12px var(--cast-soft);
+}
+/* Locked (a round with no game): the bubble goes flat and dashed, like every
+   locked hub CTA, and its reason sits inside it in the text face. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .ocean-shell .btn.ocean-shell__pearl:disabled {
+  background: var(--disabled-fill);
+  border: 1.5px dashed var(--control-edge);
+  color: var(--disabled-ink);
+  box-shadow: none;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .ocean-shell .btn.ocean-shell__pearl:disabled .ti { color: var(--disabled-ink); }
+:root[data-design="ocean"] .ocean-shell__pearl .hub-cta__reason {
+  font-size: var(--text-xs);
+  line-height: 1.2;
+  margin-top: 4px;
+}
+@media (min-width: 1280px) {
+  :root[data-design="ocean"] .ocean-shell { width: 270px; height: 250px; }
+  :root[data-design="ocean"] :is(.ocean-shell__lid, .ocean-shell__base) { left: 10px; width: 250px; }
+  :root[data-design="ocean"] .ocean-shell__lid { height: 118px; border-radius: 125px 125px 0 0 / 118px 118px 0 0; }
+  :root[data-design="ocean"] .ocean-shell__base { top: 100px; height: 150px; border-radius: 0 0 125px 125px / 0 0 150px 150px; }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .ocean-shell .btn.ocean-shell__pearl {
+    left: 60px;
+    top: 58px;
+    width: 150px;
+    height: 150px;
+    padding: 14px;
+    gap: 4px;
+    font-size: var(--text-xl);
+  }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .ocean-shell .btn.ocean-shell__pearl .ti { font-size: var(--text-4xl); }
+}
+
+/* The presets (O2.1/O3.2): the chips under the shell, centred on it. Generic
+   `.hub-presets`, so whatever chips hubPresetChips hands over — the three
+   quick-starts today, saved filters tomorrow (#1328) — sit here the same way. */
+:root[data-design="ocean"] .ocean-hub .hub-presets { justify-content: center; margin: 0; gap: 8px; }
+
+/* ---- The blocks under the shell: tickets, „Zuletzt gespielt" beside „Wie
+   wär's mit", the Rundenpuls and the rest of the cards, one surface each. */
+:root[data-design="ocean"] .ocean-pair { display: grid; gap: 16px; align-items: stretch; }
+@media (min-width: 1280px) {
+  :root[data-design="ocean"] .ocean-pair:has(> :nth-child(2)) { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+}
+:root[data-design="ocean"] .ocean-hub .hub-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  columns: auto;
+  margin: 0;
+}
+:root[data-design="ocean"] .ocean-hub .hub-cards:empty { display: none; }
+:root[data-design="ocean"] .ocean-hub .hub-cards > .card-slot { padding-bottom: 0; }
+:root[data-design="ocean"] .ocean-hub .hub-actions { margin-top: 0; }
+:root[data-design="ocean"] .ocean-hub :is(.hub-card, .ticket) { border-radius: var(--radius-xl); }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .ocean-hub :is(.hub-card, .ticket) {
+  background: var(--surface);
+  border-color: var(--line);
+  box-shadow: var(--shadow-1);
+}
+/* A block title is O1's 17px Comfortaa — the display face at a size it is
+   allowed — so these are lifted back out of the component layer's Figtree
+   reset. */
+:root[data-design="ocean"] .ocean-hub :is(.hub-card__title, .hub-offshelf__title) {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .ocean-hub .hub-card__title .ti { color: var(--ink-soft); }
+
+/* The last-session ticket as the „Zuletzt gespielt" card: a 4:3 cover, the
+   kicker, the title, the winner. No perforation — that is Klassisch's ticket;
+   the stub's winner line stays, set beside the text. */
+:root[data-design="ocean"] .ocean-hub .ticket__main { gap: 12px; padding: 14px 16px; }
+:root[data-design="ocean"] .ocean-hub .ticket__img { width: 64px; height: 48px; border-radius: var(--radius-sm); }
+:root[data-design="ocean"] .ocean-hub .ticket__label { letter-spacing: .08em; }
+:root[data-design="ocean"] .ocean-hub .ticket__stub { flex: 0 0 auto; max-width: 40%; padding: 12px 16px 12px 0; border-left: 0; }
+:root[data-design="ocean"] .ocean-hub .ticket__stub::before,
+:root[data-design="ocean"] .ocean-hub .ticket__stub::after { display: none; }
+:root[data-design="ocean"] .ocean-hub .ticket:hover { transform: translateY(-2px); }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .ocean-hub .ticket__label { color: var(--brand); }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .ocean-hub .ticket__stub { color: var(--ink); }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .ocean-hub .ticket__stub .ti { color: var(--warn); }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .ocean-hub .ticket__stub--plain .ti { color: var(--ink-soft); }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .ocean-hub .ticket--live { border-color: var(--brand); }
+
+/* „Wie wär's mit": each row opens on a small bubble (O3.2). */
+:root[data-design="ocean"] .ocean-pair .hub-row__main { position: relative; padding-left: 24px; }
+:root[data-design="ocean"] .ocean-pair .hub-row__main::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  box-sizing: border-box;
+  border-radius: 50%;
+  transform: translateY(-50%);
+  border: 1px solid transparent;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .ocean-pair .hub-row__main::before {
+  border-color: var(--bubble-rim);
+  background: radial-gradient(circle at 32% 28%, var(--bubble-hi) 0%, var(--bubble-1) 30%, var(--bubble-2) 70%, var(--bubble-3) 100%);
+}
+
+/* The Rundenpuls: its own block, its own title, the bars in the accent, and
+   both fact lines under them. */
+:root[data-design="ocean"] .ocean-hub .pulse-bars { gap: 5px; height: 48px; }
+:root[data-design="ocean"] .ocean-hub .pulse-bar__fill { border-radius: 6px 6px 0 0; min-height: 3px; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .ocean-hub .pulse-bar__fill { background: var(--brand); }
+
+/* ---- The previews and the Kümmerliste (O3.2's right column). The Pokale
+   rows carry a bar in the member's colour — a fill, never text — and the
+   Chronik lists its last sessions. */
+:root[data-design="ocean"] .ocean-hub .hub-preview__cover { width: 48px; aspect-ratio: 4 / 3; border-radius: var(--radius-sm); }
+:root[data-design="ocean"] .hub-preview__bar {
+  flex: 1;
+  height: 10px;
+  min-width: 24px;
+  border-radius: var(--radius-pill);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .hub-preview__bar {
+  background: linear-gradient(to right, var(--tone) var(--share), var(--sunken-soft) var(--share));
+}
+:root[data-design="ocean"] .hub-preview__rank .hub-preview__name { flex: 0 1 auto; max-width: 35%; }
+:root[data-design="ocean"] .hub-preview__session {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 5px 0;
+  font-size: var(--text-sm);
+}
+:root[data-design="ocean"] .hub-preview__session .hub-preview__cover { width: 38px; flex: none; }
+:root[data-design="ocean"] .hub-preview__session .hub-preview__name { font-weight: 700; }
+:root[data-design="ocean"] .hub-preview__when { flex: none; margin-left: auto; font-size: var(--text-xs); font-weight: 600; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .hub-preview__session { border-top: 1px solid var(--line-soft); }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .hub-preview__when { color: var(--ink-soft); }
+
+/* ---- „Nicht im Regal": ONE heading over the three lists and „Könnte euch
+   gefallen", as a quiet list under a hairline rather than four cards. */
+:root[data-design="ocean"] .ocean-hub > .hub-offshelf { margin: 0; padding-top: 18px; }
+:root[data-design="ocean"] .ocean-hub .hub-offshelf__list { gap: 2px; }
+:root[data-design="ocean"] .ocean-hub .off-shelf__row {
+  min-height: var(--target-control);
+  padding: 4px 8px;
+  border-color: transparent;
+  background: none;
+  font-weight: 700;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .ocean-hub > .hub-offshelf { border-top: 1px solid var(--line); }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .ocean-hub .hub-offshelf__title { color: var(--brand); }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .ocean-hub .off-shelf__row { color: var(--ink); }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .ocean-hub .off-shelf__row .ds-row__main .ti { color: var(--ink-soft); }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .ocean-hub .off-shelf__row:hover { background: var(--sunken-soft); }
+
+/* ---- The lobby (O3.1 desktop, O6.1 phone). The greeting on the water, not on
+   a band; a running session as the notice beside it; the rounds as tiles. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .app:has(.lobby-list) > .lobby-head {
+  background: none;
+  padding: 0;
+  border-radius: 0;
+}
+:root[data-design="ocean"] .lobby-head h1 { line-height: 1.1; }
+/* „Läuft gerade" stays in the tree as the zone's heading, but the notice's own
+   kicker says it on screen — twice in 40px would be noise. */
+:root[data-design="ocean"] .home-resume__head {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+:root[data-design="ocean"] .home-resume__list { display: flex; flex-direction: column; gap: 10px; }
+@media (min-width: 1100px) {
+  :root[data-design="ocean"] .app:has(.lobby-list):has(.home-resume) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 420px);
+    column-gap: 40px;
+    align-content: start;
+  }
+  /* A grid cell is not the centred column the rail-less screens otherwise
+     get (styles.css's `margin-inline: auto`): an auto margin in a cell shrinks
+     the lobby grid to one tile. */
+  :root[data-design="ocean"] .app:has(.lobby-list):has(.home-resume) > * { grid-column: 1 / -1; margin-inline: 0; min-width: 0; }
+  :root[data-design="ocean"] .app:has(.lobby-list):has(.home-resume) > .lobby-head { grid-column: 1; align-self: center; }
+  :root[data-design="ocean"] .app:has(.lobby-list):has(.home-resume) > .home-resume { grid-column: 2; margin-bottom: 26px; }
+}
+
+:root[data-design="ocean"] .ocean-notice {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  border-radius: var(--radius-xl);
+  border: 2px solid transparent;
+  text-decoration: none;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .ocean-notice {
+  background: var(--surface);
+  border-color: var(--brand);
+  color: var(--ink);
+  box-shadow: var(--shadow-2);
+}
+:root[data-design="ocean"] .ocean-notice__bubble {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  font-size: var(--text-lg);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .ocean-notice__bubble {
+  background: radial-gradient(circle at 32% 28%, var(--bubble-hi) 0%, var(--bubble-1) 30%, var(--bubble-2) 70%, var(--bubble-3) 100%);
+  box-shadow: 0 0 0 6px var(--sunken-soft), 0 6px 12px var(--cast);
+  color: var(--brand);
+}
+:root[data-design="ocean"] .ocean-notice__text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+:root[data-design="ocean"] .ocean-notice__kicker { font-size: var(--text-xs); font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+:root[data-design="ocean"] .ocean-notice__title { font-size: var(--text-xl); font-weight: 700; line-height: 1.15; }
+:root[data-design="ocean"] .ocean-notice__meta { font-size: var(--text-sm); font-weight: 600; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .ocean-notice__kicker { color: var(--brand); }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .ocean-notice__meta { color: var(--ink-soft); }
+
+/* The tiles: the water on top with the tide line — the MARKER, O3.1's „die
+   Tidenlinie trägt den Marker" — and the members as rings floating on it, then
+   the round's name, counts and last session on the surface. No text is ever
+   set on the water: the only label there is the running-vote badge, on the
+   sun. */
+@media (min-width: 860px) {
+  :root[data-design="ocean"] .lobby-list { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 24px; }
+}
+:root[data-design="ocean"] .round-card--ocean {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+  border-radius: var(--radius-xl);
+}
+:root[data-design="ocean"] .round-card--ocean:hover { transform: translateY(-2px); }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .round-card--ocean {
+  background: var(--surface);
+  border-color: var(--line);
+  box-shadow: var(--shadow-1);
+}
+:root[data-design="ocean"] .round-card__water {
+  position: relative;
+  display: block;
+  height: 108px;
+  flex: none;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .round-card__water {
+  background: linear-gradient(180deg, var(--water-foam) 0%, var(--water-shallows) 54%, var(--waterline) 54%, var(--waterline-deep) 100%);
+}
+:root[data-design="ocean"] .round-card__tide {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(54% - 10px);
+  height: 10px;
+  background-size: 16px 10px;
+  background-repeat: repeat-x;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .round-card__tide {
+  background-image: radial-gradient(circle at 50% 100%, var(--marker, var(--brand)) 4px, transparent 5px);
+}
+:root[data-design="ocean"] .round-card--ocean .avatar-stack {
+  position: absolute;
+  left: 50%;
+  top: 54%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  width: max-content;
+  max-width: 88%;
+}
+:root[data-design="ocean"] .round-card--ocean .avatar-stack .avatar {
+  width: 34px;
+  height: 34px;
+  border-width: 4px;
+  box-sizing: border-box;
+}
+:root[data-design="ocean"] .round-card--ocean .avatar-stack .avatar:not(:first-child) { margin-left: 0; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .round-card--ocean .avatar-stack .avatar { box-shadow: inset 0 0 0 999px var(--control-fill), 0 4px 8px var(--cast); }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .round-card--ocean .avatar-stack__more { background: var(--control-fill); border-color: var(--line); color: var(--ink); }
+:root[data-design="ocean"] .round-card__live {
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .round-card__live {
+  background: var(--gold);
+  color: var(--gold-ink);
+  box-shadow: 0 4px 10px var(--cast);
+}
+:root[data-design="ocean"] .round-card--ocean .round-card__body { gap: 4px; padding: 12px 16px 14px; }
+:root[data-design="ocean"] .round-card--ocean .round-card__name { font-size: var(--text-lg); line-height: 1.15; }
+:root[data-design="ocean"] .round-card__stats { font-size: var(--text-sm); font-weight: 600; }
+:root[data-design="ocean"] .round-card__last-wrap { display: flex; flex-direction: column; gap: 2px; margin-top: 6px; padding-top: 8px; }
+:root[data-design="ocean"] .round-card--ocean .round-card__last { font-size: var(--text-sm); font-weight: 600; }
+:root[data-design="ocean"] .round-card--ocean .round-card__last .ti { display: none; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .round-card__stats { color: var(--ink-soft); }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .round-card__last-wrap { border-top: 1px solid var(--line-soft); }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .round-card--ocean .round-card__last { color: var(--ink); }
+@media (min-width: 860px) {
+  :root[data-design="ocean"] .round-card__water { height: 220px; }
+  :root[data-design="ocean"] .round-card--ocean .avatar-stack { gap: 8px; }
+  :root[data-design="ocean"] .round-card--ocean .avatar-stack .avatar { width: 46px; height: 46px; border-width: 5px; }
+  :root[data-design="ocean"] .round-card--ocean .round-card__body { padding: 18px 22px 20px; gap: 6px; }
+  :root[data-design="ocean"] .round-card--ocean .round-card__name { font-size: var(--text-xl); }
+  :root[data-design="ocean"] .round-card__last-wrap { margin-top: auto; padding-top: 12px; }
+  :root[data-design="ocean"] .round-card--ocean .round-card__last { font-size: var(--text-md); }
+}
+/* „Neue Runde gründen": the dashed tile, in the accent, its label centred. */
+:root[data-design="ocean"] .round-card--new {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 60px;
+  text-align: center;
+  border-radius: var(--radius-xl);
+  border-width: 2px;
+  border-style: dashed;
+}
+:root[data-design="ocean"] .round-card--new .ti { font-size: var(--text-3xl); }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .round-card--new {
+  background: transparent;
+  border-color: var(--control-edge);
+  color: var(--brand);
+}
+
 /* ===== #1212 — Regal, Spieldetail, Spiel suchen ===== */
 /* O3.3–O3.5 (desktop), O6.2–O6.4 (phone), O6.7 (tablet 834).
  *

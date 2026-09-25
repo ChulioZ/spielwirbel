@@ -445,6 +445,10 @@ const frontendGlobals = {
   openTagsPopover: 'readonly', openImagePopover: 'readonly',
   openExpansionEditor: 'readonly', saveExpansions: 'readonly', showAddGame: 'readonly',
   setExpansionsCap: 'readonly',
+  // saved-filters.js (#1328) — the hub chips, the setup save control, the
+  // Einstellungen list
+  setSavedFilterLimits: 'readonly', savedFilterPrefill: 'readonly',
+  renderSaveFilterAction: 'readonly', renderSavedFiltersSection: 'readonly',
   OFF_SHELF_LISTS: 'readonly', offShelfListOf: 'readonly',
   showTags: 'readonly', showTransferGames: 'readonly',
   showInvite: 'readonly', inviteError: 'readonly', insertFriendPicker: 'readonly',
@@ -453,7 +457,7 @@ const frontendGlobals = {
   HUB_TABS: 'readonly', HUB_TAB_OF: 'readonly', hubTabOwning: 'readonly',
   // round-rail.js
   RAIL_OWN_ENTRY: 'readonly', RAIL_SETTINGS_SUB: 'readonly', railItem: 'readonly',
-  buildRoundRail: 'readonly',
+  buildRoundRail: 'readonly', railIsLean: 'readonly',
   renderHubTabs: 'readonly', renderSubScreenTabs: 'readonly', renderStartTab: 'readonly',
   // views-round-start.js (#923) — the Start tab and its card grid
   hubDeps: 'readonly', hubCard: 'readonly', hubSuggestCard: 'readonly',
@@ -463,6 +467,9 @@ const frontendGlobals = {
   // #1269 — Der Tisch's young-round states (hub-cards.js, views-round-start.js)
   roundIsYoung: 'readonly', hubSentenceCard: 'readonly', hubYoungCard: 'readonly',
   hubEmptyTable: 'readonly',
+  // ocean-hub.js (#1211) — Ocean's lobby tiles and round hub composition
+  oceanHubFrame: 'readonly', oceanShell: 'readonly', oceanHeroCompose: 'readonly',
+  oceanRoundCard: 'readonly', oceanResumeNotice: 'readonly',
   // #1280 — Der Tisch's young-round features (views-home.js, hub-cards.js, views-pokale.js)
   lobbyInviteSlip: 'readonly', lobbyNextStep: 'readonly', hubDemoSummary: 'readonly',
   hubDemoInvite: 'readonly', pokaleYoungLead: 'readonly',
