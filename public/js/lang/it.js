@@ -1202,6 +1202,7 @@ I18N.it = {
   'tags.edit': 'Modifica etichetta',
   'tags.moveEarlier': 'Sposta il tag in avanti',
   'tags.moveLater': 'Sposta il tag indietro',
+  'tags.moved': '«{name}» ora è in posizione {position} di {count}.',
   'tags.toast.changed': 'I tag sono cambiati nel frattempo: ricaricati.',
   'tags.save': 'Salva',
   'tags.toast.updated': 'Etichetta aggiornata',

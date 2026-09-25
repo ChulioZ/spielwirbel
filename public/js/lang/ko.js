@@ -1142,6 +1142,7 @@ I18N.ko = {
   'tags.edit': '태그 편집',
   'tags.moveEarlier': '태그를 앞으로 옮기기',
   'tags.moveLater': '태그를 뒤로 옮기기',
+  'tags.moved': '‘{name}’ 태그가 {count}개 중 {position}번째로 이동했습니다.',
   'tags.toast.changed': '그사이 태그가 변경되어 다시 불러왔습니다.',
   'tags.save': '저장',
   'tags.toast.updated': '태그를 수정했어요',

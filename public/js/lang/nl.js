@@ -1195,6 +1195,7 @@ I18N.nl = {
   'tags.edit': 'Label bewerken',
   'tags.moveEarlier': 'Tag naar voren verplaatsen',
   'tags.moveLater': 'Tag naar achteren verplaatsen',
+  'tags.moved': '‘{name}’ staat nu op positie {position} van {count}.',
   'tags.toast.changed': 'De tags zijn intussen gewijzigd – opnieuw geladen.',
   'tags.save': 'Opslaan',
   'tags.toast.updated': 'Label bijgewerkt',

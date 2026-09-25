@@ -1203,6 +1203,7 @@ I18N.fr = {
   'tags.edit': 'Modifier l’étiquette',
   'tags.moveEarlier': 'Déplacer le tag vers l’avant',
   'tags.moveLater': 'Déplacer le tag vers l’arrière',
+  'tags.moved': '« {name} » est maintenant en position {position} sur {count}.',
   'tags.toast.changed': 'Les tags ont changé entre-temps – rechargés.',
   'tags.save': 'Enregistrer',
   'tags.toast.updated': 'Étiquette modifiée',

@@ -1246,6 +1246,7 @@ I18N.de = {
   'tags.edit': 'Tag bearbeiten',
   'tags.moveEarlier': 'Tag nach vorne schieben',
   'tags.moveLater': 'Tag nach hinten schieben',
+  'tags.moved': '„{name}“ steht jetzt an Position {position} von {count}.',
   'tags.toast.changed': 'Die Tags haben sich zwischenzeitlich geändert – neu geladen.',
   'tags.save': 'Speichern',
   'tags.toast.updated': 'Tag geändert',
