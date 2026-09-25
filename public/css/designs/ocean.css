@@ -1753,7 +1753,7 @@
 
    The markup is views-session-ocean.js's re-composition of the setup and the
    result, plus Der Tisch's vote card, result Tafel and split-table builders,
-   which Ocean shares (vote-card-tisch.js, result-tafel-tisch.js,
+   which Ocean shares (vote-card-composed.js, result-tafel-composed.js,
    views-session-tables.js). tisch.css styles those only under Der Tisch, so
    every piece of them Ocean shows is laid out HERE — nothing below leans on a
    Tisch rule.
@@ -2063,7 +2063,7 @@
 /* --- The vote card (O2.3 at 390, O4.2 at 1440) -----------------------------
    Full screen at both widths: body.vote-screen already takes the top bar away
    and the wizard renders no dock (styles.css, #1185). The root is Der Tisch's
-   composition (vote-card-tisch.js) with Ocean's two side columns; the Klassisch
+   composition (vote-card-composed.js) with Ocean's two side columns; the Klassisch
    `.vote` card chrome comes off it, and the white card is only behind the cover,
    title and meta — the question and the faces stand on the water. */
 :root[data-design="ocean"]:not([data-scheme="dark"]) .vote.vote--ocean {
@@ -2359,7 +2359,7 @@
 }
 
 /* --- The result (O2.4 at 390, O4.4 at 1440) --------------------------------
-   Der Tisch's result composition (result-tafel-tisch.js), arranged by
+   Der Tisch's result composition (result-tafel-composed.js), arranged by
    composeOceanResult into the people, the middle (the sentence and the whale),
    and the Tafel with its foot. Columns from 1280px, where the screen takes
    --w-detail; one column below. */
@@ -2609,18 +2609,18 @@
    sentence, and that table's own ranking — then a foot. Side by side from
    860px, stacked below. The round's marker opens each card as its top edge. */
 :root[data-design="ocean"]:not([data-scheme="dark"]) .page-head--tables h1 { font-family: var(--font-display); }
-:root[data-design="ocean"]:not([data-scheme="dark"]) .split-tables--tisch {
+:root[data-design="ocean"]:not([data-scheme="dark"]) .split-tables--composed {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 16px;
 }
 @media (min-width: 860px) {
-  :root[data-design="ocean"]:not([data-scheme="dark"]) .split-tables--tisch { grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .split-tables--composed { grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); }
 }
 @media (min-width: 1280px) {
   /* The cards are a grid, so the block takes the pane like the app's other
      grids do. (0,6,0) against the reading cap's (0,3,0). */
-  :root[data-design="ocean"]:not([data-scheme="dark"]) .app > *:not(.rail):not(.dock):has(> .split-tables--tisch) { max-width: var(--w-detail); }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .app > *:not(.rail):not(.dock):has(> .split-tables--composed) { max-width: var(--w-detail); }
 }
 :root[data-design="ocean"]:not([data-scheme="dark"]) .split-table {
   position: relative;

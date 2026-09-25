@@ -30,7 +30,7 @@
    Laid on the SAME column tracks as the rows (tisch.css makes the Tafel a grid
    and every row and this header a subgrid of it), so a label cannot drift off
    its column however wide a pill or a „Spielen" button makes one row. */
-function tischTafelCols() {
+function composedTafelCols() {
   return h(`<div class="tafel__cols" aria-hidden="true">
        <span class="tafel__col tafel__col--place">${esc(t('result.colPlace'))}</span>
        <span class="tafel__col tafel__col--game">${esc(t('result.colGame'))}</span>
@@ -48,7 +48,7 @@ function tischTafelCols() {
    DOM ORDER IS VISUAL ORDER (WCAG 2.4.3): the distribution comes LAST, because
    it opens below the row. The Klassisch row keeps it between the title and the
    score, where it also sits on screen. */
-function tischTrow(p) {
+function composedTrow(p) {
   const r = p.row;
   const distId = `tafel-dist-${p.gameId}`;
   const votes = !p.hasVotes ? ''
@@ -88,16 +88,16 @@ function tischTrow(p) {
 }
 
 /* „Wer dabei war" on the felt head: the same people the Klassisch line lists,
-   each a piece carrying a crown that `paintTischCrowns` switches on for a
+   each a piece carrying a crown that `paintComposedCrowns` switches on for a
    winner. The crown is `aria-hidden` — the head's own sentence already names
    who won, so saying it twice to a screen reader adds nothing. */
-function tischPersonCrown() {
+function composedPersonCrown() {
   return '<i class="ti ti-crown result-people__crown" aria-hidden="true"></i>';
 }
 
 // Re-run on every render of the band (renderTisch), because a winner chip, the
 // reset and „Ändern" all move the winners without re-rendering the screen.
-function paintTischCrowns(root, winnerIds) {
+function paintComposedCrowns(root, winnerIds) {
   if (!root) return;
   root.querySelectorAll('.result-people__person[data-pid]').forEach((el) => {
     el.classList.toggle('is-winner', winnerIds.includes(el.dataset.pid));
@@ -114,7 +114,7 @@ function paintTischCrowns(root, winnerIds) {
    `again` is null when the button does not belong; `againDisabled` mirrors the
    hub's own gate (no active game to draw from). An empty `more` renders no
    „Mehr" at all rather than a menu with nothing in it. */
-function fillTischResultFoot(foot, { again, againDisabled, share, more }) {
+function fillComposedResultFoot(foot, { again, againDisabled, share, more }) {
   foot.innerHTML = '';
   if (again) {
     const btn = h(`<button type="button" class="btn btn--primary result-foot__again">${iconText('ti-tornado', t('tables.oneMore'))}</button>`);

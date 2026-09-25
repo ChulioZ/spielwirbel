@@ -1010,13 +1010,13 @@ function startVoting(round, session, games, people, opts = {}) {
   }
 
   // Der Tisch's composition (#1268, T2.4/T4.2): header on the felt, the card,
-  // the hand-off line — built in vote-card-tisch.js, fed from this closure.
+  // the hand-off line — built in vote-card-composed.js, fed from this closure.
   // Ocean (#1213, O2.3/O4.2) takes the same composition — header, card, faces
   // with their words — and adds its two desktop side columns around the card.
-  function tischCard(person, game) {
+  function composedCard(person, game) {
     const turn = voteTurn(round, session, order, person);
     const n = games.indexOf(game) + 1;
-    const card = tischVoteCard({
+    const card = composedVoteCard({
       person,
       count: `${t('vote.gameOf', { n, total: games.length })} · ${t('vote.personOf', { n: turn.n, total: turn.total })}`,
       roundName: round.name,
@@ -1090,7 +1090,7 @@ function startVoting(round, session, games, people, opts = {}) {
     const color = personColor(round, person);
 
     app.innerHTML = '';
-    const card = designIs('tisch') || oceanWorn() ? tischCard(person, game) : klassischCard(person, game, color);
+    const card = designIs('tisch') || oceanWorn() ? composedCard(person, game) : klassischCard(person, game, color);
     /* Der Tisch's third motion ritual (#1200, T10.3): a card the BEAT delivered
        tips in about its middle axis — the hand-over, and the turn itself is the
        privacy screen. `wanted.kind === 'title'` is exactly "the advance brought
@@ -1126,7 +1126,7 @@ function startVoting(round, session, games, people, opts = {}) {
     for (let n = RATING_MIN; n <= RATING_MAX; n++) {
       const sel = current.rating === n;
       // aria-pressed + a label that spells out the scale (#145), the word too
-      // under Der Tisch — one builder for both cards (vote-card-tisch.js).
+      // under Der Tisch — one builder for both cards (vote-card-composed.js).
       const b = voteMoodButton(n, sel);
       if (wanted && wanted.kind === 'mood' && wanted.n === n) restore = b;
       b.addEventListener('click', () => {
@@ -1306,7 +1306,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
   const hasVotes = sessionHasVotes(session);
   /* Der Tisch composes this screen differently (#1275, T2.5/T4.4): compact rows
      under a header row, the people on the felt head, and a foot of its own. The
-     markup lives in result-tafel-tisch.js; every branch below is on this one
+     markup lives in result-tafel-composed.js; every branch below is on this one
      flag, and Klassisch is the path it leaves alone. Ocean (#1213, O2.4/O4.4)
      shares the composition and arranges it in columns at the end
      (composeOceanResult, views-session-ocean.js). */
@@ -1452,7 +1452,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     })),
   });
   // Der Tisch carries „Teilen" in the foot instead, beside the next evening
-  // (T2.5, T4.4 — see fillTischResultFoot).
+  // (T2.5, T4.4 — see fillComposedResultFoot).
   if (shareNow && !tischLook) {
     const shareBtn = h(`<button class="btn btn--ghost">${iconText('ti-share', t('share.button'))}</button>`);
     shareBtn.addEventListener('click', shareNow);
@@ -1466,13 +1466,13 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     // anchor with no href is neither focusable nor styled as a link, so emitting
     // one would leave dead markup behind (.claude/rules/in-app-nav-links.md).
     // Der Tisch adds a crown to every piece and a `data-pid` for
-    // paintTischCrowns to find it by; Klassisch's markup is byte-for-byte as it was.
+    // paintComposedCrowns to find it by; Klassisch's markup is byte-for-byte as it was.
     peopleEl = h(`<div class="result-people">
          <span class="result-people__label">${esc(t('result.participants'))}</span>
          <span class="result-people__list">${people
            .map(
              (p) => `<${p.guest ? 'span' : 'a'} class="result-people__person"${p.guest ? '' : ` data-mid="${esc(p.id)}"`}${tischLook ? ` data-pid="${esc(p.id)}"` : ''}>
-                ${tischLook ? tischPersonCrown() : ''}<span class="avatar${p.guest ? ' avatar--guest' : ''}"${p.guest ? '' : ` style="background:${memberColor(round, p.id)}"`}>${avatarFace(initials(p.name), { userId: p.userId })}</span>
+                ${tischLook ? composedPersonCrown() : ''}<span class="avatar${p.guest ? ' avatar--guest' : ''}"${p.guest ? '' : ` style="background:${memberColor(round, p.id)}"`}>${avatarFace(initials(p.name), { userId: p.userId })}</span>
                 <span class="result-people__name">${esc(personLabel(p))}</span>
               </${p.guest ? 'span' : 'a'}>`
            )
@@ -1607,7 +1607,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     if (rows.some((r) => r.count)) {
       tafel.querySelector('.tafel__title').insertAdjacentHTML('afterend', infoButton('score'));
     }
-    tafel.appendChild(tischTafelCols());
+    tafel.appendChild(composedTafelCols());
   }
   /* The phone's one CTA (#1057). Desktop gets NO action bar: a sticky bar inside
      a column that fits never sticks and reads as one more card, which is why the
@@ -1750,7 +1750,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     // together, the short ones land first and the winner's completes last.
     const raceVar = reveal && r.count ? `--dur:${(0.5 + r.shown * 0.32).toFixed(2)}s;` : '';
     const rankClass = r.place && r.place <= 3 ? ` trow__rank--${r.place}` : '';
-    const row = tischLook ? tischTrow({
+    const row = tischLook ? composedTrow({
       row: r, gameId: g.id, hasVotes, bars, rankClass, imgStyle, fallback,
       rowClass: `trow${reveal ? ' is-race' : ''}`, rowStyle: `${fillVars}${raceVar}`,
       title: g.title, badge: retiredBadge, ownersLine,
@@ -1994,7 +1994,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
       more.push({ icon: 'ti-trash', label: t('result.deleteSession'), kind: 'destructive', run: deleteThisSession });
     }
     const memberIds = people.filter((p) => !p.guest).map((p) => p.id);
-    fillTischResultFoot(tischFoot, {
+    fillComposedResultFoot(tischFoot, {
       again: finished || cancelled ? () => showStartSession(round, { memberIds }) : null,
       againDisabled: !round.games.some(isActiveGame),
       share: shareNow,
@@ -2023,7 +2023,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     // Der Tisch's crowns and foot follow every phase change, and this is the
     // one function all of them reach — including the early return below.
     if (tischLook) {
-      paintTischCrowns(peopleEl, winnerIds);
+      paintComposedCrowns(peopleEl, winnerIds);
       renderTischFoot();
     }
     rowRefs.forEach(({ gameId, ownersEl }) => {

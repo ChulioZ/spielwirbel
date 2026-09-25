@@ -291,7 +291,7 @@ test('several tables: Ocean takes the one-screen split, one card per table', asy
   const dom = boot(t, 'ocean');
   dom.set('roundCan', () => false);
   await dom.call('showTableBuilder', round, parent);
-  assert.equal(qa(dom, '.split-tables--tisch .split-table').length, 2);
+  assert.equal(qa(dom, '.split-tables--composed .split-table').length, 2);
   assert.equal(dom.document.querySelector('h1').textContent, '2 Tische, eine Session');
 });
 

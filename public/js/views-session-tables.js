@@ -450,7 +450,7 @@ function renderTischSplit(round, session, games, children) {
   const frag = document.createDocumentFragment();
   const voted = sessionHasVotes(session);
   const baseMarker = roundMarker(round);
-  const list = h('<div class="split-tables split-tables--tisch"></div>');
+  const list = h('<div class="split-tables split-tables--composed"></div>');
   children.forEach((child, index) => {
     list.appendChild(renderTischTable(round, session, games, children, child, index, voted, baseMarker));
   });

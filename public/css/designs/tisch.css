@@ -3102,7 +3102,7 @@
   color: var(--paper-ink);
 }
 /* --- The composed card (#1268, T2.4 / T4.2 / T12.5) ------------------------
-   `.vote--tisch` is the root vote-card-tisch.js builds under this design, for
+   `.vote--composed` is the root vote-card-composed.js builds under this design, for
    the hot-seat card and the link card alike: a HEADER ON THE FELT (back, who,
    „Spiel 2 von 3 · Person 1 von 4", a dot per game, the secrecy pill), the
    paper CARD (cover beside title and meta, the question, the faces), and on a
@@ -3117,7 +3117,7 @@
    --felt-ink-soft and gold are only measured on the default felt, so neither
    carries text here (test/tisch-vote-card.test.js pins that). The dots are
    the one gold thing, and they are aria-hidden glyphs repeating the count. */
-:root[data-design="tisch"][data-scheme="dark"] .vote.vote--tisch {
+:root[data-design="tisch"][data-scheme="dark"] .vote.vote--composed {
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -3133,7 +3133,7 @@
 /* The link card has no `body.vote-screen` (it keeps the language picker), so
    it brings its own piece of felt to stand on — the default felt, since a
    ballot carries no marker. */
-:root[data-design="tisch"][data-scheme="dark"] body:not(.vote-screen) .vote.vote--tisch,
+:root[data-design="tisch"][data-scheme="dark"] body:not(.vote-screen) .vote.vote--composed,
 :root[data-design="tisch"][data-scheme="dark"] .vote-link-intro {
   padding: 16px;
   border-radius: var(--radius-xl);
@@ -3153,7 +3153,7 @@
    chevron), the position goes back to the flow. The size is restated because
    styles.css reads it from --undo-size, which only `.vote__who` declares — and
    the Tisch header is not inside one (measured: 22px without this). */
-:root[data-design="tisch"][data-scheme="dark"] .vote--tisch .vote__undo {
+:root[data-design="tisch"][data-scheme="dark"] .vote--composed .vote__undo {
   position: static;
   flex: none;
   width: 44px;
@@ -3190,7 +3190,7 @@
 /* The secrecy line moves out of the card and onto the felt as T4.2's pill. On
    a phone it takes its own line under the header row — the last thing in the
    header's DOM, so wrapping it keeps reading order and picture in step. */
-:root[data-design="tisch"][data-scheme="dark"] .vote--tisch .vote__secret {
+:root[data-design="tisch"][data-scheme="dark"] .vote--composed .vote__secret {
   flex-basis: 100%;
   justify-content: flex-start;
   padding: 0 0 0 56px;
@@ -3238,14 +3238,14 @@
    `pointer-events` — the tap guard in vote-advance.js is what keeps a
    double-tap off the new card, as it always was. */
 @media (prefers-reduced-motion: no-preference) {
-  :root[data-design="tisch"] .vote--tisch.is-tipped .vote__card {
+  :root[data-design="tisch"] .vote--composed.is-tipped .vote__card {
     animation: tisch-vote-tip 380ms cubic-bezier(0.4, 0, 0.2, 1) both;
   }
   @keyframes tisch-vote-tip {
     from { transform: perspective(1200px) rotateY(90deg); }
   }
 }
-:root[data-design="tisch"][data-scheme="dark"] .vote--tisch .vote__img {
+:root[data-design="tisch"][data-scheme="dark"] .vote--composed .vote__img {
   grid-area: img;
   align-self: center;
   width: 86px;
@@ -3254,7 +3254,7 @@
   margin: 0;
   font-size: var(--text-3xl);
 }
-:root[data-design="tisch"][data-scheme="dark"] .vote--tisch .vote__title {
+:root[data-design="tisch"][data-scheme="dark"] .vote--composed .vote__title {
   grid-area: title;
   padding: 0;
   text-align: left;
@@ -3268,12 +3268,12 @@
   font-weight: 600;
   color: var(--paper-ink-soft);
 }
-:root[data-design="tisch"][data-scheme="dark"] .vote--tisch .vote__q {
+:root[data-design="tisch"][data-scheme="dark"] .vote--composed .vote__q {
   grid-area: q;
   margin: 14px 0 0;
   text-align: left;
 }
-:root[data-design="tisch"][data-scheme="dark"] .vote--tisch .rating {
+:root[data-design="tisch"][data-scheme="dark"] .vote--composed .rating {
   grid-area: rating;
   padding: 12px 0 0;
 }
@@ -3323,7 +3323,7 @@
 /* The five faces. A ROW each on a phone (T2.4) — face, word, number — because
    five 64px tiles across 390px leaves each one 8px of label; and five COLUMNS
    from the tablet width up (T4.2), where there is room for the tile. The word
-   is `.mood__word`, which only vote-card-tisch.js renders (#1268); the rows
+   is `.mood__word`, which only vote-card-composed.js renders (#1268); the rows
    are what the app's flex row becomes by wrapping direction, so the phone and
    the desktop share one markup. */
 :root[data-design="tisch"][data-scheme="dark"] .rating {
@@ -3458,7 +3458,7 @@
    vote card and every overlay make, declared the same way so the measured paper
    pairs carry it and nothing has to be repainted token by token.
 
-   What is printed on it is Der Tisch's own markup (result-tafel-tisch.js), not
+   What is printed on it is Der Tisch's own markup (result-tafel-composed.js), not
    the app's row painted over: a column-header row — Platz · Spiel · Wertungen ·
    Score — over one COMPACT line per game ending in a score pill. The per-game
    distribution recedes behind the „Wertungen" count, which is a disclosure.
@@ -4012,7 +4012,7 @@
   font-family: var(--font-display);
   font-weight: 800;
 }
-:root[data-design="tisch"][data-scheme="dark"] .split-tables--tisch {
+:root[data-design="tisch"][data-scheme="dark"] .split-tables--composed {
   align-items: start;
 }
 :root[data-design="tisch"][data-scheme="dark"] .split-table {
@@ -4296,13 +4296,13 @@
   /* T4.2's composed card (#1268): the header in one row with the round's name
      and the pill beside the dots, the cover at 176px beside a title block that
      now holds the question too, the faces a full-width row under both. */
-  :root[data-design="tisch"][data-scheme="dark"] .vote.vote--tisch { max-width: 920px; gap: 26px; }
+  :root[data-design="tisch"][data-scheme="dark"] .vote.vote--composed { max-width: 920px; gap: 26px; }
   :root[data-design="tisch"][data-scheme="dark"] .vote-felt { flex-wrap: nowrap; gap: 16px; }
   :root[data-design="tisch"][data-scheme="dark"] .vote-felt__name { font-size: var(--text-xl); }
   :root[data-design="tisch"][data-scheme="dark"] .vote-felt__count { font-size: var(--text-sm); }
   :root[data-design="tisch"][data-scheme="dark"] .vote-felt__round { display: inline; }
   :root[data-design="tisch"][data-scheme="dark"] .vote-felt__dot { width: 13px; height: 13px; }
-  :root[data-design="tisch"][data-scheme="dark"] .vote--tisch .vote__secret {
+  :root[data-design="tisch"][data-scheme="dark"] .vote--composed .vote__secret {
     flex-basis: auto;
     padding: 6px 13px;
     border: 1px solid var(--gold-edge);
@@ -4325,11 +4325,11 @@
     column-gap: 26px;
     padding: 30px 34px;
   }
-  :root[data-design="tisch"][data-scheme="dark"] .vote--tisch .vote__img { width: 176px; height: 232px; }
-  :root[data-design="tisch"][data-scheme="dark"] .vote--tisch .vote__title { font-size: var(--text-4xl); }
+  :root[data-design="tisch"][data-scheme="dark"] .vote--composed .vote__img { width: 176px; height: 232px; }
+  :root[data-design="tisch"][data-scheme="dark"] .vote--composed .vote__title { font-size: var(--text-4xl); }
   :root[data-design="tisch"][data-scheme="dark"] .vote__meta { font-size: var(--text-md); }
-  :root[data-design="tisch"][data-scheme="dark"] .vote--tisch .vote__q { margin-top: 12px; font-size: var(--text-xl); }
-  :root[data-design="tisch"][data-scheme="dark"] .vote--tisch .rating { padding: 22px 0 0; }
+  :root[data-design="tisch"][data-scheme="dark"] .vote--composed .vote__q { margin-top: 12px; font-size: var(--text-xl); }
+  :root[data-design="tisch"][data-scheme="dark"] .vote--composed .rating { padding: 22px 0 0; }
 
   /* T4.4's two columns: the ranking on the left, the chosen box and its
      corrections on the right. The head, the people and everything from the log

@@ -513,9 +513,9 @@ const frontendGlobals = {
   // member-stats.js (#1075 — split out of views-member.js)
   memberStats: 'readonly', BEST_GAME_MIN_PLAYS: 'readonly', bestGameSub: 'readonly',
   openAddMember: 'readonly', addMemberBtn: 'readonly',
-  // vote-card-tisch.js (issue #1268): Der Tisch's vote card + the link intro
+  // vote-card-composed.js (issue #1268): Der Tisch's vote card + the link intro
   VOTE_WORD_KEYS: 'readonly', voteWord: 'readonly', voteMoodButton: 'readonly', voteTurn: 'readonly',
-  voteHandoffLine: 'readonly', voteMetaLine: 'readonly', tischVoteCard: 'readonly', tischVoteLinkIntro: 'readonly',
+  voteHandoffLine: 'readonly', voteMetaLine: 'readonly', composedVoteCard: 'readonly', composedVoteLinkIntro: 'readonly',
   // views-session.js
   showStartSession: 'readonly', startVoting: 'readonly', showResults: 'readonly',
   showFinale: 'readonly', canShareResult: 'readonly', shareResult: 'readonly',
@@ -529,9 +529,9 @@ const frontendGlobals = {
   showTableBuilder: 'readonly', tableStateFrom: 'readonly', tablePeopleIds: 'readonly',
   tableCoverBg: 'readonly',
   renderTischSplit: 'readonly', renderTischTable: 'readonly', renderTischTableTafel: 'readonly', // #1270
-  // result-tafel-tisch.js (issue #1275): Der Tisch's result Tafel and foot
-  tischTafelCols: 'readonly', tischTrow: 'readonly', tischPersonCrown: 'readonly',
-  paintTischCrowns: 'readonly', fillTischResultFoot: 'readonly',
+  // result-tafel-composed.js (issue #1275): Der Tisch's result Tafel and foot
+  composedTafelCols: 'readonly', composedTrow: 'readonly', composedPersonCrown: 'readonly',
+  paintComposedCrowns: 'readonly', fillComposedResultFoot: 'readonly',
   // views-session-live.js
   showSessionLobby: 'readonly', stopLobbyPoll: 'readonly', mySeatIn: 'readonly',
   sessionGames: 'readonly', LOBBY_POLL_MS: 'readonly', lobbyPoll: 'writable',
