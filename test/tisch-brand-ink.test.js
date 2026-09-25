@@ -119,6 +119,11 @@ for (const name of ['--brand-ink', '--brand-ring']) {
     const inTisch = declaring(TISCH);
     assert.ok(inTisch.length >= 1, `the Tisch overlay rule no longer declares ${name}`);
     for (const selector of inTisch) {
+      /* The paper surfaces IN THE PAGE (the Tafel, the vote card, …) take the
+         overlay's answer through one scheme-gated `:where()` rule. It is as
+         scoped as the overlay selectors — gated, and on named surfaces, never on
+         :root — which is the property this test protects. */
+      if (/^:root\[data-design="tisch"\]\[data-scheme="dark"\] :where\([^)]*\)$/.test(selector.replace(/\s+/g, ' ').trim())) continue;
       for (const part of selector.split(',').map((s) => s.trim())) {
         assert.ok(OVERLAYS.some((o) => part === `${GATE} ${o}`),
           `${name} is declared on ${part}, which is not one of the scheme-gated overlay selectors`);

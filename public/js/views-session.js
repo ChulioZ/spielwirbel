@@ -696,6 +696,25 @@ function showStartSession(round, prefill) {
     updateHint();
   }
 
+  /* „Filter speichern" (#1328), under the pool it describes — beside the owners
+     note, i.e. inside Der Tisch's pot, where the filter bar lives too. It saves
+     what the screen shows NOW, in the draw's own body shape, so the server
+     resolves both through one function (lib/draw-filters.js). Seats travel;
+     guests, teams and „ohne Spiele" deliberately do not — they are this
+     evening's facts, not the group's recurring draw. */
+  ownersNote.after(renderSaveFilterAction(round, () => {
+    const cur = parseInt(countInput.value, 10);
+    return {
+      count: Number.isFinite(cur) && cur >= 1 ? cur : 1,
+      tagIds: [...selectedTags].filter(([, s]) => s === 'include').map(([id]) => id),
+      excludeTagIds: [...selectedTags].filter(([, s]) => s === 'exclude').map(([id]) => id),
+      tagMode: tagFilterState.tagMode,
+      metadata: metaFilters,
+      multiTable: tableState.multiTable,
+      memberIds: [...joining],
+    };
+  }));
+
   /* The draw is in flight. #1122 removed the whirl this was written for, which
      SHRINKS the double-press window to the request itself rather than closing it:
      the button is still not disabled while the POST runs, so a second press on a
@@ -1887,8 +1906,17 @@ async function showResults(round, session, gamesHint, reveal, plain) {
      the PICTURE (seats or the ending line) rather than on a 344px picker for a
      question answered months ago. It turns true for exactly two moments: right
      after „Als gespielt markieren", when the one question left is who won, and
-     on „Ändern". Recording anything collapses it again. */
+     on „Ändern". A party tap keeps it open (#1327) — several people often won —
+     while an ending (single-choice) or „Fertig" collapses it again. */
   let pickerOpen = false;
+  /* Which party chip to hand keyboard focus back to after the re-render a tap
+     causes (#1327): renderTisch() rebuilds the chips, so the tapped button is
+     detached and focus would fall to <body> — a full Tab back into the picker
+     for every further winner. Same shape as the rating step's `refocus`: set
+     only by the party chip handler, consumed (and cleared) by the next
+     renderTisch(), and never set when the picker closes, so arriving on the
+     picture never yanks focus. */
+  let pickerRefocus = null;
 
   // Cancel is the alternative final state: only offered while no game is
   // chosen, and undoable like the finish reset. Rendered as a `link-btn` in the
@@ -1988,6 +2016,10 @@ async function showResults(round, session, gamesHint, reveal, plain) {
      state of its own beyond `pickerOpen`. */
   function renderTisch() {
     updateTitle();
+    // Consumed at the top so every exit, including the early return below,
+    // clears it — a stale intent must not fire on a later, unrelated render.
+    const wantedChip = pickerRefocus;
+    pickerRefocus = null;
     // Der Tisch's crowns and foot follow every phase change, and this is the
     // one function all of them reach — including the early return below.
     if (tischLook) {
@@ -2074,6 +2106,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     }
 
     const actions = h('<div class="tisch__actions"></div>');
+    let restoreChip = null;
 
     if (!finished) {
       // Finishing comes first and needs no winners; the picker only appears
@@ -2109,7 +2142,14 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     } else if (pickerOpen) {
       main.appendChild(h(`<div class="tisch__prompt">${esc(t('result.whoWon'))}</div>`));
 
-      /* Guests can win too (#458) — they played the game. They just never enter
+      /* ONE picker for every design (#1327). Klassisch, Der Tisch, Ocean and any
+         design added later all render these rows from here, and its open/close
+         behaviour — party taps keep it open, an ending or „Fertig" closes it,
+         focus follows the tapped chip — lives here and nowhere else. A design
+         RESTYLES the picker (`.winner-chip` in its stylesheet); it must not fork
+         it, or the old collapse-on-every-tap comes back on that design alone.
+
+         Guests can win too (#458) — they played the game. They just never enter
          the round-level standings; see the Pokale tab.
 
          One chip per PARTY (#575), so a team is recorded in a single tap. What
@@ -2117,7 +2157,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
          of its people, which is what lets the Pokale standings, the Chronik and
          the recap keep reading `winnerIds` with no idea teams exist. */
       const chips = h('<div class="winner-chips"></div>');
-      parties.forEach((party) => {
+      parties.forEach((party, pi) => {
         const ids = party.people.map((pp) => pp.id);
         // A team counts as selected only when ALL of its people are in — a
         // partially-set list reads as not selected, so one tap completes it
@@ -2125,14 +2165,18 @@ async function showResults(round, session, gamesHint, reveal, plain) {
         const sel = ids.every((id) => winnerIds.includes(id));
         const chip = h(`<button class="winner-chip ${sel ? 'is-selected' : ''}" aria-pressed="${sel}">${sel ? '<i class="ti ti-trophy" aria-hidden="true"></i> ' : ''}${party.team ? '<i class="ti ti-users" aria-hidden="true"></i> ' : ''}${esc(party.name)}</button>`);
         // Each toggle persists right away — no separate save button in this
-        // state — and collapses the picker to the picture it just produced.
+        // state — and leaves the picker OPEN (#1327), so a shared win is two
+        // or three taps rather than a tap and „Ändern" per winner. „Fertig"
+        // below is what closes it. Keyed by position: `parties` is rebuilt
+        // from the same session on every render, so index i is the same party.
         chip.addEventListener('click', () => {
-          pickerOpen = false;
+          pickerRefocus = pi;
           saveWinners(sel
             ? winnerIds.filter((x) => !ids.includes(x))
             : [...winnerIds, ...ids.filter((id) => !winnerIds.includes(id))]);
         });
         chips.appendChild(chip);
+        if (wantedChip === pi) restoreChip = chip;
       });
       main.appendChild(chips);
 
@@ -2241,6 +2285,8 @@ async function showResults(round, session, gamesHint, reveal, plain) {
 
     tisch.appendChild(box);
     tisch.appendChild(main);
+    // After both are attached: focus() on a detached node does nothing.
+    if (restoreChip) restoreChip.focus();
   }
 
   // Marks the session finished with the given winners (possibly none) and
@@ -2271,7 +2317,12 @@ async function showResults(round, session, gamesHint, reveal, plain) {
       session.finishedAt = saved.finishedAt || session.finishedAt;
       toast(t('result.toast.saved'));
       renderTisch();
-    } catch (e) { toast(e.message, { tone: 'error' }); }
+    } catch (e) {
+      // Nothing was re-rendered, so the tapped chip still holds focus; a
+      // leftover intent would otherwise fire on some later, unrelated render.
+      pickerRefocus = null;
+      toast(e.message, { tone: 'error' });
+    }
   }
 
   updateChosen();

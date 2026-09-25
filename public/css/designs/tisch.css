@@ -246,6 +246,13 @@
   /* Review finding A4: the package's tertiary ink #8d5a36 measured 4.23:1 on
      the raised paper. #7a4a28 is 5.19:1. */
   --paper-faint: #7a4a28;
+  /* The Tafel's place numerals 2 and 3 on paper. The app's own medal tints
+     (styles.css `.trow__rank--2/--3`, #9ca3af and #b3703a) are drawn for no
+     ground in particular and measured 2.06:1 and 3.22:1 on the raised paper —
+     under AA for an 18px numeral. Same metals, pressed dark enough to read:
+     silver 5.32:1, bronze 5.50:1 on --paper-raised. */
+  --paper-silver: #575e68;
+  --paper-bronze: #8a4b1c;
 
   /* ---- The rest of the paper family (#1195). The overlay rule further down
      re-points a token at each of these; they are declared HERE for the reason
@@ -1028,6 +1035,39 @@
 @media (min-width: 768px) {
   :root[data-design="tisch"][data-scheme="dark"] .topbar__acct--face:not([hidden]) { padding: 3px 12px 3px 3px; }
   :root[data-design="tisch"][data-scheme="dark"] .topbar__name { display: block; }
+}
+/* The unseen-news and unread-inbox dots as BADGES (#1326). styles.css's
+   `.topbar-dot` is an 8px --brand speck in the corner of a 10px-radius square;
+   on this pill that corner is the curved brass rim, and --brand IS the rim's
+   hue, so the dot vanished into the border it sat across.
+
+   The colour cannot be made to clear 3:1 on its own. The lifted account discs
+   (memberTone, --member-lift) are mid-light — relative luminance ~.40–.50 —
+   and the button's --control-fill is ~.06, so a flat fill ≥ 3:1 against the
+   fill is ≤ 1.2:1 against a disc and vice versa; no token sits in between.
+   The RING carries the disc side instead: --control-fill against every
+   MEMBER_COLORS disc measures 3.83–4.65:1, and --danger (T1's Zinnober, the
+   „Marke" hue, not the brass) against that ring is 4.47:1. Each boundary of
+   the badge therefore clears SC 1.4.11, on any disc and on a photo avatar too.
+   The ring is the button's own fill, so the badge reads as cut out of the
+   disc; test/tisch-app-chrome.test.js measures the pairs from these tokens.
+
+   No `display`: the dots are toggled by `hidden` (setNewsDot/setInboxDot). */
+:root[data-design="tisch"][data-scheme="dark"] .topbar-dot {
+  width: 14px;
+  height: 14px;
+  background: var(--danger);
+  border: 2px solid var(--control-fill);
+}
+/* On the face, the account dot is anchored to the 32px AVATAR rather than to
+   the pill: its centre sits on the disc's 45° point, (19 + 11.3, 19 − 11.3)
+   from the padding box, given the 3px padding. Measured from the LEFT so it is
+   the same spot at every width — the pill grows rightward by the name from
+   768px, and the phone face is the disc alone. */
+:root[data-design="tisch"][data-scheme="dark"] .topbar__acct--face .topbar-dot {
+  top: 1px;
+  right: auto;
+  left: 23px;
 }
 
 /* --- The „Abstimmung läuft" notice (T3.1, T6.1) ---------------------------
@@ -2260,6 +2300,23 @@
   background: var(--surface);
   color: var(--danger);
   border-color: var(--danger);
+}
+/* The same answer for every other red-inked button ON THE FELT: „Diese Runde
+   löschen" (Einstellungen), „Endgültig löschen" (Aussortiert) and the quiet
+   „Von der Liste nehmen" (Wunschliste — a plain `.btn` with the danger ink set
+   inline, hence the `[data-act]` hook). Each sat on --control-fill at 4.47:1.
+   Hover keeps the ground, because `.btn:hover` would swap in --brand-tint-soft.
+   Inside an overlay `.sheet .btn--danger` is more specific and red-FILLS the
+   button instead, which is the paper answer (#1195) — and it only stays more
+   specific because these are two plain selectors: an `:is()` taking both would
+   carry the second's weight and out-rank the sheet's red fill. */
+:root[data-design="tisch"][data-scheme="dark"] .btn--danger,
+:root[data-design="tisch"][data-scheme="dark"] .btn--danger:hover:not(:disabled) {
+  background: var(--surface);
+}
+:root[data-design="tisch"][data-scheme="dark"] .archive-row__actions .btn[data-act="delete"],
+:root[data-design="tisch"][data-scheme="dark"] .archive-row__actions .btn[data-act="delete"]:hover:not(:disabled) {
+  background: var(--surface);
 }
 @media (max-width: 859px) {
   :root[data-design="tisch"][data-scheme="dark"] .gd-actions__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -3506,6 +3563,13 @@
   position: static;
   font-size: var(--text-lg);
 }
+/* Places 2 and 3 in paper-strength metal (see --paper-silver). Place 1 needs no
+   rule: the winners sit in the gold group, where the single-ink sweep below
+   gives every cell --gold-ink. `.tafel` alone, not `.result-screen .tafel`: the
+   landing page prints the same Tafel. */
+:root[data-design="tisch"][data-scheme="dark"] .tafel .trow__rank--2 { color: var(--paper-silver); }
+:root[data-design="tisch"][data-scheme="dark"] .tafel .trow__rank--3 { color: var(--paper-bronze); }
+
 :root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .trow__img {
   grid-column: 2;
   grid-row: 1;
@@ -6062,6 +6126,38 @@
   --brand-ring: var(--gold-edge);
 }
 
+/* The same answer for the paper IN THE PAGE. The overlays are not the only
+   paper in Der Tisch: the result Tafel, the vote card, the split-table Tafel,
+   the live-vote panel and the Chronik's session cards flip --surface and --ink
+   too — and each block named its own grounds and inks and stopped there. Every
+   token the overlay above re-points for being mixed from the walnut, or for
+   being an ink tuned against it, reached those surfaces as walnut. The one the
+   operator saw: the Tafel's „auf dem Tisch" chip (`.trow__chip`) paints its
+   ground from --brand-tint-soft, so it stayed a dark walnut pill under the
+   gold row's --gold-ink — 1.12:1, measured.
+
+   `:where()` keeps this rule at the gate's specificity, BELOW each surface's
+   own block, so a value a surface chose for itself (the Tafel's --line, the
+   session card's --danger) still wins; this only fills what was left out.
+   test/tisch-overlays.test.js derives the list from styles.css and the overlay,
+   so a surface added tomorrow without it fails by name. */
+:root[data-design="tisch"][data-scheme="dark"] :where(.vote, .vote__card, .tafel, .split-table__tafel, .live-vote__panel, .timeline .session-card) {
+  --good: var(--paper-good);
+  --danger: var(--paper-danger);
+  --warn: var(--paper-faint);
+  --accent: var(--paper-faint);
+  --sunken: var(--paper-sunken);
+  --sunken-soft: var(--paper-sunken);
+  --line: var(--paper-line);
+  --placeholder: var(--paper-faint);
+  --brand-tint: var(--gold-hi);
+  --brand-tint-soft: var(--paper-raised);
+  --brand-edge: var(--gold-edge);
+  --bg: var(--paper);
+  --brand-ink: var(--paper-faint);
+  --brand-ring: var(--gold-edge);
+}
+
 /* --- The sheet: edge, head and close (T15a.0) ------------------------------
    18px edge, a 20px display title, a 34px close disc with a hairline rim. The
    title size is the SHEET's at both widths: the app's centred dialog above
@@ -6455,8 +6551,16 @@
    vocabulary, a checkbox — because each one's semantics is the filter's (a
    tri-state chip is not a check row). What T15a changes is their seat: each
    select row and each chip section stands on a raised slip, so the panel reads
-   as the same row list as the three editors above. */
+   as the same row list as the three editors above.
+
+   `flex-shrink: 0` is load-bearing: the popover's body is a capped flex column
+   that scrolls, and the explicit `min-height` below REPLACES a flex item's
+   automatic content-size minimum. Without it, a panel taller than its cap
+   squeezed every slip toward 44px instead of scrolling, and the Tags slip's
+   chip cloud painted over the groups below it
+   (test/filter-panel-groups-dont-shrink.test.js). */
 :root[data-design="tisch"] :is(.popover--filter, .editor--filter) :is(.mfilter__row, .mfilter__group, .fpanel__group) {
+  flex-shrink: 0;
   min-height: 44px;
   padding: 8px 12px;
   border: 1px solid var(--line);

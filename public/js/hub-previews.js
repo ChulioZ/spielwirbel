@@ -38,6 +38,8 @@ const HUB_PREVIEW_COVERS = 6;
 // And at most this many standings rows — the podium's three steps, which is
 // what the preview is a preview OF.
 const HUB_PREVIEW_RANKS = 3;
+// And at most this many sessions in Ocean's Chronik preview (O3.2's three).
+const HUB_PREVIEW_SESSIONS = 3;
 
 /* WHAT EARNS A PREVIEW IS PER SECTION, not one condition for all three.
 
@@ -149,11 +151,20 @@ function hubPokalePreview(round) {
   }
   const card = hubPreviewCard(round, { icon: 'ti-trophy', titleKey: 'hub.tab.pokale', sub, tab: 'pokale' });
   const body = card.querySelector('.hub-card__body');
+  /* Ocean draws each standing as a bar in the member's colour (O3.2): the
+     person colour as a FILL, never as text (ocean.css's rule 2). Its length is
+     data, so it rides in as `--share` — the bar is aria-hidden, the count
+     beside it already says it. */
+  const bars = designIs('ocean');
+  const top = Math.max(1, ...winners.map((m) => wins[m.id] || 0));
   winners.filter((m) => !young || rankOf[m.id] === 1).slice(0, HUB_PREVIEW_RANKS).forEach((m) => {
+    const bar = bars
+      ? `<span class="hub-preview__bar" aria-hidden="true" style="--share:${Math.round(((wins[m.id] || 0) / top) * 100)}%;--tone:${memberColor(round, m.id)}"></span>`
+      : '';
     body.appendChild(h(`<div class="hub-preview__rank">
          <span class="hub-preview__place">${rankOf[m.id]}</span>
          <span class="avatar hub-preview__avatar" style="background:${memberColor(round, m.id)}">${avatarFace(initials(m.name), { userId: m.userId })}</span>
-         <span class="hub-preview__name">${esc(m.name)}</span>
+         <span class="hub-preview__name">${esc(m.name)}</span>${bar}
          <span class="hub-preview__score">${esc(tn(wins[m.id], 'pokale.winsOne', 'pokale.wins'))}</span>
        </div>`));
   });
@@ -184,6 +195,27 @@ function hubChronikPreview(round) {
     sub: tn(finished.length, 'home.chip.sessionsOne', 'home.chip.sessions'),
     tab: 'chronik',
   });
+  /* Ocean previews the Chronik with its last sessions (O3.2, #1211 — review
+     round 1 found the bars here, under this title, which renamed the
+     Rundenpuls). Plain spans, like every row inside a preview: the card's one
+     link is its „öffnen" at the foot. Newest first by `createdAt`, the order
+     the Chronik lists them in. */
+  if (designIs('ocean')) {
+    const body = card.querySelector('.hub-card__body');
+    [...finished]
+      .sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')))
+      .slice(0, HUB_PREVIEW_SESSIONS)
+      .forEach((s) => {
+        const game = round.games.find((g) => g.id === s.chosenGameId);
+        const style = game && game.image ? ` style="background-image:url('${coverUrl(game.image, COVER_THUMB)}')"` : '';
+        body.appendChild(h(`<div class="hub-preview__session">
+             <span class="hub-preview__cover" aria-hidden="true"${style}>${game && !game.image ? coverPlaceholder(game) : ''}</span>
+             <span class="hub-preview__name">${esc(game ? game.title : t('sessions.played'))}</span>
+             <span class="hub-preview__when">${esc(fmtDate(s.createdAt))}</span>
+           </div>`));
+      });
+    return card;
+  }
   if (last) {
     card.querySelector('.hub-card__body')
       .appendChild(h(`<div class="hub-preview__last">${esc(t('hub.preview.chronikLast', { date: fmtDate(last) }))}</div>`));
@@ -205,7 +237,9 @@ function hubOffShelfGroup(round) {
   // from 1280px up the rail carries these four rows, and a second copy in the
   // pane would offer the same navigation twice on one screen. Below that width
   // the rail does not exist and this IS the hub's off-shelf group.
-  const group = h(`<section class="hub-offshelf rail-owned">
+  // Not under a lean rail (railIsLean, round-rail.js): Ocean's Reling carries
+  // no off-shelf rows (#1211), so there this group is the hub's only way in.
+  const group = h(`<section class="hub-offshelf${railIsLean() ? '' : ' rail-owned'}">
        <h2 class="hub-offshelf__title">${esc(t('rail.archive'))}</h2>
        <div class="ds-list hub-offshelf__list"></div>
      </section>`);

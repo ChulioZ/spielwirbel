@@ -122,6 +122,7 @@ const MOUNTS = [
   // flip (#1202).
   ['/marker', '../lib/routes/marker'],
   ['/tags', '../lib/routes/tags'],
+  ['/filters', '../lib/routes/saved-filters'],
   ['/lookup', '../lib/routes/lookup'],
   ['/recommendations', '../lib/routes/recommendations'],
 ];
