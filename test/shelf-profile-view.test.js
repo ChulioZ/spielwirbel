@@ -107,7 +107,8 @@ test('the screen: every dimension, the full gap list, the leading mechanics, and
   assert.deepEqual(panels.map((p) => p.querySelector('.hub-card__title').textContent),
     ['Personen', 'Spieldauer', 'Komplexität', 'Lücken', 'Mechaniken', 'Kategorien']);
   // 5, 6+, ≤30, 61–120, >120, light, heavy — all of them, not the card's three.
-  assert.equal(dom.app.querySelectorAll('.shelf-panel .shelf-gap').length, 7);
+  // Five, not seven: weight bands draw as bars but list no gap (#1173 review).
+  assert.equal(dom.app.querySelectorAll('.shelf-panel .shelf-gap').length, 5);
   const mech = [...dom.app.querySelectorAll('.shelf-top__name')].map((n) => n.textContent);
   assert.deepEqual(mech.slice(0, 2), ['Hand Management', 'Set Collection'], 'BGG names shown verbatim');
   assert.ok(dom.app.querySelector('.shelf-head__share'), 'jsdom anchors support `download`, so the share is offered');

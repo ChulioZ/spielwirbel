@@ -134,7 +134,7 @@ function shelfTop(games, field) {
 
    Returns { linked, total, seats, time, weight, mechanics, categories, gaps }:
    each of seats/time/weight is { known, unknown, bands: [{ key, n }] } or null;
-   `gaps` lists every band under SHELF_PROFILE_FEW as { dim, key, n }, emptiest
+   `gaps` lists every seat/time band under SHELF_PROFILE_FEW as { dim, key, n }, emptiest
    first (a band with NOTHING is the stronger statement), dimension order
    otherwise. */
 function shelfProfile(games, deps) {
@@ -150,8 +150,12 @@ function shelfProfile(games, deps) {
   const weight = shelfDimension(shelf, SHELF_WEIGHT_BANDS.map((b) => b.key), (g) =>
     (shelfNum(g.weight) ? [SHELF_WEIGHT_BANDS.find((b) => g.weight < b.max).key] : null));
 
+  // Weight is drawn as bars but never listed as a gap (#1173 review): a light
+  // family shelf has no heavy game on purpose — that is a taste, not a hole a
+  // draw will hit, and „Schwer: kein Spiel" on every such shelf reads as a
+  // reproach.
   const gaps = [];
-  [['seats', seats], ['time', time], ['weight', weight]].forEach(([dim, d]) => {
+  [['seats', seats], ['time', time]].forEach(([dim, d]) => {
     if (!d) return;
     d.bands.forEach((b) => { if (b.n < SHELF_PROFILE_FEW) gaps.push({ dim, key: b.key, n: b.n }); });
   });

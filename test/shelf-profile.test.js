@@ -109,16 +109,20 @@ test('a dimension too few games carry is left out rather than drawn as a row of 
   assert.ok(p.time, 'the other dimensions are unaffected');
 });
 
-test('gaps: every band under three, the empty ones first, dimension order otherwise', () => {
+test('gaps: every seat and time band under three, the empty ones first, dimension order otherwise', () => {
   const shelf = [
     ...shelfOf(7),                                           // 2–4, 31–60, medium
     g({ minPlayers: 2, maxPlayers: 5, maxPlaytime: 25 }),     // one at five, one ≤30
   ];
   const p = shelfProfile(shelf, deps);
   assert.deepEqual(p.gaps.map((x) => `${x.dim}:${x.key}:${x.n}`), [
-    'seats:6:0', 'time:to120:0', 'time:over120:0', 'weight:light:0', 'weight:heavy:0',
+    'seats:6:0', 'time:to120:0', 'time:over120:0',
     'seats:5:1', 'time:upTo30:1',
   ]);
+  // Weight is a taste, not a gap (#1173 review): a light family shelf has no
+  // heavy game on purpose, so the bars show weight and no sentence claims it.
+  assert.equal(p.weight.bands.find((b) => b.key === 'heavy').n, 0, 'the fixture really has an empty weight band');
+  assert.ok(!p.gaps.some((x) => x.dim === 'weight'), 'weight never produces a gap');
   const full = shelfProfile([
     ...shelfOf(3, { minPlayers: 1, maxPlayers: 8, maxPlaytime: 20, weight: 1.2 }),
     ...shelfOf(3, { minPlayers: 1, maxPlayers: 8, maxPlaytime: 50, weight: 2.4 }),
