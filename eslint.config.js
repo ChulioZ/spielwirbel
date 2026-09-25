@@ -435,6 +435,9 @@ const frontendGlobals = {
   recapColor: 'readonly', recapMarker: 'readonly',
   // …and the four the Regal-Steckbrief's card (#1173) paints Der Tisch with.
   tischPalette: 'readonly', tischCardFelts: 'readonly', tischFont: 'readonly', tischBadge: 'readonly',
+  // recap-card-ocean.js (#1220) — Ocean's share card in three formats; the
+  // two helpers tischWrap/tischBadge it reuses are recap-card-tisch.js's.
+  oceanCardBlob: 'readonly', oceanShareKind: 'readonly', tischWrap: 'readonly',
   offeredDesigns: 'readonly', designTile: 'readonly', renderDesignPicker: 'readonly',
   maybeShowDesignChooser: 'readonly', showDesignChooser: 'readonly',
   buildDesignSection: 'readonly',
