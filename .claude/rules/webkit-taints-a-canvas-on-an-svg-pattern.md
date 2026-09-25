@@ -2,7 +2,9 @@
 paths:
   - "public/js/recap-card.js"
   - "public/js/views-chronik.js"
+  - "public/js/views-period-recap.js"
   - "public/js/recap-card-tisch.js"
+  - "public/js/recap-card-ocean.js"
   - "public/js/card-glyphs.js"
   - "public/js/shelf-profile-card.js"
   - "test/recap-card-tisch.test.js"
@@ -91,6 +93,11 @@ names (`--page-bg`, `--gold`, `--ink`) are shared by every design, so under a
 round still on its own light palette (possible until the flip) the dark block
 was off and a live read returned Klassisch's cream and orange (measured). The
 copy is licensed by a parity test against `test/support/theme.js`.
+
+**Ocean's card (#1220, `public/js/recap-card-ocean.js`) takes the same shape** —
+gradients, flat fills, the whale as canvas paths, the whirl as a `Path2D`, the
+BGG badge via `drawImage` — and all three of its formats exported clean in
+headless Chromium and a non-persistent WKWebView.
 
 A spec can only stand in for the engine by asserting the **mechanism** against a
 recording context — jsdom has no 2d context and Node has no WebKit — so it
