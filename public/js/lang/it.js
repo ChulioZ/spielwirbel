@@ -1280,6 +1280,8 @@ I18N.it = {
   'stats.plays.many': '{n} sessioni',
   'stats.ratedOne': 'Punteggio {score} — {n} valutazione',
   'stats.rated': 'Punteggio {score} — {n} valutazioni',
+  'stats.ratedPlaysOne': '{rated} · {n} sessione',
+  'stats.ratedPlays': '{rated} · {n} sessioni',
   'stats.counter.players': 'giocatori',
   'stats.counter.rounds': 'gruppi',
   'stats.counter.games': 'giochi',

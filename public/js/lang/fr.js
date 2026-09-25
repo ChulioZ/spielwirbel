@@ -1281,6 +1281,8 @@ I18N.fr = {
   'stats.plays.many': '{n} sessions',
   'stats.ratedOne': 'Score {score} — {n} note',
   'stats.rated': 'Score {score} — {n} notes',
+  'stats.ratedPlaysOne': '{rated} · {n} session',
+  'stats.ratedPlays': '{rated} · {n} sessions',
   'stats.counter.players': 'joueurs',
   'stats.counter.rounds': 'groupes',
   'stats.counter.games': 'jeux',

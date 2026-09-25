@@ -798,6 +798,9 @@ What the app does, in detail. For a short overview see the
   enough has happened in it. The all-time card („Spielwirbels Dauerbrenner",
   issue #1035) names no period at all — it is the one durable fact about the
   instance's shelf, and it sits between the year card and the best-rated one.
+  The best-rated card ranks on the same Spielwirbel-Score a round's Regal
+  prints, plays included, and a game qualifies on ratings and plays together —
+  so its line reads „Score 4,2 — 2 Bewertungen · 12 Sessions" (issue #1329).
   The section appears on the logged-out landing
   page, on a shareable `/entdecken` screen and as a home-dashboard tile showing
   the first few rankings with their cover art —

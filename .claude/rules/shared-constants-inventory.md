@@ -394,6 +394,15 @@ grew a `plays.all` column in both backends and the lift stays in JS. Same move
 as `scoreTally`'s histogram: when a boundary cannot take the shared function,
 push the boundary **down** to something the function still owns.
 
+**What the SQL still restates is the definition of a play, and it drifted once**
+(#1329). `plays.all` counted *finished* sessions — right for the „Dauerbrenner"
+card — while the Regal's `playCounts` counts every **non-cancelled** session with
+a `chosenGameId`, finished or not. So the lift now reads its own `plays.lift`
+column, and the one thing guarding the two spellings is the repo contract's
+fixture with an **open** evening in it (`publicGameAggregates`, the calendar case
+and the lift case). A fixture of finished plays only is green against either
+definition.
+
 Two neighbouring values deliberately did **not** join it. `VIOLATION_MAX` stays
 in `table-split.js`: it is a threshold on the *tile* scale, not on the score, and
 it is already coupled to the vote scale there. And `LOW_SCORE` in

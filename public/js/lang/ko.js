@@ -1215,6 +1215,8 @@ I18N.ko = {
   'stats.plays.many': '세션 {n}회',
   'stats.ratedOne': '점수 {score} — 평가 {n}개',
   'stats.rated': '점수 {score} — 평가 {n}개',
+  'stats.ratedPlaysOne': '{rated} · 세션 {n}회',
+  'stats.ratedPlays': '{rated} · 세션 {n}회',
   'stats.counter.players': '명의 참가자',
   'stats.counter.rounds': '개의 모임',
   'stats.counter.games': '개의 게임',
