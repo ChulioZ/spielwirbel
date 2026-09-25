@@ -108,7 +108,10 @@ async function showFriends(opts) {
   if (feed.events.length) {
     // Der Tisch lists the feed as T14.1's rows — author, sentence, cover on the
     // right — where Klassisch tiles it (#1136). Same events, same collapse.
-    const tiled = renderFeedTiles(feed.events, tisch ? { rows: true } : undefined);
+    // Ocean takes the rows too (#1219, O14.2 „Was gerade läuft": a card per
+    // event, the author's ring first); its stylesheet makes each one a card.
+    const rows = tisch || designIs('ocean');
+    const tiled = renderFeedTiles(feed.events, rows ? { rows: true } : undefined);
     // „Alle anzeigen" from the home tile promises every event; below 1024 the
     // grid collapses to eight, so the link has to open it already expanded.
     if (o.feed === 'all') tiled.classList.add('is-open');

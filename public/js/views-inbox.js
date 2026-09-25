@@ -63,7 +63,8 @@ function renderInboxItem(item) {
   const row = item.type === 'round_invitation' ? renderInvitationItem(item)
     : item.type === 'friend_request' ? renderFriendRequestItem(item)
       : renderGenericItem(item);
-  if (designIs('tisch')) composeTischInboxRow(row, item);
+  // Der Tisch (#1272, T14.2) and Ocean (#1219, O14.2) both compose the row; Klassisch does not.
+  if (designIs('tisch') || designIs('ocean')) composeInboxRow(row, item);
   return row;
 }
 
@@ -75,15 +76,21 @@ function renderInboxItem(item) {
 
    The tile is decorative (`aria-hidden`); the row's own title still names the
    type in words. The time is added to the two typed rows only — the generic row
-   has carried its timestamp as its second line all along. */
-const INBOX_TISCH_ICONS = {
+   has carried its timestamp as its second line all along.
+
+   Ocean draws the same row in O14.2 (#1219) — an icon disc, the text, the
+   actions, the time — so it takes the same decoration; `.inbox-row--composed`
+   is the design-neutral hook each design's stylesheet paints (it was
+   `--tisch` while Der Tisch was the only taker). How the actions stack is each
+   stylesheet's call: Tisch stacks them, Ocean sets them side by side. */
+const INBOX_ICONS = {
   round_invitation: 'ti-user-plus',
   friend_request: 'ti-users',
 };
-function composeTischInboxRow(row, item) {
-  const kind = INBOX_TISCH_ICONS[item.type] ? item.type : 'notice';
-  const icon = INBOX_TISCH_ICONS[item.type] || 'ti-mail';
-  row.classList.add('inbox-row--tisch', `inbox-row--${kind.replace('_', '-')}`);
+function composeInboxRow(row, item) {
+  const kind = INBOX_ICONS[item.type] ? item.type : 'notice';
+  const icon = INBOX_ICONS[item.type] || 'ti-mail';
+  row.classList.add('inbox-row--composed', `inbox-row--${kind.replace('_', '-')}`);
   row.prepend(h(`<span class="inbox-row__icon" aria-hidden="true"><i class="ti ${icon}"></i></span>`));
   if (kind !== 'notice' && item.createdAt) {
     row.querySelector('.ds-row__main').appendChild(

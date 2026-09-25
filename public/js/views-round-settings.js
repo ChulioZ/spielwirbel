@@ -46,10 +46,15 @@ async function showRoundSettings(rid) {
   // they own their own screens, so this only links to them and duplicates nothing.
   app.appendChild(h(`<h2 class="rs-section__h">${esc(t('roundSettings.config'))}</h2>`));
   const nav = h('<div class="ds-list"></div>');
+  // Ocean puts the marker picker ON this screen (#1219, O14.1 „Name & Marker"),
+  // so its row would only lead to the same eight swatches one tap further on —
+  // a new place replaces its entry point. The /design route itself stays: a
+  // bookmark still reaches it, and Klassisch and Der Tisch still link to it.
+  const ocean = designIs('ocean');
   [
     { icon: 'ti-tags', label: t('round.tags'), sub: 'tags', go: () => showTags(rid) },
     { icon: 'ti-palette', label: t('round.marker'), sub: 'design', go: () => showMarker(rid) },
-  ].forEach(({ icon, label, sub, go }) => {
+  ].filter(({ sub }) => !(ocean && sub === 'design')).forEach(({ icon, label, sub, go }) => {
     const row = h(`<a class="ds-row rs-row">
          <div class="ds-row__main"><i class="ti ${icon}" aria-hidden="true"></i><span>${esc(label)}</span></div>
          <div class="ds-row__meta"><i class="ti ti-chevron-right" aria-hidden="true"></i></div>
@@ -127,6 +132,47 @@ async function showRoundSettings(rid) {
     danger.appendChild(delBtn);
   }
   app.appendChild(danger);
+  if (ocean) composeOceanSettings(round, rid);
+}
+
+/* Ocean's Einstellungen (#1219, O14.1): the same sections as cards, the marker
+   picker as the first of them, and the danger zone in a column of its own from
+   1280px. Composed AFTER the shared build, out of its own nodes, so every
+   handler above is the one that runs and Klassisch never enters this function.
+
+   Each `h2.rs-section__h` opens a card that takes every sibling up to the next
+   one — the section's list, the saved filters, the danger box. The marker card
+   goes first because O14.1 leads with it, and it states in the app's own
+   sentence (`marker.note`) the one thing the screen exists to say: the marker is
+   the ROUND's, seen by everyone in it whatever design they wear. */
+function composeOceanSettings(round, rid) {
+  const head = app.querySelector(':scope > .page-head');
+  const main = h('<div class="rs-ocean__main"></div>');
+  const aside = h('<div class="rs-ocean__aside"></div>');
+  const marker = h(`<section class="rs-card rs-card--marker">
+       <h2 class="rs-section__h">${esc(t('marker.title'))}</h2>
+     </section>`);
+  marker.appendChild(renderMarkerGrid(round, rid));
+  marker.appendChild(h(`<p class="muted rs-card__note">${esc(t('marker.note'))}</p>`));
+  main.appendChild(marker);
+
+  // Everything after the page head, in document order: the headings and what
+  // follows each of them.
+  const after = [...app.children].slice([...app.children].indexOf(head) + 1);
+  let card = null;
+  after.forEach((el) => {
+    if (el.matches('h2.rs-section__h')) {
+      const danger = el.classList.contains('rs-section__h--danger');
+      card = h(`<section class="rs-card${danger ? ' rs-card--danger' : ''}"></section>`);
+      (danger ? aside : main).appendChild(card);
+    }
+    if (card) card.appendChild(el);
+  });
+
+  const cols = h('<div class="rs-ocean"></div>');
+  cols.appendChild(main);
+  cols.appendChild(aside);
+  app.appendChild(cols);
 }
 
 // =================== The two sub-screens Einstellungen links to ===================
@@ -152,26 +198,37 @@ async function showMarker(rid) {
   app.appendChild(backRow(() => showRound(rid)));
   app.appendChild(h(`<div class="page-head"><h1>${esc(t('marker.title'))}</h1></div>`));
 
-  /* Eight swatches, and they are the ACTIVE design's eight (#1187). A round
-     stores only an index, so this screen shows what the chooser will paint for
-     the person looking at it — someone on Der Tisch picks between felts, someone
-     on Klassisch between the palette accents, and both are choosing the same
-     index. Falling back to FACE_DESIGN keeps the screen renderable on a
-     self-hosted instance with no accounts, where there is no active design at
-     all.
+  const sec = h('<div class="section"></div>');
+  sec.appendChild(h(`<div class="muted" style="margin-bottom:14px">${esc(t('marker.note'))}</div>`));
+  const grid = renderMarkerGrid(round, rid);
+  sec.appendChild(grid);
+  app.appendChild(sec);
+}
 
-     This screen was the DESIGN picker until #1187: seventeen cards, a palette
-     group and a world poster grid. Rounds no longer own a design; since the
-     flip (#1202) a round that wore one shows the marker it maps to
-     (round-marker.js), and this screen shows that marker pressed. */
+/* The eight swatches, and they are the ACTIVE design's eight (#1187). A round
+   stores only an index, so the picker shows what the chooser will paint for the
+   person looking at it — someone on Der Tisch picks between felts, someone on
+   Klassisch between the palette accents, someone on Ocean between the person
+   colours (member-colors.js; designs.js carries the copy that
+   test/design-tokens.test.js pins) — and all of
+   them are choosing the same index. Falling back to FACE_DESIGN keeps it
+   renderable on a self-hosted instance with no accounts, where there is no
+   active design at all.
+
+   This screen was the DESIGN picker until #1187: seventeen cards, a palette
+   group and a world poster grid. Rounds no longer own a design; since the flip
+   (#1202) a round that wore one shows the marker it maps to (round-marker.js),
+   and the picker shows that marker pressed.
+
+   Shared by the /design screen and, under Ocean, the Einstellungen screen's
+   marker card (#1219). A pick re-renders whichever of the two is showing. */
+function renderMarkerGrid(round, rid) {
   const active = activeDesign();
   const designId = (active && active.id) || FACE_DESIGN;
   const markers = designMarkers(designId);
   const ink = markerInk(designId);
   const current = roundMarker(round);
 
-  const sec = h('<div class="section"></div>');
-  sec.appendChild(h(`<div class="muted" style="margin-bottom:14px">${esc(t('marker.note'))}</div>`));
   const grid = h('<div class="marker-cards"></div>');
   markers.forEach((m, i) => {
     const on = i === current;
@@ -213,8 +270,7 @@ async function showMarker(rid) {
     });
     grid.appendChild(sw);
   });
-  sec.appendChild(grid);
-  app.appendChild(sec);
+  return grid;
 }
 
 // =================== Tags (custom round tags, #238) ===================
