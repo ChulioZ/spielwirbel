@@ -358,3 +358,106 @@ test('the card, the feed heading and the grid live in ONE width wrapper', async 
   assert.equal(screen.querySelector('.back-row'), null);
   assert.ok(dom.app.querySelector('.back-row'));
 });
+
+/* ---------------------------- „Dein Rückblick" (#1147) --------------------- */
+
+// Mid-month noon UTC, so no runner's zone can move a play across a month edge —
+// the bucketing itself is pinned under a fixed TZ in test/account-recap.test.js.
+const PLAYS = [
+  { at: '2026-02-10T12:00:00.000Z', key: 'title:azul', title: 'Azul', image: null, rating: 4 },
+  { at: '2026-03-05T12:00:00.000Z', key: 'title:azul', title: 'Azul', image: null, rating: 5 },
+  { at: '2026-03-12T12:00:00.000Z', key: 'title:brass', title: 'Brass', image: null, rating: 5 },
+  { at: '2026-03-20T12:00:00.000Z', key: 'title:azul', title: 'Azul', image: null, rating: null },
+];
+
+const tileTitles = (sec) => [...sec.querySelectorAll('.pokale-card')].map((c) =>
+  [c.querySelector('.pokale-card__label').textContent.trim(),
+    [...c.querySelectorAll('.pokale-game')].map((g) => g.textContent).join(', ')]);
+
+test('your own profile carries „Dein Rückblick", defaulting to the newest month', async (t_) => {
+  const dom = bootWith(t_, self({ plays: PLAYS, events: events(1) }));
+  await dom.call('showProfile', 'ada');
+
+  const screen = dom.app.querySelector('.profile-screen');
+  const sec = screen.querySelector('.arecap');
+  assert.ok(sec, 'no „Dein Rückblick" section on the own profile');
+  assert.equal(sec.querySelector('h2').textContent, t('accountRecap.title'));
+  // Between the record and the activity.
+  const order = [...screen.children];
+  assert.ok(order.indexOf(screen.querySelector('.profile-card')) < order.indexOf(sec));
+  assert.ok(order.indexOf(sec) < order.indexOf(screen.querySelector('.friends-section__h')));
+  // Not the round's recap class: under Der Tisch that one is laid on felt.
+  assert.equal(sec.classList.contains('precap'), false);
+
+  const picker = sec.querySelector('.precap__picker');
+  assert.deepEqual([...picker.options].map((o) => o.value), ['month:2026-03', 'month:2026-02', 'year:2026']);
+  assert.equal(picker.value, 'month:2026-03');
+
+  const march = dom.run('fmtMonth("2026-03-01T00:00:00")');
+  assert.deepEqual(tileTitles(sec), [
+    [t('periodRecap.mostPlayed', { period: march }), 'Azul'],
+    // Azul and Brass both average 5 in March; Azul was played more.
+    [t('accountRecap.bestRated', { period: march }), 'Azul'],
+    [t('accountRecap.newGames', { period: march }), 'Brass'],
+  ]);
+  const chips = [...sec.querySelectorAll('.recap__totals .stat-chip')].map((c) => c.textContent);
+  assert.equal(chips.length, 3, 'sessions, games played, new');
+
+  // No figure about winning anywhere in the section.
+  assert.ok(!sec.textContent.includes(t('member.winRate')));
+  assert.ok(!sec.textContent.includes(t('member.wins')));
+
+  // The picker re-renders: February has one play, and Azul was new then.
+  picker.value = 'month:2026-02';
+  picker.dispatchEvent(new dom.window.Event('change'));
+  const feb = dom.run('fmtMonth("2026-02-01T00:00:00")');
+  assert.deepEqual(tileTitles(sec).map(([label]) => label), [
+    t('periodRecap.mostPlayed', { period: feb }),
+    t('accountRecap.bestRated', { period: feb }),
+    t('accountRecap.newGames', { period: feb }),
+  ]);
+});
+
+test('no section on anybody else\'s profile, even if a payload carried plays', async (t_) => {
+  // The route never sends `plays` off the self branch (test/profile.test.js);
+  // this pins the VIEW's own gate, so neither alone is the only line.
+  for (const friendship of ['friends', 'incoming', 'outgoing', 'none']) {
+    const dom = bootWith(t_, stranger({ friendship, since: '2026-01-01T00:00:00.000Z', plays: PLAYS }));
+    await dom.call('showProfile', 'bo');
+    assert.equal(dom.app.querySelector('.arecap'), null, `a ${friendship} profile rendered the Rückblick`);
+  }
+});
+
+test('no play at all renders no section — there is no empty state to design', async (t_) => {
+  for (const plays of [[], undefined]) {
+    const dom = bootWith(t_, self({ plays }));
+    await dom.call('showProfile', 'ada');
+    assert.equal(dom.app.querySelector('.arecap'), null);
+  }
+});
+
+test('„Teilen" hands the card the username and the picked period, as a -me file', async (t_) => {
+  const shared = [];
+  const dom = bootWith(t_, self({ plays: PLAYS }));
+  dom.set('shareRecapCard', (period, model, name) => { shared.push({ period, model, name }); });
+  await dom.call('showProfile', 'ada');
+
+  const sec = dom.app.querySelector('.arecap');
+  const picker = sec.querySelector('.precap__picker');
+  picker.value = 'year:2026';
+  picker.dispatchEvent(new dom.window.Event('change'));
+  sec.querySelector('.precap__share').click();
+  await flush();
+
+  assert.equal(shared.length, 1);
+  const { model, name } = shared[0];
+  assert.equal(model.heading, 'ada', 'the personal card is headed by the username, not a round');
+  assert.equal(model.periodLabel, '2026');
+  assert.equal(name, 'spielwirbel-2026-me.png');
+  assert.equal(model.sessions, 4);
+  assert.deepEqual([...model.played], ['Azul']);
+  assert.equal(model.ratedLabel, t('accountRecap.card.bestRated'));
+  assert.equal(model.shelfLabel, t('accountRecap.card.new'));
+  assert.deepEqual([...model.shelf].map((s) => s.n), [2], 'Azul and Brass are both new in 2026');
+  assert.equal(JSON.stringify(model).includes('Runde'), false);
+});

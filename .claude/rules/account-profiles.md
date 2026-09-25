@@ -113,6 +113,11 @@ would be indistinguishable from an account with nothing to show.
 - The SUBJECT always sees their own numbers. The toggle governs what friends see,
   and hiding a figure from the person it is about would make the setting
   unverifiable from the screen offering it.
+- **`plays` (#1147, `lib/user-plays.js`) is SELF-ONLY, whatever `statsVisible`
+  says** — a per-session list with dates and the subject's own ratings, which
+  never went through #1089's friend-disclosure pass. Setting it in the friend
+  branch "because `stats` is there" is the natural edit and the wrong one; the
+  spec pins a `statsVisible: true` friend getting `stats` and no `plays`.
 
 ## The row link: a row with buttons can never become the anchor
 

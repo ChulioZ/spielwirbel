@@ -288,7 +288,8 @@ const frontendGlobals = {
   renderFeedTile: 'readonly', renderFeedTiles: 'readonly',
   // views-profile.js — the account profile (issue #558, rebuilt in #1132)
   showProfile: 'readonly', renderProfileCard: 'readonly', renderProfileState: 'readonly',
-  profileMenuItems: 'readonly',
+  profileMenuItems: 'readonly', profileGameTile: 'readonly',
+  renderAccountRecapSection: 'readonly', ACCOUNT_RECAP_NEW_SHOWN: 'readonly',
   friendRowMain: 'readonly', wireFriendRowMain: 'readonly',
   // views-account.js (issue #482)
   showAccount: 'readonly', renderKontoFact: 'readonly',
@@ -355,6 +356,10 @@ const frontendGlobals = {
   recapToken: 'readonly', recapPalette: 'readonly', recapFit: 'readonly',
   recapFont: 'readonly', recapPanel: 'readonly', recapCardBlocks: 'readonly',
   recapCardHeight: 'readonly', drawRecapCard: 'readonly', recapCardBlob: 'readonly',
+  recapShelfEntries: 'readonly',
+  // account-recap.js (#1147) — „Dein Rückblick" on the own profile
+  accountPeriodsOf: 'readonly', accountRecap: 'readonly',
+  accountRecapGame: 'readonly', accountRecapByTitle: 'readonly',
   // session-share.js (issue #526) — internal helpers listed for the same reason.
   sessionShareText: 'readonly', shareRatingLines: 'readonly', shareHeadline: 'readonly',
   SHARE_MEDALS: 'readonly', SHARE_TROPHY: 'readonly', SHARE_ENDING_TITLES: 'readonly',

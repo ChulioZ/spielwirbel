@@ -185,6 +185,67 @@ test('#1089: stats reach an accepted friend only, and only while the toggle is o
   assert.ok((await profile(bob, alice.username)).body.stats);
 });
 
+/* „Dein Rückblick" (#1147): `plays` is the account's flat play list, and unlike
+   `stats` it has been through NO friend-disclosure pass — so it is the SUBJECT's
+   alone, whatever `statsVisible` says. A played session is seeded straight into
+   the store because the HTTP path to a finished session is a dozen calls that
+   test nothing about this route. */
+async function seedPlayed(owner, title) {
+  const round = await makeRound(owner, ['Anna', 'Bob']);
+  const game = await addGame(owner, round.id, title);
+  const stored = store.data.rounds.find((r) => r.id === round.id);
+  const seat = stored.members.find((m) => m.userId === owner.user.id);
+  stored.sessions.push({
+    id: `s-${round.id}`, finished: true, cancelled: false,
+    memberIds: stored.members.map((m) => m.id), winnerIds: [seat.id],
+    gameIds: [game.id], chosenGameId: game.id,
+    votes: { [seat.id]: { [game.id]: { rating: 4 } } },
+    createdAt: '2026-03-05T19:00:00.000Z', finishedAt: '2026-03-05T22:00:00.000Z',
+  });
+  return stored;
+}
+
+test('#1147: plays reach the subject — never a stranger, a pending request or a friend', async () => {
+  const alice = await makeAccount('plays-alice@example.com');
+  const bob = await makeAccount('plays-bob@example.com');
+  await seedPlayed(alice, 'Azul');
+
+  const own = (await profile(alice, alice.username)).body;
+  assert.equal(own.plays.length, 1, 'the self profile carries the play list');
+  assert.equal(own.plays[0].title, 'Azul');
+  assert.equal(own.plays[0].rating, 4);
+
+  // Absent, never empty — the same shape as `stats` and `events`.
+  assert.equal('plays' in (await profile(bob, alice.username)).body, false, 'a stranger');
+  await sendReq(bob, alice.username);
+  assert.equal('plays' in (await profile(bob, alice.username)).body, false, 'the pending sender');
+  assert.equal('plays' in (await profile(alice, bob.username)).body, false, 'the pending addressee');
+
+  const fid = (await inbox(alice)).find((i) => i.type === 'friend_request').payload.friendshipId;
+  await request(app).post(`/api/account/friends/${fid}/accept`).set(auth(alice.token));
+  // The sharpest case: statsVisible is ON, so the friend DOES get `stats` —
+  // and must still not get `plays`.
+  const friendView = (await profile(bob, alice.username)).body;
+  assert.ok(friendView.stats, 'control: the friend sees the stats the toggle allows');
+  assert.equal('plays' in friendView, false, 'an accepted friend with stats visible');
+});
+
+test('#1147: the play list names no round, round id, member or tenant — structurally', async () => {
+  const alice = await makeAccount('plays-shape@example.com');
+  const stored = await seedPlayed(alice, 'Brass');
+  const { plays } = (await profile(alice, alice.username)).body;
+  assert.equal(plays.length, 1);
+  for (const row of plays) {
+    assert.deepEqual(Object.keys(row).sort(), ['at', 'image', 'key', 'rating', 'title']);
+  }
+  const text = JSON.stringify(plays);
+  const forbidden = [stored.id, stored.name, alice.user.tenantId,
+    ...stored.members.map((m) => m.id), ...stored.members.map((m) => m.name)];
+  for (const value of forbidden) {
+    assert.ok(value && !text.includes(value), `the play list carries ${value}`);
+  }
+});
+
 /* The legacy shape .claude/rules/defaulted-account-fields-need-a-legacy-shape-spec.md
    requires. Every account a spec can build is born carrying the key, so without
    deleting it by hand this file cannot tell `!== false` from `=== true` — and
