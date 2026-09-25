@@ -136,10 +136,11 @@ function hubPokalePreview(round) {
      where the other two previews show their count. Derived from the same
      `rankOf`, so a shared first place says so instead of naming one of them. */
   let sub = null;
-  /* Below YOUNG_ROUND_PODIUM_FROM (T7.5, #1280) Der Tisch names the leader and
-     says when the podium comes, instead of ranking three places off one or two
-     evenings — the Pokale tab's own gate, so preview and page agree. */
-  const young = designIs('tisch') && youngRoundPlayed(round, hubDeps()) < YOUNG_ROUND_PODIUM_FROM;
+  /* Below YOUNG_ROUND_PODIUM_FROM (T7.5, #1280; every design since #1318) the
+     preview names the leader and says when the podium comes, instead of
+     ranking three places off one or two evenings — the Pokale tab's own gate,
+     so preview and page agree. */
+  const young = youngRoundPlayed(round, hubDeps()) < YOUNG_ROUND_PODIUM_FROM;
   if (designIs('tisch')) {
     const leaders = winners.filter((m) => rankOf[m.id] === 1);
     sub = leaders.length === 1

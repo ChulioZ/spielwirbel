@@ -62,7 +62,7 @@ async function showHome() {
     if (alt) app.appendChild(alt);
   } else {
     app.appendChild(renderLobbyList(rounds));
-    const next = tischNextStep(rounds);
+    const next = lobbyNextStep(rounds);
     if (next) app.appendChild(next);
   }
 
@@ -87,10 +87,11 @@ function tischLobbyAlt() {
   return alt;
 }
 
-/* A one-round lobby (T7.2, #1280) — Der Tisch only. The lobby of someone who
-   has just founded their first round is where the app stops holding their
-   hand; T7.2 gives it a second slip on the round's tile and a „Nächster
-   Schritt" card under the grid.
+/* A one-round lobby (T7.2, #1280). The lobby of someone who has just founded
+   their first round is where the app stops holding their hand; T7.2 gives it a
+   second slip on the round's tile (Der Tisch only — it is that design's paper
+   slip) and a „Nächster Schritt" card under the grid (every design since
+   #1318 — below).
 
    The slip says why the others matter, on the tile of a round that seats only
    its founder. It is TEXT inside the tile's <a> (never a control — the tile is
@@ -110,9 +111,12 @@ function lobbyInviteSlip(rounds, r) {
 
    The rows are <button>s because each opens a SHEET over the lobby, not a
    route; each first fetches the round, since the sheets take the full round
-   and the lobby holds only its summary. */
-function tischNextStep(rounds) {
-  if (!designIs('tisch') || rounds.length !== 1) return null;
+   and the lobby holds only its summary.
+
+   Every design since #1318: it is an app feature rather than Tisch paint, so
+   the design only decides how the card looks (styles.css, tisch.css). */
+function lobbyNextStep(rounds) {
+  if (rounds.length !== 1) return null;
   const r = rounds[0];
   if (r.shared || r.playedCount > 0) return null;
   const steps = [];

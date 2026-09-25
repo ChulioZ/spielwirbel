@@ -245,15 +245,17 @@ function hubPulseCard(round, activeGames) {
   }
   const card = hubCard('ti-activity', t('hub.pulse.title'));
   const body = card.querySelector('.hub-card__body');
+  /* Until the third played session the card says WHEN series come (T7.5;
+     the sheet's „und Trends" was dropped — the Tisch pulse has no trend
+     line, #1280 review) — the same YOUNG_ROUND_SERIES_FROM that holds back the
+     Pokale streak card, so the sentence cannot promise something already on
+     screen. Every design since #1318 (Klassisch's two-bar chart at two
+     sessions is the same noise); in both it closes the card. */
+  const young = youngRoundPlayed(round, hubDeps()) < YOUNG_ROUND_SERIES_FROM;
+  const threshold = () => h(`<p class="hub-card__facts hub-card__threshold">${esc(tn(YOUNG_ROUND_SERIES_FROM, 'hub.young.seriesOne', 'hub.young.series'))}</p>`);
   if (tisch) {
     hubPulseTiles(round, card, pulse);
-    /* Until the third played session the card says WHEN series come (T7.5;
-       the sheet's „und Trends" was dropped — the Tisch pulse has no trend
-       line, #1280 review) — the same YOUNG_ROUND_SERIES_FROM that holds back the Pokale streak
-       card, so the sentence cannot promise something already on screen. */
-    if (youngRoundPlayed(round, hubDeps()) < YOUNG_ROUND_SERIES_FROM) {
-      body.appendChild(h(`<p class="hub-card__facts hub-card__threshold">${esc(tn(YOUNG_ROUND_SERIES_FROM, 'hub.young.seriesOne', 'hub.young.series'))}</p>`));
-    }
+    if (young) body.appendChild(threshold());
     return card;
   }
   const peak = Math.max(...pulse.months.map((m) => m.count), 1);
@@ -292,6 +294,7 @@ function hubPulseCard(round, activeGames) {
     navLink(link, roundPath(round.id, 'regal'), () => showRound(round.id, 'regal'));
     body.appendChild(link);
   }
+  if (young) body.appendChild(threshold());
   return card;
 }
 
