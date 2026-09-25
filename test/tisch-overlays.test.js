@@ -457,12 +457,6 @@ test('the Tafel prints places 2 and 3 in the paper-strength metals, not the app\
   }
 });
 
-test('the finale note reads in the stage\'s readable ink, not --stage-faint', () => {
-  // --stage-faint measured 3.86:1 on Der Tisch's stage for this --text-xs line.
-  const body = RULES.filter(([s]) => s.replace(/\s+/g, ' ').trim() === `${GATE} .stage__note`).map(([, b]) => b).join(';');
-  assert.match(body, /color\s*:\s*var\(--stage-muted\)/);
-});
-
 test('a red-inked button on the FELT sits on --surface, and a sheet still out-ranks it', () => {
   /* --danger on --control-fill is 4.47:1 (under AA); on --surface 5.53:1
      (test/tisch-spielepass.test.js measures the pair). The quiet wish-list

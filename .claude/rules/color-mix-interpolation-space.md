@@ -112,11 +112,11 @@ same side of their bar, so every existing check passed while the darkest text on
 the darkest screen lost a fifth of its headroom. Percentages nudged (62→65,
 45→48) and a stage test added.
 
-**Pre-existing and NOT fixed here:** `.stage__note` is 12px/700 in
-`--stage-faint` at ~3.58:1 — **below the 4.5 AA bar for normal text**, and it was
-(3.59:1) before this change too. The test pins a 3.5 floor as a *non-regression
-guard, not a pass*; fixing it means choosing a lighter tone, i.e. a design
-decision about the finale.
+**Closed 2026-09-25:** `.stage__note` (12px/700) sat in a third tone,
+`--stage-faint`, at ~3.58:1 — below AA, pinned for a while as a non-regression
+floor because a lighter tone was a design decision. The operator made it: the
+note takes `--stage-muted` and the token is gone; `test/a11y-contrast.test.js`
+now asserts the note's ink by name.
 
 ## Verifying a change here
 

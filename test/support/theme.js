@@ -327,7 +327,6 @@ function tokensFor(design) {
     stageBg: t('--stage-bg'),
     stageInk: t('--stage-ink'),
     stageMuted: t('--stage-muted'),
-    stageFaint: t('--stage-faint'),
     stageRaised: t('--stage-raised'),
     stageLine: t('--stage-line'),
   };

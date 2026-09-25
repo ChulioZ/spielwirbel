@@ -3570,10 +3570,6 @@
 :root[data-design="tisch"][data-scheme="dark"] .tafel .trow__rank--2 { color: var(--paper-silver); }
 :root[data-design="tisch"][data-scheme="dark"] .tafel .trow__rank--3 { color: var(--paper-bronze); }
 
-/* The finale's note („Noch kennt niemand das Ergebnis …") is real text at
-   --text-xs, and styles.css paints it --stage-faint: 3.86:1 on Der Tisch's
-   stage, measured. --stage-muted is the stage's readable secondary ink. */
-:root[data-design="tisch"][data-scheme="dark"] .stage__note { color: var(--stage-muted); }
 :root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .trow__img {
   grid-column: 2;
   grid-row: 1;
