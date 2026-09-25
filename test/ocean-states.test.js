@@ -58,9 +58,9 @@ function boot(t, design, round, { bgg = false } = {}) {
   dom.set('isLoggedIn', () => false);
   dom.set('canImportBgg', () => bgg);
   // Record where each action leads instead of opening the real sheets.
-  dom.run('globalThis.__went = []');
+  dom.went = [];
   for (const name of ['showAddGame', 'showBggImport', 'showStartSession']) {
-    dom.run(`globalThis.${name} = () => globalThis.__went.push(${JSON.stringify(name)})`);
+    dom.set(name, () => dom.went.push(name));
   }
   return dom;
 }
@@ -78,7 +78,7 @@ test('an empty Ocean shelf carries its two ways in on the card, and nowhere else
   assert.ok(btns[0].classList.contains('btn--primary'), 'adding a game is the one primary action');
   btns[0].click();
   btns[1].click();
-  assert.deepEqual(JSON.parse(dom.run('JSON.stringify(globalThis.__went)')), ['showAddGame', 'showBggImport']);
+  assert.deepEqual(dom.went, ['showAddGame', 'showBggImport']);
   // The dashed tiles, the tablet pill and the phone bubble would offer it again.
   assert.equal(dom.app.querySelector('.add-tile, .regal-fab, .regal-add--bar'), null,
     'the empty shelf offers „Spiel hinzufügen" a second time');
@@ -105,7 +105,7 @@ test('an empty Ocean Chronik offers „Abtauchen" — only where there is a game
   const btns = actions(dom);
   assert.deepEqual(btns.map(text), [dom.run("t('round.startSessionOcean')")]);
   btns[0].click();
-  assert.deepEqual(JSON.parse(dom.run('JSON.stringify(globalThis.__went)')), ['showStartSession']);
+  assert.deepEqual(dom.went, ['showStartSession']);
 
   const bare = boot(t, 'ocean', roundWith({ games: [] }));
   await bare.call('showRound', RID, 'chronik');
