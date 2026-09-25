@@ -165,8 +165,14 @@ test('the young line leaves once a session is played, and never shows on Klassis
 // --- the stylesheet ---------------------------------------------------------
 
 const SHEET = fs.readFileSync(path.join(__dirname, '..', 'public/css/designs/ocean.css'), 'utf8')
-  .replace(/\/\*[\s\S]*?\*\//g, (c) => (c.includes('===== #1216') ? '/*#1216*/' : ''));
-const SECTION = SHEET.slice(SHEET.indexOf('/*#1216*/') + '/*#1216*/'.length);
+  .replace(/\/\*[\s\S]*?\*\//g, (c) => {
+    if (c.includes('===== #1216')) return '/*#1216*/';
+    return c.startsWith('/* ===== #') ? '/*§*/' : '';
+  });
+// The section runs to the NEXT section header, not to the end of the file: a
+// later slice's rules are not #1216's (#1218's spec learned this from #1221).
+const AFTER = SHEET.slice(SHEET.indexOf('/*#1216*/') + '/*#1216*/'.length);
+const SECTION = AFTER.includes('/*§*/') ? AFTER.slice(0, AFTER.indexOf('/*§*/')) : AFTER;
 const GATE = ':root[data-design="ocean"]:not([data-scheme="dark"])';
 
 function topLevelParts(selector) {
