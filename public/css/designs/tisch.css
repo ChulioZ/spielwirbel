@@ -3184,6 +3184,29 @@
   box-shadow: 0 18px 36px var(--cast-deep);
   color: var(--paper-ink);
 }
+
+/* --- Motion ritual 3: the card tips to the next one (#1200, T10.3) ---------
+   views-session.js / views-vote-link.js add `.is-tipped` to a card the rating
+   beat (#1168) delivered — never to one reached by Back, a language switch or
+   the first card. The paper card comes back from edge-on, so in the middle of
+   the turn nothing on it is legible: the turn is the privacy screen T10 asks
+   for, not decoration.
+
+   Only the RETURN half. T10 draws 760ms out-and-back; the app already spends
+   the outgoing half on the beat, which holds the old card still showing the
+   chosen face (that frame is the acknowledgement, vote-advance.js), so turning
+   it away there would erase the one thing the beat is for. 380ms, T10's own
+   curve. No end frame: it lands on the card's rest transform. Nothing touches
+   `pointer-events` — the tap guard in vote-advance.js is what keeps a
+   double-tap off the new card, as it always was. */
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-design="tisch"] .vote--tisch.is-tipped .vote__card {
+    animation: tisch-vote-tip 380ms cubic-bezier(0.4, 0, 0.2, 1) both;
+  }
+  @keyframes tisch-vote-tip {
+    from { transform: perspective(1200px) rotateY(90deg); }
+  }
+}
 :root[data-design="tisch"][data-scheme="dark"] .vote--tisch .vote__img {
   grid-area: img;
   align-self: center;

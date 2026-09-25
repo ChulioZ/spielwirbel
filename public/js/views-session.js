@@ -1052,6 +1052,12 @@ function startVoting(round, session, games, people, opts = {}) {
 
     app.innerHTML = '';
     const card = designIs('tisch') ? tischCard(person, game) : klassischCard(person, game, color);
+    /* Der Tisch's third motion ritual (#1200, T10.3): a card the BEAT delivered
+       tips in about its middle axis — the hand-over, and the turn itself is the
+       privacy screen. `wanted.kind === 'title'` is exactly "the advance brought
+       this card", so arriving by Back, a language switch or the first card never
+       tips. The motion is tisch.css's; nothing here waits for it. */
+    if (designIs('tisch') && wanted && wanted.kind === 'title') card.classList.add('is-tipped');
 
     // Info affordance (#717): the provider metadata behind a small ⓘ in the
     // title line, so the height-budgeted card gains no extra row
