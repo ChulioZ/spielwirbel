@@ -141,7 +141,7 @@ can only lighten, so the argument had inverted while the number happened to hold
 with X" (a stylesheet, a page colour) must assert its filter is non-empty, or an
 empty filter is the failure this section is about, wearing a green tick.
 
-**Related:** `.claude/rules/design-colour-blocks-are-scheme-gated.md` (the
+**Related:** `.claude/rules/page-paper-surfaces-need-the-overlay-answer.md` (the same trap on the paper IN THE PAGE), `.claude/rules/design-colour-blocks-are-scheme-gated.md` (the
 voice/colour split, and why a rule reading a gated token is gated as hard as the
 token), `.claude/rules/design-stylesheets-are-shell-assets.md` (why every colour
 must live in the resolved root block at all),

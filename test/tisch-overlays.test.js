@@ -33,7 +33,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 
 const { loadApp, flush } = require('./support/dom');
-const { rulesOf } = require('./support/css');
+const { rulesOf, outranks } = require('./support/css');
 
 const ROOT = path.join(__dirname, '..');
 const strip = (css) => css.replace(/\/\*[\s\S]*?\*\//g, '');
@@ -411,6 +411,65 @@ test('every surface that turns its ink to PAPER turns its controls to paper too'
     .filter(([, body]) => !/--control-fill\s*:/.test(body) || !/--control-edge\s*:/.test(body))
     .map(([sel]) => sel.replace(/\s+/g, ' ').trim());
   assert.deepEqual(missing, [], 'these blocks set the paper ink but leave the felt\'s control fill/edge');
+});
+
+test('every PAPER surface in the page gets the overlay\'s whole answer, not just its grounds', () => {
+  /* The test above was the first half of this, and it was written from one
+     symptom (the Tafel's „Spielen" on a walnut fill). The same shape came back
+     one token over: the Tafel's „auf dem Tisch" chip reads --brand-tint-soft,
+     which no page-paper block re-pointed, so it stayed a walnut pill under the
+     gold row's dark ink — 1.12:1, reported from production.
+
+     So derive it the way the overlay test does: every token :root mixes from
+     the page or the surface, plus the inks tuned against the walnut, must reach
+     each paper block — from its own body or from a scheme-gated `:where()` rule
+     that names it. `--page-bg` is the one overlay-only answer: it exists for the
+     sticky sheet bars, and a page surface has none. */
+  const root = rulesOf(APP_CSS).filter(([sel]) => sel.trim() === ':root').map(([, b]) => b).join(';');
+  const derived = [...root.matchAll(/(--[\w-]+)\s*:\s*([^;]+)/g)]
+    .filter(([, , v]) => /var\(--(page-bg|surface)\)/.test(v))
+    .map(([, name]) => name);
+  const needed = [...new Set([...derived, '--good', '--danger', '--warn', '--brand-ink', '--brand-ring'])];
+  assert.ok(needed.length >= 11, `only ${needed.length} tokens derived — did the :root parse break?`);
+
+  const surfaceOf = (sel) => sel.replace(/\s+/g, ' ').trim().slice(GATE.length).trim();
+  const shared = RULES.filter(([sel]) => sel.replace(/\s+/g, ' ').trim().startsWith(`${GATE} :where(`));
+  const pages = rulesOf(TISCH)
+    .filter(([sel, body]) => /--ink\s*:\s*var\(--paper-ink\)/.test(body) && !sel.includes(`${GATE} .sheet,`) && !sel.includes('.popover'));
+  assert.ok(pages.length >= 5, `only ${pages.length} page-paper blocks found — did the parse break?`);
+
+  const gaps = [];
+  for (const [sel, body] of pages) {
+    const surface = surfaceOf(sel);
+    const from = [body, ...shared.filter(([s]) => s.slice(s.indexOf(':where(')).split(/[(),]/).map((x) => x.trim()).includes(surface)).map(([, b]) => b)].join(';');
+    const missing = needed.filter((n) => !new RegExp(`(?:^|[;{\\s])${n}\\s*:`).test(from));
+    if (missing.length) gaps.push(`${surface}: ${missing.join(' ')}`);
+  }
+  assert.deepEqual(gaps, [], 'these paper surfaces still inherit walnut values for the listed tokens');
+});
+
+test('the Tafel prints places 2 and 3 in the paper-strength metals, not the app\'s pale medal tints', () => {
+  /* styles.css's #9ca3af / #b3703a measured 2.06:1 and 3.22:1 on the raised
+     paper; the tokens are measured in test/a11y-contrast.test.js. */
+  for (const [n, token] of [[2, '--paper-silver'], [3, '--paper-bronze']]) {
+    const body = RULES.filter(([sel]) => sel.replace(/\s+/g, ' ').trim() === `${GATE} .tafel .trow__rank--${n}`).map(([, b]) => b).join(';');
+    assert.match(body, new RegExp(`color\\s*:\\s*var\\(${token}\\)`), `place ${n} keeps the app's pale tint on paper`);
+  }
+});
+
+test('a red-inked button on the FELT sits on --surface, and a sheet still out-ranks it', () => {
+  /* --danger on --control-fill is 4.47:1 (under AA); on --surface 5.53:1
+     (test/tisch-spielepass.test.js measures the pair). The quiet wish-list
+     delete carries the ink inline on a plain .btn, hence its own selector. */
+  const page = [`${GATE} .btn--danger`, `${GATE} .archive-row__actions .btn[data-act="delete"]`];
+  for (const sel of page) {
+    const body = RULES.filter(([s]) => s.split(',').map((x) => x.replace(/\s+/g, ' ').trim()).includes(sel)).map(([, b]) => b).join(';');
+    assert.match(body, /background\s*:\s*var\(--surface\)/, `${sel} keeps the felt control fill`);
+  }
+  // The sheet's red FILL must still win inside an overlay, at rest and hovered.
+  assert.ok(outranks(`${GATE} .sheet .btn--danger`, page[0]), 'the felt rule out-ranks the sheet\'s red fill');
+  assert.ok(outranks(`${GATE} .sheet .btn--danger:hover:not(:disabled)`, `${page[0]}:hover:not(:disabled)`),
+    'the felt hover out-ranks the sheet\'s red hover');
 });
 
 test('a destructive button in a sheet is red-FILLED, at rest and under the pointer', () => {
