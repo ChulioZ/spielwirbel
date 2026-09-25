@@ -29,6 +29,8 @@ I18N.en = {
   'home.docTitle': 'My rounds',
   'home.greeting': 'Good to see you.',
   'home.sub': 'Which round is playing today?',
+  // Der Tisch only (#1279): the lobby voice beside the wordmark.
+  'home.tischKicker': 'Game café · your tables',
   'home.shared': 'Shared',
   'home.newRound': 'Start a new round',
   'home.empty.title': 'No game round yet.',
@@ -676,6 +678,10 @@ I18N.en = {
   'member.favoriteNone': 'No ratings yet',
   'member.ownedTitleOne': '{n} game owned by {name}',
   'member.ownedTitle': '{n} games owned by {name}',
+  // Der Tisch's attendance line under a member's name (#1276): sessions this
+  // member took part in, of the round's finished ones. Plural follows {total}.
+  'member.attendanceOne': 'At {n} of {total} session',
+  'member.attendance': 'At {n} of {total} sessions',
   'member.noSessions': 'Not part of any session yet',
   'member.saved': 'Saved',
   'member.claim': "That's me",
@@ -1549,14 +1555,22 @@ I18N.en = {
   'design.klassisch.name': 'Classic',
   'design.klassisch.badge': 'As before',
   'design.klassisch.desc': 'The look Spielwirbel started with — light, calm, with the orange accent.',
+  'design.klassisch.tagline': 'What is your group playing today?',
+  'design.klassisch.short': 'Light paper, orange accents',
   'design.tisch.name': 'The Table',
   'design.tisch.desc': 'Dark felt and warm gold — as if it were all laid out on the games table.',
+  'design.tisch.tagline': 'Felt, brass, dice',
+  'design.tisch.short': 'Felt, brass, seats at the table',
   'design.chooser.kicker': 'New in Spielwirbel',
   'design.chooser.title': 'Pick a design.',
   'design.chooser.body': 'Everything stays where it is — shelf, chronicle, trophies, spinning up a session. It just looks different. You can switch any time in your account.',
   'design.chooser.later': 'More designs are coming. Your choice stays until you change it.',
   'design.chooser.skip': 'Decide later',
   'design.chooser.confirm': 'Use this design',
+  'design.chooser.confirmNamed': 'Use {name}',
+  'design.chooser.moreTitle': 'More to come',
+  'design.poster.pick': 'Choose',
+  'design.poster.picked': 'Selected',
   'konto.design.title': 'Design',
   'konto.design.hint': 'Applies to you, not to the round.',
   'konto.design.note': 'Classic is the design Spielwirbel started with — it stays available for good. Switching changes only how things look, never where they are.',
@@ -1740,6 +1754,9 @@ I18N.en = {
   'a11y.home': 'Spielwirbel – go to home screen',
   'a11y.language': 'Language',
   'a11y.account': 'Account',
+  // Der Tisch shows the account NAME on the button (#1279), so the name must
+  // be part of its accessible name (WCAG 2.5.3 Label in Name).
+  'a11y.accountNamed': 'Account: {name}',
   'a11y.hubTabs': 'Round sections',
   'a11y.roundNav': 'Round navigation',
 

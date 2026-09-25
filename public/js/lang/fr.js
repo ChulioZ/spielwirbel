@@ -42,6 +42,8 @@ I18N.fr = {
   'home.docTitle': 'Mes groupes',
   'home.greeting': 'Content de te voir.',
   'home.sub': 'Quel groupe joue aujourd’hui ?',
+  // Der Tisch only (#1279): the lobby voice beside the wordmark.
+  'home.tischKicker': 'Café ludique · tes tables',
   'home.shared': 'Partagé',
   'home.newRound': 'Créer un groupe',
   'home.empty.title': 'Aucun groupe pour l’instant.',
@@ -659,6 +661,10 @@ I18N.fr = {
   'member.favoriteNone': 'Pas encore de note',
   'member.ownedTitleOne': '{n} jeu de {name}',
   'member.ownedTitle': '{n} jeux de {name}',
+  // Der Tisch's attendance line under a member's name (#1276): sessions this
+  // member took part in, of the round's finished ones. Plural follows {total}.
+  'member.attendanceOne': '{n} sur {total} session',
+  'member.attendance': '{n} sur {total} sessions',
   'member.noSessions': 'Ne fait encore partie d’aucune session',
   'member.saved': 'Enregistré',
   'member.claim': 'C’est moi',
@@ -1474,14 +1480,22 @@ I18N.fr = {
   'design.klassisch.name': 'Classique',
   'design.klassisch.badge': 'Comme avant',
   'design.klassisch.desc': 'L\'apparence avec laquelle Spielwirbel a commencé : claire, calme, avec l\'accent orange.',
+  'design.klassisch.tagline': 'À quoi joue ton groupe aujourd\'hui ?',
+  'design.klassisch.short': 'Papier clair, touches orange',
   'design.tisch.name': 'La table',
   'design.tisch.desc': 'Feutre sombre et or chaud — comme si tout était posé sur la table de jeu.',
+  'design.tisch.tagline': 'Feutre, laiton, dés',
+  'design.tisch.short': 'Feutre, laiton, places à table',
   'design.chooser.kicker': 'Nouveau sur Spielwirbel',
   'design.chooser.title': 'Choisis un design.',
   'design.chooser.body': 'Tout reste au même endroit : étagère, chronique, trophées, lancement de la session. Seule l\'apparence change. Tu peux en changer à tout moment dans ton compte.',
   'design.chooser.later': 'D\'autres designs arriveront. Ton choix reste jusqu\'à ce que tu le changes.',
   'design.chooser.skip': 'Décider plus tard',
   'design.chooser.confirm': 'Utiliser ce design',
+  'design.chooser.confirmNamed': 'Utiliser {name}',
+  'design.chooser.moreTitle': 'D\'autres à venir',
+  'design.poster.pick': 'Choisir',
+  'design.poster.picked': 'Choisi',
   'konto.design.title': 'Design',
   'konto.design.hint': 'S\'applique à toi, pas à la ronde.',
   'konto.design.note': 'Classique est le design avec lequel Spielwirbel a commencé — il restera toujours disponible. Changer ne modifie que l\'apparence, jamais l\'emplacement des choses.',
@@ -1627,6 +1641,9 @@ I18N.fr = {
   'a11y.home': 'Spielwirbel – aller à l’écran d’accueil',
   'a11y.language': 'Langue',
   'a11y.account': 'Compte',
+  // Der Tisch shows the account NAME on the button (#1279), so the name must
+  // be part of its accessible name (WCAG 2.5.3 Label in Name).
+  'a11y.accountNamed': 'Compte : {name}',
   'a11y.hubTabs': 'Sections du groupe',
   'a11y.roundNav': 'Navigation du groupe',
 

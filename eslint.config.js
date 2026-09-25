@@ -259,7 +259,7 @@ const frontendGlobals = {
   showRateLimited: 'readonly',
   showAuthDone: 'readonly', buildResend: 'readonly', renderVerifyLanding: 'readonly',
   renderResetLanding: 'readonly', setupAccountUi: 'readonly',
-  accountApi: 'readonly', setupInboxUi: 'readonly', setInboxDot: 'readonly',
+  accountApi: 'readonly', setupInboxUi: 'readonly', renderAccountFace: 'readonly', accountBtnLabel: 'readonly', setInboxDot: 'readonly',
   refreshInboxBadge: 'readonly',
   // account.js — the „Was ist neu" dot (issue #741)
   hasUnseenNews: 'readonly', setNewsDot: 'readonly', markNewsSeen: 'readonly',

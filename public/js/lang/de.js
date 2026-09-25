@@ -31,6 +31,8 @@ I18N.de = {
   'home.docTitle': 'Meine Runden',
   'home.greeting': 'Schön, dass ihr da seid.',
   'home.sub': 'Welche Runde spielt heute?',
+  // Der Tisch only (#1279): the lobby voice beside the wordmark.
+  'home.tischKicker': 'Spielecafé · deine Tische',
   'home.shared': 'Geteilt',
   'home.newRound': 'Neue Runde gründen',
   'home.empty.title': 'Noch keine Spielrunde angelegt.',
@@ -678,6 +680,10 @@ I18N.de = {
   'member.favoriteNone': 'Noch keine Wertungen',
   'member.ownedTitleOne': '{n} Spiel von {name}',
   'member.ownedTitle': '{n} Spiele von {name}',
+  // Der Tisch's attendance line under a member's name (#1276): sessions this
+  // member took part in, of the round's finished ones. Plural follows {total}.
+  'member.attendanceOne': '{n} von {total} Session dabei',
+  'member.attendance': '{n} von {total} Sessions dabei',
   'member.noSessions': 'Noch bei keiner Session dabei',
   'member.saved': 'Gespeichert',
   'member.claim': 'Das bin ich',
@@ -1541,14 +1547,22 @@ I18N.de = {
   'design.klassisch.name': 'Klassisch',
   'design.klassisch.badge': 'Wie bisher',
   'design.klassisch.desc': 'Die Oberfläche, mit der Spielwirbel angefangen hat — hell, ruhig, mit dem orangenen Akzent.',
+  'design.klassisch.tagline': 'Welche Runde spielt heute?',
+  'design.klassisch.short': 'Helles Papier, orange Akzente',
   'design.tisch.name': 'Der Tisch',
   'design.tisch.desc': 'Dunkler Filz und warmes Gold — als läge alles auf dem Spieltisch.',
+  'design.tisch.tagline': 'Filz, Messing, Würfel',
+  'design.tisch.short': 'Filz, Messing, Plätze am Tisch',
   'design.chooser.kicker': 'Neu in Spielwirbel',
   'design.chooser.title': 'Wähl dir ein Design.',
   'design.chooser.body': 'Alles liegt weiter an derselben Stelle — Regal, Chronik, Pokale, Session wirbeln. Es sieht nur anders aus. Du kannst jederzeit im Konto wechseln.',
   'design.chooser.later': 'Neue Designs kommen dazu. Deine Wahl bleibt, bis du sie änderst.',
   'design.chooser.skip': 'Später entscheiden',
   'design.chooser.confirm': 'Design übernehmen',
+  'design.chooser.confirmNamed': '{name} übernehmen',
+  'design.chooser.moreTitle': 'Später mehr',
+  'design.poster.pick': 'Auswählen',
+  'design.poster.picked': 'Ausgewählt',
   'konto.design.title': 'Design',
   'konto.design.hint': 'Gilt für dich, nicht für die Runde.',
   'konto.design.note': 'Klassisch ist das Design, mit dem Spielwirbel angefangen hat — es bleibt immer wählbar. Ein Wechsel ändert nur das Aussehen, nie wo etwas liegt.',
@@ -1735,6 +1749,9 @@ I18N.de = {
   'a11y.home': 'Spielwirbel – zur Startseite',
   'a11y.language': 'Sprache',
   'a11y.account': 'Konto',
+  // Der Tisch shows the account NAME on the button (#1279), so the name must
+  // be part of its accessible name (WCAG 2.5.3 Label in Name).
+  'a11y.accountNamed': 'Konto: {name}',
   'a11y.hubTabs': 'Rundenbereiche',
   'a11y.roundNav': 'Rundennavigation',
 

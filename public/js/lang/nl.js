@@ -46,6 +46,8 @@ I18N.nl = {
   'home.docTitle': 'Mijn groepen',
   'home.greeting': 'Fijn dat je er weer bent.',
   'home.sub': 'Welke groep speelt er vandaag?',
+  // Der Tisch only (#1279): the lobby voice beside the wordmark.
+  'home.tischKicker': 'Spellencafé · jouw tafels',
   'home.shared': 'Gedeeld',
   'home.newRound': 'Een nieuwe groep starten',
   'home.empty.title': 'Nog geen speelgroep.',
@@ -654,6 +656,10 @@ I18N.nl = {
   'member.favoriteNone': 'Nog geen beoordelingen',
   'member.ownedTitleOne': '{n} spel van {name}',
   'member.ownedTitle': '{n} spellen van {name}',
+  // Der Tisch's attendance line under a member's name (#1276): sessions this
+  // member took part in, of the round's finished ones. Plural follows {total}.
+  'member.attendanceOne': 'Bij {n} van {total} sessie',
+  'member.attendance': 'Bij {n} van {total} sessies',
   'member.noSessions': 'Nog in geen enkele sessie',
   'member.saved': 'Opgeslagen',
   'member.claim': 'Dat ben ik',
@@ -1466,14 +1472,22 @@ I18N.nl = {
   'design.klassisch.name': 'Klassiek',
   'design.klassisch.badge': 'Zoals voorheen',
   'design.klassisch.desc': 'Het uiterlijk waarmee Spielwirbel begon — licht, rustig, met het oranje accent.',
+  'design.klassisch.tagline': 'Wat speelt jullie groep vandaag?',
+  'design.klassisch.short': 'Licht papier, oranje accenten',
   'design.tisch.name': 'De tafel',
   'design.tisch.desc': 'Donker vilt en warm goud — alsof alles op de speeltafel ligt.',
+  'design.tisch.tagline': 'Vilt, messing, dobbelstenen',
+  'design.tisch.short': 'Vilt, messing, plaatsen aan tafel',
   'design.chooser.kicker': 'Nieuw in Spielwirbel',
   'design.chooser.title': 'Kies een ontwerp.',
   'design.chooser.body': 'Alles blijft op dezelfde plek — kast, kroniek, prijzen, sessie starten. Alleen het uiterlijk verandert. Je kunt het altijd wijzigen in je account.',
   'design.chooser.later': 'Er komen meer ontwerpen bij. Je keuze blijft tot je hem wijzigt.',
   'design.chooser.skip': 'Later beslissen',
   'design.chooser.confirm': 'Dit ontwerp gebruiken',
+  'design.chooser.confirmNamed': '{name} gebruiken',
+  'design.chooser.moreTitle': 'Later meer',
+  'design.poster.pick': 'Kiezen',
+  'design.poster.picked': 'Gekozen',
   'konto.design.title': 'Ontwerp',
   'konto.design.hint': 'Geldt voor jou, niet voor de groep.',
   'konto.design.note': 'Klassiek is het ontwerp waarmee Spielwirbel begon — het blijft altijd beschikbaar. Wisselen verandert alleen het uiterlijk, nooit waar iets staat.',
@@ -1619,6 +1633,9 @@ I18N.nl = {
   'a11y.home': 'Spielwirbel – naar het beginscherm',
   'a11y.language': 'Taal',
   'a11y.account': 'Account',
+  // Der Tisch shows the account NAME on the button (#1279), so the name must
+  // be part of its accessible name (WCAG 2.5.3 Label in Name).
+  'a11y.accountNamed': 'Account: {name}',
   'a11y.hubTabs': 'Onderdelen van de groep',
   'a11y.roundNav': 'Navigatie van de groep',
 

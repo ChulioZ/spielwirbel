@@ -23,6 +23,8 @@ I18N.fi = {
   'home.docTitle': 'Omat porukat',
   'home.greeting': 'Mukava nähdä.',
   'home.sub': 'Mikä porukka pelaa tänään?',
+  // Der Tisch only (#1279): the lobby voice beside the wordmark.
+  'home.tischKicker': 'Pelikahvila · sinun pöytäsi',
   'home.shared': 'Jaettu',
   'home.newRound': 'Aloita uusi porukka',
   'home.empty.title': 'Ei vielä yhtään peliporukkaa.',
@@ -628,6 +630,10 @@ I18N.fi = {
   'member.favoriteNone': 'Ei vielä arvioita',
   'member.ownedTitleOne': '{n} peli, jonka omistaa {name}',
   'member.ownedTitle': '{n} peliä, jotka omistaa {name}',
+  // Der Tisch's attendance line under a member's name (#1276): sessions this
+  // member took part in, of the round's finished ones. Plural follows {total}.
+  'member.attendanceOne': 'Mukana {n}/{total} sessiossa',
+  'member.attendance': 'Mukana {n}/{total} sessiossa',
   'member.noSessions': 'Ei vielä mukana yhdessäkään sessiossa',
   'member.saved': 'Tallennettu',
   'member.claim': 'Tämä olen minä',
@@ -1434,14 +1440,22 @@ I18N.fi = {
   'design.klassisch.name': 'Klassinen',
   'design.klassisch.badge': 'Kuten ennen',
   'design.klassisch.desc': 'Ulkoasu, jolla Spielwirbel aloitti — vaalea, rauhallinen ja oranssi korostus.',
+  'design.klassisch.tagline': 'Mitä porukkanne pelaa tänään?',
+  'design.klassisch.short': 'Vaalea paperi, oranssit korostukset',
   'design.tisch.name': 'Pöytä',
   'design.tisch.desc': 'Tummaa verkaa ja lämmintä kultaa — kuin kaikki olisi pelipöydällä.',
+  'design.tisch.tagline': 'Huopa, messinki, nopat',
+  'design.tisch.short': 'Huopa, messinki, paikat pöydän ääressä',
   'design.chooser.kicker': 'Uutta Spielwirbelissä',
   'design.chooser.title': 'Valitse ulkoasu.',
   'design.chooser.body': 'Kaikki pysyy samassa paikassa — hylly, kronikka, palkinnot ja pelin arvonta. Vain ulkoasu muuttuu. Voit vaihtaa milloin tahansa tilisi asetuksista.',
   'design.chooser.later': 'Lisää ulkoasuja on tulossa. Valintasi säilyy, kunnes vaihdat sen.',
   'design.chooser.skip': 'Päätä myöhemmin',
   'design.chooser.confirm': 'Ota tämä käyttöön',
+  'design.chooser.confirmNamed': 'Ota {name} käyttöön',
+  'design.chooser.moreTitle': 'Lisää tulossa',
+  'design.poster.pick': 'Valitse',
+  'design.poster.picked': 'Valittu',
   'konto.design.title': 'Ulkoasu',
   'konto.design.hint': 'Koskee sinua, ei ryhmää.',
   'konto.design.note': 'Klassinen on ulkoasu, jolla Spielwirbel aloitti — se on aina valittavissa. Vaihtaminen muuttaa vain ulkonäköä, ei sitä missä asiat ovat.',
@@ -1587,6 +1601,9 @@ I18N.fi = {
   'a11y.home': 'Spielwirbel – siirry aloitusnäkymään',
   'a11y.language': 'Kieli',
   'a11y.account': 'Tili',
+  // Der Tisch shows the account NAME on the button (#1279), so the name must
+  // be part of its accessible name (WCAG 2.5.3 Label in Name).
+  'a11y.accountNamed': 'Tili: {name}',
   'a11y.hubTabs': 'Porukan osiot',
   'a11y.roundNav': 'Porukan navigaatio',
 
