@@ -40,6 +40,23 @@
 
 'use strict';
 
+/* The eight PERSON colours, which Ocean's markers are (#1219, O14.1). ONE list:
+   member-colors.js is the source every avatar, the members route and this
+   registry read (.claude/rules/shared-constants-across-the-stack.md).
+
+   In the browser member-colors.js loads first and MEMBER_COLORS is a
+   shared-scope global — index.html, login.html and kontakt.html all load it
+   ahead of this file. Under Node (lib/ and the tests require this module)
+   there is no such global, so the module is required instead. That is the one
+   sibling require in public/js, and it is safe for the reason the usual ban
+   exists: the browser never reaches it, because the global is always there
+   first — and a page that forgot the script fails LOUDLY on `require`, rather
+   than painting eight undefined markers. */
+const PERSON_COLORS = typeof MEMBER_COLORS !== 'undefined'
+  ? MEMBER_COLORS
+  // eslint-disable-next-line no-undef -- Node only; see above.
+  : require('./member-colors').MEMBER_COLORS;
+
 // One row per design. `labelKey`/`descKey` name the i18n keys the picker renders
 // (#1186). Both are EXPLICIT fields rather than keys assembled from the id, so a
 // grep for 'design.tisch.name' finds the registry row AND the nine lang files —
@@ -286,16 +303,19 @@ const DESIGN_REGISTRY = [
        the two copies equal.
 
        White on every one of the sixteen clears 4.5:1 (the tightest is Koralle
-       at 4.52:1), so the default markerInk stands. */
+       at 4.52:1), so the default markerInk stands.
+
+       The colours are READ from member-colors.js, never spelled here (#1219 —
+       „a hand-copied list is the palette bug"). See PERSON_COLORS above. */
     markers: [
-      { key: 'koralle', labelKey: 'marker.ocean.koralle', color: '#c6522c', deep: '#8a3418' },
-      { key: 'seegras', labelKey: 'marker.ocean.seegras', color: '#198663', deep: '#005b40' },
-      { key: 'seeigel', labelKey: 'marker.ocean.seeigel', color: '#726bc7', deep: '#4a4396' },
-      { key: 'bernstein', labelKey: 'marker.ocean.bernstein', color: '#a66815', deep: '#6f440a' },
-      { key: 'anemone', labelKey: 'marker.ocean.anemone', color: '#c34d74', deep: '#892d4d' },
-      { key: 'lagune', labelKey: 'marker.ocean.lagune', color: '#2f6f9e', deep: '#164a6e' },
-      { key: 'tang', labelKey: 'marker.ocean.tang', color: '#54821d', deep: '#345801' },
-      { key: 'purpur', labelKey: 'marker.ocean.purpur', color: '#993556', deep: '#6b1c38' },
+      { key: 'koralle', labelKey: 'marker.ocean.koralle', color: PERSON_COLORS[0], deep: '#8a3418' },
+      { key: 'seegras', labelKey: 'marker.ocean.seegras', color: PERSON_COLORS[1], deep: '#005b40' },
+      { key: 'seeigel', labelKey: 'marker.ocean.seeigel', color: PERSON_COLORS[2], deep: '#4a4396' },
+      { key: 'bernstein', labelKey: 'marker.ocean.bernstein', color: PERSON_COLORS[3], deep: '#6f440a' },
+      { key: 'anemone', labelKey: 'marker.ocean.anemone', color: PERSON_COLORS[4], deep: '#892d4d' },
+      { key: 'lagune', labelKey: 'marker.ocean.lagune', color: PERSON_COLORS[5], deep: '#164a6e' },
+      { key: 'tang', labelKey: 'marker.ocean.tang', color: PERSON_COLORS[6], deep: '#345801' },
+      { key: 'purpur', labelKey: 'marker.ocean.purpur', color: PERSON_COLORS[7], deep: '#6b1c38' },
     ],
     /* Klassisch's marks, stated rather than inherited, until Ocean's own mark
        lands with #1220 (O8.3 „the design's mark", the sine wave). Stated so the

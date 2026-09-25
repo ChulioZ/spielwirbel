@@ -4486,3 +4486,500 @@
     margin-top: 0;
   }
 }
+
+/* ===== #1219 — Einstellungen mit Markerwahl, Leute & Strom, Posteingang, Was ist neu, Konto, Statistik ===== */
+/* Source: docs/design/ocean/Ocean-O14-Tier2b.dc.html (O14.1 Rundeneinstellungen,
+   O14.2 Leute & Strom, O14.3 Mein Konto, O14.4 Statistik). O14.5 names the two
+   things this section lays down for the overlays after it: the settings ROW
+   (glyph, title, value at the right) and the GEFAHRENZONE with an edge of its
+   own instead of a red surface.
+
+   Markup: views-round-settings.js composeOceanSettings (the cards and the two
+   columns, the marker picker inline), views-account.js composeKontoCards (one
+   card per Konto section), views-inbox.js composeInboxRow (the icon disc, shared
+   with Der Tisch) and views-friends.js (the feed as rows, shared with Der
+   Tisch). News and the statistics are paint only. Klassisch renders none of it.
+
+   NOT built from the sheet, because each is a feature or data the app does not
+   have (the #1196/#1218 precedent): the rename field and the member list with
+   rights on the settings screen (the round name is edited in the rail, seats on
+   the member pages, access in the invite sheet), the four „Wie ihr spielen
+   wollt" switches and the export line; O14.2's single page holding friends,
+   feed, inbox and news together (four routes in the app, each reached from the
+   chrome), the „Alle Runden" filter, the „Suchen" link and a score in a feed
+   row; O14.3's summary head („In 2 Runden · 7 Siege") and its row list with
+   values; O14.4's personal numbers („Deine Zahlen", „Mit wem du am häufigsten
+   spielst") — the signed-in statistics screen is the INSTANCE's
+   (lib/public-stats.js), so it keeps its own counters and podiums.
+
+   Every rule is gated on the light scheme, layout included: nearly all of them
+   read a token only the gated colour block declares (--line-soft, --wave-paper,
+   --danger-soft, --cast*). Ocean is never dark since the flip, so the gate
+   costs nothing. */
+
+/* --- The card every screen here is built from ---------------------------- */
+/* O14's cards: surface, a line, the soft cast, 22px corners. One rule for the
+   five hosts, so the screens cannot drift apart. The inbox list has no class of
+   its own (Klassisch's markup is untouched), so it is named by what it holds.
+
+   `:where()`, not `:is()`: an `:is()` list takes its MOST specific member, and
+   `.app > .ds-list:has(> .inbox-row)` would lift the plain `.rs-card` to
+   (0,6,0) — over every modifier below it. Measured: the danger card's red edge
+   and red label both lost to this rule and rendered as the ordinary card. The
+   kicker rule below is `:where()` for the same reason. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) :where(.rs-card, .konto-card, .friends-screen .k-band, .app > .news-list, .app > .ds-list:has(> .inbox-row)) {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 0;
+  margin-bottom: 0;
+  padding: 18px 22px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-1);
+}
+@media (max-width: 520px) {
+  :root[data-design="ocean"]:not([data-scheme="dark"]) :where(.rs-card, .konto-card, .friends-screen .k-band, .app > .news-list, .app > .ds-list:has(> .inbox-row)) {
+    padding: 16px;
+  }
+}
+
+/* --- O14.1 Rundeneinstellungen -------------------------------------------- */
+/* Two columns from 1280px: the round's setup left, the danger zone in a 420px
+   column of its own (O14.1's grid). One column below, danger last. The block is
+   exempt from the reading measure through its `.marker-cards` (styles.css), so
+   it is capped here instead. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .app > .rs-ocean {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-width: 1240px;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) :is(.rs-ocean__main, .rs-ocean__aside) {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+}
+@media (min-width: 1280px) {
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .app > .rs-ocean {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 420px;
+    gap: 28px;
+    align-items: start;
+  }
+}
+
+/* The card's label is O1's „Kicker": Figtree 700, small, letter-spaced, in the
+   accent — 6.1:1 on --surface. It stays the section's real <h2>. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) :where(.rs-card > .rs-section__h, .konto-card > .konto-section__h, .install-section.konto-card .konto-section__h) {
+  margin: 0;
+  font-family: var(--font);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--brand);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) :is(.rs-card, .konto-card) > :not(h2) { margin-top: 0; margin-bottom: 0; }
+
+/* Rows inside a card lose their own frame: a hairline between them, as O14
+   draws every list („Zeile mit Glyphe, Titel, Wert rechts"), and the hover is
+   a wash rather than a lift. The row keeps its 44px target. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) :is(.rs-card, .konto-card) .ds-list { gap: 0; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) :is(.rs-card, .konto-card) .ds-row {
+  min-height: var(--target-button);
+  margin: 0 -10px;
+  padding: 10px;
+  width: auto;
+  background: transparent;
+  border: 0;
+  border-top: 1px solid var(--line-soft);
+  border-radius: 0;
+  box-shadow: none;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) :is(.rs-card, .konto-card) .ds-row:first-child { border-top: 0; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .rs-card :is(a, button).ds-row:hover {
+  background: var(--wave-paper);
+  border-radius: var(--radius-sm);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .rs-card .rs-row .ds-row__main { font-weight: 700; }
+/* The glyph sits in the small tile O14.3 gives every settings row. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .rs-card .ds-row__main > .ti {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-md);
+  background: var(--sunken-soft);
+  color: var(--brand);
+  font-size: 18px; /* glyph, not type */
+}
+
+/* The marker picker (O14.1): eight discs with their names under them, the
+   picked one ringed in the surface and then the accent. The colours are the
+   eight PERSON colours, read from member-colors.js through designs.js
+   (PERSON_COLORS) — none is spelled here: the disc paints --marker, which the
+   picker writes inline per swatch. The check is --marker-ink (white), 4.5:1 or
+   better on all eight (designs.js). */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .rs-card--marker .marker-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 6px;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .rs-card--marker .marker-card {
+  width: 72px;
+  min-height: 0;
+  padding: 6px 0 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 9px;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .rs-card--marker .marker-card__fill {
+  width: 46px;
+  height: 46px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--marker);
+  color: var(--marker-ink);
+  font-size: 24px; /* glyph, not type */
+  box-shadow: 0 4px 10px var(--cast);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .rs-card--marker .marker-card.is-active .marker-card__fill {
+  box-shadow: 0 0 0 4px var(--surface), 0 0 0 7px var(--brand), 0 6px 12px var(--cast-deep);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .rs-card--marker .marker-card:hover:not(.is-active) .marker-card__fill {
+  box-shadow: 0 0 0 4px var(--surface), 0 0 0 6px var(--control-edge), 0 4px 10px var(--cast);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .rs-card--marker .marker-card:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .rs-card--marker .marker-card__name {
+  padding: 0;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  line-height: 1.15;
+  text-align: center;
+  color: var(--ink);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .rs-card__note {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+
+/* The Gefahrenzone (O14.1, and O14.5 „mit eigener Kante statt roter Fläche"):
+   the surface stays; the edge takes --danger-soft (the token O14 draws for
+   this zone) and the label --danger. The inner box styles.css
+   gives `.rs-danger`/`.konto-danger` (a pink fill and a second border) is taken
+   back to nothing, so the card holds one frame. --danger is 6.3:1 on
+   --surface. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) :is(.rs-card--danger, .konto-card--danger) {
+  border: 2px solid var(--danger-soft);
+  box-shadow: none;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) :is(.rs-card--danger > .rs-section__h, .konto-card--danger > .konto-section__h) {
+  color: var(--danger);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) :is(.rs-card--danger .rs-danger, .konto-card--danger .konto-danger) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  padding: 12px 0 0;
+  background: none;
+  border: 0;
+  border-top: 1px solid var(--danger-soft);
+  border-radius: 0;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) :is(.rs-card--danger .rs-danger, .konto-card--danger .konto-danger) > p {
+  flex: 1 1 220px;
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+/* --- O14.3 Mein Konto ------------------------------------------------------- */
+/* One column of cards in the reading measure the head above them keeps (O14.3
+   draws 700px; the measure is the app's, so the cards and the title share a
+   left edge). The design card (#1215) keeps its own frame in the same column. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .app > :is(.konto-card, .konto-design--card) { margin-bottom: 18px; }
+/* The identity facts become rows with the value at the right (O14.3's row),
+   not boxed pairs. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .konto-card .konto-facts { gap: 0; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .konto-card .konto-fact {
+  min-height: var(--target-button);
+  padding: 10px 0;
+  background: transparent;
+  border: 0;
+  border-top: 1px solid var(--line-soft);
+  border-radius: 0;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .konto-card .konto-fact:first-child { border-top: 0; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .konto-card .konto-fact__value { font-weight: 700; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .konto-card .konto-notify__intro {
+  margin: 0 0 4px;
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+/* --- O14.2 Leute & Strom ----------------------------------------------------- */
+/* Each band is a card with its title in the display face (O14.2's „Leute · 6",
+   19px — above O1's 17px floor for Comfortaa) and its count beside it. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .friends-screen { display: flex; flex-direction: column; gap: 18px; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .friends-screen .k-band__h {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--ink);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .friends-screen .k-band__count { font-family: var(--font); color: var(--ink-soft); }
+
+/* The roster as O14.2 lists it: a ring, the name, the line under it — rows
+   under a hairline, two columns from 720px and three from 1280. The add tile
+   becomes the dashed pill that closes the list. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .friends-screen .k-tiles {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0 24px;
+}
+@media (min-width: 720px) {
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .friends-screen .k-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 1280px) {
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .friends-screen .k-tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .friends-screen .k-tile:not(.k-tile--add, .k-tile--adding) {
+  min-height: 56px;
+  padding: 8px 4px;
+  background: transparent;
+  border: 0;
+  border-top: 1px solid var(--line-soft);
+  border-radius: 0;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .friends-screen a.k-tile:hover { background: var(--wave-paper); }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .friends-screen .k-tile .avatar { width: 42px; height: 42px; font-size: 13px; /* glyph, not type */ }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .friends-screen .k-tile__name { font-weight: 700; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .friends-screen .k-tile__line { font-size: var(--text-sm); font-weight: 600; color: var(--ink-soft); }
+/* The cover wash is Klassisch's device for a tile; a row carries no art. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .friends-screen .k-tile__art { display: none; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .friends-screen .k-tile--add {
+  grid-column: 1 / -1;
+  justify-content: center;
+  min-height: var(--target-button);
+  margin-top: 10px;
+  border: 1.5px dashed var(--control-edge);
+  border-radius: 999px;
+  color: var(--brand-strong);
+  font-weight: 700;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .friends-screen .k-tile--add:hover { background: var(--wave-paper); }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .friends-screen .k-tile--adding { grid-column: 1 / -1; margin-top: 10px; }
+
+/* The requests keep their cards (they carry buttons), on the wave paper so the
+   two actions stand on a ground of their own inside the band's card. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .friends-screen .k-card {
+  background: var(--wave-paper);
+  border-color: transparent;
+  border-radius: var(--radius-lg);
+  box-shadow: none;
+}
+
+/* „Was gerade läuft" (O14.2): every event a card of its own — the author's
+   ring first, the sentence, the time — on the wave paper inside the band, the
+   cover standing at the right. Two columns from 1024px, row-major, so
+   newest-first still reads newest-first (.claude/rules/tiles-vs-lists.md);
+   collapsed to eight below that, behind the same expander as the tiles. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .friends-screen .feed-list--rows {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+}
+@media (min-width: 1024px) {
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .friends-screen .feed-list--rows { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  /* Nothing is collapsed up here, so the expander has nothing to open — the
+     trap Der Tisch recorded on #1272: this design's .link-btn display rule
+     outranks the styles.css hide. */
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .friends-screen .e-feed .e-feed__more { display: none; }
+}
+@media (max-width: 1023px) {
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .friends-screen .e-feed:not(.is-open) .feed-row:nth-of-type(n + 9) { display: none; }
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .friends-screen .feed-row {
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 16px;
+  background: var(--wave-paper);
+  border: 0;
+  border-radius: var(--radius-lg);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .friends-screen .feed-row__face {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  font-size: 13px; /* glyph, not type */
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .friends-screen .feed-row .feed-item__text { line-height: 1.45; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .friends-screen .feed-row .feed-item__time { font-weight: 600; color: var(--ink-soft); }
+/* O14.2's 4:3 cover, standing at the right edge of the card. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .friends-screen .feed-row__cover {
+  width: 58px;
+  height: auto;
+  aspect-ratio: 4 / 3;
+  align-self: center;
+  border-radius: var(--radius-sm);
+  box-shadow: 0 3px 7px var(--cast);
+}
+
+/* --- O14.2 Posteingang ------------------------------------------------------ */
+/* The list is one card, each item a row under a hairline: the icon disc (the
+   shared composeInboxRow tile), the text, the actions side by side, the time.
+   An unread row is told by the dot and the weight (styles.css), never by
+   colour alone. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .app > .ds-list:has(> .inbox-row) { gap: 0; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .inbox-row--composed.ds-row {
+  align-items: flex-start;
+  flex-wrap: nowrap;
+  gap: 12px;
+  padding: 12px 0;
+  background: transparent;
+  border: 0;
+  border-top: 1px solid var(--line-soft);
+  border-radius: 0;
+  box-shadow: none;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .inbox-row--composed.ds-row:first-child { border-top: 0; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .inbox-row--composed .ds-row__main { flex: 1; min-width: 0; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .inbox-row--composed .ds-row__date { font-size: var(--text-md); font-weight: 600; line-height: 1.45; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .inbox-row--composed.inbox-row--unread .ds-row__date { font-weight: 800; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .inbox-row--composed .ds-row__status { font-size: var(--text-sm); font-weight: 600; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .inbox-row--composed .inbox-row__icon {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--sunken-soft);
+  color: var(--brand);
+  font-size: 18px; /* glyph, not type */
+}
+/* The round invitation takes the gold disc O14.2 gives the item that asks you
+   into a round. --gold-ink on --gold is 11.7:1. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .inbox-row--round-invitation .inbox-row__icon {
+  background: var(--gold);
+  color: var(--gold-ink);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .inbox-row--composed .inbox-invite__actions { align-self: center; flex-wrap: wrap; gap: 8px; }
+@media (max-width: 640px) {
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .inbox-row--composed.ds-row { flex-wrap: wrap; }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .inbox-row--composed .inbox-invite__actions { flex: 1 0 calc(100% - 48px); margin-left: 48px; }
+}
+
+/* --- O14.2 Was ist neu -------------------------------------------------------- */
+/* One card, an entry per hairline: the date as an accent kicker (6.1:1 on
+   --surface), the title, the sentence. The left rule styles.css draws goes —
+   the hairline is the list's structure here. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .app > .news-list { gap: 0; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .news-list .news-entry {
+  padding: 12px 0;
+  border: 0;
+  border-top: 1px solid var(--line-soft);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .news-list .news-entry:first-child { border-top: 0; padding-top: 0; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .news-list .news-entry:last-child { padding-bottom: 0; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .news-list .news-entry__date {
+  margin: 0 0 2px;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--brand);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .news-list .news-entry__title {
+  margin: 0 0 4px;
+  font-family: var(--font);
+  font-size: var(--text-md);
+  font-weight: 700;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .news-list .news-entry__body {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+
+/* --- O14.4 Statistik (signed in) ---------------------------------------------- */
+/* The counters are O14.4's number tiles — the display-face figure over a small
+   label on the wave paper, three to a row — inside one card, and the podiums
+   are cards of their own. Scoped off `body.auth-screen`: the logged-out screen
+   and the landing wear the face design, not this one. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) body:not(.auth-screen) .app > .stats-block .stats-counters {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  padding: 18px 22px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-1);
+}
+@media (max-width: 520px) {
+  :root[data-design="ocean"]:not([data-scheme="dark"]) body:not(.auth-screen) .app > .stats-block .stats-counters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 14px;
+  }
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) body:not(.auth-screen) .app > .stats-block .stats-counter {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px 18px;
+  text-align: left;
+  background: var(--wave-paper);
+  border: 0;
+  border-radius: var(--radius-lg);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) body:not(.auth-screen) .app > .stats-block .stats-counter__num {
+  font-family: var(--font-display);
+  font-size: 28px;
+  line-height: 1;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) body:not(.auth-screen) .app > .stats-block .stats-counter__label {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--ink-soft);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) body:not(.auth-screen) .app > .stats-block .stats-card {
+  padding: 14px 16px;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-1);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) body:not(.auth-screen) .app > .stats-block .stats-card__cover {
+  width: 64px;
+  height: 48px;
+  border-radius: var(--radius-sm);
+  box-shadow: 0 3px 7px var(--cast);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) body:not(.auth-screen) .app > .stats-block .stats-note {
+  padding-top: 12px;
+  border-top: 1px solid var(--line-soft);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  line-height: 1.55;
+}

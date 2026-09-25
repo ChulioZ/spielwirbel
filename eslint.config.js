@@ -422,6 +422,7 @@ const frontendGlobals = {
   // designs.js + design.js (#1184 — the per-USER design layer, distinct from the
   // per-ROUND registry above; the two coexist until the flip, #1202)
   DESIGN_REGISTRY: 'readonly', FACE_DESIGN: 'readonly', CLASSIC_DESIGN: 'readonly', designById: 'readonly',
+  PERSON_COLORS: 'readonly', // #1219 — Ocean's markers, read from member-colors.js
   selectableDesigns: 'readonly', selectableDesignIds: 'readonly', isSelectableDesign: 'readonly',
   designMarkers: 'readonly', markerOf: 'readonly', markerInk: 'readonly', DEFAULT_MARKER_INK: 'readonly',
   activeDesign: 'readonly', designIs: 'readonly', designViewsReady: 'readonly', designScheme: 'readonly', loadDesignStylesheet: 'readonly',
