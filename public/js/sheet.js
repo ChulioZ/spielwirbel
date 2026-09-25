@@ -176,7 +176,10 @@ function usesEditorSheet() {
 function editorPopoverHead(el, title, close) {
   el.setAttribute('role', 'dialog');
   el.setAttribute('aria-label', title);
-  const head = h(`<div class="popover__head">
+  el.classList.add('popover--editor');
+  // `--editor` tells this head apart from the account menu's `.popover__head`
+  // (a caption, not a title bar), so a design can dress one without the other.
+  const head = h(`<div class="popover__head popover__head--editor">
       <h2 class="popover__title">${esc(title)}</h2>
       <button type="button" class="popover__close" aria-label="${esc(t('common.close'))}"><i class="ti ti-x" aria-hidden="true"></i></button>
     </div>`);
@@ -184,12 +187,23 @@ function editorPopoverHead(el, title, close) {
   el.appendChild(head);
 }
 
+/* The designs that draw T15a/O15a's FORM sheets: a titled popover at the
+   trigger, and the three game editors as row lists under one primary action.
+   Der Tisch first (#1273), Ocean since #1217 — both packages draw the same
+   „eine Form, zwei Auftritte" composition, so they share the markup and each
+   paints it in its own stylesheet. One predicate rather than a designIs() pair
+   at each call site, so the next design that draws it is one line here.
+   Klassisch (and every design not listed) keeps its markup byte for byte. */
+function formSheetDesign() {
+  return designIs('tisch') || designIs('ocean');
+}
+
 function openEditor(anchor, variant, title, build, onClose, opts) {
   const list = !!(opts && opts.list);
   if (!list && !usesEditorSheet()) {
     return openPopover(anchor, (el, close) => {
       el.classList.add('popover--' + variant);
-      if (designIs('tisch')) editorPopoverHead(el, title, close);
+      if (formSheetDesign()) editorPopoverHead(el, title, close);
       return build(el, close);
     }, onClose);
   }

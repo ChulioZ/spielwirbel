@@ -65,7 +65,7 @@ async function showBggImport(round, status = 'own') {
   // Under Der Tisch every state wears T15b's icon disc above its headline
   // (#1281) — decorative, so aria-hidden; Klassisch's markup is unchanged.
   const msg = (text, hint, icon = 'ti-alert-triangle') => h(`<div class="bgg-import__msg">
-      ${designIs('tisch') ? `<span class="sheet-disc" aria-hidden="true"><i class="ti ${icon}"></i></span>` : ''}<p>${esc(text)}</p>${hint ? `<p class="muted">${esc(hint)}</p>` : ''}
+      ${formSheetDesign() ? `<span class="sheet-disc" aria-hidden="true"><i class="ti ${icon}"></i></span>` : ''}<p>${esc(text)}</p>${hint ? `<p class="muted">${esc(hint)}</p>` : ''}
     </div>`);
 
   // Link (or correct) the BGG handle without leaving the sheet. The Konto screen
