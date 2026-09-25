@@ -316,7 +316,7 @@ async function openDeleteSheet(me) {
   try {
     counts = await accountApi('GET', '/deletion-preview');
   } catch (ex) {
-    if (ex.message !== 'auth') toast(t('auth.error.network'));
+    if (ex.message !== 'auth') toast(t('auth.error.network'), { tone: 'error' });
     return;
   }
 
@@ -480,7 +480,7 @@ function buildPrefToggle(field, label, checked, onToast) {
       toast(t(onToast(want)));
     } catch (ex) {
       box.checked = !want; // put it back — nothing was saved
-      if (ex.message !== 'auth') toast(t('auth.error.network'));
+      if (ex.message !== 'auth') toast(t('auth.error.network'), { tone: 'error' });
     }
     box.disabled = false;
   });
@@ -636,7 +636,7 @@ function buildEmailForm(me) {
           await accountApi('DELETE', '/change-email');
           toast(t('konto.email.cancelled'));
           render(null);
-        } catch (ex) { if (ex.message !== 'auth') toast(t('auth.error.network')); }
+        } catch (ex) { if (ex.message !== 'auth') toast(t('auth.error.network'), { tone: 'error' }); }
       });
       row.appendChild(cancel);
       wrap.appendChild(row);

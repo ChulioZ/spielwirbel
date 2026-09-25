@@ -83,6 +83,13 @@ async function showProfile(username) {
     screen.appendChild(h(`<p class="muted profile-note">${esc(t('profile.statsNote'))}</p>`));
   }
 
+  // „Dein Rückblick" (#1147) — your own profile only, between the record and
+  // the activity: the card says how you play, this says what you played when.
+  if (p.self) {
+    const recap = renderAccountRecapSection(p);
+    if (recap) screen.appendChild(recap);
+  }
+
   /* The friend's own feed, between accepted friends only. The server applies
      the acceptedAt cutoff (lib/routes/profile.js), so nothing predating the
      friendship can arrive here. On your OWN profile the same list is your whole
@@ -241,36 +248,162 @@ function renderProfileCard(p, reload) {
      stay plain text (.claude/rules/in-app-nav-links.md). */
   const cards = h('<div class="pokale-cards member-card__games"></div>');
   const loadCover = createCoverLoader();
-  const gameCard = (icon, label, games, sub, ribbon) => {
-    const lead = games[0];
-    const tile = h(`<div class="pokale-card">
-         ${games.length ? `<span class="member-ribbon">${esc(ribbon)}</span>` : ''}
-         ${lead
-    ? `<span class="pokale-card__thumb">${coverPlaceholder(lead)}</span>
-            <span class="pokale-card__label"><i class="ti ${icon}" aria-hidden="true"></i>${esc(label)}</span>`
-    : `<span class="pokale-card__icon"><i class="ti ${icon}" aria-hidden="true"></i></span>
-            <span class="pokale-card__label">${esc(label)}</span>`}
-         <span class="pokale-card__games"></span>
-         <span class="pokale-card__sub">${esc(sub)}</span>
-       </div>`);
-    if (lead) {
-      tile.classList.add('pokale-card--cover');
-      if (lead.image) loadCover(tile.querySelector('.pokale-card__thumb'), coverUrl(lead.image, COVER_THUMB));
-    }
-    const list = tile.querySelector('.pokale-card__games');
-    games.forEach((g) => list.appendChild(h(`<span class="pokale-game">${esc(g.title)}</span>`)));
-    return tile;
-  };
   /* Ties share the tile, as on the member page. `bestScore === null` is the only
      empty state — 0 is a real win RATE (a game played often and never won), and
      a game below BEST_GAME_MIN_PLAYS is unranked rather than zero. */
-  cards.appendChild(gameCard('ti-sword', t('member.bestGame'), st.bestGames,
-    st.bestScore === null ? t('member.bestGameNone') : bestGameSub(st), t('member.ribbonBest')));
-  cards.appendChild(gameCard('ti-heart', t('member.favorite'), st.favorite,
-    st.favAvg === null ? t('member.favoriteNone') : 'Ø ' + fmtAvg(st.favAvg), t('member.ribbonFav')));
+  cards.appendChild(profileGameTile('ti-sword', t('member.bestGame'), st.bestGames,
+    st.bestScore === null ? t('member.bestGameNone') : bestGameSub(st), t('member.ribbonBest'), loadCover));
+  cards.appendChild(profileGameTile('ti-heart', t('member.favorite'), st.favorite,
+    st.favAvg === null ? t('member.favoriteNone') : 'Ø ' + fmtAvg(st.favAvg), t('member.ribbonFav'), loadCover));
   card.appendChild(cards);
 
   return card;
+}
+
+/* One game tile in the Pokale card's chrome, for a screen with NO round context:
+   the Spielerkarte's two boxes and „Dein Rückblick"'s three. What is not reused
+   from the round screens is the wiring — `wireGameCardHead` makes each tile a
+   link into a round, and a profile has no round context, nor may it have one:
+   its payloads deliberately carry no round id. So the thumb stays a <span> and
+   the titles stay plain text (.claude/rules/in-app-nav-links.md). `ribbon` is
+   the Tischkarte's ribbon and is left out when null. */
+function profileGameTile(icon, label, games, sub, ribbon, loadCover) {
+  const lead = games[0];
+  const tile = h(`<div class="pokale-card">
+       ${games.length && ribbon ? `<span class="member-ribbon">${esc(ribbon)}</span>` : ''}
+       ${lead
+    ? `<span class="pokale-card__thumb">${coverPlaceholder(lead)}</span>
+          <span class="pokale-card__label"><i class="ti ${icon}" aria-hidden="true"></i>${esc(label)}</span>`
+    : `<span class="pokale-card__icon"><i class="ti ${icon}" aria-hidden="true"></i></span>
+          <span class="pokale-card__label">${esc(label)}</span>`}
+       <span class="pokale-card__games"></span>
+       <span class="pokale-card__sub">${esc(sub)}</span>
+     </div>`);
+  if (lead) {
+    tile.classList.add('pokale-card--cover');
+    if (lead.image) loadCover(tile.querySelector('.pokale-card__thumb'), coverUrl(lead.image, COVER_THUMB));
+  }
+  const list = tile.querySelector('.pokale-card__games');
+  games.forEach((g) => list.appendChild(h(`<span class="pokale-game">${esc(g.title)}</span>`)));
+  return tile;
+}
+
+// How many first-time games the „Neu ausprobiert" tile names before its sub-line
+// carries the rest as a count. A busy month can hold a dozen; a tile listing all
+// of them would dwarf the two beside it, and the count is the complete answer.
+const ACCOUNT_RECAP_NEW_SHOWN = 4;
+
+/* „Dein Rückblick" (#1147): the Chronik's month/year recap (#800) for the
+   ACCOUNT, over every seat it holds — on the OWN profile only. The route sends
+   `plays` on the self branch alone (lib/routes/profile.js), and this is called
+   only when `p.self`, so the two gates agree; either one alone would do, and
+   the view's is the one that states the intent.
+
+   The figures are account-recap.js's, bucketed HERE by the device's calendar
+   (see that file's header for why the server must not). No wins, no win rate:
+   this records what you played, not who won.
+
+   Returns null — no section at all — for an account with no finished session,
+   since accountPeriodsOf offers no period then, the same "no empty state to
+   design" call the Chronik makes. */
+function renderAccountRecapSection(p) {
+  const deps = { periodKeyOf, periodsOf };
+  const plays = Array.isArray(p.plays) ? p.plays : [];
+  const periods = accountPeriodsOf(plays, deps);
+  if (!periods.length) return null;
+
+  const labelOf = (pd) => (pd.kind === 'month' ? fmtMonth(pd.at) : pd.key);
+  const idOf = (pd) => `${pd.kind}:${pd.key}`;
+  const group = (list, label) =>
+    list.length
+      ? `<optgroup label="${esc(label)}">${list.map((pd) => `<option value="${esc(idOf(pd))}">${esc(labelOf(pd))}</option>`).join('')}</optgroup>`
+      : '';
+
+  /* NOT `.precap`: that class is the ROUND's recap, and Der Tisch lays it on the
+     round's felt (tisch.css, T13) — „Filz gehört der Runde, Design gehört dem
+     Konto" (T14.6). The inner classes are shared, so the picker row and the
+     tiles are the Chronik's own; only the frame is the account's. */
+  const sec = h(`<section class="section arecap">
+       <div class="section-head"><h2>${esc(t('accountRecap.title'))}</h2></div>
+       <p class="muted recap__lead">${esc(t('accountRecap.lead'))}</p>
+       <div class="precap__head">
+         <select class="select precap__picker" aria-label="${esc(t('periodRecap.pickerLabel'))}">
+           ${group(periods.filter((pd) => pd.kind === 'month'), t('periodRecap.months'))}
+           ${group(periods.filter((pd) => pd.kind === 'year'), t('periodRecap.years'))}
+         </select>
+       </div>
+       <div class="precap__body"></div>
+     </section>`);
+  const picker = sec.querySelector('.precap__picker');
+  const body = sec.querySelector('.precap__body');
+  const currentPeriod = () => periods.find((pd) => idOf(pd) === picker.value) || periods[0];
+
+  // What the card says, from the same model the screen shows (#526's rule).
+  const shareModel = (period, rec) => {
+    const n = rec.newGames.length;
+    return {
+      heading: p.username || t('friends.unknownUser'),
+      periodLabel: labelOf(period),
+      sessions: rec.sessions,
+      gamesPlayed: rec.gamesPlayed,
+      played: rec.topPlayed ? rec.topPlayed.games.map((g) => g.title) : [],
+      playedSub: rec.topPlayed ? tn(rec.topPlayed.count, 'home.chip.sessionsOne', 'home.chip.sessions') : '',
+      rated: rec.topRated ? rec.topRated.games.map((g) => g.title) : [],
+      ratedScore: rec.topRated ? 'Ø ' + fmtAvg(rec.topRated.rating) : '',
+      ratedLabel: t('accountRecap.card.bestRated'),
+      shelf: n ? [{ n, label: tn(n, 'accountRecap.card.gamesOne', 'accountRecap.card.games') }] : [],
+      shelfLabel: t('accountRecap.card.new'),
+    };
+  };
+
+  if (canShareRecapImage()) {
+    const btn = h(`<button type="button" class="btn btn--ghost precap__share">${iconText('ti-share', t('share.button'))}</button>`);
+    // Built at CLICK time: the picker moves under this closure.
+    btn.addEventListener('click', () => {
+      const period = currentPeriod();
+      /* The card's world: an account has none yet — the plain brand palette is
+         what the profile paints (applyBackground(null)), so recapCardBlob draws
+         no motif. Die Profilwelt (#1133's line of work) is where a personal
+         card would get one; the `world` path in recap-card.js is untouched. */
+      shareRecapCard(period, shareModel(period, accountRecap(plays, period, deps)), `spielwirbel-${period.key}-me.png`);
+    });
+    sec.querySelector('.precap__head').appendChild(btn);
+  }
+
+  function renderBody() {
+    const period = currentPeriod();
+    const rec = accountRecap(plays, period, deps);
+    body.innerHTML = '';
+    const chip = (icon, text) =>
+      h(`<span class="stat-chip"><i class="ti ${icon}" aria-hidden="true"></i>${esc(text)}</span>`);
+    const totals = h('<div class="recap__totals"></div>');
+    totals.appendChild(chip('ti-confetti', tn(rec.sessions, 'home.chip.sessionsOne', 'home.chip.sessions')));
+    totals.appendChild(chip('ti-cards', tn(rec.gamesPlayed, 'periodRecap.playedOne', 'periodRecap.played')));
+    if (rec.newGames.length) totals.appendChild(chip('ti-sparkles', tn(rec.newGames.length, 'accountRecap.newOne', 'accountRecap.new')));
+    body.appendChild(totals);
+
+    const loadCover = createCoverLoader();
+    const cards = h('<div class="pokale-cards"></div>');
+    const scope = { period: labelOf(period) };
+    if (rec.topPlayed) {
+      cards.appendChild(profileGameTile('ti-flame', t('periodRecap.mostPlayed', scope), rec.topPlayed.games,
+        tn(rec.topPlayed.count, 'home.chip.sessionsOne', 'home.chip.sessions'), null, loadCover));
+    }
+    if (rec.topRated) {
+      cards.appendChild(profileGameTile('ti-star', t('accountRecap.bestRated', scope), rec.topRated.games,
+        'Ø ' + fmtAvg(rec.topRated.rating), null, loadCover));
+    }
+    if (rec.newGames.length) {
+      cards.appendChild(profileGameTile('ti-sparkles', t('accountRecap.newGames', scope),
+        rec.newGames.slice(0, ACCOUNT_RECAP_NEW_SHOWN),
+        tn(rec.newGames.length, 'accountRecap.newSubOne', 'accountRecap.newSub'), null, loadCover));
+    }
+    body.appendChild(cards);
+  }
+
+  picker.addEventListener('change', renderBody);
+  renderBody();
+  return sec;
 }
 
 /* Der Tisch puts the visibility switch ON the own Spielerkarte (#1272, T14.1:
@@ -336,7 +469,7 @@ function renderProfileState(row, p, reload) {
         refreshInboxBadge();
         reload();
       } catch (err) {
-        toast(err.message === 'quota_friends' ? t('friends.err.quotaFriends') : t('friends.err.generic'));
+        toast(err.message === 'quota_friends' ? t('friends.err.quotaFriends') : t('friends.err.generic'), { tone: 'error' });
       }
     });
     decline.addEventListener('click', async () => {
@@ -363,7 +496,7 @@ function renderProfileState(row, p, reload) {
       toast(t('friends.toast.sent', { user: p.username }));
       reload();
     } catch (err) {
-      toast(friendSendError(err.message));
+      toast(friendSendError(err.message), { tone: 'error' });
       send.disabled = false;
     }
   });
@@ -395,7 +528,7 @@ function profileMenuItems(p, reload) {
         await accountApi('DELETE', `/friends/${p.friendshipId}`);
         toast(t('friends.toast.removed'));
         reload();
-      } catch { toast(t('friends.err.generic')); }
+      } catch { toast(t('friends.err.generic'), { tone: 'error' }); }
     } });
   } else if (p.friendship === 'outgoing') {
     items.push({ icon: 'ti-user-x', label: t('friends.cancel'), cls: 'popover__opt--muted', kind: 'undoable', run: async () => {

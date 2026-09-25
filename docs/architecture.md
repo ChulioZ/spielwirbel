@@ -215,6 +215,10 @@ lib/
                      Runs public/js/member-stats.js per seat rather than
                      re-deriving it, and returns plain numbers and game titles
                      only — no round name, round id, member name or tenant id
+  user-plays.js      the same walk, as a flat list: one row per finished session
+                     the account sat at (time, game, its own rating), for the
+                     own profile's „Dein Rückblick" — bucketed into months on
+                     the CLIENT, by the reader's calendar (issue #1147)
   demo-tenant.js     the one definition of the `demo-` tenant-id prefix that
                      classifies a tenant as a demo, dependency-free so the repo
                      backends and the logger can require it without a cycle
@@ -525,6 +529,9 @@ public/
     period-recap.js  the same idea for ONE calendar month or year, beside the
                      all-time Rückblick: which periods have content, and what
                      was played, rated and shelved in one of them (issue #800)
+    account-recap.js the same slice for one ACCOUNT across all its rounds, from
+                     the own profile's play list: sessions, games, most played,
+                     own best-rated, first-time games — no wins (issue #1147)
     recap-card.js    draws that period recap onto a canvas and hands it out as a
                      PNG the user shares — never any cover art, which may not be
                      redistributed and would taint the canvas (issue #800)
@@ -539,6 +546,12 @@ public/
                      on the table, how often the round meets, what is quietly
                      broken, and what was played on this day in a past year
                      (issue #923)
+    shelf-profile.js the Regal-Steckbrief's builder: the active shelf's seat,
+                     playing-time and weight bands, its top mechanics and
+                     categories, and the gaps under three games (issue #1173)
+    shelf-profile-card.js
+                     the Steckbrief as a shareable PNG — flat fills, no SVG, no
+                     pattern, the same-origin BGG badge (issue #1173)
     off-shelf.js     the four off-shelf destinations (Aussortiert, Durchgespielt,
                      Wunschliste, Könnte euch gefallen) with their counts — one
                      definition, used by the Regal's sheet, the rail and the
@@ -576,7 +589,8 @@ public/
                      round-theme.js falls back to outside a round (#1184)
     design-picker.js the design cards the Konto screen and the one-time
                      first-start chooser both render, that chooser sheet,
-                     and the Konto section (#1186)
+                     and the Konto section (#1186); under Der Tisch the
+                     chooser prints posters/rows from the registry (#1277)
     round-roles.js   the owner/co-owner/editor ladder and what each may do,
                      required by lib/round-access.js so the views hide exactly
                      what the server refuses (issue #137)
@@ -712,6 +726,13 @@ public/
     tag-chips.js     the tri-state custom-tag filter shared by the Regal and
                      the start-session screen: chips, mode + bulk toggles,
                      icon picker, match predicate (issue #956)
+    vendor/sortable.min.js  SortableJS, committed verbatim — the app's one
+                     vendored library, byte-identical to the `sortablejs`
+                     devDependency (a test asserts it) so Dependabot tracks it;
+                     its MIT LICENSE sits beside it (issue #1180)
+    reorder-drag.js  the one wrapper around it: drag a tile into place, as a
+                     second way to do what the Tags screen's arrows do; owns
+                     every Sortable option (issue #1180)
     game-stats.js    what a game is worth to a round — the score fields, the
                      per-session and per-round rollups, the shelf index, the
                      retirement recommendations, and how a score prints
@@ -750,6 +771,9 @@ public/
     hub-previews.js       the hub's previews of Regal, Pokale and Chronik, and
                           its „Nicht im Regal" group (issue #1185)
     views-regal.js        Regal tab: the games library (search, filters, grid)
+    views-shelf-profile.js
+                          the Regal-Steckbrief: its Start card, its screen
+                          (/round/:rid/shelf-profile) and its share (#1173)
     regal-bulk.js         the Regal's selection mode and its four bulk actions
                           (tags, owners, retire, delete), lifted out of
                           views-regal.js so each is editable on its own (#1000)

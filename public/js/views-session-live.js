@@ -130,8 +130,13 @@ function renderSessionLog(round, session, { collapsed } = {}) {
    is left; with it the tap count is back to roughly one per person, and the one
    real cost of unifying the flows is paid down. It degrades on its own: with
    nobody left there is no next person, and „Abstimmung beenden" is already the
-   leading action in that state. */
-function showSessionLobby(round, session, handedOn) {
+   leading action in that state.
+
+   `dealt` is true only on the one arrival straight from „Loswirbeln" (#1200,
+   T10.2): Der Tisch deals each person's boxes out as the drawn games laid on
+   the table. Deliberately NOT carried into `currentView` or the poll's
+   re-render — a language switch or someone else's vote is not a draw. */
+function showSessionLobby(round, session, handedOn, dealt) {
   currentView = () => showSessionLobby(round, session, handedOn);
   // Arriving here always ends any wizard: either we just came out of one, or we
   // never had one. Leaving it registered would let it swallow the next Back.
@@ -163,6 +168,7 @@ function showSessionLobby(round, session, handedOn) {
       <div class="live-vote__people" id="lvPeople"></div>
       <div class="live-vote__actions" id="lvActions"></div>
     </div>`);
+  if (dealt && designIs('tisch')) root.setAttribute('data-dealt', '');
 
   // One chip per participant: name, their colour, and whether their vote is in.
   // WHO has voted, never WHAT they voted — the values are redacted server-side
@@ -372,7 +378,7 @@ function showSessionLobby(round, session, handedOn) {
           try { await navigator.share({ text: t('lobby.shareText', { round: round.name }), url }); } catch { /* dismissed */ }
         } else if (navigator.clipboard) {
           await navigator.clipboard.writeText(url);
-          toast(t('lobby.shareCopied'));
+          toast(t('lobby.shareCopied'), { tone: 'success' });
         } else {
           // No share sheet and no clipboard (an insecure origin, an old browser):
           // show the URL so it can at least be copied by hand, rather than
@@ -380,7 +386,7 @@ function showSessionLobby(round, session, handedOn) {
           showShareUrlSheet(url);
         }
       } catch (e) {
-        toast(e.message);
+        toast(e.message, { tone: 'error' });
       } finally {
         share.disabled = false;
       }
@@ -421,7 +427,7 @@ function showSessionLobby(round, session, handedOn) {
       // been holding back, and it belongs on the device that called time.
       showFinale(fresh, s, sessionGames(fresh, s));
     } catch (e) {
-      toast(e.message);
+      toast(e.message, { tone: 'error' });
       showSessionLobby(round, session);
     }
   });
@@ -558,6 +564,6 @@ function showVoteQrSheet(round, session) {
     sheet.querySelector('.vote-qr__code').innerHTML = svg;
   }).catch((e) => {
     if (document.body.contains(backdrop)) closeSheet();
-    toast(e.message);
+    toast(e.message, { tone: 'error' });
   });
 }

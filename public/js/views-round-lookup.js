@@ -198,7 +198,7 @@ function showAddGameForm(round, { wish = false, title = '', hit = null, dirty = 
       selectedTagIds.add(tag.id);
       newTagInput.value = '';
       renderTagChips();
-    } catch (e) { toast(e.message === 'quota_tags' ? t('tags.toast.quota') : e.message); }
+    } catch (e) { toast(e.message === 'quota_tags' ? t('tags.toast.quota') : e.message, { tone: 'error' }); }
   };
   form.querySelector('#addTagBtn').addEventListener('click', createTag);
   newTagInput.addEventListener('keydown', (e) => {
@@ -384,7 +384,7 @@ function showAddGameForm(round, { wish = false, title = '', hit = null, dirty = 
     try {
       d = await lookupDetail(round.id, r);
     } catch {
-      toast(t('lookup.error'));
+      toast(t('lookup.error'), { tone: 'error' });
       return;
     }
     titleInput.value = pickedTitle(r, d) || titleInput.value;
@@ -448,7 +448,7 @@ function showAddGameForm(round, { wish = false, title = '', hit = null, dirty = 
     try {
       const created = await api('POST', `/api/rounds/${round.id}/games`, fd);
       addedGames.push({ title: (created && created.title) || title });
-      toast(wish ? t('addGame.toast.savedWish') : t('addGame.toast.saved'));
+      toast(wish ? t('addGame.toast.savedWish') : t('addGame.toast.saved'), { tone: 'success' });
       if (again) {
         // Keep the sheet open for the next game; the player range stays.
         // Mark dirty so dismissing the sheet re-renders the Regal (issue #34).
@@ -466,8 +466,8 @@ function showAddGameForm(round, { wish = false, title = '', hit = null, dirty = 
     } catch (e) {
       // cover_too_large is the server's answer when the pre-flight above was
       // bypassed (a stale tab, a client that skipped it); same message either way.
-      if (e.message === 'cover_too_large') return toast(t('cover.tooLarge', { mb: COVER_MAX_MB }));
-      toast(e.message === 'quota_games' ? t('addGame.toast.quota') : e.message);
+      if (e.message === 'cover_too_large') return toast(t('cover.tooLarge', { mb: COVER_MAX_MB }), { tone: 'error' });
+      toast(e.message === 'quota_games' ? t('addGame.toast.quota') : e.message, { tone: 'error' });
     }
   }
   form.querySelector('#save').addEventListener('click', () => save(false));
@@ -547,7 +547,7 @@ function showLinkProvider(round, game) {
       d = await lookupDetail(round.id, r);
     } catch {
       resultBox.innerHTML = '';
-      toast(t('lookup.error'));
+      toast(t('lookup.error'), { tone: 'error' });
       return;
     }
     renderMatch(r, d);
@@ -669,7 +669,7 @@ function showLinkProvider(round, game) {
       await api('PATCH', `/api/rounds/${round.id}/games/${game.id}`, body);
       toast(t('linkProvider.linked'));
       closeSheet(() => showGameDetail(round.id, game.id));
-    } catch (e) { toast(e.message); }
+    } catch (e) { toast(e.message, { tone: 'error' }); }
   }
 
   input.focus();

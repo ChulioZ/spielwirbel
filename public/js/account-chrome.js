@@ -119,6 +119,9 @@ function setupAccountUi() {
   // across the same login transitions the rest of this function tracks (boot,
   // login, logout, session-lost).
   setNewsDot(loggedIn && hasUnseenNews());
+  // Der Tisch's avatar + name face (#1279) — before the early return, so a
+  // logout takes the previous account's name off the button with it.
+  renderAccountFace();
   if (!loggedIn) return;
   btn.onclick = () => openPopover(btn, (el, close) => {
     const username = (accountUser && accountUser.username) || '';
@@ -191,6 +194,53 @@ function setupAccountUi() {
       el.appendChild(out);
     }
   });
+}
+
+/* The account button's FACE (#1279). Klassisch keeps index.html's person glyph;
+   Der Tisch draws the account as its avatar plus its name (T3/T6: „LE Lea"),
+   and tisch.css hides the name below 768px, where the phone frame (T6.1)
+   draws the avatar alone.
+
+   Klassisch's DOM is never touched: the Klassisch branch acts only when a Tisch
+   face is present to take back (a design switch or a logout), and then restores
+   exactly the markup index.html ships. `#newsDot` is MOVED, never rebuilt, so
+   its lit/unlit state survives every repaint.
+
+   Called from setupAccountUi (every login transition) and from applyDesign
+   (design.js), because the button lives outside every view and so is not
+   rebuilt by the re-render a design change triggers. */
+function renderAccountFace() {
+  const btn = document.getElementById('accountBtn');
+  if (!btn) return;
+  const dot = document.getElementById('newsDot');
+  const username = (accountUser && accountUser.username) || '';
+  const tisch = designIs('tisch') && accountsActive() && isLoggedIn() && !!username;
+  const hasTischFace = !!btn.querySelector('.topbar__avatar');
+  if (!tisch && !hasTischFace) return;
+  // The disc takes the account's own colour (accountColor, the one the friends
+  // screens use) through memberTone — lifted on a dark scheme, which Der Tisch
+  // is, so the --on-accent initials read on it like every seat avatar's do.
+  // aria-hidden: the name beside it, and the button's label, carry the person.
+  btn.innerHTML = tisch
+    ? `<span class="avatar topbar__avatar" style="background:${memberTone(accountColor(username))}" aria-hidden="true">${
+      avatarFace(initials(username), { src: accountUser.avatar || null })}</span><span class="topbar__name">${esc(username)}</span>`
+    : '<i class="ti ti-user" aria-hidden="true"></i>';
+  if (dot) btn.appendChild(dot);
+  // A class rather than `:has()`: `.topbar__acct` declares no `display` so the
+  // `hidden` attribute keeps working, and the face's flex row is keyed off this.
+  btn.classList.toggle('topbar__acct--face', tisch);
+  btn.setAttribute('aria-label', accountBtnLabel());
+}
+
+// The account button's accessible name. With the name ON the button (Der Tisch)
+// it has to contain that visible text (WCAG 2.5.3); applyStaticTexts reads this
+// too, so a language switch keeps the name in it.
+function accountBtnLabel() {
+  const btn = document.getElementById('accountBtn');
+  const username = (accountUser && accountUser.username) || '';
+  return btn && username && btn.querySelector('.topbar__name')
+    ? t('a11y.accountNamed', { name: username })
+    : t('a11y.account');
 }
 
 // The inbox button (issue #207): visible only when logged in, opens the inbox

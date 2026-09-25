@@ -244,8 +244,8 @@ async function showGameDetail(rid, gameId) {
     } catch (e) {
       // The server's answer when the pre-flight above was bypassed; every other
       // code still surfaces as-is.
-      if (e.message === 'cover_too_large') return toast(t('cover.tooLarge', { mb: COVER_MAX_MB }));
-      toast(e.message);
+      if (e.message === 'cover_too_large') return toast(t('cover.tooLarge', { mb: COVER_MAX_MB }), { tone: 'error' });
+      toast(e.message, { tone: 'error' });
     }
   }
 
@@ -877,7 +877,7 @@ async function showGameDetail(rid, gameId) {
         await api('POST', `/api/rounds/${rid}/games/${gameId}/${endpoint}`, body);
         toast(t(`${kind}.restored`, { title: game.title }));
         showGameDetail(rid, gameId);
-      } catch (e) { toast(e.message); }
+      } catch (e) { toast(e.message, { tone: 'error' }); }
     });
     bar.appendChild(restore);
   };
@@ -923,9 +923,9 @@ async function showGameDetail(rid, gameId) {
       })) return;
       try {
         await api('POST', `/api/rounds/${rid}/games/${gameId}/retire`, { retired: true });
-        toast(t('games.retired', { title: game.title }));
+        toast(t('games.retired', { title: game.title }), { tone: 'success' });
         showGameDetail(rid, gameId);
-      } catch (e) { toast(e.message); }
+      } catch (e) { toast(e.message, { tone: 'error' }); }
     } });
     menuItems.push({ icon: 'ti-circle-check', label: t('detail.complete'), cls: 'popover__opt--good', kind: 'undoable', run: async () => {
       if (!await confirmDialog({
@@ -936,7 +936,7 @@ async function showGameDetail(rid, gameId) {
         await api('POST', `/api/rounds/${rid}/games/${gameId}/complete`, { completed: true });
         toast(t('games.completed', { title: game.title }));
         showGameDetail(rid, gameId);
-      } catch (e) { toast(e.message); }
+      } catch (e) { toast(e.message, { tone: 'error' }); }
     } });
   }
   if (game.source) {
@@ -954,7 +954,7 @@ async function showGameDetail(rid, gameId) {
         await api('PATCH', `/api/rounds/${rid}/games/${gameId}`, { removeSource: true });
         toast(t('detail.toast.unlinked'));
         showGameDetail(rid, gameId);
-      } catch (e) { toast(e.message); }
+      } catch (e) { toast(e.message, { tone: 'error' }); }
     } });
   }
   // Der Tisch shows the same list as an „Aktionen" panel above the bar (T3.4;

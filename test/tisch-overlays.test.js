@@ -398,6 +398,21 @@ test('the three status inks are re-pointed at the paper family inside an overlay
   }
 });
 
+test('every surface that turns its ink to PAPER turns its controls to paper too', () => {
+  /* The overlays are not the only paper in Der Tisch: the result Tafel, the
+     vote card and the Chronik's session cards flip --ink to the paper ink
+     in the page itself. The Tafel forgot --control-fill, so its row's „Spielen"
+     `.btn` kept the felt's dark fill under the paper ink — 1.57:1, found by the
+     operator looking at it. A block that inverts the ink inverts the controls,
+     whether or not a button happens to sit in it today. */
+  const flips = rulesOf(TISCH).filter(([, body]) => /--ink\s*:\s*var\(--paper-ink\)/.test(body));
+  assert.ok(flips.length >= 5, `only ${flips.length} paper blocks found — did the parse break?`);
+  const missing = flips
+    .filter(([, body]) => !/--control-fill\s*:/.test(body) || !/--control-edge\s*:/.test(body))
+    .map(([sel]) => sel.replace(/\s+/g, ' ').trim());
+  assert.deepEqual(missing, [], 'these blocks set the paper ink but leave the felt\'s control fill/edge');
+});
+
 test('a destructive button in a sheet is red-FILLED, at rest and under the pointer', () => {
   const rule = gated(`${GATE} .sheet .btn--danger:hover`);
   assert.equal(rule.length, 1, 'the destructive rule no longer covers :hover — `.btn:hover` repaints it as paper');
