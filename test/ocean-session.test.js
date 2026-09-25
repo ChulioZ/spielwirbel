@@ -320,7 +320,12 @@ test('every rule in the #1213 section is gated on Ocean\'s light scheme', () => 
   const head = '/* ===== #1213 — Session loop: setup, vote card, result, several tables ===== */';
   const raw = fs.readFileSync(path.join(__dirname, '..', 'public/css/designs/ocean.css'), 'utf8');
   assert.ok(raw.includes(head), 'the section header is the merge seam other Ocean slices rely on');
-  const section = raw.slice(raw.indexOf(head)).replace(/\/\*[\s\S]*?\*\//g, '');
+  /* Up to the NEXT slice's header, not to EOF: the other Ocean slices append
+     their own sections, and whichever merges later lands after this one — a
+     slice to EOF would sweep their (legitimately ungated) rules into ours. */
+  const start = raw.indexOf(head);
+  const next = raw.indexOf('/* ===== #', start + head.length);
+  const section = raw.slice(start, next === -1 ? undefined : next).replace(/\/\*[\s\S]*?\*\//g, '');
   const rules = rulesOf(section);
   assert.ok(rules.length > 60, `only ${rules.length} rules found — did the parse break?`);
   const ungated = rules.flatMap(([sel]) => sel.split(/,(?![^(]*\))/).map((s) => s.trim()))
