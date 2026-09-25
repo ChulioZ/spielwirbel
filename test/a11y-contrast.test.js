@@ -1750,7 +1750,10 @@ test('Klassisch\'s young-round pieces keep their text at AA and the crown at 3:1
       if (!(ratio >= bar)) failures.push(`${name(t)} — ${label} = ${ratio.toFixed(2)}:1 (bar ${bar})`);
     }
   }
-  assert.ok(checked >= pairs.length * 10, 'the sweep measured almost nothing');
+  // The floor counts DESIGNS, not a fixed number: #1202 retires the round
+  // palettes, which would leave `pairs.length * 10` unreachable while every
+  // pair is still measured. Klassisch + Der Tisch is the smallest honest set.
+  assert.ok(THEMES.length >= 2 && checked === pairs.length * THEMES.length, 'the sweep measured almost nothing');
   assert.deepEqual(failures, []);
 });
 
