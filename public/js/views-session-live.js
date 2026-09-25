@@ -145,7 +145,7 @@ function showSessionLobby(round, session, handedOn, dealt) {
   // Same reason as showResults: this is the other screen a cold-loaded session
   // URL resolves to, and a shared lobby link is exactly how a second device
   // arrives (#209) — on the Standard design, until this line.
-  applyBackground(round.background, round);
+  applyMarker(round);
   syncUrl(resultsPath(round.id, session.id));
   setContext(round.name);
   // Deliberately the same on every state, like the wizard's: a tab title must

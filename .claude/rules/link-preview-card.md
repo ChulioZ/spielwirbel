@@ -83,8 +83,10 @@ vacuously true.
 Each design's registry row names its own `og-image.png` (Der Tisch's lives in
 `public/icons/tisch/` and is rendered by `scripts/render-design-marks.js`). A
 scraper runs no script, so the head can only ever carry one: the **face's**, and
-`test/design-marks.test.js` pins `og:image`/`twitter:image` to it — the flip
-(#1202) moves the tags or goes red. The CORP opt-out in `assetCacheHeaders` keys
+`test/design-marks.test.js` pins `og:image`/`twitter:image` to it — which is why
+the flip (#1202) moved them to Der Tisch's card in the same change. The redraw
+recipe below is Klassisch's original card; Der Tisch's is
+`scripts/render-design-marks.js`. The CORP opt-out in `assetCacheHeaders` keys
 on the basename, so every design's card gets it. See
 `.claude/rules/design-marks-follow-the-face.md`.
 

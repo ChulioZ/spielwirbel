@@ -1234,12 +1234,11 @@ async function showResults(round, session, gamesHint, reveal, plain) {
   // way in — the finale, the lobby, the Chronik, a cold load — agree.
   if (!plain && (session.multiTable || isSplitParent(session)))
     return showTableBuilder(round, session, gamesHint);
-  // The round's design, applied HERE and not left to the hub: a results URL is
+  // The round's marker, applied HERE and not left to the hub: a results URL is
   // shared and cold-loaded (session-share.js, showResultsById), and this screen
-  // used to render that visit on the Standard design — no accent, no world,
-  // and since #940 no victory scene on the spotlight a later visit is meant to
-  // show. Idempotent, so the finale's path pays nothing for it.
-  applyBackground(round.background, round);
+  // used to render that visit without the round's look (#940, when the look was
+  // still a round design). Idempotent, so the finale's path pays nothing for it.
+  applyMarker(round);
   currentView = () => showResults(round, session, gamesHint, false, plain);
   syncUrl(resultsPath(round.id, session.id));
   setContext(round.name);
@@ -1599,13 +1598,12 @@ async function showResults(round, session, gamesHint, reveal, plain) {
        </div>`);
     tafel.appendChild(topGroup);
     if (reveal) {
-      // World-agnostic on purpose (#940): a world re-shapes these SAME bits in
-      // CSS — fireflies, streaking stars — off the one root hook a world sets
-      // (slot 7 under "Worlds" in styles.css), so nothing here knows a world
-      // exists. The per-bit randomness therefore travels as custom properties:
-      // the colour, because an inline `background` would beat every rule a world
-      // could write; and a horizontal drift, set for every bit and simply
-      // ignored by the palette's fall.
+      // Design-agnostic on purpose (#940): a design may re-shape these SAME bits
+      // in CSS (the round worlds did, until #1202), so nothing here knows which
+      // design is worn. The per-bit randomness therefore travels as custom
+      // properties: the colour, because an inline `background` would beat every
+      // rule a design could write; and a horizontal drift, set for every bit
+      // and simply ignored by the default fall.
       const conf = h('<div class="confetti" aria-hidden="true"></div>');
       for (let i = 0; i < 16; i++) {
         const bit = h('<span class="confetti__bit"></span>');
@@ -1702,7 +1700,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
        longer score axis instead of a wider gutter (`.claude/rules/tiles-vs-
        lists.md`). `--sc` travels as the raw accent and CSS does the mix, the
        `.stamp` mechanism from #1040: an inline `background` would beat every
-       rule a design or a world could write. A row nobody voted on carries 0%,
+       rule a design could write. A row nobody voted on carries 0%,
        so it is simply bare. */
     const pct = r.count ? Math.round((r.shown / RATING_MAX) * 1000) / 10 : 0;
     const fillVars = `--pct:${pct}%;${r.count ? `--sc:${scoreColor(r.score)};` : ''}`;

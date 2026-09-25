@@ -214,10 +214,17 @@ test('no secret value ever appears in the response', async () => {
    can go wrong is invisible to an assertion against a constant, namely
    reporting the full registry on a production instance.
 
-   Note the assertions are derived from `enabled` rather than from the literal
-   ['klassisch'], so enabling a design (the one-line PR #1202 makes) does not
-   silently turn this into a test of nothing. */
-test('production reports only the enabled designs; outside it, the whole registry', async () => {
+   Note the assertions are derived from `enabled` rather than from a literal.
+   Since the flip (#1202) every registered design is live, so the unfinished
+   one is made for the test: Klassisch is switched off for its duration (never
+   the face, which must stay offered), on the very module object the server
+   reads — the state the next design will be in while it is built. */
+test('production reports only the enabled designs; outside it, the whole registry', async (t) => {
+  const klassisch = DESIGN_REGISTRY.find((d) => d.id === 'klassisch');
+  if (DESIGN_REGISTRY.every((d) => d.enabled)) {
+    klassisch.enabled = false;
+    t.after(() => { klassisch.enabled = true; });
+  }
   const enabled = DESIGN_REGISTRY.filter((d) => d.enabled).map((d) => d.id);
   const unfinished = DESIGN_REGISTRY.filter((d) => !d.enabled).map((d) => d.id);
   assert.ok(unfinished.length >= 1,
@@ -232,7 +239,7 @@ test('production reports only the enabled designs; outside it, the whole registr
 
   delete process.env.NODE_ENV;
   const dev = await request(app).get('/api/config');
-  assert.deepEqual(dev.body.designs, enabled.concat(unfinished),
+  assert.deepEqual(dev.body.designs, DESIGN_REGISTRY.map((d) => d.id),
     'outside production every registered design is selectable, so an unfinished one can be reviewed');
 
   // The face is a design that actually exists, in both directions — a face the

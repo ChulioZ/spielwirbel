@@ -16,7 +16,7 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 
-const { loadApp, flush } = require('./support/dom');
+const { loadApp, waitFor } = require('./support/dom');
 
 // One hit per state a row can be in. The round's games carry the provider link
 // the state is read from (game.source) — a title alone decides nothing.
@@ -44,7 +44,16 @@ const ROUND = {
   activity: [],
 };
 
-/** Boot the shell with an api stub that records every call. */
+/** Boot the shell with an api stub that records every call.
+
+   The screens a sheet returns to are stubbed as recorders. Saving the form
+   calls closeSheet(back), and `back` runs only after jsdom has popped the
+   sheet's history marker — two real setTimeout(0)s later (#1320). Left real,
+   that navigation rendered the Regal from this stub's `{}` answer and threw
+   "reading 'filter'" of undefined into whichever test was still running when
+   the timers came due: never in a quiet process, about one run in forty under
+   a loaded full-suite run. Recorded instead, the return trip becomes a state
+   the spec can wait for, and finish on. */
 function boot(t, { design = 'klassisch', detail = {} } = {}) {
   const dom = loadApp({ locale: 'de' });
   t.after(() => dom.close());
@@ -59,8 +68,12 @@ function boot(t, { design = 'klassisch', detail = {} } = {}) {
   const toasts = [];
   dom.set('toast', (m) => toasts.push(m));
   dom.set('currentUserId', () => 'u1');
+  const navigations = [];
+  dom.set('showRound', (rid, tab) => navigations.push(['round', rid, tab]));
+  // showWishlist is a `const` arrow, so it is stubbed one level down.
+  dom.set('showArchive', (rid, kind) => navigations.push(['archive', rid, kind]));
   dom.run(`applyDesign(${JSON.stringify(design)})`);
-  return { dom, calls, toasts };
+  return { dom, calls, toasts, navigations };
 }
 
 const sheetOf = (dom) => dom.document.querySelector('.sheet');
@@ -73,11 +86,15 @@ async function searched(t, opts = {}) {
   const input = dom.document.getElementById('addSearchQ');
   input.value = 'nord';
   input.dispatchEvent(new dom.window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
-  await flush();
-  await flush();
+  await waitFor(() => dom.document.querySelectorAll('.add-search__row').length === HITS.length,
+    { label: `all ${HITS.length} search hits rendered as rows` });
   const row = (title) => [...dom.document.querySelectorAll('.add-search__row')]
     .find((r) => r.querySelector('.add-search__title').textContent === title);
-  return Object.assign(env, { input, row });
+  // The last thing pickSuggestion does, once the detail hop has filled the form.
+  const filledToast = dom.run("t('addGame.toast.filled', { provider: providerLabel('bgg') })");
+  const picked = () => waitFor(() => env.toasts.includes(filledToast),
+    { label: `the picked hit's detail filling the form (toast "${filledToast}")` });
+  return Object.assign(env, { input, row, picked });
 }
 
 /* ---------------------------- Klassisch: unchanged --------------------------- */
@@ -164,10 +181,9 @@ test('Tisch: „Hinzufügen" opens the form prefilled with the hit, as a lookup 
   // Operator decision 2026-09-24: a hit is a starting point, not a save — the
   // form opens filled (title, players, provider link, cover) so tags, owners
   // and the edition can be set before anything is stored.
-  const { dom, calls, row } = await searched(t, { detail: { minPlayers: 1, maxPlayers: 5, imageUrl: 'https://cf.geekdo-images.com/x.jpg' } });
+  const { dom, calls, row, picked, navigations } = await searched(t, { detail: { minPlayers: 1, maxPlayers: 5, imageUrl: 'https://cf.geekdo-images.com/x.jpg' } });
   row('Nordlicht-Expedition').querySelector('.add-search__add').click();
-  await flush();
-  await flush();
+  await picked();
   const sheet = sheetOf(dom);
   assert.equal(dom.document.querySelectorAll('.sheet').length, 1, 'the form must REPLACE the search step');
   assert.equal(sheet.querySelector('.add-search__list'), null);
@@ -178,8 +194,10 @@ test('Tisch: „Hinzufügen" opens the form prefilled with the hit, as a lookup 
   assert.equal(sheet.querySelector('#maxPlayers').value, '5');
 
   sheet.querySelector('#save').click();
-  await flush();
-  await flush();
+  // The return to the Regal is the save's LAST step, so waiting for it also
+  // leaves no queued history timer behind to fire into a later test.
+  await waitFor(() => navigations.length, { label: 'the saved form closing back to the Regal' });
+  assert.deepEqual(navigations, [['round', 1, 'regal']]);
   const post = calls.find((c) => c.method === 'POST');
   assert.ok(post, 'Speichern posted nothing');
   assert.equal(post.url, '/api/rounds/1/games');
@@ -189,13 +207,12 @@ test('Tisch: „Hinzufügen" opens the form prefilled with the hit, as a lookup 
 });
 
 test('Tisch wish variant: the prefilled form still files a wish', async (t) => {
-  const { dom, calls, row } = await searched(t, { wish: true });
+  const { dom, calls, row, picked, navigations } = await searched(t, { wish: true });
   row('Nordlicht-Expedition').querySelector('.add-search__add').click();
-  await flush();
-  await flush();
+  await picked();
   sheetOf(dom).querySelector('#save').click();
-  await flush();
-  await flush();
+  await waitFor(() => navigations.length, { label: 'the saved wish closing back to the wishlist' });
+  assert.deepEqual(navigations, [['archive', 1, 'wish']]);
   const fd = calls.find((c) => c.method === 'POST' && c.url.endsWith('/games')).body;
   assert.equal(fd.get('wish'), 'true');
   assert.equal(fd.get('sourceExternalId'), '303');
@@ -210,8 +227,8 @@ test('Tisch: a wished hit offers „Ins Regal" and moves THAT game, not a copy',
   assert.equal(row('Nordland').querySelector('.add-search__add'), null, 'and not a second „Hinzufügen"');
   assert.equal(btn.getAttribute('aria-label'), 'Ins Regal: Nordland');
   btn.click();
-  await flush();
-  await flush();
+  await waitFor(() => row('Nordland').classList.contains('is-held'),
+    { label: 'the „Nordland" row re-rendering as held after „Ins Regal"' });
   assert.deepEqual(calls.filter((c) => c.method === 'POST').map((c) => [c.url, JSON.stringify(c.body)]),
     [['/api/rounds/1/games/12/wish', '{"wish":false}']]);
   assert.equal(toasts.length, 1);

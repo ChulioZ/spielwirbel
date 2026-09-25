@@ -181,15 +181,12 @@ const DARK_BLOCK = bodyOfIn(':root[data-scheme="dark"]');
 assert.ok(ROOT_BLOCK, 'styles.css declares no :root block');
 assert.ok(DARK_BLOCK, 'styles.css declares no :root[data-scheme="dark"] block — has the hook moved?');
 
-/* A USER design's blocks — and only a user design's. The two registries share
-   ids: the round world `ocean` (round-designs.js) and the user design `ocean`
-   (designs.js) are different objects with the same id, and until #1202 retires
-   the worlds both are measured. Keying the lookup on the id alone would resolve
-   the WORLD through the user design's stylesheet, which the browser never does
-   (a world is a round's data-world, not an account's data-design). So the
-   entry must also name the same STYLESHEET: only a user design carries one, and
-   a spread copy (`{ ...design, scheme }`, which a spec builds to ask "what
-   would this resolve to under the other scheme") keeps it. */
+/* A USER design's blocks — and only a user design's. Until #1202 retired the
+   round worlds, the world `ocean` and the user design `ocean` shared an id, so
+   the lookup is keyed on the STYLESHEET as well as the id: only a user design
+   carries one, and a spread copy (`{ ...design, scheme }`, which a spec builds
+   to ask "what would this resolve to under the other scheme") keeps it. The
+   collision is gone, but the stylesheet check stays the cheaper guarantee. */
 function blocksOf(design) {
   const b = design && DESIGN_BLOCKS.get(design.id);
   return b && design.stylesheet && design.stylesheet === b.design.stylesheet ? b : null;
@@ -254,7 +251,7 @@ function evaluate(expr, design) {
   /* A side of the mix: a colour, optionally followed by its percentage. Since
      #1188 that percentage may itself be a `var(--x, <fallback>)` — memberTone()
      emits `color-mix(in oklab, <hex>, #fff var(--member-lift, 42%))` so a design
-     can lift its own people further without re-tuning the four shipped worlds.
+     can lift its own people further without re-tuning every other design.
      Resolved through the same block order as a colour token, so a design that
      declares it is measured at ITS value and one that does not falls back to
      the literal in the var() — which is the value that ships. */
@@ -285,12 +282,13 @@ function evaluate(expr, design) {
 }
 
 /* One token, resolved for one design. `--page-bg` and `--brand` come from the
-   design itself — applyBackground() writes them inline, so the sheet's own
-   values are only the Standard fallback and would silently measure the wrong
-   page for every other design. */
+   design itself — paintDesign() writes them inline, so the sheet's own values
+   are only Klassisch's and would silently measure the wrong page for every
+   other design. Klassisch declares neither (it IS the :root default), so for it
+   the sheet's value is exactly right and the lookup falls through to it. */
 function token(name, design) {
-  if (name === '--page-bg') return hex(design.page);
-  if (name === '--brand') return hex(design.accent);
+  if (name === '--page-bg' && design.page) return hex(design.page);
+  if (name === '--brand' && design.accent) return hex(design.accent);
   return evaluate(declaration(name, design.scheme === 'dark', design), design);
 }
 

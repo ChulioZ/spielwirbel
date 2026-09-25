@@ -72,7 +72,6 @@ I18N.fi = {
   'newRound.toast.createdImported': 'Porukka luotu – pelit kopioitu',
   'newRound.toast.quota': 'Porukoiden yläraja tuli vastaan. Poista ensin jokin porukka.',
 
-  'round.design': 'Ulkoasu',
   'round.tags': 'Tunnisteet',
   'round.startSession': 'Aloita sessio',
   'round.startEmptyTitle': 'Ei vielä sessioita',
@@ -1104,10 +1103,6 @@ I18N.fi = {
   'share.toast.copied': 'Tulos kopioitu leikepöydälle',
   'share.toast.failed': 'Jakaminen ei onnistunut',
 
-  'design.crumb': 'Ulkoasu',
-  'design.title': 'Ulkoasu',
-  'design.note': 'Valitse tälle porukalle ulkoasu. Tausta, korostusväri ja kaikki muut sävyt mukautuvat yhdessä.',
-  'design.toast.set': 'Ulkoasu otettu käyttöön',
   'theme.standard': 'Perus',
   'theme.blaugrau': 'Siniharmaa',
   'theme.salbei': 'Salvia',
@@ -1116,14 +1111,6 @@ I18N.fi = {
   'theme.sand': 'Hiekka',
   'theme.schiefer': 'Liuske',
   'theme.pfirsich': 'Persikka',
-  'theme.obsidian': 'Obsidiaani',
-  'theme.forest': 'Metsä',
-  'theme.scifi': 'Scifi',
-  'theme.ocean': 'Valtameri',
-  'theme.chess': 'Shakki',
-  'theme.horror': 'Kauhu',
-  'theme.dinos': 'Dinosaurukset',
-  'theme.burg': 'Linna',
   'round.marker': 'Värimerkki',
   'marker.title': 'Värimerkki',
   'marker.note': 'Jokaisella porukalla on yksi väri. Kaikki porukassa näkevät sen — kukin omassa ulkoasussaan.',
@@ -1143,9 +1130,6 @@ I18N.fi = {
   'marker.ocean.lagune': 'Laguuni',
   'marker.ocean.tang': 'Rakkolevä',
   'marker.ocean.purpur': 'Purppura',
-  'design.group.colors': 'Värit',
-  'design.group.worlds': 'Maailmat',
-  'design.worlds.note': 'Maailma tuo värien päälle oman kirjasintyyppinsä, koristeensa ja taustansa.',
 
 
   'tags.crumb': 'Tunnisteet',

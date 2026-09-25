@@ -20,8 +20,7 @@ below AA on the darkest page (#145).
 **Rule:** any colour used as text gets measured against **both** `--surface`
 and `--page-bg` — **resolved for the design under test**.
 `test/a11y-contrast.test.js` does exactly this and requires the registry
-(`public/js/round-designs.js` — palettes AND worlds), so a newly added design is
-checked automatically.
+(`public/js/designs.js`), so a newly added design is checked automatically.
 
 **"The darkest theme page" stopped being one hex in #904.** A design may declare
 `scheme: 'dark'`, which replaces `--surface`, `--ink`, `--ink-soft` and all three
@@ -35,12 +34,10 @@ whole dark half is `.claude/rules/dark-designs-and-the-on-accent-flip.md`.
   `--brand`, which paints every `.link-btn` — so an accent must clear 4.5:1
   **on its own page** (Sand and Pfirsich sat at 3.8:1 and put every link in
   the app below AA; both were darkened).
-- **Correcting a theme needs no migration — resolve at RENDER time.** A round
-  stores a palette *snapshot*, so `resolveAccent(bg)` in `round-theme.js` looks the
-  accent up by `page` on every render; existing rounds self-correct on next
-  draw. Both `applyBackground` and `themeAccent` go through it. (Same
-  render-time reasoning as `provider-cover-sizing.md`; keeps the repo free of
-  migration code.)
+- **Correcting a colour needs no migration — resolve at RENDER time.** A
+  design's colours come from the registry, never from stored data, and a round's
+  retired design (#1202) is mapped to its marker at render time
+  (`public/js/round-marker.js`) — no migration code (`provider-cover-sizing.md`).
 - **`avgColor()` is used in BOTH directions** — fill under `--on-accent` text
   (`.score-pill`) *and* text/stroke on the page (the Chronik's and the results
   screen's score text; the game-detail ring it was derived from went with #1039,

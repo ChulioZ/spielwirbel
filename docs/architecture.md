@@ -25,26 +25,28 @@ behind these choices — and why they are not up for casual revision — are in
   it only under `NODE_ENV=production`. It exists purely to bust stale asset
   caches after a deploy — not a bundler or framework.
 - **Designs are per USER, and one design may be a whole layout** (issue #1184).
-  Until now a design was per *round* and was only ever two colours: a page tone
-  and an accent, written as inline custom properties by `applyBackground()`. The
+  A design used to be per *round* and was only ever two colours: a page tone and
+  an accent, written as inline custom properties on `<html>`. The
   designs the programme ships (`docs/design/`) change layout as well as colour,
   so they need a root hook every rule can key off and a stylesheet of their own:
   `<html data-design="…">`, set by `applyDesign()` (`public/js/design.js`) from
   the registry in `public/js/designs.js`, with one **override stylesheet per
   design under `public/css/designs/`, injected on first wear** rather than
   shipped in `index.html`. Klassisch has no override file — `styles.css` *is*
-  Klassisch — and declares no colours, which is what makes "today's look is
-  unchanged" a property of the code rather than a coincidence of two hexes.
+  Klassisch — and declares no colours, which is what makes "Klassisch looks as it
+  always did" a property of the code rather than a coincidence of two hexes.
 
   Three consequences worth knowing before touching any of it. **A design's
   colours live in the registry, its layout in the stylesheet**, because the
   contrast suite resolves each design's tokens from `page`/`accent`/`scheme`
   against `styles.css` — a colour in an override file would ship unmeasured.
-  **The round and user layers coexist** until the flip (#1202): a round's stored
-  design still wins while it is applied, and "no round design here" now means
-  "fall back to the user's design" rather than "clear to the `:root` defaults",
-  which is why `setScheme` has three states. And **the gate is in code, not an
-  env var** — each registry entry carries `enabled`, the server strips the
+  **Rounds own no design since the flip (#1202)**: `paintDesign()`
+  (`public/js/round-theme.js`) puts the account's design on every screen, and a
+  round screen adds only its colour marker (`applyMarker`). A round's stored
+  `background` is still read — `public/js/round-marker.js` maps a retired palette
+  or world onto the marker it becomes. **Every account wears Der Tisch until it
+  answers the chooser**, resolved lazily on read in `lib/account-design.js` with
+  no migration. And **the gate is in code, not an env var** — each registry entry carries `enabled`, the server strips the
   disabled ones under `NODE_ENV=production` and reports the rest on
   `GET /api/config`, so enabling a design is a one-line PR. See
   `.claude/rules/design-stylesheets-are-shell-assets.md` for the two cache
@@ -143,9 +145,11 @@ lib/
   quota.js           per-tenant state caps — rounds/tenant, games/round,
                      tags/round, members/round (issue #139; inert unless
                      ACCOUNTS_ENABLED)
-  web-manifest.js    GET /manifest.webmanifest per design (#1199): the face's
-                     static file untouched, or — for ?design=<a selectable id>
-                     — that design's icons, theme and splash colour. Reads no
+  web-manifest.js    GET /manifest.webmanifest per design (#1199): the static
+                     file untouched for a colourless design (Klassisch), else
+                     the file re-dressed in the design's icons, theme and
+                     splash colour — the face's (Der Tisch) for the bare URL,
+                     any selectable one for ?design=<id>. Reads no
                      account; mounted in front of express.static, as open as
                      the file
   faq.js             the server-rendered FAQ page, one language per page in
@@ -207,7 +211,7 @@ lib/
   demo.js            guest demo mode: mints, seeds and purges throwaway demo
                      accounts (issue #427; off unless DEMO_ENABLED)
   demo-seed.js       the content a demo tenant is seeded with — three rounds,
-                     each with its design, games (hotlinked provider covers plus
+                     each with its colour marker, games (hotlinked provider covers plus
                      resolved provider metadata), tags, sessions and per-locale
                      text (issues #427, #953)
   user-stats.js      one account's play record aggregated over every member seat
@@ -416,9 +420,7 @@ lib/
                                              account-free half of #209/#612)
     activities.js    …/activities           (list the feed [GET], delete an entry)
     marker.js        …/marker               (PATCH the round's colour marker,
-                                             0-7 — issue #1187) and, until the
-                                             flip (#1202), the retired
-                                             …/background (set the design)
+                                             0-7 — issue #1187)
     tags.js          …/tags                 (create a custom tag [deduped], set its icon, delete one)
 public/
   index.html
@@ -431,8 +433,9 @@ public/
                      on demand by js/design.js; Klassisch has none, because
       tisch.css      styles.css IS Klassisch
       ocean.css
-  manifest.webmanifest  PWA manifest (installable app metadata + icons) — the
-                     face's; other designs get theirs from lib/web-manifest.js
+  manifest.webmanifest  PWA manifest (installable app metadata + icons) —
+                     Klassisch's; lib/web-manifest.js derives every other
+                     design's (the face's included) from it
   robots.txt         crawl policy; every noindex page stays crawl-ALLOWED (#510)
   sitemap.xml        the four public URLs, on the canonical host
   sw.js              service worker: precache the app shell, offline fallback
@@ -566,28 +569,24 @@ public/
                      forward-looking surfaces (session setup, teams, rankings,
                      trophies) apply, while history keeps resolving a retired
                      seat unchanged (issue #1006)
-    round-designs.js the design registry: the eight colour palettes and the
-                     worlds (Forest, Sci-Fi) under a stable id each, plus the
-                     resolver every view and the recap card look a stored
-                     design up through — by id, then by the legacy page hex
-                     (issue #903)
     round-marker.js  a round's COLOUR MARKER (#1187): the design-neutral
-                     index 0-7, the table mapping every retired design onto
-                     one, the id hash that assigns one at creation, and the
-                     resolver. Required by both repo backends and by
-                     lib/routes/marker.js
-    round-theme.js   how a design reaches the page: the --page-bg/--brand
-                     pair, the data-world and data-scheme root attributes,
+                     index 0-7, the tables mapping every retired round design
+                     (by id, or a pre-#903 page hex) onto one (#1202), the id
+                     hash that assigns one at creation, and the resolver.
+                     Required by both repo backends and by lib/routes/marker.js
+    round-theme.js   how the worn design and the round's marker reach the
+                     page: the --page-bg/--brand pair and data-scheme
+                     (paintDesign), the marker tokens (applyMarker),
                      <meta name="theme-color">, and the rating ramp that
-                     flips with the scheme (issue #956)
+                     flips with the scheme (issues #956, #1202)
     designs.js       the USER design registry (#1184): which designs an
                      account may wear, each one's page/accent/scheme and
                      override stylesheet, the `enabled` gate and the face
                      design. Required by lib/app.js so GET /api/config and
                      the client work from one list
     design.js        applying a user design: <html data-design>, the
-                     on-demand stylesheet link, and the tokens
-                     round-theme.js falls back to outside a round (#1184)
+                     on-demand stylesheet link and the head's brand marks,
+                     then paintDesign() (#1184)
     design-picker.js the design cards the Konto screen and the one-time
                      first-start chooser both render, that chooser sheet,
                      and the Konto section (#1186); under Der Tisch the
@@ -795,8 +794,8 @@ public/
                           renders
     views-round-settings.js round Einstellungen screen: the round-level actions
                           (invite, move games, delete/leave) in one place (#561),
-                          plus the two sub-screens it links to — the design
-                          picker and the tag manager (#956)
+                          plus the two sub-screens it links to — the colour
+                          marker picker and the tag manager (#956, #1187)
     views-round-actions.js  the two sheets that screen opens: move games, invite
     views-round-lookup.js the two lookup sheets: add a game, link an existing
                           game to a provider
@@ -910,8 +909,9 @@ order matters** (see `index.html`).
 
 ## Design programme (`docs/design/`)
 
-Since 2026-09-19 the app is moving from per-round colour schemes and worlds to
-**per-user designs** (issues #1183–#1207). Everything that decides how that
+Since 2026-09-19 the app has moved from per-round colour schemes and worlds to
+**per-user designs** (issues #1183–#1207; the flip, #1202, made Der Tisch the
+face and retired the round designs). Everything that decides how that
 works lives under `docs/design/`, not in this file: the handover that fixes the
 information architecture every design shares, the vocabulary rule (nouns and
 navigation are Spielwirbel's, only the ritual may be themed), the review of the

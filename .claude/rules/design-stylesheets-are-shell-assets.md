@@ -96,7 +96,7 @@ of regression, on a surface nobody has looked at yet. Hence:
   resolvable. `test/a11y-contrast.test.js` pairs the design-specific families
   (felt, paper, score ramp) by name and then asserts that no design token is left
   without a pair — so a new one fails until it is given one.
-- `--page-bg` and `--brand` still belong in `designs.js`: `applyBackground()`
+- `--page-bg` and `--brand` still belong in `designs.js`: `paintDesign()`
   writes them inline on `<html>`, so a copy here would be dead text reading as
   the source of truth.
 

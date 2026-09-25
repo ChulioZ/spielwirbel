@@ -221,7 +221,7 @@ async function showEntdecken() {
   syncUrl('/entdecken');
   setContext(t('stats.title'));
   setDocTitle(t('stats.title'));
-  applyBackground(null);
+  applyMarker(null);
   // ONE expression, read twice: the chrome a visitor gets and whether they are
   // offered a way in are the same question, and two copies could disagree.
   const loggedOut = accountsActive() && !isLoggedIn();

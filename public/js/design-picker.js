@@ -37,8 +37,9 @@
 // see null and silently offer the face alone.
 function offeredDesigns(cfg) {
   const ids = (cfg && Array.isArray(cfg.designs)) ? cfg.designs : [FACE_DESIGN];
-  // Registry order, not config order: the face comes first, which is what puts
-  // „Klassisch — wie bisher" at the head of the list without a sort key.
+  // Registry order, not config order: Klassisch is the registry's first row,
+  // which is what puts „Klassisch — wie bisher" at the head of the list without
+  // a sort key.
   return DESIGN_REGISTRY.filter((d) => ids.indexOf(d.id) !== -1);
 }
 
@@ -106,7 +107,7 @@ function renderDesignPicker(cfg, current, onPick) {
         <input type="radio" name="designPick" value="${esc(design.id)}"${on ? ' checked' : ''}>
         <span class="design-card__body">
           <span class="design-card__name">${esc(t(design.labelKey))}${
-  design.id === FACE_DESIGN ? `<span class="design-card__badge">${esc(t('design.klassisch.badge'))}</span>` : ''}</span>
+  design.id === CLASSIC_DESIGN ? `<span class="design-card__badge">${esc(t('design.klassisch.badge'))}</span>` : ''}</span>
           <span class="design-card__desc">${esc(t(design.descKey))}</span>
         </span>
       </label>`);
@@ -129,8 +130,8 @@ function renderDesignPicker(cfg, current, onPick) {
    Built EMPTY and filled from withAppConfig, because which designs exist is the
    server's answer (`enabled` resolved against NODE_ENV) and it arrives
    asynchronously. The heading is appended in the same callback rather than up
-   front, so an instance offering a single design — which is production today,
-   before the flip (#1202) — renders no heading over an empty box. A picker with
+   front, so an instance offering a single design renders no heading over an
+   empty box. A picker with
    one card is not a choice, and a section announcing one is worse than none.
 
    The pick is saved IMMEDIATELY, with no save button. It is a preference with a
@@ -190,8 +191,8 @@ function buildDesignSection(me) {
 
    - MORE THAN ONE design is offered. With a single one there is no choice to
      make, and a sheet announcing "pick a design" over one card is worse than
-     silence. This is also why nothing fires in production before the flip
-     (#1202) — only Klassisch is `enabled` there today.
+     silence. This is also why nothing fired in production before the flip
+     (#1202), when only Klassisch was `enabled`.
    - the account has not seen THIS run of it (designChooserSeen). A revision
      rather than a boolean so a later design can ask once more; designs.js has
      the reasoning.
@@ -233,7 +234,7 @@ function maybeShowDesignChooser(me, onDone) {
 function designPosterSheet(cfg, current) {
   const designs = offeredDesigns(cfg);
   const badge = (design) => {
-    if (design.id === FACE_DESIGN) return `<span class="design-card__badge">${esc(t('design.klassisch.badge'))}</span>`;
+    if (design.id === CLASSIC_DESIGN) return `<span class="design-card__badge">${esc(t('design.klassisch.badge'))}</span>`;
     if (design.id === current) return `<span class="design-card__badge">${esc(t('design.poster.picked'))}</span>`;
     return '';
   };

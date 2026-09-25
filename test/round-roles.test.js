@@ -118,11 +118,9 @@ const MOUNTS = [
   ['/members', '../lib/routes/members'],
   ['/sessions', '../lib/routes/sessions'],
   ['/activities', '../lib/routes/activities'],
-  // One module, two routers (#1187) — the marker route and the retired design
-  // route it shares a file with. Listed separately so each mount's own verb is
-  // what the guards below see.
-  ['/marker', '../lib/routes/marker', 'marker'],
-  ['/background', '../lib/routes/marker', 'background'],
+  // The per-round design route it once shared a file with was retired at the
+  // flip (#1202).
+  ['/marker', '../lib/routes/marker'],
   ['/tags', '../lib/routes/tags'],
   ['/lookup', '../lib/routes/lookup'],
   ['/recommendations', '../lib/routes/recommendations'],

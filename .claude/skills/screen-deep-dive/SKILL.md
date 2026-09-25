@@ -42,9 +42,9 @@ Every proposal has to pass all four readings of that sentence:
   motion, the brand's own verb made visible — built from the app's tokens and
   faces. Boldness starts **one notch past what feels safe**, reaches a few more
   surfaces than the cautious version, and is spent in one place with quiet
-  around it. The calibration on record: the world artwork and the victory
-  scenes that were approved on the first pass without notes filled the
-  gutters at .55 alpha — start there, not below it.
+  around it. The calibration on record: the round worlds' artwork and victory
+  scenes (retired with the worlds at #1202) were approved on the first pass
+  without notes at .55 alpha in their gutters — start there, not below it.
 - **Beautiful.** Inside the brand and above the accessibility floor;
   `.claude/skills/ui-audit/SKILL.md` names both fences (evolution, never
   rebrand; never trade the floor for looks). Labelled controls, real buttons

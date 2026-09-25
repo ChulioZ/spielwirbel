@@ -1294,8 +1294,8 @@ test('#1186: a new account wears the face and has not seen the chooser', async (
 test('#1186: PATCH /me stores a selectable design and refuses everything else', async () => {
   const acc = await freshAccount('design-patch@example.com');
 
-  // 'tisch' is registered but NOT enabled, so it is selectable outside
-  // production and refused inside it — the gate the whole registry exists for.
+  // Both registered designs are enabled since the flip (#1202); the production
+  // gate for an unenabled one is the next test's.
   assert.equal((await patchMe(acc.accessToken, { design: 'tisch' })).body.design, 'tisch');
   assert.equal((await getMe(acc.accessToken)).body.design, 'tisch', 'and it persists');
 
@@ -1310,23 +1310,33 @@ test('#1186: PATCH /me stores a selectable design and refuses everything else', 
   assert.equal((await patchMe(acc.accessToken, { bgStats: true })).body.design, 'tisch');
 });
 
-test('#1186: in production an unenabled design is refused AND not handed back', async () => {
+test('#1186: in production an unenabled design is refused AND not handed back', async (t) => {
+  // Every registered design is live since the flip (#1202), so the gate is
+  // exercised by switching a NON-face design off for the duration — the state
+  // the next design (Ocean, Die Brücke …) will be in while it is built. Same
+  // module object the route reads, restored after. Not the face: an unenabled
+  // face would fold onto itself and prove nothing.
+  const row = designs.designById('klassisch');
+  assert.notEqual(row.id, designs.FACE_DESIGN);
   const acc = await freshAccount('design-prod@example.com');
   // Stored while it was selectable — the exact state a design built on a dev
   // instance leaves behind, and the one the projection has to defuse.
-  assert.equal((await patchMe(acc.accessToken, { design: 'tisch' })).body.design, 'tisch');
+  assert.equal((await patchMe(acc.accessToken, { design: 'klassisch' })).body.design, 'klassisch');
 
+  row.enabled = false;
+  t.after(() => { row.enabled = true; });
   await asProduction(async () => {
-    const res = await patchMe(acc.accessToken, { design: 'tisch' });
+    const res = await patchMe(acc.accessToken, { design: 'klassisch' });
     assert.equal(res.status, 400);
     assert.equal(res.body.error, 'invalid_design');
-    // The sharper half: the STORED value is still 'tisch', and the projection
-    // must not hand it out — applyDesign() on the client is policy-free, so an
-    // echoed id would put an unfinished design on a production page.
+    // The sharper half: the STORED value is still 'klassisch', and the
+    // projection must not hand it out — applyDesign() on the client is
+    // policy-free, so an echoed id would put an unfinished design on a
+    // production page.
     assert.equal((await getMe(acc.accessToken)).body.design, designs.FACE_DESIGN);
   });
 
-  assert.equal((await getMe(acc.accessToken)).body.design, 'tisch',
+  assert.equal((await getMe(acc.accessToken)).body.design, 'klassisch',
     'outside production the stored value is offered again');
 });
 
@@ -1391,9 +1401,9 @@ test('#1186: a demo account may change its design, unlike its avatar', async (t)
   assert.equal(res.body.user.designChooserSeen, null,
     'a visitor trying the app is exactly who the chooser is for');
 
-  const patched = await patchMe(res.body.accessToken, { design: 'tisch' });
+  const patched = await patchMe(res.body.accessToken, { design: 'klassisch' });
   assert.equal(patched.status, 200, 'the avatar route refuses a demo; this one must not');
-  assert.equal(patched.body.design, 'tisch');
+  assert.equal(patched.body.design, 'klassisch');
 });
 
 test('#841: an account predating the profile picture answers null, not an absent key', async () => {

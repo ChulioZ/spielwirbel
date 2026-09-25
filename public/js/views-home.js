@@ -17,7 +17,7 @@ async function showHome() {
   const tisch = designIs('tisch');
   setContext(tisch ? t('home.tischKicker') : '', tisch ? 'kicker' : undefined);
   setDocTitle(t('home.docTitle'));
-  applyBackground(null); // home: default background
+  applyMarker(null); // home: no round, no marker
   app.innerHTML = '<p class="muted">…</p>';
   // SWR: renders instantly from the cached summary (a background refresh
   // re-invokes showHome via currentView if anything changed).
@@ -62,7 +62,7 @@ async function showHome() {
     if (alt) app.appendChild(alt);
   } else {
     app.appendChild(renderLobbyList(rounds));
-    const next = tischNextStep(rounds);
+    const next = lobbyNextStep(rounds);
     if (next) app.appendChild(next);
   }
 
@@ -87,10 +87,11 @@ function tischLobbyAlt() {
   return alt;
 }
 
-/* A one-round lobby (T7.2, #1280) — Der Tisch only. The lobby of someone who
-   has just founded their first round is where the app stops holding their
-   hand; T7.2 gives it a second slip on the round's tile and a „Nächster
-   Schritt" card under the grid.
+/* A one-round lobby (T7.2, #1280). The lobby of someone who has just founded
+   their first round is where the app stops holding their hand; T7.2 gives it a
+   second slip on the round's tile (Der Tisch only — it is that design's paper
+   slip) and a „Nächster Schritt" card under the grid (every design since
+   #1318 — below).
 
    The slip says why the others matter, on the tile of a round that seats only
    its founder. It is TEXT inside the tile's <a> (never a control — the tile is
@@ -110,9 +111,12 @@ function lobbyInviteSlip(rounds, r) {
 
    The rows are <button>s because each opens a SHEET over the lobby, not a
    route; each first fetches the round, since the sheets take the full round
-   and the lobby holds only its summary. */
-function tischNextStep(rounds) {
-  if (!designIs('tisch') || rounds.length !== 1) return null;
+   and the lobby holds only its summary.
+
+   Every design since #1318: it is an app feature rather than Tisch paint, so
+   the design only decides how the card looks (styles.css, tisch.css). */
+function lobbyNextStep(rounds) {
+  if (rounds.length !== 1) return null;
   const r = rounds[0];
   if (r.shared || r.playedCount > 0) return null;
   const steps = [];
@@ -334,29 +338,13 @@ function renderLobbyList(rounds) {
       lastLine = `<span class="round-card__last${won ? '' : ' round-card__last--plain'}"><i class="ti ${won ? 'ti-trophy' : 'ti-cards'}" aria-hidden="true"></i>${esc(text)}</span>`;
     }
 
-    // A round on a world carries the hook ITSELF (#903), with its own accent
-    // inline, so the tile's backdrop, corner and display face are that world's
-    // while the lobby around it stays standard — the one place home shows one.
-    // A DARK round marks the tile too (#904), but only far enough to fix the
-    // emblem's ink: the block in styles.css is scoped to :root and .theme-card,
-    // so the tile does not turn dark. One dark tile in a light lobby would read
-    // as a patchwork rather than as an identity.
-    //
-    // A round that is NOT on a world carries its colour MARKER instead (#1187):
-    // the emblem is filled from --marker rather than from a stored accent, so
-    // the tile shows the round's colour in the viewer's own design. For a
-    // palette round the two are the same hex by construction — Klassisch's eight
-    // markers ARE the eight palette accents — which is what makes this switch
-    // invisible to every round that has one.
-    const design = resolveDesign(r.background);
-    const schemeAttr = design && design.scheme ? ` data-scheme="${esc(design.scheme)}"` : '';
+    // Every tile carries the round's colour MARKER (#1187): the emblem is
+    // filled from --marker, so the tile shows the round's colour in the viewer's
+    // own design. Since the flip (#1202) that holds for every round — one that
+    // wore a world or a palette resolves to the marker it maps to.
     const marker = markerStyle(r);
-    const worldAttrs = (design && design.world
-      ? ` data-world="${esc(design.world)}" style="--brand:${design.accent}"`
-      : (marker ? ` style="${marker}"` : '')) + schemeAttr;
-    const emblemFill = marker ? 'var(--marker)' : themeAccent(r.background);
-    const card = h(`<a class="round-card"${worldAttrs}>
-         <span class="round-card__emblem" style="background:${emblemFill}"><i class="ti ${designIcon(r.background)}" aria-hidden="true"></i></span>
+    const card = h(`<a class="round-card" style="${marker}">
+         <span class="round-card__emblem" style="background:var(--marker)"><i class="ti ti-tornado" aria-hidden="true"></i></span>
          <span class="round-card__body">
            <span class="round-card__name">${esc(r.name)}${r.shared ? ` <span class="round-card__shared"><i class="ti ti-users" aria-hidden="true"></i> ${esc(t('home.shared'))}</span>` : ''}</span>
            <span class="round-card__meta">
@@ -387,7 +375,7 @@ async function showNewRound() {
   syncUrl('/round/new');
   setContext(''); // creating a round, not inside one yet
   setDocTitle(t('newRound.title'));
-  applyBackground(null);
+  applyMarker(null);
   app.innerHTML = '<p class="muted">…</p>';
 
   // Rounds whose games list can be copied over. rerender:false — this screen

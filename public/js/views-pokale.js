@@ -208,7 +208,7 @@ function roundStandings(round) {
   return { wins, ranked, winners, rankOf };
 }
 
-/* Der Tisch's leader line for a young round (T7.5, #1280): the crowned
+/* The leader line for a young round (T7.5, #1280; every design since #1318): the crowned
    leader(s) and „Ein Podium braucht 3 Sessions." in place of the podium.
    Each named leader stays a link to their page, exactly as a podium entry is,
    and `named` tells the caller who is already on screen — everyone else still
@@ -296,12 +296,13 @@ function renderPokaleTab(round) {
   // `.claude/rules/rank-encodings-must-not-be-growable-by-ties.md`.
   const podiumItems = winners.map((m) => ({ place: rankOf[m.id], member: m }));
   const { single, cols } = podiumColumns(podiumItems);
-  /* Der Tisch's young round (T7.5, #1280): below YOUNG_ROUND_PODIUM_FROM the
-     leader is named and the sentence says when the podium comes — three steps
-     drawn off one or two evenings would rank people on noise. The same constant
-     gates the hub's Pokale preview, so preview and page agree. */
+  /* The young round (T7.5, #1280; every design since #1318): below
+     YOUNG_ROUND_PODIUM_FROM the leader is named and the sentence says when the
+     podium comes — three steps drawn off one or two evenings would rank people
+     on noise. The same constant gates the hub's Pokale preview, so preview and
+     page agree. */
   const played = youngRoundPlayed(round, hubDeps());
-  const young = designIs('tisch') && played < YOUNG_ROUND_PODIUM_FROM;
+  const young = played < YOUNG_ROUND_PODIUM_FROM;
   const youngLead = young ? pokaleYoungLead(round, winners, rankOf, wins) : null;
   if (youngLead) sec.appendChild(youngLead.el);
   if (winners.length && !young) {
@@ -448,10 +449,10 @@ function renderPokaleTab(round) {
     } else break;
   }
   const streakM = streakMember && round.members.find((m) => m.id === streakMember);
-  // Under Der Tisch a series waits for YOUNG_ROUND_SERIES_FROM (#1280) — the
-  // number the Rundenpuls card's sentence names, so it cannot promise a series
-  // this card is already showing.
-  const seriesHeld = designIs('tisch') && played < YOUNG_ROUND_SERIES_FROM;
+  // A series waits for YOUNG_ROUND_SERIES_FROM (#1280; every design since
+  // #1318) — the number the Rundenpuls card's sentence names, so it cannot
+  // promise a series this card is already showing.
+  const seriesHeld = played < YOUNG_ROUND_SERIES_FROM;
   if (streakM && streak >= 2 && !seriesHeld) {
     // The member name links to their detail page, like the podium above.
     cards.appendChild(

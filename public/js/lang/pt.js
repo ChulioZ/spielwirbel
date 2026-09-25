@@ -97,7 +97,6 @@ I18N.pt = {
   'newRound.toast.createdImported': 'Grupo criado – jogos copiados',
   'newRound.toast.quota': 'Limite de grupos atingido. Exclua um grupo primeiro.',
 
-  'round.design': 'Visual',
   'round.tags': 'Etiquetas',
   'round.startSession': 'Iniciar sessão',
   'round.startEmptyTitle': 'Nenhuma sessão ainda',
@@ -1135,10 +1134,6 @@ I18N.pt = {
   'share.toast.copied': 'Resultado copiado para a área de transferência',
   'share.toast.failed': 'O compartilhamento não funcionou',
 
-  'design.crumb': 'Visual',
-  'design.title': 'Visual',
-  'design.note': 'Escolha um visual para este grupo. Fundo, cor de destaque e todos os outros tons se ajustam juntos.',
-  'design.toast.set': 'Visual aplicado',
   'theme.standard': 'Padrão',
   'theme.blaugrau': 'Azul-acinzentado',
   'theme.salbei': 'Sálvia',
@@ -1147,14 +1142,6 @@ I18N.pt = {
   'theme.sand': 'Areia',
   'theme.schiefer': 'Ardósia',
   'theme.pfirsich': 'Pêssego',
-  'theme.obsidian': 'Obsidiana',
-  'theme.forest': 'Floresta',
-  'theme.scifi': 'Ficção científica',
-  'theme.ocean': 'Oceano',
-  'theme.chess': 'Xadrez',
-  'theme.horror': 'Terror',
-  'theme.dinos': 'Dinossauros',
-  'theme.burg': 'Castelo',
   'round.marker': 'Marcador de cor',
   'marker.title': 'Marcador de cor',
   'marker.note': 'Cada grupo tem uma cor. Toda a gente no grupo a vê — cada um no seu próprio design.',
@@ -1174,9 +1161,6 @@ I18N.pt = {
   'marker.ocean.lagune': 'Laguna',
   'marker.ocean.tang': 'Alga',
   'marker.ocean.purpur': 'Púrpura',
-  'design.group.colors': 'Cores',
-  'design.group.worlds': 'Mundos',
-  'design.worlds.note': 'Um mundo acrescenta a sua própria tipografia, ornamentos e um pano de fundo sobre as cores.',
 
 
   'tags.crumb': 'Etiquetas',

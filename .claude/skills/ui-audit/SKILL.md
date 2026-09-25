@@ -41,9 +41,11 @@ the whole reason it can be trusted to touch a live product's look:
    the *same* content — its size, weight, placement, framing, backdrop — is
    visual and in scope however dramatic the visual difference; changing *which*
    content or controls a screen has, or their order of use, is UX.
-2. **Evolution, never rebrand.** Stay within `--brand` (`#c2410c`), the 8 `PALETTES` (plus the worlds, #903),
-   and the `color-mix`-derived token families. The app must be recognizably itself
-   tomorrow. Refine a ramp; never swap the palette or default to dark (U-R02, U-R05).
+2. **Evolution, never rebrand.** Stay within the worn design's own tokens — Klassisch's `--brand`
+   (`#c2410c`) and its 8 markers, Der Tisch's felt/brass/paper (`public/js/designs.js`,
+   `public/css/designs/tisch.css`) — and the `color-mix`-derived token families. The app must be
+   recognizably itself tomorrow. Refine a ramp; never swap a design's palette (U-R02, U-R05). Which
+   design is the default is the design programme's call (`docs/design/`), never an audit's.
 3. **Above the accessibility floor, always.** `accessibility-audit` owns contrast,
    focus, target size, ARIA, keyboard and reduced-motion *compliance*
    (A-001..A-016). Never re-report those, and never propose a change that would
@@ -94,8 +96,8 @@ renders an empty state and tells you nothing about the populated one. Leave
 The dataset must be *pretty enough to judge*: a round with ~12 games across several
 tags (some with real provider covers, some on the placeholder gradient), archived
 and completed games, a finished session with a podium, an abandoned draw, and a
-couple of different `PALETTES` (and a world) applied so you see the design on more than the
-standard palette.
+couple of rounds on different colour markers, viewed under **both** Klassisch and Der Tisch,
+so you see more than one design.
 
 ### 2. The Browser pane lies in ways that look like design bugs
 

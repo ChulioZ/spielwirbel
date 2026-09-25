@@ -111,6 +111,9 @@ const GLYPH_LITERALS = [
   // sized to the tile rather than to the type scale, exactly like `.mood .ti`
   '.rater__face',
   '.fchip__x',
+  // the young round's leader block (#1318): initials and crown sized to the
+  // 44px seat, exactly as Der Tisch's copy of the same two rules
+  '.pokale-young__avatar', '.pokale-young__crown',
   '.game-card__pick',
   // large standalone marks
   '.auth__logo', '.paste-zone__icon',

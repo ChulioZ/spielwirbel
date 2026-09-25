@@ -183,7 +183,9 @@ test('manifestDesign/manifestFor: the pure halves the route composes', () => {
 });
 
 test('wearing a design re-points the head’s manifest, favicon and apple-touch icon', () => {
-  const dom = loadApp();
+  // Boot state, untouched: the static head is the FACE's, which is Der Tisch
+  // since the flip (#1202) — so the design worn here is the OTHER one.
+  const dom = loadApp({ design: null });
   try {
     const href = (sel) => dom.run(`document.querySelector('${sel}').getAttribute('href')`);
     const before = {
@@ -191,13 +193,14 @@ test('wearing a design re-points the head’s manifest, favicon and apple-touch 
       icon: href('link[rel="icon"]'),
       apple: href('link[rel="apple-touch-icon"]'),
     };
-    dom.call('applyDesign', 'tisch');
-    const tisch = designById('tisch').marks;
-    assert.equal(href('link[rel="manifest"]'), '/manifest.webmanifest?design=tisch');
-    assert.equal(href('link[rel="icon"]'), tisch.favicon.href);
-    assert.equal(dom.run('document.querySelector(\'link[rel="icon"]\').getAttribute(\'sizes\')'), tisch.favicon.sizes);
-    assert.equal(href('link[rel="apple-touch-icon"]'), tisch.appleTouch);
-    // …and back: the face's head is restored exactly, not left on Der Tisch.
+    const other = DESIGN_REGISTRY.find((d) => d.id !== FACE_DESIGN);
+    dom.call('applyDesign', other.id);
+    const marks = other.marks;
+    assert.equal(href('link[rel="manifest"]'), `/manifest.webmanifest?design=${other.id}`);
+    assert.equal(href('link[rel="icon"]'), marks.favicon.href);
+    assert.equal(dom.run('document.querySelector(\'link[rel="icon"]\').getAttribute(\'sizes\')'), marks.favicon.sizes);
+    assert.equal(href('link[rel="apple-touch-icon"]'), marks.appleTouch);
+    // …and back: the face's head is restored exactly, not left on the other.
     dom.call('applyDesign', FACE_DESIGN);
     assert.deepEqual({
       manifest: href('link[rel="manifest"]'),

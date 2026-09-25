@@ -235,7 +235,9 @@ test('an entry carries its own win count, and the same text upright or sideways'
 
   // A SHARED step, where the entries lie sideways: same text, no second number
   // that CSS has to hide.
-  const tie = [night(['anna'], MEMBERS), night(['ben'], MEMBERS)];
+  // A third, winnerless night keeps the round at the podium threshold
+  // (YOUNG_ROUND_PODIUM_FROM, every design since #1318) without breaking the tie.
+  const tie = [night(['anna'], MEMBERS), night(['ben'], MEMBERS), night([], MEMBERS)];
   const two = await pokale(t, roundWith(tie));
   const top = [...two.app.querySelectorAll('.podium__col--1 .podium__entry .podium__wins')];
   assert.equal(top.length, 2, 'fixture does not produce a shared TOP step');

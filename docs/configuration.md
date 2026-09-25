@@ -129,8 +129,8 @@ Guest demo mode (issue #427): set `DEMO_ENABLED=true` (on top of
 `ACCOUNTS_ENABLED`) and the landing page offers **"Ohne Anmeldung ausprobieren"**
 alongside registering, plus a `/demo` deep link so a launch post can point
 straight into a running demo. One click mints a throwaway account with its own
-tenant, seeded with three ready-to-play rounds — two of them on a world (one
-light, one dark) and one on a plain palette, with real provider covers and
+tenant, seeded with three ready-to-play rounds — each on its own colour marker,
+with real provider covers and
 metadata, an archived and a wished-for game, two finished sessions on the round
 the visitor lands in, and one evening split across two tables with a guest and a
 team — and drops the visitor into the app with no e-mail and no password.
@@ -315,8 +315,9 @@ the **quota ceilings paired with the highest value anyone currently holds**
 against each, and the Node version the answering process is running.
 **Funktionsnutzung** answers "is any of this being used": how many accounts exist
 (verified / unverified / suspended), and then one share per feature — rounds using
-the archive, the played shelf or the wishlist; which design accounts wear, and
-how many went back to Klassisch after trying another; rounds carrying their own
+the archive, the played shelf or the wishlist; which design accounts wear (an
+account that has not answered the design chooser counts under the face, Der
+Tisch, exactly as it sees it), and how many went back to Klassisch; rounds carrying their own
 tags or shared with someone; games linked to a provider, wearing a
 cover, owned by a named person or carrying expansions; sessions with guests, with
 teams or opened through a shared vote link; accounts with a passkey, a BGG

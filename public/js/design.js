@@ -1,21 +1,21 @@
 /* Spielwirbel – applying a USER design (#1184): the root attribute every design
    rule keys off, the override stylesheet fetched on demand, and the tokens
-   round-theme.js falls back to when no round design is in force.
+   round-theme.js paints the page with.
 
    The seam, stated once because everything after this issue is "one more
    design":
 
-   - `<html data-design="…">` is the hook. An attribute, not a custom property,
-     for the same reason data-world is one — a whole family of rules has to
-     switch at once, and only a selector can do that.
+   - `<html data-design="…">` is the hook. An attribute, not a custom property:
+     a whole family of rules has to switch at once, and only a selector can do
+     that.
    - A design's COLOURS come from the registry (designs.js) and are written as
-     the same two inline custom properties a round design uses, by the same
-     function (applyBackground). One writer, so the two can never disagree.
+     two inline custom properties by one function (paintDesign, round-theme.js).
+     One writer, so nothing can disagree with it.
    - A design's LAYOUT comes from its own stylesheet, injected once, only when
      the design is actually applied. Klassisch has none: styles.css is Klassisch.
-   - Nothing is ever CLEARED. A round's design still wins while it is applied —
-     rounds keep their palettes and worlds until the flip (#1202) — but leaving
-     a round falls back to the user's design rather than to the :root defaults.
+   - A round owns no design since the flip (#1202) — only a colour marker
+     (round-theme.js's applyMarker) — so the page wears this design on every
+     screen, in a round or not.
 
    No module.exports: every function here touches `document`, so requiring it
    from Node would enter the coverage report almost entirely unreachable and
@@ -44,10 +44,10 @@ function designViewsReady() {
   designViewsAreReady = true;
 }
 
-// The registry entry round-theme.js falls back to when a screen has no round
-// design of its own. Klassisch's entry carries no page/accent on purpose, so
-// the caller's "does it have colours?" check clears the inline properties and
-// the page resolves to the :root defaults — byte-for-byte today's look.
+// The registry entry round-theme.js paints. Klassisch's entry carries no
+// page/accent on purpose, so paintDesign's "does it have colours?" check clears
+// the inline properties and the page resolves to the :root defaults —
+// byte-for-byte the look Spielwirbel started with.
 function activeDesign() {
   return designById(activeDesignId) || designById(FACE_DESIGN);
 }
@@ -62,9 +62,8 @@ function designIs(id) {
   return activeDesign().id === id;
 }
 
-// 'dark' or 'light' for the design in force. round-theme.js's setScheme uses it
-// as the fallback, which is what keeps a dark user design dark on home, the
-// account screens and every other surface outside a round.
+// 'dark' or 'light' for the design in force — the only thing that decides
+// <html data-scheme> since rounds stopped owning designs (#1202).
 function designScheme() {
   const d = activeDesign();
   return d && d.scheme === 'dark' ? 'dark' : 'light';
@@ -139,10 +138,8 @@ function applyDesignMarks(design) {
 // (#1186). Adding a check here would look like a gate while being one a page's
 // own console can step around, which is worse than none.
 //
-// applyBackground(null) at the end is not a clear — it is the repaint. It means
-// "no ROUND design here", which round-theme.js now resolves to this design's
-// tokens. Keeping it as the single writer of --page-bg/--brand is what stops
-// the two layers from fighting over the same two properties.
+// paintDesign() is the repaint: the single writer of --page-bg/--brand and the
+// scheme, reading the design this function just made active.
 //
 // A screen that branches on designIs() builds its markup once, so a COMMITTED
 // change re-renders the current screen (#1266) — otherwise it keeps the old
@@ -159,7 +156,7 @@ function applyDesign(id, { preview = false, rendering = false } = {}) {
   document.documentElement.dataset.design = design.id;
   loadDesignStylesheet(design);
   applyDesignMarks(design);
-  applyBackground(null);
+  paintDesign();
   // The top bar's account button is chrome outside every view, so no re-render
   // reaches it: its face follows the design here — previews included (#1279).
   renderAccountFace();

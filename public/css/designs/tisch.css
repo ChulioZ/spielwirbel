@@ -23,7 +23,7 @@
  * .claude/rules/design-stylesheets-are-shell-assets.md.
  *
  * Two things that are NOT here and must not move here:
- *   - --page-bg and --brand. applyBackground() writes them as inline custom
+ *   - --page-bg and --brand. paintDesign() writes them as inline custom
  *     properties on <html>, which outrank every stylesheet, so a copy here
  *     would be dead text that reads as the source of truth. They are the
  *     registry's `page`/`accent` (public/js/designs.js).
@@ -36,7 +36,7 @@
    Der Tisch even where the colours below do not apply. */
 :root[data-design="tisch"] {
   /* ---- Schrift. Bricolage Grotesque for display, Manrope for text; both OFL,
-     both self-hosted, declared in styles.css beside the world faces. Only the
+     both self-hosted, declared in styles.css beside the base faces. Only the
      weights that ship are ever asked for (500/700/800 and 500/600/700), so the
      browser can never synthesise a faux-bold. */
   /* How far a member's colour is lifted toward white before it is painted on
@@ -77,10 +77,10 @@
 
 /* The design's COLOURS, and the gate is load-bearing rather than tidy.
  *
- * Until the flip (#1202) a ROUND still overrides --page-bg and --brand with its
- * own palette, inline on <html>, and applyBackground() sets data-scheme from
- * THAT design rather than from the user's (round-theme.js). So inside a round
- * on a light palette the page goes light while <html> still says
+ * Until the flip (#1202) a ROUND could still override --page-bg and --brand
+ * with its own palette, inline on <html>, and data-scheme followed THAT design
+ * rather than the user's. So inside a round on a light palette the page went
+ * light while <html> still says
  * data-design="tisch" — and an ungated block left Der Tisch's paper --ink
  * #f6ecd8 on a #eaf1ea page, and its near-black --on-accent on that round's
  * dark green accent. Measured in a browser on a seeded demo round; it is the
@@ -88,17 +88,8 @@
  * resolves a design against its OWN page by construction.
  *
  * Gating on the scheme makes the colours apply exactly where they cohere:
- * outside a round (setScheme(null) falls back to the user design, i.e. dark),
- * and in a round whose own design is dark. In a LIGHT round the block simply
- * does not match, and the round's palette resolves exactly as it does under
- * Klassisch — which is the documented transition behaviour: a round's design
- * wins while it is applied.
- *
- * The remaining combination is a dark WORLD round under Der Tisch, where these
- * tokens meet that world's page. That one is legible by construction rather
- * than by luck: every world page is darker than Nussbaum and every ink here is
- * light, so each pair can only measure higher than the figures below. #1202
- * retires round designs and the question with them.
+ * outside a round — and since the flip (#1202) retired round designs, that is every screen
+ * Der Tisch is worn on.
  *
  * Specificity (0,3,0), so it beats styles.css's dark block (0,2,0) outright
  * rather than on source order. test/support/theme.js reads this block first for
@@ -131,10 +122,10 @@
      ever retuned, re-measure this pair first. */
   --control-edge: #b98a55;
 
-  /* The fallback GLYPH tone (empty image box, guest avatar dash, theme-card
-     lines). The dark block's 53% is not enough HERE, and the reason is the page
-     rather than the token: Nussbaum is far lighter than the four night-coloured
-     worlds that percentage was picked against (luminance .026 vs .010), so the
+  /* The fallback GLYPH tone (empty image box, guest avatar dash). The dark
+     block's 53% is not enough HERE, and the reason is the page rather than the
+     token: Nussbaum is far lighter than the night-coloured pages that
+     percentage was picked against (luminance .026 vs .010), so the
      same mix lands closer to its grounds — 2.68:1 on --sunken, against a 3:1
      bar. 62% clears every one of its four grounds (worst 3.38:1 on --sunken).
      Same re-pick-per-ground move as the dark block itself. */
@@ -225,13 +216,12 @@
   --brass-hi: #f6d795;
 
   /* THE PLATE'S DEEP STOP IS --gold-deep AND NOT --brand, although the two hold
-     the same hex today. Measured in a browser on the lobby (#1189): a round
-     still wearing a WORLD writes that world's accent as an inline --brand on
-     its own tile (views-home.js, #903), so a plate built on --brand came out
-     brass-to-GREEN on a Forest round — the design's one "this is the thing
-     itself" surface, tinted by whichever round it happened to be on. Inside a
-     dark world round the same would reach the hub CTA. --gold-deep is a design
-     token no round can write, so the metal is the design's everywhere. */
+     the same hex today. Measured in a browser on the lobby (#1189): while rounds
+     still owned designs, a world round wrote its accent as an inline --brand on
+     its own tile, so a plate built on --brand came out brass-to-GREEN on a
+     Forest round. Rounds own no design since #1202, but the plate stays on the
+     token that names the METAL rather than the action colour: --gold-deep is a
+     design token nothing else writes, so the metal is the design's everywhere. */
 
   /* T1's Zinnober — „laufende Abstimmung, Gefahr, Marke". The one place #1189
      needs it is the „Abstimmung läuft" kicker, which sits on a PAPER card
@@ -633,8 +623,7 @@
   padding: 16px 20px 26px;
   /* The marker IS the felt (#1187): a round paints its own table. --marker is
      on :root inside a round and absent everywhere else, so the fallback is the
-     design's default felt — which is also the right answer for a round still
-     wearing a world, where markerColors() returns null by design. */
+     design's default felt. */
   background:
     var(--felt-hatch, none),
     var(--felt-weave),
@@ -1395,15 +1384,9 @@
   }
   :root[data-design="tisch"][data-scheme="dark"] .round-card:hover { transform: none; box-shadow: none; }
   /* The table itself is the EMBLEM, grown — not a pseudo-element on the card.
-     Measured in a browser (#1189): `:is(.theme-card, .round-card)[data-world]::before`
-     is the world motif's slot on a lobby tile, at `opacity: .14; z-index: -1`,
-     so a disc drawn there came out 14% transparent and behind the card on every
-     round still wearing a world. Two of four tiles on the demo lobby.
-
-     The emblem is the better host anyway: it already IS the round's colour mark
-     — a 56px swatch filled from --marker — so growing it into the table says
-     the same thing at the size this screen wants, and the world keeps its
-     motif slot. Its inline `background` (views-home.js writes the flat marker
+     The emblem already IS the round's colour mark — a 56px swatch filled from
+     --marker — so growing it into the table says the same thing at the size
+     this screen wants. Its inline `background` (views-home.js writes the flat marker
      there) needs no fighting: the ::before below covers the whole box. What it
      DOES need is the radius, or the inline fill shows at the square's corners.
 
@@ -1419,8 +1402,7 @@
        nothing visible, which reads as the text having failed to render.
        `isolation` on the card is what makes -1 safe: it bounds the negative
        index to this card's stacking context, so the disc can never slide behind
-       the lobby or the page. The world motif's own ::before sits at -1 in the
-       same context and, being the first child, paints under the disc. */
+       the lobby or the page. */
     z-index: -1;
     left: 50%;
     top: var(--table-y);
@@ -2363,9 +2345,9 @@
    action stays the search result".
 
    GEOMETRY IS UNGATED, COLOUR IS NOT. This markup exists only under Der Tisch,
-   so a Tisch user inside a round still wearing a LIGHT palette (until the flip,
-   #1202) gets it too — without these rules it would be an unstyled list. So the
-   layout below applies on any scheme and reads only the app's own tokens
+   so a Tisch user inside a round wearing a LIGHT palette (possible until the
+   flip, #1202) got it too — without these rules it would have been an unstyled
+   list. So the layout below applies on any scheme and reads only the app's own tokens
    (--surface, --ink, --line …), which the overlay rule above re-points at the
    paper family in a dark Tisch sheet and which are the round's own in a light
    one. The one colour that is Tisch's alone (the state ink) is scheme-gated,
@@ -2984,8 +2966,7 @@
    The felt goes on the BODY, not on `.vote`, because that is the surface that
    reaches the viewport's edges; a gradient on the card would leave the page's
    own tone showing around it. --marker first, so a round votes on its own felt,
-   with the design's default behind it for a round that has no marker (and for
-   one still wearing a world, where markerColors() returns null). */
+   with the design's default behind it for a screen that has no marker. */
 :root[data-design="tisch"][data-scheme="dark"] body.vote-screen {
   background:
     var(--felt-weave),
@@ -3834,8 +3815,8 @@
 }
 :root[data-design="tisch"][data-scheme="dark"] .tisch__title { font-weight: 800; }
 /* „Gespielt", as T2.5 draws it: a green marker with its own ink, not a tint of
-   the score. The stamp's `--sc` mechanism is left alone — it is what a world
-   and the Spielepass both key off — and only the two colours are stated, so the
+   the score. The stamp's `--sc` mechanism is left alone — it is what the
+   Spielepass keys off — and only the two colours are stated, so the
    shape, the date line and the mask all still come from `.stamp`. */
 /* ON THE `::before`, NOT ON THE ELEMENT, and the distinction is invisible until
    you look: `.stamp` is `isolation: isolate` and its fill lives on a
@@ -5741,7 +5722,7 @@
 :root[data-design="tisch"][data-scheme="dark"] .lobby-alt__invited { justify-content: center; }
 
 /* --- The one-round lobby, the thresholds, the demo (T7.2, T7.5, T7.6; #1280)
-   Markup in views-home.js (lobbyInviteSlip, tischNextStep), hub-cards.js
+   Markup in views-home.js (lobbyInviteSlip, lobbyNextStep), hub-cards.js
    (the pulse's threshold sentence, hubDemoSummary, hubDemoInvite),
    hub-previews.js and views-pokale.js (pokaleYoungLead). Every pair is one
    test/a11y-contrast.test.js already holds (#1280's own test names them):
@@ -5803,6 +5784,9 @@
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
   color: var(--ink);
+  /* styles.css caps Klassisch's card from 860px (#1318); Der Tisch's own cap
+     starts at 1100 below. */
+  max-width: none;
 }
 :root[data-design="tisch"] .next-step__title {
   display: flex;
@@ -5906,8 +5890,8 @@
 /* The demo round's condensed summary (T7.6, #1280): what is behind each tab as
    one wood row per destination — icon, name, a hint, the figure at the far end
    — above the „Gefällt dir das?" card (`.hub-card--demo-invite`, an ordinary
-   hub card whose button is `.btn`). Colours are the generic tokens, because a
-   demo round's own design may still be light before the flip. */
+   hub card whose button is `.btn`). Colours are the generic tokens, which the
+   dark block re-points. */
 :root[data-design="tisch"] .hub-demo { display: flex; flex-direction: column; gap: 8px; }
 :root[data-design="tisch"] .hub-demo__row {
   display: flex;
@@ -6009,7 +5993,7 @@
    light round too, where the gated block does not match. They paint from the
    app's own tokens (--control-fill, --line, --accent, --brand-edge …), which
    the overlay re-point above turns into the paper family on this design and
-   which stay the round's palette elsewhere — never from a --paper-* name.
+   which stay the design's own elsewhere — never from a --paper-* name.
    =========================================================================== */
 
 /* --- The rest of the overlay's re-point ------------------------------------
@@ -6350,7 +6334,7 @@
    says its state with a tick, never with the fill alone.
 
    UNGATED, unlike the rules around them, because the markup exists whenever the
-   design is worn — in a light round too, until the flip (#1202). Every colour
+   design is worn (in a light round too, until the flip, #1202). Every colour
    is an app token the overlay re-point turns into paper here: --control-fill is
    --paper-raised, --accent is --paper-faint, --brand-edge is --gold-edge. */
 :root[data-design="tisch"] .editor-rows {
@@ -6772,7 +6756,7 @@
 
    LAYOUT is gated on the design alone, COLOUR on the design's scheme, for the
    reason design-colour-blocks-are-scheme-gated.md gives: until the flip a
-   round on a light palette still owns the page, and the strips must still be
+   round on a light palette could own the page, and the strips had to stay
    strips there — on the app's own surface, with the date inside the card. */
 
 /* The date column replaces the rail and its dots: two axes for one timeline
@@ -6948,13 +6932,8 @@
    The stage is felt with the table's rim along its bottom edge, so the plinths
    stand ON the rim rather than floating on the page. `.podium` already bottom-
    aligns its columns (styles.css), which is what puts every plinth's foot on
-   that edge.
-
-   NOT in a round still wearing a WORLD: `[data-world] .podium` owns this box's
-   padding and its ::before for the world's floor art (#1083), and felt under a
-   world floor would be two grounds fighting for one strip. There the plinths
-   below still apply, on the world's own floor. */
-:root[data-design="tisch"][data-scheme="dark"]:not([data-world]) .podium {
+   that edge. */
+:root[data-design="tisch"][data-scheme="dark"] .podium {
   gap: 16px;
   margin: 8px 0 22px;
   padding: 28px 16px 0;
@@ -6972,14 +6951,14 @@
    in styles.css. At 16px a side
    and a 16px gap, a two-way tie at 390px read „M." and „B.". */
 @media (max-width: 520px) {
-  :root[data-design="tisch"][data-scheme="dark"]:not([data-world]) .podium {
+  :root[data-design="tisch"][data-scheme="dark"] .podium {
     gap: 10px;
     padding: 22px 0 0;
   }
 }
 /* The win count stands on felt, so it takes the felt's soft ink — the pair the
    hub stage's kicker line already carries (4.79:1 on the light stop). */
-:root[data-design="tisch"][data-scheme="dark"]:not([data-world]) .podium__wins {
+:root[data-design="tisch"][data-scheme="dark"] .podium__wins {
   color: var(--felt-ink-soft);
 }
 :root[data-design="tisch"][data-scheme="dark"] .podium__avatar {
@@ -7893,9 +7872,8 @@
 
    HOW THIS REACHES A VISITOR. A logged-out visitor wears FACE_DESIGN
    (designs.js; applyAccountDesign resolves to it with no account), so every
-   rule below applies exactly when the face is Der Tisch — the face is
-   Klassisch until the flip (#1202), and under Klassisch none of these
-   selectors matches. (A signed-in account wearing Der Tisch that opens the
+   rule below applies exactly when the face is Der Tisch — which it is since the
+   flip (#1202); under a Klassisch face none of these selectors would match. (A signed-in account wearing Der Tisch that opens the
    landing sees it too, which is correct: it is their design.)
 
    The page stops being felt to every edge. #1193 put the sign-in on felt, and

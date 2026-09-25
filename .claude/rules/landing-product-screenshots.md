@@ -134,9 +134,10 @@ have — the precise act `.claude/rules/provider-cover-hotlinking.md` exists to
 avoid, and the reason covers are hotlinked rather than downloaded.
 
 Seed the data through the real API against a throwaway `DATA_DIR`
-(`.claude/rules/no-reading-production-data.md`); leaving `background` null gives
-the round the **standard theme**, which is the palette the landing page itself
-renders on, so the screenshot sits in the page instead of clashing with it.
+(`.claude/rules/no-reading-production-data.md`). Rounds own no design since the
+flip (#1202), so the screenshot wears whichever design the run shoots — the
+same one the landing page itself renders in — and sits in the page instead of
+clashing with it.
 
 ## 3a. An affordance gated on DATA cannot be reshot into existence (#752)
 
@@ -487,8 +488,9 @@ was in frame — the crop can still exclude them, and only your eyes catch that.
 
 `--design=tisch` shoots Der Tisch's set into `public/img/tisch/`
 (`LANDING_SHOTS_TISCH`); `landingShotSet()` picks by the design the landing is
-wearing, which is the face for every visitor — so production keeps Klassisch's
-pictures until the flip (#1202) and switches with no second edit.
+wearing, which is the face for every logged-out visitor — Der Tisch's set since
+the flip (#1202), which reshot it; Klassisch's is what an account on Klassisch
+sees if it opens the landing.
 `test/landing-shots.test.js` walks every table in `LANDING_SHOT_SETS` and fails
 if the FACE has none (the resolver would silently fall back to Klassisch's).
 

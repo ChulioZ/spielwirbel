@@ -21,8 +21,9 @@ custom property's `var()` is resolved **on the element that declares it**, and
 descendants inherit the *finished colour*. So any element that re-declares
 `--brand` locally still gets the page's brand through the alias.
 
-That element exists: `views-home.js` writes `style="--brand:…"` on a world
-design's round card, so the card's „geteilt" label (`.round-card__shared`) would
+That element existed: until the flip (#1202) `views-home.js` wrote
+`style="--brand:…"` on a world design's round card (today it writes the marker's
+tokens, and any design may set `--brand` on a subtree again), so the card's „geteilt" label (`.round-card__shared`) would
 have switched from the card's own accent to the page's — a Klassisch change, in
 a PR whose one promise was "Klassisch renders identically". Found on #1260 by
 grepping for every place `--brand` is *set*, before writing the alias; measured

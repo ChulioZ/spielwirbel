@@ -28,14 +28,13 @@
  * .claude/rules/design-stylesheets-are-shell-assets.md.
  *
  * Two things that are NOT here and must not move here:
- *   - --page-bg and --brand. applyBackground() writes them inline on <html>
+ *   - --page-bg and --brand. paintDesign() (round-theme.js) writes them inline on <html>
  *     from the registry's `page`/`accent` (public/js/designs.js).
  *   - Screen layout. This issue is tokens + shared components; the screens are
  *     #1211-#1221.
  */
 
-/* The design's VOICE — scheme-independent, so it survives into a round that is
-   still wearing its own palette (until #1202 retires round designs). */
+/* The design's VOICE — scheme-independent, like Der Tisch's. */
 :root[data-design="ocean"] {
   /* ---- Schrift. Comfortaa (700 only) for display and titles, Figtree
      (400/500/600/700) for text and numbers; both OFL, self-hosted, declared in
@@ -292,6 +291,7 @@
   .podium__col--multi .podium__name, .podium--single .podium__col--multi .podium__name,
   .recap-fav__name, .setup-panel__title, .pool-tile__name, .result-people__name,
   .spotlight--table .spotlight__title, .rec-ignored__name, .marker-card__name,
+  .next-step__title, .rec-spots__title, .rec-spot__title,
   /* The section label (16px, uppercase, letter-spaced) is O1's „Kicker", which
      is Figtree 700 — whichever heading level carries it. */
   .section :is(h1, h2, h3)

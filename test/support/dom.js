@@ -120,6 +120,16 @@ function translator(locale) {
  *
  * @param {object} [opts]
  * @param {string} [opts.locale='de']  locale to activate before the spec runs
+ * @param {?string} [opts.design='klassisch']  design to wear before the spec
+ *   runs, or null to leave the boot state (the face) untouched.
+ *
+ * WHY KLASSISCH BY DEFAULT (#1202). The face — what boot wears — became Der
+ * Tisch at the flip, and a spec that never names a design was written against
+ * Klassisch's DOM, which is every view's default path and stays a live design
+ * („Wie bisher"). Leaving the face in force would silently turn hundreds of
+ * Klassisch assertions into Tisch ones. A Tisch spec says so with
+ * `applyDesign('tisch')`, as it always has; a spec about BOOT itself passes
+ * `{ design: null }`.
  */
 function loadApp(opts = {}) {
   const dom = new JSDOM(INDEX_HTML, {
@@ -182,6 +192,8 @@ function loadApp(opts = {}) {
   };
 
   run(`setLocale(${JSON.stringify(opts.locale || 'de')})`);
+  const design = opts.design === undefined ? 'klassisch' : opts.design;
+  if (design) run(`applyDesign(${JSON.stringify(design)})`);
 
   return {
     window: dom.window,
@@ -207,6 +219,41 @@ function loadApp(opts = {}) {
    sees nothing sent — which reads as the action being wired wrong rather than
    as the spec being one turn early. */
 const flush = () => new Promise((resolve) => setImmediate(resolve));
+
+/* Wait for a STATE instead of for a number of turns (#1320).
+
+   `await flush(); await flush();` is a bet that everything between the action
+   and the assertion is microtasks plus one macrotask. jsdom breaks that bet in
+   places a view cannot see: `history.back()` is queued on a real
+   `setTimeout(0)`, and its `popstate` on a second one. So how many turns a
+   step takes depends on how busy the process is, which is how a spec comes to
+   pass alone and fail only inside a loaded full-suite run.
+
+   Re-checks `predicate` after each flush() until it returns something truthy,
+   and resolves with that value, so `const post = await waitFor(() =>
+   calls.find(…))` works. A predicate that THROWS counts as "not yet", because
+   reading a node that has not rendered yet is the usual way to throw here. On
+   timeout it rejects naming what it waited for — `label`, or the predicate's
+   own source — plus the last error the predicate threw. That message is the
+   point: a bare timeout says nothing about which step never happened. */
+async function waitFor(predicate, { timeout = 2000, label } = {}) {
+  const deadline = Date.now() + timeout;
+  let lastError;
+  for (;;) {
+    try {
+      const value = predicate();
+      if (value) return value;
+      lastError = undefined;
+    } catch (e) {
+      lastError = e;
+    }
+    if (Date.now() >= deadline) break;
+    await flush();
+  }
+  const what = label || predicate.toString();
+  const why = lastError ? ` (last error: ${lastError.message})` : '';
+  throw new Error(`waitFor timed out after ${timeout}ms waiting for: ${what}${why}`);
+}
 
 /* The standalone contact page (public/kontakt.html + public/js/pages/kontakt.js).
    It is a page IIFE OUTSIDE the SPA's shared scope, so it has no <script> tag in
@@ -252,4 +299,4 @@ function loadKontakt({ saved, pageLang, systemLanguage = 'en-US', fetch, storage
   return dom;
 }
 
-module.exports = { loadApp, loadI18n, translator, flush, loadKontakt };
+module.exports = { loadApp, loadI18n, translator, flush, waitFor, loadKontakt };

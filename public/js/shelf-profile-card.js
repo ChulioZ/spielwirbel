@@ -9,9 +9,9 @@
    Two looks, chosen at click time: Der Tisch paints from its own token COPY
    (TISCH_CARD_TOKENS, recap-card-tisch.js) with the round's felt as the head,
    and every other design reads the live palette the way the classic recap card
-   does (recapPalette, recapMarker). The worlds get no ornaments here on purpose:
-   they are being retired by the flip (#1202), and their SVG masks are exactly
-   what WebKit taints a canvas on (.claude/rules/webkit-taints-a-canvas-on-an-svg-pattern.md).
+   does (recapPalette, recapMarker). No SVG ornament is ever drawn: an SVG
+   pattern is exactly what WebKit taints a canvas on
+   (.claude/rules/webkit-taints-a-canvas-on-an-svg-pattern.md).
 
    So the constraints recap-card-tisch.js lists hold in full, and are simpler to
    keep here because nothing tempts breaking them:

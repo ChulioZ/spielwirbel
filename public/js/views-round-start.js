@@ -345,12 +345,15 @@ function renderStartTab(round, activeGames) {
      list and the „Gefällt dir das?" invitation follows it, both leading the grid
      right under the plate — the demo's point is the invitation, so it goes
      above the fold. isDemoAccount() is the banner's own predicate, so the two
-     can never disagree about whether this is a demo. */
-  const demo = tisch && isDemoAccount();
-  if (demo) {
-    grid.appendChild(cardSlot(hubDemoSummary(round, activeGames)));
-    grid.appendChild(cardSlot(hubDemoInvite()));
-  }
+     can never disagree about whether this is a demo.
+
+     The invitation is generic, so it leads every design's demo grid since
+     #1318; only the condensed list is Tisch composition. Klassisch keeps its
+     three previews. */
+  const demoAccount = isDemoAccount();
+  const demo = tisch && demoAccount;
+  if (demo) grid.appendChild(cardSlot(hubDemoSummary(round, activeGames)));
+  if (demoAccount) grid.appendChild(cardSlot(hubDemoInvite()));
   [
     // Der Tisch's invitation (T7.4, #1269) leads — it is the one next step.
     // Null on every other round and on Klassisch, so that list is unchanged.

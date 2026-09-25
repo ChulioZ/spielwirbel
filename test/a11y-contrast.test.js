@@ -31,24 +31,21 @@ const {
   contrast, luminance, hsl, composite, evaluate, tokensFor, alphaOf, mixOklab, toHex, rgb,
 } = require('./support/theme');
 
-// Every design a round can pick — the palettes AND the worlds — required off
-// the registry, so a new design is measured automatically instead of silently
-// escaping these checks. (#903 replaced a regex over views-round-detail.js; the
-// registry is a dependency-free module precisely so this file can require it.)
-const { DESIGNS } = require('../public/js/round-designs');
+// Every design an account can wear, required off the registry, so a new design
+// is measured automatically instead of silently escaping these checks. Until
+// the flip (#1202) this also looped the ROUND designs — the nine palettes and
+// seven worlds of the round registry — which went with it.
 const { DESIGN_REGISTRY, markerInk } = require('../public/js/designs');
 const { MEMBER_COLORS } = require('../public/js/member-colors');
-assert.ok(DESIGNS.length >= 11, 'expected the nine palettes plus the two worlds');
+assert.ok(DESIGN_REGISTRY.length >= 2, 'expected Klassisch and Der Tisch at least');
 
-/* BOTH registries (#1184). A design is per USER now as well as per round, and a
-   user design's colours land on exactly the same tokens — so it is folded into
-   the ONE list every sweep below loops, rather than getting a few assertions of
-   its own. Every check in this file therefore covers a new design for free,
-   which is the same reason #903 made the round registry requirable.
+/* ONE list every sweep below loops, so every check in this file covers a new
+   design for free.
 
-   Only the entries that DECLARE colours: Klassisch is the :root default itself
-   and has no page/accent to resolve (test/design-layer.test.js pins that), so
-   it is already measured as the light half of every assertion here.
+   Klassisch declares no page/accent — it IS the :root default
+   (test/design-layer.test.js pins that) — and tokensFor() resolves it through
+   the sheet's own values, so it is measured as the light half of every
+   assertion here.
 
    A user design's own override stylesheet (public/css/designs/<id>.css) IS read
    here since #1188: `tokensFor` resolves a token through the design's
@@ -61,7 +58,7 @@ assert.ok(DESIGNS.length >= 11, 'expected the nine palettes plus the two worlds'
    as measured. See .claude/rules/design-stylesheets-are-shell-assets.md. */
 const USER_DESIGNS = DESIGN_REGISTRY.filter((d) => d.page && d.accent);
 
-const THEMES = DESIGNS.concat(USER_DESIGNS).map(tokensFor);
+const THEMES = DESIGN_REGISTRY.map(tokensFor);
 
 // A rule whose selector may be one MEMBER of a grouped, newline-separated
 // selector — bodyOf() compares the whole text and would miss it.
@@ -75,11 +72,10 @@ const name = (t) => `${t.design.id}${t.dark ? ' (dark)' : ''}`;
 test('the registry ships designs in BOTH directions, or none of the checks below mean anything', () => {
   assert.ok(THEMES.some((t) => t.dark), 'no dark design ships — the dark half of every check below is vacuous');
   assert.ok(THEMES.some((t) => !t.dark), 'no light design ships');
-  // And that the USER registry really is in the loop. Without this, dropping
-  // the concat above would leave every sweep green while measuring only the
-  // round designs — the failure mode #1184's whole seam exists under.
+  // And that a design with colours of its own really is in the loop — Klassisch
+  // alone would leave every sweep measuring the :root default only.
   assert.ok(USER_DESIGNS.length >= 1,
-    'no user design declares colours — this file is back to covering one registry');
+    'no design declares colours of its own — this file measures the :root default only');
   for (const d of USER_DESIGNS) {
     assert.ok(THEMES.some((t) => t.design.id === d.id), `${d.id} is not being measured`);
   }
@@ -162,7 +158,7 @@ test('every design’s poster inks clear their bars on both ground stops', () =>
   assert.deepEqual(fails, [], `poster inks below their bar:\n${fails.join('\n')}`);
 });
 
-/* `scheme` is DECLARED in round-designs.js rather than measured off the page,
+/* `scheme` is DECLARED in designs.js rather than measured off the page,
    so the registry stays the single statement of what a design is. The cost of
    declaring is that it can disagree with the colour — a dark page that forgot
    the flag renders dark ink on a dark background, everywhere at once — so the
@@ -474,7 +470,7 @@ test('an open + set add-on chip carries a state marker clearing 3:1 on both of i
    any shape it could still match. Running the shipped function measures what
    ships, and it costs one jsdom boot for the whole file
    (`.claude/rules/testing-views-under-jsdom.md`). Since #904 it also reads the
-   scheme off the document, so the harness sets the same hook applyBackground()
+   scheme off the document, so the harness sets the same hook paintDesign()
    does instead of modelling the branch. */
 const APP = loadApp();
 after(() => APP.close());
@@ -937,7 +933,9 @@ test('the seal\'s padlock clears the 3:1 non-text bar, and the pair cannot flip 
       evaluate(fill[1], { ...t.design, scheme: dark ? 'dark' : 'light' })).toFixed(2);
     if (under(false) !== under(true)) flips.push(`${name(t)} (${under(false)} light / ${under(true)} dark)`);
   }
-  assert.ok(THEMES.length - flips.length > 5, 'too few designs reached the flip check — it is going vacuous');
+  // Since the flip (#1202) that is Klassisch alone — Der Tisch has its own
+  // scheme-gated block. One is still the whole class the check exists for.
+  assert.ok(THEMES.length - flips.length >= 1, 'no design reached the flip check — it is vacuous');
   assert.deepEqual(flips, [],
     'the seal is one fill in both schemes, so neither half of the pair may follow the scheme');
 });
@@ -966,7 +964,7 @@ test('the curtain still reads as darker than the page it covers', () => {
    own rather than on a theme surface. */
 const WHITE_EXEMPT = new Map([
   [':root', 'the light defaults of --surface / --on-accent, and the two --stage-* lifts'],
-  [':root[data-scheme="dark"], .theme-card[data-scheme="dark"]',
+  [':root[data-scheme="dark"]',
     'the dark scheme\'s own defaults: --shade is white BECAUSE the page is dark'],
   ['.gd-img__edit', 'on its own black scrim gradient, not on a theme surface'],
   ['.gd-score .score-info', 'on its own translucent-black scrim over box art, like .gd-img__edit'],
@@ -1030,14 +1028,14 @@ test('--placeholder paints glyph boxes, never text', () => {
    barely registered as an edge (#938).
 
    Everything the token paints is a NON-TEXT graphic that carries meaning — a
-   state glyph, the dashed boundary that marks a guest, the stand-in lines on a
-   theme card — so the bar is SC 1.4.11's 3:1, not AA text contrast. The four
+   state glyph, the dashed boundary that marks a guest — so the bar is SC
+   1.4.11's 3:1, not AA text contrast. The four
    backgrounds are the ones its call sites actually land on: --sunken (the five
    image boxes, .avatar--guest, the guest add button, a guest's seat on the ring),
    --sunken-soft (that seat under the pointer — it was .guest-chip until #1016
-   moved guests onto the ring), and --surface / --page-bg (.theme-card__line,
-   which declares no background of its own and shows whichever sits behind the
-   picker).
+   moved guests onto the ring), and --surface / --page-bg, the grounds a dashed
+   edge with no fill of its own shows through to (the design picker's
+   .theme-card__line was the first such, until the flip, #1202).
 
    Measured per design rather than pinned as a percentage, so a new design whose
    page sits differently against --shade fails here instead of shipping a glyph
@@ -1046,8 +1044,8 @@ test('--placeholder clears the 3:1 non-text bar wherever it paints', () => {
   const failures = sweep((t) => [
     ['glyph / dashed edge on --sunken', t.placeholder, t.sunken],
     ['dashed edge on --sunken-soft', t.placeholder, t.sunkenSoft],
-    ['theme-card line on --surface', t.placeholder, t.surface],
-    ['theme-card line on --page-bg', t.placeholder, t.page],
+    ['bare edge on --surface', t.placeholder, t.surface],
+    ['bare edge on --page-bg', t.placeholder, t.page],
   ], AA_LARGE);
   assert.deepEqual(failures, [],
     '--placeholder is a meaningful non-text graphic — SC 1.4.11 wants 3:1');
@@ -1139,123 +1137,14 @@ test('the winners\' gold fill clears AA too, at its higher alpha', () => {
     `the winners' rows fill at ${(alpha * 100).toFixed(0)}% --gold over --surface; body text on it needs ${AA_TEXT}:1`);
 });
 
-/* The tripwire for the premise above (#1184). Several grounds in this file are
-   composited against the STANDARD light --surface because the screens they
-   describe — home, the lobby, the account screens — used to be un-themable.
-   They are not any more: applyDesign() puts the user's design on <html>, so a
-   dark one takes those screens dark everywhere at once.
-
-   Nothing ships today because the only dark user design is `enabled: false`.
-   Enabling one is a one-line PR (#1202), and that PR must land these grounds
-   with it — so this fails at exactly that moment, naming the design, rather
-   than letting a re-derivation nobody remembers slip through a diff that
-   changes one boolean. */
-test('no ENABLED user design is dark — several grounds above assume home is light', () => {
-  const darkEnabled = DESIGN_REGISTRY
-    .filter((d) => d.enabled && d.scheme === 'dark')
-    .map((d) => d.id);
-  assert.deepEqual(darkEnabled, [],
-    'a dark user design is now selectable, so the un-themed screens are no longer light: '
-    + 're-derive the home tile motif ground (and any sibling compositing against the standard '
-    + '--surface) per user design before enabling it');
-});
-
-/* The dock's world motif (#1082). The dock is the one element on a phone that is
-   on screen every second, which is why the world now reaches it — and it is
-   therefore also the one where a motif under the labels is least escapable.
-
-   Measured against the WORLD's --surface, not white. The home tile carries the
-   same motif at .16 and clears comfortably because the lobby it sits in is never
-   themed; the dock inherits the round's own surface, where .16 lands at 4.44:1
-   on Chess — under the bar, and on a LIGHT world rather than one of the dark
-   ones the issue expected to bind. */
-test('the dock motif leaves its labels over AA on every design', () => {
-  const decl = slotBodyFor('[data-world] .dock::before');
-  assert.ok(decl, '[data-world] .dock::before is gone — did the dock motif move?');
-  const m = /opacity:\s*([\d.]+)/.exec(decl);
-  assert.ok(m, `the dock motif declares no opacity: ${decl}`);
-  const alpha = Number(m[1]);
-
-  const failures = [];
-  for (const t of THEMES) {
-    // The motif's densest pixel is a fully covered silhouette, i.e. the accent
-    // at the full declared alpha over the dock's --surface.
-    const ground = composite(t.brand, t.surface, alpha);
-    const ratio = contrast(t.inkSoft, ground);
-    if (ratio < AA_TEXT) failures.push(`${name(t)} = ${ratio.toFixed(2)}:1`);
-  }
-  assert.deepEqual(failures, [],
-    `the dock paints its world motif at ${(alpha * 100).toFixed(0)}% --brand over --surface; `
-    + `.dock__item is --ink-soft and needs ${AA_TEXT}:1. The issue's .16 lands at 4.44:1 on Chess.`);
-});
-
-/* The home round tile's world motif (#1138). The sibling of the dock check
-   above, and the host nothing measured: `:is(.theme-card, .round-card)[data-world]::before`
-   declares its alpha as `var(--motif-a, <literal>)`, and the LITERAL is reached
-   by the home tile alone — every world card in the picker is a poster and
-   overrides it (views-round-settings.js sets posters:true for the WELTEN group,
-   which is the world registry itself).
-
-   The ground is the thing to get right, and it is not the world's. Home calls
-   applyBackground(null), so the lobby stays STANDARD; the tile carries only
-   --brand (and data-scheme far enough to fix its emblem's ink), and #904's dark
-   block is scoped to :root and .theme-card precisely so a dark round's tile
-   does NOT turn dark — "one dark tile in a light lobby would read as a
-   patchwork" (views-home.js). So the composite is the world's accent over the
-   standard LIGHT --surface, with the standard --ink-soft on top: one ground,
-   not one per design. Measuring it per design instead would report a pairing
-   the app never paints, which is the trap the backdrop budget in
-   test/round-worlds.test.js documents from the other direction.
-
-   That scoping is a premise, so it is pinned below rather than assumed: widen
-   the dark block to .round-card and this test's ground is wrong, which should
-   be loud.
-
-   #1184 WIDENED IT FROM THE OTHER SIDE, and the pin could not see that. Home is
-   still un-themed by any ROUND, but the un-themed surfaces now wear the USER's
-   design, so `:root[data-scheme="dark"]` applies on home whenever the account
-   has picked a dark one — and the lobby's --surface is then dark, not the
-   standard white this test composites against. It is still correct today only
-   because no dark user design is ENABLED; the test directly below is the
-   tripwire for that, because "the premise is fine for now" is the sentence that
-   rots.
-
-   It shipped at .16 from #1082 until #1138, i.e. at 4.44:1 on Chess — under the
-   bar, and on a LIGHT world rather than one of the dark ones #1138 was about.
-   Same miss, same cause and the same landing value as the dock's .16 above. */
-test('the home tile motif leaves its meta line over AA on every world', () => {
-  const decl = slotBodyFor(':is(.theme-card, .round-card)[data-world]::before');
-  assert.ok(decl, 'the card/tile world motif is gone — did it move?');
-  const m = /opacity:\s*var\(--motif-a,\s*([\d.]+)\)/.exec(decl);
-  assert.ok(m, `the tile motif declares no --motif-a fallback: ${decl}`);
-  const alpha = Number(m[1]);
-
-  // The premise: the lobby, and therefore this tile, is never dark.
-  const darkSel = rulesOf(CSS).map(([s]) => s).find((s) => s.includes(':root[data-scheme="dark"]'));
-  assert.ok(darkSel, 'the dark token block is gone');
-  assert.ok(!/\.round-card/.test(darkSel),
-    `the dark block now covers .round-card (${darkSel.trim()}) — the tile can be dark, so this check's ground is stale`);
-
-  const std = DESIGNS.find((d) => d.std);
-  assert.ok(std, 'no standard design in the registry — the lobby ground would be a guess');
-  const lobby = tokensFor(std);
-  const worlds = DESIGNS.filter((d) => d.world);
-  // Anti-vacuous: a registry that lost its worlds leaves the loop green over nothing.
-  assert.ok(worlds.length >= 7, `only ${worlds.length} worlds — the loop below measures too little`);
-
-  const failures = [];
-  for (const w of worlds) {
-    // .round-card__last is --ink-soft at --text-sm: normal-size text, AA.
-    // The densest pixel is a fully covered silhouette, i.e. the full alpha.
-    const ground = composite(tokensFor(w).brand, lobby.surface, alpha);
-    const ratio = contrast(lobby.inkSoft, ground);
-    if (ratio < AA_TEXT) failures.push(`${w.id} = ${ratio.toFixed(2)}:1`);
-  }
-  assert.deepEqual(failures, [],
-    `the home tile paints its world motif at ${(alpha * 100).toFixed(0)}% of the world's --brand `
-    + `over the standard --surface; .round-card__last is --ink-soft and needs ${AA_TEXT}:1. `
-    + 'Chess binds: .16 lands at 4.44:1, .14 at 4.61:1.');
-});
+/* The tripwire that stood here ("no ENABLED user design is dark", #1184) and
+   the two world-motif grounds it protected — the dock's and the home tile's,
+   both composited against the STANDARD light --surface — went with the flip
+   (#1202). The worlds and their motifs are gone, Der Tisch is enabled and dark,
+   and every remaining check measures each design against its OWN tokens, so no
+   ground in this file assumes home is light any more. A new check that
+   composites against one fixed design's tokens reintroduces that premise and
+   must say so beside itself. */
 
 /* The Freundeskreis cover wash (#1094, on the person TILE since #1136). Unlike
    every fill above it, the layer is an arbitrary USER-FACING IMAGE — a game
@@ -1407,7 +1296,7 @@ const CONTROL_RULES = [
   '.chip', '.tag-mode__opt', '.btn', '.input, .select', '.sort-select',
   '.search-pill', '.fbar__trigger', '.stepper__btn', '.stepper__val',
   '.icon-picker__trigger', '.icon-picker__btn', '.mood', '.opt-card',
-  '.theme-card', '.game-card__pick', '.winner-chip',
+  '.marker-card', '.game-card__pick', '.winner-chip',
   '.team-chip', '.tables-seat', '.lang-picker', '.topbar__acct',
   '.landing-chip', '.paste-zone', '.cover-pick',
   '.nr-seat--out .nr-seat__avatar',
@@ -1735,6 +1624,47 @@ test('Der Tisch\'s young-round features keep their text at AA on the grounds the
       if (!(ratio >= bar)) failures.push(`${name(t)} — ${label} = ${ratio.toFixed(2)}:1 (bar ${bar})`);
     }
   }
+  assert.deepEqual(failures, []);
+});
+
+test('Klassisch\'s young-round pieces keep their text at AA and the crown at 3:1, on every design (#1318)', () => {
+  /* styles.css's own copies of the #1280 pieces: the „Nächster Schritt" card,
+     the Pokale leader block and the two threshold sentences. Each pair is read
+     off the RULE — the token its declaration names — rather than restated, so a
+     retune of one of these rules is measured as written. The crown is an
+     aria-hidden glyph (SC 1.4.11, 3:1). */
+  const KEY = {
+    '--ink': 'ink', '--ink-soft': 'inkSoft', '--surface': 'surface',
+    '--sunken-soft': 'sunkenSoft', '--gold-deep': 'goldDeep',
+  };
+  const tok = (sel, prop) => {
+    const body = bodyOf(sel);
+    assert.ok(body, `${sel} is gone from styles.css`);
+    const m = new RegExp(`(?:^|[;\\s])${prop}:\\s*var\\((--[\\w-]+)\\)`).exec(body);
+    assert.ok(m && KEY[m[1]], `${sel} ${prop} does not name a measured token`);
+    return KEY[m[1]];
+  };
+  const pairs = [
+    ['next-step card ink', tok('.next-step', 'color'), tok('.next-step', 'background'), AA_TEXT],
+    ['next-step row, hovered', tok('.next-step', 'color'), tok('.next-step__row:hover', 'background'), AA_TEXT],
+    ['leader line', tok('.pokale-young__lead', 'color'), tok('.pokale-young', 'background'), AA_TEXT],
+    ['leader sentence', tok('.pokale-young__when', 'color'), tok('.pokale-young', 'background'), AA_TEXT],
+    ['pulse threshold sentence', tok('.hub-card__threshold', 'color'), tok('.hub-card', 'background'), AA_TEXT],
+    ['leader crown', tok('.pokale-young__crown', 'color'), tok('.pokale-young', 'background'), AA_LARGE],
+  ];
+  const failures = [];
+  let checked = 0;
+  for (const t of THEMES) {
+    for (const [label, fg, bg, bar] of pairs) {
+      const ratio = contrast(t[fg], t[bg]);
+      checked++;
+      if (!(ratio >= bar)) failures.push(`${name(t)} — ${label} = ${ratio.toFixed(2)}:1 (bar ${bar})`);
+    }
+  }
+  // The floor counts DESIGNS, not a fixed number: #1202 retires the round
+  // palettes, which would leave `pairs.length * 10` unreachable while every
+  // pair is still measured. Klassisch + Der Tisch is the smallest honest set.
+  assert.ok(THEMES.length >= 2 && checked === pairs.length * THEMES.length, 'the sweep measured almost nothing');
   assert.deepEqual(failures, []);
 });
 

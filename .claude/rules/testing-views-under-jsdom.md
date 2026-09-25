@@ -169,7 +169,7 @@ reach it — so a spec that clicks a sheet's OK and flushes reads the page befor
 The pop then lands during the NEXT test, so the failure shows up one test away
 from its cause and alternates as tests are added or filtered.
 `.claude/rules/jsdom-popstate-needs-a-real-timer.md` has the measurements, the
-`dom.window.setTimeout` replacement, and the two state probes that identify it.
+probes, and the fix: `waitFor` the navigation, never a fixed turn count (#1320).
 
 **Related:** `.claude/rules/frontend-helper-modules-and-coverage.md` (the
 coverage gate this is shaped around), `.claude/rules/break-the-code-on-purpose.md`

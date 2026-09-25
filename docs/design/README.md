@@ -1,12 +1,18 @@
 # The design programme
 
-Spielwirbel is moving from **per-round** colour schemes and worlds to
-**per-user designs**: every account picks one look for the whole app, and a
-round keeps only a colour marker. Seven looks are planned — Klassisch (today's
-look), Der Tisch, Das Programmheft, Die Brücke, Der Run, Forest, Ocean — and
-Der Tisch is also the *face*: what logged-out visitors see. This folder holds
-everything that decides how that works. The code follows it; this file is the
-map.
+Spielwirbel moved from **per-round** colour schemes and worlds to **per-user
+designs**: every account picks one look for the whole app, and a round keeps only
+a colour marker. Seven looks are planned — Klassisch (the original look), Der
+Tisch, Das Programmheft, Die Brücke, Der Run, Forest, Ocean — and Der Tisch is
+also the *face*: what logged-out visitors see. This folder holds everything that
+decides how that works. The code follows it; this file is the map.
+
+**Status: the flip has shipped (#1202).** Der Tisch is enabled and is the face;
+every account that had not chosen a design wears it and is offered Klassisch
+(„Wie bisher") once by the first-start chooser; the round palettes and worlds
+are gone from the code, and a round that wore one shows the colour marker it maps
+to (`public/js/round-marker.js`). Live designs: **Klassisch, Der Tisch.** Ocean
+(#1207) and Die Brücke (#1204) are in slices; the others are placeholder epics.
 
 ## The documents
 

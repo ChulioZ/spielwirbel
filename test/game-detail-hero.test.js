@@ -34,7 +34,6 @@ const { bodyOf, bodyOfIn, RULES, rulesOf, mediaBlocks, whole, CSS } = require('.
 const rulesUnder = (re) => rulesOf(mediaBlocks()
   .filter(([query]) => re.test(query)).map(([, css]) => css).join('\n'));
 const { contrast, composite, tokensFor } = require('./support/theme');
-const { DESIGNS } = require('../public/js/round-designs');
 const { DESIGN_REGISTRY } = require('../public/js/designs');
 const { COVER_HERO } = require('../public/js/cover-size');
 
@@ -150,14 +149,12 @@ test('the cover glow stays under the opacity that would break the text contrast 
      decision about the hero rather than a derivation one. */
   const FLOOR = 3.9;
   const failures = [];
-  /* Both families of design, and the second half was MISSING until #1190.
-     `DESIGNS` is round-designs.js — what a ROUND can wear. Since #1184 an
-     ACCOUNT wears a design of its own, out of a different registry, and Der
-     Tisch is the first of those to override `--surface` in its own stylesheet
-     (#1188). So the band's ground stopped being a value this sweep had seen:
-     the loop reported four designs and the page could render a fifth, which is
-     precisely the hole the sibling test below was written to close and could
-     not, because it reads styles.css only.
+  /* Every design an account can wear. Until the flip (#1202) this swept the
+     round designs too — the eight palettes, Obsidian and the worlds — and #1190
+     found the ACCOUNT designs had been missing from it: Der Tisch is the first
+     to override `--surface` in its own stylesheet (#1188), so the band's ground
+     stopped being a value this sweep had seen. Since the flip the account
+     designs are the only designs there are.
 
      Nothing was wrong on Der Tisch — walnut with paper `--ink-soft` measures
      4.78:1 under the binding white cover, better than any light design — but
@@ -165,13 +162,10 @@ test('the cover glow stays under the opacity that would break the text contrast 
      shipped 0.16 was derived when `--surface` was white and an arbitrary cover
      could only DARKEN it. On this design it can only lighten. The next design
      to declare a surface is swept by construction rather than by remembering.
-
-     Klassisch has no stylesheet and no scheme — it IS the :root default, which
-     the light members of `DESIGNS` already stand for — so it has nothing here
-     for tokensFor() to resolve. */
-  const registry = DESIGN_REGISTRY.filter((d) => d.stylesheet);
-  assert.ok(registry.length, 'no account design ships a stylesheet — has the registry changed shape?');
-  for (const design of [...DESIGNS, ...registry]) {
+     Klassisch resolves to the :root default (tokensFor falls through to it). */
+  const registry = DESIGN_REGISTRY;
+  assert.ok(registry.length >= 2, 'the registry lost a design — has it changed shape?');
+  for (const design of registry) {
     const t = tokensFor(design);
     for (const [what, cover] of [['a black cover', [0, 0, 0]], ['a white cover', [255, 255, 255]]]) {
       const ratio = contrast(t.inkSoft, composite(cover, t.surface, alpha));
@@ -186,28 +180,29 @@ test('the cover glow stays under the opacity that would break the text contrast 
    the app paints. `--surface` stopped being a constant in #904 — a dark design
    lifts it off its own page — so what has to hold now is not "it is white" but
    "it is declared where tokensFor() resolves it": the two token blocks, and
-   nowhere else. A per-design inline value, or applyBackground() writing one at
+   nowhere else. A per-design inline value, or paintDesign() writing one at
    runtime, would put a surface on screen that no contrast check ever sees. */
 test('--surface is declared only in the two token blocks the harness resolves', () => {
   const declaring = RULES
     .filter(([, body]) => /(^|[;{\s])--surface\s*:/.test(body))
     .map(([sel]) => sel.replace(/\s+/g, ' ').trim());
-  assert.deepEqual(declaring, [':root', ':root[data-scheme="dark"], .theme-card[data-scheme="dark"]'],
+  assert.deepEqual(declaring, [':root', ':root[data-scheme="dark"]'],
     '--surface must be declared by :root and the dark scheme block, and by nothing else');
 
-  /* The other way a design could reach it: applyBackground() writing it at runtime.
-     The function moved to round-theme.js in #956 — and this spec did NOT go red,
-     because `indexOf` returned -1 and the slice arithmetic left a ONE-CHARACTER
-     string that trivially satisfies doesNotMatch. Hence the explicit find
-     assertions: a scan that cannot locate its subject must fail, not pass. */
+  /* The other way a design could reach it: paintDesign() writing it at runtime.
+     The writer moved to round-theme.js in #956 and was renamed at #1202 — and
+     the first move did NOT turn this red, because `indexOf` returned -1 and the
+     slice arithmetic left a ONE-CHARACTER string that trivially satisfies
+     doesNotMatch. Hence the explicit find assertions: a scan that cannot locate
+     its subject must fail, not pass. */
   const src = fs.readFileSync(path.join(__dirname, '..', 'public/js/round-theme.js'), 'utf8');
-  const from = src.indexOf('function applyBackground');
-  assert.notEqual(from, -1, 'applyBackground() not found in round-theme.js — did it move again?');
+  const from = src.indexOf('function paintDesign');
+  assert.notEqual(from, -1, 'paintDesign() not found in round-theme.js — did it move again?');
   const end = src.indexOf('\n}\n', from);
-  assert.notEqual(end, -1, 'could not find the end of applyBackground()');
+  assert.notEqual(end, -1, 'could not find the end of paintDesign()');
   const body = src.slice(from, end + 2);
   assert.doesNotMatch(body, /--surface/,
-    'applyBackground() must not set --surface, or a round could paint one nothing measures');
+    'paintDesign() must not set --surface, or a design could paint one nothing measures');
 });
 
 /* --- The card's two tracks (#901, re-derived for #1039) --------------------

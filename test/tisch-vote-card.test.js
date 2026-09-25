@@ -94,8 +94,8 @@ function linkPage(t, design) {
   t.after(() => dom.close());
   setMotion(dom, true);
   // The link page forces FACE_DESIGN in showVoteLink, so the renderers are
-  // called directly: the face is Klassisch until the flip (#1202), and this is
-  // exactly what they will draw once it is Der Tisch.
+  // called directly with the design under test — Der Tisch is the face since
+  // the flip (#1202), and Klassisch is what an older build drew.
   if (design) dom.run(`applyDesign(${JSON.stringify(design)})`);
   return dom;
 }

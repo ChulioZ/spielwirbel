@@ -24,28 +24,24 @@ const assert = require('node:assert/strict');
 
 const { loadApp } = require('./support/dom');
 const {
-  DESIGN_REGISTRY, FACE_DESIGN, designById,
+  DESIGN_REGISTRY, FACE_DESIGN, CLASSIC_DESIGN, designById,
   selectableDesigns, selectableDesignIds, isSelectableDesign,
 } = require('../public/js/designs');
-const { PALETTES } = require('../public/js/round-designs');
 
 const tisch = designById('tisch');
-const klassisch = designById(FACE_DESIGN);
-
-// A LIGHT round design, to prove a round still overrides the user's dark one.
-const salbei = PALETTES.find((p) => p.id === 'salbei');
-const roundBg = (d) => ({ type: 'theme', id: d.id, page: d.page, accent: d.accent });
+const klassisch = designById('klassisch');
 
 /* ------------------------------- the registry ------------------------------ */
 
-test('the registry ships an unfinished design, or the gate tests below are vacuous', () => {
-  assert.ok(DESIGN_REGISTRY.some((d) => d.enabled), 'no enabled design ships');
-  assert.ok(DESIGN_REGISTRY.some((d) => !d.enabled),
-    'no disabled design ships — every production-gate assertion here means nothing');
+test('the flip (#1202): Der Tisch is live and is the face; Klassisch stays offered', () => {
+  assert.equal(FACE_DESIGN, 'tisch');
+  assert.equal(tisch.enabled, true);
+  assert.equal(klassisch.enabled, true, '„Wie bisher" must stay selectable forever');
+  assert.equal(CLASSIC_DESIGN, 'klassisch');
 });
 
 test('Klassisch declares NO colours — it IS the :root default', () => {
-  // Load-bearing rather than tidiness: it is what makes applyBackground take
+  // Load-bearing rather than tidiness: it is what makes paintDesign take
   // the removeProperty branch, i.e. what makes "Klassisch renders exactly as
   // before" a property of the code rather than a coincidence of two hexes.
   assert.equal(klassisch.page, undefined);
@@ -53,7 +49,11 @@ test('Klassisch declares NO colours — it IS the :root default', () => {
   assert.equal(klassisch.stylesheet, undefined, 'styles.css is Klassisch; it needs no override file');
 });
 
-test('production offers only enabled designs; outside it, the whole registry', () => {
+test('production offers only enabled designs; outside it, the whole registry', (t) => {
+  // Every registered design is live since the flip, so one is switched off for
+  // the duration to give the gate something to refuse (never the face).
+  klassisch.enabled = false;
+  t.after(() => { klassisch.enabled = true; });
   const enabled = DESIGN_REGISTRY.filter((d) => d.enabled).map((d) => d.id);
   assert.deepEqual(selectableDesignIds({ production: true }), enabled);
   assert.deepEqual(selectableDesignIds({ production: false }), DESIGN_REGISTRY.map((d) => d.id));
@@ -64,10 +64,12 @@ test('production offers only enabled designs; outside it, the whole registry', (
   assert.equal(selectableDesigns({ production: true }).every((d) => d.enabled), true);
 });
 
-test('selectability is an allowlist — never a denylist', () => {
+test('selectability is an allowlist — never a denylist', (t) => {
   assert.equal(isSelectableDesign(FACE_DESIGN, { production: true }), true);
-  assert.equal(isSelectableDesign('tisch', { production: true }), false, 'not enabled yet');
-  assert.equal(isSelectableDesign('tisch', { production: false }), true);
+  klassisch.enabled = false;
+  t.after(() => { klassisch.enabled = true; });
+  assert.equal(isSelectableDesign('klassisch', { production: true }), false, 'not enabled');
+  assert.equal(isSelectableDesign('klassisch', { production: false }), true);
   for (const junk of ['', 'nope', '../klassisch', 'KLASSISCH', null, undefined, 42, {}, ['klassisch']]) {
     assert.equal(isSelectableDesign(junk, { production: false }), false,
       `${JSON.stringify(junk)} must not be selectable`);
@@ -140,51 +142,37 @@ test('the override stylesheet is injected once, on demand, and never twice', (t)
   assert.equal(dom.document.querySelectorAll('link[data-design="klassisch"]').length, 0);
 });
 
-/* --------------------- the three-state scheme contract --------------------- */
+/* ------------------- a round no longer paints the page ---------------------- */
 
-test('a round design overrides the user design, and leaving the round restores it', (t) => {
+test('#1202: a round screen puts its MARKER on the page and nothing else', (t) => {
   const dom = boot(t);
   dom.run('applyDesign("tisch")');
-  assert.equal(root(dom).dataset.scheme, 'dark');
-
-  // Inside a LIGHT round: rounds keep their own designs until the flip (#1202),
-  // so the round wins outright — scheme, page and accent together. Anything
-  // less would leave light-design surfaces under a dark page or vice versa.
-  dom.call('applyBackground', roundBg(salbei));
-  assert.equal(root(dom).dataset.scheme, undefined, 'a light round design clears the dark scheme');
-  assert.equal(prop(dom, '--page-bg'), salbei.page);
-  assert.equal(prop(dom, '--brand'), salbei.accent);
-  assert.equal(root(dom).dataset.design, 'tisch', 'the user design is still what the account wears');
-
-  // Back out of the round: null is NOT "light", it is "no round design here".
-  dom.call('applyBackground', null);
-  assert.equal(root(dom).dataset.scheme, 'dark', 'leaving a round must fall back to the USER design');
+  // A round that wore the light Salbei palette before the flip. Its stored
+  // design must not reach the page any more — only the marker it maps to.
+  const round = { id: 'r1', background: { type: 'theme', id: 'salbei', page: '#eaf1ea', accent: '#397a4b' } };
+  dom.call('applyMarker', round);
+  assert.equal(root(dom).dataset.scheme, 'dark', 'the worn design decides the scheme, never the round');
   assert.equal(prop(dom, '--page-bg'), tisch.page);
   assert.equal(prop(dom, '--brand'), tisch.accent);
+  assert.equal(prop(dom, '--marker'), tisch.markers[2].color, 'Salbei maps to index 2 — Burgunderfilz here');
+  assert.equal(root(dom).dataset.world, undefined, 'no world hook exists any more');
+
+  dom.call('applyMarker', null);
+  assert.equal(prop(dom, '--marker'), '', 'leaving the round clears its colour');
+  assert.equal(prop(dom, '--page-bg'), tisch.page, 'and leaves the design alone');
 });
 
-test('a legacy colour-only round is light by construction, not a fallback', (t) => {
-  // A {type:'color'} round predates dark designs entirely, so its page is a
-  // light colour. Resolving it to the user design's scheme would put light-mode
-  // ink on it — the one case where "no registry entry" must still mean light.
-  const dom = boot(t);
-  dom.run('applyDesign("tisch")');
-  dom.call('applyBackground', { type: 'color', color: '#eeeeee' });
-  assert.equal(root(dom).dataset.scheme, undefined);
-  assert.equal(prop(dom, '--page-bg'), '#eeeeee');
-});
-
-test('under Klassisch the fallback is still the :root defaults', (t) => {
-  // The regression guard for every existing screen: with the face worn, the
-  // no-round-design branch must behave exactly as it did before #1184.
+test('under Klassisch the page is still the :root defaults, in a round or not', (t) => {
+  // The regression guard for every existing screen: with Klassisch worn, the
+  // page must behave exactly as it did before #1184.
   const dom = boot(t);
   dom.run('applyDesign("klassisch")');
-  dom.call('applyBackground', roundBg(salbei));
-  dom.call('applyBackground', null);
+  dom.call('applyMarker', { id: 'r1', background: { type: 'theme', id: 'forest' } });
   assert.equal(prop(dom, '--page-bg'), '');
   assert.equal(prop(dom, '--brand'), '');
   assert.equal(root(dom).dataset.scheme, undefined);
   assert.equal(themeColor(dom), '#c2410c');
+  assert.equal(prop(dom, '--marker'), klassisch.markers[2].color, 'a Forest round is sage under Klassisch');
 });
 
 /* ------------------------------ boot + the flag ---------------------------- */
@@ -198,16 +186,16 @@ test('boot wears the face, and the ?design= flag needs the SERVER to allow it', 
   // unfinished design on production.
   dom.set('withAppConfig', (cb) => { asked.push(true); cb({ designs: [FACE_DESIGN] }); });
 
-  dom.window.history.replaceState({}, '', '/?design=tisch');
+  dom.window.history.replaceState({}, '', '/?design=klassisch');
   dom.run('initDesign()');
   assert.equal(root(dom).dataset.design, FACE_DESIGN,
-    'the server did not offer tisch, so the flag must not apply it');
+    'the server did not offer klassisch, so the flag must not apply it');
   assert.equal(asked.length, 1, 'the server was asked');
 
   // Now the same flag against a server that does offer it — the dev/review path.
-  dom.set('withAppConfig', (cb) => cb({ designs: [FACE_DESIGN, 'tisch'] }));
+  dom.set('withAppConfig', (cb) => cb({ designs: ['klassisch', FACE_DESIGN] }));
   dom.run('initDesign()');
-  assert.equal(root(dom).dataset.design, 'tisch');
+  assert.equal(root(dom).dataset.design, 'klassisch');
 });
 
 test('with no flag, boot applies the face synchronously and asks nothing', (t) => {

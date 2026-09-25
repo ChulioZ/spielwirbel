@@ -81,7 +81,6 @@ I18N.es = {
   'newRound.toast.createdImported': 'Grupo creado: juegos copiados',
   'newRound.toast.quota': 'Has llegado al límite de grupos. Elimina uno primero.',
 
-  'round.design': 'Diseño',
   'round.tags': 'Etiquetas',
   'round.startSession': 'Sortear sesión',
   'round.startEmptyTitle': 'Aún no hay sesiones',
@@ -1147,10 +1146,6 @@ I18N.es = {
   'share.toast.copied': 'Resultado copiado al portapapeles',
   'share.toast.failed': 'No se ha podido compartir',
 
-  'design.crumb': 'Diseño',
-  'design.title': 'Diseño',
-  'design.note': 'Elige un diseño para este grupo. El fondo, el color de acento y el resto de tonos se adaptan a la vez.',
-  'design.toast.set': 'Diseño aplicado',
   'theme.standard': 'Estándar',
   'theme.blaugrau': 'Azul grisáceo',
   'theme.salbei': 'Salvia',
@@ -1159,14 +1154,6 @@ I18N.es = {
   'theme.sand': 'Arena',
   'theme.schiefer': 'Pizarra',
   'theme.pfirsich': 'Melocotón',
-  'theme.obsidian': 'Obsidiana',
-  'theme.forest': 'Bosque',
-  'theme.scifi': 'Ciencia ficción',
-  'theme.ocean': 'Océano',
-  'theme.chess': 'Ajedrez',
-  'theme.horror': 'Terror',
-  'theme.dinos': 'Dinosaurios',
-  'theme.burg': 'Castillo',
   'round.marker': 'Marcador de color',
   'marker.title': 'Marcador de color',
   'marker.note': 'Cada ronda lleva un color. Todo el mundo en la ronda lo ve, cada cual en su propio diseño.',
@@ -1186,9 +1173,6 @@ I18N.es = {
   'marker.ocean.lagune': 'Laguna',
   'marker.ocean.tang': 'Alga',
   'marker.ocean.purpur': 'Púrpura',
-  'design.group.colors': 'Colores',
-  'design.group.worlds': 'Mundos',
-  'design.worlds.note': 'Un mundo añade a los colores su propia tipografía, adornos y un fondo.',
 
 
   'tags.crumb': 'Etiquetas',
