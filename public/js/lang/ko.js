@@ -600,6 +600,10 @@ I18N.ko = {
   'member.favoriteNone': '아직 평가가 없어요',
   'member.ownedTitleOne': '{name}의 게임 {n}개',
   'member.ownedTitle': '{name}의 게임 {n}개',
+  // Der Tisch's attendance line under a member's name (#1276): sessions this
+  // member took part in, of the round's finished ones. Plural follows {total}.
+  'member.attendanceOne': '세션 {total}회 중 {n}회 참여',
+  'member.attendance': '세션 {total}회 중 {n}회 참여',
   'member.noSessions': '아직 어떤 세션에도 참여하지 않았어요',
   'member.saved': '저장했어요',
   'member.claim': '저예요',

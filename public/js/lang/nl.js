@@ -637,6 +637,10 @@ I18N.nl = {
   'member.favoriteNone': 'Nog geen beoordelingen',
   'member.ownedTitleOne': '{n} spel van {name}',
   'member.ownedTitle': '{n} spellen van {name}',
+  // Der Tisch's attendance line under a member's name (#1276): sessions this
+  // member took part in, of the round's finished ones. Plural follows {total}.
+  'member.attendanceOne': 'Bij {n} van {total} sessie',
+  'member.attendance': 'Bij {n} van {total} sessies',
   'member.noSessions': 'Nog in geen enkele sessie',
   'member.saved': 'Opgeslagen',
   'member.claim': 'Dat ben ik',

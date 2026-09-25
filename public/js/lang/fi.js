@@ -611,6 +611,10 @@ I18N.fi = {
   'member.favoriteNone': 'Ei vielä arvioita',
   'member.ownedTitleOne': '{n} peli, jonka omistaa {name}',
   'member.ownedTitle': '{n} peliä, jotka omistaa {name}',
+  // Der Tisch's attendance line under a member's name (#1276): sessions this
+  // member took part in, of the round's finished ones. Plural follows {total}.
+  'member.attendanceOne': 'Mukana {n}/{total} sessiossa',
+  'member.attendance': 'Mukana {n}/{total} sessiossa',
   'member.noSessions': 'Ei vielä mukana yhdessäkään sessiossa',
   'member.saved': 'Tallennettu',
   'member.claim': 'Tämä olen minä',
