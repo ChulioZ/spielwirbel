@@ -3857,6 +3857,30 @@
 :root[data-design="tisch"][data-scheme="dark"] .tisch__box .stamp--table .stamp__date {
   color: var(--played-tag-ink);
 }
+
+/* --- Motion ritual 5: „Gespielt" is stamped (#1200, T10.5) -----------------
+   views-session.js sets `data-stamped` on the slot for the ONE render that
+   follows the finish the reader just recorded — not a later winner change, not
+   a Chronik visit to a finished session, so this is the reader's own hand on
+   the stamp, not an arrival (#1122 took the stamp's entry press out of the app
+   for exactly that reason, and this does not bring it back).
+
+   The stamp falls onto the box from above, goes a touch too small and settles:
+   T10's one overshoot in the whole design, on its own curve. 620ms after a
+   200ms beat = 820ms. `scale`/`rotate` as the INDIVIDUAL properties, so the
+   stamp's own layout is never replaced, and no end frame — it settles on the
+   rest state, which is straight: this design's static stamp is not tilted, so
+   neither is the frame the motion ends on (T10 lands at -7deg). */
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-design="tisch"] .tisch-slot[data-stamped] .tisch__box .stamp--table {
+    animation: tisch-stamp-drop 620ms cubic-bezier(0.3, 1.5, 0.5, 1) 200ms both;
+  }
+  @keyframes tisch-stamp-drop {
+    from { scale: 2.2; rotate: -7deg; opacity: 0; }
+    60% { opacity: 1; }
+    75% { scale: 0.96; rotate: 0deg; }
+  }
+}
 /* „Falls etwas anders lief" — the three corrections as a labelled group on the
    walnut (T4.4). The label is rendered by views-session.js on every design and
    revealed here; see styles.css for why it cannot be a `content:`. */
