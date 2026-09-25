@@ -203,7 +203,7 @@ function openTagsPopover(ctx, anchor) {
         renderChips();
         return true;
       } catch (e) {
-        toast(e.message === 'quota_tags' ? t('tags.toast.quota') : e.message);
+        toast(e.message === 'quota_tags' ? t('tags.toast.quota') : e.message, { tone: 'error' });
         return false;
       }
     };
@@ -284,7 +284,7 @@ function openImagePopover(ctx, anchor) {
             no_source: 'detail.toast.coverNoSource',
             provider_unreachable: 'detail.toast.coverUnreachable',
           }[e.message];
-          toast(known ? t(known, { provider: prov }) : e.message);
+          toast(known ? t(known, { provider: prov }) : e.message, { tone: 'error' });
         }
       });
       rows.appendChild(fetchBtn);
@@ -347,7 +347,7 @@ async function saveExpansions(ctx, list) {
     toast(t('detail.toast.expansionsSaved'));
     refresh();
   } catch (e) {
-    toast(e.message === 'quota_expansions' ? t('detail.toast.expansionQuota') : e.message);
+    toast(e.message === 'quota_expansions' ? t('detail.toast.expansionQuota') : e.message, { tone: 'error' });
   }
 }
 

@@ -30,7 +30,7 @@ const HUB_TABS = ['start', 'regal', 'chronik', 'pokale'];
 // router names them (resolveRoute in router.js), so a new sub-screen that
 // forgets its entry here simply renders no strip rather than a wrong one.
 const HUB_TAB_OF = {
-  regal: ['game', 'retired', 'completed', 'wishlist', 'recommendations'],
+  regal: ['game', 'retired', 'completed', 'wishlist', 'recommendations', 'shelf-profile'],
   chronik: ['session'],
   start: ['member', 'design', 'tags', 'settings'],
 };
@@ -217,7 +217,7 @@ function editableRoundName(round) {
         // refreshes the top-bar context label, which shows the round's name.
         currentView();
       } catch (e) {
-        toast(e.message);
+        toast(e.message, { tone: 'error' });
         input.replaceWith(el);
       }
     };

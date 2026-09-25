@@ -149,7 +149,9 @@ test('Der Tisch captions every seat, badges the wins and crowns the leader from 
 test('Der Tisch states the Rundenpuls as three stat tiles, the unplayed one a link into the Regal', async (t) => {
   const dom = await hub(t, 'tisch');
   assert.equal(dom.app.querySelector('.pulse-bars'), null, 'the Tisch Rundenpuls still draws bars');
-  const tiles = [...dom.app.querySelectorAll('.pulse-tiles > .pulse-tile')];
+  // `:not(.shelf-tiles)`: the Regal-Steckbrief (#1173) reuses the tile markup
+  // for its seat bands, and this shelf is linked enough to show it.
+  const tiles = [...dom.app.querySelectorAll('.pulse-tiles:not(.shelf-tiles) > .pulse-tile')];
   assert.equal(tiles.length, 3);
   assert.deepEqual(tiles.map((el) => el.querySelector('.pulse-tile__n').textContent), ['3', '5', '5'],
     'sessions in 12 months · days since the last · games never played');

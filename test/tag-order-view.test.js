@@ -158,3 +158,100 @@ test('the arrows are icon-only, so the LABEL carries the whole meaning (#1159)',
   assert.ok(dom.app.querySelector('.tag-act--back .ti-arrow-left'));
   assert.ok(dom.app.querySelector('.tag-act--fwd .ti-arrow-right'));
 });
+
+/* ---- Dragging a tile (#1180) ----
+ *
+ * SortableJS needs real layout, so no spec here performs a drag — jsdom has
+ * none, and a test that appeared to would be asserting its own simulation. What
+ * the REAL library does give us under jsdom is its instance, so these specs
+ * reach the view's own handlers through `Sortable.get(list).options` and play
+ * the part of the gesture exactly as Sortable does: move the DOM node first,
+ * then report the draggable indices. Everything after that is the view's code.
+ */
+
+const listOf = (dom) => dom.app.querySelector('.ds-list--tiles');
+const sortableOf = (dom) => dom.run('Sortable.get(document.querySelector(\'.ds-list--tiles\'))');
+
+/* What Sortable has done by the time `onEnd` fires: the row is already in its
+   new place. Then the event, in the only fields the view may read. */
+function dragDrop(dom, from, to) {
+  const list = listOf(dom);
+  const rows = [...list.querySelectorAll('.tag-row')];
+  const moved = rows[from];
+  const rest = rows.filter((r) => r !== moved);
+  if (to >= rest.length) list.appendChild(moved); else list.insertBefore(moved, rest[to]);
+  sortableOf(dom).options.onEnd({ oldDraggableIndex: from, newDraggableIndex: to });
+}
+
+test('the tag list is made draggable by the real library, tiles only (#1180)', async (t) => {
+  const { dom } = await boot(t);
+  const inst = sortableOf(dom);
+  assert.ok(inst, 'no Sortable instance on the tag list — makeReorderable was never called');
+  assert.equal(inst.options.draggable, '.tag-row');
+  assert.equal(inst.options.filter, '.tag-act', 'the arrows, pencil and trash keep their clicks');
+  assert.ok(listOf(dom).classList.contains('is-reorderable'), 'the grab cursor hangs off this class');
+});
+
+test('dropping a tile persists the whole new order through the arrows\' route (#1180)', async (t) => {
+  const { dom, sent } = await boot(t);
+  dragDrop(dom, 2, 0);
+  await flush();
+  assert.deepEqual(names(dom), ['Muy bien a 2', 'Muy bien a 3', 'Muy bien a 4']);
+  assert.deepEqual(sent, [['t3', 't1', 't2']],
+    'ONE PATCH …/tags/order with the full list — the same request an arrow press makes');
+
+  // The ends followed the tag: it is first now, so its back arrow is dead and
+  // the tile it displaced has a live one again.
+  assert.equal(rowFor(dom, 'Muy bien a 2').querySelector('.tag-act--back').disabled, true);
+  assert.equal(rowFor(dom, 'Muy bien a 3').querySelector('.tag-act--back').disabled, false);
+  assert.equal(rowFor(dom, 'Muy bien a 4').querySelector('.tag-act--fwd').disabled, true);
+});
+
+test('the arrows still work after a drag, on the order the drag left (#1180)', async (t) => {
+  const { dom, sent } = await boot(t);
+  dragDrop(dom, 0, 2);
+  await flush();
+  assert.deepEqual(names(dom), ['Muy bien a 4', 'Muy bien a 2', 'Muy bien a 3']);
+  rowFor(dom, 'Muy bien a 3').querySelector('.tag-act--back').click();
+  await flush();
+  assert.deepEqual(names(dom), ['Muy bien a 4', 'Muy bien a 3', 'Muy bien a 2']);
+  assert.deepEqual(sent, [['t2', 't3', 't1'], ['t2', 't1', 't3']],
+    'the arrow moved the tag from where the DRAG put it — one shared order, not two');
+});
+
+test('a drop tells a screen reader where the tile landed (#1180)', async (t) => {
+  const { dom } = await boot(t);
+  dragDrop(dom, 2, 0);
+  await flush();
+  const live = dom.document.getElementById('srLive').textContent;
+  assert.match(live, /Muy bien a 2/, 'the announcement names the tag');
+  assert.match(live, /\b1\b.*\b3\b/, 'and its new position out of the total');
+  assert.deepEqual(dom.context.__toasts || [], [], 'silently — a sighted user watched it land');
+});
+
+test('a drag closes an open inline editor rather than stranding it (#1180)', async (t) => {
+  const { dom } = await boot(t);
+  const pencil = [...rowFor(dom, 'Muy bien a 3').querySelectorAll('.tag-act')]
+    .find((b) => b.querySelector('.ti-pencil'));
+  pencil.click();
+  assert.equal(dom.app.querySelectorAll('.tag-edit').length, 1, 'the pencil opened its editor');
+  sortableOf(dom).options.onStart({});
+  assert.equal(dom.app.querySelectorAll('.tag-edit').length, 0,
+    'anchored after its own row, it would otherwise end up beside another tag');
+});
+
+test('a drop against a stale list re-renders from the server (#1180)', async (t) => {
+  const { dom } = await boot(t, { patch: () => { throw new Error('tags_changed'); } });
+  dragDrop(dom, 2, 0);
+  await flush();
+  await flush();
+  assert.deepEqual(names(dom), ['Muy bien a 3', 'Muy bien a 4', 'Muy bien a 2'],
+    'the dragged order was thrown away, exactly as an arrow press\'s is');
+  assert.ok((dom.context.__toasts || []).some((m) => /geändert|changed/i.test(m)));
+});
+
+test('a single tag is not made draggable (#1180)', async (t) => {
+  const { dom } = await boot(t, { tags: [{ id: 't1', name: 'Kennerspiel' }] });
+  assert.equal(sortableOf(dom), undefined, 'nothing to reorder, so no drag and no grab cursor');
+  assert.equal(listOf(dom).classList.contains('is-reorderable'), false);
+});

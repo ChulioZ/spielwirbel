@@ -730,7 +730,7 @@ function showStartSession(round, prefill) {
       // lobby renders a COUNT, never a title.
       showSessionLobby(round, data.session);
     } catch (e) {
-      toast(e.message);
+      toast(e.message, { tone: 'error' });
     } finally {
       // The guard covers the FLIGHT. On success the lobby has already replaced
       // this screen by the time this runs, so releasing it here cannot reopen the
@@ -1149,7 +1149,7 @@ function startVoting(round, session, games, people, opts = {}) {
       // Nobody sees the result yet: the finale gate gathers everyone first.
       finaleArgs = [fresh, savedSession, games];
       showFinale(...finaleArgs);
-    } catch (e) { finishing = false; toast(e.message); }
+    } catch (e) { finishing = false; toast(e.message, { tone: 'error' }); }
   }
 
   go(0);
@@ -1735,7 +1735,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
       const fresh = await fetchRoundFresh(round.id);
       const sess = fresh.sessions.find((s) => s.id === session.id) || session;
       showResults(fresh, sess, games);
-    } catch (e) { toast(e.message); }
+    } catch (e) { toast(e.message, { tone: 'error' }); }
   }
 
   /* One action column per row, rebuilt by `updateChosen` whenever the phase
@@ -1780,7 +1780,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
             });
           }
           toast(t('result.toast.willPlay', { title: game.title }));
-        } catch (e) { toast(e.message); }
+        } catch (e) { toast(e.message, { tone: 'error' }); }
       });
       actionEl.appendChild(btn);
     }
@@ -1799,7 +1799,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
           session.chosenGameId = null;
           updateChosen();
           toast(t('result.toast.choiceCleared'));
-        } catch (e) { toast(e.message); }
+        } catch (e) { toast(e.message, { tone: 'error' }); }
       } });
     }
     items.push({ icon: 'ti-trash', label: t('result.removeGame'), kind: 'destructive', run: () => removeGame(game) });
@@ -1861,7 +1861,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
       if (!next) session.cancelledAt = null;
       toast(t(next ? 'result.toast.cancelled' : 'result.toast.cancelUndone'));
       updateChosen();
-    } catch (e) { toast(e.message); }
+    } catch (e) { toast(e.message, { tone: 'error' }); }
   }
   async function confirmCancel() {
     if (!await confirmDialog({
@@ -1878,7 +1878,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
       await api('DELETE', `/api/rounds/${round.id}/sessions/${session.id}`);
       toast(t('sessions.deleted'));
       showRound(round.id);
-    } catch (e) { toast(e.message); }
+    } catch (e) { toast(e.message, { tone: 'error' }); }
   }
 
   function renderCancel() {
@@ -2045,7 +2045,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
             session.chosenGameId = null;
             updateChosen();
             toast(t('result.toast.choiceCleared'));
-          } catch (e) { toast(e.message); }
+          } catch (e) { toast(e.message, { tone: 'error' }); }
         });
         actions.appendChild(other);
       }
@@ -2164,7 +2164,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
           session.finishedAt = null; // the server clears it too; keep the copy honest
           toast(t('result.toast.reset'));
           updateChosen();
-        } catch (e) { toast(e.message); }
+        } catch (e) { toast(e.message, { tone: 'error' }); }
       });
       actions.appendChild(resetBtn);
 
@@ -2221,7 +2221,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
       session.finishedAt = saved.finishedAt || session.finishedAt;
       toast(t('result.toast.saved'));
       renderTisch();
-    } catch (e) { toast(e.message); }
+    } catch (e) { toast(e.message, { tone: 'error' }); }
   }
 
   updateChosen();
@@ -2347,8 +2347,8 @@ async function shareResult(model) {
   }
   try {
     await navigator.clipboard.writeText(text);
-    toast(t('share.toast.copied'));
+    toast(t('share.toast.copied'), { tone: 'success' });
   } catch {
-    toast(t('share.toast.failed'));
+    toast(t('share.toast.failed'), { tone: 'error' });
   }
 }
