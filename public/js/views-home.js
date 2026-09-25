@@ -128,7 +128,7 @@ function tischNextStep(rounds) {
          <i class="ti ti-chevron-right next-step__go" aria-hidden="true"></i>
        </button>`);
     row.addEventListener('click', async () => {
-      try { open(await fetchRoundFresh(r.id)); } catch (e) { toast(e.message); }
+      try { open(await fetchRoundFresh(r.id)); } catch (e) { toast(e.message, { tone: 'error' }); }
     });
     card.appendChild(row);
   });

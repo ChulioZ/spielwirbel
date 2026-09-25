@@ -178,7 +178,7 @@ async function shareShelfProfile(model) {
     blob = await shelfProfileCardBlob(model);
   } catch (err) {
     reportClientError('shelf_profile_export', err);
-    toast(t('periodRecap.toast.failed'));
+    toast(t('periodRecap.toast.failed'), { tone: 'error' });
     return;
   }
   await deliverShareImage(blob, 'spielwirbel-steckbrief.png');
