@@ -1,0 +1,512 @@
+/* Ocean — the override stylesheet (#1210, O1 + O8).
+ *
+ * Source: docs/design/ocean/Ocean-O1-Komponenten.dc.html („O1.1 Tokens") for
+ * every value here, and Ocean-O8-Farben.dc.html for the measurements. O1 is the
+ * SOURCE and O8 only measures; a value that is in neither does not belong in
+ * this file. The review (docs/design/pruefung-ocean-2026-09-20.md, R1) found
+ * ten hexes the later sheets use and O1 does not declare — they are declared
+ * below, named, so the screen issues (#1211-#1221) never have to re-derive one.
+ *
+ * Ocean is LIGHT and gradient-led, so its failure class is the inverse of Der
+ * Tisch's: saturated colour on near-white, and text over a page-height gradient
+ * whose dark end nobody measured. Three rules from the review are binding here
+ * and are stated at the tokens they bind:
+ *
+ *   1. The accent carries text only down to the water stop it was measured
+ *      against (--water-flat). Nothing darker may sit behind body text.
+ *   2. Person colour is ring, fill, tide line and bar — never text under 24px.
+ *      Where a name must be coloured it is 26px and in the darkened variant
+ *      (--person-deep-*).
+ *   3. Target sizes are tokens, not per-screen decisions (--target-*).
+ *
+ * The file follows Der Tisch's seam (public/css/designs/tisch.css): a VOICE
+ * block that is unconditional, and a COLOUR block gated on the scheme the
+ * design was drawn for. Every colour lives in that block, where
+ * test/support/theme.js resolves it and test/a11y-contrast.test.js measures it;
+ * component rules only ever read var(--x). See
+ * .claude/rules/design-colour-blocks-are-scheme-gated.md and
+ * .claude/rules/design-stylesheets-are-shell-assets.md.
+ *
+ * Two things that are NOT here and must not move here:
+ *   - --page-bg and --brand. applyBackground() writes them inline on <html>
+ *     from the registry's `page`/`accent` (public/js/designs.js).
+ *   - Screen layout. This issue is tokens + shared components; the screens are
+ *     #1211-#1221.
+ */
+
+/* The design's VOICE — scheme-independent, so it survives into a round that is
+   still wearing its own palette (until #1202 retires round designs). */
+:root[data-design="ocean"] {
+  /* ---- Schrift. Comfortaa (700 only) for display and titles, Figtree
+     (400/500/600/700) for text and numbers; both OFL, self-hosted, declared in
+     styles.css beside the other design faces. Comfortaa is „nie unter 17 px,
+     nie für Fließtext" (O1.2), which is why the component block below moves
+     every small display-face user back to --font. */
+  --font: "Figtree", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Comfortaa", "Figtree", -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* ---- Radien. „Wasser hat keine Ecken: nichts unter 10 px" — 10 klein ·
+     16 Kachel · 22 Karte · 999 Chip & Knopf. The app has four steps and O1
+     three plus the pill, so --radius-md takes the 12px O1.4 gives every input
+     and select. */
+  --radius-sm: 10px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 22px;
+
+  /* ---- Typoskala. Only the card-title step moves (21px, „Kartentitel").
+     The reading steps stay where styles.css floors them: O1's 13px meta and 15px
+     list lines are below --text-sm / --text-md, and a design never shrinks body
+     text (U-R04, test/design-tokens.test.js). */
+  --text-xl: 21px;
+
+  /* ---- Abstände, the 4er-Raster: 4 · 8 · 12 · 16 · 22 · 28 · 40 · 56. */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 22px;
+  --space-6: 28px;
+  --space-7: 40px;
+  --space-8: 56px;
+
+  /* ---- Trefferflächen, as tokens rather than per-screen decisions (review
+     point 2, O1 „Trefferflächen"). The visible shape may be smaller; the target
+     is reached through min-height and padding, never through line-height alone. */
+  --target-button: 44px;   /* every button with text, the vote card, the dock */
+  --target-control: 40px;  /* icon buttons, chips, inputs, list rows */
+  --target-footer: 32px;   /* footer links */
+  --target-text: 24px;     /* text links, breadcrumbs, toast actions — the floor */
+}
+
+/* The design's COLOURS, gated on the LIGHT scheme it was drawn for.
+ *
+ * The mirror of Der Tisch's gate. Until the flip (#1202) a round still writes
+ * its own palette inline on <html> and sets data-scheme from THAT design, so in
+ * a dark WORLD round <html> says data-design="ocean" over a near-black page. An
+ * ungated block would put Ocean's #10283a ink on it. Under the gate the block
+ * simply does not match there, and the round's dark block resolves exactly as
+ * under Klassisch; Figtree, Comfortaa and the round corners survive.
+ *
+ * A LIGHT round under Ocean keeps these colours over that round's page and
+ * accent. That pair is legible by construction rather than by luck: every light
+ * palette page is at least as light as Ocean's own, every ink here is dark, and
+ * the round's accent was tuned for white text (#145) — the --on-accent this
+ * design keeps.
+ *
+ * Specificity (0,3,0). test/support/theme.js reads this block first for a light
+ * design, exactly as it reads Der Tisch's [data-scheme="dark"] block for a dark
+ * one. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) {
+  /* ---- Flächen. Light, so the neutral ramp runs DOWNWARD from the page like
+     Klassisch's: surfaces sit ABOVE the page (O1.1 „Flächen nach oben"). */
+  --surface: #f7fbfc;       /* Fläche — cards, rail, top bar, sheets */
+  --control-fill: #ffffff;  /* Gehoben — inputs, the cover box, popovers */
+  --sunken: #cfe6ef;        /* Vertiefung — chips at rest, the segment rail */
+  --sunken-soft: #d7e9f0;   /* icon buttons, ghost hover, the close disc */
+  /* Linie — the edge of every surface. O1's #c9dde6 lifted one hair (lightness
+     x0.99): it measured 1.35:1 on --surface, a hundredth under the floor every
+     light design already ships for a hairline (LIGHT_FLOOR in
+     test/a11y-contrast.test.js). #c6dae3 is 1.39:1 and indistinguishable by eye. */
+  --line: #c6dae3;
+  --line-soft: #dfebf1;     /* the hairline INSIDE a card */
+
+  /* The UI-control border. O1's „Umriss" #a9c4d1 is stated as „3,1:1 gegen
+     Fläche" and measures 1.75:1 — a hand-calculation error of the kind the
+     review's own point 1 asked to be recomputed. SC 1.4.11 binds the edge of a
+     control, so this is #a9c4d1 darkened in oklab (lightness x0.775, hue and
+     chroma kept) until it clears 3:1 on the page: 3.07 there, 3.41 on --surface,
+     3.55 on --control-fill. The hover affordance moves to --brand (6.1:1), so
+     a control still gets STRONGER under the pointer. */
+  --control-edge: #728c98;
+
+  /* ---- Schrift. */
+  --ink: #10283a;       /* Text — 13.1:1 on the page, 14.5:1 on --surface */
+  --ink-soft: #3f5a6b;  /* Sekundärtext — 6.3:1 on the page, 7.0:1 on --surface */
+
+  /* ---- Akzent. Only the dark partner is declared: the accent itself is the
+     registry's `accent`, written inline. O1's „Akzent dunkel", the primary
+     button's hover and edge (8.5:1 under white). */
+  --brand-strong: #0a4f70;
+  --accent-edge: #083d57;   /* the pressed primary button's rim */
+
+  /* ---- Semantik. All three are TEXT as well as fills (.link-btn and toasts
+     paint them), so each is measured on the page and the surface.
+     --warn is O1's „Warnung" #8a6a10 corrected: it measures 4.39:1 on the page
+     (the sheet says 5,0 on the surface, which is right there but not on the
+     ground the app actually paints it on). #866607 is the same tone at
+     lightness x0.975 and clears 4.65 on the page. */
+  --good: #1a6b4a;
+  --warn: #866607;
+  --danger: #a3392b;
+  --danger-strong: #8a2f23;   /* the danger button's hover and edge */
+  --good-soft: #f4faf7;       /* R1: the soft success surface (O8.1's rows) */
+  --danger-soft: #f0dcd8;     /* R1: the soft danger surface (O14 „Gefahrenzone") */
+
+  /* ---- Gold. Ocean has no gold; the app's rank family is carried by O1's
+     „Sonne" (best score, „Abstimmung läuft" — a fill, never text) and its one
+     ink, and the crown by „Warnung". --gold-soft is a wash of the sun over the
+     surface rather than a new hex, so it stays inside O1's colours. */
+  --gold: #f2e394;
+  --gold-ink: #10283a;
+  --gold-deep: #866607;
+  --gold-edge: #ddcd78;
+  --gold-soft: color-mix(in oklab, var(--gold) 40%, var(--surface));
+
+  /* ---- The dark toast's action ink (O1.6): #9ed4ee on --ink, 9.4:1. */
+  --toast-action: #9ed4ee;
+
+  /* ---- Wasser — the gradient stops, top to bottom (O1.1 „Wasserverlauf").
+     THE BINDING RULE: --brand carries text down to --water-flat and on nothing
+     darker. Measured: 5.8 on foam, 5.3 shallows, 5.0 surf, 4.77 flat — and
+     3.62 on --water-coast, which is therefore INK ONLY (--ink is 8.7:1 there).
+     A page gradient that runs darker than --water-flat behind body text is the
+     O5.2 finding, and test/a11y-contrast.test.js holds every stop. */
+  --water-foam: #eef7fa;      /* Gischt — the top stop of every gradient */
+  --water-shallows: #e2f0f5;  /* Untiefe — lobby tile top, the result surface */
+  --water-surf: #dcecf2;      /* Brandung — middle of the sign-in gradients */
+  --water-flat: #cfe3ec;      /* Flach — the lowest stop accent text may sit on */
+  --water-coast: #a9c9d8;     /* Küstenwasser — gradient end, ink only */
+  --water-mid: #7fb4d3;       /* R1: the recap card's waterline (O8.3) */
+  --waterline: #8fc0da;       /* Wasserlinie, top — water under a lobby tile's tide */
+  --waterline-deep: #4f8fbb;  /* Wasserlinie, bottom */
+
+  /* The ONE dark state of Ocean: the deep water of a hidden card and of the
+     pass-device blind. Light ink only. */
+  --deep: #1c4a66;
+  --deep-bottom: #123a52;
+  --deep-ground: #0d2b3e;     /* Grund — the blind's lowest stop */
+  --deep-ink: #f7fbfc;
+  --deep-ink-soft: #9ec2d4;   /* R1: the blind's caption (O4.3) */
+
+  /* The whale (Rückenflosse, O4.4 / O8.3) and its two shades from R1. A
+     picture, never a ground for text except --deep-ink on its top stop. */
+  --whale: #2f6d94;
+  --whale-deep: #163a55;
+  --whale-shade: #1f4f72;
+  --whale-fin: #1a4360;
+
+  /* ---- Sand — the shell, the one warm surface of the design. --ink reads
+     10.8:1 on its darkest stripe. */
+  --sand-light: #f7efe2;
+  --sand: #f3ebdd;
+  --sand-deep: #e2d2b8;
+  --sand-deep-soft: #e8dac2;
+  --shell-edge: #d8c6a6;      /* the shell's 3px rim — never behind text */
+
+  /* ---- Wellenpapier — a game without a cover, an empty box (O1.1). */
+  --wave-paper: #eaf4f8;
+  --wave-paper-deep: #dfedf3;
+
+  /* ---- Die Blase — one gradient, six named parts (O1.9: Knopfkern,
+     Wertungsblase, Score-Blase, Anzahlblase, Zierblase, Bildmarke). */
+  --bubble-hi: #ffffff;
+  --bubble-1: #f3f9fb;
+  --bubble-2: #d7e9f0;
+  --bubble-3: #b9d4e0;
+  --bubble-trail: #dbe9ef;    /* R1: an empty Pokale row of bubbles (O7) */
+  --bubble-rim: #a9c4d1;      /* a rating bubble's resting rim — decoration; the face carries it */
+
+  /* ---- Deaktiviert (O1.3 / O1.4). WCAG exempts an inactive control from
+     every contrast bar, so these are stated, not measured. */
+  --disabled-fill: #d3e2e8;
+  --disabled-ink: #6b8494;
+  --disabled-edge: #c2d5de;
+
+  /* ---- Die Score-Rampe, Tiefsee -> Sonnenlicht (O1.9, O8.2), with its FIXED
+     per-step inks: the low two are dark fills taking --deep-ink, the high three
+     light fills taking --ink. Below 1 is Tintenfisch — not a value but the
+     colour of a game that took a „gar nicht". The tightest pair is Freiwasser
+     at 5.40:1 (the review's „engster Fall"). The same token NAMES as Der
+     Tisch's ramp, so test/a11y-contrast.test.js measures both with one loop. */
+  --score-1: #23305c;
+  --score-2: #35609a;
+  --score-3: #6a9fd0;
+  --score-4: #b7d4ee;
+  --score-5: #f2e394;
+  --score-veto: #4a1942;
+  --score-ink-low: #f7fbfc;
+  --score-ink-high: #10283a;
+  --score-veto-ink: #f7fbfc;
+
+  /* ---- Personenfarben, the DARKENED row (review R1). The eight colours
+     themselves are global (public/js/member-colors.js) and never change; six of
+     them are 4.3:1 on --surface, so they are ring, fill, tide line and bar and
+     carry no text under 24px. A name that must be coloured („wer ist gerade
+     dran", O2/O4) is 26px and printed in one of these. Floor 3:1 (large
+     text); every one is 7.8:1 or better. Index = member-colors.js order, and
+     the registry's marker `deep` holds the same eight — pinned equal by
+     test/design-tokens.test.js. */
+  --person-deep-1: #8a3418;   /* Koralle */
+  --person-deep-2: #005b40;   /* Seegras */
+  --person-deep-3: #4a4396;   /* Seeigel */
+  --person-deep-4: #6f440a;   /* Bernstein */
+  --person-deep-5: #892d4d;   /* Anemone */
+  --person-deep-6: #164a6e;   /* Lagune */
+  --person-deep-7: #345801;   /* Tang */
+  --person-deep-8: #6b1c38;   /* Purpur */
+
+  /* ---- Tiefe. „Schatten sind blau getönt, nie schwarz — Licht kommt von oben
+     durchs Wasser." O1's four: Fläche / Gehoben / Overlay, and the inset
+     Vertiefung. The alphas are tokens so the ramp carries no literal. */
+  --cast-soft: rgba(14, 60, 90, 0.10);
+  --cast: rgba(14, 60, 90, 0.16);
+  --cast-deep: rgba(14, 60, 90, 0.22);
+  --cast-button: rgba(14, 60, 90, 0.28);
+  --shadow-1: 0 6px 18px var(--cast-soft);
+  --shadow-2: 0 14px 34px var(--cast);
+  --shadow-3: 0 22px 48px var(--cast-deep);
+  --shadow-inset: inset 0 4px 10px var(--cast);
+}
+
+/* ---------------------------------------------------------------------------
+   Components. Everything that follows exists because a TOKEN could not say it;
+   what a token already carries — most of the app — is absent on purpose.
+   --------------------------------------------------------------------------- */
+
+/* THE DISPLAY FACE STAYS ON TITLES. The app gives --font-display to controls,
+   pills and small labels as well (Baloo 2 is a friendly UI face), but Comfortaa
+   is „nie unter 17 px, nie für Fließtext" and O1.3 sets every button in Figtree
+   700. So these take the text face back. The list is every styles.css rule that
+   asks for the display face and resolves under 17px on this design, plus the
+   controls O1 sets in Figtree — test/design-tokens.test.js DERIVES the first
+   half from styles.css, so a new small display-face rule fails there until it
+   is added here. Font only, so it belongs to the voice and is not gated. */
+:root[data-design="ocean"] :is(
+  .avatar, .nr-seat__avatar, .handover__avatar,
+  .dock__item, .sort-select, .chip, .tag-mode__opt, .fbar__trigger, .mfilter__label,
+  .btn, .lobby-cta__action, .round-card--new, .add-tile, .opt-card, .topbar__login,
+  .handover__go, .handover__back, .winner-chip,
+  .nr-table__center, .tl-month, .score-pill, .exp-pill, .pool-count__label,
+  .setup-bar__summary, .mood__n, .theme-card__name, .landing-step__num,
+  .landing-claim__title, .podium__name, .rec-ignored__title,
+  .stepper__val, .pool-count, .rater__n, .member-figure__value, .pokale-card__value,
+  .gd-price__amount, .stamp__date, .landing-stats .stats-counter__num,
+  /* …and the small TITLES. These rules set no face of their own, but the
+     element they style is usually an h2/h3, which takes --font-display from the
+     global heading rule — so at 12-16px they would be Comfortaa too. O1 sets a
+     list title in Figtree 700 („Listeneintrag"); the screen issues may lift a
+     block title to 17px Comfortaa where O1 draws one. */
+  .hub-card__title, .hub-offshelf__title, .hub-care__head, .ticket__names, .nr-seat__name,
+  .session-card__title, .popover__head, .split-group__head, .editor--expansions .exp-own__head,
+  .podium__col--multi .podium__name, .podium--single .podium__col--multi .podium__name,
+  .recap-fav__name, .setup-panel__title, .pool-tile__name, .result-people__name,
+  .spotlight--table .spotlight__title, .rec-ignored__name, .marker-card__name,
+  /* The section label (16px, uppercase, letter-spaced) is O1's „Kicker", which
+     is Figtree 700 — whichever heading level carries it. */
+  .section :is(h1, h2, h3)
+) {
+  font-family: var(--font);
+}
+
+/* „Scores und Tabellen mit tabularen Ziffern" (O1.2). */
+:root[data-design="ocean"] :is(
+  .score-pill, .stepper__val, .pool-count, .rater__n, .member-figure__value,
+  .pokale-card__value, .gd-price__amount, .trow__rank, .mood__n
+) {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- Target sizes (the --target-* tokens). Geometry only, so ungated: a
+   target is a target in every round. Padding reaches them, so nothing moves at
+   the top of the line box. */
+:root[data-design="ocean"] .btn { min-height: var(--target-button); }
+/* O1.3 draws the secondary and small buttons at 40px — the control size. */
+:root[data-design="ocean"] .btn--sm { min-height: var(--target-control); }
+:root[data-design="ocean"] :is(.chip, .input, .select, .sort-select, .sheet__close) {
+  min-height: var(--target-control);
+}
+:root[data-design="ocean"] .sheet__close { min-width: var(--target-control); }
+/* Review R2: O1.4's two search inputs render 20px / 23.5px in the sheet against
+   O1's own input token — the token wins, not the mock. */
+:root[data-design="ocean"] :is(.input, .select) { box-sizing: border-box; }
+:root[data-design="ocean"] :is(.link-btn, .back-link, .toast__action, .toast__close) {
+  min-height: var(--target-text);
+  display: inline-flex;
+  align-items: center;
+}
+:root[data-design="ocean"] .site-footer a {
+  min-height: var(--target-footer);
+  display: inline-flex;
+  align-items: center;
+  padding-inline: 4px;
+}
+
+/* ---- Buttons (O1.3): pills with a soft blue cast instead of Klassisch's
+   pressed-key bottom edge. The press therefore compensates by one pixel, not by
+   the 2.5 the 4px edge needed — otherwise every press would jump the layout
+   (#615's bug, one design over). */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .btn {
+  border-radius: var(--radius-pill);
+  border-width: 1.5px;
+  border-bottom-width: 1.5px;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .btn:active {
+  transform: translateY(1px);
+  border-bottom-width: 1.5px;
+  margin-bottom: var(--press-mb);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .btn--primary {
+  box-shadow: 0 10px 20px var(--cast-button);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .btn--primary:active {
+  border-color: var(--accent-edge);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .btn--ghost {
+  border-color: transparent;
+  color: var(--brand);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .btn--ghost:hover {
+  background: var(--sunken-soft);
+  color: var(--brand-strong);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .btn--danger:hover {
+  border-color: var(--danger-strong);
+  color: var(--danger-strong);
+}
+/* „Deaktiviert" is its own tone rather than Klassisch's 45% fade: a faded
+   accent pill on a pale page reads as a lighter ENABLED button. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .btn:disabled {
+  opacity: 1;
+  background: var(--disabled-fill);
+  border-color: var(--disabled-edge);
+  color: var(--disabled-ink);
+  box-shadow: none;
+}
+
+/* ---- Chips (O1.5): the Vertiefung at rest, the accent when on. A RE-POINT
+   rather than a `background`: this selector is (0,4,0), so a background here
+   would also beat `.chip.is-on` (0,2,0) and every on-chip would lose its accent
+   fill while keeping its white ink. Re-pointing the token the resting chip
+   paints from leaves every state rule exactly as it was. The edge stays
+   --control-edge — the app's SC 1.4.11 floor for a control. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .chip {
+  --control-fill: var(--sunken);
+}
+
+/* ---- Inputs (O1.4). A 1.5px edge on the raised white, and O1's soft focus
+   halo UNDER the app's own focus outline, which is never restyled for looks. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) :is(.input, .select) {
+  border-width: 1.5px;
+  font-weight: 600;
+}
+
+/* ---- Surfaces. Cards and the empty state sit on --surface with O1's line and
+   the blue „Fläche" shadow; a sheet is a surface, not a second page. */
+/* Radius only: the card's resting and hover shadows are the app's own
+   --shadow-* ramp, which the colour block above already tints blue — a
+   box-shadow here would also beat `.card:hover`. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .card {
+  border-radius: var(--radius-xl);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .sheet { background: var(--surface); }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .popover { border-radius: var(--radius-lg); }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .sheet__close { background: var(--sunken-soft); }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .sheet__close:hover { background: var(--sunken); }
+
+/* The empty state (O1.10): a card with a bubble instead of a dashed accent
+   frame. The bubble is the medallion the app already draws. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .empty {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) :is(.empty__icon, .lobby-cta__icon) {
+  background: radial-gradient(circle at 32% 28%, var(--bubble-hi) 0%, var(--bubble-1) 30%, var(--bubble-2) 70%, var(--bubble-3) 100%);
+  color: var(--brand);
+  box-shadow: 0 6px 12px var(--cast);
+}
+
+/* ---- The no-cover placeholder (O1.1 „Wellenpapier", O1.9 „Bildmarke"):
+   a bubble on wave paper. `.cover-ph` owns the coverless game box and brings its
+   own gradient (.claude/rules/cover-ph-owns-the-coverless-game-glyph.md), so
+   the tone is replaced here. The glyph keeps --brand, 5.4:1 on the paper. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .cover-ph {
+  color: var(--brand);
+  background-image:
+    radial-gradient(circle at 50% 50%, var(--bubble-2) 0 22%, transparent 23%),
+    repeating-linear-gradient(135deg, var(--wave-paper) 0 10px, var(--wave-paper-deep) 10px 20px);
+}
+
+/* ---- The score bubble (O1.9 „Score-Blase"): the ramp with its FIXED inks,
+   keyed on the same `data-stop` the JS writes beside `--sc`, so fill and ink
+   can never come from different rungs. The 2px white rim is what lets it read
+   on ANY cover (review rule: no text over a cover, and the rim carries this
+   one). A pill without data-stop keeps the app's --sc fill. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .score-pill {
+  border: 2px solid var(--control-fill);
+  font-weight: 700;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .score-pill[data-stop="veto"] {
+  --sc-fill: var(--score-veto);
+  --sc-ink: var(--score-veto-ink);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .score-pill[data-stop="1"] {
+  --sc-fill: var(--score-1);
+  --sc-ink: var(--score-ink-low);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .score-pill[data-stop="2"] {
+  --sc-fill: var(--score-2);
+  --sc-ink: var(--score-ink-low);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .score-pill[data-stop="3"] {
+  --sc-fill: var(--score-3);
+  --sc-ink: var(--score-ink-high);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .score-pill[data-stop="4"] {
+  --sc-fill: var(--score-4);
+  --sc-ink: var(--score-ink-high);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .score-pill[data-stop="5"] {
+  --sc-fill: var(--score-5);
+  --sc-ink: var(--score-ink-high);
+}
+
+/* ---- The face row (O1.9 „Wertungsblase"): five bubbles, the chosen one takes
+   no ramp colour here — the vote card's own composition is #1213's — but every
+   face is a round bubble with the rim. `:not(.is-selected)`, because this
+   selector outranks `.mood.is-selected` and would otherwise erase the chosen
+   face's fill. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .mood:not(.is-selected) {
+  border-color: var(--bubble-rim);
+  background: radial-gradient(circle at 32% 28%, var(--bubble-hi) 0%, var(--bubble-1) 30%, var(--bubble-2) 70%, var(--bubble-3) 100%);
+  color: var(--ink);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .mood:not(.is-selected):hover { border-color: var(--brand); }
+:root[data-design="ocean"] .mood { border-radius: 50%; }
+
+/* ---- The member (O1.8): Ocean draws a RING, and the person colour never
+   carries the initials — six of the eight are 4.3:1 against a near-white
+   ground, so a filled disc with white initials would be text on a person
+   colour under 24px. The inline fill is the member's colour and it paints
+   under the border too (background-clip: border-box); the border is made
+   transparent, and an inset shadow — which paints over the background but
+   only inside the border — covers the rest in the raised surface. What is left
+   is a ring exactly as wide as the border, with no change to the markup and no
+   pseudo-element (the lobby's world motif owns those). A profile picture is
+   content, so it sits above the shadow as before. */
+/* Not the "+" seat or a guest: both are drawn by their own dashed edge. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .avatar:not(.avatar--add, .avatar--guest) {
+  color: var(--ink);
+  border: 3px solid transparent;
+  background-clip: border-box;
+  box-shadow: inset 0 0 0 999px var(--control-fill);
+}
+
+/* ---- The footer (O1.10): the BGG badge is artwork with its own ground and is
+   licence-bound — it is never restyled, only given room. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .site-footer {
+  background: var(--surface);
+  border-top-color: var(--line);
+}
+
+/* ---- The toast (O1.6): Klassisch's dark pill is already Ocean's; only the
+   action takes the light-blue ink, and the rim radius is the pill. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .toast {
+  border-radius: var(--radius-pill);
+  box-shadow: 0 14px 30px var(--cast-button);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .toast:not(.toast--success):not(.toast--error) .toast__action {
+  color: var(--toast-action);
+}

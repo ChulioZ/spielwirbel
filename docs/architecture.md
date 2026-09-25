@@ -430,6 +430,7 @@ public/
     designs/         one override stylesheet per USER design (#1184), fetched
                      on demand by js/design.js; Klassisch has none, because
       tisch.css      styles.css IS Klassisch
+      ocean.css
   manifest.webmanifest  PWA manifest (installable app metadata + icons) — the
                      face's; other designs get theirs from lib/web-manifest.js
   robots.txt         crawl policy; every noindex page stays crawl-ALLOWED (#510)

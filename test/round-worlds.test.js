@@ -158,6 +158,13 @@ test('each world declares the whole token set the ten slots read, in the registr
   assert.doesNotMatch(bodyOf('[data-world]'), /(^|[^-])--font:/, 'a world must not retheme body text');
 });
 
+const USER_DESIGN_FACES = new Set(require('../public/js/designs').DESIGN_REGISTRY
+  .filter((d) => d.stylesheet)
+  .flatMap((d) => {
+    const sheet = fs.readFileSync(path.join(ROOT, 'public', d.stylesheet), 'utf8');
+    return [...sheet.matchAll(/--font(?:-display)?:\s*"([^"]+)"/g)].map((m) => m[1]);
+  }));
+
 test('every world face is declared, committed with its OFL licence, and not precached', () => {
   const sw = fs.readFileSync(path.join(ROOT, 'public/sw.js'), 'utf8');
   for (const w of WORLDS) {
@@ -171,6 +178,11 @@ test('every world face is declared, committed with its OFL licence, and not prec
     assert.ok(fs.existsSync(path.join(ROOT, 'public/fonts', licence)), `${licence} is missing`);
     assert.match(fs.readFileSync(path.join(ROOT, 'public/fonts', licence), 'utf8'), /SIL Open Font License/);
     // Lazy by construction: a face in SHELL would download in every Standard round.
+    // EXCEPT a face a USER design wears as well (#1210: Ocean wears the Ocean
+    // world's Comfortaa) — that one is precached for the design's sake, since an
+    // account on it must render in its own type offline. Derived from the design
+    // sheets rather than named, so the exemption cannot outlive the design.
+    if (USER_DESIGN_FACES.has(w.font)) continue;
     for (const f of faces) assert.doesNotMatch(sw, new RegExp(f), `${f} must not be in SHELL`);
   }
 });

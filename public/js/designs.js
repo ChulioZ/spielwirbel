@@ -233,6 +233,71 @@ const DESIGN_REGISTRY = [
     card: 'tisch',
     enabled: false,
   },
+  /* Ocean (#1210), from docs/design/ocean/Ocean-O1-Komponenten.dc.html (the
+     token source) and Ocean-O8-Farben.dc.html (the measurements). A LIGHT
+     design — the first after Klassisch — so its failure class is the inverse of
+     Der Tisch's: saturated colour on near-white, and text over a page-height
+     gradient whose dark end nobody measured. Both real findings of the review
+     (docs/design/pruefung-ocean-2026-09-20.md) lived exactly there.
+
+     `enabled: false` until its go-live issue (#1222); the screens are
+     #1211-#1221. Outside production it is reachable through the same
+     `?design=ocean` flag Der Tisch was built behind (design.js initDesign).
+
+     Page and accent are O1's „Seite" and „Akzent". The accent carries text on
+     the page (5.5:1), the surface (6.1:1) and down to the „Flach" water stop
+     (4.8:1), and on nothing darker — see the water tokens in ocean.css. */
+  {
+    id: 'ocean',
+    labelKey: 'design.ocean.name',
+    descKey: 'design.ocean.desc',
+    page: '#e4f1f5',
+    accent: '#0e6690',
+    stylesheet: '/css/designs/ocean.css',
+    /* The eight markers are the eight PERSON colours (O14.1 „Farbmarker — die
+       Tidenlinie dieser Runde"), in member-colors.js's own order and with the
+       package's names. `deep` is each colour's DARKENED variant — the row
+       review finding R1 asked to be derived for all eight, not only the three
+       O8.1 draws (#8a3418, #4a4396, #6f440a, used verbatim). The other five
+       are the same move in oklab: lightness x0.754 and chroma x0.83, the mean
+       of those three, which lands every one of them at 7.8:1 or better on the
+       surface. The darkened row is ALSO what „wer ist gerade dran" prints a
+       name in at 26px (O2/O4), so ocean.css re-declares it as --person-deep-*
+       tokens for the stylesheet to read; test/design-tokens.test.js pins
+       the two copies equal.
+
+       White on every one of the sixteen clears 4.5:1 (the tightest is Koralle
+       at 4.52:1), so the default markerInk stands. */
+    markers: [
+      { key: 'koralle', labelKey: 'marker.ocean.koralle', color: '#c6522c', deep: '#8a3418' },
+      { key: 'seegras', labelKey: 'marker.ocean.seegras', color: '#198663', deep: '#005b40' },
+      { key: 'seeigel', labelKey: 'marker.ocean.seeigel', color: '#726bc7', deep: '#4a4396' },
+      { key: 'bernstein', labelKey: 'marker.ocean.bernstein', color: '#a66815', deep: '#6f440a' },
+      { key: 'anemone', labelKey: 'marker.ocean.anemone', color: '#c34d74', deep: '#892d4d' },
+      { key: 'lagune', labelKey: 'marker.ocean.lagune', color: '#2f6f9e', deep: '#164a6e' },
+      { key: 'tang', labelKey: 'marker.ocean.tang', color: '#54821d', deep: '#345801' },
+      { key: 'purpur', labelKey: 'marker.ocean.purpur', color: '#993556', deep: '#6b1c38' },
+    ],
+    /* Klassisch's marks, stated rather than inherited, until Ocean's own mark
+       lands with #1220 (O8.3 „the design's mark", the sine wave). Stated so the
+       row is complete on its own — test/design-marks.test.js walks every row's
+       files — and so #1220 is a change to this block, not the discovery that the
+       design had none. */
+    marks: {
+      icons: [
+        { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
+        { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
+      ],
+      favicon: { href: '/icons/icon-192.png', sizes: '192x192' },
+      appleTouch: '/icons/apple-touch-icon.png',
+      og: '/icons/og-image.png',
+    },
+    // A person's NAME prints in the marker's `deep`, never in the colour
+    // itself (design.js personNameInk) — review rule 2, person colour is no text
+    // under 24px here.
+    personInk: 'deep',
+    enabled: false,
+  },
 ];
 
 /* Which run of the first-start chooser an account has seen (#1186). A REVISION

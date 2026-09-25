@@ -152,18 +152,26 @@ for (const design of DESIGN_REGISTRY) {
      Read in the browser's order, most specific first, which for the only shape
      that exists is also source order. */
   const scheme = bodyOfIn(`:root[data-design="${design.id}"][data-scheme="dark"]`, rules);
+  /* The LIGHT mirror (#1210, Ocean). A light design's colours must not reach a
+     dark WORLD round either, so its block is gated the other way round —
+     `:not([data-scheme="dark"])`, because the light scheme is the ABSENCE of
+     the attribute and there is nothing positive to key on. Read only for a light
+     design, exactly as the dark block is read only for a dark one. */
+  const light = bodyOfIn(`:root[data-design="${design.id}"]:not([data-scheme="dark"])`, rules);
   /* An absent block is not an empty one. `bodyOfIn` answers null for a selector
      that is not there, and falling through to :root would resolve every token
      to Klassisch's value — a complete, plausible answer to the wrong question,
      which is the failure shape in
      `.claude/rules/cssrules-walk-is-blind-under-nesting.md`. A design that ships
      a stylesheet declares at least one of these; say so loudly if it stops. */
-  assert.ok(root || scheme,
+  assert.ok(root || scheme || light,
     `${design.stylesheet} declares no :root[data-design="${design.id}"] block — has the hook moved?`);
   DESIGN_BLOCKS.set(design.id, {
+    design,
     root: root || '',
     scheme: scheme || '',
-    all: [scheme, root].filter(Boolean).join('\n'),
+    light: light || '',
+    all: [scheme, light, root].filter(Boolean).join('\n'),
   });
 }
 
@@ -172,6 +180,20 @@ const ROOT_BLOCK = bodyOf(':root');
 const DARK_BLOCK = bodyOfIn(':root[data-scheme="dark"]');
 assert.ok(ROOT_BLOCK, 'styles.css declares no :root block');
 assert.ok(DARK_BLOCK, 'styles.css declares no :root[data-scheme="dark"] block — has the hook moved?');
+
+/* A USER design's blocks — and only a user design's. The two registries share
+   ids: the round world `ocean` (round-designs.js) and the user design `ocean`
+   (designs.js) are different objects with the same id, and until #1202 retires
+   the worlds both are measured. Keying the lookup on the id alone would resolve
+   the WORLD through the user design's stylesheet, which the browser never does
+   (a world is a round's data-world, not an account's data-design). So the
+   entry must also name the same STYLESHEET: only a user design carries one, and
+   a spread copy (`{ ...design, scheme }`, which a spec builds to ask "what
+   would this resolve to under the other scheme") keeps it. */
+function blocksOf(design) {
+  const b = design && DESIGN_BLOCKS.get(design.id);
+  return b && design.stylesheet && design.stylesheet === b.design.stylesheet ? b : null;
+}
 
 /* The declared text of one custom property, for a design. The design's own
    override sheet wins, then the dark block when the design is dark, then
@@ -183,9 +205,9 @@ assert.ok(DARK_BLOCK, 'styles.css declares no :root[data-scheme="dark"] block �
    one is included only for a design of that scheme — a light design reading a
    dark block would resolve a colour the browser would never paint for it. */
 function designBlocks(design, dark) {
-  const b = design && DESIGN_BLOCKS.get(design.id);
+  const b = blocksOf(design);
   if (!b) return [];
-  return (dark ? [b.scheme, b.root] : [b.root]).filter(Boolean);
+  return (dark ? [b.scheme, b.root] : [b.light, b.root]).filter(Boolean);
 }
 
 function declaration(name, dark, design) {
@@ -324,5 +346,5 @@ function alphaOf(expr) {
 module.exports = {
   contrast, luminance, hex, toHex, hsl, mixOklab, composite, rgb,
   declaration, evaluate, token, tokensFor, alphaOf,
-  ROOT_BLOCK, DARK_BLOCK, DESIGN_BLOCKS,
+  ROOT_BLOCK, DARK_BLOCK, DESIGN_BLOCKS, blocksOf,
 };

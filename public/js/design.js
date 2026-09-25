@@ -70,6 +70,24 @@ function designScheme() {
   return d && d.scheme === 'dark' ? 'dark' : 'light';
 }
 
+/* The colour a person's NAME is printed in (#1210). On every design but one it
+   is the member tone itself. Ocean prints no person colour as text under 24px —
+   six of the eight are 4.3:1 on its near-white surface — so there a name takes
+   the DARKENED variant (O8.1 „zwei Stufen dunkler"), which the design's
+   registry row carries as each marker's `deep`. A design opts in with
+   `personInk: 'deep'`, and only on a light scheme: the deep row is dark, and
+   until #1202 a dark world round can sit under a light user design.
+
+   Anything that is not one of the eight stored hexes — a guest's
+   var(--ink-soft), a lifted color-mix() — passes through unchanged, which is
+   also why this takes the painted tone rather than a member id. */
+function personNameInk(color) {
+  const design = activeDesign();
+  if (design.personInk !== 'deep' || isDarkScheme()) return color;
+  const hit = (design.markers || []).find((m) => m.color === color);
+  return hit ? hit.deep : color;
+}
+
 // Injected once per design and then left in place: switching back to Klassisch
 // makes the rules stop matching on their own, so re-fetching on every change
 // would buy nothing. `data-design` on the link is the idempotence key.
