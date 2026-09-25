@@ -601,8 +601,7 @@
 /* --- The desktop's popover (O15a.1, difference 3) -----------------------------
    300px is already the app's `.popover { max-width }`, so nothing re-sizes the
    card, and must not: tags, owners and covers carry their own caps. The
-   editor's head is the sheet's title at 17px with its ×, over a hairline; it
-   bleeds to the card's edge through the card's own 8px padding and is
+   editor's head is the sheet's title at 17px with its ×; it bleeds to the card's edge through the card's own 8px padding and is
    `flex: none`, so a capped card still gives way through the child it always
    did. The account menu's `.popover__head` is a caption, not this — hence
    `--editor`. */
@@ -620,7 +619,9 @@
   gap: 10px;
   margin: -8px -8px 4px;
   padding: 4px 4px 4px 16px;
-  border-bottom: 1px solid var(--line);
+  /* No rule under the head (the app's `.popover__head` draws one): O15a draws
+     none, and the first row's own hairline sits 4px below — a doubled line. */
+  border-bottom: 0;
 }
 :root[data-design="ocean"] .popover__title {
   margin: 0;
