@@ -498,7 +498,8 @@ What the app does, in detail. For a short overview see the
   („Als gespielt markieren") — and nothing at all before a game is chosen. Once
   it is played, the table carries a stamp with the date and the winners as
   seats, with the picker behind „Ändern". Recording the winner(s) is an
-  optional follow-up step afterwards. When nobody won, the same step records
+  optional follow-up step afterwards; the picker stays open while winners are
+  tapped, so a shared win is recorded in one go, and „Fertig" closes it. When nobody won, the same step records
   **how it ended instead** — „Verloren" (a cooperative game beat the table),
   „Kein Sieger" (a game that is not about winning) or „Fortsetzung folgt" (a
   campaign session that is over for tonight while the campaign is not). A winner

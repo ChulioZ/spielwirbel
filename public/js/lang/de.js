@@ -1081,7 +1081,7 @@ I18N.de = {
   'vote.scaleLow': 'gar nicht',
   'vote.scaleHigh': 'unbedingt',
   'vote.scale2': 'eher nicht',
-  'vote.scale3': 'kann ich',
+  'vote.scale3': 'wäre okay',
   'vote.scale4': 'gern',
   'vote.ratingLabelWord': '{n} von {max} – {word}',
   'vote.rates': '{name} wertet',
