@@ -240,6 +240,16 @@ function renderPokaleTab(round) {
 
   const { wins, ranked, winners, rankOf } = roundStandings(round);
 
+  /* Der Tisch sets the award PLAQUES in a column beside the stage (#1276,
+     T13.2): the podium and its summary line on the left, the plaques to its
+     right from 1280px. Below that the split is a plain block, so the plaques
+     follow the podium — the markup order IS the reading order at every width,
+     and no `order:` is needed (WCAG 2.4.3). Klassisch gets no wrapper: `stageTo`
+     is the section itself and its DOM is byte-for-byte what it was. */
+  const split = designIs('tisch') ? h('<div class="pokale-split"><div class="pokale-split__stage"></div></div>') : null;
+  if (split) sec.appendChild(split);
+  const stageTo = split ? split.firstElementChild : sec;
+
   // Podium columns by rank: left = 2, center = 1, right = 3. A COLUMN IS A
   // RANK, NOT A MEMBER (#836) — tied members share one step rather than
   // widening the stage into a wrapping row of pedestals.
@@ -275,7 +285,7 @@ function renderPokaleTab(round) {
     podium.querySelectorAll('.podium__entry[data-mid]').forEach((el) => {
       makeMemberLink(el, round.id, el.dataset.mid);
     });
-    sec.appendChild(podium);
+    stageTo.appendChild(podium);
   }
   /* Anyone ranked below the third step drops to the summary line, in standings
      order. Nothing else lands here: the steps are uncapped, so a crowded place
@@ -297,7 +307,7 @@ function renderPokaleTab(round) {
     restEl.querySelectorAll('.podium__rest-name[data-mid]').forEach((el) => {
       makeMemberLink(el, round.id, el.dataset.mid);
     });
-    sec.appendChild(restEl);
+    stageTo.appendChild(restEl);
   }
 
   // One lazy-cover loader per section, shared by every trophy card below
@@ -434,7 +444,7 @@ function renderPokaleTab(round) {
     );
   }
 
-  if (cards.children.length) sec.appendChild(cards);
+  if (cards.children.length) (split || sec).appendChild(cards);
   app.appendChild(sec);
   app.appendChild(renderRecapSection(round, recap));
 }
