@@ -243,3 +243,39 @@ test('Einstellungen renames and deletes (with a confirm)', async (t) => {
   assert.match(asked[0], /Zwei/);
   await waitFor(() => rowNames(dom).length === 1, { label: 'the row to go' });
 });
+
+/* #1346: the save control sits BESIDE the trigger it saves the result of, not
+   under the pool. `.fbar` and `.fbar-mount` are `display: contents` in the
+   setup filter bar, so DOM order inside it IS the flex order — the button has to
+   be the trigger's next sibling (and so ahead of the chip line, which takes a
+   line of its own), and the reason line has to come after the chips. */
+test('the save control follows the Filter trigger, and its reason line ends the filter bar', (t) => {
+  const dom = loadApp();
+  t.after(() => dom.close());
+  dom.set('api', async () => ({}));
+  dom.call('showStartSession', round(), { tagIds: ['t1'] });
+  const bar = dom.document.querySelector('.setup-filterbar');
+  const trigger = bar.querySelector('.fbar__trigger');
+  const btn = dom.document.querySelector('.setup-save__btn');
+  const reason = dom.document.querySelector('.setup-save__reason');
+  assert.ok(trigger, 'the fixture offers a filter');
+  assert.equal(trigger.nextElementSibling, btn, 'the save button is not beside the trigger');
+  const chips = bar.querySelector('.fbar__chips');
+  assert.ok(btn.compareDocumentPosition(chips) & 4, 'the chip line must follow the button');
+  assert.equal(bar.lastElementChild, reason, 'the reason line must end the filter bar, after the chips');
+  // The label is a real text node the button is named by — hidden visually on a
+  // phone, never removed, so the accessible name stays single-sourced.
+  assert.equal(btn.querySelector('.setup-save__label').textContent, dom.run("t('savedFilters.save')"));
+});
+
+test('with nothing to filter by, the save control still renders in the filter bar', (t) => {
+  const dom = loadApp();
+  t.after(() => dom.close());
+  dom.set('api', async () => ({}));
+  const bare = (id) => ({ id, title: 'Spiel ' + id });
+  dom.call('showStartSession', round({ games: [bare('g1'), bare('g2')], tags: [] }));
+  const mount = dom.document.querySelector('#filterMount');
+  assert.equal(mount.hidden, true, 'the fixture must offer no filter at all');
+  const btn = dom.document.querySelector('.setup-save__btn');
+  assert.equal(mount.nextElementSibling, btn, 'the save button must stand in the filter bar after the mount');
+});
