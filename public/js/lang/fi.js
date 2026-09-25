@@ -1263,6 +1263,8 @@ I18N.fi = {
   'stats.plays.many': '{n} sessiota',
   'stats.ratedOne': 'Pisteet {score} — {n} arvio',
   'stats.rated': 'Pisteet {score} — {n} arviota',
+  'stats.ratedPlaysOne': '{rated} · {n} sessio',
+  'stats.ratedPlays': '{rated} · {n} sessiota',
   'stats.counter.players': 'pelaajaa',
   'stats.counter.rounds': 'porukkaa',
   'stats.counter.games': 'peliä',

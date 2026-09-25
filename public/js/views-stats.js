@@ -75,12 +75,21 @@ const STATS_PODIUMS = [
      ⓘ is explaining, so it reads correctly there.
 
      The number goes through the locale formatter, not straight into the string:
-     a raw JS number interpolates as "4.6", and German writes "4,6". */
+     a raw JS number interpolates as "4.6", and German writes "4,6".
+
+     THE PLAYS RIDE ALONG (#1329): they lift the score and count as evidence for
+     this podium, so „1 Bewertung" alone would read as too thin to qualify. Two
+     counts, two plurals — the rating line inflects on its own and is handed in
+     whole as {rated}, the outer pair on the plays. No plays, no suffix: a game
+     that qualified on ratings alone reads as it always did. */
   {
     key: 'bestRated',
     icon: 'ti-star',
     info: 'score',
-    line: (e) => tn(e.ratings, 'stats.ratedOne', 'stats.rated', { score: fmtAvg(e.score) }),
+    line: (e) => {
+      const rated = tn(e.ratings, 'stats.ratedOne', 'stats.rated', { score: fmtAvg(e.score) });
+      return e.plays > 0 ? tn(e.plays, 'stats.ratedPlaysOne', 'stats.ratedPlays', { rated }) : rated;
+    },
   },
 ];
 

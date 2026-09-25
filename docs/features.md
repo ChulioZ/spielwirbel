@@ -507,7 +507,8 @@ What the app does, in detail. For a short overview see the
   („Als gespielt markieren") — and nothing at all before a game is chosen. Once
   it is played, the table carries a stamp with the date and the winners as
   seats, with the picker behind „Ändern". Recording the winner(s) is an
-  optional follow-up step afterwards. When nobody won, the same step records
+  optional follow-up step afterwards; the picker stays open while winners are
+  tapped, so a shared win is recorded in one go, and „Fertig" closes it. When nobody won, the same step records
   **how it ended instead** — „Verloren" (a cooperative game beat the table),
   „Kein Sieger" (a game that is not about winning) or „Fortsetzung folgt" (a
   campaign session that is over for tonight while the campaign is not). A winner
@@ -806,6 +807,9 @@ What the app does, in detail. For a short overview see the
   enough has happened in it. The all-time card („Spielwirbels Dauerbrenner",
   issue #1035) names no period at all — it is the one durable fact about the
   instance's shelf, and it sits between the year card and the best-rated one.
+  The best-rated card ranks on the same Spielwirbel-Score a round's Regal
+  prints, plays included, and a game qualifies on ratings and plays together —
+  so its line reads „Score 4,2 — 2 Bewertungen · 12 Sessions" (issue #1329).
   The section appears on the logged-out landing
   page, on a shareable `/entdecken` screen and as a home-dashboard tile showing
   the first few rankings with their cover art —

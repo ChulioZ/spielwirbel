@@ -1103,7 +1103,7 @@ I18N.de = {
   'vote.scaleLow': 'gar nicht',
   'vote.scaleHigh': 'unbedingt',
   'vote.scale2': 'eher nicht',
-  'vote.scale3': 'kann ich',
+  'vote.scale3': 'wäre okay',
   'vote.scale4': 'gern',
   'vote.ratingLabelWord': '{n} von {max} – {word}',
   'vote.rates': '{name} wertet',
@@ -1356,6 +1356,11 @@ I18N.de = {
   'stats.plays.many': '{n} Sessions',
   'stats.ratedOne': 'Score {score} — {n} Bewertung',
   'stats.rated': 'Score {score} — {n} Bewertungen',
+  // The best-rated line with the plays that lifted its score (#1329).
+  // {rated} is the stats.ratedOne/stats.rated line above, already
+  // inflected for the rating count; {n} is the play count.
+  'stats.ratedPlaysOne': '{rated} · {n} Session',
+  'stats.ratedPlays': '{rated} · {n} Sessions',
   'stats.counter.players': 'Spieler*innen',
   'stats.counter.rounds': 'Runden',
   'stats.counter.games': 'Spiele',

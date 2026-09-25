@@ -1295,6 +1295,8 @@ I18N.nl = {
   'stats.plays.many': '{n} sessies',
   'stats.ratedOne': 'Score {score} — {n} beoordeling',
   'stats.rated': 'Score {score} — {n} beoordelingen',
+  'stats.ratedPlaysOne': '{rated} · {n} sessie',
+  'stats.ratedPlays': '{rated} · {n} sessies',
   'stats.counter.players': 'spelers',
   'stats.counter.rounds': 'groepen',
   'stats.counter.games': 'spellen',

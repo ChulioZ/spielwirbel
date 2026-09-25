@@ -145,21 +145,73 @@ test('finishing stamps the box and opens the picker, because who won is the one 
   assert.ok(dom.app.querySelector('.tisch-bar').hidden, 'the phone CTA is spent');
 });
 
-test('recording a winner collapses the picker to the seats', async (t) => {
-  const { dom } = await show(t, { finished: true });
+/* #1327: the picker stays OPEN across party taps, because more than one person
+   often won — a shared win among three used to cost three „Ändern" presses.
+   Only „Fertig" (or an ending, which is single-choice) closes it. The picker is
+   one shared renderer for every design, so this runs against it with no design
+   worn and needs no per-design twin. */
+test('several winners are recorded in a row, and „Fertig" shows them as seats', async (t) => {
+  const { dom, sent } = await show(t, { finished: true });
   // An archived session opens on the PICTURE, not on the picker.
   assert.equal(dom.app.querySelectorAll('.winner-chips').length, 0,
     'a session finished months ago must not open on a 344px picker');
   btn(dom, /Ändern/).click();
   assert.equal(dom.app.querySelectorAll('.winner-chips').length, 2, '„Ändern" reopens it');
 
+  const chip = (rx) => [...dom.app.querySelectorAll('.winner-chip')].find((c) => rx.test(c.textContent));
+  chip(/Anna/).click();
+  await flush();
+  assert.equal(dom.app.querySelectorAll('.winner-chips').length, 2, 'a party tap keeps the picker open');
+  chip(/Ben/).click();
+  await flush();
+  assert.deepEqual(sent.map((s) => s.body.winnerIds), [['m1'], ['m1', 'm2']],
+    'each tap saves the whole list, without „Ändern" in between');
+  assert.equal(chip(/Anna/).getAttribute('aria-pressed'), 'true');
+  assert.equal(chip(/Ben/).getAttribute('aria-pressed'), 'true');
+  assert.equal(band(dom).dataset.state, 'picking');
+
+  btn(dom, /Fertig/).click();
+  assert.equal(dom.app.querySelectorAll('.winner-chips').length, 0, '„Fertig" closes it');
+  const seats = [...band(dom).querySelectorAll('.tisch__seats .seat')];
+  assert.deepEqual(seats.map((s) => s.querySelector('.seat__name').textContent.trim()), ['Anna', 'Ben']);
+  assert.match(band(dom).querySelector('.tisch__won').textContent, /haben gewonnen/);
+});
+
+test('deselecting a winner also keeps the picker open', async (t) => {
+  const { dom, sent } = await show(t, { finished: true, winnerIds: ['m1', 'm2'] });
+  btn(dom, /Ändern/).click();
   [...dom.app.querySelectorAll('.winner-chip')].find((c) => /Anna/.test(c.textContent)).click();
   await flush();
-  assert.equal(dom.app.querySelectorAll('.winner-chips').length, 0, 'and recording closes it again');
-  const seats = band(dom).querySelectorAll('.tisch__seats .seat');
-  assert.equal(seats.length, 1);
-  assert.match(seats[0].textContent, /Anna/);
-  assert.match(band(dom).querySelector('.tisch__won').textContent, /hat gewonnen/);
+  assert.deepEqual(sent.map((s) => s.body.winnerIds), [['m2']]);
+  assert.equal(band(dom).dataset.state, 'picking', 'a correction is not the end of the question');
+});
+
+/* The re-render detaches the tapped button, so without a hand-back keyboard and
+   screen-reader focus falls to <body> — now that the picker stays open, that
+   would mean a full Tab back into it for every further winner. */
+test('focus returns to the re-rendered chip of the party just tapped', async (t) => {
+  const { dom } = await show(t, { finished: true });
+  btn(dom, /Ändern/).click();
+  const ben = () => [...dom.app.querySelectorAll('.winner-chip')].find((c) => /Ben/.test(c.textContent));
+  const before = ben();
+  before.focus();
+  before.click();
+  await flush();
+  assert.notEqual(ben(), before, 'the chip really was rebuilt');
+  assert.equal(dom.window.document.activeElement, ben(), 'focus is on the new Ben chip');
+  assert.equal(ben().getAttribute('aria-pressed'), 'true');
+});
+
+test('closing the picker moves no focus', async (t) => {
+  const { dom } = await show(t, { finished: true });
+  btn(dom, /Ändern/).click();
+  const ending = dom.app.querySelectorAll('.winner-chips')[1].querySelector('.winner-chip');
+  ending.focus();
+  ending.click();
+  await flush();
+  assert.equal(dom.app.querySelectorAll('.winner-chips').length, 0, 'an ending closes it');
+  assert.equal(dom.window.document.activeElement, dom.window.document.body,
+    'the hand-back is for an OPEN picker only — closing must not pull focus anywhere');
 });
 
 test('a team win renders one seat per member', async (t) => {
@@ -222,7 +274,9 @@ test('the band says „picking" while and only while the picker is open', async 
   btn(dom, /Ändern/).click();
   [...dom.app.querySelectorAll('.winner-chip')].find((c) => /Ben/.test(c.textContent)).click();
   await flush();
-  assert.equal(band(dom).dataset.state, 'done', 'recording a winner closes it too');
+  assert.equal(band(dom).dataset.state, 'picking', 'recording a winner keeps it open (#1327)');
+  btn(dom, /Fertig/).click();
+  assert.equal(band(dom).dataset.state, 'done');
 
   btn(dom, /Zurücksetzen/).click();
   await flush();

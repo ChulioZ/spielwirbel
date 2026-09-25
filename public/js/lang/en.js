@@ -1365,6 +1365,8 @@ I18N.en = {
   'stats.plays.many': '{n} sessions',
   'stats.ratedOne': 'Score {score} — {n} rating',
   'stats.rated': 'Score {score} — {n} ratings',
+  'stats.ratedPlaysOne': '{rated} · {n} session',
+  'stats.ratedPlays': '{rated} · {n} sessions',
   'stats.counter.players': 'players',
   'stats.counter.rounds': 'rounds',
   'stats.counter.games': 'games',

@@ -1317,6 +1317,8 @@ I18N.es = {
   'stats.plays.many': '{n} sesiones',
   'stats.ratedOne': 'Puntuación {score} — {n} valoración',
   'stats.rated': 'Puntuación {score} — {n} valoraciones',
+  'stats.ratedPlaysOne': '{rated} · {n} sesión',
+  'stats.ratedPlays': '{rated} · {n} sesiones',
   'stats.counter.players': 'jugadores',
   'stats.counter.rounds': 'grupos',
   'stats.counter.games': 'juegos',

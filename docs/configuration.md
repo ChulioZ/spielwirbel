@@ -550,8 +550,15 @@ Dauerbrenner") is the exception: `PUBLIC_STATS_MIN_PLAYS_ALL` and
 `PUBLIC_STATS_MIN_PLAY_TENANTS_ALL` both default to **0**, so it publishes
 whatever it says — the levers are kept only so it can be pulled back live.
 Best rated pairs `PUBLIC_STATS_MIN_RATINGS`
-(5) with `PUBLIC_STATS_MIN_RATING_TENANTS` (2) — the count floor is why the card
-can rank on the average at all. Like every ceiling here they are read per call,
+(5) with `PUBLIC_STATS_MIN_RATING_TENANTS` (2). Since issue #1329 both count
+**evidence**, not ratings alone: the first is ratings **plus** plays (every
+non-cancelled session that chose the game, finished or not — the same count the
+Regal's score is lifted by), the second the larger of the two account spreads
+(the rounds that rated it, the rounds that played it). A game still needs at
+least one rating whatever the floors say, so an unrated game never tops a card
+called „Bestbewertet". The names still say `RATING` on purpose — renaming them
+would silently reset a value an operator has already set. Like every ceiling
+here they are read per call,
 so raising one pulls a single metric back without a deploy. A `0` is honoured
 rather than falling back to the default.
 

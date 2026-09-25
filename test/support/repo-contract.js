@@ -5379,8 +5379,12 @@ module.exports = function repoContract(repo) {
          readable as one rule. */
       await play(null, null);
       // Neither of these is a play: one never finished, one settled on nothing.
+      // (The unfinished one IS a lift play — see the end of this case.)
       await play('2026-08-12T10:00:00.000Z', '2026-08-12T10:00:00.000Z', { finished: false });
       await play('2026-08-12T10:00:00.000Z', '2026-08-12T10:00:00.000Z', { chosenGameId: null });
+      // A cancelled session carrying a chosen game — a blob the routes refuse to
+      // produce, which is why `playCounts` guards it anyway. Nothing counts it.
+      await play('2026-08-12T10:00:00.000Z', null, { finished: false, cancelled: true });
 
       const row = await rowFor(id);
       assert.equal(row.plays.week.count, 1, 'only Wednesday; the Sunday-23:00 evening is the week before, however late it was settled');
@@ -5396,6 +5400,36 @@ module.exports = function repoContract(repo) {
          `count(*)` in SQL), which is exactly why it is pinned in the contract. */
       assert.equal(row.plays.all.count, 7, 'every finished play, however old — the stamp-less row included');
       assert.equal(row.plays.all.tenants, 1);
+      /* The LIFT count (#1329) is the Regal's `playCounts`: every non-cancelled
+         session with a chosen game, FINISHED OR NOT. So it is `all` plus the
+         open evening — 8, not 7 — and the cancelled one stays out. This is the
+         pair that tells the two definitions apart, and the one that failed on
+         Postgres while its plays read filtered `finished` in the WHERE. */
+      assert.equal(row.plays.lift.count, 8, 'the open evening is a play on the shelf; the cancelled one is not');
+      assert.equal(row.plays.lift.tenants, 1);
+    });
+
+    await t.test('the lift count spreads over tenants and never needs a finished play', async () => {
+      /* A game played only in OPEN sessions: the finished-only counts are all
+         zero, so on Postgres the grouped read yields a row whose every FILTER
+         but the lift one is empty — the shape a WHERE on `finished` would have
+         dropped entirely. */
+      const id = uniq();
+      const t1 = `pga-${uniq()}`;
+      const t2 = `pga-${uniq()}`;
+      for (const tenant of [t1, t2]) {
+        const round = await repo.createRound(tenant, { name: 'L', members: ['Ann'] });
+        const game = await repo.createGame(tenant, round.id, bgg(id));
+        await repo.createSession(tenant, round.id, {
+          gameIds: [game.id], votes: {}, createdAt: daysAgo(1),
+          finished: false, finishedAt: null, chosenGameId: game.id,
+        });
+      }
+      const row = await rowFor(id);
+      assert.equal(row.plays.lift.count, 2);
+      assert.equal(row.plays.lift.tenants, 2);
+      assert.equal(row.plays.all.count, 0, 'the most-played counts stay finished-only');
+      assert.equal(row.plays.week.count, 0);
     });
 
     await t.test('ratings bin into tiles across sessions, people and tenants', async () => {
@@ -5491,6 +5525,7 @@ module.exports = function repoContract(repo) {
       const other = await rowFor(theirs);
       assert.equal(other.ratings.count, 0, 'the cross-round vote must not be credited');
       assert.equal(other.plays.week.count, 0, 'nor a cross-round chosenGameId as a play');
+      assert.equal(other.plays.lift.count, 0, 'nor as a lift play');
     });
 
     await t.test('a demo tenant contributes to nothing', async () => {
@@ -5516,6 +5551,7 @@ module.exports = function repoContract(repo) {
       const row = await rowFor(id);
       assert.equal(row.owners, 1, 'the demo shelf must not count as an owner');
       assert.equal(row.plays.week.count, 1, 'the demo night must not count as a play');
+      assert.equal(row.plays.lift.count, 1, 'nor as a lift play');
       assert.equal(row.ratings.count, 0, 'the demo rating must not count');
     });
 

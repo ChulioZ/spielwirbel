@@ -1297,6 +1297,8 @@ I18N.pt = {
   'stats.plays.many': '{n} sessões',
   'stats.ratedOne': 'Pontuação {score} — {n} avaliação',
   'stats.rated': 'Pontuação {score} — {n} avaliações',
+  'stats.ratedPlaysOne': '{rated} · {n} sessão',
+  'stats.ratedPlays': '{rated} · {n} sessões',
   'stats.counter.players': 'jogadores',
   'stats.counter.rounds': 'grupos',
   'stats.counter.games': 'jogos',
