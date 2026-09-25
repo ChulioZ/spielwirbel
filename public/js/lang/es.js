@@ -1099,6 +1099,13 @@ I18N.es = {
   'vote.deepOcean': 'Aún en lo profundo',
   'vote.deepTextOceanOne': 'Queda {n} carta esperando abajo. El resultado solo sale a flote cuando termine la votación.',
   'vote.deepTextOcean': 'Quedan {n} cartas esperando abajo. El resultado solo sale a flote cuando termine la votación.',
+  // Ocean's shared vote (#1214, O4.3/O6.5): the pass-device blind, addressed to
+  // the table, and its relay row; then the live vote's „in der Tiefe" block.
+  'vote.turnOcean': 'Le toca a {name}.',
+  'vote.goOcean': 'Soy {name}: mostrar cartas',
+  'vote.relayNow': 'le toca',
+  'lobby.deepTextOceanOne': 'Las cartas de {name} ya están abajo. Lo que se ha valorado solo sale a flote cuando termine la votación.',
+  'lobby.deepTextOcean': 'Las cartas de {n} personas ya están abajo. Lo que se ha valorado solo sale a flote cuando termine la votación.',
   'vote.toast.saved': 'Resultados guardados',
 
   'finale.crumb': 'Final',

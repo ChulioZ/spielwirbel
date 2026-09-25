@@ -1,7 +1,9 @@
 /* Spielwirbel – Ocean's session loop (#1213): the setup (O2.2 at 390, O4.1 at
    1440), the vote card's desktop side columns (O4.2), and the result's columns
    (O2.4, O4.4). Sheets: docs/design/ocean/Ocean-O2-Phone-Kern.dc.html and
-   Ocean-O4-Session-Desktop.dc.html.
+   Ocean-O4-Session-Desktop.dc.html. #1214 added the pass-device blind (O4.3,
+   O6.5) and the live vote's „Noch in der Tiefe" block — oceanBlind() and
+   composeOceanLobby() below.
 
    Like Der Tisch's setup (views-session-setup-tisch.js), everything here
    RE-COMPOSES markup the Klassisch path has already built: every control keeps
@@ -120,6 +122,64 @@ function oceanVoteSides(round, people, person, votedIds, left) {
        <span class="ocean-deep__cards" aria-hidden="true">${'<span class="ocean-deep__card"></span>'.repeat(Math.min(left, 3))}</span>
      </aside>`) : null;
   return { raters, deep };
+}
+
+/* The pass-device blind (#1214 — O4.3 at 1440, O6.5 at 390): the one screen of
+   Ocean that is entirely deep water, because it is the moment the device
+   changes hands and nothing is shown. It replaces the Klassisch handover card
+   rather than repainting it: the sentence is addressed to the TABLE („Clara ist
+   dran.") where Klassisch's speaks to the person, the action says who is taking
+   the device, and the progress bar gives way to the relay row — who is done,
+   who is up, who is still waiting — which is the reading the sheet draws.
+
+   The ids stay Klassisch's (#goBtn, #backBtn), so startVoting() wires this
+   exactly as it wires the card. The person's colour is only the RING round the
+   avatar: on deep water no member tone is text-safe, so every word is
+   --deep-ink. */
+function oceanBlind(round, session, person, canBack) {
+  const voted = new Set(session.votedIds || []);
+  const seats = sessionPeople(round, session).map((p) => {
+    const state = p.id === person.id ? 'now' : voted.has(p.id) ? 'done' : 'open';
+    const key = { now: 'vote.relayNow', done: 'vote.raterDone', open: 'vote.raterOpen' }[state];
+    return `<li class="ocean-relay__seat is-${state}">
+         <span class="avatar${p.guest ? ' avatar--guest' : ''}"${p.guest ? '' : ` style="background:${memberColor(round, p.id)}"`}>${avatarFace(initials(p.name), { userId: p.userId })}</span>
+         <span class="ocean-relay__name">${esc(personLabel(p))}</span>
+         <span class="ocean-relay__state">${esc(t(key))}</span>
+       </li>`;
+  }).join('');
+  return h(`<div class="handover handover--ocean">
+      <span class="handover__avatar" style="--ring:${personColor(round, person)}">${avatarFace(initials(person.name), { userId: person.userId })}</span>
+      <h1 class="handover__name">${esc(t('vote.turnOcean', { name: personLabel(person) }))}</h1>
+      <p class="handover__sub">${esc(t('vote.handoverSub'))}</p>
+      <button class="handover__go" id="goBtn"><i class="ti ti-cards" aria-hidden="true"></i> ${esc(t('vote.goOcean', { name: personLabel(person) }))}</button>
+      <ul class="ocean-relay">${seats}</ul>
+      ${canBack ? `<button class="handover__back" id="backBtn"><i class="ti ti-chevron-left" aria-hidden="true"></i> ${esc(t('vote.back'))}</button>` : ''}
+    </div>`);
+}
+
+/* The live vote under Ocean (#1214): „Noch in der Tiefe" under the roster,
+   naming what the lobby is keeping hidden — the cards of everyone who has
+   already rated. With nobody in yet nothing is hidden, so the block stands down
+   the way the vote card's does on its last card.
+
+   Appended INSIDE the roster, not as a sixth child of `.live-vote`: the desktop
+   grid places the panel against the roster's row, and Der Tisch's spec pins
+   those five children (test/tisch-live-vote.test.js). */
+function composeOceanLobby(root, peopleEl, people, voted) {
+  root.classList.add('live-vote--ocean');
+  const done = people.filter((p) => voted.has(p.id));
+  if (!done.length) return;
+  // The one form names the person; the other counts them. Both get both params,
+  // since a locale whose plural rules never pick "one" (ko) reads the count.
+  const words = tn(done.length, 'lobby.deepTextOceanOne', 'lobby.deepTextOcean', {
+    n: done.length,
+    name: personLabel(done[0]),
+  });
+  peopleEl.appendChild(h(`<section class="ocean-deep" aria-labelledby="oceanLobbyDeep">
+       <h2 class="ocean-side__title" id="oceanLobbyDeep">${esc(t('vote.deepOcean'))}</h2>
+       <p class="ocean-deep__text">${esc(words)}</p>
+       <span class="ocean-deep__cards" aria-hidden="true">${'<span class="ocean-deep__card"></span>'.repeat(Math.min(done.length, 3))}</span>
+     </section>`));
 }
 
 /* The result, in columns (O4.4): the people, then the head with the band (the

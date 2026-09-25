@@ -1059,6 +1059,13 @@ I18N.fi = {
   'vote.deepOcean': 'Vielä syvyydessä',
   'vote.deepTextOceanOne': 'Vielä {n} kortti odottaa syvällä. Tulos nousee pintaan vasta, kun äänestys on ohi.',
   'vote.deepTextOcean': 'Vielä {n} korttia odottaa syvällä. Tulos nousee pintaan vasta, kun äänestys on ohi.',
+  // Ocean's shared vote (#1214, O4.3/O6.5): the pass-device blind, addressed to
+  // the table, and its relay row; then the live vote's „in der Tiefe" block.
+  'vote.turnOcean': '{name} on vuorossa.',
+  'vote.goOcean': 'Olen {name} – näytä kortit',
+  'vote.relayNow': 'vuorossa',
+  'lobby.deepTextOceanOne': '{name} on jo arvioinut – kortit ovat syvällä. Arviot nousevat pintaan vasta, kun äänestys on ohi.',
+  'lobby.deepTextOcean': '{n} henkilön kortit ovat jo syvällä. Arviot nousevat pintaan vasta, kun äänestys on ohi.',
   'vote.toast.saved': 'Tulokset tallennettu',
 
   'finale.crumb': 'Finaali',

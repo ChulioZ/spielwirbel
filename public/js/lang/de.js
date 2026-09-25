@@ -1132,6 +1132,13 @@ I18N.de = {
   'vote.deepOcean': 'Noch in der Tiefe',
   'vote.deepTextOceanOne': 'Noch {n} Karte wartet unten. Das Ergebnis taucht erst auf, wenn die Abstimmung vorbei ist.',
   'vote.deepTextOcean': 'Noch {n} Karten warten unten. Das Ergebnis taucht erst auf, wenn die Abstimmung vorbei ist.',
+  // Ocean's shared vote (#1214, O4.3/O6.5): the pass-device blind, addressed to
+  // the table, and its relay row; then the live vote's „in der Tiefe" block.
+  'vote.turnOcean': '{name} ist dran.',
+  'vote.goOcean': 'Ich bin {name} — Karten zeigen',
+  'vote.relayNow': 'ist dran',
+  'lobby.deepTextOceanOne': 'Die Karten von {name} liegen schon unten. Was gewertet wurde, taucht erst auf, wenn die Abstimmung vorbei ist.',
+  'lobby.deepTextOcean': 'Die Karten von {n} Personen liegen schon unten. Was gewertet wurde, taucht erst auf, wenn die Abstimmung vorbei ist.',
   'vote.toast.saved': 'Ergebnisse gespeichert',
 
   'finale.crumb': 'Finale',

@@ -1092,6 +1092,13 @@ I18N.it = {
   'vote.deepOcean': 'Ancora negli abissi',
   'vote.deepTextOceanOne': 'Ancora {n} carta aspetta sul fondo. Il risultato riemerge solo a votazione finita.',
   'vote.deepTextOcean': 'Ancora {n} carte aspettano sul fondo. Il risultato riemerge solo a votazione finita.',
+  // Ocean's shared vote (#1214, O4.3/O6.5): the pass-device blind, addressed to
+  // the table, and its relay row; then the live vote's „in der Tiefe" block.
+  'vote.turnOcean': 'Tocca a {name}.',
+  'vote.goOcean': 'Sono {name}: mostra le carte',
+  'vote.relayNow': 'è il suo turno',
+  'lobby.deepTextOceanOne': 'Le carte di {name} sono già sul fondo. Le valutazioni riemergono solo a votazione finita.',
+  'lobby.deepTextOcean': 'Le carte di {n} persone sono già sul fondo. Le valutazioni riemergono solo a votazione finita.',
   'vote.toast.saved': 'Risultati salvati',
 
   'finale.crumb': 'Finale',

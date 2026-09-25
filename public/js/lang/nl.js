@@ -1088,6 +1088,13 @@ I18N.nl = {
   'vote.deepOcean': 'Nog in de diepte',
   'vote.deepTextOceanOne': 'Nog {n} kaart wacht beneden. De uitslag komt pas boven als de stemming voorbij is.',
   'vote.deepTextOcean': 'Nog {n} kaarten wachten beneden. De uitslag komt pas boven als de stemming voorbij is.',
+  // Ocean's shared vote (#1214, O4.3/O6.5): the pass-device blind, addressed to
+  // the table, and its relay row; then the live vote's „in der Tiefe" block.
+  'vote.turnOcean': '{name} is aan de beurt.',
+  'vote.goOcean': 'Ik ben {name} — kaarten tonen',
+  'vote.relayNow': 'is aan de beurt',
+  'lobby.deepTextOceanOne': 'De kaarten van {name} liggen al beneden. Wat er beoordeeld is, komt pas boven als de stemming voorbij is.',
+  'lobby.deepTextOcean': 'De kaarten van {n} personen liggen al beneden. Wat er beoordeeld is, komt pas boven als de stemming voorbij is.',
   'vote.toast.saved': 'Resultaten opgeslagen',
 
   'finale.crumb': 'Finale',

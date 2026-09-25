@@ -1041,6 +1041,13 @@ I18N.ko = {
   'vote.deepOcean': '아직 깊은 곳에',
   'vote.deepTextOceanOne': '아래에 카드 {n}장이 더 기다리고 있어요. 결과는 투표가 끝나야 떠올라요.',
   'vote.deepTextOcean': '아래에 카드 {n}장이 더 기다리고 있어요. 결과는 투표가 끝나야 떠올라요.',
+  // Ocean's shared vote (#1214, O4.3/O6.5): the pass-device blind, addressed to
+  // the table, and its relay row; then the live vote's „in der Tiefe" block.
+  'vote.turnOcean': '{name} 차례예요.',
+  'vote.goOcean': '{name} 본인이에요 — 카드 보기',
+  'vote.relayNow': '차례',
+  'lobby.deepTextOceanOne': '{name}님의 카드는 이미 아래에 있어요. 평가는 투표가 끝나야 떠올라요.',
+  'lobby.deepTextOcean': '{n}명의 카드가 이미 아래에 있어요. 평가는 투표가 끝나야 떠올라요.',
   'vote.toast.saved': '결과를 저장했어요',
   'finale.crumb': '결선',
   'finale.title': '모든 표가 들어왔어요.',

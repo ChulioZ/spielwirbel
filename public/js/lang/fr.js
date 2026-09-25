@@ -1093,6 +1093,13 @@ I18N.fr = {
   'vote.deepOcean': 'Encore dans les profondeurs',
   'vote.deepTextOceanOne': 'Encore {n} carte attend en bas. Le résultat ne remonte qu’une fois le vote terminé.',
   'vote.deepTextOcean': 'Encore {n} cartes attendent en bas. Le résultat ne remonte qu’une fois le vote terminé.',
+  // Ocean's shared vote (#1214, O4.3/O6.5): the pass-device blind, addressed to
+  // the table, and its relay row; then the live vote's „in der Tiefe" block.
+  'vote.turnOcean': 'C’est au tour de {name}.',
+  'vote.goOcean': 'Je suis {name} — montrer les cartes',
+  'vote.relayNow': 'c’est son tour',
+  'lobby.deepTextOceanOne': 'Les cartes de {name} sont déjà en bas. Les notes ne remontent qu’une fois le vote terminé.',
+  'lobby.deepTextOcean': 'Les cartes de {n} personnes sont déjà en bas. Les notes ne remontent qu’une fois le vote terminé.',
   'vote.toast.saved': 'Résultats enregistrés',
 
   'finale.crumb': 'Finale',
