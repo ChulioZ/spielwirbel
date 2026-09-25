@@ -131,7 +131,7 @@ function keyframes(name) {
 }
 
 test('the tip: Tisch only, inside the motion gate, ≤ 900ms, no end frame', () => {
-  const selector = ':root[data-design="tisch"] .vote--tisch.is-tipped .vote__card';
+  const selector = ':root[data-design="tisch"] .vote--composed.is-tipped .vote__card';
   const users = rulesOf(TISCH_CSS).filter(([, b]) => /animation[-a-z]*:[^;]*tisch-vote-tip/.test(b));
   assert.deepEqual(users.map(([s]) => s), [selector], 'exactly one rule runs it, on the paper card, under Der Tisch');
   const gated = motionRules.filter(([s, b]) => s === selector && b.includes('tisch-vote-tip'));

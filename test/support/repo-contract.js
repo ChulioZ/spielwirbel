@@ -2205,6 +2205,62 @@ module.exports = function repoContract(repo) {
     assert.equal(await repo.reorderTags(T, 'missing', [a.id]), null);
   });
 
+  // Saved session filters (#1328). Round data like tags, so absent until the
+  // first save and an array in both backends; the name and cap rules live
+  // INSIDE the mutator, beside the lock that holds the list.
+  test('saved filters: create, rename, reorder, delete — and the refusals (#1328)', async () => {
+    const round = await freshRound();
+    assert.equal('savedFilters' in round, false, 'absent until the first filter is saved');
+    assert.equal('savedFilters' in (await repo.getRound(T, round.id)), false);
+
+    const body = (name, over = {}) => ({
+      name, tagIds: [], excludeTagIds: [], count: 3, memberIds: [round.members[0].id], ...over,
+    });
+    const a = await repo.createSavedFilter(T, round.id, body('Kinderabend', { multiTable: true }), 3);
+    assert.match(a.id, /^[0-9a-f]{16}$/);
+    assert.deepEqual({ ...a, id: undefined }, { ...body('Kinderabend', { multiTable: true }), id: undefined });
+    const b = await repo.createSavedFilter(T, round.id, body('Nur Koop', { tagMode: 'any' }), 3);
+    assert.deepEqual((await repo.getRound(T, round.id)).savedFilters, [a, b], 'appended, in order');
+    assert.deepEqual((await repo.getRoundMeta(T, round.id)).savedFilters, [a, b], 'the light read carries them too');
+    assert.equal('tagMode' in a, false, 'absent-key discipline survives the round-trip');
+
+    // Names are unique per round, trimmed and case-insensitive — and checked
+    // before the cap, so the more specific answer wins.
+    assert.equal(await repo.createSavedFilter(T, round.id, body(' kinderABEND '), 3), 'name_taken');
+    await repo.createSavedFilter(T, round.id, body('Dritter'), 3);
+    assert.equal(await repo.createSavedFilter(T, round.id, body('Vierter'), 3), 'quota');
+    assert.equal(await repo.createSavedFilter(T, round.id, body('nur koop'), 3), 'name_taken');
+    assert.equal((await repo.getRound(T, round.id)).savedFilters.length, 3, 'a refusal writes nothing');
+
+    // Rename: its own entry is excluded from the clash, so a case fix works.
+    const renamed = await repo.updateSavedFilter(T, round.id, b.id, { name: 'NUR KOOP' });
+    assert.equal(renamed.name, 'NUR KOOP');
+    assert.deepEqual(renamed.tagIds, b.tagIds, 'renaming touches nothing but the name');
+    assert.equal(await repo.updateSavedFilter(T, round.id, b.id, { name: 'kinderabend' }), 'name_taken');
+    assert.equal(await repo.updateSavedFilter(T, round.id, 'ghost', { name: 'X' }), null);
+
+    // Reorder: an exact permutation, or nothing moves.
+    const ids = (await repo.getRound(T, round.id)).savedFilters.map((f) => f.id);
+    const moved = await repo.reorderSavedFilters(T, round.id, [ids[2], ids[0], ids[1]]);
+    assert.deepEqual(moved.map((f) => f.id), [ids[2], ids[0], ids[1]]);
+    assert.deepEqual((await repo.getRound(T, round.id)).savedFilters.map((f) => f.id), [ids[2], ids[0], ids[1]]);
+    assert.equal(await repo.reorderSavedFilters(T, round.id, [ids[0], ids[1]]), 'filters_changed');
+    assert.equal(await repo.reorderSavedFilters(T, round.id, [ids[0], ids[0], ids[1]]), 'filters_changed');
+
+    // Delete; the list stays an array once written, as tags do.
+    assert.equal(await repo.deleteSavedFilter(T, round.id, ids[0]), true);
+    assert.equal(await repo.deleteSavedFilter(T, round.id, ids[0]), false);
+    await repo.deleteSavedFilter(T, round.id, ids[1]);
+    await repo.deleteSavedFilter(T, round.id, ids[2]);
+    assert.deepEqual((await repo.getRound(T, round.id)).savedFilters, []);
+
+    // Missing round, and another tenant's round, read as missing.
+    assert.equal(await repo.createSavedFilter(T, 'missing', body('X'), 3), null);
+    assert.equal(await repo.createSavedFilter(OTHER, round.id, body('X'), 3), null, 'another tenant cannot write here');
+    assert.equal(await repo.reorderSavedFilters(OTHER, round.id, []), null);
+    assert.equal(await repo.deleteSavedFilter(OTHER, round.id, 'x'), false);
+  });
+
   test('tag icons: absent by default, set on create, patchable, clearable (#255)', async () => {
     const round = await freshRound();
 
@@ -4161,8 +4217,28 @@ module.exports = function repoContract(repo) {
     assert.deepEqual(content.members.map((m) => m.name), ['Alice', 'Bob']);
     assert.deepEqual(content.games, [{ id: game.id, title: 'Catan' }]);
     assert.deepEqual(content.tags, [{ id: tag.id, name: 'Koop' }]);
+    assert.deepEqual(content.filters, [], 'no saved filters yet, and the key is still there');
 
     assert.equal(await repo.roundContent('nosuchround'), null);
+  });
+
+  // A saved filter's name is user-authored text (#1328), so a notice about it
+  // needs the same takedown path as a tag: the name is blanked, the filter
+  // survives with its seats.
+  test('roundContent lists saved filter names and redactText blanks one (#1328)', async () => {
+    const round = await freshRound();
+    const f = await repo.createSavedFilter(T, round.id,
+      { name: 'Anstößig', tagIds: [], excludeTagIds: [], count: 2, memberIds: [round.members[0].id] }, 6);
+    const content = await repo.roundContent(round.id);
+    assert.deepEqual(content.filters, [{ id: f.id, name: 'Anstößig' }]);
+
+    const done = await repo.redactText({ kind: 'filter', roundId: round.id, id: f.id }, '[entfernt]');
+    assert.equal(done.previous, 'Anstößig');
+    assert.equal(done.kind, 'filter');
+    const [after] = (await repo.getRound(T, round.id)).savedFilters;
+    assert.equal(after.name, '[entfernt]');
+    assert.deepEqual(after.memberIds, [round.members[0].id], 'the filter itself survives');
+    assert.equal(await repo.redactText({ kind: 'filter', roundId: round.id, id: 'nope' }, 'x'), null);
   });
 
   test('redactText blanks one text field and returns what was there', async () => {
@@ -4888,7 +4964,7 @@ module.exports = function repoContract(repo) {
     // the first half of every one of these and fails only the second.
     const ADOPTION = [
       'roundsWithRetired', 'roundsWithCompleted', 'roundsWithWish', 'roundsWithAnyShelf',
-      'roundsWithTags', 'gamesLinked', 'gamesWithOwnCover', 'gamesWithProviderCover',
+      'roundsWithTags', 'roundsWithSavedFilters', 'gamesLinked', 'gamesWithOwnCover', 'gamesWithProviderCover',
       'gamesWithOwners', 'gamesWithExpansions', 'sessionsWithGuests', 'sessionsWithTeams',
       'sessionsWithVoteLink', 'accountsWithPasskey', 'accountsWithBggUsername',
     ];
@@ -4898,6 +4974,9 @@ module.exports = function repoContract(repo) {
       const tn = `ad-${Math.random().toString(16).slice(2)}`;
       const r = await repo.createRound(tn, { name: 'Genutzt', members: ['Ann'] });
       await repo.addTag(tn, r.id, 'Kurz', null);
+      await repo.createSavedFilter(tn, r.id, {
+        name: 'Kurz', tagIds: [], excludeTagIds: [], count: 3, memberIds: [r.members[0].id],
+      });
 
       // A linked game wearing the PROVIDER's cover.
       await repo.createGame(tn, r.id, gameFields({
@@ -5091,6 +5170,9 @@ module.exports = function repoContract(repo) {
       const tn = `ex-${Math.random().toString(16).slice(2)}`;
       const r = await repo.createRound(tn, { name: 'Ausgenommen', members: ['Ann'] });
       await repo.addTag(tn, r.id, 'Kurz', null);
+      await repo.createSavedFilter(tn, r.id, {
+        name: 'Kurz', tagIds: [], excludeTagIds: [], count: 3, memberIds: [r.members[0].id],
+      });
       await repo.createGame(tn, r.id, gameFields({ title: 'Eins', image: '/uploads/e.webp' }));
       await repo.createSession(tn, r.id, {
         gameIds: [], votes: {}, createdAt: daysAgo(1), finished: true, winnerIds: ['m1'],
@@ -5110,7 +5192,7 @@ module.exports = function repoContract(repo) {
       }
 
       for (const key of ['roundsTotal', 'gamesTotal', 'sessionsTotal', 'accountsTotal',
-        'roundsWithTags', 'gamesWithOwnCover', 'accountsWithBgStats']) {
+        'roundsWithTags', 'roundsWithSavedFilters', 'gamesWithOwnCover', 'accountsWithBgStats']) {
         assert.equal(plain.adoption[key] - hidden.adoption[key], 1, `${key} was not excluded`);
       }
       assert.equal(plain.adoption.funnel.played - hidden.adoption.funnel.played, 1);
@@ -5303,8 +5385,12 @@ module.exports = function repoContract(repo) {
          readable as one rule. */
       await play(null, null);
       // Neither of these is a play: one never finished, one settled on nothing.
+      // (The unfinished one IS a lift play — see the end of this case.)
       await play('2026-08-12T10:00:00.000Z', '2026-08-12T10:00:00.000Z', { finished: false });
       await play('2026-08-12T10:00:00.000Z', '2026-08-12T10:00:00.000Z', { chosenGameId: null });
+      // A cancelled session carrying a chosen game — a blob the routes refuse to
+      // produce, which is why `playCounts` guards it anyway. Nothing counts it.
+      await play('2026-08-12T10:00:00.000Z', null, { finished: false, cancelled: true });
 
       const row = await rowFor(id);
       assert.equal(row.plays.week.count, 1, 'only Wednesday; the Sunday-23:00 evening is the week before, however late it was settled');
@@ -5320,6 +5406,36 @@ module.exports = function repoContract(repo) {
          `count(*)` in SQL), which is exactly why it is pinned in the contract. */
       assert.equal(row.plays.all.count, 7, 'every finished play, however old — the stamp-less row included');
       assert.equal(row.plays.all.tenants, 1);
+      /* The LIFT count (#1329) is the Regal's `playCounts`: every non-cancelled
+         session with a chosen game, FINISHED OR NOT. So it is `all` plus the
+         open evening — 8, not 7 — and the cancelled one stays out. This is the
+         pair that tells the two definitions apart, and the one that failed on
+         Postgres while its plays read filtered `finished` in the WHERE. */
+      assert.equal(row.plays.lift.count, 8, 'the open evening is a play on the shelf; the cancelled one is not');
+      assert.equal(row.plays.lift.tenants, 1);
+    });
+
+    await t.test('the lift count spreads over tenants and never needs a finished play', async () => {
+      /* A game played only in OPEN sessions: the finished-only counts are all
+         zero, so on Postgres the grouped read yields a row whose every FILTER
+         but the lift one is empty — the shape a WHERE on `finished` would have
+         dropped entirely. */
+      const id = uniq();
+      const t1 = `pga-${uniq()}`;
+      const t2 = `pga-${uniq()}`;
+      for (const tenant of [t1, t2]) {
+        const round = await repo.createRound(tenant, { name: 'L', members: ['Ann'] });
+        const game = await repo.createGame(tenant, round.id, bgg(id));
+        await repo.createSession(tenant, round.id, {
+          gameIds: [game.id], votes: {}, createdAt: daysAgo(1),
+          finished: false, finishedAt: null, chosenGameId: game.id,
+        });
+      }
+      const row = await rowFor(id);
+      assert.equal(row.plays.lift.count, 2);
+      assert.equal(row.plays.lift.tenants, 2);
+      assert.equal(row.plays.all.count, 0, 'the most-played counts stay finished-only');
+      assert.equal(row.plays.week.count, 0);
     });
 
     await t.test('ratings bin into tiles across sessions, people and tenants', async () => {
@@ -5415,6 +5531,7 @@ module.exports = function repoContract(repo) {
       const other = await rowFor(theirs);
       assert.equal(other.ratings.count, 0, 'the cross-round vote must not be credited');
       assert.equal(other.plays.week.count, 0, 'nor a cross-round chosenGameId as a play');
+      assert.equal(other.plays.lift.count, 0, 'nor as a lift play');
     });
 
     await t.test('a demo tenant contributes to nothing', async () => {
@@ -5440,6 +5557,7 @@ module.exports = function repoContract(repo) {
       const row = await rowFor(id);
       assert.equal(row.owners, 1, 'the demo shelf must not count as an owner');
       assert.equal(row.plays.week.count, 1, 'the demo night must not count as a play');
+      assert.equal(row.plays.lift.count, 1, 'nor as a lift play');
       assert.equal(row.ratings.count, 0, 'the demo rating must not count');
     });
 

@@ -3,7 +3,7 @@
 /* Der Tisch's vote card (#1268 — T2.4, T4.2, T12.5).
  *
  * Under Der Tisch both vote cards — the hot-seat one (startVoting) and the
- * link one (renderVoteLinkCards) — are composed by public/js/vote-card-tisch.js:
+ * link one (renderVoteLinkCards) — are composed by public/js/vote-card-composed.js:
  * a header on the felt, the card with cover and meta, five worded faces, and on
  * a shared device a hand-off line. The link opens on a felt intro.
  *
@@ -145,7 +145,7 @@ test('Klassisch: the link claim screen and card keep their head, children and fa
 test('Der Tisch: the hot-seat card is header, card and hand-off line, in that order', async (t) => {
   const dom = await wizard(t, { design: 'tisch', session: sessionFixture({ votedIds: ['m4'] }), skipIntro: false });
   const card = dom.app.querySelector('.vote');
-  assert.ok(card.classList.contains('vote--tisch'));
+  assert.ok(card.classList.contains('vote--composed'));
   assert.deepEqual(classesOf(card), ['vote-felt', 'vote__card', 'vote__handoff']);
 
   const head = card.querySelector('.vote-felt');
@@ -163,9 +163,9 @@ test('Der Tisch: the hot-seat card is header, card and hand-off line, in that or
 
   const faces = [...paper.querySelectorAll('.mood')];
   assert.deepEqual(faces.map((b) => text(b.querySelector('.mood__word'))),
-    ['gar nicht', 'eher nicht', 'kann ich', 'gern', 'unbedingt']);
+    ['gar nicht', 'eher nicht', 'wäre okay', 'gern', 'unbedingt']);
   assert.deepEqual(faces.map((b) => b.getAttribute('aria-label')),
-    ['1 von 5 – gar nicht', '2 von 5 – eher nicht', '3 von 5 – kann ich', '4 von 5 – gern', '5 von 5 – unbedingt']);
+    ['1 von 5 – gar nicht', '2 von 5 – eher nicht', '3 von 5 – wäre okay', '4 von 5 – gern', '5 von 5 – unbedingt']);
   assert.equal(card.querySelector('.rating-scale'), null, 'the words replace the two-ended scale');
 
   // Nobody at this device has a seat, so the next open person in seat order.
@@ -259,7 +259,7 @@ test('there is exactly one word key per rung, and every locale gives five distin
 test('the felt header, the hand-off line and the intro set text only in --felt-ink', () => {
   const css = fs.readFileSync(path.join(__dirname, '..', 'public', 'css', 'designs', 'tisch.css'), 'utf8')
     .replace(/\/\*[\s\S]*?\*\//g, '').replace(/@media[^{]+\{/g, '');
-  const felt = /\.vote-felt|\.vote--tisch \.vote__(?:undo|secret)|\.vote__handoff|\.vote-link-intro(?!__mark)|\.vote\.vote--tisch/;
+  const felt = /\.vote-felt|\.vote--composed \.vote__(?:undo|secret)|\.vote__handoff|\.vote-link-intro(?!__mark)|\.vote\.vote--composed/;
   const hits = rulesOf(css).filter(([sel]) => felt.test(sel));
   assert.ok(hits.length >= 8, `only ${hits.length} felt rules found — did the selectors move?`);
   const colours = hits.flatMap(([sel, body]) =>
@@ -279,7 +279,7 @@ test('the felt header, the hand-off line and the intro set text only in --felt-i
 test('the header\'s back control states its own 44px size', () => {
   const css = fs.readFileSync(path.join(__dirname, '..', 'public', 'css', 'designs', 'tisch.css'), 'utf8')
     .replace(/\/\*[\s\S]*?\*\//g, '');
-  const hit = rulesOf(css).find(([sel]) => sel.trim().endsWith('.vote--tisch .vote__undo'));
+  const hit = rulesOf(css).find(([sel]) => sel.trim().endsWith('.vote--composed .vote__undo'));
   assert.ok(hit, 'the Tisch undo rule is missing');
   assert.match(hit[1], /(^|[;\s])width:\s*44px/);
   assert.match(hit[1], /(^|[;\s])height:\s*44px/);

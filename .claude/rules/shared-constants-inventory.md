@@ -394,6 +394,15 @@ grew a `plays.all` column in both backends and the lift stays in JS. Same move
 as `scoreTally`'s histogram: when a boundary cannot take the shared function,
 push the boundary **down** to something the function still owns.
 
+**What the SQL still restates is the definition of a play, and it drifted once**
+(#1329). `plays.all` counted *finished* sessions — right for the „Dauerbrenner"
+card — while the Regal's `playCounts` counts every **non-cancelled** session with
+a `chosenGameId`, finished or not. So the lift now reads its own `plays.lift`
+column, and the one thing guarding the two spellings is the repo contract's
+fixture with an **open** evening in it (`publicGameAggregates`, the calendar case
+and the lift case). A fixture of finished plays only is green against either
+definition.
+
 Two neighbouring values deliberately did **not** join it. `VIOLATION_MAX` stays
 in `table-split.js`: it is a threshold on the *tile* scale, not on the score, and
 it is already coupled to the vote scale there. And `LOW_SCORE` in
@@ -561,6 +570,17 @@ blob alone — the design id, or a pre-#903 page hex through `LEGACY_PAGE_DESIGN
 — so it stays requirable from Node with no registry beside it. The two tables
 are the historical record of sixteen designs that no longer exist in code:
 change an entry and every legacy round mapped through it changes colour.
+
+**The twenty-first is `public/js/member-active.js`** (#1006, required
+server-side since #1328): `activeMembers`, which seats are still playing.
+The session setup screen offers only those seats, and
+`lib/routes/saved-filters.js` stores only those in a saved filter's
+`memberIds`. It is the logic half again, in its smallest form — a one-line
+`!m.retired` — and that is exactly why it is required rather than restated: a
+hand-written copy on the server would be "obviously the same" until a second
+off-the-table state joined `retired`, and then a saved filter would keep a seat
+the screen no longer offers, which the setup screen would silently drop on use
+with nothing to say why.
 
 **Each new instance must be named above.** `test/rule-enumerations.test.js`
 asserts every `require('../public/js/…')` under `lib/routes/` and `lib/` appears

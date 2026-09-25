@@ -175,9 +175,10 @@
   /* The finale stage: a dark "curtain" tinted with the accent, so it matches
      every theme. --stage-bg keeps 18%: it mixes into a dark anchor rather than
      a pure one, so its shift is chromatic (~5/255) and no percentage tunes it
-     out. The three that dilute a light tone INTO that dark bg do re-tune —
+     out. The ones that dilute a light tone INTO that dark bg do re-tune —
      same darker-per-percent effect as above, and here it costs contrast:
-     unretuned, --stage-muted drops 5.48 -> 5.12 and --stage-faint 3.59 -> 3.30. */
+     unretuned, --stage-muted drops 5.48 -> 5.12. (A third, --stage-faint, sat at
+     3.59:1 under the finale's note; it is gone — the note takes --stage-muted.) */
   --stage-anchor: #201a15;
   --stage-bg: color-mix(in oklab, var(--brand) 18%, var(--stage-anchor));
   /* #fff, not --shade: the stage is a dark curtain under BOTH schemes, so
@@ -186,7 +187,6 @@
   --stage-line: color-mix(in oklab, #fff 18%, var(--stage-bg));
   --stage-ink: color-mix(in oklab, var(--brand) 8%, #f7f2e9);
   --stage-muted: color-mix(in oklab, var(--stage-ink) 65%, var(--stage-bg));
-  --stage-faint: color-mix(in oklab, var(--stage-ink) 48%, var(--stage-bg));
 
   --ink: #2b2620;
   --ink-soft: #6b6358;
@@ -1588,6 +1588,17 @@ a.hub-row:hover { background: var(--sunken-soft); }
    pane below 1280px and in the rail above it, following that button either way. */
 .hub-presets { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
 .rail .hub-presets { margin: -6px 0 4px; }
+/* A SAVED filter's chip (#1328) carries a user-authored name of up to 40
+   characters, where the built-ins are two short words. Capped and ellipsised
+   on ONE line rather than wrapped: a wrapped chip is a taller chip, and in the
+   rail or Der Tisch's felt band a two-line pill reads as two controls. The full
+   name stays the button's text (its accessible name) and its `title`.
+   `min-width: 0` on both is what lets the flex item shrink below its text at
+   all — without it `text-overflow` never fires. Unscoped on purpose: every
+   design renders this one row, and a design that restyles the chip inherits the
+   truncation instead of re-deriving it. */
+.chip.hub-preset--saved { max-width: min(100%, 16em); min-width: 0; }
+.hub-preset__name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 /* ≤520px: stretched buttons, so a wrap reads as a deliberate stack instead of
    two ragged pills — the `.sheet__actions` narrow rule's reasoning, applied to
    the page-level action rows (`.toolbar` likewise). */
@@ -5110,7 +5121,8 @@ a.k-tile:focus-visible,
    against its label on whichever host nobody looked at. */
 .rs-row .ds-row__main,
 .wish-pick__row .ds-row__main,
-.off-shelf__row .ds-row__main { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.off-shelf__row .ds-row__main,
+.saved-filter-row .ds-row__main { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .rs-row .ds-row__meta,
 .wish-pick__row .ds-row__meta,
 .off-shelf__row .ds-row__meta { color: var(--ink-soft); }
@@ -5548,9 +5560,14 @@ a.k-tile:focus-visible,
   text-align: center;
   color: var(--ink-soft);
 }
-.trow__rank--1 { color: var(--gold); }
-.trow__rank--2 { color: #9ca3af; }
-.trow__rank--3 { color: #b3703a; }
+.trow__rank--1 { color: var(--gold-deep); }
+.trow__rank--2 { color: #575e68; }
+.trow__rank--3 { color: #8a4b1c; }
+/* The places are NUMERALS, not medal glyphs, so they are held to text contrast:
+   the medal tints `.rank-medal` keeps below measured 2.20:1 (--gold), 2.5:1 and
+   3.9:1 here on white. Same metals, pressed dark enough to read — 2 and 3 are
+   the values Der Tisch's paper Tafel takes too (--paper-silver/--paper-bronze);
+   Der Tisch's gold row gives place 1 --gold-ink through its single-ink sweep. */
 .trow__img {
   grid-area: cover;
   align-self: center;
@@ -7551,6 +7568,15 @@ a.k-tile:focus-visible,
    not. */
 .ds-list--tiles > .tag-edit { grid-column: 1 / -1; }
 .tag-edit { display: flex; flex-direction: column; gap: 10px; }
+
+/* Saved session filters (#1328): the setup screen's „Filter speichern" row
+   and the Einstellungen list. The row reuses the tag screen's `.tag-act`
+   buttons and inline `.tag-edit` editor, so only its own spacing is here. */
+.setup-save { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; margin-top: 10px; }
+.setup-save__reason { margin: 0; font-size: var(--text-sm); }
+.saved-filters__empty { margin: 0 0 8px; }
+.saved-filter-row__name { min-width: 0; overflow-wrap: anywhere; }
+.saved-filter-row .ds-row__meta { display: flex; align-items: center; gap: 2px; flex: none; }
 .tag-act {
   flex: none;
   border: none;
@@ -9971,7 +9997,7 @@ kbd {
 }
 .stage__voter-check .ti { font-size: 10px; /* glyph, not type */ }
 .stage__voter-name { font-size: var(--text-xs); font-weight: 800; color: var(--stage-muted); }
-.stage__note { font-size: var(--text-xs); font-weight: 700; color: var(--stage-faint); margin-top: 12px; }
+.stage__note { font-size: var(--text-xs); font-weight: 700; color: var(--stage-muted); margin-top: 12px; }
 
 /* ---- Results: podium reveal + confetti ---- */
 /* Who joined the session — avatar + name chips under the result header. */

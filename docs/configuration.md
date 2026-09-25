@@ -162,7 +162,10 @@ round (`MAX_GAMES_PER_ROUND`, default 1000), custom tags per round
 (`MAX_TAGS_PER_ROUND`, default 30), member seats per round
 (`MAX_MEMBERS_PER_ROUND`, default 50), expansions per game
 (`MAX_EXPANSIONS_PER_GAME`, default 40), and dismissed recommendations per round
-(`MAX_DISMISSED_RECOMMENDATIONS_PER_ROUND`, default 500, issue #782). Per
+(`MAX_DISMISSED_RECOMMENDATIONS_PER_ROUND`, default 500, issue #782). One
+per-round cap applies in **every** mode, accounts on or off: saved session
+filters (`MAX_SAVED_FILTERS_PER_ROUND`, default 6, issue #1328), because it
+bounds the hub's quick-start chip row rather than abuse. Per
 **account** rather than per
 tenant: accepted friends (`MAX_FRIENDS_PER_USER`, default 500), open outgoing
 friend requests (`MAX_FRIEND_REQUESTS_PER_USER`, default 50) and passkeys
@@ -177,6 +180,9 @@ One of them is also told to the client: `GET /api/config` reports
 ceiling („3 von 40 im Regal") instead of letting the user find out from the 403
 after pressing Übernehmen (issue #1143). It reports `null` where quotas are inert,
 so a self-hosted round is shown a bare count rather than a limit nothing applies.
+It also reports `savedFilters: { perRound, nameMax }` — always numbers, since that
+cap applies in every mode — so the session setup disables „Filter speichern" at
+the ceiling with a visible reason (issue #1328).
 
 Require a login: set `AUTH_PASSWORD=…` (and optionally `SESSION_SECRET=…`) to gate
 the whole app behind a single shared password — an unauthenticated visitor gets a
@@ -318,7 +324,7 @@ against each, and the Node version the answering process is running.
 the archive, the played shelf or the wishlist; which design accounts wear (an
 account that has not answered the design chooser counts under the face, Der
 Tisch, exactly as it sees it), and how many went back to Klassisch; rounds carrying their own
-tags or shared with someone; games linked to a provider, wearing a
+tags, keeping saved session filters or shared with someone; games linked to a provider, wearing a
 cover, owned by a named person or carrying expansions; sessions with guests, with
 teams or opened through a shared vote link; accounts with a passkey, a BGG
 username or a profile picture. Every adoption figure is stated as `n / total`
@@ -544,8 +550,15 @@ Dauerbrenner") is the exception: `PUBLIC_STATS_MIN_PLAYS_ALL` and
 `PUBLIC_STATS_MIN_PLAY_TENANTS_ALL` both default to **0**, so it publishes
 whatever it says — the levers are kept only so it can be pulled back live.
 Best rated pairs `PUBLIC_STATS_MIN_RATINGS`
-(5) with `PUBLIC_STATS_MIN_RATING_TENANTS` (2) — the count floor is why the card
-can rank on the average at all. Like every ceiling here they are read per call,
+(5) with `PUBLIC_STATS_MIN_RATING_TENANTS` (2). Since issue #1329 both count
+**evidence**, not ratings alone: the first is ratings **plus** plays (every
+non-cancelled session that chose the game, finished or not — the same count the
+Regal's score is lifted by), the second the larger of the two account spreads
+(the rounds that rated it, the rounds that played it). A game still needs at
+least one rating whatever the floors say, so an unrated game never tops a card
+called „Bestbewertet". The names still say `RATING` on purpose — renaming them
+would silently reset a value an operator has already set. Like every ceiling
+here they are read per call,
 so raising one pulls a single metric back without a deploy. A `0` is honoured
 rather than falling back to the default.
 

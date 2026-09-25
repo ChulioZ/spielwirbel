@@ -445,6 +445,10 @@ const frontendGlobals = {
   openTagsPopover: 'readonly', openImagePopover: 'readonly',
   openExpansionEditor: 'readonly', saveExpansions: 'readonly', showAddGame: 'readonly',
   setExpansionsCap: 'readonly',
+  // saved-filters.js (#1328) — the hub chips, the setup save control, the
+  // Einstellungen list
+  setSavedFilterLimits: 'readonly', savedFilterPrefill: 'readonly',
+  renderSaveFilterAction: 'readonly', renderSavedFiltersSection: 'readonly',
   OFF_SHELF_LISTS: 'readonly', offShelfListOf: 'readonly',
   showTags: 'readonly', showTransferGames: 'readonly',
   showInvite: 'readonly', inviteError: 'readonly', insertFriendPicker: 'readonly',
@@ -453,7 +457,7 @@ const frontendGlobals = {
   HUB_TABS: 'readonly', HUB_TAB_OF: 'readonly', hubTabOwning: 'readonly',
   // round-rail.js
   RAIL_OWN_ENTRY: 'readonly', RAIL_SETTINGS_SUB: 'readonly', railItem: 'readonly',
-  buildRoundRail: 'readonly',
+  buildRoundRail: 'readonly', railIsLean: 'readonly',
   renderHubTabs: 'readonly', renderSubScreenTabs: 'readonly', renderStartTab: 'readonly',
   // views-round-start.js (#923) — the Start tab and its card grid
   hubDeps: 'readonly', hubCard: 'readonly', hubSuggestCard: 'readonly',
@@ -463,6 +467,9 @@ const frontendGlobals = {
   // #1269 — Der Tisch's young-round states (hub-cards.js, views-round-start.js)
   roundIsYoung: 'readonly', hubSentenceCard: 'readonly', hubYoungCard: 'readonly',
   hubEmptyTable: 'readonly',
+  // ocean-hub.js (#1211) — Ocean's lobby tiles and round hub composition
+  oceanHubFrame: 'readonly', oceanShell: 'readonly', oceanHeroCompose: 'readonly',
+  oceanRoundCard: 'readonly', oceanResumeNotice: 'readonly',
   // #1280 — Der Tisch's young-round features (views-home.js, hub-cards.js, views-pokale.js)
   lobbyInviteSlip: 'readonly', lobbyNextStep: 'readonly', hubDemoSummary: 'readonly',
   hubDemoInvite: 'readonly', pokaleYoungLead: 'readonly',
@@ -506,22 +513,25 @@ const frontendGlobals = {
   // member-stats.js (#1075 — split out of views-member.js)
   memberStats: 'readonly', BEST_GAME_MIN_PLAYS: 'readonly', bestGameSub: 'readonly',
   openAddMember: 'readonly', addMemberBtn: 'readonly',
-  // vote-card-tisch.js (issue #1268): Der Tisch's vote card + the link intro
+  // vote-card-composed.js (issue #1268): Der Tisch's vote card + the link intro
   VOTE_WORD_KEYS: 'readonly', voteWord: 'readonly', voteMoodButton: 'readonly', voteTurn: 'readonly',
-  voteHandoffLine: 'readonly', voteMetaLine: 'readonly', tischVoteCard: 'readonly', tischVoteLinkIntro: 'readonly',
+  voteHandoffLine: 'readonly', voteMetaLine: 'readonly', composedVoteCard: 'readonly', composedVoteLinkIntro: 'readonly',
   // views-session.js
   showStartSession: 'readonly', startVoting: 'readonly', showResults: 'readonly',
   showFinale: 'readonly', canShareResult: 'readonly', shareResult: 'readonly',
   // views-session-setup-tisch.js (issue #1267): Der Tisch's setup composition
   composeTischSetup: 'readonly', tischDrawSummary: 'readonly',
   tischSetupDateLine: 'readonly',
+  // views-session-ocean.js (issue #1213): Ocean's setup, vote sides and result columns
+  oceanWorn: 'readonly', OCEAN_COUNT_BUBBLES: 'readonly', composeOceanSetup: 'readonly', paintOceanCount: 'readonly',
+  oceanVoteSides: 'readonly', composeOceanResult: 'readonly',
   // views-session-tables.js (issue #796)
   showTableBuilder: 'readonly', tableStateFrom: 'readonly', tablePeopleIds: 'readonly',
   tableCoverBg: 'readonly',
   renderTischSplit: 'readonly', renderTischTable: 'readonly', renderTischTableTafel: 'readonly', // #1270
-  // result-tafel-tisch.js (issue #1275): Der Tisch's result Tafel and foot
-  tischTafelCols: 'readonly', tischTrow: 'readonly', tischPersonCrown: 'readonly',
-  paintTischCrowns: 'readonly', fillTischResultFoot: 'readonly',
+  // result-tafel-composed.js (issue #1275): Der Tisch's result Tafel and foot
+  composedTafelCols: 'readonly', composedTrow: 'readonly', composedPersonCrown: 'readonly',
+  paintComposedCrowns: 'readonly', fillComposedResultFoot: 'readonly',
   // views-session-live.js
   showSessionLobby: 'readonly', stopLobbyPoll: 'readonly', mySeatIn: 'readonly',
   sessionGames: 'readonly', LOBBY_POLL_MS: 'readonly', lobbyPoll: 'writable',

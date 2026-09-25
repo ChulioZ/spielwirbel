@@ -123,7 +123,7 @@ test('Der Tisch heads the screen with the session, not with a banner', async (t)
 
 test('each table gets a felt head: label, people with crowns, the standard sentence, and its link', async (t) => {
   const dom = await render(t, 'tisch', [T1, T2]);
-  const tables = [...dom.app.querySelectorAll('.split-tables--tisch > .split-table')];
+  const tables = [...dom.app.querySelectorAll('.split-tables--composed > .split-table')];
   assert.equal(tables.length, 2);
 
   const [a, b] = tables.map((tb) => tb.querySelector('.split-table__head'));

@@ -15,7 +15,10 @@ async function showHome() {
   // Home has no round context. Der Tisch fills the slot with its lobby voice
   // instead (#1279: „Spielecafé · deine Tische" beside the wordmark, T3.1).
   const tisch = designIs('tisch');
-  setContext(tisch ? t('home.tischKicker') : '', tisch ? 'kicker' : undefined);
+  // Ocean's sub-brand the same way (#1211, O3.1): „Die Küste · deine Runden".
+  const ocean = designIs('ocean');
+  const kicker = tisch ? t('home.tischKicker') : ocean ? t('home.oceanKicker') : '';
+  setContext(kicker, kicker ? 'kicker' : undefined);
   setDocTitle(t('home.docTitle'));
   applyMarker(null); // home: no round, no marker
   app.innerHTML = '<p class="muted">…</p>';
@@ -30,7 +33,7 @@ async function showHome() {
     // width, so a screen reader meets it once. Klassisch renders neither.
     h(`<div class="lobby-head">${tisch ? `
          <p class="lobby-head__kicker">${esc(t('home.tischKicker'))}</p>` : ''}
-         <h1>${esc(t('home.greeting'))}</h1>
+         <h1>${esc(t(ocean ? 'home.oceanGreeting' : 'home.greeting'))}</h1>
          <div class="muted lobby-head__sub">${esc(t('home.sub'))}</div>
        </div>`)
   );
@@ -172,6 +175,14 @@ function renderResumeZone(rounds) {
     </section>`);
   const list = zone.querySelector('.home-resume__list');
   open.slice(0, HOME_RESUME_CAP).forEach(({ round, session }) => {
+    // Ocean draws a running session as a notice rather than a ticket (#1211,
+    // O3.1/O6.1) — same link, same strings, ocean-hub.js.
+    if (designIs('ocean')) {
+      const notice = oceanResumeNotice({ round, session });
+      navLink(notice, resultsPath(round.id, session.id), () => showResultsById(round.id, session.id));
+      list.appendChild(notice);
+      return;
+    }
     const voting = session.stage === 'voting';
     // A voting session names no game BY CONSTRUCTION — the draw stays secret
     // until everyone has rated, so the backends send null title and cover
@@ -343,7 +354,11 @@ function renderLobbyList(rounds) {
     // own design. Since the flip (#1202) that holds for every round — one that
     // wore a world or a palette resolves to the marker it maps to.
     const marker = markerStyle(r);
-    const card = h(`<a class="round-card" style="${marker}">
+    // Ocean composes the tile as water with the seats on the tide line
+    // (#1211, O3.1/O6.1): the same link, stack and lines, ocean-hub.js.
+    const card = designIs('ocean')
+      ? oceanRoundCard(r, { stack, seatCount, lastLine, invite: lobbyInviteSlip(rounds, r) })
+      : h(`<a class="round-card" style="${marker}">
          <span class="round-card__emblem" style="background:var(--marker)"><i class="ti ti-tornado" aria-hidden="true"></i></span>
          <span class="round-card__body">
            <span class="round-card__name">${esc(r.name)}${r.shared ? ` <span class="round-card__shared"><i class="ti ti-users" aria-hidden="true"></i> ${esc(t('home.shared'))}</span>` : ''}</span>

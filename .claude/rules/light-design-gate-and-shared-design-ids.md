@@ -4,6 +4,7 @@ paths:
   - "public/js/designs.js"
   - "test/support/theme.js"
   - "test/a11y-contrast.test.js"
+  - "public/js/views-session*.js"
 ---
 
 # A LIGHT design gates its colours on `:not([data-scheme="dark"])` — and its id may be a world's too
@@ -53,6 +54,15 @@ unter 17 px". A scan of rules that name `--font-display` cannot see it; the
 browser walk found it on the hub and the Regal. `test/design-tokens.test.js`
 therefore also derives every heading/`title`/`name` rule under 17px, and
 `ocean.css` moves each one to `--font`.
+
+## 4. A view cannot spell `designIs('ocean')` where a retired-world guard scans it
+
+`test/result-tafel.test.js` asserts `views-session.js` names no retired round
+world — every key of `LEGACY_MARKER_INDEX`, quoted. `ocean` (and `forest`) are
+keys there, so the obvious `designIs('ocean')` in that file reddens a test about
+the #1202 flip, not about your change. Don't weaken the scan: #1213 asks through
+`oceanWorn()` in `views-session-ocean.js`, the one place the session screens
+spell the id. A Forest slice will need the same.
 
 **Related:** `.claude/rules/design-colour-blocks-are-scheme-gated.md` (the dark
 half of the gate), `.claude/rules/design-stylesheets-are-shell-assets.md`,
