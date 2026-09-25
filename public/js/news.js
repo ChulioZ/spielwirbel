@@ -47,6 +47,93 @@
 // AFTER, which is the exact unearned interruption this design exists to avoid.
 const NEWS = [
   /*
+   * #1328. A capability that did not exist: a round remembered exactly ONE
+   * draw (the last), so a group with two recurring evenings re-picked the other
+   * one every time. Dated the day after the flip's entry, because an equal date
+   * would leave every account that has read the flip without the dot.
+   */
+  {
+    revision: '2026-09-26',
+    kind: 'new',
+    de: {
+      title: 'Filter speichern',
+      body: 'Zieht eure Runde immer wieder auf dieselbe Art? Stellt die Session '
+        + 'einmal ein — Tags, Filter, Anzahl und wer mitspielt — und tippt auf '
+        + '„Filter speichern". Gespeicherte Filter erscheinen auf dem Start als '
+        + 'Schnellstart, für alle in der Runde, und öffnen „Session wirbeln" mit '
+        + 'allem schon eingestellt. Umbenennen, sortieren und löschen könnt ihr '
+        + 'sie in den Einstellungen der Runde.',
+    },
+    en: {
+      title: 'Save your filters',
+      body: 'Does your round keep drawing the same way? Set the session up once — '
+        + 'tags, filters, count and who is playing — and tap „Save filter". Saved '
+        + 'filters appear on Start as quick-start chips, for everyone in the round, '
+        + 'and open „Start session" with everything already set. Rename, reorder '
+        + 'and delete them in the round\'s Settings.',
+    },
+    es: {
+      title: 'Guarda tus filtros',
+      body: '¿Vuestro grupo sortea siempre de la misma manera? Configurad la '
+        + 'sesión una vez —etiquetas, filtros, cantidad y quién juega— y tocad '
+        + '«Guardar filtro». Los filtros guardados aparecen en Inicio como inicio '
+        + 'rápido, para todo el grupo, y abren «Sortear sesión» con todo listo. '
+        + 'Podéis cambiarles el nombre, ordenarlos y eliminarlos en los Ajustes '
+        + 'del grupo.',
+    },
+    fr: {
+      title: 'Enregistrez vos filtres',
+      body: 'Votre groupe tire toujours de la même façon ? Réglez la session une '
+        + 'fois — étiquettes, filtres, nombre et qui joue — puis touchez « '
+        + 'Enregistrer le filtre ». Les filtres enregistrés apparaissent dans '
+        + 'Démarrer en démarrage rapide, pour tout le groupe, et ouvrent « Démarrer '
+        + 'une session » avec tout déjà réglé. Renommez-les, triez-les et '
+        + 'supprimez-les dans les Réglages du groupe.',
+    },
+    it: {
+      title: 'Salva i tuoi filtri',
+      body: 'Il vostro gruppo estrae sempre allo stesso modo? Impostate la '
+        + 'sessione una volta — etichette, filtri, numero e chi gioca — e toccate '
+        + '«Salva filtro». I filtri salvati compaiono in Avvia come avvio rapido, '
+        + 'per tutto il gruppo, e aprono «Avvia una sessione» con tutto già '
+        + 'impostato. Rinominateli, riordinateli ed eliminateli nelle '
+        + 'Impostazioni del gruppo.',
+    },
+    nl: {
+      title: 'Filters opslaan',
+      body: 'Trekt jullie groep steeds op dezelfde manier? Stel de sessie één keer '
+        + 'in — labels, filters, aantal en wie meespeelt — en tik op „Filter '
+        + 'opslaan". Opgeslagen filters staan bij Start als snelle start, voor '
+        + 'iedereen in de groep, en openen „Sessie starten" met alles al ingesteld. '
+        + 'Hernoemen, sorteren en verwijderen doe je in de Instellingen van de '
+        + 'groep.',
+    },
+    pt: {
+      title: 'Guarde os seus filtros',
+      body: 'O vosso grupo sorteia sempre da mesma forma? Configurem a sessão uma '
+        + 'vez — etiquetas, filtros, quantidade e quem joga — e toquem em «Guardar '
+        + 'filtro». Os filtros guardados aparecem em Início como começo rápido, '
+        + 'para todo o grupo, e abrem «Iniciar sessão» com tudo já configurado. '
+        + 'Mudem o nome, ordenem e excluam-nos nas Configurações do grupo.',
+    },
+    fi: {
+      title: 'Tallenna suodattimet',
+      body: 'Arpooko porukkanne aina samalla tavalla? Määritä sessio kerran — '
+        + 'tunnisteet, suodattimet, määrä ja ketkä pelaavat — ja napauta '
+        + '”Tallenna suodatin”. Tallennetut suodattimet näkyvät Aloitus-näkymässä '
+        + 'pikavalintoina koko porukalle ja avaavat ”Aloita sessio” -näkymän '
+        + 'valmiiksi säädettynä. Nimeä, järjestä ja poista niitä porukan '
+        + 'Asetuksissa.',
+    },
+    ko: {
+      title: '필터 저장',
+      body: '모임이 늘 같은 방식으로 뽑나요? 태그, 필터, 개수, 함께하는 사람까지 세션을 한 번 설정하고 '
+        + '„필터 저장"을 누르세요. 저장된 필터는 모임의 모든 사람에게 시작 화면의 빠른 시작으로 '
+        + '보이고, 모든 설정이 된 채로 „세션 시작"을 엽니다. 이름 바꾸기, 순서 변경, 삭제는 모임 '
+        + '설정에서 할 수 있어요.',
+    },
+  },
+  /*
    * #1202, the flip. Clears the bar although it is not a new feature in the
    * usual sense: every account wakes up in a different look, and the one thing
    * a reader needs to find is how to get the old one back. So the entry says

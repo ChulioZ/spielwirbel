@@ -59,6 +59,12 @@ async function showRoundSettings(rid) {
   });
   app.appendChild(nav);
 
+  // --- The round's saved session filters (#1328) — rename, delete, reorder.
+  // Inline rather than a routed sub-screen: a list of at most a handful of
+  // names needs no page of its own. Every grantee may manage them — they cost
+  // 'round.write', the floor anyone who can draw in the round clears.
+  app.appendChild(renderSavedFiltersSection(round));
+
   // --- The two sheet actions. The gate asks the shared capability table (#137)
   // rather than testing `shared`, so a grantee is never offered an action the
   // route would 403 — and the two cannot drift, since the server consults the same

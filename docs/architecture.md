@@ -98,6 +98,9 @@ lib/
     index.js         picks the backend (DATABASE_URL ? postgres : json)
     json.js          default backend — the data/data.json store below
     postgres.js      PostgreSQL backend (Knex query builder), used when DATABASE_URL set
+    saved-filters.js a round's saved session filters (#1328): the unique-name,
+                     per-round cap and exact-permutation rules, run by both
+                     backends inside their own lock
     import-copy.js   what travels when a new round imports another round's
                      games (#921) — shared by both backends so a copy carries
                      the same fields whichever one is running
@@ -194,6 +197,10 @@ lib/
                      recommendation costs no multi-megabyte read per request;
                      dropped on every write lib/corpus.js makes, plus a TTL for
                      the writes another replica made (issue #682)
+  draw-filters.js    the FILTER half of a draw (tags, tag mode, metadata,
+                     multi-table, count) resolved against a round — one function
+                     shared by the session draw and the saved-filter route
+                     (issue #1328)
   draw.js            the session draw's game pool + shuffle: the one named
                      "is this game active" predicate both of the sessions
                      route's guards go through (issue #486)
@@ -426,6 +433,9 @@ lib/
     marker.js        …/marker               (PATCH the round's colour marker,
                                              0-7 — issue #1187)
     tags.js          …/tags                 (create a custom tag [deduped], set its icon, delete one)
+    saved-filters.js …/filters              (save the setup under a name, rename,
+                                             reorder, delete — the hub's quick-start
+                                             chips, issue #1328)
 public/
   index.html
   login.html         standalone login page (shown only when AUTH_PASSWORD is set)
@@ -775,6 +785,9 @@ public/
     ocean-hub.js          Ocean's composition of the lobby and the round hub:
                           the hub's columns, the shell with the one action, the
                           crew captions, the lobby tiles and notice (#1211)
+    saved-filters.js      a round's saved session filters (#1328): the chip's
+                          prefill, the setup screen's „Filter speichern" sheet
+                          and the Einstellungen list
     hub-previews.js       the hub's previews of Regal, Pokale and Chronik, and
                           its „Nicht im Regal" group (issue #1185)
     views-regal.js        Regal tab: the games library (search, filters, grid)

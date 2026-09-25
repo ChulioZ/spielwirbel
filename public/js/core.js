@@ -440,6 +440,10 @@ function initFooter() {
       // `null` (quotas inert) is a meaningful value the setter must receive, not
       // a reason to skip the call.
       setExpansionsCap(cfg ? cfg.expansionsPerGame : null);
+      // The saved-filter ceiling and name bound (#1328), for the same reason:
+      // the setup screen disables „Filter speichern" at the cap with a visible
+      // reason instead of letting the user find out from the 403.
+      setSavedFilterLimits(cfg ? cfg.savedFilters : null);
     })
     .catch(() => {});
 }

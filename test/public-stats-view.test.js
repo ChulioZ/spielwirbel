@@ -82,6 +82,24 @@ test('/entdecken renders the counters and one card per qualifying metric', async
   assert.equal(dom.document.querySelector('.empty-note'), null);
 });
 
+/* THE LINE SHOWS THE PLAYS THAT LIFTED THE SCORE (#1329). Since plays count
+   as evidence for this podium, „Score 4,2 — 1 Bewertung" alone would read as
+   too thin to have qualified. Both counts inflect on their own: one rating and
+   many plays, and the reverse, so a line that shared one count between the two
+   plurals goes red here. Without plays (`plays` 0 or absent — the payload
+   above) the line is the one it always was, asserted in the case before this. */
+test('#1329 the bestRated line carries the play count, each count inflected', async (t) => {
+  const line = async (bestRated) => {
+    const dom = bootWith(t, ok({ ...FULL, games: { bestRated } }));
+    await dom.call('showEntdecken');
+    return dom.document.querySelector('.stats-card__value').textContent;
+  };
+  const base = { title: 'Wingspan', image: null, url: null, score: 4.2 };
+  assert.equal(await line({ ...base, ratings: 1, plays: 12 }), 'Score 4,2 — 1 Bewertung · 12 Sessions');
+  assert.equal(await line({ ...base, ratings: 7, plays: 1 }), 'Score 4,2 — 7 Bewertungen · 1 Session');
+  assert.equal(await line({ ...base, ratings: 5, plays: 0 }), 'Score 4,2 — 5 Bewertungen');
+});
+
 /* The ⓘ is on the podium for one reason the in-round ones do not have: this is
    where somebody who has never used the app meets the score. So it is asserted
    per SURFACE rather than once — the landing page is the surface that matters

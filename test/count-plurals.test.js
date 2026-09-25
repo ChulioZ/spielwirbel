@@ -66,6 +66,14 @@ const PAIRS = [
     en: ['Score 4,6 — 1 rating', 'Score 4,6 — 2 ratings'],
   },
   {
+    // #1329: the same line with the plays that lifted the score. {rated} is the
+    // row above, already inflected for its own count; this pair inflects the plays.
+    what: 'stats.ratedPlays — the best-rated line with its play count',
+    one: 'stats.ratedPlaysOne', other: 'stats.ratedPlays', params: { rated: 'Score 4,6 — 3 Bewertungen' },
+    de: ['Score 4,6 — 3 Bewertungen · 1 Session', 'Score 4,6 — 3 Bewertungen · 2 Sessions'],
+    en: ['Score 4,6 — 3 Bewertungen · 1 session', 'Score 4,6 — 3 Bewertungen · 2 sessions'],
+  },
+  {
     what: 'lobby.closeConfirm — closing the lobby with votes outstanding',
     one: 'lobby.closeConfirmOne', other: 'lobby.closeConfirm', params: {},
     de: ['Es fehlt noch 1 Stimme. Abstimmung trotzdem beenden?',
