@@ -163,9 +163,9 @@ test('Der Tisch: the hot-seat card is header, card and hand-off line, in that or
 
   const faces = [...paper.querySelectorAll('.mood')];
   assert.deepEqual(faces.map((b) => text(b.querySelector('.mood__word'))),
-    ['gar nicht', 'eher nicht', 'kann ich', 'gern', 'unbedingt']);
+    ['gar nicht', 'eher nicht', 'wäre okay', 'gern', 'unbedingt']);
   assert.deepEqual(faces.map((b) => b.getAttribute('aria-label')),
-    ['1 von 5 – gar nicht', '2 von 5 – eher nicht', '3 von 5 – kann ich', '4 von 5 – gern', '5 von 5 – unbedingt']);
+    ['1 von 5 – gar nicht', '2 von 5 – eher nicht', '3 von 5 – wäre okay', '4 von 5 – gern', '5 von 5 – unbedingt']);
   assert.equal(card.querySelector('.rating-scale'), null, 'the words replace the two-ended scale');
 
   // Nobody at this device has a seat, so the next open person in seat order.
