@@ -2205,6 +2205,62 @@ module.exports = function repoContract(repo) {
     assert.equal(await repo.reorderTags(T, 'missing', [a.id]), null);
   });
 
+  // Saved session filters (#1328). Round data like tags, so absent until the
+  // first save and an array in both backends; the name and cap rules live
+  // INSIDE the mutator, beside the lock that holds the list.
+  test('saved filters: create, rename, reorder, delete — and the refusals (#1328)', async () => {
+    const round = await freshRound();
+    assert.equal('savedFilters' in round, false, 'absent until the first filter is saved');
+    assert.equal('savedFilters' in (await repo.getRound(T, round.id)), false);
+
+    const body = (name, over = {}) => ({
+      name, tagIds: [], excludeTagIds: [], count: 3, memberIds: [round.members[0].id], ...over,
+    });
+    const a = await repo.createSavedFilter(T, round.id, body('Kinderabend', { multiTable: true }), 3);
+    assert.match(a.id, /^[0-9a-f]{16}$/);
+    assert.deepEqual({ ...a, id: undefined }, { ...body('Kinderabend', { multiTable: true }), id: undefined });
+    const b = await repo.createSavedFilter(T, round.id, body('Nur Koop', { tagMode: 'any' }), 3);
+    assert.deepEqual((await repo.getRound(T, round.id)).savedFilters, [a, b], 'appended, in order');
+    assert.deepEqual((await repo.getRoundMeta(T, round.id)).savedFilters, [a, b], 'the light read carries them too');
+    assert.equal('tagMode' in a, false, 'absent-key discipline survives the round-trip');
+
+    // Names are unique per round, trimmed and case-insensitive — and checked
+    // before the cap, so the more specific answer wins.
+    assert.equal(await repo.createSavedFilter(T, round.id, body(' kinderABEND '), 3), 'name_taken');
+    await repo.createSavedFilter(T, round.id, body('Dritter'), 3);
+    assert.equal(await repo.createSavedFilter(T, round.id, body('Vierter'), 3), 'quota');
+    assert.equal(await repo.createSavedFilter(T, round.id, body('nur koop'), 3), 'name_taken');
+    assert.equal((await repo.getRound(T, round.id)).savedFilters.length, 3, 'a refusal writes nothing');
+
+    // Rename: its own entry is excluded from the clash, so a case fix works.
+    const renamed = await repo.updateSavedFilter(T, round.id, b.id, { name: 'NUR KOOP' });
+    assert.equal(renamed.name, 'NUR KOOP');
+    assert.deepEqual(renamed.tagIds, b.tagIds, 'renaming touches nothing but the name');
+    assert.equal(await repo.updateSavedFilter(T, round.id, b.id, { name: 'kinderabend' }), 'name_taken');
+    assert.equal(await repo.updateSavedFilter(T, round.id, 'ghost', { name: 'X' }), null);
+
+    // Reorder: an exact permutation, or nothing moves.
+    const ids = (await repo.getRound(T, round.id)).savedFilters.map((f) => f.id);
+    const moved = await repo.reorderSavedFilters(T, round.id, [ids[2], ids[0], ids[1]]);
+    assert.deepEqual(moved.map((f) => f.id), [ids[2], ids[0], ids[1]]);
+    assert.deepEqual((await repo.getRound(T, round.id)).savedFilters.map((f) => f.id), [ids[2], ids[0], ids[1]]);
+    assert.equal(await repo.reorderSavedFilters(T, round.id, [ids[0], ids[1]]), 'filters_changed');
+    assert.equal(await repo.reorderSavedFilters(T, round.id, [ids[0], ids[0], ids[1]]), 'filters_changed');
+
+    // Delete; the list stays an array once written, as tags do.
+    assert.equal(await repo.deleteSavedFilter(T, round.id, ids[0]), true);
+    assert.equal(await repo.deleteSavedFilter(T, round.id, ids[0]), false);
+    await repo.deleteSavedFilter(T, round.id, ids[1]);
+    await repo.deleteSavedFilter(T, round.id, ids[2]);
+    assert.deepEqual((await repo.getRound(T, round.id)).savedFilters, []);
+
+    // Missing round, and another tenant's round, read as missing.
+    assert.equal(await repo.createSavedFilter(T, 'missing', body('X'), 3), null);
+    assert.equal(await repo.createSavedFilter(OTHER, round.id, body('X'), 3), null, 'another tenant cannot write here');
+    assert.equal(await repo.reorderSavedFilters(OTHER, round.id, []), null);
+    assert.equal(await repo.deleteSavedFilter(OTHER, round.id, 'x'), false);
+  });
+
   test('tag icons: absent by default, set on create, patchable, clearable (#255)', async () => {
     const round = await freshRound();
 
@@ -4161,8 +4217,28 @@ module.exports = function repoContract(repo) {
     assert.deepEqual(content.members.map((m) => m.name), ['Alice', 'Bob']);
     assert.deepEqual(content.games, [{ id: game.id, title: 'Catan' }]);
     assert.deepEqual(content.tags, [{ id: tag.id, name: 'Koop' }]);
+    assert.deepEqual(content.filters, [], 'no saved filters yet, and the key is still there');
 
     assert.equal(await repo.roundContent('nosuchround'), null);
+  });
+
+  // A saved filter's name is user-authored text (#1328), so a notice about it
+  // needs the same takedown path as a tag: the name is blanked, the filter
+  // survives with its seats.
+  test('roundContent lists saved filter names and redactText blanks one (#1328)', async () => {
+    const round = await freshRound();
+    const f = await repo.createSavedFilter(T, round.id,
+      { name: 'Anstößig', tagIds: [], excludeTagIds: [], count: 2, memberIds: [round.members[0].id] }, 6);
+    const content = await repo.roundContent(round.id);
+    assert.deepEqual(content.filters, [{ id: f.id, name: 'Anstößig' }]);
+
+    const done = await repo.redactText({ kind: 'filter', roundId: round.id, id: f.id }, '[entfernt]');
+    assert.equal(done.previous, 'Anstößig');
+    assert.equal(done.kind, 'filter');
+    const [after] = (await repo.getRound(T, round.id)).savedFilters;
+    assert.equal(after.name, '[entfernt]');
+    assert.deepEqual(after.memberIds, [round.members[0].id], 'the filter itself survives');
+    assert.equal(await repo.redactText({ kind: 'filter', roundId: round.id, id: 'nope' }, 'x'), null);
   });
 
   test('redactText blanks one text field and returns what was there', async () => {

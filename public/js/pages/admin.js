@@ -1093,6 +1093,8 @@
       // Flat across the shelf (#653) — an expansion title is user-authored text
       // like every other row here, and its id is unique instance-wide.
       ...(content.expansions || []).map((e) => ['Erweiterung', 'expansion', e.id, e.title]),
+      // A saved session filter's name (#1328) — user-authored like the rest.
+      ...(content.filters || []).map((f) => ['Gespeicherter Filter', 'filter', f.id, f.name]),
     ]) {
       const row = detailRow({
         title: label,

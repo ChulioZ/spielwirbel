@@ -107,9 +107,13 @@ returns the previous value.
   — sound only because expansion ids are minted per entry and re-minted on a
   round copy. See `.claude/rules/expansions-widen-by-union.md`.
 
+- A **saved filter** (#1328) is redacted by name only, like a tag: the filter
+  keeps its seats and tags, so a moderation action never quietly changes what a
+  group's quick-start chip draws. `roundContent` lists them as `filters`.
+
 There are **no rating comments** (votes are numeric), so user-authored text is
 exactly: round name, game title, member name, tag name, expansion title,
-feedback message. **Adding a sixth means adding a `REDACT_KINDS` entry, both
+saved-filter name, feedback message. **Adding another means adding a `REDACT_KINDS` entry, both
 backends' `redactText`, the `roundContent` list and one line in the panel's flat
 row builder** — a new free-text field with no takedown path is a DSA answer the
 operator cannot give. Feedback is global/un-scoped → it redacts by id alone, no
