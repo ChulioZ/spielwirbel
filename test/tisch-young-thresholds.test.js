@@ -3,7 +3,7 @@
 /* Der Tisch's young-round features (#1280, T7.2 / T7.5 / T7.6):
  *
  *   - T7.5: until the third played session the Rundenpuls carries a sentence
- *     instead of series and trends, the Pokale streak card waits, and the
+ *     instead of series, the Pokale streak card waits, and the
  *     podium — on the hub preview AND on the Pokale tab — becomes the leader
  *     plus „Ein Podium braucht 3 Sessions.";
  *   - T7.2: a one-round lobby gets an invite slip on the tile and a
@@ -70,7 +70,7 @@ async function pokale(t, design, r) {
 
 const cardByTitle = (dom, title) => [...dom.app.querySelectorAll('.hub-cards .hub-card')]
   .find((c) => c.querySelector('.hub-card__title').textContent.trim() === title);
-const SERIES = `Serien und Trends zeigen wir ab ${YOUNG_ROUND_SERIES_FROM} Sessions — vorher wäre jede Linie geraten.`;
+const SERIES = `Serien zeigen wir ab ${YOUNG_ROUND_SERIES_FROM} Sessions — vorher wären sie Zufall.`;
 const PODIUM = `Ein Podium braucht ${YOUNG_ROUND_PODIUM_FROM} Sessions.`;
 
 // ------------------------------------------------------------- the constants

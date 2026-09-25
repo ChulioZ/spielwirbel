@@ -247,8 +247,9 @@ function hubPulseCard(round, activeGames) {
   const body = card.querySelector('.hub-card__body');
   if (tisch) {
     hubPulseTiles(round, card, pulse);
-    /* Until the third evening the card says WHEN series and trends come (T7.5)
-       — the same YOUNG_ROUND_SERIES_FROM that holds back the Pokale streak
+    /* Until the third played session the card says WHEN series come (T7.5;
+       the sheet's „und Trends" was dropped — the Tisch pulse has no trend
+       line, #1280 review) — the same YOUNG_ROUND_SERIES_FROM that holds back the Pokale streak
        card, so the sentence cannot promise something already on screen. */
     if (youngRoundPlayed(round, hubDeps()) < YOUNG_ROUND_SERIES_FROM) {
       body.appendChild(h(`<p class="hub-card__facts hub-card__threshold">${esc(tn(YOUNG_ROUND_SERIES_FROM, 'hub.young.seriesOne', 'hub.young.series'))}</p>`));
