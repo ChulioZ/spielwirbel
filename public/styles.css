@@ -11,11 +11,6 @@
 @font-face { font-family: 'Nunito'; font-style: normal; font-weight: 600; font-display: swap; src: url('fonts/nunito-latin-600-normal.woff2') format('woff2'); }
 @font-face { font-family: 'Nunito'; font-style: normal; font-weight: 700; font-display: swap; src: url('fonts/nunito-latin-700-normal.woff2') format('woff2'); }
 @font-face { font-family: 'Nunito'; font-style: normal; font-weight: 800; font-display: swap; src: url('fonts/nunito-latin-800-normal.woff2') format('woff2'); }
-/* Comfortaa outlived the worlds (#1202 retired them; it was Ocean's world face):
-   it is the display face of the Ocean USER design (#1210), so the file and this
-   declaration stay. @font-face downloads nothing until a rule applies it.
-   Licence: LICENSE-comfortaa.txt. */
-@font-face { font-family: 'Comfortaa'; font-style: normal; font-weight: 700; font-display: swap; src: url('fonts/comfortaa-latin-700-normal.woff2') format('woff2'); }
 /* Der Tisch's two faces (#1188, T1): Bricolage Grotesque for display, Manrope
    for text. Declared here beside the base faces rather than in
    public/css/designs/tisch.css for two reasons — the url() is resolved against
@@ -34,6 +29,26 @@
 @font-face { font-family: 'Manrope'; font-style: normal; font-weight: 500; font-display: swap; src: url('fonts/manrope-latin-500-normal.woff2') format('woff2'); }
 @font-face { font-family: 'Manrope'; font-style: normal; font-weight: 600; font-display: swap; src: url('fonts/manrope-latin-600-normal.woff2') format('woff2'); }
 @font-face { font-family: 'Manrope'; font-style: normal; font-weight: 700; font-display: swap; src: url('fonts/manrope-latin-700-normal.woff2') format('woff2'); }
+/* Ocean's two faces (#1210, O1.2): Comfortaa for display and titles, Figtree
+   for text and numbers. Declared here for the same two reasons as Der Tisch's.
+
+   Comfortaa was already here for the Ocean WORLD (#905), which wears the same
+   file; it moved into this block because the design outlives the worlds (#1202
+   retires them). test/design-tokens.test.js requires both families' files to
+   exist and to be precached, so a world clean-up that deletes the woff2 goes
+   red rather than silently dropping the design to its fallback face.
+
+   Comfortaa ships ONE weight and it is the heavy one, so a request for any
+   other weight takes that face as it is — nothing lighter exists for the
+   browser to embolden. Figtree declares every weight the design uses (O1:
+   400/500/600/700); a request above 700 resolves to the 700 face, which is
+   already bold, so no weight is ever synthesised. Licences: LICENSE-comfortaa.txt,
+   LICENSE-figtree.txt (both OFL 1.1). */
+@font-face { font-family: 'Comfortaa'; font-style: normal; font-weight: 700; font-display: swap; src: url('fonts/comfortaa-latin-700-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Figtree'; font-style: normal; font-weight: 400; font-display: swap; src: url('fonts/figtree-latin-400-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Figtree'; font-style: normal; font-weight: 500; font-display: swap; src: url('fonts/figtree-latin-500-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Figtree'; font-style: normal; font-weight: 600; font-display: swap; src: url('fonts/figtree-latin-600-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Figtree'; font-style: normal; font-weight: 700; font-display: swap; src: url('fonts/figtree-latin-700-normal.woff2') format('woff2'); }
 
 :root {
   /* Native UI — the <select> popup, scrollbars, form-control defaults — follows

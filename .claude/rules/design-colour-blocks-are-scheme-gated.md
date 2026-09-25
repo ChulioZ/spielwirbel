@@ -142,4 +142,5 @@ subtree must not re-point it),
 round's palette on `<html>` before the flip, and puts its marker there since),
 `.claude/rules/overlay-surface-flip-strands-the-status-tokens.md` (the same
 blind spot inside ONE design, plus the contrast sweep that looped only one of
-the two design registries).
+the two design registries), `.claude/rules/light-design-gate-and-shared-design-ids.md`
+(a LIGHT design gates the other way, on `:not([data-scheme="dark"])`).

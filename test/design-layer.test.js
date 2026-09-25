@@ -275,7 +275,10 @@ function splitRoot(file, css) {
     if (at === -1) { rest += css.slice(from); break; }
     const open = css.indexOf('{', at);
     if (css.slice(at, open).replace(`:root[data-design="${id}"]`, '').trim()
-      .replace(/^\[data-scheme="[a-z]+"\]$/, '') !== '') {
+      .replace(/^\[data-scheme="[a-z]+"\]$/, '')
+      /* …or its LIGHT mirror (#1210): a light design gates its colours on the
+         absence of the dark scheme, since light is no attribute at all. */
+      .replace(/^:not\(\[data-scheme="dark"\]\)$/, '') !== '') {
       rest += css.slice(from, open + 1);
       from = open + 1;
       continue;

@@ -1159,6 +1159,14 @@ I18N.fr = {
   'marker.tisch.moosfilz': 'Feutre mousse',
   'marker.tisch.taubenfilz': 'Feutre tourterelle',
   'marker.tisch.ockerfilz': 'Feutre ocre',
+  'marker.ocean.koralle': 'Corail',
+  'marker.ocean.seegras': 'Herbier',
+  'marker.ocean.seeigel': 'Oursin',
+  'marker.ocean.bernstein': 'Ambre',
+  'marker.ocean.anemone': 'Anémone',
+  'marker.ocean.lagune': 'Lagon',
+  'marker.ocean.tang': 'Varech',
+  'marker.ocean.purpur': 'Pourpre',
 
 
   'tags.crumb': 'Étiquettes',
@@ -1511,6 +1519,8 @@ I18N.fr = {
   'design.tisch.desc': 'Feutre sombre et or chaud — comme si tout était posé sur la table de jeu.',
   'design.tisch.tagline': 'Feutre, laiton, dés',
   'design.tisch.short': 'Feutre, laiton, places à table',
+  'design.ocean.name': 'Océan',
+  'design.ocean.desc': 'Clair et vaste : groupes, membres, victoires — et une baleine.',
   'design.chooser.kicker': 'Nouveau sur Spielwirbel',
   'design.chooser.title': 'Choisis un design.',
   'design.chooser.body': 'Tout reste au même endroit : étagère, chronique, trophées, lancement de la session. Seule l\'apparence change. Tu peux en changer à tout moment dans ton compte.',

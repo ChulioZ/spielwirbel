@@ -1153,6 +1153,14 @@ I18N.pt = {
   'marker.tisch.moosfilz': 'Feltro musgo',
   'marker.tisch.taubenfilz': 'Feltro pomba',
   'marker.tisch.ockerfilz': 'Feltro ocre',
+  'marker.ocean.koralle': 'Coral',
+  'marker.ocean.seegras': 'Capim-marinho',
+  'marker.ocean.seeigel': 'Ouriço-do-mar',
+  'marker.ocean.bernstein': 'Âmbar',
+  'marker.ocean.anemone': 'Anêmona',
+  'marker.ocean.lagune': 'Laguna',
+  'marker.ocean.tang': 'Alga',
+  'marker.ocean.purpur': 'Púrpura',
 
 
   'tags.crumb': 'Etiquetas',
@@ -1505,6 +1513,8 @@ I18N.pt = {
   'design.tisch.desc': 'Feltro escuro e ouro quente — como se estivesse tudo sobre a mesa de jogo.',
   'design.tisch.tagline': 'Feltro, latão, dados',
   'design.tisch.short': 'Feltro, latão, lugares à mesa',
+  'design.ocean.name': 'Oceano',
+  'design.ocean.desc': 'Claro e amplo: grupos, membros, vitórias — e uma baleia.',
   'design.chooser.kicker': 'Novo no Spielwirbel',
   'design.chooser.title': 'Escolhe um design.',
   'design.chooser.body': 'Tudo continua no mesmo sítio — estante, crónica, troféus, iniciar a sessão. Só o aspeto muda. Podes trocar a qualquer momento na tua conta.',

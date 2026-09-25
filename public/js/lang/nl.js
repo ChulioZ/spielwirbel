@@ -1151,6 +1151,14 @@ I18N.nl = {
   'marker.tisch.moosfilz': 'Mosvilt',
   'marker.tisch.taubenfilz': 'Duifgrijs vilt',
   'marker.tisch.ockerfilz': 'Okervilt',
+  'marker.ocean.koralle': 'Koraal',
+  'marker.ocean.seegras': 'Zeegras',
+  'marker.ocean.seeigel': 'Zee-egel',
+  'marker.ocean.bernstein': 'Barnsteen',
+  'marker.ocean.anemone': 'Anemoon',
+  'marker.ocean.lagune': 'Lagune',
+  'marker.ocean.tang': 'Kelp',
+  'marker.ocean.purpur': 'Purper',
 
 
   'tags.crumb': 'Labels',
@@ -1503,6 +1511,8 @@ I18N.nl = {
   'design.tisch.desc': 'Donker vilt en warm goud — alsof alles op de speeltafel ligt.',
   'design.tisch.tagline': 'Vilt, messing, dobbelstenen',
   'design.tisch.short': 'Vilt, messing, plaatsen aan tafel',
+  'design.ocean.name': 'Oceaan',
+  'design.ocean.desc': 'Licht en weids: groepen, leden, overwinningen — en een walvis.',
   'design.chooser.kicker': 'Nieuw in Spielwirbel',
   'design.chooser.title': 'Kies een ontwerp.',
   'design.chooser.body': 'Alles blijft op dezelfde plek — kast, kroniek, prijzen, sessie starten. Alleen het uiterlijk verandert. Je kunt het altijd wijzigen in je account.',

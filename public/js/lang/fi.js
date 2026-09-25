@@ -1122,6 +1122,14 @@ I18N.fi = {
   'marker.tisch.moosfilz': 'Sammalhuopa',
   'marker.tisch.taubenfilz': 'Kyyhkynharmaa huopa',
   'marker.tisch.ockerfilz': 'Okrahuopa',
+  'marker.ocean.koralle': 'Koralli',
+  'marker.ocean.seegras': 'Meriheinä',
+  'marker.ocean.seeigel': 'Merisiili',
+  'marker.ocean.bernstein': 'Meripihka',
+  'marker.ocean.anemone': 'Merivuokko',
+  'marker.ocean.lagune': 'Laguuni',
+  'marker.ocean.tang': 'Rakkolevä',
+  'marker.ocean.purpur': 'Purppura',
 
 
   'tags.crumb': 'Tunnisteet',
@@ -1471,6 +1479,8 @@ I18N.fi = {
   'design.tisch.desc': 'Tummaa verkaa ja lämmintä kultaa — kuin kaikki olisi pelipöydällä.',
   'design.tisch.tagline': 'Huopa, messinki, nopat',
   'design.tisch.short': 'Huopa, messinki, paikat pöydän ääressä',
+  'design.ocean.name': 'Valtameri',
+  'design.ocean.desc': 'Vaalea ja avara: porukat, jäsenet, voitot — ja valas.',
   'design.chooser.kicker': 'Uutta Spielwirbelissä',
   'design.chooser.title': 'Valitse ulkoasu.',
   'design.chooser.body': 'Kaikki pysyy samassa paikassa — hylly, kronikka, palkinnot ja pelin arvonta. Vain ulkoasu muuttuu. Voit vaihtaa milloin tahansa tilisi asetuksista.',

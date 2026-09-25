@@ -1211,6 +1211,14 @@ I18N.en = {
   'marker.tisch.moosfilz': 'Moss felt',
   'marker.tisch.taubenfilz': 'Dove felt',
   'marker.tisch.ockerfilz': 'Ochre felt',
+  'marker.ocean.koralle': 'Coral',
+  'marker.ocean.seegras': 'Seagrass',
+  'marker.ocean.seeigel': 'Sea urchin',
+  'marker.ocean.bernstein': 'Amber',
+  'marker.ocean.anemone': 'Anemone',
+  'marker.ocean.lagune': 'Lagoon',
+  'marker.ocean.tang': 'Kelp',
+  'marker.ocean.purpur': 'Purple',
 
 
   'tags.crumb': 'Tags',
@@ -1586,6 +1594,8 @@ I18N.en = {
   'design.tisch.desc': 'Dark felt and warm gold — as if it were all laid out on the games table.',
   'design.tisch.tagline': 'Felt, brass, dice',
   'design.tisch.short': 'Felt, brass, seats at the table',
+  'design.ocean.name': 'Ocean',
+  'design.ocean.desc': 'Bright and open: rounds, members, wins — and a whale.',
   'design.chooser.kicker': 'New in Spielwirbel',
   'design.chooser.title': 'Pick a design.',
   'design.chooser.body': 'Everything stays where it is — shelf, chronicle, trophies, spinning up a session. It just looks different. You can switch any time in your account.',

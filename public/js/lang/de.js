@@ -1202,6 +1202,14 @@ I18N.de = {
   'marker.tisch.moosfilz': 'Moosfilz',
   'marker.tisch.taubenfilz': 'Taubenfilz',
   'marker.tisch.ockerfilz': 'Ockerfilz',
+  'marker.ocean.koralle': 'Koralle',
+  'marker.ocean.seegras': 'Seegras',
+  'marker.ocean.seeigel': 'Seeigel',
+  'marker.ocean.bernstein': 'Bernstein',
+  'marker.ocean.anemone': 'Anemone',
+  'marker.ocean.lagune': 'Lagune',
+  'marker.ocean.tang': 'Tang',
+  'marker.ocean.purpur': 'Purpur',
 
 
   'tags.crumb': 'Tags',
@@ -1578,6 +1586,8 @@ I18N.de = {
   'design.tisch.desc': 'Dunkler Filz und warmes Gold — als läge alles auf dem Spieltisch.',
   'design.tisch.tagline': 'Filz, Messing, Würfel',
   'design.tisch.short': 'Filz, Messing, Plätze am Tisch',
+  'design.ocean.name': 'Ocean',
+  'design.ocean.desc': 'Hell und weit: Runden, Mitglieder, Siege — und ein Wal.',
   'design.chooser.kicker': 'Neu in Spielwirbel',
   'design.chooser.title': 'Wähl dir ein Design.',
   'design.chooser.body': 'Alles liegt weiter an derselben Stelle — Regal, Chronik, Pokale, Session wirbeln. Es sieht nur anders aus. Du kannst jederzeit im Konto wechseln.',

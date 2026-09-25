@@ -293,7 +293,9 @@ test('every toast tone keeps its message at AA on every design (Klassisch rules)
 });
 
 test('Der Tisch paints each toast tone from its own planks, at AA for the text and 3:1 for the glyph (T15b.4)', () => {
-  const hosts = THEMES.filter((t) => DESIGN_REGISTRY.find((d) => d.id === t.design.id && d.stylesheet));
+  // `t.design.stylesheet`, not a registry lookup by id: the round world `ocean`
+  // shares its id with the user design, and carries no stylesheet (#1210).
+  const hosts = THEMES.filter((t) => t.design.stylesheet);
   assert.ok(hosts.some((t) => t.design.id === 'tisch'), 'Der Tisch is no longer a user design with a stylesheet — this test is vacuous');
   const failures = [];
   let checked = 0;
@@ -663,6 +665,23 @@ test('every member tone carries its initials at AA, on every design', () => {
   ])), [], '.avatar / .nr-seat__avatar render --on-accent initials on these');
 });
 
+/* The ink a voter's NAME is actually printed in, for one design (#1210): the
+   member tone passed through the app's own personNameInk(), with the design
+   WORN, because that function reads the active design — Ocean prints its
+   darkened row there rather than the colour itself. Asked of the real function
+   rather than re-derived here (.claude/rules/assert-the-decision-not-its-ingredients.md);
+   a round design is worn over Klassisch, which is what an account sees in it. */
+function voterNameInk(color, design) {
+  const worn = DESIGN_REGISTRY.includes(design) ? design.id : 'klassisch';
+  APP.run(`applyDesign(${JSON.stringify(worn)})`);
+  setScheme(design.scheme === 'dark');
+  try {
+    return evaluate(APP.run(`personNameInk(memberTone(${JSON.stringify(color)}))`), design);
+  } finally {
+    APP.run("applyDesign('klassisch')");
+  }
+}
+
 test('every member tone clears AA as the voter name printed on the vote card', () => {
   /* personColor() is not only a fill: `.vote__who strong` prints the person's
      name in it, as TEXT. The background is the card (`.vote` is --surface), not
@@ -671,9 +690,12 @@ test('every member tone clears AA as the voter name printed on the vote card', (
 
      On a light design this is the palette's documented tuning (4.5:1 on white).
      On a dark one the stored hexes would land near 1.6:1 on the lifted surface,
-     which is what memberTone()'s lift is for. */
+     which is what memberTone()'s lift is for. And on Ocean's near-white
+     surface six of the eight measure 4.3:1 — the review's rule 2 — which is why
+     that design prints each name in its darkened row (#1210): with the
+     personNameInk() call removed from this sweep, exactly those six go red. */
   assert.deepEqual(sweep((t) => MEMBER_COLORS.map((c) => [
-    `${c} as the voter name`, memberTone(c, t.design), t.surface,
+    `${c} as the voter name`, voterNameInk(c, t.design), t.surface,
   ])), [], '.vote__who draws the person in their own tone on the .vote card');
 });
 
@@ -904,8 +926,8 @@ test('the seal\'s padlock clears the 3:1 non-text bar, and the pair cannot flip 
        found would be an artefact of the probe rather than a flip. Those designs
        cannot flip by construction: each of the two tokens is declared once, in
        the one block that applies to them. */
-    const own = DESIGN_BLOCKS.get(t.design.id);
-    if (own && own.scheme) continue;
+    const own = blocksOf(t.design);
+    if (own && (own.scheme || own.light)) continue;
     const under = (dark) => contrast(
       evaluate(ink[1], { ...t.design, scheme: dark ? 'dark' : 'light' }),
       evaluate(fill[1], { ...t.design, scheme: dark ? 'dark' : 'light' })).toFixed(2);
@@ -1419,10 +1441,10 @@ test('hovering a control never WEAKENS its edge', () => {
    Written as "the design that declares it" rather than "Tisch", so a second
    design declaring `--paper` is measured for free and one that declares
    something new fails the coverage guard instead of shipping unmeasured. */
-const { token, DESIGN_BLOCKS } = require('./support/theme');
+const { token, blocksOf } = require('./support/theme');
 
 const declares = (t, name) => {
-  const block = DESIGN_BLOCKS.get(t.design.id);
+  const block = blocksOf(t.design);
   return Boolean(block && new RegExp(`(?:^|[;{\\s])${name}:`).test(block.all));
 };
 const withToken = (name) => THEMES.filter((t) => declares(t, name));
@@ -1431,7 +1453,7 @@ const withToken = (name) => THEMES.filter((t) => declares(t, name));
    colour; this is for the two cases where the text itself is the subject — an
    alpha the resolver has no ground to composite against. */
 const declaredIn = (t, name) => {
-  const block = DESIGN_BLOCKS.get(t.design.id);
+  const block = blocksOf(t.design);
   const m = block && new RegExp(`(?:^|[;{\\s])${name}:\\s*([^;}]+)`).exec(block.all);
   return m ? m[1].trim() : null;
 };
@@ -1943,6 +1965,156 @@ test('a design that declares Pokale PLINTHS carries their one ink on all six sto
   assert.deepEqual(failures, [], 'a plinth caption has to be readable on every stop of every plinth');
 });
 
+/* ---- Ocean (#1210): the water, the sand, the bubble and the people ----------
+   Ocean is the first LIGHT design with tokens of its own, and its failure class
+   is the inverse of Der Tisch's: saturated colour on near-white, and text over a
+   page-height gradient whose dark end nobody measured — both of the review's
+   real findings lived there (docs/design/pruefung-ocean-2026-09-20.md, points 6
+   and 7). So every stop of every gradient O1 declares is measured here against
+   the ink it is allowed to carry, and the one it is NOT allowed to carry is
+   named as such.
+
+   Keyed on `--water-flat` rather than on the id, like the Tisch families above,
+   so a later light design that declares the same water is measured for free. */
+test('a design that declares a WATER gradient carries its inks on every stop it allows them on', () => {
+  const hosts = withToken('--water-flat');
+  assert.ok(hosts.length >= 1, 'no design declares a water gradient — this test is vacuous');
+  const failures = [];
+  let checked = 0;
+  for (const t of hosts) {
+    const v = (n) => token(n, t.design);
+    const pairs = [
+      /* Body ink on every stop, down to the coast — O1: „Küstenwasser … Nur
+         Tinte, nie Akzent". The recap card's waterline stop (R1) too. */
+      ...['--water-foam', '--water-shallows', '--water-surf', '--water-flat', '--water-coast',
+        '--water-mid', '--waterline'].map((g) => [`--ink on ${g}`, v('--ink'), v(g), AA_TEXT]),
+      /* The waterline's deep end carries no running text, only a large label
+         („nur Tinte, kein Fließtext"), so the large-text bar. */
+      ['--ink on --waterline-deep', v('--ink'), v('--waterline-deep'), AA_LARGE],
+      /* THE ACCENT RULE: accent text down to --water-flat and on nothing
+         darker. Measured on all four stops it is allowed on… */
+      ...['--water-foam', '--water-shallows', '--water-surf', '--water-flat'].flatMap((g) => [
+        [`--brand on ${g}`, v('--brand'), v(g), AA_TEXT],
+        [`--ink-soft on ${g}`, v('--ink-soft'), v(g), AA_TEXT],
+      ]),
+    ];
+    for (const [label, ink, ground, bar] of pairs) {
+      checked += 1;
+      const ratio = contrast(ink, ground);
+      if (!(ratio >= bar)) failures.push(`${name(t)} — ${label} = ${ratio.toFixed(2)}:1 (bar ${bar})`);
+    }
+    /* …and the coast IS the boundary: if accent text ever cleared it, the rule
+       in ocean.css („on nothing darker than --water-flat") would be stating a
+       limit that is not the real one, and a screen issue would trust it. The
+       review measured the accent at 4.03:1 on the old bottom stop (O5.2); this
+       keeps the stop the rule names honest in both directions. */
+    assert.ok(contrast(v('--brand'), v('--water-coast')) < AA_TEXT,
+      `${name(t)}: the accent now clears --water-coast — move the accent-text floor down to it`);
+  }
+  assert.ok(checked >= 16, `only ${checked} water pairs measured`);
+  assert.deepEqual(failures, [], 'text on the water gradient must clear its bar on every stop it is allowed on');
+});
+
+test('a design that declares a DEEP state keeps its light ink on every deep stop', () => {
+  /* The one dark state of Ocean: a hidden card, the pass-device blind (O4.3)
+     and the whale. Light ink only — the review's R1 caption tone (#9ec2d4)
+     included, since it is the blind's running text. */
+  const hosts = withToken('--deep');
+  assert.ok(hosts.length >= 1, 'no design declares a deep state — this test is vacuous');
+  const failures = [];
+  for (const t of hosts) {
+    const v = (n) => token(n, t.design);
+    for (const g of ['--deep', '--deep-bottom', '--deep-ground']) {
+      for (const ink of ['--deep-ink', '--deep-ink-soft']) {
+        const ratio = contrast(v(ink), v(g));
+        if (!(ratio >= AA_TEXT)) failures.push(`${name(t)} — ${ink} on ${g} = ${ratio.toFixed(2)}:1`);
+      }
+    }
+    // O1 „Rückenflosse — Text #f7fbfc: 6,3:1" on the whale's top stop.
+    const whale = contrast(v('--deep-ink'), v('--whale'));
+    if (!(whale >= AA_TEXT)) failures.push(`${name(t)} — --deep-ink on --whale = ${whale.toFixed(2)}:1`);
+  }
+  assert.deepEqual(failures, [], 'text in the deep must clear AA on every stop of it');
+});
+
+test('a design that declares SAND, WAVE PAPER and the BUBBLE carries its ink on every stop', () => {
+  /* The shell (the pot), the no-cover placeholder and the bubble all carry
+     text or a glyph: the ink as text at 4.5:1, and the accent GLYPH the
+     placeholder and the empty-state medallion draw at the 3:1 non-text bar. */
+  const hosts = withToken('--sand');
+  assert.ok(hosts.length >= 1, 'no design declares sand — this test is vacuous');
+  const failures = [];
+  for (const t of hosts) {
+    const v = (n) => token(n, t.design);
+    const grounds = ['--sand-light', '--sand', '--sand-deep', '--sand-deep-soft',
+      '--wave-paper', '--wave-paper-deep', '--bubble-hi', '--bubble-1', '--bubble-2', '--bubble-3'];
+    const pairs = grounds.map((g) => [`--ink on ${g}`, v('--ink'), v(g), AA_TEXT]);
+    for (const g of ['--wave-paper', '--wave-paper-deep', '--bubble-2']) {
+      pairs.push([`--brand glyph on ${g}`, v('--brand'), v(g), AA_LARGE]);
+    }
+    for (const [label, ink, ground, bar] of pairs) {
+      const ratio = contrast(ink, ground);
+      if (!(ratio >= bar)) failures.push(`${name(t)} — ${label} = ${ratio.toFixed(2)}:1 (bar ${bar})`);
+    }
+  }
+  assert.deepEqual(failures, []);
+});
+
+test('a design that declares soft status surfaces, a toast action and a danger hover keeps each legible', () => {
+  const hosts = withToken('--toast-action');
+  assert.ok(hosts.length >= 1, 'no design declares a toast action ink — this test is vacuous');
+  const failures = [];
+  for (const t of hosts) {
+    const v = (n) => token(n, t.design);
+    const pairs = [
+      // O1.6: the toast is --ink with --surface text; its action is light blue.
+      ['--toast-action on the toast (--ink)', v('--toast-action'), v('--ink')],
+      // R1's soft surfaces carry their own semantic ink and body ink.
+      ['--good on --good-soft', v('--good'), v('--good-soft')],
+      ['--ink on --good-soft', v('--ink'), v('--good-soft')],
+      ['--danger on --danger-soft', v('--danger'), v('--danger-soft')],
+      ['--ink on --danger-soft', v('--ink'), v('--danger-soft')],
+      // The danger button's hover: its fill under --on-accent, and as text.
+      ['--on-accent on --danger-strong', v('--on-accent'), v('--danger-strong')],
+      ['--danger-strong on --surface', v('--danger-strong'), v('--surface')],
+    ];
+    for (const [label, ink, ground] of pairs) {
+      const ratio = contrast(ink, ground);
+      if (!(ratio >= AA_TEXT)) failures.push(`${name(t)} — ${label} = ${ratio.toFixed(2)}:1`);
+    }
+  }
+  assert.deepEqual(failures, []);
+});
+
+test('a design that declares a DARKENED person row: the colours at their permitted size, the darkened row as names', () => {
+  /* Review rule 2, binding in ocean.css: person colour is ring, fill, tide line
+     and bar — never text under 24px. So the eight colours are held to the 3:1
+     bar (a non-text graphic, and text only from 24px) on every ground a person
+     is drawn on; the darkened row is what prints a NAME, and R1's floor for it
+     is 3:1 because it appears at 26px — it is held to the text bar here anyway,
+     since every one of the eight clears it by a wide margin and a name that
+     loses its size would otherwise lose its contrast with it. */
+  const hosts = withToken('--person-deep-1');
+  assert.ok(hosts.length >= 1, 'no design declares a darkened person row — this test is vacuous');
+  const failures = [];
+  let checked = 0;
+  for (const t of hosts) {
+    const v = (n) => token(n, t.design);
+    const grounds = [['--page-bg', t.page], ['--surface', v('--surface')], ['--control-fill', v('--control-fill')]];
+    MEMBER_COLORS.forEach((c, i) => {
+      for (const [g, ground] of grounds) {
+        checked += 2;
+        const ring = contrast(rgb(c), ground);
+        if (!(ring >= AA_LARGE)) failures.push(`${name(t)} — ${c} on ${g} = ${ring.toFixed(2)}:1 (bar ${AA_LARGE})`);
+        const deep = contrast(v(`--person-deep-${i + 1}`), ground);
+        if (!(deep >= AA_TEXT)) failures.push(`${name(t)} — --person-deep-${i + 1} on ${g} = ${deep.toFixed(2)}:1`);
+      }
+    });
+  }
+  assert.ok(checked >= 48, `only ${checked} person pairs measured`);
+  assert.deepEqual(failures, [], 'a person colour must read as a ring, and its darkened row as a name');
+});
+
 test('every colour token a design declares is measured by one of the checks above', () => {
   /* The guard that makes #1188's move safe. A design's root block is now
      RESOLVABLE by test/support/theme.js, and test/design-layer.test.js pushes
@@ -1983,13 +2155,24 @@ test('every colour token a design declares is measured by one of the checks abov
     // (gold is --brass-hi/--gold-deep, measured by the same check).
     '--plinth-silver-hi', '--plinth-silver', '--plinth-bronze-hi', '--plinth-bronze',
     '--plinth-ink',
+    // #1210, Ocean: the water gradient, the deep state and the whale's top
+    // stop, the sand, wave paper and bubble grounds, the soft status surfaces,
+    // the toast action, the danger hover, and the darkened person row.
+    '--water-foam', '--water-shallows', '--water-surf', '--water-flat', '--water-coast',
+    '--water-mid', '--waterline', '--waterline-deep',
+    '--deep', '--deep-bottom', '--deep-ground', '--deep-ink', '--deep-ink-soft', '--whale',
+    '--sand-light', '--sand', '--sand-deep', '--sand-deep-soft',
+    '--wave-paper', '--wave-paper-deep', '--bubble-hi', '--bubble-1', '--bubble-2', '--bubble-3',
+    '--good-soft', '--danger-soft', '--toast-action', '--danger-strong',
+    '--person-deep-1', '--person-deep-2', '--person-deep-3', '--person-deep-4',
+    '--person-deep-5', '--person-deep-6', '--person-deep-7', '--person-deep-8',
   ]);
   /* Not colours, so not this test's business: a lift PERCENTAGE, and the four
      compositing alphas the elevation ramp is built from. The alphas are painted
      over a ground this file cannot know (a shadow falls on whatever is behind
      the card), and they can only ever DARKEN it — which is the safe direction
      for every pair already measured on that ground. */
-  const NOT_A_COLOUR = /^--(member-lift|cast|cast-soft|cast-deep|brass-sheen|brass-sheen-strong)$/;
+  const NOT_A_COLOUR = /^--(member-lift|cast|cast-soft|cast-deep|cast-button|brass-sheen|brass-sheen-strong)$/;
   /* A hairline on a NON-INTERACTIVE label. SC 1.4.11 binds a boundary only
      where it identifies a control, and these two identify a printed tag — so
      there is no bar to measure them against, and inventing one would push them
@@ -2000,17 +2183,26 @@ test('every colour token a design declares is measured by one of the checks abov
      red FILL identifies that control, measured above) and the paper hairline
      between rows and under a head, which separates and identifies nothing. */
   const DECORATIVE_EDGE = /^--(played-tag-edge|veto-tag-edge|paper-danger-edge|paper-line|plinth-edge)$/;
+  /* Ocean (#1210) adds the same two kinds and one more, each carrying no text:
+     a hairline inside a card and the pressed button's rim (the fill identifies
+     that control); the shell's rim, a rating bubble's resting rim (the face
+     glyph identifies the control) and the whale's shading and fin, all parts of
+     a picture; the empty-Pokale bubble row; and the three DISABLED tones, which
+     WCAG 1.4.3 and 1.4.11 exempt by name (an inactive control). */
+  const OCEAN_UNPAIRED = /^--(line-soft|accent-edge|shell-edge|bubble-rim|bubble-trail|whale-deep|whale-shade|whale-fin|disabled-fill|disabled-ink|disabled-edge)$/;
 
   const unmeasured = [];
   for (const t of THEMES) {
-    const block = DESIGN_BLOCKS.get(t.design.id);
+    const block = blocksOf(t.design);
     if (!block) continue;
     for (const m of block.all.matchAll(/(^|[;{\s])(--[a-z0-9-]+)\s*:/gm)) {
       const tok = m[2];
       if (inApp.has(tok) || MEASURED.has(tok) || NOT_A_COLOUR.test(tok)) continue;
-      if (DECORATIVE_EDGE.test(tok)) continue;
-      // A layout token is not a colour either — radii, sizes, fonts, durations.
-      if (/^--(radius|text|w|dur|ease|font|rail|dock)/.test(tok)) continue;
+      if (DECORATIVE_EDGE.test(tok) || OCEAN_UNPAIRED.test(tok)) continue;
+      // A layout token is not a colour either — radii, sizes, fonts, durations,
+      // and since #1210 the spacing grid, the target sizes and an elevation
+      // recipe (built from the --cast alphas above, never from a colour).
+      if (/^--(radius|text|w|dur|ease|font|rail|dock|space|target|shadow)/.test(tok)) continue;
       unmeasured.push(`${name(t)} -> ${tok}`);
     }
   }

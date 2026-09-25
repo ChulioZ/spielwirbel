@@ -1158,6 +1158,14 @@ I18N.it = {
   'marker.tisch.moosfilz': 'Feltro muschio',
   'marker.tisch.taubenfilz': 'Feltro tortora',
   'marker.tisch.ockerfilz': 'Feltro ocra',
+  'marker.ocean.koralle': 'Corallo',
+  'marker.ocean.seegras': 'Posidonia',
+  'marker.ocean.seeigel': 'Riccio di mare',
+  'marker.ocean.bernstein': 'Ambra',
+  'marker.ocean.anemone': 'Anemone',
+  'marker.ocean.lagune': 'Laguna',
+  'marker.ocean.tang': 'Alga',
+  'marker.ocean.purpur': 'Porpora',
 
 
   'tags.crumb': 'Etichette',
@@ -1510,6 +1518,8 @@ I18N.it = {
   'design.tisch.desc': 'Feltro scuro e oro caldo, come se fosse tutto sul tavolo da gioco.',
   'design.tisch.tagline': 'Feltro, ottone, dadi',
   'design.tisch.short': 'Feltro, ottone, posti al tavolo',
+  'design.ocean.name': 'Oceano',
+  'design.ocean.desc': 'Chiaro e ampio: gruppi, membri, vittorie… e una balena.',
   'design.chooser.kicker': 'Novità su Spielwirbel',
   'design.chooser.title': 'Scegli un design.',
   'design.chooser.body': 'Tutto resta dov\'è: scaffale, cronaca, trofei, avvio della sessione. Cambia solo l\'aspetto. Puoi cambiarlo quando vuoi nel tuo account.',

@@ -1165,6 +1165,14 @@ I18N.es = {
   'marker.tisch.moosfilz': 'Fieltro musgo',
   'marker.tisch.taubenfilz': 'Fieltro paloma',
   'marker.tisch.ockerfilz': 'Fieltro ocre',
+  'marker.ocean.koralle': 'Coral',
+  'marker.ocean.seegras': 'Pradera marina',
+  'marker.ocean.seeigel': 'Erizo de mar',
+  'marker.ocean.bernstein': 'Ámbar',
+  'marker.ocean.anemone': 'Anémona',
+  'marker.ocean.lagune': 'Laguna',
+  'marker.ocean.tang': 'Alga',
+  'marker.ocean.purpur': 'Púrpura',
 
 
   'tags.crumb': 'Etiquetas',
@@ -1534,6 +1542,8 @@ I18N.es = {
   'design.tisch.desc': 'Fieltro oscuro y oro cálido, como si todo estuviera sobre la mesa de juego.',
   'design.tisch.tagline': 'Fieltro, latón, dados',
   'design.tisch.short': 'Fieltro, latón, sitios en la mesa',
+  'design.ocean.name': 'Océano',
+  'design.ocean.desc': 'Claro y abierto: grupos, miembros, victorias… y una ballena.',
   'design.chooser.kicker': 'Novedad en Spielwirbel',
   'design.chooser.title': 'Elige un diseño.',
   'design.chooser.body': 'Todo sigue en el mismo sitio: estantería, crónica, trofeos y el sorteo de la sesión. Solo cambia el aspecto. Puedes cambiarlo cuando quieras en tu cuenta.',
