@@ -132,6 +132,36 @@ test('every design\u2019s eight markers carry its own ink at 4.5:1', () => {
   assert.deepEqual(fails, [], `markers below AA for their own ink:\n${fails.join('\n')}`);
 });
 
+/* A design's POSTER (#1277, designs.js `poster`): the bill the first-start
+   chooser prints for it under Der Tisch, painted inline from the registry.
+   Two inks, two bars, measured on BOTH ground stops since the bill is a
+   top-to-foot gradient and text can land anywhere on it:
+   - `ink` is the wordmark, only ever set at display size (≥ 20px, 800 — the
+     CSS half is pinned in test/design-posters-tisch.test.js), so large-text
+     3:1. That is what lets Der Tisch print its gold on felt, which T1's A1 rule
+     allows from 24px.
+   - `sub` is small text — the tagline, and the wordmark in the phone's 58px
+     tile — so 4.5:1. */
+test('every design’s poster inks clear their bars on both ground stops', () => {
+  const fails = [];
+  let checked = 0;
+  for (const d of DESIGN_REGISTRY.filter((x) => x.poster)) {
+    const { ground, ink, sub } = d.poster;
+    assert.equal(ground.length, 2, `${d.id}: a poster ground is two stops`);
+    for (const stop of ground) {
+      for (const [name, colour, bar] of [['ink', ink, 3], ['sub', sub, 4.5]]) {
+        checked++;
+        const ratio = contrast(rgb(colour), rgb(stop));
+        if (!(ratio >= bar)) fails.push(`${d.id} ${name} ${colour} on ${stop}: ${ratio.toFixed(2)}:1 < ${bar}`);
+      }
+    }
+  }
+  // Both shipped designs carry one; a floor rather than a count so a design
+  // added without its poster yet (the tile falls back) does not redden this.
+  assert.ok(checked >= 8, `anti-vacuous: only ${checked} pairs measured`);
+  assert.deepEqual(fails, [], `poster inks below their bar:\n${fails.join('\n')}`);
+});
+
 /* `scheme` is DECLARED in round-designs.js rather than measured off the page,
    so the registry stays the single statement of what a design is. The cost of
    declaring is that it can disagree with the colour — a dark page that forgot
@@ -1569,6 +1599,60 @@ test('Der Tisch\'s hub tiles keep their figures and labels at AA on the grounds 
       ['--ink-soft on --sunken (tile label)', v('--ink-soft'), v('--sunken'), AA_TEXT],
       ['--ink on --surface (count tile)', v('--ink'), v('--surface'), AA_TEXT],
       ['--gold on --surface (tile glyph)', v('--gold'), v('--surface'), AA_LARGE],
+    ]) {
+      const ratio = contrast(fg, bg);
+      if (!(ratio >= bar)) failures.push(`${name(t)} — ${label} = ${ratio.toFixed(2)}:1 (bar ${bar})`);
+    }
+  }
+  assert.deepEqual(failures, []);
+});
+
+test('Der Tisch\'s app chrome keeps the plate, the kicker and the account name at AA (#1279)', () => {
+  /* The top bar is walnut (--wood-deep) under Der Tisch; the wordmark sits on
+     the brass plate (a --brass-hi → --gold-deep gradient, so both stops are
+     measured); the lobby kicker is --ink-soft both in the bar and, on a phone,
+     on the page; the account name is --ink on the button's --control-fill. */
+  const hosts = withToken('--wood-deep').filter((t) => declares(t, '--brass-hi'));
+  assert.ok(hosts.length >= 1, 'no design declares the walnut bar and the brass plate — this test is vacuous');
+  const failures = [];
+  for (const t of hosts) {
+    const v = (n) => token(n, t.design);
+    for (const [label, fg, bg] of [
+      ['plate --on-accent on --brass-hi', v('--on-accent'), v('--brass-hi')],
+      ['plate --on-accent on --gold-deep', v('--on-accent'), v('--gold-deep')],
+      ['bar kicker --ink-soft on --wood-deep', v('--ink-soft'), v('--wood-deep')],
+      ['lobby kicker --ink-soft on --page-bg', v('--ink-soft'), v('--page-bg')],
+      ['account name --ink on --control-fill', v('--ink'), v('--control-fill')],
+    ]) {
+      const ratio = contrast(fg, bg);
+      if (!(ratio >= AA_TEXT)) failures.push(`${name(t)} — ${label} = ${ratio.toFixed(2)}:1`);
+    }
+  }
+  assert.deepEqual(failures, []);
+});
+
+test('Der Tisch\'s young-round features keep their text at AA on the grounds they sit on (#1280)', () => {
+  /* T7.2 / T7.5 / T7.6 (tisch.css „The young round"): the „Nächster Schritt"
+     card, the demo summary rows, the Pokale leader block and the threshold
+     sentences are --ink / --ink-soft on --surface; a next-step row lifts to
+     --control-fill under the pointer; their glyphs and the leader's crown are
+     --gold (non-text, SC 1.4.11). The lobby's invite slip is the paper slip
+     `.round-card__last` already is — --paper-ink on the --paper gradient, with a
+     --gold-edge glyph. Measured for every design that declares both families. */
+  const hosts = withToken('--paper').filter((t) => token('--felt', t.design));
+  assert.ok(hosts.length >= 1, 'no design declares --paper and --felt — this test is vacuous');
+  const failures = [];
+  for (const t of hosts) {
+    const v = (n) => token(n, t.design);
+    for (const [label, fg, bg, bar] of [
+      ['--ink on --surface (row label, leader line)', v('--ink'), v('--surface'), AA_TEXT],
+      ['--ink-soft on --surface (threshold sentence, hint, value)', v('--ink-soft'), v('--surface'), AA_TEXT],
+      ['--ink on --control-fill (next-step row, hovered)', v('--ink'), v('--control-fill'), AA_TEXT],
+      ['--gold on --surface (row glyph, crown)', v('--gold'), v('--surface'), AA_LARGE],
+      ['--paper-ink on --paper (invite slip)', v('--paper-ink'), v('--paper'), AA_TEXT],
+      ['--paper-ink on --paper-raised (invite slip)', v('--paper-ink'), v('--paper-raised'), AA_TEXT],
+      ['--gold-edge on --paper (invite slip glyph)', v('--gold-edge'), v('--paper'), AA_LARGE],
+      ['--gold-edge on --paper-raised (invite slip glyph)', v('--gold-edge'), v('--paper-raised'), AA_LARGE],
     ]) {
       const ratio = contrast(fg, bg);
       if (!(ratio >= bar)) failures.push(`${name(t)} — ${label} = ${ratio.toFixed(2)}:1 (bar ${bar})`);

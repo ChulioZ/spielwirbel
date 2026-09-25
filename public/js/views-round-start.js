@@ -341,6 +341,16 @@ function renderStartTab(round, activeGames) {
   // (#946) — a margin on the card itself is carried across the column break by
   // WebKit instead of being truncated.
   const grid = h('<div class="hub-cards"></div>');
+  /* Der Tisch's DEMO round (T7.6, #1280): the three previews condense into one
+     list and the „Gefällt dir das?" invitation follows it, both leading the grid
+     right under the plate — the demo's point is the invitation, so it goes
+     above the fold. isDemoAccount() is the banner's own predicate, so the two
+     can never disagree about whether this is a demo. */
+  const demo = tisch && isDemoAccount();
+  if (demo) {
+    grid.appendChild(cardSlot(hubDemoSummary(round, activeGames)));
+    grid.appendChild(cardSlot(hubDemoInvite()));
+  }
   [
     // Der Tisch's invitation (T7.4, #1269) leads — it is the one next step.
     // Null on every other round and on Klassisch, so that list is unchanged.
@@ -356,7 +366,7 @@ function renderStartTab(round, activeGames) {
   // The three sub-page previews (#1185, hub-previews.js), LAST in the grid:
   // "what is over there" is a weaker claim on the reader than "play this
   // tonight". Same null-or-nothing contract as the four above.
-  const previews = [
+  const previews = demo ? [] : [
     hubRegalPreview(round, activeGames),
     hubPokalePreview(round),
     hubChronikPreview(round),

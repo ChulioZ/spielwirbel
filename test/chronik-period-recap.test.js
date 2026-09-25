@@ -289,7 +289,10 @@ test('„Teilen" shares the SELECTED period, from the numbers on screen', async 
   await new Promise((r) => setTimeout(r, 0));
   assert.equal(drawn.length, 1);
   assert.equal(drawn[0].periodLabel, monthLabel(dom, '2026-07-01T00:00:00'), 'the card shared the wrong period');
-  assert.equal(drawn[0].roundName, 'Freitagsrunde');
+  assert.equal(drawn[0].heading, 'Freitagsrunde');
+  // The shelf row's entries ride the model since #1147 — the round card's three.
+  assert.deepEqual([...drawn[0].shelf].map((s) => s.label),
+    ['added', 'retired', 'completed'].map((k) => dom.run(`t('periodRecap.label.${k}')`)));
   // The same numbers the section is showing, not a second aggregation: July has
   // six played sessions, and its most-played game is Azul on three nights.
   assert.equal(drawn[0].sessions, 6);

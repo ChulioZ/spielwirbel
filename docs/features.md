@@ -758,6 +758,15 @@ What the app does, in detail. For a short overview see the
   describe breadth rather than performance, the
   round and game counts, are the line under your name. The favourite and
   strongest game are the two ribboned boxes at the foot of the card.
+- **„Dein Rückblick"** – *accounts mode only* (issue #1147). Your own profile —
+  and only yours; friends never see it — has the Chronik's month/year picker for
+  **you**, across every round you sit in: how many sessions you played, how many
+  different games, your most-played game, the game **you** rated highest (your
+  own ratings, not the group's score) and the games you played for the first
+  time ever. It records what you played, not who won, so it carries no wins and
+  no win rate. Months are counted by your device's own calendar, exactly like the
+  Chronik's. „Teilen" makes the same shareable picture as the round recap, headed
+  with your username instead of a round name.
 - **Profile pictures** – *accounts mode only* (issue #841). An account can upload
   a picture, replace it or remove it again from the Konto screen; without one the
   app keeps showing the coloured tile with your initials, which also stands in if

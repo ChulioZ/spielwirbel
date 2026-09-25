@@ -242,7 +242,7 @@ const frontendGlobals = {
   accountsActive: 'readonly', isLoggedIn: 'readonly', authFetch: 'readonly',
   currentUserId: 'readonly', currentUsername: 'readonly',
   isDemoAccount: 'readonly', bgStatsEnabled: 'readonly', setCachedPref: 'readonly',
-  startDemo: 'readonly', setupDemoBanner: 'readonly',
+  startDemo: 'readonly', setupDemoBanner: 'readonly', leaveDemoForRegister: 'readonly',
   setupTermsBanner: 'readonly',
   enterDemo: 'readonly', resumeDemo: 'readonly', endDemo: 'readonly',
   authErrorKey: 'readonly',
@@ -259,7 +259,7 @@ const frontendGlobals = {
   showRateLimited: 'readonly',
   showAuthDone: 'readonly', buildResend: 'readonly', renderVerifyLanding: 'readonly',
   renderResetLanding: 'readonly', setupAccountUi: 'readonly',
-  accountApi: 'readonly', setupInboxUi: 'readonly', setInboxDot: 'readonly',
+  accountApi: 'readonly', setupInboxUi: 'readonly', renderAccountFace: 'readonly', accountBtnLabel: 'readonly', setInboxDot: 'readonly',
   refreshInboxBadge: 'readonly',
   // account.js — the „Was ist neu" dot (issue #741)
   hasUnseenNews: 'readonly', setNewsDot: 'readonly', markNewsSeen: 'readonly',
@@ -288,7 +288,8 @@ const frontendGlobals = {
   renderFeedTile: 'readonly', renderFeedTiles: 'readonly',
   // views-profile.js — the account profile (issue #558, rebuilt in #1132)
   showProfile: 'readonly', renderProfileCard: 'readonly', renderProfileState: 'readonly',
-  profileMenuItems: 'readonly',
+  profileMenuItems: 'readonly', profileGameTile: 'readonly',
+  renderAccountRecapSection: 'readonly', ACCOUNT_RECAP_NEW_SHOWN: 'readonly',
   friendRowMain: 'readonly', wireFriendRowMain: 'readonly',
   // views-account.js (issue #482)
   showAccount: 'readonly', renderKontoFact: 'readonly',
@@ -362,12 +363,18 @@ const frontendGlobals = {
   shelfRect: 'readonly', drawShelfHead: 'readonly', drawShelfDim: 'readonly',
   drawShelfLists: 'readonly', drawShelfGaps: 'readonly', drawShelfFoot: 'readonly',
   drawShelfCard: 'readonly', shelfProfileCardBlob: 'readonly',
+  YOUNG_ROUND_SERIES_FROM: 'readonly', YOUNG_ROUND_PODIUM_FROM: 'readonly',
+  youngRoundPlayed: 'readonly',
   RECAP_CARD_W: 'readonly', RECAP_CARD_PAD: 'readonly', RECAP_CARD_GAP: 'readonly',
   RECAP_CARD_TILE_H: 'readonly', RECAP_CARD_ROW_H: 'readonly', RECAP_CARD_SHELF_H: 'readonly',
   RECAP_CARD_SCENE_H: 'readonly',
   recapToken: 'readonly', recapPalette: 'readonly', recapFit: 'readonly',
   recapFont: 'readonly', recapPanel: 'readonly', recapCardBlocks: 'readonly',
   recapCardHeight: 'readonly', drawRecapCard: 'readonly', recapCardBlob: 'readonly',
+  recapShelfEntries: 'readonly',
+  // account-recap.js (#1147) — „Dein Rückblick" on the own profile
+  accountPeriodsOf: 'readonly', accountRecap: 'readonly',
+  accountRecapGame: 'readonly', accountRecapByTitle: 'readonly',
   // session-share.js (issue #526) — internal helpers listed for the same reason.
   sessionShareText: 'readonly', shareRatingLines: 'readonly', shareHeadline: 'readonly',
   SHARE_MEDALS: 'readonly', SHARE_TROPHY: 'readonly', SHARE_ENDING_TITLES: 'readonly',
@@ -454,6 +461,9 @@ const frontendGlobals = {
   // #1269 — Der Tisch's young-round states (hub-cards.js, views-round-start.js)
   roundIsYoung: 'readonly', hubSentenceCard: 'readonly', hubYoungCard: 'readonly',
   hubEmptyTable: 'readonly',
+  // #1280 — Der Tisch's young-round features (views-home.js, hub-cards.js, views-pokale.js)
+  lobbyInviteSlip: 'readonly', tischNextStep: 'readonly', hubDemoSummary: 'readonly',
+  hubDemoInvite: 'readonly', pokaleYoungLead: 'readonly',
   // off-shelf.js (#1185) — the four off-shelf destinations, one definition
   offShelfEntries: 'readonly', offShelfSegments: 'readonly',
   // hub-previews.js (#1185) — the hub's three sub-page previews + „Nicht im Regal"

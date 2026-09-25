@@ -32,7 +32,7 @@ const { loadApp } = require('./support/dom');
 
 // A period model with no optional blocks, so the height is the base card and any
 // growth in it is the band and nothing else.
-const MODEL = { roundName: 'Freitagsrunde', periodLabel: 'August 2026', sessions: 4, gamesPlayed: 7 };
+const MODEL = { heading: 'Freitagsrunde', periodLabel: 'August 2026', sessions: 4, gamesPlayed: 7 };
 
 /* A recording 2d context. Every method drawRecapCard reaches for, and nothing
    more — an unexpected call throws by name rather than being silently absorbed,

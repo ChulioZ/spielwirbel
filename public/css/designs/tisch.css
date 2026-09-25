@@ -941,6 +941,106 @@
   transform: none;
 }
 
+/* --- The app chrome: brass plate, lobby voice, the account's face (#1279) ---
+   Every T3/T6 frame draws the top bar the same way: a walnut strip on a brass
+   rim, the wordmark on a brass PLATE (the one plate treatment, see
+   .round-card__name), and the account as avatar + name. The plate is the home
+   link's own text, so it translates nowhere and its accessible name is still
+   the a11y.home label core.js sets.
+
+   Below 521px styles.css drops the wordmark to the tornado glyph (the bar does
+   not fit both); the plate keeps that trade and becomes a small brass tile
+   around the glyph. From 521px up the glyph goes and the word is the plate. */
+:root[data-design="tisch"][data-scheme="dark"] .topbar {
+  background: var(--wood-deep);
+  border-bottom: 3px solid var(--gold-edge);
+}
+/* No `display` here, deliberately: the link is a flex item (so already
+   blockified), and at (0,4,0) any display would beat styles.css's
+   `body.auth-screen .topbar__home { display: none }` and put the plate on the
+   sign-in screens, which keep only the language picker. */
+:root[data-design="tisch"][data-scheme="dark"] .topbar__home {
+  flex: none;
+  font-weight: 800;
+  font-size: var(--text-md);
+  line-height: 1.2;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--on-accent);
+  background: linear-gradient(180deg, var(--brass-hi), var(--gold-deep));
+  border-radius: var(--radius-sm);
+  padding: 6px 13px;
+  text-decoration: none;
+  box-shadow: var(--shadow-1);
+}
+@media (min-width: 521px) {
+  :root[data-design="tisch"][data-scheme="dark"] .topbar__home .ti { display: none; }
+}
+@media (max-width: 520px) {
+  :root[data-design="tisch"][data-scheme="dark"] .topbar__home {
+    padding: 5px 7px;
+    font-size: var(--text-xl);
+    letter-spacing: 0;
+  }
+}
+/* The lobby's sub-brand line, „Spielecafé · deine Tische". T3.1 sets it in the
+   bar beside the plate; T6.1's phone has no wordmark in its bar and prints it
+   above the greeting instead. showHome renders both (the bar's through
+   setContext's 'kicker' kind), and exactly one is shown per width. */
+:root[data-design="tisch"][data-scheme="dark"] .topbar__context--kicker {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: var(--text-md);
+  color: var(--ink-soft);
+}
+:root[data-design="tisch"][data-scheme="dark"] .lobby-head__kicker {
+  margin: 0 0 3px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--text-sm);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+@media (max-width: 767px) {
+  :root[data-design="tisch"][data-scheme="dark"] .topbar__context--kicker { display: none; }
+}
+@media (min-width: 768px) {
+  :root[data-design="tisch"][data-scheme="dark"] .lobby-head__kicker { display: none; }
+}
+/* The account as avatar + name (account-chrome.js renderAccountFace). The name
+   shows from 768px only: T6.1's phone bar draws the avatar alone, and the 390px
+   bar already holds the plate, the picker and up to four icon buttons.
+   `:not([hidden])` because `.topbar__acct` deliberately declares no `display`
+   — a bare `display: inline-flex` here would put the button back on screen
+   for a logged-out visitor (.claude/rules/hidden-attribute-vs-display-rule.md). */
+:root[data-design="tisch"][data-scheme="dark"] .topbar__acct--face:not([hidden]) {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px;
+  border-radius: 999px;
+}
+:root[data-design="tisch"][data-scheme="dark"] .topbar__avatar {
+  width: 32px;
+  height: 32px;
+  border: 0;
+}
+:root[data-design="tisch"][data-scheme="dark"] .topbar__name {
+  display: none;
+  max-width: 14ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--ink);
+}
+@media (min-width: 768px) {
+  :root[data-design="tisch"][data-scheme="dark"] .topbar__acct--face:not([hidden]) { padding: 3px 12px 3px 3px; }
+  :root[data-design="tisch"][data-scheme="dark"] .topbar__name { display: block; }
+}
+
 /* --- The „Abstimmung läuft" notice (T3.1, T6.1) ---------------------------
    A vote already running is the one thing on the lobby that is not a
    destination but an appointment, so it is printed on paper and laid on the
@@ -1281,13 +1381,14 @@
   /* --ring-r is the seat ring's radius and --table-y the disc's centre; both
      are read by the seat rule below, so a bigger table needs one edit. */
   :root[data-design="tisch"][data-scheme="dark"] .round-card {
+    --card-h: 392px;
     --table-d: 244px;
     --table-y: 170px;
     --ring-r: 130px;
     position: relative;
     isolation: isolate;
     display: block;
-    height: 392px;
+    height: var(--card-h);
     overflow: visible;
     background: none;
     box-shadow: none;
@@ -1399,10 +1500,33 @@
     border-radius: var(--radius-sm);
     box-shadow: var(--shadow-2);
   }
-  /* The new-round table is the same disc, drawn as an empty place. */
-  :root[data-design="tisch"][data-scheme="dark"] .round-card--new {
-    height: 392px;
+  /* The new-round table is the same disc, drawn as an empty place, with its
+     label laid in the middle of it (#1279).
+
+     The label was drawn ABOVE the circle at 1280/1440 until #1279: the
+     `.round-card` rule above turns every tile into `display: block`, the phone
+     rule's flex centring on `.round-card--new` tied with it at (0,4,0) and lost
+     on source order, so the icon and the text flowed from the card's top edge —
+     y≈0–26 against a circle spanning 48–292. The old nudge, `> * { top: … }`,
+     could not rescue it: it moved the `<i>` and never the label, which is a
+     bare TEXT node that no element selector reaches.
+
+     So: compounded to (0,5,0), a centred flex column, and a content box made
+     exactly 2·--table-y tall by the bottom padding — i.e. centred on the
+     circle's own centre, whatever the label's line count. The side padding
+     holds the label to the disc's width less 28px each side, so a long locale
+     wraps inside the circle rather than across its rim. */
+  :root[data-design="tisch"][data-scheme="dark"] .round-card.round-card--new {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: var(--card-h);
     padding: 0;
+    padding-bottom: calc(var(--card-h) - 2 * var(--table-y));
+    padding-inline: calc(50% - var(--table-d) / 2 + 28px);
+    text-align: center;
     border: 0;
   }
   :root[data-design="tisch"][data-scheme="dark"] .round-card--new::before {
@@ -1420,12 +1544,6 @@
     box-shadow: none;
   }
   :root[data-design="tisch"][data-scheme="dark"] .round-card--new:hover::before { border-color: var(--gold); }
-  /* The label rides in the middle of that empty place rather than at the card's
-     own centre, which sits 26px lower. */
-  :root[data-design="tisch"][data-scheme="dark"] .round-card--new > * {
-    position: relative;
-    top: calc(var(--table-y) - 196px);
-  }
 }
 
 /* --- Desktop: the rail as the brass rail, the band as the table (T3.2) -----
@@ -4402,7 +4520,9 @@
    - T5.2's two-column dashboard (the „Du" card of setting rows beside the
      Design card, the BoardGameGeek row card, the danger card) is Konto's
      composition — #1265, the block after this one.
-   - T5.3's posters with their own wordmark and button — #1277.
+   - T5.3's posters with their own wordmark and button, and T5.4's rows —
+     #1277, built in „The bills, the posters and the rows" below
+     (design-picker.js designPosterSheet, behind designIs('tisch')).
    - T5.1's „Lieber ohne Passwort? · Link schicken" card has no feature behind
      it at all: this app has no magic-link login. That is a feature question,
      not a layout one.
@@ -4689,17 +4809,19 @@
   }
 }
 
-/* --- The design posters (T5.2, T5.3, T5.4) ---------------------------------
-   T5.3 makes every design a printed bill: its own material across the head,
-   then the name, a badge and one sentence on the paper below. The card
-   already carries exactly those two halves in that order, so the change is
-   that the tile stops being an inset swatch beside the text and becomes the
-   card's head — `padding: 0` on the card, the padding moved onto the body.
+/* --- The design cards in Konto (T5.2) --------------------------------------
+   T5.2 prints every design as a small bill: its own material across the head,
+   then the name, a badge and one sentence below. The card already carries
+   exactly those two halves in that order, so the tile stops being an inset
+   swatch beside the text and becomes the card's head — `padding: 0` on the
+   card, the padding moved onto the body. Since #1277 the head is a BILL
+   (design-picker.js designBill): the design's wordmark on its own poster
+   colours, the block after the kicker below.
 
-   The list renders in two grounds and this rule has to hold in both: on wood
-   in the Konto section, and on paper inside the first-start chooser, where
-   the overlay rule above has already re-pointed --surface. Nothing here names
-   a ground, so both follow. */
+   The first-start chooser no longer renders this list under Der Tisch — it
+   prints T5.3's posters and T5.4's rows instead (#1277, further down). The
+   card rules still hold on paper as well as on wood, because nothing here
+   names a ground. */
 :root[data-design="tisch"][data-scheme="dark"] .design-card {
   padding: 0;
   gap: 0;
@@ -4770,6 +4892,229 @@
    on --paper-raised. */
 :root[data-design="tisch"][data-scheme="dark"] .design-chooser__kicker {
   color: var(--gold-ink);
+}
+
+/* --- The bills, the posters and the rows (#1277, T5.2–T5.4) ---------------
+   A BILL is a design's tile printed: its wordmark (and, on a poster, its
+   tagline) on its own poster ground. Every colour arrives INLINE from the
+   design's registry row (designs.js `poster`) as --poster-top/-foot/-ink/-sub,
+   because the chooser shows every design at once while the page wears one —
+   so this file names none of them, and a design without a `poster` falls back
+   to its --tile-page/--tile-accent pair. The registry's own thresholds are
+   swept in test/a11y-contrast.test.js: the wordmark (--poster-ink) is only
+   ever set at display size here — 20px and up, bold — and every smaller text
+   on a bill takes --poster-sub, which is held to 4.5:1.
+
+   GEOMETRY is gated on the design alone (the markup exists whenever Der Tisch
+   is worn), COLOURS keep the scheme gate — the split the #1265 block states. */
+:root[data-design="tisch"] .design-tile--bill {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: 12px 14px;
+  overflow: hidden;
+}
+:root[data-design="tisch"][data-scheme="dark"] .design-tile--bill {
+  background: linear-gradient(180deg,
+    var(--poster-top, var(--tile-page)),
+    var(--poster-foot, var(--poster-top, var(--tile-page))));
+}
+:root[data-design="tisch"] .design-tile__word {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 25px;
+  line-height: 1.05;
+  overflow-wrap: anywhere;
+}
+:root[data-design="tisch"] .design-card .design-tile__word { font-size: 20px; }
+:root[data-design="tisch"] .design-tile__sub {
+  margin-top: 8px;
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+:root[data-design="tisch"][data-scheme="dark"] .design-tile__word { color: var(--poster-ink, var(--tile-accent)); }
+:root[data-design="tisch"][data-scheme="dark"] .design-tile__sub { color: var(--poster-sub, var(--tile-accent)); }
+
+/* T5.3: the chooser as a wide sheet of posters. 1240px is the sheet's own
+   card inside its 1440 frame; below that the sheet takes the backdrop's width. */
+:root[data-design="tisch"] .sheet.design-chooser--posters { max-width: 1240px; }
+:root[data-design="tisch"] .design-chooser__head {
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+}
+:root[data-design="tisch"] .design-chooser__intro { flex: 1 1 28rem; min-width: 0; }
+:root[data-design="tisch"] .design-chooser__intro h2 { font-family: var(--font-display); }
+:root[data-design="tisch"] .design-chooser__body { margin: 6px 0 0; max-width: 88ch; }
+:root[data-design="tisch"] .design-chooser__skip { flex: none; min-height: 44px; }
+
+/* auto-fill over a 230px floor, so no breakpoint: four across the sheet's
+   1240, three at a laptop's 900, two at a tablet's 700 — and the „Später
+   mehr" tile simply takes the next cell. Registry order is reading order. */
+:root[data-design="tisch"] .design-posters {
+  list-style: none;
+  margin: 0;
+  padding: 20px 0 6px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 16px;
+}
+:root[data-design="tisch"] .design-poster {
+  display: flex;
+  flex-direction: column;
+  border: 2px solid transparent;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+:root[data-design="tisch"] .design-poster > .design-tile--bill {
+  height: 196px;
+  padding: 16px;
+  border: 0;
+  border-radius: 0;
+  flex: none;
+}
+:root[data-design="tisch"] .design-poster__body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px 14px;
+  flex: 1;
+}
+:root[data-design="tisch"] .design-poster__name {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+}
+:root[data-design="tisch"] .design-poster__desc { margin: 0; font-size: var(--text-sm); line-height: 1.45; }
+/* The ritual words sit at the foot of the text, above the button — so a
+   poster with a short sentence does not float its words up under it. */
+:root[data-design="tisch"] .design-poster__words {
+  margin: auto 0 0;
+  padding-top: 8px;
+  font-size: var(--text-xs);
+  font-weight: 700;
+}
+:root[data-design="tisch"] .design-poster__pick { width: 100%; min-height: 44px; margin-top: 8px; }
+:root[data-design="tisch"] .design-poster__desc + .design-poster__pick { margin-top: auto; }
+:root[data-design="tisch"] .design-poster--later {
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 20px;
+  text-align: center;
+  border-style: dashed;
+}
+:root[data-design="tisch"] .design-poster--later .ti { font-size: 30px; }
+
+:root[data-design="tisch"][data-scheme="dark"] .design-poster {
+  background: var(--surface);
+  border-color: var(--control-edge);
+  box-shadow: var(--shadow-1);
+}
+:root[data-design="tisch"][data-scheme="dark"] .design-poster.is-on {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 2px var(--gold-soft), var(--shadow-2);
+}
+:root[data-design="tisch"][data-scheme="dark"] .design-poster__desc,
+:root[data-design="tisch"][data-scheme="dark"] .design-row__desc { color: var(--ink-soft); }
+/* The ritual words and the palette glyph in the kicker's brown — measured on
+   --paper at 10.50:1 (the kicker note above). */
+:root[data-design="tisch"][data-scheme="dark"] .design-poster__words,
+:root[data-design="tisch"][data-scheme="dark"] .design-poster--later .ti { color: var(--gold-ink); }
+:root[data-design="tisch"][data-scheme="dark"] .design-poster--later { background: var(--control-fill); }
+
+/* T5.4: below the app's 640px sheet breakpoint the posters become rows and
+   the answer moves to one commit button — see designPosterSheet for why both
+   presentations are in the DOM. display:none on the hidden one keeps it out
+   of the tab order and the accessibility tree. */
+:root[data-design="tisch"] .design-rows,
+:root[data-design="tisch"] .design-chooser__commit { display: none; }
+:root[data-design="tisch"] .design-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 76px;
+  padding: 9px;
+  border: 2px solid transparent;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+:root[data-design="tisch"] .design-row > .design-tile--bill {
+  width: 58px;
+  height: 58px;
+  flex: none;
+  padding: 2px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: var(--radius-sm);
+}
+/* 11px is SMALL text, so the tile sets its name in the poster's small-text
+   ink rather than the display ink the 25px poster may use (the Tisch gold is
+   only legal on felt from 24px — T1's A1 rule). */
+:root[data-design="tisch"] .design-row .design-tile__word { font-size: 11px; line-height: 1; text-align: center; overflow-wrap: normal; word-break: normal; }
+:root[data-design="tisch"][data-scheme="dark"] .design-row .design-tile__word { color: var(--poster-sub, var(--tile-accent)); }
+:root[data-design="tisch"] .design-row__body { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+:root[data-design="tisch"] .design-row__name {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--text-md);
+}
+:root[data-design="tisch"] .design-row__desc { font-size: var(--text-sm); line-height: 1.4; }
+:root[data-design="tisch"] .design-row input { width: 22px; height: 22px; margin: 0; flex: none; }
+/* Drawn, not native: under the dark scheme Chrome paints an UNCHECKED native
+   radio as a solid dark disc, which on this paper sheet read as the selected
+   one (#1277 review). An empty ring vs a ring with a dot, both in the row's own
+   ink, so the pair holds whatever the sheet's ground is. */
+:root[data-design="tisch"] .design-row input[type="radio"] {
+  appearance: none;
+  color: inherit; /* a form control does not inherit it — it took the dark scheme's white field text */
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+}
+:root[data-design="tisch"] .design-row input[type="radio"]:checked {
+  background: radial-gradient(circle, currentColor 0 5px, transparent 5.5px);
+}
+:root[data-design="tisch"] .design-row input[type="radio"]:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}
+:root[data-design="tisch"][data-scheme="dark"] .design-row {
+  background: var(--surface);
+  border-color: var(--control-edge);
+}
+:root[data-design="tisch"][data-scheme="dark"] .design-row.is-on { border-color: var(--gold); }
+@media (max-width: 639px) {
+  :root[data-design="tisch"] .design-posters,
+  :root[data-design="tisch"] .design-chooser__skip { display: none; }
+  :root[data-design="tisch"] .design-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-top: 12px;
+  }
+  /* Sticky, like .sheet__actions: seven rows outgrow a phone, and the answer
+     must not scroll away under them. --page-bg is the paper in an overlay. */
+  :root[data-design="tisch"] .design-chooser__commit {
+    position: sticky;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    padding: 14px 0 4px;
+    background: var(--page-bg);
+  }
+  :root[data-design="tisch"] .design-chooser__intro h2 { font-size: var(--text-xl); }
 }
 
 /* ===========================================================================
@@ -5026,11 +5371,15 @@
      mit", and T7.1's second way into an empty lobby. The rules are under „The
      young round" below. It keeps the app's own threshold (one game), not the
      sheet's „ab 2 Spielen".
-   - #1280 (still open) — T7.2's „Nächster Schritt" card, T7.5's later
-     thresholds („Serien und Trends ab der dritten Session", „Ein Podium braucht
-     drei Sessions") and T7.6's demo summary with its „Gefällt dir das?"
-     invitation. Each is a new string plus a new threshold in shared code; it
-     touches hubPulseCard and renderLobbyList again.
+   - #1280 (the young round's later steps) — T7.2's invite slip and
+     „Nächster Schritt" card in a one-round lobby, T7.5's thresholds (the
+     Rundenpuls from the first session with „Serien zeigen wir ab 3
+     Sessions", the streak card held until then, „Ein Podium braucht 3
+     Sessions." on the preview and the Pokale tab — both numbers are
+     YOUNG_ROUND_* in hub-insights.js), and T7.6's demo summary with its
+     „Gefällt dir das?" invitation. The rules are under „The one-round lobby,
+     the thresholds, the demo" and beside the demo's banderole. Nothing in T7
+     is left unbuilt.
 
    Same gate and same no-literals rule as every section above.
    =========================================================================== */
@@ -5180,6 +5529,136 @@
 }
 :root[data-design="tisch"][data-scheme="dark"] .lobby-alt__invited { justify-content: center; }
 
+/* --- The one-round lobby, the thresholds, the demo (T7.2, T7.5, T7.6; #1280)
+   Markup in views-home.js (lobbyInviteSlip, tischNextStep), hub-cards.js
+   (the pulse's threshold sentence, hubDemoSummary, hubDemoInvite),
+   hub-previews.js and views-pokale.js (pokaleYoungLead). Every pair is one
+   test/a11y-contrast.test.js already holds (#1280's own test names them):
+   --ink / --ink-soft on --surface, --ink on --control-fill, --gold glyphs on
+   --surface, and the paper slip's --paper-ink on --paper.
+
+   The pulse, preview and Pokale pieces live INSIDE a round, where the design's
+   colours apply only while the round's own design is dark — so their layout is
+   unconditional and their colours are the generic tokens, which resolve under
+   either scheme. The lobby is always outside a round. */
+
+/* T7.2's second slip: the same printed paper as `.round-card__last`, one
+   strip lower. When both are there the upper one stops reaching the tile's
+   foot (its negative bottom margin) and the two share an edge. */
+:root[data-design="tisch"][data-scheme="dark"] .round-card__invite {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 6px -16px -14px;
+  padding: 10px 14px;
+  min-height: 44px;
+  border-top: 3px solid var(--gold-edge);
+  background: linear-gradient(180deg, var(--paper), var(--paper-raised));
+  color: var(--paper-ink);
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+:root[data-design="tisch"][data-scheme="dark"] .round-card__invite .ti { color: var(--gold-edge); font-size: 19px; /* glyph, not type */ }
+:root[data-design="tisch"][data-scheme="dark"] .round-card__last:has(+ .round-card__invite) { margin-bottom: 0; }
+:root[data-design="tisch"][data-scheme="dark"] .round-card__last + .round-card__invite { margin-top: 0; border-top-width: 1px; }
+/* From 1100 up the tile is a table and the slip is dropped at its foot like
+   `.round-card__last`; the last-played slip, when there is one, moves up a
+   slip's height so the two lie one above the other rather than on top. */
+@media (min-width: 1100px) {
+  :root[data-design="tisch"][data-scheme="dark"] .round-card__invite {
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    width: var(--table-d);
+    margin: 0;
+    transform: translateX(-50%) rotate(0.8deg);
+    border: 0;
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-2);
+    text-align: left;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .round-card__last:has(+ .round-card__invite) { bottom: 52px; }
+}
+
+/* „Nächster Schritt" (T7.2): a wood card under the lobby grid, its two steps
+   as full-width rows. Buttons, not links — each opens a sheet. */
+:root[data-design="tisch"] .next-step {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 14px;
+  padding: 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  color: var(--ink);
+}
+:root[data-design="tisch"] .next-step__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 4px;
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+}
+:root[data-design="tisch"] .next-step__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 8px;
+  margin: 0 -8px;
+  background: none;
+  border: 0;
+  border-radius: var(--radius-sm);
+  color: inherit;
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+:root[data-design="tisch"] .next-step__row:hover { background: var(--control-fill); }
+:root[data-design="tisch"] .next-step__row:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+:root[data-design="tisch"] .next-step__go { margin-left: auto; }
+:root[data-design="tisch"][data-scheme="dark"] .next-step__title .ti,
+:root[data-design="tisch"][data-scheme="dark"] .next-step__row .ti { color: var(--gold); }
+@media (min-width: 1100px) {
+  :root[data-design="tisch"] .next-step { max-width: 420px; }
+}
+
+/* T7.5's sentences: the pulse card's closing line, and the Pokale preview's
+   second line (which borrows `.hub-preview__last`'s type). */
+:root[data-design="tisch"] .hub-card__threshold { color: var(--ink-soft); line-height: 1.5; }
+
+/* T7.5's leader block on the Pokale tab: the crowned avatar(s) beside the
+   leader line and the sentence, on a wood card where the podium would stand. */
+:root[data-design="tisch"] .pokale-young {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 18px 0 12px;
+  padding: 18px 16px 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+:root[data-design="tisch"] .pokale-young__who { display: flex; gap: 8px; flex: none; }
+:root[data-design="tisch"] .pokale-young__seat { position: relative; display: block; }
+:root[data-design="tisch"] .pokale-young__avatar { width: 44px; height: 44px; font-size: 15px; /* glyph, not type */ }
+:root[data-design="tisch"] .pokale-young__crown {
+  position: absolute;
+  left: 50%;
+  top: -13px;
+  transform: translateX(-50%);
+  color: var(--brand);
+  font-size: 15px; /* glyph, not type */
+}
+:root[data-design="tisch"][data-scheme="dark"] .pokale-young__crown { color: var(--gold); }
+:root[data-design="tisch"] .pokale-young__text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+:root[data-design="tisch"] .pokale-young__lead { color: var(--ink); font-weight: 700; }
+:root[data-design="tisch"] .pokale-young__when { color: var(--ink-soft); font-size: var(--text-sm); }
+
 /* --- The demo, as a brass banderole and a hatched table (T7.6) ------------
    The demo must never be mistaken for a round of one's own, and T7.6 says it
    twice: a brass band across the top, and a diagonal hatch in the felt.
@@ -5212,6 +5691,40 @@
 :root[data-design="tisch"][data-scheme="dark"] .demo-banner__cta:hover {
   color: var(--gold-ink);
 }
+
+/* The demo round's condensed summary (T7.6, #1280): what is behind each tab as
+   one wood row per destination — icon, name, a hint, the figure at the far end
+   — above the „Gefällt dir das?" card (`.hub-card--demo-invite`, an ordinary
+   hub card whose button is `.btn`). Colours are the generic tokens, because a
+   demo round's own design may still be light before the flip. */
+:root[data-design="tisch"] .hub-demo { display: flex; flex-direction: column; gap: 8px; }
+:root[data-design="tisch"] .hub-demo__row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 52px;
+  padding: 10px 13px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  color: var(--ink);
+  text-decoration: none;
+}
+:root[data-design="tisch"] .hub-demo__row:hover { background: var(--control-fill); }
+:root[data-design="tisch"] .hub-demo__row > .ti { color: var(--brand-ink, var(--brand)); font-size: 19px; /* glyph, not type */ }
+:root[data-design="tisch"][data-scheme="dark"] .hub-demo__row > .ti { color: var(--gold); }
+:root[data-design="tisch"] .hub-demo__main { display: flex; flex-direction: column; min-width: 0; }
+:root[data-design="tisch"] .hub-demo__label { font-weight: 700; }
+:root[data-design="tisch"] .hub-demo__hint { color: var(--ink-soft); font-size: var(--text-xs); }
+:root[data-design="tisch"] .hub-demo__value {
+  margin-left: auto;
+  color: var(--ink-soft);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+:root[data-design="tisch"] .hub-card--demo-invite .hub-demo__cta { margin-top: 12px; align-self: stretch; justify-content: center; }
 
 /* --- The two density cases (T7.7) ----------------------------------------
    T7.7's 40-game shelf is already done — #1190's
@@ -6303,6 +6816,32 @@
   color: var(--on-accent);
 }
 
+/* The plaques stand BESIDE the stage from 1280px (#1276, T13.2): the podium
+   and its summary line on the left, the award plaques in a 340px column on the
+   right, as the sheet draws them. `.pokale-split` exists only under this design
+   (renderPokaleTab), and below 1280px it is a plain block, so the plaques follow
+   the podium — the DOM order is the reading order at every width and nothing
+   here reorders anything. Flex rather than a two-track grid so a round with no
+   award yet (the column is not rendered at all) gets the full width back rather
+   than an empty 340px track. The plaque column is one card wide, so the shared
+   auto-fit grid collapses to a single track there. */
+@media (min-width: 1280px) {
+  :root[data-design="tisch"][data-scheme="dark"] .pokale-split {
+    display: flex;
+    align-items: flex-start;
+    gap: 22px;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .pokale-split__stage {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .pokale-split > .pokale-cards {
+    flex: 0 0 340px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+  }
+}
+
 /* --- The member page (T13.4, T13.5) ---------------------------------------
    The identity block becomes the felt band across the card's head — T13.4's
    header with the table's rim under it — and the four figures become wooden
@@ -6316,7 +6855,12 @@
    member's wash as the ground under the name, and the felt replaces that
    ground; carried onto the felt it would be decoration under text with no
    measurement behind it. The member's colour stays where it is load-bearing —
-   the avatar, the win-rate ring, the state chip and the game tiles' edge. */
+   the avatar, the win-rate ring, the state chip and the game tiles' edge.
+
+   #1276 adds the two pieces of T13.4 that are STRUCTURE rather than paint (the
+   corrected ruling in the #1196 header above): the attendance line under the
+   name, and „Gehört Jonas" as a panel inside the card. Both are built by
+   showMember under this design only; Klassisch's DOM has neither. */
 :root[data-design="tisch"][data-scheme="dark"] .member-card .member-card__id {
   margin: -26px -24px 0;
   padding: 26px 24px 22px;
@@ -6352,14 +6896,85 @@
     flex-basis: calc(50% - 6px);
   }
 }
-/* „Gehört Jonas" — the boxes this member brings, on a walnut panel of their
-   own, as T13.4 draws it beside the record. */
-:root[data-design="tisch"][data-scheme="dark"] .app > .section:has(> .member-games) {
+/* „21 von 23 Sessions dabei" on the felt, under the name (T13.4). The full
+   felt ink rather than --felt-ink-soft: the band's ground is the round's MARKER
+   when it has one, and only the felt's own stops are measured for the soft ink
+   (hero__chips' 4.79:1); --felt-ink is the pair every text on this band uses. */
+:root[data-design="tisch"][data-scheme="dark"] .member-card .member-card__attendance {
+  margin: 6px 0 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--felt-ink);
+}
+/* „Gehört Jonas" (#1276, T13.4): the boxes this member brings, as a walnut
+   panel INSIDE the card, beside the two game tiles from 860px — where the sheet
+   draws its (operator-dropped) rating panel. Stacked below that, owned boxes
+   first, which is also the DOM order. */
+:root[data-design="tisch"][data-scheme="dark"] .member-card .member-card__lower {
+  display: grid;
+  gap: 18px;
+  margin-top: 22px;
+}
+:root[data-design="tisch"][data-scheme="dark"] .member-card .member-card__lower > .member-card__games {
+  margin-top: 0;
+}
+@media (min-width: 860px) {
+  :root[data-design="tisch"][data-scheme="dark"] .member-card .member-card__lower {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+  /* One tile per row in a half-width column; the shared 2-up from 560px would
+     put two 150px tiles side by side. */
+  :root[data-design="tisch"][data-scheme="dark"] .member-card .member-card__lower > .member-card__games {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+:root[data-design="tisch"][data-scheme="dark"] .member-owned {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   padding: 18px;
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
   background: var(--surface);
   box-shadow: var(--shadow-1);
+}
+:root[data-design="tisch"][data-scheme="dark"] .member-owned__title {
+  margin: 0 0 4px;
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 800;
+}
+/* One row per box, the whole row the link (48px, the touch floor): the cover
+   standing up as the Chronik strips draw it, the title, the shelf's pill. */
+:root[data-design="tisch"][data-scheme="dark"] .member-owned__row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 48px;
+  color: inherit;
+}
+:root[data-design="tisch"][data-scheme="dark"] .member-owned__cover {
+  position: relative; /* anchors + clips the .cover-ph gradient layer (#256) */
+  overflow: hidden;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 42px;
+  border-radius: var(--radius-sm);
+  background: var(--sunken) center/cover no-repeat;
+  box-shadow: var(--shadow-1);
+  font-size: 16px; /* glyph, not type */
+}
+:root[data-design="tisch"][data-scheme="dark"] .member-owned__name {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+:root[data-design="tisch"][data-scheme="dark"] .member-owned__row .score-pill {
+  flex: none;
 }
 
 /* --- The off-shelf lists and the recommendations (T13.3) -------------------
@@ -6574,6 +7189,27 @@
 }
 :root[data-design="tisch"][data-scheme="dark"] .profile-card__vis .konto-notify__intro { color: var(--ink-soft); }
 :root[data-design="tisch"][data-scheme="dark"] .profile-card__vis-icon { color: var(--gold); }
+
+/* „Dein Rückblick" on the own profile (#1147). The ROUND's recap is laid on
+   the round's felt (.precap, T13 above); this one is the ACCOUNT's, so by T14.6
+   („Filz gehört der Runde, Design gehört dem Konto") it is a walnut plank with
+   the Spielerkarte's gold rim instead — no felt, no marker. The share button is
+   the same brass plate as the Chronik's, for the same reason: the section
+   exists to become the card. Every ground and ink here is a pair the Spielerkarte
+   above already uses (--surface / --ink / --ink-soft, brass under --on-accent). */
+:root[data-design="tisch"][data-scheme="dark"] .arecap {
+  padding: 20px;
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-2), inset 0 0 0 1px var(--gold-edge);
+}
+:root[data-design="tisch"][data-scheme="dark"] .arecap .precap__picker { border-color: var(--gold); }
+:root[data-design="tisch"][data-scheme="dark"] .arecap .precap__share,
+:root[data-design="tisch"][data-scheme="dark"] .arecap .precap__share:hover {
+  border-color: var(--gold-edge);
+  background: linear-gradient(180deg, var(--brass-hi), var(--gold-deep));
+  color: var(--on-accent);
+}
 
 /* --- Der Freundeskreis and its feed (T14.1, right) --------------------------
    People are walnut plates with the face in a gold rim — T14.1 draws every
