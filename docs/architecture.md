@@ -560,6 +560,10 @@ public/
                      Der Tisch's share card (#1199): one 1080×1350 layout for a
                      session, a split session and a period recap, drawn when
                      that design is worn — felt head, played game, people, Tafel
+    recap-card-ocean.js
+                     Ocean's share card (#1220): a 1080×1350 session card, a
+                     1200×630 landscape one and a 1080×1350 period recap —
+                     water above, every string on an opaque band below
     hub-insights.js  the Start tab's derivations: which games are worth putting
                      on the table, how often the round meets, what is quietly
                      broken, and what was played on this day in a past year
@@ -797,8 +801,11 @@ public/
     regal-bulk.js         the Regal's selection mode and its four bulk actions
                           (tags, owners, retire, delete), lifted out of
                           views-regal.js so each is editable on its own (#1000)
-    views-chronik.js      Chronik tab: the month-grouped session/shelf timeline,
-                          and the shareable month/year recap above it
+    views-chronik.js      Chronik tab: the month-grouped session/shelf timeline
+    views-period-recap.js
+                          the Chronik's shareable month/year recap section, and
+                          the share delivery its card (and the account recap's
+                          and the Regal-Steckbrief's) goes out through (#1345)
     views-pokale.js       Pokale tab: podium + fun stats, and the Rückblick
     views-archive.js      the three off-shelf screens (retired / completed /
                           Wunschliste) through one renderer

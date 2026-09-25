@@ -317,11 +317,11 @@ const DESIGN_REGISTRY = [
       { key: 'tang', labelKey: 'marker.ocean.tang', color: PERSON_COLORS[6], deep: '#345801' },
       { key: 'purpur', labelKey: 'marker.ocean.purpur', color: PERSON_COLORS[7], deep: '#6b1c38' },
     ],
-    /* Klassisch's marks, stated rather than inherited, until Ocean's own mark
-       lands with #1220 (O8.3 „the design's mark", the sine wave). Stated so the
-       row is complete on its own — test/design-marks.test.js walks every row's
-       files — and so #1220 is a change to this block, not the discovery that the
-       design had none. */
+    /* Klassisch's marks, stated rather than inherited. Ocean's own SIGN is the
+       `glyph` above (`ti-wave-sine`, O8.3 „the design's mark"), printed in the
+       chooser; #1220 scoped the app icon, favicon and link-preview image OUT —
+       they stay the face's in the static head. Stated so the row is complete on
+       its own: test/design-marks.test.js walks every row's files. */
     marks: {
       icons: [
         { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
@@ -335,6 +335,8 @@ const DESIGN_REGISTRY = [
     // itself (design.js personNameInk) — review rule 2, person colour is no text
     // under 24px here.
     personInk: 'deep',
+    // O8.3's share card in its three formats (recap-card-ocean.js, #1220).
+    card: 'ocean',
     enabled: false,
   },
 ];

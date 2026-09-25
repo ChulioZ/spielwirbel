@@ -139,6 +139,9 @@ function renderStartTab(round, activeGames) {
     startBtn.setAttribute('aria-describedby', 'hub-cta-reason');
   }
   launch.appendChild(ocean ? oceanShell(startBtn) : startBtn);
+  // Ocean's young round (#1216, O7.3): the shell stays the centre, and one
+  // line under it says what is waiting for the first session.
+  if (ocean && activeGames.length && roundIsYoung(round)) launch.appendChild(oceanYoungLine(activeGames));
 
   // Quick-start presets (#923): the same draw, already narrowed. Directly under
   // the CTA because they modify it — and only when this shelf can actually

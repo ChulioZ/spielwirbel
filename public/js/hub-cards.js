@@ -168,7 +168,9 @@ function hubSuggestCard(round, activeGames, statsByGame, exclude) {
        reason (the app suggests unrated games), so it is not the copy. Every
        other empty answer keeps returning null — #1280's thresholds are about
        series and the podium, and have nothing to say about suggestions. */
-    if (designIs('tisch') && roundIsYoung(round) && activeGames.length
+    // Ocean says it too (#1216, O7.3 „Wie wär's mit"), in the pair beside the
+    // shell — the same one truthful reason, the same copy.
+    if ((designIs('tisch') || designIs('ocean')) && roundIsYoung(round) && activeGames.length
       && activeGames.length < SUGGEST_MIN_SHELF) {
       return hubSentenceCard('ti-bulb', t('hub.suggest.title'),
         tn(SUGGEST_MIN_SHELF, 'hub.young.suggestOne', 'hub.young.suggest'));
