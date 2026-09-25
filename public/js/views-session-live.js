@@ -232,6 +232,8 @@ function showSessionLobby(round, session, handedOn, dealt) {
       </div>`));
   }
 
+  if (oceanWorn()) composeOceanLobby(root, peopleEl, people, voted);
+
   const actions = root.querySelector('#lvActions');
 
   // Write one person's column, then come back here with the server's own view of

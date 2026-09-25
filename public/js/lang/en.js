@@ -1142,6 +1142,13 @@ I18N.en = {
   'vote.deepOcean': 'Still in the deep',
   'vote.deepTextOceanOne': '{n} more card is waiting below. The result only surfaces once the vote is over.',
   'vote.deepTextOcean': '{n} more cards are waiting below. The result only surfaces once the vote is over.',
+  // Ocean's shared vote (#1214, O4.3/O6.5): the pass-device blind, addressed to
+  // the table, and its relay row; then the live vote's „in der Tiefe" block.
+  'vote.turnOcean': '{name} is up.',
+  'vote.goOcean': 'I’m {name} — show my cards',
+  'vote.relayNow': 'is up',
+  'lobby.deepTextOceanOne': '{name}’s cards are already below. What was rated only surfaces once the vote is over.',
+  'lobby.deepTextOcean': 'The cards of {n} people are already below. What was rated only surfaces once the vote is over.',
   'vote.toast.saved': 'Results saved',
 
   'finale.crumb': 'Finale',

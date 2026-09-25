@@ -1125,13 +1125,16 @@ function startVoting(round, session, games, people, opts = {}) {
        not re-cleared in finish()/guardLeave()/onPopstate: a second clear would be
        a guard that can never be observed failing, so neither could be trusted
        (.claude/rules/redundant-guards-make-each-other-untestable.md). */
-    voteScreen(step.type === 'vote');
+    // Ocean's blind is full-screen like its card (#1214); Klassisch keeps the
+    // top bar over its handover card.
+    voteScreen(step.type === 'vote' || (step.type === 'intro' && oceanWorn()));
 
-    // Handover screen: full color card in the person's color.
+    // Handover screen: full color card in the person's color — or, under
+    // Ocean, the deep-water blind (views-session-ocean.js).
     if (step.type === 'intro') {
       const color = personColor(round, step.person);
       app.innerHTML = '';
-      const card = h(`<div class="handover" style="background:${color}">
+      const card = oceanWorn() ? oceanBlind(round, session, step.person, idx > 0) : h(`<div class="handover" style="background:${color}">
           ${progressBar()}
           <span class="handover__avatar" style="color:${color}">${avatarFace(initials(step.person.name), { userId: step.person.userId })}</span>
           <h1 class="handover__name">${esc(t('vote.turn', { name: personLabel(step.person) }))}</h1>

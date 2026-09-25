@@ -2203,7 +2203,8 @@ test('every colour token a design declares is measured by one of the checks abov
      over a ground this file cannot know (a shadow falls on whatever is behind
      the card), and they can only ever DARKEN it — which is the safe direction
      for every pair already measured on that ground. */
-  const NOT_A_COLOUR = /^--(member-lift|cast|cast-soft|cast-deep|cast-button|brass-sheen|brass-sheen-strong)$/;
+  // #1214 adds Ocean's --deep-cast, the blind's shadow alpha — the same kind.
+  const NOT_A_COLOUR = /^--(member-lift|cast|cast-soft|cast-deep|cast-button|deep-cast|brass-sheen|brass-sheen-strong)$/;
   /* A hairline on a NON-INTERACTIVE label. SC 1.4.11 binds a boundary only
      where it identifies a control, and these two identify a printed tag — so
      there is no bar to measure them against, and inventing one would push them
@@ -2219,8 +2220,11 @@ test('every colour token a design declares is measured by one of the checks abov
      that control); the shell's rim, a rating bubble's resting rim (the face
      glyph identifies the control) and the whale's shading and fin, all parts of
      a picture; the empty-Pokale bubble row; and the three DISABLED tones, which
-     WCAG 1.4.3 and 1.4.11 exempt by name (an inactive control). */
-  const OCEAN_UNPAIRED = /^--(line-soft|accent-edge|shell-edge|bubble-rim|bubble-trail|whale-deep|whale-shade|whale-fin|disabled-fill|disabled-ink|disabled-edge)$/;
+     WCAG 1.4.3 and 1.4.11 exempt by name (an inactive control).
+     #1214 adds the blind's still bubbles and the halo round its avatar: parts
+     of the picture on --deep, kept below the text by position (the comment on
+     the blind's body rule in ocean.css carries the measurement). */
+  const OCEAN_UNPAIRED = /^--(line-soft|accent-edge|shell-edge|bubble-rim|bubble-trail|whale-deep|whale-shade|whale-fin|disabled-fill|disabled-ink|disabled-edge|deep-bubble|deep-bubble-soft|deep-halo)$/;
 
   const unmeasured = [];
   for (const t of THEMES) {
