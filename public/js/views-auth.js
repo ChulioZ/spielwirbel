@@ -53,7 +53,7 @@ function openAuth(render, innerHtml, build, path) {
   if (path) syncUrl(path);
   authScreen(true);
   setContext('');
-  applyBackground(null);
+  applyMarker(null);
   app.innerHTML = '';
   const wrap = h(`<div class="auth">${innerHtml}</div>`);
   app.appendChild(wrap);

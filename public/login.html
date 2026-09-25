@@ -19,9 +19,9 @@
        #14161c, so installing from here yielded a different-coloured app than
        installing from the SPA. -->
   <link rel="manifest" href="/manifest.webmanifest" />
-  <meta name="theme-color" content="#c2410c" />
-  <link rel="icon" href="/icons/icon-192.png" sizes="192x192" type="image/png" />
-  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+  <meta name="theme-color" content="#d9a951" />
+  <link rel="icon" href="/icons/tisch/favicon-32.png" sizes="32x32" type="image/png" />
+  <link rel="apple-touch-icon" href="/icons/tisch/apple-touch-icon.png" />
   <!-- Standalone login page (issue #129), intentionally independent of the SPA:
        it must render before the app (and its i18n) loads. German only — the
        app's primary UI language — and self-contained. Inline styles are allowed
@@ -69,8 +69,8 @@
     }
     /* DER TISCH AS THE FACE (#1198). A second copy, of Der Tisch's tokens this
        time, applied only when <html data-design="tisch"> — i.e. only once
-       FACE_DESIGN (js/designs.js) names it. Until the flip (#1202) nothing
-       matches and the page is exactly the Klassisch one above. Every value is
+       FACE_DESIGN (js/designs.js) names it, which it does since the flip
+       (#1202); with a Klassisch face the page is exactly the one above. Every value is
        Der Tisch's own resolved token (the registry's page/accent, then
        css/designs/tisch.css, then styles.css's dark block), pinned by
        test/standalone-page-brand.test.js, which also requires this block to
@@ -245,11 +245,11 @@
 </head>
 <body>
   <form class="card" id="loginForm">
-    <!-- The real app icon, the same file the PWA, the home screen and
-         kontakt.html use. It replaced a U+1F300 emoji (#595), which was never a
+    <!-- The real app icon — the FACE's (Der Tisch's since #1202), the same file
+         the PWA, the home screen and kontakt.html use. It replaced a U+1F300 emoji (#595), which was never a
          brand asset — it only passed for one because Apple renders that
          codepoint in blue. -->
-    <img class="logo" src="/icons/icon-192.png" alt="" width="56" height="56" />
+    <img class="logo" src="/icons/tisch/icon-192.png" alt="" width="56" height="56" />
     <h1>Spielwirbel</h1>
     <label for="password">Passwort</label>
     <input id="password" name="password" type="password" autocomplete="current-password"

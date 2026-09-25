@@ -6,7 +6,9 @@
  * operator's „Designs" tile can report how many people went back after the
  * flip (#1202). Two halves:
  *
- *  - lib/account-design.js, the rule itself — pure, so it is tested directly;
+ *  - lib/account-design.js, the rule itself — pure, so it is tested directly —
+ *    and the flip's lazy default (#1202) it carries: an account that never
+ *    answered the chooser wears the face;
  *  - the two routes that change a design (PATCH /me, POST /design-chooser-seen),
  *    which must both apply it, driven end to end.
  *
@@ -71,44 +73,66 @@ test('the switch-back target is a registered design that production offers', () 
   const row = designs.designById(SWITCH_BACK_DESIGN);
   assert.ok(row, `${SWITCH_BACK_DESIGN} is not in the registry`);
   assert.equal(row.enabled, true);
+  assert.notEqual(SWITCH_BACK_DESIGN, designs.FACE_DESIGN,
+    'a switch-back to the face would count every untouched account as having gone back');
+});
+
+// An account that has answered the chooser — the only kind whose stored design
+// is a CHOICE since the flip (#1202).
+const chose = (design, extra = {}) => ({ design, designChooserSeen: designs.DESIGN_CHOOSER_REVISION, ...extra });
+
+test('#1202: an account that never answered the chooser wears the face, whatever it stores', () => {
+  // Every account registered before the flip stores the face of ITS day —
+  // Klassisch — without having chosen it. The flip moves all of them.
+  assert.equal(designs.FACE_DESIGN, 'tisch');
+  assert.equal(accountDesign({ design: 'klassisch', designChooserSeen: null }), 'tisch');
+  assert.equal(accountDesign({ design: 'klassisch' }), 'tisch', 'absent key: never answered');
+  assert.equal(accountDesign({}), 'tisch');
+  assert.equal(accountDesign(null), 'tisch');
+  // Once answered, the stored design is a choice and is honoured.
+  assert.equal(accountDesign(chose('klassisch')), 'klassisch');
+  assert.equal(accountDesign(chose('tisch')), 'tisch');
+  // …unless this instance does not offer it.
+  assert.equal(accountDesign(chose('GEHEIM')), 'tisch');
+  // ANY run of the chooser counts: a later run (a new design) must not move an
+  // account that chose Klassisch back onto the face while it is pending.
+  assert.equal(accountDesign({ design: 'klassisch', designChooserSeen: '2000-01-01' }), 'klassisch');
 });
 
 test('switchBackPatch stamps only a move FROM another worn design TO Klassisch', () => {
   const back = { designSwitchedBack: true };
-  assert.deepEqual(switchBackPatch({ design: 'tisch' }, 'klassisch'), back);
-  assert.deepEqual(switchBackPatch({ design: 'tisch' }, 'tisch'), {}, 'staying put is not a switch');
-  assert.deepEqual(switchBackPatch({ design: 'klassisch' }, 'tisch'), {}, 'moving AWAY is not back');
-  assert.deepEqual(switchBackPatch({ design: 'klassisch' }, 'klassisch'), {},
-    'Klassisch to Klassisch is a no-op — the pre-flip default must never read as a switch');
-  assert.deepEqual(switchBackPatch({}, 'klassisch'), {}, 'an account predating the field wore Klassisch');
-  assert.deepEqual(switchBackPatch({ design: 'tisch', designSwitchedBack: true }, 'klassisch'), {},
+  assert.deepEqual(switchBackPatch(chose('tisch'), 'klassisch'), back);
+  assert.deepEqual(switchBackPatch(chose('tisch'), 'tisch'), {}, 'staying put is not a switch');
+  assert.deepEqual(switchBackPatch(chose('klassisch'), 'tisch'), {}, 'moving AWAY is not back');
+  assert.deepEqual(switchBackPatch(chose('klassisch'), 'klassisch'), {},
+    'Klassisch to Klassisch is a no-op — an account that already chose it never left');
+  assert.deepEqual(switchBackPatch(chose('tisch', { designSwitchedBack: true }), 'klassisch'), {},
     'already stamped: nothing to write');
   assert.deepEqual(switchBackPatch(null, 'klassisch'), {});
 });
 
-test('switchBackPatch judges the design the account was SHOWN, not the stored string', async () => {
-  // Production before the flip offers Klassisch alone, so a stored 'tisch' from a
-  // dev instance resolves to Klassisch — the account never saw Tisch, and
-  // „going back" from it is not going back.
-  await asProduction(async () => {
-    assert.equal(accountDesign({ design: 'tisch' }), 'klassisch');
-    assert.deepEqual(switchBackPatch({ design: 'tisch' }, 'klassisch'), {});
-  });
+test('#1202: a pre-flip account picking Klassisch IS a switch back — it was shown Der Tisch', () => {
+  // It stores 'klassisch' but has never answered the chooser, so it WEARS the
+  // face. The stored string must not decide, or „Wie bisher" in the chooser —
+  // the main way back — would never register on the operator's tile.
+  assert.deepEqual(switchBackPatch({ design: 'klassisch', designChooserSeen: null }, 'klassisch'),
+    { designSwitchedBack: true });
+  assert.deepEqual(switchBackPatch({}, 'klassisch'), { designSwitchedBack: true },
+    'an account predating the field wears the face too');
 });
 
-test('tallyDesignAdoption folds unknown ids into the face and keys only offered ids', () => {
+test('tallyDesignAdoption resolves like /me: unanswered and unknown fold into the face', () => {
   const out = tallyDesignAdoption([
-    { design: null, switched: false, n: 2 },
-    { design: 'tisch', switched: true, n: 3 },
-    { design: 'klassisch', switched: true, n: 4 },
-    { design: 'GEHEIM', switched: true, n: 1 },
+    { design: null, answered: false, switched: false, n: 2 },
+    { design: 'klassisch', answered: false, switched: false, n: 6 }, // pre-flip, untouched
+    { design: 'tisch', answered: true, switched: true, n: 3 },
+    { design: 'klassisch', answered: true, switched: true, n: 4 },
+    { design: 'GEHEIM', answered: true, switched: true, n: 1 },
   ]);
   assert.deepEqual(Object.keys(out.byDesign), designs.selectableDesignIds({ production: false }));
-  assert.equal(out.byDesign.klassisch, 7);
-  assert.equal(out.byDesign.tisch, 3);
-  // The unknown id wears Klassisch and carries the flag, so it counts — what
-  // matters is what the account SEES, which is also what /me says.
-  assert.equal(out.switchedBack, 5, 'the flag counts only on a current Klassisch');
+  assert.equal(out.byDesign.klassisch, 4, 'only the accounts that CHOSE Klassisch');
+  assert.equal(out.byDesign.tisch, 2 + 6 + 3 + 1);
+  assert.equal(out.switchedBack, 4, 'the flag counts only on a current Klassisch');
   assert.equal(JSON.stringify(out).includes('GEHEIM'), false, 'a stored id reached the keys');
 });
 
@@ -122,11 +146,8 @@ test('registration writes designSwitchedBack: false, not an absent key', async (
 
 test('PATCH /me stamps a return to Klassisch, once, and never clears it', async () => {
   const acc = await freshAccount();
-  assert.equal((await patchMe(acc, { design: 'klassisch' })).status, 200);
-  assert.equal(await stored(acc), false, 'Klassisch to Klassisch is not a switch');
-
-  await patchMe(acc, { design: 'tisch' });
-  assert.equal(await stored(acc), false, 'moving to Tisch is not a switch back');
+  assert.equal((await patchMe(acc, { design: 'tisch' })).status, 200);
+  assert.equal(await stored(acc), false, 'Tisch to Tisch is not a switch');
 
   await patchMe(acc, { design: 'klassisch' });
   assert.equal(await stored(acc), true, 'Tisch back to Klassisch is');
@@ -139,27 +160,45 @@ test('PATCH /me stamps a return to Klassisch, once, and never clears it', async 
   assert.equal('designSwitchedBack' in me.body, false);
 });
 
-test('the first-start chooser stamps it too — the main way back after the flip', async () => {
+test('#1202: a pick on Konto answers the chooser, so the pick is actually WORN', async () => {
   const acc = await freshAccount();
-  await patchMe(acc, { design: 'tisch' });
-  const res = await chooser(acc, { design: 'klassisch' });
+  const res = await patchMe(acc, { design: 'klassisch' });
   assert.equal(res.status, 200);
-  assert.equal(await stored(acc), true);
+  assert.equal(res.body.design, 'klassisch', 'without the stamp /me would still answer the face');
+  assert.equal(res.body.designChooserSeen, designs.DESIGN_CHOOSER_REVISION);
 
-  // Declining („Später entscheiden") sends no design and must stamp nothing.
-  const other = await freshAccount();
-  await patchMe(other, { design: 'tisch' });
-  await chooser(other, {});
-  assert.equal(await stored(other), false);
+  // Already answered: a later pick leaves the stamp alone.
+  await repo.updateUser(acc.uid, { designChooserSeen: '2000-01-01' });
+  await patchMe(acc, { design: 'tisch' });
+  assert.equal((await repo.getUserById(acc.uid)).designChooserSeen, '2000-01-01');
 });
 
-test('in production, a stored-but-unoffered design going to Klassisch is NOT a switch', async () => {
-  // The pre-flip production state: the account holds 'tisch' from a dev build,
-  // but has only ever been shown Klassisch.
+test('the first-start chooser stamps it too — the main way back after the flip', async () => {
   const acc = await freshAccount();
-  await patchMe(acc, { design: 'tisch' });
+  const res = await chooser(acc, { design: 'klassisch' });
+  assert.equal(res.status, 200);
+  assert.equal(res.body.design, 'klassisch');
+  assert.equal(await stored(acc), true, 'a fresh account wore the face, so „Wie bisher" is a switch back');
+});
+
+test('#1202: „Später entscheiden" keeps the design the account is WEARING, and writes it down', async () => {
+  // The pre-flip shape: stored Klassisch, chooser never answered.
+  const acc = await freshAccount();
+  await repo.updateUser(acc.uid, { design: 'klassisch', designChooserSeen: null });
+  const res = await chooser(acc, {});
+  assert.equal(res.status, 200);
+  assert.equal(res.body.design, 'tisch', 'declining must not quietly undo the flip');
+  assert.equal((await repo.getUserById(acc.uid)).design, 'tisch');
+  assert.equal(await stored(acc), false, 'declining is not a switch back');
+});
+
+test('an account on a design this instance does not offer is not „switched back" by going to Klassisch… unless it was shown the face', async () => {
+  // A stored id the registry does not know resolves to the face (Der Tisch), so
+  // the account WAS shown Der Tisch and Klassisch is a real return.
+  const acc = await freshAccount();
+  await repo.updateUser(acc.uid, { design: 'GEHEIM', designChooserSeen: designs.DESIGN_CHOOSER_REVISION });
   await asProduction(async () => {
     assert.equal((await patchMe(acc, { design: 'klassisch' })).status, 200);
   });
-  assert.equal(await stored(acc), false);
+  assert.equal(await stored(acc), true);
 });

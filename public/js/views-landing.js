@@ -212,10 +212,10 @@ const LANDING_SHOTS_TISCH = {
 };
 
 // Which set the page shows: the design the landing is WEARING, which is the
-// face (FACE_DESIGN) for every logged-out visitor — so production keeps
-// Klassisch's pictures until the flip (#1202) moves the face, and Der Tisch's
-// appear the moment it does, with no second edit here. A design without a set
-// of its own shows Klassisch's rather than nothing.
+// face (FACE_DESIGN, Der Tisch since the flip, #1202) for every logged-out
+// visitor. A signed-in account on Klassisch that opens the landing sees
+// Klassisch's set. A design without a set of its own shows Klassisch's rather
+// than nothing.
 const LANDING_SHOT_SETS = { klassisch: LANDING_SHOTS, tisch: LANDING_SHOTS_TISCH };
 
 function landingShotSet() {
@@ -365,7 +365,7 @@ function showLanding() {
   // rather than setDocTitle(), because that pitch is 'app.tabTitle', not the
   // bare brand a part-less setDocTitle() would produce.
   applyTabTitle();
-  applyBackground(null);
+  applyMarker(null);
   app.innerHTML = '';
 
   const claims = LANDING_FEATURES.map(([icon, key]) => `

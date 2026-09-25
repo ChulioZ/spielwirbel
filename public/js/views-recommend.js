@@ -134,7 +134,7 @@ async function showRecommendations(rid) {
   let round;
   try { round = await fetchRound(rid); }
   catch { return showHome(); }
-  applyBackground(round.background, round);
+  applyMarker(round);
   setContext(round.name);
   setDocTitle(t('suggest.title'), round.name);
 

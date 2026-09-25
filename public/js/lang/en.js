@@ -80,7 +80,6 @@ I18N.en = {
   'newRound.toast.createdImported': 'Round created – games copied',
   'newRound.toast.quota': 'Round limit reached. Please delete a round first.',
 
-  'round.design': 'Design',
   'round.tags': 'Tags',
   'round.startSession': 'Start session',
   'round.startEmptyTitle': 'No session yet',
@@ -1193,10 +1192,6 @@ I18N.en = {
   'share.toast.copied': 'Result copied to the clipboard',
   'share.toast.failed': 'Sharing did not work',
 
-  'design.crumb': 'Design',
-  'design.title': 'Design',
-  'design.note': 'Choose a design for this round. Background, accent color and all other tones adapt together.',
-  'design.toast.set': 'Design applied',
   'theme.standard': 'Standard',
   'theme.blaugrau': 'Blue-gray',
   'theme.salbei': 'Sage',
@@ -1205,14 +1200,6 @@ I18N.en = {
   'theme.sand': 'Sand',
   'theme.schiefer': 'Slate',
   'theme.pfirsich': 'Peach',
-  'theme.obsidian': 'Obsidian',
-  'theme.forest': 'Forest',
-  'theme.scifi': 'Sci-Fi',
-  'theme.ocean': 'Ocean',
-  'theme.chess': 'Chess',
-  'theme.horror': 'Horror',
-  'theme.dinos': 'Dinosaurs',
-  'theme.burg': 'Castle',
   'round.marker': 'Colour marker',
   'marker.title': 'Colour marker',
   'marker.note': 'Every round carries one colour. Everyone in the round sees it — each in their own design.',
@@ -1224,9 +1211,6 @@ I18N.en = {
   'marker.tisch.moosfilz': 'Moss felt',
   'marker.tisch.taubenfilz': 'Dove felt',
   'marker.tisch.ockerfilz': 'Ochre felt',
-  'design.group.colors': 'Colors',
-  'design.group.worlds': 'Worlds',
-  'design.worlds.note': 'A world adds its own typeface, ornaments and a backdrop on top of the colors.',
 
 
   'tags.crumb': 'Tags',

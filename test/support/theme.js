@@ -232,7 +232,7 @@ function evaluate(expr, design) {
   /* A side of the mix: a colour, optionally followed by its percentage. Since
      #1188 that percentage may itself be a `var(--x, <fallback>)` — memberTone()
      emits `color-mix(in oklab, <hex>, #fff var(--member-lift, 42%))` so a design
-     can lift its own people further without re-tuning the four shipped worlds.
+     can lift its own people further without re-tuning every other design.
      Resolved through the same block order as a colour token, so a design that
      declares it is measured at ITS value and one that does not falls back to
      the literal in the var() — which is the value that ships. */
@@ -263,12 +263,13 @@ function evaluate(expr, design) {
 }
 
 /* One token, resolved for one design. `--page-bg` and `--brand` come from the
-   design itself — applyBackground() writes them inline, so the sheet's own
-   values are only the Standard fallback and would silently measure the wrong
-   page for every other design. */
+   design itself — paintDesign() writes them inline, so the sheet's own values
+   are only Klassisch's and would silently measure the wrong page for every
+   other design. Klassisch declares neither (it IS the :root default), so for it
+   the sheet's value is exactly right and the lookup falls through to it. */
 function token(name, design) {
-  if (name === '--page-bg') return hex(design.page);
-  if (name === '--brand') return hex(design.accent);
+  if (name === '--page-bg' && design.page) return hex(design.page);
+  if (name === '--brand' && design.accent) return hex(design.accent);
   return evaluate(declaration(name, design.scheme === 'dark', design), design);
 }
 

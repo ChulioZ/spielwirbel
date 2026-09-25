@@ -44,11 +44,6 @@ const ALLOW = {
   // The shared-password gate: one string, compared with timingSafeEqual.
   'auth.js POST /login': 'a single password field, compared constant-time',
   'admin/index.js POST /login': 'a single password field, compared constant-time',
-  // Its own zod union with `.catch` — a malformed design becomes the default
-  // rather than a 400, which is what the client would do with an unknown one.
-  // Renamed lib/routes/background.js -> marker.js in #1187: the retired design
-  // route now shares a file with the marker route that replaced it.
-  'marker.js POST /': 'own zod schema with .catch (unknown design -> default)',
   // The honeypot is read beside validateBody, deliberately outside the schema so
   // a filled-in field is not reported as a validation error to the bot.
   'games.js POST /': 'multipart (multer) form: the fields arrive as strings and buildSource/buildEdition own them',
@@ -57,8 +52,8 @@ const ALLOW = {
 };
 
 /* Any router-shaped receiver, not the literal name `router` (#1187). A file may
-   define more than one — lib/routes/marker.js has the marker router and the
-   retired design router it replaced — and the second one was INVISIBLE to this
+   define more than one — lib/routes/marker.js had the marker router and the
+   retired design router it replaced, until #1202 — and the second one was INVISIBLE to this
    scan while looking perfectly ordinary in the source. Measured: with the name
    pinned, `background.post('/')` went unseen and this spec reported the whole
    surface as covered.

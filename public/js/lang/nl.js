@@ -95,7 +95,6 @@ I18N.nl = {
   'newRound.toast.createdImported': 'Groep aangemaakt – spellen overgenomen',
   'newRound.toast.quota': 'Maximum aantal groepen bereikt. Verwijder eerst een groep.',
 
-  'round.design': 'Design',
   'round.tags': 'Labels',
   'round.startSession': 'Sessie starten',
   'round.startEmptyTitle': 'Nog geen sessie',
@@ -1133,10 +1132,6 @@ I18N.nl = {
   'share.toast.copied': 'Resultaat naar het klembord gekopieerd',
   'share.toast.failed': 'Delen is niet gelukt',
 
-  'design.crumb': 'Design',
-  'design.title': 'Design',
-  'design.note': 'Kies een design voor deze groep. Achtergrond, accentkleur en alle andere tinten passen zich samen aan.',
-  'design.toast.set': 'Design toegepast',
   'theme.standard': 'Standaard',
   'theme.blaugrau': 'Blauwgrijs',
   'theme.salbei': 'Salie',
@@ -1145,14 +1140,6 @@ I18N.nl = {
   'theme.sand': 'Zand',
   'theme.schiefer': 'Leisteen',
   'theme.pfirsich': 'Perzik',
-  'theme.obsidian': 'Obsidiaan',
-  'theme.forest': 'Woud',
-  'theme.scifi': 'Sci-fi',
-  'theme.ocean': 'Oceaan',
-  'theme.chess': 'Schaken',
-  'theme.horror': 'Horror',
-  'theme.dinos': 'Dinosauriërs',
-  'theme.burg': 'Kasteel',
   'round.marker': 'Kleurmarkering',
   'marker.title': 'Kleurmarkering',
   'marker.note': 'Elke ronde heeft één kleur. Iedereen in de ronde ziet hem — elk in het eigen ontwerp.',
@@ -1164,9 +1151,6 @@ I18N.nl = {
   'marker.tisch.moosfilz': 'Mosvilt',
   'marker.tisch.taubenfilz': 'Duifgrijs vilt',
   'marker.tisch.ockerfilz': 'Okervilt',
-  'design.group.colors': 'Kleuren',
-  'design.group.worlds': 'Werelden',
-  'design.worlds.note': 'Een wereld voegt boven op de kleuren een eigen lettertype, ornamenten en een achtergrond toe.',
 
 
   'tags.crumb': 'Labels',

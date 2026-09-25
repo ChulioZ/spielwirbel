@@ -18,26 +18,17 @@
       SecurityError at export time, long after the code looked fine.
       CROSS-ORIGIN IS NOT THE ONLY WAY TO TAINT: WebKit also taints on a
       createPattern() built from an SVG image, however same-origin — see
-      .claude/rules/webkit-taints-a-canvas-on-an-svg-pattern.md and recapTint.
+      .claude/rules/webkit-taints-a-canvas-on-an-svg-pattern.md.
    2. Wait for document.fonts.ready before drawing. The app's own woff2 faces
       load with `font-display: swap`; a canvas drawn before they resolve renders
       in a fallback face and looks subtly wrong rather than broken.
    3. Draw at 2x into the backing store and scale the context, or the card is
       soft on a phone screenshot.
 
-   The palette is read from the LIVE custom properties, so a round with its own
-   theme (applyBackground) shares a card in its own colours rather than in the
-   default orange. Only the raw tokens are read — the derived ones are
-   color-mix() values a canvas cannot parse — and the tints are composited here
-   instead. A WORLD (#903) reaches the card the same way: its display face is
-   whatever --font-display resolves to, and its backdrop motif and button frame
-   are the SVG masks the world's token block declares in styles.css, drawn here
-   in the accent — and since #1083 its SCENE too, in a band along the foot: the
-   one piece of world art that leaves the app. A data: URI is same-origin, so
-   DRAWING it taints nothing — but making a repeat PATTERN from it taints in
-   WebKit, which is why recapTint stamps instead. Constraint 2 grows a half: a
-   canvas ctx.font never TRIGGERS a font load, so a world face no DOM node has
-   painted yet would draw in a fallback; recapCardBlob asks for it explicitly.
+   The palette is read from the LIVE custom properties, so the card shares in
+   the colours of the design the page wears rather than in a fixed orange. Only
+   the raw tokens are read — the derived ones are color-mix() values a canvas
+   cannot parse — and the tints are composited here instead.
 
    Load order: see index.html. */
 
@@ -59,12 +50,6 @@ const RECAP_CARD_GAP = 14;
 const RECAP_CARD_TILE_H = 104;
 const RECAP_CARD_ROW_H = 82;
 const RECAP_CARD_SHELF_H = 68;
-// The world's scene band along the foot (#1083). The art is 600x120, drawn the
-// full width of the card, so its height is the width's fifth — derived rather
-// than written down, because a literal here and a stretch there is how the
-// scene ends up squashed with nothing to fail.
-const RECAP_CARD_SCENE_H = RECAP_CARD_W / 5;
-
 /* Normalize any CSS colour to what a canvas will actually paint, or null.
 
    Canvas treats an unparseable fillStyle as "keep the previous one", so a bad
@@ -114,8 +99,7 @@ function recapToken(name, fallback) {
    unset is invalid-at-computed-value-time, so the probe would inherit the page's
    ink and hand back a plausible, wrong marker. getPropertyValue answers '' for
    "not set", which is the distinction this needs — and null is a real answer
-   here, because a round still on a retired world carries no marker until the
-   flip (round-theme.js's markerColors). */
+   here: a card drawn outside a round (the account's own recap) has no marker. */
 function recapMarker() {
   const root = getComputedStyle(document.documentElement);
   const color = recapColor(root.getPropertyValue('--marker').trim());
@@ -148,75 +132,15 @@ function recapFit(ctx, text, maxWidth) {
   return s.slice(0, lo).trimEnd() + '…';
 }
 
-// The display stack follows the round's design: a world puts its own face in
-// front of --font-display, and the card has to say so in the same face the
-// screen does. Read off the live token rather than restated — a literal
-// "Baloo 2" here is how the card would keep the standard face inside a Forest
-// round with no error anywhere. A canvas accepts the whole family list.
+// The display stack follows the worn design: the card says so in the same face
+// the screen does. Read off the live token rather than restated. A canvas
+// accepts the whole family list.
 function recapDisplayStack() {
   const v = getComputedStyle(document.documentElement).getPropertyValue('--font-display').trim();
   return v || '"Baloo 2", "Nunito", sans-serif';
 }
 const recapFont = (weight, size, display) =>
   `${weight} ${size}px ${display ? recapDisplayStack() : '"Nunito", sans-serif'}`;
-
-// One of the world's SVG masks (the token block in styles.css), decoded to an
-// Image — or null when the round has no world, which is the common case and
-// costs one computed-style read. The mask is a black silhouette; recapTint
-// gives it a colour.
-function recapWorldMask(name) {
-  const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-  // The URI holds quotes of the OTHER kind and parentheses (SVG transforms),
-  // so only the enclosing quote may end the match — never a ')' inside.
-  const m = /^url\((["'])(data:image\/svg\+xml.*)\1\)$/.exec(v);
-  if (!m) return Promise.resolve(null);
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.onload = () => resolve(img);
-    img.onerror = () => resolve(null);
-    img.src = m[2];
-  });
-}
-
-// The silhouette painted in `color`, at `scale` for the 2x backing store:
-// tile (or stretch) it onto a scratch canvas, then keep the colour only where
-// the silhouette is (source-in). Returned as a canvas the caller drawImage()s.
-//
-// The tiling branch STAMPS the mask rather than reaching for createPattern, and
-// that is the whole of constraint 1's WebKit half (see the header): a pattern
-// built from an SVG image taints every canvas it touches in WebKit, so toBlob()
-// then threw SecurityError on a world round — while plain drawImage() of the
-// very same data: URI is clean. The mask is rasterized once into a scratch tile
-// at the backing-store scale, so stamping costs no sharpness — it GAINS some:
-// the pattern rasterized the SVG at 1x and upscaled it, where a stamped tile is
-// pixel-identical to a true 2x vector rasterization (measured in Chromium, 5x
-// fewer half-covered edge pixels). Constraint 3 was quietly being missed here.
-function recapTint(mask, w, h, color, scale, tile) {
-  const c = document.createElement('canvas');
-  c.width = w * scale;
-  c.height = h * scale;
-  const g = c.getContext('2d');
-  g.scale(scale, scale);
-  if (tile) {
-    // The loop steps by the tile's own size, so a mask that reports none would
-    // spin forever; it draws nothing instead, as the pattern did.
-    const tw = mask.naturalWidth || mask.width;
-    const th = mask.naturalHeight || mask.height;
-    if (tw && th) {
-      const t = document.createElement('canvas');
-      t.width = tw * scale;
-      t.height = th * scale;
-      t.getContext('2d').drawImage(mask, 0, 0, tw * scale, th * scale);
-      for (let y = 0; y < h; y += th) for (let x = 0; x < w; x += tw) g.drawImage(t, x, y, tw, th);
-    }
-  } else {
-    g.drawImage(mask, 0, 0, w, h);
-  }
-  g.globalCompositeOperation = 'source-in';
-  g.fillStyle = color;
-  g.fillRect(0, 0, w, h);
-  return c;
-}
 
 // A rounded panel; the app's own cards are 16px-radius surfaces on the page.
 function recapPanel(ctx, x, y, w, h, fill) {
@@ -263,17 +187,12 @@ function recapShelfEntries(rec) {
 // How tall this card has to be. The trailing term is the wordmark's own line
 // plus the breathing space above it, which is what keeps a two-block card and a
 // four-block card looking like the same design.
-//
-// `scene` is the world's scene mask when the round has one (recapCardBlob loads
-// it): the card then GROWS by the band rather than fitting it in, so the band is
-// text-free by construction. Both passes take the same argument, so the height
-// and the drawing cannot disagree about where the content ends.
-function recapCardHeight(model, scene) {
+function recapCardHeight(model) {
   const { rows, shelf } = recapCardBlocks(model);
   let h = RECAP_CARD_PAD + 26 + 44 + 26 + RECAP_CARD_TILE_H + RECAP_CARD_GAP;
   h += rows.length * (RECAP_CARD_ROW_H + RECAP_CARD_GAP);
   if (shelf.length) h += RECAP_CARD_SHELF_H + RECAP_CARD_GAP;
-  return h + 24 + 20 + RECAP_CARD_PAD + (scene ? RECAP_CARD_SCENE_H : 0);
+  return h + 24 + 20 + RECAP_CARD_PAD;
 }
 
 // `model` is what the view already computed for the screen:
@@ -282,18 +201,11 @@ function recapCardHeight(model, scene) {
 //   shelfLabel? }. `heading` is the top line — the round's name on the
 // Chronik's card, the username on the account's own (#1147); it was
 // `roundName` until the second caller made that name a lie.
-// `world` is { backdrop, frame, scene, scale } — the three masks (any may be
-// null) loaded by recapCardBlob before this synchronous pass, and the
-// backing-store scale the tints are rendered at.
-function drawRecapCard(ctx, model, height, world = {}) {
+function drawRecapCard(ctx, model, height) {
   const p = recapPalette();
   const W = RECAP_CARD_W;
   const pad = RECAP_CARD_PAD;
   const inner = W - pad * 2;
-  // Where the card's CONTENT ends: the foot of the panel stack, above the
-  // world's scene band. Everything that used to anchor on `height` anchors here,
-  // which is what keeps the band clear of the wordmark and the frame corner.
-  const foot = height - (world.scene ? RECAP_CARD_SCENE_H : 0);
 
   ctx.fillStyle = p.bg;
   ctx.fillRect(0, 0, W, height);
@@ -306,33 +218,10 @@ function drawRecapCard(ctx, model, height, world = {}) {
   ctx.fillStyle = glow;
   ctx.fillRect(0, 0, W, 240);
   ctx.globalAlpha = 1;
-  // The world's backdrop across the same band the glow covers, and its button
-  // frame at the card's corners — the same two marks the screen shows.
-  const scale = world.scale || 1;
-  if (world.backdrop) {
-    // .09, the page's own backdrop budget: the round name is --ink-soft on this
-    // band, and at .12 it drops under 4.5:1 on the motif's densest pixel.
-    ctx.globalAlpha = 0.09;
-    ctx.drawImage(recapTint(world.backdrop, W, 240, p.brand, scale, true), 0, 0, W, 240);
-    ctx.globalAlpha = 1;
-  }
-  if (world.frame) {
-    const fw = 110;
-    const fh = 70;
-    const frame = recapTint(world.frame, fw, fh, p.brand, scale, false);
-    ctx.drawImage(frame, 8, 8, fw, fh);
-    ctx.save();
-    ctx.translate(W - 8, foot - 8);
-    ctx.rotate(Math.PI);
-    ctx.drawImage(frame, 0, 0, fw, fh);
-    ctx.restore();
-  }
-
   // The round's marker along the card's head (#1187) — the fourth surface it
   // paints, and the one that leaves the app: whoever receives the image sees the
-  // same colour the round wears on screen. Drawn LAST of the head marks so the
-  // world's frame corner cannot sit on top of it, and full-bleed rather than
-  // inset, so it reads as the card's edge rather than as a stray rule.
+  // same colour the round wears on screen. Full-bleed rather than inset, so it
+  // reads as the card's edge rather than as a stray rule.
   const marker = recapMarker();
   if (marker) {
     const bar = ctx.createLinearGradient(0, 0, W, 0);
@@ -414,24 +303,13 @@ function drawRecapCard(ctx, model, height, world = {}) {
   // says where it came from.
   ctx.fillStyle = p.brand;
   ctx.font = recapFont(700, 20, true);
-  ctx.fillText('Spielwirbel', pad, foot - pad);
+  ctx.fillText('Spielwirbel', pad, height - pad);
   ctx.fillStyle = p.inkSoft;
   ctx.font = recapFont(600, 13);
   ctx.textAlign = 'right';
-  ctx.fillText(recapFit(ctx, 'spielwirbel.app', inner / 2), W - pad, foot - pad);
+  ctx.fillText(recapFit(ctx, 'spielwirbel.app', inner / 2), W - pad, height - pad);
   ctx.textAlign = 'left';
 
-  /* The world's scene along the foot, full width — the same band the empty
-     state carries on screen (slot 5), at the same bold alpha, and bold for the
-     same reason: the card grew by exactly this much, so no line of type is on
-     it. Drawn LAST so it sits over the page glow rather than under it; nothing
-     else reaches this far down. */
-  if (world.scene) {
-    ctx.globalAlpha = 0.36;
-    const band = recapTint(world.scene, W, RECAP_CARD_SCENE_H, p.brand, scale, false);
-    ctx.drawImage(band, 0, foot, W, RECAP_CARD_SCENE_H);
-    ctx.globalAlpha = 1;
-  }
 }
 
 // Render the card to a PNG Blob. Rejects rather than resolving null, so the
@@ -444,7 +322,7 @@ async function recapCardBlob(model) {
   // Constraint 2 — see the header. `document.fonts` is present in every browser
   // this app supports; the guard is for a stray environment without it.
   if (document.fonts && document.fonts.ready) await document.fonts.ready;
-  // A world face that no DOM node has painted yet is declared but not loaded,
+  // A display face that no DOM node has painted yet is declared but not loaded,
   // and ctx.font never loads one. load() takes the same shorthand and resolves
   // once every face in the stack that has an @font-face is usable; a face that
   // cannot load leaves the card in the fallback rather than failing the share.
@@ -452,16 +330,13 @@ async function recapCardBlob(model) {
     try { await document.fonts.load(recapFont(700, 30, true)); } catch { /* fallback face */ }
   }
   const scale = 2; // constraint 3
-  const [backdrop, frame, scene] = await Promise.all([
-    recapWorldMask('--world-backdrop'), recapWorldMask('--world-frame'), recapWorldMask('--world-scene'),
-  ]);
-  const height = recapCardHeight(model, scene);
+  const height = recapCardHeight(model);
   const canvas = document.createElement('canvas');
   canvas.width = RECAP_CARD_W * scale;
   canvas.height = height * scale;
   const ctx = canvas.getContext('2d');
   ctx.scale(scale, scale);
-  drawRecapCard(ctx, model, height, { backdrop, frame, scene, scale });
+  drawRecapCard(ctx, model, height);
   return new Promise((resolve, reject) => {
     // Nothing cross-origin is ever drawn (constraint 1), so toBlob cannot taint
     // — but it still answers null on an out-of-memory canvas.

@@ -11,23 +11,13 @@
 @font-face { font-family: 'Nunito'; font-style: normal; font-weight: 600; font-display: swap; src: url('fonts/nunito-latin-600-normal.woff2') format('woff2'); }
 @font-face { font-family: 'Nunito'; font-style: normal; font-weight: 700; font-display: swap; src: url('fonts/nunito-latin-700-normal.woff2') format('woff2'); }
 @font-face { font-family: 'Nunito'; font-style: normal; font-weight: 800; font-display: swap; src: url('fonts/nunito-latin-800-normal.woff2') format('woff2'); }
-/* World display faces (#903, "Worlds" at the end of this file). Declared here,
-   fetched only when a [data-world] rule applies them — a Standard round
-   downloads neither. Licences: LICENSE-averia-serif-libre.txt, LICENSE-chakra-petch.txt. */
-@font-face { font-family: 'Averia Serif Libre'; font-style: normal; font-weight: 400; font-display: swap; src: url('fonts/averia-serif-libre-latin-400-normal.woff2') format('woff2'); }
-@font-face { font-family: 'Averia Serif Libre'; font-style: normal; font-weight: 700; font-display: swap; src: url('fonts/averia-serif-libre-latin-700-normal.woff2') format('woff2'); }
-@font-face { font-family: 'Chakra Petch'; font-style: normal; font-weight: 600; font-display: swap; src: url('fonts/chakra-petch-latin-600-normal.woff2') format('woff2'); }
-@font-face { font-family: 'Chakra Petch'; font-style: normal; font-weight: 700; font-display: swap; src: url('fonts/chakra-petch-latin-700-normal.woff2') format('woff2'); }
-/* #905. Creepster and Alfa Slab One ship ONE weight, and headings ask for 700:
-   the range tells the browser this face already IS the bold, so it never
-   synthesises a smeared faux-bold over an already heavy face. */
+/* Comfortaa outlived the worlds (#1202 retired them; it was Ocean's world face):
+   it is the display face of the Ocean USER design (#1210), so the file and this
+   declaration stay. @font-face downloads nothing until a rule applies it.
+   Licence: LICENSE-comfortaa.txt. */
 @font-face { font-family: 'Comfortaa'; font-style: normal; font-weight: 700; font-display: swap; src: url('fonts/comfortaa-latin-700-normal.woff2') format('woff2'); }
-@font-face { font-family: 'Playfair Display'; font-style: normal; font-weight: 700; font-display: swap; src: url('fonts/playfair-display-latin-700-normal.woff2') format('woff2'); }
-@font-face { font-family: 'Creepster'; font-style: normal; font-weight: 400 800; font-display: swap; src: url('fonts/creepster-latin-400-normal.woff2') format('woff2'); }
-@font-face { font-family: 'Alfa Slab One'; font-style: normal; font-weight: 400 800; font-display: swap; src: url('fonts/alfa-slab-one-latin-400-normal.woff2') format('woff2'); }
-@font-face { font-family: 'Cinzel'; font-style: normal; font-weight: 400 800; font-display: swap; src: url('fonts/cinzel-latin-700-normal.woff2') format('woff2'); }
 /* Der Tisch's two faces (#1188, T1): Bricolage Grotesque for display, Manrope
-   for text. Declared here beside the world faces rather than in
+   for text. Declared here beside the base faces rather than in
    public/css/designs/tisch.css for two reasons — the url() is resolved against
    THIS file, which is the only path scripts/build.js rewrites for fonts, and a
    face declared in a design sheet would not exist until that sheet is injected,
@@ -35,8 +25,8 @@
    account on Klassisch fetches neither.
 
    Every weight the design asks for is declared, so the browser never has to
-   synthesise one — see .claude/rules/world-artwork-masks-and-single-weight-faces.md
-   for what a missing weight does to a display face. Licences:
+   synthesise one — see .claude/rules/single-weight-display-faces.md for what a
+   missing weight does to a display face. Licences:
    LICENSE-bricolage-grotesque.txt, LICENSE-manrope.txt (both OFL 1.1). */
 @font-face { font-family: 'Bricolage Grotesque'; font-style: normal; font-weight: 500; font-display: swap; src: url('fonts/bricolage-grotesque-latin-500-normal.woff2') format('woff2'); }
 @font-face { font-family: 'Bricolage Grotesque'; font-style: normal; font-weight: 700; font-display: swap; src: url('fonts/bricolage-grotesque-latin-700-normal.woff2') format('woff2'); }
@@ -340,28 +330,19 @@
   /* This scale is for MICRO-interactions (hover, press, open). The signature
      long-form motion is deliberately NOT on it and must not be "unified" onto
      it: the finale seal pulse (1.8s), the podium rise (0.55s), the confetti
-     (1.7s) and a world's victory scene (2.6s, #940) are the app's character
-     moments, and a 0.25s ceiling would flatten exactly the thing worth
+     (1.7s) are the app's character moments, and a 0.25s ceiling would flatten exactly the thing worth
      keeping. */
   --font: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  /* Named so a world (#903) can put its own face IN FRONT of this stack. */
+  /* Named so a design can put its own face IN FRONT of this stack. */
   --font-display-std: "Baloo 2", "Nunito", -apple-system, BlinkMacSystemFont, sans-serif;
   --font-display: var(--font-display-std);
 }
 
 /* ---- The dark scheme (#904) --------------------------------------------
-   A design declares `scheme: 'dark'` in round-designs.js and applyBackground()
-   sets <html data-scheme="dark">, exactly as it sets data-world. Everything
-   below is a TOKEN override — no component rule keys off the attribute — so a
-   screen is dark because its tokens are, not because it was ported.
-
-   Two selectors, because two things can be dark at once. The root carries the
-   round's own scheme; a `.theme-card` on the design screen carries the scheme
-   of the design it PREVIEWS, and sets --page-bg/--brand inline, so a Sci-Fi
-   card inside a Standard round previews as a dark card (the same inheritance
-   trick the world ornaments use). The home tile is deliberately NOT in here:
-   one dark tile per round would make the lobby a patchwork, so it takes the
-   accent ink alone (.round-card[data-scheme] below).
+   A user design declares `scheme: 'dark'` in designs.js and paintDesign()
+   (round-theme.js) sets <html data-scheme="dark">. Everything below is a TOKEN
+   override — no component rule keys off the attribute — so a screen is dark
+   because its tokens are, not because it was ported.
 
    What flips, and why it is not just "swap black and white":
 
@@ -390,8 +371,7 @@
    test/a11y-contrast.test.js measures every pair above against every shipped
    design, in both directions — light designs against white, dark ones against
    their own page. */
-:root[data-scheme="dark"],
-.theme-card[data-scheme="dark"] {
+:root[data-scheme="dark"] {
   color-scheme: dark;
   --shade: #fff;
   --surface: color-mix(in oklab, #fff 9%, var(--page-bg));
@@ -440,7 +420,7 @@
   /* The curtain still has to be darker than the page it COVERS, and on a dark
      design that is not free: 18% of a light accent lifts the mix above a
      night-blue page on its own, however deep the anchor goes. So both terms
-     move — the anchor becomes a deepened version of this round's own page
+     move — the anchor becomes a deepened version of the design's own page
      (one hue on screen instead of a fixed warm black beside a cool one), and
      the accent's share drops to the point where the curtain still reads as a
      step DOWN. test/a11y-contrast.test.js asserts that direction. */
@@ -448,10 +428,6 @@
   --stage-bg: color-mix(in oklab, var(--brand) 9%, var(--stage-anchor));
 }
 
-/* The home tile paints ONE round's accent while the lobby around it stays
-   light, so it needs that accent's ink and nothing else from the block above
-   (views-home.js sets the attribute). */
-.round-card[data-scheme="dark"] .round-card__emblem { color: var(--on-accent-dark); }
 
 * { box-sizing: border-box; }
 
@@ -741,8 +717,8 @@ h1, h2, h3 { font-family: var(--font-display); }
      the grid). `:has()` alone only ever matched the first kind, which quietly
      capped the lobby at the reading measure — 2 round cards across instead of
      4, on the first screen anyone sees. */
-  .app > *:not(.rail):not(.dock):is(.cards, .pokale-cards, .theme-cards, .lobby-list, .ds-list--tiles),
-  .app > *:not(.rail):not(.dock):not(.precap):has(.cards, .pokale-cards, .theme-cards, .lobby-list, .ds-list--tiles) {
+  .app > *:not(.rail):not(.dock):is(.cards, .pokale-cards, .marker-cards, .lobby-list, .ds-list--tiles),
+  .app > *:not(.rail):not(.dock):not(.precap):has(.cards, .pokale-cards, .marker-cards, .lobby-list, .ds-list--tiles) {
     max-width: none;
   }
 
@@ -1560,8 +1536,7 @@ a.hub-row:hover { background: var(--sunken-soft); }
    one column however long a localized label is; the label WRAPS rather than
    truncating (T7.7's +30 %, and Finnish is the long one). A band under three
    games is a gap: its count takes the accent, and the gap list under it says
-   so in words — the colour is never the only carrier. No per-world rules: the
-   worlds go with the flip (#1202) and paint these bars in their own --brand. */
+   so in words — the colour is never the only carrier. */
 .shelf-card__sub { font-size: var(--text-sm); font-weight: 600; color: var(--ink-soft); margin-bottom: 6px; }
 .shelf-bars { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
 .shelf-bar {
@@ -2376,8 +2351,7 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
 }
 /* A 220px floor needs 456px for two columns, so EVERY phone got a single one:
    a 22-game shelf measured 6332px of scroll, about eight screenfuls (#332).
-   Drop the floor below 520px — 150px matches the .theme-cards rule that
-   already tiles two-up down here — and 390px yields two 175px columns, which
+   Drop the floor below 520px — 150px tiles two-up down here — and 390px yields two 175px columns, which
    still carries the 17px title and the absolutely-positioned badges. */
 @media (max-width: 520px) {
   .cards {
@@ -2446,7 +2420,9 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--on-accent);
+  /* The marker's own ink (#1187): a marker is a dark fill in every design and
+     does not flip with the scheme, so neither may the glyph on it. */
+  color: var(--marker-ink, var(--on-accent));
   font-size: 28px; /* glyph, not type */
   flex: none;
 }
@@ -5411,7 +5387,7 @@ a.k-tile:focus-visible,
    is what the spotlight could not do, since it showed several covers over a
    single pair of winners with nothing linking them. */
 .tafel-top {
-  position: relative; /* anchors the confetti overlay, and the world's scene */
+  position: relative; /* anchors the confetti overlay */
   background: var(--gold-soft);
   border: 1px solid var(--gold-edge);
   border-radius: var(--radius-lg);
@@ -5463,8 +5439,8 @@ a.k-tile:focus-visible,
    over the scale's top, so the empty part of a row is the score's remainder and
    a wider column becomes a longer axis instead of a wider gutter. `--sc` arrives
    inline as the raw accent and the mix happens HERE — the `.stamp` mechanism
-   from #1040 — because an inline `background` would beat every rule a design or
-   a world could write. A row nobody voted on carries no `--sc` and `--pct: 0`,
+   from #1040 — because an inline `background` would beat every rule a design
+   could write. A row nobody voted on carries no `--sc` and `--pct: 0`,
    so it is simply bare.
 
    `inset: 0 auto 0 0` rather than `inset: 0`: with left, right and width all
@@ -5595,8 +5571,7 @@ a.k-tile:focus-visible,
 
 /* The race (#1056), on the reveal path only. Every fill starts together and
    runs at `--dur` = 0.5s + score × 0.32s, so the short rows land first and the
-   winner's completes last; the gold then tints in under it, and the world's own
-   victory scene (slot 7) runs after that. A cold load, the Chronik, a shared
+   winner's completes last; the gold then tints in under it. A cold load, the Chronik, a shared
    link and a reduced-motion reader all get the rest state — which is the thing
    worth looking at anyway. */
 /* The three moments of the table (#1058) — the quiet half of this redesign,
@@ -6857,8 +6832,7 @@ a.k-tile:focus-visible,
    right half to spend: the alpha is what makes the mark read as the member's
    colour at all, while the size only decides how much corner it fills.
 
-   The alpha is bounded by the motif-under-text measurement, like every world
-   slot. Note the card's radial peak ALREADY measures 3.26:1 for --ink-soft
+   The alpha is bounded by the motif-under-text measurement. Note the card's radial peak ALREADY measures 3.26:1 for --ink-soft
    without any watermark — that is #1074's own reason the corner carries no
    text, not something this added. Where text actually sits (the linear wash) it
    is 4.82:1, and the watermark does not reach there. */
@@ -9027,17 +9001,8 @@ kbd {
      computes to 0 in a degenerate viewport, which is what the Browser pane
      reports on a freshly opened tab, so without it the panel collapses to
      nothing exactly where it is being measured
-     (.claude/rules/preview-pane-paint-artifacts.md).
-
-     --pot-band is the world vessel's reservation (slot 10, #1086), inherited
-     from .setup-panel and 0 everywhere else. Subtracting it HERE is what gives
-     the band back to the screen WHEN THIS BOUND BINDS: a pool long enough to be
-     clipped shrinks by exactly what the panel grew by, so the panel's height —
-     and the action bar under it — does not move. It cannot help a SHORT pool,
-     which is content-sized, nor any viewport under ~800px tall, where the 300px
-     floor already wins; the band's 84px cap is measured against the CTA for
-     those cases instead (slot 10's comment). */
-  max-height: max(300px, calc(100dvh - 500px - var(--pot-band, 0px)));
+     (.claude/rules/preview-pane-paint-artifacts.md). */
+  max-height: max(300px, calc(100dvh - 500px));
   overflow-y: auto;
   /* Room for the hover lift. `overflow-y: auto` computes `overflow-x` to `auto`
      as well, so a tile that grows past its layout box here produces a horizontal
@@ -9795,10 +9760,10 @@ kbd {
 .live-vote__share { flex: 1 1 14rem; }
 .live-vote__qr { flex: 0 1 auto; }
 
-/* The code itself. Black on white REGARDLESS of the round's design: the dark
-   worlds would otherwise hand a scanner an inverted code, which many phone
-   cameras refuse outright — so this is the one surface in the app that does not
-   follow the round's theme. The white field is the quiet zone the format
+/* The code itself. Black on white REGARDLESS of the design: a dark design
+   would otherwise hand a scanner an inverted code, which many phone cameras
+   refuse outright — so this is the one surface in the app that does not follow
+   the theme. The white field is the quiet zone the format
    requires, and the server's own 2-module margin sits inside it. */
 .vote-qr__code {
   background: #fff;
@@ -10069,8 +10034,8 @@ kbd {
   border-radius: 2px;
   opacity: 0;
   /* A custom property rather than an inline background (#940): the bit's
-     colour is per bit, but a world recolours and re-shapes these same bits
-     (slot 7 under "Worlds"), and an inline background would beat that rule. */
+     colour is per bit, and an inline background would beat any rule a design
+     writes for these same bits. */
   background: var(--bit-color);
 }
 @media (prefers-reduced-motion: no-preference) {
@@ -10323,1190 +10288,3 @@ kbd {
 }
 .marker-card:not(.is-active) .marker-card__fill .ti { visibility: hidden; }
 .marker-card__name { font-size: var(--text-sm); font-weight: 600; padding: 0 8px; }
-
-/* ---- Design studio: theme preview cards ---- */
-.theme-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 12px;
-}
-/* The Welten group runs on wider tracks and a different card — .theme-cards--worlds
-   and .theme-card--world, with the world preview rules near the end of this file. */
-.theme-card {
-  position: relative;
-  border: 2px solid var(--control-edge);
-  border-radius: 16px;
-  padding: 14px 14px 12px;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 7px;
-  text-align: left;
-  transition: box-shadow var(--dur-base) var(--ease-out), transform var(--dur-fast) var(--ease-out);
-}
-.theme-card:hover { transform: translateY(-2px) rotate(-0.3deg); box-shadow: var(--shadow-2); }
-.theme-card__bar { width: 56%; height: 14px; border-radius: var(--radius-pill); }
-.theme-card__line { width: 80%; height: 7px; border-radius: var(--radius-pill); background: var(--placeholder); }
-.theme-card__line--short { width: 55%; }
-.theme-card__name { font-family: var(--font-display); font-size: var(--text-sm); font-weight: 700; margin-top: 4px; }
-.theme-card__check {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  color: var(--on-accent);
-  display: none;
-  align-items: center;
-  justify-content: center;
-}
-.theme-card__check .ti { font-size: var(--text-sm); }
-.theme-card.is-active { border-color: var(--ink); }
-.theme-card.is-active .theme-card__check { display: flex; }
-
-/* ---- Worlds (#903): a design with a personality on top of the two tokens ----
-   A world is ADDITIVE over the palette machinery above: it sets --page-bg and
-   --brand exactly as a palette does (round-designs.js, applied by
-   applyBackground in core.js) and adds ONE hook, `<html data-world="…">`.
-   Everything below keys off that hook, so a world with no rules here is simply
-   a palette, and nothing on home, login, landing, account or inbox — which
-   applyBackground(null) — ever carries an ornament.
-
-   The contract, in two halves:
-
-   1. ONE TOKEN BLOCK PER WORLD — [data-world="forest"], [data-world="scifi"],
-      and since #905 ocean, chess, horror and dinos —
-      naming its display face and its artwork: hand-authored SVG silhouettes,
-      inlined as data URIs (no vendored assets, no build step, works offline).
-      Every mask is drawn in black; the colour comes from the SLOT, always a
-      theme token (--brand, --brand-strong, --stage-ink), so a motif follows the
-      world's accent for free and never hardcodes a shade
-      (.claude/rules/theme-derived-colors.md).
-   2. TEN SLOT RULES, shared by every world, keyed off the bare [data-world]:
-      the page backdrop, the primary-button frame, the section-heading rule, the
-      card corner, the empty-state scene, the finale stage, the winner
-      reveal's victory scene (#940), the round's crown (#1082), the Pokale
-      podium's floor (#1083) and the session pot's vessel (#1086). Each is a
-      PSEUDO-ELEMENT with pointer-events: none — never a real element, never in an accessible name,
-      never a change to a hit target — and each anchors its host with
-      position: relative only (no overflow change on cards, so nothing a card
-      contains gets clipped). The one REAL element a world touches is the
-      confetti bit — slot 7's particles — which it re-shapes through tokens
-      rather than replacing: the generator in views-session.js knows no world.
-
-   The same token block also matches a design-screen preview card carrying
-   data-world (views-round-detail.js): custom properties inherit from the
-   NEAREST element that sets them, so a Sci-Fi card inside a Forest round
-   previews Sci-Fi — which is why the slots read tokens rather than being
-   written per world. The design face applies through --font-display only;
-   --font (body text) is Nunito in every world, on purpose. Focus rings are
-   untouched (test/design-tokens.test.js pins them); backdrop motifs drop
-   under prefers-contrast: more and every animation runs only under
-   prefers-reduced-motion: no-preference (test/round-worlds.test.js). */
-
-[data-world="forest"] {
-  --world-font: "Averia Serif Libre";
-  --world-backdrop: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240' viewBox='0 0 240 240'%3E%3Cg fill='%23000'%3E %3Cpath d='M18 46c14-18 40-22 62-10c-12 22-40 28-62 10z'/%3E %3Cpath d='M150 30c10-20 36-26 60-16c-10 22-36 30-60 16z'/%3E %3Cpath d='M60 136c18-10 40-6 56 12c-20 8-42 4-56-12z'/%3E %3Cpath d='M168 128c4-22 24-36 48-34c-4 24-24 38-48 34z'/%3E %3Cpath d='M20 206c16-12 38-12 56 2c-16 12-38 12-56-2z'/%3E %3Cpath d='M132 214c12-18 36-24 58-14c-12 18-36 24-58 14z'/%3E %3Cpath d='M96 76c2-12 12-20 26-18c-2 12-12 20-26 18z'/%3E %3Cpath d='M204 200c2-12 12-20 26-18c-2 12-12 20-26 18z'/%3E %3Ccircle cx='118' cy='176' r='3'/%3E%3Ccircle cx='230' cy='70' r='2.6'/%3E%3Ccircle cx='42' cy='106' r='2.6'/%3E%3Ccircle cx='150' cy='90' r='2.2'/%3E %3C/g%3E%3C/svg%3E");
-  --world-backdrop-size: 320px 320px;
-  /* Slot 1's alpha. Ceiling .095 (see the slot rule); .09 keeps the margin. */
-  --world-backdrop-alpha: .09;
-  /* A canopy: densest at the top of the viewport, thinning toward the bottom. */
-  --world-backdrop-fade: linear-gradient(#000 0%, transparent 130vh);
-  --world-frame: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='88' height='56' viewBox='0 0 88 56'%3E%3Cpath d='M4 54C8 34 22 16 50 8' fill='none' stroke='%23000' stroke-width='3' stroke-linecap='round'/%3E %3Cg fill='%23000'%3E %3Cpath d='M10 40c4-12 14-18 26-14c-4 12-14 18-26 14z'/%3E %3Cpath d='M24 22c8-8 20-10 30-4c-8 8-20 10-30 4z'/%3E %3Cpath d='M42 12c8-6 18-6 26 0c-8 6-18 6-26 0z'/%3E %3Cpath d='M2 52c-2-10 2-18 12-22c2 10-2 18-12 22z'/%3E %3Ccircle cx='20' cy='30' r='2.4'/%3E%3Ccircle cx='60' cy='9' r='2'/%3E%3C/g%3E%3C/svg%3E");
-  --world-rule: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='10' viewBox='0 0 140 10'%3E%3Cpath d='M0 5h132' stroke='%23000' stroke-width='1.5' fill='none'/%3E%3Cg fill='%23000'%3E %3Cpath d='M14 5c4-5 12-6 18-2c-4 5-12 6-18 2z'/%3E %3Cpath d='M52 5c4-5 12-6 18-2c-4 5-12 6-18 2z'/%3E %3Cpath d='M90 5c4-5 12-6 18-2c-4 5-12 6-18 2z'/%3E %3Cpath d='M34 5c4 5 12 6 18 2c-4-5-12-6-18-2z'/%3E %3Cpath d='M72 5c4 5 12 6 18 2c-4-5-12-6-18-2z'/%3E %3Ccircle cx='136' cy='5' r='2.2'/%3E%3C/g%3E%3C/svg%3E");
-  --world-corner: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 22 22'%3E%3Cg fill='%23000' transform='rotate(-45 11 11)'%3E%3Cpath d='M1 11c5-7 15-7 20 0c-5 7-15 7-20 0z'/%3E%3C/g%3E%3C/svg%3E");
-  --world-scene: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='120' viewBox='0 0 600 120'%3E%3Cg fill='%23000'%3E%3Cpath fill-opacity='0.45' d='M40 50L54.28 77.9H25.72zM40 63.64L61.08 94.64H18.92zM40 79.75999999999999L67.88 109.52H12.120000000000001zM36.94 107.04h6.12V112h-6.12z'/%3E%3Cpath fill-opacity='0.45' d='M130 42L144.28 73.5H115.72zM130 57.4L151.07999999999998 92.4H108.92zM130 75.6L157.88 109.2H102.12zM126.94 106.4h6.12V112h-6.12z'/%3E%3Cpath fill-opacity='0.45' d='M205 34L219.28 69.1H190.72zM205 51.16L226.07999999999998 90.16H183.92000000000002zM205 71.44L232.88 108.88H177.12zM201.94 105.76h6.12V112h-6.12z'/%3E%3Cpath fill-opacity='0.45' d='M300 50L314.28 77.9H285.72zM300 63.64L321.08 94.64H278.92zM300 79.75999999999999L327.88 109.52H272.12zM296.94 107.04h6.12V112h-6.12z'/%3E%3Cpath fill-opacity='0.45' d='M395 42L409.28 73.5H380.72zM395 57.4L416.08 92.4H373.92zM395 75.6L422.88 109.2H367.12zM391.94 106.4h6.12V112h-6.12z'/%3E%3Cpath fill-opacity='0.45' d='M470 34L484.28 69.1H455.72zM470 51.16L491.08 90.16H448.92zM470 71.44L497.88 108.88H442.12zM466.94 105.76h6.12V112h-6.12z'/%3E%3Cpath fill-opacity='0.45' d='M560 50L574.28 77.9H545.72zM560 63.64L581.08 94.64H538.92zM560 79.75999999999999L587.88 109.52H532.12zM556.94 107.04h6.12V112h-6.12z'/%3E%3Cpath d='M0 120v-6c60-4 120 2 180-2s120-6 180-2s120 6 180 2s50 0 60 2v6z'/%3E%3Cpath d='M15 36L33.480000000000004 73.8H-3.4800000000000004zM15 54.480000000000004L42.28 96.47999999999999H-12.280000000000001zM15 76.32L51.08 116.64H-21.08zM11.04 113.28h7.92V120h-7.92z'/%3E%3Cpath d='M90 20L108.48 65H71.52zM90 42L117.28 92H62.72zM90 68L126.08 116H53.92zM86.04 112h7.92V120h-7.92z'/%3E%3Cpath d='M250 36L268.48 73.8H231.52zM250 54.480000000000004L277.28 96.47999999999999H222.72zM250 76.32L286.08 116.64H213.92000000000002zM246.04 113.28h7.92V120h-7.92z'/%3E%3Cpath d='M340 20L358.48 65H321.52zM340 42L367.28 92H312.72zM340 68L376.08 116H303.92zM336.04 112h7.92V120h-7.92z'/%3E%3Cpath d='M520 36L538.48 73.8H501.52zM520 54.480000000000004L547.28 96.47999999999999H492.72zM520 76.32L556.08 116.64H483.92zM516.04 113.28h7.92V120h-7.92z'/%3E%3Cpath d='M590 20L608.48 65H571.52zM590 42L617.28 92H562.72zM590 68L626.08 116H553.92zM586.04 112h7.92V120h-7.92z'/%3E%3Cpath d='M410 118c-2-7 2-12 8-12h54c6 0 10 5 8 12z'/%3E%3Cpath d='M478 119v-8h5v8zM472 111c0-6 5-9 8-9s8 3 8 9zM490 119v-6h4v6zM487 113c0-4 3-6 5-6s5 2 5 6z'/%3E%3Cg transform='translate(160 106) scale(0.9)'%3E %3Cpath d='M0 0c0-9 7-15 17-15c5 0 9 1 12 3l3-8l6 6h5l6-6l2 9c4 3 6 7 6 11c0 4-2 6-5 7l-2 6h-4v-6H22v6h-4v-6C7 7 0 5 0 0z'/%3E %3Cpath d='M2 2c-8-3-16 1-22 9c7 3 14 1 22-5z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-  --world-stage: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='140' viewBox='0 0 600 140'%3E%3Cg fill='%23000'%3E %3Cpath d='M0 0h600v20c-30 14-70 18-100 6c-30-12-70-8-100 4c-30 12-70 22-100 6c-30-16-70-14-100 0c-30 14-70 22-100 8c-30-14-60-6-100 2z'/%3E %3Cpath d='M90 40v34M300 34v46M470 30v40' stroke='%23000' stroke-width='2.5' fill='none'/%3E %3Cpath d='M60 74c10-14 40-18 60-8c-10 14-40 18-60 8z'/%3E %3Cpath d='M270 80c10-14 40-18 60-8c-10 14-40 18-60 8z'/%3E %3Cpath d='M440 70c10-14 40-18 60-8c-10 14-40 18-60 8z'/%3E %3Cpath d='M180 110c6-8 20-10 30-4c-6 8-20 10-30 4z'/%3E %3Cpath d='M540 96c6-8 20-10 30-4c-6 8-20 10-30 4z'/%3E %3Cpath d='M20 100c6-8 20-10 30-4c-6 8-20 10-30 4z'/%3E %3C/g%3E%3C/svg%3E");
-  --world-stage-size: 100% auto;
-  --world-stage-repeat: no-repeat;
-  --world-stage-position: center top;
-  /* Slot 8 — the crown: a canopy hangs from the top, so the strip shows the art’s top. */
-  --world-crown-y: top;
-  /* Slot 7 (#940) — the victory scene. Layer 1 grows: two trunks in the
-     gutters and the forest floor across the band; layer 2 is the canopies,
-     which lift into place after it. The confetti bits become fireflies —
-     soft dots that rise from the floor and pulse. */
-  --world-victory-l: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='280' viewBox='0 0 120 280'%3E%3Cg fill='%23000'%3E%3Cpath d='M34 282c6-34 9-72 9-112c0-18 3-34 9-52c6 18 9 34 9 52c0 40 3 78 9 112z'/%3E%3Cpath d='M18 282c12-10 24-14 34-14s22 4 34 14z'/%3E%3Cpath d='M48 198c-10-8-20-14-32-14c6 8 16 12 30 16z'/%3E%3Cpath d='M58 168c8-12 18-18 30-18c-6 10-14 16-26 20z'/%3E%3Cpath d='M46 148c-6-8-12-12-20-12c4 6 10 10 18 12z'/%3E%3C/g%3E%3C/svg%3E");
-  --world-victory-r: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='280' viewBox='0 0 120 280'%3E%3Cg fill='%23000'%3E%3Cpath d='M52 282c6-34 9-72 9-112c0-18 3-34 9-52c6 18 9 34 9 52c0 40 3 78 9 112z'/%3E%3Cpath d='M36 282c12-10 24-14 34-14s22 4 34 14z'/%3E%3Cpath d='M72 198c10-8 20-14 32-14c-6 8-16 12-30 16z'/%3E%3Cpath d='M62 168c-8-12-18-18-30-18c6 10 14 16 26 20z'/%3E%3Cpath d='M74 148c6-8 12-12 20-12c-4 6-10 10-18 12z'/%3E%3C/g%3E%3C/svg%3E");
-  --world-victory-band: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='90' viewBox='0 0 600 90'%3E%3Cg fill='%23000'%3E%3Cpath d='M0 90V80c40-8 80-12 120-6s80 12 120 4 80-14 120-8 80 14 120 6 80-8 120 4V90z'/%3E%3Cpath d='M30 80l-5-16 5 7 3-13 3 13 5-7-5 16z'/%3E%3Cpath d='M70 76l-5-16 5 7 3-13 3 13 5-7-5 16z'/%3E%3Cpath d='M150 74l-5-16 5 7 3-13 3 13 5-7-5 16z'/%3E%3Cpath d='M190 78l-5-16 5 7 3-13 3 13 5-7-5 16z'/%3E%3Cpath d='M250 74l-5-16 5 7 3-13 3 13 5-7-5 16z'/%3E%3Cpath d='M330 72l-5-16 5 7 3-13 3 13 5-7-5 16z'/%3E%3Cpath d='M380 76l-5-16 5 7 3-13 3 13 5-7-5 16z'/%3E%3Cpath d='M430 72l-5-16 5 7 3-13 3 13 5-7-5 16z'/%3E%3Cpath d='M470 78l-5-16 5 7 3-13 3 13 5-7-5 16z'/%3E%3Cpath d='M590 76l-5-16 5 7 3-13 3 13 5-7-5 16z'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(96 78) rotate(-70) scale(0.5)'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(104 80) rotate(-40) scale(0.42)'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(296 76) rotate(-75) scale(0.55)'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(306 78) rotate(-45) scale(0.45)'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(288 78) rotate(-105) scale(0.4)'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(446 78) rotate(-65) scale(0.5)'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(454 80) rotate(-35) scale(0.4)'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(40 80) rotate(-80) scale(0.45)'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(48 82) rotate(-50) scale(0.38)'/%3E%3Cpath d='M548 82c-10-14-4-30 12-30s24 14 16 30z'/%3E%3Cpath d='M210 78V64h4v14zM202 66a10 8 0 0 1 20 0z'/%3E%3Cpath d='M226 80V70h3v10zM220 71a8 6 0 0 1 15 0z'/%3E%3Cpath d='M396 78V66h4v12zM388 67a10 8 0 0 1 20 0z'/%3E%3Crect x='500' y='64' width='74' height='16' rx='8'/%3E%3Ccircle cx='574' cy='72' r='9'/%3E%3Ccircle cx='130' cy='84' r='3'/%3E%3Ccircle cx='352' cy='84' r='2.5'/%3E%3Ccircle cx='520' cy='86' r='2.5'/%3E%3Ccircle cx='560' cy='86' r='2'/%3E%3C/g%3E%3C/svg%3E");
-  --world-victory-2-l: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='280' viewBox='0 0 120 280'%3E%3Cg fill='%23000'%3E%3Ccircle cx='60' cy='74' r='27'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(81 80) rotate(15) scale(0.55)'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(76 90) rotate(45) scale(0.55)'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(66 95) rotate(75) scale(0.55)'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(54 95) rotate(105) scale(0.55)'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(44 90) rotate(135) scale(0.55)'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(39 80) rotate(165) scale(0.55)'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(39 68) rotate(195) scale(0.55)'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(44 58) rotate(225) scale(0.55)'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(54 53) rotate(255) scale(0.55)'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(66 53) rotate(285) scale(0.55)'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(76 58) rotate(315) scale(0.55)'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(81 68) rotate(345) scale(0.55)'/%3E%3Ccircle cx='29' cy='126' r='11'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(38 126) rotate(0) scale(0.36)'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(34 134) rotate(60) scale(0.36)'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(24 134) rotate(120) scale(0.36)'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(20 126) rotate(180) scale(0.36)'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(24 118) rotate(240) scale(0.36)'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(34 118) rotate(300) scale(0.36)'/%3E%3Ccircle cx='90' cy='102' r='12'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(99 107) rotate(30) scale(0.36)'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(90 112) rotate(90) scale(0.36)'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(81 107) rotate(150) scale(0.36)'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(81 97) rotate(210) scale(0.36)'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(90 92) rotate(270) scale(0.36)'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(99 97) rotate(330) scale(0.36)'/%3E%3Ccircle cx='44' cy='96' r='9'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(49 102) rotate(50) scale(0.3)'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(40 102) rotate(122) scale(0.3)'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(37 94) rotate(194) scale(0.3)'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(43 89) rotate(266) scale(0.3)'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(51 93) rotate(338) scale(0.3)'/%3E%3C/g%3E%3C/svg%3E");
-  --world-victory-2-r: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='280' viewBox='0 0 120 280'%3E%3Cg fill='%23000' transform='matrix(-1 0 0 1 120 0)'%3E%3Ccircle cx='60' cy='74' r='27'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(81 80) rotate(15) scale(0.55)'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(76 90) rotate(45) scale(0.55)'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(66 95) rotate(75) scale(0.55)'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(54 95) rotate(105) scale(0.55)'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(44 90) rotate(135) scale(0.55)'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(39 80) rotate(165) scale(0.55)'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(39 68) rotate(195) scale(0.55)'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(44 58) rotate(225) scale(0.55)'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(54 53) rotate(255) scale(0.55)'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(66 53) rotate(285) scale(0.55)'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(76 58) rotate(315) scale(0.55)'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(81 68) rotate(345) scale(0.55)'/%3E%3Ccircle cx='29' cy='126' r='11'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(38 126) rotate(0) scale(0.36)'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(34 134) rotate(60) scale(0.36)'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(24 134) rotate(120) scale(0.36)'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(20 126) rotate(180) scale(0.36)'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(24 118) rotate(240) scale(0.36)'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(34 118) rotate(300) scale(0.36)'/%3E%3Ccircle cx='90' cy='102' r='12'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(99 107) rotate(30) scale(0.36)'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(90 112) rotate(90) scale(0.36)'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(81 107) rotate(150) scale(0.36)'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(81 97) rotate(210) scale(0.36)'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(90 92) rotate(270) scale(0.36)'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(99 97) rotate(330) scale(0.36)'/%3E%3Ccircle cx='44' cy='96' r='9'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(49 102) rotate(50) scale(0.3)'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(40 102) rotate(122) scale(0.3)'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(37 94) rotate(194) scale(0.3)'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(43 89) rotate(266) scale(0.3)'/%3E%3Cpath d='M0 0c14-18 40-22 62-10c-12 22-40 28-62 10z' transform='translate(51 93) rotate(338) scale(0.3)'/%3E%3C/g%3E%3C/svg%3E");
-  --world-victory-2-band: none;
-  --world-victory-y: bottom;
-  --world-victory-2-y: bottom;
-  --world-victory-anim: world-grow;
-  --world-victory-anim-2: world-canopy;
-  --world-particle: radial-gradient(circle, #000 30%, transparent 70%);
-  --world-particle-w: 10px;
-  --world-particle-h: 10px;
-  --world-particle-inset: auto -12px;
-  --world-particle-anim: world-firefly;
-  --world-particle-dur: 2.4s;
-  /* Slot 10 (#1086) — the vessel the pot's covers are piled in. 200x120,
-     standing on the band's bottom edge, drawn like every other world mask:
-     black, sized by the SLOT, coloured by --brand. */
-  --world-vessel: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='120' viewBox='0 0 200 120'%3E%3Cg fill='%23000'%3E%3Cpath fill-rule='evenodd' d='M22 42c0-12 35-20 78-20s78 8 78 20v52c0 12-35 20-78 20s-78-8-78-20zM32 42c0-9 30-15 68-15s68 6 68 15s-30 15-68 15s-68-6-68-15zM48 42c0-5 22-9 52-9s52 4 52 9s-22 9-52 9s-52-4-52-9zM64 42c0-3 15-5 36-5s36 2 36 5s-15 5-36 5s-36-2-36-5zM62 70v34h3v-34zM96 74v32h3v-32zM136 68v36h3v-36z'/%3E%3Cpath d='M4 112c8-8 16-12 26-14l3 7c-10 1-18 4-26 9zM196 112c-8-8-16-12-26-14l-3 7c10 1 18 4 26 9z'/%3E%3C/g%3E%3C/svg%3E");
-}
-
-[data-world="scifi"] {
-  --world-font: "Chakra Petch";
-  --world-backdrop: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg fill='%23000'%3E %3Crect x='0' y='19.5' width='120' height='1'/%3E%3Crect x='0' y='59.5' width='120' height='1'/%3E%3Crect x='0' y='99.5' width='120' height='1'/%3E %3Crect x='19.5' y='0' width='1' height='120'/%3E%3Crect x='59.5' y='0' width='1' height='120'/%3E%3Crect x='99.5' y='0' width='1' height='120'/%3E %3Cpath d='M20 20h40v40h40' fill='none' stroke='%23000' stroke-width='2'/%3E %3Cpath d='M100 100h-40v-24' fill='none' stroke='%23000' stroke-width='2'/%3E %3Ccircle cx='20' cy='20' r='3'/%3E%3Ccircle cx='100' cy='60' r='3'/%3E%3Ccircle cx='60' cy='76' r='2.5'/%3E%3Crect x='97' y='97' width='6' height='6'/%3E %3C/g%3E%3C/svg%3E");
-  --world-backdrop-size: 150px 150px;
-  /* Slot 1's alpha. Ceiling .295 (see the slot rule); .26 keeps the margin. */
-  --world-backdrop-alpha: .26;
-  /* A circuit floor: rises from the bottom, fades under the page glow. The
-     floor stop is NOT transparent — see burg below for why. */
-  --world-backdrop-fade: linear-gradient(rgb(0 0 0 / .55) 0%, #000 90vh);
-  --world-frame: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='88' height='56' viewBox='0 0 88 56'%3E%3Cdefs%3E %3ClinearGradient id='f' x1='0' x2='1' y1='0' y2='0'%3E%3Cstop offset='0' stop-color='%23000'/%3E%3Cstop offset='1' stop-color='%23000' stop-opacity='0'/%3E%3C/linearGradient%3E %3ClinearGradient id='v' x1='0' x2='0' y1='0' y2='1'%3E%3Cstop offset='0' stop-color='%23000'/%3E%3Cstop offset='1' stop-color='%23000' stop-opacity='0'/%3E%3C/linearGradient%3E%3C/defs%3E %3Cpath d='M3 30V3h27' fill='none' stroke='%23000' stroke-width='3'/%3E %3Crect x='30' y='2' width='58' height='2' fill='url(%23f)'/%3E %3Crect x='2' y='30' width='2' height='26' fill='url(%23v)'/%3E %3Crect x='0' y='0' width='7' height='7' fill='%23000'/%3E%3C/svg%3E");
-  --world-rule: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='10' viewBox='0 0 140 10'%3E%3Cpath d='M6 1H1v8h5M104 1h5v8h-5' fill='none' stroke='%23000' stroke-width='1.6'/%3E %3Crect x='10' y='4.25' width='88' height='1.5' fill='%23000'/%3E %3Crect x='114' y='3' width='4' height='4' fill='%23000'/%3E%3Crect x='122' y='3' width='4' height='4' fill='%23000' opacity='.6'/%3E%3Crect x='130' y='3' width='4' height='4' fill='%23000' opacity='.3'/%3E%3C/svg%3E");
-  --world-corner: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 22 22'%3E%3Cpath d='M22 0v14L8 0z' fill='%23000' opacity='.7'/%3E%3Cpath d='M22 6V0h-6' fill='none' stroke='%23000' stroke-width='2'/%3E%3C/svg%3E");
-  --world-scene: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='120' viewBox='0 0 600 120'%3E%3Ccircle cx='500' cy='78' r='30' fill='%23000'/%3E %3Cellipse cx='500' cy='78' rx='72' ry='16' fill='none' stroke='%23000' stroke-width='3' transform='rotate(-12 500 78)'/%3E %3Cellipse cx='500' cy='78' rx='96' ry='24' fill='none' stroke='%23000' stroke-width='1.5' transform='rotate(-12 500 78)' opacity='.6'/%3E %3Cg fill='%23000'%3E%3Ccircle cx='120' cy='40' r='2.5'/%3E%3Ccircle cx='220' cy='90' r='2'/%3E%3Ccircle cx='340' cy='30' r='3'/%3E%3Ccircle cx='60' cy='96' r='1.8'/%3E%3Ccircle cx='420' cy='104' r='2'/%3E%3C/g%3E %3Cpath d='M0 110h300' stroke='%23000' stroke-width='1' opacity='.5'/%3E%3C/svg%3E");
-  --world-stage: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='140' viewBox='0 0 600 140'%3E%3Ccircle cx='300' cy='420' r='360' fill='%23000' opacity='.5'/%3E %3Ccircle cx='300' cy='420' r='360' fill='none' stroke='%23000' stroke-width='3'/%3E %3Cellipse cx='300' cy='112' rx='330' ry='30' fill='none' stroke='%23000' stroke-width='1.5' opacity='.7'/%3E %3Cg fill='%23000'%3E%3Ccircle cx='40' cy='24' r='2.5'/%3E%3Ccircle cx='120' cy='48' r='1.8'/%3E%3Ccircle cx='200' cy='16' r='2'/%3E%3Ccircle cx='390' cy='22' r='2.6'/%3E%3Ccircle cx='480' cy='44' r='1.8'/%3E%3Ccircle cx='560' cy='18' r='2.2'/%3E%3Ccircle cx='300' cy='8' r='1.6'/%3E%3C/g%3E%3C/svg%3E");
-  --world-stage-size: 100% auto;
-  --world-stage-repeat: no-repeat;
-  --world-stage-position: center top;
-  /* Slot 8 — the crown: a skyline stands on the bottom, so the strip shows the art’s bottom. */
-  --world-crown-y: bottom;
-  /* Slot 7 (#940) — layer 1 is the rocket ALONE, at the top of the right
-     gutter, so the launch can translate the whole layer; layer 2 is the ringed
-     planet low in the left gutter plus the pad, its exhaust cloud and a still
-     starfield across the band — the layer that glints once at ignition. The
-     bits become stars that streak downward while the rocket climbs. */
-  --world-victory-l: none;
-  --world-victory-r: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='280' viewBox='0 0 120 280'%3E%3Cg fill='%23000'%3E%3Cpath d='M60 12c-13 20-20 42-20 66h40c0-24-7-46-20-66z'/%3E%3Cpath fill-rule='evenodd' d='M40 78h40v92c0 9-6 16-20 16s-20-7-20-16zM60 100a9 9 0 1 1 0 18a9 9 0 1 1 0-18z'/%3E%3Cpath d='M40 132l-24 44v24l24-16zM80 132l24 44v24l-24-16z'/%3E%3Cpath d='M46 186h28l5 10H41z'/%3E%3Cpath d='M60 200c-12 14-16 28-9 46 4 10 6 16 9 30 3-14 5-20 9-30 7-18 3-32-9-46z'/%3E%3Ccircle cx='60' cy='262' r='3.5' opacity='.5'/%3E%3Ccircle cx='60' cy='272' r='2.5' opacity='.28'/%3E%3C/g%3E%3C/svg%3E");
-  --world-victory-band: none;
-  --world-victory-2-l: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Ccircle cx='58' cy='66' r='30' fill='%23000'/%3E%3Cellipse cx='58' cy='66' rx='56' ry='14' fill='none' stroke='%23000' stroke-width='4.5' transform='rotate(-18 58 66)'/%3E%3Cellipse cx='58' cy='66' rx='70' ry='20' fill='none' stroke='%23000' stroke-width='2' opacity='.55' transform='rotate(-18 58 66)'/%3E%3Cg fill='%23000'%3E%3Ccircle cx='14' cy='22' r='2.6'/%3E%3Ccircle cx='104' cy='30' r='2.2'/%3E%3Ccircle cx='100' cy='108' r='2.6'/%3E%3C/g%3E%3C/svg%3E");
-  --world-victory-2-r: none;
-  --world-victory-2-band: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='90' viewBox='0 0 600 90'%3E%3Cpath d='M0 86h600' stroke='%23000' stroke-width='1.5' opacity='.5'/%3E%3Cg fill='%23000'%3E%3Ccircle cx='540' cy='76' r='20'/%3E%3Ccircle cx='568' cy='68' r='16'/%3E%3Ccircle cx='512' cy='72' r='14'/%3E%3Ccircle cx='590' cy='78' r='12'/%3E%3Ccircle cx='556' cy='84' r='18'/%3E%3Ccircle cx='494' cy='82' r='10'/%3E%3Crect x='520' y='84' width='60' height='4'/%3E%3Ccircle cx='40' cy='20' r='3'/%3E%3Ccircle cx='120' cy='58' r='2.5'/%3E%3Ccircle cx='200' cy='14' r='3.5'/%3E%3Ccircle cx='270' cy='44' r='2'/%3E%3Ccircle cx='330' cy='22' r='3'/%3E%3Ccircle cx='390' cy='60' r='2.5'/%3E%3Ccircle cx='450' cy='26' r='3'/%3E%3Ccircle cx='480' cy='66' r='2'/%3E%3Ccircle cx='150' cy='30' r='1.8'/%3E%3C/g%3E%3C/svg%3E");
-  --world-victory-y: top;
-  --world-victory-2-y: bottom;
-  --world-victory-anim: world-launch;
-  --world-victory-anim-2: world-glint;
-  --world-particle: linear-gradient(to bottom, transparent, #000 40% 60%, transparent);
-  --world-particle-w: 2px;
-  --world-particle-h: 28px;
-  --world-particle-inset: -30px auto;
-  --world-particle-anim: world-star;
-  --world-particle-dur: 1.2s;
-  --world-vessel: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='120' viewBox='0 0 200 120'%3E%3Cg fill='%23000'%3E%3Cpath fill='%23fff' fill-opacity='.35' d='M74 30h52l16 54H58z'/%3E%3Cpath d='M22 92C12 66 24 36 50 20l7 11C36 44 26 68 33 88z'/%3E%3Cpath d='M178 92c10-26-2-56-28-72l-7 11c21 13 31 37 24 57z'/%3E%3Cpath d='M42 10h22v18H42zM136 10h22v18h-22z'/%3E%3Cpath fill-rule='evenodd' d='M100 82c43 0 78 8 78 19s-35 19-78 19s-78-8-78-19s35-19 78-19zM100 92c-29 0-52 4-52 9s23 9 52 9s52-4 52-9s-23-9-52-9z'/%3E%3Cpath fill-rule='evenodd' d='M100 94c24 0 43 3 43 7s-19 7-43 7s-43-3-43-7s19-7 43-7zM100 98c-14 0-25 2-25 3s11 3 25 3s25-2 25-3s-11-3-25-3z'/%3E%3C/g%3E%3C/svg%3E");
-}
-
-
-[data-world="ocean"] {
-  --world-font: "Comfortaa";
-  --world-backdrop: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240' viewBox='0 0 240 240'%3E%3Cg fill='%23000'%3E%3Cpath d='M30 60c10-12 26-14 40-6l12-8v18l-12-6c-14 8-30 6-40-6zM50 58a2.5 2.5 0 1 1 0 5a2.5 2.5 0 1 1 0-5z'/%3E%3Cpath d='M150 130c8-9 20-11 30-4l9-6v14l-9-5c-10 6-22 5-30-4z'/%3E%3Cpath d='M120 40c5-6 12-7 18-3l6-4v10l-6-3c-6 4-13 3-18-3z'/%3E%3Cpath d='M210 200c-6 8-16 9-24 3l-8 5v-13l8 4c8-5 18-4 24 4z'/%3E%3Cpath d='M60 190l4 10h10l-8 6l3 10l-9-6l-9 6l3-10l-8-6h10z'/%3E%3Cpath d='M178 76a14 14 0 0 1 28 0v4h-28zM181 82h3l1 16l-2 4h-3l2-4zM188 82h3v18l-2 4h-3l2-4zM196 82h3l2 16l-2 4h-3l2-4zM202 82h3l-1 14h-3z'/%3E%3Ccircle cx='100' cy='100' r='3'/%3E%3Ccircle cx='108' cy='88' r='2'/%3E%3Ccircle cx='96' cy='112' r='2'/%3E%3Ccircle cx='200' cy='150' r='2.5'/%3E%3Ccircle cx='40' cy='130' r='2'/%3E%3Cpath d='M0 226c14-8 26-8 40 0s26 8 40 0v3c-14 8-26 8-40 0s-26-8-40 0zM160 226c14-8 26-8 40 0s26 8 40 0v3c-14 8-26 8-40 0s-26-8-40 0z'/%3E%3C/g%3E%3C/svg%3E");
-  --world-backdrop-size: 320px 320px;
-  /* Slot 1's alpha. Ceiling .095 (see the slot rule); .09 keeps the margin. */
-  --world-backdrop-alpha: .09;
-  /* The sea: rises from the bottom of the viewport, clear water above —
-     but never to nothing at the top; see burg for the floor. */
-  --world-backdrop-fade: linear-gradient(rgb(0 0 0 / .55) 0%, #000 100vh);
-  --world-frame: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='88' height='56' viewBox='0 0 88 56'%3E%3Cpath d='M4 54C6 30 18 12 44 8c15-2 28 6 26 18c-2 9-12 12-17 6c-3-4 1-9 6-8' fill='none' stroke='%23000' stroke-width='3' stroke-linecap='round'/%3E%3Cg fill='%23000'%3E%3Ccircle cx='12' cy='20' r='2.6'/%3E%3Ccircle cx='22' cy='10' r='2'/%3E%3Ccircle cx='6' cy='34' r='1.6'/%3E%3C/g%3E%3C/svg%3E");
-  --world-rule: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='10' viewBox='0 0 140 10'%3E%3Cpath d='M0 5c8 -5 16 -5 24 0c8 -5 16 -5 24 0c8 -5 16 -5 24 0c8 -5 16 -5 24 0c8 -5 16 -5 24 0' fill='none' stroke='%23000' stroke-width='1.6' stroke-linecap='round'/%3E%3Cg fill='%23000'%3E%3Cg transform='translate(131 5) scale(0.42 0.42)'%3E%3Cpath d='M-14 0c8-9 22-9 30 0c-8 9-22 9-30 0z'/%3E%3Cpath d='M14 0l11-8v16z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-  --world-corner: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 22 22'%3E%3Cg fill='none' stroke='%23000' stroke-width='1.9'%3E%3Ccircle cx='13' cy='8' r='6'/%3E%3Ccircle cx='5' cy='15' r='3.6'/%3E%3Ccircle cx='16' cy='18' r='2.3'/%3E%3C/g%3E%3Ccircle cx='15.5' cy='5.5' r='1.3' fill='%23000'/%3E%3C/svg%3E");
-  --world-scene: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='120' viewBox='0 0 600 120'%3E%3Cg fill='%23000'%3E%3Cpath d='M0 120V104c60-8 120 6 180 0s120-10 180-2 120 8 180 0 60-6 60 0V120z'/%3E%3Cpath d='M62 106c-12 -18 12 -33 0 -48c-7.199999999999999 -6 3.5999999999999996 -9 0 -60' fill='none' stroke='%23000' stroke-width='8.399999999999999' stroke-linecap='round'/%3E%3Cpath d='M84 108c-14 -24.599999999999998 14 -45.1 0 -65.60000000000001c-8.4 -8.200000000000001 4.2 -12.299999999999999 0 -82' fill='none' stroke='%23000' stroke-width='9.799999999999999' stroke-linecap='round'/%3E%3Cpath d='M102 106c-10 -14.399999999999999 10 -26.400000000000002 0 -38.400000000000006c-6 -4.800000000000001 3 -7.199999999999999 0 -48' fill='none' stroke='%23000' stroke-width='7' stroke-linecap='round'/%3E%3Cpath d='M432 106c-13 -21 13 -38.5 0 -56c-7.8 -7 3.9 -10.5 0 -70' fill='none' stroke='%23000' stroke-width='9.1' stroke-linecap='round'/%3E%3Cpath d='M456 108c-11 -15.6 11 -28.6 0 -41.6c-6.6 -5.2 3.3 -7.8 0 -52' fill='none' stroke='%23000' stroke-width='7.699999999999999' stroke-linecap='round'/%3E%3Cpath d='M548 106c-12 -18.599999999999998 12 -34.1 0 -49.6c-7.199999999999999 -6.2 3.5999999999999996 -9.299999999999999 0 -62' fill='none' stroke='%23000' stroke-width='8.399999999999999' stroke-linecap='round'/%3E%3Cpath transform='translate(262 96) scale(1.1)' d='M0-12l3.5 8l8.7 .8l-6.6 5.7l2 8.5l-7.6-4.5l-7.6 4.5l2-8.5l-6.6-5.7l8.7-.8z'/%3E%3Cg transform='translate(330 106) scale(1)'%3E%3Cpath d='M-12 0a12 12 0 0 1 24 0z'/%3E%3C/g%3E%3Cg transform='translate(500 105) scale(0.8)'%3E%3Cpath d='M-12 0a12 12 0 0 1 24 0z'/%3E%3C/g%3E%3Cg transform='translate(360 62) scale(-1 1)'%3E%3Cpath d='M-14 0c8-9 22-9 30 0c-8 9-22 9-30 0z'/%3E%3Cpath d='M14 0l11-8v16z'/%3E%3C/g%3E%3Cg transform='translate(190 44) scale(0.7 0.7)'%3E%3Cpath d='M-14 0c8-9 22-9 30 0c-8 9-22 9-30 0z'/%3E%3Cpath d='M14 0l11-8v16z'/%3E%3C/g%3E%3Ccircle cx='120' cy='60' r='3'/%3E%3Ccircle cx='128' cy='48' r='2'/%3E%3Ccircle cx='470' cy='70' r='2.6'/%3E%3Ccircle cx='478' cy='58' r='1.8'/%3E%3Ccircle cx='405' cy='38' r='2.2'/%3E%3C/g%3E%3C/svg%3E");
-  --world-stage: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='140' viewBox='0 0 600 140'%3E%3Cg fill='%23000'%3E%3Cpath d='M0 0h600v18c-40 14-80 14-120 0s-80-14-120 0-80 14-120 0-80-14-120 0-80 14-120 0z'/%3E%3Cpath d='M0 34c50-16 100-16 150 0s100 16 150 0 100-16 150 0 100 16 150 0v9c-50 16-100 16-150 0s-100-16-150 0-100 16-150 0-100-16-150 0z' opacity='.6'/%3E%3Cpath d='M0 70c50-16 100-16 150 0s100 16 150 0 100-16 150 0 100 16 150 0v7c-50 16-100 16-150 0s-100-16-150 0-100 16-150 0-100-16-150 0z' opacity='.35'/%3E%3Cg transform='translate(70 108) scale(0.9 0.9)'%3E%3Cpath d='M-14 0c8-9 22-9 30 0c-8 9-22 9-30 0z'/%3E%3Cpath d='M14 0l11-8v16z'/%3E%3C/g%3E%3Cg transform='translate(536 116) scale(-0.8 0.8)'%3E%3Cpath d='M-14 0c8-9 22-9 30 0c-8 9-22 9-30 0z'/%3E%3Cpath d='M14 0l11-8v16z'/%3E%3C/g%3E%3Ccircle cx='120' cy='96' r='2.6'/%3E%3Ccircle cx='128' cy='86' r='1.8'/%3E%3Ccircle cx='480' cy='100' r='2.4'/%3E%3Ccircle cx='488' cy='90' r='1.6'/%3E%3C/g%3E%3C/svg%3E");
-  --world-stage-size: 100% auto;
-  --world-stage-repeat: no-repeat;
-  --world-stage-position: center top;
-  /* Slot 8 — the crown: waves break downward from the top, so the strip shows the art’s top. */
-  --world-crown-y: top;
-  /* Slot 7 — layer 1 is the sea floor: kelp in both gutters and a sand bed
-     with starfish and shells across the band, rising with the tide; layer 2
-     is a whale surfacing in the left gutter, blowing, plus its bubbles. The
-     bits become bubbles that wobble up from the floor. */
-  --world-victory-l: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='280' viewBox='0 0 120 280'%3E%3Cg fill='none' stroke='%23000' stroke-linecap='round'%3E%3Cpath d='M28 282c-12-30 14-56 0-88c-12-28 10-48 2-74' stroke-width='9'/%3E%3Cpath d='M60 282c10-28-10-50 2-78c8-22-6-42 6-64' stroke-width='7'/%3E%3Cpath d='M92 282c-8-22 8-42-2-66' stroke-width='6'/%3E%3C/g%3E%3Cg fill='%23000'%3E%3Cpath d='M100 282v-28c0-10 8-12 12-24c2 8-2 16 4 26c4-8 2-18 8-24c2 10-4 22 0 32c-6 6-10 12-12 18z'/%3E%3Ccircle cx='80' cy='150' r='3'/%3E%3Ccircle cx='86' cy='136' r='2.2'/%3E%3Ccircle cx='40' cy='90' r='2.6'/%3E%3Ccircle cx='48' cy='78' r='1.8'/%3E%3C/g%3E%3C/svg%3E");
-  --world-victory-r: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='280' viewBox='0 0 120 280'%3E%3Cg transform='matrix(-1 0 0 1 120 0)'%3E%3Cg fill='none' stroke='%23000' stroke-linecap='round'%3E%3Cpath d='M28 282c-12-30 14-56 0-88c-12-28 10-48 2-74' stroke-width='9'/%3E%3Cpath d='M60 282c10-28-10-50 2-78c8-22-6-42 6-64' stroke-width='7'/%3E%3Cpath d='M92 282c-8-22 8-42-2-66' stroke-width='6'/%3E%3C/g%3E%3Cg fill='%23000'%3E%3Cpath d='M100 282v-28c0-10 8-12 12-24c2 8-2 16 4 26c4-8 2-18 8-24c2 10-4 22 0 32c-6 6-10 12-12 18z'/%3E%3Ccircle cx='80' cy='150' r='3'/%3E%3Ccircle cx='86' cy='136' r='2.2'/%3E%3Ccircle cx='40' cy='90' r='2.6'/%3E%3Ccircle cx='48' cy='78' r='1.8'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-  --world-victory-band: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='90' viewBox='0 0 600 90'%3E%3Cg fill='%23000'%3E%3Cpath d='M0 90V76c50-8 100 4 150-2s100-8 150 0 100 8 150-2 100-6 150 4V90z'/%3E%3Cpath transform='translate(110 68) scale(1)' d='M0-12l3.5 8l8.7 .8l-6.6 5.7l2 8.5l-7.6-4.5l-7.6 4.5l2-8.5l-6.6-5.7l8.7-.8z'/%3E%3Cpath transform='translate(430 70) scale(0.8)' d='M0-12l3.5 8l8.7 .8l-6.6 5.7l2 8.5l-7.6-4.5l-7.6 4.5l2-8.5l-6.6-5.7l8.7-.8z'/%3E%3Cg transform='translate(230 76) scale(1.1)'%3E%3Cpath d='M-12 0a12 12 0 0 1 24 0z'/%3E%3C/g%3E%3Cg transform='translate(520 75) scale(0.9)'%3E%3Cpath d='M-12 0a12 12 0 0 1 24 0z'/%3E%3C/g%3E%3Cg transform='translate(330 78) scale(0.8)'%3E%3Cpath d='M-12 0a12 12 0 0 1 24 0z'/%3E%3C/g%3E%3Cg transform='translate(370 52) scale(0.6 0.6)'%3E%3Cpath d='M-14 0c8-9 22-9 30 0c-8 9-22 9-30 0z'/%3E%3Cpath d='M14 0l11-8v16z'/%3E%3C/g%3E%3Ccircle cx='60' cy='60' r='2.4'/%3E%3Ccircle cx='66' cy='50' r='1.6'/%3E%3Ccircle cx='480' cy='58' r='2.2'/%3E%3C/g%3E%3C/svg%3E");
-  --world-victory-2-l: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='280' viewBox='0 0 120 280'%3E%3Cg fill='%23000'%3E%3Cpath fill-rule='evenodd' d='M6 266c8-30 30-54 64-58c18-2 34 6 44 20c4 6 4 12 0 16l-12 6c-8 2-18 2-28 0c-12 4-26 6-40 6c-12 0-22-4-28-10zM100 224a3 3 0 1 0 6 0a3 3 0 1 0-6 0zM80 236l30-6l1 2l-30 6zM72 224c4-4 8-6 12-6c-2 3-4 5-6 8z'/%3E%3Cpath d='M16 246c-8-12-9-28 0-42c3 8 9 13 17 15c-6 8-6 18 0 27c-6-2-12-2-17 0z'/%3E%3Cpath d='M20 204l-14-9l9-3l7 9l7-10l9 3l-14 10z'/%3E%3Cpath d='M54 254c-14 4-24 12-28 26c12-4 24-9 34-18z'/%3E%3Cpath d='M96 196c-3-6 0-12 4-14c2 4 4 8 2 14zM106 184c-2-5 1-10 4-12c1 4 2 8 0 12zM86 190c-2-4 0-9 3-11c2 3 3 7 1 11z'/%3E%3Ccircle cx='26' cy='150' r='4'/%3E%3Ccircle cx='42' cy='120' r='3'/%3E%3Ccircle cx='30' cy='92' r='5'/%3E%3Ccircle cx='50' cy='62' r='2.5'/%3E%3Ccircle cx='36' cy='34' r='3.5'/%3E%3C/g%3E%3C/svg%3E");
-  --world-victory-2-r: none;
-  --world-victory-2-band: none;
-  --world-victory-y: bottom;
-  --world-victory-2-y: bottom;
-  --world-victory-anim: world-tide;
-  --world-victory-anim-2: world-surface;
-  --world-particle: radial-gradient(circle, transparent 48%, #000 58% 76%, transparent 86%);
-  --world-particle-w: 12px;
-  --world-particle-h: 12px;
-  --world-particle-inset: auto -14px;
-  --world-particle-anim: world-bubble;
-  --world-particle-dur: 2.2s;
-  --world-vessel: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='120' viewBox='0 0 200 120'%3E%3Cg fill='%23000'%3E%3Cpath d='M100 8c36 0 66 16 72 37c-22-9-45-14-72-14s-50 5-72 14c6-21 36-37 72-37z'/%3E%3Cpath d='M100 50c44 0 80 13 80 29c0 16-36 29-80 29s-80-13-80-29c0-16 36-29 80-29z'/%3E%3Cpath fill='%23fff' fill-opacity='.35' d='M98 56h4v50h-4zM70 58l4-1 9 48-4 1zM126 57l4 1-9 48-4-1zM44 65l4-2 17 42-4 2zM152 63l4 2-17 42-4-2z'/%3E%3Cpath d='M8 96c10-10 22-16 34-18l2 9c-11 2-21 7-30 15zM192 96c-10-10-22-16-34-18l-2 9c11 2 21 7 30 15z'/%3E%3C/g%3E%3C/svg%3E");
-}
-
-[data-world="chess"] {
-  --world-font: "Playfair Display";
-  --world-backdrop: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cg fill='%23000'%3E%3Cpath fill-rule='evenodd' transform='translate(12 8) scale(0.36 0.36)' d='M21 111c-1-18 2-34 10-46l-11-3c-5-1-7-5-6-9l4-8c1-3 4-4 7-3l3 1c3-7 8-12 14-15l4-12l6 9l7-4l-1 9c6 5 9 14 9 26c0 22-5 36-5 55zM36 36a2.6 2.6 0 1 0 5.2 0a2.6 2.6 0 1 0-5.2 0z'/%3E%3Cpath transform='translate(12 8) scale(0.36 0.36)' d='M20 111h29v3h-29zM9 128v-7c0-2 1-3 3-3h40c2 0 3 1 3 3v7zM15 118v-4c0-2 1-3 3-3h28c2 0 3 1 3 3v4z'/%3E%3Cpath transform='translate(104 18) scale(0.28 0.28)' d='M21 44a11 11 0 1 0 22 0a11 11 0 1 0-22 0zM27 52h10v8h-10zM19 61a13 4 0 1 0 26 0a13 4 0 1 0-26 0zM25 62h14c0 22.05 8 39.2 8 49h-30c0-9.8 8-26.950000000000003 8-49zM9 128v-7c0-2 1-3 3-3h40c2 0 3 1 3 3v7zM15 118v-4c0-2 1-3 3-3h28c2 0 3 1 3 3v4z'/%3E%3Cpath transform='translate(98 96) scale(0.34 0.34)' d='M17 24h9v9h5v-9h6v9h5v-9h9v19h-34zM15 44a17 3.5 0 1 0 34 0a17 3.5 0 1 0-34 0zM19 46h26c0 22 1 44 4 65h-34c3-21 4-43 4-65zM9 128v-7c0-2 1-3 3-3h40c2 0 3 1 3 3v7zM15 118v-4c0-2 1-3 3-3h28c2 0 3 1 3 3v4z'/%3E%3Cpath fill-rule='evenodd' transform='translate(20 92) scale(0.36 0.36)' d='M32 19c9 7 14 18 13 33h-26c-1-15 4-26 13-33zM24 46l14-15l3 3l-14 15z'/%3E%3Cpath transform='translate(20 92) scale(0.36 0.36)' d='M28 15a4 4 0 1 0 8 0a4 4 0 1 0-8 0zM19 54a13 4 0 1 0 26 0a13 4 0 1 0-26 0zM25 55h14c0 25.2 9 44.800000000000004 9 56h-32c0-11.200000000000001 9-30.800000000000004 9-56zM9 128v-7c0-2 1-3 3-3h40c2 0 3 1 3 3v7zM15 118v-4c0-2 1-3 3-3h28c2 0 3 1 3 3v4z'/%3E%3C/g%3E%3C/svg%3E");
-  --world-backdrop-size: 200px 200px;
-  /* Slot 1's alpha. Ceiling .095 (see the slot rule); .09 keeps the margin. */
-  --world-backdrop-alpha: .09;
-  /* A board on the table: rises from the bottom, thins toward the top
-     without reaching zero there; see burg for the floor. */
-  --world-backdrop-fade: linear-gradient(rgb(0 0 0 / .55) 0%, #000 100vh);
-  --world-frame: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='88' height='56' viewBox='0 0 88 56'%3E%3Cg fill='%23000'%3E%3Cpath d='M0 0h8v8h-8zM16 0h8v8h-8zM32 0h8v8h-8zM48 0h8v8h-8zM8 8h8v8h-8zM24 8h8v8h-8zM40 8h8v8h-8zM56 8h8v8h-8z'/%3E%3Cpath d='M0 16h8v8h-8zM8 24h8v8h-8zM0 32h8v8h-8zM8 40h8v8h-8zM0 48h8v8h-8z'/%3E%3C/g%3E%3C/svg%3E");
-  --world-rule: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='10' viewBox='0 0 140 10'%3E%3Cg fill='%23000'%3E%3Crect x='0' y='1' width='8' height='8'/%3E%3Crect x='16' y='1' width='8' height='8'/%3E%3Crect x='32' y='1' width='8' height='8'/%3E%3Crect x='48' y='1' width='8' height='8'/%3E%3Crect x='64' y='1' width='8' height='8'/%3E%3Crect x='80' y='1' width='8' height='8'/%3E%3Crect x='96' y='1' width='8' height='8'/%3E%3Crect x='112' y='1' width='8' height='8'/%3E%3Cg transform='translate(134 10) scale(0.27)'%3E%3Ccircle cx='0' cy='-30' r='6'/%3E%3Cpath d='M-6-22h12l-2 6c5 2 7 6 7 12h-22c0-6 2-10 7-12z'/%3E%3Crect x='-11' y='-4' width='22' height='4'/%3E%3C/g%3E%3C/g%3E%3Crect x='.5' y='.5' width='127' height='9' fill='none' stroke='%23000' stroke-width='1'/%3E%3C/svg%3E");
-  --world-corner: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 22 22'%3E%3Cg fill='%23000'%3E%3Cpath fill-rule='evenodd' transform='translate(-1 -2) scale(0.24 0.24)' d='M21 111c-1-18 2-34 10-46l-11-3c-5-1-7-5-6-9l4-8c1-3 4-4 7-3l3 1c3-7 8-12 14-15l4-12l6 9l7-4l-1 9c6 5 9 14 9 26c0 22-5 36-5 55zM36 36a2.6 2.6 0 1 0 5.2 0a2.6 2.6 0 1 0-5.2 0z'/%3E%3C/g%3E%3C/svg%3E");
-  --world-scene: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='120' viewBox='0 0 600 120'%3E%3Cg fill='%23000'%3E%3Cpath d='M0 104h24v24h-24zM48 104h24v24h-24zM96 104h24v24h-24zM144 104h24v24h-24zM192 104h24v24h-24zM240 104h24v24h-24zM288 104h24v24h-24zM336 104h24v24h-24zM384 104h24v24h-24zM432 104h24v24h-24zM480 104h24v24h-24zM528 104h24v24h-24zM576 104h24v24h-24z'/%3E%3Cpath d='M36 112h24v24h-24zM84 112h24v24h-24zM132 112h24v24h-24zM180 112h24v24h-24zM228 112h24v24h-24zM276 112h24v24h-24zM324 112h24v24h-24zM372 112h24v24h-24zM420 112h24v24h-24zM468 112h24v24h-24zM516 112h24v24h-24zM564 112h24v24h-24z'/%3E%3Cpath transform='translate(22 24.64) scale(0.62 0.62)' d='M17 24h9v9h5v-9h6v9h5v-9h9v19h-34zM15 44a17 3.5 0 1 0 34 0a17 3.5 0 1 0-34 0zM19 46h26c0 22 1 44 4 65h-34c3-21 4-43 4-65zM9 128v-7c0-2 1-3 3-3h40c2 0 3 1 3 3v7zM15 118v-4c0-2 1-3 3-3h28c2 0 3 1 3 3v4z'/%3E%3Cpath fill-rule='evenodd' transform='translate(92 24.64) scale(0.62 0.62)' d='M21 111c-1-18 2-34 10-46l-11-3c-5-1-7-5-6-9l4-8c1-3 4-4 7-3l3 1c3-7 8-12 14-15l4-12l6 9l7-4l-1 9c6 5 9 14 9 26c0 22-5 36-5 55zM36 36a2.6 2.6 0 1 0 5.2 0a2.6 2.6 0 1 0-5.2 0z'/%3E%3Cpath transform='translate(92 24.64) scale(0.62 0.62)' d='M20 111h29v3h-29zM9 128v-7c0-2 1-3 3-3h40c2 0 3 1 3 3v7zM15 118v-4c0-2 1-3 3-3h28c2 0 3 1 3 3v4z'/%3E%3Cpath fill-rule='evenodd' transform='translate(162 24.64) scale(0.62 0.62)' d='M32 19c9 7 14 18 13 33h-26c-1-15 4-26 13-33zM24 46l14-15l3 3l-14 15z'/%3E%3Cpath transform='translate(162 24.64) scale(0.62 0.62)' d='M28 15a4 4 0 1 0 8 0a4 4 0 1 0-8 0zM19 54a13 4 0 1 0 26 0a13 4 0 1 0-26 0zM25 55h14c0 25.2 9 44.800000000000004 9 56h-32c0-11.200000000000001 9-30.800000000000004 9-56zM9 128v-7c0-2 1-3 3-3h40c2 0 3 1 3 3v7zM15 118v-4c0-2 1-3 3-3h28c2 0 3 1 3 3v4z'/%3E%3Cpath transform='translate(232 24.64) scale(0.62 0.62)' d='M28.8 9a3.2 3.2 0 1 0 6.4 0a3.2 3.2 0 1 0-6.4 0zM18 40l3-22l8 13l3-19l3 19l8-13l3 22c-4 3-9 4-14 4s-10-1-14-4zM18.6 18a2.4 2.4 0 1 0 4.8 0a2.4 2.4 0 1 0-4.8 0zM40.6 18a2.4 2.4 0 1 0 4.8 0a2.4 2.4 0 1 0-4.8 0zM17 45a15 4 0 1 0 30 0a15 4 0 1 0-30 0zM24 46h16c0 29.25 9 52 9 65h-34c0-13 9-35.75 9-65zM9 128v-7c0-2 1-3 3-3h40c2 0 3 1 3 3v7zM15 118v-4c0-2 1-3 3-3h28c2 0 3 1 3 3v4z'/%3E%3Cpath transform='translate(302 24.64) scale(0.62 0.62)' d='M30 4h4v6h6v4h-6v8h-4v-8h-6v-4h6zM22 34c0-9 20-9 20 0l2 8h-24zM17 44a15 4 0 1 0 30 0a15 4 0 1 0-30 0zM24 45h16c0 29.7 9 52.800000000000004 9 66h-34c0-13.200000000000001 9-36.300000000000004 9-66zM9 128v-7c0-2 1-3 3-3h40c2 0 3 1 3 3v7zM15 118v-4c0-2 1-3 3-3h28c2 0 3 1 3 3v4z'/%3E%3Cpath fill-rule='evenodd' transform='translate(372 24.64) scale(0.62 0.62)' d='M32 19c9 7 14 18 13 33h-26c-1-15 4-26 13-33zM24 46l14-15l3 3l-14 15z'/%3E%3Cpath transform='translate(372 24.64) scale(0.62 0.62)' d='M28 15a4 4 0 1 0 8 0a4 4 0 1 0-8 0zM19 54a13 4 0 1 0 26 0a13 4 0 1 0-26 0zM25 55h14c0 25.2 9 44.800000000000004 9 56h-32c0-11.200000000000001 9-30.800000000000004 9-56zM9 128v-7c0-2 1-3 3-3h40c2 0 3 1 3 3v7zM15 118v-4c0-2 1-3 3-3h28c2 0 3 1 3 3v4z'/%3E%3Cpath fill-rule='evenodd' transform='translate(442 24.64) scale(-0.62 0.62) translate(-64 0)' d='M21 111c-1-18 2-34 10-46l-11-3c-5-1-7-5-6-9l4-8c1-3 4-4 7-3l3 1c3-7 8-12 14-15l4-12l6 9l7-4l-1 9c6 5 9 14 9 26c0 22-5 36-5 55zM36 36a2.6 2.6 0 1 0 5.2 0a2.6 2.6 0 1 0-5.2 0z'/%3E%3Cpath transform='translate(442 24.64) scale(-0.62 0.62) translate(-64 0)' d='M20 111h29v3h-29zM9 128v-7c0-2 1-3 3-3h40c2 0 3 1 3 3v7zM15 118v-4c0-2 1-3 3-3h28c2 0 3 1 3 3v4z'/%3E%3Cpath transform='translate(512 24.64) scale(0.62 0.62)' d='M17 24h9v9h5v-9h6v9h5v-9h9v19h-34zM15 44a17 3.5 0 1 0 34 0a17 3.5 0 1 0-34 0zM19 46h26c0 22 1 44 4 65h-34c3-21 4-43 4-65zM9 128v-7c0-2 1-3 3-3h40c2 0 3 1 3 3v7zM15 118v-4c0-2 1-3 3-3h28c2 0 3 1 3 3v4z'/%3E%3C/g%3E%3C/svg%3E");
-  --world-stage: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='140' viewBox='0 0 600 140'%3E%3Cg fill='%23000'%3E%3Cpath d='M0 126h25v25h-25zM50 126h25v25h-25zM100 126h25v25h-25zM150 126h25v25h-25zM200 126h25v25h-25zM250 126h25v25h-25zM300 126h25v25h-25zM350 126h25v25h-25zM400 126h25v25h-25zM450 126h25v25h-25zM500 126h25v25h-25zM550 126h25v25h-25z'/%3E%3Cpath transform='translate(26 4.400000000000006) scale(0.95 0.95)' d='M30 4h4v6h6v4h-6v8h-4v-8h-6v-4h6zM22 34c0-9 20-9 20 0l2 8h-24zM17 44a15 4 0 1 0 30 0a15 4 0 1 0-30 0zM24 45h16c0 29.7 9 52.800000000000004 9 66h-34c0-13.200000000000001 9-36.300000000000004 9-66zM9 128v-7c0-2 1-3 3-3h40c2 0 3 1 3 3v7zM15 118v-4c0-2 1-3 3-3h28c2 0 3 1 3 3v4z'/%3E%3Cpath transform='translate(514 4.400000000000006) scale(0.95 0.95)' d='M28.8 9a3.2 3.2 0 1 0 6.4 0a3.2 3.2 0 1 0-6.4 0zM18 40l3-22l8 13l3-19l3 19l8-13l3 22c-4 3-9 4-14 4s-10-1-14-4zM18.6 18a2.4 2.4 0 1 0 4.8 0a2.4 2.4 0 1 0-4.8 0zM40.6 18a2.4 2.4 0 1 0 4.8 0a2.4 2.4 0 1 0-4.8 0zM17 45a15 4 0 1 0 30 0a15 4 0 1 0-30 0zM24 46h16c0 29.25 9 52 9 65h-34c0-13 9-35.75 9-65zM9 128v-7c0-2 1-3 3-3h40c2 0 3 1 3 3v7zM15 118v-4c0-2 1-3 3-3h28c2 0 3 1 3 3v4z'/%3E%3Cpath fill-rule='evenodd' transform='translate(150 46.64) scale(0.62 0.62)' d='M21 111c-1-18 2-34 10-46l-11-3c-5-1-7-5-6-9l4-8c1-3 4-4 7-3l3 1c3-7 8-12 14-15l4-12l6 9l7-4l-1 9c6 5 9 14 9 26c0 22-5 36-5 55zM36 36a2.6 2.6 0 1 0 5.2 0a2.6 2.6 0 1 0-5.2 0z'/%3E%3Cpath transform='translate(150 46.64) scale(0.62 0.62)' d='M20 111h29v3h-29zM9 128v-7c0-2 1-3 3-3h40c2 0 3 1 3 3v7zM15 118v-4c0-2 1-3 3-3h28c2 0 3 1 3 3v4z'/%3E%3Cpath fill-rule='evenodd' transform='translate(396 46.64) scale(0.62 0.62)' d='M32 19c9 7 14 18 13 33h-26c-1-15 4-26 13-33zM24 46l14-15l3 3l-14 15z'/%3E%3Cpath transform='translate(396 46.64) scale(0.62 0.62)' d='M28 15a4 4 0 1 0 8 0a4 4 0 1 0-8 0zM19 54a13 4 0 1 0 26 0a13 4 0 1 0-26 0zM25 55h14c0 25.2 9 44.800000000000004 9 56h-32c0-11.200000000000001 9-30.800000000000004 9-56zM9 128v-7c0-2 1-3 3-3h40c2 0 3 1 3 3v7zM15 118v-4c0-2 1-3 3-3h28c2 0 3 1 3 3v4z'/%3E%3C/g%3E%3C/svg%3E");
-  --world-stage-size: 100% auto;
-  --world-stage-repeat: no-repeat;
-  --world-stage-position: center top;
-  /* Slot 8 — the crown: a rank stands on the bottom, so the strip shows the art’s bottom. */
-  --world-crown-y: bottom;
-  /* Slot 7 — layer 1 is the board: the king in the left gutter, the queen in
-     the right, and the checkered floor across the band, all rising into
-     place; layer 2 is the back rank on the floor — rook, knight, bishop and
-     pawns — set down from above. The bits become squares that tumble down. */
-  --world-victory-l: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='280' viewBox='0 0 120 280'%3E%3Cg fill='%23000'%3E%3Cpath transform='translate(5.6 62) scale(1.7 1.7)' d='M30 4h4v6h6v4h-6v8h-4v-8h-6v-4h6zM22 34c0-9 20-9 20 0l2 8h-24zM17 44a15 4 0 1 0 30 0a15 4 0 1 0-30 0zM24 45h16c0 29.7 9 52.800000000000004 9 66h-34c0-13.200000000000001 9-36.300000000000004 9-66zM9 128v-7c0-2 1-3 3-3h40c2 0 3 1 3 3v7zM15 118v-4c0-2 1-3 3-3h28c2 0 3 1 3 3v4z'/%3E%3C/g%3E%3C/svg%3E");
-  --world-victory-r: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='280' viewBox='0 0 120 280'%3E%3Cg fill='%23000'%3E%3Cpath transform='translate(5.6 62) scale(1.7 1.7)' d='M28.8 9a3.2 3.2 0 1 0 6.4 0a3.2 3.2 0 1 0-6.4 0zM18 40l3-22l8 13l3-19l3 19l8-13l3 22c-4 3-9 4-14 4s-10-1-14-4zM18.6 18a2.4 2.4 0 1 0 4.8 0a2.4 2.4 0 1 0-4.8 0zM40.6 18a2.4 2.4 0 1 0 4.8 0a2.4 2.4 0 1 0-4.8 0zM17 45a15 4 0 1 0 30 0a15 4 0 1 0-30 0zM24 46h16c0 29.25 9 52 9 65h-34c0-13 9-35.75 9-65zM9 128v-7c0-2 1-3 3-3h40c2 0 3 1 3 3v7zM15 118v-4c0-2 1-3 3-3h28c2 0 3 1 3 3v4z'/%3E%3C/g%3E%3C/svg%3E");
-  --world-victory-band: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='90' viewBox='0 0 600 90'%3E%3Cg fill='%23000'%3E%3Cpath d='M0 42h24v24h-24zM48 42h24v24h-24zM96 42h24v24h-24zM144 42h24v24h-24zM192 42h24v24h-24zM240 42h24v24h-24zM288 42h24v24h-24zM336 42h24v24h-24zM384 42h24v24h-24zM432 42h24v24h-24zM480 42h24v24h-24zM528 42h24v24h-24zM576 42h24v24h-24zM24 66h24v24h-24zM72 66h24v24h-24zM120 66h24v24h-24zM168 66h24v24h-24zM216 66h24v24h-24zM264 66h24v24h-24zM312 66h24v24h-24zM360 66h24v24h-24zM408 66h24v24h-24zM456 66h24v24h-24zM504 66h24v24h-24zM552 66h24v24h-24z'/%3E%3Cpath d='M0 40h600v2H0z'/%3E%3C/g%3E%3C/svg%3E");
-  --world-victory-2-l: none;
-  --world-victory-2-r: none;
-  --world-victory-2-band: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='90' viewBox='0 0 600 90'%3E%3Cg fill='%23000'%3E%3Cpath transform='translate(40 13.200000000000003) scale(0.6 0.6)' d='M17 24h9v9h5v-9h6v9h5v-9h9v19h-34zM15 44a17 3.5 0 1 0 34 0a17 3.5 0 1 0-34 0zM19 46h26c0 22 1 44 4 65h-34c3-21 4-43 4-65zM9 128v-7c0-2 1-3 3-3h40c2 0 3 1 3 3v7zM15 118v-4c0-2 1-3 3-3h28c2 0 3 1 3 3v4z'/%3E%3Cpath fill-rule='evenodd' transform='translate(110 13.200000000000003) scale(0.6 0.6)' d='M21 111c-1-18 2-34 10-46l-11-3c-5-1-7-5-6-9l4-8c1-3 4-4 7-3l3 1c3-7 8-12 14-15l4-12l6 9l7-4l-1 9c6 5 9 14 9 26c0 22-5 36-5 55zM36 36a2.6 2.6 0 1 0 5.2 0a2.6 2.6 0 1 0-5.2 0z'/%3E%3Cpath transform='translate(110 13.200000000000003) scale(0.6 0.6)' d='M20 111h29v3h-29zM9 128v-7c0-2 1-3 3-3h40c2 0 3 1 3 3v7zM15 118v-4c0-2 1-3 3-3h28c2 0 3 1 3 3v4z'/%3E%3Cpath fill-rule='evenodd' transform='translate(180 13.200000000000003) scale(0.6 0.6)' d='M32 19c9 7 14 18 13 33h-26c-1-15 4-26 13-33zM24 46l14-15l3 3l-14 15z'/%3E%3Cpath transform='translate(180 13.200000000000003) scale(0.6 0.6)' d='M28 15a4 4 0 1 0 8 0a4 4 0 1 0-8 0zM19 54a13 4 0 1 0 26 0a13 4 0 1 0-26 0zM25 55h14c0 25.2 9 44.800000000000004 9 56h-32c0-11.200000000000001 9-30.800000000000004 9-56zM9 128v-7c0-2 1-3 3-3h40c2 0 3 1 3 3v7zM15 118v-4c0-2 1-3 3-3h28c2 0 3 1 3 3v4z'/%3E%3Cpath transform='translate(250 13.200000000000003) scale(0.6 0.6)' d='M21 44a11 11 0 1 0 22 0a11 11 0 1 0-22 0zM27 52h10v8h-10zM19 61a13 4 0 1 0 26 0a13 4 0 1 0-26 0zM25 62h14c0 22.05 8 39.2 8 49h-30c0-9.8 8-26.950000000000003 8-49zM9 128v-7c0-2 1-3 3-3h40c2 0 3 1 3 3v7zM15 118v-4c0-2 1-3 3-3h28c2 0 3 1 3 3v4z'/%3E%3Cpath transform='translate(320 13.200000000000003) scale(0.6 0.6)' d='M21 44a11 11 0 1 0 22 0a11 11 0 1 0-22 0zM27 52h10v8h-10zM19 61a13 4 0 1 0 26 0a13 4 0 1 0-26 0zM25 62h14c0 22.05 8 39.2 8 49h-30c0-9.8 8-26.950000000000003 8-49zM9 128v-7c0-2 1-3 3-3h40c2 0 3 1 3 3v7zM15 118v-4c0-2 1-3 3-3h28c2 0 3 1 3 3v4z'/%3E%3Cpath fill-rule='evenodd' transform='translate(390 13.200000000000003) scale(0.6 0.6)' d='M32 19c9 7 14 18 13 33h-26c-1-15 4-26 13-33zM24 46l14-15l3 3l-14 15z'/%3E%3Cpath transform='translate(390 13.200000000000003) scale(0.6 0.6)' d='M28 15a4 4 0 1 0 8 0a4 4 0 1 0-8 0zM19 54a13 4 0 1 0 26 0a13 4 0 1 0-26 0zM25 55h14c0 25.2 9 44.800000000000004 9 56h-32c0-11.200000000000001 9-30.800000000000004 9-56zM9 128v-7c0-2 1-3 3-3h40c2 0 3 1 3 3v7zM15 118v-4c0-2 1-3 3-3h28c2 0 3 1 3 3v4z'/%3E%3Cpath fill-rule='evenodd' transform='translate(460 13.200000000000003) scale(-0.6 0.6) translate(-64 0)' d='M21 111c-1-18 2-34 10-46l-11-3c-5-1-7-5-6-9l4-8c1-3 4-4 7-3l3 1c3-7 8-12 14-15l4-12l6 9l7-4l-1 9c6 5 9 14 9 26c0 22-5 36-5 55zM36 36a2.6 2.6 0 1 0 5.2 0a2.6 2.6 0 1 0-5.2 0z'/%3E%3Cpath transform='translate(460 13.200000000000003) scale(-0.6 0.6) translate(-64 0)' d='M20 111h29v3h-29zM9 128v-7c0-2 1-3 3-3h40c2 0 3 1 3 3v7zM15 118v-4c0-2 1-3 3-3h28c2 0 3 1 3 3v4z'/%3E%3Cpath transform='translate(530 13.200000000000003) scale(0.6 0.6)' d='M17 24h9v9h5v-9h6v9h5v-9h9v19h-34zM15 44a17 3.5 0 1 0 34 0a17 3.5 0 1 0-34 0zM19 46h26c0 22 1 44 4 65h-34c3-21 4-43 4-65zM9 128v-7c0-2 1-3 3-3h40c2 0 3 1 3 3v7zM15 118v-4c0-2 1-3 3-3h28c2 0 3 1 3 3v4z'/%3E%3C/g%3E%3C/svg%3E");
-  --world-victory-y: bottom;
-  --world-victory-2-y: bottom;
-  --world-victory-anim: world-tide;
-  --world-victory-anim-2: world-setdown;
-  --world-particle: linear-gradient(#000, #000);
-  --world-particle-w: 9px;
-  --world-particle-h: 9px;
-  --world-particle-inset: -12px auto;
-  --world-particle-anim: world-tumble;
-  --world-particle-dur: 2.6s;
-  --world-vessel: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='120' viewBox='0 0 200 120'%3E%3Cg fill='%23000'%3E%3Cpath d='M30 60L46 10h108l16 50z'/%3E%3Cpath fill='%23fff' fill-opacity='.35' d='M50 15h26v19H50zM102 15h26v19h-26zM37 38h26v20H37zM89 38h26v20H89zM141 38h26v20h-26z'/%3E%3Cpath d='M18 60h164v11H18z'/%3E%3Cpath d='M24 71h152v33c0 5-3 9-8 9H32c-5 0-8-4-8-9z'/%3E%3Cpath fill='%23fff' fill-opacity='.35' d='M92 84h16v14c0 4-2 6-4 7h-8c-2-1-4-3-4-7z'/%3E%3Cpath d='M34 113h18v7H34zM148 113h18v7h-18z'/%3E%3C/g%3E%3C/svg%3E");
-}
-
-[data-world="horror"] {
-  --world-font: "Creepster";
-  --world-backdrop: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240' viewBox='0 0 240 240'%3E%3Cg fill='none' stroke='%23000' stroke-width='1.5' stroke-linecap='round'%3E%3Cpath d='M0 0L74.0 0.0M0 0L69.5 25.3M0 0L56.7 47.6M0 0L37.0 64.1M0 0L12.8 72.9M0 0L0.0 74.0'/%3E%3Cpath d='M22.2 0Q17.3 17.3 0 22.2M40.7 0Q31.7 31.7 0 40.7M59.2 0Q46.2 46.2 0 59.2M74 0Q57.7 57.7 0 74' opacity='.85'/%3E%3C/g%3E%3Cg fill='%23000'%3E%3Cg transform='translate(150 62) scale(0.9)'%3E%3Cpath d='M0-2c-3-5-9-7-15-4c1 3 1 6-1 9c4-3 8-3 11 1l2-3l3 3c3-4 7-4 11-1c-2-3-2-6-1-9c-6-3-12-1-15 4l-1 2z'/%3E%3C/g%3E%3Cg transform='translate(60 150) scale(0.7)'%3E%3Cpath d='M0-2c-3-5-9-7-15-4c1 3 1 6-1 9c4-3 8-3 11 1l2-3l3 3c3-4 7-4 11-1c-2-3-2-6-1-9c-6-3-12-1-15 4l-1 2z'/%3E%3C/g%3E%3Cg transform='translate(200 200) scale(0.55)'%3E%3Cpath d='M0-2c-3-5-9-7-15-4c1 3 1 6-1 9c4-3 8-3 11 1l2-3l3 3c3-4 7-4 11-1c-2-3-2-6-1-9c-6-3-12-1-15 4l-1 2z'/%3E%3C/g%3E%3Cpath d='M88 226v-21a11 11 0 0 1 22 0v21z'/%3E%3Crect x='85' y='226' width='28' height='4'/%3E%3Cpath fill-rule='evenodd' d='M180 156a24 24 0 1 0 48 0a24 24 0 1 0-48 0zM194 156a19 19 0 1 0 38 0a19 19 0 1 0-38 0z'/%3E%3Ccircle cx='174' cy='120' r='1.6'/%3E%3Ccircle cx='232' cy='150' r='1.4'/%3E%3C/g%3E%3C/svg%3E");
-  --world-backdrop-size: 320px 320px;
-  /* Slot 1's alpha. Ceiling .275 (see the slot rule); .24 keeps the margin. */
-  --world-backdrop-alpha: .24;
-  /* Webs hang from the top of the viewport and thin out below. */
-  --world-backdrop-fade: linear-gradient(#000 0%, transparent 130vh);
-  --world-frame: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='88' height='56' viewBox='0 0 88 56'%3E%3Cg transform='translate(2 2)'%3E%3Cg fill='none' stroke='%23000' stroke-width='1.5' stroke-linecap='round'%3E%3Cpath d='M0 0L56.0 0.0M0 0L52.6 19.2M0 0L42.9 36.0M0 0L28.0 48.5M0 0L9.7 55.1M0 0L0.0 56.0'/%3E%3Cpath d='M16.8 0Q13.1 13.1 0 16.8M30.800000000000004 0Q24.0 24.0 0 30.800000000000004M44.800000000000004 0Q34.9 34.9 0 44.800000000000004M56 0Q43.7 43.7 0 56' opacity='.85'/%3E%3C/g%3E%3C/g%3E%3Cg fill='%23000'%3E%3Cpath d='M70 14v16' stroke='%23000' stroke-width='1.2'/%3E%3Ccircle cx='70' cy='30' r='2.6'/%3E%3Cellipse cx='70' cy='37' rx='4' ry='5'/%3E%3Cpath d='M66 34l-7-3M66 39l-7 2M74 34l7-3M74 39l7 2' stroke='%23000' stroke-width='1.2' fill='none'/%3E%3C/g%3E%3C/svg%3E");
-  --world-rule: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='10' viewBox='0 0 140 10'%3E%3Cpath d='M0 2.5h130' stroke='%23000' stroke-width='1.8'/%3E%3Cg fill='%23000'%3E%3Cpath d='M18 2.5v4a2.2 2.2 0 0 0 4.4 0v-4zM56 2.5v5.6a2.2 2.2 0 0 0 4.4 0v-5.6zM94 2.5v4a2.2 2.2 0 0 0 4.4 0v-4z'/%3E%3Cpath d='M135 2.5v2' stroke='%23000' stroke-width='1'/%3E%3Ccircle cx='135' cy='6.5' r='2.4'/%3E%3Cpath d='M132 5.5l-3-1M132 7.5l-3 1M138 5.5l3-1M138 7.5l3 1' stroke='%23000' stroke-width='.9'/%3E%3C/g%3E%3C/svg%3E");
-  --world-corner: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 22 22'%3E%3Cg fill='%23000'%3E%3Cpath fill-rule='evenodd' d='M11 2c-5 0-8 4-8 9v9l3-2 3 2 2-2 2 2 3-2 3 2v-9c0-5-3-9-8-9zM8 8.5a1.6 1.6 0 1 0 .01 0zM14 8.5a1.6 1.6 0 1 0 .01 0z'/%3E%3C/g%3E%3C/svg%3E");
-  --world-scene: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='120' viewBox='0 0 600 120'%3E%3Cg fill='%23000'%3E%3Cpath d='M0 120V108c100-6 200 4 300 0s200-8 300-2V120z'/%3E%3Cg opacity='.35'%3E%3Cellipse cx='120' cy='104' rx='90' ry='9'/%3E%3Cellipse cx='330' cy='106' rx='110' ry='10'/%3E%3Cellipse cx='520' cy='103' rx='80' ry='8'/%3E%3C/g%3E%3Cpath d='M150 108v-26a14 14 0 0 1 28 0v26z'/%3E%3Crect x='147' y='108' width='34' height='4'/%3E%3Cpath d='M230 108v-21a11 11 0 0 1 22 0v21z'/%3E%3Crect x='227' y='108' width='28' height='4'/%3E%3Cg transform='translate(300 108) scale(1.1)'%3E%3Crect x='-2.5' y='-26' width='5' height='26'/%3E%3Crect x='-9' y='-19' width='18' height='5'/%3E%3Crect x='-8' y='0' width='16' height='4'/%3E%3C/g%3E%3Cpath d='M380 108v-29a15 15 0 0 1 30 0v29z'/%3E%3Crect x='377' y='108' width='36' height='4'/%3E%3Cg transform='translate(450 108) scale(0.85)'%3E%3Crect x='-2.5' y='-26' width='5' height='26'/%3E%3Crect x='-9' y='-19' width='18' height='5'/%3E%3Crect x='-8' y='0' width='16' height='4'/%3E%3C/g%3E%3Cpath d='M40 108c2-30-2-50 4-72c-10 4-16 12-18 24c6-4 10-8 12-14c2 12 0 22-2 30c6-4 12-6 20-6c-8 4-14 10-16 18c8-2 14 0 20 4c-8 0-14 4-18 12z'/%3E%3Cpath d='M46 36c-4-6-4-14 2-20c2 6 6 10 12 12c-6 2-10 4-14 8z'/%3E%3Cg transform='translate(520 44) scale(2)'%3E%3Cpath fill-rule='evenodd' d='M11 2c-5 0-8 4-8 9v9l3-2 3 2 2-2 2 2 3-2 3 2v-9c0-5-3-9-8-9zM8 8.5a1.6 1.6 0 1 0 .01 0zM14 8.5a1.6 1.6 0 1 0 .01 0z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-  --world-stage: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='140' viewBox='0 0 600 140'%3E%3Cg fill='%23000'%3E%3Cg fill='none' stroke='%23000' stroke-width='1.5' stroke-linecap='round'%3E%3Cpath d='M0 0L110.0 0.0M0 0L103.4 37.6M0 0L84.3 70.7M0 0L55.0 95.3M0 0L19.1 108.3M0 0L0.0 110.0'/%3E%3Cpath d='M33 0Q25.7 25.7 0 33M60.50000000000001 0Q47.2 47.2 0 60.50000000000001M88 0Q68.6 68.6 0 88M110 0Q85.8 85.8 0 110' opacity='.85'/%3E%3C/g%3E%3Cg transform='matrix(-1 0 0 1 600 0)'%3E%3Cg fill='none' stroke='%23000' stroke-width='1.5' stroke-linecap='round'%3E%3Cpath d='M0 0L110.0 0.0M0 0L103.4 37.6M0 0L84.3 70.7M0 0L55.0 95.3M0 0L19.1 108.3M0 0L0.0 110.0'/%3E%3Cpath d='M33 0Q25.7 25.7 0 33M60.50000000000001 0Q47.2 47.2 0 60.50000000000001M88 0Q68.6 68.6 0 88M110 0Q85.8 85.8 0 110' opacity='.85'/%3E%3C/g%3E%3C/g%3E%3Cg transform='translate(150 50) scale(1.1)'%3E%3Cpath d='M0-2c-3-5-9-7-15-4c1 3 1 6-1 9c4-3 8-3 11 1l2-3l3 3c3-4 7-4 11-1c-2-3-2-6-1-9c-6-3-12-1-15 4l-1 2z'/%3E%3C/g%3E%3Cg transform='translate(210 90) scale(0.8)'%3E%3Cpath d='M0-2c-3-5-9-7-15-4c1 3 1 6-1 9c4-3 8-3 11 1l2-3l3 3c3-4 7-4 11-1c-2-3-2-6-1-9c-6-3-12-1-15 4l-1 2z'/%3E%3C/g%3E%3Cg transform='translate(400 40) scale(1)'%3E%3Cpath d='M0-2c-3-5-9-7-15-4c1 3 1 6-1 9c4-3 8-3 11 1l2-3l3 3c3-4 7-4 11-1c-2-3-2-6-1-9c-6-3-12-1-15 4l-1 2z'/%3E%3C/g%3E%3Cg transform='translate(450 96) scale(0.75)'%3E%3Cpath d='M0-2c-3-5-9-7-15-4c1 3 1 6-1 9c4-3 8-3 11 1l2-3l3 3c3-4 7-4 11-1c-2-3-2-6-1-9c-6-3-12-1-15 4l-1 2z'/%3E%3C/g%3E%3Cpath fill-rule='evenodd' d='M398 44a24 24 0 1 0 48 0a24 24 0 1 0-48 0zM409 44a18 18 0 1 0 36 0a18 18 0 1 0-36 0z' fill-opacity='.85'/%3E%3Cg transform='translate(124 -6) scale(.5)'%3E%3Cpath d='M48 282l4-120c1-8 11-8 12 0l6 120z'/%3E%3Cg fill='none' stroke='%23000' stroke-linecap='round'%3E%3Cpath d='M58 180c-14-12-30-16-46-14M58 168c12-14 26-26 36-46M56 196c-10-8-22-10-32-6M60 154c10-2 18-8 22-18' stroke-width='6'/%3E%3Cpath d='M22 168c-8-4-12-12-12-22M94 122c6-8 6-16 4-26M30 190c-8 2-14 8-16 16M82 136c8-2 14-8 16-16M36 162c-4-8-2-16 4-22' stroke-width='3'/%3E%3C/g%3E%3C/g%3E%3Cpath fill-opacity='.7' d='M170 140v-14c0-5 4-8 8-8s8 3 8 8v14zM240 140v-10h14v10zM360 140v-16c0-5 4-8 8-8s8 3 8 8v16zM440 140v-9h10v9zM118 140v-9h9v9z'/%3E%3C/g%3E%3C/svg%3E");
-  --world-stage-size: 100% auto;
-  --world-stage-repeat: no-repeat;
-  --world-stage-position: center top;
-  /* Slot 8 — the crown: webs hang from the top, so the strip shows the art’s top. */
-  --world-crown-y: top;
-  /* Slot 7 — layer 1 is the graveyard: a dead tree in each gutter and fog,
-     stones and crosses across the band, looming in; layer 2 is the ghost
-     rising in the left gutter and the moon high in the right. The bits become
-     bats that flit down through the card. */
-  --world-victory-l: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='280' viewBox='0 0 120 280'%3E%3Cg fill='%23000'%3E%3Cpath d='M48 282l4-120c1-8 11-8 12 0l6 120z'/%3E%3Cg fill='none' stroke='%23000' stroke-linecap='round'%3E%3Cpath d='M58 180c-14-12-30-16-46-14M58 168c12-14 26-26 36-46M56 196c-10-8-22-10-32-6M60 154c10-2 18-8 22-18' stroke-width='6'/%3E%3Cpath d='M22 168c-8-4-12-12-12-22M94 122c6-8 6-16 4-26M30 190c-8 2-14 8-16 16M82 136c8-2 14-8 16-16M36 162c-4-8-2-16 4-22' stroke-width='3'/%3E%3C/g%3E%3Cpath d='M14 282v-21a11 11 0 0 1 22 0v21z'/%3E%3Crect x='11' y='282' width='28' height='4'/%3E%3C/g%3E%3C/svg%3E");
-  --world-victory-r: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='280' viewBox='0 0 120 280'%3E%3Cg transform='matrix(-1 0 0 1 120 0)'%3E%3Cg fill='%23000'%3E%3Cpath d='M48 282l4-120c1-8 11-8 12 0l6 120z'/%3E%3Cg fill='none' stroke='%23000' stroke-linecap='round'%3E%3Cpath d='M58 180c-14-12-30-16-46-14M58 168c12-14 26-26 36-46M56 196c-10-8-22-10-32-6M60 154c10-2 18-8 22-18' stroke-width='6'/%3E%3Cpath d='M22 168c-8-4-12-12-12-22M94 122c6-8 6-16 4-26M30 190c-8 2-14 8-16 16M82 136c8-2 14-8 16-16M36 162c-4-8-2-16 4-22' stroke-width='3'/%3E%3C/g%3E%3Cg transform='translate(16 282) scale(1)'%3E%3Crect x='-2.5' y='-26' width='5' height='26'/%3E%3Crect x='-9' y='-19' width='18' height='5'/%3E%3Crect x='-8' y='0' width='16' height='4'/%3E%3C/g%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-  --world-victory-band: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='90' viewBox='0 0 600 90'%3E%3Cg fill='%23000'%3E%3Cpath d='M0 90V78c100-6 200 4 300 0s200-8 300-2V90z'/%3E%3Cg opacity='.35'%3E%3Cellipse cx='130' cy='74' rx='100' ry='9'/%3E%3Cellipse cx='330' cy='76' rx='120' ry='10'/%3E%3Cellipse cx='500' cy='73' rx='90' ry='8'/%3E%3C/g%3E%3Cpath d='M140 78v-23a13 13 0 0 1 26 0v23z'/%3E%3Crect x='137' y='78' width='32' height='4'/%3E%3Cg transform='translate(210 78) scale(1)'%3E%3Crect x='-2.5' y='-26' width='5' height='26'/%3E%3Crect x='-9' y='-19' width='18' height='5'/%3E%3Crect x='-8' y='0' width='16' height='4'/%3E%3C/g%3E%3Cpath d='M290 78v-19a11 11 0 0 1 22 0v19z'/%3E%3Crect x='287' y='78' width='28' height='4'/%3E%3Cpath d='M390 78v-26a14 14 0 0 1 28 0v26z'/%3E%3Crect x='387' y='78' width='34' height='4'/%3E%3Cg transform='translate(470 78) scale(0.9)'%3E%3Crect x='-2.5' y='-26' width='5' height='26'/%3E%3Crect x='-9' y='-19' width='18' height='5'/%3E%3Crect x='-8' y='0' width='16' height='4'/%3E%3C/g%3E%3Cpath d='M540 78v-18a10 10 0 0 1 20 0v18z'/%3E%3Crect x='537' y='78' width='26' height='4'/%3E%3C/g%3E%3C/svg%3E");
-  --world-victory-2-l: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='280' viewBox='0 0 120 280'%3E%3Cg fill='%23000' transform='translate(30 150) scale(3.2)'%3E%3Cpath fill-rule='evenodd' d='M11 2c-5 0-8 4-8 9v9l3-2 3 2 2-2 2 2 3-2 3 2v-9c0-5-3-9-8-9zM8 8.5a1.6 1.6 0 1 0 .01 0zM14 8.5a1.6 1.6 0 1 0 .01 0z'/%3E%3C/g%3E%3C/svg%3E");
-  --world-victory-2-r: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='280' viewBox='0 0 120 280'%3E%3Cg fill='%23000'%3E%3Cpath fill-rule='evenodd' d='M50 60a36 36 0 1 0 72 0a36 36 0 1 0-72 0zM64 60a29 29 0 1 0 58 0a29 29 0 1 0-58 0z'/%3E%3Ccircle cx='22' cy='40' r='2'/%3E%3Ccircle cx='36' cy='118' r='1.6'/%3E%3Cg transform='translate(40 96) scale(0.9)'%3E%3Cpath d='M0-2c-3-5-9-7-15-4c1 3 1 6-1 9c4-3 8-3 11 1l2-3l3 3c3-4 7-4 11-1c-2-3-2-6-1-9c-6-3-12-1-15 4l-1 2z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-  --world-victory-2-band: none;
-  --world-victory-y: bottom;
-  --world-victory-2-y: top;
-  --world-victory-anim: world-loom;
-  --world-victory-anim-2: world-haunt;
-  --world-particle: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='12' viewBox='0 0 22 12'%3E%3Cpath d='M11 3c-3-4-8-5-13-2c1 2 1 4-1 6c3-2 6-2 8 1l2-2l2 2c2-3 5-3 8-1c-2-2-2-4-1-6c-5-3-10-2-13 2l-1 2z' fill='%23000'/%3E%3C/svg%3E");
-  --world-particle-w: 22px;
-  --world-particle-h: 12px;
-  --world-particle-inset: -16px auto;
-  --world-particle-anim: world-flit;
-  --world-particle-dur: 2.4s;
-  --world-vessel: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='120' viewBox='0 0 200 120'%3E%3Cg fill='%23000'%3E%3Cpath d='M28 34c0-8 32-14 72-14s72 6 72 14v8c0 30-24 54-56 62h-32c-32-8-56-32-56-62z'/%3E%3Cpath d='M40 22c-6-6-6-14 0-18h120c6 4 6 12 0 18z'/%3E%3Cpath d='M50 104l-10 14h14l6-14zM150 104l10 14h-14l-6-14z'/%3E%3Cpath d='M84 12c-2-8 2-12 6-12s8 4 6 12zM104 10c-2-6 0-10 4-10s6 4 4 10z'/%3E%3C/g%3E%3C/svg%3E");
-}
-
-[data-world="dinos"] {
-  --world-font: "Alfa Slab One";
-  --world-backdrop: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240' viewBox='0 0 240 240'%3E%3Cg fill='%23000'%3E%3Cg transform='translate(40 30) rotate(20) scale(0.9)'%3E%3Cellipse cx='0' cy='5' rx='6.5' ry='5.5'/%3E%3Cellipse cx='-7.5' cy='-6' rx='2.8' ry='7' transform='rotate(-32 -7.5 -6)'/%3E%3Cellipse cx='0' cy='-9' rx='2.8' ry='8'/%3E%3Cellipse cx='7.5' cy='-6' rx='2.8' ry='7' transform='rotate(32 7.5 -6)'/%3E%3C/g%3E%3Cg transform='translate(74 74) rotate(16) scale(0.9)'%3E%3Cellipse cx='0' cy='5' rx='6.5' ry='5.5'/%3E%3Cellipse cx='-7.5' cy='-6' rx='2.8' ry='7' transform='rotate(-32 -7.5 -6)'/%3E%3Cellipse cx='0' cy='-9' rx='2.8' ry='8'/%3E%3Cellipse cx='7.5' cy='-6' rx='2.8' ry='7' transform='rotate(32 7.5 -6)'/%3E%3C/g%3E%3Cg transform='translate(100 122) rotate(22) scale(0.9)'%3E%3Cellipse cx='0' cy='5' rx='6.5' ry='5.5'/%3E%3Cellipse cx='-7.5' cy='-6' rx='2.8' ry='7' transform='rotate(-32 -7.5 -6)'/%3E%3Cellipse cx='0' cy='-9' rx='2.8' ry='8'/%3E%3Cellipse cx='7.5' cy='-6' rx='2.8' ry='7' transform='rotate(32 7.5 -6)'/%3E%3C/g%3E%3Cg transform='translate(136 166) rotate(18) scale(0.9)'%3E%3Cellipse cx='0' cy='5' rx='6.5' ry='5.5'/%3E%3Cellipse cx='-7.5' cy='-6' rx='2.8' ry='7' transform='rotate(-32 -7.5 -6)'/%3E%3Cellipse cx='0' cy='-9' rx='2.8' ry='8'/%3E%3Cellipse cx='7.5' cy='-6' rx='2.8' ry='7' transform='rotate(32 7.5 -6)'/%3E%3C/g%3E%3Cg transform='translate(164 214) rotate(24) scale(0.9)'%3E%3Cellipse cx='0' cy='5' rx='6.5' ry='5.5'/%3E%3Cellipse cx='-7.5' cy='-6' rx='2.8' ry='7' transform='rotate(-32 -7.5 -6)'/%3E%3Cellipse cx='0' cy='-9' rx='2.8' ry='8'/%3E%3Cellipse cx='7.5' cy='-6' rx='2.8' ry='7' transform='rotate(32 7.5 -6)'/%3E%3C/g%3E%3Cg transform='translate(190 50) rotate(-28) scale(0.8)'%3E%3Crect x='-13' y='-3' width='26' height='6' rx='3'/%3E%3Ccircle cx='-13' cy='-4' r='4.2'/%3E%3Ccircle cx='-13' cy='4' r='4.2'/%3E%3Ccircle cx='13' cy='-4' r='4.2'/%3E%3Ccircle cx='13' cy='4' r='4.2'/%3E%3C/g%3E%3Cg transform='translate(40 190) rotate(24) scale(0.7)'%3E%3Crect x='-13' y='-3' width='26' height='6' rx='3'/%3E%3Ccircle cx='-13' cy='-4' r='4.2'/%3E%3Ccircle cx='-13' cy='4' r='4.2'/%3E%3Ccircle cx='13' cy='-4' r='4.2'/%3E%3Ccircle cx='13' cy='4' r='4.2'/%3E%3C/g%3E%3Cg transform='translate(210 130) rotate(70) scale(0.55)'%3E%3Crect x='-13' y='-3' width='26' height='6' rx='3'/%3E%3Ccircle cx='-13' cy='-4' r='4.2'/%3E%3Ccircle cx='-13' cy='4' r='4.2'/%3E%3Ccircle cx='13' cy='-4' r='4.2'/%3E%3Ccircle cx='13' cy='4' r='4.2'/%3E%3C/g%3E%3Cpath d='M20 118c4-5 10-5 14 0c0 5-3 9-7 12c-4-3-7-7-7-12z' opacity='.8'/%3E%3C/g%3E%3C/svg%3E");
-  --world-backdrop-size: 320px 320px;
-  /* Slot 1's alpha. .09 IS this world's ceiling — the tightest of the seven,
-     with no margin left; see the slot rule before nudging it. */
-  --world-backdrop-alpha: .09;
-  /* Sediment: rises from the bottom of the viewport, floored; see burg. */
-  --world-backdrop-fade: linear-gradient(rgb(0 0 0 / .55) 0%, #000 100vh);
-  --world-frame: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='88' height='56' viewBox='0 0 88 56'%3E%3Cg fill='%23000'%3E%3Cg transform='translate(10 48) rotate(-40) scale(0.5)'%3E%3Cellipse cx='0' cy='5' rx='6.5' ry='5.5'/%3E%3Cellipse cx='-7.5' cy='-6' rx='2.8' ry='7' transform='rotate(-32 -7.5 -6)'/%3E%3Cellipse cx='0' cy='-9' rx='2.8' ry='8'/%3E%3Cellipse cx='7.5' cy='-6' rx='2.8' ry='7' transform='rotate(32 7.5 -6)'/%3E%3C/g%3E%3Cg transform='translate(26 32) rotate(-48) scale(0.62)'%3E%3Cellipse cx='0' cy='5' rx='6.5' ry='5.5'/%3E%3Cellipse cx='-7.5' cy='-6' rx='2.8' ry='7' transform='rotate(-32 -7.5 -6)'/%3E%3Cellipse cx='0' cy='-9' rx='2.8' ry='8'/%3E%3Cellipse cx='7.5' cy='-6' rx='2.8' ry='7' transform='rotate(32 7.5 -6)'/%3E%3C/g%3E%3Cg transform='translate(46 20) rotate(-58) scale(0.74)'%3E%3Cellipse cx='0' cy='5' rx='6.5' ry='5.5'/%3E%3Cellipse cx='-7.5' cy='-6' rx='2.8' ry='7' transform='rotate(-32 -7.5 -6)'/%3E%3Cellipse cx='0' cy='-9' rx='2.8' ry='8'/%3E%3Cellipse cx='7.5' cy='-6' rx='2.8' ry='7' transform='rotate(32 7.5 -6)'/%3E%3C/g%3E%3Cg transform='translate(70 12) rotate(-70) scale(0.86)'%3E%3Cellipse cx='0' cy='5' rx='6.5' ry='5.5'/%3E%3Cellipse cx='-7.5' cy='-6' rx='2.8' ry='7' transform='rotate(-32 -7.5 -6)'/%3E%3Cellipse cx='0' cy='-9' rx='2.8' ry='8'/%3E%3Cellipse cx='7.5' cy='-6' rx='2.8' ry='7' transform='rotate(32 7.5 -6)'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-  --world-rule: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='10' viewBox='0 0 140 10'%3E%3Cg fill='%23000'%3E%3Crect x='0' y='3' width='7.0' height='6.0' rx='1.6'/%3E%3Crect x='2.3' y='0.8' width='2.4' height='2'/%3E%3Crect x='10' y='3.1' width='6.8' height='5.8' rx='1.6'/%3E%3Crect x='12.2' y='0.9' width='2.4' height='2'/%3E%3Crect x='20' y='3.2' width='6.7' height='5.6' rx='1.6'/%3E%3Crect x='22.2' y='1.0' width='2.4' height='2'/%3E%3Crect x='30' y='3.3' width='6.5' height='5.4' rx='1.6'/%3E%3Crect x='32.1' y='1.1' width='2.4' height='2'/%3E%3Crect x='40' y='3.4' width='6.4' height='5.2' rx='1.6'/%3E%3Crect x='42.0' y='1.2' width='2.4' height='2'/%3E%3Crect x='50' y='3.5' width='6.3' height='5.0' rx='1.6'/%3E%3Crect x='51.9' y='1.3' width='2.4' height='2'/%3E%3Crect x='60' y='3.6' width='6.1' height='4.8' rx='1.6'/%3E%3Crect x='61.8' y='1.4' width='2.4' height='2'/%3E%3Crect x='70' y='3.7' width='6.0' height='4.6' rx='1.6'/%3E%3Crect x='71.8' y='1.5' width='2.4' height='2'/%3E%3Crect x='80' y='3.8' width='5.8' height='4.4' rx='1.6'/%3E%3Crect x='81.7' y='1.6' width='2.4' height='2'/%3E%3Crect x='90' y='3.9' width='5.7' height='4.2' rx='1.6'/%3E%3Crect x='91.6' y='1.7' width='2.4' height='2'/%3E%3Crect x='100' y='4' width='5.5' height='4.0' rx='1.6'/%3E%3Crect x='101.5' y='1.8' width='2.4' height='2'/%3E%3Crect x='110' y='4.1' width='5.3' height='3.8' rx='1.6'/%3E%3Crect x='111.5' y='1.9' width='2.4' height='2'/%3E%3Crect x='120' y='4.2' width='5.2' height='3.6' rx='1.6'/%3E%3Crect x='121.4' y='2.0' width='2.4' height='2'/%3E%3Crect x='0' y='4.4' width='134' height='1.2' opacity='.6'/%3E%3C/g%3E%3C/svg%3E");
-  --world-corner: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 22 22'%3E%3Cpath d='M4 3c4 3 10 3 14 0c1 8-3 15-7 18c-4-3-8-10-7-18z' fill='%23000'/%3E%3C/svg%3E");
-  --world-scene: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='120' viewBox='0 0 600 120'%3E%3Cg fill='%23000'%3E%3Cpath d='M0 120V104c100-6 200 8 300 2s200-10 300-2V120z'/%3E%3Cpath d='M0 112c100-4 200 6 300 2s200-8 300-4v2c-100-2-200 6-300 4s-200-6-300 0z' opacity='.45'/%3E%3Cpath d='M0 100c80-6 160 4 240 0s160-8 240-2 80 4 120 2v3c-40 0-80-4-120-2s-160 8-240 2-160-6-240 0z' opacity='.3'/%3E%3Cg transform='translate(190 104) scale(0.95)'%3E%3Cellipse cx='0' cy='-42' rx='36' ry='22'/%3E%3Cpath d='M22-54c14-10 24-34 34-58' fill='none' stroke='%23000' stroke-width='15' stroke-linecap='round'/%3E%3Cellipse cx='60' cy='-114' rx='13' ry='8' transform='rotate(-10 60 -114)'/%3E%3Cpath d='M-30-58c-20 2-44 10-64 34c18-10 36-16 58-16l10-6z'/%3E%3Crect x='-30' y='-30' width='13' height='30' rx='4'/%3E%3Crect x='-12' y='-28' width='13' height='28' rx='4'/%3E%3Crect x='6' y='-30' width='13' height='30' rx='4'/%3E%3Crect x='22' y='-28' width='13' height='28' rx='4'/%3E%3C/g%3E%3Cg transform='translate(420 104) rotate(0) scale(1)'%3E%3Cpath d='M0 0c-2-14 0-28 4-40' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round'/%3E%3Cg fill='%23000'%3E%3Cpath d='M2-8c-8-2-14-6-16-12c6 0 12 4 16 12z'/%3E%3Cpath d='M3-16c-8-3-13-8-14-14c6 1 11 6 14 14z'/%3E%3Cpath d='M4-24c-7-3-11-8-11-14c5 2 9 7 11 14z'/%3E%3Cpath d='M2-8c8-2 14-8 14-14c-6 1-12 6-14 14z'/%3E%3Cpath d='M3-16c8-3 12-9 12-15c-6 2-10 7-12 15z'/%3E%3Cpath d='M4-24c6-3 9-8 8-14c-4 3-7 8-8 14z'/%3E%3C/g%3E%3C/g%3E%3Cg transform='translate(452 104) rotate(8) scale(0.8)'%3E%3Cpath d='M0 0c-2-14 0-28 4-40' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round'/%3E%3Cg fill='%23000'%3E%3Cpath d='M2-8c-8-2-14-6-16-12c6 0 12 4 16 12z'/%3E%3Cpath d='M3-16c-8-3-13-8-14-14c6 1 11 6 14 14z'/%3E%3Cpath d='M4-24c-7-3-11-8-11-14c5 2 9 7 11 14z'/%3E%3Cpath d='M2-8c8-2 14-8 14-14c-6 1-12 6-14 14z'/%3E%3Cpath d='M3-16c8-3 12-9 12-15c-6 2-10 7-12 15z'/%3E%3Cpath d='M4-24c6-3 9-8 8-14c-4 3-7 8-8 14z'/%3E%3C/g%3E%3C/g%3E%3Cg transform='translate(560 104) rotate(-6) scale(0.9)'%3E%3Cpath d='M0 0c-2-14 0-28 4-40' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round'/%3E%3Cg fill='%23000'%3E%3Cpath d='M2-8c-8-2-14-6-16-12c6 0 12 4 16 12z'/%3E%3Cpath d='M3-16c-8-3-13-8-14-14c6 1 11 6 14 14z'/%3E%3Cpath d='M4-24c-7-3-11-8-11-14c5 2 9 7 11 14z'/%3E%3Cpath d='M2-8c8-2 14-8 14-14c-6 1-12 6-14 14z'/%3E%3Cpath d='M3-16c8-3 12-9 12-15c-6 2-10 7-12 15z'/%3E%3Cpath d='M4-24c6-3 9-8 8-14c-4 3-7 8-8 14z'/%3E%3C/g%3E%3C/g%3E%3Cellipse cx='500' cy='100' rx='8' ry='10'/%3E%3Cellipse cx='514' cy='102' rx='7' ry='9'/%3E%3Cg transform='translate(80 108) rotate(10) scale(0.7)'%3E%3Crect x='-13' y='-3' width='26' height='6' rx='3'/%3E%3Ccircle cx='-13' cy='-4' r='4.2'/%3E%3Ccircle cx='-13' cy='4' r='4.2'/%3E%3Ccircle cx='13' cy='-4' r='4.2'/%3E%3Ccircle cx='13' cy='4' r='4.2'/%3E%3C/g%3E%3Cg transform='translate(300 96) rotate(-20) scale(0.6)'%3E%3Cellipse cx='0' cy='5' rx='6.5' ry='5.5'/%3E%3Cellipse cx='-7.5' cy='-6' rx='2.8' ry='7' transform='rotate(-32 -7.5 -6)'/%3E%3Cellipse cx='0' cy='-9' rx='2.8' ry='8'/%3E%3Cellipse cx='7.5' cy='-6' rx='2.8' ry='7' transform='rotate(32 7.5 -6)'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-  --world-stage: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='140' viewBox='0 0 600 140'%3E%3Cg fill='%23000'%3E%3Cpath d='M0 140v-12c60-4 120 2 180-2s120-6 180-2 120 6 180 2 40-2 60 0v14z'/%3E%3Cg transform='translate(470 128) scale(0.9)'%3E%3Cpath d='M-70 0l40-70c6-8 14-8 20-2l10 6l42 66z'/%3E%3Cpath d='M-30-70l8-6l8 5l7-3l6 4' fill='none' stroke='%23000' stroke-width='3'/%3E%3Cg opacity='.5'%3E%3Ccircle cx='-10' cy='-88' r='12'/%3E%3Ccircle cx='6' cy='-98' r='15'/%3E%3Ccircle cx='-8' cy='-110' r='13'/%3E%3Ccircle cx='10' cy='-124' r='11'/%3E%3Ccircle cx='-4' cy='-136' r='9'/%3E%3C/g%3E%3C/g%3E%3Cg transform='translate(140 128) scale(1)'%3E%3Cellipse cx='4' cy='-56' rx='34' ry='21' transform='rotate(-18 4 -56)'/%3E%3Cpath d='M-26-72l24 8l-6 22l-24-10z'/%3E%3Cpath d='M-76-78c0-10 10-16 24-16c14 0 24 8 24 16l-2 12c-4 8-12 10-20 8l-8-6l-6 4l-6-4l-4 4c-4-4-4-12-2-18z'/%3E%3Cpath d='M-56-70l4 5l4-5l4 5l4-5l4 5l4-5' fill='none' stroke='%23000' stroke-width='2'/%3E%3Cpath d='M30-66c26-4 50 2 72 22c-22-8-44-10-68 0z'/%3E%3Cellipse cx='2' cy='-30' rx='14' ry='18'/%3E%3Crect x='4' y='-26' width='10' height='26' rx='3'/%3E%3Cpath d='M0 0h22l4-4h-30z'/%3E%3Cellipse cx='-16' cy='-34' rx='11' ry='15'/%3E%3Crect x='-18' y='-28' width='9' height='28' rx='3'/%3E%3Cpath d='M-24 0h18l3-4h-26z'/%3E%3Cpath d='M-28-52l-10 8l3 3l10-6z'/%3E%3C/g%3E%3Cg transform='translate(24 128) rotate(6) scale(0.9)'%3E%3Cpath d='M0 0c-2-14 0-28 4-40' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round'/%3E%3Cg fill='%23000'%3E%3Cpath d='M2-8c-8-2-14-6-16-12c6 0 12 4 16 12z'/%3E%3Cpath d='M3-16c-8-3-13-8-14-14c6 1 11 6 14 14z'/%3E%3Cpath d='M4-24c-7-3-11-8-11-14c5 2 9 7 11 14z'/%3E%3Cpath d='M2-8c8-2 14-8 14-14c-6 1-12 6-14 14z'/%3E%3Cpath d='M3-16c8-3 12-9 12-15c-6 2-10 7-12 15z'/%3E%3Cpath d='M4-24c6-3 9-8 8-14c-4 3-7 8-8 14z'/%3E%3C/g%3E%3C/g%3E%3Cg transform='translate(60 128) rotate(-8) scale(0.7)'%3E%3Cpath d='M0 0c-2-14 0-28 4-40' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round'/%3E%3Cg fill='%23000'%3E%3Cpath d='M2-8c-8-2-14-6-16-12c6 0 12 4 16 12z'/%3E%3Cpath d='M3-16c-8-3-13-8-14-14c6 1 11 6 14 14z'/%3E%3Cpath d='M4-24c-7-3-11-8-11-14c5 2 9 7 11 14z'/%3E%3Cpath d='M2-8c8-2 14-8 14-14c-6 1-12 6-14 14z'/%3E%3Cpath d='M3-16c8-3 12-9 12-15c-6 2-10 7-12 15z'/%3E%3Cpath d='M4-24c6-3 9-8 8-14c-4 3-7 8-8 14z'/%3E%3C/g%3E%3C/g%3E%3Cg transform='translate(580 128) rotate(-4) scale(0.8)'%3E%3Cpath d='M0 0c-2-14 0-28 4-40' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round'/%3E%3Cg fill='%23000'%3E%3Cpath d='M2-8c-8-2-14-6-16-12c6 0 12 4 16 12z'/%3E%3Cpath d='M3-16c-8-3-13-8-14-14c6 1 11 6 14 14z'/%3E%3Cpath d='M4-24c-7-3-11-8-11-14c5 2 9 7 11 14z'/%3E%3Cpath d='M2-8c8-2 14-8 14-14c-6 1-12 6-14 14z'/%3E%3Cpath d='M3-16c8-3 12-9 12-15c-6 2-10 7-12 15z'/%3E%3Cpath d='M4-24c6-3 9-8 8-14c-4 3-7 8-8 14z'/%3E%3C/g%3E%3C/g%3E%3Cpath d='M300 22c6-6 14-8 22-4c-8 0-14 2-18 8c-8-2-14 0-20 4c4-6 10-8 16-8z'/%3E%3C/g%3E%3C/svg%3E");
-  --world-stage-size: 100% auto;
-  --world-stage-repeat: no-repeat;
-  --world-stage-position: center top;
-  /* Slot 8 — the crown: a horizon stands on the bottom, so the strip shows the art’s bottom. */
-  --world-crown-y: bottom;
-  /* Slot 7 — layer 1 is the herd: a long-neck in the left gutter, a
-     tyrannosaur in the right and a fern floor across the band, stomping up
-     into place; layer 2 is the volcano in the band, its smoke rising, with a
-     pterosaur high in the right gutter. The bits become ash that drifts down. */
-  --world-victory-l: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='280' viewBox='0 0 120 280'%3E%3Cg fill='%23000'%3E%3Cellipse cx='58' cy='240' rx='38' ry='22'/%3E%3Cpath d='M76 226c10-30 8-70 6-120' fill='none' stroke='%23000' stroke-width='16' stroke-linecap='round'/%3E%3Cellipse cx='84' cy='98' rx='14' ry='9' transform='rotate(-12 84 98)'/%3E%3Cpath d='M24 228c-14 4-22 16-26 40c8-14 18-22 30-24z'/%3E%3Crect x='28' y='250' width='13' height='32' rx='4'/%3E%3Crect x='46' y='252' width='13' height='30' rx='4'/%3E%3Crect x='64' y='250' width='13' height='32' rx='4'/%3E%3Crect x='80' y='252' width='13' height='30' rx='4'/%3E%3C/g%3E%3C/svg%3E");
-  --world-victory-r: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='280' viewBox='0 0 120 280'%3E%3Cg fill='%23000'%3E%3Cpath fill-rule='evenodd' d='M4 148c8-14 24-22 38-18c10 2 16 10 20 20c12 10 26 28 38 50c14 18 22 42 20 64v18h-12v-18c0-22-8-40-20-56c-12-8-26-12-38-22c-4-4-6-8-8-12l-4 0c-8-2-22-4-32-10l-4-6l32-2l2-8l-32 0zM40 138a3.5 3.5 0 1 0 7 0a3.5 3.5 0 1 0-7 0z'/%3E%3Cpath d='M54 200c14 0 26 10 30 24l-8 16l16 26h-30l6-24l-8-16c-6-6-8-16-6-26z'/%3E%3Cpath d='M78 210c10 4 16 12 18 22l-4 14l10 22h-18l2-20l-8-16z' fill-opacity='.75'/%3E%3Cpath d='M56 176c-8 0-14 6-14 12h4c0-4 4-6 10-6z'/%3E%3C/g%3E%3C/svg%3E");
-  --world-victory-band: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='90' viewBox='0 0 600 90'%3E%3Cg fill='%23000'%3E%3Cpath d='M0 90V80c60-4 120 2 180-2s120-6 180-2 120 6 180 2 40-2 60 0v14z'/%3E%3Cg transform='translate(40 80) rotate(4) scale(1)'%3E%3Cpath d='M0 0c-2-14 0-28 4-40' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round'/%3E%3Cg fill='%23000'%3E%3Cpath d='M2-8c-8-2-14-6-16-12c6 0 12 4 16 12z'/%3E%3Cpath d='M3-16c-8-3-13-8-14-14c6 1 11 6 14 14z'/%3E%3Cpath d='M4-24c-7-3-11-8-11-14c5 2 9 7 11 14z'/%3E%3Cpath d='M2-8c8-2 14-8 14-14c-6 1-12 6-14 14z'/%3E%3Cpath d='M3-16c8-3 12-9 12-15c-6 2-10 7-12 15z'/%3E%3Cpath d='M4-24c6-3 9-8 8-14c-4 3-7 8-8 14z'/%3E%3C/g%3E%3C/g%3E%3Cg transform='translate(130 80) rotate(-6) scale(0.8)'%3E%3Cpath d='M0 0c-2-14 0-28 4-40' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round'/%3E%3Cg fill='%23000'%3E%3Cpath d='M2-8c-8-2-14-6-16-12c6 0 12 4 16 12z'/%3E%3Cpath d='M3-16c-8-3-13-8-14-14c6 1 11 6 14 14z'/%3E%3Cpath d='M4-24c-7-3-11-8-11-14c5 2 9 7 11 14z'/%3E%3Cpath d='M2-8c8-2 14-8 14-14c-6 1-12 6-14 14z'/%3E%3Cpath d='M3-16c8-3 12-9 12-15c-6 2-10 7-12 15z'/%3E%3Cpath d='M4-24c6-3 9-8 8-14c-4 3-7 8-8 14z'/%3E%3C/g%3E%3C/g%3E%3Cg transform='translate(250 80) rotate(8) scale(0.9)'%3E%3Cpath d='M0 0c-2-14 0-28 4-40' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round'/%3E%3Cg fill='%23000'%3E%3Cpath d='M2-8c-8-2-14-6-16-12c6 0 12 4 16 12z'/%3E%3Cpath d='M3-16c-8-3-13-8-14-14c6 1 11 6 14 14z'/%3E%3Cpath d='M4-24c-7-3-11-8-11-14c5 2 9 7 11 14z'/%3E%3Cpath d='M2-8c8-2 14-8 14-14c-6 1-12 6-14 14z'/%3E%3Cpath d='M3-16c8-3 12-9 12-15c-6 2-10 7-12 15z'/%3E%3Cpath d='M4-24c6-3 9-8 8-14c-4 3-7 8-8 14z'/%3E%3C/g%3E%3C/g%3E%3Cg transform='translate(360 80) rotate(-4) scale(0.75)'%3E%3Cpath d='M0 0c-2-14 0-28 4-40' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round'/%3E%3Cg fill='%23000'%3E%3Cpath d='M2-8c-8-2-14-6-16-12c6 0 12 4 16 12z'/%3E%3Cpath d='M3-16c-8-3-13-8-14-14c6 1 11 6 14 14z'/%3E%3Cpath d='M4-24c-7-3-11-8-11-14c5 2 9 7 11 14z'/%3E%3Cpath d='M2-8c8-2 14-8 14-14c-6 1-12 6-14 14z'/%3E%3Cpath d='M3-16c8-3 12-9 12-15c-6 2-10 7-12 15z'/%3E%3Cpath d='M4-24c6-3 9-8 8-14c-4 3-7 8-8 14z'/%3E%3C/g%3E%3C/g%3E%3Cg transform='translate(470 80) rotate(6) scale(1)'%3E%3Cpath d='M0 0c-2-14 0-28 4-40' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round'/%3E%3Cg fill='%23000'%3E%3Cpath d='M2-8c-8-2-14-6-16-12c6 0 12 4 16 12z'/%3E%3Cpath d='M3-16c-8-3-13-8-14-14c6 1 11 6 14 14z'/%3E%3Cpath d='M4-24c-7-3-11-8-11-14c5 2 9 7 11 14z'/%3E%3Cpath d='M2-8c8-2 14-8 14-14c-6 1-12 6-14 14z'/%3E%3Cpath d='M3-16c8-3 12-9 12-15c-6 2-10 7-12 15z'/%3E%3Cpath d='M4-24c6-3 9-8 8-14c-4 3-7 8-8 14z'/%3E%3C/g%3E%3C/g%3E%3Cg transform='translate(560 80) rotate(-8) scale(0.8)'%3E%3Cpath d='M0 0c-2-14 0-28 4-40' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round'/%3E%3Cg fill='%23000'%3E%3Cpath d='M2-8c-8-2-14-6-16-12c6 0 12 4 16 12z'/%3E%3Cpath d='M3-16c-8-3-13-8-14-14c6 1 11 6 14 14z'/%3E%3Cpath d='M4-24c-7-3-11-8-11-14c5 2 9 7 11 14z'/%3E%3Cpath d='M2-8c8-2 14-8 14-14c-6 1-12 6-14 14z'/%3E%3Cpath d='M3-16c8-3 12-9 12-15c-6 2-10 7-12 15z'/%3E%3Cpath d='M4-24c6-3 9-8 8-14c-4 3-7 8-8 14z'/%3E%3C/g%3E%3C/g%3E%3Cellipse cx='200' cy='78' rx='14' ry='6'/%3E%3Cellipse cx='420' cy='79' rx='10' ry='5'/%3E%3Cg transform='translate(310 78) rotate(8) scale(0.6)'%3E%3Crect x='-13' y='-3' width='26' height='6' rx='3'/%3E%3Ccircle cx='-13' cy='-4' r='4.2'/%3E%3Ccircle cx='-13' cy='4' r='4.2'/%3E%3Ccircle cx='13' cy='-4' r='4.2'/%3E%3Ccircle cx='13' cy='4' r='4.2'/%3E%3C/g%3E%3Cg transform='translate(520 74) rotate(-30) scale(0.55)'%3E%3Cellipse cx='0' cy='5' rx='6.5' ry='5.5'/%3E%3Cellipse cx='-7.5' cy='-6' rx='2.8' ry='7' transform='rotate(-32 -7.5 -6)'/%3E%3Cellipse cx='0' cy='-9' rx='2.8' ry='8'/%3E%3Cellipse cx='7.5' cy='-6' rx='2.8' ry='7' transform='rotate(32 7.5 -6)'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-  --world-victory-2-l: none;
-  --world-victory-2-r: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='280' viewBox='0 0 120 280'%3E%3Cg fill='%23000'%3E%3Cpath d='M10 60c14-12 30-16 46-12c6-14 14-22 26-26c-6 8-8 16-6 24c14-2 28 4 38 16c-10-4-22-4-32 2l-8 14l-6-12c-12 0-24 4-34 10c-8 2-16 0-24-16z'/%3E%3Cpath d='M70 32l6-10l8 6l-10 6z'/%3E%3C/g%3E%3C/svg%3E");
-  --world-victory-2-band: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='90' viewBox='0 0 600 90'%3E%3Cg fill='%23000'%3E%3Cg transform='translate(300 88) scale(0.62)'%3E%3Cpath d='M-70 0l40-70c6-8 14-8 20-2l10 6l42 66z'/%3E%3Cpath d='M-30-70l8-6l8 5l7-3l6 4' fill='none' stroke='%23000' stroke-width='3'/%3E%3Cg opacity='.5'%3E%3Ccircle cx='-10' cy='-88' r='12'/%3E%3Ccircle cx='6' cy='-98' r='15'/%3E%3Ccircle cx='-8' cy='-110' r='13'/%3E%3Ccircle cx='10' cy='-124' r='11'/%3E%3Ccircle cx='-4' cy='-136' r='9'/%3E%3C/g%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-  --world-victory-y: bottom;
-  --world-victory-2-y: top;
-  --world-victory-anim: world-stomp;
-  --world-victory-anim-2: world-erupt;
-  --world-particle: radial-gradient(circle, #000 40%, transparent 70%);
-  --world-particle-w: 7px;
-  --world-particle-h: 7px;
-  --world-particle-inset: -10px auto;
-  --world-particle-anim: world-ash;
-  --world-particle-dur: 2.8s;
-  --world-vessel: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='120' viewBox='0 0 200 120'%3E%3Cg fill='%23000'%3E%3Cpath d='M66 34c9 0 17 13 17 27s-8 23-17 23s-17-9-17-23s8-27 17-27z'/%3E%3Cpath d='M134 38c9 0 17 13 17 26s-8 22-17 22s-17-8-17-22s8-26 17-26z'/%3E%3Cpath d='M100 24c10 0 19 15 19 31s-9 26-19 26s-19-10-19-26s9-31 19-31z'/%3E%3Cpath d='M14 76c0-14 39-23 86-23s86 9 86 23c0 18-39 32-86 32s-86-14-86-32z'/%3E%3Cpath fill='%23fff' fill-opacity='.35' d='M22 74l156 8-1 7-156-8zM26 88l148-10 1 7-148 10zM40 98l124-14 1 6-124 14z'/%3E%3Cpath d='M2 92c11-9 24-14 37-15l2 8c-12 1-23 5-33 12zM198 92c-11-9-24-14-37-15l-2 8c12 1 23 5 33 12z'/%3E%3C/g%3E%3C/svg%3E");
-}
-
-[data-world="burg"] {
-  --world-font: "Cinzel";
-  --world-backdrop: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240' viewBox='0 0 240 240'%3E%3Cg fill='%23000'%3E%3Cpath d='M30 40h6v-6h5v6h6v-6h5v6h6v-6h5v6h6v34H30zM36 52v18h20V52z'/%3E%3Cpath d='M150 130c0-2 12-4 16-4s16 2 16 4v18c0 10-8 18-16 22c-8-4-16-12-16-22z'/%3E%3Cpath fill-rule='evenodd' d='M60 170a10 10 0 1 0 20 0a10 10 0 1 0-20 0zM66 170a4 4 0 1 0 8 0a4 4 0 1 0-8 0zM78 168h30v5h-6v5h-5v-5h-4v5h-5v-5h-10z'/%3E%3Cpath d='M190 40v60h-3V40zM191 40l26 8l-26 8z'/%3E%3Cpath d='M110 90c-4-6-2-12 4-14c3 4 3 8 0 12c6-2 10 2 10 6c-4 2-8 0-10-4c-2 4-6 6-10 4c0-4 2-6 6-4z'/%3E%3Cpath d='M200 186c-7 7-9 14-4 20c1-4 4-7 7-10c2 4 4 8 3 12c6-5 5-15-2-22c0 3-1 6-4 8c1-3 1-6 0-8z'/%3E%3Cpath d='M196 208h8l-2 22h-4z'/%3E%3C/g%3E%3C/svg%3E");
-  --world-backdrop-size: 320px 320px;
-  /* Slot 1's alpha. Ceiling .335 (see the slot rule); .30 keeps the margin. */
-  --world-backdrop-alpha: .30;
-  /* Stone: rises from the floor of the viewport, like Dinosaurs' sediment.
-
-     The gradient starts at .55, not at `transparent` (#1138). This layer is
-     `position: fixed`, so the gradient does NOT scroll: stop 0% is the top of
-     every screen, forever, and a transparent stop there means the motif is
-     absent exactly where the eye lands first and present only along the
-     viewport floor — which is what the report showed. .55 keeps the ramp the
-     world wants (the motif still gathers downward, ~1.8x denser at the floor)
-     while the top reads at Lc ~4, half a light world's step rather than none. */
-  --world-backdrop-fade: linear-gradient(rgb(0 0 0 / .55) 0%, #000 100vh);
-  --world-frame: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='88' height='56' viewBox='0 0 88 56'%3E%3Cg fill='%23000'%3E%3Cpath d='M0 0h7v6h6V0h7v6h6V0h7v6h6V0h7v12H12v32H0zM0 26h12v7H0z'/%3E%3C/g%3E%3C/svg%3E");
-  --world-rule: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='10' viewBox='0 0 140 10'%3E%3Cg fill='%23000'%3E%3Cpath d='M0 1H140v1.2H0zM0 2L10 10L20 2zM20 2L30 10L40 2zM40 2L50 10L60 2zM60 2L70 10L80 2zM80 2L90 10L100 2zM100 2L110 10L120 2zM120 2L130 10L140 2z'/%3E%3C/g%3E%3C/svg%3E");
-  --world-corner: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 22 22'%3E%3Cg fill='%23000'%3E%3Cpath d='M3 3c0-1 6-2 8-2s8 1 8 2v9c0 5-4 8-8 10c-4-2-8-5-8-10z'/%3E%3C/g%3E%3C/svg%3E");
-  --world-scene: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='120' viewBox='0 0 600 120'%3E%3Cg fill='%23000'%3E%3Cpath fill-rule='evenodd' d='M0 120v-14c40-6 90-14 130-14v-8h4v-6h5v6h5v-6h5v6h5v-6h5v6h5v-6h4v20h4V64h6v-6h5v6h6v-6h5v6h6v-6h5v6h5v28h8V52h6v-8h5v8h6v-8h5v8h6v-8h5v8h6v-8h5v8h6v44h8V70h5v-6h5v6h5v-6h5v6h5v-6h5v6h5v20h8V80h4v-6h5v6h5v-6h5v6h5v-6h4v18c50 0 130 8 236 14v14zM296 120v-26c0-8 6-14 14-14s14 6 14 14v26z'/%3E%3Cpath d='M264 52l-14-4l14-4zM366 60l14-4l-14-4z'/%3E%3Cpath d='M30 78L39.24 96H20.759999999999998zM30 86.8L43.64 106.8H16.36zM30 97.2L48.04 116.4H11.96zM28.02 114.8h3.96V118h-3.96z'/%3E%3Cpath d='M570 72L580.08 92.7H559.92zM570 82.12L584.88 105.12H555.12zM570 94.08L589.68 116.16H550.32zM567.84 114.32h4.32V118h-4.32z'/%3E%3Cpath fill-opacity='0.6' d='M556 86L563.56 99.5H548.44zM556 92.6L567.16 107.6H544.84zM556 100.4L570.76 114.8H541.24zM554.38 113.6h3.2399999999999998V116h-3.2399999999999998z'/%3E%3Cg transform='translate(420 6) scale(0.36)'%3E%3Cpath d='M46 60c8-10 26-16 50-14c16 1 30 6 42 14c-12 6-26 8-40 8c-20 0-38-2-52-8z'/%3E%3Cpath d='M50 62c-12-4-20-14-20-28c0-8 3-15 9-20l8 5c-4 4-6 9-6 15c1 10 7 18 17 24z'/%3E%3Cpath d='M8 20c4-10 14-16 26-14c8 1 14 5 18 11l-6 4c-6-2-12-2-18 0l-4 5l-16-2z'/%3E%3Cpath d='M6 26l18 3l-3 6l-15-4z'/%3E%3Cpath d='M34 8l5-14l3 14zM42 9l7-12l1 13z'/%3E%3Cpath d='M74 42c-3-16 4-30 18-38c-3 8-2 15 3 20c5-8 14-12 24-11c-5 6-6 12-3 18c9-3 18-1 26 5c-6 4-10 9-12 15c-18 1-38 0-56-4c-1-2-1-3 0-5z'/%3E%3Cpath d='M96 48l4-7l4 7zM110 48l4-7l4 7zM124 50l4-7l4 7z'/%3E%3Cpath d='M136 62c14 2 24 10 28 22c1 5 0 10-3 14l8 6l-11 2l-1-8c2-5 1-9-3-13c-7-7-14-13-18-23z'/%3E%3Cpath d='M160 96l10-6l4 10l-10 2z'/%3E%3Cpath d='M80 68l-5 11l7-2l3-9zM104 68l-2 11l7-3l1-8z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-  --world-stage: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='140' viewBox='0 0 600 140'%3E%3Cg fill='%23000'%3E%3Cpath d='M0 140v-12h12v-8h8v8h12v-8h8v8h12v-8h8v8h12v12zM528 140v-12h12v-8h8v8h12v-8h8v8h12v-8h8v8h12v12z'/%3E%3Cg transform='translate(200 24) scale(1.05)'%3E%3Cpath d='M46 60c8-10 26-16 50-14c16 1 30 6 42 14c-12 6-26 8-40 8c-20 0-38-2-52-8z'/%3E%3Cpath d='M50 62c-12-4-20-14-20-28c0-8 3-15 9-20l8 5c-4 4-6 9-6 15c1 10 7 18 17 24z'/%3E%3Cpath d='M8 20c4-10 14-16 26-14c8 1 14 5 18 11l-6 4c-6-2-12-2-18 0l-4 5l-16-2z'/%3E%3Cpath d='M6 26l18 3l-3 6l-15-4z'/%3E%3Cpath d='M34 8l5-14l3 14zM42 9l7-12l1 13z'/%3E%3Cpath d='M74 42c-3-16 4-30 18-38c-3 8-2 15 3 20c5-8 14-12 24-11c-5 6-6 12-3 18c9-3 18-1 26 5c-6 4-10 9-12 15c-18 1-38 0-56-4c-1-2-1-3 0-5z'/%3E%3Cpath d='M96 48l4-7l4 7zM110 48l4-7l4 7zM124 50l4-7l4 7z'/%3E%3Cpath d='M136 62c14 2 24 10 28 22c1 5 0 10-3 14l8 6l-11 2l-1-8c2-5 1-9-3-13c-7-7-14-13-18-23z'/%3E%3Cpath d='M160 96l10-6l4 10l-10 2z'/%3E%3Cpath d='M80 68l-5 11l7-2l3-9zM104 68l-2 11l7-3l1-8z'/%3E%3C/g%3E%3Cpath fill-rule='evenodd' d='M486 46a22 22 0 1 0 44 0a22 22 0 1 0-44 0zM496 46a17 17 0 1 0 34 0a17 17 0 1 0-34 0z'/%3E%3Ccircle cx='90' cy='40' r='2'/%3E%3Ccircle cx='140' cy='70' r='1.6'/%3E%3Ccircle cx='420' cy='30' r='2'/%3E%3Ccircle cx='560' cy='80' r='1.5'/%3E%3Ccircle cx='40' cy='90' r='1.8'/%3E%3C/g%3E%3C/svg%3E");
-  --world-stage-size: 100% auto;
-  --world-stage-repeat: no-repeat;
-  --world-stage-position: center top;
-  /* Slot 8 — the crown: battlements stand on the bottom, so the strip shows
-     the art's bottom edge. */
-  --world-crown-y: bottom;
-  /* Slot 7 — layer 1 is the castle: a tower in each gutter with its windows
-     and door cut out, and the curtain wall with its gate across the band,
-     rising into place; layer 2 is the dragon, flying in from the right
-     gutter. The bits are sparks off the torches. */
-  --world-victory-l: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='280' viewBox='0 0 120 280'%3E%3Cg fill='%23000'%3E%3Cpath fill-rule='evenodd' d='M30 282V84h8v-8h9v8h9v-8h9v8h9v-8h9v8h8v198zM50 282v-40c0-8 5-14 11-14s11 6 11 14v40zM56 140a5 5 0 1 0 10 0a5 5 0 1 0-10 0z'/%3E%3Cpath d='M60 74V30h3v44zM63 30l24 8l-24 8z'/%3E%3C/g%3E%3C/svg%3E");
-  --world-victory-r: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='280' viewBox='0 0 120 280'%3E%3Cg fill='%23000'%3E%3Cpath fill-rule='evenodd' d='M30 282V64h8v-8h9v8h9v-8h9v8h9v-8h9v8h8v218zM50 282v-40c0-8 5-14 11-14s11 6 11 14v40zM56 120a5 5 0 1 0 10 0a5 5 0 1 0-10 0zM56 180a5 5 0 1 0 10 0a5 5 0 1 0-10 0z'/%3E%3Cpath d='M60 54V10h3v44zM63 10l-24 8l24 8z'/%3E%3C/g%3E%3C/svg%3E");
-  --world-victory-band: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='90' viewBox='0 0 600 90'%3E%3Cg fill='%23000'%3E%3Cpath fill-rule='evenodd' d='M0 90V60h12v-8h8v8h12v-8h8v8h12v-8h8v8h12v-8h8v8h12v-8h8v8h12v-8h8v8h12v-8h8v8h12v-8h8v8h12v-8h8v8h12v-8h8v8h12v-8h8v8h12v-8h8v8h12v-8h8v8h12v-8h8v8h12v-8h8v8h12v-8h8v8h12v-8h8v8h12v-8h8v8h12v-8h8v8h12v-8h8v8h12v-8h8v8h12v-8h8v8h12v-8h8v8h12v-8h8v8h12v-8h8v8h12v-8h8v8h12v-8h8v8h12v-8h8v8h12v-8h8v8h12v-8h8v8v30zM284 90V66c0-9 7-16 16-16s16 7 16 16v24z'/%3E%3C/g%3E%3C/svg%3E");
-  --world-victory-2-l: none;
-  --world-victory-2-r: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='280' viewBox='0 0 120 280'%3E%3Cg fill='%23000'%3E%3Cg transform='translate(-22 26) scale(0.8)'%3E%3Cpath d='M46 60c8-10 26-16 50-14c16 1 30 6 42 14c-12 6-26 8-40 8c-20 0-38-2-52-8z'/%3E%3Cpath d='M50 62c-12-4-20-14-20-28c0-8 3-15 9-20l8 5c-4 4-6 9-6 15c1 10 7 18 17 24z'/%3E%3Cpath d='M8 20c4-10 14-16 26-14c8 1 14 5 18 11l-6 4c-6-2-12-2-18 0l-4 5l-16-2z'/%3E%3Cpath d='M6 26l18 3l-3 6l-15-4z'/%3E%3Cpath d='M34 8l5-14l3 14zM42 9l7-12l1 13z'/%3E%3Cpath d='M74 42c-3-16 4-30 18-38c-3 8-2 15 3 20c5-8 14-12 24-11c-5 6-6 12-3 18c9-3 18-1 26 5c-6 4-10 9-12 15c-18 1-38 0-56-4c-1-2-1-3 0-5z'/%3E%3Cpath d='M96 48l4-7l4 7zM110 48l4-7l4 7zM124 50l4-7l4 7z'/%3E%3Cpath d='M136 62c14 2 24 10 28 22c1 5 0 10-3 14l8 6l-11 2l-1-8c2-5 1-9-3-13c-7-7-14-13-18-23z'/%3E%3Cpath d='M160 96l10-6l4 10l-10 2z'/%3E%3Cpath d='M80 68l-5 11l7-2l3-9zM104 68l-2 11l7-3l1-8z'/%3E%3C/g%3E%3Ccircle cx='30' cy='150' r='2'/%3E%3Ccircle cx='62' cy='180' r='1.6'/%3E%3Ccircle cx='42' cy='220' r='2'/%3E%3C/g%3E%3C/svg%3E");
-  --world-victory-2-band: none;
-  --world-victory-y: bottom;
-  --world-victory-2-y: top;
-  --world-victory-anim: world-tide;
-  --world-victory-anim-2: world-flyby;
-  --world-particle: radial-gradient(circle, #000 30%, transparent 70%);
-  --world-particle-w: 8px;
-  --world-particle-h: 8px;
-  --world-particle-inset: auto -12px;
-  --world-particle-anim: world-firefly;
-  --world-particle-dur: 2.2s;
-  --world-vessel: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='120' viewBox='0 0 200 120'%3E%3Cg fill='%23000'%3E%3Cpath d='M20 60h160v50c0 4-2 6-6 6H26c-4 0-6-2-6-6z'/%3E%3Cpath d='M24 58c0-16 8-28 16-32h120c8 4 16 16 16 32z'/%3E%3Cpath fill='%23fff' fill-opacity='.35' d='M92 60h16v18c0 4-2 6-4 8h-8c-2-2-4-4-4-8z'/%3E%3Cpath d='M20 62h160v6H20z'/%3E%3C/g%3E%3C/svg%3E");
-}
-
-/* The display face: the world's own first, then the standard stack, so a
-   glyph the world face lacks still renders in Baloo 2. Declaring the face in
-   @font-face (top of this file) downloads nothing; the fetch happens the first
-   time THIS rule applies it to rendered text. */
-[data-world] { --font-display: var(--world-font), var(--font-display-std); }
-/* A palette preview card inside a world round shows the palette's own face. */
-.theme-card:not([data-world]) { --font-display: var(--font-display-std); }
-
-/* Slot 1 — the page backdrop. A fixed layer under everything, above the
-   body's own glow + grain: the motif tile, intersected with a fade so it sits
-   where the world wants it and never across a whole reading column at once.
-
-   Alpha is the contrast budget, and it is PER WORLD (#1138) rather than one
-   number: --ink keeps AAA and --ink-soft keeps AA on the densest pixel of the
-   motif, which each world's own page and accent price differently
-   (test/round-worlds.test.js measures both, per world, and there is no shared
-   ceiling left to pin). One flat .09 shipped until #1138 and was tuned for a
-   LIGHT page: alpha is not comparable across schemes, because the same step
-   over a near-black page is swallowed by screen flare — the term APCA models
-   and a pure lightness space does not. Measured that way the three dark worlds
-   sat at Lc ~2.4 against the light worlds' ~8.4, i.e. under a third of the
-   step, while their own AAA/AA ceilings were three times higher (burg .335)
-   than the number they were held to. Their alphas buy that step back. */
-[data-world] body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background: var(--brand);
-  opacity: var(--world-backdrop-alpha);
-  mask-image: var(--world-backdrop), var(--world-backdrop-fade);
-  mask-size: var(--world-backdrop-size), 100% 100%;
-  mask-repeat: repeat, no-repeat;
-  mask-composite: intersect;
-}
-
-/* Slot 2 — the primary button's frame: one ornament at the top-left corner,
-   the same one rotated at the bottom-right. Sized in em so .btn--sm and
-   .btn--lg scale their frame with their type. --brand-strong rather than --brand:
-   the button IS --brand, and the part of the frame that overlaps it has to
-   read as sitting in front. */
-[data-world] .btn--primary { position: relative; }
-[data-world] .btn--primary::before,
-[data-world] .btn--primary::after {
-  content: '';
-  position: absolute;
-  width: 2.8em;
-  height: 1.8em;
-  pointer-events: none;
-  background: var(--brand-strong);
-  mask-image: var(--world-frame);
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: left top;
-}
-[data-world] .btn--primary::before { top: -.7em; left: -.8em; }
-[data-world] .btn--primary::after { bottom: -.7em; right: -.8em; transform: rotate(180deg); }
-
-/* …and the corollary: the frame hangs .8em OUTSIDE the button box on each side,
-   while a button row sits its controls 10px apart (.toolbar). So a primary
-   button with a neighbour lets its ornament land ON that neighbour — measured
-   2026-09-08 at 7.6px of leaf over „Speichern & weiteres" in the add-game
-   sheet, which reads as a rendering glitch rather than as a flourish.
-
-   The vote card was the second row this covered (4.4px of leaf over „Zurück").
-   #1168 removed its nav entirely — the rating tap advances, so there is no
-   primary button left there — and the `.vote__nav` arm was dropped with it
-   rather than left in the selector matching nothing.
-
-   It has to be COLUMN-GAP, not a margin on the button. A margin looked right and
-   is wrong on a phone: .toolbar wraps (flex-wrap: wrap; .sheet__actions grows its
-   buttons to full width at ≤639px), and a horizontal margin then makes the
-   primary button NARROWER than the one stacked under it — measured at 390px,
-   335px against 344px, a ragged right edge in the one place the ornament was
-   never colliding. column-gap applies only between items on the SAME line, so it
-   is inert exactly where the collision cannot happen. `gap: 10px` still supplies
-   the row-gap for the wrapped case.
-
-   22px clears the largest ornament in these rows (.8em of the sheet's 22px
-   btn--lg = 17.6px) with ~4px to spare. A
-   button type above ~27px would outgrow it — raise this with it, and note the
-   overhang is sized in the BUTTON's em while this is the row's, which is why the
-   two cannot simply be written as one number. :has() keeps every other .toolbar
-   on its normal 10px. */
-[data-world] .toolbar:has(> .btn--primary) { column-gap: 22px; }
-
-/* Slot 3 — a rule under a heading: section headings (direct children only:
-   the same selector without `>` reaches every card title inside the
-   section), sheet titles, the round's own name on the hub and in the rail,
-   and the vote card's game title. The name and the title get the widest cut. */
-[data-world] .section > :is(h1, h2, h3)::after,
-[data-world] .section > .section-head > :is(h1, h2, h3)::after,
-[data-world] .sheet__head > h2::after,
-[data-world] .hero > h1::after,
-[data-world] .rail__name::after,
-[data-world] .vote__title::after {
-  content: '';
-  display: block;
-  width: 200px;
-  max-width: 100%;
-  height: 12px;
-  margin-top: 6px;
-  pointer-events: none;
-  background: var(--brand);
-  opacity: .9;
-  mask-image: var(--world-rule);
-  mask-size: auto 100%;
-  mask-repeat: no-repeat;
-  mask-position: left center;
-}
-[data-world] .hero > h1::after,
-[data-world] .rail__name::after { width: 280px; height: 16px; margin-top: 8px; }
-[data-world] .vote__title::after { width: 200px; height: 14px; margin: 8px auto 0; }
-
-/* Slot 4 — a card corner. Inset from the rounded corner rather than clipped
-   to it, so the host keeps its overflow and a badge, a popover or a hover
-   shadow inside it is never cut. The Regal's game tile takes it at the
-   BOTTOM-right, because its badge column owns the top-right; the home tile
-   carries the attribute itself (views-home.js) and joins here.
-
-   It USED to be turned a quarter there as well, which was fine for a leaf and
-   wrong for everything else: a knight, a ghost or a whale lying on its side
-   reads as neither (#1081). Upright at the bottom-right costs nothing. */
-[data-world] :is(.card, .ticket, .round-card, .vote, .game-card) { position: relative; }
-[data-world] :is(.card, .ticket, .round-card, .vote)::after,
-.round-card[data-world]::after,
-[data-world] .game-card::after {
-  content: '';
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 28px;
-  height: 28px;
-  pointer-events: none;
-  background: var(--brand);
-  opacity: .9;
-  mask-image: var(--world-corner);
-  mask-size: contain;
-  mask-repeat: no-repeat;
-}
-[data-world] .game-card::after { top: auto; bottom: 6px; }
-
-/* Slot 5 — the empty state's scene, in a band of its own along the bottom.
-   The band is one fifth of the width (the art's own ratio), capped at 160px
-   on wide screens (the art stops growing at 800px), and the box reserves
-   exactly that much below its text, so the scene never sits under a line of
-   --ink-soft — which is what lets it be bold: measured at .14 across the text
-   it already cost the muted line its AA (4.35:1). */
-[data-world] .empty { position: relative; overflow: hidden; isolation: isolate; padding-bottom: calc(44px + min(20%, 160px)); }
-[data-world] .empty::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background: var(--brand);
-  opacity: .36;
-  mask-image: var(--world-scene);
-  mask-size: min(100%, 800px) auto;
-  mask-repeat: no-repeat;
-  mask-position: center bottom;
-}
-
-/* Slot 6 — the finale stage: the world's scene in the stage's own light ink,
-   as a band across the top BEHIND THE SEAL, plus a glow that breathes
-   (motion-gated below). A band rather than a curtain-wide tile because every
-   line of stage text is centred under the seal: a tile at .16 pulled
-   --stage-faint to 2.27:1 on its densest pixel. The art is 600x140, so at the
-   stage's 640px ceiling the band ends at 149px — above the title, which
-   starts at 40px padding + the 104px seal + its 18px margin. */
-[data-world] .stage { position: relative; overflow: hidden; isolation: isolate; }
-[data-world] .stage::before,
-[data-world] .stage::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-}
-[data-world] .stage::before {
-  background: var(--stage-ink);
-  opacity: .4;
-  mask-image: var(--world-stage);
-  mask-size: var(--world-stage-size);
-  mask-repeat: var(--world-stage-repeat);
-  mask-position: var(--world-stage-position);
-}
-[data-world] .stage::after {
-  background: radial-gradient(70% 55% at 50% 0%, color-mix(in oklab, var(--stage-ink) 22%, transparent), transparent 70%);
-}
-@media (prefers-reduced-motion: no-preference) {
-  [data-world] .stage::after { animation: world-glow 3.6s ease-in-out infinite; }
-  @keyframes world-glow {
-    0%, 100% { opacity: .7; }
-    50% { opacity: 1; }
-  }
-}
-
-/* Slot 7 — the winner reveal's victory scene (#940), in place of the confetti.
-   The spotlight is the one slot with TEXT on it — the kicker and the winner's
-   title — so its geometry is the contrast budget: the hero paints only in the
-   two side gutters (--victory-col wide, full height) and the bottom band
-   (--victory-band tall, capped like slot 5's), and the host reserves exactly
-   those as padding through the SAME two properties, so a drift between the
-   art and the reservation is unrepresentable. The bits are small and moving,
-   like the confetti, and may cross text. Two layers per world, each a gutter
-   pair plus a band, in the accent at one bold alpha: the end state is the
-   ornament a cold load, the Chronik and a reduced-motion reader see, and the
-   reveal class runs the world's keyframes INTO it — once, after the 0.55s
-   spotlight rise (gated below). A keyframe animates the pseudo-element, never
-   one mask layer, so a thing that must move as a unit gets a layer to itself
-   (the rocket). The winners keep their default z-order above both layers. */
-[data-world] .spotlight,
-[data-world] .tafel-top {
-  --victory-col: min(18%, 120px);
-  --victory-band: min(15%, 120px);
-  --victory-alpha: .55;
-  overflow: hidden;
-  isolation: isolate;
-  padding-inline: var(--victory-col);
-  padding-bottom: calc(20px + var(--victory-band));
-}
-/* Tighter gutters than the spotlight's: this host holds full-width ROWS, and an
-   18% reservation per side would eat the mini chart before the scene earned its
-   place. At 560px of content the rows still keep ≥400px. */
-[data-world] .tafel-top { --victory-col: min(12%, 80px); }
-[data-world] .spotlight::before,
-[data-world] .spotlight::after,
-[data-world] .tafel-top::before,
-[data-world] .tafel-top::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background: var(--brand);
-  opacity: var(--victory-alpha);
-  transform-origin: 50% 100%;
-  mask-size: var(--victory-col) auto, var(--victory-col) auto, min(100%, 800px) auto;
-  /* The band tiles: its art stops growing at 800px, and on a wide card the
-     floor has to reach both trees. Each band SVG starts and ends on the
-     same ground line for that reason. */
-  mask-repeat: no-repeat, no-repeat, repeat-x;
-}
-[data-world] .spotlight::before,
-[data-world] .tafel-top::before {
-  mask-image: var(--world-victory-l), var(--world-victory-r), var(--world-victory-band);
-  mask-position: left var(--world-victory-y), right var(--world-victory-y), center bottom;
-}
-[data-world] .spotlight::after,
-[data-world] .tafel-top::after {
-  mask-image: var(--world-victory-2-l), var(--world-victory-2-r), var(--world-victory-2-band);
-  mask-position: left var(--world-victory-2-y), right var(--world-victory-2-y), center bottom;
-}
-/* A victory scene celebrates, so an unplayed or cancelled table paints none —
-   through the alpha rather than `display: none`, which keeps the reserved
-   padding and so keeps every card in a row on the same geometry. */
-[data-world] .spotlight--table.is-off { --victory-alpha: 0; }
-/* The particles: the confetti generator's own bits (views-session.js), given
-   the world's shape, size, start edge and pace through tokens. The palette
-   rule paints the bit's inline --bit-color; under a world the accent wins. */
-[data-world] .confetti__bit {
-  inset-block: var(--world-particle-inset);
-  width: var(--world-particle-w);
-  height: var(--world-particle-h);
-  border-radius: 0;
-  background: var(--brand);
-  mask-image: var(--world-particle);
-}
-@media (prefers-reduced-motion: no-preference) {
-  [data-world] :is(.spotlight, .tafel-top).is-reveal::before { animation: var(--world-victory-anim) 2.6s ease-out .65s both; }
-  [data-world] :is(.spotlight, .tafel-top).is-reveal::after { animation: var(--world-victory-anim-2) 2.6s ease-out .65s both; }
-  [data-world] .confetti__bit { animation: var(--world-particle-anim) var(--world-particle-dur) ease-in-out 3; }
-  /* Forest: the trunks and the floor shoot up from the ground line, then the
-     canopies lift into place and fill out — a sapling's crown rising with it.
-     Both scale from the bottom edge (the shared transform-origin), which is
-     what keeps two trees at opposite edges growing in place. */
-  @keyframes world-grow {
-    from { transform: scaleY(.06); }
-    to { transform: scaleY(1); }
-  }
-  @keyframes world-canopy {
-    0%, 30% { transform: scaleY(.2); opacity: 0; }
-    100% { transform: scaleY(1); opacity: var(--victory-alpha); }
-  }
-  @keyframes world-firefly {
-    0% { transform: translate(0, 0); opacity: 0; }
-    15% { opacity: 1; }
-    30% { opacity: .2; }
-    45% { opacity: 1; }
-    60% { opacity: .2; }
-    80% { opacity: 1; }
-    100% { transform: translate(var(--bit-drift, 0px), -340px); opacity: 0; }
-  }
-  /* Sci-Fi: the rocket layer starts a whole card-height below the card and
-     climbs — slow off the pad, fast, then settling — while the planet, the pad
-     and the stars come up and glint once at ignition. */
-  @keyframes world-launch {
-    0% { transform: translateY(105%); animation-timing-function: cubic-bezier(.6, 0, .8, .3); }
-    45% { transform: translateY(60%); animation-timing-function: cubic-bezier(.2, .6, .2, 1); }
-    100% { transform: translateY(0); }
-  }
-  @keyframes world-glint {
-    0% { opacity: 0; }
-    35% { opacity: var(--victory-alpha); }
-    50% { opacity: 1; }
-    65%, 100% { opacity: var(--victory-alpha); }
-  }
-  @keyframes world-star {
-    0% { transform: translateY(0) scaleY(.4); opacity: 0; }
-    12% { opacity: 1; }
-    100% { transform: translateY(420px) scaleY(1.4); opacity: 0; }
-  }
-  /* Ocean: the floor comes up with the tide, then the whale surfaces from
-     below and settles. Bubbles wobble upward and pop. */
-  @keyframes world-tide {
-    from { transform: translateY(100%); }
-    to { transform: translateY(0); }
-  }
-  @keyframes world-surface {
-    0%, 25% { transform: translateY(40%); opacity: 0; }
-    70% { transform: translateY(-3%); opacity: var(--victory-alpha); }
-    100% { transform: translateY(0); opacity: var(--victory-alpha); }
-  }
-  @keyframes world-bubble {
-    0% { transform: translate(0, 0) scale(.5); opacity: 0; }
-    15% { opacity: 1; }
-    50% { transform: translate(calc(var(--bit-drift, 0px) * .5), -170px) scale(.9); }
-    100% { transform: translate(var(--bit-drift, 0px), -340px) scale(1.1); opacity: 0; }
-  }
-  /* Chess: the board and its royals rise like the ocean floor (the shared
-     tide), then the back rank is set down onto it. Squares tumble down. */
-  @keyframes world-setdown {
-    0%, 35% { transform: translateY(-14%); opacity: 0; }
-    100% { transform: translateY(0); opacity: var(--victory-alpha); }
-  }
-  @keyframes world-tumble {
-    0% { transform: translate(0, 0) rotate(0deg); opacity: 0; }
-    10% { opacity: 1; }
-    100% { transform: translate(var(--bit-drift, 0px), 420px) rotate(540deg); opacity: 0; }
-  }
-  /* Horror: the graveyard looms up out of the fog, then the ghost drifts up
-     and the moon fades in, flickering once. Bats flap down across the card. */
-  @keyframes world-loom {
-    from { transform: translateY(10%); opacity: 0; }
-    to { transform: translateY(0); opacity: var(--victory-alpha); }
-  }
-  @keyframes world-haunt {
-    0%, 30% { transform: translateY(24%); opacity: 0; }
-    60% { opacity: var(--victory-alpha); }
-    70% { opacity: .15; }
-    80% { opacity: var(--victory-alpha); }
-    100% { transform: translateY(0); opacity: var(--victory-alpha); }
-  }
-  @keyframes world-flit {
-    0% { transform: translate(0, 0) scaleX(1); opacity: 0; }
-    10% { opacity: 1; }
-    25% { transform: translate(calc(var(--bit-drift, 0px) * .25), 90px) scaleX(.4); }
-    50% { transform: translate(calc(var(--bit-drift, 0px) * .5), 190px) scaleX(1); }
-    75% { transform: translate(calc(var(--bit-drift, 0px) * .75), 290px) scaleX(.4); }
-    100% { transform: translate(var(--bit-drift, 0px), 400px) scaleX(1); opacity: 0; }
-  }
-  /* Dinosaurs: the herd stomps up out of the ground — two bounces as the
-     feet land — then the volcano erupts, its smoke drifting up. Ash sifts
-     down through the card, flickering like embers. */
-  @keyframes world-stomp {
-    0% { transform: translateY(100%); animation-timing-function: cubic-bezier(.3, 0, .6, 1); }
-    55% { transform: translateY(-3%); animation-timing-function: ease-in; }
-    70% { transform: translateY(1.5%); animation-timing-function: ease-out; }
-    85% { transform: translateY(-.8%); animation-timing-function: ease-in; }
-    100% { transform: translateY(0); }
-  }
-  @keyframes world-erupt {
-    0%, 40% { transform: translateY(6%); opacity: 0; }
-    100% { transform: translateY(0); opacity: var(--victory-alpha); }
-  }
-  /* Burg (#1084): the dragon comes in from the right rather than rising with
-     the wall, so it holds off until the towers have landed. */
-  @keyframes world-flyby {
-    0%, 30% { transform: translateX(28%); opacity: 0; }
-    100% { transform: translateX(0); opacity: var(--victory-alpha); }
-  }
-  @keyframes world-ash {
-    0% { transform: translate(0, 0); opacity: 0; }
-    12% { opacity: 1; }
-    40% { opacity: .35; }
-    60% { opacity: 1; }
-    100% { transform: translate(var(--bit-drift, 0px), 400px); opacity: 0; }
-  }
-}
-
-/* Slot 9 — DER BODEN. The Pokale podium stands on the world's floor (#1083).
-   Pokale is the round's own celebration screen and carried 4 marks in every
-   world before this. The pedestals already sit on one baseline
-   (`align-items: flex-end` on .podium), so a band beneath them reads as a
-   floor by construction, and it needs no new artwork: slot 7's victory band is
-   the one piece of world art drawn to stand ON a ground line.
-
-   BOTH band layers, because a world may carry its floor on either. Sci-Fi's
-   `--world-victory-band` is `none` — its pad and starfield live on the `-2`
-   layer — so a rule reading only the first would leave one world of six with a
-   bare podium and nothing to say so. A `none` layer contributes no mask, which
-   is why listing both costs the other five nothing (test/round-worlds.test.js
-   asserts every world paints on one of them).
-
-   --podium-band carries the reservation AND the art's height, slot 8's
-   discipline — but as a pure LENGTH, never the percentage slot 5 can afford: a
-   percentage resolves against the containing block's WIDTH in `padding-bottom`
-   and against the element's own HEIGHT in `mask-size`, so one property holding
-   `15%` would quietly mean two different bands.
-
-   No `overflow: hidden`, unlike slots 5 and 6: the art is `inset: 0` on the
-   pseudo-element, so it cannot reach outside the padding box anyway, while a
-   podium entry IS a link (.podium__entry.member-link) whose focus ring is drawn
-   just outside it — and the outer columns touch the podium's edge once the row
-   is full. Clipping is the only thing `overflow` would add here. */
-[data-world] .podium {
-  --podium-band: clamp(44px, 10vw, 84px);
-  position: relative;
-  isolation: isolate;
-  padding-bottom: calc(18px + var(--podium-band));
-}
-[data-world] .podium::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background: var(--brand);
-  opacity: .36;
-  mask-image: var(--world-victory-band), var(--world-victory-2-band);
-  /* The art tiles across any width, which is what each band SVG's matching
-     start and end ground line is for (slot 7's comment). Sized by HEIGHT so the
-     width follows the art's own ratio — a per-world ratio that a width-and-cap
-     pair, as slot 5 uses, would have to restate correctly six times. */
-  mask-size: auto var(--podium-band);
-  mask-repeat: repeat-x;
-  mask-position: center bottom;
-}
-
-/* The design screen's preview card and the home tile carry data-world THEMSELVES
-   (views-round-detail.js, views-home.js): the world's backdrop across the box
-   and, on the preview, its frame around the accent bar — both in the BOX's
-   accent (its inline --brand), so the preview is the world it names, not the
-   round it sits in, and a home tile is recognisable from the lobby. The tile
-   sits on white, where --ink-soft keeps 4.9:1 on the motif's densest pixel.
-   --brand rather than --brand-strong for the bar frame: the derived tokens are
-   resolved once at :root from the ROUND's accent and inherit as values, so
-   inside the card only the raw token is the card's own. */
-:is(.theme-card, .round-card)[data-world] { position: relative; overflow: hidden; isolation: isolate; }
-:is(.theme-card, .round-card)[data-world]::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background: var(--brand);
-  /* One declaration, overridden by the host rather than by a second rule at the
-     same specificity — where source order, not the author, would decide
-     (test/css-specificity.test.js). The poster card below carries the crown as
-     well as this backdrop, so the swatch alpha under both stacks into mud.
-
-     THE FALLBACK IS THE HOME ROUND TILE, and only that (#1138). Every world
-     card in the picker is a poster — views-round-settings.js sets posters:true
-     for the WELTEN group, which IS the world registry — so .theme-card--world
-     overrides this on all seven, and the value here is reached exclusively by
-     .round-card[data-world] on home. That is why it does NOT derive from
-     --world-backdrop-alpha the way the poster below does: the tile sits on the
-     UNTHEMED lobby's --surface in the visitor's own scheme, so the dark-page
-     flare argument behind the per-world alphas simply does not apply to it,
-     and the text over it is --ink-soft body type rather than a display-size
-     accent name. And the lobby is never dark: #904's dark block is scoped to
-     :root and .theme-card, deliberately, so that a dark round's tile does not
-     turn dark ("one dark tile in a light lobby would read as a patchwork",
-     views-home.js). So there is ONE ground — the standard light --surface —
-     and the bar on it caps this at .150 (Chess); .14 for the margin, the same
-     value and the same reasoning as the dock's motif. It shipped at .16 until
-     #1138, i.e. at 4.44:1 on Chess: under the bar, on a light world rather
-     than one of the dark ones this issue was about.
-     test/a11y-contrast.test.js measures every world on that ground, and pins
-     the not-dark premise rather than assuming it. */
-  opacity: var(--motif-a, .14);
-  mask-image: var(--world-backdrop);
-  mask-size: var(--world-backdrop-size);
-  mask-repeat: repeat;
-}
-
-/* #1085 — the WELTEN group is a POSTER. The picker is the one screen whose
-   whole job is choosing a world, and the swatch showed the seven at their most
-   alike: one 152x106 box each, the same backdrop alpha, the art nowhere.
-
-   The crown strip is slot 8's scene and slot 8's per-world anchor, not a second
-   copy: a world that retunes its stage retunes its card with it, and the card
-   is judged as the crown the round will actually wear. The card carries
-   data-world ITSELF (see above), so --world-stage and --world-crown-y resolve
-   to the world it names rather than to the round the picker sits in. The strip
-   is text-free by geometry, which is what buys the bolder .42 — the name sits
-   below it, on the page, at the tone it had as a swatch. */
-.theme-cards--worlds { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
-.theme-card--world {
-  /* Derived (#1138), so the poster PREDICTS the page: a world whose backdrop
-     was retuned shows that retune in the card it is chosen from, instead of
-     being picked off a card where the motif reads and landing on a page where
-     it does not. x1.1 lands the four light worlds at .099 — a hair off the .10
-     measured for this card. The card carries the crown as well, which is why
-     it is x1.1 and not the bolder ratio the backdrop itself could take.
-
-     The bar here is neither ink: it is .theme-card__name, painted in the
-     design's OWN accent (views-round-settings.js writes it inline), so the
-     name CLOSES on the wash as alpha rises. At --text-xl/700 that is large
-     text, 3:1, and the measured maxima run .400 (ocean) to .610 (chess).
-     The .30 cap is MARGIN, not the bar: it binds only burg (x1.1 would give
-     it .33) and buys 4.06:1 where the uncapped value still passes at 3.79:1.
-     Keeping it means the derivation cannot walk a retuned world up to its
-     ceiling unnoticed. */
-  --motif-a: min(calc(var(--world-backdrop-alpha) * 1.1), .30);
-  padding: 0;
-  gap: 0;
-  align-items: stretch;
-}
-.theme-card__crown {
-  height: 84px;
-  background: var(--brand);
-  opacity: .42;
-  mask-image: var(--world-stage);
-  mask-position: center var(--world-crown-y);
-  mask-size: 100% auto;
-  mask-repeat: no-repeat;
-}
-.theme-card__body {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 9px;
-  padding: 12px 14px 14px;
-}
-.theme-card--world .theme-card__name { font-size: var(--text-xl); margin-top: 0; }
-
-/* ---- #1082: the round WEARS its world ----------------------------------
-   Measured 2026-09-13 over the seeded demo at 1470x870: besides the .09
-   backdrop a world painted 3 marks on the hub, 4 on Chronik and Pokale, 12 on
-   the Regal — while the three BOLD slots (.36/.40/.55) sit on an empty list,
-   the finale stage and the winners' group, i.e. a young round's screen and two
-   once-per-session moments. On a phone the dock at y 761 — the one element on
-   screen every second — carried nothing. A world was loud where nobody is and
-   a whisper where everybody lives.
-
-   Every addition below is a pseudo-element painting an existing token into a
-   TEXT-FREE band, or at an alpha a text surface already clears, so the contrast
-   budget is untouched. No new artwork: the crown re-uses --world-stage. */
-
-/* Slot 8 — DIE KRONE. The stage art as a text-free strip above the round's
-   name, on the two surfaces a round is actually looked at on.
-
-   The reservation and the art are sized through ONE custom property
-   (--crown-h) on purpose: slot 5's discipline. Two numbers that must agree
-   drift, and the failure is silent — the strip either clips the art or leaves a
-   gap above the name, with nothing to fail. */
-[data-world] .hero {
-  --crown-h: clamp(56px, 16vw, 96px);
-  position: relative;
-  padding-top: calc(var(--crown-h) + 12px);
-}
-[data-world] .hero::before,
-[data-world] .rail__id::before {
-  content: '';
-  position: absolute;
-  inset: 0 0 auto;
-  height: var(--crown-h);
-  pointer-events: none;
-  background: var(--brand);
-  opacity: .36;
-  mask-image: var(--world-stage);
-  /* The anchor is per world: a canopy, waves and webs hang from the TOP of the
-     art, while a skyline, a rank and a horizon stand on its BOTTOM. Cropping a
-     600x140 scene to a 56–96px strip therefore has to keep a different edge
-     per world, which is what --world-crown-y carries. */
-  mask-position: center var(--world-crown-y);
-  mask-size: 100% auto;
-  mask-repeat: no-repeat;
-}
-/* The rail's crown is gated on HEIGHT as well as width (operator decision): the
-   rail already measures 746px tall under the demo banner and its last group
-   sits at y 860–899, so at 1280x800 a 48px crown would push it 7–20px past the
-   fold. The hero's crown is unconditional because the hub scrolls. */
-@media (min-width: 1280px) and (min-height: 860px) {
-  [data-world] .rail__id {
-    --crown-h: 48px;
-    position: relative;
-    padding-top: calc(var(--crown-h) + 8px);
-  }
-  [data-world] .rail__id::before { mask-size: 260px auto; }
-}
-
-/* B2 — the dock and the tab strip. One element in both forms
-   (.claude/rules/responsive-hub-tabs.md): a fixed pill below 860px, an in-flow
-   strip at 860–1279. It gets the home tile's treatment above — the same shape,
-   a small surface carrying the motif behind its own labels. `isolation:
-   isolate` keeps the z-index: -1 layer inside the pill instead of behind the
-   page.
-
-   BUT NOT THE TILE'S .16, and the difference is exactly what #1082 said to
-   measure rather than assume. The home tile's comment says it "sits on white,
-   where --ink-soft keeps 4.9:1" — true of the LOBBY, which is never themed. The
-   dock lives inside the round and inherits the WORLD's --surface, and there .16
-   measures 4.44:1 on Chess: under the AA bar, on a light world rather than one
-   of the dark ones the issue expected to bind.
-
-     .16 -> 4.44:1 (Chess)   fails AA
-     .15 -> 4.53:1           passes by 0.03, i.e. inside rounding noise
-     .14 -> 4.61:1           ships
-
-   .14 rather than the bare ceiling, for the margin: 0.03 is not a budget.
-   test/a11y-contrast.test.js re-derives this from the opacity below. */
-[data-world] .dock { overflow: hidden; isolation: isolate; }
-[data-world] .dock::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background: var(--brand);
-  opacity: .14;
-  mask-image: var(--world-backdrop);
-  mask-size: var(--world-backdrop-size);
-  mask-repeat: repeat;
-}
-
-/* B3 — the round's name in the top bar, in the world's face. The wordmark
-   stays Baloo: the brand names the product, the context names this round.
-   Mind .claude/rules/hangul-locale-typography.md — a world face carries no
-   Hangul and falls back per glyph, the same trade the round name already makes
-   on the hub. */
-[data-world] .topbar__context { font-family: var(--font-display); }
-
-/* B4 — a coverless game tile shows the world's corner motif instead of the
-   app's tornado. `currentColor` is the placeholder's OWN glyph ink — set on
-   .cover-ph, including its @supports oklch branch — so the motif keeps exactly
-   the tone the tornado had rather than introducing one.
-   (.claude/rules/cover-ph-owns-the-coverless-game-glyph.md.) The recap card
-   draws its own placeholder in canvas; that one is untouched. */
-[data-world] .cover-ph .ti { display: none; }
-[data-world] .cover-ph::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: currentColor;
-  opacity: .72;
-  mask-image: var(--world-corner);
-  mask-size: 44%;
-  mask-position: center;
-  mask-repeat: no-repeat;
-}
-
-.theme-card[data-world] .theme-card__bar { position: relative; }
-.theme-card[data-world] .theme-card__bar::before,
-.theme-card[data-world] .theme-card__bar::after {
-  content: '';
-  position: absolute;
-  width: 30px;
-  height: 19px;
-  pointer-events: none;
-  background: var(--brand);
-  mask-image: var(--world-frame);
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: left top;
-}
-.theme-card[data-world] .theme-card__bar::before { top: -8px; left: -9px; }
-.theme-card[data-world] .theme-card__bar::after { bottom: -8px; right: -9px; transform: rotate(180deg); }
-
-/* Slot 10 — DER KESSEL. The session-setup pot gets the world's vessel painted
-   behind the covers (#1086): a stump for Forest, a cauldron for Horror, a chest
-   for Burg, and a teleporter pad, an open clam, an open chess box and a nest of
-   eggs for the rest. This is the screen the whole table is gathered around when
-   „Loswirbeln" is pressed, and the only world mark it carried was the backdrop.
-
-   TWO HOSTS, because the pool is rendered twice and CSS picks one by width
-   (views-session.js): the `.setup-panel` from 860px up, the `.pool-hint` strip
-   inside the filter bar below it. The issue proposed `.pool-shelf`, and
-   measuring ruled it out on both counts. At 1470 the shelf is not rendered at
-   all — `.setup-grid .pool-hint { display: none }` — so the widest presentation,
-   the one a group actually gathers around, would have got nothing. And below
-   860 the shelf is a horizontal scroller, so an absolutely-positioned layer
-   inside it SCROLLS AWAY WITH THE COVERS: measured on the demo at 390px, a
-   probe pinned to the shelf's bottom moved from x 46 to x -164 on a 210px
-   flick, and `overflow-y` computes to `auto`, so anything taller than the
-   padding box is clipped as well. Each host below is `display: none` at the
-   other's widths, so the two rules never both paint.
-
-   The panel RESERVES its band, slot 9's discipline — its tiles carry titles, so
-   unreserved art would sit under them, and an unreserved layer faint enough to
-   be safe there is not worth painting: composited on --surface, --ink-soft holds
-   AA only to alpha .12 (measured over all seven worlds; .16 gives Chess
-   4.44:1). Reserved, the band takes slot 7's bold .55 instead.
-
-   It is paid for out of the pool's own scroll height where that is possible:
-   `--pot-band` is subtracted in `.setup-panel__body`'s `max-height` above, so a
-   pool long enough to be clipped gives the band back and the panel's total
-   height does not move — measured at 1470x870 with 32 tiles, the panel stays
-   454px for every band from 0 to 56. That coupling is also what makes the
-   prefers-contrast branch one declaration: `--pot-band: 0px` undoes the padding
-   and the subtraction together.
-
-   It is NOT free on a short pool, and the 84px cap is that measurement rather
-   than a round number. Below the `max(300px, …)` floor — any viewport under
-   ~800px tall — the subtraction cannot bite at all, so the band is simply added
-   height, and what the screen has to protect is the „Loswirbeln" button, not the
-   document height (this page scrolls past its footer at 1280x800 today, at any
-   band). Measured at 1280x800 on an 8-game pool: the CTA's bottom sits at 686
-   with no band, 770 at 84 and 802 at 116 — i.e. 116 puts the button the whole
-   layout exists to keep reachable below an 800px fold, and 84 leaves 30px.
-
-   The strip reserves NOTHING, because it cannot. Measured at 390x844 the setup
-   screen fills the viewport to the pixel (app 732 + footer 112 = 844, no slack
-   — .claude/rules/setup-screens-two-column-layout.md §5 measured the same), so
-   a band there would buy art with a scrollbar on the one screen whose height is
-   already spent. It is text-free by GEOMETRY instead: the count group is the
-   row's only text and is a left-aligned flex item, measured ending at x 22 of
-   256 at 390px and at x 91 of 622 at 768px, while the art is right-anchored and
-   painted only as wide as its own 5:3 ratio at the row's height — 127px, so it
-   starts at x 129 and x 495. The `min(220px, 60%)` box is a floor for that art,
-   never a position: its own left edge (x 102 at 390px) already clears the text,
-   so a locale with a longer caption cannot walk into it. */
-[data-world] .setup-panel {
-  --pot-band: clamp(52px, 8vw, 84px);
-  position: relative;
-  isolation: isolate;
-  padding-bottom: calc(16px + var(--pot-band));
-}
-[data-world] .setup-panel::after {
-  content: '';
-  position: absolute;
-  inset: auto 0 0;
-  height: var(--pot-band);
-  z-index: -1;
-  pointer-events: none;
-  background: var(--brand);
-  /* The victory scene's alpha (slot 7). Bold, and affordable because the band
-     is text-free — by reservation here, by geometry on the strip below. */
-  opacity: .55;
-  mask-image: var(--world-vessel);
-  /* Sized by HEIGHT so the art keeps its own ratio, and so the reservation and
-     the mask are the one number (slot 9's comment). */
-  mask-size: auto 100%;
-  mask-repeat: no-repeat;
-  mask-position: center bottom;
-}
-[data-world] .setup-filterbar .pool-hint { position: relative; isolation: isolate; }
-[data-world] .setup-filterbar .pool-hint::after {
-  content: '';
-  position: absolute;
-  inset: 0 0 0 auto;
-  width: min(220px, 60%);
-  z-index: -1;
-  pointer-events: none;
-  background: var(--brand);
-  opacity: .55;
-  mask-image: var(--world-vessel);
-  mask-size: auto 100%;
-  mask-repeat: no-repeat;
-  mask-position: right bottom;
-}
-
-/* Backdrop motifs are decoration under text; a reader who asked for more
-   contrast gets the plain page. The small marks (frame, rule, corner) stay,
-   and so do the particles — small and moving, like the confetti they replace. */
-@media (prefers-contrast: more) {
-  [data-world] body::before,
-  [data-world] .empty::before,
-  [data-world] .stage::before,
-  [data-world] .stage::after,
-  [data-world] .spotlight::before,
-  [data-world] .spotlight::after,
-  [data-world] .tafel-top::before,
-  [data-world] .tafel-top::after,
-  [data-world] .hero::before,
-  [data-world] .rail__id::before,
-  [data-world] .dock::before,
-  [data-world] .podium::before,
-  [data-world] .setup-panel::after,
-  [data-world] .setup-filterbar .pool-hint::after,
-  /* A flow element, so hiding it needs no reservation undone below: the poster
-     simply loses its strip and the name moves up. */
-  .theme-card__crown,
-  :is(.theme-card, .round-card)[data-world]::before { display: none; }
-  /* The crown's and the floor's reservations go with their art, or the name
-     sits under an empty 96px band and the pedestals stand on 84px of nothing.
-     The coverless tile gets its tornado back rather than nothing. */
-  [data-world] .hero, [data-world] .rail__id { padding-top: 0; }
-  [data-world] .podium { padding-bottom: 0; }
-  /* One declaration for the pot: the band is both the panel's padding and the
-     subtraction in its pool's max-height, so zeroing it undoes both. */
-  [data-world] .setup-panel { --pot-band: 0px; }
-  [data-world] .cover-ph::after { display: none; }
-  [data-world] .cover-ph .ti { display: block; }
-}

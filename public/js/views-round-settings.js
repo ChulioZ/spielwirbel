@@ -33,7 +33,7 @@ async function showRoundSettings(rid) {
   let round;
   try { round = await fetchRound(rid); }
   catch { return showHome(); }
-  applyBackground(round.background, round);
+  applyMarker(round);
   setContext(round.name);
   setDocTitle(t('rail.settings'), round.name);
 
@@ -137,7 +137,7 @@ async function showMarker(rid) {
   let round;
   try { round = await fetchRound(rid); }
   catch { return showHome(); }
-  applyBackground(round.background, round);
+  applyMarker(round);
   setContext(round.name);
   setDocTitle(t('round.marker'), round.name);
 
@@ -224,7 +224,7 @@ async function showTags(rid) {
   let round;
   try { round = await fetchRound(rid); }
   catch { return showHome(); }
-  applyBackground(round.background, round);
+  applyMarker(round);
   setContext(round.name);
   setDocTitle(t('tags.title'), round.name);
 

@@ -98,14 +98,10 @@ test('the paper strip re-points every ink its content reads', () => {
     'the title reads --brand-strong in styles.css, brass lifted toward white');
 });
 
-test('the felt stage stays out of a world round', () => {
+test('the podium stands on a felt stage (the world exemption went with the flip, #1202)', () => {
   const stage = RULES.filter(([sel]) => /\.podium$/.test(sel.trim()));
-  assert.ok(stage.length, 'the podium has no felt stage');
-  for (const [sel, body] of stage) {
-    if (!/background/.test(body) && !/padding/.test(body)) continue;
-    assert.match(sel, /:not\(\[data-world\]\)/,
-      `${sel.trim()} would paint felt under a world's floor art (#1083)`);
-  }
+  assert.ok(stage.some(([, body]) => /background/.test(body)), 'the podium has no felt stage');
+  for (const [sel] of stage) assert.doesNotMatch(sel, /data-world/, `${sel.trim()} still names a retired world`);
 });
 
 test('from 1280px the recap is a third column spanning every row', () => {

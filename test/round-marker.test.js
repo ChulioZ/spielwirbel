@@ -4,10 +4,9 @@
    per-round design, the render-time mapping from a retired design onto it, the
    route that stores it, and the picker that sets it.
 
-   The five specs that used to cover the DESIGN picker are gone from
-   test/round-worlds.test.js — that screen is this one now. What stayed there is
-   the rendering of a world a round already carries, which survives until the
-   flip (#1202). */
+   Since the flip (#1202) the retired designs — palettes and worlds — exist
+   only as the `background` a round stored back then, and the marker it maps
+   to is the whole of what they still decide. */
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
@@ -15,10 +14,10 @@ const request = require('supertest');
 const { app, createRound } = require('./helpers');
 const { loadApp } = require('./support/dom');
 const {
-  MARKER_COUNT, LEGACY_MARKER_INDEX, markerIndexFromId, isMarkerIndex, resolveMarker,
+  MARKER_COUNT, LEGACY_MARKER_INDEX, LEGACY_PAGE_DESIGN, legacyDesignId, markerIndexFromId, isMarkerIndex,
+  resolveMarker,
 } = require('../public/js/round-marker');
 const { DESIGN_REGISTRY, designMarkers, markerOf, markerInk, DEFAULT_MARKER_INK } = require('../public/js/designs');
-const { PALETTES, WORLDS, DESIGNS } = require('../public/js/round-designs');
 
 const HEX = /^#[0-9a-f]{6}$/;
 const flush = () => new Promise((r) => setImmediate(r));
@@ -43,21 +42,18 @@ test('every design declares exactly eight markers, each a colour, a deep stop an
   }
 });
 
-/* The drift guard this file exists for. Klassisch's eight ARE the eight light
-   palettes' accents, and the two registries are separate files until the flip
-   (#1202) deletes round-designs.js — so a second #145-style accent correction
-   that moved one and not the other would leave the lobby tile painting a colour
-   the round no longer has. That is exactly the silent half of
-   .claude/rules/shared-constants-across-the-stack.md, and this is the parity
-   test that licenses the copy. Delete it WITH the palettes, not before. */
-test('Klassisch’s markers are the eight light palettes’ accents, in order', () => {
-  const light = PALETTES.filter((p) => p.scheme !== 'dark');
-  assert.equal(light.length, MARKER_COUNT, 'the eight light palettes are what the marker set was taken from');
-  assert.deepEqual(
-    designMarkers('klassisch').map((m) => [m.key, m.color]),
-    light.map((p) => [p.id, p.accent]),
-  );
-  // Obsidian is the dark palette and is deliberately NOT one of the eight.
+/* Klassisch's eight ARE the eight retired light palettes' accents, after #145's
+   contrast correction, in the palettes' own order — which is what makes a
+   round that wore Salbei before the flip (#1202) still read as the same sage
+   under Klassisch. The palettes' source was deleted with the flip, so the
+   values are pinned here as the historical record they now are: moving one
+   re-colours every legacy round that maps onto it. */
+test('Klassisch’s markers are the eight retired light palettes’ accents, in order', () => {
+  assert.deepEqual(designMarkers('klassisch').map((m) => [m.key, m.color]), [
+    ['standard', '#c2410c'], ['blaugrau', '#3a67b1'], ['salbei', '#397a4b'], ['rose', '#b23a72'],
+    ['lavendel', '#6d55c4'], ['sand', '#91641a'], ['schiefer', '#33688f'], ['pfirsich', '#b34d2e'],
+  ]);
+  // Obsidian was the dark palette and is deliberately NOT one of the eight.
   assert.equal(designMarkers('klassisch').some((m) => m.key === 'obsidian'), false);
 });
 
@@ -93,11 +89,11 @@ test('markerIndexFromId is in range, stable, and does not collapse onto one colo
 
 test('a stored marker wins over everything, and only a valid one counts', () => {
   const bg = { type: 'theme', id: 'salbei' };
-  assert.equal(resolveMarker({ id: 'r1', marker: 5, background: bg }, { designId: 'salbei' }), 5);
+  assert.equal(resolveMarker({ id: 'r1', marker: 5, background: bg }), 5);
   // Anything that is not an integer 0-7 falls through to the legacy lookup, so a
   // hand-edited data file cannot put an unrenderable index on a round.
   for (const bad of [8, -1, 1.5, '3', null, undefined, NaN]) {
-    assert.equal(resolveMarker({ id: 'r1', marker: bad, background: bg }, { designId: 'salbei' }), 2,
+    assert.equal(resolveMarker({ id: 'r1', marker: bad, background: bg }), 2,
       `marker ${String(bad)} must not be accepted`);
   }
 });
@@ -113,15 +109,33 @@ test('every retired design resolves to its pinned marker index', () => {
     obsidian: 4, forest: 2, ocean: 1, scifi: 6,
     chess: 0, horror: 2, dinos: 2, burg: 7,
   };
-  assert.equal(Object.keys(expected).length, DESIGNS.length,
-    'a design was added or removed without deciding which marker it becomes');
-  for (const d of DESIGNS) {
-    assert.equal(typeof expected[d.id], 'number', `${d.id} has no pinned marker`);
-    assert.equal(
-      resolveMarker({ id: 'whatever', background: { type: 'theme', id: d.id } }, { designId: d.id }),
-      expected[d.id], `${d.id} resolves to the wrong marker`);
+  assert.equal(Object.keys(expected).length, 16, 'nine palettes and seven worlds were ever shipped');
+  for (const [id, index] of Object.entries(expected)) {
+    assert.equal(resolveMarker({ id: 'whatever', background: { type: 'theme', id } }), index,
+      `${id} resolves to the wrong marker`);
   }
   assert.deepEqual(LEGACY_MARKER_INDEX, expected, 'the shipped table and the pinned one must agree');
+});
+
+/* A round saved before designs had ids (pre-#903) stored only a page hex, and
+   the resolver has to recognise it WITHOUT the deleted palette registry. Only
+   the eight light palettes existed then, so only their pages map. */
+test('a pre-#903 round (page hex, no id) maps through its palette', () => {
+  const pages = {
+    '#f4f1ea': 0, '#eef2f7': 1, '#eaf1ea': 2, '#f6ecf1': 3,
+    '#efedf8': 4, '#f6efe2': 5, '#e9eef3': 6, '#f8ede6': 7,
+  };
+  assert.deepEqual(Object.fromEntries(Object.entries(LEGACY_PAGE_DESIGN)
+    .map(([page, id]) => [page, LEGACY_MARKER_INDEX[id]])), pages);
+  for (const [page, index] of Object.entries(pages)) {
+    assert.equal(resolveMarker({ id: 'x', background: { type: 'theme', page, accent: '#000000' } }), index, page);
+    assert.equal(resolveMarker({ id: 'x', background: { type: 'theme', page: page.toUpperCase(), accent: '#000' } }),
+      index, `${page} upper-cased`);
+  }
+  // A world's page without an id was never a world: Forest's page hashes.
+  assert.equal(legacyDesignId({ type: 'theme', page: '#ecf1e4', accent: '#356427' }), null);
+  // An id wins over the page — a Forest round carries Forest's own page.
+  assert.equal(legacyDesignId({ type: 'theme', id: 'forest', page: '#ecf1e4' }), 'forest');
 });
 
 test('a round with no design, a collage or an unknown id falls back to its id’s marker', () => {
@@ -169,18 +183,14 @@ test('PATCH marker refuses anything that is not an index, and 404s an unknown ro
   assert.equal(missing.status, 404);
 });
 
-test('PATCH marker accepts the retired design body and maps it, but not an unknown design', async () => {
+test('PATCH marker no longer accepts the retired design body (#1202)', async () => {
+  // The transitional arm that mapped `{ type: 'theme', id }` onto a marker went
+  // with the flip: nothing in the app sends it, and an index is the one shape.
   const round = await createRound(request);
   const res = await request(app)
     .patch(`/api/rounds/${round.id}/marker`)
     .send({ type: 'theme', id: 'burg', page: '#171310', accent: '#e8825a' });
-  assert.equal(res.status, 200);
-  assert.deepEqual(res.body, { marker: LEGACY_MARKER_INDEX.burg });
-
-  const unknown = await request(app)
-    .patch(`/api/rounds/${round.id}/marker`)
-    .send({ type: 'theme', id: 'not-a-design' });
-  assert.equal(unknown.status, 400);
+  assert.equal(res.status, 400);
 });
 
 // ---- the frontend --------------------------------------------------------
@@ -271,48 +281,44 @@ test('the marker reaches the document root inside a round and is cleared outside
   assert.equal(root.hasAttribute('data-marked'), false, 'leaving a round must not leak its colour');
 });
 
-/* Operator decision 2026-09-22: until the flip, a round still on a WORLD renders
-   exactly as it does today on all four surfaces. Nineteen rounds deliberately
-   picked one, and swapping their emblem for "the nearest palette colour" would
-   be a visible downgrade shipped by an issue whose own scope says worlds stay. */
-test('a world round keeps its emblem and carries no marker; a palette round takes the marker', async (t) => {
-  const forest = WORLDS.find((w) => w.id === 'forest');
-  const dom = loadApp({ locale: 'de' });
-  t.after(() => dom.close());
-  dom.set('api', async () => [
-    { ...roundFixture({ id: 'a', background: { type: 'theme', id: forest.id, page: forest.page, accent: forest.accent } }) },
-    { ...roundFixture({ id: 'b', marker: 4 }) },
-  ]);
-  dom.set('accountsActive', () => false);
-  dom.set('isLoggedIn', () => false);
-  await dom.call('showHome');
-  const [world, plain] = [...dom.document.querySelectorAll('.round-card:not(.round-card--new)')];
+/* The flip's acceptance criterion (#1202): a round that wore a world shows its
+   MAPPED marker, in both designs — no world hook, no world accent, no world
+   emblem. Forest maps to index 2: Salbei under Klassisch, Burgunderfilz under
+   Der Tisch. */
+for (const design of ['klassisch', 'tisch']) {
+  test(`a round that wore Forest shows its mapped marker under ${design}`, async (t) => {
+    const dom = loadApp({ locale: 'de', design });
+    t.after(() => dom.close());
+    dom.set('api', async () => [
+      roundFixture({ id: 'a', marker: null, background: { type: 'theme', id: 'forest', page: '#ecf1e4', accent: '#356427' } }),
+    ]);
+    dom.set('accountsActive', () => false);
+    dom.set('isLoggedIn', () => false);
+    await dom.call('showHome');
+    const tile = dom.document.querySelector('.round-card:not(.round-card--new)');
+    const want = designMarkers(design)[LEGACY_MARKER_INDEX.forest];
+    assert.match(tile.getAttribute('style'), new RegExp(`--marker:${want.color}`));
+    assert.equal(tile.hasAttribute('data-world'), false, 'no world hook survives the flip');
+    assert.equal(/--brand/.test(tile.getAttribute('style')), false, 'the world accent is not written');
+    assert.equal(tile.querySelector('.round-card__emblem').style.background, 'var(--marker)');
+    assert.ok(tile.querySelector('.round-card__emblem .ti-tornado'), 'the app glyph, not a world icon');
+    assert.equal(dom.document.documentElement.dataset.world, undefined);
+  });
+}
 
-  assert.equal(world.dataset.world, 'forest');
-  assert.match(world.getAttribute('style'), new RegExp(`--brand:${forest.accent}`));
-  assert.equal(/--marker/.test(world.getAttribute('style')), false, 'a world round carries no marker');
-  // jsdom normalises an inline colour to rgb(), so compare what it parsed.
-  assert.equal(world.querySelector('.round-card__emblem').style.background, 'rgb(53, 100, 39)');
-
-  assert.equal(plain.hasAttribute('data-world'), false);
-  assert.match(plain.getAttribute('style'), new RegExp(`--marker:${designMarkers('klassisch')[4].color}`));
-  assert.equal(plain.querySelector('.round-card__emblem').style.background, 'var(--marker)');
-});
-
-test('a legacy palette round’s emblem colour is UNCHANGED by the switch', async (t) => {
-  const salbei = PALETTES.find((p) => p.id === 'salbei');
+test('a legacy palette round’s emblem colour is UNCHANGED under Klassisch', async (t) => {
   const dom = loadApp({ locale: 'de' });
   t.after(() => dom.close());
   // No stored marker: the round predates them, so the legacy lookup decides.
   dom.set('api', async () => [roundFixture({
     id: 'a', marker: null,
-    background: { type: 'theme', id: salbei.id, page: salbei.page, accent: salbei.accent },
+    background: { type: 'theme', id: 'salbei', page: '#eaf1ea', accent: '#397a4b' },
   })]);
   dom.set('accountsActive', () => false);
   dom.set('isLoggedIn', () => false);
   await dom.call('showHome');
   const card = dom.document.querySelector('.round-card:not(.round-card--new)');
   // The whole point of taking Klassisch's markers from the palette ACCENTS: the
-  // colour the tile paints is the one it painted before this change.
-  assert.match(card.getAttribute('style'), new RegExp(`--marker:${salbei.accent}`));
+  // colour the tile paints is the one Salbei painted before the flip.
+  assert.match(card.getAttribute('style'), /--marker:#397a4b/);
 });

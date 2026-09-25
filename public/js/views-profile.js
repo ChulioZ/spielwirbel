@@ -25,7 +25,7 @@ async function showProfile(username) {
   // the canonical spelling below, since the URL may differ in case.
   setContext(username);
   setDocTitle(username, t('profile.title'));
-  applyBackground(null);
+  applyMarker(null);
   app.innerHTML = '<p class="muted">…</p>';
 
   let p;
@@ -361,10 +361,8 @@ function renderAccountRecapSection(p) {
     // Built at CLICK time: the picker moves under this closure.
     btn.addEventListener('click', () => {
       const period = currentPeriod();
-      /* The card's world: an account has none yet — the plain brand palette is
-         what the profile paints (applyBackground(null)), so recapCardBlob draws
-         no motif. Die Profilwelt (#1133's line of work) is where a personal
-         card would get one; the `world` path in recap-card.js is untouched. */
+      /* The card paints in the design the profile wears (applyMarker(null):
+         no round, so no marker). */
       shareRecapCard(period, shareModel(period, accountRecap(plays, period, deps)), `spielwirbel-${period.key}-me.png`);
     });
     sec.querySelector('.precap__head').appendChild(btn);

@@ -1239,7 +1239,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
   // used to render that visit on the Standard design — no accent, no world,
   // and since #940 no victory scene on the spotlight a later visit is meant to
   // show. Idempotent, so the finale's path pays nothing for it.
-  applyBackground(round.background, round);
+  applyMarker(round);
   currentView = () => showResults(round, session, gamesHint, false, plain);
   syncUrl(resultsPath(round.id, session.id));
   setContext(round.name);

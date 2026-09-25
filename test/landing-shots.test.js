@@ -164,15 +164,15 @@ test('every supported locale has a complete screenshot set, in every design\u201
 });
 
 test('every design with a set is registered, and the FACE has one (#1199)', () => {
-  // The landing shows the face's app. The flip (#1202) moves FACE_DESIGN, and
+  // The landing shows the face's app — Der Tisch's since the flip (#1202) — and
   // landingShotSet() falls back to Klassisch's pictures for a design without a
-  // set — silently, on the most public page there is. So the face must own a set.
+  // set, silently, on the most public page there is. So the face must own a set.
   const sets = designTables();
   for (const design of Object.keys(sets)) {
     assert.ok(designById(design), `LANDING_SHOT_SETS names '${design}', which is not a registered design`);
   }
   assert.ok(sets[FACE_DESIGN], `the face (${FACE_DESIGN}) has no landing screenshot set`);
-  assert.equal(sets.klassisch, 'LANDING_SHOTS', 'Klassisch keeps the set production serves today');
+  assert.equal(sets.klassisch, 'LANDING_SHOTS', 'Klassisch keeps its own set, for an account that wears it');
   // Every set lives in its own folder, so two designs can never overwrite each
   // other's files — and Klassisch's stays exactly where it always was.
   for (const shot of allShots()) {
@@ -182,15 +182,18 @@ test('every design with a set is registered, and the FACE has one (#1199)', () =
 });
 
 test('the landing shows the worn design’s pictures, and the face’s by default', () => {
-  const dom = loadApp({ locale: 'fr' });
+  // Boot state untouched: a logged-out visitor wears the face.
+  const dom = loadApp({ locale: 'fr', design: null });
   try {
     const src = () => dom.run('landingShots().vote.src');
+    const tisch = declaredShots('LANDING_SHOTS_TISCH').fr.find((s) => s.name === 'vote').src;
+    assert.equal(FACE_DESIGN, 'tisch');
+    assert.equal(src(), tisch, 'a visitor wearing the face (Der Tisch since #1202) sees its pictures');
+    dom.call('applyDesign', 'klassisch');
     assert.equal(src(), declaredShots('LANDING_SHOTS').fr.find((s) => s.name === 'vote').src,
-      'a visitor wearing the face (Klassisch today) sees today’s pictures');
-    dom.call('applyDesign', 'tisch');
-    assert.equal(src(), declaredShots('LANDING_SHOTS_TISCH').fr.find((s) => s.name === 'vote').src);
+      'an account on Klassisch opening the landing sees Klassisch');
     dom.call('applyDesign', 'no-such-design');
-    assert.match(src(), /^\/img\/landing-vote\.fr\.webp$/, 'an unknown design falls back to the face');
+    assert.equal(src(), tisch, 'an unknown design falls back to the face');
   } finally { dom.close(); }
 });
 

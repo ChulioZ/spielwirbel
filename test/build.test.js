@@ -102,19 +102,20 @@ test('does not rename shared top-level identifiers (no minifyIdentifiers)', () =
      would break cross-file references. Spot-check BOTH SIDES of one, not just the
      declaring file: a minifier renaming consistently *within* a file would still
      break the app, and that is exactly the shape a single-file check cannot see.
-     #956 is why this is written per file — it moved `applyBackground` out of
-     core.js, and the old list had pinned the name to that file by hand. */
+     #956 is why this is written per file — it moved the theme block out of
+     core.js, and the old list had pinned a name to that file by hand. */
   const spot = {
-    // `repositionPopover` and `resolveAccent`/`STANDARD_ACCENT` are each listed on
+    // `repositionPopover` and `paintDesign`/`applyMarker` are each listed on
     // BOTH sides — declared in one file, called from another. That pair is the
     // actual invariant; a name checked only where it is declared would survive a
     // minifier that renamed it consistently within its own file.
     '/js/popover.js': ['openPopover', 'repositionPopover'],
     '/js/tag-chips.js': ['matchesTagFilter', 'repositionPopover'],
-    '/js/round-theme.js': ['applyBackground', 'avgColor', 'resolveAccent', 'STANDARD_ACCENT'],
+    '/js/round-theme.js': ['paintDesign', 'applyMarker', 'avgColor', 'STANDARD_ACCENT'],
     '/js/game-stats.js': ['gameStats', 'roundScoreIndex', 'displayScore'],
-    '/js/core.js': ['memberColor', 'resolveAccent', 'STANDARD_ACCENT'],
-    '/js/views-home.js': ['applyBackground'],
+    '/js/core.js': ['memberColor', 'isDarkScheme'],
+    '/js/design.js': ['applyDesign', 'paintDesign'],
+    '/js/views-home.js': ['applyMarker'],
   };
   for (const [src, names] of Object.entries(spot)) {
     const code = read(manifest[src]);

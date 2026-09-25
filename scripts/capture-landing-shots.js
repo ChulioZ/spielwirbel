@@ -50,8 +50,9 @@ const desktopShot = require('./landing-desktop-shot');
 /* WHICH DESIGN the app wears in the pictures (#1199): `--design=tisch` shoots
    Der Tisch's set into public/img/tisch/, the default shoots Klassisch's into
    public/img/ exactly as before. One set per design because the landing shows
-   the FACE's app (views-landing.js landingShots), and the face moves to Der
-   Tisch at the flip (#1202) — the Tisch set has to exist before then.
+   the WORN design's app (views-landing.js landingShots): Der Tisch's for every
+   logged-out visitor since the flip (#1202) made it the face, Klassisch's for
+   an account on Klassisch that opens the landing.
 
    The capture runs in open mode (no accounts), where the design is the
    DEVICE's choice (design.js storedDesign), so wearing one is a localStorage

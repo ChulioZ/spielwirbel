@@ -28,9 +28,10 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const { loadApp } = require('./support/dom');
-const { bodyOf, bodyOfIn, mediaBlocks, rulesOf, outranks, RULES } = require('./support/css');
+const { bodyOf, mediaBlocks, rulesOf, outranks, RULES } = require('./support/css');
 const { MEMBER_COLORS } = require('../public/js/member-colors');
-const { WORLDS } = require('../public/js/round-designs');
+const { LEGACY_MARKER_INDEX } = require('../public/js/round-marker');
+const { designMarkers } = require('../public/js/designs');
 
 // -------------------------------------------------------- the CSS contract
 
@@ -56,8 +57,8 @@ test('the row IS its own score bar — a fill whose width is the score', () => {
   assert.match(fill, /width:\s*var\(--pct/, 'the fill takes its width from the score, not from a literal');
   assert.match(fill, /z-index:\s*-1/, 'text reads over the fill, never under it');
   // The mix happens in CSS from a raw accent handed over inline — the `.stamp`
-  // mechanism (#1040). An inline `background` would beat every rule a design or
-  // a world could write.
+  // mechanism (#1040). An inline `background` would beat every rule a design
+  // could write.
   assert.match(fill, /color-mix\(in oklab, var\(--fill-tint\) var\(--fill-a\)/,
     'the tint must be mixed here, from the accent the view hands over');
 });
@@ -348,70 +349,53 @@ test('the race and the confetti fire on the reveal path only', async (t) => {
     `the winner's fill must finish LAST (${durs.join(' vs ')})`);
 });
 
-// --------------------------------------------- the world's scene (#940)
+// --------------------------------------------- the confetti and the design
 
-/* A world replaces the confetti with its own victory scene. The scene itself is
-   CSS — slot 7 under "Worlds" in styles.css, pinned by test/round-worlds.test.js
-   — and what is asserted HERE is the JS side of the contract: the generator is
-   world-agnostic, its per-bit randomness travels as custom properties a world
-   rule can read, and the screen applies the round's design itself. */
+/* The worlds' victory scenes went with the flip (#1202). What stays is the JS
+   side of the contract they established: the generator is design-agnostic, its
+   per-bit randomness travels as custom properties a design's stylesheet can
+   read, and the screen applies the round's own look (its marker) itself. */
 
-test('the confetti colours its bits through a custom property, so a world rule can recolour them', async (t) => {
+test('the confetti colours its bits through a custom property, so a design rule can recolour them', async (t) => {
   const dom = await show(t, session('s16', { g1: 5, g2: 3 }), true);
   const bits = [...dom.app.querySelectorAll('.confetti__bit')];
   assert.equal(bits.length, 16);
   for (const bit of bits) {
     assert.ok(MEMBER_COLORS.includes(bit.style.getPropertyValue('--bit-color')),
       'each bit carries its palette colour as --bit-color');
-    assert.equal(bit.style.background, '', 'an inline background would beat the world rule');
-    // The drift is set for EVERY bit — a palette simply ignores it — rather than
-    // branching on the world, which is the #903 principle: one hook, CSS decides.
+    assert.equal(bit.style.background, '', 'an inline background would beat a design rule');
     assert.match(bit.style.getPropertyValue('--bit-drift'), /^-?\d+px$/);
   }
 });
 
-test('the results screen carries no world name — the scene keys off the one hook, in CSS', () => {
+test('the results screen names no retired world, and still has exactly one particle generator', () => {
   const src = fs.readFileSync(path.join(__dirname, '..', 'public/js/views-session.js'), 'utf8');
-  for (const w of WORLDS) assert.doesNotMatch(src, new RegExp(w.id, 'i'), `views-session.js names the ${w.id} world`);
-  assert.doesNotMatch(src, /data-world|\bWORLDS\b|\bsetWorld\b/, 'the only world branch is CSS');
-  assert.equal([...src.matchAll(/confetti__bit/g)].length, 1, 'one particle generator, re-shaped by CSS — never a second one');
+  for (const id of Object.keys(LEGACY_MARKER_INDEX)) {
+    assert.doesNotMatch(src, new RegExp(`['"\`]${id}['"\`]`), `views-session.js names the retired '${id}' design`);
+  }
+  assert.doesNotMatch(src, /data-world|\bWORLDS\b|\bsetWorld\b/, 'no world branch survives the flip');
+  assert.equal([...src.matchAll(/confetti__bit/g)].length, 1, 'one particle generator — never a second one');
 });
 
-test('under a world the winner stays a working link, and the screen applies the round\'s design itself', async (t) => {
-  /* Both halves matter for the scene. The link: every ornament is a
-     pointer-events: none pseudo-element (round-worlds pins that), so the anchor
-     under it must still navigate. The design: showResults used to leave it to
-     the hub, so a shared or cold-loaded results URL rendered on the Standard
-     design — and the scene's end state, which a later visit is meant to show,
-     was simply absent there. */
-  const forest = WORLDS.find((w) => w.id === 'forest');
+test('the winner stays a working link, and the screen applies the round\'s marker itself', async (t) => {
+  /* showResults used to leave the round's look to the hub, so a shared or
+     cold-loaded results URL rendered without it (#940). Since the flip that look
+     is the marker — here resolved from a round that wore Forest and never
+     picked one. */
   const s = session('s17', { g1: 5, g2: 3 });
-  const r = round({ sessions: [s], background: { type: 'theme', id: forest.id, page: forest.page, accent: forest.accent } });
+  const r = round({ sessions: [s], background: { type: 'theme', id: 'forest', page: '#ecf1e4', accent: '#356427' } });
   const dom = bootApp(t, r);
   const opened = [];
   dom.set('showGameDetail', (rid, gid) => { opened.push([rid, gid]); });
   await dom.call('showResults', r, s, r.games, true);
 
-  assert.equal(dom.document.documentElement.dataset.world, 'forest', 'the results screen must dress the round');
+  const root = dom.document.documentElement;
+  assert.equal(root.style.getPropertyValue('--marker'), designMarkers('klassisch')[LEGACY_MARKER_INDEX.forest].color,
+    'the results screen must carry the round\'s marker');
+  assert.equal(root.dataset.world, undefined);
   const top = dom.app.querySelector('.tafel-top');
   assert.ok(top.classList.contains('is-reveal'));
-  assert.equal(top.querySelectorAll('.confetti__bit').length, 16, 'the same bits — a world re-shapes them in CSS');
+  assert.equal(top.querySelectorAll('.confetti__bit').length, 16);
   top.querySelector('.trow__title').click();
   assert.deepEqual(JSON.parse(JSON.stringify(opened)), [[RID, 'g1']], 'the winner link must open the game');
-});
-
-test('the victory scene hosts BOTH cards, with tighter gutters on the full-width one', () => {
-  const host = bodyOfIn('[data-world] .tafel-top');
-  assert.ok(host, 'the gold group is not a host for the world victory scene');
-  const own = bodyOf('[data-world] .tafel-top');
-  assert.ok(own, 'the group needs a reservation of its own — it holds full-width rows, not two small covers');
-  const col = /--victory-col:\s*min\(\s*(\d+)%\s*,\s*(\d+)px\s*\)/.exec(own);
-  const shared = /--victory-col:\s*min\(\s*(\d+)%\s*,\s*(\d+)px\s*\)/.exec(host);
-  assert.ok(col, 'the tighter gutter is not declared as a capped percentage');
-  assert.ok(Number(col[1]) < Number(shared[1]),
-    `${col[1]}% per side is not tighter than the spotlight's ${shared[1]}%`);
-  // At 560px of content the rows must keep >= 400px, or the mini chart goes
-  // before the scene has earned its place.
-  assert.ok(560 * (1 - 2 * Number(col[1]) / 100) >= 400,
-    `at 560px the gutters leave ${(560 * (1 - 2 * Number(col[1]) / 100)).toFixed(0)}px for the rows`);
 });

@@ -193,7 +193,7 @@ async function showShelfProfile(rid) {
   let round;
   try { round = await fetchRound(rid); }
   catch { return showHome(); }
-  applyBackground(round.background, round);
+  applyMarker(round);
   setContext(round.name);
   setDocTitle(t('shelfProfile.title'), round.name);
 
