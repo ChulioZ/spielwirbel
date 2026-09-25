@@ -3536,3 +3536,590 @@
 :root[data-design="ocean"] .konto-design__note .ti { flex: none; font-size: 21px; }
 :root[data-design="ocean"]:not([data-scheme="dark"]) .konto-design__note { background: var(--wave-paper); }
 :root[data-design="ocean"]:not([data-scheme="dark"]) .konto-design__note .ti { color: var(--brand); }
+
+/* ===== #1218 — Chronik, Pokale, Mitglied, Nicht im Regal ===== */
+/* Source: docs/design/ocean/Ocean-O13-Tier2a.dc.html (O13.1 Chronik, O13.2
+   Pokale, O13.3 Nicht im Regal, O13.4 Mitglied, O13.5 Chronik am Telefon).
+   O13.6 names the two patterns this section lays down for every later sheet:
+   the MONTH HEADING WITH A HAIRLINE for long lists, and the NUMBER TILE (a big
+   display-face figure over a small label) for everything counted.
+
+   Markup: views-chronik.js (`.session-card--row`, the month count, the recap's
+   `.stat-chip--tile`), views-pokale.js (`.pokale-bars`), views-member.js (the
+   Tisch branches Ocean shares) and off-shelf.js (`data-sub`). Klassisch renders
+   none of it.
+
+   NOT built from the sheet, because each is a feature or data the app does not
+   have (the #1196 precedent, where the operator dropped the same kind of item
+   from Der Tisch's sheet): the Chronik's year picker, „Alle Spiele" filter,
+   „Sessions pro Monat" chart, „Alle N ansehen" link and the Aussortiert info
+   note; the Pokale's „Gesamt" picker, „Teilen", the share of sessions beside
+   each bar and the „kleine Auszeichnungen" line; the member's „Führt mit N
+   Siegen", „Farbe ändern" button and rating distribution; and the merged
+   off-shelf screen with the recommendations as a side column.
+
+   Every rule is GATED on the light scheme, layout included: nearly all of them
+   read a token only the gated colour block declares (--wave-paper, --line-soft,
+   --cast*, --gold-edge), and a rule reading an undeclared token is gated as hard
+   as the token (.claude/rules/design-colour-blocks-are-scheme-gated.md). Ocean
+   is never dark since the flip, so the gate costs nothing. */
+
+/* --- The page titles: „Die Chronik", „Die Pokale" (O13.1, O13.2) --------
+   The app sets every section heading as the small uppercase label, and the
+   component layer above keeps that label in Figtree („Kicker"). These two
+   pages lead with a real title in the display face, so their h1 — and the
+   recap card's h2 — step out of it. Scoped by what the section HOLDS, so no
+   other screen's heading moves. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .section:has(> .timeline, > .pokale-bars, > .pokale-young, > .podium) > .section-head h1,
+:root[data-design="ocean"]:not([data-scheme="dark"]) .precap .section-head h2 {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.1;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--ink);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .precap .section-head h2 { font-size: var(--text-xl); }
+
+/* --- The Chronik: rows under month headings (O13.1, O13.5) --------------- */
+/* No rail and no dots: the month heading with its hairline is the timeline's
+   only structure (O13.6). */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .timeline { padding-left: 0; gap: 10px; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .timeline::before,
+:root[data-design="ocean"]:not([data-scheme="dark"]) .timeline .tl-dot { display: none; }
+
+:root[data-design="ocean"]:not([data-scheme="dark"]) .tl-month {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 12px 0 0;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .tl-month:first-child { margin-top: 0; }
+/* The display face at 22px — above O1's 17px floor for Comfortaa. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .tl-month__name {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  color: var(--ink);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .tl-month::after {
+  content: '';
+  flex: 1;
+  order: 1;
+  height: 1px;
+  background: var(--line);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .tl-month__count {
+  order: 2;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+/* The session row. Grid rather than the card's flex, so the winner slot and the
+   pill line up down the month whatever the title's length. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .session-card--row {
+  display: grid;
+  grid-template-columns: 66px minmax(0, 1fr) minmax(0, 190px) auto 20px;
+  align-items: center;
+  gap: 14px;
+  min-height: var(--target-button);
+  padding: 8px 14px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+  color: var(--ink);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .session-card--row:hover { transform: none; box-shadow: var(--shadow-2); }
+/* The fixed 4:3 cover box (O1 „fester 4:3-Coverkasten"). */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .session-card--row .session-card__img {
+  width: 66px;
+  height: auto;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--radius-sm);
+  box-shadow: 0 4px 8px var(--cast-deep);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .session-card--row .session-card__title {
+  display: block;
+  font-size: var(--text-md);
+  line-height: 1.25;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .session-card--row .session-card__meta {
+  margin-top: 2px;
+  font-weight: 600;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .session-card__who {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .session-card__won { min-width: 0; overflow-wrap: anywhere; }
+/* The winner's ring with the crown over it. The ring itself is the component
+   layer's (.avatar above: person colour as a ring, never behind the initials). */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .session-card__crowned {
+  position: relative;
+  flex: none;
+  display: inline-flex;
+  margin-top: 10px;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .session-card__crowned .avatar { width: 36px; height: 36px; border-width: 4px; font-size: 12px; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .session-card__crowned .ti-crown {
+  position: absolute;
+  top: -16px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-8deg);
+  font-size: 18px;
+  color: var(--gold-deep);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .session-card__cancelled { color: var(--danger); }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .session-card--row > .score-pill {
+  position: static;
+  justify-self: end;
+  min-width: 46px;
+  text-align: center;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .session-card__chev { justify-self: end; font-size: 18px; color: var(--brand); }
+/* A split evening's tables stay nested under their row, without the rail. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .timeline .tl-nest { margin: 8px 0 0 28px; display: grid; gap: 8px; }
+
+/* The phone row (O13.5): cover · title over date · pill, the winner as a third
+   short line and its ring folded away — O13.5 draws „… hat gewonnen" in the
+   meta and no face. 700px: below it the 190px winner column squeezes the title
+   to a few characters. */
+@media (max-width: 700px) {
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .session-card--row {
+    grid-template-columns: 56px minmax(0, 1fr) auto;
+    grid-template-areas: "img body pill" "img who pill";
+    column-gap: 11px;
+    row-gap: 1px;
+    padding: 10px 13px;
+  }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .session-card--row .session-card__img { grid-area: img; width: 56px; }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .session-card--row .session-card__body { grid-area: body; }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .session-card--row .session-card__who { grid-area: who; font-size: var(--text-xs); }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .session-card--row > .score-pill { grid-area: pill; }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .session-card__crowned,
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .session-card__chev { display: none; }
+  /* Month headings stick under the top bar while their sessions scroll (O13.5).
+     The top bar is sticky at 0 (styles.css), so the heading sits below it; the
+     page colour behind the heading keeps a row from showing through. */
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .tl-month {
+    position: sticky;
+    top: var(--ocean-topbar-h, 66px);
+    z-index: 1;
+    padding: 6px 0;
+    background: var(--page-bg);
+  }
+}
+
+/* Shelf changes recede (the #1271 fold, shared): a quiet line, the run behind
+   one dashed disclosure. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .timeline .tl-act,
+:root[data-design="ocean"]:not([data-scheme="dark"]) .timeline .tl-act.tl-act--milestone,
+:root[data-design="ocean"]:not([data-scheme="dark"]) .timeline .tl-act.tl-act--add {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .tl-run__toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: var(--target-control);
+  padding: 6px 14px;
+  border: 1px dashed var(--control-edge);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .tl-run__label { flex: 1; min-width: 0; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .tl-run__toggle[aria-expanded="true"] .tl-run__chev { transform: rotate(180deg); }
+/* :not([hidden]) — a display rule would otherwise beat the attribute that keeps
+   the run folded (.claude/rules/hidden-attribute-vs-display-rule.md). */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .tl-run__list:not([hidden]) {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+/* The page's span beside its title — „23 Sessions seit Mai 2025" — on the
+   Chronik and the Pokale alike (O13.1/O13.2). */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .section-head .chronik__count {
+  margin-right: auto;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  letter-spacing: .04em;
+  color: var(--ink-soft);
+}
+
+/* --- The period recap: a card of number tiles (O13.1 right, O13.5 top) ---- */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .precap {
+  padding: 20px 22px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .precap .recap__lead { margin: -4px 0 12px; font-size: var(--text-sm); }
+/* The number tile. A stat-chip in the markup, so the recap keeps one builder. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .precap .recap__totals { gap: 14px 22px; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .stat-chip.stat-chip--tile {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+  padding: 0;
+  border-radius: 0;
+  background: none;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .stat-chip__n {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .stat-chip__label { font-size: var(--text-xs); font-weight: 600; color: var(--ink-soft); }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .precap .pokale-cards { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+/* The picker and „Teilen" share one line, as O13.1's head does. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .precap .precap__picker { flex: 1 1 0; }
+/* A phone gets O13.5's compact card: the lead sentence steps out (the title
+   and the picker already say what the card is), so the figures sit near the
+   top of the Chronik rather than a screen below it. */
+@media (max-width: 560px) {
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .precap { padding: 14px 16px; }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .precap .recap__lead { display: none; }
+}
+
+/* Desktop (O13.1): the recap moves BESIDE the timeline as a 400px column, the
+   way Der Tisch does it (tisch.css #1196) — only on a screen that HAS a recap,
+   so every other round screen keeps its two tracks. The recap is first in the
+   DOM, so the reading order (recap, then history) is the phone's too. The
+   tiles become O13.1's list: figure left, label right, a hairline between. */
+@media (min-width: 1280px) {
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .app:has(> .precap) {
+    grid-template-columns: var(--rail-w) minmax(0, 1fr) 400px;
+  }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .app:has(> .precap) > .precap {
+    grid-column: 3;
+    grid-row: 1 / span 999;
+    align-self: start;
+  }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .precap .recap__totals { flex-direction: column; gap: 0; }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .stat-chip.stat-chip--tile {
+    flex-direction: row;
+    align-items: baseline;
+    gap: 12px;
+    padding: 5px 0;
+    border-top: 1px solid var(--line-soft);
+  }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .stat-chip.stat-chip--tile .stat-chip__n { min-width: 58px; }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .stat-chip.stat-chip--tile .stat-chip__label { font-size: var(--text-sm); }
+}
+
+/* --- The Pokale: a bar per person (O13.2) -------------------------------- */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .pokale-bars {
+  list-style: none;
+  margin: 8px 0 22px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .pokale-bars__link {
+  display: grid;
+  grid-template-columns: 66px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 20px;
+  padding: 16px 22px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+  color: var(--ink);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .pokale-bars__link:hover { box-shadow: var(--shadow-2); }
+/* The leader's row is washed in the sun (O13.2 paints the first row #f2e394).
+   --ink on --gold is the score ramp's own top pair. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .pokale-bars__row.is-lead .pokale-bars__link {
+  background: var(--gold);
+  border-color: var(--gold-edge);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .pokale-bars__face { position: relative; display: inline-flex; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .pokale-bars__face .avatar {
+  width: 66px;
+  height: 66px;
+  border-width: 6px;
+  font-size: 20px;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .pokale-bars__face .ti-crown {
+  position: absolute;
+  top: -28px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-8deg);
+  font-size: 30px;
+  color: var(--gold-deep);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .pokale-bars__body { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .pokale-bars__name {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+/* The bar: person colour as a FILL (ocean.css header, rule 2), on the
+   Vertiefung. Its length is the claim; the count beside it states it in text. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .pokale-bars__track {
+  display: block;
+  height: 16px;
+  border-radius: var(--radius-pill);
+  background: var(--sunken-soft);
+  overflow: hidden;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .pokale-bars__fill {
+  display: block;
+  width: var(--w);
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--bar);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .pokale-bars__count {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  min-width: 64px;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .pokale-bars__n {
+  font-family: var(--font-display);
+  font-size: 34px; /* the one figure the screen exists for */
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .pokale-bars__word { font-size: var(--text-sm); font-weight: 600; color: var(--ink-soft); }
+@media (max-width: 560px) {
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .pokale-bars__link { grid-template-columns: 48px minmax(0, 1fr) auto; gap: 14px; padding: 14px 16px; }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .pokale-bars__face .avatar { width: 48px; height: 48px; border-width: 5px; font-size: 16px; }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .pokale-bars__face .ti-crown { top: -22px; font-size: 24px; }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .pokale-bars__n { font-size: var(--text-2xl); }
+}
+
+/* The award tiles (O13.2's lower row): the icon in a bubble disc. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .pokale-card { border-radius: var(--radius-lg); }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .pokale-card__icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--sunken-soft);
+  color: var(--brand);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .pokale-card__label { letter-spacing: .1em; color: var(--brand); }
+
+/* --- The member page (O13.4) --------------------------------------------- */
+/* A plain surface card: the person's colour is the RING, so the Klassisch wash
+   and the initials watermark (both painted in the member's tone) stand down,
+   and so does the win-rate gauge around the face — the Siegquote stays in the
+   figure strip, where it is written as a number. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .member-card {
+  padding: 26px 28px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  background: var(--surface);
+  box-shadow: var(--shadow-2);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .member-card__mark { display: none; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .member-card .member-ring { padding: 0; background: none; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .member-card .member-avatar {
+  width: 84px;
+  height: 84px;
+  border-width: 7px;
+  font-size: 26px;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .member-card__who h1 { font-size: 30px; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .member-card .member-card__attendance {
+  margin: 4px 0 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+/* The figure strip as four number tiles on wave paper (O13.4). */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .member-card .member-card__figures {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 14px;
+  padding-top: 0;
+  border-top: 0;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .member-card .member-figure {
+  padding: 14px 16px;
+  border-radius: var(--radius-lg);
+  background: var(--wave-paper);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .member-card .member-figure .member-figure__value {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .member-card .member-figure__label {
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+/* The two game tiles stand as Ocean cards, not as boxes in the member's tone. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .member-card__games .pokale-card,
+:root[data-design="ocean"]:not([data-scheme="dark"]) .member-card__games .pokale-card:hover {
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+  transform: none;
+}
+/* „Bringt mit" beside the record (O13.4's left column), stacked below 860px. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .member-card .member-card__lower { display: grid; gap: 20px; margin-top: 22px; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .member-card .member-card__lower > .member-card__games { margin-top: 0; }
+@media (min-width: 860px) {
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .member-card .member-card__lower {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .member-card .member-card__lower > .member-card__games { grid-template-columns: minmax(0, 1fr); }
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .member-owned { display: flex; flex-direction: column; }
+/* O1's „Kicker": Figtree 700, letter-spaced, in the accent (5.9:1 on the card). */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .member-owned__title {
+  margin: 0 0 6px;
+  font-family: var(--font);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--brand);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .member-owned__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: var(--target-button);
+  padding: 7px 0;
+  border-top: 1px solid var(--line-soft);
+  color: var(--ink);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .member-owned__cover {
+  position: relative; /* anchors + clips the .cover-ph gradient layer (#256) */
+  overflow: hidden;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--radius-sm);
+  background: var(--sunken) center/cover no-repeat;
+  box-shadow: 0 3px 6px var(--cast);
+  font-size: 18px; /* glyph, not type */
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .member-owned__name { flex: 1 1 auto; min-width: 0; font-weight: 700; overflow-wrap: anywhere; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .member-owned__row .score-pill { position: static; flex: none; }
+
+/* --- Nicht im Regal: the three lists as segments (O13.3) ------------------ */
+/* off-shelf.js renders the strip for every design and styles.css hides it; a
+   design opts in here. Each segment is a real link to its own route — the „one
+   screen with segments" O13.3 draws, without merging three addresses. ONE ROW
+   THAT SCROLLS rather than wraps, for Der Tisch's reason: a segmented control
+   broken over two lines stops reading as one choice. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .offshelf-seg {
+  display: flex;
+  gap: 3px;
+  max-width: 100%;
+  width: max-content;
+  margin: 0 0 18px;
+  padding: 5px;
+  overflow-x: auto;
+  border-radius: var(--radius-pill);
+  background: var(--sunken-soft);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .offshelf-seg__item {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--target-control);
+  padding: 0 18px;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  white-space: nowrap;
+  color: var(--ink-soft);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .offshelf-seg__item:hover { color: var(--ink); }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .offshelf-seg__item.is-on {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 2px 6px var(--cast);
+}
+/* „Könnte euch gefallen" is not a fourth list — it suggests rather than keeps
+   (O13.3 gives it its own column) — so it stands apart behind a hairline, with
+   the accent sparkles. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .offshelf-seg__item[data-sub="recommendations"] {
+  position: relative;
+  margin-left: 8px;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .offshelf-seg__item[data-sub="recommendations"]::before {
+  content: '';
+  position: absolute;
+  left: -6px;
+  top: 8px;
+  bottom: 8px;
+  width: 1px;
+  background: var(--control-edge);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .offshelf-seg__item[data-sub="recommendations"] .ti { color: var(--brand); }
+
+/* The rows: a 4:3 cover, the title, and the actions (O13.3). Aussortiert's
+   covers are washed out — those games left the shelf; Durchgespielt and the
+   Wunschliste keep theirs. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .archive-row {
+  gap: 18px;
+  padding: 14px 18px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .archive-row__img {
+  width: 96px;
+  height: auto;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--radius-sm);
+  box-shadow: 0 5px 10px var(--cast-deep);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .app:has(.offshelf-seg__item[data-sub="retired"].is-on) .archive-row__img { filter: saturate(.55); }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .archive-row__title { font-family: var(--font); }
+/* Bringing a game back is the row's one primary action on all three lists
+   (O13.3 „Zurück ins Regal" as the accent pill); the Wunschliste already says
+   so in its markup (`primaryRestore`), the two archives get it here. The
+   delete stays the quiet danger button beside it. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .archive-row__actions [data-act="restore"] {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: var(--on-accent);
+  box-shadow: 0 10px 20px var(--cast-button);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .archive-row__actions [data-act="restore"]:hover {
+  background: var(--brand-strong);
+  border-color: var(--brand-strong);
+}
+@media (max-width: 560px) {
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .archive-row__img { width: 72px; }
+}

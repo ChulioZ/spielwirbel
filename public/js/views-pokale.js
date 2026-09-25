@@ -243,6 +243,35 @@ function pokaleYoungLead(round, winners, rankOf, wins) {
   return { el, named: new Set(leaders.map((m) => m.id)) };
 }
 
+/* Ocean's standings (#1218, O13.2): a row per active member — the ring, the
+   name, a bar as long as their wins against the leader's, and the count. The
+   whole row is the link to that member's page, as a podium entry is. Ranked
+   by `roundStandings`, so a tie keeps its shared place and the crown goes to
+   everyone in first; a member with no decided evening stands at 0 rather
+   than vanishing („wer neu dazukommt, steht trotzdem in der Liste"). The
+   bar's colour is the member's own — a fill, never text (ocean.css header,
+   rule 2), so it is a custom property the stylesheet paints from. */
+function pokaleBars(round, ranked, rankOf, wins) {
+  const top = Math.max(1, ...ranked.map((m) => wins[m.id]));
+  const list = h('<ol class="pokale-bars"></ol>');
+  ranked.forEach((m) => {
+    const n = wins[m.id];
+    const lead = rankOf[m.id] === 1 && n > 0;
+    const color = memberColor(round, m.id);
+    const row = h(`<li class="pokale-bars__row${lead ? ' is-lead' : ''}"><a class="pokale-bars__link" data-mid="${esc(m.id)}" style="--bar:${color}; --w:${Math.round((n / top) * 100)}%">
+         <span class="pokale-bars__face"><span class="avatar" style="background:${color}">${avatarFace(initials(m.name), { userId: m.userId })}</span>${lead ? '<i class="ti ti-crown" aria-hidden="true"></i>' : ''}</span>
+         <span class="pokale-bars__body">
+           <span class="pokale-bars__name">${esc(m.name)}</span>
+           <span class="pokale-bars__track" aria-hidden="true"><span class="pokale-bars__fill"></span></span>
+         </span>
+         <span class="pokale-bars__count"><span class="pokale-bars__n">${n}</span><span class="pokale-bars__word">${esc(tn(n, 'pokale.winWordOne', 'pokale.winWord'))}</span></span>
+       </a></li>`);
+    makeMemberLink(row.querySelector('a'), round.id, m.id);
+    list.appendChild(row);
+  });
+  return list;
+}
+
 function renderPokaleTab(round) {
   const finished = round.sessions.filter((s) => s.finished);
 
@@ -254,6 +283,14 @@ function renderPokaleTab(round) {
      genuinely needs it — and if you do, it owes a rule file too. */
   const head = h(`<div class="section-head"><h1>${esc(t('pokale.title'))}</h1></div>`);
   sec.appendChild(head);
+  // Ocean names the span beside the title, as its Chronik does (#1218, O13.2
+  // „Seit Oktober 2025 · 23 Sessions") — the same key, counted the same way,
+  // so the two pages cannot disagree about how many sessions the round has.
+  const ocean = designIs('ocean');
+  if (ocean && finished.length) {
+    const since = finished.reduce((a, s) => (s.createdAt < a ? s.createdAt : a), finished[0].createdAt);
+    head.appendChild(h(`<span class="chronik__count">${esc(tn(finished.length, 'chronik.countOne', 'chronik.count', { month: fmtMonth(since) }))}</span>`));
+  }
 
   if (finished.length === 0) {
     sec.appendChild(emptyState({ icon: 'ti-trophy', title: t('pokale.emptyTitle'), text: t('pokale.empty') }));
@@ -305,7 +342,15 @@ function renderPokaleTab(round) {
   const young = played < YOUNG_ROUND_PODIUM_FROM;
   const youngLead = young ? pokaleYoungLead(round, winners, rankOf, wins) : null;
   if (youngLead) sec.appendChild(youngLead.el);
-  if (winners.length && !young) {
+  /* Ocean's standings are BARS, one per person (#1218, O13.2): „kein Podest,
+     keine Medaillen — ein Balken je Person, so lang wie ihre Siege". Every
+     active member is listed, most wins first, so the summary line below has
+     nobody left to name and is not rendered. The young-round sentence above
+     still stands in for it: bars off one or two evenings rank on noise exactly
+     as a podium would. */
+  const bars = ocean && !young && winners.length ? pokaleBars(round, ranked, rankOf, wins) : null;
+  if (bars) stageTo.appendChild(bars);
+  if (winners.length && !young && !bars) {
     /* ONE number per entry again — the win count the step is ranked on.
        It carried the Siegwertung plus the raw count from #895 until 2026-09-22,
        with `.podium__col--multi` hiding the count on a shared step because two
@@ -340,7 +385,7 @@ function renderPokaleTab(round) {
      making anyone invisible. */
   const onPodium = youngLead ? youngLead.named
     : new Set(cols.flatMap((c) => c.shown.map((it) => it.member.id)));
-  const rest = ranked.filter((m) => !onPodium.has(m.id));
+  const rest = bars ? [] : ranked.filter((m) => !onPodium.has(m.id));
   if (rest.length) {
     const line = rest
       .map(
