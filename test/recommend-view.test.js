@@ -458,3 +458,18 @@ test('the shortened labels hold in English too (#817)', async (t) => {
   assert.ok(link.getAttribute('aria-label').includes('BGG'), 'SC 2.5.3 holds in en as well');
   assert.equal(dom.app.querySelector('.rec-card [data-act="dismiss"]').textContent.trim(), '');
 });
+
+/* A spotlight row's tiles stretch to the tallest one, and their reason lines
+   differ in length — so as a wrapping flex row the actions landed at a
+   different height in each tile and a short tile showed its empty space below
+   the BGG link (#1228 merge interview). The tile is a three-row grid whose
+   middle row takes the spare height, which pins the actions to the foot. */
+test('a spotlight tile pins its actions to the bottom: a grid whose middle row absorbs the height', () => {
+  const { bodyOf } = require('./support/css');
+  const tile = bodyOf('.rec-card.rec-card--spot');  // compounded: it must beat .rec-card's display: flex
+  assert.match(tile, /display:\s*grid/, 'the tile is a grid, not a wrapping flex row');
+  assert.match(tile, /grid-template-rows:\s*auto\s+1fr\s+auto/, 'caption, a flexible middle, then the actions');
+  assert.match(bodyOf('.rec-card--spot .rec-card__actions'), /grid-column:\s*1\s*\/\s*-1/,
+    'the actions span the whole last row');
+  assert.match(bodyOf('.rec-spot__cap'), /grid-column:\s*1\s*\/\s*-1/, 'the caption spans the first row');
+});

@@ -10352,15 +10352,23 @@ kbd {
   }
 }
 /* The tile is the list's own card, so it inherits every action and the in-place
-   undo; only the caption on top and the stacking differ. */
-.rec-card--spot {
-  align-items: flex-start;
-  align-content: flex-start;
+   undo; only the caption on top and the stacking differ.
+   A GRID, not the list card's wrapping flex row: the row's tiles stretch to the
+   tallest, and a flex wrap cannot push its last line to the bottom — so the
+   actions sat at a different height in each tile and a short tile showed its
+   spare height under the BGG link. The 1fr middle row takes that height
+   instead, pinning the actions to the foot (#1228 merge interview). */
+.rec-card.rec-card--spot {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto 1fr auto;
+  align-items: start;
+  gap: 10px 14px;
   border-color: color-mix(in oklab, var(--brand) 40%, var(--line));
 }
-.rec-card--spot .rec-card__body { flex: 1 1 150px; min-width: 0; }
-.rec-card--spot .rec-card__actions { flex-basis: 100%; }
-.rec-spot__cap { flex-basis: 100%; display: flex; flex-direction: column; gap: 2px; }
+.rec-card--spot .rec-card__body { min-width: 0; }
+.rec-card--spot .rec-card__actions { grid-column: 1 / -1; }
+.rec-spot__cap { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 2px; }
 .rec-spot__title {
   display: inline-flex;
   align-items: center;
