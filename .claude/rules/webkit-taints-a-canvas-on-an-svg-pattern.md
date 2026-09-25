@@ -5,7 +5,6 @@ paths:
   - "public/js/recap-card-tisch.js"
   - "public/js/card-glyphs.js"
   - "public/js/shelf-profile-card.js"
-  - "test/recap-card-tint.test.js"
   - "test/recap-card-tisch.test.js"
 ---
 # WebKit taints a canvas on `createPattern(svgImage)` — `drawImage` of the same SVG is clean
@@ -44,10 +43,14 @@ So it is the **pattern**, not the image and not the origin. `crossOrigin =
 **Never build a canvas pattern from an SVG image on a canvas you intend to
 export.** Rasterize the SVG into a scratch canvas first — at the backing-store
 scale, or the tile ships at half resolution — and either pattern *that* canvas
-or stamp it with `drawImage`. `recapTint` stamps, and guards the tile's
-intrinsic size on the way: a stamping loop steps by the tile size, so a mask
-reporting `0` spins forever where the pattern it replaced merely painted
-nothing.
+or stamp it with `drawImage`. The fix that shipped (`recapTint`, #1149) stamped,
+and guarded the tile's intrinsic size on the way: a stamping loop steps by the
+tile size, so a mask reporting `0` spins forever where the pattern it replaced
+merely painted nothing.
+
+**Since the flip (#1202) no card draws SVG at all.** The worlds were the only
+thing that put a mask on the card, and they went with `recapTint` and its spec.
+The rule stands for the next design that wants artwork on a share card.
 
 ## Why nothing caught it, in any direction
 
@@ -85,15 +88,13 @@ pins the mechanism, the same way the spec below does.
 
 It paints from a **copy** of Der Tisch's tokens, not the live cascade — the
 names (`--page-bg`, `--gold`, `--ink`) are shared by every design, so under a
-round still on its own light palette the dark block is off and a live read
-returned Klassisch's cream and orange (measured). The copy is licensed by a
-parity test against `test/support/theme.js`.
+round still on its own light palette (possible until the flip) the dark block
+was off and a live read returned Klassisch's cream and orange (measured). The
+copy is licensed by a parity test against `test/support/theme.js`.
 
-`test/recap-card-tint.test.js` is what stands in for the engine: jsdom has no 2d
-context and Node has no WebKit, so it asserts the **mechanism** — that the
-backdrop is stamped, that the tile is rasterized at `scale`, and that
-`createPattern` is not reached — against a recording context. It cannot see the
-taint itself; say so rather than reading it as engine coverage.
+A spec can only stand in for the engine by asserting the **mechanism** against a
+recording context — jsdom has no 2d context and Node has no WebKit — so it
+cannot see the taint itself; say so rather than reading it as engine coverage.
 
 **Related:** `.claude/rules/browser-pane-is-chromium-only.md` (the probe, and the
 general form of this trap — a claim proved on the engine that was never in

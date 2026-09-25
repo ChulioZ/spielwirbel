@@ -12,7 +12,7 @@ mis-fires on this pattern. `eslint.config.js` handles it with a dedicated
 override for `public/js/**`:
 
 - **`globals` lists every top-level name** the scripts share (`t`, `showHome`,
-  `api`, `PALETTES`, …) so a use of one in *another* file isn't a `no-undef`
+  `api`, `MEMBER_COLORS`, …) so a use of one in *another* file isn't a `no-undef`
   error. **When you add/rename/remove a top-level `function`/`const` in
   `public/js`, update that list** or lint will (wrongly) flag it — or miss a typo.
   **The REMOVE half had no signal at all until #1122**, and it rots: declaring a

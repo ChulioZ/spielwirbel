@@ -96,7 +96,7 @@ of regression, on a surface nobody has looked at yet. Hence:
   resolvable. `test/a11y-contrast.test.js` pairs the design-specific families
   (felt, paper, score ramp) by name and then asserts that no design token is left
   without a pair — so a new one fails until it is given one.
-- `--page-bg` and `--brand` still belong in `designs.js`: `applyBackground()`
+- `--page-bg` and `--brand` still belong in `designs.js`: `paintDesign()`
   writes them inline on `<html>`, so a copy here would be dead text reading as
   the source of truth.
 
@@ -114,4 +114,6 @@ any new `public/js` file needs — `design.js` deliberately has no
 `module.exports`), `.claude/rules/accessibility-contrast-and-modals.md` (the
 suite the last section protects),
 `.claude/rules/design-colour-blocks-are-scheme-gated.md` (what a colour block
-must be gated on, and the voice/colour split).
+must be gated on, and the voice/colour split),
+`.claude/rules/light-design-gate-and-shared-design-ids.md` (the light mirror of that
+gate, and why a design block is looked up by stylesheet rather than by id).

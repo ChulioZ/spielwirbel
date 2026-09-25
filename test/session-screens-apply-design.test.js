@@ -1,14 +1,15 @@
 'use strict';
 
-/* The session screens a URL can COLD-LOAD apply the round's design themselves.
+/* The session screens a URL can COLD-LOAD apply the round's marker themselves.
  *
- * Every screen inside a round used to inherit its design from the hub: showRound
- * calls applyBackground() and the session flow only ever followed from there. But
+ * Every screen inside a round used to inherit its look from the hub: showRound
+ * applied it and the session flow only ever followed from there. But
  * two of the flow's screens are also reached from a bare URL — the results
  * (shared through session-share.js, opened from the Chronik on another device)
  * and the lobby (the very link a second device joins a live vote through, #209)
  * — and router.js's showResultsById resolves both without passing the hub. So
- * a shared link rendered on the Standard design: no accent, no scheme, no world.
+ * a shared link rendered without the round's own look. Since the flip (#1202)
+ * that look is the round's colour MARKER alone.
  *
  * Found by #940, whose victory scene has to be on the spotlight a later visit
  * shows; fixed by applying the design at the top of each screen, which is
@@ -30,10 +31,13 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 
 const { loadApp } = require('./support/dom');
-const { WORLDS } = require('../public/js/round-designs');
+const { LEGACY_MARKER_INDEX } = require('../public/js/round-marker');
+const { designMarkers } = require('../public/js/designs');
 
-const forest = WORLDS.find((w) => w.id === 'forest');
-const stored = { type: 'theme', id: forest.id, page: forest.page, accent: forest.accent };
+// A round that wore Forest before the flip and never picked a marker: the
+// screens must resolve the marker Forest maps to.
+const stored = { type: 'theme', id: 'forest', page: '#ecf1e4', accent: '#356427' };
+const forestMarker = (design) => designMarkers(design)[LEGACY_MARKER_INDEX.forest].color;
 
 const round = (session) => ({
   id: 'r1',
@@ -73,14 +77,16 @@ test('the results screen dresses the round, so a shared or cold-loaded results U
   const dom = boot(t, r);
   await dom.call('showResults', r, s, r.games, false);
   const root = dom.document.documentElement;
-  assert.equal(root.dataset.world, 'forest', 'the results screen must apply the round\'s design');
-  assert.equal(root.style.getPropertyValue('--brand'), forest.accent);
+  assert.equal(root.style.getPropertyValue('--marker'), forestMarker('klassisch'),
+    'the results screen must apply the round\'s marker');
+  assert.equal(root.dataset.world, undefined, 'no world hook survives the flip');
+  assert.equal(root.style.getPropertyValue('--brand'), '', 'the old world accent is not painted');
 });
 
 test('a results URL for a round with NO design of its own wears the account design', async (t) => {
   /* The #1187 shape, and the one every round has after the flip: a marker, no
-     background. `applyBackground(null)` must fall through to the user's design
-     rather than to the :root defaults — and must carry that design's SCHEME
+     background. The screen must keep the user's design rather than fall to the
+     :root defaults — and must carry that design's SCHEME
      with it, which is the half a spec asserting only `data-design` would miss.
 
      Der Tisch is dark, so `data-scheme` is what decides whether ~200 component
@@ -134,8 +140,10 @@ test('the lobby dresses the round too — it is the link a second device arrives
   };
   const r = round(s);
   const dom = boot(t, r);
+  dom.run('applyDesign("tisch")');
   dom.call('showSessionLobby', r, s);
   const root = dom.document.documentElement;
-  assert.equal(root.dataset.world, 'forest', 'the lobby must apply the round\'s design');
-  assert.equal(root.style.getPropertyValue('--page-bg'), forest.page);
+  assert.equal(root.style.getPropertyValue('--marker'), forestMarker('tisch'),
+    'the lobby must apply the round\'s marker, in the design the viewer wears');
+  assert.equal(root.dataset.scheme, 'dark', 'and the round must not undo the design\'s scheme');
 });

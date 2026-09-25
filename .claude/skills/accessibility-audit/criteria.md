@@ -29,9 +29,9 @@ see A-R05. AA is held here as the product bar regardless.
 ### A-002 — A theme accent clears 4.5:1 as text on its own page
 - **Status:** adopted · 2026-07-23
 - **Source:** `accessibility-contrast-and-modals.md` §1
-- **Check:** every design's `accent` (`public/js/round-designs.js`) becomes `--brand` and paints every `.link-btn`, so a new
-  or edited theme must clear AA on its own `page` value. Resolved at render time via
-  `resolveAccent(bg)` — a corrected theme needs no migration.
+- **Check:** every design's `accent` (`public/js/designs.js`) becomes `--brand` and paints every `.link-btn`, so a new
+  or edited design must clear AA on its own `page` value. Read from the registry at render time —
+  a corrected design needs no migration (rounds carry only a marker index since #1202).
 - **Enforced by:** `test/a11y-contrast.test.js`
 
 ### A-003 — Non-text and large-text contrast ≥ 3:1

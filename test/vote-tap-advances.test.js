@@ -115,7 +115,9 @@ test('the shared-link card wears the same corner control', async (t) => {
   const { dom } = await voteLinkCards(t);
   const undo = dom.app.querySelector('#backBtn');
   assert.ok(undo.classList.contains('vote__undo'));
-  assert.ok(undo.closest('.vote__who'));
+  // The link page wears the FACE, which is Der Tisch since the flip (#1202):
+  // its card carries the control on the felt head rather than in the person line.
+  assert.ok(undo.closest('.vote__who, .vote-felt'), 'it must sit in the card head, not loose');
   assert.equal(undo.textContent.trim(), '');
   assert.equal(undo.getAttribute('aria-label'), dom.run("t('vote.back')"));
   // Enabled on card ONE here, unlike the wizard: it goes back to the name

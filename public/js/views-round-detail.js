@@ -188,7 +188,7 @@ async function showGameDetail(rid, gameId) {
   let round;
   try { round = await fetchRound(rid); }
   catch { return showHome(); }
-  applyBackground(round.background, round);
+  applyMarker(round);
   const game = round.games.find((g) => g.id === gameId);
   if (!game) return showRound(rid);
   setContext(round.name);

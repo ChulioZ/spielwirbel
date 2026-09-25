@@ -173,3 +173,9 @@
 .ti-fish::before { content: "\ef2b"; }
 .ti-chess-knight::before { content: "\f56d"; }
 .ti-bone::before { content: "\edb8"; }
+/* Ocean (#1210). Read from THIS woff2's cmap (fontTools, 5093 glyphs) and
+   looked at rendered: `ti-shell` is absent from this font, so the design's mark
+   is the sine wave. */
+.ti-wave-sine::before { content: "\ecd4"; }
+.ti-droplet::before { content: "\ea97"; }
+.ti-anchor::before { content: "\eb76"; }

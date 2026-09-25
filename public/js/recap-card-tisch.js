@@ -33,10 +33,11 @@
    token block), the TAG_ICONS shape from
    .claude/rules/shared-constants-across-the-stack.md. A live read was the first
    cut and it was measured wrong: the names are SHARED (`--page-bg`, `--ink`,
-   `--gold` exist in every design), so whenever Der Tisch's dark block is not
-   in force — a round still on its own light palette, which rounds keep until
+   `--gold` exist in every design), so whenever Der Tisch's dark block was not
+   in force — a round still on its own light palette, which rounds kept until
    the flip (#1202) — the card silently drew Klassisch's cream page and orange
-   edge under a Tisch layout. The ROUND'S marker is still read live, because
+   edge under a Tisch layout. The copy also keeps the card independent of
+   whatever the cascade says at click time. The ROUND'S marker is still read live, because
    that one is the round's own and has no other home.
 
    No module.exports — DOM/canvas code, reached through the jsdom harness by
@@ -60,7 +61,7 @@ const TISCH_CARD_BADGE = '/icons/powered-by-bgg.png';
 
 // Der Tisch's tokens, keyed by their name in tisch.css (see the header for why
 // a copy; the parity test is what keeps it one). `--page-bg` is the registry's
-// `page`, which applyBackground writes and the test compares against instead.
+// `page`, which paintDesign writes and the test compares against instead.
 const TISCH_CARD_TOKENS = {
   '--page-bg': '#3b2a12', '--felt': '#2f6b4d', '--felt-deep': '#1c4531',
   '--felt-ink': '#f6ecd8', '--felt-ink-soft': '#cfe6d6',

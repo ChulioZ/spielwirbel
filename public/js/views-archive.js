@@ -88,7 +88,7 @@ async function showArchive(rid, kind, seg = kind) {
   let round;
   try { round = await fetchRound(rid); }
   catch { return showHome(); }
-  applyBackground(round.background, round);
+  applyMarker(round);
   setContext(round.name);
   // `kind` keys the i18n namespace, so all three screens are covered by one line.
   setDocTitle(t(`${kind}.title`), round.name);

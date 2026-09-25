@@ -26,7 +26,7 @@ const { loadApp, flush } = require('./support/dom');
 const plain = (v) => JSON.parse(JSON.stringify(v));
 const { bodyOf, bodyOfIn, declaredValue } = require('./support/css');
 const {
-  DESIGN_REGISTRY, FACE_DESIGN, DESIGN_CHOOSER_REVISION, designById,
+  DESIGN_REGISTRY, FACE_DESIGN, CLASSIC_DESIGN, DESIGN_CHOOSER_REVISION, designById,
 } = require('../public/js/designs');
 
 const BOTH = { designs: DESIGN_REGISTRY.map((d) => d.id) };
@@ -70,8 +70,8 @@ test('#1186: the picker renders one card per OFFERED design, current one marked'
   const list = dom.call('renderDesignPicker', BOTH, 'tisch', () => {});
   const cards = list.querySelectorAll('.design-card');
   assert.equal(cards.length, DESIGN_REGISTRY.length);
-  // Registry order, so the face heads the list without a sort key.
-  assert.equal(cards[0].querySelector('input').value, FACE_DESIGN);
+  // Registry order, so Klassisch heads the list without a sort key.
+  assert.equal(cards[0].querySelector('input').value, CLASSIC_DESIGN);
   assert.equal(cards[0].querySelector('.design-card__badge').textContent, 'Wie bisher');
   assert.equal(list.querySelector('input:checked').value, 'tisch');
   assert.ok(cards[1].classList.contains('is-on'));
@@ -94,7 +94,7 @@ test('#1186: the picker offers only what the SERVER listed', (t) => {
 test('#1186: choosing a card reports the id and moves the mark', (t) => {
   const dom = boot(t);
   const picked = [];
-  const list = dom.call('renderDesignPicker', BOTH, FACE_DESIGN, (id) => picked.push(id));
+  const list = dom.call('renderDesignPicker', BOTH, CLASSIC_DESIGN, (id) => picked.push(id));
   const second = list.querySelectorAll('.design-card')[1];
   second.querySelector('input').checked = true;
   second.querySelector('input').dispatchEvent(new dom.window.Event('change'));
@@ -109,17 +109,17 @@ test('#1186: choosing a card reports the id and moves the mark', (t) => {
 test('#1186: the chooser fires once, and only where there is a choice', (t) => {
   const sheets = (dom) => dom.document.querySelectorAll('.design-chooser').length;
 
-  const unseen = boot(t, { me: { id: 'u1', design: FACE_DESIGN, designChooserSeen: null } });
+  const unseen = boot(t, { me: { id: 'u1', design: CLASSIC_DESIGN, designChooserSeen: null } });
   unseen.call('maybeShowDesignChooser', unseen.get('accountUser'));
   assert.equal(sheets(unseen), 1, 'an account that has not seen it is asked');
 
-  const seen = boot(t, { me: { id: 'u2', design: FACE_DESIGN, designChooserSeen: DESIGN_CHOOSER_REVISION } });
+  const seen = boot(t, { me: { id: 'u2', design: CLASSIC_DESIGN, designChooserSeen: DESIGN_CHOOSER_REVISION } });
   seen.call('maybeShowDesignChooser', seen.get('accountUser'));
   assert.equal(sheets(seen), 0, 'and once seen, never again for this revision');
 
-  const alone = boot(t, { cfg: FACE_ONLY, me: { id: 'u3', design: FACE_DESIGN, designChooserSeen: null } });
+  const alone = boot(t, { cfg: FACE_ONLY, me: { id: 'u3', design: CLASSIC_DESIGN, designChooserSeen: null } });
   alone.call('maybeShowDesignChooser', alone.get('accountUser'));
-  assert.equal(sheets(alone), 0, 'one design is not a choice — this is production today');
+  assert.equal(sheets(alone), 0, 'one design is not a choice — this was production before the flip');
 
   const out = boot(t, { accounts: false });
   out.call('maybeShowDesignChooser', null);
@@ -127,7 +127,7 @@ test('#1186: the chooser fires once, and only where there is a choice', (t) => {
 });
 
 test('#1186: confirming stores the pick and the stamp in ONE request', async (t) => {
-  const me = { id: 'u1', design: FACE_DESIGN, designChooserSeen: null };
+  const me = { id: 'u1', design: CLASSIC_DESIGN, designChooserSeen: null };
   const dom = boot(t, { me });
   const sent = [];
   dom.set('accountApi', (method, path, body) => {
@@ -152,7 +152,7 @@ test('#1186: confirming stores the pick and the stamp in ONE request', async (t)
 });
 
 test('#1186: declining reverts the preview BEFORE the request, and still records it', async (t) => {
-  const me = { id: 'u1', design: FACE_DESIGN, designChooserSeen: null };
+  const me = { id: 'u1', design: CLASSIC_DESIGN, designChooserSeen: null };
   const dom = boot(t, { me });
   const sent = [];
   /* The request is held IN FLIGHT on purpose. Resolving it immediately hides
@@ -177,17 +177,17 @@ test('#1186: declining reverts the preview BEFORE the request, and still records
   assert.equal(dom.document.documentElement.dataset.design, 'tisch', 'previewed live');
 
   sheet.querySelector('#designChooserSkip').click();
-  assert.equal(dom.document.documentElement.dataset.design, FACE_DESIGN,
+  assert.equal(dom.document.documentElement.dataset.design, CLASSIC_DESIGN,
     'reverted at once, not one round trip later');
   assert.deepEqual(plain(sent), [{}], 'seen, with no design');
 
   release();
   await flush();
-  assert.equal(dom.document.documentElement.dataset.design, FACE_DESIGN, 'and it stays reverted');
+  assert.equal(dom.document.documentElement.dataset.design, CLASSIC_DESIGN, 'and it stays reverted');
 });
 
 test('#1186: a chooser answer that never arrives leaves no previewed design behind', async (t) => {
-  const me = { id: 'u1', design: FACE_DESIGN, designChooserSeen: null };
+  const me = { id: 'u1', design: CLASSIC_DESIGN, designChooserSeen: null };
   const dom = boot(t, { me });
   // The offline case: accountApi rejects, the catch deliberately does nothing,
   // and the synchronous revert above is the ONLY thing standing between the
@@ -202,11 +202,11 @@ test('#1186: a chooser answer that never arrives leaves no previewed design behi
 
   sheet.querySelector('#designChooserSkip').click();
   await flush();
-  assert.equal(dom.document.documentElement.dataset.design, FACE_DESIGN);
+  assert.equal(dom.document.documentElement.dataset.design, CLASSIC_DESIGN);
 });
 
 test('#1186: the chooser is answered exactly ONCE however it is dismissed', async (t) => {
-  const me = { id: 'u1', design: FACE_DESIGN, designChooserSeen: null };
+  const me = { id: 'u1', design: CLASSIC_DESIGN, designChooserSeen: null };
   const dom = boot(t, { me });
   let calls = 0;
   dom.set('accountApi', () => { calls += 1; return Promise.resolve({ ...me, designChooserSeen: DESIGN_CHOOSER_REVISION }); });
@@ -226,7 +226,7 @@ test('#1186: the chooser is answered exactly ONCE however it is dismissed', asyn
 
 test('#1186: with accounts ON the account field decides, not the device key', (t) => {
   const dom = boot(t, { me: { id: 'u1', design: 'tisch', designChooserSeen: null } });
-  dom.window.localStorage.setItem('design', FACE_DESIGN);
+  dom.window.localStorage.setItem('design', CLASSIC_DESIGN);
   assert.equal(dom.run('applyAccountDesign()'), 'tisch',
     'a stale device value must not outrank the account — that is the whole point of per-user');
   assert.equal(dom.document.documentElement.dataset.design, 'tisch');
@@ -234,7 +234,7 @@ test('#1186: with accounts ON the account field decides, not the device key', (t
 
 test('#1186: with accounts OFF the device key decides', (t) => {
   const dom = boot(t, { accounts: false });
-  assert.equal(dom.run('applyAccountDesign()'), FACE_DESIGN, 'nothing stored yet');
+  assert.equal(dom.run('applyAccountDesign()'), FACE_DESIGN, 'nothing stored yet: the face');
   dom.run('storeDesign("tisch")');
   assert.equal(dom.window.localStorage.getItem('design'), 'tisch');
   assert.equal(dom.run('applyAccountDesign()'), 'tisch');
@@ -262,10 +262,10 @@ test('#1186: a localStorage that throws does not take the boot with it', (t) => 
 /* ------------- re-rendering the screen on a committed change (#1266) ------------- */
 
 test('the chooser re-renders the screen underneath once, on the answer, never on a preview', async (t) => {
-  const me = { id: 'u1', design: FACE_DESIGN, designChooserSeen: null };
+  const me = { id: 'u1', design: CLASSIC_DESIGN, designChooserSeen: null };
   const dom = boot(t, { me });
   dom.set('accountApi', (method, path, body) => Promise.resolve({ ...me, design: body.design || me.design, designChooserSeen: DESIGN_CHOOSER_REVISION }));
-  dom.run(`applyDesign(${JSON.stringify(FACE_DESIGN)}); designViewsReady(); globalThis.__renders = 0; currentView = () => { globalThis.__renders++; }`);
+  dom.run(`applyDesign(${JSON.stringify(CLASSIC_DESIGN)}); designViewsReady(); globalThis.__renders = 0; currentView = () => { globalThis.__renders++; }`);
 
   dom.call('maybeShowDesignChooser', me);
   const sheet = dom.document.querySelector('.design-chooser');
@@ -280,11 +280,11 @@ test('the chooser re-renders the screen underneath once, on the answer, never on
 });
 
 test('the Konto picker re-renders only once the server has taken the pick', async (t) => {
-  const me = { id: 'u1', design: FACE_DESIGN };
+  const me = { id: 'u1', design: CLASSIC_DESIGN };
   const dom = boot(t, { me });
   let resolve;
   dom.set('accountApi', () => new dom.window.Promise((r) => { resolve = r; }));
-  dom.run(`applyDesign(${JSON.stringify(FACE_DESIGN)}); designViewsReady(); globalThis.__renders = 0; currentView = () => { globalThis.__renders++; }`);
+  dom.run(`applyDesign(${JSON.stringify(CLASSIC_DESIGN)}); designViewsReady(); globalThis.__renders = 0; currentView = () => { globalThis.__renders++; }`);
   const section = dom.call('buildDesignSection', dom.get('accountUser'));
   dom.document.body.appendChild(section);
   const tisch = section.querySelectorAll('.design-card')[1].querySelector('input');

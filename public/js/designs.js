@@ -1,16 +1,15 @@
 /* Spielwirbel – the USER design registry (#1184): every design an ACCOUNT can
-   wear, as opposed to round-designs.js, which lists every design a ROUND can
-   pick. The two coexist deliberately for the whole transition — rounds keep
-   their palettes and worlds until the flip (#1202) — so do not fold one into
-   the other, and do not read an entry here as a round background.
+   wear. Since the flip (#1202) it is the only design registry there is: rounds
+   no longer pick a palette or a world, they carry a colour marker
+   (round-marker.js) that each design paints in its own eight colours.
 
    A design is a page tone, an accent, a scheme and, optionally, an OVERRIDE
-   STYLESHEET of its own. Klassisch is today's look, so it declares no colours
+   STYLESHEET of its own. Klassisch is the original look, so it declares no colours
    at all: it IS the :root default in styles.css, and saying so twice is how the
    two drift. Every other design states its two colours here and ships its
    layout in public/css/designs/<id>.css, loaded on demand by design.js.
 
-   WHY THESE TWO COLOURS LIVE HERE. applyBackground() writes `page` and `accent`
+   WHY THESE TWO COLOURS LIVE HERE. paintDesign() (round-theme.js) writes `page` and `accent`
    as INLINE custom properties on <html>, which outrank every stylesheet — so a
    copy of either in a design's own file would be dead text that reads as the
    source of truth.
@@ -31,7 +30,7 @@
    it is not configuration). In production only enabled designs exist; outside it
    every registered design is selectable, so an unfinished one can be built and
    reviewed on dev-temp-data and in the tests. Enabling a design is a one-line
-   PR — which is what the flip issue does.
+   PR — the flip (#1202) did it for Der Tisch.
 
    Dependency-free with the module.exports guard, for two reasons: the contrast
    harness requires it, and so does the SERVER — lib/app.js answers GET
@@ -92,7 +91,7 @@
 // ground stops; `sub` is small text — the tagline, and the wordmark in the
 // phone's 58px tile — and must clear 4.5:1 on both.
 const DESIGN_REGISTRY = [
-  // Today's look. No `page`/`accent`: styles.css's :root already is Klassisch,
+  // The original look. No `page`/`accent`: styles.css's :root already is Klassisch,
   // so applyDesign clears the two inline properties instead of restating them —
   // which is also what makes "Klassisch renders exactly as before" provable
   // rather than merely likely.
@@ -120,9 +119,9 @@ const DESIGN_REGISTRY = [
     // color-mix() because the recap card paints on a CANVAS, where there is no
     // cascade to resolve one against.
     //
-    // Keep these equal to round-designs.js's light PALETTES until the flip
-    // (#1202) retires that file: test/round-marker.test.js pins the pair, so a
-    // second #145-style accent correction cannot move one and not the other.
+    // They are the accents the eight retired palettes carried after #145's
+    // contrast correction, so a round that wore Salbei before the flip (#1202)
+    // still reads as the same sage under Klassisch.
     markers: [
       { key: 'standard', labelKey: 'theme.standard', color: '#c2410c', deep: '#8f3009' },
       { key: 'blaugrau', labelKey: 'theme.blaugrau', color: '#3a67b1', deep: '#2a4c83' },
@@ -133,10 +132,11 @@ const DESIGN_REGISTRY = [
       { key: 'schiefer', labelKey: 'theme.schiefer', color: '#33688f', deep: '#254c69' },
       { key: 'pfirsich', labelKey: 'theme.pfirsich', color: '#b34d2e', deep: '#843922' },
     ],
-    // Today's marks, EXACTLY as public/manifest.webmanifest and index.html's head
-    // declare them — test/design-marks.test.js pins both equalities, so this row
-    // cannot drift from the files production already serves. The white die on
-    // orange stays Klassisch's for good (T11.2: "keinen stillen Markenwechsel").
+    // Klassisch's marks, EXACTLY as public/manifest.webmanifest declares them —
+    // test/design-marks.test.js pins the equality, so this row cannot drift from
+    // the file `?design=klassisch` is answered with. The white die on orange stays
+    // Klassisch's for good (T11.2: "keinen stillen Markenwechsel"); since the
+    // flip (#1202) index.html's static head carries the FACE's marks instead.
     marks: {
       icons: [
         { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
@@ -149,12 +149,13 @@ const DESIGN_REGISTRY = [
     enabled: true,
   },
   /* Der Tisch (#1188), from docs/design/tisch/Tisch-T1-Komponenten.dc.html.
-     Still `enabled: false` — the screens are #1189-#1200 and the flip is #1202.
+     Live since the flip (#1202): every account that had not chosen wears it,
+     and it is the FACE a logged-out visitor sees.
 
      THE PAGE IS NUSSBAUM, not the near-black the #1184 stub carried. A dark
      design's page is the reference every contrast in the app is measured
-     against, and this one sits much higher than the four night-coloured worlds
-     (luminance .026 against Obsidian's .010) — so the tuned alpha washes and the
+     against, and this one sits much higher than the night-coloured pages the
+     dark block was first tuned on (luminance .026 against .010) — so the tuned alpha washes and the
      dark block's neutral percentages land closer together on it, and two derived
      tokens have to be re-picked in tisch.css rather than inherited. That is
      recorded there, at the tokens themselves.
@@ -189,9 +190,9 @@ const DESIGN_REGISTRY = [
     // tokens under `:root[data-design="tisch"]`, because they never load its
     // stylesheet. test/standalone-page-brand.test.js requires that copy of every
     // design marked here, pins each value against this design's own resolved
-    // token, and refuses a FACE_DESIGN that is neither Klassisch nor marked —
-    // so the flip (#1202) cannot move the face onto a design the public pages
-    // would render as Klassisch.
+    // token, and refuses a FACE_DESIGN that is neither Klassisch nor marked — so
+    // the face can never sit on a design the public pages would render as
+    // Klassisch.
     face: true,
     // The eight FELTS of docs/design/tisch/Tisch-T8-Farben.dc.html -> "T8.1
     // Filze", in the package's own order, so index 0 is Tannenfilz — the
@@ -231,6 +232,71 @@ const DESIGN_REGISTRY = [
     // Which recap-card layout the share buttons draw while this design is worn
     // (recap-card-tisch.js). Absent = the classic card, unchanged.
     card: 'tisch',
+    enabled: true,
+  },
+  /* Ocean (#1210), from docs/design/ocean/Ocean-O1-Komponenten.dc.html (the
+     token source) and Ocean-O8-Farben.dc.html (the measurements). A LIGHT
+     design — the first after Klassisch — so its failure class is the inverse of
+     Der Tisch's: saturated colour on near-white, and text over a page-height
+     gradient whose dark end nobody measured. Both real findings of the review
+     (docs/design/pruefung-ocean-2026-09-20.md) lived exactly there.
+
+     `enabled: false` until its go-live issue (#1222); the screens are
+     #1211-#1221. Outside production it is reachable through the same
+     `?design=ocean` flag Der Tisch was built behind (design.js initDesign).
+
+     Page and accent are O1's „Seite" and „Akzent". The accent carries text on
+     the page (5.5:1), the surface (6.1:1) and down to the „Flach" water stop
+     (4.8:1), and on nothing darker — see the water tokens in ocean.css. */
+  {
+    id: 'ocean',
+    labelKey: 'design.ocean.name',
+    descKey: 'design.ocean.desc',
+    page: '#e4f1f5',
+    accent: '#0e6690',
+    stylesheet: '/css/designs/ocean.css',
+    /* The eight markers are the eight PERSON colours (O14.1 „Farbmarker — die
+       Tidenlinie dieser Runde"), in member-colors.js's own order and with the
+       package's names. `deep` is each colour's DARKENED variant — the row
+       review finding R1 asked to be derived for all eight, not only the three
+       O8.1 draws (#8a3418, #4a4396, #6f440a, used verbatim). The other five
+       are the same move in oklab: lightness x0.754 and chroma x0.83, the mean
+       of those three, which lands every one of them at 7.8:1 or better on the
+       surface. The darkened row is ALSO what „wer ist gerade dran" prints a
+       name in at 26px (O2/O4), so ocean.css re-declares it as --person-deep-*
+       tokens for the stylesheet to read; test/design-tokens.test.js pins
+       the two copies equal.
+
+       White on every one of the sixteen clears 4.5:1 (the tightest is Koralle
+       at 4.52:1), so the default markerInk stands. */
+    markers: [
+      { key: 'koralle', labelKey: 'marker.ocean.koralle', color: '#c6522c', deep: '#8a3418' },
+      { key: 'seegras', labelKey: 'marker.ocean.seegras', color: '#198663', deep: '#005b40' },
+      { key: 'seeigel', labelKey: 'marker.ocean.seeigel', color: '#726bc7', deep: '#4a4396' },
+      { key: 'bernstein', labelKey: 'marker.ocean.bernstein', color: '#a66815', deep: '#6f440a' },
+      { key: 'anemone', labelKey: 'marker.ocean.anemone', color: '#c34d74', deep: '#892d4d' },
+      { key: 'lagune', labelKey: 'marker.ocean.lagune', color: '#2f6f9e', deep: '#164a6e' },
+      { key: 'tang', labelKey: 'marker.ocean.tang', color: '#54821d', deep: '#345801' },
+      { key: 'purpur', labelKey: 'marker.ocean.purpur', color: '#993556', deep: '#6b1c38' },
+    ],
+    /* Klassisch's marks, stated rather than inherited, until Ocean's own mark
+       lands with #1220 (O8.3 „the design's mark", the sine wave). Stated so the
+       row is complete on its own — test/design-marks.test.js walks every row's
+       files — and so #1220 is a change to this block, not the discovery that the
+       design had none. */
+    marks: {
+      icons: [
+        { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
+        { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
+      ],
+      favicon: { href: '/icons/icon-192.png', sizes: '192x192' },
+      appleTouch: '/icons/apple-touch-icon.png',
+      og: '/icons/og-image.png',
+    },
+    // A person's NAME prints in the marker's `deep`, never in the colour
+    // itself (design.js personNameInk) — review rule 2, person colour is no text
+    // under 24px here.
+    personInk: 'deep',
     enabled: false,
   },
 ];
@@ -246,7 +312,8 @@ const DESIGN_REGISTRY = [
 const DESIGN_CHOOSER_REVISION = '2026-09-22';
 
 // The design a logged-OUT surface wears — the landing page, the login screen,
-// the legal pages. Klassisch until the flip (#1202) moves the face to Tisch.
+// the legal pages — and the one every account wears until it chooses (#1202
+// moved it from Klassisch to Der Tisch; lib/account-design.js has the rule).
 //
 // The pages OUTSIDE the SPA read it too (#1198), and none of them waits for
 // GET /api/config to do it, because every one would then paint Klassisch and
@@ -255,7 +322,14 @@ const DESIGN_CHOOSER_REVISION = '2026-09-22';
 // login.html / kontakt.html load this file plus js/pages/face.js in <head>,
 // synchronously, before the body exists. Each page carries its own copy of
 // the tokens of every design marked `face: true` above.
-const FACE_DESIGN = 'klassisch';
+const FACE_DESIGN = 'tisch';
+
+/* The design that is always there to go back to: Klassisch, the look Spielwirbel
+   started with („Wie bisher", operator decision 2026-09-19). A fixed id rather
+   than FACE_DESIGN, which names the face and moved at the flip — the chooser's
+   „Wie bisher" badge and the switch-back count (lib/account-design.js) both mean
+   THIS design, whatever the face is. */
+const CLASSIC_DESIGN = 'klassisch';
 
 /* The ink a design writes ON its markers, and the one place the default lives.
 
@@ -307,7 +381,7 @@ function designMarks(id) {
 /* The manifest URL a page wearing `id` links to (#1199).
 
    The FACE gets the bare path, so a logged-out page, the standalone pages that
-   hard-code it (login.html, kontakt.html, the FAQ) and today's index.html all
+   hard-code it (login.html, kontakt.html, the FAQ) and index.html all
    agree on one URL. Any other design names itself in the query, and the route
    (lib/web-manifest.js) answers with that design's icons and colours — or with
    the face's, if the id is not selectable on this instance.
@@ -344,7 +418,7 @@ function isSelectableDesign(id, opts) {
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
-    DESIGN_REGISTRY, FACE_DESIGN, DESIGN_CHOOSER_REVISION, designById, designMarks, manifestHref,
+    DESIGN_REGISTRY, FACE_DESIGN, CLASSIC_DESIGN, DESIGN_CHOOSER_REVISION, designById, designMarks, manifestHref,
     designMarkers, markerOf, markerInk, DEFAULT_MARKER_INK,
     selectableDesigns, selectableDesignIds, isSelectableDesign,
   };

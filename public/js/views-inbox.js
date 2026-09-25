@@ -20,7 +20,7 @@ async function showInbox() {
   syncUrl('/inbox');
   setContext(t('inbox.title'));
   setDocTitle(t('inbox.title'));
-  applyBackground(null);
+  applyMarker(null);
   app.innerHTML = '<p class="muted">…</p>';
 
   let res;

@@ -2,11 +2,14 @@
 paths:
   - "public/styles.css"
   - "test/a11y-contrast.test.js"
-  - "test/round-worlds.test.js"
   - "test/support/theme.js"
 ---
 
 # One alpha over a light page and a dark page are not the same wash — and oklab will tell you they are
+
+Learned on the round worlds (#1138), which the flip (#1202) retired; every trap
+below binds any wash, motif or fade a user design paints — Der Tisch is dark,
+Klassisch light, and the next design may be either.
 
 Slot 1, the world page backdrop, painted `--brand` at a flat `opacity: .09` for
 all seven worlds. The number was picked on a light page and reused on the dark
@@ -79,13 +82,12 @@ accent *wash*. The home tile sits on the lobby, which carries no ROUND design �
 `.theme-card` precisely so a dark round's tile does not turn dark — so its
 ground is the standard `--surface` and its bar is `--ink-soft` body text.
 
-**Since #1184 that last step holds only while no dark USER design is enabled.**
-`applyBackground(null)` now means "fall back to the user's design" rather than
-"clear to the `:root` defaults", so a dark one puts `data-scheme="dark"` on
-`<html>` and the lobby's `--surface` goes dark with it — a different ground for
-the same literal. Nothing ships yet (`enabled: false`), and
-`test/a11y-contrast.test.js` carries a named tripwire that fails the moment one
-is enabled. Re-derive the `.150` before citing it under a dark design.
+**Since #1184 that last step held only while no dark USER design was enabled**:
+a dark one puts `data-scheme="dark"` on `<html>` and the lobby's `--surface` goes
+dark with it — a different ground for the same literal. `test/a11y-contrast.test.js`
+carried a named tripwire for it; the flip (#1202) enabled Der Tisch and removed
+the tile motif and the tripwire together, so no ground in that file assumes a
+light home any more.
 Deriving the fallback from the backdrop alpha, which is what the issue asked
 for, would have put a `.42` wash under that body text.
 
@@ -127,7 +129,7 @@ denylists).
 **Related:** `.claude/rules/dark-scheme-neutral-ramp-runs-upward.md` (the
 sibling: a *derived* neutral mixed at the light percentage lands somewhere else
 on dark — that one moves, this one arrives where you asked and still cannot be
-seen), `.claude/rules/theme-derived-colors.md` § Worlds (the slot contract),
+seen), `.claude/rules/theme-derived-colors.md` (the constraints that outlived the worlds),
 `.claude/rules/color-mix-interpolation-space.md` (where oklab *is* the right
 space), `.claude/rules/browser-pane-is-chromium-only.md` (this was verified in
 the pane only — nothing here is engine-dependent).

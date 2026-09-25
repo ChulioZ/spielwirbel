@@ -26,7 +26,9 @@ const path = require('node:path');
 
 const { loadApp, flush, translator } = require('./support/dom');
 const { rulesOf } = require('./support/css');
-const { DESIGN_REGISTRY, FACE_DESIGN, DESIGN_CHOOSER_REVISION, designById } = require('../public/js/designs');
+const {
+  DESIGN_REGISTRY, CLASSIC_DESIGN, DESIGN_CHOOSER_REVISION, designById,
+} = require('../public/js/designs');
 
 const T = translator('de');
 const ALL = { designs: DESIGN_REGISTRY.map((d) => d.id) };
@@ -284,9 +286,12 @@ test('every poster key a registry row names exists in every locale', () => {
   assert.ok(checked >= locales.length * 10, `anti-vacuous: only ${checked} keys checked`);
 });
 
-test('FACE_DESIGN still heads the posters', (t) => {
+test('Klassisch („Wie bisher") still heads the posters, though the face moved (#1202)', (t) => {
   const { sheet } = tischChooser(t);
-  assert.equal(sheet.querySelector('.design-poster__pick').dataset.design, FACE_DESIGN);
+  const first = sheet.querySelector('.design-poster');
+  assert.equal(first.querySelector('.design-poster__pick').dataset.design, CLASSIC_DESIGN);
+  assert.equal(first.querySelector('.design-card__badge').textContent, 'Wie bisher',
+    'the badge names the way BACK, not the face');
 });
 
 /* ---------------------------------- the CSS ---------------------------------- */

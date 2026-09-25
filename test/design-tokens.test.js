@@ -111,6 +111,9 @@ const GLYPH_LITERALS = [
   // sized to the tile rather than to the type scale, exactly like `.mood .ti`
   '.rater__face',
   '.fchip__x',
+  // the young round's leader block (#1318): initials and crown sized to the
+  // 44px seat, exactly as Der Tisch's copy of the same two rules
+  '.pokale-young__avatar', '.pokale-young__crown',
   '.game-card__pick',
   // large standalone marks
   '.auth__logo', '.paste-zone__icon',
@@ -336,4 +339,250 @@ test('color-scheme is declared per design: light on :root, dark on the dark bloc
   const dark = RULES.find(([sel]) => sel.includes(':root[data-scheme="dark"]'));
   assert.ok(dark, 'the dark-design block is gone');
   assert.match(dark[1], /(^|;)\s*color-scheme:\s*dark\s*;/m, 'the dark block must flip color-scheme');
+});
+
+/* ---------------------------------------------------------------------------
+   Ocean (#1210): the design's token set, pinned against its package.
+
+   docs/design/ocean/Ocean-O1-Komponenten.dc.html („O1.1 Tokens") is the one
+   token source for O2-O15, so every value the stylesheet declares is compared
+   to the value O1 draws — a retune in either place fails here by name. Where
+   the stylesheet deliberately DIFFERS from O1 it is because a measurement said
+   so, and those are pinned as corrections next to the O1 value they replace,
+   so the next reader cannot "fix" one back to the sheet. Contrast lives in
+   test/a11y-contrast.test.js; this file pins identity.
+   --------------------------------------------------------------------------- */
+
+const { designById } = require('../public/js/designs');
+const { MEMBER_COLORS } = require('../public/js/member-colors');
+const { blocksOf } = require('./support/theme');
+
+const OCEAN = designById('ocean');
+const OCEAN_SHEET = fs.readFileSync(path.join(SUPPORT_ROOT, 'public/css/designs/ocean.css'), 'utf8')
+  .replace(/\/\*[\s\S]*?\*\//g, '');
+const oceanBlocks = () => {
+  const b = blocksOf(OCEAN);
+  assert.ok(b && b.light, 'ocean.css has no :root[data-design="ocean"]:not([data-scheme="dark"]) colour block');
+  return `${b.light}\n${b.root}`;
+};
+const oceanDecl = (name) => {
+  const m = new RegExp(`(?:^|[;{\\s])${name}:\\s*([^;]+);`).exec(oceanBlocks());
+  return m ? m[1].trim() : null;
+};
+
+test('Ocean is registered, light, and still behind its go-live (#1222)', () => {
+  assert.ok(OCEAN, 'no design with id "ocean" in public/js/designs.js');
+  assert.equal(OCEAN.enabled, false, 'Ocean goes live in #1222, not in its token issue');
+  assert.notEqual(OCEAN.scheme, 'dark');
+  assert.equal(OCEAN.page, '#e4f1f5', 'O1 „Seite"');
+  assert.equal(OCEAN.accent, '#0e6690', 'O1 „Akzent"');
+  assert.equal(OCEAN.stylesheet, '/css/designs/ocean.css');
+});
+
+/* O1.1's named values, as the stylesheet must carry them — grouped the way O1
+   groups them, so a failure points at the section of the sheet. */
+const O1_TOKENS = {
+  // Flächen
+  '--surface': '#f7fbfc', '--control-fill': '#ffffff', '--sunken': '#cfe6ef',
+  '--sunken-soft': '#d7e9f0', '--line-soft': '#dfebf1',
+  // Schrift & Akzent
+  '--ink': '#10283a', '--ink-soft': '#3f5a6b', '--brand-strong': '#0a4f70', '--accent-edge': '#083d57',
+  // Zustände
+  '--good': '#1a6b4a', '--danger': '#a3392b', '--danger-strong': '#8a2f23',
+  '--gold': '#f2e394', '--gold-ink': '#10283a', '--gold-edge': '#ddcd78',
+  '--toast-action': '#9ed4ee',
+  // Wasserverlauf, top to bottom, and the deep states
+  '--water-foam': '#eef7fa', '--water-shallows': '#e2f0f5', '--water-surf': '#dcecf2',
+  '--water-flat': '#cfe3ec', '--water-coast': '#a9c9d8',
+  '--waterline': '#8fc0da', '--waterline-deep': '#4f8fbb',
+  '--deep': '#1c4a66', '--deep-bottom': '#123a52', '--deep-ground': '#0d2b3e', '--deep-ink': '#f7fbfc',
+  '--whale': '#2f6d94', '--whale-deep': '#163a55',
+  // Sand, Wellenpapier, Blase
+  '--sand-light': '#f7efe2', '--sand': '#f3ebdd', '--sand-deep': '#e2d2b8', '--sand-deep-soft': '#e8dac2',
+  '--shell-edge': '#d8c6a6', '--wave-paper': '#eaf4f8', '--wave-paper-deep': '#dfedf3',
+  '--bubble-hi': '#ffffff', '--bubble-1': '#f3f9fb', '--bubble-2': '#d7e9f0', '--bubble-3': '#b9d4e0',
+  '--bubble-rim': '#a9c4d1',
+  // Deaktiviert
+  '--disabled-fill': '#d3e2e8', '--disabled-ink': '#6b8494', '--disabled-edge': '#c2d5de',
+  // Score-Rampe, Tiefsee -> Sonnenlicht, with its FIXED inks (O1.9)
+  '--score-1': '#23305c', '--score-2': '#35609a', '--score-3': '#6a9fd0', '--score-4': '#b7d4ee',
+  '--score-5': '#f2e394', '--score-veto': '#4a1942',
+  '--score-ink-low': '#f7fbfc', '--score-ink-high': '#10283a', '--score-veto-ink': '#f7fbfc',
+};
+
+test('Ocean declares every O1.1 token at O1’s value', () => {
+  const wrong = [];
+  for (const [name, value] of Object.entries(O1_TOKENS)) {
+    const got = oceanDecl(name);
+    if (got !== value) wrong.push(`${name}: expected ${value}, declared ${got}`);
+  }
+  assert.deepEqual(wrong, [], 'ocean.css drifted from Ocean-O1-Komponenten.dc.html');
+});
+
+test('Ocean declares the ten values the review found undeclared (R1)', () => {
+  /* docs/design/pruefung-ocean-2026-09-20.md R1: six deep-water tones, the soft
+     danger surface and three darkened person colours that O2-O15 use and O1
+     never named. Each must be a named token now, so no screen issue re-derives
+     it from a sheet. */
+  const R1 = ['#1f4f72', '#7fb4d3', '#9ec2d4', '#1a4360', '#dbe9ef', '#f4faf7',
+    '#f0dcd8', '#4a4396', '#8a3418', '#6f440a'];
+  const block = oceanBlocks();
+  const missing = R1.filter((hex) => !new RegExp(`--[a-z0-9-]+:\\s*${hex};`, 'i').test(block));
+  assert.deepEqual(missing, [], 'these R1 values are still not declared as Ocean tokens');
+});
+
+test('Ocean’s measured corrections to O1 stay corrections', () => {
+  /* Each is an O1 value that failed its own bar once recomputed — the review's
+     point 1, „Kontrast, nachgerechnet statt geglaubt". Pinned beside the value
+     it replaces, so none of them is quietly reverted to the sheet. */
+  const CORRECTIONS = [
+    ['--control-edge', '#728c98', '#a9c4d1', 'O1 „Umriss" is 1.75:1 on --surface, not the 3.1:1 the sheet states'],
+    ['--warn', '#866607', '#8a6a10', 'O1 „Warnung" is 4.39:1 on the page, below AA'],
+    ['--line', '#c6dae3', '#c9dde6', 'O1 „Linie" is 1.35:1 on --surface, under the light hairline floor'],
+  ];
+  for (const [name, value, o1, why] of CORRECTIONS) {
+    assert.notEqual(value, o1);
+    assert.equal(oceanDecl(name), value, `${name}: ${why}`);
+  }
+});
+
+test('Ocean’s markers are the eight person colours, and the darkened row has all eight', () => {
+  /* O14.1 paints a round's marker with the person colours; R1 asks for the
+     darkened row for ALL eight rather than the three O8.1 draws. Three places
+     hold them and all three must agree: member-colors.js (the colours, global
+     and never forked), the registry's `deep` (read by the marker code and by
+     personNameInk), and ocean.css's --person-deep-* (read by the stylesheet). */
+  assert.equal(OCEAN.markers.length, 8);
+  assert.deepEqual(OCEAN.markers.map((m) => m.color), MEMBER_COLORS,
+    'a marker must be the member colour at the same index');
+  const deep = OCEAN.markers.map((m) => m.deep);
+  for (let i = 0; i < 8; i += 1) {
+    assert.equal(oceanDecl(`--person-deep-${i + 1}`), deep[i],
+      `--person-deep-${i + 1} and the registry's marker ${OCEAN.markers[i].key} disagree`);
+  }
+  // O8.1's three, verbatim — the other five are derived from these.
+  assert.equal(deep[0], '#8a3418', 'Koralle, O8.1');
+  assert.equal(deep[2], '#4a4396', 'Seeigel, O8.1');
+  assert.equal(deep[3], '#6f440a', 'Bernstein, O8.1');
+  assert.equal(new Set(deep).size, 8, 'two darkened colours collapsed onto one');
+  assert.equal(OCEAN.personInk, 'deep', 'a name must print in the darkened row (design.js personNameInk)');
+});
+
+test('Ocean’s target sizes are tokens, and the components read them', () => {
+  const targets = {
+    '--target-button': '44px', '--target-control': '40px',
+    '--target-footer': '32px', '--target-text': '24px',
+  };
+  for (const [name, px] of Object.entries(targets)) {
+    assert.equal(oceanDecl(name), px, `${name} must be ${px} (O1 „Trefferflächen")`);
+    assert.match(OCEAN_SHEET, new RegExp(`min-height:\\s*var\\(${name}\\)`),
+      `nothing in ocean.css sizes a target with ${name} — the token is dead`);
+  }
+});
+
+/* ---- Ocean's faces ---- */
+
+const fontFaces = (family) => [...CSS.matchAll(/@font-face\s*\{([^}]*)\}/g)]
+  .map((m) => m[1])
+  .filter((b) => new RegExp(`font-family:\\s*'${family}'`).test(b))
+  .map((b) => ({
+    weight: /font-weight:\s*([^;]+);/.exec(b)[1].trim(),
+    url: /url\('([^']+)'\)/.exec(b)[1],
+  }));
+
+test('Ocean’s two faces are self-hosted, declared weight by weight, and precached', () => {
+  const sw = fs.readFileSync(path.join(SUPPORT_ROOT, 'public/sw.js'), 'utf8');
+  const shell = sw.match(/const SHELL = \[([\s\S]*?)\];/)[1];
+  const expect = { Comfortaa: ['700'], Figtree: ['400', '500', '600', '700'] };
+  for (const [family, weights] of Object.entries(expect)) {
+    const faces = fontFaces(family);
+    /* EXACTLY these weights. A range (`400 800`) would be the single-weight
+       trick #905 uses for Creepster — right for a face that has no bold, wrong
+       here — and a missing weight would let the browser synthesise one. */
+    assert.deepEqual(faces.map((f) => f.weight), weights, `${family}: declared weights`);
+    for (const f of faces) {
+      assert.ok(fs.existsSync(path.join(SUPPORT_ROOT, 'public', f.url)), `${f.url} is not on disk`);
+      assert.ok(shell.includes(`'/${f.url}'`), `${f.url} is not in sw.js SHELL`);
+    }
+  }
+  for (const lic of ['LICENSE-figtree.txt', 'LICENSE-comfortaa.txt']) {
+    assert.ok(fs.existsSync(path.join(SUPPORT_ROOT, 'public/fonts', lic)), `${lic} is missing — both faces ship under OFL`);
+  }
+  assert.match(oceanDecl('--font'), /^"Figtree",/);
+  assert.match(oceanDecl('--font-display'), /^"Comfortaa",/);
+});
+
+test('Ocean never sets Comfortaa under 17px — every small display-face rule is moved to Figtree', () => {
+  /* O1.2: Comfortaa is „nie unter 17 px, nie für Fließtext". The app gives
+     --font-display to buttons, pills and small labels too, so ocean.css hands
+     those back to --font. DERIVED from styles.css — every rule that asks for
+     the display face at a size that resolves under 17px on this design — so a
+     new small display-face rule fails here until ocean.css lists it. */
+  const px = (size) => {
+    const tok = /^var\((--text-[a-z0-9]+)\)$/.exec(size);
+    if (tok) {
+      const own = oceanDecl(tok[1]);
+      const v = own || (ROOT.match(new RegExp(`${tok[1]}:\\s*(\\d+)px`)) || [])[1];
+      return Number(String(v).replace('px', ''));
+    }
+    const lit = /^(\d+(?:\.\d+)?)px$/.exec(size);
+    return lit ? Number(lit[1]) : null;
+  };
+  const reset = /:root\[data-design="ocean"\] :is\(([\s\S]*?)\)\s*\{\s*font-family:\s*var\(--font\);/.exec(OCEAN_SHEET);
+  assert.ok(reset, 'ocean.css has no font-family: var(--font) reset list');
+  // Top-level commas only: a listed selector may itself hold `:is(h1, h2, h3)`.
+  const splitSel = (text) => {
+    const out = [];
+    let depth = 0;
+    let cur = '';
+    for (const ch of text) {
+      if (ch === '(') depth += 1;
+      if (ch === ')') depth -= 1;
+      if (ch === ',' && depth === 0) { out.push(cur); cur = ''; continue; }
+      cur += ch;
+    }
+    out.push(cur);
+    return out.map((x) => x.replace(/\/\*[\s\S]*?\*\//g, '').trim().replace(/\s+/g, ' ')).filter(Boolean);
+  };
+  const listed = new Set(splitSel(reset[1]));
+
+  /* Two ways a rule puts the display face on small text, and the second is the
+     one a browser walk found and the first scan could not see: the rule names
+     --font-display itself, OR it sizes a heading or a TITLE (an h1-h6, or a
+     `title`/`head`/`name` class) and names no face at all — such an element is
+     usually an h2/h3, which takes --font-display from the global heading rule.
+     Listing a title that is not a heading costs nothing: it is Figtree either
+     way. Measured: the Regal's „Spiele (9)" section label, an h1 at 16px, is
+     how the second half was found. */
+  const TITLE = /(title|heading|__head$|__name|__names|(^|[\s(,:])h[1-6]\b)/;
+  const small = [];
+  let seen = 0;
+  for (const [sel, body] of RULES) {
+    const size = (body.match(/font-size:\s*([^;]+)/) || [])[1];
+    const n = size ? px(size.trim()) : null;
+    if (n === null) continue;
+    const display = /font-family:\s*var\(--font-display\)/.test(body);
+    if (display) seen += 1;
+    if (n >= 17) continue;
+    for (const s of splitSel(sel)) {
+      const last = s.replace(/:is\(([^)]*)\)/g, (m, inner) => inner.replace(/\s+/g, '')).split(' ').pop();
+      const titled = !/font-family/.test(body) && TITLE.test(last);
+      if ((display || titled) && !listed.has(s)) small.push(`${s} (${size.trim()} = ${n}px)`);
+    }
+  }
+  // Anti-vacuous: the scan must have resolved the display-face rules it walks.
+  assert.ok(seen >= 40, `only ${seen} display-face rules resolved a size — did the parse break?`);
+  assert.deepEqual(small, [], 'these rules would set Comfortaa under 17px on Ocean — add them to the reset list');
+});
+
+test('the three Ocean glyphs are declared at the codepoints this woff2 maps them to', () => {
+  /* Read from public/fonts/tabler-icons.woff2's own cmap (fontTools), per
+     .claude/rules/tabler-icon-codepoints.md — `ti-shell` is absent from it,
+     which is why the mark is the sine wave. A test cannot read the cmap
+     without a font parser, so the numbers are pinned as measured. */
+  const icons = fs.readFileSync(path.join(SUPPORT_ROOT, 'public/fonts/tabler-icons.css'), 'utf8');
+  for (const [cls, cp] of [['wave-sine', 'ecd4'], ['droplet', 'ea97'], ['anchor', 'eb76']]) {
+    assert.ok(icons.includes(`.ti-${cls}::before { content: "\\${cp}"; }`), `ti-${cls} must be \\${cp}`);
+  }
+  assert.ok(!icons.includes('.ti-shell::before'), 'ti-shell has no glyph in this font');
 });

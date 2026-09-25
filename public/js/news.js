@@ -47,6 +47,111 @@
 // AFTER, which is the exact unearned interruption this design exists to avoid.
 const NEWS = [
   /*
+   * #1202, the flip. Clears the bar although it is not a new feature in the
+   * usual sense: every account wakes up in a different look, and the one thing
+   * a reader needs to find is how to get the old one back. So the entry says
+   * that before anything else, and says plainly what went (the rounds' palettes
+   * and worlds) and what replaced it (the colour marker).
+   */
+  {
+    revision: '2026-09-25',
+    kind: 'new',
+    de: {
+      title: 'Der Tisch — ein neues Aussehen, und Klassisch bleibt',
+      body: 'Spielwirbel trägt jetzt „Der Tisch": dunkler Filz, Messing und '
+        + 'Papierkarten, als läge alles auf dem Spieltisch. Alles liegt weiter an '
+        + 'derselben Stelle — Regal, Chronik, Pokale, Session wirbeln. Wer lieber '
+        + 'beim bisherigen Aussehen bleibt, wählt „Klassisch": beim ersten Öffnen '
+        + 'oder jederzeit im Konto. Das Design gilt für dich, nicht für die Runde. '
+        + 'Die Farbschemata und Welten der Runden gibt es dafür nicht mehr — jede '
+        + 'Runde trägt stattdessen einen Farbmarker, den alle in der Runde sehen, '
+        + 'jede und jeder im eigenen Design.',
+    },
+    en: {
+      title: 'The Table — a new look, and Classic stays',
+      body: 'Spielwirbel now wears „The Table": dark felt, brass and paper cards, '
+        + 'as if everything lay on the games table. Everything is still where it '
+        + 'was — Shelf, History, Trophies, Start session. If you would rather keep '
+        + 'the old look, choose „Classic": when you first open the app, or any time '
+        + 'in your account. The design is yours, not the round\'s. In return, '
+        + 'rounds no longer have their own colour schemes and worlds — each round '
+        + 'carries a colour marker instead, which everyone in it sees, each in '
+        + 'their own design.',
+    },
+    es: {
+      title: 'La mesa: un aspecto nuevo, y Clásico se queda',
+      body: 'Spielwirbel viste ahora «La mesa»: fieltro oscuro, latón y tarjetas '
+        + 'de papel, como si todo estuviera sobre la mesa de juego. Todo sigue en '
+        + 'su sitio: Estantería, Historial, Trofeos, Sortear sesión. Si prefieres '
+        + 'el aspecto de siempre, elige «Clásico» al abrir la app por primera vez '
+        + 'o cuando quieras en tu cuenta. El diseño es tuyo, no del grupo. A '
+        + 'cambio, los grupos ya no tienen esquemas de color ni mundos propios: '
+        + 'cada grupo lleva un marcador de color que todos ven, cada cual en su '
+        + 'propio diseño.',
+    },
+    fr: {
+      title: 'La table — un nouveau look, et Classique reste',
+      body: 'Spielwirbel porte désormais « La table » : feutre sombre, laiton et '
+        + 'cartes de papier, comme si tout était posé sur la table de jeu. Tout '
+        + 'reste à sa place — Étagère, Historique, Trophées, Démarrer une session. '
+        + 'Si tu préfères l\'aspect d\'avant, choisis « Classique » à la première '
+        + 'ouverture ou quand tu veux dans ton compte. Le design est le tien, pas '
+        + 'celui du groupe. En contrepartie, les groupes n\'ont plus leurs propres '
+        + 'palettes ni leurs mondes : chaque groupe porte un marqueur de couleur '
+        + 'que tout le monde voit, chacun dans son propre design.',
+    },
+    it: {
+      title: 'Il tavolo: un aspetto nuovo, e Classico resta',
+      body: 'Spielwirbel ora veste «Il tavolo»: feltro scuro, ottone e carte di '
+        + 'carta, come se tutto fosse sul tavolo da gioco. Tutto è ancora al suo '
+        + 'posto: Scaffale, Cronologia, Trofei, Avvia una sessione. Se preferisci '
+        + 'l\'aspetto di prima, scegli «Classico» alla prima apertura o quando vuoi '
+        + 'nel tuo account. Il design è tuo, non del gruppo. In cambio i gruppi '
+        + 'non hanno più schemi di colore e mondi propri: ogni gruppo porta un '
+        + 'marcatore di colore che tutti vedono, ciascuno nel proprio design.',
+    },
+    nl: {
+      title: 'De tafel — een nieuw uiterlijk, en Klassiek blijft',
+      body: 'Spielwirbel draagt nu „De tafel": donker vilt, messing en papieren '
+        + 'kaarten, alsof alles op de speltafel ligt. Alles staat nog op dezelfde '
+        + 'plek — Kast, Geschiedenis, Trofeeën, Sessie starten. Blijf je liever bij '
+        + 'het oude uiterlijk, kies dan „Klassiek": bij de eerste keer openen of '
+        + 'wanneer je wilt in je account. Het ontwerp is van jou, niet van de '
+        + 'groep. Daarvoor hebben groepen geen eigen kleurenschema\'s en werelden '
+        + 'meer — elke groep draagt in plaats daarvan een kleurmarkering die '
+        + 'iedereen ziet, ieder in het eigen ontwerp.',
+    },
+    pt: {
+      title: 'A mesa — um visual novo, e o Clássico continua',
+      body: 'O Spielwirbel agora veste «A mesa»: feltro escuro, latão e cartões '
+        + 'de papel, como se tudo estivesse sobre a mesa de jogo. Tudo continua no '
+        + 'mesmo lugar: Estante, Histórico, Troféus, Iniciar sessão. Se preferir o '
+        + 'visual de antes, escolha «Clássico» ao abrir o app pela primeira vez ou '
+        + 'quando quiser na sua conta. O design é seu, não do grupo. Em troca, os '
+        + 'grupos deixam de ter esquemas de cores e mundos próprios: cada grupo '
+        + 'leva um marcador de cor que todos veem, cada um no seu próprio design.',
+    },
+    fi: {
+      title: 'Pöytä — uusi ilme, ja Klassinen jää',
+      body: 'Spielwirbelin ilme on nyt ”Pöytä”: tumma huopa, messinki ja '
+        + 'paperikortit, kuin kaikki olisi pelipöydällä. Kaikki on yhä samassa '
+        + 'paikassa — Hylly, Historia, Palkinnot, Aloita sessio. Jos pidät '
+        + 'vanhasta ilmeestä, valitse ”Klassinen”, kun avaat sovelluksen '
+        + 'ensimmäisen kerran, tai milloin tahansa tililläsi. Ulkoasu on sinun, ei '
+        + 'porukan. Porukoilla ei sen vuoksi ole enää omia värimaailmoja eikä '
+        + 'maailmoja — jokaisella porukalla on sen sijaan värimerkki, jonka kaikki '
+        + 'näkevät, kukin omassa ulkoasussaan.',
+    },
+    ko: {
+      title: '테이블 — 새로운 모습, 클래식도 그대로',
+      body: '이제 Spielwirbel은 „테이블" 디자인을 입습니다. 어두운 펠트, 황동, 종이 카드로 모든 것이 '
+        + '게임 테이블 위에 놓인 것처럼 보입니다. 선반, 기록, 트로피, 세션 시작은 모두 그 자리에 '
+        + '있습니다. 이전 모습이 더 좋다면 처음 열 때나 언제든 계정에서 „클래식"을 고르세요. 디자인은 '
+        + '모임이 아니라 나에게 적용됩니다. 대신 모임마다 따로 있던 색 구성과 월드는 없어지고, 각 '
+        + '모임에는 모두가 각자의 디자인으로 보는 색상 마커가 붙습니다.',
+    },
+  },
+  /*
    * #1147. A capability that did not exist: a player in three rounds had three
    * unconnected Rückblicke and no answer to „wie war mein Jahr?". Own profile
    * only, so the entry says so.
@@ -565,132 +670,6 @@ const NEWS = [
         + '줍니다. 주인을 기록하지 않은 게임은 예전처럼 항상 후보에 남으므로, 아무도 입력하지 않는 한 달라지는 것은 없습니다. 참여는 하지만 자기 게임을 가져오지 '
         + '않았다면 Session을 시작할 때 그렇게 지정할 수 있습니다. 그러면 오늘은 그 사람의 게임만 빠지고, 자리에 관한 다른 것은 그대로입니다. 결과 '
         + '화면에는 누가 게임을 가져오는지 표시됩니다.',
-    },
-  },
-  /*
-   * Clears the bar: a round's design was eight variations of one look, and a
-   * world is something a group could not have before — its own typeface,
-   * backdrop and ornaments on the round's screens, its home tile and its shared
-   * recap card (#903). The remaining worlds are content on this machinery (#905).
-   *
-   * AMENDED by #904 (dark designs) rather than given a second entry, and the
-   * revision bumped WITH the text — the opposite call to #851's location fix
-   * below, because there the capability had not changed and here it has. From a
-   * reader's side these are one thing ("what the design picker can do"), the
-   * entry is a day old so most accounts have not seen either yet, and two
-   * overlapping design entries in two days would spend the attention the
-   * Nutzungsbedingungen §11 notice needs twice for one story.
-   *
-   * #940 (the victory scene on the winner reveal) added one sentence WITHOUT a
-   * bump — the #851 call: polish on the capability this entry announces, not a
-   * new one, so re-lighting the dot would spend attention for nothing new.
-   */
-  {
-    revision: '2026-09-07',
-    kind: 'improved',
-    de: {
-      title: 'Welten: Wald und Sci-Fi als Design',
-      body: 'Unter Design gibt es neben den Farben jetzt Welten. Wald und Sci-Fi '
-        + 'bringen eine eigene Schrift für Überschriften und Knöpfe, ein '
-        + 'Hintergrundmotiv und Verzierungen an Karten, Knöpfen, leeren Bereichen '
-        + 'und der Bühne vor der Auflösung mit. Die Kachel der Runde auf der '
-        + 'Startseite und die Rückblick-Karte zum Teilen tragen die Welt ebenfalls. '
-        + 'Neu ist außerdem: ein Design darf dunkel sein. Sci-Fi spielt jetzt vor '
-        + 'einem Sternenhimmel, und „Obsidian" ist ein dunkles Design ganz ohne '
-        + 'Verzierungen. Bei der Auflösung des Siegers wächst im Wald ein Baum '
-        + 'zwischen Glühwürmchen, und in Sci-Fi hebt eine Rakete ab. Fließtext '
-        + 'bleibt überall gut lesbar, und alle Farben halten wie bisher den '
-        + 'Kontrast.',
-    },
-    en: {
-      title: 'Worlds: Forest and Sci-Fi designs',
-      body: 'Under Design, the colours are now joined by worlds. Forest and Sci-Fi '
-        + 'bring their own typeface for headings and buttons, a backdrop motif and '
-        + 'ornaments on cards, buttons, empty areas and the stage before the '
-        + 'reveal. The round\'s tile on the home screen and the shareable recap '
-        + 'card carry the world too. And a design may now be dark: Sci-Fi plays '
-        + 'against a starfield, and "Obsidian" is a dark design with no ornaments '
-        + 'at all. When the winner is revealed, a tree grows among fireflies in '
-        + 'Forest and a rocket lifts off in Sci-Fi. Body text stays easy to read '
-        + 'everywhere, and all colours keep their contrast as before.',
-    },
-    es: {
-      title: 'Mundos: Bosque y Ciencia ficción como diseño',
-      body: 'En Diseño, junto a los colores hay ahora mundos. Bosque y Ciencia ficción traen su '
-        + 'propia tipografía para títulos y botones, un motivo de fondo y adornos en las '
-        + 'tarjetas, los botones, las zonas vacías y el escenario previo a la revelación. La '
-        + 'ficha del grupo en la pantalla de inicio y la tarjeta de Resumen para compartir '
-        + 'también llevan el mundo. Además, un diseño ya puede ser oscuro: Ciencia ficción '
-        + 'transcurre ante un cielo estrellado y «Obsidiana» es un diseño oscuro sin ningún '
-        + 'adorno. Al revelarse el ganador, en Bosque crece un árbol entre luciérnagas y en '
-        + 'Ciencia ficción despega un cohete. El texto corrido sigue siendo bien legible en todas '
-        + 'partes y todos los colores mantienen el contraste de siempre.',
-    },
-    fr: {
-      title: 'Mondes : Forêt et Science-fiction comme apparence',
-      body: 'Dans Apparence, les couleurs sont désormais accompagnées de mondes. Forêt et '
-        + 'Science-fiction apportent leur propre typographie pour les titres et les boutons, un '
-        + 'motif de fond et des ornements sur les cartes, les boutons, les zones vides et la '
-        + 'scène qui précède la révélation. La tuile du groupe sur l’écran d’accueil et la carte '
-        + 'de Bilan à partager portent aussi le monde. Nouveauté également : une apparence peut '
-        + 'être sombre. Science-fiction se joue devant un ciel étoilé, et « Obsidienne » est une '
-        + 'apparence sombre sans le moindre ornement. À la révélation du gagnant, un arbre pousse '
-        + 'parmi les lucioles dans Forêt et une fusée décolle dans Science-fiction. Le texte '
-        + 'courant reste partout bien lisible et toutes les couleurs gardent leur contraste.',
-    },
-    it: {
-      title: 'Mondi: Bosco e Fantascienza come aspetto',
-      body: 'In Aspetto, accanto ai colori ci sono ora i mondi. Bosco e Fantascienza portano un '
-        + 'proprio carattere per titoli e pulsanti, un motivo di sfondo e decorazioni su schede, '
-        + 'pulsanti, aree vuote e sul palco prima della rivelazione. Anche la scheda del gruppo '
-        + 'nella schermata iniziale e la carta del Riepilogo da condividere indossano il mondo. '
-        + 'Altra novità: un aspetto può essere scuro. Fantascienza si svolge davanti a un cielo '
-        + 'stellato e «Ossidiana» è un aspetto scuro del tutto privo di decorazioni. Alla '
-        + 'rivelazione del vincitore, nel Bosco cresce un albero tra le lucciole e in '
-        + 'Fantascienza decolla un razzo. Il testo corrente resta ovunque ben leggibile e tutti i '
-        + 'colori mantengono il contrasto di sempre.',
-    },
-    nl: {
-      title: 'Werelden: Bos en Sci-fi als design',
-      body: 'Onder Design staan naast de kleuren nu werelden. Bos en Sci-fi brengen een eigen '
-        + 'lettertype voor koppen en knoppen mee, een achtergrondmotief en versieringen op '
-        + 'kaarten, knoppen, lege vlakken en het podium vóór de onthulling. De tegel van de groep '
-        + 'op het startscherm en de Terugblik-kaart om te delen dragen de wereld ook. Nieuw is '
-        + 'bovendien: een design mag donker zijn. Sci-fi speelt zich nu af voor een sterrenhemel, '
-        + 'en „Obsidiaan" is een donker design helemaal zonder versieringen. Bij de onthulling '
-        + 'van de winnaar groeit in Bos een boom tussen de glimwormen, en in Sci-fi stijgt een '
-        + 'raket op. Lopende tekst blijft overal goed leesbaar en alle kleuren houden hun '
-        + 'contrast zoals voorheen.',
-    },
-    pt: {
-      title: 'Mundos: Floresta e Ficção científica como visual',
-      body: 'Em Visual, ao lado das cores agora há mundos. Floresta e Ficção científica trazem uma '
-        + 'fonte própria para títulos e botões, um motivo de fundo e enfeites em cartões, botões, '
-        + 'áreas vazias e no palco antes da revelação. O bloco do grupo na tela inicial e o '
-        + 'cartão de Retrospectiva para compartilhar também vestem o mundo. Outra novidade: um '
-        + 'visual pode ser escuro. Ficção científica acontece diante de um céu estrelado, e '
-        + '«Obsidiana» é um visual escuro sem enfeite nenhum. Na revelação do vencedor, na '
-        + 'Floresta cresce uma árvore entre vaga-lumes e em Ficção científica um foguete decola. '
-        + 'O texto corrido continua bem legível em todo lugar e todas as cores mantêm o contraste '
-        + 'de sempre.',
-    },
-    fi: {
-      title: 'Maailmat: Metsä ja Scifi ulkoasuna',
-      body: 'Ulkoasussa värien rinnalle ovat tulleet maailmat. Metsä ja Scifi tuovat mukanaan oman '
-        + 'kirjasimen otsikoille ja painikkeille, taustakuvion sekä koristeita kortteihin, '
-        + 'painikkeisiin, tyhjiin alueisiin ja paljastusta edeltävään näyttämöön. Myös porukan '
-        + 'ruutu aloitusnäytöllä ja jaettava Yhteenveto-kortti kantavat maailmaa. Lisäksi uutta: '
-        + 'ulkoasu saa olla tumma. Scifi soi nyt tähtitaivasta vasten, ja ”Obsidiaani” on tumma '
-        + 'ulkoasu ilman yhtään koristetta. Voittajan paljastuessa Metsässä kasvaa puu '
-        + 'kiiltomatojen keskellä ja Scifissä raketti nousee ilmaan. Leipäteksti pysyy kaikkialla '
-        + 'hyvin luettavana ja kaikki värit säilyttävät kontrastinsa kuten ennenkin.',
-    },
-    ko: {
-      title: '월드: 디자인이 된 숲과 SF',
-      body: '디자인에서 색상 외에 이제 월드를 고를 수 있습니다. 숲과 SF는 제목과 버튼에 쓰이는 전용 서체, 배경 모티프, 그리고 카드·버튼·빈 영역·발표 직전 '
-        + '무대에 들어가는 장식을 함께 가져옵니다. 홈 화면의 모임 타일과 공유용 요약 카드에도 월드가 반영됩니다. 또 하나 새로워진 점은 디자인이 어두워질 수 '
-        + '있다는 것입니다. SF는 별이 가득한 하늘을 배경으로 펼쳐지고, ‘옵시디언’은 장식이 전혀 없는 어두운 디자인입니다. 우승자를 발표할 때 숲에서는 반딧불이 '
-        + '사이로 나무가 자라고, SF에서는 로켓이 날아오릅니다. 본문 글은 어디서나 잘 읽히고, 모든 색상은 예전처럼 대비를 유지합니다.',
     },
   },
   /*

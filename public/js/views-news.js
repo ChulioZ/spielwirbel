@@ -21,7 +21,7 @@
    Content comes from NEWS (public/js/news.js), a code constant that ships with
    the release it describes. Part of the shared frontend scope — loads after
    account.js/core.js and uses their helpers (accountsActive/isLoggedIn/
-   markNewsSeen, h/esc/app/t, syncUrl/setContext/setDocTitle/applyBackground). */
+   markNewsSeen, h/esc/app/t, syncUrl/setContext/setDocTitle/applyMarker). */
 
 'use strict';
 
@@ -36,7 +36,7 @@ async function showNews() {
   syncUrl('/neu');
   setContext(t('news.title'));
   setDocTitle(t('news.title'));
-  applyBackground(null);
+  applyMarker(null);
 
   app.innerHTML = '';
   // Der Tisch lays the head on felt (T14.3, #1281). A modifier class of its

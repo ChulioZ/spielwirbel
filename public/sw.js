@@ -27,7 +27,7 @@
  * See .claude/rules/frontend-build-cache-busting.md.
  */
 
-const CACHE = 'spielwirbel-shell-v343';
+const CACHE = 'spielwirbel-shell-v346';
 
 // Everything the app needs to boot offline. Kept in sync with the <script>/<link>
 // order in index.html; each entry must be a real, servable path or install fails
@@ -49,6 +49,18 @@ const SHELL = [
   // unlisted one would be fetched from the network on first wear and then
   // cached forever under whatever it happened to get.
   '/css/designs/tisch.css',
+  '/css/designs/ocean.css',
+  // The two Ocean faces (#1210) ARE listed, unlike every other woff2 (see the
+  // comment above SHELL): the design must render in its own type offline, and a
+  // face the cache-first handler has never been asked for is simply absent
+  // there, so an offline Ocean would fall back to the system sans. Five files,
+  // about 58 KB. The Tisch faces are still lazy, which is a question for its
+  // own flip (#1202) rather than one to settle here.
+  '/fonts/comfortaa-latin-700-normal.woff2',
+  '/fonts/figtree-latin-400-normal.woff2',
+  '/fonts/figtree-latin-500-normal.woff2',
+  '/fonts/figtree-latin-600-normal.woff2',
+  '/fonts/figtree-latin-700-normal.woff2',
   '/manifest.webmanifest',
   '/fonts/tabler-icons.css',
   '/js/error-report.js',
@@ -78,7 +90,6 @@ const SHELL = [
   '/js/demo-marker.js',
   '/js/member-colors.js',
   '/js/member-active.js',
-  '/js/round-designs.js',
   '/js/round-marker.js',
   '/js/round-theme.js',
   '/js/designs.js',

@@ -401,32 +401,14 @@ it is already coupled to the vote scale there. And `LOW_SCORE` in
 and the server has no opinion about it, so it is a render-time choice like
 `cover-size.js`'s widths rather than a shared contract.
 
-**The fourteenth is `public/js/round-designs.js`** (#953): the design registry —
-every palette and world a round can pick, each with its page tone, accent and
-declared scheme. It is the `session-log.js` direction, server-writes /
-client-renders, with the twist that the server writing it is the **demo seed**:
-`lib/demo-seed.js` requires it to build the stored `{ type: 'theme', id, page,
-accent }` for each of the three seeded rounds, and the home screen resolves that
-blob back through this file's own `resolveDesign()` to pick the backdrop, emblem
-and display face.
-
-Its trap is that a drift here is **completely silent in the direction that
-matters**. `resolveDesign()` returns null for an id it does not know and the
-caller keeps whatever was stored, so a hand-copied hex that no longer matches the
-registry — or a typo'd id — renders the round on the **standard palette** with no
-error, no 400 and a screen that still looks finished. That is precisely the "the
-worlds are invisible" state #953 exists to end, reintroduced by the change meant
-to end it. `designFor()` therefore throws on an unknown id rather than returning
-null, because the seed is the one caller that can afford to fail loudly at
-require time, and `test/demo-seed.test.js` asserts each seeded design round-trips
-through `resolveDesign()` with the registry's own page and accent.
-
-Note what deliberately did **not** join it: `lib/routes/marker.js` still
-stores a design id **without** checking it against this list. That is not an
-oversight and must not be "fixed" — an unknown id already resolves to the plain
-palette on the client, and validating server-side would turn a render-time
-fallback into a cross-boundary contract, which is the thing this file spends
-fourteen paragraphs telling you to avoid creating unnecessarily.
+**The fourteenth was the round design registry** (#953) — every palette and
+world a round could pick, which `lib/demo-seed.js` required to build the three
+seeded rounds' stored designs. The flip (#1202) retired it with the designs
+themselves; the demo now seeds a marker index per round, and what a retired
+design still decides — the marker it maps to — lives in `round-marker.js`
+(the twentieth, below). Its lesson is the twentieth's too: a lookup that falls
+back silently for an unknown id must be fed from the registry, never from a
+hand-copied value, or the drift renders a plausible default with no error.
 
 **The fifteenth is `public/js/provider-info-fields.js`** (#717/#724, moved from
 `lib/` by the 2026-09-08 audit): WHICH provider-sourced fields a game carries and
@@ -521,7 +503,7 @@ stylesheet, the `enabled` gate and `FACE_DESIGN`. `lib/app.js` requires it so
 `GET /api/config` can report the selectable ids; since #1186
 `lib/routes/account.js` validates `PATCH /me { design }` and
 `POST /design-chooser-seen` against the same list, `lib/demo.js` writes
-`FACE_DESIGN` at mint, `lib/faq.js` and `lib/legal.js` stamp `FACE_DESIGN`
+`FACE_DESIGN` at mint (Der Tisch since the flip, #1202), `lib/faq.js` and `lib/legal.js` stamp `FACE_DESIGN`
 onto the standalone pages' `<html data-design>` (#1198), and `lib/me-projection.js`
 RESOLVES the stored id against it on the way out (through `lib/account-design.js`
 since #1201, which the operator's design tile and the switch-back stamp share) —
@@ -574,9 +556,11 @@ fail in the *quiet* direction. A server that still said 8 while a design set gre
 would accept an index no design can render, and the four surfaces would paint
 `undefined` — no 400, no error, just an uncoloured round. Hence `MARKER_COUNT` in
 the schema rather than `.max(7)`, and hence the whole file being dependency-free:
-it deliberately does **not** resolve a legacy design itself (that needs
-`round-designs.js`), so `resolveMarker` takes the already-resolved id as an
-argument and stays requirable from Node.
+since the flip (#1202) it resolves a retired design itself, from the stored
+blob alone — the design id, or a pre-#903 page hex through `LEGACY_PAGE_DESIGN`
+— so it stays requirable from Node with no registry beside it. The two tables
+are the historical record of sixteen designs that no longer exist in code:
+change an entry and every legacy round mapped through it changes colour.
 
 **Each new instance must be named above.** `test/rule-enumerations.test.js`
 asserts every `require('../public/js/…')` under `lib/routes/` and `lib/` appears

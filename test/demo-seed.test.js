@@ -28,7 +28,8 @@ const { TAG_ICONS } = require('../lib/tag-icons');
 // "is this drawable" asserts its own arithmetic rather than the pool's
 // (.claude/rules/active-games-filter-sites.md).
 const { isActiveGame, fitsPlayerCount, ownedByParty } = require('../public/js/draw-pool');
-const { resolveDesign } = require('../public/js/round-designs');
+const { isMarkerIndex } = require('../public/js/round-marker');
+const { designMarkers } = require('../public/js/designs');
 const { MIN_TABLE_PARTIES } = require('../public/js/table-split');
 const { ENDINGS } = require('../public/js/session-outcome');
 const { PROVIDER_INFO_FIELDS } = require('../public/js/provider-info-fields');
@@ -85,31 +86,22 @@ test('every seeded cover passes the same guard the add-game route applies', () =
   }
 });
 
-test('every seeded design is a real registry entry, stored in the shape the app reads', () => {
-  // A design that does not resolve renders as the STANDARD palette with no error
-  // anywhere — i.e. exactly the "the worlds are invisible" state #953 exists to
-  // end, reintroduced silently. resolveDesign() is the app's own lookup, so this
-  // asserts what the home tile will actually do rather than re-deriving it.
-  for (const round of seed.DEMO_ROUNDS) {
-    const design = resolveDesign(round.design);
-    assert.ok(design, `round '${round.key}': design ${JSON.stringify(round.design)} resolves to nothing`);
-    assert.strictEqual(round.design.type, 'theme');
-    assert.strictEqual(round.design.page, design.page, `round '${round.key}': page hex is not the registry's`);
-    assert.strictEqual(round.design.accent, design.accent, `round '${round.key}': accent is not the registry's`);
+test('every seeded round names its own colour marker, distinct in every design (#1202)', () => {
+  // Rounds own no design since the flip; the lobby tells them apart by marker
+  // alone. Three rounds sharing a colour — which the id hash would happily
+  // produce — would show a visitor nothing of that. Distinct INDEXES are not
+  // enough on their own: a design may paint two indexes alike, so the check is
+  // on the colours each design actually renders.
+  const markers = seed.DEMO_ROUNDS.map((r) => r.marker);
+  for (const [i, m] of markers.entries()) {
+    assert.ok(isMarkerIndex(m), `round '${seed.DEMO_ROUNDS[i].key}': ${m} is not a marker index`);
   }
-});
-
-test('the seed shows a world in each scheme, and at least one round without one', () => {
-  // The point of seeding three rounds rather than one (#953): the home screen
-  // renders each card in its own world's backdrop, emblem and display face, so a
-  // seed whose rounds all share a design demonstrates none of that — and three
-  // worlds would misrepresent the plain palettes as legacy. A light world, a
-  // dark one and a palette is the smallest set that shows all three facts.
-  const designs = seed.DEMO_ROUNDS.map((r) => resolveDesign(r.design));
-  const worlds = designs.filter((d) => d.world);
-  assert.ok(worlds.some((d) => d.scheme !== 'dark'), 'no LIGHT world is seeded');
-  assert.ok(worlds.some((d) => d.scheme === 'dark'), 'no DARK world is seeded — #904 is then invisible in the demo');
-  assert.ok(designs.some((d) => !d.world), 'every seeded round carries a world; a plain palette must be shown too');
+  for (const id of ['klassisch', 'tisch']) {
+    const colours = markers.map((m) => designMarkers(id)[m].color);
+    assert.strictEqual(new Set(colours).size, colours.length, `${id}: two demo rounds share a colour`);
+  }
+  assert.strictEqual(seed.DEMO_ROUNDS.some((r) => 'design' in r), false,
+    'a seeded round design would be written by no route and rendered by no screen');
 });
 
 test('the two off-shelf states are both seeded, and neither is what keeps a round drawable', () => {

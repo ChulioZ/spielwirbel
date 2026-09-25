@@ -4821,20 +4821,27 @@ module.exports = function repoContract(repo) {
       const mk = (over) => repo.createUser({
         ...userFields(), tenantId: `dsn-${Math.random().toString(16).slice(2)}`, ...over,
       });
-      await mk({});                                                   // absent -> klassisch
-      await mk({ design: 'klassisch', designSwitchedBack: false });
-      await mk({ design: 'tisch', designSwitchedBack: false });
-      await mk({ design: 'not-a-design' });                           // unknown -> klassisch
-      await mk({ design: 'klassisch', designSwitchedBack: true });    // went back, stayed
-      await mk({ design: 'tisch', designSwitchedBack: true });        // went back, tried again
+      // `seen` is an ANSWERED chooser. Since the flip (#1202) an account that
+      // never answered wears the face whatever it stores — the pre-flip shape is
+      // exactly `design: 'klassisch'` with no answer.
+      const seen = { designChooserSeen: '2026-09-22' };
+      await mk({});                                                   // absent -> the face
+      await mk({ design: 'klassisch', designSwitchedBack: false });   // pre-flip, untouched -> the face
+      await mk({ design: 'klassisch', designChooserSeen: '' });       // '' is no answer -> the face
+      await mk({ design: 'klassisch', designSwitchedBack: false, ...seen });
+      await mk({ design: 'tisch', designSwitchedBack: false, ...seen });
+      await mk({ design: 'not-a-design', ...seen });                  // unknown -> the face
+      await mk({ design: 'klassisch', designSwitchedBack: true, ...seen });    // went back, stayed
+      await mk({ design: 'tisch', designSwitchedBack: true, ...seen });        // went back, tried again
       // A STRING 'true' is not the flag. Postgres' ->> would read it as 'true';
       // the jsonb comparison must agree with the JSON backend's `=== true`.
-      await mk({ design: 'klassisch', designSwitchedBack: 'true' });
+      await mk({ design: 'klassisch', designSwitchedBack: 'true', ...seen });
     };
 
     await t.test('design adoption counts ACCOUNTS by the design they are SHOWN', async () => {
       /* Resolved exactly as /me resolves it (lib/account-design.js): an absent
-         key and an id this instance does not offer both count as the face. The
+         key, an unanswered chooser and an id this instance does not offer all
+         count as the face (Der Tisch since #1202). The
          KEYS are the offered ids, never a stored string — a stored 'not-a-design'
          must not appear, which is what keeps user-reachable text off the card. */
       const mid = await repo.instanceMetrics();
@@ -4844,8 +4851,8 @@ module.exports = function repoContract(repo) {
 
       assert.deepEqual(Object.keys(m.designAdoption.byDesign), selectableDesignIds({ production: false }),
         'one key per offered design, in registry order, and nothing else');
-      assert.equal(d('klassisch'), 5, 'absent, klassisch x3 and an unknown id all wear Klassisch');
-      assert.equal(d('tisch'), 2);
+      assert.equal(d('klassisch'), 3, 'only the accounts that ANSWERED with Klassisch wear it');
+      assert.equal(d('tisch'), 6, 'absent, unanswered x2, tisch x2 and an unknown id wear the face');
       assert.equal(m.designAdoption.switchedBack - mid.designAdoption.switchedBack, 1,
         'only the flag AND a current Klassisch counts — not a return to Tisch, not a string');
       const sum = (o) => Object.values(o).reduce((a, b) => a + b, 0);
@@ -4854,10 +4861,10 @@ module.exports = function repoContract(repo) {
     });
 
     await t.test('in production an unoffered design counts as the face, like /me', async () => {
-      /* Before the flip only Klassisch is enabled, so a Tisch picked on a dev
-         instance is a stored value production never shows. The tile must report
-         what the account SEES — otherwise it would count Tisch users on an
-         instance where nobody can be one. */
+      /* A design production does not offer (the state the next design is in
+         while it is built) is a stored value production never shows. The tile
+         must report what the account SEES — otherwise it would count users of a
+         design nobody on the instance can wear. */
       await designAccounts();
       const was = process.env.NODE_ENV;
       process.env.NODE_ENV = 'production';
@@ -5090,6 +5097,7 @@ module.exports = function repoContract(repo) {
       });
       await repo.createUser({
         ...userFields(), tenantId: tn, bgStats: true, design: 'klassisch', designSwitchedBack: true,
+        designChooserSeen: '2026-09-22',
       });
 
       const plain = await repo.instanceMetrics();

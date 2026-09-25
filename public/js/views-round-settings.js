@@ -33,7 +33,7 @@ async function showRoundSettings(rid) {
   let round;
   try { round = await fetchRound(rid); }
   catch { return showHome(); }
-  applyBackground(round.background, round);
+  applyMarker(round);
   setContext(round.name);
   setDocTitle(t('rail.settings'), round.name);
 
@@ -137,7 +137,7 @@ async function showMarker(rid) {
   let round;
   try { round = await fetchRound(rid); }
   catch { return showHome(); }
-  applyBackground(round.background, round);
+  applyMarker(round);
   setContext(round.name);
   setDocTitle(t('round.marker'), round.name);
 
@@ -155,10 +155,9 @@ async function showMarker(rid) {
      all.
 
      This screen was the DESIGN picker until #1187: seventeen cards, a palette
-     group and a world poster grid. Rounds no longer own a design, so the worlds
-     are no longer offered — the ones already on a round keep rendering until the
-     flip (#1202) deletes the world CSS, which is why round-theme.js still
-     resolves them. */
+     group and a world poster grid. Rounds no longer own a design; since the
+     flip (#1202) a round that wore one shows the marker it maps to
+     (round-marker.js), and this screen shows that marker pressed. */
   const active = activeDesign();
   const designId = (active && active.id) || FACE_DESIGN;
   const markers = designMarkers(designId);
@@ -224,7 +223,7 @@ async function showTags(rid) {
   let round;
   try { round = await fetchRound(rid); }
   catch { return showHome(); }
-  applyBackground(round.background, round);
+  applyMarker(round);
   setContext(round.name);
   setDocTitle(t('tags.title'), round.name);
 

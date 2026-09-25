@@ -15,10 +15,10 @@ puts **light ink on a light page** the moment you open a round.
 
 ## Why, and it is not the design's fault
 
-Until the flip (#1202) a round keeps its own palette, and `applyBackground()`
-writes that palette's two colours **inline on `<html>`**, where they outrank
-every stylesheet. It also calls `setScheme()` with the **round's** scheme, not
-the user's. So inside a round on a light palette:
+Until the flip (#1202) a round kept its own palette, and `applyBackground()`
+wrote that palette's two colours **inline on `<html>`**, where they outrank
+every stylesheet. It also set the scheme from the **round's** design, not the
+user's. So inside a round on a light palette:
 
 | | value | from |
 |---|---|---|
@@ -61,10 +61,13 @@ Split the stylesheet in two:
 :root[data-design="tisch"][data-scheme="dark"] { --surface: #4a3423; … }
 ```
 
-In a light round the colour block simply does not match, and the round's palette
-resolves exactly as it does under Klassisch — the documented transition
-behaviour, *a round's design wins while it is applied*. Outside a round
-`setScheme(null)` falls back to the user design, so the block applies.
+In a light round the colour block simply did not match, and the round's palette
+resolved exactly as it does under Klassisch. **Since the flip no round writes the
+page** — `paintDesign()` puts the account's design there on every screen — so a
+Tisch account is dark everywhere and the gate always matches. Keep it anyway: it
+is what makes a design's colours cohere with the scheme they were measured on,
+and the day a design appears in both schemes, or something else owns the page
+again, the ungated form is the catastrophic direction again.
 
 ## It binds a COMPONENT RULE just as hard, and #1188 shipped five ungated
 
@@ -104,27 +107,21 @@ which is unset outside the block. `test/tisch-form-sheets.test.js` pins both.
 ## A design's decoration must not take a pseudo-element the app already owns
 
 Found the same day, and it is the neighbouring trap rather than this one.
-`:is(.theme-card, .round-card)[data-world]::before` is the **world motif's**
+`:is(.theme-card, .round-card)[data-world]::before` was the **world motif's**
 slot on a lobby tile, at `opacity: .14; z-index: -1`. A felt table drawn on
 `.round-card::before` therefore came out 14% transparent and behind the card —
 on world rounds only, i.e. two of four tiles, which reads as a data problem.
-
-Both `::before` and `::after` on the app's cards are spoken for (`::after` is
-the world's corner glyph). Draw on a **real element** instead: the lobby table
+The worlds are gone since #1202; the lesson is that the app's own
+pseudo-elements on a shared component may already be spoken for, and a design
+cannot see that from its own stylesheet. Draw on a **real element** instead: the lobby table
 is `.round-card__emblem`, which already *is* the round's colour mark. And when
 you do, remember that a positioned box paints after in-flow content — the
 emblem covered the round's name until it took `z-index: -1` under an
 `isolation: isolate` on the card.
 
-**The voice/colour split is the useful half**, and it is worth keeping after
-#1202 retires round designs: it is the thing that answers "what still belongs to
-this design when someone else owns the page".
-
-**What the gate does NOT cover** is a *dark* round design under a dark user
-design — there the block matches and its tokens meet that world's page. That one
-is legible by construction rather than by luck (every world page is darker than
-Nussbaum and every Tisch ink is light, so each pair can only measure higher),
-which is the argument to re-make rather than to assume for the next design.
+**The voice/colour split is the useful half**, and it outlived the round designs
+(#1202): it is the thing that answers "what still belongs to this design when
+someone else owns the page".
 
 ## The resolver has to read both blocks
 
@@ -141,8 +138,9 @@ two cache traps, and the "no colours here" rule this supersedes),
 `.claude/rules/dark-designs-and-the-on-accent-flip.md` (why `--on-accent` is a
 property of the FILL, not of the ground — an overlay that flips the scheme on a
 subtree must not re-point it),
-`.claude/rules/routed-screens-apply-the-round-design.md` (the call that puts the
-round's palette on `<html>` in the first place),
+`.claude/rules/routed-screens-apply-the-round-marker.md` (the call that put the
+round's palette on `<html>` before the flip, and puts its marker there since),
 `.claude/rules/overlay-surface-flip-strands-the-status-tokens.md` (the same
 blind spot inside ONE design, plus the contrast sweep that looped only one of
-the two design registries).
+the two design registries), `.claude/rules/light-design-gate-and-shared-design-ids.md`
+(a LIGHT design gates the other way, on `:not([data-scheme="dark"])`).

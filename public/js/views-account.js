@@ -16,7 +16,7 @@
    than shown an empty shell. Part of the shared frontend scope — loads after
    account.js/core.js and uses their helpers (accountApi/isLoggedIn/
    accountsActive/setTokens, h/esc/app/t/toast, syncUrl/setContext/
-   applyBackground, authErrorKey). */
+   applyMarker, authErrorKey). */
 
 'use strict';
 
@@ -27,7 +27,7 @@ async function showAccount() {
   syncUrl('/konto');
   setContext(t('konto.title'));
   setDocTitle(t('konto.title'));
-  applyBackground(null);
+  applyMarker(null);
   app.innerHTML = '<p class="muted">…</p>';
 
   // /me rather than the cached `accountUser`: it is the authoritative record and

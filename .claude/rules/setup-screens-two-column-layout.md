@@ -86,8 +86,8 @@ re-render, and only one is ever in the accessibility tree.
   shelf pushes the CTA straight back below the fold, i.e. re-creates the defect —
   which is why the strip's own unbounded list is laid out on ONE row that scrolls
   sideways rather than wrapping.
-- **Anything painted ON the pool needs a rule per presentation.** Slot 10's
-  world vessel (#1086) is the first ornament to land here, and the issue's own
+- **Anything painted ON the pool needs a rule per presentation.** The round
+  worlds' vessel (#1086, retired at #1202) was the first ornament to land here, and the issue's own
   one-selector proposal named `.pool-shelf` — which is not rendered from 860px
   up, so the widest presentation would have got nothing.
   `.claude/rules/ornament-slots-need-every-presentation.md` has the measurement

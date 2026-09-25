@@ -4,14 +4,15 @@ paths:
   - "public/js/views-round-settings.js"
   - "public/js/core.js"
   - "public/js/round-theme.js"
-  - "public/js/round-designs.js"
+  - "public/js/designs.js"
   - "public/index.html"
 ---
 # Derive UI colors from the theme variables, don't hardcode them
 
-Each round picks a design (page background + accent). The whole UI must follow
-it, so `styles.css` derives every tone from two custom properties that
-`applyBackground()` sets: `--page-bg` and `--brand`.
+Each account wears a design (page background + accent, `public/js/designs.js`);
+until the flip (#1202) each ROUND picked one. The whole UI must follow it, so
+`styles.css` derives every tone from two custom properties that `paintDesign()`
+(`public/js/round-theme.js`) sets: `--page-bg` and `--brand`.
 
 **Rule:** when styling something new, never hardcode a hex that is really "a
 lighter/darker shade of the page or accent" — use `color-mix()` on the existing
@@ -32,8 +33,9 @@ variables, or one of the prepared families:
   var(--surface))`, not fixed pastels.
 
 **Why:** the original redesign hardcoded warm tones (a brown stage, beige
-placeholder icons, amber pastels). On cool themes (Blaugrau, Schiefer, Lavendel)
-they clashed badly — three color worlds on one screen. The fix was exactly this
+placeholder icons, amber pastels). On the cool round palettes of the time
+(Blaugrau, Schiefer, Lavendel) they clashed badly — three colour worlds on one
+screen. The fix was exactly this
 derivation; don't regress it. Category tags (`.tag--digital` etc.) and medal
 silver/bronze are intentionally fixed — they encode meaning, not theme.
 
@@ -77,9 +79,8 @@ example will not mean what it meant there. See
 
 Also note: the page backdrop (soft accent glow + paper grain) lives entirely in
 the `body` rule in `styles.css`. There is no JS texture generation anymore —
-`applyBackground()` sets/removes the two variables plus the browser chrome
-(below) and the world hook (§ Worlds); a legacy `pattern` field in old data is
-ignored.
+`paintDesign()` sets/removes the two variables plus the browser chrome (below);
+a legacy `pattern` field in old data is ignored.
 
 ## A NON-FLIPPING fill needs a non-flipping ink — `--gold-deep` is not it (#937)
 
@@ -139,122 +140,31 @@ exempts it — but the glyph is the thing that says „sealed", and because `--g
 is a fill *here and nowhere else*, the fix moves no medal, crown or trophy. An
 exemption is the right answer when the fix has blast radius; this one had none.
 
-## Worlds (#903): one hook, ten slots, additive over the tokens
+## The round worlds are retired (#1202) — two of their constraints outlive them
 
-The registry is `public/js/round-designs.js` — `PALETTES`, `WORLDS` and
-`resolveDesign(bg)`, which finds a design by its stable `id` first and by the
-legacy page hex second (palettes only: a hex-only round predates worlds). The
-stored shape is `{ type: 'theme', id, page, accent }`. `lib/routes/marker.js`
-NAMES `id` in its zod object because that object strips unknown keys, and stores
-it without validating it against the list — an unknown id resolves to the plain
-palette client-side, so the list is not a cross-boundary contract.
+Rounds could wear seven worlds (#903–#905, #1084): a display face and SVG
+ornaments on ten pseudo-element slots, keyed off `<html data-world>`. The flip
+removed them with the palettes; a round that wore one now shows the colour
+marker its world maps to (`public/js/round-marker.js`). What still binds every
+user design that paints something of its own:
 
-A world is the same two tokens plus ONE hook: `applyBackground()` sets
-`<html data-world="…">` from the entry's `world` and clears it otherwise. Every
-ornament rule keys off that attribute, in two halves at the end of `styles.css`:
-
-- **one token block per world** (`[data-world="forest"]`) — its display face
-  and its artwork, hand-authored SVG silhouettes as data URIs;
-- **nine slot rules keyed off the bare `[data-world]`** — page backdrop,
-  primary-button frame, section-heading rule, card corner, empty-state scene,
-  finale stage, (#940) the winner reveal's victory scene, (#1082) the
-  **crown**: the stage art as a text-free strip above the round's name, on the
-  hub hero and the desktop rail, and (#1083) the **floor** under the Pokale
-  podium, and (#1086) the **vessel**
-  behind the session pot's covers — each a
-  pseudo-element with `pointer-events: none`, painting the mask in a THEME
-  token (`--brand`, `--brand-strong`, `--stage-ink`), never in a shade of its
-  own. Slot 7 is the one with text ON its host, so its bold alpha is bought
-  with geometry rather than measured: the hero paints only in two side gutters
-  and a bottom band, and the **host** reserves exactly those as padding
-  through the **same** custom properties the masks are sized with, so the art
-  and the reservation cannot drift apart. Since #1056 there are TWO hosts —
-  the split screen's `.spotlight` card and the result screen's gold `.tafel-top`
-  group — and the group declares a tighter `--victory-col` because it holds
-  full-width rows rather than two small covers. It also re-shapes the confetti
-  bits into the world's particles (fireflies, streaking stars) through tokens —
-  the one real element a world touches, and the generator in `views-session.js`
-  stays world-agnostic (`test/result-tafel.test.js` scans it for a world
-  name).
-
-  **Slot 10 (#1086) is the first slot whose host is rendered TWICE**, and it is
-  the shape to check for before writing any new one: the session pot is a tile
-  panel from 860px up and a scrolling strip below, each `display: none` at the
-  other's widths, so the slot is two rules and the spec lists both. The panel
-  reserves its band like slots 5/8/9; the strip cannot (the screen fills a
-  390x844 phone exactly) and is text-free by geometry instead. The band's 84px
-  cap is measured off the CTA, not chosen. Both traps —
-  and why the issue's own single `.pool-shelf` selector painted nothing at
-  desktop widths — are in
+- **The face changes through `--font-display` only** — `--font` (body text)
+  stays Nunito, so reading is never harmed; and **`--surface` is declared by the
+  two token blocks and a design's own resolved root block, nowhere else**
+  (`test/game-detail-hero.test.js` pins *where*, not *what*).
+- **Artwork paints in a theme TOKEN, never a shade of its own, and a motif under
+  text costs contrast the plain-background harness cannot see** — so bold art
+  lives in text-free bands, and an alpha tuned on a light design is not portable
+  to a dark one (`.claude/rules/alpha-washes-are-not-comparable-across-schemes.md`).
+  Authoring traps (a mask reads alpha; a single-weight face needs a weight range):
+  `.claude/rules/single-weight-display-faces.md`. A slot rendered in two
+  presentations needs a rule for each:
   `.claude/rules/ornament-slots-need-every-presentation.md`.
-
-  **Slot 8 (#1082) takes slot 7's reservation discipline to a second place, and
-  needs it for the same reason.** The crown is painted at
-  `height: var(--crown-h)` and its host reserves
-  `padding-top: calc(var(--crown-h) + N)` — ONE property carrying both. Two
-  literals that must agree drift on the first retune and the failure is silent
-  in both directions: too little padding clips the art, too much leaves an empty
-  band above the round's name, and nothing goes red.
-
-  Its own wrinkle is that the art is a 600x140 SCENE cropped to a <=96px strip,
-  so which edge survives is per world: `--world-crown-y` is `top` where the
-  motif hangs (canopy, waves, webs) and `bottom` where it stands (skyline, rank,
-  horizon). A fixed edge would show half the worlds the empty part of their own
-  artwork — and it would look deliberate.
-
-  The rail's copy is gated on `min-height: 860px` as well as the rail's own
-  width (operator decision): the rail measures 746px tall under the demo banner
-  and its last group sits at y 860–899, so at 1280x800 a 48px crown pushes it
-  past the fold. The hero's is unconditional, because the hub scrolls.
-
-  And under `prefers-contrast: more` the RESERVATION goes with the art — a
-  hidden crown over an unchanged `padding-top` is the empty band again. Same for
-  the coverless tile, which gets its tornado back rather than nothing at all.
-
-  **Slot 9 (#1083) is the third reservation, and it adds two wrinkles.** The
-  podium's floor re-uses slot 7's victory band under the pedestals, which is free
-  artwork — but a world may carry its ground line on EITHER victory layer
-  (Sci-Fi's `--world-victory-band` is `none`; its pad and starfield are on the
-  `-2` layer), so the floor lists both masks or one world of six gets a bare
-  podium and nothing says so. And its `--podium-band` must be an absolute LENGTH,
-  not slot 5's capped percentage: a percentage resolves against the containing
-  block's WIDTH in `padding-bottom` and against the element's own HEIGHT in
-  `mask-size`, so one property would silently mean two different bands. The same
-  band reaches the shareable recap card, where the card GROWS by it rather than
-  fitting it in — the canvas's wordmark and frame corner anchor on that foot, so
-  the band stays text-free by construction.
-
-Three constraints, each with its reason: the face changes through
-`--font-display` only (`--font` stays Nunito, so reading is never harmed);
-`--surface` is set by the two token blocks and nowhere else (#904 —
-`test/game-detail-hero.test.js` pins *where*, not *what*); and the preview card and the home
-tile carry the attribute THEMSELVES, so the slots must read TOKENS — custom
-properties inherit from the nearest element that sets them, which is what lets
-a Sci-Fi card inside a Forest round preview Sci-Fi. Since #1085 the picker's
-world card also RENDERS slot 8's art, as a real `<span>` rather than a
-pseudo-element — its own `::before` is already the backdrop — so the card is
-judged as the crown the round will wear; the pseudo-element discipline above
-binds the SLOTS, not everything a world paints. A motif under text costs
-contrast the plain-background harness cannot see (a stage tile at .16 put
-`--stage-faint` at 2.27:1), so the bold scenes live in text-free bands.
-`test/round-worlds.test.js` pins the hook, the token set, the pseudo-element
-discipline, the two bands' geometry and the two media gates. **Sci-Fi is dark
-since #904** and a world may declare `scheme: 'dark'` like any palette; the
-ornaments need no change, because every slot paints in a theme token. The dark
-half is `.claude/rules/dark-designs-and-the-on-accent-flip.md`. Two traps in
-authoring a world's artwork — a mask reads alpha, so white is not a cutout, and
-a single-weight face needs a `font-weight` range — are
-`.claude/rules/world-artwork-masks-and-single-weight-faces.md` (#905).
-**A slot's ALPHA is not portable between a light world and a dark one** — one
-number over both buys a third of the step on the dark side, and the wash still
-passes every contrast bar while being invisible:
-`.claude/rules/alpha-washes-are-not-comparable-across-schemes.md` (#1138), which
-also has why a `var()` fallback's real consumer may not be the host you expect.
 
 ## The browser chrome is themed too, and it is NOT a CSS variable
 
 `<meta name="theme-color">` is an HTML attribute, so no amount of `color-mix()`
-reaches it — `applyBackground()` writes it directly. Adding a themed surface?
+reaches it — `paintDesign()` writes it directly. Adding a themed surface?
 Check whether it lives outside the stylesheet before reaching for a variable.
 The reasoning (why it follows the ACCENT rather than the page, and the two
 constraints on changing it) is `.claude/rules/theme-color-meta-tag.md`.

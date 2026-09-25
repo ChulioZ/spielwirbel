@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="public/icons/icon-192.png"
+  <img src="public/icons/tisch/icon-192.png"
        width="96"
        height="96"
        alt="">
@@ -17,9 +17,9 @@ phones, or through a link — and
 remembers what your round actually likes.
 
 <p align="center">
-  <img src="public/img/landing-shelf-phone.en.webp" alt="The shelf — a group's games as tiles, each with its Spielwirbel score" width="250">
-  <img src="public/img/landing-vote.en.webp" alt="Voting — one drawn game and a scale of five faces" width="250">
-  <img src="public/img/landing-result.en.webp" alt="The result — the game that was played, with the group's ranking below it" width="250">
+  <img src="public/img/tisch/landing-shelf-phone.en.webp" alt="The shelf — a group's games as tiles, each with its Spielwirbel score" width="250">
+  <img src="public/img/tisch/landing-vote.en.webp" alt="Voting — one drawn game and a scale of five faces" width="250">
+  <img src="public/img/tisch/landing-result.en.webp" alt="The result — the game that was played, with the group's ranking below it" width="250">
 </p>
 
 Self-hostable, German + English + Spanish + French + Italian + Dutch + Portuguese + Finnish + Korean UI, no tracking. Try it without an account at
@@ -81,7 +81,8 @@ and documented in [`docs/configuration.md`](docs/configuration.md).
   *not* own, ranked against its own shelf, its own ratings and what it actually
   plays, using a local BoardGameGeek corpus. Plain weighted arithmetic — no AI, nothing invented —
   and every card says why it is there.
-- **Per-round design** (colour schemes and themed worlds), custom tags, an
+- **A design of your own** — *Der Tisch* (dark felt and brass) or *Klassisch*,
+  per person, with a colour marker per round — custom tags, an
   installable **PWA** that works offline, shareable deep links, a
   **Freundeskreis** feed between accounts, and
   **passkey** sign-in (fingerprint, face or device PIN — alongside the password,
