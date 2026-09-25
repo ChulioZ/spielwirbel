@@ -64,6 +64,33 @@
 // which re-points the head's <link>s when a design is worn, and
 // test/design-marks.test.js, which checks every file exists at the size it
 // declares. Paths are literals for the same build reason `stylesheet` is.
+//
+// The POSTER fields (#1277) are what the first-start chooser prints for a
+// design under a design that composes it as posters (Der Tisch's T5.3/T5.4).
+// Every one is OPTIONAL, and a row without them still gets a usable poster —
+// test/design-posters-tisch.test.js renders one to prove it:
+//
+//   `wordmarkKey`  the bill's big word. Absent: the design's own name.
+//   `taglineKey`   the line under it. Absent: no line.
+//   `shortKey`     the phone row's one sentence. Absent: `descKey`.
+//   `ritualKeys`   the words this design says at the table, joined with „·".
+//                  They are the APP's own keys, not copies — a design that
+//                  renames nothing (Der Tisch, T9 / B8) must show the words the
+//                  app actually uses, and a copy would drift from them.
+//                  Absent: no line.
+//   `poster`       { ground: [top, bottom], ink, sub } — the bill's printing
+//                  colours, painted INLINE from here, because a poster has to
+//                  show a design's material while the page wears another, and
+//                  loading every design's stylesheet to draw them is exactly
+//                  what the chooser must not do. Absent: the design's
+//                  `page`/`accent` through the tile's --tile-* defaults.
+//
+// `poster` is NOT a set of tokens and is never applied to the page — which is
+// why Klassisch may state one while still declaring no `page`/`accent` (it IS
+// :root, and restating those would drift). test/a11y-contrast.test.js sweeps
+// it: `ink` is the wordmark, set at display size, and must clear 3:1 on both
+// ground stops; `sub` is small text — the tagline, and the wordmark in the
+// phone's 58px tile — and must clear 4.5:1 on both.
 const DESIGN_REGISTRY = [
   // Today's look. No `page`/`accent`: styles.css's :root already is Klassisch,
   // so applyDesign clears the two inline properties instead of restating them —
@@ -73,6 +100,13 @@ const DESIGN_REGISTRY = [
     id: 'klassisch',
     labelKey: 'design.klassisch.name',
     descKey: 'design.klassisch.desc',
+    // T5.3 prints Klassisch's bill with the BRAND rather than the design's
+    // name: it is the look Spielwirbel has always had.
+    wordmarkKey: 'app.title',
+    taglineKey: 'design.klassisch.tagline',
+    shortKey: 'design.klassisch.short',
+    ritualKeys: ['startSession.potHeading', 'round.startSession', 'startSession.draw'],
+    poster: { ground: ['#f6f3ec', '#eae5d9'], ink: '#c2410c', sub: '#6b6358' },
     // The eight ACCENTS of the eight light palettes, in the palettes' own order
     // (#1187) — not their page tones. The accent is what identified a palette:
     // three of the eight pages are near-identical creams (#f4f1ea / #f6efe2 /
@@ -138,6 +172,14 @@ const DESIGN_REGISTRY = [
     id: 'tisch',
     labelKey: 'design.tisch.name',
     descKey: 'design.tisch.desc',
+    // No wordmarkKey: T5.3's bill says „Der Tisch", which is the name.
+    taglineKey: 'design.tisch.tagline',
+    shortKey: 'design.tisch.short',
+    ritualKeys: ['startSession.potHeading', 'round.startSession', 'startSession.draw'],
+    // Tannenfilz top stop to foot (T8.1), the gold wordmark — gold is T1's
+    // display colour, legal as text on felt from 24px, and the poster sets it
+    // at 25px — and T5.3's pale-green tagline ink.
+    poster: { ground: ['#2f6b4d', '#1c4531'], ink: '#f0cf86', sub: '#eaf6ec' },
     scheme: 'dark',
     page: '#3b2a12',
     accent: '#d9a951',

@@ -4389,7 +4389,9 @@
    - T5.2's two-column dashboard (the „Du" card of setting rows beside the
      Design card, the BoardGameGeek row card, the danger card) is Konto's
      composition — #1265, the block after this one.
-   - T5.3's posters with their own wordmark and button — #1277.
+   - T5.3's posters with their own wordmark and button, and T5.4's rows —
+     #1277, built in „The bills, the posters and the rows" below
+     (design-picker.js designPosterSheet, behind designIs('tisch')).
    - T5.1's „Lieber ohne Passwort? · Link schicken" card has no feature behind
      it at all: this app has no magic-link login. That is a feature question,
      not a layout one.
@@ -4676,17 +4678,19 @@
   }
 }
 
-/* --- The design posters (T5.2, T5.3, T5.4) ---------------------------------
-   T5.3 makes every design a printed bill: its own material across the head,
-   then the name, a badge and one sentence on the paper below. The card
-   already carries exactly those two halves in that order, so the change is
-   that the tile stops being an inset swatch beside the text and becomes the
-   card's head — `padding: 0` on the card, the padding moved onto the body.
+/* --- The design cards in Konto (T5.2) --------------------------------------
+   T5.2 prints every design as a small bill: its own material across the head,
+   then the name, a badge and one sentence below. The card already carries
+   exactly those two halves in that order, so the tile stops being an inset
+   swatch beside the text and becomes the card's head — `padding: 0` on the
+   card, the padding moved onto the body. Since #1277 the head is a BILL
+   (design-picker.js designBill): the design's wordmark on its own poster
+   colours, the block after the kicker below.
 
-   The list renders in two grounds and this rule has to hold in both: on wood
-   in the Konto section, and on paper inside the first-start chooser, where
-   the overlay rule above has already re-pointed --surface. Nothing here names
-   a ground, so both follow. */
+   The first-start chooser no longer renders this list under Der Tisch — it
+   prints T5.3's posters and T5.4's rows instead (#1277, further down). The
+   card rules still hold on paper as well as on wood, because nothing here
+   names a ground. */
 :root[data-design="tisch"][data-scheme="dark"] .design-card {
   padding: 0;
   gap: 0;
@@ -4757,6 +4761,229 @@
    on --paper-raised. */
 :root[data-design="tisch"][data-scheme="dark"] .design-chooser__kicker {
   color: var(--gold-ink);
+}
+
+/* --- The bills, the posters and the rows (#1277, T5.2–T5.4) ---------------
+   A BILL is a design's tile printed: its wordmark (and, on a poster, its
+   tagline) on its own poster ground. Every colour arrives INLINE from the
+   design's registry row (designs.js `poster`) as --poster-top/-foot/-ink/-sub,
+   because the chooser shows every design at once while the page wears one —
+   so this file names none of them, and a design without a `poster` falls back
+   to its --tile-page/--tile-accent pair. The registry's own thresholds are
+   swept in test/a11y-contrast.test.js: the wordmark (--poster-ink) is only
+   ever set at display size here — 20px and up, bold — and every smaller text
+   on a bill takes --poster-sub, which is held to 4.5:1.
+
+   GEOMETRY is gated on the design alone (the markup exists whenever Der Tisch
+   is worn), COLOURS keep the scheme gate — the split the #1265 block states. */
+:root[data-design="tisch"] .design-tile--bill {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: 12px 14px;
+  overflow: hidden;
+}
+:root[data-design="tisch"][data-scheme="dark"] .design-tile--bill {
+  background: linear-gradient(180deg,
+    var(--poster-top, var(--tile-page)),
+    var(--poster-foot, var(--poster-top, var(--tile-page))));
+}
+:root[data-design="tisch"] .design-tile__word {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 25px;
+  line-height: 1.05;
+  overflow-wrap: anywhere;
+}
+:root[data-design="tisch"] .design-card .design-tile__word { font-size: 20px; }
+:root[data-design="tisch"] .design-tile__sub {
+  margin-top: 8px;
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+:root[data-design="tisch"][data-scheme="dark"] .design-tile__word { color: var(--poster-ink, var(--tile-accent)); }
+:root[data-design="tisch"][data-scheme="dark"] .design-tile__sub { color: var(--poster-sub, var(--tile-accent)); }
+
+/* T5.3: the chooser as a wide sheet of posters. 1240px is the sheet's own
+   card inside its 1440 frame; below that the sheet takes the backdrop's width. */
+:root[data-design="tisch"] .sheet.design-chooser--posters { max-width: 1240px; }
+:root[data-design="tisch"] .design-chooser__head {
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+}
+:root[data-design="tisch"] .design-chooser__intro { flex: 1 1 28rem; min-width: 0; }
+:root[data-design="tisch"] .design-chooser__intro h2 { font-family: var(--font-display); }
+:root[data-design="tisch"] .design-chooser__body { margin: 6px 0 0; max-width: 88ch; }
+:root[data-design="tisch"] .design-chooser__skip { flex: none; min-height: 44px; }
+
+/* auto-fill over a 230px floor, so no breakpoint: four across the sheet's
+   1240, three at a laptop's 900, two at a tablet's 700 — and the „Später
+   mehr" tile simply takes the next cell. Registry order is reading order. */
+:root[data-design="tisch"] .design-posters {
+  list-style: none;
+  margin: 0;
+  padding: 20px 0 6px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 16px;
+}
+:root[data-design="tisch"] .design-poster {
+  display: flex;
+  flex-direction: column;
+  border: 2px solid transparent;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+:root[data-design="tisch"] .design-poster > .design-tile--bill {
+  height: 196px;
+  padding: 16px;
+  border: 0;
+  border-radius: 0;
+  flex: none;
+}
+:root[data-design="tisch"] .design-poster__body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px 14px;
+  flex: 1;
+}
+:root[data-design="tisch"] .design-poster__name {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+}
+:root[data-design="tisch"] .design-poster__desc { margin: 0; font-size: var(--text-sm); line-height: 1.45; }
+/* The ritual words sit at the foot of the text, above the button — so a
+   poster with a short sentence does not float its words up under it. */
+:root[data-design="tisch"] .design-poster__words {
+  margin: auto 0 0;
+  padding-top: 8px;
+  font-size: var(--text-xs);
+  font-weight: 700;
+}
+:root[data-design="tisch"] .design-poster__pick { width: 100%; min-height: 44px; margin-top: 8px; }
+:root[data-design="tisch"] .design-poster__desc + .design-poster__pick { margin-top: auto; }
+:root[data-design="tisch"] .design-poster--later {
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 20px;
+  text-align: center;
+  border-style: dashed;
+}
+:root[data-design="tisch"] .design-poster--later .ti { font-size: 30px; }
+
+:root[data-design="tisch"][data-scheme="dark"] .design-poster {
+  background: var(--surface);
+  border-color: var(--control-edge);
+  box-shadow: var(--shadow-1);
+}
+:root[data-design="tisch"][data-scheme="dark"] .design-poster.is-on {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 2px var(--gold-soft), var(--shadow-2);
+}
+:root[data-design="tisch"][data-scheme="dark"] .design-poster__desc,
+:root[data-design="tisch"][data-scheme="dark"] .design-row__desc { color: var(--ink-soft); }
+/* The ritual words and the palette glyph in the kicker's brown — measured on
+   --paper at 10.50:1 (the kicker note above). */
+:root[data-design="tisch"][data-scheme="dark"] .design-poster__words,
+:root[data-design="tisch"][data-scheme="dark"] .design-poster--later .ti { color: var(--gold-ink); }
+:root[data-design="tisch"][data-scheme="dark"] .design-poster--later { background: var(--control-fill); }
+
+/* T5.4: below the app's 640px sheet breakpoint the posters become rows and
+   the answer moves to one commit button — see designPosterSheet for why both
+   presentations are in the DOM. display:none on the hidden one keeps it out
+   of the tab order and the accessibility tree. */
+:root[data-design="tisch"] .design-rows,
+:root[data-design="tisch"] .design-chooser__commit { display: none; }
+:root[data-design="tisch"] .design-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 76px;
+  padding: 9px;
+  border: 2px solid transparent;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+:root[data-design="tisch"] .design-row > .design-tile--bill {
+  width: 58px;
+  height: 58px;
+  flex: none;
+  padding: 2px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: var(--radius-sm);
+}
+/* 11px is SMALL text, so the tile sets its name in the poster's small-text
+   ink rather than the display ink the 25px poster may use (the Tisch gold is
+   only legal on felt from 24px — T1's A1 rule). */
+:root[data-design="tisch"] .design-row .design-tile__word { font-size: 11px; line-height: 1; text-align: center; overflow-wrap: normal; word-break: normal; }
+:root[data-design="tisch"][data-scheme="dark"] .design-row .design-tile__word { color: var(--poster-sub, var(--tile-accent)); }
+:root[data-design="tisch"] .design-row__body { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+:root[data-design="tisch"] .design-row__name {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--text-md);
+}
+:root[data-design="tisch"] .design-row__desc { font-size: var(--text-sm); line-height: 1.4; }
+:root[data-design="tisch"] .design-row input { width: 22px; height: 22px; margin: 0; flex: none; }
+/* Drawn, not native: under the dark scheme Chrome paints an UNCHECKED native
+   radio as a solid dark disc, which on this paper sheet read as the selected
+   one (#1277 review). An empty ring vs a ring with a dot, both in the row's own
+   ink, so the pair holds whatever the sheet's ground is. */
+:root[data-design="tisch"] .design-row input[type="radio"] {
+  appearance: none;
+  color: inherit; /* a form control does not inherit it — it took the dark scheme's white field text */
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+}
+:root[data-design="tisch"] .design-row input[type="radio"]:checked {
+  background: radial-gradient(circle, currentColor 0 5px, transparent 5.5px);
+}
+:root[data-design="tisch"] .design-row input[type="radio"]:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}
+:root[data-design="tisch"][data-scheme="dark"] .design-row {
+  background: var(--surface);
+  border-color: var(--control-edge);
+}
+:root[data-design="tisch"][data-scheme="dark"] .design-row.is-on { border-color: var(--gold); }
+@media (max-width: 639px) {
+  :root[data-design="tisch"] .design-posters,
+  :root[data-design="tisch"] .design-chooser__skip { display: none; }
+  :root[data-design="tisch"] .design-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-top: 12px;
+  }
+  /* Sticky, like .sheet__actions: seven rows outgrow a phone, and the answer
+     must not scroll away under them. --page-bg is the paper in an overlay. */
+  :root[data-design="tisch"] .design-chooser__commit {
+    position: sticky;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    padding: 14px 0 4px;
+    background: var(--page-bg);
+  }
+  :root[data-design="tisch"] .design-chooser__intro h2 { font-size: var(--text-xl); }
 }
 
 /* ===========================================================================
