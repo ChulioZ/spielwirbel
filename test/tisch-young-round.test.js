@@ -139,7 +139,7 @@ test('Der Tisch round with games and no session: first-session label, invitation
   const sentences = [...dom.app.querySelectorAll('.hub-card--sentence .hub-card__facts')].map((p) => p.textContent);
   assert.deepEqual(sentences, [
     'Vorschläge gibt es ab 6 Spielen im Regal.',
-    'Zahlen gibt es ab 2 Sessions.',
+    'Zahlen gibt es ab der ersten Session.', // Der Tisch draws its tiles from one session (#1280)
   ], 'each sentence must state the threshold the code actually applies');
   assert.equal(dom.app.querySelector('.pulse-tiles, .pulse-bars'), null, 'a young round drew a zero');
 });
@@ -159,7 +159,7 @@ test('Der Tisch round that has played is not young: no invitation, no sentences,
   const dom = await hub(t, 'tisch', round({ games: 3, sessions: [played] }));
   assert.equal(dom.app.querySelector('.hub-stage > .hub-cta').textContent.trim(), 'Session wirbeln');
   assert.equal(dom.app.querySelector('.hub-card--young, .hub-card--sentence'), null,
-    'the thresholds past the first session are #1280’s, not a sentence here');
+    'a played round is past the young sentences — its later thresholds are asserted in test/tisch-young-thresholds.test.js');
 });
 
 test('a cancelled draw leaves a round young; a running one does not', async (t) => {
