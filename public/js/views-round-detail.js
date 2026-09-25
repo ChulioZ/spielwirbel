@@ -199,6 +199,13 @@ async function showGameDetail(rid, gameId) {
   // numeral beside the title, „Verwandte Sessions" as a dated list, the „…"
   // items as an Aktionen panel. Every branch below reads this one flag.
   const tisch = designIs('tisch');
+  // Ocean (#1212, O3.4/O6.3) takes Der Tisch's dated session list, its raters-
+  // first order and its Aktionen panel (`listy`), and lays the page out in
+  // THREE columns instead of the spread: the cover over the facts, the story
+  // (title, score, the one action, how the round rated it, the sessions), and
+  // the actions. `story` is that middle column; it exists only under Ocean.
+  const ocean = designIs('ocean');
+  const listy = tisch || ocean;
   const coverCss = game.image ? `url('${coverUrl(game.image, COVER_HERO)}')` : '';
   const imgStyle = coverCss ? `style="background-image:${coverCss}"` : '';
   const fallback = coverPlaceholder(game);
@@ -346,6 +353,10 @@ async function showGameDetail(rid, gameId) {
   const leftPage = h('<div class="pass__game"></div>');
   const rightPage = h('<div class="pass__table"></div>');
   pass.append(leftPage, rightPage);
+  const story = ocean ? h('<div class="pass__story"></div>') : null;
+  if (story) leftPage.after(story);
+  // What each later block is appended to: the right page, or Ocean's story.
+  const tale = story || rightPage;
 
   // --- Left page: the game's own card --------------------------------------
   //
@@ -404,7 +415,10 @@ async function showGameDetail(rid, gameId) {
                aria-label="${esc(`${t('score.name')}: ${fmtAvg(shown)}`)}">${fmtAvg(shown)}</span>`
       : `<span class="score-pill score-pill--lg score-pill--none">${esc(t('games.scoreNew'))}</span>`;
     const badge = h(`<div class="gd-score">${pill}${infoButton('score')}</div>`);
-    coverCol.appendChild(badge);
+    // Ocean puts no text on a cover (O3.4): the pill stands beside the title,
+    // through the same title line Der Tisch's numeral uses.
+    if (ocean) scoreBig = badge;
+    else coverCol.appendChild(badge);
     wireInfoButtons(badge);
   }
 
@@ -531,7 +545,10 @@ async function showGameDetail(rid, gameId) {
   // section 517px tall on a phone. Both anchors are re-rendered together by
   // `renderInfo` below, because the provider backfill can fill either.
   const factsAnchor = h('<div></div>');
-  info.appendChild(factsAnchor);
+  // Ocean's facts are a column of their own under the cover (O3.4), so both
+  // anchors below — the glance facts and „Mehr zum Spiel" — go there instead.
+  const factsHost = ocean ? h('<div class="gd-factcol"></div>') : info;
+  factsHost.appendChild(factsAnchor);
 
   // „Mehr zum Spiel" — the reference half, collapsed by default: the category
   // and mechanic lists, the community rating (detail only, #724), the BGG credit,
@@ -588,7 +605,7 @@ async function showGameDetail(rid, gameId) {
     // children would be vacuously true; the query asks for real content instead.
     const ensureMore = () => {
       if (more.isConnected) return;
-      if (moreBody.querySelector('.link-out, .game-info__body')) info.appendChild(more);
+      if (moreBody.querySelector('.link-out, .game-info__body')) factsHost.appendChild(more);
     };
     const renderInfo = () => {
       factsNode = swap(factsNode, gameGlanceFacts(game));
@@ -607,7 +624,12 @@ async function showGameDetail(rid, gameId) {
   }
 
 
-  leftPage.appendChild(card);
+  if (ocean) {
+    leftPage.append(coverCol, factsHost);
+    story.appendChild(card);
+  } else {
+    leftPage.appendChild(card);
+  }
 
   // Sparse game (#256): one inviting panel that says why the page is bare and
   // offers the steps that fill it, instead of scattering half-empty widgets.
@@ -638,7 +660,7 @@ async function showGameDetail(rid, gameId) {
       b.addEventListener('click', () => onClick(b));
       acts.appendChild(b);
     });
-    leftPage.appendChild(onboard);
+    (story || leftPage).appendChild(onboard);
   }
 
   // --- Right page: what it cost, how it went, and the one action -----------
@@ -659,7 +681,7 @@ async function showGameDetail(rid, gameId) {
   // same place: the anchor is dropped and the page is exactly what it was.
   if (game.wish && game.source && game.source.externalId) {
     const priceAnchor = h('<div></div>');
-    rightPage.appendChild(priceAnchor);
+    tale.appendChild(priceAnchor);
     // Stale-while-revalidate (#707): two requests race. `stored=1` answers from
     // the last-known-price store instantly; the full request may block on the
     // upstream for seconds (every in-memory cache miss — hourly, and after each
@@ -718,7 +740,7 @@ async function showGameDetail(rid, gameId) {
     // Der Tisch draws it as a dated LIST (T3.4, T6.3) — one row per session,
     // the winner's counter, the date, who won — so it is a real <ul>. Same
     // rows, same order, same links as the stamps; only the presentation forks.
-    const list = h(tisch ? '<ul class="gd-plays"></ul>' : '<div class="stamps"></div>');
+    const list = h(listy ? '<ul class="gd-plays"></ul>' : '<div class="stamps"></div>');
     related.slice(0, 15).forEach((s) => {
       const sst = gameStatsForSession(round, s, gameId);
       const picked = s.chosenGameId === gameId;
@@ -769,7 +791,7 @@ async function showGameDetail(rid, gameId) {
       // it a 5". Read off avgColor() rather than written as a hex, so a retune
       // of the ramp carries this with it (.claude/rules/theme-derived-colors.md).
       const PLAYED_UNRATED = 4.5;
-      if (tisch) {
+      if (listy) {
         const row = tischPlayRow(round, s, { picked, status, winners: s.finished ? winners : [], scoreCell });
         navLink(row.querySelector('a'), resultsPath(round.id, s.id), () => showResults(round, s));
         list.appendChild(row);
@@ -802,7 +824,7 @@ async function showGameDetail(rid, gameId) {
   }
   // Under Der Tisch the band of raters leads and the history follows (T3.4,
   // T6.3), so it is appended after the raters block below instead of here.
-  if (!sparse && !game.wish && !tisch) rightPage.appendChild(sec);
+  if (!sparse && !game.wish && !listy) rightPage.appendChild(sec);
   /* „Wer wie gewertet hat" (#1190, T3.4/T6.3) — who is behind the number the
      left page prints, as one tile per person: their avatar, the mood their
      average rounds to, and that average.
@@ -845,15 +867,15 @@ async function showGameDetail(rid, gameId) {
       const tile = h(`<div class="rater" title="${esc(`${who} · ${evidence}`)}">
            <span class="avatar${person.guest ? ' avatar--guest' : ''}" style="background:${personColor(round, person)}" aria-hidden="true">${avatarFace(initials(person.name), {})}</span>
            <i class="ti ${ratingFace(face)} rater__face" aria-hidden="true"></i>
-           <span class="rater__n">${esc(fmtAvg(avg))}</span>
+           <span class="rater__n" data-stop="${rampStop(avg)}">${esc(fmtAvg(avg))}</span>
            <span class="rater__who">${esc(who)}</span>
          </div>`);
       strip.appendChild(tile);
     });
     votesSec.appendChild(strip);
-    rightPage.appendChild(votesSec);
+    tale.appendChild(votesSec);
   }
-  if (!sparse && !game.wish && tisch) rightPage.appendChild(sec);
+  if (!sparse && !game.wish && listy) tale.appendChild(sec);
 
 
   // The one action, alone in a bar at the foot of the right page (#1039). It
@@ -903,7 +925,9 @@ async function showGameDetail(rid, gameId) {
     play.addEventListener('click', () => startDirectSession(round, game));
     bar.appendChild(play);
   }
-  rightPage.appendChild(bar);
+  // Ocean: the one action right under the title (O6.3), not at a page's foot.
+  if (ocean) card.after(bar);
+  else rightPage.appendChild(bar);
 
   app.appendChild(pass);
 
@@ -960,11 +984,12 @@ async function showGameDetail(rid, gameId) {
   // Der Tisch shows the same list as an „Aktionen" panel above the bar (T3.4;
   // a 2×2 grid on the phone, T6.3) — and then drops „…": every item is already
   // a button on the screen, and T15b does not repeat those in the menu.
-  if (menuItems.length && tisch) {
+  if (menuItems.length && listy) {
     const panel = h(`<div class="section gd-actions"><h2>${esc(t('detail.actionsTitle'))}</h2><div class="gd-actions__grid"></div></div>`);
     panel.querySelector('.gd-actions__grid')
       .append(...menuItemButtons(menuItems, () => {}, { base: 'btn btn--sm gd-act', tone: false }));
-    rightPage.insertBefore(panel, bar);
+    if (ocean) rightPage.appendChild(panel);
+    else rightPage.insertBefore(panel, bar);
   } else if (menuItems.length) {
     back.classList.add('back-row--split');
     const menuBtn = h(`<button type="button" class="btn btn--sm gd-menu" aria-label="${esc(t('detail.moreActions'))}" aria-expanded="false"><i class="ti ti-dots" aria-hidden="true"></i></button>`);

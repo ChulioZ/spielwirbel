@@ -36,7 +36,7 @@ const STATUS = (over = {}) => ({
     content: { games: 90, activeGames: 70, members: 25, sessions: 33, sessionsFinished: 20 },
     adoption: {
       roundsWithRetired: 3, roundsWithCompleted: 1, roundsWithWish: 5, roundsWithAnyShelf: 7,
-      roundsWithTags: 6,
+      roundsWithTags: 6, roundsWithSavedFilters: 4,
       gamesLinked: 55, gamesWithOwnCover: 12, gamesWithProviderCover: 40,
       gamesWithOwners: 9, gamesWithExpansions: 4,
       sessionsWithGuests: 8, sessionsWithTeams: 2, sessionsWithVoteLink: 5,
@@ -166,7 +166,7 @@ test('each tile lands on the card whose question it answers', async (t) => {
   assert.deepEqual(labelsOf(adoptionTiles(doc)),
     ['Konten', 'Regal-Nutzung', 'Designs', 'Teilen & Freunde',
       'Spiele-Quellen & Titelbilder', 'Besitz & Erweiterungen', 'Sessions',
-      'Konto-Funktionen & eigene Tags', 'Session-Trichter', 'Runden mit zweiter Session'],
+      'Konto-Funktionen, eigene Tags & Filter', 'Session-Trichter', 'Runden mit zweiter Session'],
     'Konten sits FIRST on „Funktionsnutzung" — it is the denominator of the tiles below it');
 });
 
@@ -308,7 +308,7 @@ test('Konten is the ONE bare count, and „mit Bild" appears exactly once', asyn
   // The profile-picture figure left this tile and lives as a SHARE one tile over.
   const text = doc.getElementById('adoptionGrid').textContent;
   assert.equal(/mit Bild/.test(text), false, 'the old „mit Bild" wording is back on Konten');
-  const konto = adoptionTiles(doc).find((x) => x.label === 'Konto-Funktionen & eigene Tags');
+  const konto = adoptionTiles(doc).find((x) => x.label === 'Konto-Funktionen, eigene Tags & Filter');
   assert.deepEqual(Object.fromEntries(konto.breakdown)['Konto-Bild'], '7 / 40');
 });
 
@@ -333,12 +333,13 @@ test('every new adoption figure renders against its own denominator', async (t) 
   assert.equal(sl['mit Teams'], '2 / 30');
   assert.equal(sl['mit Vote-Link'], '5 / 30');
 
-  const konto = Object.fromEntries(by['Konto-Funktionen & eigene Tags'].breakdown);
-  assert.equal(by['Konto-Funktionen & eigene Tags'].value, '11 / 40');
+  const konto = Object.fromEntries(by['Konto-Funktionen, eigene Tags & Filter'].breakdown);
+  assert.equal(by['Konto-Funktionen, eigene Tags & Filter'].value, '11 / 40');
   assert.equal(konto['BGG-Konto'], '6 / 40');
   // The one line on this tile measured against ROUNDS rather than accounts,
   // which is why each line carries its own denominator.
   assert.equal(konto['Runden mit eigenen Tags'], '6 / 10');
+  assert.equal(konto['Runden mit gespeicherten Filtern'], '4 / 10');
 
   const social = by['Teilen & Freunde'];
   assert.equal(social.value, '2 / 10');
@@ -477,7 +478,7 @@ test('every share divides by the ADOPTION denominator, not the instance-wide one
   assert.equal(denominatorOf(byLabel['Besitz & Erweiterungen'].value), 80,
     'the ownership tile used content.games');
   assert.equal(denominatorOf(byLabel.Sessions.value), 30, 'the Sessions tile used content.sessions');
-  assert.equal(denominatorOf(byLabel['Konto-Funktionen & eigene Tags'].value), 40,
+  assert.equal(denominatorOf(byLabel['Konto-Funktionen, eigene Tags & Filter'].value), 40,
     'the account tile used accounts.total');
 
   /* „Konten" is the ONE deliberate exception and must keep counting everybody:
@@ -489,7 +490,7 @@ test('every share divides by the ADOPTION denominator, not the instance-wide one
 test('the two new account figures are shares of the accounts on this card', async (t) => {
   const { doc, dom } = await panel();
   t.after(() => dom.window.close());
-  const tile = adoptionTiles(doc).find((x) => x.label === 'Konto-Funktionen & eigene Tags');
+  const tile = adoptionTiles(doc).find((x) => x.label === 'Konto-Funktionen, eigene Tags & Filter');
   const lines = Object.fromEntries(tile.breakdown);
   assert.equal(lines['BG-Stats-Weitergabe'], '4 / 40');
   assert.equal(lines['ohne Runde (nach Tenant)'], '13 / 40');

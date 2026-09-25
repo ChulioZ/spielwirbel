@@ -296,7 +296,8 @@ What the app does, in detail. For a short overview see the
   the round's sub-screens, marking the section they belong to:
   - **Start** – the launchpad: hero with the members, a big "start session"
     button (with quick-start chips beside it that open the setup with the draw
-    already narrowed — „unter 60 Min", „leichte Kost" …), resumable in-progress
+    already narrowed — the round's own **saved filters** once it has any,
+    otherwise automatic ones like „unter 60 Min", „leichte Kost" …), resumable in-progress
     sessions, the last played result, and gentle retire recommendations for
     games the group's own votes rate badly. Below those, a
     responsive card grid derived on demand from the round's own data:
@@ -421,6 +422,14 @@ What the app does, in detail. For a short overview see the
   screen, so the button is in reach without scrolling past the options. The tags,
   filters and count a round was last drawn with are remembered and preselected
   the next time, so a group that always draws the same way just confirms.
+  A group with more than one recurring draw can **save the setup under a name**
+  („Filter speichern" — tags, tag mode, filters, multi-table, count and who is
+  playing; guests are not saved). Saved filters are the round's, shared with
+  everyone in it, at most six per round (`MAX_SAVED_FILTERS_PER_ROUND`); they
+  replace the automatic quick-start chips on the Start tab, and Einstellungen
+  renames, reorders and deletes them. Tapping one opens the setup with the whole
+  filter applied — a seat or tag removed since is simply left out, and if none of
+  the saved seats remains everyone is seated.
 - **Voting** – the draw opens a **lobby** showing who has voted and who has not.
   There is nothing to configure and no mode to pick: every session works the same
   way, and each person's ratings are saved the moment they give them: one
@@ -498,7 +507,8 @@ What the app does, in detail. For a short overview see the
   („Als gespielt markieren") — and nothing at all before a game is chosen. Once
   it is played, the table carries a stamp with the date and the winners as
   seats, with the picker behind „Ändern". Recording the winner(s) is an
-  optional follow-up step afterwards. When nobody won, the same step records
+  optional follow-up step afterwards; the picker stays open while winners are
+  tapped, so a shared win is recorded in one go, and „Fertig" closes it. When nobody won, the same step records
   **how it ended instead** — „Verloren" (a cooperative game beat the table),
   „Kein Sieger" (a game that is not about winning) or „Fortsetzung folgt" (a
   campaign session that is over for tonight while the campaign is not). A winner
@@ -797,6 +807,9 @@ What the app does, in detail. For a short overview see the
   enough has happened in it. The all-time card („Spielwirbels Dauerbrenner",
   issue #1035) names no period at all — it is the one durable fact about the
   instance's shelf, and it sits between the year card and the best-rated one.
+  The best-rated card ranks on the same Spielwirbel-Score a round's Regal
+  prints, plays included, and a game qualifies on ratings and plays together —
+  so its line reads „Score 4,2 — 2 Bewertungen · 12 Sessions" (issue #1329).
   The section appears on the logged-out landing
   page, on a shareable `/entdecken` screen and as a home-dashboard tile showing
   the first few rankings with their cover art —

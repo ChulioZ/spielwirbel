@@ -179,7 +179,7 @@ function renderVoteLinkClaim(token, ballot) {
     </div>`);
   // Der Tisch opens the link on its felt intro (T12.5, #1268) — the wordmark,
   // whose round this is, and what the link can see — in the page head's place.
-  if (designIs('tisch')) root.querySelector('.page-head').replaceWith(tischVoteLinkIntro(ballot));
+  if (designIs('tisch')) root.querySelector('.page-head').replaceWith(composedVoteLinkIntro(ballot));
 
   // Initials, never `avatarFace()`. The ballot carries no `userId` by design
   // (#1169 settled it as a boolean `linked` instead), and AVATAR_CACHE is filled
@@ -253,8 +253,8 @@ function renderVoteLinkCards(token, ballot, person) {
      people are not a queue), no secrecy pill and no hand-off line — this is
      the voter's own phone. The owner is left out of the meta line because the
      ballot deliberately carries no members to resolve it against. */
-  function tischCard(game) {
-    return tischVoteCard({
+  function composedCard(game) {
+    return composedVoteCard({
       person,
       count: t('vote.gameOf', { n: idx + 1, total: games.length }),
       roundName: ballot.roundName,
@@ -271,7 +271,7 @@ function renderVoteLinkCards(token, ballot, person) {
     const game = games[idx];
     const current = votes[game.id] || { rating: null };
     app.innerHTML = '';
-    const card = designIs('tisch') ? tischCard(game) : klassischCard(game);
+    const card = designIs('tisch') ? composedCard(game) : klassischCard(game);
     // The same tip as the wizard's card (#1200, T10.3) — `focusTitle` is this
     // surface's "the beat delivered this card", so the two cannot disagree.
     if (designIs('tisch') && focusTitle) card.classList.add('is-tipped');
