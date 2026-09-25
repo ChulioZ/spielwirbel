@@ -193,7 +193,7 @@ function renderStartTab(round, activeGames) {
           toast(t('round.toast.draftDiscarded'));
           await fetchRoundFresh(round.id);
           showRound(round.id, 'start');
-        } catch (e) { toast(e.message); }
+        } catch (e) { toast(e.message, { tone: 'error' }); }
       });
       app.appendChild(discard);
     });
@@ -341,6 +341,16 @@ function renderStartTab(round, activeGames) {
   // (#946) — a margin on the card itself is carried across the column break by
   // WebKit instead of being truncated.
   const grid = h('<div class="hub-cards"></div>');
+  /* Der Tisch's DEMO round (T7.6, #1280): the three previews condense into one
+     list and the „Gefällt dir das?" invitation follows it, both leading the grid
+     right under the plate — the demo's point is the invitation, so it goes
+     above the fold. isDemoAccount() is the banner's own predicate, so the two
+     can never disagree about whether this is a demo. */
+  const demo = tisch && isDemoAccount();
+  if (demo) {
+    grid.appendChild(cardSlot(hubDemoSummary(round, activeGames)));
+    grid.appendChild(cardSlot(hubDemoInvite()));
+  }
   [
     // Der Tisch's invitation (T7.4, #1269) leads — it is the one next step.
     // Null on every other round and on Klassisch, so that list is unchanged.
@@ -348,12 +358,15 @@ function renderStartTab(round, activeGames) {
     hubSuggestCard(round, activeGames, statsByGame, nagged),
     hubPulseCard(round, activeGames),
     hubCareCard(round, activeGames),
+    // The Regal-Steckbrief (#1173, views-shelf-profile.js): what the shelf adds
+    // up to. Null below its threshold of games with provider data.
+    hubShelfProfileCard(round, activeGames),
     hubAnniversaryCard(round),
   ].forEach((card) => { if (card) grid.appendChild(cardSlot(card)); });
   // The three sub-page previews (#1185, hub-previews.js), LAST in the grid:
   // "what is over there" is a weaker claim on the reader than "play this
   // tonight". Same null-or-nothing contract as the four above.
-  const previews = [
+  const previews = demo ? [] : [
     hubRegalPreview(round, activeGames),
     hubPokalePreview(round),
     hubChronikPreview(round),
@@ -452,9 +465,9 @@ function renderStartTab(round, activeGames) {
         })) return;
         try {
           await api('POST', `/api/rounds/${round.id}/games/${game.id}/retire`, { retired: true });
-          toast(t('games.retired', { title: game.title }));
+          toast(t('games.retired', { title: game.title }), { tone: 'success' });
           showRound(round.id);
-        } catch (e) { toast(e.message); }
+        } catch (e) { toast(e.message, { tone: 'error' }); }
       });
       list.appendChild(item);
     });

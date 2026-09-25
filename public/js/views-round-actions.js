@@ -25,7 +25,7 @@ async function showTransferGames(round) {
   try {
     rounds = await fetchRoundList({ rerender: false });
   } catch (e) {
-    toast(e.message);
+    toast(e.message, { tone: 'error' });
     return;
   }
   const others = rounds.filter((r) => r.id !== round.id);
@@ -252,7 +252,7 @@ async function showTransferGames(round) {
         e.message === 'quota_games' ? t(`${ns}.toast.quotaGames`)
           : e.message === 'quota_tags' ? t(`${ns}.toast.quotaTags`)
             : e.message;
-      toast(msg2);
+      toast(msg2, { tone: 'error' });
     }
   });
 }
@@ -332,7 +332,7 @@ async function showInvite(round) {
       closeSheet();
     } catch (e) {
       go.disabled = false;
-      toast(inviteError(e.message));
+      toast(inviteError(e.message), { tone: 'error' });
     }
   });
   form.querySelector('#inviteHandle').addEventListener('keydown', (e) => {

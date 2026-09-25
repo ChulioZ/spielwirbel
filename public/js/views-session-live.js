@@ -378,7 +378,7 @@ function showSessionLobby(round, session, handedOn, dealt) {
           try { await navigator.share({ text: t('lobby.shareText', { round: round.name }), url }); } catch { /* dismissed */ }
         } else if (navigator.clipboard) {
           await navigator.clipboard.writeText(url);
-          toast(t('lobby.shareCopied'));
+          toast(t('lobby.shareCopied'), { tone: 'success' });
         } else {
           // No share sheet and no clipboard (an insecure origin, an old browser):
           // show the URL so it can at least be copied by hand, rather than
@@ -386,7 +386,7 @@ function showSessionLobby(round, session, handedOn, dealt) {
           showShareUrlSheet(url);
         }
       } catch (e) {
-        toast(e.message);
+        toast(e.message, { tone: 'error' });
       } finally {
         share.disabled = false;
       }
@@ -427,7 +427,7 @@ function showSessionLobby(round, session, handedOn, dealt) {
       // been holding back, and it belongs on the device that called time.
       showFinale(fresh, s, sessionGames(fresh, s));
     } catch (e) {
-      toast(e.message);
+      toast(e.message, { tone: 'error' });
       showSessionLobby(round, session);
     }
   });
@@ -564,6 +564,6 @@ function showVoteQrSheet(round, session) {
     sheet.querySelector('.vote-qr__code').innerHTML = svg;
   }).catch((e) => {
     if (document.body.contains(backdrop)) closeSheet();
-    toast(e.message);
+    toast(e.message, { tone: 'error' });
   });
 }

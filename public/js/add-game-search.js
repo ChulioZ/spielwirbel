@@ -175,7 +175,7 @@ function showAddGameSearch(round, { wish = false } = {}) {
       await api('POST', `/api/rounds/${round.id}/games/${g.id}/wish`, { wish: false });
     } catch (e) {
       btn.disabled = false;
-      return toast(e.message);
+      return toast(e.message, { tone: 'error' });
     }
     toast(t('wish.restored', { title: g.title }));
     // The re-render swaps the button for the held badge, so the focus it had

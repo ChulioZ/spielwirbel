@@ -256,10 +256,12 @@
    </div>
   </footer>
 
-  <!-- Small toast for feedback. A permanent aria-live region (#145): it stays in
-       the accessibility tree and is shown/hidden with a class, because a live
-       region that only appears together with its text is never announced. -->
-  <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+  <!-- Small toast for feedback. Two permanent aria-live regions (#145, #1261):
+       they stay in the accessibility tree and only their text changes, because a
+       live region that only appears together with its text is never announced.
+       An error is spoken as an alert, everything else as a status; the glyph and
+       the action / dismiss buttons are added by toast() (js/live-region.js). -->
+  <div id="toast" class="toast"><span id="toastStatus" class="toast__msg" role="status" aria-live="polite" aria-atomic="true"></span><span id="toastAlert" class="toast__msg" role="alert" aria-live="assertive" aria-atomic="true"></span></div>
 
   <!-- The SILENT half of the same idea (#1168): announcements that belong to a
        screen reader and to nobody else, so they must not become a visible toast.
@@ -326,6 +328,8 @@
   <script src="/js/install-prompt.js"></script>
   <script src="/js/popover.js"></script>
   <script src="/js/tag-chips.js"></script>
+  <script src="/js/vendor/sortable.min.js"></script>
+  <script src="/js/reorder-drag.js"></script>
   <script src="/js/game-stats.js"></script>
   <script src="/js/live-region.js"></script>
   <script src="/js/core.js"></script>
@@ -352,10 +356,13 @@
   <script src="/js/bgstats.js"></script>
   <script src="/js/recap.js"></script>
   <script src="/js/period-recap.js"></script>
+  <script src="/js/account-recap.js"></script>
   <script src="/js/recap-card.js"></script>
   <script src="/js/card-glyphs.js"></script>
   <script src="/js/recap-card-tisch.js"></script>
+  <script src="/js/shelf-profile-card.js"></script>
   <script src="/js/hub-insights.js"></script>
+  <script src="/js/shelf-profile.js"></script>
   <script src="/js/lookup-cover.js"></script>
   <script src="/js/lookup-score.js"></script>
   <script src="/js/lookup.js"></script>
@@ -376,6 +383,7 @@
   <script src="/js/views-round-start.js"></script>
   <script src="/js/regal-bulk.js"></script>
   <script src="/js/views-regal.js"></script>
+  <script src="/js/views-shelf-profile.js"></script>
   <script src="/js/views-chronik.js"></script>
   <script src="/js/views-pokale.js"></script>
   <script src="/js/views-archive.js"></script>

@@ -86,6 +86,17 @@ test('kontakt.html reference is rewritten too', () => {
   assert.ok(dist.includes(`"${manifest['/js/pages/kontakt.js']}"`), 'kontakt.html points at hashed kontakt.js');
 });
 
+test('a vendored library ships byte-for-byte as upstream, only content-hashed (#1180)', () => {
+  // Re-minifying an already-minified bundle grew SortableJS 45.5 → 48.5 KB and
+  // made the served bytes differ from the release the parity test pins. So
+  // js/vendor/** is hashed for cache-busting and otherwise left alone.
+  const hashed = manifest['/js/vendor/sortable.min.js'];
+  assert.match(hashed, HASH, 'the vendored file is still content-hashed');
+  const built = fs.readFileSync(path.join(OUT, hashed));
+  const src = fs.readFileSync(path.join(SRC, 'js', 'vendor', 'sortable.min.js'));
+  assert.ok(built.equals(src), 'the built copy is byte-identical to the committed one');
+});
+
 test('does not rename shared top-level identifiers (no minifyIdentifiers)', () => {
   /* The frontend shares one global scope across files; renaming a top-level name
      would break cross-file references. Spot-check BOTH SIDES of one, not just the

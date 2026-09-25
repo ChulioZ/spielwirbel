@@ -94,7 +94,7 @@ async function showBggImport(round, status = 'own') {
         await accountApi('PATCH', '/me', { bggUsername: name });
       } catch (ex) {
         if (ex.message === 'auth') return; // accountApi already bounced a dead session
-        return toast(ex.message === 'invalid_bgg_username' ? t('bggImport.toast.badHandle') : ex.message);
+        return toast(ex.message === 'invalid_bgg_username' ? t('bggImport.toast.badHandle') : ex.message, { tone: 'error' });
       }
       load();
     });
@@ -269,7 +269,7 @@ async function showBggImport(round, status = 'own') {
         dismiss();
       } catch (e) {
         submit.disabled = false;
-        toast(bggImportError(e.message));
+        toast(bggImportError(e.message), { tone: 'error' });
       }
     });
   }

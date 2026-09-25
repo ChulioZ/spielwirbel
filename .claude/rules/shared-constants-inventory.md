@@ -478,7 +478,7 @@ per-game Siegwertung when that measure was withdrawn from the whole app.
 **The seventeenth is `public/js/error-report.js`** (#1149): `CLIENT_ERROR_KINDS`,
 the fault kinds a browser may report, plus `CLIENT_ERROR_MESSAGE_MAX` and
 `isClientErrorPathShape`. The client OFFERS them (the two window handlers and
-the four explicit call sites) and `lib/routes/client-error.js` VALIDATES against
+the six explicit call sites) and `lib/routes/client-error.js` VALIDATES against
 them, so it is the plain shape — but its failure direction is the one worth
 naming: a drifted server copy 400s the report, so the **fault the report was
 about stays invisible**, which is the exact condition this whole feature exists

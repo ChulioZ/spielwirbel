@@ -54,7 +54,7 @@ async function startDemo(busy) {
     // Back should return to. Since #501 that also supersedes the manual
     // history.replaceState this used to do before showLanding().
     else routeTo('/');
-    toast(t(key));
+    toast(t(key), { tone: 'error' });
   };
 
   let res;
@@ -178,21 +178,26 @@ function setupDemoBanner() {
   }
   if (cta) {
     cta.textContent = t('demo.banner.cta');
-    // Registering from inside a demo starts a FRESH account — nothing carries
-    // over (#427 rules that out: it would need the cross-tenant re-tenanting
-    // write path removed in #405). So drop the demo's tokens first, or the new
-    // visitor to the register screen is still holding a logged-in session.
-    //
-    // The resume MARKER deliberately survives (#502): this exit abandons the
-    // demo without ending it, so it stays alive server-side and the landing CTA
-    // must offer to re-enter it rather than minting a second one.
-    cta.onclick = () => {
-      clearTokens();
-      accountUser = null;
-      setupDemoBanner();
-      setupAccountUi();
-      showRegister();
-    };
+    cta.onclick = () => leaveDemoForRegister();
   }
+}
+
+// Leave a demo for the register screen — the banner's CTA and, under Der Tisch,
+// the demo hub's „Gefällt dir das?" card (#1280) share this ONE exit.
+//
+// Registering from inside a demo starts a FRESH account — nothing carries over
+// (#427 rules that out: it would need the cross-tenant re-tenanting write path
+// removed in #405). So drop the demo's tokens first, or the new visitor to the
+// register screen is still holding a logged-in session.
+//
+// The resume MARKER deliberately survives (#502): this exit abandons the demo
+// without ending it, so it stays alive server-side and the landing CTA must
+// offer to re-enter it rather than minting a second one.
+function leaveDemoForRegister() {
+  clearTokens();
+  accountUser = null;
+  setupDemoBanner();
+  setupAccountUi();
+  showRegister();
 }
 

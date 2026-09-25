@@ -47,6 +47,86 @@
 // AFTER, which is the exact unearned interruption this design exists to avoid.
 const NEWS = [
   /*
+   * #1147. A capability that did not exist: a player in three rounds had three
+   * unconnected Rückblicke and no answer to „wie war mein Jahr?". Own profile
+   * only, so the entry says so.
+   */
+  {
+    revision: '2026-09-24',
+    kind: 'new',
+    de: {
+      title: 'Dein Rückblick — dein Monat, dein Jahr, über alle Runden',
+      body: 'Auf deinem eigenen Profil findest du jetzt „Dein Rückblick": Wähle '
+        + 'einen Monat oder ein Jahr und sieh, wie viele Sessions du gespielt hast, '
+        + 'welches Spiel am häufigsten auf dem Tisch lag, welches du am besten '
+        + 'bewertet hast und was du zum ersten Mal ausprobiert hast — über alle '
+        + 'deine Runden zusammen. Nur du siehst ihn, und mit „Teilen" wird daraus '
+        + 'ein Bild für den Gruppenchat.',
+    },
+    en: {
+      title: 'Your recap — your month, your year, across all rounds',
+      body: 'Your own profile now has „Your recap": pick a month or a year and see '
+        + 'how many sessions you played, which game hit the table most, which one '
+        + 'you rated highest and what you tried for the first time — across all of '
+        + 'your rounds together. Only you can see it, and „Share" turns it into a '
+        + 'picture for the group chat.',
+    },
+    es: {
+      title: 'Tu resumen: tu mes, tu año, en todos tus grupos',
+      body: 'Tu propio perfil tiene ahora «Tu resumen»: elige un mes o un año y mira '
+        + 'cuántas sesiones jugaste, qué juego salió más a la mesa, cuál valoraste '
+        + 'mejor y qué probaste por primera vez, sumando todos tus grupos. Solo tú '
+        + 'puedes verlo, y «Compartir» lo convierte en una imagen para el chat del grupo.',
+    },
+    fr: {
+      title: 'Ton bilan — ton mois, ton année, dans tous tes groupes',
+      body: 'Ton propre profil propose désormais « Ton bilan » : choisis un mois ou '
+        + 'une année et vois combien de sessions tu as jouées, quel jeu est le plus '
+        + 'souvent sorti, lequel tu as le mieux noté et ce que tu as découvert — '
+        + 'tous tes groupes réunis. Toi seul·e le vois, et « Partager » en fait une '
+        + 'image pour le chat du groupe.',
+    },
+    it: {
+      title: 'Il tuo riepilogo: il tuo mese, il tuo anno, in tutti i gruppi',
+      body: 'Il tuo profilo ha ora «Il tuo riepilogo»: scegli un mese o un anno e '
+        + 'guarda quante sessioni hai giocato, quale gioco è finito più spesso sul '
+        + 'tavolo, quale hai votato meglio e cosa hai provato per la prima volta, '
+        + 'sommando tutti i tuoi gruppi. Lo vedi solo tu, e «Condividi» lo '
+        + 'trasforma in un’immagine per la chat del gruppo.',
+    },
+    nl: {
+      title: 'Jouw terugblik — jouw maand, jouw jaar, over al je groepen',
+      body: 'Je eigen profiel heeft nu „Jouw terugblik": kies een maand of een jaar '
+        + 'en zie hoeveel sessies je speelde, welk spel het vaakst op tafel lag, '
+        + 'welk je het hoogst beoordeelde en wat je voor het eerst speelde — over '
+        + 'al je groepen samen. Alleen jij ziet hem, en met „Delen" wordt het een '
+        + 'afbeelding voor de groepschat.',
+    },
+    pt: {
+      title: 'Seu resumo — seu mês, seu ano, em todos os grupos',
+      body: 'Seu próprio perfil agora tem «Seu resumo»: escolha um mês ou um ano e '
+        + 'veja quantas sessões você jogou, qual jogo foi mais vezes para a mesa, '
+        + 'qual você avaliou melhor e o que jogou pela primeira vez, somando todos '
+        + 'os seus grupos. Só você vê, e «Compartilhar» transforma tudo numa imagem '
+        + 'para o chat do grupo.',
+    },
+    fi: {
+      title: 'Sinun katsauksesi — kuukautesi ja vuotesi kaikissa ryhmissä',
+      body: 'Omassa profiilissasi on nyt ”Sinun katsauksesi”: valitse kuukausi tai '
+        + 'vuosi ja näe, montako sessiota pelasit, mikä peli oli useimmin pöydässä, '
+        + 'minkä arvioit parhaaksi ja mitä kokeilit ensimmäistä kertaa — kaikki '
+        + 'ryhmäsi yhteensä. Vain sinä näet sen, ja ”Jaa” tekee siitä kuvan '
+        + 'ryhmän chattiin.',
+    },
+    ko: {
+      title: '나의 돌아보기 — 모든 그룹에서의 나의 한 달, 나의 한 해',
+      body: '이제 내 프로필에 „나의 돌아보기"가 있어요. 한 달이나 한 해를 고르면 '
+        + '모든 그룹을 합쳐서 세션을 몇 번 했는지, 어떤 게임을 가장 많이 했는지, '
+        + '내가 가장 높게 평가한 게임과 처음 해 본 게임을 볼 수 있어요. 나만 볼 수 '
+        + '있고, „공유"를 누르면 단체 채팅방에 보낼 이미지가 만들어져요.',
+    },
+  },
+  /*
    * Clears the bar on the SECOND half rather than the first. The previews are a
    * restructure of a screen that already existed — worth describing, not worth a
    * dot on its own. The full-screen rating card is the capability: a shared phone
