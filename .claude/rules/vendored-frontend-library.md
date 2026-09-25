@@ -14,10 +14,14 @@ committed. SortableJS (#1180) is the first, at
 
 ## The five pieces, and what each one prevents
 
-1. **Under `public/js/**`, not a sibling `public/vendor/`.** `scripts/build.js`
+1. **Under `public/js/vendor/`, not a sibling `public/vendor/`.** `scripts/build.js`
    hashes every `*.js` under `js/` recursively, so the file is content-hashed and
-   cache-busted like our own scripts with no build change. Outside `js/` it
-   would ship un-hashed and served stale after an upgrade.
+   cache-busted like our own scripts. Outside `js/` it would ship un-hashed and
+   served stale after an upgrade. `js/vendor/**` is the one subtree the build
+   hashes but does **not** minify or rewrite (`isVendored`, #1180 review):
+   re-minifying the release grew SortableJS 45.5 → 48.5 KB and made the served
+   bytes differ from the one the parity test pins. `test/build.test.js` asserts
+   the built copy is byte-identical.
 2. **Also a `devDependency`, pinned exact.** Not `dependencies` — the server
    never requires it and the prod image runs `npm ci --omit=dev`. The point is
    that Dependabot then opens a PR on a release.
@@ -30,9 +34,8 @@ committed. SortableJS (#1180) is the first, at
    bump `CACHE` in `public/sw.js`.
 4. **The package's own LICENSE beside it** (`sortable.LICENSE.txt`), also
    parity-tested. MIT requires the notice with every copy, and the one-line
-   `/*! … - MIT */` banner is a pointer, not the notice. esbuild keeps `/*!`
-   banners through `minifyWhitespace` (asserted on a real build), so the hashed
-   production copy still carries it.
+   `/*! … - MIT */` banner is a pointer, not the notice. The hashed production
+   copy carries the banner because the build ships the file verbatim (point 1).
 5. **Ignored by ESLint, and never edited to satisfy anything.** It sits in the
    global `ignores`. A lint fix to a vendored file would break the parity test,
    which is correct: the answer is always "re-copy", never "patch".

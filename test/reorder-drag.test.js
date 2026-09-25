@@ -49,7 +49,7 @@ test('the vendored licence travels with the file (#1180)', () => {
   const src = fs.readFileSync(VENDORED, 'utf8');
   const { version } = require('sortablejs/package.json');
   assert.match(src.slice(0, 200), new RegExp(`^/\\*! Sortable ${version.replace(/\./g, '\\.')} - MIT`),
-    'the /*! … MIT */ banner is what esbuild keeps through the production build');
+    'the /*! … MIT */ banner is the notice the production build ships verbatim');
   const lic = fs.readFileSync(path.join(ROOT, 'public', 'js', 'vendor', 'sortable.LICENSE.txt'));
   assert.ok(lic.equals(fs.readFileSync(path.join(path.dirname(UPSTREAM), 'LICENSE'))),
     'sortable.LICENSE.txt must be the package\'s own LICENSE — MIT requires the notice with every copy');
@@ -64,7 +64,7 @@ test('the production build keeps the licence banner on the hashed copy (#1180)',
     assert.ok(hashed, 'build.js did not pick up js/vendor/** — the file would ship un-hashed');
     assert.match(hashed, /^\/js\/vendor\/sortable\.min\.[0-9a-f]{8}\.js$/);
     const built = fs.readFileSync(path.join(out, hashed.slice(1)), 'utf8');
-    assert.match(built, /\/\*! Sortable [\d.]+ - MIT/, 'esbuild dropped the licence banner');
+    assert.match(built, /\/\*! Sortable [\d.]+ - MIT/, 'the production build dropped the licence banner');
     assert.ok(fs.existsSync(path.join(out, 'js', 'vendor', 'sortable.LICENSE.txt')),
       'the LICENSE file is copied through beside it');
   } finally {
