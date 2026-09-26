@@ -5,7 +5,9 @@
  *
  * All CSS, keyed on hooks the result screen already sets: `.is-race` + `--dur`
  * on every row and `.is-reveal` on the gold group, ONLY when the screen opens
- * as the reveal („Auflösen"), and the distribution's own `hidden` disclosure.
+ * as the reveal („Auflösen"). The distribution's bars rise off the same
+ * `.is-race` (#1363 — they used to rise off a per-row disclosure, which is gone:
+ * the bars are always shown, so an unscoped rise would replay on every visit).
  * So the jsdom half pins that those hooks still mean what the stylesheet
  * assumes — present on the reveal, absent on a cold load — and the CSS half
  * pins the timing arithmetic that keeps the whole reveal inside T10's 900ms,
@@ -61,16 +63,16 @@ test('the hooks the reveal keys on are set by „Auflösen" and by nothing else'
   const raced = [...revealed.app.querySelectorAll('.result-screen .trow.is-race')];
   assert.equal(raced.length, 2, 'every rated row races');
   raced.forEach((r) => assert.match(r.getAttribute('style'), /--dur:\d/, 'each carries its own race length'));
-  // The distribution is closed until the reader opens it: its `hidden` IS the
-  // bars' trigger, so it must exist, start hidden, and open on the count.
-  const toggle = revealed.app.querySelector('.trow__votes');
-  const bars = revealed.app.querySelector('.trow__bars');
-  assert.equal(bars.hidden, true);
-  toggle.click();
-  assert.equal(bars.hidden, false, 'the reader\'s click is what shows the bars — and starts their rise');
+  // The distribution is shown in every row on both paths; only the reveal's
+  // `.is-race` ancestor lets it rise.
+  assert.equal(revealed.app.querySelectorAll('.trow.is-race > .trow__bars:not([hidden])').length, 2,
+    'each raced row carries its bars, open, under it');
+  assert.equal(revealed.app.querySelector('.trow__votes'), null, 'no disclosure to open');
 
   const cold = await show(t, false);
   assert.equal(cold.app.querySelector('.is-reveal, .is-race'), null, 'a cold load plays nothing');
+  assert.equal(cold.app.querySelectorAll('.trow > .trow__bars:not([hidden])').length, 2,
+    'the bars are still there on a revisit, just static');
 });
 
 /* ---------------------------------------------------------- the CSS contract */
@@ -131,8 +133,8 @@ test('the app\'s 3.6s gold tint is stood down to its rest state on Der Tisch', (
   assert.match(unconditional[1], /animation:\s*none/);
 });
 
-test('the distribution rises when opened: Tisch only, ≤ 900ms, no end frame', () => {
-  const sel = ':root[data-design="tisch"] .result-screen .trow__bars:not([hidden]) .bar';
+test('the distribution rises with the reveal only: Tisch only, ≤ 900ms, no end frame', () => {
+  const sel = ':root[data-design="tisch"] .result-screen .trow.is-race .trow__bars .bar';
   const users = rulesOf(TISCH_CSS).filter(([, b]) => /animation[-a-z]*:[^;]*tisch-bar-rise/.test(b));
   assert.deepEqual(users.map(([s]) => s), [sel]);
   const body = gatedBody(sel);

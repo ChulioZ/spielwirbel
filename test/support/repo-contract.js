@@ -4994,26 +4994,35 @@ module.exports = function repoContract(repo) {
       await mk({ design: 'klassisch', designSwitchedBack: 'true', ...seen });
     };
 
-    await t.test('design adoption counts ACCOUNTS by the design they are SHOWN', async () => {
-      /* Resolved exactly as /me resolves it (lib/account-design.js): an absent
-         key, an unanswered chooser and an id this instance does not offer all
-         count as the face (Der Tisch since #1202). The
-         KEYS are the offered ids, never a stored string — a stored 'not-a-design'
-         must not appear, which is what keeps user-reachable text off the card. */
+    await t.test('design adoption counts only ANSWERED accounts, by the design they are SHOWN', async () => {
+      /* #1362: the per-design lines count only accounts that have answered the
+         chooser or picked on Konto — both write the same `designChooserSeen`
+         stamp. An account that never answered drops out of every line, whatever
+         it stores: it never saw the alternatives. A SKIP stamps the same field
+         and writes the face, so a skipper counts under Der Tisch — storage
+         cannot tell it from a confirmed Tisch, and the tile's wording says so.
+
+         Answered accounts still resolve as /me does (lib/account-design.js): an
+         id this instance does not offer counts as the face. The KEYS are the
+         offered ids, never a stored string — a stored 'not-a-design' must not
+         appear, which is what keeps user-reachable text off the card. */
       const mid = await repo.instanceMetrics();
       await designAccounts();
       const m = await repo.instanceMetrics();
       const d = (k) => m.designAdoption.byDesign[k] - mid.designAdoption.byDesign[k];
+      const sum = (o) => Object.values(o).reduce((a, b) => a + b, 0);
 
       assert.deepEqual(Object.keys(m.designAdoption.byDesign), selectableDesignIds({ production: false }),
         'one key per offered design, in registry order, and nothing else');
       assert.equal(d('klassisch'), 3, 'only the accounts that ANSWERED with Klassisch wear it');
-      assert.equal(d('tisch'), 6, 'absent, unanswered x2, tisch x2 and an unknown id wear the face');
+      assert.equal(d('tisch'), 3,
+        'a skipper/confirmed Tisch, a return to Tisch and an unknown id — never an unanswered account');
+      assert.equal(sum(m.designAdoption.byDesign) - sum(mid.designAdoption.byDesign), 6,
+        'the three accounts that never answered (absent, pre-flip klassisch, empty stamp) count NOWHERE');
       assert.equal(m.designAdoption.switchedBack - mid.designAdoption.switchedBack, 1,
         'only the flag AND a current Klassisch counts — not a return to Tisch, not a string');
-      const sum = (o) => Object.values(o).reduce((a, b) => a + b, 0);
-      assert.equal(sum(m.designAdoption.byDesign), m.adoption.accountsTotal,
-        'every account the card measures wears exactly one design');
+      assert.equal(m.adoption.accountsTotal - mid.adoption.accountsTotal, 9,
+        'the headline denominator still counts every account, answered or not');
     });
 
     await t.test('in production an unoffered design counts as the face, like /me', async () => {
@@ -5021,19 +5030,22 @@ module.exports = function repoContract(repo) {
          while it is built) is a stored value production never shows. The tile
          must report what the account SEES — otherwise it would count users of a
          design nobody on the instance can wear. */
+      const prod = async () => {
+        const was = process.env.NODE_ENV;
+        process.env.NODE_ENV = 'production';
+        try {
+          return await repo.instanceMetrics();
+        } finally {
+          if (was === undefined) delete process.env.NODE_ENV; else process.env.NODE_ENV = was;
+        }
+      };
+      const mid = await prod();
       await designAccounts();
-      const was = process.env.NODE_ENV;
-      process.env.NODE_ENV = 'production';
-      let m;
-      try {
-        m = await repo.instanceMetrics();
-      } finally {
-        if (was === undefined) delete process.env.NODE_ENV; else process.env.NODE_ENV = was;
-      }
+      const m = await prod();
       assert.deepEqual(Object.keys(m.designAdoption.byDesign), selectableDesignIds({ production: true }));
       const sum = (o) => Object.values(o).reduce((a, b) => a + b, 0);
-      assert.equal(sum(m.designAdoption.byDesign), m.adoption.accountsTotal,
-        'the unoffered accounts were dropped rather than folded into the face');
+      assert.equal(sum(m.designAdoption.byDesign) - sum(mid.designAdoption.byDesign), 6,
+        'every ANSWERED account lands on an offered line — none dropped, no unanswered one added');
     });
 
     /* ---- #1124: the adoption figures ------------------------------------- */

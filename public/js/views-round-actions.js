@@ -209,30 +209,26 @@ async function showTransferGames(round) {
     const ids = picked();
     if (!ids.length) return;
     const copy = mode === 'copy';
-    // A copy touches no history at all, so it never needs the move's warning —
-    // its confirm just names the count and the round.
-    let msg;
-    if (copy) {
-      msg = tn(ids.length, 'copyGames.confirmOne', 'copyGames.confirm', { round: targetName });
-    } else {
+    // Only a MOVE asks (#1360). A copy touches nothing in this round, and the
+    // sheet's own button already reads „Spiele kopieren" — a second dialog
+    // asking to approve it while saying it cannot hurt added a step and no
+    // safety.
+    if (!copy) {
       // Only warn about history when a selected game actually carries any: a
       // shelf-tidying move of never-played games loses nothing, and a warning
       // that cries wolf gets clicked through.
       const chosen = new Set(ids);
       const touchesHistory = (round.sessions || []).some((s) => (s.gameIds || []).some((x) => chosen.has(x)));
-      msg = touchesHistory
+      const msg = touchesHistory
         ? tn(ids.length, 'moveGames.confirmOne', 'moveGames.confirm', { round: targetName })
         : tn(ids.length, 'moveGames.confirmPlainOne', 'moveGames.confirmPlain', { round: targetName });
+      // Raised from INSIDE a sheet, and openSheet REPLACES an open sheet rather
+      // than stacking on it (#939) — so declining has to bring the picker back,
+      // or the user lands on the screen behind it with their selection gone.
+      if (!await confirmDialog({
+        body: msg, confirmLabel: t('moveGames.submit'), icon: 'ti-arrow-right',
+      })) { showTransferGames(round); return; }
     }
-    // Raised from INSIDE a sheet, and openSheet REPLACES an open sheet rather
-    // than stacking on it (#939) — so declining has to bring the picker back,
-    // or the user lands on the screen behind it with their selection gone.
-    if (!await confirmDialog({
-      body: msg,
-      confirmLabel: t(copy ? 'copyGames.submit' : 'moveGames.submit'),
-      icon: copy ? 'ti-copy' : 'ti-arrow-right',
-      danger: !copy,
-    })) { showTransferGames(round); return; }
     go.disabled = true;
     try {
       // Send the explicit selection even when everything is checked — the count

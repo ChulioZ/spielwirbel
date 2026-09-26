@@ -141,7 +141,7 @@ function renderPeriodRecapSection(round, activities) {
     // Only the non-zero shelf numbers, the call the Rückblick's archive chip
     // already makes: "0 aussortiert" is noise on a quiet month.
     if (rec.added) totals.appendChild(chip('ti-plus', tn(rec.added, 'periodRecap.addedOne', 'periodRecap.added'), rec.added, 'periodRecap.label.added'));
-    if (rec.retired) totals.appendChild(chip('ti-trash', tn(rec.retired, 'periodRecap.retiredOne', 'periodRecap.retired'), rec.retired, 'periodRecap.label.retired'));
+    if (rec.retired) totals.appendChild(chip('ti-archive', tn(rec.retired, 'periodRecap.retiredOne', 'periodRecap.retired'), rec.retired, 'periodRecap.label.retired'));
     if (rec.completed) totals.appendChild(chip('ti-circle-check', tn(rec.completed, 'periodRecap.completedOne', 'periodRecap.completed'), rec.completed, 'periodRecap.label.completed'));
     body.appendChild(totals);
 

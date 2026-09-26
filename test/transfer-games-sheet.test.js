@@ -41,7 +41,8 @@ async function openSheetOn(t, { target = TARGET } = {}) {
   dom.set('api', async (method, path, body) => { posts.push({ method, path, body }); return { movedGames: 1, copiedGames: 1 }; });
   dom.set('toast', () => {});
   dom.set('showRound', () => {});
-  dom.set('confirmDialog', () => Promise.resolve(true));
+  const confirms = [];
+  dom.set('confirmDialog', (o) => { confirms.push(o); return Promise.resolve(true); });
   await dom.call('showTransferGames', ROUND);
   const sheet = dom.document.querySelector('.sheet');
   const chip = (mode) => sheet.querySelector(`.transfer-modes .chip[data-mode="${mode}"]`);
@@ -49,6 +50,7 @@ async function openSheetOn(t, { target = TARGET } = {}) {
     dom,
     sheet,
     posts,
+    confirms,
     reads,
     chip,
     // The picker settles asynchronously in copy mode: switching mode kicks off a
@@ -78,6 +80,20 @@ test('the sheet opens in MOVE mode and posts to /move-to', async (t) => {
   assert.equal(s.posts.length, 1);
   assert.match(s.posts[0].path, /\/games\/move-to$/);
   assert.deepEqual([...s.posts[0].body.gameIds], ['g1', 'g2']);
+  // A move takes games out of this round's history, so it still asks first.
+  assert.equal(s.confirms.length, 1, 'a move must still be confirmed');
+});
+
+/* #1360: the sheet's own button already reads „Spiele kopieren", and a copy
+   changes nothing in this round — a second dialog asking to approve an action
+   while saying it cannot hurt adds a step and no safety. */
+test('a copy goes straight from the sheet, with no confirm', async (t) => {
+  const s = await openSheetOn(t);
+  await s.pick('copy');
+  s.sheet.querySelector('#moveGo').click();
+  await new Promise((r) => setTimeout(r, 0));
+  assert.equal(s.confirms.length, 0, 'copying raised a confirm');
+  assert.equal(s.posts.filter((p) => /\/games\/copy-to$/.test(p.path)).length, 1);
 });
 
 test('switching to Kopieren swaps every string the user reads', async (t) => {

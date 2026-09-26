@@ -182,6 +182,33 @@ test('the banner and the suggestion card never name the same game', (t) => {
   assert.ok(!suggested.includes('Spiel 17'), 'the hub recommended the game it is simultaneously proposing to archive');
 });
 
+/* #1360: the banner's retire button asks about a reversible move, so it must not
+   be dressed as a deletion — no bin, no red. Same fixture as above, since it is
+   the one known to trip the banner. */
+test('the banner\'s retire asks a neutral question with the archive icon', async (t) => {
+  const dom = loadApp();
+  t.after(() => dom.close());
+  dom.set('api', noRecos());
+  const r = busyRound();
+  r.sessions = [...r.sessions, ...[[1, 1], [3, 3], [3, 3]].map(([a, b], i) =>
+    play(950 + i, 10, daysAgo(300 + i), {
+      gameIds: [10, 17],
+      votes: { 1: { 10: { rating: 5 }, 17: { rating: a } }, 2: { 10: { rating: 5 }, 17: { rating: b } } },
+    }))];
+  dom.call('renderStartTab', r, r.games);
+  const banner = dom.app.querySelector('.rec-banner');
+  assert.ok(banner, 'the fixture no longer trips the retirement banner');
+  assert.equal(banner.querySelector('.rec-banner__text .ti-trash'), null, 'the banner still wears the bin');
+
+  const asked = [];
+  dom.set('confirmDialog', async (o) => { asked.push(o); return false; });
+  banner.querySelector('.recommend-item__btn').click();
+  await new Promise((res) => setImmediate(res));
+  assert.equal(asked.length, 1);
+  assert.equal(asked[0].danger, false, 'retiring is reversible, yet the confirm is red');
+  assert.equal(asked[0].icon, 'ti-archive');
+});
+
 // -------------------------------------------------------------- preset chips
 
 test('no quick-start chip is offered for a shelf that cannot express one', (t) => {

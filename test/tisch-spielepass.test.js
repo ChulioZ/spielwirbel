@@ -152,7 +152,8 @@ test('Tisch: the menu\'s items are an Aktionen panel in fillMenu\'s order, and �
 
   const btns = app.querySelectorAll('.gd-actions .gd-actions__grid > button.gd-act');
   assert.deepEqual(labelsOf(btns), ['Durchgespielt', 'Aussortieren', 'Verknüpfung lösen']);
-  assert.deepEqual([...btns].map((b) => b.dataset.kind), ['undoable', 'destructive', 'destructive']);
+  // Retiring is reversible, so it sits with completion above the rule (#1360).
+  assert.deepEqual([...btns].map((b) => b.dataset.kind), ['undoable', 'undoable', 'destructive']);
 
   // The raters lead, the history follows, then the panel, then the bar.
   assert.deepEqual(classOrder(app.querySelector('.pass__table')), ['gd-raters', 'gd-history', 'gd-actions', 'gd-bar']);
