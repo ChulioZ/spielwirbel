@@ -127,7 +127,7 @@ test('the shell draws only on pseudo-element slots styles.css leaves free', () =
     const which = /::(before|after)$/.exec(subject)[0];
     const slot = `${cls}${which}`;
     if (RESTYLED.has(slot)) continue;
-    const owner = RULES.find(([s]) => s.split(',').some((x) => new RegExp(`${cls.replace(/[.]/g, '\\.')}(?![\\w-])[^\\s,]*${which}`).test(x)));
+    const owner = RULES.find(([s]) => s.split(',').some((x) => new RegExp(`${cls.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\w-])[^\\s,]*${which}`).test(x)));
     if (owner) taken.push(`${slot} (styles.css: ${owner[0].trim()})`);
   }
   assert.deepEqual(taken, []);
