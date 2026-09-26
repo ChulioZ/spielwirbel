@@ -5290,3 +5290,48 @@
     from { transform: translateY(-28px) scale(1.12); opacity: 0; }
   }
 }
+
+/* ===== #1221 O10.2 — „Der Wal taucht auf": the whale surfaces at the result ===== */
+/* Sheet: docs/design/ocean/Ocean-O10-Motion.dc.html, O10.2 and the rules in
+   O10.4. The whale is the result band's resting picture (#1213, O4.4), and it
+   exists only once the chosen game is played — so "once per result" is the ONE
+   render after the reader records the finish. views-session.js already marks
+   that render with `data-stamped` on the slot for every composed design (Der
+   Tisch's T10.5 hook, #1200): not a cold load of a finished session, not a
+   winner change, not the next re-render. Nothing new in the script.
+
+   The whale rises 70px from below the waterline, 700ms on O10's curve, lifts
+   3px past its rest (O10.2's „Nachwiegen von 3 px", with the sheet's 1° rock)
+   and settles. The sheet's loop swings -8px; its text and O10.4 („kein
+   Überschwingen") allow the 3px only, and the text wins. The box rides on its
+   back: same keyframes, pivoting on the whale's own centre (at 168px, i.e.
+   150px below the box's 18px top edge, and 10px left of its middle — the
+   #1213 geometry above), so the two turn as one body.
+
+   For the ride the layers are re-stacked — whale, box, water, then the text
+   card over all three — so the whale and the box come up out of the water
+   rather than over it, and the whale's start position below the band's water
+   hides under the card instead of painting over its text. At rest nothing
+   overlaps any of those (box ends at 130px, water starts at 188px, the card at
+   236px, the whale spans 112-224px), so the order is invisible once still.
+
+   No end frame and no fill: it ends on the element's own rest, the Endbild
+   reduced motion shows at once; outside the gate nothing here exists. The
+   sentence above states the result in text — the motion is Zugabe, never
+   Information. Drop this section and `data-stamped` is inert under Ocean. */
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .result-screen--ocean .tisch-slot[data-stamped] > .tisch:is([data-state="done"], [data-state="picking"])::before {
+    animation: ocean-surface 700ms cubic-bezier(0.2, 0.8, 0.3, 1);
+  }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .result-screen--ocean .tisch-slot[data-stamped] > .tisch:is([data-state="done"], [data-state="picking"]) .tisch__box {
+    z-index: 2;
+    transform-origin: calc(50% - 10px) 150px;
+    animation: ocean-surface 700ms cubic-bezier(0.2, 0.8, 0.3, 1);
+  }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .result-screen--ocean .tisch-slot[data-stamped] > .tisch:is([data-state="done"], [data-state="picking"])::after { z-index: 3; }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .result-screen--ocean .tisch-slot[data-stamped] > .tisch:is([data-state="done"], [data-state="picking"]) .tisch__main { z-index: 4; }
+  @keyframes ocean-surface {
+    from { transform: translateY(70px) rotate(-3deg); }
+    70% { transform: translateY(-3px) rotate(1deg); }
+  }
+}
