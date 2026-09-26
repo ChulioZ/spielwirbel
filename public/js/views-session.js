@@ -1823,7 +1823,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     const raceVar = reveal && r.count ? `--dur:${(0.5 + r.shown * 0.32).toFixed(2)}s;` : '';
     const rankClass = r.place && r.place <= 3 ? ` trow__rank--${r.place}` : '';
     const row = tischLook ? composedTrow({
-      row: r, gameId: g.id, hasVotes, bars, rankClass, imgStyle, fallback,
+      row: r, hasVotes, bars, rankClass, imgStyle, fallback,
       rowClass: `trow${reveal ? ' is-race' : ''}`, rowStyle: `${fillVars}${raceVar}`,
       title: g.title, badge: retiredBadge, ownersLine,
       whyLine: r.count && scoreReason(r) ? `<div class="score-why">${esc(scoreReason(r))}</div>` : '',

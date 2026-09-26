@@ -268,6 +268,37 @@ test('the veto pill reads „1× gar nicht", never „kein Veto"', async (t) => 
   assert.doesNotMatch(dom.app.textContent, /kein Veto/);
 });
 
+// #1363: no vote-count toggle — the count was the same on every row — and the
+// distribution shown under every row, as Klassisch always has.
+test('every Ocean result row shows its distribution, with no count and no toggle', async (t) => {
+  const dom = await result(t, 'ocean');
+  const rows = qa(dom, '.result-screen .trow');
+  assert.ok(rows.length >= 3, `only ${rows.length} rows rendered`);
+  for (const row of rows) {
+    const bars = row.querySelector('.trow__bars');
+    assert.ok(bars && !bars.hidden, 'the bars are open in every row');
+    assert.equal(row.lastElementChild, bars, 'and last, under the row');
+  }
+  assert.equal(q(dom, '.trow__votes'), null);
+  assert.doesNotMatch(OCEAN_CSS, /trow__votes|"votes /, 'no rule or grid area for the gone count');
+  assert.equal(RULES.find(([s]) => s === `${GATE}.result-screen--ocean .trow__bars[hidden]`), undefined,
+    'nothing hides the bars');
+});
+
+// #1363's merge interview: a settled row's action is the `…` alone, so it sits
+// beside the pill and the bars follow the title — on a line of its own it left a
+// gap in every row. Only a wide action („Spielen", „Auf dem Tisch") takes a line.
+test('an Ocean row keeps its `…` on the first line; only a wide action drops', () => {
+  const areas = (sel) => declaredValue(bodyFor(sel), 'grid-template-areas')
+    .split('"').filter((s) => s.trim()).map((s) => s.trim().split(/\s+/));
+  const settled = areas('.result-screen--ocean .tafel .trow');
+  assert.equal(settled.length, 2, 'two lines: the row, then the bars');
+  assert.deepEqual(settled[0].slice(-2), ['pill', 'sub'], 'the action sits beside the pill');
+  const wide = areas('.result-screen--ocean .tafel .trow:has(.play-btn, .trow__chip)');
+  assert.equal(wide.length, 3, 'a wide action takes a line of its own');
+  assert.ok(wide[1].includes('sub') && !wide[0].includes('sub'));
+});
+
 test('Klassisch keeps its one-column result', async (t) => {
   const dom = await result(t, null);
   assert.equal(q(dom, '.result-screen--ocean'), null);
