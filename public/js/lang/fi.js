@@ -1774,6 +1774,8 @@ I18N.fi = {
   'badges.count.progress': '{n} kesken',
   'badges.count.openOne': '{n} avoinna',
   'badges.count.open': '{n} avoinna',
+  'badges.rank': 'Sija {n}',
+  'badges.memberAll': 'Kaikki merkit: {name}',
   'badges.newSinceOne': '{n} uusi pelin {game} jälkeen',
   'badges.newSince': '{n} uutta pelin {game} jälkeen',
   'badges.newOne': '{n} uusi',

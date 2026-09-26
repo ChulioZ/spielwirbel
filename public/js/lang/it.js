@@ -1813,6 +1813,8 @@ I18N.it = {
   'badges.count.progress': '{n} in corso',
   'badges.count.openOne': '{n} da ottenere',
   'badges.count.open': '{n} da ottenere',
+  'badges.rank': 'Posto {n}',
+  'badges.memberAll': 'Tutti i distintivi di {name}',
   'badges.newSinceOne': '{n} nuovo da {game}',
   'badges.newSince': '{n} nuovi da {game}',
   'badges.newOne': '{n} nuovo',

@@ -387,11 +387,16 @@ What the app does, in detail. For a short overview see the
     reached. Nothing is stored: they are derived from the sessions on every
     render, so deleting a session removes what it earned. From seven members a
     row shows only earned marks, the rest behind „N offen"; before the first
-    finished session the section is one line. The same marks appear as up to
+    finished session the section is one line. A legend in the section head
+    keys the three drawn states (verdient, unterwegs, offen), and each member
+    row names its standings place („Platz N", tie-aware, only for members the
+    standings rank) — issue #1386; Der Tisch shows both from the editor split
+    up, Ocean the legend only. The same marks appear as up to
     two entries on the result screen of the session that earned them („+N
     weitere" beyond that), as one row per earning under that session in the
     Chronik, as one line in the hub's Pokale preview, and as the earned-only
-    row on die Tischkarte. Ocean draws each mark as a pearl in a Muschel
+    row on die Tischkarte, which ends on a chevron link to that member's row
+    in Pokale › Abzeichen (on Ocean from the editor split up only). Ocean draws each mark as a pearl in a Muschel
     (issue #1391): a full pearl when earned, a smaller one inside a ring while
     under way, an empty shell with a dashed rim while open, and a closed shell
     for a secret — with each person's pearls threaded on a string.
