@@ -229,7 +229,9 @@ lib/
                      it holds, in its own and in shared rounds (issue #1089).
                      Runs public/js/member-stats.js per seat rather than
                      re-deriving it, and returns plain numbers and game titles
-                     only — no round name, round id, member name or tenant id
+                     only — no round name, round id, member name or tenant id.
+                     Its `badges` are the account-tier Abzeichen, from
+                     public/js/achievements.js (issue #1387)
   user-plays.js      the same walk, as a flat list: one row per finished session
                      the account sat at (time, game, its own rating), for the
                      own profile's „Dein Rückblick" — bucketed into months on
@@ -839,6 +841,11 @@ public/
                      round's sessions. Split out of views-member.js by #1075;
                      a pure derivation, edited when a statistic changes rather
                      than when the screen does
+    achievements.js  the Abzeichen catalogue (22 entries: member, round,
+                     account) and their states, tiers and earning dates,
+                     replayed on demand from the finished sessions — nothing
+                     stored. Also required by lib/user-stats.js for the
+                     account tier (issue #1387)
     views-member.js  member detail page (die Tischkarte: the Siegquote ring,
                      the initials watermark, the figure strip and its
                      the two game boxes; name/colour editing)

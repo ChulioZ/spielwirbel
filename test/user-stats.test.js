@@ -31,9 +31,9 @@ const UID = 'u-ada';
 let n = 0;
 const uid = () => `x${(n += 1)}`;
 
-function seatUser({ id = UID, tenantId = 't-ada' } = {}) {
+function seatUser({ id = UID, tenantId = 't-ada', createdAt } = {}) {
   store.data.users = store.data.users || [];
-  store.data.users.push({ id, tenantId, email: `${id}@example.com`, username: id });
+  store.data.users.push({ id, tenantId, email: `${id}@example.com`, username: id, ...(createdAt ? { createdAt } : {}) });
   return id;
 }
 
@@ -233,7 +233,7 @@ test('the payload carries numbers and game titles only — no round, member or t
 
   const st = await accountStats(UID);
   assert.deepEqual(Object.keys(st).sort(), [
-    'avgGiven', 'bestGames', 'bestPlays', 'bestScore', 'favAvg', 'favorite',
+    'avgGiven', 'badges', 'bestGames', 'bestPlays', 'bestScore', 'favAvg', 'favorite',
     'gamesPlayed', 'rounds', 'sessions', 'winRate', 'wins',
   ]);
   // A game tile carries what it draws with and nothing that identifies where it
@@ -244,6 +244,24 @@ test('the payload carries numbers and game titles only — no round, member or t
   for (const leak of ['Runde', 'Ada', 'Bo', 't-ada', 'm-me', 'g1']) {
     assert.equal(json.includes(leak), false, `payload must not carry ${leak}`);
   }
+});
+
+// --- the account-tier Abzeichen (#1387) ----------------------------------------
+
+test('the account-tier Abzeichen read the same totals, plus the account age', async () => {
+  reset();
+  // A year and a day ago, so Jahre 1 is earned whatever today is.
+  seatUser({ createdAt: new Date(Date.now() - 366 * 24 * 60 * 60 * 1000).toISOString() });
+  round({ games: [game('g1', 'Azul')], sessions: [played('s1', 'g1')] });
+  round({ games: [game('g2', 'Azul')], sessions: [played('s2', 'g2', { winner: 'm-other' })] });
+
+  const st = await accountStats(UID);
+  const by = Object.fromEntries(st.badges.map((b) => [b.key, b]));
+  assert.deepEqual(Object.keys(by), ['accountSessions', 'accountWins', 'accountRounds', 'accountYears']);
+  assert.deepEqual([by.accountSessions.state, by.accountSessions.count, by.accountSessions.of], ['progress', st.sessions, 25]);
+  assert.deepEqual([by.accountWins.count, by.accountWins.of], [st.wins, 10]);
+  assert.deepEqual([by.accountRounds.state, by.accountRounds.tier], ['earned', 2], 'two seats is Runden 2');
+  assert.deepEqual([by.accountYears.state, by.accountYears.tier], ['earned', 1]);
 });
 
 // --- empty and unknown ------------------------------------------------------

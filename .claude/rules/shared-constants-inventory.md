@@ -582,6 +582,16 @@ off-the-table state joined `retired`, and then a saved filter would keep a seat
 the screen no longer offers, which the setup screen would silently drop on use
 with nothing to say why.
 
+**The twenty-second is `public/js/achievements.js`** (#1387): the Abzeichen
+catalogue and its derivation — `roundBadges`, `newSince`, and `accountBadges`,
+which `lib/user-stats.js` requires for the account tier on the profile. The
+`member-stats.js` direction again (a whole derivation, not a value), and for the
+same reason: the Spielerkarte's Sessions/Siege/Runden marks must count from the
+very totals the same card prints, so the server computes them once rather than
+the client re-deriving a second „Siege". `accountBadges` needs no injected
+siblings, which is why the server can call it bare; `roundBadges` takes the
+memberStats-style `deps` and, under Node, throws without them.
+
 **Each new instance must be named above.** `test/rule-enumerations.test.js`
 asserts every `require('../public/js/…')` under `lib/routes/` and `lib/` appears
 in it, because the list had already gone stale by one before anyone noticed. The
