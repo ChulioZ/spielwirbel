@@ -1747,6 +1747,8 @@ I18N.ko = {
   'badges.count.progress': '{n}개 진행 중',
   'badges.count.openOne': '{n}개 미획득',
   'badges.count.open': '{n}개 미획득',
+  'badges.rank': '{n}위',
+  'badges.memberAll': '{name}의 모든 배지',
   'badges.newSinceOne': '{game} 이후 {n}개 새로 획득',
   'badges.newSince': '{game} 이후 {n}개 새로 획득',
   'badges.newOne': '{n}개 새로 획득',

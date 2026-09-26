@@ -182,9 +182,11 @@ test('the hub line, the Chronik row, the card and the feed (T17.6, T17.7)', () =
   assert.match(body('.feed-row__cover--badge'), /var\(--gold-deep\)/);
 });
 
-test('nothing here moves — the falling pin is its own, droppable PR', () => {
-  const moving = rulesFor('badge').filter(([, b]) => /\b(animation|transition)\s*:/.test(b));
-  assert.deepEqual(moving.map(([s]) => norm(s)), []);
+test('nothing here moves but the falling pin, and that only on a fresh mark (#1386)', () => {
+  // The motion is test/tisch-motion-pin.test.js; the static skin must stay still.
+  const moving = rulesFor('badge').filter(([, b]) => /\b(animation|transition)[-a-z]*\s*:/.test(b));
+  const stray = moving.filter(([s]) => !members(s).every((m) => m.includes('.badge-moment__item[data-fresh]')));
+  assert.deepEqual(stray.map(([s]) => norm(s)), []);
 });
 
 // ------------------------------------------------------------ the markup

@@ -1818,6 +1818,8 @@ I18N.pt = {
   'badges.count.progress': '{n} em andamento',
   'badges.count.openOne': '{n} por conquistar',
   'badges.count.open': '{n} por conquistar',
+  'badges.rank': 'Posição {n}',
+  'badges.memberAll': 'Todas as insígnias de {name}',
   'badges.newSinceOne': '{n} nova desde {game}',
   'badges.newSince': '{n} novas desde {game}',
   'badges.newOne': '{n} nova',

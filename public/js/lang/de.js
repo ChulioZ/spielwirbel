@@ -1937,6 +1937,8 @@ I18N.de = {
   'badges.count.progress': '{n} unterwegs',
   'badges.count.openOne': '{n} offen',
   'badges.count.open': '{n} offen',
+  'badges.rank': 'Platz {n}',
+  'badges.memberAll': 'Alle Abzeichen von {name}',
   'badges.newSinceOne': '{n} neu seit {game}',
   'badges.newSince': '{n} neu seit {game}',
   'badges.newOne': '{n} neu',

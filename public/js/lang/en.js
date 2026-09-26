@@ -1939,6 +1939,8 @@ I18N.en = {
   'badges.count.progress': '{n} in progress',
   'badges.count.openOne': '{n} open',
   'badges.count.open': '{n} open',
+  'badges.rank': 'Place {n}',
+  'badges.memberAll': 'All badges for {name}',
   'badges.newSinceOne': '{n} new since {game}',
   'badges.newSince': '{n} new since {game}',
   'badges.newOne': '{n} new',
