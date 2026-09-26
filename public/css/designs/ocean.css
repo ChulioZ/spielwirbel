@@ -5335,3 +5335,85 @@
     70% { transform: translateY(-3px) rotate(1deg); }
   }
 }
+
+/* ===== #1221 O10.3 — the small movements: the pick, the new crown, the sheet, the toast ===== */
+/* Sheet: docs/design/ocean/Ocean-O10-Motion.dc.html, O10.3 and O10.4. Four of
+   O10.3's eight, each its own block below and each droppable on its own. Of the
+   other four: the Tidenlinie is the ambient movement (its own section); „Laden"
+   has nothing to move — the app's loading states are a line of text, with no
+   placeholder or spinner; „Karte umdrehen" has no face-down card that is ever
+   uncovered in the app, and the nearest moment (the next vote card) is O10.4's
+   one banned surface; the Zierblasen are out of #1221's scope. The sheet's and
+   the toast's EXITS are not animated either: sheet.js and toast() remove
+   synchronously for every design, and reduced motion's hard exit is O10.3's
+   own Endbild for both. Every block sits in the motion gate, so under reduced
+   motion each element simply stands in its resting state. */
+@media (prefers-reduced-motion: no-preference) {
+  /* --- Wertung wählen, 260ms ease-out -------------------------------------------
+     The chosen bubble rises 8px and grows to 1.06. The rating tap re-renders the
+     whole card, so a transition has nothing to run on; `.vote--advancing` is on
+     exactly the rebuilt card that shows the new pick (vote-advance.js), for the
+     340ms beat before the next card replaces it. The lift is held (`forwards`)
+     for the rest of that beat and leaves with the card: a card met again by Back
+     is not advancing, so it rests as #1213 drew it. The fill is not animated —
+     the bubble's gradient cannot interpolate into the ramp colour, and the
+     filled frame is the acknowledgement the beat exists to show. */
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .vote--ocean.vote--advancing .rating .mood.is-selected .ti {
+    animation: ocean-pick 260ms ease-out forwards;
+  }
+  @keyframes ocean-pick {
+    to { transform: translateY(-8px) scale(1.06); }
+  }
+
+  /* --- Sieg kommt dazu, 420ms, 0 → 1.18 → 1 -----------------------------------
+     O10.3's victory pearl has no pearl row to land in here; the victory the app
+     draws is the crown over a winner, which `paintComposedCrowns` switches on IN
+     PLACE — the people column survives a winner tap. So a TRANSITION, not an
+     animation: it runs only when the class moves on a node that was already
+     painted, i.e. on the reader's own tap, and never on a load or a language
+     switch, which build the crown already on. The curve peaks at 1.18 about 60%
+     in (O10.3's one allowed overshoot, it is a reward). `scale` rather than
+     `transform`, so the crown's translateX(-50%) stands; origin at the box's
+     left edge is the crown's own bottom centre once that translate applies.
+     Only `scale` transitions — `visibility` flips at once, so a crown taken away
+     is simply gone. */
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .result-people__crown {
+    transform-origin: 0 100%;
+    transition: scale 420ms cubic-bezier(0.3, 1.325, 0.53, 1.325);
+  }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .result-people__person:not(.is-winner) .result-people__crown { scale: 0; }
+
+  /* --- Sheet von unten, 320ms, Schleier 160ms ----------------------------------
+     A docked sheet (the phone's, #1217 — the same selector as its grip) rides
+     all the way up from below its own height; a centred card keeps the app's
+     short rise, on O10's timing. The scrim fades its COLOUR only: fading the
+     backdrop's opacity would fade the sheet inside it along with it. */
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .sheet-backdrop {
+    animation: ocean-scrim 160ms ease-out;
+  }
+  @keyframes ocean-scrim {
+    from { background-color: transparent; }
+  }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .sheet-backdrop > .sheet {
+    animation: sheet-up 320ms cubic-bezier(0.2, 0.8, 0.3, 1);
+  }
+  @media (max-width: 639px) {
+    :root[data-design="ocean"]:not([data-scheme="dark"]) :is(.sheet-backdrop:not(.sheet-backdrop--center), .sheet-backdrop--editor) > .sheet {
+      animation: ocean-sheet-up 320ms cubic-bezier(0.2, 0.8, 0.3, 1);
+    }
+  }
+  @keyframes ocean-sheet-up {
+    from { transform: translateY(100%); }
+  }
+
+  /* --- Toast, 180ms in ---------------------------------------------------------
+     20px up from below. `translate` rather than `transform`, which holds the
+     toast's centring. A toast replacing another keeps `.is-on` through toast()'s
+     synchronous clear, so a replacement swaps its words without a second rise. */
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .toast.is-on {
+    animation: ocean-toast-in 180ms cubic-bezier(0.2, 0.8, 0.3, 1);
+  }
+  @keyframes ocean-toast-in {
+    from { translate: 0 20px; opacity: 0; }
+  }
+}
