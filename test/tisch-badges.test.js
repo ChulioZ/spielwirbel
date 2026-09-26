@@ -131,15 +131,6 @@ test('in progress carries the brass RING of --pct; an earned tier shows it on th
   assert.deepEqual(onLocked, [], 'an open or secret pin draws a ring');
 });
 
-test('the tier is a brass SHIELD with the numeral: gold on the dark plinth ink', () => {
-  const tier = body('.badge__tier');
-  assert.equal(decl(tier, 'background'), 'var(--plinth-ink)');
-  assert.equal(decl(tier, 'color'), 'var(--gold)');
-  assert.match(decl(tier, 'border'), /var\(--gold\)/);
-  // Placed on the pin's lower right from the pin's own size, at every size.
-  assert.match(decl(tier, 'transform'), /var\(--pin/);
-});
-
 test('the name and the line sit BESIDE the pin, never on the brass', () => {
   // The glyph is the only thing inside the mark (markup); the name is its own
   // grid row under it, or its own column beside it.
@@ -167,9 +158,8 @@ test('the Tischkarte and the Spielerkarte carry their pins on a band along the l
   const both = RULES.filter(([sel]) => members(sel).includes(`${GATE} .member-card__badges`)
     && members(sel).includes(`${GATE} .profile-card__badges`));
   assert.ok(both.some(([, b]) => /border-top:\s*3px solid var\(--gold-edge\)/.test(b)), 'the two cards do not share the band');
-  // The compact row shows each earned pin's name (with its tier) and no shield.
+  // The compact row shows each earned pin's name, which carries its tier.
   assert.equal(decl(body('.badge-grid--compact .badge__name'), 'display'), 'block');
-  assert.equal(decl(body('.badge-grid--compact .badge__tier'), 'display'), 'none');
 });
 
 test('the result moment: pins on wooden plates, the holder beside them, never „Neu" on every one (T17.5)', () => {

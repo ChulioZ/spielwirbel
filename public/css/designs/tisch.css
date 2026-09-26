@@ -8321,7 +8321,7 @@
      locked       a felt recess, dashed --control-edge, the glyph in its ink
      progress     the recess, solid, plus the brass ring and the count line
      secret       the locked recess; lock-question is the markup's glyph
-     tier         a brass shield on the pin's lower right, the numeral in gold
+     tier         in the name alone („Stammgast 10") — no shield (operator, 2026-09-26)
 
    State is never colour alone (T17.10): brass vs recess is fill AND relief,
    open vs progress is dashed edge vs ring, and every tile's aria-label names
@@ -8429,32 +8429,6 @@
   background: conic-gradient(var(--gold) calc(var(--pct) * 1%), var(--gold-soft) 0);
 }
 
-/* The tier: a brass-rimmed shield on the pin's lower right, the numeral gold on
-   the plinth ink (10.41:1). Placed in the mark's grid cell and pushed out by
-   the pin's own size, so it follows the pin at every one of its sizes. */
-:root[data-design="tisch"][data-scheme="dark"] .badge__tier {
-  position: static;
-  z-index: 1;
-  grid-row: 1;
-  grid-column: 1;
-  align-self: center;
-  justify-self: center;
-  min-width: 20px;
-  height: 17px;
-  padding: 0 4px;
-  box-sizing: border-box;
-  border: 1px solid var(--gold);
-  border-radius: var(--radius-sm);
-  background: var(--plinth-ink);
-  color: var(--gold);
-  font-family: var(--font-display);
-  font-size: 10px; /* a numeral on a 17px shield, not running type */
-  font-weight: 800;
-  line-height: 15px;
-  text-align: center;
-  font-variant-numeric: tabular-nums;
-  transform: translate(calc(var(--pin, 50px) / 2 - 5px), calc(var(--pin, 50px) / 2 - 6px));
-}
 /* „Neu" until the next visit: a small gold plate at the pin's upper left,
    --gold-ink on --gold (review finding A2's one ink on gold, 7.74:1). */
 :root[data-design="tisch"][data-scheme="dark"] .badge__new {
@@ -8653,9 +8627,8 @@
 }
 
 /* The Tischkarte shows EARNED pins only (the markup's rule), each with its
-   name — tier included, „Stammgast 10" — under it; no shield, no ring, no
-   „Neu": the card is about who the member is, and the shield would repeat the
-   name's numeral. */
+   name — tier included, „Stammgast 10" — under it; no ring, no „Neu": the
+   card is about who the member is. */
 :root[data-design="tisch"][data-scheme="dark"] .badge-grid--compact {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -8670,7 +8643,6 @@
   font-size: var(--text-xs);
   text-align: center;
 }
-:root[data-design="tisch"][data-scheme="dark"] .badge-grid--compact .badge__tier,
 :root[data-design="tisch"][data-scheme="dark"] .badge-grid--compact .badge__new { display: none; }
 /* 1440 (T17.4): the kicker in a 96px column on the left, the pins in a row
    beside it with the name to the right of each. */
@@ -8791,8 +8763,7 @@
   text-align: left;
 }
 :root[data-design="tisch"][data-scheme="dark"] .badge-moment .badge:hover { border-color: var(--gold); }
-:root[data-design="tisch"][data-scheme="dark"] .badge-moment .badge__mark,
-:root[data-design="tisch"][data-scheme="dark"] .badge-moment .badge__tier { grid-row: 1 / 4; }
+:root[data-design="tisch"][data-scheme="dark"] .badge-moment .badge__mark { grid-row: 1 / 4; }
 :root[data-design="tisch"][data-scheme="dark"] .badge-moment .badge__name {
   grid-row: 2;
   grid-column: 2;
