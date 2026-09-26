@@ -27,7 +27,7 @@
  * See .claude/rules/frontend-build-cache-busting.md.
  */
 
-const CACHE = 'spielwirbel-shell-v370';
+const CACHE = 'spielwirbel-shell-v371';
 
 // Everything the app needs to boot offline. Kept in sync with the <script>/<link>
 // order in index.html; each entry must be a real, servable path or install fails
@@ -219,6 +219,9 @@ const SHELL = [
   // ~170 KB for nothing.
   '/icons/tisch/favicon-32.png',
   '/icons/tisch/icon-192.png',
+  // Ocean marks (#1222), on the same reasoning: the favicon and the 192 only.
+  '/icons/ocean/favicon-32.png',
+  '/icons/ocean/icon-192.png',
   '/icons/powered-by-bgg.png',
 ];
 
