@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="design_doc_mode" content="canvas">
+  <link rel="stylesheet" href="../../../public/fonts/tabler-icons.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #d9d5cc; font-family: 'Archivo', sans-serif; }
+    a { color: #b8330f; text-decoration: none; }
+    a:hover { color: #141414; text-decoration: underline; }
+  </style>
+</helmet>
+<div style="display: flex; flex-direction: column; gap: 40px; padding: 48px; width: max-content; color: #141414; background: #d9d5cc; font-family: 'Archivo', sans-serif;">
+
+  <div data-screen-label="P9 Kopf" style="width: 1240px; display: flex; flex-direction: column; gap: 12px; background: #fbfaf6; border: 2px solid #141414; padding: 24px 28px;">
+    <div style="display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;">
+      <span style="font-weight: 700; font-size: 13px; letter-spacing: .14em; background: #141414; color: #fbfaf6; padding: 5px 12px;">P9</span>
+      <h1 style="margin: 0; font-family: 'Anton'; font-weight: 400; font-size: 40px; line-height: 1; text-transform: uppercase;">Vokabular · DE und EN</h1>
+      <span style="font-size: 14px; color: #2b2925;">Brief 9 von 14 · nach dem Vokabular-Addendum vom 20.09.</span>
+    </div>
+    <p style="margin: 0; font-size: 15px; line-height: 1.55; max-width: 96ch; color: #2b2925;"><strong>Das Programmheft benennt nichts um.</strong> Topf, beide Hauptknöpfe, Wertungsfrage, Skalenenden und Aufdecken bleiben die Wörter der App — das Addendum nennt „Session wirbeln →“ und „Loswirbeln →“ für das Programmheft ausdrücklich „fine as is“. Die Zeitung steckt in der <strong>Form</strong> (Schlagzeile, Satzspiegel, große Ziffern) und in fünf Zierstellen, die nichts tragen, was jemand suchen muss. Damit gibt es auch <strong>kein Glossar</strong> (Regel 6): es gibt nichts zu erklären.</p>
+  </div>
+
+  <section data-screen-label="P9.1 Themenstellen" style="width: 1240px; display: flex; flex-direction: column; gap: 12px;">
+    <span style="font-family: 'Anton'; font-weight: 400; font-size: 30px; text-transform: uppercase;">1 · Die Stellen aus §2 — was das Programmheft dort tut</span>
+    <div style="background: #fbfaf6; border: 1px solid #141414; padding: 6px 18px 12px;">
+      <div style="display: grid; grid-template-columns: 200px minmax(0, 1fr) minmax(0, 1fr) 150px; gap: 16px; font-weight: 700; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #6f6b66; border-bottom: 2px solid #141414; padding: 10px 0 6px;"><span>Stelle</span><span>Deutsch</span><span>English</span><span>Status</span></div>
+      <sc-for list="{{ places }}" as="p" hint-placeholder-count="10"><div style="display: grid; grid-template-columns: 200px minmax(0, 1fr) minmax(0, 1fr) 150px; gap: 16px; align-items: baseline; padding: 10px 0; border-bottom: 1px dotted #b8b4ad; font-size: 15px; line-height: 1.45;"><strong>{{ p.k }}</strong><span>{{ p.de }}</span><span style="color: #2b2925;">{{ p.en }}</span><span style="font-weight: 700; font-size: 13px; color: {{ p.ink }};">{{ p.s }}</span></div></sc-for>
+    </div>
+    <span style="font-size: 14px; line-height: 1.5; color: #2b2925;">„App“ heißt: der String steht so in <code>public/js/lang/de.js</code> bzw. <code>en.js</code> und wird nicht angefasst. „Neu“ sind die Zierzeilen des Designs — für sie liefern wir DE und EN, die übrigen sieben Sprachen übersetzt ihr. Keine davon ist ein Wortspiel: Ausgabe → issue, Extrablatt → extra edition, Spielbericht → match report.</span>
+  </section>
+
+  <section data-screen-label="P9.2 Aus dem Konzept entfernt" style="width: 1240px; display: flex; flex-direction: column; gap: 12px;">
+    <span style="font-family: 'Anton'; font-weight: 400; font-size: 30px; text-transform: uppercase;">2 · Was gegenüber dem Konzept wegfällt</span>
+    <div style="background: #fbfaf6; border: 1px solid #141414; padding: 6px 18px 12px;">
+      <sc-for list="{{ removed }}" as="r" hint-placeholder-count="7"><div style="display: grid; grid-template-columns: minmax(0, 1fr) 40px minmax(0, 1fr) minmax(0, 1.2fr); gap: 16px; align-items: baseline; padding: 10px 0; border-bottom: 1px dotted #b8b4ad; font-size: 15px; line-height: 1.45;"><span style="text-decoration: line-through; text-decoration-thickness: 2px; text-decoration-color: #e8451c;">{{ r.was }}</span><span style="font-weight: 700;">→</span><strong>{{ r.now }}</strong><span style="color: #2b2925; font-size: 14px;">{{ r.why }}</span></div></sc-for>
+    </div>
+  </section>
+
+  <div style="display: flex; gap: 24px; width: 1240px;">
+    <section data-screen-label="P9.3 Sperrwörter" style="flex: 1; background: #fbfaf6; border: 2px solid #141414; padding: 18px 20px; display: flex; flex-direction: column; gap: 8px;">
+      <span style="font-family: 'Anton'; font-weight: 400; font-size: 26px; text-transform: uppercase;">3 · Sperrwörter</span>
+      <span style="font-size: 14px; line-height: 1.5; color: #2b2925;">Nie für eine Session, in keiner Sprache: <strong>Abend · Spielabend · game night · tonight</strong> als Name — und auch nicht in Zierzeilen oder Beispieltexten, denn Beispieltexte werden zu Strings. Auf allen vierzehn Blättern und den vier Bauteilen gesucht (Wortteil „abend“, Groß/klein egal): <strong>0 Treffer</strong> außerhalb der Stellen, die das Sperrwort zitieren — dieses Blatt, die Regel O3 in P1.8 und die Kopfnotiz von P3. Der Kasten sagt „Neue Session“, nicht „Heute Abend“.</span>
+    </section>
+    <section data-screen-label="P9.4 FAQ-Zeile" style="flex: 1.3; background: #fbfaf6; border: 2px solid #141414; padding: 18px 20px; display: flex; flex-direction: column; gap: 8px;">
+      <span style="font-family: 'Anton'; font-weight: 400; font-size: 26px; text-transform: uppercase;">4 · Statt Glossar: eine Zeile im FAQ</span>
+      <span style="font-size: 15px; line-height: 1.5;"><strong>DE</strong> — Im Programmheft heißt alles wie überall in Spielwirbel. Nur die Zierzeilen spielen Zeitung: „Ausgabe“, „Extrablatt“, „Spielbericht“.</span>
+      <span style="font-size: 15px; line-height: 1.5; color: #2b2925;"><strong style="color: #141414;">EN</strong> — In the Programme, everything keeps its usual Spielwirbel name. Only the decorative lines play newspaper: “issue”, “extra edition”, “match report”.</span>
+      <span style="font-size: 13px; color: #6f6b66;">Designname: Das Programmheft · EN The Programme</span>
+    </section>
+  </div>
+
+
+  <section data-screen-label="P9.5 Neue Schlüssel" style="width: 1240px; display: flex; flex-direction: column; gap: 12px;">
+    <span style="font-family: 'Anton'; font-weight: 400; font-size: 30px; text-transform: uppercase;">5 · Neue Schlüssel — nicht in de.js</span>
+    <div style="background: #fbfaf6; border: 1px solid #141414; padding: 6px 18px 12px;">
+      <div style="display: grid; grid-template-columns: 260px 200px minmax(0, 1fr); gap: 16px; font-weight: 700; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #6f6b66; border-bottom: 2px solid #141414; padding: 10px 0 6px;"><span>Wortlaut auf den Blättern</span><span>Wo</span><span>Nächster App-Wortlaut</span></div>
+      <sc-for list="{{ newKeys }}" as="k" hint-placeholder-count="9"><div style="display: grid; grid-template-columns: 260px 200px minmax(0, 1fr); gap: 16px; align-items: baseline; padding: 10px 0; border-bottom: 1px dotted #b8b4ad; font-size: 15px; line-height: 1.45;"><strong>{{ k.t }}</strong><span style="color: #2b2925;">{{ k.w }}</span><span style="color: #2b2925;">{{ k.app }}</span></div></sc-for>
+    </div>
+    <span style="font-size: 14px; line-height: 1.5; color: #2b2925;">Nach Entscheidung 9: Claude Code ordnet jeden Eintrag einem echten Schlüssel zu, wo einer passt; sonst wird er als neuer Schlüssel angelegt (DE + EN, sieben Sprachen nachziehen). Alles andere auf den Blättern steht so in <code>de.js</code>.</span>
+  </section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const APP = '#141414', NEW = '#b8330f';
+    const places = [
+      { k: 'Topf', de: 'Der Topf · „9 Spiele im Topf“', en: 'The pot · “9 games in the pot”', s: 'App — unverändert', ink: APP },
+      { k: 'Anzahlfrage', de: 'Wie viele wirbeln?', en: 'wie en.js', s: 'App — unverändert', ink: APP },
+      { k: 'Hauptknopf Hub', de: 'Session wirbeln → (mit Wirbel)', en: 'Start session →', s: 'App — nur der Pfeil', ink: APP },
+      { k: 'Hauptknopf Setup', de: 'Loswirbeln →', en: 'wie en.js', s: 'App — nur der Pfeil', ink: APP },
+      { k: 'Wertungskarte', de: 'Wie gern möchtest du das spielen? · gar nicht … unbedingt', en: 'How much would you like to play this? · not at all … absolutely', s: 'App — unverändert', ink: APP },
+      { k: 'Aufdecken', de: 'aufdecken', en: 'reveal', s: 'App — unverändert', ink: APP },
+      { k: 'Schlagzeile (Form)', de: '„Nordlichter“ wurde gespielt. Jonas hat gewonnen! — Anton, versal, bis 84 px', en: '“Nordlichter” was played. Jonas won! — as result.titleWonOne', s: 'App-Wortlaut, Form neu', ink: NEW },
+      { k: 'Begrüßung Start', de: 'Schön, dass ihr da seid. · allein: Schön, dass du da bist.', en: 'Good to see you all. · alone: Good to see you.', s: 'Neu', ink: NEW },
+      { k: 'Zierzeile Wortmarke', de: 'Kiosk · Donnerstag, 19. September 2026', en: 'Newsstand · Thursday, 19 September 2026', s: 'Neu', ink: NEW },
+      { k: 'Kicker Hinweiskarte', de: 'Extrablatt', en: 'Extra edition', s: 'Neu', ink: NEW },
+      { k: 'Zier-Notation', de: 'Ausgabe Nr. 24 · Nr. 1 (Regalkarte) · Session Nr. 23 · Spielbericht · Sonntag, 14. September 2026', en: 'Issue No. 24 · No. 1 · Session No. 23 · Match report · Sunday, 14 September 2026', s: 'Neu · nie auf Bedienelementen', ink: NEW },
+    ];
+    const removed = [
+      { was: 'Heute Abend (Kicker im Kasten)', now: 'Neue Session', why: 'Das Addendum ließ die Zeile als Tageszeit zu — aber sie enthält „Abend“ und würde als String den Sperrwort-Test auslösen.' },
+      { was: 'Vorspann-Prosa unter dem Aufmacher', now: 'Faktenzeile: Score · Im Topf · Sieger · Serie', why: 'Spielbericht-Prosa ist eine spätere Lieferung (§1); der Vorspann enthielt außerdem „des Abends“.' },
+      { was: 'Titel, Spielerzahl und Score auf dem Cover', now: 'unter dem Cover auf Papier', why: 'Regel 3 der Tisch-Prüfung: kein Text auf einem Cover.' },
+      { was: '„Gespielt“-Stempel halbtransparent auf dem Cover', now: 'Stempel auf deckendem Papier neben dem Cover', why: 'Regel 3; der Stempel bleibt, das Wort ist result.stamp.' },
+      { was: 'Mitglieder als graue Quadrate', now: 'die acht globalen Personenfarben', why: '§1: die acht Farben bleiben.' },
+      { was: 'Nr. 01 · führende Nullen', now: 'Nr. 1', why: 'Wie bei der Brücke (D7) — über neun Sprachen unverfänglich.' },
+      { was: 'Kopfleiste Papier auf Zinnober, Wortmarke 22 px', now: 'Tinte auf Zinnober, Wortmarke 24 px', why: 'Papier auf #e8451c ist 3,8:1 — nicht für Text unter 24 px.' },
+    ];
+    const newKeys = [
+      { t: 'Sieger ändern', w: 'P2.4, P4.3, P15b-Menü', app: '„Ändern“ (result.change) im Siegerkontext' },
+      { t: 'Ergebnis ansehen →', w: 'P2.1, P3.2 Hub', app: '—' },
+      { t: 'nur diese Session', w: 'Gast-Zeile P2.2, P4.1, P7.7', app: '„Gäste stimmen mit ab, gehören aber nicht zur Runde.“ (startSession.guestsNote)' },
+      { t: 'Ohne BGG eintragen', w: 'P3.5, P6.4', app: '—' },
+      { t: 'Sammlung lesen', w: 'P3.5, P6.4', app: '—' },
+      { t: 'Beispielrunde ansehen', w: 'P7.1', app: '—' },
+      { t: 'Weiter →', w: 'Wertungskarte P2.3, P4.2', app: '—' },
+      { t: 'Begründungen in „Könnte euch gefallen“', w: 'P13.8', app: 'kommen aus der Empfehlungslogik' },
+      { t: 'Toast-Sätze', w: 'P15b', app: 'je gegen de.js prüfen' },
+    ];
+    return { places, removed, newKeys };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="design_doc_mode" content="canvas">
+  <link rel="stylesheet" href="../../../public/fonts/tabler-icons.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #d9d5cc; font-family: 'Archivo', sans-serif; }
+    a { color: #b8330f; text-decoration: none; }
+    a:hover { color: #141414; text-decoration: underline; }
+  </style>
+</helmet>
+<div style="display: flex; flex-direction: column; gap: 48px; padding: 48px; width: max-content; color: #141414; background: #d9d5cc; font-family: 'Archivo', sans-serif;">
+
+  <div data-screen-label="P5 Kopf" style="max-width: 1240px; display: flex; flex-direction: column; gap: 12px; background: #fbfaf6; border: 2px solid #141414; padding: 24px 28px;">
+    <div style="display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;">
+      <span style="font-weight: 700; font-size: 13px; letter-spacing: .14em; background: #141414; color: #fbfaf6; padding: 5px 12px;">P5</span>
+      <h1 style="margin: 0; font-family: 'Anton'; font-weight: 400; font-size: 40px; line-height: 1; text-transform: uppercase;">Konto · Anmelden, Design-Wähler, Auswahl</h1>
+      <span style="font-size: 14px; color: #2b2925;">Brief 5 von 14 · Tokens aus <a href="Programmheft-P1-Komponenten.dc.html" style="display: inline-flex; align-items: center; justify-content: center; min-height: 24px; min-width: 24px; padding: 0 4px; text-decoration: underline;">P1</a></span>
+    </div>
+    <p style="margin: 0; font-size: 15px; line-height: 1.55; max-width: 96ch; color: #2b2925;">Anmelden und Registrieren im Programmheft — für wen es nach dem Abmelden noch gilt (Gerät merkt sich das Design) —, die Kontoseite mit dem <strong>Design-Wähler</strong> und das <strong>Auswahl-Sheet</strong> beim ersten Besuch, beide mit sieben Plakaten. Die Plakatfarben der anderen sechs Designs sind <strong>Nicht-Token</strong>: sie gehören deren X1. Jedes Plakat trägt seinen Namen auf einem deckenden Papierband unter der Farbfläche, nie auf ihr. Alle Wörter aus <code>auth.*</code> und <code>design.chooser.*</code>.</p>
+  </div>
+
+  <div style="display: flex; gap: 28px; align-items: flex-start;">
+  <div data-screen-label="P5.1 Anmelden" style="display: flex; flex-direction: column; gap: 10px;">
+    <span style="font-weight: 600; font-size: 13px; color: #2b2925;">P5.1 · Anmelden und Konto erstellen — Desktop</span>
+    <div style="width: 1440px; min-height: 900px; background: #fbfaf6; border: 1px solid #141414; display: flex; flex-direction: column;">
+      <div style="display: flex; align-items: center; gap: 24px; height: 56px; padding: 0 32px 0 40px; background: #e8451c;">
+        <span style="display: inline-flex; align-items: center; gap: 10px; font-family: 'Anton'; font-weight: 400; font-size: 24px; letter-spacing: .2em; text-transform: uppercase;"><i class="ti ti-tornado"></i>Spielwirbel</span>
+        <a href="#" style="margin-left: auto; min-height: 44px; display: inline-flex; align-items: center; gap: 6px; padding: 0 10px; font-weight: 700; font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: #141414;"><i class="ti ti-world" style="font-size: 18px;"></i>DE<i class="ti ti-chevron-down"></i></a>
+      </div>
+      <div style="margin: 48px 40px 0; display: grid; grid-template-columns: 1fr 1px 1fr; gap: 0 64px;">
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <h2 style="margin: 0; font-family: 'Anton'; font-weight: 400; font-size: 84px; line-height: 1; text-transform: uppercase;">Willkommen zurück</h2>
+          <span style="font-size: 18px; color: #2b2925; border-bottom: 4px solid #141414; padding-bottom: 14px;">Melde dich bei Spielwirbel an.</span>
+          <label style="display: flex; flex-direction: column; gap: 6px;"><span style="font-weight: 700; font-size: 13px; letter-spacing: .12em; text-transform: uppercase;">E-Mail oder Benutzername</span><input value="marco" style="height: 44px; box-sizing: border-box; border: 1.5px solid #141414; background: #ffffff; padding: 0 12px; font: 400 16px 'Archivo'; color: #141414;"></label>
+          <label style="display: flex; flex-direction: column; gap: 6px;"><span style="font-weight: 700; font-size: 13px; letter-spacing: .12em; text-transform: uppercase;">Passwort</span><input type="password" value="geheimgeheim" style="height: 44px; box-sizing: border-box; border: 1.5px solid #141414; background: #ffffff; padding: 0 12px; font: 400 16px 'Archivo'; color: #141414;"></label>
+          <a href="#" style="align-self: flex-start; display: inline-flex; align-items: center; min-height: 24px; font-weight: 700; font-size: 14px; text-decoration: underline;">Passwort vergessen?</a>
+          <a href="#" style="display: flex; align-items: center; justify-content: center; min-height: 56px; background: #141414; color: #fbfaf6; font-family: 'Anton'; font-weight: 400; font-size: 28px; text-transform: uppercase;">Anmelden</a>
+          <span style="display: flex; align-items: center; gap: 14px; font-weight: 700; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: #6f6b66;"><span style="flex: 1; border-top: 1px solid #141414;"></span>oder<span style="flex: 1; border-top: 1px solid #141414;"></span></span>
+          <a href="#" style="display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 52px; border: 2px solid #141414; color: #141414; font-weight: 700; font-size: 15px; letter-spacing: .08em; text-transform: uppercase;"><i class="ti ti-fingerprint" style="font-size: 22px;"></i>Mit Passkey anmelden</a>
+        </div>
+        <span style="background: #141414;"></span>
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <h2 style="margin: 0; font-family: 'Anton'; font-weight: 400; font-size: 84px; line-height: 1; text-transform: uppercase;">Konto erstellen</h2>
+          <span style="font-size: 18px; color: #2b2925; border-bottom: 4px solid #141414; padding-bottom: 14px;">Starte deinen eigenen Spielwirbel.</span>
+          <label style="display: flex; flex-direction: column; gap: 6px;"><span style="font-weight: 700; font-size: 13px; letter-spacing: .12em; text-transform: uppercase;">Benutzername</span><input value="" placeholder="marco_b" style="height: 44px; box-sizing: border-box; border: 1.5px solid #141414; background: #ffffff; padding: 0 12px; font: 400 16px 'Archivo'; color: #141414;"><span style="font-size: 13px; line-height: 1.45; color: #2b2925;">3–20 Zeichen: Buchstaben, Ziffern, _ und -. Öffentlich sichtbar und später nicht änderbar.</span></label>
+          <label style="display: flex; flex-direction: column; gap: 6px;"><span style="font-weight: 700; font-size: 13px; letter-spacing: .12em; text-transform: uppercase;">E-Mail</span><input value="" style="height: 44px; box-sizing: border-box; border: 1.5px solid #141414; background: #ffffff; padding: 0 12px; font: 400 16px 'Archivo'; color: #141414;"></label>
+          <label style="display: flex; flex-direction: column; gap: 6px;"><span style="font-weight: 700; font-size: 13px; letter-spacing: .12em; text-transform: uppercase;">Passwort</span><input type="password" value="" style="height: 44px; box-sizing: border-box; border: 1.5px solid #141414; background: #ffffff; padding: 0 12px; font: 400 16px 'Archivo'; color: #141414;"><span style="font-size: 13px; color: #2b2925;">Mindestens 8 Zeichen.</span></label>
+          <span style="font-size: 14px; line-height: 1.7; color: #2b2925;">Mit der Registrierung akzeptierst du die <a href="#" style="display: inline-flex; align-items: center; min-height: 24px; font-weight: 700; text-decoration: underline;">Nutzungsbedingungen</a>. Informationen zur Datenverarbeitung: <a href="#" style="display: inline-flex; align-items: center; min-height: 24px; font-weight: 700; text-decoration: underline;">Datenschutzerklärung</a></span>
+          <a href="#" style="display: flex; align-items: center; justify-content: center; min-height: 56px; background: #e8451c; color: #141414; font-family: 'Anton'; font-weight: 400; font-size: 28px; text-transform: uppercase;">Registrieren</a>
+          <a href="#" style="align-self: flex-start; display: inline-flex; align-items: center; min-height: 24px; font-weight: 700; font-size: 14px; text-decoration: underline;">Schon ein Konto? Anmelden</a>
+        </div>
+      </div>
+      <div style="margin-top: auto; padding-top: 40px;"><dc-import name="Programmheft-Fuss" hint-size="100%,56px" style="width: 100%;"></dc-import></div>
+    </div>
+  </div>
+
+  <div data-screen-label="P5.2 Anmelden Telefon" style="display: flex; flex-direction: column; gap: 10px;">
+    <span style="font-weight: 600; font-size: 13px; color: #2b2925;">P5.2 · Anmelden — Telefon</span>
+    <div style="width: 390px; min-height: 844px; background: #fbfaf6; border: 1px solid #141414; display: flex; flex-direction: column;">
+      <div style="background: #e8451c;">
+        <div style="height: 40px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; font-weight: 700; font-size: 13px;"><span>9:41</span><span style="display: flex; gap: 6px; font-size: 16px;"><i class="ti ti-activity"></i><i class="ti ti-percentage"></i></span></div>
+        <div style="height: 52px; display: flex; align-items: center; padding: 0 6px 0 18px;"><span style="display: inline-flex; align-items: center; gap: 8px; font-family: 'Anton'; font-weight: 400; font-size: 24px; letter-spacing: .16em; text-transform: uppercase;"><i class="ti ti-tornado"></i>Spielwirbel</span><a href="#" style="margin-left: auto; min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 3px; font-weight: 700; font-size: 13px; color: #141414;"><i class="ti ti-world" style="font-size: 20px;"></i>DE</a></div>
+      </div>
+      <div style="padding: 28px 18px 0; display: flex; flex-direction: column; gap: 14px;">
+        <span style="font-family: 'Anton'; font-weight: 400; font-size: 52px; line-height: 1; text-transform: uppercase;">Willkommen zurück</span>
+        <span style="font-size: 16px; color: #2b2925; border-bottom: 4px solid #141414; padding-bottom: 12px;">Melde dich bei Spielwirbel an.</span>
+        <label style="display: flex; flex-direction: column; gap: 6px;"><span style="font-weight: 700; font-size: 13px; letter-spacing: .12em; text-transform: uppercase;">E-Mail oder Benutzername</span><input style="height: 48px; box-sizing: border-box; border: 1.5px solid #141414; background: #ffffff; padding: 0 12px; font: 400 16px 'Archivo';"></label>
+        <label style="display: flex; flex-direction: column; gap: 6px;"><span style="font-weight: 700; font-size: 13px; letter-spacing: .12em; text-transform: uppercase;">Passwort</span><input type="password" style="height: 48px; box-sizing: border-box; border: 1.5px solid #141414; background: #ffffff; padding: 0 12px; font: 400 16px 'Archivo';"></label>
+        <a href="#" style="align-self: flex-start; display: inline-flex; align-items: center; min-height: 44px; font-weight: 700; font-size: 15px; text-decoration: underline;">Passwort vergessen?</a>
+        <a href="#" style="display: flex; align-items: center; justify-content: center; min-height: 56px; background: #141414; color: #fbfaf6; font-family: 'Anton'; font-weight: 400; font-size: 26px; text-transform: uppercase;">Anmelden</a>
+        <a href="#" style="display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 52px; border: 2px solid #141414; color: #141414; font-weight: 700; font-size: 14px; letter-spacing: .08em; text-transform: uppercase;"><i class="ti ti-fingerprint" style="font-size: 22px;"></i>Mit Passkey anmelden</a>
+        <a href="#" style="align-self: center; display: inline-flex; align-items: center; min-height: 44px; font-weight: 700; font-size: 15px; text-decoration: underline;">Konto erstellen</a>
+      </div>
+      <div style="margin-top: auto; padding-top: 24px;"><dc-import name="Programmheft-Fuss" phone="{{ true }}" hint-size="100%,80px" style="width: 100%;"></dc-import></div>
+    </div>
+  </div>
+  </div>
+
+  <div data-screen-label="P5.3 Konto und Design" style="display: flex; flex-direction: column; gap: 10px;">
+    <span style="font-weight: 600; font-size: 13px; color: #2b2925;">P5.3 · Kontoseite mit Design-Wähler</span>
+    <div style="width: 1440px; min-height: 900px; background: #fbfaf6; border: 1px solid #141414; display: flex; flex-direction: column;">
+      <dc-import name="Programmheft-Kopf" crumb="Meine Runden → Konto" active="none" hint-size="100%,56px" style="width: 100%;"></dc-import>
+      <div style="margin: 18px 40px 0; border-bottom: 4px solid #141414; padding-bottom: 8px; display: flex; align-items: flex-end; justify-content: space-between;">
+        <h2 style="margin: 0; font-family: 'Anton'; font-weight: 400; font-size: 96px; line-height: 1; text-transform: uppercase;">Konto</h2>
+        <a href="#" style="display: inline-flex; align-items: center; gap: 6px; min-height: 44px; margin-bottom: 8px; padding: 0 14px; border: 2px solid #141414; color: #141414; font-weight: 700; font-size: 13px; letter-spacing: .1em; text-transform: uppercase;"><i class="ti ti-logout"></i>Abmelden</a>
+      </div>
+      <div style="margin: 20px 40px 0; display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 0 48px;">
+        <nav style="display: flex; flex-direction: column; border-right: 1px solid #141414; padding-right: 32px;"><sc-for list="{{ accountNav }}" as="n" hint-placeholder-count="6"><a href="#" style="display: flex; align-items: center; gap: 10px; min-height: 48px; border-bottom: 1px dotted #b8b4ad; color: #141414; font-weight: 700; font-size: 15px; background: {{ n.bg }}; color: {{ n.ink }}; padding: 0 10px;"><i class="ti {{ n.icon }}" style="font-size: 18px;"></i>{{ n.label }}</a></sc-for></nav>
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <span style="display: flex; justify-content: space-between; align-items: baseline; border-bottom: 2px solid #141414; padding-bottom: 6px;"><span style="font-family: 'Anton'; font-weight: 400; font-size: 40px; text-transform: uppercase;">Design</span><span style="font-size: 14px; color: #2b2925;">gilt für dein Konto, auf jedem Gerät, in jeder Runde</span></span>
+          <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px;">
+            <sc-for list="{{ posters }}" as="p" hint-placeholder-count="7">
+              <a href="#" aria-pressed="{{ p.pressed }}" style="display: flex; flex-direction: column; border: {{ p.frame }}; color: #141414; background: #ffffff;">
+                <span style="position: relative; display: block; height: 170px; background: {{ p.bg }};"><span style="position: absolute; left: 16px; right: 16px; top: 18px; height: 14px; background: {{ p.a1 }};"></span><span style="position: absolute; left: 16px; top: 44px; width: 60%; height: 60px; background: {{ p.a2 }};"></span><span style="position: absolute; right: 16px; bottom: 16px; width: 44px; height: 44px; background: {{ p.a3 }};"></span></span>
+                <span style="display: flex; flex-direction: column; gap: 2px; padding: 10px 12px 12px; border-top: 1px solid #141414;"><span style="display: flex; justify-content: space-between; align-items: center;"><span style="font-family: 'Anton'; font-weight: 400; font-size: 26px; text-transform: uppercase;">{{ p.name }}</span><sc-if value="{{ p.active }}" hint-placeholder-val="{{ false }}"><span style="background: #141414; color: #fbfaf6; font-weight: 700; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; padding: 3px 8px;">Aktiv</span></sc-if></span><span style="font-size: 13px; color: #2b2925;">{{ p.line }}</span></span>
+              </a>
+            </sc-for>
+          </div>
+          <span style="font-size: 14px; line-height: 1.5; color: #2b2925;">Aktiv = 4-px-Tintenrahmen plus Etikett „Aktiv“ und <code>aria-pressed</code>. Klassisch bleibt dauerhaft wählbar. Die Runden behalten ihre Farbmarker; jede Person sieht sie in ihrem eigenen Design (P8.2).</span>
+        </div>
+      </div>
+      <div style="margin-top: auto; padding-top: 32px;"><dc-import name="Programmheft-Fuss" hint-size="100%,56px" style="width: 100%;"></dc-import></div>
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 28px; align-items: flex-start;">
+  <div data-screen-label="P5.4 Auswahl-Sheet" style="display: flex; flex-direction: column; gap: 10px;">
+    <span style="font-weight: 600; font-size: 13px; color: #2b2925;">P5.4 · Auswahl beim ersten Besuch — Desktop, über dem Start</span>
+    <div style="width: 1440px; height: 900px; position: relative; overflow: hidden; background: #fbfaf6; border: 1px solid #141414;">
+      <dc-import name="Programmheft-Kopf" crumb="Kiosk · Donnerstag, 19. September 2026" active="none" hint-size="100%,56px" style="width: 100%;"></dc-import>
+      <div style="padding: 40px; font-family: 'Anton'; font-weight: 400; font-size: 84px; line-height: 1; text-transform: uppercase;">Schön, dass<br>ihr da seid.</div>
+      <div style="position: absolute; inset: 0; background: rgba(20,20,20,.62);"></div>
+      <div role="dialog" aria-labelledby="chooser-t" style="position: absolute; left: 120px; right: 120px; top: 70px; background: #ffffff; border: 2px solid #141414; box-shadow: 0 1px 0 #141414, 0 14px 36px rgba(20,20,20,.20); padding: 28px 32px; display: flex; flex-direction: column; gap: 16px;">
+        <span style="display: flex; justify-content: space-between; align-items: flex-start;"><span style="display: flex; flex-direction: column; gap: 12px;"><span style="font-weight: 700; font-size: 13px; letter-spacing: .16em; text-transform: uppercase; color: #b8330f;">Neu in Spielwirbel</span><span id="chooser-t" style="font-family: 'Anton'; font-weight: 400; font-size: 60px; line-height: 1; text-transform: uppercase;">Wähl dir ein Design.</span></span><a href="#" aria-label="Schließen" style="width: 44px; height: 44px; display: grid; place-items: center; border: 2px solid #141414; color: #141414;"><i class="ti ti-x" style="font-size: 20px;"></i></a></span>
+        <span style="font-size: 16px; line-height: 1.5; color: #2b2925; max-width: 80ch; border-bottom: 2px solid #141414; padding-bottom: 14px;">Alles liegt weiter an derselben Stelle — Regal, Chronik, Pokale, Session wirbeln. Es sieht nur anders aus. Du kannst jederzeit im Konto wechseln.</span>
+        <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 12px;">
+          <sc-for list="{{ posters }}" as="p" hint-placeholder-count="7">
+            <a href="#" aria-pressed="{{ p.pressed }}" style="display: flex; flex-direction: column; border: {{ p.frame }}; color: #141414; background: #ffffff;">
+              <span style="position: relative; display: block; height: 220px; background: {{ p.bg }};"><span style="position: absolute; left: 12px; right: 12px; top: 14px; height: 12px; background: {{ p.a1 }};"></span><span style="position: absolute; left: 12px; top: 38px; width: 64%; height: 80px; background: {{ p.a2 }};"></span><span style="position: absolute; right: 12px; bottom: 12px; width: 36px; height: 36px; background: {{ p.a3 }};"></span></span>
+              <span style="display: flex; flex-direction: column; gap: 2px; padding: 8px 10px 10px; border-top: 1px solid #141414;"><span style="font-family: 'Anton'; font-weight: 400; font-size: 24px; line-height: 1.05; text-transform: uppercase;">{{ p.name }}</span><span style="font-size: 13px; color: #2b2925;">{{ p.line }}</span></span>
+            </a>
+          </sc-for>
+        </div>
+        <span style="display: flex; align-items: center; gap: 14px; border-top: 1px solid #141414; padding-top: 14px;"><span style="font-size: 14px; color: #2b2925;">Neue Designs kommen dazu. Deine Wahl bleibt, bis du sie änderst.</span><a href="#" style="margin-left: auto; display: inline-flex; align-items: center; min-height: 48px; padding: 0 16px; font-weight: 700; font-size: 14px; letter-spacing: .08em; text-transform: uppercase; color: #141414; text-decoration: underline;">Später entscheiden</a><a href="#" style="display: inline-flex; align-items: center; min-height: 56px; padding: 0 24px; background: #141414; color: #fbfaf6; font-family: 'Anton'; font-weight: 400; font-size: 26px; text-transform: uppercase;">Programmheft übernehmen</a></span>
+      </div>
+    </div>
+  </div>
+
+  <div data-screen-label="P5.5 Auswahl-Sheet Telefon" style="display: flex; flex-direction: column; gap: 10px;">
+    <span style="font-weight: 600; font-size: 13px; color: #2b2925;">P5.5 · Auswahl — Telefon, als Sheet</span>
+    <div style="width: 390px; min-height: 844px; position: relative; background: rgba(20,20,20,.62); border: 1px solid #141414; display: flex; flex-direction: column; justify-content: flex-end;">
+      <div style="margin-top: 60px; background: #ffffff; border-top: 3px solid #141414; display: flex; flex-direction: column; gap: 12px; padding: 10px 18px 20px;">
+        <span style="align-self: center; width: 48px; height: 5px; background: #141414;"></span>
+        <span style="display: flex; justify-content: space-between; align-items: flex-start;"><span style="display: flex; flex-direction: column; gap: 12px;"><span style="font-weight: 700; font-size: 12px; letter-spacing: .16em; text-transform: uppercase; color: #b8330f;">Neu in Spielwirbel</span><span style="font-family: 'Anton'; font-weight: 400; font-size: 38px; line-height: 1; text-transform: uppercase;">Wähl dir ein Design.</span></span><a href="#" aria-label="Schließen" style="width: 44px; height: 44px; flex: none; display: grid; place-items: center; border: 2px solid #141414; color: #141414;"><i class="ti ti-x" style="font-size: 20px;"></i></a></span>
+        <span style="font-size: 14px; line-height: 1.5; color: #2b2925;">Alles liegt weiter an derselben Stelle — Regal, Chronik, Pokale, Session wirbeln. Es sieht nur anders aus. Du kannst jederzeit im Konto wechseln.</span>
+        <sc-for list="{{ posters }}" as="p" hint-placeholder-count="7"><a href="#" aria-pressed="{{ p.pressed }}" style="display: grid; grid-template-columns: 86px minmax(0, 1fr); min-height: 64px; border: {{ p.frame }}; color: #141414; background: #ffffff;"><span style="position: relative; display: block; background: {{ p.bg }};"><span style="position: absolute; left: 8px; right: 8px; top: 8px; height: 8px; background: {{ p.a1 }};"></span><span style="position: absolute; right: 8px; bottom: 8px; width: 22px; height: 22px; background: {{ p.a3 }};"></span></span><span style="display: flex; flex-direction: column; justify-content: center; padding: 6px 12px; border-left: 1px solid #141414;"><span style="font-family: 'Anton'; font-weight: 400; font-size: 24px; line-height: 1; text-transform: uppercase;">{{ p.name }}</span><span style="font-size: 13px; color: #2b2925;">{{ p.line }}</span></span></a></sc-for>
+        <a href="#" style="display: flex; align-items: center; justify-content: center; min-height: 56px; background: #141414; color: #fbfaf6; font-family: 'Anton'; font-weight: 400; font-size: 24px; text-transform: uppercase;">Programmheft übernehmen</a>
+        <a href="#" style="align-self: center; display: inline-flex; align-items: center; min-height: 44px; font-weight: 700; font-size: 14px; text-decoration: underline; color: #141414;">Später entscheiden</a>
+      </div>
+    </div>
+  </div>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const posters = [
+      ['Der Tisch', 'Walnuss, Filz, Messing', '#3b2a12', '#f0cf86', '#2f6b4d', '#b98a55'],
+      ['Das Programmheft', 'Papier, Zinnober, große Ziffern', '#fbfaf6', '#e8451c', '#141414', '#e8451c'],
+      ['Die Brücke', 'Nachtblau, Cyan, Instrumente', '#070b14', '#35e0ff', '#141d30', '#ffb020'],
+      ['Der Run', 'Dunkel, Neon, Tempo', '#120c1c', '#ff3fb4', '#2a1f3d', '#9dff4a'],
+      ['Ocean', 'Hell, Blau, der Wal', '#e4f1f5', '#0e6690', '#a9c9d8', '#0e6690'],
+      ['Forest', 'Hell, Laub, Glühwürmchen', '#ecf1e4', '#356427', '#c9d9b4', '#e2c14a'],
+      ['Klassisch', 'Creme und Orange, wie bisher', '#fff4e4', '#e8791c', '#f3d2a8', '#6b3f12'],
+    ].map(([name, line, bg, a1, a2, a3]) => {
+      const active = name === 'Das Programmheft';
+      return { name, line, bg, a1, a2, a3, active, pressed: active ? 'true' : 'false', frame: active ? '4px solid #141414' : '1px solid #141414' };
+    });
+    const accountNav = [['ti-user', 'Profil', false], ['ti-mail', 'E-Mail und Passwort', false], ['ti-fingerprint', 'Passkeys', false], ['ti-world', 'Sprache', false], ['ti-palette', 'Design', true], ['ti-message', 'Benachrichtigungen', false], ['ti-download', 'Daten exportieren', false], ['ti-trash', 'Konto löschen', false]]
+      .map(([icon, label, on]) => ({ icon, label, bg: on ? '#141414' : 'transparent', ink: on ? '#fbfaf6' : '#141414' }));
+    return { posters, accountNav };
+  }
+}
+</script>
+</body>
+</html>

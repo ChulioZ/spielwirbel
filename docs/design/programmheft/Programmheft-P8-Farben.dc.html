@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="design_doc_mode" content="canvas">
+  <link rel="stylesheet" href="../../../public/fonts/tabler-icons.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #d9d5cc; font-family: 'Archivo', sans-serif; }
+    a { color: #b8330f; text-decoration: none; }
+    a:hover { color: #141414; text-decoration: underline; }
+  </style>
+</helmet>
+<div style="display: flex; flex-direction: column; gap: 48px; padding: 48px; width: max-content; color: #141414; background: #d9d5cc; font-family: 'Archivo', sans-serif;">
+
+  <div data-screen-label="P8 Kopf" style="max-width: 1240px; display: flex; flex-direction: column; gap: 12px; background: #fbfaf6; border: 2px solid #141414; padding: 24px 28px;">
+    <div style="display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;">
+      <span style="font-weight: 700; font-size: 13px; letter-spacing: .14em; background: #141414; color: #fbfaf6; padding: 5px 12px;">P8</span>
+      <h1 style="margin: 0; font-family: 'Anton'; font-weight: 400; font-size: 40px; line-height: 1; text-transform: uppercase;">Farben · Personen, Marker, Rampe, Rückblickkarte</h1>
+      <span style="font-size: 14px; color: #2b2925;">Brief 8 von 14 · Tokens aus <a href="Programmheft-P1-Komponenten.dc.html" style="display: inline-flex; align-items: center; justify-content: center; min-height: 24px; min-width: 24px; padding: 0 4px; text-decoration: underline;">P1</a></span>
+    </div>
+    <p style="margin: 0; font-size: 15px; line-height: 1.55; max-width: 96ch; color: #2b2925;">Dieses Blatt <strong>misst</strong> mit derselben Funktion wie P1 — keine Zahl ist abgeschrieben. Die acht Personenfarben bleiben <strong>unverändert</strong>: auf Papier liegen alle zwischen 4,3:1 und 6,7:1, also über 3:1 für Flächen; sie tragen deshalb nur Flächen und Initialen ab 19 px fett, <strong>nie einen Namen</strong> — Namen stehen in Tinte daneben. Eine aufgehellte oder abgedunkelte Zweitreihe braucht das Programmheft nicht.</p>
+  </div>
+
+  <section data-screen-label="P8.1 Personenfarben" style="display: flex; flex-direction: column; gap: 14px; max-width: 1340px;">
+    <div style="display: flex; align-items: baseline; gap: 14px;"><span style="font-family: 'Anton'; font-weight: 400; font-size: 30px; text-transform: uppercase;">1 · Die acht Personenfarben auf jeder Fläche</span></div>
+    <div style="background: #fbfaf6; border: 1px solid #141414; padding: 18px;">
+      <div style="display: grid; grid-template-columns: 220px repeat(4, minmax(0, 1fr)) 150px; gap: 12px; font-weight: 700; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #6f6b66; border-bottom: 2px solid #141414; padding-bottom: 6px;"><span>Farbe</span><span>auf Papier</span><span>auf Weiß</span><span>auf Goldzeile</span><span>im Kasten</span><span>Initiale Papier</span></div>
+      <sc-for list="{{ people }}" as="p" hint-placeholder-count="8">
+        <div style="display: grid; grid-template-columns: 220px repeat(4, minmax(0, 1fr)) 150px; gap: 12px; align-items: center; min-height: 60px; border-bottom: 1px dotted #b8b4ad;">
+          <span style="display: flex; align-items: center; gap: 12px;"><span style="width: 44px; height: 44px; background: {{ p.hex }}; color: #fbfaf6; display: grid; place-items: center; font-weight: 700; font-size: 20px;">{{ p.ini }}</span><span style="display: flex; flex-direction: column;"><strong style="font-size: 15px;">{{ p.name }}</strong><span style="font-size: 13px; color: #6f6b66;">{{ p.hex }}</span></span></span>
+          <sc-for list="{{ p.on }}" as="o" hint-placeholder-count="4"><span style="display: flex; align-items: center; gap: 10px;"><span style="width: 56px; height: 32px; background: {{ o.bg }}; border: 1px solid #141414; display: grid; place-items: center;"><span style="width: 20px; height: 20px; background: {{ p.hex }};"></span></span><span style="font-weight: 700; font-size: 15px;">{{ o.r }}</span><span style="font-size: 12px; color: #6f6b66;">{{ o.v }}</span></span></sc-for>
+          <span style="font-weight: 700; font-size: 15px;">{{ p.initial }}</span>
+        </div>
+      </sc-for>
+      <span style="display: block; padding-top: 12px; font-size: 14px; line-height: 1.5; color: #2b2925;">Fläche braucht 3:1 (1.4.11). Im schwarzen Kasten fallen <strong>{{ weakInBox }}</strong> unter 3:1 — deshalb stehen im Kasten keine Personenfelder; Mitglieder erscheinen dort nie. Initialen: Papier auf der Farbe, 19–20 px fett = große Schrift, 3:1 genügt; alle acht bestehen.</span>
+    </div>
+  </section>
+
+  <section data-screen-label="P8.2 Marker" style="display: flex; flex-direction: column; gap: 14px; max-width: 1340px;">
+    <div style="display: flex; align-items: baseline; gap: 14px;"><span style="font-family: 'Anton'; font-weight: 400; font-size: 30px; text-transform: uppercase;">2 · Die acht Farbmarker</span><span style="font-size: 14px; color: #2b2925;">Der Marker ist das <strong>Kopfband</strong> der Zeitung: 10 px über dem Rundennamen, am Kopf der Kachel, über dem Titel jedes Session-Screens und oben auf der Rückblickkarte. Neue Runden bekommen <strong>Zinnober</strong>.</span></div>
+    <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px;">
+      <sc-for list="{{ markers }}" as="m" hint-placeholder-count="8">
+        <div style="background: #fbfaf6; border: 1px solid #141414; display: flex; flex-direction: column;">
+          <span style="height: 64px; background: {{ m.hex }}; display: flex; align-items: flex-end; padding: 8px 12px; box-sizing: border-box;"><span style="font-weight: 700; font-size: 14px; color: {{ m.txt }}; white-space: nowrap;">{{ m.txtName }} · {{ m.ratio }}</span></span>
+          <span style="padding: 10px 12px; display: flex; flex-direction: column; gap: 8px;">
+            <span style="display: flex; justify-content: space-between; align-items: baseline;"><strong style="font-size: 16px;">{{ m.name }}</strong><span style="font-size: 13px; color: #6f6b66;">{{ m.hex }} · {{ m.edge }}</span></span>
+            <span style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; align-items: start;">
+              <span style="display: flex; flex-direction: column; gap: 4px; border: 1px solid #141414; background: #ffffff; padding: 6px;"><span style="height: 5px; background: {{ m.hex }};"></span><span style="font-family: 'Archivo'; font-weight: 700; font-size: 16px; line-height: 1; text-transform: uppercase;">Runde</span><span style="font-size: 11px; color: #6f6b66;">Kachel</span></span>
+              <span style="display: flex; flex-direction: column; gap: 4px; border: 1px solid #141414; background: #ffffff; padding: 6px;"><span style="height: 5px; background: {{ m.hex }};"></span><span style="font-family: 'Archivo'; font-weight: 700; font-size: 16px; line-height: 1; text-transform: uppercase; border-bottom: 2px solid #141414;">Hub</span><span style="font-size: 11px; color: #6f6b66;">Kopfband</span></span>
+              <span style="display: flex; flex-direction: column; gap: 4px; border: 1px solid #141414; background: #ffffff; padding: 6px;"><span style="height: 5px; background: {{ m.hex }};"></span><span style="height: 12px; background: #141414;"></span><span style="font-size: 11px; color: #6f6b66;">Session</span></span>
+            </span>
+          </span>
+        </div>
+      </sc-for>
+    </div>
+    <span style="font-size: 14px; line-height: 1.5; color: #2b2925;">Das Band ist Grafik und braucht 3:1 gegen Papier — {{ markerFails }}. Deshalb sitzt unter jedem Band die 4-px-Tintenlinie des Titels: sie trägt die Kante, das Band trägt nur die Farbe. Text steht auf der Markerfläche nur im Markerwähler (P14.6) und auf der Karte, in der gemessenen Tinte oder Papier. Zinnober-Marker und der zinnoberrote Kopf der App berühren sich nie: dazwischen liegt immer Papier.</span>
+  </section>
+
+  <section data-screen-label="P8.3 Score-Rampe" style="display: flex; flex-direction: column; gap: 14px; max-width: 1340px;">
+    <div style="display: flex; align-items: baseline; gap: 14px;"><span style="font-family: 'Anton'; font-weight: 400; font-size: 30px; text-transform: uppercase;">3 · Score-Rampe unter Farbfehlsichtigkeit</span><span style="font-size: 14px; color: #2b2925;">Simulation nach Machado 2009, Schweregrad 1,0; Grau = relative Luminanz.</span></div>
+    <div style="background: #fbfaf6; border: 1px solid #141414; padding: 18px; display: flex; flex-direction: column; gap: 10px;">
+      <sc-for list="{{ cvd }}" as="c" hint-placeholder-count="5">
+        <div style="display: grid; grid-template-columns: 170px repeat(5, minmax(0, 1fr)) 120px; gap: 8px; align-items: center;">
+          <strong style="font-size: 15px;">{{ c.name }}</strong>
+          <sc-for list="{{ c.stops }}" as="s" hint-placeholder-count="5"><span style="height: 52px; background: {{ s.hex }}; display: flex; align-items: center; justify-content: space-between; padding: 0 10px; color: {{ s.ink }};"><i class="ti {{ s.face }}" style="font-size: 22px;"></i><span style="font-family: 'Anton'; font-weight: 400; font-size: 26px;">{{ s.n }}</span></span></sc-for>
+          <span style="height: 52px; box-sizing: border-box; border: 2px solid {{ c.veto }}; background: #fbfaf6; display: grid; place-items: center; font-weight: 700; font-size: 14px; color: #b8330f;">Veto</span>
+        </div>
+      </sc-for>
+      <div style="display: grid; grid-template-columns: 170px repeat(5, minmax(0, 1fr)) 120px; gap: 8px; font-size: 13px; color: #2b2925; border-top: 1px solid #141414; padding-top: 8px;"><strong>Luminanz</strong><sc-for list="{{ lums }}" as="l" hint-placeholder-count="5"><span>{{ l }}</span></sc-for><span></span></div>
+      <span style="font-size: 14px; line-height: 1.5; color: #2b2925;">Die Rampe fällt in der Helligkeit monoton — {{ lumSteps }} zwischen Nachbarn —, also bleibt ihre Reihenfolge in jeder Zeile lesbar, auch in Grau. Die Bedeutung tragen trotzdem Gesicht und Ziffer; die Farbe stützt sie nur. Veto ist keine sechste Farbe: Papier, Zinnoberkante, das Wort.</span>
+    </div>
+  </section>
+
+  <section data-screen-label="P8.4 Rückblickkarte" style="display: flex; flex-direction: column; gap: 14px;">
+    <div style="display: flex; align-items: baseline; gap: 14px;"><span style="font-family: 'Anton'; font-weight: 400; font-size: 30px; text-transform: uppercase;">4 · Die Rückblickkarte</span><span style="font-size: 14px; color: #2b2925;">Hochformat 1080 × 1350, hier bei 540 × 675 gezeichnet (× 2). <strong>Kein SVG, kein Muster</strong> — nur Flächen und Schrift, damit der Canvas-Export in WebKit sauber bleibt.</span></div>
+    <div style="display: flex; gap: 32px; align-items: flex-start;">
+      <sc-for list="{{ cards }}" as="k" hint-placeholder-count="2">
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <span style="font-weight: 600; font-size: 13px; color: #2b2925;">{{ k.label }}</span>
+          <div style="width: 540px; height: 675px; box-sizing: border-box; background: #fbfaf6; border: 1px solid #141414; display: flex; flex-direction: column;">
+            <div style="height: 40px; background: #e8451c; display: flex; align-items: center; justify-content: space-between; padding: 0 22px;"><span style="font-family: 'Anton'; font-weight: 400; font-size: 24px; letter-spacing: .2em; text-transform: uppercase; color: #141414;">Spielwirbel</span><span style="font-weight: 700; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #141414;">{{ k.issue }}</span></div>
+            <div style="margin: 16px 22px 0; height: 8px; background: {{ k.marker }};"></div>
+            <div style="margin: 6px 22px 0; display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 3px solid #141414; padding-bottom: 6px;"><span style="font-family: 'Anton'; font-weight: 400; font-size: 34px; line-height: 1; text-transform: uppercase;">{{ k.round }}</span><span style="font-weight: 700; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: #6f6b66;">{{ k.date }}</span></div>
+            <div style="margin: 14px 22px 0; display: grid; grid-template-columns: 170px minmax(0, 1fr); gap: 16px; align-items: start;">
+              <span style="display: flex; flex-direction: column; gap: 8px;"><span style="display: block; aspect-ratio: 3 / 4; background: {{ k.cover }};"></span><span style="align-self: flex-start; border: 3px solid #e8451c; background: #fbfaf6; color: #b8330f; font-family: 'Anton'; font-weight: 400; font-size: 24px; letter-spacing: .1em; text-transform: uppercase; padding: 0 8px;">Gespielt</span></span>
+              <span style="font-family: 'Anton'; font-weight: 400; font-size: 38px; line-height: 1.05; text-transform: uppercase;">{{ k.headA }}<span style="color: #e8451c;">{{ k.headWho }}</span>{{ k.headB }}</span>
+            </div>
+            <div style="margin: 14px 22px 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px;"><sc-for list="{{ k.facts }}" as="f" hint-placeholder-count="3"><span style="display: flex; flex-direction: column; border-top: 2px solid #141414; padding-top: 4px;"><span style="font-weight: 700; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: #6f6b66;">{{ f.k }}</span><span style="font-family: 'Anton'; font-weight: 400; font-size: 30px; line-height: 1.05;">{{ f.v }}</span></span></sc-for></div>
+            <div style="margin: 12px 22px 0; display: flex; flex-direction: column;"><sc-for list="{{ k.rows }}" as="r" hint-placeholder-count="3"><span style="display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; gap: 10px; align-items: center; min-height: 34px; border-bottom: 1px solid #141414; background: {{ r.bg }}; padding: 0 6px;"><span style="font-family: 'Anton'; font-weight: 400; font-size: 24px;">{{ r.place }}</span><span style="font-weight: 700; font-size: 15px;">{{ r.title }}</span><span style="font-family: 'Anton'; font-weight: 400; font-size: 24px; color: {{ r.sc }};">{{ r.score }}</span></span></sc-for></div>
+            <div style="margin-top: auto; padding: 0 22px 16px; display: flex; justify-content: space-between; align-items: center;"><span style="font-weight: 700; font-size: 14px;">spielwirbel.app</span><span style="font-weight: 600; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: #6f6b66;">{{ k.foot }}</span></div>
+          </div>
+        </div>
+      </sc-for>
+      <div style="width: 360px; background: #fbfaf6; border: 2px solid #141414; padding: 18px 20px; display: flex; flex-direction: column; gap: 8px; font-size: 14px; line-height: 1.5; color: #2b2925;">
+        <strong style="font-size: 15px; color: #141414;">Maße im Export (× 2)</strong>
+        <span>Kleinste Schrift: 12 px gezeichnet = <strong style="color: #141414;">24 px</strong> im Bild. Weiche Tinte nur dort, {{ cardSoft }} auf Papier.</span>
+        <span>Kein Text auf dem Cover; der Stempel steht auf eigenem Papier darunter.</span>
+        <span>Die Karte trägt sich mit Fakten allein — Spiel, Sieger, Score, Serie, Anzahl. Ein späterer Spielbericht-Text käme als Band unter die Tafel, die Fakten bleiben.</span>
+        <span>Zweite Karte: Unentschieden und Marker Tannengrün — der Name des Siegers wird zur Aufzählung, die Tafel bleibt drei Zeilen.</span>
+      </div>
+    </div>
+  </section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const toLin = (v) => v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+    const toSrgb = (v) => { v = Math.max(0, Math.min(1, v)); return v <= 0.0031308 ? 12.92 * v : 1.055 * Math.pow(v, 1 / 2.4) - 0.055; };
+    const rgb = (h) => [1, 3, 5].map((i) => parseInt(h.substr(i, 2), 16) / 255);
+    const lum = (h) => { const c = rgb(h).map(toLin); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; };
+    const crN = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+    const cr = (a, b) => crN(a, b).toFixed(1).replace('.', ',');
+    const hex = (c) => '#' + c.map((v) => Math.round(toSrgb(v) * 255).toString(16).padStart(2, '0')).join('');
+    const sim = (h, m) => { const c = rgb(h).map(toLin); return hex([0, 1, 2].map((r) => m[r * 3] * c[0] + m[r * 3 + 1] * c[1] + m[r * 3 + 2] * c[2])); };
+    const MAT = {
+      deut: [0.367322, 0.860646, -0.227968, 0.280085, 0.672501, 0.047413, -0.011820, 0.042940, 0.968881],
+      prot: [0.152286, 1.052583, -0.204868, 0.114503, 0.786281, 0.099216, -0.003882, -0.048116, 1.051998],
+      trit: [1.255528, -0.076749, -0.178779, -0.078411, 0.930809, 0.147602, 0.004733, 0.691367, 0.303900],
+    };
+    const gray = (h) => { const l = lum(h); return hex([l, l, l]); };
+    const P = '#fbfaf6', W = '#ffffff', GT = '#f6e7b9', I = '#141414';
+    const names = ['Rost', 'Grün', 'Lavendel', 'Ocker', 'Rosé', 'Blau', 'Moos', 'Beere'];
+    const hexes = ['#c6522c', '#198663', '#726bc7', '#a66815', '#c34d74', '#2f6f9e', '#54821d', '#993556'];
+    const people = hexes.map((h, i) => ({
+      hex: h, name: names[i], ini: 'MJLTASBK'[i],
+      on: [P, W, GT, I].map((bg) => { const n = crN(h, bg); return { bg, r: cr(h, bg) + ':1', v: n >= 3 ? 'Fläche ok' : 'nicht als Fläche' }; }),
+      initial: cr(P, h) + ':1',
+    }));
+    const weakInBox = hexes.filter((h) => crN(h, I) < 3).length + ' von 8';
+    const mk = [['Zinnober · Standard', '#e8451c'], ['Preußischblau', '#1f4e8c'], ['Tannengrün', '#2e6b3f'], ['Ocker', '#a8761a'], ['Pflaume', '#6e3a6b'], ['Graphit', '#4a4a48'], ['Petrol', '#1c6b72'], ['Fuchsie', '#9c2f6e']];
+    const markers = mk.map(([name, h]) => {
+      const inkBetter = crN(I, h) >= crN(P, h);
+      const txt = inkBetter ? I : P;
+      return { name, hex: h, txt, txtName: inkBetter ? 'Tinte' : 'Papier', ratio: cr(txt, h) + ':1', edge: cr(h, P) + ':1 zu Papier' };
+    });
+    const under3 = mk.filter(([, h]) => crN(h, P) < 3).map(([n]) => n.split(' ')[0]);
+    const markerFails = under3.length ? under3.join(' und ') + ' liegen darunter' : 'alle acht bestehen';
+    const ramp = ['#e8451c', '#b23d1c', '#7a4a3a', '#4a3f3a', '#141414'];
+    const faces = ['ti-mood-cry', 'ti-mood-sad', 'ti-mood-neutral', 'ti-mood-smile', 'ti-mood-crazy-happy'];
+    const row = (name, f) => ({ name, veto: f('#e8451c'), stops: ramp.map((h, i) => { const s = f(h); return { hex: s, n: String(i + 1), face: faces[i], ink: crN(I, s) >= crN(P, s) ? I : P }; }) });
+    const cvd = [row('Normal', (h) => h), row('Deuteranopie', (h) => sim(h, MAT.deut)), row('Protanopie', (h) => sim(h, MAT.prot)), row('Tritanopie', (h) => sim(h, MAT.trit)), row('Graustufen', gray)];
+    const L = ramp.map(lum);
+    const lums = L.map((l) => l.toFixed(3).replace('.', ','));
+    const steps = L.slice(1).map((l, i) => ((L[i] + 0.05) / (l + 0.05)).toFixed(2).replace('.', ','));
+    const lumSteps = 'Kontrast ' + steps.join(' · ');
+    const fmt = (v) => v.toFixed(1).replace('.', ',');
+    const cov = (h) => `linear-gradient(160deg, oklch(.6 .13 ${h}), oklch(.34 .12 ${h + 30}))`;
+    const rrow = (r) => ({ ...r, score: fmt(r.s), bg: r.win ? GT : 'transparent', sc: r.win ? I : ramp[Math.round(r.s) - 1] });
+    const cards = [
+      { label: 'Standard · Preußischblau', issue: 'Ausgabe Nr. 24', marker: '#1f4e8c', round: 'Donnerstagsrunde', date: '14. September 2026', cover: cov(200), headA: '„Nordlichter“ wurde gespielt. ', headWho: 'Jonas', headB: ' hat gewonnen!',
+        facts: [{ k: 'Score', v: '4,8' }, { k: 'Serie', v: '2 in Folge' }, { k: 'Dabei', v: '4' }],
+        rows: [{ place: '1', title: 'Nordlichter', s: 4.8, win: true }, { place: '2', title: 'Kartographen des Nordens', s: 3.8 }, { place: '3', title: 'Rost & Regen', s: 2.9 }].map(rrow), foot: 'Session Nr. 23' },
+      { label: 'Unentschieden · Tannengrün', issue: 'Ausgabe Nr. 59', marker: '#2e6b3f', round: 'Familie Berger', date: '18. September 2026', cover: cov(120), headA: '„Salzwiesen“ wurde gespielt. ', headWho: 'Oma Hilde und Paul', headB: ' haben gewonnen!',
+        facts: [{ k: 'Score', v: '4,2' }, { k: 'Geteilt', v: '2 Sieger' }, { k: 'Dabei', v: '6' }],
+        rows: [{ place: '1', title: 'Salzwiesen', s: 4.2, win: true }, { place: '1', title: 'Moorgeister', s: 4.2 }, { place: '3', title: 'Glutkessel', s: 2.8 }].map(rrow), foot: 'Session Nr. 58' },
+    ];
+    return { people, weakInBox, markers, markerFails, cvd, lums, lumSteps, cards, cardSoft: cr('#6f6b66', P) + ':1' };
+  }
+}
+</script>
+</body>
+</html>

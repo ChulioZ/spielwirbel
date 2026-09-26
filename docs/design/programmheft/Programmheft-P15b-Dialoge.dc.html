@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="design_doc_mode" content="canvas">
+  <link rel="stylesheet" href="../../../public/fonts/tabler-icons.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #d9d5cc; font-family: 'Archivo', sans-serif; }
+    a { color: #b8330f; text-decoration: none; }
+    a:hover { color: #141414; text-decoration: underline; }
+  </style>
+</helmet>
+<div style="display: flex; flex-direction: column; gap: 40px; padding: 48px; width: max-content; color: #141414; background: #d9d5cc; font-family: 'Archivo', sans-serif;">
+
+  <div data-screen-label="P15b Kopf" style="width: 1240px; display: flex; flex-direction: column; gap: 12px; background: #fbfaf6; border: 2px solid #141414; padding: 24px 28px;">
+    <div style="display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;">
+      <span style="font-weight: 700; font-size: 13px; letter-spacing: .14em; background: #141414; color: #fbfaf6; padding: 5px 12px;">P15b</span>
+      <h1 style="margin: 0; font-family: 'Anton'; font-weight: 400; font-size: 40px; line-height: 1.05; text-transform: uppercase;">Dialoge · Toasts · „…“-Menü</h1>
+      <span style="font-size: 14px; color: #2b2925;">Overlays, Teil 2 · letztes Blatt des Programmhefts</span>
+    </div>
+    <p style="margin: 0; font-size: 15px; line-height: 1.55; max-width: 96ch; color: #2b2925;">Ein Dialog ist eine <strong>Meldung im Kasten</strong>: Weiß, 2-px-Tintenrahmen, Titel als Frage in Anton, ein Satz Folge, zwei Knöpfe rechts. Der Fokus liegt beim Öffnen auf der <strong>sicheren</strong> Wahl; die zerstörende steht rechts in Gefahrrot, gefüllt. Toasts sind schwarze Streifen unten, 4,5 s, mit höchstens einer Aktion (32 px hoch, Regel 4). Die Dialogsätze stehen so in <code>de.js</code> (Schlüssel über jedem Dialog); Toast-Wortlaut ohne App-Schlüssel ist in P9.5 gelistet.</p>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(3, 520px); gap: 24px;">
+    <sc-for list="{{ dialogs }}" as="d" hint-placeholder-count="9">
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <span style="font-weight: 600; font-size: 13px; color: #2b2925;">{{ d.src }}</span>
+        <div style="background: rgba(20,20,20,.62); padding: 28px; border: 1px solid #141414;">
+          <div role="alertdialog" style="background: #ffffff; border: 2px solid #141414; box-shadow: 0 1px 0 #141414, 0 14px 36px rgba(20,20,20,.20); display: flex; flex-direction: column;">
+            <span style="height: 8px; background: {{ d.band }};"></span>
+            <span style="padding: 16px 20px 0; font-family: 'Anton'; font-weight: 400; font-size: 30px; line-height: 1; text-transform: uppercase;">{{ d.title }}</span>
+            <span style="padding: 10px 20px 0; font-size: 16px; line-height: 1.5; color: #2b2925;">{{ d.body }}</span>
+            <span style="display: flex; justify-content: flex-end; gap: 8px; padding: 18px 20px 20px;"><a href="#" style="display: inline-flex; align-items: center; min-height: 48px; padding: 0 16px; border: 2px solid #141414; outline: 3px solid #141414; outline-offset: 3px; color: #141414; font-weight: 700; font-size: 14px; letter-spacing: .06em; text-transform: uppercase;">{{ d.safe }}</a><a href="#" style="display: inline-flex; align-items: center; min-height: 48px; padding: 0 16px; background: {{ d.goBg }}; color: #fbfaf6; font-weight: 700; font-size: 14px; letter-spacing: .06em; text-transform: uppercase;">{{ d.go }}</a></span>
+          </div>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="display: flex; gap: 28px; align-items: flex-start;">
+    <div data-screen-label="P15b Toasts" style="width: 560px; display: flex; flex-direction: column; gap: 12px;">
+      <span style="font-family: 'Anton'; font-weight: 400; font-size: 30px; text-transform: uppercase;">Toasts</span>
+      <div style="background: #fbfaf6; border: 1px solid #141414; padding: 20px; display: flex; flex-direction: column; gap: 10px;">
+        <sc-for list="{{ toasts }}" as="t" hint-placeholder-count="7"><div role="status" style="display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 0 8px 0 16px; background: {{ t.bg }}; color: #fbfaf6; border-left: 6px solid {{ t.edge }};"><i class="ti {{ t.icon }}" style="font-size: 20px;"></i><span style="flex: 1; font-size: 15px;">{{ t.text }}</span><sc-if value="{{ t.hasAct }}" hint-placeholder-val="{{ false }}"><a href="#" style="display: inline-flex; align-items: center; min-height: 32px; padding: 0 12px; border: 1.5px solid #fbfaf6; color: #fbfaf6; font-weight: 700; font-size: 13px; letter-spacing: .08em; text-transform: uppercase;">{{ t.act }}</a></sc-if><a href="#" aria-label="Schließen" style="width: 32px; height: 32px; display: grid; place-items: center; color: #fbfaf6;"><i class="ti ti-x"></i></a></div></sc-for>
+        <span style="font-size: 14px; line-height: 1.5; color: #2b2925;">Kante links: Tinte-Papier für Information, Grün für gespeichert, Gefahrrot für Fehler — immer zusammen mit dem Symbol. Papier auf Tinte 17,6:1, Papier auf Gefahrrot 7,1:1 (P1).</span>
+      </div>
+    </div>
+
+    <div data-screen-label="P15b Menü" style="display: flex; flex-direction: column; gap: 12px;">
+      <span style="font-family: 'Anton'; font-weight: 400; font-size: 30px; text-transform: uppercase;">Das „…“-Menü</span>
+      <div style="width: 640px; height: 520px; position: relative; background: #fbfaf6; border: 1px solid #141414;">
+        <span style="position: absolute; right: 40px; top: 30px; display: inline-flex; align-items: center; justify-content: center; min-height: 44px; min-width: 44px; border: 2px solid #141414; outline: 3px solid #141414; outline-offset: 3px; background: #ffffff;"><i class="ti ti-dots" style="font-size: 20px;"></i></span>
+        <span style="position: absolute; left: 40px; top: 36px; font-weight: 700; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: #6f6b66;">Ergebnis · Mehr</span>
+        <div role="menu" style="position: absolute; right: 40px; top: 90px; width: 320px; background: #ffffff; border: 2px solid #141414; box-shadow: 0 1px 0 #141414, 0 14px 36px rgba(20,20,20,.20); display: flex; flex-direction: column;"><sc-for list="{{ menu }}" as="m" hint-placeholder-count="7"><a href="#" role="menuitem" style="display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 0 16px; border-top: {{ m.sep }}; color: {{ m.ink }}; font-weight: 700; font-size: 15px;"><i class="ti {{ m.icon }}" style="font-size: 18px;"></i>{{ m.l }}</a></sc-for></div>
+        <span style="position: absolute; left: 40px; bottom: 30px; width: 240px; font-size: 14px; line-height: 1.5; color: #2b2925;">Zerstörende Einträge stehen unten, durch eine 2-px-Linie getrennt, in Gefahrrot. Jeder davon öffnet einen Dialog von oben.</span>
+      </div>
+    </div>
+  </div>
+
+  <div data-screen-label="P15b Abschluss" style="width: 1240px; background: #141414; color: #fbfaf6; padding: 22px 26px; display: flex; gap: 16px; align-items: flex-start;">
+    <i class="ti ti-flag" style="font-size: 24px; color: #e8451c;"></i>
+    <span style="font-size: 15px; line-height: 1.55;"><strong>Das Programmheft ist durchgezeichnet:</strong> P1 bis P10, P13, P14, P15a, P15b — vierzehn Blätter plus vier Bauteile (Kopf, Telefonkopf, Dock, Fuß). Das Übergabepaket liegt in <code>design_handoff_programmheft/</code>; die README nennt die sechzehn übernommenen Regeln und die offenen Punkte.</span>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const D = '#a3241a', I = '#141414';
+    const dg = (src, title, body, safe, go, danger) => ({ src, title, body, safe, go, goBg: danger ? D : I, band: danger ? D : '#e8451c' });
+    const dialogs = [
+      dg('lobby.closeConfirm', 'Abstimmung beenden?', 'Es fehlen noch 2 Stimmen. Abstimmung trotzdem beenden?', 'Weiter abstimmen', 'Beenden', true),
+      dg('vote.leaveConfirm', 'Abstimmung verlassen?', 'Die bisher abgegebenen Bewertungen gehen verloren.', 'Bleiben', 'Verlassen', true),
+      dg('round.draftDiscardConfirm', 'Abstimmung verwerfen?', 'Diese begonnene Abstimmung verwerfen? Die Auslosung wird gelöscht.', 'Behalten', 'Verwerfen', true),
+      dg('result.cancelConfirm', 'Session abbrechen?', 'Diese Session abbrechen? Danach kann kein Spiel mehr zum Spielen gewählt werden.', 'Nicht abbrechen', 'Session abbrechen', true),
+      dg('result.removeGameConfirm', 'Aus Session entfernen?', '„Rost & Regen“ aus dieser Session entfernen? Alle Bewertungen dafür werden gelöscht.', 'Behalten', 'Entfernen', true),
+      dg('result.deleteSession', 'Session löschen?', 'Die Session vom 14. September verschwindet aus Chronik und Pokalen.', 'Behalten', 'Session löschen', true),
+      dg('detail.retireConfirm', 'Aussortieren?', '„Wolkenpfad“ aussortieren? Weg aus Regal und Auslosung — jederzeit zurückholen.', 'Abbrechen', 'Aussortieren', false),
+      dg('detail.unlinkConfirmCover', 'Verknüpfung lösen?', 'Verknüpfung mit BGG lösen? Das Titelbild von BGG wird dabei ebenfalls entfernt.', 'Abbrechen', 'Lösen', false),
+      dg('round.deleteConfirm', 'Diese Runde löschen?', 'Runde „Donnerstagsrunde“ mit allen Spielen und Sessions löschen?', 'Behalten', 'Runde löschen', true),
+    ];
+    const ts = (text, icon, kind, act) => ({ text, icon, act: act || '', hasAct: !!act, bg: kind === 'err' ? D : I, edge: kind === 'ok' ? '#2d6a3e' : kind === 'err' ? '#fbfaf6' : '#fbfaf6' });
+    const toasts = [
+      ts('Ergebnis gespeichert', 'ti-circle-check', 'ok'),
+      ts('„Nordlichter“ wird gespielt', 'ti-circle-check', 'ok', 'Rückgängig'),
+      ts('Zurückgesetzt', 'ti-arrow-back-up', 'info', 'Rückgängig'),
+      ts('Abstimmung verworfen', 'ti-trash', 'info', 'Rückgängig'),
+      ts('Link kopiert — teile ihn mit der Runde.', 'ti-link', 'info'),
+      ts('Spieldatenbank nicht erreichbar', 'ti-alert-triangle', 'err', 'Erneut'),
+    ];
+    const sep = (b) => b ? '2px solid #141414' : '1px dotted #b8b4ad';
+    const menu = [
+      { icon: 'ti-pencil', l: 'Sieger ändern', ink: I, sep: 'none' },
+      { icon: 'ti-dice-5', l: 'Anderes Spiel wählen', ink: I, sep: sep(false) },
+      { icon: 'ti-external-link', l: 'An BG Stats übergeben', ink: I, sep: sep(false) },
+      { icon: 'ti-arrow-back-up', l: 'Zurücksetzen', ink: I, sep: sep(false) },
+      { icon: 'ti-ban', l: 'Session abbrechen', ink: D, sep: sep(true) },
+      { icon: 'ti-trash', l: 'Session löschen', ink: D, sep: sep(false) },
+    ];
+    return { dialogs, toasts, menu };
+  }
+}
+</script>
+</body>
+</html>

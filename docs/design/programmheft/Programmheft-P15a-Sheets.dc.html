@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="design_doc_mode" content="canvas">
+  <link rel="stylesheet" href="../../../public/fonts/tabler-icons.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #d9d5cc; font-family: 'Archivo', sans-serif; }
+    a { color: #b8330f; text-decoration: none; }
+    a:hover { color: #141414; text-decoration: underline; }
+  </style>
+</helmet>
+<div style="display: flex; flex-direction: column; gap: 40px; padding: 48px; width: max-content; color: #141414; background: #d9d5cc; font-family: 'Archivo', sans-serif;">
+
+  <div data-screen-label="P15a Kopf" style="width: 1240px; display: flex; flex-direction: column; gap: 12px; background: #fbfaf6; border: 2px solid #141414; padding: 24px 28px;">
+    <div style="display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;">
+      <span style="font-weight: 700; font-size: 13px; letter-spacing: .14em; background: #141414; color: #fbfaf6; padding: 5px 12px;">P15a</span>
+      <h1 style="margin: 0; font-family: 'Anton'; font-weight: 400; font-size: 40px; line-height: 1; text-transform: uppercase;">Sheets und Popover</h1>
+      <span style="font-size: 14px; color: #2b2925;">Overlays, Teil 1 · Dialoge in <a href="Programmheft-P15b-Dialoge.dc.html" style="display: inline-flex; align-items: center; justify-content: center; min-height: 24px; min-width: 24px; padding: 0 4px; text-decoration: underline;">P15b</a></span>
+    </div>
+    <p style="margin: 0; font-size: 15px; line-height: 1.55; max-width: 96ch; color: #2b2925;">Ein Sheet ist ein <strong>eingelegtes Blatt</strong>: Weiß über Papier, 3-px-Tintenkante oben, Griff, versaler Titel in Anton, Schließen 44 × 44 rechts, scrollender Inhalt, die Aktion am Fuß im schwarzen Kasten. Am Desktop werden daraus Popover am Auslöser (bis 420 px) oder, für lange Formulare, dasselbe Blatt als seitliche Spalte. Grund dahinter: Tinte zu 62 % — das Papier wird dunkel, nicht bunt. Vierzehn Sheets, drei Popover; die Wörter aus der App.</p>
+  </div>
+
+  <div style="display: flex; flex-wrap: wrap; gap: 24px; width: 1740px; align-items: flex-start;">
+    <sc-for list="{{ sheets }}" as="s" hint-placeholder-count="14">
+      <div data-screen-label="{{ s.label }}" style="display: flex; flex-direction: column; gap: 8px;">
+        <span style="font-weight: 600; font-size: 13px; color: #2b2925;">{{ s.label }}</span>
+        <div style="width: 390px; background: rgba(20,20,20,.62); border: 1px solid #141414; padding-top: 36px;">
+          <div style="background: #ffffff; border-top: 3px solid #141414; display: flex; flex-direction: column;">
+            <span style="align-self: center; width: 48px; height: 5px; background: #141414; margin-top: 8px;"></span>
+            <span style="display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 10px 8px 18px; border-bottom: 2px solid #141414;"><span style="font-family: 'Anton'; font-weight: 400; font-size: 28px; line-height: 1; text-transform: uppercase;">{{ s.title }}</span><a href="#" aria-label="Schließen" style="width: 44px; height: 44px; flex: none; display: grid; place-items: center; color: #141414;"><i class="ti ti-x" style="font-size: 22px;"></i></a></span>
+            <div style="padding: 6px 18px 12px; display: flex; flex-direction: column;">
+              <sc-for list="{{ s.rows }}" as="r" hint-placeholder-count="3">
+                <sc-if value="{{ r.isField }}" hint-placeholder-val="{{ false }}"><label style="display: flex; flex-direction: column; gap: 4px; padding: 8px 0;"><span style="font-weight: 700; font-size: 12px; letter-spacing: .12em; text-transform: uppercase;">{{ r.label }}</span><input value="{{ r.value }}" placeholder="{{ r.ph }}" style="height: 44px; box-sizing: border-box; border: 1.5px solid #141414; background: #ffffff; padding: 0 12px; font: 400 16px 'Archivo';"></label></sc-if>
+                <sc-if value="{{ r.isToggle }}" hint-placeholder-val="{{ false }}"><a href="#" role="switch" aria-checked="{{ r.aria }}" style="display: flex; align-items: center; justify-content: space-between; min-height: 48px; border-bottom: 1px dotted #b8b4ad; color: #141414; font-weight: 600; font-size: 15px;">{{ r.label }}<span style="width: 48px; height: 26px; box-sizing: border-box; background: {{ r.tBg }}; border: 2px solid #141414; display: flex; justify-content: {{ r.tJ }}; padding: 2px;"><span style="width: 18px; background: {{ r.tK }};"></span></span></a></sc-if>
+                <sc-if value="{{ r.isCheck }}" hint-placeholder-val="{{ false }}"><a href="#" style="display: flex; align-items: center; gap: 12px; min-height: 48px; border-bottom: 1px dotted #b8b4ad; color: #141414; font-size: 15px;"><span style="width: 24px; height: 24px; box-sizing: border-box; border: 2px solid #141414; background: {{ r.cBg }}; color: #fbfaf6; display: grid; place-items: center;"><i class="ti {{ r.cIcon }}" style="font-size: 16px;"></i></span><span style="width: 14px; height: 14px; background: {{ r.sw }}; display: {{ r.swD }};"></span><span style="font-weight: 700;">{{ r.label }}</span><span style="margin-left: auto; font-size: 13px; color: #6f6b66;">{{ r.meta }}</span></a></sc-if>
+                <sc-if value="{{ r.isChips }}" hint-placeholder-val="{{ false }}"><span style="display: flex; flex-direction: column; gap: 6px; padding: 10px 0;"><span style="font-weight: 700; font-size: 12px; letter-spacing: .12em; text-transform: uppercase;">{{ r.label }}</span><span style="display: flex; flex-wrap: wrap; gap: 6px;"><sc-for list="{{ r.chips }}" as="c" hint-placeholder-count="3"><a href="#" style="min-height: 32px; display: inline-flex; align-items: center; gap: 4px; padding: 0 10px; border: 1.5px solid #141414; background: {{ c.bg }}; color: {{ c.ink }}; font-weight: 700; font-size: 12px; text-transform: uppercase;">{{ c.l }}</a></sc-for></span></span></sc-if>
+                <sc-if value="{{ r.isSwatches }}" hint-placeholder-val="{{ false }}"><span style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; padding: 10px 0;"><sc-for list="{{ r.sw }}" as="c" hint-placeholder-count="8"><a href="#" role="radio" aria-checked="{{ c.ac }}" style="height: 52px; background: {{ c.hex }}; outline: {{ c.ring }}; outline-offset: 3px; display: grid; place-items: center; color: {{ c.txt }};"><i class="ti {{ c.icon }}" style="font-size: 22px;"></i></a></sc-for></span></sc-if>
+                <sc-if value="{{ r.isText }}" hint-placeholder-val="{{ false }}"><span style="padding: 10px 0; font-size: 14px; line-height: 1.5; color: #2b2925;">{{ r.text }}</span></sc-if>
+                <sc-if value="{{ r.isStepper }}" hint-placeholder-val="{{ false }}"><span style="display: flex; align-items: center; justify-content: space-between; min-height: 56px; border-bottom: 1px dotted #b8b4ad;"><span style="font-weight: 700; font-size: 15px;">{{ r.label }}</span><span style="display: flex; align-items: center; gap: 10px;"><a href="#" aria-label="Weniger" style="width: 44px; height: 44px; box-sizing: border-box; border: 2px solid #141414; display: grid; place-items: center; color: #141414;"><i class="ti ti-minus"></i></a><span style="font-family: 'Anton'; font-weight: 400; font-size: 32px; min-width: 28px; text-align: center;">{{ r.n }}</span><a href="#" aria-label="Mehr" style="width: 44px; height: 44px; box-sizing: border-box; border: 2px solid #141414; display: grid; place-items: center; color: #141414;"><i class="ti ti-plus"></i></a></span></span></sc-if>
+              </sc-for>
+            </div>
+            <span style="display: flex; gap: 8px; padding: 12px 18px 18px; border-top: 1px solid #141414;"><sc-if value="{{ s.hasSecondary }}" hint-placeholder-val="{{ false }}"><a href="#" style="display: inline-flex; align-items: center; justify-content: center; min-height: 52px; padding: 0 14px; border: 2px solid {{ s.secEdge }}; color: {{ s.secInk }}; font-weight: 700; font-size: 13px; text-transform: uppercase;">{{ s.secondary }}</a></sc-if><a href="#" style="flex: 1; display: inline-flex; align-items: center; justify-content: center; min-height: 52px; background: #141414; color: #fbfaf6; font-family: 'Anton'; font-weight: 400; font-size: 24px; text-transform: uppercase;">{{ s.action }}</a></span>
+          </div>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+
+  <div data-screen-label="P15a Popover" style="display: flex; flex-direction: column; gap: 12px;">
+    <span style="font-family: 'Anton'; font-weight: 400; font-size: 30px; text-transform: uppercase;">Popover am Desktop</span>
+    <div style="width: 1240px; height: 560px; position: relative; background: #fbfaf6; border: 1px solid #141414;">
+      <span style="position: absolute; left: 40px; top: 30px; display: inline-flex; align-items: center; gap: 10px; height: 44px; box-sizing: border-box; border: 1.5px solid #141414; outline: 3px solid #141414; outline-offset: 3px; background: #ffffff; padding: 0 12px; font-weight: 700; font-size: 14px;">Sortiert: Bewertung<i class="ti ti-chevron-down"></i></span>
+      <div role="listbox" aria-label="Sortierung" style="position: absolute; left: 40px; top: 86px; width: 260px; background: #ffffff; border: 2px solid #141414; box-shadow: 0 1px 0 #141414, 0 14px 36px rgba(20,20,20,.20); display: flex; flex-direction: column;"><sc-for list="{{ sort }}" as="o" hint-placeholder-count="3"><a href="#" role="option" aria-selected="{{ o.sel }}" style="display: flex; align-items: center; justify-content: space-between; min-height: 44px; padding: 0 14px; border-bottom: 1px dotted #b8b4ad; color: {{ o.ink }}; background: {{ o.bg }}; font-weight: 700; font-size: 15px;">{{ o.l }}<i class="ti {{ o.icon }}"></i></a></sc-for></div>
+      <span style="position: absolute; left: 360px; top: 30px; display: inline-flex; align-items: center; gap: 6px; height: 44px; box-sizing: border-box; border: 1.5px solid #141414; padding: 0 12px; font-weight: 700; font-size: 14px;"><i class="ti ti-filter"></i>Filter · 2</span>
+      <div style="position: absolute; left: 360px; top: 86px; width: 400px; background: #ffffff; border: 2px solid #141414; box-shadow: 0 1px 0 #141414, 0 14px 36px rgba(20,20,20,.20); padding: 14px 16px; display: flex; flex-direction: column; gap: 12px;">
+        <span style="display: flex; justify-content: space-between; align-items: center;"><span style="font-family: 'Anton'; font-weight: 400; font-size: 26px; text-transform: uppercase;">Filter</span><a href="#" style="display: inline-flex; align-items: center; min-height: 32px; font-weight: 700; font-size: 13px; color: #141414; text-decoration: underline;">Zurücksetzen</a></span>
+        <span style="display: flex; flex-direction: column; gap: 6px;"><span style="font-weight: 700; font-size: 12px; letter-spacing: .12em; text-transform: uppercase;">Schnellstart</span><span style="display: flex; flex-wrap: wrap; gap: 6px;"><sc-for list="{{ filterChips }}" as="c" hint-placeholder-count="4"><a href="#" style="min-height: 32px; display: inline-flex; align-items: center; padding: 0 10px; border: 1.5px solid #141414; background: {{ c.bg }}; color: {{ c.ink }}; font-weight: 700; font-size: 12px; text-transform: uppercase;">{{ c.l }}</a></sc-for></span></span>
+        <span style="display: flex; flex-direction: column; gap: 6px;"><span style="font-weight: 700; font-size: 12px; letter-spacing: .12em; text-transform: uppercase;">Tags</span><span style="display: flex; flex-wrap: wrap; gap: 6px;"><sc-for list="{{ filterTags }}" as="c" hint-placeholder-count="4"><a href="#" style="min-height: 32px; display: inline-flex; align-items: center; gap: 5px; padding: 0 10px; border: 1.5px solid #141414; background: {{ c.bg }}; color: {{ c.ink }}; font-weight: 600; font-size: 13px;"><i class="ti {{ c.icon }}"></i>{{ c.l }}</a></sc-for></span></span>
+        <a href="#" style="display: inline-flex; align-items: center; justify-content: center; min-height: 48px; background: #141414; color: #fbfaf6; font-weight: 700; font-size: 14px; letter-spacing: .08em; text-transform: uppercase;">7 Spiele zeigen</a>
+      </div>
+      <span style="position: absolute; right: 40px; top: 30px; display: inline-flex; align-items: center; gap: 6px; height: 44px; padding: 0 12px; background: #e8451c; font-weight: 700; font-size: 13px; letter-spacing: .12em; text-transform: uppercase;"><i class="ti ti-world"></i>DE<i class="ti ti-chevron-down"></i></span>
+      <div role="listbox" aria-label="Sprache" style="position: absolute; right: 40px; top: 86px; width: 260px; background: #ffffff; border: 2px solid #141414; box-shadow: 0 1px 0 #141414, 0 14px 36px rgba(20,20,20,.20); display: flex; flex-direction: column;"><sc-for list="{{ langs }}" as="o" hint-placeholder-count="9"><a href="#" role="option" aria-selected="{{ o.sel }}" style="display: flex; align-items: center; justify-content: space-between; min-height: 44px; padding: 0 14px; border-bottom: 1px dotted #b8b4ad; color: {{ o.ink }}; background: {{ o.bg }}; font-weight: 700; font-size: 15px;"><span>{{ o.l }}</span><span style="font-size: 12px; letter-spacing: .1em;">{{ o.code }}</span></a></sc-for></div>
+    </div>
+    <span style="font-size: 14px; color: #2b2925;">Sortieroptionen wie in <code>views-regal.js</code>: Zufällig · Name · Bewertung. Die neun Sprachen aus <code>locales.js</code>: de en es fr it nl pt fi ko.</span>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const P = '#fbfaf6', I = '#141414';
+    const MC = ['#c6522c', '#198663', '#726bc7', '#a66815', '#c34d74', '#2f6f9e'];
+    const blank = { isField: false, isToggle: false, isCheck: false, isChips: false, isSwatches: false, isText: false, isStepper: false };
+    const field = (label, value, ph) => ({ ...blank, isField: true, label, value: value || '', ph: ph || '' });
+    const toggle = (label, on) => ({ ...blank, isToggle: true, label, aria: on ? 'true' : 'false', tBg: on ? I : '#ffffff', tJ: on ? 'flex-end' : 'flex-start', tK: on ? P : I });
+    const check = (label, on, meta, sw) => ({ ...blank, isCheck: true, label, meta: meta || '', cBg: on ? I : '#ffffff', cIcon: on ? 'ti-check' : '', sw: sw || 'transparent', swD: sw ? 'block' : 'none' });
+    const chips = (label, list, active) => ({ ...blank, isChips: true, label, chips: list.map((l) => ({ l, bg: active.includes(l) ? I : 'transparent', ink: active.includes(l) ? P : I })) });
+    const text = (t) => ({ ...blank, isText: true, text: t });
+    const stepper = (label, n) => ({ ...blank, isStepper: true, label, n: String(n) });
+    const lum = (h) => { const c = [1, 3, 5].map((i) => parseInt(h.substr(i, 2), 16) / 255).map((v) => v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4)); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; };
+    const crN = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+    const swatches = { ...blank, isSwatches: true, sw: ['#e8451c', '#1f4e8c', '#2e6b3f', '#a8761a', '#6e3a6b', '#4a4a48', '#1c6b72', '#9c2f6e'].map((hex, i) => ({ hex, ac: i === 1 ? 'true' : 'false', ring: i === 1 ? '3px solid #141414' : 'none', icon: i === 1 ? 'ti-check' : '', txt: crN(I, hex) >= crN(P, hex) ? I : P })) };
+    const S = (label, title, rows, action, secondary, danger) => ({ label, title, rows, action, secondary: secondary || '', hasSecondary: !!secondary, secEdge: danger ? '#a3241a' : I, secInk: danger ? '#a3241a' : I });
+    const sheets = [
+      S('1 · Spiel hinzufügen', 'Spiel hinzufügen', [field('Name', '', 'Spiel suchen'), text('Titel, Personenzahl, Dauer und Bild kommen von BGG. Nichts dabei? Dann von Hand.'), toggle('Gehört mir', true)], 'Hinzufügen'),
+      S('2 · Spiel bearbeiten', 'Spiel bearbeiten', [field('Name', 'Nordlichter'), field('Personenzahl', '2–5'), field('Dauer in Minuten', '90'), chips('Tags', ['Koop', 'Strategie', 'Würfel'], ['Strategie'])], 'Speichern', 'Aussortieren'),
+      S('3 · Mitglied bearbeiten', 'Mitglied bearbeiten', [field('Name', 'Jonas'), text('Die Personenfarbe vergibt Spielwirbel; sie ist in jeder Runde gleich.'), toggle('Hat Spiele im Regal', true)], 'Speichern', 'Entfernen', true),
+      S('4 · Plätze wählen', 'Wer spielt mit?', [check('Marco', true, 'spielt mit', MC[0]), check('Jonas', true, 'spielt mit', MC[1]), check('Lea', true, 'spielt mit', MC[2]), check('Tim', false, 'heute nicht dabei', MC[3])], 'Übernehmen'),
+      S('5 · Filter', 'Filter', [chips('Schnellstart', ['Unter 60 Min', 'Leichte Kost', 'Anspruchsvoll', 'Familientauglich'], ['Unter 60 Min']), stepper('Personen', 4), toggle('Nur Spiele mit Bild', false)], '7 Spiele zeigen', 'Zurücksetzen'),
+      S('6 · Einladen', 'Einladen', [field('Link', 'spielwirbel.app/r/k7m2-donnerstag'), text('Wer den Link hat, kann der Runde beitreten. Du kannst ihn jederzeit neu erzeugen.')], 'Link kopieren', 'Neuer Link'),
+      S('7 · Runde übergeben', 'Runde übergeben', [check('Jonas', true, '', MC[1]), check('Lea', false, '', MC[2]), check('Tim', false, '', MC[3]), text('Jonas wird Besitzer der Runde; du bleibst Mitglied.')], 'Übergeben'),
+      S('8 · Farbmarker', 'Farbmarker', [swatches, text('Preußischblau · alle in der Runde sehen ihn.')], 'Übernehmen'),
+      S('9 · Teams', 'Teams', [stepper('Anzahl Teams', 2), check('Marco · Team 1', true, '', MC[0]), check('Jonas · Team 2', true, '', MC[1]), check('Lea · Team 1', true, '', MC[2])], 'Übernehmen', 'Ohne Teams'),
+      S('10 · Jemand ohne Spiele?', 'Jemand ohne Spiele?', [check('Marco', false, '', MC[0]), check('Jonas', false, '', MC[1]), check('Lea', false, '', MC[2]), check('Tim', true, '', MC[3]), text('Tim ohne Spiele — seine Spiele kommen diesmal nicht in den Topf.')], 'Übernehmen'),
+      S('11 · Mehrere Tische', 'Mehrere Tische', [stepper('Tische', 2), check('Tisch 1 · 4 Personen', true, '9 im Topf'), check('Tisch 2 · 3 Personen', true, '5 im Topf')], 'Übernehmen', 'Ein Tisch'),
+      S('12 · Rückblick', 'Rückblick', [chips('Zeitraum', ['Monat', 'Quartal', 'Jahr'], ['Quartal']), text('Sommer 2026 · 8 Sessions · Meistgespielt: Nordlichter · Siegesserie: Jonas, 3 Siege in Folge')], 'Rückblick teilen'),
+      S('14 · Gast hinzufügen', 'Gast hinzufügen', [field('Name', '', 'Name des Gasts'), text('Gäste stimmen mit ab, gehören aber nicht zur Runde.')], 'Hinzufügen'),
+      S('13 · Teilen', 'Teilen', [text('Die Karte aus P8.4 als Bild, dazu der Link zum Ergebnis.'), check('Mit Wertungen', true), check('Mit Namen', true)], 'Bild teilen', 'Link kopieren'),
+    ];
+    const sort = [['Zufällig', false], ['Name', false], ['Bewertung', true]].map(([l, on]) => ({ l, sel: on ? 'true' : 'false', bg: on ? I : '#ffffff', ink: on ? P : I, icon: on ? 'ti-check' : '' }));
+    const filterChips = [['Unter 60 Min', true], ['Leichte Kost', false], ['Anspruchsvoll', false], ['Familientauglich', true]].map(([l, on]) => ({ l, bg: on ? I : 'transparent', ink: on ? P : I }));
+    const filterTags = [['ti-dice-5', 'Würfel', false], ['ti-puzzle', 'Koop', false], ['ti-chess', 'Strategie', false], ['ti-sword', 'Kampagne', false]].map(([icon, l, on]) => ({ icon, l, bg: on ? I : 'transparent', ink: on ? P : I }));
+    const langs = [['Deutsch', 'DE'], ['English', 'EN'], ['Español', 'ES'], ['Français', 'FR'], ['Italiano', 'IT'], ['Nederlands', 'NL'], ['Português', 'PT'], ['Suomi', 'FI'], ['한국어', 'KO']].map(([l, code], i) => ({ l, code, sel: i === 0 ? 'true' : 'false', bg: i === 0 ? I : '#ffffff', ink: i === 0 ? P : I }));
+    return { sheets, sort, filterChips, filterTags, langs };
+  }
+}
+</script>
+</body>
+</html>

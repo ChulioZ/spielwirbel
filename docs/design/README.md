@@ -12,7 +12,7 @@ every account that had not chosen a design wears it and is offered Klassisch
 („Wie bisher") once by the first-start chooser; the round palettes and worlds
 are gone from the code, and a round that wore one shows the colour marker it maps
 to (`public/js/round-marker.js`). Live designs: **Klassisch, Der Tisch.** Ocean
-(#1207) and Die Brücke (#1204) are in slices; the others are placeholder epics.
+(#1207), Die Brücke (#1204) and Das Programmheft (#1203) are in slices; the others are placeholder epics.
 
 ## The documents
 
@@ -26,6 +26,8 @@ to (`public/js/round-marker.js`). Live designs: **Klassisch, Der Tisch.** Ocean
 | `ocean/` | The reviewed „Ocean“ package (fifteen sheets O1–O15b plus the concept sheet), same shape as `tisch/`. |
 | `pruefung-bruecke-2026-09-22.md` | The review of the third package (Die Brücke), over two rounds. Its closing section adds four rules for the remaining designs — in particular that a word finding binds to the **package**, not to the screen it was spotted on, and that icons and locales are checked against the **repo**, never against the previous package. |
 | `bruecke/` | The reviewed „Die Brücke“ package (sixteen sheets B1–B16 plus the concept sheet), same shape as `tisch/`. B16 is the density sheet — twelve seats, a 42-game shelf, a tie and two long locales. The shared vote and the pass-device blind arrived in round 3 as B4.5/B6.9 and B4.6/B6.10. |
+| `pruefung-programmheft-2026-09-26.md` | The review of the fourth package (Das Programmheft), over two rounds. Round 2 was accepted with one condition for the build (R2-1: a design's wordmark must fit its poster tile, now in #1376). |
+| `programmheft/` | The reviewed „Das Programmheft“ package (fourteen sheets P1–P10, P13, P14, P15a, P15b plus the concept sheet), same shape as `tisch/`, plus the four component sheets (`-Kopf`, `-Telefonkopf`, `-Dock`, `-Fuss`) the others embed. The density cases live in P7 (P7.7–P7.10); per operator decision 10 its density notes are drawing aids, not product rules. |
 | `tools/audit.js` | The contrast + hit-size audit that measured the Tisch sheets (see below). |
 
 The issues that implement the programme start at #1184 (the design layer) and
@@ -34,7 +36,8 @@ design. **Ocean's slices are #1210–#1222**, filed from the package in PR #1209
 its epic #1207 closes when Ocean is enabled. **Die Brücke's slices are
 #1237–#1249**, filed from the package in PR #1234 (round 2) and PR #1236
 (round 3, which added the shared vote and the blind); its epic #1204 closes when
-Die Brücke is enabled. The decisions behind them are in the handover's §1 and in the issues
+Die Brücke is enabled. **Das Programmheft's slices are #1371–#1383**, filed
+from the package in this folder; its epic #1203 closes when it is enabled. The decisions behind them are in the handover's §1 and in the issues
 themselves; do not re-derive them.
 
 ## Opening a sheet
@@ -49,6 +52,7 @@ python3 -m http.server 3199
 # then open http://localhost:3199/docs/design/tisch/Tisch-T3-Runde-Desktop.dc.html
 #   or http://localhost:3199/docs/design/ocean/Ocean-O3-Runde-Desktop.dc.html
 #   or http://localhost:3199/docs/design/bruecke/Bruecke-B3-Runde-Desktop.dc.html
+#   or http://localhost:3199/docs/design/programmheft/Programmheft-P3-Runde-Desktop.dc.html
 ```
 
 Opening a sheet as a `file://` URL renders a static snapshot with `{{ … }}`

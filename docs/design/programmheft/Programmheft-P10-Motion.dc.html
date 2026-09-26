@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="design_doc_mode" content="canvas">
+  <link rel="stylesheet" href="../../../public/fonts/tabler-icons.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #d9d5cc; font-family: 'Archivo', sans-serif; }
+    a { color: #b8330f; text-decoration: none; }
+    a:hover { color: #141414; text-decoration: underline; }
+  </style>
+</helmet>
+<div style="display: flex; flex-direction: column; gap: 40px; padding: 48px; width: max-content; color: #141414; background: #d9d5cc; font-family: 'Archivo', sans-serif;">
+
+  <div data-screen-label="P10 Kopf" style="width: 1240px; display: flex; flex-direction: column; gap: 12px; background: #fbfaf6; border: 2px solid #141414; padding: 24px 28px;">
+    <div style="display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;">
+      <span style="font-weight: 700; font-size: 13px; letter-spacing: .14em; background: #141414; color: #fbfaf6; padding: 5px 12px;">P10</span>
+      <h1 style="margin: 0; font-family: 'Anton'; font-weight: 400; font-size: 40px; line-height: 1; text-transform: uppercase;">Bewegung · vier Rituale</h1>
+      <span style="font-size: 14px; color: #2b2925;">Brief 10 von 14 · Endbilder = Screens aus <a href="Programmheft-P4-Session-Desktop.dc.html" style="display: inline-flex; align-items: center; justify-content: center; min-height: 24px; min-width: 24px; padding: 0 4px; text-decoration: underline;">P4</a></span>
+    </div>
+    <p style="margin: 0; font-size: 15px; line-height: 1.55; max-width: 96ch; color: #2b2925;">Die Zeitung bewegt sich wie eine Druckerei: <strong>setzen, stempeln, andrucken</strong>. Nichts federt, nichts schwebt — Bewegungen sind kurz, gerade und enden hart. Jede hat ein <strong>statisches Endbild</strong>, das unter <code>prefers-reduced-motion</code> sofort steht; der Schalter unten simuliert das. Keine Bewegung länger als 1,8 s, keine blinkt öfter als dreimal pro Sekunde.</p>
+    <span style="display: flex; gap: 10px; align-items: center;">
+      <a href="#" onClick="{{ playAll }}" style="display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 18px; background: #141414; color: #fbfaf6; font-weight: 700; font-size: 14px; letter-spacing: .1em; text-transform: uppercase;"><i class="ti ti-player-play"></i>Alle abspielen</a>
+      <a href="#" role="switch" aria-checked="{{ reducedAria }}" onClick="{{ toggleReduced }}" style="display: flex; align-items: center; gap: 10px; min-height: 44px; color: #141414; font-weight: 700; font-size: 14px;"><span style="width: 48px; height: 26px; box-sizing: border-box; background: {{ swBg }}; border: 2px solid #141414; display: flex; justify-content: {{ swJustify }}; padding: 2px;"><span style="width: 18px; background: {{ swKnob }};"></span></span>Reduzierte Bewegung</a>
+    </span>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(2, 600px); gap: 28px;">
+
+    <div data-screen-label="P10.1 Start" style="display: flex; flex-direction: column; gap: 10px;">
+      <span style="display: flex; justify-content: space-between; align-items: center;"><span style="font-weight: 700; font-size: 15px;">1 · Start — der Kasten öffnet die Ausgabe · 900 ms</span><a href="#" onClick="{{ play0 }}" style="display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 14px; border: 2px solid #141414; color: #141414; font-weight: 700; font-size: 13px; text-transform: uppercase;"><i class="ti ti-player-play"></i>Abspielen</a></span>
+      <div style="width: 600px; height: 380px; position: relative; overflow: hidden; background: #fbfaf6; border: 1px solid #141414;">
+        <div style="position: absolute; left: 24px; top: 24px; width: 260px; height: {{ m0.boxH }}; background: #141414; color: #fbfaf6; padding: 18px; box-sizing: border-box; display: flex; flex-direction: column; gap: 10px;"><span style="display: flex; align-items: flex-start; gap: 10px; font-family: 'Anton'; font-weight: 400; font-size: 34px; line-height: 1; text-transform: uppercase;"><i class="ti ti-tornado" style="font-size: 32px; display: inline-block; transform: rotate({{ m0.rot }});"></i><span>Session<br>wirbeln →</span></span></div>
+        <div style="position: absolute; left: 310px; right: 24px; top: 24px; display: flex; flex-direction: column; gap: 8px;"><span style="font-family: 'Anton'; font-weight: 400; font-size: 52px; line-height: 1; text-transform: uppercase; clip-path: {{ m0.clip }};">Neue Session</span><span style="height: 4px; background: #141414; width: {{ m0.rule }};"></span><span style="font-weight: 700; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; opacity: {{ m0.op }};">Wer spielt mit?</span></div>
+      </div>
+      <span style="font-size: 14px; line-height: 1.5; color: #2b2925;">Der Wirbel dreht eine Umdrehung (0–360 ms), der Kasten wächst nach unten, dann wird „Neue Session“ von links aufgedeckt und die 4-px-Linie läuft nach. <strong>Endbild:</strong> P4.1-Kopf, ohne Übergang.</span>
+    </div>
+
+    <div data-screen-label="P10.2 Topf" style="display: flex; flex-direction: column; gap: 10px;">
+      <span style="display: flex; justify-content: space-between; align-items: center;"><span style="font-weight: 700; font-size: 15px;">2 · Der Topf — Zeile für Zeile gesetzt · 1 400 ms</span><a href="#" onClick="{{ play1 }}" style="display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 14px; border: 2px solid #141414; color: #141414; font-weight: 700; font-size: 13px; text-transform: uppercase;"><i class="ti ti-player-play"></i>Abspielen</a></span>
+      <div style="width: 600px; height: 380px; position: relative; overflow: hidden; background: #fbfaf6; border: 1px solid #141414; display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 20px; padding: 24px; box-sizing: border-box;">
+        <span style="display: flex; flex-direction: column;"><span style="font-family: 'Anton'; font-weight: 400; font-size: 190px; line-height: 1; color: #e8451c;">{{ m1.count }}</span><span style="font-weight: 700; font-size: 16px;">Spiele im Topf</span></span>
+        <span style="display: flex; flex-direction: column;"><sc-for list="{{ m1.lines }}" as="l" hint-placeholder-count="9"><span style="display: flex; align-items: center; gap: 10px; min-height: 34px; border-bottom: 1px dotted #b8b4ad; font-weight: 700; font-size: 15px; opacity: {{ l.op }}; transform: translateX({{ l.x }});"><span style="width: 22px; height: 16px; background: {{ l.cover }};"></span>{{ l.title }}</span></sc-for></span>
+      </div>
+      <span style="font-size: 14px; line-height: 1.5; color: #2b2925;">Die Ziffer zählt mit, jede Zeile rückt 16 px von links ein, 120 ms versetzt — der Topf wird gesetzt, nicht geschüttet. Filterwechsel setzen nur die geänderten Zeilen neu. <strong>Endbild:</strong> 9 und die volle Liste.</span>
+    </div>
+
+    <div data-screen-label="P10.3 Stimme" style="display: flex; flex-direction: column; gap: 10px;">
+      <span style="display: flex; justify-content: space-between; align-items: center;"><span style="font-weight: 700; font-size: 15px;">3 · Die Stimme — gestempelt · 700 ms</span><a href="#" onClick="{{ play2 }}" style="display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 14px; border: 2px solid #141414; color: #141414; font-weight: 700; font-size: 13px; text-transform: uppercase;"><i class="ti ti-player-play"></i>Abspielen</a></span>
+      <div style="width: 600px; height: 380px; position: relative; overflow: hidden; background: #fbfaf6; border: 1px solid #141414; padding: 24px; box-sizing: border-box; display: flex; flex-direction: column; gap: 14px;">
+        <span style="display: flex; justify-content: space-between; align-items: center;"><span style="font-weight: 700; font-size: 20px;">Wie gern möchtest du das spielen?</span><span style="display: flex; gap: 6px;"><span style="width: 14px; height: 14px; background: #141414;"></span><span style="width: 14px; height: 14px; background: {{ m2.dot2 }}; box-sizing: border-box; border: 2px solid #141414;"></span><span style="width: 14px; height: 14px; box-sizing: border-box; border: 2px solid #141414;"></span></span></span>
+        <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px;"><sc-for list="{{ m2.cells }}" as="c" hint-placeholder-count="5"><span style="position: relative; min-height: 190px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 14px 0 0; box-sizing: border-box; border: 3px solid #141414; background: #ffffff; overflow: hidden; transform: translateY({{ c.y }});"><span style="position: absolute; left: 0; right: 0; bottom: 0; height: {{ c.fill }}; background: #141414;"></span><i class="ti {{ c.face }}" style="position: relative; font-size: 30px; color: {{ c.ink }};"></i><span style="position: relative; font-family: 'Anton'; font-weight: 400; font-size: 84px; line-height: 1; color: {{ c.ink }};">{{ c.n }}</span><span style="position: relative; align-self: stretch; height: 8px; background: {{ c.ramp }};"></span></span></sc-for></div>
+        <span style="font-weight: 700; font-size: 15px; opacity: {{ m2.op }};">Gewählt: 4 von 5 – gern</span>
+      </div>
+      <span style="font-size: 14px; line-height: 1.5; color: #2b2925;">Die Zelle wird 2 px eingedrückt und füllt sich in 180 ms von unten mit Tinte, dann springt der Fortschrittspunkt. Kein Ton, keine Farbe außer Tinte — was jemand gewählt hat, soll von der Seite nicht aufblitzen. <strong>Endbild:</strong> P4.2.</span>
+    </div>
+
+    <div data-screen-label="P10.4 Aufdecken" style="display: flex; flex-direction: column; gap: 10px;">
+      <span style="display: flex; justify-content: space-between; align-items: center;"><span style="font-weight: 700; font-size: 15px;">4 · Aufdecken — der Andruck · 1 800 ms</span><a href="#" onClick="{{ play3 }}" style="display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 14px; border: 2px solid #141414; color: #141414; font-weight: 700; font-size: 13px; text-transform: uppercase;"><i class="ti ti-player-play"></i>Abspielen</a></span>
+      <div style="width: 600px; height: 380px; position: relative; overflow: hidden; background: #fbfaf6; border: 1px solid #141414; padding: 24px; box-sizing: border-box; display: flex; flex-direction: column; gap: 6px;">
+        <span style="font-weight: 700; font-size: 12px; letter-spacing: .16em; text-transform: uppercase; color: #b8330f; border-bottom: 3px solid #141414; padding-bottom: 6px;">Spielbericht · Sonntag, 14. September 2026</span>
+        <sc-for list="{{ m3.lines }}" as="l" hint-placeholder-count="3"><span style="font-family: 'Anton'; font-weight: 400; font-size: 52px; line-height: 1.05; text-transform: uppercase; clip-path: {{ l.clip }}; color: {{ l.ink }};">{{ l.text }}</span></sc-for>
+        <span style="display: flex; align-items: flex-end; justify-content: space-between; margin-top: auto;"><span style="display: flex; flex-direction: column; border-top: 2px solid #141414; padding-top: 4px; min-width: 140px;"><span style="font-weight: 700; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #6f6b66;">Score</span><span style="font-family: 'Anton'; font-weight: 400; font-size: 60px; line-height: 1;">{{ m3.score }}</span></span><span style="border: 4px solid #e8451c; background: #fbfaf6; color: #b8330f; font-family: 'Anton'; font-weight: 400; font-size: 40px; letter-spacing: .12em; text-transform: uppercase; padding: 2px 14px; opacity: {{ m3.stampOp }}; transform: rotate({{ m3.stampRot }}) scale({{ m3.stampScale }});">Gespielt</span></span>
+      </div>
+      <span style="font-size: 14px; line-height: 1.5; color: #2b2925;">Die Schlagzeile wird Zeile für Zeile angedruckt (Wisch von links, je 300 ms), der Score zählt auf 4,8, zuletzt fällt der Stempel „Gespielt“ mit einem harten Aufsatz. Bei Veto oder Unentschieden läuft dasselbe, nur die Wörter ändern sich. <strong>Endbild:</strong> P4.3.</span>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { t: [1, 1, 1, 1], reduced: false };
+  dur = [900, 1400, 700, 1800];
+  componentWillUnmount() { this.raf && this.raf.forEach((r) => cancelAnimationFrame(r)); }
+  play(i) {
+    this.raf = this.raf || [];
+    cancelAnimationFrame(this.raf[i]);
+    if (this.state.reduced) { this.setT(i, 1); return; }
+    const start = performance.now();
+    const step = (now) => {
+      const t = Math.min(1, (now - start) / this.dur[i]);
+      this.setT(i, t);
+      if (t < 1) this.raf[i] = requestAnimationFrame(step);
+    };
+    this.setT(i, 0);
+    this.raf[i] = requestAnimationFrame(step);
+  }
+  setT(i, v) { this.setState((s) => { const t = s.t.slice(); t[i] = v; return { t }; }); }
+  renderVals() {
+    const [a, b, c, d] = this.state.t;
+    const cl = (v) => Math.max(0, Math.min(1, v));
+    const ease = (v) => 1 - Math.pow(1 - cl(v), 3);
+    const pre = (e) => { if (e && e.preventDefault) e.preventDefault(); };
+    const m0 = { rot: Math.round(ease(a / 0.4) * 360) + 'deg', boxH: Math.round(120 + ease(a / 0.5) * 212) + 'px', clip: `inset(0 ${Math.round((1 - ease((a - 0.45) / 0.35)) * 100)}% 0 0)`, rule: Math.round(ease((a - 0.6) / 0.4) * 100) + '%', op: String(ease((a - 0.8) / 0.2)) };
+    const cov = (h) => `linear-gradient(160deg, oklch(.6 .13 ${h}), oklch(.34 .12 ${h + 30}))`;
+    const G = [['Nordlichter', 200], ['Moorgeister', 160], ['Kartographen des Nordens', 150], ['Glutkessel', 30], ['Der letzte Leuchtturm', 250], ['Zinnober', 20], ['Wolkenpfad', 300], ['Hafenmeister', 60], ['Sternenhafen', 280]];
+    const m1 = { count: String(Math.round(cl(b / 0.85) * 9)), lines: G.map(([title, h], i) => { const local = ease((b - i * 0.085) / 0.2); return { title, cover: cov(h), op: String(local), x: Math.round((1 - local) * -16) + 'px' }; }) };
+    const ramp = ['#e8451c', '#b23d1c', '#7a4a3a', '#4a3f3a', '#141414'];
+    const faces = ['ti-mood-cry', 'ti-mood-sad', 'ti-mood-neutral', 'ti-mood-smile', 'ti-mood-crazy-happy'];
+    const fill = ease((c - 0.1) / 0.26);
+    const m2 = { dot2: c > 0.7 ? '#141414' : '#e8451c', op: String(ease((c - 0.5) / 0.3)), cells: faces.map((face, i) => ({ face, n: String(i + 1), ramp: ramp[i], fill: i === 3 ? Math.round(fill * 100) + '%' : '0%', ink: i === 3 && fill > 0.55 ? '#fbfaf6' : '#141414', y: i === 3 && c > 0 && c < 0.4 ? '2px' : '0' })) };
+    const lines = ['„Nordlichter“ wurde', 'gespielt. Jonas', 'hat gewonnen!'];
+    const m3 = {
+      lines: lines.map((text, i) => ({ text, ink: '#141414', clip: `inset(0 ${Math.round((1 - ease((d - i * 0.18) / 0.17)) * 100)}% 0 0)` })),
+      score: (Math.round(ease((d - 0.55) / 0.2) * 48) / 10).toFixed(1).replace('.', ','),
+      stampOp: String(cl((d - 0.8) / 0.06)), stampScale: String(1 + (1 - ease((d - 0.8) / 0.12)) * 0.6), stampRot: (-5 - (1 - ease((d - 0.8) / 0.12)) * 7).toFixed(1) + 'deg',
+    };
+    const r = this.state.reduced;
+    return {
+      m0, m1, m2, m3,
+      play0: (e) => { pre(e); this.play(0); }, play1: (e) => { pre(e); this.play(1); }, play2: (e) => { pre(e); this.play(2); }, play3: (e) => { pre(e); this.play(3); },
+      playAll: (e) => { pre(e); [0, 1, 2, 3].forEach((i) => this.play(i)); },
+      toggleReduced: (e) => { pre(e); this.setState((s) => ({ reduced: !s.reduced, t: [1, 1, 1, 1] })); },
+      reducedAria: r ? 'true' : 'false', swBg: r ? '#141414' : '#ffffff', swKnob: r ? '#fbfaf6' : '#141414', swJustify: r ? 'flex-end' : 'flex-start',
+    };
+  }
+}
+</script>
+</body>
+</html>
