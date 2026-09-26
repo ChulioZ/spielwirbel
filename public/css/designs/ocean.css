@@ -5417,3 +5417,23 @@
     from { translate: 0 20px; opacity: 0; }
   }
 }
+
+/* ===== #1221 O10.3 — the Tidenlinie: the one ambient movement ===== */
+/* Sheet: docs/design/ocean/Ocean-O10-Motion.dc.html, O10.3 „Tidenlinie · 6 s,
+   endlos" and O10.4. The only movement in Ocean without a cause: each lobby
+   tile's tide line (#1211, `.round-card__tide`, drawn by oceanRoundCard and
+   nowhere else — the Küste is the lobby, O9) lifts 6px and settles back, 6s
+   ease-in-out, for as long as the lobby is open. The sheet's own loop, oTide:
+   0 → -6px → 0, so the line never dips into the water it sits on and every
+   loop begins and ends on the resting line. It carries no information — the
+   tile's name, counts and last session are all text — and under reduced motion
+   it stands still, which is O10.3's Endbild. O10.4's 900ms cap names this one
+   as its exception. Drop this section and the line is still. */
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .round-card__tide {
+    animation: ocean-tide 6s ease-in-out infinite;
+  }
+  @keyframes ocean-tide {
+    50% { transform: translateY(-6px); }
+  }
+}
