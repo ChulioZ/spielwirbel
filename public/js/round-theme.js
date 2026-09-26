@@ -86,8 +86,9 @@ function markerColors(round) {
   const marker = markerOf(id, roundMarker(round));
   // The ink travels WITH the colour: a marker is a dark fill in every design, so
   // its ink must not flip with the scheme the way --on-accent does. See
-  // markerInk() in designs.js for the measurement.
-  return marker && { ...marker, ink: markerInk(id) };
+  // markerInk() in designs.js for the measurement — and markerInkOf(), since a
+  // design may give one marker its own ink (Das Programmheft's Zinnober, #1371).
+  return marker && { ...marker, ink: markerInkOf(id, marker) };
 }
 
 // An inline `style` fragment for one round, used where many rounds are on screen

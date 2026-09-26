@@ -35,7 +35,7 @@ const {
 // is measured automatically instead of silently escaping these checks. Until
 // the flip (#1202) this also looped the ROUND designs — the nine palettes and
 // seven worlds of the round registry — which went with it.
-const { DESIGN_REGISTRY, markerInk } = require('../public/js/designs');
+const { DESIGN_REGISTRY, markerInkOf } = require('../public/js/designs');
 const { MEMBER_COLORS } = require('../public/js/member-colors');
 assert.ok(DESIGN_REGISTRY.length >= 2, 'expected Klassisch and Der Tisch at least');
 
@@ -110,10 +110,14 @@ test('every design\u2019s eight markers carry its own ink at 4.5:1', () => {
   const fails = [];
   let checked = 0;
   for (const d of DESIGN_REGISTRY) {
-    const ink = rgb(markerInk(d.id));
     const markers = d.markers || [];
     assert.equal(markers.length, 8, `${d.id} declares ${markers.length} markers`);
     for (const m of markers) {
+      // markerInkOf, not markerInk: a design may give ONE marker its own ink
+      // (Das Programmheft's Zinnober and Ocker take ink, its other six paper —
+      // 3.79:1 with paper on the vermilion, #1371), and the picker and the four
+      // surfaces paint exactly what this returns.
+      const ink = rgb(markerInkOf(d.id, m));
       // The swatch is a gradient from `color` to `deep`, so the LIGHT stop is
       // the critical ground for ink on a dark design and the deep one for a
       // light design — measure both rather than guessing which way a design
@@ -1491,16 +1495,55 @@ test('hovering a control never WEAKENS its edge', () => {
     .filter(([, m]) => m);
   assert.ok(hovers.length >= 9, `only ${hovers.length} control hover borders found — has the scan drifted?`);
 
+  /* A design sheet may answer a hover itself (Das Programmheft keeps every edge
+     ink, #1371): its own rule for the same selector, under the design's gate,
+     outranks styles.css, so that is the token the browser paints. */
+  const sheetRules = new Map();
+  const GATE = /^:root\[data-design="[\w-]+"\](?::not\(\[data-scheme="dark"\]\)|\[data-scheme="dark"\])?\s+/;
+  const sheetOf = (t) => {
+    const file = t.design && t.design.stylesheet;
+    if (!file) return [];
+    if (!sheetRules.has(file)) {
+      const text = require('node:fs').readFileSync(require('node:path').join(__dirname, '..', 'public', file), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+      sheetRules.set(file, rulesOf(text).map(([g, body]) => [g.split(',').map((s) => s.trim().replace(GATE, '')), body]));
+    }
+    return sheetRules.get(file);
+  };
+  // `sel` may itself be a group (`.input:focus, .select:focus`): every member
+  // has to be answered by the same design rule.
+  const overrideFor = (t, sel) => {
+    const want = sel.split(',').map((s) => s.trim());
+    for (const [parts, body] of sheetOf(t)) {
+      const m = want.every((w) => parts.includes(w)) && /border-color:\s*var\((--[\w-]+)\)/.exec(body);
+      if (m) return m[1];
+    }
+    return null;
+  };
+  /* The same "repainted" exit as above, per design: Der Tisch lays its search
+     pill on paper, so neither --control-fill nor --control-edge is that
+     control's ground or rest, and the pair here would measure a control that
+     is not on screen. */
+  const repaintedIn = (t, sel) => sheetOf(t).some(([parts, body]) =>
+    parts.includes(base(sel.split(',')[0])) && /(^|[;{\s])background(?:-color)?:\s*var\(/.test(body));
+  let overridden = 0;
   const failures = [];
   for (const [sel, m] of hovers) {
-    const key = HOVER_TOKENS[m[1]];
-    assert.ok(key, `${sel} hovers to ${m[1]} — add it to HOVER_TOKENS so it can be measured`);
+    assert.ok(HOVER_TOKENS[m[1]], `${sel} hovers to ${m[1]} — add it to HOVER_TOKENS so it can be measured`);
     for (const t of THEMES) {
+      if (repaintedIn(t, sel)) continue;
+      const own = overrideFor(t, sel);
+      if (own) overridden++;
+      // A design's own token (Der Tisch's --gold-edge) is resolved for it.
+      const key = HOVER_TOKENS[own || m[1]];
+      const edge = key ? t[key] : rgb(token(own, t.design));
       const rest = contrast(t.controlEdge, t.controlFill);
-      const hot = contrast(t[key], t.controlFill);
+      const hot = contrast(edge, t.controlFill);
       if (hot < rest) failures.push(`${name(t)} — ${sel} ${hot.toFixed(2)}:1 < resting ${rest.toFixed(2)}:1`);
     }
   }
+  // Counts HITS: a lookup that stopped matching would fall back to styles.css
+  // and report the design's hover as the app's.
+  assert.ok(overridden >= 9, `only ${overridden} design-sheet hover answers found — has the lookup drifted?`);
   assert.deepEqual(failures.slice(0, 6), [], 'the hover border is fainter than the resting one');
 });
 
@@ -1999,14 +2042,14 @@ test('a design’s gold holds as DISPLAY type on every one of its felts', () => 
      stops of all eight felts (a table can land on any of them). Ockerfilz's
      light stop is the tightest, at 3.56:1. Below the rail width the sentence is
      smaller and the names take the felt's own ink, which the marker sweep
-     above already measures. */
-  /* A design whose markers carry NIGHT ink (Die Brücke, #1237: B8.1's lightened
-     row, markerInk #070b14) paints no light name on them, so gold on those
-     plates is not a pair anything prints; its own split slice states its ink. */
-  const hosts = withToken('--gold').filter((t) => {
-    const d = DESIGN_REGISTRY.find((x) => x.id === t.design.id) || {};
-    return d.markers && !(d.markerInk && luminance(rgb(d.markerInk)) < 0.05);
-  });
+     above already measures.
+     Scoped to designs that HAVE felts (declare --felt): Das Programmheft
+     (#1371) declares a --gold for its winner fills and markers for its rounds,
+     but prints no names on a marker ground, so its gold is measured as a FILL
+     under --gold-ink in test/design-tokens-programmheft.test.js instead. */
+  const felted = new Set(withToken('--felt').map((t) => t.design.id));
+  const hosts = withToken('--gold').filter((t) => felted.has(t.design.id)
+    && (DESIGN_REGISTRY.find((d) => d.id === t.design.id) || {}).markers);
   assert.ok(hosts.length >= 1, 'no design declares gold and felts — this test is vacuous');
   const failures = [];
   let checked = 0;
@@ -2393,6 +2436,15 @@ test('every colour token a design declares is measured by one of the checks abov
     '--band-top', '--band-good', '--band-low', '--band-new',
     '--person-lit-1', '--person-lit-2', '--person-lit-3', '--person-lit-4',
     '--person-lit-5', '--person-lit-6', '--person-lit-7', '--person-lit-8',
+    // #1371, Das Programmheft: the box and its two inks, the vermilion masthead
+    // and its ink, the two focus rings, the second ink, the darkening ramp with
+    // its inks and the veto stamp — all measured in
+    // test/design-tokens-programmheft.test.js (this file is past its budget).
+    '--box', '--box-ink', '--box-ink-soft', '--vermilion', '--on-vermilion',
+    '--brand-ring', '--ring-on-box',
+    '--ramp-1', '--ramp-2', '--ramp-3', '--ramp-4', '--ramp-5',
+    '--ramp-ink-1', '--ramp-ink-2', '--ramp-ink-3', '--ramp-ink-4', '--ramp-ink-5',
+    '--veto-fill', '--veto-edge', '--veto-ink',
   ]);
   /* Not colours, so not this test's business: a lift PERCENTAGE, and the four
      compositing alphas the elevation ramp is built from. The alphas are painted
@@ -2425,6 +2477,10 @@ test('every colour token a design declares is measured by one of the checks abov
      of the picture on --deep, kept below the text by position (the comment on
      the blind's body rule in ocean.css carries the measurement). */
   const OCEAN_UNPAIRED = /^--(line-soft|accent-edge|shell-edge|bubble-rim|bubble-trail|whale-deep|whale-shade|whale-fin|disabled-fill|disabled-ink|disabled-edge|deep-bubble|deep-bubble-soft|deep-halo)$/;
+  /* Das Programmheft (#1371): P1 marks the hairline and the hatch „kein Text" —
+     a rule and a fill that separate and carry nothing. The guard that they are
+     never a TEXT colour is in test/design-tokens-programmheft.test.js. */
+  const PROGRAMMHEFT_UNPAIRED = /^--(hair|hatch)$/;
 
   const unmeasured = [];
   for (const t of THEMES) {
@@ -2433,11 +2489,13 @@ test('every colour token a design declares is measured by one of the checks abov
     for (const m of block.all.matchAll(/(^|[;{\s])(--[a-z0-9-]+)\s*:/gm)) {
       const tok = m[2];
       if (inApp.has(tok) || MEASURED.has(tok) || NOT_A_COLOUR.test(tok)) continue;
-      if (DECORATIVE_EDGE.test(tok) || OCEAN_UNPAIRED.test(tok)) continue;
+      if (DECORATIVE_EDGE.test(tok) || OCEAN_UNPAIRED.test(tok) || PROGRAMMHEFT_UNPAIRED.test(tok)) continue;
       // A layout token is not a colour either — radii, sizes, fonts, durations,
       // and since #1210 the spacing grid, the target sizes and an elevation
       // recipe (built from the --cast alphas above, never from a colour).
-      if (/^--(radius|text|w|dur|ease|font|rail|dock|space|target|shadow|display|track)/.test(tok)) continue;
+      // #1371 adds Das Programmheft's display sizes, leadings, kicker gap, rule
+      // weights and ring geometry — all lengths or ratios.
+      if (/^--(radius|text|w|dur|ease|font|rail|dock|space|target|shadow|display|track|leading|kicker|rule|ring-width|ring-offset)/.test(tok)) continue;
       unmeasured.push(`${name(t)} -> ${tok}`);
     }
   }

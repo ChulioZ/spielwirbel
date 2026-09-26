@@ -31,6 +31,20 @@ change — `test/ocean-overlays.test.js` now sweeps all of
 The drawing is not a licence: a design package draws ONE message at ONE length,
 so it can never show you the case the fix was for.
 
+## The same blindness in a contrast sweep — and it cuts both ways (#1371)
+
+`a11y-contrast.test.js`'s „hovering a control never WEAKENS its edge" read
+each hover's token out of `styles.css` only. Das Programmheft rests every
+control on an ink edge (18:1), so the app's hover-to-`--brand` (6:1) is a real
+weakening there — and a design sheet answering it with its own hover rule was
+invisible to the test, which kept reporting the app's token. The test now looks
+the selector up in the design's sheet first (matching a grouped selector member
+by member), and skips a control the design repaints onto another ground, as it
+already did for `styles.css`. Widening it immediately found Der Tisch's search
+pill, whose paper ground made the old pair meaningless — so a widened sweep can
+report a false defect as easily as it hides a real one. Check what ground the
+design actually paints before believing either.
+
 **Related:** `.claude/rules/design-stylesheets-are-shell-assets.md` (what a
 design sheet may declare), `.claude/rules/source-scanning-guards-enumerate-shapes.md`
 (a scan's coverage is whatever it reads — here, which FILES).

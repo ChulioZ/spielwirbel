@@ -63,6 +63,17 @@
 @font-face { font-family: 'IBM Plex Mono'; font-style: normal; font-weight: 400; font-display: swap; src: url('fonts/ibm-plex-mono-latin-400-normal.woff2') format('woff2'); }
 @font-face { font-family: 'IBM Plex Mono'; font-style: normal; font-weight: 500; font-display: swap; src: url('fonts/ibm-plex-mono-latin-500-normal.woff2') format('woff2'); }
 @font-face { font-family: 'IBM Plex Mono'; font-style: normal; font-weight: 600; font-display: swap; src: url('fonts/ibm-plex-mono-latin-600-normal.woff2') format('woff2'); }
+/* Das Programmheft (#1371, P1.2): Anton for display, Archivo for text. Anton
+   ships ONE weight and it is a heavy condensed face, so it is declared as the
+   range `400 800` — every heading asks for 700, and a face declared at 400
+   alone would be matched and then SYNTHESISED bold, a smear over glyphs that
+   are already black (.claude/rules/single-weight-display-faces.md §1). Archivo
+   declares each weight P1 uses (400/600/700). Both from fontsource, latin
+   subset; licences LICENSE-anton.txt, LICENSE-archivo.txt (OFL 1.1). */
+@font-face { font-family: 'Anton'; font-style: normal; font-weight: 400 800; font-display: swap; src: url('fonts/anton-latin-400-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Archivo'; font-style: normal; font-weight: 400; font-display: swap; src: url('fonts/archivo-latin-400-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Archivo'; font-style: normal; font-weight: 600; font-display: swap; src: url('fonts/archivo-latin-600-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Archivo'; font-style: normal; font-weight: 700; font-display: swap; src: url('fonts/archivo-latin-700-normal.woff2') format('woff2'); }
 
 :root {
   /* Native UI — the <select> popup, scrollbars, form-control defaults — follows
