@@ -550,7 +550,7 @@ function renderPokaleTab(round) {
   /* Abzeichen (#1388, views-badges.js): below the podium and the plaques, the
      round's band then one row per member in THIS standings order — so the two
      lists on one page cannot disagree about who comes first. */
-  app.appendChild(renderBadgeSection(round, ranked));
+  app.appendChild(renderBadgeSection(round, ranked, rankOf));
   app.appendChild(renderRecapSection(round, recap));
   badgeRevealTarget(round.id);
 }

@@ -10619,6 +10619,37 @@ kbd {
    done (and a count in its line), a locked or secret one is a DASHED outline —
    and every tile's aria-label names the state in words. */
 .badge-section__summary { font-size: var(--text-sm); color: var(--ink-soft); }
+/* The legend (#1386): a key to the drawing, one swatch per state drawn the way
+   the tiles draw it — filled, ringed, dashed. Its own line under the title on a
+   phone, beside the count from the editor split up. */
+.badge-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  flex: 1 0 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+@media (min-width: 860px) { .badge-legend { flex: none; margin-left: auto; } }
+.badge-legend__item { display: inline-flex; align-items: center; gap: 6px; }
+.badge-legend__mark {
+  flex: none;
+  box-sizing: border-box;
+  width: 14px;
+  height: 14px;
+  border-radius: var(--radius-pill);
+}
+.badge-legend__item[data-state="earned"] .badge-legend__mark { background: var(--brand); }
+.badge-legend__item[data-state="progress"] .badge-legend__mark {
+  background:
+    radial-gradient(closest-side, var(--surface) calc(100% - 3px), transparent calc(100% - 2px)),
+    conic-gradient(var(--brand) 60%, var(--sunken) 0);
+}
+.badge-legend__item[data-state="locked"] .badge-legend__mark { border: 2px dashed var(--control-edge); }
 .badge-section__empty { margin: 0; }
 .badge-grid {
   display: grid;
@@ -10733,6 +10764,10 @@ kbd {
 .badge-member__head:focus-visible { outline: 3px solid var(--brand-edge); outline-offset: 2px; border-radius: var(--radius-sm); }
 .badge-member__name { font-weight: 700; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .badge-member__summary { font-size: var(--text-sm); color: var(--ink-soft); }
+/* „Platz N" (#1386): the Tafel's place, pushed right; the disclosure mark
+   follows it instead of taking the free space itself. */
+.badge-member__rank { margin-left: auto; font-size: var(--text-sm); font-weight: 700; color: var(--ink-soft); white-space: nowrap; }
+.badge-member__head:has(.badge-member__rank)::after { margin-left: 0; }
 .badge-member[open] > .badge-grid { margin-top: 10px; }
 .badge-member__more { margin-top: 8px; }
 
@@ -10768,8 +10803,25 @@ kbd {
 .hub-row--badges { font-size: var(--text-sm); color: var(--ink-soft); }
 .hub-row--badges .ti { color: var(--brand-ink, var(--brand)); }
 
-.member-card__badges { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
+/* The row wraps: the label and the chevron (#1386) share the first line, the
+   pins take the whole second one. */
+.member-card__badges { display: flex; flex-flow: row wrap; align-items: center; gap: 6px; margin-top: 12px; }
+.member-card__badges > .member-card__badges-label { flex: 1 1 auto; }
 .member-card__badges-label { font-size: var(--text-sm); color: var(--ink-soft); font-weight: 600; }
+.member-card__badges > .badge-grid { flex: 1 0 100%; order: 1; }
+.member-card__badges-go {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  min-height: 32px;
+  border-radius: var(--radius-pill);
+  color: var(--brand-ink, var(--brand));
+  font-size: var(--text-lg);
+  text-decoration: none;
+}
+.member-card__badges-go:hover { background: var(--sunken-soft); }
+.member-card__badges-go:focus-visible { outline: 3px solid var(--brand-edge); outline-offset: 2px; }
 
 /* The Spielerkarte's account tier (#1389): the same label and tiles, all four
    always, under the figures — two a row on a phone, four across from there. */
