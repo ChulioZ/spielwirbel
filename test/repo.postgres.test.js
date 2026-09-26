@@ -655,6 +655,11 @@ if (!process.env.DATABASE_URL) {
       verification: null,
       reset: null,
       refreshTokens: [],
+      // Answered, so the design tile counts it (#1362): its lines count only
+      // accounts that answered the chooser, and the plain-role probe below
+      // asserts they are non-empty.
+      design: 'tisch',
+      designChooserSeen: '2026-09-22',
     });
 
     const admin = new Client({
@@ -711,7 +716,8 @@ if (!process.env.DATABASE_URL) {
       'the round adoption figures were empty without the admin escape');
     /* The design tile (#1201) reads `users`, which carries no RLS — so it is
        plain knex, not atx(), and must still come back under a plain role. The
-       seeded account above wears the face, so a zero would be a dropped read. */
+       seeded account above answered the chooser, so it counts on a line and a
+       zero would be a dropped read. */
     assert.ok(Object.values(out.designAdoption.byDesign).reduce((a, b) => a + b, 0) >= 1,
       'the design tile saw no account under a plain role');
     assert.equal(typeof out.designAdoption.switchedBack, 'number');

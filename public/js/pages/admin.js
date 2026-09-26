@@ -378,20 +378,27 @@
        per-round histogram, which stopped meaning anything once designs moved
        from rounds to accounts. Keyed by the designs this instance offers, in
        registry order, so the keys come from code; an offered design nobody
-       wears still gets its line. Since the flip (#1202) an account that has not
-       answered the chooser counts under the face (Der Tisch), exactly as /me
-       resolves it.
+       wears still gets its line.
+
+       The lines count ONLY accounts that have answered the design chooser or
+       picked on Konto (#1362); an account that never answered is on no line.
+       So each line divides by the ANSWERED sum, derived here from the lines
+       themselves, never by `accounts`. Skippers are included — a skip stores
+       the face exactly like a confirmed Der Tisch — which is why the wording
+       says „beantwortet" and never „gewählt".
 
        The headline is the SWITCH-BACK share: accounts that went from another
-       design back to Klassisch and are still on it. Low or high it is not a
-       fault, so the pill stays neutral like every tile on this card. The
-       design's stable id is the line's label — this page is German-only and
-       ships no translation table, so a label map here would be a second copy
-       of the registry to keep in step. */
+       design back to Klassisch and are still on it, over every account on the
+       card. Low or high it is not a fault, so the pill stays neutral like every
+       tile on this card. The design's stable id is the line's label — this page
+       is German-only and ships no translation table, so a label map here would
+       be a second copy of the registry to keep in step. */
     const byDesign = m.designAdoption.byDesign;
+    const answered = Object.values(byDesign).reduce((sum, n) => sum + n, 0);
     rows.push(['Designs', null, share(m.designAdoption.switchedBack, accounts),
-      `Konten, die zu Klassisch zurückgewechselt sind (von ${accounts})`,
-      Object.entries(byDesign).map(([id, n]) => [id, share(n, accounts)])]);
+      `Konten, die zu Klassisch zurückgewechselt sind (von ${accounts}); je Design: `
+        + `von ${answered}, die die Design-Auswahl beantwortet haben`,
+      Object.entries(byDesign).map(([id, n]) => [id, share(n, answered)])]);
 
     rows.push(['Teilen & Freunde', null, share(m.social.sharedRounds, rounds),
       `geteilte Runden (von ${rounds})`, [
