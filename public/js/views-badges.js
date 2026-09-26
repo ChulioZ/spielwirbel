@@ -407,8 +407,19 @@ function chronikBadgeRows(round, marks) {
    Only for the round's LATEST finished session: this is the moment of earning,
    not an archive — an older session's marks are in the Chronik under it.
    Static by construction: no motion in Klassisch, no focus move, no modal, and
-   every name and condition is in the DOM from the first paint. */
+   every name and condition is in the DOM from the first paint.
+
+   `data-fresh` on an item is the one motion hook, and it is design-neutral:
+   Klassisch draws nothing from it. It marks a mark this `el` has NOT shown
+   before, on any fill after the screen's first — so a cold load of a finished
+   session (the first fill) arrives still, and a winner tap's refill replays
+   nothing it already showed; only the marks that tap earned are fresh. A
+   design that animates the moment keys off the attribute alone. */
+const badgeMomentShown = new WeakMap();
 function fillBadgeMoment(el, round, session) {
+  const seen = badgeMomentShown.get(el); // undefined on the screen's first fill
+  const shown = seen || new Set();
+  badgeMomentShown.set(el, shown);
   el.replaceChildren();
   el.hidden = true;
   if (!session.finished) return;
@@ -433,6 +444,9 @@ function fillBadgeMoment(el, round, session) {
     if (!e) return;
     const holder = ctx.holderName(x.holder, x.memberId);
     const item = h(`<li class="badge-moment__item"><span class="badge-moment__holder">${esc(holder)}</span></li>`);
+    const id = `${x.memberId || ''}|${x.key}|${x.tier || ''}`;
+    if (seen && !shown.has(id)) item.setAttribute('data-fresh', '');
+    shown.add(id);
     item.appendChild(badgeTile(e, ctx, { holder, announceHolder: true, line: badgeCondition(e, ctx, { at: x.tier || undefined }) }));
     list.appendChild(item);
   });

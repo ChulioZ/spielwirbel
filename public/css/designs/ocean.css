@@ -6118,3 +6118,69 @@
   border-radius: var(--radius-lg);
   background: var(--wave-paper);
 }
+
+/* ===== #1386 O17.5 motion — the bubble rises after the whale ===== */
+/* Sheet: docs/design/ocean/Ocean-O17-Abzeichen.dc.html, O17.5's timing table
+   and frames; binding: docs/design/pruefung-abzeichen-2026-09-26.md finding 6
+   and handover-abzeichen-2026-09-26.md §5. A droppable slice of its own: drop
+   this section and the #1391 pearl simply stands in its shell from 0 ms, as it
+   does under reduced motion.
+
+   The whale (#1221 O10.2) surfaces in 0–700 ms. After it, per mark:
+
+      800 ms   a bubble rises 60px out of the water to the shell, 420 ms on
+               O10's curve, scale 0.6 → 0.9 (the sheet's text: „60 px in
+               420 ms"; its frames draw a longer climb, and the text wins, as
+               it did for the whale's overshoot)
+     1220 ms   it bursts — scale 1.3, opacity 0, 160 ms — while the pearl grows
+               0.6 → 1 (200 ms, ease-out) in its place
+     +160 ms   the second mark, the same; the moment holds two at most
+               (BADGE_MOMENT_MAX), so nothing staggers further
+     1580 ms   still. No loop, no fill: every element ends on its own rest.
+
+   The earliest the pearl can show is 1220 ms after the render that put it
+   there, and the whale starts on that same render (`data-stamped`) or an
+   earlier one — so the pearl never overtakes it. Only `data-fresh` marks move
+   (views-badges.js): a cold load of a finished session and a winner tap's
+   refill replay nothing already shown. The name, the holder and the condition
+   never move; the glyph rides inside the pearl, which is the mark. Nothing
+   waits on the motion: the pill is a button from 0 ms, the bubble takes no
+   pointer. Outside the motion gate the bubble does not exist and the pearl
+   rests at once (O17.5 „Reduced Motion": Perle liegt ab 0 ms, keine Blase). */
+@media (prefers-reduced-motion: no-preference) {
+  /* The bubble: over the pearl's own spot (the pill's 1px border + 8px
+     padding + half the 50 − 34px difference; its 2px glyph drop halved),
+     resting invisible, so a skipped animation leaves no trace. */
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .badge-moment__item[data-fresh]::after {
+    content: "";
+    position: absolute;
+    z-index: 3;
+    left: 17px;
+    top: calc(50% - 16px);
+    width: 34px;
+    height: 34px;
+    box-sizing: border-box;
+    border: 2px solid var(--surface);
+    border-radius: 50%;
+    background: radial-gradient(circle at 32% 28%, var(--bubble-hi) 0 4px, transparent 5px);
+    box-shadow: 0 0 0 1px var(--bubble-rim);
+    opacity: 0;
+    pointer-events: none;
+    animation: ocean-bubble 580ms linear 800ms;
+  }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .badge-moment__item[data-fresh] .badge__mark > .ti {
+    animation: ocean-pearl 200ms ease-out 1220ms backwards;
+  }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .badge-moment__item[data-fresh]:nth-child(2)::after { animation-delay: 960ms; }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .badge-moment__item[data-fresh]:nth-child(2) .badge__mark > .ti { animation-delay: 1380ms; }
+  /* 580 ms = the 420 ms climb + the 160 ms burst; 72.41% is where one ends. */
+  @keyframes ocean-bubble {
+    0% { opacity: 0; transform: translateY(60px) scale(0.6); animation-timing-function: cubic-bezier(0.2, 0.8, 0.3, 1); }
+    8% { opacity: 1; }
+    72.41% { opacity: 1; transform: translateY(0) scale(0.9); animation-timing-function: ease-out; }
+    100% { opacity: 0; transform: translateY(0) scale(1.3); }
+  }
+  @keyframes ocean-pearl {
+    from { opacity: 0; transform: scale(0.6); }
+  }
+}
