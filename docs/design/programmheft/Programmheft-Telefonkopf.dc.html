@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="../../../public/fonts/tabler-icons.css">
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;600;700&display=swap" rel="stylesheet">
+</helmet>
+<div style="display: flex; flex-direction: column; width: 100%; font-family: 'Archivo', sans-serif; color: #141414;">
+  <div style="background: #e8451c; color: #141414;">
+    <div style="height: 40px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; font-weight: 700; font-size: 13px;"><span>9:41</span><span style="display: flex; gap: 6px; font-size: 16px;"><i class="ti ti-activity"></i><i class="ti ti-percentage"></i></span></div>
+    <div style="height: 52px; display: flex; align-items: center; padding: 0 6px 0 18px;">
+      <a href="#" style="display: inline-flex; align-items: center; gap: 8px; min-height: 44px; font-family: 'Anton'; font-weight: 400; font-size: 24px; letter-spacing: .16em; text-transform: uppercase; color: #141414;"><i class="ti ti-tornado" style="font-size: 22px;"></i>Spielwirbel</a>
+      <span style="margin-left: auto; display: flex;">
+        <a href="#" aria-label="Sprache: Deutsch" style="min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 3px; font-weight: 700; font-size: 13px; color: #141414;"><i class="ti ti-world" style="font-size: 20px;"></i>{{ lang }}</a>
+        <a href="#" aria-label="Postfach, 2 neu" style="position: relative; min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; color: #141414;"><i class="ti ti-mail" style="font-size: 22px;"></i><span style="position: absolute; top: 5px; right: 3px; background: #141414; color: #fbfaf6; font-weight: 700; font-size: 11px; padding: 1px 5px;">2</span></a>
+        <a href="#" aria-label="Konto: Marco" style="min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center;"><span style="width: 30px; height: 30px; background: #141414; color: #fbfaf6; display: grid; place-items: center; font-weight: 700; font-size: 14px;">M</span></a>
+      </span>
+    </div>
+  </div>
+  <sc-if value="{{ hasRow }}" hint-placeholder-val="{{ true }}">
+    <div style="display: flex; align-items: center; gap: 6px; min-height: 48px; padding: 0 18px 0 6px; background: #fbfaf6; border-bottom: 1px solid #141414;">
+      <sc-if value="{{ hasBack }}" hint-placeholder-val="{{ true }}"><a href="#" style="min-height: 44px; display: inline-flex; align-items: center; gap: 6px; padding: 0 10px; font-weight: 700; font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: #141414;"><i class="ti ti-arrow-left" style="font-size: 18px;"></i>{{ back }}</a></sc-if>
+      <span style="margin-left: auto; font-weight: 700; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #6f6b66; text-align: right;">{{ crumb }}</span>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:390,&quot;height&quot;:140},&quot;back&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;crumb&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const back = this.props.back ?? '';
+    const crumb = this.props.crumb ?? '';
+    return { back, crumb, hasBack: !!back, hasRow: !!(back || crumb), lang: this.props.lang ?? 'DE' };
+  }
+}
+</script>
+</body>
+</html>

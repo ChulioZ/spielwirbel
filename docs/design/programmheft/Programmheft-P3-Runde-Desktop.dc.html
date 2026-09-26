@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="design_doc_mode" content="canvas">
+  <link rel="stylesheet" href="../../../public/fonts/tabler-icons.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #d9d5cc; font-family: 'Archivo', sans-serif; }
+    a { color: #b8330f; text-decoration: none; }
+    a:hover { color: #141414; text-decoration: underline; }
+  </style>
+</helmet>
+<div style="display: flex; flex-direction: column; gap: 48px; padding: 48px; width: max-content; color: #141414; background: #d9d5cc; font-family: 'Archivo', sans-serif;">
+
+  <div data-screen-label="P3 Kopf" style="max-width: 1240px; display: flex; flex-direction: column; gap: 12px; background: #fbfaf6; border: 2px solid #141414; padding: 24px 28px;">
+    <div style="display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;">
+      <span style="font-weight: 700; font-size: 13px; letter-spacing: .14em; background: #141414; color: #fbfaf6; padding: 5px 12px;">P3</span>
+      <h1 style="margin: 0; font-family: 'Anton'; font-weight: 400; font-size: 40px; line-height: 1; text-transform: uppercase;">Runde · Desktop 1440</h1>
+      <span style="font-size: 14px; color: #2b2925;">Brief 3 von 14 · Tokens aus <a href="Programmheft-P1-Komponenten.dc.html" style="display: inline-flex; align-items: center; justify-content: center; min-height: 24px; min-width: 24px; padding: 0 4px; text-decoration: underline;">P1</a> · Telefon in <a href="Programmheft-P2-Phone-Kern.dc.html" style="display: inline-flex; align-items: center; justify-content: center; min-height: 24px; min-width: 24px; padding: 0 4px; text-decoration: underline;">P2</a></span>
+    </div>
+    <p style="margin: 0; font-size: 15px; line-height: 1.55; max-width: 96ch; color: #2b2925;">Start, Hub, Regal, Spieldetail und Spiel hinzufügen. Jede Runde ist eine Zeitung; der Hub ist ihre <strong>Titelseite</strong> — Aufmacher links, der schwarze Kasten in der Mitte, die Ressorts als Spalten, unten eine Leiste mit den Vorschauen. Die <strong>Ressortzeile</strong> unter dem Kopf trägt Start · Regal · Chronik · Pokale · Einstellungen auf jedem Rundenscreen. Chronik, Pokale und Mitgliedsseite stehen in <a href="Programmheft-P13-Tier2a.dc.html" style="display: inline-flex; align-items: center; justify-content: center; min-height: 24px; min-width: 24px; padding: 0 4px; text-decoration: underline;">P13</a>, die Rundeneinstellungen in <a href="Programmheft-P14-Tier2b.dc.html" style="display: inline-flex; align-items: center; justify-content: center; min-height: 24px; min-width: 24px; padding: 0 4px; text-decoration: underline;">P14</a>.</p>
+    <div style="display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; background: #ffffff; border: 2px solid #141414; font-size: 14px; line-height: 1.55;"><i class="ti ti-info-circle" style="font-size: 20px; flex: none;"></i><span><strong>Keine Spielberichts-Prosa als Grundlage.</strong> Das Konzept hatte unter dem Aufmacher einen Vorspann („Drei Spiele lagen im Topf …“). Prosa ist eine spätere Lieferung (§1) — und der Satz enthielt ein Abendwort. Der Aufmacher steht jetzt allein auf den Fakten: Spiel, Sieger, Score, Serie, Anzahl. Die gestrichelte Linie markiert 900 px.</span></div>
+  </div>
+
+  <div data-screen-label="P3.1 Start" style="display: flex; flex-direction: column; gap: 10px;">
+    <span style="font-weight: 600; font-size: 13px; color: #2b2925;">P3.1 · Start — der Kiosk: jede Runde eine Zeitung</span>
+    <div style="width: 1440px; min-height: 900px; position: relative; background: #fbfaf6; border: 1px solid #141414; display: flex; flex-direction: column;">
+      <span style="position: absolute; left: -16px; right: -16px; top: 900px; border-top: 2px dashed #b8330f; pointer-events: none;"></span>
+      <dc-import name="Programmheft-Kopf" crumb="Kiosk · Donnerstag, 19. September 2026" active="none" hint-size="100%,56px" style="width: 100%;"></dc-import>
+      <div style="padding: 20px 40px 0;">
+        <a href="#" style="display: flex; align-items: center; gap: 22px; min-height: 60px; padding: 8px 18px; border: 2px solid #141414; color: #141414;">
+          <span style="font-family: 'Anton'; font-weight: 400; font-size: 24px; letter-spacing: .14em; text-transform: uppercase; background: #141414; color: #fbfaf6; padding: 4px 12px;">Extrablatt</span>
+          <span style="display: flex; flex-direction: column;"><span style="font-weight: 700; font-size: 17px;">Abstimmung läuft · Familie Berger</span><span style="font-size: 14px; color: #2b2925;">3 Spiele ausgelost. Alle stimmen ab, dann kommt das Finale.</span></span>
+          <span style="margin-left: auto; display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; background: #e8451c; color: #141414; font-weight: 700; font-size: 14px; letter-spacing: .12em; text-transform: uppercase;">Jetzt abstimmen →</span>
+        </a>
+      </div>
+      <div style="padding: 28px 40px 0; display: flex; align-items: flex-end; justify-content: space-between; gap: 40px;">
+        <div><h2 style="margin: 0; font-family: 'Anton'; font-weight: 400; font-size: 84px; line-height: 1; text-transform: uppercase;">Schön, dass<br>ihr da seid.</h2><div style="font-size: 20px; font-weight: 600; color: #2b2925; margin-top: 12px;">Welche Runde spielt heute?</div></div>
+        <span style="font-weight: 600; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #6f6b66; text-align: right; line-height: 1.8;">3 Runden<br>Marco · seit Oktober 2025</span>
+      </div>
+      <div style="margin: 24px 40px 0; border-top: 4px solid #141414; padding-top: 22px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 28px;">
+        <sc-for list="{{ lobby }}" as="r" hint-placeholder-count="3">
+          <a href="#" style="display: flex; flex-direction: column; gap: 10px; color: #141414; border-right: 1px solid #141414; padding-right: 28px;">
+            <span style="height: 10px; background: {{ r.marker }};"></span>
+            <span style="display: flex; justify-content: space-between; font-weight: 600; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #6f6b66;"><span>{{ r.kicker }}</span><span>{{ r.issue }}</span></span>
+            <span style="font-family: 'Anton'; font-weight: 400; font-size: 40px; line-height: 1; text-transform: uppercase;">{{ r.name }}</span>
+            <span style="display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 14px; font-weight: 600;"><sc-for list="{{ r.people }}" as="p" hint-placeholder-count="4"><span style="display: inline-flex; align-items: center; gap: 5px;"><span style="width: 10px; height: 10px; background: {{ p.c }};"></span>{{ p.n }}</span></sc-for></span>
+            <span style="display: block; height: 170px; background: {{ r.cover }}; border: {{ r.coverEdge }}; box-sizing: border-box;"></span>
+            <span style="font-weight: 700; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #6f6b66;">Zuletzt gespielt</span>
+            <span style="font-size: 16px; font-weight: 700; line-height: 1.3;">{{ r.last }}</span>
+            <span style="margin-top: auto; display: flex; gap: 16px; font-weight: 600; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #6f6b66; border-top: 1px solid #141414; padding-top: 10px;"><span>{{ r.games }}</span><span>{{ r.sessions }}</span></span>
+          </a>
+        </sc-for>
+        <a href="#" style="display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 12px; color: #141414; border: 2px dashed #141414; padding: 28px; min-height: 380px;">
+          <span style="font-family: 'Anton'; font-weight: 400; font-size: 60px; line-height: 1; color: #e8451c;">+</span>
+          <span style="font-family: 'Anton'; font-weight: 400; font-size: 30px; line-height: 1; text-transform: uppercase;">Neue Runde<br>gründen</span>
+          <span style="font-size: 14px; color: #2b2925;">Name, Mitglieder, Regal — der Rest kommt mit der ersten Session.</span>
+        </a>
+      </div>
+      <div style="margin-top: auto; padding-top: 32px;"><dc-import name="Programmheft-Fuss" hint-size="100%,56px" style="width: 100%;"></dc-import></div>
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 28px; align-items: flex-start;">
+  <div data-screen-label="P3.2 Hub" style="display: flex; flex-direction: column; gap: 10px;">
+    <span style="font-weight: 600; font-size: 13px; color: #2b2925;">P3.2 · Hub — die Titelseite der Runde</span>
+    <div style="width: 1440px; min-height: 900px; position: relative; background: #fbfaf6; border: 1px solid #141414; display: flex; flex-direction: column;">
+      <span style="position: absolute; left: -16px; right: -16px; top: 900px; border-top: 2px dashed #b8330f; pointer-events: none;"></span>
+      <dc-import name="Programmheft-Kopf" crumb="Meine Runden → Donnerstagsrunde" active="start" hint-size="100%,100px" style="width: 100%;"></dc-import>
+      <div style="margin: 16px 40px 0; height: 10px; background: #1f4e8c;"></div>
+      <div style="margin: 8px 40px 0; border-bottom: 4px solid #141414; padding-bottom: 8px; display: flex; align-items: flex-end; justify-content: space-between; gap: 30px;">
+        <h2 style="margin: 0; font-family: 'Anton'; font-weight: 400; font-size: 118px; line-height: 1; text-transform: uppercase; letter-spacing: -.01em;">Donnerstagsrunde</h2>
+        <div style="text-align: right; font-weight: 600; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #6f6b66; line-height: 1.8; padding-bottom: 6px;">Ausgabe Nr. 24<br>Donnerstag, 19. September 2026<br>12 Spiele · 23 Sessions</div>
+      </div>
+      <div style="margin: 0 40px; display: flex; justify-content: space-between; align-items: center; gap: 20px; border-bottom: 1px solid #141414; min-height: 60px;">
+        <span style="display: flex; gap: 22px; align-items: center;"><span style="font-weight: 700; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #6f6b66;">Mitglieder</span><sc-for list="{{ members }}" as="m" hint-placeholder-count="4"><a href="#" style="display: inline-flex; align-items: center; gap: 8px; min-height: 44px; color: #141414;"><span style="width: 32px; height: 32px; background: {{ m.color }}; color: #fbfaf6; display: grid; place-items: center; font-weight: 700; font-size: 19px;">{{ m.ini }}</span><span style="font-weight: 700; font-size: 16px;">{{ m.name }}</span><span style="font-size: 14px; color: #6f6b66;">{{ m.wins }}</span></a></sc-for><a href="#" style="display: inline-flex; align-items: center; gap: 6px; min-height: 44px; font-weight: 700; font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: #b8330f;"><i class="ti ti-plus"></i>Platz dazu</a></span>
+        <a href="#" style="display: inline-flex; align-items: center; gap: 8px; min-height: 44px; font-weight: 700; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: #141414;"><i class="ti ti-settings" style="font-size: 16px;"></i>Einstellungen · Farbmarker · Tags · Einladen</a>
+      </div>
+      <div style="margin: 20px 40px 0; display: grid; grid-template-columns: 7fr 3.2fr 3.2fr; gap: 0 32px;">
+        <div style="display: grid; grid-template-columns: 1fr 1.1fr; gap: 24px; align-items: start; border-right: 1px solid #141414; padding-right: 32px;">
+          <span style="display: block; aspect-ratio: 4 / 5; background: linear-gradient(160deg, oklch(.6 .12 200), oklch(.32 .11 230));"></span>
+          <span style="display: flex; flex-direction: column; gap: 12px;">
+            <span style="font-weight: 700; font-size: 12px; letter-spacing: .16em; text-transform: uppercase; color: #b8330f;">Zuletzt gespielt · 14. September</span>
+            <span style="font-family: 'Anton'; font-weight: 400; font-size: 50px; line-height: 1.05; text-transform: uppercase;">„Nordlichter“ wurde gespielt. <span style="color: #e8451c;">Jonas</span> hat gewonnen!</span>
+            <span style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px; margin-top: 6px;"><sc-for list="{{ facts }}" as="f" hint-placeholder-count="4"><span style="display: flex; flex-direction: column; border-top: 2px solid #141414; padding-top: 6px;"><span style="font-weight: 700; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #6f6b66;">{{ f.k }}</span><span style="font-family: 'Anton'; font-weight: 400; font-size: 30px; line-height: 1.05;">{{ f.v }}</span></span></sc-for></span>
+            <span style="display: flex; gap: 20px;"><a href="#" style="display: inline-flex; align-items: center; min-height: 44px; font-weight: 700; font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: #b8330f;">Ergebnis ansehen →</a></span>
+          </span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 22px; border-right: 1px solid #141414; padding-right: 32px;">
+          <div style="background: #141414; color: #fbfaf6; padding: 20px 22px 22px; display: flex; flex-direction: column; gap: 12px;">
+            <span style="font-weight: 700; font-size: 12px; letter-spacing: .16em; text-transform: uppercase; color: #cfccc5;">Neue Session</span>
+            <a href="#" style="display: flex; align-items: flex-start; gap: 12px; color: #fbfaf6; font-family: 'Anton'; font-weight: 400; font-size: 40px; line-height: 1; text-transform: uppercase;"><i class="ti ti-tornado" style="font-size: 38px;"></i><span>Session<br>wirbeln →</span></a>
+            <span style="font-weight: 700; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #cfccc5; margin-top: 4px;">Schnellstart</span>
+            <span style="display: flex; flex-wrap: wrap; gap: 6px;"><sc-for list="{{ presets }}" as="p" hint-placeholder-count="3"><a href="#" style="min-height: 32px; display: inline-flex; align-items: center; padding: 0 10px; border: 1.5px solid #fbfaf6; color: #fbfaf6; font-weight: 700; font-size: 12px; letter-spacing: .08em; text-transform: uppercase;">{{ p }}</a></sc-for></span>
+          </div>
+          <div style="display: flex; flex-direction: column;">
+            <span style="font-weight: 700; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; border-bottom: 2px solid #141414; padding-bottom: 6px;">Wie wär’s mit</span>
+            <sc-for list="{{ suggestions }}" as="s" hint-placeholder-count="3"><a href="#" style="display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 8px; align-items: center; min-height: 52px; color: #141414; border-bottom: 1px dotted #b8b4ad;"><span style="font-family: 'Anton'; font-weight: 400; font-size: 26px; color: #e8451c;">{{ s.n }}</span><span style="display: flex; flex-direction: column;"><span style="font-weight: 700; font-size: 16px;">{{ s.title }}</span><span style="font-size: 13px; color: #6f6b66;">{{ s.why }}</span></span></a></sc-for>
+            <a href="#" style="display: inline-flex; align-items: center; min-height: 36px; font-weight: 700; font-size: 13px; color: #b8330f;">Alle Empfehlungen ansehen →</a>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 22px;">
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <span style="font-weight: 700; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; border-bottom: 2px solid #141414; padding-bottom: 6px;">Rundenpuls</span>
+            <div style="display: flex; gap: 4px; align-items: flex-end; height: 70px;"><sc-for list="{{ pulse }}" as="p" hint-placeholder-count="12"><span style="flex: 1; display: flex; flex-direction: column; justify-content: flex-end; height: 100%; gap: 3px;"><span style="background: #141414; height: {{ p.h }};"></span><span style="font-size: 11px; font-weight: 600; text-align: center; color: #6f6b66;">{{ p.m }}</span></span></sc-for></div>
+            <span style="display: flex; flex-direction: column; gap: 2px; font-size: 14px; color: #2b2925;"><span>23 Sessions in 12 Monaten</span><span>Vor 5 Tagen gespielt</span><span>2 von 12 Spielen waren noch nie dran</span></span>
+          </div>
+          <div style="display: flex; flex-direction: column;">
+            <span style="font-weight: 700; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; border-bottom: 2px solid #141414; padding-bottom: 6px;">Kümmerliste</span>
+            <sc-for list="{{ care }}" as="c" hint-placeholder-count="2"><a href="#" style="display: flex; justify-content: space-between; align-items: center; gap: 10px; min-height: 48px; color: #141414; border-bottom: 1px dotted #b8b4ad;"><span style="display: flex; flex-direction: column;"><span style="font-weight: 700; font-size: 15px;">{{ c.title }}</span><span style="font-size: 13px; color: #6f6b66;">{{ c.sub }}</span></span><i class="ti ti-chevron-right" style="font-size: 18px;"></i></a></sc-for>
+          </div>
+        </div>
+      </div>
+      <div style="margin: 28px 40px 0; border-top: 4px solid #141414; display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 0;">
+        <a href="#" style="display: flex; flex-direction: column; gap: 10px; padding: 14px 24px 18px 0; color: #141414; border-right: 1px solid #141414;">
+          <span style="display: flex; justify-content: space-between;"><span style="font-weight: 700; font-size: 13px; letter-spacing: .14em; text-transform: uppercase;">Regal · 12 Spiele</span><span style="font-weight: 700; font-size: 13px; color: #b8330f;">Regal öffnen →</span></span>
+          <span style="display: flex; gap: 8px; align-items: flex-end; height: 96px;"><sc-for list="{{ shelfPeek }}" as="c" hint-placeholder-count="6"><span style="flex: 1; aspect-ratio: {{ c.ar }}; background: {{ c.bg }}; border: {{ c.edge }}; box-sizing: border-box;"></span></sc-for></span>
+        </a>
+        <a href="#" style="display: flex; flex-direction: column; gap: 6px; padding: 14px 24px 18px; color: #141414; border-right: 1px solid #141414;">
+          <span style="display: flex; justify-content: space-between;"><span style="font-weight: 700; font-size: 13px; letter-spacing: .14em; text-transform: uppercase;">Pokale</span><span style="font-weight: 700; font-size: 13px; color: #b8330f;">öffnen →</span></span>
+          <span style="font-size: 14px; color: #2b2925;">Jonas führt</span>
+          <sc-for list="{{ standings }}" as="s" hint-placeholder-count="4"><span style="display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px dotted #b8b4ad;"><span style="font-weight: 700; font-size: 15px;">{{ s.name }}</span><span style="font-family: 'Anton'; font-weight: 400; font-size: 24px;">{{ s.wins }}</span></span></sc-for>
+        </a>
+        <a href="#" style="display: flex; flex-direction: column; gap: 6px; padding: 14px 24px 18px; color: #141414; border-right: 1px solid #141414;">
+          <span style="display: flex; justify-content: space-between;"><span style="font-weight: 700; font-size: 13px; letter-spacing: .14em; text-transform: uppercase;">Chronik</span><span style="font-weight: 700; font-size: 13px; color: #b8330f;">öffnen →</span></span>
+          <span style="font-family: 'Anton'; font-weight: 400; font-size: 48px; line-height: 1;">23</span>
+          <span style="font-size: 14px; color: #2b2925;">23 Sessions seit Oktober 2025</span>
+          <span style="font-size: 14px; color: #2b2925;">Zuletzt am 14. September</span>
+        </a>
+        <div style="display: flex; flex-direction: column; padding: 14px 0 18px 24px;">
+          <span style="font-weight: 700; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; padding-bottom: 4px;">Nicht im Regal</span>
+          <sc-for list="{{ offShelf }}" as="o" hint-placeholder-count="4"><a href="#" style="display: flex; justify-content: space-between; align-items: center; min-height: 36px; color: {{ o.ink }}; border-bottom: 1px dotted #b8b4ad; font-weight: 700; font-size: 15px;"><span>{{ o.label }}</span><span style="color: #141414;">{{ o.n }}</span></a></sc-for>
+        </div>
+      </div>
+      <div style="margin-top: auto; padding-top: 28px;"><dc-import name="Programmheft-Fuss" hint-size="100%,56px" style="width: 100%;"></dc-import></div>
+    </div>
+  </div>
+
+  <div data-screen-label="P3.2 Prüfliste" style="width: 380px; margin-top: 26px; background: #fbfaf6; border: 2px solid #141414; padding: 18px 20px; display: flex; flex-direction: column; gap: 4px;">
+    <span style="font-family: 'Anton'; font-weight: 400; font-size: 26px; text-transform: uppercase;">IA-Prüfliste · Hub</span>
+    <span style="font-size: 13px; color: #2b2925; padding-bottom: 6px;">Block für Block abgehakt (Ocean-Lehre 2) — kein Block ist in einem Nachbarn aufgegangen.</span>
+    <sc-for list="{{ checklist }}" as="c" hint-placeholder-count="12"><span style="display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: 8px; padding: 6px 0; border-bottom: 1px dotted #b8b4ad; font-size: 14px; line-height: 1.4;"><i class="ti ti-check" style="font-size: 16px; color: #2d6a3e; margin-top: 2px;"></i><span><strong>{{ c.k }}</strong> — {{ c.v }}</span></span></sc-for>
+  </div>
+  </div>
+
+  <div data-screen-label="P3.3 Regal" style="display: flex; flex-direction: column; gap: 10px;">
+    <span style="font-weight: 600; font-size: 13px; color: #2b2925;">P3.3 · Regal — die Katalogseite</span>
+    <div style="width: 1440px; min-height: 900px; position: relative; background: #fbfaf6; border: 1px solid #141414; display: flex; flex-direction: column;">
+      <span style="position: absolute; left: -16px; right: -16px; top: 900px; border-top: 2px dashed #b8330f; pointer-events: none;"></span>
+      <dc-import name="Programmheft-Kopf" crumb="Meine Runden → Donnerstagsrunde" active="regal" hint-size="100%,100px" style="width: 100%;"></dc-import>
+      <div style="margin: 18px 40px 0; border-bottom: 4px solid #141414; padding-bottom: 8px; display: flex; align-items: flex-end; justify-content: space-between; gap: 30px;">
+        <h2 style="margin: 0; font-family: 'Anton'; font-weight: 400; font-size: 96px; line-height: 1; text-transform: uppercase;">Regal <span style="font-size: 40px; color: #6f6b66;">12 Spiele</span></h2>
+        <span style="display: flex; gap: 8px; margin-bottom: 8px;"><sc-for list="{{ regalTools }}" as="t" hint-placeholder-count="3"><a href="#" style="display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 14px; border: 2px solid #141414; color: #141414; font-weight: 700; font-size: 13px; letter-spacing: .1em; text-transform: uppercase;"><i class="ti {{ t.icon }}" style="font-size: 16px;"></i>{{ t.label }}</a></sc-for><a href="#" style="display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 16px; background: #141414; color: #fbfaf6; font-weight: 700; font-size: 13px; letter-spacing: .1em; text-transform: uppercase;"><i class="ti ti-plus" style="font-size: 16px;"></i>Spiel hinzufügen</a></span>
+      </div>
+      <div style="margin: 0 40px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #141414; padding: 12px 0;">
+        <label style="display: flex; align-items: center; gap: 10px; height: 44px; box-sizing: border-box; border: 1.5px solid #141414; background: #ffffff; padding: 0 12px; width: 360px;"><i class="ti ti-search" style="font-size: 18px;"></i><input placeholder="Spiele suchen" style="flex: 1; border: none; background: none; font: 400 16px 'Archivo'; color: #141414; outline: none;"></label>
+        <a href="#" style="display: inline-flex; align-items: center; gap: 10px; height: 44px; box-sizing: border-box; border: 1.5px solid #141414; background: #ffffff; padding: 0 12px; font-weight: 700; font-size: 14px; color: #141414; white-space: nowrap;">Sortiert: Bewertung<i class="ti ti-chevron-down"></i></a>
+        <a href="#" style="display: inline-flex; align-items: center; gap: 6px; height: 44px; box-sizing: border-box; border: 1.5px solid #141414; padding: 0 12px; font-weight: 700; font-size: 14px; color: #141414; white-space: nowrap;"><i class="ti ti-filter"></i>Filter</a>
+        <span style="margin-left: auto; font-size: 14px; color: #2b2925;">Sortiert nach Spielwirbel-Score · ohne Wertung am Ende</span>
+      </div>
+      <div style="margin: 24px 40px 0; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 32px 24px;">
+        <sc-for list="{{ catalog }}" as="g" hint-placeholder-count="12">
+          <a href="#" style="display: flex; flex-direction: column; gap: 8px; color: #141414;">
+            <span style="display: flex; justify-content: space-between; font-weight: 600; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #6f6b66;"><span>Nr. {{ g.n }}</span><span>{{ g.meta }}</span></span>
+            <span style="height: 190px; display: flex; align-items: flex-end;"><span style="display: block; width: 100%; aspect-ratio: {{ g.ar }}; max-height: 190px; background: {{ g.cover }}; border: {{ g.edge }}; box-sizing: border-box;"></span></span>
+            <span style="display: flex; justify-content: space-between; align-items: flex-end; gap: 8px; border-bottom: 1px solid #141414; padding-bottom: 6px;"><span style="display: flex; flex-direction: column; gap: 2px;"><span style="font-weight: 700; font-size: 15px; line-height: 1.2;">{{ g.title }}</span><span style="font-size: 13px; color: #6f6b66;">{{ g.owner }}</span></span><span style="font-family: 'Anton'; font-weight: 400; font-size: 34px; line-height: 1; color: {{ g.sc }};">{{ g.score }}</span></span>
+          </a>
+        </sc-for>
+      </div>
+      <div style="margin: 28px 40px 0; display: flex; align-items: center; gap: 20px; border-top: 2px solid #141414; padding: 8px 0;">
+        <span style="font-weight: 700; font-size: 13px; letter-spacing: .14em; text-transform: uppercase;">Nicht im Regal</span>
+        <sc-for list="{{ offShelf }}" as="o" hint-placeholder-count="4"><a href="#" style="display: inline-flex; align-items: center; gap: 6px; min-height: 44px; font-weight: 700; font-size: 14px; color: {{ o.ink }};">{{ o.label }} <span style="color: #6f6b66;">{{ o.n }}</span></a></sc-for>
+      </div>
+      <div style="margin-top: auto; padding-top: 20px;"><dc-import name="Programmheft-Fuss" hint-size="100%,56px" style="width: 100%;"></dc-import></div>
+    </div>
+  </div>
+
+  <div data-screen-label="P3.4 Spieldetail" style="display: flex; flex-direction: column; gap: 10px;">
+    <span style="font-weight: 600; font-size: 13px; color: #2b2925;">P3.4 · Spieldetail — der Spielepass</span>
+    <div style="width: 1440px; min-height: 900px; position: relative; background: #fbfaf6; border: 1px solid #141414; display: flex; flex-direction: column;">
+      <span style="position: absolute; left: -16px; right: -16px; top: 900px; border-top: 2px dashed #b8330f; pointer-events: none;"></span>
+      <dc-import name="Programmheft-Kopf" crumb="Donnerstagsrunde → Regal → Nordlichter" active="regal" hint-size="100%,100px" style="width: 100%;"></dc-import>
+      <div style="margin: 12px 40px 0;"><a href="#" style="display: inline-flex; align-items: center; gap: 6px; min-height: 44px; font-weight: 700; font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: #141414;"><i class="ti ti-arrow-left" style="font-size: 16px;"></i>Regal</a></div>
+      <div style="margin: 4px 40px 0; display: grid; grid-template-columns: 420px minmax(0, 1fr) 360px; gap: 0 40px;">
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <span style="display: block; aspect-ratio: 3 / 4; background: linear-gradient(160deg, oklch(.6 .12 200), oklch(.32 .11 230));"></span>
+          <span style="display: flex; gap: 8px;"><a href="#" style="display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 12px; border: 1.5px solid #141414; color: #141414; font-weight: 700; font-size: 13px;"><i class="ti ti-photo"></i>Bild ändern</a><a href="#" style="display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 12px; border: 1.5px solid #141414; color: #141414; font-weight: 700; font-size: 13px;"><i class="ti ti-external-link"></i>Auf BGG ansehen</a></span>
+          <img src="../../../public/icons/powered-by-bgg.png" alt="Powered by BGG" style="height: 26px; width: auto; align-self: flex-start;">
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 14px; border-left: 1px solid #141414; padding-left: 40px;">
+          <span style="font-weight: 600; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #6f6b66;">Nr. 1 · im Regal seit März 2025</span>
+          <h2 style="margin: 0; font-family: 'Anton'; font-weight: 400; font-size: 96px; line-height: 1; text-transform: uppercase;">Nordlichter</h2>
+          <span style="display: flex; flex-wrap: wrap; gap: 8px;"><sc-for list="{{ detailTags }}" as="t" hint-placeholder-count="3"><span style="min-height: 28px; display: inline-flex; align-items: center; gap: 6px; padding: 0 10px; border: 1px solid #141414; background: #ffffff; font-weight: 600; font-size: 13px;"><i class="ti {{ t.icon }}"></i>{{ t.label }}</span></sc-for></span>
+          <span style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px;"><sc-for list="{{ passFacts }}" as="f" hint-placeholder-count="4"><span style="display: flex; flex-direction: column; border-top: 2px solid #141414; padding-top: 6px;"><span style="font-weight: 700; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #6f6b66;">{{ f.k }}</span><span style="font-family: 'Anton'; font-weight: 400; font-size: 34px; line-height: 1.05;">{{ f.v }}</span></span></sc-for></span>
+          <span style="display: flex; flex-direction: column; gap: 6px; margin-top: 8px;">
+            <span style="font-weight: 700; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; border-bottom: 2px solid #141414; padding-bottom: 6px;">Wer wie gewertet hat</span>
+            <sc-for list="{{ raters }}" as="r" hint-placeholder-count="4"><span style="display: grid; grid-template-columns: 14px 90px repeat(5, 34px) minmax(0, 1fr); gap: 6px; align-items: center; min-height: 40px; border-bottom: 1px dotted #b8b4ad;"><span style="width: 12px; height: 12px; background: {{ r.color }};"></span><span style="font-weight: 700; font-size: 15px;">{{ r.name }}</span><sc-for list="{{ r.cells }}" as="c" hint-placeholder-count="5"><span style="width: 34px; height: 28px; box-sizing: border-box; display: grid; place-items: center; font-weight: 700; font-size: 14px; background: {{ c.bg }}; color: {{ c.ink }}; border: 1px solid {{ c.edge }};">{{ c.count }}</span></sc-for><span style="font-size: 13px; color: #6f6b66; text-align: right;">{{ r.avg }}</span></span></sc-for>
+          </span>
+          <span style="display: flex; flex-direction: column; gap: 4px; margin-top: 8px;">
+            <span style="font-weight: 700; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; border-bottom: 2px solid #141414; padding-bottom: 6px;">Verwandte Sessions</span>
+            <sc-for list="{{ related }}" as="r" hint-placeholder-count="4"><a href="#" style="display: grid; grid-template-columns: 130px minmax(0, 1fr) auto; gap: 12px; align-items: center; min-height: 40px; border-bottom: 1px dotted #b8b4ad; color: #141414; font-size: 15px;"><span style="font-weight: 600; color: #2b2925;">{{ r.date }}</span><span style="font-weight: 700;">{{ r.what }}</span><span style="font-size: 13px; color: #6f6b66;">{{ r.state }}</span></a></sc-for>
+          </span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <div style="border: 2px solid #141414; padding: 16px 18px; display: flex; flex-direction: column; gap: 6px; background: #ffffff;">
+            <span style="font-weight: 700; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #6f6b66;">Spielwirbel-Score</span>
+            <span style="font-family: 'Anton'; font-weight: 400; font-size: 96px; line-height: 1;">4,8</span>
+            <span style="font-size: 14px; line-height: 1.45; color: #2b2925;">Aus 16 Wertungen in 4 Sessions. Die Veto-Kurve zählt ein „gar nicht“ stärker als den Durchschnitt.</span>
+          </div>
+          <div style="display: flex; flex-direction: column;">
+            <span style="font-weight: 700; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; border-bottom: 2px solid #141414; padding-bottom: 6px;">Aktionen</span>
+            <sc-for list="{{ detailActions }}" as="a" hint-placeholder-count="5"><a href="#" style="display: flex; align-items: center; gap: 10px; min-height: 44px; border-bottom: 1px dotted #b8b4ad; color: {{ a.ink }}; font-weight: 700; font-size: 15px;"><i class="ti {{ a.icon }}" style="font-size: 18px;"></i>{{ a.label }}</a></sc-for>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <span style="font-weight: 700; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; border-bottom: 2px solid #141414; padding-bottom: 6px;">Erweiterungen</span>
+            <span style="font-size: 14px; color: #2b2925;">1 im Regal · Polarnacht</span>
+            <a href="#" style="align-self: flex-start; display: inline-flex; align-items: center; min-height: 32px; padding: 0 10px; border: 1.5px dashed #141414; color: #141414; font-weight: 700; font-size: 13px;">+ Erweiterung</a>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top: auto; padding-top: 28px;"><dc-import name="Programmheft-Fuss" hint-size="100%,56px" style="width: 100%;"></dc-import></div>
+    </div>
+  </div>
+
+  <div data-screen-label="P3.5 Spiel hinzufügen" style="display: flex; flex-direction: column; gap: 10px;">
+    <span style="font-weight: 600; font-size: 13px; color: #2b2925;">P3.5 · Spiel hinzufügen — Suche bei BGG</span>
+    <div style="width: 1440px; min-height: 900px; position: relative; background: #fbfaf6; border: 1px solid #141414; display: flex; flex-direction: column;">
+      <dc-import name="Programmheft-Kopf" crumb="Donnerstagsrunde → Regal → Spiel hinzufügen" active="regal" hint-size="100%,100px" style="width: 100%;"></dc-import>
+      <div style="margin: 18px 40px 0; border-bottom: 4px solid #141414; padding-bottom: 8px; display: flex; align-items: flex-end; justify-content: space-between;">
+        <h2 style="margin: 0; font-family: 'Anton'; font-weight: 400; font-size: 84px; line-height: 1; text-transform: uppercase;">Spiel hinzufügen</h2>
+        <a href="#" style="display: inline-flex; align-items: center; gap: 6px; min-height: 44px; margin-bottom: 8px; font-weight: 700; font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: #141414;"><i class="ti ti-arrow-left"></i>Regal</a>
+      </div>
+      <div style="margin: 24px 40px 0; display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 48px;">
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <label style="display: flex; align-items: center; gap: 12px; height: 56px; box-sizing: border-box; border: 2px solid #141414; outline: 3px solid #141414; outline-offset: 3px; background: #ffffff; padding: 0 16px;"><i class="ti ti-search" style="font-size: 22px;"></i><input value="Kaskad" style="flex: 1; border: none; background: none; font: 400 20px 'Archivo'; color: #141414; outline: none;"></label>
+          <span style="font-weight: 700; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #6f6b66; padding-top: 8px;">Suchvorschläge · von BoardGameGeek</span>
+          <sc-for list="{{ lookup }}" as="r" hint-placeholder-count="5"><div style="display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; gap: 16px; align-items: center; min-height: 72px; border-bottom: 1px solid #141414;"><span style="width: 56px; height: 56px; background: {{ r.cover }}; border: {{ r.edge }}; box-sizing: border-box;"></span><span style="display: flex; flex-direction: column; gap: 2px;"><span style="font-weight: 700; font-size: 18px;">{{ r.title }}</span><span style="font-size: 14px; color: #6f6b66;">{{ r.meta }}</span></span><a href="#" style="display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 16px; border: 2px solid #141414; color: #141414; font-weight: 700; font-size: 13px; letter-spacing: .1em; text-transform: uppercase;"><i class="ti ti-plus"></i>Übernehmen</a></div></sc-for>
+          <span style="font-size: 14px; color: #2b2925; padding-top: 6px;">Nichts dabei? <a href="#" style="display: inline-flex; align-items: center; min-height: 24px; font-weight: 700; text-decoration: underline;">Ohne BGG eintragen</a></span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <div style="background: #141414; color: #fbfaf6; padding: 20px 22px; display: flex; flex-direction: column; gap: 12px;">
+            <span style="font-family: 'Anton'; font-weight: 400; font-size: 30px; line-height: 1; text-transform: uppercase;">Von BGG übernehmen</span>
+            <span style="font-size: 14px; line-height: 1.5; color: #cfccc5;">Das ganze Regal in einem Schritt: BGG-Benutzername eingeben, die Sammlung wird gelesen, ihr wählt aus.</span>
+            <input placeholder="BGG-Benutzername" style="height: 44px; box-sizing: border-box; border: 1.5px solid #fbfaf6; background: #ffffff; padding: 0 12px; font: 400 16px 'Archivo'; color: #141414;">
+            <a href="#" style="display: inline-flex; align-items: center; justify-content: center; min-height: 48px; background: #e8451c; color: #141414; font-weight: 700; font-size: 14px; letter-spacing: .1em; text-transform: uppercase;">Sammlung lesen</a>
+          </div>
+          <img src="../../../public/icons/powered-by-bgg.png" alt="Powered by BGG" style="height: 30px; width: auto; align-self: flex-start;">
+          <span style="font-size: 13px; line-height: 1.5; color: #2b2925;">Titel, Personenzahl, Dauer und Titelbild kommen von BoardGameGeek; das Badge steht überall, wo diese Daten erscheinen.</span>
+        </div>
+      </div>
+      <div style="margin-top: auto; padding-top: 28px;"><dc-import name="Programmheft-Fuss" hint-size="100%,56px" style="width: 100%;"></dc-import></div>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const P = '#fbfaf6', I = '#141414';
+    const MC = ['#c6522c', '#198663', '#726bc7', '#a66815', '#c34d74', '#2f6f9e', '#54821d', '#993556'];
+    const cov = (h) => `linear-gradient(160deg, oklch(.6 .13 ${h}), oklch(.34 .12 ${h + 30}))`;
+    const noCov = 'linear-gradient(to top right, transparent calc(50% - 1px), #6f6b66 calc(50% - 1px), #6f6b66 calc(50% + 1px), transparent calc(50% + 1px)), linear-gradient(to bottom right, transparent calc(50% - 1px), #6f6b66 calc(50% - 1px), #6f6b66 calc(50% + 1px), transparent calc(50% + 1px)), #ffffff';
+    const ppl = (arr, off) => arr.map((n, i) => ({ n, c: MC[(i + off) % 8] }));
+    const lobby = [
+      { marker: '#1f4e8c', kicker: 'Deine Runde', issue: 'Nr. 24', name: 'Donnerstagsrunde', people: ppl(['Marco', 'Jonas', 'Lea', 'Tim'], 0), cover: cov(200), coverEdge: 'none', last: '„Nordlichter“ · Jonas hat gewonnen · 14. September', games: '12 Spiele', sessions: '23 Sessions' },
+      { marker: '#2e6b3f', kicker: 'Geteilt', issue: 'Nr. 59', name: 'Familie Berger', people: ppl(['Oma Hilde', 'Paul', 'Mia', 'Nils', 'Sarah', 'Kai'], 3), cover: cov(120), coverEdge: 'none', last: '„Salzwiesen“ · Oma Hilde hat gewonnen · 7. September', games: '31 Spiele', sessions: '58 Sessions' },
+      { marker: '#e8451c', kicker: 'Deine Runde', issue: 'Nr. 5', name: 'WG Kastanienallee', people: ppl(['Aylin', 'Ben', 'Chris'], 5), cover: noCov, coverEdge: '1.5px solid #141414', last: '„Hafenmeister“ · Aylin hat gewonnen · 29. August', games: '9 Spiele', sessions: '4 Sessions' },
+    ];
+    const names = ['Marco', 'Jonas', 'Lea', 'Tim'];
+    const wins = [5, 9, 7, 2];
+    const members = names.map((name, i) => ({ name, ini: name[0], color: MC[i], wins: wins[i] + ' Siege' }));
+    const facts = [{ k: 'Score', v: '4,8' }, { k: 'Im Topf', v: '3 Spiele' }, { k: 'Sieger', v: 'Jonas · 9.' }, { k: 'Serie', v: '2 in Folge' }];
+    const presets = ['Unter 60 Min', 'Leichte Kost', 'Familientauglich'];
+    const suggestions = [
+      { n: '1', title: 'Salzwiesen', why: 'Seit 3 Monaten nicht gespielt' },
+      { n: '2', title: 'Moorgeister', why: 'Kam gut an und war lange nicht dran' },
+      { n: '3', title: 'Hafenmeister', why: 'Steht im Regal, war aber noch nie dran' },
+    ];
+    const months = ['O', 'N', 'D', 'J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S'];
+    const pulse = [1, 3, 2, 2, 1, 0, 2, 3, 2, 4, 1, 2].map((c, i) => ({ m: months[i], h: Math.max(3, Math.round(c / 4 * 100)) + '%' }));
+    const care = [{ title: '2 Spiele ohne Bild', sub: 'Hafenmeister · Kupferzeit' }, { title: '1 Session ohne eingetragenes Ergebnis', sub: 'Salzwiesen · 24. August' }];
+    const shelfPeek = [[200, '3 / 4'], [60, '4 / 3'], [150, '1'], [280, '3 / 4'], [null, '1'], [120, '4 / 5']].map(([h, ar]) => ({ ar, bg: h === null ? noCov : cov(h), edge: h === null ? '1.5px solid #141414' : 'none' }));
+    const standings = [{ name: 'Jonas', wins: '9' }, { name: 'Lea', wins: '7' }, { name: 'Marco', wins: '5' }, { name: 'Tim', wins: '2' }];
+    const offShelf = [{ label: 'Aussortiert', n: '2', ink: I }, { label: 'Durchgespielt', n: '1', ink: I }, { label: 'Wunschliste', n: '4', ink: I }, { label: 'Könnte euch gefallen →', n: '', ink: '#b8330f' }];
+    const checklist = [
+      { k: 'Mitglieder', v: 'Name, Siege, „Platz dazu“ in der Zeile unter dem Titel' },
+      { k: 'Session wirbeln', v: 'der schwarze Kasten, Wirbel-Glyphe, drei Schnellstart-Chips' },
+      { k: 'Zuletzt gespielt', v: 'Aufmacher: Spiel, Sieger, Score, Datum' },
+      { k: 'Wie wär’s mit', v: '3 Vorschläge mit Grund, plus „Alle Empfehlungen ansehen“' },
+      { k: 'Rundenpuls', v: 'eigene Spalte, 12 Balken, drei Zeilen aus hub.pulse.*' },
+      { k: 'Kümmerliste', v: 'eigene Spalte, Einträge aus hub.care.*' },
+      { k: 'Vorschau Regal', v: 'sechs Cover + Anzahl, öffnet P3.3' },
+      { k: 'Vorschau Pokale', v: 'wer führt + Stand, öffnet P13.3' },
+      { k: 'Vorschau Chronik', v: 'Anzahl + letztes Datum, öffnet P13.1' },
+      { k: 'Nicht im Regal', v: 'Aussortiert · Durchgespielt · Wunschliste · Könnte euch gefallen' },
+      { k: 'Einstellungen', v: 'Ressortzeile und die Zeile unter dem Titel' },
+      { k: 'Kopf', v: 'Sprache (9) · Postfach · Konto' },
+      { k: 'Fuß', v: 'Rechtslinks, „Kein Tracking · EU-Hosting“, BGG-Badge' },
+    ];
+    const regalTools = [{ icon: 'ti-checkbox', label: 'Auswählen' }, { icon: 'ti-download', label: 'Von BGG übernehmen' }, { icon: 'ti-archive', label: 'Nicht im Regal' }];
+    const ramp5 = ['#e8451c', '#b23d1c', '#7a4a3a', '#4a3f3a', '#141414'];
+    const fmt = (v) => v.toFixed(1).replace('.', ',');
+    const G = [
+      ['Nordlichter', 4.8, 200, '2–5 · 90', 'Marco', '3 / 4'], ['Moorgeister', 4.4, 160, '3–6 · 40', 'Lea', '4 / 3'], ['Kartographen des Nordens', 4.2, 150, '2–4 · 45', 'Lea', '1'], ['Sternenhafen', 4.1, 280, '1–4 · 60', 'Jonas', '3 / 4'],
+      ['Glutkessel', 4.0, 30, '2–4 · 30', 'Tim', '4 / 3'], ['Salzwiesen', 3.9, 120, '2–5 · 75', 'Marco', '4 / 5'], ['Der letzte Leuchtturm', 3.6, 250, '1–2 · 20', 'Jonas', '1'], ['Rost & Regen', 3.3, 220, '2–6 · 120', 'Tim', '3 / 4'],
+      ['Zinnober', 3.1, 20, '3–5 · 50', 'Lea', '16 / 9'], ['Wolkenpfad', 2.7, 300, '2–4 · 35', 'Marco', '3 / 4'], ['Hafenmeister', null, null, '2–4 · 60', 'Jonas', '1'], ['Kupferzeit', null, null, '1–4 · 90', 'Tim', '1'],
+    ];
+    const catalog = G.map(([title, score, h, meta, owner, ar], i) => ({
+      n: String(i + 1), title, meta: meta + ' Min', owner: 'Gehört ' + owner, ar, cover: h === null ? noCov : cov(h), edge: h === null ? '1.5px solid #141414' : 'none',
+      score: score === null ? 'neu' : fmt(score), sc: score === null ? '#6f6b66' : ramp5[Math.round(score) - 1],
+    }));
+    const detailTags = [{ icon: 'ti-puzzle', label: 'Koop' }, { icon: 'ti-chess', label: 'Strategie' }, { icon: 'ti-users', label: 'Familientauglich' }];
+    const passFacts = [{ k: 'Spieler', v: '2–5' }, { k: 'Dauer', v: '90 Min' }, { k: 'Gespielt', v: '4×' }, { k: 'Gehört', v: 'Marco' }];
+    const rampInk = [I, P, P, P, P];
+    const raters = [['Marco', [0, 0, 0, 1, 3]], ['Jonas', [0, 0, 0, 0, 4]], ['Lea', [0, 0, 1, 1, 2]], ['Tim', [0, 0, 0, 2, 2]]].map(([name, d], i) => ({
+      name, color: MC[i], avg: 'Ø ' + fmt(d.reduce((a, c, j) => a + c * (j + 1), 0) / d.reduce((a, c) => a + c, 0)),
+      cells: d.map((c, j) => ({ count: c || '·', bg: c ? ramp5[j] : P, ink: c ? rampInk[j] : '#6f6b66', edge: c ? ramp5[j] : '#b8b4ad' })),
+    }));
+    const related = [
+      { date: '14. September', what: 'Jonas hat gewonnen', state: 'gespielt' },
+      { date: '31. Juli', what: 'Lea hat gewonnen', state: 'gespielt' },
+      { date: '3. Juli', what: '„Kartographen des Nordens“ wurde gespielt', state: 'nicht gewählt' },
+      { date: '12. Mai', what: 'Marco hat gewonnen', state: 'gespielt' },
+    ];
+    const detailActions = [
+      { icon: 'ti-pencil', label: 'Personenzahl festlegen', ink: I }, { icon: 'ti-tags', label: 'Tags', ink: I }, { icon: 'ti-user', label: 'Besitzer eintragen', ink: I },
+      { icon: 'ti-archive', label: 'Aussortieren', ink: I }, { icon: 'ti-circle-check', label: 'Durchgespielt', ink: I }, { icon: 'ti-dots', label: 'Weitere Aktionen', ink: I },
+    ];
+    const lookup = [
+      ['Kaskadia', '2021 · 1–4 Spieler · 30–45 Min', 150], ['Kaskadia: Landmarks', '2023 · Erweiterung', 170], ['Kaskade', '2019 · 2–5 Spieler · 20 Min', 40], ['Kaskadenwald', '2024 · 1–4 Spieler · 60 Min', null], ['Die Kaskaden von Aris', '2017 · 2–4 Spieler · 90 Min', 260],
+    ].map(([title, meta, h]) => ({ title, meta, cover: h === null ? noCov : cov(h), edge: h === null ? '1.5px solid #141414' : 'none' }));
+    return { lobby, members, facts, presets, suggestions, pulse, care, shelfPeek, standings, offShelf, checklist, regalTools, catalog, detailTags, passFacts, raters, related, detailActions, lookup };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="design_doc_mode" content="canvas">
+  <link rel="stylesheet" href="../../../public/fonts/tabler-icons.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #d9d5cc; font-family: 'Archivo', sans-serif; }
+    a { color: #b8330f; text-decoration: none; }
+    a:hover { color: #141414; text-decoration: underline; }
+  </style>
+</helmet>
+<div style="display: flex; flex-direction: column; gap: 48px; padding: 48px; width: max-content; color: #141414; background: #d9d5cc; font-family: 'Archivo', sans-serif;">
+
+  <div data-screen-label="P14 Kopf" style="max-width: 1240px; display: flex; flex-direction: column; gap: 12px; background: #fbfaf6; border: 2px solid #141414; padding: 24px 28px;">
+    <div style="display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;">
+      <span style="font-weight: 700; font-size: 13px; letter-spacing: .14em; background: #141414; color: #fbfaf6; padding: 5px 12px;">P14</span>
+      <h1 style="margin: 0; font-family: 'Anton'; font-weight: 400; font-size: 40px; line-height: 1; text-transform: uppercase;">Stufe 2 · Konto, Freunde, Einstellungen</h1>
+      <span style="font-size: 14px; color: #2b2925;">Brief 14 von 14 · Marker aus <a href="Programmheft-P8-Farben.dc.html" style="display: inline-flex; align-items: center; justify-content: center; min-height: 24px; min-width: 24px; padding: 0 4px; text-decoration: underline;">P8</a></span>
+    </div>
+    <p style="margin: 0; font-size: 15px; line-height: 1.55; max-width: 96ch; color: #2b2925;">Profil („Spielerkarte“), Freunde und Feed, Postfach, „Was ist neu“, Statistik und die <strong>Rundeneinstellungen mit dem Markerwähler</strong>. Konto-Seiten tragen keine Ressortzeile (sie gehören keiner Runde); die Rundeneinstellungen tragen sie, mit „Einstellungen“ aktiv.</p>
+  </div>
+
+  <div data-screen-label="P14.6 Rundeneinstellungen" style="display: flex; flex-direction: column; gap: 10px;">
+    <span style="font-weight: 600; font-size: 13px; color: #2b2925;">P14.6 · Rundeneinstellungen mit Markerwähler</span>
+    <div style="width: 1440px; min-height: 900px; background: #fbfaf6; border: 1px solid #141414; display: flex; flex-direction: column;">
+      <dc-import name="Programmheft-Kopf" crumb="Meine Runden → Donnerstagsrunde" active="einstellungen" hint-size="100%,100px" style="width: 100%;"></dc-import>
+      <div style="margin: 16px 40px 0; height: 10px; background: #1f4e8c;"></div>
+      <div style="margin: 8px 40px 0; border-bottom: 4px solid #141414; padding-bottom: 8px;"><h2 style="margin: 0; font-family: 'Anton'; font-weight: 400; font-size: 96px; line-height: 1; text-transform: uppercase;">Einstellungen</h2></div>
+      <div style="margin: 24px 40px 0; display: grid; grid-template-columns: 1fr 1fr; gap: 0 48px;">
+        <div style="display: flex; flex-direction: column; gap: 22px; border-right: 1px solid #141414; padding-right: 48px;">
+          <label style="display: flex; flex-direction: column; gap: 6px;"><span style="font-weight: 700; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; border-bottom: 2px solid #141414; padding-bottom: 6px;">Name</span><input value="Donnerstagsrunde" style="height: 48px; box-sizing: border-box; border: 1.5px solid #141414; background: #ffffff; padding: 0 12px; font: 400 18px 'Archivo';"></label>
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <span style="font-weight: 700; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; border-bottom: 2px solid #141414; padding-bottom: 6px;">Farbmarker</span>
+            <div role="radiogroup" aria-label="Farbmarker" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px;"><sc-for list="{{ markers }}" as="m" hint-placeholder-count="8"><a href="#" role="radio" aria-checked="{{ m.checked }}" style="display: flex; flex-direction: column; gap: 6px; color: #141414; padding: 6px; outline: {{ m.ring }}; outline-offset: 0;"><span style="height: 56px; background: {{ m.hex }}; display: grid; place-items: center; color: {{ m.txt }};"><i class="ti {{ m.icon }}" style="font-size: 26px;"></i></span><span style="font-weight: 700; font-size: 14px;">{{ m.name }}</span></a></sc-for></div>
+            <span style="font-size: 14px; line-height: 1.5; color: #2b2925;">Gewählt = 3-px-Tintenrahmen und Häkchen (in Papier oder Tinte, je nach Messung in P8.2). Alle in der Runde sehen den Marker — jede Person in ihrem eigenen Design.</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 10px;"><span style="font-weight: 700; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; border-bottom: 2px solid #141414; padding-bottom: 6px;">Tags</span><span style="display: flex; flex-wrap: wrap; gap: 8px;"><sc-for list="{{ tags }}" as="t" hint-placeholder-count="4"><span style="min-height: 32px; display: inline-flex; align-items: center; gap: 6px; padding: 0 10px; border: 1px solid #141414; background: #ffffff; font-weight: 600; font-size: 14px;"><i class="ti {{ t.icon }}"></i>{{ t.label }}<a href="#" aria-label="Tag entfernen" style="display: grid; place-items: center; min-width: 24px; min-height: 24px; color: #141414;"><i class="ti ti-x" style="font-size: 14px;"></i></a></span></sc-for><a href="#" style="min-height: 32px; display: inline-flex; align-items: center; gap: 6px; padding: 0 12px; border: 1.5px dashed #141414; color: #141414; font-weight: 700; font-size: 13px;"><i class="ti ti-plus"></i>Tag</a></span></div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 22px;">
+          <div style="display: flex; flex-direction: column; gap: 10px;"><span style="font-weight: 700; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; border-bottom: 2px solid #141414; padding-bottom: 6px;">Einladen</span><span style="display: flex; gap: 8px;"><input value="spielwirbel.app/r/k7m2-donnerstag" readonly style="flex: 1; height: 48px; box-sizing: border-box; border: 1.5px solid #141414; background: #ffffff; padding: 0 12px; font: 400 16px 'Archivo';"><a href="#" style="display: inline-flex; align-items: center; gap: 6px; min-height: 48px; padding: 0 16px; background: #141414; color: #fbfaf6; font-weight: 700; font-size: 13px; letter-spacing: .08em; text-transform: uppercase;"><i class="ti ti-copy"></i>Kopieren</a></span><a href="#" style="align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; font-weight: 700; font-size: 14px; color: #141414; text-decoration: underline;"><i class="ti ti-user-plus"></i>Freund einladen</a></div>
+          <div style="display: flex; flex-direction: column;"><span style="font-weight: 700; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; border-bottom: 2px solid #141414; padding-bottom: 6px;">Mitglieder</span><sc-for list="{{ members }}" as="m" hint-placeholder-count="4"><div style="display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; gap: 12px; align-items: center; min-height: 52px; border-bottom: 1px dotted #b8b4ad;"><span style="width: 36px; height: 36px; background: {{ m.c }}; color: #fbfaf6; display: grid; place-items: center; font-weight: 700; font-size: 19px;">{{ m.i }}</span><span style="display: flex; flex-direction: column;"><span style="font-weight: 700; font-size: 16px;">{{ m.n }}</span><span style="font-size: 13px; color: #6f6b66;">{{ m.role }}</span></span><a href="#" aria-label="Bearbeiten" style="width: 44px; height: 44px; display: grid; place-items: center; color: #141414;"><i class="ti ti-pencil" style="font-size: 18px;"></i></a></div></sc-for></div>
+          <div style="display: flex; flex-direction: column; gap: 10px;"><span style="font-weight: 700; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; border-bottom: 2px solid #141414; padding-bottom: 6px;">Runde übergeben</span><span style="font-size: 14px; color: #2b2925;">Eine andere Person wird Besitzerin der Runde; du bleibst Mitglied.</span><a href="#" style="align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 16px; border: 2px solid #141414; color: #141414; font-weight: 700; font-size: 13px; letter-spacing: .08em; text-transform: uppercase;"><i class="ti ti-arrows-split"></i>Übergeben</a></div>
+          <div style="display: flex; flex-direction: column; gap: 10px; border: 2px solid #a3241a; padding: 14px 16px;"><span style="font-weight: 700; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: #a3241a;">Gefahrenzone</span><span style="font-size: 14px; color: #2b2925;">Löscht die Runde mit allen Spielen und Sessions.</span><a href="#" style="align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 16px; background: #a3241a; color: #fbfaf6; font-weight: 700; font-size: 13px; letter-spacing: .08em; text-transform: uppercase;"><i class="ti ti-trash"></i>Diese Runde löschen</a></div>
+        </div>
+      </div>
+      <div style="margin-top: auto; padding-top: 28px;"><dc-import name="Programmheft-Fuss" hint-size="100%,56px" style="width: 100%;"></dc-import></div>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(2, 1100px); gap: 28px;">
+
+    <div data-screen-label="P14.1 Profil" style="display: flex; flex-direction: column; gap: 10px;">
+      <span style="font-weight: 600; font-size: 13px; color: #2b2925;">P14.1 · Profil — die Spielerkarte</span>
+      <div style="width: 1100px; min-height: 700px; background: #fbfaf6; border: 1px solid #141414; display: flex; flex-direction: column;">
+        <dc-import name="Programmheft-Kopf" crumb="Profil" active="none" hint-size="100%,56px" style="width: 100%;"></dc-import>
+        <div style="margin: 24px 40px 0; display: grid; grid-template-columns: 360px minmax(0, 1fr); gap: 40px;">
+          <div style="border: 2px solid #141414; background: #ffffff; display: flex; flex-direction: column;"><span style="height: 12px; background: #e8451c;"></span><span style="padding: 18px; display: flex; flex-direction: column; gap: 10px;"><span style="font-weight: 700; font-size: 12px; letter-spacing: .16em; text-transform: uppercase; color: #6f6b66;">Spielerkarte</span><span style="width: 96px; height: 96px; background: #141414; color: #fbfaf6; display: grid; place-items: center; font-weight: 700; font-size: 44px;">M</span><span style="font-family: 'Anton'; font-weight: 400; font-size: 52px; line-height: 1; text-transform: uppercase;">Marco</span><span style="font-size: 14px; color: #2b2925;">@marco_b · seit Oktober 2025</span><span style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; border-top: 2px solid #141414; padding-top: 8px;"><sc-for list="{{ card }}" as="c" hint-placeholder-count="3"><span style="display: flex; flex-direction: column;"><span style="font-family: 'Anton'; font-weight: 400; font-size: 34px; line-height: 1;">{{ c.v }}</span><span style="font-weight: 700; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: #6f6b66;">{{ c.k }}</span></span></sc-for></span></span></div>
+          <div style="display: flex; flex-direction: column; gap: 16px;"><span style="font-weight: 700; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; border-bottom: 2px solid #141414; padding-bottom: 6px;">Lieblingsspiele</span><sc-for list="{{ favs }}" as="f" hint-placeholder-count="3"><span style="display: grid; grid-template-columns: 30px 56px minmax(0, 1fr) auto; gap: 12px; align-items: center; min-height: 64px; border-bottom: 1px dotted #b8b4ad;"><span style="font-family: 'Anton'; font-weight: 400; font-size: 26px; color: #e8451c;">{{ f.n }}</span><span style="width: 56px; height: 56px; background: {{ f.cover }};"></span><span style="font-weight: 700; font-size: 17px;">{{ f.t }}</span><span style="font-family: 'Anton'; font-weight: 400; font-size: 28px;">{{ f.s }}</span></span></sc-for><span style="display: flex; gap: 10px;"><a href="#" style="display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 16px; border: 2px solid #141414; color: #141414; font-weight: 700; font-size: 13px; text-transform: uppercase;"><i class="ti ti-pencil"></i>Profil bearbeiten</a><a href="#" style="display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 16px; border: 2px solid #141414; color: #141414; font-weight: 700; font-size: 13px; text-transform: uppercase;"><i class="ti ti-share"></i>Teilen</a></span></div>
+        </div>
+      </div>
+    </div>
+
+    <div data-screen-label="P14.2 Freunde und Feed" style="display: flex; flex-direction: column; gap: 10px;">
+      <span style="font-weight: 600; font-size: 13px; color: #2b2925;">P14.2 · Freunde und Feed</span>
+      <div style="width: 1100px; min-height: 700px; background: #fbfaf6; border: 1px solid #141414; display: flex; flex-direction: column;">
+        <dc-import name="Programmheft-Kopf" crumb="Freunde" active="none" hint-size="100%,56px" style="width: 100%;"></dc-import>
+        <div style="margin: 24px 40px 0; display: grid; grid-template-columns: 320px minmax(0, 1fr); gap: 0 40px;">
+          <div style="display: flex; flex-direction: column; gap: 8px; border-right: 1px solid #141414; padding-right: 40px;"><span style="font-family: 'Anton'; font-weight: 400; font-size: 40px; text-transform: uppercase; border-bottom: 4px solid #141414; padding-bottom: 6px;">Freunde</span><label style="display: flex; align-items: center; gap: 10px; height: 44px; box-sizing: border-box; border: 1.5px solid #141414; background: #ffffff; padding: 0 12px;"><i class="ti ti-user-plus"></i><input placeholder="Benutzername" style="flex: 1; min-width: 0; border: none; background: none; font: 400 16px 'Archivo'; outline: none;"></label><sc-for list="{{ friends }}" as="f" hint-placeholder-count="4"><a href="#" style="display: flex; align-items: center; gap: 10px; min-height: 48px; border-bottom: 1px dotted #b8b4ad; color: #141414;"><span style="width: 32px; height: 32px; background: #141414; color: #fbfaf6; display: grid; place-items: center; font-weight: 700; font-size: 16px;">{{ f.i }}</span><span style="display: flex; flex-direction: column;"><span style="font-weight: 700; font-size: 15px;">{{ f.n }}</span><span style="font-size: 13px; color: #6f6b66;">{{ f.s }}</span></span></a></sc-for></div>
+          <div style="display: flex; flex-direction: column;"><span style="font-weight: 700; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; border-bottom: 2px solid #141414; padding-bottom: 6px;">Feed</span><sc-for list="{{ feed }}" as="e" hint-placeholder-count="4"><div style="display: grid; grid-template-columns: 100px minmax(0, 1fr) 44px; gap: 14px; align-items: center; min-height: 72px; border-bottom: 1px dotted #b8b4ad;"><span style="font-weight: 600; font-size: 13px; color: #2b2925;">{{ e.d }}</span><span style="display: flex; flex-direction: column;"><span style="font-weight: 700; font-size: 16px;">{{ e.t }}</span><span style="font-size: 13px; color: #6f6b66;">{{ e.s }}</span></span><a href="#" aria-label="Melden" style="width: 44px; height: 44px; display: grid; place-items: center; color: #141414;"><i class="ti ti-flag" style="font-size: 18px;"></i></a></div></sc-for></div>
+        </div>
+      </div>
+    </div>
+
+    <div data-screen-label="P14.3 Postfach" style="display: flex; flex-direction: column; gap: 10px;">
+      <span style="font-weight: 600; font-size: 13px; color: #2b2925;">P14.3 · Postfach — Einladungen und Geteiltes</span>
+      <div style="width: 1100px; min-height: 620px; background: #fbfaf6; border: 1px solid #141414; display: flex; flex-direction: column;">
+        <dc-import name="Programmheft-Kopf" crumb="Postfach" active="none" hint-size="100%,56px" style="width: 100%;"></dc-import>
+        <div style="margin: 18px 40px 0; border-bottom: 4px solid #141414; padding-bottom: 6px;"><span style="font-family: 'Anton'; font-weight: 400; font-size: 72px; line-height: 1; text-transform: uppercase;">Postfach</span></div>
+        <div style="margin: 0 40px; display: flex; flex-direction: column;"><sc-for list="{{ inbox }}" as="m" hint-placeholder-count="3"><div style="display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 16px; align-items: center; min-height: 88px; border-bottom: 1px solid #141414;"><span style="width: 44px; height: 44px; display: grid; place-items: center; background: {{ m.bg }}; color: {{ m.ink }};"><i class="ti {{ m.icon }}" style="font-size: 22px;"></i></span><span style="display: flex; flex-direction: column; gap: 2px;"><span style="font-weight: 700; font-size: 17px;">{{ m.t }}</span><span style="font-size: 14px; color: #2b2925;">{{ m.s }}</span></span><span style="display: flex; gap: 8px;"><sc-for list="{{ m.actions }}" as="a" hint-placeholder-count="2"><a href="#" style="display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; background: {{ a.bg }}; color: {{ a.ink }}; border: 2px solid #141414; font-weight: 700; font-size: 13px; letter-spacing: .08em; text-transform: uppercase;">{{ a.l }}</a></sc-for></span></div></sc-for></div>
+      </div>
+    </div>
+
+    <div data-screen-label="P14.4 Was ist neu" style="display: flex; flex-direction: column; gap: 10px;">
+      <span style="font-weight: 600; font-size: 13px; color: #2b2925;">P14.4 · Was ist neu — als Meldungsspalte</span>
+      <div style="width: 1100px; min-height: 620px; background: #fbfaf6; border: 1px solid #141414; display: flex; flex-direction: column;">
+        <dc-import name="Programmheft-Kopf" crumb="Was ist neu" active="none" hint-size="100%,56px" style="width: 100%;"></dc-import>
+        <div style="margin: 18px 40px 0; border-bottom: 4px solid #141414; padding-bottom: 6px;"><span style="font-family: 'Anton'; font-weight: 400; font-size: 72px; line-height: 1; text-transform: uppercase;">Was ist neu</span></div>
+        <div style="margin: 18px 40px 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 28px;"><sc-for list="{{ news }}" as="n" hint-placeholder-count="3"><div style="display: flex; flex-direction: column; gap: 8px; border-right: {{ n.rule }}; padding-right: 28px;"><span style="font-weight: 700; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #b8330f;">{{ n.d }}</span><span style="font-family: 'Anton'; font-weight: 400; font-size: 32px; line-height: 1; text-transform: uppercase;">{{ n.t }}</span><span style="font-size: 15px; line-height: 1.5; color: #2b2925;">{{ n.b }}</span></div></sc-for></div>
+      </div>
+    </div>
+
+    <div data-screen-label="P14.5 Statistik" style="display: flex; flex-direction: column; gap: 10px;">
+      <span style="font-weight: 600; font-size: 13px; color: #2b2925;">P14.5 · Statistik — Entdecken</span>
+      <div style="width: 1100px; min-height: 640px; background: #fbfaf6; border: 1px solid #141414; display: flex; flex-direction: column;">
+        <dc-import name="Programmheft-Kopf" crumb="Entdecken" active="none" hint-size="100%,56px" style="width: 100%;"></dc-import>
+        <div style="margin: 18px 40px 0; border-bottom: 4px solid #141414; padding-bottom: 6px; display: flex; justify-content: space-between; align-items: flex-end;"><span style="font-family: 'Anton'; font-weight: 400; font-size: 72px; line-height: 1; text-transform: uppercase;">Entdecken</span><span style="font-size: 14px; color: #2b2925; margin-bottom: 8px;">aus allen öffentlichen Runden · ohne Namen</span></div>
+        <div style="margin: 18px 40px 0; display: grid; grid-template-columns: 1fr 1fr; gap: 0 40px;">
+          <div style="display: flex; flex-direction: column; gap: 8px; border-right: 1px solid #141414; padding-right: 40px;"><span style="font-weight: 700; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; border-bottom: 2px solid #141414; padding-bottom: 6px;">Meistgespielt im September</span><sc-for list="{{ stats }}" as="s" hint-placeholder-count="5"><span style="display: grid; grid-template-columns: 26px 170px minmax(0, 1fr) 50px; gap: 10px; align-items: center; min-height: 36px;"><span style="font-family: 'Anton'; font-weight: 400; font-size: 24px;">{{ s.n }}</span><span style="font-weight: 700; font-size: 15px;">{{ s.t }}</span><span style="height: 16px; background: #141414; width: {{ s.w }};"></span><span style="font-size: 14px; text-align: right;">{{ s.v }}</span></span></sc-for></div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-content: start;"><sc-for list="{{ bigNums }}" as="b" hint-placeholder-count="4"><span style="display: flex; flex-direction: column; border-top: 2px solid #141414; padding-top: 6px;"><span style="font-weight: 700; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #6f6b66;">{{ b.k }}</span><span style="font-family: 'Anton'; font-weight: 400; font-size: 52px; line-height: 1;">{{ b.v }}</span></span></sc-for></div>
+        </div>
+        <div style="margin: 20px 40px 0;"><img src="../../../public/icons/powered-by-bgg.png" alt="Powered by BGG" style="height: 26px; width: auto;"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const P = '#fbfaf6', I = '#141414';
+    const lum = (h) => { const c = [1, 3, 5].map((i) => parseInt(h.substr(i, 2), 16) / 255).map((v) => v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4)); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; };
+    const crN = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+    const markers = [['Zinnober', '#e8451c'], ['Preußischblau', '#1f4e8c'], ['Tannengrün', '#2e6b3f'], ['Ocker', '#a8761a'], ['Pflaume', '#6e3a6b'], ['Graphit', '#4a4a48'], ['Petrol', '#1c6b72'], ['Fuchsie', '#9c2f6e']].map(([name, hex]) => {
+      const on = name === 'Preußischblau';
+      return { name, hex, txt: crN(I, hex) >= crN(P, hex) ? I : P, icon: on ? 'ti-check' : '', checked: on ? 'true' : 'false', ring: on ? '3px solid #141414' : 'none' };
+    });
+    const tags = [{ icon: 'ti-dice-5', label: 'Würfel' }, { icon: 'ti-puzzle', label: 'Koop' }, { icon: 'ti-chess', label: 'Strategie' }, { icon: 'ti-sword', label: 'Kampagne' }];
+    const MC = ['#c6522c', '#198663', '#726bc7', '#a66815'];
+    const members = ['Marco', 'Jonas', 'Lea', 'Tim'].map((n, i) => ({ n, i: n[0], c: MC[i], role: i === 0 ? 'Besitzer · du' : 'Mitglied' }));
+    const card = [{ k: 'Runden', v: '3' }, { k: 'Sessions', v: '85' }, { k: 'Siege', v: '17' }];
+    const cov = (h) => `linear-gradient(160deg, oklch(.6 .13 ${h}), oklch(.34 .12 ${h + 30}))`;
+    const favs = [{ n: '1', t: 'Nordlichter', s: '5,0', cover: cov(200) }, { n: '2', t: 'Brass: Birmingham', s: '4,9', cover: cov(40) }, { n: '3', t: 'Salzwiesen', s: '4,6', cover: cov(120) }];
+    const friends = [{ n: 'Jonas', i: 'J', s: '2 gemeinsame Runden' }, { n: 'Lea', i: 'L', s: '1 gemeinsame Runde' }, { n: 'Paul', i: 'P', s: 'Familie Berger' }, { n: 'Aylin', i: 'A', s: 'WG Kastanienallee' }];
+    const feed = [
+      { d: 'vor 2 Std.', t: 'Jonas hat bei Donnerstagsrunde gewonnen', s: '„Nordlichter“ · Score 4,8' },
+      { d: 'gestern', t: 'Aylin hat Kaskadia ins Regal gestellt', s: 'WG Kastanienallee' },
+      { d: '16. Sep.', t: 'Paul hat einen Rückblick geteilt', s: 'Familie Berger · Sommer 2026' },
+      { d: '12. Sep.', t: 'Lea hat 3 Siege in Folge', s: 'Donnerstagsrunde' },
+    ];
+    const act = (l, primary) => ({ l, bg: primary ? I : 'transparent', ink: primary ? P : I });
+    const inbox = [
+      { icon: 'ti-user-plus', bg: I, ink: P, t: 'Paul lädt dich in „Familie Berger“ ein', s: '6 Mitglieder · 31 Spiele', actions: [act('Annehmen', true), act('Ablehnen', false)] },
+      { icon: 'ti-share', bg: '#ffffff', ink: I, t: 'Lea hat ein Ergebnis mit dir geteilt', s: '„Moorgeister“ wurde gespielt. Lea hat gewonnen!', actions: [act('Ansehen', false)] },
+      { icon: 'ti-file-text', bg: '#ffffff', ink: I, t: 'Die Nutzungsbedingungen ändern sich zum 1. Oktober', s: 'Kurz zusammengefasst, was sich ändert.', actions: [act('Lesen', false)] },
+    ];
+    const news = [
+      { d: '25. September 2026', t: 'Sieben Designs zur Wahl', b: 'Wähl im Konto, wie Spielwirbel für dich aussieht. Alles liegt weiter an derselben Stelle.', rule: '1px solid #141414' },
+      { d: '10. September 2026', t: 'Mitstimmen per QR-Code', b: 'Jeder wertet am eigenen Telefon — ohne Konto, nur die ausgelosten Spiele.', rule: '1px solid #141414' },
+      { d: '28. August 2026', t: 'Der Rückblick', b: 'Monat, Quartal oder Jahr als Karte zum Teilen.', rule: 'none' },
+    ];
+    const stats = [['Cascadia', 100], ['Heat', 86], ['Arche Nova', 74], ['Die Crew', 61], ['Azul', 55]].map(([t, v], i) => ({ n: String(i + 1), t, w: v + '%', v: String(Math.round(v * 4.3)) }));
+    const bigNums = [{ k: 'Sessions diesen Monat', v: '12 480' }, { k: 'Runden', v: '3 912' }, { k: 'Spiele in Regalen', v: '41 207' }, { k: 'Ø Score', v: '3,9' }];
+    return { markers, tags, members, card, favs, friends, feed, inbox, news, stats, bigNums };
+  }
+}
+</script>
+</body>
+</html>
