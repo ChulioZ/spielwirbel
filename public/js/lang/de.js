@@ -1424,6 +1424,8 @@ I18N.de = {
   'friends.addTile': 'Freund*in hinzufügen',
   'friends.addTileSub': 'mit dem Nutzernamen',
   'friends.feedMore': 'Alle {count} Aktivitäten',
+  'friends.feedLoadMore': 'Mehr laden',
+  'friends.feedLoading': 'Lädt …',
   'friends.newsTitle': 'Neues',
   'friends.feedEmpty': 'Noch keine Aktivitäten deiner Freunde.',
   'friends.listEmpty': 'Du hast noch keine Freunde hinzugefügt.',

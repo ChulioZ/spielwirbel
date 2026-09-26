@@ -1296,6 +1296,8 @@ I18N.ko = {
   'friends.addTile': '친구 추가',
   'friends.addTileSub': '사용자 이름으로',
   'friends.feedMore': '활동 {count}개 모두 보기',
+  'friends.feedLoadMore': '더 불러오기',
+  'friends.feedLoading': '불러오는 중…',
   'friends.newsTitle': '새소식',
   'friends.feedEmpty': '아직 친구들의 활동이 없어요.',
   'friends.listEmpty': '아직 친구를 추가하지 않으셨어요.',

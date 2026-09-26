@@ -3965,7 +3965,87 @@ module.exports = function repoContract(repo) {
     assert.deepEqual(await repo.listFeedEvents(['nobody']), []);
   });
 
-  test('feed: the per-user cap prunes the oldest on write (env MAX_FEED_EVENTS)', async () => {
+  /* #1357: retention is an AGE limit. The count (MAX_FEED_EVENTS) survives only
+     as a safety ceiling whose default is far above 50 — the old default, which
+     is what made a friend's profile feed stop at their last 50 actions. */
+  test('feed: writing does not cap an account at 50 rows any more', async () => {
+    const prev = process.env.MAX_FEED_EVENTS;
+    delete process.env.MAX_FEED_EVENTS;
+    try {
+      for (let i = 0; i < 60; i++) await repo.addFeedEvent('feed-many', { type: 'game_added', title: `m${i}` });
+      assert.equal((await repo.listFeedEvents(['feed-many'], 1000)).length, 60);
+    } finally {
+      if (prev !== undefined) process.env.MAX_FEED_EVENTS = prev;
+    }
+  });
+
+  /* Date is mocked, not the env shortened: the rows have to be genuinely OLD by
+     the clock addFeedEvent stamps them with. Only 'Date' — the pool's timers stay
+     real. */
+  test('feed: expired rows go on the writer\'s next write, and the sweep takes the rest', async (t) => {
+    const now = Date.now();
+    const day = 24 * 60 * 60 * 1000;
+    t.mock.timers.enable({ apis: ['Date'], now: now - 400 * day });
+    try {
+      await repo.addFeedEvent('feed-age', { type: 'game_added', title: 'ancient-1' });
+      await repo.addFeedEvent('feed-age', { type: 'game_added', title: 'ancient-2' });
+      await repo.addFeedEvent('feed-idle', { type: 'game_added', title: 'ancient-idle' });
+      t.mock.timers.setTime(now - 300 * day);
+      await repo.addFeedEvent('feed-age', { type: 'game_added', title: 'ten-months' });
+      t.mock.timers.setTime(now);
+      await repo.addFeedEvent('feed-age', { type: 'game_added', title: 'fresh' });
+    } finally {
+      t.mock.timers.reset();
+    }
+    // The writer's own expired rows went; its 300-day-old one is inside the year.
+    assert.deepEqual((await repo.listFeedEvents(['feed-age'])).map((e) => e.title), ['fresh', 'ten-months']);
+    // An account that writes nothing keeps its rows until the sweep…
+    assert.deepEqual((await repo.listFeedEvents(['feed-idle'])).map((e) => e.title), ['ancient-idle']);
+    const cutoff = new Date(now - 365 * day).toISOString();
+    const removed = await repo.purgeExpiredFeedEvents(cutoff);
+    assert.equal(typeof removed, 'number');
+    assert.ok(removed >= 1, 'the idle account\'s row was swept');
+    assert.deepEqual(await repo.listFeedEvents(['feed-idle']), []);
+    assert.equal((await repo.listFeedEvents(['feed-age'])).length, 2, 'the sweep keeps what is inside the year');
+    // Idempotent: a second run over the same cutoff finds nothing.
+    assert.equal(await repo.purgeExpiredFeedEvents(cutoff), 0);
+  });
+
+  /* The paging cursor (#1357): { id, at } of the last row consumed. Rows STRICTLY
+     older in store order, across uids, even when written in the same millisecond
+     — which is why the id and not the timestamp positions the page. */
+  test('feed: listFeedEvents pages with a before cursor, with no gap and no repeat', async (t) => {
+    const ids = [];
+    // Every row in ONE millisecond: a cursor that positioned by timestamp alone
+    // would lose the rest of the page here, which is the case it has to survive.
+    t.mock.timers.enable({ apis: ['Date'], now: Date.now() });
+    try {
+      for (let i = 0; i < 7; i++) {
+        const uid = i % 2 ? 'feed-pg-a' : 'feed-pg-b';
+        ids.push((await repo.addFeedEvent(uid, { type: 'game_added', title: `p${i}` })).id);
+      }
+      await repo.addFeedEvent('feed-pg-other', { type: 'game_added', title: 'not asked for' });
+    } finally {
+      t.mock.timers.reset();
+    }
+    const uids = ['feed-pg-a', 'feed-pg-b'];
+    const seen = [];
+    let before = null;
+    for (let guard = 0; guard < 10; guard++) {
+      const rows = await repo.listFeedEvents(uids, 3, before);
+      seen.push(...rows.map((e) => e.id));
+      if (rows.length < 3) break;
+      const last = rows[rows.length - 1];
+      before = { id: last.id, at: last.at };
+    }
+    assert.deepEqual(seen, [...ids].reverse());
+    // A cursor row that has GONE (aged out, erased) falls back to its timestamp.
+    const gone = { id: 'ffffffffffffffff', at: '9999-12-31T00:00:00.000Z' };
+    assert.equal((await repo.listFeedEvents(uids, 100, gone)).length, 7);
+    assert.deepEqual(await repo.listFeedEvents(uids, 100, { ...gone, at: '2000-01-01T00:00:00.000Z' }), []);
+  });
+
+  test('feed: the safety ceiling still prunes the oldest on write (env MAX_FEED_EVENTS)', async () => {
     const prev = process.env.MAX_FEED_EVENTS;
     process.env.MAX_FEED_EVENTS = '3';
     try {

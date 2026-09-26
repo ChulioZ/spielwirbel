@@ -4873,7 +4873,13 @@ a.k-tile:focus-visible,
    the day one of them is not, counting by position would hide the wrong one. */
 @media (max-width: 1023px) {
   .e-feed:not(.is-open) .e-tile:nth-of-type(n + 9) { display: none; }
+  /* The paging button (#1357) waits behind the same collapse: loading pages
+     into a list whose ninth tile is still hidden would load what nobody sees,
+     and a hidden button never intersects, so the observer stays quiet too. */
+  .e-feed:not(.is-open) .e-feed__load { display: none; }
 }
+/* „Mehr laden" — a real button, which the infinite-scroll observer clicks. */
+.e-feed__load { display: flex; justify-content: center; margin-top: 14px; }
 @media (min-width: 1024px) {
   .e-feed__more { display: none; }
 }

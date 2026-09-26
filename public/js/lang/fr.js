@@ -1362,6 +1362,8 @@ I18N.fr = {
   'friends.addTile': 'Ajouter quelqu’un',
   'friends.addTileSub': 'par nom d’utilisateur',
   'friends.feedMore': 'Les {count} activités',
+  'friends.feedLoadMore': 'Charger plus',
+  'friends.feedLoading': 'Chargement…',
   'friends.newsTitle': 'Du neuf',
   'friends.feedEmpty': 'Aucune activité de tes amis pour l’instant.',
   'friends.listEmpty': 'Tu n’as encore ajouté aucun ami.',

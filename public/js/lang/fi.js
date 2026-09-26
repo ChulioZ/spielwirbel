@@ -1322,6 +1322,8 @@ I18N.fi = {
   'friends.addTile': 'Lisää kaveri',
   'friends.addTileSub': 'käyttäjänimellä',
   'friends.feedMore': 'Kaikki {count} tapahtumaa',
+  'friends.feedLoadMore': 'Lataa lisää',
+  'friends.feedLoading': 'Ladataan…',
   'friends.newsTitle': 'Uutta',
   'friends.feedEmpty': 'Kavereiltasi ei ole vielä toimintaa.',
   'friends.listEmpty': 'Et ole vielä lisännyt kavereita.',

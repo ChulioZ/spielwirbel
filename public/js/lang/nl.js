@@ -1354,6 +1354,8 @@ I18N.nl = {
   'friends.addTile': 'Iemand toevoegen',
   'friends.addTileSub': 'met de gebruikersnaam',
   'friends.feedMore': 'Alle {count} activiteiten',
+  'friends.feedLoadMore': 'Meer laden',
+  'friends.feedLoading': 'Laden…',
   'friends.newsTitle': 'Nieuws',
   'friends.feedEmpty': 'Nog geen activiteit van je vrienden.',
   'friends.listEmpty': 'Je hebt nog geen vrienden toegevoegd.',
