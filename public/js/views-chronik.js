@@ -8,8 +8,8 @@
 // feed arrives as its own argument (fetched per visit by showRound, #197) —
 // it is no longer part of the round payload.
 // The timeline's visual tiers (#633). Keyed on the event TYPE, never on the icon
-// class the row happens to render: `ti-trash` is `game_retired` AND
-// `game_deleted`, so an icon-based match would wash a deletion as a milestone.
+// class the row happens to render: an icon can be shared between types (`ti-trash`
+// is every deletion), so an icon-based match would misfile rows between tiers.
 // Everything not listed here keeps the neutral middle tier — a move, an import,
 // a new seat and a rename are bookkeeping, not moments in the round's history.
 const CHRONIK_MILESTONES = ['game_retired', 'game_completed', 'game_restored', 'game_uncompleted'];
@@ -84,7 +84,7 @@ function renderChronikTab(round, activities) {
   (activities || []).forEach((a) => {
     const meta = {
       game_added: { icon: 'ti-plus', text: t('activity.gameAdded', { title: a.title }) },
-      game_retired: { icon: 'ti-trash', text: t('activity.gameRetired', { title: a.title }) },
+      game_retired: { icon: 'ti-archive', text: t('activity.gameRetired', { title: a.title }) },
       game_restored: { icon: 'ti-arrow-back-up', text: t('activity.gameRestored', { title: a.title }) },
       game_completed: { icon: 'ti-circle-check', text: t('activity.gameCompleted', { title: a.title }) },
       game_uncompleted: { icon: 'ti-arrow-back-up', text: t('activity.gameUncompleted', { title: a.title }) },
@@ -102,7 +102,7 @@ function renderChronikTab(round, activities) {
       // Bulk shelf tidying (#832) — counts for the same reason as the three
       // above, and the reason bites hardest here: undoing a 200-game import
       // would otherwise bury every other event the round has ever had.
-      games_retired: { icon: 'ti-trash', text: tn(a.count, 'activity.gamesRetiredOne', 'activity.gamesRetired') },
+      games_retired: { icon: 'ti-archive', text: tn(a.count, 'activity.gamesRetiredOne', 'activity.gamesRetired') },
       games_deleted: { icon: 'ti-trash', text: tn(a.count, 'activity.gamesDeletedOne', 'activity.gamesDeleted') },
       // A new seat (#563) — carries the member's NAME, not a game title. Written
       // for both an added seat and an accepted invitation (#207), since either way

@@ -333,7 +333,9 @@ test('one click adds, two removes, three leaves the tag out of both lists', asyn
   sheetBtn(APPLY).click();
   await settle();
 
-  assert.match(confirms[0], /Kenner/, 'the confirm must name the tags, not just a count');
+  // #1360: the chips already show the direction and nothing is lost that the
+  // same sheet cannot restore, so „Übernehmen" applies straight away.
+  assert.equal(confirms.length, 0, 'the tags picker raised a second dialog');
   assert.equal(posts().length, 1);
   assert.equal(posts()[0].path, `/api/rounds/${r.id}/games/bulk-tags`);
   assert.deepEqual([...posts()[0].body.gameIds].sort(), ['g1', 'g3']);
@@ -358,6 +360,29 @@ test('a third click returns the chip to neutral and sends neither instruction', 
 
   assert.deepEqual([...posts()[0].body.addTagIds], ['t1']);
   assert.deepEqual([...posts()[0].body.removeTagIds], [], 'a neutral chip must travel in neither list');
+});
+
+/* With the confirm gone (#1360), the disabled „Übernehmen" is the ONLY thing
+   between an empty pick and a request — so it is tested on its own, including
+   the way back: a chip clicked round to neutral again must re-disable it
+   (.claude/rules/redundant-guards-make-each-other-untestable.md). */
+test('Übernehmen re-disables when every chip is back to neutral, and sends nothing', async () => {
+  const { posts } = spy();
+  regal(TAGS_ROUND);
+  toggleBtn().click();
+  cardFor('Azul').click();
+  act('tags').click();
+
+  const chip = tagChipFor('Kenner');
+  chip.click();
+  assert.equal(sheetBtn(APPLY).disabled, false, 'one pick enables it');
+  chip.click(); chip.click();                         // remove -> neutral
+  assert.equal(sheetBtn(APPLY).disabled, true, 'nothing picked any more, yet still actionable');
+  sheetBtn(APPLY).click();
+  await settle();
+  assert.equal(posts().length, 0, 'a disabled Übernehmen still sent a request');
+  sheetBtn('Abbrechen').click();
+  await settle();
 });
 
 test('the tags action is absent when the round has no tags', () => {
@@ -417,6 +442,29 @@ test('deleting never-played games states the count without crying wolf', async (
   assert.match(confirms[0], /2/, 'the count is not named');
   assert.equal(/Session/.test(confirms[0]), false,
     'an unplayed selection loses no history, so the warning must not appear');
+});
+
+/* Retire is reversible — its own copy says „jederzeit zurückholen" — so it must
+   not LOOK like the delete beside it (#1360): neutral button, archive icon, on
+   both the bar and the confirm. Delete keeps the red and the bin. */
+test('retire reads as reversible, delete stays destructive', async () => {
+  const { confirmOpts } = spy({ confirm: false });
+  regal();
+  toggleBtn().click();
+  assert.ok(act('retire').querySelector('.ti-archive'), 'the bar\'s retire button is not the archive icon');
+  assert.equal(act('retire').classList.contains('btn--danger'), false);
+  assert.ok(act('delete').classList.contains('btn--danger'), 'delete lost its red');
+
+  cardFor('Azul').click();
+  act('retire').click();
+  await flush();
+  assert.equal(confirmOpts[0].danger, false, 'the retire confirm is still styled as a deletion');
+  assert.equal(confirmOpts[0].icon, 'ti-archive');
+
+  act('delete').click();
+  await flush();
+  assert.notEqual(confirmOpts[1].danger, false, 'the delete confirm lost its danger styling');
+  assert.equal(confirmOpts[1].icon, 'ti-trash');
 });
 
 test('declining the confirm sends nothing', async () => {
