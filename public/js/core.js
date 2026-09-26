@@ -510,8 +510,11 @@ function randomOrderedGames(round, activeGames) {
 // name. The shipped value is the var()'s FALLBACK, so a design that declares
 // nothing is byte-for-byte unchanged; test/a11y-contrast.test.js resolves the
 // percentage per design, so one that moves it is measured where it moved to.
+// A design with its own person ROW (#1237, Die Brücke's B8.1) paints that instead.
 const MEMBER_LIFT = 'var(--member-lift, 42%)';
 function memberTone(color) {
+  const own = designPersonTone(color);
+  if (own) return own;
   return isDarkScheme() ? `color-mix(in oklab, ${color}, #fff ${MEMBER_LIFT})` : color;
 }
 

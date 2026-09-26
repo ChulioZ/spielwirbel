@@ -1,0 +1,485 @@
+/* Die Brücke — the override stylesheet (#1237, B1 + B8).
+ *
+ * Source: docs/design/bruecke/Bruecke-B1-Komponenten.dc.html („1 · Tokens")
+ * for every value here, and Bruecke-B8-Farben.dc.html for the measurements. B1
+ * is the SOURCE and B8 only measures; a value that is in neither does not
+ * belong in this file. The review is docs/design/pruefung-bruecke-2026-09-22.md.
+ *
+ * Die Brücke is DARK and right-angled: panels sit as faintly lit plates over a
+ * night ground, and depth comes from edges, corner brackets and glow — never
+ * from shadow. Its failure class is the opposite of Ocean's: not saturated
+ * colour on near-white, but ACCENT and PERSON colour used as small text on a
+ * dark plate. Four rules from B1 bind here and are stated at the tokens they
+ * bind:
+ *
+ *   1. Accent and person colour carry text only from 24px, or as a glyph. On a
+ *      person colour the text is ink (--on-accent, the night).
+ *   2. --ink-dim is NOT a text colour (3.3:1 on the plate). Disabled states and
+ *      empty grid cells only; test/design-tokens.test.js holds that.
+ *   3. Target sizes are tokens, not per-screen decisions (--target-*).
+ *   4. Radius 0 — the design is right-angled.
+ *
+ * The file follows Der Tisch's seam: a VOICE block that is unconditional, and a
+ * COLOUR block gated on the scheme the design was drawn for (dark). Every
+ * colour lives in that block, where test/support/theme.js resolves it and
+ * test/a11y-contrast.test.js measures it; component rules only ever read
+ * var(--x). See .claude/rules/design-colour-blocks-are-scheme-gated.md and
+ * .claude/rules/design-stylesheets-are-shell-assets.md.
+ *
+ * Two things that are NOT here and must not move here:
+ *   - --page-bg and --brand. paintDesign() (round-theme.js) writes them inline
+ *     on <html> from the registry's `page`/`accent` (public/js/designs.js).
+ *   - Screen layout. This issue is tokens + shared components; the screens are
+ *     the issues after #1237.
+ */
+
+/* The design's VOICE — scheme-independent. */
+:root[data-design="bruecke"] {
+  /* ---- Schrift (B1 „2 · Schrift"). Chakra Petch 600/700 for display —
+     uppercase, titles, names of rounds and games, result numbers; IBM Plex Sans
+     400/500/600 for everything a person reads; IBM Plex Mono 400/500/600 for
+     notation only (kickers, counters, column heads), never for a sentence. All
+     OFL, self-hosted, declared in styles.css beside the other design faces.
+     Plex Sans and Plex Mono count as ONE superfamily (review D6). */
+  --font: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Chakra Petch", "IBM Plex Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* ---- Radius. „keine Rundung — das Design ist rechtwinklig". The pill too:
+     a chip or a dock item is a rectangle here. */
+  --radius-sm: 0;
+  --radius-md: 0;
+  --radius-lg: 0;
+  --radius-xl: 0;
+  --radius-pill: 0;
+
+  /* ---- Typoskala (B1 „Typoskala"). The display steps as tokens, so the
+     long-language rule below can drop a title one step without a screen
+     re-deriving the sizes. The app's reading steps stay where styles.css floors
+     them: a design never shrinks body text (U-R04, test/design-tokens.test.js),
+     and B1's own floors (text 13px, notation 11px, mono-micro 10px for counters
+     and axes only) sit at or under them. */
+  --display-xl: 58px;
+  --display-l: 40px;
+  --display-m: 26px;
+  --display-s: 19px;
+  /* Notation letter-spacing, and its long-language step (B16.4): above 18
+     characters the tracking falls from .16em to .06em. */
+  --track-notation: 0.16em;
+  --track-notation-long: 0.06em;
+  --track-display: 0.04em;
+
+  /* ---- Abstände, „Vielfache von 2": 4 · 8 · 12 · 18 · 24; gutter 24, margin 48. */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 18px;
+  --space-5: 24px;
+  --space-gutter: 24px;
+  --space-margin: 48px;
+
+  /* ---- Trefferflächen (B1 „Raster und Kante"). Tokens, not per-screen
+     decisions — the review measured nine controls under them before round 2
+     fixed them (A2). The visible shape may be smaller; padding and min-height
+     reach the target, never line-height alone. */
+  --target-min: 24px;    /* every control, including a text link */
+  --target-key: 44px;    /* vote card incl. „Zurück", dock, seats; every text button */
+  --target-field: 44px;  /* the input itself, not its frame */
+  --target-foot: 32px;   /* footer links */
+}
+
+/* The design's COLOURS, gated on the DARK scheme it was drawn for.
+ *
+ * Specificity (0,3,0). test/support/theme.js reads this block first for a dark
+ * design. Since the flip no round writes the page, so the gate always matches
+ * for a Brücke account — it is kept because an ungated block is the
+ * catastrophic direction the day anything else owns the page again. */
+:root[data-design="bruecke"][data-scheme="dark"] {
+  /* ---- Grund und Fläche. „Kein Verlauf auf einem Paneel": the one gradient
+     is the page ground, radial from --page-hi to the registry's page (#070b14,
+     which is --page-bg). Panels are flat. */
+  --page-hi: #10203a;          /* the page gradient's LIGHT stop */
+  --surface: #0e1626;          /* surface — every panel, flat */
+  --surface-raised: #141d30;   /* sheet, dialog, popover over a panel */
+  --control-fill: #141d30;     /* inputs and controls sit raised on a panel */
+  --bar: #0b1220;              /* top bar and dock, darker than the panel */
+
+  /* The neutral ramp runs UPWARD on dark
+     (.claude/rules/dark-scheme-neutral-ramp-runs-upward.md), soft < sunken <
+     line < edge. --line is B1's „line" (1.40:1 on --surface), --sunken-soft its
+     „hairline" (1.22:1) — the separator inside a panel — and --sunken sits
+     between them (1.31:1) so the ordering holds. */
+  --sunken-soft: #1c2740;
+  --sunken: #202d46;
+  --line: #24324a;
+  --hairline: #1c2740;
+  /* The UI-control border. B1 draws every secondary control as a „Draht in
+     #24324a" — that is 1.40:1 on the plate, and SC 1.4.11 binds the edge that
+     identifies a control at 3:1. So the edge is B1's --ink-dim, the one tone B1
+     reserves for non-text: 3.31 on --surface, 3.08 on --control-fill, 3.61 on
+     the page. Hover moves to --brand (11.4:1), so a control gets STRONGER. */
+  --control-edge: #5d6a82;
+  /* The empty-grid/disabled tone. NON-TEXT ONLY. */
+  --ink-dim: #5d6a82;
+
+  /* ---- Schriftfarben, measured on #0e1626. */
+  --ink: #dfe7f5;        /* 14.5:1 — titles and body */
+  --ink-2: #b8c2d6;      /* 10.1:1 — the second level, longer paragraphs */
+  --ink-soft: #9aa8c0;   /* B1 „ink-muted", 7.5:1 — notation, kicker, meta; the smallest real text */
+
+  /* ---- Akzente. --brand is the registry's cyan (#35e0ff, 11.4:1), written
+     inline. Its hover (B1's link hover) is the lighter cyan. Amber is B1's
+     „action", the ONE main action per screen, a token the primary button reads
+     — an app-wide amber --brand would turn every link amber too. */
+  --brand-strong: #8aeeff;
+  --action: #ffb020;           /* 9.9:1 on the plate */
+  --action-hover: #ffc451;     /* „Überfahren": lighter, stronger glow */
+  --action-press: #e09710;     /* „Gedrückt": darker, glow off */
+  /* Every ink on a saturated fill is the night (dark-designs-and-the-on-accent-flip.md). */
+  --on-accent: #070b14;
+  --on-accent-dark: #070b14;
+
+  /* ---- Semantik. All three are text as well as fills. */
+  --good: #4ade80;     /* ok — ready, rated, the „Gespielt" stamp; 10.4:1 */
+  --warn: #ffb020;     /* the care list's warning is the action amber (B8.2 „wenig") */
+  --danger: #ff6b85;   /* alert — veto, destructive action; 6.6:1 */
+
+  /* ---- Gold. Die Brücke has no gold; the app's rank family is carried by the
+     action amber (a fill with night ink, and 9.9:1 as text), and the wash is a
+     dark amber plate rather than a mix, so it is a measured colour. */
+  --gold: #ffb020;
+  --gold-ink: #070b14;
+  --gold-deep: #ffb020;
+  --gold-edge: #e09710;
+  --gold-soft: #241c0c;
+
+  /* ---- Leuchten. Zier, never meaning on its own („Leuchten sind Zier und
+     tragen nie Bedeutung allein"). Alphas over whatever is behind. */
+  --glow-accent: rgba(53, 224, 255, 0.30);
+  --glow-action: rgba(255, 176, 32, 0.30);
+  --glow-action-strong: rgba(255, 176, 32, 0.50);
+
+  /* ---- Tiefe. „nie aus Schatten": the elevation ramp is an EDGE, and the
+     raised step adds the faint accent glow. */
+  --shadow-1: 0 0 0 1px var(--line);
+  --shadow-2: 0 0 0 1px var(--line);
+  --shadow-3: 0 0 0 1px var(--line), 0 0 28px var(--glow-accent);
+
+  /* ---- The B8.2 ramp, „kein Schub" -> „volle Kraft", one colour per face. It
+     is NOT ordered by lightness (muted sits between amber and green): B8.3's
+     colour-vision proof carries it by the face on every step, the number 1-5 in
+     every cell and a bar whose height rises monotonically — „die Farbe ist die
+     dritte Information, nie die einzige". So it is its own family rather than
+     the --score-* names, whose check asserts a lightness order this ramp
+     deliberately does not have. Each takes the night as ink when filled. */
+  --thrust-1: #ff6b85;   /* kein Schub — the veto's own tone */
+  --thrust-2: #ffb020;   /* wenig */
+  --thrust-3: #9aa8c0;   /* mittel — „die Mitte ist keine Meinung" */
+  --thrust-4: #4ade80;   /* viel */
+  --thrust-5: #35e0ff;   /* volle Kraft */
+  --thrust-ink: #070b14;
+
+  /* ---- The score's band colour (B8 „Score-Farbe an der Zahl"): 4,0 and up
+     cyan, 3,5-3,9 green, under 3,5 amber, never played muted. A score under
+     24px prints in --ink and the band carries the colour; from 24px the number
+     may wear it. */
+  --band-top: #35e0ff;
+  --band-good: #4ade80;
+  --band-low: #ffb020;
+  --band-new: #9aa8c0;
+
+  /* ---- Personenfarben, the LIGHTENED row (B8.1, review D1). The eight stored
+     colours are global (public/js/member-colors.js) and never change; on this
+     plate they measure 2.6-4.0:1 and none reaches 4.5:1. B8.1 keeps each hue
+     and order and raises the lightness: 6.4-9.0:1 on --surface. The design
+     converts when drawing — memberTone() (core.js) asks designPersonTone()
+     (design.js), which reads the registry's markers, and these are the same
+     eight, pinned equal by test/design-tokens.test.js. */
+  --person-lit-1: #f08a5d;
+  --person-lit-2: #3fbf95;
+  --person-lit-3: #a49cf0;
+  --person-lit-4: #e0a03c;
+  --person-lit-5: #f08aa8;
+  --person-lit-6: #6bb3e0;
+  --person-lit-7: #9cc44a;
+  --person-lit-8: #e07a9a;
+}
+
+/* ---------------------------------------------------------------------------
+   Components. Everything that follows exists because a TOKEN could not say it;
+   what a token already carries — most of the app — is absent on purpose.
+   --------------------------------------------------------------------------- */
+
+/* ---- The page ground (B1 „Flächenregel"): the only gradient in the design,
+   and the 28px dot raster over it, both behind everything and never behind a
+   panel's text. Replaces Klassisch's accent glow and paper grain. */
+:root[data-design="bruecke"][data-scheme="dark"] body {
+  background-color: var(--page-bg);
+  background-image:
+    radial-gradient(circle, var(--hairline) 1px, transparent 1.5px),
+    radial-gradient(90% 60% at 50% 0%, var(--page-hi), var(--page-bg) 70%);
+  background-size: 28px 28px, auto;
+  background-attachment: fixed;
+}
+
+/* ---- Display: uppercase, only for titles and buttons (B1 „Nur versal, nur
+   für Titel, Namen von Runden und Spielen, Zahlen im Ergebnis. Kein
+   Fließtext."). Font face only, so it belongs to the voice and is not gated. */
+:root[data-design="bruecke"] :is(h1, h2, h3, .btn, .topbar__home) {
+  text-transform: uppercase;
+  letter-spacing: var(--track-display);
+}
+/* The long-language rule (B16.4): an uppercase title DROPS ONE STEP at 22
+   characters rather than wrapping — two lines of letter-spaced uppercase are
+   unreadable. A screen that renders a title marks it `data-long` when its text
+   runs past 22 characters; the step lives here so no screen re-derives it. */
+:root[data-design="bruecke"] :is(h1, h2, h3)[data-long] { font-size: var(--display-m); }
+:root[data-design="bruecke"] :is(h1, h2, h3)[data-long="2"] { font-size: var(--display-s); }
+
+/* ---- Notation (B1 „IBM Plex Mono … nur für Notation — Kicker, Zähler,
+   Zierzeilen, Spaltenköpfe, versal"): the section kicker and the dock's words.
+   Colour is --ink-soft (B1 „ink-muted") — the kicker is small, so it never
+   wears the accent (rule 1). */
+:root[data-design="bruecke"] :is(.section :is(h1, h2, h3), .dock__item) {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: var(--track-notation);
+}
+:root[data-design="bruecke"] :is(.section :is(h1, h2, h3), .dock__item)[data-long] {
+  letter-spacing: var(--track-notation-long);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .section :is(h1, h2, h3) { color: var(--ink-soft); }
+
+/* „Scores und Tabellen" — tabular figures, as the notation sets them. */
+:root[data-design="bruecke"] :is(
+  .score-pill, .stepper__val, .pool-count, .rater__n, .member-figure__value,
+  .pokale-card__value, .gd-price__amount, .trow__rank, .mood__n
+) {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- Right angles. The radius tokens are 0 above, but styles.css writes a
+   literal radius on the components that predate them; each is restated here.
+   Circles that are circles by MEANING (a status dot) are not in the list. */
+:root[data-design="bruecke"] :is(
+  .btn, .btn--sm, .chip, .input, .select, .sort-select, .card, .sheet, .popover,
+  .popover__opt, .dock, .dock__item, .toast, .empty, .empty__icon, .score-pill,
+  .tag, .mood, .avatar, .sheet__close, .link-btn, .cover-ph
+) {
+  border-radius: 0;
+}
+
+/* ---- Target sizes (the --target-* tokens). Geometry only, so ungated. */
+:root[data-design="bruecke"] .btn { min-height: var(--target-key); }
+:root[data-design="bruecke"] .btn--sm { min-height: var(--target-min); }
+:root[data-design="bruecke"] :is(.input, .select, .sort-select) {
+  min-height: var(--target-field);
+  box-sizing: border-box;
+}
+:root[data-design="bruecke"] :is(.chip, .sheet__close, .link-btn, .back-link, .toast__action, .toast__close) {
+  min-height: var(--target-min);
+}
+:root[data-design="bruecke"] :is(.link-btn, .back-link, .toast__action, .toast__close) {
+  display: inline-flex;
+  align-items: center;
+}
+:root[data-design="bruecke"] .sheet__close { min-width: var(--target-key); min-height: var(--target-key); }
+:root[data-design="bruecke"] .dock__item { min-height: var(--target-key); }
+:root[data-design="bruecke"] .site-footer a {
+  min-height: var(--target-foot);
+  display: inline-flex;
+  align-items: center;
+  padding-inline: 4px;
+}
+
+/* ---- Buttons (B1 „Knöpfe"). Amber is the one main action per screen; the
+   rest is a wire. No pressed-key bottom edge — depth is never a shadow here —
+   so the press compensates nothing and the layout never jumps (#615). */
+:root[data-design="bruecke"][data-scheme="dark"] .btn {
+  border-width: 1px;
+  border-bottom-width: 1px;
+  background: transparent;
+  color: var(--ink);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .btn:hover {
+  background: transparent;
+  border-color: var(--brand);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .btn:active {
+  transform: none;
+  border-bottom-width: 1px;
+  margin-bottom: var(--press-mb);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .btn--primary {
+  background: var(--action);
+  border-color: var(--action);
+  color: var(--on-accent);
+  box-shadow: 0 0 26px var(--glow-action);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .btn--primary:hover {
+  background: var(--action-hover);
+  border-color: var(--action-hover);
+  box-shadow: 0 0 34px var(--glow-action-strong);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .btn--primary:active {
+  background: var(--action-press);
+  border-color: var(--action-press);
+  box-shadow: none;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .btn--ghost {
+  border-color: transparent;
+  color: var(--brand);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .btn--ghost:hover {
+  border-color: var(--brand);
+  color: var(--brand-strong);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .btn--danger {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+/* „Gesperrt verliert die Leuchte, nicht nur die Deckkraft": no glow, no amber,
+   a hairline and the dim tone. WCAG exempts an inactive control, which is the
+   ONLY place --ink-dim may colour a label. */
+:root[data-design="bruecke"][data-scheme="dark"] .btn:disabled {
+  opacity: 1;
+  background: transparent;
+  border-color: var(--hairline);
+  color: var(--ink-dim);
+  box-shadow: none;
+}
+/* „Lädt": the outline stays and the fill runs in from the left; its static end
+   state is filled (B1 „5 · Zustände", B10). A button marks itself busy with
+   aria-busy. */
+:root[data-design="bruecke"][data-scheme="dark"] .btn--primary[aria-busy="true"] {
+  background: linear-gradient(90deg, var(--action) 60%, transparent 60%);
+  color: var(--on-accent);
+  box-shadow: none;
+}
+
+/* ---- Focus (B1 „Fokus"): a cyan ring, 2px, 2px off, outside the shape so it
+   carries on amber as well as on a wire. Nothing to write: every focus rule in
+   styles.css paints `var(--brand-ring, var(--brand))`, and --brand is the cyan. */
+
+/* ---- Chips: a wire at rest, the cyan fill with night ink when on — which is
+   styles.css's own `.chip.is-on` (--brand under --on-accent). A re-point, not a
+   background, so every state rule keeps its fill (Ocean's lesson, #1210). */
+:root[data-design="bruecke"][data-scheme="dark"] .chip {
+  --control-fill: var(--surface);
+}
+
+/* ---- Inputs: the raised plate with the control edge; the focus ring is the
+   app's own and is never restyled for looks. */
+:root[data-design="bruecke"][data-scheme="dark"] :is(.input, .select) {
+  border-width: 1px;
+}
+
+/* ---- Panels. Flat, one line, no lift on hover („keine Bewegung") — the edge
+   lights instead. */
+:root[data-design="bruecke"][data-scheme="dark"] .card:hover {
+  transform: none;
+  border-color: var(--brand);
+  box-shadow: 0 0 18px var(--glow-accent);
+}
+/* Sheet, dialog, popover and menu sit raised over a panel. A re-point of
+   --surface, so everything inside that reads the surface follows. */
+:root[data-design="bruecke"][data-scheme="dark"] :is(.sheet, .popover) {
+  --surface: var(--surface-raised);
+  background: var(--surface-raised);
+  border: 1px solid var(--line);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .sheet__close {
+  background: transparent;
+  border: 1px solid var(--control-edge);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .sheet__close:hover { border-color: var(--brand); }
+
+/* ---- Top bar and dock: the bar tone, darker than a panel. */
+:root[data-design="bruecke"][data-scheme="dark"] .topbar {
+  background: var(--bar);
+  border-bottom-color: var(--line);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .dock {
+  background: var(--bar);
+  border-color: var(--line);
+  box-shadow: none;
+}
+
+/* ---- The toast: a raised plate with a line, like every overlay. Its radius
+   is 0 above — never the pill token (#858, test/ocean-overlays.test.js). Only
+   the neutral tone is restated; the success/error tones keep styles.css's
+   measured pairs. */
+:root[data-design="bruecke"][data-scheme="dark"] .toast:not(.toast--success):not(.toast--error) {
+  background: var(--surface-raised);
+  color: var(--ink);
+  border: 1px solid var(--line);
+}
+
+/* ---- The empty state (B7): a panel with a wire, not a dashed accent frame;
+   the medallion is a square outlined in cyan with the glyph in cyan (a glyph,
+   so the accent may carry it). */
+:root[data-design="bruecke"][data-scheme="dark"] .empty {
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .empty__icon {
+  background: transparent;
+  border: 1px solid var(--brand);
+  color: var(--brand);
+}
+
+/* ---- The no-cover placeholder: B1's scanlines („Scanlinien auf Covern") on
+   the raised plate, the glyph in cyan. `.cover-ph` owns the coverless game box
+   (.claude/rules/cover-ph-owns-the-coverless-game-glyph.md). The sheets'
+   placeholder cover gradients are NOT tokens and are never implemented. */
+:root[data-design="bruecke"][data-scheme="dark"] .cover-ph {
+  color: var(--brand);
+  background-color: var(--surface-raised);
+  background-image: repeating-linear-gradient(0deg, var(--hairline) 0 1px, transparent 1px 4px);
+}
+
+/* ---- The score pill (B8 „Score-Farbe an der Zahl"). A pill is under 24px,
+   so its number prints in --ink on the raised plate and a BAND at its leading
+   edge carries the colour — never the colour as small text (rule 1). Keyed on
+   the `data-stop` rung the JS writes; B8's bands are on the tenth (4,0 / 3,5),
+   the rungs on the half, so 5 is cyan, 4 green and the rest amber. The veto
+   takes the alert tone. A pill without data-stop keeps the app's --sc fill. */
+:root[data-design="bruecke"][data-scheme="dark"] .score-pill[data-stop] {
+  --sc-fill: var(--surface-raised);
+  --sc-ink: var(--ink);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--sc-band, var(--band-low));
+}
+:root[data-design="bruecke"][data-scheme="dark"] .score-pill[data-stop="5"] { --sc-band: var(--band-top); }
+:root[data-design="bruecke"][data-scheme="dark"] .score-pill[data-stop="4"] { --sc-band: var(--band-good); }
+:root[data-design="bruecke"][data-scheme="dark"] .score-pill[data-stop="veto"] { --sc-band: var(--danger); }
+
+/* ---- The face row (B1 „Wertungskarte"): five square keys at the key target,
+   a wire at rest. The chosen face keeps the app's ramp fill and night ink; the
+   card's own composition (the thrust bars) is the vote-card issue's. */
+:root[data-design="bruecke"] .mood { min-width: var(--target-key); min-height: var(--target-key); }
+:root[data-design="bruecke"][data-scheme="dark"] .mood:not(.is-selected) {
+  background: transparent;
+  border-width: 1px;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .mood:hover { transform: none; }
+:root[data-design="bruecke"][data-scheme="dark"] .mood.is-selected {
+  transform: none;
+  box-shadow: 0 0 24px var(--glow-accent);
+}
+
+/* ---- The footer (B1 „Kopfleiste & Dock" / B7): the bar tone with a line.
+   The BGG badge is artwork with its own ground and is licence-bound — it is
+   never restyled, only given room. */
+:root[data-design="bruecke"][data-scheme="dark"] .site-footer {
+  background: var(--bar);
+  border-top-color: var(--line);
+}
+
+/* ---- The Tafel's place numerals. styles.css prints places 2 and 3 in a
+   silver and a bronze tuned for a white card (2.7:1 on this plate); here they
+   take the two lower rungs of the ink ramp, 10.1:1 and 7.5:1, and place 1
+   keeps --gold-deep, the action amber. */
+:root[data-design="bruecke"][data-scheme="dark"] .trow__rank--2 { color: var(--ink-2); }
+:root[data-design="bruecke"][data-scheme="dark"] .trow__rank--3 { color: var(--ink-soft); }

@@ -1270,6 +1270,14 @@ I18N.en = {
   'marker.ocean.lagune': 'Lagoon',
   'marker.ocean.tang': 'Kelp',
   'marker.ocean.purpur': 'Purple',
+  'marker.bruecke.glut': 'Ember',
+  'marker.bruecke.minze': 'Mint',
+  'marker.bruecke.nebel': 'Nebula',
+  'marker.bruecke.bernstein': 'Amber',
+  'marker.bruecke.rosa': 'Rose',
+  'marker.bruecke.himmel': 'Sky',
+  'marker.bruecke.limette': 'Lime',
+  'marker.bruecke.beere': 'Berry',
   'marker.toast.set': 'Colour saved',
 
 
@@ -1653,6 +1661,8 @@ I18N.en = {
   'design.tisch.short': 'Felt, brass, seats at the table',
   'design.ocean.name': 'Ocean',
   'design.ocean.desc': 'Bright and open: rounds, members, wins — and a whale.',
+  'design.bruecke.name': 'The Bridge',
+  'design.bruecke.desc': 'Dark ground, cyan and amber: your round on the command bridge.',
   'design.ocean.short': 'Bright water, open space',
   'design.chooser.kicker': 'New in Spielwirbel',
   'design.chooser.title': 'Pick a design.',

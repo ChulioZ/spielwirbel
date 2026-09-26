@@ -1217,6 +1217,14 @@ I18N.it = {
   'marker.ocean.lagune': 'Laguna',
   'marker.ocean.tang': 'Alga',
   'marker.ocean.purpur': 'Porpora',
+  'marker.bruecke.glut': 'Brace',
+  'marker.bruecke.minze': 'Menta',
+  'marker.bruecke.nebel': 'Nebulosa',
+  'marker.bruecke.bernstein': 'Ambra',
+  'marker.bruecke.rosa': 'Rosa',
+  'marker.bruecke.himmel': 'Cielo',
+  'marker.bruecke.limette': 'Lime',
+  'marker.bruecke.beere': 'Bacca',
   'marker.toast.set': 'Colore salvato',
 
 
@@ -1577,6 +1585,8 @@ I18N.it = {
   'design.tisch.short': 'Feltro, ottone, posti al tavolo',
   'design.ocean.name': 'Oceano',
   'design.ocean.desc': 'Chiaro e ampio: gruppi, membri, vittorie… e una balena.',
+  'design.bruecke.name': 'La plancia',
+  'design.bruecke.desc': 'Fondo notturno, ciano e ambra: il tuo gruppo sulla plancia di comando.',
   'design.ocean.short': 'Acqua chiara, tanto spazio',
   'design.chooser.kicker': 'Novità su Spielwirbel',
   'design.chooser.title': 'Scegli un design.',

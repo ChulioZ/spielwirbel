@@ -1261,6 +1261,14 @@ I18N.de = {
   'marker.ocean.lagune': 'Lagune',
   'marker.ocean.tang': 'Tang',
   'marker.ocean.purpur': 'Purpur',
+  'marker.bruecke.glut': 'Glut',
+  'marker.bruecke.minze': 'Minze',
+  'marker.bruecke.nebel': 'Nebel',
+  'marker.bruecke.bernstein': 'Bernstein',
+  'marker.bruecke.rosa': 'Rosa',
+  'marker.bruecke.himmel': 'Himmel',
+  'marker.bruecke.limette': 'Limette',
+  'marker.bruecke.beere': 'Beere',
   'marker.toast.set': 'Farbe gespeichert',
 
 
@@ -1648,6 +1656,8 @@ I18N.de = {
   'design.tisch.short': 'Filz, Messing, Plätze am Tisch',
   'design.ocean.name': 'Ocean',
   'design.ocean.desc': 'Hell und weit: Runden, Mitglieder, Siege — und ein Wal.',
+  'design.bruecke.name': 'Die Brücke',
+  'design.bruecke.desc': 'Nachtgrund, Cyan und Amber: die Runde auf der Kommandobrücke.',
   'design.ocean.short': 'Helles Wasser, viel Weite',
   'design.chooser.kicker': 'Neu in Spielwirbel',
   'design.chooser.title': 'Wähl dir ein Design.',

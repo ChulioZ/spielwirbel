@@ -27,7 +27,7 @@
  * See .claude/rules/frontend-build-cache-busting.md.
  */
 
-const CACHE = 'spielwirbel-shell-v384';
+const CACHE = 'spielwirbel-shell-v385';
 
 // Everything the app needs to boot offline. Kept in sync with the <script>/<link>
 // order in index.html; each entry must be a real, servable path or install fails
@@ -61,6 +61,17 @@ const SHELL = [
   '/fonts/figtree-latin-500-normal.woff2',
   '/fonts/figtree-latin-600-normal.woff2',
   '/fonts/figtree-latin-700-normal.woff2',
+  // Die Bruecke (#1237): its sheet and its three faces, listed for the same
+  // reason as Ocean above. Eight woff2, about 136 KB.
+  '/css/designs/bruecke.css',
+  '/fonts/chakra-petch-latin-600-normal.woff2',
+  '/fonts/chakra-petch-latin-700-normal.woff2',
+  '/fonts/ibm-plex-sans-latin-400-normal.woff2',
+  '/fonts/ibm-plex-sans-latin-500-normal.woff2',
+  '/fonts/ibm-plex-sans-latin-600-normal.woff2',
+  '/fonts/ibm-plex-mono-latin-400-normal.woff2',
+  '/fonts/ibm-plex-mono-latin-500-normal.woff2',
+  '/fonts/ibm-plex-mono-latin-600-normal.woff2',
   '/manifest.webmanifest',
   '/fonts/tabler-icons.css',
   '/js/error-report.js',
