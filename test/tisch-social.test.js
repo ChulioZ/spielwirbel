@@ -194,7 +194,8 @@ const KLASSISCH_FRIENDS = `div.friends-screen
             i.ti.ti-flag
         div.e-tile
           span.e-tile__img
-            i.ti.ti-cards
+            span.cover-ph
+              i.ti.ti-tornado
           span.e-tile__title
           span.e-tile__meta
             span.e-tile__who

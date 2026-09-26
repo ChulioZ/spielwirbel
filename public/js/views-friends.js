@@ -212,7 +212,7 @@ function personTileLine(p, events) {
    It becomes the field IN PLACE rather than opening an editor: there is nothing
    to dismiss, and the enclosing <form> is what keeps Enter-to-submit and the
    submit button's semantics. The form spans the whole row, because a username
-   field plus a submit button does not fit a 168px track. */
+   field plus a submit button does not fit a 156-172px track. */
 function renderAddTile() {
   const tile = h(`<button type="button" class="k-tile k-tile--add">
        <span class="k-tile__plus" aria-hidden="true">＋</span>
