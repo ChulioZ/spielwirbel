@@ -2544,21 +2544,32 @@
 }
 :root[data-design="ocean"]:not([data-scheme="dark"]) .result-screen--ocean .tafel .trow {
   display: grid;
-  /* Second line: the row's action across the title's and the pill's columns.
-     An area spanning the flexible track does not widen the pill's column, so a
-     „Spielen" button cannot squeeze the title, and the two never share a track
-     to collide in. */
-  grid-template-columns: 20px 44px minmax(0, 1fr) auto;
+  /* A settled session's action is the `…` alone, so it sits beside the pill and
+     the distribution follows the title directly (#1363's merge interview — on
+     its own line it left a gap in every row). */
+  grid-template-columns: 20px 44px minmax(0, 1fr) auto auto;
   grid-template-areas:
-    "rank cover main pill"
-    ".    .     sub  sub"
-    "bars bars  bars bars";
+    "rank cover main pill sub"
+    "bars bars  bars bars bars";
   gap: 4px 12px;
   align-items: center;
   margin-bottom: 8px;
   padding: 10px 12px;
   border-radius: var(--radius-lg);
   background: var(--control-fill);
+}
+/* While the session is still choosing, the action is a „Spielen" button or the
+   „Auf dem Tisch" chip (~100px), which beside the pill would squeeze the title.
+   Then it takes a line of its own across the title's and the pill's columns —
+   an area spanning the flexible track does not widen the pill's column, so the
+   two never share a track to collide in. At every width: Ocean's Tafel sits in
+   a narrow column on desktop too. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .result-screen--ocean .tafel .trow:has(.play-btn, .trow__chip) {
+  grid-template-columns: 20px 44px minmax(0, 1fr) auto;
+  grid-template-areas:
+    "rank cover main pill"
+    ".    .     sub  sub"
+    "bars bars  bars bars";
 }
 :root[data-design="ocean"]:not([data-scheme="dark"]) .result-screen--ocean .tafel-top .trow { background: transparent; }
 :root[data-design="ocean"]:not([data-scheme="dark"]) .result-screen--ocean .trow__rank {

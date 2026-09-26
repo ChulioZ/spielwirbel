@@ -170,9 +170,10 @@ test('the distribution is always shown under the row, with no count and no toggl
   assert.equal(bars.querySelectorAll('.bar-col').length, 5, 'the whole distribution');
   assert.equal(dom.app.querySelector('.trow__votes, [aria-controls^="tafel-dist-"], [id^="tafel-dist-"]'), null,
     'no count, no disclosure wiring');
-  // The toggle's label was the distribution's accessible name; the group keeps it.
+  // The group keeps an accessible name, and it carries no count either — the
+  // number is the same on every row, for a screen reader as for the eye.
   assert.equal(bars.getAttribute('role'), 'group');
-  assert.equal(bars.getAttribute('aria-label'), 'Verteilung der 3 Wertungen');
+  assert.equal(bars.getAttribute('aria-label'), 'Verteilung der Wertungen');
 });
 
 test('a row nobody rated shows empty bar tracks and „–" in the pill, like Klassisch', async (t) => {
@@ -182,6 +183,7 @@ test('a row nobody rated shows empty bar tracks and „–" in the pill, like Kl
   assert.equal(text(cn.querySelector('.trow__pill.score-pill--none')), '–');
   const bars = cn.querySelector('.trow__bars');
   assert.ok(bars, 'the row keeps the same shape as its rated neighbours');
+  assert.equal(bars.getAttribute('aria-label'), 'Verteilung der Wertungen', 'never „0 Wertungen“');
   assert.equal(bars.hidden, false);
   const fills = [...bars.querySelectorAll('.bar')];
   assert.equal(fills.length, 5);

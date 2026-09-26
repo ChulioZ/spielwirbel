@@ -74,7 +74,7 @@ function composedTrow(p) {
        ${pill}
        <div class="trow__action"></div>
        ${p.hasVotes ? `<div class="trow__bars" role="group"
-           aria-label="${esc(tn(r.count, 'result.distShowOne', 'result.distShow', { n: r.count }))}">${p.bars}</div>` : ''}
+           aria-label="${esc(t('result.distLabel'))}">${p.bars}</div>` : ''}
      </div>`);
 }
 
