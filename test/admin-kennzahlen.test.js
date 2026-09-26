@@ -24,10 +24,11 @@ const { JSDOM } = require('jsdom');
 
 const ROOT = path.join(__dirname, '..');
 
-// Per ACCOUNT since #1201, keyed by the offered designs in registry order. The
-// counts sum to `adoption.accountsTotal` (40), never to `accounts.total` (42) —
-// the two are made to disagree below on purpose.
-const DESIGNS = { klassisch: 31, tisch: 9 };
+// Per ACCOUNT since #1201, keyed by the offered designs in registry order. Since
+// #1362 only accounts that ANSWERED the chooser are counted, so the lines sum to
+// 30 — deliberately neither `adoption.accountsTotal` (40) nor `accounts.total`
+// (42), so a line that divided by either could not pass.
+const DESIGNS = { klassisch: 21, tisch: 9 };
 
 const STATUS = (over = {}) => ({
   metrics: {
@@ -272,9 +273,22 @@ test('Designs counts ACCOUNTS per design, headlined by the switch-back share', a
   assert.equal(row.value, '3 / 40', 'the headline is the switch-back share of the card\'s accounts');
   assert.match(row.note, /zurückgewechselt/);
   assert.match(row.note, /von 40/, 'the note must say what the share is out of');
-  assert.deepEqual(row.breakdown, [['klassisch', '31 / 40'], ['tisch', '9 / 40']],
-    'one line per offered design, in the order the server sent them');
+  assert.deepEqual(row.breakdown, [['klassisch', '21 / 30'], ['tisch', '9 / 30']],
+    'one line per offered design, each a share of the ANSWERED accounts (#1362)');
   assert.equal(row.pill, 'pill', 'an adoption share carries the neutral pill');
+});
+
+test('the per-design lines name their denominator: accounts that answered the chooser (#1362)', async (t) => {
+  /* The answered population includes skippers — „Später entscheiden" writes the
+     face and stamps the chooser exactly like a confirmed Tisch — so the wording
+     must never call the figure a choice. */
+  const { doc, dom } = await panel();
+  t.after(() => dom.window.close());
+  const row = adoptionTiles(doc).find((x) => x.label === 'Designs');
+  assert.match(row.note, /von 30, die die Design-Auswahl beantwortet haben/,
+    'the lines\' denominator must be stated, and it is the answered sum, not an account total');
+  const text = [row.note, ...row.breakdown.flat()].join(' ');
+  assert.doesNotMatch(text, /gewählt|bewusst/i, 'skippers are included — the tile must not claim a choice');
 });
 
 test('the round histogram does not come back beside the account tile', async (t) => {
