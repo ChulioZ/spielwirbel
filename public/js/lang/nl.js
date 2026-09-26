@@ -1210,6 +1210,14 @@ I18N.nl = {
   'marker.ocean.lagune': 'Lagune',
   'marker.ocean.tang': 'Kelp',
   'marker.ocean.purpur': 'Purper',
+  'marker.bruecke.glut': 'Gloed',
+  'marker.bruecke.minze': 'Munt',
+  'marker.bruecke.nebel': 'Nevel',
+  'marker.bruecke.bernstein': 'Amber',
+  'marker.bruecke.rosa': 'Roze',
+  'marker.bruecke.himmel': 'Hemel',
+  'marker.bruecke.limette': 'Limoen',
+  'marker.bruecke.beere': 'Bes',
   'marker.toast.set': 'Kleur opgeslagen',
 
 
@@ -1570,6 +1578,8 @@ I18N.nl = {
   'design.tisch.short': 'Vilt, messing, plaatsen aan tafel',
   'design.ocean.name': 'Oceaan',
   'design.ocean.desc': 'Licht en weids: groepen, leden, overwinningen — en een walvis.',
+  'design.bruecke.name': 'De brug',
+  'design.bruecke.desc': 'Nachtgrond, cyaan en amber: jullie groep op de commandobrug.',
   'design.ocean.short': 'Helder water, veel ruimte',
   'design.chooser.kicker': 'Nieuw in Spielwirbel',
   'design.chooser.title': 'Kies een ontwerp.',

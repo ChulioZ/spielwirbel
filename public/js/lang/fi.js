@@ -1181,6 +1181,14 @@ I18N.fi = {
   'marker.ocean.lagune': 'Laguuni',
   'marker.ocean.tang': 'Rakkolevä',
   'marker.ocean.purpur': 'Purppura',
+  'marker.bruecke.glut': 'Hehku',
+  'marker.bruecke.minze': 'Minttu',
+  'marker.bruecke.nebel': 'Sumu',
+  'marker.bruecke.bernstein': 'Meripihka',
+  'marker.bruecke.rosa': 'Ruusu',
+  'marker.bruecke.himmel': 'Taivas',
+  'marker.bruecke.limette': 'Lime',
+  'marker.bruecke.beere': 'Marja',
   'marker.toast.set': 'Väri tallennettu',
 
 
@@ -1538,6 +1546,8 @@ I18N.fi = {
   'design.tisch.short': 'Huopa, messinki, paikat pöydän ääressä',
   'design.ocean.name': 'Valtameri',
   'design.ocean.desc': 'Vaalea ja avara: porukat, jäsenet, voitot — ja valas.',
+  'design.bruecke.name': 'Komentosilta',
+  'design.bruecke.desc': 'Yötausta, syaani ja meripihka: porukkasi komentosillalla.',
   'design.ocean.short': 'Kirkas vesi, paljon tilaa',
   'design.chooser.kicker': 'Uutta Spielwirbelissä',
   'design.chooser.title': 'Valitse ulkoasu.',

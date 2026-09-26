@@ -1218,6 +1218,14 @@ I18N.fr = {
   'marker.ocean.lagune': 'Lagon',
   'marker.ocean.tang': 'Varech',
   'marker.ocean.purpur': 'Pourpre',
+  'marker.bruecke.glut': 'Braise',
+  'marker.bruecke.minze': 'Menthe',
+  'marker.bruecke.nebel': 'Nébuleuse',
+  'marker.bruecke.bernstein': 'Ambre',
+  'marker.bruecke.rosa': 'Rose',
+  'marker.bruecke.himmel': 'Ciel',
+  'marker.bruecke.limette': 'Citron vert',
+  'marker.bruecke.beere': 'Baie',
   'marker.toast.set': 'Couleur enregistrée',
 
 
@@ -1578,6 +1586,8 @@ I18N.fr = {
   'design.tisch.short': 'Feutre, laiton, places à table',
   'design.ocean.name': 'Océan',
   'design.ocean.desc': 'Clair et vaste : groupes, membres, victoires — et une baleine.',
+  'design.bruecke.name': 'La passerelle',
+  'design.bruecke.desc': 'Fond de nuit, cyan et ambre : votre groupe sur la passerelle de commandement.',
   'design.ocean.short': 'Eau claire, grand large',
   'design.chooser.kicker': 'Nouveau sur Spielwirbel',
   'design.chooser.title': 'Choisis un design.',

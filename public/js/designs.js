@@ -320,6 +320,78 @@ const DESIGN_REGISTRY = [
     card: 'ocean',
     enabled: true,
   },
+  /* Die Brücke (#1237), from docs/design/bruecke/Bruecke-B1-Komponenten.dc.html
+     (the one token source) and Bruecke-B8-Farben.dc.html (the measurements). A
+     DARK, right-angled design: faintly lit plates over a night ground, depth from
+     edges, corner brackets and glow, never from shadow. Its failure class is the
+     opposite of Ocean's — not saturated colour on near-white, but accent and
+     person colour used as SMALL TEXT on a dark plate, which is where every
+     contrast finding of the review lived (docs/design/pruefung-bruecke-2026-09-22.md).
+
+     `enabled: false` until its flip (#1249); the screens are the issues after
+     #1237. Outside production it is reachable through `?design=bruecke`
+     (design.js initDesign), exactly as Ocean and Der Tisch were built.
+
+     THE PAGE IS THE DARKEST STOP of B1's page gradient (#070b14): paintDesign()
+     writes it inline as --page-bg, which is also what every ratio in this app is
+     measured against. The gradient's light stop (#10203a) is a token in
+     bruecke.css, and test/a11y-contrast.test.js measures text on BOTH stops.
+
+     THE ACCENT IS CYAN (#35e0ff), B1's „accent": kicker, numbers, the outline of
+     the second action, and the focus ring. --brand is the app's link and
+     active-chip colour, and cyan is the one that carries text on every ground
+     here (11.4:1 on the plate). Amber — B1's „action", „die eine Hauptaktion pro
+     Screen" — is a separate token the primary button reads in bruecke.css,
+     because an app-wide --brand in amber would also turn every link amber. */
+  {
+    id: 'bruecke',
+    labelKey: 'design.bruecke.name',
+    descKey: 'design.bruecke.desc',
+    // B1.3 „rocket trägt Mission starten": the one glyph the design owns.
+    glyph: 'ti-rocket',
+    scheme: 'dark',
+    page: '#070b14',
+    accent: '#35e0ff',
+    stylesheet: '/css/designs/bruecke.css',
+    /* The eight markers are the eight PERSON colours in B8.1's LIGHTENED row
+       (B14.5 draws the marker picker with exactly these, in member-colors.js's
+       own order). The stored colours are global and never change
+       (public/js/member-colors.js): the eight originals measure 2.6-4.0:1 on
+       the Brücke plate and none reaches 4.5:1, so the design converts when it
+       draws — B8.1's row keeps each hue and raises its lightness (review D1).
+
+       `deep` is each colour 15% toward the page in oklab: the marker's second
+       stop (a marker is a two-stop swatch everywhere in the app). Dark ink
+       #070b14 clears 5.1:1 or better on it, the tightest being the berry. */
+    markerInk: '#070b14',
+    markers: [
+      { key: 'glut', labelKey: 'marker.bruecke.glut', color: '#f08a5d', deep: '#c87553' },
+      { key: 'minze', labelKey: 'marker.bruecke.minze', color: '#3fbf95', deep: '#37a080' },
+      { key: 'nebel', labelKey: 'marker.bruecke.nebel', color: '#a49cf0', deep: '#8983ca' },
+      { key: 'bernstein', labelKey: 'marker.bruecke.bernstein', color: '#e0a03c', deep: '#bb873a' },
+      { key: 'rosa', labelKey: 'marker.bruecke.rosa', color: '#f08aa8', deep: '#c8758f' },
+      { key: 'himmel', labelKey: 'marker.bruecke.himmel', color: '#6bb3e0', deep: '#5a96bd' },
+      { key: 'limette', labelKey: 'marker.bruecke.limette', color: '#9cc44a', deep: '#82a545' },
+      { key: 'beere', labelKey: 'marker.bruecke.beere', color: '#e07a9a', deep: '#bb6884' },
+    ],
+    /* A person's colour is PAINTED as the marker at its index (design.js
+       designPersonTone, read by memberTone in core.js): B8.1's lightened row,
+       instead of the generic dark-scheme lift every other dark design gets. */
+    personTone: 'marker',
+    /* Klassisch's marks, stated rather than inherited, until Brücke's own mark
+       lands with its flip — the same move Ocean made before #1222, so the row
+       is complete on its own (test/design-marks.test.js walks every row). */
+    marks: {
+      icons: [
+        { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
+        { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
+      ],
+      favicon: { href: '/icons/icon-192.png', sizes: '192x192' },
+      appleTouch: '/icons/apple-touch-icon.png',
+      og: '/icons/og-image.png',
+    },
+    enabled: false,
+  },
 ];
 
 /* Which run of the first-start chooser an account has seen (#1186). A REVISION

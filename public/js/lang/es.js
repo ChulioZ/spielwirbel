@@ -1224,6 +1224,14 @@ I18N.es = {
   'marker.ocean.lagune': 'Laguna',
   'marker.ocean.tang': 'Alga',
   'marker.ocean.purpur': 'Púrpura',
+  'marker.bruecke.glut': 'Brasa',
+  'marker.bruecke.minze': 'Menta',
+  'marker.bruecke.nebel': 'Nebulosa',
+  'marker.bruecke.bernstein': 'Ámbar',
+  'marker.bruecke.rosa': 'Rosa',
+  'marker.bruecke.himmel': 'Cielo',
+  'marker.bruecke.limette': 'Lima',
+  'marker.bruecke.beere': 'Baya',
   'marker.toast.set': 'Color guardado',
 
 
@@ -1601,6 +1609,8 @@ I18N.es = {
   'design.tisch.short': 'Fieltro, latón, sitios en la mesa',
   'design.ocean.name': 'Océano',
   'design.ocean.desc': 'Claro y abierto: grupos, miembros, victorias… y una ballena.',
+  'design.bruecke.name': 'El puente',
+  'design.bruecke.desc': 'Fondo nocturno, cian y ámbar: tu grupo en el puente de mando.',
   'design.ocean.short': 'Agua clara, mucho espacio',
   'design.chooser.kicker': 'Novedad en Spielwirbel',
   'design.chooser.title': 'Elige un diseño.',
