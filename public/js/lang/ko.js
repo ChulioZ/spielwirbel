@@ -1718,8 +1718,6 @@ I18N.ko = {
   'badges.completed.line': '첫 게임을 완료로 표시',
   'badges.evergreen.name': '스테디셀러',
   'badges.evergreen.line': '한 게임을 {n}번 플레이',
-  'badges.recapShared.name': '요약 공유',
-  'badges.recapShared.line': '첫 요약 공유',
   'badges.accountSessions.name': '세션',
   'badges.accountSessions.line': '모든 그룹에서 세션 {n}회',
   'badges.accountWins.name': '승리',

@@ -1787,8 +1787,6 @@ I18N.nl = {
   'badges.completed.line': 'Het eerste spel als uitgespeeld gemarkeerd',
   'badges.evergreen.name': 'Klassieker',
   'badges.evergreen.line': 'Eén spel {n} keer gespeeld',
-  'badges.recapShared.name': 'Terugblik gedeeld',
-  'badges.recapShared.line': 'De eerste terugblik gedeeld',
   'badges.accountSessions.name': 'Sessies',
   'badges.accountSessions.line': '{n} sessies in alle groepen',
   'badges.accountWins.name': 'Zeges',

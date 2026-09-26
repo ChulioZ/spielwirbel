@@ -1908,8 +1908,6 @@ I18N.de = {
   'badges.completed.line': 'Das erste Spiel als durchgespielt markiert',
   'badges.evergreen.name': 'Dauerbrenner',
   'badges.evergreen.line': 'Ein Spiel {n}-mal gespielt',
-  'badges.recapShared.name': 'Rückblick geteilt',
-  'badges.recapShared.line': 'Den ersten Rückblick geteilt',
   'badges.accountSessions.name': 'Sessions',
   'badges.accountSessions.line': '{n} Sessions in allen Runden',
   'badges.accountWins.name': 'Siege',

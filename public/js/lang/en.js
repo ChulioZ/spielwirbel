@@ -1910,8 +1910,6 @@ I18N.en = {
   'badges.completed.line': 'Marked the first game as completed',
   'badges.evergreen.name': 'Evergreen',
   'badges.evergreen.line': 'Played one game {n} times',
-  'badges.recapShared.name': 'Recap shared',
-  'badges.recapShared.line': 'Shared the first recap',
   'badges.accountSessions.name': 'Sessions',
   'badges.accountSessions.line': '{n} sessions across all rounds',
   'badges.accountWins.name': 'Wins',
