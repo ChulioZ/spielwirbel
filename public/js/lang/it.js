@@ -1794,8 +1794,6 @@ I18N.it = {
   'badges.completed.line': 'Primo gioco segnato come completato',
   'badges.evergreen.name': 'Intramontabile',
   'badges.evergreen.line': 'Un gioco giocato {n} volte',
-  'badges.recapShared.name': 'Riepilogo condiviso',
-  'badges.recapShared.line': 'Primo riepilogo condiviso',
   'badges.accountSessions.name': 'Sessioni',
   'badges.accountSessions.line': '{n} sessioni in tutti i gruppi',
   'badges.accountWins.name': 'Vittorie',

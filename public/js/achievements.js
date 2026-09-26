@@ -8,7 +8,8 @@
 
    The catalogue is the ★ core set of docs/design/handover-abzeichen-2026-09-26.md
    §2 with the decisions of docs/design/pruefung-abzeichen-2026-09-26.md finding 4:
-   22 entries (9 member · 9 round · 4 account), Stammgast and the round's
+   21 entries (9 member · 8 round · 4 account — Rückblick geteilt was dropped:
+   sharing a recap stores nothing, so it could never be earned), Stammgast and the round's
    Sessions with four tiers, everything else three at most, and exactly three
    secrets (Comeback · Einstimmig · Unentschieden).
 
@@ -18,7 +19,7 @@
      roundBadges(round, opts)   -> { round: [entry], members: { [mid]: [entry] } }
      newSince(round, sid, opts) -> [{ key, holder, memberId, tier, sessionId, at }]
      accountBadges(stats, createdAt, now) -> [entry]
-     BADGE_CATALOGUE            -> the 22 definitions, in display order
+     BADGE_CATALOGUE            -> the 21 definitions, in display order
 
    One entry:
      { key, holder, glyph, secret,
@@ -29,8 +30,8 @@
        history,   // every earning, oldest first: [{ tier, sessionId, at }]
        isNew,     // an earning came from the round's latest finished session
        gameId }   // Dauerbrenner only: the game that carries the count
-   `sessionId` is null for the three round entries no session produces (Regal,
-   Durchgespielt, Rückblick geteilt) and for the account tier.
+   `sessionId` is null for the two round entries no session produces (Regal,
+   Durchgespielt) and for the account tier.
 
    The replay: every condition walks the round's FINISHED sessions in
    `createdAt` order — when the evening happened, the Pokale streak's rule
@@ -96,7 +97,6 @@ const BADGE_CATALOGUE = [
   { key: 'bigTable', holder: 'round', glyph: 'ti-confetti', n: BADGE_BIG_TABLE, measure: (c) => badgeFirst(c.sessions.filter((s) => c.deps.sessionPeople(c.round, s).length >= BADGE_BIG_TABLE)) },
   { key: 'completed', holder: 'round', glyph: 'ti-circle-check', measure: badgeMeasureCompleted },
   { key: 'evergreen', holder: 'round', glyph: 'ti-flame', goal: BADGE_EVERGREEN_PLAYS, counted: true, measure: badgeMeasureEvergreen },
-  { key: 'recapShared', holder: 'round', glyph: 'ti-share', measure: badgeMeasureRecapShared },
   // --- C. the account, across all its rounds --------------------------------
   { key: 'accountSessions', holder: 'account', glyph: 'ti-cards', tiers: [25, 100, 500], counted: true, measure: (c) => badgeTotal(c.stats.sessions) },
   { key: 'accountWins', holder: 'account', glyph: 'ti-trophy', tiers: [10, 50], counted: true, measure: (c) => badgeTotal(c.stats.wins) },
@@ -268,17 +268,6 @@ function badgeMeasureEvergreen(c) {
   return { steps, count: best, gameId };
 }
 
-/* The first period recap shared (#800). Sharing the card is today a purely
-   client-side act (views-period-recap.js `shareRecapCard`) that stores nothing,
-   so the round snapshot holds no signal for it. The condition reads a
-   `recap_shared` activity from `opts.activities` so the slice that records the
-   share needs no change here; until something writes one, this entry stays
-   locked. */
-function badgeMeasureRecapShared(c) {
-  const at = (c.activities || []).filter((a) => a && a.type === 'recap_shared' && a.at).map((a) => a.at).sort()[0];
-  return at ? { steps: [{ sessionId: null, at, count: 1 }], count: 1 } : { steps: [], count: 0 };
-}
-
 /* Voters: everyone at the table (guests included) who rated at least one game.
    A direct-pick session asks nobody, so it has no vote at all and neither
    condition below can fire on it. */
@@ -403,7 +392,6 @@ function badgeRoundContext(round, opts) {
   return {
     round: { ...round, games: round.games || [], members: round.members || [] },
     sessions,
-    activities: o.activities,
     deps: badgeDeps(o.deps),
     game: (gid) => (gid ? byId.get(gid) || null : null),
     // Legacy sessions without `memberIds` count everyone as joined — the
@@ -418,7 +406,7 @@ function badgeRoundContext(round, opts) {
 }
 
 /* Every round and member entry for one round snapshot.
-   opts: { activities (for Rückblick geteilt), deps (Node callers) }. */
+   opts: { deps (Node callers) }. */
 function roundBadges(round, opts) {
   const c = badgeRoundContext(round, opts);
   const latest = c.sessions[c.sessions.length - 1];
@@ -435,8 +423,8 @@ function roundBadges(round, opts) {
    first satisfying session it was: the result moment's marks, and the hub's
    „N neue Abzeichen seit …" line. Members first, in catalogue and seat order,
    then the round, so a renderer that shows „at most two" shows the members'
-   first (handover §3.4). Session-less earnings (Regal, Durchgespielt,
-   Rückblick geteilt) are never attributed to a session. */
+   first (handover §3.4). Session-less earnings (Regal, Durchgespielt)
+   are never attributed to a session. */
 function newSince(round, sessionId, opts) {
   const all = roundBadges(round, opts);
   const out = [];

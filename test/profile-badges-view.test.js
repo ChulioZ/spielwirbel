@@ -52,9 +52,9 @@ test('a friend\'s card carries the four account tiles, under the figures', async
   assert.deepEqual(tiles(dom).map((b) => b.dataset.key), ['accountSessions', 'accountWins', 'accountRounds', 'accountYears']);
   assert.deepEqual(tiles(dom).map((b) => b.dataset.state), ['earned', 'earned', 'earned', 'earned']);
 
-  // The shared tile: tier, name, and the way to the next tier as its line.
+  // The shared tile: the name with its tier, and the way to the next tier as its line.
   const [sessions, , , years] = tiles(dom);
-  assert.equal(sessions.querySelector('.badge__tier').textContent, '25');
+  assert.equal(sessions.querySelector('.badge__tier'), null, 'the tier lives in the name alone');
   assert.equal(sessions.querySelector('.badge__name').textContent, `${t('badges.accountSessions.name')} 25`);
   assert.equal(sessions.querySelector('.badge__line').textContent, '41 / 100');
   // Jahre counts from the registration month, which is what its line says.

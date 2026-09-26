@@ -5,7 +5,8 @@
    slice restyles them and never forks the structure. Keep the names exactly:
 
      .badge (a <button>, data-state="earned|progress|locked|secret", data-new)
-       .badge__mark (--pct for the progress ring) .badge__tier .badge__name .badge__line
+       .badge__mark (--pct for the progress ring) .badge__name .badge__line
+         (the tier lives in the name alone — „Sessions 10", no corner pill)
      .badge-card                      the tap-open card (popover ≥ 860, sheet below)
      .badge-section                   Pokale › Abzeichen
        .badge-band--round, .badge-member (a <details>, standings order)
@@ -50,9 +51,9 @@ let badgeTarget = null;
 const badgeDefOf = (key) => BADGE_CATALOGUE.find((d) => d.key === key);
 
 /* One render's view of a round: the derived entries plus the three lookups
-   every placement needs. `activities` only feeds Rückblick geteilt. */
-function badgeContext(round, activities) {
-  const all = roundBadges(round, { activities });
+   every placement needs. */
+function badgeContext(round) {
+  const all = roundBadges(round);
   const byId = new Map((round.sessions || []).map((s) => [s.id, s]));
   const gameTitle = (sid) => {
     const s = sid && byId.get(sid);
@@ -161,7 +162,6 @@ function badgeTile(e, ctx, opts = {}) {
   const line = opts.line === undefined ? badgeLine(e, ctx) : opts.line;
   const btn = h(`<button type="button" class="badge" data-state="${esc(e.state)}" data-key="${esc(e.key)}">
        <span class="badge__mark"${pct === null ? '' : ` style="--pct:${pct}"`} aria-hidden="true"><i class="ti ${esc(glyph)}"></i></span>
-       ${e.tier ? `<span class="badge__tier" aria-hidden="true">${esc(String(e.tier))}</span>` : ''}
        <span class="badge__name">${esc(badgeName(e))}</span>
        ${line === false ? '' : `<span class="badge__line">${esc(line)}</span>`}
        ${e.isNew ? `<span class="badge__new" aria-hidden="true">${esc(t('badges.newMark'))}</span>` : ''}
@@ -363,11 +363,11 @@ function hubBadgeLine(round) {
 
 /* The Chronik's rows: every earning, keyed by the session that produced it —
    members first (seat order), then the round, as newSince orders them. An
-   earning no session produced (Regal, Durchgespielt, Rückblick geteilt) has no
-   session to sit under and gets no row. */
-function badgeChronikIndex(round, activities) {
+   earning no session produced (Regal, Durchgespielt) has no session to sit
+   under and gets no row. */
+function badgeChronikIndex(round) {
   if (!round.sessions.some((s) => s.finished)) return new Map();
-  const all = roundBadges(round, { activities });
+  const all = roundBadges(round);
   const bySession = new Map();
   const collect = (entries, mid) => entries.forEach((e) => (e.history || []).forEach((x) => {
     if (!x.sessionId) return;

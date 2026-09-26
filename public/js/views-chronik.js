@@ -42,7 +42,7 @@ function renderChronikTab(round, activities) {
   const ocean = designIs('ocean');
   const loadCover = createCoverLoader(); // lazy session thumbs (#198)
   // The earnings each session produced (#1388), a row apiece under its card.
-  const badgeRows = badgeChronikIndex(round, activities);
+  const badgeRows = badgeChronikIndex(round);
 
   // The chip choice persists for the session but is scoped to one round — the
   // same guard renderRegalTab opens with. An unknown value (a filter dropped in

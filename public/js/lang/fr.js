@@ -1795,8 +1795,6 @@ I18N.fr = {
   'badges.completed.line': 'Premier jeu marqué comme terminé',
   'badges.evergreen.name': 'Incontournable',
   'badges.evergreen.line': 'Un jeu joué {n} fois',
-  'badges.recapShared.name': 'Bilan partagé',
-  'badges.recapShared.line': 'Premier bilan partagé',
   'badges.accountSessions.name': 'Sessions',
   'badges.accountSessions.line': '{n} sessions dans tous les groupes',
   'badges.accountWins.name': 'Victoires',
