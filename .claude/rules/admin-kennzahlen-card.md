@@ -58,7 +58,8 @@ without anyone remembering the test exists.
 payload field is no longer always a scalar. Keys matter as well as values: #941's
 design histogram was keyed by the **stored design id**, i.e. by data. #1201's
 `designAdoption` replaced it keyed by the registry's OFFERED ids — each account
-folded onto the design `/me` resolves it to (`lib/account-design.js`) — which is
+that answered the chooser (#1362) folded onto the design `/me` resolves it to
+(`lib/account-design.js`) — which is
 the shape for any nested block: never key by a stored value.
 
 **The tempting fix to either sweep is an allowlist of known-safe or known-nested

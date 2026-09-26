@@ -127,6 +127,22 @@ test('the real verb reaches the button and the question reaches the body', () =>
   app.close();
 });
 
+/* #1360: „Abbrechen" beside „Session abbrechen" makes the two opposite answers
+   near-identical words, so a caller can name the way out too. The default must
+   stay the plain cancel every other dialog shows. */
+test('the cancel button reads „Abbrechen" unless the caller names it', () => {
+  const app = loadApp({ locale: 'de' });
+  const plain = openDialog(app, { body: 'weg?' });
+  assert.equal(btn(plain.sheet, 'cancel').textContent.trim(), app.run("t('common.cancel')"));
+  plain.promise.catch(() => {});
+  btn(plain.sheet, 'cancel').click();
+
+  const named = openDialog(app, { body: 'Session abbrechen?', cancelLabel: 'Weiterspielen' });
+  assert.equal(btn(named.sheet, 'cancel').textContent.trim(), 'Weiterspielen');
+  named.promise.catch(() => {});
+  app.close();
+});
+
 /* The guard that the conversion stays converted.
 
    Scanned over source with comments STRIPPED, not over raw text: this module's

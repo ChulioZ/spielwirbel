@@ -111,7 +111,12 @@ async function showFriends(opts) {
     // Ocean takes the rows too (#1219, O14.2 „Was gerade läuft": a card per
     // event, the author's ring first); its stylesheet makes each one a card.
     const rows = tisch || designIs('ocean');
-    const tiled = renderFeedTiles(feed.events, rows ? { rows: true } : undefined);
+    // Later pages (#1357) append to this list as its end scrolls into view.
+    const more = {
+      nextCursor: feed.nextCursor,
+      load: (cursor) => accountApi('GET', `/friends/feed?before=${encodeURIComponent(cursor)}`),
+    };
+    const tiled = renderFeedTiles(feed.events, rows ? { rows: true, more } : { more });
     // „Alle anzeigen" from the home tile promises every event; below 1024 the
     // grid collapses to eight, so the link has to open it already expanded.
     if (o.feed === 'all') tiled.classList.add('is-open');

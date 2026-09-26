@@ -73,7 +73,7 @@ test('the plural branches in every shipped locale, not just German', (t) => {
 
 test('a games_imported row with NO count renders as a plain "added", never a crash', (t) => {
   /* Defensive, and it describes real production rows: every past import wrote a
-     `game_added` for the first game, and those age out over MAX_FEED_EVENTS
+     `game_added` for the first game, and those age out over the 12-month retention
      rather than being migrated. A row that somehow arrives as this type without
      a count still carries the title, so the older sentence is the honest one. */
   const { text } = lineFor(t, { type: 'games_imported' });

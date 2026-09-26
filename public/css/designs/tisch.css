@@ -3459,16 +3459,17 @@
    pairs carry it and nothing has to be repainted token by token.
 
    What is printed on it is Der Tisch's own markup (result-tafel-composed.js), not
-   the app's row painted over: a column-header row — Platz · Spiel · Wertungen ·
-   Score — over one COMPACT line per game ending in a score pill. The per-game
-   distribution recedes behind the „Wertungen" count, which is a disclosure.
+   the app's row painted over: a column-header row — Platz · Spiel · Score — over
+   one COMPACT line per game ending in a score pill, with the per-game
+   distribution always printed under it (#1363 — it used to hide behind a vote
+   count that was the same on every row).
 
    The sheet is ONE grid and every line on it a SUBGRID of it. That is what
    keeps the header's labels over their columns: each row sizing its own `auto`
    tracks would let one row's „Spielen" button or a wider pill shift every cell
    left of it off its label. The gold group is a subgrid too, so its rows share
    the same tracks as the rest. The two-digit rank and a 32px cover are fixed;
-   the votes, the pill and the action size to the widest of their column. */
+   the pill and the action size to the widest of their column. */
 :root[data-design="tisch"][data-scheme="dark"] .tafel {
   --surface: var(--paper);
   --ink: var(--paper-ink);
@@ -3492,7 +3493,7 @@
    scatter. */
 :root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel {
   display: grid;
-  grid-template-columns: 22px 32px minmax(0, 1fr) auto auto auto;
+  grid-template-columns: 22px 32px minmax(0, 1fr) auto auto;
   column-gap: 8px;
 }
 /* The `display: grid` above outranks styles.css's `.tafel[hidden]` — the gate a
@@ -3521,17 +3522,15 @@
   text-transform: uppercase;
   color: var(--paper-faint);
 }
-/* A label must NOT size its column. „WERTUNGEN" is ~90px against a ~40px count,
-   and as an `auto` track's content it took the width straight out of the title
-   column (measured at 390: titles squeezed to 62px). So every label is a
+/* A label must NOT size its column: as an `auto` track's content a long label
+   takes the width straight out of the title column (measured at 390 with the
+   old „WERTUNGEN" column: titles squeezed to 62px). So every label is a
    zero-width box that its text overflows — into the empty header space beside
    it, never into another label: „Platz" spills right over the cover column,
-   which is why „Spiel" starts at the TITLE; „Wertungen" is pinned to its
-   column's RIGHT edge and spills left over the title column's empty header;
-   „Score" is pinned to its column's LEFT edge and spills right over the action
-   column's. The two therefore grow AWAY from each other, which is what holds
-   for the long locales too (es „Valoraciones" · „Puntuación"). The cells under
-   them sit at the same edges (`justify-self` below). */
+   which is why „Spiel" starts at the TITLE; „Score" is pinned to its column's
+   LEFT edge and spills right over the action column's, which holds for the long
+   locales too (es „Puntuación"). The pill under it sits at the same edge
+   (`justify-self` below). */
 :root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel__col {
   display: flex;
   width: 0;
@@ -3539,12 +3538,7 @@
 }
 :root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel__col--place { grid-column: 1; }
 :root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel__col--game { grid-column: 3; }
-:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel__col--votes {
-  justify-self: end;
-  justify-content: flex-end;
-}
-:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel__col--votes { grid-column: 4; }
-:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel__col--score { grid-column: 5; }
+:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel__col--score { grid-column: 4; }
 /* One compact line: every cell pinned to ROW 1 of its own column, because the
    app's row places them by `grid-area` names this grid does not define. The
    distribution is the one cell left to auto-placement, so it drops below
@@ -3578,51 +3572,21 @@
   font-size: 16px; /* glyph, not type */
 }
 :root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .trow__main { grid-column: 3; grid-row: 1; }
-:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .trow__votes { grid-column: 4; grid-row: 1; justify-self: end; }
 :root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .trow__pill {
-  grid-column: 5;
+  grid-column: 4;
   grid-row: 1;
   justify-self: start;
   position: static;
 }
-:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .trow__action { grid-column: 6; grid-row: 1; }
+:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .trow__action { grid-column: 5; grid-row: 1; }
 :root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .play-btn { margin-top: 0; }
 :root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .trow__bars {
   grid-column: 3 / -1;
   grid-row: auto;
   margin-top: 8px;
 }
-/* `.trow__bars` is `display: flex` in styles.css, which beats the attribute —
-   and the disclosure IS the attribute. */
-:root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .trow__bars[hidden] { display: none; }
 :root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .trow__title { font-size: var(--text-md); }
 :root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .trow__owners { font-size: var(--text-xs); }
-/* The „Wertungen" count, and the disclosure that opens the distribution under
-   the row. A control on paper, so the paper's own edge and ink; 32px keeps it
-   over the 24px target floor (SC 2.5.8) without growing the line. */
-:root[data-design="tisch"][data-scheme="dark"] .trow__votes {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  min-width: 32px;
-  min-height: 32px;
-  padding: 0 6px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--paper-ink);
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: var(--text-sm);
-  cursor: pointer;
-}
-:root[data-design="tisch"][data-scheme="dark"] .trow__votes .ti { font-size: 12px; /* glyph, not type */ }
-:root[data-design="tisch"][data-scheme="dark"] .trow__votes[aria-expanded="true"] .ti { transform: rotate(180deg); }
-:root[data-design="tisch"][data-scheme="dark"] .trow__votes--none {
-  border-color: transparent;
-  color: var(--paper-faint);
-  cursor: default;
-}
 /* While the evening is still choosing, a phone row's action is a „Spielen"
    button or the „Auf dem Tisch" chip — ~100px that would leave the title ~60.
    So on a phone that action takes a line of its own under the title (and the
@@ -3657,7 +3621,7 @@
 }
 /* The row's „…" is a `.btn`, which Tisch paints as a walnut tile — on the paper
    Tafel that put the paper's ink on a dark fill (~1.3:1). It is drawn like
-   `.trow__votes` beside it instead: no fill and a rule. It sets NO ink of its
+   a rule on paper instead: no fill, just the paper's edge. It sets NO ink of its
    own — the glyph inherits the row's (paper ink, or --gold-ink on the gold
    row), because an ink here would outrank the gold row's single-ink sweep. */
 :root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .trow__menu {
@@ -3777,9 +3741,10 @@
   }
 }
 
-/* --- The result: the distribution, opened from „Wertungen" (#1275) ---------
-   No longer printed on every row: it sits below its row, hidden until that
-   row's count is pressed (the disclosure above), in T8.2's BAR ramp. Both
+/* --- The result: the distribution under every row (#1275, #1363) ----------
+   Printed below its row, always — #1275 hid it behind a vote-count disclosure,
+   and #1363 took that away again because the count was the same on every row
+   (#902's reasoning). Drawn in T8.2's BAR ramp. Both
    halves come off `--sc` on the column, which the row writes inline from
    avgColor(n) — so this is one rule per rung rather than a JS branch per
    design. The track is the paper's own well; the fill and the glyph are the
@@ -3798,17 +3763,19 @@
    type. Same split the app makes on every other design. */
 :root[data-design="tisch"][data-scheme="dark"] .trow__bars .bar-axis__n { color: var(--paper-ink-soft); }
 
-/* --- Motion ritual 4b: the distribution rises when opened (#1200, T10.4) ----
-   The bars T10 draws rising are this distribution, which on Der Tisch is behind
-   the row's „Wertungen" disclosure — so they rise when the reader opens it, the
-   reader's own click, never on arrival. A `display: none` → shown switch starts
-   an element's animations afresh, so the disclosure's own `hidden` is the whole
-   trigger; there is no JS. 460ms per bar from the baseline, 70ms apart by rung,
-   capped at the sixth: 460 + 5 × 70 = 810ms. `scale` rather than `height`: the
-   fill's height is its value (inline), and the individual property composes
-   with it instead of replacing it. No end frame. */
+/* --- Motion ritual 4b: the distribution rises with the reveal (#1200, T10.4) -
+   The bars T10 draws rising are this distribution. Since #1363 it is printed on
+   every row at every visit, so an unscoped rise would replay on every arrival
+   and every re-render. It is keyed on the row's `.is-race` instead — set only
+   when the screen opens as the reveal („Auflösen", views-session.js), and never
+   by a revisit or a `currentView()` re-render, which pass `reveal = false` — so
+   the bars rise once, beside the score race, and a finished session's are
+   static. 460ms per bar from the baseline, 70ms apart by rung, capped at the
+   sixth: 460 + 5 × 70 = 810ms. `scale` rather than `height`: the fill's height
+   is its value (inline), and the individual property composes with it instead
+   of replacing it. No end frame. */
 @media (prefers-reduced-motion: no-preference) {
-  :root[data-design="tisch"] .result-screen .trow__bars:not([hidden]) .bar {
+  :root[data-design="tisch"] .result-screen .trow.is-race .trow__bars .bar {
     transform-origin: bottom;
     animation: tisch-bar-rise 460ms cubic-bezier(0.2, 0.8, 0.2, 1) calc(var(--rise-i, 0) * 70ms) both;
   }

@@ -302,11 +302,18 @@ test('"Ins Regal" on an expansion attaches it instead of clearing the wish flag'
     calls.push({ method, path, body: body && { ...body } });
     return roundFixture([base]);
   });
-  dom.set('confirmDialog', () => Promise.resolve(true));
+  const asked = [];
+  dom.set('confirmDialog', (o) => { asked.push(o); return Promise.resolve(true); });
 
   const rows = [...dom.app.querySelectorAll('.archive-row')];
   rows[0].querySelector('[data-act="restore"]').click();
   await new Promise((r) => setTimeout(r, 0));
+
+  // #1360: the question asks to RECORD an expansion, so the button says that —
+  // not „Ins Regal" beside an undo arrow.
+  assert.equal(asked.length, 1);
+  assert.equal(asked[0].confirmLabel, 'Als Erweiterung eintragen');
+  assert.equal(asked[0].icon, 'ti-puzzle');
 
   const acquires = calls.filter((c) => c.path.includes('acquire-expansion'));
   assert.equal(acquires.length, 1, `expected one acquire call, got ${JSON.stringify(calls)}`);
@@ -333,10 +340,12 @@ test('a base game the round lacks is created from the provider, then attached', 
     if (/\/games$/.test(path)) return { id: 'new1', title: 'CATAN' };
     return roundFixture([]);
   });
-  dom.set('confirmDialog', () => Promise.resolve(true));
+  const asked = [];
+  dom.set('confirmDialog', (o) => { asked.push(o); return Promise.resolve(true); });
 
   dom.app.querySelector('[data-act="restore"]').click();
   await new Promise((r) => setTimeout(r, 0));
+  assert.equal(asked[0].confirmLabel, 'Als Erweiterung eintragen');
 
   const detail = calls.find((c) => c.path.includes('/lookup/game'));
   assert.ok(detail, `no detail hop: ${JSON.stringify(calls.map((c) => c.path))}`);
@@ -396,4 +405,32 @@ test('"Ins Regal" on a plain wished game still clears the flag', async (t) => {
 
   assert.equal(calls[0].path, '/api/rounds/1/games/g1/wish');
   assert.deepEqual({ ...calls[0].body }, { wish: false });
+});
+
+/* #1360: each off-shelf screen's delete confirm names ITS OWN verb. For the wish
+   list that is „Von der Liste nehmen", and a wish was never on the shelf, so it
+   is not dressed as a deletion; the two archives keep „Endgültig löschen" in red. */
+test('removing a wish confirms with „Von der Liste nehmen", not a red „Löschen"', async (t) => {
+  const dom = await wishlist(t, [bggGame('g1', '822', { wish: true, title: 'Ark Nova' })]);
+  const asked = [];
+  dom.set('confirmDialog', async (o) => { asked.push(o); return false; });
+  dom.app.querySelector('.archive-row [data-act="delete"]').click();
+  await new Promise((r) => setTimeout(r, 0));
+  assert.equal(asked.length, 1, 'the wish row offered no delete, or it raised no confirm');
+  assert.equal(asked[0].confirmLabel, 'Von der Liste nehmen');
+  assert.equal(asked[0].danger, false);
+});
+
+test('deleting from the retired archive stays a red „Endgültig löschen"', async (t) => {
+  const dom = loadApp({ locale: 'de' });
+  t.after(() => dom.close());
+  dom.set('api', async () => roundFixture([bggGame('g1', '822', { retired: true, title: 'Ark Nova' })]));
+  await dom.call('showRetired', 1);
+  const asked = [];
+  dom.set('confirmDialog', async (o) => { asked.push(o); return false; });
+  dom.app.querySelector('.archive-row [data-act="delete"]').click();
+  await new Promise((r) => setTimeout(r, 0));
+  assert.equal(asked.length, 1, 'the retired row offered no delete, or it raised no confirm');
+  assert.equal(asked[0].confirmLabel, 'Endgültig löschen');
+  assert.notEqual(asked[0].danger, false);
 });
