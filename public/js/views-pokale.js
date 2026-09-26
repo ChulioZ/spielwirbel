@@ -300,6 +300,8 @@ function renderPokaleTab(round) {
       emptyStateAction(empty, { icon: 'ti-tornado', label: t('round.startSessionOcean'), primary: true, onClick: () => showStartSession(round) });
     }
     app.appendChild(sec);
+    // Abzeichen (#1388): the section's one empty line, no tiles.
+    app.appendChild(renderBadgeSection(round));
     return;
   }
 
@@ -545,7 +547,12 @@ function renderPokaleTab(round) {
 
   if (cards.children.length) (split || sec).appendChild(cards);
   app.appendChild(sec);
+  /* Abzeichen (#1388, views-badges.js): below the podium and the plaques, the
+     round's band then one row per member in THIS standings order — so the two
+     lists on one page cannot disagree about who comes first. */
+  app.appendChild(renderBadgeSection(round, ranked));
   app.appendChild(renderRecapSection(round, recap));
+  badgeRevealTarget(round.id);
 }
 
 /*

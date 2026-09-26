@@ -233,6 +233,9 @@ async function showMember(rid, mid) {
   figures.appendChild(figure(t('member.winRate'), st.winRate === null ? '–' : Math.round(st.winRate * 100) + '%'));
   figures.appendChild(figure(t('member.sessions'), String(st.joined)));
   figures.appendChild(figure(t('member.avgGiven'), st.avgGiven === null ? '–' : 'Ø ' + fmtAvg(st.avgGiven)));
+  // The member's earned Abzeichen under the figures (#1388) — never the open ones.
+  const badgeRow = memberCardBadges(round, member);
+  if (badgeRow) figures.after(badgeRow);
 
   const cards = card.querySelector('.member-card__games');
 

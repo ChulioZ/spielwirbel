@@ -379,6 +379,20 @@ What the app does, in detail. For a short overview see the
     same third session, and the Rundenpuls closes on a sentence saying when
     series come.
 
+    **Abzeichen** (badges, issue #1388) sit below the standings: a band for the
+    round, then one row per member in standings order — the first win, ten
+    sessions, a game that keeps coming back, and a few secret ones that show
+    only a padlock until earned. Each is a button that opens a card (a popover
+    on a wide screen, a sheet on a phone) with every tier and when it was
+    reached. Nothing is stored: they are derived from the sessions on every
+    render, so deleting a session removes what it earned. From seven members a
+    row shows only earned marks, the rest behind „N offen"; before the first
+    finished session the section is one line. The same marks appear as up to
+    two entries on the result screen of the session that earned them („+N
+    weitere" beyond that), as one row per earning under that session in the
+    Chronik, as one line in the hub's Pokale preview, and as the earned-only
+    row on die Tischkarte.
+
     A win counts wherever it happened, an evening played alone included. That is
     a deliberate trade: weighting a win by the size of the field it beat is
     fairer and was how the standings worked for a while, but it needed a

@@ -172,6 +172,9 @@ function hubPokalePreview(round) {
   if (young) {
     body.appendChild(h(`<div class="hub-preview__last hub-preview__threshold">${esc(tn(YOUNG_ROUND_PODIUM_FROM, 'pokale.young.podiumOne', 'pokale.young.podium'))}</div>`));
   }
+  // Abzeichen (#1388): „2 neue Abzeichen seit Nordlichter" or the newest mark.
+  const badges = hubBadgeLine(round);
+  if (badges) body.appendChild(badges);
   return card;
 }
 
