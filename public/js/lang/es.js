@@ -1839,8 +1839,6 @@ I18N.es = {
   'badges.completed.line': 'Primer juego marcado como completado',
   'badges.evergreen.name': 'Imprescindible',
   'badges.evergreen.line': 'Un juego jugado {n} veces',
-  'badges.recapShared.name': 'Resumen compartido',
-  'badges.recapShared.line': 'Primer resumen compartido',
   'badges.accountSessions.name': 'Sesiones',
   'badges.accountSessions.line': '{n} sesiones en todos los grupos',
   'badges.accountWins.name': 'Victorias',

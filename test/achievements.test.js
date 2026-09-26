@@ -80,12 +80,12 @@ const ours = (round, key, opts) => all(round, opts).round.find((e) => e.key === 
 
 // --- the catalogue -------------------------------------------------------------
 
-test('the catalogue is the 22 decided entries: 9 member · 9 round · 4 account', () => {
+test('the catalogue is the 21 decided entries: 9 member · 8 round · 4 account', () => {
   const by = (h) => BADGE_CATALOGUE.filter((d) => d.holder === h).map((d) => d.key);
   assert.deepEqual(by('member'), ['firstWin', 'regular', 'streak', 'versatile', 'allPlayed', 'teamPlayer', 'host', 'comeback', 'explorer']);
-  assert.deepEqual(by('round'), ['founded', 'sessions', 'shelf', 'unanimous', 'tie', 'bigTable', 'completed', 'evergreen', 'recapShared']);
+  assert.deepEqual(by('round'), ['founded', 'sessions', 'shelf', 'unanimous', 'tie', 'bigTable', 'completed', 'evergreen']);
   assert.deepEqual(by('account'), ['accountSessions', 'accountWins', 'accountRounds', 'accountYears']);
-  assert.equal(new Set(BADGE_CATALOGUE.map((d) => d.key)).size, 22, 'keys are unique');
+  assert.equal(new Set(BADGE_CATALOGUE.map((d) => d.key)).size, 21, 'keys are unique');
 });
 
 test('exactly three secrets, and the tier ladders the review decided', () => {
@@ -336,12 +336,6 @@ test('Dauerbrenner: one game at 10 plays, naming the game; 9 misses', () => {
   assert.deepEqual([nine.state, nine.count, nine.of, nine.gameId], ['progress', 9, 10, 'g1']);
 });
 
-test('Rückblick geteilt: a recap_shared activity earns it; the snapshot alone never does', () => {
-  const activities = [{ type: 'game_added', at: iso(T0) }, { type: 'recap_shared', at: iso(T0 + 5 * DAY) }];
-  assert.deepEqual(ours(mkRound(), 'recapShared', { activities }).earnedAt, { sessionId: null, at: iso(T0 + 5 * DAY) });
-  assert.equal(ours(mkRound(), 'recapShared').state, 'locked');
-});
-
 // --- holders, states, newSince --------------------------------------------------
 
 test('guests never hold marks; a retired member keeps theirs', () => {
@@ -354,7 +348,7 @@ test('guests never hold marks; a retired member keeps theirs', () => {
 test('an empty round: every member entry locked or secret, nothing earned, nothing new', () => {
   const res = all(mkRound({ games: [] }));
   const every = [...res.round, ...res.members.a];
-  assert.equal(every.length, 18);
+  assert.equal(every.length, 17);
   assert.ok(every.every((e) => e.state === 'locked' || e.state === 'secret'));
   assert.ok(every.every((e) => !e.isNew && e.earnedAt === null));
 });

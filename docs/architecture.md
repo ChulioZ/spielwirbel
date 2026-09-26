@@ -844,7 +844,7 @@ public/
                      round's sessions. Split out of views-member.js by #1075;
                      a pure derivation, edited when a statistic changes rather
                      than when the screen does
-    achievements.js  the Abzeichen catalogue (22 entries: member, round,
+    achievements.js  the Abzeichen catalogue (21 entries: member, round,
                      account) and their states, tiers and earning dates,
                      replayed on demand from the finished sessions — nothing
                      stored. Also required by lib/user-stats.js for the

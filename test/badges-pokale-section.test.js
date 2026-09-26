@@ -77,6 +77,15 @@ test('every tile is a button naming its state in words, in the sheets’ shape',
   assert.ok(secret.querySelector('.ti-lock-question'), 'and shows the padlock, not its own glyph');
 });
 
+test('a reached tier is said once, in the name — no corner pill (operator decision 2026-09-26)', async (t) => {
+  const ten = Array.from({ length: 10 }, (_, i) => night(`s${i + 1}`, i + 1));
+  const dom = await pokale(t, badgeRound(ten));
+  const sessions = tileOf(section(dom).querySelector('.badge-band--round'), 'sessions');
+  assert.equal(sessions.dataset.state, 'earned', 'ten finished sessions reach the first tier');
+  assert.match(sessions.querySelector('.badge__name').textContent, / 10$/);
+  assert.equal(section(dom).querySelectorAll('.badge__tier').length, 0);
+});
+
 test('from seven members a row shows only its earned marks, the rest behind „N offen"', async (t) => {
   const seven = ['m1', 'm2', 'm3', 'm4', 'm5', 'm6', 'm7'];
   const dom = await pokale(t, badgeRound([night('s1', 1, { memberIds: seven })], 7));
