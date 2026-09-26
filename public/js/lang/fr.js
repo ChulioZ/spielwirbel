@@ -1141,7 +1141,6 @@ I18N.fr = {
   'result.more': 'Plus',
   'result.colPlace': 'Place',
   'result.colGame': 'Jeu',
-  'result.colVotes': 'Notes',
   'result.colScore': 'Score',
   'result.distShowOne': 'Répartition de {n} note',
   'result.distShow': 'Répartition des {n} notes',

@@ -1133,7 +1133,6 @@ I18N.nl = {
   'result.more': 'Meer',
   'result.colPlace': 'Plaats',
   'result.colGame': 'Spel',
-  'result.colVotes': 'Beoordelingen',
   'result.colScore': 'Score',
   'result.distShowOne': 'Verdeling van {n} beoordeling',
   'result.distShow': 'Verdeling van {n} beoordelingen',

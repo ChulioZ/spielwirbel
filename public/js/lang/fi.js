@@ -1104,7 +1104,6 @@ I18N.fi = {
   'result.more': 'Lisää',
   'result.colPlace': 'Sija',
   'result.colGame': 'Peli',
-  'result.colVotes': 'Arviot',
   'result.colScore': 'Pisteet',
   'result.distShowOne': '{n} arvion jakauma',
   'result.distShow': '{n} arvion jakauma',

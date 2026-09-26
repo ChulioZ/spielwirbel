@@ -268,6 +268,23 @@ test('the veto pill reads „1× gar nicht", never „kein Veto"', async (t) => 
   assert.doesNotMatch(dom.app.textContent, /kein Veto/);
 });
 
+// #1363: no vote-count toggle — the count was the same on every row — and the
+// distribution shown under every row, as Klassisch always has.
+test('every Ocean result row shows its distribution, with no count and no toggle', async (t) => {
+  const dom = await result(t, 'ocean');
+  const rows = qa(dom, '.result-screen .trow');
+  assert.ok(rows.length >= 3, `only ${rows.length} rows rendered`);
+  for (const row of rows) {
+    const bars = row.querySelector('.trow__bars');
+    assert.ok(bars && !bars.hidden, 'the bars are open in every row');
+    assert.equal(row.lastElementChild, bars, 'and last, under the row');
+  }
+  assert.equal(q(dom, '.trow__votes'), null);
+  assert.doesNotMatch(OCEAN_CSS, /trow__votes|"votes /, 'no rule or grid area for the gone count');
+  assert.equal(RULES.find(([s]) => s === `${GATE}.result-screen--ocean .trow__bars[hidden]`), undefined,
+    'nothing hides the bars');
+});
+
 test('Klassisch keeps its one-column result', async (t) => {
   const dom = await result(t, null);
   assert.equal(q(dom, '.result-screen--ocean'), null);

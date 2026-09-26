@@ -2,7 +2,8 @@
 
 /* Der Tisch's session result, composed as T2.5 (390) and T4.4 (1440) draw it
  * (#1275): a column-header row over compact rows ending in a score pill, the
- * distribution behind a per-row disclosure, „Wer dabei war" as crowned pieces
+ * distribution always shown under each row (#1363 — it used to sit behind a
+ * per-row vote-count disclosure), „Wer dabei war" as crowned pieces
  * on the felt head, and a foot of „Noch eine Session" · „Teilen" · „Mehr".
  *
  * Two halves, and the first is the one the issue's acceptance hangs on:
@@ -128,12 +129,12 @@ test('Klassisch keeps its blocks, its row cells and its footer exactly as before
 
 /* ----------------------------------- Der Tisch ----------------------------------- */
 
-test('Der Tisch heads the Tafel with an aria-hidden row naming the four columns', async (t) => {
+test('Der Tisch heads the Tafel with an aria-hidden row naming the three columns', async (t) => {
   const { dom } = await show(t, 'tisch');
   const cols = dom.app.querySelector('.tafel > .tafel__cols');
   assert.ok(cols, 'the header row is a direct child of the Tafel, so it can share its tracks');
   assert.equal(cols.getAttribute('aria-hidden'), 'true');
-  assert.deepEqual([...cols.children].map(text), ['Platz', 'Spiel', 'Wertungen', 'Score']);
+  assert.deepEqual([...cols.children].map(text), ['Platz', 'Spiel', 'Score']);
   // …above the first row, the gold group's included.
   const first = dom.app.querySelector('.tafel-top, .tafel > .trow');
   assert.ok(cols.compareDocumentPosition(first) & dom.window.Node.DOCUMENT_POSITION_FOLLOWING);
@@ -142,11 +143,11 @@ test('Der Tisch heads the Tafel with an aria-hidden row naming the four columns'
   assert.equal(dom.app.querySelector('.score-label'), null);
 });
 
-test('each row is one compact line: rank, cover, title, votes, pill, action — distribution last', async (t) => {
+test('each row is one compact line: rank, cover, title, pill, action — distribution last', async (t) => {
   const { dom } = await show(t, 'tisch');
   const catan = rowByTitle(dom, 'Catan');
   assert.deepEqual(kids(catan), [
-    'trow__rank trow__rank--1', 'trow__img game-link nav-link', 'trow__main', 'trow__votes', 'score-pill trow__pill',
+    'trow__rank trow__rank--1', 'trow__img game-link nav-link', 'trow__main', 'score-pill trow__pill',
     'trow__action', 'trow__bars',
   ]);
   // The row says what its cells are, since the header is hidden from AT.
@@ -158,33 +159,34 @@ test('each row is one compact line: rank, cover, title, votes, pill, action — 
   assert.equal(catan.querySelector('.score-big'), null);
 });
 
-test('the distribution is one press away, behind the votes count', async (t) => {
+/* #1363: the vote count was the same on every row (the vote card will not
+   advance until each drawn game is rated — #902's reasoning), so the toggle
+   repeated one number down the page and hid the one part that differs. */
+test('the distribution is always shown under the row, with no count and no toggle', async (t) => {
   const { dom } = await show(t, 'tisch');
   const catan = rowByTitle(dom, 'Catan');
-  const toggle = catan.querySelector('button.trow__votes');
   const bars = catan.querySelector('.trow__bars');
-  assert.equal(text(toggle), '3');
-  assert.equal(toggle.getAttribute('aria-label'), 'Verteilung der 3 Wertungen');
-  assert.equal(toggle.getAttribute('aria-controls'), bars.id);
-  assert.equal(bars.hidden, true, 'receded by default');
-  assert.equal(toggle.getAttribute('aria-expanded'), 'false');
-  assert.equal(bars.querySelectorAll('.bar-col').length, 5, 'the whole distribution is still there');
-
-  toggle.click();
-  assert.equal(bars.hidden, false);
-  assert.equal(toggle.getAttribute('aria-expanded'), 'true');
-  toggle.click();
-  assert.equal(bars.hidden, true);
-  assert.equal(toggle.getAttribute('aria-expanded'), 'false');
+  assert.equal(bars.hidden, false, 'visible without any interaction');
+  assert.equal(bars.querySelectorAll('.bar-col').length, 5, 'the whole distribution');
+  assert.equal(dom.app.querySelector('.trow__votes, [aria-controls^="tafel-dist-"], [id^="tafel-dist-"]'), null,
+    'no count, no disclosure wiring');
+  // The toggle's label was the distribution's accessible name; the group keeps it.
+  assert.equal(bars.getAttribute('role'), 'group');
+  assert.equal(bars.getAttribute('aria-label'), 'Verteilung der 3 Wertungen');
 });
 
-test('a row nobody rated says so in both columns and has nothing to disclose', async (t) => {
+test('a row nobody rated shows empty bar tracks and „–" in the pill, like Klassisch', async (t) => {
   const { dom } = await show(t, 'tisch');
   const cn = rowByTitle(dom, 'Codenames');
-  assert.equal(cn.querySelector('button.trow__votes'), null);
-  assert.equal(text(cn.querySelector('.trow__votes--none')), '–');
-  assert.ok(cn.querySelector('.trow__pill.score-pill--none'));
-  assert.equal(cn.querySelector('.trow__bars'), null);
+  assert.equal(cn.querySelector('.trow__votes'), null);
+  assert.equal(text(cn.querySelector('.trow__pill.score-pill--none')), '–');
+  const bars = cn.querySelector('.trow__bars');
+  assert.ok(bars, 'the row keeps the same shape as its rated neighbours');
+  assert.equal(bars.hidden, false);
+  const fills = [...bars.querySelectorAll('.bar')];
+  assert.equal(fills.length, 5);
+  assert.ok(fills.every((b) => /height:\s*0%/.test(b.getAttribute('style'))), 'every track is empty');
+  assert.equal(cn.lastElementChild, bars, 'still last, since it sits below the row');
 });
 
 test('a session nobody voted in gets no header and no votes or score cells', async (t) => {
@@ -325,18 +327,27 @@ test('the header and every row share the Tafel’s tracks, so a label cannot lea
   assert.match(group, /grid-template-columns:\s*subgrid/);
 });
 
+test('two tracks after the title: pill, action — the votes column and its disclosure are gone', () => {
+  assert.match(body('.result-screen .tafel'), /grid-template-columns:\s*22px 32px minmax\(0, 1fr\) auto auto;/);
+  assert.match(body('.result-screen .tafel__col--score'), /grid-column:\s*4/);
+  assert.match(body('.result-screen .tafel .trow .trow__pill'), /grid-column:\s*4/);
+  assert.match(body('.result-screen .tafel .trow .trow__action'), /grid-column:\s*5/);
+  assert.equal(body('.result-screen .tafel .trow .trow__bars[hidden]'), null,
+    'nothing hides the distribution any more');
+  assert.doesNotMatch(CSS, /trow__votes|tafel__col--votes/);
+});
+
 test('the grid is scoped to the result screen, and gives back the attributes it outranks', () => {
   // The landing page prints a `.tafel` in the app's own row markup.
   assert.equal(body('.tafel') && /display:\s*grid/.test(body('.tafel')), false);
   assert.match(body('.result-screen .tafel[hidden]'), /display:\s*none/);
-  assert.match(body('.result-screen .tafel .trow .trow__bars[hidden]'), /display:\s*none/);
   assert.match(body('.result-foot[hidden]'), /display:\s*none/);
 });
 
 // Found in the merge interview (2026-09-24), present on main before this PR: the
 // row's „…" is a `.btn`, so under Tisch it took the walnut button fill with the
 // paper's ink on it — a dark glyph on a dark tile, ~1.3:1, under the 3:1 a
-// control needs. On the paper Tafel it is drawn the way `.trow__votes` is.
+// control needs. On the paper Tafel it is drawn with no fill and a rule.
 test('the row menu on the paper Tafel has no fill and inherits the row’s ink', () => {
   const b = body('.result-screen .tafel .trow .trow__menu');
   assert.ok(b, 'no Tisch rule for the row menu on the result Tafel');

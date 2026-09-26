@@ -1140,7 +1140,6 @@ I18N.it = {
   'result.more': 'Altro',
   'result.colPlace': 'Posto',
   'result.colGame': 'Gioco',
-  'result.colVotes': 'Voti',
   'result.colScore': 'Punteggio',
   'result.distShowOne': 'Distribuzione di {n} voto',
   'result.distShow': 'Distribuzione dei {n} voti',

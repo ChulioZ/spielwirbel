@@ -1135,7 +1135,6 @@ I18N.pt = {
   'result.more': 'Mais',
   'result.colPlace': 'Posição',
   'result.colGame': 'Jogo',
-  'result.colVotes': 'Avaliações',
   'result.colScore': 'Pontuação',
   'result.distShowOne': 'Distribuição de {n} avaliação',
   'result.distShow': 'Distribuição das {n} avaliações',

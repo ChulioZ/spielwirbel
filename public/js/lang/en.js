@@ -1191,7 +1191,6 @@ I18N.en = {
   'result.more': 'More',
   'result.colPlace': 'Place',
   'result.colGame': 'Game',
-  'result.colVotes': 'Ratings',
   'result.colScore': 'Score',
   'result.distShowOne': 'Distribution of {n} rating',
   'result.distShow': 'Distribution of {n} ratings',

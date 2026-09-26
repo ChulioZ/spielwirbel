@@ -1084,7 +1084,6 @@ I18N.ko = {
   'result.more': '더 보기',
   'result.colPlace': '순위',
   'result.colGame': '게임',
-  'result.colVotes': '평가',
   'result.colScore': '점수',
   'result.distShowOne': '평가 {n}개의 분포',
   'result.distShow': '평가 {n}개의 분포',

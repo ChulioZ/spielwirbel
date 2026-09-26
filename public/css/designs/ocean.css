@@ -2525,9 +2525,11 @@
 }
 
 /* The Tafel: „Das Ergebnis" as one white card of compact rows — rank, cover,
-   title with who brings it (and the veto pill), the vote count, the score
-   bubble, the row's action. Der Tisch's column-header row is its own design's
-   (aria-hidden, so dropping it drops nothing a reader hears). */
+   title with who brings it (and the veto pill), the score bubble, the row's
+   action, and the distribution under it (always shown since #1363; the vote
+   count that used to open it was the same on every row). Der Tisch's
+   column-header row is its own design's (aria-hidden, so dropping it drops
+   nothing a reader hears). */
 :root[data-design="ocean"]:not([data-scheme="dark"]) .result-screen--ocean .tafel {
   padding: 16px;
   border: 1px solid var(--line);
@@ -2542,14 +2544,14 @@
 }
 :root[data-design="ocean"]:not([data-scheme="dark"]) .result-screen--ocean .tafel .trow {
   display: grid;
-  /* Second line: the vote count under the rank and cover, the row's action
-     across the title's and the pill's columns. An area spanning the flexible
-     track does not widen the pill's column, so a „Spielen" button cannot
-     squeeze the title, and the two never share a track to collide in. */
+  /* Second line: the row's action across the title's and the pill's columns.
+     An area spanning the flexible track does not widen the pill's column, so a
+     „Spielen" button cannot squeeze the title, and the two never share a track
+     to collide in. */
   grid-template-columns: 20px 44px minmax(0, 1fr) auto;
   grid-template-areas:
     "rank cover main pill"
-    "votes votes sub  sub"
+    ".    .     sub  sub"
     "bars bars  bars bars";
   gap: 4px 12px;
   align-items: center;
@@ -2567,30 +2569,12 @@
 }
 :root[data-design="ocean"]:not([data-scheme="dark"]) .result-screen--ocean .trow__img { width: 44px; height: 44px; font-size: 20px; /* glyph, not type */ }
 :root[data-design="ocean"]:not([data-scheme="dark"]) .result-screen--ocean .trow__title { font-size: var(--text-md); }
-:root[data-design="ocean"]:not([data-scheme="dark"]) .result-screen--ocean .trow__votes {
-  grid-area: votes;
-  justify-self: start;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  min-height: var(--target-control);
-  min-width: var(--target-control);
-  padding: 0 10px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-pill);
-  background: var(--sunken-soft);
-  color: var(--ink);
-  font-weight: 700;
-  cursor: pointer;
-}
-:root[data-design="ocean"]:not([data-scheme="dark"]) .result-screen--ocean span.trow__votes { cursor: default; }
 /* `.score-pill` positions itself absolutely (it was made for a cover's corner),
    so every inline use pins it back into the flow
    (.claude/rules/absolutely-positioned-components-escape-a-new-host.md). */
 :root[data-design="ocean"]:not([data-scheme="dark"]) .result-screen--ocean .trow__pill { position: static; grid-area: pill; justify-self: end; }
 :root[data-design="ocean"]:not([data-scheme="dark"]) .result-screen--ocean .trow__action { grid-area: sub; justify-self: end; }
 :root[data-design="ocean"]:not([data-scheme="dark"]) .result-screen--ocean .trow__bars { grid-area: bars; padding-top: 6px; }
-:root[data-design="ocean"]:not([data-scheme="dark"]) .result-screen--ocean .trow__bars[hidden] { display: none; }
 /* The veto pill — „1× gar nicht" (score.reasonVetoOne), in Tintenfisch: the
    ramp's colour for a game that took a „gar nicht", with its fixed light ink. */
 :root[data-design="ocean"]:not([data-scheme="dark"]) .result-screen--ocean .score-why {

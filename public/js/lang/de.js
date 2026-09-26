@@ -1182,7 +1182,6 @@ I18N.de = {
   'result.more': 'Mehr',
   'result.colPlace': 'Platz',
   'result.colGame': 'Spiel',
-  'result.colVotes': 'Wertungen',
   'result.colScore': 'Score',
   'result.distShowOne': 'Verteilung der {n} Wertung',
   'result.distShow': 'Verteilung der {n} Wertungen',
