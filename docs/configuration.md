@@ -171,9 +171,18 @@ tenant: accepted friends (`MAX_FRIENDS_PER_USER`, default 500), open outgoing
 friend requests (`MAX_FRIEND_REQUESTS_PER_USER`, default 50) and passkeys
 (`MAX_PASSKEYS_PER_USER`, default 20, issue #418). Two more are trims rather
 than refusals — the oldest rows are dropped instead of the write being rejected:
-the friends feed (`MAX_FEED_EVENTS`, default 50, issue #325) and the in-app
+the friends feed (`MAX_FEED_EVENTS`, default 5000, issue #325) and the in-app
 inbox (`MAX_INBOX_ITEMS`, default 100, issue #207). With accounts off (the
 default, single-tenant deploy) these are inert. See the quotas block in `.env.example`.
+
+The friends feed's **retention** is an age, not that count (issue #1357):
+`MAX_FEED_EVENT_AGE_DAYS` (default 365) — events older than that are deleted on
+the author's next write and by the scheduler's `purgeExpiredFeedEvents` sweep, so
+an account that stops writing still ages out. `MAX_FEED_EVENTS` is only a safety
+ceiling against runaway writes; it was 50 before #1357, and **an instance that
+still sets it to 50 keeps the old behaviour** (a profile feed that stops at the
+last 50 actions), so remove the override when upgrading. The privacy policy states
+12 months — change both together if you retune the age.
 
 One of them is also told to the client: `GET /api/config` reports
 `expansionsPerGame`, so the expansions dialog can count the ticked set against the

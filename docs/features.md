@@ -697,7 +697,10 @@ What the app does, in detail. For a short overview see the
   count. Each friend is a compact tile carrying what that person last did (or how
   long you have been friends) and, behind it, a wash of the cover they last
   played; tapping one opens their profile, where removing them lives. The feed
-  below is a **wall of tiles** rather than a column of rows. A friendship shares
+  below is a **wall of tiles** rather than a column of rows, and it **keeps
+  loading as you scroll** (a „Mehr laden" button the scroll clicks for you), as
+  does the feed on a friend's profile; each event is kept for **12 months**
+  (issue #1357). A friendship shares
   **no round data**; it is purely social. Unfriending is unilateral and immediate in both
   directions. With accounts off the whole feature is inert.
 - **E-mail for actionable inbox items** – *accounts mode only* (issue #618). A

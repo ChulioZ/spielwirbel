@@ -33,7 +33,8 @@
 
    A row with no count is rendered as a plain `game_added` rather than throwing:
    rows written before this change are still in production feeds and age out
-   over MAX_FEED_EVENTS, and the row still carries the title they name. */
+   over the 12-month retention (#1357), and the row still carries the title
+   they name. */
 function feedText(ev) {
   const params = {
     user: `<strong>${friendName(ev.username)}</strong>`,
@@ -229,18 +230,101 @@ function renderFeedRow(ev) {
 
    `opts.rows` lays the same events out as Der Tisch's rows (#1272), under the
    same expander and the same eight-then-more collapse, so „Alle anzeigen" from
-   the home tile keeps its promise under either design. */
+   the home tile keeps its promise under either design.
+
+   `opts.more` (#1357) pages the list: `{ nextCursor, load(cursor) }`, where
+   `load` resolves to the next `{ events, nextCursor }`. See feedPager below. */
 function renderFeedTiles(events, opts) {
+  const o = opts || {};
   const wrap = h('<div class="e-feed"></div>');
-  const rows = !!(opts && opts.rows);
+  const rows = !!o.rows;
   const grid = h(rows ? '<div class="feed-list feed-list--rows"></div>' : '<div class="e-grid"></div>');
-  events.forEach((ev) => grid.appendChild(rows ? renderFeedRow(ev) : renderFeedTile(ev, opts)));
+  const render = (ev) => (rows ? renderFeedRow(ev) : renderFeedTile(ev, opts));
+  events.forEach((ev) => grid.appendChild(render(ev)));
   wrap.appendChild(grid);
   if (events.length > FEED_TILES_COLLAPSED) {
     const more = h(`<button type="button" class="link-btn e-feed__more">${esc(t('friends.feedMore', { count: events.length }))}</button>`);
-    more.addEventListener('click', () => wrap.classList.add('is-open'));
+    // Opened, the expander hides (CSS: its count was the first page's, which
+    // later pages make wrong), so focus goes to the first tile it revealed —
+    // tabindex -1, reachable by script only — rather than falling to <body>.
+    more.addEventListener('click', () => {
+      wrap.classList.add('is-open');
+      const first = grid.children[FEED_TILES_COLLAPSED];
+      if (first) { first.setAttribute('tabindex', '-1'); first.focus(); }
+    });
     wrap.appendChild(more);
+  } else if (o.more && o.more.nextCursor) {
+    // Nothing is collapsed, so there is no expander to lift the collapse off a
+    // later page — open the list now, or appended tiles would arrive hidden.
+    wrap.classList.add('is-open');
   }
+  if (o.more && o.more.nextCursor) feedPager(wrap, grid, render, o.more);
   return wrap;
+}
+
+/* Infinite scroll for a paged feed (#1357).
+
+   The sentinel is a real BUTTON („Mehr laden"), not an empty div watched by an
+   observer: a keyboard or screen-reader user gets a control that loads the next
+   page, a browser without IntersectionObserver still works, and the observer
+   does nothing but click it. One request in flight at a time, and the guard is
+   `disabled` ALONE: a disabled button dispatches no click, whether a finger or
+   the observer's `btn.click()` asks. A separate `busy` flag was written first
+   and deliberately taken out — breaking it on purpose left every test green,
+   because `disabled` had already absorbed the case
+   (.claude/rules/redundant-guards-make-each-other-untestable.md), so it guarded
+   nothing and would have hidden the real guard from the next cleanup.
+
+   Pages APPEND to the same grid, never re-render it: a list the user has
+   already expanded stays expanded, and while it is still collapsed below 1024px
+   the CSS collapse hides `.e-feed__load` too, so the observer cannot load pages
+   nobody can see (a hidden element never intersects). When `nextCursor` comes
+   back null the observer is disconnected and the button STAYS, reading „Alles
+   geladen" (#1357's merge interview): removing it dropped a keyboard user's
+   focus to <body>. It is `aria-disabled`, never `disabled` — the browser's focus
+   fixup moves focus off an element the moment it becomes disabled, which is the
+   same jump — so the end state is guarded by the missing cursor instead.
+
+   After each page the button is re-observed, because an IntersectionObserver
+   reports CHANGES: a short page that leaves the button in view would otherwise
+   never fire again. A failed load re-enables the button for a retry and does
+   NOT re-observe, so an outage cannot turn into a request loop. */
+function feedPager(wrap, grid, render, more) {
+  let cursor = more.nextCursor;
+  let io = null;
+  const row = h(`<div class="e-feed__load"><button type="button" class="btn btn--sm">${esc(t('friends.feedLoadMore'))}</button></div>`);
+  const btn = row.querySelector('button');
+  wrap.appendChild(row);
+
+  btn.addEventListener('click', async () => {
+    if (!cursor) return;
+    btn.disabled = true;
+    btn.textContent = t('friends.feedLoading');
+    let page = null;
+    try {
+      page = await more.load(cursor);
+    } catch {
+      // accountApi has already told the user; leave a working button behind.
+    }
+    btn.disabled = false;
+    btn.textContent = t('friends.feedLoadMore');
+    if (!page) return;
+    (page.events || []).forEach((ev) => grid.appendChild(render(ev)));
+    cursor = page.nextCursor || null;
+    if (!cursor) {
+      if (io) io.disconnect();
+      btn.setAttribute('aria-disabled', 'true');
+      btn.textContent = t('friends.feedAllLoaded');
+      return;
+    }
+    if (io) { io.unobserve(btn); io.observe(btn); }
+  });
+
+  if (typeof IntersectionObserver === 'function') {
+    io = new IntersectionObserver((entries) => {
+      if (entries.some((e) => e.isIntersecting)) btn.click();
+    }, { rootMargin: '400px 0px' });
+    io.observe(btn);
+  }
 }
 
