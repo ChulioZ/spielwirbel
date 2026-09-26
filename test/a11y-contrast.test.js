@@ -2212,6 +2212,43 @@ test('a design that declares a DARKENED person row: the colours at their permitt
   assert.deepEqual(failures, [], 'a person colour must read as a ring, and its darkened row as a name');
 });
 
+test('a design that declares a PEARL keeps its glyph, ring and open rim legible (#1391, O17.9)', () => {
+  /* Ocean's Abzeichen: a pearl in a Muschel. The glyph sits on the pearl's
+     sweep, a progress ring on the shell's water, and an OPEN mark is told by a
+     dashed rim — so all three are non-text graphics at 3:1 (SC 1.4.11), each on
+     every stop it can land on. The words beside a pearl on a wave-paper panel
+     (the Spielerkarte, the Tischkarte string, a Chronik row) are text at AA. */
+  const hosts = withToken('--pearl-3');
+  assert.ok(hosts.length >= 1, 'no design declares a pearl — this test is vacuous');
+  const failures = [];
+  let checked = 0;
+  for (const t of hosts) {
+    const v = (n) => token(n, t.design);
+    const pairs = [
+      ...['--bubble-hi', '--pearl-1', '--pearl-2', '--pearl-3'].map((g) => [`--ink glyph on ${g}`, v('--ink'), v(g), AA_LARGE]),
+      // The ring's arc on its track (the shell's water), and the tier pill.
+      ['--brand ring on --sunken-soft', v('--brand'), v('--sunken-soft'), AA_LARGE],
+      ['--on-accent tier on --brand', v('--on-accent'), v('--brand'), AA_TEXT],
+      // The open shell: its dashed rim and its outlined glyph on the pale water,
+      // and that glyph where it crosses the lid's darker rib and the dish.
+      ['--shell-open-rim on --wave-paper', v('--shell-open-rim'), v('--wave-paper'), AA_LARGE],
+      ...['--wave-paper', '--water-coast', '--shell-lid', '--shell-dish', '--surface']
+        .map((g) => [`--ink-soft glyph on ${g}`, v('--ink-soft'), v(g), AA_LARGE]),
+      // Words on the wave-paper panels, and the „Abzeichen" label in the accent.
+      ['--ink-soft on --wave-paper', v('--ink-soft'), v('--wave-paper'), AA_TEXT],
+      ['--brand on --wave-paper', v('--brand'), v('--wave-paper'), AA_TEXT],
+      ['--gold-ink on --gold („Neu")', v('--gold-ink'), v('--gold'), AA_TEXT],
+    ];
+    for (const [label, ink, ground, bar] of pairs) {
+      checked += 1;
+      const ratio = contrast(ink, ground);
+      if (!(ratio >= bar)) failures.push(`${name(t)} — ${label} = ${ratio.toFixed(2)}:1 (bar ${bar})`);
+    }
+  }
+  assert.ok(checked >= 15, `only ${checked} pearl pairs measured`);
+  assert.deepEqual(failures, [], 'a pearl, its ring and an open shell must read at their bar');
+});
+
 test('every colour token a design declares is measured by one of the checks above', () => {
   /* The guard that makes #1188's move safe. A design's root block is now
      RESOLVABLE by test/support/theme.js, and test/design-layer.test.js pushes
@@ -2266,14 +2303,18 @@ test('every colour token a design declares is measured by one of the checks abov
     '--good-soft', '--danger-soft', '--toast-action', '--danger-strong',
     '--person-deep-1', '--person-deep-2', '--person-deep-3', '--person-deep-4',
     '--person-deep-5', '--person-deep-6', '--person-deep-7', '--person-deep-8',
+    // #1391, Ocean's Abzeichen: the pearl's stops, the open shell's rim, and the
+    // lid rib and dish the open mark's glyph can cross.
+    '--pearl-1', '--pearl-2', '--pearl-3', '--shell-open-rim', '--shell-lid', '--shell-dish',
   ]);
   /* Not colours, so not this test's business: a lift PERCENTAGE, and the four
      compositing alphas the elevation ramp is built from. The alphas are painted
      over a ground this file cannot know (a shadow falls on whatever is behind
      the card), and they can only ever DARKEN it — which is the safe direction
      for every pair already measured on that ground. */
-  // #1214 adds Ocean's --deep-cast, the blind's shadow alpha — the same kind.
-  const NOT_A_COLOUR = /^--(member-lift|cast|cast-soft|cast-deep|cast-button|deep-cast|brass-sheen|brass-sheen-strong)$/;
+  // #1214 adds Ocean's --deep-cast, the blind's shadow alpha — the same kind;
+  // #1391 its --cast-pearl, the pearl's.
+  const NOT_A_COLOUR = /^--(member-lift|cast|cast-soft|cast-deep|cast-button|deep-cast|cast-pearl|brass-sheen|brass-sheen-strong)$/;
   /* A hairline on a NON-INTERACTIVE label. SC 1.4.11 binds a boundary only
      where it identifies a control, and these two identify a printed tag — so
      there is no bar to measure them against, and inventing one would push them

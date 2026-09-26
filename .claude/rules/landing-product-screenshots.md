@@ -68,7 +68,10 @@ edge — which reads as "the app is broken on a phone", not as "the tool lied".
 Diagnose it in one step: screenshot a page whose body is
 `innerWidth+"x"+innerHeight`. Fix it by driving Chrome over **CDP** and calling
 `Emulation.setDeviceMetricsOverride({ width, height, deviceScaleFactor, mobile })`,
-which sets the viewport exactly. Node has a global `WebSocket`, so a CDP client
+which sets the viewport exactly. (A no-CDP alternative for a static page,
+used on #1391: screenshot a wrapper document holding an `<iframe>` of the
+target width — the iframe is its own viewport, so its media queries fire at
+390 while the outer window stays at the 500px floor.) Node has a global `WebSocket`, so a CDP client
 is ~30 lines and needs no dependency:
 
 ```js

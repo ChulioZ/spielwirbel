@@ -268,6 +268,27 @@
      dimmed, not blacked out. Here rather than in the #1217 section at the end
      because it is a colour, and only this block is resolved and measured. */
   --scrim: color-mix(in oklab, var(--ink) 34%, transparent);
+
+  /* ---- Abzeichen (#1391, O17): a pearl in a Muschel. The values O17 uses
+     outside O1 (docs/design/pruefung-abzeichen-2026-09-26.md finding 3), named
+     here so the #1391 section below only ever reads var(). The pearl is a
+     radial sweep --bubble-hi -> --pearl-1 -> --pearl-2 -> --pearl-3, and the
+     glyph on it is --ink (8.7:1 on the darkest stop, O17.9). The shell's water
+     is --sunken-soft (an open mark's: --wave-paper), its lid ribs --shell-lid
+     and --water-coast, its dish --shell-dish: parts of a picture, never behind
+     text. An OPEN mark's dashed rim is the one edge that tells a state, so it
+     clears the 3:1 non-text bar on --wave-paper (4.07:1).
+     Three O17 hexes are deliberately NOT here: #b9d3df is the sheet's own
+     handover panel, and #dcdaf2 / #efeef9 tint O17.4's Tischkarte in Lea's
+     colour — a ground O13.4 (#1218) stood down on purpose — so nothing in the
+     app paints them. */
+  --pearl-1: #f1f4f6;
+  --pearl-2: #d5dde3;
+  --pearl-3: #b9c6cf;
+  --shell-lid: #c3dbe6;
+  --shell-dish: #bcd6e2;
+  --shell-open-rim: #5d7a8b;
+  --cast-pearl: rgba(14, 60, 90, 0.35);   /* the pearl's shadow: an alpha, like --cast */
 }
 
 /* ---------------------------------------------------------------------------
@@ -5443,4 +5464,657 @@
   @keyframes ocean-tide {
     50% { transform: translateY(-6px); }
   }
+}
+
+/* ===== #1391 — Abzeichen: a pearl in a Muschel (O17) ===== */
+/* Sheet: docs/design/ocean/Ocean-O17-Abzeichen.dc.html (O17.1-O17.8), over
+   K17's shared markup (views-badges.js, #1388/#1389). NO markup of its own: the
+   shell is drawn on `.badge__mark` itself — its background is the water disc
+   (and the #0e6690 ring when a count is running), `::before` is the lid,
+   `::after` the dish, and the glyph's own `<i>` is the pearl. O17.10: „O17
+   fügt nur ::before für den Deckel und ::after für die Schale an .badge__mark
+   hinzu"; the strings under the members are the only other drawing, on the
+   grids' own `::before`, which styles.css leaves unused.
+
+   The four states, never colour alone (every tile's aria-label names it too):
+     earned   — a full pearl in the open shell; a ring when the next tier counts
+     progress — a smaller pearl, the ring and the count
+     locked   — the empty shell: a dashed rim, a dashed pearl slot, the glyph
+                outlined in --ink-soft
+     secret   — the closed shell (the lid is the whole disc) with lock-question
+
+   Geometry is one pair of custom properties the placement sets on a CONTAINER
+   — --o-mark (the shell's box) and --o-ring (the ring's width) — and every size
+   inside is a share of the water disc, so the band's 64px shell, a string's 54,
+   the phone's 52 and the card's 74 are one drawing. A fallback of 52/3 is the
+   phone's.
+
+   Every rule is gated on the light scheme — nearly all read a token only the
+   gated block declares (.claude/rules/design-colour-blocks-are-scheme-gated.md).
+   A rule that DISPLAYs a K17 container keeps `:not([hidden])`: K17 hides the
+   empty moment and the folded „N offen" grid with the attribute, and a design
+   rule outranks styles.css's `[hidden] { display: none }`
+   (.claude/rules/hidden-attribute-vs-display-rule.md).
+
+   Out of this section on purpose: the rising bubble after the whale (O17.5's
+   motion) — a separate, droppable slice; the whale's own ritual stays exactly
+   as #1221 left it. */
+
+/* --- The tile --------------------------------------------------------------- */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge {
+  --o-top: 4px;
+  gap: 5px;
+  min-width: 0;
+  padding: var(--o-top) 2px 4px;
+  border: 0;
+  border-radius: var(--radius-lg);
+  background: none;
+  color: var(--ink);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge:hover { background: var(--line-soft); }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge__name {
+  max-width: 100%;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--ink);
+}
+/* Two lines at most under a pearl: the whole line is in the aria-label and in
+   the card a tap opens, and a four-line condition under an 88px tile is a wall. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge__line {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+/* „Neu" on the sun, at the shell's upper left (O17.1 „Neu (Endzustand)"). */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge__new {
+  z-index: 1;
+  top: 0;
+  left: calc(50% - var(--o-mark, 52px) / 2 - 10px);
+  background: var(--gold);
+  color: var(--gold-ink);
+}
+
+/* --- The shell ---------------------------------------------------------------
+   `isolation` makes the mark its own stacking context, so the lid and the dish
+   (z-index -1) paint over its water and under the pearl. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge__mark {
+  --o-w: calc(var(--o-mark, 52px) - 2 * var(--o-ring, 3px));
+  --o-water: var(--sunken-soft);
+  position: relative;
+  isolation: isolate;
+  flex: none;
+  width: var(--o-mark, 52px);
+  height: var(--o-mark, 52px);
+  border: 0;
+  border-radius: 50%;
+  color: var(--ink);
+  background: radial-gradient(closest-side, var(--o-water) calc(100% - var(--o-ring, 3px)), transparent calc(100% - var(--o-ring, 3px) + 0.5px));
+}
+/* The ring: a running count (an earned tier on its way to the next, or an entry
+   under way) is the only mark K17 gives a --pct, so the inline property IS the
+   test. Track = the water, so the arc is the only thing that reads. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge__mark[style*="--pct"],
+:root[data-design="ocean"]:not([data-scheme="dark"]) :is(.badge, .badge-card)[data-state="progress"] .badge__mark {
+  background:
+    radial-gradient(closest-side, var(--o-water) calc(100% - var(--o-ring, 3px)), transparent calc(100% - var(--o-ring, 3px) + 0.5px)),
+    conic-gradient(var(--brand) calc(var(--pct) * 1%), var(--sunken-soft) 0);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge__mark::before,
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge__mark::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+}
+/* The lid, ribbed like a scallop. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge__mark::before {
+  left: calc(var(--o-ring, 3px) + var(--o-w) * 0.09);
+  right: calc(var(--o-ring, 3px) + var(--o-w) * 0.09);
+  top: calc(var(--o-ring, 3px) + var(--o-w) * 0.07);
+  height: calc(var(--o-w) * 0.46);
+  border-radius: calc(var(--o-w) * 0.43) calc(var(--o-w) * 0.43) 3px 3px;
+  background: repeating-conic-gradient(from -90deg at 50% 100%, var(--shell-lid) 0 9deg, var(--water-coast) 9deg 18deg);
+}
+/* The dish the pearl lies in. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge__mark::after {
+  left: calc(var(--o-ring, 3px) + var(--o-w) * 0.125);
+  right: calc(var(--o-ring, 3px) + var(--o-w) * 0.125);
+  bottom: calc(var(--o-ring, 3px) + var(--o-w) * 0.09);
+  height: calc(var(--o-w) * 0.23);
+  border-radius: 3px 3px calc(var(--o-w) * 0.4) calc(var(--o-w) * 0.4);
+  background: var(--shell-dish);
+}
+/* The pearl: the glyph's own element. --o-pk / --o-gk are its share of the
+   water disc and the glyph's (O17.1: 38 / 20 in a 56 disc when earned). */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge__mark > .ti {
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  width: calc(var(--o-w) * var(--o-pk, 0.68));
+  height: calc(var(--o-w) * var(--o-pk, 0.68));
+  margin-top: calc(var(--o-w) * 0.04);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, var(--bubble-hi), var(--pearl-1) 35%, var(--pearl-2) 75%, var(--pearl-3));
+  box-shadow: 0 3px 6px var(--cast-pearl);
+  color: var(--ink);
+  font-size: calc(var(--o-w) * var(--o-gk, 0.36));
+}
+/* Under way: a smaller pearl growing inside its ring. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) :is(.badge, .badge-card)[data-state="progress"] .badge__mark {
+  --o-pk: 0.46;
+  --o-gk: 0.27;
+}
+/* Open: the empty shell — pale water, a dashed rim, the lid half there, and
+   only the dashed outline of where the pearl will lie. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) :is(.badge, .badge-card)[data-state="locked"] .badge__mark {
+  --o-water: var(--wave-paper);
+  --o-pk: 0.54;
+  --o-gk: 0.27;
+  outline: 2px dashed var(--shell-open-rim);
+  outline-offset: calc(-2px - var(--o-ring, 3px));
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) :is(.badge, .badge-card)[data-state="locked"] .badge__mark::before { opacity: 0.55; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) :is(.badge, .badge-card)[data-state="locked"] .badge__mark > .ti {
+  border: 2px dashed var(--shell-open-rim);
+  background: none;
+  box-shadow: none;
+  color: var(--ink-soft);
+}
+/* Secret: the shell is closed — the lid is the whole disc, no dish — and a
+   plain chip carries the lock. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) :is(.badge, .badge-card)[data-state="secret"] .badge__mark {
+  --o-pk: 0.54;
+  --o-gk: 0.27;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) :is(.badge, .badge-card)[data-state="secret"] .badge__mark::before {
+  height: calc(var(--o-w) * 0.82);
+  border-radius: 50%;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) :is(.badge, .badge-card)[data-state="secret"] .badge__mark::after { display: none; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) :is(.badge, .badge-card)[data-state="secret"] .badge__mark > .ti {
+  background: var(--surface);
+  box-shadow: none;
+  color: var(--ink-soft);
+}
+
+/* --- Pokale › Abzeichen (O17.2 at 1440, O17.3 at 390) --------------------------
+   The heading is a real title, like O13.2's: Comfortaa, not the kicker. It has
+   to beat the component layer's Figtree `:is()` list, which weighs (0,5,0) —
+   .claude/rules/is-list-takes-its-most-specific-member.md — and this is (0,5,1). */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-section > .section-head {
+  justify-content: flex-start;
+  align-items: center;
+  gap: 6px 12px;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-section > .section-head h2 {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.1;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--ink);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-section > .section-head h2 .ti { display: none; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-section__summary {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+/* The hairline after the count, as every O13 section head draws it. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-section > .section-head::after {
+  content: "";
+  flex: 1 1 24px;
+  height: 1px;
+  background: var(--line);
+}
+/* O17.8: before the first session, one sentence — no empty shells. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-section__empty {
+  font-size: var(--text-md);
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+/* The grids: four across on a phone (O17.3), the Spielerkarte and the „N offen"
+   rest included. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-grid:not([hidden]) {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px 0;
+}
+
+/* The round's shell row. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-band--round {
+  margin-bottom: 12px;
+  padding: 12px 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-band__head {
+  justify-content: flex-start;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding: 0 6px;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-band__name {
+  font-family: var(--font-display);
+  font-size: 17px;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-band__count {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+/* One card per person: the head is the disclosure, the pearls sit below it. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-member {
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-member__head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 10px;
+  min-height: 60px;
+  padding: 0 14px;
+}
+/* Name over its counts, as O17.2/O17.3 set them: the 180px head of a desktop
+   row cannot hold the two side by side. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-member__head > .badge-member__avatar { grid-row: 1 / 3; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-member__head > .badge-member__name { grid-column: 2; align-self: end; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-member__head > .badge-member__summary { grid-column: 2; align-self: start; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-member__avatar {
+  width: 38px;
+  height: 38px;
+  flex: none;
+  font-size: var(--text-xs);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-member__name { font-size: var(--text-md); }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-member__summary {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+/* The chevron is O17.3's tabler pair, not the app's triangles. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-member__head::after {
+  grid-column: 3;
+  grid-row: 1 / 3;
+  content: "\ea61";
+  font-family: "tabler-icons";
+  font-size: 19px;
+  color: var(--brand);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-member[open] > .badge-member__head::after { content: "\ea5f"; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-member[open] > .badge-grid:not([hidden]) {
+  margin-top: 0;
+  padding: 8px 4px 12px;
+  border-top: 1px solid var(--line-soft);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-member__more { margin: 0 14px 12px; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-member[open] > .badge-grid--rest:not([hidden]) {
+  padding: 0 4px 12px;
+  border-top: 0;
+}
+
+/* From the editor split up the section is O17.2: the round's shells in a
+   wrapping row, and every person's pearls threaded on a string. The members go
+   to ONE column — a string is a row, and two of them side by side would each
+   break after four pearls. */
+@media (min-width: 860px) {
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .badge-section > .section-head h2 { font-size: var(--text-2xl); }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .badge-section__summary { font-size: var(--text-md); font-weight: 600; }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .badge-band--round {
+    --o-mark: 64px;
+    --o-ring: 4px;
+    padding: 16px 20px;
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-1);
+  }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .badge-band__name { font-size: 19px; }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .badge-band__count { font-size: var(--text-sm); }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .badge-band--round > .badge-grid:not([hidden]) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .badge-band--round .badge { width: 118px; }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .badge-band--round .badge__name { font-size: var(--text-sm); }
+
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .badge-members { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .badge-member {
+    --o-mark: 54px;
+    border-radius: var(--radius-xl);
+  }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .badge-member__head { padding: 0 20px; }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .badge-member__avatar {
+    width: 46px;
+    height: 46px;
+    font-size: var(--text-sm);
+  }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .badge-member__name {
+    font-family: var(--font-display);
+    font-size: 18px;
+  }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .badge-member[open] > .badge-grid:not([hidden]) {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    /* As wide as its pearls, so a short string ends at its last one. */
+    width: fit-content;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: 4px 20px 14px;
+    border-top: 0;
+  }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .badge-member .badge { width: 104px; }
+  /* The string, through the middle of the first row of shells. Each tile is
+     positioned (styles.css), so the tiles paint over it in tree order. */
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .badge-member > .badge-grid::before {
+    content: "";
+    position: absolute;
+    left: 50px;
+    right: 50px;
+    top: calc(4px + var(--o-top, 4px) + var(--o-mark) / 2 - 1px);
+    height: 2px;
+    background: var(--bubble-rim);
+  }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .badge-member__more { margin: 0 20px 12px; }
+}
+/* Wide enough for O17.2's two columns — the person, then their string. A
+   <details> lays out as a grid of its summary and its content slot only where
+   `::details-content` exists; elsewhere the row simply stays stacked. */
+@media (min-width: 1100px) {
+  @supports selector(::details-content) {
+    :root[data-design="ocean"]:not([data-scheme="dark"]) .badge-member[open] {
+      display: grid;
+      grid-template-columns: 180px minmax(0, 1fr);
+      align-items: center;
+      column-gap: 16px;
+      padding: 12px 20px;
+    }
+    :root[data-design="ocean"]:not([data-scheme="dark"]) .badge-member[open] > .badge-member__head { padding: 0; }
+    :root[data-design="ocean"]:not([data-scheme="dark"]) .badge-member[open] > .badge-grid:not([hidden]) { padding: 0; }
+    :root[data-design="ocean"]:not([data-scheme="dark"]) .badge-member[open] > .badge-member__more { margin: 8px 0 0; }
+    :root[data-design="ocean"]:not([data-scheme="dark"]) .badge-member[open] > .badge-grid--rest:not([hidden]) { padding: 8px 0 0; }
+  }
+}
+
+/* --- The result moment (O17.5, the static end state) --------------------------
+   No box: at most two pills under the headline, then „+N weitere". The holder's
+   name sits outside the button in K17's markup, so it is laid onto the pill's
+   first row; it takes no pointer, so a tap there still reaches the button.
+   The pill is --surface, opaque, so every word on it is measured on --surface
+   and not on the water behind the whale. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-moment:not([hidden]) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 16px;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-moment__title {
+  flex: 1 0 100%;
+  margin: 0;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--brand);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-moment__title .ti { display: none; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-moment__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-moment__item { position: relative; display: block; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-moment__holder {
+  position: absolute;
+  z-index: 2;
+  top: 9px;
+  left: 71px;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  line-height: 16px;
+  color: var(--brand);
+  pointer-events: none;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-moment .badge {
+  --o-mark: 50px;
+  --o-ring: 0px;
+  --o-top: 8px;
+  display: grid;
+  grid-template-columns: 50px minmax(0, auto);
+  grid-template-rows: 16px auto auto;
+  align-content: start;
+  justify-items: start;
+  column-gap: 12px;
+  row-gap: 1px;
+  min-height: 64px;
+  padding: 8px 18px 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+  text-align: left;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-moment .badge:hover { background: var(--bubble-1); }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-moment .badge__mark {
+  grid-row: 1 / -1;
+  grid-column: 1;
+  align-self: center;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-moment .badge__name {
+  grid-row: 2;
+  grid-column: 2;
+  font-size: var(--text-md);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-moment .badge__line {
+  grid-row: 3;
+  grid-column: 2;
+}
+/* Everything in the moment is new; the aria-label still says so. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-moment .badge__new { display: none; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-moment__more {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target-button);
+  margin: 0;
+  padding: 0 16px;
+  border: 1.5px solid var(--control-edge);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+/* --- The tap-open card (O17.1 „Nach dem Antippen") ------------------------ */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .popover--badge { width: 380px; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-card {
+  --o-mark: 74px;
+  --o-ring: 5px;
+  gap: 12px;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-card__head { gap: 14px; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-card__name {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-card__holder { font-weight: 600; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-card__cond {
+  font-size: var(--text-md);
+  font-weight: 600;
+  line-height: 1.5;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-card__next {
+  font-weight: 700;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-card__bar {
+  height: 10px;
+  background: linear-gradient(90deg, var(--brand) calc(var(--pct) * 1%), var(--sunken-soft) 0);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-card__earned {
+  padding-top: 10px;
+  border-top: 1px solid var(--line-soft);
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+/* --- The hub line and the Chronik rows (O17.6) ----------------------------- */
+/* The hub's Pokale card: one wave-paper row, its medal drawn as a pearl. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .hub-row--badges {
+  min-height: 48px;
+  margin: 8px 0 0;
+  padding: 0 12px;
+  border-top: 0;
+  border-radius: var(--radius-lg);
+  background: var(--wave-paper);
+  color: var(--ink);
+  font-weight: 700;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) :is(.hub-row--badges, .chronik-row--badge .chronik-row__icon) .ti {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, var(--bubble-hi), var(--pearl-1) 35%, var(--pearl-2) 75%, var(--pearl-3));
+  box-shadow: 0 1px 3px var(--cast-pearl);
+  color: var(--ink);
+  font-size: 14px;
+}
+/* The Chronik: one pill per earning under its session, the „Abzeichen" label
+   at its end in the accent (5.66:1 on the wave paper, O17.9). */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .chronik-row--badge {
+  box-sizing: border-box;
+  gap: 10px;
+  min-height: 40px;
+  margin: 5px 0 0 28px;
+  padding: 4px 14px 4px 6px;
+  border-radius: var(--radius-pill);
+  background: var(--wave-paper);
+  color: var(--ink);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .chronik-row--badge .chronik-row__icon { display: flex; flex: none; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .chronik-row--badge .chronik-row__text {
+  order: 1;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target-text);
+  font-weight: 700;
+  color: var(--ink);
+  text-decoration: none;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .chronik-row--badge .chronik-row__label {
+  order: 2;
+  margin-left: auto;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--brand);
+}
+
+/* --- The Tischkarte (O17.4): the earned string under the figures ------------
+   Earned only (K17), so every mark is a bare pearl: no shell, no ring
+   — the name beside it carries the tier („Stammgast 10"). */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .member-card__badges {
+  --o-mark: 44px;
+  --o-ring: 0px;
+  gap: 8px;
+  margin-top: 18px;
+  padding: 12px 6px;
+  border-radius: var(--radius-lg);
+  background: var(--wave-paper);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .member-card__badges .member-card__badges-label {
+  padding: 0 10px;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--brand);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-grid--compact:not([hidden]) {
+  position: relative;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px 0;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-grid--compact .badge { padding: 0 2px; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-grid--compact .badge__mark {
+  --o-pk: 1;
+  --o-gk: 0.45;
+  background: none;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-grid--compact .badge__mark::before,
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-grid--compact .badge__mark::after { display: none; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-grid--compact .badge__mark > .ti { margin-top: 0; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-grid--compact .badge__name { display: block; }
+@media (min-width: 860px) {
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .member-card__badges {
+    --o-mark: 40px;
+    flex-direction: row;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 16px;
+  }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .member-card__badges .member-card__badges-label {
+    flex: none;
+    min-width: 92px;
+    padding: 0;
+    white-space: nowrap;
+  }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .badge-grid--compact:not([hidden]) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 18px;
+  }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .badge-grid--compact .badge {
+    flex-direction: row;
+    gap: 8px;
+    padding: 0 4px 0 0;
+  }
+  /* The name cuts the string, so it stands on the panel's own ground. */
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .badge-grid--compact .badge__name {
+    padding-right: 4px;
+    background: var(--wave-paper);
+    font-size: var(--text-sm);
+    text-align: left;
+  }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .badge-grid--compact::before {
+    content: "";
+    position: absolute;
+    left: 20px;
+    right: 40px;
+    top: calc(var(--o-mark) / 2 - 1px);
+    height: 2px;
+    background: var(--bubble-rim);
+  }
+}
+
+/* --- The Spielerkarte (O17.7): the account tier on a wave-paper panel,
+   four across at every width. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-grid--account:not([hidden]) {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  padding: 12px 4px;
+  border-radius: var(--radius-lg);
+  background: var(--wave-paper);
 }

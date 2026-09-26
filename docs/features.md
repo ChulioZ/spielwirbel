@@ -391,7 +391,10 @@ What the app does, in detail. For a short overview see the
     two entries on the result screen of the session that earned them („+N
     weitere" beyond that), as one row per earning under that session in the
     Chronik, as one line in the hub's Pokale preview, and as the earned-only
-    row on die Tischkarte.
+    row on die Tischkarte. Ocean draws each mark as a pearl in a Muschel
+    (issue #1391): a full pearl when earned, a smaller one inside a ring while
+    under way, an empty shell with a dashed rim while open, and a closed shell
+    for a secret — with each person's pearls threaded on a string.
 
     A win counts wherever it happened, an evening played alone included. That is
     a deliberate trade: weighting a win by the size of the field it beat is
