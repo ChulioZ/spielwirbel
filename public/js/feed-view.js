@@ -244,7 +244,14 @@ function renderFeedTiles(events, opts) {
   wrap.appendChild(grid);
   if (events.length > FEED_TILES_COLLAPSED) {
     const more = h(`<button type="button" class="link-btn e-feed__more">${esc(t('friends.feedMore', { count: events.length }))}</button>`);
-    more.addEventListener('click', () => wrap.classList.add('is-open'));
+    // Opened, the expander hides (CSS: its count was the first page's, which
+    // later pages make wrong), so focus goes to the first tile it revealed —
+    // tabindex -1, reachable by script only — rather than falling to <body>.
+    more.addEventListener('click', () => {
+      wrap.classList.add('is-open');
+      const first = grid.children[FEED_TILES_COLLAPSED];
+      if (first) { first.setAttribute('tabindex', '-1'); first.focus(); }
+    });
     wrap.appendChild(more);
   } else if (o.more && o.more.nextCursor) {
     // Nothing is collapsed, so there is no expander to lift the collapse off a

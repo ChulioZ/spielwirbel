@@ -176,6 +176,26 @@ test('a collapsed list keeps its expander, and the paging button hides behind th
   assert.match(block, /\.e-feed:not\(\.is-open\) \.e-feed__load \{ display: none; \}/);
 });
 
+/* #1357's merge interview: once opened, „Alle N anzeigen" has done its job —
+   and its N was the FIRST page's count, which pages appended below it made
+   wrong. So it hides, and focus moves to the first tile it revealed rather
+   than falling to <body> with the button it was on. */
+test('opening the collapse hides the expander and hands focus to the first revealed tile', (t) => {
+  const { dom } = boot(t);
+  const wrap = dom.call('renderFeedTiles', many(12), { more: { nextCursor: 'c1', load: async () => ({ events: [], nextCursor: null }) } });
+  dom.document.body.appendChild(wrap);
+  const more = wrap.querySelector('.e-feed__more');
+  more.focus();
+  more.click();
+  assert.ok(wrap.classList.contains('is-open'));
+  const ninth = wrap.querySelectorAll('.e-tile')[8];
+  assert.equal(dom.document.activeElement, ninth, 'focus lands on the first tile the collapse hid');
+  assert.equal(ninth.getAttribute('tabindex'), '-1', 'focusable by script only, not a new tab stop');
+
+  const css = fs.readFileSync(path.join(__dirname, '..', 'public', 'styles.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+  assert.match(css, /\.e-feed\.is-open \.e-feed__more \{ display: none; \}/, 'the opened expander is hidden');
+});
+
 /* ------------------------------ the two screens --------------------------- */
 
 test('the Freundeskreis asks /friends/feed?before= for the next page', async (t) => {
