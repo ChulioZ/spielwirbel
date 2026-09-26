@@ -9,11 +9,14 @@
          (the tier lives in the name alone — „Sessions 10", no corner pill)
      .badge-card                      the tap-open card (popover ≥ 860, sheet below)
      .badge-section                   Pokale › Abzeichen
+       .badge-legend (earned · progress · locked, in the section head)
        .badge-band--round, .badge-member (a <details>, standings order)
+         .badge-member__rank          „Platz N", the Tafel's place (#1386)
      .badge-moment                    the result screen, at most two marks
      .hub-row--badges                 one line in the hub's Pokale preview
      .chronik-row--badge              one row per earning under its session
      .member-card__badges             the Tischkarte, earned only
+       .member-card__badges-go        its chevron link to Pokale (#1386)
      .profile-card__badges            the Spielerkarte's account tier (#1389)
 
    Everything is DERIVED on every render through achievements.js — nothing is
@@ -233,9 +236,11 @@ function badgeLink(el, rid, mid) {
 }
 
 /* Pokale › Abzeichen. The round's band first, then one row per member in the
-   order the standings list them (`ranked`, roundStandings). A round with no
-   finished session gets one line and no tiles — no wall of grey padlocks. */
-function renderBadgeSection(round, ranked) {
+   order the standings list them (`ranked`, roundStandings), each carrying its
+   tie-aware place from the same call (`rankOf` — only members with a record
+   have one, exactly as the Tafel ranks them). A round with no finished session
+   gets one line and no tiles — no wall of grey padlocks. */
+function renderBadgeSection(round, ranked, rankOf) {
   const sec = h(`<section class="section badge-section" id="abzeichen" tabindex="-1" aria-labelledby="abzeichen-title">
        <div class="section-head"><h2 id="abzeichen-title">${iconText('ti-medal', t('badges.title'))}</h2></div>
      </section>`);
@@ -255,6 +260,7 @@ function renderBadgeSection(round, ranked) {
       : tn(fresh, 'badges.newOne', 'badges.new'));
   }
   sec.querySelector('.section-head').appendChild(h(`<span class="badge-section__summary">${esc(summary.join(' · '))}</span>`));
+  sec.querySelector('.section-head').appendChild(badgeLegend());
 
   const roundEarned = ctx.all.round.filter((e) => e.state === 'earned').length;
   const band = h(`<div class="badge-band badge-band--round" id="abzeichen-round" tabindex="-1">
@@ -274,6 +280,7 @@ function renderBadgeSection(round, ranked) {
   const list = h('<div class="badge-members"></div>');
   members.forEach((m, i) => list.appendChild(badgeMemberRow(round, ctx, m, {
     dense,
+    rank: rankOf ? rankOf[m.id] : undefined,
     // Open on a desktop; on a phone the first row (T17.3), or the one a tap
     // on the Tischkarte or a Chronik row asked for.
     open: wide || (wantMid ? wantMid === m.id : i === 0),
@@ -282,8 +289,19 @@ function renderBadgeSection(round, ranked) {
   return sec;
 }
 
-// One member's row: a <details> whose summary is the member and their counts.
-function badgeMemberRow(round, ctx, m, { dense, open }) {
+/* The key to the drawing (T17.2, O17.2): one swatch per state a tile can show
+   before it is opened. Secret is left out, as in every sheet — its padlock
+   glyph says so on the tile. aria-hidden: each tile already names its state
+   in words, so a screen reader would only hear the key twice. The words are
+   the tiles' own state strings; each design draws the swatch as its mark. */
+function badgeLegend() {
+  return h(`<ul class="badge-legend" aria-hidden="true">${['earned', 'progress', 'locked'].map((st) =>
+    `<li class="badge-legend__item" data-state="${st}"><span class="badge-legend__mark"></span>${esc(t(`badges.state.${st}`))}</li>`).join('')}</ul>`);
+}
+
+// One member's row: a <details> whose summary is the member, their counts and
+// their place in the standings.
+function badgeMemberRow(round, ctx, m, { dense, open, rank }) {
   const entries = ctx.all.members[m.id] || [];
   const earned = entries.filter((e) => e.state === 'earned');
   const progress = entries.filter((e) => e.state === 'progress').length;
@@ -294,6 +312,7 @@ function badgeMemberRow(round, ctx, m, { dense, open }) {
          <span class="avatar badge-member__avatar" style="background:${memberColor(round, m.id)}">${avatarFace(initials(m.name), { userId: m.userId })}</span>
          <span class="badge-member__name">${esc(m.name)}</span>
          <span class="badge-member__summary">${esc(counts.join(' · '))}</span>
+         ${rank ? `<span class="badge-member__rank">${esc(t('badges.rank', { n: rank }))}</span>` : ''}
        </summary>
        <div class="badge-grid"></div>
      </details>`);
@@ -407,8 +426,19 @@ function chronikBadgeRows(round, marks) {
    Only for the round's LATEST finished session: this is the moment of earning,
    not an archive — an older session's marks are in the Chronik under it.
    Static by construction: no motion in Klassisch, no focus move, no modal, and
-   every name and condition is in the DOM from the first paint. */
+   every name and condition is in the DOM from the first paint.
+
+   `data-fresh` on an item is the one motion hook, and it is design-neutral:
+   Klassisch draws nothing from it. It marks a mark this `el` has NOT shown
+   before, on any fill after the screen's first — so a cold load of a finished
+   session (the first fill) arrives still, and a winner tap's refill replays
+   nothing it already showed; only the marks that tap earned are fresh. A
+   design that animates the moment keys off the attribute alone. */
+const badgeMomentShown = new WeakMap();
 function fillBadgeMoment(el, round, session) {
+  const seen = badgeMomentShown.get(el); // undefined on the screen's first fill
+  const shown = seen || new Set();
+  badgeMomentShown.set(el, shown);
   el.replaceChildren();
   el.hidden = true;
   if (!session.finished) return;
@@ -433,6 +463,9 @@ function fillBadgeMoment(el, round, session) {
     if (!e) return;
     const holder = ctx.holderName(x.holder, x.memberId);
     const item = h(`<li class="badge-moment__item"><span class="badge-moment__holder">${esc(holder)}</span></li>`);
+    const id = `${x.memberId || ''}|${x.key}|${x.tier || ''}`;
+    if (seen && !shown.has(id)) item.setAttribute('data-fresh', '');
+    shown.add(id);
     item.appendChild(badgeTile(e, ctx, { holder, announceHolder: true, line: badgeCondition(e, ctx, { at: x.tier || undefined }) }));
     list.appendChild(item);
   });
@@ -445,8 +478,11 @@ function fillBadgeMoment(el, round, session) {
 
 /* The Tischkarte's row (#1074): the member's EARNED marks under the figures —
    never open or secret ones, the card is about who they are. Each opens Pokale ›
-   Abzeichen at this member's row. Null when there is nothing earned, so a
-   member with no sessions gets no empty label. */
+   Abzeichen at this member's row, and so does the chevron that closes the row
+   (T17.4, O17.4 — #1386): the sheets draw the whole row as that link, but the
+   pins are buttons already and cannot nest in an <a>, so the chevron is its
+   own named link. Null when there is nothing earned, so a member with no
+   sessions gets no empty label. */
 function memberCardBadges(round, member) {
   if (!round.sessions.some((s) => s.finished)) return null;
   const ctx = badgeContext(round);
@@ -461,6 +497,8 @@ function memberCardBadges(round, member) {
     line: false,
     onActivate: () => showBadges(round.id, member.id),
   })));
+  const go = h(`<a class="member-card__badges-go" aria-label="${esc(t('badges.memberAll', { name: member.name }))}"><i class="ti ti-chevron-right" aria-hidden="true"></i></a>`);
+  row.appendChild(badgeLink(go, round.id, member.id));
   return row;
 }
 

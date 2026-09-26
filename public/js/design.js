@@ -87,6 +87,21 @@ function personNameInk(color) {
   return hit ? hit.deep : color;
 }
 
+/* The tone a stored person colour is PAINTED as on a design that brings its own
+   row (#1237), or null when the design has none. Die Brücke declares
+   `personTone: 'marker'`: a member's colour is drawn as that design's marker at
+   the same index — B8.1's lightened row, measured on its plate — instead of the
+   generic 42% lift memberTone() applies on every other dark design. The stored
+   value never changes (lib/routes/members.js validates the same eight), so a
+   colour that is not one of the eight passes through as null. */
+function designPersonTone(color) {
+  const design = activeDesign();
+  if (design.personTone !== 'marker') return null;
+  const i = MEMBER_COLORS.indexOf(color);
+  const marker = i >= 0 ? (design.markers || [])[i] : null;
+  return marker ? marker.color : null;
+}
+
 // Injected once per design and then left in place: switching back to Klassisch
 // makes the rules stop matching on their own, so re-fetching on every change
 // would buy nothing. `data-design` on the link is the idempotence key.
