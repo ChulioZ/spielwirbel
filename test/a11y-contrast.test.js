@@ -659,9 +659,18 @@ test('the worn edge never fades the stamp border below the 3:1 non-text bar', ()
    and wrong since #1188 made the lift itself a token: a `var(--member-lift)`
    resolved against Klassisch reports every design at the shipped 42% fallback,
    including one that declares its own. */
+/* The design is WORN, not just its scheme: since #1237 memberTone() asks the
+   active design whether it brings its own person row (Die Brücke's B8.1), so a
+   design evaluated under Klassisch would report the generic lift it never paints. */
 function memberTone(color, design) {
+  const worn = DESIGN_REGISTRY.includes(design) ? design.id : 'klassisch';
+  APP.run(`applyDesign(${JSON.stringify(worn)})`);
   setScheme(design.scheme === 'dark');
-  return evaluate(APP.run(`memberTone(${JSON.stringify(color)})`), design);
+  try {
+    return evaluate(APP.run(`memberTone(${JSON.stringify(color)})`), design);
+  } finally {
+    APP.run("applyDesign('klassisch')");
+  }
 }
 
 test('every member tone carries its initials at AA, on every design', () => {
@@ -893,10 +902,20 @@ test('the Tafel\'s place numerals clear AA text on every design\'s surface', () 
   const [silver, bronze] = [ink(2), ink(3)];
   // Place 1 reads a token rather than a hex; name it, then measure what it resolves to.
   assert.match(APP_CSS_TEXT, /\.trow__rank--1\s*\{\s*color\s*:\s*var\(--gold-deep\)/, 'place 1 left --gold-deep');
+  /* A design may restate the two numerals in its own sheet (Die Brücke, #1237,
+     whose plate is too dark for either hex). Then the token it names is what
+     paints, so that is what is measured. */
+  const own = (t, n) => {
+    if (!t.design.stylesheet) return null;
+    const css = require('node:fs').readFileSync(
+      require('node:path').join(__dirname, '..', 'public', t.design.stylesheet), 'utf8');
+    const m = new RegExp(`\\]\\s+\\.trow__rank--${n}\\s*\\{\\s*color:\\s*var\\((--[\\w-]+)\\)`).exec(css);
+    return m ? require('./support/theme').token(m[1], t.design) : null;
+  };
   assert.deepEqual(sweep((t) => (name(t).startsWith('tisch') ? [] : [
     ['place 1 on the surface', t.goldDeep, t.surface],
-    ['place 2 on the surface', rgb(silver), t.surface],
-    ['place 3 on the surface', rgb(bronze), t.surface],
+    ['place 2 on the surface', own(t, 2) || rgb(silver), t.surface],
+    ['place 3 on the surface', own(t, 3) || rgb(bronze), t.surface],
   ])), []);
 });
 
@@ -1981,7 +2000,13 @@ test('a design’s gold holds as DISPLAY type on every one of its felts', () => 
      light stop is the tightest, at 3.56:1. Below the rail width the sentence is
      smaller and the names take the felt's own ink, which the marker sweep
      above already measures. */
-  const hosts = withToken('--gold').filter((t) => (DESIGN_REGISTRY.find((d) => d.id === t.design.id) || {}).markers);
+  /* A design whose markers carry NIGHT ink (Die Brücke, #1237: B8.1's lightened
+     row, markerInk #070b14) paints no light name on them, so gold on those
+     plates is not a pair anything prints; its own split slice states its ink. */
+  const hosts = withToken('--gold').filter((t) => {
+    const d = DESIGN_REGISTRY.find((x) => x.id === t.design.id) || {};
+    return d.markers && !(d.markerInk && luminance(rgb(d.markerInk)) < 0.05);
+  });
   assert.ok(hosts.length >= 1, 'no design declares gold and felts — this test is vacuous');
   const failures = [];
   let checked = 0;
@@ -2249,6 +2274,59 @@ test('a design that declares a PEARL keeps its glyph, ring and open rim legible 
   assert.deepEqual(failures, [], 'a pearl, its ring and an open shell must read at their bar');
 });
 
+test('Die Brücke carries its B1/B8 pairs: text on both page stops, the plates, the ramps and the person row (#1237)', () => {
+  /* bruecke.css's own families. B1's text inks on the page gradient's DARKEST
+     stop (--page-bg, #070b14) and its LIGHTEST (--page-hi), on the panel, the
+     raised plate and the bar; the action amber under night ink in all three of
+     its states; the B8.2 thrust ramp and the score bands under night ink and as
+     24px numbers on the panel; and B8.1's lightened person row, which is ink on
+     the plate (a name) and a fill under night ink (initials). */
+  const hosts = withToken('--thrust-1');
+  assert.ok(hosts.length >= 1, 'no design declares the thrust ramp — this test is vacuous');
+  const failures = [];
+  let checked = 0;
+  const pair = (t, label, fg, bg, bar = AA_TEXT) => {
+    checked++;
+    const r = contrast(fg, bg);
+    if (!(r >= bar)) failures.push(`${name(t)} — ${label} = ${r.toFixed(2)}:1 (bar ${bar})`);
+  };
+  for (const t of hosts) {
+    const v = (n) => token(n, t.design);
+    const grounds = [['page', t.page], ['--page-hi', v('--page-hi')], ['--surface', v('--surface')],
+      ['--surface-raised', v('--surface-raised')], ['--bar', v('--bar')]];
+    for (const [g, ground] of grounds) {
+      for (const ink of ['--ink', '--ink-2', '--ink-soft', '--good', '--warn', '--danger', '--action', '--brand-strong']) {
+        pair(t, `${ink} on ${g}`, v(ink), ground);
+      }
+      pair(t, `accent on ${g}`, t.brand, ground);
+    }
+    for (const fill of ['--action', '--action-hover', '--action-press']) pair(t, `--on-accent on ${fill}`, t.onAccent, v(fill));
+    for (let i = 1; i <= 5; i++) {
+      pair(t, `--thrust-ink on --thrust-${i}`, v('--thrust-ink'), v(`--thrust-${i}`));
+      pair(t, `--thrust-${i} as a 24px number on --surface`, v(`--thrust-${i}`), v('--surface'), AA_LARGE);
+    }
+    for (const b of ['--band-top', '--band-good', '--band-low', '--band-new']) {
+      pair(t, `${b} as a 24px score on --surface`, v(b), v('--surface'), AA_LARGE);
+      pair(t, `${b} as the pill band on --surface-raised`, v(b), v('--surface-raised'), AA_LARGE);
+    }
+    for (let i = 1; i <= 8; i++) {
+      const p = v(`--person-lit-${i}`);
+      for (const [g, ground] of grounds) pair(t, `--person-lit-${i} on ${g}`, p, ground);
+      pair(t, `--on-accent initials on --person-lit-${i}`, t.onAccent, p);
+    }
+    /* --ink-dim is NON-TEXT: the control edge and the disabled wire. Held to the
+       non-text bar on every ground a control sits on. */
+    for (const [g, ground] of [['page', t.page], ['--surface', v('--surface')], ['--control-fill', v('--control-fill')]]) {
+      pair(t, `--ink-dim on ${g}`, v('--ink-dim'), ground, AA_LARGE);
+    }
+    // The gold wash under its label, and the hairline is a separator (a step off the panel, not a bar).
+    pair(t, '--gold-deep on --gold-soft', v('--gold-deep'), v('--gold-soft'));
+    if (!(contrast(v('--hairline'), v('--surface')) > 1.1)) failures.push(`${name(t)} — --hairline is no step off --surface`);
+  }
+  assert.ok(checked >= 100, `only ${checked} Brücke pairs measured`);
+  assert.deepEqual(failures, [], 'Die Brücke keeps every B1/B8 pair at its bar');
+});
+
 test('every colour token a design declares is measured by one of the checks above', () => {
   /* The guard that makes #1188's move safe. A design's root block is now
      RESOLVABLE by test/support/theme.js, and test/design-layer.test.js pushes
@@ -2306,6 +2384,15 @@ test('every colour token a design declares is measured by one of the checks abov
     // #1391, Ocean's Abzeichen: the pearl's stops, the open shell's rim, and the
     // lid rib and dish the open mark's glyph can cross.
     '--pearl-1', '--pearl-2', '--pearl-3', '--shell-open-rim', '--shell-lid', '--shell-dish',
+    // #1237, Die Brücke: the page's light stop, the raised plate, the bar, the
+    // hairline, the ink ramp, the action states, the thrust ramp, the score
+    // bands and the lightened person row (the Brücke test above).
+    '--page-hi', '--surface-raised', '--bar', '--hairline', '--ink-2', '--ink-dim',
+    '--action', '--action-hover', '--action-press',
+    '--thrust-1', '--thrust-2', '--thrust-3', '--thrust-4', '--thrust-5', '--thrust-ink',
+    '--band-top', '--band-good', '--band-low', '--band-new',
+    '--person-lit-1', '--person-lit-2', '--person-lit-3', '--person-lit-4',
+    '--person-lit-5', '--person-lit-6', '--person-lit-7', '--person-lit-8',
   ]);
   /* Not colours, so not this test's business: a lift PERCENTAGE, and the four
      compositing alphas the elevation ramp is built from. The alphas are painted
@@ -2314,7 +2401,8 @@ test('every colour token a design declares is measured by one of the checks abov
      for every pair already measured on that ground. */
   // #1214 adds Ocean's --deep-cast, the blind's shadow alpha — the same kind;
   // #1391 its --cast-pearl, the pearl's.
-  const NOT_A_COLOUR = /^--(member-lift|cast|cast-soft|cast-deep|cast-button|deep-cast|cast-pearl|brass-sheen|brass-sheen-strong)$/;
+  // #1237 adds Die Brücke's three glow alphas, the same kind: decoration over whatever is behind.
+  const NOT_A_COLOUR = /^--(member-lift|cast|cast-soft|cast-deep|cast-button|deep-cast|cast-pearl|brass-sheen|brass-sheen-strong|glow-accent|glow-action|glow-action-strong)$/;
   /* A hairline on a NON-INTERACTIVE label. SC 1.4.11 binds a boundary only
      where it identifies a control, and these two identify a printed tag — so
      there is no bar to measure them against, and inventing one would push them
@@ -2349,7 +2437,7 @@ test('every colour token a design declares is measured by one of the checks abov
       // A layout token is not a colour either — radii, sizes, fonts, durations,
       // and since #1210 the spacing grid, the target sizes and an elevation
       // recipe (built from the --cast alphas above, never from a colour).
-      if (/^--(radius|text|w|dur|ease|font|rail|dock|space|target|shadow)/.test(tok)) continue;
+      if (/^--(radius|text|w|dur|ease|font|rail|dock|space|target|shadow|display|track)/.test(tok)) continue;
       unmeasured.push(`${name(t)} -> ${tok}`);
     }
   }

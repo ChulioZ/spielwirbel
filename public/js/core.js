@@ -510,9 +510,7 @@ function randomOrderedGames(round, activeGames) {
 // name. The shipped value is the var()'s FALLBACK, so a design that declares
 // nothing is byte-for-byte unchanged; test/a11y-contrast.test.js resolves the
 // percentage per design, so one that moves it is measured where it moved to.
-//
-// A design may instead bring its own ROW (#1237, Die Brücke's B8.1): then the
-// tone is that design's colour at the same index, and no mix is emitted at all.
+// A design with its own person ROW (#1237, Die Brücke's B8.1) paints that instead.
 const MEMBER_LIFT = 'var(--member-lift, 42%)';
 function memberTone(color) {
   const own = designPersonTone(color);

@@ -1519,7 +1519,7 @@ I18N.ko = {
   'design.ocean.name': '바다',
   'design.ocean.desc': '밝고 넓게: 모임, 멤버, 승리 — 그리고 고래 한 마리.',
   'design.bruecke.name': '함교',
-  'design.bruecke.desc': '밤하늘 바탕에 청록과 호박색: 함교 위의 우리 모임.',
+  'design.bruecke.desc': '어두운 바탕에 청록과 호박색: 함교 위의 우리 모임.',
   'design.ocean.short': '맑은 물, 넓은 여백',
   'design.chooser.kicker': 'Spielwirbel의 새로운 기능',
   'design.chooser.title': '디자인을 골라 보세요.',

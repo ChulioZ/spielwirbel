@@ -1662,7 +1662,7 @@ I18N.en = {
   'design.ocean.name': 'Ocean',
   'design.ocean.desc': 'Bright and open: rounds, members, wins — and a whale.',
   'design.bruecke.name': 'The Bridge',
-  'design.bruecke.desc': 'Night ground, cyan and amber: your round on the command bridge.',
+  'design.bruecke.desc': 'Dark ground, cyan and amber: your round on the command bridge.',
   'design.ocean.short': 'Bright water, open space',
   'design.chooser.kicker': 'New in Spielwirbel',
   'design.chooser.title': 'Pick a design.',
