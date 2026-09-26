@@ -1755,8 +1755,6 @@ I18N.fi = {
   'badges.completed.line': 'Ensimmäinen peli merkitty läpipelatuksi',
   'badges.evergreen.name': 'Ikivihreä',
   'badges.evergreen.line': 'Yhtä peliä pelattu {n} kertaa',
-  'badges.recapShared.name': 'Yhteenveto jaettu',
-  'badges.recapShared.line': 'Ensimmäinen yhteenveto jaettu',
   'badges.accountSessions.name': 'Sessiot',
   'badges.accountSessions.line': '{n} sessiota kaikissa ryhmissä',
   'badges.accountWins.name': 'Voitot',
