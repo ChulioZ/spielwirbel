@@ -1226,6 +1226,7 @@ I18N.fr = {
   'marker.ocean.lagune': 'Lagon',
   'marker.ocean.tang': 'Varech',
   'marker.ocean.purpur': 'Pourpre',
+  'marker.toast.set': 'Couleur enregistrée',
 
 
   'tags.crumb': 'Étiquettes',

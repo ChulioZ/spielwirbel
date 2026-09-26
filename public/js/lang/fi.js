@@ -1189,6 +1189,7 @@ I18N.fi = {
   'marker.ocean.lagune': 'Laguuni',
   'marker.ocean.tang': 'Rakkolevä',
   'marker.ocean.purpur': 'Purppura',
+  'marker.toast.set': 'Väri tallennettu',
 
 
   'tags.crumb': 'Tunnisteet',

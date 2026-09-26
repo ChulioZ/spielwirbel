@@ -1167,6 +1167,7 @@ I18N.ko = {
   'marker.ocean.lagune': '석호',
   'marker.ocean.tang': '다시마',
   'marker.ocean.purpur': '자주',
+  'marker.toast.set': '색상을 저장했어요',
   'tags.crumb': '태그',
   'tags.title': '태그',
   'tags.note': '태그는 이 모임의 게임을 원하는 방식으로 정리해 줘요 – 예를 들어 “야외”나 “점심시간용”처럼요. 선반과 새 세션을 태그로 걸러 보세요.',

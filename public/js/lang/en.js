@@ -1278,6 +1278,7 @@ I18N.en = {
   'marker.ocean.lagune': 'Lagoon',
   'marker.ocean.tang': 'Kelp',
   'marker.ocean.purpur': 'Purple',
+  'marker.toast.set': 'Colour saved',
 
 
   'tags.crumb': 'Tags',

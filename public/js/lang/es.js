@@ -1232,6 +1232,7 @@ I18N.es = {
   'marker.ocean.lagune': 'Laguna',
   'marker.ocean.tang': 'Alga',
   'marker.ocean.purpur': 'Púrpura',
+  'marker.toast.set': 'Color guardado',
 
 
   'tags.crumb': 'Etiquetas',
