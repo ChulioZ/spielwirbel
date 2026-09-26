@@ -1208,6 +1208,37 @@ test('the friend tile\'s cover wash keeps its text over AA, for any cover', () =
     + 'do not widen this test.');
 });
 
+/* Die Tafel (#1137): the roster's plate. The tiles sit on it with their own
+   --surface, so the ink that stands on the PLATE itself is the „＋" seat's —
+   its fill was dropped so the plate shows through, leaving its name (--ink) and
+   its muted second line (--ink-soft) on the gradient.
+
+   Both stops are read out of the rule rather than named here, so retuning the
+   plate onto a denser token is measured instead of assumed. Every design is
+   swept although only Klassisch renders the plate today (Der Tisch lays the
+   roster out as pills, Ocean opts out in its own sheet): a design that later
+   drops its opt-out inherits a plate that has already been measured on it. */
+test('the Freundeskreis plate keeps the „＋" seat\'s text over AA, on every design', () => {
+  const body = bodyOf('.k-tiles');
+  assert.ok(body, '.k-tiles is gone — did the plate move?');
+  const bg = /background:\s*linear-gradient\(([^;]*)\);/.exec(body);
+  assert.ok(bg, `the plate declares no gradient: ${body}`);
+  const stops = [...bg[1].matchAll(/var\((--[\w-]+)\)/g)].map((m) => m[1]);
+  assert.equal(stops.length, 2, `expected two token stops, got ${stops.join(', ')}`);
+
+  const failures = [];
+  for (const t of THEMES) {
+    for (const stop of stops) {
+      const ground = rgb(token(stop, t.design));
+      for (const [label, ink] of [['--ink', t.ink], ['--ink-soft', t.inkSoft]]) {
+        const ratio = contrast(ink, ground);
+        if (!(ratio >= AA_TEXT)) failures.push(`${name(t)} ${label} on ${stop} = ${ratio.toFixed(2)}:1`);
+      }
+    }
+  }
+  assert.deepEqual(failures, [], `the „＋" seat's text sits on the plate and needs ${AA_TEXT}:1`);
+});
+
 /* The Tischkarte's initials watermark (#1075). It sits in the card's top-right
    corner on top of the wash, and the SIZE is what keeps it off the text — both
    sizes were measured against the painted ink of every label, figure, chip and

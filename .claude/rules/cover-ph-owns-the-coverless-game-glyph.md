@@ -37,13 +37,14 @@ Only the boxes that render a **bare `<i>`**, which are never a game cover:
 |---|---|
 | `.session-card__img` | a session's **state** icon (`ti-x` / `ti-layout-grid` / `ti-cards`) — the `chosen ? coverPlaceholder(…) : <i>` ternary in `views-chronik.js` |
 | `.feed-item__img` | a feed row with no `ev.coverUrl` (`feed-view.js`) |
-| `.e-tile__img` | the same event as a TILE, same fallback, same file (#1132) |
 | `.lookup__thumb--none .ti` | a search hit with no thumbnail (`lookup.js`) |
 | `.avatar--guest`, the guest add button, a guest's seat on the ring (#1016) | a **dashed border**, not a glyph at all |
 | `.theme-card__line` | a **background** — the stand-in text lines on a design card |
 
-`.game-card__img` and `.pool-tile__img` declare the colour and never show it;
-their only child is `coverPlaceholder()`'s output. The declarations are kept as
+`.game-card__img`, `.pool-tile__img` and — since #1137 made the feed tile's
+cover its whole 3:2 band — `.e-tile__img` declare the colour and never show it;
+their only child is `coverPlaceholder()`'s output. (The feed ROW,
+`.feed-item__img`, keeps its bare glyph: a 46px thumb is not a wall of covers.) The declarations are kept as
 the correct tone should a bare glyph ever land there — but do not read them as
 evidence that one does.
 

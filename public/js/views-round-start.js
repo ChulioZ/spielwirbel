@@ -450,7 +450,7 @@ function renderStartTab(round, activeGames) {
   if (recs.length && !minimizedRecs.has(round.id)) {
     const banner = h(`<div class="rec-banner">
          <div class="rec-banner__bar" role="button" tabindex="0" aria-expanded="false">
-           <span class="rec-banner__text"><i class="ti ti-trash" aria-hidden="true"></i> ${esc(t('rec.title', { n: recs.length }))}</span>
+           <span class="rec-banner__text"><i class="ti ti-archive" aria-hidden="true"></i> ${esc(t('rec.title', { n: recs.length }))}</span>
            <div class="rec-banner__actions">
              <i class="ti ti-chevron-down rec-banner__caret" aria-hidden="true"></i>
              <button class="rec-banner__dismiss" title="${esc(t('rec.dismiss'))}" aria-label="${esc(t('rec.dismiss'))}"><i class="ti ti-x" aria-hidden="true"></i></button>
@@ -497,7 +497,7 @@ function renderStartTab(round, activeGames) {
       item.querySelector('.recommend-item__btn').addEventListener('click', async () => {
         if (!await confirmDialog({
           body: t('detail.retireConfirm', { title: game.title }),
-          confirmLabel: t('detail.retire'), icon: 'ti-trash',
+          confirmLabel: t('detail.retire'), icon: 'ti-archive', danger: false,
         })) return;
         try {
           await api('POST', `/api/rounds/${round.id}/games/${game.id}/retire`, { retired: true });

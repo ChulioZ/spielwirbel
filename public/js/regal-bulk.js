@@ -111,7 +111,7 @@ function createRegalBulk(ctx) {
          <button type="button" class="link-btn" data-act="all"></button>
          ${canSetOwners ? `<button type="button" class="btn" data-act="owners"><i class="ti ti-users" aria-hidden="true"></i> ${esc(t('bulk.owners'))}</button>` : ''}
          ${canSetTags ? `<button type="button" class="btn" data-act="tags"><i class="ti ti-tags" aria-hidden="true"></i> ${esc(t('bulk.tags'))}</button>` : ''}
-         <button type="button" class="btn" data-act="retire"><i class="ti ti-trash" aria-hidden="true"></i> ${esc(t('bulk.retire'))}</button>
+         <button type="button" class="btn" data-act="retire"><i class="ti ti-archive" aria-hidden="true"></i> ${esc(t('bulk.retire'))}</button>
          ${canBulkDelete ? `<button type="button" class="btn btn--danger" data-act="delete"><i class="ti ti-trash-x" aria-hidden="true"></i> ${esc(t('bulk.delete'))}</button>` : ''}
        </div>
      </div>`);
@@ -208,9 +208,13 @@ function createRegalBulk(ctx) {
       : selectionTouchesHistory(round, selection)
         ? tn(ids.length, 'bulk.confirmDeleteOne', 'bulk.confirmDelete')
         : tn(ids.length, 'bulk.confirmDeletePlainOne', 'bulk.confirmDeletePlain');
+    // Retire is reversible („jederzeit zurückholen"), so it is asked as a
+    // neutral question with the archive icon; only delete is red (#1360).
+    const retire = act === 'retire';
     if (!await confirmDialog({
       body: msg,
-      confirmLabel: t(act === 'retire' ? 'bulk.retire' : 'bulk.delete'), icon: 'ti-trash',
+      confirmLabel: t(retire ? 'bulk.retire' : 'bulk.delete'),
+      icon: retire ? 'ti-archive' : 'ti-trash', danger: !retire,
     })) return;
     const buttons = [...bulkBar.querySelectorAll('button')];
     buttons.forEach((b) => { b.disabled = true; });
@@ -286,8 +290,9 @@ function createRegalBulk(ctx) {
     }
   }
   /* Add and remove tags across the selection (#1000) — the fourth bulk action,
-     and like the owners one it leads with a PICKER rather than a confirm:
-     there is nothing to warn about until the user has said which tags.
+     and like the owners one it leads with a PICKER rather than a confirm.
+     Unlike owners it also ENDS with the picker: „Übernehmen" applies at once
+     (#1360), since an additive edit has nothing to warn about at all.
 
      IT DOES NOT REPLACE, and that is the decision that separates it from the
      owners sheet twenty lines above. A 50-game selection carries 50 different
@@ -333,7 +338,8 @@ function createRegalBulk(ctx) {
             paint();
             // Nothing picked is not a no-op to confirm — it is an unfinished
             // sentence, so the action stays unavailable rather than reporting a
-            // successful zero.
+            // successful zero. With no confirm after it (#1360) this IS the
+            // guard against an empty submit.
             okBtn.disabled = picks.size === 0;
           });
           paint();
@@ -351,19 +357,11 @@ function createRegalBulk(ctx) {
   async function runTags(addTagIds, removeTagIds) {
     const ids = [...selection];
     if (!ids.length || !(addTagIds.length + removeTagIds.length)) return;
-    const nameOf = (id) => ((round.tags || []).find((tg) => tg.id === id) || {}).name || id;
-    // The confirm states the COUNT and the DIRECTION, both of which the user
-    // can otherwise only infer from chip colours they set a moment ago. Three
-    // wordings rather than one with empty halves: „remove: " followed by
-    // nothing is not a sentence.
-    const added = addTagIds.map(nameOf).join(', ');
-    const removed = removeTagIds.map(nameOf).join(', ');
-    const key = addTagIds.length && removeTagIds.length ? 'bulk.confirmTagsBoth'
-      : addTagIds.length ? 'bulk.confirmTagsAdd' : 'bulk.confirmTagsRemove';
-    if (!await confirmDialog({
-      body: tn(ids.length, `${key}One`, key, { added, removed }),
-      icon: 'ti-tags', confirmLabel: t('bulk.tags'),
-    })) return;
+    // No confirm (#1360). The chips already show each tag's direction, the
+    // edit is additive and nothing is lost that the same sheet cannot restore,
+    // so a second dialog only repeated what the user had just set. The guard
+    // against an empty submit is the disabled „Übernehmen" in openTagsSheet;
+    // the line above is its backstop for a direct call, not a second gate.
     const buttons = [...bulkBar.querySelectorAll('button')];
     buttons.forEach((b) => { b.disabled = true; });
     try {

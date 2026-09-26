@@ -4553,14 +4553,52 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
    name that must WRAP (see .k-card .friend-row__name below). */
 .k-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(252px, 1fr)); gap: 12px; }
 
-/* The roster. `auto-fill`, never `auto-fit`, so an empty track stays empty and a
-   lone tile cannot balloon to the pane
+/* The roster, on DIE TAFEL (#1137): one plate in the accent, the people laid on
+   it as straight place cards. `auto-fill`, never `auto-fit`, so an empty track
+   stays empty and a lone tile cannot balloon to the pane
    (.claude/rules/auto-fit-collapses-only-empty-tracks.md).
 
-   168px is LOAD-BEARING rather than chosen: it is the largest minimum that still
-   gives TWO columns at 390px (2 x 168 + 10 = 346 <= 362 of content box), and it
-   gives one row at 1800. */
-.k-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: 10px; }
+   The plate is the Tischkarte's idiom one notch bolder: the prepared
+   --brand-tint -> --brand-tint-soft pair and a --brand-edge hairline, all
+   derived from the worn design's accent (.claude/rules/theme-derived-colors.md),
+   so no design needs a colour of its own for it. It sits QUIETER than the
+   requests band above: that one keeps a 3px --brand edge, and this has none.
+   STRAIGHT, never tilted — a tilt was prototyped and rejected (2026-09-15); the
+   plate and the tiles' shadow carry the place-card reading on their own.
+   test/a11y-contrast.test.js reads both gradient stops out of this rule and
+   holds the ink that sits directly on the plate (the „＋" seat) to AA on them.
+
+   THE MINIMUM PAYS FOR THE PADDING, and it is two numbers because one cannot
+   hold the column counts #1136 measured. The plate costs 34px of track (2 x 16
+   padding + 2 x 1 border), and #1136's 168px grid sat within a few px of a
+   column break at BOTH ends — 7.02 tracks at 1280, 9.94 at the 1800 cap — so a
+   single minimum that keeps 1280's seventh column hands 2560 a tenth:
+
+     viewport   content   #1136 (168)   plate, 156   plate, 172
+     390        362       2             2            1
+     768        728       4             4            4
+     1280       1240      7             7            6
+     1470       1430      8             8            7
+     2560       1760      9             10           9
+
+   So 156px up to 1723px, and 172px from 1724 — the first viewport at which 156
+   would open a tenth track (content >= 1684). From there to the cap both give
+   nine, so the count never DROPS as the window widens. */
+.k-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(156px, 1fr));
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid var(--brand-edge);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(180deg, var(--brand-tint), var(--brand-tint-soft));
+}
+@media (min-width: 1724px) {
+  .k-tiles { grid-template-columns: repeat(auto-fill, minmax(172px, 1fr)); }
+}
+/* Laid ON the table: a shadow, not a second border. The „＋" seat takes none —
+   it is an empty place, not a card. */
+.k-tiles > .k-tile:not(.k-tile--add):not(.k-tile--adding) { box-shadow: var(--shadow-1); }
 
 /* One person, ~56px against the card's 121. It IS the link to the profile — a
    real <a>, not a div that re-earns the click in JS
@@ -4597,8 +4635,9 @@ a.k-tile:focus-visible,
 .k-tile .avatar { flex: none; }
 .k-tile__body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 /* The name WRAPS rather than truncating. At 390px the pre-#1092 row gave it 36px
-   where it needed 75-166 and rendered "an…" / "de…"; a 168px tile leaves ~98px,
-   which is the same trap one component later. */
+   where it needed 75-166 and rendered "an…" / "de…"; a 168px tile leaves ~98px
+   (a 156px one on #1137's plate, ~86), which is the same trap one component
+   later. */
 .k-tile__name { font-weight: 600; overflow-wrap: anywhere; }
 /* TWO lines, not one. On a single nowrap line a 168px tile leaves the line
    ~98px, which the game title alone fills — measured at 1470, seven of nine
@@ -4657,7 +4696,7 @@ a.k-tile:focus-visible,
 .k-tile--add:hover { border-color: var(--brand); color: var(--brand-ink, var(--brand-strong)); }
 .k-tile__plus { font-size: var(--text-xl); line-height: 1; /* glyph, not type */ }
 /* The form spans the row: a username field plus a submit button does not fit a
-   168px track, and the tile it replaces is the last cell either way. */
+   156-172px track, and the tile it replaces is the last cell either way. */
 .k-tile--adding { grid-column: 1 / -1; gap: 8px; }
 
 /* One card, two request states. It is NOT a click target and must not look like
@@ -4809,29 +4848,51 @@ a.k-tile:focus-visible,
    still gives TWO columns at 390px (2 x 172 + 10 = 354 <= 362 of content box),
    and it gives nine at 1800. */
 .e-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(172px, 1fr)); gap: 10px; }
+/* COVER-FORWARD (#1137): the art is the tile's own 3:2 band and the words sit
+   under it, so the feed reads as a wall of what the circle actually played. It
+   was a 44px thumb in a padded column; the covers were already in the payload
+   (GET /friends/feed), requested at COVER_THUMB, so this costs no request.
+
+   `overflow: hidden` is what rounds the band's top corners with the tile's —
+   the band itself carries no radius, so it cannot disagree with the frame.
+
+   DAY BANDS ARE NOT HERE ON PURPOSE — measured and dropped, do not re-add. A
+   „Heute · Gestern · 13. September" band is a full-width row inside a grid, so
+   it forces a row break at EVERY day: a day with four events wastes five cells
+   of a nine-column row. Measured over the #1136 bench (26 events): 1144px of
+   feed with day bands against 463 without. Each tile already carries its own
+   date, exactly as the Stempelkarte's stamps do. */
 .e-tile {
   position: relative;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 10px 12px 12px;
+  gap: 0;
+  padding: 0;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
 }
+/* `max-width: 100%` because an aspect-ratio box that is also `width: 100%` can
+   otherwise be pushed wider than its track by a long unbreakable child; `flex:
+   none` so a tall text area can never squeeze the band shorter than 3:2.
+   `position: relative` anchors the .cover-ph gradient a cover-less event gets
+   (#256) — without it the layer escapes to the tile. */
 .e-tile__img {
+  position: relative;
   flex: none;
   overflow: hidden;
-  width: 44px;
-  height: 44px;
-  border-radius: var(--radius-sm);
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  aspect-ratio: 3 / 2;
   background: var(--sunken) center/cover no-repeat;
   display: grid;
   place-items: center;
   color: var(--placeholder);
-  font-size: 20px; /* glyph, not type */
+  font-size: 28px; /* glyph, not type */
 }
-.e-tile__title { font-weight: 700; line-height: 1.3; overflow-wrap: anywhere; }
+.e-tile__title { font-weight: 700; line-height: 1.3; overflow-wrap: anywhere; padding: 10px 12px 0; }
 /* One full-width line under the title, so the author does not take a column
    from the news the way the row's badge exists to avoid. */
 .e-tile__meta {
@@ -4840,6 +4901,7 @@ a.k-tile:focus-visible,
   align-items: center;
   gap: 2px 6px;
   margin-top: auto;
+  padding: 6px 12px 12px;
   font-size: var(--text-xs);
   color: var(--ink-soft);
 }
@@ -4847,14 +4909,19 @@ a.k-tile:focus-visible,
 .e-tile__who .avatar { width: 20px; height: 20px; font-size: 10px; /* glyph, not type */ }
 .e-tile__name { font-weight: 700; color: var(--ink); overflow-wrap: anywhere; }
 /* The report button rides the tile's top-right corner — the one place on a
-   172px tile that no text reaches. Same size and same quiet treatment as the
-   row's, so the notice channel does not change character with the layout. */
+   172px tile that no text reaches. Same size and quiet ink as the row's, so the
+   notice channel does not change character with the layout.
+
+   Since #1137 that corner is COVER, i.e. arbitrary art under a --ink-soft
+   glyph, so the button brings its own --surface chip: the glyph is then
+   measured against the ground every other --ink-soft is, whatever the cover. */
 .e-tile__report {
   position: absolute;
-  top: 4px;
-  right: 4px;
+  top: 6px;
+  right: 6px;
   border: none;
-  background: transparent;
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
   color: var(--ink-soft);
   cursor: pointer;
   line-height: 1;
@@ -4864,6 +4931,10 @@ a.k-tile:focus-visible,
 .e-tile__report .ti { font-size: var(--text-md); display: block; }
 .e-tile__report:hover { background: var(--sunken); color: var(--ink); }
 .e-feed__more { margin-top: 10px; }
+/* Opened, it has done its job — and its count was the first page's, which the
+   pages appended below it make wrong (#1357). The click handler moves focus
+   to the first revealed tile before this hides it. (0,3,0) beats the base. */
+.e-feed.is-open .e-feed__more { display: none; }
 /* Below 1024px the grid shows eight tiles — four rows at the phone's two
    columns, measured at ~187px each (#1136) — then the expander. Above it nothing is capped: four rows of tiles
    is not a screenful, and the whole point of the shape is that width buys
@@ -4873,7 +4944,18 @@ a.k-tile:focus-visible,
    the day one of them is not, counting by position would hide the wrong one. */
 @media (max-width: 1023px) {
   .e-feed:not(.is-open) .e-tile:nth-of-type(n + 9) { display: none; }
+  /* The paging button (#1357) waits behind the same collapse: loading pages
+     into a list whose ninth tile is still hidden would load what nobody sees,
+     and a hidden button never intersects, so the observer stays quiet too. */
+  .e-feed:not(.is-open) .e-feed__load { display: none; }
 }
+/* „Mehr laden" — a real button, which the infinite-scroll observer clicks. */
+.e-feed__load { display: flex; justify-content: center; margin-top: 14px; }
+/* The end of the list (#1357): the button stays so focus does not jump, and
+   it is aria-disabled rather than disabled — so it keeps full contrast (the
+   .btn:disabled fade would put „Alles geladen" near 2:1) and only drops the
+   affordances of a control that still does something. */
+.e-feed__load .btn[aria-disabled="true"] { cursor: default; pointer-events: none; }
 @media (min-width: 1024px) {
   .e-feed__more { display: none; }
 }

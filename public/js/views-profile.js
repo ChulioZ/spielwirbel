@@ -103,10 +103,18 @@ async function showProfile(username) {
          above, which is also why the route omits `username` from the rows;
          `noReport` on your own profile, for the reason the account report
          button has always been hidden there. */
-      screen.appendChild(renderFeedTiles(
-        p.events.map((ev) => ({ ...ev, username: p.username, avatar: p.avatar })),
-        { noAuthor: true, noReport: !!p.self },
-      ));
+      const withAuthor = (events) => events.map((ev) => ({ ...ev, username: p.username, avatar: p.avatar }));
+      screen.appendChild(renderFeedTiles(withAuthor(p.events), {
+        noAuthor: true,
+        noReport: !!p.self,
+        // Later pages (#1357) come from the profile's own feed route, which
+        // runs the same guards and the same acceptedAt cutoff as this one.
+        more: {
+          nextCursor: p.nextCursor,
+          load: (cursor) => accountApi('GET', `/profile/${encodeURIComponent(p.username || username)}/feed?before=${encodeURIComponent(cursor)}`)
+            .then((page) => ({ events: withAuthor(page.events || []), nextCursor: page.nextCursor })),
+        },
+      }));
     } else {
       // Two empty states: the friend one dates itself from the friendship, which
       // is a sentence your OWN profile cannot say — there is no friendship, and

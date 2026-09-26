@@ -2,14 +2,15 @@
    T4.4 at 1440).
 
    What the sheet draws and the app did not: the Tafel as COMPACT rows under a
-   column-header row (Platz · Spiel · Wertungen · Score), each ending in a score
-   pill; the per-game distribution receding behind a per-row disclosure; the
-   people on the felt head as crowned pieces; and a foot carrying „Noch eine
-   Session" with „Teilen" and „Mehr" beside it.
+   column-header row (Platz · Spiel · Score), each ending in a score pill with
+   the per-game distribution under it; the people on the felt head as crowned
+   pieces; and a foot carrying „Noch eine Session" with „Teilen" and „Mehr"
+   beside it.
 
    Every builder here is called from showResults (views-session.js) and only
-   under `designIs('tisch')` — Klassisch never reaches this file, so its DOM is
-   the default path, untouched. Its own file rather than more branches inside
+   under `tischLook` (Der Tisch, and Ocean, which shares the composition) —
+   Klassisch never reaches this file, so its DOM is the default path,
+   untouched. Its own file rather than more branches inside
    views-session.js, which is on the token budget's allowlist already
    (.claude/rules/token-friendly-source-files.md).
 
@@ -21,11 +22,11 @@
 'use strict';
 
 /* The column-header row. A LIST with an `aria-hidden` header, not a <table>:
-   every row carries links, a disclosure and a menu, and nesting those in table
-   cells buys nothing a screen reader needs. So the header is purely visual and
-   each row says what its cells are — the rank cell carries „Platz" and the pill
-   carries the score's name, both as `.sr-only` text, and the votes toggle names
-   its count in its own label.
+   every row carries links and a menu, and nesting those in table cells buys
+   nothing a screen reader needs. So the header is purely visual and each row
+   says what its cells are — the rank cell carries „Platz" and the pill carries
+   the score's name, both as `.sr-only` text, and the distribution is a named
+   group.
 
    Laid on the SAME column tracks as the rows (tisch.css makes the Tafel a grid
    and every row and this header a subgrid of it), so a label cannot drift off
@@ -34,7 +35,6 @@ function composedTafelCols() {
   return h(`<div class="tafel__cols" aria-hidden="true">
        <span class="tafel__col tafel__col--place">${esc(t('result.colPlace'))}</span>
        <span class="tafel__col tafel__col--game">${esc(t('result.colGame'))}</span>
-       <span class="tafel__col tafel__col--votes">${esc(t('result.colVotes'))}</span>
        <span class="tafel__col tafel__col--score">${esc(t('result.colScore'))}</span>
      </div>`);
 }
@@ -46,23 +46,24 @@ function composedTafelCols() {
    owners stand-down need no second code path.
 
    DOM ORDER IS VISUAL ORDER (WCAG 2.4.3): the distribution comes LAST, because
-   it opens below the row. The Klassisch row keeps it between the title and the
-   score, where it also sits on screen. */
+   it sits below the row. The Klassisch row keeps it between the title and the
+   score, where it also sits on screen.
+
+   The distribution is always shown (#1363). It used to sit behind a vote-count
+   toggle, but within one session that count is the same on every row (the vote
+   card will not advance until every drawn game is rated — #902's reasoning for
+   dropping „Score aus 3" from Klassisch), so the column repeated one number and
+   hid the one part that differs. A row nobody rated gets empty tracks, as in
+   Klassisch, so every row keeps one shape. The toggle's label was the bars'
+   accessible name; it moves onto the group, since the header is aria-hidden and
+   the per-column `title=` is not a name. */
 function composedTrow(p) {
   const r = p.row;
-  const distId = `tafel-dist-${p.gameId}`;
-  const votes = !p.hasVotes ? ''
-    : r.count
-      ? `<button type="button" class="trow__votes" aria-expanded="false" aria-controls="${esc(distId)}"
-           aria-label="${esc(tn(r.count, 'result.distShowOne', 'result.distShow', { n: r.count }))}">
-           <span class="trow__votes-n">${r.count}</span><i class="ti ti-chevron-down" aria-hidden="true"></i>
-         </button>`
-      : '<span class="trow__votes trow__votes--none">–</span>';
   const pill = !p.hasVotes ? ''
     : r.count
       ? `<span class="score-pill trow__pill" style="--sc:${scoreColor(r.score)}" data-stop="${scoreStop(r.score)}"><span class="sr-only">${esc(t('score.name'))} </span>${fmtAvg(r.shown)}</span>`
       : '<span class="score-pill score-pill--none trow__pill">–</span>';
-  const row = h(`<div class="${p.rowClass}" style="${p.rowStyle}">
+  return h(`<div class="${p.rowClass}" style="${p.rowStyle}">
        <span class="trow__rank${p.rankClass}"><span class="sr-only">${esc(t('result.colPlace'))} </span>${r.place || ''}</span>
        <a class="trow__img" ${p.imgStyle}>${p.fallback}</a>
        <div class="trow__main">
@@ -70,21 +71,11 @@ function composedTrow(p) {
          ${p.ownersLine}
          ${p.whyLine}
        </div>
-       ${votes}
        ${pill}
        <div class="trow__action"></div>
-       ${p.hasVotes && r.count ? `<div class="trow__bars" id="${esc(distId)}" hidden>${p.bars}</div>` : ''}
+       ${p.hasVotes ? `<div class="trow__bars" role="group"
+           aria-label="${esc(t('result.distLabel'))}">${p.bars}</div>` : ''}
      </div>`);
-  const toggle = row.querySelector('button.trow__votes');
-  if (toggle) {
-    const dist = row.querySelector('.trow__bars');
-    toggle.addEventListener('click', () => {
-      const open = dist.hidden;
-      dist.hidden = !open;
-      toggle.setAttribute('aria-expanded', String(open));
-    });
-  }
-  return row;
 }
 
 /* „Wer dabei war" on the felt head: the same people the Klassisch line lists,

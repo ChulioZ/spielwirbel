@@ -61,8 +61,11 @@ tempting simplification — read that account's events and return them — silen
 drops the cutoff that makes the feed privacy-preserving: a brand-new friend would
 see the friend's **entire prior history** the moment the request was accepted.
 
-`feedFor(uid, since)` keeps the same `String(e.at) >= String(since)` compare, and
-`since` is the friendship's `acceptedAt`, read from the caller's own row. The
+`feedFor(uid, since)` keeps the same `String(e.at) >= String(since)` compare
+(inside `readFeedPage`, `lib/feed.js`, since #1357), and
+`since` is the friendship's `acceptedAt`, read from the caller's own row. Later
+pages come from `GET …/:username/feed`, which runs the SAME guards through the
+shared `resolveSubject()` and re-reads the friendship per page. The
 events are also only assembled inside the `accepted` branch, so a stranger's
 profile carries no `events` key at all rather than an empty array — the two are
 easy to conflate and only the first is provably right.

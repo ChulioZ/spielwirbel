@@ -46,7 +46,7 @@ and says nothing about its side effects.
 **both** read sites. It does two things a guard cannot:
 
 - **Rows already written cannot be un-written.** They sit in friends' feeds until
-  `MAX_FEED_EVENTS` ages them out — a read-side fix is what repairs production
+  the 12-month retention (#1357) ages them out — a read-side fix is what repairs production
   without a migration or an admin action.
 - **A guard is a read-then-write**, so two overlapping requests can both observe
   the old state and both emit. The window is small; a double-tap is exactly the
@@ -58,7 +58,7 @@ Three properties of the collapse are load-bearing and each fails silently:
   between is a real second event. A fixture with one run and nothing else cannot
   tell a collapse from a global de-dupe — `test/feed.test.js` interleaves a third
   event for that reason.
-- **Before the `FEED_SHOW` slice**, never after: collapsing after it lets
+- **Before the `FEED_PAGE` slice**, never after: collapsing after it lets
   duplicates eat the page, so the feed gets *shorter* instead of cleaner.
   Measured — moving the call after the slice reds exactly one named test.
 - **The window is measured against the KEPT (newest) event**, not against each
@@ -72,6 +72,14 @@ There are **two** feed read sites — `lib/routes/friends.js` `GET /feed` and
 showing the duplicates, with no error and a screen that still looks finished.
 That is why the helper lives in `lib/feed.js`, the single seam, rather than being
 written out twice (`.claude/rules/shared-constants-across-the-stack.md`).
+
+**Since #1357 both sites page through `readFeedPage` (`lib/feed.js`)**, which owns
+the whole window → filter → collapse → slice order *and* where the paging cursor
+points — the raw row just before the next page's first event, never the last
+event shown, or the rows the collapse folded into it come back as a repeat on
+the next page. `test/feed-paging.test.js` is the fixture that can see it (a
+duplicate straddling a page boundary behind a filtered row); a one-page fixture
+is green against every wrong cursor.
 
 ## What was deliberately left alone
 

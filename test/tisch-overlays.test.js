@@ -91,7 +91,7 @@ function assertMenuContract(where, items, expectedLabels) {
   assert.deepEqual(items.map((i) => i.label), expectedLabels, `${where}: the rows`);
 }
 
-test('the game menu: completion first, then the two red questions', async (t) => {
+test('the game menu: the two reversible moves, then the one red question', async (t) => {
   const dom = loadApp({ locale: 'de' });
   t.after(() => dom.close());
   const round = {
@@ -102,8 +102,23 @@ test('the game menu: completion first, then the two red questions', async (t) =>
   dom.set('api', async (method, url) => (/^\/api\/rounds\/r1$/.test(url) ? round : (/\/activities$/.test(url) ? [] : {})));
   await dom.call('showGameDetail', 'r1', 'g1');
   const tr = (k) => dom.run(`t('${k}')`);
-  assertMenuContract('game detail', await menuFacts(dom, '.gd-menu'),
+  const items = await menuFacts(dom, '.gd-menu');
+  assertMenuContract('game detail', items,
     [tr('detail.complete'), tr('detail.retire'), tr('detail.unlinkProvider')]);
+  // #1360: retiring is reversible („jederzeit zurückholen"), so it is neither
+  // filed nor asked as a deletion.
+  assert.equal(items.find((i) => i.label === tr('detail.retire')).kind, 'undoable',
+    'retire is still filed with the destructive group');
+  dom.document.querySelector('.gd-menu').dispatchEvent(new dom.window.Event('click', { bubbles: true }));
+  const row = [...dom.document.querySelectorAll('.popover--menu .popover__opt')]
+    .find((b) => b.textContent.trim() === tr('detail.retire'));
+  assert.ok(row.querySelector('.ti-archive'), 'the retire row still wears the bin');
+  assert.equal(row.classList.contains('popover__opt--warn'), false, 'the retire row is still painted as a warning');
+  const asked = [];
+  dom.set('confirmDialog', async (o) => { asked.push(o); return false; });
+  row.click();
+  await flush();
+  assert.equal(asked[0].icon, 'ti-archive');
 });
 
 test('the member menu: the way back above the two red questions', async (t) => {

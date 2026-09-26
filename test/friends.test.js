@@ -19,11 +19,9 @@
 
 process.env.ACCOUNTS_ENABLED = 'true';
 process.env.SESSION_SECRET = 'test-session-secret';
-// The per-account feed cap (#325, default 50) equals the route's FEED_SHOW, so a
-// spec cannot store more rows than one page holds — which is exactly what the
-// collapse-before-slice assertion below needs. Raised out of reach here;
-// lib/repo/*.js read it per call. Nothing else in this file depends on it.
-process.env.MAX_FEED_EVENTS = '400';
+// No MAX_FEED_EVENTS override any more: until #1357 its default (50) equalled a
+// page, so this file raised it to let the collapse-before-slice spec store more
+// than one page. The ceiling now defaults to 5000 and the retention is an age.
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
@@ -301,7 +299,7 @@ test('feed: repeated „Ins Regal" saves store one acquisition, and the feed sho
   assert.deepEqual(added.map((e) => e.title), ['Wanted']);
 });
 
-/* Collapse happens BEFORE the FEED_SHOW slice. Collapsing after it would let
+/* Collapse happens BEFORE the FEED_PAGE slice. Collapsing after it would let
    duplicates eat the page — the feed would get shorter instead of cleaner — and
    only a store holding more than one page's worth can tell the two orders apart. */
 test('feed: a run of stored duplicates does not shorten the returned page', async () => {

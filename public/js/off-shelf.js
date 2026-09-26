@@ -35,7 +35,7 @@ function offShelfEntries(round) {
      destination WITHOUT its count, for a presentation that shows the count as a
      separate figure (Der Tisch's count tiles, #1262) rather than in the label. */
   const counted = [
-    { sub: 'retired', icon: 'ti-trash', key: 'retired.link', nameKey: 'retired.title', flag: (g) => g.retired, go: () => showRetired(rid) },
+    { sub: 'retired', icon: 'ti-archive', key: 'retired.link', nameKey: 'retired.title', flag: (g) => g.retired, go: () => showRetired(rid) },
     { sub: 'completed', icon: 'ti-circle-check', key: 'completed.link', nameKey: 'completed.title', flag: (g) => g.completed, go: () => showCompleted(rid) },
     { sub: 'wishlist', icon: 'ti-heart', key: 'wish.link', nameKey: 'wish.title', flag: (g) => g.wish, go: () => showWishlist(rid) },
   ].map(({ sub, icon, key, nameKey, flag, go }) => {

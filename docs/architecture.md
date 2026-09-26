@@ -356,12 +356,12 @@ lib/
                                              404 unless ACCOUNTS_ENABLED)
     friends.js       /api/account/friends   (friendships + Freundeskreis feed:
                                              send / accept / decline / unfriend,
-                                             list, feed (#325) —
+                                             list, feed paged by ?before= (#325, #1357) —
                                              404 unless ACCOUNTS_ENABLED)
     profile.js       /api/account/profile   (public account profile by username:
                                              handle, registration month, the
                                              caller's friendship state, and the
-                                             friends-only feed (#558) —
+                                             friends-only feed; later pages at /:username/feed (#558, #1357) —
                                              404 unless ACCOUNTS_ENABLED)
     passkeys.js      /api/account/passkeys  (WebAuthn: registration options +
                                              verify, list, rename, remove, plus

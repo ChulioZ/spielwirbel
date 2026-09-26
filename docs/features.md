@@ -205,15 +205,16 @@ What the app does, in detail. For a short overview see the
   turns the covers into a selection: it keeps the search, the tag chips, the
   metadata filters and the sort working, so „Alle auswählen" means everything you
   have narrowed to, and the picked games can be retired, have their **owners set**
-  or their **tags changed** in one step — or be deleted outright — in one
-  confirmed action. Setting owners replaces whatever each game held, so picking
+  or their **tags changed** in one step — or be deleted outright. Setting owners replaces whatever each game held, so picking
   nobody clears them; a wish in the selection is skipped, since a wish is
   nobody's box yet. Tags deliberately work the other way round: each tag is
   add / remove / leave alone, so tags you do not touch stay exactly as they
   were — a selection of fifty games carries fifty different tag sets, and there
-  is no single right value to replace them with. The confirm says how many games
-  and in which direction, and the result counts only the games that actually
-  changed. The same selection sits
+  is no single right value to replace them with. Because nothing is lost that
+  the same picker cannot restore, „Übernehmen" applies the tags at once, with no
+  second dialog; the result counts only the games that actually changed.
+  Retiring, setting owners and deleting each ask first — retiring as a plain
+  question, since it can be undone, and deleting in red. The same selection sits
   on the two archives and the Wunschliste, for delete only. It exists because the
   shelf can be *filled* in one action by the BoardGameGeek import: undoing a
   200-game import used to be some 400 taps. Bulk delete is the one path that
@@ -240,8 +241,9 @@ What the app does, in detail. For a short overview see the
   round they happened in. An archived or wished-for game copies as what it is.
   Once a target round is picked, games it already has by title are flagged and
   unticked, so a shelf does not quietly gain a second copy of the same box —
-  ticking one back on copies it anyway. Copying is owner-only for the same
-  reason moving is.
+  ticking one back on copies it anyway. A copy runs straight from the sheet's
+  own button, since it changes nothing here; a move still asks first. Copying
+  is owner-only for the same reason moving is.
 - **Tags** – every round can define its own free-form tags (e.g. "outside",
   "quick lunch break", "co-op") on a dedicated screen, reached from
   the Start tab or, on a wide screen, the round rail. Tags are the single way to categorize games. Assign
@@ -695,7 +697,10 @@ What the app does, in detail. For a short overview see the
   count. Each friend is a compact tile carrying what that person last did (or how
   long you have been friends) and, behind it, a wash of the cover they last
   played; tapping one opens their profile, where removing them lives. The feed
-  below is a **wall of tiles** rather than a column of rows. A friendship shares
+  below is a **wall of tiles** rather than a column of rows, and it **keeps
+  loading as you scroll** (a „Mehr laden" button the scroll clicks for you), as
+  does the feed on a friend's profile; each event is kept for **12 months**
+  (issue #1357). A friendship shares
   **no round data**; it is purely social. Unfriending is unilateral and immediate in both
   directions. With accounts off the whole feature is inert.
 - **E-mail for actionable inbox items** – *accounts mode only* (issue #618). A
