@@ -5036,6 +5036,17 @@
 :root[data-design="ocean"]:not([data-scheme="dark"]) .friends-screen .k-tile__line { font-size: var(--text-sm); font-weight: 600; color: var(--ink-soft); }
 /* The cover wash is Klassisch's device for a tile; a row carries no art. */
 :root[data-design="ocean"]:not([data-scheme="dark"]) .friends-screen .k-tile__art { display: none; }
+/* So is die Tafel (#1137): Klassisch lays its tiles on a tinted plate, and
+   O14.2's roster is rows under a hairline INSIDE the band's own card — a plate
+   there would be a card in a card. The tiles' shadow goes with it; a row has
+   none. Track minimums are set above, so only the plate's own box is undone. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .friends-screen .k-tiles {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .friends-screen .k-tiles > .k-tile { box-shadow: none; }
 :root[data-design="ocean"]:not([data-scheme="dark"]) .friends-screen .k-tile--add {
   grid-column: 1 / -1;
   justify-content: center;

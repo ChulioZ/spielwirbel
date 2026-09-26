@@ -139,7 +139,12 @@ function feedTileVerb(ev) {
 function renderFeedTile(ev, opts) {
   const o = opts || {};
   const imgStyle = ev.coverUrl ? ` style="background-image:url('${coverUrl(ev.coverUrl, COVER_THUMB)}')"` : '';
-  const fallback = ev.coverUrl ? '' : '<i class="ti ti-cards" aria-hidden="true"></i>';
+  // A cover-less event gets the SHELF's placeholder, not the row's bare glyph
+  // (#1137): the art is the tile's whole 3:2 band now, and a flat grey box with
+  // a small icon reads as a broken image on a wall of covers. coverPlaceholder()
+  // hashes the title, so a game looks the same here as on its shelf. The ROW
+  // form keeps its glyph — a 46px thumb is not a wall.
+  const fallback = ev.coverUrl ? '' : coverPlaceholder({ title: ev.title || '' });
   // The author rides the meta row rather than the cover's corner: a 172px tile
   // has a full-width line under the title, so the person needs no badge to
   // avoid taking a column from the news.
