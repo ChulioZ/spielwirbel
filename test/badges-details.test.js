@@ -153,6 +153,16 @@ test('Der Tisch: legend and place from 860px only, as T17.2 draws them; the chev
   assert.ok(plain(TISCH_CSS, new RegExp(`^${esc(GATE)} \\.member-card__badges-go$`)).some(([, b]) => /color:\s*var\(--gold\)/.test(b)), 'the chevron is gold');
 });
 
+test('Der Tisch: the Tischkarte kicker never wraps its count off at 860px+ (it was a fixed 96px)', () => {
+  const rules = inMedia(TISCH_CSS, '.member-card__badges-label', 'min-width: 860px')
+    .filter(([s]) => s.endsWith('.member-card__badges-label'));
+  assert.ok(rules.length > 0, 'the 1440 kicker column rule exists');
+  for (const [, b] of rules) {
+    assert.match(b, /white-space:\s*nowrap/, '„ABZEICHEN · 4" stays on one line');
+    assert.doesNotMatch(b, /(^|[^-])width:\s*96px/, 'a fixed width is what broke it; the column is a minimum');
+  }
+});
+
 test('Ocean: legend and chevron from 860px only; no place — O17 never draws one', () => {
   const GATE = ':root[data-design="ocean"]:not([data-scheme="dark"])';
   assert.ok(hiddenIn(OCEAN_CSS, GATE, '.badge-legend'), 'O17.3 (390) draws no legend');
