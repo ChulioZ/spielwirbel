@@ -2027,6 +2027,41 @@ test('a design that declares Pokale PLINTHS carries their one ink on all six sto
   assert.deepEqual(failures, [], 'a plinth caption has to be readable on every stop of every plinth');
 });
 
+test('a design that declares brass PINS carries T17.9\'s pairs on the pin, the recess and the card (#1390)', () => {
+  /* Der Tisch's Abzeichen (tisch.css „ABZEICHEN as brass pins"). Graphics take
+     3:1 (the engraving, the recess glyph, the dashed edge, the ring, the card's
+     bar); the tier numeral is text at 10px, so AA. The engraving is swept over
+     all four stops of the brass, since the worst one is the shadowed rim.
+
+     The dashed edge is measured where T17.9 measures it — --felt-deep — plus
+     the wood the member rows stand on and the recess it rims. On the felt's
+     LIGHT stop it is 2.05:1; the recess and its glyph carry the shape there,
+     which is the decision the PR records rather than a pair this test hides. */
+  const hosts = withToken('--pin-recess');
+  assert.ok(hosts.length >= 1, 'no design declares pins — this test is vacuous');
+  const failures = [];
+  let checked = 0;
+  for (const t of hosts) {
+    const v = (n) => token(n, t.design);
+    const pairs = [
+      ...['--gold-hi', '--gold', '--gold-deep', '--brass-lo'].map((g) => [`engraving --on-accent on ${g}`, v('--on-accent'), v(g), AA_LARGE]),
+      ['recess glyph --pin-recess-ink on --pin-recess', v('--pin-recess-ink'), v('--pin-recess'), AA_LARGE],
+      ...['--felt-deep', '--surface', '--pin-recess'].map((g) => [`dashed edge --control-edge on ${g}`, v('--control-edge'), v(g), AA_LARGE]),
+      ...['--felt', '--felt-deep', '--surface', '--pin-recess'].map((g) => [`ring --gold on ${g}`, v('--gold'), v(g), AA_LARGE]),
+      ['tier numeral --gold on --plinth-ink', v('--gold'), v('--plinth-ink'), AA_TEXT],
+      ['card bar --paper-faint on --paper-track', v('--paper-faint'), v('--paper-track'), AA_LARGE],
+      ['Chronik label --paper-faint on --paper-raised', v('--paper-faint'), v('--paper-raised'), AA_TEXT],
+    ];
+    for (const [what, fg, bg, need] of pairs) {
+      checked += 1;
+      const ratio = contrast(fg, bg);
+      if (ratio < need) failures.push(`${name(t)} — ${what} = ${ratio.toFixed(2)}:1 < ${need}:1`);
+    }
+  }
+  assert.ok(checked >= 15, `only ${checked} pairs measured`);
+  assert.deepEqual(failures, [], 'a pin pair is under its bar');
+});
+
 /* ---- Ocean (#1210): the water, the sand, the bubble and the people ----------
    Ocean is the first LIGHT design with tokens of its own, and its failure class
    is the inverse of Der Tisch's: saturated colour on near-white, and text over a
@@ -2217,6 +2252,9 @@ test('every colour token a design declares is measured by one of the checks abov
     // (gold is --brass-hi/--gold-deep, measured by the same check).
     '--plinth-silver-hi', '--plinth-silver', '--plinth-bronze-hi', '--plinth-bronze',
     '--plinth-ink',
+    // #1390: the Abzeichen pins' recess, its glyph, the brass rim stop and the
+    // card's progress track (the pins test above).
+    '--pin-recess', '--pin-recess-ink', '--brass-lo', '--paper-track',
     // #1210, Ocean: the water gradient, the deep state and the whale's top
     // stop, the sand, wave paper and bubble grounds, the soft status surfaces,
     // the toast action, the danger hover, and the darkened person row.
@@ -2245,7 +2283,9 @@ test('every colour token a design declares is measured by one of the checks abov
   /* #1195 added two more of the same kind: the destructive button's rim (the
      red FILL identifies that control, measured above) and the paper hairline
      between rows and under a head, which separates and identifies nothing. */
-  const DECORATIVE_EDGE = /^--(played-tag-edge|veto-tag-edge|paper-danger-edge|paper-line|plinth-edge)$/;
+  /* #1390's --pin-shadow is the hard edge a raised pin stands on: the brass
+     fill identifies the pin, so the shadow has no bar to meet. */
+  const DECORATIVE_EDGE = /^--(played-tag-edge|veto-tag-edge|paper-danger-edge|paper-line|plinth-edge|pin-shadow)$/;
   /* Ocean (#1210) adds the same two kinds and one more, each carrying no text:
      a hairline inside a card and the pressed button's rim (the fill identifies
      that control); the shell's rim, a rating bubble's resting rim (the face
