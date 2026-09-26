@@ -10785,6 +10785,17 @@ kbd {
 .member-card__badges { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
 .member-card__badges-label { font-size: var(--text-sm); color: var(--ink-soft); font-weight: 600; }
 
+/* The Spielerkarte's account tier (#1389): the same label and tiles, all four
+   always, under the figures — two a row on a phone, four across from there. */
+.profile-card__badges { display: flex; flex-direction: column; gap: 6px; margin-top: 16px; }
+.badge-grid--account { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (min-width: 600px) { .badge-grid--account { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+
+/* A mark in the friends' feed has no cover: its slot carries the mark's glyph
+   on the brand tint, so it reads as a mark and not as a missing box. */
+.e-tile__img--badge,
+.feed-row__cover--badge { background: var(--brand-tint); color: var(--brand-ink, var(--brand)); }
+
 /* The tap-open card: a popover ≥860px, a sheet below (openEditor). */
 .popover--badge { width: 320px; max-width: calc(100vw - 32px); }
 .badge-card { display: flex; flex-direction: column; gap: 10px; }

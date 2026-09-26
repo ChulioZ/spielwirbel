@@ -3953,6 +3953,40 @@ module.exports = function repoContract(repo) {
     }
   });
 
+  /* The allowlist's second widening (#1389): an account-tier Abzeichen is its
+     catalogue KEY (in `title`) and its TIER, and nothing else — no cover, no
+     round, no person. Validated at the store against the catalogue, so a call
+     site cannot put free text into a friend's feed through `title`. */
+  test('feed: a badge_earned row is key + tier only, and only a real account tier', async () => {
+    const ev = await repo.addFeedEvent('feed-b', {
+      type: 'badge_earned', title: 'accountSessions', tier: 100,
+      coverUrl: 'https://example.test/x.jpg', roundId: 'r1', roundName: 'Familienrunde', memberName: 'Anna',
+    });
+    assert.deepEqual(Object.keys(ev).sort(), ['at', 'coverUrl', 'id', 'tier', 'title', 'type', 'uid']);
+    assert.deepEqual([ev.title, ev.tier, ev.coverUrl], ['accountSessions', 100, null]);
+    const stored = (await repo.listFeedEvents(['feed-b']))[0];
+    assert.deepEqual([stored.title, stored.tier, stored.coverUrl], ['accountSessions', 100, null]);
+    assert.deepEqual(Object.keys(stored).sort(), ['at', 'coverUrl', 'id', 'tier', 'title', 'type', 'uid']);
+
+    // Dropped outright: a round mark, a made-up key, free text, a tier the entry
+    // does not have, a tier of the wrong type.
+    for (const bad of [
+      { title: 'regular', tier: 10 },
+      { title: 'Familienrunde', tier: 25 },
+      { title: 'accountSessions', tier: 99 },
+      { title: 'accountSessions', tier: '100' },
+      { title: 'accountWins' },
+    ]) {
+      assert.equal(await repo.addFeedEvent('feed-b', { type: 'badge_earned', ...bad }), null, JSON.stringify(bad));
+    }
+    assert.equal((await repo.listFeedEvents(['feed-b'])).length, 1, 'nothing invalid was stored');
+
+    // The other types never grow a tier key.
+    const row = await repo.addFeedEvent('feed-b', { type: 'session_played', title: 'X', tier: 25 });
+    assert.ok(!Object.prototype.hasOwnProperty.call(row, 'tier'), 'session_played grew a tier key');
+    assert.ok(!Object.prototype.hasOwnProperty.call((await repo.listFeedEvents(['feed-b']))[0], 'tier'));
+  });
+
   test('feed: listFeedEvents reads the given uids newest-first; empty ids read nothing', async () => {
     await repo.addFeedEvent('feed-x', { type: 'game_added', title: 'One' });
     const two = await repo.addFeedEvent('feed-y', { type: 'game_added', title: 'Two' });

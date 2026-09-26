@@ -40,6 +40,20 @@ save button: an auto-saving editor, a toggle group, anything that persists on
 every interaction. "The route is idempotent" is a property of the **stored state**
 and says nothing about its side effects.
 
+## The exception that proves it: a CROSSING can happen on a re-save
+
+`badge_earned` (#1389, `lib/badge-feed.js`) cannot be gated on the finish
+transition, because Siege crosses on exactly the requests that are *not*
+transitions — winners are usually tapped in after „gespielt", i.e. on a re-save.
+Gated like `session_played`, Siege would simply never post, and every test
+built from a winner-in-the-first-POST fixture would stay green. So it diffs the
+affected accounts' badges before and after **every** finish request and makes
+the emit idempotent the other way: it reads the account's stored rows and skips
+a key + tier already announced. That read runs only when a crossing was found,
+so the ordinary request pays nothing. Its badge rows are written **before**
+`session_played`, so an un-finish + re-finish still leaves the two plays
+adjacent for the collapse below.
+
 ## Why the guard is not enough on its own, and the collapse is not belt-and-braces
 
 `collapseFeedEvents` in `lib/feed.js` folds an adjacent run on the way out, at

@@ -35,11 +35,36 @@
    rows written before this change are still in production feeds and age out
    over the 12-month retention (#1357), and the row still carries the title
    they name. */
+/* An account-tier Abzeichen (#1389): the row carries the catalogue KEY in
+   `title` and the tier in `tier`, never a game — so every place below that
+   prints `title` goes through feedSubject() instead. The key is looked up in
+   the catalogue rather than trusted: a key this build does not know (a later
+   catalogue change) names no mark, and the row says only „Abzeichen". */
+function feedBadgeDef(ev) {
+  if (!ev || ev.type !== 'badge_earned') return null;
+  return BADGE_CATALOGUE.find((d) => d.holder === 'account' && d.key === ev.title) || null;
+}
+
+// „Sessions 100" — the mark as the Spielerkarte's tile names it.
+function feedBadgeName(ev) {
+  const def = feedBadgeDef(ev);
+  if (!def) return ev && ev.type === 'badge_earned' ? t('badges.title') : null;
+  return Number.isInteger(ev.tier) ? `${t(`badges.${def.key}.name`)} ${ev.tier}` : t(`badges.${def.key}.name`);
+}
+
+// What an event is ABOUT, as plain text: the game, or the mark.
+const feedSubject = (ev) => feedBadgeName(ev) || ev.title || '';
+
+// The time line, with the X17.7 kicker on a mark: „Abzeichen · 24.09.2026, 21:40".
+const feedTimeText = (ev) => (ev.type === 'badge_earned' ? `${t('badges.title')} · ` : '') + fmtDateTime(ev.at);
+
 function feedText(ev) {
   const params = {
     user: `<strong>${friendName(ev.username)}</strong>`,
     game: `<strong>${esc(ev.title || '')}</strong>`,
   };
+  // X17.7's row: „Mia · Sessions 100" — no verb, the kicker below says what it is.
+  if (ev.type === 'badge_earned') return `${params.user} · <strong>${esc(feedBadgeName(ev))}</strong>`;
   if (ev.type === 'session_played') return t('friends.feed.played', params);
   if (ev.type === 'games_imported' && Number.isInteger(ev.count) && ev.count > 1) {
     const n = ev.count - 1;
@@ -50,7 +75,9 @@ function feedText(ev) {
 
 function renderFeedEvent(ev) {
   const imgStyle = ev.coverUrl ? ` style="background-image:url('${coverUrl(ev.coverUrl, COVER_THUMB)}')"` : '';
-  const fallback = ev.coverUrl ? '' : '<i class="ti ti-cards" aria-hidden="true"></i>';
+  // A mark has no cover; its slot shows the mark's own glyph.
+  const badge = feedBadgeDef(ev);
+  const fallback = ev.coverUrl ? '' : `<i class="ti ${badge ? esc(badge.glyph) : 'ti-cards'}" aria-hidden="true"></i>`;
   // The AUTHOR, badged onto the corner of the GAME's cover (#841). The row's one
   // image slot belongs to the game, so the person rides on it rather than taking
   // a fourth column — which on a phone would push the line that carries the
@@ -66,7 +93,7 @@ function renderFeedEvent(ev) {
       </span>
       <div class="feed-item__body">
         <div class="feed-item__text">${feedText(ev)}</div>
-        <div class="feed-item__time muted">${esc(fmtDateTime(ev.at))}</div>
+        <div class="feed-item__time muted">${esc(feedTimeText(ev))}</div>
       </div>
     </div>`);
 
@@ -83,7 +110,7 @@ function renderFeedEvent(ev) {
     username: ev.username,
     subject: t('friends.feed.reportSubject', {
       user: ev.username || '',
-      game: ev.title || '',
+      game: feedSubject(ev),
       date: fmtDateTime(ev.at),
     }),
   });
@@ -129,6 +156,8 @@ const FEED_TILES_COLLAPSED = 8;
    including the plural — `games_imported` carries a COUNT, so t() is not
    enough (.claude/rules/source-scanning-guards-enumerate-shapes.md). */
 function feedTileVerb(ev) {
+  // A mark: the tile's title already names it, so the verb slot names the kind.
+  if (ev.type === 'badge_earned') return t('badges.title');
   if (ev.type === 'session_played') return t('friends.tile.played');
   if (ev.type === 'games_imported' && Number.isInteger(ev.count) && ev.count > 1) {
     const n = ev.count - 1;
@@ -145,15 +174,21 @@ function renderFeedTile(ev, opts) {
   // a small icon reads as a broken image on a wall of covers. coverPlaceholder()
   // hashes the title, so a game looks the same here as on its shelf. The ROW
   // form keeps its glyph — a 46px thumb is not a wall.
-  const fallback = ev.coverUrl ? '' : coverPlaceholder({ title: ev.title || '' });
+  const badge = feedBadgeDef(ev);
+  // A mark (#1389) has no cover and is not a game, so it gets its own glyph
+  // rather than a shelf placeholder hashed from a catalogue key.
+  const fallback = ev.coverUrl ? ''
+    : ev.type === 'badge_earned'
+      ? `<i class="ti ${esc(badge ? badge.glyph : 'ti-medal')}" aria-hidden="true"></i>`
+      : coverPlaceholder({ title: ev.title || '' });
   // The author rides the meta row rather than the cover's corner: a 172px tile
   // has a full-width line under the title, so the person needs no badge to
   // avoid taking a column from the news.
   const who = o.noAuthor ? ''
     : `<span class="e-tile__who">${friendAvatar(ev.username, ev.avatar)}<span class="e-tile__name">${friendName(ev.username)}</span></span>`;
   const tile = h(`<div class="e-tile">
-      <span class="e-tile__img"${imgStyle}>${fallback}</span>
-      <span class="e-tile__title">${esc(ev.title || '')}</span>
+      <span class="e-tile__img${ev.type === 'badge_earned' ? ' e-tile__img--badge' : ''}"${imgStyle}>${fallback}</span>
+      <span class="e-tile__title">${esc(feedSubject(ev))}</span>
       <span class="e-tile__meta">
         ${who}
         <span class="e-tile__verb">${esc(feedTileVerb(ev))}</span>
@@ -171,7 +206,7 @@ function renderFeedTile(ev, opts) {
     username: ev.username,
     subject: t('friends.feed.reportSubject', {
       user: ev.username || '',
-      game: ev.title || '',
+      game: feedSubject(ev),
       date: fmtDateTime(ev.at),
     }),
   });
@@ -200,14 +235,16 @@ function renderFeedTile(ev, opts) {
    game with no art gets no box rather than an empty one. aria-hidden: the
    sentence beside it already names the game. */
 function renderFeedRow(ev) {
+  // A mark (#1389, X17.7) stands its glyph where a game stands its box.
+  const badge = feedBadgeDef(ev);
   const cover = ev.coverUrl
     ? `<span class="feed-item__img feed-row__cover" aria-hidden="true" style="background-image:url('${coverUrl(ev.coverUrl, COVER_THUMB)}')"></span>`
-    : '';
+    : badge ? `<span class="feed-item__img feed-row__cover feed-row__cover--badge" aria-hidden="true"><i class="ti ${esc(badge.glyph)}"></i></span>` : '';
   const row = h(`<div class="feed-item feed-row">
       ${friendAvatar(ev.username, ev.avatar, 'feed-row__face')}
       <div class="feed-item__body">
         <div class="feed-item__text">${feedText(ev)}</div>
-        <div class="feed-item__time muted">${esc(fmtDateTime(ev.at))}</div>
+        <div class="feed-item__time muted">${esc(feedTimeText(ev))}</div>
       </div>
       ${cover}
     </div>`);
@@ -215,7 +252,7 @@ function renderFeedRow(ev) {
     username: ev.username,
     subject: t('friends.feed.reportSubject', {
       user: ev.username || '',
-      game: ev.title || '',
+      game: feedSubject(ev),
       date: fmtDateTime(ev.at),
     }),
   });

@@ -13,10 +13,22 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const { FEED_EVENT_TYPES } = require('../lib/feed-events');
+const { FEED_EVENT_TYPES, badgeFeedFields } = require('../lib/feed-events');
 
-test('the feed event types are the three the client can phrase', () => {
-  assert.deepEqual([...FEED_EVENT_TYPES].sort(), ['game_added', 'games_imported', 'session_played']);
+test('the feed event types are the four the client can phrase', () => {
+  assert.deepEqual([...FEED_EVENT_TYPES].sort(), ['badge_earned', 'game_added', 'games_imported', 'session_played']);
+});
+
+// #1389: an Abzeichen is validated once, here, for both backends.
+test('badgeFeedFields accepts an account tier and nothing else', () => {
+  assert.deepEqual(badgeFeedFields({ title: 'accountWins', tier: 50 }), { title: 'accountWins', tier: 50 });
+  assert.deepEqual(badgeFeedFields({ title: 'accountYears', tier: 3 }), { title: 'accountYears', tier: 3 });
+  for (const bad of [
+    null, {}, { title: 'firstWin', tier: 1 }, { title: 'sessions', tier: 10 },
+    { title: 'accountWins', tier: 25 }, { title: 'accountWins', tier: 10.0001 }, { title: '__proto__', tier: 1 },
+  ]) {
+    assert.equal(badgeFeedFields(bad), null, JSON.stringify(bad));
+  }
 });
 
 test('neither backend carries its own copy of the set', () => {
