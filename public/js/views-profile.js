@@ -227,6 +227,11 @@ function renderProfileCard(p, reload) {
      to say it. */
   if (st && !record) {
     card.appendChild(h(`<p class="muted empty-note">${esc(t(p.self ? 'profile.statsEmptySelf' : 'profile.statsEmpty'))}</p>`));
+    // With no play at all the marks are four open tiles, which say nothing the
+    // line above does not — unless Jahre is already earned (#1389).
+    if (st.badges && st.badges.some((e) => e.state === 'earned')) {
+      card.appendChild(profileCardBadges(st.badges, p.createdAt, name));
+    }
     return card;
   }
   if (!record) return card;
@@ -248,6 +253,12 @@ function renderProfileCard(p, reload) {
   figure(t('member.sessions'), String(st.sessions));
   figure(t('member.avgGiven'), st.avgGiven === null ? '–' : 'Ø ' + fmtAvg(st.avgGiven));
   card.appendChild(figures);
+
+  /* The account-tier Abzeichen under the totals (#1389, X17.7). `stats.badges`
+     reaches exactly who `stats` does, minus the demo (lib/routes/profile.js), so
+     its absence is the whole gate here. */
+  const badgeRow = profileCardBadges(st.badges, p.createdAt, name);
+  if (badgeRow) card.appendChild(badgeRow);
 
   /* The two game tiles as the Tischkarte's ribboned boxes. What is NOT reused is
      the wiring: `wireGameCardHead` makes each tile a link into a round, and a

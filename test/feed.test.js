@@ -68,6 +68,13 @@ test('a different uid, type or title is never collapsed', () => {
   assert.equal(collapseFeedEvents([ev(0), ev(1, { title: 'Azul' })]).length, 2);
 });
 
+// #1389: two tiers of one Abzeichen are two earnings, never a repeat.
+test('two tiers of one badge are not collapsed; the same tier is', () => {
+  const mark = (min, tier) => ev(min, { type: 'badge_earned', title: 'accountSessions', tier });
+  assert.equal(collapseFeedEvents([mark(0, 100), mark(1, 25)]).length, 2);
+  assert.equal(collapseFeedEvents([mark(0, 100), mark(1, 100)]).length, 1, 'control: the same tier collapses');
+});
+
 test('an unparseable timestamp keeps both entries rather than losing one', () => {
   const out = collapseFeedEvents([ev(0, { at: 'not-a-date' }), ev(1)]);
   assert.equal(out.length, 2, 'bad data must never silently drop an event');

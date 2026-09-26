@@ -703,7 +703,10 @@ What the app does, in detail. For a short overview see the
   **Freundeskreis feed** (a tile on the home dashboard plus a dedicated
   view at `/freunde`): only "*added a game*", "*played a game*" and — for a
   BoardGameGeek collection import — "*added ‹game› and N more games*" notes, with
-  the **game title and cover** and, for that last one, a plain count; never
+  the **game title and cover** and, for that last one, a plain count — plus
+  „‹friend› · Sessions 100" when a friend reaches a new tier of an account
+  Abzeichen at a session finish (issue #1389; Sessions and Siege only, each tier
+  announced once, never while the friend's record is hidden); never
   member names, ratings, votes or round names, and only for activity after you
   became friends. The screen itself is **three full-width bands** — what is
   waiting on you, your people, what is new — stacked in that order at every
@@ -780,6 +783,11 @@ What the app does, in detail. For a short overview see the
   describe breadth rather than performance, the
   round and game counts, are the line under your name. The favourite and
   strongest game are the two ribboned boxes at the foot of the card.
+  Under the figures sit the four **account Abzeichen** (issue #1389) —
+  Sessions 25 · 100 · 500, Siege 10 · 50, Runden 2 · 5 and Jahre 1 · 2 · 3 —
+  the round badges' own tiles and card, counted from the same totals the card
+  prints (Jahre from the registration date). They reach exactly who the record
+  reaches, and a demo account shows none.
 - **„Dein Rückblick"** – *accounts mode only* (issue #1147). Your own profile —
   and only yours; friends never see it — has the Chronik's month/year picker for
   **you**, across every round you sit in: how many sessions you played, how many

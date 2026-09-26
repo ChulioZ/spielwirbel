@@ -200,7 +200,9 @@ function personTileLine(p, events) {
   const last = lastEventOf(p, events);
   if (last) {
     const rel = fmtRelativeDays(dayIndexOf(Date.now()) - dayIndexOf(last.at));
-    return `${esc(last.title || '')} · ${esc(rel || fmtDate(last.at))}`;
+    // feedSubject, not `title`: a badge_earned row keeps its catalogue key there
+    // (#1389), and the line names the mark instead.
+    return `${esc(feedSubject(last))} · ${esc(rel || fmtDate(last.at))}`;
   }
   return p.since ? esc(t('friends.card.since', { when: fmtMonth(p.since) })) : '';
 }

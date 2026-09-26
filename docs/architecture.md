@@ -161,6 +161,9 @@ lib/
   feed.js            the Freundeskreis activity feed's allowlisted events (#325)
   feed-events.js     the feed's accepted event types, one dependency-free set
                      both repo backends require rather than each holding a copy
+  badge-feed.js      the account-tier Abzeichen's feed event (#1389): measures
+                     the accounts a session finish can move before and after
+                     it, and posts each newly crossed tier once
   corpus.js          the licensed BoardGameGeek game corpus (issue #681): the
                      operator-uploaded ranks dump, filtered and capped, plus the
                      bounded, resumable enrichment pass that fills each row's

@@ -116,6 +116,11 @@ would be indistinguishable from an account with nothing to show.
 - The SUBJECT always sees their own numbers. The toggle governs what friends see,
   and hiding a figure from the person it is about would make the setting
   unverifiable from the screen offering it.
+- **`stats.badges` (#1389) rides `stats`**, so it reaches exactly who `stats`
+  reaches — with one carve-out: a demo account's own profile gets `stats`
+  without `badges` (`statsFor()` in the route; absent, not empty). The same
+  gates bind the feed event: an account with `statsVisible: false` or a demo
+  posts no `badge_earned` (`lib/badge-feed.js`).
 - **`plays` (#1147, `lib/user-plays.js`) is SELF-ONLY, whatever `statsVisible`
   says** — a per-session list with dates and the subject's own ratings, which
   never went through #1089's friend-disclosure pass. Setting it in the friend

@@ -14,6 +14,7 @@
      .hub-row--badges                 one line in the hub's Pokale preview
      .chronik-row--badge              one row per earning under its session
      .member-card__badges             the Tischkarte, earned only
+     .profile-card__badges            the Spielerkarte's account tier (#1389)
 
    Everything is DERIVED on every render through achievements.js — nothing is
    stored, so a deleted session takes its marks (and their Chronik rows) with it.
@@ -25,7 +26,7 @@
 
    Part of the frontend; all files share one global script scope. Loaded after
    achievements.js; every caller (views-pokale.js, hub-previews.js,
-   views-chronik.js, views-member.js, views-session.js) reaches these at RENDER
+   views-chronik.js, views-member.js, views-session.js, views-profile.js) reaches these at RENDER
    time, so the files loading before this one are fine
    (.claude/rules/frontend-script-load-order.md). */
 
@@ -99,6 +100,11 @@ function badgeCondition(e, ctx, { allTiers, at } = {}) {
   // Dauerbrenner names its game in the condition (handover B10).
   const g = e.gameId && (ctx.round.games || []).find((x) => x.id === e.gameId);
   if (g) return t('badges.evergreen.lineGame', { game: g.title, n });
+  // „1 Jahr" is the one condition whose number can be 1 (#1389 — the account
+  // tier is the first placement to render Jahre at all).
+  if (e.key === 'accountYears' && typeof n === 'number') {
+    return tn(n, 'badges.accountYears.lineOne', 'badges.accountYears.line', { n });
+  }
   return t(`badges.${e.key}.line`, { n });
 }
 
@@ -455,5 +461,33 @@ function memberCardBadges(round, member) {
     line: false,
     onActivate: () => showBadges(round.id, member.id),
   })));
+  return row;
+}
+
+/* The Spielerkarte's account tier (#1389, X17.7): Sessions · Siege · Runden ·
+   Jahre, all four always — open ones included, since the tier ladder IS the
+   point of a cross-round mark — under the figures. `badges` is the profile
+   payload's `stats.badges` (lib/user-stats.js), which the server sends only to
+   the subject and an accepted friend, and never for a demo account: absent
+   means no row. The tiles and the card are the round tiles' own
+   (badgeTile / openBadgeCard) over a context with no round, since a profile may
+   carry none — nothing here can name one.
+
+   The second line: the way to the next tier („41 / 100"), the condition while
+   nothing is counted yet or the top tier is reached, and for Jahre the
+   registration month, which is what that entry counts from. */
+function profileCardBadges(badges, createdAt, holder) {
+  if (!Array.isArray(badges) || !badges.length) return null;
+  const ctx = { round: { games: [] }, gameTitle: () => null };
+  const row = h(`<div class="profile-card__badges">
+       <span class="member-card__badges-label">${esc(t('badges.title'))}</span>
+       <div class="badge-grid badge-grid--account"></div>
+     </div>`);
+  const grid = row.querySelector('.badge-grid');
+  badges.forEach((e) => {
+    let line = (e.state !== 'locked' && badgeProgress(e)) || badgeCondition(e, ctx);
+    if (e.key === 'accountYears' && createdAt) line = t('profile.memberSince', { when: fmtMonth(createdAt) });
+    grid.appendChild(badgeTile(e, ctx, { holder, line }));
+  });
   return row;
 }

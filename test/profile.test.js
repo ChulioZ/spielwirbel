@@ -453,3 +453,39 @@ test('#1089: a demo sees its OWN profile, and that does not reopen the oracle', 
   assert.equal(taken.status, free.status);
   assert.equal(taken.status, 403);
 });
+
+/* The account-tier Abzeichen (#1389) ride `stats.badges`, so they reach exactly
+   who `stats` reaches — and a DEMO account gets none on its own profile, the
+   one carve-out (lib/routes/profile.js statsFor). */
+test('#1389: the account badges reach the subject and a friend, never a stranger', async () => {
+  const alice = await makeAccount('badge-alice@example.com');
+  const bob = await makeAccount('badge-bob@example.com');
+  await seedPlayed(alice, 'Azul');
+
+  const keys = (body) => body.stats.badges.map((b) => b.key);
+  const own = (await profile(alice, alice.username)).body;
+  assert.deepEqual(keys(own), ['accountSessions', 'accountWins', 'accountRounds', 'accountYears']);
+
+  assert.equal('stats' in (await profile(bob, alice.username)).body, false, 'a stranger gets no stats, so no badges');
+  await sendReq(bob, alice.username);
+  const fid = (await inbox(alice)).find((i) => i.type === 'friend_request').payload.friendshipId;
+  await request(app).post(`/api/account/friends/${fid}/accept`).set(auth(alice.token));
+  const friendView = (await profile(bob, alice.username)).body;
+  assert.deepEqual(keys(friendView), keys(own), 'an accepted friend sees the same four');
+  // Keys, tiers, counts and dates only — nothing that names a round or a person.
+  const text = JSON.stringify(friendView.stats.badges);
+  const stored = store.data.rounds.find((r) => r.members.some((m) => m.userId === alice.user.id));
+  for (const value of [stored.id, stored.name, ...stored.members.map((m) => m.name)]) {
+    assert.equal(text.includes(value), false, `the badges carry ${value}`);
+  }
+});
+
+test('#1389: a demo account\'s own profile carries its stats but no badges', async () => {
+  const started = await request(app).post('/api/account/demo').send({});
+  assert.equal(started.status, 200);
+  const token = started.body.accessToken;
+  const mine = (await request(app).get('/api/account/me').set(auth(token))).body;
+  const own = (await request(app).get(`/api/account/profile/${encodeURIComponent(mine.username)}`).set(auth(token))).body;
+  assert.ok(own.stats && own.stats.sessions > 0, 'control: the demo still gets its numbers');
+  assert.equal('badges' in own.stats, false, 'absent, not empty');
+});

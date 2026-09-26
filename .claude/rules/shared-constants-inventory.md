@@ -590,7 +590,11 @@ same reason: the Spielerkarte's Sessions/Siege/Runden marks must count from the
 very totals the same card prints, so the server computes them once rather than
 the client re-deriving a second „Siege". `accountBadges` needs no injected
 siblings, which is why the server can call it bare; `roundBadges` takes the
-memberStats-style `deps` and, under Node, throws without them.
+memberStats-style `deps` and, under Node, throws without them. **#1389 gave it
+a second backend reader, `lib/feed-events.js`**, which validates a
+`badge_earned` feed row's key and tier against `BADGE_CATALOGUE` — the value
+half this time: a hand-copied key list would drop a real mark silently, or let
+a free-text `title` through into a friend's feed.
 
 **Each new instance must be named above.** `test/rule-enumerations.test.js`
 asserts every `require('../public/js/…')` under `lib/routes/` and `lib/` appears
