@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="design_doc_mode" content="canvas">
+  <link rel="stylesheet" href="../../../public/fonts/tabler-icons.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #070b14; font-family: 'IBM Plex Sans', sans-serif; }
+    a { color: #35e0ff; text-decoration: none; }
+    a:hover { color: #8aeeff; text-decoration: underline; }
+    button:focus-visible, a:focus-visible { outline: 2px solid #35e0ff; outline-offset: 3px; }
+  </style>
+</helmet>
+<div style="display: flex; flex-direction: column; gap: 40px; padding: 44px; width: max-content; color: #dfe7f5; background-color: #070b14; background-image: radial-gradient(1200px 600px at 50% 0%, #10203a, #070b14 70%);">
+
+  <div data-screen-label="B17 Kopf" style="max-width: 1240px; display: flex; flex-direction: column; gap: 12px; background: #0e1626; border: 1px solid #24324a; padding: 24px 28px;">
+    <div style="display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;">
+      <span style="font-family: 'IBM Plex Mono'; font-weight: 600; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: #070b14; background: #35e0ff; padding: 5px 12px;">B17</span>
+      <h1 style="margin: 0; font-family: 'Chakra Petch'; font-weight: 700; font-size: 38px; line-height: 1.05; text-transform: uppercase;">Abzeichen: Die Brücke</h1>
+      <span style="font-family: 'IBM Plex Mono'; font-size: 13px; color: #9aa8c0;">26.09.2026 · baut auf B3, B4, B13, B14 · handover-abzeichen-2026-09-26</span>
+    </div>
+    <p style="margin: 0; font-size: 15px; line-height: 1.55; max-width: 92ch; color: #b8c2d6; text-wrap: pretty;">Ein Abzeichen ist hier eine <strong style="color: #dfe7f5;">Dienstplakette</strong>: eine schmale Platte mit abgeschrägten Ecken. Links sitzt die Glyphe, rechts zeigen Balken die Stufe. Eine verdiente Plakette ist voll cyan. Unterwegs ist die Kontur mit einer Ladeanzeige. Ein offenes Abzeichen ist eine leere Kontur, ein geheimes eine geschwärzte. Im Ergebnis blitzt ein HUD-Rahmen auf, danach gleitet die Plakette an ihren Platz. Das Panel heißt <strong style="color: #dfe7f5;">„Abzeichen“</strong> und nicht „Verdienste“, weil die Form nie zum Label wird (Handover §4).</p>
+    <div style="display: flex; flex-wrap: wrap; gap: 8px; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .1em; text-transform: uppercase;">
+      <span style="border: 1px solid #24324a; padding: 6px 10px;">Kern: 22 Einträge</span>
+      <span style="border: 1px solid #24324a; padding: 6px 10px;">Geheim: Comeback · Einstimmig · Unentschieden</span>
+      <span style="border: 1px solid #24324a; padding: 6px 10px;">Stufe = Balkenzahl + Ziffer im Namen</span>
+      <span style="border: 1px solid #24324a; padding: 6px 10px;">Glyphen: wie T17, nur Subset</span>
+    </div>
+  </div>
+
+  <div data-screen-label="B17.1 Plakette" style="display: flex; flex-direction: column; gap: 10px;">
+    <span style="font-family: 'IBM Plex Mono'; font-size: 12px; color: #9aa8c0;">B17.1 · Die Plakette in sechs Zuständen: Band-Kachel für 1440, kompakt für 390 und Dienstliste, dazu die Karte beim Antippen</span>
+    <div style="width: 1440px; box-sizing: border-box; padding: 26px 28px; background: #0b1220; border: 1px solid #24324a; display: flex; flex-direction: column; gap: 22px;">
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px;">
+        <sc-for list="{{ states }}" as="s" hint-placeholder-count="6">
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <span style="display: flex; align-items: baseline; gap: 10px; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase;"><span style="color: #35e0ff;">{{ s.label }}</span><span style="color: #9aa8c0; letter-spacing: .04em; text-transform: none;">{{ s.hint }}</span></span>
+            <button aria-label="{{ s.t.aria }}" style="display: flex; align-items: center; gap: 16px; min-height: 72px; padding: 10px 16px; background: #0e1626; border: 1px solid #24324a; color: #dfe7f5; font: inherit; text-align: left; cursor: pointer;">
+              <span style="width: 84px; height: 36px; flex: none; clip-path: polygon(9px 0, 100% 0, 100% calc(100% - 9px), calc(100% - 9px) 100%, 0 100%, 0 9px); background: {{ s.t.edge }}; padding: 1px; box-sizing: border-box;">
+                <span style="display: flex; align-items: center; justify-content: {{ s.t.justify }}; gap: 8px; width: 100%; height: 100%; padding: 0 10px; box-sizing: border-box; clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px); background: {{ s.t.fill }}; color: {{ s.t.ink }};">
+                  <i class="{{ s.t.icon }}" style="font-size: 20px;"></i>
+                  <sc-if value="{{ s.t.hasBars }}" hint-placeholder-val="{{ false }}"><span style="display: flex; gap: 3px;"><sc-for list="{{ s.t.bars }}" as="b" hint-placeholder-count="3"><span style="width: 5px; height: 16px; background: {{ b.bg }}; box-shadow: inset 0 0 0 1px {{ b.edge }};"></span></sc-for></span></sc-if>
+                </span>
+              </span>
+              <span style="display: flex; flex-direction: column; gap: 3px; min-width: 0;">
+                <span style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;"><span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 18px; text-transform: uppercase; line-height: 1.1;">{{ s.t.nameTier }}</span><sc-if value="{{ s.t.isNew }}" hint-placeholder-val="{{ false }}"><span style="font-family: 'IBM Plex Mono'; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #070b14; background: #ffb020; padding: 2px 7px;">Neu</span></sc-if></span>
+                <span style="font-family: 'IBM Plex Mono'; font-size: 12px; color: #9aa8c0; line-height: 1.45;">{{ s.t.line }}</span>
+              </span>
+            </button>
+          </div>
+        </sc-for>
+      </div>
+      <div style="display: grid; grid-template-columns: minmax(0, 1fr) 440px; gap: 26px; align-items: start;">
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #35e0ff;">Kompakt · 390 und Dienstliste</span>
+          <div style="display: flex; flex-wrap: wrap; gap: 10px; padding: 16px; background: #0e1626; border: 1px solid #24324a;">
+            <sc-for list="{{ compactRow }}" as="t" hint-placeholder-count="5">
+              <button aria-label="{{ t.aria }}" style="width: 96px; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 4px 0; background: none; border: none; color: #dfe7f5; font: inherit; cursor: pointer;">
+                <span style="width: 72px; height: 30px; clip-path: polygon(7px 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%, 0 7px); background: {{ t.edge }}; padding: 1px; box-sizing: border-box;">
+                  <span style="display: flex; align-items: center; justify-content: {{ t.justify }}; gap: 6px; width: 100%; height: 100%; padding: 0 8px; box-sizing: border-box; clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px); background: {{ t.fill }}; color: {{ t.ink }};">
+                    <i class="{{ t.icon }}" style="font-size: 17px;"></i>
+                    <sc-if value="{{ t.hasBars }}" hint-placeholder-val="{{ false }}"><span style="display: flex; gap: 2px;"><sc-for list="{{ t.bars }}" as="b" hint-placeholder-count="3"><span style="width: 4px; height: 13px; background: {{ b.bg }}; box-shadow: inset 0 0 0 1px {{ b.edge }};"></span></sc-for></span></sc-if>
+                  </span>
+                </span>
+                <span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 12px; text-transform: uppercase; text-align: center; line-height: 1.15;">{{ t.nameTier }}</span>
+                <span style="font-family: 'IBM Plex Mono'; font-size: 11px; color: #9aa8c0;">{{ t.count }}</span>
+              </button>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #35e0ff;">Nach dem Antippen · Karte, kein Modal</span>
+          <div role="dialog" aria-label="Stammgast" style="position: relative; padding: 20px 22px; background: #0e1626; border: 1px solid #24324a; display: flex; flex-direction: column; gap: 12px;">
+            <span style="position: absolute; left: -1px; top: -1px; width: 14px; height: 14px; border-left: 2px solid #35e0ff; border-top: 2px solid #35e0ff;"></span><span style="position: absolute; right: -1px; bottom: -1px; width: 14px; height: 14px; border-right: 2px solid #35e0ff; border-bottom: 2px solid #35e0ff;"></span>
+            <span style="display: flex; align-items: center; gap: 14px;">
+              <span style="width: 96px; height: 40px; flex: none; clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px); background: #35e0ff; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; box-sizing: border-box; color: #070b14;"><i class="ti ti-star" style="font-size: 22px;"></i><span style="display: flex; gap: 3px;"><span style="width: 5px; height: 18px; background: #070b14;"></span><span style="width: 5px; height: 18px; box-shadow: inset 0 0 0 1px #070b14;"></span><span style="width: 5px; height: 18px; box-shadow: inset 0 0 0 1px #070b14;"></span><span style="width: 5px; height: 18px; box-shadow: inset 0 0 0 1px #070b14;"></span></span></span>
+              <span style="display: flex; flex-direction: column;"><span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 24px; text-transform: uppercase;">Stammgast 10</span><span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #9aa8c0;">Jonas · Donnerstagsrunde</span></span>
+              <button aria-label="Schließen" style="margin-left: auto; align-self: flex-start; width: 36px; height: 36px; border: 1px solid #24324a; background: #0b1220; color: #dfe7f5; font: inherit; cursor: pointer; display: grid; place-items: center;"><i class="ti ti-x" style="font-size: 17px;"></i></button>
+            </span>
+            <span style="font-size: 15px; line-height: 1.5;">Bei 10 · 25 · 50 · 100 Sessions dabei</span>
+            <span style="display: flex; flex-direction: column; gap: 6px;">
+              <span style="display: flex; align-items: baseline; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #9aa8c0;"><span>Nächste Stufe 25</span><span style="margin-left: auto; font-family: 'Chakra Petch'; font-weight: 700; font-size: 22px; letter-spacing: 0; color: #35e0ff;">22 / 25</span></span>
+              <span style="display: block; height: 8px; background: #1c2740;"><span style="display: block; width: 88%; height: 100%; background: #35e0ff;"></span></span>
+            </span>
+            <span style="display: flex; align-items: center; gap: 8px; font-family: 'IBM Plex Mono'; font-size: 12px; color: #9aa8c0; border-top: 1px solid #1c2740; padding-top: 10px;"><i class="ti ti-calendar" style="font-size: 15px; color: #35e0ff;"></i>Stufe 10 erreicht 01/2026 · Moorgeister</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div data-screen-label="B17.2 Pokale Desktop" style="display: flex; flex-direction: column; gap: 10px;">
+    <span style="font-family: 'IBM Plex Mono'; font-size: 12px; color: #9aa8c0;">B17.2 · Pokale 1440, weitergescrollt: unter Rangliste und Bestmarken das Panel „Abzeichen“. Die Runde steht im HUD-Rahmen, darunter die Dienstliste je Person in Pokale-Reihenfolge</span>
+    <div style="width: 1440px; position: relative; background: radial-gradient(90% 60% at 50% 0%, #10203a, #070b14 70%); border: 1px solid #24324a; font-size: 15px; display: flex; flex-direction: column;">
+      <div style="flex: none; height: 52px; display: flex; align-items: center; gap: 22px; padding: 0 32px; background: #0b1220; border-bottom: 1px solid #24324a;">
+        <a href="#" style="display: flex; align-items: center; gap: 10px; font-family: 'Chakra Petch'; font-weight: 700; font-size: 18px; letter-spacing: .2em; text-transform: uppercase; color: #35e0ff;"><span style="width: 10px; height: 10px; background: #35e0ff; box-shadow: 0 0 10px #35e0ff;"></span>Spielwirbel</a>
+        <span style="margin-left: auto; display: flex; gap: 10px; align-items: center; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase;"><a href="#" style="min-height: 28px; display: inline-flex; align-items: center; border: 1px solid #24324a; padding: 0 10px; color: #dfe7f5;"><i class="ti ti-world" style="margin-right: 6px;"></i> DE</a><a href="#" style="min-height: 28px; display: inline-flex; align-items: center; border: 1px solid #24324a; padding: 0 10px; color: #dfe7f5;"><i class="ti ti-mail" style="margin-right: 6px;"></i><span style="white-space: nowrap;">Postfach 2</span></a><a href="#" style="min-height: 28px; display: inline-flex; align-items: center; border: 1px solid #24324a; padding: 0 10px; color: #dfe7f5;">Marco</a></span>
+      </div>
+      <div style="flex: none; height: 44px; display: flex; align-items: stretch; gap: 4px; padding: 0 32px; background: #0b1220; border-bottom: 1px solid #24324a;">
+        <sc-for list="{{ navPokale }}" as="n" hint-placeholder-count="5"><a href="#" style="display: inline-flex; align-items: center; padding: 0 16px; border-bottom: 2px solid {{ n.edge }}; color: {{ n.ink }}; font-family: 'IBM Plex Mono'; font-size: 12px; letter-spacing: .14em; text-transform: uppercase;">{{ n.label }}</a></sc-for>
+        <span style="margin-left: auto; display: inline-flex; align-items: center; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #9aa8c0;">Donnerstagsrunde</span>
+      </div>
+      <div style="padding: 20px 32px 30px; display: flex; flex-direction: column; gap: 18px;">
+        <span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #9aa8c0;">↑ Rangliste und Bestmarken wie B3.4</span>
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
+          <sc-for list="{{ awards }}" as="a" hint-placeholder-count="4">
+            <div style="display: flex; flex-direction: column; gap: 4px; background: #0e1626; border: 1px solid #24324a; padding: 12px 16px;"><span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #9aa8c0;">{{ a.title }}</span><span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 22px; text-transform: uppercase; line-height: 1.05;">{{ a.value }}</span></div>
+          </sc-for>
+        </div>
+        <div id="abzeichen" style="position: relative; display: flex; flex-direction: column; gap: 16px; padding: 22px 24px; background: #0b1220; border: 1px solid #24324a;">
+          <span style="position: absolute; left: -1px; top: -1px; width: 18px; height: 18px; border-left: 2px solid #35e0ff; border-top: 2px solid #35e0ff;"></span><span style="position: absolute; right: -1px; top: -1px; width: 18px; height: 18px; border-right: 2px solid #35e0ff; border-top: 2px solid #35e0ff;"></span><span style="position: absolute; left: -1px; bottom: -1px; width: 18px; height: 18px; border-left: 2px solid #35e0ff; border-bottom: 2px solid #35e0ff;"></span><span style="position: absolute; right: -1px; bottom: -1px; width: 18px; height: 18px; border-right: 2px solid #35e0ff; border-bottom: 2px solid #35e0ff;"></span>
+          <div style="display: flex; align-items: flex-end; gap: 16px;">
+            <h2 style="margin: 0; font-family: 'Chakra Petch'; font-weight: 700; font-size: 38px; line-height: 1; text-transform: uppercase;">Abzeichen</h2>
+            <span style="font-family: 'IBM Plex Mono'; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: #9aa8c0;">16 verdient · 2 neu seit Nordlichter</span>
+            <span style="margin-left: auto; display: flex; gap: 16px; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #9aa8c0;">
+              <span style="display: inline-flex; align-items: center; gap: 7px;"><span style="width: 22px; height: 12px; background: #35e0ff;"></span>verdient</span>
+              <span style="display: inline-flex; align-items: center; gap: 7px;"><span style="width: 22px; height: 12px; box-sizing: border-box; border: 1px solid #35e0ff; background: linear-gradient(90deg, rgba(53,224,255,.35) 55%, transparent 55%);"></span>lädt</span>
+              <span style="display: inline-flex; align-items: center; gap: 7px;"><span style="width: 22px; height: 12px; box-sizing: border-box; border: 1px solid #6b7b96;"></span>offen</span>
+              <span style="display: inline-flex; align-items: center; gap: 7px;"><span style="width: 22px; height: 12px; box-sizing: border-box; border: 1px solid #6b7b96; background: repeating-linear-gradient(135deg, #24324a 0 3px, transparent 3px 6px);"></span>geheim</span>
+            </span>
+          </div>
+          <div style="display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 18px; align-items: center; padding: 14px 16px; background: #0e1626; border: 1px solid #24324a;">
+            <span style="display: flex; flex-direction: column; gap: 3px;"><span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 20px; text-transform: uppercase;">Donnerstagsrunde</span><span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #9aa8c0;">seit 10/2025 · 3 von 9</span></span>
+            <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+              <sc-for list="{{ roundMarks }}" as="t" hint-placeholder-count="9">
+                <button aria-label="{{ t.aria }}" style="width: 112px; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 4px 0; background: none; border: none; color: #dfe7f5; font: inherit; cursor: pointer;">
+                  <span style="width: 80px; height: 32px; clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px); background: {{ t.edge }}; padding: 1px; box-sizing: border-box;">
+                    <span style="display: flex; align-items: center; justify-content: {{ t.justify }}; gap: 6px; width: 100%; height: 100%; padding: 0 9px; box-sizing: border-box; clip-path: polygon(7px 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%, 0 7px); background: {{ t.fill }}; color: {{ t.ink }};">
+                      <i class="{{ t.icon }}" style="font-size: 18px;"></i>
+                      <sc-if value="{{ t.hasBars }}" hint-placeholder-val="{{ false }}"><span style="display: flex; gap: 2px;"><sc-for list="{{ t.bars }}" as="b" hint-placeholder-count="3"><span style="width: 4px; height: 14px; background: {{ b.bg }}; box-shadow: inset 0 0 0 1px {{ b.edge }};"></span></sc-for></span></sc-if>
+                    </span>
+                  </span>
+                  <span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 13px; text-transform: uppercase; text-align: center; line-height: 1.15;">{{ t.nameTier }}</span>
+                  <span style="font-family: 'IBM Plex Mono'; font-size: 11px; color: #9aa8c0; text-align: center;">{{ t.count }}</span>
+                </button>
+              </sc-for>
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column;">
+            <div style="display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 18px; padding: 0 16px 8px; font-family: 'IBM Plex Mono'; font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: #9aa8c0; border-bottom: 1px solid #24324a;"><span>Mitglied</span><span>Abzeichen, verdiente zuerst</span></div>
+            <sc-for list="{{ members }}" as="m" hint-placeholder-count="4">
+              <div id="{{ m.anchor }}" style="display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 18px; align-items: center; padding: 10px 16px; border-bottom: 1px solid #1c2740;">
+                <span style="display: flex; align-items: center; gap: 12px;">
+                  <span style="width: 40px; height: 40px; border: 1px solid {{ m.color }}; display: grid; place-items: center; font-family: 'Chakra Petch'; font-weight: 700; font-size: 17px; color: {{ m.color }}; flex: none;">{{ m.ini }}</span>
+                  <span style="display: flex; flex-direction: column;"><span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 20px; text-transform: uppercase;">{{ m.name }}</span><span style="font-family: 'IBM Plex Mono'; font-size: 11px; color: #9aa8c0;">{{ m.summary }}</span></span>
+                </span>
+                <div style="display: flex; gap: 2px;">
+                  <sc-for list="{{ m.marks }}" as="t" hint-placeholder-count="9">
+                    <button aria-label="{{ t.aria }}" style="width: 106px; display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 4px 0; background: none; border: none; color: #dfe7f5; font: inherit; cursor: pointer;">
+                      <span style="width: 72px; height: 30px; clip-path: polygon(7px 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%, 0 7px); background: {{ t.edge }}; padding: 1px; box-sizing: border-box;">
+                        <span style="display: flex; align-items: center; justify-content: {{ t.justify }}; gap: 6px; width: 100%; height: 100%; padding: 0 8px; box-sizing: border-box; clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px); background: {{ t.fill }}; color: {{ t.ink }};">
+                          <i class="{{ t.icon }}" style="font-size: 17px;"></i>
+                          <sc-if value="{{ t.hasBars }}" hint-placeholder-val="{{ false }}"><span style="display: flex; gap: 2px;"><sc-for list="{{ t.bars }}" as="b" hint-placeholder-count="3"><span style="width: 4px; height: 13px; background: {{ b.bg }}; box-shadow: inset 0 0 0 1px {{ b.edge }};"></span></sc-for></span></sc-if>
+                        </span>
+                      </span>
+                      <span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 12px; text-transform: uppercase; text-align: center; line-height: 1.15;">{{ t.nameTier }}</span>
+                      <span style="font-family: 'IBM Plex Mono'; font-size: 11px; color: #9aa8c0;">{{ t.count }}</span>
+                    </button>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+      <div style="height: 40px; display: flex; align-items: center; gap: 14px; padding: 0 32px; border-top: 1px solid #24324a; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #9aa8c0;"><a href="#" style="color: #9aa8c0; min-height: 24px; display: inline-flex; align-items: center;">FAQ</a><a href="#" style="color: #9aa8c0; min-height: 24px; display: inline-flex; align-items: center;">Kontakt</a><a href="#" style="color: #9aa8c0; min-height: 24px; display: inline-flex; align-items: center;">Impressum</a><a href="#" style="color: #9aa8c0; min-height: 24px; display: inline-flex; align-items: center;">Datenschutz</a><a href="#" style="color: #9aa8c0; min-height: 24px; display: inline-flex; align-items: center;">Nutzungsbedingungen</a><span style="margin-left: auto;">Kein Tracking · EU-Hosting</span><img src="../../../public/icons/powered-by-bgg.png" alt="Powered by BGG" style="width: 96px; height: auto;"></div>
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 30px; align-items: flex-start;">
+    <div data-screen-label="B17.3 Pokale Telefon" style="display: flex; flex-direction: column; gap: 10px;">
+      <span style="font-family: 'IBM Plex Mono'; font-size: 12px; color: #9aa8c0;">B17.3 · Pokale 390: eine Spalte, Personen aufklappbar</span>
+      <div style="width: 390px; min-height: 1060px; position: relative; background: radial-gradient(120% 60% at 50% 0%, #10203a, #070b14 70%); border: 1px solid #24324a; display: flex; flex-direction: column;">
+        <div style="height: 52px; flex: none; display: flex; align-items: center; gap: 10px; padding: 0 16px; background: #0b1220; border-bottom: 1px solid #24324a;">
+          <span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 20px; text-transform: uppercase;">Pokale</span>
+          <span style="margin-left: auto; display: flex; gap: 6px; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .12em;"><a href="#" style="min-height: 32px; display: inline-flex; align-items: center; border: 1px solid #24324a; padding: 0 8px; color: #dfe7f5;">DE</a><a href="#" aria-label="Postfach" style="width: 32px; height: 32px; display: grid; place-items: center; border: 1px solid #24324a; color: #dfe7f5;"><i class="ti ti-mail"></i></a><a href="#" aria-label="Konto" style="width: 32px; height: 32px; display: grid; place-items: center; border: 1px solid #24324a; color: #dfe7f5;"><i class="ti ti-user"></i></a></span>
+        </div>
+        <div style="padding: 14px 16px 18px; display: flex; flex-direction: column; gap: 12px;">
+          <span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #9aa8c0;">↑ Rangliste und Bestmarken</span>
+          <span style="display: flex; align-items: baseline; gap: 10px;"><span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 26px; text-transform: uppercase;">Abzeichen</span><span style="margin-left: auto; font-family: 'IBM Plex Mono'; font-size: 11px; color: #9aa8c0;">16 verdient</span></span>
+          <div style="padding: 12px 6px; background: #0e1626; border: 1px solid #24324a; display: flex; flex-direction: column; gap: 8px;">
+            <span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 15px; text-transform: uppercase; padding: 0 8px;">Donnerstagsrunde <span style="font-family: 'IBM Plex Mono'; font-weight: 400; font-size: 11px; color: #9aa8c0;">3 von 9</span></span>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); row-gap: 6px;">
+              <sc-for list="{{ roundMarks }}" as="t" hint-placeholder-count="9">
+                <button aria-label="{{ t.aria }}" style="display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 4px 0; background: none; border: none; color: #dfe7f5; font: inherit; cursor: pointer;">
+                  <span style="width: 72px; height: 30px; clip-path: polygon(7px 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%, 0 7px); background: {{ t.edge }}; padding: 1px; box-sizing: border-box;">
+                    <span style="display: flex; align-items: center; justify-content: {{ t.justify }}; gap: 6px; width: 100%; height: 100%; padding: 0 8px; box-sizing: border-box; clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px); background: {{ t.fill }}; color: {{ t.ink }};">
+                      <i class="{{ t.icon }}" style="font-size: 17px;"></i>
+                      <sc-if value="{{ t.hasBars }}" hint-placeholder-val="{{ false }}"><span style="display: flex; gap: 2px;"><sc-for list="{{ t.bars }}" as="b" hint-placeholder-count="3"><span style="width: 4px; height: 13px; background: {{ b.bg }}; box-shadow: inset 0 0 0 1px {{ b.edge }};"></span></sc-for></span></sc-if>
+                    </span>
+                  </span>
+                  <span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 12px; text-transform: uppercase; text-align: center; line-height: 1.15;">{{ t.nameTier }}</span>
+                </button>
+              </sc-for>
+            </div>
+          </div>
+          <sc-for list="{{ phoneMembers }}" as="m" hint-placeholder-count="4">
+            <div style="background: #0e1626; border: 1px solid #24324a; display: flex; flex-direction: column;">
+              <button aria-expanded="{{ m.open }}" style="display: flex; align-items: center; gap: 10px; min-height: 58px; padding: 0 12px; background: none; border: none; color: #dfe7f5; font: inherit; text-align: left; cursor: pointer;">
+                <span style="width: 34px; height: 34px; border: 1px solid {{ m.color }}; display: grid; place-items: center; font-family: 'Chakra Petch'; font-weight: 700; font-size: 15px; color: {{ m.color }}; flex: none;">{{ m.ini }}</span>
+                <span style="display: flex; flex-direction: column;"><span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 17px; text-transform: uppercase;">{{ m.name }}</span><span style="font-family: 'IBM Plex Mono'; font-size: 11px; color: #9aa8c0;">{{ m.summary }}</span></span>
+                <span style="margin-left: auto; display: flex; gap: 3px;"><sc-for list="{{ m.peek }}" as="t" hint-placeholder-count="3"><span style="width: 26px; height: 18px; background: #35e0ff; color: #070b14; display: grid; place-items: center; clip-path: polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px);"><i class="{{ t.icon }}" style="font-size: 12px;"></i></span></sc-for></span>
+                <i class="{{ m.chev }}" style="font-size: 18px; color: #35e0ff;"></i>
+              </button>
+              <sc-if value="{{ m.isOpen }}" hint-placeholder-val="{{ false }}">
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); row-gap: 6px; padding: 8px 4px 12px; border-top: 1px solid #1c2740;">
+                  <sc-for list="{{ m.marks }}" as="t" hint-placeholder-count="9">
+                    <button aria-label="{{ t.aria }}" style="display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 4px 0 0; background: none; border: none; color: #dfe7f5; font: inherit; cursor: pointer;">
+                      <span style="width: 72px; height: 30px; clip-path: polygon(7px 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%, 0 7px); background: {{ t.edge }}; padding: 1px; box-sizing: border-box;">
+                        <span style="display: flex; align-items: center; justify-content: {{ t.justify }}; gap: 6px; width: 100%; height: 100%; padding: 0 8px; box-sizing: border-box; clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px); background: {{ t.fill }}; color: {{ t.ink }};">
+                          <i class="{{ t.icon }}" style="font-size: 17px;"></i>
+                          <sc-if value="{{ t.hasBars }}" hint-placeholder-val="{{ false }}"><span style="display: flex; gap: 2px;"><sc-for list="{{ t.bars }}" as="b" hint-placeholder-count="3"><span style="width: 4px; height: 13px; background: {{ b.bg }}; box-shadow: inset 0 0 0 1px {{ b.edge }};"></span></sc-for></span></sc-if>
+                        </span>
+                      </span>
+                      <span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 12px; text-transform: uppercase; text-align: center; line-height: 1.15;">{{ t.nameTier }}</span>
+                      <span style="font-family: 'IBM Plex Mono'; font-size: 11px; color: #9aa8c0;">{{ t.count }}</span>
+                    </button>
+                  </sc-for>
+                </div>
+              </sc-if>
+            </div>
+          </sc-for>
+        </div>
+        <div style="margin-top: auto; flex: none; display: flex; background: #0b1220; border-top: 1px solid #24324a;"><sc-for list="{{ dockPokale }}" as="d" hint-placeholder-count="4"><span style="flex: 1; min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; color: {{ d.ink }}; border-top: 2px solid {{ d.edge }};"><i class="ti {{ d.icon }}" style="font-size: 20px;"></i><span style="font-family: 'IBM Plex Mono'; font-size: 10px; letter-spacing: .08em; text-transform: uppercase;">{{ d.label }}</span></span></sc-for></div>
+      </div>
+    </div>
+
+    <div data-screen-label="B17.4 Tischkarte" style="display: flex; flex-direction: column; gap: 10px;">
+      <span style="font-family: 'IBM Plex Mono'; font-size: 12px; color: #9aa8c0;">B17.4 · Mitgliedsseite (Tischkarte): nur Verdientes, als Plakettenreihe unter den fünf Zahlen. Antippen öffnet Pokale › Abzeichen › Jonas</span>
+      <div style="width: 900px; box-sizing: border-box; padding: 24px 28px; background: #0e1626; border: 1px solid #24324a; display: flex; flex-direction: column; gap: 18px; position: relative; overflow: hidden;">
+        <span aria-hidden="true" style="position: absolute; right: 22px; top: -14px; font-family: 'Chakra Petch'; font-weight: 700; font-size: 150px; line-height: 1; color: rgba(107,179,224,.07);">JO</span>
+        <div style="display: flex; align-items: center; gap: 20px; position: relative;">
+          <span style="width: 88px; height: 88px; border: 1px solid #6bb3e0; display: grid; place-items: center; font-family: 'Chakra Petch'; font-weight: 700; font-size: 38px; color: #6bb3e0; background: conic-gradient(rgba(107,179,224,.22) 39%, transparent 0);">J</span>
+          <span style="display: flex; flex-direction: column; gap: 3px;"><span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 48px; line-height: 1; text-transform: uppercase;">Jonas</span><span style="font-family: 'IBM Plex Mono'; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #9aa8c0;">Mitglied seit 10/2025 · 22 von 23 Sessions</span></span>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; position: relative;">
+          <sc-for list="{{ figures }}" as="f" hint-placeholder-count="5">
+            <span style="display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; background: #0b1220; border: 1px solid #24324a;"><span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 28px; line-height: 1;">{{ f.value }}</span><span style="font-family: 'IBM Plex Mono'; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #9aa8c0;">{{ f.label }}</span></span>
+          </sc-for>
+        </div>
+        <a href="#abzeichen-jonas" style="position: relative; display: flex; align-items: center; gap: 16px; padding: 12px 14px; border: 1px solid #24324a; background: #0b1220; color: #dfe7f5; text-decoration: none;">
+          <span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #35e0ff; width: 124px; flex: none;">Abzeichen · 4</span>
+          <span style="display: flex; gap: 14px; flex-wrap: wrap;">
+            <sc-for list="{{ jonasEarned }}" as="t" hint-placeholder-count="4">
+              <span style="display: flex; align-items: center; gap: 8px;">
+                <span style="width: 64px; height: 28px; clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px); background: #35e0ff; color: #070b14; display: flex; align-items: center; justify-content: {{ t.justify }}; gap: 5px; padding: 0 8px; box-sizing: border-box;"><i class="{{ t.icon }}" style="font-size: 16px;"></i><sc-if value="{{ t.hasBars }}" hint-placeholder-val="{{ false }}"><span style="display: flex; gap: 2px;"><sc-for list="{{ t.bars }}" as="b" hint-placeholder-count="3"><span style="width: 4px; height: 12px; background: {{ b.bg }}; box-shadow: inset 0 0 0 1px {{ b.edge }};"></span></sc-for></span></sc-if></span>
+                <span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 14px; text-transform: uppercase;">{{ t.nameTier }}</span>
+              </span>
+            </sc-for>
+          </span>
+          <i class="ti ti-arrow-right" style="margin-left: auto; color: #35e0ff;"></i>
+        </a>
+        <span style="font-size: 13px; color: #b8c2d6; position: relative;">Darunter unverändert: die zwei Spielschachteln. Offene und geheime Einträge erscheinen hier nie.</span>
+      </div>
+      <div style="width: 390px; box-sizing: border-box; padding: 14px; background: #0e1626; border: 1px solid #24324a; display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
+        <span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #35e0ff;">390 · Kartenrand</span>
+        <a href="#abzeichen-jonas" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 12px; border: 1px solid #24324a; background: #0b1220; color: #dfe7f5; text-decoration: none;">
+          <sc-for list="{{ jonasEarned }}" as="t" hint-placeholder-count="4">
+            <span style="display: flex; align-items: center; gap: 8px; min-height: 32px;">
+              <span style="width: 58px; height: 28px; flex: none; clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px); background: #35e0ff; color: #070b14; display: flex; align-items: center; justify-content: {{ t.justify }}; gap: 4px; padding: 0 7px; box-sizing: border-box;"><i class="{{ t.icon }}" style="font-size: 15px;"></i><sc-if value="{{ t.hasBars }}" hint-placeholder-val="{{ false }}"><span style="display: flex; gap: 2px;"><sc-for list="{{ t.bars }}" as="b" hint-placeholder-count="3"><span style="width: 3px; height: 11px; background: {{ b.bg }}; box-shadow: inset 0 0 0 1px {{ b.edge }};"></span></sc-for></span></sc-if></span>
+              <span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 12px; text-transform: uppercase; line-height: 1.1;">{{ t.nameTier }}</span>
+            </span>
+          </sc-for>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div data-screen-label="B17.5 Ergebnis-Moment" style="display: flex; flex-direction: column; gap: 10px;">
+    <span style="font-family: 'IBM Plex Mono'; font-size: 12px; color: #9aa8c0;">B17.5 · Ergebnis: der HUD-Rahmen blitzt auf, dann gleitet die Plakette an ihren Platz. Endzustand 1440, darunter die Bilder und die Zeittafel</span>
+    <div style="width: 1440px; height: 880px; position: relative; overflow: hidden; background: radial-gradient(90% 60% at 50% 0%, #10203a, #070b14 70%); border: 1px solid #24324a; font-size: 15px; display: flex; flex-direction: column;">
+      <div style="flex: none; height: 52px; display: flex; align-items: center; gap: 22px; padding: 0 32px; background: #0b1220; border-bottom: 1px solid #24324a;">
+        <a href="#" style="display: flex; align-items: center; gap: 10px; font-family: 'Chakra Petch'; font-weight: 700; font-size: 18px; letter-spacing: .2em; text-transform: uppercase; color: #35e0ff;"><span style="width: 10px; height: 10px; background: #35e0ff; box-shadow: 0 0 10px #35e0ff;"></span>Spielwirbel</a>
+        <span style="margin-left: auto; display: flex; gap: 10px; align-items: center; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase;"><a href="#" style="min-height: 28px; display: inline-flex; align-items: center; border: 1px solid #24324a; padding: 0 10px; color: #dfe7f5;"><i class="ti ti-world" style="margin-right: 6px;"></i> DE</a><a href="#" style="min-height: 28px; display: inline-flex; align-items: center; border: 1px solid #24324a; padding: 0 10px; color: #dfe7f5;"><i class="ti ti-mail" style="margin-right: 6px;"></i><span style="white-space: nowrap;">Postfach 2</span></a><a href="#" style="min-height: 28px; display: inline-flex; align-items: center; border: 1px solid #24324a; padding: 0 10px; color: #dfe7f5;">Marco</a></span>
+      </div>
+      <div style="flex: none; height: 44px; display: flex; align-items: stretch; gap: 4px; padding: 0 32px; background: #0b1220; border-bottom: 1px solid #24324a;">
+        <sc-for list="{{ navNone }}" as="n" hint-placeholder-count="5"><a href="#" style="display: inline-flex; align-items: center; padding: 0 16px; border-bottom: 2px solid {{ n.edge }}; color: {{ n.ink }}; font-family: 'IBM Plex Mono'; font-size: 12px; letter-spacing: .14em; text-transform: uppercase;">{{ n.label }}</a></sc-for>
+        <span style="margin-left: auto; display: inline-flex; align-items: center; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #9aa8c0;">24.09.2026 · 3 Spiele · 4 Bewertungen</span>
+      </div>
+      <div style="flex: 1; padding: 22px 32px 26px; display: grid; grid-template-columns: 1fr 420px; gap: 22px; min-height: 0;">
+        <div style="position: relative; display: flex; flex-direction: column; gap: 14px; padding: 24px 28px; background: #0e1626; border: 1px solid #24324a;">
+          <span style="position: absolute; left: -1px; top: -1px; width: 14px; height: 14px; border-left: 2px solid #35e0ff; border-top: 2px solid #35e0ff;"></span><span style="position: absolute; right: -1px; bottom: -1px; width: 14px; height: 14px; border-right: 2px solid #35e0ff; border-bottom: 2px solid #35e0ff;"></span>
+          <span style="display: inline-flex; align-self: flex-start; align-items: center; gap: 10px; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: #4ade80; border: 1px solid #4ade80; padding: 6px 10px;"><span style="width: 8px; height: 8px; background: #4ade80;"></span>Gespielt</span>
+          <h1 style="margin: 0; font-family: 'Chakra Petch'; font-weight: 700; font-size: 52px; line-height: 1.02; text-transform: uppercase; letter-spacing: .02em;">„Kartographen“ wurde gespielt. <span style="color: #35e0ff;">Tim hat gewonnen.</span></h1>
+          <div style="display: flex; gap: 12px; align-items: stretch; flex-wrap: wrap;">
+            <sc-for list="{{ moment }}" as="t" hint-placeholder-count="2">
+              <button aria-label="{{ t.aria }}" style="position: relative; display: flex; align-items: center; gap: 14px; min-height: 62px; padding: 8px 18px 8px 12px; background: #0b1220; border: 1px solid #24324a; color: #dfe7f5; font: inherit; text-align: left; cursor: pointer;">
+                <span style="width: 76px; height: 32px; flex: none; clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px); background: #35e0ff; color: #070b14; display: flex; align-items: center; justify-content: center;"><i class="{{ t.icon }}" style="font-size: 19px;"></i></span>
+                <span style="display: flex; flex-direction: column; gap: 1px;"><span style="font-family: 'IBM Plex Mono'; font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: #9aa8c0;">{{ t.holder }}</span><span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 19px; text-transform: uppercase; line-height: 1.1;">{{ t.nameTier }}</span><span style="font-family: 'IBM Plex Mono'; font-size: 11px; color: #9aa8c0;">{{ t.cond }}</span></span>
+              </button>
+            </sc-for>
+            <a href="#abzeichen" style="display: inline-flex; align-items: center; gap: 8px; padding: 0 16px; min-height: 44px; border: 1px solid #24324a; font-family: 'IBM Plex Mono'; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #dfe7f5;">+1 weitere <i class="ti ti-arrow-right" style="color: #35e0ff;"></i></a>
+          </div>
+          <div style="display: grid; grid-template-columns: 40px 1fr 100px; gap: 16px; font-family: 'IBM Plex Mono'; font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: #9aa8c0; border-bottom: 1px solid #24324a; padding-bottom: 8px; margin-top: 6px;"><span>#</span><span>Spiel</span><span style="text-align: right;">Score</span></div>
+          <sc-for list="{{ tafel }}" as="r" hint-placeholder-count="3">
+            <div style="display: grid; grid-template-columns: 40px 1fr 100px; gap: 16px; align-items: center; padding: 10px 0; border-bottom: 1px solid #1c2740;">
+              <span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 26px; color: {{ r.rankColor }};">{{ r.place }}</span>
+              <span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 20px; text-transform: uppercase;">{{ r.title }}</span>
+              <span style="text-align: right; font-family: 'Chakra Petch'; font-weight: 700; font-size: 38px; line-height: 1; color: {{ r.sc }};">{{ r.score }}</span>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <div style="display: flex; flex-direction: column; gap: 4px; padding: 14px 16px; background: #0e1626; border: 1px solid #24324a;"><span style="font-family: 'IBM Plex Mono'; font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: #9aa8c0;">Sieger</span><span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 30px; line-height: 1; text-transform: uppercase; color: #35e0ff;">Tim</span><span style="font-family: 'IBM Plex Mono'; font-size: 11px; color: #b8c2d6;">3. Sieg · erster seit 11 Sessions</span></div>
+          <span style="font-size: 13px; color: #b8c2d6; line-height: 1.55;">Ab 0 ms bedienbar. Überschrift, Kacheln mit Text, Tabelle und „Noch eine Runde“ stehen sofort. Nur der Rahmen und die Plakette bewegen sich.</span>
+          <a href="#" style="margin-top: auto; display: flex; justify-content: space-between; align-items: center; min-height: 64px; padding: 0 22px; background: #ffb020; color: #070b14; box-shadow: 0 0 30px rgba(255,176,32,.3);"><span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 26px; letter-spacing: .08em; text-transform: uppercase; line-height: 1;">Noch eine Runde</span><i class="ti ti-arrow-right" style="font-size: 26px;"></i></a>
+        </div>
+      </div>
+    </div>
+    <div style="width: 1440px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-top: 8px;">
+      <sc-for list="{{ frames }}" as="f" hint-placeholder-count="4">
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #35e0ff;">{{ f.label }}</span>
+          <div style="position: relative; height: 150px; background: #0e1626; border: 1px solid #24324a; overflow: hidden;">
+            <span style="position: absolute; left: {{ f.bx }}; top: {{ f.by }}; width: {{ f.bw }}; height: {{ f.bh }}; opacity: {{ f.bOp }};">
+              <span style="position: absolute; left: 0; top: 0; width: 12px; height: 12px; border-left: 2px solid #35e0ff; border-top: 2px solid #35e0ff;"></span><span style="position: absolute; right: 0; top: 0; width: 12px; height: 12px; border-right: 2px solid #35e0ff; border-top: 2px solid #35e0ff;"></span><span style="position: absolute; left: 0; bottom: 0; width: 12px; height: 12px; border-left: 2px solid #35e0ff; border-bottom: 2px solid #35e0ff;"></span><span style="position: absolute; right: 0; bottom: 0; width: 12px; height: 12px; border-right: 2px solid #35e0ff; border-bottom: 2px solid #35e0ff;"></span>
+            </span>
+            <span style="position: absolute; left: 34px; top: 58px; width: 76px; height: 32px; clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px); background: #35e0ff; padding: 1px; box-sizing: border-box; opacity: {{ f.pOp }}; transform: translateX({{ f.px }});"><span style="display: grid; place-items: center; width: 100%; height: 100%; clip-path: polygon(7px 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%, 0 7px); background: {{ f.pFill }}; color: {{ f.pInk }};"><i class="ti ti-rocket" style="font-size: 19px;"></i></span></span>
+            <span style="position: absolute; left: 140px; top: 56px; display: flex; flex-direction: column;"><span style="font-family: 'IBM Plex Mono'; font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: #9aa8c0;">Tim</span><span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 18px; text-transform: uppercase;">Comeback</span></span>
+            <span style="position: absolute; right: 10px; bottom: 8px; font-family: 'IBM Plex Mono'; font-size: 11px; color: #9aa8c0;">{{ f.t }}</span>
+          </div>
+          <span style="font-size: 13px; color: #b8c2d6; line-height: 1.5;">{{ f.note }}</span>
+        </div>
+      </sc-for>
+    </div>
+    <div style="width: 1440px; box-sizing: border-box; background: #0e1626; border: 1px solid #24324a; margin-top: 8px;">
+      <div style="display: grid; grid-template-columns: 130px 260px 1fr 200px; gap: 16px; padding: 11px 20px; font-family: 'IBM Plex Mono'; font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: #9aa8c0; border-bottom: 1px solid #24324a;"><span>Zeit</span><span>Element</span><span>Bewegung</span><span>Reduced Motion</span></div>
+      <sc-for list="{{ timing }}" as="r" hint-placeholder-count="6">
+        <div style="display: grid; grid-template-columns: 130px 260px 1fr 200px; gap: 16px; padding: 10px 20px; border-bottom: 1px solid #1c2740; font-size: 14px; line-height: 1.45;">
+          <span style="font-family: 'IBM Plex Mono'; font-size: 13px; color: #35e0ff;">{{ r.t }}</span><span style="font-weight: 600;">{{ r.el }}</span><span style="color: #b8c2d6;">{{ r.move }}</span><span style="color: #9aa8c0;">{{ r.rm }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 30px; align-items: flex-start;">
+    <div data-screen-label="B17.6 Hub und Chronik" style="display: flex; flex-direction: column; gap: 10px;">
+      <span style="font-family: 'IBM Plex Mono'; font-size: 12px; color: #9aa8c0;">B17.6 · Pokale-Vorschau im Hub, eine Zeile mehr · Chronik mit einer Zeile je Abzeichen unter der Session</span>
+      <div style="width: 1000px; display: grid; grid-template-columns: 360px 1fr; gap: 24px; align-items: start;">
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <a href="#" style="display: flex; flex-direction: column; gap: 8px; padding: 16px 18px; background: #0e1626; border: 1px solid #24324a; color: #dfe7f5;">
+            <span style="display: flex; justify-content: space-between; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: #9aa8c0;"><span>Pokale</span><i class="ti ti-arrow-right" style="color: #35e0ff;"></i></span>
+            <sc-for list="{{ hubRows }}" as="h" hint-placeholder-count="3"><span style="display: grid; grid-template-columns: 24px 1fr auto; gap: 10px; align-items: center; min-height: 32px; font-size: 14px;"><span style="font-family: 'Chakra Petch'; font-weight: 700; color: {{ h.color }};">{{ h.rank }}</span><span>{{ h.name }}</span><span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 18px;">{{ h.wins }}</span></span></sc-for>
+            <span style="display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 10px; border: 1px solid #35e0ff; background: #0b1220;">
+              <span style="display: flex; gap: 3px;"><span style="width: 30px; height: 20px; background: #35e0ff; color: #070b14; display: grid; place-items: center; clip-path: polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px);"><i class="ti ti-users" style="font-size: 13px;"></i></span><span style="width: 30px; height: 20px; background: #35e0ff; color: #070b14; display: grid; place-items: center; clip-path: polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px);"><i class="ti ti-rocket" style="font-size: 13px;"></i></span></span>
+              <span style="font-size: 14px;">2 neue Abzeichen seit Nordlichter</span>
+            </span>
+          </a>
+          <span style="font-size: 13px; color: #b8c2d6; line-height: 1.5;">Wenn nichts neu ist, zeigt die Zeile die neueste Plakette: „Zuletzt: Teamgeist · Lea“. Ohne Session entfällt sie.</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          <sc-for list="{{ chronikRows }}" as="c" hint-placeholder-count="3">
+            <div style="display: flex; flex-direction: column;">
+              <a href="#" style="display: grid; grid-template-columns: 90px 56px 1fr 24px; gap: 14px; align-items: center; min-height: 58px; padding: 6px 14px; background: #0e1626; border: 1px solid #24324a; color: #dfe7f5;">
+                <span style="font-family: 'IBM Plex Mono'; font-size: 12px; color: #9aa8c0;">{{ c.date }}</span>
+                <span style="width: 56px; height: 42px; background: {{ c.cover }}; border: 1px solid #24324a;"></span>
+                <span style="display: flex; flex-direction: column;"><span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 18px; text-transform: uppercase;">{{ c.game }}</span><span style="font-family: 'IBM Plex Mono'; font-size: 11px; color: #9aa8c0;">{{ c.line }}</span></span>
+                <i class="ti ti-arrow-right" style="color: #35e0ff;"></i>
+              </a>
+              <sc-for list="{{ c.marks }}" as="t" hint-placeholder-count="1">
+                <span style="display: grid; grid-template-columns: 90px 56px 1fr auto; gap: 14px; align-items: center; min-height: 40px; padding: 0 14px; border: 1px solid #24324a; border-top: none; background: #0b1220;">
+                  <span></span>
+                  <span style="width: 44px; height: 22px; background: #35e0ff; color: #070b14; display: grid; place-items: center; clip-path: polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px);"><i class="{{ t.icon }}" style="font-size: 14px;"></i></span>
+                  <span style="font-size: 14px;">{{ t.text }}</span>
+                  <span style="font-family: 'IBM Plex Mono'; font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: #9aa8c0;">Abzeichen</span>
+                </span>
+              </sc-for>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+
+    <div data-screen-label="B17.7 Spielerkarte" style="display: flex; flex-direction: column; gap: 10px;">
+      <span style="font-family: 'IBM Plex Mono'; font-size: 12px; color: #9aa8c0;">B17.7 · Spielerkarte · Freundes-Feed</span>
+      <div style="width: 410px; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px;">
+        <div style="padding: 18px; background: #0e1626; border: 1px solid #24324a; display: flex; flex-direction: column; gap: 14px;">
+          <span style="display: flex; align-items: center; gap: 14px;">
+            <span style="width: 58px; height: 58px; border: 1px solid #a49cf0; display: grid; place-items: center; font-family: 'Chakra Petch'; font-weight: 700; font-size: 26px; color: #a49cf0; background: conic-gradient(rgba(164,156,240,.22) 27%, transparent 0);">L</span>
+            <span style="display: flex; flex-direction: column;"><span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 26px; text-transform: uppercase; line-height: 1;">Lea</span><span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #9aa8c0;">seit 03/2025 · 3 Runden · 31 Spiele</span></span>
+          </span>
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
+            <sc-for list="{{ account }}" as="t" hint-placeholder-count="4">
+              <button aria-label="{{ t.aria }}" style="display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 6px 10px; background: #0b1220; border: 1px solid #24324a; color: #dfe7f5; font: inherit; text-align: left; cursor: pointer;">
+                <span style="width: 64px; height: 28px; flex: none; clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px); background: {{ t.edge }}; padding: 1px; box-sizing: border-box;"><span style="display: flex; align-items: center; justify-content: {{ t.justify }}; gap: 5px; width: 100%; height: 100%; padding: 0 7px; box-sizing: border-box; clip-path: polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px); background: {{ t.fill }}; color: {{ t.ink }};"><i class="{{ t.icon }}" style="font-size: 15px;"></i><sc-if value="{{ t.hasBars }}" hint-placeholder-val="{{ false }}"><span style="display: flex; gap: 2px;"><sc-for list="{{ t.bars }}" as="b" hint-placeholder-count="3"><span style="width: 3px; height: 12px; background: {{ b.bg }}; box-shadow: inset 0 0 0 1px {{ b.edge }};"></span></sc-for></span></sc-if></span></span>
+                <span style="display: flex; flex-direction: column;"><span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 14px; text-transform: uppercase;">{{ t.nameTier }}</span><span style="font-family: 'IBM Plex Mono'; font-size: 11px; color: #9aa8c0;">{{ t.count }}</span></span>
+              </button>
+            </sc-for>
+          </div>
+        </div>
+        <span style="font-size: 13px; color: #b8c2d6; line-height: 1.5;">Sichtbar für dich und Freundschaften, nur Summen. Keine Runde und keine anderen Personen.</span>
+        <span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #35e0ff;">Freunde · Feed</span>
+        <div style="display: flex; align-items: center; gap: 12px; min-height: 58px; padding: 8px 14px; background: #0e1626; border: 1px solid #24324a;">
+          <span style="width: 34px; height: 34px; border: 1px solid #f08aa8; display: grid; place-items: center; font-family: 'Chakra Petch'; font-weight: 700; font-size: 15px; color: #f08aa8; flex: none;">M</span>
+          <span style="display: flex; flex-direction: column;"><span style="font-size: 14px; font-weight: 600;">Mia · Sessions 100</span><span style="font-family: 'IBM Plex Mono'; font-size: 11px; color: #9aa8c0;">Abzeichen · vor 2 Tagen</span></span>
+          <span style="margin-left: auto; width: 56px; height: 26px; background: #35e0ff; color: #070b14; display: flex; align-items: center; justify-content: space-between; padding: 0 7px; box-sizing: border-box; clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);"><i class="ti ti-cards" style="font-size: 14px;"></i><span style="display: flex; gap: 2px;"><span style="width: 3px; height: 11px; background: #070b14;"></span><span style="width: 3px; height: 11px; background: #070b14;"></span><span style="width: 3px; height: 11px; box-shadow: inset 0 0 0 1px #070b14;"></span></span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div data-screen-label="B17.8 Leer und Dichte" style="display: flex; flex-direction: column; gap: 10px;">
+    <span style="font-family: 'IBM Plex Mono'; font-size: 12px; color: #9aa8c0;">B17.8 · Familie Berger ohne Session · 12er-Runde mit 64 Abzeichen · ein Mitglied mit 14 Abzeichen auf Finnisch (späterer Katalog)</span>
+    <div style="display: flex; gap: 30px; align-items: flex-start;">
+      <div style="width: 390px; display: flex; flex-direction: column; gap: 14px;">
+        <div style="padding: 18px; background: #0e1626; border: 1px solid #24324a; display: flex; flex-direction: column; gap: 10px;">
+          <span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 24px; text-transform: uppercase;">Abzeichen</span>
+          <span style="font-size: 15px; line-height: 1.5;">Nach der ersten Session trägt Familie Berger hier ihre erste Plakette.</span>
+          <span style="font-family: 'IBM Plex Mono'; font-size: 11px; color: #9aa8c0; line-height: 1.5;">Eine Zeile, keine leeren Konturen. Im Hub gibt es keine Abzeichen-Zeile.</span>
+        </div>
+        <div style="padding: 14px; background: #0e1626; border: 1px solid #24324a; display: flex; flex-direction: column; gap: 10px;">
+          <span style="display: flex; align-items: center; gap: 10px;">
+            <span style="width: 34px; height: 34px; border: 1px solid #d07aa0; display: grid; place-items: center; font-family: 'Chakra Petch'; font-weight: 700; font-size: 15px; color: #d07aa0;">A</span>
+            <span style="display: flex; flex-direction: column;"><span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 17px; text-transform: uppercase;">Aleksanteri</span><span style="font-family: 'IBM Plex Mono'; font-size: 11px; color: #9aa8c0;">14 ansaittu</span></span>
+            <span style="margin-left: auto; font-family: 'IBM Plex Mono'; font-size: 11px; color: #9aa8c0;">fi · 390</span>
+          </span>
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); row-gap: 10px; column-gap: 4px; padding: 10px 4px; background: #0b1220; border: 1px solid #24324a;">
+            <sc-for list="{{ finnish }}" as="t" hint-placeholder-count="14">
+              <span style="display: flex; flex-direction: column; align-items: center; gap: 5px; min-width: 0;">
+                <span style="width: 64px; height: 26px; clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px); background: #35e0ff; color: #070b14; display: flex; align-items: center; justify-content: {{ t.justify }}; gap: 4px; padding: 0 7px; box-sizing: border-box;"><i class="{{ t.icon }}" style="font-size: 15px;"></i><sc-if value="{{ t.hasBars }}" hint-placeholder-val="{{ false }}"><span style="display: flex; gap: 2px;"><sc-for list="{{ t.bars }}" as="b" hint-placeholder-count="3"><span style="width: 3px; height: 11px; background: {{ b.bg }}; box-shadow: inset 0 0 0 1px {{ b.edge }};"></span></sc-for></span></sc-if></span>
+                <span lang="fi" style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 11px; text-transform: uppercase; line-height: 1.15; text-align: center; overflow-wrap: anywhere; hyphens: auto; padding: 0 2px;">{{ t.name }}</span>
+              </span>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+      <div style="width: 1020px; box-sizing: border-box; padding: 20px 22px; background: #0b1220; border: 1px solid #24324a; display: flex; flex-direction: column; gap: 12px;">
+        <span style="display: flex; align-items: baseline; gap: 12px;"><span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 26px; text-transform: uppercase;">Abzeichen</span><span style="font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #9aa8c0;">Spieleverein Hafen · 12 Mitglieder · 64 verdient</span><span style="margin-left: auto; font-size: 12px; color: #b8c2d6;">Ab 7 Personen je Zeile nur Verdientes, Offenes hinter „N offen“</span></span>
+        <div style="display: flex; gap: 6px; align-items: center; padding: 10px 14px; background: #0e1626; border: 1px solid #24324a;">
+          <sc-for list="{{ denseRound }}" as="t" hint-placeholder-count="9">
+            <span style="width: 48px; height: 24px; clip-path: polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px); background: {{ t.edge }}; padding: 1px; box-sizing: border-box;"><span style="display: grid; place-items: center; width: 100%; height: 100%; clip-path: polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px); background: {{ t.fill }}; color: {{ t.ink }};"><i class="{{ t.icon }}" style="font-size: 14px;"></i></span></span>
+          </sc-for>
+          <span style="margin-left: 8px; font-family: 'IBM Plex Mono'; font-size: 11px; color: #9aa8c0;">8 von 9 für die Runde</span>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 14px;">
+          <sc-for list="{{ denseMembers }}" as="m" hint-placeholder-count="12">
+            <div style="display: flex; align-items: center; gap: 8px; min-height: 52px; border-bottom: 1px solid #1c2740;">
+              <span style="width: 28px; height: 28px; border: 1px solid {{ m.color }}; display: grid; place-items: center; font-family: 'Chakra Petch'; font-weight: 700; font-size: 13px; color: {{ m.color }}; flex: none;">{{ m.ini }}</span>
+              <span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 13px; text-transform: uppercase; width: 92px; flex: none; overflow-wrap: anywhere;">{{ m.name }}</span>
+              <span style="display: flex; gap: 3px; flex-wrap: wrap; flex: 1; min-width: 0;"><sc-for list="{{ m.marks }}" as="t" hint-placeholder-count="5"><span style="width: 30px; height: 20px; background: #35e0ff; color: #070b14; display: grid; place-items: center; clip-path: polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px);"><i class="{{ t }}" style="font-size: 12px;"></i></span></sc-for></span>
+              <span style="flex: none; min-height: 26px; display: inline-flex; align-items: center; padding: 0 8px; border: 1px solid #6b7b96; font-family: 'IBM Plex Mono'; font-size: 11px; color: #9aa8c0;">{{ m.openLabel }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div data-screen-label="B17.9 Kontrast" style="display: flex; flex-direction: column; gap: 10px;">
+    <span style="font-family: 'IBM Plex Mono'; font-size: 12px; color: #9aa8c0;">B17.9 · Kontraste, einmal gerechnet (WCAG 2.2; Glyphen, Konturen und Balken ≥ 3:1, Text ≥ 4,5:1)</span>
+    <div style="width: 1440px; background: #0e1626; border: 1px solid #24324a;">
+      <div style="display: grid; grid-template-columns: 1fr 150px 150px 110px 110px; gap: 14px; padding: 11px 20px; font-family: 'IBM Plex Mono'; font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: #9aa8c0; border-bottom: 1px solid #24324a;"><span>Paar</span><span>Vordergrund</span><span>Grund</span><span style="text-align: right;">Wert</span><span style="text-align: right;">Soll</span></div>
+      <sc-for list="{{ contrast }}" as="c" hint-placeholder-count="10">
+        <div style="display: grid; grid-template-columns: 1fr 150px 150px 110px 110px; gap: 14px; align-items: center; padding: 9px 20px; border-bottom: 1px solid #1c2740; font-size: 14px;">
+          <span>{{ c.what }}</span>
+          <span style="display: flex; align-items: center; gap: 8px; font-family: 'IBM Plex Mono'; font-size: 12px;"><span style="width: 16px; height: 16px; background: {{ c.fg }}; box-shadow: inset 0 0 0 1px #24324a;"></span>{{ c.fg }}</span>
+          <span style="display: flex; align-items: center; gap: 8px; font-family: 'IBM Plex Mono'; font-size: 12px;"><span style="width: 16px; height: 16px; background: {{ c.bg }}; box-shadow: inset 0 0 0 1px #24324a;"></span>{{ c.bg }}</span>
+          <span style="text-align: right; font-family: 'Chakra Petch'; font-weight: 700; font-size: 17px;">{{ c.ratio }}</span><span style="text-align: right; font-family: 'IBM Plex Mono'; font-size: 12px;">{{ c.need }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div data-screen-label="B17.10 Übergabe" style="max-width: 1240px; background: #0e1626; border: 1px solid #24324a; border-left: 3px solid #35e0ff; padding: 22px 26px; display: flex; flex-direction: column; gap: 12px;">
+    <span style="font-family: 'Chakra Petch'; font-weight: 700; font-size: 22px; text-transform: uppercase;">Was B17 entscheidet</span>
+    <span style="font-size: 15px; line-height: 1.6; color: #b8c2d6; max-width: 110ch; text-wrap: pretty;"><strong style="color: #dfe7f5;">Form:</strong> eine Plakette mit abgeschrägten Ecken, links die Glyphe, rechts die Stufenbalken. Verdient ist sie voll in #35e0ff mit dunkler Glyphe. Unterwegs ist sie eine cyan Kontur mit Ladebalken im Inneren und der Zahl daneben. Offen ist sie eine graue Kontur, geheim eine geschwärzte Kontur mit Schloss-Fragezeichen. <strong style="color: #dfe7f5;">Stufen:</strong> Ein gefüllter Balken steht für jede erreichte Stufe, ein hohler für jede noch offene. Die Ziffer steht zusätzlich im Namen („Stammgast 10“), damit die Stufe nie nur an der Form hängt. <strong style="color: #dfe7f5;">Mitgliedsfarbe</strong> gibt es nur am Initialenrahmen. <strong style="color: #dfe7f5;">Platz:</strong> Pokale › Abzeichen im HUD-Rahmen unter Rangliste und Bestmarken. Die Runde hat eine eigene Zeile, darunter folgt die Dienstliste in Pokale-Reihenfolge (auf dem Telefon aufklappbar). Die Mitgliedsseite trägt die Reihe unter den fünf Zahlen. Das Handover schlägt „unter dem Namen“ vor, §3 legt aber „unter den fünf Zahlen“ fest, und §3 gilt.</span>
+    <span style="font-size: 15px; line-height: 1.6; color: #b8c2d6; max-width: 110ch;"><strong style="color: #dfe7f5;">K17-Markup:</strong> dasselbe wie in T17. B17 setzt <code>clip-path</code> auf <code>.badge__mark</code> und rendert die Stufen als <code>.badge__tier</code> mit einem <code>span</code> je Stufe (<code>data-on</code>).</span>
+    <span style="font-size: 14px; line-height: 1.6; color: #9aa8c0; max-width: 110ch;">Offene Punkte wie in T17 (Jonas 22 / 25, vier Stufen, finnische Platzhalter). Nicht übernommen: „Verdienste“ als Panel-Titel, weil das die Form zum Label machen würde.</span>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1540}}">
+class Component extends DCLogic {
+  renderVals() {
+    const CY = '#35e0ff', MU = '#9aa8c0', AM = '#ffb020', GR = '#4ade80';
+    const P = ['#f08a5d', '#6bb3e0', '#a49cf0', '#e0a03c'];
+    const C = { marco: P[0], jonas: P[1], lea: P[2], tim: P[3] };
+    const CAT = {
+      erster: ['crown', 'Erster Sieg', 'Die erste Session gewonnen'],
+      stamm: ['star', 'Stammgast', 'Bei 10 · 25 · 50 · 100 Sessions dabei', 4],
+      serie: ['bolt', 'Serienheld', '3 Sessions in Folge gewonnen'],
+      viel: ['dice-5', 'Vielseitig', 'Mit 3 · 6 · 10 verschiedenen Spielen gewonnen', 3],
+      alles: ['checkbox', 'Alles gespielt', 'Jedes Spiel im Regal mindestens einmal gespielt'],
+      team: ['users', 'Teamgeist', 'Als Teil eines Teams gewonnen'],
+      gast: ['home-heart', 'Gastgeber', 'Die eigene Schachtel kam 10-mal auf den Tisch'],
+      comeback: ['rocket', 'Comeback', 'Gewonnen nach 10 Sessions ohne Sieg'],
+      entdecker: ['world-search', 'Entdecker', '5 neue Spiele in ihrer ersten Woche mitgespielt'],
+      gegr: ['flag', 'Gegründet', 'Die erste Session beendet'],
+      sess: ['calendar', 'Sessions', '10 · 50 · 100 · 250 Sessions beendet', 4],
+      regal: ['archive', 'Regal', '25 · 50 · 100 Spiele im Regal', 3],
+      einst: ['heart', 'Einstimmig', 'Alle gaben dem Siegerspiel eine 5'],
+      unent: ['scale', 'Unentschieden', 'Eine Abstimmung endete gleichauf'],
+      gross: ['confetti', 'Große Runde', '8 oder mehr am Tisch, Gäste zählen mit'],
+      durch: ['circle-check', 'Durchgespielt', 'Das erste Spiel als durchgespielt markiert'],
+      dauer: ['flame', 'Dauerbrenner', 'Ein Spiel 10-mal gespielt'],
+      rueck: ['share', 'Rückblick geteilt', 'Den ersten Rückblick geteilt'],
+      csess: ['cards', 'Sessions', '25 · 100 · 500 Sessions in allen Runden', 3],
+      csieg: ['trophy', 'Siege', '10 · 50 Siege in allen Runden', 2],
+      crund: ['world', 'Runden', 'In 2 · 5 Runden dabei', 2],
+      cjahr: ['hourglass', 'Jahre', '1 · 2 · 3 Jahre bei Spielwirbel', 3],
+    };
+    const T = (key, o = {}) => {
+      const [g, name, cond, tiers] = CAT[key];
+      const st = o.st || 'earned';
+      const earned = st === 'earned', prog = st === 'progress', secret = st === 'secret';
+      const pct = o.at ? Math.round(o.at[0] / o.at[1] * 100) : 0;
+      let line = cond;
+      if (earned && o.date) line = o.date + (o.at ? ` · ${o.at[0]} / ${o.at[1]} zur nächsten Stufe` : '');
+      if (prog) line = `${o.at[0]} / ${o.at[1]} · ${cond}`;
+      if (secret) line = 'Wird sichtbar, sobald es jemand verdient';
+      const nm = secret ? 'Geheim' : name;
+      const lvl = o.lvl || 0;
+      const onInk = earned ? '#070b14' : CY;
+      const bars = tiers && !secret ? Array.from({ length: tiers }, (_, i) => ({
+        bg: i < lvl ? onInk : 'transparent', edge: earned ? '#070b14' : (prog ? CY : '#6b7b96'),
+      })) : [];
+      return {
+        icon: 'ti ti-' + (secret ? 'lock-question' : g), name: nm, cond, line,
+        count: o.at ? `${o.at[0]} / ${o.at[1]}` : (o.short || ''),
+        nameTier: o.tier && !secret ? `${name} ${o.tier}` : nm, isNew: !!o.isNew,
+        bars, hasBars: bars.length > 0, justify: bars.length ? 'space-between' : 'center',
+        edge: earned || prog ? CY : '#6b7b96',
+        fill: earned ? CY : prog ? `linear-gradient(90deg, rgba(53,224,255,.24) ${pct}%, #0e1626 ${pct}%)` : secret ? 'repeating-linear-gradient(135deg, #24324a 0 4px, #0e1626 4px 8px)' : '#0e1626',
+        ink: earned ? '#070b14' : prog ? CY : MU,
+        aria: `${nm}${o.tier ? ' ' + o.tier : ''}, ${earned ? 'verdient' : prog ? 'unterwegs' : secret ? 'geheim' : 'offen'}. ${line}`,
+      };
+    };
+    const states = [
+      { label: 'Verdient', hint: 'voll, datiert', t: T('erster', { date: '11/2025 · Moorgeister' }) },
+      { label: 'Verdient mit Stufe', hint: '1 von 4 Balken gefüllt', t: T('stamm', { tier: '10', lvl: 1, at: [22, 25], date: '01/2026' }) },
+      { label: 'Unterwegs', hint: 'Kontur mit Ladebalken und Zahl', t: T('gast', { st: 'progress', at: [7, 10] }) },
+      { label: 'Offen', hint: 'graue Kontur, Bedingung sichtbar', t: T('team', { st: 'locked' }) },
+      { label: 'Geheim', hint: 'geschwärzt, keine Bedingung', t: T('comeback', { st: 'secret' }) },
+      { label: 'Neu (Endzustand)', hint: '„Neu“ bis zum nächsten Öffnen', t: T('comeback', { date: '09/2026 · Kartographen', isNew: true }) },
+    ];
+    const compactRow = [T('erster', { short: '11/2025' }), T('stamm', { tier: '10', lvl: 1, at: [22, 25] }), T('gast', { st: 'progress', at: [7, 10] }), T('team', { st: 'locked' }), T('comeback', { st: 'secret' })];
+    const roundMarks = [
+      T('gegr', { short: '10/2025' }), T('sess', { tier: '10', lvl: 1, at: [23, 50] }), T('unent', { short: '08/2026' }),
+      T('regal', { st: 'progress', at: [12, 25] }), Object.assign(T('dauer', { st: 'progress', at: [7, 10] }), { count: 'Nordlichter 7 / 10' }),
+      T('gross', { st: 'locked' }), T('durch', { st: 'locked' }), T('rueck', { st: 'locked' }), T('einst', { st: 'secret' }),
+    ];
+    const memberDefs = [
+      ['Jonas', C.jonas, '4 verdient · 3 lädt', [
+        T('erster', { short: '10/2025' }), T('stamm', { tier: '10', lvl: 1, at: [22, 25] }), T('serie', { short: '07/2026' }), T('viel', { tier: '3', lvl: 1, at: [5, 6] }),
+        T('gast', { st: 'progress', at: [7, 10] }), T('alles', { st: 'progress', at: [10, 12] }), T('entdecker', { st: 'progress', at: [2, 5] }),
+        T('team', { st: 'locked' }), T('comeback', { st: 'secret' })]],
+      ['Lea', C.lea, '3 verdient · 4 lädt', [
+        T('erster', { short: '11/2025' }), T('stamm', { tier: '10', lvl: 1, at: [23, 25] }), T('team', { short: 'neu' }),
+        T('viel', { st: 'progress', at: [2, 3] }), T('alles', { st: 'progress', at: [9, 12] }), T('gast', { st: 'progress', at: [4, 10] }), T('entdecker', { st: 'progress', at: [1, 5] }),
+        T('serie', { st: 'locked' }), T('comeback', { st: 'secret' })]],
+      ['Marco', C.marco, '3 verdient · 2 lädt', [
+        T('erster', { short: '10/2025' }), T('stamm', { tier: '10', lvl: 1, at: [20, 25] }), T('viel', { tier: '3', lvl: 1, at: [3, 6] }),
+        T('gast', { st: 'progress', at: [2, 10] }), T('alles', { st: 'progress', at: [8, 12] }),
+        T('serie', { st: 'locked' }), T('team', { st: 'locked' }), T('entdecker', { st: 'locked' }), T('comeback', { st: 'secret' })]],
+      ['Tim', C.tim, '2 verdient · 2 lädt', [
+        T('erster', { short: '02/2026' }), T('stamm', { tier: '10', lvl: 1, at: [18, 25] }),
+        T('viel', { st: 'progress', at: [2, 3] }), T('alles', { st: 'progress', at: [7, 12] }),
+        T('serie', { st: 'locked' }), T('team', { st: 'locked' }), T('gast', { st: 'locked' }), T('entdecker', { st: 'locked' }), T('comeback', { st: 'secret' })]],
+    ];
+    const members = memberDefs.map(([name, color, summary, marks]) => ({ name, color, summary, marks, ini: name.slice(0, 1), anchor: 'abzeichen-' + name.toLowerCase() }));
+    const phoneMembers = members.map((m, i) => Object.assign({}, m, {
+      isOpen: i === 0, open: i === 0 ? 'true' : 'false', chev: i === 0 ? 'ti ti-chevron-down' : 'ti ti-chevron-right',
+      peek: m.marks.filter((t) => t.fill === CY).slice(0, 3),
+    }));
+    const awards = [
+      { title: 'Meistgespielt', value: 'Nordlichter · 4×' }, { title: 'Bestbewertet', value: 'Nordlichter · 4,8' },
+      { title: 'Siegesserie', value: 'Jonas · 3' }, { title: 'Staubfänger', value: 'Rost & Regen' },
+    ];
+    const nav = (active) => ['Start', 'Regal', 'Chronik', 'Pokale', 'Einstellungen'].map((label) => ({ label, ink: label === active ? '#dfe7f5' : MU, edge: label === active ? CY : 'transparent' }));
+    const dock = (active) => [['Start', 'ti-layout-grid'], ['Regal', 'ti-cards'], ['Chronik', 'ti-history'], ['Pokale', 'ti-trophy']]
+      .map(([label, icon]) => ({ label, icon, ink: label === active ? CY : MU, edge: label === active ? CY : 'transparent' }));
+    const figures = [{ value: '9', label: 'Siege' }, { value: '41 %', label: 'Siegquote' }, { value: '22', label: 'Sessions' }, { value: '+7,0', label: 'Siegwertung' }, { value: '4,3', label: 'Ø Schub' }];
+    const jonasEarned = members[0].marks.filter((t) => t.fill === CY);
+    const moment = [
+      Object.assign(T('comeback'), { holder: 'Tim', cond: 'Gewonnen nach 10 Sessions ohne Sieg', aria: 'Tim, Comeback, neu verdient' }),
+      Object.assign(T('dauer'), { holder: 'Donnerstagsrunde', cond: 'Kartographen 10-mal gespielt', aria: 'Donnerstagsrunde, Dauerbrenner, neu verdient' }),
+    ];
+    const tafel = [
+      { place: '1', title: 'Kartographen', score: '4,4', rankColor: CY, sc: CY },
+      { place: '2', title: 'Nordlichter', score: '4,1', rankColor: MU, sc: CY },
+      { place: '3', title: 'Salzwiesen', score: '3,2', rankColor: MU, sc: AM },
+    ];
+    const frames = [
+      { label: 'Anfang · 300 ms', t: 't = 300', bx: '14px', by: '38px', bw: '116px', bh: '72px', bOp: 1, pOp: 1, px: '0px', pFill: '#0e1626', pInk: CY, note: 'Der Rahmen erscheint weit um die Stelle, dazu die leere Kontur. Text und Tabelle stehen schon.' },
+      { label: 'Mitte · 480 ms', t: 't = 480', bx: '26px', by: '50px', bw: '92px', bh: '48px', bOp: 1, pOp: 1, px: '16px', pFill: CY, pInk: '#070b14', note: 'Der Rahmen zieht sich auf die Plakette zusammen. Die volle Plakette gleitet von rechts ein.' },
+      { label: 'Ende · 840 ms', t: 't = 840', bx: '26px', by: '50px', bw: '92px', bh: '48px', bOp: 0, pOp: 1, px: '0px', pFill: CY, pInk: '#070b14', note: 'Die Plakette sitzt, der Rahmen ist weg. Die zweite folgt 140 ms später.' },
+      { label: 'Reduced Motion', t: 'sofort', bx: '26px', by: '50px', bw: '92px', bh: '48px', bOp: 0, pOp: 1, px: '0px', pFill: CY, pInk: '#070b14', note: 'Die Plakette sitzt ab 0 ms. Kein Rahmen, kein Gleiten.' },
+    ];
+    const timing = [
+      { t: '0 ms', el: 'Überschrift, Kacheln mit Text, Tabelle, „Noch eine Runde“', move: 'Stehen sofort, bedienbar. Die Plakette ist als leere Kontur da.', rm: 'Plakette voll' },
+      { t: '300 ms', el: 'HUD-Rahmen 1', move: 'Vier Ecken, scale 1,3 → 1, opacity 0 → 1, 180 ms, steps(3) für das Flackern.', rm: 'entfällt' },
+      { t: '480 ms', el: 'Plakette 1', move: 'Füllung gleitet translateX 16 px → 0, 200 ms, cubic-bezier(.2,.8,.3,1).', rm: 'voll ab 0 ms' },
+      { t: '680 ms', el: 'HUD-Rahmen 1', move: 'opacity 1 → 0, 160 ms linear.', rm: 'entfällt' },
+      { t: '+140 ms', el: 'Plakette 2', move: 'Wie Plakette 1. Höchstens zwei.', rm: 'voll ab 0 ms' },
+      { t: '980 ms', el: 'Ende', move: 'Nichts läuft weiter. Kein Glühen, keine Schleife, keine Bewegung auf Text.', rm: 'gleich' },
+    ];
+    const hubRows = [{ rank: '1', name: 'Jonas', wins: '9', color: C.jonas }, { rank: '2', name: 'Lea', wins: '7', color: C.lea }, { rank: '3', name: 'Marco', wins: '5', color: C.marco }];
+    const cover = (h) => `linear-gradient(160deg, oklch(.55 .12 ${h}), oklch(.3 .1 ${h + 30}))`;
+    const chronikRows = [
+      { date: '24.09.2026', game: 'Kartographen', line: 'Tim hat gewonnen · 4 dabei', cover: cover(150), marks: [{ icon: 'ti ti-rocket', text: 'Tim · Comeback' }, { icon: 'ti ti-flame', text: 'Donnerstagsrunde · Dauerbrenner' }, { icon: 'ti ti-star', text: 'Lea · Stammgast 25' }] },
+      { date: '14.09.2026', game: 'Nordlichter', line: 'Team Lea & Marco hat gewonnen', cover: cover(200), marks: [{ icon: 'ti ti-users', text: 'Lea · Teamgeist' }] },
+      { date: '03.09.2026', game: 'Moorgeister', line: 'Lea hat gewonnen · 3 dabei', cover: cover(290), marks: [] },
+    ];
+    const account = [T('csess', { tier: '25', lvl: 1, at: [41, 100] }), T('csieg', { tier: '10', lvl: 1, at: [11, 50] }), T('crund', { tier: '2', lvl: 1, at: [3, 5] }), T('cjahr', { tier: '1', lvl: 1, short: 'seit 03/2025' })];
+    const fi = [['crown', 'Ensimmäinen voitto'], ['star', 'Kanta-asiakas 50', 3, 4], ['bolt', 'Voittoputki'], ['dice-5', 'Monipuolinen 10', 3, 3], ['checkbox', 'Kaikki pelattu'], ['users', 'Joukkuehenki'], ['home-heart', 'Isäntä'], ['rocket', 'Paluu'], ['world-search', 'Löytöretkeilijä'], ['heart', 'Ensimmäinen valinta'], ['calendar', 'Koko vuosi'], ['layout-grid', 'Kaksi pöytää'], ['sparkles', 'Yllätysvoitto'], ['medal', 'Pöydän kunkku']];
+    const finnish = fi.map(([g, name, lvl, tiers]) => {
+      const bars = tiers ? Array.from({ length: tiers }, (_, i) => ({ bg: i < lvl ? '#070b14' : 'transparent', edge: '#070b14' })) : [];
+      return { icon: 'ti ti-' + g, name, bars, hasBars: bars.length > 0, justify: bars.length ? 'space-between' : 'center' };
+    });
+    const denseRound = ['flag', 'calendar', 'archive', 'scale', 'confetti', 'circle-check', 'flame', 'share'].map((g) => ({ icon: 'ti ti-' + g, edge: CY, fill: CY, ink: '#070b14' }))
+      .concat([{ icon: 'ti ti-lock-question', edge: '#6b7b96', fill: 'repeating-linear-gradient(135deg, #24324a 0 4px, #0e1626 4px 8px)', ink: MU }]);
+    const pal = ['#f08a5d', '#6bb3e0', '#a49cf0', '#e0a03c', '#f08aa8', '#6fa8dc', '#9ccf5a', '#d07aa0'];
+    const glyphs = ['ti ti-crown', 'ti ti-star', 'ti ti-dice-5', 'ti ti-bolt', 'ti ti-users', 'ti ti-checkbox', 'ti ti-home-heart'];
+    const denseMembers = [['Aleksanteri', 7], ['Henrike', 6], ['Bo', 6], ['Constantin', 5], ['Dilara', 5], ['Emil', 5], ['Friederike', 4], ['Gül', 4], ['Hannes', 4], ['Ines', 3], ['Jakob', 3], ['Kaja', 2]]
+      .map(([name, n], i) => ({ name, color: pal[i % 8], ini: name.slice(0, 1), marks: glyphs.slice(0, n), openLabel: (9 - n) + ' offen' }));
+    const contrast = [
+      { what: 'Glyphe und Balken auf voller Plakette', fg: '#070b14', bg: '#35e0ff', ratio: '12,43', need: '3:1' },
+      { what: 'Cyan-Kontur und Glyphe (unterwegs) auf Paneel', fg: '#35e0ff', bg: '#0e1626', ratio: '11,41', need: '3:1' },
+      { what: 'Cyan-Glyphe über Ladebalken (dichteste Stelle)', fg: '#35e0ff', bg: '#17233a', ratio: '9,91', need: '3:1' },
+      { what: 'Graue Kontur (offen, geheim) auf Paneel', fg: '#6b7b96', bg: '#0e1626', ratio: '4,22', need: '3:1' },
+      { what: 'Glyphe offen / geheim über Schraffur', fg: '#9aa8c0', bg: '#24324a', ratio: '5,36', need: '3:1' },
+      { what: 'Name auf Paneel', fg: '#dfe7f5', bg: '#0e1626', ratio: '14,54', need: '4,5:1' },
+      { what: 'Bedingung / Zahl (Mono) auf Paneel', fg: '#9aa8c0', bg: '#0e1626', ratio: '7,52', need: '4,5:1' },
+      { what: 'Fließtext auf Paneel', fg: '#b8c2d6', bg: '#0e1626', ratio: '10,10', need: '4,5:1' },
+      { what: '„Neu“ auf Amber', fg: '#070b14', bg: '#ffb020', ratio: '10,76', need: '4,5:1' },
+      { what: 'Bedingung auf dunklem Paneel', fg: '#9aa8c0', bg: '#0b1220', ratio: '7,79', need: '4,5:1' },
+    ];
+    return {
+      states, compactRow, roundMarks, members, phoneMembers, awards,
+      navPokale: nav('Pokale'), navNone: nav(''), dockPokale: dock('Pokale'),
+      figures, jonasEarned, moment, tafel, frames, timing, hubRows, chronikRows, account, finnish, denseRound, denseMembers, contrast,
+    };
+  }
+}
+</script>
+</body>
+</html>
