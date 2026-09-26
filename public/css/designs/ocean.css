@@ -5532,21 +5532,6 @@
   color: var(--ink-soft);
   font-variant-numeric: tabular-nums;
 }
-/* The tier: a blue pill with the digit at the shell's lower right (O17.1). */
-:root[data-design="ocean"]:not([data-scheme="dark"]) .badge__tier {
-  z-index: 1;
-  top: calc(var(--o-top) + var(--o-mark, 52px) - 15px);
-  right: auto;
-  left: calc(50% + var(--o-mark, 52px) / 2 - 16px);
-  box-sizing: border-box;
-  min-width: 22px;
-  height: 18px;
-  padding: 0 5px;
-  background: var(--brand);
-  color: var(--on-accent);
-  line-height: 18px;
-  font-variant-numeric: tabular-nums;
-}
 /* „Neu" on the sun, at the shell's upper left (O17.1 „Neu (Endzustand)"). */
 :root[data-design="ocean"]:not([data-scheme="dark"]) .badge__new {
   z-index: 1;
@@ -5943,10 +5928,6 @@
   grid-row: 3;
   grid-column: 2;
 }
-:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-moment .badge__tier {
-  top: 42px;
-  left: 42px;
-}
 /* Everything in the moment is new; the aria-label still says so. */
 :root[data-design="ocean"]:not([data-scheme="dark"]) .badge-moment .badge__new { display: none; }
 :root[data-design="ocean"]:not([data-scheme="dark"]) .badge-moment__more {
@@ -6053,8 +6034,8 @@
 }
 
 /* --- The Tischkarte (O17.4): the earned string under the figures ------------
-   Earned only (K17), so every mark is a bare pearl: no shell, no ring, no tier
-   pill — the name beside it carries the tier („Stammgast 10"). */
+   Earned only (K17), so every mark is a bare pearl: no shell, no ring
+   — the name beside it carries the tier („Stammgast 10"). */
 :root[data-design="ocean"]:not([data-scheme="dark"]) .member-card__badges {
   --o-mark: 44px;
   --o-ring: 0px;
@@ -6084,8 +6065,7 @@
   background: none;
 }
 :root[data-design="ocean"]:not([data-scheme="dark"]) .badge-grid--compact .badge__mark::before,
-:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-grid--compact .badge__mark::after,
-:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-grid--compact .badge__tier { display: none; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-grid--compact .badge__mark::after { display: none; }
 :root[data-design="ocean"]:not([data-scheme="dark"]) .badge-grid--compact .badge__mark > .ti { margin-top: 0; }
 :root[data-design="ocean"]:not([data-scheme="dark"]) .badge-grid--compact .badge__name { display: block; }
 @media (min-width: 860px) {
