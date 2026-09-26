@@ -784,8 +784,9 @@ What the app does, in detail. For a short overview see the
   and are reportable from the profile and from a feed tile.
 - **Design (per user)** – *Der Tisch by default, Klassisch one tap away*
   (issues #1184, #1186, #1202). A design is the look the whole app wears **for
-  you** — not for the round. Two are live: **Der Tisch** — dark felt, brass and
-  paper cards, as if everything lay on the games table — and **Klassisch**, the
+  you** — not for the round. Three are live: **Der Tisch** — dark felt, brass and
+  paper cards, as if everything lay on the games table — **Ocean** (#1222), a
+  light, water-blue design with rounded forms, and **Klassisch**, the
   look the app started with, which stays selectable for good. Since the flip
   (#1202) Der Tisch is what every account wears until it chooses, and what a
   logged-out visitor sees (landing, sign-in, FAQ, legal pages). An account that

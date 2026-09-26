@@ -47,6 +47,88 @@
 // AFTER, which is the exact unearned interruption this design exists to avoid.
 const NEWS = [
   /*
+   * #1222, Ocean goes live. A capability that did not exist: a second design
+   * to choose besides Der Tisch and Klassisch. Dated the day after the saved
+   * filters' entry, because an equal date would leave every account that has
+   * read that one without the dot. It says where to find it, since nobody is
+   * moved into it — the first-start chooser is deliberately NOT asked again.
+   */
+  {
+    revision: '2026-09-27',
+    kind: 'new',
+    de: {
+      title: 'Ocean — ein helles Design zur Wahl',
+      body: 'Neben „Der Tisch" und „Klassisch" gibt es jetzt „Ocean": hell, '
+        + 'wasserblau und mit runden Formen, als läge alles am Strand. Alles '
+        + 'bleibt an derselben Stelle — Regal, Chronik, Pokale, Session wirbeln. '
+        + 'Wählen kannst du es jederzeit im Konto. Das Design gilt nur für dich; '
+        + 'alle anderen in der Runde sehen weiter ihr eigenes.',
+    },
+    en: {
+      title: 'Ocean — a light design to choose',
+      body: 'Besides „The Table" and „Classic" there is now „Ocean": light, '
+        + 'water-blue and rounded, as if everything lay on the beach. Everything '
+        + 'stays where it was — Shelf, History, Trophies, Start session. Choose '
+        + 'it any time in your account. The design is only yours; everyone else '
+        + 'in the round keeps seeing their own.',
+    },
+    es: {
+      title: 'Océano: un diseño claro para elegir',
+      body: 'Además de «La mesa» y «Clásico» ahora está «Océano»: claro, azul '
+        + 'agua y de formas redondeadas, como si todo estuviera en la playa. Todo '
+        + 'sigue en su sitio: Estantería, Historial, Trofeos, Sortear sesión. '
+        + 'Puedes elegirlo cuando quieras en tu cuenta. El diseño es solo tuyo; '
+        + 'los demás del grupo siguen viendo el suyo.',
+    },
+    fr: {
+      title: 'Océan — un design clair au choix',
+      body: 'À côté de « La table » et « Classique », il y a désormais « Océan » : '
+        + 'clair, bleu d\'eau et tout en rondeurs, comme si tout était posé sur la '
+        + 'plage. Tout reste à sa place — Étagère, Historique, Trophées, Démarrer '
+        + 'une session. Tu peux le choisir quand tu veux dans ton compte. Le design '
+        + 'n\'est que le tien ; les autres du groupe gardent le leur.',
+    },
+    it: {
+      title: 'Oceano: un design chiaro da scegliere',
+      body: 'Oltre a «Il tavolo» e «Classico» ora c\'è «Oceano»: chiaro, azzurro '
+        + 'acqua e dalle forme arrotondate, come se tutto fosse in spiaggia. Tutto '
+        + 'resta al suo posto: Scaffale, Cronologia, Trofei, Avvia una sessione. '
+        + 'Puoi sceglierlo quando vuoi nel tuo account. Il design è solo tuo; gli '
+        + 'altri del gruppo continuano a vedere il proprio.',
+    },
+    nl: {
+      title: 'Oceaan — een licht ontwerp om te kiezen',
+      body: 'Naast „De tafel" en „Klassiek" is er nu „Oceaan": licht, waterblauw '
+        + 'en met ronde vormen, alsof alles op het strand ligt. Alles blijft op '
+        + 'dezelfde plek — Kast, Geschiedenis, Trofeeën, Sessie starten. Kies het '
+        + 'wanneer je wilt in je account. Het ontwerp is alleen van jou; de '
+        + 'anderen in de groep blijven hun eigen zien.',
+    },
+    pt: {
+      title: 'Oceano — um design claro para escolher',
+      body: 'Além de «A mesa» e «Clássico», agora há «Oceano»: claro, azul-água e '
+        + 'com formas arredondadas, como se tudo estivesse na praia. Tudo continua '
+        + 'no mesmo lugar: Estante, Histórico, Troféus, Iniciar sessão. Escolha-o '
+        + 'quando quiser na sua conta. O design é só seu; os outros do grupo '
+        + 'continuam a ver o deles.',
+    },
+    fi: {
+      title: 'Valtameri — vaalea ulkoasu valittavaksi',
+      body: '”Pöydän” ja ”Klassisen” rinnalla on nyt ”Valtameri”: vaalea, '
+        + 'vedensininen ja pyöreämuotoinen, kuin kaikki olisi rannalla. Kaikki on '
+        + 'yhä samassa paikassa — Hylly, Historia, Palkinnot, Aloita sessio. Voit '
+        + 'valita sen milloin tahansa tililläsi. Ulkoasu on vain sinun; muut '
+        + 'porukassa näkevät edelleen omansa.',
+    },
+    ko: {
+      title: '바다 — 고를 수 있는 밝은 디자인',
+      body: '„테이블"과 „클래식"에 이어 이제 „바다"가 있습니다. 밝은 물빛에 둥근 모양으로, 모든 '
+        + '것이 해변에 놓인 것처럼 보입니다. 선반, 기록, 트로피, 세션 시작은 모두 그 자리에 '
+        + '있습니다. 언제든 계정에서 고를 수 있어요. 디자인은 나에게만 적용되고, 모임의 다른 '
+        + '사람들은 계속 각자의 디자인을 봅니다.',
+    },
+  },
+  /*
    * #1328. A capability that did not exist: a round remembered exactly ONE
    * draw (the last), so a group with two recurring evenings re-picked the other
    * one every time. Dated the day after the flip's entry, because an equal date

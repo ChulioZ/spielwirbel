@@ -370,9 +370,9 @@ const oceanDecl = (name) => {
   return m ? m[1].trim() : null;
 };
 
-test('Ocean is registered, light, and still behind its go-live (#1222)', () => {
+test('Ocean is registered, light, and live since its go-live (#1222)', () => {
   assert.ok(OCEAN, 'no design with id "ocean" in public/js/designs.js');
-  assert.equal(OCEAN.enabled, false, 'Ocean goes live in #1222, not in its token issue');
+  assert.equal(OCEAN.enabled, true, 'Ocean went live in #1222');
   assert.notEqual(OCEAN.scheme, 'dark');
   assert.equal(OCEAN.page, '#e4f1f5', 'O1 „Seite"');
   assert.equal(OCEAN.accent, '#0e6690', 'O1 „Akzent"');

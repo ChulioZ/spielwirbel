@@ -148,10 +148,16 @@ test('?design=tisch outside production serves Der Tisch’s icons and colours', 
 });
 
 test('in production an unreleased design is refused — the face answers instead', async (t) => {
-  // Whichever design is still behind the gate; once none is, there is nothing
-  // left for this route to leak and the spec says so rather than passing blind.
-  const gated = DESIGN_REGISTRY.find((d) => !d.enabled && d.page);
-  if (!gated) { t.skip('every registered design is enabled'); return; }
+  // Whichever design is still behind the gate. Since Ocean went live (#1222)
+  // none is, so a coloured non-face design is gated for the length of this
+  // test — the next design under construction must not leak either, and a
+  // skip here would leave the guard unproven until then.
+  let gated = DESIGN_REGISTRY.find((d) => !d.enabled && d.page);
+  if (!gated) {
+    gated = DESIGN_REGISTRY.find((d) => d.page && d.id !== FACE_DESIGN);
+    gated.enabled = false;
+    t.after(() => { gated.enabled = true; });
+  }
   const was = process.env.NODE_ENV;
   t.after(() => { process.env.NODE_ENV = was; });
   process.env.NODE_ENV = 'production';

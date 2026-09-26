@@ -48,8 +48,8 @@ const MAIL_ENV = { SMTP_HOST: 'smtp.example.test', SMTP_USER: 'u', SMTP_PASS: 'p
 // `designs`/`faceDesign` (#1184) are in every expectation below because the
 // deepEqual assertions pin the WHOLE shape. Outside production the server
 // reports every REGISTERED design, enabled or not, so an unfinished one can be
-// opened for review — which is why `tisch` is here while it is `enabled: false`.
-// The production half is its own test at the bottom.
+// opened for review. Every registered design is enabled today, so the production
+// test at the bottom gates one temporarily to keep its half from going vacuous.
 const OFF = {
   footer: false,
   donateUrl: null,

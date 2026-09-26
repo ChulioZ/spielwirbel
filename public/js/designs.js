@@ -248,9 +248,9 @@ const DESIGN_REGISTRY = [
      gradient whose dark end nobody measured. Both real findings of the review
      (docs/design/pruefung-ocean-2026-09-20.md) lived exactly there.
 
-     `enabled: false` until its go-live issue (#1222); the screens are
-     #1211-#1221. Outside production it is reachable through the same
-     `?design=ocean` flag Der Tisch was built behind (design.js initDesign).
+     Live since its go-live (#1222): selectable in the chooser and on Konto for
+     every account. The screens are #1211-#1221; nobody is moved into it, and
+     the first-start chooser was deliberately not asked again for it.
 
      Page and accent are O1's „Seite" and „Akzent". The accent carries text on
      the page (5.5:1), the surface (6.1:1) and down to the „Flach" water stop
@@ -297,19 +297,20 @@ const DESIGN_REGISTRY = [
       { key: 'tang', labelKey: 'marker.ocean.tang', color: '#54821d', deep: '#345801' },
       { key: 'purpur', labelKey: 'marker.ocean.purpur', color: '#993556', deep: '#6b1c38' },
     ],
-    /* Klassisch's marks, stated rather than inherited. Ocean's own SIGN is the
-       `glyph` above (`ti-wave-sine`, O8.3 „the design's mark"), printed in the
-       chooser; #1220 scoped the app icon, favicon and link-preview image OUT —
-       they stay the face's in the static head. Stated so the row is complete on
-       its own: test/design-marks.test.js walks every row's files. */
+    /* Ocean's own marks (#1222 — the go-live decided them; #1220 had scoped
+       them out and the row carried Klassisch's orange die until then): the
+       whirl in Gischt on the accent water. The `glyph` above is a different
+       thing — the chooser postcard's sign. Rendered by
+       scripts/render-design-marks.js — never hand-edited. */
     marks: {
       icons: [
-        { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
-        { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
+        { src: '/icons/ocean/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+        { src: '/icons/ocean/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+        { src: '/icons/ocean/icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
       ],
-      favicon: { href: '/icons/icon-192.png', sizes: '192x192' },
-      appleTouch: '/icons/apple-touch-icon.png',
-      og: '/icons/og-image.png',
+      favicon: { href: '/icons/ocean/favicon-32.png', sizes: '32x32' },
+      appleTouch: '/icons/ocean/apple-touch-icon.png',
+      og: '/icons/ocean/og-image.png',
     },
     // A person's NAME prints in the marker's `deep`, never in the colour
     // itself (design.js personNameInk) — review rule 2, person colour is no text
@@ -317,7 +318,7 @@ const DESIGN_REGISTRY = [
     personInk: 'deep',
     // O8.3's share card in its three formats (recap-card-ocean.js, #1220).
     card: 'ocean',
-    enabled: false,
+    enabled: true,
   },
 ];
 

@@ -150,7 +150,95 @@ function tischRecipe() {
   };
 }
 
-const RECIPES = { tisch: tischRecipe };
+/* -------------------------------------------------------------------- Ocean */
+
+// #1222 (the go-live): Ocean's own marks, decided at go-live rather than left on
+// Klassisch's orange die. Nothing in the package draws them (#1220 scoped the
+// app icon out), so they are Der Tisch's T11.2 composition re-dressed in Ocean's
+// own tokens: the whirl — Spielwirbel's mark in every design — in Gischt on the
+// accent water. A light ground was the obvious reading of a light design and the
+// wrong one: at 16px on a white home screen the pale water dissolves into its
+// neighbours, so the icon takes the accent, which is what Ocean's primary button
+// wears. Gischt on the accent is 5.8:1, on --brand-strong 8.2:1.
+function oceanRecipe() {
+  const design = designById('ocean');
+  const css = fs.readFileSync(path.join(PUBLIC, design.stylesheet.replace(/^\//, '')), 'utf8');
+  const c = {
+    page: design.page,
+    accent: design.accent,
+    brandStrong: token(css, '--brand-strong'),
+    foam: token(css, '--water-foam'),
+    coast: token(css, '--water-coast'),
+    deep: token(css, '--deep'),
+    deepBottom: token(css, '--deep-bottom'),
+    deepInk: token(css, '--deep-ink'),
+    deepInkSoft: token(css, '--deep-ink-soft'),
+    ink: token(css, '--ink'),
+    sand: token(css, '--sand'),
+    sandDeep: token(css, '--sand-deep'),
+    waterline: token(css, '--waterline'),
+    waterlineDeep: token(css, '--waterline-deep'),
+  };
+  const fonts = fontFace('Comfortaa', 700, 'comfortaa-latin-700-normal.woff2')
+    + fontFace('Figtree', 600, 'figtree-latin-600-normal.woff2')
+    + fontFace('Figtree', 700, 'figtree-latin-700-normal.woff2');
+  const water = `radial-gradient(110% 110% at 35% 15%, ${c.accent}, ${c.brandStrong} 78%)`;
+
+  // Same proportions as Der Tisch's: 52% on the app icons, 36% on the maskable
+  // one so the whole whirl sits inside the inner 60%.
+  const icon = (size, glyph, ground = water, radius = 0) => ({
+    width: size,
+    height: size,
+    html: `<div style="position:fixed;inset:0;display:grid;place-items:center;background:${ground};`
+      + `border-radius:${radius}px">${whirl(Math.round(size * glyph), c.foam)}</div>`,
+  });
+
+  const marks = design.marks;
+  const [i192, i512, maskable] = marks.icons;
+  const og = {
+    width: 1200,
+    height: 630,
+    // Der Tisch's Open Graph frame, Ocean's materials: the deep-water panel with
+    // the claim on the left, the shelf on a sand ledge over the page's water on
+    // the right. German only, like every og card (link-preview-card.md §1).
+    html: `<div style="position:fixed;inset:0;display:flex;background:linear-gradient(180deg, ${c.foam}, ${c.coast});font-family:Figtree">
+      <div style="width:680px;flex:none;box-sizing:border-box;padding:48px;display:flex;flex-direction:column;gap:26px;
+        background:linear-gradient(180deg, ${c.deep}, ${c.deepBottom});border-right:10px solid ${c.waterlineDeep}">
+        <span style="align-self:flex-start;font:700 26px Comfortaa;letter-spacing:.08em;
+          color:${c.deepInk};background:${c.accent};border-radius:999px;padding:12px 26px">Spielwirbel</span>
+        <span style="font:700 60px/1.12 Comfortaa;color:${c.deepInk}">Wer am Tisch sitzt, entscheidet mit.</span>
+        <span style="font:600 28px/1.45 Figtree;color:${c.deepInkSoft}">Regal füllen, Session wirbeln, geheim werten.</span>
+        <span style="margin-top:auto;font:700 24px Figtree;color:${c.deepInk}">Kein Tracking · EU-Hosting · spielwirbel.app</span>
+      </div>
+      <div style="flex:1;padding:48px 44px;display:flex;flex-direction:column;gap:24px;justify-content:center">
+        <span style="display:flex;gap:16px;align-items:flex-end">
+          ${[[184, 204], [148, 32], [208, 318], [168, 150]].map(([h, hue]) => `<span style="width:92px;height:${h}px;border-radius:12px;
+            background:linear-gradient(150deg, hsl(${hue} 48% 52%), hsl(${hue + 40} 50% 30%));box-shadow:0 10px 22px rgba(16,40,58,.28)"></span>`).join('')}
+        </span>
+        <span style="height:18px;border-radius:9px;background:linear-gradient(180deg, ${c.sand}, ${c.sandDeep})"></span>
+        <span style="align-self:flex-start;display:inline-flex;align-items:center;gap:16px;min-height:88px;padding:0 34px;border-radius:999px;
+          background:${c.accent};color:${c.foam};font:700 30px Comfortaa">
+          ${whirl(38, c.foam)} Session wirbeln</span>
+      </div>
+    </div>`,
+  };
+
+  return {
+    fonts,
+    assets: [
+      [i192.src, icon(192, 0.52)],
+      [i512.src, icon(512, 0.52)],
+      [maskable.src, icon(512, 0.36)],
+      [marks.appleTouch, icon(180, 0.5)],
+      // Flat deep accent at 32px, like Der Tisch's flat felt: a gradient there
+      // only reads as noise.
+      [marks.favicon.href, icon(32, 0.56, c.brandStrong, 7)],
+      [marks.og, og],
+    ],
+  };
+}
+
+const RECIPES = { tisch: tischRecipe, ocean: oceanRecipe };
 
 /* ------------------------------------------------------------------ the CDP */
 

@@ -461,6 +461,8 @@ public/
     tisch/           Der Tisch's own marks (#1199): felt + gold whirl icons, a
                      maskable one, apple-touch, favicon and its og-image.png,
                      rendered by scripts/render-design-marks.js
+    ocean/           Ocean's own marks (#1222): the whirl in Gischt on the
+                     accent water, the same six files, same script
   img/               product screenshots on the logged-out landing page — the
                      shelf, the voting screen and a session result, all phone
                      width, one set per UI locale (landing-*.<locale>.webp),
