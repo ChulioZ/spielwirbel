@@ -8337,9 +8337,9 @@
    so on a red or blue marker it would read as a hole of another colour; and
    the dashed edge and the ring are measured on this felt only.
 
-   NO MOTION. The falling pin (T17.5's 400 → 1 040 ms) is its own, droppable PR
-   per the issue; everything below is the end state, which is also exactly what
-   reduced motion shows.
+   MOTION lives in ONE block at the end of this section („The pin drops onto
+   the felt", #1386): the falling pin of T17.5, 400 → 1 040 ms. Everything
+   before it is the end state, which is also exactly what reduced motion shows.
 
    Scheme-gated throughout, geometry included: every rule reads a gated token
    or lays out a surface that only exists under the gated colours, and the
@@ -9028,4 +9028,104 @@
   border-top: 1px solid var(--paper-line);
   color: var(--paper-ink-soft);
   font-weight: 600;
+}
+
+/* --- The pin drops onto the felt (T17.5 motion, #1386) ----------------------
+   The result moment's one motion: a pin that was JUST earned falls onto the
+   felt and settles with one short bounce. No sound. The end state is the
+   static moment above, unchanged, and that is also exactly what reduced
+   motion shows from 0 ms. Nothing else moves.
+
+   THE HOOK, not a bare `.badge-moment .badge`: fillBadgeMoment() rebuilds the
+   moment on every phase change, so an animation keyed on the markup alone would
+   replay on each winner tap and on every cold load of a finished session.
+   views-badges.js sets `data-fresh` on an item only when a fill shows a mark
+   this screen had not shown before — the finish the reader just recorded, or a
+   winner tap that earns one. The screen's first fill marks nothing.
+
+   WHAT MOVES: only the pin — the brass (`::before`) and the engraved glyph
+   (`> .ti`, a glyph, not text), on the same keyframes. The plate, the holder,
+   the name and the condition stand still, and the button is a real target from
+   0 ms: the mark is aria-hidden paint inside it, and no `pointer-events` is
+   touched. The progress ring (the span's own background) stays put.
+
+   THE TIMING (T17.5's table; review finding 6: 400 → 1 040 ms):
+     400 ms    pin 1 falls from −48px to rest, scale 1.08 → 1, 360ms on
+               cubic-bezier(.55,0,.9,.4) — gravity. It fades in over the first
+               120ms, so it arrives rather than hangs in the air.
+     760 ms    it lands, lifts 4px once and settles: 120ms, ease-out then in.
+     560 ms    pin 2: the same, 160ms behind. Keyed on a SECOND fresh item, so
+               a lone fresh pin beside an older mark falls at 400ms rather than
+               waiting on a sibling that stays still.
+     1 040 ms  nothing runs. No loop.
+   T17's table gives the settle 140ms, which would end pin 2 at 1 060ms; the
+   sheet's own end row and the review both say 1 040, so the settle takes 120.
+
+   THE SHADOW: a falling pin's cast would hang in the air with it, so during
+   the fall the cast is transparent and a ground shadow (`::after`, on the
+   felt) grows under the landing spot instead — scale .5 → 1, opacity .25 → 1.
+   After the landing the two cross-fade, and the rest state is the pin's own
+   cast again with the ground shadow at 0, so the settled frame IS the static
+   frame.
+
+   NO END FRAME on any keyframes: each settles on the rule's rest value, so the
+   motion can never leave a pin a pixel off the static design. Individual
+   `translate`/`scale`, never `transform`. At most two pins can move, because
+   the moment never shows more than two (BADGE_MOMENT_MAX). */
+:root[data-design="tisch"][data-scheme="dark"] .badge-moment .badge__mark::after {
+  content: "";
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  bottom: -6px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--cast-deep);
+  filter: blur(3px);
+  opacity: 0;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-design="tisch"][data-scheme="dark"] .badge-moment__item[data-fresh] .badge[data-state="earned"] .badge__mark > .ti {
+    animation: tisch-pin-drop 480ms 400ms both, tisch-pin-in 120ms linear 400ms both;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .badge-moment__item[data-fresh] .badge[data-state="earned"] .badge__mark::before {
+    animation-name: tisch-pin-drop, tisch-pin-in, tisch-pin-cast;
+    animation-duration: 480ms, 120ms, 480ms;
+    animation-timing-function: ease, linear, linear;
+    animation-delay: 400ms;
+    animation-fill-mode: both;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .badge-moment__item[data-fresh] .badge[data-state="earned"] .badge__mark::after {
+    animation: tisch-pin-ground 480ms 400ms both;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .badge-moment__item[data-fresh] ~ .badge-moment__item[data-fresh] .badge[data-state="earned"] .badge__mark::before,
+  :root[data-design="tisch"][data-scheme="dark"] .badge-moment__item[data-fresh] ~ .badge-moment__item[data-fresh] .badge[data-state="earned"] .badge__mark > .ti,
+  :root[data-design="tisch"][data-scheme="dark"] .badge-moment__item[data-fresh] ~ .badge-moment__item[data-fresh] .badge[data-state="earned"] .badge__mark::after {
+    animation-delay: 560ms;
+  }
+  @keyframes tisch-pin-drop {
+    0% {
+      translate: 0 -48px;
+      scale: 1.08;
+      animation-timing-function: cubic-bezier(.55, 0, .9, .4);
+    }
+    75% {
+      translate: 0 0;
+      scale: 1;
+      animation-timing-function: ease-out;
+    }
+    87% { translate: 0 -4px; animation-timing-function: ease-in; }
+  }
+  /* The brass's own cast, held back while it is in the air (the glyph has none). */
+  @keyframes tisch-pin-cast {
+    0%, 75% { box-shadow: 0 4px 0 var(--pin-shadow), 0 8px 14px transparent; }
+  }
+  @keyframes tisch-pin-in {
+    0% { opacity: 0; }
+  }
+  @keyframes tisch-pin-ground {
+    0% { opacity: .25; scale: .5; animation-timing-function: cubic-bezier(.55, 0, .9, .4); }
+    75% { opacity: 1; scale: 1; animation-timing-function: ease-out; }
+  }
 }
