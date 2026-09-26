@@ -5762,6 +5762,38 @@
   border-top: 1px solid var(--line-soft);
 }
 :root[data-design="ocean"]:not([data-scheme="dark"]) .badge-member__more { margin: 0 14px 12px; }
+
+/* The legend (#1386) is O17.2's alone: O17.3 (390) draws the head with the
+   count only. No O17 view draws „Platz N", and O17.4 draws the chevron only
+   from the editor split — so all three start hidden here. The swatches are the
+   tiles' own marks in miniature: a pearl, the conic ring round the open shell,
+   the dashed closed shell. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-legend,
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-member__rank,
+:root[data-design="ocean"]:not([data-scheme="dark"]) .member-card__badges-go { display: none; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-legend {
+  gap: 14px;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-legend__mark {
+  width: 16px;
+  height: 16px;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-legend__item[data-state="earned"] .badge-legend__mark {
+  background: radial-gradient(circle at 35% 30%, var(--pearl-1), var(--pearl-2) 55%, var(--pearl-3));
+  box-shadow: var(--cast-pearl);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-legend__item[data-state="progress"] .badge-legend__mark {
+  background:
+    radial-gradient(closest-side, var(--surface) calc(100% - 4px), transparent calc(100% - 3.5px)),
+    conic-gradient(var(--brand) 60%, var(--sunken-soft) 0);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-legend__item[data-state="locked"] .badge-legend__mark {
+  border: 2px dashed var(--shell-open-rim);
+  background: none;
+}
 :root[data-design="ocean"]:not([data-scheme="dark"]) .badge-member[open] > .badge-grid--rest:not([hidden]) {
   padding: 0 4px 12px;
   border-top: 0;
@@ -5772,6 +5804,8 @@
    to ONE column — a string is a row, and two of them side by side would each
    break after four pearls. */
 @media (min-width: 860px) {
+  /* After the hairline, at the head's right end (O17.2). */
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .badge-legend { display: flex; order: 1; }
   :root[data-design="ocean"]:not([data-scheme="dark"]) .badge-section > .section-head h2 { font-size: var(--text-2xl); }
   :root[data-design="ocean"]:not([data-scheme="dark"]) .badge-section__summary { font-size: var(--text-md); font-weight: 600; }
   :root[data-design="ocean"]:not([data-scheme="dark"]) .badge-band--round {
@@ -6053,6 +6087,11 @@
   text-transform: uppercase;
   color: var(--brand);
 }
+/* The chevron (#1386), O17.4 at 1440: brand, closing the row after the pearls. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .member-card__badges-go {
+  color: var(--brand);
+  font-size: 19px; /* glyph, not type */
+}
 :root[data-design="ocean"]:not([data-scheme="dark"]) .badge-grid--compact:not([hidden]) {
   position: relative;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -6072,6 +6111,7 @@
   :root[data-design="ocean"]:not([data-scheme="dark"]) .member-card__badges {
     --o-mark: 40px;
     flex-direction: row;
+    flex-wrap: nowrap;
     align-items: center;
     gap: 16px;
     padding: 12px 16px;
@@ -6082,6 +6122,8 @@
     padding: 0;
     white-space: nowrap;
   }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .member-card__badges > .badge-grid { flex: 0 1 auto; order: 0; }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .member-card__badges-go { display: inline-flex; margin-left: auto; }
   :root[data-design="ocean"]:not([data-scheme="dark"]) .badge-grid--compact:not([hidden]) {
     display: flex;
     flex-wrap: wrap;
