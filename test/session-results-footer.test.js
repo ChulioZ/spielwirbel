@@ -157,6 +157,20 @@ test('cancel is a link-btn with its icon and label, not a ghost button', async (
   assert.equal(btn.getAttribute('title'), 'Kein Spiel gefällt');
 });
 
+/* #1360: the confirm's two buttons used to read „Abbrechen" and „Session
+   abbrechen" side by side — opposite answers in nearly the same word. The way
+   out now says what it does. */
+test('the cancel confirm offers „Weiterspielen" as the way back', async (t) => {
+  const dom = await results(t);
+  const asked = [];
+  dom.set('confirmDialog', async (o) => { asked.push(o); return false; });
+  cancelBtn(dom).click();
+  await new Promise((r) => setImmediate(r));
+  assert.equal(asked.length, 1, 'the cancel control raised no confirm');
+  assert.equal(asked[0].cancelLabel, 'Weiterspielen');
+  assert.equal(asked[0].confirmLabel, 'Session abbrechen');
+});
+
 // Cancel sits beside delete, and before it: the reversible action ahead of the
 // permanent one.
 test('cancel and delete share one footer row, cancel first', async (t) => {

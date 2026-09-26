@@ -940,17 +940,6 @@ async function showGameDetail(rid, gameId) {
   // verbatim.
   const menuItems = [];
   if (!game.retired && !game.completed && !game.wish) {
-    menuItems.push({ icon: 'ti-trash', label: t('detail.retire'), cls: 'popover__opt--warn', kind: 'destructive', run: async () => {
-      if (!await confirmDialog({
-        body: t('detail.retireConfirm', { title: game.title }),
-        confirmLabel: t('detail.retire'), icon: 'ti-trash',
-      })) return;
-      try {
-        await api('POST', `/api/rounds/${rid}/games/${gameId}/retire`, { retired: true });
-        toast(t('games.retired', { title: game.title }), { tone: 'success' });
-        showGameDetail(rid, gameId);
-      } catch (e) { toast(e.message, { tone: 'error' }); }
-    } });
     menuItems.push({ icon: 'ti-circle-check', label: t('detail.complete'), cls: 'popover__opt--good', kind: 'undoable', run: async () => {
       if (!await confirmDialog({
         body: t('detail.completeConfirm', { title: game.title }),
@@ -959,6 +948,21 @@ async function showGameDetail(rid, gameId) {
       try {
         await api('POST', `/api/rounds/${rid}/games/${gameId}/complete`, { completed: true });
         toast(t('games.completed', { title: game.title }));
+        showGameDetail(rid, gameId);
+      } catch (e) { toast(e.message, { tone: 'error' }); }
+    } });
+    // Reversible („jederzeit zurückholen"), so neither filed nor asked as a
+    // deletion: no bin, no warn tone, `undoable`, a neutral confirm (#1360).
+    // Pushed AFTER completion, which keeps the menu's order unchanged now that
+    // both share a kind and sortMenuItems falls back to write order.
+    menuItems.push({ icon: 'ti-archive', label: t('detail.retire'), kind: 'undoable', run: async () => {
+      if (!await confirmDialog({
+        body: t('detail.retireConfirm', { title: game.title }),
+        confirmLabel: t('detail.retire'), icon: 'ti-archive', danger: false,
+      })) return;
+      try {
+        await api('POST', `/api/rounds/${rid}/games/${gameId}/retire`, { retired: true });
+        toast(t('games.retired', { title: game.title }), { tone: 'success' });
         showGameDetail(rid, gameId);
       } catch (e) { toast(e.message, { tone: 'error' }); }
     } });

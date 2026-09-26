@@ -91,6 +91,10 @@ function splitConfirmQuestion(text) {
                                     its question sentence becomes the heading
    @param {string} [o.title]        dialog heading; overrides that split
    @param {string} [o.confirmLabel] the real verb; defaults to a neutral "confirm"
+   @param {string} [o.cancelLabel]  the way out; defaults to "cancel". Name it only
+                                    where the verb itself IS "cancel" (#1360) —
+                                    „Abbrechen" beside „Session abbrechen" puts the
+                                    two opposite answers in nearly the same word
    @param {boolean}[o.danger=true]  style the confirm button as destructive
    @param {string} [o.icon]         Tabler class for the confirm button
    @returns {Promise<boolean>}
@@ -104,6 +108,7 @@ function confirmDialog(o) {
   const title = opts.title || (split ? split.question : t('common.confirmTitle'));
   const bodyText = split ? split.rest : (opts.body || '');
   const label = opts.confirmLabel || t('common.confirm');
+  const cancelLabel = opts.cancelLabel || t('common.cancel');
   const icon = opts.icon || (danger ? 'ti-alert-triangle' : 'ti-check');
 
   return new Promise((resolve) => {
@@ -123,7 +128,7 @@ function confirmDialog(o) {
           <p class="confirm-dialog__body">${esc(bodyText)}</p>
           <div class="confirm-dialog__opts"></div>
           <div class="toolbar sheet__actions sheet__actions--confirm">
-            <button class="btn" type="button" data-act="cancel">${esc(t('common.cancel'))}</button>
+            <button class="btn" type="button" data-act="cancel">${esc(cancelLabel)}</button>
             <button class="btn ${danger ? 'btn--danger' : 'btn--primary'}" type="button" data-act="ok"><i class="ti ${esc(icon)}" aria-hidden="true"></i> ${esc(label)}</button>
           </div>
         </div>

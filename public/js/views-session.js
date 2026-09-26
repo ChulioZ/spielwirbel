@@ -2010,6 +2010,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
   async function confirmCancel() {
     if (!await confirmDialog({
       body: t('result.cancelConfirm'), confirmLabel: t('result.cancel'), icon: 'ti-x',
+      cancelLabel: t('result.keepSession'),
     })) return;
     await setCancelled(true);
   }
