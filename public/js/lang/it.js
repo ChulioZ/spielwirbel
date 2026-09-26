@@ -1225,6 +1225,7 @@ I18N.it = {
   'marker.ocean.lagune': 'Laguna',
   'marker.ocean.tang': 'Alga',
   'marker.ocean.purpur': 'Porpora',
+  'marker.toast.set': 'Colore salvato',
 
 
   'tags.crumb': 'Etichette',

@@ -1218,6 +1218,7 @@ I18N.nl = {
   'marker.ocean.lagune': 'Lagune',
   'marker.ocean.tang': 'Kelp',
   'marker.ocean.purpur': 'Purper',
+  'marker.toast.set': 'Kleur opgeslagen',
 
 
   'tags.crumb': 'Labels',

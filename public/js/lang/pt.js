@@ -1220,6 +1220,7 @@ I18N.pt = {
   'marker.ocean.lagune': 'Laguna',
   'marker.ocean.tang': 'Alga',
   'marker.ocean.purpur': 'Púrpura',
+  'marker.toast.set': 'Cor salva',
 
 
   'tags.crumb': 'Etiquetas',

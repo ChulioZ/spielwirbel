@@ -1269,6 +1269,7 @@ I18N.de = {
   'marker.ocean.lagune': 'Lagune',
   'marker.ocean.tang': 'Tang',
   'marker.ocean.purpur': 'Purpur',
+  'marker.toast.set': 'Farbe gespeichert',
 
 
   'tags.crumb': 'Tags',
