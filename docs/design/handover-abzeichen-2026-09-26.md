@@ -80,7 +80,7 @@ Every entry is computable from `round.sessions` (finished, createdAt, winnerIds,
 | B11 | **Aufgeräumt** | Kümmerliste empty with 20+ games (every cover, every result recorded) | rewards care, a round-hygiene mark |
 | B12 | **Geteilt** | round shared with a second account (#207) | |
 | B13 | **Jahrgang** | a session in every month of a calendar year | the round-level twin of A12 |
-| B14 ★ | **Rückblick geteilt** | first period recap shared (#800) | |
+| B14 | ~~**Rückblick geteilt**~~ | first period recap shared (#800) | dropped 2026-09-26 (operator): sharing stores nothing, so it could never be earned |
 | B15 | **Vollständig** (secret) | every shelf game played at least once with 20+ games | |
 
 ### C. Account across rounds (DECIDED in — all four)

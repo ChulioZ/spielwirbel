@@ -519,6 +519,8 @@ const frontendGlobals = {
   showMember: 'readonly',
   // member-stats.js (#1075 — split out of views-member.js)
   memberStats: 'readonly', BEST_GAME_MIN_PLAYS: 'readonly', bestGameSub: 'readonly',
+  // achievements.js (#1387): the Abzeichen catalogue and its derivation
+  BADGE_CATALOGUE: 'readonly', roundBadges: 'readonly', newSince: 'readonly', accountBadges: 'readonly',
   openAddMember: 'readonly', addMemberBtn: 'readonly',
   // vote-card-composed.js (issue #1268): Der Tisch's vote card + the link intro
   VOTE_WORD_KEYS: 'readonly', voteWord: 'readonly', voteMoodButton: 'readonly', voteTurn: 'readonly',
