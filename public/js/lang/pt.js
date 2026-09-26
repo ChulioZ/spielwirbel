@@ -1789,8 +1789,6 @@ I18N.pt = {
   'badges.completed.line': 'Primeiro jogo marcado como concluído',
   'badges.evergreen.name': 'Clássico',
   'badges.evergreen.line': 'Um jogo jogado {n} vezes',
-  'badges.recapShared.name': 'Retrospectiva',
-  'badges.recapShared.line': 'Primeira retrospectiva compartilhada',
   'badges.accountSessions.name': 'Sessões',
   'badges.accountSessions.line': '{n} sessões em todos os grupos',
   'badges.accountWins.name': 'Vitórias',
