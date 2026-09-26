@@ -1421,6 +1421,7 @@ I18N.en = {
   'friends.feedMore': 'All {count} activities',
   'friends.feedLoadMore': 'Load more',
   'friends.feedLoading': 'Loading…',
+  'friends.feedAllLoaded': 'All loaded',
   'friends.newsTitle': 'What’s new',
   'friends.feedEmpty': 'No activity from your friends yet.',
   'friends.listEmpty': 'You haven’t added any friends yet.',

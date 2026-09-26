@@ -1355,6 +1355,7 @@ I18N.it = {
   'friends.feedMore': 'Tutte le {count} attività',
   'friends.feedLoadMore': 'Carica altro',
   'friends.feedLoading': 'Caricamento…',
+  'friends.feedAllLoaded': 'Tutto caricato',
   'friends.newsTitle': 'Novità',
   'friends.feedEmpty': 'Ancora nessuna attività dai tuoi amici.',
   'friends.listEmpty': 'Non hai ancora aggiunto nessun amico.',

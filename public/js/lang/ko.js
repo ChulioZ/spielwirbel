@@ -1290,6 +1290,7 @@ I18N.ko = {
   'friends.feedMore': '활동 {count}개 모두 보기',
   'friends.feedLoadMore': '더 불러오기',
   'friends.feedLoading': '불러오는 중…',
+  'friends.feedAllLoaded': '모두 불러옴',
   'friends.newsTitle': '새소식',
   'friends.feedEmpty': '아직 친구들의 활동이 없어요.',
   'friends.listEmpty': '아직 친구를 추가하지 않으셨어요.',

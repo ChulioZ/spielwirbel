@@ -1371,6 +1371,7 @@ I18N.es = {
   'friends.feedMore': 'Las {count} actividades',
   'friends.feedLoadMore': 'Cargar más',
   'friends.feedLoading': 'Cargando…',
+  'friends.feedAllLoaded': 'Todo cargado',
   'friends.newsTitle': 'Novedades',
   'friends.feedEmpty': 'Todavía no hay actividad de tus amigos.',
   'friends.listEmpty': 'Todavía no has añadido a ningún amigo.',

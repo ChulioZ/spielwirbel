@@ -4880,6 +4880,11 @@ a.k-tile:focus-visible,
 }
 /* „Mehr laden" — a real button, which the infinite-scroll observer clicks. */
 .e-feed__load { display: flex; justify-content: center; margin-top: 14px; }
+/* The end of the list (#1357): the button stays so focus does not jump, and
+   it is aria-disabled rather than disabled — so it keeps full contrast (the
+   .btn:disabled fade would put „Alles geladen" near 2:1) and only drops the
+   affordances of a control that still does something. */
+.e-feed__load .btn[aria-disabled="true"] { cursor: default; pointer-events: none; }
 @media (min-width: 1024px) {
   .e-feed__more { display: none; }
 }

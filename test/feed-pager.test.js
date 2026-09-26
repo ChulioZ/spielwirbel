@@ -72,7 +72,35 @@ test('„Mehr laden" is a real button, and a click appends the next page to the 
   loadBtn(wrap).click();
   await waitFor(() => titles(wrap).length === 6, { label: 'page three appended' });
   assert.deepEqual(calls, ['c1', 'c2']);
-  assert.equal(wrap.querySelector('.e-feed__load'), null, 'nextCursor null removes the button');
+  assertAllLoaded(dom, wrap);
+});
+
+/* #1357's merge interview: the end of the list must not drop a keyboard user's
+   focus to <body>. So the button STAYS, says „Alles geladen" and is
+   aria-disabled — never the native `disabled`, which would trip the browser's
+   focus fixup and move focus away exactly as removing the button did. */
+function assertAllLoaded(dom, wrap) {
+  const btn = loadBtn(wrap);
+  assert.ok(btn, 'the button stays at the end of the list');
+  assert.equal(btn.textContent, dom.run("t('friends.feedAllLoaded')"));
+  assert.equal(btn.getAttribute('aria-disabled'), 'true');
+  assert.equal(btn.disabled, false, 'aria-disabled, not disabled — disabled drops focus');
+}
+
+test('at the end the focused button keeps focus, and pressing it loads nothing', async (t) => {
+  const { dom } = boot(t);
+  const calls = [];
+  const wrap = dom.call('renderFeedTiles', many(2), { more: { nextCursor: 'c1', load: async (cur) => { calls.push(cur); return { events: many(1, 'L'), nextCursor: null }; } } });
+  dom.document.body.appendChild(wrap);
+  const btn = loadBtn(wrap);
+  btn.focus();
+  btn.click();
+  await waitFor(() => titles(wrap).length === 3, { label: 'the last page appended' });
+  assertAllLoaded(dom, wrap);
+  assert.equal(dom.document.activeElement, btn, 'focus stayed on the button');
+  btn.click();
+  await flush();
+  assert.deepEqual(calls, ['c1'], 'an exhausted list asks for nothing');
 });
 
 test('one request in flight: a second click while loading asks for nothing', async (t) => {
@@ -131,7 +159,7 @@ test('the observer clicks the button when it scrolls into view, re-arms per page
   await waitFor(() => titles(wrap).length === 4, { label: 'the observer loaded page three' });
   assert.deepEqual(calls, ['c1', 'c2']);
   assert.ok(io.disconnected, 'no cursor left: the observer is disconnected');
-  assert.equal(wrap.querySelector('.e-feed__load'), null);
+  assertAllLoaded(dom, wrap);
 });
 
 test('a collapsed list keeps its expander, and the paging button hides behind the same collapse', (t) => {
@@ -184,5 +212,5 @@ test('a profile asks its own feed route for the next page', async (t) => {
   loadBtn(dom.app).click();
   await waitFor(() => titles(dom.app).length === 4, { label: 'the next profile page rendered' });
   assert.equal(paths[paths.length - 1], '/profile/dora/feed?before=xyz');
-  assert.equal(dom.app.querySelector('.e-feed__load'), null);
+  assertAllLoaded(dom, dom.app);
 });

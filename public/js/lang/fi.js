@@ -1316,6 +1316,7 @@ I18N.fi = {
   'friends.feedMore': 'Kaikki {count} tapahtumaa',
   'friends.feedLoadMore': 'Lataa lisää',
   'friends.feedLoading': 'Ladataan…',
+  'friends.feedAllLoaded': 'Kaikki ladattu',
   'friends.newsTitle': 'Uutta',
   'friends.feedEmpty': 'Kavereiltasi ei ole vielä toimintaa.',
   'friends.listEmpty': 'Et ole vielä lisännyt kavereita.',

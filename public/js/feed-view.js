@@ -272,7 +272,11 @@ function renderFeedTiles(events, opts) {
    already expanded stays expanded, and while it is still collapsed below 1024px
    the CSS collapse hides `.e-feed__load` too, so the observer cannot load pages
    nobody can see (a hidden element never intersects). When `nextCursor` comes
-   back null the button goes and the observer is disconnected.
+   back null the observer is disconnected and the button STAYS, reading „Alles
+   geladen" (#1357's merge interview): removing it dropped a keyboard user's
+   focus to <body>. It is `aria-disabled`, never `disabled` — the browser's focus
+   fixup moves focus off an element the moment it becomes disabled, which is the
+   same jump — so the end state is guarded by the missing cursor instead.
 
    After each page the button is re-observed, because an IntersectionObserver
    reports CHANGES: a short page that leaves the button in view would otherwise
@@ -286,6 +290,7 @@ function feedPager(wrap, grid, render, more) {
   wrap.appendChild(row);
 
   btn.addEventListener('click', async () => {
+    if (!cursor) return;
     btn.disabled = true;
     btn.textContent = t('friends.feedLoading');
     let page = null;
@@ -301,7 +306,8 @@ function feedPager(wrap, grid, render, more) {
     cursor = page.nextCursor || null;
     if (!cursor) {
       if (io) io.disconnect();
-      row.remove();
+      btn.setAttribute('aria-disabled', 'true');
+      btn.textContent = t('friends.feedAllLoaded');
       return;
     }
     if (io) { io.unobserve(btn); io.observe(btn); }
