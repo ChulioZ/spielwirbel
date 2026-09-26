@@ -141,7 +141,8 @@ test('Klassisch: the member card and the owned section after it are unchanged', 
   await dom.call('showMember', RID, 'm1');
   const card = dom.app.querySelector('.member-card');
   assert.deepEqual(shapeOf(card),
-    ['member-card__mark', 'member-card__id', 'member-card__figures', 'pokale-cards member-card__games', 'member-card__table'],
+    // #1388 added the earned Abzeichen row under the figures, on purpose.
+    ['member-card__mark', 'member-card__id', 'member-card__figures', 'member-card__badges', 'pokale-cards member-card__games', 'member-card__table'],
     'the Klassisch card changed shape');
   assert.deepEqual(shapeOf(card.querySelector('.member-card__who')), ['', 'member-card__state'],
     'something was added under the Klassisch name');

@@ -47,6 +47,86 @@
 // AFTER, which is the exact unearned interruption this design exists to avoid.
 const NEWS = [
   /*
+   * #1388, Abzeichen. A capability that did not exist: marks a round and its
+   * people earn by playing, derived from the sessions already recorded. Dated
+   * the day after Ocean's entry so every account that has read that one still
+   * gets the dot.
+   */
+  {
+    revision: '2026-09-28',
+    kind: 'new',
+    de: {
+      title: 'Abzeichen für eure Runde',
+      body: 'Unter Pokale gibt es jetzt Abzeichen — für die Runde und für jede '
+        + 'Person: der erste Sieg, zehn Sessions, ein Spiel, das immer wieder auf '
+        + 'den Tisch kommt. Sie ergeben sich aus den Sessions, die ihr schon '
+        + 'eingetragen habt. Was neu dazukommt, zeigt das Ergebnis der Session, '
+        + 'und die Chronik vermerkt es unter der Session, in der es verdient wurde.',
+    },
+    en: {
+      title: 'Badges for your round',
+      body: 'Trophies now has badges — for the round and for each person: the '
+        + 'first win, ten sessions, a game that keeps coming back to the table. '
+        + 'They come from the sessions you have already recorded. A new one shows '
+        + 'on the session\'s result, and the History notes it under the session '
+        + 'that earned it.',
+    },
+    es: {
+      title: 'Insignias para tu grupo',
+      body: 'En Trofeos ahora hay insignias, para el grupo y para cada persona: '
+        + 'la primera victoria, diez sesiones, un juego que vuelve una y otra vez '
+        + 'a la mesa. Salen de las sesiones que ya habéis registrado. Las nuevas '
+        + 'aparecen en el resultado de la sesión, y el Historial las anota bajo la '
+        + 'sesión en que se ganaron.',
+    },
+    fr: {
+      title: 'Des badges pour votre groupe',
+      body: 'Trophées propose maintenant des badges, pour le groupe et pour chaque '
+        + 'personne : la première victoire, dix sessions, un jeu qui revient sans '
+        + 'cesse sur la table. Ils découlent des sessions déjà enregistrées. Un '
+        + 'nouveau badge apparaît sur le résultat de la session, et l\'Historique '
+        + 'le note sous la session où il a été gagné.',
+    },
+    it: {
+      title: 'Distintivi per il vostro gruppo',
+      body: 'In Trofei ora ci sono i distintivi, per il gruppo e per ogni persona: '
+        + 'la prima vittoria, dieci sessioni, un gioco che torna sempre in tavola. '
+        + 'Nascono dalle sessioni che avete già registrato. Quelli nuovi compaiono '
+        + 'nel risultato della sessione, e la Cronologia li annota sotto la '
+        + 'sessione in cui sono stati ottenuti.',
+    },
+    nl: {
+      title: 'Badges voor jullie groep',
+      body: 'Bij Trofeeën zijn er nu badges, voor de groep en voor iedereen: de '
+        + 'eerste overwinning, tien sessies, een spel dat steeds weer op tafel '
+        + 'komt. Ze volgen uit de sessies die jullie al hebben vastgelegd. Een '
+        + 'nieuwe verschijnt bij de uitslag van de sessie, en de Geschiedenis zet '
+        + 'hem onder de sessie waarin hij verdiend is.',
+    },
+    pt: {
+      title: 'Insígnias para o vosso grupo',
+      body: 'Em Troféus há agora insígnias, para o grupo e para cada pessoa: a '
+        + 'primeira vitória, dez sessões, um jogo que volta sempre à mesa. Vêm das '
+        + 'sessões que já registaram. As novas aparecem no resultado da sessão, e '
+        + 'o Histórico regista-as por baixo da sessão em que foram conquistadas.',
+    },
+    fi: {
+      title: 'Merkit porukallenne',
+      body: 'Palkinnoissa on nyt merkkejä, porukalle ja jokaiselle: ensimmäinen '
+        + 'voitto, kymmenen sessiota, peli joka palaa pöytään yhä uudelleen. Ne '
+        + 'syntyvät sessioista, jotka olette jo kirjanneet. Uusi merkki näkyy '
+        + 'session tuloksessa, ja Historia merkitsee sen sen session alle, jossa '
+        + 'se ansaittiin.',
+    },
+    ko: {
+      title: '모임을 위한 배지',
+      body: '이제 트로피에 배지가 있어요. 모임과 한 사람 한 사람을 위한 것으로, 첫 승리, '
+        + '세션 10회, 계속 테이블에 다시 오르는 게임 같은 것들이에요. 이미 기록한 '
+        + '세션에서 생겨나요. 새 배지는 세션 결과에 나타나고, 기록에는 그 배지를 얻은 '
+        + '세션 아래에 남아요.',
+    },
+  },
+  /*
    * #1222, Ocean goes live. A capability that did not exist: a second design
    * to choose besides Der Tisch and Klassisch. Dated the day after the saved
    * filters' entry, because an equal date would leave every account that has

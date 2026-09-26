@@ -103,7 +103,8 @@ test('Klassisch keeps its blocks, its row cells and its footer exactly as before
   // The screen's blocks, in order. Der Tisch moves the people into the head and
   // replaces the footer; none of that may reach this path.
   assert.deepEqual(kids(screen(dom)), [
-    'page-head page-head--result', 'result-people', 'tisch-slot', 'tafel', 'tisch-bar',
+    // `.badge-moment` (#1388) sits before the table, hidden while it is empty.
+    'page-head page-head--result', 'result-people', 'badge-moment', 'tisch-slot', 'tafel', 'tisch-bar',
     'section result-footer',
   ]);
   // The head keeps „Teilen" as its second child, as it has since #526.

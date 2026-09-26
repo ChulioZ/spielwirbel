@@ -304,6 +304,7 @@
   .recap-fav__name, .setup-panel__title, .pool-tile__name, .result-people__name,
   .spotlight--table .spotlight__title, .rec-ignored__name, .marker-card__name,
   .next-step__title, .rec-spots__title, .rec-spot__title,
+  .badge__name, .badge-moment__title,
   /* The section label (16px, uppercase, letter-spaced) is O1's „Kicker", which
      is Figtree 700 — whichever heading level carries it. */
   .section :is(h1, h2, h3)

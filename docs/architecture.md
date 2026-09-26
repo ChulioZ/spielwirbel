@@ -846,6 +846,10 @@ public/
                      replayed on demand from the finished sessions — nothing
                      stored. Also required by lib/user-stats.js for the
                      account tier (issue #1387)
+    views-badges.js  the Abzeichen in Klassisch (issue #1388): the shared
+                     `.badge` markup every design skins, Pokale › Abzeichen,
+                     the result moment, the Chronik rows, the hub line, the
+                     Tischkarte row and the tap-open card
     views-member.js  member detail page (die Tischkarte: the Siegquote ring,
                      the initials watermark, the figure strip and its
                      the two game boxes; name/colour editing)

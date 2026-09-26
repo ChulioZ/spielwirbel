@@ -41,6 +41,8 @@ function renderChronikTab(round, activities) {
   const tisch = designIs('tisch');
   const ocean = designIs('ocean');
   const loadCover = createCoverLoader(); // lazy session thumbs (#198)
+  // The earnings each session produced (#1388), a row apiece under its card.
+  const badgeRows = badgeChronikIndex(round, activities);
 
   // The chip choice persists for the session but is scoped to one round — the
   // same guard renderRegalTab opens with. An unknown value (a filter dropped in
@@ -459,6 +461,7 @@ function renderChronikTab(round, activities) {
       kids.forEach((child) => nest.appendChild(buildSessionCard(child)));
       item.appendChild(nest);
     }
+    if (e.kind === 'session') chronikBadgeRows(round, badgeRows.get(e.session.id)).forEach((row) => item.appendChild(row));
     return item;
   }
   renderTimeline();

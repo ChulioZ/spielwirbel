@@ -521,6 +521,9 @@ const frontendGlobals = {
   memberStats: 'readonly', BEST_GAME_MIN_PLAYS: 'readonly', bestGameSub: 'readonly',
   // achievements.js (#1387): the Abzeichen catalogue and its derivation
   BADGE_CATALOGUE: 'readonly', roundBadges: 'readonly', newSince: 'readonly', accountBadges: 'readonly',
+  // views-badges.js (#1388) — the Klassisch rendering every design skins.
+  renderBadgeSection: 'readonly', badgeRevealTarget: 'readonly', hubBadgeLine: 'readonly', badgeChronikIndex: 'readonly',
+  chronikBadgeRows: 'readonly', fillBadgeMoment: 'readonly', memberCardBadges: 'readonly', showBadges: 'readonly',
   openAddMember: 'readonly', addMemberBtn: 'readonly',
   // vote-card-composed.js (issue #1268): Der Tisch's vote card + the link intro
   VOTE_WORD_KEYS: 'readonly', voteWord: 'readonly', voteMoodButton: 'readonly', voteTurn: 'readonly',

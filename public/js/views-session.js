@@ -1624,6 +1624,13 @@ async function showResults(round, session, gamesHint, reveal, plain) {
      outcome in the h1 („„X" wurde gespielt."), and the cancelled case has its
      own title too. `views-session-tables.js` still renders that class on the
      split screen, so the CSS stays. */
+  /* Abzeichen (#1388): the marks this session just earned, after the winner
+     headline and before the table. Always in the DOM, hidden while empty, and
+     refilled by renderTisch() on every phase change — a winner tap can earn or
+     un-earn one (views-badges.js, fillBadgeMoment). Never a modal: the table
+     and „Fertig" below stay operable from the first paint. */
+  const badgeMoment = h('<section class="badge-moment" hidden></section>');
+  screen.appendChild(badgeMoment);
   const tischSlot = h('<div class="tisch-slot"></div>');
   const tisch = h('<section class="tisch" hidden></section>');
   tischSlot.appendChild(tisch);
@@ -2089,6 +2096,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
      state of its own beyond `pickerOpen`. */
   function renderTisch() {
     updateTitle();
+    fillBadgeMoment(badgeMoment, round, session);
     // Consumed at the top so every exit, including the early return below,
     // clears it — a stale intent must not fire on a later, unrelated render.
     const wantedChip = pickerRefocus;
