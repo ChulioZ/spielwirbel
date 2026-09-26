@@ -1814,6 +1814,8 @@ I18N.fr = {
   'badges.count.progress': '{n} en cours',
   'badges.count.openOne': '{n} à obtenir',
   'badges.count.open': '{n} à obtenir',
+  'badges.rank': 'Place {n}',
+  'badges.memberAll': 'Tous les badges de {name}',
   'badges.newSinceOne': '{n} nouveau depuis {game}',
   'badges.newSince': '{n} nouveaux depuis {game}',
   'badges.newOne': '{n} nouveau',

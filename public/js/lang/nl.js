@@ -1806,6 +1806,8 @@ I18N.nl = {
   'badges.count.progress': '{n} onderweg',
   'badges.count.openOne': '{n} open',
   'badges.count.open': '{n} open',
+  'badges.rank': 'Plaats {n}',
+  'badges.memberAll': 'Alle badges van {name}',
   'badges.newSinceOne': '{n} nieuw sinds {game}',
   'badges.newSince': '{n} nieuw sinds {game}',
   'badges.newOne': '{n} nieuw',

@@ -8582,7 +8582,47 @@
   text-decoration: none;
 }
 
+/* The legend and „Platz N" (#1386) are T17.2's alone — T17.3 (390) draws the
+   head with the count only and a member row with its peek of pins, so on a
+   phone both stay out. The legend's swatches are the pins in miniature:
+   brass, the brass ring round the recess, the dashed recess. */
+:root[data-design="tisch"][data-scheme="dark"] .badge-legend,
+:root[data-design="tisch"][data-scheme="dark"] .badge-member__rank { display: none; }
+:root[data-design="tisch"][data-scheme="dark"] .badge-legend {
+  gap: 16px;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+:root[data-design="tisch"][data-scheme="dark"] .badge-legend__item { gap: 7px; }
+:root[data-design="tisch"][data-scheme="dark"] .badge-legend__mark {
+  width: 18px;
+  height: 18px;
+}
+:root[data-design="tisch"][data-scheme="dark"] .badge-legend__item[data-state="earned"] .badge-legend__mark {
+  border: 1px solid var(--plinth-edge);
+  background: radial-gradient(circle at 35% 30%, var(--gold-hi), var(--gold-deep) 70%);
+}
+:root[data-design="tisch"][data-scheme="dark"] .badge-legend__item[data-state="progress"] .badge-legend__mark {
+  background:
+    radial-gradient(closest-side, var(--pin-recess) calc(100% - 2px), transparent calc(100% - 1.5px)),
+    conic-gradient(var(--gold) 60%, var(--gold-soft) 0);
+}
+:root[data-design="tisch"][data-scheme="dark"] .badge-legend__item[data-state="locked"] .badge-legend__mark {
+  border: 2px dashed var(--control-edge);
+  background: var(--pin-recess);
+}
+/* The place in the display face, at the row's right edge (T17.2). */
+:root[data-design="tisch"][data-scheme="dark"] .badge-member__rank {
+  font-family: var(--font-display);
+  font-size: var(--text-xs);
+  font-weight: 800;
+  color: var(--ink-soft);
+}
+
 @media (min-width: 860px) {
+  :root[data-design="tisch"][data-scheme="dark"] .badge-legend { display: flex; }
+  :root[data-design="tisch"][data-scheme="dark"] .badge-member__rank { display: inline; }
   :root[data-design="tisch"][data-scheme="dark"] .badge-band--round { padding: 16px 18px; }
   :root[data-design="tisch"][data-scheme="dark"] .badge-band--round .badge-grid {
     grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
@@ -8626,6 +8666,18 @@
   color: var(--gold);
 }
 
+/* The chevron (#1386): gold like the kicker, a glyph on wood (7.74:1). On a
+   phone it closes the kicker's line (T17.4 390, „Abzeichen · 4 ›"); from the
+   editor split it closes the row itself, after the pins. */
+:root[data-design="tisch"][data-scheme="dark"] .member-card__badges-go {
+  min-width: 32px;
+  min-height: 32px;
+  color: var(--gold);
+  font-size: 20px; /* glyph, not type */
+}
+:root[data-design="tisch"][data-scheme="dark"] .member-card__badges-go:hover { background: var(--gold-soft); }
+:root[data-design="tisch"][data-scheme="dark"] .member-card__badges-go:focus-visible { outline: 3px solid var(--gold); }
+
 /* The Tischkarte shows EARNED pins only (the markup's rule), each with its
    name — tier included, „Stammgast 10" — under it; no ring, no „Neu": the
    card is about who the member is. */
@@ -8649,12 +8701,19 @@
 @media (min-width: 860px) {
   :root[data-design="tisch"][data-scheme="dark"] .member-card__badges {
     flex-direction: row;
+    flex-wrap: nowrap;
     align-items: center;
     gap: 14px;
   }
+  :root[data-design="tisch"][data-scheme="dark"] .member-card__badges > .badge-grid { flex: 0 1 auto; order: 0; }
+  :root[data-design="tisch"][data-scheme="dark"] .member-card__badges-go { margin-left: auto; }
+  /* A MIN-width, not a width: „ABZEICHEN · 4" is wider than 96px in the
+     letter-spaced kicker face and wrapped onto two lines; the column may grow
+     for it (and for longer languages) but never breaks the count off. */
   :root[data-design="tisch"][data-scheme="dark"] .member-card__badges .member-card__badges-label {
     flex: none;
-    width: 96px;
+    min-width: 96px;
+    white-space: nowrap;
   }
   :root[data-design="tisch"][data-scheme="dark"] .badge-grid--compact {
     display: flex;
