@@ -226,7 +226,6 @@ function renderMarkerGrid(round, rid) {
   const active = activeDesign();
   const designId = (active && active.id) || FACE_DESIGN;
   const markers = designMarkers(designId);
-  const ink = markerInk(designId);
   const current = roundMarker(round);
 
   const grid = h('<div class="marker-cards"></div>');
@@ -236,7 +235,9 @@ function renderMarkerGrid(round, rid) {
     // The same three tokens a round carries (round-theme.js's markerStyle), so
     // the swatch is painted by what the four surfaces read rather than by hexes
     // this screen spells for itself. --marker-ink is the check glyph's, and it
-    // is per design rather than per scheme — see markerInk() in designs.js.
+    // is per design (or per marker) rather than per scheme — see markerInkOf()
+    // in designs.js.
+    const ink = markerInkOf(designId, m);
     const sw = h(`<button class="marker-card${on ? ' is-active' : ''}" type="button"
          aria-pressed="${on}" style="--marker:${m.color};--marker-deep:${m.deep};--marker-ink:${ink}" title="${label}">
          <span class="marker-card__fill"><i class="ti ti-check" aria-hidden="true"></i></span>

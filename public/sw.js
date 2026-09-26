@@ -27,7 +27,7 @@
  * See .claude/rules/frontend-build-cache-busting.md.
  */
 
-const CACHE = 'spielwirbel-shell-v381';
+const CACHE = 'spielwirbel-shell-v382';
 
 // Everything the app needs to boot offline. Kept in sync with the <script>/<link>
 // order in index.html; each entry must be a real, servable path or install fails
@@ -61,6 +61,14 @@ const SHELL = [
   '/fonts/figtree-latin-500-normal.woff2',
   '/fonts/figtree-latin-600-normal.woff2',
   '/fonts/figtree-latin-700-normal.woff2',
+  // Das Programmheft (#1371): its stylesheet and its two faces, listed for the
+  // same reason as the Ocean pair above. Anton is one file (declared as the
+  // weight range 400 800), Archivo three. About 80 KB.
+  '/css/designs/programmheft.css',
+  '/fonts/anton-latin-400-normal.woff2',
+  '/fonts/archivo-latin-400-normal.woff2',
+  '/fonts/archivo-latin-600-normal.woff2',
+  '/fonts/archivo-latin-700-normal.woff2',
   '/manifest.webmanifest',
   '/fonts/tabler-icons.css',
   '/js/error-report.js',

@@ -423,7 +423,7 @@ const frontendGlobals = {
   // per-ROUND registry above; the two coexist until the flip, #1202)
   DESIGN_REGISTRY: 'readonly', FACE_DESIGN: 'readonly', CLASSIC_DESIGN: 'readonly', designById: 'readonly',
   selectableDesigns: 'readonly', selectableDesignIds: 'readonly', isSelectableDesign: 'readonly',
-  designMarkers: 'readonly', markerOf: 'readonly', markerInk: 'readonly', DEFAULT_MARKER_INK: 'readonly',
+  designMarkers: 'readonly', markerOf: 'readonly', markerInk: 'readonly', markerInkOf: 'readonly', DEFAULT_MARKER_INK: 'readonly',
   activeDesign: 'readonly', designIs: 'readonly', designViewsReady: 'readonly', designScheme: 'readonly', loadDesignStylesheet: 'readonly',
   applyDesign: 'readonly', requestedDesign: 'readonly', initDesign: 'readonly',
   DESIGN_CHOOSER_REVISION: 'readonly', applyAccountDesign: 'readonly',

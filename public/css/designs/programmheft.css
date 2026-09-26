@@ -1,0 +1,547 @@
+/* Das Programmheft — the override stylesheet (#1371, P1 + P8).
+ *
+ * Source: docs/design/programmheft/Programmheft-P1-Komponenten.dc.html
+ * („P1.1 Tokens") for every value here; the review
+ * (docs/design/pruefung-programmheft-2026-09-26.md) accepted the package with
+ * two remarks, neither of which touches a token. A value that is not in P1 does
+ * not belong in this file — the few this layer had to DERIVE (a marker's second
+ * gradient stop, the ramp's veto edge) say so where they are declared.
+ *
+ * The design is a printed programme: paper, black print, one vermilion, radius
+ * zero, and type doing the work a shadow does elsewhere. Its failure class is
+ * therefore VERMILION AS TEXT. #e8451c is 3.79:1 on the paper, so it is a
+ * display colour (Anton, 24px and up), a surface and an underline — never text
+ * below 24px. Where the app paints its accent as text (--brand: every
+ * .link-btn), the registry carries P1's „accent-ink" #b8330f instead, 5.71:1 on
+ * the page; the vermilion itself lives here as --vermilion.
+ * test/a11y-contrast-programmheft.test.js pins both halves, and pins that the
+ * two tones P1 marks „no text" (--hair, --hatch) are never a `color`.
+ *
+ * The file follows Ocean's seam (public/css/designs/ocean.css), because
+ * Programmheft is LIGHT too: a VOICE block that is unconditional, and a COLOUR
+ * block gated on `:not([data-scheme="dark"])`, where test/support/theme.js
+ * resolves it and the contrast suite measures it. Component rules only ever
+ * read var(--x). See .claude/rules/light-design-gate-and-shared-design-ids.md
+ * and .claude/rules/design-stylesheets-are-shell-assets.md.
+ *
+ * What is NOT here and must not move here:
+ *   - --page-bg and --brand. paintDesign() (round-theme.js) writes them inline
+ *     on <html> from the registry's `page`/`accent` (public/js/designs.js).
+ *   - Screen layout, motion and the placeholder cover tiles. This issue is
+ *     tokens + shared components; the screens are #1372-#1382.
+ */
+
+/* The design's VOICE — scheme-independent. */
+:root[data-design="programmheft"] {
+  /* ---- Schrift (P1.2). Anton for display — a single-weight face, declared
+     `400 800` in styles.css so a heading asking for 700 is never synthesised
+     bold — and Archivo 400/600/700 for everything else. Both OFL, self-hosted.
+     Anton is „ab 24 px", so the component block below hands every smaller
+     display-face user back to --font. */
+  --font: "Archivo", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Anton", "Archivo", -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* ---- Radien. „Ecken: keine." Every step is zero, the pill included — a
+     chip is a printed box. The toast's own 26px (styles.css, #858) is not a
+     token and is cleared in the component block. */
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-pill: 0px;
+
+  /* ---- Abstände (P1.1): 4 · 8 · 12 · 16 · 24 · 32 · 40 · 56. The page margin
+     is 40 on desktop and 18 on a phone; the screens place it (#1372). */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 40px;
+  --space-8: 56px;
+
+  /* ---- The display scale (P1.2), Anton only. display-6 is the smallest step
+     Anton may take (24px, tracked .2em); anything smaller is Archivo. */
+  --display-1: 118px;
+  --display-2: 84px;
+  --display-3: 60px;
+  --display-4: 40px;
+  --display-5: 30px;
+  --display-6: 24px;
+
+  /* ---- Zeilenabstand. Anton sets solid — „1,0, nie enger" — and a headline
+     opening on a „ quote needs 1.05 so the mark clears the line above. A kicker
+     sits 12px over its heading. */
+  --leading-display: 1;
+  --leading-quote: 1.05;
+  --kicker-gap: 12px;
+
+  /* ---- Linien (P1.1): 4px under a page head, 2px under a table head and
+     round a box, 1px between columns. A dotted hair is decoration only. */
+  --rule-page: 4px;
+  --rule-strong: 2px;
+  --rule-col: 1px;
+
+  /* ---- Fokus: 3px, 3px out. The colour is --brand-ring below. */
+  --ring-width: 3px;
+  --ring-offset: 3px;
+
+  /* ---- Trefferflächen — four tokens, not per-screen decisions (P1.1):
+     24 the floor; 32 footer links, toast actions and chips; 44 every KEY
+     control (the vote card and its back, the dock, the seats, the masthead);
+     44 every FIELD (inputs, selects, the stepper's buttons). */
+  --target-min: 24px;
+  --target-foot: 32px;
+  --target-key: 44px;
+  --target-field: 44px;
+}
+
+/* The design's COLOURS, gated on the LIGHT scheme it was drawn for — the same
+ * gate as Ocean's, for the same reason: the light scheme is the ABSENCE of
+ * data-scheme, so there is nothing positive to key on. Specificity (0,3,0).
+ * test/support/theme.js reads this block first for a light design. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) {
+  /* ---- Papier. The page (#fbfaf6) is the registry's `page`; raised is white.
+     Cards, sheets and every control sit on the raised white, so --surface and
+     --control-fill are the same tone — the edge carries the difference. */
+  --surface: #ffffff;
+  --control-fill: #ffffff;
+
+  /* ---- Druck. --ink-2 is the second black a masthead line or a sub-head
+     takes. --ink-soft is one step darker than P1's #6f6b66 (5.1:1 on the
+     page, 4.29 on --gold-soft): P1 keeps it off gold-soft by rule, but the app
+     prints secondary text on every tint it has — gold-soft, the brand tints,
+     the score washes — so the rule cannot be kept. #5f5b56 is 6.45:1 on the
+     page, 6.74 on white and 5.47 on --gold-soft. */
+  --ink: #141414;
+  --ink-2: #2b2925;
+  --ink-soft: #5f5b56;
+
+  /* ---- The two tones that carry NO text (P1: „nur Deko" / „kein Text").
+     --hair is 1.98:1 on the page: a dotted rule, a hairline, --line. --hatch is
+     the diagonal fill of an empty slot, and P1 prints nothing on it. */
+  --hair: #b8b4ad;
+  --hatch: #efece4;
+  --line: var(--hair);
+  /* The two wells (a pressed chip ground, a list's quiet row). :root mixes
+     them off the page, and on this near-white page that lands under the step
+     every other light design ships against white (1.24 / 1.19); stated here
+     as the nearest tones that clear it, from P1's own paper family. */
+  --sunken: #e6e3dc;
+  --sunken-soft: #ebe8e1;
+
+  /* The UI-control border: ink. P1.4 draws a field as a 1.5px black rule on
+     white, and the edge — not the fill — is what carries SC 1.4.11's 3:1. */
+  --control-edge: #141414;
+
+  /* ---- Der Kasten (the box): black with paper print, P1's „Primär" button and
+     the programme's framed notices. --box-ink-soft is the box's caption tone,
+     11.5:1. */
+  --box: #141414;
+  --box-ink: #fbfaf6;
+  --box-ink-soft: #cfccc5;
+
+  /* ---- Zinnober (P1: „Akzent") — the masthead band, a display numeral, an
+     underline, the progress dot. 3.79:1 on the page, so never text under
+     24px; ink on it is 4.65:1, which is what a masthead's print takes. */
+  --vermilion: #e8451c;
+  --on-vermilion: #141414;
+
+  /* ---- Fokus. Ink everywhere the ring falls on paper (17.6:1); inside the box
+     and on the masthead a ring needs the other tone, which the screen rules
+     set from --ring-on-box (vermilion on black, 4.65:1). */
+  --brand-ring: #141414;
+  --ring-on-box: #e8451c;
+
+  /* ---- Semantik — all three are text as well (.link-btn, toasts), measured
+     on the page and on white. --danger is also the fill a destructive hover
+     takes, with paper on it at 7.12:1. */
+  --good: #2d6a3e;
+  --warn: #8a5a00;
+  --danger: #a3241a;
+
+  /* ---- Gold (P1: „nur auf Tinte oder mit Tintenkante"). The winning row's
+     wash is --gold-soft, P1's gold-tint; ink on it is 14.96:1 and accent-ink
+     4.85:1. The gold itself is a crown and a seal on ink (8.34:1), and its
+     edge is ink. --gold-deep, the family's text member, is --warn's tone. */
+  --gold: #d9a72a;
+  --gold-ink: #141414;
+  --gold-soft: #f6e7b9;
+  --gold-deep: #8a5a00;
+  --gold-edge: #141414;
+
+  /* ---- The score ramp (P1.9), 1 -> 5, vermilion to ink. It DARKENS as the
+     score rises — the print gets heavier — so it has names of its own rather
+     than the --score-* family, whose contract is a ramp that brightens.
+     Each step carries a FIXED ink: ink on the vermilion (4.65:1), paper on the
+     other four (5.62 / 7.01 / 9.75 / 17.64). */
+  --ramp-1: #e8451c;
+  --ramp-2: #b23d1c;
+  --ramp-3: #7a4a3a;
+  --ramp-4: #4a3f3a;
+  --ramp-5: #141414;
+  --ramp-ink-1: #141414;
+  --ramp-ink-2: #fbfaf6;
+  --ramp-ink-3: #fbfaf6;
+  --ramp-ink-4: #fbfaf6;
+  --ramp-ink-5: #fbfaf6;
+  /* „Gar nicht" is not a colour on the ramp but a stamp: paper, a 2px
+     vermilion edge, the word in accent-ink (5.71:1 on the page). */
+  --veto-fill: #fbfaf6;
+  --veto-edge: #e8451c;
+  --veto-ink: #b8330f;
+
+  /* ---- Tiefe. „Schatten nur für Schwebendes": a card lies flat on the paper,
+     so the two resting steps carry none, and anything that floats (a sheet, a
+     popover, the toast) takes P1's one shadow — an ink hairline under it and a
+     soft cast. */
+  --cast: rgba(20, 20, 20, 0.20);
+  --shadow-1: none;
+  --shadow-2: none;
+  --shadow-3: 0 1px 0 var(--ink), 0 14px 36px var(--cast);
+}
+
+/* ---------------------------------------------------------------------------
+   Components. Everything that follows exists because a TOKEN could not say it.
+   --------------------------------------------------------------------------- */
+
+/* ANTON STAYS ON DISPLAY TYPE. The app gives --font-display to controls, pills
+   and small labels as well, but Anton is „ab 24 px" and P1.3 sets every small
+   button in Archivo 700. So these take the text face back. The list is every
+   styles.css rule that asks for the display face — or sizes a heading/title —
+   and resolves under 24px on this design;
+   test/design-tokens-programmheft.test.js DERIVES it from styles.css, so a new
+   small display-face rule fails there until it is added here. Font only, so it
+   belongs to the voice and is not gated. */
+:root[data-design="programmheft"] :is(
+  .topbar__home,
+  .rail__name,
+  .page-head h2,
+  .avatar,
+  .hub-card__title,
+  .hub-offshelf__title,
+  .hub-care__head,
+  .ticket__title,
+  .ticket__names,
+  .dock__item,
+  .section :is(h1, h2, h3),
+  .sort-select,
+  .chip,
+  .tag-mode__opt,
+  .fbar__trigger,
+  .mfilter__label,
+  .btn,
+  .card :is(h2, h3),
+  .next-step__title,
+  .round-card__name,
+  .round-card--new,
+  .lobby-cta__action,
+  .nr-table__center,
+  .nr-seat__avatar,
+  .nr-seat__name,
+  .tl-month,
+  .session-card__title,
+  .score-pill,
+  .exp-pill,
+  .game-card__title,
+  .add-tile,
+  .landing-hero__brand,
+  .landing-desktop__caption,
+  .landing-walk__title,
+  .landing-step__num,
+  .landing-claim__title,
+  .topbar__login,
+  .news-entry__title,
+  .home-resume__head,
+  .dash-tile__head h2,
+  .install-section h2,
+  .install-offer h2,
+  .popover__head,
+  .vote .vote__title,
+  .tafel__title,
+  .trow__rank,
+  .trow__title,
+  .split-group__head,
+  .winner-chip,
+  .gd-onboard :is(h2, h3),
+  .rater__n,
+  .stamp__date,
+  .editor--expansions .exp-own__head,
+  .stepper__val,
+  .podium__name,
+  .podium__col--multi .podium__name,
+  .podium__rank,
+  .podium--single .podium__col--multi .podium__name,
+  .pokale-card__value,
+  .pokale-game__title,
+  .recap-fav__name,
+  .opt-card,
+  .setup-panel__title,
+  .pool-tile__name,
+  .pool-count__label,
+  .setup-bar__summary,
+  .handover__go,
+  .handover__back,
+  .mood__n,
+  .session-log__summary-title,
+  .session-log__title,
+  .result-people__name,
+  .spotlight__title,
+  .spotlight--table .spotlight__title,
+  .archive-row__title,
+  .rec-card__title,
+  .rec-spots__title,
+  .rec-spot__title,
+  .rec-ignored__title,
+  .rec-ignored__name,
+  .marker-card__name,
+  .badge__name,
+  .badge-moment__title,
+  .badge-card__name,
+  .konto-section__h,
+  .rs-section__h,
+  .friends-section__h,
+  .k-band__h
+) {
+  font-family: var(--font);
+}
+
+/* Anton sets solid (P1.2, --leading-display). Only the headings: a display
+   numeral inside a component keeps the line box that component was laid out
+   with until its screen issue re-draws it. */
+:root[data-design="programmheft"] :is(h1, h2, h3) { line-height: var(--leading-display); }
+
+/* „Zahlen tabellarisch" (P1.2). */
+:root[data-design="programmheft"] :is(
+  .score-pill, .stepper__val, .pool-count, .rater__n, .member-figure__value,
+  .pokale-card__value, .gd-price__amount, .trow__rank, .mood__n
+) {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- Target sizes (the --target-* tokens). Geometry only, so ungated. */
+:root[data-design="programmheft"] .btn { min-height: var(--target-key); }
+:root[data-design="programmheft"] .btn--sm { min-height: var(--target-foot); }
+:root[data-design="programmheft"] .chip { min-height: var(--target-foot); }
+:root[data-design="programmheft"] :is(.input, .select, .sort-select) { min-height: var(--target-field); box-sizing: border-box; }
+:root[data-design="programmheft"] .sheet__close { min-height: var(--target-key); min-width: var(--target-key); }
+:root[data-design="programmheft"] :is(.link-btn, .back-link) {
+  min-height: var(--target-min);
+  display: inline-flex;
+  align-items: center;
+}
+:root[data-design="programmheft"] :is(.toast__action, .toast__close) {
+  min-height: var(--target-foot);
+  display: inline-flex;
+  align-items: center;
+}
+:root[data-design="programmheft"] .site-footer a {
+  min-height: var(--target-foot);
+  display: inline-flex;
+  align-items: center;
+  padding-inline: 4px;
+}
+
+/* ---- Focus (P1.1): 3px, 3px out, in --brand-ring (ink). Every focus rule in
+   styles.css already reads `var(--brand-ring, var(--brand))`, so the colour
+   needs no rule at all; this only thickens the ring and moves it out. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) :focus-visible {
+  outline: var(--ring-width) solid var(--brand-ring);
+  outline-offset: var(--ring-offset);
+}
+/* The box's own ring is vermilion — ink on ink would vanish at the button's
+   edge, where the offset puts it back on paper only after 3px. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .btn--primary:focus-visible {
+  outline-color: var(--ring-on-box);
+}
+
+/* ---- Hover and focus edges stay INK. The app moves a control's edge to
+   --brand under the pointer, which is a step UP from its old --brand-edge rest;
+   here the rest is already the ink rule (18:1), so the accent (6:1) would make
+   the control FAINTER on hover. The design sheet's answer is what the hover
+   test in a11y-contrast.test.js measures. Declared before the button variants,
+   so .btn--primary/.btn--danger:hover still win on source order at the same
+   weight. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .search-pill:focus-within,
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .sort-select:focus,
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .chip:hover,
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .tag-mode__opt:not(:disabled):hover,
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .fbar__trigger:hover,
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .btn:hover,
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .input:focus,
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .select:focus,
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .landing-chip--link:hover,
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .topbar__acct:hover,
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .winner-chip:hover,
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .icon-picker__trigger:hover,
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .cover-pick:hover,
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .paste-zone:focus,
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .stepper__btn:hover,
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .stepper__val:focus,
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .opt-card:hover,
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .team-chip:hover,
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .mood:hover {
+  border-color: var(--control-edge);
+}
+
+/* ---- Buttons (P1.3). Flat print: a 2px ink rule, no pressed-key bottom edge,
+   so the press compensates by nothing but still restates the resting margin
+   (the #615 rule — a bare 0 would clobber a component's own margin). The label
+   is Archivo 700, uppercase and tracked; Anton belongs to 24px and up. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .btn {
+  border: var(--rule-strong) solid var(--ink);
+  border-bottom-width: var(--rule-strong);
+  font-size: var(--text-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .btn:hover {
+  background: var(--surface);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .btn:active {
+  transform: translateY(1px);
+  border-bottom-width: var(--rule-strong);
+  margin-bottom: var(--press-mb);
+}
+/* Primär: der Kasten — black, paper print, a vermilion underline on hover. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .btn--primary {
+  background: var(--box);
+  border-color: var(--box);
+  color: var(--box-ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .btn--primary:hover {
+  background: var(--box);
+  border-color: var(--box);
+  text-decoration-color: var(--vermilion);
+}
+/* Ghost: no rule at all, just the underline under the pointer. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .btn--ghost {
+  background: transparent;
+  border-color: transparent;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .btn--ghost:hover {
+  border-color: transparent;
+}
+/* Gefahr: the danger rule and ink; the hover fills it and prints paper. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .btn--danger {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .btn--danger:hover {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: var(--box-ink);
+}
+/* Deaktiviert: a DASHED rule rather than a fade — a faded black box reads as a
+   grey enabled one. WCAG exempts an inactive control from the contrast bars. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .btn:disabled {
+  opacity: 1;
+  background: transparent;
+  border: var(--rule-strong) dashed var(--ink-soft);
+  color: var(--ink-soft);
+  text-decoration: none;
+}
+
+/* ---- Chips (P1.5): a printed box — white, an ink rule, ink print. The on
+   state keeps the app's accent fill (--brand under --on-accent, 5.97:1). */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .chip {
+  color: var(--ink);
+  border-color: var(--ink);
+}
+
+/* ---- Fields (P1.4): a 1.5px ink rule on white. The focus ring is the global
+   one above, not the app's 2px brand outline. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) :is(.input, .select) {
+  border-width: 1.5px;
+  border-color: var(--control-edge);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) :is(.input, .select):focus-visible {
+  outline: var(--ring-width) solid var(--brand-ring);
+  outline-offset: var(--ring-offset);
+  border-color: var(--control-edge);
+}
+
+/* ---- Surfaces. A card lies flat: white, an ink column rule, no shadow. A
+   sheet, a popover and the toast float, so they take P1's one shadow
+   (--shadow-3) and a 2px ink frame. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .card {
+  border-color: var(--ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .sheet {
+  background: var(--surface);
+  border: var(--rule-strong) solid var(--ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .popover {
+  border: var(--rule-strong) solid var(--ink);
+}
+
+/* The empty state (P1.10): a printed notice on white inside an ink rule,
+   instead of the dashed accent frame. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .empty {
+  background: var(--surface);
+  border: var(--rule-strong) solid var(--ink);
+}
+
+/* ---- The no-cover placeholder (P1.9): white, an ink frame, the two
+   diagonals in --ink-soft (5.29:1 on white). `.cover-ph` owns the coverless
+   game box and brings its own gradient
+   (.claude/rules/cover-ph-owns-the-coverless-game-glyph.md), so the tone is
+   replaced here; the glyph takes --ink-soft too. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .cover-ph {
+  color: var(--ink-soft);
+  background-color: var(--surface);
+  background-image:
+    linear-gradient(to top right, transparent calc(50% - 0.5px), var(--ink-soft) calc(50% - 0.5px), var(--ink-soft) calc(50% + 0.5px), transparent calc(50% + 0.5px)),
+    linear-gradient(to bottom right, transparent calc(50% - 0.5px), var(--ink-soft) calc(50% - 0.5px), var(--ink-soft) calc(50% + 0.5px), transparent calc(50% + 0.5px));
+  box-shadow: inset 0 0 0 var(--rule-strong) var(--ink);
+}
+
+/* ---- The score pill (P1.9): the ramp with its FIXED inks, keyed on the same
+   `data-stop` the JS writes beside `--sc`, so fill and ink can never come from
+   different rungs. A pill without data-stop keeps the app's --sc fill. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .score-pill { font-weight: 700; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .score-pill[data-stop="veto"] {
+  --sc-fill: var(--veto-fill);
+  --sc-ink: var(--veto-ink);
+  box-shadow: inset 0 0 0 var(--rule-strong) var(--veto-edge);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .score-pill[data-stop="1"] { --sc-fill: var(--ramp-1); --sc-ink: var(--ramp-ink-1); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .score-pill[data-stop="2"] { --sc-fill: var(--ramp-2); --sc-ink: var(--ramp-ink-2); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .score-pill[data-stop="3"] { --sc-fill: var(--ramp-3); --sc-ink: var(--ramp-ink-3); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .score-pill[data-stop="4"] { --sc-fill: var(--ramp-4); --sc-ink: var(--ramp-ink-4); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .score-pill[data-stop="5"] { --sc-fill: var(--ramp-5); --sc-ink: var(--ramp-ink-5); }
+
+/* ---- The face row (P1.9): square keys with an ink rule; the chosen face is an
+   ink fill with paper print. `:not(.is-selected)` for the rest state, because
+   this selector outranks `.mood.is-selected`. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .mood:not(.is-selected) {
+  background: var(--surface);
+  border-color: var(--ink);
+  color: var(--ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .mood.is-selected {
+  background: var(--box);
+  border-color: var(--box);
+  color: var(--box-ink);
+}
+
+/* ---- The footer (P1.10): paper with a strong ink rule above it. The BGG
+   badge is licence-bound artwork and is never restyled. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .site-footer {
+  background: var(--page-bg);
+  border-top: var(--rule-strong) solid var(--ink);
+}
+
+/* ---- The toast (P1.6): the box, square. Only the neutral toast — the success
+   and error states keep their semantic fills. Klassisch's 26px corner is a
+   literal in styles.css (#858), so it is cleared here rather than through a
+   token. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .toast:not(.toast--success):not(.toast--error) {
+  background: var(--box);
+  color: var(--box-ink);
+  border-radius: 0;
+  box-shadow: var(--shadow-3);
+}

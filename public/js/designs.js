@@ -320,6 +320,80 @@ const DESIGN_REGISTRY = [
     card: 'ocean',
     enabled: true,
   },
+  /* Das Programmheft (#1371), from docs/design/programmheft/
+     Programmheft-P1-Komponenten.dc.html (the one token source) and
+     Programmheft-P8-Farben.dc.html (the markers and the ramp). A LIGHT,
+     right-angled newspaper: paper ground, a black box as a component, a
+     vermilion masthead, hierarchy from type rather than from colour or shadow.
+
+     `enabled: false` until its go-live issue (#1383); the screens are
+     #1372-#1382. Outside production it is selectable like any registered
+     design, so it can be built and reviewed on dev-temp-data.
+
+     THE ACCENT IS P1's `accent-ink`, not the vermilion. --brand is the app's
+     action colour AND its link-text colour (.link-btn sits on the page), and
+     the vermilion #e8451c is 3.8:1 on paper — P1's own rule allows it only for
+     Anton from 24px, surfaces and underlines. #b8330f is P1's „Zinnober für
+     Text unter 24 px" (5.7:1 on paper, 6.0:1 under white), so every place the
+     app prints --brand as small text stays legal by construction. The
+     vermilion itself lives in programmheft.css as --masthead / --vermilion. */
+  {
+    id: 'programmheft',
+    labelKey: 'design.programmheft.name',
+    descKey: 'design.programmheft.desc',
+    // A printed sheet — the chooser postcard's sign. Already declared in the
+    // repo subset (no new codepoint, .claude/rules/tabler-icon-codepoints.md).
+    glyph: 'ti-file-text',
+    taglineKey: 'design.programmheft.tagline',
+    shortKey: 'design.programmheft.short',
+    ritualKeys: ['startSession.potHeading', 'round.startSession', 'startSession.draw'],
+    /* P5.4's bill: paper running into P1's `hatch`, the vermilion wordmark —
+       display type, 3.8:1 on paper and over the 3:1 bar on the hatch stop —
+       and the ink subline. Swept with every poster by test/a11y-contrast.test.js.
+       The wordmark's FIT in the tile (review R2-1) is #1376's. */
+    poster: { ground: ['#fbfaf6', '#efece4'], ink: '#e8451c', sub: '#141414' },
+    page: '#fbfaf6',
+    accent: '#b8330f',
+    stylesheet: '/css/designs/programmheft.css',
+    /* P1.1 „Marker der Runde (8)", in the package's order, so index 0 is
+       Zinnober — the default. The ink differs PER MARKER (P8.2 measures which
+       of paper and ink reads better on each): Zinnober and Ocker take ink
+       (4.65:1 / 4.62:1), the other six paper (5.9:1 or better) — hence the
+       per-marker `ink` on those two and the design's paper `markerInk` for the
+       rest (designs.js markerInkOf).
+
+       The package draws every marker FLAT — „Tiefe nur über Linienstärke" —
+       so it has no `deep`. The app's machinery still reads one (the picker's
+       swatch gradient, the classic recap bar), so it is derived: lightness
+       x0.85 in oklab for the six paper markers (paper then reads 8:1 or
+       better), and for the two ink markers the darkest step that keeps ink at
+       4.5:1 (4.55 / 4.54) — x0.99, a hair — because a real step would drop the ink below AA.
+       Ocker stays #a8761a (operator decision E2): its band is 3.8:1 against
+       paper, a graphic at the 3:1 bar. */
+    markerInk: '#fbfaf6',
+    markers: [
+      { key: 'zinnober', labelKey: 'marker.programmheft.zinnober', color: '#e8451c', deep: '#e64319', ink: '#141414' },
+      { key: 'preussischblau', labelKey: 'marker.programmheft.preussischblau', color: '#1f4e8c', deep: '#0b3c78' },
+      { key: 'tannengruen', labelKey: 'marker.programmheft.tannengruen', color: '#2e6b3f', deep: '#17572c' },
+      { key: 'ocker', labelKey: 'marker.programmheft.ocker', color: '#a8761a', deep: '#a67518', ink: '#141414' },
+      { key: 'pflaume', labelKey: 'marker.programmheft.pflaume', color: '#6e3a6b', deep: '#5b2858' },
+      { key: 'graphit', labelKey: 'marker.programmheft.graphit', color: '#4a4a48', deep: '#3a3a38' },
+      { key: 'petrol', labelKey: 'marker.programmheft.petrol', color: '#1c6b72', deep: '#00565d' },
+      { key: 'fuchsie', labelKey: 'marker.programmheft.fuchsie', color: '#9c2f6e', deep: '#841459' },
+    ],
+    /* Klassisch's marks, stated rather than inherited, until the design's own
+       mark lands with #1381 (P8.4) — the same holding pattern Ocean used. */
+    marks: {
+      icons: [
+        { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
+        { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
+      ],
+      favicon: { href: '/icons/icon-192.png', sizes: '192x192' },
+      appleTouch: '/icons/apple-touch-icon.png',
+      og: '/icons/og-image.png',
+    },
+    enabled: false,
+  },
 ];
 
 /* Which run of the first-start chooser an account has seen (#1186). A REVISION
@@ -371,6 +445,15 @@ const DEFAULT_MARKER_INK = '#ffffff';
 function markerInk(id) {
   const design = designById(id);
   return (design && design.markerInk) || DEFAULT_MARKER_INK;
+}
+
+/* The ink for ONE marker (#1371). A design whose eight markers do not all take
+   the same ink states it per marker: Das Programmheft's Zinnober and Ocker are
+   too light for its paper (3.8:1) and take ink, the other six take paper — one
+   design-wide ink cannot serve both. Every caller that paints a marker's ink
+   asks this rather than markerInk(), so the choice travels with the colour. */
+function markerInkOf(id, marker) {
+  return (marker && marker.ink) || markerInk(id);
 }
 
 /* The eight marker colours a design paints an index with. Every registry row
@@ -440,7 +523,7 @@ function isSelectableDesign(id, opts) {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     DESIGN_REGISTRY, FACE_DESIGN, CLASSIC_DESIGN, DESIGN_CHOOSER_REVISION, designById, designMarks, manifestHref,
-    designMarkers, markerOf, markerInk, DEFAULT_MARKER_INK,
+    designMarkers, markerOf, markerInk, markerInkOf, DEFAULT_MARKER_INK,
     selectableDesigns, selectableDesignIds, isSelectableDesign,
   };
 }

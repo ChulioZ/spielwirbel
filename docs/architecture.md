@@ -452,6 +452,7 @@ public/
                      on demand by js/design.js; Klassisch has none, because
       tisch.css      styles.css IS Klassisch
       ocean.css
+      programmheft.css
   manifest.webmanifest  PWA manifest (installable app metadata + icons) —
                      Klassisch's; lib/web-manifest.js derives every other
                      design's (the face's included) from it

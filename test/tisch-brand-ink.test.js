@@ -129,10 +129,22 @@ for (const name of ['--brand-ink', '--brand-ring']) {
           `${name} is declared on ${part}, which is not one of the scheme-gated overlay selectors`);
       }
     }
-    // And the other designs' sheets: none of them may declare it either.
+    /* And the other designs' sheets. The trap is an ALIAS of the brand, which is
+       substituted once where it is declared (root-alias-custom-property-is-
+       substituted-once.md). A design whose ring is a fixed ink of its own —
+       Das Programmheft's is P1's black, whatever the round's accent (#1371) —
+       may state it as a LITERAL in its own root colour block; that follows
+       nothing, so there is nothing to strand. Anything else is still refused. */
     const dir = path.join(ROOT, 'public/css/designs');
     for (const f of fs.readdirSync(dir).filter((n) => n.endsWith('.css') && n !== 'tisch.css')) {
-      assert.deepEqual(declaring(strip(fs.readFileSync(path.join(dir, f), 'utf8'))), [], `${f} declares ${name}`);
+      const css = strip(fs.readFileSync(path.join(dir, f), 'utf8'));
+      const bad = rulesOf(css).filter(([sel, body]) => {
+        const m = new RegExp(`(?:^|[;{\\s])${name}\\s*:\\s*([^;]+)`).exec(body);
+        if (!m) return false;
+        const rootBlock = /^:root\[data-design="[\w-]+"\](?::not\(\[data-scheme="dark"\]\)|\[data-scheme="dark"\])?$/.test(sel.trim());
+        return !(rootBlock && /^#[0-9a-f]{3,8}$/i.test(m[1].trim()));
+      }).map(([s]) => s);
+      assert.deepEqual(bad, [], `${f} declares ${name} outside its root colour block, or as anything but a literal`);
     }
   });
 }
