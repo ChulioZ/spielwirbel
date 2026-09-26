@@ -3016,8 +3016,10 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
   background-repeat: no-repeat;
 }
 /* Overlay/interactive children must stay above the cover layers — ::after is an
-   auto-z-index positioned sibling that would otherwise paint over them. */
+   auto-z-index positioned sibling that would otherwise paint over them. The
+   selection tick was missing here until #1358: it sat under every real cover. */
 .game-card__badges,
+.game-card__pick,
 .gd-img__edit {
   z-index: 2;
 }
@@ -10312,10 +10314,24 @@ kbd {
   justify-content: center;
   font-size: 16px; /* glyph, not type */
   color: transparent;
+  /* A halo in the page's own tone plus a soft cast, so the EMPTY circle reads
+     over a light cover and a dark one alike (#1358). */
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--page-bg) 70%, transparent), var(--shadow-1);
 }
 .is-selecting .game-card__pick { display: flex; }
 .is-selecting .game-card { cursor: pointer; }
 .is-selecting .game-card.is-picked { border-color: var(--brand); }
+/* The picked frame every design can show (#1358). The card border above is
+   outranked on Ocean light and absent on Der Tisch (border: 0), so the cover
+   itself carries the ring — drawn on the ::after cover layer, as an INSET
+   shadow, which paints above that layer's own background (the cover image).
+   Measured in Chromium: an outline or shadow on .game-card__img itself paints
+   UNDER its positioned ::before/::after layers and never shows, and an outer
+   shadow would be clipped by the card's paint containment (content-visibility). */
+.is-selecting .game-card.is-picked .game-card__img::after {
+  box-shadow: inset 0 0 0 3px var(--brand);
+  border-radius: inherit;
+}
 .is-selecting .game-card.is-picked .game-card__pick {
   background: var(--brand);
   border-color: var(--brand);
