@@ -407,6 +407,27 @@
   --veto-tag-ink: #8f2f22;
   --veto-tag-edge: #d9a99a;
 
+  /* ---- Die Nadel (#1390, T17): the Abzeichen as brass pins on the felt.
+     The five values T17 draws outside T1, and the review (pruefung-abzeichen
+     finding 3) puts them HERE rather than on the pin rules, because only this
+     block is resolved by test/support/theme.js. Measured in
+     test/a11y-contrast.test.js against T17.9's grounds.
+
+     --pin-recess     the felt RECESS an open, progressing or secret pin sits
+                      in — a shade under --felt-deep, so it reads as pressed in.
+     --pin-recess-ink the glyph in that recess: 6.50:1, a graphic (3:1).
+     --brass-lo       the brass pin's shadowed rim stop, under --gold-deep. The
+                      engraving (--on-accent) is 5.34:1 there, its worst stop.
+     --pin-shadow     the hard edge a raised pin stands on. Decorative: the
+                      brass fill identifies the pin, not its shadow.
+     --paper-track    the card's progress TRACK on paper; --paper-faint fills it
+                      at 5.14:1. */
+  --pin-recess: #173a29;
+  --pin-recess-ink: #9cc4a8;
+  --brass-lo: #b8893b;
+  --pin-shadow: #6b4a1a;
+  --paper-track: #e2d6bc;
+
   /* ---- Tiefe. Wood takes a harder shadow than paper does: the app's ramp is
      tuned for a light page, and at 0.06-0.12 alpha it disappears entirely on
      Nussbaum. Same three steps, same structure (sharp key over soft ambient),
@@ -8282,4 +8303,699 @@
 :root[data-design="tisch"][data-scheme="dark"] .landing-desktop__caption {
   font-weight: 800;
   color: var(--felt-ink);
+}
+
+/* ===========================================================================
+   #1390 — ABZEICHEN as brass pins on the felt (Tisch-T17-Abzeichen.dc.html,
+   T17.1–T17.8; review: docs/design/pruefung-abzeichen-2026-09-26.md).
+
+   PAINT over K17's shared markup (views-badges.js, #1388): nothing here adds,
+   drops or reorders an element, so every placement keeps Klassisch's reading
+   order and every mark stays a real <button>. The pin is two layers on the
+   one `.badge__mark` span — the span itself holds the progress RING (a conic
+   of --pct), its ::before is the PIN (brass, or the felt recess), and the
+   glyph sits above both. That is why the glyph is `position: relative`: a
+   positioned pseudo-element otherwise paints over in-flow content.
+
+     earned       raised brass, the glyph engraved in --on-accent
+     locked       a felt recess, dashed --control-edge, the glyph in its ink
+     progress     the recess, solid, plus the brass ring and the count line
+     secret       the locked recess; lock-question is the markup's glyph
+     tier         a brass shield on the pin's lower right, the numeral in gold
+
+   State is never colour alone (T17.10): brass vs recess is fill AND relief,
+   open vs progress is dashed edge vs ring, and every tile's aria-label names
+   the state in words (views-badges.js).
+
+   THE MEMBER'S COLOUR stays in the avatar and never touches a pin, and no
+   name or condition is ever written on the brass — both are the sheet's
+   binding cautions (handover §5); test/tisch-badges.test.js pins the first on
+   the rendered markup.
+
+   THE ROUND BAND IS THE DEFAULT FELT, not the round's marker (the podium and
+   the Tischkarte head wear the marker). The recess is Tannenfilz pressed in,
+   so on a red or blue marker it would read as a hole of another colour; and
+   the dashed edge and the ring are measured on this felt only.
+
+   NO MOTION. The falling pin (T17.5's 400 → 1 040 ms) is its own, droppable PR
+   per the issue; everything below is the end state, which is also exactly what
+   reduced motion shows.
+
+   Scheme-gated throughout, geometry included: every rule reads a gated token
+   or lays out a surface that only exists under the gated colours, and the
+   markup is Klassisch's own, so a light round (should one ever own the page
+   again) falls back to Klassisch's badges whole rather than to half a pin.
+   =========================================================================== */
+
+/* --- The pin (T17.1) ------------------------------------------------------ */
+:root[data-design="tisch"][data-scheme="dark"] .badge {
+  --pin: 50px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  align-content: start;
+  row-gap: 5px;
+  padding: 4px 2px 6px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: none;
+  color: var(--ink);
+}
+:root[data-design="tisch"][data-scheme="dark"] .badge:hover { background: none; }
+:root[data-design="tisch"][data-scheme="dark"] .badge:hover .badge__name {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+/* Gold, as T17's own focus ring: 4.20:1 on the felt's light stop and 7.74:1
+   on wood, both over the 3:1 a focus indicator needs. */
+:root[data-design="tisch"][data-scheme="dark"] .badge:focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: 3px;
+}
+
+:root[data-design="tisch"][data-scheme="dark"] .badge__mark {
+  position: relative;
+  grid-row: 1;
+  grid-column: 1;
+  align-self: center;
+  width: var(--pin, 50px);
+  height: var(--pin, 50px);
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--pin-recess-ink);
+  font-size: calc(var(--pin, 50px) * .42); /* glyph, not type — sized to the pin */
+}
+/* The pin itself: by default the RECESS (open and secret). The inset shadow
+   presses it into the felt; the dashed edge is 3.51:1 on --felt-deep, 3.78:1
+   on wood and 4.08:1 against the recess it rims. */
+:root[data-design="tisch"][data-scheme="dark"] .badge__mark::before {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  box-sizing: border-box;
+  border: 2px dashed var(--control-edge);
+  border-radius: 50%;
+  background: var(--pin-recess);
+  box-shadow: inset 0 3px 6px var(--cast-deep);
+}
+:root[data-design="tisch"][data-scheme="dark"] .badge__mark > .ti,
+:root[data-design="tisch"][data-scheme="dark"] .badge-card .badge__mark > .ti { position: relative; }
+
+/* Earned: raised brass, lit from the upper left, standing on a hard shadow.
+   The engraving is the walnut ink — 13.26:1 on the highlight down to 5.34:1 on
+   --brass-lo — so the glyph reads as cut into the metal at every stop. */
+:root[data-design="tisch"][data-scheme="dark"] :is(.badge, .badge-card)[data-state="earned"] .badge__mark {
+  color: var(--on-accent);
+}
+:root[data-design="tisch"][data-scheme="dark"] :is(.badge, .badge-card)[data-state="earned"] .badge__mark::before {
+  border: 2px solid var(--plinth-edge);
+  background: radial-gradient(circle at 35% 30%, var(--gold-hi), var(--gold) 40%, var(--gold-deep) 75%, var(--brass-lo));
+  box-shadow: 0 4px 0 var(--pin-shadow), 0 8px 14px var(--cast-deep);
+}
+
+/* In progress: the recess loses its dashed edge — the RING is its edge now —
+   and the span behind it draws the share done in brass (7.18:1 on --felt-deep,
+   4.20:1 on the felt's light stop, 7.74:1 on wood). An EARNED tier that has a
+   next step carries the same ring: the way to the next tier (T17.1 „Verdient
+   mit Stufe"). The markup writes --pct only where there is a count, and a
+   locked entry's count is 0, so the ring is keyed on the state as well. */
+:root[data-design="tisch"][data-scheme="dark"] .badge[data-state="progress"] .badge__mark::before {
+  border-style: solid;
+  border-color: var(--pin-recess);
+}
+:root[data-design="tisch"][data-scheme="dark"] .badge[data-state="progress"] .badge__mark,
+:root[data-design="tisch"][data-scheme="dark"] .badge[data-state="earned"] .badge__mark[style*="--pct"] {
+  background: conic-gradient(var(--gold) calc(var(--pct) * 1%), var(--gold-soft) 0);
+}
+
+/* The tier: a brass-rimmed shield on the pin's lower right, the numeral gold on
+   the plinth ink (10.41:1). Placed in the mark's grid cell and pushed out by
+   the pin's own size, so it follows the pin at every one of its sizes. */
+:root[data-design="tisch"][data-scheme="dark"] .badge__tier {
+  position: static;
+  z-index: 1;
+  grid-row: 1;
+  grid-column: 1;
+  align-self: center;
+  justify-self: center;
+  min-width: 20px;
+  height: 17px;
+  padding: 0 4px;
+  box-sizing: border-box;
+  border: 1px solid var(--gold);
+  border-radius: var(--radius-sm);
+  background: var(--plinth-ink);
+  color: var(--gold);
+  font-family: var(--font-display);
+  font-size: 10px; /* a numeral on a 17px shield, not running type */
+  font-weight: 800;
+  line-height: 15px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  transform: translate(calc(var(--pin, 50px) / 2 - 5px), calc(var(--pin, 50px) / 2 - 6px));
+}
+/* „Neu" until the next visit: a small gold plate at the pin's upper left,
+   --gold-ink on --gold (review finding A2's one ink on gold, 7.74:1). */
+:root[data-design="tisch"][data-scheme="dark"] .badge__new {
+  position: static;
+  z-index: 1;
+  grid-row: 1;
+  grid-column: 1;
+  align-self: center;
+  justify-self: center;
+  padding: 0 5px;
+  border-radius: var(--radius-sm);
+  background: var(--gold);
+  color: var(--gold-ink);
+  font-family: var(--font-display);
+  font-size: 10px; /* a tag on the pin's rim, not running type */
+  font-weight: 800;
+  letter-spacing: .08em;
+  line-height: 16px;
+  text-transform: uppercase;
+  transform: translate(calc(var(--pin, 50px) / -2 + 4px), calc(var(--pin, 50px) / -2 + 4px));
+}
+
+/* Name and line: beside the pin, never on it — on the wood or the felt the
+   tile stands on. The line is clamped to two: the full condition is the
+   card's and the aria-label's, and a 76px column would stack five lines. */
+:root[data-design="tisch"][data-scheme="dark"] .badge__name {
+  grid-row: 2;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  line-height: 1.25;
+  color: inherit;
+}
+:root[data-design="tisch"][data-scheme="dark"] .badge__line {
+  grid-row: 3;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+:root[data-design="tisch"][data-scheme="dark"] .badge[data-state="locked"] .badge__name,
+:root[data-design="tisch"][data-scheme="dark"] .badge[data-state="secret"] .badge__name { color: inherit; }
+
+/* The pin board: small columns, four across a phone, as many as fit wider. */
+:root[data-design="tisch"][data-scheme="dark"] .badge-grid {
+  grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+  gap: 8px 4px;
+}
+
+/* --- Pokale › Abzeichen (T17.2 at 1440, T17.3 at 390) ----------------------
+   Under the Tafel and the plaques: the section opens on the brass rule the
+   page's other boards use, the round's marks are a FELT band, then one wooden
+   row per member in standings order (the markup's order). */
+:root[data-design="tisch"][data-scheme="dark"] .badge-section > .section-head {
+  justify-content: flex-start;
+  align-items: baseline;
+  gap: 6px 14px;
+  padding-top: 20px;
+  border-top: 3px solid var(--gold-edge);
+}
+:root[data-design="tisch"][data-scheme="dark"] .badge-section > .section-head h2 .ti { color: var(--gold); }
+:root[data-design="tisch"][data-scheme="dark"] .badge-section__summary {
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+/* The round as a felt band. Text on it is paper ink (review finding A1): the
+   name --felt-ink 5.38:1, the count and the lines --felt-ink-soft 4.79:1, both
+   on the light stop. */
+:root[data-design="tisch"][data-scheme="dark"] .badge-band--round {
+  margin-bottom: 16px;
+  padding: 14px 10px 12px;
+  border: 1px solid var(--gold-edge);
+  border-radius: var(--radius-md);
+  background-color: var(--felt-deep);
+  background-image:
+    var(--felt-weave),
+    radial-gradient(90% 180% at 20% -40%, var(--felt), var(--felt-deep) 74%);
+  color: var(--felt-ink);
+}
+:root[data-design="tisch"][data-scheme="dark"] .badge-band__head {
+  justify-content: flex-start;
+  gap: 10px;
+  margin: 0 6px 10px;
+}
+:root[data-design="tisch"][data-scheme="dark"] .badge-band__name {
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  font-weight: 800;
+}
+:root[data-design="tisch"][data-scheme="dark"] .badge-band__count {
+  font-weight: 600;
+  color: var(--felt-ink-soft);
+}
+:root[data-design="tisch"][data-scheme="dark"] .badge-band--round .badge__line { color: var(--felt-ink-soft); }
+/* T17.3: on a phone the band shows the names alone — four pins across, and the
+   dates and counts are the card's (and every tile's aria-label). */
+@media (max-width: 520px) {
+  :root[data-design="tisch"][data-scheme="dark"] .badge-band--round .badge__line { display: none; }
+}
+
+/* The members: wooden rows, the avatar ringed in gold as on the podium. The
+   avatar is the ONLY place the member's colour appears. */
+:root[data-design="tisch"][data-scheme="dark"] .badge-members { gap: 16px; }
+:root[data-design="tisch"][data-scheme="dark"] .badge-member {
+  padding: 4px 14px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+}
+:root[data-design="tisch"][data-scheme="dark"] .badge-member__head {
+  min-height: 52px;
+  gap: 11px;
+}
+:root[data-design="tisch"][data-scheme="dark"] .badge-member__avatar {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  box-shadow: 0 0 0 2px var(--gold);
+}
+:root[data-design="tisch"][data-scheme="dark"] .badge-member__name {
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  font-weight: 800;
+}
+:root[data-design="tisch"][data-scheme="dark"] .badge-member__summary {
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+:root[data-design="tisch"][data-scheme="dark"] .badge-member__head::after { color: var(--gold); }
+:root[data-design="tisch"][data-scheme="dark"] .badge-member[open] > .badge-grid {
+  margin-top: 4px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+/* „N offen" in a dense round (X17.8): a dashed slot, the same „something
+   belongs here" edge the open pins wear. */
+:root[data-design="tisch"][data-scheme="dark"] .badge-member__more {
+  min-height: 28px;
+  padding: 0 8px;
+  border: 1px dashed var(--control-edge);
+  border-radius: var(--radius-sm);
+  color: var(--ink-soft);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+@media (min-width: 860px) {
+  :root[data-design="tisch"][data-scheme="dark"] .badge-band--round { padding: 16px 18px; }
+  :root[data-design="tisch"][data-scheme="dark"] .badge-band--round .badge-grid {
+    grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .badge-band--round .badge { --pin: 58px; }
+  :root[data-design="tisch"][data-scheme="dark"] .badge-band--round .badge__name { font-size: var(--text-sm); }
+  :root[data-design="tisch"][data-scheme="dark"] .badge-band__name { font-size: var(--text-lg); }
+  :root[data-design="tisch"][data-scheme="dark"] .badge-member .badge-grid {
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .badge-member .badge { --pin: 48px; }
+}
+
+/* --- The Tischkarte's lapel and the Spielerkarte's row (T17.4, T17.7) -----
+   The pins run along the card's lower edge on a band of wood under the brass
+   rule, bled to the card's edges by the card's own padding (26px 24px, 20px
+   16px on a phone). The kicker is gold on WOOD, not felt, so A1 does not bind
+   it (7.74:1). */
+:root[data-design="tisch"][data-scheme="dark"] .member-card__badges,
+:root[data-design="tisch"][data-scheme="dark"] .profile-card__badges {
+  gap: 10px;
+  margin: 18px -24px 0;
+  padding: 14px 24px 16px;
+  border-top: 3px solid var(--gold-edge);
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+}
+@media (max-width: 520px) {
+  :root[data-design="tisch"][data-scheme="dark"] .member-card__badges,
+  :root[data-design="tisch"][data-scheme="dark"] .profile-card__badges {
+    margin: 16px -16px 0;
+    padding: 12px 16px 14px;
+  }
+}
+:root[data-design="tisch"][data-scheme="dark"] .member-card__badges-label {
+  font-family: var(--font-display);
+  font-size: var(--text-xs);
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+/* The Tischkarte shows EARNED pins only (the markup's rule), each with its
+   name — tier included, „Stammgast 10" — under it; no shield, no ring, no
+   „Neu": the card is about who the member is, and the shield would repeat the
+   name's numeral. */
+:root[data-design="tisch"][data-scheme="dark"] .badge-grid--compact {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+:root[data-design="tisch"][data-scheme="dark"] .badge-grid--compact .badge { --pin: 44px; }
+:root[data-design="tisch"][data-scheme="dark"] .badge-grid--compact .badge__mark,
+:root[data-design="tisch"][data-scheme="dark"] .badge-grid--compact .badge__mark[style*="--pct"] { background: none; }
+:root[data-design="tisch"][data-scheme="dark"] .badge-grid--compact .badge__mark::before { inset: 0; }
+:root[data-design="tisch"][data-scheme="dark"] .badge-grid--compact .badge__name {
+  display: block;
+  font-size: var(--text-xs);
+  text-align: center;
+}
+:root[data-design="tisch"][data-scheme="dark"] .badge-grid--compact .badge__tier,
+:root[data-design="tisch"][data-scheme="dark"] .badge-grid--compact .badge__new { display: none; }
+/* 1440 (T17.4): the kicker in a 96px column on the left, the pins in a row
+   beside it with the name to the right of each. */
+@media (min-width: 860px) {
+  :root[data-design="tisch"][data-scheme="dark"] .member-card__badges {
+    flex-direction: row;
+    align-items: center;
+    gap: 14px;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .member-card__badges .member-card__badges-label {
+    flex: none;
+    width: 96px;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .badge-grid--compact {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 18px;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .badge-grid--compact .badge {
+    --pin: 40px;
+    grid-template-columns: var(--pin) auto;
+    column-gap: 8px;
+    align-items: center;
+    padding: 2px 4px 2px 0;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .badge-grid--compact .badge__name {
+    grid-row: 1;
+    grid-column: 2;
+    font-size: var(--text-sm);
+    text-align: left;
+  }
+}
+
+/* The Spielerkarte: the four account marks across, rings and all (T17.7) — the
+   tier ladder is the point of a cross-round mark, so its counts stay. */
+:root[data-design="tisch"][data-scheme="dark"] .badge-grid--account {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+}
+
+/* --- The result moment (T17.5), its END state --------------------------------
+   Under the felt head, before the Tafel: a strip of felt carrying at most two
+   pins, each on a wooden plate with the holder, the name and the condition
+   beside it — never on the brass. „+N weitere" is an outlined plate that opens
+   Pokale › Abzeichen. All of it is in the DOM from the first paint and nothing
+   moves; the result's closing action stays below and operable throughout. */
+:root[data-design="tisch"][data-scheme="dark"] .badge-moment {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0 0 18px;
+  padding: 12px 14px;
+  border: 1px solid var(--gold-edge);
+  border-radius: var(--radius-md);
+  background-color: var(--felt-deep);
+  background-image:
+    var(--felt-weave),
+    radial-gradient(90% 180% at 20% -40%, var(--felt), var(--felt-deep) 74%);
+  color: var(--felt-ink);
+}
+:root[data-design="tisch"][data-scheme="dark"] .badge-moment[hidden] { display: none; }
+/* A kicker in paper ink: gold is barred as text under 24px on felt (A1). The
+   medal is a glyph, where gold is allowed (4.20:1 on the light stop). */
+:root[data-design="tisch"][data-scheme="dark"] .badge-moment__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-xs);
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--felt-ink);
+}
+:root[data-design="tisch"][data-scheme="dark"] .badge-moment__title .ti {
+  flex: none;
+  color: var(--gold);
+  font-size: 18px; /* glyph, not type — the kicker's text is 12px */
+}
+:root[data-design="tisch"][data-scheme="dark"] .badge-moment__list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+:root[data-design="tisch"][data-scheme="dark"] .badge-moment__item { position: relative; }
+/* The holder names whose pin it is, in the plate's first line. It lives
+   outside the button in the markup (the button's name says it anyway), so it is
+   laid over the plate and lets the tap through to it. Its left edge is the
+   plate's padding + border + pin + gap: 8 + 1 + 52 + 12. */
+:root[data-design="tisch"][data-scheme="dark"] .badge-moment__holder {
+  position: absolute;
+  z-index: 1;
+  top: 8px;
+  left: 73px;
+  right: 16px;
+  overflow: hidden;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--ink-soft);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+:root[data-design="tisch"][data-scheme="dark"] .badge-moment .badge {
+  --pin: 52px;
+  width: 100%;
+  min-height: 64px;
+  grid-template-columns: var(--pin) minmax(0, 1fr);
+  grid-template-rows: 18px auto auto;
+  column-gap: 12px;
+  row-gap: 1px;
+  justify-items: start;
+  align-content: center;
+  padding: 7px 16px 8px 8px;
+  border: 1px solid var(--gold-edge);
+  background: var(--surface);
+  text-align: left;
+}
+:root[data-design="tisch"][data-scheme="dark"] .badge-moment .badge:hover { border-color: var(--gold); }
+:root[data-design="tisch"][data-scheme="dark"] .badge-moment .badge__mark,
+:root[data-design="tisch"][data-scheme="dark"] .badge-moment .badge__tier { grid-row: 1 / 4; }
+:root[data-design="tisch"][data-scheme="dark"] .badge-moment .badge__name {
+  grid-row: 2;
+  grid-column: 2;
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  font-weight: 800;
+}
+:root[data-design="tisch"][data-scheme="dark"] .badge-moment .badge__line {
+  grid-row: 3;
+  grid-column: 2;
+}
+:root[data-design="tisch"][data-scheme="dark"] .badge-moment .badge__new { display: none; }
+:root[data-design="tisch"][data-scheme="dark"] .badge-moment__more {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  min-height: 44px;
+  margin: 0;
+  padding: 0 14px;
+  border: 1px solid var(--gold);
+  border-radius: var(--radius-md);
+  color: var(--felt-ink);
+  font-weight: 700;
+  text-decoration: none;
+}
+@media (min-width: 860px) {
+  :root[data-design="tisch"][data-scheme="dark"] .badge-moment {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 14px;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .badge-moment__title {
+    flex: none;
+    width: 108px;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .badge-moment__list {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .badge-moment__item { width: 300px; max-width: 100%; }
+  :root[data-design="tisch"][data-scheme="dark"] .badge-moment__more { align-self: center; }
+}
+
+/* --- The hub line (T17.6) ---------------------------------------------------
+   In the Pokale card at 1280 and up: a strip of felt with the medal as a brass
+   pin. Below 1280 the preview is a TILE — title plus one line, its ranks
+   already hidden — and the pin strip would be a third line in a 44px tile, so
+   it goes with the ranks; the tile itself opens the Pokale. */
+:root[data-design="tisch"][data-scheme="dark"] .hub-row--badges {
+  gap: 10px;
+  min-height: 44px;
+  margin: 10px 0 0;
+  padding: 0 10px;
+  border: 1px solid var(--gold-edge);
+  border-radius: var(--radius-md);
+  background-color: var(--felt-deep);
+  background-image:
+    var(--felt-weave),
+    radial-gradient(90% 180% at 20% -40%, var(--felt), var(--felt-deep) 74%);
+  color: var(--felt-ink);
+  font-weight: 700;
+}
+:root[data-design="tisch"][data-scheme="dark"] .hub-row--badges .ti,
+:root[data-design="tisch"][data-scheme="dark"] .chronik-row--badge .chronik-row__icon,
+:root[data-design="tisch"][data-scheme="dark"] .feed-row__cover--badge {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  box-sizing: border-box;
+  border: 1px solid var(--plinth-edge);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, var(--gold-hi), var(--gold-deep) 70%);
+  color: var(--on-accent);
+  font-size: 14px; /* glyph, not type — sized to the pin */
+}
+:root[data-design="tisch"][data-scheme="dark"] .hub-previews .hub-row--badges { display: none; }
+@media (min-width: 1280px) {
+  :root[data-design="tisch"][data-scheme="dark"] .hub-previews .hub-row--badges { display: flex; }
+}
+
+/* --- The Chronik (T17.6) ------------------------------------------------------
+   One paper slip per earning under its session's strip, indented into the
+   strip's column — on a desktop the strip's paper starts past the 58px date
+   column, so the slip does too. „Abzeichen" is the quiet label at its right
+   (--paper-faint, 6.01:1 on --paper-raised); the DOM keeps label-then-text,
+   the order Klassisch reads. */
+:root[data-design="tisch"][data-scheme="dark"] .chronik-row--badge {
+  box-sizing: border-box;
+  gap: 10px;
+  min-height: 40px;
+  margin: 4px 0 0 24px;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--paper-raised);
+  color: var(--paper-ink);
+  font-size: var(--text-sm);
+}
+@media (min-width: 521px) {
+  :root[data-design="tisch"][data-scheme="dark"] .chronik-row--badge { margin-left: 82px; }
+}
+:root[data-design="tisch"][data-scheme="dark"] .chronik-row--badge .chronik-row__text {
+  order: 1;
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  color: var(--paper-ink);
+  font-weight: 700;
+}
+/* Brass would be 2:1 on the paper; the focus ring takes the rim, 3.71:1. */
+:root[data-design="tisch"][data-scheme="dark"] .chronik-row--badge .chronik-row__text:focus-visible {
+  outline: 2px solid var(--gold-edge);
+  outline-offset: 2px;
+}
+:root[data-design="tisch"][data-scheme="dark"] .chronik-row--badge .chronik-row__label {
+  order: 2;
+  margin-left: auto;
+  color: var(--paper-faint);
+  font-size: var(--text-xs);
+  font-weight: 700;
+}
+
+/* --- The friends' feed (T17.7): the one account-tier earning a friend sees —
+   the cover slot becomes a brass pin (rule shared with the hub and Chronik
+   pins above), and a tile's image slot is felt with the pin laid on it. */
+:root[data-design="tisch"][data-scheme="dark"] .feed-row__cover--badge {
+  width: 36px;
+  height: 36px;
+  font-size: 17px; /* glyph, not type */
+}
+:root[data-design="tisch"][data-scheme="dark"] .e-tile__img--badge {
+  background-color: var(--felt-deep);
+  background-image:
+    var(--felt-weave),
+    radial-gradient(90% 180% at 20% -40%, var(--felt), var(--felt-deep) 74%);
+}
+:root[data-design="tisch"][data-scheme="dark"] .e-tile__img--badge .ti {
+  display: inline-grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  box-sizing: border-box;
+  border: 2px solid var(--plinth-edge);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, var(--gold-hi), var(--gold) 40%, var(--gold-deep) 75%, var(--brass-lo));
+  box-shadow: 0 4px 0 var(--pin-shadow);
+  color: var(--on-accent);
+  font-size: 26px; /* glyph, not type */
+}
+
+/* --- The card on tap (T17.1, right) ----------------------------------------
+   A printed card like every Tisch overlay (the paper re-point above), with the
+   pin at 64px in its head. The progress bar is the paper ink T1 names for a
+   graphic on paper over T17's track (5.14:1); the reached tiers are struck on
+   the gold tint, the rest dashed. The card's pin has no --pct in the markup, so
+   it carries no ring — the bar under it is the progress. */
+:root[data-design="tisch"][data-scheme="dark"] .badge-card { gap: 12px; }
+:root[data-design="tisch"][data-scheme="dark"] .badge-card__head { gap: 14px; }
+:root[data-design="tisch"][data-scheme="dark"] .badge-card .badge__mark {
+  --pin: 64px;
+  flex: none;
+  width: var(--pin);
+  height: var(--pin);
+}
+:root[data-design="tisch"][data-scheme="dark"] .badge-card .badge__mark::before { inset: 0; }
+:root[data-design="tisch"][data-scheme="dark"] .badge-card__name {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 800;
+}
+:root[data-design="tisch"][data-scheme="dark"] .badge-card__cond {
+  font-weight: 600;
+  line-height: 1.5;
+}
+:root[data-design="tisch"][data-scheme="dark"] .badge-card__tier {
+  border: 1px dashed var(--paper-edge);
+  border-radius: var(--radius-sm);
+  color: var(--paper-ink-soft);
+}
+:root[data-design="tisch"][data-scheme="dark"] .badge-card__tier[data-reached] {
+  border-style: solid;
+  border-color: var(--gold-edge);
+  background: var(--gold-hi);
+  color: var(--paper-ink);
+}
+:root[data-design="tisch"][data-scheme="dark"] .badge-card__next {
+  font-weight: 700;
+  color: var(--paper-ink);
+  font-variant-numeric: tabular-nums;
+}
+:root[data-design="tisch"][data-scheme="dark"] .badge-card__bar {
+  height: 10px;
+  margin-top: 6px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(90deg, var(--paper-faint) calc(var(--pct) * 1%), var(--paper-track) 0);
+  box-shadow: inset 0 0 0 1px var(--paper-line);
+}
+:root[data-design="tisch"][data-scheme="dark"] .badge-card__earned {
+  padding-top: 10px;
+  border-top: 1px solid var(--paper-line);
+  color: var(--paper-ink-soft);
+  font-weight: 600;
 }
