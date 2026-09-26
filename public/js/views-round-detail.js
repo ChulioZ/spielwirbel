@@ -532,7 +532,7 @@ async function showGameDetail(rid, gameId) {
   }
 
   // State chips — read-only, so plain spans rather than `editableTag`.
-  if (game.retired) chips.append(h(`<span class="tag tag--retired">${iconText('ti-trash', t('result.retiredTag'))}</span>`));
+  if (game.retired) chips.append(h(`<span class="tag tag--retired">${iconText('ti-archive', t('result.retiredTag'))}</span>`));
   if (game.completed) chips.append(h(`<span class="tag tag--completed">${iconText('ti-circle-check', t('result.completedTag'))}</span>`));
   // The third chip (#663). Its key is `wish.tag`, not a fourth `result.*` one:
   // the two above are shared with the session results rows, and a wish can never

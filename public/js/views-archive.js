@@ -22,7 +22,7 @@
  */
 const ARCHIVES = {
   retired: {
-    icon: 'ti-trash',
+    icon: 'ti-archive',
     flag: (g) => g.retired,
     at: (g) => g.retiredAt,
     endpoint: (rid, gid) => `/api/rounds/${rid}/games/${gid}/retire`,
@@ -55,6 +55,9 @@ const ARCHIVES = {
     // so the danger hint (text colour) stays; dominance was the bug.
     primaryRestore: true,
     quietDelete: true,
+    // Un-wishing, not deleting (#1360): the bin is kept for the two archives,
+    // where the delete really does take a played game's history with it.
+    deleteIcon: 'ti-heart-off',
     // A wished EXPANSION says which game it belongs to, so the row does not read
     // as a game the round could play (#664). `expansionOf` is what marks the row
     // as an expansion at all, and it may be EMPTY — BGG does not always report an
@@ -147,7 +150,7 @@ async function showArchive(rid, kind, seg = kind) {
            </div>
            <div class="archive-row__actions">
              <button class="btn${a.primaryRestore ? ' btn--primary' : ''}" data-act="restore"><i class="ti ${a.restoreIcon || 'ti-arrow-back-up'}" aria-hidden="true"></i> ${esc(t(`${kind}.restore`))}</button>
-             ${roundCan(round, 'game.delete') ? `<button class="btn${a.quietDelete ? '' : ' btn--danger'}"${a.quietDelete ? ' style="color:var(--danger)"' : ''} data-act="delete"><i class="ti ti-trash" aria-hidden="true"></i> ${esc(t(`${kind}.delete`))}</button>` : ''}
+             ${roundCan(round, 'game.delete') ? `<button class="btn${a.quietDelete ? '' : ' btn--danger'}"${a.quietDelete ? ' style="color:var(--danger)"' : ''} data-act="delete"><i class="ti ${a.deleteIcon || 'ti-trash'}" aria-hidden="true"></i> ${esc(t(`${kind}.delete`))}</button>` : ''}
            </div>
          </div>`);
       if (g.image) loadCover(row.querySelector('.archive-row__img'), coverUrl(g.image, COVER_THUMB));
@@ -186,7 +189,7 @@ async function showArchive(rid, kind, seg = kind) {
         // history, so — like its quiet trigger — its confirm is not red.
         if (!await confirmDialog({
           body: t(`${kind}.deleteConfirm`, { title: g.title }),
-          confirmLabel: t(`${kind}.delete`), icon: 'ti-trash', danger: !a.quietDelete,
+          confirmLabel: t(`${kind}.delete`), icon: a.deleteIcon || 'ti-trash', danger: !a.quietDelete,
         })) return;
         try {
           await api('DELETE', `/api/rounds/${rid}/games/${g.id}`);

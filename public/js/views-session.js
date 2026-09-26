@@ -1387,7 +1387,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
      surface carrying it once the Tafel is gated away, so a look-alike copy here
      would be a fact that silently drifts. */
   const archivedBadge = (g) => (g.retired
-    ? ` <span class="tag tag--retired">${iconText('ti-trash', t('result.retiredTag'))}</span>`
+    ? ` <span class="tag tag--retired">${iconText('ti-archive', t('result.retiredTag'))}</span>`
     : g.completed
       ? ` <span class="tag tag--completed">${iconText('ti-circle-check', t('result.completedTag'))}</span>`
       : '');
