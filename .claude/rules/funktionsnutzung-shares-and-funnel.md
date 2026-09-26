@@ -34,8 +34,14 @@ So `adoption` carries **its own four totals** — `accountsTotal`, `roundsTotal`
 twin of the accounts block's own figure. `adoptionRows()` reads only those.
 `designAdoption` and `social` take the exclusion in place, because both render
 as shares on that same card; nothing else reads them. `designAdoption` (#1201)
-divides by `accountsTotal` — it counts ACCOUNTS, not rounds, since designs moved
-from rounds to accounts, and its per-design rows sum to exactly that total.
+counts ACCOUNTS, not rounds, since designs moved from rounds to accounts. Its
+headline (the switch-back share) divides by `accountsTotal`; its per-design
+lines, since #1362, count only accounts that answered the design chooser, so
+they divide by **their own sum**, derived in `admin.js` — never by
+`accountsTotal`, which would put every never-answered account in the
+denominator of a line it can never be in. The answered sum includes skippers
+(a skip stores the face like a confirmed Der Tisch), so the tile says
+„beantwortet", never „gewählt".
 
 **With the variable unset all of them equal their instance-wide twin**, which is
 what makes this look like a no-op and is not one: a renderer that reached for
