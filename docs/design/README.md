@@ -28,6 +28,8 @@ to (`public/js/round-marker.js`). Live designs: **Klassisch, Der Tisch.** Ocean
 | `bruecke/` | The reviewed „Die Brücke“ package (sixteen sheets B1–B16 plus the concept sheet), same shape as `tisch/`. B16 is the density sheet — twelve seats, a 42-game shelf, a tie and two long locales. The shared vote and the pass-device blind arrived in round 3 as B4.5/B6.9 and B4.6/B6.10. |
 | `pruefung-programmheft-2026-09-26.md` | The review of the fourth package (Das Programmheft), over two rounds. Round 2 was accepted with one condition for the build (R2-1: a design's wordmark must fit its poster tile, now in #1376). |
 | `programmheft/` | The reviewed „Das Programmheft“ package (fourteen sheets P1–P10, P13, P14, P15a, P15b plus the concept sheet), same shape as `tisch/`, plus the four component sheets (`-Kopf`, `-Telefonkopf`, `-Dock`, `-Fuss`) the others embed. The density cases live in P7 (P7.7–P7.10); per operator decision 10 its density notes are drawing aids, not product rules. |
+| `handover-abzeichen-2026-09-26.md` | The **Abzeichen** (achievements) brief X17, one sheet per design: the decided catalogue (22 core entries, three holders), the seven placements every design shares, and the per-design form. Its decisions table is binding. |
+| `pruefung-abzeichen-2026-09-26.md` | The review of the four X17 sheets (T17, O17, B17, P17), measured clean in one round; its nine numbered findings bind the implementation. Each of `tisch/`, `ocean/`, `bruecke/` and `programmheft/` holds its design's `*-X17-Abzeichen.dc.html`, a seventeenth brief added after the packages. |
 | `tools/audit.js` | The contrast + hit-size audit that measured the Tisch sheets (see below). |
 
 The issues that implement the programme start at #1184 (the design layer) and

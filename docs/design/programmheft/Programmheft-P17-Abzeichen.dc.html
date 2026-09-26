@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="design_doc_mode" content="canvas">
+  <link rel="stylesheet" href="../../../public/fonts/tabler-icons.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #d9d5cc; font-family: 'Archivo', sans-serif; }
+    a { color: #b8330f; text-decoration: none; }
+    a:hover { color: #141414; text-decoration: underline; }
+    button:focus-visible, a:focus-visible { outline: 3px solid #e8451c; outline-offset: 2px; }
+  </style>
+</helmet>
+<div style="display: flex; flex-direction: column; gap: 48px; padding: 48px; width: max-content; color: #141414; background: #d9d5cc; font-family: 'Archivo', sans-serif;">
+
+  <div data-screen-label="P17 Kopf" style="max-width: 1240px; display: flex; flex-direction: column; gap: 12px; background: #fbfaf6; border: 2px solid #141414; padding: 24px 28px;">
+    <div style="display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;">
+      <span style="font-weight: 700; font-size: 13px; letter-spacing: .14em; background: #141414; color: #fbfaf6; padding: 5px 12px;">P17</span>
+      <h1 style="margin: 0; font-family: 'Anton'; font-weight: 400; font-size: 44px; line-height: 1.05; text-transform: uppercase;">Abzeichen: Das Programmheft</h1>
+      <span style="font-weight: 600; font-size: 13px; color: #2b2925;">26.09.2026 · baut auf P1, P4, P13, P14 · handover-abzeichen-2026-09-26</span>
+    </div>
+    <p style="margin: 0; font-size: 16px; line-height: 1.55; max-width: 92ch; color: #2b2925; text-wrap: pretty;">Ein Abzeichen ist hier eine <strong style="color: #141414;">gedruckte Medaille</strong> in der Tinte des Papiers. Verdient ist ein volles Siegel mit Innenring und ausgesparter Glyphe. Unterwegs ist ein Kreis, den ein Tintenbogen schließt. Offen ist ein gestrichelter Kreis, geheim ein schraffierter. Auf der Pokale-Seite hat die Runde eine Zeitungsleiste, und jede Person bekommt eine eigene Spalte. Im Ergebnis drückt ein Stempel die Medaille ins Papier. Nur eine große Stufe bekommt eine „Sonderausgabe“. Zinnober erscheint nur ab 24 px.</p>
+    <div style="display: flex; flex-wrap: wrap; gap: 8px; font-size: 13px; font-weight: 700;">
+      <span style="border: 1px solid #141414; padding: 5px 10px;">Kern: 22 Einträge</span>
+      <span style="border: 1px solid #141414; padding: 5px 10px;">Geheim: Comeback · Einstimmig · Unentschieden</span>
+      <span style="border: 1px solid #141414; padding: 5px 10px;">Stufe = Ziffer auf dem Siegelband</span>
+      <span style="border: 1px solid #141414; padding: 5px 10px;">Glyphen: wie T17, nur Subset</span>
+    </div>
+  </div>
+
+  <div data-screen-label="P17.1 Medaille" style="display: flex; flex-direction: column; gap: 10px;">
+    <span style="font-weight: 600; font-size: 13px; color: #2b2925;">P17.1 · Die Medaille in sechs Zuständen: Zeile für 1440, kompakt für 390 und die Spalten, dazu die Karte beim Antippen</span>
+    <div style="width: 1440px; box-sizing: border-box; padding: 26px 40px 32px; background: #fbfaf6; border: 1px solid #141414; display: flex; flex-direction: column; gap: 26px;">
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 40px;">
+        <sc-for list="{{ states }}" as="s" hint-placeholder-count="6">
+          <div style="display: flex; flex-direction: column; gap: 6px; padding-top: 14px;">
+            <span style="display: flex; align-items: baseline; gap: 8px; border-bottom: 2px solid #141414; padding-bottom: 6px;"><span style="font-weight: 700; font-size: 12px; letter-spacing: .14em; text-transform: uppercase;">{{ s.label }}</span><span style="font-size: 13px; color: #6f6b66;">{{ s.hint }}</span></span>
+            <button aria-label="{{ s.t.aria }}" style="display: flex; align-items: center; gap: 16px; min-height: 80px; padding: 8px 0; background: none; border: none; border-bottom: 1px dotted #b8b4ad; color: #141414; font: inherit; text-align: left; cursor: pointer;">
+              <span style="position: relative; width: 62px; height: 62px; flex: none; border-radius: 50%; background: {{ s.t.ring }}; display: grid; place-items: center;">
+                <span style="width: 56px; height: 56px; box-sizing: border-box; border-radius: 50%; background: {{ s.t.bg }}; border: {{ s.t.border }}; box-shadow: {{ s.t.inner }}; color: {{ s.t.ink }}; display: grid; place-items: center;"><span style="width: {{ s.t.chip }}; height: {{ s.t.chip }}; border-radius: 50%; background: {{ s.t.chipBg }}; display: grid; place-items: center;"><i class="{{ s.t.icon }}" style="font-size: 24px;"></i></span></span>
+                <sc-if value="{{ s.t.hasTier }}" hint-placeholder-val="{{ false }}"><span style="position: absolute; left: 50%; bottom: -8px; transform: translateX(-50%); min-width: 30px; height: 20px; padding: 0 6px; box-sizing: border-box; background: #fbfaf6; border: 2px solid #141414; font-weight: 700; font-size: 12px; display: grid; place-items: center; font-variant-numeric: tabular-nums;">{{ s.t.tier }}</span></sc-if>
+              </span>
+              <span style="display: flex; flex-direction: column; gap: 2px; min-width: 0;">
+                <span style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;"><span style="font-weight: 700; font-size: 19px;">{{ s.t.nameTier }}</span><sc-if value="{{ s.t.isNew }}" hint-placeholder-val="{{ false }}"><span style="font-weight: 700; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; background: #141414; color: #fbfaf6; padding: 2px 7px;">Neu</span></sc-if></span>
+                <span style="font-size: 14px; color: #2b2925; line-height: 1.4;">{{ s.t.line }}</span>
+              </span>
+            </button>
+          </div>
+        </sc-for>
+      </div>
+      <div style="display: grid; grid-template-columns: minmax(0, 1fr) 440px; gap: 0 48px; align-items: start;">
+        <div style="display: flex; flex-direction: column; gap: 10px; border-right: 1px solid #141414; padding-right: 48px;">
+          <span style="font-weight: 700; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; border-bottom: 2px solid #141414; padding-bottom: 6px;">Kompakt · 390 und Leiste</span>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+            <sc-for list="{{ compactRow }}" as="t" hint-placeholder-count="5">
+              <button aria-label="{{ t.aria }}" style="width: 96px; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 6px 0; background: none; border: none; color: #141414; font: inherit; cursor: pointer;">
+                <span style="position: relative; width: 50px; height: 50px; border-radius: 50%; background: {{ t.ring }}; display: grid; place-items: center;">
+                  <span style="width: 46px; height: 46px; box-sizing: border-box; border-radius: 50%; background: {{ t.bg }}; border: {{ t.border }}; box-shadow: {{ t.innerS }}; color: {{ t.ink }}; display: grid; place-items: center;"><span style="width: {{ t.chipS }}; height: {{ t.chipS }}; border-radius: 50%; background: {{ t.chipBg }}; display: grid; place-items: center;"><i class="{{ t.icon }}" style="font-size: 20px;"></i></span></span>
+                  <sc-if value="{{ t.hasTier }}" hint-placeholder-val="{{ false }}"><span style="position: absolute; left: 50%; bottom: -8px; transform: translateX(-50%); min-width: 26px; height: 18px; padding: 0 5px; box-sizing: border-box; background: #fbfaf6; border: 2px solid #141414; font-weight: 700; font-size: 11px; display: grid; place-items: center;">{{ t.tier }}</span></sc-if>
+                </span>
+                <span style="font-weight: 700; font-size: 13px; text-align: center; line-height: 1.2;">{{ t.name }}</span>
+                <span style="font-size: 12px; color: #6f6b66; font-variant-numeric: tabular-nums;">{{ t.count }}</span>
+              </button>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <span style="font-weight: 700; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; border-bottom: 2px solid #141414; padding-bottom: 6px;">Nach dem Antippen · Karte, kein Modal</span>
+          <div role="dialog" aria-label="Stammgast" style="background: #ffffff; border: 2px solid #141414; padding: 18px 20px; display: flex; flex-direction: column; gap: 12px; box-shadow: 6px 6px 0 #141414;">
+            <span style="display: flex; align-items: center; gap: 16px;">
+              <span style="position: relative; width: 72px; height: 72px; flex: none; border-radius: 50%; background: conic-gradient(#141414 84%, #d9d5cc 0); display: grid; place-items: center;">
+                <span style="width: 64px; height: 64px; box-sizing: border-box; border-radius: 50%; background: #141414; box-shadow: inset 0 0 0 4px #141414, inset 0 0 0 6px #fbfaf6; color: #fbfaf6; display: grid; place-items: center;"><i class="ti ti-star" style="font-size: 28px;"></i></span>
+                <span style="position: absolute; left: 50%; bottom: -8px; transform: translateX(-50%); min-width: 30px; height: 20px; padding: 0 6px; box-sizing: border-box; background: #fbfaf6; border: 2px solid #141414; font-weight: 700; font-size: 12px; display: grid; place-items: center;">10</span>
+              </span>
+              <span style="display: flex; flex-direction: column;"><span style="font-family: 'Anton'; font-weight: 400; font-size: 34px; line-height: 1; text-transform: uppercase;">Stammgast</span><span style="font-size: 14px; color: #2b2925;">Jonas · Donnerstagsrunde</span></span>
+              <button aria-label="Schließen" style="margin-left: auto; align-self: flex-start; width: 40px; height: 40px; border: 2px solid #141414; background: #fbfaf6; color: #141414; font: inherit; cursor: pointer; display: grid; place-items: center;"><i class="ti ti-x" style="font-size: 18px;"></i></button>
+            </span>
+            <span style="font-size: 16px; line-height: 1.5;">Bei 10 · 25 · 50 · 100 Sessions dabei</span>
+            <span style="display: flex; flex-direction: column; gap: 6px; border-top: 2px solid #141414; padding-top: 8px;">
+              <span style="display: flex; align-items: baseline;"><span style="font-weight: 700; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #6f6b66;">Nächste Stufe 25</span><span style="margin-left: auto; font-family: 'Anton'; font-weight: 400; font-size: 30px; line-height: 1;">21 / 25</span></span>
+              <span style="display: block; height: 10px; border: 2px solid #141414; box-sizing: content-box;"><span style="display: block; width: 84%; height: 100%; background: #141414;"></span></span>
+            </span>
+            <span style="display: flex; align-items: center; gap: 8px; font-size: 14px; color: #2b2925; border-top: 1px dotted #b8b4ad; padding-top: 10px;"><i class="ti ti-calendar" style="font-size: 16px;"></i>Stufe 10 erreicht im Januar 2026 · Moorgeister</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div data-screen-label="P17.2 Pokale Desktop" style="display: flex; flex-direction: column; gap: 10px;">
+    <span style="font-weight: 600; font-size: 13px; color: #2b2925;">P17.2 · Pokale 1440, weitergescrollt: unter Ruhmeshalle, Tafel und Auszeichnungen die Rubrik „Abzeichen“. Die Runde bekommt eine Leiste unter der Rubrikzeile, jede Person eine Spalte in Tafel-Reihenfolge</span>
+    <div style="width: 1440px; background: #fbfaf6; border: 1px solid #141414; display: flex; flex-direction: column;">
+      <dc-import name="Programmheft-Kopf" crumb="Meine Runden → Donnerstagsrunde" active="pokale" hint-size="100%,100px" style="width: 100%;"></dc-import>
+      <span style="margin: 14px 40px 0; font-size: 14px; color: #6f6b66;">↑ Pokale, Ruhmeshalle, Tafel und vier Auszeichnungen wie P13.3</span>
+      <div style="margin: 10px 40px 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;">
+        <sc-for list="{{ awards }}" as="a" hint-placeholder-count="4"><span style="display: flex; flex-direction: column; border-top: 2px solid #141414; padding-top: 6px;"><span style="font-weight: 700; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #6f6b66;">{{ a.k }}</span><span style="font-family: 'Anton'; font-weight: 400; font-size: 28px; line-height: 1.05;">{{ a.v }}</span></span></sc-for>
+      </div>
+      <div id="abzeichen" style="margin: 40px 40px 0; border-bottom: 4px solid #141414; padding-bottom: 8px; display: flex; align-items: flex-end; justify-content: space-between;"><h2 style="margin: 0; font-family: 'Anton'; font-weight: 400; font-size: 72px; line-height: 1; text-transform: uppercase;">Abzeichen</h2><span style="display: flex; gap: 18px; align-items: center; margin-bottom: 10px; font-size: 14px; font-weight: 600;"><span>16 verdient · 2 neu seit Nordlichter</span>
+        <span style="display: inline-flex; align-items: center; gap: 6px; color: #2b2925;"><span style="width: 16px; height: 16px; border-radius: 50%; background: #141414;"></span>verdient</span>
+        <span style="display: inline-flex; align-items: center; gap: 6px; color: #2b2925;"><span style="width: 16px; height: 16px; border-radius: 50%; background: conic-gradient(#141414 60%, #d9d5cc 0);"></span>unterwegs</span>
+        <span style="display: inline-flex; align-items: center; gap: 6px; color: #2b2925;"><span style="width: 16px; height: 16px; box-sizing: border-box; border-radius: 50%; border: 2px dashed #6f6b66;"></span>offen</span>
+      </span></div>
+      <div style="margin: 0 40px; display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 24px; align-items: center; padding: 14px 0 16px; border-bottom: 2px solid #141414;">
+        <span style="display: flex; flex-direction: column; gap: 2px;"><span style="font-weight: 700; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #6f6b66;">Die Runde</span><span style="font-family: 'Anton'; font-weight: 400; font-size: 30px; line-height: 1; text-transform: uppercase;">Donnerstagsrunde</span><span style="font-size: 14px; color: #2b2925;">seit Oktober 2025 · 3 von 9</span></span>
+        <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+          <sc-for list="{{ roundMarks }}" as="t" hint-placeholder-count="9">
+            <button aria-label="{{ t.aria }}" style="width: 118px; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 6px 0; background: none; border: none; border-right: 1px dotted #b8b4ad; color: #141414; font: inherit; cursor: pointer;">
+              <span style="position: relative; width: 56px; height: 56px; border-radius: 50%; background: {{ t.ring }}; display: grid; place-items: center;">
+                <span style="width: 50px; height: 50px; box-sizing: border-box; border-radius: 50%; background: {{ t.bg }}; border: {{ t.border }}; box-shadow: {{ t.innerS }}; color: {{ t.ink }}; display: grid; place-items: center;"><span style="width: {{ t.chipS }}; height: {{ t.chipS }}; border-radius: 50%; background: {{ t.chipBg }}; display: grid; place-items: center;"><i class="{{ t.icon }}" style="font-size: 22px;"></i></span></span>
+                <sc-if value="{{ t.hasTier }}" hint-placeholder-val="{{ false }}"><span style="position: absolute; left: 50%; bottom: -8px; transform: translateX(-50%); min-width: 26px; height: 18px; padding: 0 5px; box-sizing: border-box; background: #fbfaf6; border: 2px solid #141414; font-weight: 700; font-size: 11px; display: grid; place-items: center;">{{ t.tier }}</span></sc-if>
+              </span>
+              <span style="font-weight: 700; font-size: 14px; text-align: center; line-height: 1.2;">{{ t.name }}</span>
+              <span style="font-size: 12px; color: #6f6b66; text-align: center;">{{ t.count }}</span>
+            </button>
+          </sc-for>
+        </div>
+      </div>
+      <div style="margin: 0 40px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));">
+        <sc-for list="{{ members }}" as="m" hint-placeholder-count="4">
+          <div id="{{ m.anchor }}" style="display: flex; flex-direction: column; padding: 16px 20px 20px; border-right: {{ m.rule }};">
+            <span style="display: flex; align-items: center; gap: 10px; border-bottom: 2px solid #141414; padding-bottom: 8px;">
+              <span style="width: 36px; height: 36px; background: {{ m.color }}; color: #fbfaf6; display: grid; place-items: center; font-weight: 700; font-size: 17px; flex: none;">{{ m.ini }}</span>
+              <span style="display: flex; flex-direction: column;"><span style="font-family: 'Anton'; font-weight: 400; font-size: 28px; line-height: 1; text-transform: uppercase;">{{ m.name }}</span><span style="font-size: 13px; color: #2b2925;">{{ m.summary }}</span></span>
+            </span>
+            <sc-for list="{{ m.marks }}" as="t" hint-placeholder-count="9">
+              <button aria-label="{{ t.aria }}" style="display: flex; align-items: center; gap: 12px; min-height: 58px; padding: 6px 0; background: none; border: none; border-bottom: 1px dotted #b8b4ad; color: #141414; font: inherit; text-align: left; cursor: pointer;">
+                <span style="position: relative; width: 44px; height: 44px; flex: none; border-radius: 50%; background: {{ t.ring }}; display: grid; place-items: center;">
+                  <span style="width: 40px; height: 40px; box-sizing: border-box; border-radius: 50%; background: {{ t.bg }}; border: {{ t.border }}; box-shadow: {{ t.innerS }}; color: {{ t.ink }}; display: grid; place-items: center;"><span style="width: {{ t.chipXs }}; height: {{ t.chipXs }}; border-radius: 50%; background: {{ t.chipBg }}; display: grid; place-items: center;"><i class="{{ t.icon }}" style="font-size: 18px;"></i></span></span>
+                </span>
+                <span style="display: flex; flex-direction: column; min-width: 0;"><span style="font-weight: 700; font-size: 15px;">{{ t.nameTier }}</span><span style="font-size: 13px; color: {{ t.subInk }};">{{ t.short2 }}</span></span>
+              </button>
+            </sc-for>
+          </div>
+        </sc-for>
+      </div>
+      <div style="margin-top: auto; padding-top: 28px;"><dc-import name="Programmheft-Fuss" hint-size="100%,56px" style="width: 100%;"></dc-import></div>
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 28px; align-items: flex-start;">
+    <div data-screen-label="P17.3 Pokale Telefon" style="display: flex; flex-direction: column; gap: 10px;">
+      <span style="font-weight: 600; font-size: 13px; color: #2b2925;">P17.3 · Pokale 390: eine Spalte, Personen aufklappbar</span>
+      <div style="width: 390px; min-height: 1100px; background: #fbfaf6; border: 1px solid #141414; display: flex; flex-direction: column;">
+        <dc-import name="Programmheft-Telefonkopf" crumb="Donnerstagsrunde" hint-size="100%,140px" style="width: 100%;"></dc-import>
+        <span style="padding: 10px 18px 0; font-size: 13px; color: #6f6b66;">↑ Ruhmeshalle, Tafel, Auszeichnungen</span>
+        <div style="padding: 10px 18px 0;"><span style="display: flex; align-items: baseline; justify-content: space-between; border-bottom: 4px solid #141414; padding-bottom: 6px;"><span style="font-family: 'Anton'; font-weight: 400; font-size: 44px; line-height: 1; text-transform: uppercase;">Abzeichen</span><span style="font-size: 13px; font-weight: 600;">16 verdient</span></span></div>
+        <div style="margin: 0 18px; padding: 10px 0 12px; border-bottom: 2px solid #141414;">
+          <span style="display: block; font-weight: 700; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #6f6b66; padding-bottom: 6px;">Die Runde · 3 von 9</span>
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); row-gap: 8px;">
+            <sc-for list="{{ roundMarks }}" as="t" hint-placeholder-count="9">
+              <button aria-label="{{ t.aria }}" style="display: flex; flex-direction: column; align-items: center; gap: 7px; padding: 4px 0; background: none; border: none; color: #141414; font: inherit; cursor: pointer;">
+                <span style="position: relative; width: 50px; height: 50px; border-radius: 50%; background: {{ t.ring }}; display: grid; place-items: center;">
+                  <span style="width: 46px; height: 46px; box-sizing: border-box; border-radius: 50%; background: {{ t.bg }}; border: {{ t.border }}; box-shadow: {{ t.innerS }}; color: {{ t.ink }}; display: grid; place-items: center;"><span style="width: {{ t.chipS }}; height: {{ t.chipS }}; border-radius: 50%; background: {{ t.chipBg }}; display: grid; place-items: center;"><i class="{{ t.icon }}" style="font-size: 20px;"></i></span></span>
+                  <sc-if value="{{ t.hasTier }}" hint-placeholder-val="{{ false }}"><span style="position: absolute; left: 50%; bottom: -8px; transform: translateX(-50%); min-width: 26px; height: 18px; padding: 0 5px; box-sizing: border-box; background: #fbfaf6; border: 2px solid #141414; font-weight: 700; font-size: 11px; display: grid; place-items: center;">{{ t.tier }}</span></sc-if>
+                </span>
+                <span style="font-weight: 700; font-size: 12px; text-align: center; line-height: 1.2;">{{ t.name }}</span>
+              </button>
+            </sc-for>
+          </div>
+        </div>
+        <sc-for list="{{ phoneMembers }}" as="m" hint-placeholder-count="4">
+          <div style="margin: 0 18px; border-bottom: 1px solid #141414; display: flex; flex-direction: column;">
+            <button aria-expanded="{{ m.open }}" style="display: flex; align-items: center; gap: 10px; min-height: 60px; padding: 0; background: none; border: none; color: #141414; font: inherit; text-align: left; cursor: pointer;">
+              <span style="width: 32px; height: 32px; background: {{ m.color }}; color: #fbfaf6; display: grid; place-items: center; font-weight: 700; font-size: 15px; flex: none;">{{ m.ini }}</span>
+              <span style="display: flex; flex-direction: column;"><span style="font-family: 'Anton'; font-weight: 400; font-size: 24px; line-height: 1; text-transform: uppercase;">{{ m.name }}</span><span style="font-size: 13px; color: #2b2925;">{{ m.summary }}</span></span>
+              <span style="margin-left: auto; display: flex; gap: 3px;"><sc-for list="{{ m.peek }}" as="t" hint-placeholder-count="3"><span style="width: 24px; height: 24px; border-radius: 50%; background: #141414; color: #fbfaf6; display: grid; place-items: center;"><i class="{{ t.icon }}" style="font-size: 13px;"></i></span></sc-for></span>
+              <i class="{{ m.chev }}" style="font-size: 20px;"></i>
+            </button>
+            <sc-if value="{{ m.isOpen }}" hint-placeholder-val="{{ false }}">
+              <div style="display: flex; flex-direction: column; padding-bottom: 8px;">
+                <sc-for list="{{ m.marks }}" as="t" hint-placeholder-count="9">
+                  <button aria-label="{{ t.aria }}" style="display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 4px 0; background: none; border: none; border-top: 1px dotted #b8b4ad; color: #141414; font: inherit; text-align: left; cursor: pointer;">
+                    <span style="width: 44px; height: 44px; flex: none; border-radius: 50%; background: {{ t.ring }}; display: grid; place-items: center;"><span style="width: 40px; height: 40px; box-sizing: border-box; border-radius: 50%; background: {{ t.bg }}; border: {{ t.border }}; box-shadow: {{ t.innerS }}; color: {{ t.ink }}; display: grid; place-items: center;"><span style="width: {{ t.chipXs }}; height: {{ t.chipXs }}; border-radius: 50%; background: {{ t.chipBg }}; display: grid; place-items: center;"><i class="{{ t.icon }}" style="font-size: 18px;"></i></span></span></span>
+                    <span style="display: flex; flex-direction: column;"><span style="font-weight: 700; font-size: 15px;">{{ t.nameTier }}</span><span style="font-size: 13px; color: {{ t.subInk }};">{{ t.short2 }}</span></span>
+                  </button>
+                </sc-for>
+              </div>
+            </sc-if>
+          </div>
+        </sc-for>
+        <div style="margin-top: auto; padding-top: 20px;"><dc-import name="Programmheft-Dock" active="pokale" hint-size="100%,64px" style="width: 100%;"></dc-import></div>
+      </div>
+    </div>
+
+    <div data-screen-label="P17.4 Tischkarte" style="display: flex; flex-direction: column; gap: 10px;">
+      <span style="font-weight: 600; font-size: 13px; color: #2b2925;">P17.4 · Mitgliedsseite (Tischkarte): eine Zeile mit Medaillen unter den fünf Zahlen, nur Verdientes. Antippen öffnet Pokale › Abzeichen › Jonas</span>
+      <div style="width: 960px; box-sizing: border-box; padding: 0 40px 28px; background: #fbfaf6; border: 1px solid #141414; display: flex; flex-direction: column;">
+        <div style="margin-top: 22px; border-bottom: 4px solid #141414; padding-bottom: 10px; display: flex; align-items: flex-end; gap: 24px;"><span style="width: 96px; height: 96px; background: #198663; color: #fbfaf6; display: grid; place-items: center; font-weight: 700; font-size: 46px;">J</span><h2 style="margin: 0; font-family: 'Anton'; font-weight: 400; font-size: 100px; line-height: 1; text-transform: uppercase;">Jonas</h2></div>
+        <div style="margin-top: 18px; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 20px;">
+          <sc-for list="{{ figures }}" as="f" hint-placeholder-count="5"><span style="display: flex; flex-direction: column; border-top: 2px solid #141414; padding-top: 6px;"><span style="font-weight: 700; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #6f6b66;">{{ f.k }}</span><span style="font-family: 'Anton'; font-weight: 400; font-size: 48px; line-height: 1;">{{ f.v }}</span></span></sc-for>
+        </div>
+        <a href="#abzeichen-jonas" style="margin-top: 20px; display: flex; align-items: center; gap: 20px; padding: 12px 0; border-top: 2px solid #141414; border-bottom: 1px solid #141414; color: #141414; text-decoration: none;">
+          <span style="font-weight: 700; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #6f6b66; width: 110px; flex: none;">Abzeichen · 4</span>
+          <span style="display: flex; gap: 22px; flex-wrap: wrap;">
+            <sc-for list="{{ jonasEarned }}" as="t" hint-placeholder-count="4">
+              <span style="display: flex; align-items: center; gap: 10px;">
+                <span style="width: 40px; height: 40px; box-sizing: border-box; border-radius: 50%; background: #141414; box-shadow: inset 0 0 0 3px #141414, inset 0 0 0 5px #fbfaf6; color: #fbfaf6; display: grid; place-items: center; flex: none;"><i class="{{ t.icon }}" style="font-size: 18px;"></i></span>
+                <span style="font-weight: 700; font-size: 15px;">{{ t.nameTier }}</span>
+              </span>
+            </sc-for>
+          </span>
+          <span style="margin-left: auto; font-size: 20px;">→</span>
+        </a>
+        <span style="margin-top: 12px; font-size: 14px; color: #2b2925;">Darunter unverändert: Letzte Siege und „Gehört Jonas“. Offene und geheime Einträge erscheinen hier nie.</span>
+      </div>
+      <div style="width: 390px; box-sizing: border-box; padding: 12px 18px 16px; background: #fbfaf6; border: 1px solid #141414; margin-top: 10px; display: flex; flex-direction: column; gap: 8px;">
+        <span style="font-weight: 700; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #6f6b66;">390 · unter den Zahlen</span>
+        <a href="#abzeichen-jonas" style="display: grid; grid-template-columns: repeat(4, 1fr); padding: 10px 0; border-top: 2px solid #141414; border-bottom: 1px solid #141414; color: #141414; text-decoration: none;">
+          <sc-for list="{{ jonasEarned }}" as="t" hint-placeholder-count="4">
+            <span style="display: flex; flex-direction: column; align-items: center; gap: 6px;"><span style="width: 44px; height: 44px; box-sizing: border-box; border-radius: 50%; background: #141414; box-shadow: inset 0 0 0 3px #141414, inset 0 0 0 5px #fbfaf6; color: #fbfaf6; display: grid; place-items: center;"><i class="{{ t.icon }}" style="font-size: 20px;"></i></span><span style="font-weight: 700; font-size: 12px; text-align: center; line-height: 1.2;">{{ t.nameTier }}</span></span>
+          </sc-for>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div data-screen-label="P17.5 Ergebnis-Moment" style="display: flex; flex-direction: column; gap: 10px;">
+    <span style="font-weight: 600; font-size: 13px; color: #2b2925;">P17.5 · Ergebnis: der Stempel drückt die Medaille ins Papier. Oben der Normalfall, darunter die Sonderausgabe bei einer großen Stufe. Darunter die Bilder und die Zeittafel</span>
+    <div style="display: flex; gap: 28px; align-items: flex-start;">
+      <div style="width: 1440px; background: #fbfaf6; border: 1px solid #141414; display: flex; flex-direction: column;">
+        <dc-import name="Programmheft-Kopf" crumb="Donnerstagsrunde → Spielbericht" active="none" hint-size="100%,100px" style="width: 100%;"></dc-import>
+        <div style="margin: 18px 40px 0; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #141414; padding-bottom: 10px;"><span style="font-weight: 700; font-size: 13px; letter-spacing: .16em; text-transform: uppercase; color: #b8330f;">Spielbericht · Donnerstag, 24. September 2026 · 3 Spiele · 4 dabei</span><span style="font-weight: 600; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #6f6b66;">Session Nr. 24</span></div>
+        <div style="margin: 18px 40px 0; display: grid; grid-template-columns: minmax(0, 1fr) 440px; gap: 0 48px;">
+          <div style="display: flex; flex-direction: column; gap: 18px; border-right: 1px solid #141414; padding-right: 48px;">
+            <h2 style="margin: 0; font-family: 'Anton'; font-weight: 400; font-size: 84px; line-height: 1.05; text-transform: uppercase;">„Kartographen“ wurde gespielt. <span style="color: #e8451c;">Tim</span> hat gewonnen!</h2>
+            <div style="display: flex; align-items: stretch; border-top: 2px solid #141414; border-bottom: 2px solid #141414;">
+              <span style="display: flex; align-items: center; padding: 0 16px 0 0; font-weight: 700; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #6f6b66; width: 110px; flex: none;">Neue Abzeichen</span>
+              <sc-for list="{{ moment }}" as="t" hint-placeholder-count="2">
+                <button aria-label="{{ t.aria }}" style="display: flex; align-items: center; gap: 14px; min-height: 76px; padding: 8px 20px; background: none; border: none; border-left: 1px solid #141414; color: #141414; font: inherit; text-align: left; cursor: pointer;">
+                  <span style="width: 52px; height: 52px; box-sizing: border-box; border-radius: 50%; background: #141414; box-shadow: inset 0 0 0 4px #141414, inset 0 0 0 6px #fbfaf6; color: #fbfaf6; display: grid; place-items: center; flex: none;"><i class="{{ t.icon }}" style="font-size: 23px;"></i></span>
+                  <span style="display: flex; flex-direction: column;"><span style="font-weight: 700; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: #6f6b66;">{{ t.holder }}</span><span style="font-weight: 700; font-size: 19px;">{{ t.nameTier }}</span><span style="font-size: 13px; color: #2b2925;">{{ t.cond }}</span></span>
+                </button>
+              </sc-for>
+              <a href="#abzeichen" style="margin-left: auto; display: flex; align-items: center; gap: 6px; padding: 0 0 0 18px; border-left: 1px solid #141414; font-weight: 700; font-size: 14px; color: #141414; min-height: 44px;">+1 weitere →</a>
+            </div>
+            <div style="display: flex; flex-direction: column;">
+              <div style="display: grid; grid-template-columns: 56px minmax(0, 1fr) 100px; gap: 16px; font-weight: 700; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #6f6b66; border-bottom: 2px solid #141414; padding-bottom: 6px;"><span>Platz</span><span>Spiel</span><span style="text-align: right;">Score</span></div>
+              <sc-for list="{{ tafel }}" as="r" hint-placeholder-count="3"><div style="display: grid; grid-template-columns: 56px minmax(0, 1fr) 100px; gap: 16px; align-items: center; padding: 10px 8px 10px 0; border-bottom: 1px solid #141414; background: {{ r.bg }};"><span style="font-family: 'Anton'; font-weight: 400; font-size: 34px; padding-left: 10px;">{{ r.place }}</span><span style="font-weight: 700; font-size: 19px;">{{ r.title }}</span><span style="text-align: right; font-family: 'Anton'; font-weight: 400; font-size: 44px; line-height: 1;">{{ r.score }}</span></div></sc-for>
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 16px;">
+            <span style="font-size: 14px; color: #2b2925; line-height: 1.55;">Ab 0 ms bedienbar. Schlagzeile, Leiste mit Text, Tafel und „Noch eine Session“ stehen sofort. Nur die Medaille bekommt den Stempel.</span>
+            <a href="#" style="margin-top: auto; background: #141414; color: #fbfaf6; min-height: 72px; padding: 0 22px; display: flex; justify-content: space-between; align-items: center; font-family: 'Anton'; font-weight: 400; font-size: 32px; text-transform: uppercase;">Noch eine Session<span>→</span></a>
+          </div>
+        </div>
+        <div style="margin-top: auto; padding-top: 28px;"><dc-import name="Programmheft-Fuss" hint-size="100%,56px" style="width: 100%;"></dc-import></div>
+      </div>
+    </div>
+
+    <div style="width: 1440px; background: #fbfaf6; border: 1px solid #141414; display: flex; flex-direction: column; margin-top: 12px;">
+      <div style="padding: 14px 40px 0; font-weight: 700; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #6f6b66;">Sonderausgabe · nur bei Sessions 100 und 250 der Runde und bei Stammgast 100. Belegt einen der zwei Plätze.</div>
+      <div style="margin: 12px 40px 0;">
+        <h2 style="margin: 0 0 16px; font-family: 'Anton'; font-weight: 400; font-size: 64px; line-height: 1.05; text-transform: uppercase;">„Nordlichter“ wurde gespielt. <span style="color: #e8451c;">Lea</span> hat gewonnen!</h2>
+        <div style="display: flex; align-items: center; gap: 24px; background: #e8451c; color: #fbfaf6; padding: 14px 24px; border-top: 4px solid #141414; border-bottom: 4px solid #141414;">
+          <span style="font-family: 'Anton'; font-weight: 400; font-size: 48px; line-height: 1; text-transform: uppercase; letter-spacing: .02em;">Sonderausgabe</span>
+          <span style="width: 64px; height: 64px; box-sizing: border-box; border-radius: 50%; background: #141414; box-shadow: inset 0 0 0 4px #141414, inset 0 0 0 6px #fbfaf6; color: #fbfaf6; display: grid; place-items: center; flex: none;"><i class="ti ti-calendar" style="font-size: 28px;"></i></span>
+          <span style="display: flex; flex-direction: column;"><span style="font-family: 'Anton'; font-weight: 400; font-size: 34px; line-height: 1.05; text-transform: uppercase;">Abzeichen Sessions 100</span><span style="font-family: 'Anton'; font-weight: 400; font-size: 26px; line-height: 1.1;">Die Donnerstagsrunde hat 100 Sessions gespielt.</span></span>
+          <a href="#abzeichen" style="margin-left: auto; display: inline-flex; align-items: center; min-height: 48px; padding: 0 16px; background: #141414; color: #fbfaf6; font-weight: 700; font-size: 14px; letter-spacing: .08em; text-transform: uppercase;">Zu den Abzeichen →</a>
+        </div>
+      </div>
+      <div style="margin: 12px 40px 24px; font-size: 14px; color: #2b2925;">Darunter folgen Leiste (höchstens noch ein Abzeichen), Tafel und „Noch eine Session“ wie oben. Der Text im Zinnoberband ist durchgehend Anton ab 26 px (3,79 : 1, große Schrift).</div>
+    </div>
+
+    <div style="width: 1440px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-top: 12px;">
+      <sc-for list="{{ frames }}" as="f" hint-placeholder-count="4">
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <span style="font-weight: 700; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; border-bottom: 2px solid #141414; padding-bottom: 4px;">{{ f.label }}</span>
+          <div style="position: relative; height: 150px; background: #fbfaf6; border: 1px solid #141414; overflow: hidden;">
+            <span style="position: absolute; left: 30px; top: 46px; width: 58px; height: 58px; border-radius: 50%; box-shadow: 0 0 0 {{ f.bleed }} rgba(20,20,20,.28); opacity: {{ f.op }};"></span>
+            <span style="position: absolute; left: 30px; top: 46px; width: 58px; height: 58px; box-sizing: border-box; border-radius: 50%; background: #141414; box-shadow: inset 0 0 0 4px #141414, inset 0 0 0 6px #fbfaf6; color: #fbfaf6; display: grid; place-items: center; opacity: {{ f.op }}; transform: scale({{ f.scale }});"><i class="ti ti-rocket" style="font-size: 25px;"></i></span>
+            <span style="position: absolute; left: 30px; top: 46px; width: 58px; height: 58px; box-sizing: border-box; border-radius: 50%; border: 2px dashed #6f6b66; opacity: {{ f.ghost }};"></span>
+            <span style="position: absolute; left: 106px; top: 52px; display: flex; flex-direction: column;"><span style="font-weight: 700; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: #6f6b66;">Tim</span><span style="font-weight: 700; font-size: 19px;">Comeback</span></span>
+            <span style="position: absolute; right: 10px; bottom: 8px; font-weight: 600; font-size: 12px; color: #6f6b66;">{{ f.t }}</span>
+          </div>
+          <span style="font-size: 14px; color: #2b2925; line-height: 1.5;">{{ f.note }}</span>
+        </div>
+      </sc-for>
+    </div>
+    <div style="width: 1440px; box-sizing: border-box; background: #fbfaf6; border: 1px solid #141414; padding: 0 20px; margin-top: 12px;">
+      <div style="display: grid; grid-template-columns: 130px 260px 1fr 200px; gap: 16px; padding: 12px 0 6px; font-weight: 700; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #6f6b66; border-bottom: 2px solid #141414;"><span>Zeit</span><span>Element</span><span>Bewegung</span><span>Reduced Motion</span></div>
+      <sc-for list="{{ timing }}" as="r" hint-placeholder-count="6">
+        <div style="display: grid; grid-template-columns: 130px 260px 1fr 200px; gap: 16px; padding: 10px 0; border-bottom: 1px dotted #b8b4ad; font-size: 14px; line-height: 1.45;">
+          <span style="font-weight: 700;">{{ r.t }}</span><span style="font-weight: 700;">{{ r.el }}</span><span style="color: #2b2925;">{{ r.move }}</span><span style="color: #6f6b66;">{{ r.rm }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 28px; align-items: flex-start;">
+    <div data-screen-label="P17.6 Hub und Chronik" style="display: flex; flex-direction: column; gap: 10px;">
+      <span style="font-weight: 600; font-size: 13px; color: #2b2925;">P17.6 · Pokale-Vorschau im Hub, eine Zeile mehr · Chronik, eine Zeile je Abzeichen unter der Session</span>
+      <div style="width: 1000px; box-sizing: border-box; padding: 24px 28px; background: #fbfaf6; border: 1px solid #141414; display: grid; grid-template-columns: 340px 1fr; gap: 0 40px; align-items: start;">
+        <div style="display: flex; flex-direction: column; border-right: 1px solid #141414; padding-right: 40px;">
+          <a href="#" style="display: flex; justify-content: space-between; align-items: center; font-weight: 700; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; border-bottom: 2px solid #141414; padding-bottom: 6px; color: #141414; min-height: 32px;">Pokale<span>→</span></a>
+          <sc-for list="{{ hubRows }}" as="h" hint-placeholder-count="3"><span style="display: grid; grid-template-columns: 26px 1fr auto; gap: 10px; align-items: center; min-height: 44px; border-bottom: 1px dotted #b8b4ad;"><span style="font-family: 'Anton'; font-weight: 400; font-size: 24px;">{{ h.rank }}</span><span style="display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 15px;"><span style="width: 12px; height: 12px; background: {{ h.color }};"></span>{{ h.name }}</span><span style="font-family: 'Anton'; font-weight: 400; font-size: 24px;">{{ h.wins }}</span></span></sc-for>
+          <a href="#abzeichen" style="display: flex; align-items: center; gap: 10px; min-height: 52px; border-bottom: 2px solid #141414; color: #141414;">
+            <span style="display: flex; gap: 3px;"><span style="width: 28px; height: 28px; border-radius: 50%; background: #141414; color: #fbfaf6; display: grid; place-items: center;"><i class="ti ti-users" style="font-size: 15px;"></i></span><span style="width: 28px; height: 28px; border-radius: 50%; background: #141414; color: #fbfaf6; display: grid; place-items: center;"><i class="ti ti-rocket" style="font-size: 15px;"></i></span></span>
+            <span style="font-weight: 700; font-size: 15px;">2 neue Abzeichen seit Nordlichter</span><span style="margin-left: auto;">→</span>
+          </a>
+          <span style="margin-top: 10px; font-size: 13px; color: #2b2925; line-height: 1.5;">Wenn nichts neu ist, zeigt die Zeile die neueste Medaille: „Zuletzt: Teamgeist · Lea“. Ohne Session entfällt sie.</span>
+        </div>
+        <div style="display: flex; flex-direction: column;">
+          <span style="font-family: 'Anton'; font-weight: 400; font-size: 34px; line-height: 1; text-transform: uppercase; border-bottom: 2px solid #141414; padding-bottom: 4px;">September</span>
+          <sc-for list="{{ chronikRows }}" as="c" hint-placeholder-count="3">
+            <div style="display: flex; flex-direction: column; border-bottom: 1px solid #141414;">
+              <a href="#" style="display: grid; grid-template-columns: 110px 48px minmax(0, 1fr) auto; gap: 14px; align-items: center; min-height: 64px; color: #141414;">
+                <span style="font-weight: 600; font-size: 14px; color: #2b2925;">{{ c.date }}</span>
+                <span style="width: 48px; height: 48px; background: {{ c.cover }};"></span>
+                <span style="display: flex; flex-direction: column;"><span style="font-weight: 700; font-size: 17px;">{{ c.game }}</span><span style="font-size: 14px; color: #2b2925;">{{ c.line }}</span></span>
+                <span>→</span>
+              </a>
+              <sc-for list="{{ c.marks }}" as="t" hint-placeholder-count="1">
+                <span style="display: grid; grid-template-columns: 110px 48px minmax(0, 1fr) auto; gap: 14px; align-items: center; min-height: 40px; border-top: 1px dotted #b8b4ad;">
+                  <span></span>
+                  <span style="width: 28px; height: 28px; border-radius: 50%; background: #141414; color: #fbfaf6; display: grid; place-items: center; justify-self: center;"><i class="{{ t.icon }}" style="font-size: 15px;"></i></span>
+                  <span style="font-weight: 700; font-size: 15px;">{{ t.text }}</span>
+                  <span style="font-weight: 700; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #6f6b66;">Abzeichen</span>
+                </span>
+              </sc-for>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+
+    <div data-screen-label="P17.7 Spielerkarte" style="display: flex; flex-direction: column; gap: 10px;">
+      <span style="font-weight: 600; font-size: 13px; color: #2b2925;">P17.7 · Spielerkarte · Freundes-Feed</span>
+      <div style="width: 410px; box-sizing: border-box; padding: 18px 20px; background: #fbfaf6; border: 1px solid #141414; display: flex; flex-direction: column; gap: 12px;">
+        <span style="display: flex; align-items: flex-end; gap: 14px; border-bottom: 4px solid #141414; padding-bottom: 8px;"><span style="width: 56px; height: 56px; background: #726bc7; color: #fbfaf6; display: grid; place-items: center; font-weight: 700; font-size: 26px;">L</span><span style="display: flex; flex-direction: column;"><span style="font-family: 'Anton'; font-weight: 400; font-size: 44px; line-height: 1; text-transform: uppercase;">Lea</span><span style="font-size: 13px; color: #2b2925;">seit März 2025 · 3 Runden · 31 Spiele</span></span></span>
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); padding: 6px 0 12px; border-bottom: 1px solid #141414;">
+          <sc-for list="{{ account }}" as="t" hint-placeholder-count="4">
+            <button aria-label="{{ t.aria }}" style="display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 4px 0; background: none; border: none; color: #141414; font: inherit; cursor: pointer;">
+              <span style="position: relative; width: 50px; height: 50px; border-radius: 50%; background: {{ t.ring }}; display: grid; place-items: center;">
+                <span style="width: 46px; height: 46px; box-sizing: border-box; border-radius: 50%; background: {{ t.bg }}; border: {{ t.border }}; box-shadow: {{ t.innerS }}; color: {{ t.ink }}; display: grid; place-items: center;"><i class="{{ t.icon }}" style="font-size: 20px;"></i></span>
+                <sc-if value="{{ t.hasTier }}" hint-placeholder-val="{{ false }}"><span style="position: absolute; left: 50%; bottom: -8px; transform: translateX(-50%); min-width: 26px; height: 18px; padding: 0 5px; box-sizing: border-box; background: #fbfaf6; border: 2px solid #141414; font-weight: 700; font-size: 11px; display: grid; place-items: center;">{{ t.tier }}</span></sc-if>
+              </span>
+              <span style="font-weight: 700; font-size: 13px;">{{ t.name }}</span>
+              <span style="font-size: 12px; color: #6f6b66;">{{ t.count }}</span>
+            </button>
+          </sc-for>
+        </div>
+        <span style="font-size: 13px; color: #2b2925; line-height: 1.5;">Sichtbar für dich und Freundschaften, nur Summen. Keine Runde und keine anderen Personen.</span>
+        <span style="font-weight: 700; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; border-bottom: 2px solid #141414; padding-bottom: 4px;">Freunde · Feed</span>
+        <div style="display: flex; align-items: center; gap: 12px; min-height: 56px; border-bottom: 1px dotted #b8b4ad;">
+          <span style="width: 32px; height: 32px; background: #c34d74; color: #fbfaf6; display: grid; place-items: center; font-weight: 700; font-size: 15px; flex: none;">M</span>
+          <span style="display: flex; flex-direction: column;"><span style="font-weight: 700; font-size: 15px;">Mia · Sessions 100</span><span style="font-size: 13px; color: #6f6b66;">Abzeichen · vor 2 Tagen</span></span>
+          <span style="margin-left: auto; width: 36px; height: 36px; box-sizing: border-box; border-radius: 50%; background: #141414; box-shadow: inset 0 0 0 3px #141414, inset 0 0 0 5px #fbfaf6; color: #fbfaf6; display: grid; place-items: center;"><i class="ti ti-cards" style="font-size: 16px;"></i></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div data-screen-label="P17.8 Leer und Dichte" style="display: flex; flex-direction: column; gap: 10px;">
+    <span style="font-weight: 600; font-size: 13px; color: #2b2925;">P17.8 · Familie Berger ohne Session · 12er-Runde mit 64 Abzeichen · ein Mitglied mit 14 Abzeichen auf Finnisch (späterer Katalog)</span>
+    <div style="display: flex; gap: 28px; align-items: flex-start;">
+      <div style="width: 390px; display: flex; flex-direction: column; gap: 16px;">
+        <div style="padding: 16px 18px; background: #fbfaf6; border: 1px solid #141414; display: flex; flex-direction: column; gap: 8px;">
+          <span style="font-family: 'Anton'; font-weight: 400; font-size: 40px; line-height: 1; text-transform: uppercase; border-bottom: 4px solid #141414; padding-bottom: 6px;">Abzeichen</span>
+          <span style="font-size: 16px; line-height: 1.5;">Nach der ersten Session druckt Familie Berger hier ihre erste Medaille.</span>
+          <span style="font-size: 13px; color: #6f6b66;">Eine Zeile, keine leeren Kreise. Im Hub steht keine Abzeichen-Zeile.</span>
+        </div>
+        <div style="padding: 14px 18px; background: #fbfaf6; border: 1px solid #141414; display: flex; flex-direction: column; gap: 8px;">
+          <span style="display: flex; align-items: center; gap: 10px; border-bottom: 2px solid #141414; padding-bottom: 6px;"><span style="width: 32px; height: 32px; background: #993556; color: #fbfaf6; display: grid; place-items: center; font-weight: 700; font-size: 15px;">A</span><span style="display: flex; flex-direction: column;"><span style="font-family: 'Anton'; font-weight: 400; font-size: 24px; line-height: 1; text-transform: uppercase;">Aleksanteri</span><span style="font-size: 12px; color: #2b2925;">14 ansaittu</span></span><span style="margin-left: auto; font-size: 12px; color: #6f6b66;">fi · 390</span></span>
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); row-gap: 12px;">
+            <sc-for list="{{ finnish }}" as="t" hint-placeholder-count="14">
+              <span style="display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 0;">
+                <span style="position: relative; width: 42px; height: 42px; box-sizing: border-box; border-radius: 50%; background: #141414; box-shadow: inset 0 0 0 3px #141414, inset 0 0 0 5px #fbfaf6; color: #fbfaf6; display: grid; place-items: center;"><i class="{{ t.icon }}" style="font-size: 19px;"></i><sc-if value="{{ t.hasTier }}" hint-placeholder-val="{{ false }}"><span style="position: absolute; left: 50%; bottom: -9px; transform: translateX(-50%); min-width: 24px; height: 17px; padding: 0 4px; box-sizing: border-box; background: #fbfaf6; border: 2px solid #141414; color: #141414; font-weight: 700; font-size: 10.5px; display: grid; place-items: center;">{{ t.tier }}</span></sc-if></span>
+                <span lang="fi" style="font-weight: 700; font-size: 11.5px; line-height: 1.2; text-align: center; overflow-wrap: anywhere; hyphens: auto; padding: 0 2px;">{{ t.name }}</span>
+              </span>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+      <div style="width: 1030px; box-sizing: border-box; padding: 16px 24px 20px; background: #fbfaf6; border: 1px solid #141414; display: flex; flex-direction: column;">
+        <span style="display: flex; align-items: flex-end; gap: 14px; border-bottom: 4px solid #141414; padding-bottom: 6px;"><span style="font-family: 'Anton'; font-weight: 400; font-size: 48px; line-height: 1; text-transform: uppercase;">Abzeichen</span><span style="font-size: 14px; font-weight: 600; margin-bottom: 6px;">Spieleverein Hafen · 12 Mitglieder · 64 verdient</span><span style="margin-left: auto; margin-bottom: 6px; font-size: 13px; color: #2b2925;">Ab 7 Personen: sechs Spalten, nur Verdientes, Offenes hinter „N offen“</span></span>
+        <div style="display: flex; align-items: center; gap: 8px; padding: 10px 0; border-bottom: 2px solid #141414;">
+          <sc-for list="{{ denseRound }}" as="t" hint-placeholder-count="9"><span style="width: 36px; height: 36px; box-sizing: border-box; border-radius: 50%; background: {{ t.bg }}; border: {{ t.border }}; color: {{ t.ink }}; display: grid; place-items: center;"><span style="width: {{ t.chip }}; height: {{ t.chip }}; border-radius: 50%; background: {{ t.chipBg }}; display: grid; place-items: center;"><i class="{{ t.icon }}" style="font-size: 16px;"></i></span></span></sc-for>
+          <span style="margin-left: 8px; font-size: 13px; color: #2b2925;">8 von 9 für die Runde</span>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr));">
+          <sc-for list="{{ denseMembers }}" as="m" hint-placeholder-count="12">
+            <div style="display: flex; flex-direction: column; gap: 6px; padding: 10px 10px 12px; border-right: {{ m.rule }}; border-bottom: 1px solid #141414;">
+              <span style="display: flex; align-items: center; gap: 6px;"><span style="width: 18px; height: 18px; background: {{ m.color }}; flex: none;"></span><span style="font-weight: 700; font-size: 13px; overflow-wrap: anywhere;">{{ m.name }}</span></span>
+              <span style="display: flex; flex-wrap: wrap; gap: 3px;"><sc-for list="{{ m.marks }}" as="t" hint-placeholder-count="5"><span style="width: 26px; height: 26px; border-radius: 50%; background: #141414; color: #fbfaf6; display: grid; place-items: center;"><i class="{{ t }}" style="font-size: 13px;"></i></span></sc-for></span>
+              <span style="align-self: flex-start; min-height: 26px; display: inline-flex; align-items: center; padding: 0 8px; border: 1.5px dashed #6f6b66; font-size: 12px; font-weight: 700; color: #2b2925;">{{ m.openLabel }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div data-screen-label="P17.9 Kontrast" style="display: flex; flex-direction: column; gap: 10px;">
+    <span style="font-weight: 600; font-size: 13px; color: #2b2925;">P17.9 · Kontraste, einmal gerechnet (WCAG 2.2; Glyphen, Kreise, Bögen ≥ 3:1, Text ≥ 4,5:1, Zinnober nur ab 24 px)</span>
+    <div style="width: 1440px; box-sizing: border-box; background: #fbfaf6; border: 1px solid #141414; padding: 0 20px;">
+      <div style="display: grid; grid-template-columns: 1fr 150px 150px 110px 110px; gap: 14px; padding: 12px 0 6px; font-weight: 700; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #6f6b66; border-bottom: 2px solid #141414;"><span>Paar</span><span>Vordergrund</span><span>Grund</span><span style="text-align: right;">Wert</span><span style="text-align: right;">Soll</span></div>
+      <sc-for list="{{ contrast }}" as="c" hint-placeholder-count="10">
+        <div style="display: grid; grid-template-columns: 1fr 150px 150px 110px 110px; gap: 14px; align-items: center; padding: 9px 0; border-bottom: 1px dotted #b8b4ad; font-size: 14px;">
+          <span>{{ c.what }}</span>
+          <span style="display: flex; align-items: center; gap: 8px; font-size: 13px;"><span style="width: 16px; height: 16px; background: {{ c.fg }}; box-shadow: inset 0 0 0 1px #141414;"></span>{{ c.fg }}</span>
+          <span style="display: flex; align-items: center; gap: 8px; font-size: 13px;"><span style="width: 16px; height: 16px; background: {{ c.bg }}; box-shadow: inset 0 0 0 1px #141414;"></span>{{ c.bg }}</span>
+          <span style="text-align: right; font-weight: 700; font-size: 16px;">{{ c.ratio }}</span><span style="text-align: right; font-weight: 700;">{{ c.need }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div data-screen-label="P17.10 Übergabe" style="max-width: 1240px; background: #141414; color: #fbfaf6; padding: 24px 28px; display: flex; flex-direction: column; gap: 12px;">
+    <span style="font-family: 'Anton'; font-weight: 400; font-size: 30px; line-height: 1; text-transform: uppercase;">Was P17 entscheidet</span>
+    <span style="font-size: 15px; line-height: 1.6; max-width: 110ch; text-wrap: pretty;"><strong>Form:</strong> eine runde Medaille in Tinte. Verdient ist ein volles Siegel mit Innenring, die Glyphe bleibt als Papier ausgespart. Unterwegs ist ein Papierkreis mit Tintenglyphe, den ein Tintenbogen je nach Anteil schließt, dazu die Zahl. Offen ist ein gestrichelter grauer Kreis. Geheim ist ein schraffierter Kreis mit Papierfleck und Schloss-Fragezeichen. <strong>Stufen:</strong> ein Siegelband mit der Ziffer unter der Medaille, in Spalten und Zeilen steht die Ziffer auch im Namen. <strong>Mitgliedsfarbe</strong> gibt es nur am Farbquadrat. <strong>Platz:</strong> Pokale › Abzeichen als eigene Rubrik unter den Auszeichnungen. Die Runde steht als Leiste unter der Rubrikzeile, die Personen als Spalten in Tafel-Reihenfolge, auf dem Telefon aufklappbar. Die Tischkarte bekommt eine Zeile unter den fünf Zahlen. Die Rubrik heißt „Abzeichen“ und nicht „Auszeichnungen“, denn „Auszeichnungen“ ist schon die Überschrift der vier Plaketten. <strong>Sonderausgabe:</strong> nur bei Sessions 100 · 250 und Stammgast 100. Sie ist statisch, nur die Medaille bekommt den Stempel.</span>
+    <span style="font-size: 15px; line-height: 1.6; max-width: 110ch;"><strong>K17-Markup:</strong> dasselbe wie in T17. P17 fügt <code>.badge-moment--special</code> für die Sonderausgabe hinzu (neuer String <code>badges.specialEdition</code> = „Sonderausgabe“, bitte in P9.5 nachtragen).</span>
+    <span style="font-size: 14px; line-height: 1.6; color: #d9d5cc; max-width: 110ch;">Offene Punkte wie in T17. Die Programmheft-Beispieldaten folgen P13: Jonas hat 21 Sessions, steht also bei 21 / 25 statt 24 / 25. Der Button heißt wie in P4 „Noch eine Session“.</span>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1540}}">
+class Component extends DCLogic {
+  renderVals() {
+    const I = '#141414', P = '#fbfaf6', GT = '#f6e7b9';
+    const MC = ['#c6522c', '#198663', '#726bc7', '#a66815'];
+    const C = { marco: MC[0], jonas: MC[1], lea: MC[2], tim: MC[3] };
+    const CAT = {
+      erster: ['crown', 'Erster Sieg', 'Die erste Session gewonnen'],
+      stamm: ['star', 'Stammgast', 'Bei 10 · 25 · 50 · 100 Sessions dabei'],
+      serie: ['bolt', 'Serienheld', '3 Sessions in Folge gewonnen'],
+      viel: ['dice-5', 'Vielseitig', 'Mit 3 · 6 · 10 verschiedenen Spielen gewonnen'],
+      alles: ['checkbox', 'Alles gespielt', 'Jedes Spiel im Regal mindestens einmal gespielt'],
+      team: ['users', 'Teamgeist', 'Als Teil eines Teams gewonnen'],
+      gast: ['home-heart', 'Gastgeber', 'Die eigene Schachtel kam 10-mal auf den Tisch'],
+      comeback: ['rocket', 'Comeback', 'Gewonnen nach 10 Sessions ohne Sieg'],
+      entdecker: ['world-search', 'Entdecker', '5 neue Spiele in ihrer ersten Woche mitgespielt'],
+      gegr: ['flag', 'Gegründet', 'Die erste Session beendet'],
+      sess: ['calendar', 'Sessions', '10 · 50 · 100 · 250 Sessions beendet'],
+      regal: ['archive', 'Regal', '25 · 50 · 100 Spiele im Regal'],
+      einst: ['heart', 'Einstimmig', 'Alle gaben dem Siegerspiel eine 5'],
+      unent: ['scale', 'Unentschieden', 'Eine Abstimmung endete gleichauf'],
+      gross: ['confetti', 'Große Runde', '8 oder mehr am Tisch, Gäste zählen mit'],
+      durch: ['circle-check', 'Durchgespielt', 'Das erste Spiel als durchgespielt markiert'],
+      dauer: ['flame', 'Dauerbrenner', 'Ein Spiel 10-mal gespielt'],
+      rueck: ['share', 'Rückblick geteilt', 'Den ersten Rückblick geteilt'],
+      csess: ['cards', 'Sessions', '25 · 100 · 500 Sessions in allen Runden'],
+      csieg: ['trophy', 'Siege', '10 · 50 Siege in allen Runden'],
+      crund: ['world', 'Runden', 'In 2 · 5 Runden dabei'],
+      cjahr: ['hourglass', 'Jahre', '1 · 2 · 3 Jahre bei Spielwirbel'],
+    };
+    const hatch = 'repeating-linear-gradient(45deg, #141414 0 1.5px, #fbfaf6 1.5px 5px)';
+    const T = (key, o = {}) => {
+      const [g, name, cond] = CAT[key];
+      const st = o.st || 'earned';
+      const earned = st === 'earned', prog = st === 'progress', secret = st === 'secret';
+      const pct = o.at ? Math.round(o.at[0] / o.at[1] * 100) : 0;
+      let line = cond;
+      if (earned && o.date) line = o.date + (o.at ? ` · ${o.at[0]} / ${o.at[1]} zur nächsten Stufe` : '');
+      if (prog) line = `${o.at[0]} / ${o.at[1]} · ${cond}`;
+      if (secret) line = 'Wird sichtbar, sobald es jemand verdient';
+      const nm = secret ? 'Geheim' : name;
+      const count = o.at ? `${o.at[0]} / ${o.at[1]}` : (o.short || '');
+      return {
+        icon: 'ti ti-' + (secret ? 'lock-question' : g), name: nm, cond, line, count,
+        short2: earned ? (o.short ? (o.at ? `${o.short} · ${count} zur nächsten` : o.short) : count) : prog ? count + ' · unterwegs' : secret ? 'noch nicht entdeckt' : cond,
+        subInk: earned || prog ? '#2b2925' : '#6f6b66',
+        tier: o.tier || '', hasTier: !!o.tier && !secret,
+        nameTier: o.tier && !secret ? `${name} ${o.tier}` : nm, isNew: !!o.isNew,
+        ring: o.at && !earned ? `conic-gradient(#141414 ${pct}%, #d9d5cc 0)` : (o.at ? `conic-gradient(#141414 ${pct}%, #d9d5cc 0)` : 'transparent'),
+        bg: earned ? I : secret ? hatch : P,
+        border: earned ? 'none' : st === 'locked' ? '2px dashed #6f6b66' : secret ? '2px solid #141414' : '2px solid #141414',
+        inner: earned ? 'inset 0 0 0 4px #141414, inset 0 0 0 6px #fbfaf6' : 'none',
+        innerS: earned ? 'inset 0 0 0 3px #141414, inset 0 0 0 5px #fbfaf6' : 'none',
+        ink: earned ? P : st === 'locked' ? '#6f6b66' : I,
+        chip: secret ? '32px' : '100%', chipS: secret ? '28px' : '100%', chipXs: secret ? '24px' : '100%',
+        chipBg: secret ? P : 'transparent',
+        aria: `${nm}${o.tier ? ' ' + o.tier : ''}, ${earned ? 'verdient' : prog ? 'unterwegs' : secret ? 'geheim' : 'offen'}. ${line}`,
+      };
+    };
+    const states = [
+      { label: 'Verdient', hint: 'volles Siegel, datiert', t: T('erster', { date: 'November 2025 · Moorgeister' }) },
+      { label: 'Verdient mit Stufe', hint: 'Siegelband mit Ziffer, Bogen zur nächsten', t: T('stamm', { tier: '10', at: [21, 25], date: 'Januar 2026' }) },
+      { label: 'Unterwegs', hint: 'Papierkreis, Tintenbogen, Zahl', t: T('gast', { st: 'progress', at: [7, 10] }) },
+      { label: 'Offen', hint: 'gestrichelt, Bedingung sichtbar', t: T('team', { st: 'locked' }) },
+      { label: 'Geheim', hint: 'schraffiert, keine Bedingung', t: T('comeback', { st: 'secret' }) },
+      { label: 'Neu (Endzustand)', hint: '„Neu“ bis zum nächsten Öffnen', t: T('comeback', { date: 'September 2026 · Kartographen', isNew: true }) },
+    ];
+    const compactRow = [T('erster', { short: 'Nov 2025' }), T('stamm', { tier: '10', at: [21, 25] }), T('gast', { st: 'progress', at: [7, 10] }), T('team', { st: 'locked' }), T('comeback', { st: 'secret' })];
+    const roundMarks = [
+      T('gegr', { short: 'Okt 2025' }), T('sess', { tier: '10', at: [23, 50] }), T('unent', { short: 'Aug 2026' }),
+      T('regal', { st: 'progress', at: [12, 25] }), Object.assign(T('dauer', { st: 'progress', at: [7, 10] }), { count: 'Nordlichter 7 / 10' }),
+      T('gross', { st: 'locked' }), T('durch', { st: 'locked' }), T('rueck', { st: 'locked' }), T('einst', { st: 'secret' }),
+    ];
+    roundMarks.forEach((t) => { if (!t.count && t.name !== 'Geheim') t.count = 'offen'; });
+    const memberDefs = [
+      ['Jonas', C.jonas, '4 verdient · 3 unterwegs', [
+        T('erster', { short: 'Okt 2025' }), T('stamm', { tier: '10', at: [21, 25], short: 'Jan 2026' }), T('serie', { short: 'Jul 2026' }), T('viel', { tier: '3', at: [5, 6], short: 'Mär 2026' }),
+        T('gast', { st: 'progress', at: [7, 10] }), T('alles', { st: 'progress', at: [10, 12] }), T('entdecker', { st: 'progress', at: [2, 5] }),
+        T('team', { st: 'locked' }), T('comeback', { st: 'secret' })]],
+      ['Lea', C.lea, '3 verdient · 4 unterwegs', [
+        T('erster', { short: 'Nov 2025' }), T('stamm', { tier: '10', at: [22, 25], short: 'Jan 2026' }), T('team', { short: 'neu · Sep 2026' }),
+        T('viel', { st: 'progress', at: [2, 3] }), T('alles', { st: 'progress', at: [9, 12] }), T('gast', { st: 'progress', at: [4, 10] }), T('entdecker', { st: 'progress', at: [1, 5] }),
+        T('serie', { st: 'locked' }), T('comeback', { st: 'secret' })]],
+      ['Marco', C.marco, '3 verdient · 2 unterwegs', [
+        T('erster', { short: 'Okt 2025' }), T('stamm', { tier: '10', at: [23, 25], short: 'Dez 2025' }), T('viel', { tier: '3', at: [3, 6], short: 'Jun 2026' }),
+        T('gast', { st: 'progress', at: [2, 10] }), T('alles', { st: 'progress', at: [8, 12] }),
+        T('serie', { st: 'locked' }), T('team', { st: 'locked' }), T('entdecker', { st: 'locked' }), T('comeback', { st: 'secret' })]],
+      ['Tim', C.tim, '2 verdient · 2 unterwegs', [
+        T('erster', { short: 'Feb 2026' }), T('stamm', { tier: '10', at: [15, 25], short: 'Mai 2026' }),
+        T('viel', { st: 'progress', at: [2, 3] }), T('alles', { st: 'progress', at: [7, 12] }),
+        T('serie', { st: 'locked' }), T('team', { st: 'locked' }), T('gast', { st: 'locked' }), T('entdecker', { st: 'locked' }), T('comeback', { st: 'secret' })]],
+    ];
+    const members = memberDefs.map(([name, color, summary, marks], i) => ({ name, color, summary, marks, ini: name.slice(0, 1), anchor: 'abzeichen-' + name.toLowerCase(), rule: i < 3 ? '1px solid #141414' : 'none' }));
+    const phoneMembers = members.map((m, i) => Object.assign({}, m, {
+      isOpen: i === 0, open: i === 0 ? 'true' : 'false', chev: i === 0 ? 'ti ti-chevron-down' : 'ti ti-chevron-right',
+      peek: m.marks.filter((t) => t.bg === I).slice(0, 3),
+    }));
+    const awards = [{ k: 'Siegesserie', v: 'Jonas · 3' }, { k: 'Meistgespielt', v: 'Nordlichter · 4×' }, { k: 'Bestbewertet', v: 'Moorgeister · 4,4' }, { k: 'Staubfänger', v: 'Rost & Regen' }];
+    const figures = [{ k: 'Siege', v: '9' }, { k: 'Siegquote', v: '43 %' }, { k: 'Sessions', v: '21' }, { k: 'Siegwertung', v: '+7,0' }, { k: 'Ø Wertung', v: '4,3' }];
+    const jonasEarned = members[0].marks.filter((t) => t.bg === I);
+    const moment = [
+      Object.assign(T('comeback'), { holder: 'Tim', cond: 'Gewonnen nach 10 Sessions ohne Sieg', aria: 'Tim, Comeback, neu verdient' }),
+      Object.assign(T('dauer'), { holder: 'Donnerstagsrunde', cond: 'Kartographen 10-mal gespielt', aria: 'Donnerstagsrunde, Dauerbrenner, neu verdient' }),
+    ];
+    const tafel = [{ place: '1', title: 'Kartographen', score: '4,4', bg: GT }, { place: '2', title: 'Nordlichter', score: '4,1', bg: 'transparent' }, { place: '3', title: 'Salzwiesen', score: '3,2', bg: 'transparent' }];
+    const frames = [
+      { label: 'Anfang · 400 ms', t: 't = 400', op: 1, scale: 1.15, bleed: '0px', ghost: 0, note: 'Der Stempel setzt an, 115 %. Unter ihm liegt noch der gestrichelte Platz.' },
+      { label: 'Mitte · 520 ms', t: 't = 520', op: 1, scale: 1, bleed: '4px', ghost: 0, note: 'Der Stempel sitzt, die Tinte läuft ein Frame lang 4 px über den Rand.' },
+      { label: 'Ende · 600 ms', t: 't = 600', op: 1, scale: 1, bleed: '0px', ghost: 0, note: 'Scharf gedruckt. Die zweite Medaille folgt 180 ms später.' },
+      { label: 'Reduced Motion', t: 'sofort', op: 1, scale: 1, bleed: '0px', ghost: 0, note: 'Die Medaille ist ab 0 ms gedruckt. Kein Stempel, kein Tintenrand.' },
+    ];
+    const timing = [
+      { t: '0 ms', el: 'Schlagzeile, Leiste mit Text, Tafel, „Noch eine Session“', move: 'Stehen sofort, bedienbar. Die Medaille ist als gestrichelter Platz da.', rm: 'Medaille gedruckt' },
+      { t: '400 ms', el: 'Medaille 1', move: 'Erscheint mit scale 1,15 und opacity 1, ohne Einblenden.', rm: 'gedruckt ab 0 ms' },
+      { t: '400–520 ms', el: 'Medaille 1', move: 'scale 1,15 → 1,0, 120 ms, cubic-bezier(.5,0,.9,.5), ein harter Druck.', rm: 'entfällt' },
+      { t: '520 ms', el: 'Tintenrand', move: 'Ein Frame (≈ 16 ms) Rand 4 px, rgba(20,20,20,.28), dann weg.', rm: 'entfällt' },
+      { t: '+180 ms', el: 'Medaille 2', move: 'Wie Medaille 1. Höchstens zwei. In der Sonderausgabe wird nur die Medaille im Band gestempelt, das Band selbst ist statisch.', rm: 'gedruckt' },
+      { t: '880 ms', el: 'Ende', move: 'Nichts läuft weiter.', rm: 'gleich' },
+    ];
+    const hubRows = [{ rank: '1', name: 'Jonas', wins: '9', color: C.jonas }, { rank: '2', name: 'Lea', wins: '7', color: C.lea }, { rank: '3', name: 'Marco', wins: '5', color: C.marco }];
+    const cov = (h) => `linear-gradient(160deg, oklch(.6 .13 ${h}), oklch(.34 .12 ${h + 30}))`;
+    const chronikRows = [
+      { date: '24. September', game: 'Kartographen', line: 'Tim hat gewonnen · 4 dabei', cover: cov(150), marks: [{ icon: 'ti ti-rocket', text: 'Tim · Comeback' }, { icon: 'ti ti-flame', text: 'Donnerstagsrunde · Dauerbrenner' }, { icon: 'ti ti-star', text: 'Lea · Stammgast 25' }] },
+      { date: '14. September', game: 'Nordlichter', line: 'Team Lea & Marco hat gewonnen', cover: cov(200), marks: [{ icon: 'ti ti-users', text: 'Lea · Teamgeist' }] },
+      { date: '3. September', game: 'Moorgeister', line: 'Lea hat gewonnen · 3 dabei', cover: cov(290), marks: [] },
+    ];
+    const account = [T('csess', { tier: '25', at: [41, 100] }), T('csieg', { tier: '10', at: [11, 50] }), T('crund', { tier: '2', at: [3, 5] }), T('cjahr', { tier: '1', short: 'seit Mär 2025' })];
+    const fi = [['crown', 'Ensimmäinen voitto'], ['star', 'Kanta-asiakas', '50'], ['bolt', 'Voittoputki'], ['dice-5', 'Monipuolinen', '10'], ['checkbox', 'Kaikki pelattu'], ['users', 'Joukkuehenki'], ['home-heart', 'Isäntä'], ['rocket', 'Paluu'], ['world-search', 'Löytöretkeilijä'], ['heart', 'Ensimmäinen valinta'], ['calendar', 'Koko vuosi'], ['layout-grid', 'Kaksi pöytää'], ['sparkles', 'Yllätysvoitto'], ['medal', 'Pöydän kunkku']];
+    const finnish = fi.map(([g, name, tier]) => ({ icon: 'ti ti-' + g, name, tier: tier || '', hasTier: !!tier }));
+    const denseRound = ['flag', 'calendar', 'archive', 'scale', 'confetti', 'circle-check', 'flame', 'share'].map((g) => ({ icon: 'ti ti-' + g, bg: I, border: 'none', ink: P, chip: '100%', chipBg: 'transparent' }))
+      .concat([{ icon: 'ti ti-lock-question', bg: hatch, border: '2px solid #141414', ink: I, chip: '22px', chipBg: P }]);
+    const pal = ['#c6522c', '#198663', '#726bc7', '#a66815', '#c34d74', '#2f6f9e', '#54821d', '#993556'];
+    const glyphs = ['ti ti-crown', 'ti ti-star', 'ti ti-dice-5', 'ti ti-bolt', 'ti ti-users', 'ti ti-checkbox', 'ti ti-home-heart'];
+    const denseMembers = [['Aleksanteri', 7], ['Henrike', 6], ['Bo', 6], ['Constantin', 5], ['Dilara', 5], ['Emil', 5], ['Friederike', 4], ['Gül', 4], ['Hannes', 4], ['Ines', 3], ['Jakob', 3], ['Kaja', 2]]
+      .map(([name, n], i) => ({ name, color: pal[i % 8], marks: glyphs.slice(0, n), openLabel: (9 - n) + ' offen', rule: (i % 6) < 5 ? '1px solid #141414' : 'none' }));
+    const contrast = [
+      { what: 'Ausgesparte Glyphe im Siegel', fg: '#fbfaf6', bg: '#141414', ratio: '17,64', need: '3:1' },
+      { what: 'Siegel auf Papier (Form)', fg: '#141414', bg: '#fbfaf6', ratio: '17,64', need: '3:1' },
+      { what: 'Tintenbogen (unterwegs) auf Papier', fg: '#141414', bg: '#fbfaf6', ratio: '17,64', need: '3:1' },
+      { what: 'Gestrichelter Kreis und Glyphe (offen)', fg: '#6f6b66', bg: '#fbfaf6', ratio: '5,06', need: '3:1' },
+      { what: 'Glyphe geheim auf Papierfleck (über der Schraffur)', fg: '#141414', bg: '#fbfaf6', ratio: '17,64', need: '3:1' },
+      { what: 'Name auf Papier', fg: '#141414', bg: '#fbfaf6', ratio: '17,64', need: '4,5:1' },
+      { what: 'Datum / Zahl, weiche Tinte', fg: '#2b2925', bg: '#fbfaf6', ratio: '13,90', need: '4,5:1' },
+      { what: 'Bedingung offen, Grau', fg: '#6f6b66', bg: '#fbfaf6', ratio: '5,06', need: '4,5:1' },
+      { what: 'Sonderausgabe: Anton ≥ 26 px auf Zinnober', fg: '#fbfaf6', bg: '#e8451c', ratio: '3,79', need: '3:1 (groß)' },
+      { what: 'Zinnober-Name in der Schlagzeile (84 px)', fg: '#e8451c', bg: '#fbfaf6', ratio: '3,79', need: '3:1 (groß)' },
+      { what: '„Neu“ auf Tinte', fg: '#fbfaf6', bg: '#141414', ratio: '17,64', need: '4,5:1' },
+    ];
+    return {
+      states, compactRow, roundMarks, members, phoneMembers, awards, figures, jonasEarned,
+      moment, tafel, frames, timing, hubRows, chronikRows, account, finnish, denseRound, denseMembers, contrast,
+    };
+  }
+}
+</script>
+</body>
+</html>
