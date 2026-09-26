@@ -31,8 +31,8 @@ const GATE = ':root[data-design="ocean"]:not([data-scheme="dark"]) ';
 const ITEM = `${GATE}.badge-moment__item[data-fresh]`;
 const BUBBLE = `${ITEM}::after`;
 const PEARL = `${ITEM} .badge__mark > .ti`;
-const BUBBLE_2 = `${ITEM}:nth-child(2)::after`;
-const PEARL_2 = `${ITEM}:nth-child(2) .badge__mark > .ti`;
+const BUBBLE_2 = `${ITEM} ~ .badge-moment__item[data-fresh]::after`;
+const PEARL_2 = `${ITEM} ~ .badge-moment__item[data-fresh] .badge__mark > .ti`;
 
 function section() {
   assert.ok(RAW.includes(HEAD), 'the section header is this slice\'s drop seam');
@@ -171,5 +171,18 @@ test('under Ocean the ritual\'s selectors match a mark the tap just earned, and 
   await waitFor(() => q(PEARL).length === 1, { label: 'the first win arrives fresh' });
   assert.equal(q(BUBBLE).length, 1);
   assert.equal(q(PEARL)[0].closest('.badge').dataset.key, 'firstWin');
-  assert.equal(q(PEARL_2).length, 0, 'the fresh one is the first item — no stagger');
+  assert.equal(q(PEARL_2).length, 0, 'one fresh mark rises at once, whatever its slot — no stagger');
+});
+
+test('the 160 ms stagger keys on a SECOND FRESH mark, not on the second tile', () => {
+  const { JSDOM } = require('jsdom');
+  const doc = new JSDOM('<!doctype html><html data-design="ocean"><body></body></html>').window.document;
+  const item = (fresh) => `<li class="badge-moment__item"${fresh ? ' data-fresh' : ''}><span class="badge"><span class="badge__mark"><i class="ti"></i></span></span></li>`;
+  const staggered = (a, b) => {
+    doc.body.innerHTML = `<ul>${item(a)}${item(b)}</ul>`;
+    return doc.querySelectorAll(PEARL_2).length;
+  };
+  assert.equal(staggered(false, true), 0, 'a lone new mark beside an old one rises at once');
+  assert.equal(staggered(true, true), 1, 'the second of two new marks waits');
+  assert.equal(staggered(true, false), 0);
 });

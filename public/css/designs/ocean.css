@@ -6171,8 +6171,11 @@
   :root[data-design="ocean"]:not([data-scheme="dark"]) .badge-moment__item[data-fresh] .badge__mark > .ti {
     animation: ocean-pearl 200ms ease-out 1220ms backwards;
   }
-  :root[data-design="ocean"]:not([data-scheme="dark"]) .badge-moment__item[data-fresh]:nth-child(2)::after { animation-delay: 960ms; }
-  :root[data-design="ocean"]:not([data-scheme="dark"]) .badge-moment__item[data-fresh]:nth-child(2) .badge__mark > .ti { animation-delay: 1380ms; }
+  /* The SECOND FRESH mark waits 160 ms, not the second tile: a lone new mark
+     beside one already shown rises at 800 ms like any first one (the same
+     rule Der Tisch's pins follow). */
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .badge-moment__item[data-fresh] ~ .badge-moment__item[data-fresh]::after { animation-delay: 960ms; }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .badge-moment__item[data-fresh] ~ .badge-moment__item[data-fresh] .badge__mark > .ti { animation-delay: 1380ms; }
   /* 580 ms = the 420 ms climb + the 160 ms burst; 72.41% is where one ends. */
   @keyframes ocean-bubble {
     0% { opacity: 0; transform: translateY(60px) scale(0.6); animation-timing-function: cubic-bezier(0.2, 0.8, 0.3, 1); }
