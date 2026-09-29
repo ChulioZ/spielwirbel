@@ -483,3 +483,611 @@
    keeps --gold-deep, the action amber. */
 :root[data-design="bruecke"][data-scheme="dark"] .trow__rank--2 { color: var(--ink-2); }
 :root[data-design="bruecke"][data-scheme="dark"] .trow__rank--3 { color: var(--ink-soft); }
+
+/* ===== #1238 — Lobby, round hub and the Abschnittsleiste ===== */
+/* B2.1 (phone lobby), B2.2 (phone hub, dock), B3.1 (desktop hub and the
+   Abschnittsleiste every desktop round screen wears). The markup Die Brücke
+   composes is its own (bruecke-hub.js, and the designIs('bruecke') branches in
+   views-round-start.js, views-home.js, hub-cards.js and round-rail.js);
+   everything below lays it out.
+
+   Two kinds of rule, as in the component layer above: GEOMETRY sits on the
+   bare hook, anything that reads a colour token is gated with the colour block
+   (.claude/rules/design-colour-blocks-are-scheme-gated.md). */
+
+/* ---- The top bar's status line (B3.1 „T+ 00:14:52 · Orbit stabil"). Pure
+   decoration (B9 „Zierzeilen"): printed from the bar's data attribute with an
+   EMPTY alternative text, so no screen reader reads it, and only while the
+   lobby or the hub is on screen, from 1280 — the phone bar has no room. It
+   sits before the language picker, which gives up its own auto margin. */
+@media (min-width: 1280px) {
+  :root[data-design="bruecke"] .topbar[data-status]:has(~ .app :is(.bruecke-hub, .lobby-head))::after {
+    content: attr(data-status) / "";
+    order: 1;
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: var(--track-notation);
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  :root[data-design="bruecke"] .topbar[data-status]:has(~ .app :is(.bruecke-hub, .lobby-head)) > :not(.topbar__home):not(.topbar__context) { order: 2; }
+  :root[data-design="bruecke"] .topbar[data-status]:has(~ .app :is(.bruecke-hub, .lobby-head)) > .lang-picker { margin-left: 0; }
+}
+:root[data-design="bruecke"][data-scheme="dark"] .topbar::after { color: var(--ink-soft); }
+/* The lobby voice beside the wordmark („Flotte / Übersicht") is notation. */
+:root[data-design="bruecke"] .topbar__context--kicker {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: var(--track-notation);
+  text-transform: uppercase;
+}
+
+/* ---- The dock (B2.2): below 860 a bar flush with the bottom edge, exactly
+   four targets at the key size. The active one is marked by a cyan rule along
+   its top edge and a cyan GLYPH; its label stays ink — accent carries text
+   only from 24px (rule 1). */
+@media (max-width: 859px) {
+  :root[data-design="bruecke"] .dock {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    transform: none;
+    gap: 0;
+    padding: 0 0 env(safe-area-inset-bottom, 0px);
+    border-width: 1px 0 0;
+  }
+  :root[data-design="bruecke"] .dock__item {
+    flex: 1;
+    justify-content: center;
+    gap: 4px;
+    min-height: 60px;
+    padding: 6px 2px;
+    font-size: 11px;
+    border-top: 2px solid transparent;
+  }
+  :root[data-design="bruecke"] .app:has(.dock:not(.dock--sub)),
+  :root[data-design="bruecke"] .app:has(.dock:not(.dock--sub)) + .site-footer { padding-bottom: 84px; }
+  :root[data-design="bruecke"][data-scheme="dark"] .dock__item.is-active {
+    background: transparent;
+    color: var(--ink);
+    border-top-color: var(--brand);
+  }
+  :root[data-design="bruecke"][data-scheme="dark"] .dock__item.is-active .ti { color: var(--brand); }
+  :root[data-design="bruecke"][data-scheme="dark"] .dock__item:not(.is-active):hover { background: var(--surface); }
+}
+
+/* ---- The Abschnittsleiste (B3.1, README „Abschnittslinks statt Brotkrume"):
+   from 1280 the rail is a BAR under the top bar with the five links —
+   Start · Regal · Chronik · Pokale · Einstellungen — and the content takes the
+   whole shell below it. round-rail.js builds it without identity, CTA, presets
+   or off-shelf rows (railIsLean). The bar tone reaches edge to edge through a
+   spread shadow, clipped to the bar's own height. */
+@media (min-width: 1280px) {
+  :root[data-design="bruecke"] .app:has(.rail) { grid-template-columns: minmax(0, 1fr); }
+  :root[data-design="bruecke"] .app:has(.rail) > .rail { grid-column: 1; grid-row: auto; }
+  :root[data-design="bruecke"] .app:has(.rail) > *:not(.rail) { grid-column: 1; }
+  :root[data-design="bruecke"] .rail {
+    position: static;
+    flex-direction: row;
+    align-items: stretch;
+    gap: 0;
+    margin: -24px 0 28px;
+    clip-path: inset(0 -100vmax -1px);
+  }
+  :root[data-design="bruecke"] .rail__group { flex-direction: row; gap: 0; }
+  :root[data-design="bruecke"] .rail__item {
+    width: auto;
+    min-height: var(--target-key);
+    padding: 0 18px;
+    border-radius: 0;
+    border-bottom: 2px solid transparent;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: var(--track-notation);
+    text-transform: uppercase;
+  }
+  :root[data-design="bruecke"] .rail__item .ti { display: none; }
+  :root[data-design="bruecke"][data-scheme="dark"] .rail {
+    box-shadow: 0 1px 0 0 var(--line), 0 0 0 100vmax var(--bar);
+    background: var(--bar);
+  }
+  :root[data-design="bruecke"][data-scheme="dark"] .rail__item { color: var(--ink-soft); }
+  :root[data-design="bruecke"][data-scheme="dark"] .rail__item:not(.is-active):hover { background: transparent; color: var(--ink); }
+  :root[data-design="bruecke"][data-scheme="dark"] .rail__item.is-active {
+    background: transparent;
+    color: var(--ink);
+    border-bottom-color: var(--brand);
+  }
+}
+
+/* ---- The hub frame. One column of named slots in the DOM's own order on a
+   phone (B2.2); from 1280 the slots take the grid areas of B3.1 — the title
+   row, then members · Missionskontrolle · Wie wär's mit, the Rundenpuls under
+   the members and the previews under the suggestions, and the bottom row
+   Kümmerliste · Zuletzt gespielt · Nicht im Regal. An empty slot takes no
+   room at all. */
+:root[data-design="bruecke"] .bruecke-hub { display: flex; flex-direction: column; gap: 16px; }
+:root[data-design="bruecke"] .bruecke-hub > * { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+:root[data-design="bruecke"] .bruecke-hub > :empty { display: none; }
+:root[data-design="bruecke"] .bruecke-hub .hub-cards:empty { display: none; }
+:root[data-design="bruecke"] .bruecke-hub :is(.hub-card, .ticket, .hub-cta, .hero, .hub-actions, .hub-offshelf) { margin: 0; }
+/* Rundenpuls and Kümmerliste share a row on a phone (B2.2). */
+@media (min-width: 390px) and (max-width: 1279px) {
+  :root[data-design="bruecke"] .bruecke-hub:has(> .bruecke-hub__pulse:not(:empty)):has(> .bruecke-hub__care:not(:empty)) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  :root[data-design="bruecke"] .bruecke-hub:has(> .bruecke-hub__pulse:not(:empty)):has(> .bruecke-hub__care:not(:empty)) > :not(.bruecke-hub__pulse):not(.bruecke-hub__care) { grid-column: 1 / -1; }
+}
+
+@media (min-width: 1280px) {
+  /* The hub spreads over the shell like B3.1; the reading cap is for prose.
+     (0,4,0) against the cap's (0,3,0). */
+  :root[data-design="bruecke"] .app > .bruecke-hub { max-width: none; }
+  :root[data-design="bruecke"] .bruecke-hub {
+    display: grid;
+    grid-template-columns: 300px minmax(0, 1fr) 340px;
+    grid-template-rows: auto auto auto auto 1fr auto auto auto;
+    grid-template-areas:
+      "title   title   stats"
+      "feed    feed    feed"
+      "crew    mission suggest"
+      "pulse   mission previews"
+      ".       mission previews"
+      "care    last    offshelf"
+      "more    more    more"
+      "actions actions actions";
+    column-gap: 22px;
+    row-gap: 18px;
+    align-items: start;
+  }
+  :root[data-design="bruecke"] :is(.bruecke-hub__crew, .bruecke-hub .hero) { display: contents; }
+  :root[data-design="bruecke"] .bruecke-hub .hero h1 { grid-area: title; align-self: end; }
+  :root[data-design="bruecke"] .bruecke-hub .hero__chips { grid-area: stats; align-self: end; justify-content: flex-end; }
+  :root[data-design="bruecke"] .bruecke-hub .hero__members { grid-area: crew; align-self: stretch; }
+  :root[data-design="bruecke"] .bruecke-hub__mission { grid-area: mission; align-self: stretch; }
+  :root[data-design="bruecke"] .bruecke-hub__feed { grid-area: feed; }
+  :root[data-design="bruecke"] .bruecke-hub__last { grid-area: last; align-self: stretch; }
+  :root[data-design="bruecke"] .bruecke-hub__suggest { grid-area: suggest; align-self: stretch; }
+  :root[data-design="bruecke"] .bruecke-hub__pulse { grid-area: pulse; }
+  :root[data-design="bruecke"] .bruecke-hub__care { grid-area: care; align-self: stretch; }
+  :root[data-design="bruecke"] .bruecke-hub__previews { grid-area: previews; }
+  :root[data-design="bruecke"] .bruecke-hub__more { grid-area: more; }
+  :root[data-design="bruecke"] .bruecke-hub__offshelf { grid-area: offshelf; align-self: stretch; }
+  :root[data-design="bruecke"] .bruecke-hub__actions { grid-area: actions; }
+  :root[data-design="bruecke"] .bruecke-hub :is(.bruecke-hub__last, .bruecke-hub__suggest, .bruecke-hub__care, .bruecke-hub__offshelf, .bruecke-hub__mission) > :only-child { flex: 1; }
+}
+
+/* ---- The round's name and the counts line under it: the display face at the
+   B1 steps, and „Mission 24 · Crew 4 · 12 Spiele · 23 Sessions" as ONE line of
+   notation — the two app chips lose their pill and their glyph. */
+:root[data-design="bruecke"] .bruecke-hub .hero h1 { font-size: var(--display-m); line-height: 1.05; }
+@media (min-width: 1280px) {
+  :root[data-design="bruecke"] .bruecke-hub .hero h1 { font-size: var(--display-xl); }
+}
+:root[data-design="bruecke"] .bruecke-hub .hero__chips { gap: 0; margin-top: 6px; }
+:root[data-design="bruecke"] .bruecke-hub .hero__chips > * {
+  padding: 0;
+  background: none;
+  border-radius: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: var(--track-notation);
+  text-transform: uppercase;
+}
+:root[data-design="bruecke"] .bruecke-hub .hero__chips > * + *::before { content: "·" / ""; margin: 0 0.6em; }
+:root[data-design="bruecke"] .bruecke-hub .hero__chips .ti { display: none; }
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-hub .hero__chips > * { color: var(--ink-soft); }
+
+/* ---- The members (B2.2 row of squares with the win count under each; B3.1 a
+   titled list with the name and „5 Siege"). The seat's colour is a FILL on its
+   `.seat__face` square under night ink (rule 1); the link around it is
+   transparent. „Platz dazu" wraps to two lines under the „+" — never
+   shortened. */
+:root[data-design="bruecke"] .bruecke-hub .hero__members { gap: 10px 12px; margin-top: 14px; align-items: flex-start; }
+:root[data-design="bruecke"] .bruecke-crew__title { display: none; }
+:root[data-design="bruecke"] .bruecke-hub .hero__members > a.avatar {
+  width: auto;
+  height: auto;
+  min-width: var(--target-key);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+:root[data-design="bruecke"] .seat__face {
+  width: var(--target-key);
+  height: var(--target-key);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  font-family: var(--font-display);
+  font-size: 16px; /* glyph, not type */
+}
+:root[data-design="bruecke"] .seat__face .avatar__img { width: 100%; height: 100%; object-fit: cover; }
+:root[data-design="bruecke"] .bruecke-hub .seat__text { display: none; }
+:root[data-design="bruecke"] .seat__n {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.2;
+}
+:root[data-design="bruecke"] .bruecke-hub .hero__members > .avatar--add {
+  position: relative;
+  width: var(--target-key);
+  height: var(--target-key);
+  margin-bottom: 30px;
+}
+:root[data-design="bruecke"] .bruecke-hub .avatar--add > .seat__text {
+  display: block;
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 50%;
+  width: 56px;
+  transform: translateX(-50%);
+  font-family: var(--font);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-hub .hero__members > a.avatar { background: transparent; color: var(--ink); }
+:root[data-design="bruecke"][data-scheme="dark"] .seat__face { color: var(--on-accent); }
+:root[data-design="bruecke"][data-scheme="dark"] :is(.seat__n, .bruecke-hub .avatar--add > .seat__text) { color: var(--ink-soft); }
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-hub .hero__members > .avatar--add {
+  background: transparent;
+  border: 1px dashed var(--brand);
+  color: var(--brand);
+}
+
+@media (min-width: 1280px) {
+  :root[data-design="bruecke"] .bruecke-hub .hero__members {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    gap: 8px;
+    margin: 0;
+    padding: 18px;
+  }
+  :root[data-design="bruecke"] .bruecke-crew__title {
+    display: block;
+    margin: 0 0 6px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: var(--track-notation);
+    text-transform: uppercase;
+  }
+  :root[data-design="bruecke"] .bruecke-hub .hero__members > a.avatar {
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    min-height: var(--target-key);
+  }
+  :root[data-design="bruecke"] .bruecke-hub .seat__n { display: none; }
+  :root[data-design="bruecke"] .bruecke-hub .hero__members > a.avatar > .seat__text {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  :root[data-design="bruecke"] .bruecke-hub .seat__name {
+    font-family: var(--font-display);
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: var(--track-display);
+    text-transform: uppercase;
+    overflow-wrap: anywhere;
+  }
+  :root[data-design="bruecke"] .bruecke-hub .seat__wins {
+    flex: none;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+  }
+  :root[data-design="bruecke"] .bruecke-hub .hero__members > .avatar--add { margin: 0; align-self: flex-start; overflow: visible; }
+  :root[data-design="bruecke"] .bruecke-hub .avatar--add > .seat__text {
+    top: 50%;
+    left: calc(100% + 12px);
+    width: max-content;
+    transform: translateY(-50%);
+    font-family: var(--font-mono);
+    letter-spacing: var(--track-notation);
+    text-transform: uppercase;
+  }
+  :root[data-design="bruecke"][data-scheme="dark"] .bruecke-hub .hero__members {
+    background: var(--surface);
+    border: 1px solid var(--line);
+  }
+  :root[data-design="bruecke"][data-scheme="dark"] :is(.bruecke-crew__title, .bruecke-hub .seat__wins) { color: var(--ink-soft); }
+  :root[data-design="bruecke"][data-scheme="dark"] .bruecke-hub .avatar--add > .seat__text { color: var(--ink-2); }
+}
+
+/* ---- Missionskontrolle (B2.2, B3.1): a panel with cyan corner brackets, its
+   inscription and „Bereit", the amber ignition inside two rings and a
+   cross-hair, and the three presets under it. The brackets are drawn with
+   solid-colour image layers (no gradient on a panel — each layer is one flat
+   colour); the rings and the cross-hair are aria-hidden spans. */
+:root[data-design="bruecke"] .bruecke-mission {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  padding: 16px 18px 22px;
+  background-repeat: no-repeat;
+  background-size: 16px 2px, 2px 16px, 16px 2px, 2px 16px, 16px 2px, 2px 16px, 16px 2px, 2px 16px;
+  background-position: top left, top left, top right, top right, bottom left, bottom left, bottom right, bottom right;
+}
+:root[data-design="bruecke"] .bruecke-mission__head {
+  align-self: stretch;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+:root[data-design="bruecke"] :is(.bruecke-mission__title, .bruecke-mission__state) {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: var(--track-notation);
+  text-transform: uppercase;
+}
+:root[data-design="bruecke"] .bruecke-mission__ignition {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 190px;
+  height: 190px;
+}
+:root[data-design="bruecke"] .bruecke-mission__ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1px solid transparent;
+}
+:root[data-design="bruecke"] .bruecke-mission__ring--inner { inset: 22px; border-style: dashed; }
+:root[data-design="bruecke"] .btn.hub-cta.bruecke-mission__fire {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 12px;
+  border-radius: 50%;
+  font-family: var(--font-display);
+  font-size: 15px;
+  line-height: 1.1;
+  text-align: center;
+  --press-mb: 0px;
+}
+:root[data-design="bruecke"] .bruecke-mission__fire .ti { font-size: 26px; }
+:root[data-design="bruecke"] .bruecke-mission__fire .hub-cta__reason { font-size: 11px; text-transform: none; letter-spacing: 0; }
+:root[data-design="bruecke"] .bruecke-mission .hub-presets { justify-content: center; margin: 0; }
+:root[data-design="bruecke"] .bruecke-mission .hub-preset {
+  min-height: var(--target-min);
+  padding: 8px 14px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: var(--track-notation);
+  text-transform: uppercase;
+}
+@media (min-width: 1280px) {
+  :root[data-design="bruecke"] .bruecke-mission { justify-content: space-between; padding: 18px 22px 28px; }
+  :root[data-design="bruecke"] .bruecke-mission__ignition { width: 300px; height: 300px; margin: auto 0; }
+  :root[data-design="bruecke"] .bruecke-mission__ring--inner { inset: 50px; }
+  :root[data-design="bruecke"] .btn.hub-cta.bruecke-mission__fire { width: 156px; height: 156px; font-size: 17px; }
+}
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-mission {
+  background-color: var(--surface);
+  background-image:
+    linear-gradient(var(--brand), var(--brand)), linear-gradient(var(--brand), var(--brand)),
+    linear-gradient(var(--brand), var(--brand)), linear-gradient(var(--brand), var(--brand)),
+    linear-gradient(var(--brand), var(--brand)), linear-gradient(var(--brand), var(--brand)),
+    linear-gradient(var(--brand), var(--brand)), linear-gradient(var(--brand), var(--brand));
+  border: 1px solid var(--line);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-mission__title { color: var(--ink-soft); }
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-mission__state { color: var(--good); }
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-mission__ring { border-color: var(--glow-accent); }
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-mission__ignition {
+  background:
+    linear-gradient(var(--hairline), var(--hairline)) center / 100% 1px no-repeat,
+    linear-gradient(var(--hairline), var(--hairline)) center / 1px 100% no-repeat;
+}
+
+/* ---- The blocks around it: every hub card is a flat plate whose title is
+   notation (B2.2/B3.1 draw „WIE WÄR'S MIT", „RUNDENPULS" small and spaced, with
+   no kicker above them). The Kümmerliste keeps its wrench in the warning amber
+   — a glyph, so the colour may carry it. */
+:root[data-design="bruecke"] .bruecke-hub .hub-card__title {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: var(--track-notation);
+  text-transform: uppercase;
+}
+:root[data-design="bruecke"] .bruecke-hub .hub-card__title .ti { display: none; }
+:root[data-design="bruecke"] .bruecke-hub__care .hub-card__title .ti { display: inline; font-size: 14px; }
+:root[data-design="bruecke"] .hub-card__fact { display: block; }
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-hub .hub-card__title { color: var(--ink-soft); }
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-hub__care .hub-card__title,
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-hub__care .hub-card__title .ti { color: var(--warn); }
+:root[data-design="bruecke"][data-scheme="dark"] .hub-card__fact { color: var(--ink-2); }
+
+/* The three previews: on a phone one row of three small tiles — the title and
+   its one line — whose single link („öffnen") covers the whole tile (B2.2);
+   from 1280 the full cards stacked in the right column (B3.1). */
+@media (max-width: 1279px) {
+  :root[data-design="bruecke"] .bruecke-hub__previews {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+    grid-auto-flow: column;
+    gap: 10px;
+  }
+  :root[data-design="bruecke"] .bruecke-hub__previews .hub-preview { position: relative; padding: 12px; }
+  :root[data-design="bruecke"] .bruecke-hub__previews .hub-card__title {
+    font-family: var(--font-display);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: var(--track-display);
+    margin-bottom: 4px;
+    /* A tile is ~88px of text at 390: the glyph takes its own line so the word
+       keeps the whole width, and a long word hyphenates rather than splitting
+       mid-syllable („CHRON / IK" before). */
+    hyphens: auto;
+    overflow-wrap: break-word;
+  }
+  :root[data-design="bruecke"] .bruecke-hub__previews .hub-card__title .ti { display: block; font-size: 18px; margin-bottom: 6px; }
+  :root[data-design="bruecke"] .bruecke-hub__previews .hub-card__body > :not(.hub-preview__sub) { display: none; }
+  :root[data-design="bruecke"] .bruecke-hub__previews .hub-preview__sub { font-size: 12px; }
+  :root[data-design="bruecke"] .bruecke-hub__previews .hub-preview__open {
+    position: absolute;
+    inset: 0;
+    font-size: 0;
+  }
+  :root[data-design="bruecke"] .bruecke-hub__previews .hub-preview__open .ti { display: none; }
+  :root[data-design="bruecke"][data-scheme="dark"] .bruecke-hub__previews .hub-card__title { color: var(--ink); }
+  :root[data-design="bruecke"][data-scheme="dark"] .bruecke-hub__previews .hub-card__title .ti { color: var(--brand); }
+}
+
+/* „Nicht im Regal": the four entries as one run of notation links (B2.2/B3.1:
+   „Aussortiert 2 · Durchgespielt 1 · Wunschliste 4"), each at the 24px target. */
+:root[data-design="bruecke"] .bruecke-hub .hub-offshelf { padding: 14px 16px; }
+:root[data-design="bruecke"] .bruecke-hub .hub-offshelf__title {
+  margin: 0 0 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: var(--track-notation);
+  text-transform: uppercase;
+}
+:root[data-design="bruecke"] .bruecke-hub .hub-offshelf__list { display: flex; flex-wrap: wrap; gap: 2px 16px; background: none; border: 0; }
+:root[data-design="bruecke"] .bruecke-hub .hub-offshelf .ds-row {
+  min-height: var(--target-min);
+  padding: 2px 0;
+  border: 0;
+  background: none;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+:root[data-design="bruecke"] .bruecke-hub .hub-offshelf .ds-row :is(.ti, .ds-row__meta) { display: none; }
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-hub .hub-offshelf {
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-hub .hub-offshelf__title { color: var(--ink-soft); }
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-hub .hub-offshelf .ds-row { color: var(--ink); }
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-hub .hub-offshelf .ds-row:hover { color: var(--brand); background: none; }
+
+/* ---- The lobby (B2.1). The greeting on the page ground — no band, „kein
+   Verlauf auf einem Paneel" — the question under it, the running session as
+   the signal notice, and each round as a plate: its marker as a small square
+   before the name, the seats as squares, the counts as notation. */
+:root[data-design="bruecke"] .app:has(.lobby-list) > .lobby-head { background: none; padding: 0; }
+:root[data-design="bruecke"] .lobby-head h1 { font-size: var(--display-m); line-height: 1.1; }
+@media (min-width: 1280px) {
+  :root[data-design="bruecke"] .app:has(.lobby-list) > .lobby-head h1 { font-size: var(--display-l); }
+}
+:root[data-design="bruecke"] .lobby-head__sub { font-weight: 400; }
+/* „Läuft gerade" stays for a screen reader; the notice's own kicker is what
+   the sheet shows. */
+:root[data-design="bruecke"] .home-resume__head:has(+ .home-resume__list > .bruecke-notice) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+:root[data-design="bruecke"] .bruecke-notice {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px 14px 36px;
+  position: relative;
+  text-decoration: none;
+}
+:root[data-design="bruecke"] .bruecke-notice::before {
+  content: "";
+  position: absolute;
+  left: 16px;
+  top: 19px;
+  width: 10px;
+  height: 10px;
+}
+:root[data-design="bruecke"] :is(.bruecke-notice__kicker, .bruecke-notice__go) {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: var(--track-notation);
+  text-transform: uppercase;
+}
+:root[data-design="bruecke"] .bruecke-notice__title { font-size: 17px; font-weight: 600; }
+:root[data-design="bruecke"] .bruecke-notice__meta { font-size: 13px; }
+:root[data-design="bruecke"] .bruecke-notice__go { display: inline-flex; align-items: center; gap: 6px; min-height: var(--target-min); }
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-notice {
+  background: var(--surface);
+  border: 1px solid var(--action);
+  box-shadow: 0 0 22px var(--glow-action);
+  color: var(--ink);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-notice::before { background: var(--action); }
+:root[data-design="bruecke"][data-scheme="dark"] :is(.bruecke-notice__kicker, .bruecke-notice__go) { color: var(--action); }
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-notice__meta { color: var(--ink-2); }
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-notice:hover { box-shadow: 0 0 30px var(--glow-action-strong); }
+
+:root[data-design="bruecke"] .round-card { align-items: flex-start; gap: 12px; }
+:root[data-design="bruecke"] .round-card:not(.round-card--new):hover { transform: none; }
+:root[data-design="bruecke"] .round-card__emblem { align-self: flex-start; width: 12px; height: 12px; margin-top: 8px; border-radius: 0; font-size: 0; }
+:root[data-design="bruecke"] .round-card__emblem .ti { display: none; }
+:root[data-design="bruecke"] .round-card__name { font-size: 22px; letter-spacing: var(--track-display); text-transform: uppercase; line-height: 1.1; }
+:root[data-design="bruecke"] .round-card .avatar-stack { gap: 4px; }
+:root[data-design="bruecke"] .round-card .avatar-stack .avatar { width: 28px; height: 28px; margin-left: 0; font-size: 12px; border-radius: 0; }
+:root[data-design="bruecke"] .round-card .stat-chip {
+  padding: 0;
+  background: none;
+  border-radius: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: var(--track-notation);
+  text-transform: uppercase;
+}
+:root[data-design="bruecke"] .round-card .stat-chip .ti { display: none; }
+:root[data-design="bruecke"] .round-card__last { font-weight: 500; }
+:root[data-design="bruecke"] .round-card__chev { display: none; }
+:root[data-design="bruecke"] .round-card--new {
+  justify-content: center;
+  min-height: var(--target-key);
+  font-size: 15px;
+  letter-spacing: var(--track-display);
+  text-transform: uppercase;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .round-card:not(.round-card--new):hover {
+  border-color: var(--brand);
+  box-shadow: 0 0 18px var(--glow-accent);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .round-card .stat-chip { color: var(--ink-soft); }
+:root[data-design="bruecke"][data-scheme="dark"] .round-card__last { color: var(--ink-2); }
+:root[data-design="bruecke"][data-scheme="dark"] .round-card__last .ti { color: var(--action); }
+:root[data-design="bruecke"][data-scheme="dark"] .round-card--new {
+  border: 1px dashed var(--brand);
+  color: var(--ink);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .round-card--new .ti { color: var(--brand); }
+:root[data-design="bruecke"][data-scheme="dark"] .round-card--new:hover { background: var(--surface); }

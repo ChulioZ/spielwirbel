@@ -51,6 +51,10 @@ I18N.fr = {
   // Ocean only (#1211): its sub-brand beside the wordmark and its lobby greeting.
   'home.oceanKicker': 'La côte · tes groupes',
   'home.oceanGreeting': 'Bienvenue sur la côte.',
+  // Die Brücke only (#1238): the lobby voice, its greeting and the notice kicker (B9).
+  'home.brueckeKicker': 'Flotte / Aperçu',
+  'home.brueckeGreeting': 'Bon retour à bord.',
+  'home.brueckeSignal': 'Signal entrant',
   'home.shared': 'Partagé',
   'home.newRound': 'Créer un groupe',
   'home.empty.title': 'Aucun groupe pour l’instant.',
@@ -98,6 +102,14 @@ I18N.fr = {
   'round.startSession': 'Démarrer une session',
   // Ocean only (#1211): the one action's themed verb (O9 §2).
   'round.startSessionOcean': 'Plonger',
+  // Die Brücke only (#1238): the one action, the panel it sits in and the
+  // two decorative lines (B9 „Zierzeilen" — never a label, never a button).
+  'round.startSessionBruecke': 'Lancer la mission',
+  'hub.bruecke.control': 'Contrôle de mission',
+  'hub.bruecke.ready': 'Prêt',
+  'hub.bruecke.mission': 'Mission {n} · Équipage {m}',
+  'hub.bruecke.crew': 'Membres · {n}',
+  'bruecke.status': 'T+ 00:14:52 · orbite stable',
   'round.startEmptyTitle': 'Pas encore de session',
   'round.startEmpty': 'Lancez votre première session — vous verrez ensuite ici ce que vous avez joué en dernier.',
   'round.startSessionDisabled': 'Ajoute d’abord des jeux',

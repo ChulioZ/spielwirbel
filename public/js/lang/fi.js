@@ -32,6 +32,10 @@ I18N.fi = {
   // Ocean only (#1211): its sub-brand beside the wordmark and its lobby greeting.
   'home.oceanKicker': 'Rannikko · sinun porukkasi',
   'home.oceanGreeting': 'Tervetuloa rannikolle.',
+  // Die Brücke only (#1238): the lobby voice, its greeting and the notice kicker (B9).
+  'home.brueckeKicker': 'Laivasto / Yleiskatsaus',
+  'home.brueckeGreeting': 'Tervetuloa takaisin kyytiin.',
+  'home.brueckeSignal': 'Saapuva signaali',
   'home.shared': 'Jaettu',
   'home.newRound': 'Aloita uusi porukka',
   'home.empty.title': 'Ei vielä yhtään peliporukkaa.',
@@ -79,6 +83,14 @@ I18N.fi = {
   'round.startSession': 'Aloita sessio',
   // Ocean only (#1211): the one action's themed verb (O9 §2).
   'round.startSessionOcean': 'Sukella',
+  // Die Brücke only (#1238): the one action, the panel it sits in and the
+  // two decorative lines (B9 „Zierzeilen" — never a label, never a button).
+  'round.startSessionBruecke': 'Käynnistä tehtävä',
+  'hub.bruecke.control': 'Tehtävänohjaus',
+  'hub.bruecke.ready': 'Valmis',
+  'hub.bruecke.mission': 'Tehtävä {n} · Miehistö {m}',
+  'hub.bruecke.crew': 'Jäsenet · {n}',
+  'bruecke.status': 'T+ 00:14:52 · kiertorata vakaa',
   'round.startEmptyTitle': 'Ei vielä sessioita',
   'round.startEmpty': 'Aloita ensimmäinen sessio — viimeksi pelattu näkyy tässä.',
   'round.startSessionDisabled': 'Lisää ensin pelejä',

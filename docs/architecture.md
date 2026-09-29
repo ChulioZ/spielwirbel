@@ -797,6 +797,9 @@ public/
     ocean-hub.js          Ocean's composition of the lobby and the round hub:
                           the hub's columns, the shell with the one action, the
                           crew captions, the lobby tiles and notice (#1211)
+    bruecke-hub.js        Die Brücke's composition of the lobby and the round
+                          hub: the hub's slot frame, the Missionskontrolle,
+                          the member captions and the signal notice (#1238)
     saved-filters.js      a round's saved session filters (#1328): the chip's
                           prefill, the setup screen's „Filter speichern" sheet
                           and the Einstellungen list

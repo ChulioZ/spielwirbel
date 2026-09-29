@@ -33,6 +33,10 @@ I18N.ko = {
   // Ocean only (#1211): its sub-brand beside the wordmark and its lobby greeting.
   'home.oceanKicker': '해안 · 나의 모임',
   'home.oceanGreeting': '해안에 오신 걸 환영해요.',
+  // Die Brücke only (#1238): the lobby voice, its greeting and the notice kicker (B9).
+  'home.brueckeKicker': '함대 / 개요',
+  'home.brueckeGreeting': '다시 탑승하신 걸 환영해요.',
+  'home.brueckeSignal': '수신 신호',
   'home.shared': '공유됨',
   'home.newRound': '새 모임 시작하기',
   'home.empty.title': '아직 게임 모임이 없어요.',
@@ -80,6 +84,14 @@ I18N.ko = {
   'round.startSession': '세션 시작',
   // Ocean only (#1211): the one action's themed verb (O9 §2).
   'round.startSessionOcean': '잠수하기',
+  // Die Brücke only (#1238): the one action, the panel it sits in and the
+  // two decorative lines (B9 „Zierzeilen" — never a label, never a button).
+  'round.startSessionBruecke': '미션 시작',
+  'hub.bruecke.control': '미션 컨트롤',
+  'hub.bruecke.ready': '준비 완료',
+  'hub.bruecke.mission': '미션 {n} · 크루 {m}',
+  'hub.bruecke.crew': '멤버 · {n}',
+  'bruecke.status': 'T+ 00:14:52 · 궤도 안정',
   'round.startEmptyTitle': '아직 세션이 없어요',
   'round.startEmpty': '첫 세션을 시작해 보세요 — 마지막으로 플레이한 게임이 여기에 표시돼요.',
   'round.startSessionDisabled': '먼저 게임을 추가하세요',
