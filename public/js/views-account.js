@@ -158,6 +158,10 @@ async function showAccount() {
   if (kontoAsCards()) composeKontoCards();
 }
 
+// Ocean (#1219) and Die Brücke (#1242, B5.4 — every section a plate) both
+// compose the shared screen as cards; each stylesheet draws its own card.
+const kontoAsCards = () => designIs('ocean') || designIs('bruecke');
+
 /* Ocean's Konto (#1219, O14.3 „Alles auf einer Seite, nichts versteckt"): every
    section a card of its own, built AFTER the shared screen out of its own nodes,
    so the forms and their handlers are exactly Klassisch's. Each
@@ -166,10 +170,6 @@ async function showAccount() {
    `.konto-design`) is left as it is, and the install section, which holds its
    heading inside it, only takes the card's class. The deletion card keeps a
    danger edge. */
-// Ocean (#1219) and Die Brücke (#1242, B5.4 — every section a plate) both
-// compose the shared screen as cards; each stylesheet draws its own card.
-const kontoAsCards = () => designIs('ocean') || designIs('bruecke');
-
 function composeKontoCards() {
   let card = null;
   [...app.children].forEach((el) => {
