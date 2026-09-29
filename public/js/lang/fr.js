@@ -1883,6 +1883,8 @@ I18N.fr = {
   'badges.card.next': 'Palier suivant : {n}',
   'badges.card.tiers': 'Paliers',
   'badges.evergreen.lineGame': '{game} joué {n} fois',
+  // A Regal card's running number in Das Programmheft (#1373, P3.3).
+  'regal.cardNo': 'N° {n}',
   // Das Programmheft's lobby and hub (#1372, P3.1/P3.2/P6.1).
   'hub.members': 'Membres',
   'hub.lead.open': 'Voir le résultat',

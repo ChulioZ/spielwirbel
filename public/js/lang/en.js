@@ -1998,6 +1998,8 @@ I18N.en = {
   'badges.card.next': 'Next tier {n}',
   'badges.card.tiers': 'Tiers',
   'badges.evergreen.lineGame': 'Played {game} {n} times',
+  // A Regal card's running number in Das Programmheft (#1373, P3.3).
+  'regal.cardNo': 'No. {n}',
   // Das Programmheft's lobby and hub (#1372, P3.1/P3.2/P6.1).
   'hub.members': 'Members',
   'hub.lead.open': 'See the result',
