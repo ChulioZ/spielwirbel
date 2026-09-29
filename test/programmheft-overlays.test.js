@@ -115,8 +115,13 @@ const SHEET = fs.readFileSync(path.join(__dirname, '..', 'public/css/designs/pro
   .replace(/\/\*[\s\S]*?\*\//g, '');
 const MARK = '#1378';
 const RAW = fs.readFileSync(path.join(__dirname, '..', 'public/css/designs/programmheft.css'), 'utf8');
-// This slice's own section: everything after its banner, comments stripped.
-const MINE = RAW.slice(RAW.indexOf(`/* ===== ${MARK}`)).replace(/\/\*[\s\S]*?\*\//g, '');
+// This slice's own section, comments stripped — up to the NEXT slice's banner,
+// not to EOF: sibling Programmheft slices append their own sections, and
+// whichever merges later lands after this one (#1380's Gefahrenzone fills a
+// danger button on purpose, P14).
+const START = RAW.indexOf(`/* ===== ${MARK}`);
+const NEXT = RAW.indexOf('/* ===== #', START + 1);
+const MINE = RAW.slice(START, NEXT === -1 ? undefined : NEXT).replace(/\/\*[\s\S]*?\*\//g, '');
 
 test('the slice section exists and is not vacuous', () => {
   assert.ok(RAW.includes(`/* ===== ${MARK}`), 'the #1378 banner is gone');
