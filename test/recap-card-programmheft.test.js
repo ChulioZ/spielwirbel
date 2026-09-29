@@ -250,8 +250,14 @@ test('the edition: long date, the session’s number, and the Pokale’s streak 
         { id: 's4', createdAt: at(20), finished: false, memberIds: ['a', 'b'] }],
     };
     dom.context.__round = round;
-    const ed = (sid, winners) => JSON.parse(dom.run(
-      `JSON.stringify(programmheftEdition(__round, __round.sessions.find((s) => s.id === ${JSON.stringify(sid)}), ${JSON.stringify(winners)}))`));
+    // Arguments travel through the context, not the script text, so nothing
+    // is spliced into code that the sandbox evaluates.
+    const ed = (sid, winners) => {
+      dom.context.__sid = sid;
+      dom.context.__winners = winners;
+      return JSON.parse(dom.run(
+        'JSON.stringify(programmheftEdition(__round, __round.sessions.find((s) => s.id === __sid), __winners))'));
+    };
 
     const now = ed('s4', ['a']);
     assert.equal(now.sessionNo, 4, 'the session being finished counts itself');
