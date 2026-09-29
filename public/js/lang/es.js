@@ -297,6 +297,8 @@ I18N.es = {
   'periodRecap.label.shelf': 'Estantería',
   'periodRecap.toast.saved': 'Imagen guardada.',
   'periodRecap.toast.failed': 'No se pudo crear la imagen.',
+  // Die Brücke's share card (#1247): the caption over its twelve monthly bars.
+  'periodRecap.card.perMonth': 'Sesiones por mes',
   // „Dein Rückblick" on the own profile (#1147) — no wins, only what was played.
   'accountRecap.title': 'Tu resumen',
   'accountRecap.lead': 'Lo que jugaste en todos tus grupos — solo tú puedes verlo.',
@@ -1910,4 +1912,33 @@ I18N.es = {
   'badges.card.next': 'Siguiente nivel: {n}',
   'badges.card.tiers': 'Niveles',
   'badges.evergreen.lineGame': '{game} jugado {n} veces',
+  // Die Brücke's session loop (#1240): only the five themed words of
+  // docs/design/bruecke §2 — pool, probes, ignition, thrust, decrypt.
+  'startSession.poolBruecke': 'Pool',
+  'startSession.ignitionBruecke': 'Ignición',
+  'startSession.countQuestionBruecke': 'Sondas · ¿cuántas se extraen?',
+  'startSession.potLabelBrueckeOne': 'juego en el pool',
+  'startSession.potLabelBruecke': 'juegos en el pool',
+  'startSession.sealedBruecke': 'Valoración secreta: se descifra solo cuando todos han valorado.',
+  'vote.questionBruecke': '¿Cuánto empuje le das hoy a este juego?',
+  'vote.scaleLowBruecke': 'sin empuje',
+  'vote.scaleHighBruecke': 'máxima potencia',
+  'vote.ratersTitleBruecke': 'Quién ya ha valorado',
+  'vote.sealedNoteBruecke': 'Solo se descifra cuando todos han valorado. Hasta entonces nadie ve los valores de los demás.',
+  'vote.sealedTitleBruecke': 'Oculto',
+  'vote.sealedTextBrueckeOne': 'Un juego más sigue cifrado hasta que llegues a él.',
+  'vote.sealedTextBruecke': '{n} juegos más siguen cifrados hasta que llegues a ellos.',
+  'vote.sealedCardBruecke': 'Cifrado',
+  'score.reasonVetoBrueckeOne': '{n}× sin empuje',
+  'score.reasonVetoBruecke': '{n}× sin empuje',
+  'startSession.guestSeatBruecke': 'Invitado · solo hoy',
+  // Das Programmheft's share card (#1381, P8.4): its facts and masthead.
+  'card.programmheft.sessionNo': 'Sesión n.º {n}',
+  'card.programmheft.score': 'Puntuación',
+  'card.programmheft.streak': 'Racha',
+  'card.programmheft.streakN': '{n} seguidas',
+  'card.programmheft.shared': 'Compartido',
+  'card.programmheft.winners': '{n} ganadores',
+  'card.programmheft.ratings': 'Valoraciones',
+  'card.programmheft.present': 'Jugadores',
 };

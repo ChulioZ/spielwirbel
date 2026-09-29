@@ -927,6 +927,562 @@
 :root[data-design="bruecke"] .member-owned { display: flex; flex-direction: column; }
 :root[data-design="bruecke"] .member-owned__title {
   margin: 0 0 6px;
+/* ===== #1240 — Session loop: setup, vote card, result, several tables ===== */
+/* Sheets: docs/design/bruecke/Bruecke-B2-Phone-Kern.dc.html (B2.3 Neue
+   Session, B2.4 Abstimmung, B2.5 Ergebnis), Bruecke-B4-Session-Desktop.dc.html
+   (B4.1–B4.4) and Bruecke-B16-Dichte.dc.html (B16.1 twelve people, B16.3 the
+   tie).
+
+   The markup is views-session-bruecke.js's re-composition of the setup and the
+   result, plus the vote card, result Tafel and split-table builders Der Tisch
+   and Ocean share (vote-card-composed.js, result-tafel-composed.js,
+   views-session-tables.js). tisch.css and ocean.css style those only under
+   their own designs, so every piece Die Brücke shows is laid out HERE.
+
+   Every colour is a var() from the colour block above, every rule is gated on
+   the dark scheme like the component layer, and the accent carries text only
+   from 24px (rule 1): the pool's count, the winner's name in the headline. The
+   small kickers are notation in --ink-soft. Nothing here moves: motion is out
+   of scope for #1240. */
+
+/* --- Shared pieces: the kicker and the panel ------------------------------ */
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-kicker {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: var(--track-notation);
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+/* A panel: the flat plate with one line (B1 „Flächenregel"). */
+:root[data-design="bruecke"][data-scheme="dark"] :is(.setup-grid--bruecke .setup-grid__main, .bruecke-pool, .setup-grid--bruecke .setup-bar, .bruecke-raters, .bruecke-sealed) {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 0;
+  box-shadow: none;
+  padding: var(--space-4);
+}
+
+/* --- Setup (B2.3 at 390, B4.1 at 1440, B16.1 with twelve people) --------- */
+/* The head: the title, and the step rail „1 Wer spielt mit? ▸ 2 Pool ▸
+   3 Zündung" right of it (under it on a phone). No leading zero (review R2-5). */
+:root[data-design="bruecke"][data-scheme="dark"] .page-head--bruecke {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-5);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: var(--track-notation);
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-steps__step { display: inline-flex; align-items: center; gap: 6px; }
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-steps__step + .bruecke-steps__step::before { content: '▸'; color: var(--ink-soft); }
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-steps__step.is-current { color: var(--ink); }
+/* The current step's number sits in a cyan square — a glyph box, so the accent
+   draws the EDGE and the numeral stays ink. */
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-steps__n {
+  display: inline-grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  border: 1px solid var(--control-edge);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-steps__step.is-current .bruecke-steps__n { border-color: var(--brand); box-shadow: 0 0 10px var(--glow-accent); }
+
+/* Three columns from 1100px — who plays · the Pool · the Sonden and „Zündung"
+   — by dissolving the aside so its two blocks become grid items of the form.
+   `display: contents` on a plain <div> drops no semantics. Below 1100 the app's
+   own two columns (860) and single column stand. */
+@media (min-width: 1100px) {
+  :root[data-design="bruecke"][data-scheme="dark"] .setup-grid--bruecke {
+    grid-template-columns: minmax(240px, 1fr) minmax(0, 1.5fr) minmax(260px, 1fr);
+    column-gap: var(--space-5);
+  }
+  :root[data-design="bruecke"][data-scheme="dark"] .setup-grid--bruecke .setup-grid__aside { display: contents; }
+  :root[data-design="bruecke"][data-scheme="dark"] .setup-grid--bruecke .setup-bar { position: sticky; top: var(--space-4); }
+}
+:root[data-design="bruecke"][data-scheme="dark"] .setup-grid--bruecke .setup-grid__main { margin-bottom: var(--space-4); }
+:root[data-design="bruecke"][data-scheme="dark"] .setup-grid--bruecke .setup-grid__main .field { margin-bottom: var(--space-3); }
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-setup__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px var(--space-3);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .setup-grid--bruecke #seatsLabel {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: var(--track-notation);
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-setup__hint { font-size: var(--text-sm); color: var(--ink-2); }
+
+/* The seats: a LIST with a state word at every width (B2.3, B4.1) — the arc is
+   the hub's picture; here the question is a checklist. `position: static`
+   turns the picker's inline placement off without touching it (the inline
+   left/top only bind a positioned box). */
+:root[data-design="bruecke"][data-scheme="dark"] .setup-grid--bruecke .nr-table {
+  width: 100%;
+  aspect-ratio: auto;
+  height: auto;
+  margin: var(--space-2) 0 var(--space-3);
+  display: flex;
+  flex-direction: column;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .setup-grid--bruecke :is(.nr-table__ring, .nr-table__center, .nr-seat__tick) { display: none; }
+:root[data-design="bruecke"][data-scheme="dark"] .setup-grid--bruecke .nr-seat {
+  position: static;
+  margin: 0;
+  width: 100%;
+  min-height: var(--target-key);
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: var(--space-3);
+  padding: 4px 2px;
+  border-bottom: 1px solid var(--hairline);
+  text-align: left;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .setup-grid--bruecke .nr-seat:hover { background: var(--sunken-soft); }
+/* The person colour stays the avatar's fill (memberTone() already lightens it
+   for this plate); the square is the design's right angle. */
+:root[data-design="bruecke"][data-scheme="dark"] .setup-grid--bruecke .nr-seat__avatar {
+  grid-column: 1;
+  width: 36px;
+  height: 36px;
+  border-radius: 0;
+  border: 1px solid var(--line);
+  font-family: var(--font-mono);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .setup-grid--bruecke :is(.nr-seat--out, .nr-seat--add, .nr-seat--guest) .nr-seat__avatar {
+  border: 1px dashed var(--control-edge);
+  background: transparent;
+  color: var(--ink-soft);
+  opacity: 1;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .setup-grid--bruecke .nr-seat__name {
+  grid-column: 2;
+  max-width: none;
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: var(--track-display);
+  color: var(--ink);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .setup-grid--bruecke .nr-seat--out .nr-seat__name { opacity: 1; color: var(--ink-soft); }
+/* „spielt mit" / „heute nicht dabei", „Gast · nur heute", „(du)" — the state as
+   a WORD at every place (B16.1: „Der Zustand bleibt als Wort an jedem Platz"). */
+:root[data-design="bruecke"][data-scheme="dark"] .setup-grid--bruecke :is(.nr-seat__state, .nr-seat__guest, .nr-seat__you) {
+  grid-column: 3;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  text-align: right;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .setup-grid--bruecke .nr-seat:not(.nr-seat--out) .nr-seat__state { color: var(--good); }
+/* From nine places the list breaks onto a grid (B16.1) — two columns on a
+   phone, as many as fit on a desk. The state stays a word in each cell. */
+:root[data-design="bruecke"][data-scheme="dark"] .setup-grid--bruecke .nr-table:has(> .nr-seat:nth-of-type(9)) {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  column-gap: var(--space-3);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .setup-grid--bruecke .nr-table:has(> .nr-seat:nth-of-type(9)) .nr-seat {
+  grid-template-columns: 32px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  row-gap: 0;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .setup-grid--bruecke .nr-table:has(> .nr-seat:nth-of-type(9)) .nr-seat__avatar { grid-row: 1 / span 2; width: 32px; height: 32px; }
+:root[data-design="bruecke"][data-scheme="dark"] .setup-grid--bruecke .nr-table:has(> .nr-seat:nth-of-type(9)) :is(.nr-seat__state, .nr-seat__guest, .nr-seat__you) {
+  grid-column: 2;
+  grid-row: 2;
+  text-align: left;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .setup-grid--bruecke .nr-table:has(> .nr-seat:nth-of-type(9)) .nr-seat__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .setup-grid--bruecke .nr-guest-add { margin: var(--space-3) 0; max-width: none; }
+:root[data-design="bruecke"][data-scheme="dark"] .setup-grid--bruecke .setup-grid__main .field__hint { text-align: left; color: var(--ink-2); }
+:root[data-design="bruecke"][data-scheme="dark"] .setup-grid--bruecke .setup-addons { justify-content: flex-start; }
+
+/* The Pool (B2.3's panel, B4.1's middle column): the kicker and the filter
+   row, then the count as the panel's big number, then — from 860px, where
+   there is room for it — the games as a list. The compact strip is hidden, so
+   there is one presentation of the pool at every width. */
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-pool { margin-bottom: var(--space-4); }
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-pool__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-3);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-pool .setup-filterbar { margin: 0; flex: 0 1 auto; }
+:root[data-design="bruecke"][data-scheme="dark"] .setup-grid--bruecke .pool-hint { display: none; }
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-pool .setup-panel {
+  display: block;
+  margin: var(--space-3) 0 0;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: 0;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-pool .setup-panel__title { margin: 0 0 var(--space-2); }
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-pool .setup-panel__title::after { content: none; }
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-pool .setup-panel__title .pool-count-group { align-items: baseline; gap: var(--space-3); }
+/* „9" — the count, in the accent (58px, rule 1's floor is 24). */
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-pool .setup-panel__title .pool-count {
+  font-family: var(--font-display);
+  font-size: var(--display-xl);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--brand);
+  text-shadow: 0 0 24px var(--glow-accent);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-pool .setup-panel__title .pool-count__label {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: var(--track-notation);
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-pool .setup-panel__body { display: none; }
+@media (min-width: 860px) {
+  :root[data-design="bruecke"][data-scheme="dark"] .bruecke-pool .setup-panel__body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+    padding: 0;
+  }
+  :root[data-design="bruecke"][data-scheme="dark"] .bruecke-pool .setup-panel__body .pool-tile {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--space-3);
+    padding: 6px 0;
+    border-bottom: 1px solid var(--hairline);
+  }
+  :root[data-design="bruecke"][data-scheme="dark"] .bruecke-pool .setup-panel__body .pool-tile:hover { transform: none; }
+  :root[data-design="bruecke"][data-scheme="dark"] .bruecke-pool .pool-tile__img {
+    flex: none;
+    width: 40px;
+    aspect-ratio: 4 / 3;
+    border-radius: 0;
+    border: 1px solid var(--line);
+  }
+  :root[data-design="bruecke"][data-scheme="dark"] .bruecke-pool .pool-tile__name { font-weight: 500; color: var(--ink); }
+}
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-pool .pool-owners-note { margin: var(--space-2) 0 0; font-size: var(--text-sm); color: var(--ink-2); }
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-pool .pool-owners-note:empty { margin: 0; }
+
+/* The Sonden and „Zündung" (B2.3's foot, B4.1's right column). One column:
+   the question, the stepper, the summary, the sealed line, the button. */
+:root[data-design="bruecke"][data-scheme="dark"] .setup-grid--bruecke .setup-bar {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-3);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .setup-grid--bruecke .setup-bar__count label {
+  margin: 0 0 var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: var(--track-notation);
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .setup-grid--bruecke .stepper { display: grid; grid-template-columns: 1fr auto 1fr; gap: var(--space-2); }
+:root[data-design="bruecke"][data-scheme="dark"] .setup-grid--bruecke .stepper__btn {
+  min-height: var(--target-key);
+  width: auto;
+  border: 1px solid var(--control-edge);
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .setup-grid--bruecke .stepper__btn:hover { border-color: var(--brand); }
+/* The number of probes: a result number, so the display face — and 26px, so
+   the accent may carry it. */
+:root[data-design="bruecke"][data-scheme="dark"] .setup-grid--bruecke .stepper__val {
+  width: 64px;
+  min-height: var(--target-key);
+  border: 1px solid var(--line);
+  border-radius: 0;
+  background: var(--control-fill);
+  font-family: var(--font-display);
+  font-size: var(--display-m);
+  font-weight: 700;
+  color: var(--brand);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .setup-grid--bruecke .setup-bar__summary {
+  font-family: var(--font);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--ink-2);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-setup__sealed { margin: 0; font-size: var(--text-sm); color: var(--ink-2); }
+/* „Zündung": the one amber action, full width, as tall as the sheets draw it. */
+:root[data-design="bruecke"][data-scheme="dark"] .setup-grid--bruecke .setup-bar #go {
+  width: 100%;
+  min-height: 56px;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  letter-spacing: 0.12em;
+}
+@media (min-width: 1100px) {
+  :root[data-design="bruecke"][data-scheme="dark"] .setup-grid--bruecke .setup-bar #go { min-height: 64px; font-size: var(--text-2xl); }
+}
+
+/* --- The vote card (B2.4 at 390, B4.2 at 1440) ---------------------------
+   Full screen at both widths: body.vote-screen already takes the top bar away
+   and the wizard renders no dock (styles.css, #1185). The root is the shared
+   composition (vote-card-composed.js) with Die Brücke's two side panels; the
+   Klassisch `.vote` card chrome comes off the root, and the card is the panel
+   in the middle with its corner brackets. */
+:root[data-design="bruecke"][data-scheme="dark"] .vote.vote--bruecke {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-width: 560px;
+  padding: 0;
+  background: none;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  overflow: visible;
+  color: var(--ink);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .vote-felt {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+}
+/* „Zurück": a wire square at the key target, 44px (B2.4's corner control).
+   Restated because styles.css sizes it from --undo-size, which only the
+   Klassisch `.vote__who` row declares. */
+:root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .vote__undo {
+  position: static;
+  flex: none;
+  width: var(--target-key);
+  height: var(--target-key);
+  border: 1px solid var(--control-edge);
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .vote__undo:hover:not(:disabled) { border-color: var(--brand); }
+:root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .vote-felt__who { flex: 1; min-width: 0; }
+:root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .vote-felt__name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--display-m);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: var(--track-display);
+  text-transform: uppercase;
+  color: var(--ink);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .vote-felt__count {
+  margin: 4px 0 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+/* One square per game: done filled, current filled and lit, the rest a wire.
+   aria-hidden — the count says it. */
+:root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .vote-felt__dots { display: flex; gap: 6px; }
+:root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .vote-felt__dot {
+  width: 12px;
+  height: 12px;
+  border: 1px solid var(--brand);
+  background: transparent;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .vote-felt__dot.is-done { background: var(--brand); }
+:root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .vote-felt__dot.is-current { background: var(--brand); box-shadow: 0 0 10px var(--glow-accent); }
+/* „Geheim · die anderen schauen weg" — the app's line, on its own row. */
+:root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .vote__secret {
+  display: flex;
+  flex-basis: 100%;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--ink-2);
+}
+
+/* The card: a plate with a cyan bracket at two corners (B1 „Klammern"). */
+:root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .vote__card {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "img" "title" "meta" "q" "rating";
+  padding: var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .vote__card::before,
+:root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .vote__card::after {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .vote__card::before { top: -1px; left: -1px; border-top: 2px solid var(--brand); border-left: 2px solid var(--brand); }
+:root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .vote__card::after { right: -1px; bottom: -1px; border-right: 2px solid var(--brand); border-bottom: 2px solid var(--brand); }
+:root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .vote__img {
+  grid-area: img;
+  margin: 0 0 var(--space-3);
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  max-height: 30vh;
+  border-radius: 0;
+  border: 1px solid var(--line);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .vote__title {
+  grid-area: title;
+  padding: 0;
+  text-align: left;
+  font-family: var(--font-display);
+  font-size: var(--display-m);
+  font-weight: 700;
+  line-height: 1.1;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .vote__meta {
+  grid-area: meta;
+  margin: 4px 0 0;
+  font-size: var(--text-sm);
+  color: var(--ink-2);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .vote__q {
+  grid-area: q;
+  margin: var(--space-4) 0 0;
+  text-align: left;
+  font-size: var(--text-lg);
+  color: var(--ink);
+}
+/* The five keys (B1 „Wertungskarte"): square, a wire at rest, the face and the
+   number in each — the number is in every cell, so the colour is the third
+   signal, never the only one (B8.3). The two END words sit under the row. */
+:root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .rating {
+  grid-area: rating;
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-4) 0 0;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .rating .mood {
+  flex: 1 1 0;
+  width: auto;
+  height: auto;
+  min-width: var(--target-key);
+  min-height: 64px;
+  justify-content: flex-start;
+  gap: 4px;
+  padding: var(--space-2) 0;
+  border: 1px solid var(--control-edge);
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+  transform: none;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .rating .mood:hover { border-color: var(--brand); }
+:root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .rating .mood .ti { font-size: 24px; /* glyph, not type */ }
+:root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .rating .mood__n { order: 1; font-family: var(--font-mono); font-size: var(--text-sm); font-weight: 600; }
+/* „kein Schub" … „volle Kraft": only the ends are printed (the middle three
+   keep the tile's name). `visibility`, so the columns keep one height. */
+:root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .rating .mood__word {
+  order: 2;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  line-height: 1.2;
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--ink-soft);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .rating .mood:first-child .mood__word { color: var(--danger); }
+:root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .rating .mood:not(:first-child):not(:last-child) .mood__word { visibility: hidden; }
+/* The chosen key: its thrust colour (B8.2), the night as ink, a faint glow. */
+:root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .rating .mood.is-selected { color: var(--thrust-ink); box-shadow: 0 0 24px var(--glow-accent); }
+:root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .rating .mood.is-selected .mood__word { color: var(--thrust-ink); }
+:root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .rating .mood.is-selected:nth-child(1) { background: var(--thrust-1); border-color: var(--thrust-1); }
+:root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .rating .mood.is-selected:nth-child(2) { background: var(--thrust-2); border-color: var(--thrust-2); }
+:root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .rating .mood.is-selected:nth-child(3) { background: var(--thrust-3); border-color: var(--thrust-3); }
+:root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .rating .mood.is-selected:nth-child(4) { background: var(--thrust-4); border-color: var(--thrust-4); }
+:root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .rating .mood.is-selected:nth-child(5) { background: var(--thrust-5); border-color: var(--thrust-5); }
+:root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .vote__handoff { margin: 0; font-size: var(--text-sm); color: var(--ink-2); }
+/* A card that is NOT the composed one (the shared-link view keeps its Klassisch
+   card under Die Brücke) prints its own scale row, so the tile words go. */
+:root[data-design="bruecke"][data-scheme="dark"] .vote:not(.vote--composed) .mood__word { display: none; }
+
+/* „Wer hat schon gewertet" — under the card on a phone, left of it at 1440. */
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-raters__list { list-style: none; margin: var(--space-3) 0 0; padding: 0; }
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-raters__row {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: var(--space-3);
+  padding: 6px 0 6px var(--space-2);
+  border-bottom: 1px solid var(--hairline);
+  border-left: 2px solid transparent;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-raters__row.is-now { border-left-color: var(--brand); }
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-raters .avatar { width: 32px; height: 32px; font-size: 12px; /* glyph, not type */ }
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-raters__name { min-width: 0; font-weight: 600; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-raters__state {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-raters__row.is-done .bruecke-raters__state { color: var(--good); }
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-raters__row.is-now .bruecke-raters__state { color: var(--ink); }
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-raters__note { margin: var(--space-3) 0 0; font-size: var(--text-sm); line-height: 1.5; color: var(--ink-2); }
+/* „Verdeckt": the cards still to come, sealed. Only where B4.2 draws it. */
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-sealed { display: none; }
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-sealed__text { margin: var(--space-2) 0 var(--space-3); font-size: var(--text-sm); line-height: 1.5; color: var(--ink-2); }
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-sealed__cards { display: flex; flex-direction: column; gap: var(--space-3); }
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-sealed__card {
+  display: grid;
+  place-items: center;
+  min-height: 120px;
+  border: 1px solid var(--line);
+  background-color: var(--surface-raised);
+  background-image: repeating-linear-gradient(135deg, var(--hairline) 0 8px, transparent 8px 16px);
   font-family: var(--font-mono);
   font-size: var(--text-xs);
   font-weight: 500;
@@ -1062,3 +1618,371 @@
   :root[data-design="bruecke"] .rec-card__img { width: 100%; }
   :root[data-design="bruecke"] .rec-card__body { min-width: 0; flex-basis: 100%; }
 }
+  color: var(--ink-soft);
+}
+
+@media (min-width: 1100px) {
+  /* Out of the reading measure: the three columns are the screen. (0,6,0)
+     against the cap's (0,3,0), and there is no navigation on this step. */
+  :root[data-design="bruecke"][data-scheme="dark"] .app > *:not(.rail):not(.dock).vote--bruecke { max-width: 1320px; }
+  :root[data-design="bruecke"][data-scheme="dark"] .vote.vote--bruecke {
+    display: grid;
+    grid-template-columns: minmax(220px, 300px) minmax(0, 1fr) minmax(220px, 260px);
+    grid-template-areas: "head head head" "raters card sealed" "hand hand hand";
+    align-items: stretch;
+    column-gap: var(--space-5);
+    row-gap: var(--space-5);
+  }
+  :root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .vote-felt { grid-area: head; }
+  :root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .vote-felt__name { font-size: var(--display-l); }
+  :root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .vote__handoff { grid-area: hand; }
+  :root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .bruecke-raters { grid-area: raters; display: flex; flex-direction: column; }
+  :root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .bruecke-raters__note { margin-top: auto; padding-top: var(--space-4); }
+  :root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .bruecke-sealed { grid-area: sealed; display: block; }
+  :root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .vote__card {
+    grid-area: card;
+    grid-template-columns: minmax(0, 300px) minmax(0, 1fr);
+    grid-template-rows: auto auto auto 1fr auto;
+    grid-template-areas: "img title" "img meta" "img q" "img ." "rating rating";
+    column-gap: var(--space-5);
+    padding: var(--space-5);
+  }
+  :root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .vote__img { margin: 0; max-height: none; aspect-ratio: 4 / 3; align-self: start; }
+  :root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .vote__q { margin-top: var(--space-3); }
+  :root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .rating { padding-top: var(--space-5); }
+  :root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .rating .mood { min-height: 88px; }
+}
+
+/* --- The result (B2.5 at 390, B4.3 at 1440, B16.3 the tie) ---------------
+   The shared result composition (result-tafel-composed.js), arranged by
+   composeBrueckeResult into the large panel (the sentence, who was there, the
+   Tafel) and the side column (the chosen game and the foot). Two panels from
+   1280px, where the screen takes --w-detail; one column below. */
+@media (min-width: 1280px) {
+  :root[data-design="bruecke"][data-scheme="dark"] .app > *:not(.rail):not(.dock).result-screen--bruecke { max-width: var(--w-detail); }
+  :root[data-design="bruecke"][data-scheme="dark"] .result-screen--bruecke {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(340px, 420px);
+    column-gap: var(--space-5);
+    align-items: start;
+  }
+}
+@media (min-width: 860px) {
+  :root[data-design="bruecke"][data-scheme="dark"] .bruecke-result__main {
+    position: relative;
+    padding: var(--space-5);
+    background: var(--surface);
+    border: 1px solid var(--line);
+  }
+  :root[data-design="bruecke"][data-scheme="dark"] .bruecke-result__main::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: -1px;
+    width: 14px;
+    height: 14px;
+    border-top: 2px solid var(--brand);
+    border-left: 2px solid var(--brand);
+  }
+}
+/* The headline in two voices: what was played in ink, who won in the accent
+   (≥ 26px, so rule 1 holds). A tie names both — the app's own sentence. */
+:root[data-design="bruecke"][data-scheme="dark"] .result-screen--bruecke .result-title {
+  font-family: var(--font-display);
+  font-size: var(--display-m);
+  line-height: 1.1;
+}
+@media (min-width: 860px) {
+  :root[data-design="bruecke"][data-scheme="dark"] .result-screen--bruecke .result-title { font-size: var(--display-l); }
+}
+:root[data-design="bruecke"][data-scheme="dark"] .result-title__won { color: var(--brand); }
+:root[data-design="bruecke"][data-scheme="dark"] .result-screen--bruecke .page-head--result { margin-bottom: var(--space-3); }
+:root[data-design="bruecke"][data-scheme="dark"] .result-screen--bruecke .result-people__label {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: var(--track-notation);
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .result-screen--bruecke .result-people { margin-top: var(--space-4); }
+:root[data-design="bruecke"][data-scheme="dark"] .result-screen--bruecke .result-people__person { position: relative; min-height: var(--target-key); }
+:root[data-design="bruecke"][data-scheme="dark"] .result-screen--bruecke .result-people__name { color: var(--ink); }
+:root[data-design="bruecke"][data-scheme="dark"] .result-screen--bruecke .result-people__crown {
+  position: absolute;
+  left: 12px;
+  top: -10px;
+  transform: translateX(-50%);
+  font-size: 14px; /* glyph, not type */
+  color: var(--action);
+  visibility: hidden;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .result-screen--bruecke .result-people__person.is-winner .result-people__crown { visibility: visible; }
+
+/* The chosen game: a panel, its title in the display face, the stamp in the
+   ok tone. */
+:root[data-design="bruecke"][data-scheme="dark"] .result-screen--bruecke .tisch {
+  border: 1px solid var(--line);
+  border-radius: 0;
+  background: var(--surface);
+  box-shadow: none;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .result-screen--bruecke .tisch__box { border-radius: 0; border: 1px solid var(--line); }
+:root[data-design="bruecke"][data-scheme="dark"] .result-screen--bruecke .tisch__title { font-family: var(--font-display); text-transform: uppercase; letter-spacing: var(--track-display); }
+:root[data-design="bruecke"][data-scheme="dark"] .result-screen--bruecke .tisch__kick {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  letter-spacing: var(--track-notation);
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .result-screen--bruecke .tisch__won { color: var(--ink); }
+:root[data-design="bruecke"][data-scheme="dark"] .result-screen--bruecke .tisch__seats .avatar { box-shadow: 0 0 0 2px var(--action); }
+:root[data-design="bruecke"][data-scheme="dark"] .result-screen--bruecke .winner-chip { min-height: var(--target-key); border-radius: 0; }
+
+/* The Tafel: „# · Spiel · Schub 1–5 · Score" — the column header stays
+   (B4.3 draws it), and each row is a line on the panel rather than a card of
+   its own. */
+:root[data-design="bruecke"][data-scheme="dark"] .result-screen--bruecke .tafel__title {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: var(--track-notation);
+  color: var(--ink-soft);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .result-screen--bruecke .tafel__title::after { content: none; }
+:root[data-design="bruecke"][data-scheme="dark"] .result-screen--bruecke .tafel__cols {
+  display: grid;
+  grid-template-columns: 28px 44px minmax(0, 1fr) auto;
+  column-gap: var(--space-3);
+  padding: 0 var(--space-2) var(--space-2);
+  border-bottom: 1px solid var(--line);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  letter-spacing: var(--track-notation);
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .result-screen--bruecke .tafel__col--game { grid-column: 3; }
+:root[data-design="bruecke"][data-scheme="dark"] .result-screen--bruecke .tafel__col--score { grid-column: 4; text-align: right; }
+:root[data-design="bruecke"][data-scheme="dark"] .result-screen--bruecke .tafel .trow {
+  display: grid;
+  grid-template-columns: 28px 44px minmax(0, 1fr) auto auto;
+  grid-template-areas:
+    "rank cover main pill sub"
+    "bars bars  bars bars bars";
+  gap: 4px var(--space-3);
+  align-items: center;
+  margin: 0;
+  padding: var(--space-3) var(--space-2);
+  border: 0;
+  border-bottom: 1px solid var(--hairline);
+  border-radius: 0;
+  background: transparent;
+}
+/* While the session is still choosing, the action is a „Spielen" button or the
+   chip; it takes a line of its own so the title is never squeezed. */
+:root[data-design="bruecke"][data-scheme="dark"] .result-screen--bruecke .tafel .trow:has(.play-btn, .trow__chip) {
+  grid-template-columns: 28px 44px minmax(0, 1fr) auto;
+  grid-template-areas:
+    "rank cover main pill"
+    ".    .     sub  sub"
+    "bars bars  bars bars";
+}
+@media (min-width: 860px) {
+  /* The distribution beside the title, where B4.3 draws its „Schub" column. */
+  :root[data-design="bruecke"][data-scheme="dark"] .result-screen--bruecke .tafel .trow {
+    grid-template-columns: 28px 44px minmax(0, 1fr) auto auto auto;
+    grid-template-areas: "rank cover main bars pill sub";
+  }
+  :root[data-design="bruecke"][data-scheme="dark"] .result-screen--bruecke .tafel .trow:has(.play-btn, .trow__chip) {
+    grid-template-columns: 28px 44px minmax(0, 1fr) auto auto;
+    grid-template-areas: "rank cover main bars pill" ".    .     sub  sub  sub";
+  }
+}
+:root[data-design="bruecke"][data-scheme="dark"] .result-screen--bruecke .tafel-top {
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  border: 0;
+  border-left: 2px solid var(--action);
+  border-radius: 0;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .result-screen--bruecke .tafel-top__kicker {
+  padding: var(--space-2) var(--space-2) 0;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  letter-spacing: var(--track-notation);
+  color: var(--action);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .result-screen--bruecke .tafel-top .trow { border-color: var(--hairline); }
+:root[data-design="bruecke"][data-scheme="dark"] .result-screen--bruecke .trow__rank {
+  position: static;
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  color: var(--ink);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .result-screen--bruecke .trow__img { width: 44px; height: 44px; border-radius: 0; font-size: 20px; /* glyph, not type */ }
+:root[data-design="bruecke"][data-scheme="dark"] .result-screen--bruecke .trow__title {
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  font-weight: 600;
+  letter-spacing: var(--track-display);
+  text-transform: uppercase;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .result-screen--bruecke .trow__pill { position: static; grid-area: pill; justify-self: end; }
+/* The played row. Klassisch rings it with an INSET shadow, which paints at the
+   background layer — so the row's own score fill (`.trow::before`) covers it and
+   only the unfilled remainder showed a frame. An outline paints above the fill. */
+:root[data-design="bruecke"][data-scheme="dark"] .result-screen--bruecke .tafel .trow.is-chosen {
+  box-shadow: none;
+  outline: 2px solid var(--brand);
+  outline-offset: -2px;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .result-screen--bruecke .trow__action { grid-area: sub; justify-self: end; }
+:root[data-design="bruecke"][data-scheme="dark"] .result-screen--bruecke .trow__bars { grid-area: bars; padding-top: 4px; }
+:root[data-design="bruecke"][data-scheme="dark"] .result-screen--bruecke .trow__bars .bar { border-radius: 0; }
+/* „1× kein Schub" — the alert tone on a wire, never a „Veto" word. */
+:root[data-design="bruecke"][data-scheme="dark"] .result-screen--bruecke .score-why {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 1px 8px;
+  border: 1px solid var(--danger);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--danger);
+}
+
+/* The foot: „Noch eine Session" amber and wide, „Teilen" and „Mehr" as wires. */
+:root[data-design="bruecke"][data-scheme="dark"] .result-screen--bruecke .result-foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .result-screen--bruecke .result-foot[hidden] { display: none; }
+:root[data-design="bruecke"][data-scheme="dark"] .result-screen--bruecke .result-foot__again {
+  flex: 1 1 100%;
+  min-height: 56px;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  letter-spacing: 0.1em;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .result-screen--bruecke :is(.result-foot__share, .result-foot__more) {
+  flex: 1 1 0;
+  justify-content: center;
+  border-color: var(--control-edge);
+  color: var(--ink);
+}
+@media (min-width: 1280px) {
+  :root[data-design="bruecke"][data-scheme="dark"] .bruecke-result__side { display: flex; flex-direction: column; gap: var(--space-4); }
+  :root[data-design="bruecke"][data-scheme="dark"] .bruecke-result__side .tisch-slot { margin: 0; }
+}
+
+/* --- Several tables (B4.4) ------------------------------------------------
+   The builder's table cards and the one-screen split result are panels; the
+   split's cards stand side by side from 860px. Each table's own marker opens
+   its card as a top edge. */
+:root[data-design="bruecke"][data-scheme="dark"] .tables-card {
+  border: 1px solid var(--line);
+  border-radius: 0;
+  background: var(--surface);
+  box-shadow: none;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .tables-card.is-invalid { border-color: var(--danger); }
+:root[data-design="bruecke"][data-scheme="dark"] .page-head--tables h1 { font-family: var(--font-display); }
+:root[data-design="bruecke"][data-scheme="dark"] .split-tables--composed { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-4); }
+@media (min-width: 860px) {
+  :root[data-design="bruecke"][data-scheme="dark"] .split-tables--composed { grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); }
+}
+@media (min-width: 1280px) {
+  :root[data-design="bruecke"][data-scheme="dark"] .app > *:not(.rail):not(.dock):has(> .split-tables--composed) { max-width: var(--w-detail); }
+}
+:root[data-design="bruecke"][data-scheme="dark"] .split-table {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-5) var(--space-4) var(--space-4);
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .split-table__head { display: flex; flex-direction: column; gap: var(--space-2); color: var(--ink); text-decoration: none; }
+:root[data-design="bruecke"][data-scheme="dark"] .split-table__head::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--marker, var(--brand));
+}
+:root[data-design="bruecke"][data-scheme="dark"] .split-table__top { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-4); }
+:root[data-design="bruecke"][data-scheme="dark"] .split-table__label {
+  font-family: var(--font-display);
+  font-size: var(--display-s);
+  font-weight: 700;
+  letter-spacing: var(--track-display);
+  text-transform: uppercase;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .split-table__people { display: flex; flex-wrap: wrap; gap: var(--space-3); padding-top: var(--space-3); }
+:root[data-design="bruecke"][data-scheme="dark"] .split-table__person { position: relative; }
+:root[data-design="bruecke"][data-scheme="dark"] .split-table__person .avatar { width: 36px; height: 36px; font-size: 13px; /* glyph, not type */ }
+:root[data-design="bruecke"][data-scheme="dark"] .split-table__crown {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 14px; /* glyph, not type */
+  color: var(--action);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .split-table__sentence { font-size: var(--text-md); line-height: 1.4; }
+:root[data-design="bruecke"][data-scheme="dark"] .split-table__winners { font-weight: 600; }
+:root[data-design="bruecke"][data-scheme="dark"] .split-table.is-off .split-table__sentence { color: var(--ink-soft); }
+:root[data-design="bruecke"][data-scheme="dark"] .split-table__tafel { display: flex; flex-direction: column; }
+:root[data-design="bruecke"][data-scheme="dark"] .split-row {
+  display: grid;
+  grid-template-columns: 22px 40px minmax(0, 1fr) auto;
+  grid-template-areas: "rank img main pill" ".    .   tag  tag";
+  align-items: center;
+  gap: 2px var(--space-3);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--hairline);
+}
+/* The row this table played: an amber edge, the action colour as a rule. */
+:root[data-design="bruecke"][data-scheme="dark"] .split-row.is-played { border-left: 2px solid var(--action); padding-left: var(--space-2); }
+:root[data-design="bruecke"][data-scheme="dark"] .split-row__rank { grid-area: rank; font-family: var(--font-display); font-weight: 700; color: var(--ink); }
+:root[data-design="bruecke"][data-scheme="dark"] .split-row__img {
+  grid-area: img;
+  position: relative;
+  overflow: hidden;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--line);
+  background: var(--sunken) center/cover no-repeat;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px; /* glyph, not type */
+}
+:root[data-design="bruecke"][data-scheme="dark"] .split-row__main { grid-area: main; display: flex; flex-direction: column; min-width: 0; }
+:root[data-design="bruecke"][data-scheme="dark"] .split-row__title { display: inline-flex; align-items: center; min-height: var(--target-min); font-weight: 600; color: var(--ink); }
+:root[data-design="bruecke"][data-scheme="dark"] .split-row__owners { font-size: var(--text-sm); color: var(--ink-2); }
+:root[data-design="bruecke"][data-scheme="dark"] .split-row__pill { position: static; grid-area: pill; }
+:root[data-design="bruecke"][data-scheme="dark"] .split-row__tag {
+  grid-area: tag;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .split-row__tag:empty { display: none; }
+:root[data-design="bruecke"][data-scheme="dark"] .split-tables__foot { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--space-2); margin-top: var(--space-4); }

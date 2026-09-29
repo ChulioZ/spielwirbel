@@ -572,6 +572,14 @@ public/
                      Ocean's share card (#1220): a 1080×1350 session card, a
                      1200×630 landscape one and a 1080×1350 period recap —
                      water above, every string on an opaque band below
+    recap-card-bruecke.js
+                     Die Brücke's share card (#1247): the period recap drawn at
+                     600×600 and exported at 1080×1080 — round, period, four
+                     figures, the monthly bars, the lamp-and-wordmark
+    recap-card-programmheft.js
+                     Das Programmheft's share card (#1381): a 1080×1350 front
+                     page for a session and a period recap — vermilion masthead,
+                     the round's marker band, headline, three facts, a table
     hub-insights.js  the Start tab's derivations: which games are worth putting
                      on the table, how often the round meets, what is quietly
                      broken, and what was played on this day in a past year
@@ -650,6 +658,9 @@ public/
                      #796, SPLIT across several tables; derived from the child
                      ids rather than from a third boolean, and required by
                      lib/routes/sessions.js and lib/recommend.js
+    session-tally.js two counts over a round's finished sessions — the sole-win
+                     streak the Pokale prints and a session's number in the
+                     round — shared with Das Programmheft's card (issue #1381)
     table-split.js   the multi-table objective, the seeded search that optimises
                      it and the per-table numbers the builder shows; also the
                      relaxed pool predicate lib/draw.js applies in that mode
@@ -874,6 +885,9 @@ public/
     views-session-ocean.js Ocean's session loop (#1213): the setup in three columns
                      with the Muschel, the vote card's desktop side columns, and
                      the result arranged in columns
+    views-session-bruecke.js Die Brücke's session loop (#1240): the setup with
+                     the step rail, the Pool and the Sonden, the vote card's
+                     side panels, and the result in two panels
     views-vote-link.js the PUBLIC /vote/:token screen (#652): claim your name
                      from the participant list and rate the drawn games without
                      an account — the only view that runs logged out

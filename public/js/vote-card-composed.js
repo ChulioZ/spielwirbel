@@ -44,11 +44,15 @@ const voteWord = (n) => t(VOTE_WORD_KEYS[n - RATING_MIN]);
 function voteMoodButton(n, selected) {
   // Ocean (#1213) composes its card from the same builder, words included; its
   // stylesheet prints only the two end words under the faces.
-  const tisch = designIs('tisch') || oceanWorn();
+  // Die Brücke (#1240) names the two ends in its own words („kein Schub" …
+  // „volle Kraft"); the middle three keep the app's.
+  const bruecke = designIs('bruecke');
+  const tisch = designIs('tisch') || oceanWorn() || bruecke;
+  const said = (bruecke && brueckeVoteWord(n)) || voteWord(n);
   const label = tisch
-    ? t('vote.ratingLabelWord', { n, max: RATING_MAX, word: voteWord(n) })
+    ? t('vote.ratingLabelWord', { n, max: RATING_MAX, word: said })
     : t('vote.ratingLabel', { n, max: RATING_MAX });
-  const word = tisch ? `<span class="mood__word">${esc(voteWord(n))}</span>` : '';
+  const word = tisch ? `<span class="mood__word">${esc(said)}</span>` : '';
   // aria-pressed carries the choice (#145): the selected face is otherwise
   // marked only by its fill, so nothing announced which rating was picked.
   // The odd indentation is deliberate: the whitespace text nodes it produces
@@ -150,7 +154,7 @@ function composedVoteCard({ person, count, roundName, gameN, gameTotal, secret, 
         <div class="vote__img" ${imgStyle}>${coverPlaceholder(game)}</div>
         <h1 class="vote__title" tabindex="-1">${esc(game.title)}</h1>
         ${meta ? `<p class="vote__meta">${esc(meta)}</p>` : ''}
-        <div class="vote__q" id="voteQ">${esc(t('vote.question'))}</div>
+        <div class="vote__q" id="voteQ">${esc(t(designIs('bruecke') ? 'vote.questionBruecke' : 'vote.question'))}</div>
         <div class="rating" role="group" aria-labelledby="voteQ"></div>
       </div>
       ${handoff ? `<p class="vote__handoff">${esc(handoff)}</p>` : ''}

@@ -307,6 +307,8 @@ I18N.fr = {
   'periodRecap.label.shelf': 'Étagère',
   'periodRecap.toast.saved': 'Image enregistrée.',
   'periodRecap.toast.failed': 'Impossible de créer l’image.',
+  // Die Brücke's share card (#1247): the caption over its twelve monthly bars.
+  'periodRecap.card.perMonth': 'Sessions par mois',
   // „Dein Rückblick" on the own profile (#1147) — no wins, only what was played.
   'accountRecap.title': 'Ton bilan',
   'accountRecap.lead': 'Ce que tu as joué, dans tous tes groupes — visible par toi seul·e.',
@@ -1866,4 +1868,33 @@ I18N.fr = {
   'badges.card.next': 'Palier suivant : {n}',
   'badges.card.tiers': 'Paliers',
   'badges.evergreen.lineGame': '{game} joué {n} fois',
+  // Die Brücke's session loop (#1240): only the five themed words of
+  // docs/design/bruecke §2 — pool, probes, ignition, thrust, decrypt.
+  'startSession.poolBruecke': 'Pool',
+  'startSession.ignitionBruecke': 'Allumage',
+  'startSession.countQuestionBruecke': 'Sondes · combien en tire-t-on ?',
+  'startSession.potLabelBrueckeOne': 'jeu dans le pool',
+  'startSession.potLabelBruecke': 'jeux dans le pool',
+  'startSession.sealedBruecke': 'Vote secret – déchiffré seulement quand tout le monde a voté.',
+  'vote.questionBruecke': 'Quelle poussée donnes-tu à ce jeu aujourd’hui ?',
+  'vote.scaleLowBruecke': 'aucune poussée',
+  'vote.scaleHighBruecke': 'pleine puissance',
+  'vote.ratersTitleBruecke': 'Qui a déjà voté',
+  'vote.sealedNoteBruecke': 'Le déchiffrement n’a lieu que lorsque tout le monde a voté. D’ici là, personne ne voit les notes des autres.',
+  'vote.sealedTitleBruecke': 'Masqué',
+  'vote.sealedTextBrueckeOne': 'Encore un jeu reste chiffré jusqu’à ce que tu l’atteignes.',
+  'vote.sealedTextBruecke': 'Encore {n} jeux restent chiffrés jusqu’à ce que tu les atteignes.',
+  'vote.sealedCardBruecke': 'Chiffré',
+  'score.reasonVetoBrueckeOne': '{n}× aucune poussée',
+  'score.reasonVetoBruecke': '{n}× aucune poussée',
+  'startSession.guestSeatBruecke': 'Invité · aujourd’hui seulement',
+  // Das Programmheft's share card (#1381, P8.4): its facts and masthead.
+  'card.programmheft.sessionNo': 'Session n° {n}',
+  'card.programmheft.score': 'Score',
+  'card.programmheft.streak': 'Série',
+  'card.programmheft.streakN': '{n} d’affilée',
+  'card.programmheft.shared': 'Partagé',
+  'card.programmheft.winners': '{n} gagnants',
+  'card.programmheft.ratings': 'Notes',
+  'card.programmheft.present': 'Présents',
 };

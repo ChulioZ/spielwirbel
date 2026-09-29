@@ -104,6 +104,8 @@ function renderPeriodRecapSection(round, activities) {
     rated: rec.topRated ? recapGames(round, rec.topRated.gameIds).map((g) => g.title) : [],
     ratedScore: rec.topRated ? fmtAvg(displayScore(rec.topRated.score)) : '',
     shelf: recapShelfEntries(rec),
+    // A year's twelve bars, for Die Brücke's card (#1247); null for a month.
+    monthly: periodMonths(playedSessions(round).map((s) => s.createdAt), period),
   });
 
   if (canShareRecapImage()) {

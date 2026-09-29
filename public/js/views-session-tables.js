@@ -76,7 +76,7 @@ async function showTableBuilder(round, session, gamesHint) {
   // same thing twice. Klassisch keeps its head byte-for-byte.
   // Ocean (#1213, O4.5/O6.6) takes the same one-screen composition and paints
   // each table as its own card in ocean.css.
-  const tischSplit = done && children.length > 0 && (designIs('tisch') || oceanWorn());
+  const tischSplit = done && children.length > 0 && (designIs('tisch') || oceanWorn() || designIs('bruecke'));
   const subline = tischSplit
     ? [
       tn(people.length, 'tables.peopleOne', 'tables.people'),

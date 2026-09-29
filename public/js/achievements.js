@@ -35,7 +35,7 @@
 
    The replay: every condition walks the round's FINISHED sessions in
    `createdAt` order — when the evening happened, the Pokale streak's rule
-   (views-pokale.js), since `finishedAt` moves when an old session is
+   (session-tally.js), since `finishedAt` moves when an old session is
    re-finished — and reports its running count as `steps`. A threshold is earned
    at the first step reaching it, which is what makes a tier's date, the
    Chronik row and `newSince` derivable with no stored field.
