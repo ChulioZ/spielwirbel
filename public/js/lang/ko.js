@@ -1780,4 +1780,6 @@ I18N.ko = {
   'badges.card.next': '다음 단계 {n}',
   'badges.card.tiers': '단계',
   'badges.evergreen.lineGame': '{game} {n}번 플레이',
+  // A Regal card's running number in Das Programmheft (#1373, P3.3).
+  'regal.cardNo': '{n}번',
 };

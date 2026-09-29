@@ -1849,4 +1849,6 @@ I18N.nl = {
   'badges.card.next': 'Volgend niveau {n}',
   'badges.card.tiers': 'Niveaus',
   'badges.evergreen.lineGame': '{game} {n} keer gespeeld',
+  // A Regal card's running number in Das Programmheft (#1373, P3.3).
+  'regal.cardNo': 'Nr. {n}',
 };

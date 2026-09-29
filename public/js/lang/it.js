@@ -1856,4 +1856,6 @@ I18N.it = {
   'badges.card.next': 'Livello successivo: {n}',
   'badges.card.tiers': 'Livelli',
   'badges.evergreen.lineGame': '{game} giocato {n} volte',
+  // A Regal card's running number in Das Programmheft (#1373, P3.3).
+  'regal.cardNo': 'N. {n}',
 };

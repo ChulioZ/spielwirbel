@@ -1972,4 +1972,6 @@ I18N.en = {
   'badges.card.next': 'Next tier {n}',
   'badges.card.tiers': 'Tiers',
   'badges.evergreen.lineGame': 'Played {game} {n} times',
+  // A Regal card's running number in Das Programmheft (#1373, P3.3).
+  'regal.cardNo': 'No. {n}',
 };

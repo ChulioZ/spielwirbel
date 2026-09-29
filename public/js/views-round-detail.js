@@ -205,7 +205,12 @@ async function showGameDetail(rid, gameId) {
   // (title, score, the one action, how the round rated it, the sessions), and
   // the actions. `story` is that middle column; it exists only under Ocean.
   const ocean = designIs('ocean');
-  const listy = tisch || ocean;
+  // Das Programmheft (#1373, P3.4/P6.3) takes Ocean's three columns with the
+  // facts in the middle rather than under the cover, and states the score in a
+  // box at the head of the right column: cover | the game and how it went |
+  // the score, the one action and the rest.
+  const ph = designIs('programmheft');
+  const listy = tisch || ocean || ph;
   const coverCss = game.image ? `url('${coverUrl(game.image, COVER_HERO)}')` : '';
   const imgStyle = coverCss ? `style="background-image:${coverCss}"` : '';
   const fallback = coverPlaceholder(game);
@@ -349,11 +354,11 @@ async function showGameDetail(rid, gameId) {
   // our table on the right, with the one action pinned at the right page's foot.
   // Single column below 860px — the app's existing strip/dock/editor breakpoint
   // (.claude/rules/responsive-hub-tabs.md) — in the order card → history → bar.
-  const pass = h('<div class="pass"></div>');
+  const pass = h(`<div class="pass${ph ? ' ph-pass' : ''}"></div>`);
   const leftPage = h('<div class="pass__game"></div>');
   const rightPage = h('<div class="pass__table"></div>');
   pass.append(leftPage, rightPage);
-  const story = ocean ? h('<div class="pass__story"></div>') : null;
+  const story = ocean || ph ? h('<div class="pass__story"></div>') : null;
   if (story) leftPage.after(story);
   // What each later block is appended to: the right page, or Ocean's story.
   const tale = story || rightPage;
@@ -406,9 +411,14 @@ async function showGameDetail(rid, gameId) {
   // the same game's shelf card still says „neu".
   const shown = st.score === null ? null : displayScore(st.score);
   let scoreBig = null;
-  if (!sparse && !game.wish && tisch) {
-    scoreBig = tischScoreNumeral(st, shown);
-    wireInfoButtons(scoreBig);
+  let scoreBox = null;
+  if (!sparse && !game.wish && (tisch || ph)) {
+    const numeral = tischScoreNumeral(st, shown);
+    wireInfoButtons(numeral);
+    // The box takes the score's ramp tone (P3.4), as a Regal card's figure does.
+    if (ph && st.score !== null) numeral.dataset.stop = scoreStop(st.score);
+    if (ph) scoreBox = numeral;
+    else scoreBig = numeral;
   } else if (!sparse && !game.wish) {
     const pill = st.score !== null
       ? `<span class="score-pill score-pill--lg" style="--sc:${scoreColor(st.score)}" data-stop="${scoreStop(st.score)}"
@@ -626,6 +636,9 @@ async function showGameDetail(rid, gameId) {
 
   if (ocean) {
     leftPage.append(coverCol, factsHost);
+    story.appendChild(card);
+  } else if (ph) {
+    leftPage.appendChild(coverCol);
     story.appendChild(card);
   } else {
     leftPage.appendChild(card);
@@ -927,7 +940,7 @@ async function showGameDetail(rid, gameId) {
   }
   // Ocean: the one action right under the title (O6.3), not at a page's foot.
   if (ocean) card.after(bar);
-  else rightPage.appendChild(bar);
+  else rightPage.append(...(scoreBox ? [scoreBox] : []), bar);
 
   app.appendChild(pass);
 
@@ -992,7 +1005,7 @@ async function showGameDetail(rid, gameId) {
     const panel = h(`<div class="section gd-actions"><h2>${esc(t('detail.actionsTitle'))}</h2><div class="gd-actions__grid"></div></div>`);
     panel.querySelector('.gd-actions__grid')
       .append(...menuItemButtons(menuItems, () => {}, { base: 'btn btn--sm gd-act', tone: false }));
-    if (ocean) rightPage.appendChild(panel);
+    if (ocean || ph) rightPage.appendChild(panel);
     else rightPage.insertBefore(panel, bar);
   } else if (menuItems.length) {
     back.classList.add('back-row--split');
