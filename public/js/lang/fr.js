@@ -1883,6 +1883,11 @@ I18N.fr = {
   'badges.card.next': 'Palier suivant : {n}',
   'badges.card.tiers': 'Paliers',
   'badges.evergreen.lineGame': '{game} joué {n} fois',
+  // Das Programmheft's lobby and hub (#1372, P3.1/P3.2/P6.1).
+  'hub.members': 'Membres',
+  'hub.lead.open': 'Voir le résultat',
+  'home.phExtra': 'Édition spéciale',
+  'home.phKicker': 'Kiosque · {date}',
   // Die Brücke's session loop (#1240): only the five themed words of
   // docs/design/bruecke §2 — pool, probes, ignition, thrust, decrypt.
   'startSession.poolBruecke': 'Pool',

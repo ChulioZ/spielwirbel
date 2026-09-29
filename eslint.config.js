@@ -480,6 +480,9 @@ const frontendGlobals = {
   // ocean-hub.js (#1211) — Ocean's lobby tiles and round hub composition
   oceanHubFrame: 'readonly', oceanShell: 'readonly', oceanHeroCompose: 'readonly',
   oceanRoundCard: 'readonly', oceanResumeNotice: 'readonly', oceanYoungLine: 'readonly',
+  // programmheft-hub.js (#1372) — the Programmheft's lobby tiles and round hub composition
+  phHubFrame: 'readonly', phPresetsLabel: 'readonly', phHeroCompose: 'readonly', phLead: 'readonly',
+  phRoundCard: 'readonly', phResumeNotice: 'readonly', phLobbyKicker: 'readonly',
   // bruecke-hub.js (#1238) — Die Brücke's lobby notice and round hub composition
   brueckeHubFrame: 'readonly', brueckeMission: 'readonly', brueckeHeroCompose: 'readonly',
   brueckeStatus: 'readonly', brueckeResumeNotice: 'readonly',

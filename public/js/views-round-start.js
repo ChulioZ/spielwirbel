@@ -57,12 +57,22 @@ function renderStartTab(round, activeGames) {
      `bh` is that frame, and every append below that names a slot goes there. */
   const bh = designIs('bruecke') ? brueckeHubFrame() : null;
   if (bh) app.appendChild(bh.root);
-  const stage = tisch ? app.appendChild(h('<div class="hub-stage"></div>')) : ocean ? cols.crew : bh ? bh.crew : app;
+  /* Das Programmheft sets the hub as a printed front page (P3.2, P2.1; #1372):
+     the head, the black box with the one action, the lead story, the side
+     column and the bottom strip — real DOM cells (programmheft-hub.js), so the
+     phone order is the DOM order, the Ocean shape. */
+  const ph = designIs('programmheft') ? phHubFrame() : null;
+  if (ph) app.appendChild(ph.root);
+  const stage = tisch ? app.appendChild(h('<div class="hub-stage"></div>'))
+    : ocean ? cols.crew : bh ? bh.crew : ph ? ph.head : app;
   // Where the one action and its presets go, and where the tickets and cards
-  // follow them. Both are the plain column everywhere but Ocean and Die Brücke.
-  const launch = ocean ? cols.main : bh ? bh.mission : stage;
-  const feed = ocean ? cols.main : bh ? bh.feed : app;
-  const hero = h(`<div class="hero${ocean || bh ? '' : ' rail-owned'}">
+  // follow them. Both are the plain column everywhere but Ocean, Die Brücke and
+  // the Programmheft.
+  const launch = ocean ? cols.main : bh ? bh.mission : ph ? ph.box : stage;
+  const feed = ocean ? cols.main : bh ? bh.feed : ph ? ph.more : app;
+  // The running sessions are the Programmheft's lead story, above the last one.
+  const tickets = ph ? ph.lead : feed;
+  const hero = h(`<div class="hero${ocean || bh || ph ? '' : ' rail-owned'}">
        <h1></h1>
        <div class="hero__members">${activeMembers(round)
          .map((m) => `<a class="avatar" style="background:${memberColor(round, m.id)}" title="${esc(m.name)}">${avatarFace(initials(m.name), { userId: m.userId })}</a>`)
@@ -112,6 +122,7 @@ function renderStartTab(round, activeGames) {
   if (tisch) tischSeatHints(round, seatRow);
   if (ocean) oceanHeroCompose(round, hero);
   if (bh) brueckeHeroCompose(round, hero, playedCount);
+  if (ph) phHeroCompose(round, hero);
 
   /* `rail-owned` only where the rail still carries its own copy. Der Tisch's
      rail is identity plus the five links (#1262), so there the band's CTA and
@@ -125,7 +136,7 @@ function renderStartTab(round, activeGames) {
      the CTA say „Erste Session wirbeln"; the invitation card in the grid carries
      the count. The threshold is the app's own — one active game — not the
      sheet's „ab 2 Spielen" (operator default on #1269). */
-  if (activeGames.length === 0) launch.appendChild(hubEmptyTable(round));
+  if (activeGames.length === 0) (ph ? ph.lead : launch).appendChild(hubEmptyTable(round));
   // Ocean's one themed verb, „Abtauchen" (O9 §2), on the one action; Die
   // Brücke's „Mission starten" with its own glyph (B9 „Hauptaktion 1").
   const ctaLabel = ocean ? t('round.startSessionOcean')
@@ -162,6 +173,7 @@ function renderStartTab(round, activeGames) {
     // the pane.
     if (presets) {
       if (!railIsLean()) presets.classList.add('rail-owned');
+      if (ph) launch.appendChild(phPresetsLabel());
       // Die Brücke: inside the Missionskontrolle panel, under the ignition.
       (bh ? launch.querySelector('.bruecke-mission') : launch).appendChild(presets);
     }
@@ -202,7 +214,7 @@ function renderStartTab(round, activeGames) {
       // or member — unlike the wizard it used to open, it renders whatever the
       // session still has and offers the actions that fit.
       ticket.addEventListener('click', () => showSessionLobby(round, session));
-      feed.appendChild(ticket);
+      tickets.appendChild(ticket);
 
       // Guarded even though every grantee role clears the floor today (#857):
       // the route decides on a capability, so the control has to ask the same
@@ -222,7 +234,7 @@ function renderStartTab(round, activeGames) {
           showRound(round.id, 'start');
         } catch (e) { toast(e.message, { tone: 'error' }); }
       });
-      feed.appendChild(discard);
+      tickets.appendChild(discard);
     });
 
   // "In progress" tickets: sessions whose voting is done but that have not yet
@@ -273,7 +285,7 @@ function renderStartTab(round, activeGames) {
       navLink(ticket, resultsPath(round.id, session.id), () => showResults(round, session));
       const parentId = groupKey(session);
       if (!parentId) {
-        feed.appendChild(ticket);
+        tickets.appendChild(ticket);
         return;
       }
       // One header per split evening, created by whichever of its tables is
@@ -287,7 +299,7 @@ function renderStartTab(round, activeGames) {
              <div class="split-group__body"></div>
            </div>`);
         navLink(group.querySelector('.split-group__head'), resultsPath(round.id, parentId), () => showResults(round, parent));
-        feed.appendChild(group);
+        tickets.appendChild(group);
         mounts.set(parentId, group.querySelector('.split-group__body'));
       }
       mounts.get(parentId).appendChild(ticket);
@@ -304,7 +316,21 @@ function renderStartTab(round, activeGames) {
   const lastPlayed = round.sessions
     .filter((s) => s.finished && s.chosenGameId && round.games.some((g) => g.id === s.chosenGameId))
     .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)))[0];
-  if (lastPlayed) {
+  if (lastPlayed && ph) {
+    const game = round.games.find((g) => g.id === lastPlayed.chosenGameId);
+    const people = sessionPeople(round, lastPlayed);
+    const sst = gameStatsForSession(round, lastPlayed, game.id);
+    const lead = phLead({
+      game,
+      winnerNames: (lastPlayed.winnerIds || []).map((wid) => personLabel(people.find((p) => p.id === wid))).filter(Boolean),
+      ending: sessionEnding(lastPlayed),
+      when: fmtDateTime(lastPlayed.createdAt),
+      score: sst.avg !== null ? fmtAvg(displayScore(sst.score)) : '',
+      pot: (lastPlayed.gameIds || []).length,
+    });
+    navLink(lead, resultsPath(round.id, lastPlayed.id), () => showResults(round, lastPlayed));
+    ph.lead.appendChild(lead);
+  } else if (lastPlayed) {
     const game = round.games.find((g) => g.id === lastPlayed.chosenGameId);
     // Winners resolve against the session's own people, so a guest winner shows
     // up here too — marked as a guest (#458).
@@ -393,16 +419,21 @@ function renderStartTab(round, activeGames) {
     if (suggest) pair.appendChild(suggest);
     if (!pair.children.length) pair.remove();
   }
-  // Die Brücke gives these three a slot of their own (B3.1 places them).
+  // Die Brücke gives these three a slot of their own (B3.1 places them); the
+  // Programmheft's side column (P3.2) takes the pulse and the Kümmerliste.
   const pulse = hubPulseCard(round, activeGames);
   if (bh) [[suggest, bh.suggest], [pulse, bh.pulse], [care, bh.care]].forEach(([card, slot]) => { if (card) slot.appendChild(card); });
+  if (ph) {
+    if (suggest) ph.suggest.appendChild(suggest);
+    [pulse, care].forEach((card) => { if (card) ph.side.appendChild(card); });
+  }
   [
     // Der Tisch's invitation (T7.4, #1269) leads — it is the one next step.
     // Null on every other round and on Klassisch, so that list is unchanged.
     hubYoungCard(round, activeGames),
-    ocean || bh ? null : suggest,
-    bh ? null : pulse,
-    ocean || bh ? null : care,
+    ocean || bh || ph ? null : suggest,
+    bh || ph ? null : pulse,
+    ocean || bh || ph ? null : care,
     // The Regal-Steckbrief (#1173, views-shelf-profile.js): what the shelf adds
     // up to. Null below its threshold of games with provider data.
     hubShelfProfileCard(round, activeGames),
@@ -416,7 +447,9 @@ function renderStartTab(round, activeGames) {
     hubPokalePreview(round),
     hubChronikPreview(round),
   ].filter(Boolean);
-  if (ocean) {
+  if (ph) {
+    previews.forEach((card) => ph.strip.appendChild(card));
+  } else if (ocean) {
     previews.forEach((card) => cols.aside.appendChild(card));
     if (care) cols.aside.appendChild(care);
   } else if (bh) {
@@ -448,7 +481,7 @@ function renderStartTab(round, activeGames) {
   // pane holding one is not the bare page this stand-in exists for.
   // The empty table (#1269) is already that stand-in, at every width.
   // Not under Ocean: its hero and shell stay in the pane at every width.
-  if (!ocean && !bh && !app.querySelector('.ticket') && !grid.querySelector('.hub-card')
+  if (!ocean && !bh && !ph && !app.querySelector('.ticket') && !grid.querySelector('.hub-card')
     && !app.querySelector('.empty--table')) {
     const gap = emptyState({
       icon: 'ti-tornado',
@@ -552,7 +585,7 @@ function renderStartTab(round, activeGames) {
      used one is exactly where someone goes to start. */
   // Under Ocean it is the frame's fourth cell: the crew column's foot at desktop
   // (O3.2), the end of the page on a phone.
-  (ocean ? cols.root : bh ? bh.offshelf : app).appendChild(hubOffShelfGroup(round));
+  (ocean ? cols.root : bh ? bh.offshelf : ph ? ph.strip : app).appendChild(hubOffShelfGroup(round));
 
   // Quick actions: quieter secondary tasks below the fold.
   const actions = h('<div class="hub-actions"></div>');
@@ -577,7 +610,7 @@ function renderStartTab(round, activeGames) {
   actions.appendChild(settingsBtn);
   // Ocean: the frame's last cell — the end of the page on a phone, under the
   // centre column from 1280 (ocean.css).
-  (ocean ? cols.root : bh ? bh.actions : app).appendChild(actions);
+  (ocean ? cols.root : bh ? bh.actions : ph ? ph.root : app).appendChild(actions);
   if (bh) brueckeStatus();
 }
 

@@ -1996,6 +1996,11 @@ I18N.de = {
   'badges.card.next': 'Nächste Stufe {n}',
   'badges.card.tiers': 'Stufen',
   'badges.evergreen.lineGame': '{game} {n}-mal gespielt',
+  // Das Programmheft's lobby and hub (#1372, P3.1/P3.2/P6.1).
+  'hub.members': 'Mitglieder',
+  'hub.lead.open': 'Ergebnis ansehen',
+  'home.phExtra': 'Extrablatt',
+  'home.phKicker': 'Kiosk · {date}',
   // Die Brücke's session loop (#1240): only the five themed words of
   // docs/design/bruecke §2 — pool, probes, ignition, thrust, decrypt.
   'startSession.poolBruecke': 'Pool',

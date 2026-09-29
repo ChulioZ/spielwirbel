@@ -1927,6 +1927,11 @@ I18N.es = {
   'badges.card.next': 'Siguiente nivel: {n}',
   'badges.card.tiers': 'Niveles',
   'badges.evergreen.lineGame': '{game} jugado {n} veces',
+  // Das Programmheft's lobby and hub (#1372, P3.1/P3.2/P6.1).
+  'hub.members': 'Miembros',
+  'hub.lead.open': 'Ver el resultado',
+  'home.phExtra': 'Edición especial',
+  'home.phKicker': 'Quiosco · {date}',
   // Die Brücke's session loop (#1240): only the five themed words of
   // docs/design/bruecke §2 — pool, probes, ignition, thrust, decrypt.
   'startSession.poolBruecke': 'Pool',
