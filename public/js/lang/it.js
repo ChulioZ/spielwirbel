@@ -306,6 +306,8 @@ I18N.it = {
   'periodRecap.label.shelf': 'Scaffale',
   'periodRecap.toast.saved': 'Immagine salvata.',
   'periodRecap.toast.failed': 'Impossibile creare l’immagine.',
+  // Die Brücke's share card (#1247): the caption over its twelve monthly bars.
+  'periodRecap.card.perMonth': 'Sessioni al mese',
   // „Dein Rückblick" on the own profile (#1147) — no wins, only what was played.
   'accountRecap.title': 'Il tuo riepilogo',
   'accountRecap.lead': 'Cosa hai giocato, in tutti i tuoi gruppi — visibile solo a te.',
@@ -1876,4 +1878,13 @@ I18N.it = {
   'score.reasonVetoBrueckeOne': '{n}× nessuna spinta',
   'score.reasonVetoBruecke': '{n}× nessuna spinta',
   'startSession.guestSeatBruecke': 'Ospite · solo oggi',
+  // Das Programmheft's share card (#1381, P8.4): its facts and masthead.
+  'card.programmheft.sessionNo': 'Sessione n. {n}',
+  'card.programmheft.score': 'Punteggio',
+  'card.programmheft.streak': 'Serie',
+  'card.programmheft.streakN': '{n} di fila',
+  'card.programmheft.shared': 'Condiviso',
+  'card.programmheft.winners': '{n} vincitori',
+  'card.programmheft.ratings': 'Valutazioni',
+  'card.programmheft.present': 'Presenti',
 };

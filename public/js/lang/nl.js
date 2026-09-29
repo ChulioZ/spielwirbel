@@ -304,6 +304,8 @@ I18N.nl = {
   'periodRecap.label.shelf': 'Kast',
   'periodRecap.toast.saved': 'Afbeelding opgeslagen.',
   'periodRecap.toast.failed': 'De afbeelding kon niet worden gemaakt.',
+  // Die Brücke's share card (#1247): the caption over its twelve monthly bars.
+  'periodRecap.card.perMonth': 'Sessies per maand',
   // „Dein Rückblick" on the own profile (#1147) — no wins, only what was played.
   'accountRecap.title': 'Jouw terugblik',
   'accountRecap.lead': 'Wat je gespeeld hebt, in al je groepen — alleen voor jou zichtbaar.',
@@ -1869,4 +1871,13 @@ I18N.nl = {
   'score.reasonVetoBrueckeOne': '{n}× geen stuwkracht',
   'score.reasonVetoBruecke': '{n}× geen stuwkracht',
   'startSession.guestSeatBruecke': 'Gast · alleen vandaag',
+  // Das Programmheft's share card (#1381, P8.4): its facts and masthead.
+  'card.programmheft.sessionNo': 'Sessie nr. {n}',
+  'card.programmheft.score': 'Score',
+  'card.programmheft.streak': 'Reeks',
+  'card.programmheft.streakN': '{n} op rij',
+  'card.programmheft.shared': 'Gedeeld',
+  'card.programmheft.winners': '{n} winnaars',
+  'card.programmheft.ratings': 'Beoordelingen',
+  'card.programmheft.present': 'Erbij',
 };

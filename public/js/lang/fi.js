@@ -281,6 +281,8 @@ I18N.fi = {
   'periodRecap.label.shelf': 'Hylly',
   'periodRecap.toast.saved': 'Kuva tallennettu.',
   'periodRecap.toast.failed': 'Kuvaa ei voitu luoda.',
+  // Die Brücke's share card (#1247): the caption over its twelve monthly bars.
+  'periodRecap.card.perMonth': 'Sessiot kuukausittain',
   // „Dein Rückblick" on the own profile (#1147) — no wins, only what was played.
   'accountRecap.title': 'Sinun katsauksesi',
   'accountRecap.lead': 'Mitä olet pelannut kaikissa ryhmissäsi — näkyy vain sinulle.',
@@ -1837,4 +1839,13 @@ I18N.fi = {
   'score.reasonVetoBrueckeOne': '{n}× ei työntöä',
   'score.reasonVetoBruecke': '{n}× ei työntöä',
   'startSession.guestSeatBruecke': 'Vieras · vain tänään',
+  // Das Programmheft's share card (#1381, P8.4): its facts and masthead.
+  'card.programmheft.sessionNo': 'Sessio nro {n}',
+  'card.programmheft.score': 'Pisteet',
+  'card.programmheft.streak': 'Putki',
+  'card.programmheft.streakN': '{n} peräkkäin',
+  'card.programmheft.shared': 'Jaettu',
+  'card.programmheft.winners': '{n} voittajaa',
+  'card.programmheft.ratings': 'Arviot',
+  'card.programmheft.present': 'Mukana',
 };
