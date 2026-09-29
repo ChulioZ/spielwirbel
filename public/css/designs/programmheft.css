@@ -617,6 +617,13 @@
   color: var(--ink);
 }
 
+/* The settings head spans both columns: .rs-ph is exempt from the shell's
+   reading measure (it holds .marker-cards), so a capped head's rule would stop
+   short of the right-hand column. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .app:has(> .rs-ph) > .page-head {
+  max-width: none;
+}
+
 /* ---- P14.6 Rundeneinstellungen: two columns split by a 1px ink rule, the
    set-up left and the actions right; stacked below 1024px. */
 :root[data-design="programmheft"]:not([data-scheme="dark"]) .rs-ph {
