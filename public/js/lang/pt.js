@@ -57,6 +57,10 @@ I18N.pt = {
   // Ocean only (#1211): its sub-brand beside the wordmark and its lobby greeting.
   'home.oceanKicker': 'A costa · seus grupos',
   'home.oceanGreeting': 'Boas-vindas à costa.',
+  // Die Brücke only (#1238): the lobby voice, its greeting and the notice kicker (B9).
+  'home.brueckeKicker': 'Frota / Visão geral',
+  'home.brueckeGreeting': 'Boas-vindas de volta a bordo.',
+  'home.brueckeSignal': 'Sinal recebido',
   'home.shared': 'Compartilhado',
   'home.newRound': 'Criar um novo grupo',
   'home.empty.title': 'Nenhum grupo de jogo ainda.',
@@ -104,6 +108,14 @@ I18N.pt = {
   'round.startSession': 'Iniciar sessão',
   // Ocean only (#1211): the one action's themed verb (O9 §2).
   'round.startSessionOcean': 'Mergulhar',
+  // Die Brücke only (#1238): the one action, the panel it sits in and the
+  // two decorative lines (B9 „Zierzeilen" — never a label, never a button).
+  'round.startSessionBruecke': 'Iniciar missão',
+  'hub.bruecke.control': 'Controle da missão',
+  'hub.bruecke.ready': 'Pronto',
+  'hub.bruecke.mission': 'Missão {n} · Tripulação {m}',
+  'hub.bruecke.crew': 'Membros · {n}',
+  'bruecke.status': 'T+ 00:14:52 · órbita estável',
   'round.startEmptyTitle': 'Nenhuma sessão ainda',
   'round.startEmpty': 'Comece a sua primeira sessão — o que vocês jogaram por último aparece aqui.',
   'round.startSessionDisabled': 'Adicione jogos primeiro',
@@ -306,6 +318,8 @@ I18N.pt = {
   'periodRecap.label.shelf': 'Estante',
   'periodRecap.toast.saved': 'Imagem salva.',
   'periodRecap.toast.failed': 'Não foi possível criar a imagem.',
+  // Die Brücke's share card (#1247): the caption over its twelve monthly bars.
+  'periodRecap.card.perMonth': 'Sessões por mês',
   // „Dein Rückblick" on the own profile (#1147) — no wins, only what was played.
   'accountRecap.title': 'Seu resumo',
   'accountRecap.lead': 'O que você jogou, em todos os seus grupos — visível só para você.',
@@ -340,6 +354,15 @@ I18N.pt = {
   'chronik.seated': '{n} à mesa',
   'chronik.wonOne': '{names} venceu',
   'chronik.won': '{names} venceram',
+  // Die Brücke's Chronik (#1245): how often the chosen game took the 1 in that
+  // session, in the scale's own end word — and the log's column heads.
+  'chronik.noThrustOne': '{n}× sem impulso',
+  'chronik.noThrust': '{n}× sem impulso',
+  'chronik.col.date': 'Data',
+  'chronik.col.game': 'Jogo',
+  'chronik.col.winner': 'Vencedor',
+  'chronik.col.games': 'Jogos sorteados',
+  'chronik.col.score': 'Pontuação',
   'chronik.changesOne': '{n} alteração na estante',
   'chronik.changes': '{n} alterações na estante',
   'activity.delete': 'Excluir atividade',
@@ -1577,6 +1600,9 @@ I18N.pt = {
   'konto.profile.off': 'Agora só tu podes ver o teu balanço.',
   // The per-user design (#1186): the Konto picker and the one-time chooser.
   'design.pick.label': 'Design',
+  'design.scheme.dark': 'Escuro',
+  'design.scheme.light': 'Claro',
+  'design.pick.mine': 'O teu',
   'design.klassisch.name': 'Clássico',
   'design.klassisch.badge': 'Como antes',
   'design.klassisch.desc': 'O aspeto com que o Spielwirbel começou — claro, calmo, com o acento laranja.',
@@ -1608,7 +1634,7 @@ I18N.pt = {
   'design.poster.picked': 'Escolhido',
   'konto.design.title': 'Design',
   'konto.design.hint': 'Aplica-se a ti, não ao grupo.',
-  'konto.design.note': 'Clássico é o design com que o Spielwirbel começou — fica sempre disponível. Mudar altera apenas o aspeto, nunca onde as coisas estão.',
+  'konto.design.note': 'Clássico é o design com que o Spielwirbel começou — fica sempre disponível. Mudar altera apenas o design, nunca onde as coisas estão.',
   'konto.design.saved': 'Design aplicado.',
   'konto.design.invalid': 'Esse design não existe aqui.',
   'konto.bgg.title': 'BoardGameGeek',
@@ -1853,4 +1879,38 @@ I18N.pt = {
   'badges.evergreen.lineGame': '{game} jogado {n} vezes',
   // A Regal card's running number in Das Programmheft (#1373, P3.3).
   'regal.cardNo': 'N.º {n}',
+  // Das Programmheft's lobby and hub (#1372, P3.1/P3.2/P6.1).
+  'hub.members': 'Membros',
+  'hub.lead.open': 'Ver o resultado',
+  'home.phExtra': 'Edição extra',
+  'home.phKicker': 'Banca · {date}',
+  // Die Brücke's session loop (#1240): only the five themed words of
+  // docs/design/bruecke §2 — pool, probes, ignition, thrust, decrypt.
+  'startSession.poolBruecke': 'Pool',
+  'startSession.ignitionBruecke': 'Ignição',
+  'startSession.countQuestionBruecke': 'Sondas · quantas são sorteadas?',
+  'startSession.potLabelBrueckeOne': 'jogo no pool',
+  'startSession.potLabelBruecke': 'jogos no pool',
+  'startSession.sealedBruecke': 'Avaliação secreta: só é decifrada quando todos tiverem avaliado.',
+  'vote.questionBruecke': 'Quanto impulso dás a este jogo hoje?',
+  'vote.scaleLowBruecke': 'sem impulso',
+  'vote.scaleHighBruecke': 'potência máxima',
+  'vote.ratersTitleBruecke': 'Quem já avaliou',
+  'vote.sealedNoteBruecke': 'Só quando todos tiverem avaliado é decifrado. Até lá ninguém vê os valores dos outros.',
+  'vote.sealedTitleBruecke': 'Oculto',
+  'vote.sealedTextBrueckeOne': 'Mais um jogo continua cifrado até lá chegares.',
+  'vote.sealedTextBruecke': 'Mais {n} jogos continuam cifrados até lá chegares.',
+  'vote.sealedCardBruecke': 'Cifrado',
+  'score.reasonVetoBrueckeOne': '{n}× sem impulso',
+  'score.reasonVetoBruecke': '{n}× sem impulso',
+  'startSession.guestSeatBruecke': 'Convidado · só hoje',
+  // Das Programmheft's share card (#1381, P8.4): its facts and masthead.
+  'card.programmheft.sessionNo': 'Sessão n.º {n}',
+  'card.programmheft.score': 'Pontuação',
+  'card.programmheft.streak': 'Sequência',
+  'card.programmheft.streakN': '{n} seguidas',
+  'card.programmheft.shared': 'Compartilhado',
+  'card.programmheft.winners': '{n} vencedores',
+  'card.programmheft.ratings': 'Avaliações',
+  'card.programmheft.present': 'Presentes',
 };

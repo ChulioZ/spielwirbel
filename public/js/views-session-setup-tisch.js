@@ -33,6 +33,10 @@ function tischSetupDateLine(now = new Date()) {
 // pot has nothing to draw from, so it falls back to the pot's own headline.
 function tischDrawSummary(people, potSize, count) {
   const seated = tn(people, 'startSession.tableCountOne', 'startSession.tableCount');
+  // Die Brücke's pot is the POOL (#1240): „0 Spiele im Pool", never „im Topf".
+  if (!potSize && designIs('bruecke')) {
+    return seated + ' · 0 ' + tn(0, 'startSession.potLabelBrueckeOne', 'startSession.potLabelBruecke');
+  }
   if (!potSize) return seated + ' · ' + tn(0, 'startSession.availableOne', 'startSession.available');
   const drawn = Math.max(1, Math.min(Number.isInteger(count) ? count : 1, potSize));
   return seated + ' · ' + tn(drawn, 'startSession.drawOfOne', 'startSession.drawOf', { total: potSize });

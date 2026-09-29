@@ -318,7 +318,13 @@ function hubPulseCard(round, activeGames) {
         : tn(pulse.daysSinceLast, 'hub.pulse.lastDaysOne', 'hub.pulse.lastDays')
     );
   }
-  body.appendChild(h(`<p class="muted hub-card__facts">${esc(facts.join(' · '))}</p>`));
+  /* Die Brücke sets the Rundenpuls as three LINES (B2.2/B3.1, #1238): when it
+     last met, how often, and — the coverage row below — how much of the shelf
+     never reached the table. Same strings, one fact per line, recency first. */
+  const lines = designIs('bruecke')
+    ? facts.slice().reverse().map((f) => `<span class="hub-card__fact">${esc(f)}</span>`).join('')
+    : esc(facts.join(' · '));
+  body.appendChild(h(`<p class="muted hub-card__facts">${lines}</p>`));
 
   // Shelf coverage links into the Regal, because that is where the untouched
   // games are — the number is only useful if it is one tap from acting on it.

@@ -55,6 +55,10 @@ I18N.nl = {
   // Ocean only (#1211): its sub-brand beside the wordmark and its lobby greeting.
   'home.oceanKicker': 'De kust · jouw groepen',
   'home.oceanGreeting': 'Welkom aan de kust.',
+  // Die Brücke only (#1238): the lobby voice, its greeting and the notice kicker (B9).
+  'home.brueckeKicker': 'Vloot / Overzicht',
+  'home.brueckeGreeting': 'Welkom terug aan boord.',
+  'home.brueckeSignal': 'Inkomend signaal',
   'home.shared': 'Gedeeld',
   'home.newRound': 'Een nieuwe groep starten',
   'home.empty.title': 'Nog geen speelgroep.',
@@ -102,6 +106,14 @@ I18N.nl = {
   'round.startSession': 'Sessie starten',
   // Ocean only (#1211): the one action's themed verb (O9 §2).
   'round.startSessionOcean': 'Duiken',
+  // Die Brücke only (#1238): the one action, the panel it sits in and the
+  // two decorative lines (B9 „Zierzeilen" — never a label, never a button).
+  'round.startSessionBruecke': 'Missie starten',
+  'hub.bruecke.control': 'Missiecontrole',
+  'hub.bruecke.ready': 'Gereed',
+  'hub.bruecke.mission': 'Missie {n} · Crew {m}',
+  'hub.bruecke.crew': 'Leden · {n}',
+  'bruecke.status': 'T+ 00:14:52 · baan stabiel',
   'round.startEmptyTitle': 'Nog geen sessie',
   'round.startEmpty': 'Start je eerste sessie — wat jullie laatst speelden komt hier te staan.',
   'round.startSessionDisabled': 'Voeg eerst spellen toe',
@@ -304,6 +316,8 @@ I18N.nl = {
   'periodRecap.label.shelf': 'Kast',
   'periodRecap.toast.saved': 'Afbeelding opgeslagen.',
   'periodRecap.toast.failed': 'De afbeelding kon niet worden gemaakt.',
+  // Die Brücke's share card (#1247): the caption over its twelve monthly bars.
+  'periodRecap.card.perMonth': 'Sessies per maand',
   // „Dein Rückblick" on the own profile (#1147) — no wins, only what was played.
   'accountRecap.title': 'Jouw terugblik',
   'accountRecap.lead': 'Wat je gespeeld hebt, in al je groepen — alleen voor jou zichtbaar.',
@@ -338,6 +352,15 @@ I18N.nl = {
   'chronik.seated': '{n} aan tafel',
   'chronik.wonOne': '{names} won',
   'chronik.won': '{names} wonnen',
+  // Die Brücke's Chronik (#1245): how often the chosen game took the 1 in that
+  // session, in the scale's own end word — and the log's column heads.
+  'chronik.noThrustOne': '{n}× geen stuwkracht',
+  'chronik.noThrust': '{n}× geen stuwkracht',
+  'chronik.col.date': 'Datum',
+  'chronik.col.game': 'Spel',
+  'chronik.col.winner': 'Winnaar',
+  'chronik.col.games': 'Spellen getrokken',
+  'chronik.col.score': 'Score',
   'chronik.changesOne': '{n} kastwijziging',
   'chronik.changes': '{n} kastwijzigingen',
   'activity.delete': 'Activiteit verwijderen',
@@ -1575,6 +1598,9 @@ I18N.nl = {
   'konto.profile.off': 'Alleen jij kunt je balans nog zien.',
   // The per-user design (#1186): the Konto picker and the one-time chooser.
   'design.pick.label': 'Ontwerp',
+  'design.scheme.dark': 'Donker',
+  'design.scheme.light': 'Licht',
+  'design.pick.mine': 'Van jou',
   'design.klassisch.name': 'Klassiek',
   'design.klassisch.badge': 'Zoals voorheen',
   'design.klassisch.desc': 'Het uiterlijk waarmee Spielwirbel begon — licht, rustig, met het oranje accent.',
@@ -1606,7 +1632,7 @@ I18N.nl = {
   'design.poster.picked': 'Gekozen',
   'konto.design.title': 'Ontwerp',
   'konto.design.hint': 'Geldt voor jou, niet voor de groep.',
-  'konto.design.note': 'Klassiek is het ontwerp waarmee Spielwirbel begon — het blijft altijd beschikbaar. Wisselen verandert alleen het uiterlijk, nooit waar iets staat.',
+  'konto.design.note': 'Klassiek is het ontwerp waarmee Spielwirbel begon — het blijft altijd beschikbaar. Wisselen verandert alleen het ontwerp, nooit waar iets staat.',
   'konto.design.saved': 'Ontwerp toegepast.',
   'konto.design.invalid': 'Dat ontwerp bestaat hier niet.',
   'konto.bgg.title': 'BoardGameGeek',
@@ -1851,4 +1877,38 @@ I18N.nl = {
   'badges.evergreen.lineGame': '{game} {n} keer gespeeld',
   // A Regal card's running number in Das Programmheft (#1373, P3.3).
   'regal.cardNo': 'Nr. {n}',
+  // Das Programmheft's lobby and hub (#1372, P3.1/P3.2/P6.1).
+  'hub.members': 'Leden',
+  'hub.lead.open': 'Uitslag bekijken',
+  'home.phExtra': 'Extra editie',
+  'home.phKicker': 'Kiosk · {date}',
+  // Die Brücke's session loop (#1240): only the five themed words of
+  // docs/design/bruecke §2 — pool, probes, ignition, thrust, decrypt.
+  'startSession.poolBruecke': 'Pool',
+  'startSession.ignitionBruecke': 'Ontsteking',
+  'startSession.countQuestionBruecke': 'Sondes · hoeveel worden er getrokken?',
+  'startSession.potLabelBrueckeOne': 'spel in de pool',
+  'startSession.potLabelBruecke': 'spellen in de pool',
+  'startSession.sealedBruecke': 'Geheim beoordeeld – pas ontsleuteld als iedereen heeft beoordeeld.',
+  'vote.questionBruecke': 'Hoeveel stuwkracht geef je dit spel vandaag?',
+  'vote.scaleLowBruecke': 'geen stuwkracht',
+  'vote.scaleHighBruecke': 'vol vermogen',
+  'vote.ratersTitleBruecke': 'Wie heeft al beoordeeld',
+  'vote.sealedNoteBruecke': 'Pas als iedereen heeft beoordeeld, wordt er ontsleuteld. Tot dan ziet niemand de waarden van de anderen.',
+  'vote.sealedTitleBruecke': 'Verborgen',
+  'vote.sealedTextBrueckeOne': 'Nog één spel blijft versleuteld tot je het bereikt.',
+  'vote.sealedTextBruecke': 'Nog {n} spellen blijven versleuteld tot je ze bereikt.',
+  'vote.sealedCardBruecke': 'Versleuteld',
+  'score.reasonVetoBrueckeOne': '{n}× geen stuwkracht',
+  'score.reasonVetoBruecke': '{n}× geen stuwkracht',
+  'startSession.guestSeatBruecke': 'Gast · alleen vandaag',
+  // Das Programmheft's share card (#1381, P8.4): its facts and masthead.
+  'card.programmheft.sessionNo': 'Sessie nr. {n}',
+  'card.programmheft.score': 'Score',
+  'card.programmheft.streak': 'Reeks',
+  'card.programmheft.streakN': '{n} op rij',
+  'card.programmheft.shared': 'Gedeeld',
+  'card.programmheft.winners': '{n} winnaars',
+  'card.programmheft.ratings': 'Beoordelingen',
+  'card.programmheft.present': 'Erbij',
 };
