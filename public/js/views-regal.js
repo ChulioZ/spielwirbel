@@ -416,9 +416,13 @@ function renderRegalTab(round, activeGames) {
   // (#1262) and Ocean's Reling (#1211) carry no off-shelf group, so at desktop
   // this button is the Regal's own way to the four — T3.3 draws it in the
   // toolbar at 1440, and O3's „Vom Regal führt ein Weg zu Nicht im Regal".
-  // Das Programmheft draws it in the 1440 toolbar (P3.3) whatever the rail
-  // carries, and as the list closing the shelf on a phone (P6.2).
-  const offShelfCls = ph ? ' regal-tool--wide' : railIsLean() ? '' : ' rail-owned';
+  // Das Programmheft draws it in the toolbar between 860 and 1279 (P3.3), and
+  // closes the shelf with the list at every width (P6.2). From 1280px its rail
+  // carries the „Nicht im Regal" group, so programmheft.css hides the toolbar
+  // copy there (`regal-tool--offshelf`) — rail, toolbar and list made three
+  // entries for one thing. Not `rail-owned`: the design's own `.link-btn`
+  // display rule outranks `.app .rail-owned`, measured at 1440.
+  const offShelfCls = ph ? ' regal-tool--wide regal-tool--offshelf' : railIsLean() ? '' : ' rail-owned';
   const offShelfBtn = h(`<button class="link-btn${offShelfCls}" type="button"><i class="ti ti-archive" aria-hidden="true"></i> <span>${esc(t('rail.archive'))}</span></button>`);
   offShelfBtn.addEventListener('click', () => openOffShelfSheet(round));
   gamesTools.appendChild(offShelfBtn);

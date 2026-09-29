@@ -9,7 +9,10 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 
+const fs = require('node:fs');
+const path = require('node:path');
 const { loadApp } = require('./support/dom');
+const { ROOT, mediaBlocks, rulesOf } = require('./support/css');
 
 const RID = 'r1';
 const flush = () => new Promise((r) => setImmediate(r));
@@ -100,6 +103,22 @@ test('Regal: the toolbar carries the black add and the wide tools, the phone get
   assert.ok(labels.includes(t_('bulk.select')), `„…" lacks the select action: ${labels}`);
   assert.ok(labels.includes(t_('bggImport.tile')), `„…" lacks the BGG import: ${labels}`);
   assert.equal(more.getAttribute('aria-expanded'), 'true');
+});
+
+test('Regal: the toolbar\'s „Nicht im Regal" yields to the rail from 1280px (three entries were one too many)', (t) => {
+  const { dom, round } = boot(t);
+  renderRegal(dom, round);
+  const btn = dom.app.querySelector('.regal-head .section-tools .ti-archive').closest('button');
+  // Wide (860–1279, no rail) and hidden ≥1280, where the rail's group and the
+  // end-of-shelf list already carry the four. Not `rail-owned`: the design's
+  // `:is(.link-btn, .back-link)` display rule outranks `.app .rail-owned`.
+  assert.ok(btn.classList.contains('regal-tool--wide'), 'the toolbar button is not a desktop tool');
+  assert.ok(btn.classList.contains('regal-tool--offshelf'), 'the toolbar button is not marked as the off-shelf tool');
+  const css = fs.readFileSync(path.join(ROOT, 'public/css/designs/programmheft.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+  const hides = mediaBlocks(css).some(([q, body]) => /min-width:\s*1280px/.test(q) && !/max-width/.test(q)
+    && rulesOf(body).some(([sel, decl]) => /\.ph-regal \.regal-tool--offshelf\s*$/.test(sel.trim()) && /display:\s*none/.test(decl)));
+  assert.ok(hides, 'the toolbar button still shows beside the rail\'s „Nicht im Regal" group from 1280px');
+  assert.ok(dom.app.querySelector('nav.ph-offshelf'), 'the end-of-shelf list must stay');
 });
 
 test('Regal: „Nicht im Regal" closes the shelf as a labelled list of links', (t) => {

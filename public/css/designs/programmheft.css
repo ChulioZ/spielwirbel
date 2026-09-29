@@ -637,12 +637,16 @@
 
 /* One control per width, as Ocean's three adds are: `display: none` takes the
    other out of the accessibility tree, so no width announces two. At desktop the
-   toolbar carries „Auswählen", the BGG import, „Nicht im Regal" and the black
+   toolbar carries „Auswählen", the BGG import, „Nicht im Regal" (860–1279
+   only: from 1280 the rail's group carries it) and the black
    „Spiel hinzufügen" (P3.3); a phone folds the first two into the „…" and
    keeps the dashed tile in the grid (P6.2). An EMPTY shelf renders no bar, so
    its tiles stay at every width. */
 @media (max-width: 859px) {
   :root[data-design="programmheft"] .ph-regal :is(.regal-tool--wide, .regal-add--bar) { display: none; }
+}
+@media (min-width: 1280px) {
+  :root[data-design="programmheft"] .ph-regal .regal-tool--offshelf { display: none; }
 }
 @media (min-width: 860px) {
   :root[data-design="programmheft"] .ph-regal .regal-more { display: none; }
