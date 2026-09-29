@@ -233,22 +233,27 @@ function renderFeedTile(ev, opts) {
    `coverUrl` is what the allowlisted payload holds for it (lib/feed-events.js),
    and nothing is added to reach a cover the event does not already carry — so a
    game with no art gets no box rather than an empty one. aria-hidden: the
-   sentence beside it already names the game. */
-function renderFeedRow(ev) {
+   sentence beside it already names the game.
+
+   The profile's two options hold here as they do on a tile (#1380, which gave
+   Das Programmheft's profile the rows): `noAuthor` drops the face — every row
+   there is the <h1>'s account — and `noReport` the flag on your own profile. */
+function renderFeedRow(ev, opts) {
+  const o = opts || {};
   // A mark (#1389, X17.7) stands its glyph where a game stands its box.
   const badge = feedBadgeDef(ev);
   const cover = ev.coverUrl
     ? `<span class="feed-item__img feed-row__cover" aria-hidden="true" style="background-image:url('${coverUrl(ev.coverUrl, COVER_THUMB)}')"></span>`
     : badge ? `<span class="feed-item__img feed-row__cover feed-row__cover--badge" aria-hidden="true"><i class="ti ${esc(badge.glyph)}"></i></span>` : '';
   const row = h(`<div class="feed-item feed-row">
-      ${friendAvatar(ev.username, ev.avatar, 'feed-row__face')}
+      ${o.noAuthor ? '' : friendAvatar(ev.username, ev.avatar, 'feed-row__face')}
       <div class="feed-item__body">
         <div class="feed-item__text">${feedText(ev)}</div>
         <div class="feed-item__time muted">${esc(feedTimeText(ev))}</div>
       </div>
       ${cover}
     </div>`);
-  const url = feedReportUrl({
+  const url = !o.noReport && feedReportUrl({
     username: ev.username,
     subject: t('friends.feed.reportSubject', {
       user: ev.username || '',
@@ -281,7 +286,7 @@ function renderFeedTiles(events, opts) {
   const wrap = h('<div class="e-feed"></div>');
   const rows = !!o.rows;
   const grid = h(rows ? '<div class="feed-list feed-list--rows"></div>' : '<div class="e-grid"></div>');
-  const render = (ev) => (rows ? renderFeedRow(ev) : renderFeedTile(ev, opts));
+  const render = (ev) => (rows ? renderFeedRow(ev, opts) : renderFeedTile(ev, opts));
   events.forEach((ev) => grid.appendChild(render(ev)));
   wrap.appendChild(grid);
   if (events.length > FEED_TILES_COLLAPSED) {

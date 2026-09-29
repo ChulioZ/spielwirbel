@@ -51,10 +51,14 @@ async function showRoundSettings(rid) {
   // a new place replaces its entry point. The /design route itself stays: a
   // bookmark still reaches it, and Klassisch and Der Tisch still link to it.
   const ocean = designIs('ocean');
+  // Das Programmheft draws the picker inline as well (#1380, P14.6), for the
+  // same reason — so its row goes too.
+  const programmheft = designIs('programmheft');
+  const inlinePicker = ocean || programmheft;
   [
     { icon: 'ti-tags', label: t('round.tags'), sub: 'tags', go: () => showTags(rid) },
     { icon: 'ti-palette', label: t('round.marker'), sub: 'design', go: () => showMarker(rid) },
-  ].filter(({ sub }) => !(ocean && sub === 'design')).forEach(({ icon, label, sub, go }) => {
+  ].filter(({ sub }) => !(inlinePicker && sub === 'design')).forEach(({ icon, label, sub, go }) => {
     const row = h(`<a class="ds-row rs-row">
          <div class="ds-row__main"><i class="ti ${icon}" aria-hidden="true"></i><span>${esc(label)}</span></div>
          <div class="ds-row__meta"><i class="ti ti-chevron-right" aria-hidden="true"></i></div>
@@ -133,6 +137,7 @@ async function showRoundSettings(rid) {
   }
   app.appendChild(danger);
   if (ocean) composeOceanSettings(round, rid);
+  if (programmheft) composeProgrammheftSettings(round, rid);
 }
 
 /* Ocean's Einstellungen (#1219, O14.1): the same sections as cards, the marker
@@ -170,6 +175,54 @@ function composeOceanSettings(round, rid) {
   });
 
   const cols = h('<div class="rs-ocean"></div>');
+  cols.appendChild(main);
+  cols.appendChild(aside);
+  app.appendChild(cols);
+}
+
+/* Das Programmheft's Einstellungen (#1380, P14.6): a printed two-column page.
+   The left column is the round's own set-up — the marker picker first (P14.6
+   „Farbmarker"), then „Runde einrichten" and the saved filters; the right one
+   is what acts on the round — „Runde verwalten" and the Gefahrenzone, framed
+   in --danger at the foot. Composed AFTER the shared build out of its own
+   nodes, exactly like Ocean's, so every handler above is the one that runs and
+   Klassisch never enters this function. DOM order is the reading order: the
+   left column precedes the right one (WCAG 2.4.3), and below 1024px the two
+   simply stack.
+
+   The picker states the marker is the ROUND's, seen by everyone in their own
+   design, in the app's own sentence (`marker.note`) — it must not read as a
+   Programmheft-only setting. */
+function composeProgrammheftSettings(round, rid) {
+  const head = app.querySelector(':scope > .page-head');
+  const kids = [...app.children];
+  const after = kids.slice(kids.indexOf(head) + 1);
+  const main = h('<div class="rs-ph__col"></div>');
+  const aside = h('<div class="rs-ph__col rs-ph__col--act"></div>');
+  const marker = h(`<section class="rs-ph__sec rs-ph__sec--marker">
+       <h2 class="rs-section__h">${esc(t('marker.title'))}</h2>
+     </section>`);
+  marker.appendChild(renderMarkerGrid(round, rid));
+  marker.appendChild(h(`<p class="rs-ph__note">${esc(t('marker.note'))}</p>`));
+  main.appendChild(marker);
+
+  // Each heading opens a section that takes its siblings up to the next one.
+  // „Runde verwalten" is the one heading that is neither the first two nor the
+  // danger zone, and it starts the right-hand column.
+  const manage = t('roundSettings.manage');
+  let sec = null;
+  let col = main;
+  after.forEach((el) => {
+    if (el.matches('h2.rs-section__h')) {
+      const danger = el.classList.contains('rs-section__h--danger');
+      if (danger || el.textContent === manage) col = aside;
+      sec = h(`<section class="rs-ph__sec${danger ? ' rs-ph__sec--danger' : ''}"></section>`);
+      col.appendChild(sec);
+    }
+    if (sec) sec.appendChild(el);
+  });
+
+  const cols = h('<div class="rs-ph"></div>');
   cols.appendChild(main);
   cols.appendChild(aside);
   app.appendChild(cols);
