@@ -722,8 +722,9 @@
   :root[data-design="bruecke"] .stat-chip.stat-chip--tile { min-width: 0; }
 }
 /* Desktop: the recap becomes a right-hand column beside the log, as Ocean and
-   Der Tisch place it — only on a screen that HAS a recap. The recap is first
-   in the DOM, so the reading order matches the phone's. */
+   Der Tisch place it — only on a screen that HAS a recap. The recap follows
+   the log in the DOM (views-chronik.js, B6.1: the phone reads log first), and
+   its explicit column and row lift it beside the log regardless. */
 @media (min-width: 1280px) {
   :root[data-design="bruecke"] .app:has(> .precap) {
     grid-template-columns: var(--rail-w) minmax(0, 1fr) 380px;

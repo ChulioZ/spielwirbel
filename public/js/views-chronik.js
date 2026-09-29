@@ -146,8 +146,11 @@ function renderChronikTab(round, activities) {
   // the Chronik is the round's time axis, so the shareable card for a month
   // belongs beside the very stretch of history it summarises. It renders
   // nothing at all when the round has no period worth offering.
+  // Die Brücke is the exception (#1245, B6.1): its phone shows the log FIRST and
+  // the recap after it, so the section is appended below the log instead. The
+  // desktop grid places the recap in its own column either way (bruecke.css).
   const periodSec = renderPeriodRecapSection(round, activities);
-  if (periodSec) app.appendChild(periodSec);
+  if (periodSec && !bruecke) app.appendChild(periodSec);
 
   // Exactly one <h1> on the screen, and it is this one — the recap above keeps
   // its <h2>. That does put an h2 before the h1 in document order; it is an
@@ -199,6 +202,7 @@ function renderChronikTab(round, activities) {
   const tl = h('<div class="timeline"></div>');
   sec.appendChild(tl);
   app.appendChild(sec);
+  if (periodSec && bruecke) app.appendChild(periodSec);
 
   function buildSessionCard(s) {
     const when = fmtDateTime(s.createdAt);

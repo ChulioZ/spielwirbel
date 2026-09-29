@@ -141,6 +141,30 @@ test('the log has column heads, hidden from assistive tech, and the span beside 
   assert.ok(dom.app.querySelector('.precap .stat-chip--tile .stat-chip__n'), 'the recap totals are not number tiles');
 });
 
+// B6.1 puts the log FIRST on the phone and the recap after it. The phone is a
+// single column in DOM order, so the order is the markup's; the desktop grid
+// places the recap in its own column whichever comes first.
+const logBeforeRecap = (dom) => {
+  const log = dom.app.querySelector('.timeline').closest('.section');
+  const recap = dom.app.querySelector('.precap');
+  assert.ok(log && recap, 'the screen needs both the log and the recap');
+  return Boolean(log.compareDocumentPosition(recap) & 4); // DOCUMENT_POSITION_FOLLOWING
+};
+
+test('Brücke puts the log before the period recap (B6.1)', async (t) => {
+  const dom = boot(t, 'bruecke');
+  await dom.call('showRound', RID, 'chronik');
+  assert.equal(logBeforeRecap(dom), true, 'the recap comes before the log');
+});
+
+test('Klassisch and Ocean keep the recap above the log', async (t) => {
+  for (const design of ['klassisch', 'ocean']) {
+    const dom = boot(t, design);
+    await dom.call('showRound', RID, 'chronik');
+    assert.equal(logBeforeRecap(dom), false, `${design} moved its recap below the log`);
+  }
+});
+
 test('Klassisch keeps its cards and chips', async (t) => {
   const dom = boot(t, 'klassisch');
   await dom.call('showRound', RID, 'chronik');
