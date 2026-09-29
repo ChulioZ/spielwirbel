@@ -339,6 +339,15 @@ I18N.de = {
   'chronik.seated': '{n} dabei',
   'chronik.wonOne': '{names} hat gewonnen',
   'chronik.won': '{names} haben gewonnen',
+  // Die Brücke's Chronik (#1245): how often the chosen game took the 1 in that
+  // session, in the scale's own end word — and the log's column heads.
+  'chronik.noThrustOne': '{n}× kein Schub',
+  'chronik.noThrust': '{n}× kein Schub',
+  'chronik.col.date': 'Datum',
+  'chronik.col.game': 'Spiel',
+  'chronik.col.winner': 'Sieger',
+  'chronik.col.games': 'Spiele gezogen',
+  'chronik.col.score': 'Score',
   'chronik.changesOne': '{n} Regal-Änderung',
   'chronik.changes': '{n} Regal-Änderungen',
   'activity.delete': 'Aktivität löschen',

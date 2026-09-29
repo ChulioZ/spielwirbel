@@ -131,7 +131,9 @@ function renderPeriodRecapSection(round, activities) {
        share card already prints beside its figures (periodRecap.label.*), so the
        tile and the PNG it shares cannot name a number two ways. Same five
        figures, same non-zero rule — only the presentation differs. */
-    const ocean = designIs('ocean');
+    // Die Brücke reads them as the same tiles (#1245, B13.1 „Zeitraum" panel):
+    // a readout of five numbers, not a sentence of chips.
+    const ocean = designIs('ocean') || designIs('bruecke');
     const chip = ocean
       ? (icon, text, n, label) => h(`<span class="stat-chip stat-chip--tile"><span class="stat-chip__n">${esc(String(n))}</span><span class="stat-chip__label">${esc(t(label))}</span></span>`)
       : (icon, text) => h(`<span class="stat-chip"><i class="ti ${icon}" aria-hidden="true"></i>${esc(text)}</span>`);

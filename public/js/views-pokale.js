@@ -250,8 +250,14 @@ function pokaleYoungLead(round, winners, rankOf, wins) {
    everyone in first; a member with no decided evening stands at 0 rather
    than vanishing („wer neu dazukommt, steht trotzdem in der Liste"). The
    bar's colour is the member's own — a fill, never text (ocean.css header,
-   rule 2), so it is a custom property the stylesheet paints from. */
-function pokaleBars(round, ranked, rankOf, wins) {
+   rule 2), so it is a custom property the stylesheet paints from.
+
+   Die Brücke draws the same rows (#1245, B3.4/B6.2) with the PLACE in front —
+   „1 · 2 · 3", a leaderboard's own grammar — and no crown: the lead is the
+   cyan rank, not a medal. The place is the shared one `roundStandings`
+   computed, so a tie prints one number twice; a member with no win yet has
+   no place and shows a dash. */
+function pokaleBars(round, ranked, rankOf, wins, { rank = false, crown = true } = {}) {
   const top = Math.max(1, ...ranked.map((m) => wins[m.id]));
   const list = h('<ol class="pokale-bars"></ol>');
   ranked.forEach((m) => {
@@ -259,7 +265,8 @@ function pokaleBars(round, ranked, rankOf, wins) {
     const lead = rankOf[m.id] === 1 && n > 0;
     const color = memberColor(round, m.id);
     const row = h(`<li class="pokale-bars__row${lead ? ' is-lead' : ''}"><a class="pokale-bars__link" data-mid="${esc(m.id)}" style="--bar:${color}; --w:${Math.round((n / top) * 100)}%">
-         <span class="pokale-bars__face"><span class="avatar" style="background:${color}">${avatarFace(initials(m.name), { userId: m.userId })}</span>${lead ? '<i class="ti ti-crown" aria-hidden="true"></i>' : ''}</span>
+         ${rank ? `<span class="pokale-bars__rank">${n > 0 && rankOf[m.id] ? rankOf[m.id] : '–'}</span>` : ''}
+         <span class="pokale-bars__face"><span class="avatar" style="background:${color}">${avatarFace(initials(m.name), { userId: m.userId })}</span>${lead && crown ? '<i class="ti ti-crown" aria-hidden="true"></i>' : ''}</span>
          <span class="pokale-bars__body">
            <span class="pokale-bars__name">${esc(m.name)}</span>
            <span class="pokale-bars__track" aria-hidden="true"><span class="pokale-bars__fill"></span></span>
@@ -287,7 +294,10 @@ function renderPokaleTab(round) {
   // „Seit Oktober 2025 · 23 Sessions") — the same key, counted the same way,
   // so the two pages cannot disagree about how many sessions the round has.
   const ocean = designIs('ocean');
-  if (ocean && finished.length) {
+  // Die Brücke (#1245) shares Ocean's standings and count, and Der Tisch's
+  // plaque column — B3.4 is bars on the left, plaques on the right.
+  const bruecke = designIs('bruecke');
+  if ((ocean || bruecke) && finished.length) {
     const since = finished.reduce((a, s) => (s.createdAt < a ? s.createdAt : a), finished[0].createdAt);
     head.appendChild(h(`<span class="chronik__count">${esc(tn(finished.length, 'chronik.countOne', 'chronik.count', { month: fmtMonth(since) }))}</span>`));
   }
@@ -325,7 +335,7 @@ function renderPokaleTab(round) {
      follow the podium — the markup order IS the reading order at every width,
      and no `order:` is needed (WCAG 2.4.3). Klassisch gets no wrapper: `stageTo`
      is the section itself and its DOM is byte-for-byte what it was. */
-  const split = designIs('tisch') ? h('<div class="pokale-split"><div class="pokale-split__stage"></div></div>') : null;
+  const split = designIs('tisch') || bruecke ? h('<div class="pokale-split"><div class="pokale-split__stage"></div></div>') : null;
   if (split) sec.appendChild(split);
   const stageTo = split ? split.firstElementChild : sec;
 
@@ -355,7 +365,9 @@ function renderPokaleTab(round) {
      nobody left to name and is not rendered. The young-round sentence above
      still stands in for it: bars off one or two evenings rank on noise exactly
      as a podium would. */
-  const bars = ocean && !young && winners.length ? pokaleBars(round, ranked, rankOf, wins) : null;
+  const bars = (ocean || bruecke) && !young && winners.length
+    ? pokaleBars(round, ranked, rankOf, wins, bruecke ? { rank: true, crown: false } : {})
+    : null;
   if (bars) stageTo.appendChild(bars);
   if (winners.length && !young && !bars) {
     /* ONE number per entry again — the win count the step is ranked on.

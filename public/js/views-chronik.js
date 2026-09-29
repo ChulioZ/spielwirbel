@@ -32,7 +32,12 @@ const CHRONIK_STRIP_FACES = 4;
    date | the winner's ring and crown | score bubble | chevron], under month
    headings that carry their own session count, with the recap in a column
    beside it from 1280px (ocean.css). The same link, target and words as the
-   Klassisch card; what moves is where each fact sits. */
+   Klassisch card; what moves is where each fact sits.
+
+   Die Brücke lays it out as a LOG (#1245, B3.3/B6.1): one line per session,
+   [date | game | who won | games drawn | score], under a row of column heads
+   from 700px — the result table's own grammar, so a session reads the same in
+   the Chronik as on its result. */
 // Unique ids for the collapsed shelf-change runs' aria-controls.
 let chronikRunSeq = 0;
 
@@ -40,6 +45,7 @@ function renderChronikTab(round, activities) {
   const rid = round.id;
   const tisch = designIs('tisch');
   const ocean = designIs('ocean');
+  const bruecke = designIs('bruecke');
   const loadCover = createCoverLoader(); // lazy session thumbs (#198)
   // The earnings each session produced (#1388), a row apiece under its card.
   const badgeRows = badgeChronikIndex(round);
@@ -154,7 +160,7 @@ function renderChronikTab(round, activities) {
   // 2025" (T13.1). Counted exactly as the rail beside it counts (round-rail.js:
   // every FINISHED session), not over the strips: a cancelled night is listed
   // but was never played, and counting it put „7" here beside the rail's „6".
-  if (tisch || ocean) {
+  if (tisch || ocean || bruecke) {
     const counted = round.sessions.filter((s) => s.finished);
     if (counted.length) {
       const since = counted.reduce((a, s) => (s.createdAt < a ? s.createdAt : a), counted[0].createdAt);
@@ -181,6 +187,15 @@ function renderChronikTab(round, activities) {
   });
   sec.appendChild(chips);
 
+  /* Die Brücke's column heads (B3.3 „Datum · Spiel · Sieger · Spiele gezogen ·
+     Score"). aria-hidden: each row is one link whose name already carries every
+     fact in reading order, so heads a screen reader cannot associate with a
+     cell would only be read as five stray words. Shown from 700px (bruecke.css),
+     where the row is a table line; the phone row has no columns to head. */
+  if (bruecke) {
+    sec.appendChild(h(`<div class="chronik-cols" aria-hidden="true">${['date', 'game', 'winner', 'games', 'score']
+      .map((c) => `<span class="chronik-cols__${c}">${esc(t(`chronik.col.${c}`))}</span>`).join('')}</div>`));
+  }
   const tl = h('<div class="timeline"></div>');
   sec.appendChild(tl);
   app.appendChild(sec);
@@ -232,6 +247,7 @@ function renderChronikTab(round, activities) {
     // screen reader hears for them — in the text, not only in the picture.
     if (tisch && sPeople.length) parts.push(esc(tn(sPeople.length, 'chronik.seatedOne', 'chronik.seated')));
     const rated = sessionHasVotes(s) ? esc(tn(s.gameIds.length, 'sessions.ratedOne', 'sessions.rated')) : '';
+    if (bruecke) return buildSessionLog(s, { when, chosen, sPeople, title, pill, outcome });
     if (ocean) return buildSessionRow(s, { when, chosen, sPeople, thumbIcon, title, pill, outcome, rated });
     if (tisch) return buildSessionStrip(s, { when, chosen, sPeople, thumbIcon, title, pill, parts, rated });
     if (rated) parts.push(rated);
@@ -318,6 +334,46 @@ function renderChronikTab(round, activities) {
          <i class="ti ti-chevron-right session-card__chev" aria-hidden="true"></i>
        </a>`);
     if (chosen && chosen.image) loadCover(card.querySelector('.session-card__img'), coverUrl(chosen.image, COVER_THUMB));
+    navLink(card, resultsPath(round.id, s.id), () => showResults(round, s));
+    return card;
+  }
+
+  /* Die Brücke's log line (#1245, B3.3 desktop / B6.1 phone). Same link, target
+     and words as the Klassisch card. The WHO slot says „Jonas hat gewonnen"
+     (Ocean's key — one sentence for one fact) and, under it, how often the
+     chosen game took the 1 in this session in Brücke's scale-end words, „1× kein
+     Schub" (B3.3). A night without a winner says how it ended, exactly as the
+     Klassisch meta line does.
+
+     The date is rendered twice on purpose: „14.09.2026" for the desktop column
+     and „14 / Sep" stacked for the phone (B6.1). The stacked pair is
+     aria-hidden and the full date is the one read at every width — the CSS only
+     swaps which of the two is SEEN (on a phone the full one stays in the
+     accessibility tree, clipped). No cover: neither sheet draws one on a log
+     line. */
+  function buildSessionLog(s, { when, chosen, sPeople, title, pill, outcome }) {
+    const d = new Date(s.createdAt);
+    const tag = localeTag(locale);
+    const full = d.toLocaleDateString(tag, { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const winners = (s.winnerIds || []).map((wid) => sPeople.find((p) => p.id === wid)).filter(Boolean);
+    let who;
+    if (outcome === 'split') who = iconText('ti-layout-grid', t('sessions.split'));
+    else if (winners.length) who = `<span class="session-card__won">${esc(tn(winners.length, 'chronik.wonOne', 'chronik.won', { names: winners.map(personLabel).join(', ') }))}</span>`;
+    else if (s.finished) who = endingText(s) || iconText('ti-check', t('sessions.played'));
+    else if (outcome === 'cancelled') who = `<span class="session-card__cancelled">${iconText('ti-x', t('sessions.cancelled'))}</span>`;
+    const vetoes = chosen ? gameStatsForSession(round, s, chosen.id).vetoes : 0;
+    const sub = vetoes ? `<span class="session-card__vetoes">${esc(tn(vetoes, 'chronik.noThrustOne', 'chronik.noThrust', { n: vetoes }))}</span>` : '';
+    // „Spiele gezogen": how many games the pool drew. A direct play (one game,
+    // no vote) has that as well, so this is not „bewertet", which #915 retired
+    // for exactly that case.
+    const drawn = s.gameIds && s.gameIds.length ? esc(tn(s.gameIds.length, 'home.chip.gamesOne', 'home.chip.games')) : '';
+    const card = h(`<a class="session-card session-card--log">
+         <time class="session-card__date" datetime="${esc(s.createdAt)}" title="${esc(when)}"><span class="session-card__day" aria-hidden="true">${esc(d.toLocaleString(tag, { day: 'numeric' }))}</span><span class="session-card__mon" aria-hidden="true">${esc(d.toLocaleString(tag, { month: 'short' }))}</span><span class="session-card__full">${esc(full)}</span></time>
+         <div class="session-card__title">${title}</div>
+         <div class="session-card__who">${who || ''}${sub}</div>
+         <div class="session-card__drawn">${drawn}</div>
+         ${pill}
+       </a>`);
     navLink(card, resultsPath(round.id, s.id), () => showResults(round, s));
     return card;
   }
@@ -420,7 +476,8 @@ function renderChronikTab(round, activities) {
     // changes ARE the page, and one disclosure per month would hide all of it.
     // Ocean folds the same way (#1218): O13.1 draws the sessions alone, and a
     // month of shelf bookkeeping between two rows would bury them.
-    const fold = (tisch || ocean) && chronikFilter === 'all';
+    // Die Brücke too (#1245): B3.3 lists the sessions, one line each.
+    const fold = (tisch || ocean || bruecke) && chronikFilter === 'all';
     let lastMonth = '';
     for (let i = 0; i < visible.length;) {
       const e = visible[i];

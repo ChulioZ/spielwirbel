@@ -315,6 +315,15 @@ I18N.fi = {
   'chronik.seated': '{n} pöydässä',
   'chronik.wonOne': '{names} voitti',
   'chronik.won': '{names} voittivat',
+  // Die Brücke's Chronik (#1245): how often the chosen game took the 1 in that
+  // session, in the scale's own end word — and the log's column heads.
+  'chronik.noThrustOne': '{n}× ei työntövoimaa',
+  'chronik.noThrust': '{n}× ei työntövoimaa',
+  'chronik.col.date': 'Päivä',
+  'chronik.col.game': 'Peli',
+  'chronik.col.winner': 'Voittaja',
+  'chronik.col.games': 'Arvotut pelit',
+  'chronik.col.score': 'Pisteet',
   'chronik.changesOne': '{n} hyllymuutos',
   'chronik.changes': '{n} hyllymuutosta',
   'activity.delete': 'Poista merkintä',
