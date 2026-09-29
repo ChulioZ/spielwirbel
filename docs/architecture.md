@@ -797,6 +797,9 @@ public/
     ocean-hub.js          Ocean's composition of the lobby and the round hub:
                           the hub's columns, the shell with the one action, the
                           crew captions, the lobby tiles and notice (#1211)
+    programmheft-hub.js   the Programmheft's lobby and round hub: the front-page
+                          frame, the members row, the lead story, the lobby
+                          tiles and the „Extrablatt" (#1372)
     saved-filters.js      a round's saved session filters (#1328): the chip's
                           prefill, the setup screen's „Filter speichern" sheet
                           and the Einstellungen list
