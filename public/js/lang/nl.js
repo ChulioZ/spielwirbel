@@ -1586,6 +1586,9 @@ I18N.nl = {
   'konto.profile.off': 'Alleen jij kunt je balans nog zien.',
   // The per-user design (#1186): the Konto picker and the one-time chooser.
   'design.pick.label': 'Ontwerp',
+  'design.scheme.dark': 'Donker',
+  'design.scheme.light': 'Licht',
+  'design.pick.mine': 'Van jou',
   'design.klassisch.name': 'Klassiek',
   'design.klassisch.badge': 'Zoals voorheen',
   'design.klassisch.desc': 'Het uiterlijk waarmee Spielwirbel begon — licht, rustig, met het oranje accent.',
@@ -1617,7 +1620,7 @@ I18N.nl = {
   'design.poster.picked': 'Gekozen',
   'konto.design.title': 'Ontwerp',
   'konto.design.hint': 'Geldt voor jou, niet voor de groep.',
-  'konto.design.note': 'Klassiek is het ontwerp waarmee Spielwirbel begon — het blijft altijd beschikbaar. Wisselen verandert alleen het uiterlijk, nooit waar iets staat.',
+  'konto.design.note': 'Klassiek is het ontwerp waarmee Spielwirbel begon — het blijft altijd beschikbaar. Wisselen verandert alleen het ontwerp, nooit waar iets staat.',
   'konto.design.saved': 'Ontwerp toegepast.',
   'konto.design.invalid': 'Dat ontwerp bestaat hier niet.',
   'konto.bgg.title': 'BoardGameGeek',

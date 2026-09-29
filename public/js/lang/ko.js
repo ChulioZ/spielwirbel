@@ -1526,6 +1526,9 @@ I18N.ko = {
   'konto.profile.off': '이제 나만 내 전적을 볼 수 있습니다.',
   // The per-user design (#1186): the Konto picker and the one-time chooser.
   'design.pick.label': '디자인',
+  'design.scheme.dark': '어두움',
+  'design.scheme.light': '밝음',
+  'design.pick.mine': '내 디자인',
   'design.klassisch.name': '클래식',
   'design.klassisch.badge': '기존 그대로',
   'design.klassisch.desc': 'Spielwirbel이 처음 시작한 모습 — 밝고 차분하며 주황색 강조가 있습니다.',
@@ -1557,7 +1560,7 @@ I18N.ko = {
   'design.poster.picked': '선택됨',
   'konto.design.title': '디자인',
   'konto.design.hint': '라운드가 아니라 나에게 적용됩니다.',
-  'konto.design.note': '클래식은 Spielwirbel이 처음 시작한 디자인으로 언제나 선택할 수 있습니다. 바꿔도 보이는 모습만 달라질 뿐, 무엇이 어디에 있는지는 그대로입니다.',
+  'konto.design.note': '클래식은 Spielwirbel이 처음 시작한 디자인으로 언제나 선택할 수 있습니다. 바꿔도 디자인만 달라질 뿐, 무엇이 어디에 있는지는 그대로입니다.',
   'konto.design.saved': '디자인을 적용했습니다.',
   'konto.design.invalid': '여기에는 없는 디자인입니다.',
   'konto.bgg.title': 'BoardGameGeek',

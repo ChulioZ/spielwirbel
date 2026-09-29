@@ -1664,6 +1664,9 @@ I18N.de = {
   'konto.profile.off': 'Deine Bilanz ist nur noch für dich sichtbar.',
   // The per-user design (#1186): the Konto picker and the one-time chooser.
   'design.pick.label': 'Design',
+  'design.scheme.dark': 'Dunkel',
+  'design.scheme.light': 'Hell',
+  'design.pick.mine': 'Deins',
   'design.klassisch.name': 'Klassisch',
   'design.klassisch.badge': 'Wie bisher',
   'design.klassisch.desc': 'Die Oberfläche, mit der Spielwirbel angefangen hat — hell, ruhig, mit dem orangenen Akzent.',
@@ -1695,7 +1698,7 @@ I18N.de = {
   'design.poster.picked': 'Ausgewählt',
   'konto.design.title': 'Design',
   'konto.design.hint': 'Gilt für dich, nicht für die Runde.',
-  'konto.design.note': 'Klassisch ist das Design, mit dem Spielwirbel angefangen hat — es bleibt immer wählbar. Ein Wechsel ändert nur das Aussehen, nie wo etwas liegt.',
+  'konto.design.note': 'Klassisch ist das Design, mit dem Spielwirbel angefangen hat — es bleibt immer wählbar. Ein Wechsel ändert nur das Design, nie wo etwas liegt.',
   'konto.design.saved': 'Design übernommen.',
   'konto.design.invalid': 'Dieses Design gibt es hier nicht.',
   'konto.bgg.title': 'BoardGameGeek',

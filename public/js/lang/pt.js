@@ -1588,6 +1588,9 @@ I18N.pt = {
   'konto.profile.off': 'Agora só tu podes ver o teu balanço.',
   // The per-user design (#1186): the Konto picker and the one-time chooser.
   'design.pick.label': 'Design',
+  'design.scheme.dark': 'Escuro',
+  'design.scheme.light': 'Claro',
+  'design.pick.mine': 'O teu',
   'design.klassisch.name': 'Clássico',
   'design.klassisch.badge': 'Como antes',
   'design.klassisch.desc': 'O aspeto com que o Spielwirbel começou — claro, calmo, com o acento laranja.',
@@ -1619,7 +1622,7 @@ I18N.pt = {
   'design.poster.picked': 'Escolhido',
   'konto.design.title': 'Design',
   'konto.design.hint': 'Aplica-se a ti, não ao grupo.',
-  'konto.design.note': 'Clássico é o design com que o Spielwirbel começou — fica sempre disponível. Mudar altera apenas o aspeto, nunca onde as coisas estão.',
+  'konto.design.note': 'Clássico é o design com que o Spielwirbel começou — fica sempre disponível. Mudar altera apenas o design, nunca onde as coisas estão.',
   'konto.design.saved': 'Design aplicado.',
   'konto.design.invalid': 'Esse design não existe aqui.',
   'konto.bgg.title': 'BoardGameGeek',

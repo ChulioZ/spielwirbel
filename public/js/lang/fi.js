@@ -1554,6 +1554,9 @@ I18N.fi = {
   'konto.profile.off': 'Vain sinä näet nyt tilastosi.',
   // The per-user design (#1186): the Konto picker and the one-time chooser.
   'design.pick.label': 'Ulkoasu',
+  'design.scheme.dark': 'Tumma',
+  'design.scheme.light': 'Vaalea',
+  'design.pick.mine': 'Sinun',
   'design.klassisch.name': 'Klassinen',
   'design.klassisch.badge': 'Kuten ennen',
   'design.klassisch.desc': 'Ulkoasu, jolla Spielwirbel aloitti — vaalea, rauhallinen ja oranssi korostus.',
@@ -1585,7 +1588,7 @@ I18N.fi = {
   'design.poster.picked': 'Valittu',
   'konto.design.title': 'Ulkoasu',
   'konto.design.hint': 'Koskee sinua, ei ryhmää.',
-  'konto.design.note': 'Klassinen on ulkoasu, jolla Spielwirbel aloitti — se on aina valittavissa. Vaihtaminen muuttaa vain ulkonäköä, ei sitä missä asiat ovat.',
+  'konto.design.note': 'Klassinen on ulkoasu, jolla Spielwirbel aloitti — se on aina valittavissa. Vaihtaminen muuttaa vain ulkoasua, ei sitä missä asiat ovat.',
   'konto.design.saved': 'Ulkoasu otettu käyttöön.',
   'konto.design.invalid': 'Tätä ulkoasua ei ole täällä.',
   'konto.bgg.title': 'BoardGameGeek',

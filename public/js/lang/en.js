@@ -1669,6 +1669,9 @@ I18N.en = {
   'konto.profile.off': 'Only you can see your record now.',
   // The per-user design (#1186): the Konto picker and the one-time chooser.
   'design.pick.label': 'Design',
+  'design.scheme.dark': 'Dark',
+  'design.scheme.light': 'Light',
+  'design.pick.mine': 'Yours',
   'design.klassisch.name': 'Classic',
   'design.klassisch.badge': 'As before',
   'design.klassisch.desc': 'The look Spielwirbel started with — light, calm, with the orange accent.',
@@ -1700,7 +1703,7 @@ I18N.en = {
   'design.poster.picked': 'Selected',
   'konto.design.title': 'Design',
   'konto.design.hint': 'Applies to you, not to the round.',
-  'konto.design.note': 'Classic is the design Spielwirbel started with — it stays available for good. Switching changes only how things look, never where they are.',
+  'konto.design.note': 'Classic is the design Spielwirbel started with — it stays available for good. Switching changes only the design, never where things are.',
   'konto.design.saved': 'Design applied.',
   'konto.design.invalid': 'That design is not available here.',
   'konto.bgg.title': 'BoardGameGeek',

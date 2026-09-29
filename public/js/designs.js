@@ -112,6 +112,9 @@ const DESIGN_REGISTRY = [
     shortKey: 'design.klassisch.short',
     ritualKeys: ['startSession.potHeading', 'round.startSession', 'startSession.draw'],
     poster: { ground: ['#f6f3ec', '#eae5d9'], ink: '#c2410c', sub: '#6b6358' },
+    // Stated even though it is the default: the picker prints it (B5.2), and
+    // test/bruecke-konto.test.js requires every row to say which it is.
+    scheme: 'light',
     // The eight ACCENTS of the eight light palettes, in the palettes' own order
     // (#1187) — not their page tones. The accent is what identified a palette:
     // three of the eight pages are near-identical creams (#f4f1ea / #f6efe2 /
@@ -270,6 +273,7 @@ const DESIGN_REGISTRY = [
     glyph: 'ti-wave-sine',
     shortKey: 'design.ocean.short',
     poster: { ground: ['#eef7fa', '#a9c9d8'], ink: '#0e6690', sub: '#10283a' },
+    scheme: 'light',
     page: '#e4f1f5',
     accent: '#0e6690',
     stylesheet: '/css/designs/ocean.css',
@@ -349,6 +353,11 @@ const DESIGN_REGISTRY = [
     descKey: 'design.bruecke.desc',
     // B1.3 „rocket trägt Mission starten": the one glyph the design owns.
     glyph: 'ti-rocket',
+    /* B1's page gradient, light stop to night, with the cyan wordmark and the
+       ink subline — the ground B5.2 prints Brücke's own card on (#1242), and
+       what a Tisch-worn chooser's bill prints it on. Swept with every poster
+       by test/a11y-contrast.test.js. */
+    poster: { ground: ['#10203a', '#070b14'], ink: '#35e0ff', sub: '#dfe7f5' },
     scheme: 'dark',
     page: '#070b14',
     accent: '#35e0ff',
@@ -429,6 +438,7 @@ const DESIGN_REGISTRY = [
        and the ink subline. Swept with every poster by test/a11y-contrast.test.js.
        The wordmark's FIT in the tile (review R2-1) is #1376's. */
     poster: { ground: ['#fbfaf6', '#efece4'], ink: '#e8451c', sub: '#141414' },
+    scheme: 'light',
     page: '#fbfaf6',
     accent: '#b8330f',
     stylesheet: '/css/designs/programmheft.css',
