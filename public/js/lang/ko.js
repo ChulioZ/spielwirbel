@@ -318,6 +318,15 @@ I18N.ko = {
   'chronik.seated': '{n}명 참여',
   'chronik.wonOne': '{names} 승리',
   'chronik.won': '{names} 승리',
+  // Die Brücke's Chronik (#1245): how often the chosen game took the 1 in that
+  // session, in the scale's own end word — and the log's column heads.
+  'chronik.noThrustOne': '{n}× 추진력 없음',
+  'chronik.noThrust': '{n}× 추진력 없음',
+  'chronik.col.date': '날짜',
+  'chronik.col.game': '게임',
+  'chronik.col.winner': '승자',
+  'chronik.col.games': '뽑은 게임',
+  'chronik.col.score': '점수',
   'chronik.changesOne': '선반 변경 {n}건',
   'chronik.changes': '선반 변경 {n}건',
   'activity.delete': '기록 삭제',
