@@ -139,9 +139,9 @@ a canvas cannot read a design's tokens off the cascade when that design's colour
 block is not in force (the names are shared, so it silently reads another
 design's), so Der Tisch's share card paints from a copy that
 `test/recap-card-tisch.test.js` compares, value for value, against what
-`test/support/theme.js` resolves for the design. **`OCEAN_CARD_TOKENS`
-(`public/js/recap-card-ocean.js`, #1220) is the fourth**, for the same reason
-and under the same licence (`test/recap-card-ocean.test.js`).
+`test/support/theme.js` resolves for the design. **Ocean's and Die Brücke's
+copies are the fourth and fifth** (#1220, #1247), same reason, same licence,
+each pinned by its own `recap-card-<id>` spec.
 
 Use this as precedent only under the same condition: *sharing is structurally
 impossible*, not merely inconvenient. A copy that could have been a `require()`

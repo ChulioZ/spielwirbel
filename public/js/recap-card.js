@@ -321,6 +321,7 @@ async function recapCardBlob(model) {
   if (designCard() === 'tisch') return tischCardBlob('period', model);
   // Ocean's period card (#1220, recap-card-ocean.js) — O8.3's „Jahresrückblick".
   if (designCard() === 'ocean') return oceanCardBlob('period', model);
+  if (designCard() === 'bruecke') return brueckeCardBlob(model); // B8.4, recap-card-bruecke.js (#1247)
   // Constraint 2 — see the header. `document.fonts` is present in every browser
   // this app supports; the guard is for a stray environment without it.
   if (document.fonts && document.fonts.ready) await document.fonts.ready;

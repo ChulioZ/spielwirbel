@@ -438,6 +438,9 @@ const frontendGlobals = {
   // recap-card-ocean.js (#1220) — Ocean's share card in three formats; the
   // two helpers tischWrap/tischBadge it reuses are recap-card-tisch.js's.
   oceanCardBlob: 'readonly', oceanShareKind: 'readonly', tischWrap: 'readonly',
+  // recap-card-bruecke.js (#1247) — Die Brücke's period card; period-recap.js's
+  // periodMonths feeds its bars from both share models.
+  brueckeCardBlob: 'readonly', periodMonths: 'readonly',
   offeredDesigns: 'readonly', designTile: 'readonly', renderDesignPicker: 'readonly',
   maybeShowDesignChooser: 'readonly', showDesignChooser: 'readonly',
   buildDesignSection: 'readonly',

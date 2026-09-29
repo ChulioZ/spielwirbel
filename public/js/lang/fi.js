@@ -281,6 +281,8 @@ I18N.fi = {
   'periodRecap.label.shelf': 'Hylly',
   'periodRecap.toast.saved': 'Kuva tallennettu.',
   'periodRecap.toast.failed': 'Kuvaa ei voitu luoda.',
+  // Die Brücke's share card (#1247): the caption over its twelve monthly bars.
+  'periodRecap.card.perMonth': 'Sessiot kuukausittain',
   // „Dein Rückblick" on the own profile (#1147) — no wins, only what was played.
   'accountRecap.title': 'Sinun katsauksesi',
   'accountRecap.lead': 'Mitä olet pelannut kaikissa ryhmissäsi — näkyy vain sinulle.',

@@ -378,9 +378,14 @@ const DESIGN_REGISTRY = [
        designPersonTone, read by memberTone in core.js): B8.1's lightened row,
        instead of the generic dark-scheme lift every other dark design gets. */
     personTone: 'marker',
-    /* Klassisch's marks, stated rather than inherited, until Brücke's own mark
-       lands with its flip — the same move Ocean made before #1222, so the row
-       is complete on its own (test/design-marks.test.js walks every row). */
+    // B8.4's period recap card, 600 drawn / 1080 exported (recap-card-bruecke.js, #1247).
+    card: 'bruecke',
+    /* Klassisch's marks, stated rather than inherited. Die Brücke's own MARK is
+       the lamp-and-wordmark its share card carries (B8.4, brueckeWordmark) and
+       its SIGN the `glyph` above; #1247 scoped the app icon, favicon and
+       link-preview image OUT — they are design-independent and stay the face's,
+       as Ocean's did (#1220). Stated so the row is complete on its own:
+       test/design-marks.test.js walks every row's files. */
     marks: {
       icons: [
         { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any maskable' },

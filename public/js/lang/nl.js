@@ -304,6 +304,8 @@ I18N.nl = {
   'periodRecap.label.shelf': 'Kast',
   'periodRecap.toast.saved': 'Afbeelding opgeslagen.',
   'periodRecap.toast.failed': 'De afbeelding kon niet worden gemaakt.',
+  // Die Brücke's share card (#1247): the caption over its twelve monthly bars.
+  'periodRecap.card.perMonth': 'Sessies per maand',
   // „Dein Rückblick" on the own profile (#1147) — no wins, only what was played.
   'accountRecap.title': 'Jouw terugblik',
   'accountRecap.lead': 'Wat je gespeeld hebt, in al je groepen — alleen voor jou zichtbaar.',
