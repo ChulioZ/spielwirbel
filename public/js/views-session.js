@@ -76,6 +76,9 @@ function showStartSession(round, prefill) {
   // Ocean (#1213) re-composes the same form into three columns — seats, the
   // Muschel, the count and „Abtauchen" (views-session-ocean.js).
   const ocean = oceanWorn();
+  // Die Brücke (#1240) re-composes it into seats, the Pool and the Sonden with
+  // „Zündung" (views-session-bruecke.js).
+  const bruecke = designIs('bruecke');
   if (tisch) {
     // The rail's rename and „+" re-render through currentView(), and the
     // `round` this closure holds is a snapshot — so under the rail the screen
@@ -154,6 +157,7 @@ function showStartSession(round, prefill) {
   app.appendChild(form);
   if (tisch) composeTischSetup(round, head, form);
   if (ocean) composeOceanSetup(form);
+  if (bruecke) composeBrueckeSetup(head, form);
 
   // Custom-tag filter (#238, tri-state #241): all ignored by default = no tag
   // filter. Map<tagId, 'include'|'exclude'>; included tags combine per
@@ -333,7 +337,9 @@ function showStartSession(round, prefill) {
   const potCount = (n) => `<span class="pool-count-group"><span class="pool-count">${n}</span> `
     + `<span class="pool-count__label">${esc(ocean
       ? tn(n, 'startSession.potLabelOceanOne', 'startSession.potLabelOcean')
-      : tn(n, 'startSession.potLabelOne', 'startSession.potLabel'))}</span></span>`;
+      : bruecke
+        ? tn(n, 'startSession.potLabelBrueckeOne', 'startSession.potLabelBruecke')
+        : tn(n, 'startSession.potLabelOne', 'startSession.potLabel'))}</span></span>`;
   /* Der Tisch's first motion ritual (#1200, T10.1): a game that ENTERS the pot
      is thrown in from outside, staggered. Only an entering one — the first
      render records what is already there and throws nothing, because a screen
@@ -373,7 +379,7 @@ function showStartSession(round, prefill) {
     // Deliberately not a live region: the ring centre and the panel title already
     // state these two numbers, and a third announcement on every seat tap would
     // talk over the ownersNote below, which IS one.
-    barSummary.textContent = tisch || ocean
+    barSummary.textContent = tisch || ocean || bruecke
       ? tischDrawSummary(joining.size + guests.length, games.length, parseInt(form.querySelector('#count').value, 10))
       : tn(joining.size + guests.length, 'startSession.tableCountOne', 'startSession.tableCount') + ' · ' + headline;
 
@@ -445,7 +451,7 @@ function showStartSession(round, prefill) {
     // two of the three chips can change from a click on the ring.
     addons.relabelAddons();
     updateHint();
-  }, guestList, { stateLines: tisch || ocean });
+  }, guestList, { stateLines: tisch || ocean || bruecke });
   seatTable.setAttribute('role', 'group');
   seatTable.setAttribute('aria-labelledby', 'seatsLabel');
   const multiTableNote = form.querySelector('#multiTableNote');
@@ -744,11 +750,11 @@ function showStartSession(round, prefill) {
       countInput.value = Math.max(1, (Number.isInteger(cur) ? cur : 1) + parseInt(btn.dataset.d, 10));
       // Der Tisch's summary states the drawn number (T2.3), so it follows it —
       // and so does Ocean's, with its count bubbles.
-      if (tisch || ocean) updateHint();
+      if (tisch || ocean || bruecke) updateHint();
     });
   });
   // …and it was first written before the remembered count was loaded above.
-  if (tisch || ocean) {
+  if (tisch || ocean || bruecke) {
     countInput.addEventListener('input', updateHint);
     updateHint();
   }
@@ -1102,6 +1108,17 @@ function startVoting(round, session, games, people, opts = {}) {
       card.querySelector('.vote__card').before(sides.raters);
       if (sides.deep) card.querySelector('.vote__card').after(sides.deep);
     }
+    if (designIs('bruecke')) {
+      // Die Brücke (#1240, B2.4/B4.2): „Wer hat schon gewertet" under the card
+      // on a phone, left of it at 1440; „Verdeckt" right of it at 1440 only.
+      // DOM order is the phone's reading order; bruecke.css places the columns
+      // by grid area. Neither holds a control, so focus order is unaffected.
+      const sides = brueckeVoteSides(round, sessionPeople(round, session), person,
+        session.votedIds, games.length - n);
+      card.classList.add('vote--bruecke');
+      card.querySelector('.vote__card').after(sides.raters);
+      if (sides.sealed) sides.raters.after(sides.sealed);
+    }
     return card;
   }
 
@@ -1159,7 +1176,8 @@ function startVoting(round, session, games, people, opts = {}) {
     const color = personColor(round, person);
 
     app.innerHTML = '';
-    const card = designIs('tisch') || oceanWorn() ? composedCard(person, game) : klassischCard(person, game, color);
+    const card = designIs('tisch') || oceanWorn() || designIs('bruecke')
+      ? composedCard(person, game) : klassischCard(person, game, color);
     /* Der Tisch's third motion ritual (#1200, T10.3): a card the BEAT delivered
        tips in about its middle axis — the hand-over, and the turn itself is the
        privacy screen. `wanted.kind === 'title'` is exactly "the advance brought
@@ -1380,7 +1398,12 @@ async function showResults(round, session, gamesHint, reveal, plain) {
      shares the composition and arranges it in columns at the end
      (composeOceanResult, views-session-ocean.js). */
   const oceanLook = oceanWorn();
-  const tischLook = designIs('tisch') || oceanLook;
+  // Die Brücke (#1240, B2.5/B4.3) takes the same composition and arranges it in
+  // two panels at the end (composeBrueckeResult, views-session-bruecke.js).
+  const brueckeLook = designIs('bruecke');
+  const tischLook = designIs('tisch') || oceanLook || brueckeLook;
+  // „1× kein Schub" under Die Brücke — the scale's end word, never „kein Veto".
+  const whyOf = (r) => (brueckeLook ? brueckeScoreReason(r) : scoreReason(r));
 
   /* The „aussortiert" / „durchgespielt" badge (#250). Shared by the ranking row
      and the table band (#1107) rather than written twice: the band is the ONLY
@@ -1603,6 +1626,8 @@ async function showResults(round, session, gamesHint, reveal, plain) {
           game: gname,
           names: joinNames(names),
         });
+        // Who won, in the accent (B2.5, B4.3; a tie names both, B16.3).
+        if (brueckeLook) brueckeTitleSplit(titleEl, gname);
       }
     } else {
       titleEl.textContent = t('result.title');
@@ -1833,7 +1858,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
       row: r, hasVotes, bars, rankClass, imgStyle, fallback,
       rowClass: `trow${reveal ? ' is-race' : ''}`, rowStyle: `${fillVars}${raceVar}`,
       title: g.title, badge: retiredBadge, ownersLine,
-      whyLine: r.count && scoreReason(r) ? `<div class="score-why">${esc(scoreReason(r))}</div>` : '',
+      whyLine: r.count && whyOf(r) ? `<div class="score-why">${esc(whyOf(r))}</div>` : '',
     }) : h(`<div class="trow${reveal ? ' is-race' : ''}" style="${fillVars}${raceVar}">
          <span class="trow__rank${rankClass}">${r.place || ''}</span>
          <a class="trow__img" ${imgStyle}>${fallback}</a>
@@ -2437,6 +2462,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
   if (tischFoot) {
     screen.appendChild(tischFoot);
     if (oceanLook) composeOceanResult(screen, head, peopleEl);
+    if (brueckeLook) composeBrueckeResult(screen);
     return;
   }
   const footer = h('<div class="section result-footer"></div>');
