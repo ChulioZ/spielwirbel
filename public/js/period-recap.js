@@ -267,6 +267,22 @@ function periodRecap(round, activities, period, deps) {
   };
 }
 
+/* The twelve months of a YEAR period, each with how many of `dates` fall in it:
+   the bars Die Brücke's share card draws (#1247, B8.4 „Sessions pro Monat").
+   Null for a month period, where one bar is not a chart. Bucketed through
+   periodKeyOf, so a bar can never disagree with the year's own session count
+   about which calendar a session belongs to. `dates` is a list of timestamps,
+   so the round card (sessions) and the account card (plays) share it. */
+function periodMonths(dates, period) {
+  if (!period || period.kind !== 'year') return null;
+  const counts = new Array(12).fill(0);
+  (Array.isArray(dates) ? dates : []).forEach((iso) => {
+    const keys = periodKeyOf(iso);
+    if (keys && keys.year === period.key) counts[Number(keys.month.slice(5)) - 1] += 1;
+  });
+  return counts.map((count, i) => ({ at: `${period.key}-${String(i + 1).padStart(2, '0')}-01T00:00:00`, count }));
+}
+
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { periodKeyOf, dayIndexOf, monthsBetween, periodsOf, periodRecap };
+  module.exports = { periodKeyOf, dayIndexOf, monthsBetween, periodsOf, periodRecap, periodMonths };
 }

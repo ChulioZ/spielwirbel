@@ -45,7 +45,7 @@ async function showMember(rid, mid) {
   // an attendance line under the name, and the owned boxes as a panel inside
   // the card. Ocean takes the same two (#1218, O13.4 — „Bringt mit" beside the
   // record). Klassisch takes none of these branches.
-  const panelled = designIs('tisch') || designIs('ocean');
+  const panelled = designIs('tisch') || designIs('ocean') || designIs('bruecke');
 
   // Link or unlink this seat, then re-render into the other state. Shared by
   // „Das bin ich“ in the card and „Das bin ich nicht“ in the page menu.

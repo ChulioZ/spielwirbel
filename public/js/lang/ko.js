@@ -282,6 +282,8 @@ I18N.ko = {
   'periodRecap.label.shelf': '선반',
   'periodRecap.toast.saved': '이미지를 저장했어요.',
   'periodRecap.toast.failed': '이미지를 만들지 못했어요.',
+  // Die Brücke's share card (#1247): the caption over its twelve monthly bars.
+  'periodRecap.card.perMonth': '월별 세션',
   // „Dein Rückblick" on the own profile (#1147) — no wins, only what was played.
   'accountRecap.title': '나의 돌아보기',
   'accountRecap.lead': '모든 그룹에서 내가 플레이한 기록이에요 — 나에게만 보여요.',
@@ -316,6 +318,15 @@ I18N.ko = {
   'chronik.seated': '{n}명 참여',
   'chronik.wonOne': '{names} 승리',
   'chronik.won': '{names} 승리',
+  // Die Brücke's Chronik (#1245): how often the chosen game took the 1 in that
+  // session, in the scale's own end word — and the log's column heads.
+  'chronik.noThrustOne': '{n}× 추진력 없음',
+  'chronik.noThrust': '{n}× 추진력 없음',
+  'chronik.col.date': '날짜',
+  'chronik.col.game': '게임',
+  'chronik.col.winner': '승자',
+  'chronik.col.games': '뽑은 게임',
+  'chronik.col.score': '점수',
   'chronik.changesOne': '선반 변경 {n}건',
   'chronik.changes': '선반 변경 {n}건',
   'activity.delete': '기록 삭제',
@@ -1783,4 +1794,33 @@ I18N.ko = {
   'badges.card.next': '다음 단계 {n}',
   'badges.card.tiers': '단계',
   'badges.evergreen.lineGame': '{game} {n}번 플레이',
+  // Die Brücke's session loop (#1240): only the five themed words of
+  // docs/design/bruecke §2 — pool, probes, ignition, thrust, decrypt.
+  'startSession.poolBruecke': '풀',
+  'startSession.ignitionBruecke': '점화',
+  'startSession.countQuestionBruecke': '탐사선 · 몇 개를 뽑을까요?',
+  'startSession.potLabelBrueckeOne': '풀에 있는 게임',
+  'startSession.potLabelBruecke': '풀에 있는 게임',
+  'startSession.sealedBruecke': '비밀 평가 – 모두 평가를 마쳐야 해독됩니다.',
+  'vote.questionBruecke': '오늘 이 게임에 얼마나 추진력을 줄까요?',
+  'vote.scaleLowBruecke': '추진력 없음',
+  'vote.scaleHighBruecke': '최대 출력',
+  'vote.ratersTitleBruecke': '평가를 마친 사람',
+  'vote.sealedNoteBruecke': '모두 평가를 마쳐야 해독됩니다. 그때까지는 아무도 다른 사람의 값을 볼 수 없습니다.',
+  'vote.sealedTitleBruecke': '가려짐',
+  'vote.sealedTextBrueckeOne': '게임 하나가 차례가 올 때까지 암호화된 채로 남아 있습니다.',
+  'vote.sealedTextBruecke': '게임 {n}개가 차례가 올 때까지 암호화된 채로 남아 있습니다.',
+  'vote.sealedCardBruecke': '암호화됨',
+  'score.reasonVetoBrueckeOne': '{n}× 추진력 없음',
+  'score.reasonVetoBruecke': '{n}× 추진력 없음',
+  'startSession.guestSeatBruecke': '게스트 · 오늘만',
+  // Das Programmheft's share card (#1381, P8.4): its facts and masthead.
+  'card.programmheft.sessionNo': '세션 {n}번',
+  'card.programmheft.score': '점수',
+  'card.programmheft.streak': '연승',
+  'card.programmheft.streakN': '{n}연속',
+  'card.programmheft.shared': '공동',
+  'card.programmheft.winners': '승자 {n}명',
+  'card.programmheft.ratings': '평가',
+  'card.programmheft.present': '참가',
 };

@@ -306,6 +306,8 @@ I18N.it = {
   'periodRecap.label.shelf': 'Scaffale',
   'periodRecap.toast.saved': 'Immagine salvata.',
   'periodRecap.toast.failed': 'Impossibile creare l’immagine.',
+  // Die Brücke's share card (#1247): the caption over its twelve monthly bars.
+  'periodRecap.card.perMonth': 'Sessioni al mese',
   // „Dein Rückblick" on the own profile (#1147) — no wins, only what was played.
   'accountRecap.title': 'Il tuo riepilogo',
   'accountRecap.lead': 'Cosa hai giocato, in tutti i tuoi gruppi — visibile solo a te.',
@@ -340,6 +342,15 @@ I18N.it = {
   'chronik.seated': '{n} al tavolo',
   'chronik.wonOne': 'ha vinto {names}',
   'chronik.won': 'hanno vinto {names}',
+  // Die Brücke's Chronik (#1245): how often the chosen game took the 1 in that
+  // session, in the scale's own end word — and the log's column heads.
+  'chronik.noThrustOne': '{n}× nessuna spinta',
+  'chronik.noThrust': '{n}× nessuna spinta',
+  'chronik.col.date': 'Data',
+  'chronik.col.game': 'Gioco',
+  'chronik.col.winner': 'Vincitore',
+  'chronik.col.games': 'Giochi estratti',
+  'chronik.col.score': 'Punteggio',
   'chronik.changesOne': '{n} modifica allo scaffale',
   'chronik.changes': '{n} modifiche allo scaffale',
   'activity.delete': 'Elimina l’attività',
@@ -1859,4 +1870,33 @@ I18N.it = {
   'badges.card.next': 'Livello successivo: {n}',
   'badges.card.tiers': 'Livelli',
   'badges.evergreen.lineGame': '{game} giocato {n} volte',
+  // Die Brücke's session loop (#1240): only the five themed words of
+  // docs/design/bruecke §2 — pool, probes, ignition, thrust, decrypt.
+  'startSession.poolBruecke': 'Pool',
+  'startSession.ignitionBruecke': 'Accensione',
+  'startSession.countQuestionBruecke': 'Sonde · quante ne vengono estratte?',
+  'startSession.potLabelBrueckeOne': 'gioco nel pool',
+  'startSession.potLabelBruecke': 'giochi nel pool',
+  'startSession.sealedBruecke': 'Voto segreto: si decifra solo quando tutti hanno votato.',
+  'vote.questionBruecke': 'Quanta spinta dai a questo gioco oggi?',
+  'vote.scaleLowBruecke': 'nessuna spinta',
+  'vote.scaleHighBruecke': 'piena potenza',
+  'vote.ratersTitleBruecke': 'Chi ha già votato',
+  'vote.sealedNoteBruecke': 'Si decifra solo quando tutti hanno votato. Fino ad allora nessuno vede i valori degli altri.',
+  'vote.sealedTitleBruecke': 'Coperto',
+  'vote.sealedTextBrueckeOne': 'Un altro gioco resta cifrato finché non ci arrivi.',
+  'vote.sealedTextBruecke': 'Altri {n} giochi restano cifrati finché non ci arrivi.',
+  'vote.sealedCardBruecke': 'Cifrato',
+  'score.reasonVetoBrueckeOne': '{n}× nessuna spinta',
+  'score.reasonVetoBruecke': '{n}× nessuna spinta',
+  'startSession.guestSeatBruecke': 'Ospite · solo oggi',
+  // Das Programmheft's share card (#1381, P8.4): its facts and masthead.
+  'card.programmheft.sessionNo': 'Sessione n. {n}',
+  'card.programmheft.score': 'Punteggio',
+  'card.programmheft.streak': 'Serie',
+  'card.programmheft.streakN': '{n} di fila',
+  'card.programmheft.shared': 'Condiviso',
+  'card.programmheft.winners': '{n} vincitori',
+  'card.programmheft.ratings': 'Valutazioni',
+  'card.programmheft.present': 'Presenti',
 };

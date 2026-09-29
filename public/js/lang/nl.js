@@ -304,6 +304,8 @@ I18N.nl = {
   'periodRecap.label.shelf': 'Kast',
   'periodRecap.toast.saved': 'Afbeelding opgeslagen.',
   'periodRecap.toast.failed': 'De afbeelding kon niet worden gemaakt.',
+  // Die Brücke's share card (#1247): the caption over its twelve monthly bars.
+  'periodRecap.card.perMonth': 'Sessies per maand',
   // „Dein Rückblick" on the own profile (#1147) — no wins, only what was played.
   'accountRecap.title': 'Jouw terugblik',
   'accountRecap.lead': 'Wat je gespeeld hebt, in al je groepen — alleen voor jou zichtbaar.',
@@ -338,6 +340,15 @@ I18N.nl = {
   'chronik.seated': '{n} aan tafel',
   'chronik.wonOne': '{names} won',
   'chronik.won': '{names} wonnen',
+  // Die Brücke's Chronik (#1245): how often the chosen game took the 1 in that
+  // session, in the scale's own end word — and the log's column heads.
+  'chronik.noThrustOne': '{n}× geen stuwkracht',
+  'chronik.noThrust': '{n}× geen stuwkracht',
+  'chronik.col.date': 'Datum',
+  'chronik.col.game': 'Spel',
+  'chronik.col.winner': 'Winnaar',
+  'chronik.col.games': 'Spellen getrokken',
+  'chronik.col.score': 'Score',
   'chronik.changesOne': '{n} kastwijziging',
   'chronik.changes': '{n} kastwijzigingen',
   'activity.delete': 'Activiteit verwijderen',
@@ -1852,4 +1863,33 @@ I18N.nl = {
   'badges.card.next': 'Volgend niveau {n}',
   'badges.card.tiers': 'Niveaus',
   'badges.evergreen.lineGame': '{game} {n} keer gespeeld',
+  // Die Brücke's session loop (#1240): only the five themed words of
+  // docs/design/bruecke §2 — pool, probes, ignition, thrust, decrypt.
+  'startSession.poolBruecke': 'Pool',
+  'startSession.ignitionBruecke': 'Ontsteking',
+  'startSession.countQuestionBruecke': 'Sondes · hoeveel worden er getrokken?',
+  'startSession.potLabelBrueckeOne': 'spel in de pool',
+  'startSession.potLabelBruecke': 'spellen in de pool',
+  'startSession.sealedBruecke': 'Geheim beoordeeld – pas ontsleuteld als iedereen heeft beoordeeld.',
+  'vote.questionBruecke': 'Hoeveel stuwkracht geef je dit spel vandaag?',
+  'vote.scaleLowBruecke': 'geen stuwkracht',
+  'vote.scaleHighBruecke': 'vol vermogen',
+  'vote.ratersTitleBruecke': 'Wie heeft al beoordeeld',
+  'vote.sealedNoteBruecke': 'Pas als iedereen heeft beoordeeld, wordt er ontsleuteld. Tot dan ziet niemand de waarden van de anderen.',
+  'vote.sealedTitleBruecke': 'Verborgen',
+  'vote.sealedTextBrueckeOne': 'Nog één spel blijft versleuteld tot je het bereikt.',
+  'vote.sealedTextBruecke': 'Nog {n} spellen blijven versleuteld tot je ze bereikt.',
+  'vote.sealedCardBruecke': 'Versleuteld',
+  'score.reasonVetoBrueckeOne': '{n}× geen stuwkracht',
+  'score.reasonVetoBruecke': '{n}× geen stuwkracht',
+  'startSession.guestSeatBruecke': 'Gast · alleen vandaag',
+  // Das Programmheft's share card (#1381, P8.4): its facts and masthead.
+  'card.programmheft.sessionNo': 'Sessie nr. {n}',
+  'card.programmheft.score': 'Score',
+  'card.programmheft.streak': 'Reeks',
+  'card.programmheft.streakN': '{n} op rij',
+  'card.programmheft.shared': 'Gedeeld',
+  'card.programmheft.winners': '{n} winnaars',
+  'card.programmheft.ratings': 'Beoordelingen',
+  'card.programmheft.present': 'Erbij',
 };
