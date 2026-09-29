@@ -1972,4 +1972,13 @@ I18N.de = {
   'badges.card.next': 'Nächste Stufe {n}',
   'badges.card.tiers': 'Stufen',
   'badges.evergreen.lineGame': '{game} {n}-mal gespielt',
+  // Das Programmheft's share card (#1381, P8.4): its facts and masthead.
+  'card.programmheft.sessionNo': 'Session Nr. {n}',
+  'card.programmheft.score': 'Score',
+  'card.programmheft.streak': 'Serie',
+  'card.programmheft.streakN': '{n} in Folge',
+  'card.programmheft.shared': 'Geteilt',
+  'card.programmheft.winners': '{n} Sieger',
+  'card.programmheft.ratings': 'Wertungen',
+  'card.programmheft.present': 'Dabei',
 };

@@ -1819,4 +1819,13 @@ I18N.fi = {
   'badges.card.next': 'Seuraava taso {n}',
   'badges.card.tiers': 'Tasot',
   'badges.evergreen.lineGame': '{game} pelattu {n} kertaa',
+  // Das Programmheft's share card (#1381, P8.4): its facts and masthead.
+  'card.programmheft.sessionNo': 'Sessio nro {n}',
+  'card.programmheft.score': 'Pisteet',
+  'card.programmheft.streak': 'Putki',
+  'card.programmheft.streakN': '{n} peräkkäin',
+  'card.programmheft.shared': 'Jaettu',
+  'card.programmheft.winners': '{n} voittajaa',
+  'card.programmheft.ratings': 'Arviot',
+  'card.programmheft.present': 'Mukana',
 };

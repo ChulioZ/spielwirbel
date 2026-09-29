@@ -1782,4 +1782,13 @@ I18N.ko = {
   'badges.card.next': '다음 단계 {n}',
   'badges.card.tiers': '단계',
   'badges.evergreen.lineGame': '{game} {n}번 플레이',
+  // Das Programmheft's share card (#1381, P8.4): its facts and masthead.
+  'card.programmheft.sessionNo': '세션 {n}번',
+  'card.programmheft.score': '점수',
+  'card.programmheft.streak': '연승',
+  'card.programmheft.streakN': '{n}연속',
+  'card.programmheft.shared': '공동',
+  'card.programmheft.winners': '승자 {n}명',
+  'card.programmheft.ratings': '평가',
+  'card.programmheft.present': '참가',
 };

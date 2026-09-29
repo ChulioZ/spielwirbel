@@ -1522,6 +1522,9 @@ async function showResults(round, session, gamesHint, reveal, plain) {
       color: p.guest ? null : memberHex(round, p.id),
       winner: winnerIds.includes(p.id),
     })),
+    // Das Programmheft's card adds the long date, the session's number and the
+    // winner's streak (#1381) — nothing another design's share reads.
+    ...(designIs('programmheft') ? programmheftEdition(round, session, winnerIds) : {}),
   });
   // Der Tisch carries „Teilen" in the foot instead, beside the next evening
   // (T2.5, T4.4 — see fillComposedResultFoot).
