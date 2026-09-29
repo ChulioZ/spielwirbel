@@ -303,6 +303,8 @@ I18N.en = {
   'periodRecap.label.shelf': 'Shelf',
   'periodRecap.toast.saved': 'Image saved.',
   'periodRecap.toast.failed': 'The image could not be created.',
+  // Die Brücke's share card (#1247): the caption over its twelve monthly bars.
+  'periodRecap.card.perMonth': 'Sessions per month',
   // „Dein Rückblick" on the own profile (#1147) — no wins, only what was played.
   'accountRecap.title': 'Your recap',
   'accountRecap.lead': 'What you played, across all your rounds — visible only to you.',

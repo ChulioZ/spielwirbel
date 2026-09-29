@@ -459,5 +459,8 @@ test('„Teilen" hands the card the username and the picked period, as a -me fil
   assert.equal(model.ratedLabel, t('accountRecap.card.bestRated'));
   assert.equal(model.shelfLabel, t('accountRecap.card.new'));
   assert.deepEqual([...model.shelf].map((s) => s.n), [2], 'Azul and Brass are both new in 2026');
+  // Die Brücke's bars (#1247): a year carries its twelve months, from the same plays.
+  assert.equal(model.monthly.length, 12);
+  assert.equal([...model.monthly].reduce((n, m) => n + m.count, 0), model.sessions);
   assert.equal(JSON.stringify(model).includes('Runde'), false);
 });

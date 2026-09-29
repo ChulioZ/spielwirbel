@@ -633,6 +633,9 @@ function designCard() {
    did not know they were getting. */
 async function shareResultCard(model, text) {
   if (!(navigator.canShare && navigator.share && typeof File !== 'undefined')) return false;
+  // Die Brücke's card is the period recap only (B8.4, #1247): its results
+  // screen keeps the text share rather than wearing Der Tisch's session card.
+  if (designCard() === 'bruecke') return false;
   let blob;
   try {
     // Ocean's card (#1220) picks its proportion from the screen; its spec

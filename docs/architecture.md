@@ -572,6 +572,10 @@ public/
                      Ocean's share card (#1220): a 1080×1350 session card, a
                      1200×630 landscape one and a 1080×1350 period recap —
                      water above, every string on an opaque band below
+    recap-card-bruecke.js
+                     Die Brücke's share card (#1247): the period recap drawn at
+                     600×600 and exported at 1080×1080 — round, period, four
+                     figures, the monthly bars, the lamp-and-wordmark
     recap-card-programmheft.js
                      Das Programmheft's share card (#1381): a 1080×1350 front
                      page for a session and a period recap — vermilion masthead,

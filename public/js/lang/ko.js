@@ -282,6 +282,8 @@ I18N.ko = {
   'periodRecap.label.shelf': '선반',
   'periodRecap.toast.saved': '이미지를 저장했어요.',
   'periodRecap.toast.failed': '이미지를 만들지 못했어요.',
+  // Die Brücke's share card (#1247): the caption over its twelve monthly bars.
+  'periodRecap.card.perMonth': '월별 세션',
   // „Dein Rückblick" on the own profile (#1147) — no wins, only what was played.
   'accountRecap.title': '나의 돌아보기',
   'accountRecap.lead': '모든 그룹에서 내가 플레이한 기록이에요 — 나에게만 보여요.',
