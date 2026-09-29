@@ -1543,6 +1543,9 @@ I18N.fi = {
   'konto.profile.off': 'Vain sinä näet nyt tilastosi.',
   // The per-user design (#1186): the Konto picker and the one-time chooser.
   'design.pick.label': 'Ulkoasu',
+  'design.scheme.dark': 'Tumma',
+  'design.scheme.light': 'Vaalea',
+  'design.pick.mine': 'Sinun',
   'design.klassisch.name': 'Klassinen',
   'design.klassisch.badge': 'Kuten ennen',
   'design.klassisch.desc': 'Ulkoasu, jolla Spielwirbel aloitti — vaalea, rauhallinen ja oranssi korostus.',

@@ -1582,6 +1582,9 @@ I18N.it = {
   'konto.profile.off': 'Ora solo tu puoi vedere il tuo bilancio.',
   // The per-user design (#1186): the Konto picker and the one-time chooser.
   'design.pick.label': 'Design',
+  'design.scheme.dark': 'Scuro',
+  'design.scheme.light': 'Chiaro',
+  'design.pick.mine': 'Il tuo',
   'design.klassisch.name': 'Classico',
   'design.klassisch.badge': 'Come prima',
   'design.klassisch.desc': 'L\'aspetto con cui Spielwirbel è nato: chiaro, tranquillo, con l\'accento arancione.',

@@ -349,6 +349,11 @@ const DESIGN_REGISTRY = [
     descKey: 'design.bruecke.desc',
     // B1.3 „rocket trägt Mission starten": the one glyph the design owns.
     glyph: 'ti-rocket',
+    /* B1's page gradient, light stop to night, with the cyan wordmark and the
+       ink subline — the ground B5.2 prints Brücke's own card on (#1242), and
+       what a Tisch-worn chooser's bill prints it on. Swept with every poster
+       by test/a11y-contrast.test.js. */
+    poster: { ground: ['#10203a', '#070b14'], ink: '#35e0ff', sub: '#dfe7f5' },
     scheme: 'dark',
     page: '#070b14',
     accent: '#35e0ff',

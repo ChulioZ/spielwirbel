@@ -1653,6 +1653,9 @@ I18N.de = {
   'konto.profile.off': 'Deine Bilanz ist nur noch für dich sichtbar.',
   // The per-user design (#1186): the Konto picker and the one-time chooser.
   'design.pick.label': 'Design',
+  'design.scheme.dark': 'Dunkel',
+  'design.scheme.light': 'Hell',
+  'design.pick.mine': 'Deins',
   'design.klassisch.name': 'Klassisch',
   'design.klassisch.badge': 'Wie bisher',
   'design.klassisch.desc': 'Die Oberfläche, mit der Spielwirbel angefangen hat — hell, ruhig, mit dem orangenen Akzent.',

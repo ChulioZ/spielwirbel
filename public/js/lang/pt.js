@@ -1577,6 +1577,9 @@ I18N.pt = {
   'konto.profile.off': 'Agora só tu podes ver o teu balanço.',
   // The per-user design (#1186): the Konto picker and the one-time chooser.
   'design.pick.label': 'Design',
+  'design.scheme.dark': 'Escuro',
+  'design.scheme.light': 'Claro',
+  'design.pick.mine': 'O teu',
   'design.klassisch.name': 'Clássico',
   'design.klassisch.badge': 'Como antes',
   'design.klassisch.desc': 'O aspeto com que o Spielwirbel começou — claro, calmo, com o acento laranja.',

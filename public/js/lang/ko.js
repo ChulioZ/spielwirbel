@@ -1515,6 +1515,9 @@ I18N.ko = {
   'konto.profile.off': '이제 나만 내 전적을 볼 수 있습니다.',
   // The per-user design (#1186): the Konto picker and the one-time chooser.
   'design.pick.label': '디자인',
+  'design.scheme.dark': '어두움',
+  'design.scheme.light': '밝음',
+  'design.pick.mine': '내 디자인',
   'design.klassisch.name': '클래식',
   'design.klassisch.badge': '기존 그대로',
   'design.klassisch.desc': 'Spielwirbel이 처음 시작한 모습 — 밝고 차분하며 주황색 강조가 있습니다.',
