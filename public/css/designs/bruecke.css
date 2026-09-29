@@ -522,6 +522,12 @@
   letter-spacing: var(--track-notation);
   text-transform: uppercase;
 }
+/* Below 860 the phone bar has no room for it beside the wordmark and the
+   picker — it truncated to „Flotte / Übe…" at 390 — so the lobby's own
+   greeting carries the page there. */
+@media (max-width: 859px) {
+  :root[data-design="bruecke"] .topbar__context--kicker { display: none; }
+}
 
 /* ---- The dock (B2.2): below 860 a bar flush with the bottom edge, exactly
    four targets at the key size. The active one is marked by a cyan rule along
@@ -647,7 +653,10 @@
   :root[data-design="bruecke"] .bruecke-hub .hero h1 { grid-area: title; align-self: end; }
   :root[data-design="bruecke"] .bruecke-hub .hero__chips { grid-area: stats; align-self: end; justify-content: flex-end; }
   :root[data-design="bruecke"] .bruecke-hub .hero__members { grid-area: crew; align-self: stretch; }
-  :root[data-design="bruecke"] .bruecke-hub__mission { grid-area: mission; align-self: stretch; }
+  /* The mission panel ends with its content: stretched, it grew to the right
+     column's height (Wie wär's mit + the three previews) and printed a tall
+     empty panel around the ignition. */
+  :root[data-design="bruecke"] .bruecke-hub__mission { grid-area: mission; align-self: start; }
   :root[data-design="bruecke"] .bruecke-hub__feed { grid-area: feed; }
   :root[data-design="bruecke"] .bruecke-hub__last { grid-area: last; align-self: stretch; }
   :root[data-design="bruecke"] .bruecke-hub__suggest { grid-area: suggest; align-self: stretch; }

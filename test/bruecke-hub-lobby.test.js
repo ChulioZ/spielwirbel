@@ -20,6 +20,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const { loadApp } = require('./support/dom');
+const { mediaBlocks, rulesOf } = require('./support/css');
 
 const BRUECKE_CSS = fs.readFileSync(path.join(__dirname, '..', 'public', 'css', 'designs', 'bruecke.css'), 'utf8');
 
@@ -242,4 +243,33 @@ test('bruecke.css: the #1238 section lays out the hub as 300 / free / 340 from 1
   assert.match(wide, /\.bruecke-hub__crew[^{]*\{\s*display: contents/);
   // The status line is printed out of the accessibility tree.
   assert.match(own, /content: attr\(data-status\) \/ ""/);
+});
+
+/* The #1238 section's media blocks, comments stripped (a comment naming a class
+   must not stand in for the rule — css-text-assertions-strip-comments.md). */
+const ownBlocks = () => {
+  const at = BRUECKE_CSS.indexOf('/* ===== #1238 — ');
+  const own = BRUECKE_CSS.slice(at).replace(/\/\*[\s\S]*?\*\//g, '');
+  return mediaBlocks(own);
+};
+
+test('bruecke.css: the „Flotte / Übersicht" kicker is dropped below 860 and kept from 860', () => {
+  const blocks = ownBlocks();
+  const phone = blocks.filter(([q]) => /^\(max-width: 859px\)$/.test(q));
+  assert.ok(phone.length > 0, 'no phone block in the #1238 section');
+  const hides = phone.some(([, css]) => rulesOf(css).some(([sel, body]) =>
+    /\.topbar__context--kicker(?![\w-])/.test(sel) && /display:\s*none/.test(body)));
+  assert.ok(hides, 'the kicker truncates at 390 — it must be display: none below 860');
+  // …and nowhere else, so the desktop bar keeps it.
+  const elsewhere = blocks.filter(([q]) => q !== '(max-width: 859px)').some(([, css]) => rulesOf(css).some(([sel, body]) =>
+    /\.topbar__context--kicker(?![\w-])/.test(sel) && /display:\s*none/.test(body)));
+  assert.equal(elsewhere, false);
+});
+
+test('bruecke.css: from 1280 the Missionskontrolle is as tall as its content, not the right column', () => {
+  const wide = ownBlocks().filter(([q]) => q === '(min-width: 1280px)').map(([, css]) => css).join('\n');
+  const body = rulesOf(wide).find(([sel, decl]) =>
+    /\.bruecke-hub__mission(?![\w-])/.test(sel) && /grid-area:\s*mission/.test(decl));
+  assert.ok(body, 'the mission slot has no grid-area rule from 1280');
+  assert.match(body[1], /align-self:\s*start/);
 });
