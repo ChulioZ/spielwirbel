@@ -438,6 +438,13 @@ const frontendGlobals = {
   // recap-card-ocean.js (#1220) — Ocean's share card in three formats; the
   // two helpers tischWrap/tischBadge it reuses are recap-card-tisch.js's.
   oceanCardBlob: 'readonly', oceanShareKind: 'readonly', tischWrap: 'readonly',
+  // recap-card-bruecke.js (#1247) — Die Brücke's period card; period-recap.js's
+  // periodMonths feeds its bars from both share models.
+  brueckeCardBlob: 'readonly', periodMonths: 'readonly',
+  // recap-card-programmheft.js (#1381) and the two counts it shares with the
+  // Pokale (session-tally.js).
+  programmheftCardBlob: 'readonly', programmheftEdition: 'readonly', tischRuns: 'readonly',
+  soleWinStreak: 'readonly', sessionNumber: 'readonly',
   offeredDesigns: 'readonly', designTile: 'readonly', renderDesignPicker: 'readonly',
   maybeShowDesignChooser: 'readonly', showDesignChooser: 'readonly',
   buildDesignSection: 'readonly',
@@ -542,6 +549,9 @@ const frontendGlobals = {
   oceanWorn: 'readonly', OCEAN_COUNT_BUBBLES: 'readonly', composeOceanSetup: 'readonly', paintOceanCount: 'readonly',
   oceanVoteSides: 'readonly', composeOceanResult: 'readonly', oceanBlind: 'readonly', composeOceanLobby: 'readonly',
   oceanDive: 'readonly', // #1221, O10.1
+  // views-session-bruecke.js (issue #1240): Die Brücke's setup, vote sides and result panels
+  composeBrueckeSetup: 'readonly', brueckeVoteSides: 'readonly', brueckeVoteWord: 'readonly', brueckeScoreReason: 'readonly',
+  brueckeTitleSplit: 'readonly', composeBrueckeResult: 'readonly',
   // views-session-tables.js (issue #796)
   showTableBuilder: 'readonly', tableStateFrom: 'readonly', tablePeopleIds: 'readonly',
   tableCoverBg: 'readonly',

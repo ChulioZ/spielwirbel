@@ -195,13 +195,15 @@ function renderSeatPicker(round, joining, onChange, guestList, opts = {}) {
          `.nr-seat__name` is 64px with an ellipsis, so „Anna (Gast)" would clip
          the marker away entirely, which is the one part that must not be lost
          (.claude/rules/session-guests-are-not-members.md). The button's
-         accessible name carries both regardless. */
+         accessible name carries both regardless.
+         Die Brücke (#1240, B2.3) words it as the seat's state, „Gast · nur
+         heute", since its seats are a checklist with a state word each. */
       const seat = h(`<button type="button" class="nr-seat nr-seat--guest"
            aria-label="${esc(t('startSession.guestRemove', { name }))}"
            title="${esc(t('people.guest', { name }))}">
            <span class="nr-seat__avatar">${esc(initials(name))}</span>
            <span class="nr-seat__name">${esc(name)}</span>
-           <span class="nr-seat__guest">${esc(t('startSession.guestSeat'))}</span>
+           <span class="nr-seat__guest">${esc(t(designIs('bruecke') ? 'startSession.guestSeatBruecke' : 'startSession.guestSeat'))}</span>
          </button>`);
       seat.addEventListener('click', () => {
         guestList.remove(key);

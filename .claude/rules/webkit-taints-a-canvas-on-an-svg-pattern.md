@@ -5,6 +5,8 @@ paths:
   - "public/js/views-period-recap.js"
   - "public/js/recap-card-tisch.js"
   - "public/js/recap-card-ocean.js"
+  - "public/js/recap-card-bruecke.js"
+  - "public/js/recap-card-programmheft.js"
   - "public/js/card-glyphs.js"
   - "public/js/shelf-profile-card.js"
   - "test/recap-card-tisch.test.js"
@@ -98,6 +100,18 @@ copy is licensed by a parity test against `test/support/theme.js`.
 gradients, flat fills, the whale as canvas paths, the whirl as a `Path2D`, the
 BGG badge via `drawImage` — and all three of its formats exported clean in
 headless Chromium and a non-persistent WKWebView.
+
+**Die Brücke's card (#1247, `public/js/recap-card-bruecke.js`) is the case where
+the design itself drew a pattern**: B8.4's dot grid is a CSS
+`radial-gradient` background-image with a `mask-image`. It is drawn as plain
+`arc()` fills, the mask evaluated per dot — never `createPattern`, even from a
+canvas, so the next reader has nothing to reason about.
+
+**Das Programmheft's card (#1381, `public/js/recap-card-programmheft.js`) is
+the fourth of that shape** and the plainest: flat fills, one gradient (the cover
+stand-in), no Path2D, no image but the BGG badge. Its masthead tracks capitals
+by drawing them letter by letter rather than through `ctx.letterSpacing`, which
+WebKit lacks in the versions this app supports.
 
 A spec can only stand in for the engine by asserting the **mechanism** against a
 recording context — jsdom has no 2d context and Node has no WebKit — so it
