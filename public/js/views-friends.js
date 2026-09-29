@@ -110,7 +110,8 @@ async function showFriends(opts) {
     // right — where Klassisch tiles it (#1136). Same events, same collapse.
     // Ocean takes the rows too (#1219, O14.2 „Was gerade läuft": a card per
     // event, the author's ring first); its stylesheet makes each one a card.
-    const rows = tisch || designIs('ocean');
+    // Das Programmheft sets it as P14.2's Meldungszeilen (#1380): date, sentence, flag.
+    const rows = tisch || designIs('ocean') || designIs('programmheft');
     // Later pages (#1357) append to this list as its end scrolls into view.
     const more = {
       nextCursor: feed.nextCursor,

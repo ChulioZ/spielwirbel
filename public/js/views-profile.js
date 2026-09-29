@@ -105,6 +105,9 @@ async function showProfile(username) {
          button has always been hidden there. */
       const withAuthor = (events) => events.map((ev) => ({ ...ev, username: p.username, avatar: p.avatar }));
       screen.appendChild(renderFeedTiles(withAuthor(p.events), {
+        // Das Programmheft prints the activity as the Freundeskreis's rows
+        // (#1380, P14.1/P14.2): the tile grid does not fit its narrow column.
+        rows: designIs('programmheft'),
         noAuthor: true,
         noReport: !!p.self,
         // Later pages (#1357) come from the profile's own feed route, which
