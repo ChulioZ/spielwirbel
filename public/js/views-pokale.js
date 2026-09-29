@@ -250,8 +250,14 @@ function pokaleYoungLead(round, winners, rankOf, wins) {
    everyone in first; a member with no decided evening stands at 0 rather
    than vanishing („wer neu dazukommt, steht trotzdem in der Liste"). The
    bar's colour is the member's own — a fill, never text (ocean.css header,
-   rule 2), so it is a custom property the stylesheet paints from. */
-function pokaleBars(round, ranked, rankOf, wins) {
+   rule 2), so it is a custom property the stylesheet paints from.
+
+   Die Brücke draws the same rows (#1245, B3.4/B6.2) with the PLACE in front —
+   „1 · 2 · 3", a leaderboard's own grammar — and no crown: the lead is the
+   cyan rank, not a medal. The place is the shared one `roundStandings`
+   computed, so a tie prints one number twice; a member with no win yet has
+   no place and shows a dash. */
+function pokaleBars(round, ranked, rankOf, wins, { rank = false, crown = true } = {}) {
   const top = Math.max(1, ...ranked.map((m) => wins[m.id]));
   const list = h('<ol class="pokale-bars"></ol>');
   ranked.forEach((m) => {
@@ -259,7 +265,8 @@ function pokaleBars(round, ranked, rankOf, wins) {
     const lead = rankOf[m.id] === 1 && n > 0;
     const color = memberColor(round, m.id);
     const row = h(`<li class="pokale-bars__row${lead ? ' is-lead' : ''}"><a class="pokale-bars__link" data-mid="${esc(m.id)}" style="--bar:${color}; --w:${Math.round((n / top) * 100)}%">
-         <span class="pokale-bars__face"><span class="avatar" style="background:${color}">${avatarFace(initials(m.name), { userId: m.userId })}</span>${lead ? '<i class="ti ti-crown" aria-hidden="true"></i>' : ''}</span>
+         ${rank ? `<span class="pokale-bars__rank">${n > 0 && rankOf[m.id] ? rankOf[m.id] : '–'}</span>` : ''}
+         <span class="pokale-bars__face"><span class="avatar" style="background:${color}">${avatarFace(initials(m.name), { userId: m.userId })}</span>${lead && crown ? '<i class="ti ti-crown" aria-hidden="true"></i>' : ''}</span>
          <span class="pokale-bars__body">
            <span class="pokale-bars__name">${esc(m.name)}</span>
            <span class="pokale-bars__track" aria-hidden="true"><span class="pokale-bars__fill"></span></span>
@@ -281,13 +288,18 @@ function renderPokaleTab(round) {
      somewhere; a count of wins owes none, and the whole `win` topic went with
      the measure (score-info.js). Don't add one back without a measure that
      genuinely needs it — and if you do, it owes a rule file too. */
-  const head = h(`<div class="section-head"><h1>${esc(t('pokale.title'))}</h1></div>`);
+  // Die Brücke (#1245) shares Ocean's standings and count, and Der Tisch's
+  // plaque column — B3.4 is bars on the left, plaques on the right. Its page
+  // is titled with the tab's own word, „Pokale" (B3.4/B6.2): the sheet names
+  // the page after the tab it is reached by, not „Ruhmeshalle".
+  const bruecke = designIs('bruecke');
+  const head = h(`<div class="section-head"><h1>${esc(t(bruecke ? 'hub.tab.pokale' : 'pokale.title'))}</h1></div>`);
   sec.appendChild(head);
   // Ocean names the span beside the title, as its Chronik does (#1218, O13.2
   // „Seit Oktober 2025 · 23 Sessions") — the same key, counted the same way,
   // so the two pages cannot disagree about how many sessions the round has.
   const ocean = designIs('ocean');
-  if (ocean && finished.length) {
+  if ((ocean || bruecke) && finished.length) {
     const since = finished.reduce((a, s) => (s.createdAt < a ? s.createdAt : a), finished[0].createdAt);
     head.appendChild(h(`<span class="chronik__count">${esc(tn(finished.length, 'chronik.countOne', 'chronik.count', { month: fmtMonth(since) }))}</span>`));
   }
@@ -325,7 +337,7 @@ function renderPokaleTab(round) {
      follow the podium — the markup order IS the reading order at every width,
      and no `order:` is needed (WCAG 2.4.3). Klassisch gets no wrapper: `stageTo`
      is the section itself and its DOM is byte-for-byte what it was. */
-  const split = designIs('tisch') ? h('<div class="pokale-split"><div class="pokale-split__stage"></div></div>') : null;
+  const split = designIs('tisch') || bruecke ? h('<div class="pokale-split"><div class="pokale-split__stage"></div></div>') : null;
   if (split) sec.appendChild(split);
   const stageTo = split ? split.firstElementChild : sec;
 
@@ -355,7 +367,9 @@ function renderPokaleTab(round) {
      nobody left to name and is not rendered. The young-round sentence above
      still stands in for it: bars off one or two evenings rank on noise exactly
      as a podium would. */
-  const bars = ocean && !young && winners.length ? pokaleBars(round, ranked, rankOf, wins) : null;
+  const bars = (ocean || bruecke) && !young && winners.length
+    ? pokaleBars(round, ranked, rankOf, wins, bruecke ? { rank: true, crown: false } : {})
+    : null;
   if (bars) stageTo.appendChild(bars);
   if (winners.length && !young && !bars) {
     /* ONE number per entry again — the win count the step is ranked on.
@@ -456,50 +470,11 @@ function renderPokaleTab(round) {
     );
   }
 
-  // Streak: how many of the latest nights in a row one member won alone.
-  // Chronological by `createdAt` (when the night happened), like the Chronik —
-  // `finishedAt` moves when an old session is re-finished. The Discover
-  // aggregate missed this note until #1059; the rule is now written down in
-  // .claude/rules/server-computed-calendar-periods.md §7.
-  // A night any guest won is skipped entirely (#458): a session-only visitor
-  // must neither break nor extend a member's streak, and treating their win as
-  // an ordinary sole win would silently blank the card (there is no member row
-  // behind the id) — which is breaking it by another name.
-  const wonByGuest = (s) => {
-    const gids = new Set((s.guests || []).map((g) => g.id));
-    return gids.size > 0 && (s.winnerIds || []).some((wid) => gids.has(wid));
-  };
-  // A solo evening is skipped for the SAME reason (#895), and the argument was
-  // already here unimplemented: an evening that was not a contest can neither
-  // break nor extend a streak. A one-person session is single-winner by
-  // definition, so twenty logged solo plays read as a twenty-night streak.
-  const isSolo = (s) => sessionPartyCount(round, s) === 1;
-  // A night recorded as „Kein Sieger" or „Fortsetzung folgt" (#1038) is skipped
-  // for the SAME reason as a solo one: it was not a contest, so it can neither
-  // break nor extend a streak. „Verloren" is NOT skipped — the table played to
-  // win and did not, which breaks a streak exactly as somebody else's win does
-  // (it already did, via `ws.length !== 1`; naming it here stops a future reader
-  // from folding all three together). An UNRECORDED night also still breaks one;
-  // the fix for that is recording it.
-  const notAContest = (s) => {
-    const e = sessionEnding(s);
-    return e === 'noWinner' || e === 'ongoing';
-  };
-  const chrono = [...finished]
-    .filter((s) => !wonByGuest(s) && !isSolo(s) && !notAContest(s))
-    .sort((a, b) => String(a.createdAt).localeCompare(String(b.createdAt)));
-  let streakMember = null;
-  let streak = 0;
-  for (let i = chrono.length - 1; i >= 0; i--) {
-    const ws = chrono[i].winnerIds || [];
-    if (streakMember === null) {
-      if (ws.length !== 1) break;
-      streakMember = ws[0];
-      streak = 1;
-    } else if (ws.length === 1 && ws[0] === streakMember) {
-      streak++;
-    } else break;
-  }
+  // Streak: how many of the latest nights in a row one member won alone. The
+  // rule — chronological by `createdAt`, guest-won, solo and no-contest nights
+  // skipped — lives in session-tally.js (#1381), which Das Programmheft's share
+  // card reads too, so the two cannot disagree about what a streak is.
+  const { memberId: streakMember, n: streak } = soleWinStreak(round, finished, { sessionEnding, sessionPartyCount });
   const streakM = streakMember && round.members.find((m) => m.id === streakMember);
   // A series waits for YOUNG_ROUND_SERIES_FROM (#1280; every design since
   // #1318) — the number the Rundenpuls card's sentence names, so it cannot

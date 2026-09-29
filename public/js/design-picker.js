@@ -111,6 +111,36 @@ function designGlyphTile(design) {
   return tile;
 }
 
+/* A design's SWATCH (#1242, Die Brücke's B5.2/B5.3): the tile as a plain
+   field of the design's own poster ground, top to foot — no wordmark, no sign,
+   because B5 prints each card's name and scheme beside it. Built only while
+   Die Brücke is worn. Like the bill and the postcard it paints from registry
+   DATA, inline, so the other designs' colours never enter bruecke.css (the
+   issue's acceptance line; test/bruecke-konto.test.js). A row without a poster
+   falls back to its `page`/`accent` through the tile's --tile-* defaults. */
+function designSwatch(design) {
+  const tile = designTile(design);
+  tile.classList.add('design-tile--swatch');
+  const poster = design.poster;
+  if (poster) {
+    tile.style.setProperty('--poster-top', poster.ground[0]);
+    tile.style.setProperty('--poster-foot', poster.ground[1]);
+  }
+  return tile;
+}
+
+// Die Brücke's per-card extras (#1242): the scheme line (B5.2 „Dunkel"/„Hell")
+// and the „Deins" mark. The mark is rendered on every card and the stylesheet
+// shows it on the picked one only, so a pick needs no DOM bookkeeping; it is
+// aria-hidden because the checked radio already says the same thing.
+function brueckeCardScheme(design) {
+  const scheme = t(design.scheme === 'dark' ? 'design.scheme.dark' : 'design.scheme.light');
+  return `<span class="design-card__scheme">${esc(scheme)}</span>`;
+}
+function brueckeCardMark() {
+  return h(`<span class="design-card__mine" aria-hidden="true"><i class="ti ti-check"></i><span>${esc(t('design.pick.mine'))}</span></span>`);
+}
+
 /* The card list. `current` is the design in force, `onPick` is handed the id of
    whatever the user chose — the caller owns persisting it, because the Konto
    screen and the chooser sheet write it through different endpoints.
@@ -125,6 +155,8 @@ function renderDesignPicker(cfg, current, onPick) {
   // on its own ground and its name, no sentence: at four across a 700px card a
   // description would wrap into a column of single words.
   const ocean = designIs('ocean');
+  // Die Brücke's B5.2 prints name and scheme, no sentence, for Ocean's reason.
+  const bruecke = designIs('bruecke');
   for (const design of offeredDesigns(cfg)) {
     const on = design.id === current;
     const card = h(`<label class="design-card${on ? ' is-on' : ''}">
@@ -132,7 +164,7 @@ function renderDesignPicker(cfg, current, onPick) {
         <span class="design-card__body">
           <span class="design-card__name">${esc(t(design.labelKey))}${
   design.id === CLASSIC_DESIGN ? `<span class="design-card__badge">${esc(t('design.klassisch.badge'))}</span>` : ''}</span>
-          ${ocean ? '' : `<span class="design-card__desc">${esc(t(design.descKey))}</span>`}
+          ${bruecke ? brueckeCardScheme(design) : ''}${ocean || bruecke ? '' : `<span class="design-card__desc">${esc(t(design.descKey))}</span>`}
         </span>
       </label>`);
     // Der Tisch prints the Konto cards as T5.2's small bills (wordmark, no
@@ -140,7 +172,9 @@ function renderDesignPicker(cfg, current, onPick) {
     let art = designTile(design);
     if (designIs('tisch')) art = designBill(design);
     else if (ocean) art = designGlyphTile(design);
+    else if (bruecke) art = designSwatch(design);
     card.insertBefore(art, card.querySelector('.design-card__body'));
+    if (bruecke) card.appendChild(brueckeCardMark());
     card.querySelector('input').addEventListener('change', () => {
       for (const other of list.querySelectorAll('.design-card')) other.classList.remove('is-on');
       card.classList.add('is-on');

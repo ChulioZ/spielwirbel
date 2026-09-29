@@ -299,6 +299,8 @@ test('„Teilen" shares the SELECTED period, from the numbers on screen', async 
   // Re-realmed: the model is built inside the vm context, so its arrays carry
   // that realm's Array.prototype and deepStrictEqual refuses them by identity.
   assert.deepEqual([...drawn[0].played], ['Azul']);
+  // A month has no bars on Die Brücke's card (#1247): one bar is not a chart.
+  assert.equal(drawn[0].monthly, null);
 });
 
 // ---- the edges of the new home ---------------------------------------------

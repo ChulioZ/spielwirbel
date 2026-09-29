@@ -40,13 +40,15 @@ const RAIL_OWN_ENTRY = ['retired', 'completed', 'wishlist', 'recommendations', .
 
 /* Does the rail carry ONLY navigation — no CTA, no presets, no off-shelf rows?
    Der Tisch's rail is identity plus the five links (#1262); Ocean's Reling is
-   the five links alone (#1211, O3.2 „Reling 104 px"). Every screen that marks
+   the five links alone (#1211, O3.2 „Reling 104 px"); the Programmheft's is
+   the section line of the printed page, the five links alone (#1372, P3.2).
+   Every screen that marks
    an element `rail-owned` because "the rail carries a copy" has to ask this,
    or the element vanishes from 1280px up with no copy anywhere — the Regal's
    off-shelf trigger is the one that did (views-regal.js). One question, so a
    third lean design is one line here rather than a hunt for every caller. */
 function railIsLean() {
-  return designIs('tisch') || designIs('ocean');
+  return designIs('tisch') || designIs('ocean') || designIs('bruecke') || designIs('programmheft');
 }
 
 // One rail row. `sub` decides the marker, and the two states are NOT
@@ -94,7 +96,11 @@ function buildRoundRail(round, activeTab, sub, offShelf) {
      „+", and the top bar names the round on every other screen — so the hero
      is NOT `rail-owned` under Ocean (views-round-start.js) and keeps the
      Start tab's one <h1> at every width. */
-  const reling = designIs('ocean');
+  // Die Brücke's Abschnittsleiste (#1238, B3.1) is the same five links and
+  // nothing else, laid out as a bar under the top bar (bruecke.css).
+  // The Programmheft's section line drops the identity the same way (#1372):
+  // its hub prints the round's name as the page's own masthead line.
+  const reling = designIs('ocean') || designIs('bruecke') || designIs('programmheft');
 
   // --- Identity. The hero this mirrors stays on the Start tab for narrow
   // screens, where there is no rail to carry it; CSS hides it here instead.

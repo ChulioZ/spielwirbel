@@ -62,14 +62,28 @@ function offShelfEntries(round) {
    Rendered for every design and `display: none` in styles.css: a design opts in
    by showing it (tisch.css). Klassisch reaches the same four through the rail
    and the Regal, and a second navigation strip there is a decision for that
-   design rather than a side effect of this one. */
+   design rather than a side effect of this one.
+
+   Die Brücke (#1245, B6.7) titles the strip „Nicht im Regal" and gives each
+   segment its name over its count, a tab readout rather than a sentence. The
+   title is aria-hidden because the nav's own label already says it; there is
+   no group count — the three lists are not one inventory, and a sum would be a
+   number that counts nothing. The recommendations keep their null count, so
+   that segment carries its name alone. */
 function offShelfSegments(round, activeSub) {
   const nav = h(`<nav class="offshelf-seg" aria-label="${esc(t('rail.archive'))}"></nav>`);
-  offShelfEntries(round).forEach(({ icon, label, sub, go }) => {
+  const bruecke = designIs('bruecke');
+  if (bruecke) nav.appendChild(h(`<p class="offshelf-seg__title" aria-hidden="true">${esc(t('rail.archive'))}</p>`));
+  offShelfEntries(round).forEach(({ icon, label, name, count, sub, go }) => {
     const on = sub === activeSub;
     // `data-sub` lets a design set the recommendations apart from the three
     // lists (Ocean, #1218: O13.3 gives „Könnte euch gefallen" its own column).
-    const seg = h(`<a class="offshelf-seg__item${on ? ' is-on' : ''}" data-sub="${sub}"${on ? ' aria-current="page"' : ''}>${iconText(icon, label)}</a>`);
+    // Brücke's segment still reads as one phrase to a screen reader: the name,
+    // then the figure — the same two facts `label` states in one string.
+    const inner = bruecke
+      ? `<span class="offshelf-seg__name">${esc(name)}</span>${count === null ? '' : `<span class="offshelf-seg__n">${count}</span>`}`
+      : iconText(icon, label);
+    const seg = h(`<a class="offshelf-seg__item${on ? ' is-on' : ''}" data-sub="${sub}"${on ? ' aria-current="page"' : ''}>${inner}</a>`);
     navLink(seg, roundPath(round.id, sub), go);
     nav.appendChild(seg);
   });

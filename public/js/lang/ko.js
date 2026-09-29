@@ -33,6 +33,10 @@ I18N.ko = {
   // Ocean only (#1211): its sub-brand beside the wordmark and its lobby greeting.
   'home.oceanKicker': '해안 · 나의 모임',
   'home.oceanGreeting': '해안에 오신 걸 환영해요.',
+  // Die Brücke only (#1238): the lobby voice, its greeting and the notice kicker (B9).
+  'home.brueckeKicker': '함대 / 개요',
+  'home.brueckeGreeting': '다시 탑승하신 걸 환영해요.',
+  'home.brueckeSignal': '수신 신호',
   'home.shared': '공유됨',
   'home.newRound': '새 모임 시작하기',
   'home.empty.title': '아직 게임 모임이 없어요.',
@@ -80,6 +84,14 @@ I18N.ko = {
   'round.startSession': '세션 시작',
   // Ocean only (#1211): the one action's themed verb (O9 §2).
   'round.startSessionOcean': '잠수하기',
+  // Die Brücke only (#1238): the one action, the panel it sits in and the
+  // two decorative lines (B9 „Zierzeilen" — never a label, never a button).
+  'round.startSessionBruecke': '미션 시작',
+  'hub.bruecke.control': '미션 컨트롤',
+  'hub.bruecke.ready': '준비 완료',
+  'hub.bruecke.mission': '미션 {n} · 크루 {m}',
+  'hub.bruecke.crew': '멤버 · {n}',
+  'bruecke.status': 'T+ 00:14:52 · 궤도 안정',
   'round.startEmptyTitle': '아직 세션이 없어요',
   'round.startEmpty': '첫 세션을 시작해 보세요 — 마지막으로 플레이한 게임이 여기에 표시돼요.',
   'round.startSessionDisabled': '먼저 게임을 추가하세요',
@@ -282,6 +294,8 @@ I18N.ko = {
   'periodRecap.label.shelf': '선반',
   'periodRecap.toast.saved': '이미지를 저장했어요.',
   'periodRecap.toast.failed': '이미지를 만들지 못했어요.',
+  // Die Brücke's share card (#1247): the caption over its twelve monthly bars.
+  'periodRecap.card.perMonth': '월별 세션',
   // „Dein Rückblick" on the own profile (#1147) — no wins, only what was played.
   'accountRecap.title': '나의 돌아보기',
   'accountRecap.lead': '모든 그룹에서 내가 플레이한 기록이에요 — 나에게만 보여요.',
@@ -316,6 +330,15 @@ I18N.ko = {
   'chronik.seated': '{n}명 참여',
   'chronik.wonOne': '{names} 승리',
   'chronik.won': '{names} 승리',
+  // Die Brücke's Chronik (#1245): how often the chosen game took the 1 in that
+  // session, in the scale's own end word — and the log's column heads.
+  'chronik.noThrustOne': '{n}× 추진력 없음',
+  'chronik.noThrust': '{n}× 추진력 없음',
+  'chronik.col.date': '날짜',
+  'chronik.col.game': '게임',
+  'chronik.col.winner': '승자',
+  'chronik.col.games': '뽑은 게임',
+  'chronik.col.score': '점수',
   'chronik.changesOne': '선반 변경 {n}건',
   'chronik.changes': '선반 변경 {n}건',
   'activity.delete': '기록 삭제',
@@ -1515,6 +1538,9 @@ I18N.ko = {
   'konto.profile.off': '이제 나만 내 전적을 볼 수 있습니다.',
   // The per-user design (#1186): the Konto picker and the one-time chooser.
   'design.pick.label': '디자인',
+  'design.scheme.dark': '어두움',
+  'design.scheme.light': '밝음',
+  'design.pick.mine': '내 디자인',
   'design.klassisch.name': '클래식',
   'design.klassisch.badge': '기존 그대로',
   'design.klassisch.desc': 'Spielwirbel이 처음 시작한 모습 — 밝고 차분하며 주황색 강조가 있습니다.',
@@ -1546,7 +1572,7 @@ I18N.ko = {
   'design.poster.picked': '선택됨',
   'konto.design.title': '디자인',
   'konto.design.hint': '라운드가 아니라 나에게 적용됩니다.',
-  'konto.design.note': '클래식은 Spielwirbel이 처음 시작한 디자인으로 언제나 선택할 수 있습니다. 바꿔도 보이는 모습만 달라질 뿐, 무엇이 어디에 있는지는 그대로입니다.',
+  'konto.design.note': '클래식은 Spielwirbel이 처음 시작한 디자인으로 언제나 선택할 수 있습니다. 바꿔도 디자인만 달라질 뿐, 무엇이 어디에 있는지는 그대로입니다.',
   'konto.design.saved': '디자인을 적용했습니다.',
   'konto.design.invalid': '여기에는 없는 디자인입니다.',
   'konto.bgg.title': 'BoardGameGeek',
@@ -1780,4 +1806,38 @@ I18N.ko = {
   'badges.card.next': '다음 단계 {n}',
   'badges.card.tiers': '단계',
   'badges.evergreen.lineGame': '{game} {n}번 플레이',
+  // Das Programmheft's lobby and hub (#1372, P3.1/P3.2/P6.1).
+  'hub.members': '멤버',
+  'hub.lead.open': '결과 보기',
+  'home.phExtra': '호외',
+  'home.phKicker': '가판대 · {date}',
+  // Die Brücke's session loop (#1240): only the five themed words of
+  // docs/design/bruecke §2 — pool, probes, ignition, thrust, decrypt.
+  'startSession.poolBruecke': '풀',
+  'startSession.ignitionBruecke': '점화',
+  'startSession.countQuestionBruecke': '탐사선 · 몇 개를 뽑을까요?',
+  'startSession.potLabelBrueckeOne': '풀에 있는 게임',
+  'startSession.potLabelBruecke': '풀에 있는 게임',
+  'startSession.sealedBruecke': '비밀 평가 – 모두 평가를 마쳐야 해독됩니다.',
+  'vote.questionBruecke': '오늘 이 게임에 얼마나 추진력을 줄까요?',
+  'vote.scaleLowBruecke': '추진력 없음',
+  'vote.scaleHighBruecke': '최대 출력',
+  'vote.ratersTitleBruecke': '평가를 마친 사람',
+  'vote.sealedNoteBruecke': '모두 평가를 마쳐야 해독됩니다. 그때까지는 아무도 다른 사람의 값을 볼 수 없습니다.',
+  'vote.sealedTitleBruecke': '가려짐',
+  'vote.sealedTextBrueckeOne': '게임 하나가 차례가 올 때까지 암호화된 채로 남아 있습니다.',
+  'vote.sealedTextBruecke': '게임 {n}개가 차례가 올 때까지 암호화된 채로 남아 있습니다.',
+  'vote.sealedCardBruecke': '암호화됨',
+  'score.reasonVetoBrueckeOne': '{n}× 추진력 없음',
+  'score.reasonVetoBruecke': '{n}× 추진력 없음',
+  'startSession.guestSeatBruecke': '게스트 · 오늘만',
+  // Das Programmheft's share card (#1381, P8.4): its facts and masthead.
+  'card.programmheft.sessionNo': '세션 {n}번',
+  'card.programmheft.score': '점수',
+  'card.programmheft.streak': '연승',
+  'card.programmheft.streakN': '{n}연속',
+  'card.programmheft.shared': '공동',
+  'card.programmheft.winners': '승자 {n}명',
+  'card.programmheft.ratings': '평가',
+  'card.programmheft.present': '참가',
 };

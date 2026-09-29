@@ -32,6 +32,10 @@ I18N.fi = {
   // Ocean only (#1211): its sub-brand beside the wordmark and its lobby greeting.
   'home.oceanKicker': 'Rannikko · sinun porukkasi',
   'home.oceanGreeting': 'Tervetuloa rannikolle.',
+  // Die Brücke only (#1238): the lobby voice, its greeting and the notice kicker (B9).
+  'home.brueckeKicker': 'Laivasto / Yleiskatsaus',
+  'home.brueckeGreeting': 'Tervetuloa takaisin kyytiin.',
+  'home.brueckeSignal': 'Saapuva signaali',
   'home.shared': 'Jaettu',
   'home.newRound': 'Aloita uusi porukka',
   'home.empty.title': 'Ei vielä yhtään peliporukkaa.',
@@ -79,6 +83,14 @@ I18N.fi = {
   'round.startSession': 'Aloita sessio',
   // Ocean only (#1211): the one action's themed verb (O9 §2).
   'round.startSessionOcean': 'Sukella',
+  // Die Brücke only (#1238): the one action, the panel it sits in and the
+  // two decorative lines (B9 „Zierzeilen" — never a label, never a button).
+  'round.startSessionBruecke': 'Käynnistä tehtävä',
+  'hub.bruecke.control': 'Tehtävänohjaus',
+  'hub.bruecke.ready': 'Valmis',
+  'hub.bruecke.mission': 'Tehtävä {n} · Miehistö {m}',
+  'hub.bruecke.crew': 'Jäsenet · {n}',
+  'bruecke.status': 'T+ 00:14:52 · kiertorata vakaa',
   'round.startEmptyTitle': 'Ei vielä sessioita',
   'round.startEmpty': 'Aloita ensimmäinen sessio — viimeksi pelattu näkyy tässä.',
   'round.startSessionDisabled': 'Lisää ensin pelejä',
@@ -281,6 +293,8 @@ I18N.fi = {
   'periodRecap.label.shelf': 'Hylly',
   'periodRecap.toast.saved': 'Kuva tallennettu.',
   'periodRecap.toast.failed': 'Kuvaa ei voitu luoda.',
+  // Die Brücke's share card (#1247): the caption over its twelve monthly bars.
+  'periodRecap.card.perMonth': 'Sessiot kuukausittain',
   // „Dein Rückblick" on the own profile (#1147) — no wins, only what was played.
   'accountRecap.title': 'Sinun katsauksesi',
   'accountRecap.lead': 'Mitä olet pelannut kaikissa ryhmissäsi — näkyy vain sinulle.',
@@ -315,6 +329,15 @@ I18N.fi = {
   'chronik.seated': '{n} pöydässä',
   'chronik.wonOne': '{names} voitti',
   'chronik.won': '{names} voittivat',
+  // Die Brücke's Chronik (#1245): how often the chosen game took the 1 in that
+  // session, in the scale's own end word — and the log's column heads.
+  'chronik.noThrustOne': '{n}× ei työntövoimaa',
+  'chronik.noThrust': '{n}× ei työntövoimaa',
+  'chronik.col.date': 'Päivä',
+  'chronik.col.game': 'Peli',
+  'chronik.col.winner': 'Voittaja',
+  'chronik.col.games': 'Arvotut pelit',
+  'chronik.col.score': 'Pisteet',
   'chronik.changesOne': '{n} hyllymuutos',
   'chronik.changes': '{n} hyllymuutosta',
   'activity.delete': 'Poista merkintä',
@@ -1543,6 +1566,9 @@ I18N.fi = {
   'konto.profile.off': 'Vain sinä näet nyt tilastosi.',
   // The per-user design (#1186): the Konto picker and the one-time chooser.
   'design.pick.label': 'Ulkoasu',
+  'design.scheme.dark': 'Tumma',
+  'design.scheme.light': 'Vaalea',
+  'design.pick.mine': 'Sinun',
   'design.klassisch.name': 'Klassinen',
   'design.klassisch.badge': 'Kuten ennen',
   'design.klassisch.desc': 'Ulkoasu, jolla Spielwirbel aloitti — vaalea, rauhallinen ja oranssi korostus.',
@@ -1574,7 +1600,7 @@ I18N.fi = {
   'design.poster.picked': 'Valittu',
   'konto.design.title': 'Ulkoasu',
   'konto.design.hint': 'Koskee sinua, ei ryhmää.',
-  'konto.design.note': 'Klassinen on ulkoasu, jolla Spielwirbel aloitti — se on aina valittavissa. Vaihtaminen muuttaa vain ulkonäköä, ei sitä missä asiat ovat.',
+  'konto.design.note': 'Klassinen on ulkoasu, jolla Spielwirbel aloitti — se on aina valittavissa. Vaihtaminen muuttaa vain ulkoasua, ei sitä missä asiat ovat.',
   'konto.design.saved': 'Ulkoasu otettu käyttöön.',
   'konto.design.invalid': 'Tätä ulkoasua ei ole täällä.',
   'konto.bgg.title': 'BoardGameGeek',
@@ -1817,4 +1843,38 @@ I18N.fi = {
   'badges.card.next': 'Seuraava taso {n}',
   'badges.card.tiers': 'Tasot',
   'badges.evergreen.lineGame': '{game} pelattu {n} kertaa',
+  // Das Programmheft's lobby and hub (#1372, P3.1/P3.2/P6.1).
+  'hub.members': 'Jäsenet',
+  'hub.lead.open': 'Katso tulos',
+  'home.phExtra': 'Ylimääräinen painos',
+  'home.phKicker': 'Kioski · {date}',
+  // Die Brücke's session loop (#1240): only the five themed words of
+  // docs/design/bruecke §2 — pool, probes, ignition, thrust, decrypt.
+  'startSession.poolBruecke': 'Pooli',
+  'startSession.ignitionBruecke': 'Sytytys',
+  'startSession.countQuestionBruecke': 'Luotaimet · montako arvotaan?',
+  'startSession.potLabelBrueckeOne': 'peli poolissa',
+  'startSession.potLabelBruecke': 'peliä poolissa',
+  'startSession.sealedBruecke': 'Salainen arvio – puretaan vasta, kun kaikki ovat arvioineet.',
+  'vote.questionBruecke': 'Kuinka paljon työntövoimaa annat tälle pelille tänään?',
+  'vote.scaleLowBruecke': 'ei työntöä',
+  'vote.scaleHighBruecke': 'täysi teho',
+  'vote.ratersTitleBruecke': 'Ketkä ovat jo arvioineet',
+  'vote.sealedNoteBruecke': 'Salaus puretaan vasta, kun kaikki ovat arvioineet. Siihen asti kukaan ei näe muiden arvoja.',
+  'vote.sealedTitleBruecke': 'Piilossa',
+  'vote.sealedTextBrueckeOne': 'Vielä yksi peli pysyy salattuna, kunnes pääset siihen.',
+  'vote.sealedTextBruecke': 'Vielä {n} peliä pysyy salattuna, kunnes pääset niihin.',
+  'vote.sealedCardBruecke': 'Salattu',
+  'score.reasonVetoBrueckeOne': '{n}× ei työntöä',
+  'score.reasonVetoBruecke': '{n}× ei työntöä',
+  'startSession.guestSeatBruecke': 'Vieras · vain tänään',
+  // Das Programmheft's share card (#1381, P8.4): its facts and masthead.
+  'card.programmheft.sessionNo': 'Sessio nro {n}',
+  'card.programmheft.score': 'Pisteet',
+  'card.programmheft.streak': 'Putki',
+  'card.programmheft.streakN': '{n} peräkkäin',
+  'card.programmheft.shared': 'Jaettu',
+  'card.programmheft.winners': '{n} voittajaa',
+  'card.programmheft.ratings': 'Arviot',
+  'card.programmheft.present': 'Mukana',
 };
