@@ -1780,4 +1780,9 @@ I18N.ko = {
   'badges.card.next': '다음 단계 {n}',
   'badges.card.tiers': '단계',
   'badges.evergreen.lineGame': '{game} {n}번 플레이',
+  // Das Programmheft's lobby and hub (#1372, P3.1/P3.2/P6.1).
+  'hub.members': '멤버',
+  'hub.lead.open': '결과 보기',
+  'home.phExtra': '호외',
+  'home.phKicker': '가판대 · {date}',
 };

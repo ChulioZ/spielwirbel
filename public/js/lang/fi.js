@@ -1817,4 +1817,9 @@ I18N.fi = {
   'badges.card.next': 'Seuraava taso {n}',
   'badges.card.tiers': 'Tasot',
   'badges.evergreen.lineGame': '{game} pelattu {n} kertaa',
+  // Das Programmheft's lobby and hub (#1372, P3.1/P3.2/P6.1).
+  'hub.members': 'Jäsenet',
+  'hub.lead.open': 'Katso tulos',
+  'home.phExtra': 'Ylimääräinen painos',
+  'home.phKicker': 'Kioski · {date}',
 };

@@ -1856,4 +1856,9 @@ I18N.it = {
   'badges.card.next': 'Livello successivo: {n}',
   'badges.card.tiers': 'Livelli',
   'badges.evergreen.lineGame': '{game} giocato {n} volte',
+  // Das Programmheft's lobby and hub (#1372, P3.1/P3.2/P6.1).
+  'hub.members': 'Membri',
+  'hub.lead.open': 'Vedi il risultato',
+  'home.phExtra': 'Edizione straordinaria',
+  'home.phKicker': 'Edicola · {date}',
 };

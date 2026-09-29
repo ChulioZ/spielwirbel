@@ -1851,4 +1851,9 @@ I18N.pt = {
   'badges.card.next': 'Próximo nível: {n}',
   'badges.card.tiers': 'Níveis',
   'badges.evergreen.lineGame': '{game} jogado {n} vezes',
+  // Das Programmheft's lobby and hub (#1372, P3.1/P3.2/P6.1).
+  'hub.members': 'Membros',
+  'hub.lead.open': 'Ver o resultado',
+  'home.phExtra': 'Edição extra',
+  'home.phKicker': 'Banca · {date}',
 };

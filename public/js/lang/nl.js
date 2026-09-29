@@ -1849,4 +1849,9 @@ I18N.nl = {
   'badges.card.next': 'Volgend niveau {n}',
   'badges.card.tiers': 'Niveaus',
   'badges.evergreen.lineGame': '{game} {n} keer gespeeld',
+  // Das Programmheft's lobby and hub (#1372, P3.1/P3.2/P6.1).
+  'hub.members': 'Leden',
+  'hub.lead.open': 'Uitslag bekijken',
+  'home.phExtra': 'Extra editie',
+  'home.phKicker': 'Kiosk · {date}',
 };
