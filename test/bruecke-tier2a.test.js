@@ -162,8 +162,9 @@ test('Brücke ranks every member with their place and no crown, plaques beside',
     'every member on the board, a tie sharing its place, Dora at 0 with no place');
   assert.equal(dom.app.querySelector('.pokale-bars .ti-crown'), null, 'the lead is the cyan place, not a crown');
   assert.ok(dom.app.querySelector('.pokale-bars__row.is-lead'));
-  assert.ok(dom.app.querySelector('.pokale-split .pokale-split__stage .pokale-bars'), 'the board is not in the split');
+  assert.ok(dom.app.querySelector('.pokale-split .pokale-split__stage .pokale-bars'), 'the board sits in the split\'s stage');
   assert.equal(dom.app.querySelector('.podium'), null);
+  assert.equal(text(dom.app.querySelector('.section-head h1')), 'Pokale', 'the page carries the tab\'s word (B3.4)');
 });
 
 test('a young Brücke round keeps the sentence; Ocean keeps its crowned bars without places', async (t) => {
@@ -176,6 +177,7 @@ test('a young Brücke round keeps the sentence; Ocean keeps its crowned bars wit
   await ocean.call('showRound', RID, 'pokale');
   assert.equal(ocean.app.querySelector('.pokale-bars__rank'), null);
   assert.ok(ocean.app.querySelector('.pokale-bars .ti-crown'));
+  assert.equal(text(ocean.app.querySelector('.section-head h1')), 'Ruhmeshalle', 'other designs keep their title');
 });
 
 // --- the member page -------------------------------------------------------

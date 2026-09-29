@@ -288,15 +288,17 @@ function renderPokaleTab(round) {
      somewhere; a count of wins owes none, and the whole `win` topic went with
      the measure (score-info.js). Don't add one back without a measure that
      genuinely needs it — and if you do, it owes a rule file too. */
-  const head = h(`<div class="section-head"><h1>${esc(t('pokale.title'))}</h1></div>`);
+  // Die Brücke (#1245) shares Ocean's standings and count, and Der Tisch's
+  // plaque column — B3.4 is bars on the left, plaques on the right. Its page
+  // is titled with the tab's own word, „Pokale" (B3.4/B6.2): the sheet names
+  // the page after the tab it is reached by, not „Ruhmeshalle".
+  const bruecke = designIs('bruecke');
+  const head = h(`<div class="section-head"><h1>${esc(t(bruecke ? 'hub.tab.pokale' : 'pokale.title'))}</h1></div>`);
   sec.appendChild(head);
   // Ocean names the span beside the title, as its Chronik does (#1218, O13.2
   // „Seit Oktober 2025 · 23 Sessions") — the same key, counted the same way,
   // so the two pages cannot disagree about how many sessions the round has.
   const ocean = designIs('ocean');
-  // Die Brücke (#1245) shares Ocean's standings and count, and Der Tisch's
-  // plaque column — B3.4 is bars on the left, plaques on the right.
-  const bruecke = designIs('bruecke');
   if ((ocean || bruecke) && finished.length) {
     const since = finished.reduce((a, s) => (s.createdAt < a ? s.createdAt : a), finished[0].createdAt);
     head.appendChild(h(`<span class="chronik__count">${esc(tn(finished.length, 'chronik.countOne', 'chronik.count', { month: fmtMonth(since) }))}</span>`));
