@@ -55,6 +55,10 @@ I18N.nl = {
   // Ocean only (#1211): its sub-brand beside the wordmark and its lobby greeting.
   'home.oceanKicker': 'De kust · jouw groepen',
   'home.oceanGreeting': 'Welkom aan de kust.',
+  // Die Brücke only (#1238): the lobby voice, its greeting and the notice kicker (B9).
+  'home.brueckeKicker': 'Vloot / Overzicht',
+  'home.brueckeGreeting': 'Welkom terug aan boord.',
+  'home.brueckeSignal': 'Inkomend signaal',
   'home.shared': 'Gedeeld',
   'home.newRound': 'Een nieuwe groep starten',
   'home.empty.title': 'Nog geen speelgroep.',
@@ -102,6 +106,14 @@ I18N.nl = {
   'round.startSession': 'Sessie starten',
   // Ocean only (#1211): the one action's themed verb (O9 §2).
   'round.startSessionOcean': 'Duiken',
+  // Die Brücke only (#1238): the one action, the panel it sits in and the
+  // two decorative lines (B9 „Zierzeilen" — never a label, never a button).
+  'round.startSessionBruecke': 'Missie starten',
+  'hub.bruecke.control': 'Missiecontrole',
+  'hub.bruecke.ready': 'Gereed',
+  'hub.bruecke.mission': 'Missie {n} · Crew {m}',
+  'hub.bruecke.crew': 'Leden · {n}',
+  'bruecke.status': 'T+ 00:14:52 · baan stabiel',
   'round.startEmptyTitle': 'Nog geen sessie',
   'round.startEmpty': 'Start je eerste sessie — wat jullie laatst speelden komt hier te staan.',
   'round.startSessionDisabled': 'Voeg eerst spellen toe',

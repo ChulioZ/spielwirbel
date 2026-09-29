@@ -52,12 +52,17 @@ function renderStartTab(round, activeGames) {
   const ocean = designIs('ocean');
   const cols = ocean ? oceanHubFrame() : null;
   if (cols) app.appendChild(cols.root);
-  const stage = tisch ? app.appendChild(h('<div class="hub-stage"></div>')) : ocean ? cols.crew : app;
+  /* Die Brücke (#1238, B2.2/B3.1) lays the hub out as ONE grid of named slots
+     in the phone order (bruecke-hub.js), placed into three columns from 1280 —
+     `bh` is that frame, and every append below that names a slot goes there. */
+  const bh = designIs('bruecke') ? brueckeHubFrame() : null;
+  if (bh) app.appendChild(bh.root);
+  const stage = tisch ? app.appendChild(h('<div class="hub-stage"></div>')) : ocean ? cols.crew : bh ? bh.crew : app;
   // Where the one action and its presets go, and where the tickets and cards
-  // follow them. Both are the plain column everywhere but Ocean.
-  const launch = ocean ? cols.main : stage;
-  const feed = ocean ? cols.main : app;
-  const hero = h(`<div class="hero${ocean ? '' : ' rail-owned'}">
+  // follow them. Both are the plain column everywhere but Ocean and Die Brücke.
+  const launch = ocean ? cols.main : bh ? bh.mission : stage;
+  const feed = ocean ? cols.main : bh ? bh.feed : app;
+  const hero = h(`<div class="hero${ocean || bh ? '' : ' rail-owned'}">
        <h1></h1>
        <div class="hero__members">${activeMembers(round)
          .map((m) => `<a class="avatar" style="background:${memberColor(round, m.id)}" title="${esc(m.name)}">${avatarFace(initials(m.name), { userId: m.userId })}</a>`)
@@ -106,6 +111,7 @@ function renderStartTab(round, activeGames) {
   [...seatRow.children].forEach((el, i) => el.style.setProperty('--seat-i', i));
   if (tisch) tischSeatHints(round, seatRow);
   if (ocean) oceanHeroCompose(round, hero);
+  if (bh) brueckeHeroCompose(round, hero, playedCount);
 
   /* `rail-owned` only where the rail still carries its own copy. Der Tisch's
      rail is identity plus the five links (#1262), so there the band's CTA and
@@ -120,12 +126,14 @@ function renderStartTab(round, activeGames) {
      the count. The threshold is the app's own — one active game — not the
      sheet's „ab 2 Spielen" (operator default on #1269). */
   if (activeGames.length === 0) launch.appendChild(hubEmptyTable(round));
-  // Ocean's one themed verb, „Abtauchen" (O9 §2), on the one action.
+  // Ocean's one themed verb, „Abtauchen" (O9 §2), on the one action; Die
+  // Brücke's „Mission starten" with its own glyph (B9 „Hauptaktion 1").
   const ctaLabel = ocean ? t('round.startSessionOcean')
-    : tisch && activeGames.length && roundIsYoung(round)
-      ? t('hub.young.firstCta') : t('round.startSession');
+    : bh ? t('round.startSessionBruecke')
+      : tisch && activeGames.length && roundIsYoung(round)
+        ? t('hub.young.firstCta') : t('round.startSession');
   const startBtn = h(
-    `<button class="btn btn--primary hub-cta${railOwned}"><i class="ti ti-tornado" aria-hidden="true"></i>${esc(ctaLabel)}</button>`
+    `<button class="btn btn--primary hub-cta${railOwned}"><i class="ti ${bh ? 'ti-rocket' : 'ti-tornado'}" aria-hidden="true"></i>${esc(ctaLabel)}</button>`
   );
   startBtn.addEventListener('click', () => showStartSession(round));
   if (activeGames.length === 0) {
@@ -138,7 +146,8 @@ function renderStartTab(round, activeGames) {
     startBtn.appendChild(h(`<span class="hub-cta__reason" id="hub-cta-reason" aria-hidden="true">${esc(t('hub.young.lock'))}</span>`));
     startBtn.setAttribute('aria-describedby', 'hub-cta-reason');
   }
-  launch.appendChild(ocean ? oceanShell(startBtn) : startBtn);
+  if (bh) launch.appendChild(brueckeMission(startBtn, activeGames.length > 0));
+  else launch.appendChild(ocean ? oceanShell(startBtn) : startBtn);
   // Ocean's young round (#1216, O7.3): the shell stays the centre, and one
   // line under it says what is waiting for the first session.
   if (ocean && activeGames.length && roundIsYoung(round)) launch.appendChild(oceanYoungLine(activeGames));
@@ -153,7 +162,8 @@ function renderStartTab(round, activeGames) {
     // the pane.
     if (presets) {
       if (!railIsLean()) presets.classList.add('rail-owned');
-      launch.appendChild(presets);
+      // Die Brücke: inside the Missionskontrolle panel, under the ignition.
+      (bh ? launch.querySelector('.bruecke-mission') : launch).appendChild(presets);
     }
   }
 
@@ -339,7 +349,7 @@ function renderStartTab(round, activeGames) {
          </span>
        </a>`);
     navLink(ticket, resultsPath(round.id, lastPlayed.id), () => showResults(round, lastPlayed));
-    (ocean ? pair : app).appendChild(ticket);
+    (ocean ? pair : bh ? bh.last : app).appendChild(ticket);
   }
 
   // The retirement recommendations are resolved BEFORE the cards, because the
@@ -383,13 +393,16 @@ function renderStartTab(round, activeGames) {
     if (suggest) pair.appendChild(suggest);
     if (!pair.children.length) pair.remove();
   }
+  // Die Brücke gives these three a slot of their own (B3.1 places them).
+  const pulse = hubPulseCard(round, activeGames);
+  if (bh) [[suggest, bh.suggest], [pulse, bh.pulse], [care, bh.care]].forEach(([card, slot]) => { if (card) slot.appendChild(card); });
   [
     // Der Tisch's invitation (T7.4, #1269) leads — it is the one next step.
     // Null on every other round and on Klassisch, so that list is unchanged.
     hubYoungCard(round, activeGames),
-    ocean ? null : suggest,
-    hubPulseCard(round, activeGames),
-    ocean ? null : care,
+    ocean || bh ? null : suggest,
+    bh ? null : pulse,
+    ocean || bh ? null : care,
     // The Regal-Steckbrief (#1173, views-shelf-profile.js): what the shelf adds
     // up to. Null below its threshold of games with provider data.
     hubShelfProfileCard(round, activeGames),
@@ -406,6 +419,8 @@ function renderStartTab(round, activeGames) {
   if (ocean) {
     previews.forEach((card) => cols.aside.appendChild(card));
     if (care) cols.aside.appendChild(care);
+  } else if (bh) {
+    previews.forEach((card) => bh.previews.appendChild(card));
   } else if (tisch && previews.length) {
     /* Der Tisch lays the survivors out as ONE row of small tiles on a phone
        (T2.2, #1263), so they share one slot: two survivors are two half-width
@@ -433,7 +448,7 @@ function renderStartTab(round, activeGames) {
   // pane holding one is not the bare page this stand-in exists for.
   // The empty table (#1269) is already that stand-in, at every width.
   // Not under Ocean: its hero and shell stay in the pane at every width.
-  if (!ocean && !app.querySelector('.ticket') && !grid.querySelector('.hub-card')
+  if (!ocean && !bh && !app.querySelector('.ticket') && !grid.querySelector('.hub-card')
     && !app.querySelector('.empty--table')) {
     const gap = emptyState({
       icon: 'ti-tornado',
@@ -521,7 +536,7 @@ function renderStartTab(round, activeGames) {
   // so an empty grid costs no margin and no gap — the "renders nothing when it
   // has nothing to say" rule, kept by CSS rather than by an append condition
   // that cannot see the future.
-  feed.appendChild(grid);
+  (bh ? bh.more : feed).appendChild(grid);
 
   // Fetched AFTER this paint, never in showRound's Promise.all: the route does
   // a full getRound plus the corpus join, so putting it on the critical path
@@ -537,7 +552,7 @@ function renderStartTab(round, activeGames) {
      used one is exactly where someone goes to start. */
   // Under Ocean it is the frame's fourth cell: the crew column's foot at desktop
   // (O3.2), the end of the page on a phone.
-  (ocean ? cols.root : app).appendChild(hubOffShelfGroup(round));
+  (ocean ? cols.root : bh ? bh.offshelf : app).appendChild(hubOffShelfGroup(round));
 
   // Quick actions: quieter secondary tasks below the fold.
   const actions = h('<div class="hub-actions"></div>');
@@ -562,7 +577,8 @@ function renderStartTab(round, activeGames) {
   actions.appendChild(settingsBtn);
   // Ocean: the frame's last cell — the end of the page on a phone, under the
   // centre column from 1280 (ocean.css).
-  (ocean ? cols.root : app).appendChild(actions);
+  (ocean ? cols.root : bh ? bh.actions : app).appendChild(actions);
+  if (bh) brueckeStatus();
 }
 
 /* Der Tisch's seat captions (T2.1, T3.2; #1262/#1263): a name under each seat,
