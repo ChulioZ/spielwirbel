@@ -1901,4 +1901,13 @@ I18N.es = {
   'badges.card.next': 'Siguiente nivel: {n}',
   'badges.card.tiers': 'Niveles',
   'badges.evergreen.lineGame': '{game} jugado {n} veces',
+  // Das Programmheft's share card (#1381, P8.4): its facts and masthead.
+  'card.programmheft.sessionNo': 'Sesión n.º {n}',
+  'card.programmheft.score': 'Puntuación',
+  'card.programmheft.streak': 'Racha',
+  'card.programmheft.streakN': '{n} seguidas',
+  'card.programmheft.shared': 'Compartido',
+  'card.programmheft.winners': '{n} ganadores',
+  'card.programmheft.ratings': 'Valoraciones',
+  'card.programmheft.present': 'Jugadores',
 };

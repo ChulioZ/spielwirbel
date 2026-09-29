@@ -456,50 +456,11 @@ function renderPokaleTab(round) {
     );
   }
 
-  // Streak: how many of the latest nights in a row one member won alone.
-  // Chronological by `createdAt` (when the night happened), like the Chronik —
-  // `finishedAt` moves when an old session is re-finished. The Discover
-  // aggregate missed this note until #1059; the rule is now written down in
-  // .claude/rules/server-computed-calendar-periods.md §7.
-  // A night any guest won is skipped entirely (#458): a session-only visitor
-  // must neither break nor extend a member's streak, and treating their win as
-  // an ordinary sole win would silently blank the card (there is no member row
-  // behind the id) — which is breaking it by another name.
-  const wonByGuest = (s) => {
-    const gids = new Set((s.guests || []).map((g) => g.id));
-    return gids.size > 0 && (s.winnerIds || []).some((wid) => gids.has(wid));
-  };
-  // A solo evening is skipped for the SAME reason (#895), and the argument was
-  // already here unimplemented: an evening that was not a contest can neither
-  // break nor extend a streak. A one-person session is single-winner by
-  // definition, so twenty logged solo plays read as a twenty-night streak.
-  const isSolo = (s) => sessionPartyCount(round, s) === 1;
-  // A night recorded as „Kein Sieger" or „Fortsetzung folgt" (#1038) is skipped
-  // for the SAME reason as a solo one: it was not a contest, so it can neither
-  // break nor extend a streak. „Verloren" is NOT skipped — the table played to
-  // win and did not, which breaks a streak exactly as somebody else's win does
-  // (it already did, via `ws.length !== 1`; naming it here stops a future reader
-  // from folding all three together). An UNRECORDED night also still breaks one;
-  // the fix for that is recording it.
-  const notAContest = (s) => {
-    const e = sessionEnding(s);
-    return e === 'noWinner' || e === 'ongoing';
-  };
-  const chrono = [...finished]
-    .filter((s) => !wonByGuest(s) && !isSolo(s) && !notAContest(s))
-    .sort((a, b) => String(a.createdAt).localeCompare(String(b.createdAt)));
-  let streakMember = null;
-  let streak = 0;
-  for (let i = chrono.length - 1; i >= 0; i--) {
-    const ws = chrono[i].winnerIds || [];
-    if (streakMember === null) {
-      if (ws.length !== 1) break;
-      streakMember = ws[0];
-      streak = 1;
-    } else if (ws.length === 1 && ws[0] === streakMember) {
-      streak++;
-    } else break;
-  }
+  // Streak: how many of the latest nights in a row one member won alone. The
+  // rule — chronological by `createdAt`, guest-won, solo and no-contest nights
+  // skipped — lives in session-tally.js (#1381), which Das Programmheft's share
+  // card reads too, so the two cannot disagree about what a streak is.
+  const { memberId: streakMember, n: streak } = soleWinStreak(round, finished, { sessionEnding, sessionPartyCount });
   const streakM = streakMember && round.members.find((m) => m.id === streakMember);
   // A series waits for YOUNG_ROUND_SERIES_FROM (#1280; every design since
   // #1318) — the number the Rundenpuls card's sentence names, so it cannot

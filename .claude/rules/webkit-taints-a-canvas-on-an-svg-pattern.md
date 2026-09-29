@@ -5,6 +5,7 @@ paths:
   - "public/js/views-period-recap.js"
   - "public/js/recap-card-tisch.js"
   - "public/js/recap-card-ocean.js"
+  - "public/js/recap-card-programmheft.js"
   - "public/js/card-glyphs.js"
   - "public/js/shelf-profile-card.js"
   - "test/recap-card-tisch.test.js"
@@ -98,6 +99,12 @@ copy is licensed by a parity test against `test/support/theme.js`.
 gradients, flat fills, the whale as canvas paths, the whirl as a `Path2D`, the
 BGG badge via `drawImage` — and all three of its formats exported clean in
 headless Chromium and a non-persistent WKWebView.
+
+**Das Programmheft's card (#1381, `public/js/recap-card-programmheft.js`) is
+the third of that shape** and the plainest: flat fills, one gradient (the cover
+stand-in), no Path2D, no image but the BGG badge. Its masthead tracks capitals
+by drawing them letter by letter rather than through `ctx.letterSpacing`, which
+WebKit lacks in the versions this app supports.
 
 A spec can only stand in for the engine by asserting the **mechanism** against a
 recording context — jsdom has no 2d context and Node has no WebKit — so it

@@ -1849,4 +1849,13 @@ I18N.nl = {
   'badges.card.next': 'Volgend niveau {n}',
   'badges.card.tiers': 'Niveaus',
   'badges.evergreen.lineGame': '{game} {n} keer gespeeld',
+  // Das Programmheft's share card (#1381, P8.4): its facts and masthead.
+  'card.programmheft.sessionNo': 'Sessie nr. {n}',
+  'card.programmheft.score': 'Score',
+  'card.programmheft.streak': 'Reeks',
+  'card.programmheft.streakN': '{n} op rij',
+  'card.programmheft.shared': 'Gedeeld',
+  'card.programmheft.winners': '{n} winnaars',
+  'card.programmheft.ratings': 'Beoordelingen',
+  'card.programmheft.present': 'Erbij',
 };
