@@ -1616,7 +1616,7 @@ I18N.it = {
   'design.poster.picked': 'Scelto',
   'konto.design.title': 'Design',
   'konto.design.hint': 'Vale per te, non per il gruppo.',
-  'konto.design.note': 'Classico è il design con cui Spielwirbel è nato e resterà sempre disponibile. Cambiarlo modifica solo l\'aspetto, mai dove si trovano le cose.',
+  'konto.design.note': 'Classico è il design con cui Spielwirbel è nato e resterà sempre disponibile. Cambiarlo modifica solo il design, mai dove si trovano le cose.',
   'konto.design.saved': 'Design applicato.',
   'konto.design.invalid': 'Questo design qui non esiste.',
   'konto.bgg.title': 'BoardGameGeek',

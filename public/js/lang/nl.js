@@ -1609,7 +1609,7 @@ I18N.nl = {
   'design.poster.picked': 'Gekozen',
   'konto.design.title': 'Ontwerp',
   'konto.design.hint': 'Geldt voor jou, niet voor de groep.',
-  'konto.design.note': 'Klassiek is het ontwerp waarmee Spielwirbel begon — het blijft altijd beschikbaar. Wisselen verandert alleen het uiterlijk, nooit waar iets staat.',
+  'konto.design.note': 'Klassiek is het ontwerp waarmee Spielwirbel begon — het blijft altijd beschikbaar. Wisselen verandert alleen het ontwerp, nooit waar iets staat.',
   'konto.design.saved': 'Ontwerp toegepast.',
   'konto.design.invalid': 'Dat ontwerp bestaat hier niet.',
   'konto.bgg.title': 'BoardGameGeek',

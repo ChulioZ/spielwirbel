@@ -112,6 +112,9 @@ const DESIGN_REGISTRY = [
     shortKey: 'design.klassisch.short',
     ritualKeys: ['startSession.potHeading', 'round.startSession', 'startSession.draw'],
     poster: { ground: ['#f6f3ec', '#eae5d9'], ink: '#c2410c', sub: '#6b6358' },
+    // Stated even though it is the default: the picker prints it (B5.2), and
+    // test/bruecke-konto.test.js requires every row to say which it is.
+    scheme: 'light',
     // The eight ACCENTS of the eight light palettes, in the palettes' own order
     // (#1187) — not their page tones. The accent is what identified a palette:
     // three of the eight pages are near-identical creams (#f4f1ea / #f6efe2 /
@@ -270,6 +273,7 @@ const DESIGN_REGISTRY = [
     glyph: 'ti-wave-sine',
     shortKey: 'design.ocean.short',
     poster: { ground: ['#eef7fa', '#a9c9d8'], ink: '#0e6690', sub: '#10283a' },
+    scheme: 'light',
     page: '#e4f1f5',
     accent: '#0e6690',
     stylesheet: '/css/designs/ocean.css',
@@ -429,6 +433,7 @@ const DESIGN_REGISTRY = [
        and the ink subline. Swept with every poster by test/a11y-contrast.test.js.
        The wordmark's FIT in the tile (review R2-1) is #1376's. */
     poster: { ground: ['#fbfaf6', '#efece4'], ink: '#e8451c', sub: '#141414' },
+    scheme: 'light',
     page: '#fbfaf6',
     accent: '#b8330f',
     stylesheet: '/css/designs/programmheft.css',

@@ -1692,7 +1692,7 @@ I18N.en = {
   'design.poster.picked': 'Selected',
   'konto.design.title': 'Design',
   'konto.design.hint': 'Applies to you, not to the round.',
-  'konto.design.note': 'Classic is the design Spielwirbel started with — it stays available for good. Switching changes only how things look, never where they are.',
+  'konto.design.note': 'Classic is the design Spielwirbel started with — it stays available for good. Switching changes only the design, never where things are.',
   'konto.design.saved': 'Design applied.',
   'konto.design.invalid': 'That design is not available here.',
   'konto.bgg.title': 'BoardGameGeek',

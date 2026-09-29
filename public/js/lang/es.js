@@ -1640,7 +1640,7 @@ I18N.es = {
   'design.poster.picked': 'Elegido',
   'konto.design.title': 'Diseño',
   'konto.design.hint': 'Se aplica a ti, no a la ronda.',
-  'konto.design.note': 'Clásico es el diseño con el que empezó Spielwirbel y siempre estará disponible. Cambiar solo altera el aspecto, nunca dónde está cada cosa.',
+  'konto.design.note': 'Clásico es el diseño con el que empezó Spielwirbel y siempre estará disponible. Cambiar solo altera el diseño, nunca dónde está cada cosa.',
   'konto.design.saved': 'Diseño aplicado.',
   'konto.design.invalid': 'Ese diseño no está disponible aquí.',
   'konto.bgg.title': 'BoardGameGeek',

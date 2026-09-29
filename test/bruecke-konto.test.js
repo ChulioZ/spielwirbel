@@ -23,11 +23,13 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
+const vm = require('node:vm');
 
 const { loadApp, flush } = require('./support/dom');
 const { rulesOf } = require('./support/css');
 const { contrast, token } = require('./support/theme');
 const { DESIGN_REGISTRY, CLASSIC_DESIGN, designById } = require('../public/js/designs');
+const { SUPPORTED_LOCALES } = require('../public/js/locales');
 
 const BRUECKE = designById('bruecke');
 const SHEET = fs
@@ -79,6 +81,17 @@ test('#1242: Brücke\'s own poster is B1\'s page gradient, and the swatch reads 
 });
 
 /* --------------------------- 2. the Konto cards ------------------------------ */
+
+/* The picker's „Hell"/„Dunkel" line reads `scheme` and falls back to „Hell"
+   for a row without one — so a dark design that forgot the field would be
+   labelled light with nothing going red. Every row states it instead. */
+test('#1242: every registry row declares its scheme explicitly', () => {
+  const missing = DESIGN_REGISTRY.filter((d) => !['light', 'dark'].includes(d.scheme))
+    .map((d) => `${d.id}: ${JSON.stringify(d.scheme)}`);
+  assert.deepEqual(missing, [], 'a design row without scheme: \'light\' | \'dark\'');
+  assert.equal(designById(CLASSIC_DESIGN).scheme, 'light');
+  assert.equal(BRUECKE.scheme, 'dark');
+});
 
 const ME = { id: 'u1', design: 'bruecke', designChooserSeen: null };
 
@@ -169,4 +182,24 @@ test('#1242: every text link on the auth screens is sized at target-min', () => 
   assert.ok(sized('.auth__terms a'), 'the legal line\'s links are not at target-min');
   const terms = rules.find(([sel]) => sel.includes('.auth__terms a'));
   assert.match(terms[1], /display:\s*inline-flex/, 'min-height does nothing on an inline <a>');
+});
+
+/* The Konto foot note calls what a switch changes by the SECTION's own name
+   („Design"), not by a synonym („Aussehen") — one thing, one word on one card.
+   Read from the parsed dictionaries, so comments cannot satisfy it. The FIRST
+   sentence already names the design („Klassisch ist das Design …"), so only
+   the last one is checked — that is where the synonym sat. */
+test('#1242: the Konto foot note names the section by its title word, in every locale', () => {
+  const off = [];
+  for (const locale of SUPPORTED_LOCALES) {
+    const ctx = { I18N: {} };
+    vm.runInNewContext(fs.readFileSync(path.join(__dirname, '..', 'public', 'js', 'lang', `${locale}.js`), 'utf8'), ctx);
+    const dict = ctx.I18N[locale];
+    const title = dict['konto.design.title'].toLowerCase();
+    const sentences = dict['konto.design.note'].split(/[.!?。]\s+/).filter(Boolean);
+    const last = sentences[sentences.length - 1].toLowerCase();
+    if (sentences.length < 2 || !last.includes(title)) off.push(`${locale}: „${last}" lacks „${title}"`);
+  }
+  assert.ok(SUPPORTED_LOCALES.length >= 9, 'fewer than nine locales — this checks less than it claims');
+  assert.deepEqual(off, []);
 });

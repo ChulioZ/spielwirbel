@@ -1687,7 +1687,7 @@ I18N.de = {
   'design.poster.picked': 'Ausgewählt',
   'konto.design.title': 'Design',
   'konto.design.hint': 'Gilt für dich, nicht für die Runde.',
-  'konto.design.note': 'Klassisch ist das Design, mit dem Spielwirbel angefangen hat — es bleibt immer wählbar. Ein Wechsel ändert nur das Aussehen, nie wo etwas liegt.',
+  'konto.design.note': 'Klassisch ist das Design, mit dem Spielwirbel angefangen hat — es bleibt immer wählbar. Ein Wechsel ändert nur das Design, nie wo etwas liegt.',
   'konto.design.saved': 'Design übernommen.',
   'konto.design.invalid': 'Dieses Design gibt es hier nicht.',
   'konto.bgg.title': 'BoardGameGeek',

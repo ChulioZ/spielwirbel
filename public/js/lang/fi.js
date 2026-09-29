@@ -1577,7 +1577,7 @@ I18N.fi = {
   'design.poster.picked': 'Valittu',
   'konto.design.title': 'Ulkoasu',
   'konto.design.hint': 'Koskee sinua, ei ryhmää.',
-  'konto.design.note': 'Klassinen on ulkoasu, jolla Spielwirbel aloitti — se on aina valittavissa. Vaihtaminen muuttaa vain ulkonäköä, ei sitä missä asiat ovat.',
+  'konto.design.note': 'Klassinen on ulkoasu, jolla Spielwirbel aloitti — se on aina valittavissa. Vaihtaminen muuttaa vain ulkoasua, ei sitä missä asiat ovat.',
   'konto.design.saved': 'Ulkoasu otettu käyttöön.',
   'konto.design.invalid': 'Tätä ulkoasua ei ole täällä.',
   'konto.bgg.title': 'BoardGameGeek',
