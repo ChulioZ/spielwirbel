@@ -375,6 +375,8 @@ function renderAccountRecapSection(p) {
       ratedLabel: t('accountRecap.card.bestRated'),
       shelf: n ? [{ n, label: tn(n, 'accountRecap.card.gamesOne', 'accountRecap.card.games') }] : [],
       shelfLabel: t('accountRecap.card.new'),
+      // A year's twelve bars, for Die Brücke's card (#1247); null for a month.
+      monthly: periodMonths(plays.map((row) => row.at), period),
     };
   };
 

@@ -4,7 +4,8 @@
 
    Klassisch never reaches this file: showAddGame (views-round-lookup.js) asks
    for Der Tisch or Ocean (#1212, O3.5/O6.4 draw the same search-first step;
-   ocean.css styles it) and sends every other design straight to the form. Under
+   ocean.css styles it), or Das Programmheft (#1373, P3.5/P6.4, styled by
+   programmheft.css) and sends every other design straight to the form. Under
    Der Tisch the sheet opens on a query field with a hit count, lists the hits
    as rows that each carry their own state — „Im Regal", „Auf der Wunschliste",
    or an add button — and offers two ways out below: the BGG collection import

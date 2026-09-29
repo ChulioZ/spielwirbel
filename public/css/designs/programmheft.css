@@ -200,6 +200,11 @@
   --shadow-1: none;
   --shadow-2: none;
   --shadow-3: 0 1px 0 var(--ink), 0 14px 36px var(--cast);
+
+  /* The ground under a sheet or a dialog (P15a: „Tinte zu 62 % — das Papier
+     wird dunkel, nicht bunt"). Declared here, in the block the harness
+     resolves, because it is a colour token (#1378). */
+  --scrim: color-mix(in oklab, var(--ink) 62%, transparent);
 }
 
 /* ---------------------------------------------------------------------------
@@ -545,6 +550,1648 @@
   border-radius: 0;
   box-shadow: var(--shadow-3);
 }
+
+/* ===== #1372 — the lobby, the round hub and the shared chrome =============
+   Sheets P2.1 (hub, phone), P2.5 (Telefonkopf), P3.1 (lobby), P3.2 (hub,
+   desktop), P6.1 (lobby, phone) and the Kopf/Dock/Fuß components. The markup
+   the lobby and hub compose is programmheft-hub.js; everything else here
+   restyles markup every design shares. Colour rules are gated like the rest of
+   this file; geometry and type are not. Klassisch never matches any of it. */
+
+/* ---- Der Kopf: the masthead band. Ink print on the vermilion (4.65:1), a
+   strong ink rule under it, the wordmark in Anton at 24px tracked .2em — the
+   one size P1 lets the display face and its tracking go that small. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .topbar {
+  background: var(--vermilion);
+  border-bottom: var(--rule-strong) solid var(--ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) :is(.topbar__home, .topbar__context) { color: var(--on-vermilion); }
+:root[data-design="programmheft"] .topbar { min-height: 64px; box-sizing: border-box; }
+:root[data-design="programmheft"] .topbar .topbar__home .topbar__word {
+  font-family: var(--font-display);
+  font-size: var(--display-6);
+  font-weight: 400;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  line-height: 1;
+}
+:root[data-design="programmheft"] .topbar__context { font-weight: 700; }
+/* The round's marker before its name, square and edged in ink — a zinnober
+   marker is the masthead's own colour and would vanish without the edge. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) [data-marked] .topbar__context::before {
+  border-radius: 0;
+  box-shadow: 0 0 0 1.5px var(--ink);
+}
+
+/* ---- Der Telefonkopf (P2.5): 52px, the wordmark stays — it is the page's
+   masthead — and the context line gives way to it. Every screen names itself
+   in its own heading, so nothing reachable is lost with the label. */
+@media (max-width: 520px) {
+  :root[data-design="programmheft"] .topbar { min-height: 52px; }
+  :root[data-design="programmheft"] .topbar .topbar__home .topbar__word { display: inline; font-size: 20px; letter-spacing: 0.14em; }
+  :root[data-design="programmheft"] .topbar .topbar__context { display: none; }
+}
+
+/* ---- Der Fuß: the links as small-caps print, ink on the paper. */
+:root[data-design="programmheft"] .site-footer__links a {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .site-footer__links a { color: var(--ink); }
+
+/* ---- Das Dock, phone (below 860): a bar flush with the bottom edge, four equal
+   cells, a 3px ink rule over it; the current section is a black cell with
+   paper print. It is shown on the hub tabs and — since the result screen is
+   where a session ends and the round goes on — on the result screen too
+   (operator decision on #1372). Neue Session, the vote and the handover keep
+   the whole screen and render no dock at all. */
+@media (max-width: 859px) {
+  :root[data-design="programmheft"] .dock {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    transform: none;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+    gap: 0;
+    padding: 0 0 env(safe-area-inset-bottom, 0);
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .dock {
+    background: var(--page-bg);
+    border-top: 3px solid var(--ink);
+  }
+  :root[data-design="programmheft"] .dock .dock__item {
+    min-height: 64px;
+    min-width: 0;
+    padding: 8px 2px;
+    border-radius: 0;
+    font-size: 12px;
+    line-height: 1.15;
+    text-align: center;
+    overflow-wrap: anywhere;
+  }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .dock .dock__item { color: var(--ink); }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .dock .dock__item.is-active { background: var(--box); color: var(--box-ink); }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .dock .dock__item:not(.is-active):hover { background: var(--sunken-soft); }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .dock .dock__item:focus-visible {
+    outline: var(--ring-width) solid var(--ring-on-box);
+    outline-offset: calc(-1 * var(--ring-width));
+  }
+  :root[data-design="programmheft"] .app:has(.result-screen) .dock.dock--sub { display: grid; }
+  :root[data-design="programmheft"] .app:has(.dock:not(.dock--sub)),
+  :root[data-design="programmheft"] .app:has(.dock:not(.dock--sub)) + .site-footer,
+  :root[data-design="programmheft"] .app:has(.result-screen):has(.dock),
+  :root[data-design="programmheft"] .app:has(.result-screen):has(.dock) + .site-footer { padding-bottom: 88px; }
+}
+
+/* ---- Das Dock, 860–1279: the in-flow strip becomes a section line — the full
+   width, an ink rule under it, the current section underlined 4px in ink. */
+@media (min-width: 860px) {
+  :root[data-design="programmheft"] .dock {
+    width: auto;
+    gap: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+  }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .dock {
+    background: transparent;
+    border-bottom: var(--rule-strong) solid var(--ink);
+  }
+  :root[data-design="programmheft"] .dock .dock__item { min-height: var(--target-key); border-radius: 0; font-size: 14px; }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .dock .dock__item { color: var(--ink); }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .dock .dock__item.is-active {
+    background: transparent;
+    color: var(--ink);
+    box-shadow: inset 0 -4px 0 var(--ink);
+  }
+}
+
+/* ---- The section line, from 1280 (P3.2): the rail stops being a left column
+   and runs ACROSS the top of the page — the five links in a row, icon beside
+   label, an ink rule under it. round-rail.js builds it lean (no identity, no
+   start button, no presets, no off-shelf rows) under this design, so the page
+   is one column again and the hub spreads over the whole shell. */
+@media (min-width: 1280px) {
+  :root[data-design="programmheft"] .app:has(.rail) { grid-template-columns: minmax(0, 1fr); column-gap: 0; }
+  :root[data-design="programmheft"] .app:has(.rail) > .rail {
+    grid-column: 1;
+    grid-row: 1;
+    position: static;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: 0 var(--space-5);
+    margin-bottom: var(--space-6);
+  }
+  :root[data-design="programmheft"] .app:has(.rail) > *:not(.rail) { grid-column: 1; }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .rail { border-bottom: var(--rule-strong) solid var(--ink); }
+  :root[data-design="programmheft"] .rail .rail__group { flex-direction: row; flex-wrap: wrap; gap: 0 var(--space-5); }
+  :root[data-design="programmheft"] .rail .rail__group:last-child { margin-left: auto; }
+  :root[data-design="programmheft"] .rail .rail__label { display: none; }
+  :root[data-design="programmheft"] .rail .rail__item {
+    width: auto;
+    min-height: var(--target-key);
+    padding: 0 2px;
+    border-radius: 0;
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .rail .rail__item { color: var(--ink); background: transparent; }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .rail .rail__item:not(.is-active):hover { background: transparent; box-shadow: inset 0 -2px 0 var(--ink); }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .rail .rail__item.is-active {
+    background: transparent;
+    color: var(--ink);
+    box-shadow: inset 0 -4px 0 var(--ink);
+  }
+  /* The hub spreads over the shell like P3.2; the reading cap is for prose. */
+  :root[data-design="programmheft"] .app > .ph-hub { max-width: none; }
+}
+
+/* ---- The hub (P2.1 phone, P3.2 desktop). One column in DOM order on a phone;
+   from 1280 the three columns lead / box+suggest / side. The lead sits LEFT of
+   the box it follows in the DOM — the one place the order bends, because the
+   box is what a phone must reach first and what a desktop reads second. */
+:root[data-design="programmheft"] .ph-hub { display: flex; flex-direction: column; gap: var(--space-5); }
+:root[data-design="programmheft"] .ph-hub__grid { display: flex; flex-direction: column; gap: var(--space-5); }
+:root[data-design="programmheft"] :is(.ph-hub__lead, .ph-hub__suggest, .ph-hub__side, .ph-hub__more, .ph-hub__strip) {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+:root[data-design="programmheft"] :is(.ph-hub__lead, .ph-hub__suggest, .ph-hub__side, .ph-hub__more, .ph-hub__strip):empty { display: none; }
+:root[data-design="programmheft"] .ph-hub .hub-cards { margin: 0; }
+:root[data-design="programmheft"] .ph-hub > .hub-actions { margin-top: 0; }
+@media (min-width: 1280px) {
+  :root[data-design="programmheft"] .ph-hub__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 0.9fr);
+    grid-template-areas: "lead box side" "lead suggest side";
+    grid-template-rows: auto 1fr;
+    column-gap: var(--space-6);
+    row-gap: var(--space-5);
+    align-items: start;
+  }
+  :root[data-design="programmheft"] .ph-hub__box { grid-area: box; }
+  :root[data-design="programmheft"] .ph-hub__lead { grid-area: lead; }
+  :root[data-design="programmheft"] .ph-hub__suggest { grid-area: suggest; }
+  :root[data-design="programmheft"] .ph-hub__side { grid-area: side; }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-hub__side {
+    border-left: var(--rule-col) solid var(--ink);
+    padding-left: var(--space-5);
+  }
+  :root[data-design="programmheft"] .ph-hub__strip {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: var(--space-5);
+  }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-hub__strip {
+    border-top: var(--rule-page) solid var(--ink);
+    padding-top: var(--space-5);
+  }
+  :root[data-design="programmheft"] .ph-hub__strip > .hub-offshelf { margin-top: 0; }
+}
+
+/* The head: the marker as a bar, the name as the masthead line in Anton, the
+   two counts as a meta line, and the members row. The name wraps — hyphenated
+   where the locale allows — rather than running off a phone. */
+:root[data-design="programmheft"] .ph-hub .hero { margin: 0; }
+:root[data-design="programmheft"] .ph-marker { display: block; width: 72px; height: 8px; margin-bottom: var(--kicker-gap); background: var(--marker, var(--ink)); }
+:root[data-design="programmheft"] .ph-hub .hero h1 {
+  font-size: var(--display-3);
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+  hyphens: auto;
+}
+@media (max-width: 520px) {
+  :root[data-design="programmheft"] .ph-hub .hero h1 { font-size: var(--display-4); }
+}
+@media (min-width: 1280px) {
+  :root[data-design="programmheft"] .ph-hub .hero h1 { font-size: var(--display-1); }
+}
+:root[data-design="programmheft"] .ph-members {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3) var(--space-4);
+  margin-top: var(--space-4);
+  padding-block: var(--space-3);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-members {
+  border-top: var(--rule-strong) solid var(--ink);
+  border-bottom: var(--rule-col) solid var(--ink);
+}
+:root[data-design="programmheft"] .ph-members__label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+:root[data-design="programmheft"] .ph-members .hero__members { margin: 0; gap: var(--space-3) var(--space-4); flex: 1 1 auto; min-width: 0; }
+/* A seat is a colour square with its name and win count beside it
+   (programmheft-hub.js moves the member's colour onto the square), so the link
+   grows to carry the caption and stays one target. */
+:root[data-design="programmheft"] .ph-members .hero__members > .avatar {
+  width: auto;
+  height: auto;
+  min-height: var(--target-key);
+  gap: var(--space-2);
+  padding: 0;
+  justify-content: flex-start;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  font-family: var(--font);
+  text-decoration: none;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-members .hero__members > .avatar { color: var(--ink); }
+:root[data-design="programmheft"] .ph-members .seat__sq {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: var(--target-key);
+  height: var(--target-key);
+  font-size: 13px;
+  font-weight: 700;
+  overflow: hidden;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-members .seat__sq {
+  color: var(--box-ink);
+  border: var(--rule-col) solid var(--ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-members .avatar--add .seat__sq {
+  background: var(--hatch);
+  color: var(--ink);
+  border-style: dashed;
+}
+:root[data-design="programmheft"] .ph-members .seat__sq .avatar__img { border-radius: 0; }
+:root[data-design="programmheft"] .ph-members .seat__text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.15;
+  font-size: 13px;
+  font-weight: 700;
+}
+:root[data-design="programmheft"] .ph-members .seat__wins { font-size: 12px; font-weight: 600; }
+:root[data-design="programmheft"] .ph-members__settings {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--target-key);
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-members__settings { color: var(--ink); }
+/* Below 1280 the hub's own „Einstellungen" button at the page's foot is the way
+   there, as in every design; the row carries it where the row is the page. */
+@media (max-width: 1279px) {
+  :root[data-design="programmheft"] .ph-members__settings { display: none; }
+}
+
+/* Der Kasten: black, paper print, the kicker „Neue Session", the one action
+   inverted (paper on the box), the presets under a visible label. */
+:root[data-design="programmheft"] .ph-hub__box { display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-5); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-hub__box { background: var(--box); color: var(--box-ink); }
+:root[data-design="programmheft"] :is(.ph-box__kicker, .ph-box__label) {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-box__label { color: var(--box-ink-soft); }
+:root[data-design="programmheft"] .ph-hub__box .btn.hub-cta { margin: 0; width: 100%; justify-content: center; --press-mb: 0px; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-hub__box .btn.hub-cta:not(:disabled) {
+  background: var(--vermilion);
+  color: var(--on-vermilion);
+  border-color: var(--vermilion);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-hub__box :focus-visible { outline-color: var(--ring-on-box); }
+:root[data-design="programmheft"] .ph-hub__box .hub-presets { margin: 0; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-hub__box .hub-presets .chip {
+  background: transparent;
+  color: var(--box-ink);
+  border: var(--rule-col) solid var(--box-ink);
+}
+
+/* The lead story: a 4:5 cover, the kicker, the headline in Anton, the facts on
+   rules, „Ergebnis ansehen" as the underlined foot. One link, whole. */
+:root[data-design="programmheft"] .ph-lead {
+  display: grid;
+  grid-template-columns: minmax(96px, 36%) minmax(0, 1fr);
+  gap: var(--space-4);
+  text-decoration: none;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-lead { color: var(--ink); }
+:root[data-design="programmheft"] .ph-lead__cover {
+  display: block;
+  aspect-ratio: 4 / 5;
+  background-size: cover;
+  background-position: center;
+  overflow: hidden;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-lead__cover { border: var(--rule-strong) solid var(--ink); background-color: var(--hatch); }
+:root[data-design="programmheft"] .ph-lead__text { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
+:root[data-design="programmheft"] .ph-lead__kicker { font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+:root[data-design="programmheft"] .ph-lead__headline {
+  font-family: var(--font-display);
+  font-size: var(--display-6);
+  line-height: var(--leading-quote);
+  overflow-wrap: anywhere;
+}
+@media (min-width: 1280px) {
+  :root[data-design="programmheft"] .ph-lead { grid-template-columns: minmax(0, 1fr); }
+  /* Full column width at 4:5 measured ~600px of cover over a 500px column,
+     pushing the headline below the fold. A landscape lead photo keeps the
+     headline on the first screen. */
+  :root[data-design="programmheft"] .ph-lead__cover { aspect-ratio: 3 / 2; }
+  :root[data-design="programmheft"] .ph-lead__headline { font-size: var(--display-4); }
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-lead__winner { color: var(--vermilion); font-size: var(--display-6); }
+:root[data-design="programmheft"] .ph-lead__facts { display: flex; flex-wrap: wrap; gap: 0 var(--space-5); padding-block: var(--space-2); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-lead__facts { border-block: var(--rule-col) solid var(--ink); }
+:root[data-design="programmheft"] .ph-lead__fact { display: flex; flex-direction: column; }
+:root[data-design="programmheft"] .ph-lead__fact-k { font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+:root[data-design="programmheft"] .ph-lead__fact-v { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
+:root[data-design="programmheft"] .ph-lead__open {
+  align-self: flex-start;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-lead__open { text-decoration-color: var(--vermilion); }
+
+/* The cards of the hub read as columns of print: no card, a rule over each. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-hub :is(.ph-hub__suggest, .ph-hub__side, .ph-hub__strip) .hub-card {
+  background: transparent;
+  border: 0;
+  border-top: var(--rule-strong) solid var(--ink);
+  box-shadow: none;
+  padding-inline: 0;
+}
+
+/* ---- The lobby (P3.1 desktop, P6.1 phone). */
+:root[data-design="programmheft"] .app:has(.lobby-list) > .lobby-head h1 {
+  font-size: var(--display-4);
+  text-transform: uppercase;
+}
+@media (min-width: 1280px) {
+  :root[data-design="programmheft"] .app:has(.lobby-list) > .lobby-head h1 { font-size: var(--display-2); }
+  :root[data-design="programmheft"] .lobby-list { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-5); }
+}
+
+/* Das Extrablatt: the black label, the line, the step as a vermilion button. */
+:root[data-design="programmheft"] .ph-extra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3) var(--space-4);
+  padding: var(--space-3);
+  text-decoration: none;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-extra {
+  color: var(--ink);
+  background: var(--surface);
+  border: var(--rule-strong) solid var(--ink);
+}
+:root[data-design="programmheft"] .ph-extra__label {
+  padding: var(--space-1) var(--space-2);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-extra__label { background: var(--box); color: var(--box-ink); }
+:root[data-design="programmheft"] .ph-extra__text { flex: 1 1 12em; min-width: 0; font-weight: 700; }
+:root[data-design="programmheft"] .ph-extra__go {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--target-key);
+  padding: 0 var(--space-4);
+  font-weight: 700;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-extra__go { background: var(--vermilion); color: var(--on-vermilion); }
+
+/* A round tile: the marker bar across the top, the name in Anton, members as
+   colour squares with names, the last session, the two counts at the foot. */
+:root[data-design="programmheft"] .round-card.round-card--ph {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  padding: 0;
+  border-radius: 0;
+  transform: none;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .round-card.round-card--ph {
+  background: var(--surface);
+  border: var(--rule-strong) solid var(--ink);
+  box-shadow: none;
+  color: var(--ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .round-card.round-card--ph:hover { box-shadow: 4px 4px 0 var(--ink); transform: none; }
+:root[data-design="programmheft"] .round-card--ph .round-card__bar { display: block; height: 8px; background: var(--marker, var(--ink)); }
+:root[data-design="programmheft"] .round-card--ph .round-card__body { padding: var(--space-4); gap: var(--space-3); }
+:root[data-design="programmheft"] .round-card--ph .round-card__kicker {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .round-card--ph .round-card__kicker--live { color: var(--brand); }
+:root[data-design="programmheft"] .lobby-list .round-card.round-card--ph .round-card__name {
+  font-family: var(--font-display);
+  font-size: var(--display-5);
+  font-weight: 400;
+  line-height: var(--leading-display);
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+  hyphens: auto;
+}
+:root[data-design="programmheft"] .round-card--ph .round-card__foot {
+  display: flex;
+  gap: var(--space-4);
+  padding-top: var(--space-2);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .round-card--ph .round-card__foot { border-top: var(--rule-col) solid var(--ink); }
+
+/* „Neue Runde gründen" as the empty slot: hatched, dashed ink, a 60px „+". */
+:root[data-design="programmheft"] .lobby-list .round-card.round-card--new {
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 160px;
+  border-radius: 0;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .lobby-list .round-card.round-card--new {
+  background: var(--hatch);
+  border: var(--rule-strong) dashed var(--ink);
+  color: var(--ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .lobby-list .round-card.round-card--new .ti {
+  color: var(--vermilion);
+  font-size: var(--display-3);
+}
+@media (max-width: 859px) {
+  :root[data-design="programmheft"] .lobby-list .round-card.round-card--new { min-height: 72px; flex-direction: row; }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .lobby-list .round-card.round-card--new .ti { font-size: var(--display-6); }
+}
+
+/* ===== #1378 — the overlays: sheets and popovers, dialogs, toasts, the „…" menu ===== */
+/* Source: Programmheft-P15a-Sheets.dc.html and Programmheft-P15b-Dialoge.dc.html.
+   P15a's sheet is „ein eingelegtes Blatt": white over the paper, a 3px ink
+   edge on top, a grip, the uppercase title in Anton, a 44px ×, the content
+   scrolling, and the action at the foot in the black box. The app already has
+   the phone-sheet / desktop-popover split for its editors (`openEditor`,
+   .claude/rules/popover-vs-sheet-editors.md), so — as Der Tisch (#1195) and
+   Ocean (#1217) did — this section paints the two halves rather than inventing
+   a third presentation. P15a's „seitliche Spalte" for long forms on a desktop
+   is NOT built: every other overlay stays the app's centred card from 640px up.
+
+   The MARKUP this design shares is `formSheetDesign()` (sheet.js): the popover's
+   title bar and the three form editors' row lists. Their geometry is UNGATED
+   and paints from app tokens, so the rows never come out as bare UA buttons if
+   the colour gate fails to match
+   (.claude/rules/design-colour-blocks-are-scheme-gated.md, „the inverse").
+
+   Anton only at 24px and up (P1.2): the sheet's title (28), the dialog's
+   question (30), the popover's title (26) and the sheet's primary action (24).
+   Every smaller action — a dialog's pair, a secondary, a toast's action — is
+   Archivo 700 uppercase. test/programmheft-overlays.test.js derives that from
+   this file. The sort and language pickers stay native <select>s: their option
+   lists come from views-regal.js and locales.js, and the OS draws them. */
+
+/* --- The sheet's ground and edge ------------------------------------------------
+   Sticky head and action bar paint from --page-bg (the paper, #fbfaf6) while the
+   sheet is --surface (white), so both bars would read as two tinted bands on the
+   white leaf; re-pointing the page inside the sheet makes them disappear into it
+   (.claude/rules/overlay-surface-flip-strands-the-status-tokens.md). The 3px
+   top edge is P15a's; the 2px frame is the component layer's. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .sheet {
+  --page-bg: var(--surface);
+  border-top-width: 3px;
+  padding: 0 18px;
+}
+
+/* --- The phone's sheet: docked, with a grip ------------------------------------
+   Below 640px the app docks every non-centred sheet to the bottom edge, and
+   P15a draws the editors docked too, so `.sheet-backdrop--editor` docks here as
+   it does on Der Tisch and Ocean. A docked leaf spans the phone: only its top
+   edge is drawn. The dialogs keep their centre (P15b draws them the same at
+   both widths), and a list dialog never carries the editor class. The grip
+   hangs off the STICKY head, because the sheet is its own scroll container. */
+@media (max-width: 639px) {
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .sheet-backdrop--editor {
+    align-items: flex-end;
+    padding: 0;
+  }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .sheet-backdrop--editor > .sheet {
+    width: 100%;
+    max-width: none;
+  }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) :is(.sheet-backdrop:not(.sheet-backdrop--center), .sheet-backdrop--editor) > .sheet {
+    border-left: 0;
+    border-right: 0;
+    border-bottom: 0;
+  }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) :is(.sheet-backdrop:not(.sheet-backdrop--center), .sheet-backdrop--editor) > .sheet > .sheet__head {
+    padding-top: 22px;
+  }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) :is(.sheet-backdrop:not(.sheet-backdrop--center), .sheet-backdrop--editor) > .sheet > .sheet__head::before {
+    content: '';
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    width: 48px;
+    height: 5px;
+    margin-left: -24px;
+    background: var(--ink);
+  }
+}
+
+/* --- The head: the title in Anton, a 2px rule under it, a 44px × -------------
+   The rule runs edge to edge, so the head bleeds through the sheet's 18px
+   padding and restates it inside. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .sheet__head {
+  margin: 0 -18px;
+  padding: 10px 8px 10px 18px;
+  border-bottom: var(--rule-strong) solid var(--ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .sheet__head h2 {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 400;
+  line-height: var(--leading-display);
+  text-transform: uppercase;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .sheet__close {
+  width: var(--target-key);
+  height: var(--target-key);
+  flex: none;
+  background: transparent;
+  color: var(--ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .sheet__close .ti { font-size: 22px; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .sheet__close:hover {
+  background: var(--sunken-soft);
+  color: var(--ink);
+}
+/* The first block under the rule needs air of its own; the head's old 14px
+   bottom padding used to give it. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .sheet__head + * { margin-top: 14px; }
+
+/* --- The foot: an ink hair, the action in the black box ---------------------
+   P15a: the primary is the box, Anton 24px, 52px tall, and takes the rest of
+   the row; a secondary beside it is Archivo 700 uppercase with a 2px edge. Not
+   the confirm dialog's bar — P15b draws that pair differently, below. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .sheet__actions {
+  margin-left: -18px;
+  margin-right: -18px;
+  padding-left: 18px;
+  padding-right: 18px;
+  border-top: var(--rule-col) solid var(--ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .sheet__actions:not(.sheet__actions--confirm) .btn {
+  min-height: 52px;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .sheet__actions:not(.sheet__actions--confirm) .btn.btn--primary {
+  flex: 1 1 auto;
+  font-family: var(--font-display);
+  font-size: var(--display-6);
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: var(--leading-display);
+}
+
+/* --- The confirm dialog (P15b) --------------------------------------------------
+   „Eine Meldung im Kasten": a band on top — the vermilion, or the danger red
+   when the verb destroys — the question in Anton at 30px, one sentence of
+   consequence, two buttons on the right. The safe choice is an ink-edged
+   unfilled button (confirmDialog focuses it), the verb is FILLED: ink, or red
+   when destructive. Only in a DIALOG — P15a never makes a destructive action a
+   sheet's primary, so a `.btn--danger` elsewhere keeps the component layer's
+   outline. `.sheet[role="alertdialog"]` is confirmDialog's own signature. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .sheet.sheet--dialog[role="alertdialog"] {
+  max-width: 480px;
+  padding: 0 20px;
+  border-top: 8px solid var(--vermilion);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .sheet.sheet--dialog[role="alertdialog"]:has(.sheet__actions--confirm .btn--danger) {
+  border-top-color: var(--danger);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .sheet[role="alertdialog"] .sheet__head {
+  margin: 0 -12px 0 0;
+  padding: 16px 0 0;
+  border-bottom: 0;
+  align-items: flex-start;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .sheet[role="alertdialog"] .sheet__head h2 {
+  font-size: var(--display-5);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .sheet[role="alertdialog"] .sheet__head + * { margin-top: 10px; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .confirm-dialog__body {
+  font-size: var(--text-md);
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .sheet__actions--confirm {
+  margin: 0 -20px;
+  padding: 18px 20px 20px;
+  border-top: 0;
+  gap: 8px;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .sheet__actions--confirm .btn {
+  min-height: 48px;
+  padding-left: 16px;
+  padding-right: 16px;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .sheet__actions--confirm .btn:not(.btn--primary, .btn--danger) {
+  background: transparent;
+  border-color: var(--ink);
+  color: var(--ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .sheet__actions--confirm .btn--danger,
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .sheet__actions--confirm .btn--danger:hover:not(:disabled) {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: var(--box-ink);
+}
+
+/* --- Popovers (P15a „Popover am Desktop") --------------------------------------
+   White, a 2px ink frame and P1's one shadow — the component layer already says
+   so. What is added: the editor's head (the title in Anton at 26px, the ×),
+   which formSheetDesign() renders, and a 300px floor so a short editor still
+   reads as the leaf P15a draws. A floor, not a width — the card is
+   shrink-to-fit (.claude/rules/popover-width-is-shrink-to-fit.md). */
+:root[data-design="programmheft"] .popover.popover--editor { min-width: min(300px, 100vw - 32px); }
+:root[data-design="programmheft"] .popover__head--editor {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: -8px -8px 4px;
+  padding: 4px 0 4px 14px;
+  border-bottom: 0;
+}
+:root[data-design="programmheft"] .popover__title {
+  margin: 0;
+  min-width: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 400;
+  line-height: var(--leading-display);
+  text-transform: uppercase;
+  color: var(--ink);
+  /* `.popover__head` breaks anywhere for the account menu's e-mail caption; a
+     title must not. keep-all is `normal` for Latin and keeps Korean's words. */
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+:root[data-design="programmheft"] .popover__close {
+  flex: none;
+  margin-left: auto;
+  min-width: var(--target-key);
+  min-height: var(--target-key);
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+  font-size: 20px;
+  cursor: pointer;
+}
+:root[data-design="programmheft"] .popover__close:hover { background: var(--sunken-soft, var(--sunken)); }
+
+/* --- Rows (P15a's check and field rows): the form editors ------------------------
+   48px rows under a dotted hair; the label in Archivo 700. A toggle row's state
+   is a 24px square with a 2px ink edge — empty when off, the box with a paper
+   check when on — so the state never rests on the hover tint or a colour alone.
+   A field row's label is P15a's small uppercase caption. Same rows in both
+   presentations: P15a's content does not change between them. */
+:root[data-design="programmheft"] .editor-rows {
+  display: flex;
+  flex-direction: column;
+}
+:root[data-design="programmheft"] .editor-rows[hidden] { display: none; }
+:root[data-design="programmheft"] .editor-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 48px;
+  padding: 6px 2px;
+  border: 0;
+  border-bottom: 1px dotted var(--line);
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: left;
+}
+:root[data-design="programmheft"] button.editor-row { cursor: pointer; }
+:root[data-design="programmheft"] button.editor-row:hover { background: var(--sunken-soft, var(--sunken)); }
+:root[data-design="programmheft"] .editor-row__label { flex: 1 1 auto; min-width: 0; }
+:root[data-design="programmheft"] .editor-row[role="group"] .editor-row__label {
+  font-size: var(--text-xs);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+:root[data-design="programmheft"] .editor-row__icon {
+  flex: none;
+  width: 24px;
+  font-size: 20px;
+  text-align: center;
+  color: var(--ink);
+}
+:root[data-design="programmheft"] .editor-row--danger,
+:root[data-design="programmheft"] .editor-row--danger .editor-row__icon { color: var(--danger); }
+:root[data-design="programmheft"] .editor-row__avatar {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  font-size: 11px;
+}
+:root[data-design="programmheft"] .editor-row__tick {
+  flex: none;
+  margin-left: auto;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  box-sizing: border-box;
+  border: var(--rule-strong, 2px) solid var(--ink);
+  background: var(--surface);
+  color: transparent;
+  font-size: 16px;
+}
+:root[data-design="programmheft"] .editor-row[aria-pressed="true"] .editor-row__tick {
+  background: var(--ink);
+  color: var(--surface);
+}
+:root[data-design="programmheft"] .editor-row__control {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+:root[data-design="programmheft"] .editor-row__control .input {
+  width: 64px;
+  padding: 4px 8px;
+  text-align: center;
+}
+/* The edition-cover picker's toggle stands as one of the cover editor's rows. */
+:root[data-design="programmheft"] :is(.popover--image, .editor--image) .cover-picker__toggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 48px;
+  padding: 6px 2px;
+  border-bottom: 1px dotted var(--line);
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 700;
+  text-decoration: none;
+}
+/* The ONE primary, under the rows, full width — the box, in Anton at 24px. */
+:root[data-design="programmheft"] .editor-actions {
+  display: flex;
+  margin-top: 12px;
+}
+:root[data-design="programmheft"] .editor-actions .btn { flex: 1 1 auto; min-height: 52px; }
+:root[data-design="programmheft"] .editor-actions .btn.btn--primary {
+  font-family: var(--font-display);
+  font-size: var(--display-6);
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: var(--leading-display);
+}
+/* The owners card gives way through its row list, popover-only — the sheet
+   scrolls itself (.claude/rules/popover-vs-sheet-editors.md §4). */
+:root[data-design="programmheft"] .popover--owners .editor-rows {
+  flex: 1 1 auto;
+  min-height: 48px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* The scanning lists (BGG import, „Spiele verschieben", the pickers): a row is
+   the sheet's row height. */
+:root[data-design="programmheft"] .sheet .ds-row { min-height: 48px; }
+
+/* --- When a sheet cannot deliver ---------------------------------------------------
+   The BGG import renders each failure through `.bgg-import__msg`, and under
+   formSheetDesign() with a `.sheet-disc` glyph above it. Here the disc is a
+   printed square, not a coin: 48px, a 2px ink frame, the glyph in ink. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .sheet .bgg-import__msg {
+  margin: 4px 0 12px;
+  padding: 20px 18px 24px;
+  text-align: center;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .sheet .bgg-import__msg > p:first-of-type {
+  font-size: var(--text-md);
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .sheet .sheet-disc {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 12px;
+  box-sizing: border-box;
+  border: var(--rule-strong) solid var(--ink);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 24px;
+}
+
+/* --- The „…" menu (P15b „Das …-Menü") ----------------------------------------------
+   48px rows at 15px with the glyph at 18px, flush, each under a dotted hair,
+   in the ORDER fillMenu already gives (change · share · undoable · destructive).
+   The destructive group stands under a 2px ink rule and is danger-red, painted
+   by `data-kind` rather than the app's tone classes — a kind says what the row
+   DOES. fillMenu sorts, so the boundary occurs once. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .popover.popover--menu {
+  gap: 0;
+  padding: 0;
+  min-width: min(260px, 100vw - 32px);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .popover--menu .popover__opt {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  padding: 0 16px;
+  border: 0;
+  border-top: 1px dotted var(--hair);
+  border-radius: 0;
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 700;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .popover--menu .popover__opt:first-child { border-top: 0; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .popover--menu .popover__opt:hover { background: var(--sunken-soft); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .popover--menu .popover__opt .ti {
+  flex: none;
+  width: 20px;
+  font-size: 18px;
+  text-align: center;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .popover--menu .popover__opt[data-kind="destructive"] { color: var(--danger); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .popover--menu .popover__opt:not([data-kind="destructive"]) + .popover__opt[data-kind="destructive"] {
+  border-top: var(--rule-strong) solid var(--ink);
+}
+
+/* --- The toast (P15b „Toasts") ----------------------------------------------------
+   A black strip, square, with a 6px edge on its leading side that names the
+   tone together with the glyph: paper for information, green for saved, and —
+   on the red strip an error takes — paper again. Left-aligned text; the action
+   is a 32px outlined box in the toast's own ink, Archivo 700 uppercase (P1.6's
+   „Aktion 32 px"). Success leaves the app's green plank for the ink one: P15b
+   draws it that way, and the paper print is 17.6:1 on it. The corner stays 0 —
+   never the pill (#858, test/toast-shape.test.js). */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .toast {
+  justify-content: flex-start;
+  min-height: 52px;
+  box-sizing: border-box;
+  padding: 8px 8px 8px 16px;
+  border-radius: 0;
+  border-inline-start: 6px solid var(--box-ink);
+  box-shadow: var(--shadow-3);
+  font-size: 15px;
+  font-weight: 400;
+  text-align: left;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .toast.toast--success {
+  background: var(--box);
+  color: var(--box-ink);
+  border-inline-start-color: var(--good);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .toast.toast--error {
+  background: var(--danger);
+  color: var(--box-ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .toast__icon { font-size: 20px; margin-inline-end: 12px; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .toast__action {
+  padding: 0 12px;
+  border: 1.5px solid currentColor;
+  border-radius: 0;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .toast__close {
+  min-width: var(--target-foot);
+  margin-inline-end: 0;
+  border-radius: 0;
+}
+/* Below 860px the dock is up, so the toast stands on it rather than behind it. */
+@media (max-width: 859px) {
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .toast { bottom: var(--dock-clearance); }
+}
+
+/* --- Sheet 8, „Farbmarker" -----------------------------------------------------------
+   The marker grid is one component (renderMarkerGrid) on /design and in
+   Einstellungen; its Programmheft look lives in the #1380 section below, the
+   single owner. Rules here would be overridden there at equal specificity. */
+
+/* ===== #1373 — Regal, Spielepass, add-game lookup ===== */
+/* Sheets: docs/design/programmheft/Programmheft-P3-Runde-Desktop.dc.html (P3.3
+   Regal, P3.4 Spieldetail, P3.5 Spiel hinzufügen), Programmheft-P6-Phone-Rest
+   (P6.2–P6.4) and Programmheft-P7-Leerzustaende (P7.8, the 42-game shelf).
+
+   The markup is views-regal.js's `phCard` / `phMoreButton` / `phOffShelf`,
+   views-round-detail.js's `ph-pass` branch and add-game-search.js (which
+   Programmheft reaches through showAddGame, like Der Tisch and Ocean). Klassisch
+   renders none of it — test/programmheft-klassisch-golden.test.js.
+
+   Every Anton rule below sets its own size of 24px or more in the SAME body,
+   and so does every rule that paints a ramp tone as text: --ramp-1 IS the
+   vermilion, and test/design-tokens-programmheft.test.js reads the size off
+   the rule that sets the colour. */
+
+/* ---- The Regal head (P3.3/P6.2): „Regal" in Anton over a 4px page rule, the
+   count beside it, and one row of printed controls. (0,5,1) on the title,
+   against the reset list's (0,5,0) `.section :is(h1, h2, h3)`. */
+:root[data-design="programmheft"] .ph-regal .regal-head {
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px 24px;
+  padding-bottom: var(--space-2);
+  border-bottom: var(--rule-page) solid transparent;
+}
+:root[data-design="programmheft"] .ph-regal .regal-title { display: flex; align-items: baseline; gap: 12px; min-width: 0; }
+:root[data-design="programmheft"] .section .regal-head .regal-title h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--display-2);
+  font-weight: 400;
+  line-height: var(--leading-display);
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+:root[data-design="programmheft"] .ph-regal .regal-title__count {
+  font-family: var(--font-display);
+  font-size: var(--display-4);
+  line-height: var(--leading-display);
+  text-transform: uppercase;
+}
+:root[data-design="programmheft"] .ph-regal .regal-head .section-tools { flex-wrap: wrap; gap: 8px; }
+:root[data-design="programmheft"] .ph-regal .regal-head .search-pill {
+  min-height: var(--target-field);
+  min-width: 240px;
+  border-width: 1.5px;
+}
+/* „Sortiert: Bewertung" — one printed box holding the word and the <select>. */
+:root[data-design="programmheft"] .ph-regal .regal-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: var(--target-field);
+  padding: 0 4px 0 12px;
+  border: 1.5px solid transparent;
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+:root[data-design="programmheft"] .ph-regal .regal-sort .sort-select {
+  min-height: 0;
+  padding-left: 2px;
+  border: 0;
+  background-color: transparent;
+  font-weight: 700;
+}
+/* The toolbar's actions are P1.3's secondary button: a 2px ink rule, Archivo
+   700, uppercase and tracked. */
+:root[data-design="programmheft"] .ph-regal .regal-head .section-tools :is(.link-btn, .fbar__trigger, .regal-more) {
+  gap: 6px;
+  min-height: var(--target-key);
+  padding: 0 14px;
+  border: var(--rule-strong) solid transparent;
+  font-family: var(--font);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+:root[data-design="programmheft"] .ph-regal .regal-head .section-tools .regal-more {
+  justify-content: center;
+  min-width: var(--target-key);
+  padding: 0;
+}
+:root[data-design="programmheft"] .ph-regal .regal-more .ti { font-size: 18px; /* glyph, not type */ }
+/* With the trigger lifted into the toolbar, an empty filter bar would still
+   cost its wrapper's margin. */
+:root[data-design="programmheft"] .ph-regal .regal-filter:has(.fbar__chips[hidden]) { display: none; }
+
+/* One control per width, as Ocean's three adds are: `display: none` takes the
+   other out of the accessibility tree, so no width announces two. At desktop the
+   toolbar carries „Auswählen", the BGG import, „Nicht im Regal" (860–1279
+   only: from 1280 the rail's group carries it) and the black
+   „Spiel hinzufügen" (P3.3); a phone folds the first two into the „…" and
+   keeps the dashed tile in the grid (P6.2). An EMPTY shelf renders no bar, so
+   its tiles stay at every width. */
+@media (max-width: 859px) {
+  :root[data-design="programmheft"] .ph-regal :is(.regal-tool--wide, .regal-add--bar) { display: none; }
+}
+@media (min-width: 1280px) {
+  :root[data-design="programmheft"] .ph-regal .regal-tool--offshelf { display: none; }
+}
+@media (min-width: 860px) {
+  :root[data-design="programmheft"] .ph-regal .regal-more { display: none; }
+  :root[data-design="programmheft"] .ph-regal:has(.regal-add--bar) .cards > .add-tile { display: none; }
+}
+
+/* ---- The catalogue (P3.3/P6.2): print ABOUT the cover, never on it. The
+   card is no box at all — the number and the meta above, the cover standing on
+   a common baseline, the title, the owner and the score over a 1px ink rule. */
+:root[data-design="programmheft"] .ph-regal .cards {
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 32px 24px;
+}
+:root[data-design="programmheft"] .ph-card {
+  gap: 8px;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+:root[data-design="programmheft"] .ph-card:hover { transform: none; box-shadow: none; }
+:root[data-design="programmheft"] .ph-card:hover .game-card__title { text-decoration: underline; text-underline-offset: 3px; }
+:root[data-design="programmheft"] .ph-card__kicker {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+/* The number never wraps: on a phone the meta beside it ellipsises instead
+   („NR. / 4" was measured at 390px with a two-range meta). */
+:root[data-design="programmheft"] .ph-card__nr { flex: none; white-space: nowrap; }
+:root[data-design="programmheft"] .ph-card__kicker .game-card__meta {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  letter-spacing: 0.06em;
+}
+:root[data-design="programmheft"] .ph-card__kicker .exp-pill { flex: none; position: static; }
+/* The cover keeps its own proportions on a common floor (P3.3's 190px well):
+   the whole cover, contained and set on the baseline, with no blurred backing
+   copy — the programme prints the box, not an atmosphere around it. */
+:root[data-design="programmheft"] .ph-card .game-card__img {
+  aspect-ratio: auto;
+  height: 190px;
+  overflow: visible;
+  background: transparent;
+}
+:root[data-design="programmheft"] .ph-card .game-card__img::before { content: none; }
+:root[data-design="programmheft"] .ph-card .game-card__img::after { background-position: center bottom; }
+:root[data-design="programmheft"] .ph-card .game-card__body {
+  flex-direction: row;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 0 6px;
+  border-bottom: var(--rule-col) solid transparent;
+}
+:root[data-design="programmheft"] .ph-card__text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+:root[data-design="programmheft"] .ph-card .game-card__title {
+  font-size: var(--text-md);
+  font-weight: 700;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+:root[data-design="programmheft"] .ph-card__owner { font-size: var(--text-sm); }
+/* The score is a display numeral in its ramp tone (P1.9), not a badge. */
+:root[data-design="programmheft"] .ph-card__score {
+  flex: none;
+  font-family: var(--font-display);
+  font-size: var(--display-5);
+  line-height: var(--leading-display);
+  font-variant-numeric: tabular-nums;
+}
+/* „neu" is a word, so it takes the text face at kicker size. */
+:root[data-design="programmheft"] .ph-card__score--none {
+  font-family: var(--font);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+:root[data-design="programmheft"] .ph-regal .add-tile {
+  min-height: 190px;
+  font-family: var(--font);
+  font-size: var(--text-sm);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+:root[data-design="programmheft"] .ph-regal .add-tile .ti { font-size: 40px; /* glyph, not type */ }
+
+/* A big shelf (P7.8) takes the denser composition — narrower columns and a
+   lower cover well, so eight fit where six did. Only the composition: P7.8's
+   letter jump and batch loading are notes, not product rules (#1373). */
+:root[data-design="programmheft"] .ph-regal .cards:has(> .ph-card:nth-child(25)) {
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 24px 18px;
+}
+:root[data-design="programmheft"] .ph-regal .cards:has(> .ph-card:nth-child(25)) .game-card__img { height: 150px; }
+
+@media (max-width: 859px) {
+  :root[data-design="programmheft"] .section .regal-head .regal-title h1 { font-size: var(--display-3); }
+  :root[data-design="programmheft"] .ph-regal .regal-title__count { font-size: var(--display-6); }
+  :root[data-design="programmheft"] .ph-regal .regal-head .section-tools { flex: 1 1 100%; }
+  :root[data-design="programmheft"] .ph-regal .regal-head .search-pill { flex: 1 1 100%; min-width: 0; }
+  :root[data-design="programmheft"] .ph-regal .regal-sort { flex: 1 1 auto; }
+}
+/* P6.2: two columns and a 150px well on a phone, whatever the shelf holds. */
+@media (max-width: 520px) {
+  :root[data-design="programmheft"] .ph-regal .cards,
+  :root[data-design="programmheft"] .ph-regal .cards:has(> .ph-card:nth-child(25)) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px 14px;
+  }
+  :root[data-design="programmheft"] .ph-card .game-card__img,
+  :root[data-design="programmheft"] .ph-regal .cards:has(> .ph-card:nth-child(25)) .game-card__img { height: 150px; }
+  :root[data-design="programmheft"] .ph-regal .add-tile { min-height: 150px; }
+  :root[data-design="programmheft"] .ph-regal .regal-sort__prefix { display: none; }
+}
+
+/* ---- „Nicht im Regal" (P3.3: one line of links under a 2px rule; P6.2: the
+   same four as 44px rows). One list, laid out per width. */
+:root[data-design="programmheft"] .ph-offshelf {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 24px;
+  margin-top: var(--space-6);
+  padding-top: var(--space-2);
+  border-top: var(--rule-strong) solid transparent;
+}
+:root[data-design="programmheft"] .section .ph-offshelf__label {
+  margin: 0;
+  font-family: var(--font);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+:root[data-design="programmheft"] .ph-offshelf__list { display: flex; flex-wrap: wrap; gap: 0 24px; margin: 0; padding: 0; list-style: none; }
+:root[data-design="programmheft"] .ph-offshelf__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--target-key);
+  font-weight: 700;
+  text-decoration: none;
+}
+:root[data-design="programmheft"] .ph-offshelf__link .ti { display: none; }
+:root[data-design="programmheft"] .ph-offshelf__link:hover { text-decoration: underline; text-underline-offset: 3px; }
+@media (max-width: 859px) {
+  :root[data-design="programmheft"] .ph-offshelf { flex-direction: column; align-items: stretch; gap: 0; margin-top: var(--space-5); }
+  :root[data-design="programmheft"] .section .ph-offshelf__label { padding: 10px 0 2px; }
+  :root[data-design="programmheft"] .ph-offshelf__list { flex-direction: column; gap: 0; }
+  :root[data-design="programmheft"] .ph-offshelf__link {
+    justify-content: space-between;
+    width: 100%;
+    border-bottom: var(--rule-col) dotted transparent;
+    font-size: var(--text-md);
+  }
+  :root[data-design="programmheft"] .ph-offshelf__link .ti { display: inline; }
+}
+
+/* ---- The Regal's colours. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-regal .regal-head { border-bottom-color: var(--ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .section .regal-head .regal-title h1 { color: var(--ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-regal .regal-title__count { color: var(--ink-soft); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-regal .regal-head .search-pill { background: var(--surface); border-color: var(--control-edge); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-regal .regal-sort { background: var(--surface); border-color: var(--control-edge); color: var(--ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-regal .regal-sort .sort-select { color: var(--ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-regal .regal-head .section-tools :is(.link-btn, .fbar__trigger, .regal-more) {
+  background: var(--surface);
+  border-color: var(--ink);
+  color: var(--ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-regal .regal-head .section-tools :is(.link-btn, .fbar__trigger, .regal-more):hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-card { color: var(--ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-card__kicker,
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-card__owner,
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-card__score--none { color: var(--ink-soft); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-card .game-card__body { border-bottom-color: var(--ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-card.is-picked .game-card__img { outline: var(--ring-width) solid var(--ink); outline-offset: 2px; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-card__score[data-stop="veto"] { color: var(--veto-ink); font-size: var(--display-5); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-card__score[data-stop="1"] { color: var(--ramp-1); font-size: var(--display-5); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-card__score[data-stop="2"] { color: var(--ramp-2); font-size: var(--display-5); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-card__score[data-stop="3"] { color: var(--ramp-3); font-size: var(--display-5); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-card__score[data-stop="4"] { color: var(--ramp-4); font-size: var(--display-5); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-card__score[data-stop="5"] { color: var(--ramp-5); font-size: var(--display-5); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-regal .add-tile {
+  background: transparent;
+  border: var(--rule-strong) dashed var(--ink);
+  color: var(--ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-regal .add-tile:hover { background: var(--surface); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-offshelf { border-top-color: var(--ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .section .ph-offshelf__label { color: var(--ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-offshelf__link { color: var(--ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-offshelf__link .ti { color: var(--ink-soft); }
+@media (max-width: 859px) {
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-offshelf__link { border-bottom-color: var(--hair); }
+}
+
+/* ---- Der Spielepass (P3.4): three columns — the cover; the game and how it
+   went, behind a 1px column rule; the score in a box, the one action and the
+   rest. Two from 860px (the right page under the story), one below. The
+   columns are DOM (views-round-detail.js), so the phone order is the reading
+   order. */
+:root[data-design="programmheft"] .ph-pass { align-items: start; gap: 24px 40px; }
+@media (min-width: 860px) {
+  :root[data-design="programmheft"] .ph-pass { grid-template-columns: minmax(0, 300px) minmax(0, 1fr); }
+  :root[data-design="programmheft"] .ph-pass > .pass__game { grid-row: 1 / span 2; }
+  :root[data-design="programmheft"] .ph-pass > .pass__story { padding-left: var(--space-7); border-left: var(--rule-col) solid transparent; }
+  :root[data-design="programmheft"] .ph-pass > .pass__table { grid-column: 2; }
+}
+@media (min-width: 1280px) {
+  :root[data-design="programmheft"] .ph-pass { grid-template-columns: minmax(0, 360px) minmax(0, 1fr) minmax(0, 320px); }
+  :root[data-design="programmheft"] .ph-pass > .pass__game { grid-row: auto; }
+  :root[data-design="programmheft"] .ph-pass > .pass__table { grid-column: auto; }
+}
+:root[data-design="programmheft"] .ph-pass > .pass__game,
+:root[data-design="programmheft"] .ph-pass > .pass__story { display: flex; flex-direction: column; gap: var(--space-5); min-width: 0; }
+:root[data-design="programmheft"] .ph-pass > .pass__table { gap: var(--space-4); }
+/* The cover: the whole box, no wash, no rounded frame. */
+:root[data-design="programmheft"] .ph-pass .gd-img { aspect-ratio: 3 / 4; box-shadow: none; }
+:root[data-design="programmheft"] .ph-pass .gd-img::before { content: none; }
+/* The story: no card — the title, the chips and the facts print on the page. */
+:root[data-design="programmheft"] .ph-pass .pass__story .gd-head {
+  display: block;
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  overflow: visible;
+}
+:root[data-design="programmheft"] .ph-pass .pass__story .gd-head::before { content: none; }
+:root[data-design="programmheft"] .ph-pass .gd-info h1 {
+  margin: 0 0 var(--space-4);
+  font-family: var(--font-display);
+  font-size: var(--display-3);
+  font-weight: 400;
+  line-height: var(--leading-display);
+  text-transform: uppercase;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+/* The middle column is ~310px between 1280 and 1600, where a 60px title split
+   an eleven-letter name („CARCASSONN / E", measured). One step down there. */
+@media (min-width: 1280px) and (max-width: 1599px) {
+  :root[data-design="programmheft"] .ph-pass .gd-info h1 { font-size: var(--display-4); }
+}
+:root[data-design="programmheft"] .ph-pass .gd-chips .tag { border-radius: 0; }
+/* The facts (P3.4's „Spieler · Dauer · …"): a row of keys over a 2px rule. */
+:root[data-design="programmheft"] .ph-pass .gd-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: var(--space-4);
+  margin: var(--space-4) 0 0;
+}
+:root[data-design="programmheft"] .ph-pass .fact {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 6px 0 0;
+  border-top: var(--rule-strong) solid transparent;
+  border-radius: 0;
+  background: none;
+  font-size: var(--text-md);
+}
+:root[data-design="programmheft"] .ph-pass :is(.fact__label, .game-info__weight-label) {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+/* The panels: a section head in Archivo caps over a 2px rule, no box. */
+:root[data-design="programmheft"] .ph-pass :is(.gd-raters, .gd-history, .gd-actions) { margin: 0; padding: 0; }
+:root[data-design="programmheft"] .ph-pass .section:is(.gd-raters, .gd-history, .gd-actions) > h2 {
+  margin: 0 0 var(--space-2);
+  padding-bottom: 6px;
+  border-bottom: var(--rule-strong) solid transparent;
+  font-family: var(--font);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+:root[data-design="programmheft"] .ph-pass .rater { border-radius: 0; }
+:root[data-design="programmheft"] .ph-pass .gd-plays { list-style: none; margin: 0; padding: 0; }
+:root[data-design="programmheft"] .ph-pass .gd-play__link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: var(--target-key);
+  padding: 4px 0;
+  text-decoration: none;
+}
+:root[data-design="programmheft"] .ph-pass .gd-play .avatar { flex: none; width: 28px; height: 28px; font-size: 11px; /* glyph-sized initials */ }
+:root[data-design="programmheft"] .ph-pass .gd-play__dot { flex: none; width: 28px; height: 28px; }
+:root[data-design="programmheft"] .ph-pass .gd-play__date { flex: none; font-weight: 600; font-variant-numeric: tabular-nums; }
+:root[data-design="programmheft"] .ph-pass .gd-play__what { flex: 1 1 auto; min-width: 0; font-weight: 700; }
+:root[data-design="programmheft"] .ph-pass .gd-play .score-pill { position: static; flex: none; font-family: var(--font); }
+:root[data-design="programmheft"] .ph-pass .gd-play__link:hover .gd-play__what { text-decoration: underline; text-underline-offset: 3px; }
+/* The score box (P3.4): the one boxed thing on the page. */
+:root[data-design="programmheft"] .ph-pass .gd-bignum {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px 18px;
+  border: var(--rule-strong) solid transparent;
+}
+:root[data-design="programmheft"] .ph-pass .gd-bignum__cap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+:root[data-design="programmheft"] .ph-pass .gd-bignum__n {
+  font-family: var(--font-display);
+  font-size: var(--display-2);
+  line-height: var(--leading-display);
+  font-variant-numeric: tabular-nums;
+}
+:root[data-design="programmheft"] .ph-pass .gd-bignum__n--none { font-size: var(--display-4); text-transform: uppercase; }
+:root[data-design="programmheft"] .ph-pass .gd-bignum__ev { font-size: var(--text-sm); line-height: 1.45; }
+/* The one action sits in the column at desktop; on a phone it is the sticky
+   bar over the fold, as every other design's is (styles.css). */
+@media (min-width: 860px) {
+  :root[data-design="programmheft"] .ph-pass .gd-bar {
+    position: static;
+    margin: 0;
+    padding: 0;
+    background: none;
+    box-shadow: none;
+  }
+}
+:root[data-design="programmheft"] .ph-pass .gd-bar { border-radius: 0; }
+/* „Aktionen" (P3.4): a list of 44px rows under dotted hairlines. */
+:root[data-design="programmheft"] .ph-pass .gd-actions__grid { display: flex; flex-direction: column; gap: 0; }
+:root[data-design="programmheft"] .ph-pass .gd-act {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  width: 100%;
+  min-height: var(--target-key);
+  padding: 0;
+  border: 0;
+  border-bottom: var(--rule-col) dotted transparent;
+  border-radius: 0;
+  background: none;
+  font-size: var(--text-md);
+  font-weight: 700;
+  letter-spacing: 0;
+  text-align: left;
+  text-transform: none;
+}
+:root[data-design="programmheft"] .ph-pass .gd-act:hover { text-decoration: underline; text-underline-offset: 3px; }
+@media (max-width: 859px) {
+  :root[data-design="programmheft"] .ph-pass .pass__game .gd-cover { max-width: 180px; }
+  :root[data-design="programmheft"] .ph-pass .gd-info h1 { font-size: var(--display-4); }
+  :root[data-design="programmheft"] .ph-pass .gd-bignum__n { font-size: var(--display-3); }
+}
+
+/* ---- The Spielepass's colours. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-pass > .pass__story { border-left-color: var(--ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-pass .gd-img { background: var(--surface); border: var(--rule-col) solid var(--ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-pass .gd-info h1 { color: var(--ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-pass .gd-chips .tag:not(.tag--empty) {
+  background: var(--surface);
+  box-shadow: inset 0 0 0 var(--rule-col) var(--ink);
+  color: var(--ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-pass .gd-chips .tag--empty {
+  background: transparent;
+  border: 1.5px dashed var(--ink);
+  color: var(--ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-pass .fact { border-top-color: var(--ink); color: var(--ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-pass :is(.fact__label, .game-info__weight-label) { color: var(--ink-soft); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-pass .section:is(.gd-raters, .gd-history, .gd-actions) > h2 {
+  border-bottom-color: var(--ink);
+  color: var(--ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-pass .rater { background: var(--surface); box-shadow: inset 0 0 0 var(--rule-col) var(--ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-pass .gd-play { border-bottom: var(--rule-col) dotted var(--hair); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-pass .gd-play__link { color: var(--ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-pass .gd-play__date { color: var(--ink-2); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-pass .gd-play--muted :is(.gd-play__date, .gd-play__what) { color: var(--ink-soft); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-pass .gd-play__dot { background: var(--sunken); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-pass .gd-bignum { background: var(--surface); border-color: var(--ink); color: var(--ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-pass .gd-bignum__cap { color: var(--ink-soft); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-pass .gd-bignum__ev { color: var(--ink-2); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-pass .gd-bignum__n { color: var(--ink); font-size: var(--display-2); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-pass .gd-bignum__n--none { color: var(--ink-soft); font-size: var(--display-4); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-pass .gd-bignum[data-stop="veto"] .gd-bignum__n { color: var(--veto-ink); font-size: var(--display-2); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-pass .gd-bignum[data-stop="1"] .gd-bignum__n { color: var(--ramp-1); font-size: var(--display-2); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-pass .gd-bignum[data-stop="2"] .gd-bignum__n { color: var(--ramp-2); font-size: var(--display-2); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-pass .gd-bignum[data-stop="3"] .gd-bignum__n { color: var(--ramp-3); font-size: var(--display-2); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-pass .gd-bignum[data-stop="4"] .gd-bignum__n { color: var(--ramp-4); font-size: var(--display-2); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-pass .gd-bignum[data-stop="5"] .gd-bignum__n { color: var(--ramp-5); font-size: var(--display-2); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-pass .gd-act { border-bottom-color: var(--hair); color: var(--ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-pass .gd-act .ti { color: var(--ink-soft); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-pass .gd-act[data-kind="destructive"],
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-pass .gd-act[data-kind="destructive"] .ti { color: var(--danger); }
+@media (max-width: 859px) {
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-pass .gd-bar {
+    background: var(--page-bg);
+    box-shadow: none;
+    border-top: var(--rule-strong) solid var(--ink);
+  }
+  /* The ramp numerals keep their tone at the phone's 60px. */
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-pass .gd-bignum[data-stop] .gd-bignum__n,
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-pass .gd-bignum__n { font-size: var(--display-3); }
+}
+
+/* ---- Spiel hinzufügen (P3.5, P6.4): the search-first step Der Tisch built
+   (add-game-search.js), in print — a 56px query field in a 2px ink rule, hits
+   as rows over 1px rules, and the BGG import as the black box. */
+:root[data-design="programmheft"] .add-search__query {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  margin: 2px 0 var(--space-3);
+  padding: 0 16px;
+  border: var(--rule-strong) solid transparent;
+}
+:root[data-design="programmheft"] .add-search__query > .ti { font-size: 22px; /* glyph, not type */ }
+:root[data-design="programmheft"] .add-search__input {
+  flex: 1;
+  min-width: 0;
+  padding: 12px 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: var(--text-lg);
+  outline: none;
+}
+:root[data-design="programmheft"] .add-search__count {
+  flex: none;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+:root[data-design="programmheft"] .add-search__msg { margin: 0 0 10px; font-size: var(--text-sm); }
+:root[data-design="programmheft"] .add-search__msg:empty { margin: 0; }
+:root[data-design="programmheft"] .add-search__list { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
+:root[data-design="programmheft"] .add-search__row {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  min-height: 72px;
+  padding: 8px 0;
+  border-bottom: var(--rule-col) solid transparent;
+}
+:root[data-design="programmheft"] .add-search__cover {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  overflow: hidden;
+}
+:root[data-design="programmheft"] .add-search__cover img { display: block; width: 100%; height: 100%; object-fit: contain; }
+:root[data-design="programmheft"] .add-search__cover .cover-ph .ti { font-size: 18px; /* glyph, not type */ }
+:root[data-design="programmheft"] .add-search__text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+:root[data-design="programmheft"] .add-search__title { font-size: var(--text-lg); font-weight: 700; line-height: 1.2; overflow-wrap: anywhere; }
+:root[data-design="programmheft"] .add-search__meta { font-size: var(--text-sm); }
+:root[data-design="programmheft"] .add-search__state {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+:root[data-design="programmheft"] :is(.add-search__add, .add-search__shelve, .add-search__held) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: var(--target-key);
+  padding: 0 14px;
+}
+:root[data-design="programmheft"] .add-search__held {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+:root[data-design="programmheft"] .add-search__ways { display: flex; flex-direction: column; gap: var(--space-3); margin-top: var(--space-4); }
+:root[data-design="programmheft"] .add-search__way { justify-content: flex-start; gap: 10px; min-height: 48px; }
+/* „Selbst eintragen" is the quiet way out (P3.5's underlined line). */
+:root[data-design="programmheft"] #addSearchSelf {
+  align-self: flex-start;
+  min-height: var(--target-key);
+  padding: 0;
+  border-color: transparent;
+  background: transparent;
+  letter-spacing: 0;
+  text-decoration: underline;
+  text-transform: none;
+  text-underline-offset: 3px;
+}
+@media (min-width: 640px) {
+  :root[data-design="programmheft"] .sheet-backdrop:has(> .add-search) { align-items: flex-start; padding-top: 92px; }
+}
+@media (max-width: 639px) {
+  :root[data-design="programmheft"] .add-search__query { min-height: 52px; padding: 0 12px; }
+  :root[data-design="programmheft"] .add-search__input { font-size: var(--text-md); }
+  :root[data-design="programmheft"] .add-search__row { grid-template-columns: 48px minmax(0, 1fr) 44px; gap: 12px; min-height: 68px; }
+  :root[data-design="programmheft"] .add-search__cover { width: 48px; height: 48px; }
+  :root[data-design="programmheft"] .add-search__title { font-size: var(--text-md); }
+  :root[data-design="programmheft"] :is(.add-search__add, .add-search__shelve, .add-search__held) { width: 44px; padding: 0; font-size: 20px; }
+  :root[data-design="programmheft"] .add-search__act-label { display: none; }
+}
+
+/* ---- The lookup's colours. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .add-search__query {
+  background: var(--surface);
+  border-color: var(--control-edge);
+  color: var(--ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .add-search__query:focus-within {
+  outline: var(--ring-width) solid var(--brand-ring);
+  outline-offset: var(--ring-offset);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .add-search__input { color: var(--ink); }
+/* The field's box carries the ring (focus-within, above); the bare input inside
+   it would otherwise draw the design's :focus-visible ring a second time, as a
+   frame inside the frame (measured at 390px). */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .add-search__query .add-search__input:focus-visible { outline: none; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .add-search__input::placeholder { color: var(--ink-soft); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) :is(.add-search__msg, .add-search__meta, .add-search__state, .add-search__count) { color: var(--ink-soft); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .add-search__row { border-bottom-color: var(--ink); color: var(--ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .add-search__cover { background: var(--surface); box-shadow: inset 0 0 0 var(--rule-col) var(--ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .add-search__held { color: var(--ink-soft); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) #addSearchImport {
+  background: var(--box);
+  border-color: var(--box);
+  color: var(--box-ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) #addSearchImport:focus-visible { outline-color: var(--ring-on-box); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) #addSearchSelf { color: var(--ink); }
 
 /* ===== #1380 — tier 2b: Einstellungen, Profil, Freunde, Postfach, Was ist neu, Entdecken ===== */
 /* P14 (docs/design/programmheft/Programmheft-P14-Tier2b.dc.html). The six
