@@ -48,7 +48,7 @@ const RAIL_OWN_ENTRY = ['retired', 'completed', 'wishlist', 'recommendations', .
    off-shelf trigger is the one that did (views-regal.js). One question, so a
    third lean design is one line here rather than a hunt for every caller. */
 function railIsLean() {
-  return designIs('tisch') || designIs('ocean') || designIs('programmheft');
+  return designIs('tisch') || designIs('ocean') || designIs('bruecke') || designIs('programmheft');
 }
 
 // One rail row. `sub` decides the marker, and the two states are NOT
@@ -96,9 +96,11 @@ function buildRoundRail(round, activeTab, sub, offShelf) {
      „+", and the top bar names the round on every other screen — so the hero
      is NOT `rail-owned` under Ocean (views-round-start.js) and keeps the
      Start tab's one <h1> at every width. */
+  // Die Brücke's Abschnittsleiste (#1238, B3.1) is the same five links and
+  // nothing else, laid out as a bar under the top bar (bruecke.css).
   // The Programmheft's section line drops the identity the same way (#1372):
   // its hub prints the round's name as the page's own masthead line.
-  const reling = designIs('ocean') || designIs('programmheft');
+  const reling = designIs('ocean') || designIs('bruecke') || designIs('programmheft');
 
   // --- Identity. The hero this mirrors stays on the Start tab for narrow
   // screens, where there is no rail to carry it; CSS hides it here instead.

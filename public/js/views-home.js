@@ -17,9 +17,12 @@ async function showHome() {
   const tisch = designIs('tisch');
   // Ocean's sub-brand the same way (#1211, O3.1): „Die Küste · deine Runden".
   const ocean = designIs('ocean');
+  // Die Brücke's the same way (#1238, B9 „Begrüßung"): „Flotte / Übersicht".
+  const bruecke = designIs('bruecke');
   // The Programmheft's dateline (#1372, P3.1): „Kiosk · <today>".
   const kicker = tisch ? t('home.tischKicker') : ocean ? t('home.oceanKicker')
-    : designIs('programmheft') ? phLobbyKicker() : '';
+    : bruecke ? t('home.brueckeKicker')
+      : designIs('programmheft') ? phLobbyKicker() : '';
   setContext(kicker, kicker ? 'kicker' : undefined);
   setDocTitle(t('home.docTitle'));
   applyMarker(null); // home: no round, no marker
@@ -35,11 +38,12 @@ async function showHome() {
     // width, so a screen reader meets it once. Klassisch renders neither.
     h(`<div class="lobby-head">${tisch ? `
          <p class="lobby-head__kicker">${esc(t('home.tischKicker'))}</p>` : ''}
-         <h1>${esc(t(ocean ? 'home.oceanGreeting' : 'home.greeting'))}</h1>
+         <h1>${esc(t(ocean ? 'home.oceanGreeting' : bruecke ? 'home.brueckeGreeting' : 'home.greeting'))}</h1>
          <div class="muted lobby-head__sub">${esc(t('home.sub'))}</div>
        </div>`)
   );
 
+  if (bruecke) brueckeStatus();
   const resume = renderResumeZone(rounds);
   if (resume) app.appendChild(resume);
 
@@ -179,10 +183,13 @@ function renderResumeZone(rounds) {
   open.slice(0, HOME_RESUME_CAP).forEach(({ round, session }) => {
     // Ocean draws a running session as a notice rather than a ticket (#1211,
     // O3.1/O6.1) — same link, same strings, ocean-hub.js.
+    // Die Brücke's is a notice card under „Eingehendes Signal" (#1238, B2.1).
     // The Programmheft prints it as the „Extrablatt" (#1372, P3.1/P6.1).
-    const phExtra = designIs('programmheft');
-    if (phExtra || designIs('ocean')) {
-      const notice = (phExtra ? phResumeNotice : oceanResumeNotice)({ round, session });
+    const composed = designIs('ocean') ? oceanResumeNotice
+      : designIs('bruecke') ? brueckeResumeNotice
+        : designIs('programmheft') ? phResumeNotice : null;
+    if (composed) {
+      const notice = composed({ round, session });
       navLink(notice, resultsPath(round.id, session.id), () => showResultsById(round.id, session.id));
       list.appendChild(notice);
       return;
