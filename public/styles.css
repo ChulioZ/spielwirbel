@@ -600,6 +600,8 @@ h1, h2, h3 { font-family: var(--font-display); }
   padding: 6px 8px;
   cursor: pointer;
 }
+/* Only a phone shows it — see the narrow-screens block. */
+.lang-picker__globe { display: none; }
 
 /* ---- Layout ---- */
 .app {
@@ -1842,14 +1844,40 @@ a.hub-row:hover { background: var(--sunken-soft); }
 }
 
 /* ---- Narrow screens: keep the top bar and last-played ticket from
-   overflowing. The three top-bar items (brand, breadcrumb, language picker)
-   don't all fit under ~400px, so the picker gets clipped; drop the wordmark to
+   overflowing. The top-bar items (brand, breadcrumb, language picker, the design
+   button and the account controls) don't all fit under ~400px, so the picker gets clipped; drop the wordmark to
    the dice icon there and tighten the bar. The ticket's side "stub" is too
    wide next to its main part on a phone, so stack it as a footer instead. */
 @media (max-width: 520px) {
   .topbar { gap: 10px; padding: 10px 14px; }
   .topbar__home { padding: 6px; font-size: var(--text-xl); }
   .topbar__word { display: none; }
+  /* The language picker goes compact (#1429). Written out, „Deutsch" costs
+     ~111px, and with the design button beside it the logged-in bar left the
+     round name 0–6px at 390 (measured under Klassisch, Der Tisch and Ocean);
+     logged out, the bar overflowed by 3–15px. So the select shrinks to a 38px
+     globe and sits over it at opacity 0: a tap still opens the platform's own
+     language list, and the select keeps its accessible name and its place in
+     the tab order.
+
+     Painted with the select's own tokens, so every design draws it as the
+     picker it stands in for. The select's pull is the globe's width PLUS the
+     bar's gap above — change either and it stops covering the globe
+     (test/design-menu.test.js holds the sum). A wrapper element would have
+     been tidier and was ruled out: Die Brücke's bar orders `> .lang-picker`
+     as a direct child of .topbar. */
+  .lang-picker__globe {
+    display: grid; place-items: center; flex: none;
+    width: 38px; height: 34px; margin-left: auto; box-sizing: border-box;
+    font-size: var(--text-lg); color: var(--ink-soft);
+    background: var(--control-fill); border: 1px solid var(--control-edge); border-radius: 10px;
+  }
+  .lang-picker {
+    position: relative;
+    width: 38px; height: 34px; margin-left: -48px;
+    opacity: 0;
+  }
+  .lang-picker__globe:has(+ .lang-picker:focus-visible) { outline: 2px solid var(--brand-ring, var(--brand)); outline-offset: 2px; }
 
   .ticket { flex-direction: column; }
   .ticket__stub {
@@ -3396,7 +3424,8 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
 }
 
 /* ---- Onboarding / account auth (issue #138) ---- */
-/* Auth screens take over the view; the top bar keeps only the language picker. */
+/* Auth screens take over the view; the top bar keeps only the language picker
+   and, since #1429, the design button beside it. */
 /* #feedbackBtn is hidden here too: since #321 it navigates to the public contact
    form (so it would work logged-out), but the auth screen is a focused funnel
    that already hides the home button and round context — a feedback entry point
@@ -5093,8 +5122,10 @@ a.k-tile:focus-visible,
    beside a label — and so the name and description get the card's full width at
    every size this list is rendered at. */
 /* The landing's design band (#1198) prints the same posters, so it shares the
-   two defaults rather than restating them — one licensed copy, not two. */
+   two defaults rather than restating them — one licensed copy, not two. The
+   top-bar design menu (#1429) draws the same tiles, so it joins the list. */
 .design-card,
+.design-menu,
 .landing-design {
   --tile-page: #f4f1ea;
   --tile-accent: #c2410c;
@@ -7421,6 +7452,26 @@ a.k-tile:focus-visible,
    drops when it wraps that text in an anonymous item. */
 .popover__opt--marked { display: flex; align-items: center; gap: 5px; }
 .popover__opt:hover { background: var(--brand-tint); }
+/* The top-bar design menu (#1429): one row per offered design — its swatch, its
+   name, and a visible radio, since the checked state IS the information here and
+   a tick drawn by hand would be a second thing to keep in step with it. Tokens
+   only, so every design paints it (.claude/rules/theme-derived-colors.md). */
+.design-menu__list { display: flex; flex-direction: column; gap: 2px; }
+.design-menu__opt {
+  display: flex; align-items: center; gap: 10px;
+  padding: 6px 10px; min-height: 44px;
+  border: 1px solid transparent; border-radius: var(--radius-sm);
+  font-weight: 600; cursor: pointer;
+}
+.design-menu__opt:hover { background: var(--brand-tint); }
+.design-menu__opt.is-on { border-color: var(--brand); background: var(--brand-tint); }
+.design-menu__opt input { margin: 0; accent-color: var(--brand); flex: none; }
+.design-menu__swatch {
+  flex: none; width: 40px; height: 28px; border-radius: 6px;
+  border: 1px solid color-mix(in oklab, var(--shade) 12%, transparent);
+  background: linear-gradient(135deg, var(--tile-page) 58%, var(--tile-accent) 58%);
+}
+.design-menu__name { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; min-width: 0; }
 .popover__opt.is-current { border-color: var(--brand); background: var(--brand-tint); }
 /* Below 860px the same three editors are presented as a bottom sheet instead
    (#422) — `.editor` is that sheet's body, and it mirrors `.popover`'s stacking

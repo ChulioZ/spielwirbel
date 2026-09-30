@@ -63,7 +63,16 @@
   <header class="topbar">
     <a id="homeBtn" class="topbar__home" href="/" aria-label="Home"><i class="ti ti-tornado" aria-hidden="true"></i></a>
     <div id="context" class="topbar__context"></div>
+    <!-- The language picker's phone face (issue #1429): under 520px the select
+         shrinks to this globe and lies over it, invisible, so a tap still opens
+         the native language list. Decorative — the select keeps the name. -->
+    <i class="ti ti-world lang-picker__globe" aria-hidden="true"></i>
     <select id="langPicker" class="lang-picker" aria-label="Language"></select>
+    <!-- Design (issue #1429): hidden until GET /api/config offers at least two
+         designs; wired by js/design-menu.js setupDesignMenu(), its label set by
+         applyStaticTexts(). Shown on the auth screens and the landing too — a
+         logged-out visitor chooses for this device. -->
+    <button id="designBtn" class="topbar__acct" type="button" hidden aria-expanded="false" aria-label="Design"><i class="ti ti-palette" aria-hidden="true"></i></button>
     <!-- "Anmelden" (issue #1090). The logged-out landing page and /entdecken
          offer it; every other screen hides it, which authScreen() does on its
          way in and out, so the auth screens themselves never show it either.
@@ -303,6 +312,7 @@
   <script src="/js/designs.js"></script>
   <script src="/js/design.js"></script>
   <script src="/js/design-picker.js"></script>
+  <script src="/js/design-menu.js"></script>
   <script src="/js/round-roles.js"></script>
   <script src="/js/draw-pool.js"></script>
   <script src="/js/provider-info-fields.js"></script>

@@ -340,6 +340,7 @@ function applyStaticTexts() {
   // (#145); only the feedback button was being localized.
   home.setAttribute('aria-label', t('a11y.home'));
   document.getElementById('langPicker').setAttribute('aria-label', t('a11y.language'));
+  document.getElementById('designBtn').setAttribute('aria-label', t('design.pick.label')); // the picker's own word (#1429)
   document.getElementById('feedbackBtn').setAttribute('aria-label', t('feedback.button'));
   document.getElementById('supportBtn').setAttribute('aria-label', t('support.button'));
   document.getElementById('accountBtn').setAttribute('aria-label', accountBtnLabel());

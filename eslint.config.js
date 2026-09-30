@@ -426,7 +426,7 @@ const frontendGlobals = {
   designMarkers: 'readonly', markerOf: 'readonly', markerInk: 'readonly', markerInkOf: 'readonly', DEFAULT_MARKER_INK: 'readonly',
   activeDesign: 'readonly', designIs: 'readonly', designViewsReady: 'readonly', designScheme: 'readonly', loadDesignStylesheet: 'readonly',
   applyDesign: 'readonly', requestedDesign: 'readonly', initDesign: 'readonly',
-  DESIGN_CHOOSER_REVISION: 'readonly', applyAccountDesign: 'readonly',
+  DESIGN_CHOOSER_REVISION: 'readonly', applyAccountDesign: 'readonly', storeDesign: 'readonly',
   // #1199 — a design's brand marks and the manifest URL that carries them.
   designMarks: 'readonly', manifestHref: 'readonly',
   // card-glyphs.js + recap-card-tisch.js (#1199) — Der Tisch's share card.
@@ -447,7 +447,9 @@ const frontendGlobals = {
   winStreak: 'readonly', sessionNumber: 'readonly',
   offeredDesigns: 'readonly', designTile: 'readonly', renderDesignPicker: 'readonly',
   maybeShowDesignChooser: 'readonly', showDesignChooser: 'readonly',
-  buildDesignSection: 'readonly',
+  buildDesignSection: 'readonly', saveAccountDesign: 'readonly',
+  // design-menu.js (#1429) — the top-bar design button, wired by main.js.
+  setupDesignMenu: 'readonly',
   showMarker: 'readonly', showGameDetail: 'readonly',
   // game-editors.js (#968 — the five field editors, split out of
   // views-round-detail.js; each takes an explicit context)

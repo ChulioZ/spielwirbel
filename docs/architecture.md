@@ -625,6 +625,9 @@ public/
                      first-start chooser both render, that chooser sheet,
                      and the Konto section (#1186); under Der Tisch the
                      chooser prints posters/rows from the registry (#1277)
+    design-menu.js   the top-bar palette button and its popover: a pick
+                     saves to the account when logged in, to the device
+                     otherwise (#1429)
     round-roles.js   the owner/co-owner/editor ladder and what each may do,
                      required by lib/round-access.js so the views hide exactly
                      what the server refuses (issue #137)
