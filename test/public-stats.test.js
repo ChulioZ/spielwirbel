@@ -10,6 +10,7 @@ const bgg = require('../lib/providers/bgg');
 const scheduler = require('../lib/scheduler');
 const repo = require('../lib/repo');
 const { playCounts, scoreRatings, shelfScore, SCORE_MIN } = require('../public/js/vote-score');
+const { periodBoundaries } = require('../lib/calendar-periods');
 
 /*
  * Instance-wide public statistics (#564).
@@ -324,17 +325,19 @@ test('a play in the PREVIOUS calendar month is not counted in this one', async (
      with `now` — at the 5th it could, whenever a month's last day is a Monday
      (Mon 2026-03-31 and Sat 2026-04-05 are one week), and the week assertion
      below would fail on those days alone. */
-  const nextMonth = new Date();
-  nextMonth.setUTCDate(1);
-  nextMonth.setUTCMonth(nextMonth.getUTCMonth() + 1);
-  nextMonth.setUTCDate(20);
+  /* And take "this month" from the BERLIN calendar the counts use, not from the
+     UTC one: in the last hour or two of a month the play is already in the new
+     month in Berlin while UTC is still in the old one, and a UTC-derived "next
+     month" was then the play's own month (red on 2026-09-30, 22:14 UTC). */
+  const [y, m] = periodBoundaries(new Date().toISOString()).monthKey.split('-').map(Number);
+  const nextMonth = new Date(Date.UTC(y, m, 20, 12)); // m is 1-based, so this is the NEXT month
   const built = await rebuild(nextMonth.toISOString());
   const games = built.games || {};
   assert.equal('playedWeek' in games, false, 'last month is not this week');
   assert.equal('playedMonth' in games, false, 'last month is not this month');
   // Still inside the calendar YEAR — unless the rollover crossed one, which is
   // the case the ternary covers rather than skipping the assertion entirely.
-  const sameYear = nextMonth.getUTCFullYear() === new Date().getUTCFullYear();
+  const sameYear = nextMonth.getUTCFullYear() === y;
   assert.equal('playedYear' in games, sameYear,
     sameYear ? 'the same calendar year still counts it' : 'a December run rolls into the next year');
 });
