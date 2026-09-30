@@ -39,6 +39,8 @@ function renderRegalTab(round, activeGames) {
   // words the sort „Sortiert: Bewertung". It keeps the dashed add tile and
   // brings its own ways off the shelf; ocean.css lays the rest out per width.
   const ocean = designIs('ocean');
+  // Die Brücke only for its empty shelf so far (#1243, B7.2).
+  const bruecke = designIs('bruecke');
   // Das Programmheft (#1373, P3.3/P6.2/P7.8) takes the composed head too, and
   // Ocean's „Sortiert:" statement; its cards set the number, the meta and the
   // score as print ABOUT the cover rather than on it (phCard below).
@@ -80,13 +82,19 @@ function renderRegalTab(round, activeGames) {
   // the toolbar's (#1278 moved only the toolbar's import into the add sheet).
   const gridAddTile = tisch ? [] : [addTile];
 
-  if (activeGames.length === 0 && ocean) {
+  if (activeGames.length === 0 && (ocean || bruecke)) {
     /* Ocean's empty shelf (#1216, O7.1) carries its two ways in ON the card —
        the same two tiles' labels and handlers, as the card's one action and its
-       side road — so the dashed tiles below would offer them a second time. */
+       side road — so the dashed tiles below would offer them a second time.
+       Die Brücke's too (#1243, B7.2), with the side road as a text link: „nie
+       als zweiter Knopf". */
     const empty = gamesSec.appendChild(emptyState({ icon: 'ti-cards', title: t('games.emptyTitle'), text: t('games.empty') }));
     emptyStateAction(empty, { icon: 'ti-plus', label: t('round.addGame'), primary: true, onClick: () => showAddGame(round) });
-    if (canImportBgg()) emptyStateAction(empty, { icon: 'ti-download', label: t('bggImport.tile'), onClick: () => showBggImport(round) });
+    if (canImportBgg()) {
+      emptyStateAction(empty, bruecke
+        ? { icon: 'ti-arrow-right', label: t('bggImport.tile'), link: true, onClick: () => showBggImport(round) }
+        : { icon: 'ti-download', label: t('bggImport.tile'), onClick: () => showBggImport(round) });
+    }
   } else if (activeGames.length === 0) {
     gamesSec.appendChild(emptyState({ icon: 'ti-cards', title: t('games.emptyTitle'), text: t('games.empty') }));
     grid.append(...gridAddTile);

@@ -169,8 +169,9 @@ function hubSuggestCard(round, activeGames, statsByGame, exclude) {
        other empty answer keeps returning null — #1280's thresholds are about
        series and the podium, and have nothing to say about suggestions. */
     // Ocean says it too (#1216, O7.3 „Wie wär's mit"), in the pair beside the
-    // shell — the same one truthful reason, the same copy.
-    if ((designIs('tisch') || designIs('ocean')) && roundIsYoung(round) && activeGames.length
+    // shell — the same one truthful reason, the same copy. And Die Brücke, in
+    // its own slot (#1243, B7.2 „sagt, wann es losgeht").
+    if ((designIs('tisch') || designIs('ocean') || designIs('bruecke')) && roundIsYoung(round) && activeGames.length
       && activeGames.length < SUGGEST_MIN_SHELF) {
       return hubSentenceCard('ti-bulb', t('hub.suggest.title'),
         tn(SUGGEST_MIN_SHELF, 'hub.young.suggestOne', 'hub.young.suggest'));
@@ -273,7 +274,12 @@ function hubPulseCard(round, activeGames) {
     // roundPulse() will draw them.
     const say = tisch ? roundIsYoung(round) : youngRoundPlayed(round, hubDeps()) > 0
       && youngRoundPlayed(round, hubDeps()) < floor;
-    if (say && activeGames.length) {
+    /* Die Brücke draws the Rundenpuls on the freshly founded round too (#1243,
+       B7.1 — „Leer" still shows the block, with a sentence), empty shelf or
+       not. Its bars keep Klassisch's floor: B7.3's two-bar chart is the noise
+       #1318 decided to wait out, so the sentence stands in until then. */
+    const bruecke = designIs('bruecke') && roundIsYoung(round);
+    if (bruecke || (say && activeGames.length)) {
       return hubSentenceCard('ti-activity', t('hub.pulse.title'),
         tn(floor, 'hub.young.pulseOne', 'hub.young.pulse'));
     }
