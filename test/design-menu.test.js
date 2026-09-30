@@ -240,3 +240,41 @@ test('a stored id this instance no longer offers falls back to the face once con
 
   answer(null); // a failed config request must not throw
 });
+
+/* ------------------------- the language globe (CSS) ------------------------- */
+
+const fs = require('node:fs');
+const path = require('node:path');
+const { rulesOf, topLevel, mediaBlocks, declaredValue } = require('./support/css');
+
+test('the invisible select covers the globe: same width, pulled back by width + bar gap', () => {
+  const top = rulesOf(topLevel());
+  const bodies = (sel) => top.filter(([s]) => s === sel).map(([, b]) => b).join(';');
+  const globe = bodies('.lang-picker__globe');
+  const select = bodies('.lang-picker');
+  const bar = bodies('.topbar');
+  const w = declaredValue(globe, 'width');
+  assert.match(w || '', /^\d+px$/, 'the globe pins its width, or nothing can be matched to it');
+  assert.equal(declaredValue(select, 'width'), w);
+  assert.equal((declaredValue(select, 'margin-left') || '').replace(/\s+/g, ''), `calc(-1*(${w}+var(--topbar-gap)))`);
+  assert.equal(declaredValue(select, 'opacity'), '0');
+  assert.equal(declaredValue(bar, 'gap'), 'var(--topbar-gap)', 'the gap the pull subtracts must be the gap the bar uses');
+  assert.match(declaredValue(bar, '--topbar-gap') || '', /^\d+px$/);
+
+  // A `gap:` set on the bar anywhere else would move the globe out from under
+  // the select with nothing red — so it has to go through the property.
+  const sheets = [['styles.css media blocks', mediaBlocks().map(([, css]) => css).join('\n')]];
+  const dir = path.join(__dirname, '..', 'public', 'css', 'designs');
+  for (const f of fs.readdirSync(dir)) {
+    sheets.push([f, fs.readFileSync(path.join(dir, f), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '')]);
+  }
+  let seen = 0;
+  for (const [name, css] of sheets) {
+    for (const [sel, body] of rulesOf(css)) {
+      if (!/\.topbar(?![\w-])\s*$/.test(sel.split(',').pop().trim()) && !/\.topbar(?![\w-])(\s*,|$)/.test(sel)) continue;
+      seen += 1;
+      assert.equal(declaredValue(body, 'gap'), null, `${name}: "${sel}" sets the bar's gap directly — set --topbar-gap`);
+    }
+  }
+  assert.ok(seen >= 3, `only ${seen} .topbar rules scanned — is the sweep reading anything?`);
+});

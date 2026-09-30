@@ -544,7 +544,8 @@ h1, h2, h3 { font-family: var(--font-display); }
   z-index: 10;
   display: flex;
   align-items: center;
-  gap: 16px;
+  --topbar-gap: 16px;
+  gap: var(--topbar-gap);
   padding: 12px 20px;
   background: var(--surface);
   border-bottom: 1px solid var(--line);
@@ -588,7 +589,6 @@ h1, h2, h3 { font-family: var(--font-display); }
   background: var(--marker);
 }
 .lang-picker {
-  margin-left: auto;
   flex: none;
   font-family: inherit;
   font-size: var(--text-sm);
@@ -600,8 +600,27 @@ h1, h2, h3 { font-family: var(--font-display); }
   padding: 6px 8px;
   cursor: pointer;
 }
-/* Only a phone shows it — see the narrow-screens block. */
-.lang-picker__globe { display: none; }
+/* The language picker wears a globe (#1429), drawn as one of the bar's icon
+   buttons (`.topbar__acct`, so every design paints it like its neighbours):
+   the select lies over it at opacity 0, so a tap still opens the platform's own
+   language list and the select keeps its accessible name and tab stop. The
+   written-out „Deutsch" cost ~111px, and next to the design button it left the
+   round name 0–6px at 390 (Klassisch, Der Tisch, Ocean, logged in, in a round).
+
+   The pull is the globe's width PLUS the bar's gap, which is why the gap is a
+   custom property — test/design-menu.test.js holds the sum. The select keeps its
+   colours above: a desktop browser paints the open option list with them. A
+   wrapper element was ruled out because Die Brücke's desktop bar orders its
+   items as direct children of .topbar. */
+.lang-picker__globe { width: 38px; box-sizing: border-box; margin-left: auto; }
+.lang-picker {
+  position: relative;
+  align-self: stretch;
+  width: 38px;
+  margin-left: calc(-1 * (38px + var(--topbar-gap)));
+  opacity: 0;
+}
+.lang-picker__globe:has(+ .lang-picker:focus-visible) { outline: 2px solid var(--brand-ring, var(--brand)); outline-offset: 2px; }
 
 /* ---- Layout ---- */
 .app {
@@ -1844,40 +1863,14 @@ a.hub-row:hover { background: var(--sunken-soft); }
 }
 
 /* ---- Narrow screens: keep the top bar and last-played ticket from
-   overflowing. The top-bar items (brand, breadcrumb, language picker, the design
-   button and the account controls) don't all fit under ~400px, so the picker gets clipped; drop the wordmark to
-   the dice icon there and tighten the bar. The ticket's side "stub" is too
+   overflowing. The top-bar items (brand, breadcrumb, the language globe, the
+   design button and the account controls) don't all fit under ~400px; drop the
+   wordmark to the dice icon there and tighten the bar. The ticket's side "stub" is too
    wide next to its main part on a phone, so stack it as a footer instead. */
 @media (max-width: 520px) {
-  .topbar { gap: 10px; padding: 10px 14px; }
+  .topbar { --topbar-gap: 10px; padding: 10px 14px; }
   .topbar__home { padding: 6px; font-size: var(--text-xl); }
   .topbar__word { display: none; }
-  /* The language picker goes compact (#1429). Written out, „Deutsch" costs
-     ~111px, and with the design button beside it the logged-in bar left the
-     round name 0–6px at 390 (measured under Klassisch, Der Tisch and Ocean);
-     logged out, the bar overflowed by 3–15px. So the select shrinks to a 38px
-     globe and sits over it at opacity 0: a tap still opens the platform's own
-     language list, and the select keeps its accessible name and its place in
-     the tab order.
-
-     Painted with the select's own tokens, so every design draws it as the
-     picker it stands in for. The select's pull is the globe's width PLUS the
-     bar's gap above — change either and it stops covering the globe
-     (test/design-menu.test.js holds the sum). A wrapper element would have
-     been tidier and was ruled out: Die Brücke's bar orders `> .lang-picker`
-     as a direct child of .topbar. */
-  .lang-picker__globe {
-    display: grid; place-items: center; flex: none;
-    width: 38px; height: 34px; margin-left: auto; box-sizing: border-box;
-    font-size: var(--text-lg); color: var(--ink-soft);
-    background: var(--control-fill); border: 1px solid var(--control-edge); border-radius: 10px;
-  }
-  .lang-picker {
-    position: relative;
-    width: 38px; height: 34px; margin-left: -48px;
-    opacity: 0;
-  }
-  .lang-picker__globe:has(+ .lang-picker:focus-visible) { outline: 2px solid var(--brand-ring, var(--brand)); outline-offset: 2px; }
 
   .ticket { flex-direction: column; }
   .ticket__stub {

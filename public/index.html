@@ -63,10 +63,16 @@
   <header class="topbar">
     <a id="homeBtn" class="topbar__home" href="/" aria-label="Home"><i class="ti ti-tornado" aria-hidden="true"></i></a>
     <div id="context" class="topbar__context"></div>
-    <!-- The language picker's phone face (issue #1429): under 520px the select
-         shrinks to this globe and lies over it, invisible, so a tap still opens
-         the native language list. Decorative — the select keeps the name. -->
-    <i class="ti ti-world lang-picker__globe" aria-hidden="true"></i>
+    <!-- The language picker's face (issue #1429): the select lies over this
+         globe, invisible, so a tap still opens the native language list and the
+         bar reads as one row of icon buttons. A real <button>, out of the tab
+         order and hidden from assistive tech (not `inert`: specs read any
+         [inert] on the page as a modal having opened), because a button is what
+         its neighbours are: a span
+         took the design's text font and line height and came out 1–4px taller
+         depending on the design. The select keeps the accessible name and the
+         tab stop. -->
+    <button class="topbar__acct lang-picker__globe" type="button" aria-hidden="true" tabindex="-1"><i class="ti ti-world"></i></button>
     <select id="langPicker" class="lang-picker" aria-label="Language"></select>
     <!-- Design (issue #1429): hidden until GET /api/config offers at least two
          designs; wired by js/design-menu.js setupDesignMenu(), its label set by

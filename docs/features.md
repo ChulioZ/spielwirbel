@@ -836,7 +836,8 @@ What the app does, in detail. For a short overview see the
   every screen and every device you sign in on. The palette button is there for
   everyone: a **logged-out visitor** picks for this device, and at login the
   account's design takes over again. Arrow keys preview a design; a tap, Enter or
-  Space keeps it. On a phone the language picker shrinks to a globe to make room.
+  Space keeps it. The language picker beside it is drawn as a globe icon, like
+  the bar's other buttons, and opens the same list.
   Which designs exist is decided in code (`public/js/designs.js`), so a design
   under construction stays off a live instance until it is enabled
   (`docs/design/README.md`). An instance running **without accounts** keeps the
