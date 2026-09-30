@@ -1050,6 +1050,14 @@ I18N.ko = {
   'vote.personOf': '참가자 {n}/{total}',
   'vote.handoffNext': '다 하면 기기를 넘겨 주세요 — 다음은 {name} 님 차례예요.',
   'vote.handoffLast': '다 하면 모두 끝나요 — 그다음은 결과예요.',
+  // The review step after a voter's last card (#1434).
+  'vote.reviewTitle': '내 평가',
+  'vote.reviewHint': '게임을 누르면 평가를 바꿀 수 있어요. 다 됐으면 보내세요.',
+  'vote.reviewCountOne': '{n}개 게임 평가 완료',
+  'vote.reviewCount': '{n}개 게임 모두 평가 완료',
+  'vote.reviewRow': '{title}: {rating}. 바꾸기',
+  'vote.reviewUnrated': '평가 안 함',
+  'vote.reviewSend': '보내기',
   // Ocean's desktop vote card (#1213, O4.2): who has rated, and what is still below.
   'vote.raterDone': '평가 완료',
   'vote.raterNow': '평가 중',

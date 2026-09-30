@@ -1097,6 +1097,14 @@ I18N.nl = {
   'vote.personOf': 'Persoon {n} van {total}',
   'vote.handoffNext': 'Geef daarna het apparaat door — {name} is hierna aan de beurt.',
   'vote.handoffLast': 'Daarna is iedereen klaar — dan komt de uitslag.',
+  // The review step after a voter's last card (#1434).
+  'vote.reviewTitle': 'Jouw beoordelingen',
+  'vote.reviewHint': 'Tik op een spel om je beoordeling te wijzigen – en verstuur dan.',
+  'vote.reviewCountOne': '{n} spel beoordeeld',
+  'vote.reviewCount': 'Alle {n} spellen beoordeeld',
+  'vote.reviewRow': '{title}: {rating}. Wijzigen',
+  'vote.reviewUnrated': 'niet beoordeeld',
+  'vote.reviewSend': 'Versturen',
   // Ocean's desktop vote card (#1213, O4.2): who has rated, and what is still below.
   'vote.raterDone': 'heeft beoordeeld',
   'vote.raterNow': 'beoordeelt nu',

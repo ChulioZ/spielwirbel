@@ -1141,6 +1141,14 @@ I18N.de = {
   'vote.personOf': 'Person {n} von {total}',
   'vote.handoffNext': 'Danach das Gerät weitergeben — {name} ist als Nächstes dran.',
   'vote.handoffLast': 'Danach sind alle durch — dann kommt das Ergebnis.',
+  // The review step after a voter's last card (#1434).
+  'vote.reviewTitle': 'Deine Wertungen',
+  'vote.reviewHint': 'Tippe ein Spiel an, um seine Wertung zu ändern – dann absenden.',
+  'vote.reviewCountOne': '{n} Spiel gewertet',
+  'vote.reviewCount': 'Alle {n} Spiele gewertet',
+  'vote.reviewRow': '{title}: {rating}. Ändern',
+  'vote.reviewUnrated': 'nicht gewertet',
+  'vote.reviewSend': 'Absenden',
   // Ocean's desktop vote card (#1213, O4.2): who has rated, and what is still below.
   'vote.raterDone': 'hat gewertet',
   'vote.raterNow': 'wertet gerade',

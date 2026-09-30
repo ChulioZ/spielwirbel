@@ -662,7 +662,7 @@ h1, h2, h3 { font-family: var(--font-display); }
    exactly where these cards stop being full-height phone cards. Below it
    nothing here applies and the phone presentation is untouched. */
 @media (min-width: 860px) {
-  .app:has(> .stage, > .handover, > .vote--split) {
+  .app:has(> .stage, > .handover, > .vote--split, > .vote-review) {
     display: flex;
     flex-direction: column;
     /* `safe` so a stage taller than the space can never be centred into an
@@ -678,7 +678,8 @@ h1, h2, h3 { font-family: var(--font-display); }
      lands. (0,2,0) so it beats each component's own (0,1,0) sizing rule. */
   .app > .stage,
   .app > .handover,
-  .app > .vote--split { width: 100%; }
+  .app > .vote--split,
+  .app > .vote-review { width: 100%; }
 }
 
 /* Shared site footer (issue #224). Muted, theme-derived link colour (no
@@ -5404,6 +5405,80 @@ a.k-tile:focus-visible,
    covers a keyboard Enter. No dimming and no transform on purpose — the beat
    must read as "registered", and a card that fades reads as lag. */
 .vote--advancing { pointer-events: none; }
+
+/* ---- The review step after a voter's last card (#1434, vote-review.js) ----
+   The Klassisch frame is the vote card's own (`.vote` + `.vote__who` with the
+   corner undo); these rules only lay out the list. Composed designs put the
+   same body inside their `.vote__card` and adjust in their own stylesheet.
+
+   Each row is a full-width button, ≥56px tall: the target a thumb goes for
+   when it wants "that one again", and one real control per game
+   (.claude/rules/native-button-vs-focusable-span.md). The chip on the right is
+   the chosen face in the same traffic-light pairing the selected `.mood` wears
+   (`--sc` under `--on-accent`), so the list shows the colour the voter just saw. */
+/* A list of rows, so it keeps the card's own measure at every width. The
+   selector repeats the shell's cap (`.app > *:not(.rail):not(.dock)`, 0,3,0)
+   plus the class so it wins: without it the review stretched to the 900px
+   reading measure at 1440 — rows 858px wide with the chip a screen away from
+   its game (measured). */
+.app > *:not(.rail):not(.dock).vote-review { max-width: 600px; }
+.vote-review__body { padding: 0 20px 20px; }
+.vote-review__count { margin: 2px 0 0; text-align: center; color: var(--ink-soft); font-size: var(--text-sm); }
+.vote-review__title { margin: 4px 0 0; text-align: center; font-size: var(--text-2xl); font-weight: 800; }
+.vote-review__hint { margin: 6px 0 14px; text-align: center; color: var(--ink-soft); font-size: var(--text-md); }
+.vote-review__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.vote-review__row {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 56px;
+  padding: 8px 12px 8px 8px;
+  border: 1px solid var(--control-edge, var(--line));
+  border-radius: var(--radius-md);
+  background: var(--control-fill);
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.vote-review__row:hover { border-color: var(--ink-soft); }
+.vote-review__cover {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-sm);
+  background: var(--sunken) center / cover no-repeat;
+  font-size: var(--text-lg); /* the placeholder glyph */
+}
+.vote-review__game { min-width: 0; font-weight: 700; overflow-wrap: break-word; hyphens: auto; }
+.vote-review__rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--sc, var(--sunken));
+  color: var(--on-accent);
+  font-weight: 700;
+  white-space: nowrap;
+}
+.vote-review__rating .ti { font-size: var(--text-lg); }
+.vote-review__rating.is-empty { color: var(--ink-soft); }
+.vote-review__word { font-weight: 600; font-size: var(--text-sm); }
+.vote-review__go { color: var(--ink-soft); font-size: var(--text-lg); }
+.vote-review__send { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; margin-top: 18px; }
+/* The word beside the chosen face (composed designs) costs a phone row its
+   title: measured at 390 under Der Tisch, „Carcassonne" broke mid-word beside
+   „wäre okay". Below 480px the face and number carry it; the word stays in
+   each row's accessible name. */
+@media (max-width: 479px) {
+  .vote-review__word { display: none; }
+}
 
 /* Info affordance on the vote cards (#717). Inline in the title line so the
    height-budgeted card gains no extra row (fitting-a-screen-to-the-viewport-
