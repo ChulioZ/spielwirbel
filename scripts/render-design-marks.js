@@ -238,7 +238,207 @@ function oceanRecipe() {
   };
 }
 
-const RECIPES = { tisch: tischRecipe, ocean: oceanRecipe };
+/* ------------------------------------------------------------------ Brücke */
+
+// #1419: Die Brücke's own marks. Its mark is already drawn — the lit lamp and
+// the tracked SPIELWIRBEL wordmark on its share card (B8.4, brueckeWordmark in
+// recap-card-bruecke.js), both in the cyan accent. So the icons are that lamp
+// on B1's night ground inside the two corner brackets every Brücke plate wears
+// (B1 „Klammern", the one ornament a panel may have), with the wordmark under it
+// where there is room for eleven letters. No whirl: the lamp IS this design's
+// sign, and the package never draws the whirl. Cyan on the night is 13:1.
+function brueckeRecipe() {
+  const design = designById('bruecke');
+  const css = fs.readFileSync(path.join(PUBLIC, design.stylesheet.replace(/^\//, '')), 'utf8');
+  const c = {
+    page: design.page,
+    accent: design.accent,
+    pageHi: token(css, '--page-hi'),
+    surface: token(css, '--surface'),
+    line: token(css, '--line'),
+    ink: token(css, '--ink'),
+    inkSoft: token(css, '--ink-soft'),
+    action: token(css, '--action'),
+    onAccent: token(css, '--on-accent'),
+  };
+  const fonts = fontFace('Chakra Petch', 700, 'chakra-petch-latin-700-normal.woff2')
+    + fontFace('IBM Plex Sans', 500, 'ibm-plex-sans-latin-500-normal.woff2')
+    + fontFace('IBM Plex Mono', 500, 'ibm-plex-mono-latin-500-normal.woff2');
+  // B1's page ground: radial from the light stop to the night (bruecke.css body).
+  const night = `radial-gradient(90% 75% at 50% 0%, ${c.pageHi}, ${c.page} 72%)`;
+
+  // The lamp: a lit square with its glow, `s` px (brueckeWordmark: fillRect + a
+  // canvas shadow of the accent).
+  const lamp = (s) => `<span style="display:block;width:${s}px;height:${s}px;background:${c.accent};`
+    + `box-shadow:0 0 ${Math.round(s * 1.1)}px ${c.accent}, 0 0 ${Math.round(s * 0.35)}px ${c.accent}"></span>`;
+  // The wordmark in B8.4's voice: Chakra Petch 700 capitals, tracked .2em.
+  const word = (px) => `<span style="font:700 ${px}px 'Chakra Petch';letter-spacing:.2em;margin-right:-.2em;`
+    + `color:${c.accent};line-height:1">SPIELWIRBEL</span>`;
+  // Two brackets, top-left and bottom-right, `inset` from the edge.
+  const brackets = (arm, stroke, inset) => ['top', 'bottom'].map((v) => {
+    const h = v === 'top' ? 'left' : 'right';
+    return `<span style="position:absolute;${v}:${inset}px;${h}:${inset}px;width:${arm}px;height:${arm}px;`
+      + `border-${v}:${stroke}px solid ${c.accent};border-${h}:${stroke}px solid ${c.accent}"></span>`;
+  }).join('');
+
+  // `lampShare` is the lamp's side as a share of the icon; `wordShare` the
+  // wordmark's type size (0 = lamp alone, no brackets). `scale` shrinks the
+  // whole composition over the full-bleed ground: the maskable icon's 0.7 keeps
+  // the brackets' corners inside the inner 60% (a circle of radius 0.4), so
+  // Android's crop never takes one.
+  const icon = (size, { lampShare, wordShare = 0, scale = 1, ground = night, radius = 0 }) => ({
+    width: size,
+    height: size,
+    html: `<div style="position:fixed;inset:0;background:${ground};border-radius:${radius}px">`
+      + `<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;`
+      + `gap:${Math.round(size * 0.1)}px;transform:scale(${scale})">`
+      + (wordShare ? brackets(Math.round(size * 0.14), Math.max(2, Math.round(size * 0.022)), Math.round(size * 0.12)) : '')
+      + lamp(Math.round(size * lampShare))
+      + (wordShare ? word(Math.round(size * wordShare)) : '')
+      + '</div></div>',
+  });
+
+  const marks = design.marks;
+  const [i192, i512, maskable] = marks.icons;
+  const og = {
+    width: 1200,
+    height: 630,
+    // Der Tisch's Open Graph frame in Die Brücke's materials: the flat plate
+    // with its brackets and the wordmark over the claim on the left, the shelf
+    // on a cyan hairline over the night on the right, the amber action — B1's
+    // „die eine Hauptaktion" — below it. German only, like every og card
+    // (link-preview-card.md §1).
+    html: `<div style="position:fixed;inset:0;display:flex;background:${night};font-family:'IBM Plex Sans'">
+      <div style="position:relative;width:680px;flex:none;box-sizing:border-box;padding:52px;display:flex;flex-direction:column;gap:28px;
+        background:${c.surface};border-right:1px solid ${c.line}">
+        ${brackets(34, 3, 18)}
+        <span style="display:flex;align-items:center;gap:18px">${lamp(20)}${word(30)}</span>
+        <span style="font:700 60px/1.1 'Chakra Petch';color:${c.ink}">Wer am Tisch sitzt, entscheidet mit.</span>
+        <span style="font:500 28px/1.45 'IBM Plex Sans';color:${c.inkSoft}">Regal füllen, Session wirbeln, geheim werten.</span>
+        <span style="margin-top:auto;font:500 19px 'IBM Plex Mono';letter-spacing:.04em;text-transform:uppercase;color:${c.inkSoft}">Kein Tracking · EU-Hosting · spielwirbel.app</span>
+      </div>
+      <div style="flex:1;padding:48px 44px;display:flex;flex-direction:column;gap:24px;justify-content:center">
+        <span style="display:flex;gap:16px;align-items:flex-end">
+          ${[[184, 204], [148, 32], [208, 318], [168, 150]].map(([h, hue]) => `<span style="width:92px;height:${h}px;
+            background:linear-gradient(150deg, hsl(${hue} 45% 40%), hsl(${hue + 40} 50% 18%));border:1px solid ${c.line}"></span>`).join('')}
+        </span>
+        <span style="height:2px;background:${c.accent};box-shadow:0 0 12px ${c.accent}"></span>
+        <span style="align-self:flex-start;display:inline-flex;align-items:center;min-height:88px;padding:0 34px;
+          background:${c.action};color:${c.onAccent};font:700 30px 'Chakra Petch';letter-spacing:.08em;text-transform:uppercase;
+          box-shadow:0 0 24px ${c.action}66">Session wirbeln</span>
+      </div>
+    </div>`,
+  };
+
+  return {
+    fonts,
+    assets: [
+      [i192.src, icon(192, { lampShare: 0.2, wordShare: 0.072 })],
+      [i512.src, icon(512, { lampShare: 0.2, wordShare: 0.072 })],
+      [maskable.src, icon(512, { lampShare: 0.2, wordShare: 0.072, scale: 0.7 })],
+      [marks.appleTouch, icon(180, { lampShare: 0.2, wordShare: 0.072 })],
+      // 32px: the lamp alone on the night, no brackets — at that size they
+      // only read as a smudge in the corners.
+      [marks.favicon.href, icon(32, { lampShare: 0.44, ground: c.page, radius: 4 })],
+      [marks.og, og],
+    ],
+  };
+}
+
+/* ------------------------------------------------------------ Programmheft */
+
+// #1419: Das Programmheft's own marks. Its mark is P8.4's masthead — the
+// vermilion band with SPIELWIRBEL in Anton, in INK (P9: „Tinte auf Zinnober";
+// paper on the vermilion is 3.8:1, ink 4.9:1) — as the share card draws it
+// (programmheftMasthead). The icons are that masthead across a paper sheet with
+// the 3px ink rule under it, the newspaper's own head. The favicon keeps only
+// the wordmark's initial on the vermilion: eleven letters do not survive 32px.
+function programmheftRecipe() {
+  const design = designById('programmheft');
+  const css = fs.readFileSync(path.join(PUBLIC, design.stylesheet.replace(/^\//, '')), 'utf8');
+  const c = {
+    page: design.page,
+    ink: token(css, '--ink'),
+    inkSoft: token(css, '--ink-soft'),
+    vermilion: token(css, '--vermilion'),
+    onVermilion: token(css, '--on-vermilion'),
+    box: token(css, '--box'),
+    boxInk: token(css, '--box-ink'),
+  };
+  const fonts = fontFace('Anton', 400, 'anton-latin-400-normal.woff2')
+    + fontFace('Archivo', 600, 'archivo-latin-600-normal.woff2')
+    + fontFace('Archivo', 700, 'archivo-latin-700-normal.woff2');
+
+  // The masthead: the band, the wordmark tracked like the card's (4.8px at 24px
+  // = .2em), then the rule. `word` is the type size as a share of the icon.
+  const icon = (size, { word, band, rule }) => ({
+    width: size,
+    height: size,
+    html: `<div style="position:fixed;inset:0;display:flex;flex-direction:column;justify-content:center;background:${c.page}">`
+      + `<div style="height:${Math.round(size * band)}px;background:${c.vermilion};display:grid;place-items:center">`
+      + `<span style="font:400 ${Math.round(size * word)}px/1 Anton;letter-spacing:.2em;margin-right:-.2em;color:${c.onVermilion}">SPIELWIRBEL</span></div>`
+      + `<div style="height:${Math.max(2, Math.round(size * rule))}px;margin-top:${Math.round(size * 0.035)}px;background:${c.ink}"></div>`
+      + '</div>',
+  });
+  const initial = (size) => ({
+    width: size,
+    height: size,
+    html: `<div style="position:fixed;inset:0;display:grid;place-items:center;background:${c.vermilion}">`
+      + `<span style="font:400 ${Math.round(size * 0.84)}px/1 Anton;color:${c.onVermilion};transform:translateY(${Math.round(size * 0.02)}px)">S</span></div>`,
+  });
+
+  const marks = design.marks;
+  const [i192, i512, maskable] = marks.icons;
+  const og = {
+    width: 1200,
+    height: 630,
+    // The front page: the masthead across the whole card, the claim in Anton
+    // over the 3px rule on the left, the shelf's placeholder covers flat on
+    // paper on the right with the black box — P1's component — as the action.
+    // German only, like every og card (link-preview-card.md §1).
+    html: `<div style="position:fixed;inset:0;display:flex;flex-direction:column;background:${c.page};font-family:Archivo">
+      <div style="height:96px;flex:none;background:${c.vermilion};display:flex;align-items:center;justify-content:space-between;padding:0 52px">
+        <span style="font:400 56px/1 Anton;letter-spacing:.2em;color:${c.onVermilion}">SPIELWIRBEL</span>
+        <span style="font:700 22px Archivo;letter-spacing:.14em;color:${c.onVermilion}">DAS PROGRAMMHEFT</span>
+      </div>
+      <div style="flex:1;display:flex;padding:40px 52px 44px;gap:48px">
+        <div style="flex:1;display:flex;flex-direction:column;gap:22px">
+          <span style="font:400 76px/1.04 Anton;text-transform:uppercase;color:${c.ink}">Wer am Tisch sitzt, entscheidet mit.</span>
+          <span style="height:3px;background:${c.ink}"></span>
+          <span style="font:600 28px/1.4 Archivo;color:${c.inkSoft}">Regal füllen, Session wirbeln, geheim werten.</span>
+          <span style="margin-top:auto;font:700 20px Archivo;letter-spacing:.12em;text-transform:uppercase;color:${c.ink}">Kein Tracking · EU-Hosting · spielwirbel.app</span>
+        </div>
+        <div style="width:392px;flex:none;display:flex;flex-direction:column;gap:22px;justify-content:flex-end">
+          <span style="display:flex;gap:12px;align-items:flex-end">
+            ${[[168, 204], [132, 32], [190, 318], [150, 150]].map(([h, hue]) => `<span style="width:86px;height:${h}px;
+              background:linear-gradient(150deg, hsl(${hue} 45% 48%), hsl(${hue + 40} 50% 28%));outline:1px solid ${c.ink}"></span>`).join('')}
+          </span>
+          <span style="height:3px;background:${c.ink}"></span>
+          <span style="align-self:flex-start;display:inline-flex;align-items:center;min-height:80px;padding:0 30px;
+            background:${c.box};color:${c.boxInk};font:400 32px Anton;letter-spacing:.08em;text-transform:uppercase">Session wirbeln</span>
+        </div>
+      </div>
+    </div>`,
+  };
+
+  return {
+    fonts,
+    assets: [
+      [i192.src, icon(192, { word: 0.11, band: 0.34, rule: 0.018 })],
+      [i512.src, icon(512, { word: 0.11, band: 0.34, rule: 0.018 })],
+      // The inner 60%: the wordmark narrows to fit it; the band and the rule
+      // are ground and may run into the crop.
+      [maskable.src, icon(512, { word: 0.074, band: 0.24, rule: 0.013 })],
+      [marks.appleTouch, icon(180, { word: 0.11, band: 0.34, rule: 0.018 })],
+      [marks.favicon.href, initial(32)],
+      [marks.og, og],
+    ],
+  };
+}
+
+const RECIPES = {
+  tisch: tischRecipe, ocean: oceanRecipe, bruecke: brueckeRecipe, programmheft: programmheftRecipe,
+};
 
 /* ------------------------------------------------------------------ the CDP */
 
