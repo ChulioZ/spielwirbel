@@ -2453,8 +2453,9 @@ test('every colour token a design declares is measured by one of the checks abov
      for every pair already measured on that ground. */
   // #1214 adds Ocean's --deep-cast, the blind's shadow alpha — the same kind;
   // #1391 its --cast-pearl, the pearl's.
-  // #1237 adds Die Brücke's three glow alphas, the same kind: decoration over whatever is behind.
-  const NOT_A_COLOUR = /^--(member-lift|cast|cast-soft|cast-deep|cast-button|deep-cast|cast-pearl|brass-sheen|brass-sheen-strong|glow-accent|glow-action|glow-action-strong)$/;
+  // #1237 adds Die Brücke's three glow alphas, the same kind: decoration over whatever is behind;
+  // #1241 its --blind-stripe, a 5% cyan alpha of the blind's stripes: it lifts the night ground by a hair, and --ink-soft over it stays above 7:1.
+  const NOT_A_COLOUR = /^--(member-lift|cast|cast-soft|cast-deep|cast-button|deep-cast|cast-pearl|brass-sheen|brass-sheen-strong|glow-accent|glow-action|glow-action-strong|blind-stripe)$/;
   /* A hairline on a NON-INTERACTIVE label. SC 1.4.11 binds a boundary only
      where it identifies a control, and these two identify a printed tag — so
      there is no bar to measure them against, and inventing one would push them

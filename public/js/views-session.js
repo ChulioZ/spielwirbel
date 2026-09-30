@@ -1145,16 +1145,21 @@ function startVoting(round, session, games, people, opts = {}) {
        not re-cleared in finish()/guardLeave()/onPopstate: a second clear would be
        a guard that can never be observed failing, so neither could be trusted
        (.claude/rules/redundant-guards-make-each-other-untestable.md). */
-    // Ocean's blind is full-screen like its card (#1214); Klassisch keeps the
-    // top bar over its handover card.
-    voteScreen(step.type === 'vote' || (step.type === 'intro' && oceanWorn()));
+    // Ocean's blind is full-screen like its card (#1214), and so is Die
+    // Brücke's at both widths (#1241) — a blind the previous person could
+    // navigate away from would defeat itself. Klassisch keeps the top bar over
+    // its handover card.
+    const bruecke = designIs('bruecke');
+    voteScreen(step.type === 'vote' || (step.type === 'intro' && (oceanWorn() || bruecke)));
 
     // Handover screen: full color card in the person's color — or, under
-    // Ocean, the deep-water blind (views-session-ocean.js).
+    // Ocean, the deep-water blind (views-session-ocean.js), and under Die
+    // Brücke the night blind (views-session-bruecke.js).
     if (step.type === 'intro') {
       const color = personColor(round, step.person);
       app.innerHTML = '';
-      const card = oceanWorn() ? oceanBlind(round, session, step.person, idx > 0) : h(`<div class="handover" style="background:${color}">
+      const card = oceanWorn() ? oceanBlind(round, session, step.person, idx > 0)
+        : bruecke ? brueckeBlind(round, step.person, idx > 0) : h(`<div class="handover" style="background:${color}">
           ${progressBar()}
           <span class="handover__avatar" style="color:${color}">${avatarFace(initials(step.person.name), { userId: step.person.userId })}</span>
           <h1 class="handover__name">${esc(t('vote.turn', { name: personLabel(step.person) }))}</h1>

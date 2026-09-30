@@ -1906,6 +1906,8 @@ I18N.it = {
   'vote.sealedTextBrueckeOne': 'Un altro gioco resta cifrato finché non ci arrivi.',
   'vote.sealedTextBruecke': 'Altri {n} giochi restano cifrati finché non ci arrivi.',
   'vote.sealedCardBruecke': 'Cifrato',
+  // The blind's kicker (#1241, B4.6/B6.10) — a decorative line, read by no screen reader.
+  'vote.signalBruecke': 'Segnale in arrivo',
   'score.reasonVetoBrueckeOne': '{n}× nessuna spinta',
   'score.reasonVetoBruecke': '{n}× nessuna spinta',
   'startSession.guestSeatBruecke': 'Ospite · solo oggi',

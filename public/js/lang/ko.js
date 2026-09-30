@@ -1830,6 +1830,8 @@ I18N.ko = {
   'vote.sealedTextBrueckeOne': '게임 하나가 차례가 올 때까지 암호화된 채로 남아 있습니다.',
   'vote.sealedTextBruecke': '게임 {n}개가 차례가 올 때까지 암호화된 채로 남아 있습니다.',
   'vote.sealedCardBruecke': '암호화됨',
+  // The blind's kicker (#1241, B4.6/B6.10) — a decorative line, read by no screen reader.
+  'vote.signalBruecke': '수신 신호',
   'score.reasonVetoBrueckeOne': '{n}× 추진력 없음',
   'score.reasonVetoBruecke': '{n}× 추진력 없음',
   'startSession.guestSeatBruecke': '게스트 · 오늘만',

@@ -2020,6 +2020,8 @@ I18N.de = {
   'vote.sealedTextBrueckeOne': 'Ein weiteres Spiel bleibt verschlüsselt, bis du es erreichst.',
   'vote.sealedTextBruecke': 'Noch {n} Spiele bleiben verschlüsselt, bis du sie erreichst.',
   'vote.sealedCardBruecke': 'Verschlüsselt',
+  // The blind's kicker (#1241, B4.6/B6.10) — a decorative line, read by no screen reader.
+  'vote.signalBruecke': 'Eingehendes Signal',
   'score.reasonVetoBrueckeOne': '{n}× kein Schub',
   'score.reasonVetoBruecke': '{n}× kein Schub',
   'startSession.guestSeatBruecke': 'Gast · nur heute',
