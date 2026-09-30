@@ -10927,10 +10927,17 @@ kbd {
 .badge-grid--account { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 @media (min-width: 600px) { .badge-grid--account { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 
-/* A mark in the friends' feed has no cover: its slot carries the mark's glyph
-   on the brand tint, so it reads as a mark and not as a missing box. */
-.e-tile__img--badge,
-.feed-row__cover--badge { background: var(--brand-tint); color: var(--brand-ink, var(--brand)); }
+/* A mark in the friends' feed (#1428): the slot carries the EARNED mark itself
+   (badgeEmblem in views-badges.js), so it reads as a mark and not as a game with
+   no cover. The row's 46px slot drops its sunken box and takes the disc at its
+   own 44px, and lets it overflow so a design's pin shadow is not clipped; the
+   tile keeps the brand tint as its band, with the disc at 60px on it. Each
+   design sizes its own mark through its own property (--pin, --o-mark). */
+.badge-emblem { display: inline-grid; place-items: center; flex: none; }
+.feed-item__img--badge { background: none; overflow: visible; }
+.e-tile__img--badge { background: var(--brand-tint); }
+.e-tile__img--badge .badge__mark { width: 60px; height: 60px; font-size: var(--text-2xl); }
+.feed-row__badge { align-self: center; }
 
 /* The tap-open card: a popover ≥860px, a sheet below (openEditor). */
 .popover--badge { width: 320px; max-width: calc(100vw - 32px); }

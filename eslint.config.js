@@ -539,7 +539,7 @@ const frontendGlobals = {
   // views-badges.js (#1388) — the Klassisch rendering every design skins.
   renderBadgeSection: 'readonly', badgeRevealTarget: 'readonly', hubBadgeLine: 'readonly', badgeChronikIndex: 'readonly',
   chronikBadgeRows: 'readonly', fillBadgeMoment: 'readonly', memberCardBadges: 'readonly', showBadges: 'readonly',
-  profileCardBadges: 'readonly',
+  profileCardBadges: 'readonly', badgeEmblem: 'readonly',
   openAddMember: 'readonly', addMemberBtn: 'readonly',
   // vote-card-composed.js (issue #1268): Der Tisch's vote card + the link intro
   VOTE_WORD_KEYS: 'readonly', voteWord: 'readonly', voteMoodButton: 'readonly', voteTurn: 'readonly',
