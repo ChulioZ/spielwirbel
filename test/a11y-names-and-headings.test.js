@@ -217,6 +217,7 @@ test('the hero and the rail are never displayed at the same time', () => {
 const TOPBAR_NAMES = {
   homeBtn: 'a11y.home',
   langPicker: 'a11y.language',
+  designBtn: 'design.pick.label',
   feedbackBtn: 'feedback.button',
   supportBtn: 'support.button',
   inboxBtn: 'inbox.title',

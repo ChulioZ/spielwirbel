@@ -219,42 +219,73 @@ function storeDesign(id) {
   } catch { /* private mode / blocked site data: the choice just does not persist */ }
 }
 
+/* The designs GET /api/config listed, once it has answered; null until then.
+   What a stored device id is checked against (#1429): since the top-bar picker
+   writes the key for anyone, a design retired later — or, in production, one
+   registered but not yet `enabled` — must not stay worn just because a device
+   remembers it. Before the answer arrives the stored id is trusted, so a
+   returning visitor's page does not flash the face first. */
+let offeredDesignIds = null;
+
+// The device's stored design, if this instance still offers it; '' otherwise.
+function deviceDesign() {
+  const id = storedDesign();
+  if (!id) return '';
+  if (offeredDesignIds && offeredDesignIds.indexOf(id) === -1) return '';
+  return id;
+}
+
 /* Wear the design the SESSION says to, and answer which one that is.
 
    Called from bootApp once the account state is resolved, from enterApp after a
-   login, and from the picker after a change — i.e. every point at which the
-   answer can differ from what boot painted. Deliberately tolerant of being
-   called when nothing has changed: applyDesign is idempotent.
+   login, from logout()/onSessionLost() on the way out, and from the pickers after
+   a change — i.e. every point at which the answer can differ from what boot
+   painted. Deliberately tolerant of being called when nothing has changed:
+   applyDesign is idempotent.
 
-   The precedence is accounts-first and it matters. With accounts ON, the stored
-   account field is the whole answer and the device key is not consulted at all —
-   otherwise a user who picked Tisch on their laptop would keep seeing a stale
-   device value on it after switching to Klassisch on their phone. With accounts
-   OFF there is no account, so the device key IS the answer.
+   The precedence (#1429): a LOGGED-IN account's field is the whole answer, and
+   the device key is not consulted — otherwise a user who picked Tisch on their
+   laptop would keep seeing a stale device value on it after switching to
+   Klassisch on their phone. Everyone else — logged out, or on an instance with
+   accounts off — wears the device key, which the top-bar picker writes. A
+   device pick is never carried into the account: at login the account wins.
 
    `?design=` still wins over both, because its whole job is to preview a design
    without storing anything (and the server has already vetted it). */
 // `opts` passes through to applyDesign — the Konto picker commits with
 // `{ rendering: true }` because it re-renders its own screen (and restores focus).
 function applyAccountDesign(opts) {
-  if (typeof accountsActive === 'function' && accountsActive()) {
+  if (typeof accountsActive === 'function' && accountsActive()
+    && typeof isLoggedIn === 'function' && isLoggedIn()) {
     const me = typeof accountUser !== 'undefined' ? accountUser : null;
     return applyDesign((me && me.design) || FACE_DESIGN, opts);
   }
-  return applyDesign(storedDesign() || FACE_DESIGN, opts);
+  return applyDesign(deviceDesign() || FACE_DESIGN, opts);
 }
 
 // Applied synchronously first, so nothing renders undesigned while the account
 // probe and the config request are in flight. The device key is read here
-// because it costs nothing and removes a visible repaint on an accounts-off
-// instance; with accounts on it is absent, so this resolves to the face and
-// applyAccountDesign() settles it a moment later.
+// because it costs nothing and removes a visible repaint for a visitor who
+// picked one; applyAccountDesign() settles it a moment later.
+//
+// The config answer, when there is anything to ask it, does two jobs: it gates the stored id (a design this
+// instance no longer offers falls back — through applyAccountDesign, so a
+// logged-in account's design is not overwritten by the face), and it admits a
+// `?design=` review flag.
 function initDesign() {
-  applyDesign(storedDesign() || FACE_DESIGN);
+  const stored = storedDesign();
+  applyDesign(stored || FACE_DESIGN);
   const wanted = requestedDesign();
-  if (!wanted || wanted === activeDesignId) return;
+  // Nothing to gate and nothing to admit: no config round trip at all.
+  if (!stored && !wanted) return;
   withAppConfig((cfg) => {
-    const allowed = (cfg && Array.isArray(cfg.designs)) ? cfg.designs : [];
-    if (allowed.indexOf(wanted) !== -1) applyDesign(wanted);
+    const allowed = (cfg && Array.isArray(cfg.designs)) ? cfg.designs : null;
+    if (!allowed) return;
+    offeredDesignIds = allowed;
+    if (wanted && wanted !== activeDesignId && allowed.indexOf(wanted) !== -1) {
+      applyDesign(wanted);
+      return;
+    }
+    if (stored && stored === activeDesignId && allowed.indexOf(stored) === -1) applyAccountDesign();
   });
 }

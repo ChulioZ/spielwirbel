@@ -831,12 +831,17 @@ What the app does, in detail. For a short overview see the
   logged-out visitor sees (landing, sign-in, FAQ, legal pages). An account that
   has never been asked gets a one-time card offering the choice — „Wie bisher"
   brings Klassisch back, „Später entscheiden" keeps Der Tisch — and the design
-  can be changed any time under **Konto → Design**; it applies on every screen
-  and every device you sign in on. Which designs exist is decided in code
-  (`public/js/designs.js`), so a design under construction stays off a live
-  instance until it is enabled (`docs/design/README.md`). An instance running
-  **without accounts** keeps the choice on the device instead, and starts on Der
-  Tisch.
+  can be changed any time with the **palette button in the top bar**, beside the
+  language picker (#1429), or under **Konto → Design**; signed in, it applies on
+  every screen and every device you sign in on. The palette button is there for
+  everyone: a **logged-out visitor** picks for this device, and at login the
+  account's design takes over again. Arrow keys preview a design; a tap, Enter or
+  Space keeps it. The language picker beside it is drawn as a globe icon, like
+  the bar's other buttons, and opens the same list.
+  Which designs exist is decided in code (`public/js/designs.js`), so a design
+  under construction stays off a live instance until it is enabled
+  (`docs/design/README.md`). An instance running **without accounts** keeps the
+  choice on the device, and starts on Der Tisch.
 - **Entdecken** – *live by default; PUBLIC_STATS_ENABLED=false takes it down* (issue #564). Publishes
   the whole instance at a glance: how many rounds, players, shelf games and
   played sessions it holds, plus the games on the most shelves and the ones most

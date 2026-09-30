@@ -141,6 +141,10 @@ function onSessionLost() {
   invalidateRoundCache(); // no cached round data may survive the identity loss
   resetAvatarCache();     // nor the profile pictures resolved under it (#841)
   accountUser = null;
+  // Back to the device's design (#1429) — the account's must not stay worn on
+  // the login card. `rendering`: showLogin() below renders anyway, so a
+  // committed re-render of the old authenticated view would be wasted.
+  applyAccountDesign({ rendering: true });
   setupAccountUi();
   showLogin();
 }
@@ -198,6 +202,9 @@ async function logout() {
   invalidateRoundCache(); // the next login may be a different account/tenant
   resetAvatarCache();     // ...and so must the faces resolved for it (#841)
   accountUser = null;
+  // Same as onSessionLost: the landing wears the device's design, not the
+  // account just left (#1429).
+  applyAccountDesign({ rendering: true });
   setupAccountUi();
   // The landing page, not the login card (#501). A deliberate logout is a
   // departure, and showLanding() owns '/', so the address bar stops naming the

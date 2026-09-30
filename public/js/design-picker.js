@@ -185,6 +185,37 @@ function renderDesignPicker(cfg, current, onPick) {
   return list;
 }
 
+/* The ONE save path for a logged-in account's design (#1429): Konto's section
+   and the top-bar menu (design-menu.js) both call it, so the preview → PATCH →
+   revert sequence cannot fork between them.
+
+   Applied as a PREVIEW before the request, so the choice is what the user sees
+   while it is in flight — committing first would re-render the page from the
+   not-yet-updated account. The commit comes after the account is updated; `commit`
+   passes through to applyDesign (Konto hands `{ rendering: true }` because it
+   re-renders its own screen and restores focus).
+
+   A refusal reverts the paint and toasts, then rethrows so the caller can put its
+   own controls back — the server is the authority on which designs exist, and it
+   may have retired one since the screen loaded. `auth` has already bounced to
+   login, so it gets no toast (the shape buildPrefToggle uses). No success toast
+   here: the repaint is the feedback, and Konto adds its own. */
+async function saveAccountDesign(id, commit) {
+  applyDesign(id, { preview: true });
+  try {
+    const updated = await accountApi('PATCH', '/me', { design: id });
+    accountUser = updated;
+    applyAccountDesign(commit);
+    return updated;
+  } catch (ex) {
+    applyAccountDesign();
+    if (ex.message !== 'auth') {
+      toast(t(ex.message === 'invalid_design' ? 'konto.design.invalid' : 'auth.error.network'), { tone: 'error' });
+    }
+    throw ex;
+  }
+}
+
 /* The design picker section (#1186).
 
    Built EMPTY and filled from withAppConfig, because which designs exist is the
@@ -215,18 +246,9 @@ function buildDesignSection(me) {
     head.appendChild(h(`<h2 class="konto-section__h">${esc(t('konto.design.title'))}</h2>`));
     head.appendChild(h(`<p class="muted">${esc(t('konto.design.hint'))}</p>`));
     wrap.appendChild(renderDesignPicker(cfg, me.design, async (id) => {
-      // Applied before the request, so the card the user tapped is what they
-      // see while it is in flight. A refusal reverts below — the server is the
-      // authority on which designs exist, and it may have retired one since
-      // this screen loaded. A PREVIEW until the server agrees: committing here
-      // would re-render the page from the not-yet-updated account, with the old
-      // card checked. The commit below comes after the account is updated.
-      applyDesign(id, { preview: true });
       try {
-        const updated = await accountApi('PATCH', '/me', { design: id });
-        accountUser = updated;
+        const updated = await saveAccountDesign(id, { rendering: true });
         me.design = updated.design;
-        applyAccountDesign({ rendering: true });
         toast(t('konto.design.saved'));
         if (currentView) {
           await currentView();
@@ -234,17 +256,12 @@ function buildDesignSection(me) {
           if (picked) picked.focus();
         }
       } catch (ex) {
-        // Revert the paint, then re-render so the radios agree with what is
-        // actually stored — leaving the refused card checked over a reverted
-        // page is the one state that tells the user nothing. `auth` has already
-        // bounced to login, so it gets no toast (the shape buildPrefToggle uses).
-        // The pick was only previewed, so the revert commits nothing and
-        // re-renders nothing — hence the explicit currentView() below.
-        applyAccountDesign();
-        if (ex.message !== 'auth') {
-          toast(t(ex.message === 'invalid_design' ? 'konto.design.invalid' : 'auth.error.network'), { tone: 'error' });
-          if (currentView) currentView();
-        }
+        // Re-render so the radios agree with what is actually stored — leaving
+        // the refused card checked over a reverted page is the one state that
+        // tells the user nothing. The pick was only previewed, so the revert in
+        // saveAccountDesign committed nothing and re-rendered nothing. `auth` has
+        // already bounced to login.
+        if (ex.message !== 'auth' && currentView) currentView();
       }
     }));
     wrap.appendChild(ocean

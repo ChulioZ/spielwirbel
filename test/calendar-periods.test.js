@@ -94,10 +94,14 @@ test('periodBoundaries resolves calendar periods on the Europe/Berlin clock', as
   await t.test('an unparseable `now` falls back to the current instant', () => {
     const b = periodBoundaries('not a date');
     // Can't pin a literal, so pin the invariants: three real boundaries, all in
-    // the past, correctly ordered.
-    assert.ok(b.week > b.month || b.week === b.month);
+    // the past, the week less than seven days back, and month after year. NOT
+    // week >= month: from the 1st until the month's first Monday the week began
+    // in the PREVIOUS month, so that ordering was false on those days only.
+    const now = Date.now();
+    assert.ok(Date.parse(b.week) <= now && now - Date.parse(b.week) < 7 * 864e5, 'the week began in the last seven days');
+    assert.ok(Date.parse(b.month) <= now);
     assert.ok(b.month >= b.year);
-    assert.ok(Date.parse(b.year) <= Date.now());
+    assert.ok(Date.parse(b.year) <= now);
     assert.match(b.monthKey, /^\d{4}-\d{2}$/);
   });
 });
