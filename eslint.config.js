@@ -444,7 +444,7 @@ const frontendGlobals = {
   // recap-card-programmheft.js (#1381) and the two counts it shares with the
   // Pokale (session-tally.js).
   programmheftCardBlob: 'readonly', programmheftEdition: 'readonly', tischRuns: 'readonly',
-  soleWinStreak: 'readonly', sessionNumber: 'readonly',
+  winStreak: 'readonly', sessionNumber: 'readonly',
   offeredDesigns: 'readonly', designTile: 'readonly', renderDesignPicker: 'readonly',
   maybeShowDesignChooser: 'readonly', showDesignChooser: 'readonly',
   buildDesignSection: 'readonly',

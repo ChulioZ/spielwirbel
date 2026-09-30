@@ -188,7 +188,8 @@ der Umsetzung entschieden:
 
 1. **Unentschieden** (B16.3): beide bekommen einen **vollen** Sieg, keine
    Bruchzahl, die Serie läuft für beide weiter; bei gleichem Score wird das
-   **ältere** Spiel gezogen.
+   **ältere** Spiel gezogen. → *Entschieden 2026-09-30 (#1421): voller Sieg und
+   weiterlaufende Serie ja; kein Ziehen — gleicher Score ist geteilter Platz 1.*
 2. **Teams** (B16.1): ein Team zählt als **ein** Sieger, jeder bewertet
    trotzdem einzeln; Gäste dürfen in Teams sitzen und mitgewinnen.
 3. **Die drei Dichteregeln** (B16): Rasterumbruch der Plätze ab **neun**

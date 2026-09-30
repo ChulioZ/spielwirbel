@@ -470,20 +470,26 @@ function renderPokaleTab(round) {
     );
   }
 
-  // Streak: how many of the latest nights in a row one member won alone. The
-  // rule — chronological by `createdAt`, guest-won, solo and no-contest nights
-  // skipped — lives in session-tally.js (#1381), which Das Programmheft's share
-  // card reads too, so the two cannot disagree about what a streak is.
-  const { memberId: streakMember, n: streak } = soleWinStreak(round, finished, { sessionEnding, sessionPartyCount });
-  const streakM = streakMember && round.members.find((m) => m.id === streakMember);
+  // Streak: how many of the latest nights in a row a member won — a shared win
+  // counts for each winner (#1421). The rule — chronological by `createdAt`,
+  // guest-won, solo and no-contest nights skipped — lives in session-tally.js
+  // (#1381), which Das Programmheft's share card reads too, so the two cannot
+  // disagree about what a streak is.
+  const { memberIds: streakIds, n: streak } = winStreak(round, finished, { sessionEnding, sessionPartyCount });
+  // In the round's own member order, so a joint holding reads the same whatever
+  // order the night's winners were ticked in.
+  const streakMs = round.members.filter((m) => streakIds.includes(m.id));
   // A series waits for YOUNG_ROUND_SERIES_FROM (#1280; every design since
   // #1318) — the number the Rundenpuls card's sentence names, so it cannot
   // promise a series this card is already showing.
   const seriesHeld = played < YOUNG_ROUND_SERIES_FROM;
-  if (streakM && streak >= 2 && !seriesHeld) {
-    // The member name links to their detail page, like the podium above.
+  if (streakMs.length && streak >= 2 && !seriesHeld) {
+    // One holder's name links to their detail page, like the podium above.
+    // Several who won the same run together are named together; a card value
+    // is one link, so that line links nobody rather than picking one of them.
+    const solo = streakMs.length === 1 ? streakMs[0].id : null;
     cards.appendChild(
-      pokaleStatCard(round, 'ti-bolt', t('pokale.streak'), streakM.name, t('pokale.streakN', { n: streak }), streakMember)
+      pokaleStatCard(round, 'ti-bolt', t('pokale.streak'), joinNames(streakMs.map((m) => m.name)), t('pokale.streakN', { n: streak }), solo)
     );
   }
 

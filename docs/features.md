@@ -406,8 +406,12 @@ What the app does, in detail. For a short overview see the
     fairer and was how the standings worked for a while, but it needed a
     paragraph to explain and left everyone but the leader on a negative number,
     which a leaderboard cannot afford. The winning-streak tile still skips solo
-    evenings, for the reason it already skipped nights a guest won: an evening
+    evenings, for the reason it already skipped nights only a guest won: an evening
     that was not a contest can neither break nor extend a streak.
+    A shared win is a full win for every winner, and it continues the streak
+    for each of them (issue #1421); two who keep winning together hold it
+    jointly, and the tile names both. A win shared with a guest counts the
+    same way for the members in it.
 - **Sessions (hot-seat voting)** – pick who is playing tonight, optionally narrow
   the collection, and draw a random set of candidate games — only games whose
   player range fits the number of joining members are eligible. Narrowing happens

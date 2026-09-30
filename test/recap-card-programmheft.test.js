@@ -264,7 +264,7 @@ test('the edition: long date, the session’s number, and the Pokale’s streak 
     assert.equal(now.streak, 3, 'its own win extends the streak it is shared with');
     assert.equal(now.dayLong, '20. September 2026');
     assert.equal(ed('s4', ['b']).streak, null, 'a different winner starts no streak worth printing');
-    assert.equal(ed('s4', ['a', 'b']).streak, null, 'a shared win is no streak');
+    assert.equal(ed('s4', ['a', 'b']).streak, 3, 'a shared win extends it for the winner already on a run (#1421)');
     // A solo night neither extends nor breaks a streak (the Pokale's rule), so
     // the card must not print the run it skipped over as this night's.
     round.sessions[3].memberIds = ['a'];

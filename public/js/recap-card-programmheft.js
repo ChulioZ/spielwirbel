@@ -105,16 +105,18 @@ function programmheftCardMarker() {
 /* What the results screen adds to its share model under this design, at click
    time like the rest of it: the long date, the session's number in the round
    and the winner's streak as of THIS session. The streak is the Pokale's own
-   (soleWinStreak) over the finished sessions up to this one, with this session
+   (winStreak) over the finished sessions up to this one, with this session
    taken as the closure holds it — its stored copy may not be finished yet — and
    it waits for YOUNG_ROUND_SERIES_FROM exactly as the Pokale card does. */
 function programmheftEdition(round, session, winnerIds) {
   const at = String(session.createdAt);
   const before = (round.sessions || []).filter((s) => s.id !== session.id && s.finished && String(s.createdAt) <= at);
   const here = { ...session, finished: true, winnerIds: (winnerIds || []).slice() };
-  const run = soleWinStreak(round, [...before, here], { sessionEnding, sessionPartyCount });
+  const run = winStreak(round, [...before, here], { sessionEnding, sessionPartyCount });
   const young = youngRoundPlayed(round, hubDeps()) < YOUNG_ROUND_SERIES_FROM;
-  const own = run.lastId === session.id && here.winnerIds.length === 1 && run.memberId === here.winnerIds[0];
+  // This session's winners hold the run whenever it ends here — a tie included
+  // (#1421), since the walk starts from their night.
+  const own = run.lastId === session.id && run.memberIds.length > 0;
   return {
     dayLong: new Date(session.createdAt).toLocaleDateString(localeTag(locale), { day: 'numeric', month: 'long', year: 'numeric' }),
     sessionNo: sessionNumber(round, session),
