@@ -2420,20 +2420,44 @@
   box-shadow: var(--shadow-2);
 }
 
-/* --- The result (O2.4 at 390, O4.4 at 1440) --------------------------------
+/* --- The result (O2.4 at 390, O4.4 at 1440, rearranged by #1430) ----------
    Der Tisch's result composition (result-tafel-composed.js), arranged by
-   composeOceanResult into the people, the middle (the sentence and the whale),
-   and the Tafel with its foot. Columns from 1280px, where the screen takes
-   --w-detail; one column below. */
+   composeOceanResult into two columns: the SIDE column (the people as a ring
+   row, the sentence, the whale, the foot) and the TAFEL column (the ranking,
+   then the log). Two columns from 1280px, where the screen takes --w-detail;
+   one column below, in the same order.
+
+   This DEPARTS FROM O4.4 ON PURPOSE. The sheet draws people 230 | whale 1fr |
+   Tafel 500 with the foot under the Tafel, and it was drawn with three rows.
+   Measured at eight (#1430, 1440×900): the Tafel was 440px wide and 1394px
+   tall, the document 1927px, ~1000px stood empty under the people and the
+   whale, and „Noch eine Session" came after the whole list. So the Tafel takes
+   the wide column (capped, so a row keeps a readable measure) and the side
+   column pins beside it. */
 @media (min-width: 1280px) {
   :root[data-design="ocean"]:not([data-scheme="dark"]) .result-screen--ocean {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(380px, 440px);
+    grid-template-columns: minmax(400px, 460px) minmax(0, 760px);
     column-gap: 32px;
     align-items: start;
   }
-  :root[data-design="ocean"]:not([data-scheme="dark"]) .result-screen--ocean:has(> .ocean-result__people) {
-    grid-template-columns: 180px minmax(0, 1fr) minmax(380px, 440px);
+  /* The foot on ONE line in the side column: „Noch eine Session" at its own
+     width rather than a 12em basis, which pushed „Mehr" to a second line and
+     the column 56px taller. A long locale still wraps — nothing overflows. */
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .result-screen--ocean .ocean-result__side .result-foot__again { flex: 1 1 auto; }
+}
+/* Pinned while the Tafel scrolls — but only where the whole side column fits
+   under the top bar. A sticky column taller than the viewport strands its own
+   bottom: the foot would stay cut off until the very end of the scroll. The
+   height is the column's measured one at 1440 with a badge moment and a
+   played game (~730px: the people row, the sentence, the badge, the whale, the
+   foot) plus the 80px offset and some slack; below it the column is static,
+   which is what it was before. `align-self: start` comes from the grid's
+   `align-items`, without which the item would stretch and have no travel. */
+@media (min-width: 1280px) and (min-height: 900px) {
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .result-screen--ocean .ocean-result__side {
+    position: sticky;
+    top: 80px;
   }
 }
 :root[data-design="ocean"]:not([data-scheme="dark"]) .result-screen--ocean .page-head--result { margin-bottom: 16px; }
@@ -2471,16 +2495,6 @@
   visibility: hidden;
 }
 :root[data-design="ocean"]:not([data-scheme="dark"]) .result-people__person.is-winner .result-people__crown { visibility: visible; }
-@media (min-width: 1280px) {
-  :root[data-design="ocean"]:not([data-scheme="dark"]) .ocean-result__people .result-people {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  :root[data-design="ocean"]:not([data-scheme="dark"]) .ocean-result__people .result-people__list {
-    flex-direction: column;
-    gap: 14px;
-  }
-}
 
 /* The band: the chosen game. While it is on the table it is a plain card; once
    played it is O4.4's resting picture — the box on the whale's back, the whale
@@ -2629,6 +2643,26 @@
 :root[data-design="ocean"]:not([data-scheme="dark"]) .result-screen--ocean .trow__pill { position: static; grid-area: pill; justify-self: end; }
 :root[data-design="ocean"]:not([data-scheme="dark"]) .result-screen--ocean .trow__action { grid-area: sub; justify-self: end; }
 :root[data-design="ocean"]:not([data-scheme="dark"]) .result-screen--ocean .trow__bars { grid-area: bars; padding-top: 6px; }
+/* ONE LINE when the row is wide (#1430): the distribution beside the title,
+   as Klassisch and O4.4 draw it, and a still-choosing row's „Spielen" / „Auf
+   dem Tisch" inline instead of on a line of its own. This revisits #1363's
+   "under the row" for wide rows only — the distribution stays shown on every
+   row, only its place moves, and it stays LAST in the DOM (the grid area is
+   what moves it, never `order`). 131–158px rows became ~70–95.
+
+   A viewport breakpoint rather than a container query (there is none in the
+   repo, and WebKit is the engine a new one would need checking in): from 720px
+   the Tafel is ≥ ~600px wide in both of Ocean's arrangements — the single
+   column below 1280, and the Tafel column from 1280, whose floor is ~650px at
+   a 1280 viewport. Below it the two-line row above stands. */
+@media (min-width: 720px) {
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .result-screen--ocean .tafel .trow,
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .result-screen--ocean .tafel .trow:has(.play-btn, .trow__chip) {
+    grid-template-columns: 20px 44px minmax(0, 1fr) auto auto auto;
+    grid-template-areas: "rank cover main bars pill sub";
+  }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .result-screen--ocean .trow__bars { padding-top: 0; }
+}
 /* The veto pill — „1× gar nicht" (score.reasonVetoOne), in Tintenfisch: the
    ramp's colour for a game that took a „gar nicht", with its fixed light ink. */
 :root[data-design="ocean"]:not([data-scheme="dark"]) .result-screen--ocean .score-why {

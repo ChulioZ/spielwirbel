@@ -2461,7 +2461,10 @@ async function showResults(round, session, gamesHint, reveal, plain) {
   // simply the final block; the #561 constraint it was phrased against
   // ("nothing belongs after a back link") is satisfied by construction.
   // Der Tisch ends on its own foot instead, which carries the same two actions
-  // behind „Mehr" (renderTischFoot) — still the last block on the screen.
+  // behind „Mehr" (renderTischFoot) — still the last block on the screen, except
+  // under Ocean, whose composer moves it into the side column ahead of the
+  // Tafel (#1430): there the destructive pair is one more tap away behind
+  // „Mehr", and „Noch eine Session" is what the screen is for next.
   if (tischFoot) {
     screen.appendChild(tischFoot);
     if (oceanLook) composeOceanResult(screen, head, peopleEl);
