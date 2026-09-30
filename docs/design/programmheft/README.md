@@ -146,7 +146,7 @@ Nicht geändert (Beobachtungen): Initialen bleiben Papier, solange ≥ 19 px fet
 3. **Kasten-Kicker:** „Neue Session" statt „Heute Abend".
 4. **Ocker-Marker:** abgedunkelt von #c08a1e auf **#a8761a** und dabei geblieben (E2 nach Runde 1). **Tinte** darauf 4,6:1; das Band misst 3,8:1 gegen Papier (Grafik, ≥ 3:1). Gilt in P1, P8, P14, P15a.
 5. **Gleichstand beim Score:** keine Design-Setzung. Welches Spiel auf den Tisch kommt, bestimmt die bestehende App-Logik; P7.9 zeigt nur die Darstellung.
-6. **Geteilter Sieg:** jeder bekommt einen vollen Sieg, Serien laufen für beide weiter.
+6. **Geteilter Sieg:** jeder bekommt einen vollen Sieg, Serien laufen für beide weiter. (Die Serie der Pokale und der Teilen-Karte zählt seit #1421 so; vorher beendete ein Gleichstand sie.)
 7. **Podium:** Platz 2 und 3 Papier mit Tintenkante, kein Silber/Bronze-Token.
 8. **Telefon-Dock:** kein Dock auf Neue Session, Abstimmung, Übergabe; das Ergebnis hat eines.
 9. **Nicht gefundene Strings:** Claude Code ordnet sie echten Schlüsseln zu; was fehlt, wird als neuer Schlüssel angelegt (DE + EN aus den Blättern, sieben Sprachen nachziehen).

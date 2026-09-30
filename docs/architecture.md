@@ -658,9 +658,10 @@ public/
                      #796, SPLIT across several tables; derived from the child
                      ids rather than from a third boolean, and required by
                      lib/routes/sessions.js and lib/recommend.js
-    session-tally.js two counts over a round's finished sessions — the sole-win
-                     streak the Pokale prints and a session's number in the
-                     round — shared with Das Programmheft's card (issue #1381)
+    session-tally.js two counts over a round's finished sessions — the win
+                     streak the Pokale prints (a tie continues it for each
+                     winner, #1421) and a session's number in the round —
+                     shared with Das Programmheft's card (issue #1381)
     table-split.js   the multi-table objective, the seeded search that optimises
                      it and the per-table numbers the builder shows; also the
                      relaxed pool predicate lib/draw.js applies in that mode

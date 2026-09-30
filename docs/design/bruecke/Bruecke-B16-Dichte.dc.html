@@ -165,7 +165,7 @@
               <span style="text-align: right; font-family: 'Chakra Petch'; font-weight: 700; font-size: 38px; line-height: 1; color: {{ r.sc }};">{{ r.score }}</span>
             </div>
           </sc-for>
-          <span style="margin-top: auto; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #9aa8c0;">Zwei Spiele teilen sich 4,2 — gezogen wurde das ältere. Die Regel steht in der Score-Erklärung.</span>
+          <span style="margin-top: auto; font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #9aa8c0;">Zwei Spiele teilen sich 4,2 — beide stehen auf Platz 1, der Tisch wählt. Die App zieht nicht.</span>
         </div>
         <div style="display: flex; flex-direction: column; gap: 14px; min-height: 0;">
           <div style="display: flex; flex-direction: column; gap: 10px; padding: 18px 20px; background: #0e1626; border: 1px solid #35e0ff;">
@@ -318,7 +318,7 @@ class Component extends DCLogic {
 
     const tieReport = [
       { place: '1', title: 'Salzwiesen', sub: 'Gehört Aylin · gespielt', score: 4.2, dist: [0, 1, 2, 5, 4], win: true },
-      { place: '1', title: 'Moorgeister', sub: 'Gehört Ben · gleicher Score, älter gezogen', score: 4.2, dist: [0, 1, 2, 6, 3], win: true },
+      { place: '1', title: 'Moorgeister', sub: 'Gehört Ben · gleicher Score, geteilter Platz 1', score: 4.2, dist: [0, 1, 2, 6, 3], win: true },
       { place: '3', title: 'Rost & Regen', sub: 'Gehört Tim · 2× kein Schub', score: 2.8, dist: [2, 3, 3, 3, 1], win: false },
     ].map((r) => ({
       ...r, score: fmt(r.score), sc: r.win ? CY : '#dfe7f5', rankColor: r.win ? CY : MU,

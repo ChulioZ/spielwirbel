@@ -1,11 +1,11 @@
-/* Spielwirbel – two counts over a round's finished sessions (#1381): the sole-win
+/* Spielwirbel – two counts over a round's finished sessions (#1381): the win
    streak the Pokale card shows, and a session's number in the round.
 
    The streak lived inline in views-pokale.js until Das Programmheft's share card
    (#1381, P8.4 „Serie") needed the same figure. One copy, here, so the card and
    the Pokale tab cannot disagree about what a streak is — the rule has moved
-   three times (#458, #895, #1038) and each move would otherwise have had to find
-   both.
+   four times (#458, #895, #1038, #1421) and each move would otherwise have had
+   to find both.
 
    Pure and dependency-free: `deps` carries `sessionEnding` (session-outcome.js)
    and `sessionPartyCount` (session-people.js), injected — the memberStats shape,
@@ -14,7 +14,19 @@
 
 'use strict';
 
-/* Who holds the current sole-win streak over `sessions`, and how long it is.
+/* Who holds the current win streak over `sessions`, and how long it is.
+
+   A SHARED win continues the streak for every winner (#1421, operator decision
+   2026-09-26, B16.3/P7): a tie is a full win for each of them — as memberStats
+   and the Pokale standings already counted it, and as the Serienheld badge
+   (achievements.js) already measured it. Until #1421 this was a SOLE-win streak
+   and any tie ended it for everybody.
+
+   So the walk runs back from the latest counted night with that night's winners
+   as the candidates, keeps on each earlier night only the candidates who won it
+   too, and stops when none are left. The answer is the longest run still going
+   and everyone who holds it: Aylin alone three times and then level with Nils
+   is Aylin on 4 (Nils is on 1, which is not the longest).
 
    Chronological by `createdAt` (when the night happened), like the Chronik —
    `finishedAt` moves when an old session is re-finished
@@ -22,21 +34,21 @@
 
    Three kinds of night neither break nor extend a streak, and are skipped:
    - one any GUEST won (#458): a session-only visitor has no member row, and
-     treating their win as an ordinary sole win would silently blank the card —
+     treating their win as an ordinary win would silently blank the card —
      which is breaking it by another name;
-   - a SOLO one (#895): one party is single-winner by definition, so twenty
-     logged solo plays would read as a twenty-night streak;
+   - a SOLO one (#895): one party wins by definition, so twenty logged solo
+     plays would read as a twenty-night streak;
    - one recorded as „Kein Sieger" or „Fortsetzung folgt" (#1038): not a
      contest. „Verloren" is NOT skipped — the table played to win and did not,
-     which breaks a streak exactly as somebody else's win does (via
-     `ws.length !== 1`). An UNRECORDED night also still breaks one; the fix for
-     that is recording it.
+     which breaks a streak exactly as somebody else's win does (no winner is
+     left among the candidates). An UNRECORDED night also still breaks one; the
+     fix for that is recording it.
 
-   Returns { memberId, n, lastId }: the holder (null when the latest counted
-   night had no sole winner), the run's length, and the id of the night it ends
-   at — so a caller asking "is the streak THIS session's" can tell a skipped
-   session from the one that counted. */
-function soleWinStreak(round, sessions, deps) {
+   Returns { memberIds, n, lastId }: the holders (empty when the latest counted
+   night had no winner), the run's length, and the id of the night it ends at —
+   so a caller asking "is the streak THIS session's" can tell a skipped session
+   from the one that counted. */
+function winStreak(round, sessions, deps) {
   const wonByGuest = (s) => {
     const gids = new Set((s.guests || []).map((g) => g.id));
     return gids.size > 0 && (s.winnerIds || []).some((wid) => gids.has(wid));
@@ -49,19 +61,16 @@ function soleWinStreak(round, sessions, deps) {
   const chrono = [...sessions]
     .filter((s) => !wonByGuest(s) && !isSolo(s) && !notAContest(s))
     .sort((a, b) => String(a.createdAt).localeCompare(String(b.createdAt)));
-  let memberId = null;
+  let holders = null;
   let n = 0;
   for (let i = chrono.length - 1; i >= 0; i--) {
     const ws = chrono[i].winnerIds || [];
-    if (memberId === null) {
-      if (ws.length !== 1) break;
-      memberId = ws[0];
-      n = 1;
-    } else if (ws.length === 1 && ws[0] === memberId) {
-      n++;
-    } else break;
+    const next = holders === null ? [...new Set(ws)] : holders.filter((id) => ws.includes(id));
+    if (!next.length) break;
+    holders = next;
+    n++;
   }
-  return { memberId, n, lastId: chrono.length ? chrono[chrono.length - 1].id : null };
+  return { memberIds: holders || [], n, lastId: chrono.length ? chrono[chrono.length - 1].id : null };
 }
 
 /* A session's number in its round: 1 + the other FINISHED sessions that
@@ -74,5 +83,5 @@ function sessionNumber(round, session) {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { soleWinStreak, sessionNumber };
+  module.exports = { winStreak, sessionNumber };
 }

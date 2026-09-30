@@ -9,7 +9,7 @@
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { soleWinStreak, sessionNumber } = require('../public/js/session-tally');
+const { winStreak, sessionNumber } = require('../public/js/session-tally');
 const { sessionEnding } = require('../public/js/session-outcome');
 const { sessionPartyCount } = require('../public/js/session-people');
 
@@ -21,18 +21,30 @@ const s = (winnerIds, extra = {}) => ({
   finished: true, winnerIds, ...extra,
 });
 
-test('the streak counts back from the latest sole win, in createdAt order', () => {
+test('the streak counts back from the latest win, in createdAt order', () => {
   const list = [s(['b']), s(['a']), s(['a']), s(['a'])];
-  const run = soleWinStreak(round, [...list].reverse(), DEPS);
-  assert.deepEqual({ ...run }, { memberId: 'a', n: 3, lastId: list[3].id });
+  const run = winStreak(round, [...list].reverse(), DEPS);
+  assert.deepEqual({ ...run, memberIds: [...run.memberIds] }, { memberIds: ['a'], n: 3, lastId: list[3].id });
 });
 
-test('a shared win or a loss breaks it; the latest night having no sole winner leaves no holder', () => {
-  assert.equal(soleWinStreak(round, [s(['a']), s(['a', 'b']), s(['a'])], DEPS).n, 1);
-  assert.equal(soleWinStreak(round, [s(['a']), s([], { ending: 'lost' }), s(['a'])], DEPS).n, 1);
-  const none = soleWinStreak(round, [s(['a']), s(['a', 'b'])], DEPS);
-  assert.equal(none.memberId, null);
+test('a shared win continues it for each winner (#1421); a loss or somebody else’s win breaks it', () => {
+  assert.equal(winStreak(round, [s(['a']), s(['a', 'b']), s(['a'])], DEPS).n, 3);
+  assert.equal(winStreak(round, [s(['a']), s([], { ending: 'lost' }), s(['a'])], DEPS).n, 1);
+  assert.equal(winStreak(round, [s(['a']), s(['b']), s(['a'])], DEPS).n, 1);
+  const none = winStreak(round, [s(['a']), s([], { ending: 'lost' })], DEPS);
+  assert.deepEqual([...none.memberIds], []);
   assert.equal(none.n, 0);
+});
+
+test('the answer is the longest run still going, and everyone who holds it', () => {
+  // a alone twice, then level with b: a is on 3, b on 1 — only the longest is reported.
+  const longest = winStreak(round, [s(['a']), s(['a']), s(['a', 'b'])], DEPS);
+  assert.deepEqual([...longest.memberIds], ['a']);
+  assert.equal(longest.n, 3);
+  // a and b won the last two together: they hold it jointly.
+  const joint = winStreak(round, [s(['c']), s(['a', 'b']), s(['b', 'a'])], DEPS);
+  assert.deepEqual([...joint.memberIds].sort(), ['a', 'b']);
+  assert.equal(joint.n, 2);
 });
 
 test('guest wins, solo nights and nights that were no contest are skipped, not counted', () => {
@@ -45,8 +57,8 @@ test('guest wins, solo nights and nights that were no contest are skipped, not c
     s([], { ending: 'noWinner' }),
     s([], { ending: 'ongoing' }),
   ];
-  const run = soleWinStreak(round, list, DEPS);
-  assert.equal(run.memberId, 'a');
+  const run = winStreak(round, list, DEPS);
+  assert.deepEqual([...run.memberIds], ['a']);
   assert.equal(run.n, 2, 'the four skipped nights neither break nor extend it');
   assert.equal(run.lastId, list[2].id, 'the streak ends at the last night that COUNTED');
 });
