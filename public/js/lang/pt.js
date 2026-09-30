@@ -1884,6 +1884,8 @@ I18N.pt = {
   'hub.lead.open': 'Ver o resultado',
   'home.phExtra': 'Edição extra',
   'home.phKicker': 'Banca · {date}',
+  // #1377 (P7.1): the caption on the first empty column of a new account's lobby.
+  'home.phSlot': 'Aqui aparecerá o teu grupo',
   // Die Brücke's session loop (#1240): only the five themed words of
   // docs/design/bruecke §2 — pool, probes, ignition, thrust, decrypt.
   'startSession.poolBruecke': 'Pool',

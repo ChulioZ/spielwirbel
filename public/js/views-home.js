@@ -59,6 +59,12 @@ async function showHome() {
     // A logged-in account with no rounds yet gets a first-run welcome (#138);
     // the shared-password / legacy world keeps the neutral empty state.
     const onboard = accountsActive() && isLoggedIn();
+    // Das Programmheft sets the first run as its own page (P7.1, #1377).
+    if (designIs('programmheft')) {
+      app.appendChild(phFirstRun(onboard));
+      app.appendChild(renderHomeDash());
+      return;
+    }
     const cta = h(`<a class="lobby-cta">
          <span class="lobby-cta__icon"><i class="ti ti-plus" aria-hidden="true"></i></span>
          <span class="lobby-cta__title">${esc(t(onboard ? 'home.onboard.title' : 'home.empty.title'))}</span>

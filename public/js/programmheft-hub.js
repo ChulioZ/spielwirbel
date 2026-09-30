@@ -136,8 +136,13 @@ function phHeroCompose(round, hero) {
    The headline is result.titleWonOne/Many (or the ending's own title, or
    titlePlayed): P9 says the form is new and the wording the app's. The names
    are cut out of the finished sentence rather than re-assembled around it, so
-   no locale's word order is assumed. */
-function phLead({ game, winnerNames, ending, when, score, pot }) {
+   no locale's word order is assumed.
+
+   `note` is the young round's line under the facts (P7.5, #1377): until
+   YOUNG_ROUND_SERIES_FROM the lead says when series come, because the
+   Programmheft draws its Rundenpuls from the first session and so has no
+   other place to say it. */
+function phLead({ game, winnerNames, ending, when, score, pot, note = '' }) {
   const cover = game.image
     ? `<span class="ph-lead__cover" style="background-image:url('${coverUrl(game.image, COVER_HERO)}')"></span>`
     : `<span class="ph-lead__cover">${coverPlaceholder(game)}</span>`;
@@ -160,6 +165,7 @@ function phLead({ game, winnerNames, ending, when, score, pot }) {
          <span class="ph-lead__kicker">${esc(t('round.lastPlayedLabel'))} · ${esc(when)}</span>
          <span class="ph-lead__headline">${headline}</span>
          <span class="ph-lead__facts">${facts.map(([k, v]) => `<span class="ph-lead__fact"><span class="ph-lead__fact-k">${esc(k)}</span><span class="ph-lead__fact-v">${esc(v)}</span></span>`).join('')}</span>
+         ${note ? `<span class="ph-lead__note">${esc(note)}</span>` : ''}
          <span class="ph-lead__open">${esc(t('hub.lead.open'))} <i class="ti ti-arrow-right" aria-hidden="true"></i></span>
        </span>
      </a>`);
@@ -215,4 +221,119 @@ function phResumeNotice({ round, session }) {
 function phLobbyKicker() {
   const date = new Date().toLocaleDateString(localeTag(getLocale()), { dateStyle: 'full' });
   return t('home.phKicker', { date });
+}
+
+/* ===== #1377 — the empty, young and long-language states (P7.1–P7.6) =====
+
+   P7's rule for a column with nothing in it yet: the column stays standing
+   where its content will go — its title, one line in soft ink saying when the
+   content comes, and, if there is anything to do, exactly one action. None of
+   these blocks invents a figure or a state: each says only what the app's own
+   thresholds already decide (roundIsYoung, SUGGEST_MIN_SHELF, the Pokale and
+   Chronik empty screens' copy), in their own strings. */
+
+/* A LOCKED block (P7.3, P7.4): the column's title, an optional state line and
+   the sentence behind a lock. With `tab`, the title is the link to that
+   sub-page — a preview is navigation, so an empty one still leads there
+   (hub-previews.js's header: a screen is not less reachable for being empty).
+   Without it the block is a plain notice. */
+function phLocked(round, { title, state = '', text, tab = null }) {
+  const block = h(`<section class="hub-card ph-locked">
+       <h2 class="ph-locked__title">${tab ? '<a></a>' : esc(title)}</h2>
+       ${state ? `<p class="ph-locked__state">${esc(state)}</p>` : ''}
+       <p class="ph-locked__text"><i class="ti ti-lock" aria-hidden="true"></i><span>${esc(text)}</span></p>
+     </section>`);
+  if (tab) {
+    const link = block.querySelector('.ph-locked__title a');
+    link.textContent = title;
+    navLink(link, roundPath(round.id, tab), () => showRound(round.id, tab));
+  }
+  return block;
+}
+
+/* The side column of a young round (P7.3, P7.4): each of the three cards that
+   has nothing to say yet stands as a locked block instead of vanishing — but
+   only for a reason the app can state truthfully, the two Der Tisch's
+   sentence cards give (hub-cards.js). */
+function phYoungSide(round, activeGames, { suggest, pulse, care }) {
+  const young = roundIsYoung(round);
+  return {
+    suggest: suggest || (young && activeGames.length < SUGGEST_MIN_SHELF
+      ? phLocked(round, { title: t('hub.suggest.title'), text: tn(SUGGEST_MIN_SHELF, 'hub.young.suggestOne', 'hub.young.suggest') })
+      : null),
+    pulse: pulse || (young
+      ? phLocked(round, { title: t('hub.pulse.title'), text: tn(1, 'hub.young.pulseOne', 'hub.young.pulse') })
+      : null),
+    /* No locked Kümmerliste: P7.3 promises it „ab dem ersten Spiel", but
+       careList() stays empty until the first PLAYED session, so that sentence
+       would be the kind of promise P7 exists to stop making. */
+    care,
+  };
+}
+
+/* The bottom strip of a young round (P7.3, P7.4): the three previews in their
+   places, each locked until the thing it previews exists. The Regal only while
+   the shelf is empty — once it holds games its own preview (or nothing, under
+   HUB_PREVIEW_COVERS) is the answer. Pokale and Chronik only before the first
+   played session, in the words their own empty screens use. */
+function phStripPreviews(round, activeGames, { regal, pokale, chronik }) {
+  const played = round.sessions.some((s) => s.finished);
+  return [
+    regal || (!activeGames.length ? phLocked(round, {
+      title: t('hub.tab.regal'), state: tn(0, 'home.chip.gamesOne', 'home.chip.games'), text: t('hub.young.lock'), tab: 'regal',
+    }) : null),
+    pokale || (!played ? phLocked(round, {
+      title: t('hub.tab.pokale'), state: t('pokale.emptyTitle'), text: t('pokale.empty'), tab: 'pokale',
+    }) : null),
+    chronik || (!played ? phLocked(round, {
+      title: t('hub.tab.chronik'), state: t('chronik.emptyTitle'), text: t('chronik.empty'), tab: 'chronik',
+    }) : null),
+  ].filter(Boolean);
+}
+
+/* The lead of a round with games and no session yet (P7.4): the column keeps
+   its „Zuletzt gespielt" kicker, says there is none yet, and prints what is
+   waiting — the shelf's count large, in the vermilion. A notice, not a link:
+   the one action is the box beside it, which reads „Erste Session wirbeln". */
+function phYoungLead(activeGames) {
+  const n = activeGames.length;
+  return h(`<div class="ph-young">
+       <span class="ph-young__kicker">${esc(t('round.lastPlayedLabel'))}</span>
+       <span class="ph-young__title">${esc(t('round.startEmptyTitle'))}</span>
+       <span class="ph-young__text">${esc(t('round.startEmpty'))}</span>
+       <span class="ph-young__row">
+         <span class="ph-young__count" aria-hidden="true">${esc(String(n))}</span>
+         <span class="ph-young__body">
+           <span class="ph-young__ready">${esc(tn(n, 'hub.young.readyOne', 'hub.young.ready'))}</span>
+           <span class="ph-young__text">${esc(t('hub.young.readyText'))}</span>
+         </span>
+       </span>
+     </div>`);
+}
+
+/* The empty lobby (P7.1): the black box that founds the first round, and three
+   empty columns standing where the rounds will go — the first captioned „Hier
+   erscheint deine Runde". The columns are print, not content: aria-hidden,
+   and hidden below 860 where there is no row to stand in.
+
+   The same ONE link as Klassisch's `.lobby-cta` and its sub-line; the title is
+   the action itself („Neue Runde gründen"), so the separate action line would
+   say it twice and is left out. The sheet's „Beispielrunde ansehen" is left
+   out for the reason tischLobbyAlt gives (operator, #1269): only a signed-in
+   account sees this lobby, and the demo would sign it out of itself. */
+function phFirstRun(onboard) {
+  const block = h(`<div class="ph-first">
+       <a class="lobby-cta">
+         <span class="lobby-cta__icon" aria-hidden="true">+</span>
+         <span class="lobby-cta__title">${esc(t('home.newRound'))}</span>
+         <span class="lobby-cta__sub">${esc(t(onboard ? 'home.onboard.sub' : 'home.empty.sub'))}</span>
+       </a>
+       <div class="ph-first__slots" aria-hidden="true">
+         <span class="ph-first__slot"><span class="ph-first__cap">${esc(t('home.phSlot'))}</span></span>
+         <span class="ph-first__slot"></span>
+         <span class="ph-first__slot"></span>
+       </div>
+     </div>`);
+  navLink(block.querySelector('.lobby-cta'), '/round/new', () => showNewRound());
+  return block;
 }
