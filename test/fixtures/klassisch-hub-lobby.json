@@ -504,6 +504,9 @@
   "      button.link-btn.rail-owned [type=button]",
   "        i.ti.ti-archive [aria-hidden=true]",
   "        span",
+  "      button.btn.btn--primary.btn--sm.shelf-add.shelf-add--bar [type=button]",
+  "        i.ti.ti-plus [aria-hidden=true]",
+  "        span",
   "  div.regal-filter",
   "    div.fbar",
   "      button.fbar__trigger [aria-label aria-expanded=false type=button]",
@@ -605,7 +608,10 @@
   "        div.game-card__title",
   "    button.add-tile",
   "      i.ti.ti-plus [aria-hidden=true]",
-  "      span"
+  "      span",
+  "  button.btn.btn--primary.shelf-add.shelf-add--dock [type=button]",
+  "    i.ti.ti-plus [aria-hidden=true]",
+  "    span"
  ],
  "lobby (running vote)": [
   "div.lobby-head",

@@ -91,7 +91,10 @@ saying sticky was impossible here, on this rule's authority. A rule stating a
 mechanism is as load-bearing as code, so derive it from a case where the
 candidate mechanisms **disagree** — or say in the file that you could not.
 
-**Related:** `.claude/rules/setup-screens-two-column-layout.md` (the screen this
+**Related:** `.claude/rules/regal-header-has-no-spare-room.md` (a sticky bar
+that DOES work — in flow after the grid, riding above the floating dock — and
+why its offset is one dock's number),
+`.claude/rules/setup-screens-two-column-layout.md` (the screen this
 happened on, and the fit that replaced it),
 `.claude/rules/card-tracks-are-a-fraction-of-a-fraction.md` (the other #1039
 measurement, and the same "a number chosen against the viewport is the wrong
