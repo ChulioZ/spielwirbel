@@ -112,6 +112,9 @@ const DESIGN_REGISTRY = [
     shortKey: 'design.klassisch.short',
     ritualKeys: ['startSession.potHeading', 'round.startSession', 'startSession.draw'],
     poster: { ground: ['#f6f3ec', '#eae5d9'], ink: '#c2410c', sub: '#6b6358' },
+    // Stated even though it is the default: the picker prints it (B5.2), and
+    // test/bruecke-konto.test.js requires every row to say which it is.
+    scheme: 'light',
     // The eight ACCENTS of the eight light palettes, in the palettes' own order
     // (#1187) — not their page tones. The accent is what identified a palette:
     // three of the eight pages are near-identical creams (#f4f1ea / #f6efe2 /
@@ -270,6 +273,7 @@ const DESIGN_REGISTRY = [
     glyph: 'ti-wave-sine',
     shortKey: 'design.ocean.short',
     poster: { ground: ['#eef7fa', '#a9c9d8'], ink: '#0e6690', sub: '#10283a' },
+    scheme: 'light',
     page: '#e4f1f5',
     accent: '#0e6690',
     stylesheet: '/css/designs/ocean.css',
@@ -349,6 +353,11 @@ const DESIGN_REGISTRY = [
     descKey: 'design.bruecke.desc',
     // B1.3 „rocket trägt Mission starten": the one glyph the design owns.
     glyph: 'ti-rocket',
+    /* B1's page gradient, light stop to night, with the cyan wordmark and the
+       ink subline — the ground B5.2 prints Brücke's own card on (#1242), and
+       what a Tisch-worn chooser's bill prints it on. Swept with every poster
+       by test/a11y-contrast.test.js. */
+    poster: { ground: ['#10203a', '#070b14'], ink: '#35e0ff', sub: '#dfe7f5' },
     scheme: 'dark',
     page: '#070b14',
     accent: '#35e0ff',
@@ -378,9 +387,14 @@ const DESIGN_REGISTRY = [
        designPersonTone, read by memberTone in core.js): B8.1's lightened row,
        instead of the generic dark-scheme lift every other dark design gets. */
     personTone: 'marker',
-    /* Klassisch's marks, stated rather than inherited, until Brücke's own mark
-       lands with its flip — the same move Ocean made before #1222, so the row
-       is complete on its own (test/design-marks.test.js walks every row). */
+    // B8.4's period recap card, 600 drawn / 1080 exported (recap-card-bruecke.js, #1247).
+    card: 'bruecke',
+    /* Klassisch's marks, stated rather than inherited. Die Brücke's own MARK is
+       the lamp-and-wordmark its share card carries (B8.4, brueckeWordmark) and
+       its SIGN the `glyph` above; #1247 scoped the app icon, favicon and
+       link-preview image OUT — they are design-independent and stay the face's,
+       as Ocean's did (#1220). Stated so the row is complete on its own:
+       test/design-marks.test.js walks every row's files. */
     marks: {
       icons: [
         { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
@@ -424,6 +438,7 @@ const DESIGN_REGISTRY = [
        and the ink subline. Swept with every poster by test/a11y-contrast.test.js.
        The wordmark's FIT in the tile (review R2-1) is #1376's. */
     poster: { ground: ['#fbfaf6', '#efece4'], ink: '#e8451c', sub: '#141414' },
+    scheme: 'light',
     page: '#fbfaf6',
     accent: '#b8330f',
     stylesheet: '/css/designs/programmheft.css',
@@ -453,8 +468,14 @@ const DESIGN_REGISTRY = [
       { key: 'petrol', labelKey: 'marker.programmheft.petrol', color: '#1c6b72', deep: '#00565d' },
       { key: 'fuchsie', labelKey: 'marker.programmheft.fuchsie', color: '#9c2f6e', deep: '#841459' },
     ],
-    /* Klassisch's marks, stated rather than inherited, until the design's own
-       mark lands with #1381 (P8.4) — the same holding pattern Ocean used. */
+    /* The design's MARK is P8.4's masthead — the vermilion band carrying the
+       Anton wordmark — and it lives where the design is SEEN outside the app:
+       on its share card (recap-card-programmheft.js, #1381), beside the
+       chooser's `glyph` and `poster` above. The install icons, favicon and
+       link preview below stay Klassisch's, stated rather than inherited: the
+       package draws no app icon, and rendering one is a design decision the
+       sheet does not make (#1381 scoped it out, as #1220 did for Ocean until
+       #1222 decided them). */
     marks: {
       icons: [
         { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
@@ -464,6 +485,8 @@ const DESIGN_REGISTRY = [
       appleTouch: '/icons/apple-touch-icon.png',
       og: '/icons/og-image.png',
     },
+    // P8.4's share card (recap-card-programmheft.js, #1381).
+    card: 'programmheft',
     enabled: false,
   },
 ];

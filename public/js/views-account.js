@@ -111,7 +111,7 @@ async function showAccount() {
   if (me.demo) {
     app.appendChild(h(`<h2 class="konto-section__h">${esc(t('konto.demo.title'))}</h2>`));
     app.appendChild(h(`<p class="muted">${esc(t('konto.demo.note'))}</p>`));
-    if (designIs('ocean')) composeKontoCards();
+    if (kontoAsCards()) composeKontoCards();
     return;
   }
 
@@ -155,8 +155,12 @@ async function showAccount() {
   // menu, and it holds no password to re-authenticate with anyway.
   app.appendChild(h(`<h2 class="konto-section__h konto-section__h--danger">${esc(t('konto.delete.title'))}</h2>`));
   app.appendChild(buildDeleteSection(me));
-  if (designIs('ocean')) composeKontoCards();
+  if (kontoAsCards()) composeKontoCards();
 }
+
+// Ocean (#1219) and Die Brücke (#1242, B5.4 — every section a plate) both
+// compose the shared screen as cards; each stylesheet draws its own card.
+const kontoAsCards = () => designIs('ocean') || designIs('bruecke');
 
 /* Ocean's Konto (#1219, O14.3 „Alles auf einer Seite, nichts versteckt"): every
    section a card of its own, built AFTER the shared screen out of its own nodes,

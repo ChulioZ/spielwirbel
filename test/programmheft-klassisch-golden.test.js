@@ -1,0 +1,131 @@
+'use strict';
+
+/* The Klassisch DOM of the three screens #1373 composes for Das Programmheft —
+   the Regal, the Spielepass (game detail) and the add-game step — pinned as a
+   golden snapshot.
+
+   The operator ruling on #1373 is „a design owns its layout": the views branch
+   on designIs('programmheft'). The price of that licence is proof that the
+   branch is Programmheft's alone, and a per-selector absence check (the shape
+   the Ocean and Tisch specs use) can only see the classes someone thought to
+   list. A snapshot of the whole rendered screen sees everything else too — an
+   attribute moved, a wrapper added, a child reordered.
+
+   The golden was generated from the views BEFORE #1373 touched them, and was
+   seen red once against a build whose Programmheft branch was made
+   unconditional. Regenerate only for a change that deliberately alters
+   Klassisch: SPIELWIRBEL_UPDATE_GOLDEN=1 node --test test/programmheft-klassisch-golden.test.js */
+
+const { test } = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+
+const { loadApp } = require('./support/dom');
+
+const GOLDEN = path.join(__dirname, 'fixtures', 'programmheft-klassisch-golden.json');
+const RID = 'r1';
+
+function roundFixture() {
+  return {
+    id: RID,
+    name: 'Donnerstagsrunde',
+    tags: [{ id: 't1', name: 'Kooperativ', icon: 'users' }],
+    providers: [],
+    members: [{ id: 'm1', name: 'Anna' }, { id: 'm2', name: 'Ben' }],
+    games: [
+      {
+        id: 'g1', title: 'Nordlichter', minPlayers: 2, maxPlayers: 5, minPlaytime: 90, maxPlaytime: 90,
+        tagIds: ['t1'], ownerIds: ['m1'], weight: 2.4,
+        source: { provider: 'bgg', externalId: '42', url: 'https://boardgamegeek.com/boardgame/42' },
+      },
+      { id: 'g2', title: 'Moorgeister', tagIds: [] },
+      { id: 'g3', title: 'Salzwiesen', retired: true, tagIds: [] },
+      { id: 'g4', title: 'Wattwanderer', wish: true, tagIds: [] },
+    ],
+    sessions: [
+      {
+        id: 's1', createdAt: '2026-06-01T19:00:00.000Z', finished: true,
+        gameIds: ['g1', 'g2'], chosenGameId: 'g1', winnerIds: ['m1'],
+        memberIds: ['m1', 'm2'],
+        votes: {
+          m1: { g1: { rating: 5 }, g2: { rating: 3 } },
+          m2: { g1: { rating: 2 }, g2: { rating: 4 } },
+        },
+      },
+    ],
+    activity: [],
+  };
+}
+
+function boot(t, design) {
+  const dom = loadApp({ locale: 'de' });
+  t.after(() => dom.close());
+  const round = roundFixture();
+  dom.set('api', async (method, url) => {
+    if (/\/activities$/.test(url)) return [];
+    if (/^\/api\/rounds\/[^/]+$/.test(url) && method === 'GET') return round;
+    return {};
+  });
+  dom.set('toast', () => {});
+  dom.set('isLoggedIn', () => false);
+  dom.set('canImportBgg', () => true);
+  dom.run(`applyDesign(${JSON.stringify(design)})`);
+  return { dom, round };
+}
+
+// The screen's own content, without the rail and dock (the shared chrome is
+// #1372's), with whitespace folded so a template literal's indentation is not
+// part of the contract.
+function snapshot(root) {
+  const clone = root.cloneNode(true);
+  clone.querySelectorAll('.rail, .dock').forEach((n) => n.remove());
+  return clone.innerHTML.replace(/\s+/g, ' ').replace(/> </g, '><').trim();
+}
+
+const flush = () => new Promise((r) => setImmediate(r));
+
+async function renderAll(t, design) {
+  const out = {};
+  {
+    const { dom, round } = boot(t, design);
+    dom.app.innerHTML = '';
+    dom.call('renderRegalTab', round, round.games.filter((g) => !g.retired && !g.completed && !g.wish));
+    out.regal = snapshot(dom.app);
+  }
+  for (const gid of ['g1', 'g2', 'g3', 'g4']) {
+    const { dom } = boot(t, design);
+    await dom.call('showGameDetail', RID, gid);
+    await flush();
+    out[`detail_${gid}`] = snapshot(dom.app);
+  }
+  for (const wish of [false, true]) {
+    const { dom, round } = boot(t, design);
+    dom.call('showAddGame', round, { wish });
+    out[`addGame_${wish ? 'wish' : 'shelf'}`] = snapshot(dom.document.querySelector('.sheet-backdrop'));
+  }
+  return out;
+}
+
+test('Klassisch: the Regal, the Spielepass and the add-game step render exactly as before #1373', async (t) => {
+  const now = await renderAll(t, 'klassisch');
+  if (process.env.SPIELWIRBEL_UPDATE_GOLDEN === '1') {
+    fs.writeFileSync(GOLDEN, JSON.stringify(now, null, 1) + '\n');
+  }
+  const golden = JSON.parse(fs.readFileSync(GOLDEN, 'utf8'));
+  assert.deepEqual(Object.keys(now), Object.keys(golden));
+  for (const k of Object.keys(golden)) {
+    assert.ok(golden[k].length > 200, `the golden for ${k} is implausibly small — the render did not happen`);
+    assert.equal(now[k], golden[k], `Klassisch ${k} changed`);
+  }
+});
+
+test('the snapshot can see Programmheft: the same screens under it are NOT the golden', async (t) => {
+  // The control that proves the comparison above discriminates at all — a
+  // snapshot that matched under every design would be comparing nothing.
+  const golden = JSON.parse(fs.readFileSync(GOLDEN, 'utf8'));
+  const ph = await renderAll(t, 'programmheft');
+  assert.notEqual(ph.regal, golden.regal, 'Programmheft\'s Regal is identical to Klassisch\'s');
+  assert.notEqual(ph.detail_g1, golden.detail_g1, 'Programmheft\'s Spielepass is identical to Klassisch\'s');
+  assert.notEqual(ph.addGame_shelf, golden.addGame_shelf, 'Programmheft\'s add-game step is identical to Klassisch\'s');
+});

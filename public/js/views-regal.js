@@ -39,7 +39,11 @@ function renderRegalTab(round, activeGames) {
   // words the sort „Sortiert: Bewertung". It keeps the dashed add tile and
   // brings its own ways off the shelf; ocean.css lays the rest out per width.
   const ocean = designIs('ocean');
-  const composed = tisch || ocean;
+  // Das Programmheft (#1373, P3.3/P6.2/P7.8) takes the composed head too, and
+  // Ocean's „Sortiert:" statement; its cards set the number, the meta and the
+  // score as print ABOUT the cover rather than on it (phCard below).
+  const ph = designIs('programmheft');
+  const composed = tisch || ocean || ph;
   // h1, not h3: on the Regal/Chronik/Pokale tabs this is the top-level heading of
   // the view — only the Start tab renders the round-name hero (#145). The
   // section-label look is unchanged; `.section-head :is(h1,h2,h3)` styles it.
@@ -48,6 +52,7 @@ function renderRegalTab(round, activeGames) {
     : `<h1>${esc(t('games.title', { n: activeGames.length }))}</h1>`;
   const gamesHead = h(`<div class="section-head${composed ? ' regal-head' : ''}">${title}<div class="section-tools"></div></div>`);
   const gamesTools = gamesHead.querySelector('.section-tools');
+  if (ph) gamesSec.classList.add('ph-regal');
   gamesSec.appendChild(gamesHead);
 
   const grid = h('<div class="cards"></div>');
@@ -98,6 +103,8 @@ function renderRegalTab(round, activeGames) {
       // already exist for the empty-Regal tile, so this needs no new i18n key.
       const importBtn = h(`<button class="link-btn"><i class="ti ti-download" aria-hidden="true"></i> <span class="tools-label tools-label--long">${esc(t('bggImport.link'))}</span><span class="tools-label tools-label--short">${esc(t('bggImport.tile'))}</span></button>`);
       importBtn.addEventListener('click', () => showBggImport(round));
+      // P6.2 folds it into the phone's „…" (phMoreButton below).
+      if (ph) importBtn.classList.add('regal-tool--wide');
       gamesTools.appendChild(importBtn);
     }
     // Score per game (from the already computed stats) for pill and sorting.
@@ -122,7 +129,7 @@ function renderRegalTab(round, activeGames) {
     // Ocean prints the sort as a statement, „Sortiert: Bewertung" (O3.3). The
     // prefix is a visible word beside the <select>, whose own aria-label is
     // unchanged — so it is aria-hidden rather than a second name.
-    if (ocean) {
+    if (ocean || ph) {
       const sortWrap = h(`<span class="regal-sort"><span class="regal-sort__prefix" aria-hidden="true">${esc(t('games.sortedBy'))}</span></span>`);
       sortWrap.appendChild(sortSel);
       gamesTools.appendChild(sortWrap);
@@ -149,7 +156,9 @@ function renderRegalTab(round, activeGames) {
     // A hook for Der Tisch's phone row, which draws this toggle as a glyph chip
     // while it is off (T6.2 has no room for a fourth worded chip).
     if (tisch) bulk.button.classList.add('regal-select');
+    if (ph) bulk.button.classList.add('regal-tool--wide');
     gamesTools.appendChild(bulk.button);
+    if (ph) gamesTools.appendChild(phMoreButton(round, bulk.button));
 
 
     let query = regalFilters.query;
@@ -308,7 +317,7 @@ function renderRegalTab(round, activeGames) {
       const expBadge = expCount
         ? `<span class="exp-pill" title="${esc(tn(expCount, 'detail.expansionsBadgeOne', 'detail.expansionsBadge', { n: expCount }))}">+${expCount}</span>`
         : '';
-      const gc = h(`<a class="game-card game-card--clickable">
+      const gc = ph ? phCard(round, g, fallback, score, evidence, expBadge) : h(`<a class="game-card game-card--clickable">
            <div class="game-card__img">${fallback}
              <div class="game-card__badges">${expBadge}${scorePill}</div>
              <span class="game-card__pick" aria-hidden="true"><i class="ti ti-check"></i></span>
@@ -368,6 +377,9 @@ function renderRegalTab(round, activeGames) {
         return;
       }
       grid.replaceChildren(...cards, ...(bulk.isSelecting() ? [] : gridAddTile));
+      // The programme's running number follows what is on the page, so a sort
+      // or a filter renumbers rather than leaving gaps.
+      if (ph) cards.forEach((c, i) => { c.querySelector('.ph-card__nr').textContent = t('regal.cardNo', { n: i + 1 }); });
       bulk.sync();
     }
 
@@ -404,7 +416,14 @@ function renderRegalTab(round, activeGames) {
   // (#1262) and Ocean's Reling (#1211) carry no off-shelf group, so at desktop
   // this button is the Regal's own way to the four — T3.3 draws it in the
   // toolbar at 1440, and O3's „Vom Regal führt ein Weg zu Nicht im Regal".
-  const offShelfBtn = h(`<button class="link-btn${railIsLean() ? '' : ' rail-owned'}" type="button"><i class="ti ti-archive" aria-hidden="true"></i> <span>${esc(t('rail.archive'))}</span></button>`);
+  // Das Programmheft draws it in the toolbar between 860 and 1279 (P3.3), and
+  // closes the shelf with the list at every width (P6.2). From 1280px its rail
+  // carries the „Nicht im Regal" group, so programmheft.css hides the toolbar
+  // copy there (`regal-tool--offshelf`) — rail, toolbar and list made three
+  // entries for one thing. Not `rail-owned`: the design's own `.link-btn`
+  // display rule outranks `.app .rail-owned`, measured at 1440.
+  const offShelfCls = ph ? ' regal-tool--wide regal-tool--offshelf' : railIsLean() ? '' : ' rail-owned';
+  const offShelfBtn = h(`<button class="link-btn${offShelfCls}" type="button"><i class="ti ti-archive" aria-hidden="true"></i> <span>${esc(t('rail.archive'))}</span></button>`);
   offShelfBtn.addEventListener('click', () => openOffShelfSheet(round));
   gamesTools.appendChild(offShelfBtn);
 
@@ -440,6 +459,15 @@ function renderRegalTab(round, activeGames) {
     gamesTools.appendChild(bar);
   }
   if (ocean) gamesSec.appendChild(oceanOffShelfBand(round));
+  // Das Programmheft: the black „Spiel hinzufügen" closes the toolbar at
+  // desktop (P3.3); the phone keeps the dashed tile in the grid (P6.2). CSS
+  // shows one per width, as Ocean's three do.
+  if (ph && activeGames.length > 0) {
+    const bar = h(`<button type="button" class="btn btn--primary regal-add regal-add--bar"><i class="ti ti-plus" aria-hidden="true"></i> <span>${esc(t('round.addGame'))}</span></button>`);
+    bar.addEventListener('click', () => showAddGame(round));
+    gamesTools.appendChild(bar);
+  }
+  if (ph) gamesSec.appendChild(phOffShelf(round));
   if (oceanAdds) {
     const fab = h(`<button type="button" class="regal-fab" aria-label="${esc(t('round.addGame'))}"><i class="ti ti-plus" aria-hidden="true"></i></button>`);
     fab.addEventListener('click', () => showAddGame(round));
@@ -469,6 +497,61 @@ function cardMeta(g) {
     ? `<span aria-hidden="true"><i class="ti ti-users"></i> ${esc(range)}</span><span class="sr-only">${esc(playersText(g.minPlayers, g.maxPlayers))}</span>`
     : '';
   return `<div class="game-card__meta">${[players, time ? esc(time) : ''].filter(Boolean).join(' · ')}</div>`;
+}
+
+// A Programmheft card (#1373, P3.3/P6.2): the running number and the meta line
+// ABOVE the cover, the title, who owns it and the score UNDER it — nothing is
+// printed on the cover, which P1 forbids. The score is the pill's own figure and
+// evidence, set as a display numeral in its ramp tone rather than as a badge.
+// The number is filled by renderGames, which knows the order on the page.
+function phCard(round, g, fallback, score, evidence, expBadge) {
+  const owners = ownerNames(round, g.ownerIds);
+  const scored = score !== null;
+  const scoreAttrs = scored ? ` data-stop="${scoreStop(score)}" title="${esc(evidence)}"` : '';
+  return h(`<a class="game-card game-card--clickable ph-card">
+       <div class="ph-card__kicker"><span class="ph-card__nr"></span>${cardMeta(g)}${expBadge}</div>
+       <div class="game-card__img">${fallback}
+         <span class="game-card__pick" aria-hidden="true"><i class="ti ti-check"></i></span>
+       </div>
+       <div class="game-card__body">
+         <div class="ph-card__text">
+           <div class="game-card__title">${esc(g.title)}</div>
+           ${owners.length ? `<div class="ph-card__owner">${esc(t('detail.owners', { names: owners.join(', ') }))}</div>` : ''}
+         </div>
+         <span class="ph-card__score${scored ? '' : ' ph-card__score--none'}"${scoreAttrs}>${esc(scored ? fmtAvg(displayScore(score)) : t('games.scoreNew'))}</span>
+       </div>
+     </a>`);
+}
+
+// The phone's „…" (P6.2): the two toolbar actions that do not fit a 390px row,
+// „Auswählen" and the BGG import. The toolbar keeps both as buttons, and CSS
+// shows either them or this — one per width.
+function phMoreButton(round, selectBtn) {
+  const btn = h(`<button type="button" class="btn regal-more" aria-label="${esc(t('detail.moreActions'))}" aria-expanded="false"><i class="ti ti-dots" aria-hidden="true"></i></button>`);
+  const items = [{ icon: 'ti-checkbox', label: t('bulk.select'), kind: 'undoable', run: () => selectBtn.click() }];
+  if (canImportBgg()) items.push({ icon: 'ti-download', label: t('bggImport.tile'), kind: 'undoable', run: () => showBggImport(round) });
+  btn.addEventListener('click', () => {
+    openPopover(btn, (el, close) => fillMenu(el, items, close), () => btn.setAttribute('aria-expanded', 'false'));
+    btn.setAttribute('aria-expanded', 'true');
+  });
+  return btn;
+}
+
+// Das Programmheft's end of the shelf (P3.3: „Nicht im Regal" as a line of
+// links under a rule; P6.2: the same four as 44px rows). One list, laid out per
+// width; the entries and their counted labels come from off-shelf.js.
+function phOffShelf(round) {
+  const wrap = h(`<nav class="ph-offshelf" aria-labelledby="phOffShelfLabel">
+      <h2 class="ph-offshelf__label" id="phOffShelfLabel">${esc(t('rail.archive'))}</h2>
+      <ul class="ph-offshelf__list"></ul>
+    </nav>`);
+  const list = wrap.querySelector('ul');
+  offShelfEntries(round).forEach(({ label, sub, go }) => {
+    const li = h(`<li><a class="ph-offshelf__link"><span>${esc(label)}</span><i class="ti ti-chevron-right" aria-hidden="true"></i></a></li>`);
+    navLink(li.querySelector('a'), roundPath(round.id, sub), go);
+    list.appendChild(li);
+  });
+  return wrap;
 }
 
 // Ocean's end of the shelf (#1212): the four off-shelf destinations as a band
