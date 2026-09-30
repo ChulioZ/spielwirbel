@@ -68,7 +68,7 @@ const sig = (el) => {
 
 // ------------------------------------------------------------- Klassisch
 
-test('Klassisch: the Regal head, tools row and grid are exactly as before', async (t) => {
+test('Klassisch: the Regal head, tools row and grid are exactly as before — plus the header add (#1427)', async (t) => {
   const dom = await renderRegal(t, null);
   const head = dom.app.querySelector('.section-head');
   assert.equal(head.className, 'section-head');
@@ -78,11 +78,14 @@ test('Klassisch: the Regal head, tools row and grid are exactly as before', asyn
   assert.equal(head.querySelector('.regal-title'), null);
 
   const row = [...tools(dom).children];
-  assert.deepEqual(row.map((el) => el.tagName.toLowerCase()), ['button', 'label', 'select', 'button', 'button', 'button']);
+  assert.deepEqual(row.map((el) => el.tagName.toLowerCase()), ['button', 'label', 'select', 'button', 'button', 'button', 'button']);
   // The BGG import leads the row, and the off-shelf control is rail-owned.
   assert.ok(row[0].querySelector('.ti-download'), 'the import button leads the Klassisch row');
   assert.ok(row[1].classList.contains('search-pill'));
   assert.ok(row[5].classList.contains('rail-owned'));
+  // The header add (#1427) closes the row, under its own class — never the
+  // gold `regal-add` of Der Tisch, asserted below.
+  assert.ok(row[6].classList.contains('shelf-add--bar'), 'the header add closes the Klassisch row');
   assert.equal(tools(dom).querySelector('.fbar__trigger'), null, 'the filter trigger stays in its panel');
   assert.ok(dom.app.querySelector('.regal-filter .fbar > .fbar__trigger'));
   assert.equal(dom.app.querySelector('.fbar__count'), null);

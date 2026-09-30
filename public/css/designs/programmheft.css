@@ -1631,9 +1631,27 @@
    only: from 1280 the rail's group carries it) and the black
    „Spiel hinzufügen" (P3.3); a phone folds the first two into the „…" and
    keeps the dashed tile in the grid (P6.2). An EMPTY shelf renders no bar, so
-   its tiles stay at every width. */
+   its tiles stay at every width.
+
+   A phone also gets a second „Spiel hinzufügen" (#1427): the black box, in flow
+   AFTER the grid and sticky above the dock, so the only add control is not the
+   end of a long scroll. Its own copy rather than the toolbar's restyled — a
+   sticky box only sticks inside its parent, and DOM order must equal visual
+   order (WCAG 2.4.3). The dashed tile stays. */
+:root[data-design="programmheft"] .ph-regal .regal-add--dock { display: none; }
 @media (max-width: 859px) {
   :root[data-design="programmheft"] .ph-regal :is(.regal-tool--wide, .regal-add--bar) { display: none; }
+  :root[data-design="programmheft"] .ph-regal .regal-add--dock {
+    display: block;
+    position: sticky;
+    /* Above the dock: its 64px cells and the 3px rule over them (Das Dock,
+       phone), and the home-bar inset it pads for. */
+    bottom: calc(67px + env(safe-area-inset-bottom, 0px) + 10px);
+    z-index: 5;
+    width: 100%;
+    min-height: 52px;
+    margin-top: 18px;
+  }
 }
 @media (min-width: 1280px) {
   :root[data-design="programmheft"] .ph-regal .regal-tool--offshelf { display: none; }

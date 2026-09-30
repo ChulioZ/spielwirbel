@@ -1423,21 +1423,42 @@
 :root[data-design="ocean"]:not([data-scheme="dark"]) .regal-offshelf__sub { color: var(--ink-soft); }
 :root[data-design="ocean"]:not([data-scheme="dark"]) .regal-offshelf__row > .ti { color: var(--brand); }
 
-/* ---- Where „Spiel hinzufügen" is, per width. Desktop: the dashed tile that
-   closes the grid (O3.3). Tablet: a pill at the end of the toolbar (O6.7).
-   Phone: the round plus bubble at the bottom right (O6.2), sticky so it rides
-   above the dock while the shelf scrolls and settles after the last row. */
+/* ---- Where „Spiel hinzufügen" is, per width. Desktop (1280+): the dashed tile
+   that closes the grid (O3.3) — and the toolbar pill too (#1427: the sheet draws
+   the tile alone, which on a big shelf is the end of a long scroll). Tablet: the
+   pill at the end of the toolbar (O6.7), no tile. Phone: the round plus bubble
+   at the bottom right (O6.2), sticky so it rides above the dock while the shelf
+   scrolls and settles after the last row. */
 @media (max-width: 1279px) {
   :root[data-design="ocean"] .cards > .add-tile { display: none; }
 }
-@media (min-width: 600px) and (max-width: 1279px) {
-  :root[data-design="ocean"] .cards { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px 14px; }
+@media (min-width: 600px) {
   :root[data-design="ocean"] .regal-add--bar {
     display: inline-flex;
     align-items: center;
     gap: 6px;
     white-space: nowrap;
   }
+}
+/* The pill joins a toolbar that already ran to two lines at desktop: the German
+   „Von BoardGameGeek übernehmen" alone is 312px, and with the pill the last
+   control wrapped onto a line of its own (measured at 1440 and 1366, #1427).
+   O3.3 draws the short „Von BGG übernehmen" there, which is the room the pill
+   needs; the long wording stays below 1280, where nothing changed. Below 1440
+   the pane (1124–1283px) is still ~80px short, so „Sortiert:" goes as it does on
+   a phone — it is aria-hidden, the select names itself — and 1366×768, the most
+   common laptop, keeps the toolbar on one row. From 1440 the sheet's full
+   wording fits. */
+@media (min-width: 1280px) {
+  :root[data-design="ocean"] .regal-head .tools-label--long { display: none; }
+  :root[data-design="ocean"] .regal-head .tools-label--short { display: inline; }
+}
+@media (min-width: 1280px) and (max-width: 1439px) {
+  :root[data-design="ocean"] .regal-sort__prefix { display: none; }
+  :root[data-design="ocean"] .regal-sort { padding-left: 11px; }
+}
+@media (min-width: 600px) and (max-width: 1279px) {
+  :root[data-design="ocean"] .cards { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px 14px; }
   :root[data-design="ocean"] .regal-head .search-pill { min-width: 0; }
 }
 @media (max-width: 599px) {

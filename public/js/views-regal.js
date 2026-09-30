@@ -427,6 +427,13 @@ function renderRegalTab(round, activeGames) {
   offShelfBtn.addEventListener('click', () => openOffShelfSheet(round));
   gamesTools.appendChild(offShelfBtn);
 
+  // „Spiel hinzufügen" as a button; `cls` is the design's own modifier classes.
+  const addBtn = (cls) => {
+    const b = h(`<button type="button" class="btn btn--primary ${cls}"><i class="ti ti-plus" aria-hidden="true"></i> <span>${esc(t('round.addGame'))}</span></button>`);
+    b.addEventListener('click', () => showAddGame(round));
+    return b;
+  };
+
   // Der Tisch's gold „Spiel hinzufügen" (#1278). TWO buttons, one per layout,
   // and that is what keeps DOM order equal to visual order (WCAG 2.4.3): T3.3
   // ends the toolbar row with it, T6.2 puts it UNDER the shelf, sticky above the
@@ -435,39 +442,43 @@ function renderRegalTab(round, activeGames) {
   // CSS shows exactly one at any width, and `display: none` drops the other
   // from the accessibility tree, so no width announces two.
   if (tisch) {
-    const addBtn = (where) => {
-      const b = h(`<button type="button" class="btn btn--primary regal-add regal-add--${where}"><i class="ti ti-plus" aria-hidden="true"></i> <span>${esc(t('round.addGame'))}</span></button>`);
-      b.addEventListener('click', () => showAddGame(round));
-      return b;
-    };
-    gamesTools.appendChild(addBtn('bar'));
-    gamesSec.appendChild(addBtn('dock'));
+    gamesTools.appendChild(addBtn('regal-add regal-add--bar'));
+    gamesSec.appendChild(addBtn('regal-add regal-add--dock'));
   }
 
   // Ocean closes the shelf with the four ways off it (O3.3 draws them as a band
   // of cards, O6.2 as one row above the dock), and puts „Spiel hinzufügen"
-  // where each width draws it: the dashed tile at desktop, a pill in the
-  // toolbar on a tablet (O6.7), the round plus bubble on a phone (O6.2). All
-  // are rendered and CSS shows one per width; `display: none` drops the others
-  // from the accessibility tree, so no width announces two.
+  // where each width draws it: the dashed tile from 1280px (O3.3), a pill in
+  // the toolbar from 600px (O6.7, and at desktop too since #1427 — the tile
+  // alone was the end of a long scroll), the round plus bubble below that
+  // (O6.2). All are rendered and CSS shows what each width needs;
+  // `display: none` drops the others from the accessibility tree.
   // An EMPTY shelf takes neither the pill nor the bubble (#1216): its empty
   // state carries the add action itself, and a second one beside it is noise.
   const oceanAdds = ocean && activeGames.length > 0;
-  if (oceanAdds) {
-    const bar = h(`<button type="button" class="btn btn--primary btn--sm regal-add regal-add--bar"><i class="ti ti-plus" aria-hidden="true"></i> <span>${esc(t('round.addGame'))}</span></button>`);
-    bar.addEventListener('click', () => showAddGame(round));
-    gamesTools.appendChild(bar);
-  }
+  if (oceanAdds) gamesTools.appendChild(addBtn('btn--sm regal-add regal-add--bar'));
   if (ocean) gamesSec.appendChild(oceanOffShelfBand(round));
   // Das Programmheft: the black „Spiel hinzufügen" closes the toolbar at
-  // desktop (P3.3); the phone keeps the dashed tile in the grid (P6.2). CSS
-  // shows one per width, as Ocean's three do.
+  // desktop (P3.3); a phone gets a second copy, sticky above the dock, and keeps
+  // the dashed tile in the grid (P6.2, #1427). CSS shows one copy per width, as
+  // Ocean's three do; the sticky one is after the grid for the reason Der
+  // Tisch's is.
   if (ph && activeGames.length > 0) {
-    const bar = h(`<button type="button" class="btn btn--primary regal-add regal-add--bar"><i class="ti ti-plus" aria-hidden="true"></i> <span>${esc(t('round.addGame'))}</span></button>`);
-    bar.addEventListener('click', () => showAddGame(round));
-    gamesTools.appendChild(bar);
+    gamesTools.appendChild(addBtn('regal-add regal-add--bar'));
+    gamesSec.appendChild(addBtn('regal-add regal-add--dock'));
   }
   if (ph) gamesSec.appendChild(phOffShelf(round));
+  // Klassisch — and Die Brücke, which falls through to this branch until its own
+  // Regal lands (#1239) — closed the grid with the dashed tile alone. On a big
+  // shelf that is a long scroll from the only add control, so it gets Der
+  // Tisch's pair (#1427): a header button at 860px and up, a sticky bar above
+  // the dock below. Their own `shelf-add` class, never `regal-add`: the three
+  // designs above style that name, and a bare rule on it in styles.css would
+  // reach theirs. An EMPTY shelf takes neither — its empty state carries the add.
+  if (!composed && activeGames.length > 0) {
+    gamesTools.appendChild(addBtn('btn--sm shelf-add shelf-add--bar'));
+    gamesSec.appendChild(addBtn('shelf-add shelf-add--dock'));
+  }
   if (oceanAdds) {
     const fab = h(`<button type="button" class="regal-fab" aria-label="${esc(t('round.addGame'))}"><i class="ti ti-plus" aria-hidden="true"></i></button>`);
     fab.addEventListener('click', () => showAddGame(round));

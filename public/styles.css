@@ -3281,6 +3281,35 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
 .add-tile .ti { font-size: var(--text-3xl); }
 .add-tile:hover { background: var(--brand-tint-soft); }
 
+/* „Spiel hinzufügen" as a button too (#1427): the dashed tile above is the last
+   thing in the grid, i.e. the end of a long scroll on a big shelf. TWO copies,
+   one per layout, because a sticky box only sticks inside its parent and DOM
+   order must equal visual order (WCAG 2.4.3): the header button at 860px and up,
+   and below it a bar UNDER the grid, sticky above the floating dock. CSS shows
+   exactly one, and `display: none` drops the other from the accessibility tree.
+   Their own class, never `.regal-add`: Der Tisch, Ocean and Das Programmheft
+   style that name, so a bare rule on it here would reach their buttons too.
+   Hidden while selecting, as the tile is (it is not selectable, and a control
+   among checkable covers reads as one that is simply unticked). */
+.shelf-add { white-space: nowrap; }
+.shelf-add--dock { display: none; }
+@media (max-width: 859px) {
+  .shelf-add--bar { display: none; }
+  .shelf-add--dock {
+    display: block;
+    position: sticky;
+    /* The dock floats at bottom: 18px and is 70px tall, so its top edge is at
+       88px; 100px leaves the bar 12px above it. `- 30px` (Ocean's bubble) left
+       2px and read as touching (measured at 390, #1427). */
+    bottom: calc(var(--dock-clearance) - 20px);
+    z-index: 5;
+    width: 100%;
+    min-height: 52px;
+    margin-top: 18px;
+  }
+}
+.is-selecting .shelf-add { display: none; }
+
 /* The shared empty state (#869). Its medallion, title and sub-line rules are
    grouped with `.lobby-cta`'s and declared up there; only the box differs,
    because that one is a clickable card and this is a notice. Built by
