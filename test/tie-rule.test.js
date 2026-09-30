@@ -119,3 +119,18 @@ test('2 — on the Pokale tab, a run through a tie shows its one holder, linked'
   assert.equal(value.tagName, 'A', 'a single holder still links to their page');
   assert.match(card.textContent, /2 Siege in Folge/);
 });
+
+test('2 — a win shared with a GUEST continues the member’s Serie; a guest-only win is skipped', () => {
+  const deps = { sessionEnding, sessionPartyCount };
+  const round = roundWith([]);
+  const withGuest = (winnerIds) => night(winnerIds, { guests: [{ id: 'g1', name: 'Gast' }] });
+  const mixed = winStreak(round, [night(['aylin']), withGuest(['aylin', 'g1']), night(['aylin'])], deps);
+  assert.deepEqual([...mixed.memberIds], ['aylin'], 'the guest has no member row, so only Aylin can hold it');
+  assert.equal(mixed.n, 3, 'the shared night is a win in her run, as a tie with a member is');
+  const endsOnMixed = winStreak(round, [night(['nils']), night(['aylin']), withGuest(['aylin', 'g1'])], deps);
+  assert.deepEqual([...endsOnMixed.memberIds], ['aylin']);
+  assert.equal(endsOnMixed.n, 2);
+  // A guest winning ALONE stays skipped (#458): neither a break nor an extension.
+  const guestOnly = winStreak(round, [night(['aylin']), withGuest(['g1']), night(['aylin'])], deps);
+  assert.equal(guestOnly.n, 2);
+});

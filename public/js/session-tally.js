@@ -33,9 +33,11 @@
    (.claude/rules/server-computed-calendar-periods.md §7).
 
    Three kinds of night neither break nor extend a streak, and are skipped:
-   - one any GUEST won (#458): a session-only visitor has no member row, and
+   - one only GUESTS won (#458): a session-only visitor has no member row, and
      treating their win as an ordinary win would silently blank the card —
-     which is breaking it by another name;
+     which is breaking it by another name. A night a guest won TOGETHER with
+     members is not skipped: the guest is dropped and it is a shared win for
+     the members (#1421), exactly as a tie between members is;
    - a SOLO one (#895): one party wins by definition, so twenty logged solo
      plays would read as a twenty-night streak;
    - one recorded as „Kein Sieger" or „Fortsetzung folgt" (#1038): not a
@@ -49,22 +51,24 @@
    so a caller asking "is the streak THIS session's" can tell a skipped session
    from the one that counted. */
 function winStreak(round, sessions, deps) {
-  const wonByGuest = (s) => {
-    const gids = new Set((s.guests || []).map((g) => g.id));
-    return gids.size > 0 && (s.winnerIds || []).some((wid) => gids.has(wid));
+  const guestIds = (s) => new Set((s.guests || []).map((g) => g.id));
+  const memberWinners = (s) => {
+    const gids = guestIds(s);
+    return (s.winnerIds || []).filter((wid) => !gids.has(wid));
   };
+  const wonOnlyByGuests = (s) => (s.winnerIds || []).length > 0 && memberWinners(s).length === 0;
   const isSolo = (s) => deps.sessionPartyCount(round, s) === 1;
   const notAContest = (s) => {
     const e = deps.sessionEnding(s);
     return e === 'noWinner' || e === 'ongoing';
   };
   const chrono = [...sessions]
-    .filter((s) => !wonByGuest(s) && !isSolo(s) && !notAContest(s))
+    .filter((s) => !wonOnlyByGuests(s) && !isSolo(s) && !notAContest(s))
     .sort((a, b) => String(a.createdAt).localeCompare(String(b.createdAt)));
   let holders = null;
   let n = 0;
   for (let i = chrono.length - 1; i >= 0; i--) {
-    const ws = chrono[i].winnerIds || [];
+    const ws = memberWinners(chrono[i]);
     const next = holders === null ? [...new Set(ws)] : holders.filter((id) => ws.includes(id));
     if (!next.length) break;
     holders = next;
