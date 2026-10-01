@@ -569,14 +569,17 @@ const frontendGlobals = {
   oceanDive: 'readonly', // #1221, O10.1
   // views-session-bruecke.js (issue #1240): Die Brücke's setup, vote sides and result panels
   composeBrueckeSetup: 'readonly', brueckeVoteSides: 'readonly', brueckeVoteWord: 'readonly', brueckeScoreReason: 'readonly',
-  brueckeTitleSplit: 'readonly', composeBrueckeResult: 'readonly',
+  composeBrueckeResult: 'readonly',
   brueckeBlind: 'readonly', composeBrueckeLobby: 'readonly', // #1241
+  // views-session-programmheft.js (issue #1374): Das Programmheft's setup, vote card and report kicker
+  composeProgrammheftSetup: 'readonly', composeProgrammheftVoteCard: 'readonly', programmheftReportKicker: 'readonly',
+  programmheftTablesKicker: 'readonly',
   // views-session-tables.js (issue #796)
   showTableBuilder: 'readonly', tableStateFrom: 'readonly', tablePeopleIds: 'readonly',
   tableCoverBg: 'readonly',
   renderTischSplit: 'readonly', renderTischTable: 'readonly', renderTischTableTafel: 'readonly', // #1270
   // result-tafel-composed.js (issue #1275): Der Tisch's result Tafel and foot
-  composedTafelCols: 'readonly', composedTrow: 'readonly', composedPersonCrown: 'readonly',
+  composedTafelCols: 'readonly', composedTrow: 'readonly', composedPersonCrown: 'readonly', splitResultTitle: 'readonly',
   paintComposedCrowns: 'readonly', fillComposedResultFoot: 'readonly',
   // views-session-live.js
   showSessionLobby: 'readonly', stopLobbyPoll: 'readonly', mySeatIn: 'readonly',

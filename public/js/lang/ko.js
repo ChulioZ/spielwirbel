@@ -922,6 +922,8 @@ I18N.ko = {
   'sessions.split': '나눔',
   'detail.sessionSplit': '세션이 나뉘었어요',
   'result.titleSplit': '세션이 여러 테이블로 나뉘었어요.',
+  // Das Programmheft's report kicker over the result headline (#1374).
+  'result.reportKicker': '세션 기록',
   'log.split': '{actor}이(가) 인원을 {n}개 테이블로 나눴어요',
   'startSession.crumb': '세션',
   'startSession.title': '새 세션',

@@ -909,6 +909,9 @@ public/
                      the step rail, the Pool and the Sonden, the vote card's
                      side panels, the result in two panels, and (#1241) the
                      shared vote in three columns and the pass-device blind
+    views-session-programmheft.js Das Programmheft's session loop (#1374):
+                     the setup as a checklist, „Der Topf" and the black box,
+                     „Zurück" as a word on the vote card, the report's kicker
     views-vote-link.js the PUBLIC /vote/:token screen (#652): claim your name
                      from the participant list and rate the drawn games without
                      an account — the only view that runs logged out

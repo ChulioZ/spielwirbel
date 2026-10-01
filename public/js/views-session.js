@@ -79,6 +79,10 @@ function showStartSession(round, prefill) {
   // Die Brücke (#1240) re-composes it into seats, the Pool and the Sonden with
   // „Zündung" (views-session-bruecke.js).
   const bruecke = designIs('bruecke');
+  // Das Programmheft (#1374) re-composes it into the seats as a checklist, „Der
+  // Topf" with its numeral and the games by name, and the black box at the foot
+  // (views-session-programmheft.js).
+  const ph = designIs('programmheft');
   if (tisch) {
     // The rail's rename and „+" re-render through currentView(), and the
     // `round` this closure holds is a snapshot — so under the rail the screen
@@ -158,6 +162,7 @@ function showStartSession(round, prefill) {
   if (tisch) composeTischSetup(round, head, form);
   if (ocean) composeOceanSetup(form);
   if (bruecke) composeBrueckeSetup(head, form);
+  if (ph) composeProgrammheftSetup(round, head, form);
 
   // Custom-tag filter (#238, tri-state #241): all ignored by default = no tag
   // filter. Map<tagId, 'include'|'exclude'>; included tags combine per
@@ -324,6 +329,13 @@ function showStartSession(round, prefill) {
   // a pre-baked `style="…"` cannot be merged with a second one; it carried the
   // whirl's per-cover delay alongside the cover until #1122.
   const coverDecl = (g, w) => (g.image ? `background-image:url('${coverUrl(g.image, w)}')` : '');
+  // Das Programmheft lists the pot by name and playtime (P4.1, P2.2), so its
+  // tile carries the playtime as a line of its own; a game without one prints
+  // none rather than an empty cell.
+  const phPlaytime = (g) => {
+    const time = playtimeText(g);
+    return time ? `<span class="pool-tile__meta">${esc(time)}</span>` : '';
+  };
   const styleAttr = (...decls) => {
     const css = decls.filter(Boolean).join(';');
     return css ? ` style="${css}"` : '';
@@ -379,7 +391,7 @@ function showStartSession(round, prefill) {
     // Deliberately not a live region: the ring centre and the panel title already
     // state these two numbers, and a third announcement on every seat tap would
     // talk over the ownersNote below, which IS one.
-    barSummary.textContent = tisch || ocean || bruecke
+    barSummary.textContent = tisch || ocean || bruecke || ph
       ? tischDrawSummary(joining.size + guests.length, games.length, parseInt(form.querySelector('#count').value, 10))
       : tn(joining.size + guests.length, 'startSession.tableCountOne', 'startSession.tableCount') + ' · ' + headline;
 
@@ -391,7 +403,7 @@ function showStartSession(round, prefill) {
           .map(
             (g) => `<span class="pool-tile${throwClass(marks, g)}"${throwAttr(marks, g)}${styleAttr(throwDecl(marks, g))} title="${esc(g.title)}">
                  <span class="pool-tile__img"${styleAttr(coverDecl(g, COVER_CARD))}>${coverPlaceholder(g)}</span>
-                 <span class="pool-tile__name">${esc(g.title)}</span>
+                 <span class="pool-tile__name">${esc(g.title)}</span>${ph ? phPlaytime(g) : ''}
                </span>`
           )
           .join('')
@@ -451,7 +463,7 @@ function showStartSession(round, prefill) {
     // two of the three chips can change from a click on the ring.
     addons.relabelAddons();
     updateHint();
-  }, guestList, { stateLines: tisch || ocean || bruecke });
+  }, guestList, { stateLines: tisch || ocean || bruecke || ph });
   seatTable.setAttribute('role', 'group');
   seatTable.setAttribute('aria-labelledby', 'seatsLabel');
   const multiTableNote = form.querySelector('#multiTableNote');
@@ -1145,6 +1157,8 @@ function startVoting(round, session, games, people, opts = {}) {
       card.querySelector('.vote__card').after(sides.raters);
       if (sides.sealed) sides.raters.after(sides.sealed);
     }
+    // Das Programmheft (#1374, P2.3/P4.2): „Zurück" as a word, the scale ends.
+    if (designIs('programmheft')) composeProgrammheftVoteCard(card);
     return card;
   }
 
@@ -1186,6 +1200,8 @@ function startVoting(round, session, games, people, opts = {}) {
       },
     });
     if (!composed) card.querySelector('.vote__who').before(h(progressBar()));
+    // The same header as the cards it reviews (#1374): „Zurück" as a word.
+    if (designIs('programmheft')) composeProgrammheftVoteCard(card);
     app.appendChild(card);
     // Arriving by the beat or a re-rate puts focus on the heading; a Back or a
     // language switch leaves it where it was, as on the cards.
@@ -1482,7 +1498,11 @@ async function showResults(round, session, gamesHint, reveal, plain) {
   // Die Brücke (#1240, B2.5/B4.3) takes the same composition and arranges it in
   // two panels at the end (composeBrueckeResult, views-session-bruecke.js).
   const brueckeLook = designIs('bruecke');
-  const tischLook = designIs('tisch') || oceanLook || brueckeLook;
+  // Das Programmheft (#1374, P2.4/P4.3) takes it too, as Der Tisch lays it out
+  // — the band and its foot in the column beside the Tafel — and prints the
+  // report's kicker over the headline and every step's count in the Tafel.
+  const phLook = designIs('programmheft');
+  const tischLook = designIs('tisch') || oceanLook || brueckeLook || phLook;
   // „1× kein Schub" under Die Brücke — the scale's end word, never „kein Veto".
   const whyOf = (r) => (brueckeLook ? brueckeScoreReason(r) : scoreReason(r));
 
@@ -1591,6 +1611,12 @@ async function showResults(round, session, gamesHint, reveal, plain) {
        </div></div>`);
   screen.appendChild(head);
   const titleEl = head.querySelector('.result-title');
+  // The programme's kicker states the date and the counts, so it replaces the
+  // subtitle rather than repeating it — over the headline, where P4.3 prints it.
+  if (phLook) {
+    head.querySelector('.muted').remove();
+    head.firstElementChild.prepend(programmheftReportKicker(round, session, games, people));
+  }
 
   // „Teilen": hand the group chat what this screen says, as plain text (#526).
   // Hidden outright where neither API exists — which is a real case, not a
@@ -1711,7 +1737,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
           names: joinNames(names),
         });
         // Who won, in the accent (B2.5, B4.3; a tie names both, B16.3).
-        if (brueckeLook) brueckeTitleSplit(titleEl, gname);
+        if (brueckeLook || phLook) splitResultTitle(titleEl, gname);
       }
     } else {
       titleEl.textContent = t('result.title');
@@ -1891,8 +1917,13 @@ async function showResults(round, session, gamesHint, reveal, plain) {
            able to repaint the fill and the glyph, and an inline `background`
            would beat every rule it could write. The continuous colour stays the
            default, so Klassisch is unchanged. */
-        return `<div class="bar-col" title="${esc(title)}" style="--sc:${avgColor(n)}" data-stop="${rampStop(n)}">
-             <div class="bar-track"><div class="bar" style="height:${Math.round((c / maxBar) * 100)}%"></div></div>
+        /* Das Programmheft prints the COUNT in each step's square (#1374, P4.3:
+           „· · · 1 3"), so a reader gets the same fact in words; the glyph-and-
+           digit axis the other designs label the columns with is hidden there. */
+        const phCount = phLook
+          ? `<span class="bar-col__n" aria-hidden="true">${c || '·'}</span><span class="sr-only">${esc(title)}</span>` : '';
+        return `<div class="bar-col" title="${esc(title)}" style="--sc:${avgColor(n)}" data-stop="${rampStop(n)}"${phLook ? ` data-count="${c}"` : ''}>
+             <div class="bar-track"><div class="bar" style="height:${Math.round((c / maxBar) * 100)}%"></div>${phCount}</div>
              <div class="bar-axis"><i class="ti ${ratingFace(n)}" aria-hidden="true"></i><span class="bar-axis__n">${n}</span></div>
            </div>`;
       })

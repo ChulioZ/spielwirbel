@@ -76,7 +76,11 @@ async function showTableBuilder(round, session, gamesHint) {
   // same thing twice. Klassisch keeps its head byte-for-byte.
   // Ocean (#1213, O4.5/O6.6) takes the same one-screen composition and paints
   // each table as its own card in ocean.css.
-  const tischSplit = done && children.length > 0 && (designIs('tisch') || oceanWorn() || designIs('bruecke'));
+  // Das Programmheft (#1374, P4.4/P6.7) takes it as one report: the kicker
+  // with the date and the counts, and the app's own split sentence as the
+  // headline („Die Session wurde auf mehrere Tische aufgeteilt.").
+  const phSplit = done && children.length > 0 && designIs('programmheft');
+  const tischSplit = done && children.length > 0 && (designIs('tisch') || oceanWorn() || designIs('bruecke') || phSplit);
   const subline = tischSplit
     ? [
       tn(people.length, 'tables.peopleOne', 'tables.people'),
@@ -84,12 +88,17 @@ async function showTableBuilder(round, session, gamesHint) {
       t('tables.sameChronik'),
     ].join(' · ')
     : tn(games.length, 'result.subtitleOne', 'result.subtitle', { when });
-  app.appendChild(
-    h(`<div class="page-head${tischSplit ? ' page-head--tables' : ''}"><div>
-         <h1>${esc(tischSplit ? tn(children.length, 'tables.headDoneOne', 'tables.headDone') : heading)}</h1>
+  const tablesHead = h(`<div class="page-head${tischSplit ? ' page-head--tables' : ''}"><div>
+         <h1>${esc(phSplit ? t('result.titleSplit') : tischSplit ? tn(children.length, 'tables.headDoneOne', 'tables.headDone') : heading)}</h1>
          <div class="muted">${esc(subline)}</div>
-       </div></div>`)
-  );
+       </div></div>`);
+  if (phSplit) {
+    // The kicker carries the date and the people; the line under the headline
+    // keeps only where the results go (P4.4 prints it as the report's footnote).
+    tablesHead.querySelector('.muted').textContent = t('tables.sameChronik');
+    tablesHead.firstElementChild.prepend(programmheftTablesKicker(session, children.length, people.length));
+  }
+  app.appendChild(tablesHead);
 
   const body = h('<div></div>');
   app.appendChild(body);

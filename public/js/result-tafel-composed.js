@@ -34,7 +34,8 @@
 function composedTafelCols() {
   return h(`<div class="tafel__cols" aria-hidden="true">
        <span class="tafel__col tafel__col--place">${esc(t('result.colPlace'))}</span>
-       <span class="tafel__col tafel__col--game">${esc(t('result.colGame'))}</span>
+       <span class="tafel__col tafel__col--game">${esc(t('result.colGame'))}</span>${designIs('programmheft')
+         ? `<span class="tafel__col tafel__col--dist">${esc(t('card.programmheft.ratings'))}</span>` : ''}
        <span class="tafel__col tafel__col--score">${esc(t('result.colScore'))}</span>
      </div>`);
 }
@@ -76,6 +77,21 @@ function composedTrow(p) {
        ${p.hasVotes ? `<div class="trow__bars" role="group"
            aria-label="${esc(t('result.distLabel'))}">${p.bars}</div>` : ''}
      </div>`);
+}
+
+/* The result headline in two voices: „‚Nordlichter' wurde gespielt." in ink,
+   and who won in the accent — Die Brücke's B2.5/B4.3/B16.3 (#1240) and Das
+   Programmheft's P2.4/P4.3/P7.9 (#1374). The sentence is the app's
+   own; it is split only where it provably begins with the played-game part, so
+   a locale whose sentence runs the other way keeps one plain line. */
+function splitResultTitle(titleEl, game) {
+  const full = titleEl.textContent;
+  const lead = t('result.titlePlayed', { game });
+  if (!game || full === lead || !full.startsWith(lead)) return;
+  titleEl.replaceChildren(
+    document.createTextNode(lead + ' '),
+    h(`<span class="result-title__won">${esc(full.slice(lead.length).trim())}</span>`)
+  );
 }
 
 /* „Wer dabei war" on the felt head: the same people the Klassisch line lists,

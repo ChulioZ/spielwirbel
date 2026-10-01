@@ -969,6 +969,8 @@ I18N.fr = {
   'sessions.split': 'Répartie',
   'detail.sessionSplit': 'Session répartie',
   'result.titleSplit': 'La session a été répartie sur plusieurs tables.',
+  // Das Programmheft's report kicker over the result headline (#1374).
+  'result.reportKicker': 'Compte rendu',
   'log.split': '{actor} a réparti le groupe sur {n} tables',
   'startSession.crumb': 'Session',
   'startSession.title': 'Nouvelle session',

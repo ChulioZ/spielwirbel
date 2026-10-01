@@ -938,6 +938,8 @@ I18N.fi = {
   'sessions.split': 'Jaettu',
   'detail.sessionSplit': 'Sessio jaettiin',
   'result.titleSplit': 'Sessio jaettiin useaan pöytään.',
+  // Das Programmheft's report kicker over the result headline (#1374).
+  'result.reportKicker': 'Pelikertomus',
   'log.split': '{actor} jakoi porukan {n} pöytään',
   'startSession.crumb': 'Sessio',
   'startSession.title': 'Uusi sessio',

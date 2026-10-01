@@ -43,11 +43,11 @@ const voteWord = (n) => t(VOTE_WORD_KEYS[n - RATING_MIN]);
    the tile that means something. */
 /* Whether the worn design composes its vote card here rather than drawing
    Klassisch's. Ocean (#1213) and Die Brücke (#1240) take Der Tisch's
-   composition and add their own side columns; every other design — Das
-   Programmheft included, until its own session loop lands — draws Klassisch's.
-   One answer for the card, its faces and the review step (#1434), so the three
-   cannot disagree about which shape is on screen. */
-const voteCardComposed = () => designIs('tisch') || oceanWorn() || designIs('bruecke');
+   composition and add their own side columns; Das Programmheft (#1374) takes
+   it with „Zurück" as a word and the scale ends under the cells. Klassisch
+   draws its own. One answer for the card, its faces and the review step
+   (#1434), so the three cannot disagree about which shape is on screen. */
+const voteCardComposed = () => designIs('tisch') || oceanWorn() || designIs('bruecke') || designIs('programmheft');
 
 // The word a face carries under a composed card. Die Brücke names the two ends
 // in its own words („kein Schub" … „volle Kraft"); the middle three keep the app's.
