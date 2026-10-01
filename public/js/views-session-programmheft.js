@@ -3,7 +3,9 @@
    result (P2.4, P4.3, P7.9 the tie) and the several tables (P4.4, P6.7).
    Sheets: docs/design/programmheft/Programmheft-P2-Phone-Kern.dc.html,
    Programmheft-P4-Session-Desktop.dc.html, Programmheft-P6-Phone-Rest.dc.html
-   and Programmheft-P7-Leerzustaende.dc.html.
+   and Programmheft-P7-Leerzustaende.dc.html. #1375 added the pass-device
+   blind (P4.6, P6.6) and the shared vote (P4.5, P6.5) — programmheftBlind()
+   and composeProgrammheftLobby() at the end of the file.
 
    Like Die Brücke's (views-session-bruecke.js), everything here RE-COMPOSES
    markup the shared paths have already built: every control keeps its node, its
@@ -122,4 +124,109 @@ function programmheftTablesKicker(session, tableCount, peopleCount) {
     tn(tableCount, 'tables.countOne', 'tables.count'),
     tn(peopleCount, 'chronik.seatedOne', 'chronik.seated'),
   ].join(' · '))}</p>`);
+}
+
+/* The pass-device blind (#1375 — P4.6 at 1440, P6.6 at 390): the screen that
+   covers the device between two people in one-device mode. It replaces the
+   Klassisch handover card rather than repainting it, as Ocean's and Die
+   Brücke's do: that card is one full-bleed person colour, and the programme's
+   blind is paper between two vermilion bands.
+
+   It shows NOTHING of the person before — no rating, no score, no game — only
+   the name, the colour and the call to go (P4.6's own note). The kicker
+   „Person 3 von 4" is the app's `vote.personOf`, printed only when there IS a
+   sequence: a run started from the shared vote hands the device to one person,
+   and „Person 1 von 1" would be a count of nothing. `n` is the position in the
+   run's SHUFFLED order (startVoting's `order`), never in the list it was
+   handed — or the first blind could read „Person 2 von 2".
+
+   The person's colour is a plain square (P1 rule 1: colour never carries text),
+   so it is aria-hidden; the name says who. The ids stay Klassisch's (#goBtn,
+   #backBtn), so startVoting() wires this exactly as it wires the card. */
+function programmheftBlind(round, person, canBack, n, total) {
+  const kicker = total > 1
+    ? `<p class="ph-kicker ph-blind__kicker">${esc(t('vote.personOf', { n, total }))}</p>` : '';
+  return h(`<div class="handover handover--ph">
+      <span class="ph-blind__band" aria-hidden="true"></span>
+      <div class="ph-blind__body">
+        ${kicker}
+        <span class="ph-blind__swatch" style="--person:${personColor(round, person)}" aria-hidden="true"></span>
+        <h1 class="handover__name">${esc(t('vote.turn', { name: personLabel(person) }))}</h1>
+        <p class="handover__sub">${esc(t('vote.handoverSub'))}</p>
+      </div>
+      <div class="ph-blind__keys">
+        <button class="handover__go" id="goBtn">${esc(t('vote.go'))}</button>
+        ${canBack ? `<button class="handover__back" id="backBtn"><i class="ti ti-chevron-left" aria-hidden="true"></i> ${esc(t('vote.back'))}</button>` : ''}
+      </div>
+      <span class="ph-blind__band" aria-hidden="true"></span>
+    </div>`);
+}
+
+/* The shared vote (#1375 — P4.5 at 1440, P6.5 at 390), re-composed from the
+   lobby showSessionLobby() has just built. Every control keeps its node and its
+   listener; this only moves them and adds the programme's print.
+
+   - The head opens like every programme page: the round's marker as a rule,
+     the kicker „Extrablatt" (the hub's own word for a running vote, P9), the
+     title, and the count as the big numeral „2 / 4" with the same count in
+     words under it — the numeral is aria-hidden, the words are what is read.
+   - WHO: „Deine Stimme ist da" first (P4.5's banner), the people as rows, and
+     each person who can still rate on this device gets their „Für {name}" key
+     IN their row, as both sheets draw it — `hereBtns` maps person id → the
+     hot-seat button showSessionLobby() built and wired. The rows are people[]
+     in order, so row i is person i. The waiting line and the guest note follow,
+     then the „An diesem Gerät abstimmen" label as a closing line (P4.5).
+   - SHARE: the panel — the link and the code. The code stays a control that
+     opens the server-drawn code rather than the inline code the sheets print:
+     the link is minted on demand, because a token that exists is a token that
+     can leak (#652), and an inline code would mint one for every lobby anyone
+     opens (the same call Die Brücke and Der Tisch made).
+   - THIS DEVICE: the leading button, then „Abstimmung beenden" last.
+
+   DOM order is who · share · this device at every width — the order P6.5 draws
+   on the phone. From 1100px the share panel takes the right column beside both
+   other blocks (P4.5), so it reads after the people, as it is placed. */
+function composeProgrammheftLobby(round, root, people, voted, hereBtns) {
+  root.classList.add('live-vote--ph');
+  const head = root.querySelector('.page-head');
+  const peopleEl = root.querySelector('.live-vote__people');
+  const actions = root.querySelector('.live-vote__actions');
+  const panel = root.querySelector('.live-vote__panel');
+
+  const n = people.filter((p) => voted.has(p.id)).length;
+  head.classList.add('page-head--ph-lobby');
+  const title = head.querySelector('h1');
+  const text = h('<div class="ph-lobby__title"></div>');
+  text.append(h(`<p class="ph-kicker ph-lobby__kicker">${esc(t('home.phExtra'))}</p>`), title, head.querySelector('p'));
+  head.append(text, h(`<p class="ph-lobby__count">
+      <span class="ph-lobby__numeral" aria-hidden="true">${n} / ${people.length}</span>
+      <span class="ph-lobby__words">${esc(t('lobby.progress', { n, total: people.length }))}</span>
+    </p>`));
+  head.prepend(h('<span class="ph-rule" aria-hidden="true"></span>'));
+
+  const rows = [...peopleEl.querySelectorAll('.live-person')];
+  rows.forEach((row, i) => {
+    const btn = hereBtns.get(people[i] && people[i].id);
+    if (btn) row.appendChild(btn);
+  });
+  const done = actions.querySelector('.live-vote__done');
+  if (done) peopleEl.prepend(done);
+  const waiting = panel.querySelector('.live-vote__waiting');
+  if (waiting) peopleEl.insertBefore(waiting, peopleEl.querySelector('.live-vote__guests'));
+  const hotseat = actions.querySelector('.live-vote__hotseat');
+  if (hotseat) {
+    hotseat.querySelector('.field__label').className = 'ph-kicker ph-lobby__here';
+    peopleEl.appendChild(hotseat.firstElementChild);
+    hotseat.remove();
+  }
+
+  const qr = panel.querySelector('.live-vote__qr');
+  if (qr) {
+    qr.innerHTML = `<i class="ti ti-qrcode" aria-hidden="true"></i>
+      <span class="ph-qr__text"><span class="ph-qr__title">${esc(t('lobby.qr'))}</span>
+      <span class="ph-qr__hint">${esc(t('lobby.qrHint'))}</span></span>`;
+  }
+  actions.appendChild(panel.querySelector('.live-vote__close'));
+  if (panel.children.length) root.insertBefore(panel, actions);
+  else panel.remove();
 }
