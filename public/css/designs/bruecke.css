@@ -3359,3 +3359,92 @@
     box-shadow: 0 0 40px var(--glow-action);
   }
 }
+
+/* ===== #1243 — Leere und junge Zustände (B7) ===== */
+/* B7.1 (the freshly founded round, desktop), B7.2 (the single states and their
+   wording), B7.3 (the young round, the empty shelf and the empty lobby on a
+   phone). The markup is the app's own empty state (`emptyState` +
+   `emptyStateAction`, js/empty-state.js) and two Brücke pieces
+   (brueckeMissionEmpty, brueckeYoungLine in bruecke-hub.js); everything below
+   lays them out.
+
+   „ink-dim ist keine Textfarbe": the locked „Mission starten" is the ONE text
+   that may wear it (a disabled control, WCAG-exempt — the component layer's
+   `.btn:disabled`), and its reason therefore stands OUTSIDE the button, as
+   real text. Nothing in this section paints text in --ink-dim
+   (test/bruecke-states.test.js). Geometry sits on the bare hook, every colour
+   behind the gate (.claude/rules/design-colour-blocks-are-scheme-gated.md). */
+
+/* ---- The Missionskontrolle over an empty shelf (B7.1): the state beside the
+   inscription says what is missing, the reason stands under the locked
+   ignition, and the one way in follows — the primary, then the BGG import as
+   a text link under it at every width („nie als zweiter Knopf"). */
+:root[data-design="bruecke"] .bruecke-mission > .hub-cta__reason {
+  flex-basis: auto;
+  margin: -6px 0 0;
+  max-width: 36ch;
+  font-size: var(--text-md);
+  font-weight: 400;
+  text-align: center;
+}
+:root[data-design="bruecke"] .bruecke-mission > .empty__actions {
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-mission__state--empty { color: var(--warn); }
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-mission > .hub-cta__reason { color: var(--ink-2); }
+
+/* ---- The side road on any empty state: notation, like every Brücke link
+   line („Oder von BGG übernehmen →"), at the target the token layer gives
+   .link-btn. */
+:root[data-design="bruecke"] .empty__actions .link-btn {
+  align-self: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: var(--track-notation);
+  text-transform: uppercase;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .empty__actions .link-btn { color: var(--brand); }
+:root[data-design="bruecke"][data-scheme="dark"] .empty__actions .link-btn:hover { color: var(--brand-strong); }
+
+/* ---- The young round (B7.3): one line under the ignition — what stands
+   ready, and that nothing has been played yet. Real text, so the reading
+   ramp; never the accent at this size (rule 1). */
+:root[data-design="bruecke"] .bruecke-young {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  margin: -6px 0 0;
+  text-align: center;
+  font-size: var(--text-md);
+}
+:root[data-design="bruecke"] .bruecke-young__ready { font-weight: 600; }
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-young__ready { color: var(--ink); }
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-young__none { color: var(--ink-2); }
+
+/* ---- The empty lobby (B7.3, „Flotte ohne Runde"): the create card is a
+   dashed cyan wire, not the accent-tinted frame — its medallion the square
+   outlined in cyan every Brücke empty state wears, and its action in the
+   display face. The card stays ONE link. */
+:root[data-design="bruecke"] .lobby-cta { border-width: 1px; border-radius: 0; }
+:root[data-design="bruecke"] .lobby-cta__icon { border-radius: 0; }
+:root[data-design="bruecke"] .lobby-cta__action {
+  letter-spacing: var(--track-display);
+  text-transform: uppercase;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .lobby-cta {
+  background: var(--surface);
+  border-color: var(--brand);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .lobby-cta:hover { background: var(--surface-raised); }
+:root[data-design="bruecke"][data-scheme="dark"] .lobby-cta__icon {
+  background: transparent;
+  border: 1px solid var(--brand);
+  color: var(--brand);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .lobby-cta__sub { color: var(--ink-2); }
