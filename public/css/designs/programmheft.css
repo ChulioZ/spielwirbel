@@ -2818,6 +2818,844 @@
 }
 :root[data-design="programmheft"]:not([data-scheme="dark"]) .stats-block .stats-card__value { color: var(--ink-2); }
 
+/* ===== #1376 — Anmelden, Konto erstellen, Passkey, Konto, Designwahl ===== */
+/* P5 (docs/design/programmheft/Programmheft-P5-Konto.dc.html): P5.1/P5.2 the
+   sign-in pages, P5.3 the Konto with the design posters, P5.4/P5.5 the one-time
+   chooser. Every rule is gated on the light scheme and reads tokens only —
+   test/programmheft-konto.test.js sweeps the section for both.
+
+   Markup: the auth screens are the app's own, restyled — nothing moves, so the
+   passkey stays under the submit (the #1193 ruling) and the register fields
+   keep their order. The posters are design-picker.js's print branch
+   (designPrintArt + programmeCardBody), the chooser its designPrintSheet, the
+   Konto's index and sections views-account.js's composeKontoProgramme.
+
+   THE OTHER DESIGNS' POSTER COLOURS ARE NOT HERE (P5's „Nicht-Token"): a
+   poster paints from --poster-*, which design-picker.js writes INLINE from
+   each design's registry row. The wordmark's FIT (review R2-1) is the two
+   poster floors below: each is the longest name word any locale prints —
+   „PROGRAMMABOEKJE", 182px of Anton at 24px, 197px at 26px — plus the band's
+   padding, measured in Chromium; overflow-wrap is the guard under it. */
+
+/* ---- P5.1 / P5.2: the sign-in pages. ---------------------------------------
+   A printed page, not a card: the masthead carries the brand (so the card's
+   glyph goes), the heading is Anton on a 4px rule, the form runs left-set in
+   one column. Logged out, so nothing here reads a round or a marker. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) body.auth-screen:has(> .app > .auth) .topbar__home {
+  display: inline-flex;
+  align-items: center;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .auth {
+  align-items: flex-start;
+  justify-content: flex-start;
+  min-height: 0;
+  padding: var(--space-7) 0 var(--space-8);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .auth__card {
+  max-width: 640px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .auth__logo { display: none; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .auth__title {
+  margin: 0 0 var(--space-4);
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: var(--display-2);
+  /* Looser than P1's 1.0 (which is a floor, „nie enger"): Anton's umlaut
+     dots rise past the cap height, and at 84px „ZURÜCK" under „WILLKOMMEN"
+     touched the L above at 1.0 and at the quote leading 1.05 alike. */
+  line-height: 1.12;
+  text-transform: uppercase;
+  text-align: start;
+  color: var(--ink);
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .auth__sub {
+  margin: 0 0 var(--space-5);
+  padding-bottom: 14px;
+  border-bottom: var(--rule-page) solid var(--ink);
+  font-size: 18px;
+  text-align: start;
+  color: var(--ink-2);
+}
+/* The labels are P1.4's field labels: Archivo 700, 13px, tracked, versal. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .auth .field label {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .auth .input {
+  min-height: var(--target-field);
+  border: 1.5px solid var(--control-edge);
+  border-radius: 0;
+  background: var(--control-fill);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .auth .field__hint {
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+/* The submit is the box in Anton — 28px, over P1's 24px floor. Signing in is
+   the black box; creating an account is P5.1's vermilion with ink on it
+   (4.65:1). */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .auth .btn--primary {
+  min-height: 56px;
+  border: 0;
+  border-radius: 0;
+  background: var(--box);
+  color: var(--box-ink);
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 28px;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .auth__card:has(#regEmail) .btn--primary {
+  background: var(--vermilion);
+  color: var(--on-vermilion);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .auth__or {
+  margin-bottom: var(--space-4);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .auth__or::before,
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .auth__or::after { background: var(--ink); }
+/* The passkey keeps its place and its secondary weight: a 2px ink frame. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) #passkeyLogin {
+  min-height: 52px;
+  border: var(--rule-strong) solid var(--ink);
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) #passkeyLogin .ti { font-size: 22px; }
+/* Every text link at target-min (P5.1: „min-height: 24px", underlined). */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .auth__links {
+  justify-content: flex-start;
+  gap: var(--space-2) var(--space-5);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .auth .link-btn {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target-min);
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: underline;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .auth__terms {
+  font-size: 14px;
+  line-height: 1.7;
+  text-align: start;
+  color: var(--ink-2);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .auth__terms a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target-min);
+  font-weight: 700;
+  text-decoration: underline;
+}
+@media (max-width: 639px) {
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .auth { padding-top: var(--space-6); }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .auth__title { font-size: var(--display-3); }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .auth__sub { font-size: 16px; padding-bottom: var(--space-3); }
+  /* P5.2 gives the phone's links a whole key's height. */
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .auth .link-btn { min-height: var(--target-key); font-size: 15px; }
+}
+
+/* ---- P5.3: the Konto — an index beside the sections. ----------------------- */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .app:has(> .konto-ph) > .lobby-head {
+  max-width: none;
+  margin-bottom: var(--space-5);
+  padding-bottom: var(--space-2);
+  border-bottom: var(--rule-page) solid var(--ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .app:has(> .konto-ph) > .lobby-head h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: var(--display-3);
+  line-height: var(--leading-display);
+  text-transform: uppercase;
+  color: var(--ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .app > .konto-ph {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0 48px;
+  max-width: none;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .konto-index { display: none; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .konto-index__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .konto-index__link {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 48px;
+  padding: 0 10px;
+  border: 0;
+  border-bottom: 1px dotted var(--hair);
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 15px;
+  font-weight: 700;
+  text-align: start;
+  cursor: pointer;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .konto-index__link:hover {
+  background: var(--box);
+  color: var(--box-ink);
+}
+@media (min-width: 1024px) {
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .app:has(> .konto-ph) > .lobby-head h1 { font-size: var(--display-2); }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .app > .konto-ph { grid-template-columns: 300px minmax(0, 1fr); }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .konto-index {
+    display: block;
+    position: sticky;
+    top: var(--space-5);
+    align-self: start;
+    padding-right: var(--space-6);
+    border-right: var(--rule-col) solid var(--ink);
+  }
+}
+/* Each section a printed page section: no card, an Anton title on a 2px rule.
+   scroll-margin keeps a jumped-to title clear of the page's top edge. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .konto-ph__body > :is(.konto-card, .konto-design) {
+  margin: 0 0 var(--space-7);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  scroll-margin-top: var(--space-5);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) :is(
+  .konto-ph__body > .konto-card > .konto-section__h,
+  .konto-ph__body > .install-section .konto-section__h,
+  .konto-ph__body > .konto-design .konto-design__head
+) {
+  margin: 0 0 var(--space-4);
+  padding-bottom: 6px;
+  border-bottom: var(--rule-strong) solid var(--ink);
+}
+/* Three whole selectors, not one :is() — each must outrank the Archivo
+   reset on its own (test/programmheft-hub-lobby.test.js reads them so). */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .konto-ph__body > .konto-card > .konto-section__h,
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .konto-ph__body > .install-section .konto-section__h,
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .konto-ph__body .konto-design__head .konto-section__h {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: var(--display-4);
+  line-height: var(--leading-display);
+  text-transform: uppercase;
+  color: var(--ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .konto-ph__body > .konto-card--danger > .konto-section__h {
+  color: var(--danger);
+  border-bottom-color: var(--danger);
+}
+/* The design section's hint sits on the title's baseline (P5.3). */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .konto-design__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-4);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .konto-design__head > * { margin: 0; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .konto-design__head .muted {
+  font-size: 14px;
+  color: var(--ink-2);
+}
+
+/* ---- The posters (P5.3 in the Konto, P5.4/P5.5 in the chooser). ------------
+   A poster over a paper band in a 1px ink frame; the worn / picked one takes
+   P5's 4px frame — 3px of it drawn OUTSIDE, so a pick moves nothing, with the
+   focus ring pushed out past it. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .design-card--print {
+  position: relative;
+  gap: 0;
+  padding: 0;
+  border: 1px solid var(--ink);
+  border-radius: 0;
+  background: var(--surface);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .design-card--print.is-on { box-shadow: 0 0 0 3px var(--ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .design-card--print:has(input:focus-visible) {
+  outline: var(--ring-width) solid var(--brand-ring);
+  outline-offset: 6px;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .design-tile--print {
+  position: relative;
+  height: 170px;
+  border: 0;
+  border-radius: 0;
+  overflow: hidden;
+  background: linear-gradient(180deg,
+    var(--poster-top, var(--tile-page)),
+    var(--poster-foot, var(--poster-top, var(--tile-page))));
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .design-tile--print > * { position: absolute; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .design-tile__bar {
+  top: 18px;
+  left: 16px;
+  right: 16px;
+  height: 14px;
+  background: var(--poster-ink, var(--tile-accent));
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .design-tile__block {
+  top: 44px;
+  left: 16px;
+  width: 60%;
+  height: 60px;
+  background: var(--poster-sub, var(--tile-accent));
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .design-tile__square {
+  right: 16px;
+  bottom: 16px;
+  width: 44px;
+  height: 44px;
+  background: var(--poster-ink, var(--tile-accent));
+}
+/* The paper band: the name in Anton, never on the colour field. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .design-card--print .design-card__body {
+  gap: 2px;
+  padding: 10px 12px 12px;
+  border-top: 1px solid var(--ink);
+  background: var(--surface);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .design-card__head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-2);
+  min-width: 0;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .design-card--print .design-card__name {
+  /* Never narrower than its longest word: „Aktiv" wraps under the name
+     instead of squeezing it (R2-1). break-word, not anywhere — `anywhere`
+     lowers the min-content width and lets a flex row split „PROGRAMMHEF-T". */
+  flex: 1 1 auto;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 26px;
+  line-height: 1.05;
+  text-transform: uppercase;
+  color: var(--ink);
+  overflow-wrap: break-word;
+}
+/* „Wie bisher": small print in an ink frame, never Anton. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .design-card--print .design-card__badge {
+  padding: 2px 6px;
+  border: 1px solid var(--ink);
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  line-height: 1.2;
+}
+/* „Aktiv" is the Konto's: the worn design, in the box. The chooser marks its
+   pick by the frame alone (P5.4). */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .design-card__active {
+  display: none;
+  flex: none;
+  padding: 3px 8px;
+  background: var(--box);
+  color: var(--box-ink);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .konto-design .design-card--print.is-on .design-card__active { display: inline-block; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .design-card__line {
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--ink-2);
+}
+/* The Konto's floor: 197px of name at 26px + the band's 24px. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .konto-design .design-picker {
+  grid-template-columns: repeat(auto-fill, minmax(224px, 1fr));
+  gap: 20px;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .konto-design__foot {
+  margin-top: var(--space-4);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+
+/* ---- P5.4: the chooser — a wide page over the start screen. --------------- */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .sheet.design-chooser--print {
+  max-width: 1200px;
+  padding: 0 32px 20px;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .design-chooser--print .design-chooser__head {
+  padding-top: 28px;
+  border-bottom: 0;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .design-chooser--print .design-chooser__kicker {
+  margin: 0 0 var(--kicker-gap);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--brand);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .design-chooser--print .design-chooser__head h2 { font-size: var(--display-3); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .design-chooser--print .design-chooser__body {
+  margin: var(--space-3) 0 0;
+  padding-bottom: 14px;
+  max-width: none;
+  border-bottom: var(--rule-strong) solid var(--ink);
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .design-chooser--print .design-chooser__list { margin: var(--space-4) 0; }
+/* The chooser's floor: 182px of name at 24px + the band's 24px. auto-fit, so
+   five designs share the row and a sixth wraps rather than squeezing. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .design-chooser--print .design-picker {
+  grid-template-columns: repeat(auto-fit, minmax(208px, 1fr));
+  gap: 12px;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .design-chooser--print .design-tile--print { height: 220px; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .design-chooser--print .design-tile__block { height: 80px; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .design-chooser--print .design-card--print .design-card__name { font-size: var(--display-6); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .design-chooser--print .design-chooser__commit {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3) var(--space-4);
+  padding-top: 14px;
+  border-top: var(--rule-col) solid var(--ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .design-chooser--print .design-chooser__foot {
+  flex: 1 1 18rem;
+  margin: 0;
+  font-size: 14px;
+  color: var(--ink-2);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .design-chooser--print .design-chooser__skip {
+  min-height: 48px;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: underline;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .design-chooser--print .design-chooser__skip--row { display: none; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .design-chooser--print #designChooserGo {
+  min-height: 56px;
+  padding: 0 24px;
+  border-radius: 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 26px;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+/* ---- P5.5 (and the Konto on a phone): one row per design — an 86px poster
+   beside the band — and the chooser's commit first, „Später" under it. */
+@media (max-width: 639px) {
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) :is(.konto-design, .design-chooser--print) .design-picker {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .design-card--print {
+    display: grid;
+    grid-template-columns: 86px minmax(0, 1fr);
+    min-height: 64px;
+  }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) :is(.konto-design, .design-chooser--print) .design-tile--print { height: auto; }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .design-tile__bar { top: 8px; left: 8px; right: 8px; height: 8px; }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) :is(.konto-design, .design-chooser--print) .design-tile__block { display: none; }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .design-tile__square { right: 8px; bottom: 8px; width: 22px; height: 22px; }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .design-card--print .design-card__body {
+    justify-content: center;
+    padding: 6px 12px;
+    border-top: 0;
+    border-left: 1px solid var(--ink);
+  }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) :is(.konto-design, .design-chooser--print) .design-card--print .design-card__name {
+    font-size: var(--display-6);
+    line-height: 1;
+  }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .sheet.design-chooser--print { padding: 0 18px 20px; }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .design-chooser--print .design-chooser__head { padding-top: 22px; }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .design-chooser--print .design-chooser__kicker { font-size: 12px; }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .design-chooser--print .design-chooser__head h2 { font-size: var(--display-4); }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .design-chooser--print .design-chooser__body {
+    font-size: 14px;
+    padding-bottom: 0;
+    border-bottom: 0;
+  }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .design-chooser--print .design-chooser__commit {
+    flex-direction: column;
+    align-items: stretch;
+    padding-top: 0;
+    border-top: 0;
+  }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .design-chooser--print .design-chooser__skip { display: none; }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .design-chooser--print .design-chooser__skip--row {
+    display: inline-flex;
+    align-self: center;
+    min-height: var(--target-key);
+  }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .design-chooser--print #designChooserGo { font-size: var(--display-6); }
+}
+
+/* ===== #1377 — the empty, young and long-language states (P7.1–P7.6, P7.10) =====
+   P7's rule: an empty column stays standing where its content will go — its
+   title, one line in soft ink, and at most one action. `--hair` and `--hatch`
+   are rules and fills here, never text, and nothing in soft ink sits on the
+   gold tint. Every colour is gated on the light scheme, like the sections
+   above. */
+
+/* ---- The locked block (P7.3, P7.4): a column's title over the sentence that
+   says when it fills, behind a lock. In the side column and the strip it wears
+   the same printed rule as the cards it stands in for. */
+:root[data-design="programmheft"] .ph-locked { display: flex; flex-direction: column; gap: var(--space-2); }
+:root[data-design="programmheft"] .ph-locked .ph-locked__title {
+  margin: 0;
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+:root[data-design="programmheft"] .ph-locked__title a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target-min);
+  text-decoration: none;
+}
+:root[data-design="programmheft"] .ph-locked__title a:hover { text-decoration: underline; }
+:root[data-design="programmheft"] .ph-locked__state { margin: 0; font-size: 16px; font-weight: 700; overflow-wrap: anywhere; }
+:root[data-design="programmheft"] .ph-locked__text {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.45;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-locked :is(.ph-locked__title, .ph-locked__title a, .ph-locked__state) { color: var(--ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-locked__text { color: var(--ink-soft); }
+
+/* ---- The locked box (P7.3): no shelf, no draw — the black box gives way to a
+   dashed frame, the action prints in soft ink, the reason in ink. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-hub__box:has(.hub-cta:disabled) {
+  background: transparent;
+  color: var(--ink);
+  border: var(--rule-strong) dashed var(--ink-soft);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-hub__box .btn.hub-cta:disabled {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  color: var(--ink-soft);
+  opacity: 1;
+}
+:root[data-design="programmheft"] .ph-hub__box .btn.hub-cta:disabled {
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  padding-inline: 0;
+  font-family: var(--font-display);
+  font-size: var(--display-5);
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  white-space: normal;
+  text-align: left;
+}
+:root[data-design="programmheft"] .ph-hub__box .btn.hub-cta:disabled .hub-cta__reason {
+  flex-basis: 100%;
+  text-align: left;
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-hub__box .btn.hub-cta:disabled .hub-cta__reason { color: var(--ink); }
+
+/* ---- The empty table as the lead story (P7.3): the no-cover frame where the
+   cover goes, the headline in Anton, the sentence, the two ways in — printed on
+   the page, not boxed. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-hub__lead .empty--table {
+  background: transparent;
+  border: 0;
+  color: var(--ink-2);
+}
+:root[data-design="programmheft"] .ph-hub__lead .empty--table {
+  display: grid;
+  grid-template-columns: minmax(88px, 30%) minmax(0, 1fr);
+  column-gap: var(--space-5);
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  text-align: left;
+}
+:root[data-design="programmheft"] .ph-hub__lead .empty--table > * { grid-column: 2; }
+/* The medallion becomes the 4:5 no-cover frame (P1.9): its glyph is decoration
+   (aria-hidden), and the diagonals say „no cover yet" on their own. */
+:root[data-design="programmheft"] .ph-hub__lead .empty--table > .empty__icon {
+  grid-column: 1;
+  grid-row: 1 / span 3;
+  width: auto;
+  height: auto;
+  aspect-ratio: 4 / 5;
+  margin: 0;
+  border-radius: 0;
+  font-size: 0;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-hub__lead .empty--table > .empty__icon {
+  background-color: var(--surface);
+  background-image:
+    linear-gradient(to top right, transparent calc(50% - 1px), var(--ink-soft) calc(50% - 1px), var(--ink-soft) calc(50% + 1px), transparent calc(50% + 1px)),
+    linear-gradient(to bottom right, transparent calc(50% - 1px), var(--ink-soft) calc(50% - 1px), var(--ink-soft) calc(50% + 1px), transparent calc(50% + 1px));
+  border: 1.5px solid var(--ink);
+}
+:root[data-design="programmheft"] .ph-hub__lead .empty--table .empty__title {
+  font-family: var(--font-display);
+  font-size: var(--display-4);
+  font-weight: 400;
+  line-height: var(--leading-display);
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+  hyphens: auto;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-hub__lead .empty--table .empty__title { color: var(--ink); }
+:root[data-design="programmheft"] .ph-hub__lead .empty--table .empty__text {
+  max-width: 46ch;
+  margin: var(--space-3) 0 0;
+  font-size: 17px;
+  line-height: 1.5;
+}
+:root[data-design="programmheft"] .ph-hub__lead .empty--table .empty__actions {
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  margin-top: var(--space-4);
+}
+@media (max-width: 559px) {
+  /* A phone: the frame shrinks to a thumbnail beside the headline, and the
+     sentence and the actions take the full width under both. */
+  :root[data-design="programmheft"] .ph-hub__lead .empty--table { grid-template-columns: 72px minmax(0, 1fr); row-gap: var(--space-3); }
+  :root[data-design="programmheft"] .ph-hub__lead .empty--table > .empty__icon { grid-row: 1; }
+  :root[data-design="programmheft"] .ph-hub__lead .empty--table > :is(.empty__text, .empty__actions) { grid-column: 1 / -1; margin-top: 0; }
+  :root[data-design="programmheft"] .ph-hub__lead .empty--table .empty__title { font-size: var(--display-6); }
+}
+@media (min-width: 1280px) {
+  :root[data-design="programmheft"] .ph-hub__lead .empty--table .empty__title { font-size: var(--display-3); }
+}
+
+/* ---- The lead of a round that has not played yet (P7.4): the kicker, „Noch
+   keine Session" in Anton, and what is waiting — the count large in the
+   vermilion (display type, where P1 allows it), the sentence beside it. */
+:root[data-design="programmheft"] .ph-young { display: flex; flex-direction: column; gap: var(--space-3); }
+:root[data-design="programmheft"] .ph-young__kicker { font-size: 12px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; }
+:root[data-design="programmheft"] .ph-young__title {
+  font-family: var(--font-display);
+  font-size: var(--display-4);
+  line-height: var(--leading-display);
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+  hyphens: auto;
+}
+:root[data-design="programmheft"] .ph-young__text { font-size: 16px; line-height: 1.5; max-width: 52ch; }
+:root[data-design="programmheft"] .ph-young__row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-4);
+  padding-top: var(--space-3);
+}
+:root[data-design="programmheft"] .ph-young__count {
+  flex: none;
+  font-family: var(--font-display);
+  font-size: var(--display-3);
+  line-height: var(--leading-display);
+  font-variant-numeric: tabular-nums;
+}
+:root[data-design="programmheft"] .ph-young__body { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+:root[data-design="programmheft"] .ph-young__ready { font-size: 19px; font-weight: 700; overflow-wrap: anywhere; }
+:root[data-design="programmheft"] .ph-young__body .ph-young__text { font-size: 15px; line-height: 1.45; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-young { color: var(--ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-young__text { color: var(--ink-2); }
+/* The size repeats beside the colour so the rule itself shows vermilion is
+   only ever display type (P1; test/design-tokens-programmheft.test.js). */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-young__count { color: var(--vermilion); font-size: var(--display-3); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-young__row { border-top: var(--rule-strong) solid var(--ink); }
+@media (min-width: 1280px) {
+  :root[data-design="programmheft"] .ph-young__title { font-size: var(--display-3); }
+  :root[data-design="programmheft"] .ph-young__text { font-size: 17px; }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-hub .ph-young__count { font-size: 96px; }
+}
+
+/* ---- The lead's young note (P7.5): when series come, in soft ink. */
+/* The lead's cover is the containing block of its no-cover placeholder: the
+   `.cover-ph` inside it is absolutely positioned, and without this a coverless
+   last game — the usual case in a young round — covered the whole viewport
+   (found on P7.5/P7.10, #1377). */
+:root[data-design="programmheft"] .ph-lead__cover { position: relative; }
+:root[data-design="programmheft"] .ph-lead__note { font-size: 13px; line-height: 1.4; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-lead__note { color: var(--ink-soft); }
+
+/* ---- The demo (P7.6): the condensed list as rows on dotted rules, and „Gefällt
+   dir das?" as a white notice with the vermilion action. */
+:root[data-design="programmheft"] .ph-hub__lead .hub-demo { display: flex; flex-direction: column; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-hub__lead .hub-demo { border-top: var(--rule-strong) solid var(--ink); }
+:root[data-design="programmheft"] .ph-hub__lead .hub-demo__row {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  gap: var(--space-3);
+  align-items: center;
+  min-height: 52px;
+  text-decoration: none;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-hub__lead .hub-demo__row {
+  color: var(--ink);
+  border-bottom: var(--rule-col) dotted var(--hair);
+}
+:root[data-design="programmheft"] .ph-hub__lead .hub-demo__row > .ti { font-size: 22px; /* glyph, not type */ }
+:root[data-design="programmheft"] .ph-hub__lead .hub-demo__main { display: flex; flex-direction: column; min-width: 0; }
+:root[data-design="programmheft"] .ph-hub__lead .hub-demo__label { font-size: 16px; font-weight: 700; }
+:root[data-design="programmheft"] .ph-hub__lead .hub-demo__hint { font-size: 13px; }
+:root[data-design="programmheft"] .ph-hub__lead .hub-demo__value { font-size: 13px; font-weight: 700; text-align: right; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-hub__lead .hub-demo__hint { color: var(--ink-soft); }
+:root[data-design="programmheft"] .ph-hub__lead .hub-card--demo-invite { padding: var(--space-4); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-hub__lead .hub-card--demo-invite {
+  background: var(--surface);
+  border: var(--rule-strong) solid var(--ink);
+  box-shadow: none;
+  color: var(--ink-2);
+}
+:root[data-design="programmheft"] .ph-hub__lead .hub-card--demo-invite .hub-card__title {
+  font-family: var(--font-display);
+  font-size: var(--display-5);
+  font-weight: 400;
+  line-height: var(--leading-display);
+  text-transform: uppercase;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-hub__lead .hub-card--demo-invite .hub-card__title { color: var(--ink); }
+:root[data-design="programmheft"] .ph-hub__lead .hub-card--demo-invite .hub-card__title .ti { display: none; }
+:root[data-design="programmheft"] .ph-hub__lead .hub-card--demo-invite .hub-demo__cta { align-self: stretch; justify-content: center; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-hub__lead .hub-card--demo-invite .hub-demo__cta {
+  background: var(--vermilion);
+  border-color: var(--vermilion);
+  color: var(--on-vermilion);
+}
+
+/* ---- The empty lobby (P7.1): the greeting in Anton over a 4px rule, then the
+   black box that founds the first round and three empty columns beside it. */
+:root[data-design="programmheft"] .app:has(.ph-first) > .lobby-head h1 {
+  font-size: var(--display-4);
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+@media (min-width: 1280px) {
+  :root[data-design="programmheft"] .app:has(.ph-first) > .lobby-head h1 { font-size: var(--display-2); }
+  /* P7.1 is a full-width page, like the lobby with rounds: the greeting and the
+     row of columns span the pane rather than the centred reading measure
+     styles.css keeps for Klassisch's first run. Outranks the cap's (0,3,0). */
+  :root[data-design="programmheft"] .app:has(.ph-first) > *:not(.rail):not(.dock):is(.lobby-head, .ph-first, .home-dash) { max-width: none; }
+}
+:root[data-design="programmheft"] .ph-first { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-5); padding-top: var(--space-5); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-first { border-top: var(--rule-page) solid var(--ink); }
+:root[data-design="programmheft"] .ph-first .lobby-cta {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-5);
+  text-align: left;
+  border-radius: 0;
+  text-decoration: none;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-first .lobby-cta { background: var(--box); border: 0; color: var(--box-ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-first .lobby-cta:focus-visible { outline: var(--ring-width) solid var(--brand-ring); outline-offset: var(--ring-offset); }
+:root[data-design="programmheft"] .ph-first .lobby-cta .lobby-cta__icon {
+  width: auto;
+  height: auto;
+  margin: 0;
+  border-radius: 0;
+  background: none;
+  font-family: var(--font-display);
+  font-size: var(--display-3);
+  line-height: var(--leading-display);
+}
+:root[data-design="programmheft"] .ph-first .lobby-cta .lobby-cta__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--display-5);
+  font-weight: 400;
+  /* The quote leading, not 1: at 1 an „Ü" on the second line touches the
+     line above (review S4). */
+  line-height: var(--leading-quote);
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+  hyphens: auto;
+}
+:root[data-design="programmheft"] .ph-first .lobby-cta .lobby-cta__sub { margin: 0; font-size: 14px; line-height: 1.45; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-first .lobby-cta .lobby-cta__icon { color: var(--vermilion); font-size: var(--display-3); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-first .lobby-cta .lobby-cta__title { color: var(--box-ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-first .lobby-cta .lobby-cta__sub { color: var(--box-ink-soft); }
+:root[data-design="programmheft"] .ph-first__slots { display: none; }
+@media (min-width: 860px) {
+  :root[data-design="programmheft"] .ph-first { grid-template-columns: minmax(0, 1fr) minmax(0, 3fr); }
+  :root[data-design="programmheft"] .ph-first .lobby-cta { min-height: 380px; }
+  :root[data-design="programmheft"] .ph-first .lobby-cta .lobby-cta__title { font-size: 36px; }
+  :root[data-design="programmheft"] .ph-first__slots { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-5); }
+}
+:root[data-design="programmheft"] .ph-first__slot { display: flex; flex-direction: column; gap: 10px; padding-left: var(--space-5); }
+:root[data-design="programmheft"] .ph-first__slot::before { content: ""; height: 10px; }
+:root[data-design="programmheft"] .ph-first__slot::after { content: ""; flex: 1; }
+:root[data-design="programmheft"] .ph-first__cap { font-size: 12px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-first__slot { border-left: var(--rule-col) solid var(--ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-first__slot::before { background: repeating-linear-gradient(90deg, var(--hair) 0 6px, transparent 6px 12px); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-first__slot::after { border: 1.5px dashed var(--hair); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-first__cap { color: var(--ink-soft); }
+
+/* ---- The long language (P7.10). A row inside a hub card bleeds 16px into the
+   card's padding (styles.css `.hub-row`), and the Programmheft's print columns
+   have none — so on a phone every suggestion and Kümmerliste row ran 2px past
+   the page and the page scrolled sideways (measured in Finnish at 390, #1377).
+   The rows sit flush on the column instead; their text wraps within it. */
+:root[data-design="programmheft"] .ph-hub :is(.ph-hub__suggest, .ph-hub__side, .ph-hub__strip) .hub-card .hub-row {
+  margin-inline: 0;
+  padding-inline: 0;
+}
+
 /* ===== #1379 — tier 2a: Chronik, Pokale, Mitglied, Nicht im Regal, Könnte euch gefallen ===== */
 /* P13 (docs/design/programmheft/Programmheft-P13-Tier2a.dc.html). The round's
    sub-pages as printed pages: an Anton head over a 4px rule, the Chronik as an

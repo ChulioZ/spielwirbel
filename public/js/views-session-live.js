@@ -461,11 +461,22 @@ function showSessionLobby(round, session, handedOn, dealt) {
 
   root.appendChild(panel);
 
+  // Die Brücke (#1241, B4.5/B6.9) re-orders the same nodes into who · share ·
+  // this device — views-session-bruecke.js.
+  const bruecke = designIs('bruecke');
+  if (bruecke) composeBrueckeLobby(root, people, voted);
+
   // Below the actions: what you can do comes first, what already happened after.
   const log = renderSessionLog(round, session);
   if (log) root.appendChild(log);
 
   app.appendChild(root);
+  /* Die Brücke keeps the navigation here, as B4.5 draws it: the Abschnittsleiste
+     from 1280px and the section strip below it — the same sub-screen tabs the
+     result screen renders for every design (showResults). The phone gets none,
+     as on every sub-screen (`.dock--sub`, #331). Klassisch's lobby never had
+     them and keeps it that way. */
+  if (bruecke) renderSubScreenTabs(round, 'session');
 
   // Poll for other devices' votes. `root` still being in the document is the
   // teardown signal — there is no unmount hook, and every navigation replaces

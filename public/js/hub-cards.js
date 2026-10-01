@@ -169,8 +169,9 @@ function hubSuggestCard(round, activeGames, statsByGame, exclude) {
        other empty answer keeps returning null — #1280's thresholds are about
        series and the podium, and have nothing to say about suggestions. */
     // Ocean says it too (#1216, O7.3 „Wie wär's mit"), in the pair beside the
-    // shell — the same one truthful reason, the same copy.
-    if ((designIs('tisch') || designIs('ocean')) && roundIsYoung(round) && activeGames.length
+    // shell — the same one truthful reason, the same copy. And Die Brücke, in
+    // its own slot (#1243, B7.2 „sagt, wann es losgeht").
+    if ((designIs('tisch') || designIs('ocean') || designIs('bruecke')) && roundIsYoung(round) && activeGames.length
       && activeGames.length < SUGGEST_MIN_SHELF) {
       return hubSentenceCard('ti-bulb', t('hub.suggest.title'),
         tn(SUGGEST_MIN_SHELF, 'hub.young.suggestOne', 'hub.young.suggest'));
@@ -263,7 +264,11 @@ function hubPulseCard(round, activeGames) {
      off one or two evenings is the same noise the podium and the streak card
      already wait out, so all three share one threshold. */
   const tisch = designIs('tisch');
-  const floor = tisch ? 1 : YOUNG_ROUND_SERIES_FROM;
+  /* The Programmheft draws from the first played session as well (P7.5,
+     #1377) — its bars, not Der Tisch's tiles — and says when series come in
+     its lead story instead (phLead's `note`). Its young sentence is a locked
+     block of its own (phYoungSide), so it takes none from here. */
+  const floor = tisch || designIs('programmheft') ? 1 : YOUNG_ROUND_SERIES_FROM;
   const pulse = roundPulse(round, activeGames, { minSessions: floor }, hubDeps());
   if (!pulse) {
     // A young round gets the sentence, never a „0" (T7.4, #1269) — Der Tisch
@@ -273,7 +278,12 @@ function hubPulseCard(round, activeGames) {
     // roundPulse() will draw them.
     const say = tisch ? roundIsYoung(round) : youngRoundPlayed(round, hubDeps()) > 0
       && youngRoundPlayed(round, hubDeps()) < floor;
-    if (say && activeGames.length) {
+    /* Die Brücke draws the Rundenpuls on the freshly founded round too (#1243,
+       B7.1 — „Leer" still shows the block, with a sentence), empty shelf or
+       not. Its bars keep Klassisch's floor: B7.3's two-bar chart is the noise
+       #1318 decided to wait out, so the sentence stands in until then. */
+    const bruecke = designIs('bruecke') && roundIsYoung(round);
+    if (bruecke || (say && activeGames.length)) {
       return hubSentenceCard('ti-activity', t('hub.pulse.title'),
         tn(floor, 'hub.young.pulseOne', 'hub.young.pulse'));
     }
@@ -337,7 +347,8 @@ function hubPulseCard(round, activeGames) {
     body.appendChild(link);
   }
   // No series sentence here: the bars only exist from YOUNG_ROUND_SERIES_FROM
-  // on, so a drawn Klassisch pulse is never young. Left out deliberately —
+  // on, so a drawn Klassisch pulse is never young (the Programmheft's, drawn
+  // from one session, says it in its lead instead). Left out deliberately —
   // a guard for a state this branch cannot enter would be untestable.
   return card;
 }

@@ -464,6 +464,9 @@ I18N.de = {
   'metaFilter.valueIncluded': '„{name}“: zählt mit. Klicken, um Spiele damit stattdessen auszuschließen.',
   'metaFilter.valueExcluded': '„{name}“: Spiele damit sind ausgeblendet. Klicken, um den Filter aufzuheben.',
   'metaFilter.removeFilter': '{name} entfernen',
+  // The Regal's owner filter (#1433).
+  'ownerFilter.title': 'Besitzer',
+  'ownerFilter.chip': 'Gehört {name}',
 
   'transferGames.link': 'Spiele verschieben oder kopieren',
   'transferGames.mode': 'Aktion',
@@ -1145,6 +1148,14 @@ I18N.de = {
   'vote.personOf': 'Person {n} von {total}',
   'vote.handoffNext': 'Danach das Gerät weitergeben — {name} ist als Nächstes dran.',
   'vote.handoffLast': 'Danach sind alle durch — dann kommt das Ergebnis.',
+  // The review step after a voter's last card (#1434).
+  'vote.reviewTitle': 'Deine Wertungen',
+  'vote.reviewHint': 'Tippe ein Spiel an, um seine Wertung zu ändern – dann absenden.',
+  'vote.reviewCountOne': '{n} Spiel gewertet',
+  'vote.reviewCount': 'Alle {n} Spiele gewertet',
+  'vote.reviewRow': '{title}: {rating}. Ändern',
+  'vote.reviewUnrated': 'nicht gewertet',
+  'vote.reviewSend': 'Absenden',
   // Ocean's desktop vote card (#1213, O4.2): who has rated, and what is still below.
   'vote.raterDone': 'hat gewertet',
   'vote.raterNow': 'wertet gerade',
@@ -1683,6 +1694,9 @@ I18N.de = {
   'design.scheme.dark': 'Dunkel',
   'design.scheme.light': 'Hell',
   'design.pick.mine': 'Deins',
+  // Das Programmheft's Konto (#1376): the worn poster's label and the index.
+  'design.pick.active': 'Aktiv',
+  'konto.index.label': 'Inhalt',
   'design.klassisch.name': 'Klassisch',
   'design.klassisch.badge': 'Wie bisher',
   'design.klassisch.desc': 'Die Oberfläche, mit der Spielwirbel angefangen hat — hell, ruhig, mit dem orangenen Akzent.',
@@ -2007,6 +2021,8 @@ I18N.de = {
   'hub.lead.open': 'Ergebnis ansehen',
   'home.phExtra': 'Extrablatt',
   'home.phKicker': 'Kiosk · {date}',
+  // #1377 (P7.1): the caption on the first empty column of a new account's lobby.
+  'home.phSlot': 'Hier erscheint deine Runde',
   // Die Brücke's session loop (#1240): only the five themed words of
   // docs/design/bruecke §2 — pool, probes, ignition, thrust, decrypt.
   'startSession.poolBruecke': 'Pool',
@@ -2024,6 +2040,8 @@ I18N.de = {
   'vote.sealedTextBrueckeOne': 'Ein weiteres Spiel bleibt verschlüsselt, bis du es erreichst.',
   'vote.sealedTextBruecke': 'Noch {n} Spiele bleiben verschlüsselt, bis du sie erreichst.',
   'vote.sealedCardBruecke': 'Verschlüsselt',
+  // The blind's kicker (#1241, B4.6/B6.10) — a decorative line, read by no screen reader.
+  'vote.signalBruecke': 'Eingehendes Signal',
   'score.reasonVetoBrueckeOne': '{n}× kein Schub',
   'score.reasonVetoBruecke': '{n}× kein Schub',
   'startSession.guestSeatBruecke': 'Gast · nur heute',

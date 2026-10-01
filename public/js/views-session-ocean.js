@@ -198,24 +198,43 @@ function composeOceanLobby(root, peopleEl, people, voted) {
      </section>`));
 }
 
-/* The result, in columns (O4.4): the people, then the head with the band (the
-   whale), then the Tafel with everything after it. Called once at the end of
-   showResults(), after the foot is appended; renderTisch() and friends hold
-   their nodes by reference, so moving them changes nothing they do.
+/* The result, in two columns (O4.4, departing from it on purpose — #1430): the
+   side column holds the people, the head with the band (the whale) and the
+   foot; the Tafel column holds the ranking and everything after it. O4.4 drew a
+   third column for the people and the foot under the Tafel, which works for the
+   three rows it drew and not for eight: the ranking ran ~2× the viewport while
+   the columns beside it stood empty, and „Noch eine Session" came only after
+   the whole list. The badge moment, when there is one, opens the Tafel
+   column. The foot now sits in the side column's DOM, BEFORE the
+   Tafel — DOM order is the visual order at every width (WCAG 2.4.3, no
+   `order:`), which moves the screen's next action earlier in tab order on
+   purpose. Called once at the end of showResults(), after the foot is
+   appended; renderTisch() and friends hold their nodes by reference, so moving
+   them changes nothing they do.
 
    `peopleEl` is Der Tisch's crowned „Wer dabei war" row, which the shared
-   composition puts inside the head; here it is the first column instead. */
+   composition puts inside the head; here it opens the side column instead. */
 function composeOceanResult(screen, head, peopleEl) {
   screen.classList.add('result-screen--ocean');
-  const people = h('<div class="ocean-result__people"></div>');
-  const main = h('<div class="ocean-result__main"></div>');
   const side = h('<div class="ocean-result__side"></div>');
+  const list = h('<div class="ocean-result__tafel"></div>');
   const kids = [...screen.children];
   const tafelAt = kids.findIndex((el) => el.classList.contains('tafel'));
+  const foot = kids.find((el) => el.classList.contains('result-foot'));
+  if (peopleEl) {
+    const people = h('<div class="ocean-result__people"></div>');
+    people.appendChild(peopleEl);
+    side.appendChild(people);
+  }
   kids.forEach((el, i) => {
-    if (el === head || (tafelAt >= 0 && i < tafelAt)) main.appendChild(el);
-    else side.appendChild(el);
+    if (el === foot) return;
+    // The badge moment („Neu verdient") opens the Tafel column: its marks lie
+    // side by side there, where in the side column they stacked to ~210px and
+    // pushed the foot out of the first viewport (measured, #1430).
+    if (el.classList.contains('badge-moment')) list.appendChild(el);
+    else if (el === head || (tafelAt >= 0 && i < tafelAt)) side.appendChild(el);
+    else list.appendChild(el);
   });
-  if (peopleEl) people.appendChild(peopleEl);
-  screen.replaceChildren(...(peopleEl ? [people] : []), main, side);
+  if (foot) side.appendChild(foot);
+  screen.replaceChildren(side, list);
 }

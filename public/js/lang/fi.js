@@ -437,6 +437,9 @@ I18N.fi = {
   'metaFilter.valueIncluded': '”{name}”: lasketaan mukaan suodattimeen. Napsauta sulkeaksesi sen sijaan pois pelit, joilla se on.',
   'metaFilter.valueExcluded': '”{name}”: pelit, joilla se on, piilotetaan. Napsauta lopettaaksesi suodattamisen sillä.',
   'metaFilter.removeFilter': 'Poista {name}',
+  // The Regal's owner filter (#1433).
+  'ownerFilter.title': 'Omistajat',
+  'ownerFilter.chip': 'Omistaa {name}',
 
   'transferGames.link': 'Siirrä tai kopioi pelejä',
   'transferGames.mode': 'Toiminto',
@@ -1072,6 +1075,14 @@ I18N.fi = {
   'vote.personOf': 'Henkilö {n}/{total}',
   'vote.handoffNext': 'Anna sitten laite eteenpäin — seuraavana vuorossa {name}.',
   'vote.handoffLast': 'Sen jälkeen kaikki ovat arvioineet — sitten tulee tulos.',
+  // The review step after a voter's last card (#1434).
+  'vote.reviewTitle': 'Arviosi',
+  'vote.reviewHint': 'Napauta peliä muuttaaksesi sen arviota – ja lähetä sitten.',
+  'vote.reviewCountOne': '{n} peli arvioitu',
+  'vote.reviewCount': 'Kaikki {n} peliä arvioitu',
+  'vote.reviewRow': '{title}: {rating}. Muuta',
+  'vote.reviewUnrated': 'ei arvioitu',
+  'vote.reviewSend': 'Lähetä',
   // Ocean's desktop vote card (#1213, O4.2): who has rated, and what is still below.
   'vote.raterDone': 'on arvioinut',
   'vote.raterNow': 'arvioi nyt',
@@ -1573,6 +1584,9 @@ I18N.fi = {
   'design.scheme.dark': 'Tumma',
   'design.scheme.light': 'Vaalea',
   'design.pick.mine': 'Sinun',
+  // Das Programmheft's Konto (#1376): the worn poster's label and the index.
+  'design.pick.active': 'Käytössä',
+  'konto.index.label': 'Sisältö',
   'design.klassisch.name': 'Klassinen',
   'design.klassisch.badge': 'Kuten ennen',
   'design.klassisch.desc': 'Ulkoasu, jolla Spielwirbel aloitti — vaalea, rauhallinen ja oranssi korostus.',
@@ -1854,6 +1868,8 @@ I18N.fi = {
   'hub.lead.open': 'Katso tulos',
   'home.phExtra': 'Ylimääräinen painos',
   'home.phKicker': 'Kioski · {date}',
+  // #1377 (P7.1): the caption on the first empty column of a new account's lobby.
+  'home.phSlot': 'Porukkasi näkyy tässä',
   // Die Brücke's session loop (#1240): only the five themed words of
   // docs/design/bruecke §2 — pool, probes, ignition, thrust, decrypt.
   'startSession.poolBruecke': 'Pooli',
@@ -1871,6 +1887,8 @@ I18N.fi = {
   'vote.sealedTextBrueckeOne': 'Vielä yksi peli pysyy salattuna, kunnes pääset siihen.',
   'vote.sealedTextBruecke': 'Vielä {n} peliä pysyy salattuna, kunnes pääset niihin.',
   'vote.sealedCardBruecke': 'Salattu',
+  // The blind's kicker (#1241, B4.6/B6.10) — a decorative line, read by no screen reader.
+  'vote.signalBruecke': 'Saapuva signaali',
   'score.reasonVetoBrueckeOne': '{n}× ei työntöä',
   'score.reasonVetoBruecke': '{n}× ei työntöä',
   'startSession.guestSeatBruecke': 'Vieras · vain tänään',

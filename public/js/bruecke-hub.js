@@ -53,8 +53,12 @@ function brueckeHubFrame() {
 
    The ignition is the same button with the same handler, name and disabled
    reason; the two rings and the cross-hair are aria-hidden spans, pure picture.
-   The presets follow it inside the panel, because they modify it. */
-function brueckeMission(btn, ready) {
+   The presets follow it inside the panel, because they modify it.
+
+   B7.1: an empty shelf is said, and filled, in the panel; B7.3: a young
+   round's line stands directly under the ignition (#1243). */
+function brueckeMission(btn, round, activeGames) {
+  const ready = activeGames.length > 0;
   const panel = h(`<section class="bruecke-mission">
        <div class="bruecke-mission__head">
          <h2 class="bruecke-mission__title">${esc(t('hub.bruecke.control'))}</h2>
@@ -67,7 +71,43 @@ function brueckeMission(btn, ready) {
      </section>`);
   btn.classList.add('bruecke-mission__fire');
   panel.querySelector('.bruecke-mission__ignition').appendChild(btn);
+  if (!ready) brueckeMissionEmpty(panel, round);
+  else if (roundIsYoung(round)) panel.querySelector('.bruecke-mission__ignition').after(brueckeYoungLine(activeGames));
   return panel;
+}
+
+/* The freshly founded round (B7.1, #1243): „Die Missionskontrolle bleibt, aber
+   sie sagt, was ihr fehlt". The empty table's job moves INTO the panel — the
+   state beside the inscription names what is missing (the shelf's own empty
+   title, in the amber the sheet gives it), the lock's reason leaves the
+   ignition to stand under it as real text, and the one way in follows: „Spiel
+   hinzufügen" as the screen's only primary, the BGG import as a text link
+   („nie als zweiter Knopf"). So the hub offers the action once, not once on
+   a card above the panel and again in it.
+
+   The reason keeps its id, its aria-hidden and the button's aria-describedby:
+   it is announced as the locked button's description exactly as before, it is
+   only no longer painted in the disabled tone. */
+function brueckeMissionEmpty(panel, round) {
+  panel.querySelector('.bruecke-mission__head').appendChild(
+    h(`<span class="bruecke-mission__state bruecke-mission__state--empty">${esc(t('games.emptyTitle'))}</span>`));
+  const reason = panel.querySelector('.bruecke-mission__fire .hub-cta__reason');
+  if (reason) panel.appendChild(reason);
+  emptyStateAction(panel, { icon: 'ti-plus', label: t('round.addGame'), primary: true, onClick: () => showAddGame(round) });
+  if (canImportBgg()) {
+    emptyStateAction(panel, { icon: 'ti-arrow-right', label: t('bggImport.tile'), link: true, onClick: () => showBggImport(round) });
+  }
+}
+
+/* The young round's line under the ignition (B7.3, #1243): a round with games
+   and no session yet — how many games stand ready, and that none has been
+   played. Both halves are the app's own strings (the invitation count and the
+   Start tab's empty title), the same pair Ocean prints under its shell. */
+function brueckeYoungLine(activeGames) {
+  return h(`<p class="bruecke-young">
+       <strong class="bruecke-young__ready">${esc(tn(activeGames.length, 'hub.young.readyOne', 'hub.young.ready'))}</strong>
+       <span class="bruecke-young__none">${esc(t('round.startEmptyTitle'))}</span>
+     </p>`);
 }
 
 /* The members and the decorative line (B2.2 row, B3.1 list).

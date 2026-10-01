@@ -136,12 +136,13 @@ function renderStartTab(round, activeGames) {
      the CTA say „Erste Session wirbeln"; the invitation card in the grid carries
      the count. The threshold is the app's own — one active game — not the
      sheet's „ab 2 Spielen" (operator default on #1269). */
-  if (activeGames.length === 0) (ph ? ph.lead : launch).appendChild(hubEmptyTable(round));
+  // Die Brücke folds the empty table into the Missionskontrolle below (B7.1).
+  if (activeGames.length === 0 && !bh) (ph ? ph.lead : launch).appendChild(hubEmptyTable(round));
   // Ocean's one themed verb, „Abtauchen" (O9 §2), on the one action; Die
   // Brücke's „Mission starten" with its own glyph (B9 „Hauptaktion 1").
   const ctaLabel = ocean ? t('round.startSessionOcean')
     : bh ? t('round.startSessionBruecke')
-      : tisch && activeGames.length && roundIsYoung(round)
+      : (tisch || ph) && activeGames.length && roundIsYoung(round)
         ? t('hub.young.firstCta') : t('round.startSession');
   const startBtn = h(
     `<button class="btn btn--primary hub-cta${railOwned}"><i class="ti ${bh ? 'ti-rocket' : 'ti-tornado'}" aria-hidden="true"></i>${esc(ctaLabel)}</button>`
@@ -157,7 +158,7 @@ function renderStartTab(round, activeGames) {
     startBtn.appendChild(h(`<span class="hub-cta__reason" id="hub-cta-reason" aria-hidden="true">${esc(t('hub.young.lock'))}</span>`));
     startBtn.setAttribute('aria-describedby', 'hub-cta-reason');
   }
-  if (bh) launch.appendChild(brueckeMission(startBtn, activeGames.length > 0));
+  if (bh) launch.appendChild(brueckeMission(startBtn, round, activeGames));
   else launch.appendChild(ocean ? oceanShell(startBtn) : startBtn);
   // Ocean's young round (#1216, O7.3): the shell stays the centre, and one
   // line under it says what is waiting for the first session.
@@ -327,9 +328,14 @@ function renderStartTab(round, activeGames) {
       when: fmtDateTime(lastPlayed.createdAt),
       score: sst.avg !== null ? fmtAvg(displayScore(sst.score)) : '',
       pot: (lastPlayed.gameIds || []).length,
+      note: youngRoundPlayed(round, hubDeps()) < YOUNG_ROUND_SERIES_FROM
+        ? tn(YOUNG_ROUND_SERIES_FROM, 'hub.young.seriesOne', 'hub.young.series') : '',
     });
     navLink(lead, resultsPath(round.id, lastPlayed.id), () => showResults(round, lastPlayed));
     ph.lead.appendChild(lead);
+  } else if (ph && activeGames.length && roundIsYoung(round)) {
+    // P7.4 (#1377): nothing played yet — the lead says what is waiting.
+    ph.lead.appendChild(phYoungLead(activeGames));
   } else if (lastPlayed) {
     const game = round.games.find((g) => g.id === lastPlayed.chosenGameId);
     // Winners resolve against the session's own people, so a guest winner shows
@@ -408,9 +414,11 @@ function renderStartTab(round, activeGames) {
      #1318; only the condensed list is Tisch composition. Klassisch keeps its
      three previews. */
   const demoAccount = isDemoAccount();
-  const demo = tisch && demoAccount;
-  if (demo) grid.appendChild(cardSlot(hubDemoSummary(round, activeGames)));
-  if (demoAccount) grid.appendChild(cardSlot(hubDemoInvite()));
+  // The Programmheft condenses them too (P7.6, #1377), in its lead column.
+  const demo = (tisch || ph) && demoAccount;
+  const demoHost = ph ? (card) => ph.lead.appendChild(card) : (card) => grid.appendChild(cardSlot(card));
+  if (demo) demoHost(hubDemoSummary(round, activeGames));
+  if (demoAccount) demoHost(hubDemoInvite());
   // Ocean pulls two cards out of the grid: the suggestions into the pair above,
   // the Kümmerliste into the preview column (O3.2's right column).
   const suggest = hubSuggestCard(round, activeGames, statsByGame, nagged);
@@ -423,9 +431,10 @@ function renderStartTab(round, activeGames) {
   // Programmheft's side column (P3.2) takes the pulse and the Kümmerliste.
   const pulse = hubPulseCard(round, activeGames);
   if (bh) [[suggest, bh.suggest], [pulse, bh.pulse], [care, bh.care]].forEach(([card, slot]) => { if (card) slot.appendChild(card); });
-  if (ph) {
-    if (suggest) ph.suggest.appendChild(suggest);
-    [pulse, care].forEach((card) => { if (card) ph.side.appendChild(card); });
+  if (ph) { // a young round's empty cards stand as locked blocks (#1377)
+    const side = phYoungSide(round, activeGames, { suggest, pulse, care });
+    if (side.suggest) ph.suggest.appendChild(side.suggest);
+    [side.pulse, side.care].forEach((card) => { if (card) ph.side.appendChild(card); });
   }
   [
     // Der Tisch's invitation (T7.4, #1269) leads — it is the one next step.
@@ -442,7 +451,11 @@ function renderStartTab(round, activeGames) {
   // The three sub-page previews (#1185, hub-previews.js), LAST in the grid:
   // "what is over there" is a weaker claim on the reader than "play this
   // tonight". Same null-or-nothing contract as the four above.
-  const previews = demo ? [] : [
+  const previews = demo ? [] : ph ? phStripPreviews(round, activeGames, {
+    regal: hubRegalPreview(round, activeGames),
+    pokale: hubPokalePreview(round),
+    chronik: hubChronikPreview(round),
+  }) : [
     hubRegalPreview(round, activeGames),
     hubPokalePreview(round),
     hubChronikPreview(round),
