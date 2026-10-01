@@ -260,6 +260,10 @@ I18N.nl = {
   'roundSettings.leaveIntro': 'Geeft je toegang tot deze gedeelde groep op. De groep zelf blijft bestaan.',
 
   'pokale.title': 'Eregalerij',
+  // Das Programmheft's standings table (#1379): its first two column heads;
+  // the other three reuse the member page's figure labels.
+  'pokale.col.place': 'Plaats',
+  'pokale.col.name': 'Naam',
   'pokale.empty': 'De eerste sessie beslist wie ze meeneemt.',
   'pokale.emptyTitle': 'Nog geen trofeeën',
   'pokale.young.leadOne': '{name} staat bovenaan met {n} overwinning',

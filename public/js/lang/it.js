@@ -258,6 +258,10 @@ I18N.it = {
   'roundSettings.leaveIntro': 'Rinunci al tuo accesso a questo gruppo condiviso. Il gruppo resta.',
 
   'pokale.title': 'Albo d’oro',
+  // Das Programmheft's standings table (#1379): its first two column heads;
+  // the other three reuse the member page's figure labels.
+  'pokale.col.place': 'Posizione',
+  'pokale.col.name': 'Nome',
   'pokale.empty': 'La prima sessione deciderà chi li conquista.',
   'pokale.emptyTitle': 'Ancora nessun trofeo',
   'pokale.young.leadOne': '{name} è in testa con {n} vittoria',

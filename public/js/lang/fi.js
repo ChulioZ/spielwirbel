@@ -237,6 +237,10 @@ I18N.fi = {
   'roundSettings.leaveIntro': 'Luovut pääsystäsi tähän jaettuun porukkaan. Porukka itse säilyy.',
 
   'pokale.title': 'Kunniagalleria',
+  // Das Programmheft's standings table (#1379): its first two column heads;
+  // the other three reuse the member page's figure labels.
+  'pokale.col.place': 'Sija',
+  'pokale.col.name': 'Nimi',
   'pokale.empty': 'Ensimmäinen sessio ratkaisee, kuka ne vie.',
   'pokale.emptyTitle': 'Ei vielä palkintoja',
   'pokale.young.leadOne': '{name} johtaa {n} voitolla',

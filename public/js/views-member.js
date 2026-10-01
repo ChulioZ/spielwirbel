@@ -44,8 +44,9 @@ async function showMember(rid, mid) {
   // Der Tisch composes the card's head and foot differently (#1276, T13.4):
   // an attendance line under the name, and the owned boxes as a panel inside
   // the card. Ocean takes the same two (#1218, O13.4 — „Bringt mit" beside the
+  // record). Das Programmheft too (#1379, P13.5 „Gehört Jonas" beside the
   // record). Klassisch takes none of these branches.
-  const panelled = designIs('tisch') || designIs('ocean') || designIs('bruecke');
+  const panelled = designIs('tisch') || designIs('ocean') || designIs('bruecke') || designIs('programmheft');
 
   // Link or unlink this seat, then re-render into the other state. Shared by
   // „Das bin ich“ in the card and „Das bin ich nicht“ in the page menu.

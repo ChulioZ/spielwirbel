@@ -249,6 +249,10 @@ I18N.es = {
   'roundSettings.leaveIntro': 'Renuncias a tu acceso a este grupo compartido. El grupo se queda.',
 
   'pokale.title': 'Salón de la fama',
+  // Das Programmheft's standings table (#1379): its first two column heads;
+  // the other three reuse the member page's figure labels.
+  'pokale.col.place': 'Puesto',
+  'pokale.col.name': 'Nombre',
   'pokale.empty': 'La primera sesión decidirá quién se los lleva.',
   'pokale.emptyTitle': 'Aún no hay trofeos',
   'pokale.young.leadOne': '{name} va en cabeza con {n} victoria',

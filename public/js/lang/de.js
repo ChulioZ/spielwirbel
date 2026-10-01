@@ -257,6 +257,10 @@ I18N.de = {
   'roundSettings.leaveIntro': 'Du gibst deinen Zugriff auf diese geteilte Runde ab. Die Runde selbst bleibt bestehen.',
 
   'pokale.title': 'Ruhmeshalle',
+  // Das Programmheft's standings table (#1379): its first two column heads;
+  // the other three reuse the member page's figure labels.
+  'pokale.col.place': 'Platz',
+  'pokale.col.name': 'Name',
   'pokale.empty': 'Die erste Session entscheidet, wer sie holt.',
   'pokale.emptyTitle': 'Noch keine Pokale',
   'pokale.young.leadOne': '{name} führt mit {n} Sieg',

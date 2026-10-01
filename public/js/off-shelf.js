@@ -69,10 +69,13 @@ function offShelfEntries(round) {
    title is aria-hidden because the nav's own label already says it; there is
    no group count — the three lists are not one inventory, and a sum would be a
    number that counts nothing. The recommendations keep their null count, so
-   that segment carries its name alone. */
+   that segment carries its name alone.
+
+   Das Programmheft (#1379, P13.7) prints the same strip: „Nicht im Regal" as
+   the page's display head, each tab its name beside its figure. */
 function offShelfSegments(round, activeSub) {
   const nav = h(`<nav class="offshelf-seg" aria-label="${esc(t('rail.archive'))}"></nav>`);
-  const bruecke = designIs('bruecke');
+  const bruecke = designIs('bruecke') || designIs('programmheft');
   if (bruecke) nav.appendChild(h(`<p class="offshelf-seg__title" aria-hidden="true">${esc(t('rail.archive'))}</p>`));
   offShelfEntries(round).forEach(({ icon, label, name, count, sub, go }) => {
     const on = sub === activeSub;

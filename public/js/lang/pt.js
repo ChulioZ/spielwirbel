@@ -262,6 +262,10 @@ I18N.pt = {
   'roundSettings.leaveIntro': 'Abre mão do seu acesso a este grupo compartilhado. O grupo em si continua.',
 
   'pokale.title': 'Galeria da fama',
+  // Das Programmheft's standings table (#1379): its first two column heads;
+  // the other three reuse the member page's figure labels.
+  'pokale.col.place': 'Posição',
+  'pokale.col.name': 'Nome',
   'pokale.empty': 'A primeira sessão decide quem fica com eles.',
   'pokale.emptyTitle': 'Nenhum troféu ainda',
   'pokale.young.leadOne': '{name} lidera com {n} vitória',

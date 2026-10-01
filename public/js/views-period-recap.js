@@ -135,7 +135,9 @@ function renderPeriodRecapSection(round, activities) {
        figures, same non-zero rule — only the presentation differs. */
     // Die Brücke reads them as the same tiles (#1245, B13.1 „Zeitraum" panel):
     // a readout of five numbers, not a sentence of chips.
-    const ocean = designIs('ocean') || designIs('bruecke');
+    // Das Programmheft too (#1379, P13.1): the box's figures are display
+    // numerals over a tracked label.
+    const ocean = designIs('ocean') || designIs('bruecke') || designIs('programmheft');
     const chip = ocean
       ? (icon, text, n, label) => h(`<span class="stat-chip stat-chip--tile"><span class="stat-chip__n">${esc(String(n))}</span><span class="stat-chip__label">${esc(t(label))}</span></span>`)
       : (icon, text) => h(`<span class="stat-chip"><i class="ti ${icon}" aria-hidden="true"></i>${esc(text)}</span>`);

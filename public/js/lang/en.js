@@ -255,6 +255,10 @@ I18N.en = {
   'roundSettings.leaveIntro': 'Gives up your access to this shared round. The round itself stays.',
 
   'pokale.title': 'Hall of fame',
+  // Das Programmheft's standings table (#1379): its first two column heads;
+  // the other three reuse the member page's figure labels.
+  'pokale.col.place': 'Place',
+  'pokale.col.name': 'Name',
   'pokale.empty': 'The first session decides who takes them.',
   'pokale.emptyTitle': 'No trophies yet',
   'pokale.young.leadOne': '{name} leads with {n} win',

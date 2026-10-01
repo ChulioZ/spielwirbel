@@ -238,6 +238,10 @@ I18N.ko = {
   'roundSettings.leaveIntro': '공유된 이 모임에 대한 접근 권한을 포기해요. 모임 자체는 그대로 남아요.',
 
   'pokale.title': '명예의 전당',
+  // Das Programmheft's standings table (#1379): its first two column heads;
+  // the other three reuse the member page's figure labels.
+  'pokale.col.place': '순위',
+  'pokale.col.name': '이름',
   'pokale.empty': '첫 세션이 누가 가져갈지 정해요.',
   'pokale.emptyTitle': '아직 트로피가 없어요',
   'pokale.young.leadOne': '{name} {n}승으로 선두',

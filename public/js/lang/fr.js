@@ -259,6 +259,10 @@ I18N.fr = {
   'roundSettings.leaveIntro': 'Renonce à ton accès à ce groupe partagé. Le groupe, lui, reste.',
 
   'pokale.title': 'Panthéon',
+  // Das Programmheft's standings table (#1379): its first two column heads;
+  // the other three reuse the member page's figure labels.
+  'pokale.col.place': 'Rang',
+  'pokale.col.name': 'Nom',
   'pokale.empty': 'La première session décidera qui les remporte.',
   'pokale.emptyTitle': 'Pas encore de trophées',
   'pokale.young.leadOne': '{name} mène avec {n} victoire',

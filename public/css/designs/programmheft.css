@@ -2817,3 +2817,863 @@
   color: var(--ink);
 }
 :root[data-design="programmheft"]:not([data-scheme="dark"]) .stats-block .stats-card__value { color: var(--ink-2); }
+
+/* ===== #1379 — tier 2a: Chronik, Pokale, Mitglied, Nicht im Regal, Könnte euch gefallen ===== */
+/* P13 (docs/design/programmheft/Programmheft-P13-Tier2a.dc.html). The round's
+   sub-pages as printed pages: an Anton head over a 4px rule, the Chronik as an
+   archive of editions under month heads that stand in their own column, the
+   recap as the black box beside them, the Pokale as podium + table + plaques,
+   the member's record as display numerals, and the off-shelf lists under one
+   „Nicht im Regal" head. Every rule is gated on the light scheme and reads
+   tokens only — test/programmheft-tier2a.test.js sweeps the section for both.
+
+   Markup: views-chronik.js (`.ph-page`, `.session-card--edition`),
+   views-period-recap.js (the `.stat-chip--tile` figures), views-pokale.js
+   (`.ph-page`, `.pokale-split__kicker`, `.pokale-split__side`, `.pokale-table`),
+   views-member.js (the `panelled` branch) and off-shelf.js (Brücke's
+   `.offshelf-seg__title/__name/__n`). Klassisch's DOM is unchanged — pinned by
+   a golden snapshot.
+
+   The podium has NO silver or bronze (operator decision 7): place 1 is the
+   gold with its ink edge, places 2 and 3 are the raised paper with the same
+   edge and the numeral. The Abzeichen section keeps the look it has today — it
+   is #1393's.
+
+   NOT built from the sheet: the recap as a sheet on the phone (P13.2's
+   „Rückblick" link — the section stays on the page, after the editions), the
+   Chronik's „Teilen" beside the tabs (the recap's own share button carries
+   it), the recap's Monat/Quartal/Jahr switch (the picker offers months and
+   years — no quarter exists), the member's „Letzte Siege" list and
+   „Bearbeiten" button (the name and the avatar are edited in place), P13.7's
+   footnote, and P13.8's „Powered by BGG" mark beside the head (the credit line
+   under the list is the attribution). */
+
+/* ---- The page heads (P13.1–P13.8): Anton, uppercase, on a 4px ink rule. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page > .section-head {
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-5);
+  margin-bottom: 0;
+  padding-bottom: var(--space-2);
+  border-bottom: var(--rule-page) solid var(--ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page > .section-head h1 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: var(--display-4);
+  line-height: var(--leading-display);
+  letter-spacing: 0;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page > .section-head .chronik__count {
+  margin: 0 0 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+@media (min-width: 1024px) {
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page > .section-head h1 { font-size: var(--display-2); }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page > .section-head .chronik__count { font-size: 16px; margin-bottom: 10px; }
+}
+
+/* ---- The Chronik's filter: one boxed strip of three, the lit one inked. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page > .filter-chips {
+  display: flex;
+  gap: 0;
+  width: fit-content;
+  max-width: 100%;
+  margin: var(--space-3) 0 var(--space-5);
+  border: var(--rule-strong) solid var(--ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page > .filter-chips .chip {
+  min-height: 40px;
+  padding: 0 var(--space-4);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  box-shadow: none;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page > .filter-chips .chip .ti { display: none; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page > .filter-chips .chip + .chip { border-left: var(--rule-strong) solid var(--ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page > .filter-chips .chip.is-on { background: var(--ink); color: var(--box-ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page > .filter-chips .chip:not(.is-on):hover { background: var(--hatch); }
+@media (max-width: 699px) {
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page > .filter-chips { width: 100%; }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page > .filter-chips .chip { flex: 1 1 0; justify-content: center; padding: 0 var(--space-2); font-size: 12px; letter-spacing: 0.06em; }
+}
+
+/* ---- The editions (P13.1/P13.2). No rail, no dots: the month heads and the
+   rules are the structure. From 700px the month stands in its own column —
+   auto-placement puts each head in column 1 and every item after it in
+   column 2, so no row has to be counted. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page > .timeline { padding-left: 0; gap: 0; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page > .timeline::before,
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page > .timeline .tl-dot { display: none; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page > .timeline .tl-month {
+  margin: var(--space-5) 0 0;
+  padding-bottom: 4px;
+  border-bottom: var(--rule-strong) solid var(--ink);
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: var(--display-6);
+  line-height: var(--leading-display);
+  text-transform: uppercase;
+  color: var(--ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page > .timeline .tl-month:first-child { margin-top: 0; }
+@media (min-width: 700px) {
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page > .timeline {
+    display: grid;
+    grid-template-columns: 140px minmax(0, 1fr);
+    column-gap: 20px;
+    align-items: start;
+  }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page > .timeline > * { grid-column: 2; }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page > .timeline > .tl-month {
+    grid-column: 1;
+    padding: 6px 0 0;
+    border-bottom: 0;
+    border-top: var(--rule-page) solid var(--ink);
+    font-size: var(--display-5);
+  }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page > .timeline > .tl-month + * { border-top: var(--rule-col) solid var(--ink); }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page > .timeline > .tl-month:not(:first-child) + * { margin-top: var(--space-5); }
+}
+
+/* One edition: [date | cover | game over the line | the score]. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .session-card.session-card--edition {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 64px;
+  padding: var(--space-2) 0;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px dotted var(--hair);
+  border-radius: 0;
+  box-shadow: none;
+  color: var(--ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .session-card.session-card--edition:hover { transform: none; box-shadow: none; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .session-card--edition:hover .session-card__title { text-decoration: underline; text-underline-offset: 3px; }
+/* The phone reads the date in the sub-line (P13.2); the column stays in the
+   accessibility tree, clipped from sight — it is the copy that is READ. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .session-card--edition .session-card__date {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .session-card--edition .session-card__img {
+  width: 44px;
+  height: 44px;
+  border-radius: 0;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .session-card--edition .session-card__title {
+  display: block;
+  font-family: var(--font);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .session-card--edition .session-card__meta { margin-top: 2px; font-size: 13px; color: var(--ink-soft); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .session-card--edition .session-card__won { color: var(--ink-2); font-weight: 600; }
+/* The score as a display numeral in the ramp's own tone (P13.1): Anton from
+   24px, so even the vermilion step is a display colour, never small text. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .session-card--edition > .score-pill {
+  position: static;
+  justify-self: end;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--sc-fill, var(--ink));
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: var(--display-6);
+  line-height: var(--leading-display);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .session-card--edition > .score-pill[data-stop="veto"] { color: var(--veto-ink); box-shadow: none; }
+@media (min-width: 700px) {
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .session-card.session-card--edition {
+    grid-template-columns: 110px 56px minmax(0, 1fr) auto;
+    gap: var(--space-4);
+    min-height: 72px;
+  }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .session-card--edition .session-card__date {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .session-card--edition .session-card__when { display: none; }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .session-card--edition .session-card__img { width: 56px; height: 56px; }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .session-card--edition .session-card__title { font-size: 17px; }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .session-card--edition > .score-pill { font-size: var(--display-5); }
+  /* A night with no game has no date column: its title IS the date. */
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .session-card--edition:not(:has(> .session-card__date)) { grid-template-columns: 56px minmax(0, 1fr) auto; padding-left: 126px; }
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page > .timeline .tl-nest { margin: 0 0 0 var(--space-5); }
+
+/* The shelf changes between them: a quiet line, not a card. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page > .timeline .tl-act {
+  padding: 10px 0;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px dotted var(--hair);
+  border-radius: 0;
+  box-shadow: none;
+  color: var(--ink-2);
+  font-size: 14px;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page > .timeline .tl-act--milestone .tl-act__icon { background: transparent; color: var(--ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page > .timeline .tl-act__text { color: var(--ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page > .timeline .tl-run__toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  min-height: var(--target-key);
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px dotted var(--hair);
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page > .timeline .tl-run__toggle:hover { color: var(--ink); text-decoration: underline; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page > .timeline .tl-run__label { flex: 1; min-width: 0; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page > .timeline .tl-run__toggle[aria-expanded="true"] .tl-run__chev { transform: rotate(180deg); }
+
+/* ---- The recap: the black box (P13.1). The box is a component, not a page:
+   inside it the print tokens swap to the box's own, so every rule the recap
+   already has reads paper on black without a second copy of each. */
+/* Focus inside the box: vermilion, as on the hub box (.ph-hub__box). The
+   ring is not re-aliased here — --brand-ring stays a root literal
+   (tisch-brand-ink.test.js). */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .precap :focus-visible { outline-color: var(--ring-on-box); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .precap {
+  --ink: var(--box-ink);
+  --ink-2: var(--box-ink-soft);
+  --ink-soft: var(--box-ink-soft);
+  --brand: var(--box-ink);
+  --line: var(--box-ink-soft);
+  --surface: var(--box);
+  --control-fill: var(--box);
+  --control-edge: var(--box-ink);
+  margin-top: var(--space-6);
+  padding: 20px 22px;
+  background: var(--box);
+  color: var(--box-ink);
+  border: 0;
+  border-radius: 0;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .precap .section-head h2 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: var(--display-4);
+  line-height: var(--leading-display);
+  text-transform: uppercase;
+  color: var(--box-ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .precap .recap__lead { font-size: 14px; color: var(--box-ink-soft); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .precap .precap__picker {
+  min-height: var(--target-field);
+  border: 1.5px solid var(--box-ink);
+  border-radius: 0;
+  background-color: var(--box);
+  color: var(--box-ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .precap .precap__share {
+  min-height: 48px;
+  border: 0;
+  border-radius: 0;
+  background: var(--vermilion);
+  color: var(--on-vermilion);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .precap .precap__share:hover { background: var(--box-ink); color: var(--box); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .precap .recap__totals {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+  margin: var(--space-4) 0;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .precap .stat-chip.stat-chip--tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 6px 0 0;
+  background: transparent;
+  border-top: var(--rule-strong) solid var(--box-ink);
+  border-radius: 0;
+  color: var(--box-ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .precap .stat-chip__n {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: var(--display-5);
+  line-height: var(--leading-quote);
+  color: var(--box-ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .precap .stat-chip__label {
+  order: -1;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--box-ink-soft);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .precap .pokale-cards { grid-template-columns: minmax(0, 1fr); gap: var(--space-3); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .precap .pokale-card {
+  padding: 6px 0 0;
+  background: transparent;
+  border: 0;
+  border-top: var(--rule-strong) solid var(--box-ink);
+  border-radius: 0;
+  box-shadow: none;
+  color: var(--box-ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .precap .pokale-card__label { font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--box-ink-soft); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .precap .pokale-card__label .ti { color: var(--box-ink-soft); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .precap .pokale-game__title { color: var(--box-ink); font-weight: 700; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .precap .pokale-card__sub { color: var(--box-ink-soft); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .precap .pokale-card__thumb { border-radius: 0; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .precap .pokale-game__play {
+  border: 1.5px solid var(--box-ink);
+  border-radius: 0;
+  background: transparent;
+  color: var(--box-ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .precap .pokale-game__play:hover { background: var(--box-ink); color: var(--box); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .precap .precap__thin { color: var(--box-ink-soft); }
+/* From 1280 the box stands in its own column right of the editions (P13.1);
+   below that it follows them, as P13.2 reads the page. */
+@media (min-width: 1280px) {
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .app:has(> .ph-page > .timeline):has(> .precap) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 420px;
+    column-gap: 48px;
+  }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .app:has(> .ph-page > .timeline):has(> .precap) > * { grid-column: 1 / -1; max-width: none; }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .app:has(> .ph-page > .timeline):has(> .precap) > .ph-page {
+    grid-column: 1;
+    padding-right: 48px;
+    border-right: var(--rule-col) solid var(--ink);
+  }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .app:has(> .ph-page > .timeline):has(> .precap) > .precap {
+    grid-column: 2;
+    align-self: start;
+    margin-top: 0;
+  }
+}
+
+/* ---- The Pokale (P13.3/P13.4): the podium left under its „Ruhmeshalle"
+   kicker, the table and the plaques right; stacked on a phone. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .pokale-split { display: flex; flex-direction: column; gap: var(--space-6); margin-top: var(--space-5); }
+@media (min-width: 1024px) {
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .pokale-split {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    gap: 0 48px;
+  }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .pokale-split__stage { padding-right: 48px; border-right: var(--rule-col) solid var(--ink); }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .app > .ph-page:has(.pokale-split) { max-width: none; }
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .pokale-split__stage,
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .pokale-split__side { min-width: 0; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .pokale-split__kicker {
+  margin: 0 0 var(--space-3);
+  padding-bottom: 6px;
+  border-bottom: var(--rule-strong) solid var(--ink);
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+
+/* The podium: square faces, the name in Anton, and a block per place whose
+   HEIGHT is the rank — gold for the first, raised paper for the others, all
+   with the ink edge. The spacer riser restates each height (podium.js draws
+   an unheld place at its own step's height). */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .podium { gap: var(--space-2); margin: 0; align-items: flex-end; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .podium__col { max-width: none; gap: 6px; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .podium__col--1 { --ph-step: 130px; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .podium__col--2 { --ph-step: 100px; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .podium__col--3 { --ph-step: 76px; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .podium__base,
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .podium--single .podium__col .podium__base {
+  height: var(--ph-step);
+  justify-content: center;
+  padding: 4px;
+  background: var(--surface);
+  border: var(--rule-strong) solid var(--ink);
+  border-radius: 0;
+  color: var(--ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .podium__col--1 .podium__base { background: var(--gold); border-color: var(--gold-edge); color: var(--gold-ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .podium__col.podium__col--spacer {
+  height: var(--ph-step);
+  background: var(--hatch);
+  border: var(--rule-strong) solid var(--hair);
+  border-radius: 0;
+  opacity: 1;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .podium__rank {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: var(--display-4);
+  line-height: var(--leading-display);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .podium__shared { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .podium__crown {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  background: var(--ink);
+  color: var(--gold);
+  font-size: 20px;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .podium__avatar { width: 40px; height: 40px; border-radius: 0; font-size: 18px; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .podium__col:not(.podium__col--multi) .podium__name {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: var(--display-6);
+  line-height: var(--leading-quote);
+  text-transform: uppercase;
+  color: var(--ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .podium__wins { font-size: 13px; font-weight: 600; color: var(--ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .podium__col--multi .podium__avatar { border-radius: 0; }
+@media (min-width: 1024px) {
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .podium { gap: var(--space-3); }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .podium__col--1 { --ph-step: 260px; }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .podium__col--2 { --ph-step: 200px; }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .podium__col--3 { --ph-step: 150px; }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .podium__rank { font-size: var(--display-3); }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .podium__avatar { width: 64px; height: 64px; font-size: 26px; }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .podium__col:not(.podium__col--multi) .podium__name { font-size: var(--display-5); }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .podium__wins { font-size: 14px; }
+}
+
+/* The table: Platz · Name · Siege · Sessions · Quote, the leader's row on the
+   gold tint. The phone keeps the first three (P13.4); the member page carries
+   the other two under the same words. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .pokale-table { width: 100%; border-collapse: collapse; color: var(--ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .pokale-table thead th {
+  padding: 0 var(--space-2) 6px 0;
+  border-bottom: var(--rule-strong) solid var(--ink);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-align: left;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .pokale-table tbody :is(td, th) {
+  height: 52px;
+  padding: 0 var(--space-2) 0 0;
+  border-bottom: var(--rule-col) solid var(--ink);
+  text-align: left;
+  vertical-align: middle;
+  font-size: 15px;
+  font-weight: 400;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .pokale-table__row.is-lead { background: var(--gold-soft); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .pokale-table tbody .pokale-table__place {
+  width: 44px;
+  padding-left: 6px;
+  font-family: var(--font-display);
+  font-size: var(--display-6);
+  line-height: var(--leading-display);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .pokale-table tbody .pokale-table__wins {
+  font-family: var(--font-display);
+  font-size: var(--display-6);
+  line-height: var(--leading-display);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .pokale-table tbody .pokale-table__name { font-size: 16px; font-weight: 700; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .pokale-table__name a {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: var(--target-min);
+  color: var(--ink);
+  text-decoration: none;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .pokale-table__name a:hover { text-decoration: underline; text-underline-offset: 3px; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .pokale-table__swatch { width: 14px; height: 14px; flex: none; }
+@media (max-width: 699px) {
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .pokale-table :is(.pokale-table__sessions, .pokale-table__rate) { display: none; }
+}
+@media (min-width: 1024px) {
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .pokale-table tbody :is(td, th) { height: 56px; }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .pokale-table tbody .pokale-table__place { width: 56px; padding-left: 8px; font-size: var(--display-5); }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .pokale-table tbody .pokale-table__wins { font-size: var(--display-5); }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .pokale-table tbody .pokale-table__name { font-size: 17px; }
+}
+
+/* The plaques under the table: a 2px rule over a tracked label, the value in
+   Anton. The cover goes — P13.3 draws none on a plaque, and the game's title
+   beside it is the same link. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .pokale-split__side > .pokale-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+  margin-top: 22px;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .pokale-split__side .pokale-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 6px 0 0;
+  background: transparent;
+  border: 0;
+  border-top: var(--rule-strong) solid var(--ink);
+  border-radius: 0;
+  box-shadow: none;
+  color: var(--ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .pokale-split__side .pokale-card__thumb { display: none; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .pokale-split__side .pokale-card > * { grid-column: auto; text-align: left; justify-self: start; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .pokale-split__side .pokale-game { justify-content: flex-start; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .pokale-split__side .pokale-card__icon { display: none; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .pokale-split__side .pokale-card__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .pokale-split__side .pokale-card__label .ti { color: var(--ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .pokale-split__side .pokale-card__value,
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .pokale-split__side .pokale-game__title {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: var(--display-6);
+  line-height: var(--leading-quote);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .pokale-split__side .pokale-card__sub { font-size: 14px; color: var(--ink-2); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .pokale-split__side .pokale-game__play {
+  border: 1.5px solid var(--ink);
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .pokale-split__side .pokale-game__play:hover { background: var(--ink); color: var(--box-ink); }
+@media (min-width: 1024px) {
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .pokale-split__side .pokale-card__value,
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .pokale-split__side .pokale-game__title { font-size: var(--display-5); }
+}
+
+/* ---- The member page (P13.5/P13.6): no wash, no watermark, no gauge — a
+   square face, the name in Anton over a 4px rule, the four figures as display
+   numerals, and the boxes the member brings beside the two game plaques. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .app > .member-card {
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  overflow: visible;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .app > .member-card .member-card__mark { display: none; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .app > .member-card .member-card__id {
+  align-items: flex-end;
+  gap: var(--space-4);
+  padding-bottom: var(--space-2);
+  border-bottom: var(--rule-page) solid var(--ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .app > .member-card .member-ring,
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .app > .member-card .member-ring--none { padding: 0; background: none; border-radius: 0; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .app > .member-card .member-avatar { width: 64px; height: 64px; border: 0; border-radius: 0; box-shadow: none; font-size: 30px; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .app > .member-card .member-card__who h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: var(--display-3);
+  line-height: var(--leading-display);
+  text-transform: uppercase;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .app > .member-card .member-card__attendance { margin: 6px 0 0; font-size: 14px; color: var(--ink-2); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .app > .member-card .member-card__chip { border-radius: 0; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .app > .member-card .member-card__figures {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+  padding: 0;
+  background: transparent;
+  border: 0;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .app > .member-card .member-figure {
+  gap: 2px;
+  padding: 4px 0 0;
+  border: 0;
+  border-top: var(--rule-strong) solid var(--ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .app > .member-card .member-figure__value {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: var(--display-4);
+  line-height: var(--leading-display);
+  color: var(--ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .app > .member-card .member-figure__label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .app > .member-card .member-card__lower { display: flex; flex-direction: column; gap: var(--space-6); margin-top: var(--space-6); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .app > .member-card .member-owned { display: flex; flex-direction: column; padding: 0; background: transparent; border: 0; border-radius: 0; box-shadow: none; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .app > .member-card .member-owned__title {
+  margin: 0 0 var(--space-2);
+  padding-bottom: 6px;
+  border-bottom: var(--rule-strong) solid var(--ink);
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .app > .member-card .member-owned__row {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 52px;
+  padding: 4px 0;
+  border: 0;
+  border-bottom: 1px dotted var(--hair);
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .app > .member-card .member-owned__row > .score-pill { position: static; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .app > .member-card .member-owned__cover { position: relative; overflow: hidden; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 0; background-size: cover; background-position: center; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .app > .member-card .member-owned__name { font-weight: 700; color: var(--ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .app > .member-card .member-card__games { gap: var(--space-4); margin-top: var(--space-4); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .app > .member-card .member-card__games .pokale-card {
+  padding: 6px 0 0;
+  background: transparent;
+  border: 0;
+  border-top: var(--rule-strong) solid var(--ink);
+  border-radius: 0;
+  box-shadow: none;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .app > .member-card .member-card__games .pokale-card__thumb { border-radius: 0; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .app > .member-card .member-ribbon { border-radius: 0; background: var(--ink); color: var(--box-ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .app > .member-card .member-card__games .pokale-card__label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .app > .member-card .member-card__games .pokale-game__title { font-weight: 700; color: var(--ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .app > .member-card .member-card__table { border-top: var(--rule-col) solid var(--ink); background: transparent; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .app > .member-card .member-seat { border-radius: 0; }
+@media (min-width: 1024px) {
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .app > .member-card { max-width: none; }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .app > .member-card .member-card__id { gap: var(--space-5); padding-bottom: 10px; }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .app > .member-card .member-avatar { width: 110px; height: 110px; font-size: 52px; }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .app > .member-card .member-card__who h1 { font-size: var(--display-1); }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .app > .member-card .member-card__figures { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-5); margin-top: 20px; }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .app > .member-card .member-figure { padding-top: 6px; }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .app > .member-card .member-figure__value { font-size: var(--display-3); }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .app > .member-card .member-card__lower {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 0 48px;
+    margin-top: 28px;
+  }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .app > .member-card .member-card__lower > .member-owned { padding-right: 48px; border-right: var(--rule-col) solid var(--ink); }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .app > .member-card .member-card__lower > .member-card__games { margin-top: 0; }
+}
+
+/* ---- Nicht im Regal (P13.7): the strip becomes the page head — the group's
+   name in Anton over its 4px rule, then the four tabs, name beside figure, the
+   current one underlined in ink. The list's own <h1> and the round name under
+   it stay in the accessibility tree, clipped from sight: the lit tab already
+   names the list, and the masthead names the round. Same on the
+   recommendations (P13.8 is reached through the same strip). */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .offshelf-seg {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 0 var(--space-5);
+  margin: 0 0 var(--space-4);
+  border-bottom: var(--rule-col) solid var(--ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .offshelf-seg__title {
+  flex: 1 0 100%;
+  margin: 0;
+  padding-bottom: var(--space-2);
+  border-bottom: var(--rule-page) solid var(--ink);
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: var(--display-4);
+  line-height: var(--leading-display);
+  text-transform: uppercase;
+  color: var(--ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .offshelf-seg__item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 52px;
+  border-bottom: var(--rule-page) solid transparent;
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 700;
+  text-decoration: none;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .offshelf-seg__item[data-sub="recommendations"] { color: var(--brand); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .offshelf-seg__item.is-on { border-bottom-color: var(--ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .offshelf-seg__item:not(.is-on):hover { border-bottom-color: var(--hair); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .offshelf-seg__n {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: var(--display-6);
+  line-height: var(--leading-display);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .app:has(> .offshelf-seg) > .page-head { justify-content: flex-end; max-width: none; margin-bottom: var(--space-3); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .app:has(> .offshelf-seg) > .page-head > div:first-child {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+@media (min-width: 1024px) {
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .offshelf-seg__title { font-size: var(--display-2); }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .app > .offshelf-seg { max-width: none; }
+}
+
+/* The off-shelf rows: [cover | title over when | the actions], ink rule under
+   each, no card. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .archive-list { display: flex; flex-direction: column; gap: 0; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .archive-row {
+  display: grid;
+  grid-template-columns: auto 64px minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-3) 18px;
+  min-height: 84px;
+  padding: var(--space-3) 0;
+  background: transparent;
+  border: 0;
+  border-bottom: var(--rule-col) solid var(--ink);
+  border-radius: 0;
+  box-shadow: none;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .archive-row__pick { grid-column: 1; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .archive-list:not(.is-selecting) .archive-row { grid-template-columns: 64px minmax(0, 1fr); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .archive-row__img { width: 64px; height: 64px; border-radius: 0; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .archive-row__body { min-width: 0; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .archive-row__title { font-family: var(--font); font-size: 19px; font-weight: 700; color: var(--ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .archive-row__meta { font-size: 14px; font-weight: 400; color: var(--ink-soft); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .archive-row__actions { grid-column: 1 / -1; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .is-selecting .archive-row.is-picked { background: var(--gold-soft); }
+@media (min-width: 700px) {
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .archive-row { grid-template-columns: auto 64px minmax(0, 1fr) auto; }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .archive-list:not(.is-selecting) .archive-row { grid-template-columns: 64px minmax(0, 1fr) auto; }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .archive-row__actions { grid-column: auto; justify-content: flex-end; }
+}
+@media (min-width: 1024px) {
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .app > .archive-list { max-width: none; }
+}
+
+/* ---- Könnte euch gefallen (P13.8): the ranked list as numbered columns — the
+   rank a vermilion Anton numeral (display type, so the colour is legal), the
+   cover standing on its own base line, the facts, the recommender's reasons
+   behind an ink rule, the actions. Still one ordered list in the DOM. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .rec-list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-6) 28px;
+  counter-reset: ph-rec;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .rec-list > .rec-card {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-2);
+  padding: 10px 0 0;
+  background: transparent;
+  border: 0;
+  border-top: var(--rule-strong) solid var(--ink);
+  border-radius: 0;
+  box-shadow: none;
+  counter-increment: ph-rec;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .rec-list > .rec-card::before {
+  content: counter(ph-rec);
+  font-family: var(--font-display);
+  font-size: var(--display-4);
+  line-height: var(--leading-display);
+  color: var(--vermilion);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .rec-list > .rec-card .rec-card__img {
+  width: 100%;
+  height: 200px;
+  border-radius: 0;
+  background-color: transparent;
+  background-size: contain;
+  background-position: left bottom;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .rec-list > .rec-card .rec-card__body { min-width: 0; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .rec-list > .rec-card .rec-card__title { font-family: var(--font); font-size: 19px; font-weight: 700; color: var(--ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .rec-list > .rec-card .rec-card__facts { font-size: 14px; font-weight: 400; color: var(--ink-2); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .rec-list > .rec-card .rec-card__why {
+  margin-top: var(--space-2);
+  padding-left: 10px;
+  border-left: 3px solid var(--ink);
+  font-size: 14px;
+  line-height: 1.45;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .rec-list > .rec-card .rec-card__why li { color: var(--ink-2); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) :is(.rec-lead, .rec-source) { font-size: 14px; color: var(--ink-2); }
+@media (min-width: 700px) {
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .rec-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 1280px) {
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .rec-list { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .app > .rec-list { max-width: none; }
+}
