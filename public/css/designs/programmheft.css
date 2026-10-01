@@ -4654,8 +4654,9 @@
    result-tafel-composed.js, views-session-tables.js). tisch.css, ocean.css and
    bruecke.css style those only under their own designs, so every piece the
    programme shows is laid out HERE. Geometry and type are ungated like the
-   rest of this file; colour is gated on the light scheme. Nothing here moves:
-   motion is #1382. */
+   rest of this file; colour is gated on the light scheme. The motion rituals
+   (#1382, Programmheft-P10-Motion.dc.html) sit beside the screen they move,
+   each in its own prefers-reduced-motion: no-preference block. */
 
 /* --- Shared: the kicker, the marker rule ---------------------------------- */
 :root[data-design="programmheft"] .ph-kicker {
@@ -4685,6 +4686,44 @@
 :root[data-design="programmheft"]:not([data-scheme="dark"]) .page-head--ph-setup h1 { border-bottom: var(--rule-page) solid var(--ink); }
 @media (min-width: 860px) {
   :root[data-design="programmheft"] .page-head--ph-setup h1 { font-size: var(--display-2); }
+}
+
+/* P10.1 „Start" (#1382): the setup arrives as an issue being set — the title
+   is wiped in from the left (360ms), and the 4px page rule runs out after it
+   (135ms later, 360ms), so the head is done by 495ms. The sheet's first beat,
+   the hub box's whirl turning and growing down, happens on a screen the press
+   replaces in the same task: it is never painted, and holding the navigation
+   for it would be #1122's mistake. `data-opening` is set only on an ARRIVAL
+   (views-session-programmheft.js), never on a re-render.
+
+   The h1's own border would be wiped in WITH the title, so while opening the
+   border goes transparent and ::after carries the rule — at rest the same 4px
+   of ink in the same place. Both keyframes fill backwards only and have no end
+   frame: they land on the resting head, and reduced motion shows it at once.
+   Straight and hard, as P10 asks — the sheet's ease-out cubic, no overshoot.
+   The resting `clip-path: inset(0)` is what the wipe interpolates TO: from an
+   inset to `none` is a discrete jump (measured — the title appeared whole at
+   90ms), and inset(0) clips nothing the border box holds, ::after included. */
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-design="programmheft"] .page-head--ph-setup[data-opening] h1 {
+    position: relative;
+    clip-path: inset(0);
+    animation: ph-set 360ms cubic-bezier(.33, 1, .68, 1) backwards;
+  }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .page-head--ph-setup[data-opening] h1 { border-bottom-color: transparent; }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .page-head--ph-setup[data-opening] h1::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: calc(-1 * var(--rule-page));
+    height: var(--rule-page);
+    background: var(--ink);
+    transform-origin: left center;
+    animation: ph-rule-run 360ms cubic-bezier(.33, 1, .68, 1) 135ms backwards;
+  }
+  @keyframes ph-set { from { clip-path: inset(0 100% 0 0); } }
+  @keyframes ph-rule-run { from { transform: scaleX(0); } }
 }
 
 /* Two columns from 860 — who plays, the pot — with a column rule between them
