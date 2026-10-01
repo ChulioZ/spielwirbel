@@ -1448,6 +1448,43 @@
 :root[data-design="bruecke"][data-scheme="dark"] .split-row__tag:empty { display: none; }
 :root[data-design="bruecke"][data-scheme="dark"] .split-tables__foot { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--space-2); margin-top: var(--space-4); }
 
+/* ===== #1420 — Result: win count and seats link to the member page ===== */
+/* B16.1 (the rule B16's head states for every „Platz"): from nine people the
+   crew's places break onto a grid and lose the win count — it stands on the
+   member page, and each place is the link there. bruecke-hub.js sets
+   `.bruecke-crew--dense` and leaves the count out of the markup, so the grid
+   only has squares (390) or names (1440) to place. The extra class outranks
+   the #1238 section's flex column, which comes later in this file. */
+:root[data-design="bruecke"] .bruecke-hub .hero__members.bruecke-crew--dense {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--target-key), 1fr));
+  justify-items: center;
+}
+/* The place is a link to the member page, so its focus ring follows the
+   square face rather than the default round one. */
+:root[data-design="bruecke"] .bruecke-hub .hero__members > a.avatar.member-link:focus-visible { border-radius: 0; }
+
+@media (min-width: 1280px) {
+  /* Two columns of „face · NAME" in the 300px crew panel; the title and
+     „Platz dazu" take a whole row, so the „+" caption never runs into a
+     neighbour. A long name ends in an ellipsis — the link's accessible name
+     and its title keep it whole. */
+  :root[data-design="bruecke"] .bruecke-hub .hero__members.bruecke-crew--dense {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    justify-items: stretch;
+    align-content: start;
+    gap: 8px 12px;
+  }
+  :root[data-design="bruecke"] .bruecke-hub .bruecke-crew--dense > :is(.bruecke-crew__title, .avatar--add) { grid-column: 1 / -1; }
+  :root[data-design="bruecke"] .bruecke-hub .bruecke-crew--dense > .avatar--add { justify-self: start; }
+  :root[data-design="bruecke"] .bruecke-hub .bruecke-crew--dense .seat__name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow-wrap: normal;
+  }
+}
+
 /* ===== #1245 — Chronik, Pokale, Mitglied, Nicht im Regal ===== */
 /* Source: docs/design/bruecke/Bruecke-B13-Tier2a.dc.html (B13.1 Rückblick,
    B13.2 Mitglied, B13.3 Nicht im Regal) with B3.3 (Chronik), B3.4 (Pokale) and

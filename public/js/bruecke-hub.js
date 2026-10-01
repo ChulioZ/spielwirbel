@@ -122,13 +122,24 @@ function brueckeYoungLine(activeGames) {
    the square, aria-hidden since the words already say it. The counts are
    roundStandings() (views-pokale.js), never a second tally, for the reason
    tischSeatHints gives. A zero is not printed. The caption is REAL text inside
-   the seat's link, so it completes the link's accessible name. */
+   the seat's link, so it completes the link's accessible name.
+
+   From BRUECKE_CREW_DENSE people (#1420, B16.1 — the rule B16's head states
+   for every „Platz") the places break onto a grid and LOSE the count: it
+   stands on the member page instead, and the place is already the link there
+   (makeMemberLink in showRound), so the count is one tap away rather than
+   gone. Counted over ACTIVE members, as the strip lists them; retired seats
+   are a dimmed tail and do not make a crew crowded. */
+const BRUECKE_CREW_DENSE = 9;
+
 function brueckeHeroCompose(round, hero, playedCount) {
   const members = activeMembers(round);
   hero.querySelector('.hero__chips').prepend(h(`<span class="bruecke-line" aria-hidden="true">${esc(t('hub.bruecke.mission', { n: playedCount + 1, m: members.length }))}</span>`));
 
   const seatRow = hero.querySelector('.hero__members');
   seatRow.prepend(h(`<h2 class="bruecke-crew__title">${esc(t('hub.bruecke.crew', { n: members.length }))}</h2>`));
+  const dense = members.length >= BRUECKE_CREW_DENSE;
+  seatRow.classList.toggle('bruecke-crew--dense', dense);
   const { wins } = roundStandings(round);
   /* The seat's fill moves from the link onto a `.seat__face` square around the
      initials, so the link itself can be a row (1440) or a column (390) with the
@@ -148,7 +159,7 @@ function brueckeHeroCompose(round, hero, playedCount) {
     el.appendChild(text);
   };
   const seats = [...seatRow.querySelectorAll(':scope > a.avatar:not(.avatar--retired)')];
-  members.forEach((m, i) => { if (seats[i]) caption(seats[i], m.name, wins[m.id] || 0); });
+  members.forEach((m, i) => { if (seats[i]) caption(seats[i], m.name, dense ? 0 : wins[m.id] || 0); });
   // aria-hidden: the „+" button's aria-label is its name — the same call
   // tischSeatHints makes. „Platz dazu" wraps to two lines on the phone rather
   // than being shortened (bruecke.css), never „Platz".
