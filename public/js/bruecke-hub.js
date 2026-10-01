@@ -53,8 +53,12 @@ function brueckeHubFrame() {
 
    The ignition is the same button with the same handler, name and disabled
    reason; the two rings and the cross-hair are aria-hidden spans, pure picture.
-   The presets follow it inside the panel, because they modify it. */
-function brueckeMission(btn, ready) {
+   The presets follow it inside the panel, because they modify it.
+
+   B7.1: an empty shelf is said, and filled, in the panel; B7.3: a young
+   round's line stands directly under the ignition (#1243). */
+function brueckeMission(btn, round, activeGames) {
+  const ready = activeGames.length > 0;
   const panel = h(`<section class="bruecke-mission">
        <div class="bruecke-mission__head">
          <h2 class="bruecke-mission__title">${esc(t('hub.bruecke.control'))}</h2>
@@ -67,6 +71,8 @@ function brueckeMission(btn, ready) {
      </section>`);
   btn.classList.add('bruecke-mission__fire');
   panel.querySelector('.bruecke-mission__ignition').appendChild(btn);
+  if (!ready) brueckeMissionEmpty(panel, round);
+  else if (roundIsYoung(round)) panel.querySelector('.bruecke-mission__ignition').after(brueckeYoungLine(activeGames));
   return panel;
 }
 
