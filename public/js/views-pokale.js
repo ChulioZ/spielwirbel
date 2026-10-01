@@ -279,10 +279,49 @@ function pokaleBars(round, ranked, rankOf, wins, { rank = false, crown = true } 
   return list;
 }
 
+/* Das Programmheft's standings (#1379, P13.3/P13.4): a printed TABLE beside the
+   podium — Platz · Name · Siege · Sessions · Quote. A real <table> rather than
+   rows of links with aria-hidden heads: five numbers a row are only legible to a
+   screen reader when each is announced with its column. The name cell is the
+   link to the member's page, as a podium entry is.
+
+   Places and wins are `roundStandings`', so the table and the podium beside it
+   cannot disagree; Sessions and Quote are `memberStats`' own `joined` and
+   `winRate` — the very figures the member page prints under the same words, so
+   one tap from here shows the same numbers. A member with no win yet has no
+   place (a dash), as on Brücke's board; no contested session yet means no quote.
+   The leader's row takes the gold tint (P13.3), never a silver or bronze —
+   there are no such tokens (operator decision 7). */
+function pokaleTable(round, ranked, rankOf, wins) {
+  const cols = [['place', 'pokale.col.place'], ['name', 'pokale.col.name'], ['wins', 'member.wins'], ['sessions', 'member.sessions'], ['rate', 'member.winRate']];
+  const table = h(`<table class="pokale-table">
+       <thead><tr>${cols.map(([c, key]) => `<th scope="col" class="pokale-table__${c}">${esc(t(key))}</th>`).join('')}</tr></thead>
+       <tbody></tbody>
+     </table>`);
+  const body = table.querySelector('tbody');
+  ranked.forEach((m) => {
+    const n = wins[m.id];
+    const st = memberStats(round, m.id);
+    const place = n > 0 && rankOf[m.id] ? rankOf[m.id] : '–';
+    const lead = rankOf[m.id] === 1 && n > 0;
+    const row = h(`<tr class="pokale-table__row${lead ? ' is-lead' : ''}">
+         <td class="pokale-table__place">${place}</td>
+         <th scope="row" class="pokale-table__name"><a data-mid="${esc(m.id)}"><span class="pokale-table__swatch" style="background:${memberColor(round, m.id)}" aria-hidden="true"></span>${esc(m.name)}</a></th>
+         <td class="pokale-table__wins">${n}</td>
+         <td class="pokale-table__sessions">${st.joined}</td>
+         <td class="pokale-table__rate">${st.winRate === null ? '–' : Math.round(st.winRate * 100) + '%'}</td>
+       </tr>`);
+    makeMemberLink(row.querySelector('a'), round.id, m.id);
+    body.appendChild(row);
+  });
+  return table;
+}
+
 function renderPokaleTab(round) {
   const finished = round.sessions.filter((s) => s.finished);
 
-  const sec = h('<div class="section"></div>');
+  // `ph-page`: Das Programmheft's page hook (#1379), as on the Chronik.
+  const sec = h(`<div class="section${designIs('programmheft') ? ' ph-page' : ''}"></div>`);
   /* NO ⓘ since 2026-09-22. It existed because the Siegwertung (#895) ranked the
      standings on a number the group had not seen before and owed an explanation
      somewhere; a count of wins owes none, and the whole `win` topic went with
@@ -292,14 +331,17 @@ function renderPokaleTab(round) {
   // plaque column — B3.4 is bars on the left, plaques on the right. Its page
   // is titled with the tab's own word, „Pokale" (B3.4/B6.2): the sheet names
   // the page after the tab it is reached by, not „Ruhmeshalle".
+  // Das Programmheft does the same (#1379, P13.3/P13.4, operator decision 2):
+  // „Pokale" is the page, „Ruhmeshalle" (`pokale.title`) heads the podium.
   const bruecke = designIs('bruecke');
-  const head = h(`<div class="section-head"><h1>${esc(t(bruecke ? 'hub.tab.pokale' : 'pokale.title'))}</h1></div>`);
+  const programmheft = designIs('programmheft');
+  const head = h(`<div class="section-head"><h1>${esc(t(bruecke || programmheft ? 'hub.tab.pokale' : 'pokale.title'))}</h1></div>`);
   sec.appendChild(head);
   // Ocean names the span beside the title, as its Chronik does (#1218, O13.2
   // „Seit Oktober 2025 · 23 Sessions") — the same key, counted the same way,
   // so the two pages cannot disagree about how many sessions the round has.
   const ocean = designIs('ocean');
-  if ((ocean || bruecke) && finished.length) {
+  if ((ocean || bruecke || programmheft) && finished.length) {
     const since = finished.reduce((a, s) => (s.createdAt < a ? s.createdAt : a), finished[0].createdAt);
     head.appendChild(h(`<span class="chronik__count">${esc(tn(finished.length, 'chronik.countOne', 'chronik.count', { month: fmtMonth(since) }))}</span>`));
   }
@@ -338,9 +380,14 @@ function renderPokaleTab(round) {
      follow the podium — the markup order IS the reading order at every width,
      and no `order:` is needed (WCAG 2.4.3). Klassisch gets no wrapper: `stageTo`
      is the section itself and its DOM is byte-for-byte what it was. */
-  const split = designIs('tisch') || bruecke ? h('<div class="pokale-split"><div class="pokale-split__stage"></div></div>') : null;
+  const split = designIs('tisch') || bruecke || programmheft ? h('<div class="pokale-split"><div class="pokale-split__stage"></div></div>') : null;
   if (split) sec.appendChild(split);
   const stageTo = split ? split.firstElementChild : sec;
+  /* Das Programmheft's right-hand column (#1379, P13.3): the table, then the
+     plaques under it. The podium stays left under its „Ruhmeshalle" kicker. On
+     a phone the two stack in this same order — podium, table, plaques (P13.4). The podium's „Ruhmeshalle" kicker is set
+     with the podium itself, so a young round (no podium yet) has none. */
+  const side = programmheft ? split.appendChild(h('<div class="pokale-split__side"></div>')) : null;
 
   // Podium columns by rank: left = 2, center = 1, right = 3. A COLUMN IS A
   // RANK, NOT A MEMBER (#836) — tied members share one step rather than
@@ -372,6 +419,9 @@ function renderPokaleTab(round) {
     ? pokaleBars(round, ranked, rankOf, wins, bruecke ? { rank: true, crown: false } : {})
     : null;
   if (bars) stageTo.appendChild(bars);
+  // Every active member, so the summary line below has nobody left to name.
+  const table = programmheft && !young && winners.length ? pokaleTable(round, ranked, rankOf, wins) : null;
+  if (table) side.appendChild(table);
   if (winners.length && !young && !bars) {
     /* ONE number per entry again — the win count the step is ranked on.
        It carried the Siegwertung plus the raw count from #895 until 2026-09-22,
@@ -396,6 +446,7 @@ function renderPokaleTab(round) {
     podium.querySelectorAll('.podium__entry[data-mid]').forEach((el) => {
       makeMemberLink(el, round.id, el.dataset.mid);
     });
+    if (programmheft) stageTo.appendChild(h(`<h2 class="pokale-split__kicker">${esc(t('pokale.title'))}</h2>`));
     stageTo.appendChild(podium);
   }
   /* Anyone ranked below the third step drops to the summary line, in standings
@@ -407,7 +458,7 @@ function renderPokaleTab(round) {
      making anyone invisible. */
   const onPodium = youngLead ? youngLead.named
     : new Set(cols.flatMap((c) => c.shown.map((it) => it.member.id)));
-  const rest = bars ? [] : ranked.filter((m) => !onPodium.has(m.id));
+  const rest = bars || table ? [] : ranked.filter((m) => !onPodium.has(m.id));
   if (rest.length) {
     const line = rest
       .map(
@@ -527,7 +578,7 @@ function renderPokaleTab(round) {
     );
   }
 
-  if (cards.children.length) (split || sec).appendChild(cards);
+  if (cards.children.length) (side || split || sec).appendChild(cards);
   app.appendChild(sec);
   /* Abzeichen (#1388, views-badges.js): below the podium and the plaques, the
      round's band then one row per member in THIS standings order — so the two

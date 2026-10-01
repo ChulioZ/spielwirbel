@@ -257,6 +257,10 @@ I18N.de = {
   'roundSettings.leaveIntro': 'Du gibst deinen Zugriff auf diese geteilte Runde ab. Die Runde selbst bleibt bestehen.',
 
   'pokale.title': 'Ruhmeshalle',
+  // Das Programmheft's standings table (#1379): its first two column heads;
+  // the other three reuse the member page's figure labels.
+  'pokale.col.place': 'Platz',
+  'pokale.col.name': 'Name',
   'pokale.empty': 'Die erste Session entscheidet, wer sie holt.',
   'pokale.emptyTitle': 'Noch keine Pokale',
   'pokale.young.leadOne': '{name} führt mit {n} Sieg',
@@ -298,6 +302,10 @@ I18N.de = {
   'periodRecap.pickerLabel': 'Zeitraum',
   'periodRecap.months': 'Monate',
   'periodRecap.years': 'Jahre',
+  'periodRecap.kind.month': 'Monat',
+  'periodRecap.kind.quarter': 'Quartal',
+  'periodRecap.kind.year': 'Jahr',
+  'periodRecap.quarterLabel': '{q}. Quartal {year}',
   'periodRecap.mostPlayed': 'Meistgespielt · {period}',
   'periodRecap.bestRated': 'Bestbewertet · {period}',
   'periodRecap.playedOne': '{n} Spiel gespielt',
@@ -593,6 +601,7 @@ I18N.de = {
   'retired.crumb': 'Aussortiert',
   'retired.title': 'Aussortiert',
   'retired.empty': 'Hier landen Spiele, die ihr aus dem Regal nehmt.',
+  'retired.footnote': 'Aussortierte Spiele bleiben mit allen Sessions in der Chronik; sie kommen nur nicht mehr in den Topf.',
   'retired.emptyTitle': 'Nichts aussortiert',
   'retired.at': 'Im Ruhestand seit {when}',
   'retired.restore': 'Comeback',
@@ -761,6 +770,8 @@ I18N.de = {
   'detail.onboard.players': 'Personenzahl festlegen',
 
   'member.editName': 'Zum Umbenennen klicken',
+  'member.edit': 'Bearbeiten',
+  'member.recentWins': 'Letzte Siege',
   'member.colorLabel': 'Avatar-Farbe',
   'member.colorChange': 'Avatar-Farbe ändern',
   'member.mySeat': 'Dein Platz',

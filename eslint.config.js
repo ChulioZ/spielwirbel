@@ -539,6 +539,9 @@ const frontendGlobals = {
   PROVIDER_LABELS: 'readonly', PROVIDER_LABELS_SHORT: 'readonly', LOOKUP_PROVIDERS: 'readonly', MAX_SUGGESTIONS: 'readonly',
   // views-member.js
   showMember: 'readonly',
+  // programmheft-tier2a.js (issue #1379): the Chronik head actions, the recap sheet, „Letzte Siege“
+  programmheftChronikActions: 'readonly', openProgrammheftRecapSheet: 'readonly',
+  programmheftRecentWins: 'readonly', PH_RECENT_WINS: 'readonly',
   // member-stats.js (#1075 — split out of views-member.js)
   memberStats: 'readonly', BEST_GAME_MIN_PLAYS: 'readonly', bestGameSub: 'readonly',
   // achievements.js (#1387): the Abzeichen catalogue and its derivation

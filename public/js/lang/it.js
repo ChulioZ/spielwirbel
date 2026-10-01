@@ -258,6 +258,10 @@ I18N.it = {
   'roundSettings.leaveIntro': 'Rinunci al tuo accesso a questo gruppo condiviso. Il gruppo resta.',
 
   'pokale.title': 'Albo d’oro',
+  // Das Programmheft's standings table (#1379): its first two column heads;
+  // the other three reuse the member page's figure labels.
+  'pokale.col.place': 'Posizione',
+  'pokale.col.name': 'Nome',
   'pokale.empty': 'La prima sessione deciderà chi li conquista.',
   'pokale.emptyTitle': 'Ancora nessun trofeo',
   'pokale.young.leadOne': '{name} è in testa con {n} vittoria',
@@ -299,6 +303,10 @@ I18N.it = {
   'periodRecap.pickerLabel': 'Periodo',
   'periodRecap.months': 'Mesi',
   'periodRecap.years': 'Anni',
+  'periodRecap.kind.month': 'Mese',
+  'periodRecap.kind.quarter': 'Trimestre',
+  'periodRecap.kind.year': 'Anno',
+  'periodRecap.quarterLabel': '{q}° trimestre {year}',
   'periodRecap.mostPlayed': 'Più giocato · {period}',
   'periodRecap.bestRated': 'Più votato · {period}',
   'periodRecap.playedOne': '{n} gioco giocato',
@@ -587,6 +595,7 @@ I18N.it = {
   'retired.crumb': 'Ritirati',
   'retired.title': 'Ritirati',
   'retired.empty': 'Qui finiscono i giochi che togliete dallo scaffale.',
+  'retired.footnote': 'I giochi ritirati restano con tutte le loro sessioni nella cronologia; semplicemente non finiscono più nell’urna.',
   'retired.emptyTitle': 'Niente ritirato',
   'retired.at': 'Ritirato dal {when}',
   'retired.restore': 'Ritorno',
@@ -741,6 +750,8 @@ I18N.it = {
   'detail.onboard.players': 'Imposta i giocatori',
 
   'member.editName': 'Clicca per rinominare',
+  'member.edit': 'Modifica',
+  'member.recentWins': 'Ultime vittorie',
   'member.colorLabel': 'Colore dell’avatar',
   'member.colorChange': 'Cambia il colore dell’avatar',
   'member.mySeat': 'Il tuo posto',

@@ -238,6 +238,10 @@ I18N.ko = {
   'roundSettings.leaveIntro': '공유된 이 모임에 대한 접근 권한을 포기해요. 모임 자체는 그대로 남아요.',
 
   'pokale.title': '명예의 전당',
+  // Das Programmheft's standings table (#1379): its first two column heads;
+  // the other three reuse the member page's figure labels.
+  'pokale.col.place': '순위',
+  'pokale.col.name': '이름',
   'pokale.empty': '첫 세션이 누가 가져갈지 정해요.',
   'pokale.emptyTitle': '아직 트로피가 없어요',
   'pokale.young.leadOne': '{name} {n}승으로 선두',
@@ -275,6 +279,10 @@ I18N.ko = {
   'periodRecap.pickerLabel': '기간',
   'periodRecap.months': '월',
   'periodRecap.years': '연도',
+  'periodRecap.kind.month': '월',
+  'periodRecap.kind.quarter': '분기',
+  'periodRecap.kind.year': '연도',
+  'periodRecap.quarterLabel': '{year}년 {q}분기',
   'periodRecap.mostPlayed': '가장 많이 플레이 · {period}',
   'periodRecap.bestRated': '가장 높은 평가 · {period}',
   'periodRecap.playedOne': '게임 {n}개 플레이',
@@ -557,6 +565,7 @@ I18N.ko = {
   'retired.crumb': '정리한 게임',
   'retired.title': '정리한 게임',
   'retired.empty': '선반에서 내린 게임이 여기로 와요.',
+  'retired.footnote': '정리한 게임도 모든 세션 기록이 그대로 남습니다. 다만 더 이상 후보에 들어가지 않습니다.',
   'retired.emptyTitle': '정리한 게임이 없어요',
   'retired.at': '{when}부터 정리됨',
   'retired.restore': '복귀',
@@ -700,6 +709,8 @@ I18N.ko = {
   'detail.onboard.owners': '소유자 추가',
   'detail.onboard.players': '인원수 설정',
   'member.editName': '눌러서 이름 변경',
+  'member.edit': '편집',
+  'member.recentWins': '최근 승리',
   'member.colorLabel': '아바타 색상',
   'member.colorChange': '아바타 색상 변경',
   'member.mySeat': '내 자리',

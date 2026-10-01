@@ -260,6 +260,10 @@ I18N.nl = {
   'roundSettings.leaveIntro': 'Geeft je toegang tot deze gedeelde groep op. De groep zelf blijft bestaan.',
 
   'pokale.title': 'Eregalerij',
+  // Das Programmheft's standings table (#1379): its first two column heads;
+  // the other three reuse the member page's figure labels.
+  'pokale.col.place': 'Plaats',
+  'pokale.col.name': 'Naam',
   'pokale.empty': 'De eerste sessie beslist wie ze meeneemt.',
   'pokale.emptyTitle': 'Nog geen trofeeën',
   'pokale.young.leadOne': '{name} staat bovenaan met {n} overwinning',
@@ -297,6 +301,10 @@ I18N.nl = {
   'periodRecap.pickerLabel': 'Periode',
   'periodRecap.months': 'Maanden',
   'periodRecap.years': 'Jaren',
+  'periodRecap.kind.month': 'Maand',
+  'periodRecap.kind.quarter': 'Kwartaal',
+  'periodRecap.kind.year': 'Jaar',
+  'periodRecap.quarterLabel': 'Q{q} {year}',
   'periodRecap.mostPlayed': 'Meest gespeeld · {period}',
   'periodRecap.bestRated': 'Best beoordeeld · {period}',
   'periodRecap.playedOne': '{n} spel gespeeld',
@@ -583,6 +591,7 @@ I18N.nl = {
   'retired.crumb': 'Opzijgelegd',
   'retired.title': 'Opzijgelegd',
   'retired.empty': 'Spellen die je uit de kast haalt, komen hier terecht.',
+  'retired.footnote': 'Opzijgelegde spellen houden al hun sessies in de geschiedenis; ze gaan alleen niet meer in de pot.',
   'retired.emptyTitle': 'Niets opzijgelegd',
   'retired.at': 'Opzijgelegd sinds {when}',
   'retired.restore': 'Comeback',
@@ -737,6 +746,8 @@ I18N.nl = {
   'detail.onboard.players': 'Spelers instellen',
 
   'member.editName': 'Klik om te hernoemen',
+  'member.edit': 'Bewerken',
+  'member.recentWins': 'Laatste overwinningen',
   'member.colorLabel': 'Kleur van de avatar',
   'member.colorChange': 'Avatarkleur wijzigen',
   'member.mySeat': 'Jouw plek',

@@ -37,7 +37,12 @@ const CHRONIK_STRIP_FACES = 4;
    Die Brücke lays it out as a LOG (#1245, B3.3/B6.1): one line per session,
    [date | game | who won | games drawn | score], under a row of column heads
    from 700px — the result table's own grammar, so a session reads the same in
-   the Chronik as on its result. */
+   the Chronik as on its result.
+
+   Das Programmheft sets it as an ARCHIVE OF EDITIONS (#1379, P13.1/P13.2): one
+   headline per session — [date | cover | game + who won · N dabei · N Spiele |
+   the score as a display numeral] — under month heads that stand in their own
+   left column from 700px, with the recap as the black box beside it. */
 // Unique ids for the collapsed shelf-change runs' aria-controls.
 let chronikRunSeq = 0;
 
@@ -46,6 +51,7 @@ function renderChronikTab(round, activities) {
   const tisch = designIs('tisch');
   const ocean = designIs('ocean');
   const bruecke = designIs('bruecke');
+  const programmheft = designIs('programmheft');
   const loadCover = createCoverLoader(); // lazy session thumbs (#198)
   // The earnings each session produced (#1388), a row apiece under its card.
   const badgeRows = badgeChronikIndex(round);
@@ -149,21 +155,26 @@ function renderChronikTab(round, activities) {
   // Die Brücke is the exception (#1245, B6.1): its phone shows the log FIRST and
   // the recap after it, so the section is appended below the log instead. The
   // desktop grid places the recap in its own column either way (bruecke.css).
+  // Das Programmheft does the same (#1379): P13.2 opens on the editions, and
+  // P13.1 sets the recap as the black box in the column to their right.
+  const recapLast = bruecke || programmheft;
   const periodSec = renderPeriodRecapSection(round, activities);
-  if (periodSec && !bruecke) app.appendChild(periodSec);
+  if (periodSec && !recapLast) app.appendChild(periodSec);
 
   // Exactly one <h1> on the screen, and it is this one — the recap above keeps
   // its <h2>. That does put an h2 before the h1 in document order; it is an
   // accepted trade-off of the placement, not a WCAG 1.3.1 failure (which is
   // about structure, not level sequencing), and the screen's name in the title
   // bar comes from setDocTitle (.claude/rules/per-view-document-title.md).
-  const sec = h('<div class="section"></div>');
+  // `ph-page`: the hook programmheft.css prints the page head and the editions
+  // from (#1379); nothing else reads it.
+  const sec = h(`<div class="section${programmheft ? ' ph-page' : ''}"></div>`);
   const secHead = h(`<div class="section-head"><h1>${esc(t('chronik.title'))}</h1></div>`);
   // Der Tisch names what the page IS beside its title — „23 Sessions seit Mai
   // 2025" (T13.1). Counted exactly as the rail beside it counts (round-rail.js:
   // every FINISHED session), not over the strips: a cancelled night is listed
   // but was never played, and counting it put „7" here beside the rail's „6".
-  if (tisch || ocean || bruecke) {
+  if (tisch || ocean || bruecke || programmheft) {
     const counted = round.sessions.filter((s) => s.finished);
     if (counted.length) {
       const since = counted.reduce((a, s) => (s.createdAt < a ? s.createdAt : a), counted[0].createdAt);
@@ -190,6 +201,15 @@ function renderChronikTab(round, activities) {
   });
   sec.appendChild(chips);
 
+  // Das Programmheft's head actions (#1379): „Rückblick" opens the recap as a
+  // sheet on a phone, „Teilen" shares the box's period on a desktop
+  // (programmheft-tier2a.js). Each is shown at its own width by programmheft.css.
+  if (programmheft) {
+    const { recap, share } = programmheftChronikActions(round, activities, periodSec);
+    if (recap) secHead.appendChild(recap);
+    if (share) chips.after(share);
+  }
+
   /* Die Brücke's column heads (B3.3 „Datum · Spiel · Sieger · Spiele gezogen ·
      Score"). aria-hidden: each row is one link whose name already carries every
      fact in reading order, so heads a screen reader cannot associate with a
@@ -202,7 +222,7 @@ function renderChronikTab(round, activities) {
   const tl = h('<div class="timeline"></div>');
   sec.appendChild(tl);
   app.appendChild(sec);
-  if (periodSec && bruecke) app.appendChild(periodSec);
+  if (periodSec && recapLast) app.appendChild(periodSec);
 
   function buildSessionCard(s) {
     const when = fmtDateTime(s.createdAt);
@@ -252,6 +272,7 @@ function renderChronikTab(round, activities) {
     if (tisch && sPeople.length) parts.push(esc(tn(sPeople.length, 'chronik.seatedOne', 'chronik.seated')));
     const rated = sessionHasVotes(s) ? esc(tn(s.gameIds.length, 'sessions.ratedOne', 'sessions.rated')) : '';
     if (bruecke) return buildSessionLog(s, { when, chosen, sPeople, title, pill, outcome });
+    if (programmheft) return buildSessionEdition(s, { when, chosen, sPeople, thumbIcon, title, pill, outcome });
     if (ocean) return buildSessionRow(s, { when, chosen, sPeople, thumbIcon, title, pill, outcome, rated });
     if (tisch) return buildSessionStrip(s, { when, chosen, sPeople, thumbIcon, title, pill, parts, rated });
     if (rated) parts.push(rated);
@@ -382,6 +403,47 @@ function renderChronikTab(round, activities) {
     return card;
   }
 
+  /* Das Programmheft's edition line (#1379, P13.1 desktop / P13.2 phone). Same
+     link, target and words as the Klassisch card. The headline is the game; the
+     line under it says who won („Jonas hat gewonnen", Ocean's key) or how the
+     night ended, then „4 dabei" and how many games the pool drew — the sheet's
+     „4 dabei · 3 Spiele". The score is the ordinary pill, which programmheft.css
+     prints as a bare display numeral in the ramp's colour.
+
+     The date is rendered twice, Brücke's shape: „14. September" as the desktop's
+     own column, and the same words again at the head of the phone's sub-line
+     (P13.2 „14. September · 4 dabei · 3 Spiele"). The copy in the sub-line is
+     aria-hidden, the column is the one read at every width — the stylesheet only
+     swaps which of the two is SEEN, so DOM order stays reading order. */
+  function buildSessionEdition(s, { when, chosen, sPeople, thumbIcon, title, pill, outcome }) {
+    const day = new Date(s.createdAt).toLocaleString(localeTag(locale), { day: 'numeric', month: 'long' });
+    const winners = (s.winnerIds || []).map((wid) => sPeople.find((p) => p.id === wid)).filter(Boolean);
+    let who = '';
+    if (outcome === 'split') who = iconText('ti-layout-grid', t('sessions.split'));
+    else if (winners.length) who = `<span class="session-card__won">${esc(tn(winners.length, 'chronik.wonOne', 'chronik.won', { names: winners.map(personLabel).join(', ') }))}</span>`;
+    else if (s.finished) who = endingText(s) || iconText('ti-check', t('sessions.played'));
+    else if (outcome === 'cancelled') who = `<span class="session-card__cancelled">${iconText('ti-x', t('sessions.cancelled'))}</span>`;
+    const meta = [];
+    if (who) meta.push(who);
+    if (sPeople.length) meta.push(esc(tn(sPeople.length, 'chronik.seatedOne', 'chronik.seated')));
+    if (s.gameIds && s.gameIds.length) meta.push(esc(tn(s.gameIds.length, 'home.chip.gamesOne', 'home.chip.games')));
+    // A night with no game has the date as its TITLE already, so neither copy of
+    // it is printed a second time.
+    const dated = Boolean(chosen);
+    const card = h(`<a class="session-card session-card--edition">
+         ${dated ? `<time class="session-card__date" datetime="${esc(s.createdAt)}" title="${esc(when)}">${esc(day)}</time>` : ''}
+         <div class="session-card__img">${thumbIcon}</div>
+         <div class="session-card__body">
+           <div class="session-card__title">${title}</div>
+           <div class="session-card__meta">${dated ? `<span class="session-card__when" aria-hidden="true">${esc(day)} · </span>` : ''}${meta.join(' · ')}</div>
+         </div>
+         ${pill}
+       </a>`);
+    if (chosen && chosen.image) loadCover(card.querySelector('.session-card__img'), coverUrl(chosen.image, COVER_THUMB));
+    navLink(card, resultsPath(round.id, s.id), () => showResults(round, s));
+    return card;
+  }
+
   /* Shelf changes recede under Der Tisch (#1271): a run of two or more
      consecutive changes inside one month folds behind ONE quiet disclosure
      („5 Regal-Änderungen"), so the sessions carry the page. Nothing is hidden
@@ -482,7 +544,9 @@ function renderChronikTab(round, activities) {
     // Ocean folds the same way (#1218): O13.1 draws the sessions alone, and a
     // month of shelf bookkeeping between two rows would bury them.
     // Die Brücke too (#1245): B3.3 lists the sessions, one line each.
-    const fold = (tisch || ocean || bruecke) && chronikFilter === 'all';
+    // Das Programmheft too (#1379): P13.1 prints the editions, a lone change
+    // between them stays a line of its own.
+    const fold = (tisch || ocean || bruecke || programmheft) && chronikFilter === 'all';
     let lastMonth = '';
     for (let i = 0; i < visible.length;) {
       const e = visible[i];

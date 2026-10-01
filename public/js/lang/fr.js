@@ -259,6 +259,10 @@ I18N.fr = {
   'roundSettings.leaveIntro': 'Renonce à ton accès à ce groupe partagé. Le groupe, lui, reste.',
 
   'pokale.title': 'Panthéon',
+  // Das Programmheft's standings table (#1379): its first two column heads;
+  // the other three reuse the member page's figure labels.
+  'pokale.col.place': 'Rang',
+  'pokale.col.name': 'Nom',
   'pokale.empty': 'La première session décidera qui les remporte.',
   'pokale.emptyTitle': 'Pas encore de trophées',
   'pokale.young.leadOne': '{name} mène avec {n} victoire',
@@ -300,6 +304,10 @@ I18N.fr = {
   'periodRecap.pickerLabel': 'Période',
   'periodRecap.months': 'Mois',
   'periodRecap.years': 'Années',
+  'periodRecap.kind.month': 'Mois',
+  'periodRecap.kind.quarter': 'Trimestre',
+  'periodRecap.kind.year': 'Année',
+  'periodRecap.quarterLabel': '{q}ᵉ trimestre {year}',
   'periodRecap.mostPlayed': 'Le plus joué · {period}',
   'periodRecap.bestRated': 'Le mieux noté · {period}',
   'periodRecap.playedOne': '{n} jeu joué',
@@ -588,6 +596,7 @@ I18N.fr = {
   'retired.crumb': 'Retirés',
   'retired.title': 'Retirés',
   'retired.empty': 'Les jeux que vous retirez de l’étagère atterrissent ici.',
+  'retired.footnote': 'Les jeux retirés gardent toutes leurs sessions dans l’historique ; ils ne vont simplement plus dans le chapeau.',
   'retired.emptyTitle': 'Rien de retiré',
   'retired.at': 'Retiré depuis {when}',
   'retired.restore': 'Grand retour',
@@ -742,6 +751,8 @@ I18N.fr = {
   'detail.onboard.players': 'Définir les joueurs',
 
   'member.editName': 'Clique pour renommer',
+  'member.edit': 'Modifier',
+  'member.recentWins': 'Dernières victoires',
   'member.colorLabel': 'Couleur de l’avatar',
   'member.colorChange': 'Changer la couleur de l’avatar',
   'member.mySeat': 'Ta place',

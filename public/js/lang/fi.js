@@ -237,6 +237,10 @@ I18N.fi = {
   'roundSettings.leaveIntro': 'Luovut pääsystäsi tähän jaettuun porukkaan. Porukka itse säilyy.',
 
   'pokale.title': 'Kunniagalleria',
+  // Das Programmheft's standings table (#1379): its first two column heads;
+  // the other three reuse the member page's figure labels.
+  'pokale.col.place': 'Sija',
+  'pokale.col.name': 'Nimi',
   'pokale.empty': 'Ensimmäinen sessio ratkaisee, kuka ne vie.',
   'pokale.emptyTitle': 'Ei vielä palkintoja',
   'pokale.young.leadOne': '{name} johtaa {n} voitolla',
@@ -274,6 +278,10 @@ I18N.fi = {
   'periodRecap.pickerLabel': 'Jakso',
   'periodRecap.months': 'Kuukaudet',
   'periodRecap.years': 'Vuodet',
+  'periodRecap.kind.month': 'Kuukausi',
+  'periodRecap.kind.quarter': 'Neljännes',
+  'periodRecap.kind.year': 'Vuosi',
+  'periodRecap.quarterLabel': 'Q{q} {year}',
   'periodRecap.mostPlayed': 'Pelatuin · {period}',
   'periodRecap.bestRated': 'Parhaiten arvioitu · {period}',
   'periodRecap.playedOne': '{n} peli pelattu',
@@ -560,6 +568,7 @@ I18N.fi = {
   'retired.crumb': 'Karsitut',
   'retired.title': 'Karsitut',
   'retired.empty': 'Hyllystä poistamasi pelit päätyvät tänne.',
+  'retired.footnote': 'Karsitut pelit säilyttävät kaikki sessionsa historiassa; ne eivät vain enää päädy pottiin.',
   'retired.emptyTitle': 'Ei karsittuja pelejä',
   'retired.at': 'Karsittu {when} lähtien',
   'retired.restore': 'Paluu',
@@ -711,6 +720,8 @@ I18N.fi = {
   'detail.onboard.players': 'Aseta pelaajamäärä',
 
   'member.editName': 'Napsauta nimetäksesi uudelleen',
+  'member.edit': 'Muokkaa',
+  'member.recentWins': 'Viimeisimmät voitot',
   'member.colorLabel': 'Avatarin väri',
   'member.colorChange': 'Vaihda avatarin väri',
   'member.mySeat': 'Sinun paikkasi',

@@ -255,6 +255,10 @@ I18N.en = {
   'roundSettings.leaveIntro': 'Gives up your access to this shared round. The round itself stays.',
 
   'pokale.title': 'Hall of fame',
+  // Das Programmheft's standings table (#1379): its first two column heads;
+  // the other three reuse the member page's figure labels.
+  'pokale.col.place': 'Place',
+  'pokale.col.name': 'Name',
   'pokale.empty': 'The first session decides who takes them.',
   'pokale.emptyTitle': 'No trophies yet',
   'pokale.young.leadOne': '{name} leads with {n} win',
@@ -296,6 +300,10 @@ I18N.en = {
   'periodRecap.pickerLabel': 'Period',
   'periodRecap.months': 'Months',
   'periodRecap.years': 'Years',
+  'periodRecap.kind.month': 'Month',
+  'periodRecap.kind.quarter': 'Quarter',
+  'periodRecap.kind.year': 'Year',
+  'periodRecap.quarterLabel': 'Q{q} {year}',
   'periodRecap.mostPlayed': 'Most played · {period}',
   'periodRecap.bestRated': 'Best rated · {period}',
   'periodRecap.playedOne': '{n} game played',
@@ -591,6 +599,7 @@ I18N.en = {
   'retired.crumb': 'Retired',
   'retired.title': 'Retired',
   'retired.empty': 'Games you take off the shelf land here.',
+  'retired.footnote': 'Retired games keep all their sessions in the history; they just no longer go into the pot.',
   'retired.emptyTitle': 'Nothing retired',
   'retired.at': 'Retired since {when}',
   'retired.restore': 'Comeback',
@@ -759,6 +768,8 @@ I18N.en = {
   'detail.onboard.players': 'Set players',
 
   'member.editName': 'Click to rename',
+  'member.edit': 'Edit',
+  'member.recentWins': 'Recent wins',
   'member.colorLabel': 'Avatar color',
   'member.colorChange': 'Change the avatar colour',
   'member.mySeat': 'Your seat',

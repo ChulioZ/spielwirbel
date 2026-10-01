@@ -262,6 +262,10 @@ I18N.pt = {
   'roundSettings.leaveIntro': 'Abre mão do seu acesso a este grupo compartilhado. O grupo em si continua.',
 
   'pokale.title': 'Galeria da fama',
+  // Das Programmheft's standings table (#1379): its first two column heads;
+  // the other three reuse the member page's figure labels.
+  'pokale.col.place': 'Posição',
+  'pokale.col.name': 'Nome',
   'pokale.empty': 'A primeira sessão decide quem fica com eles.',
   'pokale.emptyTitle': 'Nenhum troféu ainda',
   'pokale.young.leadOne': '{name} lidera com {n} vitória',
@@ -299,6 +303,10 @@ I18N.pt = {
   'periodRecap.pickerLabel': 'Período',
   'periodRecap.months': 'Meses',
   'periodRecap.years': 'Anos',
+  'periodRecap.kind.month': 'Mês',
+  'periodRecap.kind.quarter': 'Trimestre',
+  'periodRecap.kind.year': 'Ano',
+  'periodRecap.quarterLabel': '{q}.º trimestre de {year}',
   'periodRecap.mostPlayed': 'Mais jogado · {period}',
   'periodRecap.bestRated': 'Melhor avaliado · {period}',
   'periodRecap.playedOne': '{n} jogo jogado',
@@ -585,6 +593,7 @@ I18N.pt = {
   'retired.crumb': 'Aposentados',
   'retired.title': 'Aposentados',
   'retired.empty': 'Os jogos que você tira da estante vão parar aqui.',
+  'retired.footnote': 'Os jogos aposentados mantêm todas as suas sessões no histórico; só deixam de entrar no sorteio.',
   'retired.emptyTitle': 'Nada aposentado',
   'retired.at': 'Aposentado desde {when}',
   'retired.restore': 'Trazer de volta',
@@ -739,6 +748,8 @@ I18N.pt = {
   'detail.onboard.players': 'Definir jogadores',
 
   'member.editName': 'Clique para renomear',
+  'member.edit': 'Editar',
+  'member.recentWins': 'Últimas vitórias',
   'member.colorLabel': 'Cor do avatar',
   'member.colorChange': 'Mudar a cor do avatar',
   'member.mySeat': 'Seu lugar',
