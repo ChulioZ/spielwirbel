@@ -2924,6 +2924,50 @@
 :root[data-design="bruecke"][data-scheme="dark"] .round-card--new .ti { color: var(--brand); }
 :root[data-design="bruecke"][data-scheme="dark"] .round-card--new:hover { background: var(--surface); }
 
+/* ===== #1248 B10.1 — Die Zündung ===== */
+/* Sheet: docs/design/bruecke/Bruecke-B10-Motion.dc.html, B10.1 — „Die
+   Amber-Fläche des Zündungsknopfs läuft von links über die ganze Leiste und
+   lässt die Leiste gefüllt zurück", 900ms, cubic-bezier(.2,.8,.2,1): fast off
+   the mark, slow to land. No flash, nothing outside the button moves.
+
+   views-session-bruecke.js's brueckeIgnite() puts `.is-igniting` on „Zündung"
+   for a press that got past the draw's guards. It is feedback on the press,
+   never a wait (#1122): the lobby replaces the screen as soon as the draw
+   returns, mid-run if need be — the sheet's „danach wechselt der Screen" is
+   not built as a hold. On a failed draw the run completes and the button
+   rests as it was.
+
+   Three runs, none with an end frame, so each lands on the resting button —
+   which is the Endbild reduced motion shows at once:
+   - `bruecke-ignite-hold` (steps, the whole 900ms) takes the plate's own fill
+     away and paints the amber as an image instead, so the fill can GROW;
+   - `bruecke-ignite-fill` grows that image from the left edge, and the glow
+     with it;
+   - `bruecke-ignite-ink` keeps the label amber on the night until the fill
+     has passed the middle of the bar (120ms, 51% along the curve), then the
+     label takes the night ink it rests in — the label is legible throughout.
+   The two static declarations only size the image; with no image at rest
+   they paint nothing, so a failed draw's button still hovers and presses. */
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-design="bruecke"][data-scheme="dark"] .setup-grid--bruecke .setup-bar #go.is-igniting {
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+    animation:
+      bruecke-ignite-hold 900ms steps(1, end),
+      bruecke-ignite-fill 900ms cubic-bezier(.2, .8, .2, 1),
+      bruecke-ignite-ink 120ms steps(1, end);
+  }
+  @keyframes bruecke-ignite-hold {
+    from { background-color: transparent; background-image: linear-gradient(var(--action), var(--action)); }
+  }
+  @keyframes bruecke-ignite-fill {
+    from { background-size: 0% 100%; box-shadow: none; }
+  }
+  @keyframes bruecke-ignite-ink {
+    from { color: var(--action); }
+  }
+}
+
 /* ===== #1241 — Shared vote and the pass-device blind ===== */
 /* Sheets: docs/design/bruecke/Bruecke-B4-Session-Desktop.dc.html (B4.5
    Geteilte Wertung, B4.6 Sichtblende) and Bruecke-B6-Phone-Rest.dc.html (B6.9,

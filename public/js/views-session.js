@@ -836,6 +836,9 @@ function showStartSession(round, prefill) {
     // Ocean's O10.1 „Abtauchen" (#1221): the Muschel opens once on the same
     // press, under the same rule — views-session-ocean.js.
     if (ocean) oceanDive(form);
+    // Die Brücke's B10.1 „Die Zündung" (#1248), under the same rule —
+    // views-session-bruecke.js.
+    if (bruecke) brueckeIgnite(form);
     try {
       const data = await api('POST', `/api/rounds/${round.id}/sessions`, {
         count,

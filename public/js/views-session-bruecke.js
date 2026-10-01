@@ -83,6 +83,20 @@ function composeBrueckeSetup(head, form) {
   bar.querySelector('#barSummary').after(h(`<p class="bruecke-setup__sealed">${esc(t('startSession.sealedBruecke'))}</p>`));
 }
 
+/* B10.1 „Die Zündung" (#1248): „Zündung" ignites ONCE on a press that got
+   past the draw's guards — the caller only reaches this after them, so a
+   refused draw never ignites. Feedback on the press, never a wait (#1122): the
+   lobby replaces the screen as soon as the draw returns, mid-run if need be.
+   Removed and re-added so a second press after a failed draw runs again. The
+   motion is bruecke.css's; without it the class is inert. */
+function brueckeIgnite(form) {
+  const go = form.querySelector('#go');
+  if (!go) return;
+  go.classList.remove('is-igniting');
+  void go.offsetWidth; // restart the animation
+  go.classList.add('is-igniting');
+}
+
 /* B2.4/B4.2's side panels. `people` is everyone voting in this session,
    `person` the one rating now, `votedIds` who is already in, `left` how many of
    this person's cards come after the current one.
