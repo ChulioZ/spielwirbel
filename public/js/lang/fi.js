@@ -1071,6 +1071,14 @@ I18N.fi = {
   'vote.personOf': 'Henkilö {n}/{total}',
   'vote.handoffNext': 'Anna sitten laite eteenpäin — seuraavana vuorossa {name}.',
   'vote.handoffLast': 'Sen jälkeen kaikki ovat arvioineet — sitten tulee tulos.',
+  // The review step after a voter's last card (#1434).
+  'vote.reviewTitle': 'Arviosi',
+  'vote.reviewHint': 'Napauta peliä muuttaaksesi sen arviota – ja lähetä sitten.',
+  'vote.reviewCountOne': '{n} peli arvioitu',
+  'vote.reviewCount': 'Kaikki {n} peliä arvioitu',
+  'vote.reviewRow': '{title}: {rating}. Muuta',
+  'vote.reviewUnrated': 'ei arvioitu',
+  'vote.reviewSend': 'Lähetä',
   // Ocean's desktop vote card (#1213, O4.2): who has rated, and what is still below.
   'vote.raterDone': 'on arvioinut',
   'vote.raterNow': 'arvioi nyt',

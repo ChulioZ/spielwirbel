@@ -1111,6 +1111,14 @@ I18N.es = {
   'vote.personOf': 'Persona {n} de {total}',
   'vote.handoffNext': 'Después pasa el dispositivo — le toca a {name}.',
   'vote.handoffLast': 'Después ya habréis terminado todos — y llega el resultado.',
+  // The review step after a voter's last card (#1434).
+  'vote.reviewTitle': 'Tus valoraciones',
+  'vote.reviewHint': 'Toca un juego para cambiar su valoración y luego envía.',
+  'vote.reviewCountOne': '{n} juego valorado',
+  'vote.reviewCount': 'Los {n} juegos valorados',
+  'vote.reviewRow': '{title}: {rating}. Cambiar',
+  'vote.reviewUnrated': 'sin valorar',
+  'vote.reviewSend': 'Enviar',
   // Ocean's desktop vote card (#1213, O4.2): who has rated, and what is still below.
   'vote.raterDone': 'ya ha valorado',
   'vote.raterNow': 'valorando ahora',

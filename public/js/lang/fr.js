@@ -1105,6 +1105,14 @@ I18N.fr = {
   'vote.personOf': 'Personne {n} sur {total}',
   'vote.handoffNext': 'Ensuite, passe l’appareil — c’est au tour de {name}.',
   'vote.handoffLast': 'Ensuite, tout le monde aura noté — place au résultat.',
+  // The review step after a voter's last card (#1434).
+  'vote.reviewTitle': 'Tes notes',
+  'vote.reviewHint': 'Touche un jeu pour changer sa note, puis envoie.',
+  'vote.reviewCountOne': '{n} jeu noté',
+  'vote.reviewCount': 'Les {n} jeux notés',
+  'vote.reviewRow': '{title} : {rating}. Modifier',
+  'vote.reviewUnrated': 'pas noté',
+  'vote.reviewSend': 'Envoyer',
   // Ocean's desktop vote card (#1213, O4.2): who has rated, and what is still below.
   'vote.raterDone': 'a noté',
   'vote.raterNow': 'note en ce moment',

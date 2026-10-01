@@ -546,6 +546,9 @@ const frontendGlobals = {
   // vote-card-composed.js (issue #1268): Der Tisch's vote card + the link intro
   VOTE_WORD_KEYS: 'readonly', voteWord: 'readonly', voteMoodButton: 'readonly', voteTurn: 'readonly',
   voteHandoffLine: 'readonly', voteMetaLine: 'readonly', composedVoteCard: 'readonly', composedVoteLinkIntro: 'readonly',
+  voteCardComposed: 'readonly', voteSaidWord: 'readonly',
+  // vote-review.js (issue #1434): the review step after a voter's last card
+  voteReviewRow: 'readonly', voteReviewCard: 'readonly',
   // views-session.js
   showStartSession: 'readonly', startVoting: 'readonly', showResults: 'readonly',
   showFinale: 'readonly', canShareResult: 'readonly', shareResult: 'readonly',
