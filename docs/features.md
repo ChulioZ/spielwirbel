@@ -329,7 +329,9 @@ What the app does, in detail. For a short overview see the
     count already says everything the strip could. Only the off-shelf group is
     always there, because a list is not less worth reaching for being empty.
   - **Regal** (shelf) – the game collection as a card grid with one „Filter"
-    control holding both the custom-tag chips and the imported-BGG-metadata
+    control holding the custom-tag chips, an **owner** filter (once anybody on
+    the shelf is marked as owning a box: pick one or more members to see the
+    games any of them owns) and the imported-BGG-metadata
     filters (see Sessions below), a search pill, sorting
     (random / name / rating),
     and the add-game sheet. Each card opens the game's detail page
@@ -463,7 +465,13 @@ What the app does, in detail. For a short overview see the
   way, and each person's ratings are saved the moment they give them: one
   **1–5** scale per drawn game, from „gar nicht" to „unbedingt". Rating is **one
   tap per game** — the face you press is the answer, and the card moves on by
-  itself after a short beat. The rating card runs **full-screen**: no top bar and
+  itself after a short beat. After the **last** game comes a short **review**:
+  every game with its rating, each one tap away from its card to change it (a
+  change comes straight back to the review), and one **„Absenden"** that sends
+  the ratings — one extra tap per person, not per game, so nobody's vote leaves
+  before they have seen every candidate. On a passed-around device each person
+  reviews before the next one's handover; the shared-link card reviews the same
+  way. The rating card runs **full-screen**: no top bar and
   no section navigation, so the device holds one game and one question while the
   person beside you waits for it. The card's only other control is an undo in its
   top-left corner, which reopens the last game with its rating still chosen and is

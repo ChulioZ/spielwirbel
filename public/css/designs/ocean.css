@@ -2377,6 +2377,32 @@
   :root[data-design="ocean"]:not([data-scheme="dark"]) .ocean-raters { grid-area: raters; }
   :root[data-design="ocean"]:not([data-scheme="dark"]) .ocean-deep { grid-area: deep; }
 }
+
+/* --- The review step after the last card (#1434) ---------------------------
+   Built in the composed frame (vote-review.js): the header on the water, then
+   `.vote__card`. The card's white is a grid-placed pseudo-element sized to the
+   cover rows, which a list has none of — so here the card is simply white, and
+   each row's chip takes the score colour its face takes when selected. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .vote-review.vote--ocean .vote__card {
+  display: block;
+  padding: 18px;
+  border-radius: var(--radius-xl);
+  background: var(--surface);
+  box-shadow: var(--shadow-2);
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .vote-review.vote--ocean .vote__card::before { content: none; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .vote-review .vote-review__title { font-family: var(--font-display); font-weight: 700; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .vote-review .vote-review__row { border-radius: var(--radius-lg); }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .vote-review .vote-review__rating[data-n="1"] { background: var(--score-1); color: var(--score-ink-low); }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .vote-review .vote-review__rating[data-n="2"] { background: var(--score-2); color: var(--score-ink-low); }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .vote-review .vote-review__rating[data-n="3"] { background: var(--score-3); color: var(--score-ink-high); }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .vote-review .vote-review__rating[data-n="4"] { background: var(--score-4); color: var(--score-ink-high); }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .vote-review .vote-review__rating[data-n="5"] { background: var(--score-5); color: var(--score-ink-high); }
+/* The card's 1320px, three-column desktop frame (≥1100px) is for its side
+   columns, which the review has none of: it keeps the list's measure and the
+   single column (styles.css). Measured at 1440 without these: rows 84px wide. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .app > *:not(.rail):not(.dock).vote--ocean.vote-review { max-width: 600px; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .vote.vote--ocean.vote-review { display: flex; }
 /* O1's kicker, over both side columns. --brand-strong on the page, 8:1 and up. */
 :root[data-design="ocean"]:not([data-scheme="dark"]) .ocean-side__title {
   margin: 0 0 12px;

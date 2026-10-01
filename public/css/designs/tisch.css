@@ -4428,6 +4428,28 @@
   :root[data-design="tisch"][data-scheme="dark"] .split-tables__foot .btn { flex: none; padding-inline: 18px; }
 }
 
+/* --- The review step after the last card (#1434) ---------------------------
+   vote-review.js builds it in the composed card's own frame: the felt header,
+   then the paper `.vote__card`. The card's cover/title/faces grid does not
+   apply to a list, so the paper goes back to a plain column here; the chosen
+   face in each row is the same brass plate the selected `.mood` wears. */
+:root[data-design="tisch"][data-scheme="dark"] .vote-review .vote__card { display: block; }
+:root[data-design="tisch"][data-scheme="dark"] .vote-review .vote-review__title {
+  margin: 0;
+  text-align: left;
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  line-height: 1.05;
+}
+:root[data-design="tisch"][data-scheme="dark"] .vote-review .vote-review__hint { text-align: left; }
+:root[data-design="tisch"][data-scheme="dark"] .vote-review .vote-review__rating {
+  background: linear-gradient(180deg, var(--brass-hi), var(--gold-deep));
+  box-shadow: 0 2px 0 var(--gold-edge);
+}
+/* T4.2's 920px desktop card is for the cover beside the title; the review has
+   no cover and keeps the list's measure (styles.css). */
+:root[data-design="tisch"][data-scheme="dark"] .vote.vote--composed.vote-review { max-width: 600px; }
+
 /* ---- Live-Abstimmung (#1192, T4.3 Live-Abstimmung + T6.5 Live) ------------
  *
  * The screen where each person rates on their own device. Two things change
