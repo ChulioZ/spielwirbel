@@ -26,6 +26,29 @@
 
 'use strict';
 
+/* P10.2's numeral (#1382): counts 0 → n while the arriving pot is set, on the
+   rows' own clock — the ninth row (the stagger's cap) lands at 9 × 120 + 280ms,
+   so a pot of n rows is counted in min(n − 1, 9) × 120 + 280ms. The element
+   already reads n; the count only rewrites its text, so reduced motion (no
+   frame at all) and a numeral detached by a re-render both leave n standing.
+   The gate is the CSS one, asked POSITIVELY: an environment that cannot answer
+   the query gets the still number, never a 0 waiting on a frame. Not a live
+   region, so the count is not announced. */
+function phCountUp(el, n) {
+  if (!el || !window.matchMedia || !window.matchMedia('(prefers-reduced-motion: no-preference)').matches) return;
+  const dur = Math.min(n - 1, 9) * 120 + 280;
+  let start = null;
+  const step = (now) => {
+    if (!el.isConnected) return;
+    if (start === null) start = now;
+    const p = Math.min(1, (now - start) / dur);
+    el.textContent = String(p >= 1 ? n : Math.round(n * (1 - Math.pow(1 - p, 3))));
+    if (p < 1) requestAnimationFrame(step);
+  };
+  el.textContent = '0';
+  requestAnimationFrame(step);
+}
+
 /* The setup, re-composed. `head` is the page head, `form` the `.setup-grid`
    showStartSession() has just built; ids stay, because it finds every node by
    id after this.

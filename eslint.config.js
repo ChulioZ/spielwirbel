@@ -572,7 +572,7 @@ const frontendGlobals = {
   composeBrueckeResult: 'readonly',
   brueckeBlind: 'readonly', composeBrueckeLobby: 'readonly', // #1241
   // views-session-programmheft.js (issue #1374): Das Programmheft's setup, vote card and report kicker
-  composeProgrammheftSetup: 'readonly', composeProgrammheftVoteCard: 'readonly', programmheftReportKicker: 'readonly',
+  composeProgrammheftSetup: 'readonly', phCountUp: 'readonly', composeProgrammheftVoteCard: 'readonly', programmheftReportKicker: 'readonly',
   programmheftTablesKicker: 'readonly',
   programmheftBlind: 'readonly', composeProgrammheftLobby: 'readonly', // #1375
   // views-session-tables.js (issue #796)
