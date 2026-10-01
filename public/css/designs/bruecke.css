@@ -2302,6 +2302,575 @@
 }
 :root[data-design="bruecke"] .konto-design__foot { margin-top: var(--space-4); }
 
+/* ===== #1246 — Spielerkarte, Freunde, Postfach, Neu, Statistik, Rundeneinstellungen ===== */
+/* B14 (docs/design/bruecke/Bruecke-B14-Tier2b.dc.html: B14.1 Profil, B14.2
+   Freunde, B14.3 Postfach & Neu, B14.4 Statistik, B14.5 Rundeneinstellungen)
+   and B6.6 (the phone Einstellungen). The sheet draws data the app does not
+   hold — an account nav, per-account rating histograms, a round invite on the
+   Freundeskreis — so this lays out the app's OWN screens in B14's idiom rather
+   than inventing them: plates with one line, display heads, notation kickers,
+   hairline rows, the cyan corner bracket on the one plate a screen leads with.
+
+   Markup: views-round-settings.js composes the Einstellungen into plates
+   (composeBrueckeSettings, the marker picker inline as B14.5 draws it); the
+   inbox takes the composed row the other designs share; the Freundeskreis and
+   the profile list the feed as rows; the four account main pages carry
+   brueckeUpLink() (bruecke-hub.js). News, the statistics and the profile card
+   are this stylesheet alone. Klassisch's DOM is unchanged.
+
+   GEOMETRY sits on the bare hook; anything that reads a colour token is gated
+   with the colour block, as in the rest of the file
+   (test/bruecke-tier2b.test.js sweeps this section for it). */
+
+/* ---- „← Zurück zu meinen Runden" (B14 top bar line). Notation, at the 24px
+   target the review measured at 15px in round 1 (A2) — padding and min-height
+   reach it, never line-height alone. */
+/* Block margins only: the shell centres every capped child with
+   `margin-inline: auto` (styles.css), and a shorthand here would pin this line
+   to the left edge while the content under it stays centred. */
+:root[data-design="bruecke"] .bruecke-up { margin-top: 0; margin-bottom: var(--space-3); }
+:root[data-design="bruecke"] .bruecke-up__link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--target-min);
+  padding: 2px 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: var(--track-notation);
+  text-transform: uppercase;
+  text-decoration: none;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-up__link { color: var(--ink-soft); }
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-up__link:hover { color: var(--brand); }
+
+/* ---- The account heads: the display face at B1's steps, on the page ground. */
+:root[data-design="bruecke"] .app:has(> .bruecke-up) .lobby-head { margin-top: 0; margin-bottom: var(--space-5); }
+@media (min-width: 1024px) {
+  :root[data-design="bruecke"] .app:has(> .bruecke-up) .lobby-head h1 { font-size: var(--display-l); line-height: 1; }
+}
+:root[data-design="bruecke"] .app:has(> .bruecke-up) .lobby-head__sub { margin-top: var(--space-2); }
+:root[data-design="bruecke"][data-scheme="dark"] .app:has(> .bruecke-up) .lobby-head__sub { color: var(--ink-2); }
+
+/* ---- The section kicker every B14 plate opens with: Plex Mono, tracked,
+   ink-muted — small, so never the accent (rule 1). */
+:root[data-design="bruecke"] :is(
+  .rs-br__plate > .rs-section__h,
+  .friends-screen .k-band__h,
+  .profile-screen > .friends-section__h
+) {
+  margin: 0 0 var(--space-3);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: var(--track-notation);
+  text-transform: uppercase;
+}
+:root[data-design="bruecke"][data-scheme="dark"] :is(
+  .rs-br__plate > .rs-section__h,
+  .friends-screen .k-band__h,
+  .friends-screen .k-band__count,
+  .profile-screen > .friends-section__h
+) {
+  color: var(--ink-soft);
+}
+
+/* ---- B14.5 / B6.6 Rundeneinstellungen. Every section a plate; from 1024px the
+   marker plate is the left column and the rest stack on the right. */
+:root[data-design="bruecke"] .rs-br {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+}
+@media (min-width: 1024px) {
+  :root[data-design="bruecke"] .rs-br {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--space-5);
+    align-items: start;
+  }
+}
+:root[data-design="bruecke"] .rs-br__col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+:root[data-design="bruecke"] .rs-br__plate {
+  position: relative;
+  padding: var(--space-4) 20px;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .rs-br__plate {
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+/* The head spans the shell: .rs-br holds .marker-cards and leaves the reading
+   measure, so a capped head would stop short of the right column. */
+:root[data-design="bruecke"] .app:has(> .rs-br) > .page-head { max-width: none; }
+:root[data-design="bruecke"] .app:has(> .rs-br) > .page-head h1 { font-size: var(--display-m); line-height: 1.05; }
+@media (min-width: 1024px) {
+  :root[data-design="bruecke"] .app:has(> .rs-br) > .page-head h1 { font-size: var(--display-l); }
+}
+/* The rows inside a plate: hairline-separated, the key target, no own box. */
+:root[data-design="bruecke"] .rs-br .ds-list { gap: 0; }
+:root[data-design="bruecke"] .rs-br .ds-row {
+  min-height: 52px;
+  padding: 4px 2px;
+  border-width: 0 0 1px;
+  box-shadow: none;
+}
+:root[data-design="bruecke"] .rs-br .ds-list > .ds-row:last-child { border-bottom-width: 0; }
+:root[data-design="bruecke"] .rs-br .rs-row .ds-row__main { font-weight: 500; }
+:root[data-design="bruecke"][data-scheme="dark"] .rs-br .ds-row {
+  background: transparent;
+  border-color: var(--hairline);
+  color: var(--ink);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .rs-br :is(a, button).ds-row:hover { color: var(--brand); box-shadow: none; }
+/* The row glyph is a glyph, so the accent may carry it (rule 1). */
+:root[data-design="bruecke"][data-scheme="dark"] .rs-br .rs-row .ds-row__main .ti { color: var(--brand); }
+:root[data-design="bruecke"] .rs-br .saved-filters__empty { margin: 0; }
+
+/* The marker plate (B14.5 „Markerfarbe"): the cyan corner bracket at its top
+   right — the one ornament a plate may wear, on the plate the screen leads
+   with — the title in the display face, the note, and the eight markers as
+   cards on the bar tone: a 44px fill and the name as notation under it. */
+:root[data-design="bruecke"] .rs-br__plate--marker > .rs-section__h {
+  font-family: var(--font-display);
+  font-size: var(--display-s);
+  font-weight: 700;
+  letter-spacing: var(--track-display);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .rs-br__plate--marker > .rs-section__h { color: var(--ink); }
+:root[data-design="bruecke"][data-scheme="dark"] .rs-br__plate--marker::before {
+  content: '';
+  position: absolute;
+  right: -1px;
+  top: -1px;
+  width: 14px;
+  height: 14px;
+  border-right: 2px solid var(--brand);
+  border-top: 2px solid var(--brand);
+  pointer-events: none;
+}
+:root[data-design="bruecke"] .rs-br__note { margin: 0 0 var(--space-4); font-size: 14px; line-height: 1.5; }
+:root[data-design="bruecke"][data-scheme="dark"] .rs-br__note { color: var(--ink-2); }
+/* Two across on a phone, four once there is room (B14.5 draws four) — two on
+   a phone keep the longest name (Finnish, French) on one line of notation. */
+:root[data-design="bruecke"] .rs-br .marker-cards {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+@media (min-width: 560px) {
+  :root[data-design="bruecke"] .rs-br .marker-cards { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+:root[data-design="bruecke"] .marker-card {
+  gap: 7px;
+  padding: var(--space-3);
+  border-width: 1px;
+  text-align: left;
+}
+:root[data-design="bruecke"] .marker-card__fill {
+  height: var(--target-key);
+  font-size: 20px; /* glyph, not type */
+}
+:root[data-design="bruecke"] .marker-card__name {
+  padding: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+/* Flat — „kein Verlauf auf einem Paneel" — and the chosen one is told by its
+   cyan edge, its glow and the check, never by colour alone. */
+:root[data-design="bruecke"][data-scheme="dark"] .marker-card {
+  background: var(--bar);
+  border-color: var(--line);
+  box-shadow: none;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .marker-card__fill { background: var(--marker); }
+:root[data-design="bruecke"][data-scheme="dark"] .marker-card__name { color: var(--ink-soft); }
+:root[data-design="bruecke"][data-scheme="dark"] .marker-card:hover { border-color: var(--brand); }
+:root[data-design="bruecke"][data-scheme="dark"] .marker-card.is-active {
+  border-color: var(--brand);
+  box-shadow: 0 0 18px var(--glow-accent);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .marker-card.is-active .marker-card__name { color: var(--ink); }
+
+/* The Gefahrenzone: the plate's line in the alert tone, its kicker too, and
+   the one destructive act as the danger wire (B6.6 „Runde verlassen"). */
+:root[data-design="bruecke"][data-scheme="dark"] .rs-br__plate--danger { border-color: var(--danger); }
+:root[data-design="bruecke"][data-scheme="dark"] .rs-br__plate--danger > .rs-section__h { color: var(--danger); }
+:root[data-design="bruecke"] .rs-br__plate--danger .rs-danger {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .rs-br__plate--danger .rs-danger { background: transparent; }
+:root[data-design="bruecke"] .rs-br__plate--danger .rs-danger > p { font-size: 14px; }
+:root[data-design="bruecke"][data-scheme="dark"] .rs-br__plate--danger .rs-danger > p { color: var(--ink-2); }
+:root[data-design="bruecke"] .rs-br__plate--danger .btn--danger { width: 100%; }
+
+/* ---- The marker in Die Brücke's idiom (B2.1, B3.1): a small square, never a
+   rounded bar — before the round's name in the top bar on every round screen
+   (the session screens included), and before the hub's title. The lobby's
+   square is the #1238 emblem. A fill, never a text colour. */
+:root[data-design="bruecke"][data-marked] .topbar__context::before {
+  width: 10px;
+  height: 10px;
+  vertical-align: 0;
+  border-radius: 0;
+}
+:root[data-design="bruecke"][data-marked] .bruecke-hub .hero h1::before {
+  content: '';
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-right: 14px;
+  vertical-align: middle;
+}
+:root[data-design="bruecke"][data-scheme="dark"][data-marked] .bruecke-hub .hero h1::before { background: var(--marker); }
+
+/* ---- B14.1 Profil — die Spielerkarte. From 1100px the card is a 420px
+   column of its own at the left and everything else reads beside it; on a
+   phone the card leads. A plate with the cyan bracket at its top left, the
+   person's colour as the square avatar's own fill, the figures as a 2×2 of
+   display numerals. */
+:root[data-design="bruecke"] .profile-screen > .friends-section__h { margin-top: var(--space-5); }
+@media (min-width: 1100px) {
+  :root[data-design="bruecke"] .profile-screen {
+    display: grid;
+    grid-template-columns: minmax(0, 420px) minmax(0, 1fr);
+    column-gap: var(--space-5);
+    align-items: start;
+  }
+  :root[data-design="bruecke"] .profile-screen > * { grid-column: 2; }
+  :root[data-design="bruecke"] .profile-screen > .profile-card {
+    grid-column: 1;
+    grid-row: 1 / span 99;
+    margin: 0;
+  }
+  /* Whatever stands first in the right-hand column starts at the card's top. */
+  :root[data-design="bruecke"] .profile-screen > .profile-card + * { margin-top: 0; }
+}
+:root[data-design="bruecke"] .profile-card { padding: 22px 24px; }
+:root[data-design="bruecke"][data-scheme="dark"] .profile-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: none;
+  overflow: visible;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .profile-card::before {
+  content: '';
+  position: absolute;
+  left: -1px;
+  top: -1px;
+  width: 14px;
+  height: 14px;
+  border-left: 2px solid var(--brand);
+  border-top: 2px solid var(--brand);
+  pointer-events: none;
+}
+:root[data-design="bruecke"] .profile-card .member-card__mark { display: none; }
+:root[data-design="bruecke"] .profile-card .member-ring { padding: 0; background: none; }
+:root[data-design="bruecke"] .profile-card .member-avatar {
+  width: 76px;
+  height: 76px;
+  border-radius: 0;
+  font-size: 26px; /* glyph, not type */
+}
+:root[data-design="bruecke"] .profile-card .member-avatar__pen { border-radius: 0; }
+:root[data-design="bruecke"] .profile-card h1 {
+  font-size: var(--display-m);
+  line-height: 1.05;
+  overflow-wrap: anywhere;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .profile-card h1 { color: var(--ink); }
+:root[data-design="bruecke"] .profile-card .member-card__figures {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+  padding: var(--space-4) 0 0;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .profile-card .member-card__figures { border-top: 1px solid var(--hairline); }
+:root[data-design="bruecke"] .profile-card .member-figure { padding: 0; }
+:root[data-design="bruecke"] .profile-card .member-figure__value {
+  font-family: var(--font-display);
+  font-size: var(--display-m);
+  font-weight: 700;
+  line-height: 1;
+}
+:root[data-design="bruecke"] .profile-card .member-figure__label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .profile-card .member-figure__value { color: var(--ink); }
+:root[data-design="bruecke"][data-scheme="dark"] .profile-card .member-figure__label { color: var(--ink-soft); }
+
+/* ---- The feed as B14.2's „Was lief" rows — the Freundeskreis and the
+   profile both list it this way: a plate per event, the author's square face,
+   the sentence, the time as notation, the cover standing at the right.
+   Collapsed to eight below 1024px behind the expander the tiles use; above it
+   nothing is collapsed, so the expander goes — compounded, because this
+   design's `.link-btn` display outranks styles.css's hiding rule (the #1272
+   lesson). */
+:root[data-design="bruecke"] .feed-list--rows { display: flex; flex-direction: column; gap: var(--space-2); }
+@media (max-width: 1023px) {
+  :root[data-design="bruecke"] .e-feed:not(.is-open) .feed-row:nth-of-type(n + 9) { display: none; }
+}
+@media (min-width: 1024px) {
+  :root[data-design="bruecke"] .e-feed .e-feed__more { display: none; }
+}
+:root[data-design="bruecke"] .feed-row {
+  gap: var(--space-4);
+  min-height: 68px;
+  padding: var(--space-3) var(--space-4);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .feed-row {
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+:root[data-design="bruecke"] .feed-row__face {
+  flex: none;
+  width: var(--target-key);
+  height: var(--target-key);
+  border-radius: 0;
+  font-family: var(--font-display);
+  font-size: 18px; /* glyph, not type */
+}
+:root[data-design="bruecke"] .feed-row .feed-item__text { font-size: 15px; line-height: 1.4; }
+:root[data-design="bruecke"] .feed-row .feed-item__time {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .feed-row .feed-item__text { color: var(--ink); }
+:root[data-design="bruecke"][data-scheme="dark"] .feed-row .feed-item__time { color: var(--ink-soft); }
+:root[data-design="bruecke"] .feed-row__cover { width: 28px; height: 36px; border-radius: 0; align-self: center; }
+:root[data-design="bruecke"][data-scheme="dark"] .feed-row__cover { box-shadow: 0 0 0 1px var(--line); }
+:root[data-design="bruecke"] .feed-row .feed-item__report {
+  min-width: var(--target-key);
+  min-height: var(--target-key);
+  display: grid;
+  place-items: center;
+  border-radius: 0;
+}
+
+/* ---- B14.2 Freunde und Feed: from 1024px „Was lief" is the wide left column
+   and the people the 380px right one (views-friends.js puts the feed first in
+   the DOM under Brücke, so the grid only places what the reading order says).
+   A request band spans both, above them — it is what someone is waiting on. */
+@media (min-width: 1024px) {
+  :root[data-design="bruecke"] .friends-screen {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 380px;
+    column-gap: var(--space-5);
+    align-items: start;
+  }
+  :root[data-design="bruecke"] .friends-screen > :is(.lobby-head, .k-band:has(> .k-grid)) { grid-column: 1 / -1; }
+  :root[data-design="bruecke"] .friends-screen > .k-band:has(> .k-band__h + .e-feed, > .empty-note) { grid-column: 1; }
+  :root[data-design="bruecke"] .friends-screen > .k-band:has(> .k-tiles) { grid-column: 2; }
+  :root[data-design="bruecke"] .friends-screen > .k-band { margin-bottom: var(--space-5); }
+}
+/* The roster as a plate of hairline rows (B14.2 „Mit wem du spielst"): a
+   square face, the name in the display face, the line as notation. */
+:root[data-design="bruecke"] .friends-screen .k-tiles {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: var(--space-2) 20px;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .friends-screen .k-tiles {
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+:root[data-design="bruecke"] .friends-screen .k-tiles > .k-tile {
+  min-height: 52px;
+  padding: 6px 0;
+  border-width: 0 0 1px;
+  border-radius: 0;
+  box-shadow: none;
+  transform: none;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .friends-screen .k-tiles > .k-tile {
+  background: transparent;
+  border-style: solid;
+  border-color: var(--hairline);
+}
+:root[data-design="bruecke"] .friends-screen .k-tile .avatar { width: 36px; height: 36px; border-radius: 0; }
+:root[data-design="bruecke"] .friends-screen .k-tile__name {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: var(--track-display);
+  text-transform: uppercase;
+}
+:root[data-design="bruecke"] .friends-screen .k-tile__line { font-size: 13px; }
+:root[data-design="bruecke"][data-scheme="dark"] .friends-screen .k-tile__line { color: var(--ink-soft); }
+:root[data-design="bruecke"][data-scheme="dark"] .friends-screen .k-tiles > a.k-tile:hover { color: var(--brand); }
+/* The add control: the dashed cyan square of B14.5's „Platz dazu". */
+:root[data-design="bruecke"] .friends-screen .k-tiles > .k-tile--add {
+  margin-top: var(--space-2);
+  min-height: var(--target-key);
+  border-width: 0;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .friends-screen .k-tiles > .k-tile--add { color: var(--ink); }
+/* A request card is a plate with the action edge — the one thing waiting. */
+:root[data-design="bruecke"] .friends-screen .k-card { border-radius: 0; box-shadow: none; }
+:root[data-design="bruecke"][data-scheme="dark"] .friends-screen .k-card {
+  background: var(--surface);
+  border: 1px solid var(--action);
+}
+
+/* ---- B14.3 Postfach: one plate of hairline rows; the type glyph as the row's
+   cyan mark at the left, the unread dot a square, the time as notation. */
+:root[data-design="bruecke"] .app > .ds-list:has(> .inbox-row) { gap: 0; }
+:root[data-design="bruecke"][data-scheme="dark"] .app > .ds-list:has(> .inbox-row) {
+  background: var(--surface-raised);
+  border: 1px solid var(--line);
+}
+:root[data-design="bruecke"] .inbox-row--composed.ds-row {
+  align-items: flex-start;
+  gap: var(--space-3) var(--space-4);
+  min-height: 68px;
+  padding: 14px 20px;
+  border-width: 0 0 1px;
+  box-shadow: none;
+}
+:root[data-design="bruecke"] .inbox-row--composed.ds-row:last-child { border-bottom-width: 0; }
+:root[data-design="bruecke"][data-scheme="dark"] .inbox-row--composed.ds-row {
+  background: transparent;
+  border-color: var(--hairline);
+}
+/* Unread is the dot AND the weight, never colour alone (B14.3 „Regeln"). */
+:root[data-design="bruecke"][data-scheme="dark"] .inbox-row--composed.inbox-row--unread { background: var(--gold-soft); }
+:root[data-design="bruecke"] .inbox-row__dot { border-radius: 0; }
+:root[data-design="bruecke"][data-scheme="dark"] .inbox-row__dot { background: var(--action); }
+:root[data-design="bruecke"] .inbox-row--composed .inbox-row__icon {
+  flex: none;
+  width: 22px;
+  padding-top: 2px;
+  font-size: 18px; /* glyph, not type */
+}
+:root[data-design="bruecke"][data-scheme="dark"] .inbox-row--composed .inbox-row__icon { color: var(--brand); }
+:root[data-design="bruecke"] .inbox-row--composed .ds-row__main { flex: 1 1 220px; min-width: 0; }
+:root[data-design="bruecke"] .inbox-row--composed .ds-row__date { font-size: 15px; line-height: 1.4; }
+:root[data-design="bruecke"] .inbox-row--composed .inbox-row__when {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .inbox-row--composed .ds-row__date { color: var(--ink); }
+:root[data-design="bruecke"][data-scheme="dark"] .inbox-row--composed .ds-row__status { color: var(--ink-soft); }
+:root[data-design="bruecke"] .inbox-row--composed .inbox-invite__actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-4); }
+@media (max-width: 640px) {
+  :root[data-design="bruecke"] .inbox-row--composed .ds-row__meta { margin-left: calc(22px + var(--space-4)); }
+}
+
+/* ---- B14.3 Was ist neu: entries between hairlines on one raised plate — the
+   title in the display face, the date as notation beside it, the body as
+   reading text. */
+:root[data-design="bruecke"] .news-list { gap: 0; padding: var(--space-2) 20px; }
+:root[data-design="bruecke"][data-scheme="dark"] .news-list {
+  background: var(--surface-raised);
+  border: 1px solid var(--line);
+}
+:root[data-design="bruecke"] .news-list .news-entry {
+  padding: var(--space-4) 0;
+  border-left: 0;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .news-list .news-entry + .news-entry { border-top: 1px solid var(--hairline); }
+:root[data-design="bruecke"] .news-list .news-entry__date {
+  margin: 0 0 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: var(--track-notation);
+  text-transform: uppercase;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .news-list .news-entry__date { color: var(--ink-soft); }
+:root[data-design="bruecke"] .news-list .news-entry__title {
+  margin: 0 0 7px;
+  font-size: var(--display-s);
+  line-height: 1.15;
+}
+:root[data-design="bruecke"] .news-list .news-entry__body { font-size: 15px; line-height: 1.5; }
+:root[data-design="bruecke"][data-scheme="dark"] .news-list .news-entry__body { color: var(--ink-2); }
+
+/* ---- B14.4 Statistik: the counters as plates of display numerals (two
+   across on a phone, five across from 1024px), the podiums as plates of rows. */
+@media (min-width: 1024px) {
+  :root[data-design="bruecke"] .app:has(> .bruecke-up) > .lobby-head:has(+ .stats-block) {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--space-5);
+  }
+}
+:root[data-design="bruecke"] .stats-block .stats-counters {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+@media (min-width: 1024px) {
+  :root[data-design="bruecke"] .stats-block .stats-counters { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; }
+}
+:root[data-design="bruecke"] .stats-block .stats-counter {
+  padding: var(--space-4);
+  text-align: left;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .stats-block .stats-counter {
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+:root[data-design="bruecke"] .stats-block .stats-counter__num {
+  font-family: var(--font-display);
+  font-size: var(--display-m);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+@media (min-width: 1024px) {
+  :root[data-design="bruecke"] .stats-block .stats-counter__num { font-size: 38px; }
+}
+:root[data-design="bruecke"] .stats-block .stats-counter__label {
+  margin-top: 4px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .stats-block .stats-counter__num { color: var(--ink); }
+:root[data-design="bruecke"][data-scheme="dark"] .stats-block .stats-counter__label { color: var(--ink-soft); }
+@media (min-width: 1024px) {
+  :root[data-design="bruecke"] .stats-block .stats-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3) 20px; }
+}
+:root[data-design="bruecke"] .stats-block .stats-card { min-height: 72px; padding: var(--space-3) var(--space-4); }
+:root[data-design="bruecke"][data-scheme="dark"] .stats-block .stats-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+:root[data-design="bruecke"] .stats-block .stats-card__cover { border-radius: 0; }
+:root[data-design="bruecke"] .stats-block .stats-card__label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+:root[data-design="bruecke"] .stats-block .stats-card__title {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: var(--track-display);
+  text-transform: uppercase;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .stats-block .stats-card__label { color: var(--ink-soft); }
+:root[data-design="bruecke"][data-scheme="dark"] .stats-block .stats-card__title { color: var(--ink); }
+
 /* ===== #1238 — Lobby, round hub and the Abschnittsleiste ===== */
 /* B2.1 (phone lobby), B2.2 (phone hub, dock), B3.1 (desktop hub and the
    Abschnittsleiste every desktop round screen wears). The markup Die Brücke

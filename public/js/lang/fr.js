@@ -30,6 +30,7 @@ I18N.fr = {
   'footer.trustHosting': 'Hébergé dans l’UE · Conforme au RGPD',
   'footer.trustNoTracking': 'Pas de pistage, pas de publicité, pas de scripts tiers',
   'common.back': 'Retour',
+  'common.backToRounds': 'Retour à mes groupes',
   'common.delete': 'Supprimer',
   'common.apply': 'Appliquer',
   'common.add': 'Ajouter',

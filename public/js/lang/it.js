@@ -29,6 +29,7 @@ I18N.it = {
   'footer.trustHosting': 'Ospitato nell’UE · Conforme al GDPR',
   'footer.trustNoTracking': 'Nessun tracciamento, nessuna pubblicità, nessuno script di terze parti',
   'common.back': 'Indietro',
+  'common.backToRounds': 'Torna ai miei gruppi',
   'common.delete': 'Elimina',
   'common.apply': 'Applica',
   'common.add': 'Aggiungi',

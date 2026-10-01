@@ -20,6 +20,7 @@ I18N.es = {
   'footer.trustHosting': 'Alojado en la UE · Conforme al RGPD',
   'footer.trustNoTracking': 'Sin rastreo, sin anuncios, sin scripts de terceros',
   'common.back': 'Atrás',
+  'common.backToRounds': 'Volver a mis grupos',
   'common.delete': 'Eliminar',
   'common.apply': 'Aplicar',
   'common.add': 'Añadir',

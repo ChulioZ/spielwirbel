@@ -36,6 +36,7 @@ I18N.pt = {
   'footer.trustHosting': 'Hospedado na UE · Em conformidade com o GDPR',
   'footer.trustNoTracking': 'Sem rastreamento, sem anúncios, sem scripts de terceiros',
   'common.back': 'Voltar',
+  'common.backToRounds': 'Voltar aos meus grupos',
   'common.delete': 'Excluir',
   'common.apply': 'Aplicar',
   'common.add': 'Adicionar',

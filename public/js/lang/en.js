@@ -13,6 +13,7 @@ I18N.en = {
   'footer.trustHosting': 'Hosted in the EU · GDPR-compliant',
   'footer.trustNoTracking': 'No tracking, no ads, no third-party scripts',
   'common.back': 'Back',
+  'common.backToRounds': 'Back to my rounds',
   'common.delete': 'Delete',
   'common.apply': 'Apply',
   'common.add': 'Add',

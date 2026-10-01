@@ -72,6 +72,9 @@ async function showFriends(opts) {
      pills. Klassisch never enters this branch — its DOM is the path below. */
   const tisch = designIs('tisch');
   if (tisch) addFriendSearchButton(head);
+  // Die Brücke (#1246, B14.2): no Abschnittsleiste off a round, so the way up.
+  const bruecke = designIs('bruecke');
+  if (bruecke) app.appendChild(brueckeUpLink());
 
   /* ORDER IS THE FEATURE, and it survives the rebuild: a request is the one
      thing on this screen somebody is waiting on, so it leads whatever the
@@ -111,7 +114,8 @@ async function showFriends(opts) {
     // Ocean takes the rows too (#1219, O14.2 „Was gerade läuft": a card per
     // event, the author's ring first); its stylesheet makes each one a card.
     // Das Programmheft sets it as P14.2's Meldungszeilen (#1380): date, sentence, flag.
-    const rows = tisch || designIs('ocean') || designIs('programmheft');
+    // Die Brücke lists it as B14.2's „Was lief" rows, a plate per event (#1246).
+    const rows = tisch || designIs('ocean') || designIs('programmheft') || bruecke;
     // Later pages (#1357) append to this list as its end scrolls into view.
     const more = {
       nextCursor: feed.nextCursor,
@@ -125,7 +129,13 @@ async function showFriends(opts) {
   } else {
     news.appendChild(h(`<p class="muted empty-note">${esc(t('friends.feedEmpty'))}</p>`));
   }
-  screen.appendChild(news);
+  /* Die Brücke reads the feed BEFORE the roster (B14.2: „Was lief" is the wide
+     left column, the people the narrow right one), so the DOM says so and the
+     grid only places it — reading order is visual order (WCAG 2.4.3). A
+     request still leads: it is above both. On a phone that also puts the news
+     ahead of the full roster, the #1092 complaint. */
+  if (bruecke) roster.before(news);
+  else screen.appendChild(news);
 
   app.appendChild(screen);
 }

@@ -32,6 +32,8 @@ async function showInbox() {
   setInboxDot(items.some((i) => !i.read));
 
   app.innerHTML = '';
+  // Die Brücke's way up off the account screens (#1246, bruecke-hub.js).
+  if (designIs('bruecke')) app.appendChild(brueckeUpLink());
   app.appendChild(h(`<div class="lobby-head"><h1>${esc(t('inbox.title'))}</h1></div>`));
 
   if (!items.length) {
@@ -63,9 +65,10 @@ function renderInboxItem(item) {
   const row = item.type === 'round_invitation' ? renderInvitationItem(item)
     : item.type === 'friend_request' ? renderFriendRequestItem(item)
       : renderGenericItem(item);
-  // Der Tisch (#1272, T14.2), Ocean (#1219, O14.2) and Das Programmheft
-  // (#1380, P14.3) compose the row; Klassisch does not.
-  if (designIs('tisch') || designIs('ocean') || designIs('programmheft')) composeInboxRow(row, item);
+  // Der Tisch (#1272, T14.2), Ocean (#1219, O14.2), Das Programmheft
+  // (#1380, P14.3) and Die Brücke (#1246, B14.3 — the type glyph as the row's
+  // kicker, the time beside it) compose the row; Klassisch does not.
+  if (designIs('tisch') || designIs('ocean') || designIs('programmheft') || designIs('bruecke')) composeInboxRow(row, item);
   return row;
 }
 
