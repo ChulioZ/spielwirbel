@@ -5266,6 +5266,33 @@
 :root[data-design="programmheft"]:not([data-scheme="dark"]) .vote--ph .rating .mood.is-selected:nth-child(3) { background: var(--ramp-3); border: var(--rule-strong) solid var(--ink); color: var(--ramp-ink-3); }
 :root[data-design="programmheft"]:not([data-scheme="dark"]) .vote--ph .rating .mood.is-selected:nth-child(4) { background: var(--ramp-4); border: var(--rule-strong) solid var(--ink); color: var(--ramp-ink-4); }
 :root[data-design="programmheft"]:not([data-scheme="dark"]) .vote--ph .rating .mood.is-selected:nth-child(5) { background: var(--ramp-5); border: var(--rule-strong) solid var(--ink); color: var(--ramp-ink-5); }
+/* P10.3 „Die Stimme" (#1382): the cell just chosen is STAMPED — pressed 2px
+   for 280ms, while the ink rises from the bottom in 180ms (from 70ms), the
+   number and face turning to the fill's ink as the fill passes them (170ms).
+   No sound, no colour but the cell's own ink: what someone chose must not
+   flash across the table. The progress dot's step is the next card, which the
+   vote beat delivers at 340ms (vote-advance.js) — so every part here is over
+   by 280ms, inside the beat.
+
+   The gate is `.vote--advancing`, as for Ocean's O10.3 pick: only the card
+   showing a FRESH tap carries it, so a choice already made („Zurück", the
+   review) arrives at rest. The fill is a cover of paper over the chosen
+   cell's own ink, lifting upward: it starts as the unchosen cell is drawn
+   (paper over the 6px ramp bar) and rests zero tall, i.e. the static chosen
+   cell. Light scheme only, like the cell colours it uncovers; reduced motion
+   shows the chosen cell at once (and the beat is 90ms there). */
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .vote--ph.vote--advancing .rating .mood.is-selected {
+    background-image: linear-gradient(var(--surface), var(--surface));
+    background-repeat: no-repeat;
+    background-position: top;
+    background-size: 100% 0;
+    animation: ph-stamp-press 280ms steps(1, end) backwards, ph-stamp-ink 180ms cubic-bezier(.33, 1, .68, 1) 70ms backwards, ph-stamp-text 100ms steps(1, end) 70ms backwards;
+  }
+  @keyframes ph-stamp-press { from { transform: translateY(2px); } }
+  @keyframes ph-stamp-ink { from { background-size: 100% calc(100% - 6px); } }
+  @keyframes ph-stamp-text { from { color: var(--ink); } }
+}
 /* „← gar nicht … unbedingt →" under the cells (the README keeps the doubled
    ends). */
 :root[data-design="programmheft"] .vote--ph .rating-scale {
