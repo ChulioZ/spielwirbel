@@ -169,3 +169,31 @@ test('„Abzeichen" is a Comfortaa title that beats the component layer\'s Figtr
   assert.ok(outranks(head.trim(), list[0].trim()),
     `${specificity(head.trim())} does not beat the list's ${specificity(list[0].trim())}`);
 });
+
+// --- the friends' feed (#1428) --------------------------------------------------------
+
+test('a friend\'s mark in the feed is the pearl in its shell, sized per slot, on water', () => {
+  /* The feed's mark is K17's .badge__mark in a .badge-emblem host (badgeEmblem).
+     Ocean draws the earned pearl on the mark UNKEYED by state, which is what lets
+     the host reach it without a state list of its own — so pin that: the shell
+     and the pearl must be drawn either unkeyed or for an earned host. */
+  const rules = rulesOf(section());
+  const reaches = (part) => rules.some(([sel]) => sel.split(/,(?![^(]*\))/).map((x) => x.trim()).some((x) => x === `${GATE} ${part}`
+    || (x.includes('.badge-emblem') && x.includes('[data-state="earned"]') && x.endsWith(part))));
+  for (const part of ['.badge__mark', '.badge__mark::before', '.badge__mark::after', '.badge__mark > .ti']) {
+    assert.ok(reaches(part), `the feed's earned host no longer reaches ${part}`);
+  }
+  const body = (sel) => {
+    const hit = rules.find(([s]) => s.trim() === `${GATE} ${sel}`);
+    assert.ok(hit, `no rule for ${sel}`);
+    return hit[1];
+  };
+  assert.match(body('.feed-item__img--badge'), /--o-mark:\s*46px/);
+  assert.match(body('.feed-row__badge'), /--o-mark:\s*48px/);
+  const tile = body('.e-tile__img--badge');
+  assert.match(tile, /--o-mark:\s*64px/);
+  assert.match(tile, /var\(--water-foam\)/, 'the tile\'s band is water, not Klassisch\'s tint');
+  assert.equal(/radial-gradient|--pearl-/.test(tile), false, 'the band draws a pearl of its own');
+  // Ocean's mark sizes itself from --o-mark: it must outrank Klassisch's tile size.
+  assert.ok(outranks(`${GATE} .badge__mark`, '.e-tile__img--badge .badge__mark'));
+});

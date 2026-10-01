@@ -136,7 +136,8 @@ function renderStartTab(round, activeGames) {
      the CTA say „Erste Session wirbeln"; the invitation card in the grid carries
      the count. The threshold is the app's own — one active game — not the
      sheet's „ab 2 Spielen" (operator default on #1269). */
-  if (activeGames.length === 0) (ph ? ph.lead : launch).appendChild(hubEmptyTable(round));
+  // Die Brücke folds the empty table into the Missionskontrolle below (B7.1).
+  if (activeGames.length === 0 && !bh) (ph ? ph.lead : launch).appendChild(hubEmptyTable(round));
   // Ocean's one themed verb, „Abtauchen" (O9 §2), on the one action; Die
   // Brücke's „Mission starten" with its own glyph (B9 „Hauptaktion 1").
   const ctaLabel = ocean ? t('round.startSessionOcean')
@@ -157,7 +158,7 @@ function renderStartTab(round, activeGames) {
     startBtn.appendChild(h(`<span class="hub-cta__reason" id="hub-cta-reason" aria-hidden="true">${esc(t('hub.young.lock'))}</span>`));
     startBtn.setAttribute('aria-describedby', 'hub-cta-reason');
   }
-  if (bh) launch.appendChild(brueckeMission(startBtn, activeGames.length > 0));
+  if (bh) launch.appendChild(brueckeMission(startBtn, round, activeGames));
   else launch.appendChild(ocean ? oceanShell(startBtn) : startBtn);
   // Ocean's young round (#1216, O7.3): the shell stays the centre, and one
   // line under it says what is waiting for the first session.

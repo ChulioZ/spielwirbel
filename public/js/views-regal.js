@@ -11,7 +11,7 @@ function renderRegalTab(round, activeGames) {
   // Filters (and sort) persist for the session but are scoped to one round —
   // opening a different round's Regal resets them to defaults.
   if (regalFiltersRid !== round.id) {
-    regalFilters = { tags: new Map(), query: '', tagMode: 'all' };
+    regalFilters = { tags: new Map(), query: '', tagMode: 'all', owners: [] };
     gamesSort = 'avg';
     regalFiltersRid = round.id;
   }
@@ -21,6 +21,16 @@ function renderRegalTab(round, activeGames) {
   // been archived — the counterpart of the deleted-tag pruning below, and what
   // stops a filter surviving as an active count over a chip nobody can see.
   regalFilters.metadata = normalizeMetadataFilters(regalFilters.metadata, metadataFilterOptions(activeGames));
+  // The owner filter (#1433), over the members who own a game on THIS shelf —
+  // none on an unmarked shelf, which is what keeps the section away there (the
+  // setup screen's `shelfIsMarked` question; no second check, it would be
+  // redundant and untestable). A pick whose last game has since left the shelf
+  // is pruned in place, for the reason the metadata line above gives.
+  const ownerMembers = ownerFilterMembers(round, activeGames);
+  const ownerPicks = regalFilters.owners;
+  [...ownerPicks].forEach((x) => {
+    if (!ownerMembers.some((m) => m.id === x)) ownerPicks.splice(ownerPicks.indexOf(x), 1);
+  });
 
   // Stats per active game (for the rating pills and sorting), shelf-scoped:
   // one pass for the play counts, one for the raw scores, then the round's own
@@ -39,6 +49,8 @@ function renderRegalTab(round, activeGames) {
   // words the sort „Sortiert: Bewertung". It keeps the dashed add tile and
   // brings its own ways off the shelf; ocean.css lays the rest out per width.
   const ocean = designIs('ocean');
+  // Die Brücke only for its empty shelf so far (#1243, B7.2).
+  const bruecke = designIs('bruecke');
   // Das Programmheft (#1373, P3.3/P6.2/P7.8) takes the composed head too, and
   // Ocean's „Sortiert:" statement; its cards set the number, the meta and the
   // score as print ABOUT the cover rather than on it (phCard below).
@@ -80,13 +92,19 @@ function renderRegalTab(round, activeGames) {
   // the toolbar's (#1278 moved only the toolbar's import into the add sheet).
   const gridAddTile = tisch ? [] : [addTile];
 
-  if (activeGames.length === 0 && ocean) {
+  if (activeGames.length === 0 && (ocean || bruecke)) {
     /* Ocean's empty shelf (#1216, O7.1) carries its two ways in ON the card —
        the same two tiles' labels and handlers, as the card's one action and its
-       side road — so the dashed tiles below would offer them a second time. */
+       side road — so the dashed tiles below would offer them a second time.
+       Die Brücke's too (#1243, B7.2), with the side road as a text link: „nie
+       als zweiter Knopf". */
     const empty = gamesSec.appendChild(emptyState({ icon: 'ti-cards', title: t('games.emptyTitle'), text: t('games.empty') }));
     emptyStateAction(empty, { icon: 'ti-plus', label: t('round.addGame'), primary: true, onClick: () => showAddGame(round) });
-    if (canImportBgg()) emptyStateAction(empty, { icon: 'ti-download', label: t('bggImport.tile'), onClick: () => showBggImport(round) });
+    if (canImportBgg()) {
+      emptyStateAction(empty, bruecke
+        ? { icon: 'ti-arrow-right', label: t('bggImport.tile'), link: true, onClick: () => showBggImport(round) }
+        : { icon: 'ti-download', label: t('bggImport.tile'), onClick: () => showBggImport(round) });
+    }
   } else if (activeGames.length === 0) {
     gamesSec.appendChild(emptyState({ icon: 'ti-cards', title: t('games.emptyTitle'), text: t('games.empty') }));
     grid.append(...gridAddTile);
@@ -262,8 +280,12 @@ function renderRegalTab(round, activeGames) {
       // handed straight back in, and the tag section node is MOVED into the new
       // panel rather than rebuilt.
       if (filterPanel) filterPanel.el.remove();
-      filterPanel = renderFilterPanel(activeGames, regalFilters.metadata, () => renderGames(), tagSection,
-        composed ? { countBadge: true } : undefined);
+      // `owners` is the Regal's own opt-in (#1433); the setup screen never
+      // passes it. Rebuilt per mount so the backfill's repaint keeps it.
+      filterPanel = renderFilterPanel(activeGames, regalFilters.metadata, () => renderGames(), tagSection, {
+        countBadge: composed,
+        owners: { round, members: ownerMembers, picked: ownerPicks },
+      });
       if (filterPanel) filterWrap.appendChild(filterPanel.el);
       filterWrap.hidden = !filterPanel;
       // Der Tisch lifts the trigger into the toolbar's one row, between the ⓘ
@@ -354,6 +376,7 @@ function renderRegalTab(round, activeGames) {
       // browser only, so there is no route change here, but the semantics must
       // be the shelf's and the draw's alike.
       if (!fitsMetadataFilters(g, regalFilters.metadata)) return false;
+      if (!matchesOwnerFilter(ownerPicks, g.ownerIds)) return false;
       const q = query.trim().toLowerCase();
       if (q && !g.title.toLowerCase().includes(q)) return false;
       return true;

@@ -141,6 +141,51 @@ function brueckeCardMark() {
   return h(`<span class="design-card__mine" aria-hidden="true"><i class="ti ti-check"></i><span>${esc(t('design.pick.mine'))}</span></span>`);
 }
 
+/* A design's PRINT (#1376, Das Programmheft's P5.3-P5.5): the tile as a small
+   printed poster — the design's own ground, top to foot, with a bar and a
+   square in its poster ink and a block in its poster sub, the three shapes
+   P5 draws. No word on it: P5 prints every name on an opaque paper band
+   UNDER the colour field, never on it, so the name is the card's own text
+   (design-card__name) and this stays a picture (aria-hidden, like the tile).
+
+   Painted from registry DATA, inline, like the bill, the postcard and the
+   swatch — the other designs' poster colours are P1's „Nicht-Token" and must
+   never enter programmheft.css (test/programmheft-konto.test.js). A row
+   without a poster falls back to its page/accent through the --tile-*
+   defaults the stylesheet reads. */
+function designPrintArt(design) {
+  const tile = designTile(design);
+  tile.classList.add('design-tile--print');
+  const poster = design.poster;
+  if (poster) {
+    tile.style.setProperty('--poster-top', poster.ground[0]);
+    tile.style.setProperty('--poster-foot', poster.ground[1]);
+    tile.style.setProperty('--poster-ink', poster.ink);
+    tile.style.setProperty('--poster-sub', poster.sub);
+  }
+  tile.appendChild(h('<span class="design-tile__bar"></span>'));
+  tile.appendChild(h('<span class="design-tile__block"></span>'));
+  tile.appendChild(h('<span class="design-tile__square"></span>'));
+  return tile;
+}
+
+// Das Programmheft's card band (#1376, P5.3): the name — with Klassisch's
+// „Wie bisher" — and the „Aktiv" label on one line, the design's short line
+// under it. „Aktiv" is rendered on every card and the stylesheet shows it on
+// the worn one in the Konto only (the chooser marks its pick by the frame);
+// it is aria-hidden because the checked radio already says the same thing.
+function programmeCardBody(design) {
+  const badge = design.id === CLASSIC_DESIGN
+    ? `<span class="design-card__badge">${esc(t('design.klassisch.badge'))}</span>` : '';
+  return `<span class="design-card__body">
+          <span class="design-card__head">
+            <span class="design-card__name">${esc(t(design.labelKey))}${badge}</span>
+            <span class="design-card__active" aria-hidden="true">${esc(t('design.pick.active'))}</span>
+          </span>
+          <span class="design-card__line">${esc(t(design.shortKey || design.descKey))}</span>
+        </span>`;
+}
+
 /* The card list. `current` is the design in force, `onPick` is handed the id of
    whatever the user chose — the caller owns persisting it, because the Konto
    screen and the chooser sheet write it through different endpoints.
@@ -157,9 +202,14 @@ function renderDesignPicker(cfg, current, onPick) {
   const ocean = designIs('ocean');
   // Die Brücke's B5.2 prints name and scheme, no sentence, for Ocean's reason.
   const bruecke = designIs('bruecke');
+  // Das Programmheft's P5.3 prints a poster over a paper band (#1376).
+  const programme = designIs('programmheft');
   for (const design of offeredDesigns(cfg)) {
     const on = design.id === current;
-    const card = h(`<label class="design-card${on ? ' is-on' : ''}">
+    const card = programme ? h(`<label class="design-card design-card--print${on ? ' is-on' : ''}">
+        <input type="radio" name="designPick" value="${esc(design.id)}"${on ? ' checked' : ''}>
+        ${programmeCardBody(design)}
+      </label>`) : h(`<label class="design-card${on ? ' is-on' : ''}">
         <input type="radio" name="designPick" value="${esc(design.id)}"${on ? ' checked' : ''}>
         <span class="design-card__body">
           <span class="design-card__name">${esc(t(design.labelKey))}${
@@ -173,6 +223,7 @@ function renderDesignPicker(cfg, current, onPick) {
     if (designIs('tisch')) art = designBill(design);
     else if (ocean) art = designGlyphTile(design);
     else if (bruecke) art = designSwatch(design);
+    else if (programme) art = designPrintArt(design);
     card.insertBefore(art, card.querySelector('.design-card__body'));
     if (bruecke) card.appendChild(brueckeCardMark());
     card.querySelector('input').addEventListener('change', () => {
@@ -242,7 +293,9 @@ function buildDesignSection(me) {
     // note in an info box; the words, and their order, are Klassisch's.
     const ocean = designIs('ocean');
     if (ocean) wrap.classList.add('konto-design--card');
-    const head = ocean ? wrap.appendChild(h('<div class="konto-design__head"></div>')) : wrap;
+    // Das Programmheft (P5.3) sets the hint on the heading's baseline too.
+    const headed = ocean || designIs('programmheft');
+    const head = headed ? wrap.appendChild(h('<div class="konto-design__head"></div>')) : wrap;
     head.appendChild(h(`<h2 class="konto-section__h">${esc(t('konto.design.title'))}</h2>`));
     head.appendChild(h(`<p class="muted">${esc(t('konto.design.hint'))}</p>`));
     wrap.appendChild(renderDesignPicker(cfg, me.design, async (id) => {
@@ -435,6 +488,43 @@ function designCardSheet(cfg, current) {
   return backdrop;
 }
 
+/* The chooser as a PROGRAMME PAGE (#1376, P5.4 at 1440, P5.5 at 390) — Das
+   Programmheft's composition of the same question, built only while it is worn.
+
+   ONE card list at both widths, as Ocean's postcards: every poster is a radio
+   that only SELECTS (renderDesignPicker's print branch, so the Konto and the
+   chooser print the same poster), and one commit button — named after the
+   pick, „Programmheft übernehmen" — answers. What differs by width is the
+   FOOT: P5.4 lines up the promise, „Später entscheiden" and the commit button
+   left to right; P5.5 puts the commit button first and „Später entscheiden"
+   under it. So „Später entscheiden" exists twice, one per presentation, and the
+   stylesheet shows one — DOM order stays visual order at both widths without
+   reordering anything (designPosterSheet's shape).
+
+   NO close button, like every other chooser: both answers must record that it
+   was seen, and Escape already declines (showDesignChooser). NO live preview
+   either, for designPosterSheet's reason — the posters are the preview. */
+function designPrintSheet(cfg, current, onPick) {
+  const backdrop = h(`<div class="sheet-backdrop">
+      <div class="sheet design-chooser design-chooser--print" role="dialog" aria-modal="true" aria-labelledby="designChooserTitle">
+        <div class="sheet__head sheet__head--stacked design-chooser__head">
+          <p class="design-chooser__kicker">${esc(t('design.chooser.kicker'))}</p>
+          <h2 id="designChooserTitle">${esc(t('design.chooser.title'))}</h2>
+        </div>
+        <p class="muted design-chooser__body">${esc(t('design.chooser.body'))}</p>
+        <div class="design-chooser__list"></div>
+        <div class="design-chooser__commit">
+          <p class="muted design-chooser__foot">${esc(t('design.chooser.later'))}</p>
+          <button type="button" class="btn btn--ghost design-chooser__skip" id="designChooserSkip">${esc(t('design.chooser.skip'))}</button>
+          <button type="button" class="btn btn--primary btn--lg" id="designChooserGo"></button>
+          <button type="button" class="btn btn--ghost design-chooser__skip design-chooser__skip--row" id="designChooserSkipRow">${esc(t('design.chooser.skip'))}</button>
+        </div>
+      </div>
+    </div>`);
+  backdrop.querySelector('.design-chooser__list').appendChild(renderDesignPicker(cfg, current, onPick));
+  return backdrop;
+}
+
 // The readout over the postcards' commit button: „Du hast Ocean gewählt." The
 // name is set in bold, so the sentence is split around a placeholder rather
 // than escaped whole.
@@ -457,11 +547,19 @@ function showDesignChooser(cfg, me, onDone) {
   let chosen = before;
   const posters = designIs('tisch');
   const postcards = !posters && designIs('ocean');
+  const prints = !posters && !postcards && designIs('programmheft');
   let backdrop;
   if (posters) {
     backdrop = designPosterSheet(cfg, before);
   } else if (postcards) {
     backdrop = designCardSheet(cfg, before);
+  } else if (prints) {
+    // A poster only selects; the commit button says what it keeps. `go` is
+    // looked up at pick time — the list is built before the button exists.
+    backdrop = designPrintSheet(cfg, before, (id) => {
+      chosen = id;
+      labelDesignCommit(backdrop.querySelector('#designChooserGo'), id);
+    });
   } else {
     backdrop = h(`<div class="sheet-backdrop sheet-backdrop--center">
       <div class="sheet sheet--dialog design-chooser" role="dialog" aria-modal="true" aria-labelledby="designChooserTitle">
@@ -499,7 +597,7 @@ function showDesignChooser(cfg, me, onDone) {
     // The posters preview nothing, so a kept poster is painted HERE instead —
     // at once, rather than one round trip later.
     if (!keep) applyDesign(before);
-    else if (posters || postcards) applyDesign(chosen, { preview: true });
+    else if (posters || postcards || prints) applyDesign(chosen, { preview: true });
     closeSheet();
     // ONE request either way. Storing the pick and the seen-stamp separately
     // would leave a window in which the chooser has been answered and not
@@ -519,6 +617,11 @@ function showDesignChooser(cfg, me, onDone) {
   const go = backdrop.querySelector('#designChooserGo');
   backdrop.querySelector('#designChooserSkip').addEventListener('click', () => finish(false));
   go.addEventListener('click', () => finish(true));
+  if (prints) {
+    labelDesignCommit(go, chosen);
+    backdrop.querySelector('#designChooserSkipRow').addEventListener('click', () => finish(false));
+    return;
+  }
   if (postcards) {
     // A card only selects; the one commit button answers, and says what it keeps.
     const picked = backdrop.querySelector('.design-deck__picked');

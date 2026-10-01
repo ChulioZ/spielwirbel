@@ -456,6 +456,9 @@ I18N.nl = {
   'metaFilter.valueIncluded': '“{name}”: telt mee voor het filter. Klik om spellen ermee juist uit te sluiten.',
   'metaFilter.valueExcluded': '“{name}”: spellen ermee zijn verborgen. Klik om er niet meer op te filteren.',
   'metaFilter.removeFilter': '{name} verwijderen',
+  // The Regal's owner filter (#1433).
+  'ownerFilter.title': 'Eigenaren',
+  'ownerFilter.chip': 'Van {name}',
 
   'transferGames.link': 'Spellen verplaatsen of kopiëren',
   'transferGames.mode': 'Actie',
@@ -1097,6 +1100,14 @@ I18N.nl = {
   'vote.personOf': 'Persoon {n} van {total}',
   'vote.handoffNext': 'Geef daarna het apparaat door — {name} is hierna aan de beurt.',
   'vote.handoffLast': 'Daarna is iedereen klaar — dan komt de uitslag.',
+  // The review step after a voter's last card (#1434).
+  'vote.reviewTitle': 'Jouw beoordelingen',
+  'vote.reviewHint': 'Tik op een spel om je beoordeling te wijzigen – en verstuur dan.',
+  'vote.reviewCountOne': '{n} spel beoordeeld',
+  'vote.reviewCount': 'Alle {n} spellen beoordeeld',
+  'vote.reviewRow': '{title}: {rating}. Wijzigen',
+  'vote.reviewUnrated': 'niet beoordeeld',
+  'vote.reviewSend': 'Versturen',
   // Ocean's desktop vote card (#1213, O4.2): who has rated, and what is still below.
   'vote.raterDone': 'heeft beoordeeld',
   'vote.raterNow': 'beoordeelt nu',
@@ -1601,6 +1612,9 @@ I18N.nl = {
   'design.scheme.dark': 'Donker',
   'design.scheme.light': 'Licht',
   'design.pick.mine': 'Van jou',
+  // Das Programmheft's Konto (#1376): the worn poster's label and the index.
+  'design.pick.active': 'Actief',
+  'konto.index.label': 'Inhoud',
   'design.klassisch.name': 'Klassiek',
   'design.klassisch.badge': 'Zoals voorheen',
   'design.klassisch.desc': 'Het uiterlijk waarmee Spielwirbel begon — licht, rustig, met het oranje accent.',
@@ -1901,6 +1915,8 @@ I18N.nl = {
   'vote.sealedTextBrueckeOne': 'Nog één spel blijft versleuteld tot je het bereikt.',
   'vote.sealedTextBruecke': 'Nog {n} spellen blijven versleuteld tot je ze bereikt.',
   'vote.sealedCardBruecke': 'Versleuteld',
+  // The blind's kicker (#1241, B4.6/B6.10) — a decorative line, read by no screen reader.
+  'vote.signalBruecke': 'Inkomend signaal',
   'score.reasonVetoBrueckeOne': '{n}× geen stuwkracht',
   'score.reasonVetoBruecke': '{n}× geen stuwkracht',
   'startSession.guestSeatBruecke': 'Gast · alleen vandaag',

@@ -355,6 +355,20 @@ function tagFilterChips(roundTags, tagFilter, afterRemove) {
     }));
 }
 
+// The owner half's chips (#1433), one per picked member — per VALUE, like the
+// categories, so a × clears exactly one person. `owners` is the `{ members,
+// picked }` the Regal hands `renderFilterPanel`; `picked` is its own array,
+// spliced in place so the screen's filter state and every closure agree.
+function ownerFilterChips(owners) {
+  if (!owners) return [];
+  return owners.members
+    .filter((m) => owners.picked.includes(m.id))
+    .map((m) => ({
+      label: t('ownerFilter.chip', { name: m.name }),
+      remove: () => { const at = owners.picked.indexOf(m.id); if (at >= 0) owners.picked.splice(at, 1); },
+    }));
+}
+
 // One entry per REMOVABLE filter, `{ label, remove }`, tags first — the panel's
 // own section order, and the half a group recognises.
 //
@@ -366,9 +380,11 @@ function tagFilterChips(roundTags, tagFilter, afterRemove) {
 // source, so the label can never disagree with what is on screen.
 // `countMetadataFilters` is untouched: the SERVER uses it (lib/routes/sessions.js)
 // to decide whether a draw carried filters at all, which is a different question.
-function activeFilterChips(state, tagSection, partyCount) {
+function activeFilterChips(state, tagSection, partyCount, owners) {
   const f = state || {};
   const out = tagSection && tagSection.chips ? tagSection.chips() : [];
+  // Owners next, the panel's own section order (#1433).
+  out.push(...ownerFilterChips(owners));
 
   // One chip for the playtime ROW, in the same three phrasings the complexity
   // range uses and for the same reason: it is one control, so a × that cleared
@@ -441,9 +457,9 @@ function activeFilterChips(state, tagSection, partyCount) {
 // =================== The one filter control ===================
 
 // The trigger plus the applied-filter chips. Returns NULL when there is nothing
-// to filter by at all (no round tags AND no metadata on the shelf), so a round
-// of hand-typed games without tags sees no filter affordance rather than an
-// empty one.
+// to filter by at all (no round tags, no metadata on the shelf AND no owner
+// section), so a round of hand-typed games without tags sees no filter
+// affordance rather than an empty one.
 //
 //  - `tagSection` is `{ el, chips, reset }` built by the calling screen, or null
 //    when the round has no tags. `chips()` is READ on every sync rather than
@@ -453,7 +469,12 @@ function activeFilterChips(state, tagSection, partyCount) {
 // Returns { el, sync, reset, isOpen }. A screen calls `sync()` after a tag chip
 // moves; the metadata controls route through `onChange` and resync themselves.
 function renderFilterPanel(games, state, onChange, tagSection, opts) {
-  if (!hasMetadataFilterOptions(metadataFilterOptions(games)) && !tagSection) return null;
+  // The owner section (#1433) is opt-in: only the Regal passes `opts.owners`
+  // (`{ round, members, picked }`), and only on a shelf where somebody is marked.
+  // The setup screen never does — its pool is already owner-aware through the
+  // table, so a second owner control there would ask the same question twice.
+  const owners = opts && opts.owners && opts.owners.members.length ? opts.owners : null;
+  if (!hasMetadataFilterOptions(metadataFilterOptions(games)) && !tagSection && !owners) return null;
   // Same thunk the body reads, because the applied chip states the count too and
   // the two must never name different numbers.
   const partyCount = (opts && opts.partyCount) || (() => 0);
@@ -496,7 +517,7 @@ function renderFilterPanel(games, state, onChange, tagSection, opts) {
   }
 
   function sync() {
-    const chips = activeFilterChips(state, tagSection, partyCount());
+    const chips = activeFilterChips(state, tagSection, partyCount(), owners);
     trigger.setAttribute('aria-label', t('games.filterLabel', { n: chips.length }));
     if (countBadge) {
       countBadge.textContent = String(chips.length);
@@ -532,10 +553,14 @@ function renderFilterPanel(games, state, onChange, tagSection, opts) {
       // `tagSection.el` is MOVED in (appendChild moves a node), so every chip
       // listener and the user's current picks survive being closed and reopened.
       if (tagSection) body.appendChild(tagSection.el);
+      // Owners between the two: a round's own members, like its tags, so they
+      // sit on the round's side of the hairline before the BGG facts.
+      const own = owners ? renderOwnerFilter(owners.round, owners, () => { sync(); onChange(); }) : null;
+      if (own) body.appendChild(own.el);
       const meta = renderMetadataFilter(games, state, () => { sync(); onChange(); }, opts);
       if (meta) body.appendChild(meta.el);
       container.appendChild(body);
-      live = { repaint: () => { if (meta) meta.repaint(); }, close };
+      live = { repaint: () => { if (own) own.repaint(); if (meta) meta.repaint(); }, close };
       // Returned, not called here: `build` runs on a DETACHED node in the popover
       // path, so a focus() in it is a silent no-op — both presentations invoke
       // this once the container is live (.claude/rules/popover-vs-sheet-editors.md
@@ -557,6 +582,8 @@ function renderFilterPanel(games, state, onChange, tagSection, opts) {
   // to, so it works with the panel closed — which is the state it is called in.
   function reset() {
     if (tagSection && tagSection.reset) tagSection.reset();
+    // No owner line: only the setup screen calls this, and it never has an
+    // owner section (#1433) — a clear here could not be reached by any test.
     clearMetadataFilters(state);
     if (live) live.repaint();
     sync();

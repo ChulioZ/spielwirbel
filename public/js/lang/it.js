@@ -458,6 +458,9 @@ I18N.it = {
   'metaFilter.valueIncluded': '«{name}»: conta ai fini del filtro. Clicca per escludere invece i giochi che la portano.',
   'metaFilter.valueExcluded': '«{name}»: i giochi che la portano sono nascosti. Clicca per smettere di filtrare in base a essa.',
   'metaFilter.removeFilter': 'Rimuovi {name}',
+  // The Regal's owner filter (#1433).
+  'ownerFilter.title': 'Proprietari',
+  'ownerFilter.chip': 'Di {name}',
 
   'transferGames.link': 'Sposta o copia giochi',
   'transferGames.mode': 'Azione',
@@ -1101,6 +1104,14 @@ I18N.it = {
   'vote.personOf': 'Persona {n} di {total}',
   'vote.handoffNext': 'Poi passa il dispositivo — tocca a {name}.',
   'vote.handoffLast': 'Poi avrete votato tutti — e arriva il risultato.',
+  // The review step after a voter's last card (#1434).
+  'vote.reviewTitle': 'I tuoi voti',
+  'vote.reviewHint': 'Tocca un gioco per cambiarne il voto, poi invia.',
+  'vote.reviewCountOne': '{n} gioco votato',
+  'vote.reviewCount': 'Tutti i {n} giochi votati',
+  'vote.reviewRow': '{title}: {rating}. Cambia',
+  'vote.reviewUnrated': 'non votato',
+  'vote.reviewSend': 'Invia',
   // Ocean's desktop vote card (#1213, O4.2): who has rated, and what is still below.
   'vote.raterDone': 'ha valutato',
   'vote.raterNow': 'sta valutando',
@@ -1608,6 +1619,9 @@ I18N.it = {
   'design.scheme.dark': 'Scuro',
   'design.scheme.light': 'Chiaro',
   'design.pick.mine': 'Il tuo',
+  // Das Programmheft's Konto (#1376): the worn poster's label and the index.
+  'design.pick.active': 'Attivo',
+  'konto.index.label': 'Indice',
   'design.klassisch.name': 'Classico',
   'design.klassisch.badge': 'Come prima',
   'design.klassisch.desc': 'L\'aspetto con cui Spielwirbel è nato: chiaro, tranquillo, con l\'accento arancione.',
@@ -1908,6 +1922,8 @@ I18N.it = {
   'vote.sealedTextBrueckeOne': 'Un altro gioco resta cifrato finché non ci arrivi.',
   'vote.sealedTextBruecke': 'Altri {n} giochi restano cifrati finché non ci arrivi.',
   'vote.sealedCardBruecke': 'Cifrato',
+  // The blind's kicker (#1241, B4.6/B6.10) — a decorative line, read by no screen reader.
+  'vote.signalBruecke': 'Segnale in arrivo',
   'score.reasonVetoBrueckeOne': '{n}× nessuna spinta',
   'score.reasonVetoBruecke': '{n}× nessuna spinta',
   'startSession.guestSeatBruecke': 'Ospite · solo oggi',
