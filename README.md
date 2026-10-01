@@ -82,7 +82,7 @@ and documented in [`docs/configuration.md`](docs/configuration.md).
   plays, using a local BoardGameGeek corpus. Plain weighted arithmetic — no AI, nothing invented —
   and every card says why it is there.
 - **A design of your own** — *Der Tisch* (dark felt and brass), the light
-  *Ocean* or *Klassisch*,
+  *Ocean*, the printed *Programmheft* or *Klassisch*,
   per person, with a colour marker per round — custom tags, an
   installable **PWA** that works offline, shareable deep links, a
   **Freundeskreis** feed between accounts, and
