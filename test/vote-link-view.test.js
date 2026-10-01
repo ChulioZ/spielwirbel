@@ -135,8 +135,9 @@ test('submitting sends only the claimed person\'s ratings, then shows the thank-
   dom.app.querySelector('#backBtn').click();
   dom.app.querySelectorAll('.mood')[0].click();
   await beat(dom);
-  dom.app.querySelectorAll('.mood')[0].click(); // Azul -> 1, and that finishes
+  dom.app.querySelectorAll('.mood')[0].click(); // Azul -> 1, and that opens the review
   await beat(dom);
+  await sendReview(dom);                        // …whose „Absenden" finishes (#1434)
 
   const post = calls.find((c) => c.method === 'POST');
   assert.ok(post, 'the votes were never submitted');
@@ -217,6 +218,12 @@ test('an unusable link renders the dead state, never a blank screen', async (t) 
    `renderVoteLinkDone` directly: the conditions read the ballot and the person
    the CARDS handed on, and a direct call would let a wrong hand-off pass. */
 
+// Since #1434 the last card opens a review step; its „Absenden" submits.
+async function sendReview(dom) {
+  dom.app.querySelector('.vote-review__send').click();
+  await flush();
+}
+
 // Vote through both games as `who`, landing on the done step.
 async function voteThrough(dom, token, who) {
   setMotion(dom, true);
@@ -228,6 +235,7 @@ async function voteThrough(dom, token, who) {
   await beat(dom);
   dom.app.querySelectorAll('.mood')[3].click();
   await beat(dom);
+  await sendReview(dom);
 }
 
 const noteOf = (dom) => dom.app.querySelector('.vote-link__note');
@@ -267,6 +275,7 @@ test('the same device is not told twice — the flag survives a revise', async (
   await beat(dom);
   dom.app.querySelectorAll('.mood')[2].click();
   await beat(dom);
+  await sendReview(dom);
 
   assert.match(dom.app.textContent, /Danke/);
   assert.equal(noteOf(dom), null, 'the second pass nagged');

@@ -883,12 +883,32 @@ function startVoting(round, session, games, people, opts = {}) {
   // The handover screen is skipped when someone is voting on their OWN device:
   // "pass the device on, no peeking" is advice about a shared phone, and showing
   // it to a person alone with their own is just a screen in the way.
+  //
+  // Each person's column ends on a REVIEW step (#1434): the last card's beat
+  // delivers it instead of submitting, so the voter can adjust a rating with
+  // every candidate seen. It sits before the next person's handover, so a voter
+  // reviews before the device is passed on — and on the last person, before
+  // finish(). It is a real step with its own history entry, which is what makes
+  // a Back from it land on the last card rather than out of the flow.
   const order = shuffled(people);
   const steps = [];
   order.forEach((p) => {
     if (!opts.skipIntro) steps.push({ type: 'intro', person: p });
     games.forEach((g) => steps.push({ type: 'vote', person: p, game: g }));
+    steps.push({ type: 'review', person: p });
   });
+  const reviewIdx = (person) => steps.findIndex((s) => s.type === 'review' && s.person === person);
+  // People whose review has been on screen. From then on a rating tap returns to
+  // the review rather than walking through every later card again — the review
+  // is where they were, and "change one, see the list again" is the point.
+  const reviewed = new Set();
+  // True only on a card reached by a row tap on the review, until anything else
+  // navigates. Then the entry BELOW this one is that review, so the re-rate goes
+  // back to it with history.back() instead of pushing a second review entry —
+  // which keeps a Back from the review landing on the last card, as it does
+  // without a jump. Cleared by every other movement (onPopstate, go()), so it can
+  // never send a history.back() to an entry that is not the review.
+  let jumpedFromReview = false;
 
   let idx = 0;
   // True once finish() has POSTed. Until then everything the user has entered
@@ -899,11 +919,12 @@ function startVoting(round, session, games, people, opts = {}) {
   // saves each column as it is given. The guards stay — losing four ratings to a
   // stray Back is still worth a confirm.
   let saved = false;
-  // One POST per run (#1168). Reaching finish() used to take a deliberate
-  // „Weiter" press; now the last rating tap does it after a beat, so a stray
-  // tap landing just as the beat releases would fire a second submission while
-  // the first is still awaiting. The catch below resets it — a failed save has
-  // to stay retryable.
+  // One POST per run (#1168). Since #1434 finish() is reached from the review
+  // step's „Absenden", and a second press while the save is still awaiting
+  // would write the column twice — the tap lock has long expired by then, so
+  // this flag is the only guard on that window. The catch below resets it — a
+  // failed save has to stay retryable, and the review is still on screen to
+  // retry from.
   let finishing = false;
   // Set by finish() so a Back out of the results screen can rebuild the finale.
   let finaleArgs = null;
@@ -973,7 +994,8 @@ function startVoting(round, session, games, people, opts = {}) {
   // now calls history.back() too, keeping index and history in one story.
   // Always via syncUrl(), never history.pushState: syncUrl also bumps
   // swrRenderToken and maintains navIndex (router.js).
-  function go(next) {
+  function go(next, fromReview = false) {
+    jumpedFromReview = fromReview;
     idx = next;
     syncUrl(sessionStepPath(round.id, session.id, idx));
     render();
@@ -985,6 +1007,7 @@ function startVoting(round, session, games, people, opts = {}) {
     // forward from where I was", which after a Back is forward out of the card
     // the user just asked for (#1168).
     advance.cancel();
+    jumpedFromReview = false;
     const at = parseSessionPath(pathname);
     const mine = at && at.rid === round.id && at.sid === session.id;
     if (mine && at.kind === 'vote' && at.step < steps.length) {
@@ -1025,10 +1048,13 @@ function startVoting(round, session, games, people, opts = {}) {
 
   // Segmented progress: one segment per person, filled in their color.
   const perPerson = games.length + (opts.skipIntro ? 0 : 1); // (intro +) one card per game
+  // A person's column in `steps` also holds their review, which fills the bar
+  // rather than counting as a step of it (#1434).
+  const stepsPerPerson = perPerson + 1;
   function progressBar() {
     return `<div class="vote-progress">${order
       .map((p, pi) => {
-        const done = Math.max(0, Math.min(perPerson, idx - pi * perPerson));
+        const done = Math.max(0, Math.min(perPerson, idx - pi * stepsPerPerson));
         const pct = Math.round((done / perPerson) * 100);
         // One progressbar per person: the bar is otherwise purely visual, and
         // "step 2 of 3" is the one thing a reader cannot infer from the card
@@ -1122,9 +1148,52 @@ function startVoting(round, session, games, people, opts = {}) {
     return card;
   }
 
+  /* The review step (#1434) — vote-review.js builds it in the card's own frame.
+     Every handler asks `advance.locked` first: the review arrives on the last
+     card's beat, and under reduced motion the #1168 tap lock outlives that beat,
+     so the second tap of a double-tap on the last face can land HERE — on
+     „Absenden" in the worst case. */
+  function renderReview(person, wanted) {
+    reviewed.add(person.id);
+    const composed = voteCardComposed();
+    const turn = composed ? voteTurn(round, session, order, person) : null;
+    const last = idx === steps.length - 1;
+    app.innerHTML = '';
+    const card = voteReviewCard({
+      composed,
+      person,
+      who: { label: t('vote.who'), color: personColor(round, person) },
+      roundName: round.name,
+      handoff: composed ? voteHandoffLine(turn, !opts.skipIntro) : '',
+      games,
+      ratingOf: (g) => (votes[person.id][g.id] || {}).rating,
+      onJump: (i) => {
+        if (advance.locked) return;
+        refocus = { kind: 'title' };
+        go(steps.findIndex((s) => s.type === 'vote' && s.person === person && s.game === games[i]), true);
+      },
+      // The last person's review submits; any earlier one hands on to the next
+      // person's handover (the pre-#655 multi-person run) without saving —
+      // finish() writes the whole table at the end, as it always did.
+      onSend: () => {
+        if (advance.locked) return;
+        if (last) return finish();
+        go(idx + 1);
+      },
+      onBack: () => {
+        if (advance.locked) return;
+        history.back();
+      },
+    });
+    if (!composed) card.querySelector('.vote__who').before(h(progressBar()));
+    app.appendChild(card);
+    // Arriving by the beat or a re-rate puts focus on the heading; a Back or a
+    // language switch leaves it where it was, as on the cards.
+    if (wanted && wanted.kind === 'title') card.querySelector('.vote-review__title').focus();
+  }
+
   function render() {
     const step = steps[idx];
-    const total = steps.length;
     // Consumed here rather than at the end: every path out of this function,
     // including the intro's early return, must clear it, or a stale intent
     // would fire on the next unrelated render.
@@ -1147,7 +1216,8 @@ function startVoting(round, session, games, people, opts = {}) {
        (.claude/rules/redundant-guards-make-each-other-untestable.md). */
     // Ocean's blind is full-screen like its card (#1214); Klassisch keeps the
     // top bar over its handover card.
-    voteScreen(step.type === 'vote' || (step.type === 'intro' && oceanWorn()));
+    // The review (#1434) is part of the rating run, so it is full-screen too.
+    voteScreen(step.type !== 'intro' || oceanWorn());
 
     // Handover screen: full color card in the person's color — or, under
     // Ocean, the deep-water blind (views-session-ocean.js).
@@ -1171,12 +1241,14 @@ function startVoting(round, session, games, people, opts = {}) {
       return;
     }
 
+    if (step.type === 'review') return renderReview(step.person, wanted);
+
     const { person, game } = step;
     const current = votes[person.id][game.id] || { rating: null };
     const color = personColor(round, person);
 
     app.innerHTML = '';
-    const card = designIs('tisch') || oceanWorn() || designIs('bruecke')
+    const card = voteCardComposed()
       ? composedCard(person, game) : klassischCard(person, game, color);
     /* Der Tisch's third motion ritual (#1200, T10.3): a card the BEAT delivered
        tips in about its middle axis — the hand-over, and the turn itself is the
@@ -1237,9 +1309,13 @@ function startVoting(round, session, games, people, opts = {}) {
           // none: with it in place, deleting either cancel leaves every test
           // green, so the thing that actually protects the user stops being
           // guarded. Measured (#1168) — both breaks, zero red.
-          if (idx === total - 1) return finish();
           refocus = { kind: 'title' };
-          go(idx + 1);
+          // A card the review sent the voter to goes back to it (see
+          // jumpedFromReview); any other card after the review was seen
+          // returns there too, with a fresh entry. Otherwise one step on —
+          // which from the last card IS the review (#1434), never finish().
+          if (jumpedFromReview) return history.back();
+          go(reviewed.has(person.id) ? reviewIdx(person) : idx + 1);
           announceCard();
         });
       });
@@ -2461,9 +2537,18 @@ async function showResults(round, session, gamesHint, reveal, plain) {
   // simply the final block; the #561 constraint it was phrased against
   // ("nothing belongs after a back link") is satisfied by construction.
   // Der Tisch ends on its own foot instead, which carries the same two actions
-  // behind „Mehr" (renderTischFoot) — still the last block on the screen.
+  // behind „Mehr" (renderTischFoot) — still the last block on the screen, except
+  // under Ocean, whose composer moves it into the side column ahead of the
+  // Tafel (#1430): there the destructive pair is one more tap away behind
+  // „Mehr", and „Noch eine Session" is what the screen is for next.
   if (tischFoot) {
-    screen.appendChild(tischFoot);
+    // Der Tisch's own foot sits under the box, inside its slot (#1430): the
+    // slot is ONE grid item, so the foot travels with the pinned box beside the
+    // Tafel instead of opening a row the Tafel spans, and on a phone the actions
+    // follow the box ahead of the ranking — Ocean's order. Ocean and Die Brücke
+    // compose their own sides from a foot that is a child of the screen.
+    if (oceanLook || brueckeLook) screen.appendChild(tischFoot);
+    else tischSlot.appendChild(tischFoot);
     if (oceanLook) composeOceanResult(screen, head, peopleEl);
     if (brueckeLook) composeBrueckeResult(screen);
     return;

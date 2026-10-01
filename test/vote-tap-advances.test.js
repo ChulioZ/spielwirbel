@@ -54,6 +54,14 @@ const sessionFixture = () => ({
 const moods = (dom) => [...dom.app.querySelectorAll('.rating .mood')];
 const title = (dom) => dom.app.querySelector('.vote__title').textContent.trim();
 
+/* Since #1434 the last card's beat delivers a review step rather than the
+   submission, so a run ends on its „Absenden". test/vote-review.test.js owns
+   that step; the cases here only need to get past it. */
+async function send(dom) {
+  dom.app.querySelector('.vote-review__send').click();
+  await flush();
+}
+
 // =========================================================== the wizard card
 
 /* `hold` keeps the save in flight, which is the only way to reach the flow's
@@ -154,18 +162,24 @@ test('a second tap 100ms after the first does NOT rate the following game', asyn
   // And it did not silently rewrite the first game either.
   moods(dom)[4].click(); await beat(dom);
   moods(dom)[4].click(); await beat(dom);
+  await send(dom);
   assert.equal(saved.length, 1);
   assert.deepEqual(saved[0].m1, { g1: { rating: 5 }, g2: { rating: 5 }, g3: { rating: 5 } });
 });
 
-test('the last tap finishes the run', async (t) => {
+/* #1434 changed what the last tap does: it opens the review step, and one
+   „Absenden" there finishes the run. Still one tap per game plus one per voter. */
+test('the last tap opens the review, and „Absenden" finishes the run', async (t) => {
   const saved = [];
   const dom = await wizard(t, { saved });
   for (let i = 0; i < GAMES.length; i++) {
     moods(dom)[2].click();
     await beat(dom);
   }
-  assert.equal(saved.length, 1, 'the last card did not submit');
+  assert.equal(saved.length, 0, 'the last card submitted without a review');
+  assert.ok(dom.app.querySelector('.vote-review'), 'the last card did not open the review');
+  await send(dom);
+  assert.equal(saved.length, 1, 'the review did not submit');
   assert.deepEqual(Object.keys(saved[0].m1).sort(), ['g1', 'g2', 'g3']);
 });
 
@@ -186,11 +200,11 @@ test('a tap while the save is still in flight does not submit a second time', as
     moods(dom)[2].click();
     await beat(dom);
   }
+  await send(dom);
   assert.equal(saved.length, 1);
-  assert.ok(dom.app.querySelector('.rating'), 'the card should still be up while the save hangs');
+  assert.ok(dom.app.querySelector('.vote-review'), 'the review should still be up while the save hangs');
 
-  moods(dom)[0].click();        // a stray tap on a card that is already submitting
-  await beat(dom);
+  await send(dom);              // a stray second press on a run that is already submitting
   assert.equal(saved.length, 1, 'the run submitted twice');
 });
 
@@ -238,6 +252,7 @@ test('changing the rating on a revisited card advances again', async (t) => {
 
   moods(dom)[2].click(); await beat(dom);
   moods(dom)[2].click(); await beat(dom);
+  await send(dom);
   assert.equal(saved[0].m1.g1.rating, 1, 'the changed rating was not the one saved');
 });
 
@@ -363,6 +378,7 @@ test('a double-tap on the shared-link card does not rate the following game', as
 
   moods(dom)[4].click(); await beat(dom);
   moods(dom)[4].click(); await beat(dom);
+  await send(dom);
   const post = calls.find((c) => c.method === 'POST');
   assert.ok(post, 'the ratings were never submitted');
   assert.deepEqual({ ...post.body.votes.g1 }, { rating: 5 });
@@ -379,12 +395,13 @@ test('the shared-link card submits exactly once, even mid-flight', async (t) => 
     moods(dom)[2].click();
     await beat(dom);
   }
+  assert.equal(posts(), 0, 'the last card submitted without a review');
+  await send(dom);
   assert.equal(posts(), 1);
 
   // Same window as the wizard's: the lock has expired, the POST has not
-  // resolved, and the card is still on screen.
-  moods(dom)[0].click();
-  await beat(dom);
+  // resolved, and the review is still on screen.
+  await send(dom);
   assert.equal(posts(), 1, 'the link voter submitted twice');
 });
 

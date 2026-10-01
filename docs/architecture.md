@@ -886,6 +886,9 @@ public/
                      with cover and meta, the worded faces, the hand-off line
                      and the vote link's felt intro; both vote cards build
                      their faces through its voteMoodButton()
+    vote-review.js   the review step after a voter's last card (#1434): every
+                     game with its rating, a row back to each card, „Absenden";
+                     one builder for both vote surfaces, in each design's frame
     views-session.js session setup, the rating cards, finale, results
     result-tafel-composed.js Der Tisch's result: the column-header Tafel of compact
                      rows with pills, the crowned people, the foot (#1275)
