@@ -315,6 +315,9 @@ function showSessionLobby(round, session, handedOn, dealt) {
   // Everyone else who can vote here. `nextUp` is dropped for the same reason the
   // own seat is: it is already the leading button.
   const rest = hotseat.filter((p) => !nextUp || p.id !== nextUp.id);
+  // Das Programmheft (#1375) moves each of these keys into its person's row;
+  // the map is how it finds them without a marker on Klassisch's markup.
+  const hereBtns = new Map();
   if (rest.length) {
     const list = h(`<div class="live-vote__hotseat">
         <div class="field__label">${esc(t('lobby.hereLabel'))}</div>
@@ -327,6 +330,7 @@ function showSessionLobby(round, session, handedOn, dealt) {
       // With the handover screen: on this device the next person really is being
       // handed a phone, which is exactly what that screen is for.
       btn.addEventListener('click', () => voteFor(p, false));
+      hereBtns.set(p.id, btn);
       list.appendChild(btn);
     });
     actions.appendChild(list);
@@ -465,6 +469,10 @@ function showSessionLobby(round, session, handedOn, dealt) {
   // this device — views-session-bruecke.js.
   const bruecke = designIs('bruecke');
   if (bruecke) composeBrueckeLobby(root, people, voted);
+  // Das Programmheft (#1375, P4.5/P6.5): who · share · this device, with each
+  // person's „Für …" key in their row — views-session-programmheft.js.
+  const ph = designIs('programmheft');
+  if (ph) composeProgrammheftLobby(round, root, people, voted, hereBtns);
 
   // Below the actions: what you can do comes first, what already happened after.
   const log = renderSessionLog(round, session);
@@ -475,8 +483,9 @@ function showSessionLobby(round, session, handedOn, dealt) {
      from 1280px and the section strip below it — the same sub-screen tabs the
      result screen renders for every design (showResults). The phone gets none,
      as on every sub-screen (`.dock--sub`, #331). Klassisch's lobby never had
-     them and keeps it that way. */
-  if (bruecke) renderSubScreenTabs(round, 'session');
+     them and keeps it that way. Das Programmheft keeps them too (#1375): P4.5
+     draws the Kopf with its section line, P6.5 the dock. */
+  if (bruecke || ph) renderSubScreenTabs(round, 'session');
 
   // Poll for other devices' votes. `root` still being in the document is the
   // teardown signal — there is no unmount hook, and every navigation replaces

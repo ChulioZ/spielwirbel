@@ -911,7 +911,8 @@ public/
                      shared vote in three columns and the pass-device blind
     views-session-programmheft.js Das Programmheft's session loop (#1374):
                      the setup as a checklist, „Der Topf" and the black box,
-                     „Zurück" as a word on the vote card, the report's kicker
+                     „Zurück" as a word on the vote card, the report's kicker,
+                     and (#1375) the shared vote and the pass-device blind
     views-vote-link.js the PUBLIC /vote/:token screen (#652): claim your name
                      from the participant list and rate the drawn games without
                      an account — the only view that runs logged out

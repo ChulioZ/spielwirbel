@@ -5678,3 +5678,469 @@
 :root[data-design="programmheft"] .split-tables__foot { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-5); }
 :root[data-design="programmheft"] .split-tables__foot .btn { border-radius: 0; --press-mb: 0px; }
 :root[data-design="programmheft"] .app .split-tables__foot .btn.btn--primary { font-family: var(--font-display); font-size: var(--display-6); font-weight: 400; text-transform: uppercase; }
+
+/* ===== #1375 — the shared vote and the pass-device blind ===== */
+/* Sheets: docs/design/programmheft/Programmheft-P4-Session-Desktop.dc.html
+   (P4.5 Geteilte Wertung, P4.6 Übergabe) and Programmheft-P6-Phone-Rest.dc.html
+   (P6.5, P6.6). The markup is showSessionLobby()'s, re-composed by
+   composeProgrammheftLobby(), and programmheftBlind() in place of the handover
+   card (views-session-programmheft.js).
+
+   Geometry is ungated like the rest of this file; colour is gated on the light
+   scheme. Vermilion carries text only at the blind's 24px+ sizes; the small
+   kickers are --brand (the accent ink). Nothing moves: motion is #1382. */
+
+/* --- The shared vote (P6.5 at 390, P4.5 at 1440) ------------------------- */
+:root[data-design="programmheft"] .live-vote--ph {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+/* The head: the marker rule, the kicker, Anton over a 4px page rule, and the
+   count — under the sentence on a phone, the big numeral at the right from
+   1100px (P4.5). */
+:root[data-design="programmheft"] .live-vote--ph > .page-head--ph-lobby {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-5);
+  margin: 0;
+  padding-bottom: var(--space-2);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .live-vote--ph > .page-head--ph-lobby { border-bottom: var(--rule-page) solid var(--ink); }
+:root[data-design="programmheft"] .page-head--ph-lobby > .ph-rule { flex: 1 0 100%; margin-bottom: 0; }
+:root[data-design="programmheft"] .ph-lobby__title { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-lobby__kicker { color: var(--brand); }
+:root[data-design="programmheft"] .page-head--ph-lobby h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--display-4);
+  font-weight: 400;
+  line-height: var(--leading-display);
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+:root[data-design="programmheft"] .page-head--ph-lobby .muted { margin: 0; font-size: 14px; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .page-head--ph-lobby .muted { color: var(--ink-2); }
+:root[data-design="programmheft"] .ph-lobby__count { display: flex; flex-direction: column; gap: 4px; margin: 0; }
+/* The numeral is the desktop's (P4.5); the phone prints the words only (P6.5). */
+:root[data-design="programmheft"] .ph-lobby__numeral { display: none; }
+:root[data-design="programmheft"] .ph-lobby__words { font-size: 15px; font-weight: 700; }
+
+/* WHO: rows on dotted rules, not the chip grid — the square initial, the name,
+   the state in words with its glyph, and the „Für …" key at the row's end. */
+:root[data-design="programmheft"] .live-vote--ph .live-vote__people {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0;
+}
+:root[data-design="programmheft"] .live-vote--ph .live-person {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) auto;
+  grid-template-areas: "ava name key" "ava state key";
+  align-items: center;
+  align-content: center;
+  gap: 2px var(--space-3);
+  min-height: 60px;
+  padding: 6px 0;
+  background: none;
+  border: 0;
+  border-radius: 0;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .live-vote--ph .live-person,
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .live-vote--ph .live-person.is-voted {
+  background: none;
+  border-bottom: 1px dotted var(--hair);
+}
+:root[data-design="programmheft"] .live-vote--ph .live-person__avatar {
+  grid-area: ava;
+  width: 36px;
+  height: 36px;
+  border-radius: 0;
+  font-family: var(--font);
+  font-size: 17px; /* glyph, not type */
+  font-weight: 700;
+}
+:root[data-design="programmheft"] .live-vote--ph .live-person__name {
+  grid-area: name;
+  align-self: end;
+  font-size: 17px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+:root[data-design="programmheft"] .live-vote--ph .live-person__state {
+  grid-area: state;
+  align-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 700;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .live-vote--ph .live-person__name { color: var(--ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .live-vote--ph .live-person__state { color: var(--ink-soft); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .live-vote--ph .live-person.is-voted .live-person__state { color: var(--good); }
+/* „Für Lea": the key target, an outlined box — never filled, so the one black
+   button on the screen stays the leading one. */
+:root[data-design="programmheft"] .live-vote--ph .live-person > .live-vote__hotseat-btn {
+  grid-area: key;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--target-key);
+  padding: 0 12px;
+  border-radius: 0;
+  box-shadow: none;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  --press-mb: 0px;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .live-vote--ph .live-person > .live-vote__hotseat-btn {
+  background: var(--surface);
+  border: var(--rule-strong) solid var(--ink);
+  color: var(--ink);
+}
+/* The row already shows the person; the key's own avatar would be a third copy. */
+:root[data-design="programmheft"] .live-vote--ph .live-person > .live-vote__hotseat-btn .live-person__avatar { display: none; }
+/* „Deine Stimme ist da": the white box with the good edge (P4.5). */
+:root[data-design="programmheft"] .live-vote--ph .live-vote__done {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: var(--target-key);
+  margin: 0 0 var(--space-3);
+  padding: 10px 14px;
+  text-align: left;
+  font-size: 15px;
+  font-weight: 700;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .live-vote--ph .live-vote__done {
+  background: var(--surface);
+  border: var(--rule-strong) solid var(--good);
+  color: var(--ink);
+}
+/* Who is still open, and the guests' note — Klassisch hides both. */
+:root[data-design="programmheft"] .live-vote--ph .live-vote__waiting {
+  display: block;
+  margin: var(--space-3) 0 0;
+  font-size: 15px;
+  line-height: 1.45;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .live-vote--ph .live-vote__waiting { color: var(--ink-2); }
+:root[data-design="programmheft"] .live-vote--ph .live-vote__guests {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: var(--space-3);
+  padding: 12px 14px;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .live-vote--ph .live-vote__guests {
+  background: var(--surface);
+  border: 1px solid var(--ink);
+  color: var(--ink);
+}
+:root[data-design="programmheft"] .live-vote--ph .live-vote__guests-main { display: flex; flex-direction: column; gap: 4px; }
+:root[data-design="programmheft"] .live-vote--ph .live-vote__guests-title { font-size: 15px; font-weight: 700; }
+:root[data-design="programmheft"] .live-vote--ph .live-vote__guests-note { font-size: 14px; }
+:root[data-design="programmheft"] .live-vote--ph .ph-lobby__here {
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .live-vote--ph .ph-lobby__here { border-top: 1px solid var(--ink); color: var(--ink); }
+
+/* SHARE: Klassisch's panel head is shown here — Anton title and the sentence —
+   then the code as a tile and the link as the black bar (P4.5, P6.5). */
+:root[data-design="programmheft"] .live-vote--ph .live-vote__panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0;
+}
+:root[data-design="programmheft"] .live-vote--ph .live-vote__panel-head { display: flex; flex-direction: column; gap: 6px; }
+:root[data-design="programmheft"] .live-vote--ph .live-vote__panel-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--display-6);
+  font-weight: 400;
+  line-height: var(--leading-display);
+  text-transform: uppercase;
+}
+:root[data-design="programmheft"] .live-vote--ph .live-vote__panel-note { margin: 0; font-size: 14px; line-height: 1.5; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .live-vote--ph .live-vote__panel-note { color: var(--ink-2); }
+:root[data-design="programmheft"] .live-vote--ph .live-vote__share-row { flex-direction: column; gap: var(--space-3); }
+:root[data-design="programmheft"] .live-vote--ph :is(.live-vote__qr, .live-vote__share) {
+  flex: none;
+  border-radius: 0;
+  box-shadow: none;
+  --press-mb: 0px;
+}
+/* The code: a tile, the glyph standing in for the code the button opens. It is
+   the faster of the two at a table (#1170), so it comes first (P6.5). */
+:root[data-design="programmheft"] .live-vote--ph .live-vote__qr {
+  order: -1;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  justify-content: start;
+  gap: 14px;
+  min-height: var(--target-key);
+  padding: 12px;
+  text-align: left;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .live-vote--ph .live-vote__qr {
+  background: var(--surface);
+  border: var(--rule-strong) solid var(--ink);
+  color: var(--ink);
+}
+:root[data-design="programmheft"] .live-vote--ph .live-vote__qr > .ti { font-size: 72px; line-height: 1; }
+:root[data-design="programmheft"] .ph-qr__text { display: flex; flex-direction: column; gap: 4px; }
+:root[data-design="programmheft"] .ph-qr__title { font-size: 14px; font-weight: 700; }
+:root[data-design="programmheft"] .ph-qr__hint { font-size: 14px; font-weight: 400; }
+:root[data-design="programmheft"] .live-vote--ph .live-vote__share {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: var(--target-key);
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .live-vote--ph .live-vote__share {
+  background: var(--box);
+  border: var(--rule-strong) solid var(--box);
+  color: var(--box-ink);
+}
+
+/* THIS DEVICE: the leading key black, „Abstimmung beenden" outlined in the
+   danger ink — it ends the evening for everyone (P4.5, P6.5). */
+:root[data-design="programmheft"] .live-vote--ph .live-vote__actions { gap: var(--space-2); }
+:root[data-design="programmheft"] .live-vote--ph .live-vote__actions .btn {
+  min-height: var(--target-key);
+  border-radius: 0;
+  box-shadow: none;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  --press-mb: 0px;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .live-vote--ph .live-vote__actions .live-vote__mine {
+  background: var(--box);
+  border: var(--rule-strong) solid var(--box);
+  color: var(--box-ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .live-vote--ph .live-vote__actions .live-vote__close {
+  background: var(--surface);
+  border: var(--rule-strong) solid var(--danger);
+  color: var(--danger);
+}
+/* With every vote in, closing is the one thing left: it leads, filled. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .live-vote--ph .live-vote__actions .live-vote__close.btn--primary {
+  background: var(--box);
+  border-color: var(--box);
+  color: var(--box-ink);
+}
+
+@media (min-width: 1100px) {
+  /* Out of the reading measure: the two columns are the page (P4.5). */
+  :root[data-design="programmheft"] .app > *:not(.rail):not(.dock).live-vote--ph { max-width: 1360px; }
+  :root[data-design="programmheft"] .live-vote.live-vote--ph {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 460px;
+    grid-template-areas: "head head" "who share" "act share" "log log";
+    grid-template-rows: auto auto 1fr auto;
+    gap: var(--space-5) 48px;
+  }
+  :root[data-design="programmheft"] .live-vote--ph > .page-head { grid-area: head; }
+  :root[data-design="programmheft"] .live-vote--ph > .live-vote__people { grid-area: who; }
+  :root[data-design="programmheft"] .live-vote--ph > .live-vote__panel { grid-area: share; align-self: start; }
+  :root[data-design="programmheft"] .live-vote--ph > .live-vote__actions {
+    grid-area: act;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-content: start;
+  }
+  :root[data-design="programmheft"] .live-vote--ph > .session-log { grid-area: log; }
+  /* With every vote in there is no share panel: one column. */
+  :root[data-design="programmheft"] .live-vote.live-vote--ph:not(:has(> .live-vote__panel)) {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "head" "who" "act" "log";
+  }
+  /* The column rule between people and sharing (P4.5). */
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .live-vote--ph:has(> .live-vote__panel) > :is(.live-vote__people, .live-vote__actions) {
+    padding-right: 48px;
+    border-right: var(--rule-col) solid var(--ink);
+  }
+  :root[data-design="programmheft"] .page-head--ph-lobby h1 { font-size: 96px; }
+  :root[data-design="programmheft"] .page-head--ph-lobby .muted { font-size: 17px; }
+  :root[data-design="programmheft"] .ph-lobby__count { align-items: flex-end; padding-bottom: 6px; }
+  :root[data-design="programmheft"] .ph-lobby__numeral {
+    display: block;
+    font-family: var(--font-display);
+    font-size: var(--display-3);
+    line-height: var(--leading-display);
+  }
+  :root[data-design="programmheft"] .ph-lobby__words { font-size: 14px; }
+  :root[data-design="programmheft"] .live-vote--ph .live-person {
+    grid-template-columns: 44px minmax(0, 1fr) auto auto;
+    grid-template-areas: "ava name state key";
+    column-gap: var(--space-4);
+    min-height: 64px;
+  }
+  :root[data-design="programmheft"] .live-vote--ph .live-person__avatar { width: 44px; height: 44px; font-size: 20px; }
+  :root[data-design="programmheft"] .live-vote--ph .live-person__name {
+    align-self: center;
+    font-family: var(--font-display);
+    font-size: var(--display-5);
+    font-weight: 400;
+    line-height: var(--leading-display);
+    text-transform: uppercase;
+  }
+  :root[data-design="programmheft"] .live-vote--ph .live-person__state { align-self: center; font-size: 14px; }
+  :root[data-design="programmheft"] .live-vote--ph .live-vote__panel-title { font-size: var(--display-5); }
+  :root[data-design="programmheft"] .live-vote--ph .live-vote__qr {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+    align-self: flex-start;
+    padding: 18px;
+    text-align: center;
+  }
+  :root[data-design="programmheft"] .live-vote--ph .live-vote__qr > .ti { font-size: 200px; }
+  :root[data-design="programmheft"] .live-vote--ph .ph-qr__text { flex-direction: row; gap: 6px; }
+  :root[data-design="programmheft"] .live-vote--ph .ph-qr__title::after { content: " ·"; }
+  :root[data-design="programmheft"] .live-vote--ph .live-vote__share { min-height: 52px; }
+  :root[data-design="programmheft"] .live-vote--ph .live-vote__actions .btn { min-height: 48px; padding: 0 16px; }
+}
+
+/* --- The pass-device blind (P6.6 at 390, P4.6 at 1440) ------------------- */
+/* No top bar, no dock, no footer at either width: body.vote-screen takes the
+   bar, the wizard renders no navigation, and the footer's links are a way off
+   the blind too (P1 rule 7). */
+:root[data-design="programmheft"] body.vote-screen:has(.handover--ph) .site-footer { display: none; }
+:root[data-design="programmheft"] .handover.handover--ph {
+  max-width: none;
+  /* The viewport less the app's own 16px top and 40px bottom padding, so the
+     blind and its key fit one screen without a scroll. */
+  min-height: calc(100dvh - 56px);
+  margin: 0;
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: var(--space-5);
+  text-align: left;
+  border-radius: 0;
+}
+/* On the page's own ground, edge to edge — a fill of its own would show the
+   app's padding as a frame round the blind. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .handover.handover--ph { background: none; color: var(--ink); }
+/* The two vermilion bands: „the screen belongs to someone right now". Fixed to
+   the viewport's edges, so they frame the screen however the page scrolls. */
+:root[data-design="programmheft"] .ph-blind__band {
+  position: fixed;
+  left: 0;
+  right: 0;
+  height: 12px;
+  z-index: 1;
+}
+:root[data-design="programmheft"] .ph-blind__band:first-child { top: 0; }
+:root[data-design="programmheft"] .ph-blind__band:last-child { bottom: 0; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-blind__band { background: var(--vermilion); }
+:root[data-design="programmheft"] .ph-blind__body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 20px;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-blind__kicker { color: var(--ink-soft); }
+:root[data-design="programmheft"] .ph-blind__swatch { width: 64px; height: 64px; background: var(--person); }
+:root[data-design="programmheft"] .handover--ph .handover__name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(44px, 18vw, 72px);
+  font-weight: 400;
+  line-height: var(--leading-display);
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+:root[data-design="programmheft"] .handover--ph .handover__sub {
+  align-self: stretch;
+  margin: 0;
+  padding-top: 14px;
+  font-size: 20px;
+  font-weight: 600;
+  opacity: 1;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .handover--ph .handover__sub { border-top: var(--rule-page) solid var(--ink); color: var(--ink-2); }
+:root[data-design="programmheft"] .ph-blind__keys {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-2);
+  padding-bottom: 12px;
+}
+/* „Los geht's": the black box in Anton, taller than the key target as both
+   sheets draw it. No pressed-key edge — depth is never a shadow here. The
+   doubled class outranks the Archivo reset list, which names .handover__go. */
+:root[data-design="programmheft"] .handover.handover--ph .handover__go {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 64px;
+  padding: 0 40px;
+  border: 0;
+  border-radius: 0;
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 400;
+  text-transform: uppercase;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .handover--ph .handover__go { background: var(--box); color: var(--box-ink); }
+:root[data-design="programmheft"] .handover--ph .handover__go:active { transform: none; border-bottom-width: 0; margin-bottom: 0; }
+:root[data-design="programmheft"] .handover--ph .handover__back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: var(--target-key);
+  margin: 0;
+  padding: 0 12px;
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .handover--ph .handover__back { color: var(--ink); }
+
+@media (min-width: 860px) {
+  /* P4.6: the name beside its colour at the size of a poster, the call under
+     it, the key in Anton at 80px. */
+  /* The app's top padding grows to 24px here. */
+  :root[data-design="programmheft"] .handover.handover--ph { min-height: calc(100dvh - 64px); padding: 40px 120px; justify-content: center; }
+  :root[data-design="programmheft"] .ph-blind__band { height: 16px; }
+  :root[data-design="programmheft"] .ph-blind__body {
+    flex: none;
+    gap: 28px;
+    display: grid;
+    grid-template-columns: 96px minmax(0, 1fr);
+    align-items: center;
+    column-gap: 28px;
+  }
+  :root[data-design="programmheft"] .ph-blind__kicker { grid-column: 1 / -1; }
+  :root[data-design="programmheft"] .ph-blind__swatch { width: 96px; height: 96px; }
+  :root[data-design="programmheft"] .handover--ph .handover__name { font-size: clamp(72px, 9vw, 150px); }
+  :root[data-design="programmheft"] .handover--ph .handover__sub { grid-column: 1 / -1; max-width: 700px; font-size: 28px; padding-top: 18px; }
+  :root[data-design="programmheft"] .ph-blind__keys { flex-direction: row; align-items: center; gap: var(--space-4); padding: 0; }
+  :root[data-design="programmheft"] .handover.handover--ph .handover__go { min-height: 80px; font-size: 44px; }
+}
