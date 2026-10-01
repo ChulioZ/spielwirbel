@@ -1552,6 +1552,9 @@ I18N.ko = {
   'design.scheme.dark': '어두움',
   'design.scheme.light': '밝음',
   'design.pick.mine': '내 디자인',
+  // Das Programmheft's Konto (#1376): the worn poster's label and the index.
+  'design.pick.active': '사용 중',
+  'konto.index.label': '목차',
   'design.klassisch.name': '클래식',
   'design.klassisch.badge': '기존 그대로',
   'design.klassisch.desc': 'Spielwirbel이 처음 시작한 모습 — 밝고 차분하며 주황색 강조가 있습니다.',

@@ -1620,6 +1620,9 @@ I18N.fr = {
   'design.scheme.dark': 'Sombre',
   'design.scheme.light': 'Clair',
   'design.pick.mine': 'Le tien',
+  // Das Programmheft's Konto (#1376): the worn poster's label and the index.
+  'design.pick.active': 'Actif',
+  'konto.index.label': 'Sommaire',
   'design.klassisch.name': 'Classique',
   'design.klassisch.badge': 'Comme avant',
   'design.klassisch.desc': 'L\'apparence avec laquelle Spielwirbel a commencé : claire, calme, avec l\'accent orange.',

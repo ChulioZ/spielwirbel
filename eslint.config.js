@@ -307,6 +307,8 @@ const frontendGlobals = {
   // views-account-tisch.js (issue #1265): Konto as Der Tisch's dashboard
   renderKontoDashboard: 'readonly', buildKontoDuCard: 'readonly',
   kontoToggleValue: 'readonly', kontoRow: 'readonly', buildKontoBggCard: 'readonly',
+  // views-account-programmheft.js (issue #1376): Konto as Das Programmheft's index + sections
+  composeKontoProgramme: 'readonly', composeKontoCards: 'readonly',
   // …and the three views-account.js builders it is the first other file to call
   buildInstallSection: 'readonly', buildAvatarForm: 'readonly', buildProfileStatsForm: 'readonly',
   // support.js (issue #173)

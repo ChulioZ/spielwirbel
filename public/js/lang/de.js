@@ -1690,6 +1690,9 @@ I18N.de = {
   'design.scheme.dark': 'Dunkel',
   'design.scheme.light': 'Hell',
   'design.pick.mine': 'Deins',
+  // Das Programmheft's Konto (#1376): the worn poster's label and the index.
+  'design.pick.active': 'Aktiv',
+  'konto.index.label': 'Inhalt',
   'design.klassisch.name': 'Klassisch',
   'design.klassisch.badge': 'Wie bisher',
   'design.klassisch.desc': 'Die Oberfläche, mit der Spielwirbel angefangen hat — hell, ruhig, mit dem orangenen Akzent.',

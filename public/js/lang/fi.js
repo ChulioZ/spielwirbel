@@ -1580,6 +1580,9 @@ I18N.fi = {
   'design.scheme.dark': 'Tumma',
   'design.scheme.light': 'Vaalea',
   'design.pick.mine': 'Sinun',
+  // Das Programmheft's Konto (#1376): the worn poster's label and the index.
+  'design.pick.active': 'Käytössä',
+  'konto.index.label': 'Sisältö',
   'design.klassisch.name': 'Klassinen',
   'design.klassisch.badge': 'Kuten ennen',
   'design.klassisch.desc': 'Ulkoasu, jolla Spielwirbel aloitti — vaalea, rauhallinen ja oranssi korostus.',
