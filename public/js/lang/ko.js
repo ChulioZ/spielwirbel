@@ -1734,6 +1734,9 @@ I18N.ko = {
   'install.done': 'Spielwirbel을 설치했어요.',
   'a11y.home': 'Spielwirbel – 홈 화면으로',
   'a11y.language': '언어',
+  // The top bar's „…" button (#1460); the second while a folded inbox or account has something unread.
+  'topbar.more': '더 보기',
+  'topbar.moreUnread': '더 보기 (읽지 않음)',
   'a11y.account': '계정',
   // Der Tisch shows the account NAME on the button (#1279), so the name must
   // be part of its accessible name (WCAG 2.5.3 Label in Name).

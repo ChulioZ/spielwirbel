@@ -143,3 +143,6 @@ permanently false there, so `element.blur()` moves `document.activeElement`
 without dispatching any `blur`/`focusout` event — which makes every
 commit-on-blur inline editor look completely dead. See
 `.claude/rules/blur-events-never-fire-in-the-preview-pane.md`.
+
+**And a phone-width emulation widens itself on overflow**, while `resize_window`
+fires no `resize`: `.claude/rules/emulated-viewport-widens-on-overflow.md`.

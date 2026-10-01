@@ -621,6 +621,19 @@ h1, h2, h3 { font-family: var(--font-display); }
   opacity: 0;
 }
 .lang-picker__globe:has(+ .lang-picker:focus-visible) { outline: 2px solid var(--brand-ring, var(--brand)); outline-offset: 2px; }
+/* Folded into „…" (#1460). `data-folded`, not `hidden`: `hidden` is the app's
+   own gating and the fit has to be able to tell the two apart
+   (js/topbar-overflow.js). `!important` because a design may give a bar button
+   a `display` of its own (Der Tisch's face account button is a flex row), which
+   would otherwise beat a one-attribute selector and leave the button drawn.
+
+   The globe carries the bar's only auto margin, which is what pushes the
+   buttons right — so once it folds, the first button still in the bar takes
+   the margin over, and every later one gives it back (two auto margins would
+   split the free space between them). */
+.topbar > [data-folded] { display: none !important; }
+.topbar > .lang-picker[data-folded] ~ :not([hidden]):not([data-folded]) { margin-left: auto; }
+.topbar > .lang-picker[data-folded] ~ :not([hidden]):not([data-folded]) ~ :not([hidden]):not([data-folded]) { margin-left: 0; }
 
 /* ---- Layout ---- */
 .app {
@@ -4273,7 +4286,7 @@ body.auth-screen .terms-banner { display: none; }
    drift apart visually. BOTH host buttons need `position: relative` — the dot is
    absolutely positioned, so without it on the account button it would anchor to
    whatever ancestor happens to be positioned and land somewhere else entirely. */
-#inboxBtn, #accountBtn { position: relative; }
+#inboxBtn, #accountBtn, #moreBtn { position: relative; }
 .topbar-dot {
   position: absolute;
   top: 3px;

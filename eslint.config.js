@@ -54,6 +54,8 @@ const frontendGlobals = {
   docTitle: 'readonly', DOC_TITLE_SEP: 'readonly', DOC_TITLE_BRAND_SEP: 'readonly',
   // popover-fit.js (issue #739)
   popoverFit: 'readonly', popoverRoom: 'readonly', POPOVER_GAP: 'readonly',
+  // topbar-fit.js (issue #1460)
+  topbarKeep: 'readonly', topbarRowWidth: 'readonly', TOPBAR_FIT_SLACK: 'readonly',
   // report-link.js
   feedReportUrl: 'readonly', setContactAvailable: 'readonly',
   // views-friends.js (#1092)
@@ -454,6 +456,8 @@ const frontendGlobals = {
   buildDesignSection: 'readonly', saveAccountDesign: 'readonly',
   // design-menu.js (#1429) — the top-bar design button, wired by main.js.
   setupDesignMenu: 'readonly',
+  // topbar-overflow.js (#1460) — the top bar's „…" menu, wired by main.js.
+  setupTopbarOverflow: 'readonly', fitTopbar: 'readonly',
   showMarker: 'readonly', showGameDetail: 'readonly',
   // game-editors.js (#968 — the five field editors, split out of
   // views-round-detail.js; each takes an explicit context)

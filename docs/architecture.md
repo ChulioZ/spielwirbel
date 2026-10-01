@@ -632,6 +632,10 @@ public/
     design-menu.js   the top-bar palette button and its popover: a pick
                      saves to the account when logged in, to the device
                      otherwise (#1429)
+    topbar-overflow.js
+                     the top bar's „…" button: buttons that do not fit beside
+                     the home link fold into its menu, lowest priority first
+                     (issue #1460)
     round-roles.js   the owner/co-owner/editor ladder and what each may do,
                      required by lib/round-access.js so the views hide exactly
                      what the server refuses (issue #137)
@@ -762,6 +766,8 @@ public/
                      (issues #145, #1168)
     popover-fit.js   which side of its anchor a popover goes on and how far it
                      may be squeezed to stay reachable there (issue #739)
+    topbar-fit.js    how many top-bar buttons fit beside the home link, from
+                     measured widths (issue #1460)
     sheet.js         the bottom sheet — the app's modal overlay primitive,
                      used by eleven other modules — plus openEditor, which
                      picks popover-or-sheet by viewport (issue #956)

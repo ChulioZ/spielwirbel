@@ -1801,6 +1801,9 @@ I18N.nl = {
 
   'a11y.home': 'Spielwirbel – naar het beginscherm',
   'a11y.language': 'Taal',
+  // The top bar's „…" button (#1460); the second while a folded inbox or account has something unread.
+  'topbar.more': 'Meer',
+  'topbar.moreUnread': 'Meer (ongelezen)',
   'a11y.account': 'Account',
   // Der Tisch shows the account NAME on the button (#1279), so the name must
   // be part of its accessible name (WCAG 2.5.3 Label in Name).

@@ -1853,6 +1853,9 @@ I18N.es = {
   // Nombres accesibles de la barra superior y de las dos zonas de navegación (#145).
   'a11y.home': 'Spielwirbel – ir a la pantalla de inicio',
   'a11y.language': 'Idioma',
+  // The top bar's „…" button (#1460); the second while a folded inbox or account has something unread.
+  'topbar.more': 'Más',
+  'topbar.moreUnread': 'Más (sin leer)',
   'a11y.account': 'Cuenta',
   // Der Tisch shows the account NAME on the button (#1279), so the name must
   // be part of its accessible name (WCAG 2.5.3 Label in Name).

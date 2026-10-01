@@ -103,6 +103,11 @@
     <!-- Account menu (issue #138): hidden unless accounts are on and the user is
          logged in; wired by js/account.js setupAccountUi(). -->
     <button id="accountBtn" class="topbar__acct" type="button" hidden aria-label="Account"><i class="ti ti-user" aria-hidden="true"></i><span id="newsDot" class="topbar-dot" hidden></span></button>
+    <!-- „…" (issue #1460): shown only when the buttons above do not all fit
+         beside the home link; they fold into its menu lowest priority first.
+         Measured and wired by js/topbar-overflow.js, its label set there too,
+         since it changes with the unread mark a folded inbox/account hands it. -->
+    <button id="moreBtn" class="topbar__acct" type="button" hidden aria-expanded="false" aria-label="More"><i class="ti ti-dots" aria-hidden="true"></i><span id="moreDot" class="topbar-dot" hidden></span></button>
   </header>
 
   <!-- No-JS fallback (issue #525). Everything below the static hero is rendered
@@ -319,6 +324,7 @@
   <script src="/js/design.js"></script>
   <script src="/js/design-picker.js"></script>
   <script src="/js/design-menu.js"></script>
+  <script src="/js/topbar-overflow.js"></script>
   <script src="/js/round-roles.js"></script>
   <script src="/js/draw-pool.js"></script>
   <script src="/js/provider-info-fields.js"></script>
@@ -341,6 +347,7 @@
   <script src="/js/news.js"></script>
   <script src="/js/doc-title.js"></script>
   <script src="/js/popover-fit.js"></script>
+  <script src="/js/topbar-fit.js"></script>
   <!-- With the other dependency-free helpers, before their consumers. -->
   <script src="/js/report-link.js"></script>
   <script src="/js/install-prompt.js"></script>

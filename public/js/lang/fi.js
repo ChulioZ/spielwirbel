@@ -1769,6 +1769,9 @@ I18N.fi = {
 
   'a11y.home': 'Spielwirbel – siirry aloitusnäkymään',
   'a11y.language': 'Kieli',
+  // The top bar's „…" button (#1460); the second while a folded inbox or account has something unread.
+  'topbar.more': 'Lisää',
+  'topbar.moreUnread': 'Lisää (lukematta)',
   'a11y.account': 'Tili',
   // Der Tisch shows the account NAME on the button (#1279), so the name must
   // be part of its accessible name (WCAG 2.5.3 Label in Name).

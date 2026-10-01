@@ -1809,6 +1809,9 @@ I18N.fr = {
 
   'a11y.home': 'Spielwirbel – aller à l’écran d’accueil',
   'a11y.language': 'Langue',
+  // The top bar's „…" button (#1460); the second while a folded inbox or account has something unread.
+  'topbar.more': 'Plus',
+  'topbar.moreUnread': 'Plus (non lu)',
   'a11y.account': 'Compte',
   // Der Tisch shows the account NAME on the button (#1279), so the name must
   // be part of its accessible name (WCAG 2.5.3 Label in Name).
