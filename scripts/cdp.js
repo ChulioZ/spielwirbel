@@ -23,7 +23,9 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
-const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+// macOS's Google Chrome by default; CHROME_BIN points both scripts at any other
+// Chrome/Chromium binary (a Linux box, a CI image) without editing this file.
+const CHROME = process.env.CHROME_BIN || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 async function connectCdp({ port, extraArgs = [], onCleanup }) {

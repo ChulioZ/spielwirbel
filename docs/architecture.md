@@ -469,6 +469,10 @@ public/
                      rendered by scripts/render-design-marks.js
     ocean/           Ocean's own marks (#1222): the whirl in Gischt on the
                      accent water, the same six files, same script
+    bruecke/         Die Brücke's own marks (#1419): the whirl, lit in cyan,
+                     in two corner brackets on the night
+    programmheft/    Das Programmheft's own marks (#1419): the whirl over the
+                     Anton wordmark in ink on the vermilion masthead
   img/               product screenshots on the logged-out landing page — the
                      shelf, the voting screen and a session result, all phone
                      width, one set per UI locale (landing-*.<locale>.webp),
@@ -956,6 +960,8 @@ scripts/
                      renders a design's app icons, favicon and link-preview
                      image to the PNGs its registry row names (#1199), with
                      headless Chrome over CDP and the design's own tokens
+                     (CHROME_BIN points it, and the landing capture, at a
+                     Chrome/Chromium other than macOS's default path)
   landing-seed-data.js
                      the per-locale seed that run puts in (round name, seats,
                      tags, invented titles, provider metadata) — a flat table,

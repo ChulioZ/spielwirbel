@@ -72,6 +72,20 @@ design's own token block, the whirl from `public/js/card-glyphs.js`. Klassisch
 has no recipe: its white die on orange is the committed original and stays
 Klassisch's for good. Look at every image; the test checks sizes, not pictures.
 
+**Every coloured design (one with a `page`) wears its OWN marks** under
+`/icons/<id>/`, and its favicon + 192 — never more — are in `SHELL`;
+`test/design-marks.test.js` asserts both. Die Brücke and Das Programmheft sat on
+Klassisch's orange die until #1419 because their recap-card slices scoped the
+marks out, and nothing went red. A new design needs a recipe here, and **the
+whirl is in every design's icon** (operator decision on #1436, which first
+shipped a lamp for Die Brücke and a bare masthead for Das Programmheft): the
+design dresses it — lit cyan in brackets, ink on the vermilion masthead — but
+never replaces it.
+
+**Off macOS, point `CHROME_BIN` at the binary** (`scripts/cdp.js`); as root,
+Chromium also needs `--no-sandbox`, so aim `CHROME_BIN` at a two-line wrapper
+script that adds it rather than committing the flag.
+
 **Related:** `.claude/rules/link-preview-card.md` (the og tags, CORP — the
 opt-out keys on the basename, so every design's `og-image.png` gets it),
 `.claude/rules/pwa-service-worker.md` (which marks are precached and why),
