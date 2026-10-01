@@ -15,6 +15,10 @@
    unconditional. Regenerate only for a change that deliberately alters
    Klassisch: SPIELWIRBEL_UPDATE_GOLDEN=1 node --test test/programmheft-session-klassisch-golden.test.js */
 
+// The golden was captured in Europe/Berlin (the results print a local time);
+// pinned so a runner in another zone (CI is UTC) renders the same snapshot.
+process.env.TZ = 'Europe/Berlin';
+
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
