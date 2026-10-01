@@ -1291,6 +1291,9 @@ function startVoting(round, session, games, people, opts = {}) {
        this card", so arriving by Back, a language switch or the first card never
        tips. The motion is tisch.css's; nothing here waits for it. */
     if (designIs('tisch') && wanted && wanted.kind === 'title') card.classList.add('is-tipped');
+    // Die Brücke's B10.3 (#1248) under the same gate: the card drives in from
+    // below (bruecke.css).
+    if (designIs('bruecke') && wanted && wanted.kind === 'title') card.classList.add('is-incoming');
 
     // Info affordance (#717): the provider metadata behind a small ⓘ in the
     // title line, so the height-budgeted card gains no extra row
