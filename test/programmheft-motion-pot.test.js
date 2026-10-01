@@ -1,18 +1,16 @@
 'use strict';
 
-/* Das Programmheft's motion ritual 2 (#1382, P10.2): „Der Topf" — the pot is
- * SET line by line, not poured. Each row moves in 16px from the left, 120ms
- * apart, and the numeral counts up beside them.
+/* Das Programmheft's motion ritual 2 (#1382, P10.2): „Der Topf" — the rows a
+ * seat tap or a filter brings into the pot are SET, not poured: each moves in
+ * 16px from the left, 120ms after the one before it.
  *
- * Where it parts from Der Tisch's T10.1 (test/tisch-motion-throw.test.js): the
- * sheet's end frame is the whole pot being set, so the ARRIVING setup sets
- * every row — Der Tisch leaves its first paint still. After that both behave
- * alike: a seat tap or a filter change sets only the rows that enter
- * („Filterwechsel setzen nur die geänderten Zeilen neu"), and a re-render of
- * the screen already on show (a language switch) sets nothing.
+ * The gate is Der Tisch's T10.1 (test/tisch-motion-throw.test.js): the first
+ * paint is still (#1122) — the sheet sets the whole arriving pot and counts the
+ * numeral up, and both were dropped at the PR — rows leaving set nothing, and a
+ * re-render of the screen on show sets nothing.
  *
- * The stagger index is capped at 9, so a pot of any size is set inside the
- * sheet's 1 400ms: the tenth row onward lands with the ninth.
+ * The stagger index is capped at 9, so any number of entering rows is set
+ * inside the sheet's 1 400ms: the tenth onward lands with the ninth.
  */
 
 const { test } = require('node:test');
@@ -24,14 +22,11 @@ const { loadApp, flush } = require('./support/dom');
 const { mediaBlocks, rulesOf } = require('./support/css');
 
 const MEMBERS = [{ id: 'm1', name: 'Anna' }, { id: 'm2', name: 'Ben' }, { id: 'm3', name: 'Clara' }];
-// Clara owns two boxes, so unseating and reseating her moves exactly those two.
+// Clara owns eleven boxes, so reseating her brings eleven rows back — enough to
+// reach the stagger cap.
 const GAMES = [
   { id: 'g01', title: 'Azul', minPlayers: 1, maxPlayers: 8 },
-  { id: 'g02', title: 'Catan', minPlayers: 1, maxPlayers: 8 },
-  { id: 'g03', title: 'Dixit', minPlayers: 1, maxPlayers: 8, ownerIds: ['m3'] },
-  { id: 'g04', title: 'Just One', minPlayers: 1, maxPlayers: 8 },
-  { id: 'g05', title: 'Kartographen', minPlayers: 1, maxPlayers: 8, ownerIds: ['m3'] },
-  ...Array.from({ length: 7 }, (_, i) => ({ id: `g${10 + i}`, title: `Spiel ${i + 1}`, minPlayers: 1, maxPlayers: 8 })),
+  ...Array.from({ length: 11 }, (_, i) => ({ id: `g${10 + i}`, title: `Spiel ${i + 1}`, minPlayers: 1, maxPlayers: 8, ownerIds: ['m3'] })),
 ];
 const roundFixture = () => ({
   id: 'r1', name: 'Freitagsrunde', tags: [], sessions: [],
@@ -55,122 +50,46 @@ const qa = (dom, sel) => [...dom.app.querySelectorAll(sel)];
 const seat = (dom, name) => qa(dom, '.nr-seat').find((s) => s.textContent.includes(name));
 const set = (dom) => qa(dom, '.pool-tile.is-set');
 
-test('the arriving pot is set row by row, the stagger capped at the ninth', async (t) => {
+test('the first paint sets nothing — the pot is simply there', async (t) => {
   const dom = await setup(t, 'programmheft');
   assert.equal(qa(dom, '.pool-tile').length, 12);
-  assert.equal(set(dom).length, 12, 'every row of the arriving pot is set');
-  assert.deepEqual(set(dom).map((el) => el.style.getPropertyValue('--set-i')),
-    ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '9', '9'],
-    'the tenth row onward lands with the ninth, so any pot is set inside 1 400ms');
-  assert.equal(qa(dom, '.pool-tile.is-thrown').length, 0, 'Der Tisch’s throw is not borrowed');
-  assert.equal(qa(dom, '.pool-tile[data-throw]').length, 0);
+  assert.equal(set(dom).length, 0, 'an arriving screen must not be in motion (#1122)');
+  assert.equal(dom.app.querySelector('#poolTitle .pool-count').textContent, '12', 'and the numeral simply reads the count');
 });
 
-test('after arrival only the rows that ENTER are set again', async (t) => {
+test('a seat tap sets exactly the rows that enter, the stagger capped at the ninth', async (t) => {
   const dom = await setup(t, 'programmheft');
   seat(dom, 'Clara').click();
-  assert.equal(qa(dom, '.pool-tile').length, 10);
-  assert.equal(set(dom).length, 0, 'rows leaving the pot set nothing, and the rest stay put');
+  assert.equal(qa(dom, '.pool-tile').length, 1);
+  assert.equal(set(dom).length, 0, 'rows leaving the pot set nothing, and the one staying stays put');
 
   seat(dom, 'Clara').click();
-  assert.deepEqual(set(dom).map((el) => el.getAttribute('title')), ['Dixit', 'Kartographen']);
-  assert.deepEqual(set(dom).map((el) => el.style.getPropertyValue('--set-i')), ['0', '1']);
+  assert.equal(qa(dom, '.pool-tile').length, 12);
+  assert.deepEqual(set(dom).map((el) => el.getAttribute('title')), GAMES.slice(1).map((g) => g.title),
+    'the eleven games Clara brought back, and not Azul');
+  assert.deepEqual(set(dom).map((el) => el.style.getPropertyValue('--set-i')),
+    ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '9'],
+    'the tenth row onward lands with the ninth, so any number is set inside 1 400ms');
+  assert.equal(qa(dom, '.pool-tile.is-thrown, .pool-tile[data-throw]').length, 0, 'Der Tisch’s throw is not borrowed');
 });
 
 test('a re-render of the screen on show sets nothing', async (t) => {
   const dom = await setup(t, 'programmheft');
+  seat(dom, 'Clara').click();
+  seat(dom, 'Clara').click();
   await dom.run('currentView()');
   await flush();
   assert.equal(qa(dom, '.pool-tile').length, 12);
-  assert.equal(set(dom).length, 0, 'a language switch is not an arrival');
+  assert.equal(set(dom).length, 0, 'a language switch is not a change to the pot');
 });
 
 test('Klassisch and Der Tisch never set a row', async (t) => {
   for (const design of ['klassisch', 'tisch']) {
     const dom = await setup(t, design);
+    seat(dom, 'Clara').click();
+    seat(dom, 'Clara').click();
     assert.equal(set(dom).length, 0, design);
   }
-});
-
-/* -------------------------------------------------------- the count-up */
-
-test('the numeral counts up only while the arriving pot is set, and ends on the count', async (t) => {
-  const dom = loadApp({ locale: 'de' });
-  t.after(() => dom.close());
-  const counts = [];
-  dom.set('phCountUp', (el, n) => counts.push([el.className, n, el.textContent]));
-  dom.set('isLoggedIn', () => false);
-  dom.set('api', async () => roundFixture());
-  dom.call('applyDesign', 'programmheft');
-  await dom.call('showStartSession', roundFixture());
-  await flush();
-  assert.deepEqual(counts, [['pool-count', 12, '12']], 'once, on the panel numeral, which already reads the final count');
-
-  seat(dom, 'Clara').click();
-  seat(dom, 'Clara').click();
-  await dom.run('currentView()');
-  assert.equal(counts.length, 1, 'a seat tap, a filter or a re-render does not count again');
-});
-
-test('phCountUp: reduced motion leaves the final count standing', async (t) => {
-  const dom = loadApp({ locale: 'de' });
-  t.after(() => dom.close());
-  dom.run('window.matchMedia = (q) => ({ matches: /reduce\\)/.test(q) })');
-  const frames = [];
-  dom.run('window.requestAnimationFrame = (f) => 0');
-  dom.set('requestAnimationFrame', (f) => { frames.push(f); return 0; });
-  const el = dom.window.document.createElement('span');
-  el.textContent = '9';
-  dom.call('phCountUp', el, 9);
-  assert.equal(el.textContent, '9');
-  assert.equal(frames.length, 0, 'no frame is ever requested');
-});
-
-test('phCountUp: no answer to the motion query leaves the final count standing', async (t) => {
-  // jsdom has no matchMedia — nor might an embedded view. A 0 waiting on a
-  // frame is worse than a number that does not move.
-  const dom = loadApp({ locale: 'de' });
-  t.after(() => dom.close());
-  dom.run('delete window.matchMedia');
-  const el = dom.window.document.createElement('span');
-  el.textContent = '9';
-  dom.call('phCountUp', el, 9);
-  assert.equal(el.textContent, '9');
-});
-
-test('phCountUp: counts from 0 to n and stops on n', async (t) => {
-  const dom = loadApp({ locale: 'de' });
-  t.after(() => dom.close());
-  dom.run('window.matchMedia = (q) => ({ matches: /no-preference/.test(q) })');
-  const frames = [];
-  dom.set('requestAnimationFrame', (f) => { frames.push(f); return frames.length; });
-  const el = dom.window.document.createElement('span');
-  dom.app.appendChild(el);
-  el.textContent = '9';
-  dom.call('phCountUp', el, 9);
-  assert.equal(el.textContent, '0', 'the count starts from nothing');
-  frames.shift()(0);           // the first frame fixes the clock
-  frames.shift()(600);
-  const mid = Number(el.textContent);
-  assert.ok(mid > 0 && mid < 9, `part way: ${mid}`);
-  frames.shift()(5000);
-  assert.equal(el.textContent, '9', 'and it ends on the count');
-  assert.equal(frames.length, 0, 'no frame after the end');
-});
-
-test('phCountUp: a detached numeral stops counting', async (t) => {
-  const dom = loadApp({ locale: 'de' });
-  t.after(() => dom.close());
-  dom.run('window.matchMedia = (q) => ({ matches: /no-preference/.test(q) })');
-  const frames = [];
-  dom.set('requestAnimationFrame', (f) => { frames.push(f); return frames.length; });
-  const el = dom.window.document.createElement('span');
-  dom.app.appendChild(el);
-  dom.call('phCountUp', el, 9);
-  frames.shift()(0);
-  el.remove();                 // the pot was re-rendered under it
-  frames.shift()(300);
-  assert.equal(frames.length, 0, 'a numeral nobody can see is left alone');
 });
 
 /* ---------------------------------------------------------- the CSS contract */

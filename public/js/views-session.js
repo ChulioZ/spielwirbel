@@ -363,18 +363,16 @@ function showStartSession(round, prefill) {
      all this writes: the stagger, its cap and the five directions live in
      tisch.css beside the pot, so dropping the ritual is one block there and
      this. Klassisch never gets a mark, so its markup is what it was. */
-  /* Das Programmheft's second (#1382, P10.2) uses the same bookkeeping with one
-     difference the sheet draws: the pot is SET line by line, so the ARRIVING
-     pot is set whole — `arriving` excludes a re-render of the screen on show —
-     and after that only the rows that enter. Its rows get `is-set` and a
-     stagger index capped at 9 instead of the throw's mark and direction; the
-     motion lives in programmheft.css. */
+  /* Das Programmheft's second (#1382, P10.2) shares the gate exactly — the
+     first paint is still here too (operator decision at the PR, against the
+     sheet's set-the-whole-pot end frame) — and only the presentation differs:
+     its entering rows get `is-set` and a stagger index capped at 9 instead of
+     the throw's mark and direction, and the rows are SET in from the left
+     (programmheft.css). */
   let potSeen = null;
-  let potCounted = !arriving;
   const potThrows = (games) => {
     const marks = new Map();
     if ((tisch || ph) && potSeen) games.forEach((g) => { if (!potSeen.has(g.id)) marks.set(g.id, marks.size); });
-    else if (ph && arriving) games.forEach((g) => marks.set(g.id, marks.size));
     potSeen = new Set(games.map((g) => g.id));
     return marks;
   };
@@ -410,9 +408,6 @@ function showStartSession(round, prefill) {
     // Tile panel (860px up). An empty pool needs its own line: a grid with no
     // tiles reads as a broken panel rather than as "nothing matches yet".
     poolTitle.innerHTML = potCount(games.length);
-    // P10.2: the numeral counts with the rows — on the arriving render only.
-    if (ph && !potCounted && games.length) phCountUp(poolTitle.querySelector('.pool-count'), games.length);
-    potCounted = true;
     poolGrid.innerHTML = games.length
       ? games
           .map(

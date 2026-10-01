@@ -4955,16 +4955,17 @@
 :root[data-design="programmheft"] .ph-pot .pool-owners-note { margin: var(--space-2) 0 0; font-size: 13px; }
 :root[data-design="programmheft"] .ph-pot .pool-owners-note:empty { margin: 0; }
 
-/* P10.2 „Der Topf" (#1382): the pot is SET, not poured — each row moves in 16px
-   from the left as it appears, 280ms, 120ms after the one above it, while
-   phCountUp() counts the numeral on the same clock. views-session.js marks
-   `is-set` on every row of the ARRIVING pot and afterwards only on rows that
-   enter (a seat tap, a filter): „Filterwechsel setzen nur die geänderten
-   Zeilen neu". `--set-i` is capped at 9 there, so the ninth row lands at
-   9 × 120 + 280 = 1 360ms and every later one with it — any pot inside the
+/* P10.2 „Der Topf" (#1382): the pot is SET, not poured — a row that ENTERS
+   (a seat tap, a filter: „Filterwechsel setzen nur die geänderten Zeilen neu")
+   moves in 16px from the left, 280ms, 120ms after the one before it.
+   views-session.js marks `is-set` with Der Tisch's T10.1 gate, so the first
+   paint is still: the sheet sets the whole arriving pot and counts the numeral
+   up, and both were dropped at the PR (#1122 — an arriving screen in motion
+   reads as one still loading). `--set-i` is capped at 9, so the ninth row
+   lands at 9 × 120 + 280 = 1 360ms and every later one with it — inside the
    sheet's 1 400ms. Backwards fill only and no end frame: a row waits unseen
    for its turn, then rests where the static list has it; reduced motion shows
-   the full list at once. */
+   it at once. */
 @media (prefers-reduced-motion: no-preference) {
   :root[data-design="programmheft"] .ph-pot .setup-panel__body .pool-tile.is-set {
     animation: ph-set-line 280ms cubic-bezier(.33, 1, .68, 1) calc(var(--set-i, 0) * 120ms) backwards;
