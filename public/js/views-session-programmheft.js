@@ -42,12 +42,16 @@
    - The bar is the black box at the foot (P1's Kasten), „Loswirbeln →".
    - The section line stays from 1280px (P4.1), as Der Tisch keeps its rail
      (T4.1). No section is current: the setup belongs to none.
+   - `arriving` marks the head `data-opening` for motion ritual P10.1 (#1382):
+     the title is set and the page rule runs after it. Only an arrival — a
+     re-render of the screen already on show must not replay it.
    DOM order is visual order at every width (WCAG 2.4.3). */
-function composeProgrammheftSetup(round, head, form) {
+function composeProgrammheftSetup(round, head, form, arriving) {
   // The setup is reached from the hub, a deep link and the Chronik's „Noch eine
   // Session"; only the first has applied the marker, so the rule reads it here.
   applyMarker(round);
   head.classList.add('page-head--ph-setup');
+  if (arriving) head.setAttribute('data-opening', '');
   head.prepend(h('<span class="ph-rule" aria-hidden="true"></span>'));
   form.classList.add('setup-grid--ph');
 
