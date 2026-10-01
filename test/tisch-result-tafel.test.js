@@ -230,8 +230,12 @@ test('the crowns follow the record: reset takes them off, a new winner puts one 
 
 test('a settled session ends on „Noch eine Session" · „Teilen" · „Mehr"', async (t) => {
   const { dom } = await show(t, 'tisch');
-  const foot = screen(dom).lastElementChild;
-  assert.equal(foot.className, 'result-foot', 'the foot is the last block on the screen');
+  // Under the box, inside its slot (#1430): on a phone the actions follow the
+  // box ahead of the ranking, and at 1280 they ride in the pinned box column.
+  const slot = screen(dom).querySelector('.tisch-slot');
+  const foot = slot.lastElementChild;
+  assert.equal(foot.className, 'result-foot', 'the foot is the last block of the box slot');
+  assert.ok(foot.compareDocumentPosition(screen(dom).querySelector('.tafel')) & 4, 'the foot comes before the Tafel');
   assert.equal(foot.hidden, false);
   assert.deepEqual([...foot.children].map(text), ['Noch eine Session', 'Teilen', 'Mehr']);
   assert.equal(screen(dom).querySelector('.result-footer'), null, 'Klassisch’s footer row is replaced');
@@ -416,9 +420,21 @@ test('from 1280px the box column is pinned — only where the box fits the viewp
   assert.doesNotMatch(body(slot) || '', /position:\s*sticky/);
 });
 
-test('from 1280px the foot takes the box column, beside the log — nothing reordered', () => {
+test('from 1280px the foot rides in the box column, under the box — the log takes column 1', () => {
   const desk = blockRules('(min-width: 1280px)');
   const has = '.result-screen:has(.tisch:not([hidden]))';
-  assert.match(inBlock(desk, `${has} > .result-foot`), /grid-column:\s*2/);
+  // No grid placement of its own: it is inside the slot, not a grid item.
+  assert.equal(inBlock(desk, `${has} > .result-foot`), null);
+  assert.match(inBlock(desk, `${has} .tisch-slot > .result-foot .result-foot__again`) || '', /flex:\s*1 1 100%/);
   assert.match(inBlock(desk, `${has} > .session-log`), /grid-column:\s*1/);
+});
+
+test('from 720px „Gehört …" sits beside the title; the veto pill keeps a line under both', () => {
+  const wide = blockRules('(min-width: 720px)');
+  const main = inBlock(wide, '.result-screen .tafel .trow .trow__main') || '';
+  assert.match(main, /display:\s*grid/);
+  assert.match(main, /grid-template-columns:\s*minmax\(0, max-content\) minmax\(0, 1fr\)/);
+  assert.match(inBlock(wide, '.result-screen .tafel .trow .trow__main > :not(.trow__title):not(.trow__owners)') || '', /grid-column:\s*1 \/ -1/);
+  // …and below 720 the owners line stays under the title.
+  assert.doesNotMatch(body('.result-screen .tafel .trow .trow__main') || '', /display:\s*grid/);
 });

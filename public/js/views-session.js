@@ -2542,7 +2542,13 @@ async function showResults(round, session, gamesHint, reveal, plain) {
   // Tafel (#1430): there the destructive pair is one more tap away behind
   // „Mehr", and „Noch eine Session" is what the screen is for next.
   if (tischFoot) {
-    screen.appendChild(tischFoot);
+    // Der Tisch's own foot sits under the box, inside its slot (#1430): the
+    // slot is ONE grid item, so the foot travels with the pinned box beside the
+    // Tafel instead of opening a row the Tafel spans, and on a phone the actions
+    // follow the box ahead of the ranking — Ocean's order. Ocean and Die Brücke
+    // compose their own sides from a foot that is a child of the screen.
+    if (oceanLook || brueckeLook) screen.appendChild(tischFoot);
+    else tischSlot.appendChild(tischFoot);
     if (oceanLook) composeOceanResult(screen, head, peopleEl);
     if (brueckeLook) composeBrueckeResult(screen);
     return;

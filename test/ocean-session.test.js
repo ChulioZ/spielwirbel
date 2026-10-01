@@ -334,6 +334,13 @@ test('from 720px an Ocean row is one line, the distribution between the title an
   }
 });
 
+test('from 720px „Gehört …" sits beside the title; the veto pill keeps a line under both', () => {
+  const main = wideBody('.result-screen--ocean .tafel .trow .trow__main');
+  assert.equal(declaredValue(main, 'display'), 'grid');
+  assert.equal(declaredValue(main, 'grid-template-columns'), 'minmax(0, max-content) minmax(0, 1fr)');
+  assert.equal(declaredValue(wideBody('.result-screen--ocean .tafel .trow .trow__main > :not(.trow__title):not(.trow__owners)'), 'grid-column'), '1 / -1');
+});
+
 test('the side column is pinned only where it fits the viewport: sticky behind a min-height gate, never without', () => {
   const sel = GATE + '.result-screen--ocean .ocean-result__side';
   const blocks = mediaBlocks(SECTION);

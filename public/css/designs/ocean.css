@@ -2688,6 +2688,16 @@
     grid-template-areas: "rank cover main bars pill sub";
   }
   :root[data-design="ocean"]:not([data-scheme="dark"]) .result-screen--ocean .trow__bars { padding-top: 0; }
+  /* „Gehört …" beside the title rather than under it (#1430, operator
+     decision); the veto pill keeps a line of its own under both. */
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .result-screen--ocean .tafel .trow .trow__main {
+    display: grid;
+    grid-template-columns: minmax(0, max-content) minmax(0, 1fr);
+    align-items: baseline;
+    column-gap: 12px;
+  }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .result-screen--ocean .tafel .trow .trow__main > :not(.trow__title):not(.trow__owners) { grid-column: 1 / -1; justify-self: start; }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .result-screen--ocean .tafel .trow .trow__owners { margin-top: 0; }
 }
 /* The veto pill — „1× gar nicht" (score.reasonVetoOne), in Tintenfisch: the
    ramp's colour for a game that took a „gar nicht", with its fixed light ink. */

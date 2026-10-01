@@ -3630,6 +3630,16 @@
   }
   :root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .trow__pill { grid-column: 5; }
   :root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .trow__action { grid-column: 6; }
+  /* „Gehört …" beside the title rather than under it (#1430, operator
+     decision); the veto pill keeps a line of its own under both. */
+  :root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .trow__main {
+    display: grid;
+    grid-template-columns: minmax(0, max-content) minmax(0, 1fr);
+    align-items: baseline;
+    column-gap: 12px;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .trow__main > :not(.trow__title):not(.trow__owners) { grid-column: 1 / -1; justify-self: start; }
+  :root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .trow__owners { margin-top: 0; }
 }
 /* While the evening is still choosing, a phone row's action is a „Spielen"
    button or the „Auf dem Tisch" chip — ~100px that would leave the title ~60.
@@ -4381,17 +4391,13 @@
   :root[data-design="tisch"][data-scheme="dark"] .result-screen:has(.tisch:not([hidden])) > .tisch-slot {
     grid-column: 2;
   }
-  /* The foot at the foot of the box column, beside the log (#1430) — not
-     directly under the box. T4.4 draws it under the Tafel; #1430 asked for it
-     under the box, and CSS alone cannot put it there: in the DOM the foot comes
-     AFTER the Tafel, so under the box means a second grid row that the Tafel
-     spans, and a spanning item's surplus height is shared EQUALLY among the rows
-     it spans — measured, the foot sat 70–96px below the box with a gap no
-     number can close. Moving it in the DOM would reorder Der Tisch's phone
-     screen too. So the log takes column 1 under the Tafel and the foot column 2
-     on the same row: nothing reordered, 70px less page. */
+  /* The foot sits directly under the box (#1430, operator decision): it is the
+     last child of `.tisch-slot` (showResults), so it rides in the box column —
+     and in its sticky pin — rather than opening a second grid row the Tafel
+     spans, whose surplus height a spanning item shares EQUALLY among its rows
+     (measured, that left a 70–96px gap under the box). The log takes column 1,
+     under the Tafel. */
   :root[data-design="tisch"][data-scheme="dark"] .result-screen:has(.tisch:not([hidden])) > .session-log { grid-column: 1; }
-  :root[data-design="tisch"][data-scheme="dark"] .result-screen:has(.tisch:not([hidden])) > .result-foot { grid-column: 2; }
   /* Beside the Tafel the band is a column, not a 128px-cover row. */
   :root[data-design="tisch"][data-scheme="dark"] .result-screen:has(.tisch:not([hidden])) .tisch {
     grid-template-columns: minmax(0, 1fr);
@@ -4423,8 +4429,8 @@
   :root[data-design="tisch"][data-scheme="dark"] .result-foot .result-foot__again { flex: none; padding-inline: 18px; }
   /* In the 330px box column the three do not fit one line: „Noch eine Session"
      takes the column's width and the other two share the line under it. */
-  :root[data-design="tisch"][data-scheme="dark"] .result-screen:has(.tisch:not([hidden])) > .result-foot .btn { flex: 1 1 0; }
-  :root[data-design="tisch"][data-scheme="dark"] .result-screen:has(.tisch:not([hidden])) > .result-foot .result-foot__again { flex: 1 1 100%; }
+  :root[data-design="tisch"][data-scheme="dark"] .result-screen:has(.tisch:not([hidden])) .tisch-slot > .result-foot .btn { flex: 1 1 0; }
+  :root[data-design="tisch"][data-scheme="dark"] .result-screen:has(.tisch:not([hidden])) .tisch-slot > .result-foot .result-foot__again { flex: 1 1 100%; }
 
   /* Two tables side by side (T4.5). `.split-tables` is already a grid in the
      app; what this states is that at the rail width it is exactly two columns,
@@ -4803,11 +4809,12 @@
 }
 
 /* The box column pinned while the Tafel scrolls (#1430) — only where the whole
-   box fits under the top bar: the band measured ≤514px at 1440 (played, with
-   the „Falls etwas anders lief" corrections), plus the 80px offset and slack.
-   Shorter than that and a pinned box would strand its own bottom, so it stays
-   in flow. It travels within the result grid, so it lets go at the log row. */
-@media (min-width: 1280px) and (min-height: 700px) {
+   column fits under the top bar: the band measured ≤514px at 1440 (played, with
+   the „Falls etwas anders lief" corrections), the foot under it brings the slot
+   to 650, plus the 80px offset and slack. Shorter than that and a pinned box
+   would strand its own foot, so it stays in flow. It travels within the result
+   grid, so it lets go at the log row. */
+@media (min-width: 1280px) and (min-height: 760px) {
   :root[data-design="tisch"][data-scheme="dark"] .result-screen:has(.tisch:not([hidden])) > .tisch-slot {
     position: sticky;
     top: 80px;
