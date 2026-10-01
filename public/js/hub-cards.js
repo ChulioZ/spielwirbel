@@ -264,7 +264,11 @@ function hubPulseCard(round, activeGames) {
      off one or two evenings is the same noise the podium and the streak card
      already wait out, so all three share one threshold. */
   const tisch = designIs('tisch');
-  const floor = tisch ? 1 : YOUNG_ROUND_SERIES_FROM;
+  /* The Programmheft draws from the first played session as well (P7.5,
+     #1377) — its bars, not Der Tisch's tiles — and says when series come in
+     its lead story instead (phLead's `note`). Its young sentence is a locked
+     block of its own (phYoungSide), so it takes none from here. */
+  const floor = tisch || designIs('programmheft') ? 1 : YOUNG_ROUND_SERIES_FROM;
   const pulse = roundPulse(round, activeGames, { minSessions: floor }, hubDeps());
   if (!pulse) {
     // A young round gets the sentence, never a „0" (T7.4, #1269) — Der Tisch
@@ -343,7 +347,8 @@ function hubPulseCard(round, activeGames) {
     body.appendChild(link);
   }
   // No series sentence here: the bars only exist from YOUNG_ROUND_SERIES_FROM
-  // on, so a drawn Klassisch pulse is never young. Left out deliberately —
+  // on, so a drawn Klassisch pulse is never young (the Programmheft's, drawn
+  // from one session, says it in its lead instead). Left out deliberately —
   // a guard for a state this branch cannot enter would be untestable.
   return card;
 }

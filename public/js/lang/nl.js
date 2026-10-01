@@ -1896,6 +1896,8 @@ I18N.nl = {
   'hub.lead.open': 'Uitslag bekijken',
   'home.phExtra': 'Extra editie',
   'home.phKicker': 'Kiosk · {date}',
+  // #1377 (P7.1): the caption on the first empty column of a new account's lobby.
+  'home.phSlot': 'Hier verschijnt je groep',
   // Die Brücke's session loop (#1240): only the five themed words of
   // docs/design/bruecke §2 — pool, probes, ignition, thrust, decrypt.
   'startSession.poolBruecke': 'Pool',

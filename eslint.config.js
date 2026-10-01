@@ -489,6 +489,9 @@ const frontendGlobals = {
   // programmheft-hub.js (#1372) — the Programmheft's lobby tiles and round hub composition
   phHubFrame: 'readonly', phPresetsLabel: 'readonly', phHeroCompose: 'readonly', phLead: 'readonly',
   phRoundCard: 'readonly', phResumeNotice: 'readonly', phLobbyKicker: 'readonly',
+  // #1377 — its empty and young states
+  phLocked: 'readonly', phYoungSide: 'readonly', phStripPreviews: 'readonly', phYoungLead: 'readonly',
+  phFirstRun: 'readonly',
   // bruecke-hub.js (#1238) — Die Brücke's lobby notice and round hub composition
   brueckeHubFrame: 'readonly', brueckeMission: 'readonly', brueckeMissionEmpty: 'readonly', brueckeYoungLine: 'readonly', brueckeHeroCompose: 'readonly',
   brueckeStatus: 'readonly', brueckeResumeNotice: 'readonly',
