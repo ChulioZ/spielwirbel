@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="design_doc_mode" content="canvas">
+  <link rel="stylesheet" href="../../../public/fonts/tabler-icons.css">
+  <link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Alegreya+Sans:wght@400;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #dcdfd4; font-family: 'Alegreya Sans', sans-serif; color: #1b2a18; }
+    a { color: #356427; text-decoration: none; }
+    a:hover { color: #284d1d; }
+    @keyframes ffFly { 0% { transform: translate(var(--fx), var(--fy)) scale(.6); opacity: 0; } 15% { opacity: 1; } 80% { transform: translate(0, -8px) scale(1); opacity: 1; } 100% { transform: translate(0, 0) scale(1); opacity: 1; } }
+    @keyframes ffOnce { 0% { box-shadow: 0 0 0 3px #f9fbf4, 0 0 0 0 rgba(255,243,168,0); } 50% { box-shadow: 0 0 0 3px #f9fbf4, 0 0 30px 12px rgba(255,243,168,1); } 100% { box-shadow: 0 0 0 3px #f9fbf4, 0 0 16px 4px rgba(255,243,168,.7); } }
+    @keyframes ffDim { from { background: #f9fbf4; } to { background: #24331f; } }
+  </style>
+</helmet>
+<div style="display: flex; flex-direction: column; gap: 56px; padding: 48px; width: max-content; background: #dcdfd4;">
+
+  <section data-screen-label="F17 Kopf" style="width: 1870px; box-sizing: border-box; padding: 30px 36px; background: #f9fbf4; border-radius: 22px; box-shadow: 0 6px 18px rgba(40,60,30,.10); display: grid; grid-template-columns: minmax(0, 1fr) 520px; gap: 36px;">
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      <div style="font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #356427;">F17 · Abzeichen · baut auf F1, F4, F13, F14 · handover-abzeichen-2026-09-26</div>
+      <h1 style="margin: 0; font-family: 'Young Serif'; font-weight: 400; font-size: 40px; line-height: 1.05;">F17 · Abzeichen: Glühwürmchen im Glas, Blätter am Ast</h1>
+      <p style="margin: 0; font-size: 17px; line-height: 1.5;">Jede Person der Runde sammelt ihre Abzeichen in Gläsern. Ein verdientes Abzeichen ist ein Glas in der Dämmerung, in dem ein Glühwürmchen als Glyphe leuchtet. Ein Abzeichen auf dem Weg ist ein helles Glas, das sich mit Moos füllt. Ein offenes ist ein gestricheltes leeres Glas, ein geheimes ein dunkles Glas ohne Licht mit Fragezeichen-Schloss. Die Runde selbst sammelt Blätter an einem Ast: verdient ist ein volles Laubblatt, auf dem Weg ein helles Blatt mit Moos, offen ein gestrichelter Umriss.</p>
+      <p style="margin: 0; font-size: 17px; line-height: 1.5;">Stufen stehen als Ziffer auf dem Deckel des Glases oder am Stiel des Blatts. Namen und Zeilen stehen immer unter der Form auf der Karte, nie auf dem Motiv. Die Mitgliedsfarbe erscheint nur am Avatar. Im Ergebnis fliegt ein Glühwürmchen aus der Krone des neuen Baums ins Glas und leuchtet einmal auf.</p>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 8px; padding: 20px 22px; background: #ecf1e4; border-radius: 18px; font-size: 15px; line-height: 1.5;">
+      <span style="font-family: 'Young Serif'; font-weight: 400; font-size: 22px;">Auf einen Blick</span>
+      <span><strong>Kern:</strong> 22 Einträge (9 Person · 9 Runde · 4 Konto)</span>
+      <span><strong>Geheim:</strong> Comeback · Einstimmig · Unentschieden</span>
+      <span><strong>Stufen:</strong> Ziffer auf Deckel / Stiel, dazu Punkte für erreichte Stufen</span>
+      <span><strong>Ohne Farbe unterscheidbar:</strong> gefüllt / Füllstand / gestrichelt / Schloss</span>
+      <span><strong>Glyphen:</strong> nur aus dem Repo-Subset, keine neuen</span>
+      <span><strong>Beispiel:</strong> Jonas steht bei Stammgast 22 / 25. Er hat 22 der 23 Sessions gespielt (F13.3).</span>
+    </div>
+  </section>
+
+  <section data-screen-label="F17.1 Glas und Blatt" style="width: 1870px; box-sizing: border-box; padding: 30px 36px; background: #f9fbf4; border-radius: 22px; box-shadow: 0 6px 18px rgba(40,60,30,.10); display: flex; flex-direction: column; gap: 22px;">
+    <div style="display: flex; align-items: baseline; gap: 16px;"><h2 style="margin: 0; font-family: 'Young Serif'; font-weight: 400; font-size: 30px;">1 · Die Kachel in sechs Zuständen</h2><span style="font-size: 15px; font-weight: 700; color: #4b5c45;">Glas = Person, Blatt = Runde · jede Kachel ist ein Knopf und öffnet die Karte rechts</span></div>
+    <div style="display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 36px; align-items: start;">
+      <div style="display: flex; flex-direction: column; gap: 22px;">
+        <div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px;">
+          <sc-for list="{{ states }}" as="s" hint-placeholder-count="6">
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 16px 8px; border-radius: 18px; background: #ecf1e4;">
+              <span style="font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #356427; text-align: center;">{{ s.label }}</span>
+              <a href="#" aria-label="{{ s.t.aria }}" style="display: flex; flex-direction: column; align-items: center; gap: 6px; width: 110px; color: #1b2a18;" style-focus="outline: 3px solid #1b2a18; outline-offset: 4px; border-radius: 12px;">
+                <span style="position: relative; width: 60px; height: 74px;"><span style="position: absolute; left: 9px; right: 9px; top: 0; height: 15px; border-radius: 4px 4px 2px 2px; background: #5a3d24; color: #f4f8ec; font-size: 12px; font-weight: 800; display: grid; place-items: center; line-height: 1; z-index: 1;">{{ s.t.tier }}</span><span style="position: absolute; left: 0; right: 0; top: 11px; bottom: 0; border-radius: 14px 14px 18px 18px; background: {{ s.t.bg }}; border: {{ s.t.border }}; box-sizing: border-box; overflow: hidden; box-shadow: {{ s.t.glow }}; display: grid; place-items: center;"><span style="position: absolute; left: 0; right: 0; bottom: 0; height: {{ s.t.fill }}; background: #d6e4c6;"></span><i class="ti {{ s.t.icon }}" style="position: relative; font-size: 26px; color: {{ s.t.ink }};"></i></span></span>
+                <span style="font-weight: 800; font-size: 14px; text-align: center; line-height: 1.2;">{{ s.t.name }}</span>
+                <span style="font-size: 13px; font-weight: 700; color: {{ s.t.subInk }}; text-align: center; line-height: 1.25;">{{ s.t.short }}</span>
+                <sc-if value="{{ s.t.isNew }}" hint-placeholder-val="{{ false }}"><span style="padding: 1px 9px; border-radius: 10px 3px 10px 3px; background: #356427; color: #f4f8ec; font-size: 12px; font-weight: 800;">Neu</span></sc-if>
+              </a>
+              <span style="font-size: 13px; color: #4b5c45; text-align: center; line-height: 1.35;">{{ s.hint }}</span>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px;">
+          <sc-for list="{{ leafStates }}" as="s" hint-placeholder-count="6">
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px 8px; border-radius: 18px; background: #ecf1e4;">
+              <a href="#" aria-label="{{ s.t.aria }}" style="display: flex; flex-direction: column; align-items: center; gap: 6px; width: 110px; color: #1b2a18;">
+                <span style="position: relative; width: 64px; height: 64px; border-radius: 30px 6px 30px 6px; background: {{ s.t.bg }}; border: {{ s.t.border }}; box-sizing: border-box; overflow: hidden; display: grid; place-items: center;"><span style="position: absolute; left: 0; right: 0; bottom: 0; height: {{ s.t.fill }}; background: #d6e4c6;"></span><i class="ti {{ s.t.icon }}" style="position: relative; font-size: 26px; color: {{ s.t.ink }};"></i></span>
+                <span style="font-weight: 800; font-size: 14px; text-align: center; line-height: 1.2;">{{ s.t.nameTier }}</span>
+                <span style="font-size: 13px; font-weight: 700; color: {{ s.t.subInk }}; text-align: center; line-height: 1.25;">{{ s.t.short }}</span>
+              </a>
+              <span style="font-size: 13px; color: #4b5c45; text-align: center;">{{ s.label }}</span>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display: flex; align-items: center; gap: 28px; padding-top: 14px; border-top: 1px solid #d5ddca;">
+          <span style="font-size: 14px; font-weight: 700; width: 170px;">Klein (Tischkarte, Chronik, Hub, 390)</span>
+          <sc-for list="{{ compact }}" as="t" hint-placeholder-count="5"><a href="#" aria-label="{{ t.aria }}" style="display: flex; align-items: center; gap: 8px; min-height: 44px; padding-right: 6px; color: #1b2a18;"><span style="position: relative; width: 32px; height: 40px; flex: none;"><span style="position: absolute; left: 5px; right: 5px; top: 0; height: 8px; border-radius: 2px; background: #5a3d24;"></span><span style="position: absolute; left: 0; right: 0; top: 6px; bottom: 0; border-radius: 8px 8px 10px 10px; background: {{ t.bg }}; border: {{ t.border }}; box-sizing: border-box; overflow: hidden; display: grid; place-items: center;"><span style="position: absolute; left: 0; right: 0; bottom: 0; height: {{ t.fill }}; background: #d6e4c6;"></span><i class="ti {{ t.icon }}" style="position: relative; font-size: 16px; color: {{ t.ink }};"></i></span></span><span style="display: flex; flex-direction: column; line-height: 1.15;"><span style="font-weight: 800; font-size: 14px;">{{ t.nameTier }}</span><span style="font-size: 12px; font-weight: 700; color: {{ t.subInk }};">{{ t.short }}</span></span></a></sc-for>
+        </div>
+      </div>
+      <div role="dialog" aria-label="Stammgast" style="display: flex; flex-direction: column; gap: 12px; padding: 20px 22px; background: #ffffff; border-radius: 20px; box-shadow: 0 18px 44px rgba(40,60,30,.18);">
+        <span style="font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #356427;">Die Karte beim Antippen · Popover, kein Modal</span>
+        <span style="display: flex; gap: 14px; align-items: center;"><span style="position: relative; width: 60px; height: 74px; flex: none;"><span style="position: absolute; left: 9px; right: 9px; top: 0; height: 15px; border-radius: 4px 4px 2px 2px; background: #5a3d24; color: #f4f8ec; font-size: 12px; font-weight: 800; display: grid; place-items: center; z-index: 1;">10</span><span style="position: absolute; left: 0; right: 0; top: 11px; bottom: 0; border-radius: 14px 14px 18px 18px; background: #24331f; display: grid; place-items: center; box-shadow: 0 0 0 3px #f9fbf4, 0 0 16px 4px rgba(255,243,168,.7);"><i class="ti ti-star" style="font-size: 26px; color: #fff3a8;"></i></span></span><span style="display: flex; flex-direction: column;"><span style="font-family: 'Young Serif'; font-weight: 400; font-size: 24px;">Stammgast</span><span style="font-size: 14px; font-weight: 700; color: #4b5c45;">Jonas · Donnerstagsrunde</span></span><a href="#" aria-label="Schließen" style="margin-left: auto; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: #d6e4c6; color: #1b2a18;"><i class="ti ti-x"></i></a></span>
+        <span style="font-size: 16px;">Bei 10 Sessions dabei</span>
+        <span style="font-size: 15px; font-weight: 700; color: #85570f;">Stufe 10 erreicht im Januar 2026</span>
+        <span style="display: flex; flex-direction: column; gap: 6px;"><span style="font-size: 14px; font-weight: 800;">Nächste Stufe 25 · 22 / 25</span><span style="height: 12px; border-radius: 6px; background: #d6e4c6; box-shadow: inset 0 0 0 1px #6f7f66; overflow: hidden;"><span style="display: block; width: 88%; height: 100%; background: #356427;"></span></span></span>
+        <span style="display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700;"><span>Stufen</span><sc-for list="{{ tierDots }}" as="d" hint-placeholder-count="4"><span style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 10px 3px 10px 3px; background: {{ d.bg }}; color: {{ d.ink }}; border: 1.5px solid {{ d.edge }}; font-weight: 800;"><i class="ti {{ d.icon }}"></i>{{ d.n }}</span></sc-for></span>
+        <a href="#" style="min-height: 44px; display: inline-flex; align-items: center; gap: 6px; font-weight: 800; font-size: 15px; color: #356427;">Alle Abzeichen von Jonas →</a>
+      </div>
+    </div>
+  </section>
+
+  <div style="display: flex; gap: 40px; align-items: flex-start;">
+    <div data-screen-label="F17.2 Pokale Desktop" style="display: flex; flex-direction: column; gap: 10px;">
+      <div style="font-size: 14px; font-weight: 700; color: #4b5c45;">F17.2 · Pokale › Abzeichen — Desktop: der Ast der Runde als Band, darunter ein Regal mit Gläsern je Person in Tafel-Reihenfolge</div>
+      <div style="position: relative; width: 1440px; overflow: hidden; box-shadow: 0 18px 44px rgba(40,60,30,.18); background: #ecf1e4;">
+        <dc-import name="Forest-Kopf" crumb="Donnerstagsrunde › Pokale" active="pokale" hint-size="1440px,108px"></dc-import>
+        <div style="display: flex; flex-direction: column; gap: 18px; padding: 22px 40px 36px;">
+          <span style="font-size: 14px; font-weight: 700; color: #4b5c45;">↑ Ruhmeshalle, Stand und Auszeichnungen wie F13.3</span>
+          <div style="display: flex; align-items: baseline; gap: 14px;"><h2 style="margin: 0; font-family: 'Young Serif'; font-weight: 400; font-size: 30px;">Abzeichen</h2><span style="font-size: 15px; font-weight: 700; color: #4b5c45;">18 verdient · 7 unterwegs · 11 offen</span></div>
+          <div style="position: relative; padding: 22px 26px 18px; background: #f9fbf4; border-radius: 22px; box-shadow: 0 6px 18px rgba(40,60,30,.10);">
+            <span style="display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px;"><span style="font-family: 'Young Serif'; font-weight: 400; font-size: 22px;">Die Runde</span><span style="font-size: 14px; font-weight: 700; color: #4b5c45;">Seit Oktober 2025 · 23 Sessions</span></span>
+            <span style="position: absolute; left: 26px; right: 26px; top: 86px; height: 6px; border-radius: 3px; background: #8a6240;"></span>
+            <div style="position: relative; display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 8px;">
+              <sc-for list="{{ roundMarks }}" as="t" hint-placeholder-count="9"><a href="#" aria-label="{{ t.aria }}" style="display: flex; flex-direction: column; align-items: center; gap: 6px; color: #1b2a18;"><span style="position: relative; width: 64px; height: 64px; border-radius: 30px 6px 30px 6px; background: {{ t.bg }}; border: {{ t.border }}; box-sizing: border-box; overflow: hidden; display: grid; place-items: center;"><span style="position: absolute; left: 0; right: 0; bottom: 0; height: {{ t.fill }}; background: #d6e4c6;"></span><i class="ti {{ t.icon }}" style="position: relative; font-size: 26px; color: {{ t.ink }};"></i></span><span style="font-weight: 800; font-size: 14px; text-align: center; line-height: 1.2;">{{ t.nameTier }}</span><span style="font-size: 13px; font-weight: 700; color: {{ t.subInk }}; text-align: center; line-height: 1.25;">{{ t.short }}</span></a></sc-for>
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px;">
+            <sc-for list="{{ memberRows }}" as="m" hint-placeholder-count="4">
+              <div style="display: flex; flex-direction: column; gap: 12px; padding: 16px 18px; background: #f9fbf4; border-radius: 20px; box-shadow: 0 6px 18px rgba(40,60,30,.10);">
+                <span style="display: flex; align-items: center; gap: 12px;"><span style="width: 40px; height: 40px; border-radius: 50%; background: #f9fbf4; border: 5px solid {{ m.c }}; box-sizing: border-box; display: grid; place-items: center; font-weight: 800; font-size: 13px;">{{ m.i }}</span><span style="display: flex; flex-direction: column;"><span style="font-weight: 800; font-size: 17px;">{{ m.n }}</span><span style="font-size: 13px; font-weight: 700; color: #4b5c45;">Platz {{ m.place }} · {{ m.count }}</span></span></span>
+                <span style="display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 4px; padding: 10px 6px 0; border-top: 6px solid #8a6240; border-radius: 3px;">
+                  <sc-for list="{{ m.marks }}" as="t" hint-placeholder-count="9"><a href="#" aria-label="{{ t.aria }}" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: #1b2a18;"><span style="position: relative; width: 40px; height: 50px;"><span style="position: absolute; left: 6px; right: 6px; top: 0; height: 12px; border-radius: 3px 3px 2px 2px; background: #5a3d24; color: #f4f8ec; font-size: 12px; font-weight: 800; display: grid; place-items: center; line-height: 1; z-index: 1;">{{ t.tier }}</span><span style="position: absolute; left: 0; right: 0; top: 8px; bottom: 0; border-radius: 10px 10px 13px 13px; background: {{ t.bg }}; border: {{ t.border }}; box-sizing: border-box; overflow: hidden; box-shadow: {{ t.glowS }}; display: grid; place-items: center;"><span style="position: absolute; left: 0; right: 0; bottom: 0; height: {{ t.fill }}; background: #d6e4c6;"></span><i class="ti {{ t.icon }}" style="position: relative; font-size: 18px; color: {{ t.ink }};"></i></span></span><span style="font-weight: 800; font-size: 12px; text-align: center; line-height: 1.15;">{{ t.name }}</span><span style="font-size: 12px; font-weight: 700; color: {{ t.subInk }}; text-align: center; line-height: 1.15;">{{ t.tiny }}</span></a></sc-for>
+                </span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <dc-import name="Forest-Fuss" hint-size="1440px,52px"></dc-import>
+      </div>
+    </div>
+    <div data-screen-label="F17.3 Pokale Telefon" style="display: flex; flex-direction: column; gap: 10px; width: 390px;">
+      <div style="font-size: 14px; font-weight: 700; color: #4b5c45;">F17.3 · Pokale › Abzeichen — Telefon, Personen aufklappbar</div>
+      <div style="position: relative; width: 390px; overflow: hidden; border-radius: 28px; box-shadow: 0 18px 44px rgba(40,60,30,.18); background: #ecf1e4;">
+        <dc-import name="Forest-Telefonkopf" back="Start" crumb="Pokale" hint-size="390px,140px"></dc-import>
+        <div style="display: flex; flex-direction: column; gap: 12px; padding: 16px 16px 24px;">
+          <span style="display: flex; align-items: baseline; gap: 10px;"><h2 style="margin: 0; font-family: 'Young Serif'; font-weight: 400; font-size: 26px;">Abzeichen</h2><span style="font-size: 13px; font-weight: 700; color: #4b5c45;">18 verdient</span></span>
+          <div style="display: flex; flex-direction: column; gap: 8px; padding: 14px; background: #f9fbf4; border-radius: 18px; box-shadow: 0 6px 18px rgba(40,60,30,.10);"><span style="font-family: 'Young Serif'; font-weight: 400; font-size: 19px;">Die Runde</span><span style="display: flex; gap: 10px; overflow: hidden; padding-bottom: 4px; border-bottom: 4px solid #8a6240;"><sc-for list="{{ roundMarksPhone }}" as="t" hint-placeholder-count="5"><a href="#" aria-label="{{ t.aria }}" style="display: flex; flex-direction: column; align-items: center; gap: 4px; width: 62px; flex: none; color: #1b2a18;"><span style="position: relative; width: 48px; height: 48px; border-radius: 22px 5px 22px 5px; background: {{ t.bg }}; border: {{ t.border }}; box-sizing: border-box; overflow: hidden; display: grid; place-items: center;"><span style="position: absolute; left: 0; right: 0; bottom: 0; height: {{ t.fill }}; background: #d6e4c6;"></span><i class="ti {{ t.icon }}" style="position: relative; font-size: 20px; color: {{ t.ink }};"></i></span><span style="font-weight: 800; font-size: 12px; text-align: center; line-height: 1.15;">{{ t.nameTier }}</span></a></sc-for></span><a href="#" style="min-height: 32px; display: inline-flex; align-items: center; font-weight: 800; font-size: 14px; color: #356427;">Alle 9 der Runde →</a></div>
+          <sc-for list="{{ memberRowsPhone }}" as="m" hint-placeholder-count="4">
+            <div style="display: flex; flex-direction: column; background: #f9fbf4; border-radius: 18px; box-shadow: 0 6px 18px rgba(40,60,30,.10);">
+              <a href="#" aria-expanded="{{ m.open }}" style="display: flex; align-items: center; gap: 10px; min-height: 56px; padding: 0 14px; color: #1b2a18;"><span style="width: 36px; height: 36px; border-radius: 50%; background: #f9fbf4; border: 4px solid {{ m.c }}; box-sizing: border-box; display: grid; place-items: center; font-weight: 800; font-size: 12px;">{{ m.i }}</span><span style="display: flex; flex-direction: column; flex: 1;"><span style="font-weight: 800; font-size: 16px;">{{ m.n }}</span><span style="font-size: 13px; font-weight: 700; color: #4b5c45;">{{ m.count }}</span></span><i class="ti {{ m.chev }}" style="font-size: 20px;"></i></a>
+              <sc-if value="{{ m.isOpen }}" hint-placeholder-val="{{ false }}"><span style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; padding: 6px 12px 14px;"><sc-for list="{{ m.marks }}" as="t" hint-placeholder-count="8"><a href="#" aria-label="{{ t.aria }}" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: #1b2a18;"><span style="position: relative; width: 40px; height: 50px;"><span style="position: absolute; left: 6px; right: 6px; top: 0; height: 12px; border-radius: 3px 3px 2px 2px; background: #5a3d24; color: #f4f8ec; font-size: 12px; font-weight: 800; display: grid; place-items: center; line-height: 1; z-index: 1;">{{ t.tier }}</span><span style="position: absolute; left: 0; right: 0; top: 8px; bottom: 0; border-radius: 10px 10px 13px 13px; background: {{ t.bg }}; border: {{ t.border }}; box-sizing: border-box; overflow: hidden; display: grid; place-items: center;"><span style="position: absolute; left: 0; right: 0; bottom: 0; height: {{ t.fill }}; background: #d6e4c6;"></span><i class="ti {{ t.icon }}" style="position: relative; font-size: 18px; color: {{ t.ink }};"></i></span></span><span style="font-weight: 800; font-size: 12px; text-align: center; line-height: 1.15;">{{ t.name }}</span><span style="font-size: 12px; font-weight: 700; color: {{ t.subInk }}; text-align: center;">{{ t.tiny }}</span></a></sc-for></span></sc-if>
+            </div>
+          </sc-for>
+        </div>
+        <dc-import name="Forest-Dock" active="pokale" hint-size="390px,68px"></dc-import>
+      </div>
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 40px; align-items: flex-start;">
+    <div data-screen-label="F17.4 Tischkarte" style="display: flex; flex-direction: column; gap: 10px; width: 620px;">
+      <div style="font-size: 14px; font-weight: 700; color: #4b5c45;">F17.4 · Tischkarte — verdiente Abzeichen unter den fünf Zahlen, keine offenen</div>
+      <div style="display: flex; flex-direction: column; gap: 16px; padding: 26px; background: #f9fbf4; border-radius: 22px; box-shadow: 0 18px 44px rgba(40,60,30,.18);">
+        <span style="display: flex; gap: 18px; align-items: center;"><span style="width: 88px; height: 88px; border-radius: 50%; background: #f9fbf4; border: 8px solid #726bc7; box-sizing: border-box; display: grid; place-items: center; font-weight: 800; font-size: 26px;">LE</span><span style="display: flex; flex-direction: column;"><span style="font-family: 'Young Serif'; font-weight: 400; font-size: 32px; line-height: 1.05;">Lea</span><span style="font-size: 15px; font-weight: 700; color: #4b5c45;">in der Runde seit Oktober 2025</span></span></span>
+        <span style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px;"><sc-for list="{{ figures }}" as="f" hint-placeholder-count="5"><span style="display: flex; flex-direction: column; padding: 10px; border-radius: 14px; background: #ecf1e4;"><span style="font-family: 'Young Serif'; font-weight: 400; font-size: 22px; line-height: 1.05;">{{ f.v }}</span><span style="font-size: 13px; font-weight: 700; color: #4b5c45;">{{ f.k }}</span></span></sc-for></span>
+        <span style="display: flex; flex-direction: column; gap: 8px; padding-top: 12px; border-top: 1px solid #d5ddca;"><span style="font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #356427;">Abzeichen · 4</span><span style="display: flex; flex-wrap: wrap; gap: 6px 18px;"><sc-for list="{{ leaEarned }}" as="t" hint-placeholder-count="4"><a href="#" aria-label="{{ t.aria }}" style="display: flex; align-items: center; gap: 8px; min-height: 44px; color: #1b2a18;"><span style="position: relative; width: 32px; height: 40px; flex: none;"><span style="position: absolute; left: 5px; right: 5px; top: 0; height: 8px; border-radius: 2px; background: #5a3d24;"></span><span style="position: absolute; left: 0; right: 0; top: 6px; bottom: 0; border-radius: 8px 8px 10px 10px; background: #24331f; display: grid; place-items: center; box-shadow: 0 0 0 2px #f9fbf4, 0 0 10px 2px rgba(255,243,168,.6);"><i class="ti {{ t.icon }}" style="font-size: 16px; color: #fff3a8;"></i></span></span><span style="display: flex; flex-direction: column; line-height: 1.15;"><span style="font-weight: 800; font-size: 14px;">{{ t.nameTier }}</span><span style="font-size: 12px; font-weight: 700; color: #4b5c45;">{{ t.short }}</span></span></a></sc-for></span><a href="#" style="min-height: 32px; display: inline-flex; align-items: center; font-weight: 800; font-size: 14px; color: #356427;">Alle Abzeichen von Lea →</a></span>
+      </div>
+    </div>
+    <div data-screen-label="F17.6 Hub und Chronik" style="display: flex; flex-direction: column; gap: 16px; width: 760px;">
+      <div style="font-size: 14px; font-weight: 700; color: #4b5c45;">F17.6 · Hub-Vorschau und Chronik-Zeile</div>
+      <a href="#" style="display: flex; flex-direction: column; gap: 8px; width: 330px; padding: 14px 16px; background: #f9fbf4; border-radius: 18px; box-shadow: 0 6px 18px rgba(40,60,30,.10); color: #1b2a18;">
+        <span style="display: flex; justify-content: space-between; align-items: baseline;"><span style="font-family: 'Young Serif'; font-weight: 400; font-size: 19px;">Pokale</span><span style="font-size: 14px; font-weight: 800; color: #356427;">öffnen →</span></span>
+        <span style="font-size: 14px; font-weight: 700;">Jonas führt</span>
+        <span style="display: flex; align-items: center; gap: 10px; padding-top: 8px; border-top: 1px solid #d5ddca;"><span style="position: relative; width: 26px; height: 32px; flex: none;"><span style="position: absolute; left: 4px; right: 4px; top: 0; height: 7px; border-radius: 2px; background: #5a3d24;"></span><span style="position: absolute; left: 0; right: 0; top: 5px; bottom: 0; border-radius: 7px 7px 9px 9px; background: #24331f; display: grid; place-items: center;"><i class="ti ti-bolt" style="font-size: 13px; color: #fff3a8;"></i></span></span><span style="display: flex; flex-direction: column; line-height: 1.2;"><span style="font-size: 14px; font-weight: 800;">3 neue Abzeichen seit Nordlichter</span><span style="font-size: 13px; font-weight: 700; color: #4b5c45;">Zuletzt: Serienheld · Jonas</span></span></span>
+      </a>
+      <div style="display: flex; flex-direction: column; gap: 6px; padding: 12px 16px; background: #f9fbf4; border-radius: 16px; box-shadow: 0 6px 18px rgba(40,60,30,.10);">
+        <span style="display: grid; grid-template-columns: 96px 80px minmax(0, 1fr) 60px; gap: 16px; align-items: center;"><span style="display: flex; flex-direction: column;"><span style="font-weight: 800; font-size: 15px;">14. Sep 2026</span><span style="font-size: 13px; font-weight: 700; color: #4b5c45;">Session Nr. 23</span></span><span style="width: 80px; height: 60px; border-radius: 6px 2px 6px 2px; background: {{ cover }};"></span><span style="display: flex; flex-direction: column;"><span style="font-family: 'Young Serif'; font-weight: 400; font-size: 20px;">Nordlichter</span><span style="font-size: 14px; font-weight: 700; color: #85570f;">Jonas hat gewonnen</span></span><span style="justify-self: end; padding: 3px 10px; border-radius: 14px 4px 14px 4px; background: #f1e58c; font-weight: 800; font-size: 16px;">4,8</span></span>
+        <sc-for list="{{ chronikLines }}" as="c" hint-placeholder-count="3"><a href="#" style="display: flex; align-items: center; gap: 10px; min-height: 32px; margin-left: 112px; padding-top: 6px; border-top: 1px solid #d5ddca; font-size: 14px; font-weight: 700; color: #1b2a18;"><span style="width: 18px; height: 22px; border-radius: 5px 5px 6px 6px; background: {{ c.bg }}; border: {{ c.border }}; box-sizing: border-box; display: grid; place-items: center;"><i class="ti {{ c.icon }}" style="font-size: 11px; color: {{ c.ink }};"></i></span>{{ c.t }}</a></sc-for>
+      </div>
+      <span style="font-size: 14px; color: #4b5c45; line-height: 1.45;">Die Zeile folgt der Grammatik der Chronik: „Wer · Was“, ein Mini-Glas für Personen, ein Mini-Blatt für die Runde. Sie wird abgeleitet, eine neue Aktivitätsart braucht es nicht.</span>
+    </div>
+  </div>
+
+  <section data-screen-label="F17.5 Ergebnis-Moment" style="width: 1870px; box-sizing: border-box; padding: 26px 30px; background: #f9fbf4; border-radius: 22px; box-shadow: 0 6px 18px rgba(40,60,30,.10); display: grid; grid-template-columns: 920px minmax(0, 1fr); gap: 32px;">
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+      <div style="display: flex; align-items: baseline; gap: 14px;"><h2 style="margin: 0; font-family: 'Young Serif'; font-weight: 400; font-size: 30px;">5 · Der Moment im Ergebnis</h2><span style="font-size: 14px; font-weight: 700; color: #4b5c45;">nach der Schlagzeile, vor der Tafel · höchstens zwei, der Rest gefaltet</span></div>
+      <div style="display: flex; flex-direction: column; gap: 14px; padding: 20px 22px; background: #ecf1e4; border-radius: 20px;">
+        <span style="font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #356427;">Auf der Lichtung · Sonntag, 14. September 2026</span>
+        <span style="font-family: 'Young Serif'; font-weight: 400; font-size: 32px; line-height: 1.08;">„Nordlichter“ wurde gespielt. Jonas hat gewonnen!</span>
+        <div style="position: relative; height: 210px; border-radius: 18px; overflow: hidden; background: linear-gradient(180deg, #f3f6ec 0%, #e9f0df 64%, #c2dc86 64%, #9cc38a 100%);">
+          <span style="position: absolute; left: 22%; bottom: 66px; width: 16px; height: 90px; margin-left: -8px; border-radius: 8px 8px 3px 3px; background: #5a3d24;"></span>
+          <span style="position: absolute; left: 22%; bottom: 128px; width: 110px; height: 86px; margin-left: -55px; border-radius: 50%; background: #4f7d40;"></span>
+          <span style="position: absolute; left: 22%; bottom: 148px; width: 72px; height: 62px; margin-left: -70px; border-radius: 50%; background: #6b9a55;"></span>
+          <span style="position: absolute; left: 22%; bottom: 152px; width: 70px; height: 60px; margin-left: -6px; border-radius: 50%; background: #446b39;"></span>
+          <span style="position: absolute; left: 52%; bottom: 30px; width: 150px; height: 112px; border-radius: 8px 3px 8px 3px; background: {{ cover }}; transform: rotate(-4deg); box-shadow: 0 10px 20px rgba(40,60,30,.3);"></span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 10px; padding: 14px 16px; background: #f9fbf4; border-radius: 16px;">
+          <span style="font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #356427;">Neu verdient</span>
+          <span style="display: flex; align-items: center; gap: 22px;">{{ moment }}<a href="#" style="margin-left: auto; min-height: 44px; display: inline-flex; align-items: center; gap: 6px; padding: 0 14px; border-radius: 14px 4px 14px 4px; background: #d6e4c6; color: #1b2a18; font-weight: 800; font-size: 15px;">+1 weiteres<i class="ti ti-chevron-right"></i></a></span>
+        </div>
+        <span style="font-size: 14px; font-weight: 700; color: #4b5c45;">↓ Die Abstimmung · 3 Spiele, Falls etwas anders lief, „Noch eine Session“ — wie F4.3, die ganze Zeit bedienbar</span>
+      </div>
+      <span style="display: flex; gap: 8px;"><a href="#" onClick="{{ play }}" style="min-height: 44px; display: inline-flex; align-items: center; gap: 6px; padding: 0 16px; border-radius: 14px 4px 14px 4px; background: #356427; color: #f4f8ec; font-weight: 800; font-size: 15px;"><i class="ti ti-player-play"></i>Abspielen</a><a href="#" onClick="{{ toEnd }}" style="min-height: 44px; display: inline-flex; align-items: center; gap: 6px; padding: 0 16px; border-radius: 14px 4px 14px 4px; background: #d6e4c6; border: 1.5px solid #6f7f66; box-sizing: border-box; color: #1b2a18; font-weight: 700; font-size: 15px;"><i class="ti ti-player-track-next"></i>Endzustand</a><a href="#" role="switch" aria-checked="{{ reducedAria }}" onClick="{{ toggleReduced }}" style="min-height: 44px; display: inline-flex; align-items: center; gap: 8px; padding: 0 14px; color: #1b2a18; font-weight: 700; font-size: 15px;"><span style="width: 40px; height: 24px; border-radius: 999px; background: {{ swBg }}; display: flex; justify-content: {{ swJ }}; padding: 3px; box-sizing: border-box;"><span style="width: 18px; height: 18px; border-radius: 50%; background: #f9fbf4;"></span></span>Reduzierte Bewegung</a></span>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      <span style="font-family: 'Young Serif'; font-weight: 400; font-size: 22px;">Zeittafel</span>
+      <sc-for list="{{ timeline }}" as="s" hint-placeholder-count="5"><div style="display: grid; grid-template-columns: 130px minmax(0, 1fr); gap: 12px; padding: 7px 0; border-top: 1px solid #d5ddca; font-size: 14px; line-height: 1.4;"><strong>{{ s.t }}</strong><span>{{ s.v }}</span></div></sc-for>
+      <span style="font-size: 15px; line-height: 1.5;"><strong>Endzustand / reduziert:</strong> beide Gläser leuchten ruhig, der Baum steht. Kein Glühwürmchen fliegt. Der Wal bei Ocean, der Baum bei Forest: Das Abzeichen kommt erst, wenn der Baum ausgewachsen ist, und stiehlt ihm nicht die Schau.</span>
+      <span style="font-size: 15px; line-height: 1.5;"><strong>Kein Modal, kein Tipp nötig.</strong> „+1 weiteres“ öffnet Pokale › Abzeichen beim Jüngsten. Bei drei und mehr gilt <code>badges.moment.more</code>. Telefon: dieselbe Zeile, die beiden Gläser untereinander mit Namen daneben.</span>
+    </div>
+  </section>
+
+  <div style="display: flex; gap: 40px; align-items: flex-start;">
+    <div data-screen-label="F17.7 Spielerkarte" style="display: flex; flex-direction: column; gap: 10px; width: 620px;">
+      <div style="font-size: 14px; font-weight: 700; color: #4b5c45;">F17.7 · Spielerkarte und Freundes-Feed — nur die vier Konto-Abzeichen</div>
+      <div style="display: flex; flex-direction: column; gap: 14px; padding: 24px; background: #f9fbf4; border-radius: 22px; box-shadow: 0 18px 44px rgba(40,60,30,.18);">
+        <span style="display: flex; gap: 16px; align-items: center;"><span style="width: 72px; height: 72px; border-radius: 50%; background: #f9fbf4; border: 6px solid #c6522c; box-sizing: border-box; display: grid; place-items: center; font-weight: 800; font-size: 22px;">MA</span><span style="display: flex; flex-direction: column;"><span style="font-family: 'Young Serif'; font-weight: 400; font-size: 28px;">Marco</span><span style="font-size: 14px; font-weight: 700; color: #4b5c45;">64 Sessions · 17 Siege · 3 Runden · 1 Jahr dabei</span></span></span>
+        <span style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; padding-top: 12px; border-top: 1px solid #d5ddca;"><sc-for list="{{ account }}" as="t" hint-placeholder-count="4"><a href="#" aria-label="{{ t.aria }}" style="display: flex; flex-direction: column; align-items: center; gap: 6px; color: #1b2a18;"><span style="position: relative; width: 48px; height: 60px;"><span style="position: absolute; left: 7px; right: 7px; top: 0; height: 13px; border-radius: 3px 3px 2px 2px; background: #5a3d24; color: #f4f8ec; font-size: 12px; font-weight: 800; display: grid; place-items: center; line-height: 1; z-index: 1;">{{ t.tier }}</span><span style="position: absolute; left: 0; right: 0; top: 9px; bottom: 0; border-radius: 12px 12px 15px 15px; background: {{ t.bg }}; border: {{ t.border }}; box-sizing: border-box; overflow: hidden; box-shadow: {{ t.glowS }}; display: grid; place-items: center;"><i class="ti {{ t.icon }}" style="font-size: 22px; color: {{ t.ink }};"></i></span></span><span style="font-weight: 800; font-size: 14px;">{{ t.nameTier }}</span><span style="font-size: 12px; font-weight: 700; color: #4b5c45; text-align: center;">{{ t.short }}</span></a></sc-for></span>
+        <span style="font-size: 13px; color: #4b5c45;">Sichtbar für Marco und seine Freunde. Fremde sehen keine Abzeichen. Es erscheinen nie Rundennamen oder andere Personen.</span>
+      </div>
+      <div style="display: flex; gap: 14px; align-items: center; padding: 14px 18px; background: #f9fbf4; border-radius: 18px; box-shadow: 0 6px 18px rgba(40,60,30,.10);"><span style="width: 44px; height: 44px; border-radius: 50%; background: #f9fbf4; border: 5px solid #198663; box-sizing: border-box; display: grid; place-items: center; font-weight: 800; font-size: 13px;">JO</span><span style="display: flex; flex-direction: column; flex: 1;"><span style="font-size: 16px;"><strong>Jonas</strong> hat das Abzeichen „Siege 50“ verdient.</span><span style="font-size: 13px; font-weight: 700; color: #4b5c45;">vor 2 Tagen · Feed (F14.3)</span></span><span style="position: relative; width: 26px; height: 32px; flex: none;"><span style="position: absolute; left: 4px; right: 4px; top: 0; height: 7px; border-radius: 2px; background: #5a3d24;"></span><span style="position: absolute; left: 0; right: 0; top: 5px; bottom: 0; border-radius: 7px 7px 9px 9px; background: #24331f; display: grid; place-items: center;"><i class="ti ti-trophy" style="font-size: 13px; color: #fff3a8;"></i></span></span></div>
+    </div>
+    <div data-screen-label="F17.8 Leer und Dichte" style="display: flex; flex-direction: column; gap: 16px; width: 1200px;">
+      <div style="font-size: 14px; font-weight: 700; color: #4b5c45;">F17.8 · Leer und dicht — eine Zeile statt einer Schlösser-Wand · Jonas nach zwei Jahren (14 Abzeichen in 9 Gläsern) · Finnisch · 12 Personen mit 60+ Abzeichen</div>
+      <div style="display: flex; flex-direction: column; gap: 6px; padding: 18px 20px; background: #f9fbf4; border-radius: 18px; box-shadow: 0 6px 18px rgba(40,60,30,.10);"><span style="font-family: 'Young Serif'; font-weight: 400; font-size: 22px;">Abzeichen</span><span style="font-size: 15px; color: #4b5c45;">Nach der ersten Session gibt es hier die ersten Abzeichen.</span><span style="font-size: 13px; font-weight: 700; color: #4b5c45;">Familie Berger · 31 Spiele, noch keine Session</span></div>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px;">
+        <sc-for list="{{ dense }}" as="m" hint-placeholder-count="2">
+          <div style="display: flex; flex-direction: column; gap: 10px; padding: 16px 18px; background: #f9fbf4; border-radius: 20px; box-shadow: 0 6px 18px rgba(40,60,30,.10);">
+            <span style="display: flex; align-items: center; gap: 12px;"><span style="width: 40px; height: 40px; border-radius: 50%; background: #f9fbf4; border: 5px solid {{ m.c }}; box-sizing: border-box; display: grid; place-items: center; font-weight: 800; font-size: 13px;">{{ m.i }}</span><span style="display: flex; flex-direction: column;"><span style="font-weight: 800; font-size: 17px;">{{ m.n }}</span><span style="font-size: 13px; font-weight: 700; color: #4b5c45;">{{ m.count }}</span></span></span>
+            <span style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px 6px; padding: 10px 4px 0; border-top: 6px solid #8a6240; border-radius: 3px;"><sc-for list="{{ m.marks }}" as="t" hint-placeholder-count="9"><a href="#" aria-label="{{ t.aria }}" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: #1b2a18;"><span style="position: relative; width: 40px; height: 50px;"><span style="position: absolute; left: 6px; right: 6px; top: 0; height: 12px; border-radius: 3px 3px 2px 2px; background: #5a3d24; color: #f4f8ec; font-size: 12px; font-weight: 800; display: grid; place-items: center; line-height: 1; z-index: 1;">{{ t.tier }}</span><span style="position: absolute; left: 0; right: 0; top: 8px; bottom: 0; border-radius: 10px 10px 13px 13px; background: {{ t.bg }}; border: {{ t.border }}; box-sizing: border-box; overflow: hidden; display: grid; place-items: center;"><span style="position: absolute; left: 0; right: 0; bottom: 0; height: {{ t.fill }}; background: #d6e4c6;"></span><i class="ti {{ t.icon }}" style="position: relative; font-size: 18px; color: {{ t.ink }};"></i></span></span><span style="font-weight: 800; font-size: 13px; text-align: center; line-height: 1.15; overflow-wrap: anywhere;">{{ t.name }}</span><span style="font-size: 12px; font-weight: 700; color: {{ t.subInk }}; text-align: center; line-height: 1.15;">{{ t.dots }}</span></a></sc-for></span>
+          </div>
+        </sc-for>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px; padding: 16px 18px; background: #f9fbf4; border-radius: 20px; box-shadow: 0 6px 18px rgba(40,60,30,.10);">
+        <span style="display: flex; align-items: baseline; gap: 10px;"><span style="font-family: 'Young Serif'; font-weight: 400; font-size: 22px;">Spielegruppe Nord · 12 Personen</span><span style="font-size: 14px; font-weight: 700; color: #4b5c45;">64 verdient · Zeilen zugeklappt, je Person eine Reihe kleiner Gläser</span></span>
+        <sc-for list="{{ twelve }}" as="m" hint-placeholder-count="12"><a href="#" style="display: grid; grid-template-columns: 34px 180px minmax(0, 1fr) 90px; gap: 10px; align-items: center; min-height: 44px; border-top: 1px solid #d5ddca; color: #1b2a18;"><span style="width: 32px; height: 32px; border-radius: 50%; background: #f9fbf4; border: 4px solid {{ m.c }}; box-sizing: border-box; display: grid; place-items: center; font-weight: 800; font-size: 12px;">{{ m.i }}</span><span style="font-weight: 800; font-size: 15px;">{{ m.n }}</span><span style="display: flex; gap: 4px;"><sc-for list="{{ m.jars }}" as="j" hint-placeholder-count="6"><span style="width: 16px; height: 20px; border-radius: 4px 4px 6px 6px; background: #24331f; box-shadow: inset 0 3px 0 #5a3d24;"></span></sc-for></span><span style="font-size: 14px; font-weight: 700; color: #4b5c45; text-align: right;">{{ m.k }} verdient</span></a></sc-for>
+      </div>
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 40px; align-items: flex-start;">
+    <section data-screen-label="F17.9 Kontrast" style="width: 900px; box-sizing: border-box; padding: 24px 28px; background: #f9fbf4; border-radius: 22px; box-shadow: 0 6px 18px rgba(40,60,30,.10); display: flex; flex-direction: column; gap: 6px;">
+      <h2 style="margin: 0 0 8px; font-family: 'Young Serif'; font-weight: 400; font-size: 28px;">9 · Kontraste, einmal gerechnet</h2>
+      <div style="display: grid; grid-template-columns: minmax(0, 1fr) 110px 110px 80px 120px; gap: 10px; font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #356427; padding: 6px 0;"><span>Paar</span><span>Vorne</span><span>Grund</span><span>Wert</span><span>Soll</span></div>
+      <sc-for list="{{ contrast }}" as="c" hint-placeholder-count="12"><div style="display: grid; grid-template-columns: minmax(0, 1fr) 110px 110px 80px 120px; gap: 10px; padding: 7px 0; border-top: 1px solid #d5ddca; font-size: 14px;"><span>{{ c.what }}</span><span>{{ c.fg }}</span><span>{{ c.bg }}</span><strong style="color: {{ c.ink }};">{{ c.ratio }}</strong><span>{{ c.need }}</span></div></sc-for>
+    </section>
+    <section data-screen-label="F17.10 Übergabe" style="width: 930px; box-sizing: border-box; padding: 24px 28px; background: #f9fbf4; border-radius: 22px; box-shadow: 0 6px 18px rgba(40,60,30,.10); display: flex; flex-direction: column; gap: 10px; font-size: 15px; line-height: 1.5;">
+      <h2 style="margin: 0; font-family: 'Young Serif'; font-weight: 400; font-size: 28px;">10 · Was F17 entscheidet</h2>
+      <span><strong>Form:</strong> Personen-Abzeichen sind Gläser mit Deckel, Runden-Abzeichen sind Blätter am Ast. Konto-Abzeichen sind Gläser auf der Spielerkarte. Verdient = Dämmerung mit Glühwürmchen-Glyphe (#fff3a8, {{ cFF }}:1). Unterwegs = helles Glas mit Moos-Füllstand und Zahl. Offen = gestrichelter Umriss. Geheim = Dämmerung ohne Licht mit <code>ti-lock-question</code> und „Geheim“.</span>
+      <span><strong>Stufen:</strong> Ziffer auf dem Deckel (#f4f8ec auf Rinde, {{ cLid }}:1). Erreichte Stufen stehen als Punkte unter dem Namen („●●○○“) und ausgeschrieben in der Karte.</span>
+      <span><strong>Platz:</strong> Pokale › Abzeichen unter den Auszeichnungen (F13.3). Erst der Ast der Runde, dann die Personen in Tafel-Reihenfolge, am Telefon aufklappbar. Die Tischkarte zeigt nur verdiente Abzeichen.</span>
+      <span><strong>K17-Markup</strong> (wie T17, bis K17 steht): <code>.badge-section</code> · <code>.badge-row--round</code> / <code>--member</code> · <code>a.badge.badge--earned|progress|locked|secret</code> · <code>.badge__glyph</code> · <code>.badge__tier</code> · <code>.badge__fill</code> (Füllstand über <code>--p</code>) · <code>.badge__name</code> · <code>.badge__line</code> · <code>.badge-moment</code> · <code>.badge-moment__more</code>. Forest setzt <code>.badge--round</code> für die Blattform und zeichnet Deckel und Glas über <code>::before</code> / <code>::after</code>. Es braucht keine eigene Ansicht.</span>
+      <span><strong>Wörter:</strong> alle aus <code>badges.*</code> (de.js, main 01.10.). „Neu verdient“, „+1 weiteres“, „3 neue Abzeichen seit Nordlichter“, „Zuletzt: Serienheld · Jonas“, „Stufe 10 erreicht im Januar 2026“, „Nächste Stufe 25“, „Stufen“, „Alle Abzeichen von Lea“. Finnisch aus fi.js. Es gibt keine neuen Schlüssel.</span>
+      <span><strong>Bitte bestätigen:</strong> (1) Jonas steht bei 22 / 25, weil er 22 der 23 Sessions gespielt hat. (2) Stammgast und Sessions haben vier Stufen, das Handover nennt höchstens drei. Wir folgen dem Katalog, wie T17/P17. (3) Die Konto-Abzeichen auf der Spielerkarte sind Gläser ohne Füllstand, die nächste Stufe steht als Text darunter.</span>
+    </section>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { run: 1, reducedLocal: false };
+  renderVals() {
+    const h = React.createElement;
+    const lum = (x) => { const c = [1, 3, 5].map((i) => parseInt(x.substr(i, 2), 16) / 255).map((v) => v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4)); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; };
+    const crN = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+    const cr = (a, b) => (Math.floor(crN(a, b) * 10) / 10).toFixed(1).replace('.', ',');
+    const DK = '#24331f', FF = '#fff3a8', SF = '#f9fbf4', ED = '#6f7f66', I = '#1b2a18', S = '#4b5c45', DS = '#c9d6bd';
+    const CAT = {
+      erster: ['crown', 'Erster Sieg', 'Die erste Session gewonnen'], stamm: ['star', 'Stammgast', 'Bei {n} Sessions dabei'], serie: ['bolt', 'Serienheld', '3 Sessions in Folge gewonnen'],
+      viel: ['dice-5', 'Vielseitig', 'Mit {n} verschiedenen Spielen gewonnen'], alles: ['checkbox', 'Alles gespielt', 'Jedes Spiel im Regal mindestens einmal gespielt'], team: ['users', 'Teamgeist', 'Als Teil eines Teams gewonnen'],
+      gast: ['home-heart', 'Gastgeber', 'Die eigene Schachtel kam 10-mal auf den Tisch'], comeback: ['rocket', 'Comeback', 'Gewonnen nach 10 Sessions ohne Sieg'], entdecker: ['world-search', 'Entdecker', '5 neue Spiele in ihrer ersten Woche mitgespielt'],
+      gegr: ['flag', 'Gegründet', 'Die erste Session beendet'], sess: ['calendar', 'Sessions', '{n} Sessions beendet'], regal: ['archive', 'Regal', '{n} Spiele im Regal'], einst: ['heart', 'Einstimmig', 'Alle gaben dem Siegerspiel die beste Wertung'],
+      unent: ['scale', 'Unentschieden', 'Eine Abstimmung endete gleichauf'], gross: ['confetti', 'Große Runde', '8 oder mehr am Tisch, Gäste zählen mit'], durch: ['circle-check', 'Durchgespielt', 'Das erste Spiel als durchgespielt markiert'],
+      dauer: ['flame', 'Dauerbrenner', 'Ein Spiel 10-mal gespielt'], rueck: ['share', 'Rückblick geteilt', 'Den ersten Rückblick geteilt'],
+      csess: ['cards', 'Sessions', '{n} Sessions in allen Runden'], csieg: ['trophy', 'Siege', '{n} Siege in allen Runden'], crund: ['world', 'Runden', 'In {n} Runden dabei'], cjahr: ['hourglass', 'Jahre', '{n} Jahr bei Spielwirbel'],
+    };
+    const T = (key, o = {}) => {
+      const [g, name0, cond0] = CAT[key];
+      const st = o.st || 'earned';
+      const earned = st === 'earned', prog = st === 'progress', secret = st === 'secret', locked = st === 'locked';
+      const nm = o.nm || (secret ? 'Geheim' : name0);
+      const cond = cond0.replace('{n}', o.tier || (o.at ? o.at[1] : ''));
+      const pct = o.at ? Math.min(100, Math.round(o.at[0] / o.at[1] * 100)) : 0;
+      const count = o.at ? `${o.at[0]} / ${o.at[1]}` : '';
+      const short = earned ? (o.date || '') : prog ? count : secret ? 'noch nicht entdeckt' : 'offen';
+      const tiny = earned ? (o.tiny || o.tier || '✓') : prog ? count : secret ? '?' : 'offen';
+      return {
+        icon: 'ti-' + (secret ? 'lock-question' : g), name: nm, nameTier: o.tier && !secret ? `${nm} ${o.tier}` : nm, tier: secret ? '' : (o.tier || ''), short, tiny, isNew: !!o.isNew, dots: o.dots || tiny,
+        bg: earned || secret ? DK : locked ? '#ecf1e4' : SF, border: earned || secret ? 'none' : locked ? '2px dashed ' + ED : '2px solid ' + ED,
+        ink: earned ? FF : secret ? DS : locked ? S : I, fill: prog ? pct + '%' : '0%',
+        glow: earned ? '0 0 0 3px #f9fbf4, 0 0 16px 4px rgba(255,243,168,.7)' : 'none', glowS: earned ? '0 0 0 2px #f9fbf4, 0 0 10px 2px rgba(255,243,168,.6)' : 'none',
+        subInk: earned && o.gold ? '#85570f' : S,
+        aria: `${nm}${o.tier && !secret ? ' ' + o.tier : ''}, ${earned ? 'verdient' : prog ? 'unterwegs, ' + count : secret ? 'geheim' : 'offen'}. ${secret ? 'Wird sichtbar, sobald es jemand verdient' : cond}${o.date && earned ? '. Verdient im ' + o.date : ''}`,
+      };
+    };
+    const states = [
+      { label: 'Verdient', hint: 'Dämmerung, Glühwürmchen-Glyphe, datiert', t: T('erster', { date: 'Nov 2025', gold: true }) },
+      { label: 'Verdient mit Stufe', hint: 'Ziffer auf dem Deckel, nächste Stufe in der Karte', t: T('stamm', { tier: '10', date: 'Jan 2026' }) },
+      { label: 'Unterwegs', hint: 'helles Glas, Moos-Füllstand, Zahl', t: T('gast', { st: 'progress', at: [7, 10] }) },
+      { label: 'Offen', hint: 'gestrichelt, Bedingung in der Karte', t: T('team', { st: 'locked' }) },
+      { label: 'Geheim', hint: 'dunkel, kein Licht, keine Bedingung', t: T('comeback', { st: 'secret' }) },
+      { label: 'Neu (Endzustand)', hint: '„Neu“ bis zum nächsten Öffnen', t: T('serie', { date: 'Sep 2026', isNew: true }) },
+    ];
+    const leafStates = [
+      { label: 'verdient', t: T('gegr', { date: 'Okt 2025' }) }, { label: 'verdient mit Stufe', t: T('sess', { tier: '10', date: 'Feb 2026' }) }, { label: 'unterwegs', t: T('regal', { st: 'progress', at: [12, 25], tier: '' }) },
+      { label: 'offen', t: T('gross', { st: 'locked' }) }, { label: 'geheim', t: T('einst', { st: 'secret' }) }, { label: 'verdient, geheim gewesen', t: T('unent', { date: 'Jun 2026' }) },
+    ].map((s) => ({ ...s, t: { ...s.t, bg: s.t.bg === DK && s.t.icon !== 'ti-lock-question' ? '#356427' : s.t.bg, ink: s.t.ink === FF ? '#f4f8ec' : s.t.ink } }));
+    const leafify = (t) => ({ ...t, bg: t.bg === DK && t.icon !== 'ti-lock-question' ? '#356427' : t.bg, ink: t.ink === FF ? '#f4f8ec' : t.ink });
+    const compact = [T('erster', { date: 'Nov 2025' }), T('stamm', { tier: '10', date: '22 / 25 zur nächsten' }), T('gast', { st: 'progress', at: [7, 10] }), T('team', { st: 'locked' }), T('comeback', { st: 'secret' })];
+    const tierDots = [['10', true], ['25', false], ['50', false], ['100', false]].map(([n, on]) => ({ n, icon: on ? 'ti-check' : 'ti-lock', bg: on ? '#356427' : '#ffffff', ink: on ? '#f4f8ec' : S, edge: on ? '#356427' : ED }));
+    const roundMarks = [T('gegr', { date: 'Okt 2025' }), T('sess', { tier: '10', date: '23 / 50' }), T('unent', { date: 'Jun 2026' }), T('durch', { date: 'Mai 2026' }), T('regal', { st: 'progress', at: [12, 25] }), T('dauer', { st: 'progress', at: [4, 10], nm: 'Dauerbrenner' }), T('gross', { st: 'locked' }), T('rueck', { st: 'locked' }), T('einst', { st: 'secret' })].map(leafify);
+    const roundMarksPhone = roundMarks.slice(0, 5);
+    const PEOPLE = ['#c6522c', '#198663', '#726bc7', '#a66815', '#c34d74', '#2f6f9e', '#54821d', '#993556'];
+    const mem = {
+      Jonas: [T('erster', { tiny: 'Okt 25' }), T('stamm', { tier: '10', tiny: '22 / 25' }), T('serie', { tiny: 'Sep 26' }), T('viel', { tier: '6', tiny: '6 / 10' }), T('gast', { st: 'progress', at: [7, 10] }), T('alles', { st: 'progress', at: [10, 12] }), T('entdecker', { st: 'progress', at: [3, 5] }), T('team', { st: 'locked' }), T('comeback', { st: 'secret' })],
+      Lea: [T('erster', { tiny: 'Nov 25' }), T('stamm', { tier: '10', tiny: '21 / 25' }), T('team', { tiny: 'Apr 26' }), T('viel', { tier: '3', tiny: '4 / 6' }), T('gast', { st: 'progress', at: [4, 10] }), T('entdecker', { st: 'progress', at: [2, 5] }), T('serie', { st: 'locked' }), T('alles', { st: 'locked' }), T('comeback', { st: 'secret' })],
+      Marco: [T('erster', { tiny: 'Okt 25' }), T('stamm', { tier: '10', tiny: '22 / 25' }), T('gast', { tiny: 'Sep 26' }), T('viel', { tier: '3', tiny: '3 / 6' }), T('entdecker', { st: 'progress', at: [1, 5] }), T('serie', { st: 'locked' }), T('team', { st: 'locked' }), T('alles', { st: 'locked' }), T('comeback', { st: 'secret' })],
+      Tim: [T('erster', { tiny: 'Mär 26' }), T('stamm', { tier: '10', tiny: '15 / 25' }), T('gast', { st: 'progress', at: [3, 10] }), T('viel', { st: 'progress', at: [1, 3] }), T('serie', { st: 'locked' }), T('team', { st: 'locked' }), T('alles', { st: 'locked' }), T('entdecker', { st: 'locked' }), T('comeback', { st: 'secret' })],
+    };
+    const order = [['Jonas', 1, '1'], ['Lea', 2, '2'], ['Marco', 0, '3'], ['Tim', 3, '4']];
+    const countOf = (list) => { const e = list.filter((t) => t.bg === DK && t.icon !== 'ti-lock-question').length, p = list.filter((t) => t.fill !== '0%').length; return `${e} verdient · ${p} unterwegs`; };
+    const memberRows = order.map(([n, k, place]) => ({ n, i: n.slice(0, 2).toUpperCase(), c: PEOPLE[k], place, marks: mem[n], count: countOf(mem[n]) }));
+    const memberRowsPhone = memberRows.map((m, i) => ({ ...m, isOpen: i === 0, open: i === 0 ? 'true' : 'false', chev: i === 0 ? 'ti-chevron-down' : 'ti-chevron-right', marks: m.marks.slice(0, 8) }));
+    const figures = [['21', 'Sessions'], ['7', 'Siege'], ['33 %', 'Quote'], ['3,9', 'Ø Wertung'], ['Moorgeister', 'Lieblingsspiel']].map(([v, k]) => ({ v, k }));
+    const leaEarned = [T('erster', { date: 'November 2025' }), T('stamm', { tier: '10', date: 'Januar 2026' }), T('team', { date: 'April 2026' }), T('viel', { tier: '3', date: 'Juni 2026' })];
+    const chronikLines = [['Jonas · Serienheld', 'bolt', true], ['Marco · Gastgeber', 'home-heart', true], ['Jonas · Vielseitig 6', 'dice-5', true]].map(([t, g]) => ({ t, icon: 'ti-' + g, bg: DK, border: 'none', ink: FF }));
+    const account = [T('csess', { tier: '25', date: '64 / 100 zur nächsten' }), T('csieg', { tier: '10', date: '17 / 50 zur nächsten' }), T('crund', { tier: '2', date: '3 / 5 zur nächsten' }), T('cjahr', { tier: '1', date: 'seit September 2025' })];
+    const fiNames = ['Ensimmäinen voitto', 'Vakiokasvo', 'Voittoputki', 'Monipuolinen', 'Kaikki pelattu', 'Joukkuehenki', 'Isäntä', 'Löytöretkeilijä', 'Salainen'];
+    const jonas2 = [T('erster'), T('stamm', { tier: '100', dots: '●●●●' }), T('serie'), T('viel', { tier: '10', dots: '●●●' }), T('alles'), T('team'), T('gast'), T('comeback'), T('entdecker')];
+    const dense = [
+      { n: 'Jonas · zwei Jahre später', i: 'JO', c: PEOPLE[1], count: '14 Abzeichen in 9 Gläsern — Stammgast 10 · 25 · 50 · 100, Vielseitig 3 · 6 · 10', marks: jonas2 },
+      { n: 'Lea · Suomi', i: 'LE', c: PEOPLE[2], count: 'Merkit · fi.js', marks: mem.Lea.map((t, i) => ({ ...t, name: fiNames[i], dots: t.tiny })) },
+    ];
+    const tn = ['Marco', 'Jonas', 'Lea', 'Tim', 'Aylin', 'Ben', 'Chris', 'Dilara', 'Emil', 'Friederike-Sophie', 'Gregor', 'Hanna'];
+    const ks = [7, 9, 6, 4, 5, 6, 5, 4, 6, 3, 5, 4];
+    const twelve = tn.map((n, i) => ({ n, i: n.slice(0, 2).toUpperCase(), c: PEOPLE[i % 8], k: String(ks[i]), jars: Array.from({ length: ks[i] }, () => ({})) }));
+    const contrast = [
+      ['Glyphe im verdienten Glas', FF, DK, 3, 'Grafik 3:1'], ['Glyphe im geheimen Glas', DS, DK, 3, 'Grafik 3:1'], ['Stufen-Ziffer auf dem Deckel (12 px)', '#f4f8ec', '#5a3d24', 4.5, 'Text 4,5:1'],
+      ['Glyphe im hellen Glas', I, SF, 3, 'Grafik 3:1'], ['Glaskante unterwegs / offen', ED, SF, 3, 'UI 3:1'], ['Glaskante offen gg. Lichtung', ED, '#ecf1e4', 3, 'UI 3:1'],
+      ['Glyphe offen (weich)', S, '#ecf1e4', 3, 'Grafik 3:1'], ['Verdientes Glas gg. Karte', DK, SF, 3, 'Grafik 3:1'], ['Verdientes Blatt gg. Karte', '#356427', SF, 3, 'Grafik 3:1'],
+      ['Glyphe im verdienten Blatt', '#f4f8ec', '#356427', 3, 'Grafik 3:1'], ['Name unter der Form', I, SF, 4.5, 'Text 4,5:1'], ['Zeile unter der Form', S, SF, 4.5, 'Text 4,5:1'],
+      ['„Neu“-Chip', '#f4f8ec', '#356427', 4.5, 'Text 4,5:1'], ['Füllstand gg. hellem Glas', '#d6e4c6', SF, 1, 'Schmuck — Zahl trägt'],
+    ].map(([what, fg, bg, need, needT]) => { const v = crN(fg, bg); return { what, fg, bg, ratio: cr(fg, bg) + ':1', need: needT, ink: v >= need ? I : '#a3392b' }; });
+    const sysReduce = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const reduced = this.state.reducedLocal || sysReduce;
+    const animate = !reduced && this.state.run > 0;
+    const jar = (g, name, sub, i) => h('span', { key: 'm' + i + '-' + this.state.run + reduced, style: { display: 'flex', alignItems: 'center', gap: 10 } },
+      h('span', { style: { position: 'relative', width: 48, height: 60, flex: 'none' } },
+        h('span', { style: { position: 'absolute', left: 7, right: 7, top: 0, height: 12, borderRadius: '3px 3px 2px 2px', background: '#5a3d24', zIndex: 1 } }),
+        h('span', { style: { position: 'absolute', left: 0, right: 0, top: 8, bottom: 0, borderRadius: '12px 12px 15px 15px', background: DK, display: 'grid', placeItems: 'center', boxShadow: '0 0 0 3px #f9fbf4, 0 0 16px 4px rgba(255,243,168,.7)', animation: animate ? `ffDim 300ms ease-out ${2200 + i * 500}ms both, ffOnce 700ms ease-out ${3000 + i * 500}ms both` : 'none' } },
+          h('i', { className: 'ti ti-' + g, style: { fontSize: 22, color: FF, '--fx': (i === 0 ? -520 : -660) + 'px', '--fy': '-150px', animation: animate ? `ffFly 900ms cubic-bezier(.3,.6,.2,1) ${2200 + i * 500}ms both` : 'none' } }))),
+      h('span', { style: { display: 'flex', flexDirection: 'column', lineHeight: 1.2 } }, h('span', { style: { fontWeight: 800, fontSize: 16 } }, name), h('span', { style: { fontSize: 13, fontWeight: 700, color: S } }, sub)));
+    const moment = h('span', { style: { display: 'flex', gap: 28 } }, jar('bolt', 'Serienheld', 'Jonas · 3 Sessions in Folge gewonnen', 0), jar('home-heart', 'Gastgeber', 'Marco · die eigene Schachtel kam 10-mal auf den Tisch', 1));
+    const timeline = [
+      { t: '0 ms', v: 'Schlagzeile, Tafel und „Noch eine Session“ stehen sofort. Die Zeile „Neu verdient“ steht schon da, die Gläser sind noch hell.' },
+      { t: '1 100–1 700 ms', v: 'Der Baum wächst (F10.4). Kein Abzeichen bewegt sich.' },
+      { t: '2 200–3 100 ms', v: 'Aus der Krone fliegt ein Glühwürmchen ins erste Glas, das Glas dämmert ein.' },
+      { t: '3 000–3 700 ms', v: 'Das Glas leuchtet einmal auf und kommt zur Ruhe. Das zweite folgt 500 ms später.' },
+      { t: 'immer', v: 'Nichts blockiert. Ein Tipp auf ein Glas öffnet die Karte, „+1 weiteres“ öffnet Pokale › Abzeichen.' },
+    ];
+    return {
+      states, leafStates, compact, tierDots, roundMarks, roundMarksPhone, memberRows, memberRowsPhone, figures, leaEarned, chronikLines, account, dense, twelve, contrast, moment, timeline,
+      cover: 'linear-gradient(145deg, oklch(.6 .13 200), oklch(.36 .12 230))', cFF: cr(FF, DK), cLid: cr('#f4f8ec', '#5a3d24'),
+      reducedAria: reduced ? 'true' : 'false', swBg: reduced ? '#356427' : ED, swJ: reduced ? 'flex-end' : 'flex-start',
+      play: (e) => { e && e.preventDefault(); this.setState((s) => ({ run: s.run + 1, reducedLocal: false })); },
+      toEnd: (e) => { e && e.preventDefault(); this.setState({ run: 0 }); },
+      toggleReduced: (e) => { e && e.preventDefault(); this.setState((s) => ({ reducedLocal: !s.reducedLocal })); },
+    };
+  }
+}
+</script>
+</body>
+</html>

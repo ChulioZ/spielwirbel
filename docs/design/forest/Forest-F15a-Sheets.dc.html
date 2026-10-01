@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="design_doc_mode" content="canvas">
+  <link rel="stylesheet" href="../../../public/fonts/tabler-icons.css">
+  <link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Alegreya+Sans:wght@400;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #dcdfd4; font-family: 'Alegreya Sans', sans-serif; color: #1b2a18; }
+    a { color: #356427; text-decoration: none; }
+    a:hover { color: #284d1d; }
+  </style>
+</helmet>
+<div style="display: flex; flex-direction: column; gap: 40px; padding: 48px; width: max-content; background: #dcdfd4;">
+  <section data-screen-label="F15a Kopf" style="width: 1720px; box-sizing: border-box; padding: 30px 36px; background: #f9fbf4; border-radius: 22px; box-shadow: 0 6px 18px rgba(40,60,30,.10); display: flex; flex-direction: column; gap: 10px;">
+    <div style="font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #356427;">Brief 15a von 15 · Overlays I · Telefon 390 (Sheet) und Desktop (Popover)</div>
+    <h1 style="margin: 0; font-family: 'Young Serif'; font-weight: 400; font-size: 40px; line-height: 1.05;">F15a · Vierzehn Sheets, drei Popover</h1>
+    <p style="margin: 0; font-size: 17px; line-height: 1.5; max-width: 1300px;">Jedes Sheet ist eine weiße Fläche mit 24-px-Ecken oben, Griff, Titel in Young Serif, Schließen (44 × 44) und einem scrollenden Inhalt. Die Hauptaktion ist ein Laubblatt-Knopf in Alegreya Sans 800, mindestens 52 px hoch. Am Desktop wird dasselbe Sheet zum Popover von 420 px Breite, mit Schatten statt Schleier. Dahinter liegt der Schleier: Tinte zu 55 %.</p>
+  </section>
+  <div style="display: grid; grid-template-columns: repeat(4, 390px); gap: 40px 40px;">
+    <sc-for list="{{ sheets }}" as="s" hint-placeholder-count="14">
+      <div data-screen-label="{{ s.label }}" style="display: flex; flex-direction: column; gap: 8px;">
+        <div style="font-size: 14px; font-weight: 700; color: #4b5c45;">F15a · {{ s.label }}</div>
+        <div role="dialog" aria-modal="true" aria-label="{{ s.title }}" style="display: flex; flex-direction: column; background: #ffffff; border-radius: 24px 24px 0 0; box-shadow: 0 18px 44px rgba(40,60,30,.18); overflow: hidden;">
+          <span style="align-self: center; width: 44px; height: 5px; margin-top: 10px; border-radius: 3px; background: #6f7f66;"></span>
+          <div style="display: flex; align-items: center; gap: 10px; padding: 8px 12px 6px 20px;"><span style="font-family: 'Young Serif'; font-weight: 400; font-size: 24px; line-height: 1.1;">{{ s.title }}</span><a href="#" aria-label="Schließen" style="margin-left: auto; width: 44px; height: 44px; flex: none; border-radius: 50%; display: grid; place-items: center; background: #d6e4c6; color: #1b2a18;"><i class="ti ti-x" style="font-size: 20px;"></i></a></div>
+          <div style="display: flex; flex-direction: column; gap: 12px; padding: 8px 20px 16px;">
+            <sc-for list="{{ s.rows }}" as="r" hint-placeholder-count="3">
+              <sc-if value="{{ r.isField }}" hint-placeholder-val="{{ false }}"><label style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 700;">{{ r.label }}<span style="display: flex; align-items: center; min-height: 44px; padding: 0 14px; background: #ffffff; border: 1.5px solid #6f7f66; border-radius: 12px; box-sizing: border-box;"><input value="{{ r.value }}" placeholder="{{ r.ph }}" style="border: none; background: none; font: inherit; font-size: 16px; font-weight: 400; color: #1b2a18; outline: none; width: 100%;"></span></label></sc-if>
+              <sc-if value="{{ r.isText }}" hint-placeholder-val="{{ false }}"><span style="font-size: 15px; color: #4b5c45; line-height: 1.45;">{{ r.text }}</span></sc-if>
+              <sc-if value="{{ r.isToggle }}" hint-placeholder-val="{{ false }}"><a href="#" role="switch" aria-checked="{{ r.aria }}" style="display: flex; align-items: center; gap: 12px; min-height: 44px; color: #1b2a18; font-weight: 700; font-size: 16px;"><span style="flex: 1;">{{ r.label }}</span><span style="width: 44px; height: 26px; border-radius: 999px; background: {{ r.tBg }}; border: {{ r.tEdge }}; display: flex; justify-content: {{ r.tJ }}; padding: 3px; box-sizing: border-box;"><span style="width: 18px; height: 18px; border-radius: 50%; background: {{ r.tK }};"></span></span></a></sc-if>
+              <sc-if value="{{ r.isCheck }}" hint-placeholder-val="{{ false }}"><a href="#" role="checkbox" aria-checked="{{ r.aria }}" style="display: flex; align-items: center; gap: 12px; min-height: 44px; color: #1b2a18; font-weight: 700; font-size: 16px;"><span style="width: 24px; height: 24px; flex: none; border-radius: 7px; background: {{ r.cBg }}; border: {{ r.cEdge }}; box-sizing: border-box; display: grid; place-items: center; color: #f4f8ec;"><i class="ti {{ r.cIcon }}" style="font-size: 16px;"></i></span><span style="width: 28px; height: 28px; flex: none; border-radius: 50%; background: #f9fbf4; border: 4px solid {{ r.sw }}; box-sizing: border-box; display: {{ r.swD }};"></span><span style="flex: 1;">{{ r.label }}</span><span style="font-size: 13px; font-weight: 700; color: #4b5c45;">{{ r.meta }}</span></a></sc-if>
+              <sc-if value="{{ r.isChips }}" hint-placeholder-val="{{ false }}"><span style="display: flex; flex-direction: column; gap: 8px;"><span style="font-size: 14px; font-weight: 700;">{{ r.label }}</span><span style="display: flex; flex-wrap: wrap; gap: 8px;"><sc-for list="{{ r.chips }}" as="c" hint-placeholder-count="3"><a href="#" aria-pressed="{{ c.on }}" style="min-height: 32px; display: inline-flex; align-items: center; padding: 0 14px; border-radius: 14px 4px 14px 4px; background: {{ c.bg }}; color: {{ c.ink }}; font-weight: 700; font-size: 14px;">{{ c.l }}</a></sc-for></span></span></sc-if>
+              <sc-if value="{{ r.isStepper }}" hint-placeholder-val="{{ false }}"><span style="display: flex; align-items: center; gap: 10px; min-height: 44px;"><span style="flex: 1; font-weight: 700; font-size: 16px;">{{ r.label }}</span><a href="#" aria-label="Weniger" style="width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; background: #d6e4c6; border: 1.5px solid #6f7f66; box-sizing: border-box; color: #1b2a18;"><i class="ti ti-minus"></i></a><span style="min-width: 28px; text-align: center; font-weight: 800; font-size: 22px;">{{ r.n }}</span><a href="#" aria-label="Mehr" style="width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; background: #d6e4c6; border: 1.5px solid #6f7f66; box-sizing: border-box; color: #1b2a18;"><i class="ti ti-plus"></i></a></span></sc-if>
+              <sc-if value="{{ r.isSwatches }}" hint-placeholder-val="{{ false }}"><span role="radiogroup" aria-label="Farbmarker" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px;"><sc-for list="{{ r.sw }}" as="m" hint-placeholder-count="8"><a href="#" role="radio" aria-checked="{{ m.ac }}" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 76px; padding: 6px 2px; border-radius: 12px; box-shadow: {{ m.ring }}; color: #1b2a18;"><span style="width: 18px; height: 40px; background: {{ m.hex }}; clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 82%, 0 100%);"></span><span style="font-size: 13px; font-weight: 800;">{{ m.name }}</span></a></sc-for></span></sc-if>
+            </sc-for>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 8px; padding: 12px 20px 22px; border-top: 1px solid #d5ddca;">
+            <a href="#" style="min-height: 52px; display: flex; align-items: center; justify-content: center; border-radius: 22px 7px 22px 7px; background: #356427; color: #f4f8ec; font-weight: 800; font-size: 18px;">{{ s.action }}</a>
+            <sc-if value="{{ s.hasSecondary }}" hint-placeholder-val="{{ false }}"><a href="#" style="min-height: 48px; display: flex; align-items: center; justify-content: center; border-radius: 14px 4px 14px 4px; border: 1.5px solid {{ s.secEdge }}; box-sizing: border-box; color: {{ s.secInk }}; font-weight: 700; font-size: 16px;">{{ s.secondary }}</a></sc-if>
+          </div>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+  <div data-screen-label="F15a Popover" style="display: flex; flex-direction: column; gap: 10px;">
+    <div style="font-size: 14px; font-weight: 700; color: #4b5c45;">F15a · Popover am Desktop — Sortierung, Filter, Sprache (neun, wie public/js/locales.js)</div>
+    <div style="display: flex; gap: 40px; align-items: flex-start;">
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <a href="#" aria-expanded="true" style="align-self: flex-start; min-height: 44px; display: inline-flex; align-items: center; gap: 8px; padding: 0 14px; border-radius: 14px 4px 14px 4px; background: #d6e4c6; color: #1b2a18; font-weight: 700; font-size: 15px; box-shadow: 0 0 0 3px #1b2a18;">Sortiert: Bewertung<i class="ti ti-chevron-down"></i></a>
+        <div role="listbox" aria-label="Sortierung" style="width: 280px; display: flex; flex-direction: column; padding: 6px; background: #ffffff; border-radius: 16px; box-shadow: 0 18px 44px rgba(40,60,30,.18);"><sc-for list="{{ sort }}" as="o" hint-placeholder-count="3"><a href="#" role="option" aria-selected="{{ o.sel }}" style="min-height: 44px; display: flex; align-items: center; gap: 10px; padding: 0 12px; border-radius: 12px; background: {{ o.bg }}; color: {{ o.ink }}; font-weight: 700; font-size: 16px;"><span style="flex: 1;">{{ o.l }}</span><i class="ti {{ o.icon }}"></i></a></sc-for></div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <a href="#" aria-expanded="true" style="align-self: flex-start; min-height: 44px; display: inline-flex; align-items: center; gap: 8px; padding: 0 14px; border-radius: 14px 4px 14px 4px; background: #d6e4c6; color: #1b2a18; font-weight: 700; font-size: 15px; box-shadow: 0 0 0 3px #1b2a18;"><i class="ti ti-filter"></i>Filter · 2</a>
+        <div role="dialog" aria-label="Filter" style="width: 420px; display: flex; flex-direction: column; gap: 14px; padding: 18px 20px; background: #ffffff; border-radius: 18px; box-shadow: 0 18px 44px rgba(40,60,30,.18); box-sizing: border-box;">
+          <span style="font-family: 'Young Serif'; font-weight: 400; font-size: 22px;">Filter</span>
+          <span style="font-size: 14px; font-weight: 700;">Schnellstart</span>
+          <span style="display: flex; flex-wrap: wrap; gap: 8px;"><sc-for list="{{ filterChips }}" as="c" hint-placeholder-count="4"><a href="#" aria-pressed="{{ c.on }}" style="min-height: 32px; display: inline-flex; align-items: center; padding: 0 14px; border-radius: 14px 4px 14px 4px; background: {{ c.bg }}; color: {{ c.ink }}; font-weight: 700; font-size: 14px;">{{ c.l }}</a></sc-for></span>
+          <span style="font-size: 14px; font-weight: 700;">Tags</span>
+          <span style="display: flex; flex-wrap: wrap; gap: 8px;"><sc-for list="{{ filterTags }}" as="t" hint-placeholder-count="4"><a href="#" aria-pressed="{{ t.on }}" style="min-height: 32px; display: inline-flex; align-items: center; gap: 6px; padding: 0 12px; border-radius: 14px 4px 14px 4px; background: {{ t.bg }}; border: 1.5px solid {{ t.edge }}; box-sizing: border-box; color: {{ t.ink }}; font-weight: 700; font-size: 14px;"><i class="ti {{ t.i }}"></i>{{ t.l }}</a></sc-for></span>
+          <span style="display: flex; gap: 8px; padding-top: 8px; border-top: 1px solid #d5ddca;"><a href="#" style="min-height: 44px; display: inline-flex; align-items: center; padding: 0 14px; color: #356427; font-weight: 800; font-size: 15px;">Zurücksetzen</a><a href="#" style="margin-left: auto; min-height: 44px; display: inline-flex; align-items: center; padding: 0 18px; border-radius: 22px 7px 22px 7px; background: #356427; color: #f4f8ec; font-weight: 800; font-size: 15px;">7 Spiele zeigen</a></span>
+        </div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <a href="#" aria-expanded="true" style="align-self: flex-start; min-height: 44px; display: inline-flex; align-items: center; gap: 6px; padding: 0 12px; border-radius: 999px; color: #1b2a18; font-weight: 700; font-size: 14px; box-shadow: 0 0 0 3px #1b2a18;"><i class="ti ti-world" style="font-size: 18px;"></i>Deutsch<i class="ti ti-chevron-down"></i></a>
+        <div role="listbox" aria-label="Sprache" style="width: 260px; display: flex; flex-direction: column; padding: 6px; background: #ffffff; border-radius: 16px; box-shadow: 0 18px 44px rgba(40,60,30,.18);"><sc-for list="{{ langs }}" as="l" hint-placeholder-count="9"><a href="#" role="option" aria-selected="{{ l.sel }}" lang="{{ l.code }}" style="min-height: 44px; display: flex; align-items: center; gap: 10px; padding: 0 12px; border-radius: 12px; background: {{ l.bg }}; color: {{ l.ink }}; font-weight: 700; font-size: 16px;"><span style="flex: 1;">{{ l.l }}</span><span style="font-size: 13px; font-weight: 800;">{{ l.up }}</span></a></sc-for></div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const A = '#356427', OA = '#f4f8ec', I = '#1b2a18', MS = '#d6e4c6', ED = '#6f7f66';
+    const MC = ['#c6522c', '#198663', '#726bc7', '#a66815', '#c34d74', '#2f6f9e'];
+    const blank = { isField: false, isToggle: false, isCheck: false, isChips: false, isSwatches: false, isText: false, isStepper: false };
+    const field = (label, value, ph) => ({ ...blank, isField: true, label, value: value || '', ph: ph || '' });
+    const toggle = (label, on) => ({ ...blank, isToggle: true, label, aria: on ? 'true' : 'false', tBg: on ? A : '#ffffff', tEdge: on ? 'none' : '1.5px solid ' + ED, tJ: on ? 'flex-end' : 'flex-start', tK: on ? OA : '#4b5c45' });
+    const check = (label, on, meta, sw) => ({ ...blank, isCheck: true, label, aria: on ? 'true' : 'false', meta: meta || '', cBg: on ? A : '#ffffff', cEdge: on ? 'none' : '1.5px solid ' + ED, cIcon: on ? 'ti-check' : '', sw: sw || 'transparent', swD: sw ? 'block' : 'none' });
+    const chips = (label, list, active) => ({ ...blank, isChips: true, label, chips: list.map((l) => ({ l, on: active.includes(l) ? 'true' : 'false', bg: active.includes(l) ? A : MS, ink: active.includes(l) ? OA : I })) });
+    const text = (t) => ({ ...blank, isText: true, text: t });
+    const stepper = (label, n) => ({ ...blank, isStepper: true, label, n: String(n) });
+    const MK = [['Tanne', '#356427'], ['Fingerhut', '#a2569b'], ['Heidelbeere', '#3e4f8f'], ['Fliegenpilz', '#b3342a'], ['Kiefer', '#7a4a2a'], ['Moorsee', '#2f6f78'], ['Ginster', '#a07a12'], ['Schlehe', '#5a3a6e']];
+    const swatches = { ...blank, isSwatches: true, sw: MK.map(([name, hex], i) => ({ name, hex, ac: i === 2 ? 'true' : 'false', ring: i === 2 ? '0 0 0 3px #1b2a18' : 'inset 0 0 0 1px #d5ddca' })) };
+    const S = (label, title, rows, action, secondary, danger) => ({ label, title, rows, action, secondary: secondary || '', hasSecondary: !!secondary, secEdge: danger ? '#a3392b' : ED, secInk: danger ? '#a3392b' : I });
+    const sheets = [
+      S('1 · Spiel hinzufügen', 'Spiel hinzufügen', [field('Name', '', 'Spiel suchen'), text('Titel, Personenzahl, Dauer und Bild kommen von BGG. Nichts dabei? Dann von Hand.'), toggle('Gehört mir', true)], 'Hinzufügen'),
+      S('2 · Spiel bearbeiten', 'Spiel bearbeiten', [field('Name', 'Nordlichter'), field('Personenzahl', '2–5'), field('Dauer in Minuten', '90'), chips('Tags', ['Koop', 'Strategie', 'Würfel'], ['Strategie'])], 'Speichern', 'Aussortieren'),
+      S('3 · Mitglied bearbeiten', 'Mitglied bearbeiten', [field('Name', 'Jonas'), text('Die Personenfarbe vergibt Spielwirbel; sie ist in jeder Runde gleich.'), toggle('Hat Spiele im Regal', true)], 'Speichern', 'Entfernen', true),
+      S('4 · Plätze wählen', 'Wer spielt mit?', [check('Marco', true, 'spielt mit', MC[0]), check('Jonas', true, 'spielt mit', MC[1]), check('Lea', true, 'spielt mit', MC[2]), check('Tim', false, 'heute nicht dabei', MC[3])], 'Übernehmen'),
+      S('5 · Filter', 'Filter', [chips('Schnellstart', ['Unter 60 Min', 'Leichte Kost', 'Anspruchsvoll', 'Familientauglich'], ['Unter 60 Min']), stepper('Personen', 4), toggle('Nur Spiele mit Bild', false)], '7 Spiele zeigen', 'Zurücksetzen'),
+      S('6 · Einladen', 'Einladen', [field('Link', 'spielwirbel.app/r/k7m2-donnerstag'), text('Wer den Link hat, kann der Runde beitreten. Du kannst ihn jederzeit neu erzeugen.')], 'Link kopieren', 'Neuer Link'),
+      S('7 · Runde übergeben', 'Runde übergeben', [check('Jonas', true, '', MC[1]), check('Lea', false, '', MC[2]), check('Tim', false, '', MC[3]), text('Jonas wird Besitzer der Runde; du bleibst Mitglied.')], 'Übergeben'),
+      S('8 · Farbmarker', 'Farbmarker', [swatches, text('Heidelbeere · alle in der Runde sehen ihn.')], 'Übernehmen'),
+      S('9 · Teams', 'Spielt jemand im Team?', [text('Ein Team zählt beim Auslosen als eine Partei – und gewinnt gemeinsam.'), stepper('Anzahl Teams', 2), check('Marco · Team 1', true, '', MC[0]), check('Jonas · Team 2', true, '', MC[1]), check('Lea · Team 1', true, '', MC[2])], 'Übernehmen', 'Ohne Teams'),
+      S('10 · Jemand ohne Spiele?', 'Wer hat seine Spiele nicht dabei?', [check('Marco', false, '', MC[0]), check('Jonas', false, '', MC[1]), check('Lea', false, '', MC[2]), check('Tim', true, '', MC[3]), text('Tim ohne Spiele — sie spielen, stimmen ab und zählen für Teams wie immer, nur ihre eigenen Spiele bleiben bei der Auslosung außen vor.')], 'Übernehmen'),
+      S('11 · Mehrere Tische', 'Mehrere Tische', [text('Für große Gruppen: Es wird einmal gemeinsam abgestimmt und danach auf mehrere Tische aufgeteilt. Zieh dafür mindestens ein Spiel pro Tisch.'), stepper('Wie viele Tische?', 2), check('Tisch 1 · 4 Personen', true), check('Tisch 2 · 3 Personen', true)], 'Tische bestätigen', 'Normales Ergebnis anzeigen'),
+      S('12 · Rückblick', 'Rückblick', [chips('Zeitraum', ['Monat', 'Quartal', 'Jahr'], ['Quartal']), text('Sommer 2026 · 8 Sessions · Meistgespielt: Nordlichter · Siegesserie: Jonas, 3 Siege in Folge')], 'Rückblick teilen'),
+      S('13 · Teilen', 'Teilen', [text('Die Karte aus F8.4 als Bild, dazu der Link zum Ergebnis.'), check('Mit Wertungen', true), check('Mit Namen', true)], 'Bild teilen', 'Link kopieren'),
+      S('14 · Gast hinzufügen', 'Gast hinzufügen', [field('Name', '', 'Name des Gasts'), text('Gäste stimmen mit ab, gehören aber nicht zur Runde.')], 'Hinzufügen'),
+    ];
+    const sort = [['Zufällig', false], ['Name', false], ['Bewertung', true]].map(([l, on]) => ({ l, sel: on ? 'true' : 'false', bg: on ? A : '#ffffff', ink: on ? OA : I, icon: on ? 'ti-check' : '' }));
+    const filterChips = [['Unter 60 Min', true], ['Leichte Kost', false], ['Anspruchsvoll', false], ['Familientauglich', true]].map(([l, on]) => ({ l, on: on ? 'true' : 'false', bg: on ? A : MS, ink: on ? OA : I }));
+    const filterTags = [['ti-dice-5', 'Würfel', false], ['ti-puzzle', 'Koop', false], ['ti-chess', 'Strategie', false], ['ti-sword', 'Kampagne', false]].map(([i, l, on]) => ({ i, l, on: on ? 'true' : 'false', bg: on ? A : '#ffffff', edge: on ? A : ED, ink: on ? OA : I }));
+    const langs = [['Deutsch', 'de'], ['English', 'en'], ['Español', 'es'], ['Français', 'fr'], ['Italiano', 'it'], ['Nederlands', 'nl'], ['Português', 'pt'], ['Suomi', 'fi'], ['한국어', 'ko']].map(([l, code], i) => ({ l, code, up: code.toUpperCase(), sel: i === 0 ? 'true' : 'false', bg: i === 0 ? A : '#ffffff', ink: i === 0 ? OA : I }));
+    return { sheets, sort, filterChips, filterTags, langs };
+  }
+}
+</script>
+</body>
+</html>

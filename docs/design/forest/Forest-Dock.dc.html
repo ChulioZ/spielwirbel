@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="../../../public/fonts/tabler-icons.css">
+  <link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Alegreya+Sans:wght@400;700;800&display=swap" rel="stylesheet">
+</helmet>
+<nav aria-label="Runde" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; height: 68px; width: 100%; box-sizing: border-box; padding: 4px 8px; background: #f9fbf4; border-top: 1px solid #d5ddca; box-shadow: 0 -6px 18px rgba(40,60,30,.10); font-family: 'Alegreya Sans', sans-serif;">
+  <sc-for list="{{ items }}" as="d" hint-placeholder-count="4">
+    <a href="#" aria-current="{{ d.current }}" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 44px; border-radius: 16px 5px 16px 5px; background: {{ d.bg }}; color: {{ d.ink }}; font-weight: 800; font-size: 13px;" style-focus="outline: 3px solid #1b2a18; outline-offset: 1px;"><i class="ti {{ d.icon }}" style="font-size: 22px;"></i>{{ d.label }}</a>
+  </sc-for>
+</nav>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:390,&quot;height&quot;:68},&quot;active&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;start&quot;,&quot;regal&quot;,&quot;chronik&quot;,&quot;pokale&quot;,&quot;none&quot;],&quot;default&quot;:&quot;start&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;labels&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const a = this.props.active ?? 'start';
+    const custom = (this.props.labels || '').split(',').map((s) => s.trim()).filter(Boolean);
+    const items = [['start', 'Start', 'ti-trees'], ['regal', 'Regal', 'ti-cards'], ['chronik', 'Chronik', 'ti-history'], ['pokale', 'Pokale', 'ti-trophy']].map(([k, de, icon], i) => ({
+      label: custom[i] || de, icon, current: k === a ? 'page' : 'false', bg: k === a ? '#356427' : 'transparent', ink: k === a ? '#f4f8ec' : '#4b5c45',
+    }));
+    return { items };
+  }
+}
+</script>
+</body>
+</html>

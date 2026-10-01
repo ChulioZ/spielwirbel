@@ -11,8 +11,8 @@ decides how that works. The code follows it; this file is the map.
 every account that had not chosen a design wears it and is offered Klassisch
 („Wie bisher") once by the first-start chooser; the round palettes and worlds
 are gone from the code, and a round that wore one shows the colour marker it maps
-to (`public/js/round-marker.js`). Live designs: **Klassisch, Der Tisch.** Ocean
-(#1207), Die Brücke (#1204) and Das Programmheft (#1203) are in slices; the others are placeholder epics.
+to (`public/js/round-marker.js`). Live designs: **Klassisch, Der Tisch, Ocean, Das Programmheft.** Die Brücke
+(#1204) and Forest (#1206) are in slices; Der Run (#1205) is a placeholder epic.
 
 ## The documents
 
@@ -28,6 +28,8 @@ to (`public/js/round-marker.js`). Live designs: **Klassisch, Der Tisch.** Ocean
 | `bruecke/` | The reviewed „Die Brücke“ package (sixteen sheets B1–B16 plus the concept sheet), same shape as `tisch/`. B16 is the density sheet — twelve seats, a 42-game shelf, a tie and two long locales. The shared vote and the pass-device blind arrived in round 3 as B4.5/B6.9 and B4.6/B6.10. |
 | `pruefung-programmheft-2026-09-26.md` | The review of the fourth package (Das Programmheft), over two rounds. Round 2 was accepted with one condition for the build (R2-1: a design's wordmark must fit its poster tile, now in #1376). |
 | `programmheft/` | The reviewed „Das Programmheft“ package (fourteen sheets P1–P10, P13, P14, P15a, P15b plus the concept sheet), same shape as `tisch/`, plus the four component sheets (`-Kopf`, `-Telefonkopf`, `-Dock`, `-Fuss`) the others embed. The density cases live in P7 (P7.7–P7.10); per operator decision 10 its density notes are drawing aids, not product rules. |
+| `pruefung-forest-2026-10-01.md` | The review of the fifth package (Forest), accepted in round 1 with no return to Claude Design. Its thirteen findings (U1–U13) are carried by the slices; the operator's decisions — the nine of the package README and a **light** chooser poster instead of the dusk one the sheets draw — are recorded there. |
+| `forest/` | The reviewed „Forest“ package (fifteen sheets F1–F10, F13, F14, F15a, F15b, F17 plus the concept sheet G and the four component sheets), same shape as `programmheft/`. The density cases live in F7 (F7.7–F7.10). Its F17 arrived with the package rather than as a later brief. |
 | `handover-abzeichen-2026-09-26.md` | The **Abzeichen** (achievements) brief X17, one sheet per design: the decided catalogue (22 core entries, three holders), the seven placements every design shares, and the per-design form. Its decisions table is binding. |
 | `pruefung-abzeichen-2026-09-26.md` | The review of the four X17 sheets (T17, O17, B17, P17), measured clean in one round; its nine numbered findings bind the implementation. Each of `tisch/`, `ocean/`, `bruecke/` and `programmheft/` holds its design's `*-X17-Abzeichen.dc.html`, a seventeenth brief added after the packages. |
 | `tools/audit.js` | The contrast + hit-size audit that measured the Tisch sheets (see below). |
@@ -39,7 +41,7 @@ its epic #1207 closes when Ocean is enabled. **Die Brücke's slices are
 #1237–#1249**, filed from the package in PR #1234 (round 2) and PR #1236
 (round 3, which added the shared vote and the blind); its epic #1204 closes when
 Die Brücke is enabled. **Das Programmheft's slices are #1371–#1383**, filed
-from the package in this folder; its epic #1203 closes when it is enabled. The decisions behind them are in the handover's §1 and in the issues
+from the package in this folder; its epic #1203 closed when it was enabled. **Forest's slices are #1465–#1476**, with its go-live #1478 and its Abzeichen skin #1477; its epic #1206 closes when Forest is enabled. The decisions behind them are in the handover's §1 and in the issues
 themselves; do not re-derive them.
 
 ## Opening a sheet
@@ -55,6 +57,7 @@ python3 -m http.server 3199
 #   or http://localhost:3199/docs/design/ocean/Ocean-O3-Runde-Desktop.dc.html
 #   or http://localhost:3199/docs/design/bruecke/Bruecke-B3-Runde-Desktop.dc.html
 #   or http://localhost:3199/docs/design/programmheft/Programmheft-P3-Runde-Desktop.dc.html
+#   or http://localhost:3199/docs/design/forest/Forest-F3-Runde-Desktop.dc.html
 ```
 
 Opening a sheet as a `file://` URL renders a static snapshot with `{{ … }}`

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="design_doc_mode" content="canvas">
+  <link rel="stylesheet" href="../../../public/fonts/tabler-icons.css">
+  <link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Alegreya+Sans:wght@400;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #dcdfd4; font-family: 'Alegreya Sans', sans-serif; color: #1b2a18; }
+    a { color: #356427; text-decoration: none; }
+    a:hover { color: #284d1d; }
+  </style>
+</helmet>
+<div style="display: flex; flex-direction: column; gap: 40px; padding: 48px; width: max-content; background: #dcdfd4;">
+  <section data-screen-label="F15b Kopf" style="width: 1520px; box-sizing: border-box; padding: 30px 36px; background: #f9fbf4; border-radius: 22px; box-shadow: 0 6px 18px rgba(40,60,30,.10); display: flex; flex-direction: column; gap: 10px;">
+    <div style="font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #356427;">Brief 15b von 15 · Overlays II</div>
+    <h1 style="margin: 0; font-family: 'Young Serif'; font-weight: 400; font-size: 40px; line-height: 1.05;">F15b · Dialoge, Toasts, „…“-Menü</h1>
+    <p style="margin: 0; font-size: 17px; line-height: 1.5; max-width: 1300px;">Neun Bestätigungsdialoge decken die drei Formen ab: Frage, zerstörend, rückholbar. Titel und Text stammen aus de.js, der Schlüssel steht jeweils darüber. Zerstörende Dialoge tragen ein Gefahr-Band und einen Gefahr-Knopf. Die sichere Wahl steht links und hat den Fokus. Toasts liegen auf der Dämmerung, ihre Aktion ist ein Glühwürmchen-Link mit 32 px. Es gibt keinen Offline-Toast, denn die App hat keine Warteschlange.</p>
+  </section>
+  <div style="display: grid; grid-template-columns: repeat(3, 480px); gap: 40px;">
+    <sc-for list="{{ dialogs }}" as="d" hint-placeholder-count="9">
+      <div data-screen-label="{{ d.label }}" style="display: flex; flex-direction: column; gap: 8px;">
+        <div style="font-size: 14px; font-weight: 700; color: #4b5c45;">{{ d.src }}</div>
+        <div role="alertdialog" aria-modal="true" aria-label="{{ d.title }}" style="display: flex; flex-direction: column; gap: 12px; padding: 0 0 20px; background: #ffffff; border-radius: 22px; box-shadow: 0 18px 44px rgba(40,60,30,.18); overflow: hidden;">
+          <span style="height: 8px; background: {{ d.band }};"></span>
+          <span style="display: flex; gap: 12px; align-items: flex-start; padding: 8px 24px 0;"><span style="width: 40px; height: 40px; flex: none; border-radius: 50%; background: {{ d.iconBg }}; color: {{ d.iconInk }}; display: grid; place-items: center;"><i class="ti {{ d.icon }}" style="font-size: 20px;"></i></span><span style="display: flex; flex-direction: column; gap: 6px;"><span style="font-family: 'Young Serif'; font-weight: 400; font-size: 24px; line-height: 1.1;">{{ d.title }}</span><span style="font-size: 16px; line-height: 1.45; color: #1b2a18;">{{ d.body }}</span></span></span>
+          <span style="display: flex; gap: 10px; justify-content: flex-end; padding: 6px 24px 0;"><a href="#" style="min-height: 48px; display: inline-flex; align-items: center; padding: 0 18px; border-radius: 14px 4px 14px 4px; background: #d6e4c6; border: 1.5px solid #6f7f66; box-sizing: border-box; color: #1b2a18; font-weight: 700; font-size: 16px; outline: 3px solid #1b2a18; outline-offset: 2px;">{{ d.safe }}</a><a href="#" style="min-height: 48px; display: inline-flex; align-items: center; padding: 0 18px; border-radius: 14px 4px 14px 4px; background: {{ d.goBg }}; color: #f4f8ec; font-weight: 800; font-size: 16px;">{{ d.go }}</a></span>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+  <div style="display: flex; gap: 48px; align-items: flex-start;">
+    <div data-screen-label="F15b Toasts" style="display: flex; flex-direction: column; gap: 12px; width: 520px;">
+      <div style="font-size: 14px; font-weight: 700; color: #4b5c45;">F15b · Toasts — unten mittig, 5 s, Aktion 32 px, beim Fokus pausiert</div>
+      <sc-for list="{{ toasts }}" as="t" hint-placeholder-count="6"><span role="status" style="display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 8px 10px 8px 16px; border-radius: 16px 5px 16px 5px; background: {{ t.bg }}; color: #f4f8ec; font-weight: 700; font-size: 16px; box-shadow: 0 18px 44px rgba(40,60,30,.18);"><i class="ti {{ t.icon }}" style="font-size: 20px; color: {{ t.iconInk }};"></i><span style="flex: 1;">{{ t.text }}</span><sc-if value="{{ t.hasAct }}" hint-placeholder-val="{{ false }}"><a href="#" style="min-height: 32px; display: inline-flex; align-items: center; padding: 0 12px; border-radius: 10px; color: {{ t.actInk }}; font-weight: 800;">{{ t.act }}</a></sc-if><span style="font-size: 12px; font-weight: 700; color: #c9d6bd; max-width: 120px; text-align: right;">{{ t.src }}</span></span></sc-for>
+      <span style="font-size: 14px; color: #4b5c45; line-height: 1.45;">Hell auf Dämmerung #24331f ({{ cToast }}:1), Aktion in Glühwürmchen ({{ cFF }}:1). Der Fehler-Toast liegt auf Gefahr #a3392b, hell darauf {{ cErr }}:1.</span>
+    </div>
+    <div data-screen-label="F15b Menü" style="display: flex; flex-direction: column; gap: 12px;">
+      <div style="font-size: 14px; font-weight: 700; color: #4b5c45;">F15b · „…“-Menü auf dem Ergebnis (result.more)</div>
+      <span style="display: flex; gap: 10px; align-items: flex-start;"><a href="#" aria-label="Mehr" aria-expanded="true" style="width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: #d6e4c6; color: #1b2a18; box-shadow: 0 0 0 3px #1b2a18;"><i class="ti ti-dots" style="font-size: 20px;"></i></a>
+        <span role="menu" style="width: 300px; display: flex; flex-direction: column; padding: 6px; background: #ffffff; border-radius: 16px; box-shadow: 0 18px 44px rgba(40,60,30,.18);"><sc-for list="{{ menu }}" as="m" hint-placeholder-count="6"><a href="#" role="menuitem" style="min-height: 44px; display: flex; align-items: center; gap: 10px; padding: 0 12px; border-radius: 10px; border-top: {{ m.sep }}; color: {{ m.ink }}; font-weight: 700; font-size: 16px;" style-hover="background: #ecf1e4;"><i class="ti {{ m.icon }}" style="font-size: 18px;"></i>{{ m.l }}</a></sc-for></span></span>
+      <span style="font-size: 14px; color: #4b5c45; line-height: 1.45; max-width: 360px;">„Sieger ändern“ ist neu (F9.5); in der Karte „Falls etwas anders lief“ steht stattdessen „Ändern“ (result.change).</span>
+    </div>
+    <div data-screen-label="F15b Abschluss" style="display: flex; flex-direction: column; gap: 10px; width: 420px; padding: 22px; background: #f9fbf4; border-radius: 20px; box-shadow: 0 6px 18px rgba(40,60,30,.10); font-size: 15px; line-height: 1.5;">
+      <span style="font-family: 'Young Serif'; font-weight: 400; font-size: 22px;">Regeln für alle Overlays</span>
+      <span>Fokus springt beim Öffnen auf die sichere Wahl, bei Sheets auf das erste Feld. <code>Esc</code> schließt, der Fokus kehrt zum Auslöser zurück.</span>
+      <span>Ein Schleier (Tinte 55 %) liegt nur hinter Sheets und Dialogen, nie hinter Popovern und Toasts.</span>
+      <span>Kein Overlay blockiert „Noch eine Session“. Die Abzeichen-Karte aus F17 ist ein Popover und kein Modal.</span>
+      <span>Unter reduzierter Bewegung erscheinen Overlays ohne Gleiten. Sonst gleiten sie in 180 ms aus 12 px Abstand ein.</span>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const lum = (h) => { const c = [1, 3, 5].map((i) => parseInt(h.substr(i, 2), 16) / 255).map((v) => v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4)); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; };
+    const cr = (a, b) => { const x = lum(a), y = lum(b); return (Math.floor((Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05) * 10) / 10).toFixed(1).replace('.', ','); };
+    const D = '#a3392b', A = '#356427', DK = '#24331f';
+    const dg = (src, title, body, safe, go, danger) => ({ label: 'F15b · ' + src, src, title, body, safe, go, goBg: danger ? D : A, band: danger ? D : A, icon: danger ? 'ti-alert-triangle' : 'ti-info-circle', iconBg: danger ? '#f8e4df' : '#d6e4c6', iconInk: danger ? D : '#1b2a18' });
+    const dialogs = [
+      dg('lobby.closeConfirm', 'Abstimmung beenden?', 'Es fehlen noch 2 Stimmen. Abstimmung trotzdem beenden?', 'Weiter abstimmen', 'Beenden', true),
+      dg('vote.leaveConfirm', 'Abstimmung verlassen?', 'Die bisher abgegebenen Bewertungen gehen verloren.', 'Bleiben', 'Verlassen', true),
+      dg('round.draftDiscardConfirm', 'Abstimmung verwerfen?', 'Diese begonnene Abstimmung verwerfen? Die Auslosung wird gelöscht.', 'Behalten', 'Verwerfen', true),
+      dg('result.cancelConfirm', 'Session abbrechen?', 'Diese Session abbrechen? Danach kann kein Spiel mehr zum Spielen gewählt werden.', 'Nicht abbrechen', 'Session abbrechen', true),
+      dg('result.removeGameConfirm', 'Aus Session entfernen?', '„Rost & Regen“ aus dieser Session entfernen? Alle Bewertungen dafür werden gelöscht.', 'Behalten', 'Entfernen', true),
+      dg('result.deleteSession', 'Session löschen?', 'Die Session vom 14. September verschwindet aus Chronik und Pokalen.', 'Behalten', 'Session löschen', true),
+      dg('detail.retireConfirm', 'Aussortieren?', '„Wolkenpfad“ aussortieren? Weg aus Regal und Auslosung — jederzeit zurückholen.', 'Abbrechen', 'Aussortieren', false),
+      dg('detail.unlinkConfirmCover', 'Verknüpfung lösen?', 'Verknüpfung mit BGG lösen? Das Titelbild von BGG wird dabei ebenfalls entfernt.', 'Abbrechen', 'Lösen', false),
+      dg('round.deleteConfirm', 'Diese Runde löschen?', 'Runde „Donnerstagsrunde“ mit allen Spielen und Sessions löschen?', 'Behalten', 'Runde löschen', true),
+    ];
+    const ts = (text, icon, kind, act, src) => ({ text, icon, src, act: act || '', hasAct: !!act, bg: kind === 'err' ? D : DK, iconInk: kind === 'err' ? '#f4f8ec' : '#fff3a8', actInk: kind === 'err' ? '#f4f8ec' : '#fff3a8' });
+    const toasts = [
+      ts('Ergebnis gespeichert', 'ti-circle-check', 'ok', '', 'result.toast.saved'),
+      ts('„Nordlichter“ wird gespielt', 'ti-circle-check', 'ok', 'Rückgängig', 'result.toast.willPlay'),
+      ts('Zurückgesetzt', 'ti-arrow-back-up', 'info', 'Rückgängig', 'result.toast.reset'),
+      ts('Session abgebrochen', 'ti-ban', 'info', 'Rückgängig', 'result.toast.cancelled'),
+      ts('Link kopiert — teile ihn mit der Runde.', 'ti-link', 'info', '', 'lobby.shareCopied'),
+      ts('Keine passenden Spiele zum Wirbeln', 'ti-alert-triangle', 'err', '', 'startSession.toast.noGames'),
+    ];
+    const sep = (b) => (b ? '1.5px solid #d5ddca' : 'none');
+    const menu = [
+      { icon: 'ti-pencil', l: 'Sieger ändern', ink: '#1b2a18', sep: 'none' },
+      { icon: 'ti-dice-5', l: 'Anderes Spiel wählen', ink: '#1b2a18', sep: sep(false) },
+      { icon: 'ti-external-link', l: 'An BG Stats übergeben', ink: '#1b2a18', sep: sep(false) },
+      { icon: 'ti-arrow-back-up', l: 'Zurücksetzen', ink: '#1b2a18', sep: sep(false) },
+      { icon: 'ti-ban', l: 'Session abbrechen', ink: D, sep: sep(true) },
+      { icon: 'ti-trash', l: 'Session löschen', ink: D, sep: sep(false) },
+    ];
+    return { dialogs, toasts, menu, cToast: cr('#f4f8ec', DK), cFF: cr('#fff3a8', DK), cErr: cr('#f4f8ec', D) };
+  }
+}
+</script>
+</body>
+</html>

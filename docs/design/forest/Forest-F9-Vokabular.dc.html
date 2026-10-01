@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="design_doc_mode" content="canvas">
+  <link rel="stylesheet" href="../../../public/fonts/tabler-icons.css">
+  <link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Alegreya+Sans:wght@400;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #dcdfd4; font-family: 'Alegreya Sans', sans-serif; color: #1b2a18; }
+    a { color: #356427; text-decoration: none; }
+    a:hover { color: #284d1d; }
+  </style>
+</helmet>
+<div style="display: flex; flex-direction: column; gap: 40px; padding: 48px; width: max-content; background: #dcdfd4;">
+  <section data-screen-label="F9 Kopf" style="width: 1440px; box-sizing: border-box; padding: 30px 36px; background: #f9fbf4; border-radius: 22px; box-shadow: 0 6px 18px rgba(40,60,30,.10); display: flex; flex-direction: column; gap: 10px;">
+    <div style="font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #356427;">Brief 9 von 15 · §3G · Vokabular-Addendum vom 20.09.</div>
+    <h1 style="margin: 0; font-family: 'Young Serif'; font-weight: 400; font-size: 40px; line-height: 1.05;">F9 · Vokabular und Glossar</h1>
+    <p style="margin: 0; font-size: 17px; line-height: 1.5; max-width: 1200px;">Die Substantive und die Navigation gehören Spielwirbel, das Ritual gehört dem Wald. Forest bleibt nah an den Standardwörtern. Umbenannt sind nur vier Themenstellen: der Stumpf als Gefäß, die Anzahlfrage, die Setup-Aktion und das Aufdecken. Dazu kommen Begrüßung, Zierzeile, Kicker und Zier-Notation, die nie auf Bedienelementen stehen. Der Hauptknopf im Hub bleibt „Session wirbeln“. Schwarz = App-Wortlaut, Laubgrün = neu.</p>
+  </section>
+  <section data-screen-label="F9.1 Themenstellen" style="width: 1440px; box-sizing: border-box; padding: 26px 36px; background: #f9fbf4; border-radius: 22px; box-shadow: 0 6px 18px rgba(40,60,30,.10); display: flex; flex-direction: column; gap: 6px;">
+    <h2 style="margin: 0 0 8px; font-family: 'Young Serif'; font-weight: 400; font-size: 28px;">1 · Themenstellen, DE und EN</h2>
+    <div style="display: grid; grid-template-columns: 200px minmax(0, 1fr) minmax(0, 1fr) 190px; gap: 14px; padding: 6px 0; font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #356427;"><span>Stelle</span><span>Deutsch</span><span>Englisch</span><span>Status</span></div>
+    <sc-for list="{{ places }}" as="p" hint-placeholder-count="12"><div style="display: grid; grid-template-columns: 200px minmax(0, 1fr) minmax(0, 1fr) 190px; gap: 14px; padding: 9px 0; border-top: 1px solid #d5ddca; font-size: 15px; line-height: 1.4;"><strong>{{ p.k }}</strong><span>{{ p.de }}</span><span>{{ p.en }}</span><span style="font-weight: 800; color: {{ p.ink }};">{{ p.s }}</span></div></sc-for>
+  </section>
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px; width: 1440px;">
+    <section data-screen-label="F9.2 Aus dem Konzept entfernt" style="box-sizing: border-box; padding: 26px 30px; background: #f9fbf4; border-radius: 22px; box-shadow: 0 6px 18px rgba(40,60,30,.10); display: flex; flex-direction: column; gap: 6px;">
+      <h2 style="margin: 0 0 6px; font-family: 'Young Serif'; font-weight: 400; font-size: 28px;">2 · Aus dem Konzept entfernt</h2>
+      <span style="font-size: 14px; font-weight: 700; color: #4b5c45;">Nach dem V0-Revert vom 20.09. gelesen (Regel O3)</span>
+      <sc-for list="{{ removed }}" as="r" hint-placeholder-count="12"><div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 8px 0; border-top: 1px solid #d5ddca; font-size: 14px; line-height: 1.4;"><span><span style="text-decoration: line-through; color: #4b5c45;">{{ r.was }}</span></span><span><strong>{{ r.now }}</strong> — {{ r.why }}</span></div></sc-for>
+    </section>
+    <div style="display: flex; flex-direction: column; gap: 32px;">
+      <section data-screen-label="F9.3 Sperrwörter" style="box-sizing: border-box; padding: 26px 30px; background: #f9fbf4; border-radius: 22px; box-shadow: 0 6px 18px rgba(40,60,30,.10); display: flex; flex-direction: column; gap: 8px; font-size: 15px; line-height: 1.5;">
+        <h2 style="margin: 0; font-family: 'Young Serif'; font-weight: 400; font-size: 28px;">3 · Sperrwörter</h2>
+        <span>Für eine Session nie, in keiner Sprache: <strong>Abend · Spielabend · game night · tonight</strong> als Name. Das gilt auch für Zierzeilen und Beispieltexte, denn Beispieltexte werden zu Strings.</span>
+        <span>Wo der Wald dämmert, heißt das nur Bild: Die Dämmerung ist ein Farbton (dusk) und kein Wort im UI. Das Konzept hatte „Heute, 19:12“ auf der Hinweiskarte, das ist entfernt. Eine Uhrzeit sagt nichts über die Session.</span>
+        <span>Geprüft per Skript über alle Forest-Blätter und Bauteile (Wortteil „abend“, Groß/klein egal): Treffer nur auf diesem Blatt und in der README, wo das Sperrwort zitiert wird.</span>
+      </section>
+      <section data-screen-label="F9.4 Glossar" style="box-sizing: border-box; padding: 26px 30px; background: #f9fbf4; border-radius: 22px; box-shadow: 0 6px 18px rgba(40,60,30,.10); display: flex; flex-direction: column; gap: 10px; font-size: 15px; line-height: 1.55;">
+        <h2 style="margin: 0; font-family: 'Young Serif'; font-weight: 400; font-size: 28px;">4 · Glossar für die FAQ</h2>
+        <span style="font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #356427;">Deutsch</span>
+        <span>In Forest heißt der Topf <strong>Baumstumpf</strong>: Dort liegen die Spiele, die zu allen passen, die mitspielen. <strong>„Wie viele Blätter fliegen?“</strong> fragt, wie viele davon gezogen werden. <strong>„Laub wirbeln“</strong> lost sie aus. Wenn alle gewertet haben, <strong>leuchten</strong> die Karten <strong>auf</strong>. Alles andere heißt wie überall in Spielwirbel.</span>
+        <span style="font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #356427;">English</span>
+        <span>In Forest the pot is called the <strong>tree stump</strong>: it holds the games that suit everyone who is playing. <strong>“How many leaves fly?”</strong> asks how many of them are drawn. <strong>“Whirl the leaves”</strong> draws them. Once everyone has rated, the cards <strong>light up</strong>. Everything else has the same name as everywhere in Spielwirbel.</span>
+      </section>
+    </div>
+  </div>
+  <section data-screen-label="F9.5 Neue Schlüssel" style="width: 1440px; box-sizing: border-box; padding: 26px 36px; background: #f9fbf4; border-radius: 22px; box-shadow: 0 6px 18px rgba(40,60,30,.10); display: flex; flex-direction: column; gap: 6px;">
+    <h2 style="margin: 0 0 6px; font-family: 'Young Serif'; font-weight: 400; font-size: 28px;">5 · Neue Schlüssel — nicht in de.js (Stand main, 01.10.)</h2>
+    <div style="display: grid; grid-template-columns: 330px 330px 270px minmax(0, 1fr); gap: 14px; padding: 6px 0; font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #356427;"><span>Wortlaut DE</span><span>EN</span><span>Wo</span><span>Vorschlag Schlüssel / nächster App-Wortlaut</span></div>
+    <sc-for list="{{ newKeys }}" as="k" hint-placeholder-count="20"><div style="display: grid; grid-template-columns: 330px 330px 270px minmax(0, 1fr); gap: 14px; padding: 8px 0; border-top: 1px solid #d5ddca; font-size: 14px; line-height: 1.4;"><strong style="color: #356427;">{{ k.de }}</strong><span>{{ k.en }}</span><span style="color: #4b5c45;">{{ k.w }}</span><span>{{ k.app }}</span></div></sc-for>
+    <span style="font-size: 14px; color: #4b5c45; margin-top: 8px;">Nach Entscheidung 9 (26.09.) ordnet Claude Code jeden Eintrag einem echten Schlüssel zu, wo einer passt. Sonst wird er neu angelegt (DE + EN von hier, sieben Sprachen nachziehen). Die Design-Varianten folgen dem Muster, das Ocean und Brücke in de.js schon haben (<code>…Ocean</code>, <code>…Bruecke</code>). Alles andere auf den Forest-Blättern steht so in de.js.</span>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const APP = '#1b2a18', NEW = '#356427';
+    const places = [
+      ['Gefäß (Topf)', 'Der Baumstumpf · „9 Spiele auf dem Stumpf“', 'The tree stump · “9 games on the stump”', 'Neu · Design-Variante', NEW],
+      ['Anzahlfrage', 'Wie viele Blätter fliegen? — darunter „3 von 9 Spielen werden gezogen“', 'How many leaves fly? — below “3 of 9 games will be drawn”', 'Neu · Variante von barCount', NEW],
+      ['Hauptknopf Hub', 'Session wirbeln (mit Wirbel)', 'as en.js', 'App — unverändert', APP],
+      ['Hauptknopf Setup', 'Laub wirbeln (mit Wirbel)', 'Whirl the leaves', 'Neu · Variante von draw', NEW],
+      ['Wertungskarte', 'Wie gern möchtest du das spielen? · gar nicht … unbedingt', 'How much would you like to play this? · as en.js', 'App — unverändert', APP],
+      ['Aufdecken', 'aufleuchten — „Die Karten leuchten auf.“', 'light up — “The cards light up.”', 'Neu · Reveal-Verb', NEW],
+      ['Schlagzeile (Form)', '„Nordlichter“ wurde gespielt. Jonas hat gewonnen! — Young Serif bis 36 px', 'as result.titleWonOne', 'App-Wortlaut, Form neu', APP],
+      ['Begrüßung Start', 'Willkommen zurück im Wald. · beim ersten Mal: Willkommen im Wald.', 'Welcome back to the woods. · first time: Welcome to the woods.', 'Neu', NEW],
+      ['Zierzeile Wortmarke', 'Der Wald · deine Lichtungen', 'The woods · your clearings', 'Neu · nie auf Bedienelementen', NEW],
+      ['Kicker Hinweiskarte', 'Leuchtzeichen', 'Beacon', 'Neu', NEW],
+      ['Zier-Notation', 'Auf der Lichtung · Sonntag, 14. September 2026 (über der Schlagzeile)', 'In the clearing · Sunday, 14 September 2026', 'Neu · nie auf Bedienelementen', NEW],
+      ['Leerer Stumpf', 'Der Stumpf ist noch leer', 'The stump is still empty', 'Neu · Variante von hub.young.emptyTitle', NEW],
+      ['Markernamen', 'Tanne · Fingerhut · Heidelbeere · Fliegenpilz · Kiefer · Moorsee · Ginster · Schlehe', 'Fir · Foxglove · Blueberry · Fly agaric · Pine · Moor lake · Broom · Sloe', 'Neu · Etiketten im Markerwähler', NEW],
+    ].map(([k, de, en, s, ink]) => ({ k, de, en, s, ink }));
+    const removed = [
+      ['„Laub wirbeln“ als Hauptknopf im Hub', 'Session wirbeln', 'Hub und Setup hätten denselben Knopf für zwei verschiedene Aktionen gehabt.'],
+      ['„Die Fährte“ über der Tafel', 'Die Abstimmung · 3 Spiele', 'result.voteTitle — eine Tafel ist kein Themenort.'],
+      ['„Blatt 2 von 3“', 'Schritt 2 von 3', 'vote.progress; die Blätter bleiben als Form.'],
+      ['„Noch im Dunkeln“ als Überschrift', 'Hilfszeile im Standardwortlaut', 'Helferzeilen bleiben Spielwirbel (§1).'],
+      ['„Noch eine Runde“', 'Noch eine Session', 'tables.oneMore; „Runde“ ist die Gruppe.'],
+      ['„Sieger ändern“ als Chip', '„Ändern“ neben „Jonas hat gewonnen“', 'result.change im Siegerkontext; Menü in F15b markiert.'],
+      ['Titel, Spielerzahl und „Gespielt“ auf dem Cover', 'unter oder neben dem Cover auf der Karte', 'Regel T3.'],
+      ['„Stand →“ und „Jonas führt · 9 Siege“', 'öffnen → · Jonas führt', 'hub.preview.open, hub.preview.pokaleLead.'],
+      ['„Die Zahl der Personen filtert den Stumpf.“', 'Die Anzahl der Personen filtert die Spiele.', 'startSession.membersNote.'],
+      ['„Gast dazu · wertet mit, gehört nicht zur Runde“', 'Gast hinzufügen + guestsNote', 'startSession.guestAddTitle, startSession.guestsNote.'],
+      ['„3 aus 9 · für 3 Personen“ im Knopf', 'darüber: „3 von 9 Spielen werden gezogen“', 'startSession.drawOf; der Knopf trägt nur die Aktion.'],
+      ['„Heute, 19:12“ auf der Hinweiskarte', 'lobby.sub', 'Uhrzeiten sind keine Session-Information.'],
+      ['Marker Fingerhut als Standard', 'Tanne', 'Der Standard ist die Farbe des Designs.'],
+    ].map(([was, now, why]) => ({ was, now, why }));
+    const newKeys = [
+      ['Der Baumstumpf', 'The tree stump', 'F2.2, F4.1', 'startSession.potHeadingForest (zu potHeading)'],
+      ['{n} Spiele auf dem Stumpf / {n} Spiel auf dem Stumpf', '{n} games on the stump / {n} game on the stump', 'F2.2, F4.1, F7.7', 'startSession.potLabelForest(One)'],
+      ['Wie viele Blätter fliegen?', 'How many leaves fly?', 'F2.2, F4.1', 'startSession.countQuestionForest'],
+      ['Laub wirbeln', 'Whirl the leaves', 'F2.2, F4.1, F7.7', 'startSession.drawForest'],
+      ['Die Karten leuchten auf.', 'The cards light up.', 'F10.4', 'vote.revealForest'],
+      ['Der Stumpf ist noch leer', 'The stump is still empty', 'F7.3', 'hub.young.emptyTitleForest'],
+      ['Willkommen zurück im Wald. / Willkommen im Wald.', 'Welcome back to the woods. / Welcome to the woods.', 'F3.1, F6.1, F7.1', 'home.greetingForest(First)'],
+      ['Der Wald · deine Lichtungen', 'The woods · your clearings', 'Kopf auf Start', 'home.subbrandForest'],
+      ['Leuchtzeichen', 'Beacon', 'Hinweiskarte F3.1, F6.1', 'home.noticeKickerForest'],
+      ['Auf der Lichtung · {date}', 'In the clearing · {date}', 'F2.4, F4.3', 'result.kickerForest (zu result.reportKicker)'],
+      ['Noch keine Runde. Gründe eine für deine Leute — oder sieh dir zuerst die Beispielrunde an.', 'No round yet. Start one for your people — or look at the sample round first.', 'F7.1', '— (Start ohne Runde)'],
+      ['Beispielrunde ansehen', 'See the sample round', 'F7.1', '—'],
+      ['Weiter →', 'Next →', 'Wertungskarte F2.3, F4.2', '— (wie Programmheft P9.5)'],
+      ['Geheim · die anderen schauen weg · Die anderen Spiele bleiben verdeckt, bis alle gewertet haben.', 'Secret · the others look away · The other games stay hidden until everyone has rated.', 'Wertungskarte F2.3, F4.2, F6.5', 'Helferzeilen aus Addendum §1, nicht in de.js — „Es bewertet:“ (vote.who) und „wertet gerade“ (vote.raterNow) sind App-Wortlaut'],
+      ['hat gewertet · noch offen', 'has rated · still open', 'F4.2 Seitenliste', '„wertet gerade“ ist vote.raterNow; lobby.voted / lobby.waiting sind die nächsten App-Wörter'],
+      ['Session Nr. {n} · {name}s {k}. Sieg · {game} zum {m}. Mal', 'Session no. {n} · {name}’s {k}th win · {game} for the {m}th time', 'F2.4, F4.3, F8.4', '— Faktenzeile'],
+      ['Ohne BGG eintragen · Sammlung lesen', 'Add without BGG · Read collection', 'F3.5, F6.4', '— (wie P9.5)'],
+      ['Sieger ändern', 'Change winner', 'Menü F15b', '„Ändern“ (result.change) im Siegerkontext'],
+      ['Marker {name} (Zeile unter dem Rundentitel)', 'Marker {name}', 'F2.1, F3.2', '—'],
+      ['Tanne … Schlehe (acht Markernamen)', 'Fir … Sloe', 'F8.2, F14.1, F15a', 'round.markerForest.*'],
+    ].map(([de, en, w, app]) => ({ de, en, w, app }));
+    return { places, removed, newKeys };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="design_doc_mode" content="canvas">
+  <link rel="stylesheet" href="../../../public/fonts/tabler-icons.css">
+  <link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Alegreya+Sans:wght@400;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #dcdfd4; font-family: 'Alegreya Sans', sans-serif; color: #1b2a18; }
+    a { color: #356427; text-decoration: none; }
+    a:hover { color: #284d1d; }
+  </style>
+</helmet>
+<div style="display: flex; flex-direction: column; gap: 56px; padding: 48px; width: max-content; background: #dcdfd4;">
+  <section data-screen-label="F14 Kopf" style="width: 2920px; box-sizing: border-box; padding: 30px 36px; background: #f9fbf4; border-radius: 22px; box-shadow: 0 6px 18px rgba(40,60,30,.10); display: flex; flex-direction: column; gap: 10px;">
+    <div style="font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #356427;">Brief 14 von 15 · Stufe 2, Teil 2 · Desktop 1440</div>
+    <h1 style="margin: 0; font-family: 'Young Serif'; font-weight: 400; font-size: 40px; line-height: 1.05;">F14 · Rundeneinstellungen, Profil, Freunde, Postfach, Was ist neu, Statistik</h1>
+    <p style="margin: 0; font-size: 17px; line-height: 1.5; max-width: 1300px;">Die Rundeneinstellungen tragen den Markerwähler mit den acht Pflanzen aus F8.2. Die Spielerkarte zeigt nur Summen, nie Rundennamen oder andere Personen. Der Feed zeigt nur, was die Freunde-Regel erlaubt. Alles steht auf Karten über der Lichtung, ohne neue Formen.</p>
+  </section>
+  <div style="display: flex; gap: 40px; align-items: flex-start;">
+    <div data-screen-label="F14.1 Rundeneinstellungen" style="display: flex; flex-direction: column; gap: 10px;">
+      <div style="font-size: 14px; font-weight: 700; color: #4b5c45;">F14.1 · Rundeneinstellungen — Name, Marker, Tags, Einladen, Übergeben, Löschen</div>
+      <div style="position: relative; width: 1440px; overflow: hidden; box-shadow: 0 18px 44px rgba(40,60,30,.18); background: #ecf1e4;">
+        <dc-import name="Forest-Kopf" crumb="Donnerstagsrunde › Einstellungen" active="einstellungen" hint-size="1440px,108px"></dc-import>
+        <div style="display: grid; grid-template-columns: minmax(0, 1fr) 420px; gap: 32px; padding: 26px 40px 36px; align-items: start;">
+          <div style="display: flex; flex-direction: column; gap: 16px;">
+            <h1 style="margin: 0; font-family: 'Young Serif'; font-weight: 400; font-size: 32px;">Einstellungen</h1>
+            <div style="display: flex; flex-direction: column; gap: 8px; padding: 18px 20px; background: #f9fbf4; border-radius: 18px; box-shadow: 0 6px 18px rgba(40,60,30,.10);"><label style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 700;">Name der Runde<span style="display: flex; align-items: center; min-height: 44px; padding: 0 14px; background: #ffffff; border: 1.5px solid #6f7f66; border-radius: 12px; box-sizing: border-box;"><input value="Donnerstagsrunde" style="border: none; background: none; font: inherit; font-size: 16px; font-weight: 400; color: #1b2a18; outline: none; width: 100%;"></span></label></div>
+            <div style="display: flex; flex-direction: column; gap: 12px; padding: 18px 20px; background: #f9fbf4; border-radius: 18px; box-shadow: 0 6px 18px rgba(40,60,30,.10);">
+              <span style="font-family: 'Young Serif'; font-weight: 400; font-size: 22px;">Farbmarker</span>
+              <span style="font-size: 15px; color: #4b5c45;">Alle in der Runde sehen ihn, jede Person in ihrem eigenen Design.</span>
+              <div role="radiogroup" aria-label="Farbmarker" style="display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 10px;"><sc-for list="{{ markers }}" as="m" hint-placeholder-count="8"><a href="#" role="radio" aria-checked="{{ m.sel }}" style="display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 4px; border-radius: 14px; background: {{ m.bg }}; box-shadow: {{ m.ring }}; color: #1b2a18;"><span style="width: 22px; height: 52px; background: {{ m.hex }}; clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 82%, 0 100%);"></span><span style="font-weight: 800; font-size: 14px;">{{ m.name }}</span><sc-if value="{{ m.on }}" hint-placeholder-val="{{ false }}"><i class="ti ti-check" style="color: #356427;"></i></sc-if></a></sc-for></div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 10px; padding: 18px 20px; background: #f9fbf4; border-radius: 18px; box-shadow: 0 6px 18px rgba(40,60,30,.10);"><span style="font-family: 'Young Serif'; font-weight: 400; font-size: 22px;">Tags</span><span style="display: flex; flex-wrap: wrap; gap: 8px;"><sc-for list="{{ tags }}" as="t" hint-placeholder-count="5"><span style="min-height: 32px; display: inline-flex; align-items: center; gap: 6px; padding: 0 12px; border-radius: 14px 4px 14px 4px; background: #ffffff; border: 1.5px solid #6f7f66; font-weight: 700; font-size: 14px; box-sizing: border-box;"><i class="ti {{ t.i }}" style="color: #356427;"></i>{{ t.l }}<a href="#" aria-label="Tag entfernen" style="min-width: 24px; min-height: 24px; display: grid; place-items: center; color: #4b5c45;"><i class="ti ti-x"></i></a></span></sc-for><a href="#" style="min-height: 32px; display: inline-flex; align-items: center; gap: 6px; padding: 0 12px; border-radius: 14px 4px 14px 4px; border: 1.5px dashed #6f7f66; color: #356427; font-weight: 800; font-size: 14px;"><i class="ti ti-plus"></i>Tag</a></span></div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 12px; padding-top: 50px;">
+            <sc-for list="{{ setActions }}" as="a" hint-placeholder-count="3"><a href="#" style="display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 0 18px; background: #f9fbf4; border-radius: 18px; box-shadow: 0 6px 18px rgba(40,60,30,.10); color: #1b2a18;"><span style="width: 40px; height: 40px; border-radius: 50%; background: #d6e4c6; display: grid; place-items: center;"><i class="ti {{ a.i }}" style="font-size: 20px;"></i></span><span style="display: flex; flex-direction: column;"><span style="font-weight: 800; font-size: 16px;">{{ a.l }}</span><span style="font-size: 13px; font-weight: 700; color: #4b5c45;">{{ a.v }}</span></span><i class="ti ti-chevron-right" style="margin-left: auto; color: #4b5c45;"></i></a></sc-for>
+            <a href="#" style="display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 0 18px; border-radius: 18px; border: 1.5px solid #a3392b; box-sizing: border-box; color: #a3392b; font-weight: 800; font-size: 16px;"><i class="ti ti-trash" style="font-size: 20px;"></i>Runde löschen</a>
+          </div>
+        </div>
+        <dc-import name="Forest-Fuss" hint-size="1440px,52px"></dc-import>
+      </div>
+    </div>
+    <div data-screen-label="F14.2 Profil" style="display: flex; flex-direction: column; gap: 10px;">
+      <div style="font-size: 14px; font-weight: 700; color: #4b5c45;">F14.2 · Profil — die Spielerkarte, nur Summen</div>
+      <div style="position: relative; width: 1440px; overflow: hidden; box-shadow: 0 18px 44px rgba(40,60,30,.18); background: #ecf1e4;">
+        <dc-import name="Forest-Kopf" crumb="Profil" active="none" hint-size="1440px,60px"></dc-import>
+        <div style="display: grid; grid-template-columns: 560px minmax(0, 1fr); gap: 32px; padding: 30px 40px 40px; align-items: start;">
+          <div style="display: flex; flex-direction: column; gap: 16px; padding: 28px; background: #f9fbf4; border-radius: 22px; box-shadow: 0 6px 18px rgba(40,60,30,.10);">
+            <span style="display: flex; gap: 18px; align-items: center;"><span style="width: 96px; height: 96px; border-radius: 50%; background: #f9fbf4; border: 8px solid #c6522c; box-sizing: border-box; display: grid; place-items: center; font-weight: 800; font-size: 28px;">MA</span><span style="display: flex; flex-direction: column;"><span style="font-family: 'Young Serif'; font-weight: 400; font-size: 34px;">Marco</span><span style="font-size: 15px; font-weight: 700; color: #4b5c45;">@marco · bei Spielwirbel seit September 2025</span></span></span>
+            <span style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px;"><sc-for list="{{ totals }}" as="f" hint-placeholder-count="4"><span style="display: flex; flex-direction: column; padding: 12px; border-radius: 14px; background: #ecf1e4;"><span style="font-family: 'Young Serif'; font-weight: 400; font-size: 28px; line-height: 1.05;">{{ f.v }}</span><span style="font-size: 13px; font-weight: 700; color: #4b5c45;">{{ f.k }}</span></span></sc-for></span>
+            <span style="font-size: 14px; color: #4b5c45;">Sichtbar für dich und deine Freunde. Die Abzeichen-Zeile unter den Summen steht in F17.7.</span>
+            <a href="#" style="align-self: flex-start; min-height: 44px; display: inline-flex; align-items: center; gap: 8px; padding: 0 16px; border-radius: 14px 4px 14px 4px; background: #d6e4c6; border: 1.5px solid #6f7f66; box-sizing: border-box; color: #1b2a18; font-weight: 700; font-size: 15px;"><i class="ti ti-pencil"></i>Profil bearbeiten</a>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 10px;"><span style="font-family: 'Young Serif'; font-weight: 400; font-size: 24px;">Am liebsten gespielt</span><sc-for list="{{ favs }}" as="g" hint-placeholder-count="3"><div style="display: flex; gap: 14px; align-items: center; padding: 12px 16px; background: #f9fbf4; border-radius: 16px; box-shadow: 0 6px 18px rgba(40,60,30,.10);"><span style="width: 72px; height: 54px; border-radius: 6px 2px 6px 2px; background: {{ g.cover }};"></span><span style="display: flex; flex-direction: column;"><span style="font-weight: 800; font-size: 16px;">{{ g.t }}</span><span style="font-size: 14px; font-weight: 700; color: #4b5c45;">{{ g.v }}</span></span></div></sc-for></div>
+        </div>
+        <dc-import name="Forest-Fuss" hint-size="1440px,52px"></dc-import>
+      </div>
+    </div>
+  </div>
+  <div style="display: flex; gap: 40px; align-items: flex-start;">
+    <div data-screen-label="F14.3 Freunde und Feed" style="display: flex; flex-direction: column; gap: 10px;">
+      <div style="font-size: 14px; font-weight: 700; color: #4b5c45;">F14.3 · Freunde und Feed</div>
+      <div style="position: relative; width: 1440px; overflow: hidden; box-shadow: 0 18px 44px rgba(40,60,30,.18); background: #ecf1e4;">
+        <dc-import name="Forest-Kopf" crumb="Freunde" active="none" hint-size="1440px,60px"></dc-import>
+        <div style="display: grid; grid-template-columns: 420px minmax(0, 1fr); gap: 32px; padding: 30px 40px 40px; align-items: start;">
+          <div style="display: flex; flex-direction: column; padding: 8px 18px; background: #f9fbf4; border-radius: 20px; box-shadow: 0 6px 18px rgba(40,60,30,.10);"><span style="display: flex; align-items: center; padding: 10px 0;"><span style="font-family: 'Young Serif'; font-weight: 400; font-size: 24px;">Freunde · 5</span><a href="#" style="margin-left: auto; min-height: 44px; display: inline-flex; align-items: center; gap: 6px; padding: 0 12px; border-radius: 14px 4px 14px 4px; background: #d6e4c6; color: #1b2a18; font-weight: 700; font-size: 14px;"><i class="ti ti-user-plus"></i>Hinzufügen</a></span><sc-for list="{{ friends }}" as="f" hint-placeholder-count="5"><a href="#" style="display: flex; align-items: center; gap: 12px; min-height: 56px; border-top: 1px solid #d5ddca; color: #1b2a18;"><span style="width: 40px; height: 40px; border-radius: 50%; background: #f9fbf4; border: 5px solid {{ f.c }}; box-sizing: border-box; display: grid; place-items: center; font-weight: 800; font-size: 13px;">{{ f.i }}</span><span style="display: flex; flex-direction: column;"><span style="font-weight: 800; font-size: 16px;">{{ f.n }}</span><span style="font-size: 13px; font-weight: 700; color: #4b5c45;">{{ f.v }}</span></span></a></sc-for></div>
+          <div style="display: flex; flex-direction: column; gap: 12px;"><span style="font-family: 'Young Serif'; font-weight: 400; font-size: 24px;">Feed</span><sc-for list="{{ feed }}" as="e" hint-placeholder-count="4"><div style="display: flex; gap: 14px; align-items: center; padding: 14px 18px; background: #f9fbf4; border-radius: 18px; box-shadow: 0 6px 18px rgba(40,60,30,.10);"><span style="width: 44px; height: 44px; flex: none; border-radius: 50%; background: #f9fbf4; border: 5px solid {{ e.c }}; box-sizing: border-box; display: grid; place-items: center; font-weight: 800; font-size: 13px;">{{ e.i }}</span><span style="display: flex; flex-direction: column; flex: 1;"><span style="font-size: 16px; line-height: 1.35;"><strong>{{ e.n }}</strong> {{ e.t }}</span><span style="font-size: 13px; font-weight: 700; color: #4b5c45;">{{ e.d }}</span></span><i class="ti {{ e.icon }}" style="font-size: 22px; color: #356427;"></i></div></sc-for></div>
+        </div>
+        <dc-import name="Forest-Fuss" hint-size="1440px,52px"></dc-import>
+      </div>
+    </div>
+    <div data-screen-label="F14.4 Postfach" style="display: flex; flex-direction: column; gap: 10px;">
+      <div style="font-size: 14px; font-weight: 700; color: #4b5c45;">F14.4 · Postfach — Einladungen und Geteiltes</div>
+      <div style="position: relative; width: 1440px; overflow: hidden; box-shadow: 0 18px 44px rgba(40,60,30,.18); background: #ecf1e4;">
+        <dc-import name="Forest-Kopf" crumb="Postfach" active="none" hint-size="1440px,60px"></dc-import>
+        <div style="display: flex; flex-direction: column; gap: 14px; padding: 30px 40px 40px; max-width: 980px;">
+          <h1 style="margin: 0; font-family: 'Young Serif'; font-weight: 400; font-size: 32px;">Postfach</h1>
+          <sc-for list="{{ inbox }}" as="m" hint-placeholder-count="4"><div style="display: flex; gap: 14px; align-items: center; padding: 16px 18px; background: {{ m.bg }}; border-radius: 18px; box-shadow: 0 6px 18px rgba(40,60,30,.10);"><span style="width: 44px; height: 44px; flex: none; border-radius: 50%; background: #d6e4c6; display: grid; place-items: center;"><i class="ti {{ m.icon }}" style="font-size: 20px;"></i></span><span style="display: flex; flex-direction: column; flex: 1;"><span style="font-weight: 800; font-size: 16px;">{{ m.t }}</span><span style="font-size: 14px; color: #4b5c45;">{{ m.v }}</span></span><sc-if value="{{ m.hasAct }}" hint-placeholder-val="{{ false }}"><span style="display: flex; gap: 8px;"><a href="#" style="min-height: 44px; display: inline-flex; align-items: center; padding: 0 16px; border-radius: 14px 4px 14px 4px; color: #356427; font-weight: 800; font-size: 15px;">Ablehnen</a><a href="#" style="min-height: 44px; display: inline-flex; align-items: center; padding: 0 18px; border-radius: 22px 7px 22px 7px; background: #356427; color: #f4f8ec; font-weight: 800; font-size: 15px;">Annehmen</a></span></sc-if></div></sc-for>
+        </div>
+        <dc-import name="Forest-Fuss" hint-size="1440px,52px"></dc-import>
+      </div>
+    </div>
+  </div>
+  <div style="display: flex; gap: 40px; align-items: flex-start;">
+    <div data-screen-label="F14.5 Was ist neu" style="display: flex; flex-direction: column; gap: 10px;">
+      <div style="font-size: 14px; font-weight: 700; color: #4b5c45;">F14.5 · Was ist neu — Einträge als Blätter am Pfad</div>
+      <div style="position: relative; width: 1440px; overflow: hidden; box-shadow: 0 18px 44px rgba(40,60,30,.18); background: #ecf1e4;">
+        <dc-import name="Forest-Kopf" crumb="Was ist neu" active="none" hint-size="1440px,60px"></dc-import>
+        <div style="display: flex; flex-direction: column; gap: 14px; padding: 30px 40px 40px; max-width: 980px;">
+          <h1 style="margin: 0; font-family: 'Young Serif'; font-weight: 400; font-size: 32px;">Was ist neu</h1>
+          <sc-for list="{{ news }}" as="n" hint-placeholder-count="3"><div style="display: grid; grid-template-columns: 130px minmax(0, 1fr); gap: 20px; padding: 18px 22px; background: #f9fbf4; border-radius: 18px; box-shadow: 0 6px 18px rgba(40,60,30,.10);"><span style="display: flex; flex-direction: column; gap: 6px;"><span style="font-weight: 800; font-size: 15px;">{{ n.d }}</span><sc-if value="{{ n.isNew }}" hint-placeholder-val="{{ false }}"><span style="align-self: flex-start; padding: 2px 10px; border-radius: 12px 3px 12px 3px; background: #356427; color: #f4f8ec; font-size: 13px; font-weight: 800;">Neu</span></sc-if></span><span style="display: flex; flex-direction: column; gap: 4px;"><span style="font-family: 'Young Serif'; font-weight: 400; font-size: 22px;">{{ n.t }}</span><span style="font-size: 16px; line-height: 1.5;">{{ n.v }}</span></span></div></sc-for>
+        </div>
+        <dc-import name="Forest-Fuss" hint-size="1440px,52px"></dc-import>
+      </div>
+    </div>
+    <div data-screen-label="F14.6 Statistik" style="display: flex; flex-direction: column; gap: 10px;">
+      <div style="font-size: 14px; font-weight: 700; color: #4b5c45;">F14.6 · Statistik — Entdecken, was in Spielwirbel gespielt wird</div>
+      <div style="position: relative; width: 1440px; overflow: hidden; box-shadow: 0 18px 44px rgba(40,60,30,.18); background: #ecf1e4;">
+        <dc-import name="Forest-Kopf" crumb="Entdecken" active="none" hint-size="1440px,60px"></dc-import>
+        <div style="display: flex; flex-direction: column; gap: 18px; padding: 30px 40px 40px;">
+          <span style="display: flex; align-items: center; gap: 12px;"><h1 style="margin: 0; font-family: 'Young Serif'; font-weight: 400; font-size: 32px;">Entdecken</h1><img src="../../../public/icons/powered-by-bgg.png" alt="Powered by BGG" style="height: 24px; width: auto; margin-left: auto;"></span>
+          <span style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px;"><sc-for list="{{ globalFacts }}" as="f" hint-placeholder-count="4"><span style="display: flex; flex-direction: column; padding: 16px 18px; background: #f9fbf4; border-radius: 18px; box-shadow: 0 6px 18px rgba(40,60,30,.10);"><span style="font-family: 'Young Serif'; font-weight: 400; font-size: 32px; line-height: 1.05;">{{ f.v }}</span><span style="font-size: 14px; font-weight: 700; color: #4b5c45;">{{ f.k }}</span></span></sc-for></span>
+          <div style="display: flex; flex-direction: column; padding: 8px 20px; background: #f9fbf4; border-radius: 20px; box-shadow: 0 6px 18px rgba(40,60,30,.10);"><span style="font-family: 'Young Serif'; font-weight: 400; font-size: 24px; padding: 10px 0;">Meistgespielt in diesem Monat</span><sc-for list="{{ top }}" as="g" hint-placeholder-count="5"><div style="display: grid; grid-template-columns: 30px 72px minmax(0, 1fr) 320px 60px; gap: 14px; align-items: center; min-height: 64px; border-top: 1px solid #d5ddca;"><span style="font-family: 'Young Serif'; font-weight: 400; font-size: 22px;">{{ g.p }}</span><span style="width: 72px; height: 54px; border-radius: 6px 2px 6px 2px; background: {{ g.cover }};"></span><span style="font-weight: 800; font-size: 16px;">{{ g.t }}</span><span style="height: 12px; border-radius: 6px; background: #d6e4c6; overflow: hidden;"><span style="display: block; height: 100%; width: {{ g.w }}; background: #356427;"></span></span><span style="font-weight: 800; font-size: 15px; text-align: right;">{{ g.n }}</span></div></sc-for></div>
+        </div>
+        <dc-import name="Forest-Fuss" hint-size="1440px,52px"></dc-import>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const PEOPLE = ['#c6522c', '#198663', '#726bc7', '#a66815', '#c34d74', '#2f6f9e', '#54821d', '#993556'];
+    const ini = (n) => n.slice(0, 2).toUpperCase();
+    const cov = (h) => `linear-gradient(145deg, oklch(.6 .13 ${h}), oklch(.36 .12 ${h + 30}))`;
+    const MK = [['Tanne', '#356427'], ['Fingerhut', '#a2569b'], ['Heidelbeere', '#3e4f8f'], ['Fliegenpilz', '#b3342a'], ['Kiefer', '#7a4a2a'], ['Moorsee', '#2f6f78'], ['Ginster', '#a07a12'], ['Schlehe', '#5a3a6e']];
+    const markers = MK.map(([name, hex], i) => ({ name, hex, on: i === 0, sel: i === 0 ? 'true' : 'false', bg: i === 0 ? '#ecf1e4' : 'transparent', ring: i === 0 ? '0 0 0 3px #1b2a18' : 'inset 0 0 0 1px #d5ddca' }));
+    const tags = [['ti-puzzle', 'Koop'], ['ti-chess', 'Strategie'], ['ti-dice-5', 'Würfel'], ['ti-sword', 'Kampagne'], ['ti-heart', 'Lieblinge']].map(([i, l]) => ({ i, l }));
+    const setActions = [['ti-link', 'Einladen', 'Link teilen oder neu erzeugen'], ['ti-users', 'Mitglieder', '4 Mitglieder · Mitglied bearbeiten'], ['ti-arrows-shuffle', 'Runde übergeben', 'Eine andere Person wird Besitzer']].map(([i, l, v]) => ({ i, l, v }));
+    const totals = [['64', 'Sessions'], ['17', 'Siege'], ['3', 'Runden'], ['1', 'Jahr dabei']].map(([v, k]) => ({ v, k }));
+    const favs = [['Nordlichter', '11× gespielt', 200], ['Glutkessel', '8× gespielt', 30], ['Salzwiesen', '7× gespielt', 120]].map(([t, v, h]) => ({ t, v, cover: cov(h) }));
+    const friends = [['Jonas', '3 gemeinsame Runden'], ['Lea', '2 gemeinsame Runden'], ['Aylin', '1 gemeinsame Runde'], ['Ben', '1 gemeinsame Runde'], ['Sarah', 'Einladung angenommen']].map(([n, v], i) => ({ n, v, i: ini(n), c: PEOPLE[(i + 1) % 8] }));
+    const feed = [['Jonas', 'hat das Abzeichen „Siege 50“ verdient.', 'vor 2 Tagen', 'ti-trophy', 1], ['Lea', 'hat das Abzeichen „Sessions 100“ verdient.', 'vor 5 Tagen', 'ti-cards', 2], ['Aylin', 'ist jetzt in 2 Runden dabei.', 'letzte Woche', 'ti-world', 4], ['Ben', 'ist seit einem Jahr bei Spielwirbel.', 'im September', 'ti-hourglass', 5]].map(([n, t, d, icon, k]) => ({ n, t, d, icon, i: ini(n), c: PEOPLE[k] }));
+    const inbox = [['ti-mail', 'Einladung in „WG Kastanienallee“', 'Aylin lädt dich ein, der Runde beizutreten.', true, '#f9fbf4'], ['ti-share', 'Jonas hat ein Ergebnis geteilt', '„Nordlichter“ wurde gespielt. Jonas hat gewonnen!', false, '#f9fbf4'], ['ti-arrows-shuffle', 'Runde übergeben', 'Marco möchte dir „Donnerstagsrunde“ übergeben.', true, '#f9fbf4'], ['ti-mail-check', 'Freundschaft bestätigt', 'Sarah und du seid jetzt befreundet.', false, '#f3f6ec']].map(([icon, t, v, hasAct, bg]) => ({ icon, t, v, hasAct, bg }));
+    const news = [['26. Sep 2026', 'Abzeichen', 'Wer spielt, sammelt jetzt Abzeichen — für sich, für die Runde und über alle Runden. Ihr findet sie auf der Pokale-Seite.', true], ['20. Sep 2026', 'Sieben Designs', 'Jedes Konto wählt sein Design: der Tisch, das Programmheft, die Brücke, Ocean, Forest, der Run oder Klassisch.', true], ['2. Sep 2026', 'Mehrere Tische', 'Große Runden stimmen einmal gemeinsam ab und spielen dann an mehreren Tischen.', false]].map(([d, t, v, isNew]) => ({ d, t, v, isNew }));
+    const globalFacts = [['12 480', 'Sessions im September'], ['3 210', 'Runden'], ['4,1', 'Ø Score aller Siegerspiele'], ['38 %', 'Sessions mit Gästen']].map(([v, k]) => ({ v, k }));
+    const top = [['Kaskadia', 180, 150], ['Flügelschlag', 162, 100], ['Arche Nova', 140, 50], ['Codenames', 121, 230], ['Azul', 109, 210]].map(([t, n, h], i) => ({ p: String(i + 1), t, n: String(n), cover: cov(h), w: Math.round(n / 180 * 100) + '%' }));
+    return { markers, tags, setActions, totals, favs, friends, feed, inbox, news, globalFacts, top };
+  }
+}
+</script>
+</body>
+</html>

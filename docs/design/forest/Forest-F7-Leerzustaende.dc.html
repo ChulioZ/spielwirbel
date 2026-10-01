@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="design_doc_mode" content="canvas">
+  <link rel="stylesheet" href="../../../public/fonts/tabler-icons.css">
+  <link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Alegreya+Sans:wght@400;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #dcdfd4; font-family: 'Alegreya Sans', sans-serif; color: #1b2a18; }
+    a { color: #356427; text-decoration: none; }
+    a:hover { color: #284d1d; }
+  </style>
+</helmet>
+<div style="display: flex; flex-direction: column; gap: 56px; padding: 48px; width: max-content; background: #dcdfd4;">
+  <div style="display: flex; gap: 32px; align-items: stretch;">
+    <section data-screen-label="F7 Kopf" style="width: 900px; box-sizing: border-box; padding: 30px 36px; background: #f9fbf4; border-radius: 22px; box-shadow: 0 6px 18px rgba(40,60,30,.10); display: flex; flex-direction: column; gap: 10px;">
+      <div style="font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #356427;">Brief 7 von 15 · §3D und §6 · Tokens aus F1</div>
+      <h1 style="margin: 0; font-family: 'Young Serif'; font-weight: 400; font-size: 40px; line-height: 1.05;">F7 · Leer, jung, dicht</h1>
+      <p style="margin: 0; font-size: 17px; line-height: 1.5;">Die meisten Runden sind leer oder jung. Eine leere Lichtung ist hell und ruhig: ein Titel, eine Zeile in weicher Tinte, und wenn es etwas zu tun gibt, genau eine Aktion. Es gibt keine grauen Blöcke und keine Schlösser-Wand. Der leere Stumpf zeigt nur seine Jahresringe. Alle Leersätze kommen aus <code>hub.young.*</code>, <code>hub.demo.*</code>, <code>pokale.*</code> und <code>badges.*</code>. Neu sind nur die Sätze für den Start ohne Runde und den leeren Stumpf (F9.5).</p>
+      <p style="margin: 0; font-size: 17px; line-height: 1.5;">Die Dichtebelege aus §6 gehören zur Lieferung (Brücke-Lehre 3): 12 Personen mit zwei Gästen und zwei Teams, ein Regal mit 42 Spielen, ein Unentschieden mit geteiltem Sieg und der Hub auf Finnisch. Dazu kommt ein Rundenname mit 30 Zeichen in F7.2.</p>
+    </section>
+    <div data-screen-label="F7 Dichteregeln" style="width: 700px; display: flex; flex-direction: column; gap: 8px; padding: 22px; background: #f9fbf4; border-radius: 22px; box-shadow: 0 6px 18px rgba(40,60,30,.10);">
+      <span style="font-family: 'Young Serif'; font-weight: 400; font-size: 24px;">Drei Zeichenhilfen aus den Belegen</span>
+      <span style="font-size: 14px; font-weight: 700; color: #4b5c45;">Hilfen für diese Blätter, keine Produktregeln (Entscheidung vom 26.09.)</span>
+      <sc-for list="{{ rules }}" as="r" hint-placeholder-count="3"><div style="display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 12px; padding: 8px 0; border-top: 1px solid #d5ddca; font-size: 14px; line-height: 1.4;"><strong>{{ r.k }}</strong><span>{{ r.v }}</span></div></sc-for>
+      <span style="font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #356427; margin-top: 8px;">Gemessen · DE → FI (aus fi.js)</span>
+      <sc-for list="{{ measure }}" as="m" hint-placeholder-count="8"><div style="display: grid; grid-template-columns: 1fr 1fr 70px; gap: 12px; padding: 5px 0; border-top: 1px solid #d5ddca; font-size: 14px;"><span>{{ m.de }}</span><span>{{ m.fi }}</span><span style="font-weight: 800; text-align: right;">{{ m.n }}</span></div></sc-for>
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 32px; align-items: flex-start;">
+    <div data-screen-label="F7.1 Start ohne Runde" style="display: flex; flex-direction: column; gap: 10px;">
+      <div style="font-size: 14px; font-weight: 700; color: #4b5c45;">F7.1 · Start ohne Runde — eine leere Lichtung, zwei Wege</div>
+      <div style="position: relative; width: 1440px; overflow: hidden; box-shadow: 0 18px 44px rgba(40,60,30,.18); background-color: #ecf1e4; background-image: radial-gradient(640px 400px at 50% 50%, rgba(255,255,255,.65), transparent 70%);">
+        <dc-import name="Forest-Kopf" crumb="Der Wald · deine Lichtungen" active="none" hint-size="1440px,60px"></dc-import>
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 90px 60px 110px; text-align: center;">
+          <span style="display: flex; align-items: flex-end; gap: 6px;"><sc-for list="{{ smallTrees }}" as="t" hint-placeholder-count="5"><span style="display: flex; flex-direction: column; align-items: center;"><span style="width: {{ t.w }}; height: {{ t.h }}; border-radius: 50% 50% 46% 46% / 60% 60% 40% 40%; background: {{ t.c }};"></span><span style="width: 6px; height: 12px; background: #5a3d24; margin-top: -4px;"></span></span></sc-for></span>
+          <h1 style="margin: 0; font-family: 'Young Serif'; font-weight: 400; font-size: 42px; line-height: 1.05;">Willkommen im Wald.</h1>
+          <span style="font-size: 18px; color: #4b5c45; max-width: 560px;">Noch keine Runde. Gründe eine für deine Leute — oder sieh dir zuerst die Beispielrunde an.</span>
+          <span style="display: flex; gap: 12px; margin-top: 8px;"><a href="#" style="min-height: 56px; display: inline-flex; align-items: center; gap: 8px; padding: 0 28px; border-radius: 22px 7px 22px 7px; background: #356427; color: #f4f8ec; font-weight: 800; font-size: 18px;"><i class="ti ti-plus"></i>Neue Runde gründen</a><a href="#" style="min-height: 56px; display: inline-flex; align-items: center; padding: 0 22px; border-radius: 14px 4px 14px 4px; background: #d6e4c6; border: 1.5px solid #6f7f66; box-sizing: border-box; color: #1b2a18; font-weight: 700; font-size: 17px;">Beispielrunde ansehen</a></span>
+        </div>
+        <dc-import name="Forest-Fuss" hint-size="1440px,52px"></dc-import>
+      </div>
+    </div>
+    <div data-screen-label="F7.1 Telefon" style="display: flex; flex-direction: column; gap: 10px; width: 390px;">
+      <div style="font-size: 14px; font-weight: 700; color: #4b5c45;">F7.1 · Telefon</div>
+      <div style="position: relative; width: 390px; height: 700px; overflow: hidden; border-radius: 28px; box-shadow: 0 18px 44px rgba(40,60,30,.18); background: #ecf1e4; display: flex; flex-direction: column;">
+        <dc-import name="Forest-Telefonkopf" hint-size="390px,92px"></dc-import>
+        <div style="display: flex; flex-direction: column; gap: 12px; padding: 60px 22px 24px; text-align: center; align-items: center;">
+          <h1 style="margin: 0; font-family: 'Young Serif'; font-weight: 400; font-size: 30px; line-height: 1.05;">Willkommen im Wald.</h1>
+          <span style="font-size: 16px; color: #4b5c45;">Noch keine Runde. Gründe eine für deine Leute — oder sieh dir zuerst die Beispielrunde an.</span>
+          <a href="#" style="align-self: stretch; min-height: 56px; display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: 22px 7px 22px 7px; background: #356427; color: #f4f8ec; font-weight: 800; font-size: 18px; margin-top: 8px;"><i class="ti ti-plus"></i>Neue Runde gründen</a>
+          <a href="#" style="align-self: stretch; min-height: 48px; display: flex; align-items: center; justify-content: center; border-radius: 14px 4px 14px 4px; background: #d6e4c6; border: 1.5px solid #6f7f66; box-sizing: border-box; color: #1b2a18; font-weight: 700; font-size: 16px;">Beispielrunde ansehen</a>
+        </div>
+        <div style="margin-top: auto;"><dc-import name="Forest-Fuss" phone="{{ true }}" hint-size="390px,90px"></dc-import></div>
+      </div>
+    </div>
+  </div>
+
+  <div data-screen-label="F7.2 Start mit einer Runde" style="display: flex; flex-direction: column; gap: 10px;">
+    <div style="font-size: 14px; font-weight: 700; color: #4b5c45;">F7.2 · Start mit genau einer Runde — 30 Zeichen im Namen, der Name bricht um und wird nie gekürzt</div>
+    <div style="position: relative; width: 1440px; overflow: hidden; box-shadow: 0 18px 44px rgba(40,60,30,.18); background-color: #ecf1e4;">
+      <dc-import name="Forest-Kopf" crumb="Der Wald · deine Lichtungen" active="none" hint-size="1440px,60px"></dc-import>
+      <div style="display: flex; flex-direction: column; gap: 24px; padding: 36px 60px 40px;">
+        <div style="display: flex; flex-direction: column; gap: 6px;"><h1 style="margin: 0; font-family: 'Young Serif'; font-weight: 400; font-size: 42px; line-height: 1.05;">Willkommen zurück im Wald.</h1><span style="font-size: 19px; color: #4b5c45;">Welche Runde spielt heute?</span></div>
+        <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px;">
+          <a href="#" style="display: flex; flex-direction: column; background: #f9fbf4; border-radius: 22px; overflow: hidden; box-shadow: 0 6px 18px rgba(40,60,30,.10); color: #1b2a18;">
+            <span style="position: relative; display: block; height: 200px; background: radial-gradient(60% 55% at 50% 46%, #f9fbf4 0%, #e9f0df 45%, #d6e4c6 100%);"><span style="position: absolute; left: 50%; top: 44%; transform: translate(-50%, -50%); display: flex; gap: 8px;"><sc-for list="{{ oneSeats }}" as="s" hint-placeholder-count="3"><span style="width: 44px; height: 44px; border-radius: 50%; background: #f9fbf4; border: 5px solid {{ s.c }}; box-sizing: border-box; display: grid; place-items: center; font-weight: 800; font-size: 13px;">{{ s.i }}</span></sc-for></span><span style="position: absolute; left: 22px; top: 0; width: 20px; height: 52px; background: #a2569b; clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 82%, 0 100%);"></span></span>
+            <span style="display: flex; flex-direction: column; gap: 6px; padding: 16px 20px 20px;"><span style="font-family: 'Young Serif'; font-weight: 400; font-size: 24px; line-height: 1.1;">Brettspielfreunde Kastanienhof</span><span style="font-size: 14px; font-weight: 700; color: #4b5c45;">7 Spiele · 2 Sessions</span><span style="margin-top: 8px; padding-top: 10px; border-top: 1px solid #d5ddca; font-size: 15px; font-weight: 700;">Zuletzt: Glutkessel — Ben hat gewonnen</span></span>
+          </a>
+          <a href="#" style="display: grid; place-items: center; min-height: 360px; border: 2px dashed #6f7f66; border-radius: 22px; color: #356427; font-weight: 800; font-size: 17px; text-align: center;"><span><i class="ti ti-plus" style="display: block; font-size: 36px; margin-bottom: 10px;"></i>Neue Runde gründen</span></a>
+        </div>
+      </div>
+      <dc-import name="Forest-Fuss" hint-size="1440px,52px"></dc-import>
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 32px; align-items: flex-start;">
+    <sc-for list="{{ youngHubs }}" as="h" hint-placeholder-count="4">
+      <div data-screen-label="{{ h.label }}" style="display: flex; flex-direction: column; gap: 10px;">
+        <div style="font-size: 14px; font-weight: 700; color: #4b5c45;">{{ h.caption }}</div>
+        <div style="position: relative; width: 1440px; overflow: hidden; box-shadow: 0 18px 44px rgba(40,60,30,.18); background-color: #ecf1e4; background-image: radial-gradient(640px 360px at 50% 30%, rgba(255,255,255,.55), transparent 70%);">
+          <dc-import name="Forest-Kopf" crumb="{{ h.crumb }}" active="start" counts="{{ false }}" hint-size="1440px,108px"></dc-import>
+          <sc-if value="{{ h.demo }}" hint-placeholder-val="{{ false }}"><div style="display: flex; align-items: center; gap: 16px; margin: 18px 40px 0; padding: 14px 18px; background: #24331f; color: #f4f8ec; border-radius: 18px;"><i class="ti ti-sparkles" style="font-size: 22px; color: #fff3a8;"></i><span style="display: flex; flex-direction: column;"><span style="font-weight: 800; font-size: 16px;">Gefällt dir das?</span><span style="font-size: 14px; color: #c9d6bd;">Die Beispielrunde wird automatisch gelöscht. Deine eigene Runde behält alles.</span></span><a href="#" style="margin-left: auto; min-height: 44px; display: inline-flex; align-items: center; padding: 0 18px; border-radius: 14px 4px 14px 4px; background: #fff3a8; color: #1b2a18; font-weight: 800; font-size: 15px;">Eigene Runde gründen</a></div></sc-if>
+          <div style="display: grid; grid-template-columns: 270px minmax(0, 1fr) 330px; gap: 28px; padding: 24px 40px 36px; align-items: start;">
+            <div style="display: flex; flex-direction: column; gap: 14px;">
+              <div style="display: flex; gap: 12px; align-items: flex-start;"><span style="width: 16px; height: 44px; flex: none; background: {{ h.marker }}; clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 82%, 0 100%);"></span><div style="display: flex; flex-direction: column; gap: 2px;"><span style="font-family: 'Young Serif'; font-weight: 400; font-size: 28px; line-height: 1.05;">{{ h.name }}</span><span style="font-size: 14px; font-weight: 700; color: #4b5c45;">{{ h.since }}</span></div></div>
+              <div style="font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #356427;">{{ h.membersLabel }}</div>
+              <sc-for list="{{ h.members }}" as="m" hint-placeholder-count="4"><span style="display: flex; align-items: center; gap: 12px; min-height: 48px;"><span style="width: 44px; height: 44px; border-radius: 50%; background: #f9fbf4; border: 5px solid {{ m.c }}; box-sizing: border-box; display: grid; place-items: center; font-weight: 800; font-size: 14px;">{{ m.i }}</span><span style="display: flex; flex-direction: column; line-height: 1.15;"><span style="font-weight: 800; font-size: 16px;">{{ m.n }}</span><span style="font-size: 13px; font-weight: 700; color: #4b5c45;">{{ m.w }}</span></span></span></sc-for>
+              <a href="#" style="display: flex; align-items: center; gap: 12px; min-height: 48px; color: #356427;"><span style="width: 44px; height: 44px; border-radius: 50%; border: 2px dashed #6f7f66; box-sizing: border-box; display: grid; place-items: center;"><i class="ti ti-plus"></i></span><span style="font-weight: 800; font-size: 15px;">Platz dazu</span></a>
+            </div>
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 14px; padding-top: 6px; text-align: center;">
+              <div style="width: 240px; height: 240px; border-radius: 50%; border: 15px solid #5a3d24; box-sizing: border-box; box-shadow: 0 0 0 6px #8a6240, 0 20px 30px rgba(40,60,30,.25), inset 0 0 0 3px #b8905f; background: repeating-radial-gradient(circle at 48% 52%, #dcbf92 0 7px, #c9a06f 7px 9px); display: grid; place-items: center;">
+                <sc-if value="{{ h.hasCta }}" hint-placeholder-val="{{ true }}"><a href="#" style="width: 156px; height: 156px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: #356427; color: #f4f8ec; box-shadow: 0 10px 20px rgba(27,42,24,.35);"><i class="ti ti-tornado" style="font-size: 34px;"></i><span style="font-weight: 800; font-size: 18px; line-height: 1.05; padding: 0 14px;">{{ h.cta }}</span></a></sc-if>
+              </div>
+              <span style="font-family: 'Young Serif'; font-weight: 400; font-size: 26px; line-height: 1.1;">{{ h.title }}</span>
+              <span style="font-size: 16px; color: #4b5c45; max-width: 520px; line-height: 1.45;">{{ h.text }}</span>
+              <sc-if value="{{ h.hasActions }}" hint-placeholder-val="{{ false }}"><span style="display: flex; gap: 10px;"><a href="#" style="min-height: 52px; display: inline-flex; align-items: center; gap: 8px; padding: 0 22px; border-radius: 22px 7px 22px 7px; background: #356427; color: #f4f8ec; font-weight: 800; font-size: 17px;"><i class="ti ti-plus"></i>Spiel hinzufügen</a><a href="#" style="min-height: 52px; display: inline-flex; align-items: center; gap: 8px; padding: 0 20px; border-radius: 14px 4px 14px 4px; background: #d6e4c6; border: 1.5px solid #6f7f66; box-sizing: border-box; color: #1b2a18; font-weight: 700; font-size: 16px;"><i class="ti ti-download"></i>Von BGG übernehmen</a></span></sc-if>
+              <sc-if value="{{ h.demo }}" hint-placeholder-val="{{ false }}"><span style="display: flex; flex-direction: column; gap: 6px; align-self: stretch; padding: 14px 18px; background: #f9fbf4; border-radius: 18px; box-shadow: 0 6px 18px rgba(40,60,30,.10); text-align: left;"><span style="font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #356427;">Das steckt in der Beispielrunde</span><sc-for list="{{ demoHints }}" as="d" hint-placeholder-count="3"><a href="#" style="display: flex; align-items: center; gap: 10px; min-height: 40px; border-top: 1px solid #d5ddca; color: #1b2a18; font-size: 15px;"><i class="ti {{ d.i }}" style="color: #356427;"></i><strong>{{ d.k }}</strong><span style="color: #4b5c45;">{{ d.v }}</span></a></sc-for></span></sc-if>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+              <sc-for list="{{ h.previews }}" as="p" hint-placeholder-count="5"><div style="display: flex; flex-direction: column; gap: 4px; padding: 14px 16px; background: #f9fbf4; border-radius: 18px; box-shadow: 0 6px 18px rgba(40,60,30,.10);"><span style="display: flex; justify-content: space-between; align-items: baseline;"><span style="font-family: 'Young Serif'; font-weight: 400; font-size: 19px;">{{ p.k }}</span><span style="font-size: 14px; font-weight: 800; color: #356427;">{{ p.link }}</span></span><span style="font-size: 15px; font-weight: 700;">{{ p.t }}</span><span style="font-size: 14px; color: #4b5c45;">{{ p.v }}</span></div></sc-for>
+            </div>
+          </div>
+          <dc-import name="Forest-Fuss" hint-size="1440px,52px"></dc-import>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="display: flex; gap: 40px; align-items: flex-start;">
+    <sc-for list="{{ youngPhones }}" as="h" hint-placeholder-count="3">
+      <div data-screen-label="{{ h.label }}" style="display: flex; flex-direction: column; gap: 10px; width: 390px;">
+        <div style="font-size: 14px; font-weight: 700; color: #4b5c45;">{{ h.caption }}</div>
+        <div style="position: relative; width: 390px; overflow: hidden; border-radius: 28px; box-shadow: 0 18px 44px rgba(40,60,30,.18); background: #ecf1e4;">
+          <dc-import name="Forest-Telefonkopf" hint-size="390px,92px"></dc-import>
+          <div style="display: flex; flex-direction: column; gap: 14px; padding: 18px 16px 24px;">
+            <div style="display: flex; gap: 10px; align-items: flex-start;"><span style="width: 14px; height: 40px; flex: none; background: {{ h.marker }}; clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 82%, 0 100%);"></span><span style="display: flex; flex-direction: column;"><span style="font-family: 'Young Serif'; font-weight: 400; font-size: 24px; line-height: 1.05;">{{ h.name }}</span><span style="font-size: 13px; font-weight: 700; color: #4b5c45;">{{ h.since }}</span></span></div>
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center;">
+              <div style="width: 200px; height: 200px; border-radius: 50%; border: 13px solid #5a3d24; box-sizing: border-box; box-shadow: 0 0 0 5px #8a6240, inset 0 0 0 3px #b8905f; background: repeating-radial-gradient(circle at 48% 52%, #dcbf92 0 7px, #c9a06f 7px 9px); display: grid; place-items: center;"><sc-if value="{{ h.hasCta }}" hint-placeholder-val="{{ true }}"><a href="#" style="width: 130px; height: 130px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; background: #356427; color: #f4f8ec;"><i class="ti ti-tornado" style="font-size: 28px;"></i><span style="font-weight: 800; font-size: 16px; line-height: 1.05; padding: 0 12px;">{{ h.cta }}</span></a></sc-if></div>
+              <span style="font-family: 'Young Serif'; font-weight: 400; font-size: 22px; line-height: 1.1;">{{ h.title }}</span>
+              <span style="font-size: 15px; color: #4b5c45; line-height: 1.45;">{{ h.text }}</span>
+              <sc-if value="{{ h.hasActions }}" hint-placeholder-val="{{ false }}"><span style="display: flex; flex-direction: column; gap: 8px; align-self: stretch;"><a href="#" style="min-height: 52px; display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: 22px 7px 22px 7px; background: #356427; color: #f4f8ec; font-weight: 800; font-size: 17px;"><i class="ti ti-plus"></i>Spiel hinzufügen</a><a href="#" style="min-height: 48px; display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: 14px 4px 14px 4px; background: #d6e4c6; border: 1.5px solid #6f7f66; box-sizing: border-box; color: #1b2a18; font-weight: 700; font-size: 16px;"><i class="ti ti-download"></i>Von BGG übernehmen</a></span></sc-if>
+            </div>
+            <sc-for list="{{ h.previews }}" as="p" hint-placeholder-count="3"><div style="display: flex; flex-direction: column; gap: 3px; padding: 12px 14px; background: #f9fbf4; border-radius: 16px; box-shadow: 0 6px 18px rgba(40,60,30,.10);"><span style="font-family: 'Young Serif'; font-weight: 400; font-size: 19px;">{{ p.k }}</span><span style="font-size: 14px; font-weight: 700;">{{ p.t }}</span><span style="font-size: 13px; color: #4b5c45;">{{ p.v }}</span></div></sc-for>
+          </div>
+          <dc-import name="Forest-Dock" active="start" hint-size="390px,68px"></dc-import>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+
+  <div data-screen-label="F7.7 Zwölf Personen" style="display: flex; flex-direction: column; gap: 10px;">
+    <div style="font-size: 14px; font-weight: 700; color: #4b5c45;">F7.7 · Zwölf Personen — 10 Mitglieder, 2 Gäste, 2 Teams; die Plätze werden zur Liste, Teams als zwei Spalten</div>
+    <div style="position: relative; width: 1440px; overflow: hidden; box-shadow: 0 18px 44px rgba(40,60,30,.18); background-color: #ecf1e4;">
+      <dc-import name="Forest-Kopf" crumb="Spielegruppe Nord › Neue Session" active="session" hint-size="1440px,108px"></dc-import>
+      <div style="display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 32px; padding: 24px 40px 36px; align-items: start;">
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <span style="display: flex; align-items: baseline; gap: 14px;"><h1 style="margin: 0; font-family: 'Young Serif'; font-weight: 400; font-size: 32px;">Neue Session</h1><span style="font-family: 'Young Serif'; font-weight: 400; font-size: 21px;">Wer spielt mit?</span><span style="font-size: 14px; font-weight: 700; color: #4b5c45;">12 spielen mit · 2 Teams</span></span>
+          <span style="font-size: 14px; font-weight: 700; color: #4b5c45;">Ein Team zählt beim Auslosen als eine Partei – und gewinnt gemeinsam.</span>
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px;">
+            <sc-for list="{{ teams }}" as="t" hint-placeholder-count="2">
+              <div style="display: flex; flex-direction: column; gap: 6px; padding: 14px 16px; background: #f9fbf4; border-radius: 20px; box-shadow: 0 6px 18px rgba(40,60,30,.10);">
+                <span style="display: flex; justify-content: space-between; align-items: baseline;"><span style="font-family: 'Young Serif'; font-weight: 400; font-size: 22px;">{{ t.name }}</span><span style="font-size: 14px; font-weight: 700; color: #4b5c45;">{{ t.count }}</span></span>
+                <sc-for list="{{ t.people }}" as="p" hint-placeholder-count="6"><span style="display: flex; align-items: center; gap: 10px; min-height: 48px; border-top: 1px solid #d5ddca;"><span style="width: 38px; height: 38px; flex: none; border-radius: 50%; background: #f9fbf4; border: {{ p.ring }}; box-sizing: border-box; display: grid; place-items: center; font-weight: 800; font-size: 12px; color: {{ p.iniInk }};">{{ p.i }}</span><span style="font-weight: 800; font-size: 15px; flex: 1; min-width: 0;">{{ p.n }}</span><span style="font-size: 13px; font-weight: 700; color: #4b5c45;">{{ p.s }}</span></span></sc-for>
+              </div>
+            </sc-for>
+          </div>
+          <span style="font-size: 13px; font-weight: 700; color: #4b5c45;">Gäste stimmen mit ab, gehören aber nicht zur Runde.</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 18px; background: #f9fbf4; border-radius: 20px; box-shadow: 0 6px 18px rgba(40,60,30,.10);">
+            <span style="width: 170px; height: 170px; border-radius: 50%; border: 12px solid #5a3d24; box-sizing: border-box; box-shadow: 0 0 0 5px #8a6240, inset 0 0 0 3px #b8905f; background: repeating-radial-gradient(circle at 48% 52%, #dcbf92 0 6px, #c9a06f 6px 8px); display: grid; place-items: center;"><span style="padding: 6px 12px; border-radius: 999px; background: #24331f; color: #f4f8ec; font-weight: 800; font-size: 14px;"><span style="font-size: 20px;">6</span> Spiele</span></span>
+            <span style="font-size: 14px; font-weight: 700; color: #4b5c45; text-align: center;">6 Spiele auf dem Stumpf · für 2 Parteien. 25 weitere Spiele fehlen, weil ihre Besitzer nicht mitspielen.</span>
+          </div>
+          <a href="#" style="min-height: 64px; display: flex; align-items: center; justify-content: center; gap: 10px; border-radius: 22px 7px 22px 7px; background: #356427; color: #f4f8ec; font-weight: 800; font-size: 22px;"><i class="ti ti-tornado" style="font-size: 26px;"></i>Laub wirbeln</a>
+        </div>
+      </div>
+      <dc-import name="Forest-Fuss" hint-size="1440px,52px"></dc-import>
+    </div>
+  </div>
+
+  <div data-screen-label="F7.8 Regal 42 Spiele" style="display: flex; flex-direction: column; gap: 10px;">
+    <div style="font-size: 14px; font-weight: 700; color: #4b5c45;">F7.8 · Regal mit 42 Spielen — acht Spalten, kleinere Mulden, zwei ohne Bild; Titel brechen auf zwei Zeilen</div>
+    <div style="position: relative; width: 1440px; overflow: hidden; box-shadow: 0 18px 44px rgba(40,60,30,.18); background-color: #ecf1e4;">
+      <dc-import name="Forest-Kopf" crumb="Familie Berger › Regal" active="regal" counts="{{ false }}" hint-size="1440px,108px"></dc-import>
+      <div style="display: flex; flex-direction: column; gap: 16px; padding: 22px 40px 32px;">
+        <span style="display: flex; align-items: center; gap: 12px;"><h1 style="margin: 0; font-family: 'Young Serif'; font-weight: 400; font-size: 32px;">Regal</h1><span style="font-size: 15px; font-weight: 800; color: #4b5c45;">42 Spiele</span><label style="margin-left: 12px; display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 14px; background: #ffffff; border: 1.5px solid #6f7f66; border-radius: 12px; min-width: 280px; box-sizing: border-box;"><i class="ti ti-search" style="color: #4b5c45;"></i><input placeholder="Spiele suchen …" style="border: none; background: none; font: inherit; font-size: 16px; outline: none; width: 220px;"></label><a href="#" style="min-height: 44px; display: inline-flex; align-items: center; gap: 8px; padding: 0 14px; border-radius: 14px 4px 14px 4px; background: #d6e4c6; color: #1b2a18; font-weight: 700; font-size: 15px;">Sortiert: Name<i class="ti ti-chevron-down"></i></a></span>
+        <div style="display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 12px;">
+          <sc-for list="{{ shelf42 }}" as="g" hint-placeholder-count="42">
+            <a href="#" style="display: flex; flex-direction: column; background: #f9fbf4; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(40,60,30,.10); color: #1b2a18;">
+              <span style="display: grid; place-items: center; height: 92px; background: {{ g.well }};"><span style="width: {{ g.w }}; height: {{ g.h }}; border-radius: 4px 2px 4px 2px; background: {{ g.cover }};"></span><sc-if value="{{ g.noCover }}" hint-placeholder-val="{{ false }}"><span style="font-size: 13px; font-weight: 800; background: #f9fbf4; padding: 1px 6px; border-radius: 6px;">Kein Bild</span></sc-if></span>
+              <span style="display: flex; gap: 4px; align-items: flex-start; padding: 6px 8px 8px;"><span style="font-weight: 800; font-size: 13px; line-height: 1.2; flex: 1;">{{ g.t }}</span><span style="padding: 0 6px; border-radius: 8px 2px 8px 2px; background: #d6e4c6; font-weight: 800; font-size: 13px;">neu</span></span>
+            </a>
+          </sc-for>
+        </div>
+      </div>
+      <dc-import name="Forest-Fuss" hint-size="1440px,52px"></dc-import>
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 40px; align-items: flex-start;">
+    <div data-screen-label="F7.9 Unentschieden" style="display: flex; flex-direction: column; gap: 10px;">
+      <div style="font-size: 14px; font-weight: 700; color: #4b5c45;">F7.9 · Unentschieden — zwei Spiele gleichauf auf Platz 1, „Spielen“ wählt; danach ein geteilter Sieg</div>
+      <div style="position: relative; width: 1440px; overflow: hidden; box-shadow: 0 18px 44px rgba(40,60,30,.18); background-color: #ecf1e4;">
+        <dc-import name="Forest-Kopf" crumb="Donnerstagsrunde › Ergebnis" active="session" hint-size="1440px,108px"></dc-import>
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px; padding: 24px 40px 36px; align-items: start;">
+          <div style="display: flex; flex-direction: column; gap: 10px; padding: 18px 20px; background: #f9fbf4; border-radius: 22px; box-shadow: 0 6px 18px rgba(40,60,30,.10);">
+            <span style="font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #356427;">Vorher · Sieger der Abstimmung</span>
+            <span style="font-family: 'Young Serif'; font-weight: 400; font-size: 22px;">Die Abstimmung · 3 Spiele</span>
+            <span style="font-size: 15px; color: #4b5c45;">Tippt „Spielen“ bei dem Spiel, das auf den Tisch kommt.</span>
+            <sc-for list="{{ tieRows }}" as="r" hint-placeholder-count="3"><div style="display: grid; grid-template-columns: 28px minmax(0, 1fr) 60px auto; gap: 12px; align-items: center; min-height: 56px; padding: 6px 12px; border-radius: 14px; background: {{ r.bg }}; border: 1px solid {{ r.edge }};"><span style="font-family: 'Young Serif'; font-weight: 400; font-size: 24px; text-align: center;">{{ r.place }}</span><span style="display: flex; flex-direction: column;"><span style="font-weight: 800; font-size: 16px;">{{ r.title }}</span><span style="font-size: 13px; font-weight: 700; color: #4b5c45;">{{ r.sub }}</span></span><span style="justify-self: end; padding: 3px 10px; border-radius: 14px 4px 14px 4px; background: {{ r.pill }}; color: {{ r.pillInk }}; font-weight: 800; font-size: 16px;">{{ r.score }}</span><sc-if value="{{ r.top }}" hint-placeholder-val="{{ false }}"><a href="#" style="min-height: 44px; display: inline-flex; align-items: center; padding: 0 16px; border-radius: 14px 4px 14px 4px; background: #356427; color: #f4f8ec; font-weight: 800; font-size: 15px;">Spielen</a></sc-if></div></sc-for>
+            <span style="font-size: 14px; color: #4b5c45;">Welches Spiel bei Gleichstand vorn steht, entscheidet die App wie bisher. Das Blatt zeigt nur die Darstellung.</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <span style="font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #356427;">Nachher · Geteilter Sieg</span>
+            <h2 style="margin: 0; font-family: 'Young Serif'; font-weight: 400; font-size: 32px; line-height: 1.08;">„Salzwiesen“ wurde gespielt. Marco und Lea haben gewonnen!</h2>
+            <span style="display: flex; gap: 18px; padding-top: 22px;"><sc-for list="{{ tieWinners }}" as="m" hint-placeholder-count="4"><span style="display: flex; flex-direction: column; align-items: center; gap: 3px; width: 72px;"><span style="position: relative; width: 50px; height: 50px; border-radius: 50%; background: #f9fbf4; border: 5px solid {{ m.c }}; box-sizing: border-box; display: grid; place-items: center; font-weight: 800; font-size: 15px; box-shadow: {{ m.halo }};">{{ m.i }}<sc-if value="{{ m.won }}" hint-placeholder-val="{{ false }}"><i class="ti ti-crown" style="position: absolute; top: -26px; left: 50%; transform: translateX(-50%) rotate(-8deg); font-size: 24px; color: #a86d14;"></i></sc-if></span><span style="font-weight: 800; font-size: 15px;">{{ m.n }}</span><span style="font-size: 13px; font-weight: 800; color: {{ m.subInk }};">{{ m.s }}</span></span></sc-for></span>
+            <span style="font-size: 15px; color: #4b5c45; line-height: 1.45;">Geteilter Sieg: jede Person bekommt einen vollen Sieg, Serien laufen für beide weiter (Entscheidung 6). Beide tragen Krone und Kranz.</span>
+          </div>
+        </div>
+        <dc-import name="Forest-Fuss" hint-size="1440px,52px"></dc-import>
+      </div>
+    </div>
+    <div data-screen-label="F7.10 Finnisch" style="display: flex; flex-direction: column; gap: 10px; width: 390px;">
+      <div style="font-size: 14px; font-weight: 700; color: #4b5c45;">F7.10 · Hub auf Finnisch — die längste Sprache am schmalsten Rahmen</div>
+      <div style="position: relative; width: 390px; overflow: hidden; border-radius: 28px; box-shadow: 0 18px 44px rgba(40,60,30,.18); background: #ecf1e4;">
+        <dc-import name="Forest-Telefonkopf" lang="FI" hint-size="390px,92px"></dc-import>
+        <div style="display: flex; flex-direction: column; gap: 14px; padding: 16px 16px 24px;">
+          <div style="display: flex; gap: 10px; align-items: flex-start;"><span style="width: 14px; height: 40px; flex: none; background: #356427; clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 82%, 0 100%);"></span><span style="display: flex; flex-direction: column;"><span style="font-family: 'Young Serif'; font-weight: 400; font-size: 24px; line-height: 1.05;">Torstain peliseurue</span><span style="font-size: 13px; font-weight: 700; color: #4b5c45;">12 peliä · 23 sessiota</span></span></div>
+          <span style="display: flex; gap: 10px; flex-wrap: wrap;"><sc-for list="{{ fiMembers }}" as="m" hint-placeholder-count="4"><span style="display: flex; flex-direction: column; align-items: center; width: 60px;"><span style="width: 44px; height: 44px; border-radius: 50%; background: #f9fbf4; border: 5px solid {{ m.c }}; box-sizing: border-box; display: grid; place-items: center; font-weight: 800; font-size: 13px;">{{ m.i }}</span><span style="font-weight: 800; font-size: 13px;">{{ m.n }}</span></span></sc-for><span style="display: flex; flex-direction: column; align-items: center; width: 70px; color: #356427;"><span style="width: 44px; height: 44px; border-radius: 50%; border: 2px dashed #6f7f66; box-sizing: border-box; display: grid; place-items: center;"><i class="ti ti-plus"></i></span><span style="font-weight: 800; font-size: 13px; text-align: center;">Lisää paikka</span></span></span>
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+            <div style="width: 200px; height: 200px; border-radius: 50%; border: 13px solid #5a3d24; box-sizing: border-box; box-shadow: 0 0 0 5px #8a6240, inset 0 0 0 3px #b8905f; background: repeating-radial-gradient(circle at 48% 52%, #dcbf92 0 7px, #c9a06f 7px 9px); display: grid; place-items: center;"><a href="#" style="width: 132px; height: 132px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; background: #356427; color: #f4f8ec; text-align: center;"><i class="ti ti-tornado" style="font-size: 28px;"></i><span style="font-weight: 800; font-size: 16px; line-height: 1.05;">Aloita<br>sessio →</span></a></div>
+            <span style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;"><sc-for list="{{ fiPresets }}" as="p" hint-placeholder-count="3"><span style="min-height: 32px; display: inline-flex; align-items: center; padding: 0 12px; border-radius: 14px 4px 14px 4px; background: #d6e4c6; font-weight: 700; font-size: 14px;">{{ p }}</span></sc-for></span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 3px; padding: 12px 14px; background: #f9fbf4; border-radius: 16px; box-shadow: 0 6px 18px rgba(40,60,30,.10);"><span style="font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #356427;">Viimeksi pelattu</span><span style="font-family: 'Young Serif'; font-weight: 400; font-size: 20px;">Nordlichter</span><span style="font-size: 14px; font-weight: 700;">Jonas · 4,8</span></div>
+          <div style="display: flex; flex-direction: column; padding: 10px 14px 4px; background: #f9fbf4; border-radius: 16px; box-shadow: 0 6px 18px rgba(40,60,30,.10);"><span style="font-family: 'Young Serif'; font-weight: 400; font-size: 19px; padding-bottom: 4px;">Mitä jos</span><sc-for list="{{ fiSuggest }}" as="s" hint-placeholder-count="3"><span style="display: flex; flex-direction: column; padding: 8px 0; border-top: 1px solid #d5ddca;"><span style="font-weight: 800; font-size: 15px;">{{ s.t }}</span><span style="font-size: 13px; font-weight: 700; color: #4b5c45;">{{ s.w }}</span></span></sc-for></div>
+          <div style="display: flex; flex-direction: column; gap: 3px; padding: 12px 14px; background: #f9fbf4; border-radius: 16px; box-shadow: 0 6px 18px rgba(40,60,30,.10);"><span style="font-family: 'Young Serif'; font-weight: 400; font-size: 19px;">Porukan pulssi</span><span style="font-size: 14px; font-weight: 700;">23 sessiota 12 kuukaudessa</span><span style="font-size: 13px; color: #4b5c45;">Pelattu 5 päivää sitten · 2 peliä 12 pelistä on vielä pelaamatta</span></div>
+          <div style="display: flex; flex-direction: column; gap: 3px; padding: 12px 14px; background: #f9fbf4; border-radius: 16px; box-shadow: 0 6px 18px rgba(40,60,30,.10);"><span style="font-family: 'Young Serif'; font-weight: 400; font-size: 19px;">Avoimet asiat</span><span style="font-size: 14px; font-weight: 700;">2 peliä ilman kuvaa</span></div>
+        </div>
+        <dc-import name="Forest-Dock" active="start" labels="Aloitus, Hylly, Historia, Palkinnot" hint-size="390px,68px"></dc-import>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const PEOPLE = ['#c6522c', '#198663', '#726bc7', '#a66815', '#c34d74', '#2f6f9e', '#54821d', '#993556'];
+    const ini = (n) => n.slice(0, 2).toUpperCase();
+    const cov = (h) => `linear-gradient(145deg, oklch(.6 .13 ${h}), oklch(.36 .12 ${h + 30}))`;
+    const ramp = [['#3d5273', '#f4f8ec'], ['#3b6f6c', '#f4f8ec'], ['#9cc38a', '#1b2a18'], ['#c2dc86', '#1b2a18'], ['#f1e58c', '#1b2a18']];
+    const stop = (s) => ramp[Math.min(4, Math.max(0, Math.round(s) - 1))];
+    const rules = [
+      { k: 'Ab 9 Plätzen', v: 'Die Plätze werden zur Liste mit 48-px-Zeilen; mit Teams als eine Spalte je Team.' },
+      { k: 'Ab 40 Spielen', v: 'Acht Spalten, Mulde 92 px hoch, Titel bis zwei Zeilen. Die Suche steht vor der Sortierung.' },
+      { k: 'Lange Wörter', v: 'Namen und Etiketten brechen um und werden nie mit Ellipse gekürzt. Chips umbrechen die Zeile.' },
+    ];
+    const measure = [['Kümmerliste', 'Avoimet asiat'], ['Rundenpuls', 'Porukan pulssi'], ['Platz dazu', 'Lisää paikka'], ['Wer spielt mit?', 'Ketkä pelaavat?'], ['Neue Session', 'Uusi sessio'], ['Pokale (Dock)', 'Palkinnot'], ['Leichte Kost', 'Jotain kevyttä'], ['Abzeichen', 'Merkit']].map(([de, fi]) => ({ de: de + ' · ' + de.replace(/ \(Dock\)/, '').length, fi: fi + ' · ' + fi.length, n: (fi.length - de.replace(/ \(Dock\)/, '').length >= 0 ? '+' : '') + (fi.length - de.replace(/ \(Dock\)/, '').length) }));
+    const greens = ['#6b9a55', '#4f7d40', '#7fae66', '#446b39', '#7fae66'];
+    const smallTrees = [26, 36, 44, 32, 24].map((w, i) => ({ w: w + 'px', h: w * 1.3 + 'px', c: greens[i] }));
+    const oneSeats = ['Ben', 'Chris', 'Dilara'].map((n, i) => ({ i: ini(n), c: PEOPLE[i + 5] }));
+    const M = (list, off) => list.map(([n, w], i) => ({ n, i: ini(n), c: PEOPLE[(i + off) % 8], w }));
+    const youngHubs = [
+      { label: 'F7.3 Runde ohne Spiele', caption: 'F7.3 · Frische Runde ohne Spiele — der Stumpf ist leer, zwei Wege ins Regal', crumb: 'Meine Runden › Spielekreis Süd', name: 'Spielekreis Süd', since: 'Runde seit heute · Marker Heidelbeere', marker: '#3e4f8f', membersLabel: 'Mitglieder · 2', members: M([['Marco', '0 Siege'], ['Aylin', '0 Siege']], 0), hasCta: false, cta: '', title: 'Der Stumpf ist noch leer', text: 'Gewirbelt wird aus dem Regal. Legt das erste Spiel auf den Tisch — oder holt euer Regal in einem Schritt von BGG.', hasActions: true, demo: false,
+        previews: [{ k: 'Regal', link: '', t: '0 Spiele', v: 'ab dem ersten Spiel' }, { k: 'Pokale', link: '', t: 'Noch keine Pokale', v: 'Die erste Session entscheidet, wer sie holt.' }, { k: 'Chronik', link: '', t: '0 Sessions', v: 'Zahlen gibt es ab der ersten Session.' }, { k: 'Nicht im Regal', link: '', t: 'Aussortiert · Durchgespielt · Wunschliste', v: 'Könnte euch gefallen — ab dem ersten Spiel' }] },
+      { label: 'F7.4 Familie Berger ohne Session', caption: 'F7.4 · Familie Berger — 31 Spiele importiert, noch keine Session', crumb: 'Meine Runden › Familie Berger', name: 'Familie Berger', since: 'Runde seit August 2026 · Marker Heidelbeere', marker: '#3e4f8f', membersLabel: 'Mitglieder · 6', members: M([['Hilde', '0 Siege'], ['Paul', '0 Siege'], ['Mia', '0 Siege'], ['Nils', '0 Siege']], 3), hasCta: true, cta: 'Erste Session wirbeln', title: '31 Spiele stehen bereit', text: 'Noch keine Session — deshalb stehen hier noch keine Scores. Sobald ihr wirbelt und abstimmt, füllt sich das von selbst.', hasActions: false, demo: false,
+        previews: [{ k: 'Regal', link: '31 Spiele →', t: '31 Spiele', v: 'Von BGG übernommen' }, { k: 'Wie wär’s mit', link: '', t: 'Kaskadia · Wolkenpfad · Salzwiesen', v: 'Steht im Regal, war aber noch nie dran' }, { k: 'Pokale', link: '', t: 'Noch keine Pokale', v: 'Die erste Session entscheidet, wer sie holt.' }, { k: 'Rundenpuls', link: '', t: '0 Sessions in 12 Monaten', v: 'Zahlen gibt es ab der ersten Session.' }, { k: 'Kümmerliste', link: '', t: '2 Spiele ohne Bild', v: 'Barrage · Azul: Sommerpavillon' }] },
+      { label: 'F7.5 Nach der ersten Session', caption: 'F7.5 · Nach der ersten Session — ein Sieger, keine Serien, keine Trends', crumb: 'Meine Runden › WG Kastanienallee', name: 'WG Kastanienallee', since: 'Runde seit September 2026 · Marker Ginster', marker: '#a07a12', membersLabel: 'Mitglieder · 3', members: M([['Aylin', '1 Sieg'], ['Ben', '0 Siege'], ['Chris', '0 Siege']], 4), hasCta: true, cta: 'Session wirbeln', title: 'Moorgeister — Aylin hat gewonnen', text: 'Serien zeigen wir ab 3 Sessions — vorher wären sie Zufall.', hasActions: false, demo: false,
+        previews: [{ k: 'Pokale', link: 'öffnen →', t: 'Aylin führt', v: '1 neues Abzeichen seit Moorgeister' }, { k: 'Chronik', link: '1 Session →', t: 'Zuletzt am 28. September', v: '' }, { k: 'Rundenpuls', link: '', t: '1 Session in 12 Monaten', v: 'Zahlen gibt es ab 3 Sessions.' }, { k: 'Wie wär’s mit', link: '', t: 'Glutkessel · Zinnober · Wolkenpfad', v: 'Steht im Regal, war aber noch nie dran' }] },
+      { label: 'F7.6 Beispielrunde', caption: 'F7.6 · Beispielrunde — voll befüllt, mit Hinweis und dem Weg zur eigenen Runde', crumb: 'Meine Runden › Beispielrunde', name: 'Beispielrunde', since: 'Zum Ausprobieren · Marker Fingerhut', marker: '#a2569b', membersLabel: 'Mitglieder · 4', members: M([['Marco', '5 Siege'], ['Jonas', '9 Siege'], ['Lea', '7 Siege'], ['Tim', '2 Siege']], 0), hasCta: true, cta: 'Session wirbeln', title: '', text: '', hasActions: false, demo: true,
+        previews: [{ k: 'Regal', link: '12 Spiele →', t: '12 Spiele', v: 'Die Spiele der Runde' }, { k: 'Pokale', link: 'öffnen →', t: 'Jonas führt', v: 'Podium und Rangliste' }, { k: 'Chronik', link: '23 Sessions →', t: 'Zuletzt am 14. September', v: 'Jede gespielte Session' }] },
+    ];
+    const demoHints = [['ti-cards', 'Regal', 'Die Spiele der Runde'], ['ti-history', 'Chronik', 'Jede gespielte Session'], ['ti-trophy', 'Pokale', 'Podium und Rangliste']].map(([i, k, v]) => ({ i, k, v }));
+    const youngPhones = [
+      { label: 'F7.3 Telefon', caption: 'F7.3 · Telefon — ohne Spiele', name: 'Spielekreis Süd', since: 'Runde seit heute', marker: '#3e4f8f', hasCta: false, cta: '', title: 'Der Stumpf ist noch leer', text: 'Gewirbelt wird aus dem Regal. Legt das erste Spiel auf den Tisch — oder holt euer Regal in einem Schritt von BGG.', hasActions: true, previews: [{ k: 'Pokale', t: 'Noch keine Pokale', v: 'Die erste Session entscheidet, wer sie holt.' }] },
+      { label: 'F7.4 Telefon', caption: 'F7.4 · Telefon — Familie Berger', name: 'Familie Berger', since: '31 Spiele · noch keine Session', marker: '#3e4f8f', hasCta: true, cta: 'Erste Session wirbeln', title: '31 Spiele stehen bereit', text: 'Noch keine Session — deshalb stehen hier noch keine Scores.', hasActions: false, previews: [{ k: 'Rundenpuls', t: '0 Sessions in 12 Monaten', v: 'Zahlen gibt es ab der ersten Session.' }, { k: 'Kümmerliste', t: '2 Spiele ohne Bild', v: 'Barrage · Azul: Sommerpavillon' }] },
+      { label: 'F7.5 Telefon', caption: 'F7.5 · Telefon — nach der ersten Session', name: 'WG Kastanienallee', since: '9 Spiele · 1 Session', marker: '#a07a12', hasCta: true, cta: 'Session wirbeln', title: 'Moorgeister — Aylin hat gewonnen', text: 'Serien zeigen wir ab 3 Sessions — vorher wären sie Zufall.', hasActions: false, previews: [{ k: 'Pokale', t: 'Aylin führt', v: '1 neues Abzeichen seit Moorgeister' }] },
+    ];
+    const lists = [['Marco', 'Jonas', 'Lea', 'Tim', 'Aylin', 'Gast · Rike'], ['Ben', 'Chris', 'Dilara', 'Emil', 'Friederike-Sophie', 'Gast · Jo']];
+    const teams = lists.map((list, t) => ({ name: 'Team ' + (t + 1), count: list.length + ' Personen', people: list.map((n, i) => { const g = n.startsWith('Gast'); return { n, i: g ? '+' : ini(n), ring: g ? '2px dashed #6f7f66' : '5px solid ' + PEOPLE[(i + t * 5) % 8], iniInk: g ? '#356427' : '#1b2a18', s: g ? 'Gast' : 'spielt mit' }; }) }));
+    const titles = ['Agricola', 'Alhambra', 'Andor', 'Arche Nova', 'Azul', 'Azul: Sommerpavillon', 'Aeons End', 'Anno 1800', 'Bohnanza', 'Brass: Birmingham', 'Burgen von Burgund', 'Blood Rage', 'Barrage', 'Cascadia', 'Carcassonne', 'Codenames', 'Cartographers', 'Clank!', 'Concordia', 'Coloretto', 'Dominion', 'Dixit', 'Die Crew', 'Everdell', 'Flügelschlag', 'Gloomhaven: Die Pranken des Löwen', 'Hanabi', 'Istanbul', 'Just One', 'Kaskadia', 'Love Letter', 'Mysterium', 'Nusfjord', 'Orléans', 'Patchwork', 'Quacksalber von Quedlinburg', 'Root', 'Salzwiesen', 'Terraforming Mars', 'Village', 'Wolkenpfad', 'Zug um Zug'];
+    const shapes = [[72, 54], [56, 74], [64, 64], [78, 44], [58, 72]];
+    const shelf42 = titles.map((t, i) => { const no = t === 'Barrage' || t === 'Azul: Sommerpavillon'; const [w, h] = shapes[i % 5]; return { t, noCover: no, cover: no ? 'transparent' : cov((i * 37) % 360), w: no ? '0' : w + 'px', h: no ? '0' : h + 'px', well: no ? 'repeating-linear-gradient(135deg, #f9fbf4 0 8px, #e9f0df 8px 16px)' : '#e9f0df' }; });
+    const tieRows = [
+      { place: '1', title: 'Salzwiesen', sub: 'Gehört Marco', s: 4.2, top: true },
+      { place: '1', title: 'Moorgeister', sub: 'Gehört Lea', s: 4.2, top: true },
+      { place: '3', title: 'Glutkessel', sub: 'Gehört Tim · 1× gar nicht', s: 2.8, top: false },
+    ].map((r) => ({ ...r, score: r.s.toFixed(1).replace('.', ','), pill: stop(r.s)[0], pillInk: stop(r.s)[1], bg: r.top ? '#f3e6b0' : '#f9fbf4', edge: r.top ? '#a86d14' : '#d5ddca' }));
+    const tieWinners = [['Marco', 0, true], ['Jonas', 1, false], ['Lea', 2, true], ['Tim', 3, false]].map(([n, k, won]) => ({ n, i: ini(n), c: PEOPLE[k], won, halo: won ? '0 0 0 5px #f3e6b0' : 'none', s: won ? 'hat gewonnen' : 'dabei', subInk: won ? '#85570f' : '#4b5c45' }));
+    const fiMembers = ['Marco', 'Jonas', 'Lea', 'Tim'].map((n, i) => ({ n, i: ini(n), c: PEOPLE[i] }));
+    const fiPresets = ['Alle 60 min', 'Jotain kevyttä', 'Koko perheelle'];
+    const fiSuggest = [{ t: 'Salzwiesen', w: 'Pidetty peli, jota ei ole pelattu vähään aikaan' }, { t: 'Hafenmeister', w: 'Hyllyssä, ei koskaan pelattu' }, { t: 'Kupferzeit', w: 'Hyllyssä, ei koskaan pelattu' }];
+    return { rules, measure, smallTrees, oneSeats, youngHubs, demoHints, youngPhones, teams, shelf42, tieRows, tieWinners, fiMembers, fiPresets, fiSuggest };
+  }
+}
+</script>
+</body>
+</html>
