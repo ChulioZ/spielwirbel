@@ -219,7 +219,9 @@ function renderVoteLinkClaim(token, ballot) {
 
    One card per drawn game, the wizard's own layout minus the parts that only make
    sense with several people on one device (the progress bar over N voters, the
-   handover screen between them). */
+   handover screen between them).
+   After the last card, the same review step as the wizard's (vote-review.js,
+   #1434) — only its „Absenden" submits. */
 function renderVoteLinkCards(token, ballot, person) {
   const games = ballot.games;
   const votes = {};
@@ -229,12 +231,19 @@ function renderVoteLinkCards(token, ballot, person) {
   // too. Per run, not per card — the lock is what a card's handlers ask.
   const advance = createVoteAdvance();
   // One submission per run, for the same reason as the wizard's `finishing`:
-  // the last rating tap now reaches submit() on its own, so a stray tap just
-  // after the beat releases could POST a second time mid-await.
+  // a second „Absenden" on the review (#1434) while the POST is still awaiting
+  // would send the column twice.
   let submitting = false;
   // Only a card a beat delivered takes focus; arriving through „Zurück" must
   // leave it where the user put it.
   let focusTitle = false;
+  // The review step (#1434) is `idx === games.length`, one past the last card.
+  // Once it has been on screen a rating tap returns to it rather than walking
+  // through every later card again. No history juggling here: this page keeps
+  // one URL throughout (see the header), so a jump and its return are plain
+  // index moves.
+  const REVIEW = games.length;
+  let reviewed = false;
 
   function klassischCard(game) {
     const imgStyle = game.image ? `style="background-image:url('${coverUrl(game.image, COVER_HERO)}')"` : '';
@@ -267,7 +276,47 @@ function renderVoteLinkCards(token, ballot, person) {
     });
   }
 
+  /* Same builder as the wizard's review (vote-review.js), in the same frame as
+     this surface's card: composed exactly when the card is. Every handler asks
+     the tap lock first — the review arrives on the last card's beat, and a
+     double-tap's second tap can still be in flight when it does. */
+  function renderReview() {
+    reviewed = true;
+    const composed = designIs('tisch');
+    app.innerHTML = '';
+    const card = voteReviewCard({
+      composed,
+      person,
+      who: { label: t('voteLink.youAre'), color: voteLinkColor(person) },
+      roundName: ballot.roundName,
+      handoff: '',
+      games,
+      ratingOf: (g) => (votes[g.id] || {}).rating,
+      onJump: (i) => {
+        if (advance.locked) return;
+        idx = i;
+        focusTitle = true;
+        render();
+      },
+      onSend: () => {
+        if (advance.locked) return;
+        submit();
+      },
+      onBack: () => {
+        if (advance.locked) return;
+        idx = REVIEW - 1;
+        render();
+      },
+    });
+    app.appendChild(card);
+    if (focusTitle) {
+      focusTitle = false;
+      card.querySelector('.vote-review__title').focus();
+    }
+  }
+
   function render() {
+    if (idx === REVIEW) return renderReview();
     const game = games[idx];
     const current = votes[game.id] || { rating: null };
     app.innerHTML = '';
@@ -308,11 +357,12 @@ function renderVoteLinkCards(token, ballot, person) {
           // of its own, and „Zurück" is locked for the duration — so there is no
           // second guard here either. See the wizard's note on why a redundant
           // one is actively harmful.
-          if (idx === games.length - 1) return submit();
-          idx += 1;
+          // From the last card — or from any card once the review has been
+          // seen — the beat delivers the review, never the submission (#1434).
+          idx = reviewed ? REVIEW : idx + 1;
           focusTitle = true;
           render();
-          announce(t('vote.advanced', { n: idx + 1, total: games.length, title: games[idx].title }));
+          if (idx < REVIEW) announce(t('vote.advanced', { n: idx + 1, total: games.length, title: games[idx].title }));
         });
       });
       ratingEl.appendChild(b);

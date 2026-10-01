@@ -1082,6 +1082,38 @@
   :root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .rating .mood { min-height: 88px; }
 }
 
+/* --- The review step after the last card (#1434) ---------------------------
+   Built in the composed frame (vote-review.js): the header, then the bracketed
+   `.vote__card` plate. The plate's cover/title/keys grid does not apply to a
+   list; each row is a wire key and its chip the thrust colour its key takes
+   when selected. Scoped to `.vote-review` only. */
+:root[data-design="bruecke"][data-scheme="dark"] .vote-review.vote--bruecke .vote__card { display: block; }
+:root[data-design="bruecke"][data-scheme="dark"] .vote-review .vote-review__title {
+  margin: 0;
+  text-align: left;
+  font-family: var(--font-display);
+  font-size: var(--display-m);
+  font-weight: 700;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .vote-review .vote-review__hint { text-align: left; color: var(--ink-2); }
+:root[data-design="bruecke"][data-scheme="dark"] .vote-review .vote-review__row { border-radius: 0; background: transparent; }
+:root[data-design="bruecke"][data-scheme="dark"] .vote-review .vote-review__row:hover { border-color: var(--brand); }
+:root[data-design="bruecke"][data-scheme="dark"] .vote-review .vote-review__cover { border-radius: 0; }
+:root[data-design="bruecke"][data-scheme="dark"] .vote-review .vote-review__rating { border-radius: 0; color: var(--thrust-ink); font-family: var(--font-mono); }
+:root[data-design="bruecke"][data-scheme="dark"] .vote-review .vote-review__rating[data-n="1"] { background: var(--thrust-1); }
+:root[data-design="bruecke"][data-scheme="dark"] .vote-review .vote-review__rating[data-n="2"] { background: var(--thrust-2); }
+:root[data-design="bruecke"][data-scheme="dark"] .vote-review .vote-review__rating[data-n="3"] { background: var(--thrust-3); }
+:root[data-design="bruecke"][data-scheme="dark"] .vote-review .vote-review__rating[data-n="4"] { background: var(--thrust-4); }
+:root[data-design="bruecke"][data-scheme="dark"] .vote-review .vote-review__rating[data-n="5"] { background: var(--thrust-5); }
+:root[data-design="bruecke"][data-scheme="dark"] .vote-review .vote-review__send { border-radius: 0; }
+/* The card's 1320px, three-column desktop frame (≥1100px) is for its side
+   columns, which the review has none of: it keeps the list's measure and the
+   single column (styles.css). Measured at 1440 without these: rows 84px wide. */
+:root[data-design="bruecke"][data-scheme="dark"] .app > *:not(.rail):not(.dock).vote--bruecke.vote-review { max-width: 600px; }
+:root[data-design="bruecke"][data-scheme="dark"] .vote.vote--bruecke.vote-review { display: flex; }
+
 /* --- The result (B2.5 at 390, B4.3 at 1440, B16.3 the tie) ---------------
    The shared result composition (result-tafel-composed.js), arranged by
    composeBrueckeResult into the large panel (the sentence, who was there, the

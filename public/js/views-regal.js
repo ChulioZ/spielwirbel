@@ -11,7 +11,7 @@ function renderRegalTab(round, activeGames) {
   // Filters (and sort) persist for the session but are scoped to one round —
   // opening a different round's Regal resets them to defaults.
   if (regalFiltersRid !== round.id) {
-    regalFilters = { tags: new Map(), query: '', tagMode: 'all' };
+    regalFilters = { tags: new Map(), query: '', tagMode: 'all', owners: [] };
     gamesSort = 'avg';
     regalFiltersRid = round.id;
   }
@@ -21,6 +21,16 @@ function renderRegalTab(round, activeGames) {
   // been archived — the counterpart of the deleted-tag pruning below, and what
   // stops a filter surviving as an active count over a chip nobody can see.
   regalFilters.metadata = normalizeMetadataFilters(regalFilters.metadata, metadataFilterOptions(activeGames));
+  // The owner filter (#1433), over the members who own a game on THIS shelf —
+  // none on an unmarked shelf, which is what keeps the section away there (the
+  // setup screen's `shelfIsMarked` question; no second check, it would be
+  // redundant and untestable). A pick whose last game has since left the shelf
+  // is pruned in place, for the reason the metadata line above gives.
+  const ownerMembers = ownerFilterMembers(round, activeGames);
+  const ownerPicks = regalFilters.owners;
+  [...ownerPicks].forEach((x) => {
+    if (!ownerMembers.some((m) => m.id === x)) ownerPicks.splice(ownerPicks.indexOf(x), 1);
+  });
 
   // Stats per active game (for the rating pills and sorting), shelf-scoped:
   // one pass for the play counts, one for the raw scores, then the round's own
@@ -262,8 +272,12 @@ function renderRegalTab(round, activeGames) {
       // handed straight back in, and the tag section node is MOVED into the new
       // panel rather than rebuilt.
       if (filterPanel) filterPanel.el.remove();
-      filterPanel = renderFilterPanel(activeGames, regalFilters.metadata, () => renderGames(), tagSection,
-        composed ? { countBadge: true } : undefined);
+      // `owners` is the Regal's own opt-in (#1433); the setup screen never
+      // passes it. Rebuilt per mount so the backfill's repaint keeps it.
+      filterPanel = renderFilterPanel(activeGames, regalFilters.metadata, () => renderGames(), tagSection, {
+        countBadge: composed,
+        owners: { round, members: ownerMembers, picked: ownerPicks },
+      });
       if (filterPanel) filterWrap.appendChild(filterPanel.el);
       filterWrap.hidden = !filterPanel;
       // Der Tisch lifts the trigger into the toolbar's one row, between the ⓘ
@@ -354,6 +368,7 @@ function renderRegalTab(round, activeGames) {
       // browser only, so there is no route change here, but the semantics must
       // be the shelf's and the draw's alike.
       if (!fitsMetadataFilters(g, regalFilters.metadata)) return false;
+      if (!matchesOwnerFilter(ownerPicks, g.ownerIds)) return false;
       const q = query.trim().toLowerCase();
       if (q && !g.title.toLowerCase().includes(q)) return false;
       return true;

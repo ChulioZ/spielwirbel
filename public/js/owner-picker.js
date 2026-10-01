@@ -7,9 +7,13 @@
    by one person, mostly recording their own boxes, so the picker that starts
    empty gets ticked identically a hundred times.
 
-   The two pure halves are CommonJS-exported and unit-tested from Node
-   (test/owner-picker.test.js); the renderer is DOM code, so it stays uncovered
-   there and is exercised through the jsdom harness instead. Requiring this file
+   The Regal's owner FILTER (#1433) lives here too: it asks the shelf the same
+   question by the same chips, so its options, predicate and section sit beside
+   the picker rather than in filter-panel.js, which only mounts the section.
+
+   The pure halves are CommonJS-exported and unit-tested from Node
+   (test/owner-picker.test.js); the renderers are DOM code, so they stay
+   uncovered there and are exercised through the jsdom harness instead. Requiring this file
    costs ~0.1 points of the global coverage figure — measured, and well clear of
    the 90% floor (.claude/rules/frontend-helper-modules-and-coverage.md). */
 
@@ -43,6 +47,30 @@ function ownerPresetFor(round, userId) {
 function ownerNames(round, ownerIds) {
   const ids = new Set(Array.isArray(ownerIds) ? ownerIds : []);
   return ((round && round.members) || []).filter((m) => ids.has(m.id)).map((m) => m.name);
+}
+
+// The members the Regal's owner filter offers (#1433): those owning at least one
+// of `games`, in the round's member order. EMPTY on an unmarked shelf, which is
+// what gates the whole section: it asks the setup screen's `shelfIsMarked`
+// question (views-session.js), a control that could only empty the shelf is
+// not offered — and a member who owns nothing here is left out for the same
+// reason. It is also stricter than that test where it matters: owner ids naming
+// only deleted seats offer nobody rather than an empty section. Retired seats are included when they still own a box: the card
+// names them (`ownerNames` does not filter them either), so the filter must be
+// able to ask about them. Guests (#532) are not members and own nothing.
+function ownerFilterMembers(round, games) {
+  const owned = new Set();
+  (games || []).forEach((g) => ((g && g.ownerIds) || []).forEach((x) => owned.add(x)));
+  return ((round && round.members) || []).filter((m) => owned.has(m.id));
+}
+
+// The owner filter's predicate (#1433): no pick is no filter; otherwise a game
+// matches when ANY picked member owns it, so a second pick widens the shelf the
+// way a second category does. A game with no owners recorded never matches while
+// the filter is on — "Anna's games" cannot include a box nobody claimed.
+function matchesOwnerFilter(picked, ownerIds) {
+  if (!picked || picked.length === 0) return true;
+  return (ownerIds || []).some((x) => picked.includes(x));
 }
 
 /* Who has to BRING the box (#971, lifted out of renderFinish by #1008). Said
@@ -105,23 +133,60 @@ function renderOwnerChips(round, selected) {
   // spelled out rather than calling `activeMembers`.
   const members = ((round && round.members) || []).filter((m) => !m.retired);
   wrap.hidden = members.length === 0;
-  wrap.replaceChildren(...members.map((m) => {
-    const on = selected.has(m.id);
-    const chip = h(`<button type="button" class="chip${on ? ' is-on' : ''}" aria-pressed="${on}">`
-      + `<span class="chip__avatar avatar" style="background:${esc(memberColor(round, m.id))}">`
-      + `${avatarFace(initials(m.name), { userId: m.userId })}</span>${esc(m.name)}</button>`);
-    chip.addEventListener('click', () => {
-      if (selected.has(m.id)) selected.delete(m.id);
-      else selected.add(m.id);
-      const now = selected.has(m.id);
-      chip.classList.toggle('is-on', now);
-      chip.setAttribute('aria-pressed', String(now));
-    });
-    return chip;
-  }));
+  wrap.replaceChildren(...members.map((m) => ownerChip(round, m, () => selected.has(m.id), () => {
+    if (selected.has(m.id)) selected.delete(m.id);
+    else selected.add(m.id);
+  }).el));
   return wrap;
 }
 
+// One member chip, two-state (`aria-pressed`), with the member's avatar. `isOn`
+// is read on every paint and `toggle` flips the caller's own state, so the chip
+// holds no copy that could disagree with it. Shared by the owner picker above
+// and the Regal's owner filter below, so the two rows look and announce alike.
+function ownerChip(round, m, isOn, toggle, onChange) {
+  const el = h('<button type="button" class="chip">'
+    + `<span class="chip__avatar avatar" style="background:${esc(memberColor(round, m.id))}">`
+    + `${avatarFace(initials(m.name), { userId: m.userId })}</span>${esc(m.name)}</button>`);
+  const paint = () => {
+    const on = isOn();
+    el.classList.toggle('is-on', on);
+    el.setAttribute('aria-pressed', String(on));
+  };
+  el.addEventListener('click', () => {
+    toggle();
+    paint();
+    if (onChange) onChange();
+  });
+  paint();
+  return { el, paint };
+}
+
+// The Regal's owner section (#1433), mounted in the filter panel by
+// `renderFilterPanel` when the Regal passes `opts.owners` — `{ members, picked }`,
+// where `picked` is the screen's own array of member ids, spliced in place.
+// Two states, not the tag chips' three: "not owned by" is out of scope. Built
+// with the tag section's classes (`.fpanel__group` > `.field__label` +
+// `.filter-chips`), so every design that seats the panel's groups (Der Tisch's
+// slips, Ocean's rows) seats this one too. Returns { el, repaint }.
+let ownerFilterSeq = 0;
+function renderOwnerFilter(round, owners, onChange) {
+  const id = `ownf-${++ownerFilterSeq}`;
+  const el = h(`<div class="fpanel__group fpanel__group--owners">
+      <div class="field__label" id="${id}">${esc(t('ownerFilter.title'))}</div>
+      <div class="filter-chips" role="group" aria-labelledby="${id}"></div>
+    </div>`);
+  const chips = owners.members.map((m) => ownerChip(round, m, () => owners.picked.includes(m.id), () => {
+    const at = owners.picked.indexOf(m.id);
+    if (at >= 0) owners.picked.splice(at, 1);
+    else owners.picked.push(m.id);
+  }, onChange));
+  el.querySelector('.filter-chips').replaceChildren(...chips.map((c) => c.el));
+  return { el, repaint: () => chips.forEach((c) => c.paint()) };
+}
+
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { ownerPresetFor, ownerNames, boxBringers };
+  module.exports = {
+    ownerPresetFor, ownerNames, boxBringers, ownerFilterMembers, matchesOwnerFilter,
+  };
 }

@@ -27,7 +27,7 @@
  * See .claude/rules/frontend-build-cache-busting.md.
  */
 
-const CACHE = 'spielwirbel-shell-v399';
+const CACHE = 'spielwirbel-shell-v404';
 
 // Everything the app needs to boot offline. Kept in sync with the <script>/<link>
 // order in index.html; each entry must be a real, servable path or install fails
@@ -217,6 +217,7 @@ const SHELL = [
   '/js/views-badges.js',
   '/js/views-member.js',
   '/js/vote-card-composed.js',
+  '/js/vote-review.js',
   '/js/views-session.js',
   '/js/result-tafel-composed.js',
   '/js/views-session-tables.js',
@@ -250,6 +251,11 @@ const SHELL = [
   // Ocean marks (#1222), on the same reasoning: the favicon and the 192 only.
   '/icons/ocean/favicon-32.png',
   '/icons/ocean/icon-192.png',
+  // Die Brücke and Das Programmheft marks (#1419), the same two each.
+  '/icons/bruecke/favicon-32.png',
+  '/icons/bruecke/icon-192.png',
+  '/icons/programmheft/favicon-32.png',
+  '/icons/programmheft/icon-192.png',
   '/icons/powered-by-bgg.png',
 ];
 

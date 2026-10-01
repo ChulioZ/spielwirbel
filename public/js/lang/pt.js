@@ -458,6 +458,9 @@ I18N.pt = {
   'metaFilter.valueIncluded': '“{name}”: conta para o filtro. Clique para esconder os jogos com ela em vez disso.',
   'metaFilter.valueExcluded': '“{name}”: os jogos com ela ficam escondidos. Clique para parar de filtrar por ela.',
   'metaFilter.removeFilter': 'Remover {name}',
+  // The Regal's owner filter (#1433).
+  'ownerFilter.title': 'Donos',
+  'ownerFilter.chip': 'De {name}',
 
   'transferGames.link': 'Mover ou copiar jogos',
   'transferGames.mode': 'Ação',
@@ -1099,6 +1102,14 @@ I18N.pt = {
   'vote.personOf': 'Pessoa {n} de {total}',
   'vote.handoffNext': 'Depois passe o dispositivo — a vez é de {name}.',
   'vote.handoffLast': 'Depois todos terão avaliado — e vem o resultado.',
+  // The review step after a voter's last card (#1434).
+  'vote.reviewTitle': 'Suas avaliações',
+  'vote.reviewHint': 'Toque em um jogo para mudar a avaliação — depois envie.',
+  'vote.reviewCountOne': '{n} jogo avaliado',
+  'vote.reviewCount': 'Todos os {n} jogos avaliados',
+  'vote.reviewRow': '{title}: {rating}. Alterar',
+  'vote.reviewUnrated': 'não avaliado',
+  'vote.reviewSend': 'Enviar',
   // Ocean's desktop vote card (#1213, O4.2): who has rated, and what is still below.
   'vote.raterDone': 'já avaliou',
   'vote.raterNow': 'avaliando agora',
