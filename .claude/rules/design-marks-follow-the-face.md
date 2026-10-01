@@ -76,9 +76,11 @@ Klassisch's for good. Look at every image; the test checks sizes, not pictures.
 `/icons/<id>/`, and its favicon + 192 — never more — are in `SHELL`;
 `test/design-marks.test.js` asserts both. Die Brücke and Das Programmheft sat on
 Klassisch's orange die until #1419 because their recap-card slices scoped the
-marks out, and nothing went red. A new design needs a recipe here, drawn from
-the mark its package already draws (the whirl for Der Tisch/Ocean, the lamp +
-wordmark for Die Brücke, the masthead for Das Programmheft).
+marks out, and nothing went red. A new design needs a recipe here, and **the
+whirl is in every design's icon** (operator decision on #1436, which first
+shipped a lamp for Die Brücke and a bare masthead for Das Programmheft): the
+design dresses it — lit cyan in brackets, ink on the vermilion masthead — but
+never replaces it.
 
 **Off macOS, point `CHROME_BIN` at the binary** (`scripts/cdp.js`); as root,
 Chromium also needs `--no-sandbox`, so aim `CHROME_BIN` at a two-line wrapper
