@@ -5053,8 +5053,9 @@ module.exports = function repoContract(repo) {
         'a skipper/confirmed Tisch, a return to Tisch and an unknown id — never an unanswered account');
       assert.equal(sum(m.designAdoption.byDesign) - sum(mid.designAdoption.byDesign), 6,
         'the three accounts that never answered (absent, pre-flip klassisch, empty stamp) count NOWHERE');
-      assert.equal(m.designAdoption.switchedBack - mid.designAdoption.switchedBack, 1,
-        'only the flag AND a current Klassisch counts — not a return to Tisch, not a string');
+      // The stored switch-back flag above no longer reaches the payload (#1480).
+      assert.deepEqual(Object.keys(m.designAdoption), ['byDesign'],
+        'designAdoption carries the per-design lines only — the switch-back share was dropped');
       assert.equal(m.adoption.accountsTotal - mid.adoption.accountsTotal, 9,
         'the headline denominator still counts every account, answered or not');
     });
@@ -5304,11 +5305,17 @@ module.exports = function repoContract(repo) {
         gameIds: [], votes: {}, createdAt: daysAgo(1), finished: true, winnerIds: ['m1'],
       });
       await repo.createUser({
-        ...userFields(), tenantId: tn, bgStats: true, design: 'klassisch', designSwitchedBack: true,
-        designChooserSeen: '2026-09-22',
+        ...userFields(), tenantId: tn, bgStats: true, design: 'klassisch',
+        designChooserSeen: '2026-09-22', emailVerified: true, disabled: true,
       });
 
       const plain = await repo.instanceMetrics();
+      /* With the variable unset each Konten twin (#1480) equals its
+         instance-wide figure — the property that makes the twins look like a
+         no-op, and the baseline the exclusion below must break. */
+      assert.equal(plain.adoption.accountsTotal, plain.accounts.total);
+      assert.equal(plain.adoption.accountsVerified, plain.accounts.verified);
+      assert.equal(plain.adoption.accountsDisabled, plain.accounts.disabled);
       process.env.ADMIN_EXCLUDE_TENANTS = tn;
       let hidden;
       try {
@@ -5318,6 +5325,7 @@ module.exports = function repoContract(repo) {
       }
 
       for (const key of ['roundsTotal', 'gamesTotal', 'sessionsTotal', 'accountsTotal',
+        'accountsVerified', 'accountsDisabled',
         'roundsWithTags', 'roundsWithSavedFilters', 'gamesWithOwnCover', 'accountsWithBgStats']) {
         assert.equal(plain.adoption[key] - hidden.adoption[key], 1, `${key} was not excluded`);
       }
@@ -5325,7 +5333,6 @@ module.exports = function repoContract(repo) {
       assert.equal(plain.adoption.roundsByFinished.one - hidden.adoption.roundsByFinished.one, 1);
       assert.equal(plain.designAdoption.byDesign.klassisch - hidden.designAdoption.byDesign.klassisch, 1,
         'the design tile divides by accountsTotal on the same card and must follow it');
-      assert.equal(plain.designAdoption.switchedBack - hidden.designAdoption.switchedBack, 1);
 
       /* …and NOTHING outside that card moves. lib/public-stats.js reads
          `content` for the public landing counters, and an operator hidden from

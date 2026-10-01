@@ -31,17 +31,21 @@ hit. Filter one side only and the card reports „Teilen & Freunde 140 %".
 
 So `adoption` carries **its own four totals** — `accountsTotal`, `roundsTotal`,
 `gamesTotal`, `sessionsTotal` — plus `accountsWithAvatar`, an adoption-scoped
-twin of the accounts block's own figure. `adoptionRows()` reads only those.
+twin of the accounts block's own figure, and since #1480 `accountsVerified` /
+`accountsDisabled`, the twins of `accounts.verified` / `.disabled`.
+`adoptionCards()` reads only those.
 `designAdoption` and `social` take the exclusion in place, because both render
 as shares on that same card; nothing else reads them. `designAdoption` (#1201)
 counts ACCOUNTS, not rounds, since designs moved from rounds to accounts. Its
-headline (the switch-back share) divides by `accountsTotal`; its per-design
-lines, since #1362, count only accounts that answered the design chooser, so
-they divide by **their own sum**, derived in `admin.js` — never by
+per-design lines, since #1362, count only accounts that answered the design
+chooser, so they divide by **their own sum**, derived in `admin.js` and shown
+as that card's parent („Design-Auswahl beantwortet") — never by
 `accountsTotal`, which would put every never-answered account in the
 denominator of a line it can never be in. The answered sum includes skippers
-(a skip stores the face like a confirmed Der Tisch), so the tile says
-„beantwortet", never „gewählt".
+(a skip stores the face like a confirmed Der Tisch), so the card says
+„beantwortet", never „gewählt". The switch-back share that used to head it was
+dropped from the card and the payload in #1480 (operator decision); the stored
+`designSwitchedBack` flag is still written but has no reader.
 
 **With the variable unset all of them equal their instance-wide twin**, which is
 what makes this look like a no-op and is not one: a renderer that reached for
@@ -51,8 +55,13 @@ fixture therefore makes the two **disagree on purpose** (40 vs 42 accounts, 10
 vs 11 rounds, 80 vs 90 games, 30 vs 33 sessions) — a fixture where they matched
 could not tell the two apart at all.
 
-**„Konten" stays the one instance-wide tile.** It is the sanctioned bare count,
-and an operator hidden from it could not see their own instance's size.
+**„Konten" is filtered too, since #1480** (operator decision). It used to be
+the one instance-wide bare count; on the grouped card it is the PARENT of every
+account line, and a parent counting a different population from its lines is
+exactly the >100 % trap above. The instance's real size stays readable where it
+belongs: `accounts.*` is untouched in the payload, for `lib/public-stats.js` and
+anyone reading the API. `test/admin-kennzahlen.test.js` makes the two disagree
+(40 vs 42 accounts, 28 vs 30 verified, 2 vs 3 disabled).
 
 ## The funnel is a BUNDLE, not a pipeline (#1174)
 

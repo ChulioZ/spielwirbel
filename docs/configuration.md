@@ -328,16 +328,19 @@ outbound mail against the `MAIL_DAILY_MAX` budget (a per-process counter — wit
 several replicas the card shows the answering process's share, not a global sum),
 the **quota ceilings paired with the highest value anyone currently holds**
 against each, and the Node version the answering process is running.
-**Funktionsnutzung** answers "is any of this being used": how many accounts exist
-(verified / unverified / suspended), and then one share per feature — rounds using
-the archive, the played shelf or the wishlist; which design accounts wear (an
-account that has not answered the design chooser counts under the face, Der
-Tisch, exactly as it sees it), and how many went back to Klassisch; rounds carrying their own
-tags, keeping saved session filters or shared with someone; games linked to a provider, wearing a
-cover, owned by a named person or carrying expansions; sessions with guests, with
-teams or opened through a shared vote link; accounts with a passkey, a BGG
-username or a profile picture. Every adoption figure is stated as `n / total`
-against the population it is measured in, never as a bare count. Every field is a
+**Funktionsnutzung** answers "is any of this being used", as one card per
+population (issue #1480): **Konten** (verified / unverified / suspended, then
+passkey, BGG username, profile picture, BG Stats hand-off, no round yet), the
+accounts that **answered the design chooser** (one line per offered design),
+**Runden** (shared, own tags, saved filters, shelf use with its three states,
+and how many sessions each round has played), **Spiele** (linked vs. by hand,
+owned, with expansions, with a cover — own or from the provider) and
+**Sessions** (guests, teams, shared vote link, and the session funnel under
+„gestartet"), plus friendships and open invitations as plain counts. Each card
+leads with its population; every line below shows the count and its whole-percent
+share of that population, or of the line it is indented under. With
+`ADMIN_EXCLUDE_TENANTS` set, every figure on the card — the account total
+included — leaves those tenants out. Every field is a
 count — **no secret value and no personal data is ever returned**, and demo
 tenants are excluded from everything but their own row. A **Feedback** card shows what users sent through the contact form's
 Feedback category (with the sender's address only where they provided one).

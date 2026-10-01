@@ -126,31 +126,20 @@ test('tallyDesignAdoption counts only answered accounts; an unknown answered id 
      never saw the alternatives. A skip is stored exactly like a confirmed Tisch
      (answered, 'tisch'), so it counts under Tisch. */
   const out = tallyDesignAdoption([
-    { design: null, answered: false, switched: false, n: 2 },
-    { design: 'klassisch', answered: false, switched: false, n: 6 }, // pre-flip, untouched
-    { design: 'tisch', answered: false, switched: false, n: 5 },     // post-flip, untouched
-    { design: 'tisch', answered: true, switched: true, n: 3 },       // skipper or confirmed Tisch
-    { design: 'klassisch', answered: true, switched: true, n: 4 },
-    { design: 'GEHEIM', answered: true, switched: true, n: 1 },
+    { design: null, answered: false, n: 2 },
+    { design: 'klassisch', answered: false, n: 6 }, // pre-flip, untouched
+    { design: 'tisch', answered: false, n: 5 },     // post-flip, untouched
+    { design: 'tisch', answered: true, n: 3 },       // skipper or confirmed Tisch
+    { design: 'klassisch', answered: true, n: 4 },
+    { design: 'GEHEIM', answered: true, n: 1 },
   ]);
   assert.deepEqual(Object.keys(out.byDesign), designs.selectableDesignIds({ production: false }));
   assert.equal(out.byDesign.klassisch, 4, 'only the accounts that CHOSE Klassisch');
   assert.equal(out.byDesign.tisch, 3 + 1, 'answered Tisch plus the unknown answered id, never the unanswered');
   assert.equal(Object.values(out.byDesign).reduce((a, b) => a + b, 0), 3 + 4 + 1,
     'the lines sum to the ANSWERED accounts');
-  assert.equal(out.switchedBack, 4, 'the flag counts only on a current Klassisch');
+  assert.deepEqual(Object.keys(out), ['byDesign'], 'the switch-back share was dropped (#1480)');
   assert.equal(JSON.stringify(out).includes('GEHEIM'), false, 'a stored id reached the keys');
-});
-
-test('tallyDesignAdoption: switchedBack is unaffected by the answered filter', () => {
-  // The flag can only be set by a pick, which also stamps the chooser — but the
-  // headline must not depend on that: an (impossible) unanswered flagged row
-  // resolves to the face and so never counts, exactly as before #1362.
-  const out = tallyDesignAdoption([
-    { design: 'klassisch', answered: true, switched: true, n: 2 },
-    { design: 'klassisch', answered: false, switched: true, n: 7 },
-  ]);
-  assert.equal(out.switchedBack, 2);
 });
 
 /* ------------------------------- the routes -------------------------------- */
