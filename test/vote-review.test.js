@@ -261,12 +261,13 @@ test('every design renders the review, composed designs in their own card', asyn
     assert.ok(root, `${design}: no review`);
     assert.equal(rows(dom).length, 3, `${design}: rows missing`);
     assert.ok(send(dom), `${design}: no send`);
-    const composed = ['tisch', 'ocean', 'bruecke'].includes(design);
+    const composed = ['tisch', 'ocean', 'bruecke', 'programmheft'].includes(design);
     assert.equal(root.classList.contains('vote--composed'), composed, `${design}: wrong composition`);
     if (composed) assert.ok(root.querySelector('.vote-felt .vote__undo'), `${design}: no way back on the felt`);
     else assert.ok(root.querySelector('.vote__who .vote__undo'), `${design}: no way back in the person line`);
     if (design === 'ocean') assert.ok(root.classList.contains('vote--ocean'));
     if (design === 'bruecke') assert.ok(root.classList.contains('vote--bruecke'));
+    if (design === 'programmheft') assert.ok(root.classList.contains('vote--ph'), 'the review takes the card\'s header (#1374)');
   }
 });
 

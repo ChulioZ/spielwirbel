@@ -968,6 +968,8 @@ I18N.it = {
   'sessions.split': 'Divisa',
   'detail.sessionSplit': 'La sessione è stata divisa',
   'result.titleSplit': 'La sessione è stata divisa su più tavoli.',
+  // Das Programmheft's report kicker over the result headline (#1374).
+  'result.reportKicker': 'Resoconto',
   'log.split': '{actor} ha diviso il gruppo su {n} tavoli',
   'startSession.crumb': 'Sessione',
   'startSession.title': 'Nuova sessione',

@@ -133,20 +133,6 @@ function brueckeScoreReason(st) {
   return st.vetoes ? tn(st.vetoes, 'score.reasonVetoBrueckeOne', 'score.reasonVetoBruecke', { n: st.vetoes }) : '';
 }
 
-/* The result headline in two voices: „‚Nordlichter' wurde gespielt." in ink,
-   and who won in the accent (B2.5, B4.3, B16.3). The sentence is the app's
-   own; it is split only where it provably begins with the played-game part, so
-   a locale whose sentence runs the other way keeps one plain line. */
-function brueckeTitleSplit(titleEl, game) {
-  const full = titleEl.textContent;
-  const lead = t('result.titlePlayed', { game });
-  if (!game || full === lead || !full.startsWith(lead)) return;
-  titleEl.replaceChildren(
-    document.createTextNode(lead + ' '),
-    h(`<span class="result-title__won">${esc(full.slice(lead.length).trim())}</span>`)
-  );
-}
-
 /* The result, in two panels (B4.3): the sentence, who was there and the Tafel
    on the large panel; the chosen game's band, the foot and „Noch eine Runde"
    in the column beside it. On a phone the same order is one column (B2.5).

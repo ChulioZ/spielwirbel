@@ -4641,3 +4641,1040 @@
    head. */
 :root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-footnote { margin: var(--space-4) 0 0; font-size: 14px; line-height: 1.5; color: var(--ink-2); }
 :root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-bgg { width: auto; height: 28px; }
+
+/* ===== #1374 — the session loop: Neue Session, vote card, result, several tables ===== */
+/* Sheets: Programmheft-P2-Phone-Kern.dc.html (P2.2 Neue Session, P2.3
+   Abstimmung, P2.4 Ergebnis), Programmheft-P4-Session-Desktop.dc.html
+   (P4.1–P4.4), Programmheft-P6-Phone-Rest.dc.html (P6.7 several tables) and
+   Programmheft-P7-Leerzustaende.dc.html (P7.7 twelve people, P7.9 the tie).
+
+   The markup is views-session-programmheft.js's re-composition of the setup,
+   plus the vote card, result Tafel, band-and-foot and split-table builders Der
+   Tisch, Ocean and Die Brücke share (vote-card-composed.js,
+   result-tafel-composed.js, views-session-tables.js). tisch.css, ocean.css and
+   bruecke.css style those only under their own designs, so every piece the
+   programme shows is laid out HERE. Geometry and type are ungated like the
+   rest of this file; colour is gated on the light scheme. Nothing here moves:
+   motion is #1382. */
+
+/* --- Shared: the kicker, the marker rule ---------------------------------- */
+:root[data-design="programmheft"] .ph-kicker {
+  margin: 0;
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+:root[data-design="programmheft"] .ph-rule { display: block; height: 8px; margin-bottom: var(--space-4); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-rule { background: var(--marker, var(--ink)); }
+
+/* --- Neue Session (P2.2 at 390, P4.1 at 1440, P7.7 twelve people) -------- */
+/* The title: Anton over a page rule, as every programme page opens. */
+:root[data-design="programmheft"] .page-head--ph-setup { display: block; margin-bottom: var(--space-5); }
+:root[data-design="programmheft"] .page-head--ph-setup h1 {
+  margin: 0;
+  padding-bottom: var(--space-2);
+  font-family: var(--font-display);
+  font-size: var(--display-4);
+  font-weight: 400;
+  line-height: var(--leading-display);
+  text-transform: uppercase;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .page-head--ph-setup h1 { border-bottom: var(--rule-page) solid var(--ink); }
+@media (min-width: 860px) {
+  :root[data-design="programmheft"] .page-head--ph-setup h1 { font-size: var(--display-2); }
+}
+
+/* Two columns from 860 — who plays, the pot — with a column rule between them
+   and the black box spanning both underneath. The aside is dissolved so its
+   two blocks become grid items of the form; DOM order (seats, pot, box) is
+   the visual order. One column below. */
+@media (min-width: 860px) {
+  :root[data-design="programmheft"] .setup-grid--ph {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas: "seats pot" "box box";
+    column-gap: var(--space-6);
+    row-gap: var(--space-6);
+  }
+  :root[data-design="programmheft"] .setup-grid--ph .setup-grid__aside { display: contents; }
+  :root[data-design="programmheft"] .setup-grid--ph .setup-grid__main { grid-area: seats; padding-right: var(--space-6); }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .setup-grid--ph .setup-grid__main { border-right: var(--rule-col) solid var(--ink); }
+  :root[data-design="programmheft"] .setup-grid--ph .ph-pot { grid-area: pot; }
+  :root[data-design="programmheft"] .setup-grid--ph .setup-bar { grid-area: box; }
+}
+:root[data-design="programmheft"] .setup-grid--ph .setup-grid__main .field { margin-bottom: var(--space-3); }
+
+/* The kicker row: „Wer spielt mit?" left, the hint right, a strong rule under. */
+:root[data-design="programmheft"] :is(.ph-setup__head, .ph-pot__head) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-3);
+  min-height: var(--target-key);
+  padding-bottom: var(--space-2);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) :is(.ph-setup__head, .ph-pot__head) { border-bottom: var(--rule-strong) solid var(--ink); }
+:root[data-design="programmheft"] .ph-setup__hint { font-size: 13px; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-setup__hint { color: var(--ink-2); }
+:root[data-design="programmheft"] .setup-grid--ph .setup-grid__main .field__hint { margin-top: var(--space-2); text-align: left; font-size: 13px; }
+
+/* The seats: a CHECKLIST — box, square avatar, the name, the state as a word
+   (P4.1, P2.2). `position: static` turns the picker's inline ring placement
+   off without touching it (the inline left/top bind only a positioned box). */
+:root[data-design="programmheft"] .setup-grid--ph .nr-table {
+  width: 100%;
+  height: auto;
+  aspect-ratio: auto;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+:root[data-design="programmheft"] .setup-grid--ph :is(.nr-table__ring, .nr-table__center, .nr-seat__tick) { display: none; }
+:root[data-design="programmheft"] .setup-grid--ph .nr-seat {
+  position: static;
+  margin: 0;
+  width: 100%;
+  min-height: 52px;
+  display: grid;
+  grid-template-columns: 24px 32px minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: var(--space-3);
+  padding: var(--space-2) 0;
+  border-radius: 0;
+  text-align: left;
+  transform: none;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .setup-grid--ph .nr-seat {
+  background: transparent;
+  border-bottom: var(--rule-col) dotted var(--hair);
+  color: var(--ink);
+}
+/* The box: an ink square, filled with a paper tick while the person plays. A
+   guest is seated by being there, so it carries the tick too; the „+" seat is
+   the empty box. The state is ALSO the word at the row's end (SC 1.4.1). */
+:root[data-design="programmheft"] .setup-grid--ph .nr-seat::before {
+  content: '';
+  grid-column: 1;
+  width: 24px;
+  height: 24px;
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .setup-grid--ph .nr-seat::before { border: var(--rule-strong) solid var(--ink); background: var(--surface); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .setup-grid--ph :is(.nr-seat[aria-pressed="true"], .nr-seat--guest)::before {
+  content: '✓';
+  background: var(--box);
+  color: var(--box-ink);
+}
+:root[data-design="programmheft"] .setup-grid--ph .nr-seat__avatar {
+  grid-column: 2;
+  width: 32px;
+  height: 32px;
+  margin: 0;
+  border-radius: 0;
+  font-size: 13px;
+  font-weight: 700;
+  opacity: 1;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .setup-grid--ph :is(.nr-seat--out, .nr-seat--add, .nr-seat--guest) .nr-seat__avatar {
+  background: var(--surface);
+  color: var(--ink);
+  border: var(--rule-strong) solid var(--ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .setup-grid--ph .nr-seat--add .nr-seat__avatar { border-style: dashed; }
+:root[data-design="programmheft"] .setup-grid--ph .nr-seat__name {
+  grid-column: 3;
+  max-width: none;
+  font-size: 17px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 1;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .setup-grid--ph .nr-seat__name { color: var(--ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .setup-grid--ph .nr-seat--out .nr-seat__name { color: var(--ink-soft); }
+:root[data-design="programmheft"] .setup-grid--ph :is(.nr-seat__state, .nr-seat__guest, .nr-seat__you) {
+  grid-column: 4;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: right;
+  text-transform: none;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .setup-grid--ph :is(.nr-seat__state, .nr-seat__guest, .nr-seat__you) { color: var(--ink-2); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .setup-grid--ph .nr-seat:hover { background: var(--sunken-soft); }
+/* From 1280 the names are print: Anton at 24px, its floor (P4.1). */
+@media (min-width: 1280px) {
+  :root[data-design="programmheft"] .setup-grid--ph .nr-table:not(:has(> .nr-seat:nth-of-type(9))) .nr-seat__name {
+    font-family: var(--font-display);
+    font-size: var(--display-6);
+    font-weight: 400;
+    line-height: var(--leading-display);
+    text-transform: uppercase;
+  }
+}
+/* From nine places the checklist becomes a grid of framed cells (P7.7): the
+   name over its state, two across on a phone, three on a desk. */
+:root[data-design="programmheft"] .setup-grid--ph .nr-table:has(> .nr-seat:nth-of-type(9)) {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: var(--space-2);
+  padding-top: var(--space-3);
+}
+:root[data-design="programmheft"] .setup-grid--ph .nr-table:has(> .nr-seat:nth-of-type(9)) .nr-seat {
+  grid-template-columns: 24px 28px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  column-gap: var(--space-2);
+  padding: 6px var(--space-2);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .setup-grid--ph .nr-table:has(> .nr-seat:nth-of-type(9)) .nr-seat { border: var(--rule-col) solid var(--ink); }
+:root[data-design="programmheft"] .setup-grid--ph .nr-table:has(> .nr-seat:nth-of-type(9)) .nr-seat::before { grid-row: 1 / span 2; }
+:root[data-design="programmheft"] .setup-grid--ph .nr-table:has(> .nr-seat:nth-of-type(9)) .nr-seat__avatar { grid-row: 1 / span 2; width: 28px; height: 28px; font-size: 12px; }
+:root[data-design="programmheft"] .setup-grid--ph .nr-table:has(> .nr-seat:nth-of-type(9)) .nr-seat__name { font-size: 15px; }
+:root[data-design="programmheft"] .setup-grid--ph .nr-table:has(> .nr-seat:nth-of-type(9)) :is(.nr-seat__state, .nr-seat__guest, .nr-seat__you) {
+  grid-column: 3;
+  grid-row: 2;
+  font-size: 12px;
+  text-align: left;
+}
+:root[data-design="programmheft"] .setup-grid--ph .nr-guest-add { margin: var(--space-3) 0; max-width: none; }
+
+/* „Teams · Jemand ohne Spiele? · Mehrere Tische" — printed boxes, uppercase. */
+:root[data-design="programmheft"] .setup-grid--ph .setup-addons { justify-content: flex-start; gap: var(--space-2); margin-top: var(--space-3); }
+:root[data-design="programmheft"] .setup-grid--ph .setup-addons__chip {
+  min-height: var(--target-key);
+  border-radius: 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .setup-grid--ph .setup-addons__chip { border: var(--rule-strong) solid var(--ink); }
+
+/* Der Topf: the kicker and the filter in one line; then the count as the big
+   vermilion numeral (Anton, far over the 24px floor) beside the games listed
+   by name and playtime. The compact strip is hidden: one presentation of the
+   pot at every width, the list (P2.2 draws it on the phone too). */
+:root[data-design="programmheft"] .setup-grid--ph .pool-hint { display: none; }
+:root[data-design="programmheft"] .ph-pot .setup-filterbar { margin: 0; flex: 0 1 auto; }
+:root[data-design="programmheft"] .ph-pot .setup-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-3) var(--space-5);
+  margin: var(--space-4) 0 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+}
+@media (min-width: 1100px) {
+  :root[data-design="programmheft"] .ph-pot .setup-panel { grid-template-columns: max-content minmax(0, 1fr); align-items: start; }
+}
+:root[data-design="programmheft"] .ph-pot .setup-panel__title { margin: 0; }
+:root[data-design="programmheft"] .ph-pot .setup-panel__title::after { content: none; }
+:root[data-design="programmheft"] .ph-pot .pool-count-group { display: flex; align-items: flex-end; gap: var(--space-3); }
+@media (min-width: 1100px) {
+  :root[data-design="programmheft"] .ph-pot .pool-count-group { flex-direction: column; align-items: flex-start; gap: var(--space-2); }
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-pot .pool-count {
+  font-family: var(--font-display);
+  font-size: var(--display-2);
+  font-weight: 400;
+  line-height: var(--leading-display);
+  color: var(--vermilion);
+}
+:root[data-design="programmheft"] .ph-pot .pool-count__label { font-size: 15px; font-weight: 700; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-pot .pool-count__label { color: var(--ink); }
+:root[data-design="programmheft"] .ph-pot .setup-panel__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+}
+:root[data-design="programmheft"] .ph-pot .setup-panel__body .pool-tile {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: var(--space-3);
+  min-height: 30px;
+  padding: 4px 0;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-pot .setup-panel__body .pool-tile { border-bottom: var(--rule-col) dotted var(--hair); }
+:root[data-design="programmheft"] .ph-pot .setup-panel__body .pool-tile:hover { transform: none; }
+:root[data-design="programmheft"] .ph-pot .pool-tile__img { width: 24px; height: 18px; aspect-ratio: auto; border-radius: 0; font-size: 11px; }
+:root[data-design="programmheft"] .ph-pot .pool-tile__name { font-size: 14px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:root[data-design="programmheft"] .ph-pot .pool-tile__meta { font-size: 12px; text-align: right; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-pot :is(.pool-tile__name, .pool-tile__meta) { color: var(--ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-pot .pool-tile__meta { color: var(--ink-2); }
+:root[data-design="programmheft"] .ph-pot .pool-owners-note { margin: var(--space-2) 0 0; font-size: 13px; }
+:root[data-design="programmheft"] .ph-pot .pool-owners-note:empty { margin: 0; }
+
+/* Der Kasten at the foot (P4.1, P2.2): „Wie viele wirbeln?", the stepper with
+   the number in Anton, the summary, „Loswirbeln →" in vermilion. Inside the box
+   the print tokens swap to the box's own, as the recap box does. */
+:root[data-design="programmheft"] .setup-grid--ph .setup-bar {
+  display: grid;
+  grid-template-columns: auto auto;
+  grid-template-areas: "count count" "summary summary" "go go";
+  align-items: center;
+  gap: var(--space-3) var(--space-5);
+  margin: var(--space-5) 0 0;
+  padding: var(--space-4);
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  position: static;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .setup-grid--ph .setup-bar {
+  --ink: var(--box-ink);
+  --ink-2: var(--box-ink-soft);
+  --ink-soft: var(--box-ink-soft);
+  --line: var(--box-ink-soft);
+  --surface: var(--box);
+  --control-fill: var(--box);
+  --control-edge: var(--box-ink);
+  background: var(--box);
+  color: var(--box-ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .setup-grid--ph .setup-bar :focus-visible { outline-color: var(--ring-on-box); }
+:root[data-design="programmheft"] .setup-grid--ph .setup-bar__count {
+  grid-area: count;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+:root[data-design="programmheft"] .setup-grid--ph .setup-bar__count label {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+:root[data-design="programmheft"] .setup-grid--ph .stepper { display: flex; align-items: center; gap: var(--space-2); }
+:root[data-design="programmheft"] .setup-grid--ph .stepper__btn {
+  width: var(--target-key);
+  height: var(--target-key);
+  border-radius: 0;
+  background: transparent;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .setup-grid--ph .stepper__btn { border: 1.5px solid var(--box-ink); color: var(--box-ink); }
+:root[data-design="programmheft"] .setup-grid--ph .setup-bar .stepper .stepper__val {
+  width: 56px;
+  min-height: var(--target-key);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: var(--display-4);
+  font-weight: 400;
+  line-height: var(--leading-display);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .setup-grid--ph .stepper__val { color: var(--box-ink); }
+:root[data-design="programmheft"] .setup-grid--ph .setup-bar__summary { grid-area: summary; margin: 0; font-size: 14px; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .setup-grid--ph .setup-bar__summary { color: var(--box-ink); }
+:root[data-design="programmheft"] .setup-grid--ph .setup-bar #go {
+  grid-area: go;
+  width: 100%;
+  min-height: 56px;
+  justify-content: center;
+  border-radius: 0;
+  font-family: var(--font-display);
+  font-size: var(--display-6);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  --press-mb: 0px;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .setup-grid--ph .setup-bar #go:not(:disabled) {
+  background: var(--vermilion);
+  border-color: var(--vermilion);
+  color: var(--on-vermilion);
+}
+@media (min-width: 860px) {
+  :root[data-design="programmheft"] .setup-grid--ph .setup-bar {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas: "count summary go";
+    padding: var(--space-4) var(--space-5);
+  }
+  :root[data-design="programmheft"] .setup-grid--ph .setup-bar #go { width: auto; min-width: 240px; font-size: var(--display-5); }
+}
+
+/* --- The vote card (P2.3 at 390, P4.2 at 1440) ---------------------------
+   Full screen: body.vote-screen takes the masthead away and the wizard renders
+   no dock (styles.css, #1185; operator decision 8). The root is the shared
+   composition (vote-card-composed.js); the Klassisch card chrome comes off it.
+   A header line — „← Zurück", who rates and where we are, one square per game —
+   over a strong rule, then the card: the cover left of the title from 860px,
+   the question, the five cells and the two scale ends. */
+:root[data-design="programmheft"] .vote.vote--ph {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-width: 1100px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  overflow: visible;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .vote.vote--ph { background: none; color: var(--ink); }
+:root[data-design="programmheft"] .vote--ph .vote-felt {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas: "back . dots" "who who who" "secret secret secret";
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+  padding-bottom: var(--space-3);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .vote--ph .vote-felt { border-bottom: var(--rule-strong) solid var(--ink); }
+/* „← Zurück": a printed key at 44px in both directions (rule T7). Restated
+   because styles.css sizes it from --undo-size, which only Klassisch's row
+   declares. */
+:root[data-design="programmheft"] .vote--ph .vote__undo {
+  grid-area: back;
+  position: static;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: auto;
+  min-width: var(--target-key);
+  height: var(--target-key);
+  padding: 0 var(--space-3);
+  border-radius: 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .vote--ph .vote__undo { background: var(--surface); border: var(--rule-strong) solid var(--ink); color: var(--ink); }
+:root[data-design="programmheft"] .vote--ph .vote-felt__who { grid-area: who; min-width: 0; }
+:root[data-design="programmheft"] .vote--ph .vote-felt__name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--display-6);
+  font-weight: 400;
+  line-height: var(--leading-display);
+  text-transform: uppercase;
+}
+:root[data-design="programmheft"] .vote--ph .vote-felt__count {
+  margin: 4px 0 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .vote--ph .vote-felt__count { color: var(--ink-2); }
+/* One square per game: done ink, current vermilion with an ink edge, the rest
+   an empty frame. aria-hidden — the count says it. */
+:root[data-design="programmheft"] .vote--ph .vote-felt__dots { grid-area: dots; display: flex; gap: 4px; }
+:root[data-design="programmheft"] .vote--ph .vote-felt__dot { width: 14px; height: 14px; border-radius: 0; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .vote--ph .vote-felt__dot { border: 1.5px solid var(--ink); background: var(--surface); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .vote--ph .vote-felt__dot.is-done { background: var(--ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .vote--ph .vote-felt__dot.is-current { background: var(--vermilion); }
+:root[data-design="programmheft"] .vote--ph .vote__secret {
+  grid-area: secret;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  font-size: 13px;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .vote--ph .vote__secret { color: var(--ink-2); }
+
+/* The card. A phone keeps the cover small beside the title (P2.3); from 860
+   the cover takes a column of its own and everything else stacks right of it
+   (P4.2). */
+:root[data-design="programmheft"] .vote--ph:not(.vote-review) .vote__card {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  grid-template-areas: "img title" "img meta" "q q" "rating rating" "scale scale";
+  align-items: end;
+  column-gap: var(--space-4);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: none;
+}
+:root[data-design="programmheft"] .vote--ph .vote__img {
+  grid-area: img;
+  align-self: start;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 3 / 4;
+  max-height: none;
+  margin: 0;
+  border-radius: 0;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .vote--ph .vote__img { box-shadow: inset 0 0 0 var(--rule-col) var(--ink); }
+:root[data-design="programmheft"] .vote.vote--ph .vote__card .vote__title {
+  grid-area: title;
+  margin: 0;
+  padding: 0;
+  text-align: left;
+  font-family: var(--font-display);
+  font-size: var(--display-5);
+  font-weight: 400;
+  line-height: var(--leading-display);
+  text-transform: uppercase;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+:root[data-design="programmheft"] .vote--ph .vote__meta { grid-area: meta; margin: 6px 0 0; font-size: 14px; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .vote--ph .vote__meta { color: var(--ink-2); }
+:root[data-design="programmheft"] .vote--ph .vote__q {
+  grid-area: q;
+  margin: var(--space-5) 0 0;
+  text-align: left;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+/* The five cells (P1.9): white with an ink rule, the face, the digit in Anton,
+   the word — and a ramp band along the foot, so the scale reads before a cell
+   is pressed. The chosen cell takes its ramp step with the step's fixed ink;
+   „gar nicht" is the veto stamp instead — paper, a vermilion edge, the word in
+   accent-ink. The number and the word are in every cell, so colour is never
+   the only signal (SC 1.4.1). */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .vote--ph .vote__q { color: var(--ink); }
+:root[data-design="programmheft"] .vote--ph .rating {
+  grid-area: rating;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--space-2);
+  margin: var(--space-3) 0 0;
+  padding: 0;
+}
+:root[data-design="programmheft"] .vote--ph .rating .mood {
+  width: auto;
+  height: auto;
+  min-width: var(--target-key);
+  min-height: 96px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2px;
+  padding: var(--space-2) 2px 10px;
+  border-radius: 0;
+  transform: none;
+  --press-mb: 0px;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .vote--ph .rating .mood:not(.is-selected) {
+  background: var(--surface);
+  border: var(--rule-strong) solid var(--ink);
+  color: var(--ink);
+}
+:root[data-design="programmheft"] .vote--ph .rating .mood .ti { font-size: 22px; /* glyph, not type */ }
+:root[data-design="programmheft"] .vote--ph .rating .mood__n {
+  order: 1;
+  font-family: var(--font-display);
+  font-size: var(--display-4);
+  font-weight: 400;
+  line-height: var(--leading-display);
+}
+:root[data-design="programmheft"] .vote--ph .rating .mood__word {
+  order: 2;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .vote--ph .rating .mood:nth-child(1) { box-shadow: inset 0 -6px 0 var(--ramp-1); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .vote--ph .rating .mood:nth-child(2) { box-shadow: inset 0 -6px 0 var(--ramp-2); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .vote--ph .rating .mood:nth-child(3) { box-shadow: inset 0 -6px 0 var(--ramp-3); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .vote--ph .rating .mood:nth-child(4) { box-shadow: inset 0 -6px 0 var(--ramp-4); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .vote--ph .rating .mood:nth-child(5) { box-shadow: inset 0 -6px 0 var(--ramp-5); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .vote--ph .rating .mood.is-selected:nth-child(1) {
+  background: var(--veto-fill);
+  border: var(--rule-strong) solid var(--veto-edge);
+  color: var(--veto-ink);
+  box-shadow: inset 0 0 0 var(--rule-strong) var(--veto-edge);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .vote--ph .rating .mood.is-selected:nth-child(2) { background: var(--ramp-2); border: var(--rule-strong) solid var(--ink); color: var(--ramp-ink-2); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .vote--ph .rating .mood.is-selected:nth-child(3) { background: var(--ramp-3); border: var(--rule-strong) solid var(--ink); color: var(--ramp-ink-3); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .vote--ph .rating .mood.is-selected:nth-child(4) { background: var(--ramp-4); border: var(--rule-strong) solid var(--ink); color: var(--ramp-ink-4); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .vote--ph .rating .mood.is-selected:nth-child(5) { background: var(--ramp-5); border: var(--rule-strong) solid var(--ink); color: var(--ramp-ink-5); }
+/* „← gar nicht … unbedingt →" under the cells (the README keeps the doubled
+   ends). */
+:root[data-design="programmheft"] .vote--ph .rating-scale {
+  grid-area: scale;
+  display: flex;
+  justify-content: space-between;
+  margin: var(--space-2) 0 0;
+  font-size: 12px;
+  font-weight: 700;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .vote--ph .rating-scale { color: var(--ink); }
+:root[data-design="programmheft"] .vote--ph .vote__handoff { margin: 0; padding-top: var(--space-3); font-size: 14px; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .vote--ph .vote__handoff { border-top: var(--rule-col) solid var(--ink); color: var(--ink-2); }
+
+@media (min-width: 860px) {
+  :root[data-design="programmheft"] .app > *:not(.rail):not(.dock).vote--ph { max-width: 1100px; }
+  :root[data-design="programmheft"] .vote--ph .vote-felt { grid-template-areas: "back who dots" "secret secret secret"; }
+  :root[data-design="programmheft"] .vote--ph:not(.vote-review) .vote__card {
+    grid-template-columns: minmax(200px, 300px) minmax(0, 1fr);
+    grid-template-rows: auto auto auto auto 1fr;
+    grid-template-areas: "img title" "img meta" "img q" "img rating" "img scale";
+    align-items: start;
+    column-gap: var(--space-6);
+    padding-top: var(--space-3);
+  }
+  :root[data-design="programmheft"] .vote.vote--ph .vote__card .vote__title { font-size: var(--display-3); padding-bottom: var(--space-2); }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .vote--ph .vote__title { border-bottom: var(--rule-strong) solid var(--ink); }
+  :root[data-design="programmheft"] .vote--ph .vote-felt__name { font-size: var(--display-5); }
+  :root[data-design="programmheft"] .vote--ph .vote__q { margin-top: var(--space-4); font-size: 22px; }
+  :root[data-design="programmheft"] .vote--ph .rating .mood { min-height: 128px; padding-top: var(--space-3); }
+  :root[data-design="programmheft"] .vote--ph .rating .mood__n { font-size: var(--display-3); }
+}
+
+/* The review step after the last card (#1434), in the same frame: the header
+   above, then the list of printed rows, each chip its ramp step. */
+:root[data-design="programmheft"] .vote-review.vote--ph { max-width: 640px; }
+:root[data-design="programmheft"] .vote-review.vote--ph .vote__card { display: block; padding: 0; border: 0; border-radius: 0; box-shadow: none; background: none; }
+:root[data-design="programmheft"] .vote.vote-review .vote__card .vote-review__title {
+  margin: 0 0 var(--space-2);
+  text-align: left;
+  font-family: var(--font-display);
+  font-size: var(--display-5);
+  font-weight: 400;
+  line-height: var(--leading-display);
+  text-transform: uppercase;
+}
+:root[data-design="programmheft"] .vote-review .vote-review__hint { text-align: left; }
+:root[data-design="programmheft"] .vote-review :is(.vote-review__row, .vote-review__cover, .vote-review__rating, .vote-review__send) { border-radius: 0; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .vote-review .vote-review__row { background: var(--surface); border: var(--rule-strong) solid var(--ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .vote-review .vote-review__rating[data-n="1"] { background: var(--veto-fill); color: var(--veto-ink); box-shadow: inset 0 0 0 var(--rule-strong) var(--veto-edge); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .vote-review .vote-review__rating[data-n="2"] { background: var(--ramp-2); color: var(--ramp-ink-2); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .vote-review .vote-review__rating[data-n="3"] { background: var(--ramp-3); color: var(--ramp-ink-3); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .vote-review .vote-review__rating[data-n="4"] { background: var(--ramp-4); color: var(--ramp-ink-4); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .vote-review .vote-review__rating[data-n="5"] { background: var(--ramp-5); color: var(--ramp-ink-5); }
+
+/* --- The result: der Spielbericht (P2.4 at 390, P4.3 at 1440, P7.9 the tie) ---
+   The shared composition (result-tafel-composed.js): the head with the
+   kicker, the headline in two voices and „Wer dabei war"; the band „Auf dem
+   Tisch" with its corrections and the foot („Noch eine Session →") in one
+   slot; the Tafel. On a phone that is one column in DOM order. From 1100 the
+   slot stands right of the head and the Tafel, as P4.3 draws it. */
+:root[data-design="programmheft"] .result-screen .ph-report {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px var(--space-4);
+  margin: 0 0 var(--space-3);
+  padding-bottom: var(--space-2);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-report { color: var(--brand); border-bottom: var(--rule-strong) solid var(--ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-report__no { color: var(--ink-2); }
+:root[data-design="programmheft"] .result-screen .page-head--result { display: block; margin-bottom: var(--space-4); }
+/* The headline: Anton, the winners in vermilion (far above 24px). */
+:root[data-design="programmheft"] .result-screen .page-head--result .result-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--display-4);
+  font-weight: 400;
+  line-height: var(--leading-quote);
+  text-transform: uppercase;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+@media (min-width: 860px) {
+  :root[data-design="programmheft"] .result-screen .page-head--result .result-title { font-size: var(--display-3); }
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .result-screen .result-title__won { color: var(--vermilion); font-size: var(--display-4); }
+@media (min-width: 860px) {
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .result-screen .result-title__won { font-size: var(--display-3); }
+}
+/* „Wer dabei war": the label, then a colour square and the name per person. */
+:root[data-design="programmheft"] .result-screen .result-people { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); margin-top: var(--space-4); }
+:root[data-design="programmheft"] .result-screen .result-people__label { font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+:root[data-design="programmheft"] .result-screen .result-people__list { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); }
+:root[data-design="programmheft"] .result-screen .result-people__person { display: inline-flex; align-items: center; gap: 6px; min-height: var(--target-min); }
+:root[data-design="programmheft"] .result-screen .result-people__person .avatar { width: 22px; height: 22px; border-radius: 0; font-size: 10px; /* glyph, not type */ }
+:root[data-design="programmheft"] .result-screen .result-people__crown { display: none; }
+:root[data-design="programmheft"] .result-screen .result-people__name { font-size: 14px; font-weight: 700; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .result-screen .result-people__name { color: var(--ink); }
+
+/* The band „Auf dem Tisch": the cover with its „Gespielt" stamp, the title,
+   who brought it, the winner; then „Falls etwas anders lief" as a list of
+   printed actions. */
+:root[data-design="programmheft"] .result-screen .tisch {
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr);
+  gap: var(--space-4);
+  margin: 0 0 var(--space-4);
+  padding: var(--space-4) 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .result-screen .tisch {
+  background: none;
+  border: 0;
+  border-top: var(--rule-strong) solid var(--ink);
+  border-bottom: var(--rule-col) solid var(--ink);
+}
+:root[data-design="programmheft"] .result-screen .tisch__box { width: 100%; aspect-ratio: 3 / 4; border-radius: 0; }
+:root[data-design="programmheft"] .result-screen .tisch__kick { font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+:root[data-design="programmheft"] .result-screen .tisch .tisch__main .tisch__title {
+  font-family: var(--font-display);
+  font-size: var(--display-6);
+  font-weight: 400;
+  line-height: var(--leading-display);
+  text-transform: uppercase;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .result-screen :is(.tisch__title, .tisch__won, .seat__name) { color: var(--ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .result-screen .tisch__note { color: var(--ink-2); }
+:root[data-design="programmheft"] .result-screen .tisch__seats .avatar { border-radius: 0; }
+:root[data-design="programmheft"] .result-screen .winner-chip { min-height: var(--target-key); border-radius: 0; }
+:root[data-design="programmheft"] .result-screen .tisch__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .result-screen .tisch__actions { border-top: var(--rule-col) solid var(--ink); }
+:root[data-design="programmheft"] .result-screen .tisch__actions-label { display: block; margin-bottom: 2px; font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+:root[data-design="programmheft"] .result-screen .tisch__actions :is(.btn, .link-btn) {
+  min-height: var(--target-key);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .result-screen .tisch__actions :is(.btn, .link-btn) { color: var(--ink); }
+/* The stamp: printed in vermilion, a frame and the word — no app tint. */
+:root[data-design="programmheft"] .result-screen .stamp { border-radius: 0; }
+/* The „Gespielt" stamp, printed: a vermilion double frame on paper and the
+   words in accent-ink (5.71:1 — the date is under 24px, so never vermilion).
+   The stamp's own --sc arrives inline from the app's score colour, so the
+   properties that read it are overridden rather than the variable. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .result-screen .stamp::before { border-color: var(--vermilion); border-radius: 0; background: var(--surface); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .result-screen .stamp :is(.stamp__date, .stamp__status) { color: var(--brand); }
+
+/* The foot: „Noch eine Session →" is the black box, Anton; „Teilen" and „Mehr"
+   printed frames beside it. */
+:root[data-design="programmheft"] .result-screen .result-foot { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-4); }
+:root[data-design="programmheft"] .result-screen .result-foot[hidden] { display: none; }
+:root[data-design="programmheft"] .result-screen .result-foot .btn { border-radius: 0; --press-mb: 0px; }
+:root[data-design="programmheft"] .result-screen .result-foot .result-foot__again {
+  flex: 1 1 100%;
+  min-height: 64px;
+  justify-content: center;
+  padding: 0 var(--space-4);
+  font-family: var(--font-display);
+  font-size: var(--display-6);
+  font-weight: 400;
+  text-transform: uppercase;
+}
+:root[data-design="programmheft"] .result-screen :is(.result-foot__share, .result-foot__more) {
+  flex: 1 1 0;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .result-screen :is(.result-foot__share, .result-foot__more) { border: var(--rule-strong) solid var(--ink); background: var(--surface); color: var(--ink); }
+
+/* The Tafel: „Platz · Spiel · Wertungen · Score" over printed rows — a rule
+   between rows, no score fill, the winning rows on the gold-tint with ink only
+   (14.96:1), the score as an Anton numeral in its ramp step. The distribution
+   is five squares, each printing its COUNT (P4.3): filled in its ramp step with
+   the step's ink when anybody gave it, an empty frame with „·" when nobody did.
+   Like Der Tisch's, the distribution is a line under the title on a phone and
+   a column of its own from 720px. */
+:root[data-design="programmheft"] .result-screen .tafel { margin-top: var(--space-4); }
+:root[data-design="programmheft"] .result-screen .tafel__kick { display: flex; align-items: center; gap: var(--space-2); padding-bottom: var(--space-2); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .result-screen .tafel__kick { border-bottom: var(--rule-strong) solid var(--ink); }
+:root[data-design="programmheft"] .result-screen .tafel__kick .tafel__title { margin: 0; font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+:root[data-design="programmheft"] .result-screen .tafel__title::after { content: none; }
+:root[data-design="programmheft"] .result-screen .tafel__cols,
+:root[data-design="programmheft"] .result-screen .tafel .trow {
+  display: grid;
+  grid-template-columns: 48px 32px minmax(0, 1fr) auto auto;
+  column-gap: var(--space-3);
+}
+:root[data-design="programmheft"] .result-screen .tafel__cols {
+  padding: var(--space-2);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .result-screen .tafel__cols { color: var(--ink-2); border-bottom: var(--rule-col) solid var(--ink); }
+:root[data-design="programmheft"] .result-screen .tafel__col--place { grid-column: 1; }
+:root[data-design="programmheft"] .result-screen .tafel__col--game { grid-column: 2 / 4; }
+:root[data-design="programmheft"] .result-screen .tafel__col--dist { display: none; }
+:root[data-design="programmheft"] .result-screen .tafel__col--score { grid-column: 4; text-align: right; }
+:root[data-design="programmheft"] .result-screen .tafel-top {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+/* The group's kicker is the same fact as the gold row, so it is kept for a
+   screen reader and not printed (P4.3 has no such line). */
+:root[data-design="programmheft"] .result-screen .tafel-top__kicker {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+:root[data-design="programmheft"] .result-screen .tafel .trow {
+  position: relative;
+  align-items: center;
+  row-gap: 6px;
+  margin: 0;
+  padding: var(--space-3) var(--space-2);
+  border-radius: 0;
+  box-shadow: none;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .result-screen .tafel .trow {
+  background: var(--page-bg);
+  border: 0;
+  border-bottom: var(--rule-col) solid var(--ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .result-screen .tafel-top .trow { background: var(--gold-soft); }
+:root[data-design="programmheft"] .result-screen .tafel .trow::before { content: none; }
+/* Every cell names its row: the base rows place their cells by named areas,
+   which this grid does not declare, so a column alone leaves a cell on an
+   implicit line (measured: the rank fell under the distribution on a phone). */
+:root[data-design="programmheft"] .result-screen .tafel .trow > :is(.trow__rank, .trow__img, .trow__main, .trow__pill, .trow__action) { grid-row: 1; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .result-screen .tafel .trow.is-chosen { outline: var(--rule-strong) solid var(--ink); outline-offset: -2px; box-shadow: none; }
+:root[data-design="programmheft"] .result-screen .tafel .trow .trow__rank {
+  grid-column: 1;
+  position: static;
+  font-family: var(--font-display);
+  font-size: var(--display-5);
+  font-weight: 400;
+  line-height: var(--leading-display);
+  background: none;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .result-screen .tafel .trow .trow__rank { color: var(--ink); }
+:root[data-design="programmheft"] .result-screen .trow__img { grid-column: 2; width: 32px; height: 32px; border-radius: 0; font-size: 14px; /* glyph, not type */ }
+:root[data-design="programmheft"] .result-screen .trow__main { grid-column: 3; min-width: 0; }
+:root[data-design="programmheft"] .result-screen .tafel .trow .trow__title { font-size: 15px; font-weight: 700; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .result-screen .tafel .trow .trow__title { color: var(--ink); }
+:root[data-design="programmheft"] .result-screen .trow__owners { font-size: 12px; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .result-screen :is(.trow__owners, .score-why) { color: var(--ink-2); }
+:root[data-design="programmheft"] .result-screen .score-why { margin-top: 2px; font-size: 12px; }
+/* The score: the ramp step as the numeral's colour, no pill. Vermilion
+   (step 1) is only ever this 30px Anton numeral, over the 24px floor. */
+:root[data-design="programmheft"] .result-screen .tafel .trow .trow__pill {
+  grid-column: 4;
+  position: static;
+  justify-self: end;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  font-family: var(--font-display);
+  font-size: var(--display-5);
+  font-weight: 400;
+  line-height: var(--leading-display);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .result-screen .tafel .trow .trow__pill { color: var(--sc-fill, var(--ink)); font-size: var(--display-5); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .result-screen .tafel .trow .trow__pill[data-stop="veto"] { color: var(--veto-ink); font-size: var(--display-5); }
+:root[data-design="programmheft"] .result-screen .trow__action { grid-column: 5; }
+:root[data-design="programmheft"] .result-screen .trow__action .btn { border-radius: 0; }
+:root[data-design="programmheft"] .result-screen .tafel .trow .trow__bars {
+  grid-column: 3 / -1;
+  grid-row: 2;
+  display: flex;
+  gap: 3px;
+  height: auto;
+  margin: 0;
+  padding: 0;
+}
+:root[data-design="programmheft"] .result-screen .trow__bars .bar-col { flex: none; display: block; }
+:root[data-design="programmheft"] .result-screen .trow__bars .bar-track {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 0;
+}
+:root[data-design="programmheft"] .result-screen .trow__bars :is(.bar, .bar-axis) { display: none; }
+:root[data-design="programmheft"] .result-screen .trow__bars .bar-col__n { font-size: 12px; font-weight: 700; line-height: 1; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .result-screen .trow__bars .bar-track { background: var(--surface); box-shadow: inset 0 0 0 var(--rule-col) var(--ink-soft); color: var(--ink-2); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .result-screen .trow__bars .bar-col[data-stop="1"]:not([data-count="0"]) .bar-track { background: var(--ramp-1); box-shadow: none; color: var(--ramp-ink-1); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .result-screen .trow__bars .bar-col[data-stop="2"]:not([data-count="0"]) .bar-track { background: var(--ramp-2); box-shadow: none; color: var(--ramp-ink-2); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .result-screen .trow__bars .bar-col[data-stop="3"]:not([data-count="0"]) .bar-track { background: var(--ramp-3); box-shadow: none; color: var(--ramp-ink-3); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .result-screen .trow__bars .bar-col[data-stop="4"]:not([data-count="0"]) .bar-track { background: var(--ramp-4); box-shadow: none; color: var(--ramp-ink-4); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .result-screen .trow__bars .bar-col[data-stop="5"]:not([data-count="0"]) .bar-track { background: var(--ramp-5); box-shadow: none; color: var(--ramp-ink-5); }
+@media (min-width: 720px) {
+  :root[data-design="programmheft"] .result-screen .tafel__cols,
+  :root[data-design="programmheft"] .result-screen .tafel .trow { grid-template-columns: 48px 32px minmax(0, 1fr) auto auto auto; }
+  :root[data-design="programmheft"] .result-screen .tafel__col--dist { display: block; grid-column: 4; }
+  :root[data-design="programmheft"] .result-screen .tafel__col--score { grid-column: 5; }
+  :root[data-design="programmheft"] .result-screen .tafel .trow .trow__bars { grid-column: 4; grid-row: 1; }
+  :root[data-design="programmheft"] .result-screen .tafel .trow .trow__pill { grid-column: 5; }
+  :root[data-design="programmheft"] .result-screen .trow__action { grid-column: 6; }
+}
+/* While the session is still choosing, a phone row's action is „Spielen" or
+   the chip — it takes a line of its own so the title is never squeezed. */
+@media (max-width: 719px) {
+  :root[data-design="programmheft"] .result-screen .tafel .trow:has(.play-btn, .trow__chip) .trow__action { grid-column: 3 / -1; grid-row: 3; justify-self: start; }
+}
+
+/* Two columns from 1100 (P4.3): the head and the Tafel on the left, the slot —
+   band, corrections, foot — on the right, beside the headline. Only once a game
+   is chosen: until then `.tisch` is hidden and the single column stays (Der
+   Tisch's own guard, tisch.css). The slot spans the head's row and a flexible
+   second one, so its height lands in that 1fr row rather than opening a gap
+   under the head. Everything else keeps column one, in DOM order. */
+@media (min-width: 1100px) {
+  :root[data-design="programmheft"] .app > *:not(.rail):not(.dock).result-screen:has(.tisch:not([hidden])) { max-width: var(--w-detail); }
+  :root[data-design="programmheft"] .result-screen:has(.tisch:not([hidden])) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    grid-template-rows: auto 1fr;
+    column-gap: var(--space-6);
+    align-items: start;
+  }
+  :root[data-design="programmheft"] .result-screen:has(.tisch:not([hidden])) > * { grid-column: 1; }
+  :root[data-design="programmheft"] .result-screen:has(.tisch:not([hidden])) > .page-head { grid-row: 1; }
+  :root[data-design="programmheft"] .result-screen:has(.tisch:not([hidden])) > .tisch-slot { grid-column: 2; grid-row: 1 / span 2; }
+  :root[data-design="programmheft"] .result-screen:has(.tisch:not([hidden])) .tisch { grid-template-columns: minmax(0, 1fr); margin-top: 0; padding-top: var(--space-3); }
+  :root[data-design="programmheft"] .result-screen:has(.tisch:not([hidden])) .tisch__box { max-width: 220px; }
+}
+
+/* --- Several tables (P4.4 at 1440, P6.7 at 390) ---------------------------
+   One report: the kicker, the app's split sentence as the headline, then one
+   column per table — its label, who sat there, its sentence in Anton, its own
+   Tafel — with a column rule between them; one under the other on a phone. */
+:root[data-design="programmheft"] .page-head--tables { display: block; }
+@media (min-width: 1280px) {
+  :root[data-design="programmheft"] .app > *:not(.rail):not(.dock).page-head--tables { max-width: var(--w-detail); }
+}
+:root[data-design="programmheft"] .page-head--tables .ph-report { margin-bottom: var(--space-3); }
+:root[data-design="programmheft"] .page-head--tables h1 {
+  margin: 0;
+  padding-bottom: var(--space-3);
+  font-family: var(--font-display);
+  font-size: var(--display-4);
+  font-weight: 400;
+  line-height: var(--leading-quote);
+  text-transform: uppercase;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .page-head--tables h1 { border-bottom: var(--rule-page) solid var(--ink); }
+@media (min-width: 860px) {
+  :root[data-design="programmheft"] .page-head--tables h1 { font-size: var(--display-3); }
+}
+:root[data-design="programmheft"] .page-head--tables .muted { margin-top: var(--space-2); font-size: 13px; }
+:root[data-design="programmheft"] .page-head--tables .ph-report { font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; padding-bottom: var(--space-2); }
+:root[data-design="programmheft"] .split-tables--composed { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-6); margin-top: var(--space-5); }
+@media (min-width: 860px) {
+  :root[data-design="programmheft"] .split-tables--composed { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .split-tables--composed > .split-table + .split-table { border-left: var(--rule-col) solid var(--ink); padding-left: var(--space-6); }
+}
+@media (min-width: 1280px) {
+  :root[data-design="programmheft"] .app > *:not(.rail):not(.dock):has(> .split-tables--composed) { max-width: var(--w-detail); }
+}
+:root[data-design="programmheft"] .split-table { display: flex; flex-direction: column; gap: var(--space-3); padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none; }
+:root[data-design="programmheft"] .split-table__head { display: flex; flex-direction: column; gap: var(--space-2); text-decoration: none; background: none; border-radius: 0; padding: 0; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .split-table__head { color: var(--ink); }
+:root[data-design="programmheft"] .split-table__top { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--space-2) var(--space-4); padding-bottom: var(--space-2); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .split-table__top { border-bottom: var(--rule-strong) solid var(--ink); }
+:root[data-design="programmheft"] .split-table .split-table__head .split-table__label {
+  font-family: var(--font-display);
+  font-size: var(--display-5);
+  font-weight: 400;
+  line-height: var(--leading-display);
+  text-transform: uppercase;
+}
+:root[data-design="programmheft"] .split-table__people { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+:root[data-design="programmheft"] .split-table__person { position: relative; }
+:root[data-design="programmheft"] .split-table__person .avatar { width: 28px; height: 28px; border-radius: 0; font-size: 11px; /* glyph, not type */ }
+:root[data-design="programmheft"] .split-table__crown { display: none; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .split-table__person.is-winner .avatar { box-shadow: 0 0 0 2px var(--page-bg), 0 0 0 4px var(--ink); }
+:root[data-design="programmheft"] .split-table .split-table__head .split-table__sentence {
+  font-family: var(--font-display);
+  font-size: var(--display-6);
+  font-weight: 400;
+  line-height: var(--leading-quote);
+  text-transform: uppercase;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .split-table .split-table__winners { color: var(--vermilion); font-size: var(--display-6); }
+:root[data-design="programmheft"] .split-table__tafel { display: flex; flex-direction: column; }
+:root[data-design="programmheft"] .split-row {
+  display: grid;
+  grid-template-columns: 26px 32px minmax(0, 1fr) auto;
+  grid-template-areas: "rank img main pill" ".    .   tag  tag";
+  align-items: center;
+  gap: 2px var(--space-3);
+  padding: var(--space-2) var(--space-2);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .split-row { border-bottom: var(--rule-col) solid var(--ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .split-row.is-played { background: var(--gold-soft); }
+:root[data-design="programmheft"] .split-tables .split-row .split-row__rank { grid-area: rank; font-family: var(--font-display); font-size: var(--display-6); font-weight: 400; line-height: var(--leading-display); }
+:root[data-design="programmheft"] .split-row__img {
+  grid-area: img;
+  position: relative;
+  overflow: hidden;
+  width: 32px;
+  height: 32px;
+  background: var(--sunken) center/cover no-repeat;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px; /* glyph, not type */
+}
+:root[data-design="programmheft"] .split-row__main { grid-area: main; display: flex; flex-direction: column; min-width: 0; }
+:root[data-design="programmheft"] .split-row__title { display: inline-flex; align-items: center; min-height: var(--target-min); font-size: 15px; font-weight: 700; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .split-row__title { color: var(--ink); }
+:root[data-design="programmheft"] .split-row__owners { font-size: 12px; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) :is(.split-row__owners, .split-row__tag) { color: var(--ink-2); }
+:root[data-design="programmheft"] .split-tables .split-row .split-row__pill {
+  grid-area: pill;
+  position: static;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  font-family: var(--font-display);
+  font-size: var(--display-5);
+  font-weight: 400;
+  line-height: var(--leading-display);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .split-row .split-row__pill { color: var(--sc-fill, var(--ink)); font-size: var(--display-5); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .split-row .split-row__pill[data-stop="veto"] { color: var(--veto-ink); font-size: var(--display-5); }
+:root[data-design="programmheft"] .split-row__tag { grid-area: tag; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+:root[data-design="programmheft"] .split-row__tag:empty { display: none; }
+:root[data-design="programmheft"] .split-tables__foot { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-5); }
+:root[data-design="programmheft"] .split-tables__foot .btn { border-radius: 0; --press-mb: 0px; }
+:root[data-design="programmheft"] .app .split-tables__foot .btn.btn--primary { font-family: var(--font-display); font-size: var(--display-6); font-weight: 400; text-transform: uppercase; }

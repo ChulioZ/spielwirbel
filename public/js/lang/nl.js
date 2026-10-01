@@ -964,6 +964,8 @@ I18N.nl = {
   'sessions.split': 'Gesplitst',
   'detail.sessionSplit': 'Sessie werd gesplitst',
   'result.titleSplit': 'De sessie werd over meerdere tafels verdeeld.',
+  // Das Programmheft's report kicker over the result headline (#1374).
+  'result.reportKicker': 'Speelverslag',
   'log.split': '{actor} verdeelde de groep over {n} tafels',
   'startSession.crumb': 'Sessie',
   'startSession.title': 'Nieuwe sessie',

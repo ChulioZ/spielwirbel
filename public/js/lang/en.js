@@ -995,6 +995,8 @@ I18N.en = {
   'sessions.split': 'Split',
   'detail.sessionSplit': 'Session was split',
   'result.titleSplit': 'The session was split across several tables.',
+  // Das Programmheft's report kicker over the result headline (#1374).
+  'result.reportKicker': 'Session report',
   'log.split': '{actor} split the group across {n} tables',
   'startSession.crumb': 'Session',
   'startSession.title': 'New session',

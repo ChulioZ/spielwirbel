@@ -966,6 +966,8 @@ I18N.pt = {
   'sessions.split': 'Dividida',
   'detail.sessionSplit': 'A sessão foi dividida',
   'result.titleSplit': 'A sessão foi dividida em várias mesas.',
+  // Das Programmheft's report kicker over the result headline (#1374).
+  'result.reportKicker': 'Relato da sessão',
   'log.split': '{actor} dividiu o grupo em {n} mesas',
   'startSession.crumb': 'Sessão',
   'startSession.title': 'Nova sessão',

@@ -972,6 +972,8 @@ I18N.es = {
   'sessions.split': 'Repartida',
   'detail.sessionSplit': 'sesión repartida',
   'result.titleSplit': 'La sesión se repartió en varias mesas.',
+  // Das Programmheft's report kicker over the result headline (#1374).
+  'result.reportKicker': 'Crónica de la sesión',
   'log.split': '{actor} ha repartido a la gente en {n} mesas',
   'startSession.crumb': 'Sesión',
   'startSession.title': 'Sesión nueva',

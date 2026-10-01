@@ -993,6 +993,8 @@ I18N.de = {
   'sessions.split': 'Aufgeteilt',
   'detail.sessionSplit': 'Session aufgeteilt',
   'result.titleSplit': 'Die Session wurde auf mehrere Tische aufgeteilt.',
+  // Das Programmheft's report kicker over the result headline (#1374).
+  'result.reportKicker': 'Spielbericht',
   'log.split': '{actor} hat auf {n} Tische aufgeteilt',
   'startSession.crumb': 'Session',
   'startSession.title': 'Neue Session',
