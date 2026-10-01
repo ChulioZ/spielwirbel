@@ -434,6 +434,9 @@ I18N.ko = {
   'metaFilter.valueIncluded': '“{name}”: 필터에 포함됨. 누르면 이 항목이 있는 게임을 대신 제외해요.',
   'metaFilter.valueExcluded': '“{name}”: 이 항목이 있는 게임을 숨겨요. 누르면 필터에서 빼요.',
   'metaFilter.removeFilter': '{name} 제거',
+  // The Regal's owner filter (#1433).
+  'ownerFilter.title': '소유자',
+  'ownerFilter.chip': '{name}의 게임',
   'transferGames.link': '게임 옮기기 또는 복사하기',
   'transferGames.mode': '작업',
   'transferGames.modeMove': '옮기기',
@@ -1050,6 +1053,14 @@ I18N.ko = {
   'vote.personOf': '참가자 {n}/{total}',
   'vote.handoffNext': '다 하면 기기를 넘겨 주세요 — 다음은 {name} 님 차례예요.',
   'vote.handoffLast': '다 하면 모두 끝나요 — 그다음은 결과예요.',
+  // The review step after a voter's last card (#1434).
+  'vote.reviewTitle': '내 평가',
+  'vote.reviewHint': '게임을 누르면 평가를 바꿀 수 있어요. 다 됐으면 보내세요.',
+  'vote.reviewCountOne': '{n}개 게임 평가 완료',
+  'vote.reviewCount': '{n}개 게임 모두 평가 완료',
+  'vote.reviewRow': '{title}: {rating}. 바꾸기',
+  'vote.reviewUnrated': '평가 안 함',
+  'vote.reviewSend': '보내기',
   // Ocean's desktop vote card (#1213, O4.2): who has rated, and what is still below.
   'vote.raterDone': '평가 완료',
   'vote.raterNow': '평가 중',
@@ -1833,6 +1844,8 @@ I18N.ko = {
   'vote.sealedTextBrueckeOne': '게임 하나가 차례가 올 때까지 암호화된 채로 남아 있습니다.',
   'vote.sealedTextBruecke': '게임 {n}개가 차례가 올 때까지 암호화된 채로 남아 있습니다.',
   'vote.sealedCardBruecke': '암호화됨',
+  // The blind's kicker (#1241, B4.6/B6.10) — a decorative line, read by no screen reader.
+  'vote.signalBruecke': '수신 신호',
   'score.reasonVetoBrueckeOne': '{n}× 추진력 없음',
   'score.reasonVetoBruecke': '{n}× 추진력 없음',
   'startSession.guestSeatBruecke': '게스트 · 오늘만',

@@ -3608,6 +3608,39 @@
 }
 :root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .trow__title { font-size: var(--text-md); }
 :root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .trow__owners { font-size: var(--text-xs); }
+/* ONE LINE when the Tafel is wide (#1430): the distribution takes a column of
+   its own between the title and the score — Klassisch's place for it, and
+   T4.4's — instead of a line under the title. This revisits #1363's "under the
+   row" for wide Tafeln only: the distribution is still on every row, and still
+   LAST in the DOM; only its grid column moves. So the tracks gain one: rank ·
+   cover · title · distribution · score · action (the ≥1280 block's six tracks
+   were already this shape). 117–155px rows became ~60–90.
+
+   A viewport breakpoint, not a container query (there is none in the repo, and
+   a new one would need its WebKit check): from 720px the Tafel is ≥ ~600px in
+   the single column, and from 1280 its column is ≥ ~600px at a 1280 viewport.
+   Below 720 the distribution stays under the title, as above. */
+@media (min-width: 720px) {
+  :root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel { grid-template-columns: 22px 32px minmax(0, 1fr) auto auto auto; }
+  :root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel__col--score { grid-column: 5; }
+  :root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .trow__bars {
+    grid-column: 4;
+    grid-row: 1;
+    margin-top: 0;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .trow__pill { grid-column: 5; }
+  :root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .trow__action { grid-column: 6; }
+  /* „Gehört …" beside the title rather than under it (#1430, operator
+     decision); the veto pill keeps a line of its own under both. */
+  :root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .trow__main {
+    display: grid;
+    grid-template-columns: minmax(0, max-content) minmax(0, 1fr);
+    align-items: baseline;
+    column-gap: 12px;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .trow__main > :not(.trow__title):not(.trow__owners) { grid-column: 1 / -1; justify-self: start; }
+  :root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .trow__owners { margin-top: 0; }
+}
 /* While the evening is still choosing, a phone row's action is a „Spielen"
    button or the „Auf dem Tisch" chip — ~100px that would leave the title ~60.
    So on a phone that action takes a line of its own under the title (and the
@@ -4328,7 +4361,12 @@
      cancelled one) would render the Tafel at two thirds of the column with an
      empty gutter beside it, which is worse than the single column it replaces.
      The DOM order is slot-then-Tafel, so the explicit column numbers are also
-     what puts them in the sheet's order rather than the markup's. */
+     what puts them in the sheet's order rather than the markup's.
+
+     #1430 departs from T4.4 on purpose where the sheet ran out: T4.4 was drawn
+     with three rows, and at eight the Tafel ran 2× the viewport beside an empty
+     box column. So the rows are one line from 720px (above), the box column is
+     pinned (after this block), and the foot moved into it (below). */
   :root[data-design="tisch"][data-scheme="dark"] .result-screen:has(.tisch:not([hidden])) {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 330px;
@@ -4353,6 +4391,13 @@
   :root[data-design="tisch"][data-scheme="dark"] .result-screen:has(.tisch:not([hidden])) > .tisch-slot {
     grid-column: 2;
   }
+  /* The foot sits directly under the box (#1430, operator decision): it is the
+     last child of `.tisch-slot` (showResults), so it rides in the box column —
+     and in its sticky pin — rather than opening a second grid row the Tafel
+     spans, whose surplus height a spanning item shares EQUALLY among its rows
+     (measured, that left a 70–96px gap under the box). The log takes column 1,
+     under the Tafel. */
+  :root[data-design="tisch"][data-scheme="dark"] .result-screen:has(.tisch:not([hidden])) > .session-log { grid-column: 1; }
   /* Beside the Tafel the band is a column, not a 128px-cover row. */
   :root[data-design="tisch"][data-scheme="dark"] .result-screen:has(.tisch:not([hidden])) .tisch {
     grid-template-columns: minmax(0, 1fr);
@@ -4382,6 +4427,10 @@
   :root[data-design="tisch"][data-scheme="dark"] .result-foot { justify-content: flex-end; }
   :root[data-design="tisch"][data-scheme="dark"] .result-foot .btn,
   :root[data-design="tisch"][data-scheme="dark"] .result-foot .result-foot__again { flex: none; padding-inline: 18px; }
+  /* In the 330px box column the three do not fit one line: „Noch eine Session"
+     takes the column's width and the other two share the line under it. */
+  :root[data-design="tisch"][data-scheme="dark"] .result-screen:has(.tisch:not([hidden])) .tisch-slot > .result-foot .btn { flex: 1 1 0; }
+  :root[data-design="tisch"][data-scheme="dark"] .result-screen:has(.tisch:not([hidden])) .tisch-slot > .result-foot .result-foot__again { flex: 1 1 100%; }
 
   /* Two tables side by side (T4.5). `.split-tables` is already a grid in the
      app; what this states is that at the rail width it is exactly two columns,
@@ -4427,6 +4476,28 @@
   :root[data-design="tisch"][data-scheme="dark"] .split-tables__foot { justify-content: flex-end; }
   :root[data-design="tisch"][data-scheme="dark"] .split-tables__foot .btn { flex: none; padding-inline: 18px; }
 }
+
+/* --- The review step after the last card (#1434) ---------------------------
+   vote-review.js builds it in the composed card's own frame: the felt header,
+   then the paper `.vote__card`. The card's cover/title/faces grid does not
+   apply to a list, so the paper goes back to a plain column here; the chosen
+   face in each row is the same brass plate the selected `.mood` wears. */
+:root[data-design="tisch"][data-scheme="dark"] .vote-review .vote__card { display: block; }
+:root[data-design="tisch"][data-scheme="dark"] .vote-review .vote-review__title {
+  margin: 0;
+  text-align: left;
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  line-height: 1.05;
+}
+:root[data-design="tisch"][data-scheme="dark"] .vote-review .vote-review__hint { text-align: left; }
+:root[data-design="tisch"][data-scheme="dark"] .vote-review .vote-review__rating {
+  background: linear-gradient(180deg, var(--brass-hi), var(--gold-deep));
+  box-shadow: 0 2px 0 var(--gold-edge);
+}
+/* T4.2's 920px desktop card is for the cover beside the title; the review has
+   no cover and keeps the list's measure (styles.css). */
+:root[data-design="tisch"][data-scheme="dark"] .vote.vote--composed.vote-review { max-width: 600px; }
 
 /* ---- Live-Abstimmung (#1192, T4.3 Live-Abstimmung + T6.5 Live) ------------
  *
@@ -4736,6 +4807,20 @@
     margin-top: 0;
   }
 }
+
+/* The box column pinned while the Tafel scrolls (#1430) — only where the whole
+   column fits under the top bar: the band measured ≤514px at 1440 (played, with
+   the „Falls etwas anders lief" corrections), the foot under it brings the slot
+   to 650, plus the 80px offset and slack. Shorter than that and a pinned box
+   would strand its own foot, so it stays in flow. It travels within the result
+   grid, so it lets go at the log row. */
+@media (min-width: 1280px) and (min-height: 760px) {
+  :root[data-design="tisch"][data-scheme="dark"] .result-screen:has(.tisch:not([hidden])) > .tisch-slot {
+    position: sticky;
+    top: 80px;
+  }
+}
+
 
 /* ===========================================================================
    #1193 — ANMELDEN, KONTO and the DESIGN-WAHL, at 390 and at 1440.
@@ -8409,10 +8494,10 @@
 /* Earned: raised brass, lit from the upper left, standing on a hard shadow.
    The engraving is the walnut ink — 13.26:1 on the highlight down to 5.34:1 on
    --brass-lo — so the glyph reads as cut into the metal at every stop. */
-:root[data-design="tisch"][data-scheme="dark"] :is(.badge, .badge-card)[data-state="earned"] .badge__mark {
+:root[data-design="tisch"][data-scheme="dark"] :is(.badge, .badge-card, .badge-emblem)[data-state="earned"] .badge__mark {
   color: var(--on-accent);
 }
-:root[data-design="tisch"][data-scheme="dark"] :is(.badge, .badge-card)[data-state="earned"] .badge__mark::before {
+:root[data-design="tisch"][data-scheme="dark"] :is(.badge, .badge-card, .badge-emblem)[data-state="earned"] .badge__mark::before {
   border: 2px solid var(--plinth-edge);
   background: radial-gradient(circle at 35% 30%, var(--gold-hi), var(--gold) 40%, var(--gold-deep) 75%, var(--brass-lo));
   box-shadow: 0 4px 0 var(--pin-shadow), 0 8px 14px var(--cast-deep);
@@ -8892,8 +8977,7 @@
   font-weight: 700;
 }
 :root[data-design="tisch"][data-scheme="dark"] .hub-row--badges .ti,
-:root[data-design="tisch"][data-scheme="dark"] .chronik-row--badge .chronik-row__icon,
-:root[data-design="tisch"][data-scheme="dark"] .feed-row__cover--badge {
+:root[data-design="tisch"][data-scheme="dark"] .chronik-row--badge .chronik-row__icon {
   display: inline-grid;
   place-items: center;
   flex: none;
@@ -8953,31 +9037,20 @@
 }
 
 /* --- The friends' feed (T17.7): the one account-tier earning a friend sees —
-   the cover slot becomes a brass pin (rule shared with the hub and Chronik
-   pins above), and a tile's image slot is felt with the pin laid on it. */
-:root[data-design="tisch"][data-scheme="dark"] .feed-row__cover--badge {
-  width: 36px;
-  height: 36px;
-  font-size: 17px; /* glyph, not type */
-}
+   the slot carries the EARNED PIN itself (#1428): K17's `.badge__mark` in a
+   `.badge-emblem` host, which the earned selector above names, so this block
+   only sizes it and lays the tile's band. No pin is drawn here — a second
+   drawing is what let the feed's pin drift from the Spielerkarte's.
+   40px in a row (the pin inside its 3px inset stands a little over the 36px
+   box a game stands), the 46px slot in the home preview, 64px on a tile. */
+:root[data-design="tisch"][data-scheme="dark"] .feed-row__badge { --pin: 40px; }
+:root[data-design="tisch"][data-scheme="dark"] .feed-item__img--badge { --pin: 46px; }
 :root[data-design="tisch"][data-scheme="dark"] .e-tile__img--badge {
+  --pin: 64px;
   background-color: var(--felt-deep);
   background-image:
     var(--felt-weave),
     radial-gradient(90% 180% at 20% -40%, var(--felt), var(--felt-deep) 74%);
-}
-:root[data-design="tisch"][data-scheme="dark"] .e-tile__img--badge .ti {
-  display: inline-grid;
-  place-items: center;
-  width: 56px;
-  height: 56px;
-  box-sizing: border-box;
-  border: 2px solid var(--plinth-edge);
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, var(--gold-hi), var(--gold) 40%, var(--gold-deep) 75%, var(--brass-lo));
-  box-shadow: 0 4px 0 var(--pin-shadow);
-  color: var(--on-accent);
-  font-size: 26px; /* glyph, not type */
 }
 
 /* --- The card on tap (T17.1, right) ----------------------------------------

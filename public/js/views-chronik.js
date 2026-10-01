@@ -471,8 +471,9 @@ function renderChronikTab(round, activities) {
       const empty = tl.appendChild(emptyState({ icon: 'ti-history', title: t('chronik.emptyTitle'), text: t('chronik.empty') }));
       // Ocean's one next step (#1216, O7.1): the hub's own „Abtauchen", and only
       // where it can start something — no session yet AND a game to draw from.
-      if (ocean && !entries.some((e) => e.kind === 'session') && round.games.some(isActiveGame)) {
-        emptyStateAction(empty, { icon: 'ti-tornado', label: t('round.startSessionOcean'), primary: true, onClick: () => showStartSession(round) });
+      // Die Brücke's is its „Mission starten" with the ignition's rocket (#1243, B7.2).
+      if ((ocean || bruecke) && !entries.some((e) => e.kind === 'session') && round.games.some(isActiveGame)) {
+        emptyStateAction(empty, { icon: bruecke ? 'ti-rocket' : 'ti-tornado', label: t(bruecke ? 'round.startSessionBruecke' : 'round.startSessionOcean'), primary: true, onClick: () => showStartSession(round) });
       }
       return;
     }

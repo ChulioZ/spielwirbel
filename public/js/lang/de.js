@@ -460,6 +460,9 @@ I18N.de = {
   'metaFilter.valueIncluded': '„{name}“: zählt mit. Klicken, um Spiele damit stattdessen auszuschließen.',
   'metaFilter.valueExcluded': '„{name}“: Spiele damit sind ausgeblendet. Klicken, um den Filter aufzuheben.',
   'metaFilter.removeFilter': '{name} entfernen',
+  // The Regal's owner filter (#1433).
+  'ownerFilter.title': 'Besitzer',
+  'ownerFilter.chip': 'Gehört {name}',
 
   'transferGames.link': 'Spiele verschieben oder kopieren',
   'transferGames.mode': 'Aktion',
@@ -1141,6 +1144,14 @@ I18N.de = {
   'vote.personOf': 'Person {n} von {total}',
   'vote.handoffNext': 'Danach das Gerät weitergeben — {name} ist als Nächstes dran.',
   'vote.handoffLast': 'Danach sind alle durch — dann kommt das Ergebnis.',
+  // The review step after a voter's last card (#1434).
+  'vote.reviewTitle': 'Deine Wertungen',
+  'vote.reviewHint': 'Tippe ein Spiel an, um seine Wertung zu ändern – dann absenden.',
+  'vote.reviewCountOne': '{n} Spiel gewertet',
+  'vote.reviewCount': 'Alle {n} Spiele gewertet',
+  'vote.reviewRow': '{title}: {rating}. Ändern',
+  'vote.reviewUnrated': 'nicht gewertet',
+  'vote.reviewSend': 'Absenden',
   // Ocean's desktop vote card (#1213, O4.2): who has rated, and what is still below.
   'vote.raterDone': 'hat gewertet',
   'vote.raterNow': 'wertet gerade',
@@ -2023,6 +2034,8 @@ I18N.de = {
   'vote.sealedTextBrueckeOne': 'Ein weiteres Spiel bleibt verschlüsselt, bis du es erreichst.',
   'vote.sealedTextBruecke': 'Noch {n} Spiele bleiben verschlüsselt, bis du sie erreichst.',
   'vote.sealedCardBruecke': 'Verschlüsselt',
+  // The blind's kicker (#1241, B4.6/B6.10) — a decorative line, read by no screen reader.
+  'vote.signalBruecke': 'Eingehendes Signal',
   'score.reasonVetoBrueckeOne': '{n}× kein Schub',
   'score.reasonVetoBruecke': '{n}× kein Schub',
   'startSession.guestSeatBruecke': 'Gast · nur heute',

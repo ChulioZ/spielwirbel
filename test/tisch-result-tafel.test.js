@@ -230,8 +230,12 @@ test('the crowns follow the record: reset takes them off, a new winner puts one 
 
 test('a settled session ends on „Noch eine Session" · „Teilen" · „Mehr"', async (t) => {
   const { dom } = await show(t, 'tisch');
-  const foot = screen(dom).lastElementChild;
-  assert.equal(foot.className, 'result-foot', 'the foot is the last block on the screen');
+  // Under the box, inside its slot (#1430): on a phone the actions follow the
+  // box ahead of the ranking, and at 1280 they ride in the pinned box column.
+  const slot = screen(dom).querySelector('.tisch-slot');
+  const foot = slot.lastElementChild;
+  assert.equal(foot.className, 'result-foot', 'the foot is the last block of the box slot');
+  assert.ok(foot.compareDocumentPosition(screen(dom).querySelector('.tafel')) & 4, 'the foot comes before the Tafel');
   assert.equal(foot.hidden, false);
   assert.deepEqual([...foot.children].map(text), ['Noch eine Session', 'Teilen', 'Mehr']);
   assert.equal(screen(dom).querySelector('.result-footer'), null, 'Klassisch’s footer row is replaced');
@@ -371,4 +375,66 @@ test('the chosen row is ringed by an outline, which the score fill cannot cover'
   assert.match(b, /box-shadow:\s*none/);
   assert.match(b, /outline:\s*2px solid var\(--gold-edge\)/);
   assert.match(b, /outline-offset:\s*-2px/);
+});
+
+// #1430: a wide Tafel spends its width on the row, not on a second line. The
+// distribution moves from under the title into a column of its own — still
+// last in the DOM (the jsdom half above pins that), only its grid cell moves.
+const { mediaBlocks, rulesOf } = require('./support/css');
+const blockRules = (query) => {
+  const hits = mediaBlocks(CSS).filter(([q]) => q.replace(/\s+/g, ' ') === query);
+  assert.ok(hits.length, `tisch.css has no @media ${query} block`);
+  return hits.flatMap(([, css]) => rulesOf(css));
+};
+const inBlock = (rules, sel) => {
+  const hit = rules.find(([s]) => s.split(',').map((x) => x.trim()).includes(`${HOOK} ${sel}`));
+  return hit ? hit[1] : null;
+};
+
+test('from 720px a row is one line: the distribution takes a column between the title and the score', () => {
+  const wide = blockRules('(min-width: 720px)');
+  assert.match(inBlock(wide, '.result-screen .tafel'), /grid-template-columns:\s*22px 32px minmax\(0, 1fr\) auto auto auto/);
+  const bars = inBlock(wide, '.result-screen .tafel .trow .trow__bars');
+  assert.ok(bars, 'no wide placement for the distribution');
+  assert.match(bars, /grid-column:\s*4/);
+  assert.match(bars, /grid-row:\s*1/);
+  assert.match(inBlock(wide, '.result-screen .tafel .trow .trow__pill'), /grid-column:\s*5/);
+  assert.match(inBlock(wide, '.result-screen .tafel .trow .trow__action'), /grid-column:\s*6/);
+  assert.match(inBlock(wide, '.result-screen .tafel__col--score'), /grid-column:\s*5/,
+    'the „Score" label follows the pill');
+  // …and below it the distribution stays UNDER the title, as #1363 put it.
+  assert.match(body('.result-screen .tafel .trow .trow__bars'), /grid-column:\s*3 \/ -1/);
+});
+
+test('from 1280px the box column is pinned — only where the box fits the viewport', () => {
+  const slot = '.result-screen:has(.tisch:not([hidden])) > .tisch-slot';
+  const gated = mediaBlocks(CSS).filter(([q]) => /min-width:\s*1280px/.test(q) && /min-height:\s*\d+px/.test(q));
+  assert.ok(gated.some(([, css]) => /position:\s*sticky/.test(inBlock(rulesOf(css), slot) || '')),
+    'no height-gated sticky rule for the box column');
+  // Nothing pins it without the height gate: a box taller than the viewport
+  // would strand its own bottom.
+  for (const [q, css] of mediaBlocks(CSS)) {
+    if (/min-height/.test(q)) continue;
+    assert.doesNotMatch(inBlock(rulesOf(css), slot) || '', /position:\s*sticky/, `ungated sticky in @media ${q}`);
+  }
+  assert.doesNotMatch(body(slot) || '', /position:\s*sticky/);
+});
+
+test('from 1280px the foot rides in the box column, under the box — the log takes column 1', () => {
+  const desk = blockRules('(min-width: 1280px)');
+  const has = '.result-screen:has(.tisch:not([hidden]))';
+  // No grid placement of its own: it is inside the slot, not a grid item.
+  assert.equal(inBlock(desk, `${has} > .result-foot`), null);
+  assert.match(inBlock(desk, `${has} .tisch-slot > .result-foot .result-foot__again`) || '', /flex:\s*1 1 100%/);
+  assert.match(inBlock(desk, `${has} > .session-log`), /grid-column:\s*1/);
+});
+
+test('from 720px „Gehört …" sits beside the title; the veto pill keeps a line under both', () => {
+  const wide = blockRules('(min-width: 720px)');
+  const main = inBlock(wide, '.result-screen .tafel .trow .trow__main') || '';
+  assert.match(main, /display:\s*grid/);
+  assert.match(main, /grid-template-columns:\s*minmax\(0, max-content\) minmax\(0, 1fr\)/);
+  assert.match(inBlock(wide, '.result-screen .tafel .trow .trow__main > :not(.trow__title):not(.trow__owners)') || '', /grid-column:\s*1 \/ -1/);
+  // …and below 720 the owners line stays under the title.
+  assert.doesNotMatch(body('.result-screen .tafel .trow .trow__main') || '', /display:\s*grid/);
 });

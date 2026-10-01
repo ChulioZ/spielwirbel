@@ -245,18 +245,27 @@ async function result(t, design) {
   return dom;
 }
 
-test('the Ocean result stands in three columns: the people, the sentence with the whale, the Tafel with its foot', async (t) => {
+// #1430: two columns, departing from O4.4's three on purpose (drawn with three
+// rows, measured at eight). The foot moves into the side column's DOM ahead of
+// the Tafel — DOM order is the visual order, so „Noch eine Session" comes
+// before the ranking in tab order too, which is intended.
+test('the Ocean result stands in two columns: the side (people, sentence, whale, foot), then the Tafel', async (t) => {
   const dom = await result(t, 'ocean');
   const screen = q(dom, '.result-screen');
   assert.ok(screen.classList.contains('result-screen--ocean'));
   assert.deepEqual([...screen.children].map((el) => el.className),
-    ['ocean-result__people', 'ocean-result__main', 'ocean-result__side']);
-  const main = q(dom, '.ocean-result__main');
-  assert.ok(main.querySelector('.page-head--result'));
-  assert.ok(main.querySelector('.tisch[data-state="done"]'), 'the played game is the whale\'s band');
+    ['ocean-result__side', 'ocean-result__tafel']);
   const side = q(dom, '.ocean-result__side');
-  assert.ok(side.firstElementChild.classList.contains('tafel'));
-  assert.ok(side.lastElementChild.classList.contains('result-foot'), 'the foot stays the last block');
+  assert.deepEqual([...side.children].map((el) => el.classList[0]),
+    ['ocean-result__people', 'page-head', 'tisch-slot', 'result-foot'],
+    'the people as a ring row, the sentence, the whale\'s band, the foot last');
+  assert.ok(side.querySelector('.tisch[data-state="done"]'), 'the played game is the whale\'s band');
+  const tafel = q(dom, '.ocean-result__tafel');
+  // The badge moment (its slot is always rendered, filled only when a mark was
+  // earned) opens this column; then the Tafel.
+  const cols = [...tafel.children].map((el) => el.classList[0]);
+  assert.deepEqual(cols.slice(0, 2), ['badge-moment', 'tafel']);
+  assert.equal(tafel.querySelector('.result-foot'), null, 'the foot is not under the Tafel any more');
   assert.ok(q(dom, '.ocean-result__people .result-people__person.is-winner'), 'the winner wears the crown');
   assert.equal(q(dom, '.result-title').textContent, '„Azul“ wurde gespielt. Ben hat gewonnen!');
 });
@@ -299,10 +308,57 @@ test('an Ocean row keeps its `…` on the first line; only a wide action drops',
   assert.ok(wide[1].includes('sub') && !wide[0].includes('sub'));
 });
 
+// #1430: where the row is wide it is ONE line — the distribution beside the
+// title (Klassisch's place, O4.4's) and a still-choosing row's action inline.
+// Revisits #1363's "under the row" for wide rows only; the bars stay last in
+// the DOM (the test above), only the grid area moves.
+const { mediaBlocks } = require('./support/css');
+const wideRules = () => mediaBlocks(SECTION)
+  .filter(([q]) => /^\(min-width:\s*720px\)$/.test(q.trim()))
+  .flatMap(([, css]) => rulesOf(css));
+const wideBody = (sel) => {
+  // Split the group on its top-level commas only: `:has(a, b)` holds one.
+  const members = (group) => group.split(/,(?![^(]*\))/).map((x) => x.trim());
+  const hit = wideRules().find(([s]) => members(s).includes(GATE + sel));
+  assert.ok(hit, `ocean.css has no ≥720px rule for ${sel}`);
+  return hit[1];
+};
+
+test('from 720px an Ocean row is one line, the distribution between the title and the pill — settled or choosing', () => {
+  for (const sel of ['.result-screen--ocean .tafel .trow', '.result-screen--ocean .tafel .trow:has(.play-btn, .trow__chip)']) {
+    const areas = declaredValue(wideBody(sel), 'grid-template-areas')
+      .split('"').filter((x) => x.trim()).map((x) => x.trim().split(/\s+/));
+    assert.equal(areas.length, 1, `${sel}: one line`);
+    assert.deepEqual(areas[0], ['rank', 'cover', 'main', 'bars', 'pill', 'sub']);
+    assert.equal(declaredValue(wideBody(sel), 'grid-template-columns').split(/\s+(?![^(]*\))/).length, 6);
+  }
+});
+
+test('from 720px „Gehört …" sits beside the title; the veto pill keeps a line under both', () => {
+  const main = wideBody('.result-screen--ocean .tafel .trow .trow__main');
+  assert.equal(declaredValue(main, 'display'), 'grid');
+  assert.equal(declaredValue(main, 'grid-template-columns'), 'minmax(0, max-content) minmax(0, 1fr)');
+  assert.equal(declaredValue(wideBody('.result-screen--ocean .tafel .trow .trow__main > :not(.trow__title):not(.trow__owners)'), 'grid-column'), '1 / -1');
+});
+
+test('the side column is pinned only where it fits the viewport: sticky behind a min-height gate, never without', () => {
+  const sel = GATE + '.result-screen--ocean .ocean-result__side';
+  const blocks = mediaBlocks(SECTION);
+  const gated = blocks.filter(([q]) => /min-width:\s*1280px/.test(q) && /min-height:\s*\d+px/.test(q));
+  assert.ok(gated.some(([, css]) => rulesOf(css).some(([s, b]) => s === sel && /position:\s*sticky/.test(b))),
+    'no height-gated sticky rule for the side column');
+  for (const [q, css] of blocks) {
+    if (/min-height/.test(q)) continue;
+    assert.ok(!rulesOf(css).some(([s, b]) => s === sel && /position:\s*sticky/.test(b)), `ungated sticky in @media ${q}`);
+  }
+  assert.ok(!RULES.some(([s, b]) => s === sel && /position:\s*sticky/.test(b) && !gated.some(([, css]) => css.includes(b))),
+    'no top-level sticky on the side column');
+});
+
 test('Klassisch keeps its one-column result', async (t) => {
   const dom = await result(t, null);
   assert.equal(q(dom, '.result-screen--ocean'), null);
-  assert.equal(q(dom, '.ocean-result__main'), null);
+  assert.equal(q(dom, '.ocean-result__side'), null);
   assert.equal(q(dom, '.result-foot'), null);
 });
 

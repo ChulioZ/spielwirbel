@@ -18,6 +18,8 @@
      .member-card__badges             the Tischkarte, earned only
        .member-card__badges-go        its chevron link to Pokale (#1386)
      .profile-card__badges            the Spielerkarte's account tier (#1389)
+     .badge-emblem (data-state="earned") a friend's mark in the feed (#1428):
+       .badge__mark alone, in a host that is NOT a button — see badgeEmblem()
 
    Everything is DERIVED on every render through achievements.js — nothing is
    stored, so a deleted session takes its marks (and their Chronik rows) with it.
@@ -173,6 +175,22 @@ function badgeTile(e, ctx, opts = {}) {
   btn.setAttribute('aria-label', badgeAria(e, ctx, opts.announceHolder ? opts.holder : null));
   btn.addEventListener('click', () => (opts.onActivate ? opts.onActivate() : openBadgeCard(btn, e, ctx, opts.holder)));
   return btn;
+}
+
+/* The EARNED mark as a picture (#1428): the friends' feed's image slot for a
+   `badge_earned` event, in all three feed renderers (feed-view.js). The
+   `.badge__mark` is the shared one, so every design's earned skin — Klassisch's
+   disc, Der Tisch's brass pin, Ocean's pearl — reaches it through the state
+   selector it already keys on, with the host added to that selector's list.
+
+   Not a `.badge`: that is a <button> with an edge, padding, hover and a tap
+   target, and a feed mark opens nothing (the card lives on the Spielerkarte).
+   Never a `--pct` (it would paint the progress ring) and never `data-fresh`
+   (the falling pin / rising bubble): a feed event has neither. `cls` names the
+   slot, which sizes the mark. Decorative: the line beside it names the mark. */
+function badgeEmblem(glyph, cls) {
+  return `<span class="badge-emblem${cls ? ` ${esc(cls)}` : ''}" data-state="earned" aria-hidden="true">`
+    + `<span class="badge__mark" aria-hidden="true"><i class="ti ${esc(glyph || 'ti-medal')}"></i></span></span>`;
 }
 
 let badgeCardSeq = 0;
