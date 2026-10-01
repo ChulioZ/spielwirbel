@@ -1603,6 +1603,9 @@ I18N.pt = {
   'design.scheme.dark': 'Escuro',
   'design.scheme.light': 'Claro',
   'design.pick.mine': 'O teu',
+  // Das Programmheft's Konto (#1376): the worn poster's label and the index.
+  'design.pick.active': 'Ativo',
+  'konto.index.label': 'Índice',
   'design.klassisch.name': 'Clássico',
   'design.klassisch.badge': 'Como antes',
   'design.klassisch.desc': 'O aspeto com que o Spielwirbel começou — claro, calmo, com o acento laranja.',

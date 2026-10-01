@@ -112,6 +112,7 @@ async function showAccount() {
     app.appendChild(h(`<h2 class="konto-section__h">${esc(t('konto.demo.title'))}</h2>`));
     app.appendChild(h(`<p class="muted">${esc(t('konto.demo.note'))}</p>`));
     if (kontoAsCards()) composeKontoCards();
+    else if (designIs('programmheft')) composeKontoProgramme();
     return;
   }
 
@@ -156,6 +157,7 @@ async function showAccount() {
   app.appendChild(h(`<h2 class="konto-section__h konto-section__h--danger">${esc(t('konto.delete.title'))}</h2>`));
   app.appendChild(buildDeleteSection(me));
   if (kontoAsCards()) composeKontoCards();
+  else if (designIs('programmheft')) composeKontoProgramme();
 }
 
 // Ocean (#1219) and Die Brücke (#1242, B5.4 — every section a plate) both

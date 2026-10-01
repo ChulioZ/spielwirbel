@@ -1684,6 +1684,9 @@ I18N.en = {
   'design.scheme.dark': 'Dark',
   'design.scheme.light': 'Light',
   'design.pick.mine': 'Yours',
+  // Das Programmheft's Konto (#1376): the worn poster's label and the index.
+  'design.pick.active': 'Active',
+  'konto.index.label': 'Contents',
   'design.klassisch.name': 'Classic',
   'design.klassisch.badge': 'As before',
   'design.klassisch.desc': 'The look Spielwirbel started with — light, calm, with the orange accent.',

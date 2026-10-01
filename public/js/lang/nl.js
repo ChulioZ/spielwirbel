@@ -1601,6 +1601,9 @@ I18N.nl = {
   'design.scheme.dark': 'Donker',
   'design.scheme.light': 'Licht',
   'design.pick.mine': 'Van jou',
+  // Das Programmheft's Konto (#1376): the worn poster's label and the index.
+  'design.pick.active': 'Actief',
+  'konto.index.label': 'Inhoud',
   'design.klassisch.name': 'Klassiek',
   'design.klassisch.badge': 'Zoals voorheen',
   'design.klassisch.desc': 'Het uiterlijk waarmee Spielwirbel begon — licht, rustig, met het oranje accent.',

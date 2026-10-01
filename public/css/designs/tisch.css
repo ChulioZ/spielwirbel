@@ -5300,7 +5300,11 @@
 /* 11px is SMALL text, so the tile sets its name in the poster's small-text
    ink rather than the display ink the 25px poster may use (the Tisch gold is
    only legal on felt from 24px — T1's A1 rule). */
-:root[data-design="tisch"] .design-row .design-tile__word { font-size: 11px; line-height: 1; text-align: center; overflow-wrap: normal; word-break: normal; }
+/* A name longer than the tile (nl „Het Programmaboekje", 101px of 11px type
+   in a 54px tile, #1376 — review R2-1 for Das Programmheft) hyphenates where
+   the browser can and breaks where it cannot; `normal` let it run off both
+   edges and clipped it to „grammabo". Every shorter name keeps its word whole. */
+:root[data-design="tisch"] .design-row .design-tile__word { font-size: 11px; line-height: 1; text-align: center; overflow-wrap: anywhere; hyphens: auto; word-break: normal; }
 :root[data-design="tisch"][data-scheme="dark"] .design-row .design-tile__word { color: var(--poster-sub, var(--tile-accent)); }
 :root[data-design="tisch"] .design-row__body { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
 :root[data-design="tisch"] .design-row__name {
