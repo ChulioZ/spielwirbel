@@ -2734,6 +2734,41 @@
     linear-gradient(var(--hairline), var(--hairline)) center / 1px 100% no-repeat;
 }
 
+/* ===== #1248 B10.5 — Dauerbewegung: der Radar-Sweep ===== */
+/* Sheet: docs/design/bruecke/Bruecke-B10-Motion.dc.html, B10.5 — one of the
+   design's two endless movements, and the first thing to cut: a cyan cone
+   sweeps the ignition's rings, 4s linear, round and round. It sits here, inside
+   the #1238 hub section, beside the panel it moves — the anchors around B10.1
+   to B10.4 were taken by their own blocks.
+
+   Only on the Missionskontrolle and only while the round is READY: the cone
+   exists when the ignition holds an enabled button. A round with nothing on
+   the shelf has its button locked, so it has no cone at all — B7's empty
+   state, the dashed ring standing still.
+
+   The cone is drawn outside the motion gate, because the sheet keeps it under
+   reduced motion as a still cone („der Sweep bleibt als statischer Kegel
+   stehen"); only the turn sits inside prefers-reduced-motion: no-preference.
+   Pure picture: a pseudo-element under the button, no pointer, nothing to
+   announce. The sheet's second endless movement, the „Signal-Puls" on the
+   lobby's notice, is not built (#1248's PR says why). */
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-mission__ignition:has(> .bruecke-mission__fire:not(:disabled))::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, var(--glow-accent), transparent 26%);
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-design="bruecke"][data-scheme="dark"] .bruecke-mission__ignition:has(> .bruecke-mission__fire:not(:disabled))::before {
+    animation: bruecke-sweep 4s linear infinite;
+  }
+  @keyframes bruecke-sweep {
+    to { rotate: 1turn; }
+  }
+}
+
 /* ---- The blocks around it: every hub card is a flat plate whose title is
    notation (B2.2/B3.1 draw „WIE WÄR'S MIT", „RUNDENPULS" small and spaced, with
    no kicker above them). The Kümmerliste keeps its wrench in the warning amber
