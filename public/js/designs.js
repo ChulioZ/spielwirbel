@@ -332,9 +332,9 @@ const DESIGN_REGISTRY = [
      person colour used as SMALL TEXT on a dark plate, which is where every
      contrast finding of the review lived (docs/design/pruefung-bruecke-2026-09-22.md).
 
-     `enabled: false` until its flip (#1249); the screens are the issues after
-     #1237. Outside production it is reachable through `?design=bruecke`
-     (design.js initDesign), exactly as Ocean and Der Tisch were built.
+     Live since its go-live (#1249): selectable in the chooser and on Konto for
+     every account. The screens are the issues after #1237; nobody is moved into
+     it, and the first-start chooser was deliberately not asked again for it.
 
      THE PAGE IS THE DARKEST STOP of B1's page gradient (#070b14): paintDesign()
      writes it inline as --page-bg, which is also what every ratio in this app is
@@ -405,7 +405,7 @@ const DESIGN_REGISTRY = [
       appleTouch: '/icons/bruecke/apple-touch-icon.png',
       og: '/icons/bruecke/og-image.png',
     },
-    enabled: false,
+    enabled: true,
   },
   /* Das Programmheft (#1371), from docs/design/programmheft/
      Programmheft-P1-Komponenten.dc.html (the one token source) and

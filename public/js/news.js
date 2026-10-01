@@ -47,6 +47,108 @@
 // AFTER, which is the exact unearned interruption this design exists to avoid.
 const NEWS = [
   /*
+   * #1249, Die Brücke goes live. A capability that did not exist: a fifth
+   * design to choose besides Der Tisch, Ocean, Das Programmheft and Klassisch.
+   * Dated after the Programmheft entry (which shipped the same day this was
+   * written) so every account that has read that one still gets the dot. Like
+   * Ocean's and the Programmheft's, it says where to find it — nobody is moved
+   * into it, and the first-start chooser is deliberately NOT asked again. It
+   * names the one renamed button („Mission starten") so a reader who switches
+   * still finds the hub's main action.
+   */
+  {
+    revision: '2026-10-02',
+    kind: 'new',
+    de: {
+      title: 'Die Brücke — ein Design wie ein Kommandostand',
+      body: 'Neben „Der Tisch", „Ocean", „Das Programmheft" und „Klassisch" gibt '
+        + 'es jetzt „Die Brücke": dunkler Grund, leuchtende Platten, Cyan und '
+        + 'Amber — die Runde auf der Kommandobrücke. Alles bleibt an derselben '
+        + 'Stelle — Regal, Chronik, Pokale; nur „Session wirbeln" heißt dort '
+        + '„Mission starten". Wählen kannst du es jederzeit über das '
+        + 'Paletten-Symbol oben oder im Konto. Das Design gilt nur für dich; alle '
+        + 'anderen in der Runde sehen weiter ihr eigenes.',
+    },
+    en: {
+      title: 'The Bridge — a design like a command deck',
+      body: 'Besides „The Table", „Ocean", „The Programme" and „Classic" there is '
+        + 'now „The Bridge": a dark ground, softly lit plates, cyan and amber — '
+        + 'your round on the command bridge. Everything stays where it was — '
+        + 'Shelf, History, Trophies; only „Start session" reads „Start mission" '
+        + 'there. Choose it any time with the palette icon at the top or in your '
+        + 'account. The design is only yours; everyone else in the round keeps '
+        + 'seeing their own.',
+    },
+    es: {
+      title: 'El puente: un diseño como una sala de mando',
+      body: 'Además de «La mesa», «Océano», «El Programa» y «Clásico» ahora está '
+        + '«El puente»: fondo oscuro, placas iluminadas, cian y ámbar; tu grupo en '
+        + 'el puente de mando. Todo sigue en su sitio: Estantería, Historial, '
+        + 'Trofeos; solo «Sortear sesión» se llama allí «Iniciar misión». Puedes '
+        + 'elegirlo cuando quieras con el icono de la paleta arriba o en tu '
+        + 'cuenta. El diseño es solo tuyo; los demás del grupo siguen viendo el '
+        + 'suyo.',
+    },
+    fr: {
+      title: 'La passerelle — un design comme un poste de commandement',
+      body: 'À côté de « La table », « Océan », « Le Programme » et « Classique », '
+        + 'il y a désormais « La passerelle » : un fond sombre, des plaques '
+        + 'éclairées, du cyan et de l\'ambre — ton groupe sur la passerelle de '
+        + 'commandement. Tout reste à sa place — Étagère, Historique, Trophées ; '
+        + 'seul « Démarrer une session » y devient « Lancer la mission ». Tu peux '
+        + 'le choisir quand tu veux avec l\'icône de palette en haut ou dans ton '
+        + 'compte. Le design n\'est que le tien ; les autres du groupe gardent le '
+        + 'leur.',
+    },
+    it: {
+      title: 'La plancia: un design come una sala comando',
+      body: 'Oltre a «Il tavolo», «Oceano», «Il Programma» e «Classico» ora c\'è '
+        + '«La plancia»: fondo scuro, pannelli illuminati, ciano e ambra; il tuo '
+        + 'gruppo sulla plancia di comando. Tutto resta al suo posto: Scaffale, '
+        + 'Cronologia, Trofei; solo «Avvia una sessione» lì diventa «Avvia '
+        + 'missione». Puoi sceglierlo quando vuoi con l\'icona della tavolozza in '
+        + 'alto o nel tuo account. Il design è solo tuo; gli altri del gruppo '
+        + 'continuano a vedere il proprio.',
+    },
+    nl: {
+      title: 'De brug — een ontwerp als een commandopost',
+      body: 'Naast „De tafel", „Oceaan", „Het Programmaboekje" en „Klassiek" is er '
+        + 'nu „De brug": een donkere grond, verlichte panelen, cyaan en amber — '
+        + 'jullie groep op de commandobrug. Alles blijft op dezelfde plek — Kast, '
+        + 'Geschiedenis, Trofeeën; alleen „Sessie starten" heet daar „Missie '
+        + 'starten". Kies het wanneer je wilt via het paletpictogram bovenaan of '
+        + 'in je account. Het ontwerp is alleen van jou; de anderen in de groep '
+        + 'blijven hun eigen zien.',
+    },
+    pt: {
+      title: 'A ponte — um design como uma sala de comando',
+      body: 'Além de «A mesa», «Oceano», «O Programa» e «Clássico», agora há «A '
+        + 'ponte»: fundo escuro, painéis iluminados, ciano e âmbar — o seu grupo '
+        + 'na ponte de comando. Tudo continua no mesmo lugar: Estante, Histórico, '
+        + 'Troféus; só «Iniciar sessão» passa a chamar-se «Iniciar missão». '
+        + 'Escolha-o quando quiser pelo ícone da paleta no topo ou na sua conta. O '
+        + 'design é só seu; os outros do grupo continuam a ver o deles.',
+    },
+    fi: {
+      title: 'Komentosilta — ulkoasu kuin komentokeskus',
+      body: '”Pöydän”, ”Valtameren”, ”Käsiohjelman” ja ”Klassisen” rinnalla on nyt '
+        + '”Komentosilta”: tumma tausta, valaistut paneelit, syaani ja meripihka — '
+        + 'porukkasi komentosillalla. Kaikki on yhä samassa paikassa — Hylly, '
+        + 'Historia, Palkinnot; vain ”Aloita sessio” on siellä ”Käynnistä '
+        + 'tehtävä”. Voit valita sen milloin tahansa ylhäällä olevasta '
+        + 'palettikuvakkeesta tai tililläsi. Ulkoasu on vain sinun; muut '
+        + 'porukassa näkevät edelleen omansa.',
+    },
+    ko: {
+      title: '함교 — 지휘실 같은 디자인',
+      body: '„테이블", „바다", „프로그램북", „클래식"에 이어 이제 „함교"가 있습니다. 어두운 '
+        + '바탕, 빛나는 패널, 청록과 호박색으로 함교 위의 우리 모임을 그립니다. 선반, 기록, '
+        + '트로피는 모두 그 자리에 있고, „세션 시작"만 그곳에서 „미션 시작"이 됩니다. 언제든 '
+        + '위쪽의 팔레트 아이콘이나 계정에서 고를 수 있어요. 디자인은 나에게만 적용되고, 모임의 '
+        + '다른 사람들은 계속 각자의 디자인을 봅니다.',
+    },
+  },
+  /*
    * #1383, Das Programmheft goes live. A capability that did not exist: a
    * fourth design to choose besides Der Tisch, Ocean and Klassisch. Dated after
    * the Abzeichen entry so every account that has read that one still gets the
