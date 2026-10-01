@@ -4027,3 +4027,71 @@
 :root[data-design="bruecke"][data-scheme="dark"] .add-search__held { color: var(--good); }
 :root[data-design="bruecke"][data-scheme="dark"] .add-search__way { background: transparent; border-color: var(--brand); color: var(--brand); box-shadow: none; }
 :root[data-design="bruecke"][data-scheme="dark"] .add-search__way:hover { background: var(--surface-raised); }
+
+/* ===== #1248 B10.4 — Entschlüsseln ===== */
+/* Sheet: docs/design/bruecke/Bruecke-B10-Motion.dc.html, B10.4 — „der eine
+   große Moment", and the one movement anybody waits for. The hatching slides
+   off the headline to the right in 14 steps over 1200ms — steps(), so it reads
+   as switching rather than as a cross-fade — and then the rows of the Tafel
+   drive in one after another, 60ms apart.
+
+   Gate: „Auflösen" alone. views-session.js marks the head `data-decrypt` and
+   gives every revealed row `--print-i` (capped at 9, shared with Das
+   Programmheft's P10.4); `.is-race` is the app's own reveal mark on the row.
+   A cold load, a Chronik visit and a re-render carry neither, so they arrive
+   decrypted.
+
+   1. The headline. ::after lays the hatch over the whole title block —
+      opaque, so nothing of the result can be read through it — and is clipped
+      from the left in 14 steps until nothing of it is left. It RESTS fully
+      clipped: a clip-path clips hit-testing too, so the resting overlay
+      neither paints nor takes a pointer, and the keyframe has no end frame.
+      The sheet's „VERSCHLÜSSELT" label is not printed: it would be a
+      user-facing word in a stylesheet, outside the locales.
+   2. The rows. Each row drives up 8px and fades in, 260ms on B10.1's curve,
+      from 1200ms + 60ms × its index: any Tafel is in by 1200 + 9 × 60 + 260
+      = 2000ms. A row waits hidden through its delay (backwards fill only), and
+      rests where the static Tafel has it. The app's bar race (`trow-fill`,
+      styles.css) is left on its own clock: the short bars finish under the
+      hatch and the winner's is still filling as its row arrives.
+
+   Inside prefers-reduced-motion: no-preference; reduced motion shows the
+   decrypted result at once. */
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-design="bruecke"][data-scheme="dark"] .result-screen--bruecke .page-head--result[data-decrypt] .result-title { position: relative; }
+  :root[data-design="bruecke"][data-scheme="dark"] .result-screen--bruecke .page-head--result[data-decrypt] .result-title::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(45deg, var(--sunken-soft) 0 8px, var(--surface) 8px 16px);
+    clip-path: inset(0 0 0 100%);
+    pointer-events: none;
+    animation: bruecke-decrypt 1200ms steps(14, end) backwards;
+  }
+  @keyframes bruecke-decrypt {
+    from { clip-path: inset(0); }
+  }
+  :root[data-design="bruecke"][data-scheme="dark"] .result-screen--bruecke .tafel .trow.is-race {
+    animation: bruecke-row-in 260ms cubic-bezier(.2, .8, .2, 1) calc(1200ms + var(--print-i, 0) * 60ms) backwards;
+  }
+  /* „Spielen" lifts the row it hands to the table (#1058, styles.css), on the
+     same element. The rule above outranks `.trow.is-lift`, so the lift is
+     listed BESIDE the drive-in here: an animation is matched by name when the
+     list changes, so adding and removing `is-lift` neither replays the
+     drive-in (which would hide the row for 1.2s) nor loses the lift. */
+  :root[data-design="bruecke"][data-scheme="dark"] .result-screen--bruecke .tafel .trow.is-race.is-lift {
+    animation:
+      bruecke-row-in 260ms cubic-bezier(.2, .8, .2, 1) calc(1200ms + var(--print-i, 0) * 60ms) backwards,
+      trow-lift 0.35s var(--ease-out) both;
+  }
+  @keyframes bruecke-row-in {
+    from { opacity: 0; transform: translateY(8px); }
+  }
+}
+/* The app's 3.6s `tafel-gold` tint of the gold GROUP fills `both`, so after
+   every reveal it left Die Brücke's group painted --gold-soft with a
+   --gold-edge rule, where a cold load of the same result shows the plate's
+   ground and the amber rule — measured in the pane (#1248). B10 moves the
+   headline and the rows and nothing else; stood down, as Der Tisch and Das
+   Programmheft do. */
+:root[data-design="bruecke"][data-scheme="dark"] .result-screen--bruecke .tafel-top.is-reveal { animation: none; }

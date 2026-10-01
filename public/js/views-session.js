@@ -1634,6 +1634,10 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     // (`--print-i` below). Only the reveal — never a cold load or a Chronik visit.
     if (reveal) head.setAttribute('data-print', '');
   }
+  // Die Brücke's B10.4 „Entschlüsseln" (#1248): the reveal decrypts the
+  // headline, then the Tafel drives in row by row (`--print-i` below). Only the
+  // reveal — never a cold load or a Chronik visit.
+  if (brueckeLook && reveal) head.setAttribute('data-decrypt', '');
 
   // „Teilen": hand the group chat what this screen says, as plain text (#526).
   // Hidden outright where neither API exists — which is a real case, not a
@@ -1986,8 +1990,9 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     // together, the short ones land first and the winner's completes last.
     const raceVar = reveal && r.count ? `--dur:${(0.5 + r.shown * 0.32).toFixed(2)}s;` : '';
     // Das Programmheft prints the revealed Tafel top first (P10.4); capped at
-    // the tenth row so any Tafel is printed inside the sheet's 1.8s.
-    const printVar = reveal && phLook ? `--print-i:${Math.min(i, 9)};` : '';
+    // the tenth row so any Tafel is printed inside the sheet's 1.8s. Die
+    // Brücke's decrypted Tafel drives in on the same index (B10.4, #1248).
+    const printVar = reveal && (phLook || brueckeLook) ? `--print-i:${Math.min(i, 9)};` : '';
     const rankClass = r.place && r.place <= 3 ? ` trow__rank--${r.place}` : '';
     const row = tischLook ? composedTrow({
       row: r, hasVotes, bars, rankClass, imgStyle, fallback,
