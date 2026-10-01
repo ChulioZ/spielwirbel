@@ -23,9 +23,11 @@ test('the feed event types are the four the client can phrase', () => {
 test('badgeFeedFields accepts an account tier and nothing else', () => {
   assert.deepEqual(badgeFeedFields({ title: 'accountWins', tier: 50 }), { title: 'accountWins', tier: 50 });
   assert.deepEqual(badgeFeedFields({ title: 'accountYears', tier: 3 }), { title: 'accountYears', tier: 3 });
+  // A tier the longer ladders added (#1463) is accepted with no edit here.
+  assert.deepEqual(badgeFeedFields({ title: 'accountWins', tier: 25 }), { title: 'accountWins', tier: 25 });
   for (const bad of [
     null, {}, { title: 'firstWin', tier: 1 }, { title: 'sessions', tier: 10 },
-    { title: 'accountWins', tier: 25 }, { title: 'accountWins', tier: 10.0001 }, { title: '__proto__', tier: 1 },
+    { title: 'accountWins', tier: 30 }, { title: 'accountWins', tier: 10.0001 }, { title: '__proto__', tier: 1 },
   ]) {
     assert.equal(badgeFeedFields(bad), null, JSON.stringify(bad));
   }

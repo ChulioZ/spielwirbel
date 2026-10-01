@@ -161,6 +161,26 @@ test('Siege 10 crosses on a winner-chip re-save and still posts, once', async ()
   assert.equal((await badgeRows(lea)).length, 1);
 });
 
+test('the longer ladders (#1463): crossing Sessions 250 and Siege 25 posts each once', async () => {
+  const ivo = await makeAccount('bf-ivo@example.com');
+  const { round, seat, session } = await roundAt(ivo, { past: 249, wonPast: 24 });
+  await sess(ivo, round.id, `/${session.id}/finish`, { winnerIds: [seat.id] });
+  assert.deepEqual((await badgeRows(ivo)).map((e) => [e.title, e.tier]).sort(),
+    [['accountSessions', 250], ['accountWins', 25]]);
+});
+
+test('an account already past a new tier posts nothing for it — the diff is not retroactive (#1463)', async () => {
+  // 300 sessions and 30 wins: Sessions 250 and Siege 25 are held on both sides
+  // of this finish, which crosses no tier of its own.
+  const ole = await makeAccount('bf-ole@example.com');
+  const { round, seat, session } = await roundAt(ole, { past: 300, wonPast: 30 });
+  await sess(ole, round.id, `/${session.id}/finish`, { winnerIds: [seat.id] });
+  assert.deepEqual(await badgeRows(ole), []);
+  // The control: the same finish posted the play, so the route ran.
+  const played = (await repo.listFeedEvents([ole.user.id], 50)).filter((e) => e.type === 'session_played');
+  assert.equal(played.length, 1);
+});
+
 test('an account that hides its record from friends posts no badge', async () => {
   const kai = await makeAccount('bf-kai@example.com');
   await request(app).patch('/api/account/me').set(auth(kai.token)).send({ statsVisible: false });
