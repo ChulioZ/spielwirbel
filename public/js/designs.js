@@ -413,9 +413,9 @@ const DESIGN_REGISTRY = [
      right-angled newspaper: paper ground, a black box as a component, a
      vermilion masthead, hierarchy from type rather than from colour or shadow.
 
-     `enabled: false` until its go-live issue (#1383); the screens are
-     #1372-#1382. Outside production it is selectable like any registered
-     design, so it can be built and reviewed on dev-temp-data.
+     Live since its go-live (#1383): selectable in the chooser and on Konto for
+     every account. The screens are #1372-#1382; nobody is moved into it, and
+     the first-start chooser was deliberately not asked again for it.
 
      THE ACCENT IS P1's `accent-ink`, not the vermilion. --brand is the app's
      action colour AND its link-text colour (.link-btn sits on the page), and
@@ -488,7 +488,7 @@ const DESIGN_REGISTRY = [
     },
     // P8.4's share card (recap-card-programmheft.js, #1381).
     card: 'programmheft',
-    enabled: false,
+    enabled: true,
   },
 ];
 

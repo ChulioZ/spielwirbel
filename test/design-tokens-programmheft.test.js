@@ -43,11 +43,11 @@ const decl = (name) => {
 };
 const v = (name) => token(name, PH);
 
-test('the registry row exists, is gated off, and every locale names it', () => {
+test('the registry row exists, is live, and every locale names it', () => {
   assert.ok(PH, 'no programmheft row in public/js/designs.js');
-  assert.equal(PH.enabled, false, 'the flip is #1383, not this layer');
-  assert.equal(isSelectableDesign('programmheft', { production: true }), false,
-    'a disabled design must not be selectable in production');
+  assert.equal(PH.enabled, true, 'live since its go-live (#1383)');
+  assert.equal(isSelectableDesign('programmheft', { production: true }), true,
+    'production offers it in the chooser and on Konto');
   assert.equal(PH.stylesheet, '/css/designs/programmheft.css');
   assert.equal(PH.page, '#fbfaf6', 'P1.1 „Papier"');
   // --brand is TEXT (every .link-btn), so the registry carries P1's accent-ink,
