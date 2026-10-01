@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="design_doc_mode" content="canvas">
+  <link rel="stylesheet" href="../../../public/fonts/tabler-icons.css">
+  <link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Alegreya+Sans:wght@400;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #dcdfd4; font-family: 'Alegreya Sans', sans-serif; color: #1b2a18; }
+    a { color: #356427; text-decoration: none; }
+    a:hover { color: #284d1d; }
+  </style>
+</helmet>
+<div style="display: flex; flex-direction: column; gap: 56px; padding: 48px; width: max-content; background: #dcdfd4;">
+  <section data-screen-label="F8 Kopf" style="width: 1440px; box-sizing: border-box; padding: 30px 36px; background: #f9fbf4; border-radius: 22px; box-shadow: 0 6px 18px rgba(40,60,30,.10); display: flex; flex-direction: column; gap: 10px;">
+    <div style="font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #356427;">Brief 8 von 15 · §3E, §3F, §3I · gerechnet mit derselben Funktion wie F1</div>
+    <h1 style="margin: 0; font-family: 'Young Serif'; font-weight: 400; font-size: 40px; line-height: 1.05;">F8 · Farben: Personen, Marker, Rampe, Rückblickkarte</h1>
+    <p style="margin: 0; font-size: 17px; line-height: 1.5; max-width: 1200px;">Personenfarben erscheinen in Forest nur als Ring um einen hellen Kern. Text steht deshalb nie auf ihnen, und alle acht bleiben unverändert. Die Marker sind acht Pflanzen. Sie hängen als Bändchen an der Lichtung und tragen nie Text. Die Rampe läuft von Schatten zu Sonne und wird unten unter drei Farbfehlsichtigkeiten und in Graustufen simuliert. Die Rückblickkarte kommt ohne SVG und ohne Text auf dem Bild aus.</p>
+  </section>
+
+  <section data-screen-label="F8.1 Personenfarben" style="width: 1440px; box-sizing: border-box; padding: 30px 36px; background: #f9fbf4; border-radius: 22px; box-shadow: 0 6px 18px rgba(40,60,30,.10); display: flex; flex-direction: column; gap: 16px;">
+    <div style="display: flex; align-items: baseline; gap: 16px;"><h2 style="margin: 0; font-family: 'Young Serif'; font-weight: 400; font-size: 30px;">1 · Die acht Personenfarben auf jeder Forest-Fläche</h2><span style="font-size: 15px; font-weight: 700; color: #4b5c45;">Ring gegen Fläche, Soll 3:1 (Grafik) · Initiale immer Tinte auf #f9fbf4</span></div>
+    <div style="display: grid; grid-template-columns: 170px repeat(8, minmax(0, 1fr)); gap: 0; font-size: 14px;">
+      <span></span>
+      <sc-for list="{{ people }}" as="p" hint-placeholder-count="8"><span style="padding: 8px; font-weight: 800; text-align: center;">{{ p.hex }}</span></sc-for>
+      <sc-for list="{{ grounds }}" as="g" hint-placeholder-count="5">
+        <span style="display: flex; flex-direction: column; justify-content: center; padding: 10px 8px; border-top: 1px solid #d5ddca;"><strong>{{ g.name }}</strong><span style="color: #4b5c45;">{{ g.hex }}</span></span>
+        <sc-for list="{{ g.cells }}" as="c" hint-placeholder-count="8">
+          <span style="display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 4px; background: {{ c.bg }}; border-top: 1px solid #d5ddca;">
+            <span style="width: 44px; height: 44px; border-radius: 50%; background: #f9fbf4; border: 5px solid {{ c.hex }}; box-sizing: border-box; display: grid; place-items: center; font-weight: 800; font-size: 14px; color: #1b2a18;">{{ c.ini }}</span>
+            <span style="font-weight: 800; color: {{ c.ink }}; padding: 0 6px; border-radius: 6px; background: {{ c.labelBg }};">{{ c.v }}</span>
+          </span>
+        </sc-for>
+      </sc-for>
+    </div>
+    <div style="font-size: 15px; line-height: 1.5; color: #1b2a18;">Auf der Dämmerung (verdeckte Karten, Übergabe, Glas) liegen alle acht Ringe unter 3:1. Dort trägt der helle Kern selbst die Grenze: #f9fbf4 gegen #24331f ist {{ cKernDusk }}:1. Ein Ring ist dort Schmuck und keine Bedeutung, denn Name und Initiale stehen immer dabei. <strong>Keine Farbe muss angepasst werden.</strong></div>
+  </section>
+
+  <section data-screen-label="F8.2 Marker" style="width: 1440px; box-sizing: border-box; padding: 30px 36px; background: #f9fbf4; border-radius: 22px; box-shadow: 0 6px 18px rgba(40,60,30,.10); display: flex; flex-direction: column; gap: 18px;">
+    <div style="display: flex; align-items: baseline; gap: 16px;"><h2 style="margin: 0; font-family: 'Young Serif'; font-weight: 400; font-size: 30px;">2 · Acht Rundenmarker</h2><span style="font-size: 15px; font-weight: 700; color: #4b5c45;">Bändchen an der Lichtung · Standard: Tanne · neue Runden bekommen die nächste freie Farbe der Reihe</span></div>
+    <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px;">
+      <sc-for list="{{ markers }}" as="m" hint-placeholder-count="8">
+        <div style="display: flex; flex-direction: column; gap: 10px; padding: 14px; background: #ecf1e4; border-radius: 18px;">
+          <span style="display: flex; align-items: center; gap: 10px;"><span style="width: 18px; height: 44px; background: {{ m.hex }}; clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 82%, 0 100%);"></span><span style="display: flex; flex-direction: column;"><span style="font-family: 'Young Serif'; font-weight: 400; font-size: 21px;">{{ m.name }}</span><span style="font-size: 13px; font-weight: 700; color: #4b5c45;">{{ m.hex }} · {{ m.note }}</span></span></span>
+          <span style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px;">
+            <span style="position: relative; height: 70px; border-radius: 12px; background: radial-gradient(60% 60% at 50% 50%, #f9fbf4, #d6e4c6); overflow: hidden;"><span style="position: absolute; left: 10px; top: 0; width: 12px; height: 30px; background: {{ m.hex }}; clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 82%, 0 100%);"></span><span style="position: absolute; left: 0; right: 0; bottom: 4px; text-align: center; font-size: 12px; font-weight: 800; color: #1b2a18;">Start</span></span>
+            <span style="display: flex; align-items: center; gap: 6px; height: 70px; padding: 0 8px; border-radius: 12px; background: #f9fbf4;"><span style="width: 8px; height: 30px; flex: none; background: {{ m.hex }}; clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 82%, 0 100%);"></span><span style="font-size: 12px; font-weight: 800;">Hub</span></span>
+            <span style="display: flex; flex-direction: column; justify-content: space-between; height: 70px; padding: 6px 8px; border-radius: 12px; background: #f9fbf4; box-shadow: inset 0 3px 0 {{ m.hex }};"><span style="font-size: 12px; font-weight: 800;">Session</span><span style="font-size: 12px; font-weight: 700; color: #4b5c45;">Kante oben</span></span>
+          </span>
+          <span style="font-size: 13px; font-weight: 700; color: #1b2a18;">Band gg. Karte {{ m.vSurface }} · gg. Lichtung {{ m.vPage }} · {{ m.inkOn }}</span>
+        </div>
+      </sc-for>
+    </div>
+    <div style="font-size: 15px; line-height: 1.5;">Auf der Rückblickkarte (F8.4) hängt das Band an der Bildkante, der Rundenname steht daneben auf der Karte. Steht doch einmal Text auf dem Marker, etwa in einer künftigen Liste, gilt die Spalte „darauf“: die bessere der beiden Schriftfarben mit gerechnetem Wert. Ginster bekommt dort Tinte. Für Text unter 24 px reicht keine Schrift auf Ginster, er bleibt deshalb Fläche.</div>
+  </section>
+
+  <section data-screen-label="F8.3 Score-Rampe" style="width: 1440px; box-sizing: border-box; padding: 30px 36px; background: #f9fbf4; border-radius: 22px; box-shadow: 0 6px 18px rgba(40,60,30,.10); display: flex; flex-direction: column; gap: 16px;">
+    <div style="display: flex; align-items: baseline; gap: 16px;"><h2 style="margin: 0; font-family: 'Young Serif'; font-weight: 400; font-size: 30px;">3 · Score-Rampe unter Farbfehlsichtigkeit</h2><span style="font-size: 15px; font-weight: 700; color: #4b5c45;">Simulation nach Machado 2009 (volle Ausprägung), im Browser aus den Hexwerten gerechnet</span></div>
+    <div style="display: grid; grid-template-columns: 190px repeat(6, minmax(0, 1fr)); gap: 10px; align-items: center;">
+      <span></span><sc-for list="{{ rampHead }}" as="h" hint-placeholder-count="6"><span style="font-size: 14px; font-weight: 800; text-align: center;">{{ h }}</span></sc-for>
+      <sc-for list="{{ sims }}" as="s" hint-placeholder-count="5">
+        <span style="font-weight: 800; font-size: 15px;">{{ s.name }}</span>
+        <sc-for list="{{ s.stops }}" as="c" hint-placeholder-count="6"><span style="display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 0; border-radius: 14px 4px 14px 4px; background: {{ c.bg }}; color: {{ c.ink }}; box-shadow: inset 0 0 0 1px rgba(27,42,24,.18);"><i class="ti {{ c.face }}" style="font-size: 26px;"></i><span style="font-weight: 800; font-size: 16px;">{{ c.n }}</span><span style="font-size: 12px; font-weight: 700;">L {{ c.L }}</span></span></sc-for>
+      </sc-for>
+    </div>
+    <div style="font-size: 15px; line-height: 1.5;">In jeder Zeile steigt die Leuchtdichte L stetig von Tollkirsche (Veto) über 1 bis 5. Die Reihenfolge bleibt deshalb unter allen drei Simulationen und in Graustufen lesbar. Die Gesichter und die Ziffer tragen die Bedeutung, die Farbe stützt sie nur (§1, §3F). Die Ziffernfarbe bleibt in jeder Zeile dieselbe: hell auf Veto, 1 und 2, Tinte auf 3 bis 5.</div>
+  </section>
+
+  <section data-screen-label="F8.4 Rückblickkarte" style="width: 1440px; box-sizing: border-box; padding: 30px 36px; background: #f9fbf4; border-radius: 22px; box-shadow: 0 6px 18px rgba(40,60,30,.10); display: flex; flex-direction: column; gap: 18px;">
+    <div style="display: flex; align-items: baseline; gap: 16px;"><h2 style="margin: 0; font-family: 'Young Serif'; font-weight: 400; font-size: 30px;">4 · Rückblickkarte</h2><span style="font-size: 15px; font-weight: 700; color: #4b5c45;">540 × 675 gezeichnet, Export 1080 × 1350 (× 2) als PNG · kleinste Schrift 12 → 24 px · keine SVG-Muster</span></div>
+    <div style="display: flex; gap: 32px; align-items: flex-start;">
+      <div data-om-raster="true" style="width: 540px; height: 675px; flex: none; display: flex; flex-direction: column; border-radius: 22px; overflow: hidden; background: #f9fbf4; box-shadow: 0 18px 44px rgba(40,60,30,.18);">
+        <div style="position: relative; height: 340px; background: linear-gradient(180deg, #f3f6ec 0%, #e9f0df 64%, #c2dc86 64%, #9cc38a 100%); overflow: hidden;">
+          <sc-for list="{{ cardFlies }}" as="d" hint-placeholder-count="8"><span style="position: absolute; left: {{ d.x }}; top: {{ d.y }}; width: {{ d.s }}; height: {{ d.s }}; border-radius: 50%; background: #fff3a8; box-shadow: 0 0 12px 5px rgba(255,243,168,.85);"></span></sc-for>
+          <span style="position: absolute; left: 66%; bottom: 108px; width: 20px; height: 120px; margin-left: -10px; border-radius: 10px 10px 3px 3px; background: #5a3d24;"></span>
+          <span style="position: absolute; left: 66%; bottom: 190px; width: 140px; height: 112px; margin-left: -70px; border-radius: 50%; background: #4f7d40;"></span>
+          <span style="position: absolute; left: 66%; bottom: 220px; width: 100px; height: 88px; margin-left: -92px; border-radius: 50%; background: #6b9a55;"></span>
+          <span style="position: absolute; left: 66%; bottom: 226px; width: 98px; height: 84px; margin-left: -10px; border-radius: 50%; background: #446b39;"></span>
+          <span style="position: absolute; left: 34px; bottom: 38px; width: 190px; height: 142px; border-radius: 10px 3px 10px 3px; background: {{ cover }}; box-shadow: 0 14px 26px rgba(40,60,30,.35); transform: rotate(-4deg);"></span>
+          <span style="position: absolute; left: 32px; top: 0; width: 22px; height: 56px; background: #356427; clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 82%, 0 100%);"></span>
+        </div>
+        <div style="flex: 1; display: flex; flex-direction: column; gap: 8px; padding: 22px 30px 20px;">
+          <span style="font-size: 13px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #356427;">Donnerstagsrunde · 14. September 2026</span>
+          <span style="font-family: 'Young Serif'; font-weight: 400; font-size: 32px; line-height: 1.08;">„Nordlichter“ wurde gespielt.</span>
+          <span style="display: flex; align-items: center; gap: 10px;"><i class="ti ti-crown" style="font-size: 24px; color: #a86d14;"></i><span style="font-weight: 800; font-size: 21px; color: #85570f;">Jonas hat gewonnen!</span><span style="margin-left: auto; padding: 4px 12px; border-radius: 14px 4px 14px 4px; background: #f1e58c; font-weight: 800; font-size: 22px; box-shadow: inset 0 0 0 1px rgba(27,42,24,.18);">4,8</span></span>
+          <span style="display: flex; flex-direction: column; gap: 4px; margin-top: 6px;"><sc-for list="{{ cardRows }}" as="r" hint-placeholder-count="3"><span style="display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 700; padding: 4px 0; border-top: 1px solid #d5ddca;"><span style="font-family: 'Young Serif'; font-weight: 400; width: 18px;">{{ r.p }}</span><span style="flex: 1;">{{ r.t }}</span><span style="padding: 1px 8px; border-radius: 10px 3px 10px 3px; background: {{ r.pill }}; color: {{ r.ink }}; font-weight: 800;">{{ r.s }}</span></span></sc-for></span>
+          <span style="margin-top: auto; display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: #4b5c45;"><span style="width: 24px; height: 24px; border-radius: 50%; background: #356427; color: #f4f8ec; display: grid; place-items: center;"><i class="ti ti-tornado" style="font-size: 13px;"></i></span><span style="font-family: 'Young Serif'; font-weight: 400; font-size: 19px; color: #1b2a18;">Spielwirbel</span>Session Nr. 23 · 4 dabei</span>
+        </div>
+      </div>
+      <div data-om-raster="true" style="width: 540px; height: 675px; flex: none; display: flex; flex-direction: column; border-radius: 22px; overflow: hidden; background: #f9fbf4; box-shadow: 0 18px 44px rgba(40,60,30,.18);">
+        <div style="position: relative; height: 300px; background: #24331f; overflow: hidden;">
+          <sc-for list="{{ recapFlies }}" as="d" hint-placeholder-count="14"><span style="position: absolute; left: {{ d.x }}; top: {{ d.y }}; width: {{ d.s }}; height: {{ d.s }}; border-radius: 50%; background: #fff3a8; box-shadow: 0 0 12px 5px rgba(255,243,168,.6);"></span></sc-for>
+          <span style="position: absolute; left: 0; right: 0; bottom: 0; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 12px;"><sc-for list="{{ recapTrees }}" as="t" hint-placeholder-count="8"><span style="width: {{ t.w }}; height: {{ t.h }}; border-radius: 50% 50% 6px 6px / 60% 60% 6px 6px; background: #1b2a18;"></span></sc-for></span>
+          <span style="position: absolute; left: 32px; top: 0; width: 22px; height: 56px; background: #356427; clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 82%, 0 100%);"></span>
+        </div>
+        <div style="flex: 1; display: flex; flex-direction: column; gap: 10px; padding: 22px 30px 20px;">
+          <span style="font-size: 13px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #356427;">Donnerstagsrunde · Rückblick</span>
+          <span style="font-family: 'Young Serif'; font-weight: 400; font-size: 34px; line-height: 1.05;">Sommer 2026</span>
+          <span style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px;"><sc-for list="{{ recapFacts }}" as="f" hint-placeholder-count="3"><span style="display: flex; flex-direction: column; padding: 10px 12px; border-radius: 14px; background: #ecf1e4;"><span style="font-family: 'Young Serif'; font-weight: 400; font-size: 24px; line-height: 1.1;">{{ f.v }}</span><span style="font-size: 13px; font-weight: 700; color: #4b5c45;">{{ f.k }}</span></span></sc-for></span>
+          <span style="font-size: 16px; font-weight: 700;">Meistgespielt: Nordlichter</span>
+          <span style="font-size: 16px; font-weight: 700;">Siegesserie: Jonas, 3 Siege in Folge</span>
+          <span style="margin-top: auto; display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: #4b5c45;"><span style="width: 24px; height: 24px; border-radius: 50%; background: #356427; color: #f4f8ec; display: grid; place-items: center;"><i class="ti ti-tornado" style="font-size: 13px;"></i></span><span style="font-family: 'Young Serif'; font-weight: 400; font-size: 19px; color: #1b2a18;">Spielwirbel</span>Juni bis August</span>
+        </div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 10px; font-size: 15px; line-height: 1.5;">
+        <div><strong>Ergebnis-Karte:</strong> oben das Siegerbild aus F10.4 im Endzustand, das Cover ohne Text, das Markerband an der Bildkante. Unten auf deckender Karte stehen Runde, Datum, Schlagzeile, Sieger in Gold-Tinte ({{ cGoldInk }}:1), Score und die Tafel.</div>
+        <div><strong>Rückblick-Karte</strong> (Sheet 12 in F15a): Dämmerung mit Glühwürmchen, eins je Session. Darunter die Fakten auf der Karte. Das ist der einzige Ort, an dem Glühwürmchen zählen.</div>
+        <div><strong>Technik:</strong> nur Verläufe, runde Ecken und clip-path, kein SVG, kein <code>pattern</code>. Damit bleibt das Canvas in WebKit sauber. Schriften sind vor dem Export geladen.</div>
+        <div><strong>Kontrast:</strong> Tinte auf der Karte {{ cInk }}:1 · weich {{ cSoft }}:1 · Kicker in Laubgrün {{ cAccent }}:1 · Score-Ziffer auf Stufe 5 {{ cScore }}:1.</div>
+        <div><strong>Ohne Prosa:</strong> nur die strukturierten Fakten. Ein Spielbericht kommt später als Overlay.</div>
+      </div>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const lin = (v) => { v /= 255; return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+    const unlin = (v) => { v = Math.max(0, Math.min(1, v)); return Math.round((v <= 0.0031308 ? v * 12.92 : 1.055 * Math.pow(v, 1 / 2.4) - 0.055) * 255); };
+    const rgb = (h) => [1, 3, 5].map((i) => parseInt(h.substr(i, 2), 16));
+    const hex = (a) => '#' + a.map((v) => v.toString(16).padStart(2, '0')).join('');
+    const lum = (h) => { const c = rgb(h).map(lin); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; };
+    const crN = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+    const cr = (a, b) => (Math.floor(crN(a, b) * 10) / 10).toFixed(1).replace('.', ',');
+    const I = '#1b2a18', S = '#4b5c45', SF = '#f9fbf4', OA = '#f4f8ec', DG = '#a3392b';
+    const PEOPLE = ['#c6522c', '#198663', '#726bc7', '#a66815', '#c34d74', '#2f6f9e', '#54821d', '#993556'];
+    const pIni = ['MA', 'JO', 'LE', 'TI', 'AY', 'BE', 'CH', 'DI'];
+    const people = PEOPLE.map((h) => ({ hex: h }));
+    const G = [['Lichtung', '#ecf1e4'], ['Karte', SF], ['Moos', '#d6e4c6'], ['Siegerzeile', '#f3e6b0'], ['Dämmerung', '#24331f']];
+    const grounds = G.map(([name, g]) => ({ name, hex: g, cells: PEOPLE.map((h, i) => { const v = crN(h, g); const dark = g === '#24331f'; return { hex: h, ini: pIni[i], bg: g, v: cr(h, g) + ':1', ink: v >= 3 ? (dark ? OA : I) : (dark ? '#fff3a8' : DG), labelBg: 'transparent' }; }) }));
+    const MK = [['Tanne', '#356427', 'Standard'], ['Fingerhut', '#a2569b', 'Blüte'], ['Heidelbeere', '#3e4f8f', 'Beere'], ['Fliegenpilz', '#b3342a', 'Hut'], ['Kiefer', '#7a4a2a', 'Rinde'], ['Moorsee', '#2f6f78', 'Wasser'], ['Ginster', '#a07a12', 'Blüte'], ['Schlehe', '#5a3a6e', 'Beere']];
+    const markers = MK.map(([name, h, note]) => { const a = crN(OA, h), b = crN(I, h); const best = a >= b ? ['hell', OA, a] : ['Tinte', I, b]; return { name, hex: h, note, vSurface: cr(h, SF) + ':1', vPage: cr(h, '#ecf1e4') + ':1', inkOn: 'darauf ' + best[0] + ' ' + (Math.floor(best[2] * 10) / 10).toFixed(1).replace('.', ',') + ':1' + (best[2] >= 4.5 ? '' : ' (nur ≥ 24 px)') }; });
+    const stops = [['#5b1e3a', OA, 'Veto', 'ti-ban'], ['#3d5273', OA, '1', 'ti-mood-cry'], ['#3b6f6c', OA, '2', 'ti-mood-sad'], ['#9cc38a', I, '3', 'ti-mood-neutral'], ['#c2dc86', I, '4', 'ti-mood-smile'], ['#f1e58c', I, '5', 'ti-mood-crazy-happy']];
+    const M = {
+      Protanopie: [[0.152286, 1.052583, -0.204868], [0.114503, 0.786281, 0.099216], [-0.003882, -0.048116, 1.051998]],
+      Deuteranopie: [[0.367322, 0.860646, -0.227968], [0.280085, 0.672501, 0.047413], [-0.011820, 0.042940, 0.968881]],
+      Tritanopie: [[1.255528, -0.076749, -0.178779], [-0.078411, 0.930809, 0.147602], [0.004733, 0.691367, 0.303900]],
+    };
+    const sim = (h, m) => { const c = rgb(h).map(lin); return hex(m.map((r) => unlin(r[0] * c[0] + r[1] * c[1] + r[2] * c[2]))); };
+    const gray = (h) => { const v = unlin(lum(h)); return hex([v, v, v]); };
+    const mk = (name, f) => ({ name, stops: stops.map(([h, ink, n, face]) => { const s = f(h); return { bg: s, ink, n, face, L: lum(s).toFixed(2).replace('.', ',') }; }) });
+    const sims = [mk('Normal', (h) => h), mk('Protanopie', (h) => sim(h, M.Protanopie)), mk('Deuteranopie', (h) => sim(h, M.Deuteranopie)), mk('Tritanopie', (h) => sim(h, M.Tritanopie)), mk('Graustufen', gray)];
+    const rampHead = ['Veto', '1 · gar nicht', '2 · eher nicht', '3 · kann ich', '4 · gern', '5 · unbedingt'];
+    const cov = (h) => `linear-gradient(145deg, oklch(.6 .13 ${h}), oklch(.36 .12 ${h + 30}))`;
+    const cardFlies = [[14, 18, 5], [28, 8, 4], [46, 26, 6], [56, 10, 4], [82, 20, 5], [90, 40, 4], [38, 40, 3], [72, 6, 4]].map(([x, y, s]) => ({ x: x + '%', y: y + '%', s: s + 'px' }));
+    const ramp = [['#3d5273', OA], ['#3b6f6c', OA], ['#9cc38a', I], ['#c2dc86', I], ['#f1e58c', I]];
+    const st = (s) => ramp[Math.min(4, Math.max(0, Math.round(s) - 1))];
+    const cardRows = [['1', 'Nordlichter', 4.8], ['2', 'Kartographen des Nordens', 3.8], ['3', 'Rost & Regen', 2.9]].map(([p, t, s]) => ({ p, t, s: s.toFixed(1).replace('.', ','), pill: st(s)[0], ink: st(s)[1] }));
+    const recapFlies = Array.from({ length: 8 }, (_, i) => ({ x: (8 + i * 11) + '%', y: (12 + ((i * 29) % 46)) + '%', s: (4 + (i % 3)) + 'px' }));
+    const recapTrees = Array.from({ length: 8 }, (_, i) => ({ w: [44, 60, 52, 70, 48, 62, 56, 66][i] + 'px', h: [80, 110, 92, 130, 86, 120, 98, 112][i] + 'px' }));
+    const recapFacts = [['8', 'Sessions'], ['6', 'Spiele'], ['4', 'dabei']].map(([v, k]) => ({ v, k }));
+    return { people, grounds, cKernDusk: cr(SF, '#24331f'), markers, sims, rampHead, cover: cov(200), cardFlies, cardRows, recapFlies, recapTrees, recapFacts, cGoldInk: cr('#85570f', SF), cInk: cr(I, SF), cSoft: cr(S, SF), cAccent: cr('#356427', SF), cScore: cr(I, '#f1e58c') };
+  }
+}
+</script>
+</body>
+</html>

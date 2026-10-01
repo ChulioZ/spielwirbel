@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="design_doc_mode" content="canvas">
+  <link rel="stylesheet" href="../../../public/fonts/tabler-icons.css">
+  <link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Alegreya+Sans:wght@400;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #dcdfd4; font-family: 'Alegreya Sans', sans-serif; color: #1b2a18; }
+    a { color: #356427; text-decoration: none; }
+    a:hover { color: #284d1d; }
+  </style>
+</helmet>
+<div style="display: flex; flex-direction: column; gap: 56px; padding: 48px; width: max-content; background: #dcdfd4;">
+  <section data-screen-label="F5 Kopf" style="width: 1880px; box-sizing: border-box; padding: 30px 36px; background: #f9fbf4; border-radius: 22px; box-shadow: 0 6px 18px rgba(40,60,30,.10); display: flex; flex-direction: column; gap: 10px;">
+    <div style="font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #356427;">Brief 5 von 15 · Desktop 1440 + Telefon 390 · Tokens aus F1</div>
+    <h1 style="margin: 0; font-family: 'Young Serif'; font-weight: 400; font-size: 40px; line-height: 1.05;">F5 · Konto: Anmelden, Design, Auswahl</h1>
+    <p style="margin: 0; font-size: 17px; line-height: 1.5; max-width: 1200px;">Anmelden, Registrieren und Passkey (Desktop und Telefon), die Kontoseite mit dem Design-Wähler und das einmalige Auswahl-Sheet in Forest. Die sieben Plakate zeigen jedes Design durch sein Material. Der Name steht auf einem Band unter dem Bild, nie auf dem Bild. Die Plakatfarben sind Nicht-Tokens und in F1 deklariert. Abgemeldet zeigt der Kopf nur die Wortmarke und die Sprache, weil es dort weder Postfach noch Konto gibt.</p>
+  </section>
+  <div style="display: flex; gap: 40px; align-items: flex-start;">
+    <div data-screen-label="F5.1 Anmelden" style="display: flex; flex-direction: column; gap: 10px;">
+      <div style="font-size: 14px; font-weight: 700; color: #4b5c45;">F5.1 · Anmelden und Konto erstellen — Desktop</div>
+      <div style="position: relative; width: 1440px; height: 900px; overflow: hidden; box-shadow: 0 18px 44px rgba(40,60,30,.18); background-color: #ecf1e4; background-image: radial-gradient(640px 400px at 30% 40%, rgba(255,255,255,.6), transparent 70%), radial-gradient(640px 400px at 75% 60%, rgba(255,255,255,.5), transparent 70%); display: flex; flex-direction: column;">
+        <div style="display: flex; align-items: center; height: 60px; padding: 0 24px 0 28px; background: #f9fbf4; border-bottom: 1px solid #d5ddca;"><a href="#" style="display: inline-flex; align-items: center; gap: 10px; min-height: 44px; color: #1b2a18;"><span style="width: 34px; height: 34px; border-radius: 50%; background: #356427; color: #f4f8ec; display: grid; place-items: center;"><i class="ti ti-tornado" style="font-size: 18px;"></i></span><span style="font-family: 'Young Serif'; font-weight: 400; font-size: 21px;">Spielwirbel</span></a><a href="#" aria-label="Sprache: Deutsch" style="margin-left: auto; min-height: 44px; display: inline-flex; align-items: center; gap: 6px; padding: 0 12px; border-radius: 999px; font-weight: 700; font-size: 14px; color: #1b2a18;"><i class="ti ti-world" style="font-size: 18px;"></i>Deutsch<i class="ti ti-chevron-down" style="font-size: 13px;"></i></a></div>
+        <div style="flex: 1; display: grid; grid-template-columns: 460px 460px; gap: 40px; justify-content: center; align-content: center;">
+          <div style="display: flex; flex-direction: column; gap: 14px; padding: 30px 32px; background: #f9fbf4; border-radius: 22px; box-shadow: 0 18px 44px rgba(40,60,30,.18);">
+            <h1 style="margin: 0; font-family: 'Young Serif'; font-weight: 400; font-size: 32px; line-height: 1.05;">Willkommen zurück</h1>
+            <span style="font-size: 16px; color: #4b5c45;">Melde dich bei Spielwirbel an.</span>
+            <label style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 700;">E-Mail oder Benutzername<span style="display: flex; align-items: center; min-height: 44px; padding: 0 14px; background: #ffffff; border: 1.5px solid #6f7f66; border-radius: 12px; box-sizing: border-box;"><input value="marco@beispiel.de" style="border: none; background: none; font: inherit; font-size: 16px; font-weight: 400; color: #1b2a18; outline: none; width: 100%;"></span></label>
+            <label style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 700;">Passwort<span style="display: flex; align-items: center; min-height: 44px; padding: 0 14px; background: #ffffff; border: 1.5px solid #6f7f66; border-radius: 12px; box-sizing: border-box;"><input type="password" value="geheimes" style="border: none; background: none; font: inherit; font-size: 16px; color: #1b2a18; outline: none; width: 100%;"></span></label>
+            <a href="#" style="align-self: flex-start; min-height: 24px; font-size: 15px; font-weight: 800; color: #356427;">Passwort vergessen?</a>
+            <a href="#" style="min-height: 52px; display: flex; align-items: center; justify-content: center; border-radius: 22px 7px 22px 7px; background: #356427; color: #f4f8ec; font-weight: 800; font-size: 18px;">Anmelden</a>
+            <span style="display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 700; color: #4b5c45;"><span style="flex: 1; border-top: 1px solid #d5ddca;"></span>oder<span style="flex: 1; border-top: 1px solid #d5ddca;"></span></span>
+            <a href="#" style="min-height: 52px; display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: 14px 4px 14px 4px; background: #d6e4c6; border: 1.5px solid #6f7f66; box-sizing: border-box; color: #1b2a18; font-weight: 700; font-size: 17px;"><i class="ti ti-fingerprint" style="font-size: 20px;"></i>Mit Passkey anmelden</a>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 12px; padding: 30px 32px; background: #f9fbf4; border-radius: 22px; box-shadow: 0 6px 18px rgba(40,60,30,.10);">
+            <h2 style="margin: 0; font-family: 'Young Serif'; font-weight: 400; font-size: 32px; line-height: 1.05;">Konto erstellen</h2>
+            <span style="font-size: 16px; color: #4b5c45;">Starte deinen eigenen Spielwirbel.</span>
+            <label style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 700;">Benutzername<span style="display: flex; align-items: center; min-height: 44px; padding: 0 14px; background: #ffffff; border: 1.5px solid #6f7f66; border-radius: 12px; box-sizing: border-box;"><input value="" style="border: none; background: none; font: inherit; font-size: 16px; color: #1b2a18; outline: none; width: 100%;"></span><span style="font-size: 13px; font-weight: 400; color: #4b5c45;">3–20 Zeichen: Buchstaben, Ziffern, _ und -. Öffentlich sichtbar und später nicht änderbar.</span></label>
+            <label style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 700;">E-Mail<span style="display: flex; align-items: center; min-height: 44px; padding: 0 14px; background: #ffffff; border: 1.5px solid #6f7f66; border-radius: 12px; box-sizing: border-box;"><input value="" style="border: none; background: none; font: inherit; font-size: 16px; color: #1b2a18; outline: none; width: 100%;"></span></label>
+            <label style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 700;">Passwort<span style="display: flex; align-items: center; min-height: 44px; padding: 0 14px; background: #ffffff; border: 1.5px solid #6f7f66; border-radius: 12px; box-sizing: border-box;"><input type="password" value="" style="border: none; background: none; font: inherit; font-size: 16px; color: #1b2a18; outline: none; width: 100%;"></span><span style="font-size: 13px; font-weight: 400; color: #4b5c45;">Mindestens 8 Zeichen.</span></label>
+            <span style="font-size: 14px; color: #4b5c45; line-height: 1.45;">Mit der Registrierung akzeptierst du die <a href="#" style="color: #356427; font-weight: 800;">Nutzungsbedingungen</a>. Informationen zur Datenverarbeitung: <a href="#" style="color: #356427; font-weight: 800;">Datenschutzerklärung</a></span>
+            <a href="#" style="min-height: 52px; display: flex; align-items: center; justify-content: center; border-radius: 14px 4px 14px 4px; background: #d6e4c6; border: 1.5px solid #6f7f66; box-sizing: border-box; color: #1b2a18; font-weight: 800; font-size: 18px;">Registrieren</a>
+          </div>
+        </div>
+        <dc-import name="Forest-Fuss" hint-size="1440px,52px"></dc-import>
+      </div>
+    </div>
+    <div data-screen-label="F5.2 Anmelden Telefon" style="display: flex; flex-direction: column; gap: 10px; width: 390px;">
+      <div style="font-size: 14px; font-weight: 700; color: #4b5c45;">F5.2 · Anmelden — Telefon, Umschalter statt zwei Karten</div>
+      <div style="position: relative; width: 390px; height: 844px; overflow: hidden; border-radius: 28px; box-shadow: 0 18px 44px rgba(40,60,30,.18); background-color: #ecf1e4; background-image: radial-gradient(420px 300px at 30% 30%, rgba(255,255,255,.6), transparent 70%); display: flex; flex-direction: column;">
+        <div style="height: 40px; display: flex; align-items: center; justify-content: space-between; padding: 0 22px; font-weight: 800; font-size: 14px; background: #f9fbf4;"><span>9:41</span><span style="display: flex; gap: 6px; font-size: 16px;"><i class="ti ti-activity"></i><i class="ti ti-percentage"></i></span></div>
+        <div style="height: 52px; display: flex; align-items: center; padding: 0 6px 0 16px; background: #f9fbf4; border-bottom: 1px solid #d5ddca;"><span style="display: inline-flex; align-items: center; gap: 8px;"><span style="width: 30px; height: 30px; border-radius: 50%; background: #356427; color: #f4f8ec; display: grid; place-items: center;"><i class="ti ti-tornado" style="font-size: 16px;"></i></span><span style="font-family: 'Young Serif'; font-weight: 400; font-size: 19px;">Spielwirbel</span></span><a href="#" aria-label="Sprache: Deutsch" style="margin-left: auto; min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 3px; font-weight: 800; font-size: 13px; color: #1b2a18;"><i class="ti ti-world" style="font-size: 20px;"></i>DE</a></div>
+        <div style="display: flex; flex-direction: column; gap: 14px; padding: 24px 18px;">
+          <span role="tablist" style="display: flex; gap: 4px; padding: 4px; background: #d6e4c6; border-radius: 14px 4px 14px 4px;"><a href="#" role="tab" aria-selected="true" style="flex: 1; min-height: 44px; display: grid; place-items: center; border-radius: 12px 3px 12px 3px; background: #f9fbf4; color: #1b2a18; font-weight: 800; font-size: 15px; box-shadow: 0 2px 6px rgba(40,60,30,.18);">Anmelden</a><a href="#" role="tab" aria-selected="false" style="flex: 1; min-height: 44px; display: grid; place-items: center; border-radius: 12px 3px 12px 3px; color: #1b2a18; font-weight: 700; font-size: 15px;">Konto erstellen</a></span>
+          <h1 style="margin: 6px 0 0; font-family: 'Young Serif'; font-weight: 400; font-size: 28px; line-height: 1.05;">Willkommen zurück</h1>
+          <span style="font-size: 16px; color: #4b5c45;">Melde dich bei Spielwirbel an.</span>
+          <label style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 700;">E-Mail oder Benutzername<span style="display: flex; align-items: center; min-height: 48px; padding: 0 14px; background: #ffffff; border: 1.5px solid #6f7f66; border-radius: 12px; box-sizing: border-box;"><input value="" style="border: none; background: none; font: inherit; font-size: 16px; color: #1b2a18; outline: none; width: 100%;"></span></label>
+          <label style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 700;">Passwort<span style="display: flex; align-items: center; min-height: 48px; padding: 0 14px; background: #ffffff; border: 1.5px solid #6f7f66; border-radius: 12px; box-sizing: border-box;"><input type="password" value="" style="border: none; background: none; font: inherit; font-size: 16px; color: #1b2a18; outline: none; width: 100%;"></span></label>
+          <a href="#" style="align-self: flex-start; min-height: 32px; display: inline-flex; align-items: center; font-size: 15px; font-weight: 800; color: #356427;">Passwort vergessen?</a>
+          <a href="#" style="min-height: 56px; display: flex; align-items: center; justify-content: center; border-radius: 22px 7px 22px 7px; background: #356427; color: #f4f8ec; font-weight: 800; font-size: 18px;">Anmelden</a>
+          <a href="#" style="min-height: 52px; display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: 14px 4px 14px 4px; background: #d6e4c6; border: 1.5px solid #6f7f66; box-sizing: border-box; color: #1b2a18; font-weight: 700; font-size: 17px;"><i class="ti ti-fingerprint" style="font-size: 20px;"></i>Mit Passkey anmelden</a>
+        </div>
+        <div style="margin-top: auto;"><dc-import name="Forest-Fuss" phone="{{ true }}" hint-size="390px,90px"></dc-import></div>
+      </div>
+    </div>
+  </div>
+
+  <div data-screen-label="F5.3 Konto und Design" style="display: flex; flex-direction: column; gap: 10px;">
+    <div style="font-size: 14px; font-weight: 700; color: #4b5c45;">F5.3 · Kontoseite mit Design-Wähler — Forest aktiv</div>
+    <div style="position: relative; width: 1440px; overflow: hidden; box-shadow: 0 18px 44px rgba(40,60,30,.18); background-color: #ecf1e4;">
+      <dc-import name="Forest-Kopf" crumb="Konto" active="none" hint-size="1440px,60px"></dc-import>
+      <div style="display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 36px; padding: 28px 40px 40px; align-items: start;">
+        <nav aria-label="Konto" style="display: flex; flex-direction: column; gap: 4px; padding: 10px; background: #f9fbf4; border-radius: 18px; box-shadow: 0 6px 18px rgba(40,60,30,.10);">
+          <span style="font-family: 'Young Serif'; font-weight: 400; font-size: 26px; padding: 8px 10px 10px;">Konto</span>
+          <sc-for list="{{ accountNav }}" as="n" hint-placeholder-count="8"><a href="#" aria-current="{{ n.cur }}" style="min-height: 44px; display: flex; align-items: center; gap: 10px; padding: 0 12px; border-radius: 14px 4px 14px 4px; background: {{ n.bg }}; color: {{ n.ink }}; font-weight: 700; font-size: 15px;"><i class="ti {{ n.icon }}" style="font-size: 18px;"></i>{{ n.label }}</a></sc-for>
+          <a href="#" style="min-height: 44px; display: flex; align-items: center; gap: 10px; padding: 0 12px; margin-top: 6px; border-top: 1px solid #d5ddca; color: #1b2a18; font-weight: 700; font-size: 15px;"><i class="ti ti-logout" style="font-size: 18px;"></i>Abmelden</a>
+        </nav>
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <div style="display: flex; flex-direction: column; gap: 4px;"><h1 style="margin: 0; font-family: 'Young Serif'; font-weight: 400; font-size: 32px; line-height: 1.05;">Design</h1><span style="font-size: 16px; color: #4b5c45;">gilt für dein Konto, auf jedem Gerät, in jeder Runde</span></div>
+          <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px;">
+            <sc-for list="{{ posters }}" as="p" hint-placeholder-count="7">
+              <a href="#" aria-pressed="{{ p.pressed }}" style="display: flex; flex-direction: column; border-radius: 18px; overflow: hidden; background: #f9fbf4; box-shadow: {{ p.frame }}; color: #1b2a18;">
+                <span style="position: relative; display: block; height: 200px; background: {{ p.bg }};"><span style="position: absolute; left: 18px; top: 18px; width: 70px; height: 70px; border-radius: 50%; background: {{ p.a1 }};"></span><span style="position: absolute; right: 22px; bottom: 26px; width: 120px; height: 46px; border-radius: 14px 4px 14px 4px; background: {{ p.a2 }};"></span><span style="position: absolute; right: 40px; top: 40px; width: 22px; height: 22px; border-radius: 50%; background: {{ p.a3 }};"></span></span>
+                <span style="display: flex; flex-direction: column; gap: 2px; padding: 12px 14px 14px;"><span style="display: flex; align-items: center; gap: 8px;"><span style="font-family: 'Young Serif'; font-weight: 400; font-size: 21px;">{{ p.name }}</span><sc-if value="{{ p.active }}" hint-placeholder-val="{{ false }}"><span style="margin-left: auto; display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 12px 3px 12px 3px; background: #356427; color: #f4f8ec; font-size: 13px; font-weight: 800;"><i class="ti ti-check"></i>Aktiv</span></sc-if></span><span style="font-size: 14px; font-weight: 700; color: #4b5c45;">{{ p.line }}</span></span>
+              </a>
+            </sc-for>
+          </div>
+          <span style="font-size: 15px; color: #4b5c45; line-height: 1.5; max-width: 900px;">Aktiv = 3-px-Tintenrahmen plus Etikett „Aktiv“ und <code>aria-pressed</code>. Klassisch bleibt dauerhaft wählbar. Die Runden behalten ihre Farbmarker; jede Person sieht sie in ihrem eigenen Design (F8.2).</span>
+        </div>
+      </div>
+      <dc-import name="Forest-Fuss" hint-size="1440px,52px"></dc-import>
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 40px; align-items: flex-start;">
+    <div data-screen-label="F5.4 Auswahl-Sheet" style="display: flex; flex-direction: column; gap: 10px;">
+      <div style="font-size: 14px; font-weight: 700; color: #4b5c45;">F5.4 · Auswahl beim ersten Besuch — Desktop, als Sheet über dem Start</div>
+      <div style="position: relative; width: 1440px; height: 900px; overflow: hidden; box-shadow: 0 18px 44px rgba(40,60,30,.18); background: #ecf1e4;">
+        <dc-import name="Forest-Kopf" crumb="Der Wald · deine Lichtungen" active="none" hint-size="1440px,60px"></dc-import>
+        <div style="padding: 36px 60px; font-family: 'Young Serif'; font-weight: 400; font-size: 42px;">Willkommen zurück im Wald.</div>
+        <div style="position: absolute; inset: 0; background: rgba(27,42,24,.55);"></div>
+        <div role="dialog" aria-modal="true" aria-labelledby="f54t" style="position: absolute; left: 50%; top: 70px; transform: translateX(-50%); width: 1160px; display: flex; flex-direction: column; gap: 18px; padding: 30px 34px; background: #ffffff; border-radius: 24px; box-shadow: 0 18px 44px rgba(40,60,30,.18); box-sizing: border-box;">
+          <div style="display: flex; align-items: flex-start; gap: 20px;"><div style="display: flex; flex-direction: column; gap: 6px;"><span style="font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #356427;">Neu in Spielwirbel</span><h2 id="f54t" style="margin: 0; font-family: 'Young Serif'; font-weight: 400; font-size: 34px; line-height: 1.05;">Wähl dir ein Design.</h2><span style="font-size: 16px; color: #4b5c45; max-width: 760px; line-height: 1.45;">Alles liegt weiter an derselben Stelle — Regal, Chronik, Pokale, Session wirbeln. Es sieht nur anders aus. Du kannst jederzeit im Konto wechseln.</span></div><a href="#" aria-label="Schließen" style="margin-left: auto; width: 44px; height: 44px; flex: none; border-radius: 50%; display: grid; place-items: center; background: #d6e4c6; color: #1b2a18;"><i class="ti ti-x" style="font-size: 20px;"></i></a></div>
+          <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 14px;">
+            <sc-for list="{{ posters }}" as="p" hint-placeholder-count="7">
+              <a href="#" aria-pressed="{{ p.pressed }}" style="display: flex; flex-direction: column; border-radius: 16px; overflow: hidden; background: #f9fbf4; box-shadow: {{ p.frame }}; color: #1b2a18;">
+                <span style="position: relative; display: block; height: 230px; background: {{ p.bg }};"><span style="position: absolute; left: 14px; top: 16px; width: 56px; height: 56px; border-radius: 50%; background: {{ p.a1 }};"></span><span style="position: absolute; left: 14px; right: 14px; bottom: 20px; height: 54px; border-radius: 12px 4px 12px 4px; background: {{ p.a2 }};"></span><span style="position: absolute; right: 18px; top: 34px; width: 18px; height: 18px; border-radius: 50%; background: {{ p.a3 }};"></span></span>
+                <span style="display: flex; flex-direction: column; gap: 2px; padding: 10px 12px 12px; min-height: 86px; box-sizing: border-box;"><span style="font-family: 'Young Serif'; font-weight: 400; font-size: 19px; line-height: 1.1;">{{ p.name }}</span><span style="font-size: 13px; font-weight: 700; color: #4b5c45; line-height: 1.3;">{{ p.line }}</span><sc-if value="{{ p.active }}" hint-placeholder-val="{{ false }}"><span style="display: inline-flex; align-items: center; gap: 4px; margin-top: 4px; font-size: 13px; font-weight: 800; color: #356427;"><i class="ti ti-check"></i>Ausgewählt</span></sc-if></span>
+              </a>
+            </sc-for>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px;"><span style="font-size: 14px; color: #4b5c45;">Neue Designs kommen dazu. Deine Wahl bleibt, bis du sie änderst.</span><a href="#" style="margin-left: auto; min-height: 48px; display: inline-flex; align-items: center; padding: 0 18px; border-radius: 14px 4px 14px 4px; color: #356427; font-weight: 800; font-size: 16px;">Später entscheiden</a><a href="#" style="min-height: 52px; display: inline-flex; align-items: center; padding: 0 26px; border-radius: 22px 7px 22px 7px; background: #356427; color: #f4f8ec; font-weight: 800; font-size: 18px;">Forest übernehmen</a></div>
+        </div>
+      </div>
+    </div>
+    <div data-screen-label="F5.5 Auswahl-Sheet Telefon" style="display: flex; flex-direction: column; gap: 10px; width: 390px;">
+      <div style="font-size: 14px; font-weight: 700; color: #4b5c45;">F5.5 · Auswahl-Sheet — Telefon, von unten, zwei Spalten</div>
+      <div style="position: relative; width: 390px; height: 844px; overflow: hidden; border-radius: 28px; box-shadow: 0 18px 44px rgba(40,60,30,.18); background: #ecf1e4;">
+        <dc-import name="Forest-Telefonkopf" hint-size="390px,92px"></dc-import>
+        <div style="position: absolute; inset: 0; background: rgba(27,42,24,.55);"></div>
+        <div role="dialog" aria-modal="true" style="position: absolute; left: 0; right: 0; bottom: 0; top: 70px; display: flex; flex-direction: column; gap: 12px; padding: 10px 16px 18px; background: #ffffff; border-radius: 24px 24px 0 0; box-shadow: 0 18px 44px rgba(40,60,30,.18);">
+          <span style="align-self: center; width: 44px; height: 5px; border-radius: 3px; background: #6f7f66;"></span>
+          <div style="display: flex; align-items: flex-start; gap: 10px;"><div style="display: flex; flex-direction: column; gap: 6px;"><span style="font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #356427;">Neu in Spielwirbel</span><span style="font-family: 'Young Serif'; font-weight: 400; font-size: 26px; line-height: 1.05;">Wähl dir ein Design.</span></div><a href="#" aria-label="Schließen" style="margin-left: auto; width: 44px; height: 44px; flex: none; border-radius: 50%; display: grid; place-items: center; background: #d6e4c6; color: #1b2a18;"><i class="ti ti-x" style="font-size: 20px;"></i></a></div>
+          <span style="font-size: 14px; color: #4b5c45; line-height: 1.4;">Alles liegt weiter an derselben Stelle — es sieht nur anders aus.</span>
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; overflow: hidden;">
+            <sc-for list="{{ posters }}" as="p" hint-placeholder-count="7">
+              <a href="#" aria-pressed="{{ p.pressed }}" style="display: flex; flex-direction: column; border-radius: 14px; overflow: hidden; background: #f9fbf4; box-shadow: {{ p.frame }}; color: #1b2a18;">
+                <span style="position: relative; display: block; height: 72px; background: {{ p.bg }};"><span style="position: absolute; left: 10px; top: 10px; width: 30px; height: 30px; border-radius: 50%; background: {{ p.a1 }};"></span><span style="position: absolute; right: 10px; bottom: 10px; width: 70px; height: 22px; border-radius: 10px 3px 10px 3px; background: {{ p.a2 }};"></span></span>
+                <span style="display: flex; align-items: center; gap: 4px; padding: 8px 10px; min-height: 44px; box-sizing: border-box;"><span style="font-family: 'Young Serif'; font-weight: 400; font-size: 19px; line-height: 1.1;">{{ p.name }}</span><sc-if value="{{ p.active }}" hint-placeholder-val="{{ false }}"><i class="ti ti-check" style="margin-left: auto; color: #356427; font-size: 18px;"></i></sc-if></span>
+              </a>
+            </sc-for>
+          </div>
+          <div style="margin-top: auto; display: flex; flex-direction: column; gap: 8px;"><a href="#" style="min-height: 52px; display: flex; align-items: center; justify-content: center; border-radius: 22px 7px 22px 7px; background: #356427; color: #f4f8ec; font-weight: 800; font-size: 18px;">Forest übernehmen</a><a href="#" style="min-height: 44px; display: flex; align-items: center; justify-content: center; color: #356427; font-weight: 800; font-size: 16px;">Später entscheiden</a></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const posters = [
+      ['Der Tisch', 'Walnuss, Filz, Messing', '#3b2a12', '#f0cf86', '#2f6b4d', '#b98a55'],
+      ['Das Programmheft', 'Papier, Zinnober, große Ziffern', '#fbfaf6', '#e8451c', '#141414', '#e8451c'],
+      ['Die Brücke', 'Nachtblau, Cyan, Instrumente', '#070b14', '#35e0ff', '#141d30', '#ffb020'],
+      ['Der Run', 'Dunkel, Neon, Tempo', '#120c1c', '#ff3fb4', '#2a1f3d', '#9dff4a'],
+      ['Ocean', 'Hell, Blau, der Wal', '#e4f1f5', '#0e6690', '#a9c9d8', '#0e6690'],
+      ['Forest', 'Hell, Laub, Glühwürmchen', '#24331f', '#fff3a8', '#356427', '#fff3a8'],
+      ['Klassisch', 'Creme und Orange, wie bisher', '#fff4e4', '#e8791c', '#f3d2a8', '#6b3f12'],
+    ].map(([name, line, bg, a1, a2, a3]) => {
+      const active = name === 'Forest';
+      return { name, line, bg, a1, a2, a3, active, pressed: active ? 'true' : 'false', frame: active ? '0 0 0 3px #1b2a18' : '0 0 0 1px #d5ddca, 0 6px 18px rgba(40,60,30,.10)' };
+    });
+    const accountNav = [['ti-user', 'Profil', false], ['ti-mail', 'E-Mail und Passwort', false], ['ti-fingerprint', 'Passkeys', false], ['ti-world', 'Sprache', false], ['ti-palette', 'Design', true], ['ti-message', 'Benachrichtigungen', false], ['ti-download', 'Daten exportieren', false], ['ti-trash', 'Konto löschen', false]]
+      .map(([icon, label, on]) => ({ icon, label, cur: on ? 'page' : 'false', bg: on ? '#356427' : 'transparent', ink: on ? '#f4f8ec' : '#1b2a18' }));
+    return { posters, accountNav };
+  }
+}
+</script>
+</body>
+</html>

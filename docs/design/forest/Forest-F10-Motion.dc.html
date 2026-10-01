@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="design_doc_mode" content="canvas">
+  <link rel="stylesheet" href="../../../public/fonts/tabler-icons.css">
+  <link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Alegreya+Sans:wght@400;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #dcdfd4; font-family: 'Alegreya Sans', sans-serif; color: #1b2a18; }
+    a { color: #356427; text-decoration: none; }
+    a:hover { color: #284d1d; }
+    @keyframes fLeafUp { from { transform: translate(0, 0) rotate(0deg) scale(.3); opacity: 0; } 60% { opacity: 1; } to { transform: translate(var(--tx), var(--ty)) rotate(var(--r)) scale(1); opacity: 1; } }
+    @keyframes fDrop { from { transform: translateY(-170px) rotate(calc(var(--r) * -2)); opacity: 0; } 70% { transform: translateY(6px) rotate(var(--r)); opacity: 1; } to { transform: translateY(0) rotate(var(--r)); opacity: 1; } }
+    @keyframes fGlow { from { transform: scale(.2); opacity: 0; } 70% { transform: scale(1.15); opacity: 1; } to { transform: scale(1); opacity: 1; } }
+    @keyframes fLift { from { transform: translateY(0); } to { transform: translateY(-6px); } }
+    @keyframes fLight { from { opacity: 1; } to { opacity: 0; } }
+    @keyframes fGrow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+    @keyframes fPop { from { transform: scale(0); } 80% { transform: scale(1.06); } to { transform: scale(1); } }
+    @keyframes fRise { 0% { transform: translateY(0); opacity: .5; } 50% { transform: translateY(-46px); opacity: 1; } 100% { transform: translateY(0); opacity: 1; } }
+  </style>
+</helmet>
+<div style="display: flex; flex-direction: column; gap: 40px; padding: 48px; width: max-content; background: #dcdfd4;">
+  <section data-screen-label="F10 Kopf" style="width: 1440px; box-sizing: border-box; padding: 30px 36px; background: #f9fbf4; border-radius: 22px; box-shadow: 0 6px 18px rgba(40,60,30,.10); display: flex; gap: 32px; align-items: flex-start;">
+    <div style="display: flex; flex-direction: column; gap: 10px; flex: 1;">
+      <div style="font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #356427;">Brief 10 von 15 · §3H · abspielbar</div>
+      <h1 style="margin: 0; font-family: 'Young Serif'; font-weight: 400; font-size: 40px; line-height: 1.05;">F10 · Vier Rituale</h1>
+      <p style="margin: 0; font-size: 17px; line-height: 1.5;">Start, Stumpf, Stimme, Aufdecken. Jede Bewegung ist kurz und blockiert nichts: Der nächste Knopf ist während der ganzen Animation bedienbar. Jede hat einen statischen Endzustand. Er ist die Fassung für <code>prefers-reduced-motion</code> und das, was nach der Animation stehen bleibt. Kein Text bewegt sich, nur Blätter, Licht und der Baum.</p>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 10px; width: 330px;">
+      <a href="#" role="switch" aria-checked="{{ reducedAria }}" onClick="{{ toggleReduced }}" style="display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 0 14px; border-radius: 14px 4px 14px 4px; background: #d6e4c6; color: #1b2a18; font-weight: 800; font-size: 16px;"><span style="width: 44px; height: 26px; border-radius: 999px; background: {{ swBg }}; display: flex; justify-content: {{ swJ }}; padding: 3px; box-sizing: border-box;"><span style="width: 20px; height: 20px; border-radius: 50%; background: #f9fbf4;"></span></span>Reduzierte Bewegung</a>
+      <a href="#" onClick="{{ playAll }}" style="display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; border-radius: 22px 7px 22px 7px; background: #356427; color: #f4f8ec; font-weight: 800; font-size: 16px;"><i class="ti ti-player-play"></i>Alle abspielen</a>
+      <span style="font-size: 14px; color: #4b5c45;">{{ reducedNote }}</span>
+    </div>
+  </section>
+  <div style="display: grid; grid-template-columns: repeat(2, 700px); gap: 40px;">
+    <sc-for list="{{ rituals }}" as="r" hint-placeholder-count="4">
+      <section data-screen-label="{{ r.label }}" style="box-sizing: border-box; padding: 24px 26px; background: #f9fbf4; border-radius: 22px; box-shadow: 0 6px 18px rgba(40,60,30,.10); display: flex; flex-direction: column; gap: 14px;">
+        <div style="display: flex; align-items: baseline; gap: 12px;"><h2 style="margin: 0; font-family: 'Young Serif'; font-weight: 400; font-size: 28px;">{{ r.title }}</h2><span style="font-size: 14px; font-weight: 700; color: #4b5c45;">{{ r.dur }}</span></div>
+        <div style="position: relative; height: 380px; border-radius: 18px; overflow: hidden; background: {{ r.bg }};">{{ r.stage }}</div>
+        <span style="display: flex; gap: 8px;"><a href="#" onClick="{{ r.play }}" style="min-height: 44px; display: inline-flex; align-items: center; gap: 6px; padding: 0 16px; border-radius: 14px 4px 14px 4px; background: #356427; color: #f4f8ec; font-weight: 800; font-size: 15px;"><i class="ti ti-player-play"></i>Abspielen</a><a href="#" onClick="{{ r.end }}" style="min-height: 44px; display: inline-flex; align-items: center; gap: 6px; padding: 0 16px; border-radius: 14px 4px 14px 4px; background: #d6e4c6; border: 1.5px solid #6f7f66; box-sizing: border-box; color: #1b2a18; font-weight: 700; font-size: 15px;"><i class="ti ti-player-track-next"></i>Endzustand</a></span>
+        <div style="display: flex; flex-direction: column;"><sc-for list="{{ r.steps }}" as="s" hint-placeholder-count="4"><div style="display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 12px; padding: 7px 0; border-top: 1px solid #d5ddca; font-size: 14px; line-height: 1.4;"><strong>{{ s.t }}</strong><span>{{ s.v }}</span></div></sc-for></div>
+        <span style="font-size: 14px; line-height: 1.45;"><strong>Endzustand / reduziert:</strong> {{ r.endText }}</span>
+      </section>
+    </sc-for>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;reduced&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Bewegung&quot;}}">
+class Component extends DCLogic {
+  state = { run: [1, 1, 1, 1], reducedLocal: false };
+  renderVals() {
+    const h = React.createElement;
+    const sysReduce = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const reduced = this.state.reducedLocal || !!this.props.reduced || sysReduce;
+    const run = this.state.run;
+    const anim = (i, a) => (!reduced && run[i] > 0 ? a : 'none');
+    const cov = (hue) => `linear-gradient(145deg, oklch(.6 .13 ${hue}), oklch(.36 .12 ${hue + 30}))`;
+    const stump = (size, extra) => h('div', { style: { position: 'absolute', left: '50%', top: '50%', width: size, height: size, marginLeft: -size / 2, marginTop: -size / 2, borderRadius: '50%', border: '14px solid #5a3d24', boxSizing: 'border-box', boxShadow: '0 0 0 5px #8a6240, 0 18px 28px rgba(40,60,30,.25), inset 0 0 0 3px #b8905f', background: 'repeating-radial-gradient(circle at 48% 52%, #dcbf92 0 7px, #c9a06f 7px 9px)', overflow: 'hidden' } }, extra);
+    const btn = h('div', { key: 'b', style: { position: 'absolute', left: '50%', top: '50%', width: 130, height: 130, margin: '-65px 0 0 -65px', borderRadius: '50%', background: '#356427', color: '#f4f8ec', display: 'grid', placeItems: 'center', textAlign: 'center', fontWeight: 800, fontSize: 17, lineHeight: 1.05, zIndex: 2 } }, h('span', null, h('i', { className: 'ti ti-tornado', style: { fontSize: 30, display: 'block' } }), 'Session', h('br'), 'wirbeln'));
+    // 1 · Start
+    const ups = [[-210, -110, -20], [-150, -150, 12], [150, -140, -8], [210, -90, 18], [-220, 40, 10], [220, 50, -14], [-140, 130, -6], [150, 130, 8]];
+    const stage1 = h('div', { key: 'k1-' + run[0] + reduced, style: { position: 'absolute', inset: 0 } },
+      stump(220, null), btn,
+      ups.map(([tx, ty, r], i) => h('span', { key: i, style: { position: 'absolute', left: '50%', top: '50%', width: 34, height: 34, margin: '-17px 0 0 -17px', borderRadius: '0 100% 0 100%', background: ['#356427', '#4f7d40', '#6b9a55', '#7fae66'][i % 4], '--tx': tx + 'px', '--ty': ty + 'px', '--r': r * 4 + 'deg', transform: `translate(${tx}px, ${ty}px) rotate(${r * 4}deg)`, animation: anim(0, `fLeafUp 900ms cubic-bezier(.2,.7,.2,1) ${i * 40}ms both`) } })));
+    // 2 · Stumpf
+    const pos = [[30, 50, -12], [118, 30, 8], [200, 60, -5], [50, 128, 6], [136, 118, -10], [214, 140, 12], [44, 204, 9], [128, 196, -7], [206, 214, 4]];
+    const hues = [200, 160, 150, 30, 250, 20, 300, 120, 280];
+    const stage2 = h('div', { key: 'k2-' + run[1] + reduced, style: { position: 'absolute', inset: 0 } },
+      stump(320, pos.map(([x, y, r], i) => h('span', { key: i, style: { position: 'absolute', left: x, top: y, width: 62, height: 48, borderRadius: '8px 3px 8px 3px', background: cov(hues[i]), boxShadow: '0 5px 10px rgba(40,60,30,.35)', '--r': r + 'deg', transform: `rotate(${r}deg)`, animation: anim(1, `fDrop 520ms cubic-bezier(.3,.8,.3,1) ${i * 80}ms both`) } }))),
+      h('span', { style: { position: 'absolute', left: '50%', bottom: 26, transform: 'translateX(-50%)', padding: '6px 14px', borderRadius: 999, background: '#24331f', color: '#f4f8ec', fontWeight: 800, fontSize: 15, whiteSpace: 'nowrap', zIndex: 2 } }, h('span', { style: { fontSize: 22 } }, '9'), ' Spiele auf dem Stumpf'));
+    // 3 · Stimme
+    const ramp = [['#3d5273', '#f4f8ec'], ['#3b6f6c', '#f4f8ec'], ['#9cc38a', '#1b2a18'], ['#c2dc86', '#1b2a18'], ['#f1e58c', '#1b2a18']];
+    const icons = ['ti-mood-cry', 'ti-mood-sad', 'ti-mood-neutral', 'ti-mood-smile', 'ti-mood-crazy-happy'];
+    const stage3 = h('div', { key: 'k3-' + run[2] + reduced, style: { position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 22 } },
+      icons.map((ic, i) => { const sel = i === 3; return h('span', { key: i, style: { position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, transform: sel ? 'translateY(-6px)' : 'none', animation: sel ? anim(2, 'fLift 300ms ease-out 200ms both') : 'none' } },
+        sel ? h('span', { style: { position: 'absolute', left: -14, top: -14, width: 116, height: 116, borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,243,168,.95) 0 46%, rgba(255,243,168,0) 70%)', animation: anim(2, 'fGlow 420ms ease-out 120ms both') } }) : null,
+        h('span', { style: { position: 'relative', width: 88, height: 88, borderRadius: '50%', display: 'grid', placeItems: 'center', background: sel ? ramp[i][0] : '#ffffff', color: sel ? ramp[i][1] : '#1b2a18', border: sel ? '3px solid #1b2a18' : '1.5px solid #6f7f66', boxSizing: 'border-box', fontSize: 46 } }, h('i', { className: 'ti ' + ic })),
+        h('span', { style: { position: 'relative', fontWeight: 800, fontSize: 16 } }, String(i + 1))); }));
+    // 4 · Aufdecken
+    const cards = [[60, 90, -4, 200], [200, 70, 3, 150], [340, 96, -2, 220]];
+    const flies = [[14, 30], [26, 14], [44, 24], [58, 10], [72, 20], [86, 34], [36, 40], [64, 38]];
+    const stage4 = h('div', { key: 'k4-' + run[3] + reduced, style: { position: 'absolute', inset: 0 } },
+      cards.map(([x, y, r, hue], i) => h('span', { key: 'c' + i, style: { position: 'absolute', left: x, top: y, width: 120, height: 90, borderRadius: '10px 3px 10px 3px', background: cov(hue), transform: `rotate(${r}deg)`, boxShadow: '0 8px 16px rgba(40,60,30,.3)', overflow: 'hidden' } },
+        h('span', { style: { position: 'absolute', inset: 0, background: '#24331f', opacity: 0, animation: anim(3, `fLight 320ms ease-out ${i * 350}ms both`) } }))),
+      h('span', { style: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 110, background: 'linear-gradient(180deg, #c2dc86, #9cc38a)' } }),
+      h('span', { style: { position: 'absolute', left: 560, bottom: 100, width: 22, height: 150, marginLeft: -11, borderRadius: '11px 11px 3px 3px', background: '#5a3d24', transformOrigin: 'bottom', animation: anim(3, 'fGrow 600ms cubic-bezier(.2,.7,.2,1) 1100ms both') } }),
+      [[560, 210, 150, 120, -75, '#4f7d40'], [560, 240, 110, 96, -100, '#6b9a55'], [560, 246, 108, 92, -8, '#446b39'], [560, 290, 80, 66, -40, '#7fae66']].map(([x, b, w, hh, ml, c], i) => h('span', { key: 't' + i, style: { position: 'absolute', left: x, bottom: b, width: w, height: hh, marginLeft: ml, borderRadius: '50%', background: c, animation: anim(3, `fPop 380ms ease-out ${1500 + i * 90}ms both`) } })),
+      flies.map(([x, y], i) => h('span', { key: 'f' + i, style: { position: 'absolute', left: (x + 20) + '%', top: (y + 10) + '%', width: 6, height: 6, borderRadius: '50%', background: '#fff3a8', boxShadow: '0 0 12px 5px rgba(255,243,168,.85)', animation: anim(3, `fRise 1600ms ease-in-out ${1800 + i * 120}ms 2 both`) } })));
+    const play = (i) => (e) => { e && e.preventDefault(); this.setState((s) => { const r = [...s.run]; r[i] = (r[i] || 0) + 1; return { run: r }; }); };
+    const end = (i) => (e) => { e && e.preventDefault(); this.setState((s) => { const r = [...s.run]; r[i] = 0; return { run: r }; }); };
+    const rituals = [
+      { label: 'F10.1 Start', title: '1 · Start — Session wirbeln', dur: '≈ 1,2 s · Hub', bg: 'radial-gradient(60% 60% at 50% 50%, #f9fbf4, #e9f0df)', stage: stage1, steps: [{ t: '0–200 ms', v: 'Der Knopf gibt nach (scale .96), Fokusring bleibt.' }, { t: '0–1 180 ms', v: 'Acht Blätter wirbeln aus dem Stumpf und legen sich im Kreis, je 40 ms versetzt.' }, { t: 'danach', v: 'Wechsel auf Neue Session; die Blätter gehen in den Stumpf von F10.2 über.' }], endText: 'Blätter liegen ruhig um den Stumpf, Knopf steht. Unter reduzierter Bewegung erscheint direkt Neue Session.' },
+      { label: 'F10.2 Stumpf', title: '2 · Der Stumpf füllt sich', dur: '≈ 1,2 s · Neue Session, bei jeder Platzänderung', bg: 'radial-gradient(60% 60% at 50% 50%, #f9fbf4, #e9f0df)', stage: stage2, steps: [{ t: '0–520 ms', v: 'Jedes Spiel, das neu passt, fällt als Blatt auf den Stumpf und federt 6 px nach.' }, { t: 'je 80 ms', v: 'Versatz zwischen den Blättern. Fällt ein Spiel heraus, weht es in 300 ms zur Seite.' }, { t: 'sofort', v: 'Die Zahl im Band wechselt ohne Animation, sie ist Information.' }], endText: 'Alle Blätter liegen gedreht auf dem Stumpf, die Zahl steht.' },
+      { label: 'F10.3 Stimme', title: '3 · Die Stimme glimmt', dur: '≈ 0,5 s · Wertungskarte', bg: '#f9fbf4', stage: stage3, steps: [{ t: '120–540 ms', v: 'Hinter dem gewählten Gesicht geht ein Glühwürmchen-Hof auf.' }, { t: '200–500 ms', v: 'Das Gesicht hebt sich um 6 px. Die anderen bleiben still.' }, { t: 'immer', v: '„Weiter →“ ist sofort bedienbar; die Wahl ist auch ohne Licht an Rahmen und Füllung erkennbar.' }], endText: 'Gewähltes Gesicht in Rampenfarbe mit Tintenrahmen und Hof, 6 px angehoben.' },
+      { label: 'F10.4 Aufdecken', title: '4 · Aufleuchten und der Baum', dur: '≈ 3 s · Übergang zum Ergebnis', bg: 'linear-gradient(180deg, #f3f6ec 0%, #e9f0df 100%)', stage: stage4, steps: [{ t: '0–1 020 ms', v: 'Die drei verdeckten Karten leuchten nacheinander auf (je 350 ms versetzt).' }, { t: '1 100–1 700 ms', v: 'Für das gespielte Spiel wächst der Stamm, dann treiben vier Kronen aus.' }, { t: '1 800–5 000 ms', v: 'Glühwürmchen steigen zweimal auf und kommen zur Ruhe. Schlagzeile und Tafel stehen von Anfang an.' }], endText: 'Karten offen, Baum ausgewachsen, Glühwürmchen ruhig in der Krone — das Bild aus F4.3 und der Rückblickkarte.' },
+    ].map((r, i) => ({ ...r, play: play(i), end: end(i) }));
+    return {
+      rituals, reducedAria: reduced ? 'true' : 'false', swBg: reduced ? '#356427' : '#6f7f66', swJ: reduced ? 'flex-end' : 'flex-start',
+      reducedNote: sysReduce ? 'Das System verlangt reduzierte Bewegung, deshalb sind alle Bühnen im Endzustand.' : 'Schalter an = jede Bühne zeigt nur ihren Endzustand.',
+      toggleReduced: (e) => { e && e.preventDefault(); this.setState((s) => ({ reducedLocal: !s.reducedLocal })); },
+      playAll: (e) => { e && e.preventDefault(); this.setState((s) => ({ run: s.run.map((v) => v + 1), reducedLocal: false })); },
+    };
+  }
+}
+</script>
+</body>
+</html>

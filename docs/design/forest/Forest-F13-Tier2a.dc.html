@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="design_doc_mode" content="canvas">
+  <link rel="stylesheet" href="../../../public/fonts/tabler-icons.css">
+  <link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Alegreya+Sans:wght@400;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #dcdfd4; font-family: 'Alegreya Sans', sans-serif; color: #1b2a18; }
+    a { color: #356427; text-decoration: none; }
+    a:hover { color: #284d1d; }
+  </style>
+</helmet>
+<div style="display: flex; flex-direction: column; gap: 56px; padding: 48px; width: max-content; background: #dcdfd4;">
+  <section data-screen-label="F13 Kopf" style="width: 1870px; box-sizing: border-box; padding: 30px 36px; background: #f9fbf4; border-radius: 22px; box-shadow: 0 6px 18px rgba(40,60,30,.10); display: flex; flex-direction: column; gap: 10px;">
+    <div style="font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #356427;">Brief 13 von 15 · Stufe 2, Teil 1 · Desktop 1440, Telefon 390 für Chronik, Pokale, Mitglied</div>
+    <h1 style="margin: 0; font-family: 'Young Serif'; font-weight: 400; font-size: 40px; line-height: 1.05;">F13 · Chronik, Pokale, Mitglied, Nicht im Regal, Könnte euch gefallen</h1>
+    <p style="margin: 0; font-size: 17px; line-height: 1.5; max-width: 1300px;">Die Chronik ist ein Pfad durch die Sessions. Die Pokale sind ein kleiner Hain: Jede Person ist ein Baum, der mit ihren Siegen wächst. Gold markiert Platz 1, Platz 2 und 3 stehen auf der Karte mit Tintenkante, ohne Silber und Bronze. Die Mitgliedsseite ist die Tischkarte mit fünf Zahlen. Abzeichen auf Pokale, Tischkarte und Chronik stehen in F17.</p>
+  </section>
+  <div style="display: flex; gap: 40px; align-items: flex-start;">
+    <div data-screen-label="F13.1 Chronik" style="display: flex; flex-direction: column; gap: 10px;">
+      <div style="font-size: 14px; font-weight: 700; color: #4b5c45;">F13.1 · Chronik mit Rückblick — Desktop</div>
+      <div style="position: relative; width: 1440px; overflow: hidden; box-shadow: 0 18px 44px rgba(40,60,30,.18); background: #ecf1e4;">
+        <dc-import name="Forest-Kopf" crumb="Donnerstagsrunde › Chronik" active="chronik" hint-size="1440px,108px"></dc-import>
+        <div style="display: grid; grid-template-columns: minmax(0, 1fr) 420px; gap: 32px; padding: 26px 40px 36px; align-items: start;">
+          <div style="display: flex; flex-direction: column; gap: 14px;">
+            <span style="display: flex; align-items: baseline; gap: 12px;"><h1 style="margin: 0; font-family: 'Young Serif'; font-weight: 400; font-size: 32px;">Chronik</h1><span style="font-size: 15px; font-weight: 800; color: #4b5c45;">23 Sessions seit Oktober 2025</span></span>
+            <div style="position: relative; display: flex; flex-direction: column; gap: 12px; padding-left: 34px;">
+              <span style="position: absolute; left: 11px; top: 8px; bottom: 8px; width: 3px; border-radius: 2px; background: #d6e4c6;"></span>
+              <sc-for list="{{ sessions }}" as="s" hint-placeholder-count="6">
+                <a href="#" style="position: relative; display: grid; grid-template-columns: 96px 80px minmax(0, 1fr) auto 60px; gap: 16px; align-items: center; padding: 12px 16px; background: #f9fbf4; border-radius: 16px; box-shadow: 0 6px 18px rgba(40,60,30,.10); color: #1b2a18;">
+                  <span style="position: absolute; left: -30px; top: 50%; width: 16px; height: 16px; margin-top: -8px; border-radius: 0 100% 0 100%; background: #356427; transform: rotate(-25deg);"></span>
+                  <span style="display: flex; flex-direction: column;"><span style="font-weight: 800; font-size: 15px;">{{ s.d }}</span><span style="font-size: 13px; font-weight: 700; color: #4b5c45;">Session Nr. {{ s.n }}</span></span>
+                  <span style="width: 80px; height: 60px; border-radius: 6px 2px 6px 2px; background: {{ s.cover }};"></span>
+                  <span style="display: flex; flex-direction: column;"><span style="font-family: 'Young Serif'; font-weight: 400; font-size: 20px; line-height: 1.1;">{{ s.g }}</span><span style="font-size: 14px; font-weight: 700; color: #85570f; display: flex; align-items: center; gap: 5px;"><i class="ti ti-crown" style="color: #a86d14;"></i>{{ s.w }}</span></span>
+                  <span style="display: flex;"><sc-for list="{{ s.p }}" as="p" hint-placeholder-count="4"><span style="width: 32px; height: 32px; margin-left: -6px; border-radius: 50%; background: #f9fbf4; border: 4px solid {{ p.c }}; box-sizing: border-box; display: grid; place-items: center; font-weight: 800; font-size: 12px;">{{ p.i }}</span></sc-for></span>
+                  <span style="justify-self: end; padding: 3px 10px; border-radius: 14px 4px 14px 4px; background: {{ s.pill }}; color: {{ s.ink }}; font-weight: 800; font-size: 16px; box-shadow: inset 0 0 0 1px rgba(27,42,24,.18);">{{ s.sc }}</span>
+                </a>
+              </sc-for>
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 14px; padding: 20px 22px; background: #f9fbf4; border-radius: 22px; box-shadow: 0 6px 18px rgba(40,60,30,.10);">
+            <span style="font-family: 'Young Serif'; font-weight: 400; font-size: 24px;">Rückblick</span>
+            <span role="tablist" style="display: flex; gap: 4px; padding: 4px; background: #d6e4c6; border-radius: 14px 4px 14px 4px;"><sc-for list="{{ periods }}" as="p" hint-placeholder-count="3"><a href="#" role="tab" aria-selected="{{ p.sel }}" style="flex: 1; min-height: 40px; display: grid; place-items: center; border-radius: 12px 3px 12px 3px; background: {{ p.bg }}; color: #1b2a18; font-weight: 800; font-size: 15px; box-shadow: {{ p.sh }};">{{ p.l }}</a></sc-for></span>
+            <span style="font-family: 'Young Serif'; font-weight: 400; font-size: 30px; line-height: 1.05;">Sommer 2026</span>
+            <span style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px;"><sc-for list="{{ recapFacts }}" as="f" hint-placeholder-count="3"><span style="display: flex; flex-direction: column; padding: 10px 12px; border-radius: 14px; background: #ecf1e4;"><span style="font-family: 'Young Serif'; font-weight: 400; font-size: 26px; line-height: 1.05;">{{ f.v }}</span><span style="font-size: 13px; font-weight: 700; color: #4b5c45;">{{ f.k }}</span></span></sc-for></span>
+            <span style="font-size: 15px; font-weight: 700;">Meistgespielt: Nordlichter</span>
+            <span style="font-size: 15px; font-weight: 700;">Siegesserie: Jonas, 3 Siege in Folge</span>
+            <span style="display: flex; align-items: flex-end; gap: 4px; height: 70px; padding-top: 6px;"><sc-for list="{{ recapBars }}" as="b" hint-placeholder-count="13"><span style="flex: 1; border-radius: 3px 3px 0 0; background: #356427; height: {{ b }};"></span></sc-for></span>
+            <span style="font-size: 11px; font-weight: 700; color: #4b5c45;">Sessions je Woche, Juni bis August</span>
+            <a href="#" style="min-height: 52px; display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: 22px 7px 22px 7px; background: #356427; color: #f4f8ec; font-weight: 800; font-size: 17px;"><i class="ti ti-share"></i>Rückblick teilen</a>
+          </div>
+        </div>
+        <dc-import name="Forest-Fuss" hint-size="1440px,52px"></dc-import>
+      </div>
+    </div>
+    <div data-screen-label="F13.2 Chronik Telefon" style="display: flex; flex-direction: column; gap: 10px; width: 390px;">
+      <div style="font-size: 14px; font-weight: 700; color: #4b5c45;">F13.2 · Chronik — Telefon</div>
+      <div style="position: relative; width: 390px; overflow: hidden; border-radius: 28px; box-shadow: 0 18px 44px rgba(40,60,30,.18); background: #ecf1e4;">
+        <dc-import name="Forest-Telefonkopf" back="Start" crumb="Donnerstagsrunde" hint-size="390px,140px"></dc-import>
+        <div style="display: flex; flex-direction: column; gap: 12px; padding: 16px 16px 24px;">
+          <span style="display: flex; align-items: baseline; gap: 10px;"><h1 style="margin: 0; font-family: 'Young Serif'; font-weight: 400; font-size: 28px;">Chronik</h1><span style="font-size: 14px; font-weight: 800; color: #4b5c45;">23 Sessions</span></span>
+          <a href="#" style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: #24331f; color: #f4f8ec; border-radius: 16px;"><span style="display: flex; flex-direction: column; flex: 1;"><span style="font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #fff3a8;">Rückblick</span><span style="font-family: 'Young Serif'; font-weight: 400; font-size: 20px;">Sommer 2026</span><span style="font-size: 13px; color: #c9d6bd;">8 Sessions · Meistgespielt: Nordlichter</span></span><i class="ti ti-chevron-right" style="font-size: 20px;"></i></a>
+          <sc-for list="{{ sessionsPhone }}" as="s" hint-placeholder-count="5"><a href="#" style="display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 8px 12px; background: #f9fbf4; border-radius: 14px; box-shadow: 0 6px 18px rgba(40,60,30,.10); color: #1b2a18;"><span style="width: 56px; height: 42px; flex: none; border-radius: 5px 2px 5px 2px; background: {{ s.cover }};"></span><span style="display: flex; flex-direction: column; flex: 1; min-width: 0;"><span style="font-weight: 800; font-size: 15px;">{{ s.g }}</span><span style="font-size: 13px; font-weight: 700; color: #4b5c45;">{{ s.d }} · {{ s.w }}</span></span><span style="padding: 2px 8px; border-radius: 12px 3px 12px 3px; background: {{ s.pill }}; color: {{ s.ink }}; font-weight: 800; font-size: 14px;">{{ s.sc }}</span></a></sc-for>
+        </div>
+        <dc-import name="Forest-Dock" active="chronik" hint-size="390px,68px"></dc-import>
+      </div>
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 40px; align-items: flex-start;">
+    <div data-screen-label="F13.3 Pokale" style="display: flex; flex-direction: column; gap: 10px;">
+      <div style="font-size: 14px; font-weight: 700; color: #4b5c45;">F13.3 · Pokale — der Hain: ein Baum je Person, Höhe = Siege, darunter Stand und die vier Plaketten</div>
+      <div style="position: relative; width: 1440px; overflow: hidden; box-shadow: 0 18px 44px rgba(40,60,30,.18); background: #ecf1e4;">
+        <dc-import name="Forest-Kopf" crumb="Donnerstagsrunde › Pokale" active="pokale" hint-size="1440px,108px"></dc-import>
+        <div style="display: flex; flex-direction: column; gap: 22px; padding: 26px 40px 36px;">
+          <span style="display: flex; align-items: baseline; gap: 12px;"><h1 style="margin: 0; font-family: 'Young Serif'; font-weight: 400; font-size: 32px;">Pokale</h1><span style="font-size: 15px; font-weight: 800; color: #4b5c45;">Seit Oktober 2025 · 23 Sessions</span></span>
+          <div style="display: grid; grid-template-columns: minmax(0, 1fr) 460px; gap: 28px; align-items: start;">
+            <div style="display: flex; flex-direction: column; gap: 10px; padding: 20px 24px 0; background: linear-gradient(180deg, #f9fbf4 0%, #f3f6ec 76%, #c2dc86 76%, #9cc38a 100%); border-radius: 22px; box-shadow: 0 6px 18px rgba(40,60,30,.10); height: 400px; box-sizing: border-box;">
+              <span style="font-family: 'Young Serif'; font-weight: 400; font-size: 24px;">Ruhmeshalle</span>
+              <span style="flex: 1; display: flex; align-items: flex-end; justify-content: space-around; padding-bottom: 20px;">
+                <sc-for list="{{ grove }}" as="g" hint-placeholder-count="4">
+                  <span style="display: flex; flex-direction: column; align-items: center;">
+                    <span style="position: relative; width: 52px; height: 52px; border-radius: 50%; background: #f9fbf4; border: 5px solid {{ g.c }}; box-sizing: border-box; display: grid; place-items: center; font-weight: 800; font-size: 15px; z-index: 1; box-shadow: {{ g.halo }};">{{ g.i }}<sc-if value="{{ g.first }}" hint-placeholder-val="{{ false }}"><i class="ti ti-crown" style="position: absolute; top: -28px; left: 50%; transform: translateX(-50%) rotate(-8deg); font-size: 26px; color: #a86d14;"></i></sc-if></span>
+                    <span style="width: {{ g.crown }}; height: {{ g.crownH }}; border-radius: 50%; background: #4f7d40; margin-top: -14px;"></span>
+                    <span style="width: 12px; height: {{ g.trunk }}; background: #5a3d24; margin-top: -6px;"></span>
+                    <span style="margin-top: 6px; padding: 4px 12px; border-radius: 12px 3px 12px 3px; background: {{ g.plate }}; border: {{ g.edge }}; font-weight: 800; font-size: 15px; color: #1b2a18;">{{ g.place }} · {{ g.n }}</span>
+                  </span>
+                </sc-for>
+              </span>
+            </div>
+            <div style="display: flex; flex-direction: column; padding: 8px 20px; background: #f9fbf4; border-radius: 22px; box-shadow: 0 6px 18px rgba(40,60,30,.10);">
+              <div style="display: grid; grid-template-columns: 40px minmax(0, 1fr) 60px 80px 60px; gap: 10px; padding: 10px 0; font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #356427;"><span>Platz</span><span>Person</span><span>Siege</span><span>Sessions</span><span>Quote</span></div>
+              <sc-for list="{{ standing }}" as="s" hint-placeholder-count="4"><a href="#" style="display: grid; grid-template-columns: 40px minmax(0, 1fr) 60px 80px 60px; gap: 10px; align-items: center; min-height: 56px; padding: 0 8px; margin: 0 -8px; border-radius: 12px; background: {{ s.bg }}; border-top: 1px solid #d5ddca; color: #1b2a18; font-size: 15px; font-weight: 700;"><span style="font-family: 'Young Serif'; font-weight: 400; font-size: 22px;">{{ s.place }}</span><span style="display: flex; align-items: center; gap: 10px;"><span style="width: 34px; height: 34px; border-radius: 50%; background: #f9fbf4; border: 4px solid {{ s.c }}; box-sizing: border-box; display: grid; place-items: center; font-weight: 800; font-size: 11px;">{{ s.i }}</span><strong>{{ s.n }}</strong></span><span>{{ s.w }}</span><span>{{ s.ss }}</span><span>{{ s.q }}</span></a></sc-for>
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <span style="font-family: 'Young Serif'; font-weight: 400; font-size: 24px;">Auszeichnungen</span>
+            <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px;"><sc-for list="{{ plaques }}" as="p" hint-placeholder-count="4"><a href="#" style="display: flex; gap: 12px; align-items: center; padding: 14px 16px; background: #f9fbf4; border-radius: 18px; box-shadow: 0 6px 18px rgba(40,60,30,.10); color: #1b2a18;"><span style="width: 64px; height: 48px; flex: none; border-radius: 6px 2px 6px 2px; background: {{ p.cover }};"></span><span style="display: flex; flex-direction: column;"><span style="font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #356427; display: flex; align-items: center; gap: 4px;"><i class="ti {{ p.i }}"></i>{{ p.k }}</span><span style="font-weight: 800; font-size: 16px;">{{ p.t }}</span><span style="font-size: 13px; font-weight: 700; color: #4b5c45;">{{ p.v }}</span></span></a></sc-for></div>
+          </div>
+        </div>
+        <dc-import name="Forest-Fuss" hint-size="1440px,52px"></dc-import>
+      </div>
+    </div>
+    <div data-screen-label="F13.4 Pokale Telefon" style="display: flex; flex-direction: column; gap: 10px; width: 390px;">
+      <div style="font-size: 14px; font-weight: 700; color: #4b5c45;">F13.4 · Pokale — Telefon</div>
+      <div style="position: relative; width: 390px; overflow: hidden; border-radius: 28px; box-shadow: 0 18px 44px rgba(40,60,30,.18); background: #ecf1e4;">
+        <dc-import name="Forest-Telefonkopf" back="Start" crumb="Donnerstagsrunde" hint-size="390px,140px"></dc-import>
+        <div style="display: flex; flex-direction: column; gap: 12px; padding: 16px 16px 24px;">
+          <h1 style="margin: 0; font-family: 'Young Serif'; font-weight: 400; font-size: 28px;">Pokale</h1>
+          <div style="display: flex; flex-direction: column; padding: 14px 14px 0; background: linear-gradient(180deg, #f9fbf4 0%, #f3f6ec 74%, #c2dc86 74%, #9cc38a 100%); border-radius: 20px; height: 250px; box-sizing: border-box;"><span style="font-family: 'Young Serif'; font-weight: 400; font-size: 20px;">Ruhmeshalle</span><span style="flex: 1; display: flex; align-items: flex-end; justify-content: space-around; padding-bottom: 12px;"><sc-for list="{{ grove }}" as="g" hint-placeholder-count="4"><span style="display: flex; flex-direction: column; align-items: center;"><span style="position: relative; width: 38px; height: 38px; border-radius: 50%; background: #f9fbf4; border: 4px solid {{ g.c }}; box-sizing: border-box; display: grid; place-items: center; font-weight: 800; font-size: 12px; z-index: 1; box-shadow: {{ g.halo }};">{{ g.i }}</span><span style="width: {{ g.crownS }}; height: {{ g.crownSH }}; border-radius: 50%; background: #4f7d40; margin-top: -10px;"></span><span style="width: 8px; height: {{ g.trunkS }}; background: #5a3d24; margin-top: -4px;"></span><span style="margin-top: 4px; padding: 2px 8px; border-radius: 10px 3px 10px 3px; background: {{ g.plate }}; border: {{ g.edge }}; font-weight: 800; font-size: 13px;">{{ g.place }} · {{ g.n }}</span></span></sc-for></span></div>
+          <div style="display: flex; flex-direction: column; padding: 4px 14px; background: #f9fbf4; border-radius: 18px; box-shadow: 0 6px 18px rgba(40,60,30,.10);"><sc-for list="{{ standing }}" as="s" hint-placeholder-count="4"><a href="#" style="display: flex; align-items: center; gap: 10px; min-height: 52px; border-top: 1px solid #d5ddca; color: #1b2a18; font-size: 15px; font-weight: 700;"><span style="font-family: 'Young Serif'; font-weight: 400; font-size: 20px; width: 20px;">{{ s.place }}</span><span style="width: 32px; height: 32px; border-radius: 50%; background: #f9fbf4; border: 4px solid {{ s.c }}; box-sizing: border-box; display: grid; place-items: center; font-weight: 800; font-size: 11px;">{{ s.i }}</span><strong style="flex: 1;">{{ s.n }}</strong><span>{{ s.w }} Siege</span></a></sc-for></div>
+          <sc-for list="{{ plaques }}" as="p" hint-placeholder-count="4"><a href="#" style="display: flex; gap: 10px; align-items: center; min-height: 56px; padding: 8px 12px; background: #f9fbf4; border-radius: 14px; box-shadow: 0 6px 18px rgba(40,60,30,.10); color: #1b2a18;"><i class="ti {{ p.i }}" style="font-size: 20px; color: #356427;"></i><span style="display: flex; flex-direction: column;"><span style="font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #356427;">{{ p.k }}</span><span style="font-weight: 800; font-size: 15px;">{{ p.t }}</span></span></a></sc-for>
+        </div>
+        <dc-import name="Forest-Dock" active="pokale" hint-size="390px,68px"></dc-import>
+      </div>
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 40px; align-items: flex-start;">
+    <div data-screen-label="F13.5 Mitglied" style="display: flex; flex-direction: column; gap: 10px;">
+      <div style="font-size: 14px; font-weight: 700; color: #4b5c45;">F13.5 · Mitglied — die Tischkarte von Lea mit fünf Zahlen</div>
+      <div style="position: relative; width: 1440px; overflow: hidden; box-shadow: 0 18px 44px rgba(40,60,30,.18); background: #ecf1e4;">
+        <dc-import name="Forest-Kopf" crumb="Donnerstagsrunde › Lea" active="none" hint-size="1440px,108px"></dc-import>
+        <div style="display: grid; grid-template-columns: 520px minmax(0, 1fr); gap: 32px; padding: 26px 40px 36px; align-items: start;">
+          <div style="display: flex; flex-direction: column; gap: 16px; padding: 26px; background: #f9fbf4; border-radius: 22px; box-shadow: 0 6px 18px rgba(40,60,30,.10);">
+            <span style="display: flex; gap: 18px; align-items: center;"><span style="width: 96px; height: 96px; border-radius: 50%; background: #f9fbf4; border: 8px solid #726bc7; box-sizing: border-box; display: grid; place-items: center; font-weight: 800; font-size: 28px; box-shadow: 0 6px 14px rgba(40,60,30,.18);">LE</span><span style="display: flex; flex-direction: column; gap: 2px;"><span style="font-family: 'Young Serif'; font-weight: 400; font-size: 34px; line-height: 1.05;">Lea</span><span style="font-size: 15px; font-weight: 700; color: #4b5c45;">in der Runde seit Oktober 2025</span></span></span>
+            <span style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px;"><sc-for list="{{ figures }}" as="f" hint-placeholder-count="5"><span style="display: flex; flex-direction: column; padding: 10px; border-radius: 14px; background: #ecf1e4;"><span style="font-family: 'Young Serif'; font-weight: 400; font-size: 24px; line-height: 1.05;">{{ f.v }}</span><span style="font-size: 13px; font-weight: 700; color: #4b5c45;">{{ f.k }}</span></span></sc-for></span>
+            <span style="font-size: 14px; color: #4b5c45;">Die Abzeichen-Zeile unter den fünf Zahlen steht in F17.4.</span>
+            <a href="#" style="align-self: flex-start; min-height: 44px; display: inline-flex; align-items: center; gap: 8px; padding: 0 16px; border-radius: 14px 4px 14px 4px; background: #d6e4c6; border: 1.5px solid #6f7f66; box-sizing: border-box; color: #1b2a18; font-weight: 700; font-size: 15px;"><i class="ti ti-pencil"></i>Mitglied bearbeiten</a>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 18px;">
+            <div style="display: flex; flex-direction: column; gap: 10px;"><span style="font-family: 'Young Serif'; font-weight: 400; font-size: 22px;">Gehört Lea · 3 Spiele</span><span style="display: flex; gap: 14px;"><sc-for list="{{ leaGames }}" as="g" hint-placeholder-count="3"><a href="#" style="display: flex; flex-direction: column; gap: 6px; width: 170px; padding: 10px; background: #f9fbf4; border-radius: 16px; box-shadow: 0 6px 18px rgba(40,60,30,.10); color: #1b2a18;"><span style="display: grid; place-items: center; height: 100px; border-radius: 10px; background: #e9f0df;"><span style="width: {{ g.w }}; height: {{ g.h }}; border-radius: 5px 2px 5px 2px; background: {{ g.cover }};"></span></span><span style="font-weight: 800; font-size: 15px;">{{ g.t }}</span></a></sc-for></span></div>
+            <div style="display: flex; flex-direction: column; padding: 6px 18px; background: #f9fbf4; border-radius: 18px; box-shadow: 0 6px 18px rgba(40,60,30,.10);"><span style="font-family: 'Young Serif'; font-weight: 400; font-size: 22px; padding: 8px 0;">Zuletzt dabei</span><sc-for list="{{ leaSessions }}" as="s" hint-placeholder-count="4"><a href="#" style="display: grid; grid-template-columns: 110px minmax(0, 1fr) auto; gap: 12px; align-items: center; min-height: 48px; border-top: 1px solid #d5ddca; color: #1b2a18; font-size: 15px;"><span style="font-weight: 700; color: #4b5c45;">{{ s.d }}</span><strong>{{ s.g }}</strong><span style="font-weight: 800; color: {{ s.ink }};">{{ s.r }}</span></a></sc-for></div>
+          </div>
+        </div>
+        <dc-import name="Forest-Fuss" hint-size="1440px,52px"></dc-import>
+      </div>
+    </div>
+    <div data-screen-label="F13.6 Mitglied Telefon" style="display: flex; flex-direction: column; gap: 10px; width: 390px;">
+      <div style="font-size: 14px; font-weight: 700; color: #4b5c45;">F13.6 · Mitglied — Telefon</div>
+      <div style="position: relative; width: 390px; overflow: hidden; border-radius: 28px; box-shadow: 0 18px 44px rgba(40,60,30,.18); background: #ecf1e4;">
+        <dc-import name="Forest-Telefonkopf" back="Start" crumb="Lea" hint-size="390px,140px"></dc-import>
+        <div style="display: flex; flex-direction: column; gap: 12px; padding: 16px 16px 24px;">
+          <div style="display: flex; flex-direction: column; gap: 12px; padding: 18px; background: #f9fbf4; border-radius: 20px; box-shadow: 0 6px 18px rgba(40,60,30,.10);"><span style="display: flex; gap: 14px; align-items: center;"><span style="width: 72px; height: 72px; border-radius: 50%; background: #f9fbf4; border: 6px solid #726bc7; box-sizing: border-box; display: grid; place-items: center; font-weight: 800; font-size: 22px;">LE</span><span style="display: flex; flex-direction: column;"><span style="font-family: 'Young Serif'; font-weight: 400; font-size: 28px;">Lea</span><span style="font-size: 14px; font-weight: 700; color: #4b5c45;">seit Oktober 2025</span></span></span><span style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px;"><sc-for list="{{ figures }}" as="f" hint-placeholder-count="5"><span style="display: flex; flex-direction: column; padding: 8px 10px; border-radius: 12px; background: #ecf1e4;"><span style="font-family: 'Young Serif'; font-weight: 400; font-size: 21px; line-height: 1.1;">{{ f.v }}</span><span style="font-size: 13px; font-weight: 700; color: #4b5c45;">{{ f.k }}</span></span></sc-for></span></div>
+          <div style="display: flex; flex-direction: column; padding: 4px 14px; background: #f9fbf4; border-radius: 18px; box-shadow: 0 6px 18px rgba(40,60,30,.10);"><span style="font-family: 'Young Serif'; font-weight: 400; font-size: 20px; padding: 8px 0;">Zuletzt dabei</span><sc-for list="{{ leaSessions }}" as="s" hint-placeholder-count="4"><a href="#" style="display: flex; gap: 10px; align-items: center; min-height: 48px; border-top: 1px solid #d5ddca; color: #1b2a18; font-size: 14px;"><span style="font-weight: 700; color: #4b5c45; width: 64px;">{{ s.dShort }}</span><strong style="flex: 1;">{{ s.g }}</strong><span style="font-weight: 800; color: {{ s.ink }};">{{ s.r }}</span></a></sc-for></div>
+        </div>
+        <dc-import name="Forest-Dock" active="pokale" hint-size="390px,68px"></dc-import>
+      </div>
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 40px; align-items: flex-start;">
+    <div data-screen-label="F13.7 Nicht im Regal" style="display: flex; flex-direction: column; gap: 10px;">
+      <div style="font-size: 14px; font-weight: 700; color: #4b5c45;">F13.7 · Nicht im Regal — drei Listen als Reiter</div>
+      <div style="position: relative; width: 1440px; overflow: hidden; box-shadow: 0 18px 44px rgba(40,60,30,.18); background: #ecf1e4;">
+        <dc-import name="Forest-Kopf" crumb="Donnerstagsrunde › Nicht im Regal" active="regal" hint-size="1440px,108px"></dc-import>
+        <div style="display: flex; flex-direction: column; gap: 16px; padding: 26px 40px 36px;">
+          <h1 style="margin: 0; font-family: 'Young Serif'; font-weight: 400; font-size: 32px;">Nicht im Regal</h1>
+          <span role="tablist" style="display: inline-flex; gap: 4px; padding: 4px; background: #d6e4c6; border-radius: 14px 4px 14px 4px; width: max-content;"><sc-for list="{{ offTabs }}" as="t" hint-placeholder-count="3"><a href="#" role="tab" aria-selected="{{ t.sel }}" style="min-height: 44px; display: inline-flex; align-items: center; gap: 8px; padding: 0 18px; border-radius: 12px 3px 12px 3px; background: {{ t.bg }}; color: #1b2a18; font-weight: 800; font-size: 15px; box-shadow: {{ t.sh }};"><i class="ti {{ t.i }}"></i>{{ t.l }}</a></sc-for></span>
+          <span style="font-size: 15px; color: #4b5c45;">Aussortierte Spiele stehen weiter in der Chronik und in den Pokalen. Zurück ins Regal geht jederzeit.</span>
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px;"><sc-for list="{{ retired }}" as="g" hint-placeholder-count="2"><div style="display: flex; gap: 16px; align-items: center; padding: 14px 18px; background: #f9fbf4; border-radius: 18px; box-shadow: 0 6px 18px rgba(40,60,30,.10);"><span style="width: 90px; height: 68px; flex: none; border-radius: 6px 2px 6px 2px; background: {{ g.cover }};"></span><span style="display: flex; flex-direction: column; flex: 1;"><span style="font-family: 'Young Serif'; font-weight: 400; font-size: 21px;">{{ g.t }}</span><span style="font-size: 14px; font-weight: 700; color: #4b5c45;">{{ g.m }}</span></span><a href="#" style="min-height: 44px; display: inline-flex; align-items: center; gap: 6px; padding: 0 14px; border-radius: 14px 4px 14px 4px; background: #d6e4c6; border: 1.5px solid #6f7f66; box-sizing: border-box; color: #1b2a18; font-weight: 700; font-size: 15px;"><i class="ti ti-arrow-back-up"></i>Zurück ins Regal</a></div></sc-for></div>
+        </div>
+        <dc-import name="Forest-Fuss" hint-size="1440px,52px"></dc-import>
+      </div>
+    </div>
+  </div>
+  <div data-screen-label="F13.8 Könnte euch gefallen" style="display: flex; flex-direction: column; gap: 10px;">
+    <div style="font-size: 14px; font-weight: 700; color: #4b5c45;">F13.8 · Könnte euch gefallen — Vorschläge vom Waldrand, je mit Grund</div>
+    <div style="position: relative; width: 1440px; overflow: hidden; box-shadow: 0 18px 44px rgba(40,60,30,.18); background: #ecf1e4;">
+      <dc-import name="Forest-Kopf" crumb="Donnerstagsrunde › Könnte euch gefallen" active="regal" hint-size="1440px,108px"></dc-import>
+      <div style="display: flex; flex-direction: column; gap: 16px; padding: 26px 40px 36px;">
+        <span style="display: flex; align-items: center; gap: 12px;"><h1 style="margin: 0; font-family: 'Young Serif'; font-weight: 400; font-size: 32px;">Könnte euch gefallen</h1><img src="../../../public/icons/powered-by-bgg.png" alt="Powered by BGG" style="height: 24px; width: auto; margin-left: auto;"></span>
+        <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px;"><sc-for list="{{ recos }}" as="r" hint-placeholder-count="4"><div style="display: flex; flex-direction: column; background: #f9fbf4; border-radius: 18px; overflow: hidden; box-shadow: 0 6px 18px rgba(40,60,30,.10);"><span style="display: grid; place-items: center; height: 170px; background: #e9f0df;"><span style="width: {{ r.w }}; height: {{ r.h }}; border-radius: 6px 2px 6px 2px; background: {{ r.cover }}; box-shadow: 0 6px 12px rgba(40,60,30,.28);"></span></span><span style="display: flex; flex-direction: column; gap: 6px; padding: 14px 16px 16px;"><span style="font-family: 'Young Serif'; font-weight: 400; font-size: 21px; line-height: 1.1;">{{ r.t }}</span><span style="font-size: 14px; font-weight: 700; color: #4b5c45;">{{ r.m }}</span><span style="display: flex; gap: 8px; align-items: flex-start; font-size: 14px; line-height: 1.4;"><span style="width: 12px; height: 12px; flex: none; margin-top: 4px; border-radius: 0 100% 0 100%; background: #356427; transform: rotate(-25deg);"></span>{{ r.why }}</span><a href="#" style="margin-top: 6px; min-height: 44px; display: inline-flex; align-items: center; gap: 6px; padding: 0 14px; border-radius: 14px 4px 14px 4px; background: #d6e4c6; border: 1.5px solid #6f7f66; box-sizing: border-box; color: #1b2a18; font-weight: 700; font-size: 15px; align-self: flex-start;"><i class="ti ti-heart"></i>Auf die Wunschliste</a></span></div></sc-for></div>
+      </div>
+      <dc-import name="Forest-Fuss" hint-size="1440px,52px"></dc-import>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const PEOPLE = ['#c6522c', '#198663', '#726bc7', '#a66815'];
+    const names = ['Marco', 'Jonas', 'Lea', 'Tim'], wins = [5, 9, 7, 2];
+    const ini = (n) => n.slice(0, 2).toUpperCase();
+    const cov = (h) => `linear-gradient(145deg, oklch(.6 .13 ${h}), oklch(.36 .12 ${h + 30}))`;
+    const ramp = [['#3d5273', '#f4f8ec'], ['#3b6f6c', '#f4f8ec'], ['#9cc38a', '#1b2a18'], ['#c2dc86', '#1b2a18'], ['#f1e58c', '#1b2a18']];
+    const stop = (s) => ramp[Math.min(4, Math.max(0, Math.round(s) - 1))];
+    const fmt = (v) => v.toFixed(1).replace('.', ',');
+    const S = [['14. Sep 2026', 23, 'Nordlichter', 'Jonas hat gewonnen', 4.8, 200], ['7. Sep 2026', 22, 'Moorgeister', 'Jonas hat gewonnen', 4.4, 160], ['31. Aug 2026', 21, 'Kartographen des Nordens', 'Jonas hat gewonnen', 4.2, 150], ['24. Aug 2026', 20, 'Salzwiesen', 'Lea hat gewonnen', 3.9, 120], ['10. Aug 2026', 19, 'Glutkessel', 'Marco hat gewonnen', 4.0, 30], ['3. Aug 2026', 18, 'Zinnober', 'Lea hat gewonnen', 3.1, 20]];
+    const sessions = S.map(([d, n, g, w, s, h]) => ({ d, n, g, w, sc: fmt(s), pill: stop(s)[0], ink: stop(s)[1], cover: cov(h), p: names.map((nm, i) => ({ i: ini(nm), c: PEOPLE[i] })) }));
+    const sessionsPhone = sessions.slice(0, 5).map((s) => ({ ...s, d: s.d.replace(' 2026', '') }));
+    const periods = [['Monat', false], ['Quartal', true], ['Jahr', false]].map(([l, on]) => ({ l, sel: on ? 'true' : 'false', bg: on ? '#f9fbf4' : 'transparent', sh: on ? '0 2px 6px rgba(40,60,30,.18)' : 'none' }));
+    const recapFacts = [['8', 'Sessions'], ['6', 'Spiele'], ['4', 'dabei']].map(([v, k]) => ({ v, k }));
+    const recapBars = [1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 0].map((c) => (c ? '100%' : '6%'));
+    const order = [1, 2, 0, 3];
+    const grove = order.map((i, p) => ({ i: ini(names[i]), c: PEOPLE[i], n: wins[i] + ' Siege', place: String(p + 1), first: p === 0, halo: p === 0 ? '0 0 0 5px #f3e6b0' : 'none', crown: (60 + wins[i] * 6) + 'px', crownH: (50 + wins[i] * 5) + 'px', trunk: (30 + wins[i] * 14) + 'px', crownS: (40 + wins[i] * 4) + 'px', crownSH: (34 + wins[i] * 3) + 'px', trunkS: (14 + wins[i] * 7) + 'px', plate: p === 0 ? '#f3e6b0' : '#f9fbf4', edge: p === 0 ? '1.5px solid #a86d14' : p < 3 ? '1.5px solid #1b2a18' : '1.5px solid #d5ddca' }));
+    const played = [22, 21, 23, 15];
+    const standing = order.map((i, p) => ({ place: String(p + 1), n: names[i], i: ini(names[i]), c: PEOPLE[i], w: String(wins[i]), ss: String(played[i]), q: Math.round(wins[i] / played[i] * 100) + ' %', bg: p === 0 ? '#f3e6b0' : 'transparent' }));
+    const plaques = [['ti-flame', 'Meistgespielt', 'Nordlichter', '4× gespielt', 200], ['ti-star', 'Bestbewertet', 'Nordlichter', 'Score 4,8', 200], ['ti-bolt', 'Siegesserie', 'Jonas', '3 Siege in Folge', 160], ['ti-hourglass', 'Staubfänger', 'Wolkenpfad', 'seit März nicht gespielt', 300]].map(([i, k, t, v, h]) => ({ i, k, t, v, cover: cov(h) }));
+    const figures = [['21', 'Sessions'], ['7', 'Siege'], ['33 %', 'Quote'], ['3,9', 'Ø Wertung'], ['Moorgeister', 'Lieblingsspiel']].map(([v, k]) => ({ v, k }));
+    const leaGames = [['Moorgeister', 160, 70, 92], ['Kartographen des Nordens', 150, 84, 84], ['Zinnober', 20, 100, 56]].map(([t, h, w, hh]) => ({ t, cover: cov(h), w: w + 'px', h: hh + 'px' }));
+    const leaSessions = [['14. Sep 2026', 'Nordlichter', 'dabei', false], ['24. Aug 2026', 'Salzwiesen', 'hat gewonnen', true], ['3. Aug 2026', 'Zinnober', 'hat gewonnen', true], ['27. Jul 2026', 'Glutkessel', 'dabei', false]].map(([d, g, r, w]) => ({ d, dShort: d.replace(' 2026', ''), g, r, ink: w ? '#85570f' : '#4b5c45' }));
+    const offTabs = [['ti-archive', 'Aussortiert · 2', true], ['ti-circle-check', 'Durchgespielt · 1', false], ['ti-heart', 'Wunschliste · 4', false]].map(([i, l, on]) => ({ i, l, sel: on ? 'true' : 'false', bg: on ? '#f9fbf4' : 'transparent', sh: on ? '0 2px 6px rgba(40,60,30,.18)' : 'none' }));
+    const retired = [['Wolkenpfad', 'aussortiert im März 2026 · 3× gespielt', 300], ['Der letzte Leuchtturm', 'aussortiert im Juni 2026 · 1× gespielt', 250]].map(([t, m, h]) => ({ t, m, cover: cov(h) }));
+    const recos = [['Kaskadia', '2021 · 1–4 · 45 Min', 'Ähnlich wie Kartographen des Nordens, das bei euch gut ankam.', 150, 110, 110], ['Flügelschlag', '2019 · 1–5 · 70 Min', 'Passt zu Lea und Marco, die gern sammeln.', 100, 96, 124], ['Arche Nova', '2021 · 1–4 · 120 Min', 'Für eure längeren Sessions — Nordlichter läuft 90 Minuten.', 50, 124, 96], ['Just One', '2018 · 3–7 · 20 Min', 'Kurz und für große Runden, ihr wart zuletzt zu acht.', 280, 110, 110]].map(([t, m, why, h, w, hh]) => ({ t, m, why, cover: cov(h), w: w + 'px', h: hh + 'px' }));
+    return { sessions, sessionsPhone, periods, recapFacts, recapBars, grove, standing, plaques, figures, leaGames, leaSessions, offTabs, retired, recos };
+  }
+}
+</script>
+</body>
+</html>
