@@ -6208,6 +6208,19 @@
   background: var(--wave-paper);
 }
 
+/* --- The friends' feed (O17.7, #1428): a friend's mark is the pearl in its
+   shell, K17's `.badge__mark` in a `.badge-emblem` host. The base mark above is
+   already the earned drawing, so this only sizes it per slot — the home
+   preview's 46px slot, the Freundeskreis row's box (a game's is 58 × 44), and
+   a tile — and gives the tile's band water in place of Klassisch's tint. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .feed-item__img--badge { --o-mark: 46px; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .feed-row__badge { --o-mark: 48px; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .e-tile__img--badge {
+  --o-mark: 64px;
+  --o-ring: 4px;
+  background: linear-gradient(180deg, var(--water-foam) 0%, var(--water-surf) 52%, var(--water-flat) 100%);
+}
+
 /* ===== #1386 O17.5 motion — the bubble rises after the whale ===== */
 /* Sheet: docs/design/ocean/Ocean-O17-Abzeichen.dc.html, O17.5's timing table
    and frames; binding: docs/design/pruefung-abzeichen-2026-09-26.md finding 6

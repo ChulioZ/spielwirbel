@@ -726,7 +726,9 @@ What the app does, in detail. For a short overview see the
   the **game title and cover** and, for that last one, a plain count — plus
   „‹friend› · Sessions 100" when a friend reaches a new tier of an account
   Abzeichen at a session finish (issue #1389; Sessions and Siege only, each tier
-  announced once, never while the friend's record is hidden); never
+  announced once, never while the friend's record is hidden), pictured by the
+  badge's own earned mark — the disc, pin or pearl the Spielerkarte shows — rather
+  than a glyph that could read as a game with no cover (issue #1428); never
   member names, ratings, votes or round names, and only for activity after you
   became friends. The screen itself is **three full-width bands** — what is
   waiting on you, your people, what is new — stacked in that order at every
