@@ -1912,6 +1912,8 @@ I18N.pt = {
   'vote.sealedTextBrueckeOne': 'Mais um jogo continua cifrado até lá chegares.',
   'vote.sealedTextBruecke': 'Mais {n} jogos continuam cifrados até lá chegares.',
   'vote.sealedCardBruecke': 'Cifrado',
+  // The blind's kicker (#1241, B4.6/B6.10) — a decorative line, read by no screen reader.
+  'vote.signalBruecke': 'Sinal a chegar',
   'score.reasonVetoBrueckeOne': '{n}× sem impulso',
   'score.reasonVetoBruecke': '{n}× sem impulso',
   'startSession.guestSeatBruecke': 'Convidado · só hoje',

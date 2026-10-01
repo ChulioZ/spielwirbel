@@ -1910,6 +1910,8 @@ I18N.nl = {
   'vote.sealedTextBrueckeOne': 'Nog één spel blijft versleuteld tot je het bereikt.',
   'vote.sealedTextBruecke': 'Nog {n} spellen blijven versleuteld tot je ze bereikt.',
   'vote.sealedCardBruecke': 'Versleuteld',
+  // The blind's kicker (#1241, B4.6/B6.10) — a decorative line, read by no screen reader.
+  'vote.signalBruecke': 'Inkomend signaal',
   'score.reasonVetoBrueckeOne': '{n}× geen stuwkracht',
   'score.reasonVetoBruecke': '{n}× geen stuwkracht',
   'startSession.guestSeatBruecke': 'Gast · alleen vandaag',

@@ -562,6 +562,7 @@ const frontendGlobals = {
   // views-session-bruecke.js (issue #1240): Die Brücke's setup, vote sides and result panels
   composeBrueckeSetup: 'readonly', brueckeVoteSides: 'readonly', brueckeVoteWord: 'readonly', brueckeScoreReason: 'readonly',
   brueckeTitleSplit: 'readonly', composeBrueckeResult: 'readonly',
+  brueckeBlind: 'readonly', composeBrueckeLobby: 'readonly', // #1241
   // views-session-tables.js (issue #796)
   showTableBuilder: 'readonly', tableStateFrom: 'readonly', tablePeopleIds: 'readonly',
   tableCoverBg: 'readonly',

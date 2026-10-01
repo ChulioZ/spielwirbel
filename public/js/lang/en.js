@@ -2033,6 +2033,8 @@ I18N.en = {
   'vote.sealedTextBrueckeOne': 'One more game stays encrypted until you reach it.',
   'vote.sealedTextBruecke': '{n} more games stay encrypted until you reach them.',
   'vote.sealedCardBruecke': 'Encrypted',
+  // The blind's kicker (#1241, B4.6/B6.10) — a decorative line, read by no screen reader.
+  'vote.signalBruecke': 'Incoming signal',
   'score.reasonVetoBrueckeOne': '{n}× no thrust',
   'score.reasonVetoBruecke': '{n}× no thrust',
   'startSession.guestSeatBruecke': 'Guest · today only',

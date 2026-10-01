@@ -1878,6 +1878,8 @@ I18N.fi = {
   'vote.sealedTextBrueckeOne': 'Vielä yksi peli pysyy salattuna, kunnes pääset siihen.',
   'vote.sealedTextBruecke': 'Vielä {n} peliä pysyy salattuna, kunnes pääset niihin.',
   'vote.sealedCardBruecke': 'Salattu',
+  // The blind's kicker (#1241, B4.6/B6.10) — a decorative line, read by no screen reader.
+  'vote.signalBruecke': 'Saapuva signaali',
   'score.reasonVetoBrueckeOne': '{n}× ei työntöä',
   'score.reasonVetoBruecke': '{n}× ei työntöä',
   'startSession.guestSeatBruecke': 'Vieras · vain tänään',

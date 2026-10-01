@@ -2,7 +2,10 @@
    B4.1 at 1440, B16.1 with twelve people), the vote card's side columns (B2.4,
    B4.2), the result's two panels (B2.5, B4.3, B16.3 the tie) and the several
    tables (B4.4). Sheets: docs/design/bruecke/Bruecke-B2-Phone-Kern.dc.html,
-   Bruecke-B4-Session-Desktop.dc.html and Bruecke-B16-Dichte.dc.html.
+   Bruecke-B4-Session-Desktop.dc.html and Bruecke-B16-Dichte.dc.html. #1241
+   added the shared vote (B4.5, B6.9) and the pass-device blind (B4.6, B6.10)
+   — composeBrueckeLobby() and brueckeBlind() at the end of the file, sheets
+   B4 and Bruecke-B6-Phone-Rest.dc.html.
 
    Like Ocean's (views-session-ocean.js), everything here RE-COMPOSES markup the
    shared paths have already built: every control keeps its node, its id and the
@@ -159,4 +162,85 @@ function composeBrueckeResult(screen) {
     (toSide ? side : main).appendChild(el);
   });
   screen.replaceChildren(main, side);
+}
+
+/* The pass-device blind (#1241 — B4.6 at 1440, B6.10 at 390): the screen that
+   covers the device between two people in one-device mode. It replaces the
+   Klassisch handover card rather than repainting it, the way Ocean's does
+   (views-session-ocean.js), because that card is one full-bleed person colour
+   and Die Brücke's blind is the night with a panel on it.
+
+   It shows NOTHING of the person before: no rating, no score, no game, and not
+   even who rated — both sheets say so on the screen, and it is the blind's
+   whole purpose. So unlike Ocean's there is no relay row; the only person on it
+   is the one being handed the device. Every word is the app's (`vote.turn`,
+   `vote.handoverSub`, `vote.go`) except the kicker, which is one of the
+   decorative lines the vocabulary addendum lets the design keep.
+
+   The ids stay Klassisch's (#goBtn, #backBtn), so startVoting() wires this
+   exactly as it wires the card. The person's colour is the avatar's edge and
+   its initial — a glyph far above rule 1's 24px floor — never a fill with text
+   on it. */
+function brueckeBlind(round, person, canBack) {
+  const color = personColor(round, person);
+  return h(`<div class="handover handover--bruecke">
+      <span class="bruecke-blind__signal" aria-hidden="true">${esc(t('vote.signalBruecke'))}</span>
+      <span class="handover__avatar" style="--person:${color}">${avatarFace(initials(person.name), { userId: person.userId })}</span>
+      <h1 class="handover__name">${esc(t('vote.turn', { name: personLabel(person) }))}</h1>
+      <p class="handover__sub">${esc(t('vote.handoverSub'))}</p>
+      <button class="handover__go" id="goBtn">${esc(t('vote.go'))}</button>
+      ${canBack ? `<button class="handover__back" id="backBtn"><i class="ti ti-chevron-left" aria-hidden="true"></i> ${esc(t('vote.back'))}</button>` : ''}
+    </div>`);
+}
+
+/* The shared vote (#1241 — B4.5 at 1440, B6.9 at 390), re-composed from the
+   lobby showSessionLobby() has just built. Three blocks, in this order at every
+   width — one column on a phone, three from 1100px:
+
+   1. WHO — „Wer spielt mit?" over the people, with the count in words, and
+      „Deine Stimme ist da" once your own is in (it was the actions column's).
+   2. SHARE — the panel: the link and the QR code, and nothing else. The code
+      stays a control that opens the server-drawn code (showVoteQrSheet) rather
+      than being printed inline as the sheets draw it: the link is minted on
+      demand, because a token that exists is a token that can leak (#652), and
+      an inline code would mint one for every lobby anyone opens.
+   3. THIS DEVICE — the actions column: the leading button, „An diesem Gerät
+      abstimmen" and its people, and last „Abstimmung beenden" with the line
+      naming who is still open, moved out of the panel. B4.5 puts closing in the
+      page head; it goes to the end of this column instead, where B6.9 draws it
+      on the phone, so the DOM order and the visual order stay one order at
+      every width (WCAG 2.4.3) — a head placement would put the last action a
+      keyboard reaches at the top of the screen.
+
+   With every vote in, the panel has nothing left to share and goes. Every node
+   keeps its listener: nothing here builds a control, it only moves them and
+   adds the headings. */
+function composeBrueckeLobby(root, people, voted) {
+  root.classList.add('live-vote--bruecke');
+  const peopleEl = root.querySelector('.live-vote__people');
+  const actions = root.querySelector('.live-vote__actions');
+  const panel = root.querySelector('.live-vote__panel');
+
+  const n = people.filter((p) => voted.has(p.id)).length;
+  peopleEl.prepend(h(`<div class="bruecke-lobby__head">
+      <h2 class="bruecke-kicker">${esc(t('startSession.membersLabel'))}</h2>
+      <span class="bruecke-lobby__count">${esc(t('lobby.progress', { n, total: people.length }))}</span>
+    </div>`));
+  const done = actions.querySelector('.live-vote__done');
+  if (done) peopleEl.appendChild(done);
+  // B4.5's footnote under the people; the phone sheet leaves it out (CSS).
+  peopleEl.appendChild(h(`<p class="bruecke-lobby__sealed">${esc(t('vote.sealedNoteBruecke'))}</p>`));
+
+  const qr = panel.querySelector('.live-vote__qr');
+  if (qr) {
+    qr.innerHTML = `<i class="ti ti-qrcode" aria-hidden="true"></i>
+      <span class="bruecke-qr__text"><span class="bruecke-qr__title">${esc(t('lobby.qr'))}</span>
+      <span class="bruecke-qr__hint">${esc(t('lobby.qrHint'))}</span></span>`;
+  }
+  ['.live-vote__close', '.live-vote__waiting'].forEach((sel) => {
+    const el = panel.querySelector(sel);
+    if (el) actions.appendChild(el);
+  });
+  if (panel.children.length) root.insertBefore(panel, actions);
+  else panel.remove();
 }
