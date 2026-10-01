@@ -329,7 +329,9 @@ What the app does, in detail. For a short overview see the
     count already says everything the strip could. Only the off-shelf group is
     always there, because a list is not less worth reaching for being empty.
   - **Regal** (shelf) – the game collection as a card grid with one „Filter"
-    control holding both the custom-tag chips and the imported-BGG-metadata
+    control holding the custom-tag chips, an **owner** filter (once anybody on
+    the shelf is marked as owning a box: pick one or more members to see the
+    games any of them owns) and the imported-BGG-metadata
     filters (see Sessions below), a search pill, sorting
     (random / name / rating),
     and the add-game sheet. Each card opens the game's detail page

@@ -459,6 +459,9 @@ I18N.fr = {
   'metaFilter.valueIncluded': '« {name} » : compte dans le filtre. Clique pour exclure les jeux qui la portent.',
   'metaFilter.valueExcluded': '« {name} » : les jeux qui la portent sont masqués. Clique pour ne plus filtrer dessus.',
   'metaFilter.removeFilter': 'Retirer {name}',
+  // The Regal's owner filter (#1433).
+  'ownerFilter.title': 'Propriétaires',
+  'ownerFilter.chip': 'À {name}',
 
   'transferGames.link': 'Déplacer ou copier des jeux',
   'transferGames.mode': 'Action',

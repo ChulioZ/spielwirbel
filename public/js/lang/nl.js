@@ -456,6 +456,9 @@ I18N.nl = {
   'metaFilter.valueIncluded': '“{name}”: telt mee voor het filter. Klik om spellen ermee juist uit te sluiten.',
   'metaFilter.valueExcluded': '“{name}”: spellen ermee zijn verborgen. Klik om er niet meer op te filteren.',
   'metaFilter.removeFilter': '{name} verwijderen',
+  // The Regal's owner filter (#1433).
+  'ownerFilter.title': 'Eigenaren',
+  'ownerFilter.chip': 'Van {name}',
 
   'transferGames.link': 'Spellen verplaatsen of kopiëren',
   'transferGames.mode': 'Actie',
