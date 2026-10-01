@@ -1907,6 +1907,13 @@ I18N.nl = {
   'badges.evergreen.lineGame': '{game} {n} keer gespeeld',
   // A Regal card's running number in Das Programmheft (#1373, P3.3).
   'regal.cardNo': 'Nr. {n}',
+  // Die Brücke's Regal and Spielepass (#1239, B16.2/B13.4).
+  'regal.lettersBruecke': 'Naar een letter springen',
+  'regal.batchShownBruecke': '{shown} van {total} geladen',
+  'regal.batchMoreBruecke': 'Nog {n} laden',
+  'detail.distTitleBruecke': 'Hoe de ronde het beoordeelt',
+  'detail.statPlaysBruecke': 'keer gespeeld',
+  'detail.statVetoBruecke': '× geen stuwkracht',
   // Das Programmheft's lobby and hub (#1372, P3.1/P3.2/P6.1).
   'hub.members': 'Leden',
   'hub.lead.open': 'Uitslag bekijken',

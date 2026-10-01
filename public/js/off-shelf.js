@@ -92,3 +92,57 @@ function offShelfSegments(round, activeSub) {
   });
   return nav;
 }
+
+// The four off-shelf destinations, as a plain list sheet (moved here from
+// views-regal.js in #1239 — it is one more presentation of the same four).
+//
+// ONE presentation for everything below 1280px, deliberately: the trigger is
+// `rail-owned`, so a popover/sheet split by the 860px editor breakpoint would
+// invent a third presentation for the 860–1279px band alone. The
+// popover-vs-sheet split exists because an anchored popover cannot hold a text
+// input on a phone (.claude/rules/popover-vs-sheet-editors.md) — this holds only
+// links, so it never needs it. Shape copied from pickExpansionBase (#664).
+// Under Der Tisch the trigger is not `rail-owned` (#1262), so this same centred
+// dialog serves the desktop too — still one presentation, just at every width.
+function openOffShelfSheet(round) {
+  const rid = round.id;
+  const backdrop = h(`<div class="sheet-backdrop sheet-backdrop--center">
+      <div class="sheet sheet--dialog sheet--list" role="dialog" aria-modal="true" aria-label="${esc(t('rail.archive'))}">
+        <div class="sheet__head">
+          <h2>${esc(t('rail.archive'))}</h2>
+          <button class="sheet__close" aria-label="${esc(t('common.close'))}"><i class="ti ti-x" aria-hidden="true"></i></button>
+        </div>
+        <div class="ds-list off-shelf"></div>
+      </div>
+    </div>`);
+  document.body.appendChild(backdrop);
+  const dismiss = () => closeSheet();
+  const onKey = (e) => { if (e.key === 'Escape') dismiss(); };
+  document.addEventListener('keydown', onKey, true);
+  // Must go through openSheet for the focus trap (#145) and Back-dismissal
+  // (#333) — never assign activeSheet directly.
+  openSheet(backdrop, onKey);
+  backdrop.addEventListener('mousedown', (e) => { if (e.target === backdrop) dismiss(); });
+  backdrop.querySelector('.sheet__close').addEventListener('click', dismiss);
+
+  // Icons, labels and counts come from off-shelf.js, so this sheet, the rail
+  // and the hub's „Nicht im Regal" group cannot disagree about which rows exist
+  // or what they count — what test/off-shelf-parity.test.js used to have to
+  // compare between two hand-built arrays.
+  const list = backdrop.querySelector('.off-shelf');
+  offShelfEntries(round).forEach(({ icon, label, sub, go }) => {
+    // Real <a href> (#330), so ⌘/middle-click still open them in a new tab.
+    // `class` FIRST, like every other .ds-row site — test/ds-row-affordance.test.js
+    // matches on `<a\s+class="ds-row…"`, so an attribute in front of it makes the
+    // row invisible to that guard rather than failing it.
+    const row = h(`<a class="ds-row off-shelf__row">
+         <span class="ds-row__main"><i class="ti ${icon}" aria-hidden="true"></i><span>${esc(label)}</span></span>
+         <span class="ds-row__meta"><i class="ti ti-chevron-right" aria-hidden="true"></i></span>
+       </a>`);
+    // Through closeSheet, never on the line after it, or the queued history pop
+    // races the screen the choice renders
+    // (.claude/rules/sheet-history-back-dismissal.md).
+    navLink(row, roundPath(rid, sub), () => closeSheet(go));
+    list.appendChild(row);
+  });
+}

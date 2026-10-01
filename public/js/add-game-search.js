@@ -5,7 +5,9 @@
    Klassisch never reaches this file: showAddGame (views-round-lookup.js) asks
    for Der Tisch or Ocean (#1212, O3.5/O6.4 draw the same search-first step;
    ocean.css styles it), or Das Programmheft (#1373, P3.5/P6.4, styled by
-   programmheft.css) and sends every other design straight to the form. Under
+   programmheft.css), or Die Brücke (#1239, B6.4: bruecke.css, which also
+   closes the sheet on the „Powered by BGG" badge the sheet draws) and sends
+   every other design straight to the form. Under
    Der Tisch the sheet opens on a query field with a hit count, lists the hits
    as rows that each carry their own state — „Im Regal", „Auf der Wunschliste",
    or an add button — and offers two ways out below: the BGG collection import
@@ -50,6 +52,7 @@ function showAddGameSearch(round, { wish = false } = {}) {
           ${canImportBgg() ? `<button type="button" class="btn add-search__way" id="addSearchImport"><i class="ti ti-cards" aria-hidden="true"></i> ${esc(importLabel)}</button>` : ''}
           <button type="button" class="btn add-search__way" id="addSearchSelf"><i class="ti ti-pencil" aria-hidden="true"></i> ${esc(t('addGame.selfEntry'))}</button>
         </div>
+        ${designIs('bruecke') ? '<img class="add-search__bgg" src="/icons/powered-by-bgg.png" width="900" height="264" alt="Powered by BGG" />' : ''}
       </div>
     </div>`);
   const sheet = backdrop.querySelector('.sheet');

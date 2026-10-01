@@ -20,8 +20,9 @@
 // else; Klassisch goes straight to the form, exactly as before.
 function showAddGame(round, opts = {}) {
   // Ocean draws the same search-first step (#1212, O3.5/O6.4), and so does Das
-  // Programmheft (#1373, P3.5/P6.4 — programmheft.css styles it).
-  if (designIs('tisch') || designIs('ocean') || designIs('programmheft')) return showAddGameSearch(round, opts);
+  // Programmheft (#1373, P3.5/P6.4 — programmheft.css styles it), and Die
+  // Brücke (#1239, B6.4 — bruecke.css).
+  if (['tisch', 'ocean', 'programmheft', 'bruecke'].some(designIs)) return showAddGameSearch(round, opts);
   return showAddGameForm(round, opts);
 }
 

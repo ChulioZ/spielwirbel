@@ -349,7 +349,7 @@ links as a subset of the rail's; see
 why it moved: it was a `.round-footer` row below the *entire* cover grid, i.e.
 present but, on a phone column of 1–2 covers, unreachable in practice. It is now
 a „Nicht im Regal" control in the Regal's `.section-tools` header row, opening a
-sheet with all four off-shelf destinations (`openOffShelfSheet`,
+sheet with all four off-shelf destinations (`openOffShelfSheet`, `public/js/off-shelf.js`, opened from
 `public/js/views-regal.js`). The parity test was retargeted at that sheet in the
 same PR rather than left watching an empty `.round-footer` selector.
 

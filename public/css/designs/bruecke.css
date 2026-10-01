@@ -3448,3 +3448,582 @@
   color: var(--brand);
 }
 :root[data-design="bruecke"][data-scheme="dark"] .lobby-cta__sub { color: var(--ink-2); }
+
+/* ===== #1239 — Regal, Spielepass and the add-game lookup (B3.2, B2.6, B16.2, B13.4, B6.3, B6.4) ===== */
+
+/* ---- The Regal head (B3.2/B2.6): „Regal" in the display face with the count
+   beside it, and one row of wired controls. Every control is at the key target
+   and the search field at --target-field: the sheets draw them at 36px, and
+   B1's own token wins over a mock's height (review A2). */
+:root[data-design="bruecke"] .bruecke-regal .regal-head {
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 14px 30px;
+  margin-bottom: 18px;
+}
+:root[data-design="bruecke"] .bruecke-regal .regal-title { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
+:root[data-design="bruecke"] .bruecke-regal .regal-head .regal-title h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--display-xl);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: var(--track-display);
+  text-transform: uppercase;
+}
+:root[data-design="bruecke"] .bruecke-regal .regal-title__count {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+:root[data-design="bruecke"] .bruecke-regal .regal-head .section-tools { flex-wrap: wrap; align-items: center; gap: 8px; }
+:root[data-design="bruecke"] .bruecke-regal .regal-head .search-pill {
+  min-height: var(--target-field);
+  min-width: 240px;
+  padding: 0 12px;
+  border-width: 1px;
+}
+:root[data-design="bruecke"] .bruecke-regal .regal-head .search-pill input { font-size: var(--text-sm); }
+:root[data-design="bruecke"] .bruecke-regal .regal-sort,
+:root[data-design="bruecke"] .bruecke-regal .regal-head .section-tools :is(.link-btn, .fbar__trigger, .bruecke-add--bar) {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--target-key);
+  padding: 0 12px;
+  border: 1px solid transparent;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: var(--track-notation);
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+}
+:root[data-design="bruecke"] .bruecke-regal .regal-sort .sort-select {
+  min-height: 0;
+  padding: 0 2px;
+  border: 0;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+}
+/* With the trigger lifted into the toolbar, an empty filter bar would still
+   cost its wrapper's margin. */
+:root[data-design="bruecke"] .bruecke-regal .regal-filter:has(.fbar__chips[hidden]) { display: none; }
+
+/* ---- „Spiel hinzufügen": the cyan wire closing the toolbar (B3.2), the same
+   button full width under the grid on a phone (B2.6). One per width, so no
+   width announces two. */
+:root[data-design="bruecke"] .bruecke-add--dock { display: none; }
+/* Specificity matters here: the toolbar rule above gives the bar copy a
+   `display` at (0,6,0), so a hide has to outrank it, not follow it. */
+:root[data-design="bruecke"] .bruecke-regal.is-selecting .bruecke-add,
+:root[data-design="bruecke"] .bruecke-regal.is-selecting .regal-head .section-tools .bruecke-add--bar { display: none; }
+
+/* ---- The card (B3.2/B2.6): the cover carries nothing, the band below it
+   carries the title, the meta, the score and its bar. Flat, no lift on hover
+   („keine Bewegung") — the edge lights instead. */
+:root[data-design="bruecke"] .bruecke-regal .cards {
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 18px;
+}
+:root[data-design="bruecke"] .bruecke-card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid transparent;
+}
+:root[data-design="bruecke"] .bruecke-card.game-card--clickable:hover { transform: none; box-shadow: none; }
+:root[data-design="bruecke"] .bruecke-card .game-card__img { aspect-ratio: 4 / 3; border-radius: 0; }
+:root[data-design="bruecke"] .bruecke-card .game-card__body {
+  flex: 1;
+  gap: 6px;
+  padding: 10px 12px;
+  border-top: 1px solid transparent;
+}
+:root[data-design="bruecke"] .bruecke-card .game-card__title {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: var(--track-display);
+  text-transform: uppercase;
+  text-wrap: balance;
+}
+/* B16.4: 22 characters and up step down one level instead of wrapping. */
+:root[data-design="bruecke"] .bruecke-card .game-card__title.is-long { font-size: 13px; }
+:root[data-design="bruecke"] .bruecke-card__row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: auto;
+}
+:root[data-design="bruecke"] .bruecke-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 6px;
+  min-width: 0;
+  font-family: var(--font-mono);
+  font-size: 10px;
+}
+:root[data-design="bruecke"] .bruecke-card__meta .game-card__meta { font-size: inherit; }
+:root[data-design="bruecke"] .bruecke-card__meta .exp-pill { position: static; }
+:root[data-design="bruecke"] .bruecke-card__score {
+  flex: none;
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1;
+}
+:root[data-design="bruecke"] .bruecke-card__score.is-new {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: var(--track-notation);
+  text-transform: uppercase;
+}
+:root[data-design="bruecke"] .bruecke-card__bar { display: block; height: 4px; }
+:root[data-design="bruecke"] .bruecke-card__bar > span { display: block; height: 100%; }
+
+/* ---- Density (B16.2): the letter row and the batch foot. Both carry
+   `hidden` when they have nothing to say, so `display` is set only on the
+   shown state — a bare `display` rule would outrank the UA's [hidden]. */
+:root[data-design="bruecke"] .bruecke-letters:not([hidden]) { display: flex; flex-wrap: wrap; gap: 4px; margin: 0 0 14px; }
+:root[data-design="bruecke"] .bruecke-letters__key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  min-height: 28px;
+  padding: 0 6px;
+  border: 1px solid transparent;
+  border-radius: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  cursor: pointer;
+}
+:root[data-design="bruecke"] .bruecke-batch:not([hidden]) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 20px;
+  margin-top: 18px;
+  padding-top: 12px;
+  border-top: 1px solid transparent;
+}
+:root[data-design="bruecke"] .bruecke-batch__count {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: var(--track-notation);
+  text-transform: uppercase;
+}
+:root[data-design="bruecke"] .bruecke-batch__more {
+  min-height: var(--target-key);
+  padding: 0 18px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: var(--track-notation);
+  text-transform: uppercase;
+}
+
+/* ---- „Nicht im Regal: …" (B3.2/B2.6): one line of links under the shelf. */
+:root[data-design="bruecke"] .bruecke-offshelf {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 14px;
+  margin-top: 22px;
+}
+:root[data-design="bruecke"] .bruecke-regal .bruecke-offshelf h2.bruecke-offshelf__label,
+:root[data-design="bruecke"] .bruecke-offshelf__link {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: var(--track-notation);
+  text-transform: uppercase;
+}
+:root[data-design="bruecke"] .bruecke-offshelf__list { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 0; padding: 0; list-style: none; }
+:root[data-design="bruecke"] .bruecke-offshelf__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--target-min);
+  text-decoration: none;
+}
+
+@media (max-width: 859px) {
+  :root[data-design="bruecke"] .bruecke-regal .regal-head .regal-title h1 { font-size: 30px; }
+  :root[data-design="bruecke"] .bruecke-regal .regal-title__count { font-size: 15px; }
+  :root[data-design="bruecke"] .bruecke-regal .regal-head .section-tools { flex: 1 1 100%; }
+  :root[data-design="bruecke"] .bruecke-regal .regal-head .search-pill { flex: 1 1 100%; min-width: 0; }
+  :root[data-design="bruecke"] .bruecke-regal .regal-head .section-tools .btn.bruecke-add--bar { display: none; }
+  :root[data-design="bruecke"] .bruecke-add--dock {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    min-height: var(--target-key);
+    margin-top: 14px;
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: var(--track-display);
+    text-transform: uppercase;
+  }
+}
+/* B2.6: two columns on a phone, whatever the shelf holds. */
+@media (max-width: 520px) {
+  :root[data-design="bruecke"] .bruecke-regal .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  :root[data-design="bruecke"] .bruecke-card .game-card__body { padding: 9px 10px; }
+  :root[data-design="bruecke"] .bruecke-card .game-card__title { font-size: 14px; }
+  :root[data-design="bruecke"] .bruecke-card .game-card__title.is-long { font-size: 12px; }
+  :root[data-design="bruecke"] .bruecke-card__bar { height: 3px; }
+}
+
+/* ---- The Spielepass (B13.4 desktop, B6.3 phone). The left page is the cover
+   over a flat panel with the title, the meta and the chips — never text on
+   the cover — and the action under it; the right page states the three
+   figures, the rating distribution, who rated it and the dated sessions. */
+@media (min-width: 860px) {
+  :root[data-design="bruecke"] .pass { grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); gap: 24px; }
+}
+@media (min-width: 1280px) {
+  :root[data-design="bruecke"] .pass { grid-template-columns: minmax(0, 520px) minmax(0, 1fr); }
+}
+:root[data-design="bruecke"] .pass__game { display: flex; flex-direction: column; gap: 14px; }
+:root[data-design="bruecke"] .pass__table { gap: 14px; }
+:root[data-design="bruecke"] .gd-head {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+  padding: 0;
+  border-radius: 0;
+  overflow: visible;
+}
+:root[data-design="bruecke"] .gd-head::before { display: none; }
+:root[data-design="bruecke"] .gd-img { aspect-ratio: 4 / 3; border-radius: 0; }
+:root[data-design="bruecke"] .gd-info { padding: 18px 20px; border: 1px solid transparent; }
+:root[data-design="bruecke"] .gd-info h1 { margin: 0 0 8px; }
+:root[data-design="bruecke"] .gd-title {
+  font-family: var(--font-display);
+  font-size: var(--display-l);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: var(--track-display);
+  text-transform: uppercase;
+}
+:root[data-design="bruecke"] .gd-title.is-long { font-size: var(--display-m); }
+:root[data-design="bruecke"] .gd-titleline { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+:root[data-design="bruecke"] .gd-titleline h1 { flex: 1 1 auto; min-width: 0; }
+:root[data-design="bruecke"] .gd-bignum { display: flex; flex: none; flex-direction: column; align-items: flex-end; gap: 2px; }
+:root[data-design="bruecke"] .gd-bignum__n {
+  font-family: var(--font-display);
+  font-size: var(--display-l);
+  font-weight: 700;
+  line-height: 1;
+}
+:root[data-design="bruecke"] .gd-bignum__n--none { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; }
+:root[data-design="bruecke"] .gd-bignum__cap,
+:root[data-design="bruecke"] .gd-bignum__ev {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: var(--track-notation-long);
+  text-transform: uppercase;
+  text-align: right;
+}
+:root[data-design="bruecke"] .gd-chips .tag {
+  min-height: 28px;
+  border-radius: 0;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: var(--track-notation-long);
+  text-transform: uppercase;
+}
+/* The section heads on the right page are notation, not titles (B13.4). */
+:root[data-design="bruecke"] .pass .section > h2 {
+  margin: 0 0 10px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: var(--track-notation);
+  text-transform: uppercase;
+}
+:root[data-design="bruecke"] .pass :is(.bruecke-dist, .gd-raters, .gd-history) { margin: 0; padding: 18px 20px; border: 1px solid transparent; }
+
+/* The three figures — desktop only; the phone states the score beside the
+   title (B6.3), so the numeral is hidden where the tiles show. */
+:root[data-design="bruecke"] .bruecke-stats { display: none; }
+:root[data-design="bruecke"] .bruecke-stat { display: flex; flex-direction: column; gap: 4px; padding: 16px 18px; border: 1px solid transparent; }
+:root[data-design="bruecke"] .bruecke-stat__n {
+  font-family: var(--font-display);
+  font-size: 36px;
+  font-weight: 700;
+  line-height: 1;
+}
+:root[data-design="bruecke"] .bruecke-stat__label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: var(--track-notation-long);
+  text-transform: uppercase;
+}
+@media (min-width: 860px) {
+  :root[data-design="bruecke"] .bruecke-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+  :root[data-design="bruecke"] .gd-titleline .gd-bignum { display: none; }
+}
+
+/* The distribution: five columns, the count above, the app's mood face below. */
+:root[data-design="bruecke"] .bruecke-dist__cols { display: flex; gap: 10px; height: 100px; }
+:root[data-design="bruecke"] .bruecke-dist__col { display: flex; flex: 1; flex-direction: column; align-items: center; gap: 6px; min-width: 0; }
+:root[data-design="bruecke"] .bruecke-dist__n { font-family: var(--font-mono); font-size: 11px; }
+:root[data-design="bruecke"] .bruecke-dist__track { display: flex; flex: 1; align-items: flex-end; width: 100%; }
+:root[data-design="bruecke"] .bruecke-dist__bar { display: block; width: 100%; min-height: 2px; }
+:root[data-design="bruecke"] .bruecke-dist__col > .ti { font-size: 18px; /* glyph, not type */ }
+
+/* The dated sessions (Der Tisch's list, in the design's notation). */
+:root[data-design="bruecke"] .gd-plays { margin: 0; padding: 0; list-style: none; }
+:root[data-design="bruecke"] .gd-play__link {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 46px;
+  border-bottom: 1px solid transparent;
+  text-decoration: none;
+}
+:root[data-design="bruecke"] .gd-play .avatar,
+:root[data-design="bruecke"] .gd-play__dot { flex: none; width: 28px; height: 28px; font-size: 11px; /* glyph-sized initials */ }
+:root[data-design="bruecke"] .gd-play__date { flex: none; font-family: var(--font-mono); font-size: 13px; font-variant-numeric: tabular-nums; }
+:root[data-design="bruecke"] .gd-play__what { flex: 1 1 auto; min-width: 0; font-size: var(--text-sm); }
+:root[data-design="bruecke"] .gd-play .score-pill { position: static; flex: none; }
+
+/* The action: under the card on the desktop (B13.4), a bar above the dock on
+   the phone (B6.3). Two copies, one per width. */
+:root[data-design="bruecke"] .gd-bar { border-radius: 0; box-shadow: none; }
+:root[data-design="bruecke"] .gd-bar--side { position: static; padding: 0; }
+:root[data-design="bruecke"] .gd-bar .btn {
+  min-height: 52px;
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: var(--track-display);
+  text-transform: uppercase;
+}
+/* B6.3 keeps the dock on the phone Spieldetail (review C2) — the one round
+   sub-screen that shows it, as Das Programmheft's result screen does. Its
+   clearance rides the same condition, and the action bar sticks flush above
+   it: 61px is the dock's 60px item plus its 1px top line. */
+@media (max-width: 859px) {
+  :root[data-design="bruecke"] .app:has(.pass) .dock.dock--sub { display: flex; }
+  :root[data-design="bruecke"] .app:has(.pass):has(.dock),
+  :root[data-design="bruecke"] .app:has(.pass):has(.dock) + .site-footer { padding-bottom: 84px; }
+  :root[data-design="bruecke"] .app:has(.dock) .gd-bar--foot { bottom: calc(61px + env(safe-area-inset-bottom, 0px)); }
+  :root[data-design="bruecke"] .gd-bar--side { display: none; }
+  :root[data-design="bruecke"] .gd-img { aspect-ratio: 16 / 10; }
+  :root[data-design="bruecke"] .gd-title { font-size: 28px; }
+  :root[data-design="bruecke"] .gd-title.is-long { font-size: var(--display-s); }
+  :root[data-design="bruecke"] .gd-bignum__n { font-size: 40px; }
+  :root[data-design="bruecke"] .bruecke-dist__cols { height: 72px; }
+}
+@media (min-width: 860px) {
+  :root[data-design="bruecke"] .gd-bar--foot { display: none; }
+}
+
+/* ---- The add-game lookup (B6.4): a wired query field, the hits as flat rows
+   with the cover beside the title, and the two ways out as dashed wires; the
+   sheet closes on the „Powered by BGG" badge. */
+:root[data-design="bruecke"] .add-search__query {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  margin: 2px 0 12px;
+  padding: 0 12px;
+  border: 1px solid transparent;
+}
+:root[data-design="bruecke"] .add-search__query > .ti { font-size: 18px; /* glyph, not type */ }
+:root[data-design="bruecke"] .add-search__input {
+  flex: 1;
+  min-width: 0;
+  min-height: var(--target-field);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 15px;
+  outline: none;
+}
+:root[data-design="bruecke"] .add-search__count,
+:root[data-design="bruecke"] .add-search__state {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: var(--track-notation-long);
+  text-transform: uppercase;
+}
+:root[data-design="bruecke"] .add-search__msg { margin: 0 0 10px; font-size: var(--text-sm); }
+:root[data-design="bruecke"] .add-search__msg:empty { margin: 0; }
+:root[data-design="bruecke"] .add-search__list { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
+:root[data-design="bruecke"] .add-search__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 60px;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+}
+:root[data-design="bruecke"] .add-search__cover { position: relative; flex: none; width: 52px; aspect-ratio: 4 / 3; overflow: hidden; }
+:root[data-design="bruecke"] .add-search__cover img { display: block; width: 100%; height: 100%; object-fit: cover; }
+:root[data-design="bruecke"] .add-search__cover .cover-ph .ti { font-size: 16px; /* glyph, not type */ }
+:root[data-design="bruecke"] .add-search__text { display: flex; flex: 1; flex-direction: column; gap: 2px; min-width: 0; }
+:root[data-design="bruecke"] .add-search__title {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: var(--track-display);
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+:root[data-design="bruecke"] .add-search__meta { font-family: var(--font-mono); font-size: 11px; }
+:root[data-design="bruecke"] :is(.add-search__add, .add-search__shelve, .add-search__held) {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: var(--target-key);
+  padding: 0 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: var(--track-notation-long);
+  text-transform: uppercase;
+}
+:root[data-design="bruecke"] .add-search__ways { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+:root[data-design="bruecke"] .add-search__way {
+  justify-content: center;
+  min-height: var(--target-key);
+  border-style: dashed;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: var(--track-notation);
+  text-transform: uppercase;
+}
+:root[data-design="bruecke"] .add-search__bgg { display: block; width: 92px; height: auto; margin-top: 16px; }
+@media (max-width: 560px) {
+  :root[data-design="bruecke"] :is(.add-search__add, .add-search__shelve, .add-search__held) { width: 44px; padding: 0; font-size: 18px; }
+  :root[data-design="bruecke"] .add-search__act-label { display: none; }
+}
+
+/* ---- Colour, gated on the dark scheme like every Brücke rule that reads a
+   token. */
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-regal .regal-title__count { color: var(--ink-soft); }
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-regal .regal-head .search-pill {
+  background: var(--surface);
+  border-color: var(--line);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-regal .regal-head .search-pill .ti { color: var(--brand); }
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-regal .regal-sort,
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-regal .regal-head .section-tools :is(.link-btn, .fbar__trigger) {
+  background: transparent;
+  border-color: var(--line);
+  color: var(--ink);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-regal .regal-head .section-tools :is(.link-btn, .fbar__trigger):hover { border-color: var(--brand); }
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-regal .regal-sort .sort-select { background-color: transparent; color: var(--ink); }
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-add,
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-batch__more {
+  background: transparent;
+  border: 1px solid var(--brand);
+  color: var(--brand);
+  box-shadow: none;
+}
+:root[data-design="bruecke"][data-scheme="dark"] :is(.bruecke-add, .bruecke-batch__more):hover {
+  background: var(--surface-raised);
+  border-color: var(--brand-strong);
+  color: var(--brand-strong);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-card {
+  background: var(--surface);
+  border-color: var(--line);
+  color: var(--ink);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-card:hover { border-color: var(--brand); }
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-card .game-card__body { border-top-color: var(--line); }
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-card__meta { color: var(--ink-soft); }
+/* B8 „Score-Farbe an der Zahl": 24px, so the number may wear its band. The
+   bar beside it reads the same band through --bk-band. */
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-card { --bk-band: var(--band-low); }
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-card:has(.bruecke-card__score[data-stop="5"]) { --bk-band: var(--band-top); }
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-card:has(.bruecke-card__score[data-stop="4"]) { --bk-band: var(--band-good); }
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-card:has(.bruecke-card__score[data-stop="veto"]) { --bk-band: var(--danger); }
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-card__score { color: var(--bk-band); }
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-card__score.is-new { color: var(--ink-soft); }
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-card__bar { background: var(--sunken-soft); }
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-card__bar > span { background: var(--bk-band); }
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-letters__key {
+  background: transparent;
+  border-color: var(--line);
+  color: var(--ink);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-letters__key:hover { border-color: var(--brand); }
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-letters__key.is-current {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: var(--on-accent);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-batch:not([hidden]) { border-top-color: var(--line); }
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-batch__count,
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-regal .bruecke-offshelf h2.bruecke-offshelf__label,
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-offshelf__link { color: var(--ink-soft); }
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-offshelf__link:hover { color: var(--ink); }
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-offshelf__link.is-rec { color: var(--brand); }
+
+:root[data-design="bruecke"][data-scheme="dark"] .gd-head { background: transparent; box-shadow: none; }
+:root[data-design="bruecke"][data-scheme="dark"] .gd-img { border: 1px solid var(--line); box-shadow: none; }
+:root[data-design="bruecke"][data-scheme="dark"] .gd-info,
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-stat,
+:root[data-design="bruecke"][data-scheme="dark"] .pass :is(.bruecke-dist, .gd-raters, .gd-history) {
+  background: var(--surface);
+  border-color: var(--line);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .gd-title { color: var(--ink); }
+:root[data-design="bruecke"][data-scheme="dark"] .gd-chips .tag { background: transparent; border: 1px solid var(--line); color: var(--ink); }
+:root[data-design="bruecke"][data-scheme="dark"] .pass .section > h2,
+:root[data-design="bruecke"][data-scheme="dark"] :is(.gd-bignum__cap, .bruecke-stat__label, .bruecke-dist__n, .gd-play__date) { color: var(--ink-soft); }
+:root[data-design="bruecke"][data-scheme="dark"] .gd-bignum__ev { color: var(--ink-2); }
+:root[data-design="bruecke"][data-scheme="dark"] :is(.gd-bignum__n, .bruecke-stat__n) { color: var(--ink); }
+:root[data-design="bruecke"][data-scheme="dark"] :is(.gd-bignum[data-stop="5"] .gd-bignum__n, .bruecke-stat__n[data-stop="5"]) { color: var(--band-top); }
+:root[data-design="bruecke"][data-scheme="dark"] :is(.gd-bignum[data-stop="4"] .gd-bignum__n, .bruecke-stat__n[data-stop="4"]) { color: var(--band-good); }
+:root[data-design="bruecke"][data-scheme="dark"] :is(.gd-bignum[data-stop="3"], .gd-bignum[data-stop="2"], .gd-bignum[data-stop="1"]) .gd-bignum__n,
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-stat__n:is([data-stop="3"], [data-stop="2"], [data-stop="1"]) { color: var(--band-low); }
+:root[data-design="bruecke"][data-scheme="dark"] :is(.gd-bignum[data-stop="veto"] .gd-bignum__n, .bruecke-stat__n[data-stop="veto"]) { color: var(--danger); }
+:root[data-design="bruecke"][data-scheme="dark"] .gd-bignum__n--none { color: var(--ink-soft); }
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-dist__col[data-r="1"] { --bk-thrust: var(--thrust-1); }
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-dist__col[data-r="2"] { --bk-thrust: var(--thrust-2); }
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-dist__col[data-r="3"] { --bk-thrust: var(--thrust-3); }
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-dist__col[data-r="4"] { --bk-thrust: var(--thrust-4); }
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-dist__col[data-r="5"] { --bk-thrust: var(--thrust-5); }
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-dist__bar { background: var(--bk-thrust); }
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-dist__col > .ti { color: var(--bk-thrust); }
+:root[data-design="bruecke"][data-scheme="dark"] .gd-play__link { border-bottom-color: var(--hairline); color: var(--ink); }
+:root[data-design="bruecke"][data-scheme="dark"] .gd-play--muted .gd-play__what { color: var(--ink-soft); }
+:root[data-design="bruecke"][data-scheme="dark"] .gd-play__dot { background: var(--sunken-soft); }
+:root[data-design="bruecke"][data-scheme="dark"] .gd-bar--foot { background: var(--bar); border-top: 1px solid var(--line); }
+:root[data-design="bruecke"][data-scheme="dark"] .gd-bar--side { background: transparent; }
+
+:root[data-design="bruecke"][data-scheme="dark"] .add-search__query { background: var(--surface); border-color: var(--line); color: var(--brand); }
+:root[data-design="bruecke"][data-scheme="dark"] .add-search__query:focus-within { border-color: var(--brand); }
+:root[data-design="bruecke"][data-scheme="dark"] .add-search__input { color: var(--ink); }
+:root[data-design="bruecke"][data-scheme="dark"] .add-search__input::placeholder { color: var(--ink-soft); }
+:root[data-design="bruecke"][data-scheme="dark"] :is(.add-search__msg, .add-search__meta, .add-search__state, .add-search__count) { color: var(--ink-soft); }
+:root[data-design="bruecke"][data-scheme="dark"] .add-search__row { background: var(--surface); border-color: var(--line); color: var(--ink); }
+:root[data-design="bruecke"][data-scheme="dark"] .add-search__row.is-held { border-color: var(--hairline); }
+:root[data-design="bruecke"][data-scheme="dark"] .add-search__cover { border: 1px solid var(--line); }
+:root[data-design="bruecke"][data-scheme="dark"] .add-search__held { color: var(--good); }
+:root[data-design="bruecke"][data-scheme="dark"] .add-search__way { background: transparent; border-color: var(--brand); color: var(--brand); box-shadow: none; }
+:root[data-design="bruecke"][data-scheme="dark"] .add-search__way:hover { background: var(--surface-raised); }

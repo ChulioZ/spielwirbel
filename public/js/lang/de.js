@@ -2028,6 +2028,13 @@ I18N.de = {
   'badges.evergreen.lineGame': '{game} {n}-mal gespielt',
   // A Regal card's running number in Das Programmheft (#1373, P3.3).
   'regal.cardNo': 'Nr. {n}',
+  // Die Brücke's Regal and Spielepass (#1239, B16.2/B13.4).
+  'regal.lettersBruecke': 'Zu einem Anfangsbuchstaben springen',
+  'regal.batchShownBruecke': '{shown} von {total} geladen',
+  'regal.batchMoreBruecke': 'Weitere {n} laden',
+  'detail.distTitleBruecke': 'Wie die Runde wertet',
+  'detail.statPlaysBruecke': 'Mal gespielt',
+  'detail.statVetoBruecke': '× kein Schub',
   // Das Programmheft's lobby and hub (#1372, P3.1/P3.2/P6.1).
   'hub.members': 'Mitglieder',
   'hub.lead.open': 'Ergebnis ansehen',

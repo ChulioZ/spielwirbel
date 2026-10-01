@@ -413,7 +413,7 @@ const frontendGlobals = {
   // views-round-detail.js, views-round-settings.js, views-round-actions.js,
   // views-round-lookup.js. They
   // share one global scope, so all their top-level names are listed together.
-  showRoundSettings: 'readonly',
+  showRoundSettings: 'readonly', cardMeta: 'readonly',
   showRound: 'readonly', showRetired: 'readonly', showCompleted: 'readonly',
   showWishlist: 'readonly', showRecommendations: 'readonly',
   recReasonText: 'readonly', recFacts: 'readonly', recEmptyKey: 'readonly',
@@ -499,11 +499,15 @@ const frontendGlobals = {
   // bruecke-hub.js (#1238) — Die Brücke's lobby notice and round hub composition
   brueckeHubFrame: 'readonly', brueckeMission: 'readonly', brueckeMissionEmpty: 'readonly', brueckeYoungLine: 'readonly', brueckeHeroCompose: 'readonly',
   brueckeStatus: 'readonly', brueckeResumeNotice: 'readonly',
+  // bruecke-shelf.js (#1239) — Die Brücke's Regal cards, density controls and Spielepass figures
+  BRUECKE_DENSE_MIN: 'readonly', BRUECKE_BATCH: 'readonly', brueckeTitleLong: 'readonly',
+  brueckeLetter: 'readonly', brueckeCard: 'readonly', brueckeShelfDensity: 'readonly',
+  brueckeOffShelfLine: 'readonly', brueckePassStats: 'readonly', brueckePassDist: 'readonly',
   // #1280 — Der Tisch's young-round features (views-home.js, hub-cards.js, views-pokale.js)
   lobbyInviteSlip: 'readonly', lobbyNextStep: 'readonly', hubDemoSummary: 'readonly',
   hubDemoInvite: 'readonly', pokaleYoungLead: 'readonly',
   // off-shelf.js (#1185) — the four off-shelf destinations, one definition
-  offShelfEntries: 'readonly', offShelfSegments: 'readonly',
+  offShelfEntries: 'readonly', offShelfSegments: 'readonly', openOffShelfSheet: 'readonly',
   // hub-previews.js (#1185) — the hub's three sub-page previews + „Nicht im Regal"
   HUB_PREVIEW_COVERS: 'readonly', HUB_PREVIEW_RANKS: 'readonly',
   hubShelfWorthPreviewing: 'readonly',

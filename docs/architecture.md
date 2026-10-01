@@ -596,8 +596,9 @@ public/
                      pattern, the same-origin BGG badge (issue #1173)
     off-shelf.js     the four off-shelf destinations (Aussortiert, Durchgespielt,
                      Wunschliste, Könnte euch gefallen) with their counts — one
-                     definition, used by the Regal's sheet, the rail and the
-                     hub's „Nicht im Regal" group (issue #1185)
+                     definition, used by the Regal's sheet (which lives here
+                     too since #1239), the rail and the hub's „Nicht im Regal"
+                     group (issue #1185)
     cover.js         deterministic per-title gradient for games with no cover
     cover-size.js    rewrites provider cover URLs to a frame-appropriate size
     tag-icons.js     the curated tag-icon set (mirrors lib/tag-icons.js)
@@ -828,6 +829,10 @@ public/
     bruecke-hub.js        Die Brücke's composition of the lobby and the round
                           hub: the hub's slot frame, the Missionskontrolle,
                           the member captions and the signal notice (#1238)
+    bruecke-shelf.js      Die Brücke's Regal cards, the letter jump and batch
+                          loading of a 30+ game shelf, the „Nicht im Regal"
+                          line, and the Spielepass's stat tiles and rating
+                          distribution (#1239)
     saved-filters.js      a round's saved session filters (#1328): the chip's
                           prefill, the setup screen's „Filter speichern" sheet
                           and the Einstellungen list
