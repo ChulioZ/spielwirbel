@@ -255,7 +255,10 @@ test('the table ranks every member like the podium, with the member page\'s Sess
     dom.run("t('member.wins')"), dom.run("t('member.sessions')"), dom.run("t('member.winRate')"),
   ]);
   const rows = [...dom.app.querySelectorAll('.pokale-table tbody tr')].map((r) => [...r.children].map(text));
-  const stat = (mid) => dom.run(`(() => { const s = memberStats(${JSON.stringify(roundWith(SESSIONS))}, '${mid}'); return [String(s.joined), s.winRate === null ? '–' : Math.round(s.winRate * 100) + '%']; })()`);
+  const stat = (mid) => {
+    const s = dom.call('memberStats', roundWith(SESSIONS), mid);
+    return [String(s.joined), s.winRate === null ? '–' : Math.round(s.winRate * 100) + '%'];
+  };
   assert.deepEqual(rows, [
     ['1', 'Anna', '3', ...stat('m1')],
     ['2', 'Ben', '1', ...stat('m2')],
