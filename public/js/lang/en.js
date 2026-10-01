@@ -458,6 +458,10 @@ I18N.en = {
   'metaFilter.valueIncluded': '“{name}”: counts towards the filter. Click to exclude games with it instead.',
   'metaFilter.valueExcluded': '“{name}”: games with it are hidden. Click to stop filtering by it.',
   'metaFilter.removeFilter': 'Remove {name}',
+  // The Regal's owner filter (#1433).
+  'ownerFilter.title': 'Owners',
+  'ownerFilter.chip': 'Owned by {name}',
+  'ownerFilter.hint': 'Shows the games at least one of the picked people owns.',
 
   'transferGames.link': 'Move or copy games',
   'transferGames.mode': 'Action',

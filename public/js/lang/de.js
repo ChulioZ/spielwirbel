@@ -460,6 +460,10 @@ I18N.de = {
   'metaFilter.valueIncluded': '„{name}“: zählt mit. Klicken, um Spiele damit stattdessen auszuschließen.',
   'metaFilter.valueExcluded': '„{name}“: Spiele damit sind ausgeblendet. Klicken, um den Filter aufzuheben.',
   'metaFilter.removeFilter': '{name} entfernen',
+  // The Regal's owner filter (#1433).
+  'ownerFilter.title': 'Besitzer',
+  'ownerFilter.chip': 'Gehört {name}',
+  'ownerFilter.hint': 'Zeigt die Spiele, die mindestens eine der gewählten Personen besitzt.',
 
   'transferGames.link': 'Spiele verschieben oder kopieren',
   'transferGames.mode': 'Aktion',

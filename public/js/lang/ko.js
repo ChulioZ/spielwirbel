@@ -434,6 +434,10 @@ I18N.ko = {
   'metaFilter.valueIncluded': '“{name}”: 필터에 포함됨. 누르면 이 항목이 있는 게임을 대신 제외해요.',
   'metaFilter.valueExcluded': '“{name}”: 이 항목이 있는 게임을 숨겨요. 누르면 필터에서 빼요.',
   'metaFilter.removeFilter': '{name} 제거',
+  // The Regal's owner filter (#1433).
+  'ownerFilter.title': '소유자',
+  'ownerFilter.chip': '{name}의 게임',
+  'ownerFilter.hint': '선택한 사람 중 한 명이라도 가진 게임을 보여줘요.',
   'transferGames.link': '게임 옮기기 또는 복사하기',
   'transferGames.mode': '작업',
   'transferGames.modeMove': '옮기기',

@@ -160,7 +160,7 @@ const frontendGlobals = {
   // filter-panel.js (issues #725, #827, #844)
   renderMetadataFilter: 'readonly', renderFilterPanel: 'readonly',
   clearMetadataFilters: 'readonly', activeFilterChips: 'readonly',
-  tagFilterChips: 'readonly',
+  tagFilterChips: 'readonly', ownerFilterChips: 'readonly',
   // vote-score.js (issue #893) — also required by lib/recommend.js
   TILE_VALUE: 'readonly', SCORE_MIN: 'readonly',
   tileValue: 'readonly', scoreRatings: 'readonly', scoreTally: 'readonly',
@@ -217,6 +217,8 @@ const frontendGlobals = {
   AVATAR_ACCEPT: 'readonly', AVATAR_MAX_PIXELS: 'readonly',
   avatarFace: 'readonly', primeAvatars: 'readonly', rememberAvatar: 'readonly',
   ownerPresetFor: 'readonly', ownerNames: 'readonly', renderOwnerChips: 'readonly', boxBringers: 'readonly',
+  ownerFilterMembers: 'readonly', matchesOwnerFilter: 'readonly',
+  ownerChip: 'readonly', renderOwnerFilter: 'readonly',
   knownAvatar: 'readonly', installAvatarFallback: 'readonly', resetAvatarCache: 'readonly',
   // cover-policy.js (issue #867)
   COVER_MAX_BYTES: 'readonly', COVER_MAX_MB: 'readonly', COVER_MAX_DIM: 'readonly',

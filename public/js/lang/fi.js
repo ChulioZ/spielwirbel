@@ -433,6 +433,10 @@ I18N.fi = {
   'metaFilter.valueIncluded': '”{name}”: lasketaan mukaan suodattimeen. Napsauta sulkeaksesi sen sijaan pois pelit, joilla se on.',
   'metaFilter.valueExcluded': '”{name}”: pelit, joilla se on, piilotetaan. Napsauta lopettaaksesi suodattamisen sillä.',
   'metaFilter.removeFilter': 'Poista {name}',
+  // The Regal's owner filter (#1433).
+  'ownerFilter.title': 'Omistajat',
+  'ownerFilter.chip': 'Omistaa {name}',
+  'ownerFilter.hint': 'Näyttää pelit, jotka ainakin yksi valituista omistaa.',
 
   'transferGames.link': 'Siirrä tai kopioi pelejä',
   'transferGames.mode': 'Toiminto',
