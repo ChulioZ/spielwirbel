@@ -74,13 +74,13 @@ const contentLabels = (root) => [...root.querySelectorAll('button, input, .edito
   .filter((n) => !n.closest('.popover__head'))
   .map((n) => n.tagName.toLowerCase() + ':' + (n.getAttribute('aria-label') || n.textContent.trim()));
 
-test('formSheetDesign names Der Tisch, Ocean and Das Programmheft, and nothing else', (t) => {
+test('formSheetDesign names Der Tisch, Ocean, Das Programmheft and Die Brücke, and nothing else', (t) => {
   const dom = loadApp();
   t.after(() => dom.close());
   const ids = JSON.parse(dom.run('JSON.stringify(DESIGN_REGISTRY.map((d) => d.id))'));
   assert.ok(ids.length >= 3, 'the registry read is vacuous');
   const drawn = ids.filter((id) => { dom.run(`applyDesign(${JSON.stringify(id)})`); return dom.run('formSheetDesign()'); });
-  assert.deepEqual(drawn.sort(), ['ocean', 'programmheft', 'tisch']);
+  assert.deepEqual(drawn.sort(), ['bruecke', 'ocean', 'programmheft', 'tisch']);
 });
 
 for (const editor of Object.keys(OPENERS)) {
