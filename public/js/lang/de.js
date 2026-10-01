@@ -463,7 +463,6 @@ I18N.de = {
   // The Regal's owner filter (#1433).
   'ownerFilter.title': 'Besitzer',
   'ownerFilter.chip': 'Gehört {name}',
-  'ownerFilter.hint': 'Zeigt die Spiele, die mindestens eine der gewählten Personen besitzt.',
 
   'transferGames.link': 'Spiele verschieben oder kopieren',
   'transferGames.mode': 'Aktion',

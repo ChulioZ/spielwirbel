@@ -437,7 +437,6 @@ I18N.ko = {
   // The Regal's owner filter (#1433).
   'ownerFilter.title': '소유자',
   'ownerFilter.chip': '{name}의 게임',
-  'ownerFilter.hint': '선택한 사람 중 한 명이라도 가진 게임을 보여줘요.',
   'transferGames.link': '게임 옮기기 또는 복사하기',
   'transferGames.mode': '작업',
   'transferGames.modeMove': '옮기기',

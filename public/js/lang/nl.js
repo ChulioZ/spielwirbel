@@ -459,7 +459,6 @@ I18N.nl = {
   // The Regal's owner filter (#1433).
   'ownerFilter.title': 'Eigenaren',
   'ownerFilter.chip': 'Van {name}',
-  'ownerFilter.hint': 'Toont de spellen die minstens één van de gekozen personen bezit.',
 
   'transferGames.link': 'Spellen verplaatsen of kopiëren',
   'transferGames.mode': 'Actie',

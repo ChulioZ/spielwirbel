@@ -436,7 +436,6 @@ I18N.fi = {
   // The Regal's owner filter (#1433).
   'ownerFilter.title': 'Omistajat',
   'ownerFilter.chip': 'Omistaa {name}',
-  'ownerFilter.hint': 'Näyttää pelit, jotka ainakin yksi valituista omistaa.',
 
   'transferGames.link': 'Siirrä tai kopioi pelejä',
   'transferGames.mode': 'Toiminto',

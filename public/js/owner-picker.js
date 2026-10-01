@@ -175,7 +175,6 @@ function renderOwnerFilter(round, owners, onChange) {
   const el = h(`<div class="fpanel__group fpanel__group--owners">
       <div class="field__label" id="${id}">${esc(t('ownerFilter.title'))}</div>
       <div class="filter-chips" role="group" aria-labelledby="${id}"></div>
-      <div class="muted field__hint">${esc(t('ownerFilter.hint'))}</div>
     </div>`);
   const chips = owners.members.map((m) => ownerChip(round, m, () => owners.picked.includes(m.id), () => {
     const at = owners.picked.indexOf(m.id);
