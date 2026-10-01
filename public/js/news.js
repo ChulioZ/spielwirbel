@@ -47,6 +47,96 @@
 // AFTER, which is the exact unearned interruption this design exists to avoid.
 const NEWS = [
   /*
+   * #1383, Das Programmheft goes live. A capability that did not exist: a
+   * fourth design to choose besides Der Tisch, Ocean and Klassisch. Dated after
+   * the Abzeichen entry so every account that has read that one still gets the
+   * dot. Like Ocean's, it says where to find it — nobody is moved into it, and
+   * the first-start chooser is deliberately NOT asked again.
+   */
+  {
+    revision: '2026-10-01',
+    kind: 'new',
+    de: {
+      title: 'Das Programmheft — ein Design wie gedruckt',
+      body: 'Neben „Der Tisch", „Ocean" und „Klassisch" gibt es jetzt „Das '
+        + 'Programmheft": schwarz auf Papier, große Ziffern und ein einziges Rot, '
+        + 'gesetzt wie ein Theaterprogramm. Alles bleibt an derselben Stelle — '
+        + 'Regal, Chronik, Pokale, Session wirbeln. Wählen kannst du es jederzeit '
+        + 'über das Paletten-Symbol oben oder im Konto. Das Design gilt nur für '
+        + 'dich; alle anderen in der Runde sehen weiter ihr eigenes.',
+    },
+    en: {
+      title: 'The Programme — a design like print',
+      body: 'Besides „The Table", „Ocean" and „Classic" there is now „The '
+        + 'Programme": black on paper, big numbers and a single red, set like a '
+        + 'theatre programme. Everything stays where it was — Shelf, History, '
+        + 'Trophies, Start session. Choose it any time with the palette icon at '
+        + 'the top or in your account. The design is only yours; everyone else in '
+        + 'the round keeps seeing their own.',
+    },
+    es: {
+      title: 'El Programa: un diseño como impreso',
+      body: 'Además de «La mesa», «Océano» y «Clásico» ahora está «El Programa»: '
+        + 'negro sobre papel, cifras grandes y un único rojo, compuesto como un '
+        + 'programa de teatro. Todo sigue en su sitio: Estantería, Historial, '
+        + 'Trofeos, Sortear sesión. Puedes elegirlo cuando quieras con el icono de '
+        + 'la paleta arriba o en tu cuenta. El diseño es solo tuyo; los demás del '
+        + 'grupo siguen viendo el suyo.',
+    },
+    fr: {
+      title: 'Le Programme — un design comme imprimé',
+      body: 'À côté de « La table », « Océan » et « Classique », il y a désormais '
+        + '« Le Programme » : noir sur papier, de grands chiffres et un seul rouge, '
+        + 'composé comme un programme de théâtre. Tout reste à sa place — Étagère, '
+        + 'Historique, Trophées, Démarrer une session. Tu peux le choisir quand tu '
+        + 'veux avec l\'icône de palette en haut ou dans ton compte. Le design '
+        + 'n\'est que le tien ; les autres du groupe gardent le leur.',
+    },
+    it: {
+      title: 'Il Programma: un design come stampato',
+      body: 'Oltre a «Il tavolo», «Oceano» e «Classico» ora c\'è «Il Programma»: '
+        + 'nero su carta, cifre grandi e un solo rosso, composto come un programma '
+        + 'di sala. Tutto resta al suo posto: Scaffale, Cronologia, Trofei, Avvia '
+        + 'una sessione. Puoi sceglierlo quando vuoi con l\'icona della tavolozza '
+        + 'in alto o nel tuo account. Il design è solo tuo; gli altri del gruppo '
+        + 'continuano a vedere il proprio.',
+    },
+    nl: {
+      title: 'Het Programmaboekje — een ontwerp als gedrukt',
+      body: 'Naast „De tafel", „Oceaan" en „Klassiek" is er nu „Het '
+        + 'Programmaboekje": zwart op papier, grote cijfers en één enkel rood, '
+        + 'gezet als een theaterprogramma. Alles blijft op dezelfde plek — Kast, '
+        + 'Geschiedenis, Trofeeën, Sessie starten. Kies het wanneer je wilt via het '
+        + 'paletpictogram bovenaan of in je account. Het ontwerp is alleen van '
+        + 'jou; de anderen in de groep blijven hun eigen zien.',
+    },
+    pt: {
+      title: 'O Programa — um design como impresso',
+      body: 'Além de «A mesa», «Oceano» e «Clássico», agora há «O Programa»: preto '
+        + 'sobre papel, números grandes e um único vermelho, composto como um '
+        + 'programa de teatro. Tudo continua no mesmo lugar: Estante, Histórico, '
+        + 'Troféus, Iniciar sessão. Escolha-o quando quiser pelo ícone da paleta '
+        + 'no topo ou na sua conta. O design é só seu; os outros do grupo '
+        + 'continuam a ver o deles.',
+    },
+    fi: {
+      title: 'Käsiohjelma — ulkoasu kuin painettu',
+      body: '”Pöydän”, ”Valtameren” ja ”Klassisen” rinnalla on nyt '
+        + '”Käsiohjelma”: mustaa paperilla, isot numerot ja yksi ainoa punainen, '
+        + 'taitettu kuin teatterin käsiohjelma. Kaikki on yhä samassa paikassa — '
+        + 'Hylly, Historia, Palkinnot, Aloita sessio. Voit valita sen milloin '
+        + 'tahansa ylhäällä olevasta palettikuvakkeesta tai tililläsi. Ulkoasu on '
+        + 'vain sinun; muut porukassa näkevät edelleen omansa.',
+    },
+    ko: {
+      title: '프로그램북 — 인쇄물 같은 디자인',
+      body: '„테이블", „바다", „클래식"에 이어 이제 „프로그램북"이 있습니다. 종이 위의 검정, 큰 '
+        + '숫자, 단 하나의 빨강으로 공연 프로그램처럼 짜였습니다. 선반, 기록, 트로피, 세션 '
+        + '시작은 모두 그 자리에 있습니다. 언제든 위쪽의 팔레트 아이콘이나 계정에서 고를 수 '
+        + '있어요. 디자인은 나에게만 적용되고, 모임의 다른 사람들은 계속 각자의 디자인을 봅니다.',
+    },
+  },
+  /*
    * #1388, Abzeichen. A capability that did not exist: marks a round and its
    * people earn by playing, derived from the sessions already recorded — plus
    * #1389's account tier on the profile and in the friends' feed. Dated
