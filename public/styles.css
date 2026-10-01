@@ -5471,7 +5471,24 @@ a.k-tile:focus-visible,
 .vote-review__rating.is-empty { color: var(--ink-soft); }
 .vote-review__word { font-weight: 600; font-size: var(--text-sm); }
 .vote-review__go { color: var(--ink-soft); font-size: var(--text-lg); }
-.vote-review__send { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; margin-top: 18px; }
+/* Pinned to the bottom of the vote screen while the list scrolls under it: at
+   390×844 a list of 6+ games pushed it below the fold in every design. Sticky
+   (not fixed) so it still rests under the last row once the list is short. */
+.vote-review__send {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 18px;
+  position: sticky;
+  bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  z-index: 1;
+}
+/* `.vote`'s `overflow: hidden` (the rounded corners) makes the card the sticky
+   button's scroll container — one that never scrolls, so the button never
+   sticks. `clip` clips the same way without being a scroll container. */
+.vote.vote-review { overflow: clip; }
 /* The word beside the chosen face (composed designs) costs a phone row its
    title: measured at 390 under Der Tisch, „Carcassonne" broke mid-word beside
    „wäre okay". Below 480px the face and number carry it; the word stays in

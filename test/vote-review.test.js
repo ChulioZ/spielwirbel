@@ -352,3 +352,15 @@ test('a tap on the shared-link „Absenden" inside the tap lock is ignored', asy
   await flush();
   assert.equal(posts().length, 0, 'a double-tap reached „Absenden"');
 });
+
+// „Absenden" must stay on screen however long the list is: measured at 390×844,
+// 6+ games pushed it below the fold in every design. It sticks to the bottom
+// edge, and the card it lives in must not be a scroll container — `.vote`'s
+// `overflow: hidden` silently made it one, and the button never stuck.
+test('the review\'s send button sticks to the bottom edge, inside a card that is not a scroll container', () => {
+  const { bodyOf } = require('./support/css');
+  const send = bodyOf('.vote-review__send') || '';
+  assert.match(send, /position:\s*sticky/);
+  assert.match(send, /bottom:\s*calc\(12px \+ env\(safe-area-inset-bottom/);
+  assert.match(bodyOf('.vote.vote-review') || '', /overflow:\s*clip/);
+});
