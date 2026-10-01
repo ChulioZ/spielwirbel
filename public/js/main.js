@@ -10,6 +10,7 @@ initLocale();
 applyStaticTexts();
 setupLangPicker();
 setupDesignMenu();
+setupTopbarOverflow();
 initFooter();
 // One capture-phase listener for every avatar on every screen (#841): a picture
 // whose bytes are gone (an operator takedown, an erasure) degrades to the

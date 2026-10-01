@@ -1922,6 +1922,9 @@ I18N.en = {
   // Accessible names for the icon-only top bar and the two landmark navs (#145).
   'a11y.home': 'Spielwirbel – go to home screen',
   'a11y.language': 'Language',
+  // The top bar's „…" button (#1460); the second while a folded inbox or account has something unread.
+  'topbar.more': 'More',
+  'topbar.moreUnread': 'More (unread)',
   'a11y.account': 'Account',
   // Der Tisch shows the account NAME on the button (#1279), so the name must
   // be part of its accessible name (WCAG 2.5.3 Label in Name).

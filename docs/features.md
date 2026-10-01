@@ -850,6 +850,10 @@ What the app does, in detail. For a short overview see the
   account's design takes over again. Arrow keys preview a design; a tap, Enter or
   Space keeps it. The language picker beside it is drawn as a globe icon, like
   the bar's other buttons, and opens the same list.
+  On a narrow phone, buttons that do not fit beside the home link fold into a
+  **„…" button** at the end of the bar (#1460) — language first, then feedback,
+  design, support, inbox and account last — and its menu does exactly what each
+  folded button does. A folded inbox or account hands its unread dot to „…".
   Which designs exist is decided in code (`public/js/designs.js`), so a design
   under construction stays off a live instance until it is enabled
   (`docs/design/README.md`). An instance running **without accounts** keeps the

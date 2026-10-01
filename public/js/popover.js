@@ -142,7 +142,12 @@ function openPopover(anchor, build, onClose) {
   // (.claude/rules/preview-pane-paint-artifacts.md). An explicit call is
   // deterministic and testable; an untestable mechanism is not worth its silence.
   function place() {
-    const r = anchor.getBoundingClientRect();
+    // A top-bar button folded into „…" (#1460) is not rendered, so its own box
+    // is all zeros and the card would land in the page's corner: it hangs off
+    // the button it folded into, which `data-folded` names.
+    const folded = anchor.dataset && anchor.dataset.folded;
+    const shown = (folded && document.getElementById(folded)) || anchor;
+    const r = shown.getBoundingClientRect();
     const margin = 8;
     const kids = [...el.children];
     // From a clean slate every time: a previous run may have clamped the card,

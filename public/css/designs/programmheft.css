@@ -589,6 +589,9 @@
 @media (max-width: 520px) {
   :root[data-design="programmheft"] .topbar { min-height: 52px; }
   :root[data-design="programmheft"] .topbar .topbar__home .topbar__word { display: inline; font-size: 20px; letter-spacing: 0.14em; }
+  /* One line, always (#1460): the wordmark never stacks under the tornado.
+     The buttons that no longer fit fold into „…" to make the room. */
+  :root[data-design="programmheft"] .topbar .topbar__home { white-space: nowrap; }
   :root[data-design="programmheft"] .topbar .topbar__context { display: none; }
 }
 
