@@ -5462,6 +5462,50 @@
 :root[data-design="programmheft"]:not([data-scheme="dark"]) .result-screen .stamp::before { border-color: var(--vermilion); border-radius: 0; background: var(--surface); }
 :root[data-design="programmheft"]:not([data-scheme="dark"]) .result-screen .stamp :is(.stamp__date, .stamp__status) { color: var(--brand); }
 
+/* P10.4 „Aufdecken — der Andruck" (#1382), split along the two moments the app
+   has (operator decision at the PR). The sheet draws the finished report in
+   one go; the app reveals the Tafel first and records the finish later.
+
+   1. The REVEAL (`data-print` on the head, `.is-race` on every row — both set
+      by „Auflösen" only): the headline is wiped in from the left (300ms), then
+      the Tafel is printed row by row from the top, 120ms apart, each wipe
+      300ms. `--print-i` is capped at 9 in views-session.js, so any Tafel is
+      printed by 300 + 9 × 120 + 300 = 1 680ms — inside the sheet's 1 800ms.
+      The sheet's count-up of the score is not built (dropped with P10.2's).
+      `ph-print` has a `to` frame on purpose: a row holds buttons, and a
+      RESTING clip-path (ritual 1's way to give the wipe something to
+      interpolate to) would cut their focus rings for good. With a backwards
+      fill only, the clip ends at none.
+   2. The FINISH (`data-stamped` on the band's slot, the one render after the
+      reader records it — T10.5's hook, set for every composed design):
+      „Gespielt" lands hard, 1.6 → 1 in 216ms after a 120ms beat, ending
+      straight on the static stamp. Individual scale/rotate, so the stamp's
+      own layout is never replaced, and no end frame. */
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-design="programmheft"] .result-screen .page-head--result[data-print] .result-title {
+    animation: ph-print 300ms cubic-bezier(.33, 1, .68, 1) backwards;
+  }
+  :root[data-design="programmheft"] .result-screen .tafel .trow.is-race {
+    animation: ph-print 300ms cubic-bezier(.33, 1, .68, 1) calc(300ms + var(--print-i, 0) * 120ms) backwards;
+  }
+  @keyframes ph-print {
+    from { clip-path: inset(0 100% 0 0); }
+    to { clip-path: inset(0); }
+  }
+  :root[data-design="programmheft"] .result-screen .tisch-slot[data-stamped] .tisch__box .stamp--table {
+    animation: ph-land 216ms cubic-bezier(.33, 1, .68, 1) 120ms backwards;
+  }
+  @keyframes ph-land {
+    from { scale: 1.6; rotate: -12deg; opacity: 0; }
+    50% { opacity: 1; }
+  }
+}
+/* The app's 3.6s `tafel-gold` tint of the gold GROUP fills `both`, so it left
+   the group painted gold over this design's `background: none` after every
+   reveal. The gold ROW carries the programme's gold already; stood down, as
+   Der Tisch does (tisch.css, T10.4). */
+:root[data-design="programmheft"] .result-screen .tafel-top.is-reveal { animation: none; }
+
 /* The foot: „Noch eine Session →" is the black box, Anton; „Teilen" and „Mehr"
    printed frames beside it. */
 :root[data-design="programmheft"] .result-screen .result-foot { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-4); }

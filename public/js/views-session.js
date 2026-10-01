@@ -1630,6 +1630,9 @@ async function showResults(round, session, gamesHint, reveal, plain) {
   if (phLook) {
     head.querySelector('.muted').remove();
     head.firstElementChild.prepend(programmheftReportKicker(round, session, games, people));
+    // P10.4 (#1382): the reveal prints the headline, then the Tafel row by row
+    // (`--print-i` below). Only the reveal — never a cold load or a Chronik visit.
+    if (reveal) head.setAttribute('data-print', '');
   }
 
   // „Teilen": hand the group chat what this screen says, as plain text (#526).
@@ -1891,7 +1894,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
   const rowRefs = [];
   let infoPlaced = false;
 
-  rows.forEach((r) => {
+  rows.forEach((r, i) => {
     const g = r.game;
     const imgStyle = g.image ? `style="background-image:url('${coverUrl(g.image, COVER_THUMB)}')"` : '';
     const fallback = coverPlaceholder(g);
@@ -1982,10 +1985,13 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     // Only the reveal path gets a duration, and it is per row: every fill starts
     // together, the short ones land first and the winner's completes last.
     const raceVar = reveal && r.count ? `--dur:${(0.5 + r.shown * 0.32).toFixed(2)}s;` : '';
+    // Das Programmheft prints the revealed Tafel top first (P10.4); capped at
+    // the tenth row so any Tafel is printed inside the sheet's 1.8s.
+    const printVar = reveal && phLook ? `--print-i:${Math.min(i, 9)};` : '';
     const rankClass = r.place && r.place <= 3 ? ` trow__rank--${r.place}` : '';
     const row = tischLook ? composedTrow({
       row: r, hasVotes, bars, rankClass, imgStyle, fallback,
-      rowClass: `trow${reveal ? ' is-race' : ''}`, rowStyle: `${fillVars}${raceVar}`,
+      rowClass: `trow${reveal ? ' is-race' : ''}`, rowStyle: `${fillVars}${raceVar}${printVar}`,
       title: g.title, badge: retiredBadge, ownersLine,
       whyLine: r.count && whyOf(r) ? `<div class="score-why">${esc(whyOf(r))}</div>` : '',
     }) : h(`<div class="trow${reveal ? ' is-race' : ''}" style="${fillVars}${raceVar}">
