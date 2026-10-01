@@ -80,6 +80,41 @@ test('every design declares marks, and every mark exists at the size it claims',
   assert.ok(checked >= 11, 'both designs’ marks were actually walked');
 });
 
+// A design with its own colours wears its own marks (#1199 Der Tisch, #1222
+// Ocean, #1419 Die Brücke + Das Programmheft) — never Klassisch's orange die,
+// which while it is worn would put another design's icon on the home screen and
+// in the tab. Klassisch alone has no `page` and keeps the committed originals.
+test('every coloured design wears its OWN marks, from its own folder', () => {
+  let checked = 0;
+  for (const design of DESIGN_REGISTRY.filter((d) => d.page)) {
+    for (const [src] of markFiles(design)) {
+      assert.ok(src.startsWith(`/icons/${design.id}/`), `${design.id}: ${src} must live under /icons/${design.id}/`);
+      checked++;
+    }
+  }
+  assert.ok(checked >= 24, 'at least four coloured designs’ marks were walked');
+});
+
+// Only the two marks the PAGE renders while a design is worn — its favicon and
+// its 192 — are precached; the rest are fetched by the OS at install time,
+// online by definition (.claude/rules/pwa-service-worker.md).
+test('the service worker precaches each coloured design’s favicon and 192, and nothing bigger', () => {
+  const sw = fs.readFileSync(path.join(PUBLIC, 'sw.js'), 'utf8');
+  const start = sw.indexOf('const SHELL = [');
+  const shell = sw.slice(start, sw.indexOf('];', start));
+  assert.ok(shell.length > 100, 'the SHELL array was found');
+  for (const design of DESIGN_REGISTRY.filter((d) => d.page)) {
+    const m = design.marks;
+    const i192 = m.icons.find((i) => i.sizes === '192x192');
+    for (const src of [m.favicon.href, i192.src]) {
+      assert.ok(shell.includes(`'${src}'`), `${design.id}: ${src} is in SHELL`);
+    }
+    for (const src of [m.appleTouch, m.og, ...m.icons.filter((i) => i.sizes !== '192x192').map((i) => i.src)]) {
+      assert.ok(!shell.includes(`'${src}'`), `${design.id}: ${src} is fetched at install time, not precached`);
+    }
+  }
+});
+
 test('every mark is served, and only the link-preview images opt out of CORP', async () => {
   for (const design of DESIGN_REGISTRY) {
     for (const [src] of markFiles(design)) {

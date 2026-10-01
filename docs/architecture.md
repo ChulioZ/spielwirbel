@@ -469,6 +469,10 @@ public/
                      rendered by scripts/render-design-marks.js
     ocean/           Ocean's own marks (#1222): the whirl in Gischt on the
                      accent water, the same six files, same script
+    bruecke/         Die Brücke's own marks (#1419): the whirl, lit in cyan,
+                     in two corner brackets on the night
+    programmheft/    Das Programmheft's own marks (#1419): the whirl over the
+                     Anton wordmark in ink on the vermilion masthead
   img/               product screenshots on the logged-out landing page — the
                      shelf, the voting screen and a session result, all phone
                      width, one set per UI locale (landing-*.<locale>.webp),
@@ -882,6 +886,9 @@ public/
                      with cover and meta, the worded faces, the hand-off line
                      and the vote link's felt intro; both vote cards build
                      their faces through its voteMoodButton()
+    vote-review.js   the review step after a voter's last card (#1434): every
+                     game with its rating, a row back to each card, „Absenden";
+                     one builder for both vote surfaces, in each design's frame
     views-session.js session setup, the rating cards, finale, results
     result-tafel-composed.js Der Tisch's result: the column-header Tafel of compact
                      rows with pills, the crowned people, the foot (#1275)
@@ -897,7 +904,8 @@ public/
                      the result arranged in columns
     views-session-bruecke.js Die Brücke's session loop (#1240): the setup with
                      the step rail, the Pool and the Sonden, the vote card's
-                     side panels, and the result in two panels
+                     side panels, the result in two panels, and (#1241) the
+                     shared vote in three columns and the pass-device blind
     views-vote-link.js the PUBLIC /vote/:token screen (#652): claim your name
                      from the participant list and rate the drawn games without
                      an account — the only view that runs logged out
@@ -953,6 +961,8 @@ scripts/
                      renders a design's app icons, favicon and link-preview
                      image to the PNGs its registry row names (#1199), with
                      headless Chrome over CDP and the design's own tokens
+                     (CHROME_BIN points it, and the landing capture, at a
+                     Chrome/Chromium other than macOS's default path)
   landing-seed-data.js
                      the per-locale seed that run puts in (round name, seats,
                      tags, invented titles, provider metadata) — a flat table,

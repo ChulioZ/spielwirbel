@@ -160,7 +160,7 @@ const frontendGlobals = {
   // filter-panel.js (issues #725, #827, #844)
   renderMetadataFilter: 'readonly', renderFilterPanel: 'readonly',
   clearMetadataFilters: 'readonly', activeFilterChips: 'readonly',
-  tagFilterChips: 'readonly',
+  tagFilterChips: 'readonly', ownerFilterChips: 'readonly',
   // vote-score.js (issue #893) — also required by lib/recommend.js
   TILE_VALUE: 'readonly', SCORE_MIN: 'readonly',
   tileValue: 'readonly', scoreRatings: 'readonly', scoreTally: 'readonly',
@@ -217,6 +217,8 @@ const frontendGlobals = {
   AVATAR_ACCEPT: 'readonly', AVATAR_MAX_PIXELS: 'readonly',
   avatarFace: 'readonly', primeAvatars: 'readonly', rememberAvatar: 'readonly',
   ownerPresetFor: 'readonly', ownerNames: 'readonly', renderOwnerChips: 'readonly', boxBringers: 'readonly',
+  ownerFilterMembers: 'readonly', matchesOwnerFilter: 'readonly',
+  ownerChip: 'readonly', renderOwnerFilter: 'readonly',
   knownAvatar: 'readonly', installAvatarFallback: 'readonly', resetAvatarCache: 'readonly',
   // cover-policy.js (issue #867)
   COVER_MAX_BYTES: 'readonly', COVER_MAX_MB: 'readonly', COVER_MAX_DIM: 'readonly',
@@ -539,11 +541,14 @@ const frontendGlobals = {
   // views-badges.js (#1388) — the Klassisch rendering every design skins.
   renderBadgeSection: 'readonly', badgeRevealTarget: 'readonly', hubBadgeLine: 'readonly', badgeChronikIndex: 'readonly',
   chronikBadgeRows: 'readonly', fillBadgeMoment: 'readonly', memberCardBadges: 'readonly', showBadges: 'readonly',
-  profileCardBadges: 'readonly',
+  profileCardBadges: 'readonly', badgeEmblem: 'readonly',
   openAddMember: 'readonly', addMemberBtn: 'readonly',
   // vote-card-composed.js (issue #1268): Der Tisch's vote card + the link intro
   VOTE_WORD_KEYS: 'readonly', voteWord: 'readonly', voteMoodButton: 'readonly', voteTurn: 'readonly',
   voteHandoffLine: 'readonly', voteMetaLine: 'readonly', composedVoteCard: 'readonly', composedVoteLinkIntro: 'readonly',
+  voteCardComposed: 'readonly', voteSaidWord: 'readonly',
+  // vote-review.js (issue #1434): the review step after a voter's last card
+  voteReviewRow: 'readonly', voteReviewCard: 'readonly',
   // views-session.js
   showStartSession: 'readonly', startVoting: 'readonly', showResults: 'readonly',
   showFinale: 'readonly', canShareResult: 'readonly', shareResult: 'readonly',
@@ -557,6 +562,7 @@ const frontendGlobals = {
   // views-session-bruecke.js (issue #1240): Die Brücke's setup, vote sides and result panels
   composeBrueckeSetup: 'readonly', brueckeVoteSides: 'readonly', brueckeVoteWord: 'readonly', brueckeScoreReason: 'readonly',
   brueckeTitleSplit: 'readonly', composeBrueckeResult: 'readonly',
+  brueckeBlind: 'readonly', composeBrueckeLobby: 'readonly', // #1241
   // views-session-tables.js (issue #796)
   showTableBuilder: 'readonly', tableStateFrom: 'readonly', tablePeopleIds: 'readonly',
   tableCoverBg: 'readonly',

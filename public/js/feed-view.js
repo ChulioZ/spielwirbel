@@ -45,6 +45,10 @@ function feedBadgeDef(ev) {
   return BADGE_CATALOGUE.find((d) => d.holder === 'account' && d.key === ev.title) || null;
 }
 
+// The mark's glyph for the feed's picture (#1428). A key this build does not
+// know gets one generic medal, the same in all three presentations.
+const feedBadgeGlyph = (ev) => (feedBadgeDef(ev) || { glyph: 'ti-medal' }).glyph;
+
 // „Sessions 100" — the mark as the Spielerkarte's tile names it.
 function feedBadgeName(ev) {
   const def = feedBadgeDef(ev);
@@ -75,9 +79,11 @@ function feedText(ev) {
 
 function renderFeedEvent(ev) {
   const imgStyle = ev.coverUrl ? ` style="background-image:url('${coverUrl(ev.coverUrl, COVER_THUMB)}')"` : '';
-  // A mark has no cover; its slot shows the mark's own glyph.
-  const badge = feedBadgeDef(ev);
-  const fallback = ev.coverUrl ? '' : `<i class="ti ${badge ? esc(badge.glyph) : 'ti-cards'}" aria-hidden="true"></i>`;
+  // A mark has no cover; its slot shows the earned mark itself (#1428) — never
+  // the bare glyph, which for Sessions is the no-cover game's own ti-cards.
+  const isMark = ev.type === 'badge_earned';
+  const fallback = isMark ? badgeEmblem(feedBadgeGlyph(ev))
+    : ev.coverUrl ? '' : '<i class="ti ti-cards" aria-hidden="true"></i>';
   // The AUTHOR, badged onto the corner of the GAME's cover (#841). The row's one
   // image slot belongs to the game, so the person rides on it rather than taking
   // a fourth column — which on a phone would push the line that carries the
@@ -88,7 +94,7 @@ function renderFeedEvent(ev) {
   const who = friendAvatar(ev.username, ev.avatar, 'feed-item__who');
   const item = h(`<div class="feed-item">
       <span class="feed-item__media">
-        <span class="feed-item__img"${imgStyle}>${fallback}</span>
+        <span class="feed-item__img${isMark ? ' feed-item__img--badge' : ''}"${isMark ? '' : imgStyle}>${fallback}</span>
         ${who}
       </span>
       <div class="feed-item__body">
@@ -174,20 +180,18 @@ function renderFeedTile(ev, opts) {
   // a small icon reads as a broken image on a wall of covers. coverPlaceholder()
   // hashes the title, so a game looks the same here as on its shelf. The ROW
   // form keeps its glyph — a 46px thumb is not a wall.
-  const badge = feedBadgeDef(ev);
-  // A mark (#1389) has no cover and is not a game, so it gets its own glyph
-  // rather than a shelf placeholder hashed from a catalogue key.
-  const fallback = ev.coverUrl ? ''
-    : ev.type === 'badge_earned'
-      ? `<i class="ti ${esc(badge ? badge.glyph : 'ti-medal')}" aria-hidden="true"></i>`
-      : coverPlaceholder({ title: ev.title || '' });
+  // A mark (#1389) has no cover and is not a game, so it gets its earned mark
+  // on the band (#1428) rather than a shelf placeholder hashed from a key.
+  const isMark = ev.type === 'badge_earned';
+  const fallback = isMark ? badgeEmblem(feedBadgeGlyph(ev))
+    : ev.coverUrl ? '' : coverPlaceholder({ title: ev.title || '' });
   // The author rides the meta row rather than the cover's corner: a 172px tile
   // has a full-width line under the title, so the person needs no badge to
   // avoid taking a column from the news.
   const who = o.noAuthor ? ''
     : `<span class="e-tile__who">${friendAvatar(ev.username, ev.avatar)}<span class="e-tile__name">${friendName(ev.username)}</span></span>`;
   const tile = h(`<div class="e-tile">
-      <span class="e-tile__img${ev.type === 'badge_earned' ? ' e-tile__img--badge' : ''}"${imgStyle}>${fallback}</span>
+      <span class="e-tile__img${isMark ? ' e-tile__img--badge' : ''}"${isMark ? '' : imgStyle}>${fallback}</span>
       <span class="e-tile__title">${esc(feedSubject(ev))}</span>
       <span class="e-tile__meta">
         ${who}
@@ -240,11 +244,12 @@ function renderFeedTile(ev, opts) {
    there is the <h1>'s account — and `noReport` the flag on your own profile. */
 function renderFeedRow(ev, opts) {
   const o = opts || {};
-  // A mark (#1389, X17.7) stands its glyph where a game stands its box.
-  const badge = feedBadgeDef(ev);
-  const cover = ev.coverUrl
-    ? `<span class="feed-item__img feed-row__cover" aria-hidden="true" style="background-image:url('${coverUrl(ev.coverUrl, COVER_THUMB)}')"></span>`
-    : badge ? `<span class="feed-item__img feed-row__cover feed-row__cover--badge" aria-hidden="true"><i class="ti ${esc(badge.glyph)}"></i></span>` : '';
+  // A mark (#1389, X17.7) stands its earned mark where a game stands its box
+  // (#1428) — the mark itself, not a box holding a glyph.
+  const cover = ev.type === 'badge_earned' ? badgeEmblem(feedBadgeGlyph(ev), 'feed-row__badge')
+    : ev.coverUrl
+      ? `<span class="feed-item__img feed-row__cover" aria-hidden="true" style="background-image:url('${coverUrl(ev.coverUrl, COVER_THUMB)}')"></span>`
+      : '';
   const row = h(`<div class="feed-item feed-row">
       ${o.noAuthor ? '' : friendAvatar(ev.username, ev.avatar, 'feed-row__face')}
       <div class="feed-item__body">

@@ -458,6 +458,9 @@ I18N.en = {
   'metaFilter.valueIncluded': '“{name}”: counts towards the filter. Click to exclude games with it instead.',
   'metaFilter.valueExcluded': '“{name}”: games with it are hidden. Click to stop filtering by it.',
   'metaFilter.removeFilter': 'Remove {name}',
+  // The Regal's owner filter (#1433).
+  'ownerFilter.title': 'Owners',
+  'ownerFilter.chip': 'Owned by {name}',
 
   'transferGames.link': 'Move or copy games',
   'transferGames.mode': 'Action',
@@ -1151,6 +1154,14 @@ I18N.en = {
   'vote.personOf': 'Person {n} of {total}',
   'vote.handoffNext': 'Then pass the device on — {name} is up next.',
   'vote.handoffLast': 'Then everyone is done — the result comes next.',
+  // The review step after a voter's last card (#1434).
+  'vote.reviewTitle': 'Your ratings',
+  'vote.reviewHint': 'Tap a game to change its rating — then send.',
+  'vote.reviewCountOne': '{n} game rated',
+  'vote.reviewCount': 'All {n} games rated',
+  'vote.reviewRow': '{title}: {rating}. Change',
+  'vote.reviewUnrated': 'not rated',
+  'vote.reviewSend': 'Send',
   // Ocean's desktop vote card (#1213, O4.2): who has rated, and what is still below.
   'vote.raterDone': 'has rated',
   'vote.raterNow': 'rating now',
@@ -2022,6 +2033,8 @@ I18N.en = {
   'vote.sealedTextBrueckeOne': 'One more game stays encrypted until you reach it.',
   'vote.sealedTextBruecke': '{n} more games stay encrypted until you reach them.',
   'vote.sealedCardBruecke': 'Encrypted',
+  // The blind's kicker (#1241, B4.6/B6.10) — a decorative line, read by no screen reader.
+  'vote.signalBruecke': 'Incoming signal',
   'score.reasonVetoBrueckeOne': '{n}× no thrust',
   'score.reasonVetoBruecke': '{n}× no thrust',
   'startSession.guestSeatBruecke': 'Guest · today only',
