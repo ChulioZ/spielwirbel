@@ -282,6 +282,14 @@ I18N.nl = {
   'pokale.dusty': 'Staat stof te vangen',
   'pokale.dustyAt': 'laatst gespeeld in {when}',
   'pokale.dustyNever': 'nog nooit gespeeld',
+  // Die Brücke's three Pokale plates (#1422, B3.4): the eyebrows, the best
+  // game's play count and the record streak's span of months.
+  'pokale.bestGame': 'Beste spel',
+  'pokale.longestStreak': 'Langste reeks',
+  'pokale.mostVetoes': 'Meeste veto’s',
+  'pokale.playedOne': 'één keer gespeeld',
+  'pokale.played': '{n}× gespeeld',
+  'pokale.streakSpan': '{from} tot {to}',
 
   'recap.title': 'Terugblik',
   'recap.lead': 'Wat jullie kast over jullie zegt — uit elke beoordeling in deze groep.',

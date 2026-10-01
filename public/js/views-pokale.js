@@ -578,7 +578,9 @@ function renderPokaleTab(round) {
     );
   }
 
-  if (cards.children.length) (side || split || sec).appendChild(cards);
+  // Die Brücke's column is B3.4's three plates instead (#1422, bruecke-pokale.js).
+  const column = bruecke ? brueckePokalePlates(round, { shelfIndex, recap, finished, seriesHeld }) : cards;
+  if (column.children.length) (side || split || sec).appendChild(column);
   app.appendChild(sec);
   /* Abzeichen (#1388, views-badges.js): below the podium and the plaques, the
      round's band then one row per member in THIS standings order — so the two

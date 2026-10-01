@@ -2027,6 +2027,37 @@
   :root[data-design="bruecke"] .rec-card__body { min-width: 0; flex-basis: 100%; }
 }
 
+/* ===== #1422 — Pokale: B3.4's right column ===== */
+/* Source: docs/design/bruecke/Bruecke-B3-Runde-Desktop.dc.html (B3.4) and
+   Bruecke-B6-Phone-Rest.dc.html (B6.2). Markup: bruecke-pokale.js
+   (`.pokale-card--plate` inside `.pokale-cards--plates`), which replaces the
+   four trophy cards under Brücke only.
+
+   A plate is the sheet's: the notation eyebrow (#1245 already sets it in
+   mono), the value as a display line in capitals, one sub line — no cover, no
+   icon. One column at every width: beside the board from 1280px (#1245's
+   split), under it below. Colour rules are dark-gated; geometry is not. */
+:root[data-design="bruecke"] .pokale-cards--plates { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+:root[data-design="bruecke"] .pokale-card--plate { gap: 5px; padding: 16px 18px; }
+:root[data-design="bruecke"] .pokale-card--plate .pokale-card__label { margin-top: 0; }
+:root[data-design="bruecke"] .pokale-card--plate .pokale-card__value {
+  font-size: var(--display-m);
+  line-height: 1.05;
+  letter-spacing: var(--track-display);
+  text-transform: uppercase;
+}
+:root[data-design="bruecke"] .pokale-card--plate .pokale-card__link { color: inherit; text-decoration: none; }
+:root[data-design="bruecke"] .pokale-card--plate .pokale-card__link:hover { text-decoration: underline; }
+:root[data-design="bruecke"][data-scheme="dark"] .pokale-card--plate {
+  border-color: var(--line);
+  background: var(--surface);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .pokale-card--plate .pokale-card__sub { font-weight: 400; color: var(--ink-2); }
+@media (max-width: 560px) {
+  :root[data-design="bruecke"] .pokale-card--plate { padding: 12px; }
+  :root[data-design="bruecke"] .pokale-card--plate .pokale-card__value { font-size: var(--display-s); }
+}
+
 /* ===== #1242 — Anmelden, Konto anlegen, Passkey, Konto, Designwahl ===== */
 /* Docs: docs/design/bruecke/Bruecke-B5-Konto.dc.html (B5.1 Anmelden, B5.2
    Design wählen, B5.3 the same list on a phone, B5.4 Konto). Markup is the

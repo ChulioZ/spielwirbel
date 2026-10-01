@@ -282,6 +282,14 @@ I18N.de = {
   'pokale.dusty': 'Staubfänger',
   'pokale.dustyAt': 'zuletzt im {when}',
   'pokale.dustyNever': 'noch nie gespielt',
+  // Die Brücke's three Pokale plates (#1422, B3.4): the eyebrows, the best
+  // game's play count and the record streak's span of months.
+  'pokale.bestGame': 'Bestes Spiel',
+  'pokale.longestStreak': 'Längste Serie',
+  'pokale.mostVetoes': 'Meiste Vetos',
+  'pokale.playedOne': 'einmal gespielt',
+  'pokale.played': '{n}× gespielt',
+  'pokale.streakSpan': '{from} bis {to}',
 
   'recap.title': 'Rückblick',
   'recap.lead': 'Was euer Regal über euch verrät — aus allen Wertungen dieser Runde.',

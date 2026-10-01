@@ -274,6 +274,14 @@ I18N.es = {
   'pokale.dusty': 'Cogiendo polvo',
   'pokale.dustyAt': 'la última vez, en {when}',
   'pokale.dustyNever': 'todavía sin jugar',
+  // Die Brücke's three Pokale plates (#1422, B3.4): the eyebrows, the best
+  // game's play count and the record streak's span of months.
+  'pokale.bestGame': 'Mejor juego',
+  'pokale.longestStreak': 'Racha más larga',
+  'pokale.mostVetoes': 'Más vetos',
+  'pokale.playedOne': 'jugado una vez',
+  'pokale.played': 'jugado {n}×',
+  'pokale.streakSpan': 'de {from} a {to}',
 
   'recap.title': 'Resumen',
   'recap.lead': 'Lo que vuestra estantería dice de vosotros, a partir de todas las valoraciones de este grupo.',

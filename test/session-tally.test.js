@@ -1,15 +1,16 @@
 'use strict';
 
 /*
- * The two counts over a round's sessions that the Pokale card and Das
- * Programmheft's share card share (public/js/session-tally.js, #1381).
+ * The counts over a round's sessions that the Pokale card and Das
+ * Programmheft's share card share (public/js/session-tally.js, #1381), and the
+ * longest streak Die Brücke's „Längste Serie" plate reads (#1422).
  * The Pokale's own rendering of the streak stays covered by its view specs;
  * this pins the rule itself, so both callers are held to one definition.
  */
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { winStreak, sessionNumber } = require('../public/js/session-tally');
+const { winStreak, longestStreak, sessionNumber } = require('../public/js/session-tally');
 const { sessionEnding } = require('../public/js/session-outcome');
 const { sessionPartyCount } = require('../public/js/session-people');
 
@@ -73,4 +74,51 @@ test('a session’s number counts the finished ones up to it, itself included wh
   assert.equal(sessionNumber(r, b), 2);
   assert.equal(sessionNumber(r, { ...later, finished: false }), 3, 'the unfinished one before it does not count');
   assert.equal(sessionNumber(r, open), 3);
+});
+
+// --- the longest streak ever (#1422, Die Brücke's „Längste Serie") ----------
+
+test('the longest streak is the longest run at ANY point, not the one still going', () => {
+  // a three times, then b twice and still going: the record is a's 3.
+  const list = [s(['a']), s(['a']), s(['a']), s(['b']), s(['b'])];
+  const rec = longestStreak(round, [...list].reverse(), DEPS);
+  assert.deepEqual([...rec.memberIds], ['a']);
+  assert.equal(rec.n, 3);
+  assert.equal(rec.from, list[0].createdAt, 'the run starts at its first night');
+  assert.equal(rec.to, list[2].createdAt, 'and ends at its last');
+  assert.equal(winStreak(round, list, DEPS).n, 2, 'the current streak is still the other figure');
+});
+
+test('a shared win extends every winner’s run; a joint run is one run with one span', () => {
+  const list = [s(['c']), s(['a', 'b']), s(['b', 'a']), s(['c'])];
+  const rec = longestStreak(round, list, DEPS);
+  assert.deepEqual([...rec.memberIds].sort(), ['a', 'b']);
+  assert.equal(rec.n, 2);
+  assert.equal(rec.from, list[1].createdAt);
+  assert.equal(rec.to, list[2].createdAt);
+});
+
+test('two separate runs of the record length name both holders and no span', () => {
+  const list = [s(['a']), s(['a']), s(['b']), s(['b']), s(['c'])];
+  const rec = longestStreak(round, list, DEPS);
+  assert.deepEqual([...rec.memberIds], ['a', 'b']);
+  assert.equal(rec.n, 2);
+  assert.equal(rec.from, null, 'two runs have no one span to print');
+  assert.equal(rec.to, null);
+});
+
+test('the longest streak skips the same nights the current one does', () => {
+  const list = [
+    s(['a']),
+    s(['g1'], { guests: [{ id: 'g1', name: 'Gast' }] }),
+    s(['b'], { memberIds: ['b'] }),
+    s([], { ending: 'noWinner' }),
+    s(['a']),
+    s([], { ending: 'lost' }),
+    s(['a']),
+  ];
+  const rec = longestStreak(round, list, DEPS);
+  assert.deepEqual([...rec.memberIds], ['a']);
+  assert.equal(rec.n, 2, 'skipped nights neither break nor extend it; a lost night breaks it');
+  assert.deepEqual({ ...longestStreak(round, [], DEPS), memberIds: [] }, { memberIds: [], n: 0, from: null, to: null });
 });

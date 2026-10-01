@@ -670,9 +670,10 @@ public/
                      #796, SPLIT across several tables; derived from the child
                      ids rather than from a third boolean, and required by
                      lib/routes/sessions.js and lib/recommend.js
-    session-tally.js two counts over a round's finished sessions — the win
+    session-tally.js counts over a round's finished sessions — the win
                      streak the Pokale prints (a tie continues it for each
-                     winner, #1421) and a session's number in the round —
+                     winner, #1421), the record streak Die Brücke's plate
+                     prints (#1422) and a session's number in the round —
                      shared with Das Programmheft's card (issue #1381)
     table-split.js   the multi-table objective, the seeded search that optimises
                      it and the per-table numbers the builder shows; also the
@@ -833,6 +834,9 @@ public/
                           loading of a 30+ game shelf, the „Nicht im Regal"
                           line, and the Spielepass's stat tiles and rating
                           distribution (#1239)
+    bruecke-pokale.js     Die Brücke's three Pokale plates beside the
+                          leaderboard: „Bestes Spiel", „Längste Serie",
+                          „Meiste Vetos" (#1422)
     saved-filters.js      a round's saved session filters (#1328): the chip's
                           prefill, the setup screen's „Filter speichern" sheet
                           and the Einstellungen list
