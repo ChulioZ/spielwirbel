@@ -155,3 +155,29 @@ test('boxBringers survives a session with no seats at all', () => {
   assert.deepEqual(bringers(r, s, { ownerIds: ['m1'] }), []);
   assert.deepEqual(bringers(r, {}, { ownerIds: ['m1'] }), [], 'and a session with no memberIds key');
 });
+
+// ---------------------------------------------------------------- owner filter
+// The Regal's owner filter (#1433): the gate, the options and the predicate.
+
+const { ownerFilterMembers, matchesOwnerFilter } = require('../public/js/owner-picker');
+
+test('ownerFilterMembers lists the members who own a shelf game, in member order', () => {
+  const CLEO = { id: 'm3', name: 'Cleo' };
+  const r = round([ANNA, BEN, CLEO]);
+  // Ben owns nothing on this shelf, so picking him could only empty it; an id
+  // naming no member (a deleted seat) is not offered either.
+  const games = [{ ownerIds: ['m3'] }, { ownerIds: ['m1', 'gone'] }, {}];
+  assert.deepEqual(ownerFilterMembers(r, games).map((m) => m.id), ['m1', 'm3']);
+  assert.deepEqual(ownerFilterMembers(r, [{}]), []);
+  assert.deepEqual(ownerFilterMembers(null, games), []);
+});
+
+test('matchesOwnerFilter: any picked owner matches, unowned games never do', () => {
+  assert.equal(matchesOwnerFilter([], undefined), true, 'no pick = no filter');
+  assert.equal(matchesOwnerFilter(undefined, ['m1']), true);
+  assert.equal(matchesOwnerFilter(['m1'], ['m1']), true);
+  assert.equal(matchesOwnerFilter(['m1', 'm2'], ['m2', 'm3']), true, 'ANY of the picked');
+  assert.equal(matchesOwnerFilter(['m1'], ['m2']), false);
+  assert.equal(matchesOwnerFilter(['m1'], []), false, 'a game with no owners does not match');
+  assert.equal(matchesOwnerFilter(['m1'], undefined), false);
+});

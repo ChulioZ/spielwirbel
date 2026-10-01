@@ -4471,6 +4471,28 @@
   :root[data-design="tisch"][data-scheme="dark"] .split-tables__foot .btn { flex: none; padding-inline: 18px; }
 }
 
+/* --- The review step after the last card (#1434) ---------------------------
+   vote-review.js builds it in the composed card's own frame: the felt header,
+   then the paper `.vote__card`. The card's cover/title/faces grid does not
+   apply to a list, so the paper goes back to a plain column here; the chosen
+   face in each row is the same brass plate the selected `.mood` wears. */
+:root[data-design="tisch"][data-scheme="dark"] .vote-review .vote__card { display: block; }
+:root[data-design="tisch"][data-scheme="dark"] .vote-review .vote-review__title {
+  margin: 0;
+  text-align: left;
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  line-height: 1.05;
+}
+:root[data-design="tisch"][data-scheme="dark"] .vote-review .vote-review__hint { text-align: left; }
+:root[data-design="tisch"][data-scheme="dark"] .vote-review .vote-review__rating {
+  background: linear-gradient(180deg, var(--brass-hi), var(--gold-deep));
+  box-shadow: 0 2px 0 var(--gold-edge);
+}
+/* T4.2's 920px desktop card is for the cover beside the title; the review has
+   no cover and keeps the list's measure (styles.css). */
+:root[data-design="tisch"][data-scheme="dark"] .vote.vote--composed.vote-review { max-width: 600px; }
+
 /* ---- Live-Abstimmung (#1192, T4.3 Live-Abstimmung + T6.5 Live) ------------
  *
  * The screen where each person rates on their own device. Two things change
@@ -8461,10 +8483,10 @@
 /* Earned: raised brass, lit from the upper left, standing on a hard shadow.
    The engraving is the walnut ink — 13.26:1 on the highlight down to 5.34:1 on
    --brass-lo — so the glyph reads as cut into the metal at every stop. */
-:root[data-design="tisch"][data-scheme="dark"] :is(.badge, .badge-card)[data-state="earned"] .badge__mark {
+:root[data-design="tisch"][data-scheme="dark"] :is(.badge, .badge-card, .badge-emblem)[data-state="earned"] .badge__mark {
   color: var(--on-accent);
 }
-:root[data-design="tisch"][data-scheme="dark"] :is(.badge, .badge-card)[data-state="earned"] .badge__mark::before {
+:root[data-design="tisch"][data-scheme="dark"] :is(.badge, .badge-card, .badge-emblem)[data-state="earned"] .badge__mark::before {
   border: 2px solid var(--plinth-edge);
   background: radial-gradient(circle at 35% 30%, var(--gold-hi), var(--gold) 40%, var(--gold-deep) 75%, var(--brass-lo));
   box-shadow: 0 4px 0 var(--pin-shadow), 0 8px 14px var(--cast-deep);
@@ -8944,8 +8966,7 @@
   font-weight: 700;
 }
 :root[data-design="tisch"][data-scheme="dark"] .hub-row--badges .ti,
-:root[data-design="tisch"][data-scheme="dark"] .chronik-row--badge .chronik-row__icon,
-:root[data-design="tisch"][data-scheme="dark"] .feed-row__cover--badge {
+:root[data-design="tisch"][data-scheme="dark"] .chronik-row--badge .chronik-row__icon {
   display: inline-grid;
   place-items: center;
   flex: none;
@@ -9005,31 +9026,20 @@
 }
 
 /* --- The friends' feed (T17.7): the one account-tier earning a friend sees —
-   the cover slot becomes a brass pin (rule shared with the hub and Chronik
-   pins above), and a tile's image slot is felt with the pin laid on it. */
-:root[data-design="tisch"][data-scheme="dark"] .feed-row__cover--badge {
-  width: 36px;
-  height: 36px;
-  font-size: 17px; /* glyph, not type */
-}
+   the slot carries the EARNED PIN itself (#1428): K17's `.badge__mark` in a
+   `.badge-emblem` host, which the earned selector above names, so this block
+   only sizes it and lays the tile's band. No pin is drawn here — a second
+   drawing is what let the feed's pin drift from the Spielerkarte's.
+   40px in a row (the pin inside its 3px inset stands a little over the 36px
+   box a game stands), the 46px slot in the home preview, 64px on a tile. */
+:root[data-design="tisch"][data-scheme="dark"] .feed-row__badge { --pin: 40px; }
+:root[data-design="tisch"][data-scheme="dark"] .feed-item__img--badge { --pin: 46px; }
 :root[data-design="tisch"][data-scheme="dark"] .e-tile__img--badge {
+  --pin: 64px;
   background-color: var(--felt-deep);
   background-image:
     var(--felt-weave),
     radial-gradient(90% 180% at 20% -40%, var(--felt), var(--felt-deep) 74%);
-}
-:root[data-design="tisch"][data-scheme="dark"] .e-tile__img--badge .ti {
-  display: inline-grid;
-  place-items: center;
-  width: 56px;
-  height: 56px;
-  box-sizing: border-box;
-  border: 2px solid var(--plinth-edge);
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, var(--gold-hi), var(--gold) 40%, var(--gold-deep) 75%, var(--brass-lo));
-  box-shadow: 0 4px 0 var(--pin-shadow);
-  color: var(--on-accent);
-  font-size: 26px; /* glyph, not type */
 }
 
 /* --- The card on tap (T17.1, right) ----------------------------------------

@@ -108,14 +108,14 @@ test('open and secret are a felt RECESS with a dashed edge, the glyph in the rec
 });
 
 test('earned is RAISED brass with the glyph engraved — the four brass stops and the pin shadow', () => {
-  const pin = body(':is(.badge, .badge-card)[data-state="earned"] .badge__mark::before');
+  const pin = body(':is(.badge, .badge-card, .badge-emblem)[data-state="earned"] .badge__mark::before');
   const bg = decl(pin, 'background');
   for (const stop of ['--gold-hi', '--gold', '--gold-deep', '--brass-lo']) {
     assert.ok(bg.includes(`var(${stop})`), `the brass misses ${stop}: ${bg}`);
   }
   assert.match(decl(pin, 'border'), /solid var\(--plinth-edge\)/);
   assert.match(decl(pin, 'box-shadow'), /var\(--pin-shadow\)/, 'an earned pin stands on its own shadow');
-  assert.equal(decl(body(':is(.badge, .badge-card)[data-state="earned"] .badge__mark'), 'color'), 'var(--on-accent)',
+  assert.equal(decl(body(':is(.badge, .badge-card, .badge-emblem)[data-state="earned"] .badge__mark'), 'color'), 'var(--on-accent)',
     'the engraving is the dark ink, never a lighter one on brass');
 });
 
@@ -179,7 +179,25 @@ test('the hub line, the Chronik row, the card and the feed (T17.6, T17.7)', () =
   assert.equal(decl(body('.chronik-row--badge .chronik-row__label'), 'color'), 'var(--paper-faint)');
   const bar = decl(body('.badge-card__bar'), 'background');
   assert.match(bar, /var\(--paper-faint\) calc\(var\(--pct\) \* 1%\), var\(--paper-track\) 0/);
-  assert.match(body('.feed-row__cover--badge'), /var\(--gold-deep\)/);
+});
+
+test('the feed wears the ONE earned pin: its host is in the earned selector, and no second drawing exists (#1428)', () => {
+  // The feed's mark is K17's .badge__mark in a .badge-emblem host (badgeEmblem),
+  // so the brass reaches it only through the earned rule naming that host.
+  const earned = RULES.filter(([sel]) => members(sel).some((m) => m.startsWith(GATE)
+    && m.includes('[data-state="earned"] .badge__mark::before')));
+  assert.ok(earned.length >= 1, 'no earned pin rule');
+  assert.ok(earned.some(([sel]) => /:is\([^)]*\.badge-emblem[^)]*\)\[data-state="earned"\]/.test(sel)),
+    'the feed host is missing from the earned selector — the feed shows the recess, not the pin');
+  // The pin is drawn once: no feed selector paints brass of its own.
+  const feedSlots = ['.feed-row__badge', '.feed-item__img--badge', '.e-tile__img--badge', '.feed-row__cover--badge'];
+  const parallel = RULES.filter(([sel, b]) => feedSlots.some((f) => sel.includes(f)) && /--gold|--brass|radial-gradient\(circle/.test(b));
+  assert.deepEqual(parallel.map(([sel]) => norm(sel)), [], 'a second pin drawing for the feed');
+  // Each slot only sizes the pin.
+  assert.equal(decl(body('.feed-row__badge'), '--pin'), '40px');
+  assert.equal(decl(body('.feed-item__img--badge'), '--pin'), '46px');
+  assert.equal(decl(body('.e-tile__img--badge'), '--pin'), '64px');
+  assert.match(body('.e-tile__img--badge'), /var\(--felt-deep\)/, 'the tile\'s band is felt');
 });
 
 test('nothing here moves but the falling pin, and that only on a fresh mark (#1386)', () => {

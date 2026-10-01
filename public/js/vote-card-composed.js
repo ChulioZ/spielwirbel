@@ -41,14 +41,22 @@ const voteWord = (n) => t(VOTE_WORD_KEYS[n - RATING_MIN]);
    before #1268. Under Der Tisch the word joins the tile, and joins its
    accessible NAME too: a reader hears „4 von 5 – gern", which is the part of
    the tile that means something. */
+/* Whether the worn design composes its vote card here rather than drawing
+   Klassisch's. Ocean (#1213) and Die Brücke (#1240) take Der Tisch's
+   composition and add their own side columns; every other design — Das
+   Programmheft included, until its own session loop lands — draws Klassisch's.
+   One answer for the card, its faces and the review step (#1434), so the three
+   cannot disagree about which shape is on screen. */
+const voteCardComposed = () => designIs('tisch') || oceanWorn() || designIs('bruecke');
+
+// The word a face carries under a composed card. Die Brücke names the two ends
+// in its own words („kein Schub" … „volle Kraft"); the middle three keep the app's.
+const voteSaidWord = (n) => (designIs('bruecke') && brueckeVoteWord(n)) || voteWord(n);
+
 function voteMoodButton(n, selected) {
-  // Ocean (#1213) composes its card from the same builder, words included; its
-  // stylesheet prints only the two end words under the faces.
-  // Die Brücke (#1240) names the two ends in its own words („kein Schub" …
-  // „volle Kraft"); the middle three keep the app's.
-  const bruecke = designIs('bruecke');
-  const tisch = designIs('tisch') || oceanWorn() || bruecke;
-  const said = (bruecke && brueckeVoteWord(n)) || voteWord(n);
+  // Ocean's stylesheet prints only the two end words under the faces.
+  const tisch = voteCardComposed();
+  const said = voteSaidWord(n);
   const label = tisch
     ? t('vote.ratingLabelWord', { n, max: RATING_MAX, word: said })
     : t('vote.ratingLabel', { n, max: RATING_MAX });
