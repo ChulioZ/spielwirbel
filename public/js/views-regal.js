@@ -49,13 +49,16 @@ function renderRegalTab(round, activeGames) {
   // words the sort „Sortiert: Bewertung". It keeps the dashed add tile and
   // brings its own ways off the shelf; ocean.css lays the rest out per width.
   const ocean = designIs('ocean');
-  // Die Brücke only for its empty shelf so far (#1243, B7.2).
+  // Die Brücke (#1239, B3.2/B2.6/B16.2) takes the composed head, the
+  // „Sortiert:" statement, cards with their meta and score on an opaque band
+  // (bruecke-shelf.js), and from 30 games a letter jump and batched loading.
+  // Its empty shelf is #1243's (B7.2).
   const bruecke = designIs('bruecke');
   // Das Programmheft (#1373, P3.3/P6.2/P7.8) takes the composed head too, and
   // Ocean's „Sortiert:" statement; its cards set the number, the meta and the
   // score as print ABOUT the cover rather than on it (phCard below).
   const ph = designIs('programmheft');
-  const composed = tisch || ocean || ph;
+  const composed = tisch || ocean || ph || bruecke;
   // h1, not h3: on the Regal/Chronik/Pokale tabs this is the top-level heading of
   // the view — only the Start tab renders the round-name hero (#145). The
   // section-label look is unchanged; `.section-head :is(h1,h2,h3)` styles it.
@@ -65,6 +68,7 @@ function renderRegalTab(round, activeGames) {
   const gamesHead = h(`<div class="section-head${composed ? ' regal-head' : ''}">${title}<div class="section-tools"></div></div>`);
   const gamesTools = gamesHead.querySelector('.section-tools');
   if (ph) gamesSec.classList.add('ph-regal');
+  if (bruecke) gamesSec.classList.add('bruecke-regal');
   gamesSec.appendChild(gamesHead);
 
   const grid = h('<div class="cards"></div>');
@@ -90,7 +94,9 @@ function renderRegalTab(round, activeGames) {
   // Under Der Tisch the gold button is THE add action, so the dashed tile goes.
   // The empty shelf keeps its import tile: that is the empty state's offer, not
   // the toolbar's (#1278 moved only the toolbar's import into the add sheet).
-  const gridAddTile = tisch ? [] : [addTile];
+  // Die Brücke draws no tile either: B3.2 adds from the toolbar, B2.6 from a
+  // full-width button under the grid.
+  const gridAddTile = tisch || bruecke ? [] : [addTile];
 
   if (activeGames.length === 0 && (ocean || bruecke)) {
     /* Ocean's empty shelf (#1216, O7.1) carries its two ways in ON the card —
@@ -147,7 +153,7 @@ function renderRegalTab(round, activeGames) {
     // Ocean prints the sort as a statement, „Sortiert: Bewertung" (O3.3). The
     // prefix is a visible word beside the <select>, whose own aria-label is
     // unchanged — so it is aria-hidden rather than a second name.
-    if (ocean || ph) {
+    if (ocean || ph || bruecke) {
       const sortWrap = h(`<span class="regal-sort"><span class="regal-sort__prefix" aria-hidden="true">${esc(t('games.sortedBy'))}</span></span>`);
       sortWrap.appendChild(sortSel);
       gamesTools.appendChild(sortWrap);
@@ -339,7 +345,8 @@ function renderRegalTab(round, activeGames) {
       const expBadge = expCount
         ? `<span class="exp-pill" title="${esc(tn(expCount, 'detail.expansionsBadgeOne', 'detail.expansionsBadge', { n: expCount }))}">+${expCount}</span>`
         : '';
-      const gc = ph ? phCard(round, g, fallback, score, evidence, expBadge) : h(`<a class="game-card game-card--clickable">
+      const gc = ph ? phCard(round, g, fallback, score, evidence, expBadge)
+        : bruecke ? brueckeCard(g, fallback, score, evidence, expBadge) : h(`<a class="game-card game-card--clickable">
            <div class="game-card__img">${fallback}
              <div class="game-card__badges">${expBadge}${scorePill}</div>
              <span class="game-card__pick" aria-hidden="true"><i class="ti ti-check"></i></span>
@@ -354,7 +361,32 @@ function renderRegalTab(round, activeGames) {
       cardById[g.id] = gc;
     });
     gamesSec.appendChild(bulk.bar);
+    // B16.2: a shelf of 30 or more games gets the letter row over the grid and
+    // loads in batches. `bkLimit` is how many of the matching games are on the
+    // page; a jump widens it to the batch holding the letter, so the target
+    // card exists before it is scrolled to. The row jumps in NAME order, so a
+    // jump switches the sort to „Name" — the only order in which a letter is a
+    // place on the shelf.
+    let bkLimit = BRUECKE_BATCH;
+    const dense = bruecke && activeGames.length >= BRUECKE_DENSE_MIN
+      ? brueckeShelfDensity({
+        more: () => { bkLimit += BRUECKE_BATCH; renderGames(); },
+        jump: (letter) => {
+          if (gamesSort !== 'name') { gamesSort = 'name'; sortSel.value = 'name'; }
+          const games = orderedGames().filter(matchesFilters);
+          const i = games.findIndex((g) => brueckeLetter(g.title) === letter);
+          if (i < 0) return;
+          bkLimit = Math.max(bkLimit, Math.ceil((i + 1) / BRUECKE_BATCH) * BRUECKE_BATCH);
+          renderGames();
+          const card = cardById[games[i].id];
+          card.scrollIntoView({ block: 'center' });
+          card.focus({ preventScroll: true });
+        },
+      })
+      : null;
+    if (dense) gamesSec.appendChild(dense.letters);
     gamesSec.appendChild(grid);
+    if (dense) gamesSec.appendChild(dense.foot);
 
     function orderedGames() {
       if (gamesSort === 'name') {
@@ -384,13 +416,18 @@ function renderRegalTab(round, activeGames) {
     // Reorder/filter the existing card nodes (no page rebuild); the add tile
     // always closes the grid.
     function renderGames() {
-      const cards = orderedGames().filter(matchesFilters).map((g) => cardById[g.id]);
+      const games = orderedGames().filter(matchesFilters);
+      const cards = games.map((g) => cardById[g.id]);
       // The "add a game" tile is dropped while selecting: it is not selectable,
       // and a dashed tile sitting among checkable covers reads as one that is
       // simply unticked. `shownCards` is what "select all" means — the games
       // currently passing the search, tags and metadata filters, which is the
       // whole reason the mode lives in the grid rather than in a flat sheet.
       bulk.setShown(cards);
+      // Selecting shows every match: „Alle wählen" means the filtered shelf,
+      // and a tick on a card that is not on the page could not be seen.
+      const onPage = dense && !bulk.isSelecting() ? cards.slice(0, bkLimit) : cards;
+      if (dense) dense.sync(bulk.isSelecting() ? [] : games, onPage.length);
       if (cards.length === 0) {
         const msg = query.trim()
           ? t('games.noMatch', { q: query.trim() })
@@ -399,7 +436,7 @@ function renderRegalTab(round, activeGames) {
         bulk.sync();
         return;
       }
-      grid.replaceChildren(...cards, ...(bulk.isSelecting() ? [] : gridAddTile));
+      grid.replaceChildren(...onPage, ...(bulk.isSelecting() ? [] : gridAddTile));
       // The programme's running number follows what is on the page, so a sort
       // or a filter renumbers rather than leaving gaps.
       if (ph) cards.forEach((c, i) => { c.querySelector('.ph-card__nr').textContent = t('regal.cardNo', { n: i + 1 }); });
@@ -413,6 +450,7 @@ function renderRegalTab(round, activeGames) {
     });
     sortSel.addEventListener('change', () => {
       gamesSort = sortSel.value;
+      bkLimit = BRUECKE_BATCH;
       renderGames();
     });
     renderGames();
@@ -491,8 +529,16 @@ function renderRegalTab(round, activeGames) {
     gamesSec.appendChild(addBtn('regal-add regal-add--dock'));
   }
   if (ph) gamesSec.appendChild(phOffShelf(round));
-  // Klassisch — and Die Brücke, which falls through to this branch until its own
-  // Regal lands (#1239) — closed the grid with the dashed tile alone. On a big
+  // Die Brücke: a cyan-wired „Spiel hinzufügen" closing the toolbar (B3.2) and,
+  // on a phone, the same button full width under the grid (B2.6) — one per
+  // width in CSS, as Der Tisch's pair. Then the shelf ends on the one line of
+  // ways off it.
+  if (bruecke && activeGames.length > 0) {
+    gamesTools.appendChild(addBtn('btn--sm bruecke-add bruecke-add--bar'));
+    gamesSec.appendChild(addBtn('bruecke-add bruecke-add--dock'));
+  }
+  if (bruecke) gamesSec.appendChild(brueckeOffShelfLine(round));
+  // Klassisch closed the grid with the dashed tile alone. On a big
   // shelf that is a long scroll from the only add control, so it gets Der
   // Tisch's pair (#1427): a header button at 860px and up, a sticky bar above
   // the dock below. Their own `shelf-add` class, never `regal-add`: the three
@@ -612,57 +658,4 @@ function oceanOffShelfBand(round) {
   row.addEventListener('click', () => openOffShelfSheet(round));
   wrap.appendChild(row);
   return wrap;
-}
-
-// The four off-shelf destinations, as a plain list sheet.
-//
-// ONE presentation for everything below 1280px, deliberately: the trigger is
-// `rail-owned`, so a popover/sheet split by the 860px editor breakpoint would
-// invent a third presentation for the 860–1279px band alone. The
-// popover-vs-sheet split exists because an anchored popover cannot hold a text
-// input on a phone (.claude/rules/popover-vs-sheet-editors.md) — this holds only
-// links, so it never needs it. Shape copied from pickExpansionBase (#664).
-// Under Der Tisch the trigger is not `rail-owned` (#1262), so this same centred
-// dialog serves the desktop too — still one presentation, just at every width.
-function openOffShelfSheet(round) {
-  const rid = round.id;
-  const backdrop = h(`<div class="sheet-backdrop sheet-backdrop--center">
-      <div class="sheet sheet--dialog sheet--list" role="dialog" aria-modal="true" aria-label="${esc(t('rail.archive'))}">
-        <div class="sheet__head">
-          <h2>${esc(t('rail.archive'))}</h2>
-          <button class="sheet__close" aria-label="${esc(t('common.close'))}"><i class="ti ti-x" aria-hidden="true"></i></button>
-        </div>
-        <div class="ds-list off-shelf"></div>
-      </div>
-    </div>`);
-  document.body.appendChild(backdrop);
-  const dismiss = () => closeSheet();
-  const onKey = (e) => { if (e.key === 'Escape') dismiss(); };
-  document.addEventListener('keydown', onKey, true);
-  // Must go through openSheet for the focus trap (#145) and Back-dismissal
-  // (#333) — never assign activeSheet directly.
-  openSheet(backdrop, onKey);
-  backdrop.addEventListener('mousedown', (e) => { if (e.target === backdrop) dismiss(); });
-  backdrop.querySelector('.sheet__close').addEventListener('click', dismiss);
-
-  // Icons, labels and counts come from off-shelf.js, so this sheet, the rail
-  // and the hub's „Nicht im Regal" group cannot disagree about which rows exist
-  // or what they count — what test/off-shelf-parity.test.js used to have to
-  // compare between two hand-built arrays.
-  const list = backdrop.querySelector('.off-shelf');
-  offShelfEntries(round).forEach(({ icon, label, sub, go }) => {
-    // Real <a href> (#330), so ⌘/middle-click still open them in a new tab.
-    // `class` FIRST, like every other .ds-row site — test/ds-row-affordance.test.js
-    // matches on `<a\s+class="ds-row…"`, so an attribute in front of it makes the
-    // row invisible to that guard rather than failing it.
-    const row = h(`<a class="ds-row off-shelf__row">
-         <span class="ds-row__main"><i class="ti ${icon}" aria-hidden="true"></i><span>${esc(label)}</span></span>
-         <span class="ds-row__meta"><i class="ti ti-chevron-right" aria-hidden="true"></i></span>
-       </a>`);
-    // Through closeSheet, never on the line after it, or the queued history pop
-    // races the screen the choice renders
-    // (.claude/rules/sheet-history-back-dismissal.md).
-    navLink(row, roundPath(rid, sub), () => closeSheet(go));
-    list.appendChild(row);
-  });
 }

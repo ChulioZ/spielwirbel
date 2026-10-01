@@ -1875,6 +1875,13 @@ I18N.fi = {
   'badges.evergreen.lineGame': '{game} pelattu {n} kertaa',
   // A Regal card's running number in Das Programmheft (#1373, P3.3).
   'regal.cardNo': 'Nro {n}',
+  // Die Brücke's Regal and Spielepass (#1239, B16.2/B13.4).
+  'regal.lettersBruecke': 'Siirry kirjaimeen',
+  'regal.batchShownBruecke': '{shown}/{total} ladattu',
+  'regal.batchMoreBruecke': 'Lataa {n} lisää',
+  'detail.distTitleBruecke': 'Miten porukka arvioi',
+  'detail.statPlaysBruecke': 'kertaa pelattu',
+  'detail.statVetoBruecke': '× ei työntöä',
   // Das Programmheft's lobby and hub (#1372, P3.1/P3.2/P6.1).
   'hub.members': 'Jäsenet',
   'hub.lead.open': 'Katso tulos',

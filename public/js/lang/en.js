@@ -2030,6 +2030,13 @@ I18N.en = {
   'badges.evergreen.lineGame': 'Played {game} {n} times',
   // A Regal card's running number in Das Programmheft (#1373, P3.3).
   'regal.cardNo': 'No. {n}',
+  // Die Brücke's Regal and Spielepass (#1239, B16.2/B13.4).
+  'regal.lettersBruecke': 'Jump to a letter',
+  'regal.batchShownBruecke': '{shown} of {total} loaded',
+  'regal.batchMoreBruecke': 'Load {n} more',
+  'detail.distTitleBruecke': 'How the round rates it',
+  'detail.statPlaysBruecke': 'times played',
+  'detail.statVetoBruecke': '× no thrust',
   // Das Programmheft's lobby and hub (#1372, P3.1/P3.2/P6.1).
   'hub.members': 'Members',
   'hub.lead.open': 'See the result',

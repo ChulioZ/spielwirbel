@@ -210,7 +210,13 @@ async function showGameDetail(rid, gameId) {
   // box at the head of the right column: cover | the game and how it went |
   // the score, the one action and the rest.
   const ph = designIs('programmheft');
-  const listy = tisch || ocean || ph;
+  // Die Brücke (#1239, B13.4/B6.3) takes Der Tisch's numeral and dated list,
+  // keeps the „…" menu rather than an Aktionen panel, and adds its three stat
+  // tiles and the rating distribution at the head of the right page
+  // (bruecke-shelf.js). Its one action stands under the card on the desktop and
+  // in a bar above the dock on the phone — two copies, one per width.
+  const bruecke = designIs('bruecke');
+  const listy = tisch || ocean || ph || bruecke;
   const coverCss = game.image ? `url('${coverUrl(game.image, COVER_HERO)}')` : '';
   const imgStyle = coverCss ? `style="background-image:${coverCss}"` : '';
   const fallback = coverPlaceholder(game);
@@ -412,11 +418,11 @@ async function showGameDetail(rid, gameId) {
   const shown = st.score === null ? null : displayScore(st.score);
   let scoreBig = null;
   let scoreBox = null;
-  if (!sparse && !game.wish && (tisch || ph)) {
+  if (!sparse && !game.wish && (tisch || ph || bruecke)) {
     const numeral = tischScoreNumeral(st, shown);
     wireInfoButtons(numeral);
     // The box takes the score's ramp tone (P3.4), as a Regal card's figure does.
-    if (ph && st.score !== null) numeral.dataset.stop = scoreStop(st.score);
+    if ((ph || bruecke) && st.score !== null) numeral.dataset.stop = scoreStop(st.score);
     if (ph) scoreBox = numeral;
     else scoreBig = numeral;
   } else if (!sparse && !game.wish) {
@@ -448,7 +454,7 @@ async function showGameDetail(rid, gameId) {
   // is for — and a <button> is an atomic inline-block, so a long title would
   // take the whole line. `role="button"` is what tells a screen reader Enter
   // does something; a bare focusable span announces only its text.
-  const titleEl = h(`<span class="gd-title" role="button" tabindex="0" title="${esc(t('detail.editName'))}">${esc(game.title)}</span>`);
+  const titleEl = h(`<span class="gd-title${bruecke && brueckeTitleLong(game.title) ? ' is-long' : ''}" role="button" tabindex="0" title="${esc(t('detail.editName'))}">${esc(game.title)}</span>`);
   titleEl.addEventListener('click', () => startTitleEdit(titleEl));
   titleEl.addEventListener('keydown', (e) => {
     // preventDefault on Space, or the page scrolls under the editor.
@@ -858,6 +864,7 @@ async function showGameDetail(rid, gameId) {
      the emptiness this screen was rebuilt to avoid. That is not the same
      condition as `related.length`, which is why it is asked separately: a
      session can draw a game that nobody then rated. */
+  if (bruecke && !sparse && !game.wish) rightPage.append(brueckePassStats(st), brueckePassDist(st));
   const raters = !sparse && !game.wish ? gameRaters(round, gameId) : [];
   if (raters.length) {
     const votesSec = h(`<div class="section gd-raters"><h2>${esc(t('detail.ratersTitle'))}</h2></div>`);
@@ -899,45 +906,52 @@ async function showGameDetail(rid, gameId) {
   // A game is Active, Retired, Completed (#250) or Wished-for (#560), and the
   // repo enforces that those four are mutually exclusive — so the branches are
   // too: a game that is off the shelf offers only the way onto it.
-  const bar = h('<div class="gd-bar"></div>');
-  // Move the game onto the shelf, out of whichever state it is in. `opts` exists
-  // for the wish list alone (see its branch below); the two archives take the
-  // defaults.
-  const restoreFrom = (kind, endpoint, body, opts = {}) => {
-    const icon = opts.icon || 'ti-arrow-back-up';
-    const label = opts.label || t('detail.restore');
-    const restore = h(`<button class="btn btn--lg"><i class="ti ${icon}" aria-hidden="true"></i> ${esc(label)}</button>`);
-    restore.addEventListener('click', async () => {
-      try {
-        await api('POST', `/api/rounds/${rid}/games/${gameId}/${endpoint}`, body);
-        toast(t(`${kind}.restored`, { title: game.title }));
-        showGameDetail(rid, gameId);
-      } catch (e) { toast(e.message, { tone: 'error' }); }
-    });
-    bar.appendChild(restore);
+  // Built by a function because Die Brücke places it twice, one copy per width.
+  const makeBar = (cls = '') => {
+    const bar = h(`<div class="gd-bar${cls}"></div>`);
+    // Move the game onto the shelf, out of whichever state it is in. `opts` exists
+    // for the wish list alone (see its branch below); the two archives take the
+    // defaults.
+    const restoreFrom = (kind, endpoint, body, opts = {}) => {
+      const icon = opts.icon || 'ti-arrow-back-up';
+      const label = opts.label || t('detail.restore');
+      const restore = h(`<button class="btn btn--lg"><i class="ti ${icon}" aria-hidden="true"></i> ${esc(label)}</button>`);
+      restore.addEventListener('click', async () => {
+        try {
+          await api('POST', `/api/rounds/${rid}/games/${gameId}/${endpoint}`, body);
+          toast(t(`${kind}.restored`, { title: game.title }));
+          showGameDetail(rid, gameId);
+        } catch (e) { toast(e.message, { tone: 'error' }); }
+      });
+      bar.appendChild(restore);
+    };
+    if (game.retired) {
+      restoreFrom('retired', 'retire', { retired: false });
+    } else if (game.completed) {
+      restoreFrom('completed', 'complete', { completed: false });
+    } else if (game.wish) {
+      // „Ins Regal" with the Regal's own icon, never „Wiederherstellen": the game
+      // is arriving on the shelf for the first time, so "restore" would claim it
+      // is going back somewhere it has never been. Same reasoning — and the same
+      // two values — as ARCHIVES.wish.restoreIcon in views-archive.js.
+      //
+      // This branch is what keeps the active `else` below off a wished-for game.
+      // Without it a wish was offered „Direkt spielen", which the server refuses
+      // with a 400 `Game is on the wishlist` (the shared isActiveGame predicate,
+      // active-games-filter-sites.md) — so the user got a seat picker, a start
+      // button and an English server error.
+      restoreFrom('wish', 'wish', { wish: false }, { icon: 'ti-cards', label: t('wish.restore') });
+    } else {
+      // Direct launch: skip the vote and play this game right away.
+      const play = h(`<button class="btn btn--primary btn--lg"><i class="ti ti-player-play" aria-hidden="true"></i> ${esc(t('directPlay.button'))}</button>`);
+      play.addEventListener('click', () => startDirectSession(round, game));
+      bar.appendChild(play);
+    }
+    return bar;
   };
-  if (game.retired) {
-    restoreFrom('retired', 'retire', { retired: false });
-  } else if (game.completed) {
-    restoreFrom('completed', 'complete', { completed: false });
-  } else if (game.wish) {
-    // „Ins Regal" with the Regal's own icon, never „Wiederherstellen": the game
-    // is arriving on the shelf for the first time, so "restore" would claim it
-    // is going back somewhere it has never been. Same reasoning — and the same
-    // two values — as ARCHIVES.wish.restoreIcon in views-archive.js.
-    //
-    // This branch is what keeps the active `else` below off a wished-for game.
-    // Without it a wish was offered „Direkt spielen", which the server refuses
-    // with a 400 `Game is on the wishlist` (the shared isActiveGame predicate,
-    // active-games-filter-sites.md) — so the user got a seat picker, a start
-    // button and an English server error.
-    restoreFrom('wish', 'wish', { wish: false }, { icon: 'ti-cards', label: t('wish.restore') });
-  } else {
-    // Direct launch: skip the vote and play this game right away.
-    const play = h(`<button class="btn btn--primary btn--lg"><i class="ti ti-player-play" aria-hidden="true"></i> ${esc(t('directPlay.button'))}</button>`);
-    play.addEventListener('click', () => startDirectSession(round, game));
-    bar.appendChild(play);
-  }
+  const bar = makeBar(bruecke ? ' gd-bar--foot' : '');
+  // B13.4 stands the action under the card in the left column.
+  if (bruecke) leftPage.appendChild(makeBar(' gd-bar--side'));
   // Ocean: the one action right under the title (O6.3), not at a page's foot.
   if (ocean) card.after(bar);
   else rightPage.append(...(scoreBox ? [scoreBox] : []), bar);
@@ -1001,7 +1015,7 @@ async function showGameDetail(rid, gameId) {
   // Der Tisch shows the same list as an „Aktionen" panel above the bar (T3.4;
   // a 2×2 grid on the phone, T6.3) — and then drops „…": every item is already
   // a button on the screen, and T15b does not repeat those in the menu.
-  if (menuItems.length && listy) {
+  if (menuItems.length && listy && !bruecke) {
     const panel = h(`<div class="section gd-actions"><h2>${esc(t('detail.actionsTitle'))}</h2><div class="gd-actions__grid"></div></div>`);
     panel.querySelector('.gd-actions__grid')
       .append(...menuItemButtons(menuItems, () => {}, { base: 'btn btn--sm gd-act', tone: false }));
