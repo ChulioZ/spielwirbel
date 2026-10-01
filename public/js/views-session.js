@@ -363,16 +363,23 @@ function showStartSession(round, prefill) {
      all this writes: the stagger, its cap and the five directions live in
      tisch.css beside the pot, so dropping the ritual is one block there and
      this. Klassisch never gets a mark, so its markup is what it was. */
+  /* Das Programmheft's second (#1382, P10.2) shares the gate exactly — the
+     first paint is still here too (operator decision at the PR, against the
+     sheet's set-the-whole-pot end frame) — and only the presentation differs:
+     its entering rows get `is-set` and a stagger index capped at 9 instead of
+     the throw's mark and direction, and the rows are SET in from the left
+     (programmheft.css). */
   let potSeen = null;
   const potThrows = (games) => {
     const marks = new Map();
-    if (tisch && potSeen) games.forEach((g) => { if (!potSeen.has(g.id)) marks.set(g.id, marks.size); });
+    if ((tisch || ph) && potSeen) games.forEach((g) => { if (!potSeen.has(g.id)) marks.set(g.id, marks.size); });
     potSeen = new Set(games.map((g) => g.id));
     return marks;
   };
-  const throwClass = (marks, g) => (marks.has(g.id) ? ' is-thrown' : '');
-  const throwAttr = (marks, g) => (marks.has(g.id) ? ` data-throw="${marks.get(g.id) % 5}"` : '');
-  const throwDecl = (marks, g) => (marks.has(g.id) ? `--throw-i:${marks.get(g.id)}` : '');
+  const throwClass = (marks, g) => (marks.has(g.id) ? (ph ? ' is-set' : ' is-thrown') : '');
+  const throwAttr = (marks, g) => (marks.has(g.id) && !ph ? ` data-throw="${marks.get(g.id) % 5}"` : '');
+  const throwDecl = (marks, g) => (!marks.has(g.id) ? ''
+    : ph ? `--set-i:${Math.min(marks.get(g.id), 9)}` : `--throw-i:${marks.get(g.id)}`);
   const updateHint = () => {
     const games = pool();
     const marks = potThrows(games);

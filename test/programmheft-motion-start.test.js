@@ -88,9 +88,10 @@ for (const [name, selector, timing] of [
   ['ph-rule-run', RULE, /ph-rule-run 360ms [^;]*135ms/],
 ]) {
   test(`${name}: Programmheft only, inside the motion gate, ends by 900ms, no end frame`, () => {
-    const users = rulesOf(PH_CSS).filter(([, b]) => new RegExp(`animation[-a-z]*:[^;]*${name}`).test(b));
+    // The name must END there: `ph-set` is a prefix of P10.2's `ph-set-line`.
+    const users = rulesOf(PH_CSS).filter(([, b]) => new RegExp(`animation[-a-z]*:[^;]*${name}(?![\\w-])`).test(b));
     assert.deepEqual(users.map(([s]) => s), [selector], 'exactly one rule runs it, under Das Programmheft');
-    const gated = motionRules.filter(([s, b]) => s === selector && b.includes(name));
+    const gated = motionRules.filter(([s, b]) => s === selector && new RegExp(`${name}(?![\\w-])`).test(b));
     assert.equal(gated.length, 1, 'and it sits inside prefers-reduced-motion: no-preference');
     const body = gated[0][1];
     assert.match(body, timing);
