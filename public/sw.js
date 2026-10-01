@@ -216,6 +216,7 @@ const SHELL = [
   '/js/achievements.js',
   '/js/views-badges.js',
   '/js/views-member.js',
+  '/js/programmheft-tier2a.js',
   '/js/vote-card-composed.js',
   '/js/vote-review.js',
   '/js/views-session.js',

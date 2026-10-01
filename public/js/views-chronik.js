@@ -201,6 +201,15 @@ function renderChronikTab(round, activities) {
   });
   sec.appendChild(chips);
 
+  // Das Programmheft's head actions (#1379): „Rückblick" opens the recap as a
+  // sheet on a phone, „Teilen" shares the box's period on a desktop
+  // (programmheft-tier2a.js). Each is shown at its own width by programmheft.css.
+  if (programmheft) {
+    const { recap, share } = programmheftChronikActions(round, activities, periodSec);
+    if (recap) secHead.appendChild(recap);
+    if (share) chips.after(share);
+  }
+
   /* Die Brücke's column heads (B3.3 „Datum · Spiel · Sieger · Spiele gezogen ·
      Score"). aria-hidden: each row is one link whose name already carries every
      fact in reading order, so heads a screen reader cannot associate with a

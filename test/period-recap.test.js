@@ -80,6 +80,38 @@ test('periods are derived from finished sessions and shelf activity, newest firs
   );
 });
 
+// Quarters are opt-in (#1379): only Das Programmheft's Monat/Quartal/Jahr
+// switch asks for them, so every other picker keeps exactly its two groups.
+test('quarters are offered only on request, between the months and the years', () => {
+  const r = round({
+    sessions: [
+      session(at(2026, 7, 15), null, { chosen: 'g1' }),
+      session(at(2026, 3, 31, 23), null, { chosen: 'g2' }),
+    ],
+  });
+  assert.ok(!periodsOf(r, []).some((p) => p.kind === 'quarter'), 'no quarter unless asked for');
+  const all = periodsOf(r, [], { quarters: true });
+  assert.deepEqual(
+    all.map((p) => `${p.kind}:${p.key}`),
+    ['month:2026-07', 'month:2026-03', 'quarter:2026-Q3', 'quarter:2026-Q1', 'year:2026']
+  );
+  assert.equal(all.find((p) => p.key === '2026-Q3').at, '2026-07-01T00:00:00', 'a quarter starts on its first month');
+});
+
+test('a quarter aggregates exactly its three months', () => {
+  const r = round({
+    sessions: [
+      session(at(2026, 6, 30, 23), null, { chosen: 'g1' }),
+      session(at(2026, 7, 1, 0), null, { chosen: 'g1' }),
+      session(at(2026, 9, 30, 23), null, { chosen: 'g2' }),
+      session(at(2026, 10, 1, 0), null, { chosen: 'g2' }),
+    ],
+  });
+  const q = periodRecap(r, [], { kind: 'quarter', key: '2026-Q3' }, deps);
+  assert.equal(q.sessions, 2);
+  assert.equal(q.gamesPlayed, 2);
+});
+
 test('a month with neither a session nor a shelf change is never offered', () => {
   const r = round({
     sessions: [session(at(2026, 5, 9), null, { chosen: 'g1' }), session(at(2026, 7, 9), null, { chosen: 'g1' })],
@@ -100,7 +132,7 @@ test('an unfinished or cancelled session contributes no period at all', () => {
 });
 
 test('periodKeyOf buckets a timestamp by the LOCAL calendar', () => {
-  assert.deepEqual(periodKeyOf(at(2026, 1, 31, 23)), { month: '2026-01', year: '2026' });
+  assert.deepEqual(periodKeyOf(at(2026, 1, 31, 23)), { month: '2026-01', quarter: '2026-Q1', year: '2026' });
 });
 
 // ---- local day and month arithmetic (#1080) --------------------------------

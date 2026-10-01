@@ -17,13 +17,18 @@
  * a played session nor a shelf change.
  */
 function renderPeriodRecapSection(round, activities) {
-  const periods = periodsOf(round, activities);
+  // Das Programmheft picks the KIND first — Monat · Quartal · Jahr (#1379,
+  // P13.1) — so it is the one caller that asks for quarters.
+  const programmheft = designIs('programmheft');
+  const periods = periodsOf(round, activities, { quarters: programmheft });
   if (!periods.length) return null;
 
   // Months are formatted through the locale machinery (fmtMonth -> localeTag,
   // js/locales.js), never a month-name array of our own — a hardcoded one is
   // the thing that silently ships English months to a French reader.
-  const labelOf = (p) => (p.kind === 'month' ? fmtMonth(p.at) : p.key);
+  const labelOf = (p) => (p.kind === 'month' ? fmtMonth(p.at)
+    : p.kind === 'quarter' ? t('periodRecap.quarterLabel', { q: p.key.slice(6), year: p.key.slice(0, 4) })
+      : p.key);
   const idOf = (p) => `${p.kind}:${p.key}`;
 
   const sec = h('<div class="section precap"></div>');
@@ -70,6 +75,28 @@ function renderPeriodRecapSection(round, activities) {
      </div>`);
   const picker = head.querySelector('.precap__picker');
   panel.appendChild(head);
+
+  /* Das Programmheft's Monat · Quartal · Jahr switch (#1379, P13.1/P15a sheet
+     12): the kind is a three-way toggle and the picker then lists only that
+     kind's periods, so every period stays reachable — the switch narrows the
+     list, it never hides a period. A kind with nothing to show is not offered. */
+  if (programmheft) {
+    const kinds = ['month', 'quarter', 'year'].filter((k) => periods.some((p) => p.kind === k));
+    const fill = (kind) => {
+      picker.innerHTML = periods.filter((p) => p.kind === kind)
+        .map((p) => `<option value="${esc(idOf(p))}">${esc(labelOf(p))}</option>`).join('');
+    };
+    const sw = h(`<div class="precap__kinds" role="group" aria-label="${esc(t('periodRecap.pickerLabel'))}">${kinds
+      .map((k, i) => `<button type="button" class="precap__kind" data-kind="${k}" aria-pressed="${i === 0}">${esc(t(`periodRecap.kind.${k}`))}</button>`)
+      .join('')}</div>`);
+    sw.querySelectorAll('.precap__kind').forEach((btn) => btn.addEventListener('click', () => {
+      sw.querySelectorAll('.precap__kind').forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+      fill(btn.dataset.kind);
+      renderBody();
+    }));
+    fill(kinds[0]);
+    head.insertBefore(sw, picker);
+  }
 
   const body = h('<div class="precap__body"></div>');
   panel.appendChild(body);

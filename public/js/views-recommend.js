@@ -305,10 +305,14 @@ async function showRecommendations(rid) {
   renderSubScreenTabs(round, 'recommendations');
   app.appendChild(backRow(() => showRound(rid, 'regal')));
   app.appendChild(offShelfSegments(round, 'recommendations')); // #1196, see off-shelf.js
+  // Das Programmheft sets the BGG mark beside the head (#1379, P13.8): every
+  // recommendation is BGG data, so the credit belongs with the title.
+  const bggMark = designIs('programmheft')
+    ? '<img class="ph-bgg" src="/icons/powered-by-bgg.png" width="900" height="264" alt="Powered by BGG" />' : '';
   app.appendChild(h(`<div class="page-head"><div>
        <h1>${esc(t('suggest.title'))}</h1>
        <div class="muted">${esc(round.name)}</div>
-     </div></div>`));
+     </div>${bggMark}</div>`));
 
   const recs = data.recommendations || [];
   if (!recs.length) {

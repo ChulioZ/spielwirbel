@@ -882,6 +882,9 @@ public/
     views-member.js  member detail page (die Tischkarte: the Siegquote ring,
                      the initials watermark, the figure strip and its
                      the two game boxes; name/colour editing)
+    programmheft-tier2a.js Das Programmheft's extras with no Klassisch counterpart
+                     (#1379): the Chronik's „Rückblick" sheet and „Teilen",
+                     „Letzte Siege" on the member page
     vote-card-composed.js Der Tisch's vote card (#1268): the felt header, the card
                      with cover and meta, the worded faces, the hand-off line
                      and the vote link's felt intro; both vote cards build

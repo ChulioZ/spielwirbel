@@ -229,6 +229,88 @@ test('Programmheft puts the editions before the recap, names the span and draws 
   assert.equal(dom.app.querySelector('.tl-dot--session') !== null, true, 'the timeline items keep their markup');
 });
 
+// --- the parts added on the operator's call (#1444) -------------------------
+
+test('Programmheft picks the recap period by kind: Monat · Quartal · Jahr, each listing only its own periods', async (t) => {
+  const dom = boot(t, 'programmheft');
+  await dom.call('showRound', RID, 'chronik');
+  const recap = dom.app.querySelector('.precap');
+  const kinds = [...recap.querySelectorAll('.precap__kinds .precap__kind')];
+  assert.deepEqual(kinds.map(text), ['Monat', 'Quartal', 'Jahr']);
+  assert.deepEqual(kinds.map((b) => b.getAttribute('aria-pressed')), ['true', 'false', 'false']);
+  const options = () => [...recap.querySelectorAll('.precap__picker option')].map(text);
+  assert.equal(recap.querySelectorAll('.precap__picker optgroup').length, 0);
+  assert.equal(options().length, 3, 'June, July and August are the months with content');
+  kinds[1].click();
+  assert.deepEqual(options(), ['3. Quartal 2026', '2. Quartal 2026']);
+  assert.equal(kinds[1].getAttribute('aria-pressed'), 'true');
+  // The body follows the switch: Q3 holds all six sessions.
+  assert.equal(text(recap.querySelector('.stat-chip--tile .stat-chip__n')), '6');
+  kinds[2].click();
+  assert.deepEqual(options(), ['2026']);
+});
+
+test('Programmheft\'s „Rückblick" opens the recap as a sheet, and „Teilen" shares the box\'s period', async (t) => {
+  const dom = boot(t, 'programmheft');
+  dom.set('canShareRecapImage', () => true);
+  const shared = [];
+  dom.set('shareRecapCard', (period, model) => shared.push([period.kind, period.key, model.periodLabel]));
+  await dom.call('showRound', RID, 'chronik');
+  const head = dom.app.querySelector('.ph-page > .section-head');
+  const open = head.querySelector('.ph-chronik-recap');
+  assert.ok(open, 'no „Rückblick" beside the title');
+  open.click();
+  const sheet = dom.document.querySelector('.sheet.ph-recap-sheet');
+  assert.ok(sheet, 'the recap sheet did not open');
+  assert.ok(sheet.querySelector('.precap .precap__kinds'), 'the sheet does not carry the recap');
+  dom.call('closeSheet');
+  const share = dom.app.querySelector('.ph-page > .filter-chips + .ph-chronik-share');
+  assert.ok(share, '„Teilen" does not close the filter row');
+  share.click();
+  assert.deepEqual(shared, [['month', '2026-08', dom.run("fmtMonth('2026-08-01T00:00:00')")]]);
+});
+
+test('without a way to deliver the image there is no „Teilen" in the head either', async (t) => {
+  const dom = boot(t, 'programmheft');
+  dom.set('canShareRecapImage', () => false);
+  await dom.call('showRound', RID, 'chronik');
+  assert.equal(dom.app.querySelector('.ph-chronik-share'), null);
+  assert.ok(dom.app.querySelector('.ph-chronik-recap'), 'the sheet is still offered');
+});
+
+test('Programmheft lists „Letzte Siege" newest first, each linked to its session, and „Bearbeiten" opens the rename', async (t) => {
+  const dom = boot(t, 'programmheft');
+  await dom.call('showMember', RID, 'm1');
+  const wins = dom.app.querySelector('.member-card__lower > .ph-wins');
+  assert.ok(wins, 'no „Letzte Siege" panel');
+  assert.equal(text(wins.querySelector('h2')), 'Letzte Siege');
+  const rows = [...wins.querySelectorAll('.ph-wins__row')];
+  assert.deepEqual(rows.map((r) => r.getAttribute('href')), ['s5', 's3', 's1'].map((s) => `/round/${RID}/session/${s}`));
+  assert.ok(rows.every((r) => text(r.querySelector('.ph-wins__game')) === 'Catan'));
+  const edit = dom.app.querySelector('.member-card .ph-member-edit');
+  assert.ok(edit, 'no „Bearbeiten"');
+  edit.click();
+  assert.equal(dom.app.querySelector('.member-card .gd-title-input').value, 'Anna');
+});
+
+test('a member who never won gets no „Letzte Siege" panel', async (t) => {
+  const dom = boot(t, 'programmheft');
+  await dom.call('showMember', RID, 'm4');
+  assert.equal(dom.app.querySelector('.ph-wins'), null);
+});
+
+test('Programmheft footnotes the retired list (P13.7) and credits BGG beside the recommendations head (P13.8)', async (t) => {
+  const retired = boot(t, 'programmheft');
+  await retired.call('showRetired', RID);
+  assert.equal(text(retired.app.querySelector('.archive-list + .ph-footnote')), retired.run("t('retired.footnote')"));
+  const wish = boot(t, 'programmheft');
+  await wish.call('showWishlist', RID);
+  assert.equal(wish.app.querySelector('.ph-footnote'), null, 'the footnote is about retiring only');
+  const recs = boot(t, 'programmheft');
+  await recs.call('showRecommendations', RID);
+  assert.equal(recs.app.querySelector('.page-head > img.ph-bgg').getAttribute('alt'), 'Powered by BGG');
+});
+
 // --- the Pokale --------------------------------------------------------------
 
 test('Programmheft: „Pokale" titles the page, „Ruhmeshalle" heads the podium, the table sits beside it', async (t) => {

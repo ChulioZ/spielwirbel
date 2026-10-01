@@ -40,7 +40,11 @@ function periodKeyOf(iso) {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return null;
   const y = String(d.getFullYear());
-  return { month: `${y}-${String(d.getMonth() + 1).padStart(2, '0')}`, year: y };
+  return {
+    month: `${y}-${String(d.getMonth() + 1).padStart(2, '0')}`,
+    quarter: `${y}-Q${Math.floor(d.getMonth() / 3) + 1}`,
+    year: y,
+  };
 }
 
 /* The same local calendar, one granularity down: the integer day a timestamp
@@ -137,20 +141,31 @@ const shelfEvents = (activities) =>
 //
 // Months lead because the freshest, most specific slice is the one a group opens
 // the tab for; the year sits below it, one click away.
-function periodsOf(round, activities) {
+//
+// Quarters (#1379, Das Programmheft's Monat/Quartal/Jahr switch, P13.1) are
+// OPT-IN: `{ quarters: true }` puts them between the months and the years. Every
+// other caller gets exactly the list it always got, so Klassisch's picker and
+// the account recap cannot grow a third group as a side effect.
+function periodsOf(round, activities, { quarters = false } = {}) {
   const months = new Set();
+  const quarterSet = new Set();
   const years = new Set();
   const note = (iso) => {
     const keys = periodKeyOf(iso);
     if (!keys) return;
     months.add(keys.month);
+    quarterSet.add(keys.quarter);
     years.add(keys.year);
   };
   playedSessions(round).forEach((s) => note(s.createdAt));
   shelfEvents(activities).forEach((a) => note(a.at));
   const desc = (a, b) => b.localeCompare(a);
+  // A quarter's `at` is its first month, so anything formatting a period's start
+  // (fmtMonth) reads a real date rather than "2026-Q3".
+  const quarterStart = (key) => `${key.slice(0, 4)}-${String((Number(key.slice(6)) - 1) * 3 + 1).padStart(2, '0')}-01T00:00:00`;
   return [
     ...[...months].sort(desc).map((key) => ({ kind: 'month', key, at: `${key}-01T00:00:00` })),
+    ...(quarters ? [...quarterSet].sort(desc).map((key) => ({ kind: 'quarter', key, at: quarterStart(key) })) : []),
     ...[...years].sort(desc).map((key) => ({ kind: 'year', key, at: `${key}-01-01T00:00:00` })),
   ];
 }

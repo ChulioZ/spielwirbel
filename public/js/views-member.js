@@ -333,11 +333,20 @@ async function showMember(rid, mid) {
      by the operator, and „Stärkstes Spiel" is shown nowhere else, so removing
      them would take away a block that is reachable today. Hidden at zero, as
      the Klassisch section is: the tiles then keep the card's full width. */
-  if (panelled && owned.length) {
+  // Das Programmheft adds „Letzte Siege" beside it (#1379, P13.5), and a visible
+  // „Bearbeiten" that opens the same inline rename the name itself does.
+  const phWins = designIs('programmheft') ? programmheftRecentWins(round, mid) : null;
+  if (panelled && (owned.length || phWins)) {
     const lower = h('<div class="member-card__lower"></div>');
     cards.replaceWith(lower);
-    lower.appendChild(memberOwnedPanel(round, member, owned));
+    if (phWins) lower.appendChild(phWins);
+    if (owned.length) lower.appendChild(memberOwnedPanel(round, member, owned));
     lower.appendChild(cards);
+  }
+  if (designIs('programmheft')) {
+    const edit = h(`<button type="button" class="btn btn--ghost btn--sm ph-member-edit">${iconText('ti-pencil', t('member.edit'))}</button>`);
+    edit.addEventListener('click', () => { if (nameEl.isConnected) nameEl.click(); });
+    card.querySelector('.member-card__who').after(edit);
   }
 
   /* „Am Tisch“ — the round's other seats in the card's foot, below 1280px only.

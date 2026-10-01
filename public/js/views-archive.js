@@ -201,6 +201,11 @@ async function showArchive(rid, kind, seg = kind) {
     });
     app.appendChild(list);
     setupArchiveSelection(round, kind, seg, list, head.querySelector('.section-tools'));
+    // Das Programmheft's footnote under the retired list (#1379, P13.7): what
+    // retiring does and does not do, said where the list is.
+    if (kind === 'retired' && designIs('programmheft')) {
+      app.appendChild(h(`<p class="ph-footnote">${esc(t('retired.footnote'))}</p>`));
+    }
   }
 }
 
