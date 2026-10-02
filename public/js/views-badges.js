@@ -6,7 +6,9 @@
 
      .badge (a <button>, data-state="earned|progress|locked|secret", data-new)
        .badge__mark (--pct for the progress ring) .badge__name .badge__line
-         (the tier lives in the name alone — „Sessions 10", no corner pill)
+         (the tier lives in the name — „Sessions 10", no corner pill)
+         .badge__tier inside the mark: one span per tier, `data-on` when
+           reached — Die Brücke's bars (#1392), rendered under it alone
      .badge-card                      the tap-open card (popover ≥ 860, sheet below)
      .badge-section                   Pokale › Abzeichen
        .badge-legend (earned · progress · locked, in the section head)
@@ -127,6 +129,23 @@ function badgeEarnedText(e, ctx) {
   return game ? `${base} · ${game}` : base;
 }
 
+/* The tier bars (#1392, B17 — the review's finding 5 sanctions them as Die
+   Brücke's one markup addition): one span per tier of a tiered entry, the
+   reached ones first and `data-on`. Inside `.badge__mark`, so they inherit its
+   aria-hidden — the name already says the tier („Stammgast 10"), so the bars
+   never carry it alone. A secret shows none: its tier count would hint at what
+   it is. Rendered under Die Brücke only, so every other design keeps the
+   operator's „the tier lives in the name alone" (2026-09-26) byte for byte; a
+   design switch re-renders (applyDesign), and styles.css hides the bars as
+   well in case a node outlives one. */
+function badgeTierBars(e) {
+  if (typeof designIs !== 'function' || !designIs('bruecke')) return '';
+  const def = badgeDefOf(e.key);
+  if (!def || !def.tiers || e.state === 'secret') return '';
+  const on = e.state === 'earned' && e.tier ? def.tiers.indexOf(e.tier) + 1 : 0;
+  return `<span class="badge__tier">${def.tiers.map((_, i) => (i < on ? '<span data-on></span>' : '<span></span>')).join('')}</span>`;
+}
+
 const badgeProgress = (e) => (e.count !== null && e.of ? `${e.count} / ${e.of}` : '');
 const badgePct = (e) => (e.count !== null && e.of ? Math.max(0, Math.min(100, Math.round((e.count / e.of) * 100))) : null);
 
@@ -169,7 +188,7 @@ function badgeTile(e, ctx, opts = {}) {
   const glyph = e.state === 'secret' ? BADGE_SECRET_GLYPH : e.glyph;
   const line = opts.line === undefined ? badgeLine(e, ctx) : opts.line;
   const btn = h(`<button type="button" class="badge" data-state="${esc(e.state)}" data-key="${esc(e.key)}">
-       <span class="badge__mark"${pct === null ? '' : ` style="--pct:${pct}"`} aria-hidden="true"><i class="ti ${esc(glyph)}"></i></span>
+       <span class="badge__mark"${pct === null ? '' : ` style="--pct:${pct}"`} aria-hidden="true"><i class="ti ${esc(glyph)}"></i>${badgeTierBars(e)}</span>
        <span class="badge__name">${esc(badgeName(e))}</span>
        ${line === false ? '' : `<span class="badge__line">${esc(line)}</span>`}
        ${e.isNew ? `<span class="badge__new" aria-hidden="true">${esc(t('badges.newMark'))}</span>` : ''}
@@ -227,7 +246,7 @@ function openBadgeCard(anchor, e, ctx, holder) {
     const earned = badgeEarnedText(e, ctx);
     const card = h(`<div class="badge-card" data-state="${esc(e.state)}">
          <div class="badge-card__head">
-           <span class="badge__mark" aria-hidden="true"><i class="ti ${esc(glyph)}"></i></span>
+           <span class="badge__mark" aria-hidden="true"><i class="ti ${esc(glyph)}"></i>${badgeTierBars(e)}</span>
            <div class="badge-card__title">
              <h3 class="badge-card__name" id="${id}" tabindex="-1">${esc(badgeName(e))}</h3>
              ${holder ? `<div class="badge-card__holder">${esc(holder)}</div>` : ''}

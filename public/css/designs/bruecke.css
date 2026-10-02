@@ -210,6 +210,17 @@
   --person-lit-6: #6bb3e0;
   --person-lit-7: #9cc44a;
   --person-lit-8: #e07a9a;
+
+  /* ---- Abzeichen (B17, #1392). The two values the Dienstplakette paints
+     outside B1. The open/secret plate's outline is B17's grey (4.22:1 on the
+     plate, 3:1 is its bar as a non-text edge). The running count's fill is
+     B17's cyan at 24 % composited over the plate — written opaque so the
+     contrast suite can measure the cyan glyph that sits on it (6.6:1).
+     B17's three sample person colours (#6fa8dc, #9ccf5a, #d07aa0) are NOT
+     here: they illustrate a 12-person round on the sheet, and the app paints
+     a member from the stored palette through --person-lit-*, never from them. */
+  --badge-open-edge: #6b7b96;
+  --badge-load: #17465a;
 }
 
 /* ---------------------------------------------------------------------------
@@ -5221,3 +5232,683 @@
    headline and the rows and nothing else; stood down, as Der Tisch and Das
    Programmheft do. */
 :root[data-design="bruecke"][data-scheme="dark"] .result-screen--bruecke .tafel-top.is-reveal { animation: none; }
+
+/* ===== #1392 — Abzeichen: the Dienstplakette (B17) ===== */
+/* Sheet: docs/design/bruecke/Bruecke-B17-Abzeichen.dc.html (B17.1–B17.8), over
+   K17's shared markup (views-badges.js, #1388/#1389). A mark is a SERVICE
+   PLATE: a slim plate with two bevelled corners (`clip-path` on .badge__mark),
+   the glyph left and the tier bars right. The bars are the one markup addition
+   B17 needs — `.badge__tier`, one span per tier, `data-on` when reached
+   (badgeTierBars(), sanctioned by docs/design/pruefung-abzeichen-2026-09-26.md
+   finding 5), rendered under Die Brücke only. The tier is ALSO
+   in the name („Stammgast 10"), so it never rests on the bars alone.
+
+   The four states, never colour alone (every tile's aria-label names it):
+     earned   — the plate full cyan, the glyph and the bars in night ink
+     progress — a cyan outline with the running count as a fill inside it
+     locked   — a grey outline (--badge-open-edge), the glyph --ink-soft
+     secret   — the grey outline over a hatch, lock-question, no bars
+
+   How the 1px outline follows the bevel: the plate's OWN background is the
+   edge colour, and `::before` — inset 1px, the same cut — is the fill. A
+   z-index -1 pseudo paints over its element's background inside the
+   `isolation` (.claude/rules/z-index-negative-pseudo-paints-over-its-own-background.md),
+   which is exactly the order wanted here. `::after` is a second fill layer
+   only the result moment uses (its slide-in, B17.5). styles.css draws on
+   neither pseudo of .badge__mark.
+
+   The fill reads --b-ground, so a plate on the band, the panel or the card
+   takes the ground it sits on; a container sets it, never the mark.
+
+   Geometry rules sit on the voice gate; every rule that reads a colour token
+   is dark-gated (.claude/rules/design-colour-blocks-are-scheme-gated.md).
+   A rule that DISPLAYs a K17 container keeps `:not([hidden])`
+   (.claude/rules/hidden-attribute-vs-display-rule.md).
+
+   NOT built from the sheet, because it needs markup or data K17 does not
+   have: the band's „seit 10/2025", the „Mitglied / Abzeichen, verdiente
+   zuerst" column heads, the earned plates peeking in a closed member row
+   (B17.3), the hub row's plates (B17.6), a fourth legend swatch for „geheim"
+   (K17's legend leaves secret out in every design) and the initial drawn in
+   the person's colour inside an outline: the avatar's colour arrives as an
+   inline fill, which no stylesheet can move to the letter, so the square
+   keeps it as its fill with night ink — the Spielerkarte's precedent (#1246). */
+
+/* --- The plate --------------------------------------------------------------- */
+:root[data-design="bruecke"] .badge__mark {
+  --b-cut: 7px;
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  /* No fixed width: six tier bars (the round's Sessions since #1463) need
+     6×4 + 5×2 = 34px beside the 16px glyph, which is the 72px floor exactly;
+     a larger plate grows with its content rather than clipping the sixth. */
+  width: auto;
+  min-width: 72px;
+  height: 30px;
+  padding: 0 8px;
+  box-sizing: border-box;
+  border: 0;
+  border-radius: 0;
+  font-size: 16px; /* glyph, not type */
+  clip-path: polygon(var(--b-cut) 0, 100% 0, 100% calc(100% - var(--b-cut)), calc(100% - var(--b-cut)) 100%, 0 100%, 0 var(--b-cut));
+}
+:root[data-design="bruecke"] .badge__mark:has(> .badge__tier) { justify-content: space-between; }
+:root[data-design="bruecke"] .badge__mark::before,
+:root[data-design="bruecke"] .badge__mark::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  z-index: -1;
+  clip-path: polygon(calc(var(--b-cut) - 1px) 0, 100% 0, 100% calc(100% - var(--b-cut) + 1px), calc(100% - var(--b-cut) + 1px) 100%, 0 100%, 0 calc(var(--b-cut) - 1px));
+  pointer-events: none;
+}
+:root[data-design="bruecke"] .badge__mark::after { display: none; }
+:root[data-design="bruecke"] .badge__mark > .ti { position: relative; flex: none; }
+
+/* The tier bars: one per tier, filled when reached, hollow when not, in the
+   plate's own ink — night on the full plate, cyan on a running one. */
+:root[data-design="bruecke"] .badge__tier {
+  display: flex;
+  flex: none;
+  gap: 2px;
+}
+:root[data-design="bruecke"] .badge__tier > span {
+  width: 4px;
+  height: 12px;
+  box-shadow: inset 0 0 0 1px currentColor;
+}
+:root[data-design="bruecke"] .badge__tier > span[data-on] { background: currentColor; }
+
+/* Earned — and the default, so the feed's `.badge-emblem` host (#1428) reaches
+   the full plate with no state list of its own. */
+:root[data-design="bruecke"][data-scheme="dark"] .badge__mark {
+  --b-ground: var(--surface);
+  background: var(--brand);
+  color: var(--on-accent);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .badge__mark::before { background: var(--brand); }
+/* Progress: the cyan outline, the count as a fill from the left (--pct, which
+   badgeTile writes inline), the glyph and the bars in cyan. */
+:root[data-design="bruecke"][data-scheme="dark"] :is(.badge, .badge-card)[data-state="progress"] .badge__mark {
+  background: var(--brand);
+  color: var(--brand);
+}
+:root[data-design="bruecke"][data-scheme="dark"] :is(.badge, .badge-card)[data-state="progress"] .badge__mark::before {
+  background: linear-gradient(90deg, var(--badge-load) calc(var(--pct, 0) * 1%), var(--b-ground) 0);
+}
+/* Locked: the grey outline, the plate's own ground, the glyph soft. */
+:root[data-design="bruecke"][data-scheme="dark"] :is(.badge, .badge-card)[data-state="locked"] .badge__mark {
+  background: var(--badge-open-edge);
+  color: var(--ink-soft);
+}
+:root[data-design="bruecke"][data-scheme="dark"] :is(.badge, .badge-card)[data-state="locked"] .badge__mark::before { background: var(--b-ground); }
+/* Secret: the same outline, blacked out with a hatch (B17 „geschwärzt"). */
+:root[data-design="bruecke"][data-scheme="dark"] :is(.badge, .badge-card)[data-state="secret"] .badge__mark {
+  background: var(--badge-open-edge);
+  color: var(--ink-soft);
+}
+:root[data-design="bruecke"][data-scheme="dark"] :is(.badge, .badge-card)[data-state="secret"] .badge__mark::before {
+  background: repeating-linear-gradient(135deg, var(--line) 0 4px, var(--b-ground) 4px 8px);
+}
+
+/* --- The tile: the plate over its name, no box of its own (B17.2) -------- */
+:root[data-design="bruecke"] .badge {
+  gap: 6px;
+  min-width: 0;
+  padding: 6px 2px 8px;
+  border: 0;
+  border-radius: 0;
+  background: none;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .badge:hover { background: var(--sunken-soft); }
+:root[data-design="bruecke"][data-scheme="dark"] .badge:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+/* 13px is B1's text floor; the display face's tracking is halved so a long
+   catalogue name („Gründungsmitglied") hyphenates once rather than twice in a
+   phone's three-a-row column (hyphens: auto and <html lang> come from
+   styles.css and i18n.js). */
+:root[data-design="bruecke"] .badge__name {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .badge__name,
+:root[data-design="bruecke"][data-scheme="dark"] .badge[data-state="locked"] .badge__name,
+:root[data-design="bruecke"][data-scheme="dark"] .badge[data-state="secret"] .badge__name { color: var(--ink); }
+:root[data-design="bruecke"] .badge__line {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  line-height: 1.35;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .badge__line { color: var(--ink-soft); }
+/* „Neu" is the action amber with night ink (B17.1 „Neu (Endzustand)"). */
+:root[data-design="bruecke"] .badge__new {
+  top: 0;
+  left: auto;
+  right: 0;
+  padding: 0 5px;
+  border-radius: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  line-height: 16px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .badge__new { background: var(--action); color: var(--on-accent); }
+
+/* The horizontal tile — plate left, name and line right — for the three
+   placements B17 draws as rows: the Spielerkarte (B17.7), the Tischkarte
+   (B17.4, name only) and the result moment (B17.5). */
+:root[data-design="bruecke"] :is(.badge-grid--account, .badge-grid--compact, .badge-moment) .badge {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas: "mark name" "mark line";
+  align-items: center;
+  column-gap: 12px;
+  row-gap: 2px;
+  text-align: left;
+}
+:root[data-design="bruecke"] :is(.badge-grid--account, .badge-grid--compact, .badge-moment) .badge__mark { grid-area: mark; }
+:root[data-design="bruecke"] :is(.badge-grid--account, .badge-grid--compact, .badge-moment) .badge__name { grid-area: name; align-self: end; }
+:root[data-design="bruecke"] :is(.badge-grid--account, .badge-grid--compact, .badge-moment) .badge__line { grid-area: line; align-self: start; }
+
+/* --- The panel: „Abzeichen" in a HUD frame (B17.2, B17.3) ----------------- */
+/* The four corner brackets are flat image layers — one colour each, no
+   gradient on a panel — as the Missionskontrolle draws them (#1238). */
+:root[data-design="bruecke"] .badge-section {
+  padding: 22px 18px 20px;
+  background-repeat: no-repeat;
+  background-size: 16px 2px, 2px 16px, 16px 2px, 2px 16px, 16px 2px, 2px 16px, 16px 2px, 2px 16px;
+  background-position: top left, top left, top right, top right, bottom left, bottom left, bottom right, bottom right;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .badge-section {
+  background-image:
+    linear-gradient(var(--brand), var(--brand)), linear-gradient(var(--brand), var(--brand)),
+    linear-gradient(var(--brand), var(--brand)), linear-gradient(var(--brand), var(--brand)),
+    linear-gradient(var(--brand), var(--brand)), linear-gradient(var(--brand), var(--brand)),
+    linear-gradient(var(--brand), var(--brand)), linear-gradient(var(--brand), var(--brand));
+}
+:root[data-design="bruecke"] .badge-section > .section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 14px;
+  margin-bottom: 16px;
+}
+/* „Abzeichen" is a TITLE, not the section kicker: it outranks the notation
+   rule every `.section h2` wears here (0,4,1 for the colour, 0,3,1 for the
+   face) — this one is (0,5,1) and (0,4,1). */
+:root[data-design="bruecke"] .badge-section > .section-head h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--display-m);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: var(--track-display);
+  text-transform: uppercase;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .badge-section > .section-head h2 { color: var(--ink); }
+:root[data-design="bruecke"] .badge-section > .section-head h2 .ti { display: none; }
+:root[data-design="bruecke"] .badge-section__summary {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: var(--track-notation);
+  text-transform: uppercase;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .badge-section__summary { color: var(--ink-soft); }
+:root[data-design="bruecke"] .badge-section__empty { font-size: var(--text-md); }
+:root[data-design="bruecke"][data-scheme="dark"] .badge-section__empty { color: var(--ink-2); }
+
+/* The legend: each swatch drawn as a small plate in its state. */
+:root[data-design="bruecke"] .badge-legend {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  letter-spacing: var(--track-notation);
+  text-transform: uppercase;
+}
+:root[data-design="bruecke"] .badge-legend__mark {
+  width: 22px;
+  height: 11px;
+  border-radius: 0;
+  clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .badge-legend__item[data-state="earned"] .badge-legend__mark { background: var(--brand); }
+:root[data-design="bruecke"][data-scheme="dark"] .badge-legend__item[data-state="progress"] .badge-legend__mark {
+  border: 1px solid var(--brand);
+  background: linear-gradient(90deg, var(--badge-load) 50%, var(--surface) 0);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .badge-legend__item[data-state="locked"] .badge-legend__mark {
+  border: 1px solid var(--badge-open-edge);
+  background: var(--surface);
+}
+
+/* The grids: plates in a column each, three a row on a phone (B17.3) — 88px
+   is the widest column that still gives three in the band at 390px, and it
+   holds the 72px plate of a six-tier entry. */
+:root[data-design="bruecke"] .badge-grid:not([hidden]) {
+  grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+  gap: 12px 6px;
+}
+
+/* The round's own row: a darker band, the round's name over its count. */
+:root[data-design="bruecke"] .badge-band--round {
+  margin-bottom: 18px;
+  padding: 14px;
+  border-radius: 0;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .badge-band--round {
+  --b-ground: var(--bar);
+  border-color: var(--line);
+  background: var(--bar);
+}
+:root[data-design="bruecke"] .badge-band__head { flex-wrap: wrap; align-items: baseline; justify-content: flex-start; gap: 4px 10px; }
+:root[data-design="bruecke"] .badge-band__name {
+  font-family: var(--font-display);
+  font-size: var(--display-s);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: var(--track-display);
+  text-transform: uppercase;
+}
+:root[data-design="bruecke"] .badge-band__count {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: var(--track-notation);
+  text-transform: uppercase;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .badge-band__name { color: var(--ink); }
+:root[data-design="bruecke"][data-scheme="dark"] .badge-band__count { color: var(--ink-soft); }
+
+/* The members (B17.3 on a phone): one plate per person, the square initial
+   in their colour, a chevron that opens the row. */
+:root[data-design="bruecke"] .badge-members { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+:root[data-design="bruecke"] .badge-member { padding: 0; border-radius: 0; }
+:root[data-design="bruecke"][data-scheme="dark"] .badge-member {
+  border-color: var(--line);
+  background: var(--surface);
+}
+:root[data-design="bruecke"] .badge-member__head {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) auto auto;
+  column-gap: 12px;
+  row-gap: 1px;
+  min-height: 56px;
+  padding: 10px 14px;
+}
+:root[data-design="bruecke"] .badge-member__head > .badge-member__avatar { grid-row: 1 / 3; }
+:root[data-design="bruecke"] .badge-member__head > .badge-member__name { grid-column: 2; align-self: end; }
+:root[data-design="bruecke"] .badge-member__head > .badge-member__summary { grid-column: 2; align-self: start; }
+:root[data-design="bruecke"] .badge-member__head > .badge-member__rank { grid-column: 3; grid-row: 1 / 3; align-self: center; margin-left: 0; }
+:root[data-design="bruecke"] .badge-member__head::after {
+  grid-column: 4;
+  grid-row: 1 / 3;
+  align-self: center;
+  margin-left: 0;
+  font-family: "tabler-icons";
+  font-size: 20px; /* glyph, not type */
+  content: "\ea61";
+}
+:root[data-design="bruecke"] .badge-member[open] > .badge-member__head::after { content: "\ea5f"; }
+:root[data-design="bruecke"][data-scheme="dark"] .badge-member__head::after { color: var(--brand); }
+:root[data-design="bruecke"][data-scheme="dark"] .badge-member__head:focus-visible { outline: 2px solid var(--brand); outline-offset: -2px; }
+:root[data-design="bruecke"] .badge-member__avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 0;
+  font-size: 13px; /* glyph, not type */
+}
+:root[data-design="bruecke"] .badge-member__name {
+  font-family: var(--font-display);
+  font-size: var(--display-s);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: var(--track-display);
+  text-transform: uppercase;
+}
+:root[data-design="bruecke"] :is(.badge-member__summary, .badge-member__rank) {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .badge-member__name { color: var(--ink); }
+:root[data-design="bruecke"][data-scheme="dark"] :is(.badge-member__summary, .badge-member__rank) { color: var(--ink-soft); }
+:root[data-design="bruecke"] .badge-member[open] > .badge-grid:not([hidden]) {
+  margin-top: 0;
+  padding: 12px 14px 14px;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .badge-member[open] > .badge-grid:not([hidden]) { border-top: 1px solid var(--hairline); }
+:root[data-design="bruecke"] .badge-member__more {
+  margin: 0 14px 12px;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: var(--track-notation);
+  text-transform: uppercase;
+}
+:root[data-design="bruecke"] .badge-member > .badge-grid--rest:not([hidden]) { padding: 0 14px 14px; }
+
+/* From the editor split up (B17.2): the band is a row — the round's name
+   left, its plates right — and the members are a duty roster, one row per
+   person with the name column left and the plates beside it, divided by
+   hairlines instead of boxed. All rows start open there (K17); the summary is
+   placed absolutely rather than the <details> made a grid, which WebKit
+   before 18 does not lay out. */
+@media (min-width: 860px) {
+  :root[data-design="bruecke"] .badge-section { padding: 30px 28px 26px; }
+  :root[data-design="bruecke"] .badge-section > .section-head h2 { font-size: var(--display-l); }
+  :root[data-design="bruecke"] .badge-band--round {
+    display: grid;
+    grid-template-columns: minmax(150px, 210px) minmax(0, 1fr);
+    align-items: center;
+    gap: 18px;
+    padding: 16px 18px;
+  }
+  :root[data-design="bruecke"] .badge-band__head { flex-direction: column; align-items: flex-start; margin-bottom: 0; }
+  :root[data-design="bruecke"] .badge-band--round > .badge-grid:not([hidden]),
+  :root[data-design="bruecke"] .badge-member[open] > .badge-grid:not([hidden]) {
+    grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+  }
+  :root[data-design="bruecke"] .badge-members { gap: 0; }
+  :root[data-design="bruecke"] .badge-member {
+    position: relative;
+    min-height: 76px;
+    padding: 12px 0 12px 226px;
+    border-width: 0 0 1px;
+  }
+  :root[data-design="bruecke"][data-scheme="dark"] .badge-member { background: none; border-color: var(--line); }
+  :root[data-design="bruecke"] .badge-member__head {
+    position: absolute;
+    top: 12px;
+    left: 0;
+    width: 210px;
+    min-height: 0;
+    padding: 4px 0;
+    grid-template-columns: 40px minmax(0, 1fr);
+  }
+  :root[data-design="bruecke"] .badge-member__head > .badge-member__avatar { grid-row: 1 / 4; width: 40px; height: 40px; }
+  :root[data-design="bruecke"] .badge-member__head > .badge-member__rank { grid-column: 2; grid-row: 3; align-self: start; }
+  :root[data-design="bruecke"] .badge-member__head::after { display: none; }
+  :root[data-design="bruecke"] .badge-member[open] > .badge-grid:not([hidden]) { padding: 0; }
+  :root[data-design="bruecke"][data-scheme="dark"] .badge-member[open] > .badge-grid:not([hidden]) { border-top: 0; }
+  :root[data-design="bruecke"] .badge-member__more { margin: 10px 0 0; }
+  :root[data-design="bruecke"] .badge-member > .badge-grid--rest:not([hidden]) { padding: 10px 0 0; }
+}
+
+/* --- The card on a tap (B17.1 „Karte, kein Modal") ------------------------ */
+:root[data-design="bruecke"] .badge-card { gap: 12px; }
+:root[data-design="bruecke"][data-scheme="dark"] .badge-card { --b-ground: var(--surface-raised); }
+:root[data-design="bruecke"] .badge-card__head { gap: 14px; }
+:root[data-design="bruecke"] .badge-card__head > .badge__mark {
+  --b-cut: 10px;
+  min-width: 96px;
+  height: 40px;
+  padding: 0 12px;
+  font-size: 22px; /* glyph, not type */
+}
+:root[data-design="bruecke"] .badge-card__head > .badge__mark .badge__tier { gap: 3px; }
+:root[data-design="bruecke"] .badge-card__head > .badge__mark .badge__tier > span { width: 5px; height: 18px; }
+:root[data-design="bruecke"] .badge-card__name {
+  font-family: var(--font-display);
+  font-size: var(--display-s);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: var(--track-display);
+  text-transform: uppercase;
+}
+:root[data-design="bruecke"] :is(.badge-card__holder, .badge-card__next) {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: var(--track-notation);
+  text-transform: uppercase;
+}
+:root[data-design="bruecke"][data-scheme="dark"] :is(.badge-card__holder, .badge-card__next) { color: var(--ink-soft); }
+:root[data-design="bruecke"] .badge-card__tier { border-radius: 0; font-family: var(--font-mono); font-size: var(--text-xs); }
+:root[data-design="bruecke"][data-scheme="dark"] .badge-card__tier { border-color: var(--badge-open-edge); color: var(--ink-soft); }
+:root[data-design="bruecke"][data-scheme="dark"] .badge-card__tier[data-reached] { border-color: var(--brand); background: var(--brand); color: var(--on-accent); }
+:root[data-design="bruecke"] .badge-card__bar { height: 6px; border-radius: 0; }
+:root[data-design="bruecke"][data-scheme="dark"] .badge-card__bar {
+  background: linear-gradient(90deg, var(--brand) calc(var(--pct) * 1%), var(--line) 0);
+}
+:root[data-design="bruecke"] .badge-card__earned { font-family: var(--font-mono); font-size: var(--text-xs); }
+:root[data-design="bruecke"][data-scheme="dark"] .badge-card__earned { color: var(--ink-soft); }
+
+/* --- The Tischkarte's row (B17.4): earned plates with their names, in a
+   framed strip under the five figures; the chevron is the way to Pokale. */
+:root[data-design="bruecke"] .member-card__badges {
+  gap: 10px 14px;
+  margin-top: 14px;
+  padding: 14px 16px;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .member-card__badges { border: 1px solid var(--line); }
+:root[data-design="bruecke"] .member-card__badges-label {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: var(--track-notation);
+  text-transform: uppercase;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .member-card__badges-label { color: var(--ink-soft); }
+:root[data-design="bruecke"] .member-card__badges-go { border-radius: 0; }
+:root[data-design="bruecke"][data-scheme="dark"] .member-card__badges-go { color: var(--brand); }
+:root[data-design="bruecke"] .badge-grid--compact:not([hidden]) {
+  grid-template-columns: repeat(auto-fill, minmax(150px, max-content));
+  gap: 8px 16px;
+}
+:root[data-design="bruecke"] .badge-grid--compact .badge {
+  grid-template-areas: "mark name";
+  padding: 2px;
+}
+/* 72px, the six-bar width, so every name in the strip starts on one line. */
+:root[data-design="bruecke"] .badge-grid--compact .badge__mark { min-width: 72px; height: 28px; }
+:root[data-design="bruecke"] .badge-grid--compact .badge__name { display: block; align-self: center; }
+
+/* --- The Spielerkarte's account tier (B17.7): four framed rows. ---------- */
+:root[data-design="bruecke"] .badge-grid--account:not([hidden]) { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+:root[data-design="bruecke"] .badge-grid--account .badge { padding: 10px 12px; }
+:root[data-design="bruecke"][data-scheme="dark"] .badge-grid--account .badge { border: 1px solid var(--line); }
+@media (max-width: 420px) {
+  :root[data-design="bruecke"] .badge-grid--account .badge { column-gap: 8px; padding: 8px; }
+}
+
+/* --- The result moment (B17.5): at most two framed rows after the headline,
+   the holder as a kicker over the plate and its name; „+N weitere" a framed
+   notation link. Everything is in place from the first paint. */
+:root[data-design="bruecke"] .badge-moment:not([hidden]) {
+  margin: 0 0 18px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+}
+:root[data-design="bruecke"] .badge-moment__title {
+  margin: 0 0 8px;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: var(--track-notation);
+  text-transform: uppercase;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .badge-moment__title { color: var(--ink-soft); }
+:root[data-design="bruecke"] .badge-moment__title .ti { display: none; }
+:root[data-design="bruecke"] .badge-moment__list {
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 10px;
+}
+:root[data-design="bruecke"] .badge-moment__item { position: relative; display: block; }
+:root[data-design="bruecke"] .badge-moment__holder {
+  position: absolute;
+  top: 9px;
+  left: 14px;
+  z-index: 1;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  letter-spacing: var(--track-notation);
+  text-transform: uppercase;
+  pointer-events: none;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .badge-moment__holder { color: var(--ink-soft); }
+:root[data-design="bruecke"] .badge-moment .badge {
+  width: 100%;
+  min-height: 84px;
+  padding: 30px 14px 12px;
+  grid-template-columns: 92px minmax(0, 1fr);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .badge-moment .badge { border: 1px solid var(--line); }
+:root[data-design="bruecke"] .badge-moment .badge__mark {
+  --b-cut: 8px;
+  min-width: 0;
+  width: 92px;
+  height: 40px;
+  align-self: start;
+  font-size: 19px; /* glyph, not type */
+}
+:root[data-design="bruecke"] .badge-moment .badge__new { display: none; }
+:root[data-design="bruecke"] .badge-moment__more {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target-min);
+  margin-top: 10px;
+  padding: 6px 12px;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: var(--track-notation);
+  text-transform: uppercase;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .badge-moment__more { border: 1px solid var(--line); color: var(--brand); }
+
+/* --- The hub's line (B17.6) and the Chronik's rows ---------------------- */
+:root[data-design="bruecke"] .hub-row--badges {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  padding: 10px 12px;
+  font-size: var(--text-sm);
+}
+:root[data-design="bruecke"][data-scheme="dark"] .hub-row--badges { border: 1px solid var(--brand); color: var(--ink); }
+/* The glyph rides on a small full plate, so it reads as a mark, not an icon. */
+:root[data-design="bruecke"] :is(.hub-row--badges, .chronik-row--badge .chronik-row__icon) .ti {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 30px;
+  height: 20px;
+  font-size: 13px; /* glyph, not type */
+  clip-path: polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px);
+}
+:root[data-design="bruecke"][data-scheme="dark"] :is(.hub-row--badges, .chronik-row--badge .chronik-row__icon) .ti {
+  background: var(--brand);
+  color: var(--on-accent);
+}
+:root[data-design="bruecke"] .chronik-row--badge {
+  gap: 12px;
+  margin-top: 0;
+  padding: 8px 16px;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .chronik-row--badge { border-top: 1px solid var(--hairline); }
+:root[data-design="bruecke"] .chronik-row--badge .chronik-row__icon { display: flex; flex: none; }
+:root[data-design="bruecke"] .chronik-row--badge .chronik-row__text { order: 1; flex: 1 1 auto; font-size: var(--text-sm); }
+:root[data-design="bruecke"] .chronik-row--badge .chronik-row__label {
+  order: 2;
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  letter-spacing: var(--track-notation);
+  text-transform: uppercase;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .chronik-row--badge .chronik-row__text { color: var(--ink); }
+:root[data-design="bruecke"][data-scheme="dark"] .chronik-row--badge .chronik-row__label { color: var(--ink-soft); }
+/* From the log's own grid up (#1245), the plate sits under the cover column. */
+@media (min-width: 860px) {
+  :root[data-design="bruecke"] .chronik-row--badge { padding-left: 136px; }
+}
+
+/* --- A friend's mark in the feed (B17.7, #1428) ------------------------- */
+/* badgeEmblem() is K17's .badge__mark in a .badge-emblem host; the unkeyed
+   plate above is the earned one, so only the size is the slot's. */
+:root[data-design="bruecke"] .feed-item__img--badge .badge__mark { --b-cut: 5px; min-width: 46px; height: 24px; padding: 0 6px; font-size: 14px; /* glyph, not type */ }
+:root[data-design="bruecke"] .feed-row__badge .badge__mark { --b-cut: 6px; min-width: 52px; height: 26px; font-size: 15px; /* glyph, not type */ }
+:root[data-design="bruecke"] .e-tile__img--badge .badge__mark {
+  --b-cut: 10px;
+  width: auto;
+  min-width: 96px;
+  height: 40px;
+  font-size: 22px; /* glyph, not type */
+}
+:root[data-design="bruecke"][data-scheme="dark"] .e-tile__img--badge { background: var(--bar); }
+
+/* ===== #1392 B17.5 motion — the HUD frame flashes, the plate slides in ===== */
+/* The timing table on B17.5. Hooked on K17's design-neutral `data-fresh`
+   (fillBadgeMoment): only a mark this result screen had not shown before —
+   never on a cold load of a finished session — and at most two of them.
+   Everything is operable from 0 ms; the moment's text never moves.
+
+     0 ms    the plate stands as an EMPTY outline (::before at the ground)
+   300 ms    the HUD frame: four corners, scale 1.3 -> 1, opacity 0 -> 1,
+             180 ms in steps(3) — the flicker
+   480 ms    the full fill (::after) slides translateX 16px -> 0, 200 ms
+             cubic-bezier(.2,.8,.3,1); the glyph turns to night ink with it
+   680 ms    the frame fades, 160 ms linear
+  +140 ms    the second plate, the same
+   980 ms    nothing runs any more — no glow, no loop
+
+   Reduced motion: none of this exists, so the plate is full from 0 ms. The
+   pre-state lives inside the media query for that reason — outside it, a
+   reduced-motion reader would be left with the empty outline. */
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-design="bruecke"][data-scheme="dark"] .badge-moment__item[data-fresh] .badge__mark {
+    animation: bruecke-plate-ink 1ms linear 480ms backwards;
+  }
+  :root[data-design="bruecke"][data-scheme="dark"] .badge-moment__item[data-fresh] .badge__mark::before { background: var(--b-ground); }
+  :root[data-design="bruecke"][data-scheme="dark"] .badge-moment__item[data-fresh] .badge__mark::after {
+    display: block;
+    background: var(--brand);
+    animation: bruecke-plate-in 200ms cubic-bezier(.2, .8, .3, 1) 480ms backwards;
+  }
+  :root[data-design="bruecke"][data-scheme="dark"] .badge-moment__item[data-fresh] .badge::after {
+    content: '';
+    position: absolute;
+    top: 24px;
+    left: 8px;
+    width: 104px;
+    height: 52px;
+    opacity: 0;
+    pointer-events: none;
+    background-image:
+      linear-gradient(var(--brand), var(--brand)), linear-gradient(var(--brand), var(--brand)),
+      linear-gradient(var(--brand), var(--brand)), linear-gradient(var(--brand), var(--brand)),
+      linear-gradient(var(--brand), var(--brand)), linear-gradient(var(--brand), var(--brand)),
+      linear-gradient(var(--brand), var(--brand)), linear-gradient(var(--brand), var(--brand));
+    background-repeat: no-repeat;
+    background-size: 12px 2px, 2px 12px, 12px 2px, 2px 12px, 12px 2px, 2px 12px, 12px 2px, 2px 12px;
+    background-position: top left, top left, top right, top right, bottom left, bottom left, bottom right, bottom right;
+    animation: bruecke-hud-frame 540ms 300ms both;
+  }
+  /* The second plate follows 140 ms behind the first. */
+  :root[data-design="bruecke"][data-scheme="dark"] .badge-moment__item[data-fresh] ~ .badge-moment__item[data-fresh] .badge__mark { animation-delay: 620ms; }
+  :root[data-design="bruecke"][data-scheme="dark"] .badge-moment__item[data-fresh] ~ .badge-moment__item[data-fresh] .badge__mark::after { animation-delay: 620ms; }
+  :root[data-design="bruecke"][data-scheme="dark"] .badge-moment__item[data-fresh] ~ .badge-moment__item[data-fresh] .badge::after { animation-delay: 440ms; }
+  @keyframes bruecke-hud-frame {
+    0% { opacity: 0; transform: scale(1.3); animation-timing-function: steps(3, end); }
+    33.33% { opacity: 1; transform: scale(1); animation-timing-function: linear; }
+    70.37% { opacity: 1; transform: scale(1); }
+    100% { opacity: 0; transform: scale(1); }
+  }
+  @keyframes bruecke-plate-in {
+    from { opacity: 0; transform: translateX(16px); }
+  }
+  @keyframes bruecke-plate-ink {
+    from { color: var(--brand); }
+  }
+}
