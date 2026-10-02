@@ -6977,3 +6977,54 @@
   :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-moment--special .badge-moment__holder { padding-left: calc(64px + 20px); }
   :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-moment--special .badge__name { font-size: 34px; }
 }
+
+/* ===== #1393 — the stamp press (P17.5's motion) =====
+   The droppable second half of the slice: revert this block alone and the
+   medals simply arrive printed. Keyed on K17's one motion hook, `data-fresh`
+   on a moment item (views-badges.js fillBadgeMoment) — a mark this screen had
+   not shown before, never on a cold load — so a winner tap stamps only what it
+   earned and replays nothing.
+
+   The timeline (P17.5 „Zeittafel"): 0–400ms the place is a dashed ghost, the
+   headline, strip text and table already standing and operable; at 400ms the
+   medal appears at 115% with no fade and presses to 100% in 120ms on
+   cubic-bezier(.5,0,.9,.5); at 520ms one frame (16ms) of a 4px ink bleed (in
+   --cast, P1's one shadow ink — 20% where P17 says 28%, because a component
+   rule may not mix a colour of its own, test/design-layer.test.js); the
+   second medal 180ms after the first; nothing after 880ms. The Sonderausgabe
+   band is static — only its medal is stamped, which these selectors give for
+   free. No fill mode anywhere: every keyframe holds only while it runs, so
+   the resting state is the static skin above. Reduced motion: printed from
+   0ms, because nothing here exists outside the gate. */
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-moment__item[data-fresh] .badge__mark {
+    animation:
+      ph-medal-wait 400ms step-end,
+      ph-medal-press 120ms cubic-bezier(0.5, 0, 0.9, 0.5) 400ms,
+      ph-medal-bleed 16ms step-end 520ms;
+  }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-moment__item[data-fresh] .badge__mark::before { animation: ph-medal-ghost 400ms step-end; }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-moment__item[data-fresh] ~ .badge-moment__item[data-fresh] .badge__mark {
+    animation:
+      ph-medal-wait 580ms step-end,
+      ph-medal-press 120ms cubic-bezier(0.5, 0, 0.9, 0.5) 580ms,
+      ph-medal-bleed 16ms step-end 700ms;
+  }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-moment__item[data-fresh] ~ .badge-moment__item[data-fresh] .badge__mark::before { animation: ph-medal-ghost 580ms step-end; }
+
+  /* Before the press the glyph is not printed yet… */
+  @keyframes ph-medal-wait { from { color: transparent; } }
+  /* …and the seal is the dashed place it will land on. */
+  @keyframes ph-medal-ghost {
+    from {
+      background: transparent;
+      box-shadow: none;
+      border: 2px dashed var(--ink-soft);
+    }
+  }
+  @keyframes ph-medal-press {
+    from { transform: scale(1.15); }
+    to { transform: scale(1); }
+  }
+  @keyframes ph-medal-bleed { from { box-shadow: 0 0 0 4px var(--cast); } }
+}
