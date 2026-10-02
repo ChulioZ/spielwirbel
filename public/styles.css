@@ -1439,6 +1439,32 @@ h1, h2, h3 { font-family: var(--font-display); }
   border-radius: var(--radius-lg);
   padding: 14px 16px;
 }
+/* A card with ONE destination is clickable anywhere (#1506): its one visible,
+   named link (`.hub-card__go`) stretches an `::after` over the card, so a tap
+   on the covers or the standings lands on the link, ⌘/middle-click still opens
+   a tab, and the accessibility tree still holds one short link rather than a
+   card-sized one. The card is the positioned ancestor, so the overlay covers
+   the card and nothing outside it — a design wrapper must not position the
+   link itself (that would shrink the overlay to the link's own box).
+   A control added inside such a card later would sit UNDER the overlay: give it
+   `position: relative; z-index: 1`, or leave the card out of the pattern. */
+.hub-card--link { position: relative; cursor: pointer; }
+.hub-card--link .hub-card__go::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+.hub-card--link:hover { border-color: var(--brand); }
+/* The ring goes round the whole card, since the whole card is the target; a
+   ring around the small foot link alone would misstate it. Only where `:has()`
+   exists is the link's own ring dropped, so an engine without it keeps one. */
+.hub-card--link:has(.hub-card__go:focus-visible) {
+  outline: 2px solid var(--brand-ring, var(--brand));
+  outline-offset: 2px;
+}
+@supports selector(:has(*)) {
+  .hub-card--link .hub-card__go:focus-visible { outline: none; }
+}
 .hub-card__title {
   margin: 0 0 10px;
   font-size: var(--text-md);

@@ -19,7 +19,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const { loadApp } = require('./support/dom');
-const { rulesOf } = require('./support/css');
+const { rulesOf, outranks } = require('./support/css');
 
 const DAY = 86400000;
 const ago = (days) => new Date(Date.now() - days * DAY).toISOString();
@@ -253,4 +253,23 @@ test('a hub card fills its slot, so a short card beside a tall one leaves no hol
   const card = rules.find(([s]) => s.trim() === ':root[data-design="tisch"] .hub-cards > .card-slot > :only-child');
   assert.ok(card, 'the card does not fill its slot');
   assert.match(card[1], /flex:\s*1\b/);
+});
+
+test('the previews row outranks the slot rule, so its tiles sit in a row and dissolve into the grid from 1280', () => {
+  /* #1496 made every slot a flex column at (0,4,0); the row's own `display:
+     grid` and the desktop `display: contents` were (0,3,0) and lost, so the
+     phone tiles stacked full-width and the desktop put all three previews in
+     one cell. Found verifying #1506; the DOM probes cannot see it, only the
+     cascade can. */
+  const slot = ':root[data-design="tisch"] .hub-cards > .card-slot';
+  const all = rulesOf(SHEET);
+  // Every rule whose SUBJECT is the row and that sets its display.
+  const subject = (sel) => sel.split(',').map((x) => x.trim()).filter((x) => /\.hub-previews$/.test(x));
+  const setters = all.filter(([sel, body]) => subject(sel).length && /(^|;)\s*display:/.test(body));
+  assert.ok(setters.length >= 2, `expected the row rule and the desktop dissolve, found ${setters.length}`);
+  for (const [sel, body] of setters) {
+    for (const one of subject(sel)) {
+      assert.ok(outranks(one, slot), `${one} { ${body.trim()} } ties or loses to ${slot}`);
+    }
+  }
 });

@@ -360,6 +360,17 @@
 :root[data-design="programmheft"]:not([data-scheme="dark"]) .btn--primary:focus-visible {
   outline-color: var(--ring-on-box);
 }
+/* A hub card that is one stretched link (#1506) wears the ring round the CARD.
+   The blanket rule above is (0,4,0) and would put a second ring round the
+   small foot link too, so it is taken off the link here, at higher specificity
+   and only where `:has()` can draw the card's (same guard as styles.css). */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .hub-card--link:has(.hub-card__go:focus-visible) {
+  outline: var(--ring-width) solid var(--brand-ring);
+  outline-offset: var(--ring-offset);
+}
+@supports selector(:has(*)) {
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .hub-card--link .hub-card__go:focus-visible { outline: none; }
+}
 
 /* ---- Hover and focus edges stay INK. The app moves a control's edge to
    --brand under the pointer, which is a step UP from its old --brand-edge rest;
@@ -949,6 +960,11 @@
   border-top: var(--rule-strong) solid var(--ink);
   box-shadow: none;
   padding-inline: 0;
+}
+/* A printed column has only its top rule to turn, so hovering a clickable one
+   (#1506) inks that rule vermilion. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-hub :is(.ph-hub__suggest, .ph-hub__side, .ph-hub__strip) .hub-card--link:hover {
+  border-top-color: var(--vermilion);
 }
 
 /* ---- The lobby (P3.1 desktop, P6.1 phone). */

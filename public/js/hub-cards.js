@@ -445,13 +445,14 @@ function hubAnniversaryCard(round) {
   if (!found) return null;
   const { session, game, years } = found;
   const card = hubCard('ti-confetti', tn(years, 'hub.anniv.yearsOne', 'hub.anniv.years'));
+  card.classList.add('hub-card--link');
   // Winners resolve against the session's OWN people, so a guest winner is named
   // and marked here exactly as on the ticket above (#458).
   const people = sessionPeople(round, session);
   const names = (session.winnerIds || [])
     .map((wid) => personLabel(people.find((p) => p.id === wid)))
     .filter(Boolean);
-  const row = h(`<a class="hub-row">
+  const row = h(`<a class="hub-row hub-card__go">
        <span class="hub-row__main">
          <span class="hub-row__title">${esc(game.title)}</span>
          <span class="hub-row__sub">${names.length ? esc(t('result.winners', { names: joinNames(names) })) : (endingText(session) || esc(fmtDate(session.createdAt)))}</span>
@@ -491,6 +492,7 @@ async function renderRecoTeaser(rid, grid) {
   // be on screen any more.
   if (!grid.isConnected) return;
   const card = hubCard('ti-sparkles', t('suggest.title'));
+  card.classList.add('hub-card--link');
   const body = card.querySelector('.hub-card__body');
   recs.slice(0, 2).forEach((rec) => {
     const why = (rec.reasons || []).map(recReasonText).filter(Boolean)[0] || '';
@@ -502,7 +504,7 @@ async function renderRecoTeaser(rid, grid) {
        </div>`);
     body.appendChild(row);
   });
-  const more = h(`<a class="hub-row hub-row--quiet">
+  const more = h(`<a class="hub-row hub-row--quiet hub-card__go">
        <span class="hub-row__main"><span class="hub-row__sub">${esc(t('hub.reco.more'))}</span></span>
        <i class="ti ti-chevron-right hub-row__go" aria-hidden="true"></i>
      </a>`);

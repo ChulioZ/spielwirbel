@@ -3895,7 +3895,7 @@
     grid-auto-flow: column;
     gap: 10px;
   }
-  :root[data-design="bruecke"] .bruecke-hub__previews .hub-preview { position: relative; padding: 12px; }
+  :root[data-design="bruecke"] .bruecke-hub__previews .hub-preview { padding: 12px; }
   :root[data-design="bruecke"] .bruecke-hub__previews .hub-card__title {
     font-family: var(--font-display);
     font-size: 14px;
@@ -3916,11 +3916,9 @@
   :root[data-design="bruecke"] .bruecke-hub__previews .hub-card__title .ti { display: block; font-size: 18px; margin-bottom: 6px; }
   :root[data-design="bruecke"] .bruecke-hub__previews .hub-card__body > :not(.hub-preview__sub) { display: none; }
   :root[data-design="bruecke"] .bruecke-hub__previews .hub-preview__sub { font-size: 12px; }
-  :root[data-design="bruecke"] .bruecke-hub__previews .hub-preview__open {
-    position: absolute;
-    inset: 0;
-    font-size: 0;
-  }
+  /* The tile hides its link's text; the whole tile is still the target through
+     the shared stretched link (`.hub-card--link`, styles.css, #1506). */
+  :root[data-design="bruecke"] .bruecke-hub__previews .hub-preview__open { font-size: 0; }
   :root[data-design="bruecke"] .bruecke-hub__previews .hub-preview__open .ti { display: none; }
   :root[data-design="bruecke"][data-scheme="dark"] .bruecke-hub__previews .hub-card__title { color: var(--ink); }
   :root[data-design="bruecke"][data-scheme="dark"] .bruecke-hub__previews .hub-card__title .ti { color: var(--brand); }

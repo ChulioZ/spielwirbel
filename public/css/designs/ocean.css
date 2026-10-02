@@ -937,6 +937,9 @@
   border-color: var(--line);
   box-shadow: var(--shadow-1);
 }
+/* The rule above restates the border colour, so the shared hover (#1506) needs
+   restating after it. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .ocean-hub .hub-card--link:hover { border-color: var(--brand); }
 /* A block title is O1's 17px Comfortaa — the display face at a size it is
    allowed — so these are lifted back out of the component layer's Figtree
    reset. */
