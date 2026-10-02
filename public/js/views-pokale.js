@@ -476,7 +476,9 @@ function renderPokaleTab(round) {
   // One lazy-cover loader per section, shared by every trophy card below
   // (#979) — a loader each would mean an IntersectionObserver each.
   const loadCover = createCoverLoader();
-  const cards = h('<div class="pokale-cards"></div>');
+  // Under Die Brücke the same four cards, in the same order, are styled as
+  // B3.4's plates (#1422, bruecke.css) — a design owns the layout, not the content.
+  const cards = h(`<div class="pokale-cards${bruecke ? ' pokale-cards--plates' : ''}"></div>`);
 
   // Most played: chosen most often across finished nights (game must exist).
   //
