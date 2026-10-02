@@ -67,7 +67,7 @@ async function asProduction(fn) {
 /* ------------------------------- the rule ---------------------------------- */
 
 test('the switch-back target is a registered design that production offers', () => {
-  // Klassisch stays selectable forever („Wie bisher"); if it ever stopped being
+  // Klassisch stays selectable forever; if it ever stopped being
   // enabled, no account in production could switch back to it and the tile
   // would read zero for a reason nobody could see.
   const row = designs.designById(SWITCH_BACK_DESIGN);
@@ -113,7 +113,7 @@ test('switchBackPatch stamps only a move FROM another worn design TO Klassisch',
 
 test('#1202: a pre-flip account picking Klassisch IS a switch back — it was shown Der Tisch', () => {
   // It stores 'klassisch' but has never answered the chooser, so it WEARS the
-  // face. The stored string must not decide, or „Wie bisher" in the chooser —
+  // face. The stored string must not decide, or picking Klassisch in the chooser —
   // the main way back — would never register on the operator's tile.
   assert.deepEqual(switchBackPatch({ design: 'klassisch', designChooserSeen: null }, 'klassisch'),
     { designSwitchedBack: true });
@@ -184,7 +184,7 @@ test('the first-start chooser stamps it too — the main way back after the flip
   const res = await chooser(acc, { design: 'klassisch' });
   assert.equal(res.status, 200);
   assert.equal(res.body.design, 'klassisch');
-  assert.equal(await stored(acc), true, 'a fresh account wore the face, so „Wie bisher" is a switch back');
+  assert.equal(await stored(acc), true, 'a fresh account wore the face, so picking Klassisch is a switch back');
 });
 
 test('#1202: „Später entscheiden" keeps the design the account is WEARING, and writes it down', async () => {
