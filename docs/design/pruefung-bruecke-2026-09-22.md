@@ -4,6 +4,13 @@ Datum: 2026-09-22 · Zwei Runden · Geprüft gegen `handover-claude-design-2026-
 `handover-vokabular-2026-09-20.md`, `projektregeln-CLAUDE.md`,
 `pruefung-tisch-2026-09-20.md`, `pruefung-ocean-2026-09-20.md` und den Code der App.
 
+> **Nachtrag 2026-10-02 (#1497):** Die Buchstabenleiste und das Nachladen in
+> 28er-Schüben aus **B16.2** sind per Betreiberentscheid **entfallen** — das
+> Regal rendert in der Brücke, wie in jedem Design, immer alle Spiele auf
+> einmal. Was B16.2 sonst zeigt (Karte, „Sortiert:", B16.4s Titel-Stufe) gilt
+> weiter; die `.dc.html`-Blätter bleiben unverändert und sind in diesem Punkt
+> überholt.
+
 Methode: alle 15 Blätter in Chromium gerendert. Kontrast **pixelgenau** — alle
 Glyphen auf `color: transparent`, ein Vollbild je Blatt, und für jeden der
 **2 749 Textknoten** der tatsächliche Grund in seiner eigenen Box (Modalwert =

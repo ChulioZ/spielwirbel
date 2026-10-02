@@ -49,10 +49,11 @@ function renderRegalTab(round, activeGames) {
   // words the sort „Sortiert: Bewertung". It keeps the dashed add tile and
   // brings its own ways off the shelf; ocean.css lays the rest out per width.
   const ocean = designIs('ocean');
-  // Die Brücke (#1239, B3.2/B2.6/B16.2) takes the composed head, the
-  // „Sortiert:" statement, cards with their meta and score on an opaque band
-  // (bruecke-shelf.js), and from 30 games a letter jump and batched loading.
-  // Its empty shelf is #1243's (B7.2).
+  // Die Brücke (#1239, B3.2/B2.6) takes the composed head, the „Sortiert:"
+  // statement and cards with their meta and score on an opaque band
+  // (bruecke-shelf.js). Like every design it renders the whole shelf at once:
+  // B16.2's letter jump and batched loading were dropped (#1497). Its empty
+  // shelf is #1243's (B7.2).
   const bruecke = designIs('bruecke');
   // Das Programmheft (#1373, P3.3/P6.2/P7.8) takes the composed head too, and
   // Ocean's „Sortiert:" statement; its cards set the number, the meta and the
@@ -361,32 +362,7 @@ function renderRegalTab(round, activeGames) {
       cardById[g.id] = gc;
     });
     gamesSec.appendChild(bulk.bar);
-    // B16.2: a shelf of 30 or more games gets the letter row over the grid and
-    // loads in batches. `bkLimit` is how many of the matching games are on the
-    // page; a jump widens it to the batch holding the letter, so the target
-    // card exists before it is scrolled to. The row jumps in NAME order, so a
-    // jump switches the sort to „Name" — the only order in which a letter is a
-    // place on the shelf.
-    let bkLimit = BRUECKE_BATCH;
-    const dense = bruecke && activeGames.length >= BRUECKE_DENSE_MIN
-      ? brueckeShelfDensity({
-        more: () => { bkLimit += BRUECKE_BATCH; renderGames(); },
-        jump: (letter) => {
-          if (gamesSort !== 'name') { gamesSort = 'name'; sortSel.value = 'name'; }
-          const games = orderedGames().filter(matchesFilters);
-          const i = games.findIndex((g) => brueckeLetter(g.title) === letter);
-          if (i < 0) return;
-          bkLimit = Math.max(bkLimit, Math.ceil((i + 1) / BRUECKE_BATCH) * BRUECKE_BATCH);
-          renderGames();
-          const card = cardById[games[i].id];
-          card.scrollIntoView({ block: 'center' });
-          card.focus({ preventScroll: true });
-        },
-      })
-      : null;
-    if (dense) gamesSec.appendChild(dense.letters);
     gamesSec.appendChild(grid);
-    if (dense) gamesSec.appendChild(dense.foot);
 
     function orderedGames() {
       if (gamesSort === 'name') {
@@ -416,18 +392,13 @@ function renderRegalTab(round, activeGames) {
     // Reorder/filter the existing card nodes (no page rebuild); the add tile
     // always closes the grid.
     function renderGames() {
-      const games = orderedGames().filter(matchesFilters);
-      const cards = games.map((g) => cardById[g.id]);
+      const cards = orderedGames().filter(matchesFilters).map((g) => cardById[g.id]);
       // The "add a game" tile is dropped while selecting: it is not selectable,
       // and a dashed tile sitting among checkable covers reads as one that is
       // simply unticked. `shownCards` is what "select all" means — the games
       // currently passing the search, tags and metadata filters, which is the
       // whole reason the mode lives in the grid rather than in a flat sheet.
       bulk.setShown(cards);
-      // Selecting shows every match: „Alle wählen" means the filtered shelf,
-      // and a tick on a card that is not on the page could not be seen.
-      const onPage = dense && !bulk.isSelecting() ? cards.slice(0, bkLimit) : cards;
-      if (dense) dense.sync(bulk.isSelecting() ? [] : games, onPage.length);
       if (cards.length === 0) {
         const msg = query.trim()
           ? t('games.noMatch', { q: query.trim() })
@@ -436,7 +407,7 @@ function renderRegalTab(round, activeGames) {
         bulk.sync();
         return;
       }
-      grid.replaceChildren(...onPage, ...(bulk.isSelecting() ? [] : gridAddTile));
+      grid.replaceChildren(...cards, ...(bulk.isSelecting() ? [] : gridAddTile));
       bulk.sync();
     }
 
@@ -447,7 +418,6 @@ function renderRegalTab(round, activeGames) {
     });
     sortSel.addEventListener('change', () => {
       gamesSort = sortSel.value;
-      bkLimit = BRUECKE_BATCH;
       renderGames();
     });
     renderGames();

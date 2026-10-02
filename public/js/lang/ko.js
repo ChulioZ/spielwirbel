@@ -1843,9 +1843,6 @@ I18N.ko = {
   'badges.card.tiers': '단계',
   'badges.evergreen.lineGame': '{game} {n}번 플레이',
   // Die Brücke's Regal and Spielepass (#1239, B16.2/B13.4).
-  'regal.lettersBruecke': '글자로 이동',
-  'regal.batchShownBruecke': '{total}개 중 {shown}개 불러옴',
-  'regal.batchMoreBruecke': '{n}개 더 불러오기',
   'detail.distTitleBruecke': '모임의 평가',
   'detail.statPlaysBruecke': '번 플레이',
   'detail.statVetoBruecke': '× 추진력 없음',

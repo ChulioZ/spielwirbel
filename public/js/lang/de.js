@@ -2030,9 +2030,6 @@ I18N.de = {
   'badges.card.tiers': 'Stufen',
   'badges.evergreen.lineGame': '{game} {n}-mal gespielt',
   // Die Brücke's Regal and Spielepass (#1239, B16.2/B13.4).
-  'regal.lettersBruecke': 'Zu einem Anfangsbuchstaben springen',
-  'regal.batchShownBruecke': '{shown} von {total} geladen',
-  'regal.batchMoreBruecke': 'Weitere {n} laden',
   'detail.distTitleBruecke': 'Wie die Runde wertet',
   'detail.statPlaysBruecke': 'Mal gespielt',
   'detail.statVetoBruecke': '× kein Schub',

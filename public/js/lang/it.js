@@ -1919,9 +1919,6 @@ I18N.it = {
   'badges.card.tiers': 'Livelli',
   'badges.evergreen.lineGame': '{game} giocato {n} volte',
   // Die Brücke's Regal and Spielepass (#1239, B16.2/B13.4).
-  'regal.lettersBruecke': 'Vai a una lettera',
-  'regal.batchShownBruecke': '{shown} di {total} caricati',
-  'regal.batchMoreBruecke': 'Carica altri {n}',
   'detail.distTitleBruecke': 'Come lo valuta il gruppo',
   'detail.statPlaysBruecke': 'volte giocato',
   'detail.statVetoBruecke': '× nessuna spinta',

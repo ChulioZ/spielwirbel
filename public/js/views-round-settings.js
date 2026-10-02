@@ -184,7 +184,8 @@ function composeOceanSettings(round, rid) {
 }
 
 /* Das Programmheft's Einstellungen (#1380, P14.6): a printed two-column page.
-   The left column is the round's own set-up — the marker picker first (P14.6
+   The left column is the round's own set-up — its name as an open field
+   (#1423, P14.6 „Name", co-owners and up), the marker picker (P14.6
    „Farbmarker"), then „Runde einrichten" and the saved filters; the right one
    is what acts on the round — „Runde verwalten" and the Gefahrenzone, framed
    in --danger at the foot. Composed AFTER the shared build out of its own
@@ -202,6 +203,11 @@ function composeProgrammheftSettings(round, rid) {
   const after = kids.slice(kids.indexOf(head) + 1);
   const main = h('<div class="rs-ph__col"></div>');
   const aside = h('<div class="rs-ph__col rs-ph__col--act"></div>');
+  // P14.6 heads the set-up with the round's name, edited in place (#1423).
+  // Renaming is co-owner and up (#137); below that the section is simply
+  // absent — the name is already the rail's heading and the context label, so
+  // a read-only copy here would only restate it.
+  if (roundCan(round, 'round.edit')) main.appendChild(programmheftNameField(round));
   const marker = h(`<section class="rs-ph__sec rs-ph__sec--marker">
        <h2 class="rs-section__h">${esc(t('marker.title'))}</h2>
      </section>`);
@@ -229,6 +235,42 @@ function composeProgrammheftSettings(round, rid) {
   cols.appendChild(main);
   cols.appendChild(aside);
   app.appendChild(cols);
+}
+
+/* The round's name as a field that is always open (#1423, P14.6 „Name"). The
+   rail's heading opens an input on click; here the input IS the row, so the
+   page reads as a form. It commits like every inline editor in the app: on
+   blur, with Enter blurring and Escape putting the saved name back first, and
+   the decision is saveRoundName's (views-round.js), so a blank or unchanged
+   entry behaves exactly as it does on the heading. A refused or failed save
+   restores the saved name, so the field never shows a name the round lacks.
+
+   The label is the new-round form's own („Name der Runde"): the same field,
+   asked again, so no new copy. */
+function programmheftNameField(round) {
+  const sec = h(`<section class="rs-ph__sec rs-ph__sec--name">
+       <h2 class="rs-section__h" id="rsPhNameH">${esc(t('newRound.nameLabel'))}</h2>
+       <input class="input rs-ph__name" type="text" autocomplete="off" enterkeyhint="done"
+              aria-labelledby="rsPhNameH" />
+     </section>`);
+  const input = sec.querySelector('input');
+  input.value = round.name;
+  // One save at a time: a second blur while the first PATCH is in flight
+  // (refocus, then leave again) would otherwise send the rename twice.
+  let saving = false;
+  input.addEventListener('blur', async () => {
+    if (saving) return;
+    saving = true;
+    const saved = await saveRoundName(round, input.value);
+    saving = false;
+    if (saved) currentView();
+    else input.value = round.name;
+  });
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+    else if (e.key === 'Escape') { input.value = round.name; input.blur(); }
+  });
+  return sec;
 }
 
 /* Die Brücke's Einstellungen (#1246, B14.5 desktop, B6.6 phone): every section

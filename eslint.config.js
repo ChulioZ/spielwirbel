@@ -485,14 +485,14 @@ const frontendGlobals = {
   hubDeps: 'readonly', hubCard: 'readonly', hubSuggestCard: 'readonly',
   hubPresetChips: 'readonly', hubPulseCard: 'readonly', hubCareCard: 'readonly',
   hubAnniversaryCard: 'readonly', renderRecoTeaser: 'readonly',
-  editableRoundName: 'readonly',
+  editableRoundName: 'readonly', saveRoundName: 'readonly',
   // #1269 — Der Tisch's young-round states (hub-cards.js, views-round-start.js)
   roundIsYoung: 'readonly', hubSentenceCard: 'readonly', hubYoungCard: 'readonly',
   hubEmptyTable: 'readonly',
   // hub-reflow.js (#1496) — moving a hub's cells between its phone and desktop arrangements
   reflowAt: 'readonly',
   // ocean-hub.js (#1211) — Ocean's lobby tiles and round hub composition
-  oceanHubFrame: 'readonly', oceanHubActions: 'readonly', oceanShell: 'readonly', oceanHeroCompose: 'readonly',
+  oceanHubFrame: 'readonly', oceanShell: 'readonly', oceanHeroCompose: 'readonly',
   oceanRoundCard: 'readonly', oceanResumeNotice: 'readonly', oceanYoungLine: 'readonly',
   // programmheft-hub.js (#1372) — the Programmheft's lobby tiles and round hub composition
   phHubFrame: 'readonly', phPresetsLabel: 'readonly', phHeroCompose: 'readonly', phLead: 'readonly',
@@ -503,9 +503,8 @@ const frontendGlobals = {
   // bruecke-hub.js (#1238) — Die Brücke's lobby notice and round hub composition
   brueckeHubFrame: 'readonly', brueckeMission: 'readonly', brueckeMissionEmpty: 'readonly', brueckeYoungLine: 'readonly', brueckeHeroCompose: 'readonly',
   brueckeStatus: 'readonly', brueckeResumeNotice: 'readonly', brueckeUpLink: 'readonly',
-  // bruecke-shelf.js (#1239) — Die Brücke's Regal cards, density controls and Spielepass figures
-  BRUECKE_DENSE_MIN: 'readonly', BRUECKE_BATCH: 'readonly', brueckeTitleLong: 'readonly',
-  brueckeLetter: 'readonly', brueckeCard: 'readonly', brueckeShelfDensity: 'readonly',
+  // bruecke-shelf.js (#1239) — Die Brücke's Regal cards and Spielepass figures
+  brueckeTitleLong: 'readonly', brueckeCard: 'readonly',
   brueckePassStats: 'readonly', brueckePassDist: 'readonly',
   // #1280 — Der Tisch's young-round features (views-home.js, hub-cards.js, views-pokale.js)
   lobbyInviteSlip: 'readonly', lobbyNextStep: 'readonly', hubDemoSummary: 'readonly',

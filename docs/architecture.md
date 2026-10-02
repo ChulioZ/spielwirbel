@@ -830,9 +830,8 @@ public/
     bruecke-hub.js        Die Brücke's composition of the lobby and the round
                           hub: the hub's slot frame, the Missionskontrolle,
                           the member captions and the signal notice (#1238)
-    bruecke-shelf.js      Die Brücke's Regal cards, the letter jump and batch
-                          loading of a 30+ game shelf, and the Spielepass's
-                          stat tiles and rating distribution (#1239)
+    bruecke-shelf.js      Die Brücke's Regal cards and the Spielepass's stat
+                          tiles and rating distribution (#1239)
     saved-filters.js      a round's saved session filters (#1328): the chip's
                           prefill, the setup screen's „Filter speichern" sheet
                           and the Einstellungen list

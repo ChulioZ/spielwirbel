@@ -94,8 +94,8 @@
   "        span",
   "      span.ds-row__meta",
   "        i.ti.ti-chevron-right [aria-hidden=true]",
-  "div.hub-actions",
-  "  a.btn.nav-link.rail-owned",
+  "div.hub-actions.rail-owned",
+  "  a.btn.nav-link",
   "    i.ti.ti-settings [aria-hidden=true]"
  ],
  "hub start (games, no session)": [
@@ -221,10 +221,8 @@
   "        span",
   "      span.ds-row__meta",
   "        i.ti.ti-chevron-right [aria-hidden=true]",
-  "div.hub-actions",
-  "  button.btn",
-  "    i.ti.ti-plus [aria-hidden=true]",
-  "  a.btn.nav-link.rail-owned",
+  "div.hub-actions.rail-owned",
+  "  a.btn.nav-link",
   "    i.ti.ti-settings [aria-hidden=true]"
  ],
  "hub start (one session)": [
@@ -420,10 +418,8 @@
   "        span",
   "      span.ds-row__meta",
   "        i.ti.ti-chevron-right [aria-hidden=true]",
-  "div.hub-actions",
-  "  button.btn",
-  "    i.ti.ti-plus [aria-hidden=true]",
-  "  a.btn.nav-link.rail-owned",
+  "div.hub-actions.rail-owned",
+  "  a.btn.nav-link",
   "    i.ti.ti-settings [aria-hidden=true]"
  ],
  "hub start (demo)": [
@@ -626,10 +622,8 @@
   "        span",
   "      span.ds-row__meta",
   "        i.ti.ti-chevron-right [aria-hidden=true]",
-  "div.hub-actions",
-  "  button.btn",
-  "    i.ti.ti-plus [aria-hidden=true]",
-  "  a.btn.nav-link.rail-owned",
+  "div.hub-actions.rail-owned",
+  "  a.btn.nav-link",
   "    i.ti.ti-settings [aria-hidden=true]"
  ],
  "lobby (empty)": [

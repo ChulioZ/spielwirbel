@@ -1912,9 +1912,6 @@ I18N.nl = {
   'badges.card.tiers': 'Niveaus',
   'badges.evergreen.lineGame': '{game} {n} keer gespeeld',
   // Die Brücke's Regal and Spielepass (#1239, B16.2/B13.4).
-  'regal.lettersBruecke': 'Naar een letter springen',
-  'regal.batchShownBruecke': '{shown} van {total} geladen',
-  'regal.batchMoreBruecke': 'Nog {n} laden',
   'detail.distTitleBruecke': 'Hoe de ronde het beoordeelt',
   'detail.statPlaysBruecke': 'keer gespeeld',
   'detail.statVetoBruecke': '× geen stuwkracht',

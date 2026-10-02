@@ -1880,9 +1880,6 @@ I18N.fi = {
   'badges.card.tiers': 'Tasot',
   'badges.evergreen.lineGame': '{game} pelattu {n} kertaa',
   // Die Brücke's Regal and Spielepass (#1239, B16.2/B13.4).
-  'regal.lettersBruecke': 'Siirry kirjaimeen',
-  'regal.batchShownBruecke': '{shown}/{total} ladattu',
-  'regal.batchMoreBruecke': 'Lataa {n} lisää',
   'detail.distTitleBruecke': 'Miten porukka arvioi',
   'detail.statPlaysBruecke': 'kertaa pelattu',
   'detail.statVetoBruecke': '× ei työntöä',
