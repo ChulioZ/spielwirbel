@@ -20,28 +20,55 @@
 
 'use strict';
 
-/* The hub's frame: ONE grid of named slots in the PHONE order (B2.2) —
-   members, Missionskontrolle, running sessions, Zuletzt gespielt, Wie wär's
-   mit, Rundenpuls, Kümmerliste, the previews, the rest of the cards, Nicht im
+/* The hub's frame: named slots in the PHONE order (B2.2) — members,
+   Missionskontrolle, running sessions, Zuletzt gespielt, Wie wär's mit,
+   Rundenpuls, Kümmerliste, the previews, the rest of the cards, Nicht im
    Regal, the quiet actions. DOM order is the phone's reading and tab order, so
    the phone needs no `order` at all.
 
-   Why slots in one grid rather than three column wrappers (Ocean's shape): the
-   desktop columns (B3.1) cut ACROSS the phone order — the Rundenpuls and the
+   From 1280 the slots move into B3.1's three column wrappers (#1496): the
+   desktop columns cut ACROSS the phone order — the Rundenpuls and the
    Kümmerliste stand under the members at 1440 but after „Wie wär's mit" at
-   390 — so column wrappers would force either a phone order that leaves the
-   sheet or a tab order that leaves the picture. bruecke.css places each slot
-   in a grid area from 1280 up instead. An empty slot is `display: none`. */
+   390 — so neither arrangement can serve both widths. It used to be ONE grid of
+   slots placed into areas, and areas share row lines: the bottom row could only
+   start below the tallest column, which left ~700px of empty grid under the
+   Missionskontrolle. Each wrapper now stacks on its own. reflowAt() (hub-
+   reflow.js) moves the slots at the crossing, so the DOM order is the visual
+   order at both widths. The members stay outside the wrappers: they sit inside
+   the hero, whose name and counts span the title row (bruecke.css). The rest
+   of the cards close the middle column rather than spanning the page under all
+   three: as a full-width band they started below the tallest column, which is
+   usually the right one, and left the gap under „Zuletzt gespielt" that this
+   frame exists to remove. An empty slot is `display: none`. */
 const BRUECKE_HUB_SLOTS = [
   'crew', 'mission', 'feed', 'last', 'suggest', 'pulse', 'care',
   'previews', 'more', 'offshelf', 'actions',
 ];
+const BRUECKE_HUB_COLUMNS = {
+  left: ['pulse', 'care'],
+  mid: ['mission', 'last', 'more'],
+  right: ['suggest', 'previews', 'offshelf'],
+};
+const BRUECKE_HUB_WIDE = '(min-width: 1280px)';
 
 function brueckeHubFrame() {
   const root = h('<div class="bruecke-hub"></div>');
   const slots = { root };
   BRUECKE_HUB_SLOTS.forEach((name) => {
     slots[name] = root.appendChild(h(`<div class="bruecke-hub__${name}"></div>`));
+  });
+  const cols = {};
+  Object.keys(BRUECKE_HUB_COLUMNS).forEach((col) => {
+    cols[col] = h(`<div class="bruecke-hub__col bruecke-hub__col--${col}"></div>`);
+  });
+  reflowAt(BRUECKE_HUB_WIDE, root, (wide) => {
+    if (wide) {
+      Object.entries(BRUECKE_HUB_COLUMNS).forEach(([col, names]) => cols[col].append(...names.map((n) => slots[n])));
+      root.append(slots.crew, slots.feed, cols.left, cols.mid, cols.right, slots.actions);
+    } else {
+      root.append(...BRUECKE_HUB_SLOTS.map((n) => slots[n]));
+      Object.values(cols).forEach((c) => c.remove());
+    }
   });
   return slots;
 }

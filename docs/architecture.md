@@ -820,6 +820,8 @@ public/
     hub-cards.js          the Start tab's card renderers, their shared frame and
                           the quick-start chips, split out of the above at its
                           own #923 seam (issue #1189)
+    hub-reflow.js         moves a hub's cells between its phone order and its
+                          desktop column wrappers at a breakpoint (#1496)
     ocean-hub.js          Ocean's composition of the lobby and the round hub:
                           the hub's columns, the shell with the one action, the
                           crew captions, the lobby tiles and notice (#1211)

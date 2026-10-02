@@ -3570,14 +3570,16 @@
 }
 
 /* ---- The hub frame. One column of named slots in the DOM's own order on a
-   phone (B2.2); from 1280 the slots take the grid areas of B3.1 — the title
-   row, then members · Missionskontrolle · Wie wär's mit, the Rundenpuls under
-   the members and the previews under the suggestions, and the bottom row
-   Kümmerliste · Zuletzt gespielt · Nicht im Regal. An empty slot takes no
-   room at all. */
+   phone (B2.2); from 1280 the slots sit in B3.1's three column wrappers
+   (bruecke-hub.js moves them, #1496) — the title row, then members ·
+   Missionskontrolle · Wie wär's mit, with the Rundenpuls and the Kümmerliste
+   under the members, Zuletzt gespielt and the rest of the cards under the
+   Missionskontrolle, and the previews and Nicht im Regal under the
+   suggestions. Each column stacks on its own; an empty slot takes no room at
+   all. */
 :root[data-design="bruecke"] .bruecke-hub { display: flex; flex-direction: column; gap: 16px; }
-:root[data-design="bruecke"] .bruecke-hub > * { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
-:root[data-design="bruecke"] .bruecke-hub > :empty { display: none; }
+:root[data-design="bruecke"] :is(.bruecke-hub, .bruecke-hub__col) > * { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+:root[data-design="bruecke"] :is(.bruecke-hub, .bruecke-hub__col) > :empty { display: none; }
 :root[data-design="bruecke"] .bruecke-hub .hub-cards:empty { display: none; }
 :root[data-design="bruecke"] .bruecke-hub :is(.hub-card, .ticket, .hub-cta, .hero, .hub-actions, .hub-offshelf) { margin: 0; }
 /* Rundenpuls and Kümmerliste share a row on a phone (B2.2). */
@@ -3593,41 +3595,36 @@
   /* The hub spreads over the shell like B3.1; the reading cap is for prose.
      (0,4,0) against the cap's (0,3,0). */
   :root[data-design="bruecke"] .app > .bruecke-hub { max-width: none; }
+  /* The members open the left column but live in the hero, whose name and
+     counts span the title row — so they keep their own area, and the left
+     wrapper starts under them. The middle and right wrappers span both rows
+     and the second row is `1fr`: a track a spanning item crosses is sized
+     only by the flexible pass, so the members' row stays exactly the members'
+     height and no column waits for another. */
   :root[data-design="bruecke"] .bruecke-hub {
     display: grid;
     grid-template-columns: 300px minmax(0, 1fr) 340px;
-    grid-template-rows: auto auto auto auto 1fr auto auto auto;
+    grid-template-rows: auto auto auto 1fr auto;
     grid-template-areas:
       "title   title   stats"
       "feed    feed    feed"
-      "crew    mission suggest"
-      "pulse   mission previews"
-      ".       mission previews"
-      "care    last    offshelf"
-      "more    more    more"
+      "crew    mid     right"
+      "left    mid     right"
       "actions actions actions";
     column-gap: 22px;
     row-gap: 18px;
     align-items: start;
   }
+  :root[data-design="bruecke"] .bruecke-hub__col { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
   :root[data-design="bruecke"] :is(.bruecke-hub__crew, .bruecke-hub .hero) { display: contents; }
   :root[data-design="bruecke"] .bruecke-hub .hero h1 { grid-area: title; align-self: end; }
   :root[data-design="bruecke"] .bruecke-hub .hero__chips { grid-area: stats; align-self: end; justify-content: flex-end; }
-  :root[data-design="bruecke"] .bruecke-hub .hero__members { grid-area: crew; align-self: stretch; }
-  /* The mission panel ends with its content: stretched, it grew to the right
-     column's height (Wie wär's mit + the three previews) and printed a tall
-     empty panel around the ignition. */
-  :root[data-design="bruecke"] .bruecke-hub__mission { grid-area: mission; align-self: start; }
+  :root[data-design="bruecke"] .bruecke-hub .hero__members { grid-area: crew; }
   :root[data-design="bruecke"] .bruecke-hub__feed { grid-area: feed; }
-  :root[data-design="bruecke"] .bruecke-hub__last { grid-area: last; align-self: stretch; }
-  :root[data-design="bruecke"] .bruecke-hub__suggest { grid-area: suggest; align-self: stretch; }
-  :root[data-design="bruecke"] .bruecke-hub__pulse { grid-area: pulse; }
-  :root[data-design="bruecke"] .bruecke-hub__care { grid-area: care; align-self: stretch; }
-  :root[data-design="bruecke"] .bruecke-hub__previews { grid-area: previews; }
-  :root[data-design="bruecke"] .bruecke-hub__more { grid-area: more; }
-  :root[data-design="bruecke"] .bruecke-hub__offshelf { grid-area: offshelf; align-self: stretch; }
+  :root[data-design="bruecke"] .bruecke-hub__col--left { grid-area: left; }
+  :root[data-design="bruecke"] .bruecke-hub__col--mid { grid-area: mid; }
+  :root[data-design="bruecke"] .bruecke-hub__col--right { grid-area: right; }
   :root[data-design="bruecke"] .bruecke-hub__actions { grid-area: actions; }
-  :root[data-design="bruecke"] .bruecke-hub :is(.bruecke-hub__last, .bruecke-hub__suggest, .bruecke-hub__care, .bruecke-hub__offshelf, .bruecke-hub__mission) > :only-child { flex: 1; }
 }
 
 /* ---- The round's name and the counts line under it: the display face at the

@@ -238,3 +238,18 @@ test('from 1280 the band is the felt, the cap is lifted for the hub blocks, and 
   assert.match(SHEET, /@media \(min-width: 1280px\) \{\s*:root\[data-design="tisch"\] \.hub-cards \{ grid-template-columns: repeat\(3, minmax\(0, 1fr\)\); \}/,
     'the desktop grid is not three wide');
 });
+
+/* #1496: the row grid stretches each slot to its row, and the card fills its
+   slot — otherwise a short card beside a tall one left a hole under it that
+   the next row's card then sat below. The selector is a top-level rule, so it
+   applies at every width the grid has more than one track. */
+test('a hub card fills its slot, so a short card beside a tall one leaves no hole (#1496)', () => {
+  const rules = rulesOf(SHEET.replace(/\/\*[\s\S]*?\*\//g, ''));
+  const slot = rules.find(([s]) => s.trim() === ':root[data-design="tisch"] .hub-cards > .card-slot');
+  assert.ok(slot, 'no rule for the Tisch card slot');
+  assert.match(slot[1], /display:\s*flex/);
+  assert.match(slot[1], /flex-direction:\s*column/);
+  const card = rules.find(([s]) => s.trim() === ':root[data-design="tisch"] .hub-cards > .card-slot > :only-child');
+  assert.ok(card, 'the card does not fill its slot');
+  assert.match(card[1], /flex:\s*1\b/);
+});
