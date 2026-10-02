@@ -1286,7 +1286,12 @@
    card beside a tall one reads as one row instead of leaving a hole under it
    that the next row's card then sits below (#1496). */
 :root[data-design="tisch"] .hub-cards > .card-slot > :only-child { flex: 1 0 auto; }
-:root[data-design="tisch"] .hub-previews {
+/* `.hub-cards > .card-slot.hub-previews`, not `.hub-previews`: the slot rule
+   above (#1496) is (0,4,0) and makes every slot a flex column, so a one-class
+   selector here lost and the tiles stacked full-width — and the desktop
+   `display: contents` below lost the same way, putting all three previews in
+   one grid cell. Specificity, never source order. */
+:root[data-design="tisch"] .hub-cards > .card-slot.hub-previews {
   display: grid;
   grid-auto-flow: column;
   grid-auto-columns: minmax(0, 1fr);
@@ -1373,7 +1378,7 @@
   :root[data-design="tisch"] .hub-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   /* The preview row dissolves into the grid: each preview becomes a cell and
      is its desktop card again, with the tile-only rules above undone. */
-  :root[data-design="tisch"] .hub-previews { display: contents; }
+  :root[data-design="tisch"] .hub-cards > .card-slot.hub-previews { display: contents; }
   :root[data-design="tisch"] .hub-previews .hub-preview { padding: 14px 16px; }
   :root[data-design="tisch"] .hub-previews .hub-card__title {
     flex-direction: row;
