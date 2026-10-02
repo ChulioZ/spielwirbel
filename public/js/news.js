@@ -13,8 +13,9 @@
 
    Modelled on TERMS_CHANGELOG (lib/legal.js), which already solved this exact
    shape: newest first, the text inline in the entry rather than behind i18n keys
-   — one entry is then one edit, and test/i18n-parity.test.js never has to care —
-   and trimmed to roughly the last ten.
+   — one entry is then one edit, and test/i18n-parity.test.js never has to care.
+   Unlike TERMS_CHANGELOG it is NOT trimmed: it is kept as a growing history of
+   what shipped (operator decision 2026-10-02; .claude/rules/keep-readme-current.md).
 
    EVERY SHIPPED LOCALE, INLINE (#1087). It was German and English only until the
    other seven had all shipped, at which point a reader who had switched the whole
