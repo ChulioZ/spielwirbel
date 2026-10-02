@@ -1699,17 +1699,15 @@
   letter-spacing: 0.06em;
 }
 :root[data-design="programmheft"] .ph-card__kicker .exp-pill { flex: none; position: static; }
-/* The cover keeps its own proportions on a common floor (P3.3's 190px well):
-   the whole cover, contained and set on the baseline, with no blurred backing
-   copy — the programme prints the box, not an atmosphere around it. */
+/* The cover sits on a common floor (P3.3's 190px well). What FILLS the frame is
+   the shared #181 rule in styles.css — the whole cover on a blurred copy of
+   itself — which no design overrides (#1504): removing its ::before here let the
+   frame's own inline background-image paint raw and tiled behind the cover. */
 :root[data-design="programmheft"] .ph-card .game-card__img {
   aspect-ratio: auto;
   height: 190px;
-  overflow: visible;
   background: transparent;
 }
-:root[data-design="programmheft"] .ph-card .game-card__img::before { content: none; }
-:root[data-design="programmheft"] .ph-card .game-card__img::after { background-position: center bottom; }
 :root[data-design="programmheft"] .ph-card .game-card__body {
   flex-direction: row;
   align-items: flex-end;
@@ -1835,9 +1833,8 @@
 :root[data-design="programmheft"] .ph-pass > .pass__game,
 :root[data-design="programmheft"] .ph-pass > .pass__story { display: flex; flex-direction: column; gap: var(--space-5); min-width: 0; }
 :root[data-design="programmheft"] .ph-pass > .pass__table { gap: var(--space-4); }
-/* The cover: the whole box, no wash, no rounded frame. */
+/* The cover: a 3:4 box with no rounded frame; the fill is the shared #181 rule. */
 :root[data-design="programmheft"] .ph-pass .gd-img { aspect-ratio: 3 / 4; box-shadow: none; }
-:root[data-design="programmheft"] .ph-pass .gd-img::before { content: none; }
 /* The story: no card — the title, the chips and the facts print on the page. */
 :root[data-design="programmheft"] .ph-pass .pass__story .gd-head {
   display: block;

@@ -1227,8 +1227,8 @@
  * eigene Regel braucht"); from 1280px up the shelf fills the row at ~150px a
  * box, which is seven at 1440 inside the Reling.
  *
- * Covers crop into a FIXED 4:3 box: the app stores no aspect ratio, so the box
- * is the only honest size. No text sits on a cover — title and meta are under
+ * Covers sit in a FIXED 4:3 box: the app stores no aspect ratio, so the box
+ * is the only honest size. What fills it is the shared #181 rule (#1504). No text sits on a cover — title and meta are under
  * it on an opaque surface — except the score bubble, whose 2px rim (#1210's
  * component layer) is what lets it read on a light and a dark cover. The
  * bubble stays INSIDE the corner rather than overhanging it as the sheet draws:
@@ -1322,10 +1322,6 @@
   gap: 20px 16px;
 }
 :root[data-design="ocean"] .game-card { border-radius: var(--radius-lg); }
-/* Crop, never letterbox: the blurred backing copy (#181) exists to fill the
-   bars a `contain` fit leaves, and a `cover` fit leaves none. */
-:root[data-design="ocean"] .game-card__img::before { content: none; }
-:root[data-design="ocean"] .game-card__img::after { background-size: cover; }
 :root[data-design="ocean"] .game-card__body { gap: 2px; padding: 10px 12px 12px; }
 :root[data-design="ocean"] .game-card__title { font-size: var(--text-md); line-height: 1.2; }
 :root[data-design="ocean"] .game-card__meta {
@@ -1455,10 +1451,9 @@
 :root[data-design="ocean"] .pass__game,
 :root[data-design="ocean"] .pass__story { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
 :root[data-design="ocean"] .pass:has(> .pass__story) > .pass__table:empty { display: none; }
-/* The cover: a 4:3 box, cropped, and nothing written on it. */
+/* The cover: a 4:3 box with nothing written on it; the fill is the shared #181
+   rule (the whole cover on a blurred copy of itself, #1504). */
 :root[data-design="ocean"] .pass__game .gd-img { border-radius: var(--radius-lg); }
-:root[data-design="ocean"] .pass__game .gd-img::before { content: none; }
-:root[data-design="ocean"] .pass__game .gd-img::after { background-size: cover; }
 /* The facts column: the glance facts as a key/value list with hairlines. */
 :root[data-design="ocean"] .gd-factcol {
   display: flex;

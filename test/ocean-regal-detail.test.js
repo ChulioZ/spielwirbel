@@ -203,15 +203,13 @@ test('Ocean: „Spiel hinzufügen" opens the search-first step; Klassisch the fo
 const CSS = fs.readFileSync(path.join(__dirname, '..', 'public', 'css', 'designs', 'ocean.css'), 'utf8');
 const section = CSS.slice(CSS.indexOf('/* ===== #1212'));
 
-test('ocean.css: the slice is one section, and covers crop into the 4:3 box', () => {
+test('ocean.css: the slice is one section, and its covers use the shared fill', () => {
   assert.equal(CSS.split('/* ===== #1212 — Regal, Spieldetail, Spiel suchen ===== */').length, 2,
     'the #1212 section header must appear exactly once');
   const body = section.replace(/\/\*[\s\S]*?\*\//g, '');
-  // Crop, never letterbox — on the shelf and on the detail's cover.
-  for (const sel of ['.game-card__img::after', '.pass__game .gd-img::after']) {
-    const rx = new RegExp(`${sel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\{[^}]*background-size:\\s*cover`);
-    assert.match(body, rx, `${sel} does not crop`);
-  }
+  // No crop any more (#1504): the shelf and the detail letterbox on the shared
+  // blurred backing — test/cover-fill-shared.test.js guards every design.
+  assert.doesNotMatch(body, /(game-card__img|gd-img)::(before|after)/);
   // Four columns on a tablet (O6.7), two on a phone (O6.2).
   assert.match(body, /min-width:\s*600px\)\s*and\s*\(max-width:\s*1279px\)\s*\{[^@]*\.cards\s*\{\s*grid-template-columns:\s*repeat\(4,/);
   assert.match(body, /max-width:\s*599px\)\s*\{[^@]*\.cards\s*\{\s*grid-template-columns:\s*repeat\(2,/);
