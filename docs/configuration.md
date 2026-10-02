@@ -659,6 +659,27 @@ pass finds nothing and writes nothing), and is safe to skip: the app reads
 where the flag was the whole vote — read as "did not vote" and drop out of that
 game's averages.
 
+### Deleting the design switch-back flag (JSON backend, one-off)
+
+Accounts used to carry `designSwitchedBack`, a yes/no stamp set when someone
+moved back to the Klassisch design, read only by the operator's design tile.
+That reader went in **#1480**, and the field with it — the app no longer writes
+it, and the values already stored are deleted once.
+
+**On PostgreSQL this happens by itself**, as a Knex migration applied on the next
+boot. **On the JSON backend** a self-hosted instance runs the script once:
+
+```bash
+node scripts/migrate-drop-design-switched-back.js --dry-run    # report only, writes nothing
+node scripts/migrate-drop-design-switched-back.js              # deletes, backing the file up first
+DATA_DIR=/path/to/data node scripts/migrate-drop-design-switched-back.js
+```
+
+**Stop the server first**, for the same reason as above. The script writes a
+timestamped `.bak` copy before touching anything and is safe to run twice.
+Skipping it changes no behaviour — nothing reads the field — it only leaves the
+stale values in `data.json`.
+
 ### Measuring what an agent session costs
 
 The `.claude/skills/` workflows are read by an agent on every tool call, so their

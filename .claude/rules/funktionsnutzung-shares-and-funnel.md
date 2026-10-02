@@ -44,8 +44,10 @@ as that card's parent („Design-Auswahl beantwortet") — never by
 denominator of a line it can never be in. The answered sum includes skippers
 (a skip stores the face like a confirmed Der Tisch), so the card says
 „beantwortet", never „gewählt". The switch-back share that used to head it was
-dropped from the card and the payload in #1480 (operator decision); the stored
-`designSwitchedBack` flag is still written but has no reader.
+dropped from the card and the payload in #1480 (operator decision), and the
+stored `designSwitchedBack` flag with it — no longer written, and deleted from
+existing accounts by `lib/repo/migrations/20261002120000_drop_design_switched_back.js`
+(JSON: `scripts/migrate-drop-design-switched-back.js`).
 
 **With the variable unset all of them equal their instance-wide twin**, which is
 what makes this look like a no-op and is not one: a renderer that reached for

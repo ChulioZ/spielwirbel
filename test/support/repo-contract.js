@@ -4880,11 +4880,12 @@ module.exports = function repoContract(repo) {
         tenantId: demoTenant, roundId: demoRound.id, sessionId: demoSession.id,
       });
 
-      // A demo that went back to Klassisch — demos may change their design
-      // (#1186), and the tile must still never count one.
+      // A demo that picked Klassisch — demos may change their design (#1186),
+      // and the tile must still never count one. Answered, so it is a row the
+      // tile WOULD count were it not a demo.
       await repo.createUser({
         ...userFields(), tenantId: demoTenant, demo: true, createdAt: daysAgo(1),
-        design: 'klassisch', designSwitchedBack: true,
+        design: 'klassisch', designChooserSeen: '2026-09-22',
       });
 
       const m = await repo.instanceMetrics();
@@ -5015,17 +5016,22 @@ module.exports = function repoContract(repo) {
       // never answered wears the face whatever it stores — the pre-flip shape is
       // exactly `design: 'klassisch'` with no answer.
       const seen = { designChooserSeen: '2026-09-22' };
+      // An OLDER chooser revision is still an answer: any run of it counts.
+      const older = { designChooserSeen: '2000-01-01' };
       await mk({});                                                   // absent -> the face
-      await mk({ design: 'klassisch', designSwitchedBack: false });   // pre-flip, untouched -> the face
+      await mk({ design: 'klassisch' });                              // pre-flip, untouched -> the face
       await mk({ design: 'klassisch', designChooserSeen: '' });       // '' is no answer -> the face
-      await mk({ design: 'klassisch', designSwitchedBack: false, ...seen });
-      await mk({ design: 'tisch', designSwitchedBack: false, ...seen });
+      await mk({ design: 'klassisch', ...seen });
+      await mk({ design: 'tisch', ...seen });
       await mk({ design: 'not-a-design', ...seen });                  // unknown -> the face
-      await mk({ design: 'klassisch', designSwitchedBack: true, ...seen });    // went back, stayed
-      await mk({ design: 'tisch', designSwitchedBack: true, ...seen });        // went back, tried again
-      // A STRING 'true' is not the flag. Postgres' ->> would read it as 'true';
-      // the jsonb comparison must agree with the JSON backend's `=== true`.
-      await mk({ design: 'klassisch', designSwitchedBack: 'true', ...seen });
+      await mk({ design: 'klassisch', ...older });
+      await mk({ design: 'tisch', ...older });
+      /* The #1201 switch-back flag used to ride on four of these, plus a fifth
+         account storing it as the STRING 'true' to pin the jsonb comparison.
+         #1480 removed the field and its only reader, so the flags went and the
+         string case went with them — it tested a comparison that no longer
+         exists, and what is left of that account (an answered Klassisch) is
+         the fourth row above. */
     };
 
     await t.test('design adoption counts only ANSWERED accounts, by the design they are SHOWN', async () => {
@@ -5048,15 +5054,14 @@ module.exports = function repoContract(repo) {
 
       assert.deepEqual(Object.keys(m.designAdoption.byDesign), selectableDesignIds({ production: false }),
         'one key per offered design, in registry order, and nothing else');
-      assert.equal(d('klassisch'), 3, 'only the accounts that ANSWERED with Klassisch wear it');
+      assert.equal(d('klassisch'), 2, 'only the accounts that ANSWERED with Klassisch wear it');
       assert.equal(d('tisch'), 3,
-        'a skipper/confirmed Tisch, a return to Tisch and an unknown id — never an unanswered account');
-      assert.equal(sum(m.designAdoption.byDesign) - sum(mid.designAdoption.byDesign), 6,
+        'a skipper/confirmed Tisch, an older-revision Tisch and an unknown id — never an unanswered account');
+      assert.equal(sum(m.designAdoption.byDesign) - sum(mid.designAdoption.byDesign), 5,
         'the three accounts that never answered (absent, pre-flip klassisch, empty stamp) count NOWHERE');
-      // The stored switch-back flag above no longer reaches the payload (#1480).
       assert.deepEqual(Object.keys(m.designAdoption), ['byDesign'],
-        'designAdoption carries the per-design lines only — the switch-back share was dropped');
-      assert.equal(m.adoption.accountsTotal - mid.adoption.accountsTotal, 9,
+        'designAdoption carries the per-design lines only — the switch-back share was dropped (#1480)');
+      assert.equal(m.adoption.accountsTotal - mid.adoption.accountsTotal, 8,
         'the headline denominator still counts every account, answered or not');
     });
 
@@ -5079,7 +5084,7 @@ module.exports = function repoContract(repo) {
       const m = await prod();
       assert.deepEqual(Object.keys(m.designAdoption.byDesign), selectableDesignIds({ production: true }));
       const sum = (o) => Object.values(o).reduce((a, b) => a + b, 0);
-      assert.equal(sum(m.designAdoption.byDesign) - sum(mid.designAdoption.byDesign), 6,
+      assert.equal(sum(m.designAdoption.byDesign) - sum(mid.designAdoption.byDesign), 5,
         'every ANSWERED account lands on an offered line — none dropped, no unanswered one added');
     });
 
