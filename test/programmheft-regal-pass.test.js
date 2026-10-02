@@ -64,18 +64,22 @@ function renderRegal(dom, round) {
   dom.call('renderRegalTab', round, round.games.filter((g) => !g.retired && !g.completed && !g.wish));
 }
 
-test('Regal: every card is a printed entry — number, title, owner and a ramp-toned score', (t) => {
+test('Regal: every card is a printed entry — meta, title, owner and a ramp-toned score, and no running number', (t) => {
   const { dom, round } = boot(t);
   renderRegal(dom, round);
-  const t_ = dom.get('t');
   assert.ok(dom.app.querySelector('.section.ph-regal'), 'the shelf is not marked as Programmheft\'s');
   const cards = [...dom.app.querySelectorAll('.cards > .ph-card')];
   assert.equal(cards.length, 2);
-  // Numbered in the order on the page, not by id.
-  cards.forEach((c, i) => {
-    assert.equal(c.querySelector('.ph-card__nr').textContent, t_('regal.cardNo', { n: i + 1 }));
+  // No running number (#1507): it told the reader nothing and squeezed the
+  // meta line (players · play time) into an ellipsis on a phone.
+  cards.forEach((c) => {
+    const kicker = c.querySelector('.ph-card__kicker');
+    assert.equal(kicker.querySelector('.ph-card__nr'), null, 'a card still carries the number slot');
+    assert.doesNotMatch(kicker.textContent, /\b(Nr|No)\.\s*\d/i, 'a card still prints a running number');
   });
   const nord = cards.find((c) => c.querySelector('.game-card__title').textContent === 'Nordlichter');
+  // The kicker now opens with the meta line itself.
+  assert.ok(nord.querySelector('.ph-card__kicker > .game-card__meta:first-child'), 'the kicker does not lead with the meta');
   const score = nord.querySelector('.ph-card__score');
   assert.ok(score.dataset.stop, 'a scored game carries its ramp stop');
   assert.ok(!score.classList.contains('ph-card__score--none'));

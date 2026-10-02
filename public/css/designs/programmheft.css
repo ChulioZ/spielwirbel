@@ -1704,9 +1704,10 @@
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }
-/* The number never wraps: on a phone the meta beside it ellipsises instead
-   („NR. / 4" was measured at 390px with a two-range meta). */
-:root[data-design="programmheft"] .ph-card__nr { flex: none; white-space: nowrap; }
+/* The meta leads the line and the expansion pill, when there is one, closes it
+   (space-between with a single child is flex-start, so a pill-less card stays
+   left-aligned). No running number since #1507; the ellipsis stays only as a
+   fallback for a really long meta. */
 :root[data-design="programmheft"] .ph-card__kicker .game-card__meta {
   min-width: 0;
   overflow: hidden;

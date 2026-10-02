@@ -1842,8 +1842,6 @@ I18N.ko = {
   'badges.card.next': '다음 단계 {n}',
   'badges.card.tiers': '단계',
   'badges.evergreen.lineGame': '{game} {n}번 플레이',
-  // A Regal card's running number in Das Programmheft (#1373, P3.3).
-  'regal.cardNo': '{n}번',
   // Die Brücke's Regal and Spielepass (#1239, B16.2/B13.4).
   'regal.lettersBruecke': '글자로 이동',
   'regal.batchShownBruecke': '{total}개 중 {shown}개 불러옴',

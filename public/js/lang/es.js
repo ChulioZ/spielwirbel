@@ -1963,8 +1963,6 @@ I18N.es = {
   'badges.card.next': 'Siguiente nivel: {n}',
   'badges.card.tiers': 'Niveles',
   'badges.evergreen.lineGame': '{game} jugado {n} veces',
-  // A Regal card's running number in Das Programmheft (#1373, P3.3).
-  'regal.cardNo': 'N.º {n}',
   // Die Brücke's Regal and Spielepass (#1239, B16.2/B13.4).
   'regal.lettersBruecke': 'Saltar a una letra',
   'regal.batchShownBruecke': '{shown} de {total} cargados',
