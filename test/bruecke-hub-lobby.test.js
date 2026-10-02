@@ -211,6 +211,9 @@ test('Brücke lobby: the greeting and the kicker, the question line unchanged', 
   assert.equal(dom.app.querySelector('.lobby-head h1').textContent, 'Willkommen zurück an Bord.');
   assert.equal(dom.app.querySelector('.lobby-head__sub').textContent, 'Welche Runde spielt heute?');
   assert.equal(dom.document.querySelector('.topbar__context').textContent, 'Flotte / Übersicht');
+  // The status line keys on this mark, not on `.lobby-head`, which every
+  // account screen has too (#1246).
+  assert.ok(dom.app.querySelector('.lobby-head.lobby-head--home'), 'the lobby head lost its home mark');
 });
 
 test('Brücke lobby: a running vote is an „Eingehendes Signal" linking to the session', async (t) => {
@@ -226,6 +229,7 @@ test('Brücke lobby: a running vote is an „Eingehendes Signal" linking to the 
 test('Klassisch lobby is untouched: its greeting, no kicker, the ticket', async (t) => {
   const dom = await lobby(t, null, [summary({ openSessions: [{ id: 's1', stage: 'voting', at: ago(0) }] })]);
   assert.equal(dom.app.querySelector('.lobby-head h1').textContent, 'Schön, dass ihr da seid.');
+  assert.equal(dom.app.querySelector('.lobby-head--home'), null, 'Klassisch markup must not change');
   assert.equal(dom.document.querySelector('.topbar__context').textContent, '');
   assert.equal(dom.app.querySelector('.bruecke-notice'), null);
 });

@@ -9,15 +9,19 @@
    The catalogue is the ★ core set of docs/design/handover-abzeichen-2026-09-26.md
    §2 with the decisions of docs/design/pruefung-abzeichen-2026-09-26.md finding 4:
    21 entries (9 member · 8 round · 4 account — Rückblick geteilt was dropped:
-   sharing a recap stores nothing, so it could never be earned), Stammgast and the round's
-   Sessions with four tiers, everything else three at most, and exactly three
-   secrets (Comeback · Einstimmig · Unentschieden).
+   sharing a recap stores nothing, so it could never be earned) and exactly three
+   secrets (Comeback · Einstimmig · Unentschieden). The first release capped the
+   ladders at three tiers (four for Stammgast and the round's Sessions); #1463
+   lifted that cap on 2026-10-01. The rule since: every COUNT is a tier ladder,
+   as long as its top is still plausible to reach, and only the yes/no marks
+   (Erster Sieg, Alles gespielt, Teamgeist, Gegründet, Durchgespielt and the
+   three secrets) stay single — a tier „1" would read „Teamgeist 1".
 
    The public API — the rendering slices (#1388 Klassisch, #1389 the account
    tier, the design skins) build on these and nothing else:
 
      roundBadges(round, opts)   -> { round: [entry], members: { [mid]: [entry] } }
-     newSince(round, sid, opts) -> [{ key, holder, memberId, tier, sessionId, at }]
+     newSince(round, sid, opts) -> [{ key, holder, memberId, tier, sessionId, at, gameId? }]
      accountBadges(stats, createdAt, now) -> [entry]
      BADGE_CATALOGUE            -> the 21 definitions, in display order
 
@@ -27,9 +31,12 @@
        tier,      // the highest tier reached (tiered entries only), else null
        count, of, // progress toward the NEXT threshold; null when nothing to count
        earnedAt,  // { sessionId, at } of the latest earning, else null
-       history,   // every earning, oldest first: [{ tier, sessionId, at }]
+       history,   // every earning, oldest first: [{ tier, sessionId, at, gameId? }]
        isNew,     // an earning came from the round's latest finished session
-       gameId }   // Dauerbrenner only: the game that carries the count
+       gameId }   // Dauerbrenner only: the game holding the running best, i.e.
+                  // the one the count belongs to. Each of its history entries
+                  // carries its OWN `gameId` too — the game that crossed that
+                  // tier, which a later game overtaking it does not rewrite.
    `sessionId` is null for the two round entries no session produces (Regal,
    Durchgespielt) and for the account tier.
 
@@ -60,19 +67,19 @@ const BADGE_DAY_MS = 24 * 60 * 60 * 1000;
 // added to the shelf.
 const BADGE_EXPLORER_DAYS = 7;
 // Große Runde: people at the table, guests included (handover B6).
-const BADGE_BIG_TABLE = 8;
+const BADGE_BIG_TABLE_TIERS = [8, 12, 16];
 // Comeback: contested sessions without a win before the one that ends it.
 const BADGE_COMEBACK_DROUGHT = 10;
 // Dauerbrenner: plays of one game.
-const BADGE_EVERGREEN_PLAYS = 10;
+const BADGE_EVERGREEN_TIERS = [10, 25, 50];
 
 /* Each definition: key (code identifier; the strings live under badges.<key>.*),
    holder, glyph (a class declared in public/fonts/tabler-icons.css — the four
-   X17 sheets' choices), `tiers` for a tiered entry OR `goal` for a single
-   count threshold, `n` for a yes/no entry whose condition line still states a
-   number (Comeback, Große Runde) — each is the {n} of the condition line —
-   `secret`, `counted` (whether an unearned entry shows „7 / 10"), and
-   `measure`, the condition.
+   X17 sheets' choices), `tiers` for a counted threshold, `n` for a yes/no
+   entry whose condition line still states a number (Comeback) — each is the {n}
+   of the condition line — `secret`, `counted` (whether an unearned entry shows
+   „7 / 10"; Serienheld and Große Runde are not, since a best run or a table
+   size is no progress you accumulate), and `measure`, the condition.
 
    measure(ctx, subject) -> { steps: [{ sessionId, at, count }], count, of?, gameId? }
    `count` is the current running value; `of` overrides the progress denominator
@@ -80,27 +87,27 @@ const BADGE_EVERGREEN_PLAYS = 10;
 const BADGE_CATALOGUE = [
   // --- A. a member of a round ---------------------------------------------
   { key: 'firstWin', holder: 'member', glyph: 'ti-crown', measure: (c, mid) => badgeFirst(c.sessions.filter((s) => badgeWon(s, mid))) },
-  { key: 'regular', holder: 'member', glyph: 'ti-star', tiers: [10, 25, 50, 100], counted: true, measure: (c, mid) => badgeRunning(c.joined(mid)) },
-  { key: 'streak', holder: 'member', glyph: 'ti-bolt', goal: 3, measure: badgeMeasureStreak },
-  { key: 'versatile', holder: 'member', glyph: 'ti-dice-5', tiers: [3, 6, 10], counted: true, measure: badgeMeasureVersatile },
+  { key: 'regular', holder: 'member', glyph: 'ti-star', tiers: [10, 25, 50, 100, 250], counted: true, measure: (c, mid) => badgeRunning(c.joined(mid)) },
+  { key: 'streak', holder: 'member', glyph: 'ti-bolt', tiers: [3, 5, 7], measure: badgeMeasureStreak },
+  { key: 'versatile', holder: 'member', glyph: 'ti-dice-5', tiers: [3, 6, 10, 20], counted: true, measure: badgeMeasureVersatile },
   { key: 'allPlayed', holder: 'member', glyph: 'ti-checkbox', counted: true, measure: badgeMeasureAllPlayed },
   { key: 'teamPlayer', holder: 'member', glyph: 'ti-users', measure: badgeMeasureTeamPlayer },
-  { key: 'host', holder: 'member', glyph: 'ti-home-heart', goal: 10, counted: true, measure: badgeMeasureHost },
+  { key: 'host', holder: 'member', glyph: 'ti-home-heart', tiers: [10, 25, 50], counted: true, measure: badgeMeasureHost },
   { key: 'comeback', holder: 'member', glyph: 'ti-rocket', n: BADGE_COMEBACK_DROUGHT, secret: true, measure: badgeMeasureComeback },
-  { key: 'explorer', holder: 'member', glyph: 'ti-world-search', goal: 5, counted: true, measure: badgeMeasureExplorer },
+  { key: 'explorer', holder: 'member', glyph: 'ti-world-search', tiers: [5, 10, 25], counted: true, measure: badgeMeasureExplorer },
   // --- B. the round ---------------------------------------------------------
   { key: 'founded', holder: 'round', glyph: 'ti-flag', measure: (c) => badgeFirst(c.sessions) },
-  { key: 'sessions', holder: 'round', glyph: 'ti-calendar', tiers: [10, 50, 100, 250], counted: true, measure: (c) => badgeRunning(c.sessions) },
-  { key: 'shelf', holder: 'round', glyph: 'ti-archive', tiers: [25, 50, 100], counted: true, measure: badgeMeasureShelf },
+  { key: 'sessions', holder: 'round', glyph: 'ti-calendar', tiers: [10, 25, 50, 100, 250, 500], counted: true, measure: (c) => badgeRunning(c.sessions) },
+  { key: 'shelf', holder: 'round', glyph: 'ti-archive', tiers: [25, 50, 100, 200], counted: true, measure: badgeMeasureShelf },
   { key: 'unanimous', holder: 'round', glyph: 'ti-heart', secret: true, measure: (c) => badgeFirst(c.sessions.filter((s) => badgeUnanimous(c, s))) },
   { key: 'tie', holder: 'round', glyph: 'ti-scale', secret: true, measure: (c) => badgeFirst(c.sessions.filter((s) => badgeTiedVote(c, s))) },
-  { key: 'bigTable', holder: 'round', glyph: 'ti-confetti', n: BADGE_BIG_TABLE, measure: (c) => badgeFirst(c.sessions.filter((s) => c.deps.sessionPeople(c.round, s).length >= BADGE_BIG_TABLE)) },
+  { key: 'bigTable', holder: 'round', glyph: 'ti-confetti', tiers: BADGE_BIG_TABLE_TIERS, measure: badgeMeasureBigTable },
   { key: 'completed', holder: 'round', glyph: 'ti-circle-check', measure: badgeMeasureCompleted },
-  { key: 'evergreen', holder: 'round', glyph: 'ti-flame', goal: BADGE_EVERGREEN_PLAYS, counted: true, measure: badgeMeasureEvergreen },
+  { key: 'evergreen', holder: 'round', glyph: 'ti-flame', tiers: BADGE_EVERGREEN_TIERS, counted: true, measure: badgeMeasureEvergreen },
   // --- C. the account, across all its rounds --------------------------------
-  { key: 'accountSessions', holder: 'account', glyph: 'ti-cards', tiers: [25, 100, 500], counted: true, measure: (c) => badgeTotal(c.stats.sessions) },
-  { key: 'accountWins', holder: 'account', glyph: 'ti-trophy', tiers: [10, 50], counted: true, measure: (c) => badgeTotal(c.stats.wins) },
-  { key: 'accountRounds', holder: 'account', glyph: 'ti-world', tiers: [2, 5], counted: true, measure: (c) => badgeTotal(c.stats.rounds) },
+  { key: 'accountSessions', holder: 'account', glyph: 'ti-cards', tiers: [25, 100, 250, 500, 1000], counted: true, measure: (c) => badgeTotal(c.stats.sessions) },
+  { key: 'accountWins', holder: 'account', glyph: 'ti-trophy', tiers: [10, 25, 50, 100, 250], counted: true, measure: (c) => badgeTotal(c.stats.wins) },
+  { key: 'accountRounds', holder: 'account', glyph: 'ti-world', tiers: [2, 3, 5], counted: true, measure: (c) => badgeTotal(c.stats.rounds) },
   { key: 'accountYears', holder: 'account', glyph: 'ti-hourglass', tiers: [1, 2, 3], counted: true, measure: badgeMeasureYears },
 ];
 
@@ -137,8 +144,9 @@ function badgeIsContest(c, s) {
 
 // --- A. member conditions ------------------------------------------------------
 
-// Three contested wins in a row among the sessions the member joined. `count`
-// is the longest run so far; a shared win (several winnerIds) still counts —
+// Contested wins in a row among the sessions the member joined. `count` is the
+// longest run so far, one step per new best, so 5 and 7 are dated at the
+// session that extended the best run to them; a shared win (several winnerIds) still counts —
 // the mark is about this member, not about winning alone.
 function badgeMeasureStreak(c, mid) {
   const steps = [];
@@ -243,14 +251,29 @@ function badgeMeasureShelf(c) {
   };
 }
 
+// The most people at one table so far — a running maximum, one step per new
+// best (Serienheld's shape), so 12 and 16 are dated at the first session that
+// size. Guests count: the mark is about the evening, not about a seat.
+function badgeMeasureBigTable(c) {
+  const steps = [];
+  let best = 0;
+  c.sessions.forEach((s) => {
+    const n = c.deps.sessionPeople(c.round, s).length;
+    if (n > best) { best = n; steps.push(badgeStep(s, best)); }
+  });
+  return { steps, count: best };
+}
+
 // The first game marked durchgespielt (#250) that still is.
 function badgeMeasureCompleted(c) {
   const at = c.round.games.filter((g) => g.completed && g.completedAt).map((g) => g.completedAt).sort()[0];
   return at ? { steps: [{ sessionId: null, at, count: 1 }], count: 1 } : { steps: [], count: 0 };
 }
 
-// One game played `goal` times. `gameId` names the game the count belongs to:
-// the first one to reach the goal once earned, else today's most-played.
+// One game played 10 · 25 · 50 times. Each step carries the game that set the
+// new best, so every tier names the game that crossed IT (g1 at 10, g2 at 25
+// once it overtook g1); `gameId` is the game holding the running best, which
+// is the one the count and the condition line talk about.
 function badgeMeasureEvergreen(c) {
   const plays = {};
   const steps = [];
@@ -261,9 +284,8 @@ function badgeMeasureEvergreen(c) {
     const n = (plays[s.chosenGameId] = (plays[s.chosenGameId] || 0) + 1);
     if (n <= best) return;
     best = n;
-    // Frozen once the goal is reached: the mark names the game that earned it.
-    if (best <= BADGE_EVERGREEN_PLAYS) gameId = s.chosenGameId;
-    steps.push(badgeStep(s, best));
+    gameId = s.chosenGameId;
+    steps.push({ ...badgeStep(s, best), gameId });
   });
   return { steps, count: best, gameId };
 }
@@ -327,8 +349,8 @@ function badgeMeasureYears(c) {
 
 // --- evaluation ------------------------------------------------------------------
 
-// The thresholds an entry is earned at: its tiers, its single goal, or 1.
-const badgeThresholds = (def) => def.tiers || [def.goal || 1];
+// The thresholds an entry is earned at: its tiers, or 1 for a yes/no mark.
+const badgeThresholds = (def) => def.tiers || [1];
 
 /* One definition + its measurement -> one public entry. Generic on purpose:
    every condition above only reports counts, and this is the one place that
@@ -337,7 +359,10 @@ function badgeEvaluate(def, m, latestId) {
   const history = [];
   badgeThresholds(def).forEach((th) => {
     const hit = m.steps.find((st) => st.count >= th);
-    if (hit) history.push({ tier: def.tiers ? th : null, sessionId: hit.sessionId, at: hit.at });
+    if (!hit) return;
+    const h = { tier: def.tiers ? th : null, sessionId: hit.sessionId, at: hit.at };
+    if (hit.gameId !== undefined) h.gameId = hit.gameId;
+    history.push(h);
   });
   const earned = history.length > 0;
   const next = badgeThresholds(def).find((th) => m.count < th);
@@ -430,7 +455,9 @@ function newSince(round, sessionId, opts) {
   const out = [];
   const collect = (entries, memberId) => entries.forEach((e) => e.history.forEach((h) => {
     if (sessionId && h.sessionId === sessionId) {
-      out.push({ key: e.key, holder: e.holder, memberId, tier: h.tier, sessionId: h.sessionId, at: h.at });
+      const x = { key: e.key, holder: e.holder, memberId, tier: h.tier, sessionId: h.sessionId, at: h.at };
+      if (h.gameId !== undefined) x.gameId = h.gameId;
+      out.push(x);
     }
   }));
   Object.keys(all.members).forEach((mid) => collect(all.members[mid], mid));
@@ -452,6 +479,6 @@ function accountBadges(stats, createdAt, now) {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     BADGE_CATALOGUE, roundBadges, newSince, accountBadges,
-    BADGE_EXPLORER_DAYS, BADGE_BIG_TABLE, BADGE_COMEBACK_DROUGHT, BADGE_EVERGREEN_PLAYS,
+    BADGE_EXPLORER_DAYS, BADGE_BIG_TABLE_TIERS, BADGE_COMEBACK_DROUGHT, BADGE_EVERGREEN_TIERS,
   };
 }

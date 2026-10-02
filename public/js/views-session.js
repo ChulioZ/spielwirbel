@@ -368,18 +368,20 @@ function showStartSession(round, prefill) {
      sheet's set-the-whole-pot end frame) — and only the presentation differs:
      its entering rows get `is-set` and a stagger index capped at 9 instead of
      the throw's mark and direction, and the rows are SET in from the left
-     (programmheft.css). */
+     (programmheft.css). Die Brücke's B10.2 (#1248) takes the same gate and the
+     same `is-set` mark — its titles drive in from below (bruecke.css). */
+  const setLook = ph || bruecke;
   let potSeen = null;
   const potThrows = (games) => {
     const marks = new Map();
-    if ((tisch || ph) && potSeen) games.forEach((g) => { if (!potSeen.has(g.id)) marks.set(g.id, marks.size); });
+    if ((tisch || setLook) && potSeen) games.forEach((g) => { if (!potSeen.has(g.id)) marks.set(g.id, marks.size); });
     potSeen = new Set(games.map((g) => g.id));
     return marks;
   };
-  const throwClass = (marks, g) => (marks.has(g.id) ? (ph ? ' is-set' : ' is-thrown') : '');
-  const throwAttr = (marks, g) => (marks.has(g.id) && !ph ? ` data-throw="${marks.get(g.id) % 5}"` : '');
+  const throwClass = (marks, g) => (marks.has(g.id) ? (setLook ? ' is-set' : ' is-thrown') : '');
+  const throwAttr = (marks, g) => (marks.has(g.id) && !setLook ? ` data-throw="${marks.get(g.id) % 5}"` : '');
   const throwDecl = (marks, g) => (!marks.has(g.id) ? ''
-    : ph ? `--set-i:${Math.min(marks.get(g.id), 9)}` : `--throw-i:${marks.get(g.id)}`);
+    : setLook ? `--set-i:${Math.min(marks.get(g.id), 9)}` : `--throw-i:${marks.get(g.id)}`);
   const updateHint = () => {
     const games = pool();
     const marks = potThrows(games);
@@ -407,7 +409,12 @@ function showStartSession(round, prefill) {
 
     // Tile panel (860px up). An empty pool needs its own line: a grid with no
     // tiles reads as a broken panel rather than as "nothing matches yet".
+    // Die Brücke counts the numeral to its new value (B10.2, #1248). What the
+    // old numeral SHOWS is read before it is replaced, so a count that changes
+    // mid-run carries on from where it stands; the first render has none.
+    const shownBefore = bruecke ? poolTitle.querySelector('.pool-count') : null;
     poolTitle.innerHTML = potCount(games.length);
+    if (shownBefore) brueckeCountPool(poolTitle.querySelector('.pool-count'), Number(shownBefore.textContent), games.length);
     poolGrid.innerHTML = games.length
       ? games
           .map(
@@ -1291,6 +1298,9 @@ function startVoting(round, session, games, people, opts = {}) {
        this card", so arriving by Back, a language switch or the first card never
        tips. The motion is tisch.css's; nothing here waits for it. */
     if (designIs('tisch') && wanted && wanted.kind === 'title') card.classList.add('is-tipped');
+    // Die Brücke's B10.3 (#1248) under the same gate: the card drives in from
+    // below (bruecke.css).
+    if (designIs('bruecke') && wanted && wanted.kind === 'title') card.classList.add('is-incoming');
 
     // Info affordance (#717): the provider metadata behind a small ⓘ in the
     // title line, so the height-budgeted card gains no extra row
@@ -1634,6 +1644,10 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     // (`--print-i` below). Only the reveal — never a cold load or a Chronik visit.
     if (reveal) head.setAttribute('data-print', '');
   }
+  // Die Brücke's B10.4 „Entschlüsseln" (#1248): the reveal decrypts the
+  // headline, then the Tafel drives in row by row (`--print-i` below). Only the
+  // reveal — never a cold load or a Chronik visit.
+  if (brueckeLook && reveal) head.setAttribute('data-decrypt', '');
 
   // „Teilen": hand the group chat what this screen says, as plain text (#526).
   // Hidden outright where neither API exists — which is a real case, not a
@@ -1986,8 +2000,9 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     // together, the short ones land first and the winner's completes last.
     const raceVar = reveal && r.count ? `--dur:${(0.5 + r.shown * 0.32).toFixed(2)}s;` : '';
     // Das Programmheft prints the revealed Tafel top first (P10.4); capped at
-    // the tenth row so any Tafel is printed inside the sheet's 1.8s.
-    const printVar = reveal && phLook ? `--print-i:${Math.min(i, 9)};` : '';
+    // the tenth row so any Tafel is printed inside the sheet's 1.8s. Die
+    // Brücke's decrypted Tafel drives in on the same index (B10.4, #1248).
+    const printVar = reveal && (phLook || brueckeLook) ? `--print-i:${Math.min(i, 9)};` : '';
     const rankClass = r.place && r.place <= 3 ? ` trow__rank--${r.place}` : '';
     const row = tischLook ? composedTrow({
       row: r, hasVotes, bars, rankClass, imgStyle, fallback,

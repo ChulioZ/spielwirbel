@@ -153,7 +153,10 @@ test('Tisch: every poster prints wordmark, tagline, sentence, ritual words and i
     // The name is a heading, badge inside it.
     assert.equal(poster.querySelector('.design-poster__name').tagName, 'H3');
   }
-  assert.equal(klassisch.querySelector('.design-card__badge').textContent, T('design.klassisch.badge'));
+  // The only badge is the worn design's „picked" one — Klassisch carries none
+  // since #1445 („Wie bisher" was written for the flip).
+  assert.equal(klassisch.querySelector('.design-card__badge'), null, 'Klassisch carries no badge');
+  assert.equal(tisch.querySelector('.design-card__badge').textContent, T('design.poster.picked'));
 
   // The design worn is marked, and its button says so; the other offers itself.
   assert.ok(tisch.classList.contains('is-on'));
@@ -286,12 +289,11 @@ test('every poster key a registry row names exists in every locale', () => {
   assert.ok(checked >= locales.length * 10, `anti-vacuous: only ${checked} keys checked`);
 });
 
-test('Klassisch („Wie bisher") still heads the posters, though the face moved (#1202)', (t) => {
+test('Klassisch still heads the posters, though the face moved (#1202), unbadged (#1445)', (t) => {
   const { sheet } = tischChooser(t);
   const first = sheet.querySelector('.design-poster');
   assert.equal(first.querySelector('.design-poster__pick').dataset.design, CLASSIC_DESIGN);
-  assert.equal(first.querySelector('.design-card__badge').textContent, 'Wie bisher',
-    'the badge names the way BACK, not the face');
+  assert.equal(first.querySelector('.design-card__badge'), null, 'Klassisch carries no badge');
 });
 
 /* ---------------------------------- the CSS ---------------------------------- */

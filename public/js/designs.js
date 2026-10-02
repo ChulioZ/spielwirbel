@@ -516,10 +516,9 @@ const DESIGN_CHOOSER_REVISION = '2026-09-22';
 const FACE_DESIGN = 'tisch';
 
 /* The design that is always there to go back to: Klassisch, the look Spielwirbel
-   started with („Wie bisher", operator decision 2026-09-19). A fixed id rather
-   than FACE_DESIGN, which names the face and moved at the flip — the chooser's
-   „Wie bisher" badge and the switch-back count (lib/account-design.js) both mean
-   THIS design, whatever the face is. */
+   started with (selectable for good, operator decision 2026-09-19). A fixed id
+   rather than FACE_DESIGN, which names the face and moved at the flip — the
+   name means THIS design wherever it is used, whatever the face is. */
 const CLASSIC_DESIGN = 'klassisch';
 
 /* The ink a design writes ON its markers, and the one place the default lives.

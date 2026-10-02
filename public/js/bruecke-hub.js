@@ -171,6 +171,20 @@ function brueckeStatus() {
   if (bar) bar.setAttribute('data-status', t('bruecke.status'));
 }
 
+/* „← Zurück zu meinen Runden" (B14, #1246): the account screens — the
+   Freundeskreis, the inbox, „Was ist neu", the statistics — are not round
+   screens, so they wear no Abschnittsleiste, and B14 gives them this line
+   where a round screen has its five links. It is a DESTINATION, not a history
+   step: a real <a href="/"> to the lobby, which is why it is not a
+   `.back-row` (.claude/rules/persistent-chrome-defines-the-main-pages.md —
+   these four are main pages and keep no back control; test/back-control.test.js
+   counts `.back-row` on them). The 24px target is bruecke.css's. */
+function brueckeUpLink() {
+  const row = h(`<div class="bruecke-up"><a class="bruecke-up__link"><i class="ti ti-arrow-left" aria-hidden="true"></i>${esc(t('common.backToRounds'))}</a></div>`);
+  navLink(row.querySelector('a'), '/', () => showHome());
+  return row;
+}
+
 /* A session still running, as Die Brücke's notice card (B2.1): the kicker
    „Eingehendes Signal" over the app's own title — „Abstimmung läuft · {round}"
    while it is voted on, the game (or „wird noch entschieden") once it waits for
