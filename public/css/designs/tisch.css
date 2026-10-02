@@ -5201,10 +5201,10 @@
   box-shadow: 0 0 0 2px var(--gold-soft), var(--shadow-2);
 }
 
-/* The „Wie bisher" badge on Klassisch's poster. Its ground follows --surface,
-   so it is wood in the Konto section and paper inside the chooser sheet — but
-   its ink is --brand-strong, which is brass lifted 13% toward white and is
-   therefore light in BOTH. On paper that measured 1.62:1.
+/* The „Ausgewählt" badge on the picked poster in the chooser sheet. Its ground
+   follows --surface, so it is paper there — but its ink is --brand-strong,
+   which is brass lifted 13% toward white and is therefore light on paper,
+   where it measured 1.62:1.
 
    --ink rather than a gold: it is the one ink the overlay already re-points,
    so the badge is legible on either ground without a second rule, and the
