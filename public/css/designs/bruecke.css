@@ -2562,6 +2562,48 @@
   :root[data-design="bruecke"] .rec-card__body { min-width: 0; flex-basis: 100%; }
 }
 
+/* ===== #1422 — Pokale: the trophy cards as B3.4's plates ===== */
+/* Source: docs/design/bruecke/Bruecke-B3-Runde-Desktop.dc.html (B3.4) and
+   Bruecke-B6-Phone-Rest.dc.html (B6.2). Markup: views-pokale.js adds
+   `.pokale-cards--plates` to the cards row under Brücke only. The four cards
+   are every design's four, in the same order with the same covers and
+   „Jetzt spielen" launchers: a design owns its layout, not its content
+   (operator decision in the #1489 review, 2026-10-02 — the sheet's three
+   plates were dropped, two of them being statistics no other design shows).
+
+   A plate is the sheet's: the notation eyebrow (#1245 already sets it in
+   mono), the value as a display line in capitals, one sub line, no icon; the
+   cover leads where there is one (#979). The value is --display-s at every
+   width, not the plates' --display-m: a plate had the column's full width,
+   a card shares it with a 64px cover and the launcher, and at 26px in the
+   340px column a plain title broke mid-word („CARCASSONN / E", measured in
+   headless Chrome at 1440px). One size for all four keeps the stack even.
+   One column at every width: beside the board from 1280px
+   (#1245's split), under it below. Colour rules are dark-gated; geometry is
+   not. */
+:root[data-design="bruecke"] .pokale-cards--plates { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+:root[data-design="bruecke"] .pokale-cards--plates > .pokale-card { gap: 5px; padding: 16px 18px; }
+:root[data-design="bruecke"] .pokale-cards--plates > .pokale-card--cover { gap: 5px 14px; }
+:root[data-design="bruecke"] .pokale-cards--plates .pokale-card__icon,
+:root[data-design="bruecke"] .pokale-cards--plates .pokale-card__label .ti { display: none; }
+:root[data-design="bruecke"] .pokale-cards--plates .pokale-card__label { margin-top: 0; }
+:root[data-design="bruecke"] .pokale-cards--plates .pokale-card__value,
+:root[data-design="bruecke"] .pokale-cards--plates .pokale-game__title {
+  font-size: var(--display-s);
+  line-height: 1.1;
+  letter-spacing: var(--track-display);
+  text-transform: uppercase;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .pokale-cards--plates > .pokale-card {
+  border-color: var(--line);
+  background: var(--surface);
+  box-shadow: none;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .pokale-cards--plates .pokale-card__sub { font-weight: 400; color: var(--ink-2); }
+@media (max-width: 560px) {
+  :root[data-design="bruecke"] .pokale-cards--plates > .pokale-card { padding: 12px; }
+}
+
 /* ===== #1242 — Anmelden, Konto anlegen, Passkey, Konto, Designwahl ===== */
 /* Docs: docs/design/bruecke/Bruecke-B5-Konto.dc.html (B5.1 Anmelden, B5.2
    Design wählen, B5.3 the same list on a phone, B5.4 Konto). Markup is the
