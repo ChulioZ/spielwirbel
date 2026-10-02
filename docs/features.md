@@ -399,7 +399,9 @@ What the app does, in detail. For a short overview see the
     sessions, a game that keeps coming back, a full year of monthly play, and
     ten secret ones that show only a padlock until earned (41 entries since
     issue #1464). Where order or a time window matters, the tables of one split
-    session count as one evening. Each is a button that opens a card (a popover
+    session count as one evening. A mark that can no longer be earned is not
+    shown at all — Gründungsmitglied for anyone who missed the round's first
+    evening. Each is a button that opens a card (a popover
     on a wide screen, a sheet on a phone) with every tier and when it was
     reached. Nothing is stored: they are derived from the sessions on every
     render, so deleting a session removes what it earned — and a tier added to

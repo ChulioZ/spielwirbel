@@ -78,7 +78,13 @@ test('Gründungsmitglied: at the round\'s first evening; a later joiner is not, 
   const ss = [sess(0), sess(24, { memberIds: ['a', 'b', 'c'] })];
   const members = [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }, { id: 'c', name: 'C' }];
   assert.equal(mine(mkRound({ members, sessions: ss }), 'founder').earnedAt.sessionId, ss[0].id);
-  assert.equal(mine(mkRound({ members, sessions: ss }), 'founder', 'c').state, 'locked');
+  // Cleo missed the first evening: she can never earn it, so it is not shown at all.
+  assert.equal(mine(mkRound({ members, sessions: ss }), 'founder', 'c'), undefined);
+  assert.equal(all(mkRound({ members, sessions: ss })).members.c.length, 17, 'her row simply has one entry fewer');
+  // Before any evening it is open to everyone.
+  assert.equal(mine(mkRound({ members }), 'founder', 'c').state, 'locked');
+  // Deleting the first session replays from the next: Cleo was at that one.
+  assert.equal(mine(mkRound({ members, sessions: ss.slice(1) }), 'founder', 'c').earnedAt.sessionId, ss[1].id);
   const tables = split(0, [{ memberIds: ['a'] }, { memberIds: ['b'] }]);
   assert.equal(mine(mkRound({ sessions: tables }), 'founder', 'b').earnedAt.sessionId, tables[1].id, 'dated at her own table');
 });

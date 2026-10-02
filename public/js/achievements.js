@@ -105,9 +105,14 @@ const BADGE_TIDE_MIN_GAMES = 3;
    size is no progress you accumulate), `lineOne` where the line has a singular
    form for n = 1 (the two year counts), and `measure`, the condition.
 
-   measure(ctx, subject) -> { steps: [{ sessionId, at, count }], count, of?, gameId? }
+   measure(ctx, subject) -> { steps: [{ sessionId, at, count }], count, of?, gameId?, closed? }
    `count` is the current running value; `of` overrides the progress denominator
-   where the target is not a threshold (Alles gespielt: the shelf's size). */
+   where the target is not a threshold (Alles gespielt: the shelf's size).
+   `closed` says the entry can NEVER be earned any more (Gründungsmitglied once
+   the first evening has passed without the member): an unearned closed entry is
+   left out of its holder's list altogether, rather than shown as an open tile
+   with a chance it does not have (operator, 2026-10-02). It is derived like
+   everything else, so deleting the first session can reopen it. */
 const BADGE_CATALOGUE = [
   // --- A. a member of a round ---------------------------------------------
   { key: 'firstWin', holder: 'member', glyph: 'ti-crown', measure: (c, mid) => badgeFirst(c.sessions.filter((s) => badgeWon(s, mid))) },
@@ -325,11 +330,11 @@ function badgeMeasureExplorer(c, mid) {
 }
 
 // At the table of the round's first evening — dated at the member's own table
-// when that evening was split.
+// when that evening was split. Once that evening exists without them, closed.
 function badgeMeasureFounder(c, mid) {
   const ev = c.evenings[0];
   const s = ev && ev.sessions.find((x) => c.isJoined(mid, x));
-  return badgeFirst(s ? [s] : []);
+  return ev && !s ? { ...badgeFirst([]), closed: true } : badgeFirst(s ? [s] : []);
 }
 
 // Sessions the member joined in which they gave the PLAYED game the top rating
@@ -563,10 +568,12 @@ function badgeAgainstTheTide(c, s) {
 // The thresholds an entry is earned at: its tiers, or 1 for a yes/no mark.
 const badgeThresholds = (def) => def.tiers || [1];
 
-/* One definition + its measurement -> one public entry. Generic on purpose:
+/* One definition + its measurement -> one public entry, or null for an
+   unearned entry that can no longer be earned (`closed`). Generic on purpose:
    every condition above only reports counts, and this is the one place that
    turns them into states, tiers, dates and progress. */
 function badgeEvaluate(def, m, latestId) {
+  if (m.closed && !m.steps.length) return null;
   const history = [];
   badgeThresholds(def).forEach((th) => {
     const hit = m.steps.find((st) => st.count >= th);
@@ -663,7 +670,8 @@ function roundBadges(round, opts) {
   const latestId = latest ? latest.id : null;
   const of = (holder, subject) => BADGE_CATALOGUE
     .filter((d) => d.holder === holder)
-    .map((d) => badgeEvaluate(d, d.measure(c, subject), latestId));
+    .map((d) => badgeEvaluate(d, d.measure(c, subject), latestId))
+    .filter(Boolean);
   const members = {};
   c.round.members.forEach((m) => { members[m.id] = of('member', m.id); });
   return { round: of('round'), members };
