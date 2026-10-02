@@ -34,28 +34,36 @@ function mount(t, sessions) {
   });
   return { r, dom };
 }
+/* Four earlier nights Ben played with a guest, Anna absent: they take the
+   foundings (Gründungsmitglied, Gegründet) off the night under test, so its
+   finish earns exactly ONE mark — the fifth night with a guest, Offenes Haus 5.
+   Anna's absence keeps her win there free of Revanche; Ben, who lost the fourth
+   night's Catan, earns one with his. */
+const GUEST = [{ id: 'q1', name: 'Quinn' }];
+const before = () => [1, 2, 3, 4].map((d) => night(`p${d}`, d, { memberIds: ['m2'], guests: GUEST, winnerIds: [] }));
+const tonight = (over) => night('s1', 5, { guests: GUEST, ...over });
 const chip = (dom, name) => [...dom.app.querySelectorAll('.winner-chip')].find((c) => c.textContent.includes(name));
 
 test('a cold load of a finished session shows its marks still — nothing is fresh', async (t) => {
-  const { r, dom } = mount(t, [night('s1', 1)]);
-  await dom.call('showResults', r, r.sessions[0], r.games, false);
-  assert.deepEqual(marks(dom), ['firstWin', 'founded']);
+  const { r, dom } = mount(t, [...before(), tonight()]);
+  await dom.call('showResults', r, r.sessions[4], r.games, false);
+  assert.deepEqual(marks(dom), ['firstWin', 'openHouse']);
 });
 
 test('recording the finish makes its marks fresh; a winner tap adds only what it earned', async (t) => {
-  const { r, dom } = mount(t, [night('s1', 1, { finished: false, winnerIds: [] })]);
-  await dom.call('showResults', r, r.sessions[0], r.games, false);
+  const { r, dom } = mount(t, [...before(), tonight({ finished: false, winnerIds: [] })]);
+  await dom.call('showResults', r, r.sessions[4], r.games, false);
   assert.equal(moment(dom).hidden, true, 'nothing is earned before the finish');
 
   const finish = [...dom.app.querySelectorAll('.tisch button')].find((b) => /Als gespielt markieren/.test(b.textContent));
   assert.ok(finish, 'the table offers the finish');
   finish.click();
-  await waitFor(() => marks(dom).length === 1, { label: 'the finish earns the founding' });
-  assert.deepEqual(marks(dom), ['founded*'], 'the mark the finish earned arrives fresh');
+  await waitFor(() => marks(dom).length === 1, { label: 'the finish earns Offenes Haus' });
+  assert.deepEqual(marks(dom), ['openHouse*'], 'the mark the finish earned arrives fresh');
 
   chip(dom, 'Anna').click();
   await waitFor(() => marks(dom).length === 2, { label: 'the tap earns the first win' });
-  assert.deepEqual(marks(dom), ['firstWin*', 'founded'], 'the founding was shown — it must not replay');
+  assert.deepEqual(marks(dom), ['firstWin*', 'openHouse'], 'Offenes Haus was shown — it must not replay');
 
   chip(dom, 'Ben').click();
   await waitFor(() => marks(dom).length === 3 || moment(dom).querySelector('.badge-moment__more'), { label: 'Ben’s win' });
@@ -64,15 +72,15 @@ test('recording the finish makes its marks fresh; a winner tap adds only what it
 });
 
 test('a mark un-earned and earned again does not replay on the same screen', async (t) => {
-  const { r, dom } = mount(t, [night('s1', 1, { winnerIds: [] })]);
-  await dom.call('showResults', r, r.sessions[0], r.games, false);
+  const { r, dom } = mount(t, [...before(), tonight({ winnerIds: [] })]);
+  await dom.call('showResults', r, r.sessions[4], r.games, false);
   [...dom.app.querySelectorAll('.tisch button')].find((b) => b.textContent.trim() === dom.run("t('result.change')")).click();
   chip(dom, 'Anna').click();
   await waitFor(() => marks(dom).length === 2, { label: 'first win' });
-  assert.deepEqual(marks(dom), ['firstWin*', 'founded']);
+  assert.deepEqual(marks(dom), ['firstWin*', 'openHouse']);
   chip(dom, 'Anna').click();
   await waitFor(() => marks(dom).length === 1, { label: 'un-won' });
   chip(dom, 'Anna').click();
   await waitFor(() => marks(dom).length === 2, { label: 'won again' });
-  assert.deepEqual(marks(dom), ['firstWin', 'founded']);
+  assert.deepEqual(marks(dom), ['firstWin', 'openHouse']);
 });

@@ -183,3 +183,20 @@
 .ti-wave-sine::before { content: "\ecd4"; }
 .ti-droplet::before { content: "\ea97"; }
 .ti-anchor::before { content: "\eb76"; }
+/* #1464 — fifteen of the new Abzeichen glyphs (the other five were already declared),
+   each read from this woff2's own cmap, not from upstream. */
+.ti-seedling::before { content: "\ed51"; }
+.ti-thumb-up::before { content: "\eb3c"; }
+.ti-target::before { content: "\eb35"; }
+.ti-infinity::before { content: "\eb69"; }
+.ti-clover::before { content: "\f1ea"; }
+.ti-swords::before { content: "\f132"; }
+.ti-stopwatch::before { content: "\ff9b"; }
+.ti-door::before { content: "\ef4e"; }
+.ti-layout-columns::before { content: "\ead4"; }
+.ti-book::before { content: "\ea39"; }
+.ti-heart-handshake::before { content: "\f0f3"; }
+.ti-calendar-check::before { content: "\f824"; }
+.ti-cake::before { content: "\f00f"; }
+.ti-run::before { content: "\ec82"; }
+.ti-books::before { content: "\eff2"; }

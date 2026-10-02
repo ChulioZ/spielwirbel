@@ -27,14 +27,16 @@ const badgeRowsOf = (item) => [...item.querySelectorAll('.chronik-row--badge')];
 // ------------------------------------------------------------------ Chronik
 
 test('each earning is one row under the session that earned it, linking to its holder', (t) => {
-  const r = badgeRound([night('s1', 1), night('s2', 2)]);
+  // A second session nobody won: a repeat win would be Titelverteidiger.
+  const r = badgeRound([night('s1', 1), night('s2', 2, { winnerIds: [] })]);
   const dom = boot(t, r);
   dom.call('renderChronikTab', r, []);
   const first = itemOf(dom, 's1');
   assert.ok(first, 'the first session is on the timeline');
   const rows = badgeRowsOf(first);
   assert.deepEqual(rows.map((x) => x.querySelector('.chronik-row__text').textContent),
-    ['Anna · Erster Sieg', 'Kartographen · Gegründet'], 'members first, then the round');
+    ['Anna · Erster Sieg', 'Anna · Gründungsmitglied', 'Anna · Anfängerglück', 'Ben · Gründungsmitglied', 'Kartographen · Gegründet'],
+    'members first (in catalogue order), then the round');
   for (const row of rows) {
     assert.equal(row.querySelector('.chronik-row__label').textContent, dom.run("t('badges.title')"));
     const a = row.querySelector('a.chronik-row__text');
@@ -58,8 +60,8 @@ test('a Chronik row’s plain click lands on that holder’s row in Pokale', asy
   const r = badgeRound([night('s1', 1, { winnerIds: ['m2'] })]);
   const dom = boot(t, r);
   dom.call('renderChronikTab', r, []);
-  const link = badgeRowsOf(itemOf(dom, 's1'))[0].querySelector('a');
-  assert.equal(link.textContent, 'Ben · Erster Sieg');
+  const link = badgeRowsOf(itemOf(dom, 's1')).map((x) => x.querySelector('a')).find((a) => a.textContent === 'Ben · Erster Sieg');
+  assert.ok(link, 'Ben’s first win has its row');
   link.click();
   const row = await waitFor(() => dom.document.getElementById('abzeichen-m2'), { label: 'Pokale rendered' });
   assert.equal(row.open, true);
@@ -73,12 +75,13 @@ test('the hub’s Pokale preview says what is new since the latest session', (t)
   const dom = boot(t, r);
   const card = dom.call('hubPokalePreview', r);
   const line = card.querySelector('.hub-row--badges');
-  assert.equal(line.textContent.trim(), '2 neue Abzeichen seit Catan');
+  // Erster Sieg, Anfängerglück, two Gründungsmitglieder and Gegründet.
+  assert.equal(line.textContent.trim(), '5 neue Abzeichen seit Catan');
   assert.notEqual(line.tagName, 'A', 'a plain line — the card keeps its one link');
 });
 
 test('with nothing new, the hub line names the newest mark instead', (t) => {
-  const r = badgeRound([night('s1', 1), night('s2', 2)]);
+  const r = badgeRound([night('s1', 1), night('s2', 2, { winnerIds: [] })]);
   const dom = boot(t, r);
   const line = dom.call('hubPokalePreview', r).querySelector('.hub-row--badges');
   assert.match(line.textContent.trim(), /^Zuletzt: /);
@@ -92,8 +95,9 @@ test('die Tischkarte shows earned marks only, and a tap goes to that member in P
   await dom.call('showMember', RID, 'm1');
   const row = await waitFor(() => dom.app.querySelector('.member-card__badges'), { label: 'the Tischkarte rendered' });
   const tiles = [...row.querySelectorAll('.badge')];
-  assert.deepEqual(tiles.map((b) => [b.dataset.key, b.dataset.state]), [['firstWin', 'earned']]);
-  assert.equal(row.querySelector('.member-card__badges-label').textContent, 'Abzeichen · 1');
+  assert.deepEqual(tiles.map((b) => [b.dataset.key, b.dataset.state]),
+    [['firstWin', 'earned'], ['founder', 'earned'], ['beginnersLuck', 'earned']]);
+  assert.equal(row.querySelector('.member-card__badges-label').textContent, 'Abzeichen · 3');
   assert.equal(tiles[0].tagName, 'BUTTON');
   assert.doesNotMatch(dom.app.textContent, /Siegwertung/, 'the withdrawn measure must not come back with the row');
 
@@ -104,7 +108,8 @@ test('die Tischkarte shows earned marks only, and a tap goes to that member in P
 });
 
 test('a member with nothing earned gets no badge row at all', async (t) => {
-  const r = badgeRound([night('s1', 1)]);
+  // Ben missed the first session, so he is no Gründungsmitglied either.
+  const r = badgeRound([night('s1', 1, { memberIds: ['m1'] }), night('s2', 2)]);
   const dom = boot(t, r);
   await dom.call('showMember', RID, 'm2');
   await waitFor(() => dom.app.querySelector('.member-card'), { label: 'the Tischkarte rendered' });

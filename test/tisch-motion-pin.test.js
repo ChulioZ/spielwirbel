@@ -50,7 +50,8 @@ const SECOND = `${GATE}.badge-moment__item[data-fresh] ~ .badge-moment__item[dat
 /* ---------------------------------------------------------- the hook, under Tisch */
 
 test('Der Tisch: a winner tap that earns a mark marks only that one fresh', async (t) => {
-  const r = badgeRound([night('s1', 1, { winnerIds: [] })]);
+  // Anna alone: the finish already earned her Gründungsmitglied.
+  const r = badgeRound([night('s1', 1, { memberIds: ['m1'], winnerIds: [] })]);
   const dom = loadApp({ locale: 'de' });
   t.after(() => dom.close());
   stubApi(dom, r);
@@ -66,10 +67,10 @@ test('Der Tisch: a winner tap that earns a mark marks only that one fresh', asyn
 
   [...dom.app.querySelectorAll('.tisch button')].find((b) => b.textContent.trim() === dom.run("t('result.change')")).click();
   [...dom.app.querySelectorAll('.winner-chip')].find((c) => c.textContent.includes('Anna')).click();
-  await waitFor(() => m.querySelectorAll('.badge').length === 2, { label: 'the first win joins the moment' });
+  await waitFor(() => m.querySelector('.badge').dataset.key === 'firstWin', { label: 'the first win joins the moment' });
   const fresh = [...m.querySelectorAll('.badge-moment__item')]
     .map((li) => [li.querySelector('.badge').dataset.key, li.hasAttribute('data-fresh')]);
-  assert.deepEqual(fresh, [['firstWin', true], ['founded', false]],
+  assert.deepEqual(fresh, [['firstWin', true], ['founder', false]],
     'the pin the tap earned drops; the one already lying there does not fall again');
 });
 

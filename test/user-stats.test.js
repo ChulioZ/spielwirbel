@@ -257,11 +257,14 @@ test('the account-tier Abzeichen read the same totals, plus the account age', as
 
   const st = await accountStats(UID);
   const by = Object.fromEntries(st.badges.map((b) => [b.key, b]));
-  assert.deepEqual(Object.keys(by), ['accountSessions', 'accountWins', 'accountRounds', 'accountYears']);
+  assert.deepEqual(Object.keys(by), ['accountSessions', 'accountWins', 'accountRounds', 'accountYears', 'accountGames']);
   assert.deepEqual([by.accountSessions.state, by.accountSessions.count, by.accountSessions.of], ['progress', st.sessions, 25]);
   assert.deepEqual([by.accountWins.count, by.accountWins.of], [st.wins, 10]);
   assert.deepEqual([by.accountRounds.state, by.accountRounds.tier], ['earned', 2], 'two seats is Runden 2');
   assert.deepEqual([by.accountYears.state, by.accountYears.tier], ['earned', 1]);
+  // Spiele counts the record's own gamesPlayed — Azul in two rounds is one game.
+  assert.equal(st.gamesPlayed, 1);
+  assert.deepEqual([by.accountGames.state, by.accountGames.count, by.accountGames.of], ['progress', st.gamesPlayed, 10]);
 });
 
 // --- empty and unknown ------------------------------------------------------

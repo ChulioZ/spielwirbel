@@ -464,14 +464,14 @@ test('#1389: the account badges reach the subject and a friend, never a stranger
 
   const keys = (body) => body.stats.badges.map((b) => b.key);
   const own = (await profile(alice, alice.username)).body;
-  assert.deepEqual(keys(own), ['accountSessions', 'accountWins', 'accountRounds', 'accountYears']);
+  assert.deepEqual(keys(own), ['accountSessions', 'accountWins', 'accountRounds', 'accountYears', 'accountGames']);
 
   assert.equal('stats' in (await profile(bob, alice.username)).body, false, 'a stranger gets no stats, so no badges');
   await sendReq(bob, alice.username);
   const fid = (await inbox(alice)).find((i) => i.type === 'friend_request').payload.friendshipId;
   await request(app).post(`/api/account/friends/${fid}/accept`).set(auth(alice.token));
   const friendView = (await profile(bob, alice.username)).body;
-  assert.deepEqual(keys(friendView), keys(own), 'an accepted friend sees the same four');
+  assert.deepEqual(keys(friendView), keys(own), 'an accepted friend sees the same five');
   // Keys, tiers, counts and dates only — nothing that names a round or a person.
   const text = JSON.stringify(friendView.stats.badges);
   const stored = store.data.rounds.find((r) => r.members.some((m) => m.userId === alice.user.id));
