@@ -476,7 +476,9 @@ function renderPokaleTab(round) {
   // One lazy-cover loader per section, shared by every trophy card below
   // (#979) — a loader each would mean an IntersectionObserver each.
   const loadCover = createCoverLoader();
-  const cards = h('<div class="pokale-cards"></div>');
+  // Under Die Brücke the same four cards, in the same order, are styled as
+  // B3.4's plates (#1422, bruecke.css) — a design owns the layout, not the content.
+  const cards = h(`<div class="pokale-cards${bruecke ? ' pokale-cards--plates' : ''}"></div>`);
 
   // Most played: chosen most often across finished nights (game must exist).
   //
@@ -578,9 +580,7 @@ function renderPokaleTab(round) {
     );
   }
 
-  // Die Brücke's column: B3.4's three plates, then these cards (#1422, bruecke-pokale.js).
-  const column = bruecke ? brueckePokaleColumn(round, cards, { shelfIndex, recap, finished, seriesHeld, loadCover }) : cards;
-  if (column.children.length) (side || split || sec).appendChild(column);
+  if (cards.children.length) (side || split || sec).appendChild(cards);
   app.appendChild(sec);
   /* Abzeichen (#1388, views-badges.js): below the podium and the plaques, the
      round's band then one row per member in THIS standings order — so the two

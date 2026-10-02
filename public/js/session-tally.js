@@ -1,6 +1,5 @@
-/* Spielwirbel – counts over a round's finished sessions (#1381): the win
-   streak the Pokale card shows, the record streak Die Brücke's plate shows
-   (#1422), and a session's number in the round.
+/* Spielwirbel – two counts over a round's finished sessions (#1381): the win
+   streak the Pokale card shows, and a session's number in the round.
 
    The streak lived inline in views-pokale.js until Das Programmheft's share card
    (#1381, P8.4 „Serie") needed the same figure. One copy, here, so the card and
@@ -52,24 +51,6 @@
    so a caller asking "is the streak THIS session's" can tell a skipped session
    from the one that counted. */
 function winStreak(round, sessions, deps) {
-  const { chrono, memberWinners } = streakNights(round, sessions, deps);
-  let holders = null;
-  let n = 0;
-  for (let i = chrono.length - 1; i >= 0; i--) {
-    const ws = memberWinners(chrono[i]);
-    const next = holders === null ? [...new Set(ws)] : holders.filter((id) => ws.includes(id));
-    if (!next.length) break;
-    holders = next;
-    n++;
-  }
-  return { memberIds: holders || [], n, lastId: chrono.length ? chrono[chrono.length - 1].id : null };
-}
-
-/* The nights a streak is counted over, oldest first, and who of the members won
-   each — the skip rules above, shared by `winStreak` and `longestStreak` so the
-   current streak and the record cannot come to disagree about which nights
-   count. */
-function streakNights(round, sessions, deps) {
   const guestIds = (s) => new Set((s.guests || []).map((g) => g.id));
   const memberWinners = (s) => {
     const gids = guestIds(s);
@@ -84,51 +65,16 @@ function streakNights(round, sessions, deps) {
   const chrono = [...sessions]
     .filter((s) => !wonOnlyByGuests(s) && !isSolo(s) && !notAContest(s))
     .sort((a, b) => String(a.createdAt).localeCompare(String(b.createdAt)));
-  return { chrono, memberWinners };
-}
-
-/* The round's RECORD streak (#1422, Die Brücke's „Längste Serie", B3.4): the
-   longest run of counted nights one member won in a row, at any point in the
-   round's history — `winStreak` is the run still going, this is the best one
-   there has ever been. Same nights, same skips, and a shared win extends the run
-   of every winner (#1421), so a run two people won together is ONE run with one
-   span, held by both.
-
-   Returns { memberIds, n, from, to }: everyone holding a run of the record
-   length, in the order their runs began; the length; and the `createdAt` of the
-   run's first and last night. Two DIFFERENT runs of the record length (Anna in
-   March, Ben in May) have no single span, so `from`/`to` are null and the caller
-   prints the length instead. */
-function longestStreak(round, sessions, deps) {
-  const { chrono, memberWinners } = streakNights(round, sessions, deps);
-  const open = new Map();
-  const runs = [];
-  const close = (id) => {
-    runs.push({ id, ...open.get(id) });
-    open.delete(id);
-  };
-  chrono.forEach((s) => {
-    const ws = new Set(memberWinners(s));
-    [...open.keys()].forEach((id) => { if (!ws.has(id)) close(id); });
-    ws.forEach((id) => {
-      const run = open.get(id);
-      if (run) {
-        run.n++;
-        run.to = s.createdAt;
-      } else open.set(id, { n: 1, from: s.createdAt, to: s.createdAt });
-    });
-  });
-  [...open.keys()].forEach(close);
-  const n = runs.reduce((max, r) => Math.max(max, r.n), 0);
-  const best = runs.filter((r) => r.n === n && n > 0)
-    .sort((a, b) => String(a.from).localeCompare(String(b.from)));
-  const oneSpan = best.length > 0 && best.every((r) => r.from === best[0].from && r.to === best[0].to);
-  return {
-    memberIds: [...new Set(best.map((r) => r.id))],
-    n,
-    from: oneSpan ? best[0].from : null,
-    to: oneSpan ? best[0].to : null,
-  };
+  let holders = null;
+  let n = 0;
+  for (let i = chrono.length - 1; i >= 0; i--) {
+    const ws = memberWinners(chrono[i]);
+    const next = holders === null ? [...new Set(ws)] : holders.filter((id) => ws.includes(id));
+    if (!next.length) break;
+    holders = next;
+    n++;
+  }
+  return { memberIds: holders || [], n, lastId: chrono.length ? chrono[chrono.length - 1].id : null };
 }
 
 /* A session's number in its round: 1 + the other FINISHED sessions that
@@ -141,5 +87,5 @@ function sessionNumber(round, session) {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { winStreak, longestStreak, sessionNumber };
+  module.exports = { winStreak, sessionNumber };
 }

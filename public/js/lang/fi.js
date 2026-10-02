@@ -260,14 +260,6 @@ I18N.fi = {
   'pokale.dusty': 'Pölyttyy',
   'pokale.dustyAt': 'viimeksi pelattu {when}',
   'pokale.dustyNever': 'ei vielä koskaan pelattu',
-  // Die Brücke's three Pokale plates (#1422, B3.4): the eyebrows, the best
-  // game's play count and the record streak's span of months.
-  'pokale.bestGame': 'Paras peli',
-  'pokale.longestStreak': 'Pisin putki',
-  'pokale.mostVetoes': 'Eniten vetoja',
-  'pokale.playedOne': 'pelattu kerran',
-  'pokale.played': 'pelattu {n}×',
-  'pokale.streakSpan': '{from}–{to}',
 
   'recap.title': 'Yhteenveto',
   'recap.lead': 'Mitä hyllysi kertoo teistä — kaikkien tämän porukan arvioiden perusteella.',

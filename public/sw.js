@@ -198,7 +198,6 @@ const SHELL = [
   '/js/programmheft-hub.js',
   '/js/bruecke-hub.js',
   '/js/bruecke-shelf.js',
-  '/js/bruecke-pokale.js',
   '/js/views-round-start.js',
   '/js/regal-bulk.js',
   '/js/views-regal.js',

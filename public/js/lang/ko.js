@@ -261,14 +261,6 @@ I18N.ko = {
   'pokale.dusty': '먼지만 쌓이는 중',
   'pokale.dustyAt': '마지막 플레이 {when}',
   'pokale.dustyNever': '아직 플레이한 적 없음',
-  // Die Brücke's three Pokale plates (#1422, B3.4): the eyebrows, the best
-  // game's play count and the record streak's span of months.
-  'pokale.bestGame': '최고의 게임',
-  'pokale.longestStreak': '최장 연승',
-  'pokale.mostVetoes': '최다 거부',
-  'pokale.playedOne': '한 번 플레이',
-  'pokale.played': '{n}번 플레이',
-  'pokale.streakSpan': '{from}부터 {to}까지',
 
   'recap.title': '요약',
   'recap.lead': '선반이 말해 주는 여러분 — 이 모임의 모든 평가로부터.',

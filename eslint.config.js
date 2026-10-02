@@ -450,7 +450,7 @@ const frontendGlobals = {
   // recap-card-programmheft.js (#1381) and the two counts it shares with the
   // Pokale (session-tally.js).
   programmheftCardBlob: 'readonly', programmheftEdition: 'readonly', tischRuns: 'readonly',
-  winStreak: 'readonly', longestStreak: 'readonly', sessionNumber: 'readonly',
+  winStreak: 'readonly', sessionNumber: 'readonly',
   offeredDesigns: 'readonly', designTile: 'readonly', renderDesignPicker: 'readonly',
   maybeShowDesignChooser: 'readonly', showDesignChooser: 'readonly',
   buildDesignSection: 'readonly', saveAccountDesign: 'readonly',
@@ -503,8 +503,6 @@ const frontendGlobals = {
   BRUECKE_DENSE_MIN: 'readonly', BRUECKE_BATCH: 'readonly', brueckeTitleLong: 'readonly',
   brueckeLetter: 'readonly', brueckeCard: 'readonly', brueckeShelfDensity: 'readonly',
   brueckeOffShelfLine: 'readonly', brueckePassStats: 'readonly', brueckePassDist: 'readonly',
-  // bruecke-pokale.js (#1422) — Die Brücke's three Pokale plates
-  brueckePlate: 'readonly', brueckeStreakSpan: 'readonly', brueckePokaleColumn: 'readonly',
   // #1280 — Der Tisch's young-round features (views-home.js, hub-cards.js, views-pokale.js)
   lobbyInviteSlip: 'readonly', lobbyNextStep: 'readonly', hubDemoSummary: 'readonly',
   hubDemoInvite: 'readonly', pokaleYoungLead: 'readonly',

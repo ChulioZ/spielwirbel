@@ -284,14 +284,6 @@ I18N.it = {
   'pokale.dusty': 'Prende polvere',
   'pokale.dustyAt': 'ultima partita: {when}',
   'pokale.dustyNever': 'mai giocato finora',
-  // Die Brücke's three Pokale plates (#1422, B3.4): the eyebrows, the best
-  // game's play count and the record streak's span of months.
-  'pokale.bestGame': 'Gioco migliore',
-  'pokale.longestStreak': 'Serie più lunga',
-  'pokale.mostVetoes': 'Più veti',
-  'pokale.playedOne': 'giocato una volta',
-  'pokale.played': 'giocato {n}×',
-  'pokale.streakSpan': 'da {from} a {to}',
 
   'recap.title': 'Riepilogo',
   'recap.lead': 'Che cosa dice di voi il vostro scaffale — da ogni valutazione di questo gruppo.',
