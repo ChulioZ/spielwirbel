@@ -11,9 +11,9 @@ paths:
 
 `POST /api/account/register` mails a verification link to any address a caller
 names. The per-**account** cooldown that fixed `resend-verification` (#435) and
-`forgot-password` (#447) cannot fix this one — a second attempt at the same
-address hits `email_taken` and mails nothing, so on the one request that *does*
-send there is no prior record to throttle against
+`forgot-password` (#447) cannot fix this one — the request that mails a *fresh*
+address has no prior record to throttle against (a repeat at an existing address
+mails the owner since #1516, but under that account's own cooldown)
 (`.claude/rules/mail-sending-endpoints-need-a-per-account-cooldown.md` says why).
 
 So #448 shipped **two** bounds, and the split between them is the whole lesson.

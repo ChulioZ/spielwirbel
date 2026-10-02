@@ -45,9 +45,11 @@ the mail they had just been sent, by their own second click. Skipping the whole
 block is what makes that impossible — `test/account.test.js` pins it by reset­ting
 with the pre-throttle link *after* a throttled call.
 
-**`register` is NOT fixable this way, and that is not an oversight** (#448): a
-second registration for the same address hits `email_taken` and mails nothing, so
-there is no prior record to throttle against on the one request that does send.
+**`register` is NOT fixable this way, and that is not an oversight** (#448): the
+request that mails a *fresh* address has, by definition, no prior record to
+throttle against. (A repeat registration for an existing address does mail since
+#1516 — but it rides the `verification`/`reset` cooldowns of the account it hit,
+so it is covered by this rule rather than an exception to it.)
 Its residual risk is breadth (one mail each to many addresses, plus address and
 username squatting), which needed a different mechanism. **#448 resolved it with
 two bounds** — a tighter per-IP cap on that one route
