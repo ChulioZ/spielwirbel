@@ -74,7 +74,7 @@ test('a tile opens the badge card, which names the holder and every tier', async
   assert.ok(card, 'no badge card opened');
   assert.equal(card.querySelector('.badge-card__holder').textContent, 'lea');
   assert.deepEqual([...card.querySelectorAll('.badge-card__tier')].map((li) => li.textContent.trim().split(',')[0]),
-    ['25', '100', '500']);
+    ['25', '100', '250', '500', '1000']);
 });
 
 test('Jahre 1 takes the singular condition („1 Jahr")', async (t_) => {

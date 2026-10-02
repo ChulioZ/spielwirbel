@@ -36,7 +36,7 @@ async function showHome() {
     // The same line again for the PHONE (T6.1 prints it above the greeting and
     // has no wordmark in its bar): tisch.css shows exactly one of the two per
     // width, so a screen reader meets it once. Klassisch renders neither.
-    h(`<div class="lobby-head">${tisch ? `
+    h(`<div class="lobby-head${bruecke ? ' lobby-head--home' : ''}">${tisch ? `
          <p class="lobby-head__kicker">${esc(t('home.tischKicker'))}</p>` : ''}
          <h1>${esc(t(ocean ? 'home.oceanGreeting' : bruecke ? 'home.brueckeGreeting' : 'home.greeting'))}</h1>
          <div class="muted lobby-head__sub">${esc(t('home.sub'))}</div>

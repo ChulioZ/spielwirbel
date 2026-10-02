@@ -54,7 +54,9 @@ async function showRoundSettings(rid) {
   // Das Programmheft draws the picker inline as well (#1380, P14.6), for the
   // same reason — so its row goes too.
   const programmheft = designIs('programmheft');
-  const inlinePicker = ocean || programmheft;
+  // And Die Brücke (#1246, B14.5/B6.6): „Einstellungen · Marker · Tags · Einladen".
+  const bruecke = designIs('bruecke');
+  const inlinePicker = ocean || programmheft || bruecke;
   [
     { icon: 'ti-tags', label: t('round.tags'), sub: 'tags', go: () => showTags(rid) },
     { icon: 'ti-palette', label: t('round.marker'), sub: 'design', go: () => showMarker(rid) },
@@ -138,6 +140,7 @@ async function showRoundSettings(rid) {
   app.appendChild(danger);
   if (ocean) composeOceanSettings(round, rid);
   if (programmheft) composeProgrammheftSettings(round, rid);
+  if (bruecke) composeBrueckeSettings(round, rid);
 }
 
 /* Ocean's Einstellungen (#1219, O14.1): the same sections as cards, the marker
@@ -223,6 +226,50 @@ function composeProgrammheftSettings(round, rid) {
   });
 
   const cols = h('<div class="rs-ph"></div>');
+  cols.appendChild(main);
+  cols.appendChild(aside);
+  app.appendChild(cols);
+}
+
+/* Die Brücke's Einstellungen (#1246, B14.5 desktop, B6.6 phone): every section
+   a plate, and the marker picker as the first of them — the issue's order,
+   „Einstellungen · Marker · Tags · Einladen", with the Gefahrenzone last as
+   B6.6 draws it. Composed AFTER the shared build out of its own nodes, like
+   Ocean's and Das Programmheft's, so every handler above is the one that runs
+   and Klassisch never enters this function.
+
+   From 1024px the plates stand in two columns: the marker alone on the LEFT,
+   the round's own set-up and its actions on the right. B14.5 draws the marker
+   on the right; it moves because it is first in the DOM, and DOM order is the
+   reading order (WCAG 2.4.3) — the same call Das Programmheft made for P14.6.
+
+   The plate states the marker is the ROUND's, seen by everyone in their own
+   design (`marker.note`) — not a Brücke setting. */
+function composeBrueckeSettings(round, rid) {
+  const head = app.querySelector(':scope > .page-head');
+  const kids = [...app.children];
+  const after = kids.slice(kids.indexOf(head) + 1);
+  const main = h('<div class="rs-br__col rs-br__col--marker"></div>');
+  const aside = h('<div class="rs-br__col"></div>');
+  const marker = h(`<section class="rs-br__plate rs-br__plate--marker">
+       <h2 class="rs-section__h">${esc(t('marker.title'))}</h2>
+       <p class="rs-br__note">${esc(t('marker.note'))}</p>
+     </section>`);
+  marker.appendChild(renderMarkerGrid(round, rid));
+  main.appendChild(marker);
+
+  // Each heading opens a plate that takes its siblings up to the next one.
+  let plate = null;
+  after.forEach((el) => {
+    if (el.matches('h2.rs-section__h')) {
+      const danger = el.classList.contains('rs-section__h--danger');
+      plate = h(`<section class="rs-br__plate${danger ? ' rs-br__plate--danger' : ''}"></section>`);
+      aside.appendChild(plate);
+    }
+    if (plate) plate.appendChild(el);
+  });
+
+  const cols = h('<div class="rs-br"></div>');
   cols.appendChild(main);
   cols.appendChild(aside);
   app.appendChild(cols);

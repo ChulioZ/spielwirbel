@@ -22,7 +22,7 @@ const { computePlaces } = require('../public/js/ranking');
 const { isActiveGame } = require('../public/js/draw-pool');
 const {
   BADGE_CATALOGUE, roundBadges, newSince, accountBadges,
-  BADGE_EXPLORER_DAYS, BADGE_BIG_TABLE, BADGE_COMEBACK_DROUGHT, BADGE_EVERGREEN_PLAYS,
+  BADGE_EXPLORER_DAYS, BADGE_BIG_TABLE_TIERS, BADGE_COMEBACK_DROUGHT, BADGE_EVERGREEN_TIERS,
 } = require('../public/js/achievements');
 
 const DEPS = {
@@ -91,19 +91,33 @@ test('the catalogue is the 21 decided entries: 9 member · 8 round · 4 account'
 test('exactly three secrets, and the tier ladders the review decided', () => {
   assert.deepEqual(BADGE_CATALOGUE.filter((d) => d.secret).map((d) => d.key), ['comeback', 'unanimous', 'tie']);
   const tiers = Object.fromEntries(BADGE_CATALOGUE.filter((d) => d.tiers).map((d) => [d.key, d.tiers]));
+  // The ladders of #1463 (the tier cap lifted 2026-10-01).
   assert.deepEqual(tiers, {
-    regular: [10, 25, 50, 100],
-    versatile: [3, 6, 10],
-    sessions: [10, 50, 100, 250],
-    shelf: [25, 50, 100],
-    accountSessions: [25, 100, 500],
-    accountWins: [10, 50],
-    accountRounds: [2, 5],
+    regular: [10, 25, 50, 100, 250],
+    streak: [3, 5, 7],
+    versatile: [3, 6, 10, 20],
+    host: [10, 25, 50],
+    explorer: [5, 10, 25],
+    sessions: [10, 25, 50, 100, 250, 500],
+    shelf: [25, 50, 100, 200],
+    bigTable: [8, 12, 16],
+    evergreen: [10, 25, 50],
+    accountSessions: [25, 100, 250, 500, 1000],
+    accountWins: [10, 25, 50, 100, 250],
+    accountRounds: [2, 3, 5],
     accountYears: [1, 2, 3],
   });
-  // Four tiers for Stammgast and the round's Sessions only (pruefung finding 4).
-  const four = BADGE_CATALOGUE.filter((d) => d.tiers && d.tiers.length > 3).map((d) => d.key);
-  assert.deepEqual(four, ['regular', 'sessions']);
+  // Every count is a ladder now; what stays single is a yes/no mark, which a
+  // tier „1" would only make read „Teamgeist 1".
+  assert.deepEqual(BADGE_CATALOGUE.filter((d) => !d.tiers).map((d) => d.key),
+    ['firstWin', 'allPlayed', 'teamPlayer', 'comeback', 'founded', 'unanimous', 'tie', 'completed']);
+  assert.deepEqual(BADGE_CATALOGUE.filter((d) => d.goal !== undefined).map((d) => d.key), [], 'no single count threshold is left');
+  // A best run and a table size are not progress you accumulate: no „4 / 5".
+  const uncounted = BADGE_CATALOGUE.filter((d) => d.tiers && !d.counted).map((d) => d.key);
+  assert.deepEqual(uncounted, ['streak', 'bigTable']);
+  // The exported thresholds ARE the catalogue's, so they cannot disagree.
+  assert.equal(BADGE_CATALOGUE.find((d) => d.key === 'bigTable').tiers, BADGE_BIG_TABLE_TIERS);
+  assert.equal(BADGE_CATALOGUE.find((d) => d.key === 'evergreen').tiers, BADGE_EVERGREEN_TIERS);
 });
 
 test('every glyph is declared in the bundled Tabler subset', () => {
@@ -126,7 +140,7 @@ test('every entry has a name and a condition line in every shipped locale', () =
       }
       // A line that states a threshold states it through {n}, so a retuned
       // tier cannot leave nine languages printing the old number.
-      if (d.tiers || d.goal || d.n) assert.match(dict[`badges.${d.key}.line`], /\{n\}/, `${code}: ${d.key} line lacks {n}`);
+      if (d.tiers || d.n) assert.match(dict[`badges.${d.key}.line`], /\{n\}/, `${code}: ${d.key} line lacks {n}`);
     }
     for (const s of ['earned', 'progress', 'locked', 'secret']) assert.ok(dict[`badges.state.${s}`], `${code}: state ${s}`);
   }
@@ -145,7 +159,8 @@ test('Erster Sieg: earned at the first win, locked without one', () => {
 
 test('Stammgast: every tier boundary, both sides', () => {
   for (const [n, tier, state, of] of [[9, null, 'progress', 10], [10, 10, 'earned', 25], [24, 10, 'earned', 25],
-    [25, 25, 'earned', 50], [49, 25, 'earned', 50], [50, 50, 'earned', 100], [99, 50, 'earned', 100], [100, 100, 'earned', null]]) {
+    [25, 25, 'earned', 50], [49, 25, 'earned', 50], [50, 50, 'earned', 100], [99, 50, 'earned', 100], [100, 100, 'earned', 250], [249, 100, 'earned', 250],
+    [250, 250, 'earned', null]]) {
     const e = mine(mkRound({ sessions: many(n) }), 'regular');
     assert.equal(e.state, state, `${n} sessions`);
     assert.equal(e.tier, tier, `${n} sessions`);
@@ -183,10 +198,30 @@ test('Serienheld: three contested wins in a row; two, or a broken run, miss', ()
   assert.equal(mine(mkRound({ sessions: [sess(W), sess(W), noWinner, sess(W)] }), 'streak').state, 'earned', 'noWinner does not break');
 });
 
-test('Vielseitig: distinct games won with, tiers 3 · 6 · 10 both sides', () => {
-  const games = Array.from({ length: 10 }, (_, i) => game(`v${i}`));
+test('Serienheld 3 · 5 · 7: each tier dated at the session that extends the best run to it', () => {
+  const W = { winnerIds: ['a'] };
+  const L = { winnerIds: ['b'] };
+  // 4 in a row, broken, then 7 in a row: 5 and 7 are reached in the second run.
+  // Built in replay order — a fixture is dated by when it is built.
+  const first = many(4, W);
+  const loss = sess(L);
+  const second = many(7, W);
+  const e = mine(mkRound({ sessions: [...first, loss, ...second] }), 'streak');
+  assert.deepEqual(e.history.map((h) => [h.tier, h.sessionId]), [[3, first[2].id], [5, second[4].id], [7, second[6].id]]);
+  assert.equal(e.tier, 7);
+  // Both sides of 5: a best run of 4 holds 3 and nothing above it.
+  const four = mine(mkRound({ sessions: [...many(4, W), sess(L), ...many(4, W)] }), 'streak');
+  assert.deepEqual([four.tier, four.history.length], [3, 1]);
+  // Uncounted: a best run is no progress you accumulate, so no „4 / 5".
+  assert.deepEqual([four.count, four.of], [null, null]);
+  const two = mine(mkRound({ sessions: many(2, W) }), 'streak');
+  assert.deepEqual([two.state, two.count], ['locked', null]);
+});
+
+test('Vielseitig: distinct games won with, tiers 3 · 6 · 10 · 20 both sides', () => {
+  const games = Array.from({ length: 20 }, (_, i) => game(`v${i}`));
   const wins = (n) => games.slice(0, n).map((g) => sess({ chosenGameId: g.id, gameIds: [g.id], winnerIds: ['a'] }));
-  for (const [n, tier] of [[2, null], [3, 3], [5, 3], [6, 6], [9, 6], [10, 10]]) {
+  for (const [n, tier] of [[2, null], [3, 3], [5, 3], [6, 6], [9, 6], [10, 10], [19, 10], [20, 20]]) {
     assert.equal(mine(mkRound({ games, sessions: wins(n) }), 'versatile').tier, tier, `${n} games`);
   }
   // The same game won twice is one game.
@@ -235,6 +270,14 @@ test('Gastgeber: the own box played 10 times, not when she came without her shel
   assert.equal(mine(mkRound({ games, sessions: many(10, { chosenGameId: 'g2' }) }), 'host').state, 'locked', "not her box");
 });
 
+test('Gastgeber 10 · 25 · 50: every tier boundary, both sides, counted toward the next', () => {
+  const games = [game('g1', { ownerIds: ['a'] })];
+  for (const [n, tier, of] of [[9, null, 10], [10, 10, 25], [24, 10, 25], [25, 25, 50], [49, 25, 50], [50, 50, null]]) {
+    const e = mine(mkRound({ games, sessions: many(n) }), 'host');
+    assert.deepEqual([e.tier, e.of], [tier, of], `${n} plays of her box`);
+  }
+});
+
 test('Comeback (secret): a win after 10 contested sessions without one; 9 misses', () => {
   const L = { winnerIds: ['b'] };
   const drought = many(BADGE_COMEBACK_DROUGHT, L);
@@ -260,6 +303,16 @@ test('Entdecker: 5 games played within a week of joining the shelf; 4, or day 8,
   assert.deepEqual([e.state, e.count, e.of], ['progress', 4, 5]);
 });
 
+test('Entdecker 5 · 10 · 25: every tier boundary, both sides', () => {
+  const games = Array.from({ length: 25 }, (_, i) => game(`e${i}`, { createdAt: iso(T0 + 1000 * DAY) }));
+  const fresh = (n) => games.slice(0, n).map((g, i) => ({ id: `y-${g.id}`, createdAt: iso(Date.parse(g.createdAt) + 1 * DAY + i), memberIds: ['a', 'b'],
+    gameIds: [g.id], chosenGameId: g.id, votes: {}, finished: true, winnerIds: [] }));
+  for (const [n, tier, of] of [[4, null, 5], [5, 5, 10], [9, 5, 10], [10, 10, 25], [24, 10, 25], [25, 25, null]]) {
+    const e = mine(mkRound({ games, sessions: fresh(n) }), 'explorer');
+    assert.deepEqual([e.tier, e.of], [tier, of], `${n} games`);
+  }
+});
+
 // --- B. round entries ----------------------------------------------------------
 
 test('Gegründet: the first finished session; an open or cancelled one is not', () => {
@@ -269,15 +322,16 @@ test('Gegründet: the first finished session; an open or cancelled one is not', 
   assert.equal(ours(mkRound({ sessions: [sess({ finished: false, cancelled: true })] }), 'founded').state, 'locked');
 });
 
-test('Sessions: every tier boundary, both sides', () => {
-  for (const [n, tier] of [[9, null], [10, 10], [49, 10], [50, 50], [99, 50], [100, 100], [249, 100], [250, 250]]) {
+test('Sessions 10 · 25 · 50 · 100 · 250 · 500: every tier boundary, both sides', () => {
+  for (const [n, tier] of [[9, null], [10, 10], [24, 10], [25, 25], [49, 25], [50, 50], [99, 50], [100, 100], [249, 100], [250, 250],
+    [499, 250], [500, 500]]) {
     assert.equal(ours(mkRound({ sessions: many(n) }), 'sessions').tier, tier, `${n} sessions`);
   }
 });
 
-test('Regal: active games only, tiers 25 · 50 · 100 both sides', () => {
+test('Regal: active games only, tiers 25 · 50 · 100 · 200 both sides', () => {
   const shelf = (n, extra = []) => [...Array.from({ length: n }, (_, i) => game(`r${i}`, { createdAt: iso(T0 + i * DAY) })), ...extra];
-  for (const [n, tier] of [[24, null], [25, 25], [49, 25], [50, 50], [99, 50], [100, 100]]) {
+  for (const [n, tier] of [[24, null], [25, 25], [49, 25], [50, 50], [99, 50], [100, 100], [199, 100], [200, 200]]) {
     assert.equal(ours(mkRound({ games: shelf(n) }), 'shelf').tier, tier, `${n} games`);
   }
   const archived = [game('x1', { retired: true }), game('x2', { completed: true }), game('x3', { wish: true })];
@@ -315,9 +369,26 @@ test('Große Runde: 8 at the table with guests counting; 7 misses', () => {
   const members = Array.from({ length: 6 }, (_, i) => ({ id: `m${i}`, name: `M${i}` }));
   const ids = members.map((m) => m.id);
   const two = [{ id: 'q1', name: 'Q1' }, { id: 'q2', name: 'Q2' }];
-  assert.equal(BADGE_BIG_TABLE, 8);
-  assert.equal(ours(mkRound({ members, sessions: [sess({ memberIds: ids, guests: two })] }), 'bigTable').state, 'earned');
-  assert.equal(ours(mkRound({ members, sessions: [sess({ memberIds: ids, guests: two.slice(1) })] }), 'bigTable').state, 'locked');
+  assert.equal(BADGE_BIG_TABLE_TIERS[0], 8);
+  const e = ours(mkRound({ members, sessions: [sess({ memberIds: ids, guests: two })] }), 'bigTable');
+  assert.deepEqual([e.state, e.tier], ['earned', 8]);
+  const seven = ours(mkRound({ members, sessions: [sess({ memberIds: ids, guests: two.slice(1) })] }), 'bigTable');
+  assert.deepEqual([seven.state, seven.count, seven.of], ['locked', null, null], 'a table size is not counted progress');
+});
+
+test('Große Runde 8 · 12 · 16: a running maximum, each tier dated at the first table that size', () => {
+  const members = Array.from({ length: 16 }, (_, i) => ({ id: `m${i}`, name: `M${i}` }));
+  const at = (n) => sess({ memberIds: members.slice(0, n).map((m) => m.id) });
+  const ss = [at(8), at(11), at(12), at(9), at(15), at(16), at(12)];
+  const e = ours(mkRound({ members, sessions: ss }), 'bigTable');
+  assert.deepEqual(e.history.map((h) => [h.tier, h.sessionId]), [[8, ss[0].id], [12, ss[2].id], [16, ss[5].id]]);
+  assert.deepEqual(e.earnedAt, { sessionId: ss[5].id, at: ss[5].createdAt });
+  // Both sides of 12 and 16, guests counting toward the size.
+  const guests = (n) => Array.from({ length: n }, (_, i) => ({ id: `q${i}`, name: `Q${i}` }));
+  const side = (n) => ours(mkRound({ members, sessions: [sess({ memberIds: members.slice(0, 8).map((m) => m.id), guests: guests(n - 8) })] }), 'bigTable').tier;
+  assert.deepEqual([11, 12, 15, 16].map(side), [8, 12, 12, 16]);
+  // A smaller table later adds nothing and takes nothing away.
+  assert.equal(newSince(mkRound({ members, sessions: ss }), ss[6].id, { deps: DEPS }).filter((x) => x.key === 'bigTable').length, 0);
 });
 
 test('Durchgespielt: the first game marked completed, dated by it', () => {
@@ -327,13 +398,28 @@ test('Durchgespielt: the first game marked completed, dated by it', () => {
 });
 
 test('Dauerbrenner: one game at 10 plays, naming the game; 9 misses', () => {
-  const ten = [...many(3, { chosenGameId: 'g2' }), ...many(BADGE_EVERGREEN_PLAYS)];
+  const ten = [...many(3, { chosenGameId: 'g2' }), ...many(BADGE_EVERGREEN_TIERS[0])];
   const e = ours(mkRound({ sessions: ten }), 'evergreen');
-  assert.equal(e.state, 'earned');
+  assert.deepEqual([e.state, e.tier], ['earned', 10]);
   assert.equal(e.gameId, 'g1');
   assert.equal(e.earnedAt.sessionId, ten[ten.length - 1].id);
   const nine = ours(mkRound({ sessions: [...many(9), ...many(5, { chosenGameId: 'g2' })] }), 'evergreen');
   assert.deepEqual([nine.state, nine.count, nine.of, nine.gameId], ['progress', 9, 10, 'g1']);
+});
+
+test('Dauerbrenner 10 · 25 · 50: each tier names the game that crossed it', () => {
+  // g1 reaches 10, then g2 overtakes it and reaches 25.
+  const a = many(10);
+  const b = many(25, { chosenGameId: 'g2' });
+  const e = ours(mkRound({ sessions: [...a, ...b] }), 'evergreen');
+  assert.deepEqual(e.history.map((h) => [h.tier, h.sessionId, h.gameId]), [[10, a[9].id, 'g1'], [25, b[24].id, 'g2']]);
+  // The entry's game is the one holding the running best: the count is its.
+  assert.deepEqual([e.tier, e.gameId, e.count, e.of], [25, 'g2', 25, 50]);
+  // Both sides of 50.
+  assert.equal(ours(mkRound({ sessions: many(49) }), 'evergreen').tier, 25);
+  assert.equal(ours(mkRound({ sessions: many(50) }), 'evergreen').tier, 50);
+  // Only Dauerbrenner names a game per tier; the history of the others stays bare.
+  assert.equal('gameId' in mine(mkRound({ sessions: many(10) }), 'regular').history[0], false);
 });
 
 // --- holders, states, newSince --------------------------------------------------
@@ -364,11 +450,12 @@ test('newSince returns exactly the entries (and tiers) a session first satisfied
   const ss = many(25);
   const r = mkRound({ sessions: ss });
   assert.deepEqual(newSince(r, ss[9].id, { deps: DEPS }).map((e) => [e.key, e.memberId, e.tier]),
-    [['regular', 'a', 10], ['regular', 'b', 10], ['sessions', null, 10], ['evergreen', null, null]]);
+    [['regular', 'a', 10], ['regular', 'b', 10], ['sessions', null, 10], ['evergreen', null, 10]]);
   assert.deepEqual(newSince(r, ss[0].id, { deps: DEPS }).map((e) => [e.key, e.memberId]), [['founded', null]]);
   assert.deepEqual(newSince(r, ss[10].id, { deps: DEPS }), [], 'a session that crossed nothing earned nothing');
   assert.deepEqual(newSince(r, ss[24].id, { deps: DEPS }).map((e) => [e.key, e.memberId, e.tier]),
-    [['regular', 'a', 25], ['regular', 'b', 25]]);
+    [['regular', 'a', 25], ['regular', 'b', 25], ['sessions', null, 25], ['evergreen', null, 25]]);
+  assert.equal(newSince(r, ss[24].id, { deps: DEPS }).find((e) => e.key === 'evergreen').gameId, 'g1', 'the moment names the game per tier');
   assert.deepEqual(newSince(r, null, { deps: DEPS }), []);
 });
 
@@ -388,13 +475,15 @@ test('replay follows createdAt, not the stored order', () => {
 
 // --- C. the account --------------------------------------------------------------
 
-test('account tiers: Sessions 25 · 100 · 500, Siege 10 · 50, Runden 2 · 5, both sides', () => {
+test('account tiers: Sessions 25 · 100 · 250 · 500 · 1000, Siege 10 · 25 · 50 · 100 · 250, Runden 2 · 3 · 5, both sides', () => {
   const at = (stats, key) => accountBadges(stats, null, T0).find((e) => e.key === key);
-  for (const [n, tier] of [[24, null], [25, 25], [99, 25], [100, 100], [499, 100], [500, 500]]) {
+  for (const [n, tier] of [[24, null], [25, 25], [99, 25], [100, 100], [249, 100], [250, 250], [499, 250], [500, 500], [999, 500], [1000, 1000]]) {
     assert.equal(at({ sessions: n }, 'accountSessions').tier, tier, `${n} sessions`);
   }
-  for (const [n, tier] of [[9, null], [10, 10], [49, 10], [50, 50]]) assert.equal(at({ wins: n }, 'accountWins').tier, tier);
-  for (const [n, tier] of [[1, null], [2, 2], [4, 2], [5, 5]]) assert.equal(at({ rounds: n }, 'accountRounds').tier, tier);
+  for (const [n, tier] of [[9, null], [10, 10], [24, 10], [25, 25], [49, 25], [50, 50], [99, 50], [100, 100], [249, 100], [250, 250]]) {
+    assert.equal(at({ wins: n }, 'accountWins').tier, tier, `${n} wins`);
+  }
+  for (const [n, tier] of [[1, null], [2, 2], [3, 3], [4, 3], [5, 5]]) assert.equal(at({ rounds: n }, 'accountRounds').tier, tier, `${n} rounds`);
   const zero = at({}, 'accountWins');
   assert.deepEqual([zero.state, zero.count, zero.of], ['locked', 0, 10]);
 });
