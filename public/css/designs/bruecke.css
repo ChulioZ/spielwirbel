@@ -4611,6 +4611,57 @@
 }
 :root[data-design="bruecke"][data-scheme="dark"] .lobby-cta__sub { color: var(--ink-2); }
 
+/* ===== #1248 B10.3 — Wertung abgeben ===== */
+/* Sheet: docs/design/bruecke/Bruecke-B10-Motion.dc.html, B10.3 — the chosen
+   key fills in 220ms and takes its glow; the other four lose nothing, they
+   stay wire. Then the next card drives in from below, 260ms. „Der Wechsel darf
+   nicht schneller sein als die Rückmeldung": the fill is over at 220ms, inside
+   the vote beat's 340ms hold (vote-advance.js), so the acknowledgement is
+   complete before the card changes.
+
+   1. The fill. The gate is `.vote--advancing`, as for Das Programmheft's P10.3
+      and Ocean's O10.3: only the card showing a FRESH tap carries it, so a
+      choice already made („Zurück", a re-render) arrives at rest. The key's
+      chosen colour IS the fill (one rule per thrust step above); the ritual
+      lays the card's surface over it as a cover and lifts the cover upward,
+      linear — a gauge loading, not a splash — so the colour rises from the
+      bottom. At rest the cover is zero tall, i.e. the static chosen key. The
+      glow grows with it. The label keeps the wire's ink until the fill is half
+      way (110ms), then takes the fill's night ink.
+   2. The next card. views-session.js marks `is-incoming` on the card the beat
+      delivered — Der Tisch's T10.3 gate, `wanted.kind === 'title'` — so the
+      first card, a Back and a language switch arrive still. Only the plate
+      moves; „Wer hat schon gewertet" and „Verdeckt" stand.
+
+   The shared-link card keeps its Klassisch card under Die Brücke (it is not
+   `.vote--bruecke`), so neither half reaches it. Inside
+   prefers-reduced-motion: no-preference, no forwards fill, no end frames;
+   reduced motion shows the chosen key and the next card at once. */
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke.vote--advancing .rating .mood.is-selected {
+    background-image: linear-gradient(var(--surface), var(--surface));
+    background-repeat: no-repeat;
+    background-position: top;
+    background-size: 100% 0;
+    animation: bruecke-rate-fill 220ms linear, bruecke-rate-ink 110ms steps(1, end);
+  }
+  :root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke.vote--advancing .rating .mood.is-selected .mood__word {
+    animation: bruecke-rate-ink 110ms steps(1, end);
+  }
+  @keyframes bruecke-rate-fill {
+    from { background-size: 100% 100%; box-shadow: none; }
+  }
+  @keyframes bruecke-rate-ink {
+    from { color: var(--ink); }
+  }
+  :root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke.is-incoming .vote__card {
+    animation: bruecke-card-in 260ms cubic-bezier(.2, .8, .2, 1) backwards;
+  }
+  @keyframes bruecke-card-in {
+    from { opacity: 0; transform: translateY(14px); }
+  }
+}
+
 /* ===== #1239 — Regal, Spielepass and the add-game lookup (B3.2, B2.6, B16.2, B13.4, B6.3, B6.4) ===== */
 
 /* ---- The Regal head (B3.2/B2.6): „Regal" in the display face with the count
