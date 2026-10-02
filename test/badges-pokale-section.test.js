@@ -91,7 +91,9 @@ test('from seven members a row shows only its earned marks, the rest behind „N
   const dom = await pokale(t, badgeRound([night('s1', 1, { memberIds: seven })], 7));
   const row = section(dom).querySelector('#abzeichen-m1');
   const shown = [...row.querySelectorAll(':scope > .badge-grid:not(.badge-grid--rest) .badge')];
-  assert.deepEqual(shown.map((b) => b.dataset.state), ['earned'], 'Anna’s one win, and nothing else in the row');
+  // Erster Sieg, Gründungsmitglied and Anfängerglück — her earned marks, nothing else.
+  assert.deepEqual(shown.map((b) => [b.dataset.key, b.dataset.state]),
+    [['firstWin', 'earned'], ['founder', 'earned'], ['beginnersLuck', 'earned']], 'only earned marks in the row');
   const more = row.querySelector('.badge-member__more');
   const rest = row.querySelector('.badge-grid--rest');
   assert.equal(more.textContent, `${rest.querySelectorAll('.badge').length} offen`);
@@ -173,4 +175,18 @@ test('showBadges lands on the member’s row, opened and focused', async (t) => 
   await dom.call('showRound', RID, 'pokale');
   await waitFor(() => dom.document.getElementById('abzeichen-m2'));
   assert.equal(dom.document.getElementById('abzeichen-m2').open, false);
+});
+
+/* A long German name in a narrow tile (Der Tisch at 390px: four tiles a row)
+   used to split mid-word — „Gründungsm / itglied", „Dauerbrenne / r" — because
+   `overflow-wrap: anywhere` breaks wherever it must. `hyphens: auto` makes it
+   break at a syllable with a hyphen instead („Gründungs- / mitglied"), checked in
+   real Chrome; the Browser pane has no hyphenation dictionaries and cannot show
+   it (.claude/rules/browser-pane-has-no-hyphenation.md). `<html lang>` follows
+   the locale (i18n.js), which hyphenation needs. */
+test('a badge name hyphenates rather than splitting a word anywhere (#1464)', () => {
+  const { rulesOf, topLevel } = require('./support/css');
+  const rule = rulesOf(topLevel()).find(([sel]) => sel.trim() === '.badge__name');
+  assert.ok(rule, 'the base .badge__name rule exists');
+  assert.match(rule[1], /hyphens:\s*auto/);
 });

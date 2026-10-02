@@ -108,10 +108,10 @@ function badgeCondition(e, ctx, { allTiers, at, gameId } = {}) {
   const gid = gameId || e.gameId;
   const g = gid && (ctx.round.games || []).find((x) => x.id === gid);
   if (g) return t('badges.evergreen.lineGame', { game: g.title, n });
-  // „1 Jahr" is the one condition whose number can be 1 (#1389 — the account
-  // tier is the first placement to render Jahre at all).
-  if (e.key === 'accountYears' && typeof n === 'number') {
-    return tn(n, 'badges.accountYears.lineOne', 'badges.accountYears.line', { n });
+  // „1 Jahr": the year counts (Konto Jahre #1389, Jubiläum #1464) are the
+  // conditions whose number can be 1, so they carry a singular line.
+  if (def.lineOne && typeof n === 'number') {
+    return tn(n, `badges.${e.key}.lineOne`, `badges.${e.key}.line`, { n });
   }
   return t(`badges.${e.key}.line`, { n });
 }

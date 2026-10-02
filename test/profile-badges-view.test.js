@@ -3,7 +3,7 @@
 /* The Spielerkarte's account-tier Abzeichen (#1389, X17.7), rendered through the
    jsdom harness (.claude/rules/testing-views-under-jsdom.md). Who RECEIVES
    `stats.badges` is the server's decision and is pinned in test/profile.test.js;
-   this file pins what the card does with it — the four shared tiles under the
+   this file pins what the card does with it — the five shared tiles under the
    figures, their words, the tap-open card, and nothing at all when the key is
    absent. The fixture is the real `accountBadges`, not a hand-written copy. */
 
@@ -23,7 +23,7 @@ const STATS = {
 };
 const withBadges = (over = {}) => {
   const st = { ...STATS, ...over };
-  return { ...st, badges: accountBadges({ sessions: st.sessions, wins: st.wins, rounds: st.rounds }, CREATED, NOW) };
+  return { ...st, badges: accountBadges({ sessions: st.sessions, wins: st.wins, rounds: st.rounds, gamesPlayed: st.gamesPlayed }, CREATED, NOW) };
 };
 
 function bootWith(t_, stats, over = {}) {
@@ -43,14 +43,16 @@ function bootWith(t_, stats, over = {}) {
 
 const tiles = (dom) => [...dom.app.querySelectorAll('.profile-card__badges .badge')];
 
-test('a friend\'s card carries the four account tiles, under the figures', async (t_) => {
+test('a friend\'s card carries the five account tiles, under the figures', async (t_) => {
   const dom = bootWith(t_, withBadges());
   await dom.call('showProfile', 'lea');
   const row = dom.app.querySelector('.profile-card .profile-card__badges');
   assert.ok(row, 'no .profile-card__badges');
   assert.equal(row.previousElementSibling.className, 'member-card__figures', 'the row sits right under the totals');
-  assert.deepEqual(tiles(dom).map((b) => b.dataset.key), ['accountSessions', 'accountWins', 'accountRounds', 'accountYears']);
-  assert.deepEqual(tiles(dom).map((b) => b.dataset.state), ['earned', 'earned', 'earned', 'earned']);
+  assert.deepEqual(tiles(dom).map((b) => b.dataset.key), ['accountSessions', 'accountWins', 'accountRounds', 'accountYears', 'accountGames']);
+  assert.deepEqual(tiles(dom).map((b) => b.dataset.state), ['earned', 'earned', 'earned', 'earned', 'progress']);
+  // Spiele counts the gamesPlayed figure printed above it: nine of ten.
+  assert.equal(tiles(dom)[4].querySelector('.badge__line').textContent, '9 / 10');
 
   // The shared tile: the name with its tier, and the way to the next tier as its line.
   const [sessions, , , years] = tiles(dom);
@@ -101,9 +103,9 @@ test('an empty record shows the row only once something is earned', async (t_) =
   const none = bootWith(t_, { ...empty, badges: accountBadges(empty, '2026-09-01T00:00:00.000Z', NOW) });
   await none.call('showProfile', 'lea');
   assert.ok(none.app.querySelector('.profile-card .empty-note'), 'control: the empty record rendered');
-  assert.equal(none.app.querySelector('.profile-card__badges'), null, 'four open tiles say nothing');
+  assert.equal(none.app.querySelector('.profile-card__badges'), null, 'five open tiles say nothing');
 
   const veteran = bootWith(t_, { ...empty, badges: accountBadges(empty, CREATED, NOW) });
   await veteran.call('showProfile', 'lea');
-  assert.equal(veteran.app.querySelectorAll('.profile-card__badges .badge').length, 4, 'Jahre 1 is earned');
+  assert.equal(veteran.app.querySelectorAll('.profile-card__badges .badge').length, 5, 'Jahre 1 is earned');
 });

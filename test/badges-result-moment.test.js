@@ -25,7 +25,8 @@ async function results(t, sessions, sid) {
 const moment = (dom) => dom.app.querySelector('.badge-moment');
 
 test('the first session shows what it earned, each mark with its holder', async (t) => {
-  const dom = await results(t, [night('s1', 1)], 's1');
+  // Anna alone and nobody won: her Gründungsmitglied and the round's Gegründet.
+  const dom = await results(t, [night('s1', 1, { memberIds: ['m1'], winnerIds: [] })], 's1');
   const m = moment(dom);
   assert.equal(m.hidden, false);
   assert.equal(m.querySelector('.badge-moment__title').textContent.trim(), dom.run("t('badges.moment.title')"));
@@ -33,19 +34,20 @@ test('the first session shows what it earned, each mark with its holder', async 
   // newSince orders members first, then the round.
   assert.deepEqual(items.map((li) => li.querySelector('.badge-moment__holder').textContent), ['Anna', 'Kartographen']);
   const tile = items[0].querySelector('.badge');
-  assert.equal(tile.dataset.key, 'firstWin');
-  assert.equal(tile.getAttribute('aria-label'), 'Anna, Erster Sieg, verdient, neu. Verdient im Juli 2026 · Catan',
+  assert.equal(tile.dataset.key, 'founder');
+  assert.equal(tile.getAttribute('aria-label'), 'Anna, Gründungsmitglied, verdient, neu. Verdient im Juli 2026 · Catan',
     'here the holder is part of the name — several holders share the list');
   assert.equal(m.querySelector('.badge-moment__more'), null, 'two marks fit, nothing is folded');
 });
 
 test('at most two marks — the rest fold into „+N weitere", which opens Pokale › Abzeichen', async (t) => {
-  // Anna and Ben share the win: two first wins plus the founding = three.
+  // Anna and Ben share the win: per head Erster Sieg, Gründungsmitglied and
+  // Anfängerglück, plus the round's Gegründet and Gemeinsam gewonnen = eight.
   const dom = await results(t, [night('s1', 1, { winnerIds: ['m1', 'm2'] })], 's1');
   const m = moment(dom);
   assert.equal(m.querySelectorAll('.badge').length, 2);
   const more = m.querySelector('.badge-moment__more');
-  assert.equal(more.textContent, '+1 weiteres');
+  assert.equal(more.textContent, '+6 weitere');
   assert.equal(more.tagName, 'A');
   assert.match(more.getAttribute('href'), /\/pokale$/, 'a real link to the Pokale tab');
 });
@@ -57,8 +59,9 @@ test('an older session shows no moment — that is the Chronik’s job', async (
 });
 
 test('a session that earned nothing shows no moment', async (t) => {
-  // The second night, won by Anna again: nothing crosses a threshold.
-  const dom = await results(t, [night('s1', 1), night('s2', 2)], 's2');
+  // The second night, won by nobody: nothing crosses a threshold (a repeat win
+  // by Anna would be Titelverteidiger).
+  const dom = await results(t, [night('s1', 1), night('s2', 2, { winnerIds: [] })], 's2');
   assert.equal(moment(dom).hidden, true);
 });
 
@@ -77,8 +80,8 @@ test('the moment is part of the page, not a modal in front of it', async (t) => 
 });
 
 test('a winner tap refills the moment in place', async (t) => {
-  // Finished with no winner recorded yet: only the founding is new.
-  const r = badgeRound([night('s1', 1, { winnerIds: [] })]);
+  // Anna alone, no winner recorded yet: only the two foundings are new.
+  const r = badgeRound([night('s1', 1, { memberIds: ['m1'], winnerIds: [] })]);
   const dom = loadApp({ locale: 'de' });
   t.after(() => dom.close());
   stubApi(dom, r);
@@ -88,7 +91,7 @@ test('a winner tap refills the moment in place', async (t) => {
   });
   await dom.call('showResults', r, r.sessions[0], r.games, false);
   const m = moment(dom);
-  assert.deepEqual([...m.querySelectorAll('.badge')].map((b) => b.dataset.key), ['founded']);
+  assert.deepEqual([...m.querySelectorAll('.badge')].map((b) => b.dataset.key), ['founder', 'founded']);
 
   // An archived session keeps its picker behind „Ändern“.
   const change = [...dom.app.querySelectorAll('.tisch button')].find((b) => b.textContent.trim() === dom.run("t('result.change')"));
@@ -97,9 +100,11 @@ test('a winner tap refills the moment in place', async (t) => {
   const anna = [...dom.app.querySelectorAll('.winner-chip')].find((c) => c.textContent.includes('Anna'));
   assert.ok(anna, 'the winner picker offers Anna');
   anna.click();
-  await waitFor(() => m.querySelectorAll('.badge').length === 2, { label: 'the moment picks up the first win' });
+  await waitFor(() => m.querySelector('.badge').dataset.key === 'firstWin', { label: 'the moment picks up the first win' });
   assert.equal(moment(dom), m, 'the same section, refilled rather than re-created');
-  assert.deepEqual([...m.querySelectorAll('.badge')].map((b) => b.dataset.key), ['firstWin', 'founded']);
+  // A solo win is no contest, so no Anfängerglück — the win, then her founding.
+  assert.deepEqual([...m.querySelectorAll('.badge')].map((b) => b.dataset.key), ['firstWin', 'founder']);
+  assert.equal(m.querySelector('.badge-moment__more').textContent, '+1 weiteres');
 });
 
 test('Dauerbrenner names the game that crossed THIS tier, not the first one to reach 10 (#1463)', async (t) => {

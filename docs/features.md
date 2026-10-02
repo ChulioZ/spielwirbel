@@ -396,8 +396,10 @@ What the app does, in detail. For a short overview see the
 
     **Abzeichen** (badges, issue #1388) sit below the standings: a band for the
     round, then one row per member in standings order — the first win, ten
-    sessions, a game that keeps coming back, and a few secret ones that show
-    only a padlock until earned. Each is a button that opens a card (a popover
+    sessions, a game that keeps coming back, a full year of monthly play, and
+    ten secret ones that show only a padlock until earned (41 entries since
+    issue #1464). Where order or a time window matters, the tables of one split
+    session count as one evening. Each is a button that opens a card (a popover
     on a wide screen, a sheet on a phone) with every tier and when it was
     reached. Nothing is stored: they are derived from the sessions on every
     render, so deleting a session removes what it earned — and a tier added to
@@ -740,7 +742,8 @@ What the app does, in detail. For a short overview see the
   BoardGameGeek collection import — "*added ‹game› and N more games*" notes, with
   the **game title and cover** and, for that last one, a plain count — plus
   „‹friend› · Sessions 100" when a friend reaches a new tier of an account
-  Abzeichen at a session finish (issue #1389; Sessions and Siege only, each tier
+  Abzeichen at a session finish (issue #1389; Sessions, Siege and — since issue
+  #1464 — Spiele, each tier
   announced once, never while the friend's record is hidden, and never for a
   tier the friend already held before that finish — so a newly added tier is
   not announced retroactively), pictured by the
@@ -822,9 +825,10 @@ What the app does, in detail. For a short overview see the
   describe breadth rather than performance, the
   round and game counts, are the line under your name. The favourite and
   strongest game are the two ribboned boxes at the foot of the card.
-  Under the figures sit the four **account Abzeichen** (issue #1389) —
+  Under the figures sit the five **account Abzeichen** (issue #1389) —
   Sessions 25 · 100 · 250 · 500 · 1000, Siege 10 · 25 · 50 · 100 · 250,
-  Runden 2 · 3 · 5 and Jahre 1 · 2 · 3 (ladders lengthened in issue #1463) —
+  Runden 2 · 3 · 5, Jahre 1 · 2 · 3 (ladders lengthened in issue #1463) and
+  Spiele 10 · 25 · 50 · 100 (distinct games played, issue #1464) —
   the round badges' own tiles and card, counted from the same totals the card
   prints (Jahre from the registration date). They reach exactly who the record
   reaches, and a demo account shows none.

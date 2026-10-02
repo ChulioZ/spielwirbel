@@ -161,6 +161,24 @@ test('Siege 10 crosses on a winner-chip re-save and still posts, once', async ()
   assert.equal((await badgeRows(lea)).length, 1);
 });
 
+test('Spiele 10 (#1464): the finish that plays a tenth distinct game posts it once', async () => {
+  const una = await makeAccount('bf-una@example.com');
+  const { round, seat, session, game } = await roundAt(una, { past: 0 });
+  // Nine other games, each played once already; the open session's is the tenth.
+  for (let i = 0; i < 9; i++) {
+    round.games.push({ ...game, id: `other-${i}`, title: `Spiel ${i}` });
+    round.sessions.push({
+      id: `played-${i}`, finished: true, cancelled: false, memberIds: [seat.id], winnerIds: [],
+      gameIds: [`other-${i}`], chosenGameId: `other-${i}`, votes: {},
+      createdAt: new Date(Date.UTC(2026, 0, 1 + i)).toISOString(),
+    });
+  }
+  await sess(una, round.id, `/${session.id}/finish`, { winnerIds: [] });
+  assert.deepEqual((await badgeRows(una)).map((e) => [e.title, e.tier]), [['accountGames', 10]]);
+  await sess(una, round.id, `/${session.id}/finish`, { winnerIds: [] });
+  assert.equal((await badgeRows(una)).length, 1, 'a re-save announces nothing again');
+});
+
 test('the longer ladders (#1463): crossing Sessions 250 and Siege 25 posts each once', async () => {
   const ivo = await makeAccount('bf-ivo@example.com');
   const { round, seat, session } = await roundAt(ivo, { past: 249, wonPast: 24 });

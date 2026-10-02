@@ -80,16 +80,26 @@ const ours = (round, key, opts) => all(round, opts).round.find((e) => e.key === 
 
 // --- the catalogue -------------------------------------------------------------
 
-test('the catalogue is the 21 decided entries: 9 member · 8 round · 4 account', () => {
+test('the catalogue is the 41 decided entries: 18 member · 18 round · 5 account', () => {
   const by = (h) => BADGE_CATALOGUE.filter((d) => d.holder === h).map((d) => d.key);
-  assert.deepEqual(by('member'), ['firstWin', 'regular', 'streak', 'versatile', 'allPlayed', 'teamPlayer', 'host', 'comeback', 'explorer']);
-  assert.deepEqual(by('round'), ['founded', 'sessions', 'shelf', 'unanimous', 'tie', 'bigTable', 'completed', 'evergreen']);
-  assert.deepEqual(by('account'), ['accountSessions', 'accountWins', 'accountRounds', 'accountYears']);
-  assert.equal(new Set(BADGE_CATALOGUE.map((d) => d.key)).size, 21, 'keys are unique');
+  assert.deepEqual(by('member'), ['firstWin', 'regular', 'streak', 'versatile', 'allPlayed', 'teamPlayer', 'host', 'comeback', 'explorer',
+    'founder', 'firstChoice', 'specialist', 'present', 'variety', 'defender', 'beginnersLuck', 'rematch', 'double']);
+  assert.deepEqual(by('round'), ['founded', 'sessions', 'shelf', 'unanimous', 'tie', 'bigTable', 'completed', 'evergreen',
+    'openHouse', 'twoTables', 'campaign', 'allWin', 'vintage', 'anniversary', 'marathon', 'rediscovered', 'againstTheTide', 'complete']);
+  assert.deepEqual(by('account'), ['accountSessions', 'accountWins', 'accountRounds', 'accountYears', 'accountGames']);
+  assert.equal(new Set(BADGE_CATALOGUE.map((d) => d.key)).size, 41, 'keys are unique');
+  // Vollzählig was dropped (operator, 2026-10-02): its first evening was full by construction.
+  assert.equal(BADGE_CATALOGUE.some((d) => d.key === 'fullHouse'), false);
 });
 
-test('exactly three secrets, and the tier ladders the review decided', () => {
-  assert.deepEqual(BADGE_CATALOGUE.filter((d) => d.secret).map((d) => d.key), ['comeback', 'unanimous', 'tie']);
+test('no two entries wear the same glyph', () => {
+  const glyphs = BADGE_CATALOGUE.map((d) => d.glyph);
+  assert.equal(new Set(glyphs).size, glyphs.length);
+});
+
+test('exactly ten secrets, and the tier ladders the review decided', () => {
+  assert.deepEqual(BADGE_CATALOGUE.filter((d) => d.secret).map((d) => d.key),
+    ['comeback', 'beginnersLuck', 'rematch', 'double', 'unanimous', 'tie', 'marathon', 'rediscovered', 'againstTheTide', 'complete']);
   const tiers = Object.fromEntries(BADGE_CATALOGUE.filter((d) => d.tiers).map((d) => [d.key, d.tiers]));
   // The ladders of #1463 (the tier cap lifted 2026-10-01).
   assert.deepEqual(tiers, {
@@ -102,19 +112,28 @@ test('exactly three secrets, and the tier ladders the review decided', () => {
     shelf: [25, 50, 100, 200],
     bigTable: [8, 12, 16],
     evergreen: [10, 25, 50],
+    firstChoice: [5, 10, 25],
+    specialist: [5, 10, 25],
+    present: [10, 25, 50],
+    variety: [10, 25, 50],
+    openHouse: [5, 10, 25],
+    campaign: [5, 10, 25],
+    anniversary: [1, 2, 3],
     accountSessions: [25, 100, 250, 500, 1000],
     accountWins: [10, 25, 50, 100, 250],
     accountRounds: [2, 3, 5],
     accountYears: [1, 2, 3],
+    accountGames: [10, 25, 50, 100],
   });
   // Every count is a ladder now; what stays single is a yes/no mark, which a
   // tier „1" would only make read „Teamgeist 1".
   assert.deepEqual(BADGE_CATALOGUE.filter((d) => !d.tiers).map((d) => d.key),
-    ['firstWin', 'allPlayed', 'teamPlayer', 'comeback', 'founded', 'unanimous', 'tie', 'completed']);
+    ['firstWin', 'allPlayed', 'teamPlayer', 'comeback', 'founder', 'defender', 'beginnersLuck', 'rematch', 'double',
+      'founded', 'unanimous', 'tie', 'completed', 'twoTables', 'allWin', 'vintage', 'marathon', 'rediscovered', 'againstTheTide', 'complete']);
   assert.deepEqual(BADGE_CATALOGUE.filter((d) => d.goal !== undefined).map((d) => d.key), [], 'no single count threshold is left');
   // A best run and a table size are not progress you accumulate: no „4 / 5".
   const uncounted = BADGE_CATALOGUE.filter((d) => d.tiers && !d.counted).map((d) => d.key);
-  assert.deepEqual(uncounted, ['streak', 'bigTable']);
+  assert.deepEqual(uncounted, ['streak', 'present', 'bigTable']);
   // The exported thresholds ARE the catalogue's, so they cannot disagree.
   assert.equal(BADGE_CATALOGUE.find((d) => d.key === 'bigTable').tiers, BADGE_BIG_TABLE_TIERS);
   assert.equal(BADGE_CATALOGUE.find((d) => d.key === 'evergreen').tiers, BADGE_EVERGREEN_TIERS);
@@ -434,7 +453,7 @@ test('guests never hold marks; a retired member keeps theirs', () => {
 test('an empty round: every member entry locked or secret, nothing earned, nothing new', () => {
   const res = all(mkRound({ games: [] }));
   const every = [...res.round, ...res.members.a];
-  assert.equal(every.length, 17);
+  assert.equal(every.length, 36);
   assert.ok(every.every((e) => e.state === 'locked' || e.state === 'secret'));
   assert.ok(every.every((e) => !e.isNew && e.earnedAt === null));
 });
@@ -443,18 +462,21 @@ test('isNew marks exactly what the latest finished session earned', () => {
   const ss = [...many(9), sess({ winnerIds: ['a'] })];
   const res = all(mkRound({ sessions: ss }));
   const fresh = [...res.round, ...res.members.a, ...res.members.b].filter((e) => e.isNew).map((e) => e.key);
-  assert.deepEqual(fresh.sort(), ['evergreen', 'firstWin', 'regular', 'regular', 'sessions'], 'g1 was the tenth play too');
+  // Ten in a row for both, and Ada lost g1 at the ninth and won it at the tenth.
+  assert.deepEqual(fresh.sort(), ['evergreen', 'firstWin', 'present', 'present', 'regular', 'regular', 'rematch', 'sessions'], 'g1 was the tenth play too');
 });
 
 test('newSince returns exactly the entries (and tiers) a session first satisfied', () => {
   const ss = many(25);
-  const r = mkRound({ sessions: ss });
+  // The shelf is as old as the first session, so its first play is no Wiederentdeckt.
+  const r = mkRound({ games: ['g1', 'g2', 'g3'].map((id) => game(id, { createdAt: ss[0].createdAt })), sessions: ss });
   assert.deepEqual(newSince(r, ss[9].id, { deps: DEPS }).map((e) => [e.key, e.memberId, e.tier]),
-    [['regular', 'a', 10], ['regular', 'b', 10], ['sessions', null, 10], ['evergreen', null, 10]]);
-  assert.deepEqual(newSince(r, ss[0].id, { deps: DEPS }).map((e) => [e.key, e.memberId]), [['founded', null]]);
+    [['regular', 'a', 10], ['present', 'a', 10], ['regular', 'b', 10], ['present', 'b', 10], ['sessions', null, 10], ['evergreen', null, 10]]);
+  assert.deepEqual(newSince(r, ss[0].id, { deps: DEPS }).map((e) => [e.key, e.memberId]),
+    [['founder', 'a'], ['founder', 'b'], ['founded', null]]);
   assert.deepEqual(newSince(r, ss[10].id, { deps: DEPS }), [], 'a session that crossed nothing earned nothing');
   assert.deepEqual(newSince(r, ss[24].id, { deps: DEPS }).map((e) => [e.key, e.memberId, e.tier]),
-    [['regular', 'a', 25], ['regular', 'b', 25], ['sessions', null, 25], ['evergreen', null, 25]]);
+    [['regular', 'a', 25], ['present', 'a', 25], ['regular', 'b', 25], ['present', 'b', 25], ['sessions', null, 25], ['evergreen', null, 25]]);
   assert.equal(newSince(r, ss[24].id, { deps: DEPS }).find((e) => e.key === 'evergreen').gameId, 'g1', 'the moment names the game per tier');
   assert.deepEqual(newSince(r, null, { deps: DEPS }), []);
 });
@@ -497,5 +519,5 @@ test('account Jahre: each anniversary, both sides of it', () => {
   assert.equal(y.tier, 3);
   assert.deepEqual(y.earnedAt, { sessionId: null, at: '2027-03-10T12:00:00.000Z' });
   assert.equal(accountBadges({}, 'not a date', T0).find((e) => e.key === 'accountYears').state, 'locked');
-  assert.equal(accountBadges(null, created).length, 4, 'now defaults to the clock');
+  assert.equal(accountBadges(null, created).length, 5, 'now defaults to the clock');
 });
