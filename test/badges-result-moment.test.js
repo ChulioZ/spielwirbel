@@ -101,3 +101,15 @@ test('a winner tap refills the moment in place', async (t) => {
   assert.equal(moment(dom), m, 'the same section, refilled rather than re-created');
   assert.deepEqual([...m.querySelectorAll('.badge')].map((b) => b.dataset.key), ['firstWin', 'founded']);
 });
+
+test('Dauerbrenner names the game that crossed THIS tier, not the first one to reach 10 (#1463)', async (t) => {
+  // Catan reaches 10, then Azul overtakes it and reaches 25 on the last night.
+  const at = (i) => new Date(Date.UTC(2026, 6, 1, 20) + i * 86400000).toISOString();
+  const sessions = Array.from({ length: 35 }, (_, i) => night(`s${i + 1}`, 1,
+    { createdAt: at(i), winnerIds: [], chosenGameId: i < 10 ? 'g1' : 'g2' }));
+  const dom = await results(t, sessions, 's35');
+  const items = [...moment(dom).querySelectorAll('.badge-moment__item')];
+  assert.deepEqual(items.map((li) => li.querySelector('.badge').dataset.key), ['evergreen'], 'nothing else crosses on night 35');
+  assert.equal(items[0].querySelector('.badge__name').textContent, 'Dauerbrenner 25');
+  assert.equal(items[0].querySelector('.badge__line').textContent, 'Azul 25-mal gespielt');
+});

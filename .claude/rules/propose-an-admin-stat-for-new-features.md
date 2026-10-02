@@ -20,10 +20,10 @@ workflow asked the question.
 
 **When a change ships a user-facing capability, ask whether the operator can see
 whether anyone uses it.** If the only answer is "open a database console",
-propose a „Funktionsnutzung" tile — naming the figure, its denominator, and
-where it comes from.
+propose a „Funktionsnutzung" line — naming the figure, the population card it
+sits on (its denominator), and where it comes from.
 
-**Propose, never add unasked.** Every tile costs a field in two backends, a case
+**Propose, never add unasked.** Every figure costs a field in two backends, a case
 in the repo contract, a render assertion and a permanent maintenance obligation.
 The operator decides — same budget posture as the „Was ist neu" list in
 `.claude/rules/keep-readme-current.md`, and for the same reason: a card that
@@ -31,13 +31,15 @@ grows a row per PR stops being read, and then it measures nothing at all.
 
 Four constraints on what may be proposed:
 
-- **Two shapes only.** A **limit** (`used / limit`, graded pill) or an
-  **adoption share** (`n / total`, neutral pill). A bare count is what the card
-  was cleaned of: „18 Runden" cannot be read without knowing how many rounds
-  exist, and the operator is precisely the person who should not have to
-  remember. **„Konten" is the single sanctioned exception** — site adoption has
-  no population of would-be accounts to divide by — and it is named here so it
-  stays an exception rather than becoming the precedent.
+- **Name its parent population.** „Funktionsnutzung" is one card per
+  denominator since #1480 — Konten, Design-Auswahl beantwortet, Runden, Spiele,
+  Sessions — so a proposed figure is a LINE on the card for the population it
+  counts (count + share of it), or an indented line under an existing figure
+  when it is a share of that subset. A bare count with no parent is what the
+  card was cleaned of: „18 Runden" cannot be read without knowing how many
+  rounds exist. The one parentless card („Freundschaften & Einladungen") exists
+  because those rows carry no tenant; it is not a precedent. A ceiling belongs
+  on „Grenzen & Kontingente" as `used / limit` instead.
 - **It must be computable from data that already exists.** A figure needing a
   new stored field, a `createdAt` backfill or a snapshot table is a separate
   decision with its own cost, not a rider on the feature's PR.
@@ -60,7 +62,7 @@ one surface over. So it rides on `.claude/skills/implement/SKILL.md` §2, beside
 the README and „Was ist neu" questions, and the default answer there is **no**:
 most changes are fixes, tweaks and refactors, which have no uptake to measure.
 
-**Related:** `.claude/rules/admin-kennzahlen-card.md` (the cards, the two tile
+**Related:** `.claude/rules/admin-kennzahlen-card.md` (the cards, the two card
 shapes and the sweeps), `.claude/rules/keep-readme-current.md` (the sibling
 per-change question, and the budget argument this one borrows),
 `.claude/rules/admin-moderation-surface.md` (the panel).

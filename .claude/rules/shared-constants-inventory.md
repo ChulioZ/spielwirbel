@@ -515,7 +515,7 @@ stylesheet, the `enabled` gate and `FACE_DESIGN`. `lib/app.js` requires it so
 `FACE_DESIGN` at mint (Der Tisch since the flip, #1202), `lib/faq.js` and `lib/legal.js` stamp `FACE_DESIGN`
 onto the standalone pages' `<html data-design>` (#1198), and `lib/me-projection.js`
 RESOLVES the stored id against it on the way out (through `lib/account-design.js`
-since #1201, which the operator's design tile and the switch-back stamp share) —
+since #1201, which the operator's design tile shares) —
 the half worth knowing, because `applyDesign()` on the
 client is deliberately policy-free, so a projection that merely echoed the
 stored value would put a design built on a dev instance onto a production page.

@@ -2655,20 +2655,6 @@
   letter-spacing: var(--track-display);
   text-transform: uppercase;
 }
-/* „Wie bisher" is small text, so it takes the notation face and the cyan ON
-   the plate (11.4:1) inside a wire — never a filled chip of the accent. */
-:root[data-design="bruecke"] .design-card__name .design-card__badge {
-  font-family: var(--font-mono);
-  font-weight: 500;
-  font-size: var(--text-xs);
-  letter-spacing: 0.08em;
-  border-radius: 0;
-}
-:root[data-design="bruecke"][data-scheme="dark"] .design-card__name .design-card__badge {
-  background: transparent;
-  border: 1px solid var(--line);
-  color: var(--brand);
-}
 :root[data-design="bruecke"] .design-card__scheme {
   font-family: var(--font-mono);
   font-size: var(--text-xs);
@@ -2763,7 +2749,6 @@
   border: 0;
   padding: 0;
 }
-:root[data-design="bruecke"] .konto-design__foot { margin-top: var(--space-4); }
 
 /* ===== #1238 — Lobby, round hub and the Abschnittsleiste ===== */
 /* B2.1 (phone lobby), B2.2 (phone hub, dock), B3.1 (desktop hub and the

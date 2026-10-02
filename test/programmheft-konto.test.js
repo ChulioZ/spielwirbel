@@ -12,7 +12,7 @@
  *   SPIELWIRBEL_UPDATE_GOLDEN=1 node --test test/programmheft-konto.test.js
  *
  * The rest pins what regresses silently:
- *   - the posters: every offered design, Klassisch first as „Wie bisher", each
+ *   - the posters: every offered design, Klassisch first and unbadged, each
  *     painted INLINE from its own registry row — no other design's colour in
  *     programmheft.css (the issue's acceptance line);
  *   - the chooser: one radio per design, one commit button named after the
@@ -118,12 +118,12 @@ test('the snapshot can see Programmheft: the same screens under it are NOT the g
 const text = (el) => (el ? el.textContent.replace(/\s+/g, ' ').trim() : '');
 const PH = { ...ME, design: 'programmheft' };
 
-test('#1376: under Programmheft every design is a print poster — Klassisch first as „Wie bisher", painted from its own row', (t) => {
+test('#1376: under Programmheft every design is a print poster — Klassisch first, unbadged (#1445), painted from its own row', (t) => {
   const dom = boot(t, 'programmheft', { loggedIn: true, me: PH });
   const wrap = dom.call('buildDesignSection', { ...PH });
   const cards = [...wrap.querySelectorAll('.design-card')];
   assert.deepEqual(cards.map((c) => c.querySelector('input').value), DESIGN_REGISTRY.map((d) => d.id));
-  assert.equal(text(cards[0].querySelector('.design-card__badge')), 'Wie bisher');
+  assert.equal(wrap.querySelector('.design-card__badge'), null, 'Klassisch carries no badge (#1445)');
   for (const card of cards) {
     const design = DESIGN_REGISTRY.find((d) => d.id === card.querySelector('input').value);
     assert.ok(card.classList.contains('design-card--print'), `${design.id} is not a print card`);
@@ -136,7 +136,7 @@ test('#1376: under Programmheft every design is a print poster — Klassisch fir
     assert.equal(art.style.getPropertyValue('--poster-sub'), design.poster.sub);
     // DOM order = visual order: the poster, then its band.
     assert.equal(art.nextElementSibling, card.querySelector('.design-card__body'));
-    assert.equal(text(card.querySelector('.design-card__name')).replace('Wie bisher', '').trim(),
+    assert.equal(text(card.querySelector('.design-card__name')),
       dom.run(`t(${JSON.stringify(design.labelKey)})`));
     assert.equal(text(card.querySelector('.design-card__line')), dom.run(`t(${JSON.stringify(design.shortKey || design.descKey)})`));
     const active = card.querySelector('.design-card__active');
