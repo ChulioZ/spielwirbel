@@ -60,6 +60,7 @@ const THING_XML = `<?xml version="1.0" encoding="utf-8"?>
     <link type="boardgamecategory" id="1021" value="Economic"/>
     <link type="boardgamemechanic" id="2072" value="Dice Rolling"/>
     <link type="boardgamemechanic" id="2040" value="Hand Management"/>
+    <link type="boardgamedesigner" id="11" value="Klaus Teuber"/>
     <link type="boardgameexpansion" id="325" value="CATAN: Seafarers"/>
     <link type="boardgameexpansion" id="926" value="CATAN: Cities &amp; Knights"/>
   </item>
@@ -255,6 +256,8 @@ test('parseThing normalizes a BGG item (analog, players, cover, url)', () => {
     minAge: 10,
     categories: ['Civilization', 'Economic'],
     mechanics: ['Dice Rolling', 'Hand Management'],
+    // #1505 — BGG's `boardgamedesigner` links, as plain names like the two above.
+    designers: ['Klaus Teuber'],
     rating: 7.09054,
     expansions: [
       { providerId: '325', title: 'CATAN: Seafarers' },
@@ -278,6 +281,7 @@ test('every provider field is null-shaped when the body lacks it', () => {
   assert.equal(empty.rating, null);
   assert.deepEqual(empty.categories, []);
   assert.deepEqual(empty.mechanics, []);
+  assert.deepEqual(empty.designers, []);
   // averageweight="0" is BGG's "no votes yet" and must read as null, like every
   // other zero-means-unknown attribute in the file.
   const zero = `<items><item type="boardgame" id="1">
@@ -519,7 +523,7 @@ test('parseGameInfo reads a MULTI-item stats body for the backfill', () => {
     </item>
   </items>`;
   const none = {
-    minPlaytime: null, maxPlaytime: null, minAge: null, categories: [], mechanics: [],
+    minPlaytime: null, maxPlaytime: null, minAge: null, categories: [], mechanics: [], designers: [],
     bestWith: [], recommendedWith: [],
   };
   assert.deepEqual(bgg.parseGameInfo(xml), [
@@ -1202,4 +1206,24 @@ test('the corpus hop gets its own 30 s deadline', async (t) => {
   t.mock.timers.tick(1);
   assert.equal(state.fired, true, 'aborted at 30 s');
   assert.match(String((await state.settled).message), /aborted/i);
+});
+
+test('designers are stored as BGG gives them, the (Uncredited) sentinel included (#1505)', () => {
+  // STORED verbatim so an uncredited game still counts as complete — an empty
+  // list would leave it re-asking BGG once per TTL forever. Every reader drops
+  // the sentinel through creditedDesigners instead (provider-info-fields.js).
+  const xml = `<items><item type="boardgame" id="1">
+    <name type="primary" value="X"/>
+    <link type="boardgamedesigner" id="3" value="(Uncredited)"/>
+    <link type="boardgamecategory" id="1" value="Party Game"/>
+  </item></items>`;
+  assert.deepEqual(bgg.parseThing(xml, '1').designers, ['(Uncredited)']);
+  // Two designers, in BGG's own order, and the inbound flag is irrelevant here:
+  // a designer link has no inverse to mark (see linkValues).
+  const two = `<items><item type="boardgame" id="2">
+    <name type="primary" value="Y"/>
+    <link type="boardgamedesigner" id="4" value="Antoine Bauza"/>
+    <link type="boardgamedesigner" id="5" value="Bruno Cathala"/>
+  </item></items>`;
+  assert.deepEqual(bgg.parseThing(two, '2').designers, ['Antoine Bauza', 'Bruno Cathala']);
 });

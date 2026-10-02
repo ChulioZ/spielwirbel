@@ -103,7 +103,7 @@ test('the shelf trigger fills every unfilled active game in one upstream call', 
   const byId = Object.fromEntries(res.body.games.map((g) => [g.id, g]));
   assert.deepEqual(byId[a.id], {
     id: a.id, weight: 3.6, minPlaytime: 30, maxPlaytime: 210, minAge: 12,
-    categories: ['Economic'], mechanics: [],
+    categories: ['Economic'], mechanics: [], designers: [],
   });
   assert.equal(byId[b.id].weight, 1.8);
   // The store, not just the response — the whole point is that the next draw
@@ -218,7 +218,7 @@ test('the shelf trigger never fails on the provider, and 404s an unknown round',
   assert.equal(res.status, 200, 'an upstream failure must not fail the screen');
   assert.deepEqual(res.body.games, [{
     id: game.id, weight: null, minPlaytime: null, maxPlaytime: null,
-    minAge: null, categories: [], mechanics: [],
+    minAge: null, categories: [], mechanics: [], designers: [],
   }]);
   // An upstream failure stamps nothing, so the next open retries rather than
   // being suppressed for the whole TTL.

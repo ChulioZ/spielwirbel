@@ -430,7 +430,11 @@ comment and a third copy in `test/game-info-view.test.js`; a field the server
 counted and the list did not would have made every open of the detail page, the
 setup screen and the Regal POST `…/provider-info` for a game that can never
 complete, with no error anywhere. Its two guards carry a `Provider` prefix
-because a classic script's top-level `const` is a global.
+because a classic script's top-level `const` is a global. Since #1505 it also owns
+`BGG_UNCREDITED` and `creditedDesigners`: BGG's `(Uncredited)` sentinel is
+STORED (so an uncredited game completes) and dropped by every reader — the
+detail page and vote sheet, the Steckbrief and `lib/recommend.js` — through that
+one helper, so no reader can treat the sentinel as a prolific designer.
 
 **The sixteenth is `public/js/member-stats.js`** (#1089): `memberStats`, one
 member's whole record in one round — sessions joined, wins, win rate,

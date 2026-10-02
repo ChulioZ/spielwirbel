@@ -1,7 +1,7 @@
 /* Spielwirbel – the Regal-Steckbrief (#1173): what a shelf adds up to.
 
    A round that imported its collection holds a shelf full of provider metadata
-   (player range, playing time, weight, categories, mechanics — see
+   (player range, playing time, weight, categories, mechanics, designers — see
    provider-info-fields.js) and, before this, nothing that read it back. This
    turns the ACTIVE shelf into bands and the gaps a draw will hit („für 6+
    Personen: nur 2 Spiele", „über 120 Min.: kein Spiel").
@@ -30,7 +30,7 @@
 const SHELF_PROFILE_MIN_GAMES = 8;
 // A band holding fewer games than this is a GAP worth a sentence (#1173).
 const SHELF_PROFILE_FEW = 3;
-// How many mechanics and categories the profile names.
+// How many mechanics, categories and designers the profile names.
 const SHELF_PROFILE_TOP = 5;
 // The table sizes the seat bands ask about. The last one is „6+": a game
 // counts there when it seats ANY table of six or more.
@@ -110,11 +110,15 @@ function shelfDimension(games, keys, bandsOf) {
 // by name so the order is stable across renders. A name held by ONE game is not
 // "leading" anything, so it is left out — on a small shelf the top five would
 // otherwise be five arbitrary singletons.
-function shelfTop(games, field) {
+//
+// `keep` narrows a game's list before counting — the designers pass
+// `deps.creditedDesigners`, so BGG's `(Uncredited)` sentinel never reads as one
+// prolific designer behind every party game (#1505).
+function shelfTop(games, field, keep = (list) => list) {
   const counts = new Map();
   games.forEach((g) => {
     if (!Array.isArray(g[field])) return;
-    new Set(g[field]).forEach((name) => {
+    new Set(keep(g[field])).forEach((name) => {
       if (typeof name !== 'string' || !name) return;
       counts.set(name, (counts.get(name) || 0) + 1);
     });
@@ -130,9 +134,12 @@ function shelfTop(games, field) {
 
    `games` is the ACTIVE shelf (isActiveGame) — a wished or archived game reaches
    no draw, so it has no place in "what can this shelf do".
-   `deps` is { fitsPlayerCount } from draw-pool.js.
+   `deps` is { fitsPlayerCount } from draw-pool.js and { creditedDesigners }
+   from provider-info-fields.js — both handed in for the same reason (see the
+   header): this file cannot require() a sibling.
 
-   Returns { linked, total, seats, time, weight, mechanics, categories, gaps }:
+   Returns { linked, total, seats, time, weight, mechanics, categories,
+   designers, gaps }:
    each of seats/time/weight is { known, unknown, bands: [{ key, n }] } or null;
    `gaps` lists every seat/time band under SHELF_PROFILE_FEW as { dim, key, n }, emptiest
    first (a band with NOTHING is the stronger statement), dimension order
@@ -170,6 +177,7 @@ function shelfProfile(games, deps) {
     weight,
     mechanics: shelfTop(shelf, 'mechanics'),
     categories: shelfTop(shelf, 'categories'),
+    designers: shelfTop(shelf, 'designers', deps.creditedDesigners),
     gaps,
   };
 }

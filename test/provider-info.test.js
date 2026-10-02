@@ -30,7 +30,7 @@ afterEach(() => { global.fetch = realFetch; });
 // sibling rides along so a sloppy name match would import the wrong number
 // (7.0 instead of the weight) and fail the assertions loudly.
 const thingXml = (items, withStats) => `<?xml version="1.0" encoding="utf-8"?><items>${items
-  .map(({ id, weight, desc, playtime, age, cats, mechs }) => `<item type="boardgame" id="${id}">
+  .map(({ id, weight, desc, playtime, age, cats, mechs, designers }) => `<item type="boardgame" id="${id}">
     <name type="primary" value="Game ${id}"/>
     <minplayers value="2"/><maxplayers value="4"/>
     ${desc ? `<description>${desc}</description>` : ''}
@@ -38,6 +38,7 @@ const thingXml = (items, withStats) => `<?xml version="1.0" encoding="utf-8"?><i
     ${age ? `<minage value="${age}"/>` : ''}
     ${(cats || []).map((c) => `<link type="boardgamecategory" id="1" value="${c}"/>`).join('')}
     ${(mechs || []).map((m) => `<link type="boardgamemechanic" id="2" value="${m}"/>`).join('')}
+    ${(designers || []).map((d) => `<link type="boardgamedesigner" id="3" value="${d}"/>`).join('')}
     ${withStats ? `<statistics><ratings><average value="7.0"/><bayesaverage value="6.9"/>
       ${weight ? `<averageweight value="${weight}"/>` : '<averageweight value="0"/>'}
     </ratings></statistics>` : ''}
@@ -50,7 +51,7 @@ const thingXml = (items, withStats) => `<?xml version="1.0" encoding="utf-8"?><i
 // projection is where it is withheld; see the vote-link spec below).
 const infoBody = (over = {}) => ({
   weight: null, minPlaytime: null, maxPlaytime: null,
-  minAge: null, categories: [], mechanics: [], rating: 7.0, ...over,
+  minAge: null, categories: [], mechanics: [], designers: [], rating: 7.0, ...over,
 });
 
 const stubFetch = (items) => {
@@ -192,6 +193,7 @@ test('a game already carrying #717\'s fields still receives the ones #724 added'
   const calls = stubFetch([{
     id: '900012', weight: '2.5', desc: 'Bereits da.',
     playtime: [45, 75], age: 12, cats: ['Economic'], mechs: ['Worker Placement', 'Trading'],
+    designers: ['Uwe Rosenberg'],
   }]);
 
   const res = await request(app).get(`/api/rounds/${rid}/games/${game.id}/provider-info`);
@@ -199,12 +201,15 @@ test('a game already carrying #717\'s fields still receives the ones #724 added'
   assert.deepEqual(res.body, infoBody({
     weight: 2.5, minPlaytime: 45, maxPlaytime: 75,
     minAge: 12, categories: ['Economic'], mechanics: ['Worker Placement', 'Trading'],
+    designers: ['Uwe Rosenberg'],
   }));
 
   const stored = (await repo.getRound('default', rid)).games.find((g) => g.id === game.id);
   assert.equal(stored.minPlaytime, 45);
   assert.equal(stored.minAge, 12);
   assert.deepEqual(stored.mechanics, ['Worker Placement', 'Trading']);
+  // #1505's field arrives the same way, on a game the earlier fields had filled.
+  assert.deepEqual(stored.designers, ['Uwe Rosenberg']);
   assert.equal(stored.rating, 7.0);
 });
 
@@ -219,6 +224,9 @@ test('a game carrying EVERY field is complete — the widened check still termin
     source: { provider: 'bgg', externalId: '900013', url: null },
     weight: 2.5, minPlaytime: 45, maxPlaytime: 75, minAge: 12,
     categories: ['Economic'], mechanics: ['Trading'], rating: 7.4,
+    // BGG's sentinel, not a name (#1505): an uncredited game must count as
+    // complete, which is why the sentinel is stored rather than dropped.
+    designers: ['(Uncredited)'],
     // EMPTY lists, deliberately (#1005): the poll's guard accepts `[]` as the
     // real answer "nobody voted", so an unpolled game still completes. Written
     // as [] here rather than as a filled poll precisely because that is the case
@@ -273,6 +281,7 @@ test('the vote-link ballot projects the metadata but NEVER the rating', async ()
     weight: 3.2, providerInfoAt: new Date().toISOString(),
     minPlaytime: 30, maxPlaytime: 90, minAge: 12,
     categories: ['Economic'], mechanics: ['Worker Placement'],
+    designers: ['Uwe Rosenberg'],
     rating: 8.4,
   });
   stubFetch([]);
@@ -289,6 +298,8 @@ test('the vote-link ballot projects the metadata but NEVER the rating', async ()
   assert.equal(g.minAge, 12);
   assert.deepEqual(g.categories, ['Economic']);
   assert.deepEqual(g.mechanics, ['Worker Placement']);
+  // The vote sheet's „Autor:innen" row (#1505) reads this projection.
+  assert.deepEqual(g.designers, ['Uwe Rosenberg']);
 
   // THE guarantee (#724). The game genuinely carries rating 8.4 — asserted
   // above via the store — so this is a real exclusion, not a game that had
@@ -426,6 +437,7 @@ test('a game with weight and the #724 fields is COMPLETE — no weekly re-ask fo
     source: { provider: 'bgg', externalId: '13' },
     weight: 2.28, minPlaytime: 60, maxPlaytime: 120, minAge: 10,
     categories: ['Economic'], mechanics: ['Trading'], rating: 7.09,
+    designers: ['Klaus Teuber'],
     bestWith: [3], recommendedWith: [3, 4],
   };
   assert.equal(needsProviderInfo(complete), false, 'a fully-filled game still asks the provider');
