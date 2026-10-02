@@ -521,9 +521,12 @@
 }
 :root[data-design="bruecke"] .sheet { padding: 0 18px; }
 
-/* --- The phone's sheet: docked, at most 70 % tall, with a grip -------------------
+/* --- The phone's sheet: docked, with a grip ---------------------------------------
    B15a: „Ein Sheet ist nie höher als 70 % des Screens und behält den Griff
-   oben." Below 640px the app docks every non-centred sheet; the editors dock
+   oben." The grip is built; the 70 % is NOT — the operator kept the app's own
+   85 % ceiling (styles.css `.sheet`) in the #1482 review, so a long sheet
+   (the BGG import, a twelve-person picker) keeps its rows rather than losing a
+   sixth of the phone to the scrim. Below 640px the app docks every non-centred sheet; the editors dock
    too (`.sheet-backdrop--editor`, as on Der Tisch, Ocean and Das Programmheft).
    A docked plate spans the phone, so only its top edge is drawn. The dialogs
    keep their centre — B15b draws them the same at both widths — and a list
@@ -539,7 +542,6 @@
     max-width: none;
   }
   :root[data-design="bruecke"] :is(.sheet-backdrop:not(.sheet-backdrop--center), .sheet-backdrop--editor) > .sheet {
-    max-height: max(280px, min(70dvh, 100%));
     border-left: 0;
     border-right: 0;
     border-bottom: 0;
@@ -594,24 +596,27 @@
 :root[data-design="bruecke"][data-scheme="dark"] .sheet__actions { border-top-color: var(--hairline); }
 
 /* --- The filter sheet (B15a.1): group heads as notation, the chips as targets ---- */
-:root[data-design="bruecke"] :is(.fpanel__group .field__label, .mfilter__label) {
+:root[data-design="bruecke"] :is(.fpanel__group .field__label, .mfilter__group > .field__label, .mfilter__label) {
   font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 600;
   letter-spacing: var(--track-notation);
   text-transform: uppercase;
 }
-:root[data-design="bruecke"][data-scheme="dark"] :is(.fpanel__group .field__label, .mfilter__label) { color: var(--ink-soft); }
+:root[data-design="bruecke"][data-scheme="dark"] :is(.fpanel__group .field__label, .mfilter__group > .field__label, .mfilter__label) { color: var(--ink-soft); }
 :root[data-design="bruecke"] .fpanel__body :is(.chip, .tag-mode__opt) { min-height: var(--target-key); }
 
 /* --- The confirm dialog (B15b.1) ----------------------------------------------------
    „Seine Überschrift ist die Frage" — confirmDialog already lifts the question
    into the head. The plate's frame says what kind of question it is: red when
-   the verb destroys, cyan when it changes something. „Zerstörende Knöpfe sind
-   rot umrandet, nie rot gefüllt — eine große rote Fläche lädt zum Klicken ein":
-   so unlike Ocean and Das Programmheft the destructive verb stays the component
-   layer's red WIRE, here at rest and under the pointer. A verb that destroys
-   nothing is the amber plate. Cancel takes one part, the verb two.
+   the verb destroys, cyan when it changes something. The destructive verb is
+   red-FILLED with the night as its ink, at rest and under the pointer — as on
+   Ocean and Das Programmheft. B15b draws a red wire („nie rot gefüllt"); the
+   operator overruled that in the #1482 review so the three designs say a
+   destroying verb the same way. Only in a DIALOG: a `.btn--danger` elsewhere
+   keeps the component layer's wire. The label measures 7.2:1 (#070b14 on
+   #ff6b85). A verb that destroys nothing is the amber plate. Cancel takes one
+   part, the verb two.
    `.sheet[role="alertdialog"]` is confirmDialog's own signature. */
 :root[data-design="bruecke"] .sheet.sheet--dialog[role="alertdialog"] {
   max-width: 470px;
@@ -654,9 +659,9 @@
 }
 :root[data-design="bruecke"][data-scheme="dark"] .sheet__actions--confirm .btn--danger,
 :root[data-design="bruecke"][data-scheme="dark"] .sheet__actions--confirm .btn--danger:hover:not(:disabled) {
-  background: transparent;
+  background: var(--danger);
   border-color: var(--danger);
-  color: var(--danger);
+  color: var(--on-accent);
 }
 
 /* --- Popovers (B15a.5): the raised plate in a cyan frame ---------------------------
@@ -847,6 +852,73 @@
   border: 1px solid var(--brand);
   color: var(--brand);
 }
+
+/* --- Found by the overlay sweep in the #1482 review --------------------------------
+   Every sheet and popover was opened under Die Brücke at 390 and 1440 (the PR
+   lists them). These are the ones that looked broken; each is geometry the
+   other designs never had to answer, because their buttons are smaller. */
+
+/* The design chooser's bar is the one `.sheet__actions` built without
+   `.toolbar` (design-picker.js), so it was a block: „Später entscheiden" sat on
+   a line of its own over a primary that did not reach the edge, and the
+   two-parts/one-part rule above had no flex container to act on. */
+:root[data-design="bruecke"] .sheet__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+/* A field row pairing an input with its own button (the add-game sheet's „Neuer
+   Tag" + „Hinzufügen"): the app's ≤639px `.toolbar .btn { flex: 1 1 auto }` let
+   Die Brücke's 15px uppercase button take the row and squeezed the input to
+   „Neue". The input keeps a floor, the button is a notation wire like every
+   secondary in a sheet. The tag editor's row gets the same button. */
+:root[data-design="bruecke"] .sheet .toolbar:not(.sheet__actions):has(> .input) > .input {
+  flex: 1 1 140px;
+  min-width: 0;
+}
+:root[data-design="bruecke"] :is(.sheet .toolbar:not(.sheet__actions):has(> .input), .pp-row) > .btn:not(.btn--primary, .btn--danger) {
+  flex: 0 1 auto;
+  min-height: var(--target-key);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+}
+
+/* The two editors whose form is ONE row of an input and buttons (add a member,
+   tag a game): the primary is B15a's — the amber plate under the row, full
+   width, 52px — as in the three row editors' `.editor-actions`. The member
+   editor's row had no rule at all, so on a phone its button sat glued to the
+   input's bottom edge. */
+:root[data-design="bruecke"] :is(.popover--add-member, .editor--add-member) .pp-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+:root[data-design="bruecke"] :is(.popover--add-member, .editor--add-member) .pp-row > .input { flex: 1 1 100%; min-width: 0; }
+:root[data-design="bruecke"] :is(.popover--add-member, .editor--add-member, .popover--tags, .editor--tags) .pp-row > .btn--primary {
+  flex: 1 1 100%;
+  min-height: 52px;
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+:root[data-design="bruecke"] :is(.popover--tags, .editor--tags) .pp-row { gap: 10px; }
+
+/* A title that wraps (DE „Mitspieler hinzufügen" at the popover's 300px floor)
+   filled the 44px head and touched the frame; the padding only shows once a
+   title is taller than the ×. */
+:root[data-design="bruecke"] .popover__head--editor .popover__title { padding-block: 6px; }
+
+/* The avatar-colour editor: the chosen swatch's ring ran under the sheet's
+   sticky head (which paints the plate) and lost its top; and the app's
+   --brand-edge ring is a dark teal on this plate, so here it is the cyan, as
+   every other selection in Die Brücke. */
+:root[data-design="bruecke"] .member-swatches { padding-top: 4px; }
+:root[data-design="bruecke"][data-scheme="dark"] .member-swatch.is-active { box-shadow: 0 0 0 3px var(--brand); }
 
 /* --- The „…" menu (B15b.3) -----------------------------------------------------------
    44px rows at 14px under a hairline, the glyph in a 24px column: cyan for an

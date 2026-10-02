@@ -7,7 +7,7 @@
  * Brücke: the popover's title head and the three form editors' row lists.
  * Everything else is CSS in the #1244 section of bruecke.css, and what can be
  * pinned of it is pinned below — the claims whose regression still renders
- * plausibly (a filled red verb, a pill toast, a grip on the desktop popover, a
+ * plausibly (a wire where the dialog's verb should be filled, a pill toast, a grip on the desktop popover, a
  * sticky bar painting the night across the plate).
  *
  * Named for what it covers: `popover`, `sheet` and `confirm-dialog` are taken
@@ -137,13 +137,18 @@ test('every rule in the section that reads a colour token is gated on the dark s
   assert.deepEqual(ungated, []);
 });
 
-test('a destructive verb is a red WIRE, never a red fill (B15b)', () => {
-  const fills = RULES.filter(([, b]) => /(^|[;\s])background(-color)?:\s*var\(--danger\)/.test(b)).map(([s]) => s);
-  assert.deepEqual(fills, [], 'B15b: „rot umrandet, nie rot gefüllt"');
-  const wire = RULES.find(([s]) => s.includes(`${G} .sheet__actions--confirm .btn--danger:hover:not(:disabled)`));
-  assert.ok(wire, 'the dialog does not restate the wire under the pointer');
-  assert.match(wire[1], /background:\s*transparent/);
-  assert.match(wire[1], /border-color:\s*var\(--danger\)/);
+test('a destructive DIALOG verb is red-FILLED with night ink, at rest and under the pointer', () => {
+  // Operator decision in the #1482 review: filled like Ocean and Das
+  // Programmheft, overruling B15b's wire. The night on --danger is 7.2:1.
+  const fill = RULES.find(([s]) => s.includes(`${G} .sheet__actions--confirm .btn--danger:hover:not(:disabled)`));
+  assert.ok(fill, 'the dialog does not restate its verb under the pointer');
+  assert.ok(fill[0].includes(`${G} .sheet__actions--confirm .btn--danger,`), 'the fill is not the resting state too');
+  assert.match(fill[1], /background:\s*var\(--danger\)/);
+  assert.match(fill[1], /color:\s*var\(--on-accent\)/);
+  // Only in the dialog: no OTHER rule of the section fills a button red.
+  const elsewhere = RULES.filter(([s, b]) => /(^|[;\s])background(-color)?:\s*var\(--danger\)/.test(b)
+    && !s.includes('.sheet__actions--confirm .btn--danger')).map(([s]) => s);
+  assert.deepEqual(elsewhere, [], 'a red fill outside the confirm dialog');
   assert.match(bodiesNaming('[role="alertdialog"]:has(.sheet__actions--confirm .btn--danger)'), /border-color:\s*var\(--danger\)/,
     'a destructive dialog is not framed in red');
 });
@@ -155,13 +160,17 @@ test('the sheet re-points the ground its sticky bars paint from, and wears the c
   assert.match(own, /border-top:\s*2px solid var\(--brand\)/);
 });
 
-test('the grip and the 70 % cap exist on a phone only', () => {
+test('the grip exists on a phone only, and Die Brücke keeps the app\'s 85 % sheet ceiling', () => {
   const phone = mediaBlocks(MINE).filter(([q]) => /max-width:\s*639px/.test(q)).map(([, css]) => css).join('\n');
   assert.match(phone, /\.sheet__head::before\s*\{[^}]*width:\s*44px/, 'no grip on the phone sheet');
-  assert.match(phone, /max-height:\s*max\(280px,\s*min\(70dvh,\s*100%\)\)/, 'the phone sheet is not capped at 70 %');
   const outside = rulesOf(topLevel(MINE)).map(([s]) => s).join('\n');
   assert.doesNotMatch(outside, /sheet__head::before/, 'a grip escaped the phone block');
-  assert.doesNotMatch(outside, /70dvh/, 'the 70 % cap escaped the phone block');
+  // Operator decision in the #1482 review: B15a's 70 % cap is not built. Any
+  // max-height on a sheet in this section — at any width — overrides styles.css's
+  // min(85dvh, 100%) and shortens every long sheet on a phone.
+  const capped = RULES.filter(([s, b]) => /\.sheet\b/.test(s) && !/\.sheet[_-]/.test(s.split(' ').pop()) && /max-height/.test(b))
+    .map(([s]) => s);
+  assert.deepEqual(capped, [], 'Die Brücke overrides the app\'s sheet ceiling');
 });
 
 test('the scrim is the night at 72 %, declared where the harness resolves it', () => {
@@ -204,4 +213,26 @@ test('every overlay control meets its target token', () => {
   assert.equal(minH(`${B} .toast__action`), 'var(--target-foot)', 'the toast action (B15b: 32px)');
   assert.equal(minH(`${B} .toast__close`), 'var(--target-foot)', 'the toast ×');
   assert.equal(minH(`${B} .sheet__actions--confirm .btn`), '48px', 'a dialog button');
+});
+
+test('the #1482 sweep fixes: a flex action bar, an input with a floor beside its button, the one-row editors\' primary', () => {
+  // The design chooser builds `.sheet__actions` without `.toolbar`, so without
+  // this its two buttons were a block and stacked ragged.
+  const bar = RULES.find(([s]) => s === `${B} .sheet__actions`);
+  assert.ok(bar, 'no flex rule on the sheet action bar');
+  assert.match(bar[1], /display:\s*flex/);
+  assert.match(bar[1], /flex-wrap:\s*wrap/);
+  // „Neuer Tag" was squeezed to „Neue" by the app's ≤639px `.toolbar .btn` grow.
+  const input = RULES.find(([s]) => s.includes('.toolbar:not(.sheet__actions):has(> .input) > .input'));
+  assert.ok(input, 'the input beside its button has no floor');
+  assert.match(input[1], /flex:\s*1 1 140px/);
+  assert.match(input[1], /min-width:\s*0/);
+  const btn = RULES.find(([s]) => s.includes('.pp-row) > .btn:not(.btn--primary, .btn--danger)'));
+  assert.ok(btn, 'the secondary beside an input is not a notation wire');
+  assert.match(btn[1], /flex:\s*0 1 auto/);
+  // Add-member and tags: the primary is the full-width amber plate under the row.
+  const primary = RULES.find(([s]) => s.includes('.editor--tags) .pp-row > .btn--primary'));
+  assert.ok(primary && primary[0].includes('.editor--add-member'), 'the one-row editors\' primary rule is gone');
+  assert.match(primary[1], /flex:\s*1 1 100%/);
+  assert.match(primary[1], /min-height:\s*52px/);
 });
