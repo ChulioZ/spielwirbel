@@ -75,6 +75,7 @@ test('the menu lists exactly the offered designs, the worn one checked', (t) => 
   assert.equal(group.getAttribute('aria-label'), dom.run("t('design.pick.label')"));
   assert.deepEqual(rowsOf(dom).map((r) => r.querySelector('input').value), [CLASSIC_DESIGN, 'tisch']);
   assert.equal(rowFor(dom, 'tisch').querySelector('input').checked, true);
+  assert.equal(group.querySelector('.design-card__badge'), null, 'Klassisch carries no badge (#1445)');
   assert.equal(btnOf(dom).getAttribute('aria-expanded'), 'true');
   assert.equal(dom.document.activeElement, rowFor(dom, 'tisch').querySelector('input'), 'focus lands on the checked radio');
 });

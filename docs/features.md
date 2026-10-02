@@ -841,8 +841,8 @@ What the app does, in detail. For a short overview see the
   look the app started with, which stays selectable for good. Since the flip
   (#1202) Der Tisch is what every account wears until it chooses, and what a
   logged-out visitor sees (landing, sign-in, FAQ, legal pages). An account that
-  has never been asked gets a one-time card offering the choice — „Wie bisher"
-  brings Klassisch back, „Später entscheiden" keeps Der Tisch — and the design
+  has never been asked gets a one-time card offering the choice — picking
+  Klassisch brings it back, „Später entscheiden" keeps Der Tisch — and the design
   can be changed any time with the **palette button in the top bar**, beside the
   language picker (#1429), or under **Konto → Design**; signed in, it applies on
   every screen and every device you sign in on. The palette button is there for

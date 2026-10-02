@@ -36,7 +36,7 @@ const klassisch = designById('klassisch');
 test('the flip (#1202): Der Tisch is live and is the face; Klassisch stays offered', () => {
   assert.equal(FACE_DESIGN, 'tisch');
   assert.equal(tisch.enabled, true);
-  assert.equal(klassisch.enabled, true, '„Wie bisher" must stay selectable forever');
+  assert.equal(klassisch.enabled, true, 'Klassisch must stay selectable forever');
   assert.equal(CLASSIC_DESIGN, 'klassisch');
 });
 
