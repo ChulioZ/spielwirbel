@@ -16,7 +16,8 @@ What the app does, in detail. For a short overview see the
   round is set up on a playful "seats around the table" screen, optionally
   importing the games list from an existing round. The **name can be corrected
   later** — click it on the round's Start screen (or in the desktop rail) and
-  type; the change is noted in the Chronik, so on a shared round everyone can
+  type, or, under Das Programmheft, edit the always-open Name field at the top
+  of the round's Einstellungen (#1423); the change is noted in the Chronik, so on a shared round everyone can
   see who renamed it. Groups change, so a further
   seat can be added later from the "+" in the round's member strip. With accounts on, the seat at
   the head of that table is **yours** — the creator is seated automatically (opt

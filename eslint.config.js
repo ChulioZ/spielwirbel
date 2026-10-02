@@ -485,7 +485,7 @@ const frontendGlobals = {
   hubDeps: 'readonly', hubCard: 'readonly', hubSuggestCard: 'readonly',
   hubPresetChips: 'readonly', hubPulseCard: 'readonly', hubCareCard: 'readonly',
   hubAnniversaryCard: 'readonly', renderRecoTeaser: 'readonly',
-  editableRoundName: 'readonly',
+  editableRoundName: 'readonly', saveRoundName: 'readonly',
   // #1269 — Der Tisch's young-round states (hub-cards.js, views-round-start.js)
   roundIsYoung: 'readonly', hubSentenceCard: 'readonly', hubYoungCard: 'readonly',
   hubEmptyTable: 'readonly',
