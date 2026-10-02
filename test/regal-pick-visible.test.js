@@ -12,9 +12,7 @@
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const path = require('node:path');
-const { RULES, ROOT, rulesOf, declaredValue } = require('./support/css');
+const { RULES, declaredValue } = require('./support/css');
 
 const members = (sel) => sel.split(',').map((s) => s.trim());
 const rulesNaming = (selector, rules = RULES) =>
@@ -41,19 +39,6 @@ test('a picked game rings its cover, in every design', () => {
     'an INSET shadow on the cover layer — anything on .game-card__img itself paints under ::after');
 });
 
-test('no design removes the cover layer or re-shadows it, either of which drops the ring', () => {
-  const dir = path.join(ROOT, 'public/css/designs');
-  const files = fs.readdirSync(dir).filter((f) => f.endsWith('.css'));
-  assert.ok(files.length >= 2, 'the design stylesheets moved');
-  let seen = 0;
-  for (const f of files) {
-    const css = fs.readFileSync(path.join(dir, f), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
-    for (const [sel, body] of rulesOf(css)) {
-      if (!/\.game-card__img::after\b/.test(sel)) continue;
-      seen += 1;
-      assert.notEqual(declaredValue(body, 'content'), 'none', `${f}: ${sel} removes the layer`);
-      assert.equal(declaredValue(body, 'box-shadow'), null, `${f}: ${sel} sets box-shadow`);
-    }
-  }
-  assert.ok(seen >= 1, 'no design touches the cover layer any more — the scan guards nothing');
-});
+// A design removing or re-shadowing .game-card__img::after would drop the ring.
+// That is now covered by the stronger guard in test/cover-fill-shared.test.js
+// (#1504): no design may style the frame's ::before/::after at all.
