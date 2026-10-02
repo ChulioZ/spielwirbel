@@ -12,6 +12,7 @@ I18N.ko = {
   'footer.trustHosting': 'EU 내 호스팅 · GDPR 준수',
   'footer.trustNoTracking': '추적 없음, 광고 없음, 외부 스크립트 없음',
   'common.back': '뒤로',
+  'common.backToRounds': '내 모임으로 돌아가기',
   'common.delete': '삭제',
   'common.apply': '적용',
   'common.add': '추가',

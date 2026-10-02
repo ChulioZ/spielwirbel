@@ -11,6 +11,7 @@ I18N.fi = {
   'footer.trustHosting': 'Palvelin EU:ssa · GDPR-yhteensopiva',
   'footer.trustNoTracking': 'Ei seurantaa, ei mainoksia, ei kolmannen osapuolen skriptejä',
   'common.back': 'Takaisin',
+  'common.backToRounds': 'Takaisin omiin porukoihin',
   'common.delete': 'Poista',
   'common.apply': 'Käytä',
   'common.add': 'Lisää',

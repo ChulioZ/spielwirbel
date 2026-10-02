@@ -14,6 +14,7 @@ I18N.de = {
   'footer.trustHosting': 'EU-Hosting · DSGVO-konform',
   'footer.trustNoTracking': 'Kein Tracking, keine Werbung, keine Fremd-Skripte',
   'common.back': 'Zurück',
+  'common.backToRounds': 'Zurück zu meinen Runden',
   'common.delete': 'Löschen',
   'common.apply': 'Übernehmen',
   'common.add': 'Hinzufügen',

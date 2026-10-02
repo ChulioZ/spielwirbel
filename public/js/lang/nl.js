@@ -34,6 +34,7 @@ I18N.nl = {
   'footer.trustHosting': 'Gehost in de EU · AVG-conform',
   'footer.trustNoTracking': 'Geen tracking, geen advertenties, geen scripts van derden',
   'common.back': 'Terug',
+  'common.backToRounds': 'Terug naar mijn groepen',
   'common.delete': 'Verwijderen',
   'common.apply': 'Toepassen',
   'common.add': 'Toevoegen',
