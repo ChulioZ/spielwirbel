@@ -621,10 +621,9 @@ function renderStartTab(round, activeGames) {
   );
   navLink(settingsBtn, roundPath(rid, 'settings'), () => showRoundSettings(rid));
   actions.appendChild(settingsBtn);
-  // Ocean: the frame's last cell — the end of the page on a phone, the foot of
-  // the centre column from 1280 (oceanHubActions).
-  if (ocean) oceanHubActions(cols, actions);
-  else (bh ? bh.actions : ph ? ph.root : app).appendChild(actions);
+  // Ocean: the frame's last cell. From 1280 the container is hidden with the
+  // rest of the rail-owned set, so it needs no wide-layout placement (#1498).
+  (bh ? bh.actions : ph ? ph.root : ocean ? cols.root : app).appendChild(actions);
   if (bh) brueckeStatus();
 }
 

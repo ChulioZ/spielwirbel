@@ -150,15 +150,16 @@ test('Ocean: the hub is three columns in phone order — crew, the shell and its
   assert.ok(hero.querySelector('.ocean-tide'), 'the round marker has no tide line');
 });
 
-test('Ocean from 1280: the quiet actions close the centre column instead of a row of their own (#1496)', async (t) => {
+test('Ocean from 1280: the quiet actions stay the frame\'s last cell, rail-owned, never moved into the centre column (#1496, #1498)', async (t) => {
   const dom = await screen(t, 'ocean', 'start', busyRound(), { wide: true });
   const hub = dom.app.querySelector('.ocean-hub');
-  // A row under the centre column was sized by the taller aside beside it, so a
-  // short centre column left a gap above the actions.
-  assert.ok(hub.querySelector('.ocean-hub__main').lastElementChild.classList.contains('hub-actions'));
+  // From 1280 the rail carries „Einstellungen" and `.hub-actions` is hidden, so
+  // nothing moves it: a wide-layout placement would only be dead code.
+  assert.equal(hub.querySelector('.ocean-hub__main .hub-actions'), null, 'the actions were moved into the centre column');
+  assert.ok(hub.lastElementChild.classList.contains('hub-actions') && hub.lastElementChild.classList.contains('rail-owned'));
   assert.deepEqual(
     [...hub.children].map((el) => el.className.split(' ')[0]),
-    ['ocean-hub__crew', 'ocean-hub__main', 'ocean-hub__aside', 'hub-offshelf'],
+    ['ocean-hub__crew', 'ocean-hub__main', 'ocean-hub__aside', 'hub-offshelf', 'hub-actions'],
   );
 });
 
@@ -302,8 +303,8 @@ test('ocean.css: the #1211 section lays out the Reling at 104px and the hub as 2
   const wide = own.split('@media (min-width: 1280px)').slice(1).join('\n');
   assert.match(wide, /\.rail \{[^}]*width: 104px/);
   assert.match(wide, /grid-template-columns: 250px minmax\(0, 1fr\) 320px/);
-  // From 1280 the actions sit in the centre column (oceanHubActions), so no
-  // rule may place them in a grid row of their own there (#1496).
+  // From 1280 the actions are hidden (rail-owned), so no rule may place them in
+  // a grid row of their own there (#1496, #1498).
   const only1280 = mediaBlocks(own.replace(/\/\*[\s\S]*?\*\//g, ''))
     .filter(([q]) => q === '(min-width: 1280px)').map(([, css]) => css).join('\n');
   assert.match(only1280, /\.ocean-hub__main \{/, 'the 1280 blocks were not found');

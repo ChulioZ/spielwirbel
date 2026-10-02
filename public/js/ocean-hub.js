@@ -44,16 +44,6 @@ function oceanHubFrame() {
   };
 }
 
-/* The quiet actions: the frame's last cell on a phone and from 860, the foot
-   of the centre column from 1280 (O3.2). They are MOVED into that column rather
-   than placed in a grid row under it (#1496): a row under the centre column is
-   sized by the taller aside beside it, so a short centre column left a gap
-   above the actions. Moving keeps DOM order = visual order at both widths. */
-const OCEAN_HUB_WIDE = '(min-width: 1280px)';
-function oceanHubActions(cols, actions) {
-  reflowAt(OCEAN_HUB_WIDE, cols.root, (wide) => (wide ? cols.main : cols.root).appendChild(actions));
-}
-
 /* The shell (O1.9 „Knopfkern", O2.1, O3.2): two sand halves drawn behind the
    one action, which becomes the bubble. The halves are aria-hidden spans — pure
    picture, no text, never a ground for anything but the bubble — and the
