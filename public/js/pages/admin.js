@@ -259,16 +259,6 @@
     return 'ok';
   }
 
-  /* „n / total", the ONLY shape an adoption figure may take (#1124). A bare
-     count is what this card was cleaned of: „18 Runden" cannot be read without
-     knowing how many rounds there are, and the reader of an operator panel is
-     precisely the person who should not have to remember.
-
-     A zero denominator renders „—", not „0 / 0": on a fresh instance the latter
-     claims a share of nothing, and 0/0 is the one input that would otherwise
-     produce a percentage nobody can compute. */
-  const share = (n, total) => (total > 0 ? `${n} / ${total}` : '—');
-
   /* ---- card 1: Grenzen & Kontingente --------------------------------------
      What is close to refusing a user, plus the runtime. Everything here either
      carries a graded pill or is a single fact about the process — nothing on
@@ -326,161 +316,165 @@
   }
 
   /* ---- card 2: Funktionsnutzung -------------------------------------------
-     Site adoption (Konten) and feature adoption (everything else). NO VERDICTS
-     here, ever: low uptake is not a fault condition, and a green pill would
-     grade something for which nobody has set a threshold.
+     Grouped by PARENT POPULATION (#1480): one card per denominator, the
+     population as its first line, every figure below it as a count with a
+     quiet share of its parent. The card replaces nine heterogeneous tiles whose
+     denominators the reader had to work out line by line.
 
-     Two tile shapes, both used below:
-      - a COMPOSITE tile, whose breakdown lines are parts of the headline share
-        (Regal-Nutzung, Designs, Titelbilder). The headline is the union, which
-        the parts cannot be summed into — one round can be in two of them.
-      - a BUNDLE tile, whose figures are independent shares of the same (or a
-        related) denominator. The headline is the tile's leading figure and each
-        remaining line carries its own „n / total", so no line is left to be read
-        against a denominator the reader has to guess. */
-  function adoptionRows(s) {
+     NO VERDICTS here, ever: low uptake is not a fault condition, and a pill
+     would grade something for which nobody has set a threshold.
+
+     Card shape: { title, total, lines: [{ label, n, of, depth }] }.
+      - `total` null = a card with no parent population (the rest card): its
+        lines are bare counts and carry no share.
+      - `n` null = a GROUP LABEL, no figure — it only names the lines under it.
+      - `of` is the line's own denominator, null for no share. A line is
+        nested one level (`depth` 1, 2) exactly when it is a share of a SUBSET
+        rather than of the card's population, and then `of` is the line
+        directly above it. Three places today: the Regal union, the cover union
+        and the session funnel. The „gespielte Sessions" bands are a partition
+        of Runden, so they divide by Runden — the label above them only names
+        them. */
+
+  /* Whole percent, computed HERE: the server reports facts, the panel
+     interprets them (.claude/rules/admin-kennzahlen-card.md). A zero
+     denominator renders „—", never „NaN %": on a fresh instance there is no
+     share to state. The no-break space keeps „52 %" on one line. */
+  const pct = (n, of) => (of > 0 ? `${Math.round((100 * n) / of)}\u00a0%` : '—');
+
+  function adoptionCards(s) {
     const m = s.metrics;
     const a = m.adoption;
     /* THE CARD'S OWN DENOMINATORS (#1174), never `m.rounds.total` /
-       `m.content.*` / `m.accounts.total`. Those count every real tenant, while
-       every numerator here may have had the operator's own tenants removed
+       `m.content.*` / `m.accounts.*`. Those count every real tenant, while
+       every figure here may have had the operator's own tenants removed
        (ADMIN_EXCLUDE_TENANTS) — dividing by an instance-wide total would then
        report shares above 100 %. With the variable unset the two are equal,
-       which is why this reads as a no-op change and is not one. */
+       which is why this reads as a no-op and is not one. Since #1480 that holds
+       for the Konten total and its first three lines too: the instance-wide
+       bare count was the card's one exception, and it is gone. */
+    const accounts = a.accountsTotal;
     const rounds = a.roundsTotal;
     const games = a.gamesTotal;
     const sessions = a.sessionsTotal;
-    const accounts = a.accountsTotal;
-    const rows = [];
+    const line = (label, n, of, depth = 0) => ({ label, n, of, depth });
 
-    /* FIRST on this card, and the one deliberate BARE COUNT on either of them:
-       „wie viele haben sich überhaupt angemeldet" has no denominator — there is
-       no population of would-be accounts to divide by. It sits here rather than
-       under Grenzen because it is adoption, and because it is literally the
-       denominator of the Konto-Funktionen tile below it. Do not "fix" it into a
-       share of nothing. */
-    rows.push(['Konten', null, String(m.accounts.total), null, [
-      ['bestätigt', String(m.accounts.verified)],
-      ['unbestätigt', String(m.accounts.total - m.accounts.verified)],
-      ['gesperrt', String(m.accounts.disabled)],
-    ]]);
-    // „mit Bild" is deliberately NOT here — it is an adoption figure and is
-    // stated as a share in Konto-Funktionen. Showing it twice was the old card.
-
-    rows.push(['Regal-Nutzung', null, share(a.roundsWithAnyShelf, rounds),
-      `Runden, die das Regal über den Grundzustand hinaus nutzen (von ${rounds})`, [
-        ['Aussortiert', String(a.roundsWithRetired)],
-        ['Durchgespielt', String(a.roundsWithCompleted)],
-        ['Wunschliste', String(a.roundsWithWish)],
-      ]]);
-
-    /* Which design ACCOUNTS wear (#1201) — the per-user successor of the
-       per-round histogram, which stopped meaning anything once designs moved
-       from rounds to accounts. Keyed by the designs this instance offers, in
-       registry order, so the keys come from code; an offered design nobody
-       wears still gets its line.
-
-       The lines count ONLY accounts that have answered the design chooser or
-       picked on Konto (#1362); an account that never answered is on no line.
-       So each line divides by the ANSWERED sum, derived here from the lines
-       themselves, never by `accounts`. Skippers are included — a skip stores
-       the face exactly like a confirmed Der Tisch — which is why the wording
-       says „beantwortet" and never „gewählt".
-
-       The headline is the SWITCH-BACK share: accounts that went from another
-       design back to Klassisch and are still on it, over every account on the
-       card. Low or high it is not a fault, so the pill stays neutral like every
-       tile on this card. The design's stable id is the line's label — this page
-       is German-only and ships no translation table, so a label map here would
-       be a second copy of the registry to keep in step. */
-    const byDesign = m.designAdoption.byDesign;
-    const answered = Object.values(byDesign).reduce((sum, n) => sum + n, 0);
-    rows.push(['Designs', null, share(m.designAdoption.switchedBack, accounts),
-      `Konten, die zu Klassisch zurückgewechselt sind (von ${accounts}); je Design: `
-        + `von ${answered}, die die Design-Auswahl beantwortet haben`,
-      Object.entries(byDesign).map(([id, n]) => [id, share(n, answered)])]);
-
-    rows.push(['Teilen & Freunde', null, share(m.social.sharedRounds, rounds),
-      `geteilte Runden (von ${rounds})`, [
-        ['offene Einladungen', String(m.social.invitationsOpen)],
-        ['Freundschaften', String(m.social.friendships)],
-      ]]);
-
-    rows.push(['Spiele-Quellen & Titelbilder', null,
-      share(a.gamesWithOwnCover + a.gamesWithProviderCover, games),
-      `Spiele mit Titelbild (von ${games})`, [
-        ['verknüpft', String(a.gamesLinked)],
-        ['von Hand', String(games - a.gamesLinked)],
-        ['eigenes Bild', String(a.gamesWithOwnCover)],
-        ['vom Anbieter', String(a.gamesWithProviderCover)],
-      ]]);
-
-    rows.push(['Besitz & Erweiterungen', null, share(a.gamesWithOwners, games),
-      `Spiele mit Besitzer*in (von ${games})`, [
-        ['mit Erweiterungen', share(a.gamesWithExpansions, games)],
-      ]]);
-
-    rows.push(['Sessions', null, share(a.sessionsWithGuests, sessions),
-      `Sessions mit Gästen (von ${sessions})`, [
-        ['mit Teams', share(a.sessionsWithTeams, sessions)],
-        ['mit Vote-Link', share(a.sessionsWithVoteLink, sessions)],
-      ]]);
-
-    rows.push(['Konto-Funktionen, eigene Tags & Filter', null,
-      share(a.accountsWithPasskey, accounts),
-      `Konten mit Passkey (von ${accounts})`, [
-        ['BGG-Konto', share(a.accountsWithBggUsername, accounts)],
-        // The one figure on this tile measured against ROUNDS, not accounts —
-        // which is why every line here carries its own denominator.
-        ['Konto-Bild', share(a.accountsWithAvatar, accounts)],
-        ['BG-Stats-Weitergabe', share(a.accountsWithBgStats, accounts)],
+    const konten = {
+      title: 'Konten',
+      total: accounts,
+      lines: [
+        line('bestätigt', a.accountsVerified, accounts),
+        line('unbestätigt', accounts - a.accountsVerified, accounts),
+        line('gesperrt', a.accountsDisabled, accounts),
+        line('BGG-Konto', a.accountsWithBggUsername, accounts),
+        line('Passkey', a.accountsWithPasskey, accounts),
+        line('Konto-Bild', a.accountsWithAvatar, accounts),
+        line('BG-Stats-Weitergabe', a.accountsWithBgStats, accounts),
         /* Registered and never started anything. Measured by TENANT, the only
            link that exists — an account invited into someone else's tenant
-           (#138) therefore reads as settled, which the note says rather than
+           (#138) therefore reads as settled, which the label says rather than
            implying a per-account answer the data cannot give. */
-        ['ohne Runde (nach Tenant)', share(a.accountsWithoutRound, accounts)],
-        ['Runden mit eigenen Tags', share(a.roundsWithTags, rounds)],
-        ['Runden mit gespeicherten Filtern', share(a.roundsWithSavedFilters, rounds)],
-      ]]);
+        line('ohne Runde (nach Tenant)', a.accountsWithoutRound, accounts),
+      ],
+    };
 
-    /* THE SESSION FUNNEL (#1174) — the one tile about the core loop rather than
-       about a feature. Its headline is „gespielt", because a session that never
-       reaches „Als gespielt markieren" leaves no Chronik entry, lifts no score
-       and updates no Staubfänger: that is the app losing its own data, and it
-       is the number the whole card was missing.
+    /* Which design ACCOUNTS wear (#1201), keyed by the designs this instance
+       offers in registry order — the keys come from code, and an offered design
+       nobody wears still gets its line. Only accounts that answered the design
+       chooser or picked on Konto are on a line (#1362), so the parent is the
+       ANSWERED sum, derived here, never `accounts`. Skippers are included — a
+       skip stores the face exactly like a confirmed Der Tisch — which is why
+       the title says „beantwortet" and never „gewählt". The stable id is the
+       label: this page is German-only and ships no translation table, so a
+       label map would be a second copy of the registry to keep in step. */
+    const byDesign = m.designAdoption.byDesign;
+    const answered = Object.values(byDesign).reduce((sum, n) => sum + n, 0);
+    const designs = {
+      title: 'Design-Auswahl beantwortet',
+      total: answered,
+      lines: Object.entries(byDesign).map(([id, n]) => line(id, n, answered)),
+    };
+
+    /* „gespielte Sessions" — whether a round is used a SECOND time, which is a
+       different question from whether any feature is used at all. The three
+       bands partition the rounds (Postgres derives `none` by subtraction), so
+       each divides by Runden. */
+    const rbf = a.roundsByFinished;
+    const runden = {
+      title: 'Runden',
+      total: rounds,
+      lines: [
+        line('geteilt', m.social.sharedRounds, rounds),
+        line('eigene Tags', a.roundsWithTags, rounds),
+        line('gespeicherte Filter', a.roundsWithSavedFilters, rounds),
+        // The UNION — one round can be in two states, so the three below are
+        // shares of it and cannot be summed into it.
+        line('Regal genutzt', a.roundsWithAnyShelf, rounds),
+        line('Aussortiert', a.roundsWithRetired, a.roundsWithAnyShelf, 1),
+        line('Durchgespielt', a.roundsWithCompleted, a.roundsWithAnyShelf, 1),
+        line('Wunschliste', a.roundsWithWish, a.roundsWithAnyShelf, 1),
+        line('gespielte Sessions', null, null),
+        line('zwei oder mehr', rbf.many, rounds, 1),
+        line('genau eine', rbf.one, rounds, 1),
+        line('noch keine', rbf.none, rounds, 1),
+      ],
+    };
+
+    const covered = a.gamesWithOwnCover + a.gamesWithProviderCover;
+    const spiele = {
+      title: 'Spiele',
+      total: games,
+      lines: [
+        line('verknüpft', a.gamesLinked, games),
+        line('von Hand', games - a.gamesLinked, games),
+        line('mit Besitzer*in', a.gamesWithOwners, games),
+        line('mit Erweiterungen', a.gamesWithExpansions, games),
+        line('mit Titelbild', covered, games),
+        line('eigenes Bild', a.gamesWithOwnCover, covered, 1),
+        line('vom Anbieter', a.gamesWithProviderCover, covered, 1),
+      ],
+    };
+
+    /* THE SESSION FUNNEL (#1174), nested under „gestartet": split parents are
+       outside it (their tables are counted instead, lib/repo/json.js), so its
+       parent is `funnel.started`, not the card's total.
 
        THE LINES ARE NOT A PIPELINE and must not be read as one. Each is an
        independent share of „gestartet": a direct-pick session is created
        already closed and with a game chosen while nobody ever voted, so
        „bewertet" can be smaller than „Abstimmung beendet" with nothing wrong.
        „abgebrochen" is counted apart for the same reason — an evening nobody
-       played on purpose is a resolved outcome, not a loss.
-
-       Split parents are outside the denominator entirely; their tables are
-       counted instead (lib/repo/json.js). */
+       played on purpose is a resolved outcome, not a loss. */
     const f = a.funnel;
-    rows.push(['Session-Trichter', null, share(f.played, f.started),
-      `Sessions als gespielt markiert (von ${f.started} gestarteten)`, [
-        ['von ≥2 bewertet', share(f.rated, f.started)],
-        ['Abstimmung beendet', share(f.closed, f.started)],
-        ['Spiel gewählt', share(f.chosen, f.started)],
-        ['Ergebnis erfasst', share(f.result, f.started)],
-        ['abgebrochen', share(f.cancelled, f.started)],
-      ]]);
+    const sessionen = {
+      title: 'Sessions',
+      total: sessions,
+      lines: [
+        line('mit Gästen', a.sessionsWithGuests, sessions),
+        line('mit Teams', a.sessionsWithTeams, sessions),
+        line('mit Vote-Link', a.sessionsWithVoteLink, sessions),
+        line('gestartet (ohne Split-Eltern)', f.started, sessions),
+        line('als gespielt markiert', f.played, f.started, 1),
+        line('von ≥2 bewertet', f.rated, f.started, 1),
+        line('Abstimmung beendet', f.closed, f.started, 1),
+        line('Spiel gewählt', f.chosen, f.started, 1),
+        line('Ergebnis erfasst', f.result, f.started, 1),
+        line('abgebrochen', f.cancelled, f.started, 1),
+      ],
+    };
 
-    /* „Wird daraus eine Gewohnheit?" — the only figure on either card that says
-       whether the app is used a SECOND time, which is a different question from
-       whether any feature is used at all. The three bands sum to the round
-       total, so the headline is the one that matters and the breakdown accounts
-       for the rest. */
-    const rbf = a.roundsByFinished;
-    rows.push(['Runden mit zweiter Session', null, share(rbf.many, rounds),
-      `Runden mit mindestens zwei gespielten Sessions (von ${rounds})`, [
-        ['genau eine', String(rbf.one)],
-        ['noch keine', String(rbf.none)],
-      ]]);
+    // No parent population: a friendship row carries no tenant and an
+    // invitation is not a share of anything on this card, so bare counts.
+    const rest = {
+      title: 'Freundschaften & Einladungen',
+      total: null,
+      lines: [
+        line('Freundschaften', m.social.friendships, null),
+        line('offene Einladungen', m.social.invitationsOpen, null),
+      ],
+    };
 
-    return rows;
+    return [konten, designs, runden, spiele, sessionen, rest];
   }
 
   async function loadStatus() {
@@ -504,11 +498,53 @@
     }
 
     renderTiles(grid, limitRows(status));
-    renderTiles(adoption, adoptionRows(status));
+    renderGroups(adoption, adoptionCards(status));
+  }
+
+  /* The grouped „Funktionsnutzung" cards (#1480) — see adoptionCards() for
+     the shape. One three-column line per figure (label · count · share), so
+     the counts line up down a card in tabular figures and the share sits
+     muted on the right. A first line (the population) and a group label carry
+     an empty share cell, never „100 %": a population is not a share of
+     itself. Every value goes in via textContent. */
+  function renderGroups(grid, cards) {
+    const cell = (tag, cls, text) => {
+      const el = document.createElement(tag);
+      el.className = cls;
+      el.textContent = text;
+      return el;
+    };
+    for (const card of cards) {
+      const item = document.createElement('div');
+      item.className = 'status__item adopt';
+
+      const head = document.createElement('div');
+      head.className = 'adopt__line adopt__line--head';
+      head.append(
+        cell('span', 'adopt__label', card.title),
+        cell('b', 'adopt__n', card.total === null ? '' : String(card.total)),
+        cell('span', 'adopt__pct', ''),
+      );
+      item.appendChild(head);
+
+      for (const ln of card.lines) {
+        const row = document.createElement('div');
+        row.className = `adopt__line adopt__line--d${ln.depth}`;
+        row.append(
+          cell('span', 'adopt__label', ln.label),
+          cell('b', 'adopt__n', ln.n === null ? '' : String(ln.n)),
+          cell('span', 'adopt__pct', ln.n === null || ln.of === null ? '' : pct(ln.n, ln.of)),
+        );
+        item.appendChild(row);
+      }
+
+      grid.appendChild(item);
+    }
   }
 
   /* One [label, verdict, value, note?, breakdown?] row per tile. Shared by the
-     two Kennzahlen boards and the BGG-Korpus card so they cannot drift into
+     „Grenzen & Kontingente" board, the BGG-Korpus card and the storage card
+     („Funktionsnutzung" has its own grouped shape since #1480) so they cannot drift into
      several ideas of what a status tile looks like. Every value goes in via
      textContent.
 

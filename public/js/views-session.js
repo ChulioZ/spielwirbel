@@ -368,18 +368,20 @@ function showStartSession(round, prefill) {
      sheet's set-the-whole-pot end frame) — and only the presentation differs:
      its entering rows get `is-set` and a stagger index capped at 9 instead of
      the throw's mark and direction, and the rows are SET in from the left
-     (programmheft.css). */
+     (programmheft.css). Die Brücke's B10.2 (#1248) takes the same gate and the
+     same `is-set` mark — its titles drive in from below (bruecke.css). */
+  const setLook = ph || bruecke;
   let potSeen = null;
   const potThrows = (games) => {
     const marks = new Map();
-    if ((tisch || ph) && potSeen) games.forEach((g) => { if (!potSeen.has(g.id)) marks.set(g.id, marks.size); });
+    if ((tisch || setLook) && potSeen) games.forEach((g) => { if (!potSeen.has(g.id)) marks.set(g.id, marks.size); });
     potSeen = new Set(games.map((g) => g.id));
     return marks;
   };
-  const throwClass = (marks, g) => (marks.has(g.id) ? (ph ? ' is-set' : ' is-thrown') : '');
-  const throwAttr = (marks, g) => (marks.has(g.id) && !ph ? ` data-throw="${marks.get(g.id) % 5}"` : '');
+  const throwClass = (marks, g) => (marks.has(g.id) ? (setLook ? ' is-set' : ' is-thrown') : '');
+  const throwAttr = (marks, g) => (marks.has(g.id) && !setLook ? ` data-throw="${marks.get(g.id) % 5}"` : '');
   const throwDecl = (marks, g) => (!marks.has(g.id) ? ''
-    : ph ? `--set-i:${Math.min(marks.get(g.id), 9)}` : `--throw-i:${marks.get(g.id)}`);
+    : setLook ? `--set-i:${Math.min(marks.get(g.id), 9)}` : `--throw-i:${marks.get(g.id)}`);
   const updateHint = () => {
     const games = pool();
     const marks = potThrows(games);
@@ -407,7 +409,12 @@ function showStartSession(round, prefill) {
 
     // Tile panel (860px up). An empty pool needs its own line: a grid with no
     // tiles reads as a broken panel rather than as "nothing matches yet".
+    // Die Brücke counts the numeral to its new value (B10.2, #1248). What the
+    // old numeral SHOWS is read before it is replaced, so a count that changes
+    // mid-run carries on from where it stands; the first render has none.
+    const shownBefore = bruecke ? poolTitle.querySelector('.pool-count') : null;
     poolTitle.innerHTML = potCount(games.length);
+    if (shownBefore) brueckeCountPool(poolTitle.querySelector('.pool-count'), Number(shownBefore.textContent), games.length);
     poolGrid.innerHTML = games.length
       ? games
           .map(

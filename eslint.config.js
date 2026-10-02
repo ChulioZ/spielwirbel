@@ -498,7 +498,7 @@ const frontendGlobals = {
   phFirstRun: 'readonly',
   // bruecke-hub.js (#1238) — Die Brücke's lobby notice and round hub composition
   brueckeHubFrame: 'readonly', brueckeMission: 'readonly', brueckeMissionEmpty: 'readonly', brueckeYoungLine: 'readonly', brueckeHeroCompose: 'readonly',
-  brueckeStatus: 'readonly', brueckeResumeNotice: 'readonly',
+  brueckeStatus: 'readonly', brueckeResumeNotice: 'readonly', brueckeUpLink: 'readonly',
   // bruecke-shelf.js (#1239) — Die Brücke's Regal cards, density controls and Spielepass figures
   BRUECKE_DENSE_MIN: 'readonly', BRUECKE_BATCH: 'readonly', brueckeTitleLong: 'readonly',
   brueckeLetter: 'readonly', brueckeCard: 'readonly', brueckeShelfDensity: 'readonly',
@@ -579,6 +579,7 @@ const frontendGlobals = {
   composeBrueckeSetup: 'readonly', brueckeVoteSides: 'readonly', brueckeVoteWord: 'readonly', brueckeScoreReason: 'readonly',
   composeBrueckeResult: 'readonly',
   brueckeBlind: 'readonly', composeBrueckeLobby: 'readonly', // #1241
+  brueckeCountPool: 'readonly', // #1248, B10.2
   // views-session-programmheft.js (issue #1374): Das Programmheft's setup, vote card and report kicker
   composeProgrammheftSetup: 'readonly', composeProgrammheftVoteCard: 'readonly', programmheftReportKicker: 'readonly',
   programmheftTablesKicker: 'readonly',

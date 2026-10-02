@@ -126,7 +126,7 @@ function translator(locale) {
  * WHY KLASSISCH BY DEFAULT (#1202). The face — what boot wears — became Der
  * Tisch at the flip, and a spec that never names a design was written against
  * Klassisch's DOM, which is every view's default path and stays a live design
- * („Wie bisher"). Leaving the face in force would silently turn hundreds of
+ * for good. Leaving the face in force would silently turn hundreds of
  * Klassisch assertions into Tisch ones. A Tisch spec says so with
  * `applyDesign('tisch')`, as it always has; a spec about BOOT itself passes
  * `{ design: null }`.

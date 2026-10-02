@@ -33,13 +33,14 @@ Kontingente" (`#statusGrid`, what is close to refusing a user) and
 a silently empty second card reads as „nothing is used", not as „this did not
 load".
 
-**Two tile shapes, and no third.** A **limit** is `used / limit` and carries a
-graded pill; an **adoption share** is `n / total` and carries the neutral one —
-low uptake is not a fault condition, and a green pill would grade something
-nobody set a threshold for. A **bare count** is what the card was cleaned of;
-„Konten" is the single sanctioned exception, because site adoption has no
-denominator to divide by. A zero denominator renders „—", never „0 / 0".
-`.claude/rules/propose-an-admin-stat-for-new-features.md` is when to add one.
+**Two card shapes.** „Grenzen & Kontingente" keeps the TILE (`renderTiles()`):
+a **limit** is `used / limit` with a graded pill. „Funktionsnutzung" is GROUPED
+BY PARENT POPULATION (#1480, `adoptionCards()`/`renderGroups()`): one card per
+denominator, the population first, then count + muted whole-percent share —
+of the line above when indented (Regal union, cover union, funnel). No pills:
+low uptake is no fault. A bare count without a parent is what it was cleaned
+of („Freundschaften & Einladungen" is parentless only because those rows carry
+no tenant). A zero parent renders „—", never „NaN %"; a first line never „100 %".
 
 ## The two sweeps, and why they are generic
 
@@ -98,7 +99,7 @@ on the instance holding the bad row.
 **The card's ARITHMETIC lives next door**: what each share divides by, what
 `ADMIN_EXCLUDE_TENANTS` reaches, and why the funnel is a bundle rather than a
 pipeline — `.claude/rules/funktionsnutzung-shares-and-funnel.md` (#1174). Read it
-before touching `adoptionRows()` or anything under `metrics.adoption`.
+before touching `adoptionCards()` or anything under `metrics.adoption`.
 
 ## The adoption figures MUST be read under `atx()`
 
@@ -126,9 +127,10 @@ guessing is how a figure becomes a permanent zero.
   copy as `distinct()` until #404 deleted the rows that used it; the trap is a
   property of the idiom, not of that file.)
 - The server reports facts; the ok/warn/off opinions live in `limitRows()` /
-  `adoptionRows()` (`public/js/pages/admin.js`), so changing an opinion never
-  changes the API shape. A **null** verdict is the neutral pill, which every
-  adoption tile gets — see the two tile shapes above.
+  `adoptionCards()` (`public/js/pages/admin.js`), so changing an opinion never
+  changes the API shape. A **null** verdict is the neutral pill on a tile; the
+  grouped adoption cards carry no pill at all, and their percentages are
+  computed in the panel too — see the two card shapes above.
 - The un-scoped, no-RLS tables `instanceMetrics` also reads (`users`,
   `round_grants`, `invitations`, `friendships`, `session_vote_links`) take plain
   `knex` — everything else goes under `atx()`, per the section above.
@@ -148,8 +150,6 @@ guessing is how a figure becomes a permanent zero.
   keys are pinned to `metrics` + `quotas`, and a top-level `mail` block is
   asserted gone), and it stays **numbers-only** (`sent`/`limit`, never
   `budgetState()`'s `day` string — the sweep types every metrics field a number).
-- `assetsBuilt()` moved **into `lib/app.js`** with the assets row (#404), so the
-  old "`status.js` must never require `lib/app.js`" cycle warning is moot.
 
 **Related:** `.claude/rules/admin-moderation-surface.md` (the panel these cards
 sit on), `.claude/rules/admin-cross-tenant-escape.md` (the `atx()` contract),

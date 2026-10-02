@@ -1,16 +1,18 @@
 'use strict';
 
 /*
- * The switch-back stamp (#1201): `designSwitchedBack: true` is written when an
- * account moves BACK to Klassisch from a design it was actually wearing, so the
- * operator's „Designs" tile can report how many people went back after the
- * flip (#1202). Two halves:
+ * Which design an account wears (#1186) and how the operator's design tile
+ * counts it (#1201/#1362). Two halves:
  *
- *  - lib/account-design.js, the rule itself — pure, so it is tested directly —
- *    and the flip's lazy default (#1202) it carries: an account that never
- *    answered the chooser wears the face;
+ *  - lib/account-design.js — pure, so it is tested directly — and the flip's
+ *    lazy default (#1202) it carries: an account that never answered the
+ *    chooser wears the face;
  *  - the two routes that change a design (PATCH /me, POST /design-chooser-seen),
- *    which must both apply it, driven end to end.
+ *    driven end to end.
+ *
+ * The switch-back stamp `designSwitchedBack` (#1201) is gone (#1480, operator
+ * decision): its only reader was removed, so no creation or design-change path
+ * may write it any more — the specs below pin that, on every path that used to.
  *
  * Its own file rather than more of test/account.test.js, which is already well
  * past the source budget. No module called account-design exists under
@@ -29,9 +31,8 @@ const repo = require('../lib/repo');
 const store = require('../lib/store');
 const { outbox } = require('../lib/mail');
 const designs = require('../public/js/designs');
-const {
-  SWITCH_BACK_DESIGN, accountDesign, switchBackPatch, tallyDesignAdoption,
-} = require('../lib/account-design');
+const demo = require('../lib/demo');
+const { accountDesign, tallyDesignAdoption } = require('../lib/account-design');
 
 const PASSWORD = 'correct horse battery';
 let seq = 0;
@@ -54,28 +55,12 @@ const patchMe = (acc, body) => request(app)
   .patch('/api/account/me').set('Authorization', `Bearer ${acc.accessToken}`).send(body);
 const chooser = (acc, body) => request(app)
   .post('/api/account/design-chooser-seen').set('Authorization', `Bearer ${acc.accessToken}`).send(body);
-const stored = async (acc) => (await repo.getUserById(acc.uid)).designSwitchedBack;
-
-async function asProduction(fn) {
-  const before = process.env.NODE_ENV;
-  process.env.NODE_ENV = 'production';
-  try { return await fn(); } finally {
-    if (before === undefined) delete process.env.NODE_ENV; else process.env.NODE_ENV = before;
-  }
-}
+// Whether the removed field reached the stored record at all — `in`, not a
+// value check, because writing `false` would be the same data-minimisation
+// failure as writing `true`.
+const carriesSwitchBack = async (uid) => 'designSwitchedBack' in (await repo.getUserById(uid));
 
 /* ------------------------------- the rule ---------------------------------- */
-
-test('the switch-back target is a registered design that production offers', () => {
-  // Klassisch stays selectable forever („Wie bisher"); if it ever stopped being
-  // enabled, no account in production could switch back to it and the tile
-  // would read zero for a reason nobody could see.
-  const row = designs.designById(SWITCH_BACK_DESIGN);
-  assert.ok(row, `${SWITCH_BACK_DESIGN} is not in the registry`);
-  assert.equal(row.enabled, true);
-  assert.notEqual(SWITCH_BACK_DESIGN, designs.FACE_DESIGN,
-    'a switch-back to the face would count every untouched account as having gone back');
-});
 
 // An account that has answered the chooser — the only kind whose stored design
 // is a CHOICE since the flip (#1202).
@@ -99,80 +84,47 @@ test('#1202: an account that never answered the chooser wears the face, whatever
   assert.equal(accountDesign({ design: 'klassisch', designChooserSeen: '2000-01-01' }), 'klassisch');
 });
 
-test('switchBackPatch stamps only a move FROM another worn design TO Klassisch', () => {
-  const back = { designSwitchedBack: true };
-  assert.deepEqual(switchBackPatch(chose('tisch'), 'klassisch'), back);
-  assert.deepEqual(switchBackPatch(chose('tisch'), 'tisch'), {}, 'staying put is not a switch');
-  assert.deepEqual(switchBackPatch(chose('klassisch'), 'tisch'), {}, 'moving AWAY is not back');
-  assert.deepEqual(switchBackPatch(chose('klassisch'), 'klassisch'), {},
-    'Klassisch to Klassisch is a no-op — an account that already chose it never left');
-  assert.deepEqual(switchBackPatch(chose('tisch', { designSwitchedBack: true }), 'klassisch'), {},
-    'already stamped: nothing to write');
-  assert.deepEqual(switchBackPatch(null, 'klassisch'), {});
-});
-
-test('#1202: a pre-flip account picking Klassisch IS a switch back — it was shown Der Tisch', () => {
-  // It stores 'klassisch' but has never answered the chooser, so it WEARS the
-  // face. The stored string must not decide, or „Wie bisher" in the chooser —
-  // the main way back — would never register on the operator's tile.
-  assert.deepEqual(switchBackPatch({ design: 'klassisch', designChooserSeen: null }, 'klassisch'),
-    { designSwitchedBack: true });
-  assert.deepEqual(switchBackPatch({}, 'klassisch'), { designSwitchedBack: true },
-    'an account predating the field wears the face too');
-});
-
 test('tallyDesignAdoption counts only answered accounts; an unknown answered id folds into the face', () => {
   /* #1362: an account that never answered the chooser counts on NO line — it
      never saw the alternatives. A skip is stored exactly like a confirmed Tisch
      (answered, 'tisch'), so it counts under Tisch. */
   const out = tallyDesignAdoption([
-    { design: null, answered: false, switched: false, n: 2 },
-    { design: 'klassisch', answered: false, switched: false, n: 6 }, // pre-flip, untouched
-    { design: 'tisch', answered: false, switched: false, n: 5 },     // post-flip, untouched
-    { design: 'tisch', answered: true, switched: true, n: 3 },       // skipper or confirmed Tisch
-    { design: 'klassisch', answered: true, switched: true, n: 4 },
-    { design: 'GEHEIM', answered: true, switched: true, n: 1 },
+    { design: null, answered: false, n: 2 },
+    { design: 'klassisch', answered: false, n: 6 }, // pre-flip, untouched
+    { design: 'tisch', answered: false, n: 5 },     // post-flip, untouched
+    { design: 'tisch', answered: true, n: 3 },       // skipper or confirmed Tisch
+    { design: 'klassisch', answered: true, n: 4 },
+    { design: 'GEHEIM', answered: true, n: 1 },
   ]);
   assert.deepEqual(Object.keys(out.byDesign), designs.selectableDesignIds({ production: false }));
   assert.equal(out.byDesign.klassisch, 4, 'only the accounts that CHOSE Klassisch');
   assert.equal(out.byDesign.tisch, 3 + 1, 'answered Tisch plus the unknown answered id, never the unanswered');
   assert.equal(Object.values(out.byDesign).reduce((a, b) => a + b, 0), 3 + 4 + 1,
     'the lines sum to the ANSWERED accounts');
-  assert.equal(out.switchedBack, 4, 'the flag counts only on a current Klassisch');
+  assert.deepEqual(Object.keys(out), ['byDesign'], 'the switch-back share was dropped (#1480)');
   assert.equal(JSON.stringify(out).includes('GEHEIM'), false, 'a stored id reached the keys');
-});
-
-test('tallyDesignAdoption: switchedBack is unaffected by the answered filter', () => {
-  // The flag can only be set by a pick, which also stamps the chooser — but the
-  // headline must not depend on that: an (impossible) unanswered flagged row
-  // resolves to the face and so never counts, exactly as before #1362.
-  const out = tallyDesignAdoption([
-    { design: 'klassisch', answered: true, switched: true, n: 2 },
-    { design: 'klassisch', answered: false, switched: true, n: 7 },
-  ]);
-  assert.equal(out.switchedBack, 2);
 });
 
 /* ------------------------------- the routes -------------------------------- */
 
-test('registration writes designSwitchedBack: false, not an absent key', async () => {
+test('#1480: registration does not write designSwitchedBack', async () => {
   const acc = await freshAccount();
   const record = store.data.users.find((u) => u.id === acc.uid);
-  assert.equal(record.designSwitchedBack, false);
+  assert.equal('designSwitchedBack' in record, false);
 });
 
-test('PATCH /me stamps a return to Klassisch, once, and never clears it', async () => {
+test('#1480: a demo account is created without designSwitchedBack', async () => {
+  const guest = await demo.createDemoAccount('de', null);
+  assert.equal(typeof guest, 'object', `the demo mint failed: ${guest}`);
+  assert.equal(await carriesSwitchBack(guest.id), false);
+});
+
+test('#1480: PATCH /me writes no switch-back stamp on any design change', async () => {
   const acc = await freshAccount();
-  assert.equal((await patchMe(acc, { design: 'tisch' })).status, 200);
-  assert.equal(await stored(acc), false, 'Tisch to Tisch is not a switch');
-
-  await patchMe(acc, { design: 'klassisch' });
-  assert.equal(await stored(acc), true, 'Tisch back to Klassisch is');
-
-  await patchMe(acc, { design: 'tisch' });
-  assert.equal(await stored(acc), true, 'sticky: trying Tisch again does not unmake the return');
-
-  // The flag is the operator's, not the account's: /me does not hand it out.
+  for (const design of ['tisch', 'klassisch', 'tisch', 'klassisch']) {
+    assert.equal((await patchMe(acc, { design })).status, 200);
+    assert.equal(await carriesSwitchBack(acc.uid), false, `after a move to ${design}`);
+  }
   const me = await request(app).get('/api/account/me').set('Authorization', `Bearer ${acc.accessToken}`);
   assert.equal('designSwitchedBack' in me.body, false);
 });
@@ -190,12 +142,12 @@ test('#1202: a pick on Konto answers the chooser, so the pick is actually WORN',
   assert.equal((await repo.getUserById(acc.uid)).designChooserSeen, '2000-01-01');
 });
 
-test('the first-start chooser stamps it too — the main way back after the flip', async () => {
+test('#1480: the first-start chooser writes no switch-back stamp — the old main way back', async () => {
   const acc = await freshAccount();
   const res = await chooser(acc, { design: 'klassisch' });
   assert.equal(res.status, 200);
   assert.equal(res.body.design, 'klassisch');
-  assert.equal(await stored(acc), true, 'a fresh account wore the face, so „Wie bisher" is a switch back');
+  assert.equal(await carriesSwitchBack(acc.uid), false);
 });
 
 test('#1202: „Später entscheiden" keeps the design the account is WEARING, and writes it down', async () => {
@@ -206,16 +158,6 @@ test('#1202: „Später entscheiden" keeps the design the account is WEARING, an
   assert.equal(res.status, 200);
   assert.equal(res.body.design, 'tisch', 'declining must not quietly undo the flip');
   assert.equal((await repo.getUserById(acc.uid)).design, 'tisch');
-  assert.equal(await stored(acc), false, 'declining is not a switch back');
+  assert.equal(await carriesSwitchBack(acc.uid), false);
 });
 
-test('an account on a design this instance does not offer is not „switched back" by going to Klassisch… unless it was shown the face', async () => {
-  // A stored id the registry does not know resolves to the face (Der Tisch), so
-  // the account WAS shown Der Tisch and Klassisch is a real return.
-  const acc = await freshAccount();
-  await repo.updateUser(acc.uid, { design: 'GEHEIM', designChooserSeen: designs.DESIGN_CHOOSER_REVISION });
-  await asProduction(async () => {
-    assert.equal((await patchMe(acc, { design: 'klassisch' })).status, 200);
-  });
-  assert.equal(await stored(acc), true);
-});

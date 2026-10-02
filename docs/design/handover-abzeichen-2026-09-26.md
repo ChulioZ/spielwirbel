@@ -17,6 +17,8 @@ Spielwirbel · 2026-09-26 · companion to `handover-claude-design-2026-09-19.md`
 > | Result moment | **members and round, at most two**, the rest folds into „+N weitere" |
 >
 > Entry names are working names; the operator may still rename individual entries when the strings are written.
+>
+> **2026-10-01 — the tier cap is lifted (#1463).** The operator lifted the first release's cap („three tiers at most", four for Stammgast and the round's Sessions) on 2026-10-01: twelve ladders are longer and five single marks became tiered (Serienheld 3 · 5 · 7, Gastgeber 10 · 25 · 50, Entdecker 5 · 10 · 25, Große Runde 8 · 12 · 16, Dauerbrenner 10 · 25 · 50); the account tier is now Sessions 25 · 100 · 250 · 500 · 1000, Wins 10 · 25 · 50 · 100 · 250, Runden 2 · 3 · 5, Jahre unchanged. The rows above and below are the record of 2026-09-26 and stay as written; `public/js/achievements.js` `BADGE_CATALOGUE` is the current ladder.
 
 ---
 
