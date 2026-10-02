@@ -4493,6 +4493,35 @@
   }
 }
 
+/* ===== #1248 B10.2 — Der Pool zählt hoch ===== */
+/* Sheet: docs/design/bruecke/Bruecke-B10-Motion.dc.html, B10.2 — when a seat
+   or a filter changes the pool, the numeral counts to its new value in 500ms
+   (brueckeCountPool(), views-session-bruecke.js) and the titles that ENTER the
+   list drive in. The count is JS because a number cannot be interpolated as
+   text; the rows are here.
+
+   The gate is Der Tisch's T10.1 pot bookkeeping, shared with Das
+   Programmheft's P10.2 (views-session.js marks `is-set` with `--set-i`): the
+   first paint is still, because an arriving screen in motion reads as one still
+   loading (#1122), and a re-render marks nothing. A row moves up 6px from
+   under its place, 300ms on B10.1's curve, 40ms after the one before it; the
+   index is capped at 5 here, so any pool lands by 5 × 40 + 300 = 500ms — the
+   sheet's whole budget. Mechanical: no overshoot, no bounce.
+
+   Titles that LEAVE are not animated: the list is rebuilt, so a leaving row is
+   already gone — the sheet's „fahren aus" would need the old rows kept, and
+   the count already says how many went. Backwards fill only, no end frame;
+   reduced motion shows the list at once. The list exists from 860px; below it
+   the panel is the numeral alone, which still counts. */
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-design="bruecke"][data-scheme="dark"] .bruecke-pool .setup-panel__body .pool-tile.is-set {
+    animation: bruecke-pool-in 300ms cubic-bezier(.2, .8, .2, 1) calc(min(var(--set-i, 0), 5) * 40ms) backwards;
+  }
+  @keyframes bruecke-pool-in {
+    from { opacity: 0; transform: translateY(6px); }
+  }
+}
+
 /* ===== #1243 — Leere und junge Zustände (B7) ===== */
 /* B7.1 (the freshly founded round, desktop), B7.2 (the single states and their
    wording), B7.3 (the young round, the empty shelf and the empty lobby on a
