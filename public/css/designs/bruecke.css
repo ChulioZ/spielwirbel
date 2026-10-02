@@ -3596,13 +3596,12 @@
   :root[data-design="bruecke"] .bruecke-hub {
     display: grid;
     grid-template-columns: 300px minmax(0, 1fr) 340px;
-    grid-template-rows: auto auto auto 1fr auto;
+    grid-template-rows: auto auto auto 1fr;
     grid-template-areas:
       "title   title   stats"
       "feed    feed    feed"
       "crew    mid     right"
-      "left    mid     right"
-      "actions actions actions";
+      "left    mid     right";
     column-gap: 22px;
     row-gap: 18px;
     align-items: start;
@@ -3616,7 +3615,11 @@
   :root[data-design="bruecke"] .bruecke-hub__col--left { grid-area: left; }
   :root[data-design="bruecke"] .bruecke-hub__col--mid { grid-area: mid; }
   :root[data-design="bruecke"] .bruecke-hub__col--right { grid-area: right; }
-  :root[data-design="bruecke"] .bruecke-hub__actions { grid-area: actions; }
+  /* The quiet actions hold only „Einstellungen" since #1498, and the rail
+     carries it from here — so the slot goes, and with it the grid row: an empty
+     explicit track still costs its row-gap, which `:empty` cannot see (the slot
+     holds the hidden `.hub-actions`). */
+  :root[data-design="bruecke"] .bruecke-hub__actions { display: none; }
 }
 
 /* ---- The round's name and the counts line under it: the display face at the

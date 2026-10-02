@@ -485,14 +485,14 @@ const frontendGlobals = {
   hubDeps: 'readonly', hubCard: 'readonly', hubSuggestCard: 'readonly',
   hubPresetChips: 'readonly', hubPulseCard: 'readonly', hubCareCard: 'readonly',
   hubAnniversaryCard: 'readonly', renderRecoTeaser: 'readonly',
-  editableRoundName: 'readonly',
+  editableRoundName: 'readonly', saveRoundName: 'readonly',
   // #1269 — Der Tisch's young-round states (hub-cards.js, views-round-start.js)
   roundIsYoung: 'readonly', hubSentenceCard: 'readonly', hubYoungCard: 'readonly',
   hubEmptyTable: 'readonly',
   // hub-reflow.js (#1496) — moving a hub's cells between its phone and desktop arrangements
   reflowAt: 'readonly',
   // ocean-hub.js (#1211) — Ocean's lobby tiles and round hub composition
-  oceanHubFrame: 'readonly', oceanHubActions: 'readonly', oceanShell: 'readonly', oceanHeroCompose: 'readonly',
+  oceanHubFrame: 'readonly', oceanShell: 'readonly', oceanHeroCompose: 'readonly',
   oceanRoundCard: 'readonly', oceanResumeNotice: 'readonly', oceanYoungLine: 'readonly',
   // programmheft-hub.js (#1372) — the Programmheft's lobby tiles and round hub composition
   phHubFrame: 'readonly', phPresetsLabel: 'readonly', phHeroCompose: 'readonly', phLead: 'readonly',
