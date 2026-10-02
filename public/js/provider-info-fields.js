@@ -11,7 +11,7 @@
  * CLIENT asks the same question — game-info.js's wantsGameInfo() decides whether
  * a detail page, the hot-seat wizard or the shelf refresh should ask the server
  * for provider info at all — and it used to answer it from a hand-copied list of
- * these seven names. Shared-scope script in index.html AND `require`d by lib/:
+ * these field names. Shared-scope script in index.html AND `require`d by lib/:
  * .claude/rules/shared-constants-across-the-stack.md.
  *
  * It exists as ONE module because the alternative is the drift this repo has
@@ -62,6 +62,11 @@ const PROVIDER_INFO_GUARDS = {
   minAge: isProviderNum,
   categories: isProviderList,
   mechanics: isProviderList,
+  // BGG's `boardgamedesigner` links (#1505), the CORPUS's own key name, so
+  // `corpusPatch` fills a shelf game with no upstream hop. An uncredited game
+  // carries BGG's sentinel (see BGG_UNCREDITED) rather than `[]`, so it still
+  // completes; readers drop the sentinel with `creditedDesigners`.
+  designers: isProviderList,
   rating: isProviderNum,
   // BGG's suggested_numplayers poll (#1005) — which table sizes the community
   // endorses. Same two key names the CORPUS already uses, deliberately, so a
@@ -82,6 +87,20 @@ const CHIPPED_PROVIDER_INFO_FIELDS = ['weight'];
 
 const UNCHIPPED_PROVIDER_INFO_FIELDS =
   PROVIDER_INFO_FIELDS.filter((k) => !CHIPPED_PROVIDER_INFO_FIELDS.includes(k));
+
+// What BGG lists as the designer of a game nobody is credited for. STORED as
+// given, so the game counts as complete and is not re-asked every TTL, and
+// DROPPED by every reader through `creditedDesigners` — otherwise every
+// uncredited party game would read as "by the same designer" on the detail page,
+// in the Steckbrief and in the recommender alike (#1505). One constant for all
+// three, client and server (.claude/rules/shared-constants-across-the-stack.md).
+const BGG_UNCREDITED = '(Uncredited)';
+
+// The designer names worth showing or matching on: BGG's strings, minus the
+// sentinel and anything that is not a non-empty string. Always an array.
+function creditedDesigners(list) {
+  return (Array.isArray(list) ? list : []).filter((d) => typeof d === 'string' && d && d !== BGG_UNCREDITED);
+}
 
 // Whether a game already carries a value for one field.
 function hasProviderField(game, key) {
@@ -105,5 +124,7 @@ if (typeof module !== 'undefined' && module.exports) {
     UNCHIPPED_PROVIDER_INFO_FIELDS,
     hasProviderField,
     assignProviderInfo,
+    BGG_UNCREDITED,
+    creditedDesigners,
   };
 }

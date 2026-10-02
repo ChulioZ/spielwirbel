@@ -27,7 +27,9 @@ const linkedRound = (over = {}) => ({
   id: 3,
   name: 'Freitagsrunde',
   members: [{ id: 1, name: 'Anna' }, { id: 2, name: 'Ben' }],
-  games: Array.from({ length: 9 }, (_, i) => game(10 + i)),
+  // Designers (#1505): five uncredited games and four by one person, so the
+  // sentinel would lead the list if any surface forgot to drop it.
+  games: Array.from({ length: 9 }, (_, i) => game(10 + i, { designers: i < 5 ? ['(Uncredited)'] : ['Uwe Rosenberg'] })),
   sessions: [],
   tags: [],
   ...over,
@@ -105,7 +107,9 @@ test('the screen: every dimension, the full gap list, the leading mechanics, and
   assert.equal(dom.app.querySelector('.page-head h1').textContent, 'Regal-Steckbrief');
   const panels = [...dom.app.querySelectorAll('.shelf-profile > .shelf-panel')];
   assert.deepEqual(panels.map((p) => p.querySelector('.hub-card__title').textContent),
-    ['Personen', 'Spieldauer', 'Komplexität', 'Lücken', 'Mechaniken', 'Kategorien']);
+    ['Personen', 'Spieldauer', 'Komplexität', 'Lücken', 'Mechaniken', 'Kategorien', 'Autor:innen']);
+  const designers = panels[6].querySelectorAll('.shelf-top__row');
+  assert.deepEqual([...designers].map((r) => r.textContent), ['Uwe Rosenberg4'], 'the sentinel is never a designer');
   // 5, 6+, ≤30, 61–120, >120, light, heavy — all of them, not the card's three.
   // Five, not seven: weight bands draw as bars but list no gap (#1173 review).
   assert.equal(dom.app.querySelectorAll('.shelf-panel .shelf-gap').length, 5);
@@ -169,6 +173,10 @@ for (const design of [null, 'tisch']) {
     const text = calls.filter(([m]) => m === 'fillText').map(([, s]) => s);
     assert.ok(text.includes('Freitagsrunde'), 'the round is named on the image');
     assert.ok(text.includes('Für 6+ Personen: kein Spiel'), 'the gaps travel with the image');
+    // The designers travel too (#1505), in a panel of their own below the two
+    // other lists — a third column would cut most names to an ellipsis.
+    assert.ok(text.includes('Autor:innen') && text.includes('Uwe Rosenberg · 4'), 'the designers are on the image');
+    assert.ok(!text.some((s) => /Uncredited/.test(s)), 'the sentinel reached the image');
     assert.deepEqual(toasts, ['Bild gespeichert.'], 'no file sharing in jsdom, so the image is saved');
   });
 }
@@ -187,4 +195,18 @@ test('a failed export is REPORTED as its own kind, and the user still gets the t
   assert.deepEqual(toasts, ['Das Bild konnte nicht erstellt werden.']);
   assert.ok(dom.run("CLIENT_ERROR_KINDS.includes('shelf_profile_export')"),
     'the kind must be in the list the route validates against, or the report 400s');
+});
+
+test('the image lays its lists out at most TWO to a panel, so a third gets a row of its own (#1505)', async (t) => {
+  const dom = await screen(t, linkedRound());
+  const list = (title) => ({ title, items: ['Worker Placement with Dice Workers · 3'] });
+  const sizes = (n) => JSON.parse(dom.run(
+    `JSON.stringify(shelfListPanels({ lists: ${JSON.stringify(Array.from({ length: n }, (_, i) => list('L' + i)))} }).map((p) => p.length))`));
+  assert.deepEqual(sizes(2), [2]);
+  assert.deepEqual(sizes(3), [2, 1], 'three lists must not squeeze into three ~150px columns');
+  assert.deepEqual(sizes(0), []);
+  // And the measuring pass counts the second panel, or it would be drawn
+  // over the gaps block below it.
+  const h = (n) => dom.run(`shelfListsH({ lists: ${JSON.stringify(Array.from({ length: n }, (_, i) => list('L' + i)))} })`);
+  assert.ok(h(3) > h(2), 'the second panel adds height');
 });

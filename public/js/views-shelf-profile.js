@@ -20,7 +20,7 @@
 
 // The builder's one dependency, the draw pool's own seat predicate — injected
 // for the reason shelf-profile.js's header gives.
-const shelfProfileDeps = () => ({ fitsPlayerCount });
+const shelfProfileDeps = () => ({ fitsPlayerCount, creditedDesigners });
 
 // Section titles per dimension. Playing time and weight reuse the filter panel's
 // labels: the same fields, named the same way wherever the app shows them.
@@ -130,7 +130,7 @@ function shelfPanel(title) {
   return { panel, body: panel.querySelector('.hub-card__body') };
 }
 
-// The mechanics or categories as a ranked list with their counts. The names are
+// The mechanics, categories or designers as a ranked list with their counts. The names are
 // BGG's own and stay untranslated — its terms allow choosing which of its names
 // to show, never rewriting one.
 function shelfTopPanel(title, items) {
@@ -149,6 +149,7 @@ function shelfShareModel(round, p) {
   const lists = [
     { title: t('metaFilter.mechanics'), items: p.mechanics },
     { title: t('metaFilter.categories'), items: p.categories },
+    { title: t('gameInfo.designers'), items: p.designers },
   ].filter((l) => l.items.length)
     .map((l) => ({ title: l.title, items: l.items.map((it) => `${it.name} · ${it.n}`) }));
   return {
@@ -183,8 +184,8 @@ async function shareShelfProfile(model) {
   await deliverShareImage(blob, 'spielwirbel-steckbrief.png');
 }
 
-// The screen: every dimension as bars, the gaps, the leading mechanics and
-// categories, and „Teilen".
+// The screen: every dimension as bars, the gaps, the leading mechanics,
+// categories and designers, and „Teilen".
 async function showShelfProfile(rid) {
   currentView = () => showShelfProfile(rid);
   syncUrl(roundPath(rid, 'shelf-profile'));
@@ -240,5 +241,6 @@ async function showShelfProfile(rid) {
   grid.appendChild(gaps.panel);
   if (p.mechanics.length) grid.appendChild(shelfTopPanel(t('metaFilter.mechanics'), p.mechanics));
   if (p.categories.length) grid.appendChild(shelfTopPanel(t('metaFilter.categories'), p.categories));
+  if (p.designers.length) grid.appendChild(shelfTopPanel(t('gameInfo.designers'), p.designers));
   app.appendChild(grid);
 }

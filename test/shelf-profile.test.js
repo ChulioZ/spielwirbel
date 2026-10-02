@@ -13,9 +13,11 @@ const {
 // The REAL seat predicate, not a paraphrase — the builder is handed it in the
 // browser, so the spec hands it the same function.
 const { fitsPlayerCount, isActiveGame } = require('../public/js/draw-pool');
+const { creditedDesigners } = require('../public/js/provider-info-fields');
 const { DEMO_ROUNDS } = require('../lib/demo-seed');
 
-const deps = { fitsPlayerCount };
+// Both seams the browser hands in (views-shelf-profile.js `shelfProfileDeps`).
+const deps = { fitsPlayerCount, creditedDesigners };
 const band = (dim, key) => dim.bands.find((b) => b.key === key).n;
 
 // A linked game: some provider data, a 2–4 range, a medium hour.
@@ -162,4 +164,18 @@ test('the demo seed’s big round has a profile, and its two small rounds do not
   assert.ok(p.gaps.length > 0, 'the demo shelf has something to say about its gaps');
   assert.equal(shelfProfile(active(duo), deps), null);
   assert.equal(shelfProfile(active(group), deps), null);
+});
+
+test('the top designers: counted like mechanics, with BGG\'s (Uncredited) sentinel never among them (#1505)', () => {
+  /* Five uncredited games outnumber everything else on this shelf, so a builder
+   * that forgot the filter would lead with "(Uncredited) · 5" — every party
+   * game reading as the work of one prolific designer. */
+  const shelf = shelfOf(9).map((x, i) => ({
+    ...x,
+    designers: i < 5 ? ['(Uncredited)'] : i < 8 ? ['Uwe Rosenberg'] : ['Uwe Rosenberg', 'Solo Person'],
+  }));
+  const p = shelfProfile(shelf, deps);
+  assert.deepEqual(p.designers, [{ name: 'Uwe Rosenberg', n: 4 }]);
+  // A shelf with no designer data has an empty list, like the other two.
+  assert.deepEqual(shelfProfile(shelfOf(9), deps).designers, []);
 });

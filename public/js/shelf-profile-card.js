@@ -1,7 +1,7 @@
 /* Spielwirbel – the Regal-Steckbrief as a shareable image (#1173).
 
    One portrait card: the round's name, the bands as horizontal bars, the
-   leading mechanics and categories, and the gaps. Drawn on the device and handed
+   leading mechanics, categories and designers, and the gaps. Drawn on the device and handed
    to the user's own share sheet (or saved) by shareShelfProfile in
    views-shelf-profile.js — nothing is uploaded, the same trust shape as the
    period recap's card.
@@ -69,10 +69,23 @@ const shelfCardFont = (pal, weight, size, display) =>
 
 // Height of each block, shared by the measuring and the drawing pass.
 const shelfDimH = (dim) => 44 + dim.rows.length * SHELF_CARD_ROW_H + 12;
+// The lists sit at most TWO to a panel (#1505): a third column on a 540px card
+// leaves ~150px per name, and BGG's mechanic and designer names are long enough
+// that recapFit would cut most of them to an ellipsis. So mechanics + categories
+// share one panel and the designers get the next one to themselves.
+const SHELF_CARD_LISTS_PER_PANEL = 2;
+function shelfListPanels(model) {
+  const panels = [];
+  for (let i = 0; i < model.lists.length; i += SHELF_CARD_LISTS_PER_PANEL) {
+    panels.push(model.lists.slice(i, i + SHELF_CARD_LISTS_PER_PANEL));
+  }
+  return panels;
+}
+const shelfListPanelH = (lists) => 42 + Math.max(...lists.map((l) => l.items.length)) * SHELF_CARD_LIST_ROW_H + 12;
 function shelfListsH(model) {
-  if (!model.lists.length) return 0;
-  const rows = Math.max(...model.lists.map((l) => l.items.length));
-  return 42 + rows * SHELF_CARD_LIST_ROW_H + 12;
+  const panels = shelfListPanels(model);
+  if (!panels.length) return 0;
+  return panels.reduce((sum, lists) => sum + shelfListPanelH(lists), 0) + (panels.length - 1) * SHELF_CARD_GAP;
 }
 const shelfGapsH = (model) => (model.gaps.length
   ? 42 + Math.min(model.gaps.length, SHELF_CARD_MAX_GAPS) * SHELF_CARD_LIST_ROW_H + 12 : 0);
@@ -147,26 +160,30 @@ function drawShelfDim(ctx, dim, y, pal) {
   return y + shelfDimH(dim);
 }
 
-// Mechanics and categories side by side, as their plain BGG names — BGG's terms
-// allow choosing which of its names to show, never rewriting one.
+// The lists, two to a panel (see shelfListPanels), as their plain BGG names —
+// BGG's terms allow choosing which of its names to show, never rewriting one.
 function drawShelfLists(ctx, model, y, pal) {
   const pad = SHELF_CARD_PAD;
   const w = SHELF_CARD_W - pad * 2;
-  const h = shelfListsH(model);
-  shelfRect(ctx, pad, y, w, h, 14, pal.panel);
-  const colW = (w - 32) / model.lists.length;
-  model.lists.forEach((list, c) => {
-    const x = pad + 16 + c * colW;
-    ctx.fillStyle = pal.ink;
-    ctx.font = shelfCardFont(pal, 800, 15, true);
-    ctx.fillText(recapFit(ctx, list.title, colW - 12), x, y + 28);
-    ctx.font = shelfCardFont(pal, 600, 13);
-    list.items.forEach((item, i) => {
-      ctx.fillStyle = pal.inkSoft;
-      ctx.fillText(recapFit(ctx, item, colW - 12), x, y + 50 + i * SHELF_CARD_LIST_ROW_H);
+  shelfListPanels(model).forEach((lists, p) => {
+    if (p) y += SHELF_CARD_GAP;
+    const h = shelfListPanelH(lists);
+    shelfRect(ctx, pad, y, w, h, 14, pal.panel);
+    const colW = (w - 32) / lists.length;
+    lists.forEach((list, c) => {
+      const x = pad + 16 + c * colW;
+      ctx.fillStyle = pal.ink;
+      ctx.font = shelfCardFont(pal, 800, 15, true);
+      ctx.fillText(recapFit(ctx, list.title, colW - 12), x, y + 28);
+      ctx.font = shelfCardFont(pal, 600, 13);
+      list.items.forEach((item, i) => {
+        ctx.fillStyle = pal.inkSoft;
+        ctx.fillText(recapFit(ctx, item, colW - 12), x, y + 50 + i * SHELF_CARD_LIST_ROW_H);
+      });
     });
+    y += h;
   });
-  return y + h;
+  return y;
 }
 
 function drawShelfGaps(ctx, model, y, pal) {

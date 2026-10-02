@@ -32,6 +32,7 @@ const {
   W_MECHANICS,
   W_CATEGORIES,
   W_TIME,
+  W_DESIGNERS,
   W_NOVELTY_PENALTY,
   W_PLAYS,
   PLAY_SCALE_FLOOR,
@@ -130,8 +131,11 @@ const profileOf = (round, corpus) =>
 
 // The score difference between two candidates that differ in exactly one
 // attribute. Rounded to kill float noise without hiding a real drift.
-const delta = (profile, a, b) =>
-  Math.round((scoreCandidate(profile, a).score - scoreCandidate(profile, b).score) * 1e6) / 1e6;
+// Both sides of a delta assertion go through `r6`: the weights are an exact
+// factor times their approved values since #1505 (TERM_SCALE), so they are no
+// longer short decimals and only compare equal at the same rounding.
+const r6 = (v) => Math.round(v * 1e6) / 1e6;
+const delta = (profile, a, b) => r6(scoreCandidate(profile, a).score - scoreCandidate(profile, b).score);
 
 // One term's raw value, which is what a tolerance actually shapes. `delta` cannot
 // see a tolerance change on its own: the isolation fixtures put their "wrong"
@@ -606,7 +610,10 @@ test('a collection-import round is scored EXACTLY as it was before #1227', () =>
     { limit: 6 },
   );
   assert.deepEqual(out.recommendations.map((r) => [r.externalId, r.score]), [
-    ['c3', 0.585], ['c7', 0.585], ['c11', 0.585], ['c15', 0.585], ['c19', 0.585], ['c4', 0.548],
+    // Re-pinned by #1505 (0.585/0.548 before): the six weights were scaled by one
+    // exact factor to make room for W_DESIGNERS, and this fixture names no
+    // designers, so the scores scale and the ORDER this case guards does not move.
+    ['c3', 0.58], ['c7', 0.58], ['c11', 0.58], ['c15', 0.58], ['c19', 0.58], ['c4', 0.545],
   ]);
 });
 
@@ -822,7 +829,7 @@ test('QUALITY is scored from the BAYES average, over the band BGG actually uses'
   // Nothing else differs, so the whole gap is the quality term at full swing.
   const top = entry('x', { bayesRating: 8.5, info: info() });
   const bottom = entry('y', { bayesRating: 5.5, info: info() });
-  assert.equal(delta(profile, top, bottom), W_QUALITY);
+  assert.equal(delta(profile, top, bottom), r6(W_QUALITY));
   // The raw `rating` must not be what is read: swapping it alone changes nothing.
   const loudMinority = entry('z', { bayesRating: 5.5, rating: 10, info: info() });
   assert.equal(delta(profile, loudMinority, bottom), 0);
@@ -837,8 +844,8 @@ test('COMPLEXITY is symmetric — too heavy and too light are equally wrong', ()
   const centre = entry('x', { info: info({ weight: 3 }) });
   const heavy = entry('y', { info: info({ weight: 4.2 }) }); // saturated: twice the tolerance out
   const light = entry('z', { info: info({ weight: 1.8 }) });
-  assert.equal(delta(profile, centre, heavy), W_COMPLEXITY);
-  assert.equal(delta(profile, centre, light), W_COMPLEXITY);
+  assert.equal(delta(profile, centre, heavy), r6(W_COMPLEXITY));
+  assert.equal(delta(profile, centre, light), r6(W_COMPLEXITY));
   assert.equal(delta(profile, heavy, light), 0, 'the same distance either side');
 });
 
@@ -870,7 +877,7 @@ test('PLAYERS scores the poll against the round\'s real party sizes, Best over R
   const best = entry('x', { info: info({ bestWith: [4], recommendedWith: [3, 4, 5] }) });
   const rec = entry('y', { info: info({ bestWith: [2], recommendedWith: [4] }) });
   const wrong = entry('z', { info: info({ bestWith: [7], recommendedWith: [7] }) });
-  assert.equal(delta(profile, best, wrong), W_PLAYERS);
+  assert.equal(delta(profile, best, wrong), r6(W_PLAYERS));
   assert.equal(delta(profile, rec, wrong), Math.round(W_PLAYERS * 0.6 * 1e6) / 1e6);
   // The BOX's range must not be what is read — it routinely lies, which is the
   // whole reason the poll is preferred.
@@ -955,8 +962,8 @@ test('MECHANICS and CATEGORIES are cosine similarity against the affinity-weight
   const mechOnly = entry('y', { info: info({ mechanics: ['M1'], categories: ['ZZ'] }) });
   const catOnly = entry('z', { info: info({ mechanics: ['ZZ'], categories: ['C1'] }) });
   const neither = entry('w', { info: info({ mechanics: ['ZZ'], categories: ['ZZ'] }) });
-  assert.equal(delta(profile, mechOnly, neither), W_MECHANICS);
-  assert.equal(delta(profile, catOnly, neither), W_CATEGORIES);
+  assert.equal(delta(profile, mechOnly, neither), r6(W_MECHANICS));
+  assert.equal(delta(profile, catOnly, neither), r6(W_CATEGORIES));
   assert.equal(delta(profile, match, neither), Math.round((W_MECHANICS + W_CATEGORIES) * 1e6) / 1e6);
   // The two are weighted apart on purpose: categories are what people name out
   // loud and the weakest predictor of what they enjoy.
@@ -1019,11 +1026,11 @@ test('the taste terms move a score by their FULL weight, on a real taste spread 
   // differ in mechanics alone, so the gap IS the term.
   const loved = entry('x', { info: info({ mechanics: TASTE_MECHANICS.slice(0, 4), categories: [] }) });
   const alien = entry('y', { info: info({ mechanics: ['ZZ1', 'ZZ2', 'ZZ3', 'ZZ4'], categories: [] }) });
-  assert.equal(delta(profile, loved, alien), W_MECHANICS);
+  assert.equal(delta(profile, loved, alien), r6(W_MECHANICS));
 
   const lovedCats = entry('a', { info: info({ mechanics: [], categories: TASTE_CATEGORIES.slice(0, 2) }) });
   const alienCats = entry('b', { info: info({ mechanics: [], categories: ['ZZ1', 'ZZ2'] }) });
-  assert.equal(delta(profile, lovedCats, alienCats), W_CATEGORIES);
+  assert.equal(delta(profile, lovedCats, alienCats), r6(W_CATEGORIES));
 });
 
 test('the ranking does not move when the corpus grows (#772 keeps §7\'s invariance)', () => {
@@ -1112,7 +1119,7 @@ test('TIME is the distance from the group\'s own evening length', () => {
   assert.equal(profile.targetTime, 60);
   const fits = entry('x', { info: info({ minPlaytime: 60, maxPlaytime: 60 }) });
   const marathon = entry('y', { info: info({ minPlaytime: 120, maxPlaytime: 120 }) });
-  assert.equal(delta(profile, fits, marathon), W_TIME);
+  assert.equal(delta(profile, fits, marathon), r6(W_TIME));
 });
 
 test('TIME\'s window is a SHARE of the shelf, so it scales instead of costing the same everywhere', () => {
@@ -2049,4 +2056,125 @@ test('the NOVELTY penalty also fires on same designer + most of the same mechani
   const sameHand = entry('b', { info: info({ designers: ['Uwe R.'], mechanics: APART }) });
   const stranger = entry('d', { info: info({ designers: ['Someone Else'], mechanics: APART }) });
   assert.equal(delta(profile, stranger, sameHand), 0, 'the designer alone is not a penalty');
+});
+
+/* ---------------------------- designers (#1505) ---------------------------- */
+
+/*
+ * Eight owned games, each with its own designer so nothing is shared by
+ * accident: g1 by „Loved", rated 5 by all four people in `sessions` evenings;
+ * g2 by „Hated", rated 1 alongside it; the other six by one designer each and
+ * never rated (the round's indifference rung). Owned mechanics are „M", so a
+ * candidate on the default `info()` (mechanics M1) never trips the re-skin
+ * penalty unless a case asks for it.
+ *
+ * Two evenings at 5 is what puts g1's affinity past A_NEUTRAL + the lift span,
+ * so the term can reach 1.0 — the #772 lesson: an isolation delta only equals
+ * the weight against a fixture where the term can actually saturate.
+ */
+function designerShelf({ sessions = 2, rating = 5, designersOf = {}, extraGames = [], extraRows = [] } = {}) {
+  const members = ['m1', 'm2', 'm3', 'm4'].map((id) => ({ id, name: id }));
+  const games = [
+    ...Array.from({ length: MIN_PROFILE_GAMES }, (_, i) => ({
+      id: `g${i + 1}`, title: `Owned ${i + 1}`, source: { provider: 'bgg', externalId: `o${i + 1}` },
+    })),
+    ...extraGames,
+  ];
+  const designer = (id) => designersOf[id] || (id === 'g1' ? ['Loved'] : id === 'g2' ? ['Hated'] : [`Solo ${id}`]);
+  const corpus = [
+    ...games.map((g) => entry(g.source.externalId, { name: g.title, info: info({ mechanics: ['M'], designers: designer(g.id) }) })),
+    ...extraRows,
+  ];
+  const round = {
+    id: 'r1', name: 'R', members, games,
+    sessions: Array.from({ length: sessions }, (_, i) => ({
+      id: `s${i}`, gameIds: ['g1', 'g2'], memberIds: members.map((m) => m.id),
+      votes: Object.fromEntries(members.map((m) => [m.id, { g1: { rating }, g2: { rating: 1 } }])),
+    })),
+  };
+  return { round, corpus, profile: profileOf(round, corpus) };
+}
+const designerTerm = (profile, designers) =>
+  scoreCandidate(profile, entry('x', { info: info({ designers }) })).terms.find((t) => t.term === 'designers');
+const byDesigners = (id, designers, over = {}) => entry(id, { info: info({ designers, ...over }) });
+
+test('DESIGNERS move a score by their FULL weight, on a designer the round loves (#1505)', () => {
+  const { profile } = designerShelf();
+  assert.equal(designerTerm(profile, ['Loved']).value, 1, 'the fixture must let the term saturate');
+  // The isolation shape: these two differ in their designer alone.
+  assert.equal(delta(profile, byDesigners('x', ['Loved']), byDesigners('y', ['Stranger'])), r6(W_DESIGNERS));
+  // Several designers combine by the BEST match — a co-designer the round has
+  // never met takes nothing away.
+  assert.equal(designerTerm(profile, ['Stranger', 'Loved']).value, 1);
+  // A designer nobody on the shelf shares is a real answer, not an unknown.
+  assert.equal(designerTerm(profile, ['Stranger']).value, 0);
+});
+
+test('DESIGNERS never lift for a designer the round dislikes or is indifferent to (#1505)', () => {
+  const { profile } = designerShelf();
+  const stranger = byDesigners('y', ['Stranger']);
+  // Rated 1 — owned and disliked. Only positive affinity counts.
+  assert.equal(delta(profile, byDesigners('x', ['Hated']), stranger), 0);
+  // Owned and never rated: indifference is not a recommendation.
+  assert.equal(delta(profile, byDesigners('x', ['Solo g3']), stranger), 0);
+  // MIXED evidence reads as mixed, not as a favourite: the loved g1 plus a
+  // retired game by the same designer averages below indifference.
+  const mixed = designerShelf({
+    designersOf: { g3: ['Loved'] },
+  });
+  mixed.round.games[2].retired = true;
+  const remixed = profileOf(mixed.round, mixed.corpus);
+  assert.equal(designerTerm(remixed, ['Loved']).value, 0, 'one retired title must sink a designer\'s mean');
+});
+
+test('DESIGNERS ignore BGG\'s (Uncredited) sentinel on both sides (#1505)', () => {
+  // Every owned game uncredited and the loved one among them: without the
+  // filter, "(Uncredited)" would be the round's favourite designer.
+  const { profile } = designerShelf({ designersOf: { g1: ['(Uncredited)'] } });
+  assert.equal(profile.designerLift.has('(Uncredited)'), false);
+  // An uncredited candidate is a real answer (BGG stores the sentinel instead of
+  // an empty list) and scores like a stranger, not NEUTRAL — or every uncredited
+  // party game would gain half the term over a credited game.
+  assert.equal(designerTerm(profile, ['(Uncredited)']).value, 0);
+  // Only a row with NO designer list at all makes no claim.
+  assert.equal(designerTerm(profile, []).value, null);
+});
+
+test('a WISHED game\'s designer lifts nothing — a wish does not profile (#1505)', () => {
+  const wish = { id: 'gw', title: 'Wunsch', wish: true, source: { provider: 'bgg', externalId: 'ow' } };
+  const { profile } = designerShelf({
+    extraGames: [wish],
+    designersOf: { gw: ['Wished'] },
+  });
+  assert.equal(designerTerm(profile, ['Wished']).value, 0);
+});
+
+test('the DESIGNERS term and the re-skin penalty can fire on the same candidate (#1505)', () => {
+  // Same designer as the loved g1 AND the same mechanics: a reason to look, but
+  // still the same game again. Both are intended, and both are visible.
+  const { profile } = designerShelf();
+  const reskin = scoreCandidate(profile, byDesigners('x', ['Loved'], { mechanics: ['M'] }));
+  assert.equal(reskin.terms.find((t) => t.term === 'designers').value, 1);
+  assert.equal(reskin.novelty, 1);
+});
+
+test('a designer reason names the designer and the round\'s best-liked game by them (#1505)', () => {
+  const { round, corpus } = designerShelf({
+    extraRows: [byDesigners('c1', ['Loved']), ...Array.from({ length: 6 }, (_, i) => byDesigners(`c${i + 2}`, [`Other ${i}`]))],
+  });
+  const rec = recommend(round, corpus).recommendations.find((r) => r.externalId === 'c1');
+  assert.deepEqual(rec.reasons.find((r) => r.term === 'designers'), { term: 'designers', designer: 'Loved', games: ['Owned 1'] });
+});
+
+test('a WEAK designer match prints no reason line (#1505)', () => {
+  // One evening at 4 lifts the designer only part of the way (below NEUTRAL),
+  // so it may move the score a little but must not be named.
+  const { round, corpus, profile } = designerShelf({
+    sessions: 1, rating: 4,
+    extraRows: [byDesigners('c1', ['Loved']), ...Array.from({ length: 6 }, (_, i) => byDesigners(`c${i + 2}`, [`Other ${i}`]))],
+  });
+  const value = designerTerm(profile, ['Loved']).value;
+  assert.ok(value > 0 && value <= NEUTRAL, `the fixture must sit in the weak band, got ${value}`);
+  const rec = recommend(round, corpus).recommendations.find((r) => r.externalId === 'c1');
+  assert.equal(rec.reasons.some((r) => r.term === 'designers'), false);
 });

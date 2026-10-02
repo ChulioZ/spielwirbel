@@ -79,8 +79,10 @@ const FULL_INFO = {
   // over: the two sides share these names deliberately, so a corpus row now
   // fills a shelf game's poll with no upstream hop at all.
   bestWith: [4], recommendedWith: [3, 4],
+  // The second key to cross over (#1505), under the corpus's own name.
+  designers: ['Ada'],
   // Corpus-only keys, which must NOT reach a game row.
-  families: ['Legacy'], designers: ['Ada'], imageUrl: 'https://cf.geekdo-images.com/x.jpg',
+  families: ['Legacy'], imageUrl: 'https://cf.geekdo-images.com/x.jpg',
 };
 
 // FULL_INFO's comment above CLAIMS full coverage; pin the claim, so a field
@@ -126,8 +128,10 @@ test('a game the corpus knows is filled with NO upstream request', async () => {
   assert.equal(written[0].weight, 3.2);
   assert.equal(written[0].rating, 7.4);
   assert.deepEqual(written[0].mechanics, ['Trading']);
+  // The designers cross over with no hop (#1505) — the corpus already parsed them.
+  assert.deepEqual(written[0].designers, ['Ada']);
   // ...and the corpus-only keys do not. A game row is not a corpus row.
-  for (const k of ['families', 'designers', 'imageUrl']) {
+  for (const k of ['families', 'imageUrl']) {
     assert.equal(k in written[0], false, `corpus-only key \`${k}\` reached a game row`);
   }
 });
@@ -139,24 +143,30 @@ test('a PARTIAL corpus row fills nothing and is not stamped', async () => {
    * upstream hop that could have completed it, with no request ever going out
    * (.claude/rules/provider-info-triggers-and-stamping.md §2).
    *
-   * Three shapes of partial, because they fail for different reasons: a row
-   * nobody enriched (rating only), one missing a number, and one whose list is
-   * empty — which `hasProviderField` counts as absent, not as "BGG named none". */
-  const games = unfilledGames(3, 991000);
-  const [a, b, c] = games.map((g) => g.source.externalId);
+   * Four shapes of partial, because they fail for different reasons: a row
+   * nobody enriched (rating only), one missing a number, one whose list is
+   * empty — which `hasProviderField` counts as absent, not as "BGG named none" —
+   * and one enriched before the corpus parser learned a field the game rows now
+   * want (#1505's designers). That last one is the accepted cost of widening the
+   * set: such a game takes the upstream hop once instead of the corpus. */
+  const games = unfilledGames(4, 991000);
+  const [a, b, c, d] = games.map((g) => g.source.externalId);
+  const beforeDesigners = { ...FULL_INFO };
+  delete beforeDesigners.designers;
   await seedCorpus([
     { externalId: a, rating: 7.4 },                                          // never enriched
     { externalId: b, rating: 7.4, info: { ...FULL_INFO, minAge: null } },    // a missing number
     { externalId: c, rating: 7.4, info: { ...FULL_INFO, mechanics: [] } },   // an empty list
+    { externalId: d, rating: 7.4, info: beforeDesigners },                   // an older parse
   ]);
   const repoStub = recordingRepo();
   const calls = stubFetch();
 
   const out = await backfillProviderInfo(repoStub, 'r-partial', games, { maxBatches: 15 });
   assert.equal(out.fromCorpus, 0, 'a partial row must fill nothing at all');
-  assert.equal(calls.length, 1, 'all three must still reach the upstream hop');
+  assert.equal(calls.length, 1, 'all four must still reach the upstream hop');
   const asked = new URL(calls[0]).searchParams.get('id').split(',');
-  assert.deepEqual(asked.sort(), [a, b, c].sort());
+  assert.deepEqual(asked.sort(), [a, b, c, d].sort());
 });
 
 test('a MIXED shelf asks BGG only about what the corpus lacks', async () => {

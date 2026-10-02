@@ -65,7 +65,9 @@ What the app does, in detail. For a short overview see the
   mean.
 - **Know what you are voting on** – a game linked to BoardGameGeek carries its
   community **complexity** (the 1–5 weight, shown to one decimal), its **playing
-  time**, a **minimum age**, and BGG's **categories** and **mechanics**. Both
+  time**, a **minimum age**, BGG's **categories** and **mechanics**, and its
+  **designers** („Autor:innen" — BGG's `(Uncredited)` placeholder is never
+  shown). Both
   voting screens — the hot-seat card and the shared vote link — show a small ⓘ
   next to the title that opens them in a sheet, and the game's detail page shows
   them as their own section, so a voter facing an unfamiliar game sees more than
@@ -78,7 +80,7 @@ What the app does, in detail. For a short overview see the
   rather than help them decide, and playing time answers a real question in four
   characters. Games added before this feature fill in silently the next time
   their detail page opens or a session draws them; categories and mechanics stay
-  in English (BGG has no translations).
+  in English (BGG has no translations), and designers keep BGG's spelling.
 - **Pick the cover of your edition** – a board game is usually printed in a dozen
   languages, and the picture BoardGameGeek serves by default is rarely the box on
   your shelf. So wherever a game is linked to BGG you can open its **edition
@@ -160,12 +162,16 @@ What the app does, in detail. For a short overview see the
   how many people really sit at their table (parties, so a team counts once).
   That middle one matters most to a round that picks its games directly instead
   of voting: those evenings leave no ratings behind, so without counting the
-  plays the app would know nothing about them. Everything else — quality, complexity,
-  mechanics, categories, the community's verdict on player counts — comes from
+  plays the app would know nothing about them. A game by a designer whose
+  other games this round rates well gets a small lift, and only then — owning a
+  designer's games the round is indifferent to, or dislikes, counts for nothing.
+  Everything else — quality, complexity,
+  mechanics, categories, designers, the community's verdict on player counts — comes from
   the local BGG corpus, and the two are joined by plain weighted arithmetic:
   no model, no AI, no outbound call, and every entry a real BGG row that cannot
   be invented. Each card says **why** it is there ("Ähnliche Mechaniken wie
-  Wingspan und Terraforming Mars", „Am besten mit 4 Personen"), and one tap
+  Wingspan und Terraforming Mars", „Am besten mit 4 Personen", „Von Uwe
+  Rosenberg, wie Agricola"), and one tap
   puts it on the Wunschliste — or, with the **ban icon** beside it („Nicht
   interessiert"), takes the title off the list for good. That icon shows no
   text but is labelled for screen readers, so the card's actions fit one row on
@@ -319,7 +325,8 @@ What the app does, in detail. For a short overview see the
     size from 2 to 6+, counting owned expansions, and the gaps a draw will hit —
     „Für 6+ Personen: nur 2 Spiele", „Über 120 Min.: kein Spiel"; it opens a
     screen with every band — players, playing time, weight — the leading
-    mechanics and categories, and a „Teilen" that draws the profile as an image
+    mechanics, categories and designers (a designer counts once two games share
+    them), and a „Teilen" that draws the profile as an image
     on the device, issue #1173), a „**heute vor N Jahren**"
     anniversary when one falls on today, and a teaser from the recommendations
     screen. Below the derived cards, a **preview of each of the round's other

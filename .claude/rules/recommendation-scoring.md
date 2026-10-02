@@ -292,7 +292,8 @@ which is a different machine from the 2026-08-14 rows. Two things decided it:
 Two things that measurement settled and one it did not:
 
 - **The ranking does not change with corpus size.** Rows are rank-ordered and
-  quality carries 35% of the score, so a bigger corpus only adds candidates that
+  quality carries a third of the score (35% until #1505's rescale, ~33% since),
+  so a bigger corpus only adds candidates that
   were already going to lose. Growing the pool is a cost question, never a
   correctness one.
 
@@ -831,3 +832,34 @@ live in `lib/recommend-spotlights.js`; the pass that feeds them stays here.
   `different` drops both taste terms, `complexity` drops complexity (its winner
   can sit AT the centre when quality outweighs the shift, and the line would then
   read "your average is 2.4" under "Mal was Komplexeres").
+
+## 17. The designer term was paid for by an EXACT factor, not rounded weights (#1505)
+
+`W_DESIGNERS` (0.05) came out of the six positive weights proportionally, and the
+obvious way to write that — round each to two places (0.33, 0.19, 0.15, 0.12,
+0.07, 0.06) — is subtly wrong: it keeps the total but shifts the RATIOS by up to
+5% (time rounds back to 0.06 while the others shrink), and on the spotlight
+fixture that flipped three near-ties in the main list. So every weight is its
+approved value times one `TERM_SCALE`, and with no designer to match a score is
+exactly that factor times the old one plus the term's NEUTRAL share. Measured
+before re-pinning `test/recommend-spotlight.test.js`: the same 24 ids, the same
+reason terms per card, the same three tiles as `main`. The delta specs compare
+through `r6()` because the weights are no longer short decimals.
+
+Three things about the term itself, each pinned by a spec that was broken on
+purpose:
+
+- **It reads the MEAN affinity of the round's games by that designer, measured
+  from `A_NEUTRAL`**, so indifference (a flat 3, or owned and never rated) lifts
+  nothing, and one retired title beside a loved one sinks the designer. Using the
+  best game instead reddens the mixed-evidence case.
+- **`(Uncredited)` is BGG's sentinel, never a person** — dropped through
+  `creditedDesigners` (`public/js/provider-info-fields.js`) on the profile side,
+  the candidate side and the re-skin penalty. But an uncredited candidate scores
+  **0**, not NEUTRAL: only a row with no designer list at all makes no claim.
+  Reading the sentinel as "unknown" would hand every uncredited party game half
+  the term over a credited game by a stranger.
+- **It can fire together with the re-skin penalty**, on purpose: a liked
+  designer is a reason to look, the same designer plus most of the same
+  mechanics is still the same game.
+

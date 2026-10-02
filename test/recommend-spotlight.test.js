@@ -45,17 +45,23 @@ test('the MAIN list is byte-identical to the pre-#1228 output', () => {
   // existed. The variants are derived from the base score and from a COPY of the
   // profile; a variant leaking into either would move a score in the third
   // decimal or reorder this list, and the hash covers the reason lines too.
+  //
+  // RE-PINNED by #1505, scores only: the designer term was paid for by scaling
+  // the six weights by one exact factor, and this fixture names no designers, so
+  // every score is that factor times the old one plus the term's NEUTRAL share.
+  // Verified against the pre-#1505 build before re-pinning: the same 24 ids in
+  // the same order, the same reason terms per card, the same three tiles.
   const { round, corpus } = corpusOf();
   const recs = recommend(round, corpus).recommendations;
   assert.deepEqual(recs.map((r) => [r.externalId, r.score]), [
-    ['c93', 0.83], ['c57', 0.814], ['c142', 0.733], ['c22', 0.721], ['c41', 0.716], ['c79', 0.691],
-    ['c152', 0.69], ['c157', 0.688], ['c75', 0.672], ['c149', 0.66], ['c9', 0.658], ['c18', 0.653],
-    ['c45', 0.65], ['c108', 0.646], ['c48', 0.609], ['c74', 0.607], ['c69', 0.606], ['c2', 0.603],
-    ['c106', 0.602], ['c59', 0.598], ['c156', 0.589], ['c29', 0.584], ['c11', 0.581], ['c27', 0.577],
+    ['c93', 0.812], ['c57', 0.797], ['c142', 0.721], ['c22', 0.709], ['c41', 0.704], ['c79', 0.681],
+    ['c152', 0.679], ['c157', 0.678], ['c75', 0.663], ['c149', 0.651], ['c9', 0.649], ['c18', 0.644],
+    ['c45', 0.641], ['c108', 0.638], ['c48', 0.602], ['c74', 0.601], ['c69', 0.6], ['c2', 0.597],
+    ['c106', 0.596], ['c59', 0.592], ['c156', 0.583], ['c29', 0.579], ['c11', 0.576], ['c27', 0.572],
   ]);
   assert.equal(
     crypto.createHash('sha256').update(JSON.stringify(recs)).digest('hex'),
-    '39d55197539920e21f1d15a74e13945017e5ec1554bb530f377aee7f806bfb6c',
+    '35bd8c291bb7d39806d016d66e470ef1ff40e7643c9156c25baf7c5d36968ec9',
   );
 });
 

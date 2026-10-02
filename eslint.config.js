@@ -150,6 +150,7 @@ const frontendGlobals = {
   // provider-info-fields.js (shared with lib/, #717/#724; client since the 2026-09-08 audit)
   PROVIDER_INFO_FIELDS: 'readonly', CHIPPED_PROVIDER_INFO_FIELDS: 'readonly',
   UNCHIPPED_PROVIDER_INFO_FIELDS: 'readonly', hasProviderField: 'readonly', assignProviderInfo: 'readonly',
+  BGG_UNCREDITED: 'readonly', creditedDesigners: 'readonly',
   EXPANSION_TITLE_MAX: 'readonly',
   expansionBaseCandidates: 'readonly', expansionAcquirePlan: 'readonly', acquirableBases: 'readonly',
   expansionParentTitles: 'readonly',
@@ -368,6 +369,7 @@ const frontendGlobals = {
   SHELF_CARD_HEAD_H: 'readonly', SHELF_CARD_ROW_H: 'readonly', SHELF_CARD_LIST_ROW_H: 'readonly',
   SHELF_CARD_GAP: 'readonly', SHELF_CARD_FOOT_H: 'readonly', SHELF_CARD_MAX_GAPS: 'readonly',
   shelfCardPalette: 'readonly', shelfCardFont: 'readonly', shelfDimH: 'readonly',
+  SHELF_CARD_LISTS_PER_PANEL: 'readonly', shelfListPanels: 'readonly', shelfListPanelH: 'readonly',
   shelfListsH: 'readonly', shelfGapsH: 'readonly', shelfCardHeight: 'readonly',
   shelfRect: 'readonly', drawShelfHead: 'readonly', drawShelfDim: 'readonly',
   drawShelfLists: 'readonly', drawShelfGaps: 'readonly', drawShelfFoot: 'readonly',

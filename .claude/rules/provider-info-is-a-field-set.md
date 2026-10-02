@@ -67,6 +67,12 @@ had to start slicing per `<item>`: `parseItems` flattens every descendant into
 one list, so run flat a two-item body's polls merge and the second game inherits
 the first one's verdict.
 
+`designers` (#1505) is the second field to cross, under the corpus's own name
+as well. The corpus parsed it from day one (#681), so every enriched row fills a
+shelf game with no hop. Its one wrinkle is BGG's `(Uncredited)` sentinel, which
+is stored as-is (the game completes) and dropped by readers via
+`creditedDesigners`, not filtered out at the guard.
+
 **#729 exercised all of this in reverse** by removing `description`, and the
 shape held: deleting its entry from `PROVIDER_INFO_GUARDS` *was* the whole
 store-side change, because the guard map is what both the write loop and the

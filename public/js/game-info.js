@@ -1,5 +1,5 @@
 /* Provider-sourced game info — BGG weight (#717), plus playing time, minimum
-   age, categories, mechanics and the community rating (#724). One builder for
+   age, categories, mechanics, designers (#1505) and the community rating (#724). One builder for
    the three surfaces that show it: the info sheet the two voting cards open
    (hot-seat wizard + vote-link cards), and the game-detail section.
 
@@ -37,6 +37,7 @@ function hasGameInfo(game, { rating = false } = {}) {
   return !!game && (game.weight != null
     || game.minPlaytime != null || game.maxPlaytime != null || game.minAge != null
     || (game.categories || []).length > 0 || (game.mechanics || []).length > 0
+    || creditedDesigners(game.designers).length > 0
     || (rating && game.rating != null));
 }
 
@@ -53,6 +54,13 @@ function factRow(label, value) {
   const row = h(`<div class="game-info__fact"><span class="game-info__fact-label">${esc(label)}</span><span class="game-info__fact-value"></span></div>`);
   row.querySelector('.game-info__fact-value').textContent = value;
   return row;
+}
+
+// Who designed it (#1505): BGG's own names, minus its `(Uncredited)` sentinel —
+// a game credited to nobody gets no row at all rather than a row saying so.
+function designerRow(facts, game, cap) {
+  const names = creditedDesigners(game.designers);
+  if (names.length) facts.appendChild(factRow(t('gameInfo.designers'), factList(names, cap)));
 }
 
 // A capped, comma-joined list — "Economic, Negotiation, +3 more" — so a long
@@ -110,6 +118,7 @@ function gameInfoBody(game, { rating = false, listCap = GAME_INFO_LIST_CAP } = {
   if (game.minAge != null) facts.appendChild(factRow(t('gameInfo.minAge'), t('gameInfo.minAgeValue', { n: game.minAge })));
   if ((game.categories || []).length) facts.appendChild(factRow(t('gameInfo.categories'), factList(game.categories, listCap)));
   if ((game.mechanics || []).length) facts.appendChild(factRow(t('gameInfo.mechanics'), factList(game.mechanics, listCap)));
+  designerRow(facts, game, listCap);
   // One decimal, like the weight — BGG's five are a precision the number does
   // not have.
   if (rating && game.rating != null) {
@@ -151,7 +160,7 @@ function mergeGameInfo(game, info) {
   for (const k of ['weight', 'minPlaytime', 'maxPlaytime', 'minAge', 'rating']) {
     if (info[k] != null && game[k] == null) game[k] = info[k];
   }
-  for (const k of ['categories', 'mechanics']) {
+  for (const k of ['categories', 'mechanics', 'designers']) {
     if ((info[k] || []).length && !(game[k] || []).length) game[k] = info[k];
   }
   return game;
@@ -280,6 +289,7 @@ function gameInfoRest(game) {
   const facts = h('<div class="game-info__facts"></div>');
   if ((game.categories || []).length) facts.appendChild(factRow(t('gameInfo.categories'), factList(game.categories, Infinity)));
   if ((game.mechanics || []).length) facts.appendChild(factRow(t('gameInfo.mechanics'), factList(game.mechanics, Infinity)));
+  designerRow(facts, game, Infinity);
   if (game.rating != null) {
     facts.appendChild(factRow(t('gameInfo.rating'), t('gameInfo.ratingValue', { n: fmtAvg(game.rating) })));
   }

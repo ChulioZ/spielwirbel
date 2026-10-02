@@ -38,6 +38,7 @@ function roundFixture() {
         minPlaytime: 60, maxPlaytime: 120, minAge: 10,
         categories: ['Civilization', 'Economic'],
         mechanics: ['Dice Rolling', 'Hand Management', 'Trading', 'Network Building', 'Income', 'Set Collection'],
+        designers: ['Klaus Teuber'],
         rating: 7.09054,
         bestWith: [4], recommendedWith: [3, 4],
         source: { provider: 'bgg', externalId: '13', url: 'https://boardgamegeek.com/boardgame/13' },
@@ -204,6 +205,8 @@ const RICH = {
   minPlaytime: 60, maxPlaytime: 120, minAge: 10,
   categories: ['Civilization', 'Economic'],
   mechanics: ['Dice Rolling', 'Hand Management', 'Trading', 'Network Building', 'Income', 'Set Collection'],
+  // BGG's sentinel beside a real name, so both surfaces prove they drop it.
+  designers: ['Klaus Teuber', '(Uncredited)'],
   rating: 7.09054,
 };
 
@@ -223,6 +226,7 @@ test('the detail page renders the standard metadata AND the BGG rating, in its t
   assert.equal(factOf(body, t('gameInfo.categories')).querySelector('.game-info__fact-value').textContent, 'Civilization, Economic');
   assert.equal(factOf(body, t('gameInfo.mechanics')).querySelector('.game-info__fact-value').textContent,
     'Dice Rolling, Hand Management, Trading, Network Building, Income, Set Collection');
+  assert.equal(factOf(body, t('gameInfo.designers')).querySelector('.game-info__fact-value').textContent, 'Klaus Teuber');
   // One decimal, like the weight — never BGG's five.
   assert.equal(factOf(body, t('gameInfo.rating')).querySelector('.game-info__fact-value').textContent, '7,1 von 10');
   // And the split is a split, not a duplication: neither half repeats the other.
@@ -247,6 +251,9 @@ test('the vote sheet shows the same metadata but NEVER the rating', async (t_) =
   // Capped at five, with the remainder summarised rather than silently dropped.
   assert.equal(factOf(sheet, t('gameInfo.mechanics')).querySelector('.game-info__fact-value').textContent,
     'Dice Rolling, Hand Management, Trading, Network Building, Income, +1 weitere');
+  // The designers, minus BGG's `(Uncredited)` sentinel (#1505).
+  assert.equal(factOf(sheet, t('gameInfo.designers')).querySelector('.game-info__fact-value').textContent, 'Klaus Teuber');
+  assert.doesNotMatch(sheet.textContent, /Uncredited/);
 
   assert.equal(factOf(sheet, t('gameInfo.rating')), undefined, 'the rating reached a voting surface');
   assert.doesNotMatch(sheet.textContent, /7[.,]1/, 'the rating leaked in some other row');
@@ -342,4 +349,26 @@ test('the vote-link card shows the ⓘ only for a game carrying info', async (t_
   await beat(dom);
   assert.match(dom.app.querySelector('.vote__title').textContent, /Ohne/);
   assert.equal(dom.app.querySelector('.vote__title .vote__info'), null);
+});
+
+test('a game credited to NOBODY gets no designer row and no ⓘ of its own (#1505)', async (t_) => {
+  /* BGG stores `(Uncredited)` rather than an empty list, so the sentinel is
+   * what an uncredited party game carries. It must read as "no designer known":
+   * a row saying "(Uncredited)" is noise, and an ⓘ opened for it alone would
+   * be an empty sheet. */
+  const { dom } = bootApp(t_);
+  const uncredited = { id: 'g', title: 'Werwolf', designers: ['(Uncredited)'] };
+  assert.equal(dom.call('gameInfoButton', uncredited), null, 'the sentinel alone grew an ⓘ');
+  assert.equal(dom.call('gameInfoRest', uncredited), null);
+  const body = dom.call('gameInfoRest', { ...uncredited, rating: 6.2 });
+  assert.equal(factOf(body, t('gameInfo.designers')), undefined, 'the sentinel rendered as a designer');
+});
+
+test('a backfill answer carrying designers fills a game that lacks them (#1505)', async (t_) => {
+  // mergeGameInfo keeps its own list of list fields; a field missing there
+  // would reach the server and never the screen the user is looking at.
+  const { dom } = bootApp(t_);
+  const game = { id: 'g', title: 'Catan' };
+  dom.call('mergeGameInfo', game, { designers: ['Klaus Teuber'] });
+  assert.deepEqual([...game.designers], ['Klaus Teuber']);
 });

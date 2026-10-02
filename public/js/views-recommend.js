@@ -27,6 +27,8 @@ function recReasonText(reason) {
   if (reason.term === 'time') return t('suggest.reason.time', { minutes: reason.minutes, target: reason.target });
   if (reason.term === 'mechanics') return t('suggest.reason.mechanics', { games: joinNames(reason.games || []) });
   if (reason.term === 'categories') return t('suggest.reason.categories', { games: joinNames(reason.games || []) });
+  // BGG's own name for the designer, the round's own title for the game (#1505).
+  if (reason.term === 'designers') return t('suggest.reason.designers', { designer: reason.designer, game: (reason.games || [])[0] });
   return '';
 }
 
