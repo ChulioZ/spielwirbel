@@ -387,7 +387,9 @@ What the app does, in detail. For a short overview see the
     only a padlock until earned. Each is a button that opens a card (a popover
     on a wide screen, a sheet on a phone) with every tier and when it was
     reached. Nothing is stored: they are derived from the sessions on every
-    render, so deleting a session removes what it earned. From seven members a
+    render, so deleting a session removes what it earned — and a tier added to
+    a ladder later (issue #1463) appears already dated at the session that first
+    satisfied it. From seven members a
     row shows only earned marks, the rest behind „N offen"; before the first
     finished session the section is one line. A legend in the section head
     keys the three drawn states (verdient, unterwegs, offen), and each member
@@ -726,7 +728,9 @@ What the app does, in detail. For a short overview see the
   the **game title and cover** and, for that last one, a plain count — plus
   „‹friend› · Sessions 100" when a friend reaches a new tier of an account
   Abzeichen at a session finish (issue #1389; Sessions and Siege only, each tier
-  announced once, never while the friend's record is hidden), pictured by the
+  announced once, never while the friend's record is hidden, and never for a
+  tier the friend already held before that finish — so a newly added tier is
+  not announced retroactively), pictured by the
   badge's own earned mark — the disc, pin or pearl the Spielerkarte shows — rather
   than a glyph that could read as a game with no cover (issue #1428); never
   member names, ratings, votes or round names, and only for activity after you
@@ -806,7 +810,8 @@ What the app does, in detail. For a short overview see the
   round and game counts, are the line under your name. The favourite and
   strongest game are the two ribboned boxes at the foot of the card.
   Under the figures sit the four **account Abzeichen** (issue #1389) —
-  Sessions 25 · 100 · 500, Siege 10 · 50, Runden 2 · 5 and Jahre 1 · 2 · 3 —
+  Sessions 25 · 100 · 250 · 500 · 1000, Siege 10 · 25 · 50 · 100 · 250,
+  Runden 2 · 3 · 5 and Jahre 1 · 2 · 3 (ladders lengthened in issue #1463) —
   the round badges' own tiles and card, counted from the same totals the card
   prints (Jahre from the registration date). They reach exactly who the record
   reaches, and a demo account shows none.
