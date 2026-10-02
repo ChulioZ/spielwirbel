@@ -18,7 +18,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const { CSS, ROOT: SUPPORT_ROOT } = require('./support/css');
-const { designById } = require('../public/js/designs');
+const { designById, isSelectableDesign } = require('../public/js/designs');
 const { MEMBER_COLORS } = require('../public/js/member-colors');
 const { blocksOf } = require('./support/theme');
 const { loadApp } = require('./support/dom');
@@ -36,9 +36,11 @@ const decl = (name) => {
   return m ? m[1].trim() : null;
 };
 
-test('Die Brücke is registered, dark, and NOT yet enabled (its flip is #1249)', () => {
+test('Die Brücke is registered, dark, and live (its go-live was #1249)', () => {
   assert.ok(BRUECKE, 'no design with id "bruecke" in public/js/designs.js');
-  assert.equal(BRUECKE.enabled, false, 'the go-live is #1249, not this slice');
+  assert.equal(BRUECKE.enabled, true, 'live since its go-live (#1249)');
+  assert.equal(isSelectableDesign('bruecke', { production: true }), true,
+    'production offers it in the chooser and on Konto');
   assert.equal(BRUECKE.scheme, 'dark');
   assert.equal(BRUECKE.page, '#070b14', 'B1 „page" — the gradient’s dark stop');
   assert.equal(BRUECKE.accent, '#35e0ff', 'B1 „accent"');
