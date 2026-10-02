@@ -600,26 +600,26 @@ function renderStartTab(round, activeGames) {
   // (O3.2), the end of the page on a phone.
   (ocean ? cols.root : bh ? bh.offshelf : ph ? ph.strip : app).appendChild(hubOffShelfGroup(round));
 
-  // Quick actions: quieter secondary tasks below the fold.
-  const actions = h('<div class="hub-actions"></div>');
-  const addGameBtn = h(
-    `<button class="btn"><i class="ti ti-plus" aria-hidden="true"></i> ${esc(t('round.addGame'))}</button>`
-  );
-  addGameBtn.addEventListener('click', () => showAddGame(round));
-  // One "Einstellungen" entry rather than the three separate Tags/Provider/Design
-  // links this used to carry (#561): those three now live INSIDE that screen,
-  // together with the round-level actions that were stranded in the Regal and
-  // Chronik footers — so a phone reaches every one of them in two taps from here.
-  // It is a routed screen, so it is a link (#330); "Spiel hinzufügen" opens a
-  // sheet and stays a button. `rail-owned`, because ≥1280px the rail carries it.
+  // Quick actions: quieter secondary tasks below the fold. One "Einstellungen"
+  // entry rather than the three separate Tags/Provider/Design links this used to
+  // carry (#561): those three now live INSIDE that screen, together with the
+  // round-level actions that were stranded in the Regal and Chronik footers — so
+  // a phone reaches every one of them in two taps from here. It is a routed
+  // screen, so it is a link (#330).
+  //
+  // No „Spiel hinzufügen" here (#1498): it sat at the very end of the page in
+  // every design, where nobody found it, and every design's Regal carries a
+  // prominent add control of its own (#1427, #1278, #1239). A 0-game round keeps
+  // its add action on the empty table above. Don't bring a substitute back.
+  //
+  // The CONTAINER is `rail-owned`, not just the link: from 1280px the rail
+  // carries „Einstellungen", and an all-hidden `.hub-actions` would still cost
+  // its margin, a flex gap or a grid row in every design.
+  const actions = h('<div class="hub-actions rail-owned"></div>');
   const settingsBtn = h(
-    `<a class="btn rail-owned"><i class="ti ti-settings" aria-hidden="true"></i> ${esc(t('rail.settings'))}</a>`
+    `<a class="btn"><i class="ti ti-settings" aria-hidden="true"></i> ${esc(t('rail.settings'))}</a>`
   );
   navLink(settingsBtn, roundPath(rid, 'settings'), () => showRoundSettings(rid));
-  // A 0-game round's empty table already carries „Spiel hinzufügen" as its
-  // primary action; a second copy two screens down would be the same control
-  // twice (#1269).
-  if (activeGames.length) actions.appendChild(addGameBtn);
   actions.appendChild(settingsBtn);
   // Ocean: the frame's last cell — the end of the page on a phone, the foot of
   // the centre column from 1280 (oceanHubActions).

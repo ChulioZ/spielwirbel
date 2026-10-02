@@ -155,7 +155,7 @@ test('Ocean from 1280: the quiet actions close the centre column instead of a ro
   const hub = dom.app.querySelector('.ocean-hub');
   // A row under the centre column was sized by the taller aside beside it, so a
   // short centre column left a gap above the actions.
-  assert.equal(hub.querySelector('.ocean-hub__main').lastElementChild.className, 'hub-actions');
+  assert.ok(hub.querySelector('.ocean-hub__main').lastElementChild.classList.contains('hub-actions'));
   assert.deepEqual(
     [...hub.children].map((el) => el.className.split(' ')[0]),
     ['ocean-hub__crew', 'ocean-hub__main', 'ocean-hub__aside', 'hub-offshelf'],
