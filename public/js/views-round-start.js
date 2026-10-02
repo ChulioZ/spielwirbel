@@ -52,8 +52,8 @@ function renderStartTab(round, activeGames) {
   const ocean = designIs('ocean');
   const cols = ocean ? oceanHubFrame() : null;
   if (cols) app.appendChild(cols.root);
-  /* Die Brücke (#1238, B2.2/B3.1) lays the hub out as ONE grid of named slots
-     in the phone order (bruecke-hub.js), placed into three columns from 1280 —
+  /* Die Brücke (#1238, B2.2/B3.1) lays the hub out as named slots in the phone
+     order (bruecke-hub.js), moved into three column wrappers from 1280 (#1496) —
      `bh` is that frame, and every append below that names a slot goes there. */
   const bh = designIs('bruecke') ? brueckeHubFrame() : null;
   if (bh) app.appendChild(bh.root);
@@ -621,9 +621,10 @@ function renderStartTab(round, activeGames) {
   // twice (#1269).
   if (activeGames.length) actions.appendChild(addGameBtn);
   actions.appendChild(settingsBtn);
-  // Ocean: the frame's last cell — the end of the page on a phone, under the
-  // centre column from 1280 (ocean.css).
-  (ocean ? cols.root : bh ? bh.actions : ph ? ph.root : app).appendChild(actions);
+  // Ocean: the frame's last cell — the end of the page on a phone, the foot of
+  // the centre column from 1280 (oceanHubActions).
+  if (ocean) oceanHubActions(cols, actions);
+  else (bh ? bh.actions : ph ? ph.root : app).appendChild(actions);
   if (bh) brueckeStatus();
 }
 

@@ -60,9 +60,17 @@ const busyRound = () => ({
   tags: [],
 });
 
-async function screen(t, design, tab = 'start', round = busyRound()) {
+/* `wide` stubs matchMedia so the desktop query matches — jsdom has none, so
+   without it the frame stays in the phone order. The stub keeps the `change`
+   listeners it is handed on `window.__mq` so a spec can cross the breakpoint. */
+async function screen(t, design, tab = 'start', round = busyRound(), { wide = false } = {}) {
   const dom = loadApp({ locale: 'de' });
   t.after(() => dom.close());
+  if (wide) {
+    dom.run(`window.__mq = [];
+      window.matchMedia = (q) => ({ matches: /min-width: 1280px/.test(q),
+        addEventListener(type, fn) { window.__mq.push(fn); }, removeEventListener() {} });`);
+  }
   if (design) dom.run(`applyDesign(${JSON.stringify(design)})`);
   dom.set('api', async (method, url) => {
     if (/recommendations/.test(url)) return { recommendations: [] };
@@ -114,6 +122,41 @@ test('Die Brücke: the hub is one frame of slots in the phone order', async (t) 
   assert.ok(frame.querySelector('.bruecke-hub__crew > .hero'), 'the hero is not in the crew slot');
   assert.deepEqual([...frame.querySelectorAll('.bruecke-hub__previews > .hub-preview .hub-card__title')].map((h) => h.textContent.trim()),
     ['Regal', 'Pokale', 'Chronik']);
+});
+
+/* #1496: from 1280 the slots stand in B3.1's three column wrappers, so each
+   column stacks on its own — as one grid of slots, „Zuletzt gespielt" waited
+   for the tallest column and left ~700px of empty grid under the panel. */
+const WIDE_COLUMNS = {
+  left: ['pulse', 'care'],
+  mid: ['mission', 'last', 'more'],
+  right: ['suggest', 'previews', 'offshelf'],
+};
+const slotNames = (el) => [...el.children].map((s) => s.className.replace('bruecke-hub__', ''));
+
+test('Die Brücke from 1280: the slots stand in three column wrappers, DOM order = visual order (#1496)', async (t) => {
+  const dom = await screen(t, 'bruecke', 'start', busyRound(), { wide: true });
+  const frame = dom.app.querySelector('.bruecke-hub');
+  assert.deepEqual(slotNames(frame),
+    ['crew', 'feed', 'col bruecke-hub__col--left', 'col bruecke-hub__col--mid', 'col bruecke-hub__col--right', 'actions']);
+  for (const [col, names] of Object.entries(WIDE_COLUMNS)) {
+    assert.deepEqual(slotNames(frame.querySelector(`.bruecke-hub__col--${col}`)), names, `the ${col} column`);
+  }
+  // The content went with its slot: „Zuletzt gespielt" directly under the panel.
+  const mid = frame.querySelector('.bruecke-hub__col--mid');
+  assert.ok(mid.querySelector('.bruecke-hub__mission > .bruecke-mission'), 'the panel left its slot');
+  assert.ok(mid.querySelector('.bruecke-hub__last > .ticket'), '„Zuletzt gespielt" is not under the panel');
+});
+
+test('Die Brücke: crossing 1280 moves the slots back to the phone order and out again (#1496)', async (t) => {
+  const dom = await screen(t, 'bruecke', 'start', busyRound(), { wide: true });
+  const frame = dom.app.querySelector('.bruecke-hub');
+  const phone = ['crew', 'mission', 'feed', 'last', 'suggest', 'pulse', 'care', 'previews', 'more', 'offshelf', 'actions'];
+  dom.run('window.__mq.forEach((fn) => fn({ matches: false }))');
+  assert.deepEqual(slotNames(frame), phone, 'narrowing did not restore the phone order');
+  assert.equal(frame.querySelector('.bruecke-hub__col'), null, 'a column wrapper survived the narrow arrangement');
+  dom.run('window.__mq.forEach((fn) => fn({ matches: true }))');
+  assert.deepEqual(slotNames(frame.querySelector('.bruecke-hub__col--mid')), WIDE_COLUMNS.mid, 'widening again did not rebuild the columns');
 });
 
 test('Die Brücke: „Mission starten" sits in the Missionskontrolle with the presets', async (t) => {
@@ -242,7 +285,9 @@ test('bruecke.css: the #1238 section lays out the hub as 300 / free / 340 from 1
   const own = BRUECKE_CSS.slice(at);
   const wide = own.split('@media (min-width: 1280px)').slice(1).join('\n');
   assert.match(wide, /grid-template-columns: 300px minmax\(0, 1fr\) 340px/);
-  assert.match(wide, /"crew +mission +suggest"/);
+  // The members keep their own area; the left wrapper starts under them while
+  // the middle and right wrappers span both rows (#1496).
+  assert.match(wide, /"crew +mid +right"\s*"left +mid +right"/);
   // The hero dissolves into the grid so its parts land in separate areas.
   assert.match(wide, /\.bruecke-hub__crew[^{]*\{\s*display: contents/);
   // The status line is printed out of the accessibility tree.
@@ -270,10 +315,27 @@ test('bruecke.css: the „Flotte / Übersicht" kicker is dropped below 860 and k
   assert.equal(elsewhere, false);
 });
 
-test('bruecke.css: from 1280 the Missionskontrolle is as tall as its content, not the right column', () => {
+test('bruecke.css: from 1280 every column is as tall as its content, and no slot shares a row with another column (#1496)', () => {
   const wide = ownBlocks().filter(([q]) => q === '(min-width: 1280px)').map(([, css]) => css).join('\n');
-  const body = rulesOf(wide).find(([sel, decl]) =>
-    /\.bruecke-hub__mission(?![\w-])/.test(sel) && /grid-area:\s*mission/.test(decl));
-  assert.ok(body, 'the mission slot has no grid-area rule from 1280');
-  assert.match(body[1], /align-self:\s*start/);
+  const rules = rulesOf(wide);
+  // A stretched column grew to the tallest one's height and printed a tall
+  // empty panel around the ignition (#1238).
+  const frame = rules.find(([sel, decl]) => /\.bruecke-hub(?![\w-])\s*$/.test(sel.trim()) && /grid-template-areas/.test(decl));
+  assert.ok(frame, 'no grid rule for the frame from 1280');
+  assert.match(frame[1], /align-items:\s*start/);
+  // The row under the members is flexible: a track a spanning item crosses is
+  // sized only by the flexible pass, so the members' own row stays their height.
+  // As `auto` it took the middle/right wrappers' height and opened a 333px hole
+  // under the members (measured in WebKit and Chromium).
+  assert.match(frame[1], /grid-template-rows:\s*auto auto auto 1fr auto;/);
+  // The slots of the three columns are placed by their wrapper, never by an
+  // area of their own: an area shares row lines, which is the hole.
+  for (const slot of ['mission', 'last', 'suggest', 'pulse', 'care', 'previews', 'more', 'offshelf']) {
+    assert.ok(!rules.some(([sel, decl]) => new RegExp(`\\.bruecke-hub__${slot}(?![\\w-])`).test(sel) && /grid-area/.test(decl)),
+      `${slot} has a grid-area of its own from 1280`);
+  }
+  for (const col of ['left', 'mid', 'right']) {
+    assert.ok(rules.some(([sel, decl]) => sel.includes(`.bruecke-hub__col--${col}`) && new RegExp(`grid-area:\\s*${col}`).test(decl)),
+      `the ${col} wrapper has no area`);
+  }
 });

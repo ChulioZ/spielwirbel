@@ -1281,7 +1281,11 @@
   gap: 12px;
   columns: auto;
 }
-:root[data-design="tisch"] .hub-cards > .card-slot { padding-bottom: 0; }
+:root[data-design="tisch"] .hub-cards > .card-slot { padding-bottom: 0; display: flex; flex-direction: column; }
+/* The grid stretches each slot to its row; the card fills the slot, so a short
+   card beside a tall one reads as one row instead of leaving a hole under it
+   that the next row's card then sits below (#1496). */
+:root[data-design="tisch"] .hub-cards > .card-slot > :only-child { flex: 1 0 auto; }
 :root[data-design="tisch"] .hub-previews {
   display: grid;
   grid-auto-flow: column;

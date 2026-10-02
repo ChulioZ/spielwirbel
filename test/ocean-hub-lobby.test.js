@@ -20,6 +20,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const { loadApp } = require('./support/dom');
+const { mediaBlocks } = require('./support/css');
 
 const OCEAN_CSS = fs.readFileSync(path.join(__dirname, '..', 'public', 'css', 'designs', 'ocean.css'), 'utf8');
 
@@ -61,9 +62,14 @@ const busyRound = () => ({
   tags: [],
 });
 
-async function screen(t, design, tab = 'start', round = busyRound()) {
+// `wide` stubs matchMedia so the 1280 query matches (jsdom has none).
+async function screen(t, design, tab = 'start', round = busyRound(), { wide = false } = {}) {
   const dom = loadApp({ locale: 'de' });
   t.after(() => dom.close());
+  if (wide) {
+    dom.run(`window.matchMedia = (q) => ({ matches: /min-width: 1280px/.test(q),
+      addEventListener() {}, removeEventListener() {} });`);
+  }
   if (design) dom.run(`applyDesign(${JSON.stringify(design)})`);
   dom.set('api', async (method, url) => {
     if (/recommendations/.test(url)) return { recommendations: [] };
@@ -141,6 +147,18 @@ test('Ocean: the hub is three columns in phone order — crew, the shell and its
   assert.equal(dom.app.querySelectorAll('h1').length, 1, 'the hub should carry exactly one h1');
   assert.equal(hero.querySelector('h1').textContent.trim(), 'Freitagsrunde');
   assert.ok(hero.querySelector('.ocean-tide'), 'the round marker has no tide line');
+});
+
+test('Ocean from 1280: the quiet actions close the centre column instead of a row of their own (#1496)', async (t) => {
+  const dom = await screen(t, 'ocean', 'start', busyRound(), { wide: true });
+  const hub = dom.app.querySelector('.ocean-hub');
+  // A row under the centre column was sized by the taller aside beside it, so a
+  // short centre column left a gap above the actions.
+  assert.equal(hub.querySelector('.ocean-hub__main').lastElementChild.className, 'hub-actions');
+  assert.deepEqual(
+    [...hub.children].map((el) => el.className.split(' ')[0]),
+    ['ocean-hub__crew', 'ocean-hub__main', 'ocean-hub__aside', 'hub-offshelf'],
+  );
 });
 
 test('Ocean: the one action is „Abtauchen" in the shell, the presets are the app\'s own strings', async (t) => {
@@ -283,6 +301,12 @@ test('ocean.css: the #1211 section lays out the Reling at 104px and the hub as 2
   const wide = own.split('@media (min-width: 1280px)').slice(1).join('\n');
   assert.match(wide, /\.rail \{[^}]*width: 104px/);
   assert.match(wide, /grid-template-columns: 250px minmax\(0, 1fr\) 320px/);
+  // From 1280 the actions sit in the centre column (oceanHubActions), so no
+  // rule may place them in a grid row of their own there (#1496).
+  const only1280 = mediaBlocks(own.replace(/\/\*[\s\S]*?\*\//g, ''))
+    .filter(([q]) => q === '(min-width: 1280px)').map(([, css]) => css).join('\n');
+  assert.match(only1280, /\.ocean-hub__main \{/, 'the 1280 blocks were not found');
+  assert.doesNotMatch(only1280, /\.ocean-hub > \.hub-actions \{[^}]*grid-row/);
   // The dock below 860 is four equal targets of the O1 control size.
   assert.match(own, /@media \(max-width: 859px\)[\s\S]*?\.dock__item \{[^}]*flex: 1;[^}]*min-height: 56px/);
 });

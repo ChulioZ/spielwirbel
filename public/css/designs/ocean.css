@@ -704,7 +704,8 @@
   :root[data-design="ocean"] .ocean-hub__main { grid-column: 2; grid-row: 1 / span 2; gap: 22px; }
   :root[data-design="ocean"] .ocean-hub__aside { grid-column: 3; grid-row: 1 / span 2; }
   :root[data-design="ocean"] .ocean-hub > .hub-offshelf { grid-column: 1; grid-row: 2; }
-  :root[data-design="ocean"] .ocean-hub > .hub-actions { grid-column: 2; grid-row: 3; }
+  /* The actions are the centre column's last child here (oceanHubActions), not
+     a row of their own: a row under it waited for the aside (#1496). */
 }
 
 /* ---- The crew (O2.1 row, O3.2 list). The name, its tide line — the round's
