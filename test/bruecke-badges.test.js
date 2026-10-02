@@ -33,6 +33,7 @@ const { rulesOf, bodyOf } = require('./support/css');
 const { token, toHex } = require('./support/theme');
 const { designById } = require('../public/js/designs');
 const { night, badgeRound, stubApi, wideAt } = require('./support/badge-fixture');
+const { BADGE_CATALOGUE } = require('../public/js/achievements');
 
 const RAW = fs.readFileSync(path.join(__dirname, '..', 'public/css/designs/bruecke.css'), 'utf8');
 const DARK = ':root[data-design="bruecke"][data-scheme="dark"]';
@@ -64,7 +65,7 @@ async function pokale(t, design = 'bruecke') {
   await dom.call('renderPokaleTab', r);
   return { dom, r };
 }
-const defOf = (dom, key) => dom.run(`BADGE_CATALOGUE.find((d) => d.key === ${JSON.stringify(key)})`);
+const defOf = (key) => BADGE_CATALOGUE.find((d) => d.key === key);
 
 // --- the bars -----------------------------------------------------------------
 
@@ -74,7 +75,7 @@ test('a tiered tile carries one bar per tier, the reached ones `data-on`, inside
   let tiered = 0;
   let onSeen = 0;
   for (const tile of tiles) {
-    const def = defOf(dom, tile.dataset.key);
+    const def = defOf(tile.dataset.key);
     const bars = tile.querySelector('.badge__mark > .badge__tier');
     if (!def.tiers || tile.dataset.state === 'secret') {
       assert.equal(bars, null, `${tile.dataset.key} (${tile.dataset.state}) must draw no bars`);
