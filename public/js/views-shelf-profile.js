@@ -102,7 +102,7 @@ function hubShelfProfileCard(round, activeGames) {
   const p = shelfProfile(activeGames, shelfProfileDeps());
   if (!p) return null;
   const card = hubCard('ti-id', t('shelfProfile.title'));
-  card.classList.add('hub-card--shelf');
+  card.classList.add('hub-card--shelf', 'hub-card--link');
   const body = card.querySelector('.hub-card__body');
   const [lead] = shelfDims(p);
   if (lead) {
@@ -111,7 +111,7 @@ function hubShelfProfileCard(round, activeGames) {
     body.appendChild(designIs('tisch') && dim === 'seats' ? shelfSeatTiles(d) : shelfBars(dim, d));
   }
   if (p.gaps.length) body.appendChild(shelfGapList(p.gaps, SHELF_CARD_GAPS));
-  const link = h(`<a class="hub-row hub-row--quiet">
+  const link = h(`<a class="hub-row hub-row--quiet hub-card__go">
        <span class="hub-row__main"><span class="hub-row__sub">${esc(t('shelfProfile.more'))}</span></span>
        <i class="ti ti-chevron-right hub-row__go" aria-hidden="true"></i>
      </a>`);

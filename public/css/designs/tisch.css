@@ -1298,7 +1298,6 @@
   gap: 8px;
 }
 :root[data-design="tisch"] .hub-previews .hub-preview {
-  position: relative;
   min-height: 44px;
   padding: 11px 10px;
 }
@@ -1323,16 +1322,14 @@
   hyphens: auto;
 }
 :root[data-design="tisch"] .hub-previews .hub-preview__open {
-  position: absolute;
-  inset: 0;
+  /* The tile hides its link's text; the whole tile is still the target through
+     the shared stretched link (`.hub-card--link`, styles.css, #1506). */
   padding: 0;
   font-size: 0;
   color: transparent;
-  border-radius: inherit;
 }
 :root[data-design="tisch"] .hub-previews .hub-preview__open .ti { display: none; }
-:root[data-design="tisch"] .hub-previews .hub-preview:hover { border-color: var(--brand); }
-:root[data-design="tisch"][data-scheme="dark"] .hub-previews .hub-preview:hover { border-color: var(--gold); }
+:root[data-design="tisch"][data-scheme="dark"] .hub-card--link:hover { border-color: var(--gold); }
 
 /* --- „Nicht im Regal" as count tiles (T2.2, T3.2) -------------------------
    A 2×2 grid on a phone, one row of four beside its heading at desktop (the
@@ -1393,14 +1390,11 @@
   :root[data-design="tisch"] .hub-previews .hub-preview__last { font-size: var(--text-sm); }
   :root[data-design="tisch"] .hub-previews .hub-preview__last { margin-top: 6px; }
   :root[data-design="tisch"] .hub-previews .hub-preview__open {
-    position: static;
     padding-top: 10px;
     font-size: var(--text-sm);
     color: var(--brand);
   }
   :root[data-design="tisch"] .hub-previews .hub-preview__open .ti { display: inline; }
-  :root[data-design="tisch"] .hub-previews .hub-preview:hover { border-color: var(--line); }
-  :root[data-design="tisch"][data-scheme="dark"] .hub-previews .hub-preview:hover { border-color: var(--line); }
 
   :root[data-design="tisch"] .hub-offshelf--tiles {
     display: grid;

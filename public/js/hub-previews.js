@@ -69,12 +69,16 @@ const hubShelfWorthPreviewing = (activeGames) => activeGames.length > HUB_PREVIE
    in an <a> and let the covers and rows inside it be links too, which nests
    interactive content — so a screen reader reads the card as one enormous link
    whose name is its entire contents, and a keyboard user tabs through a preview
-   they cannot act on. The rows below are therefore plain spans. */
+   they cannot act on. The rows below are therefore plain spans.
+
+   The whole card is still the tap target (#1506): `hub-card--link` +
+   `hub-card__go` stretch that one link's hit area over the card in CSS, so the
+   accessibility tree keeps one short, named link. See styles.css. */
 function hubPreviewCard(round, { icon, titleKey, sub, tab }) {
-  const card = h(`<section class="hub-card hub-preview">
+  const card = h(`<section class="hub-card hub-card--link hub-preview">
        <h2 class="hub-card__title">${iconText(icon, t(titleKey))}</h2>
        <div class="hub-card__body"></div>
-       <a class="hub-preview__open">${esc(t('hub.preview.open'))}<i class="ti ti-chevron-right" aria-hidden="true"></i></a>
+       <a class="hub-preview__open hub-card__go">${esc(t('hub.preview.open'))}<i class="ti ti-chevron-right" aria-hidden="true"></i></a>
      </section>`);
   if (sub) {
     card.querySelector('.hub-card__body')
