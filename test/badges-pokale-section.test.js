@@ -148,7 +148,7 @@ test('from 860px the card is an anchored popover, named as a dialog, and Escape 
   assert.equal(dom.document.activeElement, name);
   // Every tier, the reached ones marked by a glyph and a word — not by colour.
   const tiers = [...pop.querySelectorAll('.badge-card__tier')];
-  assert.deepEqual(tiers.map((li) => li.textContent.replace(/,.*$/, '').trim()), ['10', '25', '50', '100']);
+  assert.deepEqual(tiers.map((li) => li.textContent.replace(/,.*$/, '').trim()), ['10', '25', '50', '100', '250']);
   assert.equal(pop.querySelectorAll('[data-reached]').length, 0, 'one session reaches no tier of ten');
   assert.match(pop.querySelector('.badge-card__next').textContent, /1 \/ 10/);
 

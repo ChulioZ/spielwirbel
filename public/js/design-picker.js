@@ -38,8 +38,7 @@
 function offeredDesigns(cfg) {
   const ids = (cfg && Array.isArray(cfg.designs)) ? cfg.designs : [FACE_DESIGN];
   // Registry order, not config order: Klassisch is the registry's first row,
-  // which is what puts „Klassisch — wie bisher" at the head of the list without
-  // a sort key.
+  // which is what puts it at the head of the list without a sort key.
   return DESIGN_REGISTRY.filter((d) => ids.indexOf(d.id) !== -1);
 }
 
@@ -169,17 +168,14 @@ function designPrintArt(design) {
   return tile;
 }
 
-// Das Programmheft's card band (#1376, P5.3): the name — with Klassisch's
-// „Wie bisher" — and the „Aktiv" label on one line, the design's short line
-// under it. „Aktiv" is rendered on every card and the stylesheet shows it on
+// Das Programmheft's card band (#1376, P5.3): the name and the „Aktiv" label
+// on one line, the design's short line under it. „Aktiv" is rendered on every card and the stylesheet shows it on
 // the worn one in the Konto only (the chooser marks its pick by the frame);
 // it is aria-hidden because the checked radio already says the same thing.
 function programmeCardBody(design) {
-  const badge = design.id === CLASSIC_DESIGN
-    ? `<span class="design-card__badge">${esc(t('design.klassisch.badge'))}</span>` : '';
   return `<span class="design-card__body">
           <span class="design-card__head">
-            <span class="design-card__name">${esc(t(design.labelKey))}${badge}</span>
+            <span class="design-card__name">${esc(t(design.labelKey))}</span>
             <span class="design-card__active" aria-hidden="true">${esc(t('design.pick.active'))}</span>
           </span>
           <span class="design-card__line">${esc(t(design.shortKey || design.descKey))}</span>
@@ -212,8 +208,7 @@ function renderDesignPicker(cfg, current, onPick) {
       </label>`) : h(`<label class="design-card${on ? ' is-on' : ''}">
         <input type="radio" name="designPick" value="${esc(design.id)}"${on ? ' checked' : ''}>
         <span class="design-card__body">
-          <span class="design-card__name">${esc(t(design.labelKey))}${
-  design.id === CLASSIC_DESIGN ? `<span class="design-card__badge">${esc(t('design.klassisch.badge'))}</span>` : ''}</span>
+          <span class="design-card__name">${esc(t(design.labelKey))}</span>
           ${bruecke ? brueckeCardScheme(design) : ''}${ocean || bruecke ? '' : `<span class="design-card__desc">${esc(t(design.descKey))}</span>`}
         </span>
       </label>`);
@@ -289,8 +284,8 @@ function buildDesignSection(me) {
   const wrap = h('<div class="konto-design"></div>');
   withAppConfig((cfg) => {
     if (offeredDesigns(cfg).length < 2) return;
-    // Ocean (O5.5) sets the hint on the heading's baseline and the closing
-    // note in an info box; the words, and their order, are Klassisch's.
+    // Ocean (O5.5) sets the hint on the heading's baseline; the words, and
+    // their order, are Klassisch's.
     const ocean = designIs('ocean');
     if (ocean) wrap.classList.add('konto-design--card');
     // Das Programmheft (P5.3) sets the hint on the heading's baseline too.
@@ -317,9 +312,6 @@ function buildDesignSection(me) {
         if (ex.message !== 'auth' && currentView) currentView();
       }
     }));
-    wrap.appendChild(ocean
-      ? h(`<p class="muted konto-design__foot konto-design__note"><i class="ti ti-info-circle" aria-hidden="true"></i><span>${esc(t('konto.design.note'))}</span></p>`)
-      : h(`<p class="muted konto-design__foot">${esc(t('konto.design.note'))}</p>`));
   });
   return wrap;
 }
@@ -370,11 +362,8 @@ function maybeShowDesignChooser(me, onDone) {
    what painting them from the registry is for. */
 function designPosterSheet(cfg, current) {
   const designs = offeredDesigns(cfg);
-  const badge = (design) => {
-    if (design.id === CLASSIC_DESIGN) return `<span class="design-card__badge">${esc(t('design.klassisch.badge'))}</span>`;
-    if (design.id === current) return `<span class="design-card__badge">${esc(t('design.poster.picked'))}</span>`;
-    return '';
-  };
+  const badge = (design) => (design.id === current
+    ? `<span class="design-card__badge">${esc(t('design.poster.picked'))}</span>` : '');
   const backdrop = h(`<div class="sheet-backdrop">
       <div class="sheet design-chooser design-chooser--posters" role="dialog" aria-modal="true" aria-labelledby="designChooserTitle">
         <div class="sheet__head design-chooser__head">
@@ -472,8 +461,7 @@ function designCardSheet(cfg, current) {
     const card = h(`<label class="design-postcard${on ? ' is-on' : ''}">
         <input type="radio" name="designCard" value="${esc(design.id)}"${on ? ' checked' : ''}>
         <span class="design-postcard__body">
-          <span class="design-postcard__name">${esc(t(design.labelKey))}${
-  design.id === CLASSIC_DESIGN ? `<span class="design-card__badge">${esc(t('design.klassisch.badge'))}</span>` : ''}</span>
+          <span class="design-postcard__name">${esc(t(design.labelKey))}</span>
           <span class="design-postcard__desc">${esc(t(design.descKey))}</span>
           ${design.shortKey ? `<span class="design-postcard__tag">${esc(t(design.shortKey))}</span>` : ''}
         </span>

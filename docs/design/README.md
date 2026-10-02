@@ -9,7 +9,7 @@ decides how that works. The code follows it; this file is the map.
 
 **Status: the flip has shipped (#1202).** Der Tisch is enabled and is the face;
 every account that had not chosen a design wears it and is offered Klassisch
-(„Wie bisher") once by the first-start chooser; the round palettes and worlds
+once by the first-start chooser; the round palettes and worlds
 are gone from the code, and a round that wore one shows the colour marker it maps
 to (`public/js/round-marker.js`). Live designs: **Klassisch, Der Tisch, Ocean, Das Programmheft.** Die Brücke
 (#1204) and Forest (#1206) are in slices; Der Run (#1205) is a placeholder epic.

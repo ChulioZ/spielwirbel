@@ -110,3 +110,21 @@ test('a member with nothing earned gets no badge row at all', async (t) => {
   await waitFor(() => dom.app.querySelector('.member-card'), { label: 'the Tischkarte rendered' });
   assert.equal(dom.app.querySelector('.member-card__badges'), null);
 });
+
+test('Dauerbrenner: each tier’s row sits under the session of the game that crossed it (#1463)', (t) => {
+  const at = (i) => new Date(Date.UTC(2026, 6, 1, 20) + i * 86400000).toISOString();
+  const sessions = Array.from({ length: 35 }, (_, i) => night(`s${i + 1}`, 1,
+    { createdAt: at(i), winnerIds: [], chosenGameId: i < 10 ? 'g1' : 'g2' }));
+  const r = badgeRound(sessions);
+  const dom = boot(t, r);
+  dom.call('renderChronikTab', r, []);
+  const rowsAt = (sid) => badgeRowsOf(itemOf(dom, sid)).map((x) => x.querySelector('.chronik-row__text').textContent);
+  assert.ok(rowsAt('s10').includes('Kartographen · Dauerbrenner 10'), rowsAt('s10').join(' | '));
+  assert.ok(rowsAt('s35').includes('Kartographen · Dauerbrenner 25'), rowsAt('s35').join(' | '));
+  // The session each row sits under is the crossing game's.
+  assert.match(itemOf(dom, 's10').querySelector('.session-card').textContent, /Catan/);
+  assert.match(itemOf(dom, 's35').querySelector('.session-card').textContent, /Azul/);
+  // Nowhere else: Catan's later plays never reach 25.
+  const all = sessions.flatMap((s) => rowsAt(s.id)).filter((x) => x.includes('Dauerbrenner'));
+  assert.deepEqual(all, ['Kartographen · Dauerbrenner 10', 'Kartographen · Dauerbrenner 25']);
+});

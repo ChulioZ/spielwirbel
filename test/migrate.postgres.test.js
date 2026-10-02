@@ -207,4 +207,55 @@ if (!process.env.DATABASE_URL) {
     const r = await knex.raw(`SELECT relforcerowsecurity AS f FROM pg_class WHERE relname = 'sessions'`);
     assert.equal(r.rows[0].f, true);
   });
+  /* --------------------------------------------------------------- #1480 --
+     Deleting the unread `designSwitchedBack` account field
+     (20261002120000_drop_design_switched_back). `users` carries no RLS, so this
+     one needs no FORCE lift — the migration's header says why. Driven through
+     `knex.transaction` because that is how Knex runs it, and its LOCK TABLE
+     refuses to run outside a transaction block. */
+  const dropSwitchedBack = require('../lib/repo/migrations/20261002120000_drop_design_switched_back');
+  const U = 'mig1480';
+  const runDrop = (wrap = (trx) => trx) => knex.transaction((trx) => dropSwitchedBack.up(wrap(trx)));
+
+  const seedUser = async (data) => {
+    const id = `${U}-${Math.random().toString(36).slice(2, 10)}`;
+    await knex.raw('INSERT INTO users (id, data) VALUES (?, ?)', [id, JSON.stringify({ id, email: `${id}@example.test`, ...data })]);
+    return id;
+  };
+  const userData = async (id) => (await knex.raw('SELECT data FROM users WHERE id = ?', [id])).rows[0].data;
+
+  // Cleaned up per test, not in an after() hook: the hook above has already
+  // destroyed `knex` by the time a later-registered one would run.
+  const dropSeeded = () => knex.raw(`DELETE FROM users WHERE id LIKE '${U}-%'`);
+
+  test('the #1480 migration deletes designSwitchedBack from every account and nothing else', async () => {
+    const yes = await seedUser({ design: 'klassisch', designSwitchedBack: true });
+    const no = await seedUser({ design: 'tisch', designSwitchedBack: false });
+    const str = await seedUser({ design: 'tisch', designSwitchedBack: 'true' });
+    const clean = await seedUser({ design: 'tisch' });
+
+    await runDrop();
+    await runDrop();   // re-runnable: the overlap of a zero-downtime deploy
+
+    for (const [id, design] of [[yes, 'klassisch'], [no, 'tisch'], [str, 'tisch'], [clean, 'tisch']]) {
+      assert.deepEqual(await userData(id), { id, email: `${id}@example.test`, design });
+    }
+    await dropSeeded();
+  });
+
+  test('the #1480 migration REFUSES to finish when the delete changed nothing', async () => {
+    // The guard on the guard (.claude/rules/rls-blocks-data-migrations.md): a
+    // knex whose raw swallows just the UPDATE, so the real check runs against a
+    // real row with the delete disabled.
+    const id = await seedUser({ designSwitchedBack: true });
+    const blinded = (trx) => ({
+      raw: (sql, bindings) =>
+        (/^\s*UPDATE users/.test(sql) ? Promise.resolve({ rowCount: 0 }) : trx.raw(sql, bindings)),
+    });
+    await assert.rejects(() => runDrop(blinded), /still carry designSwitchedBack/);
+    assert.equal((await userData(id)).designSwitchedBack, true, 'rolled back with the throw');
+    await runDrop();
+    assert.equal('designSwitchedBack' in (await userData(id)), false);
+    await dropSeeded();
+  });
 }
