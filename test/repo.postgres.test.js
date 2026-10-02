@@ -720,7 +720,13 @@ if (!process.env.DATABASE_URL) {
        zero would be a dropped read. */
     assert.ok(Object.values(out.designAdoption.byDesign).reduce((a, b) => a + b, 0) >= 1,
       'the design tile saw no account under a plain role');
-    assert.equal(typeof out.designAdoption.switchedBack, 'number');
+    // The switch-back share is gone from the payload (#1480).
+    assert.deepEqual(Object.keys(out.designAdoption), ['byDesign']);
+    /* The Konten twins (#1480) read `users` on plain knex like the account
+       figures beside them. The seeded account is verified, so a zero would be
+       a dropped read rather than an empty instance. */
+    assert.ok(out.adoption.accountsVerified >= 1, 'accountsVerified saw no account under a plain role');
+    assert.equal(typeof out.adoption.accountsDisabled, 'number');
     assert.equal(typeof out.adoption.roundsWithRetired, 'number');
     assert.equal(typeof out.accounts.withAvatar, 'number');
     // session_vote_links is deliberately NOT RLS-scoped, so this one is read on

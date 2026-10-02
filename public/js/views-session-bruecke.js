@@ -83,6 +83,35 @@ function composeBrueckeSetup(head, form) {
   bar.querySelector('#barSummary').after(h(`<p class="bruecke-setup__sealed">${esc(t('startSession.sealedBruecke'))}</p>`));
 }
 
+/* B10.2 „Der Pool zählt hoch" (#1248): the pool's numeral counts to its new
+   value in 500ms when a seat or a filter changes it — the one place the design
+   animates a digit, because the change is a consequence of the user's own tap.
+   Never on an arrival or a re-render: the caller passes only a numeral that was
+   already on screen.
+
+   The numeral arrives holding its FINAL value (the caller has just rendered
+   it) and the first frame rewrites it to `from` before anything is painted, so
+   a tab that never runs a frame (backgrounded, or the preview pane) shows the
+   right number rather than a stale one. The
+   gate is asked POSITIVELY (no-preference), so reduced motion — and an
+   environment that cannot answer, jsdom included — keeps the number standing.
+   A numeral detached by the next render stops counting. */
+function brueckeCountPool(el, from, to) {
+  if (!el || !Number.isFinite(from) || from === to) return;
+  const mq = typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: no-preference)');
+  if (!mq || !mq.matches) return;
+  let start = null;
+  const step = (now) => {
+    if (!el.isConnected) return;
+    if (start === null) start = now;
+    const p = Math.min(1, (now - start) / 500);
+    const eased = 1 - Math.pow(1 - p, 3); // ease-out: quick off the old value, settles on the new
+    el.textContent = String(Math.round(from + (to - from) * eased));
+    if (p < 1) window.requestAnimationFrame(step);
+  };
+  window.requestAnimationFrame(step);
+}
+
 /* B2.4/B4.2's side panels. `people` is everyone voting in this session,
    `person` the one rating now, `votedIds` who is already in, `left` how many of
    this person's cards come after the current one.

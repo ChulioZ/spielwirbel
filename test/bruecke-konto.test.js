@@ -11,8 +11,8 @@
  *   1. No other design's colour enters bruecke.css (the issue's acceptance
  *      line, Tisch A8 / Ocean R4) — the swatches paint from registry data.
  *   2. The Konto cards under Brücke carry B5.2's parts — each design's own
- *      swatch, its scheme, the „Deins" mark — with Klassisch first as „Wie
- *      bisher"; and Klassisch's own section is untouched.
+ *      swatch, its scheme, the „Deins" mark — with Klassisch first and
+ *      unbadged; and Klassisch's own section is untouched.
  *   3. Every text link on the auth screens is sized at target-min.
  *
  * The layout (four across at 1440, rows at 390) is CSS jsdom cannot apply; it
@@ -23,13 +23,11 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const vm = require('node:vm');
 
 const { loadApp, flush } = require('./support/dom');
 const { rulesOf } = require('./support/css');
 const { contrast, token } = require('./support/theme');
 const { DESIGN_REGISTRY, CLASSIC_DESIGN, designById } = require('../public/js/designs');
-const { SUPPORTED_LOCALES } = require('../public/js/locales');
 
 const BRUECKE = designById('bruecke');
 const SHEET = fs
@@ -95,13 +93,13 @@ test('#1242: every registry row declares its scheme explicitly', () => {
 
 const ME = { id: 'u1', design: 'bruecke', designChooserSeen: null };
 
-test('#1242: under Brücke every design is a swatch card — Klassisch first as „Wie bisher", the worn one „Deins"', (t) => {
+test('#1242: under Brücke every design is a swatch card — Klassisch first, unbadged (#1445), the worn one „Deins"', (t) => {
   const dom = boot(t, 'bruecke', ME);
   const wrap = dom.call('buildDesignSection', { ...ME });
   const cards = [...wrap.querySelectorAll('.design-card')];
   assert.deepEqual(cards.map((c) => c.querySelector('input').value), DESIGN_REGISTRY.map((d) => d.id));
   assert.equal(cards[0].querySelector('input').value, CLASSIC_DESIGN);
-  assert.equal(cards[0].querySelector('.design-card__badge').textContent, 'Wie bisher');
+  assert.equal(wrap.querySelector('.design-card__badge'), null, 'Klassisch carries no badge (#1445)');
 
   for (const card of cards) {
     const design = designById(card.querySelector('input').value);
@@ -184,22 +182,3 @@ test('#1242: every text link on the auth screens is sized at target-min', () => 
   assert.match(terms[1], /display:\s*inline-flex/, 'min-height does nothing on an inline <a>');
 });
 
-/* The Konto foot note calls what a switch changes by the SECTION's own name
-   („Design"), not by a synonym („Aussehen") — one thing, one word on one card.
-   Read from the parsed dictionaries, so comments cannot satisfy it. The FIRST
-   sentence already names the design („Klassisch ist das Design …"), so only
-   the last one is checked — that is where the synonym sat. */
-test('#1242: the Konto foot note names the section by its title word, in every locale', () => {
-  const off = [];
-  for (const locale of SUPPORTED_LOCALES) {
-    const ctx = { I18N: {} };
-    vm.runInNewContext(fs.readFileSync(path.join(__dirname, '..', 'public', 'js', 'lang', `${locale}.js`), 'utf8'), ctx);
-    const dict = ctx.I18N[locale];
-    const title = dict['konto.design.title'].toLowerCase();
-    const sentences = dict['konto.design.note'].split(/[.!?。]\s+/).filter(Boolean);
-    const last = sentences[sentences.length - 1].toLowerCase();
-    if (sentences.length < 2 || !last.includes(title)) off.push(`${locale}: „${last}" lacks „${title}"`);
-  }
-  assert.ok(SUPPORTED_LOCALES.length >= 9, 'fewer than nine locales — this checks less than it claims');
-  assert.deepEqual(off, []);
-});

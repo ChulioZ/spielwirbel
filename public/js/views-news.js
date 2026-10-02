@@ -43,6 +43,8 @@ async function showNews() {
   // own rather than `.lobby-head` reached through :has(), and only under that
   // design — Klassisch's markup stays byte-identical.
   const felt = designIs('tisch') ? ' lobby-head--felt' : '';
+  // Die Brücke's way up off the account screens (#1246, bruecke-hub.js).
+  if (designIs('bruecke')) app.appendChild(brueckeUpLink());
   app.appendChild(h(`<div class="lobby-head${felt}"><h1>${esc(t('news.title'))}</h1></div>`));
 
   if (!NEWS.length) {
