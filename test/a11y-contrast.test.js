@@ -2445,6 +2445,15 @@ test('every colour token a design declares is measured by one of the checks abov
     '--ramp-1', '--ramp-2', '--ramp-3', '--ramp-4', '--ramp-5',
     '--ramp-ink-1', '--ramp-ink-2', '--ramp-ink-3', '--ramp-ink-4', '--ramp-ink-5',
     '--veto-fill', '--veto-edge', '--veto-ink',
+    // #1465, Forest: the raised white, the band, the moss and its hover, the
+    // dusk with its three inks (light print, soft, firefly) and its focus ring,
+    // and the danger tint — all measured in test/design-tokens-forest.test.js.
+    '--raised', '--band', '--moss', '--moss-hover', '--dusk', '--dusk-soft',
+    '--on-dusk', '--firefly', '--ring-on-dusk', '--danger-tint',
+    // Der Tisch's walnut, the top bar's ground — measured as that ground in
+    // „Der Tisch's app chrome keeps the plate …" (#1279) above. Listed since #1465 closed the
+    // bare `--w` hole in the layout regex below, which had been waving it past.
+    '--wood-deep',
   ]);
   /* Not colours, so not this test's business: a lift PERCENTAGE, and the four
      compositing alphas the elevation ramp is built from. The alphas are painted
@@ -2455,7 +2464,10 @@ test('every colour token a design declares is measured by one of the checks abov
   // #1391 its --cast-pearl, the pearl's.
   // #1237 adds Die Brücke's three glow alphas, the same kind: decoration over whatever is behind;
   // #1241 its --blind-stripe, a 5% cyan alpha of the blind's stripes: it lifts the night ground by a hair, and --ink-soft over it stays above 7:1.
-  const NOT_A_COLOUR = /^--(member-lift|cast|cast-soft|cast-deep|cast-button|deep-cast|cast-pearl|brass-sheen|brass-sheen-strong|glow-accent|glow-action|glow-action-strong|blind-stripe)$/;
+  // #1465: Der Tisch's --wood-grain, the 14% black the no-cover wood is ruled
+  // with — the same kind, and unexamined until the layout regex stopped
+  // matching every token that starts with a `w`.
+  const NOT_A_COLOUR = /^--(member-lift|cast|cast-soft|cast-deep|cast-button|deep-cast|cast-pearl|brass-sheen|brass-sheen-strong|glow-accent|glow-action|glow-action-strong|blind-stripe|wood-grain)$/;
   /* A hairline on a NON-INTERACTIVE label. SC 1.4.11 binds a boundary only
      where it identifies a control, and these two identify a printed tag — so
      there is no bar to measure them against, and inventing one would push them
@@ -2482,6 +2494,15 @@ test('every colour token a design declares is measured by one of the checks abov
      a rule and a fill that separate and carry nothing. The guard that they are
      never a TEXT colour is in test/design-tokens-programmheft.test.js. */
   const PROGRAMMHEFT_UNPAIRED = /^--(hair|hatch)$/;
+  /* Forest (#1465): F1's motif colours — the bark, the stump's cut face and
+     the canopy's four greens — draw the stump and the trees and carry no text.
+     The guard that none is ever a TEXT colour is in
+     test/design-tokens-forest.test.js. And one of Der Tisch's, surfaced by the
+     same change: --wood-light is the light stop of the no-cover placeholder's
+     wood gradient, under an aria-hidden glyph — the decorative placeholder
+     case dark-designs-and-the-on-accent-flip.md §4 leaves alone. */
+  const FOREST_UNPAIRED = /^--(bark|bark-light|wood|wood-ring|wood-edge|leaf-[1-4])$/;
+  const TISCH_UNPAIRED = /^--wood-light$/;
 
   const unmeasured = [];
   for (const t of THEMES) {
@@ -2491,12 +2512,16 @@ test('every colour token a design declares is measured by one of the checks abov
       const tok = m[2];
       if (inApp.has(tok) || MEASURED.has(tok) || NOT_A_COLOUR.test(tok)) continue;
       if (DECORATIVE_EDGE.test(tok) || OCEAN_UNPAIRED.test(tok) || PROGRAMMHEFT_UNPAIRED.test(tok)) continue;
+      if (FOREST_UNPAIRED.test(tok) || TISCH_UNPAIRED.test(tok)) continue;
       // A layout token is not a colour either — radii, sizes, fonts, durations,
       // and since #1210 the spacing grid, the target sizes and an elevation
       // recipe (built from the --cast alphas above, never from a colour).
       // #1371 adds Das Programmheft's display sizes, leadings, kicker gap, rule
       // weights and ring geometry — all lengths or ratios.
-      if (/^--(radius|text|w|dur|ease|font|rail|dock|space|target|shadow|display|track|leading|kicker|rule|ring-width|ring-offset)/.test(tok)) continue;
+      // `w-`, not `w`: the width tokens are all --w-<name>, and the bare prefix
+      // waved every colour starting with a `w` past this check (Der Tisch's
+      // three --wood* tones, found by #1465 naming Forest's own --wood).
+      if (/^--(radius|text|w-|dur|ease|font|rail|dock|space|target|shadow|display|track|leading|kicker|rule|ring-width|ring-offset)/.test(tok)) continue;
       unmeasured.push(`${name(t)} -> ${tok}`);
     }
   }

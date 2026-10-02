@@ -79,10 +79,17 @@ function designScheme() {
 
    Anything that is not one of the eight stored hexes — a guest's
    var(--ink-soft), a lifted color-mix() — passes through unchanged, which is
-   also why this takes the painted tone rather than a member id. */
+   also why this takes the painted tone rather than a member id.
+
+   Forest (#1465) opts in with `personInk: 'ink'`: F1 draws a person colour
+   only as a ring round a light core, never as type, so a name is printed in
+   the design's ink. Its markers are not the person row, so there is no `deep`
+   to borrow — and a member tone is 4.3:1 on its card, like Ocean's. */
 function personNameInk(color) {
   const design = activeDesign();
-  if (design.personInk !== 'deep' || isDarkScheme()) return color;
+  if (isDarkScheme()) return color;
+  if (design.personInk === 'ink') return MEMBER_COLORS.includes(color) ? 'var(--ink)' : color;
+  if (design.personInk !== 'deep') return color;
   const hit = (design.markers || []).find((m) => m.color === color);
   return hit ? hit.deep : color;
 }

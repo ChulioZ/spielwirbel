@@ -27,7 +27,7 @@
  * See .claude/rules/frontend-build-cache-busting.md.
  */
 
-const CACHE = 'spielwirbel-shell-v439';
+const CACHE = 'spielwirbel-shell-v440';
 
 // Everything the app needs to boot offline. Kept in sync with the <script>/<link>
 // order in index.html; each entry must be a real, servable path or install fails
@@ -80,6 +80,14 @@ const SHELL = [
   '/fonts/archivo-latin-400-normal.woff2',
   '/fonts/archivo-latin-600-normal.woff2',
   '/fonts/archivo-latin-700-normal.woff2',
+  // Forest (#1465): its stylesheet and its two faces, listed for the same
+  // reason as the Ocean pair above. Young Serif is one file (declared as the
+  // weight range 400 800), Alegreya Sans three. About 100 KB.
+  '/css/designs/forest.css',
+  '/fonts/young-serif-latin-400-normal.woff2',
+  '/fonts/alegreya-sans-latin-400-normal.woff2',
+  '/fonts/alegreya-sans-latin-700-normal.woff2',
+  '/fonts/alegreya-sans-latin-800-normal.woff2',
   '/manifest.webmanifest',
   '/fonts/tabler-icons.css',
   '/js/error-report.js',
@@ -263,6 +271,8 @@ const SHELL = [
   '/icons/bruecke/icon-192.png',
   '/icons/programmheft/favicon-32.png',
   '/icons/programmheft/icon-192.png',
+  '/icons/forest/favicon-32.png',
+  '/icons/forest/icon-192.png',
   '/icons/powered-by-bgg.png',
 ];
 

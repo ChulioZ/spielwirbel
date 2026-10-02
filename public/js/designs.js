@@ -490,6 +490,86 @@ const DESIGN_REGISTRY = [
     card: 'programmheft',
     enabled: true,
   },
+  /* Forest (#1465), from docs/design/forest/Forest-F1-Komponenten.dc.html (the
+     one token source) and Forest-F8-Farben.dc.html (the markers and the ramp).
+     A LIGHT clearing at the edge of a wood: a pale green page, cards like paper
+     in the light, leaf-shaped corners, and a dusk ground (#24331f) as the one
+     dark surface — the only place its fireflies carry meaning.
+
+     `enabled: false` until its go-live issue (#1478); the screens are
+     #1466-#1477. Outside production it is selectable like any registered
+     design, so it can be built and reviewed on dev-temp-data.
+
+     The accent is F1's Laubgrün, which carries text at any size (6.1:1 on the
+     page, 6.4:1 on the band), so unlike Das Programmheft no second, darker
+     accent is needed for small text. */
+  {
+    id: 'forest',
+    labelKey: 'design.forest.name',
+    descKey: 'design.forest.desc',
+    // The chooser postcard's sign. Already declared in the repo subset.
+    glyph: 'ti-trees',
+    taglineKey: 'design.forest.tagline',
+    shortKey: 'design.forest.short',
+    /* LIGHT, not the dusk bill F5.3/F5.4 draw (operator decision 2026-10-01,
+       review „Plakat im Design-Wähler: hell"): beside Der Tisch's green poster
+       Forest must read as the light design it is. The page running into moss,
+       the Laubgrün wordmark (6.1 / 5.3:1) and the ink subline (13.1 / 11.3:1).
+       Swept with every poster by test/a11y-contrast.test.js. No ritualKeys yet:
+       Forest's four renamed places (F9.5) arrive with their screens. */
+    poster: { ground: ['#ecf1e4', '#d6e4c6'], ink: '#356427', sub: '#1b2a18' },
+    scheme: 'light',
+    page: '#ecf1e4',
+    accent: '#356427',
+    stylesheet: '/css/designs/forest.css',
+    /* F8.2's eight markers in the package's order, so index 0 is Tanne — the
+       default for a new round (operator decision E6). The light ink
+       (on-accent #f4f8ec) reads on all eight, which is F8.2's „darauf" column
+       for seven of them.
+
+       TWO HEXES ARE NUDGED off the package (operator decision, #1465): the
+       marker sweep holds every design's check glyph at 4.5:1, and Fingerhut
+       #a2569b read 4.49:1 under the light ink while Ginster #a07a12 reached
+       neither ink (3.69 light, 3.80 dark — F8.2 itself marks it „nur ≥ 24 px").
+       Fingerhut is one percent darker (#a05599, 4.58:1, indistinguishable);
+       Ginster is a deeper gorse (#8d6b10, 4.59:1), which also lifts its band
+       against the page from 3.4 to 4.3:1.
+
+       The package draws the markers flat, so `deep` is DERIVED like Das
+       Programmheft's: lightness x0.85 in oklab, which puts the light ink at
+       6.5:1 or better on every deep stop. */
+    markerInk: '#f4f8ec',
+    markers: [
+      { key: 'tanne', labelKey: 'marker.forest.tanne', color: '#356427', deep: '#225112' },
+      { key: 'fingerhut', labelKey: 'marker.forest.fingerhut', color: '#a05599', deep: '#853c7f' },
+      { key: 'heidelbeere', labelKey: 'marker.forest.heidelbeere', color: '#3e4f8f', deep: '#2d3c7a' },
+      { key: 'fliegenpilz', labelKey: 'marker.forest.fliegenpilz', color: '#b3342a', deep: '#981611' },
+      { key: 'kiefer', labelKey: 'marker.forest.kiefer', color: '#7a4a2a', deep: '#653716' },
+      { key: 'moorsee', labelKey: 'marker.forest.moorsee', color: '#2f6f78', deep: '#155962' },
+      { key: 'ginster', labelKey: 'marker.forest.ginster', color: '#8d6b10', deep: '#745300' },
+      { key: 'schlehe', labelKey: 'marker.forest.schlehe', color: '#5a3a6e', deep: '#492a5c' },
+    ],
+    /* Forest's own marks (test/design-marks.test.js holds every coloured
+       design to its own from the moment it is registered — the holding pattern
+       Ocean and Das Programmheft used is no longer allowed): the whirl in F1's
+       light print on the Laubgrün the primary button wears. Rendered by
+       scripts/render-design-marks.js — never hand-edited; #1475 (F8.4) may
+       redraw them with the share card. */
+    marks: {
+      icons: [
+        { src: '/icons/forest/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+        { src: '/icons/forest/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+        { src: '/icons/forest/icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+      ],
+      favicon: { href: '/icons/forest/favicon-32.png', sizes: '32x32' },
+      appleTouch: '/icons/forest/apple-touch-icon.png',
+      og: '/icons/forest/og-image.png',
+    },
+    // A person's NAME prints in the design's ink, never in the colour itself
+    // (design.js personNameInk) — F1: a person colour is a ring, not type.
+    personInk: 'ink',
+    enabled: false,
+  },
 ];
 
 /* Which run of the first-start chooser an account has seen (#1186). A REVISION

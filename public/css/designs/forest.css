@@ -1,0 +1,533 @@
+/* Forest — the override stylesheet (#1465, F1 + F8).
+ *
+ * Source: docs/design/forest/Forest-F1-Komponenten.dc.html („1 · Tokens") for
+ * every value here, and Forest-F8-Farben.dc.html for the markers and the ramp;
+ * the review (docs/design/pruefung-forest-2026-10-01.md) accepted the package
+ * in round 1. A value that is not in F1 does not belong in this file — the few
+ * this layer had to DERIVE say so where they are declared.
+ *
+ * Forest is a light clearing at the edge of a wood: a pale green page, cards
+ * like paper in the light, leaf-shaped corners (14 · 4 · 14 · 4), and one dark
+ * ground, the dusk (#24331f), where the fireflies live. Its two failure classes
+ * are YOUNG SERIF FAUX-BOLDED OR SET SMALL — it ships one weight and F1 allows
+ * it from 19px — and SOFT INK DRIFTING onto the moss and gold-tint surfaces.
+ * The first is guarded by the @font-face range in styles.css and the derived
+ * reset list below, the second by test/design-tokens-forest.test.js.
+ *
+ * The file follows Ocean's and Das Programmheft's seam, because Forest is LIGHT
+ * too: a VOICE block that is unconditional, and a COLOUR block gated on
+ * `:not([data-scheme="dark"])`, where test/support/theme.js resolves it and the
+ * contrast suite measures it. Component rules only ever read var(--x). See
+ * .claude/rules/light-design-gate-and-shared-design-ids.md and
+ * .claude/rules/design-stylesheets-are-shell-assets.md.
+ *
+ * What is NOT here and must not move here:
+ *   - --page-bg and --brand. paintDesign() (round-theme.js) writes them inline
+ *     on <html> from the registry's `page`/`accent` (public/js/designs.js).
+ *   - Screen layout, motion and the sheets' placeholder cover tiles (oklch
+ *     non-tokens). This issue is tokens + shared components; the screens are
+ *     #1466-#1477.
+ */
+
+/* The design's VOICE — scheme-independent. */
+:root[data-design="forest"] {
+  /* ---- Schrift (F1.2). Young Serif for display — a single-weight face,
+     declared `400 800` in styles.css so a heading asking for 700 is never
+     synthesised bold — and Alegreya Sans 400/700/800 for everything else.
+     Young Serif is „ab 19 px", so the component block below hands every
+     smaller display-face user back to --font. */
+  --font: "Alegreya Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Young Serif", Georgia, "Times New Roman", serif;
+
+  /* ---- Radien (F1.1). Feld 12, Karte 18, Sheet 24 oben. The leaf shapes are
+     not a single length, so they are tokens of their own and the component
+     rules apply them: Blatt S on chips, pills and secondary buttons, Blatt L on
+     the primary button. --radius-pill stays round — F1: „Person, Stumpf,
+     Gesicht: rund". */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+  --radius-leaf-s: 14px 4px 14px 4px;
+  --radius-leaf-l: 22px 7px 22px 7px;
+
+  /* ---- Abstände (F1.1): 4 · 8 · 12 · 16 · 24 · 32 · 48. The page margin is
+     40 on desktop and 16 on a phone; the screens place it (#1466). */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+
+  /* ---- Durchschuss (F1.2): Display 1,05 · Titel 1,1 · Text 1,45, and a
+     kicker sits 6px over its heading. */
+  --leading-display: 1.05;
+  --leading-title: 1.1;
+  --leading-text: 1.45;
+  --kicker-gap: 6px;
+
+  /* ---- Fokus (F1.1): 3px, 2px out. The colour is --brand-ring below. */
+  --ring-width: 3px;
+  --ring-offset: 2px;
+
+  /* ---- Trefferflächen — four tokens, in height AND width (F1.1): 24 the
+     floor; 32 footer links, toast actions and chips; 44 every KEY control (the
+     vote card, the dock, the hand-over, a sheet's action); 44 every FIELD. */
+  --target-min: 24px;
+  --target-foot: 32px;
+  --target-key: 44px;
+  --target-field: 44px;
+}
+
+/* The design's COLOURS, gated on the LIGHT scheme it was drawn for — the same
+ * gate as Ocean's, for the same reason: the light scheme is the ABSENCE of
+ * data-scheme, so there is nothing positive to key on. Specificity (0,3,0).
+ * test/support/theme.js reads this block first for a light design. */
+:root[data-design="forest"]:not([data-scheme="dark"]) {
+  /* ---- Flächen (F1.1), all on or above the page (#ecf1e4, the registry's
+     `page`): Depth comes from shadow, never from a darker card. --surface is
+     the card, --raised the sheet, popover, dialog and field. */
+  --surface: #f9fbf4;
+  --raised: #ffffff;
+  --control-fill: #ffffff;
+  --band: #f3f6ec;
+  /* Moos: a chip, the secondary button, a counter. Ink 11.3:1, soft 5.4:1;
+     on its hover tone soft is 4.8:1 — the tightest soft-ink pair here. */
+  --moss: #d6e4c6;
+  --moss-hover: #c9d9b6;
+
+  /* ---- Schrift. --ink-soft is 6.3:1 on the page, its darkest ground (F1
+     measures soft type against the page because the light spots only ever
+     brighten it). */
+  --ink: #1b2a18;
+  --ink-soft: #4b5c45;
+  /* --on-accent is WHITE, not F1's #f4f8ec — a measured deviation (the other
+     two are --line and --gold-ink). The app paints --on-accent on fills this design does not own:
+     the eight member tones (an avatar's initials) and the continuous avgColor
+     ramp of an unrunged score, both tuned to 4.5:1 against white. F1's faint
+     green tint drops six member tones to 4.2:1 and the mid ramp to 4.2:1; the
+     difference between the two is not visible on the accent (7.0 vs 6.5:1).
+     F1's light print survives as --on-dusk, the ramp's low inks and the
+     markers' ink (designs.js markerInk). */
+  --on-accent: #ffffff;
+  --on-dusk: #f4f8ec;
+
+  /* ---- Die Dämmerung: the second ground — hidden cards, the hand-over, the
+     toast, the badge glass. Light print (--on-dusk) on it is 12.4:1, the soft
+     tone 8.8:1 and the firefly 11.9:1. The firefly carries meaning ONLY here; on a light
+     surface it is decoration, and test/design-tokens-forest.test.js holds it
+     off every light ground as a colour. */
+  --dusk: #24331f;
+  --dusk-soft: #c9d6bd;
+  --firefly: #fff3a8;
+
+  /* ---- Laubgrün. --brand is the registry's #356427 (text at any size, 6.1:1
+     on the page); --brand-strong is F1's accent-deep, the hover and the press,
+     where :root would otherwise mix one of its own. */
+  --brand-strong: #284d1d;
+
+  /* ---- Linien. --control-edge is F1's „edge", the UI-control border: 3.7:1
+     on the page, 4.1 on the card, 4.3 on white, 3.2 on moss (SC 1.4.11). --line
+     is ornament only — never text, never a control edge. --hatch fills an
+     empty cover and a loading skeleton, and carries no text either. */
+  --control-edge: #6f7f66;
+  /* --line is one step darker than F1's #d5ddca (1.34:1 on the card): the
+     app holds every light design's hairline to 1.36:1 off its card
+     (a11y-contrast's neutral-ramp floor), and #d3dbc8 is the nearest tone in
+     F1's hue that clears it (1.37). */
+  --line: #d3dbc8;
+  --hatch: #e9f0df;
+  /* The two wells (a pressed chip ground, a list's quiet row). F1 names none,
+     and :root's mix off the page with black lands on a grey that is not in
+     the package; stated here in F1's hue, as the lightest tones that clear the
+     app's floors (1.25 / 1.19 off the card) and keep the ramp's order off the
+     page (soft < sunken < line < edge). Soft ink reads 5.5:1 on both. */
+  --sunken: #dce4d0;
+  --sunken-soft: #e2e9d6;
+
+  /* ---- Fokus: ink everywhere the ring falls on a light surface (13:1 on the
+     page); on the dusk a ring needs the firefly, which the toast rule sets
+     from --ring-on-dusk (11.9:1). */
+  --brand-ring: #1b2a18;
+  --ring-on-dusk: #fff3a8;
+
+  /* ---- Zustände. ok = the accent, always with a check glyph. --danger also
+     fills the confirm dialog's button, with the light print on it at 6.1:1;
+     --danger-tint is its hover and the dialog band (danger on it 5.4:1). */
+  --good: #356427;
+  --warn: #8a5300;
+  --danger: #a3392b;
+  --danger-tint: #f8e4df;
+
+  /* ---- Gold is the ranking, kept apart from the green. --gold is a graphic —
+     the crown, the winner's edge — 4.1:1 on the card. Text in the gold family
+     is F1's „gold-ink" #85570f, which the APP calls --gold-deep (5.0:1 on the
+     gold-tint, 5.9:1 on the card): the app's --gold-ink is something else, the
+     glyph printed ON a gold fill (the seal's padlock), so it is the ink (3.5:1,
+     a graphic). The winner row is --gold-soft, F1's gold-tint, with ink 11.6:1
+     and soft 5.8:1 on it. */
+  --gold: #a86d14;
+  --gold-ink: #1b2a18;
+  --gold-deep: #85570f;
+  --gold-soft: #f3e6b0;
+  --gold-edge: #a86d14;
+
+  /* ---- Die Score-Rampe, Schatten -> Sonne (F1.5, F8.3). It BRIGHTENS steadily
+     from 1 to 5 (relative luminance .08 -> .77), so it reads in greyscale and
+     under every colour-vision deficiency — the same contract and the same
+     token NAMES as Der Tisch's and Ocean's ramps, so test/a11y-contrast.test.js
+     measures all three with one loop. Fixed per-step inks: light on the veto,
+     1 and 2, ink on 3-5. Below 1 is Tollkirsche, never without its word. */
+  --score-1: #3d5273;
+  --score-2: #3b6f6c;
+  --score-3: #9cc38a;
+  --score-4: #c2dc86;
+  --score-5: #f1e58c;
+  --score-veto: #5b1e3a;
+  --score-ink-low: #f4f8ec;
+  --score-ink-high: #1b2a18;
+  --score-veto-ink: #f4f8ec;
+
+  /* ---- Holz und Laub — the tree stump and the canopy (F1.1 „Motiv"). They
+     draw the stump, the trees of the Pokale grove and the decoration, and
+     carry NO text: test/design-tokens-forest.test.js holds every one of them
+     off `color`. */
+  --bark: #5a3d24;
+  --bark-light: #8a6240;
+  --wood: #dcbf92;
+  --wood-ring: #c9a06f;
+  --wood-edge: #b8905f;
+  --leaf-1: #446b39;
+  --leaf-2: #4f7d40;
+  --leaf-3: #6b9a55;
+  --leaf-4: #7fae66;
+
+  /* ---- Tiefe (F1.1): two shadows tinted with the forest's own green, never a
+     darker card. shadow-2 is a sheet's and a dialog's; shadow-3 is the same
+     lift, for what floats above a sheet. The scrim behind them is ink at 55%. */
+  --scrim: rgba(27, 42, 24, 0.55);
+  --shadow-1: 0 6px 18px rgba(40, 60, 30, 0.10);
+  --shadow-2: 0 18px 44px rgba(40, 60, 30, 0.18);
+  --shadow-3: 0 18px 44px rgba(40, 60, 30, 0.18);
+  /* The primary button's own cast (F1.3), a little deeper than shadow-1. */
+  --shadow-primary: 0 8px 18px rgba(40, 60, 30, 0.25);
+}
+
+/* ---------------------------------------------------------------------------
+   Components. Everything that follows exists because a TOKEN could not say it.
+   --------------------------------------------------------------------------- */
+
+/* YOUNG SERIF STAYS AT 19PX AND UP. The app gives --font-display to controls,
+   pills and small labels as well, and h1-h3 inherit it globally, but F1 sets
+   Young Serif „nie unter 19 px, nie auf Knöpfen". So these take the text face
+   back. The list is every styles.css rule that asks for the display face — or
+   sizes a heading/title/name — and resolves under 19px on this design, plus
+   every button; test/design-tokens-forest.test.js DERIVES it from styles.css,
+   so a new small display-face rule fails there until it is added here. Font
+   only, so it belongs to the voice and is not gated. */
+:root[data-design="forest"] :is(
+  .avatar,
+  .hub-card__title,
+  .hub-offshelf__title,
+  .hub-care__head,
+  .ticket__names,
+  .dock__item,
+  .section :is(h1, h2, h3),
+  .sort-select,
+  .chip,
+  .tag-mode__opt,
+  .fbar__trigger,
+  .mfilter__label,
+  .btn,
+  .next-step__title,
+  .round-card--new,
+  .lobby-cta__action,
+  .nr-table__center,
+  .nr-seat__avatar,
+  .nr-seat__name,
+  .tl-month,
+  .session-card__title,
+  .score-pill,
+  .exp-pill,
+  .game-card__title,
+  .add-tile,
+  .landing-desktop__caption,
+  .landing-walk__title,
+  .landing-step__num,
+  .landing-claim__title,
+  .topbar__login,
+  .news-entry__title,
+  .home-resume__head,
+  .k-band__h,
+  .friends-section__h,
+  .konto-section__h,
+  .rs-section__h,
+  .dash-tile__head h2,
+  .install-section h2,
+  .install-offer h2,
+  .popover__head,
+  .tafel__title,
+  .trow__title,
+  .split-group__head,
+  .winner-chip,
+  .rater__n,
+  .editor--expansions .exp-own__head,
+  .podium__name,
+  .podium__col--multi .podium__name,
+  .podium__rank,
+  .podium--single .podium__col--multi .podium__name,
+  .pokale-card__value,
+  .pokale-game__title,
+  .recap-fav__name,
+  .opt-card,
+  .setup-panel__title,
+  .pool-tile__name,
+  .pool-count__label,
+  .setup-bar__summary,
+  .handover__back,
+  .mood__n,
+  .session-log__summary-title,
+  .session-log__title,
+  .result-people__name,
+  .spotlight__title,
+  .spotlight--table .spotlight__title,
+  .archive-row__title,
+  .rec-card__title,
+  .rec-spots__title,
+  .rec-spot__title,
+  .rec-ignored__title,
+  .rec-ignored__name,
+  .marker-card__name,
+  .badge__name,
+  .badge-moment__title,
+  .badge-card__name
+) {
+  font-family: var(--font);
+}
+
+/* Headings set at F1's title leading (1,1). Only the headings: a display
+   numeral inside a component keeps the line box that component was laid out
+   with until its screen issue re-draws it. */
+:root[data-design="forest"] :is(h1, h2, h3) { line-height: var(--leading-title); }
+
+/* ---- Target sizes (the --target-* tokens), in height AND width. Geometry
+   only, so ungated. */
+:root[data-design="forest"] .btn { min-height: var(--target-key); }
+:root[data-design="forest"] .btn--sm { min-height: var(--target-foot); }
+:root[data-design="forest"] .chip { min-height: var(--target-foot); }
+:root[data-design="forest"] :is(.input, .select, .sort-select) { min-height: var(--target-field); box-sizing: border-box; }
+:root[data-design="forest"] .sheet__close { min-height: var(--target-key); min-width: var(--target-key); }
+:root[data-design="forest"] :is(.link-btn, .back-link) {
+  min-height: var(--target-min);
+  display: inline-flex;
+  align-items: center;
+}
+:root[data-design="forest"] :is(.toast__action, .toast__close) {
+  min-height: var(--target-foot);
+  min-width: var(--target-foot);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+/* The footer's „FAQ" draws 23px wide on every sheet (review U9) — 2.5.8 passes
+   on its spacing exception, but the token says height AND width. */
+:root[data-design="forest"] .site-footer a {
+  min-height: var(--target-foot);
+  min-width: var(--target-foot);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding-inline: 4px;
+  box-sizing: border-box;
+}
+
+/* ---- Focus (F1.1): 3px ink, 2px out. Every focus rule in styles.css already
+   reads `var(--brand-ring, var(--brand))`, so the colour needs no rule at all;
+   this only thickens the ring and sets the offset. F1 draws a field's ring on
+   its LABEL via :focus-within, which is the sheets' markup; the app's fields
+   are not all inside a label, so the ring stays on the field itself. */
+:root[data-design="forest"]:not([data-scheme="dark"]) :focus-visible {
+  outline: var(--ring-width) solid var(--brand-ring);
+  outline-offset: var(--ring-offset);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) :is(.input, .select):focus-visible {
+  outline: var(--ring-width) solid var(--brand-ring);
+  outline-offset: var(--ring-offset);
+}
+/* A hub card whose one link is stretched over it is ringed as a whole card
+   (styles.css). The blanket rule above is (0,4,0) and would put a second ring
+   round the small foot link too, so it is taken off the link here, at higher
+   specificity and only where `:has()` can draw the card's — Das Programmheft's
+   answer to the same rule (test/hub-card-link.test.js derives it). */
+:root[data-design="forest"]:not([data-scheme="dark"]) .hub-card--link:has(.hub-card__go:focus-visible) {
+  outline: var(--ring-width) solid var(--brand-ring);
+  outline-offset: var(--ring-offset);
+}
+@supports selector(:has(*)) {
+  :root[data-design="forest"]:not([data-scheme="dark"]) .hub-card--link .hub-card__go:focus-visible { outline: none; }
+}
+
+/* ---- Buttons (F1.3). Alegreya Sans, 700 — 800 on the primary. No pressed-key
+   bottom edge: depth is the shadow's. The press still restates the resting
+   margin (the #615 rule — a bare 0 would clobber a component's own margin). */
+:root[data-design="forest"]:not([data-scheme="dark"]) .btn {
+  border-radius: var(--radius-leaf-s);
+  border-bottom-width: 1.5px;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .btn:active {
+  transform: translateY(1px);
+  border-bottom-width: 1.5px;
+  margin-bottom: var(--press-mb);
+}
+/* Zweitknopf — the default .btn: moss, ink, the control edge (4.1:1 against
+   the card). Its hover is moss-hover, with the edge kept: the app's hover to
+   --brand would be a step up, which is allowed, but F1 keeps the edge. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .btn:not(.btn--primary):not(.btn--ghost):not(.btn--danger) {
+  background: var(--moss);
+  border-color: var(--control-edge);
+  color: var(--ink);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .btn:not(.btn--primary):not(.btn--ghost):not(.btn--danger):hover {
+  background: var(--moss-hover);
+}
+/* Hauptknopf: Laubgrün under the light print (6.5:1), Blatt L, 800, a green
+   cast. The hover darkens to accent-deep (9.0:1). */
+:root[data-design="forest"]:not([data-scheme="dark"]) .btn--primary {
+  border-radius: var(--radius-leaf-l);
+  border-color: var(--brand);
+  font-weight: 800;
+  box-shadow: var(--shadow-primary);
+}
+/* Geist: Laubgrün as text, moss under the pointer. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .btn--ghost {
+  border-color: transparent;
+  color: var(--brand);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .btn--ghost:hover {
+  background: var(--moss);
+  border-color: transparent;
+}
+/* Gefahr: an outline on the card — the full fill is the confirm dialog's. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .btn--danger {
+  background: var(--surface);
+  border-color: var(--danger);
+  color: var(--danger);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .btn--danger:hover {
+  background: var(--danger-tint);
+  border-color: var(--danger);
+}
+/* Gesperrt: soft ink on moss at full opacity — a faded green button reads as
+   a pale enabled one. WCAG exempts an inactive control from the bars. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .btn:disabled {
+  opacity: 1;
+  background: var(--moss);
+  border-color: var(--moss);
+  color: var(--ink-soft);
+  box-shadow: none;
+}
+
+/* ---- Chips (F1.4): moss with ink, Blatt S, an edge so the control reads
+   against the page (3.2:1 on moss). The on state keeps the app's accent fill
+   under --on-accent (6.5:1). */
+:root[data-design="forest"]:not([data-scheme="dark"]) .chip {
+  border-radius: var(--radius-leaf-s);
+  background: var(--moss);
+  color: var(--ink);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .chip:hover {
+  background: var(--moss-hover);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .chip.is-on {
+  background: var(--brand);
+  color: var(--on-accent);
+}
+
+/* ---- Fields (F1.4): white, the control edge, radius 12. */
+:root[data-design="forest"]:not([data-scheme="dark"]) :is(.input, .select) {
+  border-width: 1.5px;
+  border-radius: var(--radius-md);
+}
+
+/* ---- Surfaces. A card is paper in the light: the card tone, a hairline and
+   F1's first shadow. A sheet, a popover and a dialog are raised white with the
+   second; the sheet takes 24px on top. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .card {
+  box-shadow: var(--shadow-1);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .sheet {
+  background: var(--raised);
+  box-shadow: var(--shadow-2);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .popover {
+  background: var(--raised);
+  box-shadow: var(--shadow-2);
+}
+
+/* The empty state (F1.6): a title, one line of soft ink, at most one action —
+   „kein Bild, kein grauer Block". A card on the page instead of the dashed
+   accent frame. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .empty {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+}
+
+/* ---- The no-cover placeholder (F1.6 „Kein Bild"): the hatch, diagonal, on
+   the card tone, with the glyph in soft ink (6.2:1 on the hatch). `.cover-ph`
+   owns the coverless game box and brings its own gradient
+   (.claude/rules/cover-ph-owns-the-coverless-game-glyph.md), so the tone is
+   replaced here. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .cover-ph {
+  color: var(--ink-soft);
+  background-color: var(--surface);
+  background-image: repeating-linear-gradient(135deg, var(--hatch) 0 8px, var(--surface) 8px 16px);
+}
+
+/* ---- The score pill (F1.5): Blatt S, the ramp with its FIXED inks, keyed on
+   the same `data-stop` the JS writes beside `--sc`, so fill and ink can never
+   come from different rungs. A pill without data-stop keeps the app's --sc
+   fill. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .score-pill {
+  border-radius: var(--radius-leaf-s);
+  font-weight: 800;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .score-pill[data-stop="veto"] { --sc-fill: var(--score-veto); --sc-ink: var(--score-veto-ink); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .score-pill[data-stop="1"] { --sc-fill: var(--score-1); --sc-ink: var(--score-ink-low); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .score-pill[data-stop="2"] { --sc-fill: var(--score-2); --sc-ink: var(--score-ink-low); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .score-pill[data-stop="3"] { --sc-fill: var(--score-3); --sc-ink: var(--score-ink-high); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .score-pill[data-stop="4"] { --sc-fill: var(--score-4); --sc-ink: var(--score-ink-high); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .score-pill[data-stop="5"] { --sc-fill: var(--score-5); --sc-ink: var(--score-ink-high); }
+
+/* ---- The face row (F1.5): the chosen face takes its own rung of the ramp,
+   with that rung's ink. The faces are the rating's five children in order, so
+   the position IS the rung. The firefly halo F1 draws round it is motion's
+   (#1476). */
+:root[data-design="forest"]:not([data-scheme="dark"]) .rating .mood.is-selected:nth-child(1) { background: var(--score-1); border-color: var(--score-1); color: var(--score-ink-low); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .rating .mood.is-selected:nth-child(2) { background: var(--score-2); border-color: var(--score-2); color: var(--score-ink-low); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .rating .mood.is-selected:nth-child(3) { background: var(--score-3); border-color: var(--control-edge); color: var(--score-ink-high); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .rating .mood.is-selected:nth-child(4) { background: var(--score-4); border-color: var(--control-edge); color: var(--score-ink-high); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .rating .mood.is-selected:nth-child(5) { background: var(--score-5); border-color: var(--control-edge); color: var(--score-ink-high); }
+
+/* ---- The footer (F1.7) sits on the clearing itself, a hairline above it. The
+   BGG badge is licence-bound artwork and is never restyled. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .site-footer {
+  background: var(--page-bg);
+  border-top: 1px solid var(--line);
+}
+
+/* ---- The toast (F1.6): the dusk, with the light print. Only the neutral
+   toast — the success and error states keep their semantic fills. A control on
+   the dusk takes the firefly ring, since ink would vanish there (1.1:1). The
+   shape stays styles.css's (#858; test/ocean-overlays.test.js holds every
+   design sheet off the pill). */
+:root[data-design="forest"]:not([data-scheme="dark"]) .toast:not(.toast--success):not(.toast--error) {
+  background: var(--dusk);
+  color: var(--on-dusk);
+  box-shadow: var(--shadow-2);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .toast :focus-visible {
+  outline-color: var(--ring-on-dusk);
+}
