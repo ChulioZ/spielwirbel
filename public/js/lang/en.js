@@ -241,10 +241,12 @@ I18N.en = {
   'hub.preview.pokaleLeadTie': '{n} share first place',
   'hub.seat.add': 'Add a seat',
 
-  // Group headings in the desktop navigation rail (from 1280px up).
-  // Heads the three lists that are NOT the shelf: the two archives and the wish
-  // list (#560). No longer "Archive" — a wish list is not one.
-  'rail.archive': 'Off the shelf',
+  // The off-shelf lists (#1500): the hub's group heading, the Regal's scope
+  // strip's nav label, and that strip's leading Regal segment.
+  'offShelf.title': 'More lists',
+  'offShelf.scope': 'Shelf and lists',
+  'offShelf.regal': 'Shelf ({n})',
+  // The desktop navigation rail's Einstellungen row.
   'rail.settings': 'Settings',
 
   // The round's settings screen (#561). It reuses 'rail.settings' as its own

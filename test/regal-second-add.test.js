@@ -109,7 +109,7 @@ test('Programmheft: the phone copy follows the grid, the toolbar copy stays, an 
   const dock = sec.querySelector('.regal-add--dock');
   assert.ok(dock && dock.matches('button.btn.btn--primary'), 'no sticky black copy for the phone');
   assert.ok(follows(dom, grid, dock), 'the phone copy is after the grid');
-  assert.ok(follows(dom, dock, sec.querySelector('nav.ph-offshelf')), 'and before the list that closes the shelf');
+  assert.equal(dock, sec.lastElementChild, 'the phone copy closes the shelf (#1500 removed the list after it)');
   assert.ok(sec.querySelector('.section-tools .regal-add--bar'), 'the toolbar copy is gone');
   assert.ok(grid.lastElementChild.classList.contains('add-tile'), 'the tile stays in the grid');
 

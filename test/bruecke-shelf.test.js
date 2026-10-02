@@ -122,11 +122,13 @@ test('the Brücke shelf adds from the toolbar and under the grid, never from a d
   const dock = sec.querySelector(':scope > .bruecke-add--dock');
   assert.ok(dock, 'no full-width add under the grid');
   assert.ok(sec.querySelector('.cards').compareDocumentPosition(dock) & 4, 'the phone add sits above the grid');
-  // The toolbar keeps its way to „Nicht im Regal" (C3), and the shelf ends on the one line.
-  assert.ok([...sec.querySelectorAll('.regal-head .link-btn')].some((b) => text(b) === dom.run("t('rail.archive')")));
-  const links = [...sec.querySelectorAll('.bruecke-offshelf .bruecke-offshelf__link')];
+  // The way to the lists is the scope strip over the section (#1500) — not a
+  // toolbar button (C3) and not a line closing the shelf (B2.6) any more.
+  assert.equal(dom.app.querySelector('.bruecke-offshelf, .regal-head .ti-archive'), null);
+  const links = [...dom.app.querySelectorAll('nav.offshelf-seg a')];
   assert.deepEqual(links.map((a) => a.getAttribute('href')),
-    ['retired', 'completed', 'wishlist', 'recommendations'].map((s) => `/round/${RID}/${s}`));
+    ['regal', 'wishlist', 'retired', 'completed', 'recommendations'].map((s) => `/round/${RID}/${s}`));
+  assert.equal(dom.app.querySelector('nav.offshelf-seg').nextElementSibling, sec, 'the strip does not head the shelf');
 });
 
 test('below 30 games there is no letter row and no batch foot', async (t) => {

@@ -65,31 +65,19 @@ const regal = (dom, round) => {
 
 /* ------------------------------------ Regal ------------------------------------ */
 
-test('Ocean: the Regal brings its own way to „Nicht im Regal", at every width', (t) => {
+test('Ocean: the Regal\'s one way to the lists is the scope strip — no toolbar button, no band (#1500)', (t) => {
   const { dom, round } = boot(t, 'ocean');
   regal(dom, round);
-  const toolBtn = [...dom.app.querySelectorAll('.section-tools .link-btn')]
-    .find((b) => b.querySelector('.ti-archive'));
-  assert.ok(toolBtn, 'the toolbar lost its „Nicht im Regal" button');
-  // Ocean's Reling carries only the five tabs (#1211), so a rail-owned button
+  const nav = dom.app.querySelector('nav.offshelf-seg');
+  assert.ok(nav, 'the Regal has no scope strip');
+  // Ocean's Reling carries only the five tabs (#1211), so a rail-owned strip
   // would leave the desktop with no way off the shelf at all.
-  assert.equal(toolBtn.classList.contains('rail-owned'), false, 'rail-owned hides it from 1280px up');
-
-  const band = dom.app.querySelector('.regal-offshelf');
-  assert.ok(band, 'the end-of-shelf band is missing');
-  const cards = [...band.querySelectorAll('a.regal-offshelf__card')];
-  assert.equal(cards.length, 4, 'one card per off-shelf destination');
-  const hrefs = cards.map((a) => a.getAttribute('href'));
-  for (const sub of ['retired', 'completed', 'wishlist', 'recommendations']) {
-    assert.ok(hrefs.some((h) => h.endsWith(`/${sub}`)), `no real link to /${sub}: ${hrefs.join(' ')}`);
-  }
-  // The counted label is off-shelf.js's own, so the band cannot disagree with
-  // the rail or the sheet about how many games are aussortiert.
-  assert.match(cards[0].textContent, /Aussortiert \(1\)/);
-
-  // The phone's single row opens the same list as a sheet.
-  band.querySelector('.regal-offshelf__row').click();
-  assert.ok(dom.document.querySelector('.sheet .off-shelf'), 'the row did not open the off-shelf sheet');
+  assert.equal(nav.classList.contains('rail-owned'), false);
+  assert.deepEqual([...nav.querySelectorAll('a')].map((a) => a.dataset.sub),
+    ['regal', 'wishlist', 'retired', 'completed', 'recommendations']);
+  assert.match(nav.querySelector('[data-sub="retired"]').textContent, /Aussortiert \(1\)/);
+  assert.equal(dom.app.querySelector('.section-tools .ti-archive'), null, 'the toolbar still carries „Nicht im Regal"');
+  assert.equal(dom.app.querySelector('.regal-offshelf'), null, 'the end-of-shelf band is back');
 });
 
 test('Ocean: the sort reads „Sortiert: Bewertung" and keeps the select\'s own name', (t) => {
@@ -140,9 +128,9 @@ test('Klassisch: the Regal is exactly as it was', (t) => {
   for (const sel of ['.regal-offshelf', '.regal-sort', '.regal-fab', '.regal-add', '.game-card__meta', '.regal-head']) {
     assert.equal(dom.app.querySelector(sel), null, `${sel} leaked into Klassisch`);
   }
-  const toolBtn = [...dom.app.querySelectorAll('.section-tools .link-btn')]
-    .find((b) => b.querySelector('.ti-archive'));
-  assert.ok(toolBtn.classList.contains('rail-owned'), 'Klassisch\'s rail owns „Nicht im Regal" from 1280px');
+  // #1500 replaced Klassisch's rail-owned toolbar button with the scope strip.
+  assert.equal(dom.app.querySelector('.section-tools .ti-archive'), null);
+  assert.ok(dom.app.querySelector('nav.offshelf-seg'), 'Klassisch\'s Regal has no scope strip');
   assert.ok(dom.app.querySelector('.section-tools > select.sort-select'), 'the bare select moved');
 });
 

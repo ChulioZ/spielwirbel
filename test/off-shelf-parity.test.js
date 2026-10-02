@@ -1,35 +1,22 @@
 'use strict';
 
-/* Every off-shelf screen the Regal offers below 1280px must ALSO have a rail entry.
+/* The Regal's scope strip (#1500) is the ONE way onto the four off-shelf lists
+ * from the Regal side, at every width and in every design — so every list the
+ * hub's „Weitere Listen" group offers must be in it, with the same count.
  *
- * Since #1185 there is a THIRD surface — the hub's „Nicht im Regal" group on the
- * Start tab — and all three render one shared list, so the parity below can no
- * longer drift by construction. The hub's own half is in
- * test/hub-previews.test.js; this file keeps the Regal↔rail pair it was written
- * for, because that is the pair where a missing entry makes a screen genuinely
- * unreachable at a width.
+ * Why parity and not "the strip exists": the strip replaced up to four other
+ * presentations (a toolbar sheet, a band or line under the grid, the Klassisch
+ * rail's group). Each of those used to be the only way in at SOME width, and a
+ * row missing from one was a screen unreachable at that width with nothing red —
+ * #682 shipped its recommendations screen into the narrow surface alone, so the
+ * feature had no entry point on a desktop. One strip at every width closes the
+ * width half of that; this file keeps the other half, that the strip and the hub
+ * offer the same destinations and counts, so a fifth list added to one is
+ * checked against the other without editing this file.
  *
- * The two are not alternatives, they are the same navigation at two widths: the
- * Regal's control is `.rail-owned`, so from 1280px up it is `display: none` and
- * the rail is the ONLY way in. A link present in one and missing from the other
- * is therefore a screen that is unreachable at that width — with nothing red, no
- * error, and a screen that still looks finished from every narrower window.
- *
- * That is not hypothetical: #682 shipped its recommendations screen into the
- * narrow surface alone, so the whole feature had no entry point on a
- * desktop-width window. Verified in a browser at 1180px and 390px — both below
- * the breakpoint — which is exactly the "walk the width transitions" check
- * `.claude/rules/responsive-content-width.md` prescribes and which was skipped.
- *
- * Asserted as PARITY rather than as "the recommendations row exists", so the
- * next screen added to either surface is covered without editing this file.
- *
- * #777 moved the narrow surface from a `.round-footer` row BELOW the whole cover
- * grid into a sheet opened from the Regal's header tools. This file's header
- * used to predict that moment — "the whole spec would go quiet the day the
- * footer is refactored away" — so the parity assertion was retargeted at the
- * sheet rather than left watching an empty `.round-footer` selector, and the
- * anti-vacuous floor below is what makes that retarget checkable.
+ * The rows come from offShelfEntries() (public/js/off-shelf.js) on both
+ * surfaces, so this cannot drift by construction today — the assertions are
+ * what notices the day a surface goes back to deriving its own.
  */
 
 const { test } = require('node:test');
@@ -57,10 +44,11 @@ const roundWith = (games) => ({
 
 const round = roundWith([
   { id: 'g1', title: 'Catan', minPlayers: 3, maxPlayers: 4, tagIds: [] },
+  { id: 'g5', title: 'Dixit', minPlayers: 3, maxPlayers: 6, tagIds: [] },
   ...baseGames,
 ]);
 
-async function renderRegal(t, payload = round) {
+async function render(t, tab, payload = round) {
   const dom = loadApp({ locale: 'de' });
   t.after(() => dom.close());
   dom.set('api', async (method, url) => {
@@ -70,22 +58,8 @@ async function renderRegal(t, payload = round) {
   });
   dom.set('accountsActive', () => true);
   dom.set('isLoggedIn', () => true);
-  await dom.call('showRound', RID, 'regal');
+  await dom.call('showRound', RID, tab);
   return dom;
-}
-
-/* The trigger, as the user finds it: a control in the Regal's header tools row,
-   not anywhere below the grid. Scoped to `.section-tools` so a stray
-   `.rail-owned` elsewhere on the screen cannot stand in for it. */
-const offShelfTrigger = (dom) => dom.app.querySelector('.section-tools .rail-owned');
-
-function openOffShelf(dom) {
-  const trigger = offShelfTrigger(dom);
-  assert.ok(trigger, 'the Regal renders no off-shelf control in its header tools');
-  trigger.click();
-  const sheet = dom.document.querySelector('.off-shelf');
-  assert.ok(sheet, 'clicking the off-shelf control opened no sheet');
-  return sheet;
 }
 
 const rowsOf = (root) =>
@@ -94,78 +68,75 @@ const rowsOf = (root) =>
     text: a.textContent.replace(/\s+/g, ' ').trim(),
   }));
 
-test('every off-shelf screen the Regal offers is also reachable from the rail', async (t) => {
-  const dom = await renderRegal(t);
-  const sheet = rowsOf(openOffShelf(dom));
-  const rail = new Map(rowsOf(dom.app.querySelector('.rail')).map((r) => [r.href, r.text]));
+const strip = (dom) => {
+  const nav = dom.app.querySelector('nav.offshelf-seg');
+  assert.ok(nav, 'the screen renders no scope strip');
+  return nav;
+};
 
-  // Anti-vacuous: with no rows the set comparison passes trivially, and the
-  // whole spec would go quiet the day the sheet is refactored away — which is
-  // precisely what happened to its `.round-footer` predecessor in #777.
-  assert.ok(sheet.length >= 4, `the off-shelf sheet rendered ${sheet.length} links — check the fixture`);
-
-  const missing = sheet.filter((r) => !rail.has(r.href)).map((r) => r.href);
-  assert.deepEqual(
-    missing,
-    [],
-    `hidden from 1280px up and absent from the rail, so unreachable on a desktop: ${missing.join(', ')}`,
-  );
-
-  /* Same COUNTS, not merely the same destinations.
-
-     #1185 made this structural rather than checked: both surfaces — and the
-     hub's „Nicht im Regal" group, a third one — now render offShelfEntries()
-     (public/js/off-shelf.js) instead of each building its own array with its own
-     `round.games.filter(...)`. The assertion stays, and is worth more than it
-     looks: it is what notices if any surface goes back to deriving its own, which
-     is how the third one would have arrived by default. */
-  const drifted = sheet.filter((r) => rail.get(r.href) !== r.text);
-  assert.deepEqual(
-    drifted.map((r) => `${r.href}: sheet "${r.text}" vs rail "${rail.get(r.href)}"`),
-    [],
-  );
+test('the Regal is headed by the strip: Regal first and current, then the four lists', async (t) => {
+  const dom = await render(t, 'regal');
+  const nav = strip(dom);
+  assert.equal(nav.getAttribute('aria-label'), 'Regal und Listen');
+  // Above the shelf's own section, never below the grid.
+  assert.equal(nav.nextElementSibling, dom.app.querySelector('.section'), 'the strip does not head the Regal');
+  assert.deepEqual(rowsOf(nav), [
+    { href: `/round/${RID}/regal`, text: 'Regal (2)' },
+    { href: `/round/${RID}/wishlist`, text: 'Wunschliste (1)' },
+    { href: `/round/${RID}/retired`, text: 'Aussortiert (1)' },
+    { href: `/round/${RID}/completed`, text: 'Durchgespielt (1)' },
+    { href: `/round/${RID}/recommendations`, text: 'Könnte euch gefallen' },
+  ]);
+  const current = [...nav.querySelectorAll('[aria-current]')];
+  assert.equal(current.length, 1);
+  assert.equal(current[0].dataset.sub, 'regal');
+  assert.equal(current[0].getAttribute('aria-current'), 'page');
 });
 
-test('the off-shelf control is a real button and its rows are real links', async (t) => {
-  const dom = await renderRegal(t);
-  // A control that opens an overlay rather than navigating is a <button>, and a
-  // destination is an <a href> — .claude/rules/native-button-vs-focusable-span.md
-  // and .claude/rules/in-app-nav-links.md. The rows carrying real hrefs is what
-  // keeps ⌘-click and middle-click opening them in a new tab.
-  assert.equal(offShelfTrigger(dom).tagName, 'BUTTON');
-  const sheet = openOffShelf(dom);
-  const anchors = [...sheet.querySelectorAll('.ds-row')];
-  assert.equal(anchors.length, 4);
-  for (const row of anchors) {
-    assert.equal(row.tagName, 'A', 'an off-shelf row is not an anchor, so it cannot be opened in a new tab');
-    assert.match(row.getAttribute('href') || '', new RegExp(`^/round/${RID}/`));
+test('every list the hub offers is in the strip, with the same count', async (t) => {
+  const regal = rowsOf(strip(await render(t, 'regal')));
+  const hub = rowsOf((await render(t, 'start')).app.querySelector('.hub-offshelf'));
+  // Anti-vacuous: with no rows the comparison passes trivially.
+  assert.equal(hub.length, 4, `the hub group rendered ${hub.length} links — check the fixture`);
+  const byHref = new Map(regal.map((r) => [r.href, r.text]));
+  const drifted = hub.filter((r) => byHref.get(r.href) !== r.text);
+  assert.deepEqual(drifted.map((r) => `${r.href}: hub "${r.text}" vs strip "${byHref.get(r.href)}"`), []);
+  // And the hub never offers the Regal as one of its „Weitere Listen".
+  assert.ok(!hub.some((r) => r.href.endsWith('/regal')), 'the hub group offers the Regal as a further list');
+});
+
+test('the strip is the Regal\'s ONLY way onto the lists — no sheet, no footer, no toolbar control', async (t) => {
+  const dom = await render(t, 'regal');
+  const listHrefs = /\/(wishlist|retired|completed|recommendations)$/;
+  const outside = [...dom.app.querySelectorAll('a[href]')]
+    .filter((a) => listHrefs.test(a.getAttribute('href')) && !a.closest('nav.offshelf-seg'))
+    .map((a) => `${a.className} → ${a.getAttribute('href')}`);
+  assert.deepEqual(outside, [], 'the Regal (or the rail beside it) still links the lists outside the strip');
+  assert.equal(dom.app.querySelector('.round-footer'), null);
+  assert.equal(dom.app.querySelector('.section-tools .ti-archive'), null, 'the toolbar still carries an off-shelf control');
+});
+
+test('the strip\'s rows are real links', async (t) => {
+  const dom = await render(t, 'regal');
+  const items = [...strip(dom).querySelectorAll('.offshelf-seg__item')];
+  assert.equal(items.length, 5);
+  for (const a of items) {
+    assert.equal(a.tagName, 'A', 'a strip segment is not an anchor, so it cannot be opened in a new tab');
+    assert.match(a.getAttribute('href') || '', new RegExp(`^/round/${RID}/`));
   }
 });
 
-test('the off-shelf control is offered on an EMPTY shelf too', async (t) => {
-  // The regression this guards: `.section-tools` is only populated inside the
-  // "there are active games" branch, so a control added there would vanish for a
-  // round whose games are ALL off the shelf — the case that needs it most.
-  const dom = await renderRegal(t, roundWith(baseGames));
-  // `.empty` is rendered by the zero-active-games branch ONLY. The obvious guard
-  // — that the grid has an `.add-tile` — is vacuous: that tile closes the grid in
-  // BOTH branches, so it would have let a non-empty fixture through and this
-  // spec would have tested nothing it claims to.
+test('the strip heads an EMPTY shelf too', async (t) => {
+  // An empty shelf can still have a full Wunschliste — the case that needs the
+  // way in most. `.empty` is rendered by the zero-active-games branch ONLY.
+  const dom = await render(t, 'regal', roundWith(baseGames));
   assert.ok(dom.app.querySelector('.section .empty'), 'fixture is not an empty shelf');
-  const sheet = rowsOf(openOffShelf(dom));
-  assert.ok(sheet.length >= 4, `an empty Regal offered ${sheet.length} off-shelf links`);
+  const rows = rowsOf(strip(dom));
+  assert.equal(rows.length, 5);
+  assert.equal(rows[0].text, 'Regal (0)');
 });
 
-test('the Regal no longer strands the off-shelf links in a footer below the grid', async (t) => {
-  const dom = await renderRegal(t);
-  assert.equal(
-    dom.app.querySelector('.round-footer'),
-    null,
-    'the Regal still renders a .round-footer — the links are back below the whole cover grid',
-  );
-});
-
-test('the recommendations rail row marks itself current, like the other off-shelf rows', async (t) => {
+test('on a list screen the same strip marks the list, and the Regal is a live link back', async (t) => {
   const dom = loadApp({ locale: 'de' });
   t.after(() => dom.close());
   dom.set('api', async (method, url) => {
@@ -179,15 +150,12 @@ test('the recommendations rail row marks itself current, like the other off-shel
   dom.set('isLoggedIn', () => true);
   await dom.call('showRecommendations', RID);
 
-  const row = [...dom.app.querySelectorAll('.rail a[href]')]
-    .find((a) => a.getAttribute('href') === `/round/${RID}/recommendations`);
-  assert.ok(row, 'the rail carries no recommendations row on its own screen');
-  // "page" (you are ON it) rather than "true" (you are on a screen it owns) —
-  // the distinction railItem draws, and the same one the wishlist row uses.
-  assert.equal(row.getAttribute('aria-current'), 'page');
-  assert.ok(row.classList.contains('is-active'));
-  // And no SECTION is marked at the same time, which is what RAIL_OWN_ENTRY is
-  // for: without the entry in that list, the Regal section would light up too.
-  const marked = [...dom.app.querySelectorAll('.rail [aria-current]')].map((el) => el.textContent.trim());
-  assert.equal(marked.length, 1, `two rail rows claim to be current: ${marked.join(' / ')}`);
+  const nav = strip(dom);
+  const current = [...nav.querySelectorAll('[aria-current]')];
+  assert.deepEqual(current.map((a) => a.dataset.sub), ['recommendations']);
+  const back = nav.querySelector('[data-sub="regal"]');
+  assert.equal(back.getAttribute('aria-current'), null);
+  back.click();
+  await new Promise((r) => setTimeout(r, 0));
+  assert.ok(dom.app.querySelector('.section .cards'), 'the Regal segment did not lead back to the shelf');
 });

@@ -243,10 +243,12 @@ I18N.de = {
   'hub.preview.pokaleLeadTie': '{n} teilen Platz 1',
   'hub.seat.add': 'Platz dazu',
 
-  // Group headings in the desktop navigation rail (from 1280px up).
-  // Steht über den drei Listen, die NICHT das Regal sind: die zwei Archive und
-  // die Wunschliste (#560). Nicht mehr „Archiv“ — eine Wunschliste ist keins.
-  'rail.archive': 'Nicht im Regal',
+  // The off-shelf lists (#1500): the hub's group heading, the Regal's scope
+  // strip's nav label, and that strip's leading Regal segment.
+  'offShelf.title': 'Weitere Listen',
+  'offShelf.scope': 'Regal und Listen',
+  'offShelf.regal': 'Regal ({n})',
+  // The desktop navigation rail's Einstellungen row.
   'rail.settings': 'Einstellungen',
 
   // The round's Einstellungen screen (#561). It reuses 'rail.settings' as its

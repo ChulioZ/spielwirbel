@@ -504,13 +504,13 @@ const frontendGlobals = {
   // bruecke-shelf.js (#1239) — Die Brücke's Regal cards, density controls and Spielepass figures
   BRUECKE_DENSE_MIN: 'readonly', BRUECKE_BATCH: 'readonly', brueckeTitleLong: 'readonly',
   brueckeLetter: 'readonly', brueckeCard: 'readonly', brueckeShelfDensity: 'readonly',
-  brueckeOffShelfLine: 'readonly', brueckePassStats: 'readonly', brueckePassDist: 'readonly',
+  brueckePassStats: 'readonly', brueckePassDist: 'readonly',
   // #1280 — Der Tisch's young-round features (views-home.js, hub-cards.js, views-pokale.js)
   lobbyInviteSlip: 'readonly', lobbyNextStep: 'readonly', hubDemoSummary: 'readonly',
   hubDemoInvite: 'readonly', pokaleYoungLead: 'readonly',
   // off-shelf.js (#1185) — the four off-shelf destinations, one definition
-  offShelfEntries: 'readonly', offShelfSegments: 'readonly', openOffShelfSheet: 'readonly',
-  // hub-previews.js (#1185) — the hub's three sub-page previews + „Nicht im Regal"
+  offShelfEntries: 'readonly', offShelfSegments: 'readonly',
+  // hub-previews.js (#1185) — the hub's three sub-page previews + „Weitere Listen"
   HUB_PREVIEW_COVERS: 'readonly', HUB_PREVIEW_RANKS: 'readonly',
   hubShelfWorthPreviewing: 'readonly',
   hubPreviewCard: 'readonly', hubRegalPreview: 'readonly',

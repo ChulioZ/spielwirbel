@@ -1,6 +1,6 @@
 /* Spielwirbel – views: the Regal tab, the round's games library — search, the
-   tri-state tag filter chips, sort, the lazy cover grid, and the header control
-   that opens the four off-shelf screens. Rendered by showRound()
+   tri-state tag filter chips, sort, the lazy cover grid, and the scope strip
+   onto the four off-shelf screens (#1500). Rendered by showRound()
    (views-round.js).
    Part of the frontend; all files share one global script scope. */
 
@@ -456,38 +456,6 @@ function renderRegalTab(round, activeGames) {
     renderGames();
   }
 
-  // The ways off the active shelf — the two archives, retired ("Aussortiert")
-  // and completed ("Durchgespielt", #250), the Wunschliste (#560) and the
-  // recommendations (#682). All four are kept apart because the reason differs:
-  // two are games the group had, one is games they want, and one is games they
-  // do not own at all.
-  //
-  // `rail-owned`, so from 1280px up this is display:none and the rail's
-  // "Nicht im Regal" group carries the same four. Below that they used to be a
-  // row at the very BOTTOM of the grid — #334 fixed only the desktop half, and
-  // on a phone column of 1–2 covers a large Regal buries them a hundred-plus
-  // rows down (#777). Same footer-stranding #561 fixed for the round's actions.
-  //
-  // Appended OUTSIDE the branch above on purpose: `.section-tools` is otherwise
-  // only populated when the shelf has games, and an empty shelf can still have a
-  // full Wunschliste or Aussortiert — i.e. it would vanish exactly where it is
-  // most needed.
-  //
-  // NOT `rail-owned` under a lean rail (railIsLean, round-rail.js): Der Tisch's
-  // (#1262) and Ocean's Reling (#1211) carry no off-shelf group, so at desktop
-  // this button is the Regal's own way to the four — T3.3 draws it in the
-  // toolbar at 1440, and O3's „Vom Regal führt ein Weg zu Nicht im Regal".
-  // Das Programmheft draws it in the toolbar between 860 and 1279 (P3.3), and
-  // closes the shelf with the list at every width (P6.2). From 1280px its rail
-  // carries the „Nicht im Regal" group, so programmheft.css hides the toolbar
-  // copy there (`regal-tool--offshelf`) — rail, toolbar and list made three
-  // entries for one thing. Not `rail-owned`: the design's own `.link-btn`
-  // display rule outranks `.app .rail-owned`, measured at 1440.
-  const offShelfCls = ph ? ' regal-tool--wide regal-tool--offshelf' : railIsLean() ? '' : ' rail-owned';
-  const offShelfBtn = h(`<button class="link-btn${offShelfCls}" type="button"><i class="ti ti-archive" aria-hidden="true"></i> <span>${esc(t('rail.archive'))}</span></button>`);
-  offShelfBtn.addEventListener('click', () => openOffShelfSheet(round));
-  gamesTools.appendChild(offShelfBtn);
-
   // „Spiel hinzufügen" as a button; `cls` is the design's own modifier classes.
   const addBtn = (cls) => {
     const b = h(`<button type="button" class="btn btn--primary ${cls}"><i class="ti ti-plus" aria-hidden="true"></i> <span>${esc(t('round.addGame'))}</span></button>`);
@@ -507,9 +475,7 @@ function renderRegalTab(round, activeGames) {
     gamesSec.appendChild(addBtn('regal-add regal-add--dock'));
   }
 
-  // Ocean closes the shelf with the four ways off it (O3.3 draws them as a band
-  // of cards, O6.2 as one row above the dock), and puts „Spiel hinzufügen"
-  // where each width draws it: the dashed tile from 1280px (O3.3), a pill in
+  // Ocean puts „Spiel hinzufügen" where each width draws it: the dashed tile from 1280px (O3.3), a pill in
   // the toolbar from 600px (O6.7, and at desktop too since #1427 — the tile
   // alone was the end of a long scroll), the round plus bubble below that
   // (O6.2). All are rendered and CSS shows what each width needs;
@@ -518,7 +484,6 @@ function renderRegalTab(round, activeGames) {
   // state carries the add action itself, and a second one beside it is noise.
   const oceanAdds = ocean && activeGames.length > 0;
   if (oceanAdds) gamesTools.appendChild(addBtn('btn--sm regal-add regal-add--bar'));
-  if (ocean) gamesSec.appendChild(oceanOffShelfBand(round));
   // Das Programmheft: the black „Spiel hinzufügen" closes the toolbar at
   // desktop (P3.3); a phone gets a second copy, sticky above the dock, and keeps
   // the dashed tile in the grid (P6.2, #1427). CSS shows one copy per width, as
@@ -528,16 +493,13 @@ function renderRegalTab(round, activeGames) {
     gamesTools.appendChild(addBtn('regal-add regal-add--bar'));
     gamesSec.appendChild(addBtn('regal-add regal-add--dock'));
   }
-  if (ph) gamesSec.appendChild(phOffShelf(round));
   // Die Brücke: a cyan-wired „Spiel hinzufügen" closing the toolbar (B3.2) and,
   // on a phone, the same button full width under the grid (B2.6) — one per
-  // width in CSS, as Der Tisch's pair. Then the shelf ends on the one line of
-  // ways off it.
+  // width in CSS, as Der Tisch's pair.
   if (bruecke && activeGames.length > 0) {
     gamesTools.appendChild(addBtn('btn--sm bruecke-add bruecke-add--bar'));
     gamesSec.appendChild(addBtn('bruecke-add bruecke-add--dock'));
   }
-  if (bruecke) gamesSec.appendChild(brueckeOffShelfLine(round));
   // Klassisch closed the grid with the dashed tile alone. On a big
   // shelf that is a long scroll from the only add control, so it gets Der
   // Tisch's pair (#1427): a header button at 860px and up, a sticky bar above
@@ -554,6 +516,15 @@ function renderRegalTab(round, activeGames) {
     gamesSec.appendChild(fab);
   }
 
+  /* The scope strip — Regal · Wunschliste · Aussortiert · Durchgespielt ·
+     Könnte euch gefallen (#1500, off-shelf.js) — ABOVE the section, so it heads
+     the screen exactly as it heads the four lists (a direct child of `.app` on
+     all five, which is what the designs' `.app > .offshelf-seg` rules key on).
+     It is the Regal's ONLY way onto the four lists: everything below the grid
+     got lost, and an entry in the toolbar made „Nicht im Regal" a strange
+     category to find inside the Regal. Rendered whether or not the shelf has
+     games — an empty shelf can still have a full Wunschliste. */
+  app.appendChild(offShelfSegments(round, 'regal'));
   app.appendChild(gamesSec);
   // "Spiele verschieben" and "Einladen" used to sit in a footer below the grid
   // too. Neither is a shelf concern — one consolidates two rounds, the other
@@ -615,47 +586,4 @@ function phMoreButton(round, selectBtn) {
     btn.setAttribute('aria-expanded', 'true');
   });
   return btn;
-}
-
-// Das Programmheft's end of the shelf (P3.3: „Nicht im Regal" as a line of
-// links under a rule; P6.2: the same four as 44px rows). One list, laid out per
-// width; the entries and their counted labels come from off-shelf.js.
-function phOffShelf(round) {
-  const wrap = h(`<nav class="ph-offshelf" aria-labelledby="phOffShelfLabel">
-      <h2 class="ph-offshelf__label" id="phOffShelfLabel">${esc(t('rail.archive'))}</h2>
-      <ul class="ph-offshelf__list"></ul>
-    </nav>`);
-  const list = wrap.querySelector('ul');
-  offShelfEntries(round).forEach(({ label, sub, go }) => {
-    const li = h(`<li><a class="ph-offshelf__link"><span>${esc(label)}</span><i class="ti ti-chevron-right" aria-hidden="true"></i></a></li>`);
-    navLink(li.querySelector('a'), roundPath(round.id, sub), go);
-    list.appendChild(li);
-  });
-  return wrap;
-}
-
-// Ocean's end of the shelf (#1212): the four off-shelf destinations as a band
-// of link cards (O3.3), and — the phone's presentation — one row that opens the
-// same list as a sheet (O6.2). Both are rendered; CSS shows one per width.
-// Entries come from off-shelf.js, like every other presentation of the four.
-function oceanOffShelfBand(round) {
-  const entries = offShelfEntries(round);
-  const wrap = h(`<nav class="regal-offshelf" aria-label="${esc(t('rail.archive'))}">
-      <h2 class="regal-offshelf__label">${esc(t('rail.archive'))}</h2>
-      <div class="regal-offshelf__band"></div>
-    </nav>`);
-  const band = wrap.querySelector('.regal-offshelf__band');
-  entries.forEach(({ icon, label, sub, go }) => {
-    const card = h(`<a class="regal-offshelf__card"><span class="regal-offshelf__icon"><i class="ti ${icon}" aria-hidden="true"></i></span><span>${esc(label)}</span></a>`);
-    navLink(card, roundPath(round.id, sub), go);
-    band.appendChild(card);
-  });
-  const row = h(`<button type="button" class="regal-offshelf__row">
-      <span class="regal-offshelf__icon"><i class="ti ti-archive" aria-hidden="true"></i></span>
-      <span class="regal-offshelf__text"><span class="regal-offshelf__name">${esc(t('rail.archive'))}</span><span class="regal-offshelf__sub">${esc(entries.map((e) => e.label).join(' · '))}</span></span>
-      <i class="ti ti-chevron-right" aria-hidden="true"></i>
-    </button>`);
-  row.addEventListener('click', () => openOffShelfSheet(round));
-  wrap.appendChild(row);
-  return wrap;
 }

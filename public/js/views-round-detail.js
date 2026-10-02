@@ -221,11 +221,11 @@ async function showGameDetail(rid, gameId) {
   const imgStyle = coverCss ? `style="background-image:${coverCss}"` : '';
   const fallback = coverPlaceholder(game);
   app.innerHTML = '';
-  // Where this game lives, which both navigation controls below need. The rail
-  // marks that list instead of the Regal, which for an off-shelf game is the one
-  // section that by definition cannot contain it (#794).
+  // Where this game lives, which the back row below needs. The rail and the
+  // dock mark the Regal for every game since #1500: the off-shelf lists are
+  // views of the Regal now, not sections of their own.
   const offShelf = offShelfListOf(game);
-  renderSubScreenTabs(round, 'game', offShelf && offShelf.id);
+  renderSubScreenTabs(round, 'game');
   // The fallback destination is derived from the GAME's state, not from an
   // origin argument (#663). Real history still wins — backRow feeds navBack —
   // so this is the deep-link case, and a page reached by URL has no origin to

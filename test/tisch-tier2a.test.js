@@ -117,10 +117,15 @@ test('from 1280px the recap is a third column spanning every row', () => {
     '`1 / -1` would leave the recap in row 1 and push a gap under the timeline');
 });
 
-test('the segment strip is hidden in the app\'s design and shown in this one', () => {
+test('the segment strip is hidden by default, and shown under Klassisch and in this one', () => {
+  // Default-hidden so Klassisch's tray cannot leak into a design that does not
+  // restate a property (#1500, styles.css); each design switches it on.
   const app = APP_RULES.find(([sel]) => sel.trim() === '.offshelf-seg');
-  assert.ok(app, 'styles.css no longer hides the segments');
+  assert.ok(app, 'styles.css no longer hides the segments by default');
   assert.equal(declaredValue(app[1], 'display'), 'none');
+  const klassisch = APP_RULES.find(([sel]) => sel.trim() === ':root[data-design="klassisch"] .offshelf-seg');
+  assert.ok(klassisch, 'Klassisch does not switch the strip on');
+  assert.equal(declaredValue(klassisch[1], 'display'), 'flex');
   assert.equal(declaredValue(bodyOfIn(`${HOOK} .offshelf-seg`, RULES), 'display'), 'flex');
 });
 
@@ -162,20 +167,21 @@ const segmentsOf = (dom) => {
   }));
 };
 
-test('every off-shelf screen heads itself with the four segments, its own marked', async (t) => {
+test('every off-shelf screen heads itself with the Regal and the four segments, its own marked', async (t) => {
   for (const [view, sub] of [['showRetired', 'retired'], ['showCompleted', 'completed'], ['showWishlist', 'wishlist']]) {
     const segs = segmentsOf(await render(t, view, RID));
-    assert.deepEqual(segs.map((s) => s.href), ['retired', 'completed', 'wishlist', 'recommendations']
+    assert.deepEqual(segs.map((s) => s.href), ['regal', 'wishlist', 'retired', 'completed', 'recommendations']
       .map((s) => `/round/${RID}/${s}`), `${view}: the segments are not the four routes`);
     assert.deepEqual(segs.filter((s) => s.current === 'page').map((s) => s.href), [`/round/${RID}/${sub}`],
       `${view}: exactly its own segment must be current`);
   }
 });
 
-test('the segments count what the rail counts, and the recommendations screen has them too', async (t) => {
+test('the segments count the shelf and each list, and the recommendations screen has them too', async (t) => {
   const segs = segmentsOf(await render(t, 'showRetired', RID));
-  assert.equal(segs[0].text, 'Aussortiert (1)');
-  assert.equal(segs[2].text, 'Wunschliste (1)');
+  assert.equal(segs[0].text, 'Regal (1)');
+  assert.equal(segs[1].text, 'Wunschliste (1)');
+  assert.equal(segs[2].text, 'Aussortiert (1)');
 
   const rec = segmentsOf(await render(t, 'showRecommendations', RID));
   assert.equal(rec.find((s) => s.current === 'page').href, `/round/${RID}/recommendations`);

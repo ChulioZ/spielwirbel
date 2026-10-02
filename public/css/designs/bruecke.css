@@ -1991,7 +1991,7 @@
    Markup: views-chronik.js (`.session-card--log`, `.chronik-cols`),
    views-period-recap.js (Ocean's `.stat-chip--tile`), views-pokale.js
    (`.pokale-bars` with `rank`, and Der Tisch's `.pokale-split`), views-member.js
-   (the `panelled` branch) and off-shelf.js (`.offshelf-seg__title/__name/__n`).
+   (the `panelled` branch) and off-shelf.js (`.offshelf-seg__name/__n`).
    Klassisch renders none of it. The Abzeichen section stays in the default
    look — it is #1392's.
 
@@ -2469,27 +2469,17 @@
 :root[data-design="bruecke"] .member-owned__name { flex: 1 1 auto; min-width: 0; font-weight: 600; overflow-wrap: anywhere; }
 :root[data-design="bruecke"] .member-owned__row .score-pill { position: static; flex: none; }
 
-/* --- Nicht im Regal: titled tabs, name over count (B6.7) ------------------ */
-/* off-shelf.js renders the strip for every design and styles.css hides it.
-   Each tab is a real link to its own route. The three lists share a row of
-   equal tabs; „Könnte euch gefallen" suggests rather than keeps, so it sits
-   apart after them and carries no count. */
+/* --- The scope strip: tabs, name over count (B6.7, #1500) ---------------- */
+/* Heads the Regal and each of the four lists. Each tab is a real link to its
+   own route. The Regal and the three lists share a row of equal tabs; „Könnte
+   euch gefallen" suggests rather than keeps, so it sits apart after them and
+   carries no count. */
 :root[data-design="bruecke"] .offshelf-seg {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(0, 1.2fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr)) minmax(0, 1.2fr);
   gap: 6px;
   margin: 0 0 18px;
 }
-:root[data-design="bruecke"] .offshelf-seg__title {
-  grid-column: 1 / -1;
-  margin: 0 0 4px;
-  font-family: var(--font-display);
-  font-size: var(--display-m);
-  font-weight: 700;
-  letter-spacing: var(--track-display);
-  text-transform: uppercase;
-}
-:root[data-design="bruecke"][data-scheme="dark"] .offshelf-seg__title { color: var(--ink); }
 :root[data-design="bruecke"] .offshelf-seg__item {
   display: flex;
   flex-direction: column;
@@ -2527,8 +2517,10 @@
 }
 :root[data-design="bruecke"][data-scheme="dark"] .offshelf-seg__n { color: var(--ink); }
 :root[data-design="bruecke"] .offshelf-seg__item[data-sub="recommendations"] { margin-left: 10px; }
+/* A phone: two by two, the suggestions full width under them — four tabs in
+   one row would hyphenate every name at 390px. */
 @media (max-width: 560px) {
-  :root[data-design="bruecke"] .offshelf-seg { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  :root[data-design="bruecke"] .offshelf-seg { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   :root[data-design="bruecke"] .offshelf-seg__item[data-sub="recommendations"] { grid-column: 1 / -1; margin-left: 0; }
 }
 
@@ -4850,32 +4842,6 @@
   text-transform: uppercase;
 }
 
-/* ---- „Nicht im Regal: …" (B3.2/B2.6): one line of links under the shelf. */
-:root[data-design="bruecke"] .bruecke-offshelf {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px 14px;
-  margin-top: 22px;
-}
-:root[data-design="bruecke"] .bruecke-regal .bruecke-offshelf h2.bruecke-offshelf__label,
-:root[data-design="bruecke"] .bruecke-offshelf__link {
-  margin: 0;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: var(--track-notation);
-  text-transform: uppercase;
-}
-:root[data-design="bruecke"] .bruecke-offshelf__list { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 0; padding: 0; list-style: none; }
-:root[data-design="bruecke"] .bruecke-offshelf__link {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  min-height: var(--target-min);
-  text-decoration: none;
-}
-
 @media (max-width: 859px) {
   :root[data-design="bruecke"] .bruecke-regal .regal-head .regal-title h1 { font-size: 30px; }
   :root[data-design="bruecke"] .bruecke-regal .regal-title__count { font-size: 15px; }
@@ -5198,10 +5164,6 @@
 }
 :root[data-design="bruecke"][data-scheme="dark"] .bruecke-batch:not([hidden]) { border-top-color: var(--line); }
 :root[data-design="bruecke"][data-scheme="dark"] .bruecke-batch__count,
-:root[data-design="bruecke"][data-scheme="dark"] .bruecke-regal .bruecke-offshelf h2.bruecke-offshelf__label,
-:root[data-design="bruecke"][data-scheme="dark"] .bruecke-offshelf__link { color: var(--ink-soft); }
-:root[data-design="bruecke"][data-scheme="dark"] .bruecke-offshelf__link:hover { color: var(--ink); }
-:root[data-design="bruecke"][data-scheme="dark"] .bruecke-offshelf__link.is-rec { color: var(--brand); }
 
 :root[data-design="bruecke"][data-scheme="dark"] .gd-head { background: transparent; box-shadow: none; }
 :root[data-design="bruecke"][data-scheme="dark"] .gd-img { border: 1px solid var(--line); box-shadow: none; }

@@ -250,7 +250,12 @@ I18N.fr = {
   'hub.preview.pokaleLeadTie': '{n} ex æquo en tête',
   'hub.seat.add': 'Une place de plus',
 
-  'rail.archive': 'Hors de l’étagère',
+  // The off-shelf lists (#1500): the hub's group heading, the Regal's scope
+  // strip's nav label, and that strip's leading Regal segment.
+  'offShelf.title': 'Autres listes',
+  'offShelf.scope': 'Étagère et listes',
+  'offShelf.regal': 'Étagère ({n})',
+  // The desktop navigation rail's Einstellungen row.
   'rail.settings': 'Réglages',
 
   'roundSettings.config': 'Configurer ce groupe',

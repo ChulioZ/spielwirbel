@@ -103,15 +103,16 @@ test('Klassisch keeps its hub exactly: no band, rail-owned CTA and presets, bars
     'the Tisch Pokale lead line leaked into Klassisch');
 
   const group = dom.app.querySelector('.hub-offshelf');
-  assert.ok(group.classList.contains('rail-owned'));
+  // Not rail-owned since #1500: the Klassisch rail no longer carries the four.
+  assert.equal(group.classList.contains('rail-owned'), false);
   assert.equal(group.querySelectorAll('.ds-row.off-shelf__row').length, 4);
   assert.equal(dom.app.querySelector('.offshelf-tile'), null);
 
   const rail = dom.app.querySelector('.rail');
   assert.ok(rail.querySelector('.rail__cta'), 'the Klassisch rail lost its CTA');
   assert.ok(rail.querySelector('.hub-presets'), 'the Klassisch rail lost its presets');
-  assert.equal(rail.querySelectorAll('.rail__item').length, 9,
-    'the Klassisch rail is four sections, four off-shelf rows and Einstellungen');
+  assert.equal(rail.querySelectorAll('.rail__item').length, 5,
+    'the Klassisch rail is four sections and Einstellungen (its off-shelf rows went in #1500)');
 });
 
 // ------------------------------------------------------------- Der Tisch
@@ -175,7 +176,7 @@ test('Der Tisch shares ONE slot between the surviving previews, and the Pokale t
   assert.equal(dom2.app.querySelectorAll('.hub-previews > .hub-preview').length, 2);
 });
 
-test('Der Tisch offers „Nicht im Regal" as four count tiles, on the hub at every width', async (t) => {
+test('Der Tisch offers „Weitere Listen" as four count tiles, on the hub at every width', async (t) => {
   const dom = await hub(t, 'tisch');
   const group = dom.app.querySelector('.hub-offshelf--tiles');
   assert.ok(group, 'no tile group');
@@ -186,8 +187,8 @@ test('Der Tisch offers „Nicht im Regal" as four count tiles, on the hub at eve
   assert.deepEqual(tiles.map((el) => (el.querySelector('.offshelf-tile__n') || {}).textContent || null),
     ['1', '1', '1', null], 'the three lists carry their count; the recommendations never do');
   assert.deepEqual(tiles.map((el) => el.getAttribute('href').split('/').pop()),
-    ['retired', 'completed', 'wishlist', 'recommendations']);
-  assert.equal(tiles[0].getAttribute('aria-label'), dom.run("t('retired.link', { n: 1 })"));
+    ['wishlist', 'retired', 'completed', 'recommendations']);
+  assert.equal(tiles[0].getAttribute('aria-label'), dom.run("t('wish.link', { n: 1 })"));
 });
 
 test('Der Tisch reduces the rail to identity and the five links', async (t) => {
@@ -200,19 +201,19 @@ test('Der Tisch reduces the rail to identity and the five links', async (t) => {
   assert.ok(rail.querySelector('h1.rail__name'), 'the Start tab lost its one heading');
 });
 
-test('the Regal keeps its own way to the off-shelf lists at desktop once the Tisch rail stops carrying them', async (t) => {
-  for (const [design, railOwned] of [[null, true], ['tisch', false]]) {
+test('the Regal reaches the off-shelf lists through its strip in Klassisch and Der Tisch alike (#1500)', async (t) => {
+  for (const design of [null, 'tisch']) {
     const round = busyRound();
     const dom = loadApp({ locale: 'de' });
     t.after(() => dom.close());
     if (design) dom.run(`applyDesign(${JSON.stringify(design)})`);
     dom.set('api', async () => round);
     await dom.call('showRound', round.id, 'regal');
-    const label = dom.run("t('rail.archive')");
-    const btn = [...dom.app.querySelectorAll('.link-btn')].find((b) => b.textContent.trim() === label);
-    assert.ok(btn, `no „Nicht im Regal" button on the Regal (${design || 'klassisch'})`);
-    assert.equal(btn.classList.contains('rail-owned'), railOwned,
-      `${design || 'klassisch'}: the Regal's off-shelf button is ${railOwned ? 'not ' : ''}rail-owned`);
+    const nav = dom.app.querySelector('nav.offshelf-seg');
+    assert.ok(nav, `no scope strip on the Regal (${design || 'klassisch'})`);
+    // Never rail-owned: it is the Regal's only way onto the lists at any width.
+    assert.equal(nav.classList.contains('rail-owned'), false);
+    assert.equal(nav.querySelector('[aria-current="page"]').dataset.sub, 'regal');
   }
 });
 

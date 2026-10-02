@@ -590,8 +590,8 @@ function renderStartTab(round, activeGames) {
   // not awaited — this renderer is synchronous and the tab must not wait on it.
   renderRecoTeaser(round.id, grid);
 
-  /* „Nicht im Regal" (#1185): the four off-shelf destinations under one heading,
-     at EVERY width — below the grid because they are navigation rather than
+  /* „Weitere Listen" (#1185, #1500): the four off-shelf destinations under one
+     heading, at EVERY width — below the grid because they are navigation rather than
      content, above the quick actions because they are destinations rather than
      tasks. Unconditional, unlike every card above: a screen is not less
      reachable for being empty, and the Wunschliste of a round that has never

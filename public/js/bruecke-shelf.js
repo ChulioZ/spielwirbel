@@ -6,7 +6,7 @@
    What lives here and why it is not in views-regal.js / views-round-detail.js:
    both are near their budget, and these are the design's own presentations —
    the card with its opaque band, the density controls a 42-game shelf forces,
-   the one-line way off the shelf, and the Spielepass's stat tiles and rating
+   and the Spielepass's stat tiles and rating
    distribution. The view files ask `designIs('bruecke')` and hand over.
 
    No module.exports: this is DOM code, and the specs reach it through the jsdom
@@ -101,25 +101,6 @@ function brueckeShelfDensity({ jump, more }) {
     moreBtn.textContent = t('regal.batchMoreBruecke', { n: Math.min(BRUECKE_BATCH, rest) });
   }
   return { letters, foot, sync };
-}
-
-/* „Nicht im Regal: Aussortiert (2) · Durchgespielt (1) · Wunschliste (4) ·
-   Könnte euch gefallen →" (B3.2/B2.6) — the four destinations as one line of
-   real links under the shelf. Entries and their counted labels come from
-   off-shelf.js, like every other presentation of the four. */
-function brueckeOffShelfLine(round) {
-  const nav = h(`<nav class="bruecke-offshelf" aria-labelledby="brueckeOffShelfLabel">
-      <h2 class="bruecke-offshelf__label" id="brueckeOffShelfLabel">${esc(t('rail.archive'))}</h2>
-      <ul class="bruecke-offshelf__list"></ul>
-    </nav>`);
-  const list = nav.querySelector('ul');
-  offShelfEntries(round).forEach(({ sub, label, go }) => {
-    const rec = sub === 'recommendations';
-    const li = h(`<li><a class="bruecke-offshelf__link${rec ? ' is-rec' : ''}">${esc(label)}${rec ? ' <i class="ti ti-arrow-right" aria-hidden="true"></i>' : ''}</a></li>`);
-    navLink(li.querySelector('a'), roundPath(round.id, sub), go);
-    list.appendChild(li);
-  });
-  return nav;
 }
 
 /* The Spielepass's three figures (B13.4): the score, how often the round has

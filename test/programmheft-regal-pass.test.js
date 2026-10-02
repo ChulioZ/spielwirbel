@@ -105,31 +105,25 @@ test('Regal: the toolbar carries the black add and the wide tools, the phone get
   assert.equal(more.getAttribute('aria-expanded'), 'true');
 });
 
-test('Regal: the toolbar\'s „Nicht im Regal" yields to the rail from 1280px (three entries were one too many)', (t) => {
+/* #1500: the Programmheft desktop had NO entry above the grid — the toolbar
+   copy was hidden from 1280px on the strength of a rail group the lean
+   Programmheft rail never rendered, so the only way in was past the last game.
+   The scope strip replaced both the toolbar copy and the end-of-shelf list. */
+test('Regal: the scope strip heads the shelf, and nothing else leads to the lists', (t) => {
   const { dom, round } = boot(t);
   renderRegal(dom, round);
-  const btn = dom.app.querySelector('.regal-head .section-tools .ti-archive').closest('button');
-  // Wide (860–1279, no rail) and hidden ≥1280, where the rail's group and the
-  // end-of-shelf list already carry the four. Not `rail-owned`: the design's
-  // `:is(.link-btn, .back-link)` display rule outranks `.app .rail-owned`.
-  assert.ok(btn.classList.contains('regal-tool--wide'), 'the toolbar button is not a desktop tool');
-  assert.ok(btn.classList.contains('regal-tool--offshelf'), 'the toolbar button is not marked as the off-shelf tool');
+  const nav = dom.app.querySelector('nav.offshelf-seg');
+  assert.ok(nav, 'no scope strip');
+  assert.equal(nav.nextElementSibling, dom.app.querySelector('.ph-regal'), 'the strip does not head the shelf');
+  assert.equal(nav.querySelector('[aria-current="page"]').dataset.sub, 'regal');
+  for (const a of nav.querySelectorAll('a')) assert.match(a.getAttribute('href'), /^\/round\/r1\//);
+  assert.equal(dom.app.querySelector('.regal-head .ti-archive'), null, 'the toolbar still carries „Nicht im Regal"');
+  assert.equal(dom.app.querySelector('nav.ph-offshelf'), null, 'the end-of-shelf list is back');
+  // And no width hides the strip: the stale ≥1280 hide was the defect.
   const css = fs.readFileSync(path.join(ROOT, 'public/css/designs/programmheft.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
-  const hides = mediaBlocks(css).some(([q, body]) => /min-width:\s*1280px/.test(q) && !/max-width/.test(q)
-    && rulesOf(body).some(([sel, decl]) => /\.ph-regal \.regal-tool--offshelf\s*$/.test(sel.trim()) && /display:\s*none/.test(decl)));
-  assert.ok(hides, 'the toolbar button still shows beside the rail\'s „Nicht im Regal" group from 1280px');
-  assert.ok(dom.app.querySelector('nav.ph-offshelf'), 'the end-of-shelf list must stay');
-});
-
-test('Regal: „Nicht im Regal" closes the shelf as a labelled list of links', (t) => {
-  const { dom, round } = boot(t);
-  renderRegal(dom, round);
-  const nav = dom.app.querySelector('nav.ph-offshelf');
-  assert.ok(nav, 'no off-shelf list');
-  assert.equal(nav.getAttribute('aria-labelledby'), 'phOffShelfLabel');
-  const links = [...nav.querySelectorAll('.ph-offshelf__list > li > a.ph-offshelf__link')];
-  assert.ok(links.length >= 3, `expected the off-shelf destinations, got ${links.length}`);
-  for (const a of links) assert.match(a.getAttribute('href'), /^\/round\/r1\//);
+  const hidden = mediaBlocks(css).some(([, body]) => rulesOf(body)
+    .some(([sel, decl]) => /\.offshelf-seg\s*$/.test(sel.trim()) && /display:\s*none/.test(decl)));
+  assert.equal(hidden, false, 'a media query hides the Programmheft scope strip');
 });
 
 test('Regal: an EMPTY shelf takes no toolbar add — its tile is the only one', (t) => {

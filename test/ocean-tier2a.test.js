@@ -210,7 +210,7 @@ test('each segment names its destination, so a design can set the suggestions ap
   const dom = boot(t, 'ocean');
   await dom.call('showRetired', RID);
   const subs = [...dom.app.querySelectorAll('nav.offshelf-seg a')].map((a) => a.dataset.sub);
-  assert.deepEqual(subs, ['retired', 'completed', 'wishlist', 'recommendations']);
+  assert.deepEqual(subs, ['regal', 'wishlist', 'retired', 'completed', 'recommendations']);
 });
 
 // --- the stylesheet --------------------------------------------------------
