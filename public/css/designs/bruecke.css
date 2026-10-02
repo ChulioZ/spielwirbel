@@ -2223,14 +2223,24 @@
 /* Desktop: the recap becomes a right-hand column beside the log, as Ocean and
    Der Tisch place it — only on a screen that HAS a recap. The recap follows
    the log in the DOM (views-chronik.js, B6.1: the phone reads log first), and
-   its explicit column and row lift it beside the log regardless. */
+   its explicit column and row lift it beside the log regardless.
+
+   Written for Brücke's OWN shell, not Ocean's (#1499): from 1280 the rail is
+   the Abschnittsleiste, a full-width bar on row 1 (below), not a column. So the
+   bar spans both tracks, and the recap starts on row 2 — on row 1 it sat ABOVE
+   the bar. Every selector here carries `:has(.rail):has(> .precap)`, so it
+   outranks the bar block's `.app:has(.rail) > *` rules by specificity and
+   source order cannot undo it again. The log drops the reading-measure cap
+   that would otherwise leave a hole between it and the recap. */
 @media (min-width: 1280px) {
-  :root[data-design="bruecke"] .app:has(> .precap) {
-    grid-template-columns: var(--rail-w) minmax(0, 1fr) 380px;
+  :root[data-design="bruecke"] .app:has(.rail):has(> .precap) {
+    grid-template-columns: minmax(0, 1fr) 380px;
   }
-  :root[data-design="bruecke"] .app:has(> .precap) > .precap {
-    grid-column: 3;
-    grid-row: 1 / span 999;
+  :root[data-design="bruecke"] .app:has(.rail):has(> .precap) > .rail { grid-column: 1 / -1; grid-row: 1; }
+  :root[data-design="bruecke"] .app:has(.rail):has(> .precap) > *:not(.rail):not(.dock) { max-width: none; }
+  :root[data-design="bruecke"] .app:has(.rail):has(> .precap) > .precap {
+    grid-column: 2;
+    grid-row: 2 / span 999;
     align-self: start;
   }
   :root[data-design="bruecke"] .precap .recap__totals { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
