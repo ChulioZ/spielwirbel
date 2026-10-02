@@ -1,7 +1,9 @@
 'use strict';
 
 /* Die Brücke's Pokale right column (#1422, B3.4/B6.2): three plates — „Bestes
- * Spiel", „Längste Serie", „Meiste Vetos" — in place of the four trophy cards.
+ * Spiel", „Längste Serie", „Meiste Vetos" — FOLLOWED BY the four trophy cards,
+ * and the two plates that name a game leading with its cover (both operator
+ * decisions in the #1489 review, 2026-10-02).
  *
  * Rendered through the jsdom harness under Brücke AND Klassisch. What is pinned
  * is what regresses silently: a plate reading a different figure than the
@@ -23,7 +25,7 @@ const MEMBERS = [
   { id: 'm4', name: 'Dora' },
 ];
 const GAMES = [
-  { id: 'g1', title: 'Catan', tagIds: [] },
+  { id: 'g1', title: 'Catan', tagIds: [], image: '/uploads/catan.jpg' },
   { id: 'g2', title: 'Azul', tagIds: [] },
   { id: 'g3', title: 'Cascadia', tagIds: [] },
   { id: 'g4', title: 'Monopoly', tagIds: [], retired: true, retiredAt: '2026-06-01T00:00:00.000Z' },
@@ -116,18 +118,49 @@ test('Brücke sets B3.4’s three plates beside the board, in the sheet’s orde
   assert.match(vetoes.hrefs[0], /g2/);
 });
 
-test('the four trophy cards stand down under Brücke and stay under Klassisch', async (t) => {
-  const bruecke = boot(t, 'bruecke');
-  await bruecke.call('showRound', RID, 'pokale');
-  const labels = (dom) => [...dom.app.querySelectorAll('.section:first-of-type .pokale-card__label')].map(text);
-  assert.ok(!labels(bruecke).includes('Meistgespielt'), 'the Klassisch cards leaked into Brücke’s column');
-  assert.equal(bruecke.app.querySelector('.pokale-split .pokale-card__thumb'), null, 'a plate draws no cover');
+const KLASSISCH_CARDS = ['Meistgespielt', 'Bestbewertet', 'Siegesserie', 'Staubfänger'];
+const labels = (col) => [...col.querySelectorAll(':scope > .pokale-card > .pokale-card__label')].map(text);
 
-  const klassisch = boot(t, 'klassisch');
-  await klassisch.call('showRound', RID, 'pokale');
-  assert.equal(klassisch.app.querySelector('.pokale-card--plate, .pokale-cards--plates'), null);
-  assert.ok(labels(klassisch).includes('Meistgespielt'));
-  assert.ok(labels(klassisch).includes('Siegesserie'));
+test('under Brücke the four trophy cards follow the three plates in one column', async (t) => {
+  const dom = boot(t, 'bruecke');
+  await dom.call('showRound', RID, 'pokale');
+  const cols = dom.app.querySelectorAll('.pokale-cards');
+  const col = dom.app.querySelector('.pokale-split > .pokale-cards--plates');
+  // DOM order is visual order: plates first, then the cards — and no second
+  // `.pokale-cards` holding them somewhere else on the page's first section.
+  assert.deepEqual(labels(col), ['Bestes Spiel', 'Längste Serie', 'Meiste Vetos', ...KLASSISCH_CARDS]);
+  assert.equal([...cols].filter((c) => c.closest('.pokale-split')).length, 1, 'the cards left the plates’ column');
+  // They keep their own wiring: the Meistgespielt game still links and launches.
+  const most = col.children[3];
+  assert.match(most.querySelector('.pokale-game__title').getAttribute('href'), /g1/);
+  assert.ok(most.querySelector('.pokale-game__play'), 'the moved card lost its „Jetzt spielen" launcher');
+});
+
+test('the two plates that name a game lead with its cover; the streak plate does not', async (t) => {
+  const dom = boot(t, 'bruecke');
+  await dom.call('showRound', RID, 'pokale');
+  const [best, streak, vetoes] = dom.app.querySelectorAll('.pokale-card--plate');
+  const thumb = (c) => c.querySelector(':scope > .pokale-card__thumb');
+
+  // Catan has a cover: the trophy cards' frame, sized and loaded the same way.
+  assert.ok(thumb(best), '„Bestes Spiel" has no cover frame');
+  assert.ok(best.classList.contains('pokale-card--cover'));
+  assert.match(thumb(best).style.backgroundImage, /catan\.jpg/);
+  assert.match(thumb(best).getAttribute('href'), /g1/);
+  // Azul has none: the deterministic no-cover placeholder stands in.
+  assert.ok(thumb(vetoes), '„Meiste Vetos" has no cover frame');
+  assert.ok(thumb(vetoes).querySelector('.cover-ph'), 'a coverless game drew no placeholder');
+  assert.equal(thumb(vetoes).style.backgroundImage, '');
+  // A person, not a game.
+  assert.equal(thumb(streak), null);
+  assert.ok(!streak.classList.contains('pokale-card--cover'));
+});
+
+test('Klassisch keeps the four trophy cards, in order, and draws no plate', async (t) => {
+  const dom = boot(t, 'klassisch');
+  await dom.call('showRound', RID, 'pokale');
+  assert.equal(dom.app.querySelector('.pokale-card--plate, .pokale-cards--plates'), null);
+  assert.deepEqual(labels(dom.app.querySelector('.pokale-cards')), KLASSISCH_CARDS);
 });
 
 test('a young round holds the record streak back, as it does the current one', async (t) => {

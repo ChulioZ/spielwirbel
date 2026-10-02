@@ -836,7 +836,7 @@ public/
                           distribution (#1239)
     bruecke-pokale.js     Die Brücke's three Pokale plates beside the
                           leaderboard: „Bestes Spiel", „Längste Serie",
-                          „Meiste Vetos" (#1422)
+                          „Meiste Vetos" (#1422), then the four trophy cards
     saved-filters.js      a round's saved session filters (#1328): the chip's
                           prefill, the setup screen's „Filter speichern" sheet
                           and the Einstellungen list

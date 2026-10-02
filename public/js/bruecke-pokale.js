@@ -4,11 +4,19 @@
    here (.claude/rules/frontend-script-load-order.md).
 
    B3.4 puts THREE plates beside the leaderboard — „Bestes Spiel", „Längste
-   Serie", „Meiste Vetos" — where the other designs show the four trophy cards
-   (Meistgespielt, Bestbewertet, Siegesserie, Staubfänger). The design owns its
-   layout, so under Brücke these replace those four; every other design keeps
-   them untouched. A plate is the sheet's: an eyebrow, a display value, one sub
-   line — no cover and no icon (neither sheet draws one).
+   Serie", „Meiste Vetos". The four trophy cards the other designs show
+   (Meistgespielt, Bestbewertet, Siegesserie, Staubfänger) STAY, below the
+   plates in the same column (operator decision in the #1489 review,
+   2026-10-02): the sheets draw three, but dropping Meistgespielt and
+   Staubfänger lost two figures no plate replaces. DOM order is visual order —
+   plates first, then the cards — and every other design is untouched. A plate
+   is the sheet's: an eyebrow, a display value, one sub line, no icon. The
+   four cards are restyled into the same idiom in bruecke.css (#1422 block).
+
+   A plate that names a GAME leads with its cover (#979, the same review): the
+   `.pokale-card__thumb` frame + `wireGameCardHead`, i.e. the trophy cards' own
+   lazy loader, sizing (`coverUrl(…, COVER_THUMB)`) and coverless placeholder
+   (`coverPlaceholder`). „Längste Serie" names a person and has no cover.
 
    Every figure is one the app already shows somewhere else, read from the same
    source, so a plate cannot contradict the screen one tap away:
@@ -30,9 +38,13 @@
 // One plate. `links` is a list of [text, wire] pairs: each becomes an <a> in
 // the value line, wired by its own callback (a game or a member link), joined
 // by commas — a tie names every holder. A trailing `tail` is plain text after
-// the links („ · 3").
-function brueckePlate(label, links, sub, tail = '') {
+// the links („ · 3"). `cover` = { rid, lead, loadCover } puts the lead game's
+// cover in front, built exactly as gameCardHead/wireGameCardHead build it — a
+// tie leads with the FIRST game's cover, as the trophy cards do.
+function brueckePlate(label, links, sub, tail = '', cover = null) {
+  const thumb = cover ? `<a class="pokale-card__thumb">${coverPlaceholder(cover.lead)}</a>` : '';
   const card = h(`<div class="pokale-card pokale-card--plate">
+       ${thumb}
        <span class="pokale-card__label">${esc(label)}</span>
        <span class="pokale-card__value"></span>
        <span class="pokale-card__sub">${esc(sub)}</span>
@@ -45,6 +57,7 @@ function brueckePlate(label, links, sub, tail = '') {
     value.appendChild(a);
   });
   if (tail) value.appendChild(document.createTextNode(tail));
+  if (cover) wireGameCardHead(card, cover.rid, cover.lead, cover.loadCover);
   return card;
 }
 
@@ -60,11 +73,13 @@ function brueckeStreakSpan(from, to) {
 }
 
 /* The right column: a `.pokale-cards` holding whichever of the three plates
-   the round has data for (possibly none — the caller appends it only when it
-   has children, as it does the four cards). */
-function brueckePokalePlates(round, { shelfIndex, recap, finished, seriesHeld }) {
+   the round has data for, then the trophy `cards` views-pokale.js built (moved
+   in, not copied — they keep their own wiring). Possibly empty: the caller
+   appends it only when it has children, as it does the four cards. */
+function brueckePokaleColumn(round, cards, { shelfIndex, recap, finished, seriesHeld, loadCover }) {
   const col = h('<div class="pokale-cards pokale-cards--plates"></div>');
   const gameLinks = (games) => games.map((g) => [g.title, (a) => makeGameLink(a, round.id, g.id)]);
+  const coverOf = (games) => ({ rid: round.id, lead: games[0], loadCover });
 
   if (recap.best) {
     const games = recapGames(round, recap.best.gameIds);
@@ -73,7 +88,7 @@ function brueckePokalePlates(round, { shelfIndex, recap, finished, seriesHeld })
     const plays = games.length === 1 ? (shelfIndex.byGame[games[0].id] || {}).plays || 0 : null;
     const playedLine = plays === null ? ''
       : plays ? tn(plays, 'pokale.playedOne', 'pokale.played', { n: plays }) : t('pokale.dustyNever');
-    if (games.length) col.appendChild(brueckePlate(t('pokale.bestGame'), gameLinks(games), playedLine ? `${score} · ${playedLine}` : score));
+    if (games.length) col.appendChild(brueckePlate(t('pokale.bestGame'), gameLinks(games), playedLine ? `${score} · ${playedLine}` : score, '', coverOf(games)));
   }
 
   const rec = longestStreak(round, finished, { sessionEnding, sessionPartyCount });
@@ -94,7 +109,8 @@ function brueckePokalePlates(round, { shelfIndex, recap, finished, seriesHeld })
   if (most > 0) {
     const games = round.games.filter((g) => vetoes(g) === most);
     col.appendChild(brueckePlate(t('pokale.mostVetoes'), gameLinks(games),
-      tn(most, 'score.reasonVetoBrueckeOne', 'score.reasonVetoBruecke', { n: most })));
+      tn(most, 'score.reasonVetoBrueckeOne', 'score.reasonVetoBruecke', { n: most }), '', coverOf(games)));
   }
+  col.append(...cards.children);
   return col;
 }

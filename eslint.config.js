@@ -504,7 +504,7 @@ const frontendGlobals = {
   brueckeLetter: 'readonly', brueckeCard: 'readonly', brueckeShelfDensity: 'readonly',
   brueckeOffShelfLine: 'readonly', brueckePassStats: 'readonly', brueckePassDist: 'readonly',
   // bruecke-pokale.js (#1422) — Die Brücke's three Pokale plates
-  brueckePlate: 'readonly', brueckeStreakSpan: 'readonly', brueckePokalePlates: 'readonly',
+  brueckePlate: 'readonly', brueckeStreakSpan: 'readonly', brueckePokaleColumn: 'readonly',
   // #1280 — Der Tisch's young-round features (views-home.js, hub-cards.js, views-pokale.js)
   lobbyInviteSlip: 'readonly', lobbyNextStep: 'readonly', hubDemoSummary: 'readonly',
   hubDemoInvite: 'readonly', pokaleYoungLead: 'readonly',

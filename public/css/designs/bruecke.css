@@ -2565,13 +2565,17 @@
 /* ===== #1422 — Pokale: B3.4's right column ===== */
 /* Source: docs/design/bruecke/Bruecke-B3-Runde-Desktop.dc.html (B3.4) and
    Bruecke-B6-Phone-Rest.dc.html (B6.2). Markup: bruecke-pokale.js
-   (`.pokale-card--plate` inside `.pokale-cards--plates`), which replaces the
-   four trophy cards under Brücke only.
+   (`.pokale-card--plate` inside `.pokale-cards--plates`), under Brücke only.
+   The column holds the three plates FIRST, then the four trophy cards
+   (operator decision in the #1489 review, 2026-10-02), restyled below into the
+   plate idiom so the seven read as one stack.
 
    A plate is the sheet's: the notation eyebrow (#1245 already sets it in
-   mono), the value as a display line in capitals, one sub line — no cover, no
-   icon. One column at every width: beside the board from 1280px (#1245's
-   split), under it below. Colour rules are dark-gated; geometry is not. */
+   mono), the value as a display line in capitals, one sub line, no icon. A
+   plate naming a game leads with its cover (#979) on the trophy cards' own
+   64px frame. One column at every width: beside the board from 1280px
+   (#1245's split), under it below. Colour rules are dark-gated; geometry is
+   not. */
 :root[data-design="bruecke"] .pokale-cards--plates { grid-template-columns: minmax(0, 1fr); gap: 12px; }
 :root[data-design="bruecke"] .pokale-card--plate { gap: 5px; padding: 16px 18px; }
 :root[data-design="bruecke"] .pokale-card--plate .pokale-card__label { margin-top: 0; }
@@ -2581,6 +2585,7 @@
   letter-spacing: var(--track-display);
   text-transform: uppercase;
 }
+:root[data-design="bruecke"] .pokale-card--plate.pokale-card--cover { gap: 5px 14px; }
 :root[data-design="bruecke"] .pokale-card--plate .pokale-card__link { color: inherit; text-decoration: none; }
 :root[data-design="bruecke"] .pokale-card--plate .pokale-card__link:hover { text-decoration: underline; }
 :root[data-design="bruecke"][data-scheme="dark"] .pokale-card--plate {
@@ -2588,8 +2593,31 @@
   background: var(--surface);
 }
 :root[data-design="bruecke"][data-scheme="dark"] .pokale-card--plate .pokale-card__sub { font-weight: 400; color: var(--ink-2); }
+/* The four trophy cards under the plates: the same flat panel, the same
+   eyebrow-value-sub rhythm and no icon (a plate has none; the cover leads where
+   there is one). The value takes the plate's capitals one size down, so the
+   three plates the sheet draws still lead the stack. */
+:root[data-design="bruecke"] .pokale-cards--plates > .pokale-card:not(.pokale-card--plate) { gap: 5px; padding: 16px 18px; }
+:root[data-design="bruecke"] .pokale-cards--plates > .pokale-card--cover:not(.pokale-card--plate) { gap: 5px 14px; }
+:root[data-design="bruecke"] .pokale-cards--plates .pokale-card__icon,
+:root[data-design="bruecke"] .pokale-cards--plates .pokale-card__label .ti { display: none; }
+:root[data-design="bruecke"] .pokale-cards--plates .pokale-card__label { margin-top: 0; }
+:root[data-design="bruecke"] .pokale-cards--plates > .pokale-card:not(.pokale-card--plate) .pokale-card__value,
+:root[data-design="bruecke"] .pokale-cards--plates .pokale-game__title {
+  font-size: var(--display-s);
+  line-height: 1.1;
+  letter-spacing: var(--track-display);
+  text-transform: uppercase;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .pokale-cards--plates > .pokale-card:not(.pokale-card--plate) {
+  border-color: var(--line);
+  background: var(--surface);
+  box-shadow: none;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .pokale-cards--plates > .pokale-card:not(.pokale-card--plate) .pokale-card__sub { font-weight: 400; color: var(--ink-2); }
 @media (max-width: 560px) {
   :root[data-design="bruecke"] .pokale-card--plate { padding: 12px; }
+  :root[data-design="bruecke"] .pokale-cards--plates > .pokale-card:not(.pokale-card--plate) { padding: 12px; }
   :root[data-design="bruecke"] .pokale-card--plate .pokale-card__value { font-size: var(--display-s); }
 }
 
