@@ -5472,6 +5472,17 @@
   :root[data-design="programmheft"] .result-screen .tafel .trow.is-race {
     animation: ph-print 300ms cubic-bezier(.33, 1, .68, 1) calc(300ms + var(--print-i, 0) * 120ms) backwards;
   }
+  /* „Spielen" lifts the row it hands to the table (#1058, styles.css), on the
+     same element. The rule above outranks `.trow.is-lift`, so without this the
+     lift never played on a revealed row and `is-lift` sat there inert. Both are
+     listed: an animation is matched by name when the list changes, so adding
+     and removing `is-lift` neither replays the print nor loses the lift (the
+     Brücke reveal, #1492, needed the same pairing). */
+  :root[data-design="programmheft"] .result-screen .tafel .trow.is-race.is-lift {
+    animation:
+      ph-print 300ms cubic-bezier(.33, 1, .68, 1) calc(300ms + var(--print-i, 0) * 120ms) backwards,
+      trow-lift 0.35s var(--ease-out) both;
+  }
   @keyframes ph-print {
     from { clip-path: inset(0 100% 0 0); }
     to { clip-path: inset(0); }

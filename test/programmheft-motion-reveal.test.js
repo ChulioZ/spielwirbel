@@ -140,10 +140,12 @@ const gatedBody = (selector, name) => {
 
 const HEAD = ':root[data-design="programmheft"] .result-screen .page-head--result[data-print] .result-title';
 const ROW = ':root[data-design="programmheft"] .result-screen .tafel .trow.is-race';
+const ROW_LIFT = `${ROW}.is-lift`;
 const STAMP = ':root[data-design="programmheft"] .result-screen .tisch-slot[data-stamped] .tisch__box .stamp--table';
 
 test('ph-print: the head, then the rows, printed by 1 800ms', () => {
-  assert.deepEqual(usersOf('ph-print').sort(), [HEAD, ROW].sort(), 'exactly the head and the racing rows');
+  assert.deepEqual(usersOf('ph-print').sort(), [HEAD, ROW, ROW_LIFT].sort(),
+    'exactly the head and the racing rows (the lifted row repeats the print, below)');
   assert.match(gatedBody(HEAD, 'ph-print'), /ph-print 300ms /);
   const row = gatedBody(ROW, 'ph-print');
   const m = /ph-print (\d+)ms [^;]*calc\((\d+)ms \+ var\(--print-i, 0\) \* (\d+)ms\)/.exec(row);
@@ -158,6 +160,20 @@ test('ph-print: the head, then the rows, printed by 1 800ms', () => {
   assert.match(frames, /from\s*\{\s*clip-path:\s*inset\(0 100% 0 0\)/);
   assert.match(frames, /to\s*\{\s*clip-path:\s*inset\(0\)/);
   assert.doesNotMatch(row, /clip-path/, 'and the row itself rests unclipped');
+});
+
+test('„Spielen" still lifts a revealed row, and the lift does not replay the print', () => {
+  // The print rule outranks styles.css's `.trow.is-lift`, so until this rule the
+  // lift never played on a revealed row. Listing the lift BESIDE the print keeps
+  // both, and a list that keeps the print's name does not restart it when
+  // `is-lift` comes and goes.
+  const body = motionRules.find(([s]) => s === ROW_LIFT);
+  assert.ok(body, 'the lifted row has its own rule inside the gate');
+  const runs = /(?:^|;)\s*animation:\s*([^;]+)/.exec(body[1])[1].split(/,\s*(?=[a-z])/).map((p) => p.trim());
+  assert.equal(runs.length, 2);
+  assert.equal(runs[0], /animation:\s*([^;]+)/.exec(motionRules.find(([s]) => s === ROW)[1])[1].trim(),
+    'the print, exactly as the plain row has it');
+  assert.match(runs[1], /^trow-lift 0\.35s var\(--ease-out\) both$/, 'and the app\'s lift, exactly as styles.css has it');
 });
 
 test('ph-land: „Gespielt" lands hard on the finish, straight, no end frame', () => {
