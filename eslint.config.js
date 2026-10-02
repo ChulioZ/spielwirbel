@@ -498,7 +498,7 @@ const frontendGlobals = {
   phFirstRun: 'readonly',
   // bruecke-hub.js (#1238) — Die Brücke's lobby notice and round hub composition
   brueckeHubFrame: 'readonly', brueckeMission: 'readonly', brueckeMissionEmpty: 'readonly', brueckeYoungLine: 'readonly', brueckeHeroCompose: 'readonly',
-  brueckeStatus: 'readonly', brueckeResumeNotice: 'readonly',
+  brueckeStatus: 'readonly', brueckeResumeNotice: 'readonly', brueckeUpLink: 'readonly',
   // bruecke-shelf.js (#1239) — Die Brücke's Regal cards, density controls and Spielepass figures
   BRUECKE_DENSE_MIN: 'readonly', BRUECKE_BATCH: 'readonly', brueckeTitleLong: 'readonly',
   brueckeLetter: 'readonly', brueckeCard: 'readonly', brueckeShelfDensity: 'readonly',

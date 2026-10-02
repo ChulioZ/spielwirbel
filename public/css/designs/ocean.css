@@ -3476,8 +3476,6 @@
   font-size: 20px;
   line-height: 1.1;
 }
-/* The badge is small text, so it takes the text face back (O1.2). */
-:root[data-design="ocean"] .design-postcard__name .design-card__badge { font-family: var(--font); }
 :root[data-design="ocean"] .design-postcard__desc {
   font-size: var(--text-sm);
   font-weight: 600;
@@ -3641,21 +3639,6 @@
   font-size: var(--text-sm);
   line-height: 1.2;
 }
-:root[data-design="ocean"] .konto-design--card .design-card__badge { font-weight: 700; }
-/* The closing note as O5.5's info box: wave paper, the accent info glyph. */
-:root[data-design="ocean"] .konto-design__note {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  margin: 0;
-  padding: 14px 16px;
-  border-radius: var(--radius-lg);
-  font-weight: 600;
-  line-height: 1.5;
-}
-:root[data-design="ocean"] .konto-design__note .ti { flex: none; font-size: 21px; }
-:root[data-design="ocean"]:not([data-scheme="dark"]) .konto-design__note { background: var(--wave-paper); }
-:root[data-design="ocean"]:not([data-scheme="dark"]) .konto-design__note .ti { color: var(--brand); }
 
 /* ===== #1218 — Chronik, Pokale, Mitglied, Nicht im Regal ===== */
 /* Source: docs/design/ocean/Ocean-O13-Tier2a.dc.html (O13.1 Chronik, O13.2

@@ -114,7 +114,7 @@ test('#1215: under Ocean the chooser is postcards — every design by its sign, 
   const cards = [...sheet.querySelectorAll('.design-postcard')];
   assert.deepEqual(cards.map((c) => c.querySelector('input').value), DESIGN_REGISTRY.map((d) => d.id));
   assert.equal(cards[0].querySelector('input').value, CLASSIC_DESIGN);
-  assert.equal(cards[0].querySelector('.design-card__badge').textContent, 'Wie bisher');
+  assert.equal(sheet.querySelector('.design-card__badge'), null, 'no postcard carries a badge (#1445)');
   for (const card of cards) {
     const design = designById(card.querySelector('input').value);
     assert.ok(card.querySelector(`.design-tile--glyph .ti.${design.glyph}`), `${design.id} is missing its sign`);
@@ -186,7 +186,7 @@ test('#1215: Klassisch and Der Tisch never get the postcards', (t) => {
 
 /* ------------------------ 3. the Konto design section ------------------------ */
 
-test('#1215: under Ocean the Konto design section is signs and an info box (O5.5)', (t) => {
+test('#1215: under Ocean the Konto design section is signs, ending with the picker (O5.5, #1445)', (t) => {
   const dom = boot(t, 'ocean', ME);
   const wrap = dom.call('buildDesignSection', { ...ME });
   assert.ok(wrap.classList.contains('konto-design--card'));
@@ -198,11 +198,11 @@ test('#1215: under Ocean the Konto design section is signs and an info box (O5.5
     assert.ok(card.querySelector('.design-tile--glyph .ti'), 'each design shows its sign');
     assert.equal(card.querySelector('.design-card__desc'), null, 'O5.5 prints the name alone');
   }
-  const note = wrap.querySelector('.konto-design__note');
-  assert.ok(note && note.querySelector('.ti-info-circle'), 'the closing note is the info box');
-  // DOM order is the picture's: head, the signs, the note.
+  assert.equal(wrap.querySelector('.design-card__badge'), null, 'Klassisch carries no badge (#1445)');
+  // DOM order: head, then the signs — the section ends with the picker, no
+  // closing note since #1445.
   assert.deepEqual([...wrap.children].map((el) => el.classList[0]),
-    ['konto-design__head', 'design-picker', 'muted']);
+    ['konto-design__head', 'design-picker']);
 });
 
 test('#1215: Klassisch\'s Konto design section is untouched', (t) => {
@@ -211,7 +211,7 @@ test('#1215: Klassisch\'s Konto design section is untouched', (t) => {
   const wrap = dom.call('buildDesignSection', me);
   assert.equal(wrap.className, 'konto-design');
   assert.deepEqual([...wrap.children].map((el) => el.tagName.toLowerCase() + '.' + el.classList[0]),
-    ['h2.konto-section__h', 'p.muted', 'div.design-picker', 'p.muted']);
+    ['h2.konto-section__h', 'p.muted', 'div.design-picker']);
   assert.equal(wrap.querySelectorAll('.design-card__desc').length, DESIGN_REGISTRY.length);
-  assert.equal(wrap.querySelector('.design-tile--glyph, .konto-design__note'), null);
+  assert.equal(wrap.querySelector('.design-tile--glyph, .design-card__badge'), null);
 });
