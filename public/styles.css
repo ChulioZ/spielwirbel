@@ -5119,7 +5119,6 @@ a.k-tile:focus-visible,
    `--tile-*` and not the live tokens, because a tile must show the design it
    OFFERS while the page is wearing a different one. */
 .konto-design { margin-bottom: 30px; }
-.konto-design__foot { margin: 10px 0 0; font-size: var(--text-sm); }
 /* auto-fit over a min track, NOT a viewport media query: this list renders both
    inside a ~460px sheet and full-width on the Konto screen, so a `min-width:
    640px` breakpoint would put two columns in the sheet at desktop widths and

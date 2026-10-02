@@ -72,7 +72,8 @@ test('#1186: the picker renders one card per OFFERED design, current one marked'
   assert.equal(cards.length, DESIGN_REGISTRY.length);
   // Registry order, so Klassisch heads the list without a sort key.
   assert.equal(cards[0].querySelector('input').value, CLASSIC_DESIGN);
-  assert.equal(cards[0].querySelector('.design-card__badge').textContent, 'Wie bisher');
+  // No badge on Klassisch (#1445): „Wie bisher" was written for the flip.
+  assert.equal(list.querySelector('.design-card__badge'), null, 'no design card carries a badge');
   assert.equal(list.querySelector('input:checked').value, 'tisch');
   assert.ok(cards[1].classList.contains('is-on'));
 
