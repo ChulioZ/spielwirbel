@@ -79,9 +79,14 @@ A list that fires for routine work teaches people the dot means nothing, which
 costs more than never having built it. So the list is a budget, not a changelog,
 and an empty release is the normal case.
 
-Two mechanical constraints when you do add one: it goes **newest first** (the
-first entry's `revision` is what the dot compares against), and the list stays
-trimmed to roughly the last ten, exactly like `TERMS_CHANGELOG`.
+One mechanical constraint when you do add one: it goes **newest first** (the
+first entry's `revision` is what the dot compares against). The list is **not
+trimmed**: the operator keeps it as a growing history of what shipped (decision
+2026-10-02, at 19 entries), so old entries stay. That is no licence to lower the
+bar above; the budget is about what earns an entry, not how many are kept. (This
+replaces an earlier "roughly the last ten, like `TERMS_CHANGELOG`" — the terms
+changelog keeps its own five-entry limit, which is a legal-readability concern
+and unaffected.)
 
 **Rule:** whenever you implement a change (in particular in the `implement`
 skill's review phase, before committing), explicitly ask: *does this change make
