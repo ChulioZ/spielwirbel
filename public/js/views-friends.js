@@ -369,7 +369,12 @@ function accountColor(username) {
 // a friend keeps the same colour everywhere (no round context to borrow from).
 function friendAvatar(username, avatar, extraClass) {
   const name = username || '?';
-  const color = accountColor(name);
+  // Die Brücke paints a person in its own lightened row (designPersonTone, via
+  // memberTone — the top-bar disc already does): its initials are night ink,
+  // which every raw palette hex fails at 4.5:1 (2.8–4.35, measured on #1246),
+  // while every Brücke tone clears 6.9:1. Scoped to Brücke so the other
+  // designs' faces stay byte-identical.
+  const color = designIs('bruecke') ? memberTone(accountColor(name)) : accountColor(name);
   // The picture, when this account has one (#841). `avatar` is the path the
   // payload already carried (profile / friends list / feed), so these surfaces
   // never touch the batch endpoint. The colour stays as the fallback behind it:

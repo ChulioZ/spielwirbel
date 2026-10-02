@@ -283,6 +283,38 @@ function topLevelParts(selector) {
   return parts.map((p) => p.trim()).filter(Boolean);
 }
 
+test('Brücke paints a friend face in its own person tone, never a raw palette hex under night ink', async (t) => {
+  const { dom } = bootAccount(t, 'bruecke');
+  await dom.call('showFriends');
+  const faces = [...dom.app.querySelectorAll('.friends-screen .avatar')];
+  assert.ok(faces.length >= 2, `implausibly few faces (${faces.length})`);
+  const tones = new Set(designMarkers('bruecke').map((m) => m.color.toLowerCase()));
+  for (const face of faces) {
+    const bg = face.getAttribute('style').match(/background:\s*([^;]+)/)[1].trim().toLowerCase();
+    assert.ok(tones.has(bg), `${bg} is not one of Brücke's person tones`);
+  }
+
+  const klassisch = bootAccount(t, 'klassisch').dom;
+  await klassisch.call('showFriends');
+  const kFace = klassisch.app.querySelector('.friends-screen .avatar');
+  assert.equal(kFace.getAttribute('style'), `background:${klassisch.call('accountColor', 'dora')}`,
+    'Klassisch keeps the raw palette hex');
+});
+
+test('the status line keys on the LOBBY head, which no account screen carries', async (t) => {
+  const css = RAW.replace(/\/\*[\s\S]*?\*\//g, '');
+  const status = css.split('\n').filter((l) => l.includes('.topbar[data-status]'));
+  assert.ok(status.length >= 3, 'the status-line rules moved — re-read this test');
+  for (const line of status) {
+    assert.doesNotMatch(line, /\.lobby-head\)/, 'a bare .lobby-head matches every account screen');
+    assert.match(line, /\.lobby-head--home\)/);
+  }
+  const { dom } = bootAccount(t, 'bruecke');
+  await dom.call('showFriends');
+  assert.ok(dom.app.querySelector('.lobby-head'), 'the friends screen lost its head — re-read this test');
+  assert.equal(dom.app.querySelector('.lobby-head--home'), null);
+});
+
 test('every #1246 rule is scoped to Brücke, and every one reading a colour token is dark-gated', () => {
   assert.ok(SHEET.includes('/*#1246*/'), 'the section header moved — re-read this test');
   assert.ok(GATED_TOKENS.has('--ink-soft') && GATED_TOKENS.size > 30, 'the gated block was not found');

@@ -3405,10 +3405,12 @@
 /* ---- The top bar's status line (B3.1 „T+ 00:14:52 · Orbit stabil"). Pure
    decoration (B9 „Zierzeilen"): printed from the bar's data attribute with an
    EMPTY alternative text, so no screen reader reads it, and only while the
-   lobby or the hub is on screen, from 1280 — the phone bar has no room. It
+   lobby or the hub is on screen, from 1280 — the phone bar has no room. The
+   lobby's head is marked `.lobby-head--home` because every account screen
+   has a `.lobby-head` too, and the attribute is never cleared (#1246). It
    sits before the language picker, whose globe gives up its own auto margin. */
 @media (min-width: 1280px) {
-  :root[data-design="bruecke"] .topbar[data-status]:has(~ .app :is(.bruecke-hub, .lobby-head))::after {
+  :root[data-design="bruecke"] .topbar[data-status]:has(~ .app :is(.bruecke-hub, .lobby-head--home))::after {
     content: attr(data-status) / "";
     order: 1;
     margin-left: auto;
@@ -3418,8 +3420,8 @@
     text-transform: uppercase;
     white-space: nowrap;
   }
-  :root[data-design="bruecke"] .topbar[data-status]:has(~ .app :is(.bruecke-hub, .lobby-head)) > :not(.topbar__home):not(.topbar__context) { order: 2; }
-  :root[data-design="bruecke"] .topbar[data-status]:has(~ .app :is(.bruecke-hub, .lobby-head)) > .lang-picker__globe { margin-left: 0; }
+  :root[data-design="bruecke"] .topbar[data-status]:has(~ .app :is(.bruecke-hub, .lobby-head--home)) > :not(.topbar__home):not(.topbar__context) { order: 2; }
+  :root[data-design="bruecke"] .topbar[data-status]:has(~ .app :is(.bruecke-hub, .lobby-head--home)) > .lang-picker__globe { margin-left: 0; }
 }
 :root[data-design="bruecke"][data-scheme="dark"] .topbar::after { color: var(--ink-soft); }
 /* The lobby voice beside the wordmark („Flotte / Übersicht") is notation. */
