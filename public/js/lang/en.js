@@ -2031,8 +2031,6 @@ I18N.en = {
   'badges.card.next': 'Next tier {n}',
   'badges.card.tiers': 'Tiers',
   'badges.evergreen.lineGame': 'Played {game} {n} times',
-  // A Regal card's running number in Das Programmheft (#1373, P3.3).
-  'regal.cardNo': 'No. {n}',
   // Die Brücke's Regal and Spielepass (#1239, B16.2/B13.4).
   'detail.distTitleBruecke': 'How the round rates it',
   'detail.statPlaysBruecke': 'times played',

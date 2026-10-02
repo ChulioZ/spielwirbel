@@ -1919,8 +1919,6 @@ I18N.fr = {
   'badges.card.next': 'Palier suivant : {n}',
   'badges.card.tiers': 'Paliers',
   'badges.evergreen.lineGame': '{game} joué {n} fois',
-  // A Regal card's running number in Das Programmheft (#1373, P3.3).
-  'regal.cardNo': 'N° {n}',
   // Die Brücke's Regal and Spielepass (#1239, B16.2/B13.4).
   'detail.distTitleBruecke': 'Comment le groupe le note',
   'detail.statPlaysBruecke': 'parties jouées',

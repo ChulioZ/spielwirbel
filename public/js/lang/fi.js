@@ -1879,8 +1879,6 @@ I18N.fi = {
   'badges.card.next': 'Seuraava taso {n}',
   'badges.card.tiers': 'Tasot',
   'badges.evergreen.lineGame': '{game} pelattu {n} kertaa',
-  // A Regal card's running number in Das Programmheft (#1373, P3.3).
-  'regal.cardNo': 'Nro {n}',
   // Die Brücke's Regal and Spielepass (#1239, B16.2/B13.4).
   'detail.distTitleBruecke': 'Miten porukka arvioi',
   'detail.statPlaysBruecke': 'kertaa pelattu',

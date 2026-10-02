@@ -408,9 +408,6 @@ function renderRegalTab(round, activeGames) {
         return;
       }
       grid.replaceChildren(...cards, ...(bulk.isSelecting() ? [] : gridAddTile));
-      // The programme's running number follows what is on the page, so a sort
-      // or a filter renumbers rather than leaving gaps.
-      if (ph) cards.forEach((c, i) => { c.querySelector('.ph-card__nr').textContent = t('regal.cardNo', { n: i + 1 }); });
       bulk.sync();
     }
 
@@ -520,17 +517,18 @@ function cardMeta(g) {
   return `<div class="game-card__meta">${[players, time ? esc(time) : ''].filter(Boolean).join(' · ')}</div>`;
 }
 
-// A Programmheft card (#1373, P3.3/P6.2): the running number and the meta line
-// ABOVE the cover, the title, who owns it and the score UNDER it — nothing is
-// printed on the cover, which P1 forbids. The score is the pill's own figure and
-// evidence, set as a display numeral in its ramp tone rather than as a badge.
-// The number is filled by renderGames, which knows the order on the page.
+// A Programmheft card (#1373, P3.3/P6.2): the meta line ABOVE the cover, the
+// title, who owns it and the score UNDER it — nothing is printed on the cover,
+// which P1 forbids. The score is the pill's own figure and evidence, set as a
+// display numeral in its ramp tone rather than as a badge. There is no running
+// number (#1507): it was only the card's position on the page and it squeezed
+// the meta (players · play time) into an ellipsis on a phone.
 function phCard(round, g, fallback, score, evidence, expBadge) {
   const owners = ownerNames(round, g.ownerIds);
   const scored = score !== null;
   const scoreAttrs = scored ? ` data-stop="${scoreStop(score)}" title="${esc(evidence)}"` : '';
   return h(`<a class="game-card game-card--clickable ph-card">
-       <div class="ph-card__kicker"><span class="ph-card__nr"></span>${cardMeta(g)}${expBadge}</div>
+       <div class="ph-card__kicker">${cardMeta(g)}${expBadge}</div>
        <div class="game-card__img">${fallback}
          <span class="game-card__pick" aria-hidden="true"><i class="ti ti-check"></i></span>
        </div>
