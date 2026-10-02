@@ -327,7 +327,7 @@ test('bruecke.css: from 1280 every column is as tall as its content, and no slot
   // sized only by the flexible pass, so the members' own row stays their height.
   // As `auto` it took the middle/right wrappers' height and opened a 333px hole
   // under the members (measured in WebKit and Chromium).
-  assert.match(frame[1], /grid-template-rows:\s*auto auto auto 1fr auto;/);
+  assert.match(frame[1], /grid-template-rows:\s*auto auto auto 1fr;/);
   // The slots of the three columns are placed by their wrapper, never by an
   // area of their own: an area shares row lines, which is the hole.
   for (const slot of ['mission', 'last', 'suggest', 'pulse', 'care', 'previews', 'more', 'offshelf']) {
