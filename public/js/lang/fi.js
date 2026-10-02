@@ -1882,9 +1882,6 @@ I18N.fi = {
   // A Regal card's running number in Das Programmheft (#1373, P3.3).
   'regal.cardNo': 'Nro {n}',
   // Die Brücke's Regal and Spielepass (#1239, B16.2/B13.4).
-  'regal.lettersBruecke': 'Siirry kirjaimeen',
-  'regal.batchShownBruecke': '{shown}/{total} ladattu',
-  'regal.batchMoreBruecke': 'Lataa {n} lisää',
   'detail.distTitleBruecke': 'Miten porukka arvioi',
   'detail.statPlaysBruecke': 'kertaa pelattu',
   'detail.statVetoBruecke': '× ei työntöä',

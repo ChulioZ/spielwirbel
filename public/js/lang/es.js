@@ -1966,9 +1966,6 @@ I18N.es = {
   // A Regal card's running number in Das Programmheft (#1373, P3.3).
   'regal.cardNo': 'N.º {n}',
   // Die Brücke's Regal and Spielepass (#1239, B16.2/B13.4).
-  'regal.lettersBruecke': 'Saltar a una letra',
-  'regal.batchShownBruecke': '{shown} de {total} cargados',
-  'regal.batchMoreBruecke': 'Cargar {n} más',
   'detail.distTitleBruecke': 'Cómo lo valora la ronda',
   'detail.statPlaysBruecke': 'veces jugado',
   'detail.statVetoBruecke': '× sin empuje',
