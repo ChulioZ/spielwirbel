@@ -2011,6 +2011,9 @@ I18N.es = {
   'badges.moment.title': 'Recién conseguidas',
   'badges.moment.moreOne': '+{n} más',
   'badges.moment.more': '+{n} más',
+  // Das Programmheft's kicker on the result moment's band for a big tier (#1393):
+  // the round's Sessions 100 · 250 · 500 and Stammgast 100 · 250.
+  'badges.specialEdition': 'Edición especial',
   'badges.earnedIn': 'Conseguida en {month}',
   'badges.tierReached': 'Nivel {tier} alcanzado en {month}',
   'badges.card.next': 'Siguiente nivel: {n}',

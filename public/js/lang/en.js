@@ -2079,6 +2079,9 @@ I18N.en = {
   'badges.moment.title': 'Newly earned',
   'badges.moment.moreOne': '+{n} more',
   'badges.moment.more': '+{n} more',
+  // Das Programmheft's kicker on the result moment's band for a big tier (#1393):
+  // the round's Sessions 100 · 250 · 500 and Stammgast 100 · 250.
+  'badges.specialEdition': 'Special edition',
   'badges.earnedIn': 'Earned in {month}',
   'badges.tierReached': 'Reached tier {tier} in {month}',
   'badges.card.next': 'Next tier {n}',

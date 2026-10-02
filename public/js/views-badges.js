@@ -13,6 +13,9 @@
        .badge-band--round, .badge-member (a <details>, standings order)
          .badge-member__rank          „Platz N", the Tafel's place (#1386)
      .badge-moment                    the result screen, at most two marks
+       .badge-moment--special         Das Programmheft's „Sonderausgabe" band on
+                                      one item, with .badge-moment__kicker (#1393)
+     .badge__mark[data-tier]          the reached tier, for a design that prints it
      .hub-row--badges                 one line in the hub's Pokale preview
      .chronik-row--badge              one row per earning under its session
      .member-card__badges             the Tischkarte, earned only
@@ -48,6 +51,12 @@ const BADGE_MOMENT_MAX = 2;
 const BADGE_WIDE_FROM = 860;
 // The mark a secret entry shows until it is earned (all four sheets).
 const BADGE_SECRET_GLYPH = 'ti-lock-question';
+/* Das Programmheft's „Sonderausgabe" (#1393, P17.5): the big tiers that get
+   the vermilion band on the result moment instead of a plain strip slot —
+   decided on #1393 (2026-10-01) with #1463's longer ladders. Every other
+   design shows these like any other mark. */
+const BADGE_SPECIAL_EDITION = { sessions: [100, 250, 500], regular: [100, 250] };
+const badgeSpecialEdition = (key, tier) => (BADGE_SPECIAL_EDITION[key] || []).includes(tier);
 
 /* Where showBadges() wants the Pokale section to land, consumed by the next
    Pokale render of that round: { rid, mid } (mid null = the round's band). */
@@ -127,6 +136,12 @@ function badgeEarnedText(e, ctx) {
   return game ? `${base} · ${game}` : base;
 }
 
+/* The reached tier as data on the mark, for a design that prints it ON the
+   medal (Das Programmheft's seal band, #1393 — `content: attr(data-tier)`).
+   Never for a secret: its tier is part of what it hides. Klassisch draws
+   nothing from it; the name still carries the number for everyone. */
+const badgeTierAttr = (e) => (e.tier && e.state !== 'secret' ? ` data-tier="${esc(String(e.tier))}"` : '');
+
 const badgeProgress = (e) => (e.count !== null && e.of ? `${e.count} / ${e.of}` : '');
 const badgePct = (e) => (e.count !== null && e.of ? Math.max(0, Math.min(100, Math.round((e.count / e.of) * 100))) : null);
 
@@ -169,7 +184,7 @@ function badgeTile(e, ctx, opts = {}) {
   const glyph = e.state === 'secret' ? BADGE_SECRET_GLYPH : e.glyph;
   const line = opts.line === undefined ? badgeLine(e, ctx) : opts.line;
   const btn = h(`<button type="button" class="badge" data-state="${esc(e.state)}" data-key="${esc(e.key)}">
-       <span class="badge__mark"${pct === null ? '' : ` style="--pct:${pct}"`} aria-hidden="true"><i class="ti ${esc(glyph)}"></i></span>
+       <span class="badge__mark"${pct === null ? '' : ` style="--pct:${pct}"`}${badgeTierAttr(e)} aria-hidden="true"><i class="ti ${esc(glyph)}"></i></span>
        <span class="badge__name">${esc(badgeName(e))}</span>
        ${line === false ? '' : `<span class="badge__line">${esc(line)}</span>`}
        ${e.isNew ? `<span class="badge__new" aria-hidden="true">${esc(t('badges.newMark'))}</span>` : ''}
@@ -227,7 +242,7 @@ function openBadgeCard(anchor, e, ctx, holder) {
     const earned = badgeEarnedText(e, ctx);
     const card = h(`<div class="badge-card" data-state="${esc(e.state)}">
          <div class="badge-card__head">
-           <span class="badge__mark" aria-hidden="true"><i class="ti ${esc(glyph)}"></i></span>
+           <span class="badge__mark"${badgeTierAttr(e)} aria-hidden="true"><i class="ti ${esc(glyph)}"></i></span>
            <div class="badge-card__title">
              <h3 class="badge-card__name" id="${id}" tabindex="-1">${esc(badgeName(e))}</h3>
              ${holder ? `<div class="badge-card__holder">${esc(holder)}</div>` : ''}
@@ -472,8 +487,15 @@ function fillBadgeMoment(el, round, session) {
     .sort((a, b) => String(a.createdAt || '').localeCompare(String(b.createdAt || '')))
     .pop();
   if (!latest || latest.id !== session.id) return;
-  const earned = newSince(r, session.id);
+  let earned = newSince(r, session.id);
   if (!earned.length) return;
+  /* Das Programmheft's „Sonderausgabe" (#1393, P17.5): one big tier this
+     session reached leads the moment as a vermilion band. It takes one of the
+     two slots rather than adding a third, so it is moved to the front of the
+     list — a band cut off into „+N weitere" would be no edition at all. Only
+     the first such mark is the band; a second one stays an ordinary slot. */
+  const special = designIs('programmheft') ? earned.find((x) => badgeSpecialEdition(x.key, x.tier)) : null;
+  if (special) earned = [special].concat(earned.filter((x) => x !== special));
   const ctx = badgeContext(r);
   el.hidden = false;
   el.appendChild(h(`<h2 class="badge-moment__title">${iconText('ti-medal', t('badges.moment.title'))}</h2>`));
@@ -487,6 +509,10 @@ function fillBadgeMoment(el, round, session) {
     const id = `${x.memberId || ''}|${x.key}|${x.tier || ''}`;
     if (seen && !shown.has(id)) item.setAttribute('data-fresh', '');
     shown.add(id);
+    if (x === special) {
+      item.classList.add('badge-moment--special');
+      item.prepend(h(`<span class="badge-moment__kicker">${esc(t('badges.specialEdition'))}</span>`));
+    }
     item.appendChild(badgeTile(e, ctx, { holder, announceHolder: true, line: badgeCondition(e, ctx, { at: x.tier || undefined, gameId: x.gameId }) }));
     list.appendChild(item);
   });

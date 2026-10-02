@@ -420,7 +420,15 @@ What the app does, in detail. For a short overview see the
     in Pokale › Abzeichen (on Ocean from the editor split up only). Ocean draws each mark as a pearl in a Muschel
     (issue #1391): a full pearl when earned, a smaller one inside a ring while
     under way, an empty shell with a dashed rim while open, and a closed shell
-    for a secret — with each person's pearls threaded on a string.
+    for a secret — with each person's pearls threaded on a string. Das
+    Programmheft prints each mark as a medal in ink (issue #1393): a full seal
+    with the glyph knocked out to paper when earned, a paper circle closed by
+    an ink arc while under way, a dashed circle while open and a hatched one
+    for a secret, with the tier on a seal band under the medal. Its Pokale
+    rubric runs the round as a strip and, from 1024px, every person as a column
+    in standings order (six columns from seven people). On the result screen
+    the round's Sessions 100 · 250 · 500 and a Stammgast 100 · 250 take one of
+    the two places as a vermilion „Sonderausgabe" band.
 
     A win counts wherever it happened, an evening played alone included. That is
     a deliberate trade: weighting a win by the size of the field it beat is
