@@ -1,7 +1,7 @@
 'use strict';
 
 /* Die Brücke's Regal, Spielepass and add-game lookup (#1239: B3.2, B2.6,
- * B16.2, B13.4, B6.3, B6.4).
+ * B13.4, B6.3, B6.4).
  *
  * The pixels were judged in a browser at 390 and 1440 over a seeded 42-game
  * round; what is pinned here is what regresses silently —
@@ -9,8 +9,9 @@
  *   - text creeping back onto a cover (the score badge was the old shape);
  *   - the sort losing its „Sortiert:" statement, or offering anything but the
  *     app's three sortings;
- *   - the density rules of B16.2 — the letter jump and the 28-game batches from
- *     30 games — and the selection mode that must show every match;
+ *   - a long shelf rendering in batches again: B16.2's letter jump and 28-game
+ *     batches were dropped by operator decision (#1497), so every game is on
+ *     the page, as in every other design;
  *   - the B16.4 step-down for a title of 22 characters or more;
  *   - the Spielepass's figures disagreeing with the score they sit beside;
  *   - the Brücke rules that read a colour without the scheme gate, and the two
@@ -131,75 +132,23 @@ test('the Brücke shelf adds from the toolbar and under the grid, never from a d
   assert.equal(dom.app.querySelector('nav.offshelf-seg').nextElementSibling, sec, 'the strip does not head the shelf');
 });
 
-test('below 30 games there is no letter row and no batch foot', async (t) => {
-  const dom = boot(t, 'bruecke', roundWith(SMALL));
-  await dom.call('showRound', RID, 'regal');
-  assert.equal(dom.app.querySelector('.bruecke-letters, .bruecke-batch'), null);
-});
+// --- the whole shelf (#1497) -------------------------------------------------
 
-// --- density (B16.2) --------------------------------------------------------
-
-test('a 42-game shelf loads 28, says so, and loads the remaining 14 on request', async (t) => {
+test('a 42-game Brücke shelf renders all 42 cards, with no letter row and no batch foot', async (t) => {
   const dom = boot(t, 'bruecke', roundWith(BIG));
   await dom.call('showRound', RID, 'regal');
-  assert.equal(onPage(dom).length, 28);
-  const foot = dom.app.querySelector('.bruecke-batch');
-  assert.equal(foot.hidden, false);
-  assert.equal(text(foot.querySelector('.bruecke-batch__count')), dom.run("t('regal.batchShownBruecke', { shown: 28, total: 42 })"));
-  const more = foot.querySelector('.bruecke-batch__more');
-  assert.equal(text(more), dom.run("t('regal.batchMoreBruecke', { n: 14 })"));
-  more.click();
+  assert.equal(onPage(dom).length, 42, 'the shelf stopped short of the whole round');
+  assert.equal(dom.app.querySelector('.bruecke-letters, .bruecke-batch'), null, 'a density control is back');
+  // A sort and a search work over the whole shelf, not over a first batch.
+  const sort = dom.app.querySelector('.sort-select');
+  sort.value = 'name';
+  sort.dispatchEvent(new dom.window.Event('change'));
   assert.equal(onPage(dom).length, 42);
-  assert.equal(foot.hidden, true, 'the foot stays once everything is on the page');
-});
-
-test('the letter row lists the shelf\'s letters, digits last, and a jump lands on the letter in name order', async (t) => {
-  const dom = boot(t, 'bruecke', roundWith(BIG));
-  await dom.call('showRound', RID, 'regal');
-  const keys = () => [...dom.app.querySelectorAll('.bruecke-letters__key')];
-  assert.deepEqual(keys().map(text), [...'ABCDEFGHIKLMNOPRSTWZ', '#']);
-  // jsdom has no layout, so no scrollIntoView; a real browser always does.
-  dom.window.Element.prototype.scrollIntoView = () => {};
-  keys().find((k) => text(k) === 'Z').click();
-  assert.equal(dom.app.querySelector('.sort-select').value, 'name', 'a jump did not switch the sort to „Name"');
-  const shown = titles(dom);
-  assert.ok(shown.some((s) => s.startsWith('Z')), 'the Z games were not loaded before the jump');
-  assert.equal(text(dom.window.document.activeElement.querySelector('.game-card__title')), 'Zspiel 19',
-    'focus did not land on the first Z game');
-  assert.ok(dom.app.querySelector('.bruecke-letters__key.is-current'), 'the jumped-to letter is not marked');
-});
-
-test('a search narrows the letter row to what matches, and the foot to what is left', async (t) => {
-  const dom = boot(t, 'bruecke', roundWith(BIG));
-  await dom.call('showRound', RID, 'regal');
+  assert.equal(titles(dom).at(-1), 'Zspiel 39', 'the name sort did not reach the end of the shelf');
   const input = dom.app.querySelector('.bruecke-regal .search-pill input');
-  input.value = 'Aspiel';
+  input.value = 'Zspiel';
   input.dispatchEvent(new dom.window.Event('input'));
-  assert.deepEqual([...dom.app.querySelectorAll('.bruecke-letters__key')].map(text), ['A']);
-  assert.equal(dom.app.querySelector('.bruecke-batch').hidden, true);
-});
-
-test('selecting shows every match: „Alle wählen" cannot pick a card that is not on the page', async (t) => {
-  const dom = boot(t, 'bruecke', roundWith(BIG));
-  await dom.call('showRound', RID, 'regal');
-  const toggle = [...dom.app.querySelectorAll('.bruecke-regal .regal-head .link-btn')]
-    .find((b) => text(b) === dom.run("t('bulk.select')"));
-  toggle.click();
-  assert.equal(onPage(dom).length, 42);
-  assert.equal(dom.app.querySelector('.bruecke-letters').hidden, true);
-  assert.equal(dom.app.querySelector('.bruecke-batch').hidden, true);
-  toggle.click();
-  assert.equal(onPage(dom).length, 28, 'leaving the mode did not restore the batch');
-});
-
-test('brueckeLetter files accents under their base letter, Hangul whole, and the rest under #', (t) => {
-  const dom = boot(t, 'bruecke', roundWith(SMALL));
-  const letter = (s) => dom.run(`brueckeLetter(${JSON.stringify(s)})`);
-  assert.equal(letter('Ödland'), 'O');
-  assert.equal(letter('élan'), 'E');
-  assert.equal(letter('카탄'), '카', 'NFD split the syllable into a jamo fragment');
-  assert.equal(letter('7 Wonders'), '#');
-  assert.equal(letter('„Quoted"'), '#');
+  assert.deepEqual(titles(dom), ['Zspiel 19', 'Zspiel 39']);
 });
 
 test('Klassisch keeps its shelf: the dashed tile, no Brücke card, no density controls', async (t) => {
