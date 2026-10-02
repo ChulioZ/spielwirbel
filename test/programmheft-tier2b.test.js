@@ -73,8 +73,10 @@ test('Das Programmheft leads its settings with the marker picker, in its own eig
   await dom.call('showRoundSettings', RID);
   const main = dom.app.querySelector(':scope > .rs-ph > .rs-ph__col:not(.rs-ph__col--act)');
   assert.ok(main, 'no Programmheft composition');
-  const first = main.firstElementChild;
-  assert.ok(first.classList.contains('rs-ph__sec--marker'), 'the marker section must lead (P14)');
+  // P14.6 heads the set-up with the round's name (#1423), then the markers.
+  assert.ok(main.firstElementChild.classList.contains('rs-ph__sec--name'), 'the name field must lead (P14.6)');
+  const first = main.children[1];
+  assert.ok(first.classList.contains('rs-ph__sec--marker'), 'the marker section must follow the name (P14.6)');
   assert.equal(text(first.querySelector('h2')), dom.run("t('marker.title')"));
   const swatches = [...first.querySelectorAll('.marker-card')];
   const colours = designMarkers('programmheft').map((m) => m.color);
@@ -106,7 +108,7 @@ test('every heading takes its section with it: setup left, managing and danger r
   await dom.call('showRoundSettings', RID);
   const heads = (sel) => [...dom.app.querySelectorAll(`${sel} > .rs-ph__sec > h2`)].map(text);
   assert.deepEqual(heads('.rs-ph__col:not(.rs-ph__col--act)'), [
-    dom.run("t('marker.title')"), dom.run("t('roundSettings.config')"), dom.run("t('savedFilters.title')"),
+    dom.run("t('newRound.nameLabel')"), dom.run("t('marker.title')"), dom.run("t('roundSettings.config')"), dom.run("t('savedFilters.title')"),
   ]);
   assert.deepEqual(heads('.rs-ph__col--act'), [
     dom.run("t('roundSettings.manage')"), dom.run("t('roundSettings.danger')"),

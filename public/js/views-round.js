@@ -145,6 +145,33 @@ function renderSubScreenTabs(round, sub) {
   renderHubTabs(round, hubTabOwning(sub), sub);
 }
 
+// Save a new name for the round, or decline to: the commit half of both
+// round-name editors — the heading below and Das Programmheft's Name field on
+// Einstellungen (#1423) — shared so the two cannot disagree about a blank or an
+// unchanged entry. Resolves true only when a rename was written; every other
+// outcome has already told the user why.
+//
+// Blank is refused here so it never round-trips (the route validates the same
+// shape as the backstop), and an unchanged name is not sent at all: the server
+// would answer 200 having written nothing, but the toast would still claim a
+// rename happened.
+async function saveRoundName(round, raw) {
+  const name = String(raw || '').trim();
+  if (!name) {
+    toast(t('round.toast.needName'));
+    return false;
+  }
+  if (name === round.name) return false;
+  try {
+    await api('PATCH', `/api/rounds/${round.id}`, { name });
+    toast(t('round.toast.renamed'));
+    return true;
+  } catch (e) {
+    toast(e.message, { tone: 'error' });
+    return false;
+  }
+}
+
 // The round's name as an inline-editable heading (#562). Until then it was typed
 // once in showNewRound() and immutable for the round's whole life — the one
 // string the round owns that could not be corrected, while member names, game
@@ -186,29 +213,12 @@ function editableRoundName(round) {
     const commit = async () => {
       if (handled) return;
       handled = true;
-      const name = input.value.trim();
-      // Blank is refused here so it never round-trips (the route validates the
-      // same shape as the backstop), and an unchanged name is not sent at all:
-      // the server would answer 200 having written nothing, but the toast would
-      // still claim a rename happened.
-      if (!name) {
-        toast(t('round.toast.needName'));
-        input.replaceWith(el);
-        return;
-      }
-      if (name === round.name) return input.replaceWith(el);
-      try {
-        await api('PATCH', `/api/rounds/${round.id}`, { name });
-        toast(t('round.toast.renamed'));
-        // currentView() rather than a fixed showRound(): the rail carries this
-        // heading on every round screen, so the edit can be started from the
-        // Regal, the Chronik or a sub-screen too (#563's reasoning). It also
-        // refreshes the top-bar context label, which shows the round's name.
-        currentView();
-      } catch (e) {
-        toast(e.message, { tone: 'error' });
-        input.replaceWith(el);
-      }
+      // currentView() rather than a fixed showRound(): the rail carries this
+      // heading on every round screen, so the edit can be started from the
+      // Regal, the Chronik or a sub-screen too (#563's reasoning). It also
+      // refreshes the top-bar context label, which shows the round's name.
+      if (await saveRoundName(round, input.value)) currentView();
+      else input.replaceWith(el);
     };
     input.addEventListener('blur', commit);
     input.addEventListener('keydown', (e) => {
