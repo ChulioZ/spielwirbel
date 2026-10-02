@@ -1002,6 +1002,11 @@ I18N.en = {
   'result.titleSplit': 'The session was split across several tables.',
   // Das Programmheft's report kicker over the result headline (#1374).
   'result.reportKicker': 'Session report',
+  // Forest's result (#1468): the decorative kicker over the headline, and the fact line under the scene.
+  'result.kickerForest': 'In the clearing · {date}',
+  'result.factSessionNo': 'Session No. {n}',
+  'result.factWin': 'win no. {n} for {name}',
+  'result.factPlay': '{game}, play no. {n}',
   'log.split': '{actor} split the group across {n} tables',
   'startSession.crumb': 'Session',
   'startSession.title': 'New session',
@@ -1055,6 +1060,12 @@ I18N.en = {
   // Ocean (#1213): the pot is the Muschel, one of the design's five themed words.
   'startSession.potLabelOcean': 'games in the shell',
   'startSession.potLabelOceanOne': 'game in the shell',
+  // Forest's themed places on Neue Session (#1468, F9.5): the stump, its count, the question, the button.
+  'startSession.potHeadingForest': 'The tree stump',
+  'startSession.potLabelForest': 'games on the stump',
+  'startSession.potLabelForestOne': 'game on the stump',
+  'startSession.countQuestionForest': 'How many leaves fly?',
+  'startSession.drawForest': 'Whirl the leaves',
   'startSession.ownersHidden': '{n} more games are missing because their owners are not playing.',
   'startSession.ownersHiddenOne': '{n} more game is missing because its owner is not playing.',
   'startSession.poolEmpty': 'No game matches these settings yet.',
@@ -1187,6 +1198,10 @@ I18N.en = {
   'vote.deepOcean': 'Still in the deep',
   'vote.deepTextOceanOne': '{n} more card is waiting below. The result only surfaces once the vote is over.',
   'vote.deepTextOcean': '{n} more cards are waiting below. The result only surfaces once the vote is over.',
+  // Forest (#1468): the reveal verb on the finale, and the face-down cards beside the vote card.
+  'vote.revealForest': 'The cards light up.',
+  'vote.hiddenTextForestOne': '{n} more game stays face down until you reach it.',
+  'vote.hiddenTextForest': '{n} more games stay face down until you reach them.',
   // Ocean's shared vote (#1214, O4.3/O6.5): the pass-device blind, addressed to
   // the table, and its relay row; then the live vote's „in der Tiefe" block.
   'vote.turnOcean': '{name} is up.',

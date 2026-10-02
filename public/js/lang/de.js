@@ -1000,6 +1000,11 @@ I18N.de = {
   'result.titleSplit': 'Die Session wurde auf mehrere Tische aufgeteilt.',
   // Das Programmheft's report kicker over the result headline (#1374).
   'result.reportKicker': 'Spielbericht',
+  // Forest's result (#1468): the decorative kicker over the headline, and the fact line under the scene.
+  'result.kickerForest': 'Auf der Lichtung · {date}',
+  'result.factSessionNo': 'Session Nr. {n}',
+  'result.factWin': '{n}. Sieg für {name}',
+  'result.factPlay': '{game} zum {n}. Mal',
   'log.split': '{actor} hat auf {n} Tische aufgeteilt',
   'startSession.crumb': 'Session',
   'startSession.title': 'Neue Session',
@@ -1050,6 +1055,12 @@ I18N.de = {
   // Ocean (#1213): the pot is the Muschel, one of the design's five themed words.
   'startSession.potLabelOcean': 'Spiele in der Muschel',
   'startSession.potLabelOceanOne': 'Spiel in der Muschel',
+  // Forest's themed places on Neue Session (#1468, F9.5): the stump, its count, the question, the button.
+  'startSession.potHeadingForest': 'Der Baumstumpf',
+  'startSession.potLabelForest': 'Spiele auf dem Stumpf',
+  'startSession.potLabelForestOne': 'Spiel auf dem Stumpf',
+  'startSession.countQuestionForest': 'Wie viele Blätter fliegen?',
+  'startSession.drawForest': 'Laub wirbeln',
   'startSession.ownersHidden': '{n} weitere Spiele fehlen, weil ihre Besitzer nicht mitspielen.',
   'startSession.ownersHiddenOne': '{n} weiteres Spiel fehlt, weil sein Besitzer nicht mitspielt.',
   'startSession.poolEmpty': 'Zu diesen Einstellungen passt noch kein Spiel.',
@@ -1177,6 +1188,10 @@ I18N.de = {
   'vote.deepOcean': 'Noch in der Tiefe',
   'vote.deepTextOceanOne': 'Noch {n} Karte wartet unten. Das Ergebnis taucht erst auf, wenn die Abstimmung vorbei ist.',
   'vote.deepTextOcean': 'Noch {n} Karten warten unten. Das Ergebnis taucht erst auf, wenn die Abstimmung vorbei ist.',
+  // Forest (#1468): the reveal verb on the finale, and the face-down cards beside the vote card.
+  'vote.revealForest': 'Die Karten leuchten auf.',
+  'vote.hiddenTextForestOne': 'Noch {n} Spiel liegt verdeckt, bis du es erreichst.',
+  'vote.hiddenTextForest': 'Noch {n} Spiele liegen verdeckt, bis du sie erreichst.',
   // Ocean's shared vote (#1214, O4.3/O6.5): the pass-device blind, addressed to
   // the table, and its relay row; then the live vote's „in der Tiefe" block.
   'vote.turnOcean': '{name} ist dran.',

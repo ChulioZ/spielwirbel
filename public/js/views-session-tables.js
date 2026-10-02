@@ -80,7 +80,10 @@ async function showTableBuilder(round, session, gamesHint) {
   // with the date and the counts, and the app's own split sentence as the
   // headline („Die Session wurde auf mehrere Tische aufgeteilt.").
   const phSplit = done && children.length > 0 && designIs('programmheft');
-  const tischSplit = done && children.length > 0 && (designIs('tisch') || oceanWorn() || designIs('bruecke') || phSplit);
+  // Forest (#1468, F4.4/F6.7) takes it with its own kicker over the app's
+  // headline, and each table as a card of the clearing (forest.css).
+  const forestSplit = done && children.length > 0 && forestWorn();
+  const tischSplit = done && children.length > 0 && (designIs('tisch') || oceanWorn() || designIs('bruecke') || phSplit || forestSplit);
   const subline = tischSplit
     ? [
       tn(people.length, 'tables.peopleOne', 'tables.people'),
@@ -98,6 +101,7 @@ async function showTableBuilder(round, session, gamesHint) {
     tablesHead.querySelector('.muted').textContent = t('tables.sameChronik');
     tablesHead.firstElementChild.prepend(programmheftTablesKicker(session, children.length, people.length));
   }
+  if (forestSplit) composeForestTablesHead(tablesHead, children.length);
   app.appendChild(tablesHead);
 
   const body = h('<div></div>');

@@ -982,6 +982,11 @@ I18N.es = {
   'result.titleSplit': 'La sesión se repartió en varias mesas.',
   // Das Programmheft's report kicker over the result headline (#1374).
   'result.reportKicker': 'Crónica de la sesión',
+  // Forest's result (#1468): the decorative kicker over the headline, and the fact line under the scene.
+  'result.kickerForest': 'En el claro · {date}',
+  'result.factSessionNo': 'Sesión n.º {n}',
+  'result.factWin': 'victoria n.º {n} de {name}',
+  'result.factPlay': '{game}, partida n.º {n}',
   'log.split': '{actor} ha repartido a la gente en {n} mesas',
   'startSession.crumb': 'Sesión',
   'startSession.title': 'Sesión nueva',
@@ -1027,6 +1032,12 @@ I18N.es = {
   // Ocean (#1213): the pot is the Muschel, one of the design's five themed words.
   'startSession.potLabelOcean': 'juegos en la concha',
   'startSession.potLabelOceanOne': 'juego en la concha',
+  // Forest's themed places on Neue Session (#1468, F9.5): the stump, its count, the question, the button.
+  'startSession.potHeadingForest': 'El tocón',
+  'startSession.potLabelForest': 'juegos en el tocón',
+  'startSession.potLabelForestOne': 'juego en el tocón',
+  'startSession.countQuestionForest': '¿Cuántas hojas vuelan?',
+  'startSession.drawForest': 'Arremolinar las hojas',
   'startSession.ownersHidden': 'Faltan {n} juegos más porque sus propietarios no juegan.',
   'startSession.ownersHiddenOne': 'Falta {n} juego más porque su propietario no juega.',
   'startSession.poolEmpty': 'Todavía no hay ningún juego que encaje con estos ajustes.',
@@ -1147,6 +1158,10 @@ I18N.es = {
   'vote.deepOcean': 'Aún en lo profundo',
   'vote.deepTextOceanOne': 'Queda {n} carta esperando abajo. El resultado solo sale a flote cuando termine la votación.',
   'vote.deepTextOcean': 'Quedan {n} cartas esperando abajo. El resultado solo sale a flote cuando termine la votación.',
+  // Forest (#1468): the reveal verb on the finale, and the face-down cards beside the vote card.
+  'vote.revealForest': 'Las cartas se iluminan.',
+  'vote.hiddenTextForestOne': 'Queda {n} juego boca abajo hasta que llegues a él.',
+  'vote.hiddenTextForest': 'Quedan {n} juegos boca abajo hasta que llegues a ellos.',
   // Ocean's shared vote (#1214, O4.3/O6.5): the pass-device blind, addressed to
   // the table, and its relay row; then the live vote's „in der Tiefe" block.
   'vote.turnOcean': 'Le toca a {name}.',
