@@ -89,13 +89,15 @@ function badgeName(e, tier) {
 }
 
 /* The condition line. `n` is the threshold the line talks about: the next tier
-   while one is left (the top one once all are reached), the single goal, or the
-   fixed number of a yes/no entry. `allTiers` prints every tier („10 · 25 · 50 ·
-   100", the card's form); `at` pins it to a given tier (the moment's). */
-function badgeCondition(e, ctx, { allTiers, at } = {}) {
+   while one is left (the top one once all are reached), or the fixed number of
+   a yes/no entry. `allTiers` prints every tier („10 · 25 · 50 · 100", the
+   card's form); `at` pins it to a given tier (the moment's), and `gameId` to
+   the game that crossed THAT tier — Dauerbrenner's 10 may belong to another
+   game than its 25 (#1463), where `e.gameId` is the one holding the best. */
+function badgeCondition(e, ctx, { allTiers, at, gameId } = {}) {
   if (e.state === 'secret') return t('badges.secretLine');
   const def = badgeDefOf(e.key);
-  let n = def.goal || def.n || null;
+  let n = def.n || null;
   if (def.tiers) {
     const next = def.tiers.find((th) => !e.tier || th > e.tier);
     n = next === undefined ? def.tiers[def.tiers.length - 1] : next;
@@ -103,7 +105,8 @@ function badgeCondition(e, ctx, { allTiers, at } = {}) {
     if (allTiers) n = def.tiers.join(' · ');
   }
   // Dauerbrenner names its game in the condition (handover B10).
-  const g = e.gameId && (ctx.round.games || []).find((x) => x.id === e.gameId);
+  const gid = gameId || e.gameId;
+  const g = gid && (ctx.round.games || []).find((x) => x.id === gid);
   if (g) return t('badges.evergreen.lineGame', { game: g.title, n });
   // „1 Jahr" is the one condition whose number can be 1 (#1389 — the account
   // tier is the first placement to render Jahre at all).
@@ -484,7 +487,7 @@ function fillBadgeMoment(el, round, session) {
     const id = `${x.memberId || ''}|${x.key}|${x.tier || ''}`;
     if (seen && !shown.has(id)) item.setAttribute('data-fresh', '');
     shown.add(id);
-    item.appendChild(badgeTile(e, ctx, { holder, announceHolder: true, line: badgeCondition(e, ctx, { at: x.tier || undefined }) }));
+    item.appendChild(badgeTile(e, ctx, { holder, announceHolder: true, line: badgeCondition(e, ctx, { at: x.tier || undefined, gameId: x.gameId }) }));
     list.appendChild(item);
   });
   el.appendChild(list);

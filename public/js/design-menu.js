@@ -70,8 +70,7 @@ function openDesignMenu(btn, cfg) {
       const on = design.id === worn;
       const row = h(`<label class="design-menu__opt${on ? ' is-on' : ''}">
           <input type="radio" name="designMenu" value="${esc(design.id)}"${on ? ' checked' : ''}>
-          <span class="design-menu__name">${esc(t(design.labelKey))}${
-  design.id === CLASSIC_DESIGN ? `<span class="design-card__badge">${esc(t('design.klassisch.badge'))}</span>` : ''}</span>
+          <span class="design-menu__name">${esc(t(design.labelKey))}</span>
         </label>`);
       // designTile's colours, under a class of the menu's own: the design sheets
       // resize `.design-tile` for their Konto cards (Der Tisch's is 96px tall),
