@@ -228,7 +228,12 @@ I18N.fi = {
   'hub.preview.pokaleLeadTie': '{n} jakaa kärkipaikan',
   'hub.seat.add': 'Lisää paikka',
 
-  'rail.archive': 'Pois hyllystä',
+  // The off-shelf lists (#1500): the hub's group heading, the Regal's scope
+  // strip's nav label, and that strip's leading Regal segment.
+  'offShelf.title': 'Muut listat',
+  'offShelf.scope': 'Hylly ja listat',
+  'offShelf.regal': 'Hylly ({n})',
+  // The desktop navigation rail's Einstellungen row.
   'rail.settings': 'Asetukset',
 
   'roundSettings.config': 'Määritä tämä porukka',

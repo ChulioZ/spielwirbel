@@ -249,7 +249,12 @@ I18N.it = {
   'hub.preview.pokaleLeadTie': '{n} a pari merito in testa',
   'hub.seat.add': 'Aggiungi posto',
 
-  'rail.archive': 'Fuori dallo scaffale',
+  // The off-shelf lists (#1500): the hub's group heading, the Regal's scope
+  // strip's nav label, and that strip's leading Regal segment.
+  'offShelf.title': 'Altre liste',
+  'offShelf.scope': 'Scaffale e liste',
+  'offShelf.regal': 'Scaffale ({n})',
+  // The desktop navigation rail's Einstellungen row.
   'rail.settings': 'Impostazioni',
 
   'roundSettings.config': 'Configura questo gruppo',

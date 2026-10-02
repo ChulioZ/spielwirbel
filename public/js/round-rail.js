@@ -1,8 +1,10 @@
 /* Spielwirbel – the round's desktop navigation rail (#332 follow-up).
 
    From 1280px up, a round's navigation lives in a persistent left rail instead
-   of the in-flow tab strip: identity, the one big CTA, the four sections, the
-   two archives and one entry for the round's Einstellungen screen.
+   of the in-flow tab strip: identity, the one big CTA, the four sections and
+   one entry for the round's Einstellungen screen. (It carried a „Nicht im
+   Regal" group too until #1500 — the four lists are reached through the
+   Regal's scope strip now, in every design.)
 
    WHY IT IS A RAIL. The strip lives inside `.app`, so the column's width and the
    strip's position are coupled: giving grid screens a wider column moved the
@@ -36,16 +38,18 @@ const RAIL_SETTINGS_SUB = ['settings', 'tags', 'design'];
 // Round sub-screens that have their OWN rail entry. On these, that entry is
 // marked current and no section is — the alternative (highlighting the section
 // that owns them, as the strip must) would light up two things at once.
-const RAIL_OWN_ENTRY = ['retired', 'completed', 'wishlist', 'recommendations', ...RAIL_SETTINGS_SUB];
+// The four off-shelf lists left this list with their rail group (#1500): they
+// are views of the Regal now, so the Regal is the section they sit `inside`.
+const RAIL_OWN_ENTRY = [...RAIL_SETTINGS_SUB];
 
-/* Does the rail carry ONLY navigation — no CTA, no presets, no off-shelf rows?
+/* Does the rail carry ONLY navigation — no identity, no CTA, no presets?
    Der Tisch's rail is identity plus the five links (#1262); Ocean's Reling is
    the five links alone (#1211, O3.2 „Reling 104 px"); the Programmheft's is
    the section line of the printed page, the five links alone (#1372, P3.2).
    Every screen that marks
    an element `rail-owned` because "the rail carries a copy" has to ask this,
    or the element vanishes from 1280px up with no copy anywhere — the Regal's
-   off-shelf trigger is the one that did (views-regal.js). One question, so a
+   old off-shelf trigger is the one that did. One question, so a
    third lean design is one line here rather than a hunt for every caller. */
 function railIsLean() {
   return designIs('tisch') || designIs('ocean') || designIs('bruecke') || designIs('programmheft');
@@ -61,10 +65,10 @@ function railIsLean() {
 // Marking `inside` as current instead would leave a desktop user on Tags with
 // no rail route back to the screen that owns it.
 //
-// `inside` has TWO producers, not one. Einstellungen owns Tags/Design, and the
-// three off-shelf rows own the detail page of a game sitting in them (#794) —
-// a wished-for game is on no shelf, so the Regal, which by definition cannot
-// contain it, must not be the row that claims the marker.
+// `inside` is produced by Einstellungen, which owns Tags/Design. The three
+// off-shelf rows used to produce it too, for the detail page of a game sitting
+// in them (#794); since #1500 those lists are views of the Regal, so a wished
+// or retired game's detail page marks the Regal like any other game's.
 function railItem({ icon, label, path, onNav, current, inside }) {
   const mark = current ? 'page' : inside ? 'true' : '';
   const el = h(`<a class="rail__item${current || inside ? ' is-active' : ''}"${mark ? ` aria-current="${mark}"` : ''}>
@@ -73,20 +77,13 @@ function railItem({ icon, label, path, onNav, current, inside }) {
   return navLink(el, path, current ? null : onNav);
 }
 
-function buildRoundRail(round, activeTab, sub, offShelf) {
+function buildRoundRail(round, activeTab, sub) {
   const rid = round.id;
   const activeGames = round.games.filter((g) => !g.retired && !g.completed && !g.wish);
   const playedCount = round.sessions.filter((s) => s.finished).length;
   // A sub-screen with its own entry claims the current marker, so the section
   // list stays unhighlighted rather than lighting up two rows at once.
   const ownEntry = sub && RAIL_OWN_ENTRY.includes(sub) ? sub : null;
-  // The same one-marker rule, for a row that owns the screen without BEING it:
-  // the detail page of an off-shelf game is claimed by that game's list (#794).
-  // `offShelf` and `ownEntry` are mutually exclusive by construction — only the
-  // game detail passes one, and `game` has no entry of its own — but the
-  // sections below ask a single "is the marker already spoken for" question so
-  // that stays true no matter which of the two is set.
-  const claimed = ownEntry || offShelf || null;
 
   const rail = h(`<aside class="rail" aria-label="${esc(t('a11y.roundNav'))}"></aside>`);
 
@@ -144,9 +141,8 @@ function buildRoundRail(round, activeTab, sub, offShelf) {
 
   /* Der Tisch's rail is identity plus the FIVE links — Start, the three
      sections and Einstellungen (T3.2, #1262). The one action and its presets sit
-     on the hub's felt band, and the four off-shelf destinations are the hub's
-     count tiles, so the rail repeating them would be the same control twice on
-     one screen. On the other tabs the CTA is one tap away on Start — the phone's
+     on the hub's felt band, so the rail repeating them would be the same
+     control twice on one screen. On the other tabs the CTA is one tap away on Start — the phone's
      shape at every width. Klassisch keeps all of it, byte for byte. */
   const lean = railIsLean();
 
@@ -191,8 +187,8 @@ function buildRoundRail(round, activeTab, sub, offShelf) {
     // marked, and stays a live link, but never "page". Same distinction the
     // strip draws (#331); here it only applies when the screen has no entry of
     // its own.
-    const inside = !claimed && sub && tabId === activeTab;
-    const el = h(`<a class="rail__item${tabId === activeTab && !claimed ? ' is-active' : ''}"${inside ? ' aria-current="true"' : ''}>
+    const inside = !ownEntry && sub && tabId === activeTab;
+    const el = h(`<a class="rail__item${tabId === activeTab && !ownEntry ? ' is-active' : ''}"${inside ? ' aria-current="true"' : ''}>
          <i class="ti ${icon}" aria-hidden="true"></i><span>${esc(label)}</span>
        </a>`);
     const current = tabId === activeTab && !sub;
@@ -201,43 +197,6 @@ function buildRoundRail(round, activeTab, sub, offShelf) {
     nav.appendChild(el);
   });
   rail.appendChild(nav);
-
-  // --- Off the shelf. Counted here rather than on the Regal, where they were a
-  // link at the very bottom of the grid and effectively undiscoverable (#334).
-  // The Wunschliste (#560) joins the two archives: it is not one, but it is the
-  // third place a game can sit while not being on the shelf, and it is reached
-  // the same way.
-  const archive = h(`<div class="rail__group">
-       <div class="rail__label">${esc(t('rail.archive'))}</div>
-     </div>`);
-  // The rows themselves come from off-shelf.js (#1185) — same four, same
-  // counts, same order as the Regal's sheet and the hub's „Nicht im Regal"
-  // group. What stays here is the only thing that is the RAIL's: which row is
-  // current, and which one claims the detail page of a game sitting in it.
-  //
-  // Recommendations (#682) sit in this group rather than in a fourth one: the
-  // label is literally "Nicht im Regal", and a game the round does not own is
-  // the furthest thing from being on the shelf. It carries no count — off-shelf.js
-  // states why — and no `inside`, because no game detail page belongs to it.
-  //
-  // It MUST be here, not only in the Regal footer: that footer is `rail-owned`,
-  // so from 1280px up it is display:none and the rail is the only way in. #682
-  // shipped without this row and the feature was unreachable on a desktop-width
-  // window — see .claude/rules/responsive-content-width.md, which is exactly the
-  // "walk the width transitions" check that was skipped.
-  offShelfEntries(round).forEach(({ icon, label, sub, go, count }) => {
-    archive.appendChild(railItem({
-      icon,
-      label,
-      path: roundPath(rid, sub),
-      onNav: go,
-      current: ownEntry === sub,
-      // Only a list of the round's OWN games can hold a game detail page, which
-      // is exactly the set off-shelf.js gives a count.
-      inside: count !== null && offShelf === sub,
-    }));
-  });
-  if (!lean) rail.appendChild(archive);
 
   // --- Settings: ONE row, standing for the whole group (#581). It briefly held
   // six — Tags, Provider, Design, Spiele verschieben, Einladen and the screen

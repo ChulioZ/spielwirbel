@@ -1557,7 +1557,7 @@ a.hub-row:hover { background: var(--sunken-soft); }
 .hub-preview__score { flex: none; font-weight: 700; font-variant-numeric: tabular-nums; }
 .hub-preview__last { font-size: var(--text-sm); color: var(--ink-soft); margin-top: 6px; }
 
-/* ---- „Nicht im Regal" on the hub (#1185) -------------------------------- */
+/* ---- „Weitere Listen" on the hub (#1185, retitled #1500) ---------------- */
 
 /* The heading IS the group, so the four rows carry no count of their own beyond
    the one in each label — the V1 Tisch sheet's mistake was a fifth „Nicht im
@@ -5272,9 +5272,9 @@ a.k-tile:focus-visible,
    copied — a second block of the same six declarations is the drift
    .claude/rules/shared-constants-across-the-stack.md is about, one layer down.
 
-   The Regal's off-shelf sheet (#777) joins the two LAYOUT rules below but not
-   this reset: its rows are <a href> destinations, not <button>s, so they carry
-   none of the form-control defaults these six declarations undo. */
+   The hub's „Weitere Listen" rows join the two LAYOUT rules below but not this
+   reset: they are <a href> destinations, not <button>s, so they carry none of
+   the form-control defaults these six declarations undo. */
 .rs-row,
 .wish-pick__row {
   width: 100%;
@@ -5289,11 +5289,10 @@ a.k-tile:focus-visible,
    a flex row globally would lay those out side by side (the same reasoning that
    scopes `.provider-row .ds-row__main` below).
 
-   `.off-shelf__row` has TWO hosts since #1185 — the Regal's sheet and the hub's
-   „Nicht im Regal" group — and they deliberately share the class rather than
-   each having their own. The rows are one component; a second class would have
-   to re-declare this rule, which is the drift that makes an icon sit flush
-   against its label on whichever host nobody looked at. */
+   `.off-shelf__row` is the hub's „Weitere Listen" row (it had a second host,
+   the Regal's off-shelf sheet, until #1500). Ocean's hub restyles it under the
+   same name; a parallel class would have to re-declare this rule, which is the
+   drift that makes an icon sit flush against its label. */
 .rs-row .ds-row__main,
 .wish-pick__row .ds-row__main,
 .off-shelf__row .ds-row__main,
@@ -10496,13 +10495,52 @@ kbd {
 }
 
 /* ---- Archive rows ---- */
-/* The off-shelf SEGMENTS (#1196, offShelfSegments in off-shelf.js). Hidden in
-   the app's own design, which reaches the same four screens through the rail and
-   the Regal; a design that draws them as a segment strip turns them on
-   (tisch.css). Kept in the markup rather than built by the design, because a
-   stylesheet cannot add a link — and a second copy of the list in a design would
-   be the drift off-shelf.js exists to prevent. */
+/* The scope strip (#1196, #1500; offShelfSegments in off-shelf.js): Regal ·
+   Wunschliste · Aussortiert · Durchgespielt · Könnte euch gefallen, heading the
+   Regal and each list. Kept in the markup rather than built by a design,
+   because a stylesheet cannot add a link — and a second copy of the list in a
+   design would be the drift off-shelf.js exists to prevent.
+
+   Hidden by default and switched on per design, Klassisch included: every
+   design sheet draws its own strip, and an unscoped Klassisch rule here would
+   leak its tray, padding and pill shape into whichever of their properties a
+   design does not happen to restate (Die Brücke's grid sets no background,
+   Ocean's tray no border). Klassisch's own is a sunken tray with the current
+   view lifted out of it as a paper pill — ONE ROW THAT SCROLLS rather than
+   wraps, for Der Tisch's reason (tisch.css): a segmented control broken over
+   two lines stops reading as one choice. */
 .offshelf-seg { display: none; }
+:root[data-design="klassisch"] .offshelf-seg {
+  display: flex;
+  gap: 3px;
+  width: max-content;
+  max-width: 100%;
+  margin: 0 0 16px;
+  padding: 4px;
+  overflow-x: auto;
+  border-radius: var(--radius-pill);
+  background: var(--sunken);
+}
+:root[data-design="klassisch"] .offshelf-seg__item {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  white-space: nowrap;
+  color: var(--ink-soft);
+  text-decoration: none;
+}
+:root[data-design="klassisch"] .offshelf-seg__item:hover { color: var(--ink); }
+:root[data-design="klassisch"] .offshelf-seg__item.is-on {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow-1);
+}
 .archive-list { display: flex; flex-direction: column; gap: 12px; }
 .archive-row {
   display: flex;

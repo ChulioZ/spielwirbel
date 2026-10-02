@@ -78,14 +78,15 @@ test('Klassisch: the Regal head, tools row and grid are exactly as before — pl
   assert.equal(head.querySelector('.regal-title'), null);
 
   const row = [...tools(dom).children];
-  assert.deepEqual(row.map((el) => el.tagName.toLowerCase()), ['button', 'label', 'select', 'button', 'button', 'button', 'button']);
-  // The BGG import leads the row, and the off-shelf control is rail-owned.
+  assert.deepEqual(row.map((el) => el.tagName.toLowerCase()), ['button', 'label', 'select', 'button', 'button', 'button']);
+  // The BGG import leads the row. No off-shelf control since #1500 — the scope
+  // strip above the section reaches the lists.
   assert.ok(row[0].querySelector('.ti-download'), 'the import button leads the Klassisch row');
   assert.ok(row[1].classList.contains('search-pill'));
-  assert.ok(row[5].classList.contains('rail-owned'));
+  assert.equal(tools(dom).querySelector('.ti-archive'), null, 'the toolbar still carries the off-shelf control');
   // The header add (#1427) closes the row, under its own class — never the
   // gold `regal-add` of Der Tisch, asserted below.
-  assert.ok(row[6].classList.contains('shelf-add--bar'), 'the header add closes the Klassisch row');
+  assert.ok(row[5].classList.contains('shelf-add--bar'), 'the header add closes the Klassisch row');
   assert.equal(tools(dom).querySelector('.fbar__trigger'), null, 'the filter trigger stays in its panel');
   assert.ok(dom.app.querySelector('.regal-filter .fbar > .fbar__trigger'));
   assert.equal(dom.app.querySelector('.fbar__count'), null);
@@ -128,7 +129,6 @@ test('Tisch: ONE row in the sheet order, closed by the gold add button, no impor
     'button.score-info',
     'button.fbar__trigger',
     'button.link-btn',
-    'button.link-btn',
     'button.regal-add.regal-add--bar',
   ]);
   assert.equal(tools(dom).querySelector('.ti-download'), null, 'the BGG import left the row');
@@ -137,8 +137,8 @@ test('Tisch: ONE row in the sheet order, closed by the gold add button, no impor
   const select = tools(dom).children[4];
   assert.ok(select.classList.contains('regal-select'));
   assert.equal(select.textContent.trim(), 'Auswählen');
-  // „Nicht im Regal" is not rail-owned under Der Tisch (#1262): no rail group.
-  assert.ok(tools(dom).children[5].querySelector('.ti-archive'));
+  // No „Nicht im Regal" button since #1500: the scope strip heads the screen.
+  assert.equal(tools(dom).querySelector('.ti-archive'), null);
 });
 
 test('Tisch: the phone copy of the add button follows the grid, and the dashed tile is gone', async (t) => {

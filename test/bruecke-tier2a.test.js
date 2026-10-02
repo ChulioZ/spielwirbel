@@ -218,22 +218,27 @@ test('Brücke puts „Bringt mit" in the card, with the win count among the figu
 
 // --- the off-shelf tabs ----------------------------------------------------
 
-test('the off-shelf tabs are titled „Nicht im Regal", name over count, and carry no group sum', async (t) => {
+test('the scope tabs are the Regal and the lists, name over count, untitled, and carry no group sum', async (t) => {
   const dom = boot(t, 'bruecke');
   await dom.call('showRetired', RID);
   const nav = dom.app.querySelector('nav.offshelf-seg');
-  const title = nav.querySelector('.offshelf-seg__title');
-  assert.equal(text(title), 'Nicht im Regal');
-  assert.equal(title.getAttribute('aria-hidden'), 'true', 'the nav label already says it');
+  // No „Nicht im Regal" title since #1500: with the Regal a tab, there is no
+  // umbrella left to name, and the nav's label says what it is.
+  assert.equal(nav.querySelector('.offshelf-seg__title'), null);
+  assert.equal(nav.getAttribute('aria-label'), 'Regal und Listen');
+  const shelf = GAMES.filter((g) => !g.retired && !g.completed && !g.wish).length;
   const tabs = [...nav.querySelectorAll('a')].map((a) => [a.dataset.sub, text(a.querySelector('.offshelf-seg__name')), text(a.querySelector('.offshelf-seg__n'))]);
   assert.deepEqual(tabs, [
+    ['regal', 'Regal', String(shelf)],
+    ['wishlist', 'Wunschliste', '1'],
     ['retired', 'Aussortiert', '1'],
     ['completed', 'Durchgespielt', '0'],
-    ['wishlist', 'Wunschliste', '1'],
     ['recommendations', dom.run("t('suggest.link')"), ''],
   ]);
   assert.equal(nav.querySelector('a.is-on').getAttribute('href'), `/round/${RID}/retired`, 'each tab keeps its own route');
-  assert.equal(nav.querySelectorAll('.offshelf-seg__n').length, 3, 'a count beyond the three lists would be a sum');
+  // The shelf and the three lists, each its own inventory — no fifth figure
+  // summing them, which would count nothing.
+  assert.equal(nav.querySelectorAll('.offshelf-seg__n').length, 4, 'a count beyond the shelf and three lists would be a sum');
 
   const klassisch = boot(t, 'klassisch');
   await klassisch.call('showRetired', RID);

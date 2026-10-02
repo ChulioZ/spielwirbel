@@ -341,17 +341,16 @@ and the **rail** is the only way in — and #682 shipped with the narrow row alo
 leaving the feature unreachable on a desktop-width window. Reported by the
 operator, who had read the news entry and then could not find it. The pass that
 missed it ran at 1180px and 390px: two widths, both **below the one breakpoint
-that mattered**. `test/off-shelf-parity.test.js` now pins the narrow surface's
-links as a subset of the rail's; see
-`.claude/rules/responsive-content-width.md`.
+that mattered**. See `.claude/rules/responsive-content-width.md`.
 
-**Where that narrow entry lives moved in #777**, and the lesson above is exactly
-why it moved: it was a `.round-footer` row below the *entire* cover grid, i.e.
-present but, on a phone column of 1–2 covers, unreachable in practice. It is now
-a „Nicht im Regal" control in the Regal's `.section-tools` header row, opening a
-sheet with all four off-shelf destinations (`openOffShelfSheet`, `public/js/off-shelf.js`, opened from
-`public/js/views-regal.js`). The parity test was retargeted at that sheet in the
-same PR rather than left watching an empty `.round-footer` selector.
+**Where that narrow entry lives moved in #777, and again in #1500.** #777 lifted
+it out of a `.round-footer` row below the *entire* cover grid into a „Nicht im
+Regal" sheet in the Regal's header. #1500 removed the width split altogether:
+the Regal and each list are headed by ONE scope strip (`offShelfSegments`,
+`public/js/off-shelf.js`) rendered at every width and in every design, and the
+Klassisch rail's off-shelf group went with it. `test/off-shelf-parity.test.js`
+now pins that strip against the hub's „Weitere Listen" group, the other surface
+still offering the four.
 
 ## 10. #264 removed a recommender, and its guard had to be re-aimed rather than deleted
 

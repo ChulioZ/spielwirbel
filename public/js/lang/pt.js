@@ -253,7 +253,12 @@ I18N.pt = {
   'hub.preview.pokaleLeadTie': '{n} empatados na liderança',
   'hub.seat.add': 'Mais um lugar',
 
-  'rail.archive': 'Fora da estante',
+  // The off-shelf lists (#1500): the hub's group heading, the Regal's scope
+  // strip's nav label, and that strip's leading Regal segment.
+  'offShelf.title': 'Mais listas',
+  'offShelf.scope': 'Estante e listas',
+  'offShelf.regal': 'Estante ({n})',
+  // The desktop navigation rail's Einstellungen row.
   'rail.settings': 'Configurações',
 
   'roundSettings.config': 'Configurar este grupo',

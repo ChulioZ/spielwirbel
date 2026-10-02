@@ -251,7 +251,12 @@ I18N.nl = {
   'hub.preview.pokaleLeadTie': '{n} delen de eerste plaats',
   'hub.seat.add': 'Plek erbij',
 
-  'rail.archive': 'Uit de kast',
+  // The off-shelf lists (#1500): the hub's group heading, the Regal's scope
+  // strip's nav label, and that strip's leading Regal segment.
+  'offShelf.title': 'Meer lijsten',
+  'offShelf.scope': 'Kast en lijsten',
+  'offShelf.regal': 'Kast ({n})',
+  // The desktop navigation rail's Einstellungen row.
   'rail.settings': 'Instellingen',
 
   'roundSettings.config': 'Deze groep instellen',

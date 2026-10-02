@@ -1,6 +1,7 @@
 'use strict';
 
-/* The hub's three sub-page previews and its „Nicht im Regal" group (#1185).
+/* The hub's three sub-page previews and its „Weitere Listen" group (#1185,
+   retitled #1500).
 
    This is the information architecture every design will skin
    (docs/design/handover-claude-design-2026-09-19.md §2), built first in
@@ -263,29 +264,28 @@ test('the OFF-SHELF states never count toward that threshold', (t) => {
     'off-shelf games pushed a four-game shelf over the threshold');
 });
 
-// ------------------------------------------------------- „Nicht im Regal"
+// ------------------------------------------------------- „Weitere Listen"
 
 test('the off-shelf group is ONE heading over the four destinations', (t) => {
   const dom = hub(t, busyRound());
   const group = dom.app.querySelector('.hub-offshelf');
-  assert.ok(group, 'the hub carries no „Nicht im Regal" group');
+  assert.ok(group, 'the hub carries no „Weitere Listen" group');
   assert.equal(group.querySelectorAll('.hub-offshelf__title').length, 1);
-  assert.equal(group.querySelector('.hub-offshelf__title').textContent.trim(),
-    dom.run("t('rail.archive')"));
+  assert.equal(group.querySelector('.hub-offshelf__title').textContent.trim(), 'Weitere Listen');
   const rows = [...group.querySelectorAll('.ds-row')];
   /* Four, never five. The V1 Tisch sheet (T3.2) showed the mistake to avoid: a
-     fifth „Nicht im Regal" row with its own count, sitting inside the group of
-     that name. */
+     fifth row with its own count, sitting inside the group it names — and since
+     #1500 the Regal is not one of the „further lists" either. */
   assert.equal(rows.length, 4, 'the off-shelf group is not exactly the four destinations');
   assert.deepEqual(
     rows.map((a) => a.getAttribute('href')),
-    ['/round/r1/retired', '/round/r1/completed', '/round/r1/wishlist', '/round/r1/recommendations'],
+    ['/round/r1/wishlist', '/round/r1/retired', '/round/r1/completed', '/round/r1/recommendations'],
   );
   for (const row of rows) {
     // Real links (#330), and `class` first so test/ds-row-affordance.test.js can
     // still see the row at all.
     assert.equal(row.tagName, 'A');
-    /* The SAME row class the Regal's sheet uses. `.off-shelf__row .ds-row__main`
+    /* The shared `.off-shelf__row` class. `.off-shelf__row .ds-row__main`
        is what puts the icon beside the label — the bare `.ds-row__main` is
        `display: block` — so a parallel class renders the icon flush against the
        text. jsdom applies no stylesheet, so this pins the class rather than the
@@ -295,11 +295,10 @@ test('the off-shelf group is ONE heading over the four destinations', (t) => {
   }
 });
 
-test('the group carries the same counts as the rail and the Regal sheet', (t) => {
-  /* They no longer each derive their own — offShelfEntries() is the one
-     definition — so this asserts that the hub really renders THAT list rather
-     than having quietly grown a fourth copy. The Regal↔rail pair is pinned by
-     test/off-shelf-parity.test.js; this is the third surface joining it. */
+test('the group carries the counts offShelfEntries() derives', (t) => {
+  /* offShelfEntries() is the one definition, so this asserts that the hub
+     really renders THAT list rather than having quietly grown its own copy. The
+     hub↔Regal-strip pair is pinned by test/off-shelf-parity.test.js. */
   const r = busyRound();
   const dom = hub(t, r);
   const shown = [...dom.app.querySelectorAll('.hub-offshelf .ds-row')]
@@ -307,8 +306,8 @@ test('the group carries the same counts as the rail and the Regal sheet', (t) =>
   const expected = [...dom.get('offShelfEntries')(r)].map((e) => e.label);
   assert.deepEqual(shown, expected);
   // And the counts are real, so a label that stopped counting would show here.
-  assert.match(shown[0], /1/, 'the retired row does not count the one retired game');
-  assert.match(shown[2], /1/, 'the wish row does not count the one wished-for game');
+  assert.match(shown[0], /1/, 'the wish row does not count the one wished-for game');
+  assert.match(shown[1], /1/, 'the retired row does not count the one retired game');
 });
 
 test('the group is offered on a round with NOTHING off the shelf', (t) => {
@@ -322,20 +321,19 @@ test('the group is offered on a round with NOTHING off the shelf', (t) => {
   assert.equal(rows.length, 4, 'a round with nothing off the shelf lost its way to the four lists');
 });
 
-test('the group is rail-owned, so a desktop does not offer it twice', (t) => {
-  /* From 1280px up the rail carries these four rows. Without this the Start tab
-     would show the same navigation twice on one screen — and it is a CSS hide, so
-     the duplication is invisible to every DOM assertion
-     (.claude/rules/responsive-content-width.md). Same treatment as the hero, the
-     CTA and the Einstellungen entry. */
+test('the group is NOT rail-owned: the rail carries no copy of it since #1500', (t) => {
+  /* `rail-owned` is display:none from 1280px up. The Klassisch rail's own
+     „Nicht im Regal" rows are gone, so a rail-owned group would leave a desktop
+     hub with no way onto the four lists at all — #682's unreachable screen, one
+     surface over. It is a CSS hide, so nothing else in jsdom could see it. */
   const dom = hub(t, busyRound());
-  assert.ok(dom.app.querySelector('.hub-offshelf').classList.contains('rail-owned'));
+  assert.equal(dom.app.querySelector('.hub-offshelf').classList.contains('rail-owned'), false);
 });
 
 test('the previews are NOT rail-owned — the rail carries no preview', (t) => {
-  // The anti-vacuous half of the case above: `rail-owned` is right for
-  // navigation the rail duplicates and wrong for content it does not, and
-  // spraying it over the grid would silently empty the Start tab on a desktop.
+  // `rail-owned` is right for navigation the rail duplicates and wrong for
+  // content it does not; spraying it over the grid would silently empty the
+  // Start tab on a desktop.
   const dom = hub(t, busyRound());
   for (const card of dom.app.querySelectorAll('.hub-preview')) {
     assert.equal(card.classList.contains('rail-owned'), false);

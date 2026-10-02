@@ -596,9 +596,9 @@ public/
                      pattern, the same-origin BGG badge (issue #1173)
     off-shelf.js     the four off-shelf destinations (Aussortiert, Durchgespielt,
                      Wunschliste, Könnte euch gefallen) with their counts — one
-                     definition, used by the Regal's sheet (which lives here
-                     too since #1239), the rail and the hub's „Nicht im Regal"
-                     group (issue #1185)
+                     definition (issue #1185) — and the scope strip that heads
+                     the Regal and each list (issue #1500); the hub's
+                     „Weitere Listen" group reads the same definition
     cover.js         deterministic per-title gradient for games with no cover
     cover-size.js    rewrites provider cover URLs to a frame-appropriate size
     tag-icons.js     the curated tag-icon set (mirrors lib/tag-icons.js)
@@ -803,8 +803,7 @@ public/
                      in-app on a plain click, so Cmd/middle-click opens a new
                      tab and "Copy link address" works (issue #330)
     round-rail.js    the desktop navigation rail (from 1280px): round identity,
-                     the four sections, the off-shelf rows (from off-shelf.js),
-                     and one Einstellungen entry
+                     the four sections and one Einstellungen entry
     landing-moments.js  the landing hero's stage: the app's own pot, vote and
                      Tafel played once from the shipped components and their own
                      keyframes (issue #1091)
@@ -832,14 +831,13 @@ public/
                           hub: the hub's slot frame, the Missionskontrolle,
                           the member captions and the signal notice (#1238)
     bruecke-shelf.js      Die Brücke's Regal cards, the letter jump and batch
-                          loading of a 30+ game shelf, the „Nicht im Regal"
-                          line, and the Spielepass's stat tiles and rating
-                          distribution (#1239)
+                          loading of a 30+ game shelf, and the Spielepass's
+                          stat tiles and rating distribution (#1239)
     saved-filters.js      a round's saved session filters (#1328): the chip's
                           prefill, the setup screen's „Filter speichern" sheet
                           and the Einstellungen list
     hub-previews.js       the hub's previews of Regal, Pokale and Chronik, and
-                          its „Nicht im Regal" group (issue #1185)
+                          its „Weitere Listen" group (issues #1185, #1500)
     views-regal.js        Regal tab: the games library (search, filters, grid)
     views-shelf-profile.js
                           the Regal-Steckbrief: its Start card, its screen

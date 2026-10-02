@@ -106,11 +106,9 @@ test('the round-level actions are gone from the Regal, which keeps its archives'
   assert.ok(!found.includes('Einladen'), `"Einladen" is back under the game grid (#561): ${found}`);
   // Anti-vacuous: the archives must still be REACHABLE from the Regal. Without
   // this the two assertions above pass just as happily against a tab that
-  // renders nothing. #777 moved them out of a footer below the grid and behind
-  // the header's „Nicht im Regal" control, so the check now has to open it —
-  // the sheet is what carries the links, and it mounts on document.body.
-  dom.app.querySelector('.section-tools .rail-owned').click();
-  const offShelf = labels(dom.document.querySelector('.off-shelf'));
+  // renders nothing. Since #1500 they are segments of the scope strip that
+  // heads the Regal (#777's header sheet before that, a footer before #777).
+  const offShelf = labels(dom.app.querySelector('nav.offshelf-seg'));
   assert.ok(offShelf.some((l) => l.startsWith('Aussortiert')), `the Regal lost its retired-archive link: ${offShelf}`);
   assert.ok(offShelf.some((l) => l.startsWith('Durchgespielt')), `the Regal lost its completed-archive link: ${offShelf}`);
 });
@@ -194,24 +192,21 @@ test('the rail settings group is a single Einstellungen entry', async (t) => {
   ]) {
     assert.doesNotMatch(rail, needle, `the rail duplicates "${what}", which lives inside the settings screen (#581)`);
   }
-  /* Anti-vacuous: the archives are NOT part of that group and must survive.
-
-     Asserted against the RENDERED rail rather than against its source. #1185
-     moved the four off-shelf rows into offShelfEntries() (off-shelf.js), so the
-     literal `roundPath(rid, 'retired')` this used to grep for no longer appears
-     in this file — and a floor that greps for one way of BUILDING a row goes
-     quiet the moment the row is built another way, while the row itself is fine.
-     That is the shape `.claude/rules/source-scanning-guards-enumerate-shapes.md`
-     is about, seen from the side where the guard over-reports safety. The href
-     is the invariant; how the rail arrives at it is not. */
+  /* Anti-vacuous: the doesNotMatch scans above pass against a rail that
+     renders nothing, so the RENDERED rail must still carry its four sections
+     and the one settings entry. (It carried the four off-shelf rows too until
+     #1500, which moved them into the Regal's scope strip.) Asserted on hrefs,
+     not on source: a floor that greps for one way of BUILDING a row goes quiet
+     the moment the row is built another way
+     (`.claude/rules/source-scanning-guards-enumerate-shapes.md`). */
   const dom = loadApp();
   t.after(() => dom.close());
   dom.set('api', async () => roundFixture());
   dom.set('accountsActive', () => true);
   await dom.call('showRound', 1, 'start');
   const hrefs = [...dom.app.querySelectorAll('.rail a[href]')].map((a) => a.getAttribute('href'));
-  for (const seg of ['retired', 'completed', 'wishlist', 'recommendations']) {
-    assert.ok(hrefs.includes(`/round/1/${seg}`), `the rail lost its "${seg}" off-shelf row`);
+  for (const seg of ['regal', 'chronik', 'pokale', 'settings']) {
+    assert.ok(hrefs.includes(`/round/1/${seg}`), `the rail lost its "${seg}" row`);
   }
 });
 

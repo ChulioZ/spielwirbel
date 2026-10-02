@@ -1,25 +1,20 @@
 'use strict';
 
-/* Exactly ONE rail row is marked, and on a game detail it is the list that
-   actually holds the game (#794).
+/* Exactly ONE rail row is marked, and since #1500 the four off-shelf lists are
+ * views of the Regal — so on a list screen, and on the detail page of a game
+ * sitting in one, the marked row is the Regal, `inside` ("true").
  *
- * The defect this pins: `showGameDetail` hard-coded `renderSubScreenTabs(round,
- * 'game')`, HUB_TAB_OF maps 'game' to the Regal, and so the detail page of a
- * wished-for game highlighted the one section that by definition cannot contain
- * it — while the Wunschliste row directly below it, which does, stayed unmarked.
- * The back control on the same screen already derived the game's home from its
- * own flags (#663), so the two navigation affordances pointed at different
- * lists.
+ * History, because the previous answer was the opposite: #794 gave the Klassisch
+ * rail a „Nicht im Regal" group and made the list that holds a game claim the
+ * marker on its detail page, since the Regal "by definition cannot contain" a
+ * wished-for game. #1500 removed that group — the lists are reached through the
+ * Regal's scope strip in every design — so the rail has no row for them, and
+ * the section that owns the strip is the honest answer. The dock already said
+ * so below 1280px; now both navigations agree.
  *
  * Rendered through the jsdom harness rather than matched over the view source
- * (`.claude/rules/testing-views-under-jsdom.md`): the assertion is about which
- * of nine rail rows carries the marker after four different screens have run,
- * which no regex over `renderSubScreenTabs(…)` can see.
- *
- * The negative half carries as much weight as the positive one. Asserting only
- * "the Wunschliste row is marked" is satisfied by a change that marks
- * everything, so every case below counts the marked rows and names the Regal
- * explicitly. */
+ * (`.claude/rules/testing-views-under-jsdom.md`). Every case counts the marked
+ * rows, so a change that marks everything cannot pass. */
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
@@ -91,66 +86,49 @@ const OFF_SHELF = [
   { flag: 'completed', gid: 'g3', title: 'Cascadia', view: 'showCompleted', path: `/round/${RID}/completed` },
 ];
 
-for (const { flag, gid, title, path } of OFF_SHELF) {
-  test(`the rail marks the ${flag} list, not the Regal, on ${title}'s detail page`, async (t) => {
+const REGAL = `/round/${RID}/regal`;
+
+test('the rail carries no off-shelf rows at all — the Regal\'s strip reaches the lists', async (t) => {
+  const dom = await boot(t);
+  await dom.call('showRound', RID, 'regal');
+  assert.ok(railRows(dom).length >= 5, 'the rail rendered too few rows — check the fixture');
+  for (const { flag, path } of OFF_SHELF) {
+    assert.equal(rowFor(dom, path), undefined, `the rail still carries a ${flag} row`);
+  }
+  assert.equal(rowFor(dom, `/round/${RID}/recommendations`), undefined, 'the rail still carries the recommendations row');
+});
+
+for (const { flag, gid, title } of OFF_SHELF) {
+  test(`the rail marks the Regal, inside, on ${title}'s detail page (a ${flag} game)`, async (t) => {
     const dom = await boot(t);
     await dom.call('showGameDetail', RID, gid);
-
     const marked = soleMarked(dom, `${flag} game detail`);
-    assert.equal(marked.getAttribute('href'), path, `the marked row is not the ${flag} list`);
-    // "true", not "page": the user is on the game detail, not on the list.
+    assert.equal(marked.getAttribute('href'), REGAL);
+    // "true", not "page": the user is on the game detail, not on the Regal.
     assert.equal(marked.getAttribute('aria-current'), 'true');
-
-    // The Regal is the row the bug lit up, so it is named rather than merely
-    // covered by the count above.
-    const regal = rowFor(dom, `/round/${RID}/regal`);
-    assert.ok(regal, 'the rail has no Regal row at all — check the fixture');
-    assert.equal(regal.hasAttribute('aria-current'), false, 'the Regal is still marked');
-    assert.equal(regal.classList.contains('is-active'), false, 'the Regal is still is-active');
-  });
-
-  test(`the marked ${flag} row is still a working link back to the list`, async (t) => {
-    const dom = await boot(t);
-    await dom.call('showGameDetail', RID, gid);
-
-    const marked = soleMarked(dom, `${flag} game detail`);
-    assert.equal(marked.getAttribute('href'), path);
-    // The whole reason this is `inside` and not `current`: a click must still
-    // navigate, or a desktop user on the detail page has no rail route back up.
-    marked.click();
-    await new Promise((r) => setTimeout(r, 0));
-    assert.equal(
-      dom.window.location.pathname, path,
-      `clicking the marked ${flag} row did not navigate to the list`,
-    );
   });
 }
 
-test('an active game\'s detail page still marks the Regal, and no off-shelf row', async (t) => {
+test('an active game\'s detail page marks the Regal, inside', async (t) => {
   const dom = await boot(t);
   await dom.call('showGameDetail', RID, 'g1');
-
   const marked = soleMarked(dom, 'active game detail');
-  assert.equal(marked.getAttribute('href'), `/round/${RID}/regal`);
+  assert.equal(marked.getAttribute('href'), REGAL);
   assert.equal(marked.getAttribute('aria-current'), 'true');
-  for (const { flag, path } of OFF_SHELF) {
-    assert.equal(
-      rowFor(dom, path).hasAttribute('aria-current'), false,
-      `the ${flag} row is marked on an ACTIVE game's detail page`,
-    );
-  }
 });
 
-for (const { flag, view, path } of OFF_SHELF) {
-  test(`the ${flag} list screen itself is unchanged: its own row is "page" and inert`, async (t) => {
+for (const { flag, view } of OFF_SHELF) {
+  test(`on the ${flag} list the Regal is marked inside and is still a working link back`, async (t) => {
     const dom = await boot(t);
     await dom.call(view, RID);
-
     const marked = soleMarked(dom, `${flag} list screen`);
-    assert.equal(marked.getAttribute('href'), path);
-    // "page" and click-inert — you ARE on this screen. That is the state the
-    // game detail must NOT get, so the two are pinned against each other.
-    assert.equal(marked.getAttribute('aria-current'), 'page');
+    assert.equal(marked.getAttribute('href'), REGAL);
+    // `inside`, not `page`: the list is a view of the Regal, not the Regal —
+    // and a click must still navigate, or a desktop user has no rail route back.
+    assert.equal(marked.getAttribute('aria-current'), 'true');
+    marked.click();
+    await new Promise((r) => setTimeout(r, 0));
+    assert.equal(dom.window.location.pathname, REGAL, `clicking the Regal on the ${flag} list did not navigate`);
   });
 }
 
@@ -161,8 +139,7 @@ test('the dock is untouched: it marks the Regal on a game detail of every state'
     const marked = [...dom.app.querySelectorAll('.dock .dock__item')]
       .filter((el) => el.hasAttribute('aria-current'));
     assert.equal(marked.length, 1, `${gid}: expected exactly one marked dock tab`);
-    // Below 1280px the dock carries only the four hub tabs, so it has no
-    // off-shelf entry to mark — deliberately left to #777.
+    // The dock carries only the four hub tabs, and the Regal owns every game.
     assert.equal(marked[0].getAttribute('href'), `/round/${RID}/regal`, `${gid}: dock moved off the Regal`);
     assert.equal(marked[0].getAttribute('aria-current'), 'true');
     assert.ok(dom.app.querySelector('.dock--sub'), `${gid}: the dock lost its .dock--sub class`);

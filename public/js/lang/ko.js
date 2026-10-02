@@ -229,7 +229,12 @@ I18N.ko = {
   'hub.preview.pokaleLeadTie': '{n}명 공동 선두',
   'hub.seat.add': '자리 추가',
 
-  'rail.archive': '선반 밖',
+  // The off-shelf lists (#1500): the hub's group heading, the Regal's scope
+  // strip's nav label, and that strip's leading Regal segment.
+  'offShelf.title': '다른 목록',
+  'offShelf.scope': '선반과 목록',
+  'offShelf.regal': '선반 ({n})',
+  // The desktop navigation rail's Einstellungen row.
   'rail.settings': '설정',
 
   'roundSettings.config': '이 모임 설정하기',

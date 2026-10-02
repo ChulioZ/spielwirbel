@@ -240,7 +240,12 @@ I18N.es = {
   'hub.preview.pokaleLeadTie': '{n} empatados en cabeza',
   'hub.seat.add': 'Añadir sitio',
 
-  'rail.archive': 'Fuera de la estantería',
+  // The off-shelf lists (#1500): the hub's group heading, the Regal's scope
+  // strip's nav label, and that strip's leading Regal segment.
+  'offShelf.title': 'Más listas',
+  'offShelf.scope': 'Estantería y listas',
+  'offShelf.regal': 'Estantería ({n})',
+  // The desktop navigation rail's Einstellungen row.
   'rail.settings': 'Ajustes',
 
   'roundSettings.config': 'Configurar este grupo',

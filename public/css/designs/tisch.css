@@ -1889,8 +1889,9 @@
    Since #1278 this is the sheet's composition and not a repaint of the app's:
    views-regal.js builds a different head under Der Tisch — the display title
    „Regal" with its count, then ONE row holding search, sort, ⓘ, the filter
-   trigger (lifted out of the panel below), „Auswählen", „Nicht im Regal" and the
-   gold „Spiel hinzufügen". The BGG import is not in it: the add sheet carries
+   trigger (lifted out of the panel below), „Auswählen" and the gold „Spiel
+   hinzufügen". („Nicht im Regal" left the row in #1500 — the scope strip above
+   the head reaches the lists.) The BGG import is not in it: the add sheet carries
    the same import as a row (#1264), so the row holds exactly T3.3's controls.
    DOM order is the drawn order, so no rule here uses `order`. */
 /* The head: title left, the row to its right at desktop and under it on a
@@ -2076,7 +2077,7 @@
   :root[data-design="tisch"][data-scheme="dark"] .section-tools .sort-select,
   :root[data-design="tisch"][data-scheme="dark"] .section-tools .link-btn {
     /* A label never breaks inside its chip — the ROW wraps instead. At a zero
-       basis the chips split the row evenly and „Nicht im Regal" stood on three
+       basis the chips split the row evenly and a long label stood on three
        lines in its pill (found in the #1278 merge interview). */
     flex: 1 1 auto;
     white-space: nowrap;

@@ -368,18 +368,21 @@ test('Programmheft puts „Gehört Anna" in the card', async (t) => {
   assert.ok(card.querySelector('.member-card__attendance'));
 });
 
-test('the off-shelf screens are titled „Nicht im Regal", each tab its name beside its count', async (t) => {
+test('the off-shelf screens are headed by the untitled scope strip, each tab its name beside its count', async (t) => {
   for (const [show, sub] of [['showRetired', 'retired'], ['showRecommendations', 'recommendations']]) {
     const dom = boot(t, 'programmheft');
     await dom.call(show, RID);
     const nav = dom.app.querySelector('nav.offshelf-seg');
-    assert.equal(text(nav.querySelector('.offshelf-seg__title')), 'Nicht im Regal');
-    assert.equal(nav.querySelector('.offshelf-seg__title').getAttribute('aria-hidden'), 'true');
+    // No „Nicht im Regal" display head since #1500 — the list keeps its own
+    // page head, and the strip carries the Regal as its first tab.
+    assert.equal(nav.querySelector('.offshelf-seg__title'), null);
+    const shelf = GAMES.filter((g) => !g.retired && !g.completed && !g.wish).length;
     const tabs = [...nav.querySelectorAll('a')].map((a) => [a.dataset.sub, text(a.querySelector('.offshelf-seg__name')), text(a.querySelector('.offshelf-seg__n'))]);
     assert.deepEqual(tabs, [
+      ['regal', 'Regal', String(shelf)],
+      ['wishlist', 'Wunschliste', '1'],
       ['retired', 'Aussortiert', '1'],
       ['completed', 'Durchgespielt', '0'],
-      ['wishlist', 'Wunschliste', '1'],
       ['recommendations', dom.run("t('suggest.link')"), ''],
     ]);
     assert.equal(nav.querySelector('a.is-on').dataset.sub, sub);

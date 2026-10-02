@@ -104,7 +104,7 @@ test('Ocean: the dock carries exactly the four hub sections', async (t) => {
   );
 });
 
-test('Ocean: every other round screen wears the same Reling, and the Regal keeps its way off the shelf', async (t) => {
+test('Ocean: every other round screen wears the same Reling, and the Regal is headed by its scope strip', async (t) => {
   // Pokale goes through the same renderHubTabs; its tab needs a richer fixture.
   for (const tab of ['regal', 'chronik']) {
     const dom = await screen(t, 'ocean', tab);
@@ -112,21 +112,22 @@ test('Ocean: every other round screen wears the same Reling, and the Regal keeps
     assert.equal(items.length, 5, `${tab}: the Reling has ${items.length} entries`);
     assert.equal(dom.app.querySelector('.rail .rail__id'), null, `${tab}: the Reling grew an identity block`);
     if (tab === 'regal') {
-      /* The Reling carries no off-shelf rows, so the Regal's own trigger is the
-         desktop's only way to them — it must not be `rail-owned` (hidden). */
-      const trigger = [...dom.app.querySelectorAll('.link-btn')].find((b) => /Nicht im Regal/.test(b.textContent));
-      assert.ok(trigger, 'the Regal lost its „Nicht im Regal" trigger');
-      assert.ok(!trigger.classList.contains('rail-owned'), 'the Regal\'s off-shelf trigger is hidden from 1280 up under Ocean');
+      /* The Reling carries no off-shelf rows, so the Regal's scope strip (#1500)
+         is the desktop's only way to them — it must not be `rail-owned`. */
+      const nav = dom.app.querySelector('nav.offshelf-seg');
+      assert.ok(nav, 'the Regal lost its scope strip');
+      assert.ok(!nav.classList.contains('rail-owned'), 'the Regal\'s scope strip is hidden from 1280 up under Ocean');
     }
   }
 });
 
-test('Klassisch keeps its rail: identity, the start button and the off-shelf rows', async (t) => {
+test('Klassisch keeps its rail: identity, the start button, the five links', async (t) => {
   const dom = await screen(t, null);
   const rail = dom.app.querySelector('.rail');
   assert.ok(rail.querySelector('.rail__id'), 'Klassisch lost the rail identity');
   assert.ok(rail.querySelector('.rail__cta'), 'Klassisch lost the rail start button');
-  assert.ok(rail.querySelectorAll('.rail__item').length > 5, 'Klassisch lost the rail off-shelf rows');
+  // Its off-shelf rows went in #1500 — the Regal's scope strip reaches the lists.
+  assert.equal(rail.querySelectorAll('.rail__item').length, 5, 'the Klassisch rail is not the five links');
   assert.equal(dom.app.querySelector('.ocean-hub'), null, 'Klassisch grew the Ocean frame');
   assert.ok(dom.app.querySelector('.hero').classList.contains('rail-owned'), 'Klassisch\'s hero stopped being rail-owned');
 });
@@ -221,14 +222,14 @@ test('Ocean: „Zuletzt gespielt" sits in the pair under the shell, the previews
   assert.equal(bars[0].style.getPropertyValue('--share'), '100%', 'the leader\'s bar is not the full length');
 });
 
-test('Ocean: „Nicht im Regal" is one heading over the three lists and „Könnte euch gefallen", at every width', async (t) => {
+test('Ocean: „Weitere Listen" is one heading over the three lists and „Könnte euch gefallen", at every width', async (t) => {
   const dom = await screen(t, 'ocean');
   const groups = dom.app.querySelectorAll('.hub-offshelf');
   assert.equal(groups.length, 1);
   const group = groups[0];
   assert.ok(!group.classList.contains('rail-owned'), 'the group would vanish from 1280 up, where the Reling has no rows');
   assert.equal(group.querySelectorAll('.hub-offshelf__title').length, 1);
-  assert.equal(group.querySelector('.hub-offshelf__title').textContent, 'Nicht im Regal');
+  assert.equal(group.querySelector('.hub-offshelf__title').textContent, 'Weitere Listen');
   const rows = [...group.querySelectorAll('.off-shelf__row')].map((r) => r.textContent.trim());
   assert.equal(rows.length, 4);
   assert.match(rows[3], /Könnte euch gefallen/);

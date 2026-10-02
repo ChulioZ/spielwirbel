@@ -1,5 +1,5 @@
-/* Spielwirbel – the round hub's three PREVIEWS and its „Nicht im Regal" group
-   (#1185).
+/* Spielwirbel – the round hub's three PREVIEWS and its „Weitere Listen" group
+   (#1185, retitled #1500).
 
    This is the structure every design skins (docs/design/handover-claude-design-2026-09-19.md
    §2): the Start tab is the launchpad PLUS a preview of each sub-page it owns —
@@ -226,24 +226,24 @@ function hubChronikPreview(round) {
   return card;
 }
 
-/* The off-shelf group: ONE heading over the four destinations.
+/* The off-shelf group, „Weitere Listen": ONE heading over the four
+   destinations — the hub's shortcut onto the lists the Regal's scope strip
+   (off-shelf.js) heads.
 
-   The V1 Tisch sheet (T3.2) showed the mistake to avoid — a fifth „Nicht im
-   Regal" row carrying its own count, sitting inside the group of the same name.
-   The heading is the group; the rows are the places.
+   The V1 Tisch sheet (T3.2) showed the mistake to avoid — a fifth row carrying
+   its own count, sitting inside the group it names. The heading is the group;
+   the rows are the places.
 
-   Rows come from off-shelf.js, so this group, the Regal's sheet and the rail
-   offer the same four with the same counts by construction. */
+   Rows come from off-shelf.js, so this group and the strip offer the same four
+   with the same counts by construction.
+
+   NOT `rail-owned` in any design since #1500: the Klassisch rail's own copy of
+   these four is gone, so from 1280px up a `rail-owned` group would leave the
+   hub with no way onto them at all — the #682 trap. */
 function hubOffShelfGroup(round) {
   if (designIs('tisch')) return hubOffShelfTiles(round);
-  // `rail-owned`, exactly like the hero, the CTA and the Einstellungen entry:
-  // from 1280px up the rail carries these four rows, and a second copy in the
-  // pane would offer the same navigation twice on one screen. Below that width
-  // the rail does not exist and this IS the hub's off-shelf group.
-  // Not under a lean rail (railIsLean, round-rail.js): Ocean's Reling carries
-  // no off-shelf rows (#1211), so there this group is the hub's only way in.
-  const group = h(`<section class="hub-offshelf${railIsLean() ? '' : ' rail-owned'}">
-       <h2 class="hub-offshelf__title">${esc(t('rail.archive'))}</h2>
+  const group = h(`<section class="hub-offshelf">
+       <h2 class="hub-offshelf__title">${esc(t('offShelf.title'))}</h2>
        <div class="ds-list hub-offshelf__list"></div>
      </section>`);
   const list = group.querySelector('.hub-offshelf__list');
@@ -268,14 +268,10 @@ function hubOffShelfGroup(round) {
   return group;
 }
 
-/* Der Tisch's „Nicht im Regal" (T2.2, T3.2; #1262/#1263): the same four
+/* Der Tisch's „Weitere Listen" (T2.2, T3.2; #1262/#1263): the same four
    destinations as COUNT TILES — a 2×2 grid on a phone, one row of four at the
    foot of the desktop hub. Same rows, same counts, same order as every other
    presentation, because they come from the same offShelfEntries().
-
-   NOT `rail-owned`, unlike the Klassisch group: Der Tisch's rail is identity
-   plus the five links (#1262), so from 1280 up these tiles are the hub's only
-   way into the four lists.
 
    The count is its own figure here, so the tile reads the count-free `name`
    and the accessible name is the Klassisch label („Aussortiert (2)") — one
@@ -283,7 +279,7 @@ function hubOffShelfGroup(round) {
    Recommendations carry no count, for the reason off-shelf.js states. */
 function hubOffShelfTiles(round) {
   const group = h(`<section class="hub-offshelf hub-offshelf--tiles">
-       <h2 class="hub-offshelf__title">${esc(t('rail.archive'))}</h2>
+       <h2 class="hub-offshelf__title">${esc(t('offShelf.title'))}</h2>
        <div class="hub-offshelf__tiles"></div>
      </section>`);
   const grid = group.querySelector('.hub-offshelf__tiles');

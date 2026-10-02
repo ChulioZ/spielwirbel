@@ -137,7 +137,11 @@ What the app does, in detail. For a short overview see the
   getting it is. "Ins Regal" on a wished expansion instead records it on its base
   game's expansion list, bringing that game along if the round does not have it
   yet, so the expansion widens what the game can be drawn at rather than becoming
-  a box of its own that nobody can play.
+  a box of its own that nobody can play. The shelf and these lists read as one
+  collection: a **scope strip** — Regal · Wunschliste · Aussortiert ·
+  Durchgespielt · Könnte euch gefallen, each with its count — heads the Regal
+  and every list at every screen size, the current one marked, each a real
+  link to its own page.
   Where the instance has it switched on (`PRICES_ENABLED`), opening a wished game
   that carries a provider link also shows **what it costs right now** — the
   cheapest in-stock offer including shipping via Brettspielpreise.de, with the
@@ -293,7 +297,8 @@ What the app does, in detail. For a short overview see the
   presented per screen size: a floating bottom dock on phones, a tab strip at
   the top of the content column on tablets, and from 1280px a persistent left
   rail carrying the round's identity, the "start session" action, the four
-  sections, the two archives, the Wunschliste and one Einstellungen entry. All
+  sections and one Einstellungen entry (the lists off the shelf are reached
+  through the Regal's scope strip, and count as the Regal's). All
   three stay visible on
   the round's sub-screens, marking the section they belong to:
   - **Start** – the launchpad: hero with the members, a big "start session"
@@ -320,8 +325,8 @@ What the app does, in detail. For a short overview see the
     screen. Below the derived cards, a **preview of each of the round's other
     sections** — the shelf as a handful of covers with its count, the standings'
     top three, and how many evenings there have been with the date of the last —
-    each opening that section. Under all of it, the „Nicht im Regal" group
-    (Aussortiert · Durchgespielt · Wunschliste · Könnte euch gefallen) and one
+    each opening that section. Under all of it, the „Weitere Listen" group
+    (Wunschliste · Aussortiert · Durchgespielt · Könnte euch gefallen) and one
     Einstellungen entry. Every card renders nothing at all when it has nothing
     to say, so a young round sees none of them: the Pokale and Chronik previews
     arrive with the round's first played session, and the shelf preview once the

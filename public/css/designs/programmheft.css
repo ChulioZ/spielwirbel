@@ -1544,7 +1544,7 @@
    Regal, P3.4 Spieldetail, P3.5 Spiel hinzufügen), Programmheft-P6-Phone-Rest
    (P6.2–P6.4) and Programmheft-P7-Leerzustaende (P7.8, the 42-game shelf).
 
-   The markup is views-regal.js's `phCard` / `phMoreButton` / `phOffShelf`,
+   The markup is views-regal.js's `phCard` / `phMoreButton`,
    views-round-detail.js's `ph-pass` branch and add-game-search.js (which
    Programmheft reaches through showAddGame, like Der Tisch and Ocean). Klassisch
    renders none of it — test/programmheft-klassisch-golden.test.js.
@@ -1630,8 +1630,7 @@
 
 /* One control per width, as Ocean's three adds are: `display: none` takes the
    other out of the accessibility tree, so no width announces two. At desktop the
-   toolbar carries „Auswählen", the BGG import, „Nicht im Regal" (860–1279
-   only: from 1280 the rail's group carries it) and the black
+   toolbar carries „Auswählen", the BGG import and the black
    „Spiel hinzufügen" (P3.3); a phone folds the first two into the „…" and
    keeps the dashed tile in the grid (P6.2). An EMPTY shelf renders no bar, so
    its tiles stay at every width.
@@ -1655,9 +1654,6 @@
     min-height: 52px;
     margin-top: 18px;
   }
-}
-@media (min-width: 1280px) {
-  :root[data-design="programmheft"] .ph-regal .regal-tool--offshelf { display: none; }
 }
 @media (min-width: 860px) {
   :root[data-design="programmheft"] .ph-regal .regal-more { display: none; }
@@ -1784,49 +1780,6 @@
   :root[data-design="programmheft"] .ph-regal .regal-sort__prefix { display: none; }
 }
 
-/* ---- „Nicht im Regal" (P3.3: one line of links under a 2px rule; P6.2: the
-   same four as 44px rows). One list, laid out per width. */
-:root[data-design="programmheft"] .ph-offshelf {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px 24px;
-  margin-top: var(--space-6);
-  padding-top: var(--space-2);
-  border-top: var(--rule-strong) solid transparent;
-}
-:root[data-design="programmheft"] .section .ph-offshelf__label {
-  margin: 0;
-  font-family: var(--font);
-  font-size: var(--text-sm);
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-:root[data-design="programmheft"] .ph-offshelf__list { display: flex; flex-wrap: wrap; gap: 0 24px; margin: 0; padding: 0; list-style: none; }
-:root[data-design="programmheft"] .ph-offshelf__link {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  min-height: var(--target-key);
-  font-weight: 700;
-  text-decoration: none;
-}
-:root[data-design="programmheft"] .ph-offshelf__link .ti { display: none; }
-:root[data-design="programmheft"] .ph-offshelf__link:hover { text-decoration: underline; text-underline-offset: 3px; }
-@media (max-width: 859px) {
-  :root[data-design="programmheft"] .ph-offshelf { flex-direction: column; align-items: stretch; gap: 0; margin-top: var(--space-5); }
-  :root[data-design="programmheft"] .section .ph-offshelf__label { padding: 10px 0 2px; }
-  :root[data-design="programmheft"] .ph-offshelf__list { flex-direction: column; gap: 0; }
-  :root[data-design="programmheft"] .ph-offshelf__link {
-    justify-content: space-between;
-    width: 100%;
-    border-bottom: var(--rule-col) dotted transparent;
-    font-size: var(--text-md);
-  }
-  :root[data-design="programmheft"] .ph-offshelf__link .ti { display: inline; }
-}
-
 /* ---- The Regal's colours. */
 :root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-regal .regal-head { border-bottom-color: var(--ink); }
 :root[data-design="programmheft"]:not([data-scheme="dark"]) .section .regal-head .regal-title h1 { color: var(--ink); }
@@ -1861,13 +1814,6 @@
   color: var(--ink);
 }
 :root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-regal .add-tile:hover { background: var(--surface); }
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-offshelf { border-top-color: var(--ink); }
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .section .ph-offshelf__label { color: var(--ink); }
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-offshelf__link { color: var(--ink); }
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-offshelf__link .ti { color: var(--ink-soft); }
-@media (max-width: 859px) {
-  :root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-offshelf__link { border-bottom-color: var(--hair); }
-}
 
 /* ---- Der Spielepass (P3.4): three columns — the cover; the game and how it
    went, behind a 1px column rule; the score in a box, the one action and the
@@ -3653,7 +3599,7 @@
    views-period-recap.js (the `.stat-chip--tile` figures), views-pokale.js
    (`.ph-page`, `.pokale-split__kicker`, `.pokale-split__side`, `.pokale-table`),
    views-member.js (the `panelled` branch) and off-shelf.js (Brücke's
-   `.offshelf-seg__title/__name/__n`). Klassisch's DOM is unchanged — pinned by
+   `.offshelf-seg__name/__n`). Klassisch's DOM is unchanged — pinned by
    a golden snapshot.
 
    The podium has NO silver or bronze (operator decision 7): place 1 is the
@@ -4349,12 +4295,9 @@
   :root[data-design="programmheft"]:not([data-scheme="dark"]) .app > .member-card .member-card__lower > .member-card__games { margin-top: 0; }
 }
 
-/* ---- Nicht im Regal (P13.7): the strip becomes the page head — the group's
-   name in Anton over its 4px rule, then the four tabs, name beside figure, the
-   current one underlined in ink. The list's own <h1> and the round name under
-   it stay in the accessibility tree, clipped from sight: the lit tab already
-   names the list, and the masthead names the round. Same on the
-   recommendations (P13.8 is reached through the same strip). */
+/* ---- The scope strip (P13.7, #1500): Regal and the four lists as tabs,
+   name beside figure, the current one underlined in ink, over the column's
+   rule. It heads the Regal and each list; the screen's own head follows it. */
 :root[data-design="programmheft"]:not([data-scheme="dark"]) .offshelf-seg {
   display: flex;
   flex-wrap: wrap;
@@ -4362,18 +4305,6 @@
   gap: 0 var(--space-5);
   margin: 0 0 var(--space-4);
   border-bottom: var(--rule-col) solid var(--ink);
-}
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .offshelf-seg__title {
-  flex: 1 0 100%;
-  margin: 0;
-  padding-bottom: var(--space-2);
-  border-bottom: var(--rule-page) solid var(--ink);
-  font-family: var(--font-display);
-  font-weight: 400;
-  font-size: var(--display-4);
-  line-height: var(--leading-display);
-  text-transform: uppercase;
-  color: var(--ink);
 }
 :root[data-design="programmheft"]:not([data-scheme="dark"]) .offshelf-seg__item {
   display: inline-flex;
@@ -4395,17 +4326,7 @@
   font-size: var(--display-6);
   line-height: var(--leading-display);
 }
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .app:has(> .offshelf-seg) > .page-head { justify-content: flex-end; max-width: none; margin-bottom: var(--space-3); }
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .app:has(> .offshelf-seg) > .page-head > div:first-child {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
-}
 @media (min-width: 1024px) {
-  :root[data-design="programmheft"]:not([data-scheme="dark"]) .offshelf-seg__title { font-size: var(--display-2); }
   :root[data-design="programmheft"]:not([data-scheme="dark"]) .app > .offshelf-seg { max-width: none; }
 }
 
