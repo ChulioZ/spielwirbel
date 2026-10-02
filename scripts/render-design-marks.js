@@ -438,8 +438,97 @@ function programmheftRecipe() {
   };
 }
 
+/* ------------------------------------------------------------------ Forest */
+
+// #1465: Forest's marks. They land with its token slice rather than with its
+// share card (#1475, F8.4), because test/design-marks.test.js holds every
+// coloured design to its own icons from the moment it is registered. The whirl
+// stays Spielwirbel's sign (operator decision on #1436), in F1's light print on
+// the Laubgrün the primary button wears — the leaf-green running into
+// accent-deep — so the icon reads as the design's one action. Light print on
+// the accent is 6.5:1, on accent-deep 9.0:1. #1475 may redraw them with the
+// share card; the recipe is the one place to do it.
+function forestRecipe() {
+  const design = designById('forest');
+  const css = fs.readFileSync(path.join(PUBLIC, design.stylesheet.replace(/^\//, '')), 'utf8');
+  const c = {
+    page: design.page,
+    accent: design.accent,
+    accentDeep: token(css, '--brand-strong'),
+    onDusk: token(css, '--on-dusk'),
+    ink: token(css, '--ink'),
+    inkSoft: token(css, '--ink-soft'),
+    surface: token(css, '--surface'),
+    moss: token(css, '--moss'),
+    dusk: token(css, '--dusk'),
+    duskSoft: token(css, '--dusk-soft'),
+    firefly: token(css, '--firefly'),
+    wood: token(css, '--wood'),
+    bark: token(css, '--bark'),
+  };
+  const fonts = fontFace('Young Serif', 400, 'young-serif-latin-400-normal.woff2')
+    + fontFace('Alegreya Sans', 700, 'alegreya-sans-latin-700-normal.woff2')
+    + fontFace('Alegreya Sans', 800, 'alegreya-sans-latin-800-normal.woff2');
+  const leaf = `radial-gradient(110% 110% at 30% 15%, ${c.accent}, ${c.accentDeep} 80%)`;
+
+  // Der Tisch's proportions: 52% on the app icons, 36% on the maskable one so
+  // the whole whirl sits inside the inner 60%.
+  const icon = (size, glyph, ground = leaf, radius = 0) => ({
+    width: size,
+    height: size,
+    html: `<div style="position:fixed;inset:0;display:grid;place-items:center;background:${ground};`
+      + `border-radius:${radius}px">${whirl(Math.round(size * glyph), c.onDusk)}</div>`,
+  });
+
+  const marks = design.marks;
+  const [i192, i512, maskable] = marks.icons;
+  const og = {
+    width: 1200,
+    height: 630,
+    // Der Tisch's Open Graph frame, Forest's materials: the dusk panel with the
+    // claim in Young Serif on the left — the one dark ground, a firefly beside
+    // the wordmark — and the clearing on the right: covers on a card, the
+    // stump's cut face as a ledge, the leaf-shaped primary button. German only,
+    // like every og card (link-preview-card.md §1).
+    html: `<div style="position:fixed;inset:0;display:flex;background:${c.page};font-family:'Alegreya Sans'">
+      <div style="width:660px;flex:none;box-sizing:border-box;padding:48px;display:flex;flex-direction:column;gap:26px;background:${c.dusk}">
+        <span style="display:flex;align-items:center;gap:14px;font:400 30px 'Young Serif';color:${c.onDusk}">
+          <span style="width:14px;height:14px;border-radius:50%;background:${c.firefly};box-shadow:0 0 22px 6px ${c.firefly}"></span>Spielwirbel</span>
+        <span style="font:400 60px/1.08 'Young Serif';color:${c.onDusk}">Wer am Tisch sitzt, entscheidet mit.</span>
+        <span style="font:700 28px/1.45 'Alegreya Sans';color:${c.duskSoft}">Regal füllen, Session wirbeln, geheim werten.</span>
+        <span style="margin-top:auto;font:800 22px 'Alegreya Sans';letter-spacing:.06em;color:${c.onDusk}">Kein Tracking · EU-Hosting · spielwirbel.app</span>
+      </div>
+      <div style="flex:1;padding:48px 44px;display:flex;flex-direction:column;gap:24px;justify-content:center">
+        <span style="display:flex;gap:14px;align-items:flex-end;padding:22px;border-radius:18px;background:${c.surface};
+          box-shadow:0 6px 18px rgba(40,60,30,.10)">
+          ${[[170, 120], [132, 32], [192, 200], [150, 90]].map(([h, hue]) => `<span style="width:84px;height:${h}px;border-radius:10px;
+            background:linear-gradient(150deg, hsl(${hue} 40% 50%), hsl(${hue + 30} 45% 28%))"></span>`).join('')}
+        </span>
+        <span style="height:16px;border-radius:8px;background:linear-gradient(180deg, ${c.wood}, ${c.bark})"></span>
+        <span style="align-self:flex-start;display:inline-flex;align-items:center;gap:14px;min-height:84px;padding:0 32px;
+          border-radius:22px 7px 22px 7px;background:${c.accent};color:${c.onDusk};font:800 30px 'Alegreya Sans';
+          box-shadow:0 8px 18px rgba(40,60,30,.25)">${whirl(36, c.onDusk)} Session wirbeln</span>
+      </div>
+    </div>`,
+  };
+
+  return {
+    fonts,
+    assets: [
+      [i192.src, icon(192, 0.52)],
+      [i512.src, icon(512, 0.52)],
+      [maskable.src, icon(512, 0.36)],
+      [marks.appleTouch, icon(180, 0.5)],
+      // Flat accent-deep at 32px: a gradient there only reads as noise.
+      [marks.favicon.href, icon(32, 0.56, c.accentDeep, 7)],
+      [marks.og, og],
+    ],
+  };
+}
+
 const RECIPES = {
   tisch: tischRecipe, ocean: oceanRecipe, bruecke: brueckeRecipe, programmheft: programmheftRecipe,
+  forest: forestRecipe,
 };
 
 /* ------------------------------------------------------------------ the CDP */

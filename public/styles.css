@@ -74,6 +74,17 @@
 @font-face { font-family: 'Archivo'; font-style: normal; font-weight: 400; font-display: swap; src: url('fonts/archivo-latin-400-normal.woff2') format('woff2'); }
 @font-face { font-family: 'Archivo'; font-style: normal; font-weight: 600; font-display: swap; src: url('fonts/archivo-latin-600-normal.woff2') format('woff2'); }
 @font-face { font-family: 'Archivo'; font-style: normal; font-weight: 700; font-display: swap; src: url('fonts/archivo-latin-700-normal.woff2') format('woff2'); }
+/* Forest (#1465, F1.2): Young Serif for display, Alegreya Sans for text. Young
+   Serif ships ONE weight, so it is declared as the range `400 800` — every
+   heading asks for 700, and a face declared at 400 alone would be matched and
+   then SYNTHESISED bold (.claude/rules/single-weight-display-faces.md §1); F1:
+   „nie gefettet". Alegreya Sans declares each weight F1 uses (400/700/800).
+   Both from fontsource, latin subset; licences LICENSE-young-serif.txt,
+   LICENSE-alegreya-sans.txt (OFL 1.1). */
+@font-face { font-family: 'Young Serif'; font-style: normal; font-weight: 400 800; font-display: swap; src: url('fonts/young-serif-latin-400-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Alegreya Sans'; font-style: normal; font-weight: 400; font-display: swap; src: url('fonts/alegreya-sans-latin-400-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Alegreya Sans'; font-style: normal; font-weight: 700; font-display: swap; src: url('fonts/alegreya-sans-latin-700-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Alegreya Sans'; font-style: normal; font-weight: 800; font-display: swap; src: url('fonts/alegreya-sans-latin-800-normal.woff2') format('woff2'); }
 
 :root {
   /* Native UI — the <select> popup, scrollbars, form-control defaults — follows

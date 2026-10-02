@@ -453,6 +453,7 @@ public/
       tisch.css      styles.css IS Klassisch
       ocean.css
       programmheft.css
+      forest.css
   manifest.webmanifest  PWA manifest (installable app metadata + icons) —
                      Klassisch's; lib/web-manifest.js derives every other
                      design's (the face's included) from it
@@ -473,6 +474,8 @@ public/
                      in two corner brackets on the night
     programmheft/    Das Programmheft's own marks (#1419): the whirl over the
                      Anton wordmark in ink on the vermilion masthead
+    forest/          Forest's own marks (#1465): the whirl in light print on
+                     the Laubgrün, and an og-image.png with the dusk panel
   img/               product screenshots on the logged-out landing page — the
                      shelf, the voting screen and a session result, all phone
                      width, one set per UI locale (landing-*.<locale>.webp),
