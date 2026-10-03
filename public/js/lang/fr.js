@@ -179,6 +179,8 @@ I18N.fr = {
   'hub.pulse.title': 'Pouls de la ronde',
   'hub.young.lock': 'dès le premier jeu',
   'hub.young.emptyTitle': 'Le pot est encore vide',
+  // #1471 (F7.3): Forest's empty table names its vessel, the tree stump.
+  'hub.young.emptyTitleForest': 'La souche est encore vide',
   'hub.young.emptyText': 'Le tirage se fait dans la ludothèque. Posez votre premier jeu sur la table.',
   'hub.young.emptyTextBgg': 'Le tirage se fait dans la ludothèque. Posez votre premier jeu sur la table — ou importez toute votre ludothèque depuis BGG en une étape.',
   'hub.young.firstCta': 'Démarrer la première session',
@@ -371,6 +373,7 @@ I18N.fr = {
   'chronik.count': '{n} sessions depuis {month}',
   'chronik.seatedOne': '{n} à table',
   'chronik.seated': '{n} à table',
+  'chronik.sessionNo': 'Session nº {n}',
   'chronik.wonOne': '{names} a gagné',
   'chronik.won': '{names} ont gagné',
   // Die Brücke's Chronik (#1245): how often the chosen game took the 1 in that
@@ -764,6 +767,9 @@ I18N.fr = {
   'member.editName': 'Clique pour renommer',
   'member.edit': 'Modifier',
   'member.recentWins': 'Dernières victoires',
+  'member.recentTitle': 'Dernières présences',
+  'member.recentWon': 'a gagné',
+  'member.recentJoined': 'a joué',
   'member.colorLabel': 'Couleur de l’avatar',
   'member.colorChange': 'Changer la couleur de l’avatar',
   'member.mySeat': 'Ta place',

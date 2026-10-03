@@ -170,6 +170,8 @@ I18N.en = {
   'hub.pulse.title': 'Round pulse',
   'hub.young.lock': 'from your first game',
   'hub.young.emptyTitle': 'The pot is still empty',
+  // #1471 (F7.3): Forest's empty table names its vessel, the tree stump.
+  'hub.young.emptyTitleForest': 'The stump is still empty',
   'hub.young.emptyText': 'Sessions are whirled from the shelf. Put your first game on the table.',
   'hub.young.emptyTextBgg': 'Sessions are whirled from the shelf. Put your first game on the table — or bring your whole shelf over from BGG in one step.',
   'hub.young.firstCta': 'Whirl your first session',
@@ -364,6 +366,7 @@ I18N.en = {
   'chronik.count': '{n} sessions since {month}',
   'chronik.seatedOne': '{n} at the table',
   'chronik.seated': '{n} at the table',
+  'chronik.sessionNo': 'Session no. {n}',
   'chronik.wonOne': '{names} won',
   'chronik.won': '{names} won',
   // Die Brücke's Chronik (#1245): how often the chosen game took the 1 in that
@@ -778,6 +781,9 @@ I18N.en = {
   'member.editName': 'Click to rename',
   'member.edit': 'Edit',
   'member.recentWins': 'Recent wins',
+  'member.recentTitle': 'Recently at the table',
+  'member.recentWon': 'won',
+  'member.recentJoined': 'played',
   'member.colorLabel': 'Avatar color',
   'member.colorChange': 'Change the avatar colour',
   'member.mySeat': 'Your seat',

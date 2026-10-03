@@ -18,9 +18,10 @@
  */
 function renderPeriodRecapSection(round, activities) {
   // Das Programmheft picks the KIND first — Monat · Quartal · Jahr (#1379,
-  // P13.1) — so it is the one caller that asks for quarters.
-  const programmheft = designIs('programmheft');
-  const periods = periodsOf(round, activities, { quarters: programmheft });
+  // P13.1) — so it asks for quarters. Forest's recap card does the same (#1473,
+  // F13.1).
+  const kindSwitch = designIs('programmheft') || designIs('forest');
+  const periods = periodsOf(round, activities, { quarters: kindSwitch });
   if (!periods.length) return null;
 
   // Months are formatted through the locale machinery (fmtMonth -> localeTag,
@@ -80,7 +81,7 @@ function renderPeriodRecapSection(round, activities) {
      12): the kind is a three-way toggle and the picker then lists only that
      kind's periods, so every period stays reachable — the switch narrows the
      list, it never hides a period. A kind with nothing to show is not offered. */
-  if (programmheft) {
+  if (kindSwitch) {
     const kinds = ['month', 'quarter', 'year'].filter((k) => periods.some((p) => p.kind === k));
     const fill = (kind) => {
       picker.innerHTML = periods.filter((p) => p.kind === kind)
@@ -164,7 +165,8 @@ function renderPeriodRecapSection(round, activities) {
     // a readout of five numbers, not a sentence of chips.
     // Das Programmheft too (#1379, P13.1): the box's figures are display
     // numerals over a tracked label.
-    const ocean = designIs('ocean') || designIs('bruecke') || designIs('programmheft');
+    // Forest too (#1473, F13.1 „8 Sessions · 6 Spiele · 4 dabei" tiles).
+    const ocean = designIs('ocean') || designIs('bruecke') || designIs('programmheft') || designIs('forest');
     const chip = ocean
       ? (icon, text, n, label) => h(`<span class="stat-chip stat-chip--tile"><span class="stat-chip__n">${esc(String(n))}</span><span class="stat-chip__label">${esc(t(label))}</span></span>`)
       : (icon, text) => h(`<span class="stat-chip"><i class="ti ${icon}" aria-hidden="true"></i>${esc(text)}</span>`);

@@ -182,6 +182,8 @@ I18N.pt = {
   'hub.pulse.title': 'Pulso do grupo',
   'hub.young.lock': 'a partir do primeiro jogo',
   'hub.young.emptyTitle': 'O pote ainda está vazio',
+  // #1471 (F7.3): Forest's empty table names its vessel, the tree stump.
+  'hub.young.emptyTitleForest': 'O toco ainda está vazio',
   'hub.young.emptyText': 'O sorteio sai da estante. Coloquem o primeiro jogo na mesa.',
   'hub.young.emptyTextBgg': 'O sorteio sai da estante. Coloquem o primeiro jogo na mesa — ou tragam a estante inteira do BGG num só passo.',
   'hub.young.firstCta': 'Sortear a primeira sessão',
@@ -370,6 +372,7 @@ I18N.pt = {
   'chronik.count': '{n} sessões desde {month}',
   'chronik.seatedOne': '{n} à mesa',
   'chronik.seated': '{n} à mesa',
+  'chronik.sessionNo': 'Sessão n.º {n}',
   'chronik.wonOne': '{names} venceu',
   'chronik.won': '{names} venceram',
   // Die Brücke's Chronik (#1245): how often the chosen game took the 1 in that
@@ -761,6 +764,9 @@ I18N.pt = {
   'member.editName': 'Clique para renomear',
   'member.edit': 'Editar',
   'member.recentWins': 'Últimas vitórias',
+  'member.recentTitle': 'Últimas presenças',
+  'member.recentWon': 'venceu',
+  'member.recentJoined': 'jogou',
   'member.colorLabel': 'Cor do avatar',
   'member.colorChange': 'Mudar a cor do avatar',
   'member.mySeat': 'Seu lugar',

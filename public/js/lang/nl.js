@@ -180,6 +180,8 @@ I18N.nl = {
   'hub.pulse.title': 'Puls van de groep',
   'hub.young.lock': 'vanaf het eerste spel',
   'hub.young.emptyTitle': 'De pot is nog leeg',
+  // #1471 (F7.3): Forest's empty table names its vessel, the tree stump.
+  'hub.young.emptyTitleForest': 'De boomstronk is nog leeg',
   'hub.young.emptyText': 'Er wordt uit de kast geloot. Leg het eerste spel op tafel.',
   'hub.young.emptyTextBgg': 'Er wordt uit de kast geloot. Leg het eerste spel op tafel — of haal je hele kast in één stap van BGG.',
   'hub.young.firstCta': 'Eerste sessie starten',
@@ -368,6 +370,7 @@ I18N.nl = {
   'chronik.count': '{n} sessies sinds {month}',
   'chronik.seatedOne': '{n} aan tafel',
   'chronik.seated': '{n} aan tafel',
+  'chronik.sessionNo': 'Sessie nr. {n}',
   'chronik.wonOne': '{names} won',
   'chronik.won': '{names} wonnen',
   // Die Brücke's Chronik (#1245): how often the chosen game took the 1 in that
@@ -759,6 +762,9 @@ I18N.nl = {
   'member.editName': 'Klik om te hernoemen',
   'member.edit': 'Bewerken',
   'member.recentWins': 'Laatste overwinningen',
+  'member.recentTitle': 'Laatst aan tafel',
+  'member.recentWon': 'gewonnen',
+  'member.recentJoined': 'meegespeeld',
   'member.colorLabel': 'Kleur van de avatar',
   'member.colorChange': 'Avatarkleur wijzigen',
   'member.mySeat': 'Jouw plek',

@@ -172,6 +172,8 @@ I18N.de = {
   'hub.pulse.title': 'Rundenpuls',
   'hub.young.lock': 'ab dem ersten Spiel',
   'hub.young.emptyTitle': 'Der Topf ist noch leer',
+  // #1471 (F7.3): Forest's empty table names its vessel, the tree stump.
+  'hub.young.emptyTitleForest': 'Der Stumpf ist noch leer',
   'hub.young.emptyText': 'Gewirbelt wird aus dem Regal. Legt das erste Spiel auf den Tisch.',
   'hub.young.emptyTextBgg': 'Gewirbelt wird aus dem Regal. Legt das erste Spiel auf den Tisch — oder holt euer Regal in einem Schritt von BGG.',
   'hub.young.firstCta': 'Erste Session wirbeln',
@@ -366,6 +368,7 @@ I18N.de = {
   'chronik.count': '{n} Sessions seit {month}',
   'chronik.seatedOne': '{n} dabei',
   'chronik.seated': '{n} dabei',
+  'chronik.sessionNo': 'Session Nr. {n}',
   'chronik.wonOne': '{names} hat gewonnen',
   'chronik.won': '{names} haben gewonnen',
   // Die Brücke's Chronik (#1245): how often the chosen game took the 1 in that
@@ -780,6 +783,9 @@ I18N.de = {
   'member.editName': 'Zum Umbenennen klicken',
   'member.edit': 'Bearbeiten',
   'member.recentWins': 'Letzte Siege',
+  'member.recentTitle': 'Zuletzt dabei',
+  'member.recentWon': 'hat gewonnen',
+  'member.recentJoined': 'dabei',
   'member.colorLabel': 'Avatar-Farbe',
   'member.colorChange': 'Avatar-Farbe ändern',
   'member.mySeat': 'Dein Platz',

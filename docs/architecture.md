@@ -849,7 +849,8 @@ public/
     forest-hub.js         Forest's lobby and round hub: the three-column frame,
                           the head with its ribbon marker, the tree stump, the
                           „Zuletzt gespielt" card, the clearings and the
-                          „Leuchtzeichen" notice (#1466)
+                          „Leuchtzeichen" notice (#1466); its empty, young and
+                          demo states and the empty lobby (#1471)
     bruecke-shelf.js      Die Brücke's Regal cards and the Spielepass's stat
                           tiles and rating distribution (#1239)
     saved-filters.js      a round's saved session filters (#1328): the chip's
@@ -915,6 +916,9 @@ public/
     programmheft-tier2a.js Das Programmheft's extras with no Klassisch counterpart
                      (#1379): the Chronik's „Rückblick" sheet and „Teilen",
                      „Letzte Siege" on the member page
+    forest-tier2a.js Forest's tier 2a (#1473): the Chronik as a path and its
+                     „Rückblick" entry, the Pokale grove, the member page's
+                     five-figure Tischkarte with „Zuletzt dabei" beside it
     vote-card-composed.js Der Tisch's vote card (#1268): the felt header, the card
                      with cover and meta, the worded faces, the hand-off line
                      and the vote link's felt intro; both vote cards build

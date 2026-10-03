@@ -68,6 +68,12 @@ async function showHome() {
       app.appendChild(renderHomeDash());
       return;
     }
+    // Forest's empty clearing (F7.1, #1471): the greeting, one sentence, one action.
+    if (forest) {
+      app.appendChild(forestFirstRun(app.querySelector('.lobby-head'), onboard));
+      app.appendChild(renderHomeDash());
+      return;
+    }
     const cta = h(`<a class="lobby-cta">
          <span class="lobby-cta__icon"><i class="ti ti-plus" aria-hidden="true"></i></span>
          <span class="lobby-cta__title">${esc(t(onboard ? 'home.onboard.title' : 'home.empty.title'))}</span>
