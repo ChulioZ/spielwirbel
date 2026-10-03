@@ -7,6 +7,7 @@ paths:
   - "public/js/recap-card-ocean.js"
   - "public/js/recap-card-bruecke.js"
   - "public/js/recap-card-programmheft.js"
+  - "public/js/recap-card-forest.js"
   - "public/js/card-glyphs.js"
   - "public/js/shelf-profile-card.js"
   - "test/recap-card-tisch.test.js"
@@ -112,6 +113,14 @@ the fourth of that shape** and the plainest: flat fills, one gradient (the cover
 stand-in), no Path2D, no image but the BGG badge. Its masthead tracks capitals
 by drawing them letter by letter rather than through `ctx.letterSpacing`, which
 WebKit lacks in the versions this app supports.
+
+**Forest's card (#1475, `public/js/recap-card-forest.js`) is the fifth**, and
+the first whose sheet (F8.4 „Technik") states the constraint itself: gradients,
+rounded rects, `ellipse()` crowns, the marker band as a plain polygon path (the
+sheet's `clip-path`), a canvas `shadowBlur` under the cover stand-in, the crown
+and whirl as `Path2D`, and the fireflies as radial-gradient discs — no pattern
+anywhere. Exported clean in headless Chromium; **no WebKit run** — the probe in
+`browser-pane-is-chromium-only.md` needs a Mac, and the slice was built on Linux.
 
 A spec can only stand in for the engine by asserting the **mechanism** against a
 recording context — jsdom has no 2d context and Node has no WebKit — so it

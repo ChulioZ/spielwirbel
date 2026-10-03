@@ -323,6 +323,7 @@ async function recapCardBlob(model) {
   if (designCard() === 'ocean') return oceanCardBlob('period', model);
   if (designCard() === 'bruecke') return brueckeCardBlob(model); // B8.4, recap-card-bruecke.js (#1247)
   if (designCard() === 'programmheft') return programmheftCardBlob('period', model);
+  if (designCard() === 'forest') return forestCardBlob('period', model); // F8.4's dusk, recap-card-forest.js (#1475)
   // Constraint 2 — see the header. `document.fonts` is present in every browser
   // this app supports; the guard is for a stray environment without it.
   if (document.fonts && document.fonts.ready) await document.fonts.ready;

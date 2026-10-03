@@ -641,6 +641,7 @@ async function shareResultCard(model, text) {
     // Ocean's card (#1220) picks its proportion from the screen; its spec
     // handles a split session itself.
     if (designCard() === 'programmheft') blob = await programmheftCardBlob('session', model); else
+    if (designCard() === 'forest') blob = await forestCardBlob('session', model); else
     blob = designCard() === 'ocean'
       ? await oceanCardBlob(oceanShareKind(), model)
       : await tischCardBlob(model.outcome === 'split' ? 'split' : 'session', model);

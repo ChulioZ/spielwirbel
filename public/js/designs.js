@@ -555,8 +555,9 @@ const DESIGN_REGISTRY = [
        design to its own from the moment it is registered — the holding pattern
        Ocean and Das Programmheft used is no longer allowed): the whirl in F1's
        light print on the Laubgrün the primary button wears. Rendered by
-       scripts/render-design-marks.js — never hand-edited; #1475 (F8.4) may
-       redraw them with the share card. */
+       scripts/render-design-marks.js — never hand-edited. #1475 (F8.4) redrew
+       them from the wordmark badge: the Laubgrün disc with the whirl, on the
+       clearing's light ground (the favicon is the bare disc). */
     marks: {
       icons: [
         { src: '/icons/forest/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
@@ -570,6 +571,9 @@ const DESIGN_REGISTRY = [
     // A person's NAME prints in the design's ink, never in the colour itself
     // (design.js personNameInk) — F1: a person colour is a ring, not type.
     personInk: 'ink',
+    // F8.4's share card (recap-card-forest.js, #1475): the result's clearing
+    // and the period's dusk, one firefly per session.
+    card: 'forest',
     enabled: false,
   },
 ];
