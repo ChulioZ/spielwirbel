@@ -5353,3 +5353,659 @@
     min-height: var(--target-key);
   }
 }
+
+/* ===== #1467 — Regal, Spielepass, add-game lookup =====
+   Sheets: Forest-F3-Runde-Desktop (F3.3 Regal, F3.4 Spieldetail, F3.5 Spiel
+   hinzufügen), Forest-F6-Phone-Rest (F6.2–F6.4) and Forest-F7-Leerzustaende
+   (F7.8, the 42-game shelf).
+
+   The markup is views-regal.js's Forest branch with forestShelfCard and Das
+   Programmheft's phone „…" (phMoreButton), views-round-detail.js's
+   `forest-pass` branch with forest-shelf.js's score card, three figures and BGG
+   badge, and add-game-search.js (which Forest reaches through showAddGame, as
+   Der Tisch, Ocean, Das Programmheft and Die Brücke do). Klassisch renders none
+   of it — test/forest-regal.test.js pins its DOM.
+
+   No text on a cover (review rule T3): the title, the score and the owner sit
+   on the card under the hollow. Young Serif only at 19px and up, never on a
+   button. Geometry is ungated; every rule that paints is gated on the light
+   scheme and reads a token, never a literal. */
+
+/* ---- The Regal head (F3.3/F6.2): „Regal" in Young Serif with the count
+   beside it, then one row of tools — the search (a 44px field), the sort as a
+   statement, the ⓘ, the filter; „Auswählen", „Von BGG übernehmen" and
+   „Spiel hinzufügen" at the far end. (0,5,1) on the title, against the reset
+   list's (0,5,0). */
+:root[data-design="forest"] .forest-regal .regal-head { align-items: center; gap: 12px 20px; margin-bottom: 18px; }
+:root[data-design="forest"] .forest-regal .regal-title { display: flex; align-items: baseline; gap: 12px; min-width: 0; }
+:root[data-design="forest"] .section .regal-head .regal-title h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 400;
+  line-height: var(--leading-display);
+  letter-spacing: 0;
+  text-transform: none;
+}
+:root[data-design="forest"] .forest-regal .regal-title__count { font-size: 15px; font-weight: 800; }
+:root[data-design="forest"] .forest-regal .regal-head .section-tools { flex: 1 1 auto; gap: 8px; }
+:root[data-design="forest"] .forest-regal .regal-head .search-pill {
+  min-height: var(--target-field);
+  min-width: 280px;
+  padding: 0 14px;
+  box-sizing: border-box;
+  border-radius: var(--radius-md);
+}
+:root[data-design="forest"] .forest-regal .regal-head .search-pill input { flex: 1 1 200px; font-size: 16px; }
+/* „Sortiert: Bewertung" — one moss leaf holding the word and the <select>. */
+:root[data-design="forest"] .forest-regal .regal-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-height: var(--target-field);
+  padding: 0 4px 0 14px;
+  box-sizing: border-box;
+  border-radius: var(--radius-leaf-s);
+  font-size: 15px;
+  font-weight: 700;
+}
+:root[data-design="forest"] .forest-regal .regal-sort .sort-select {
+  min-height: var(--target-field);
+  padding: 0 6px 0 2px;
+  border: 0;
+  border-radius: var(--radius-leaf-s);
+  font-size: 15px;
+  font-weight: 700;
+}
+:root[data-design="forest"] .forest-regal .regal-head .section-tools :is(.fbar__trigger, .regal-more) {
+  justify-content: center;
+  gap: 8px;
+  min-height: var(--target-key);
+  min-width: var(--target-key);
+  padding: 0 14px;
+  box-sizing: border-box;
+  border-radius: var(--radius-leaf-s);
+  font-size: 15px;
+  font-weight: 700;
+}
+:root[data-design="forest"] .forest-regal .regal-head .section-tools .regal-more { padding: 0; }
+/* The quiet actions at the far end of the row (F3.3): Laubgrün words on the
+   page, moss under the pointer. The first one takes the slack. */
+:root[data-design="forest"] .forest-regal .regal-head .section-tools .link-btn {
+  gap: 6px;
+  min-height: var(--target-key);
+  padding: 0 12px;
+  border-radius: var(--radius-md);
+  font-size: 15px;
+  font-weight: 800;
+  text-decoration: none;
+}
+:root[data-design="forest"] .forest-regal .regal-head .section-tools > :not(.regal-tool--wide) + .regal-tool--wide { margin-left: auto; }
+:root[data-design="forest"] .forest-regal .regal-add--bar { min-height: var(--target-key); white-space: nowrap; }
+/* An empty applied-filter bar would still cost its wrapper's margin. */
+:root[data-design="forest"] .forest-regal .regal-filter:has(.fbar__chips[hidden]) { display: none; }
+
+/* One control per width, as Das Programmheft's: from 860 the toolbar carries
+   „Auswählen", the BGG import and „Spiel hinzufügen"; a phone folds the first
+   two into the „…" (F6.2) and gets the add as a bar in flow AFTER the grid,
+   sticky above the dock (#1427) — the dashed tile closes the grid at both
+   widths. `display: none` takes the other copy out of the accessibility tree. */
+:root[data-design="forest"] .forest-regal .regal-add--dock { display: none; }
+@media (min-width: 860px) {
+  :root[data-design="forest"] .forest-regal .regal-more { display: none; }
+}
+@media (max-width: 859px) {
+  :root[data-design="forest"] .forest-regal :is(.regal-tool--wide, .regal-add--bar) { display: none; }
+  :root[data-design="forest"] .forest-regal .regal-add--dock {
+    display: flex;
+    justify-content: center;
+    position: sticky;
+    /* Above the flush 68px dock and the home-bar inset it pads for (#1466),
+       with 10px of air. */
+    bottom: calc(68px + env(safe-area-inset-bottom, 0px) + 10px);
+    z-index: 5;
+    width: 100%;
+    min-height: 52px;
+    margin-top: 18px;
+  }
+  :root[data-design="forest"] .section .regal-head .regal-title h1 { font-size: 28px; }
+  :root[data-design="forest"] .forest-regal .regal-head { gap: 12px; }
+  :root[data-design="forest"] .forest-regal .regal-head .section-tools { flex: 1 1 100%; }
+  :root[data-design="forest"] .forest-regal .regal-head .search-pill { flex: 1 1 100%; min-width: 0; }
+  :root[data-design="forest"] .forest-regal .regal-sort { font-size: 14px; }
+}
+
+/* ---- The shelf (F3.3/F6.2): paper cards, each cover standing in a light
+   hollow. The hollow is the CARD's; the frame inside it keeps the one shared
+   cover fill (#1504 — a design may shape the frame, never what fills it). */
+:root[data-design="forest"] .forest-regal .cards {
+  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+  gap: 18px 16px;
+}
+:root[data-design="forest"] .forest-card { border: 0; border-radius: 16px; }
+:root[data-design="forest"] .forest-card__well {
+  display: grid;
+  place-items: center;
+  height: 150px;
+  padding: 14px;
+  box-sizing: border-box;
+}
+:root[data-design="forest"] .forest-card .game-card__img {
+  height: 100%;
+  width: auto;
+  max-width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: 6px 2px 6px 2px;
+}
+/* No cover: the hatch fills the whole hollow, with a leaf and „Kein Bild" (F1.6). */
+:root[data-design="forest"] .forest-card--bare .forest-card__well { padding: 0; }
+:root[data-design="forest"] .forest-card--bare .game-card__img { width: 100%; height: 100%; aspect-ratio: auto; border-radius: 0; }
+:root[data-design="forest"] .forest-nocover { flex-direction: column; gap: 6px; }
+:root[data-design="forest"] .forest-leaf {
+  display: block;
+  width: 22px;
+  height: 22px;
+  border-radius: 0 100% 0 100%;
+  transform: rotate(-25deg);
+}
+:root[data-design="forest"] .forest-nocover__label {
+  padding: 1px 6px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.3;
+}
+:root[data-design="forest"] .forest-card .game-card__body { gap: 3px; padding: 10px 12px 12px; }
+:root[data-design="forest"] .forest-card__head { display: flex; align-items: flex-start; gap: 6px; }
+/* The title wraps — two lines at F7.8's density — and never takes an
+   ellipsis; a long word may break rather than push the pill out. */
+:root[data-design="forest"] .forest-card .game-card__title {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+:root[data-design="forest"] .forest-card__head .score-pill {
+  position: static;
+  flex: none;
+  padding: 2px 8px;
+  border-radius: 12px 3px 12px 3px;
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 800;
+}
+:root[data-design="forest"] .forest-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  font-size: 13px;
+  font-weight: 700;
+}
+:root[data-design="forest"] .forest-card__meta .exp-pill {
+  position: static;
+  padding: 0 7px;
+  border-radius: 10px 3px 10px 3px;
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 800;
+}
+:root[data-design="forest"] .forest-card__owner { font-size: 13px; font-weight: 700; }
+:root[data-design="forest"] .forest-regal .add-tile {
+  min-height: 230px;
+  border-width: 2px;
+  border-style: dashed;
+  border-radius: 16px;
+  font-family: var(--font);
+  font-size: 15px;
+  font-weight: 800;
+}
+:root[data-design="forest"] .forest-regal .add-tile .ti { font-size: 30px; /* glyph, not type */ }
+
+/* A big shelf (F7.8): narrower columns and smaller hollows, so eight fit where
+   seven did — only the composition. Its density notes are drawing aids, not
+   product rules (as Das Programmheft's P7.8): nothing is truncated, collapsed
+   or batched at 42 games. */
+:root[data-design="forest"] .forest-regal .cards:has(> .forest-card:nth-child(25)) {
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+}
+:root[data-design="forest"] .forest-regal .cards:has(> .forest-card:nth-child(25)) .forest-card { border-radius: 12px; }
+:root[data-design="forest"] .forest-regal .cards:has(> .forest-card:nth-child(25)) .forest-card__well { height: 92px; padding: 8px; }
+:root[data-design="forest"] .forest-regal .cards:has(> .forest-card:nth-child(25)) .forest-card--bare .forest-card__well { padding: 0; }
+:root[data-design="forest"] .forest-regal .cards:has(> .forest-card:nth-child(25)) .game-card__body { padding: 6px 8px 8px; }
+:root[data-design="forest"] .forest-regal .cards:has(> .forest-card:nth-child(25)) .game-card__title { font-size: 13px; }
+:root[data-design="forest"] .forest-regal .cards:has(> .forest-card:nth-child(25)) .forest-leaf { display: none; }
+:root[data-design="forest"] .forest-regal .cards:has(> .forest-card:nth-child(25)) .add-tile { min-height: 150px; }
+
+/* F6.2: two columns and a 124px hollow on a phone, whatever the shelf holds. */
+@media (max-width: 520px) {
+  :root[data-design="forest"] .forest-regal .cards,
+  :root[data-design="forest"] .forest-regal .cards:has(> .forest-card:nth-child(25)) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  :root[data-design="forest"] .forest-card__well,
+  :root[data-design="forest"] .forest-regal .cards:has(> .forest-card:nth-child(25)) .forest-card__well { height: 124px; padding: 12px; }
+  :root[data-design="forest"] .forest-card .game-card__body { padding: 8px 10px 10px; }
+  :root[data-design="forest"] .forest-card .game-card__title { font-size: 14px; }
+  :root[data-design="forest"] .forest-card__head .score-pill { padding: 1px 7px; font-size: 13px; }
+  :root[data-design="forest"] .forest-regal .add-tile { min-height: 180px; }
+}
+
+/* ---- The Regal's colours. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .section .regal-head .regal-title h1 { color: var(--ink); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-regal .regal-title__count { color: var(--ink-soft); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-regal .regal-head .search-pill { background: var(--raised); border-color: var(--control-edge); color: var(--ink-soft); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-regal .regal-head .search-pill:focus-within {
+  outline: var(--ring-width) solid var(--brand-ring);
+  outline-offset: var(--ring-offset);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-regal .regal-sort { background: var(--moss); color: var(--ink); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-regal .regal-sort .sort-select { background-color: transparent; color: var(--ink); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-regal .regal-head .section-tools :is(.fbar__trigger, .regal-more) {
+  background: var(--moss);
+  border-color: transparent;
+  color: var(--ink);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-regal .regal-head .section-tools :is(.fbar__trigger, .regal-more):hover { background: var(--moss-hover); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-regal .regal-head .section-tools .link-btn { color: var(--brand); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-regal .regal-head .section-tools .link-btn:hover { background: var(--moss); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-card { background: var(--surface); box-shadow: var(--shadow-1); color: var(--ink); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-card__well { background: var(--hatch); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-card .game-card__img { background-color: var(--hatch); box-shadow: var(--shadow-cover); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-card--bare .game-card__img { box-shadow: none; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-leaf { background: var(--brand); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-nocover__label { background: var(--surface); color: var(--ink); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-card .game-card__title { color: var(--ink); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-card__head .score-pill { box-shadow: inset 0 0 0 1px var(--line); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-card__head .score-pill--none { background: var(--moss); color: var(--ink); }
+:root[data-design="forest"]:not([data-scheme="dark"]) :is(.forest-card__meta, .forest-card__owner) { color: var(--ink-soft); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-card__meta .exp-pill { background: var(--moss); color: var(--ink); box-shadow: none; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-regal .add-tile { background: transparent; border-color: var(--control-edge); color: var(--brand); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-regal .add-tile:hover { background: var(--moss); }
+
+/* ---- Der Spielepass (F3.4): three columns — the cover in its hollow | the
+   title, its chips and facts, the score card, the three figures, who rated it
+   and „Verwandte Sessions" | the one action, the Aktionen and the BGG card.
+   Two from 860 (the action column under the story), one below, where the DOM
+   is the reading order (F6.3) and the dock stays. */
+:root[data-design="forest"] .forest-pass { align-items: start; gap: 20px 36px; }
+@media (min-width: 860px) {
+  :root[data-design="forest"] .forest-pass { grid-template-columns: minmax(0, 340px) minmax(0, 1fr); }
+  :root[data-design="forest"] .forest-pass > .pass__game { grid-row: 1 / span 2; }
+  :root[data-design="forest"] .forest-pass > .pass__table { grid-column: 2; }
+}
+@media (min-width: 1280px) {
+  :root[data-design="forest"] .forest-pass { grid-template-columns: minmax(0, 420px) minmax(0, 1fr) minmax(0, 360px); }
+  :root[data-design="forest"] .forest-pass > .pass__game { grid-row: auto; }
+  :root[data-design="forest"] .forest-pass > .pass__table { grid-column: auto; }
+}
+:root[data-design="forest"] .forest-pass > .pass__game,
+:root[data-design="forest"] .forest-pass > .pass__story { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+:root[data-design="forest"] .forest-pass > .pass__table { gap: 12px; }
+/* The cover in its hollow: a 4:3 frame on the hatch tone, the shared fill. */
+:root[data-design="forest"] .forest-pass .gd-cover { padding: 40px 30px; box-sizing: border-box; border-radius: 22px; }
+:root[data-design="forest"] .forest-pass .gd-img { border-radius: 12px 4px 12px 4px; }
+:root[data-design="forest"] .forest-pass .gd-edition { margin: 12px 0 0; text-align: center; }
+/* The story is not a card: title, chips and facts print on the clearing. */
+:root[data-design="forest"] .forest-pass .pass__story .gd-head {
+  display: block;
+  padding: 0;
+  border-radius: 0;
+  overflow: visible;
+}
+:root[data-design="forest"] .forest-pass .pass__story .gd-head::before { content: none; }
+:root[data-design="forest"] .forest-pass .gd-info h1 {
+  margin: 0 0 12px;
+  font-family: var(--font-display);
+  font-size: 40px;
+  font-weight: 400;
+  line-height: var(--leading-display);
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+:root[data-design="forest"] .forest-pass .gd-chips { gap: 8px; }
+:root[data-design="forest"] .forest-pass .gd-chips .tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--target-foot);
+  padding: 0 12px;
+  box-sizing: border-box;
+  border-radius: var(--radius-leaf-s);
+  font-size: 14px;
+  font-weight: 700;
+}
+:root[data-design="forest"] .forest-pass .fact { border-radius: var(--radius-leaf-s); }
+/* The score card (F3.4/F6.3): the pill on its rung beside the score's name,
+   the ⓘ that opens the app's own explanation, and what the number rests on. */
+:root[data-design="forest"] .forest-score {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 18px;
+  border-radius: 18px;
+}
+:root[data-design="forest"] .forest-score .score-pill {
+  position: static;
+  flex: none;
+  padding: 10px 18px;
+  border-radius: 18px 6px 18px 6px;
+  font-family: var(--font);
+  font-size: 36px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+:root[data-design="forest"] .forest-score .score-pill--none { font-size: 22px; }
+:root[data-design="forest"] .forest-score__text { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+:root[data-design="forest"] .forest-score__name { display: inline-flex; align-items: center; gap: 4px; font-size: 17px; font-weight: 800; }
+:root[data-design="forest"] .forest-score__name .score-info { width: var(--target-key); height: var(--target-key); margin: -10px 0; }
+:root[data-design="forest"] .forest-score__ev { font-size: 15px; line-height: var(--leading-text); }
+/* The three figures (F3.4): a Young Serif numeral over its label. */
+:root[data-design="forest"] .forest-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+:root[data-design="forest"] .forest-fact {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 14px 16px;
+  border-radius: 16px;
+}
+:root[data-design="forest"] .forest-fact__v {
+  font-family: var(--font-display);
+  font-size: 28px;
+  line-height: var(--leading-display);
+  overflow-wrap: anywhere;
+}
+:root[data-design="forest"] .forest-fact__k { font-size: 14px; font-weight: 700; line-height: 1.3; }
+/* The panels under them — who rated it, „Verwandte Sessions" — as cards with a
+   Young Serif title. (0,5,1) against the reset list's (0,5,0). */
+:root[data-design="forest"] .forest-pass .section:is(.gd-raters, .gd-history) {
+  margin: 0;
+  padding: 8px 18px 12px;
+  border-radius: 18px;
+}
+:root[data-design="forest"] .forest-pass .section:is(.gd-raters, .gd-history) > h2 {
+  margin: 0;
+  padding: 8px 0;
+  font-family: var(--font-display);
+  font-size: 21px;
+  font-weight: 400;
+  line-height: var(--leading-title);
+  letter-spacing: 0;
+  text-transform: none;
+}
+:root[data-design="forest"] .forest-pass .rater { border-radius: 14px; }
+:root[data-design="forest"] .forest-pass .gd-plays { list-style: none; margin: 0; padding: 0; }
+:root[data-design="forest"] .forest-pass .gd-play__link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: var(--target-key);
+  padding: 4px 0;
+  font-size: 15px;
+  text-decoration: none;
+}
+:root[data-design="forest"] .forest-pass .gd-play .avatar { flex: none; width: 30px; height: 30px; font-size: 11px; /* glyph-sized initials */ }
+:root[data-design="forest"] .forest-pass .gd-play__dot { flex: none; width: 30px; height: 30px; }
+:root[data-design="forest"] .forest-pass .gd-play__date { flex: none; width: 110px; font-weight: 700; font-variant-numeric: tabular-nums; }
+:root[data-design="forest"] .forest-pass .gd-play__what { flex: 1 1 auto; min-width: 0; font-weight: 700; overflow-wrap: anywhere; }
+:root[data-design="forest"] .forest-pass .gd-play .score-pill {
+  position: static;
+  flex: none;
+  padding: 2px 8px;
+  border-radius: 12px 3px 12px 3px;
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 800;
+}
+:root[data-design="forest"] .forest-pass .gd-play__link:hover .gd-play__what { text-decoration: underline; text-underline-offset: 3px; }
+/* The action column: the one action as the primary leaf, the rest as moss
+   rows under it (F3.4), then the source card. */
+@media (min-width: 860px) {
+  :root[data-design="forest"] .forest-pass .gd-bar {
+    position: static;
+    margin: 0;
+    padding: 0;
+    border-radius: 0;
+  }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .forest-pass .gd-bar { background: none; box-shadow: none; }
+}
+:root[data-design="forest"] .forest-pass .gd-bar .btn { min-height: 52px; font-size: 17px; }
+:root[data-design="forest"] .forest-pass .section.gd-actions { margin: 0; padding: 0; }
+:root[data-design="forest"] .forest-pass .section.gd-actions > h2 {
+  margin: 4px 0 8px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+:root[data-design="forest"] .forest-pass .gd-actions__grid { display: flex; flex-direction: column; gap: 12px; }
+:root[data-design="forest"] .forest-pass .gd-act {
+  justify-content: flex-start;
+  gap: 10px;
+  width: 100%;
+  min-height: 48px;
+  padding: 0 16px;
+  font-size: 16px;
+  font-weight: 700;
+  text-align: left;
+}
+:root[data-design="forest"] .forest-source {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 16px;
+  border-radius: 16px;
+}
+:root[data-design="forest"] .forest-source :is(.link-out, .link-out--btn) {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--target-foot);
+  font-size: 15px;
+  font-weight: 800;
+}
+/* „Powered by BGG", linked, at a legible width (the licence condition). */
+:root[data-design="forest"] .forest-bgg-link { display: inline-flex; align-items: center; min-height: var(--target-foot); }
+:root[data-design="forest"] .forest-bgg-link img { display: block; width: 120px; height: auto; }
+@media (max-width: 859px) {
+  /* F6.3 keeps the dock on the phone Spieldetail; its clearance rides the same
+     condition and the action bar sticks above it (68px flush dock). */
+  :root[data-design="forest"] .app:has(.forest-pass) .dock.dock--sub { display: grid; }
+  :root[data-design="forest"] .app:has(.forest-pass):has(.dock),
+  :root[data-design="forest"] .app:has(.forest-pass):has(.dock) + .site-footer { padding-bottom: 92px; }
+  :root[data-design="forest"] .app:has(.dock) .forest-pass .gd-bar { bottom: calc(68px + env(safe-area-inset-bottom, 0px) + 10px); }
+  :root[data-design="forest"] .forest-pass .gd-cover { padding: 24px 40px; border-radius: 20px; }
+  :root[data-design="forest"] .forest-pass .gd-info h1 { font-size: 30px; }
+  :root[data-design="forest"] .forest-score { gap: 14px; padding: 14px; }
+  :root[data-design="forest"] .forest-score .score-pill { padding: 8px 14px; font-size: 28px; }
+  :root[data-design="forest"] .forest-score__name { font-size: 16px; }
+  :root[data-design="forest"] .forest-score__ev { font-size: 14px; }
+  :root[data-design="forest"] .forest-facts { gap: 10px; }
+  :root[data-design="forest"] .forest-fact { padding: 10px 12px; border-radius: 14px; }
+  :root[data-design="forest"] .forest-fact__v { font-size: 22px; line-height: var(--leading-title); }
+  :root[data-design="forest"] .forest-fact__k { font-size: 13px; }
+  :root[data-design="forest"] .forest-pass .section:is(.gd-raters, .gd-history) { padding: 4px 14px 8px; }
+  :root[data-design="forest"] .forest-pass .section:is(.gd-raters, .gd-history) > h2 { font-size: 19px; }
+  :root[data-design="forest"] .forest-pass .gd-play__date { width: 76px; font-size: 14px; }
+  :root[data-design="forest"] .forest-pass .gd-actions__grid { flex-flow: row wrap; gap: 8px; }
+  :root[data-design="forest"] .forest-pass .gd-act { width: auto; min-height: var(--target-key); padding: 0 12px; font-size: 14px; }
+  :root[data-design="forest"] .forest-source {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    margin: 0;
+    padding: 0;
+  }
+}
+
+/* ---- The Spielepass's colours. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-pass .gd-cover { background: var(--hatch); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-pass .gd-img { background-color: var(--surface); box-shadow: var(--shadow-2); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-pass .pass__story .gd-head { background: none; box-shadow: none; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-pass .gd-info h1 { color: var(--ink); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-pass .gd-chips .tag { background: var(--raised); border: 1.5px solid var(--control-edge); color: var(--ink); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-pass .gd-chips .tag .ti { color: var(--brand); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-pass .gd-chips .tag--empty { border-style: dashed; color: var(--ink-soft); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-pass .gd-chips .tag--edit:hover { background: var(--moss); }
+:root[data-design="forest"]:not([data-scheme="dark"]) :is(.forest-score, .forest-fact, .forest-source) { background: var(--surface); box-shadow: var(--shadow-1); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-score .score-pill { box-shadow: inset 0 0 0 1px var(--line); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-score .score-pill--none { background: var(--moss); color: var(--ink); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-score__name { color: var(--ink); }
+:root[data-design="forest"]:not([data-scheme="dark"]) :is(.forest-score__ev, .forest-fact__k) { color: var(--ink-soft); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-fact__v { color: var(--ink); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-pass .section:is(.gd-raters, .gd-history) { background: var(--surface); box-shadow: var(--shadow-1); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-pass .section:is(.gd-raters, .gd-history) > h2 { color: var(--ink); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-pass .rater { background: var(--band); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-pass .gd-play + .gd-play { border-top: 1px solid var(--line); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-pass .gd-play__link { color: var(--ink); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-pass .gd-play__date,
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-pass .gd-play--muted .gd-play__what { color: var(--ink-soft); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-pass .gd-play .score-pill { box-shadow: inset 0 0 0 1px var(--line); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-pass .section.gd-actions > h2 { color: var(--brand); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-source :is(.link-out, .link-out--btn) { background: none; border: 0; color: var(--brand); }
+@media (max-width: 859px) {
+  :root[data-design="forest"]:not([data-scheme="dark"]) .forest-source { background: none; box-shadow: none; }
+}
+
+/* ---- Spiel hinzufügen (F3.5/F6.4): the search-first step Der Tisch built
+   (add-game-search.js), on Forest's leaves — a 56px field with the focus ring
+   on its box, „Powered by BGG" linked under it, the hits as rows on one card,
+   „Hinzufügen" the primary leaf, and the two ways out as moss rows. From
+   1100px the ways stand in a column beside the hits (F3.5); below, under them
+   (F6.4). DOM order: the hits first, then the ways — the left column, then the
+   right. */
+:root[data-design="forest"] .add-search__query {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 56px;
+  margin: 2px 0 0;
+  padding: 0 18px;
+  box-sizing: border-box;
+  border-width: 1.5px;
+  border-style: solid;
+  border-radius: 14px;
+}
+:root[data-design="forest"] .add-search__query > .ti { font-size: 20px; /* glyph, not type */ }
+:root[data-design="forest"] .add-search__input {
+  flex: 1;
+  min-width: 0;
+  padding: 12px 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 18px;
+  outline: none;
+}
+:root[data-design="forest"] .add-search__count { flex: none; font-size: 14px; font-weight: 700; }
+:root[data-design="forest"] .add-search__credit { display: flex; justify-content: flex-end; margin: 6px 0 8px; }
+:root[data-design="forest"] .add-search__msg { margin: 0 0 10px; font-size: 14px; }
+:root[data-design="forest"] .add-search__msg:empty { margin: 0; }
+:root[data-design="forest"] .add-search__list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 18px;
+  list-style: none;
+}
+:root[data-design="forest"] .add-search__list:empty { display: none; }
+:root[data-design="forest"] .add-search__row {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 18px;
+}
+:root[data-design="forest"] .add-search__cover {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 76px;
+  height: 64px;
+  overflow: hidden;
+  border-radius: 10px;
+}
+:root[data-design="forest"] .add-search__cover img { display: block; width: 100%; height: 100%; object-fit: contain; }
+:root[data-design="forest"] .add-search__cover .cover-ph .ti { font-size: 18px; /* glyph, not type */ }
+:root[data-design="forest"] .add-search__text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+:root[data-design="forest"] .add-search__title { font-size: 17px; font-weight: 800; line-height: 1.2; overflow-wrap: anywhere; }
+:root[data-design="forest"] .add-search__meta { font-size: 14px; font-weight: 700; }
+:root[data-design="forest"] .add-search__state { font-size: 13px; font-weight: 700; }
+:root[data-design="forest"] :is(.add-search__add, .add-search__shelve, .add-search__held) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: var(--target-key);
+  min-width: var(--target-key);
+  padding: 0 16px;
+  box-sizing: border-box;
+  font-size: 15px;
+  font-weight: 800;
+}
+:root[data-design="forest"] .add-search__held { border-radius: var(--radius-leaf-s); }
+:root[data-design="forest"] .add-search__ways { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; padding-bottom: 18px; }
+:root[data-design="forest"] .add-search__way { display: flex; align-items: center; justify-content: flex-start; gap: 8px; min-height: 48px; font-size: 15px; text-align: left; }
+@media (min-width: 640px) {
+  :root[data-design="forest"] .sheet-backdrop:has(> .add-search) { align-items: flex-start; padding-top: 72px; }
+}
+@media (min-width: 1100px) {
+  :root[data-design="forest"] .sheet.add-search {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 280px;
+    align-content: start;
+    column-gap: 32px;
+    max-width: 960px;
+    padding-bottom: 24px;
+  }
+  :root[data-design="forest"] .sheet.add-search > .sheet__head { grid-column: 1 / -1; }
+  :root[data-design="forest"] .sheet.add-search > :not(.sheet__head):not(.add-search__ways) { grid-column: 1; }
+  :root[data-design="forest"] .sheet.add-search > .add-search__ways {
+    grid-column: 2;
+    grid-row: 2 / span 4;
+    align-self: start;
+    margin: 2px 0 0;
+    padding: 18px;
+    border-radius: 18px;
+  }
+}
+@media (max-width: 639px) {
+  :root[data-design="forest"] .add-search__query { min-height: 52px; padding: 0 14px; border-radius: var(--radius-md); }
+  :root[data-design="forest"] .add-search__input { font-size: 17px; }
+  :root[data-design="forest"] .add-search__row { grid-template-columns: 56px minmax(0, 1fr) var(--target-key); gap: 12px; padding: 10px 12px; }
+  :root[data-design="forest"] .add-search__cover { width: 56px; height: 48px; border-radius: 8px; }
+  :root[data-design="forest"] .add-search__title { font-size: 15px; }
+  :root[data-design="forest"] .add-search__meta { font-size: 13px; }
+  :root[data-design="forest"] :is(.add-search__add, .add-search__shelve, .add-search__held) { width: var(--target-key); padding: 0; font-size: 20px; }
+  :root[data-design="forest"] .add-search__act-label { display: none; }
+}
+
+/* ---- The lookup's colours. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .add-search__query { background: var(--raised); border-color: var(--control-edge); color: var(--ink-soft); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .add-search__query:focus-within {
+  outline: var(--ring-width) solid var(--brand-ring);
+  outline-offset: var(--ring-offset);
+}
+/* The box carries the ring; the bare input inside would draw a second one. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .add-search__query .add-search__input:focus-visible { outline: none; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .add-search__input { color: var(--ink); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .add-search__input::placeholder { color: var(--ink-soft); }
+:root[data-design="forest"]:not([data-scheme="dark"]) :is(.add-search__msg, .add-search__meta, .add-search__state, .add-search__count) { color: var(--ink-soft); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .add-search__list { background: var(--surface); box-shadow: var(--shadow-1); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .add-search__row { color: var(--ink); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .add-search__row + .add-search__row { border-top: 1px solid var(--line); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .add-search__cover { background: var(--hatch); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .add-search__held { background: var(--moss); color: var(--ink); }
+@media (min-width: 1100px) {
+  :root[data-design="forest"]:not([data-scheme="dark"]) .sheet.add-search > .add-search__ways { background: var(--surface); box-shadow: var(--shadow-1); }
+}

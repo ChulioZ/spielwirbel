@@ -437,6 +437,8 @@ I18N.nl = {
   'games.noMatchFilters': 'Geen spellen die aan de filters voldoen.',
   'games.retire': 'Opzijleggen',
   'games.scoreNew': 'nieuw',
+  // F1.6's empty cover hollow under Forest (#1467) — aria-hidden, never a name.
+  'games.noCover': 'Geen afbeelding',
   'games.retireConfirm': '“{title}” opzijleggen? Het verdwijnt uit de spellenlijst, maar blijft te bekijken onder “Opzijgelegde spellen”.',
   'games.retired': '“{title}” opzijgelegd',
   'games.completed': '“{title}” als uitgespeeld gemarkeerd',
@@ -1998,6 +2000,8 @@ I18N.nl = {
   'detail.distTitleBruecke': 'Hoe de ronde het beoordeelt',
   'detail.statPlaysBruecke': 'keer gespeeld',
   'detail.statVetoBruecke': '× geen stuwkracht',
+  // Forest's Spielepass figure (#1467): who has won this game most often.
+  'detail.factMostWins': 'Meeste overwinningen',
   // Das Programmheft's lobby and hub (#1372, P3.1/P3.2/P6.1).
   'hub.members': 'Leden',
   'hub.forestMarker': 'Markering {name}',

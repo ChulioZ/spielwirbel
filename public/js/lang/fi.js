@@ -414,6 +414,8 @@ I18N.fi = {
   'games.noMatchFilters': 'Mikään peli ei vastaa suodattimia.',
   'games.retire': 'Karsi',
   'games.scoreNew': 'uusi',
+  // F1.6's empty cover hollow under Forest (#1467) — aria-hidden, never a name.
+  'games.noCover': 'Ei kuvaa',
   'games.retireConfirm': 'Karsitaanko ”{title}”? Se katoaa pelilistalta mutta näkyy edelleen kohdassa ”Karsitut pelit”.',
   'games.retired': '”{title}” karsittu',
   'games.completed': '”{title}” merkitty läpipelatuksi',
@@ -1966,6 +1968,8 @@ I18N.fi = {
   'detail.distTitleBruecke': 'Miten porukka arvioi',
   'detail.statPlaysBruecke': 'kertaa pelattu',
   'detail.statVetoBruecke': '× ei työntöä',
+  // Forest's Spielepass figure (#1467): who has won this game most often.
+  'detail.factMostWins': 'Eniten voittoja',
   // Das Programmheft's lobby and hub (#1372, P3.1/P3.2/P6.1).
   'hub.members': 'Jäsenet',
   'hub.forestMarker': 'Merkki {name}',

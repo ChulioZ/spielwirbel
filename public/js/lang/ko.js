@@ -415,6 +415,8 @@ I18N.ko = {
   'games.noMatchFilters': '필터에 맞는 게임이 없어요.',
   'games.retire': '정리하기',
   'games.scoreNew': '신규',
+  // F1.6's empty cover hollow under Forest (#1467) — aria-hidden, never a name.
+  'games.noCover': '이미지 없음',
   'games.retireConfirm': '“{title}”을(를) 정리할까요? 게임 목록에서는 사라지지만 “정리한 게임”에서 계속 볼 수 있어요.',
   'games.retired': '“{title}” 정리했어요',
   'games.completed': '“{title}”을(를) 완료로 표시했어요',
@@ -1929,6 +1931,8 @@ I18N.ko = {
   'detail.distTitleBruecke': '모임의 평가',
   'detail.statPlaysBruecke': '번 플레이',
   'detail.statVetoBruecke': '× 추진력 없음',
+  // Forest's Spielepass figure (#1467): who has won this game most often.
+  'detail.factMostWins': '최다 승리',
   // Das Programmheft's lobby and hub (#1372, P3.1/P3.2/P6.1).
   'hub.members': '멤버',
   'hub.forestMarker': '마커 {name}',

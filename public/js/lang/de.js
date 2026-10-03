@@ -438,6 +438,8 @@ I18N.de = {
   'games.noMatchFilters': 'Keine Spiele passen zu den Filtern.',
   'games.retire': 'Aussortieren',
   'games.scoreNew': 'neu',
+  // F1.6's empty cover hollow under Forest (#1467) — aria-hidden, never a name.
+  'games.noCover': 'Kein Bild',
   'games.retireConfirm': '„{title}“ aussortieren? Es verschwindet aus der Spieleliste, bleibt aber unter „Aussortierte Spiele“ einsehbar.',
   'games.retired': '„{title}“ aussortiert',
   'games.completed': '„{title}“ als durchgespielt markiert',
@@ -2116,6 +2118,8 @@ I18N.de = {
   'detail.distTitleBruecke': 'Wie die Runde wertet',
   'detail.statPlaysBruecke': 'Mal gespielt',
   'detail.statVetoBruecke': '× kein Schub',
+  // Forest's Spielepass figure (#1467): who has won this game most often.
+  'detail.factMostWins': 'Meiste Siege',
   // Das Programmheft's lobby and hub (#1372, P3.1/P3.2/P6.1).
   'hub.members': 'Mitglieder',
   'hub.forestMarker': 'Marker {name}',

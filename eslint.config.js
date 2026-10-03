@@ -515,6 +515,9 @@ const frontendGlobals = {
   forestFirstRun: 'readonly',
   // bruecke-shelf.js (#1239) — Die Brücke's Regal cards and Spielepass figures
   brueckeTitleLong: 'readonly', brueckeCard: 'readonly',
+  // forest-shelf.js (#1467) — Forest's Regal cards, Spielepass figures and BGG badge
+  forestNoCover: 'readonly', forestShelfCard: 'readonly', forestPassScore: 'readonly', forestShortDate: 'readonly',
+  forestPassFacts: 'readonly', forestBggBadge: 'readonly',
   brueckePassStats: 'readonly', brueckePassDist: 'readonly',
   // #1280 — Der Tisch's young-round features (views-home.js, hub-cards.js, views-pokale.js)
   lobbyInviteSlip: 'readonly', lobbyNextStep: 'readonly', hubDemoSummary: 'readonly',

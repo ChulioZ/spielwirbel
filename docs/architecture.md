@@ -853,6 +853,9 @@ public/
                           demo states and the empty lobby (#1471)
     bruecke-shelf.js      Die Brücke's Regal cards and the Spielepass's stat
                           tiles and rating distribution (#1239)
+    forest-shelf.js       Forest's Regal cards (the cover in a light hollow),
+                          the Spielepass's score card, three figures and the
+                          linked BGG badge (#1467)
     saved-filters.js      a round's saved session filters (#1328): the chip's
                           prefill, the setup screen's „Filter speichern" sheet
                           and the Einstellungen list

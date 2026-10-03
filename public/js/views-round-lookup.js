@@ -21,8 +21,9 @@
 function showAddGame(round, opts = {}) {
   // Ocean draws the same search-first step (#1212, O3.5/O6.4), and so does Das
   // Programmheft (#1373, P3.5/P6.4 — programmheft.css styles it), and Die
-  // Brücke (#1239, B6.4 — bruecke.css).
-  if (['tisch', 'ocean', 'programmheft', 'bruecke'].some(designIs)) return showAddGameSearch(round, opts);
+  // Brücke (#1239, B6.4 — bruecke.css), and Forest (#1467, F3.5/F6.4 —
+  // forest.css).
+  if (['tisch', 'ocean', 'programmheft', 'bruecke', 'forest'].some(designIs)) return showAddGameSearch(round, opts);
   return showAddGameForm(round, opts);
 }
 
