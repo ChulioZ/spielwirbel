@@ -180,6 +180,8 @@ I18N.nl = {
   'hub.pulse.title': 'Puls van de groep',
   'hub.young.lock': 'vanaf het eerste spel',
   'hub.young.emptyTitle': 'De pot is nog leeg',
+  // #1471 (F7.3): Forest's empty table names its vessel, the tree stump.
+  'hub.young.emptyTitleForest': 'De boomstronk is nog leeg',
   'hub.young.emptyText': 'Er wordt uit de kast geloot. Leg het eerste spel op tafel.',
   'hub.young.emptyTextBgg': 'Er wordt uit de kast geloot. Leg het eerste spel op tafel — of haal je hele kast in één stap van BGG.',
   'hub.young.firstCta': 'Eerste sessie starten',

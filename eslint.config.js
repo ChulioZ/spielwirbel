@@ -508,6 +508,9 @@ const frontendGlobals = {
   // forest-hub.js (#1466) — Forest's lobby tiles, notice and round hub composition
   forestHubFrame: 'readonly', forestStump: 'readonly', forestPresetsLabel: 'readonly', forestMarkerLine: 'readonly',
   forestHeroCompose: 'readonly', forestLead: 'readonly', forestRoundCard: 'readonly', forestResumeNotice: 'readonly',
+  // #1471 — its empty and young states
+  forestYoung: 'readonly', forestLocked: 'readonly', forestAsidePreviews: 'readonly', forestLockedPulse: 'readonly',
+  forestFirstRun: 'readonly',
   // bruecke-shelf.js (#1239) — Die Brücke's Regal cards and Spielepass figures
   brueckeTitleLong: 'readonly', brueckeCard: 'readonly',
   brueckePassStats: 'readonly', brueckePassDist: 'readonly',

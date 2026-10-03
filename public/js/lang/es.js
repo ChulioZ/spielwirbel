@@ -169,6 +169,8 @@ I18N.es = {
   'hub.pulse.title': 'Pulso de la ronda',
   'hub.young.lock': 'desde el primer juego',
   'hub.young.emptyTitle': 'El bote aún está vacío',
+  // #1471 (F7.3): Forest's empty table names its vessel, the tree stump.
+  'hub.young.emptyTitleForest': 'El tocón aún está vacío',
   'hub.young.emptyText': 'Se sortea desde la estantería. Poned el primer juego sobre la mesa.',
   'hub.young.emptyTextBgg': 'Se sortea desde la estantería. Poned el primer juego sobre la mesa — o traed toda vuestra estantería de BGG en un solo paso.',
   'hub.young.firstCta': 'Sortear la primera sesión',

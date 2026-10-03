@@ -849,7 +849,8 @@ public/
     forest-hub.js         Forest's lobby and round hub: the three-column frame,
                           the head with its ribbon marker, the tree stump, the
                           „Zuletzt gespielt" card, the clearings and the
-                          „Leuchtzeichen" notice (#1466)
+                          „Leuchtzeichen" notice (#1466); its empty, young and
+                          demo states and the empty lobby (#1471)
     bruecke-shelf.js      Die Brücke's Regal cards and the Spielepass's stat
                           tiles and rating distribution (#1239)
     saved-filters.js      a round's saved session filters (#1328): the chip's

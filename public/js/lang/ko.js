@@ -158,6 +158,8 @@ I18N.ko = {
   'hub.pulse.title': '모임 활동',
   'hub.young.lock': '첫 게임부터',
   'hub.young.emptyTitle': '아직 판이 비어 있어요',
+  // #1471 (F7.3): Forest's empty table names its vessel, the tree stump.
+  'hub.young.emptyTitleForest': '아직 그루터기가 비어 있어요',
   'hub.young.emptyText': '게임은 선반에서 뽑아요. 첫 게임을 테이블에 올려 보세요.',
   'hub.young.emptyTextBgg': '게임은 선반에서 뽑아요. 첫 게임을 테이블에 올리거나, BGG에서 선반 전체를 한 번에 가져오세요.',
   'hub.young.firstCta': '첫 세션 시작',

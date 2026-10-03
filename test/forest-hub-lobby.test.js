@@ -217,10 +217,12 @@ test('Forest hub: a session without a winner says how it ended, and the grove na
   assert.ok(pokale.querySelectorAll('.hub-preview__bar').length >= 1, 'the grove has no trees');
 });
 
-test('Forest hub: a round without games keeps the locked stump and the empty table', async (t) => {
+// Since #1471 (F7.3) the empty stump shows only its rings and the empty table
+// stands UNDER it — test/forest-states.test.js owns that state in full.
+test('Forest hub: a round without games shows the empty stump and the empty table', async (t) => {
   const dom = await hub(t, 'forest', 'start', youngRound());
-  assert.ok(dom.app.querySelector('.forest-stump > .hub-cta[disabled]'), 'the locked start button left the stump');
-  assert.ok(dom.app.querySelector('.forest-hub__main .empty--table'), 'the empty table is gone');
+  assert.ok(dom.app.querySelector('.forest-stump--empty'), 'the empty stump is gone');
+  assert.ok(dom.app.querySelector('.forest-hub__main .forest-stump + .empty--table'), 'the empty table is not under the stump');
   assert.equal(dom.app.querySelector('.forest-pair'), null, 'an empty pair wrapper stayed behind');
   assert.equal(dom.app.querySelector('.forest-head__marker').textContent, 'Marker Tanne', 'the young round lost its marker line');
 });
