@@ -333,15 +333,17 @@ function renderPokaleTab(round) {
   // the page after the tab it is reached by, not „Ruhmeshalle".
   // Das Programmheft does the same (#1379, P13.3/P13.4, operator decision 2):
   // „Pokale" is the page, „Ruhmeshalle" (`pokale.title`) heads the podium.
+  // Forest too (#1473, F13.3), where „Ruhmeshalle" heads the grove.
   const bruecke = designIs('bruecke');
   const programmheft = designIs('programmheft');
-  const head = h(`<div class="section-head"><h1>${esc(t(bruecke || programmheft ? 'hub.tab.pokale' : 'pokale.title'))}</h1></div>`);
+  const forest = designIs('forest');
+  const head = h(`<div class="section-head"><h1>${esc(t(bruecke || programmheft || forest ? 'hub.tab.pokale' : 'pokale.title'))}</h1></div>`);
   sec.appendChild(head);
   // Ocean names the span beside the title, as its Chronik does (#1218, O13.2
   // „Seit Oktober 2025 · 23 Sessions") — the same key, counted the same way,
   // so the two pages cannot disagree about how many sessions the round has.
   const ocean = designIs('ocean');
-  if ((ocean || bruecke || programmheft) && finished.length) {
+  if ((ocean || bruecke || programmheft || forest) && finished.length) {
     const since = finished.reduce((a, s) => (s.createdAt < a ? s.createdAt : a), finished[0].createdAt);
     head.appendChild(h(`<span class="chronik__count">${esc(tn(finished.length, 'chronik.countOne', 'chronik.count', { month: fmtMonth(since) }))}</span>`));
   }
@@ -380,14 +382,15 @@ function renderPokaleTab(round) {
      follow the podium — the markup order IS the reading order at every width,
      and no `order:` is needed (WCAG 2.4.3). Klassisch gets no wrapper: `stageTo`
      is the section itself and its DOM is byte-for-byte what it was. */
-  const split = designIs('tisch') || bruecke || programmheft ? h('<div class="pokale-split"><div class="pokale-split__stage"></div></div>') : null;
+  const split = designIs('tisch') || bruecke || programmheft || forest ? h('<div class="pokale-split"><div class="pokale-split__stage"></div></div>') : null;
   if (split) sec.appendChild(split);
   const stageTo = split ? split.firstElementChild : sec;
   /* Das Programmheft's right-hand column (#1379, P13.3): the table, then the
      plaques under it. The podium stays left under its „Ruhmeshalle" kicker. On
      a phone the two stack in this same order — podium, table, plaques (P13.4). The podium's „Ruhmeshalle" kicker is set
-     with the podium itself, so a young round (no podium yet) has none. */
-  const side = programmheft ? split.appendChild(h('<div class="pokale-split__side"></div>')) : null;
+     with the podium itself, so a young round (no podium yet) has none. Forest
+     puts its table there too (#1473, F13.3), the grove standing left. */
+  const side = programmheft || forest ? split.appendChild(h('<div class="pokale-split__side"></div>')) : null;
 
   // Podium columns by rank: left = 2, center = 1, right = 3. A COLUMN IS A
   // RANK, NOT A MEMBER (#836) — tied members share one step rather than
@@ -420,9 +423,11 @@ function renderPokaleTab(round) {
     : null;
   if (bars) stageTo.appendChild(bars);
   // Every active member, so the summary line below has nobody left to name.
-  const table = programmheft && !young && winners.length ? pokaleTable(round, ranked, rankOf, wins) : null;
+  const table = (programmheft || forest) && !young && winners.length ? pokaleTable(round, ranked, rankOf, wins) : null;
   if (table) side.appendChild(table);
-  if (winners.length && !young && !bars) {
+  // Forest's grove replaces the podium (#1473, F13.3, E7), plaques under both.
+  const grove = forest && table ? stageTo.appendChild(forestGrove(round, ranked, rankOf, wins)) : null;
+  if (winners.length && !young && !bars && !grove) {
     /* ONE number per entry again — the win count the step is ranked on.
        It carried the Siegwertung plus the raw count from #895 until 2026-09-22,
        with `.podium__col--multi` hiding the count on a shared step because two
@@ -580,7 +585,7 @@ function renderPokaleTab(round) {
     );
   }
 
-  if (cards.children.length) (side || split || sec).appendChild(cards);
+  if (cards.children.length) ((forest ? split : side) || split || sec).appendChild(cards);
   app.appendChild(sec);
   /* Abzeichen (#1388, views-badges.js): below the podium and the plaques, the
      round's band then one row per member in THIS standings order — so the two

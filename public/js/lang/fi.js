@@ -347,6 +347,7 @@ I18N.fi = {
   'chronik.count': '{n} sessiota {month} alkaen',
   'chronik.seatedOne': '{n} pöydässä',
   'chronik.seated': '{n} pöydässä',
+  'chronik.sessionNo': 'Sessio nro {n}',
   'chronik.wonOne': '{names} voitti',
   'chronik.won': '{names} voittivat',
   // Die Brücke's Chronik (#1245): how often the chosen game took the 1 in that
@@ -735,6 +736,9 @@ I18N.fi = {
   'member.editName': 'Napsauta nimetäksesi uudelleen',
   'member.edit': 'Muokkaa',
   'member.recentWins': 'Viimeisimmät voitot',
+  'member.recentTitle': 'Viimeksi mukana',
+  'member.recentWon': 'voitti',
+  'member.recentJoined': 'mukana',
   'member.colorLabel': 'Avatarin väri',
   'member.colorChange': 'Vaihda avatarin väri',
   'member.mySeat': 'Sinun paikkasi',
