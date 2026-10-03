@@ -942,6 +942,11 @@ I18N.ko = {
   'result.titleSplit': '세션이 여러 테이블로 나뉘었어요.',
   // Das Programmheft's report kicker over the result headline (#1374).
   'result.reportKicker': '세션 기록',
+  // Forest's result (#1468): the decorative kicker over the headline, and the fact line under the scene.
+  'result.kickerForest': '숲속 빈터에서 · {date}',
+  'result.factSessionNo': '세션 {n}번',
+  'result.factWin': '{name}의 {n}번째 승리',
+  'result.factPlay': '{game} {n}번째 플레이',
   'log.split': '{actor}이(가) 인원을 {n}개 테이블로 나눴어요',
   'startSession.crumb': '세션',
   'startSession.title': '새 세션',
@@ -984,6 +989,12 @@ I18N.ko = {
   // Ocean (#1213): the pot is the Muschel, one of the design's five themed words.
   'startSession.potLabelOcean': '개가 조개 속에 있어요',
   'startSession.potLabelOceanOne': '개가 조개 속에 있어요',
+  // Forest's themed places on Neue Session (#1468, F9.5): the stump, its count, the question, the button.
+  'startSession.potHeadingForest': '나무 그루터기',
+  'startSession.potLabelForest': '개가 그루터기 위에 있어요',
+  'startSession.potLabelForestOne': '개가 그루터기 위에 있어요',
+  'startSession.countQuestionForest': '나뭇잎이 몇 장 날아갈까요?',
+  'startSession.drawForest': '낙엽 휘날리기',
   'startSession.ownersHidden': '소유자가 참여하지 않아 게임 {n}개가 더 빠져 있어요.',
   'startSession.ownersHiddenOne': '소유자가 참여하지 않아 게임 {n}개가 더 빠져 있어요.',
   'startSession.poolEmpty': '아직 이 조건에 맞는 게임이 없어요.',
@@ -1099,6 +1110,10 @@ I18N.ko = {
   'vote.deepOcean': '아직 깊은 곳에',
   'vote.deepTextOceanOne': '아래에 카드 {n}장이 더 기다리고 있어요. 결과는 투표가 끝나야 떠올라요.',
   'vote.deepTextOcean': '아래에 카드 {n}장이 더 기다리고 있어요. 결과는 투표가 끝나야 떠올라요.',
+  // Forest (#1468): the reveal verb on the finale, and the face-down cards beside the vote card.
+  'vote.revealForest': '카드에 불이 켜져요.',
+  'vote.hiddenTextForestOne': '아직 {n}개의 게임이 뒤집혀 있어요. 차례가 오면 보여요.',
+  'vote.hiddenTextForest': '아직 {n}개의 게임이 뒤집혀 있어요. 차례가 오면 보여요.',
   // Ocean's shared vote (#1214, O4.3/O6.5): the pass-device blind, addressed to
   // the table, and its relay row; then the live vote's „in der Tiefe" block.
   'vote.turnOcean': '{name} 차례예요.',

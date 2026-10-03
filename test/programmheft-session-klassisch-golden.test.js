@@ -165,3 +165,15 @@ test('the snapshot can see Programmheft: the same screens under it are NOT the g
     assert.notEqual(ph[k], golden[k], `Programmheft's ${k} is identical to Klassisch's`);
   }
 });
+
+test('the snapshot can see Forest (#1468): its session loop is NOT the golden either', async (t) => {
+  // Forest's session slice branches the same views through forestWorn(); the
+  // golden above is what pins that Klassisch stays byte-for-byte, and this
+  // control is what proves the comparison can see a Forest branch at all. Seen
+  // red by making forestWorn() answer true for every design.
+  const golden = JSON.parse(fs.readFileSync(GOLDEN, 'utf8'));
+  const forest = await renderAll(t, 'forest');
+  for (const k of Object.keys(golden)) {
+    assert.notEqual(forest[k], golden[k], `Forest's ${k} is identical to Klassisch's`);
+  }
+});

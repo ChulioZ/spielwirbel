@@ -958,6 +958,11 @@ I18N.fi = {
   'result.titleSplit': 'Sessio jaettiin useaan pöytään.',
   // Das Programmheft's report kicker over the result headline (#1374).
   'result.reportKicker': 'Pelikertomus',
+  // Forest's result (#1468): the decorative kicker over the headline, and the fact line under the scene.
+  'result.kickerForest': 'Aukiolla · {date}',
+  'result.factSessionNo': 'Sessio nro {n}',
+  'result.factWin': '{name}: {n}. voitto',
+  'result.factPlay': '{game}: {n}. pelikerta',
   'log.split': '{actor} jakoi porukan {n} pöytään',
   'startSession.crumb': 'Sessio',
   'startSession.title': 'Uusi sessio',
@@ -1000,6 +1005,12 @@ I18N.fi = {
   // Ocean (#1213): the pot is the Muschel, one of the design's five themed words.
   'startSession.potLabelOcean': 'peliä simpukassa',
   'startSession.potLabelOceanOne': 'peli simpukassa',
+  // Forest's themed places on Neue Session (#1468, F9.5): the stump, its count, the question, the button.
+  'startSession.potHeadingForest': 'Kanto',
+  'startSession.potLabelForest': 'peliä kannolla',
+  'startSession.potLabelForestOne': 'peli kannolla',
+  'startSession.countQuestionForest': 'Montako lehteä lentää?',
+  'startSession.drawForest': 'Pyöräytä lehdet',
   'startSession.ownersHidden': '{n} peliä puuttuu lisäksi, koska niiden omistajat eivät pelaa.',
   'startSession.ownersHiddenOne': '{n} peli puuttuu lisäksi, koska sen omistaja ei pelaa.',
   'startSession.poolEmpty': 'Mikään peli ei vielä vastaa näitä asetuksia.',
@@ -1117,6 +1128,10 @@ I18N.fi = {
   'vote.deepOcean': 'Vielä syvyydessä',
   'vote.deepTextOceanOne': 'Vielä {n} kortti odottaa syvällä. Tulos nousee pintaan vasta, kun äänestys on ohi.',
   'vote.deepTextOcean': 'Vielä {n} korttia odottaa syvällä. Tulos nousee pintaan vasta, kun äänestys on ohi.',
+  // Forest (#1468): the reveal verb on the finale, and the face-down cards beside the vote card.
+  'vote.revealForest': 'Kortit syttyvät valoon.',
+  'vote.hiddenTextForestOne': 'Vielä {n} peli on kuvapuoli alaspäin, kunnes pääset siihen.',
+  'vote.hiddenTextForest': 'Vielä {n} peliä on kuvapuoli alaspäin, kunnes pääset niihin.',
   // Ocean's shared vote (#1214, O4.3/O6.5): the pass-device blind, addressed to
   // the table, and its relay row; then the live vote's „in der Tiefe" block.
   'vote.turnOcean': '{name} on vuorossa.',

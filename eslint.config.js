@@ -454,7 +454,7 @@ const frontendGlobals = {
   // recap-card-programmheft.js (#1381) and the two counts it shares with the
   // Pokale (session-tally.js).
   programmheftCardBlob: 'readonly', programmheftEdition: 'readonly', tischRuns: 'readonly',
-  winStreak: 'readonly', sessionNumber: 'readonly',
+  winStreak: 'readonly', sessionNumber: 'readonly', sessionWinNumber: 'readonly', sessionPlayNumber: 'readonly',
   offeredDesigns: 'readonly', designTile: 'readonly', renderDesignPicker: 'readonly',
   maybeShowDesignChooser: 'readonly', showDesignChooser: 'readonly',
   buildDesignSection: 'readonly', saveAccountDesign: 'readonly',
@@ -597,6 +597,10 @@ const frontendGlobals = {
   // views-session-programmheft.js (issue #1374): Das Programmheft's setup, vote card and report kicker
   composeProgrammheftSetup: 'readonly', composeProgrammheftVoteCard: 'readonly', programmheftReportKicker: 'readonly',
   programmheftTablesKicker: 'readonly',
+  // views-session-forest.js (issue #1468): Forest's setup, vote sides, result columns and tables head
+  forestWorn: 'readonly', FOREST_COUNT_LEAVES: 'readonly', composeForestSetup: 'readonly', forestDrawSummary: 'readonly',
+  paintForestCount: 'readonly', composeForestVoteCard: 'readonly', forestVoteSides: 'readonly', forestFinaleKicker: 'readonly', forestResultKicker: 'readonly',
+  paintForestFacts: 'readonly', composeForestResult: 'readonly', composeForestTablesHead: 'readonly',
   programmheftBlind: 'readonly', composeProgrammheftLobby: 'readonly', // #1375
   // views-session-tables.js (issue #796)
   showTableBuilder: 'readonly', tableStateFrom: 'readonly', tablePeopleIds: 'readonly',

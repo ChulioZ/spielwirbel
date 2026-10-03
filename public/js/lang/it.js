@@ -988,6 +988,11 @@ I18N.it = {
   'result.titleSplit': 'La sessione è stata divisa su più tavoli.',
   // Das Programmheft's report kicker over the result headline (#1374).
   'result.reportKicker': 'Resoconto',
+  // Forest's result (#1468): the decorative kicker over the headline, and the fact line under the scene.
+  'result.kickerForest': 'Nella radura · {date}',
+  'result.factSessionNo': 'Sessione n. {n}',
+  'result.factWin': 'vittoria n. {n} per {name}',
+  'result.factPlay': '{game}, partita n. {n}',
   'log.split': '{actor} ha diviso il gruppo su {n} tavoli',
   'startSession.crumb': 'Sessione',
   'startSession.title': 'Nuova sessione',
@@ -1033,6 +1038,12 @@ I18N.it = {
   // Ocean (#1213): the pot is the Muschel, one of the design's five themed words.
   'startSession.potLabelOcean': 'giochi nella conchiglia',
   'startSession.potLabelOceanOne': 'gioco nella conchiglia',
+  // Forest's themed places on Neue Session (#1468, F9.5): the stump, its count, the question, the button.
+  'startSession.potHeadingForest': 'Il ceppo',
+  'startSession.potLabelForest': 'giochi sul ceppo',
+  'startSession.potLabelForestOne': 'gioco sul ceppo',
+  'startSession.countQuestionForest': 'Quante foglie volano?',
+  'startSession.drawForest': 'Far turbinare le foglie',
   'startSession.ownersHidden': 'Mancano altri {n} giochi perché i loro proprietari non giocano.',
   'startSession.ownersHiddenOne': 'Manca {n} altro gioco perché il suo proprietario non gioca.',
   'startSession.poolEmpty': 'Nessun gioco corrisponde ancora a queste impostazioni.',
@@ -1150,6 +1161,10 @@ I18N.it = {
   'vote.deepOcean': 'Ancora negli abissi',
   'vote.deepTextOceanOne': 'Ancora {n} carta aspetta sul fondo. Il risultato riemerge solo a votazione finita.',
   'vote.deepTextOcean': 'Ancora {n} carte aspettano sul fondo. Il risultato riemerge solo a votazione finita.',
+  // Forest (#1468): the reveal verb on the finale, and the face-down cards beside the vote card.
+  'vote.revealForest': 'Le carte si illuminano.',
+  'vote.hiddenTextForestOne': 'Ancora {n} gioco resta coperto finché non ci arrivi.',
+  'vote.hiddenTextForest': 'Ancora {n} giochi restano coperti finché non ci arrivi.',
   // Ocean's shared vote (#1214, O4.3/O6.5): the pass-device blind, addressed to
   // the table, and its relay row; then the live vote's „in der Tiefe" block.
   'vote.turnOcean': 'Tocca a {name}.',

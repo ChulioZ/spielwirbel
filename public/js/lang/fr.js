@@ -989,6 +989,11 @@ I18N.fr = {
   'result.titleSplit': 'La session a été répartie sur plusieurs tables.',
   // Das Programmheft's report kicker over the result headline (#1374).
   'result.reportKicker': 'Compte rendu',
+  // Forest's result (#1468): the decorative kicker over the headline, and the fact line under the scene.
+  'result.kickerForest': 'Dans la clairière · {date}',
+  'result.factSessionNo': 'Session n° {n}',
+  'result.factWin': 'victoire n° {n} pour {name}',
+  'result.factPlay': '{game}, partie n° {n}',
   'log.split': '{actor} a réparti le groupe sur {n} tables',
   'startSession.crumb': 'Session',
   'startSession.title': 'Nouvelle session',
@@ -1034,6 +1039,12 @@ I18N.fr = {
   // Ocean (#1213): the pot is the Muschel, one of the design's five themed words.
   'startSession.potLabelOcean': 'jeux dans le coquillage',
   'startSession.potLabelOceanOne': 'jeu dans le coquillage',
+  // Forest's themed places on Neue Session (#1468, F9.5): the stump, its count, the question, the button.
+  'startSession.potHeadingForest': 'La souche',
+  'startSession.potLabelForest': 'jeux sur la souche',
+  'startSession.potLabelForestOne': 'jeu sur la souche',
+  'startSession.countQuestionForest': 'Combien de feuilles s’envolent ?',
+  'startSession.drawForest': 'Faire tourbillonner les feuilles',
   'startSession.ownersHidden': '{n} autres jeux manquent, car leurs propriétaires ne jouent pas.',
   'startSession.ownersHiddenOne': '{n} autre jeu manque, car son propriétaire ne joue pas.',
   'startSession.poolEmpty': 'Aucun jeu ne correspond encore à ces réglages.',
@@ -1151,6 +1162,10 @@ I18N.fr = {
   'vote.deepOcean': 'Encore dans les profondeurs',
   'vote.deepTextOceanOne': 'Encore {n} carte attend en bas. Le résultat ne remonte qu’une fois le vote terminé.',
   'vote.deepTextOcean': 'Encore {n} cartes attendent en bas. Le résultat ne remonte qu’une fois le vote terminé.',
+  // Forest (#1468): the reveal verb on the finale, and the face-down cards beside the vote card.
+  'vote.revealForest': 'Les cartes s’illuminent.',
+  'vote.hiddenTextForestOne': 'Encore {n} jeu reste face cachée jusqu’à ce que tu y arrives.',
+  'vote.hiddenTextForest': 'Encore {n} jeux restent face cachée jusqu’à ce que tu y arrives.',
   // Ocean's shared vote (#1214, O4.3/O6.5): the pass-device blind, addressed to
   // the table, and its relay row; then the live vote's „in der Tiefe" block.
   'vote.turnOcean': 'C’est au tour de {name}.',

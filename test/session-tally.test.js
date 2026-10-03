@@ -9,7 +9,7 @@
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { winStreak, sessionNumber } = require('../public/js/session-tally');
+const { winStreak, sessionNumber, sessionWinNumber, sessionPlayNumber } = require('../public/js/session-tally');
 const { sessionEnding } = require('../public/js/session-outcome');
 const { sessionPartyCount } = require('../public/js/session-people');
 
@@ -73,4 +73,38 @@ test('a session’s number counts the finished ones up to it, itself included wh
   assert.equal(sessionNumber(r, b), 2);
   assert.equal(sessionNumber(r, { ...later, finished: false }), 3, 'the unfinished one before it does not count');
   assert.equal(sessionNumber(r, open), 3);
+});
+
+/* Forest's fact line under the result (#1468): „9. Sieg für Jonas", „Nordlichter
+   zum 4. Mal". Counted exactly like sessionNumber — finished sessions no later
+   than this one — and the session itself counts once, from the CALLER's copy of
+   its outcome, because the screen states a winner the round snapshot may not
+   know yet. */
+test('sessionWinNumber counts the member’s wins up to and including this session', () => {
+  const a1 = s(['a']);
+  const b1 = s(['b']);
+  const a2 = s(['a', 'b']);
+  const openA = s(['a'], { finished: false });
+  const now = s([]);
+  const later = s(['a']);
+  const r = { ...round, sessions: [later, now, openA, a2, b1, a1] };
+  assert.equal(sessionWinNumber(r, now, 'a'), 3, 'a1, the shared a2, and this one');
+  assert.equal(sessionWinNumber(r, now, 'b'), 3);
+  assert.equal(sessionWinNumber(r, now, 'c'), 1, 'a first win is the 1st');
+  assert.equal(sessionWinNumber(r, a2, 'a'), 2, 'a later session never counts');
+  assert.equal(sessionWinNumber(r, { ...a1, winnerIds: ['a'] }, 'a'), 1, 'the session itself counts once, not twice');
+});
+
+test('sessionPlayNumber counts the plays of a game up to and including this session', () => {
+  const g1 = s([], { chosenGameId: 'g' });
+  const h1 = s([], { chosenGameId: 'h' });
+  const openG = s([], { chosenGameId: 'g', finished: false });
+  const g2 = s([], { chosenGameId: 'g' });
+  const now = s([], { chosenGameId: 'h' });
+  const later = s([], { chosenGameId: 'g' });
+  const r = { ...round, sessions: [later, now, g2, openG, h1, g1] };
+  assert.equal(sessionPlayNumber(r, now, 'g'), 3, 'g1, g2 and this one');
+  assert.equal(sessionPlayNumber(r, now, 'h'), 2);
+  assert.equal(sessionPlayNumber(r, g1, 'g'), 1, 'the session itself counts once');
+  assert.equal(sessionPlayNumber(r, g2, 'g'), 2, 'the unfinished one between does not count');
 });

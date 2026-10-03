@@ -984,6 +984,11 @@ I18N.nl = {
   'result.titleSplit': 'De sessie werd over meerdere tafels verdeeld.',
   // Das Programmheft's report kicker over the result headline (#1374).
   'result.reportKicker': 'Speelverslag',
+  // Forest's result (#1468): the decorative kicker over the headline, and the fact line under the scene.
+  'result.kickerForest': 'Op de open plek · {date}',
+  'result.factSessionNo': 'Sessie nr. {n}',
+  'result.factWin': 'overwinning nr. {n} voor {name}',
+  'result.factPlay': '{game}, potje nr. {n}',
   'log.split': '{actor} verdeelde de groep over {n} tafels',
   'startSession.crumb': 'Sessie',
   'startSession.title': 'Nieuwe sessie',
@@ -1029,6 +1034,12 @@ I18N.nl = {
   // Ocean (#1213): the pot is the Muschel, one of the design's five themed words.
   'startSession.potLabelOcean': 'spellen in de schelp',
   'startSession.potLabelOceanOne': 'spel in de schelp',
+  // Forest's themed places on Neue Session (#1468, F9.5): the stump, its count, the question, the button.
+  'startSession.potHeadingForest': 'De boomstronk',
+  'startSession.potLabelForest': 'spellen op de stronk',
+  'startSession.potLabelForestOne': 'spel op de stronk',
+  'startSession.countQuestionForest': 'Hoeveel bladeren vliegen er?',
+  'startSession.drawForest': 'Bladeren laten dwarrelen',
   'startSession.ownersHidden': 'Er ontbreken nog {n} spellen omdat hun eigenaars niet meespelen.',
   'startSession.ownersHiddenOne': 'Er ontbreekt nog {n} spel omdat de eigenaar niet meespeelt.',
   'startSession.poolEmpty': 'Nog geen spel dat aan deze instellingen voldoet.',
@@ -1146,6 +1157,10 @@ I18N.nl = {
   'vote.deepOcean': 'Nog in de diepte',
   'vote.deepTextOceanOne': 'Nog {n} kaart wacht beneden. De uitslag komt pas boven als de stemming voorbij is.',
   'vote.deepTextOcean': 'Nog {n} kaarten wachten beneden. De uitslag komt pas boven als de stemming voorbij is.',
+  // Forest (#1468): the reveal verb on the finale, and the face-down cards beside the vote card.
+  'vote.revealForest': 'De kaarten lichten op.',
+  'vote.hiddenTextForestOne': 'Nog {n} spel ligt verdekt tot je erbij bent.',
+  'vote.hiddenTextForest': 'Nog {n} spellen liggen verdekt tot je erbij bent.',
   // Ocean's shared vote (#1214, O4.3/O6.5): the pass-device blind, addressed to
   // the table, and its relay row; then the live vote's „in der Tiefe" block.
   'vote.turnOcean': '{name} is aan de beurt.',
