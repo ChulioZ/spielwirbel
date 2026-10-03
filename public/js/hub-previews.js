@@ -147,7 +147,8 @@ function hubPokalePreview(round) {
      ranking three places off one or two evenings — the Pokale tab's own gate,
      so preview and page agree. */
   const young = youngRoundPlayed(round, hubDeps()) < YOUNG_ROUND_PODIUM_FROM;
-  if (designIs('tisch')) {
+  // Forest's grove prints the same line under its trees (F3.2 „Jonas führt").
+  if (designIs('tisch') || designIs('forest')) {
     const leaders = winners.filter((m) => rankOf[m.id] === 1);
     sub = leaders.length === 1
       ? t('hub.preview.pokaleLead', { name: leaders[0].name })
@@ -158,8 +159,10 @@ function hubPokalePreview(round) {
   /* Ocean draws each standing as a bar in the member's colour (O3.2): the
      person colour as a FILL, never as text (ocean.css's rule 2). Its length is
      data, so it rides in as `--share` — the bar is aria-hidden, the count
-     beside it already says it. */
-  const bars = designIs('ocean');
+     beside it already says it. Forest draws the same share as each person's
+     TREE (F3.2's grove: the trunk grows with the wins), so it takes the same
+     data and forest.css gives it the shape. */
+  const bars = designIs('ocean') || designIs('forest');
   const top = Math.max(1, ...winners.map((m) => wins[m.id] || 0));
   winners.filter((m) => !young || rankOf[m.id] === 1).slice(0, HUB_PREVIEW_RANKS).forEach((m) => {
     const bar = bars

@@ -2436,6 +2436,9 @@ test('every colour token a design declares is measured by one of the checks abov
     '--band-top', '--band-good', '--band-low', '--band-new',
     '--person-lit-1', '--person-lit-2', '--person-lit-3', '--person-lit-4',
     '--person-lit-5', '--person-lit-6', '--person-lit-7', '--person-lit-8',
+    // #1392, Die Brücke's Abzeichen: the open plate's outline and the running
+    // count's fill — measured in test/bruecke-badges.test.js (B17.9).
+    '--badge-open-edge', '--badge-load',
     // #1371, Das Programmheft: the box and its two inks, the vermilion masthead
     // and its ink, the two focus rings, the second ink, the darkening ramp with
     // its inks and the veto stamp — all measured in
@@ -2467,7 +2470,11 @@ test('every colour token a design declares is measured by one of the checks abov
   // #1465: Der Tisch's --wood-grain, the 14% black the no-cover wood is ruled
   // with — the same kind, and unexamined until the layout regex stopped
   // matching every token that starts with a `w`.
-  const NOT_A_COLOUR = /^--(member-lift|cast|cast-soft|cast-deep|cast-button|deep-cast|cast-pearl|brass-sheen|brass-sheen-strong|glow-accent|glow-action|glow-action-strong|blind-stripe|wood-grain)$/;
+  // #1469: Forest's four firefly alphas (--firefly-halo/-ring/-glow/-glow-soft),
+  // the glow round a firefly on the dusk — Die Brücke's glow kind. No text
+  // sits on one: they halo the blind's dots, ring the person and glow round
+  // the key, and the text pairs on the dusk are measured on the bare dusk.
+  const NOT_A_COLOUR = /^--(member-lift|cast|cast-soft|cast-deep|cast-button|deep-cast|cast-pearl|brass-sheen|brass-sheen-strong|glow-accent|glow-action|glow-action-strong|blind-stripe|wood-grain|firefly-halo|firefly-ring|firefly-glow|firefly-glow-soft)$/;
   /* A hairline on a NON-INTERACTIVE label. SC 1.4.11 binds a boundary only
      where it identifies a control, and these two identify a printed tag — so
      there is no bar to measure them against, and inventing one would push them

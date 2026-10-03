@@ -38,11 +38,15 @@ I18N.en = {
   'home.tischKicker': 'Game café · your tables',
   // Ocean only (#1211): its sub-brand beside the wordmark and its lobby greeting.
   'home.oceanKicker': 'The coast · your rounds',
+  'home.forestKicker': 'The woods · your clearings',
   'home.oceanGreeting': 'Welcome to the coast.',
+  'home.forestGreeting': 'Welcome back to the woods.',
+  'home.forestGreetingFirst': 'Welcome to the woods.',
   // Die Brücke only (#1238): the lobby voice, its greeting and the notice kicker (B9).
   'home.brueckeKicker': 'Fleet / Overview',
   'home.brueckeGreeting': 'Welcome back aboard.',
   'home.brueckeSignal': 'Incoming signal',
+  'home.forestSignal': 'Beacon',
   'home.shared': 'Shared',
   'home.newRound': 'Start a new round',
   'home.empty.title': 'No game round yet.',
@@ -166,6 +170,8 @@ I18N.en = {
   'hub.pulse.title': 'Round pulse',
   'hub.young.lock': 'from your first game',
   'hub.young.emptyTitle': 'The pot is still empty',
+  // #1471 (F7.3): Forest's empty table names its vessel, the tree stump.
+  'hub.young.emptyTitleForest': 'The stump is still empty',
   'hub.young.emptyText': 'Sessions are whirled from the shelf. Put your first game on the table.',
   'hub.young.emptyTextBgg': 'Sessions are whirled from the shelf. Put your first game on the table — or bring your whole shelf over from BGG in one step.',
   'hub.young.firstCta': 'Whirl your first session',
@@ -360,6 +366,7 @@ I18N.en = {
   'chronik.count': '{n} sessions since {month}',
   'chronik.seatedOne': '{n} at the table',
   'chronik.seated': '{n} at the table',
+  'chronik.sessionNo': 'Session no. {n}',
   'chronik.wonOne': '{names} won',
   'chronik.won': '{names} won',
   // Die Brücke's Chronik (#1245): how often the chosen game took the 1 in that
@@ -774,6 +781,9 @@ I18N.en = {
   'member.editName': 'Click to rename',
   'member.edit': 'Edit',
   'member.recentWins': 'Recent wins',
+  'member.recentTitle': 'Recently at the table',
+  'member.recentWon': 'won',
+  'member.recentJoined': 'played',
   'member.colorLabel': 'Avatar color',
   'member.colorChange': 'Change the avatar colour',
   'member.mySeat': 'Your seat',
@@ -1002,6 +1012,11 @@ I18N.en = {
   'result.titleSplit': 'The session was split across several tables.',
   // Das Programmheft's report kicker over the result headline (#1374).
   'result.reportKicker': 'Session report',
+  // Forest's result (#1468): the decorative kicker over the headline, and the fact line under the scene.
+  'result.kickerForest': 'In the clearing · {date}',
+  'result.factSessionNo': 'Session No. {n}',
+  'result.factWin': 'win no. {n} for {name}',
+  'result.factPlay': '{game}, play no. {n}',
   'log.split': '{actor} split the group across {n} tables',
   'startSession.crumb': 'Session',
   'startSession.title': 'New session',
@@ -1055,6 +1070,12 @@ I18N.en = {
   // Ocean (#1213): the pot is the Muschel, one of the design's five themed words.
   'startSession.potLabelOcean': 'games in the shell',
   'startSession.potLabelOceanOne': 'game in the shell',
+  // Forest's themed places on Neue Session (#1468, F9.5): the stump, its count, the question, the button.
+  'startSession.potHeadingForest': 'The tree stump',
+  'startSession.potLabelForest': 'games on the stump',
+  'startSession.potLabelForestOne': 'game on the stump',
+  'startSession.countQuestionForest': 'How many leaves fly?',
+  'startSession.drawForest': 'Whirl the leaves',
   'startSession.ownersHidden': '{n} more games are missing because their owners are not playing.',
   'startSession.ownersHiddenOne': '{n} more game is missing because its owner is not playing.',
   'startSession.poolEmpty': 'No game matches these settings yet.',
@@ -1187,6 +1208,10 @@ I18N.en = {
   'vote.deepOcean': 'Still in the deep',
   'vote.deepTextOceanOne': '{n} more card is waiting below. The result only surfaces once the vote is over.',
   'vote.deepTextOcean': '{n} more cards are waiting below. The result only surfaces once the vote is over.',
+  // Forest (#1468): the reveal verb on the finale, and the face-down cards beside the vote card.
+  'vote.revealForest': 'The cards light up.',
+  'vote.hiddenTextForestOne': '{n} more game stays face down until you reach it.',
+  'vote.hiddenTextForest': '{n} more games stay face down until you reach them.',
   // Ocean's shared vote (#1214, O4.3/O6.5): the pass-device blind, addressed to
   // the table, and its relay row; then the live vote's „in der Tiefe" block.
   'vote.turnOcean': '{name} is up.',
@@ -1890,6 +1915,8 @@ I18N.en = {
   'landing.cta.title': 'Next time, nobody argues about it.',
   'landing.faq.q': 'Still wondering?',
   'landing.faq.link': 'Read the FAQ',
+  // The „Was spielen wir heute?" guide page (#1171), linked beside the FAQ.
+  'landing.guide.link': 'Guide: What should we play tonight?',
   // The design band (#1198), shown only by a design that asks for it (Der Tisch as the face).
   // {n} is how many designs the instance offers (GET /api/config), so it never overclaims.
   'landing.designs.title': '{n} designs, one app.',
@@ -2079,6 +2106,9 @@ I18N.en = {
   'badges.moment.title': 'Newly earned',
   'badges.moment.moreOne': '+{n} more',
   'badges.moment.more': '+{n} more',
+  // Das Programmheft's kicker on the result moment's band for a big tier (#1393):
+  // the round's Sessions 100 · 250 · 500 and Stammgast 100 · 250.
+  'badges.specialEdition': 'Special edition',
   'badges.earnedIn': 'Earned in {month}',
   'badges.tierReached': 'Reached tier {tier} in {month}',
   'badges.card.next': 'Next tier {n}',
@@ -2090,6 +2120,7 @@ I18N.en = {
   'detail.statVetoBruecke': '× no thrust',
   // Das Programmheft's lobby and hub (#1372, P3.1/P3.2/P6.1).
   'hub.members': 'Members',
+  'hub.forestMarker': 'Marker {name}',
   'hub.lead.open': 'See the result',
   'home.phExtra': 'Extra edition',
   'home.phKicker': 'Newsstand · {date}',

@@ -515,9 +515,11 @@ const DESIGN_REGISTRY = [
        review „Plakat im Design-Wähler: hell"): beside Der Tisch's green poster
        Forest must read as the light design it is. The page running into moss,
        the Laubgrün wordmark (6.1 / 5.3:1) and the ink subline (13.1 / 11.3:1).
-       Swept with every poster by test/a11y-contrast.test.js. No ritualKeys yet:
-       Forest's four renamed places (F9.5) arrive with their screens. */
+       Swept with every poster by test/a11y-contrast.test.js. */
     poster: { ground: ['#ecf1e4', '#d6e4c6'], ink: '#356427', sub: '#1b2a18' },
+    /* The words Forest says at the table (#1468, F9.5): the stump, the hub's
+       unchanged „Session wirbeln", the setup's „Laub wirbeln". */
+    ritualKeys: ['startSession.potHeadingForest', 'round.startSession', 'startSession.drawForest'],
     scheme: 'light',
     page: '#ecf1e4',
     accent: '#356427',

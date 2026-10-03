@@ -29,7 +29,7 @@ and it is the copy nobody remembers that rots.
 
 **Every instance lives in `.claude/rules/shared-constants-inventory.md`**, which
 is `paths:`-scoped to `public/js/**` and `lib/**` — the only places one can be
-created. Fifteen of them today, and adding a paragraph
+created. Twenty-three of them today, and adding a paragraph
 there is a **required** part of adding a shared file:
 `test/rule-enumerations.test.js` asserts that every `require('../public/js/…')`
 under `lib/routes/` and `lib/` is named in it. That list is what makes the shape

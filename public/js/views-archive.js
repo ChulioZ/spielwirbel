@@ -107,7 +107,7 @@ async function showArchive(rid, kind, seg = kind) {
   app.appendChild(backRow(() => showRound(rid, 'regal')));
   // The four off-shelf screens as segments (#1196); shown only where a design
   // asks for them — see offShelfSegments in off-shelf.js.
-  app.appendChild(offShelfSegments(round, seg));
+  const segs = app.appendChild(offShelfSegments(round, seg));
   const head = h(`<div class="page-head"><div>
          <h1>${esc(t(`${kind}.title`))}</h1>
          <div class="muted">${esc(round.name)}</div>
@@ -128,6 +128,13 @@ async function showArchive(rid, kind, seg = kind) {
     head.querySelector('.section-tools').appendChild(importBtn);
   }
   app.appendChild(head);
+  /* Forest (#1473, F13.7) reads title, then the lists as tabs, then — on the
+     retired list — what retiring does, then the rows: the strip moves under the
+     head in the DOM, so the reading order is the order on the sheet. */
+  if (designIs('forest')) {
+    head.after(segs);
+    if (kind === 'retired' && games.length) segs.after(h(`<p class="forest-footnote">${esc(t('retired.footnote'))}</p>`));
+  }
 
   if (games.length === 0) {
     // The kind's own glyph (a.icon), so the empty state and the rows it stands

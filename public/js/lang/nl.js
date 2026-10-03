@@ -55,11 +55,15 @@ I18N.nl = {
   'home.tischKicker': 'Spellencafé · jouw tafels',
   // Ocean only (#1211): its sub-brand beside the wordmark and its lobby greeting.
   'home.oceanKicker': 'De kust · jouw groepen',
+  'home.forestKicker': 'Het bos · jouw open plekken',
   'home.oceanGreeting': 'Welkom aan de kust.',
+  'home.forestGreeting': 'Welkom terug in het bos.',
+  'home.forestGreetingFirst': 'Welkom in het bos.',
   // Die Brücke only (#1238): the lobby voice, its greeting and the notice kicker (B9).
   'home.brueckeKicker': 'Vloot / Overzicht',
   'home.brueckeGreeting': 'Welkom terug aan boord.',
   'home.brueckeSignal': 'Inkomend signaal',
+  'home.forestSignal': 'Lichtsignaal',
   'home.shared': 'Gedeeld',
   'home.newRound': 'Een nieuwe groep starten',
   'home.empty.title': 'Nog geen speelgroep.',
@@ -176,6 +180,8 @@ I18N.nl = {
   'hub.pulse.title': 'Puls van de groep',
   'hub.young.lock': 'vanaf het eerste spel',
   'hub.young.emptyTitle': 'De pot is nog leeg',
+  // #1471 (F7.3): Forest's empty table names its vessel, the tree stump.
+  'hub.young.emptyTitleForest': 'De boomstronk is nog leeg',
   'hub.young.emptyText': 'Er wordt uit de kast geloot. Leg het eerste spel op tafel.',
   'hub.young.emptyTextBgg': 'Er wordt uit de kast geloot. Leg het eerste spel op tafel — of haal je hele kast in één stap van BGG.',
   'hub.young.firstCta': 'Eerste sessie starten',
@@ -364,6 +370,7 @@ I18N.nl = {
   'chronik.count': '{n} sessies sinds {month}',
   'chronik.seatedOne': '{n} aan tafel',
   'chronik.seated': '{n} aan tafel',
+  'chronik.sessionNo': 'Sessie nr. {n}',
   'chronik.wonOne': '{names} won',
   'chronik.won': '{names} wonnen',
   // Die Brücke's Chronik (#1245): how often the chosen game took the 1 in that
@@ -755,6 +762,9 @@ I18N.nl = {
   'member.editName': 'Klik om te hernoemen',
   'member.edit': 'Bewerken',
   'member.recentWins': 'Laatste overwinningen',
+  'member.recentTitle': 'Laatst aan tafel',
+  'member.recentWon': 'gewonnen',
+  'member.recentJoined': 'meegespeeld',
   'member.colorLabel': 'Kleur van de avatar',
   'member.colorChange': 'Avatarkleur wijzigen',
   'member.mySeat': 'Jouw plek',
@@ -974,6 +984,11 @@ I18N.nl = {
   'result.titleSplit': 'De sessie werd over meerdere tafels verdeeld.',
   // Das Programmheft's report kicker over the result headline (#1374).
   'result.reportKicker': 'Speelverslag',
+  // Forest's result (#1468): the decorative kicker over the headline, and the fact line under the scene.
+  'result.kickerForest': 'Op de open plek · {date}',
+  'result.factSessionNo': 'Sessie nr. {n}',
+  'result.factWin': 'overwinning nr. {n} voor {name}',
+  'result.factPlay': '{game}, potje nr. {n}',
   'log.split': '{actor} verdeelde de groep over {n} tafels',
   'startSession.crumb': 'Sessie',
   'startSession.title': 'Nieuwe sessie',
@@ -1019,6 +1034,12 @@ I18N.nl = {
   // Ocean (#1213): the pot is the Muschel, one of the design's five themed words.
   'startSession.potLabelOcean': 'spellen in de schelp',
   'startSession.potLabelOceanOne': 'spel in de schelp',
+  // Forest's themed places on Neue Session (#1468, F9.5): the stump, its count, the question, the button.
+  'startSession.potHeadingForest': 'De boomstronk',
+  'startSession.potLabelForest': 'spellen op de stronk',
+  'startSession.potLabelForestOne': 'spel op de stronk',
+  'startSession.countQuestionForest': 'Hoeveel bladeren vliegen er?',
+  'startSession.drawForest': 'Bladeren laten dwarrelen',
   'startSession.ownersHidden': 'Er ontbreken nog {n} spellen omdat hun eigenaars niet meespelen.',
   'startSession.ownersHiddenOne': 'Er ontbreekt nog {n} spel omdat de eigenaar niet meespeelt.',
   'startSession.poolEmpty': 'Nog geen spel dat aan deze instellingen voldoet.',
@@ -1136,6 +1157,10 @@ I18N.nl = {
   'vote.deepOcean': 'Nog in de diepte',
   'vote.deepTextOceanOne': 'Nog {n} kaart wacht beneden. De uitslag komt pas boven als de stemming voorbij is.',
   'vote.deepTextOcean': 'Nog {n} kaarten wachten beneden. De uitslag komt pas boven als de stemming voorbij is.',
+  // Forest (#1468): the reveal verb on the finale, and the face-down cards beside the vote card.
+  'vote.revealForest': 'De kaarten lichten op.',
+  'vote.hiddenTextForestOne': 'Nog {n} spel ligt verdekt tot je erbij bent.',
+  'vote.hiddenTextForest': 'Nog {n} spellen liggen verdekt tot je erbij bent.',
   // Ocean's shared vote (#1214, O4.3/O6.5): the pass-device blind, addressed to
   // the table, and its relay row; then the live vote's „in der Tiefe" block.
   'vote.turnOcean': '{name} is aan de beurt.',
@@ -1791,6 +1816,8 @@ I18N.nl = {
   'landing.cta.title': 'De volgende keer discussieert er niemand meer over.',
   'landing.faq.q': 'Nog vragen?',
   'landing.faq.link': 'Lees de FAQ',
+  // The „Was spielen wir heute?" guide page (#1171), linked beside the FAQ.
+  'landing.guide.link': 'Gids: wat spelen we vanavond?',
   // The design band (#1198), shown only by a design that asks for it (Der Tisch as the face).
   // {n} is how many designs the instance offers (GET /api/config), so it never overclaims.
   'landing.designs.title': '{n} ontwerpen, één app.',
@@ -1959,6 +1986,9 @@ I18N.nl = {
   'badges.moment.title': 'Net behaald',
   'badges.moment.moreOne': '+{n} meer',
   'badges.moment.more': '+{n} meer',
+  // Das Programmheft's kicker on the result moment's band for a big tier (#1393):
+  // the round's Sessions 100 · 250 · 500 and Stammgast 100 · 250.
+  'badges.specialEdition': 'Speciale editie',
   'badges.earnedIn': 'Behaald in {month}',
   'badges.tierReached': 'Niveau {tier} bereikt in {month}',
   'badges.card.next': 'Volgend niveau {n}',
@@ -1970,6 +2000,7 @@ I18N.nl = {
   'detail.statVetoBruecke': '× geen stuwkracht',
   // Das Programmheft's lobby and hub (#1372, P3.1/P3.2/P6.1).
   'hub.members': 'Leden',
+  'hub.forestMarker': 'Markering {name}',
   'hub.lead.open': 'Uitslag bekijken',
   'home.phExtra': 'Extra editie',
   'home.phKicker': 'Kiosk · {date}',

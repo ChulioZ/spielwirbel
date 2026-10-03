@@ -171,7 +171,8 @@ function hubSuggestCard(round, activeGames, statsByGame, exclude) {
     // Ocean says it too (#1216, O7.3 „Wie wär's mit"), in the pair beside the
     // shell — the same one truthful reason, the same copy. And Die Brücke, in
     // its own slot (#1243, B7.2 „sagt, wann es losgeht").
-    if ((designIs('tisch') || designIs('ocean') || designIs('bruecke')) && roundIsYoung(round) && activeGames.length
+    // Forest too (#1471, F7.4), in the pair under the stump.
+    if ((designIs('tisch') || designIs('ocean') || designIs('bruecke') || designIs('forest')) && roundIsYoung(round) && activeGames.length
       && activeGames.length < SUGGEST_MIN_SHELF) {
       return hubSentenceCard('ti-bulb', t('hub.suggest.title'),
         tn(SUGGEST_MIN_SHELF, 'hub.young.suggestOne', 'hub.young.suggest'));
@@ -516,4 +517,40 @@ async function renderRecoTeaser(rid, grid) {
   // ordering available for something deliberately kept off the critical path.
   const gap = grid.parentNode && grid.parentNode.querySelector('.empty--rail-gap');
   if (gap) gap.remove();
+}
+
+/* The EMPTY TABLE (T7.3, #1269): a 0-game round's one next step — „Der Topf ist
+   noch leer", a sentence, and the two ways to fill the pot. The same
+   `emptyState` every other empty screen uses, plus its actions, so each design
+   paints it with the material it already gives `.empty` (Der Tisch's felt
+   medallion, #1194). Every design since the #1269 merge interview.
+
+   „Von BGG übernehmen" only where the import exists (canImportBgg — accounts
+   mode), and the sentence drops its BGG half with it: copy that points at a
+   button which is not there is the kind of promise T7 exists to stop making.
+
+   Moved here from views-round-start.js by #1466 for that file's token budget:
+   it is a card renderer like its neighbours, called from the Start tab.
+
+   `titleKey` lets Forest name its own vessel (F7.3, #1471: „Der Stumpf ist
+   noch leer" — the stump, not the pot); the sentence and the actions stay. */
+function hubEmptyTable(round, { titleKey = 'hub.young.emptyTitle' } = {}) {
+  const bgg = canImportBgg();
+  const table = emptyState({
+    icon: 'ti-tornado',
+    title: t(titleKey),
+    text: t(bgg ? 'hub.young.emptyTextBgg' : 'hub.young.emptyText'),
+  });
+  table.classList.add('empty--table');
+  const actions = h('<div class="empty__actions"></div>');
+  const add = h(`<button class="btn btn--primary"><i class="ti ti-plus" aria-hidden="true"></i> ${esc(t('round.addGame'))}</button>`);
+  add.addEventListener('click', () => showAddGame(round));
+  actions.appendChild(add);
+  if (bgg) {
+    const imp = h(`<button class="btn"><i class="ti ti-download" aria-hidden="true"></i> ${esc(t('bggImport.tile'))}</button>`);
+    imp.addEventListener('click', () => showBggImport(round));
+    actions.appendChild(imp);
+  }
+  table.appendChild(actions);
+  return table;
 }

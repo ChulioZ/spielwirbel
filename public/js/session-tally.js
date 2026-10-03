@@ -86,6 +86,27 @@ function sessionNumber(round, session) {
   return 1 + (round.sessions || []).filter((s) => s.id !== session.id && s.finished && String(s.createdAt) <= at).length;
 }
 
+/* Which win of `memberId`'s this session is, and which play of `gameId` —
+   Forest's fact line under the result (#1468: „9. Sieg für Jonas",
+   „Nordlichter zum 4. Mal"). The same window as sessionNumber: the OTHER
+   finished sessions that happened no later than this one, plus this one. The
+   session itself is counted by assumption rather than read off its stored
+   copy, because the caller asks only for a winner it is showing and a game it
+   is showing — and the result screen states both before the round snapshot
+   knows them. Counted like memberStats' `wins` (every finished night a member
+   is among the winners, a shared win included), so the line can never disagree
+   with the member page. */
+function sessionWinNumber(round, session, memberId) {
+  const at = String(session.createdAt);
+  return 1 + (round.sessions || []).filter((s) => s.id !== session.id && s.finished
+    && String(s.createdAt) <= at && (s.winnerIds || []).includes(memberId)).length;
+}
+function sessionPlayNumber(round, session, gameId) {
+  const at = String(session.createdAt);
+  return 1 + (round.sessions || []).filter((s) => s.id !== session.id && s.finished
+    && String(s.createdAt) <= at && s.chosenGameId === gameId).length;
+}
+
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { winStreak, sessionNumber };
+  module.exports = { winStreak, sessionNumber, sessionWinNumber, sessionPlayNumber };
 }

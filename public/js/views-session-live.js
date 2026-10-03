@@ -473,6 +473,10 @@ function showSessionLobby(round, session, handedOn, dealt) {
   // person's „Für …" key in their row — views-session-programmheft.js.
   const ph = designIs('programmheft');
   if (ph) composeProgrammheftLobby(round, root, people, voted, hereBtns);
+  // Forest (#1469, F4.5/F6.5): the dusk cards, each person's „Für …" key in
+  // their row, and the code behind its button — views-session-forest.js.
+  const forest = forestWorn();
+  if (forest) composeForestLobby(root, people, voted, hereBtns, games.length);
 
   // Below the actions: what you can do comes first, what already happened after.
   const log = renderSessionLog(round, session);
@@ -484,8 +488,9 @@ function showSessionLobby(round, session, handedOn, dealt) {
      result screen renders for every design (showResults). The phone gets none,
      as on every sub-screen (`.dock--sub`, #331). Klassisch's lobby never had
      them and keeps it that way. Das Programmheft keeps them too (#1375): P4.5
-     draws the Kopf with its section line, P6.5 the dock. */
-  if (bruecke || ph) renderSubScreenTabs(round, 'session');
+     draws the Kopf with its section line, P6.5 the dock. So does Forest
+     (#1469): F4.5 draws the Kopf, F6.5 the dock. */
+  if (bruecke || ph || forest) renderSubScreenTabs(round, 'session');
 
   // Poll for other devices' votes. `root` still being in the document is the
   // teardown signal — there is no unmount hook, and every navigation replaces

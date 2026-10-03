@@ -214,7 +214,8 @@ function renderAccountFace() {
   if (!btn) return;
   const dot = document.getElementById('newsDot');
   const username = (accountUser && accountUser.username) || '';
-  const tisch = designIs('tisch') && accountsActive() && isLoggedIn() && !!username;
+  // Forest's Kopf draws the same face (#1466, F1.7: the ring and the name).
+  const tisch = (designIs('tisch') || designIs('forest')) && accountsActive() && isLoggedIn() && !!username;
   const hasTischFace = !!btn.querySelector('.topbar__avatar');
   if (!tisch && !hasTischFace) return;
   // The disc takes the account's own colour (accountColor, the one the friends

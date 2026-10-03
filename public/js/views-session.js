@@ -86,6 +86,9 @@ function showStartSession(round, prefill) {
   // Topf" with its numeral and the games by name, and the black box at the foot
   // (views-session-programmheft.js).
   const ph = designIs('programmheft');
+  // Forest (#1468) re-composes it into seats, the tree stump and the count card
+  // with „Laub wirbeln" (views-session-forest.js).
+  const forest = forestWorn();
   if (tisch) {
     // The rail's rename and „+" re-render through currentView(), and the
     // `round` this closure holds is a snapshot — so under the rail the screen
@@ -166,6 +169,7 @@ function showStartSession(round, prefill) {
   if (ocean) composeOceanSetup(form);
   if (bruecke) composeBrueckeSetup(head, form);
   if (ph) composeProgrammheftSetup(round, head, form, arriving);
+  if (forest) composeForestSetup(form);
 
   // Custom-tag filter (#238, tri-state #241): all ignored by default = no tag
   // filter. Map<tagId, 'include'|'exclude'>; included tags combine per
@@ -352,6 +356,8 @@ function showStartSession(round, prefill) {
   const potCount = (n) => `<span class="pool-count-group"><span class="pool-count">${n}</span> `
     + `<span class="pool-count__label">${esc(ocean
       ? tn(n, 'startSession.potLabelOceanOne', 'startSession.potLabelOcean')
+      : forest
+        ? tn(n, 'startSession.potLabelForestOne', 'startSession.potLabelForest')
       : bruecke
         ? tn(n, 'startSession.potLabelBrueckeOne', 'startSession.potLabelBruecke')
         : tn(n, 'startSession.potLabelOne', 'startSession.potLabel'))}</span></span>`;
@@ -403,7 +409,9 @@ function showStartSession(round, prefill) {
     // Deliberately not a live region: the ring centre and the panel title already
     // state these two numbers, and a third announcement on every seat tap would
     // talk over the ownersNote below, which IS one.
-    barSummary.textContent = tisch || ocean || bruecke || ph
+    barSummary.textContent = forest
+      ? forestDrawSummary(joining.size + guests.length, games.length, parseInt(form.querySelector('#count').value, 10))
+      : tisch || ocean || bruecke || ph
       ? tischDrawSummary(joining.size + guests.length, games.length, parseInt(form.querySelector('#count').value, 10))
       : tn(joining.size + guests.length, 'startSession.tableCountOne', 'startSession.tableCount') + ' · ' + headline;
 
@@ -462,6 +470,7 @@ function showStartSession(round, prefill) {
     // the chips live OUTSIDE it (unlike `mountFilterPanel`, which must not).
     if (filterPanel) filterPanel.sync();
     if (ocean) paintOceanCount(form);
+    if (forest) paintForestCount(form);
     fitSetupPool(form);
   };
   // Seats around the table: tap a member to toggle whether they join tonight,
@@ -480,7 +489,7 @@ function showStartSession(round, prefill) {
     // two of the three chips can change from a click on the ring.
     addons.relabelAddons();
     updateHint();
-  }, guestList, { stateLines: tisch || ocean || bruecke || ph });
+  }, guestList, { stateLines: tisch || ocean || bruecke || ph || forest });
   seatTable.setAttribute('role', 'group');
   seatTable.setAttribute('aria-labelledby', 'seatsLabel');
   const multiTableNote = form.querySelector('#multiTableNote');
@@ -778,12 +787,12 @@ function showStartSession(round, prefill) {
       const cur = parseInt(countInput.value, 10);
       countInput.value = Math.max(1, (Number.isInteger(cur) ? cur : 1) + parseInt(btn.dataset.d, 10));
       // Der Tisch's summary states the drawn number (T2.3), so it follows it —
-      // and so does Ocean's, with its count bubbles.
-      if (tisch || ocean || bruecke) updateHint();
+      // and so does Ocean's, with its count bubbles, and Forest's, with its leaves.
+      if (tisch || ocean || bruecke || forest) updateHint();
     });
   });
   // …and it was first written before the remembered count was loaded above.
-  if (tisch || ocean || bruecke) {
+  if (tisch || ocean || bruecke || forest) {
     countInput.addEventListener('input', updateHint);
     updateHint();
   }
@@ -1176,6 +1185,16 @@ function startVoting(round, session, games, people, opts = {}) {
     }
     // Das Programmheft (#1374, P2.3/P4.2): „Zurück" as a word, the scale ends.
     if (designIs('programmheft')) composeProgrammheftVoteCard(card);
+    if (forestWorn()) {
+      // Forest (#1468, F2.3/F4.2): who has rated left of the card (1440 only),
+      // the cards still to come face down on the dusk right of it — under the
+      // faces on a phone. DOM order is the 1440 reading order.
+      const sides = forestVoteSides(round, sessionPeople(round, session), person,
+        session.votedIds, games.length - n);
+      composeForestVoteCard(card);
+      card.querySelector('.vote__card').before(sides.raters);
+      if (sides.hidden) card.querySelector('.vote__card').after(sides.hidden);
+    }
     return card;
   }
 
@@ -1219,6 +1238,7 @@ function startVoting(round, session, games, people, opts = {}) {
     if (!composed) card.querySelector('.vote__who').before(h(progressBar()));
     // The same header as the cards it reviews (#1374): „Zurück" as a word.
     if (designIs('programmheft')) composeProgrammheftVoteCard(card);
+    if (forestWorn()) composeForestVoteCard(card);
     app.appendChild(card);
     // Arriving by the beat or a re-rate puts focus on the heading; a Back or a
     // language switch leaves it where it was, as on the cards.
@@ -1254,18 +1274,22 @@ function startVoting(round, session, games, people, opts = {}) {
     // is part of the rating run, so it is full-screen too.
     const bruecke = designIs('bruecke');
     const ph = designIs('programmheft');
-    voteScreen(step.type !== 'intro' || oceanWorn() || bruecke || ph);
+    // Forest's dusk blind too (#1469, F4.6/F6.6: „ohne Kopf und Dock").
+    const forest = forestWorn();
+    voteScreen(step.type !== 'intro' || oceanWorn() || bruecke || ph || forest);
 
     // Handover screen: full color card in the person's color — or, under
     // Ocean, the deep-water blind (views-session-ocean.js), and under Die
     // Brücke the night blind (views-session-bruecke.js), and under Das
     // Programmheft the paper blind between two bands
-    // (views-session-programmheft.js).
+    // (views-session-programmheft.js), and under Forest the dusk with its
+    // fireflies (views-session-forest.js).
     if (step.type === 'intro') {
       const color = personColor(round, step.person);
       app.innerHTML = '';
       const card = oceanWorn() ? oceanBlind(round, session, step.person, idx > 0)
         : bruecke ? brueckeBlind(round, step.person, idx > 0)
+        : forest ? forestBlind(round, step.person, idx > 0)
         : ph ? programmheftBlind(round, step.person, idx > 0, order.indexOf(step.person) + 1, order.length) : h(`<div class="handover" style="background:${color}">
           ${progressBar()}
           <span class="handover__avatar" style="color:${color}">${avatarFace(initials(step.person.name), { userId: step.person.userId })}</span>
@@ -1457,6 +1481,8 @@ function showFinale(round, session, games) {
       <button class="btn btn--primary btn--lg stage__reveal"><i class="ti ti-sparkles" aria-hidden="true"></i> ${esc(t('finale.reveal'))}</button>
       <div class="stage__note">${esc(t('finale.note'))}</div>
     </div>`);
+  // Forest's reveal verb over the stage's title (#1468, F9.5).
+  if (forestWorn()) stage.querySelector('.stage__title').before(forestFinaleKicker());
   stage.querySelector('.stage__reveal').addEventListener('click', () => {
     // The flow is over. Ending it here leaves its entries to resolveRoute,
     // which maps every transient session path to the round hub — so Back out of
@@ -1526,7 +1552,11 @@ async function showResults(round, session, gamesHint, reveal, plain) {
   // — the band and its foot in the column beside the Tafel — and prints the
   // report's kicker over the headline and every step's count in the Tafel.
   const phLook = designIs('programmheft');
-  const tischLook = designIs('tisch') || oceanLook || brueckeLook || phLook;
+  // Forest (#1468, F2.4/F4.3) takes it too and arranges it in three columns at
+  // the end — the people, the sentence over the grown tree and the fact line,
+  // the Tafel with the corrections and the foot (composeForestResult).
+  const forestLook = forestWorn();
+  const tischLook = designIs('tisch') || oceanLook || brueckeLook || phLook || forestLook;
   // „1× kein Schub" under Die Brücke — the scale's end word, never „kein Veto".
   const whyOf = (r) => (brueckeLook ? brueckeScoreReason(r) : scoreReason(r));
 
@@ -1644,6 +1674,14 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     // (`--print-i` below). Only the reveal — never a cold load or a Chronik visit.
     if (reveal) head.setAttribute('data-print', '');
   }
+  // Forest's kicker replaces the subtitle the same way (F2.4, F4.3): it carries
+  // the date, and the Tafel's title the count. The fact line under the scene is
+  // painted by updateTitle(), which every phase change reaches.
+  const forestFacts = forestLook ? h('<p class="forest-facts" hidden></p>') : null;
+  if (forestLook) {
+    head.querySelector('.muted').remove();
+    head.firstElementChild.prepend(forestResultKicker(session));
+  }
   // Die Brücke's B10.4 „Entschlüsseln" (#1248): the reveal decrypts the
   // headline, then the Tafel drives in row by row (`--print-i` below). Only the
   // reveal — never a cold load or a Chronik visit.
@@ -1745,6 +1783,12 @@ async function showResults(round, session, gamesHint, reveal, plain) {
 
 
   function updateTitle() {
+    if (forestLook) {
+      paintForestFacts(forestFacts, {
+        round, session, finished: finished && !cancelled, winnerIds, people,
+        game: chosenId ? games.find((x) => x.id === chosenId) : null,
+      });
+    }
     if (cancelled) {
       titleEl.textContent = t('result.titleCancelled');
     } else if (finished && chosenId) {
@@ -2618,9 +2662,10 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     // Tafel instead of opening a row the Tafel spans, and on a phone the actions
     // follow the box ahead of the ranking — Ocean's order. Ocean and Die Brücke
     // compose their own sides from a foot that is a child of the screen.
-    if (oceanLook || brueckeLook) screen.appendChild(tischFoot);
+    if (oceanLook || brueckeLook || forestLook) screen.appendChild(tischFoot);
     else tischSlot.appendChild(tischFoot);
     if (oceanLook) composeOceanResult(screen, head, peopleEl);
+    if (forestLook) composeForestResult(screen, head, peopleEl, forestFacts);
     if (brueckeLook) composeBrueckeResult(screen);
     return;
   }

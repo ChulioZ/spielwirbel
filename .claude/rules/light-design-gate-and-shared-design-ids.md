@@ -62,7 +62,9 @@ world — every key of `LEGACY_MARKER_INDEX`, quoted. `ocean` (and `forest`) are
 keys there, so the obvious `designIs('ocean')` in that file reddens a test about
 the #1202 flip, not about your change. Don't weaken the scan: #1213 asks through
 `oceanWorn()` in `views-session-ocean.js`, the one place the session screens
-spell the id. A Forest slice will need the same.
+spell the id, and #1468 did the same with `forestWorn()` in
+`views-session-forest.js` — every Forest session file (the shared vote and the
+blind, #1469, included) asks through it rather than spelling `'forest'`.
 
 **Related:** `.claude/rules/design-colour-blocks-are-scheme-gated.md` (the dark
 half of the gate), `.claude/rules/design-stylesheets-are-shell-assets.md`,
