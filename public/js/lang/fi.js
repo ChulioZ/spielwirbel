@@ -32,11 +32,15 @@ I18N.fi = {
   'home.tischKicker': 'Pelikahvila · sinun pöytäsi',
   // Ocean only (#1211): its sub-brand beside the wordmark and its lobby greeting.
   'home.oceanKicker': 'Rannikko · sinun porukkasi',
+  'home.forestKicker': 'Metsä · sinun aukeasi',
   'home.oceanGreeting': 'Tervetuloa rannikolle.',
+  'home.forestGreeting': 'Tervetuloa takaisin metsään.',
+  'home.forestGreetingFirst': 'Tervetuloa metsään.',
   // Die Brücke only (#1238): the lobby voice, its greeting and the notice kicker (B9).
   'home.brueckeKicker': 'Laivasto / Yleiskatsaus',
   'home.brueckeGreeting': 'Tervetuloa takaisin kyytiin.',
   'home.brueckeSignal': 'Saapuva signaali',
+  'home.forestSignal': 'Valomerkki',
   'home.shared': 'Jaettu',
   'home.newRound': 'Aloita uusi porukka',
   'home.empty.title': 'Ei vielä yhtään peliporukkaa.',
@@ -1774,6 +1778,8 @@ I18N.fi = {
   'landing.cta.title': 'Ensi kerralla siitä ei enää väitellä.',
   'landing.faq.q': 'Vieläkö jokin mietityttää?',
   'landing.faq.link': 'Lue UKK',
+  // The „Was spielen wir heute?" guide page (#1171), linked beside the FAQ.
+  'landing.guide.link': 'Opas: mitä pelataan tänään?',
   // The design band (#1198), shown only by a design that asks for it (Der Tisch as the face).
   // {n} is how many designs the instance offers (GET /api/config), so it never overclaims.
   'landing.designs.title': '{n} ulkoasua, yksi sovellus.',
@@ -1942,6 +1948,9 @@ I18N.fi = {
   'badges.moment.title': 'Juuri ansaittu',
   'badges.moment.moreOne': '+{n} lisää',
   'badges.moment.more': '+{n} lisää',
+  // Das Programmheft's kicker on the result moment's band for a big tier (#1393):
+  // the round's Sessions 100 · 250 · 500 and Stammgast 100 · 250.
+  'badges.specialEdition': 'Erikoispainos',
   'badges.earnedIn': 'Ansaittu: {month}',
   'badges.tierReached': 'Taso {tier} saavutettu: {month}',
   'badges.card.next': 'Seuraava taso {n}',
@@ -1953,6 +1962,7 @@ I18N.fi = {
   'detail.statVetoBruecke': '× ei työntöä',
   // Das Programmheft's lobby and hub (#1372, P3.1/P3.2/P6.1).
   'hub.members': 'Jäsenet',
+  'hub.forestMarker': 'Merkki {name}',
   'hub.lead.open': 'Katso tulos',
   'home.phExtra': 'Ylimääräinen painos',
   'home.phKicker': 'Kioski · {date}',

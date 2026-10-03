@@ -52,7 +52,7 @@ const RAIL_OWN_ENTRY = [...RAIL_SETTINGS_SUB];
    old off-shelf trigger is the one that did. One question, so a
    third lean design is one line here rather than a hunt for every caller. */
 function railIsLean() {
-  return designIs('tisch') || designIs('ocean') || designIs('bruecke') || designIs('programmheft');
+  return designIs('tisch') || designIs('ocean') || designIs('bruecke') || designIs('programmheft') || designIs('forest');
 }
 
 // One rail row. `sub` decides the marker, and the two states are NOT
@@ -97,7 +97,8 @@ function buildRoundRail(round, activeTab, sub) {
   // nothing else, laid out as a bar under the top bar (bruecke.css).
   // The Programmheft's section line drops the identity the same way (#1372):
   // its hub prints the round's name as the page's own masthead line.
-  const reling = designIs('ocean') || designIs('bruecke') || designIs('programmheft');
+  // Forest's Wegweiser (#1466, F3.2) is the band of five links under the Kopf.
+  const reling = designIs('ocean') || designIs('bruecke') || designIs('programmheft') || designIs('forest');
 
   // --- Identity. The hero this mirrors stays on the Start tab for narrow
   // screens, where there is no rail to carry it; CSS hides it here instead.
@@ -174,6 +175,12 @@ function buildRoundRail(round, activeTab, sub) {
     if (presets) rail.appendChild(presets);
   }
 
+  /* Forest's Wegweiser counts the Regal and the Chronik beside their names
+     (F1.7, F3.2) — the two figures the hero carries in every other design, so
+     nothing new is derived. aria-hidden: the link is named by its section, and
+     the hub's previews say the same figures in words. */
+  const counts = designIs('forest') ? { regal: activeGames.length, chronik: playedCount } : {};
+
   // --- The four sections.
   const nav = h(`<nav class="rail__group" aria-label="${esc(t('a11y.hubTabs'))}"></nav>`);
   [
@@ -189,7 +196,7 @@ function buildRoundRail(round, activeTab, sub) {
     // its own.
     const inside = !ownEntry && sub && tabId === activeTab;
     const el = h(`<a class="rail__item${tabId === activeTab && !ownEntry ? ' is-active' : ''}"${inside ? ' aria-current="true"' : ''}>
-         <i class="ti ${icon}" aria-hidden="true"></i><span>${esc(label)}</span>
+         <i class="ti ${icon}" aria-hidden="true"></i><span>${esc(label)}</span>${counts[tabId] ? `<span class="rail__count" aria-hidden="true">${counts[tabId]}</span>` : ''}
        </a>`);
     const current = tabId === activeTab && !sub;
     if (current) el.setAttribute('aria-current', 'page');

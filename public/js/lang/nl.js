@@ -55,11 +55,15 @@ I18N.nl = {
   'home.tischKicker': 'Spellencafé · jouw tafels',
   // Ocean only (#1211): its sub-brand beside the wordmark and its lobby greeting.
   'home.oceanKicker': 'De kust · jouw groepen',
+  'home.forestKicker': 'Het bos · jouw open plekken',
   'home.oceanGreeting': 'Welkom aan de kust.',
+  'home.forestGreeting': 'Welkom terug in het bos.',
+  'home.forestGreetingFirst': 'Welkom in het bos.',
   // Die Brücke only (#1238): the lobby voice, its greeting and the notice kicker (B9).
   'home.brueckeKicker': 'Vloot / Overzicht',
   'home.brueckeGreeting': 'Welkom terug aan boord.',
   'home.brueckeSignal': 'Inkomend signaal',
+  'home.forestSignal': 'Lichtsignaal',
   'home.shared': 'Gedeeld',
   'home.newRound': 'Een nieuwe groep starten',
   'home.empty.title': 'Nog geen speelgroep.',
@@ -1806,6 +1810,8 @@ I18N.nl = {
   'landing.cta.title': 'De volgende keer discussieert er niemand meer over.',
   'landing.faq.q': 'Nog vragen?',
   'landing.faq.link': 'Lees de FAQ',
+  // The „Was spielen wir heute?" guide page (#1171), linked beside the FAQ.
+  'landing.guide.link': 'Gids: wat spelen we vanavond?',
   // The design band (#1198), shown only by a design that asks for it (Der Tisch as the face).
   // {n} is how many designs the instance offers (GET /api/config), so it never overclaims.
   'landing.designs.title': '{n} ontwerpen, één app.',
@@ -1974,6 +1980,9 @@ I18N.nl = {
   'badges.moment.title': 'Net behaald',
   'badges.moment.moreOne': '+{n} meer',
   'badges.moment.more': '+{n} meer',
+  // Das Programmheft's kicker on the result moment's band for a big tier (#1393):
+  // the round's Sessions 100 · 250 · 500 and Stammgast 100 · 250.
+  'badges.specialEdition': 'Speciale editie',
   'badges.earnedIn': 'Behaald in {month}',
   'badges.tierReached': 'Niveau {tier} bereikt in {month}',
   'badges.card.next': 'Volgend niveau {n}',
@@ -1985,6 +1994,7 @@ I18N.nl = {
   'detail.statVetoBruecke': '× geen stuwkracht',
   // Das Programmheft's lobby and hub (#1372, P3.1/P3.2/P6.1).
   'hub.members': 'Leden',
+  'hub.forestMarker': 'Markering {name}',
   'hub.lead.open': 'Uitslag bekijken',
   'home.phExtra': 'Extra editie',
   'home.phKicker': 'Kiosk · {date}',

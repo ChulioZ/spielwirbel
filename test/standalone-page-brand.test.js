@@ -55,6 +55,8 @@ const PAGES = [
   { rel: 'public/kontakt.html', klassisch: true },
   { rel: 'public/login.html', klassisch: true },
   { rel: 'lib/faq.js', klassisch: true },
+  // The „Was spielen wir heute?" guide (#1171) — the FAQ's copy, same shape.
+  { rel: 'lib/guide.js', klassisch: true },
   { rel: 'lib/legal.js', klassisch: false },
 ];
 const FACES = DESIGN_REGISTRY.filter((d) => d.face);
