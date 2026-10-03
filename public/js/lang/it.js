@@ -1966,6 +1966,9 @@ I18N.it = {
   'badges.moment.title': 'Appena ottenuti',
   'badges.moment.moreOne': '+{n} altro',
   'badges.moment.more': '+{n} altri',
+  // Das Programmheft's kicker on the result moment's band for a big tier (#1393):
+  // the round's Sessions 100 · 250 · 500 and Stammgast 100 · 250.
+  'badges.specialEdition': 'Edizione speciale',
   'badges.earnedIn': 'Ottenuto: {month}',
   'badges.tierReached': 'Livello {tier} raggiunto: {month}',
   'badges.card.next': 'Livello successivo: {n}',

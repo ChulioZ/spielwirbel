@@ -1927,6 +1927,9 @@ I18N.fi = {
   'badges.moment.title': 'Juuri ansaittu',
   'badges.moment.moreOne': '+{n} lisää',
   'badges.moment.more': '+{n} lisää',
+  // Das Programmheft's kicker on the result moment's band for a big tier (#1393):
+  // the round's Sessions 100 · 250 · 500 and Stammgast 100 · 250.
+  'badges.specialEdition': 'Erikoispainos',
   'badges.earnedIn': 'Ansaittu: {month}',
   'badges.tierReached': 'Taso {tier} saavutettu: {month}',
   'badges.card.next': 'Seuraava taso {n}',

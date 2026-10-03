@@ -1967,6 +1967,9 @@ I18N.fr = {
   'badges.moment.title': 'Tout juste obtenus',
   'badges.moment.moreOne': '+{n} de plus',
   'badges.moment.more': '+{n} de plus',
+  // Das Programmheft's kicker on the result moment's band for a big tier (#1393):
+  // the round's Sessions 100 · 250 · 500 and Stammgast 100 · 250.
+  'badges.specialEdition': 'Édition spéciale',
   'badges.earnedIn': 'Obtenu en {month}',
   'badges.tierReached': 'Palier {tier} atteint en {month}',
   'badges.card.next': 'Palier suivant : {n}',
