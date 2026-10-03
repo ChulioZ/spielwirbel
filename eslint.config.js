@@ -601,6 +601,7 @@ const frontendGlobals = {
   forestWorn: 'readonly', FOREST_COUNT_LEAVES: 'readonly', composeForestSetup: 'readonly', forestDrawSummary: 'readonly',
   paintForestCount: 'readonly', composeForestVoteCard: 'readonly', forestVoteSides: 'readonly', forestFinaleKicker: 'readonly', forestResultKicker: 'readonly',
   paintForestFacts: 'readonly', composeForestResult: 'readonly', composeForestTablesHead: 'readonly',
+  FOREST_DUSK_TREES: 'readonly', forestBlind: 'readonly', composeForestLobby: 'readonly', // #1469: the dusk blind and the shared vote
   programmheftBlind: 'readonly', composeProgrammheftLobby: 'readonly', // #1375
   // views-session-tables.js (issue #796)
   showTableBuilder: 'readonly', tableStateFrom: 'readonly', tablePeopleIds: 'readonly',
