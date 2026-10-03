@@ -950,7 +950,8 @@ public/
     views-session-forest.js Forest's session loop (#1468): forestWorn(), the
                      setup with the tree stump in three columns, the vote card's
                      side columns and dusk strip, the finale's kicker, the
-                     result in three columns with its fact line, the tables head
+                     result in three columns with its fact line, the tables head,
+                     and (#1469) the shared vote and the dusk pass-device blind
     views-vote-link.js the PUBLIC /vote/:token screen (#652): claim your name
                      from the participant list and rate the drawn games without
                      an account — the only view that runs logged out

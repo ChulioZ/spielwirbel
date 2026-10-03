@@ -1274,18 +1274,22 @@ function startVoting(round, session, games, people, opts = {}) {
     // is part of the rating run, so it is full-screen too.
     const bruecke = designIs('bruecke');
     const ph = designIs('programmheft');
-    voteScreen(step.type !== 'intro' || oceanWorn() || bruecke || ph);
+    // Forest's dusk blind too (#1469, F4.6/F6.6: „ohne Kopf und Dock").
+    const forest = forestWorn();
+    voteScreen(step.type !== 'intro' || oceanWorn() || bruecke || ph || forest);
 
     // Handover screen: full color card in the person's color — or, under
     // Ocean, the deep-water blind (views-session-ocean.js), and under Die
     // Brücke the night blind (views-session-bruecke.js), and under Das
     // Programmheft the paper blind between two bands
-    // (views-session-programmheft.js).
+    // (views-session-programmheft.js), and under Forest the dusk with its
+    // fireflies (views-session-forest.js).
     if (step.type === 'intro') {
       const color = personColor(round, step.person);
       app.innerHTML = '';
       const card = oceanWorn() ? oceanBlind(round, session, step.person, idx > 0)
         : bruecke ? brueckeBlind(round, step.person, idx > 0)
+        : forest ? forestBlind(round, step.person, idx > 0)
         : ph ? programmheftBlind(round, step.person, idx > 0, order.indexOf(step.person) + 1, order.length) : h(`<div class="handover" style="background:${color}">
           ${progressBar()}
           <span class="handover__avatar" style="color:${color}">${avatarFace(initials(step.person.name), { userId: step.person.userId })}</span>
