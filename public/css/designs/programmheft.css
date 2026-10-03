@@ -3618,8 +3618,8 @@
 
    The podium has NO silver or bronze (operator decision 7): place 1 is the
    gold with its ink edge, places 2 and 3 are the raised paper with the same
-   edge and the numeral. The Abzeichen section keeps the look it has today — it
-   is #1393's.
+   edge and the numeral. The Abzeichen section is not drawn here — it has its
+   own section, „#1393 — Abzeichen", further down.
 
    NOT built from the sheet: the recap as a sheet on the phone (P13.2's
    „Rückblick" link — the section stays on the page, after the editions), the
@@ -6201,4 +6201,830 @@
   :root[data-design="programmheft"] .handover--ph .handover__sub { grid-column: 1 / -1; max-width: 700px; font-size: 28px; padding-top: 18px; }
   :root[data-design="programmheft"] .ph-blind__keys { flex-direction: row; align-items: center; gap: var(--space-4); padding: 0; }
   :root[data-design="programmheft"] .handover.handover--ph .handover__go { min-height: 80px; font-size: 44px; }
+}
+
+/* ===== #1393 — Abzeichen: printed medals in ink (P17) ===== */
+/* Sheet: docs/design/programmheft/Programmheft-P17-Abzeichen.dc.html
+   (P17.1–P17.8), over K17's shared markup (views-badges.js, #1388/#1389). The
+   medal is drawn on `.badge__mark` itself — its background is the progress
+   arc, `::before` the seal, `::after` the tier band, the glyph's own `<i>` the
+   knocked-out print — so no design-specific markup is needed for the states.
+
+   The four states, never colour alone (every tile's aria-label names it too):
+     earned   — a full ink seal with an inner paper ring, the glyph in paper
+     progress — a paper disc with an ink edge, closed by an ink arc of --pct
+     locked   — a dashed circle in the soft ink
+     secret   — a hatched disc, the padlock on a paper spot
+   An earned tier on its way to the next keeps the arc round its seal.
+
+   The tier (P17.10 „Siegelband"): a paper band with the numeral under the
+   medal, read from `data-tier` on the mark (views-badges.js badgeTierAttr). In
+   the member columns, the Tischkarte and the result strip the sheet draws no
+   band — the name carries the number there, as it does everywhere.
+
+   Size is one custom property, --ph-mark, set by the placement: the round's
+   strip 50/56, a member column 44, the card 72, the moment 52, the
+   Sonderausgabe 64, the Tischkarte 44/40. Every size inside is derived from it.
+
+   Colours: every hex on P17 is P1's, so every one is a token here. Two the
+   sheet uses are not app colours and are mapped: #d9d5cc (the sheet's own
+   ground, „nicht in der App") becomes --sunken for the arc's track, and
+   #6f6b66 becomes --ink-soft (this design's one step darker soft ink, see the
+   colour block above). Vermilion appears once — the Sonderausgabe band — and
+   everything printed on it is Anton from 26px, because paper on vermilion is
+   3.79:1 and passes as large text only (P17.9).
+
+   Every rule is gated on the light scheme. A rule that DISPLAYs a K17
+   container keeps `:not([hidden])` — K17 hides the empty moment and the
+   folded „N offen" grid with the attribute
+   (.claude/rules/hidden-attribute-vs-display-rule.md).
+
+   Not built from the sheet: the member row's three-medal peek beside the
+   chevron on a phone (P17.3 — markup K17 does not have), the band's
+   „Zu den Abzeichen" link (the moment's own „+N weitere" and the tile's card
+   reach the same place), and the Spielerkarte's own layout (#1389's). The
+   stamp press (P17.5's motion) is the section after this one. */
+
+/* --- The medal ------------------------------------------------------------ */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge__mark {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: none;
+  box-sizing: border-box;
+  width: var(--ph-mark, 50px);
+  height: var(--ph-mark, 50px);
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--ink);
+  font-size: calc(var(--ph-mark, 50px) * 0.42);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge__mark::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  border-radius: 50%;
+}
+/* Positioned after ::before in tree order, so the print lies on the seal. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge__mark > .ti {
+  position: relative;
+  display: grid;
+  place-items: center;
+  line-height: 1;
+}
+
+:root[data-design="programmheft"]:not([data-scheme="dark"]) :is(.badge, .badge-card, .badge-emblem)[data-state="earned"] .badge__mark { color: var(--box-ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) :is(.badge, .badge-card, .badge-emblem)[data-state="earned"] .badge__mark::before {
+  background: var(--ink);
+  box-shadow: inset 0 0 0 3px var(--ink), inset 0 0 0 5px var(--box-ink);
+}
+
+/* The arc: only on a TILE (the card says the same with its bar), only while
+   counting — an open mark may carry --pct:0 and must not draw a track. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) :is(.badge, .badge-card)[data-state="progress"] .badge__mark { color: var(--ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge[data-state="progress"] .badge__mark,
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge[data-state="earned"] .badge__mark[style*="--pct"] {
+  background: conic-gradient(var(--ink) calc(var(--pct) * 1%), var(--sunken) 0);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge[data-state="progress"] .badge__mark::before,
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge[data-state="earned"] .badge__mark[style*="--pct"]::before { inset: 3px; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) :is(.badge, .badge-card)[data-state="progress"] .badge__mark::before {
+  background: var(--page-bg);
+  border: 2px solid var(--ink);
+}
+
+:root[data-design="programmheft"]:not([data-scheme="dark"]) :is(.badge, .badge-card)[data-state="locked"] .badge__mark { color: var(--ink-soft); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) :is(.badge, .badge-card)[data-state="locked"] .badge__mark::before { border: 2px dashed var(--ink-soft); }
+
+:root[data-design="programmheft"]:not([data-scheme="dark"]) :is(.badge, .badge-card)[data-state="secret"] .badge__mark { color: var(--ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) :is(.badge, .badge-card)[data-state="secret"] .badge__mark::before {
+  background: repeating-linear-gradient(45deg, var(--ink) 0 1.5px, var(--page-bg) 1.5px 5px);
+  border: 2px solid var(--ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) :is(.badge, .badge-card)[data-state="secret"] .badge__mark > .ti {
+  width: 58%;
+  height: 58%;
+  border-radius: 50%;
+  background: var(--page-bg);
+  font-size: calc(var(--ph-mark, 50px) * 0.34);
+}
+
+/* The seal band. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge__mark[data-tier]::after {
+  content: attr(data-tier);
+  position: absolute;
+  left: 50%;
+  bottom: -8px;
+  transform: translateX(-50%);
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  min-width: 26px;
+  height: 18px;
+  padding: 0 5px;
+  background: var(--page-bg);
+  border: 2px solid var(--ink);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) :is(.badge-member, .badge-grid--compact, .badge-moment) .badge__mark[data-tier]::after { display: none; }
+
+/* --- The tile: medal over name over line (the strip, the account row) ------ */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge {
+  gap: 7px;
+  min-width: 0;
+  padding: 6px 2px 8px;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: var(--ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge:hover { background: none; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge:hover .badge__name { text-decoration: underline; text-underline-offset: 3px; }
+/* `break-word` rather than styles.css's `anywhere`, so a name only ever
+   splits when it cannot fit its cell at all; `hyphens: auto` (styles.css)
+   gets the break first in a real engine. The headless Chromium these were
+   checked in has no hyphenation dictionaries and still splits „Gründungs-
+   mitglied" mid-word in the 4-up phone grid — judge that in real Chrome or
+   WebKit (.claude/rules/browser-pane-has-no-hyphenation.md). */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge__name {
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.2;
+  overflow-wrap: break-word;
+  /* A centred flex item is shrink-to-fit: without a cap its box IS the word,
+     and break-word never finds an edge to break at. */
+  max-width: 100%;
+  color: var(--ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge:has(.badge__mark[data-tier]) .badge__name { margin-top: 4px; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge__line { font-size: 12px; line-height: 1.3; color: var(--ink-soft); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge__new {
+  top: 0;
+  left: auto;
+  right: 0;
+  padding: 2px 6px;
+  border-radius: 0;
+  background: var(--ink);
+  color: var(--box-ink);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-grid:not([hidden]) {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 12px 4px;
+}
+
+/* --- Pokale › Abzeichen: the rubric (P17.2/P17.3) ------------------------ */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-section { margin-top: var(--space-7); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-section > .section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 6px 18px;
+  margin: 0;
+  padding-bottom: 6px;
+  border-bottom: var(--rule-page) solid var(--ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-section > .section-head h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: var(--display-4);
+  line-height: var(--leading-display);
+  letter-spacing: 0;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-section > .section-head h2 .ti { display: none; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-section__summary { margin-bottom: 4px; font-size: 13px; font-weight: 600; color: var(--ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-section__empty { margin: 10px 0 0; font-size: 16px; line-height: 1.5; color: var(--ink); }
+/* The key: on a phone the sheet prints only the count (P17.3). */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-legend { display: none; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-legend__mark { width: 16px; height: 16px; border-radius: 50%; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-legend__item[data-state="earned"] .badge-legend__mark { background: var(--ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-legend__item[data-state="progress"] .badge-legend__mark { background: conic-gradient(var(--ink) 60%, var(--sunken) 0); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-legend__item[data-state="locked"] .badge-legend__mark { border: 2px dashed var(--ink-soft); background: none; }
+
+/* The round as a strip under the rubric line: four across on a phone, the
+   name and the count as one tracked kicker, the line left to the card. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-band--round {
+  margin: 0;
+  padding: 10px 0 12px;
+  border: 0;
+  border-bottom: var(--rule-strong) solid var(--ink);
+  border-radius: 0;
+  background: none;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-band__head {
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 2px 8px;
+  margin: 0 0 8px;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) :is(.badge-band__name, .badge-band__count) {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-band--round > .badge-grid:not([hidden]) { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-band--round .badge__name { font-size: 12px; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-band--round .badge__line { display: none; }
+
+/* The people: one disclosure per member in standings order on a phone. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-members { display: flex; flex-direction: column; gap: 0; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member {
+  padding: 0;
+  border: 0;
+  border-bottom: var(--rule-col) solid var(--ink);
+  border-radius: 0;
+  background: none;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member__head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  column-gap: 10px;
+  align-items: center;
+  min-height: 60px;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member__head > .badge-member__avatar { grid-row: 1 / 3; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member__head > .badge-member__name { grid-column: 2; align-self: end; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member__head > .badge-member__summary { grid-column: 2 / 4; grid-row: 2; align-self: start; }
+/* „Platz N" beside the name, so the counts below keep the column's width. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member__head > .badge-member__rank { grid-column: 3; grid-row: 1; align-self: end; white-space: nowrap; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member__avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 0;
+  font-size: 15px;
+  font-weight: 700;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member__name {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: var(--display-6);
+  line-height: var(--leading-display);
+  text-transform: uppercase;
+  color: var(--ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member__summary { font-size: 13px; color: var(--ink-2); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member__rank {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member__head::after {
+  grid-column: 4;
+  grid-row: 1 / 3;
+  margin: 0;
+  content: "\ea61";
+  font-family: "tabler-icons";
+  font-size: 20px;
+  color: var(--ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member[open] > .badge-member__head::after { content: "\ea5f"; }
+
+/* A member's medals as ROWS: the medal, then name over line, between dotted
+   hairs (the sheet's columns and the phone's open row are one drawing). */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member > .badge-grid:not([hidden]) {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0;
+  padding-bottom: 8px;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member .badge {
+  --ph-mark: 44px;
+  display: grid;
+  grid-template-columns: var(--ph-mark) minmax(0, 1fr) auto;
+  column-gap: 12px;
+  row-gap: 0;
+  align-items: center;
+  justify-items: start;
+  min-height: 52px;
+  padding: 4px 0;
+  border-top: 1px dotted var(--hair);
+  text-align: left;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member .badge__mark { grid-row: 1 / 3; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member .badge__name { grid-column: 2; align-self: end; margin: 0; font-size: 15px; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member .badge__line { grid-column: 2 / 4; align-self: start; font-size: 13px; color: var(--ink-2); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member .badge:is([data-state="locked"], [data-state="secret"]) .badge__line { color: var(--ink-soft); }
+/* „Neu" takes its own cell after the name rather than printing over it. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member .badge__new { position: static; grid-column: 3; grid-row: 1; align-self: end; }
+/* „N offen" (P17.8): a dashed print box, not a link line. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member__more {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target-min);
+  margin: 6px 0 10px;
+  padding: 0 8px;
+  border: 1.5px dashed var(--ink-soft);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-2);
+  text-decoration: none;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member > .badge-grid--rest:not([hidden]) { margin: 0; }
+
+@media (min-width: 1024px) {
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .app > .badge-section { max-width: none; }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-section > .section-head { padding-bottom: 8px; }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-section > .section-head h2 { font-size: var(--display-3); }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-section__summary { margin-bottom: 8px; font-size: 14px; }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-section > .section-head .badge-legend {
+    display: flex;
+    flex: none;
+    gap: 18px;
+    margin: 0 0 8px auto;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink-2);
+  }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-section > .section-head .badge-section__summary { margin-left: auto; }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-section > .section-head .badge-section__summary + .badge-legend { margin-left: 0; }
+
+  /* The round: a newspaper strip — its name in Anton at the left, the medals
+     in 118px cells between dotted rules. */
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-band--round {
+    display: grid;
+    grid-template-columns: 220px minmax(0, 1fr);
+    align-items: center;
+    gap: 24px;
+    padding: 14px 0 16px;
+  }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-band__head { flex-direction: column; align-items: flex-start; margin: 0; }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-band__name {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: var(--display-5);
+    line-height: var(--leading-display);
+    letter-spacing: 0;
+    color: var(--ink);
+    overflow-wrap: anywhere;
+  }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-band__count { font-size: 14px; font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--ink-2); }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-band--round > .badge-grid:not([hidden]) { display: flex; flex-wrap: wrap; gap: 14px 4px; }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-band--round .badge {
+    --ph-mark: 56px;
+    width: 118px;
+    border-right: 1px dotted var(--hair);
+  }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-band--round .badge__name { font-size: 14px; text-align: center; }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-band--round .badge__line {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    padding: 0 4px;
+    text-align: center;
+  }
+
+  /* The people as COLUMNS in standings order — as many as there are people up
+     to six, so four members get four columns (P17.2). A column's left rule is
+     a shadow the strip clips at its own edge, so the first column of every row
+     has none without any selector having to know which one that is. */
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-members {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    overflow: hidden;
+  }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member {
+    padding: 16px 20px 20px;
+    border-bottom: 0;
+    box-shadow: -1px 0 0 var(--ink);
+  }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member__head {
+    min-height: 0;
+    padding-bottom: 8px;
+    border-bottom: var(--rule-strong) solid var(--ink);
+  }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member__head::after { display: none; }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member__avatar { width: 36px; height: 36px; font-size: 17px; }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member__name { font-size: 28px; overflow-wrap: anywhere; white-space: normal; }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member .badge {
+    min-height: 58px;
+    padding: 6px 0;
+    border-top: 0;
+    border-bottom: 1px dotted var(--hair);
+  }
+
+  /* From seven people (P17.8): six columns, the earned marks as bare 26px
+     seals that wrap, the rest behind „N offen". The fold button is K17's tell
+     for a dense round; the names stay in every seal's aria-label. */
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-members:has(> .badge-member > .badge-member__more) { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-members:has(> .badge-member > .badge-member__more) .badge-member { padding: 10px 10px 12px; border-bottom: var(--rule-col) solid var(--ink); }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-members:has(> .badge-member > .badge-member__more) .badge-member__head { gap: 6px; padding-bottom: 6px; border-bottom: 0; }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-members:has(> .badge-member > .badge-member__more) .badge-member__avatar { width: 18px; height: 18px; font-size: 0; }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-members:has(> .badge-member > .badge-member__more) .badge-member__name {
+    font-family: var(--font);
+    font-weight: 700;
+    font-size: 13px;
+    line-height: 1.2;
+    text-transform: none;
+  }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-members:has(> .badge-member > .badge-member__more) :is(.badge-member__summary, .badge-member__rank) { display: none; }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-members:has(> .badge-member > .badge-member__more) .badge-member > .badge-grid:not([hidden]) {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 3px;
+    padding: 0;
+  }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-members:has(> .badge-member > .badge-member__more) .badge-member .badge {
+    --ph-mark: 26px;
+    display: block;
+    min-height: 0;
+    padding: 0;
+    border: 0;
+  }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-members:has(> .badge-member > .badge-member__more) .badge-member :is(.badge__name, .badge__line, .badge__new) { display: none; }
+}
+
+/* --- The tap-open card (P17.1 right): a printed box, the name in Anton. --- */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .popover--badge { width: 420px; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-card { --ph-mark: 72px; gap: 12px; color: var(--ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-card__head { gap: 16px; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-card .badge-card__name {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 34px;
+  line-height: var(--leading-display);
+  text-transform: uppercase;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-card__holder { font-size: 14px; color: var(--ink-2); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-card__cond { font-size: 16px; line-height: 1.5; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-card__tier {
+  border: 1.5px dashed var(--ink-soft);
+  border-radius: 0;
+  color: var(--ink-2);
+  font-size: 13px;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-card__tier[data-reached] {
+  border: 1.5px solid var(--ink);
+  background: var(--ink);
+  color: var(--box-ink);
+  font-weight: 700;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-card__next {
+  padding-top: 8px;
+  border-top: var(--rule-strong) solid var(--ink);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-card__bar {
+  box-sizing: content-box;
+  height: 10px;
+  margin-top: 8px;
+  border: var(--rule-strong) solid var(--ink);
+  border-radius: 0;
+  background: linear-gradient(90deg, var(--ink) calc(var(--pct) * 1%), transparent 0);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-card__earned { padding-top: 10px; border-top: 1px dotted var(--hair); font-size: 14px; color: var(--ink-2); }
+
+/* --- The Tischkarte row (P17.4): earned only, under the figures. ---------- */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .member-card__badges {
+  gap: 8px;
+  margin-top: 20px;
+  padding: 10px 0;
+  border-top: var(--rule-strong) solid var(--ink);
+  border-bottom: var(--rule-col) solid var(--ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .member-card__badges .member-card__badges-label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .member-card__badges-go {
+  min-width: var(--target-min);
+  min-height: var(--target-min);
+  border-radius: 0;
+  color: var(--ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .member-card__badges-go:hover { background: none; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-grid--compact:not([hidden]) { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px 4px; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-grid--compact .badge { --ph-mark: 44px; gap: 6px; padding: 0; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-grid--compact .badge__name { display: block; margin: 0; font-size: 12px; text-align: center; }
+@media (min-width: 1024px) {
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .member-card__badges { flex-wrap: nowrap; gap: 20px; padding: 12px 0; }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .member-card__badges > .member-card__badges-label { flex: 0 0 110px; }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .member-card__badges > .badge-grid { flex: 1 1 auto; order: 0; }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-grid--compact:not([hidden]) { display: flex; flex-wrap: wrap; gap: 10px 22px; }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-grid--compact .badge { --ph-mark: 40px; flex-direction: row; gap: 10px; }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-grid--compact .badge__name { font-size: 15px; text-align: left; }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .member-card__badges-go { margin-left: auto; font-size: 20px; }
+}
+
+/* --- The Spielerkarte's account tier and the feed's mark (P17.7). -------- */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-grid--account:not([hidden]) { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .feed-item__img--badge { --ph-mark: 44px; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .feed-row__badge { --ph-mark: 36px; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .e-tile__img--badge { --ph-mark: 60px; background: var(--hatch); }
+
+/* --- The hub's line and the Chronik's rows (P17.6): a 28px seal each. ---- */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .hub-row--badges {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) :is(.hub-row--badges .ti, .chronik-row--badge .chronik-row__icon) {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--box-ink);
+  font-size: 15px;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .chronik-row--badge {
+  gap: 14px;
+  min-height: 40px;
+  margin: 0;
+  border-top: 1px dotted var(--hair);
+  font-size: 15px;
+  color: var(--ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .chronik-row--badge .chronik-row__text { order: 1; font-weight: 700; color: var(--ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .chronik-row--badge .chronik-row__label {
+  order: 2;
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+/* --- The result moment (P17.5): a ruled strip — the kicker, at most two
+   medals with their holders, „+N weitere" — after the headline. The list is
+   `display: contents` so its items, the title and the link share one flex
+   line; a Sonderausgabe item takes the whole line above it. ------------- */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-moment:not([hidden]) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  margin: 0 0 var(--space-5);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-moment__list { display: contents; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-moment__title {
+  display: flex;
+  align-items: center;
+  flex: 1 0 100%;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 10px 0 6px;
+  border-top: var(--rule-strong) solid var(--ink);
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-moment__title .ti { display: none; }
+/* With only the Sonderausgabe to show, the strip has nothing under its
+   kicker: the heading stays for the outline, off the page. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-moment:not(:has(.badge-moment__item:not(.badge-moment--special))) .badge-moment__title {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-moment__item:not(.badge-moment--special) {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex: 1 0 100%;
+  min-width: 0;
+  padding: 8px 0;
+  border-top: var(--rule-col) solid var(--ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-moment__title + .badge-moment__list > .badge-moment__item:not(.badge-moment--special):first-child,
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-moment__list > .badge-moment--special + .badge-moment__item { border-top: 0; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-moment__holder {
+  padding-left: calc(52px + 14px);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 16px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-moment .badge {
+  --ph-mark: 52px;
+  display: grid;
+  grid-template-columns: var(--ph-mark) minmax(0, 1fr);
+  column-gap: 14px;
+  row-gap: 0;
+  align-items: center;
+  justify-items: start;
+  padding: 0;
+  text-align: left;
+}
+/* The medal centres on holder, name and line together (P17.5). */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-moment .badge__mark { grid-row: 1 / 3; margin-top: -16px; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-moment .badge__name { grid-column: 2; margin: 0; font-size: 19px; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-moment .badge__line { grid-column: 2; font-size: 13px; color: var(--ink-2); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-moment .badge__new { display: none; }
+/* The strip prints a plain seal (P17.5): the way to the next tier is the
+   card's business, not the moment's. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-moment .badge[data-state] .badge__mark[style*="--pct"] { background: none; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-moment .badge[data-state] .badge__mark[style*="--pct"]::before { inset: 0; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-moment__more {
+  display: flex;
+  align-items: center;
+  flex: 1 0 100%;
+  min-height: var(--target-key);
+  margin: 0;
+  border-top: var(--rule-col) solid var(--ink);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+}
+/* The closing rule under the strip — after whatever came last. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-moment:not([hidden]):has(.badge-moment__item:not(.badge-moment--special))::after {
+  content: "";
+  flex: 1 0 100%;
+  order: 99;
+  border-top: var(--rule-strong) solid var(--ink);
+}
+@media (min-width: 700px) {
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-moment__title { flex: 0 0 110px; padding: 10px 16px 10px 0; border-bottom: var(--rule-strong) solid var(--ink); }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-moment__item:not(.badge-moment--special),
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-moment__list > .badge-moment--special + .badge-moment__item {
+    flex: 1 1 220px;
+    padding: 8px 20px;
+    border-top: var(--rule-strong) solid var(--ink);
+    border-bottom: var(--rule-strong) solid var(--ink);
+    border-left: var(--rule-col) solid var(--ink);
+  }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-moment__more {
+    flex: 0 0 auto;
+    margin-left: auto;
+    padding: 0 0 0 18px;
+    border-top: var(--rule-strong) solid var(--ink);
+    border-bottom: var(--rule-strong) solid var(--ink);
+    border-left: var(--rule-col) solid var(--ink);
+  }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-moment:not([hidden]):has(.badge-moment__item:not(.badge-moment--special))::after { display: none; }
+}
+
+/* The „Sonderausgabe" (P17.5, #1393 comment 2026-10-01): the round's Sessions
+   100 · 250 · 500 and Stammgast 100 · 250 as a vermilion band over the strip,
+   in one of its two slots (views-badges.js puts it first). Paper on vermilion
+   is 3.79:1, so every word here is Anton from 26px; the medal is the ink seal
+   with its paper ring, 4.65:1 against the band. Static: only its medal is
+   stamped (the next section). */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-moment--special {
+  order: -1;
+  flex: 1 0 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "kick" "holder" "tile";
+  row-gap: 6px;
+  box-sizing: border-box;
+  margin-bottom: var(--space-4);
+  padding: 14px 18px 16px;
+  border-top: var(--rule-page) solid var(--ink);
+  border-bottom: var(--rule-page) solid var(--ink);
+  background: var(--vermilion);
+  color: var(--box-ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-moment--special .badge-moment__kicker {
+  grid-area: kick;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 34px;
+  line-height: var(--leading-display);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-moment--special .badge-moment__holder {
+  grid-area: holder;
+  padding: 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 26px;
+  line-height: 1.1;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--box-ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-moment--special .badge { --ph-mark: 64px; grid-area: tile; column-gap: 20px; color: var(--box-ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-moment--special .badge__mark { margin-top: 0; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-moment--special .badge__name {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 28px;
+  line-height: 1.05;
+  text-transform: uppercase;
+  color: var(--box-ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-moment--special .badge__line {
+  font-family: var(--font-display);
+  font-size: 26px;
+  line-height: 1.1;
+  color: var(--box-ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-moment--special .badge:hover .badge__name { text-decoration-thickness: 2px; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-moment--special .badge__new { display: none; }
+@media (min-width: 700px) {
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-moment--special {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas: "kick holder" "kick tile";
+    column-gap: 24px;
+    row-gap: 2px;
+    align-items: center;
+    padding: 14px 24px;
+  }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-moment--special .badge-moment__kicker { font-size: 48px; }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-moment--special .badge-moment__holder { padding-left: calc(64px + 20px); }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-moment--special .badge__name { font-size: 34px; }
+}
+
+/* ===== #1393 — the stamp press (P17.5's motion) =====
+   The droppable second half of the slice: revert this block alone and the
+   medals simply arrive printed. Keyed on K17's one motion hook, `data-fresh`
+   on a moment item (views-badges.js fillBadgeMoment) — a mark this screen had
+   not shown before, never on a cold load — so a winner tap stamps only what it
+   earned and replays nothing.
+
+   The timeline (P17.5 „Zeittafel"): 0–400ms the place is a dashed ghost, the
+   headline, strip text and table already standing and operable; at 400ms the
+   medal appears at 115% with no fade and presses to 100% in 120ms on
+   cubic-bezier(.5,0,.9,.5); at 520ms one frame (16ms) of a 4px ink bleed (in
+   --cast, P1's one shadow ink — 20% where P17 says 28%, because a component
+   rule may not mix a colour of its own, test/design-layer.test.js); the
+   second medal 180ms after the first; nothing after 880ms. The Sonderausgabe
+   band is static — only its medal is stamped, which these selectors give for
+   free. No fill mode anywhere: every keyframe holds only while it runs, so
+   the resting state is the static skin above. Reduced motion: printed from
+   0ms, because nothing here exists outside the gate. */
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-moment__item[data-fresh] .badge__mark {
+    animation:
+      ph-medal-wait 400ms step-end,
+      ph-medal-press 120ms cubic-bezier(0.5, 0, 0.9, 0.5) 400ms,
+      ph-medal-bleed 16ms step-end 520ms;
+  }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-moment__item[data-fresh] .badge__mark::before { animation: ph-medal-ghost 400ms step-end; }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-moment__item[data-fresh] ~ .badge-moment__item[data-fresh] .badge__mark {
+    animation:
+      ph-medal-wait 580ms step-end,
+      ph-medal-press 120ms cubic-bezier(0.5, 0, 0.9, 0.5) 580ms,
+      ph-medal-bleed 16ms step-end 700ms;
+  }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-moment__item[data-fresh] ~ .badge-moment__item[data-fresh] .badge__mark::before { animation: ph-medal-ghost 580ms step-end; }
+
+  /* Before the press the glyph is not printed yet… */
+  @keyframes ph-medal-wait { from { color: transparent; } }
+  /* …and the seal is the dashed place it will land on. */
+  @keyframes ph-medal-ghost {
+    from {
+      background: transparent;
+      box-shadow: none;
+      border: 2px dashed var(--ink-soft);
+    }
+  }
+  @keyframes ph-medal-press {
+    from { transform: scale(1.15); }
+    to { transform: scale(1); }
+  }
+  @keyframes ph-medal-bleed { from { box-shadow: 0 0 0 4px var(--cast); } }
 }

@@ -1961,6 +1961,9 @@ I18N.nl = {
   'badges.moment.title': 'Net behaald',
   'badges.moment.moreOne': '+{n} meer',
   'badges.moment.more': '+{n} meer',
+  // Das Programmheft's kicker on the result moment's band for a big tier (#1393):
+  // the round's Sessions 100 · 250 · 500 and Stammgast 100 · 250.
+  'badges.specialEdition': 'Speciale editie',
   'badges.earnedIn': 'Behaald in {month}',
   'badges.tierReached': 'Niveau {tier} bereikt in {month}',
   'badges.card.next': 'Volgend niveau {n}',

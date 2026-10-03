@@ -1892,6 +1892,9 @@ I18N.ko = {
   'badges.moment.title': '새로 획득',
   'badges.moment.moreOne': '+{n}개 더',
   'badges.moment.more': '+{n}개 더',
+  // Das Programmheft's kicker on the result moment's band for a big tier (#1393):
+  // the round's Sessions 100 · 250 · 500 and Stammgast 100 · 250.
+  'badges.specialEdition': '특별판',
   'badges.earnedIn': '{month} 획득',
   'badges.tierReached': '{month} {tier}단계 달성',
   'badges.card.next': '다음 단계 {n}',
