@@ -902,6 +902,9 @@ public/
     programmheft-tier2a.js Das Programmheft's extras with no Klassisch counterpart
                      (#1379): the Chronik's „Rückblick" sheet and „Teilen",
                      „Letzte Siege" on the member page
+    forest-tier2a.js Forest's tier 2a (#1473): the Chronik as a path and its
+                     „Rückblick" entry, the Pokale grove, the member page's
+                     five-figure Tischkarte with „Zuletzt dabei" beside it
     vote-card-composed.js Der Tisch's vote card (#1268): the felt header, the card
                      with cover and meta, the worded faces, the hand-off line
                      and the vote link's felt intro; both vote cards build

@@ -556,6 +556,9 @@ const frontendGlobals = {
   // programmheft-tier2a.js (issue #1379): the Chronik head actions, the recap sheet, „Letzte Siege“
   programmheftChronikActions: 'readonly', openProgrammheftRecapSheet: 'readonly',
   programmheftRecentWins: 'readonly', PH_RECENT_WINS: 'readonly',
+  // forest-tier2a.js (issue #1473): the Chronik's path and recap entry, the Pokale grove, the member page
+  forestSessionNumbers: 'readonly', FOREST_PATH_FACES: 'readonly', forestPathRow: 'readonly', forestRecapEntry: 'readonly',
+  forestGrove: 'readonly', forestMemberPage: 'readonly', FOREST_RECENT_SESSIONS: 'readonly', forestRecentSessions: 'readonly',
   // member-stats.js (#1075 — split out of views-member.js)
   memberStats: 'readonly', BEST_GAME_MIN_PLAYS: 'readonly', bestGameSub: 'readonly',
   // achievements.js (#1387): the Abzeichen catalogue and its derivation

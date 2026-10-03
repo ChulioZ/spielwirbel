@@ -346,6 +346,7 @@ I18N.ko = {
   'chronik.count': '{month}부터 세션 {n}개',
   'chronik.seatedOne': '{n}명 참여',
   'chronik.seated': '{n}명 참여',
+  'chronik.sessionNo': '세션 {n}회차',
   'chronik.wonOne': '{names} 승리',
   'chronik.won': '{names} 승리',
   // Die Brücke's Chronik (#1245): how often the chosen game took the 1 in that
@@ -722,6 +723,9 @@ I18N.ko = {
   'member.editName': '눌러서 이름 변경',
   'member.edit': '편집',
   'member.recentWins': '최근 승리',
+  'member.recentTitle': '최근 참여',
+  'member.recentWon': '승리',
+  'member.recentJoined': '참여',
   'member.colorLabel': '아바타 색상',
   'member.colorChange': '아바타 색상 변경',
   'member.mySeat': '내 자리',

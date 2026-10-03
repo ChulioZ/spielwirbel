@@ -368,6 +368,7 @@ I18N.nl = {
   'chronik.count': '{n} sessies sinds {month}',
   'chronik.seatedOne': '{n} aan tafel',
   'chronik.seated': '{n} aan tafel',
+  'chronik.sessionNo': 'Sessie nr. {n}',
   'chronik.wonOne': '{names} won',
   'chronik.won': '{names} wonnen',
   // Die Brücke's Chronik (#1245): how often the chosen game took the 1 in that
@@ -759,6 +760,9 @@ I18N.nl = {
   'member.editName': 'Klik om te hernoemen',
   'member.edit': 'Bewerken',
   'member.recentWins': 'Laatste overwinningen',
+  'member.recentTitle': 'Laatst aan tafel',
+  'member.recentWon': 'gewonnen',
+  'member.recentJoined': 'meegespeeld',
   'member.colorLabel': 'Kleur van de avatar',
   'member.colorChange': 'Avatarkleur wijzigen',
   'member.mySeat': 'Jouw plek',

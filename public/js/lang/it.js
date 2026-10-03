@@ -370,6 +370,7 @@ I18N.it = {
   'chronik.count': '{n} sessioni da {month}',
   'chronik.seatedOne': '{n} al tavolo',
   'chronik.seated': '{n} al tavolo',
+  'chronik.sessionNo': 'Sessione n. {n}',
   'chronik.wonOne': 'ha vinto {names}',
   'chronik.won': 'hanno vinto {names}',
   // Die Brücke's Chronik (#1245): how often the chosen game took the 1 in that
@@ -763,6 +764,9 @@ I18N.it = {
   'member.editName': 'Clicca per rinominare',
   'member.edit': 'Modifica',
   'member.recentWins': 'Ultime vittorie',
+  'member.recentTitle': 'Ultime presenze',
+  'member.recentWon': 'ha vinto',
+  'member.recentJoined': 'ha giocato',
   'member.colorLabel': 'Colore dell’avatar',
   'member.colorChange': 'Cambia il colore dell’avatar',
   'member.mySeat': 'Il tuo posto',
