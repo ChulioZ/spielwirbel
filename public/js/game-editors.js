@@ -27,8 +27,9 @@
 /* --- Der Tisch's row lists (#1273, T15a) --------------------------------------
    T15a draws every form sheet as a head over ROWS — 44px raised slips, each a
    label with its value or control — and at most one primary action, a full-width
-   48px plate under them. Under Der Tisch — and Ocean, Das Programmheft and Die
-   Brücke, whose O15a/P15a/B15a draw the same form (#1217/#1378/#1244,
+   48px plate under them. Under Der Tisch — and Ocean, Das Programmheft, Die
+   Brücke and Forest, whose O15a/P15a/B15a/F15a draw the same form
+   (#1217/#1378/#1244/#1472,
    `formSheetDesign` in sheet.js) — the players, owners and cover
    editors build that composition; every other design keeps the Klassisch body byte for
    byte, which is why each builder branches ONCE at the top rather than sprinkling

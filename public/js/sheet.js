@@ -190,14 +190,16 @@ function editorPopoverHead(el, title, close) {
 /* The designs that draw T15a/O15a's FORM sheets: a titled popover at the
    trigger, and the three game editors as row lists under one primary action.
    Der Tisch first (#1273), Ocean since #1217, Das Programmheft since #1378,
-   Die Brücke since #1244 — each package draws the same „eine Form, zwei
-   Auftritte" composition (P15a's „eingelegtes Blatt" is the third, B15a's
-   „dieselbe Sache, zwei Formen" the fourth), so they share the markup and each paints
+   Die Brücke since #1244, Forest since #1472 — each package draws the same
+   „eine Form, zwei Auftritte" composition (P15a's „eingelegtes Blatt" is the
+   third, B15a's „dieselbe Sache, zwei Formen" the fourth, F15a's „am Desktop
+   wird dasselbe Sheet zum Popover" the fifth), so they share the markup and each paints
    it in its own stylesheet. One predicate rather than a designIs() pair at each
    call site, so the next design that draws it is one line here.
    Klassisch (and every design not listed) keeps its markup byte for byte. */
 function formSheetDesign() {
-  return designIs('tisch') || designIs('ocean') || designIs('programmheft') || designIs('bruecke');
+  return designIs('tisch') || designIs('ocean') || designIs('programmheft') || designIs('bruecke')
+    || designIs('forest');
 }
 
 function openEditor(anchor, variant, title, build, onClose, opts) {
