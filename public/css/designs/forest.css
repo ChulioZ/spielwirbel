@@ -6000,3 +6000,74 @@
   :root[data-design="forest"]:not([data-scheme="dark"]) .badge-moment__more { margin-left: auto; }
 }
 /* ===== end #1477 ===== */
+
+/* ===== #1477 — the firefly into the jar (F17.5's motion) =====
+   The droppable second half of the slice: revert this block alone and the
+   jars simply arrive lit. Keyed on K17's one motion hook, `data-fresh` on a
+   moment item (views-badges.js fillBadgeMoment) — a mark this screen had not
+   shown before, never on a cold load — so a winner tap lights only what it
+   earned and replays nothing.
+
+   The timeline, SHORTENED from F17.5's Zeittafel as the issue allows: the
+   sheet waits for the tree to grow (F10.4, 1 100–1 700 ms) and flies the
+   firefly at 2 200–3 100 ms, but this screen's tree stands still (the result's
+   picture is F10.4's end state, #1468) and `data-fresh` only ever appears on a
+   tap, so a 2.2 s wait would read as lag. So: 0 ms the headline, the table,
+   „Noch eine Session" and the „Neu verdient" line stand, the jar still light;
+   0–600 ms a firefly flies in from up the clearing (the scene is above the
+   moment on a phone, to its left from 1280px) while the jar dims to dusk
+   from 300 ms; 600–1 100 ms it glows once and rests; the second jar 400 ms
+   later — nothing runs past 1 500 ms (Ocean's moment ends at 1 580 ms).
+   No fill mode and no loop: each keyframe holds only while it runs, so the
+   resting state is the static skin above, and a second jar waits as a light
+   jar through a step-end hold instead of a backwards fill. Nothing blocks:
+   the jar is a button from 0 ms. Reduced motion: lit from 0 ms, because
+   nothing here exists outside the no-preference gate. */
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-design="forest"]:not([data-scheme="dark"]) .badge-moment__item[data-fresh] .badge__mark {
+    animation:
+      forest-jar-dim 600ms ease-out,
+      forest-jar-glow 500ms ease-out 600ms;
+  }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .badge-moment__item[data-fresh] .badge__mark > .ti {
+    animation: forest-firefly-fly 600ms cubic-bezier(0.3, 0.6, 0.2, 1);
+  }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .badge-moment__item[data-fresh] ~ .badge-moment__item[data-fresh] .badge__mark {
+    animation:
+      forest-jar-wait 400ms step-end,
+      forest-jar-dim 600ms ease-out 400ms,
+      forest-jar-glow 500ms ease-out 1000ms;
+  }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .badge-moment__item[data-fresh] ~ .badge-moment__item[data-fresh] .badge__mark > .ti {
+    animation:
+      forest-firefly-wait 400ms step-end,
+      forest-firefly-fly 600ms cubic-bezier(0.3, 0.6, 0.2, 1) 400ms;
+  }
+  /* Where the firefly comes from: the crown, above on a phone… */
+  :root[data-design="forest"]:not([data-scheme="dark"]) .badge-moment { --ff-from: translate(-30px, -120px); }
+
+  /* The light jar before the firefly reaches it… */
+  @keyframes forest-jar-wait {
+    from { background: var(--surface); box-shadow: none; }
+  }
+  /* …stays light while it flies, then dims to dusk… */
+  @keyframes forest-jar-dim {
+    0%, 50% { background: var(--surface); box-shadow: none; }
+  }
+  /* …and glows once. */
+  @keyframes forest-jar-glow {
+    45% { box-shadow: 0 0 0 3px var(--surface), 0 0 calc(var(--fj, 48px) * 0.6) calc(var(--fj, 48px) * 0.2) var(--firefly-glow); }
+  }
+  @keyframes forest-firefly-wait {
+    from { opacity: 0; }
+  }
+  @keyframes forest-firefly-fly {
+    from { transform: var(--ff-from) scale(0.5); opacity: 0; }
+    25% { opacity: 1; }
+  }
+}
+/* …to its left from 1280px, where the moment opens the Tafel column. */
+@media (prefers-reduced-motion: no-preference) and (min-width: 1280px) {
+  :root[data-design="forest"]:not([data-scheme="dark"]) .badge-moment { --ff-from: translate(-180px, -40px); }
+}
+/* ===== end #1477 motion ===== */
