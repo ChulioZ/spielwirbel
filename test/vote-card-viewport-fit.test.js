@@ -227,7 +227,7 @@ test('the wide layout centres its content column and pins every row in DOM order
     'no spacer below the content column — it floats high, as it did when the nav row went');
 
   // The card's own DOM order, which the rows must follow.
-  const ORDER = ['.vote__who', '.vote__title', '.vote__q', '.rating', '.rating-scale'];
+  const ORDER = ['.vote__who', '.vote__title', '.vote__q', '.rating'];
   const placed = ORDER.map((cls) => {
     const row = SPLIT
       .filter(([sel]) => sel.split(',').map((s) => s.trim()).includes(`.vote--split ${cls}`))

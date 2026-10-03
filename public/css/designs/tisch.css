@@ -2270,9 +2270,8 @@
   border: 2px solid var(--gold-edge);
 }
 /* Gold as a GLYPH colour, which is the one job review finding A1 leaves it: the
-   mood is 22px of icon, never text, and the number beside it stays in --ink. */
+   mood is 22px of icon, never text. */
 :root[data-design="tisch"][data-scheme="dark"] .rater__face { color: var(--gold); }
-:root[data-design="tisch"][data-scheme="dark"] .rater__n { font-family: var(--font-display); }
 
 /* „Verwandte Sessions" as T3.4 lists it: one hairline row per session — the
    winner's counter, the date, who won, the evening's pill. 44px rows, so each
@@ -3345,7 +3344,7 @@
   line-height: 1.5;
 }
 
-/* The five faces. A ROW each on a phone (T2.4) — face, word, number — because
+/* The five faces. A ROW each on a phone (T2.4) — face, then word — because
    five 64px tiles across 390px leaves each one 8px of label; and five COLUMNS
    from the tablet width up (T4.2), where there is room for the tile. The word
    is `.mood__word`, which only vote-card-composed.js renders (#1268); the rows
@@ -3357,6 +3356,10 @@
   padding: 10px 18px 6px;
 }
 :root[data-design="tisch"][data-scheme="dark"] .rating .mood {
+  /* Klassisch's word tile (styles.css, #1530) gives a non-composed card's face
+     a 64px flex BASIS. On a phone this rating is a column, where a basis is a
+     height — and the landing's vote picture is such a card — so it is undone. */
+  flex: none;
   width: auto;
   height: auto;
   min-height: 52px;
@@ -3373,12 +3376,6 @@
   font-family: var(--font-display);
   font-weight: 800;
   font-size: var(--text-md);
-}
-/* The number goes to the far end of the row, which is where T2.4 puts it. */
-:root[data-design="tisch"][data-scheme="dark"] .rating .mood__n {
-  margin-left: auto;
-  font-size: var(--text-lg);
-  font-variant-numeric: tabular-nums;
 }
 /* THE CHOSEN FACE IS THE BRASS PLATE, not the ramp's colour — T2.4 and T4.2
    both draw it that way, and it is why the mood loop had to stop writing an
@@ -3397,7 +3394,6 @@
   border-color: var(--gold-edge);
   transform: none;
 }
-:root[data-design="tisch"][data-scheme="dark"] .rating-scale { color: var(--paper-faint); }
 
 /* The handover screen keeps the person's own colour — it is the one screen in
    the app that is deliberately NOT the design's palette, because its whole job
@@ -3816,10 +3812,6 @@
 :root[data-design="tisch"][data-scheme="dark"] .trow__bars .bar-col[data-stop="3"] { --sc-fill: var(--bar-3); }
 :root[data-design="tisch"][data-scheme="dark"] .trow__bars .bar-col[data-stop="4"] { --sc-fill: var(--bar-4); }
 :root[data-design="tisch"][data-scheme="dark"] .trow__bars .bar-col[data-stop="5"] { --sc-fill: var(--bar-5); }
-/* The numeral under each face stays the paper's own ink at every rung — it is
-   TEXT, and the bar ramp is tuned to 3:1 as a graphical object, not to 4.5:1 as
-   type. Same split the app makes on every other design. */
-:root[data-design="tisch"][data-scheme="dark"] .trow__bars .bar-axis__n { color: var(--paper-ink-soft); }
 
 /* --- Motion ritual 4b: the distribution rises with the reveal (#1200, T10.4) -
    The bars T10 draws rising are this distribution. Since #1363 it is printed on
@@ -4315,8 +4307,6 @@
     gap: 7px;
     padding: 0 8px;
   }
-  :root[data-design="tisch"][data-scheme="dark"] .rating .mood__n { margin-left: 0; }
-  :root[data-design="tisch"][data-scheme="dark"] .rating-scale { padding-inline: 32px; }
 
   /* T4.2's composed card (#1268): the header in one row with the round's name
      and the pill beside the dots, the cover at 176px beside a title block that

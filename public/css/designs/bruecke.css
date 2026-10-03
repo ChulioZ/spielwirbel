@@ -271,8 +271,8 @@
 
 /* „Scores und Tabellen" — tabular figures, as the notation sets them. */
 :root[data-design="bruecke"] :is(
-  .score-pill, .stepper__val, .pool-count, .rater__n, .member-figure__value,
-  .pokale-card__value, .gd-price__amount, .trow__rank, .mood__n
+  .score-pill, .stepper__val, .pool-count, .member-figure__value,
+  .pokale-card__value, .gd-price__amount, .trow__rank
 ) {
   font-variant-numeric: tabular-nums;
 }
@@ -1496,9 +1496,10 @@
   font-size: var(--text-lg);
   color: var(--ink);
 }
-/* The five keys (B1 „Wertungskarte"): square, a wire at rest, the face and the
-   number in each — the number is in every cell, so the colour is the third
-   signal, never the only one (B8.3). The two END words sit under the row. */
+/* The five keys (B1 „Wertungskarte"): square, a wire at rest, the face in
+   each — the face is in every cell, so the colour is never the only signal
+   (B8.3). The two END words sit under the row. B1 drew a number in each cell
+   too; #1530 took the scale's digits off every design. */
 :root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .rating {
   grid-area: rating;
   display: flex;
@@ -1523,7 +1524,6 @@
 }
 :root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .rating .mood:hover { border-color: var(--brand); }
 :root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .rating .mood .ti { font-size: 24px; /* glyph, not type */ }
-:root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .rating .mood__n { order: 1; font-family: var(--font-mono); font-size: var(--text-sm); font-weight: 600; }
 /* „kein Schub" … „volle Kraft": only the ends are printed (the middle three
    keep the tile's name). `visibility`, so the columns keep one height. */
 :root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .rating .mood__word {
@@ -1548,9 +1548,6 @@
 :root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .rating .mood.is-selected:nth-child(4) { background: var(--thrust-4); border-color: var(--thrust-4); }
 :root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .rating .mood.is-selected:nth-child(5) { background: var(--thrust-5); border-color: var(--thrust-5); }
 :root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .vote__handoff { margin: 0; font-size: var(--text-sm); color: var(--ink-2); }
-/* A card that is NOT the composed one (the shared-link view keeps its Klassisch
-   card under Die Brücke) prints its own scale row, so the tile words go. */
-:root[data-design="bruecke"][data-scheme="dark"] .vote:not(.vote--composed) .mood__word { display: none; }
 
 /* „Wer hat schon gewertet" — under the card on a phone, left of it at 1440. */
 :root[data-design="bruecke"][data-scheme="dark"] .bruecke-raters__list { list-style: none; margin: var(--space-3) 0 0; padding: 0; }
