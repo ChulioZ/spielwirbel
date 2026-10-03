@@ -19,9 +19,11 @@ async function showHome() {
   const ocean = designIs('ocean');
   // Die Brücke's the same way (#1238, B9 „Begrüßung"): „Flotte / Übersicht".
   const bruecke = designIs('bruecke');
+  // Forest's the same way (#1466, F3.1): „Der Wald · deine Lichtungen".
+  const forest = designIs('forest');
   // The Programmheft's dateline (#1372, P3.1): „Kiosk · <today>".
   const kicker = tisch ? t('home.tischKicker') : ocean ? t('home.oceanKicker')
-    : bruecke ? t('home.brueckeKicker')
+    : bruecke ? t('home.brueckeKicker') : forest ? t('home.forestKicker')
       : designIs('programmheft') ? phLobbyKicker() : '';
   setContext(kicker, kicker ? 'kicker' : undefined);
   setDocTitle(t('home.docTitle'));
@@ -38,7 +40,8 @@ async function showHome() {
     // width, so a screen reader meets it once. Klassisch renders neither.
     h(`<div class="lobby-head${bruecke ? ' lobby-head--home' : ''}">${tisch ? `
          <p class="lobby-head__kicker">${esc(t('home.tischKicker'))}</p>` : ''}
-         <h1>${esc(t(ocean ? 'home.oceanGreeting' : bruecke ? 'home.brueckeGreeting' : 'home.greeting'))}</h1>
+         <h1>${esc(t(ocean ? 'home.oceanGreeting' : bruecke ? 'home.brueckeGreeting'
+    : forest ? (rounds.length ? 'home.forestGreeting' : 'home.forestGreetingFirst') : 'home.greeting'))}</h1>
          <div class="muted lobby-head__sub">${esc(t('home.sub'))}</div>
        </div>`)
   );
@@ -62,6 +65,12 @@ async function showHome() {
     // Das Programmheft sets the first run as its own page (P7.1, #1377).
     if (designIs('programmheft')) {
       app.appendChild(phFirstRun(onboard));
+      app.appendChild(renderHomeDash());
+      return;
+    }
+    // Forest's empty clearing (F7.1, #1471): the greeting, one sentence, one action.
+    if (forest) {
+      app.appendChild(forestFirstRun(app.querySelector('.lobby-head'), onboard));
       app.appendChild(renderHomeDash());
       return;
     }
@@ -191,9 +200,11 @@ function renderResumeZone(rounds) {
     // O3.1/O6.1) — same link, same strings, ocean-hub.js.
     // Die Brücke's is a notice card under „Eingehendes Signal" (#1238, B2.1).
     // The Programmheft prints it as the „Extrablatt" (#1372, P3.1/P6.1).
+    // Forest lights a „Leuchtzeichen" (#1466, F3.1/F6.1).
     const composed = designIs('ocean') ? oceanResumeNotice
       : designIs('bruecke') ? brueckeResumeNotice
-        : designIs('programmheft') ? phResumeNotice : null;
+        : designIs('programmheft') ? phResumeNotice
+          : designIs('forest') ? forestResumeNotice : null;
     if (composed) {
       const notice = composed({ round, session });
       navLink(notice, resultsPath(round.id, session.id), () => showResultsById(round.id, session.id));
@@ -374,11 +385,12 @@ function renderLobbyList(rounds) {
     // Ocean composes the tile as water with the seats on the tide line
     // (#1211, O3.1/O6.1): the same link, stack and lines, ocean-hub.js.
     // The Programmheft's tile (#1372, P3.1/P6.1), programmheft-hub.js.
-    const card = designIs('ocean')
-      ? oceanRoundCard(r, { stack, seatCount, lastLine, invite: lobbyInviteSlip(rounds, r) })
-      : designIs('programmheft')
-        ? phRoundCard(r, { stack, seatCount, lastLine, invite: lobbyInviteSlip(rounds, r) })
-        : h(`<a class="round-card" style="${marker}">
+    // Forest's clearing (#1466, F3.1/F6.1), forest-hub.js.
+    const parts = { stack, seatCount, lastLine, invite: lobbyInviteSlip(rounds, r) };
+    const card = designIs('ocean') ? oceanRoundCard(r, parts)
+      : designIs('programmheft') ? phRoundCard(r, parts)
+        : designIs('forest') ? forestRoundCard(r, parts)
+          : h(`<a class="round-card" style="${marker}">
          <span class="round-card__emblem" style="background:var(--marker)"><i class="ti ti-tornado" aria-hidden="true"></i></span>
          <span class="round-card__body">
            <span class="round-card__name">${esc(r.name)}${r.shared ? ` <span class="round-card__shared"><i class="ti ti-users" aria-hidden="true"></i> ${esc(t('home.shared'))}</span>` : ''}</span>

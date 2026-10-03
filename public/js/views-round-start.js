@@ -50,7 +50,11 @@ function renderStartTab(round, activeGames) {
      previews — built as real DOM columns (ocean-hub.js) so the phone order IS
      the DOM order and CSS only decides whether they sit side by side. */
   const ocean = designIs('ocean');
-  const cols = ocean ? oceanHubFrame() : null;
+  /* Forest draws the same three columns (F3.2, F2.1; #1466) and drives them
+     through the same `cols` (forest-hub.js) — only the stump, the head and the
+     „Zuletzt gespielt" card are its own. */
+  const forest = designIs('forest');
+  const cols = ocean ? oceanHubFrame() : forest ? forestHubFrame() : null;
   if (cols) app.appendChild(cols.root);
   /* Die Brücke (#1238, B2.2/B3.1) lays the hub out as named slots in the phone
      order (bruecke-hub.js), moved into three column wrappers from 1280 (#1496) —
@@ -64,15 +68,15 @@ function renderStartTab(round, activeGames) {
   const ph = designIs('programmheft') ? phHubFrame() : null;
   if (ph) app.appendChild(ph.root);
   const stage = tisch ? app.appendChild(h('<div class="hub-stage"></div>'))
-    : ocean ? cols.crew : bh ? bh.crew : ph ? ph.head : app;
+    : cols ? cols.crew : bh ? bh.crew : ph ? ph.head : app;
   // Where the one action and its presets go, and where the tickets and cards
   // follow them. Both are the plain column everywhere but Ocean, Die Brücke and
   // the Programmheft.
-  const launch = ocean ? cols.main : bh ? bh.mission : ph ? ph.box : stage;
-  const feed = ocean ? cols.main : bh ? bh.feed : ph ? ph.more : app;
+  const launch = cols ? cols.main : bh ? bh.mission : ph ? ph.box : stage;
+  const feed = cols ? cols.main : bh ? bh.feed : ph ? ph.more : app;
   // The running sessions are the Programmheft's lead story, above the last one.
   const tickets = ph ? ph.lead : feed;
-  const hero = h(`<div class="hero${ocean || bh || ph ? '' : ' rail-owned'}">
+  const hero = h(`<div class="hero${cols || bh || ph ? '' : ' rail-owned'}">
        <h1></h1>
        <div class="hero__members">${activeMembers(round)
          .map((m) => `<a class="avatar" style="background:${memberColor(round, m.id)}" title="${esc(m.name)}">${avatarFace(initials(m.name), { userId: m.userId })}</a>`)
@@ -123,6 +127,7 @@ function renderStartTab(round, activeGames) {
   if (ocean) oceanHeroCompose(round, hero);
   if (bh) brueckeHeroCompose(round, hero, playedCount);
   if (ph) phHeroCompose(round, hero);
+  if (forest) forestHeroCompose(round, hero);
 
   /* `rail-owned` only where the rail still carries its own copy. Der Tisch's
      rail is identity plus the five links (#1262), so there the band's CTA and
@@ -137,12 +142,13 @@ function renderStartTab(round, activeGames) {
      the count. The threshold is the app's own — one active game — not the
      sheet's „ab 2 Spielen" (operator default on #1269). */
   // Die Brücke folds the empty table into the Missionskontrolle below (B7.1).
-  if (activeGames.length === 0 && !bh) (ph ? ph.lead : launch).appendChild(hubEmptyTable(round));
+  // Forest puts it UNDER the stump instead (F7.3, #1471 — forestYoung).
+  if (activeGames.length === 0 && !bh && !forest) (ph ? ph.lead : launch).appendChild(hubEmptyTable(round));
   // Ocean's one themed verb, „Abtauchen" (O9 §2), on the one action; Die
   // Brücke's „Mission starten" with its own glyph (B9 „Hauptaktion 1").
   const ctaLabel = ocean ? t('round.startSessionOcean')
     : bh ? t('round.startSessionBruecke')
-      : (tisch || ph) && activeGames.length && roundIsYoung(round)
+      : (tisch || ph || forest) && activeGames.length && roundIsYoung(round)
         ? t('hub.young.firstCta') : t('round.startSession');
   const startBtn = h(
     `<button class="btn btn--primary hub-cta${railOwned}"><i class="ti ${bh ? 'ti-rocket' : 'ti-tornado'}" aria-hidden="true"></i>${esc(ctaLabel)}</button>`
@@ -159,10 +165,13 @@ function renderStartTab(round, activeGames) {
     startBtn.setAttribute('aria-describedby', 'hub-cta-reason');
   }
   if (bh) launch.appendChild(brueckeMission(startBtn, round, activeGames));
-  else launch.appendChild(ocean ? oceanShell(startBtn) : startBtn);
+  else launch.appendChild(ocean ? oceanShell(startBtn) : forest ? forestStump(activeGames.length ? startBtn : null) : startBtn);
   // Ocean's young round (#1216, O7.3): the shell stays the centre, and one
-  // line under it says what is waiting for the first session.
+  // line under it says what is waiting for the first session. Forest's says
+  // it for every young state, the empty table included (F7.3–F7.5, #1471).
   if (ocean && activeGames.length && roundIsYoung(round)) launch.appendChild(oceanYoungLine(activeGames));
+  const forestLine = forest && forestYoung(round, activeGames);
+  if (forestLine) launch.appendChild(forestLine);
 
   // Quick-start presets (#923): the same draw, already narrowed. Directly under
   // the CTA because they modify it — and only when this shelf can actually
@@ -175,6 +184,7 @@ function renderStartTab(round, activeGames) {
     if (presets) {
       if (!railIsLean()) presets.classList.add('rail-owned');
       if (ph) launch.appendChild(phPresetsLabel());
+      if (forest) presets.prepend(forestPresetsLabel());
       // Die Brücke: inside the Missionskontrolle panel, under the ignition.
       (bh ? launch.querySelector('.bruecke-mission') : launch).appendChild(presets);
     }
@@ -313,7 +323,7 @@ function renderStartTab(round, activeGames) {
   /* Ocean sets „Zuletzt gespielt" and „Wie wär's mit" side by side under the
      shell (O3.2) and stacked on a phone (O2.1): one wrapper, filled here and by
      the suggestion card below, dropped again if neither has anything to say. */
-  const pair = ocean ? cols.main.appendChild(h('<div class="ocean-pair"></div>')) : null;
+  const pair = cols ? cols.main.appendChild(h(`<div class="${forest ? 'forest-pair' : 'ocean-pair'}"></div>`)) : null;
   const lastPlayed = round.sessions
     .filter((s) => s.finished && s.chosenGameId && round.games.some((g) => g.id === s.chosenGameId))
     .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)))[0];
@@ -333,6 +343,8 @@ function renderStartTab(round, activeGames) {
     });
     navLink(lead, resultsPath(round.id, lastPlayed.id), () => showResults(round, lastPlayed));
     ph.lead.appendChild(lead);
+  } else if (lastPlayed && forest) {
+    pair.appendChild(forestLead(round, lastPlayed));
   } else if (ph && activeGames.length && roundIsYoung(round)) {
     // P7.4 (#1377): nothing played yet — the lead says what is waiting.
     ph.lead.appendChild(phYoungLead(activeGames));
@@ -418,12 +430,15 @@ function renderStartTab(round, activeGames) {
   const demo = (tisch || ph) && demoAccount;
   const demoHost = ph ? (card) => ph.lead.appendChild(card) : (card) => grid.appendChild(cardSlot(card));
   if (demo) demoHost(hubDemoSummary(round, activeGames));
-  if (demoAccount) demoHost(hubDemoInvite());
+  /* Forest (F7.6, #1471): the invitation as a band over the whole hub, the
+     condensed list under the stump — and its previews stay on the right. */
+  if (forest && demoAccount) cols.main.appendChild(hubDemoSummary(round, activeGames));
+  if (demoAccount) (forest ? (card) => cols.root.before(card) : demoHost)(hubDemoInvite());
   // Ocean pulls two cards out of the grid: the suggestions into the pair above,
   // the Kümmerliste into the preview column (O3.2's right column).
   const suggest = hubSuggestCard(round, activeGames, statsByGame, nagged);
   const care = hubCareCard(round, activeGames);
-  if (ocean) {
+  if (cols) {
     if (suggest) pair.appendChild(suggest);
     if (!pair.children.length) pair.remove();
   }
@@ -440,9 +455,9 @@ function renderStartTab(round, activeGames) {
     // Der Tisch's invitation (T7.4, #1269) leads — it is the one next step.
     // Null on every other round and on Klassisch, so that list is unchanged.
     hubYoungCard(round, activeGames),
-    ocean || bh || ph ? null : suggest,
-    bh || ph ? null : pulse,
-    ocean || bh || ph ? null : care,
+    cols || bh || ph ? null : suggest,
+    bh || ph || forest ? null : pulse,
+    cols || bh || ph ? null : care,
     // The Regal-Steckbrief (#1173, views-shelf-profile.js): what the shelf adds
     // up to. Null below its threshold of games with provider data.
     hubShelfProfileCard(round, activeGames),
@@ -455,6 +470,10 @@ function renderStartTab(round, activeGames) {
     regal: hubRegalPreview(round, activeGames),
     pokale: hubPokalePreview(round),
     chronik: hubChronikPreview(round),
+  }) : forest ? forestAsidePreviews(round, activeGames, {
+    regal: hubRegalPreview(round, activeGames),
+    pokale: hubPokalePreview(round),
+    chronik: hubChronikPreview(round),
   }) : [
     hubRegalPreview(round, activeGames),
     hubPokalePreview(round),
@@ -462,8 +481,12 @@ function renderStartTab(round, activeGames) {
   ].filter(Boolean);
   if (ph) {
     previews.forEach((card) => ph.strip.appendChild(card));
-  } else if (ocean) {
+  } else if (cols) {
     previews.forEach((card) => cols.aside.appendChild(card));
+    // Forest's right column carries the pulse too (F3.2), above the Kümmerliste.
+    // A young one's stands locked until it has numbers (F7.4, #1471).
+    const fpulse = forest && (pulse || forestLockedPulse(round, activeGames));
+    if (fpulse) cols.aside.appendChild(fpulse);
     if (care) cols.aside.appendChild(care);
   } else if (bh) {
     previews.forEach((card) => bh.previews.appendChild(card));
@@ -494,7 +517,7 @@ function renderStartTab(round, activeGames) {
   // pane holding one is not the bare page this stand-in exists for.
   // The empty table (#1269) is already that stand-in, at every width.
   // Not under Ocean: its hero and shell stay in the pane at every width.
-  if (!ocean && !bh && !ph && !app.querySelector('.ticket') && !grid.querySelector('.hub-card')
+  if (!cols && !bh && !ph && !app.querySelector('.ticket') && !grid.querySelector('.hub-card')
     && !app.querySelector('.empty--table')) {
     const gap = emptyState({
       icon: 'ti-tornado',
@@ -598,7 +621,7 @@ function renderStartTab(round, activeGames) {
      used one is exactly where someone goes to start. */
   // Under Ocean it is the frame's fourth cell: the crew column's foot at desktop
   // (O3.2), the end of the page on a phone.
-  (ocean ? cols.root : bh ? bh.offshelf : ph ? ph.strip : app).appendChild(hubOffShelfGroup(round));
+  (cols ? cols.root : bh ? bh.offshelf : ph ? ph.strip : app).appendChild(hubOffShelfGroup(round));
 
   // Quick actions: quieter secondary tasks below the fold. One "Einstellungen"
   // entry rather than the three separate Tags/Provider/Design links this used to
@@ -623,7 +646,7 @@ function renderStartTab(round, activeGames) {
   actions.appendChild(settingsBtn);
   // Ocean: the frame's last cell. From 1280 the container is hidden with the
   // rest of the rail-owned set, so it needs no wide-layout placement (#1498).
-  (bh ? bh.actions : ph ? ph.root : ocean ? cols.root : app).appendChild(actions);
+  (bh ? bh.actions : ph ? ph.root : cols ? cols.root : app).appendChild(actions);
   if (bh) brueckeStatus();
 }
 
@@ -666,34 +689,4 @@ function tischSeatHints(round, seatRow) {
   seatRow.querySelectorAll(':scope > a.avatar--retired').forEach((el, i) => {
     if (retired[i]) caption(el, retired[i].name);
   });
-}
-
-/* The EMPTY TABLE (T7.3, #1269): a 0-game round's one next step — „Der Topf ist
-   noch leer", a sentence, and the two ways to fill the pot. The same
-   `emptyState` every other empty screen uses, plus its actions, so each design
-   paints it with the material it already gives `.empty` (Der Tisch's felt
-   medallion, #1194). Every design since the #1269 merge interview.
-
-   „Von BGG übernehmen" only where the import exists (canImportBgg — accounts
-   mode), and the sentence drops its BGG half with it: copy that points at a
-   button which is not there is the kind of promise T7 exists to stop making. */
-function hubEmptyTable(round) {
-  const bgg = canImportBgg();
-  const table = emptyState({
-    icon: 'ti-tornado',
-    title: t('hub.young.emptyTitle'),
-    text: t(bgg ? 'hub.young.emptyTextBgg' : 'hub.young.emptyText'),
-  });
-  table.classList.add('empty--table');
-  const actions = h('<div class="empty__actions"></div>');
-  const add = h(`<button class="btn btn--primary"><i class="ti ti-plus" aria-hidden="true"></i> ${esc(t('round.addGame'))}</button>`);
-  add.addEventListener('click', () => showAddGame(round));
-  actions.appendChild(add);
-  if (bgg) {
-    const imp = h(`<button class="btn"><i class="ti ti-download" aria-hidden="true"></i> ${esc(t('bggImport.tile'))}</button>`);
-    imp.addEventListener('click', () => showBggImport(round));
-    actions.appendChild(imp);
-  }
-  table.appendChild(actions);
-  return table;
 }

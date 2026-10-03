@@ -224,8 +224,10 @@ test('the firefly is never a colour on a light surface — only on the dusk', ()
      fill, a ring) only where it ALSO stands on the dusk: its own body sets the
      dusk ground, or its selector sits inside a dusk surface. The toast is the
      only dusk surface the component layer has; the hand-over and the hidden
-     cards join with their screens. */
-  const DUSK_SURFACES = ['.toast'];
+     cards join with their screens — the demo's „Gefällt dir das?" band did
+     (#1471, F7.6). The finale's stage (#1468) is the dusk too: forest.css
+     re-points its --stage-* tokens at --dusk and --on-dusk. */
+  const DUSK_SURFACES = ['.toast', '.hub-card--demo-invite', '.stage'];
   const hits = uses([F1_TOKENS['--firefly']], ['color', 'background', 'background-color', 'outline-color', 'border-color', 'fill', 'stroke', 'box-shadow']);
   const light = hits.filter((h) => !/background(?:-color)?:\s*var\(--dusk\)/.test(h.body)
     && !DUSK_SURFACES.some((s) => h.sel.includes(s)));
@@ -233,7 +235,21 @@ test('the firefly is never a colour on a light surface — only on the dusk', ()
     'the firefly is painted off the dusk');
   // Anti-vacuous: the one sanctioned use today is the toast's focus ring.
   assert.ok(hits.some((h) => h.sel.includes('.toast')), 'the dusk ring on the toast is gone — has the lookup drifted?');
+  /* `uses()` reads a declaration whose value STARTS with var(), so a firefly
+     painted inside a gradient — the hidden cards' glint (#1468) — never reached
+     it. Those rules must lay the dusk under it in the same body. */
+  const offDusk = fireflyGradientsOffDusk(SHEET_RULES);
+  assert.deepEqual(offDusk, [], 'a gradient paints the firefly off the dusk');
+  assert.ok(SHEET_RULES.some(([, body]) => /gradient\([^;]*var\(--firefly\)/.test(body)),
+    'no gradient carries the firefly any more — has the hidden-card rule moved?');
 });
+
+function fireflyGradientsOffDusk(rules) {
+  return rules
+    .filter(([, body]) => /gradient\([^;]*var\(--firefly\)/.test(body))
+    .filter(([sel, body]) => !/var\(--dusk\)/.test(body) && !['.toast', '.stage'].some((s) => sel.includes(s)))
+    .map(([sel]) => sel);
+}
 
 test('the hairline, the hatch and the motif colours are never a text colour', () => {
   const tones = [DEVIATIONS['--line'][0], F1_TOKENS['--hatch'], ...MOTIF.map((n) => F1_TOKENS[n])];
@@ -249,6 +265,8 @@ test('the colour guards can see a violation (control)', () => {
   assert.deepEqual(text, ['.x', '.y']);
   const ff = uses([F1_TOKENS['--firefly']], ['color', 'background'], fake).map((h) => h.sel);
   assert.deepEqual(ff, ['.z', '.t'], 'both firefly uses are found; the guard then excuses only the dusk one');
+  const grad = rulesOf('.g { background: radial-gradient(circle, var(--firefly) 0 2px, transparent 3px), var(--surface); } .h { background: radial-gradient(circle, var(--firefly) 0 2px, transparent 3px), var(--dusk); }');
+  assert.deepEqual(fireflyGradientsOffDusk(grad), ['.g'], 'a gradient firefly off the dusk is caught, one on it is not');
 });
 
 /* ---- Targets ---- */

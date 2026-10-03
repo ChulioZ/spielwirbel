@@ -155,9 +155,16 @@ Nothing else needs touching — the key already exists in every other language, 
    `test/news-locales.test.js` derives the required set from `locales.js`, so the
    suite is red until every entry has the new code. Look the screen names up in
    your new `lang/<code>.js` rather than translating them fresh.
-9. Optionally add the language to `DEMO_TEXT`/`DEMO_TAGS` in `lib/demo-seed.js`,
+9. Translate the „Was spielen wir heute?" guide: copy `lib/guide-text/de.js` to
+   `lib/guide-text/<code>.js` (German is the reference text), add the slug — the
+   search phrase in your language, lowercased and hyphenated — to `GUIDE_SLUGS`
+   in `public/js/guide-paths.js`, and add the page's URL to `public/sitemap.xml`.
+   The same device-word and Session-naming bans as the FAQ apply to its prose.
+   `test/guide.test.js` and `test/seo.test.js` derive the required set from
+   `locales.js`, so the suite is red until all three exist.
+10. Optionally add the language to `DEMO_TEXT`/`DEMO_TAGS` in `lib/demo-seed.js`,
    so the guest demo's round is in it too. Without this it falls back to English.
-10. **For a script that does not break lines at spaces** — CJK, and Thai — add
+11. **For a script that does not break lines at spaces** — CJK, and Thai — add
    the wrapping rule the script needs to `public/styles.css` and look at every
    screen at phone width before believing it. Korean's is one `:lang(ko)` line,
    and the obvious value for half of it is the wrong one:

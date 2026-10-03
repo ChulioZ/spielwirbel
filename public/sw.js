@@ -27,7 +27,7 @@
  * See .claude/rules/frontend-build-cache-busting.md.
  */
 
-const CACHE = 'spielwirbel-shell-v441';
+const CACHE = 'spielwirbel-shell-v449';
 
 // Everything the app needs to boot offline. Kept in sync with the <script>/<link>
 // order in index.html; each entry must be a real, servable path or install fails
@@ -92,6 +92,7 @@ const SHELL = [
   '/fonts/tabler-icons.css',
   '/js/error-report.js',
   '/js/locales.js',
+  '/js/guide-paths.js',
   '/js/i18n.js',
   '/js/lang/en.js',
   '/js/lang/de.js',
@@ -206,6 +207,7 @@ const SHELL = [
   '/js/ocean-hub.js',
   '/js/programmheft-hub.js',
   '/js/bruecke-hub.js',
+  '/js/forest-hub.js',
   '/js/bruecke-shelf.js',
   '/js/views-round-start.js',
   '/js/regal-bulk.js',
@@ -229,6 +231,7 @@ const SHELL = [
   '/js/views-badges.js',
   '/js/views-member.js',
   '/js/programmheft-tier2a.js',
+  '/js/forest-tier2a.js',
   '/js/vote-card-composed.js',
   '/js/vote-review.js',
   '/js/views-session.js',
@@ -239,6 +242,7 @@ const SHELL = [
   '/js/views-session-ocean.js',
   '/js/views-session-bruecke.js',
   '/js/views-session-programmheft.js',
+  '/js/views-session-forest.js',
   '/js/views-vote-link.js',
   '/js/views-inbox.js',
   '/js/views-news.js',
