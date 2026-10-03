@@ -435,6 +435,13 @@ What the app does, in detail. For a short overview see the
     in standings order (six columns from seven people). On the result screen
     the round's Sessions 100 · 250 · 500 and a Stammgast 100 · 250 take one of
     the two places as a vermilion „Sonderausgabe" band.
+    Forest keeps a person's marks in jars with a bark lid (issue #1477): a jar
+    at dusk with a firefly glowing in it when earned, a light jar filling with
+    moss while under way (the count beside it carries the number), a dashed
+    outline while open and a dark jar without light for a secret. The round's
+    own marks are leaves on a branch, in the same four states. The tier stands
+    on the lid (at the leaf's stem) and as one dot per tier under the name;
+    on the phone the branch wraps and each person's jars stand on a shelf.
 
     A win counts wherever it happened, an evening played alone included. That is
     a deliberate trade: weighting a win by the size of the field it beat is
