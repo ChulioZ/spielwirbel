@@ -2436,6 +2436,9 @@ test('every colour token a design declares is measured by one of the checks abov
     '--band-top', '--band-good', '--band-low', '--band-new',
     '--person-lit-1', '--person-lit-2', '--person-lit-3', '--person-lit-4',
     '--person-lit-5', '--person-lit-6', '--person-lit-7', '--person-lit-8',
+    // #1392, Die Brücke's Abzeichen: the open plate's outline and the running
+    // count's fill — measured in test/bruecke-badges.test.js (B17.9).
+    '--badge-open-edge', '--badge-load',
     // #1371, Das Programmheft: the box and its two inks, the vermilion masthead
     // and its ink, the two focus rings, the second ink, the darkening ramp with
     // its inks and the veto stamp — all measured in
