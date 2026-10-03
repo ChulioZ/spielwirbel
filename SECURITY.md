@@ -65,6 +65,13 @@ Security issues especially relevant given the current architecture:
   checked against the instance's selectable designs, so the in-scope findings
   are reflecting any request input into the response, or getting a design that
   is not released on this instance (`enabled: false` in production) served.
+- **The guide pages** (`GET /<lang>/<slug>`, e.g. `/de/was-spielen-wir-heute`,
+  `lib/guide.js`, #1171) — nine read-only, server-rendered pages outside the
+  gate and outside the global per-IP limiter (like `robots.txt`). They read no
+  account and no round and interpolate no request input; the router answers only
+  the nine exact paths and passes everything else to the SPA. In-scope findings
+  are reflecting any request input into the response, or reaching anything but
+  those nine documents through the route.
 - Auth/session bypass — forging or replaying access/refresh tokens, the shared
   session cookie, or the `/uploads` cookie gate (see
   [`.claude/rules/accounts-mode-gate.md`](.claude/rules/accounts-mode-gate.md),

@@ -1890,6 +1890,8 @@ I18N.en = {
   'landing.cta.title': 'Next time, nobody argues about it.',
   'landing.faq.q': 'Still wondering?',
   'landing.faq.link': 'Read the FAQ',
+  // The „Was spielen wir heute?" guide page (#1171), linked beside the FAQ.
+  'landing.guide.link': 'Guide: What should we play tonight?',
   // The design band (#1198), shown only by a design that asks for it (Der Tisch as the face).
   // {n} is how many designs the instance offers (GET /api/config), so it never overclaims.
   'landing.designs.title': '{n} designs, one app.',

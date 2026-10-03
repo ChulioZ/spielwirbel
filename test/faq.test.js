@@ -21,6 +21,7 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const { BANNED_BY_LOCALE } = require('./support/device-words');
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
@@ -209,22 +210,8 @@ test('user-facing copy says "device", never a specific kind of device', async ()
   // lang tables, because the wording regressed in two places at once (the FAQ's
   // "Handy oder Tablet" and the landing page's "Aufs Handy installieren").
   const banned = /\b(Handy|Handys|Smartphones?|Tablets?|phones?)\b/i;
-  /* PER LANGUAGE since #1088, because the ban is on the WORD and every language
-     has its own (.claude/rules/source-scanning-guards-enumerate-shapes.md: the
-     spelling the scan misses is invisible). Korean has no word boundaries, so it
-     takes the substring shape — the same split test/session-naming.test.js
-     makes. Each addition was proved red by planting the word on purpose. */
-  const BANNED_BY_LOCALE = {
-    de: /\b(Handy|Handys|Smartphones?|Tablets?)\b/i,
-    en: /\b(phones?|smartphones?|tablets?)\b/i,
-    es: /\b(m[oó]vil(es)?|tel[eé]fonos?|tabletas?)\b/i,
-    fr: /\b(t[eé]l[eé]phones?|portables?|tablettes?)\b/i,
-    it: /\b(telefon[oi]|cellulari?|tablets?)\b/i,
-    nl: /\b(telefoons?|mobiel(tje)?s?|tablets?)\b/i,
-    pt: /\b(celulares?|telefones?|tablets?)\b/i,
-    fi: /\b(puhelim\w*|k[aä]nnyk\w*|tabletti\w*)\b/i,
-    ko: /(휴대폰|스마트폰|핸드폰|태블릿)/,
-  };
+  // The per-language map lives in test/support/device-words.js since #1171,
+  // shared with the guide's spec.
 
   // Scan QUESTIONS, not the SERVED page: most answers are gated, and the shared
   // test app runs accounts-off + legal-unconfigured, so a request renders only

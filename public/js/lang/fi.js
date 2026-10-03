@@ -1759,6 +1759,8 @@ I18N.fi = {
   'landing.cta.title': 'Ensi kerralla siitä ei enää väitellä.',
   'landing.faq.q': 'Vieläkö jokin mietityttää?',
   'landing.faq.link': 'Lue UKK',
+  // The „Was spielen wir heute?" guide page (#1171), linked beside the FAQ.
+  'landing.guide.link': 'Opas: mitä pelataan tänään?',
   // The design band (#1198), shown only by a design that asks for it (Der Tisch as the face).
   // {n} is how many designs the instance offers (GET /api/config), so it never overclaims.
   'landing.designs.title': '{n} ulkoasua, yksi sovellus.',

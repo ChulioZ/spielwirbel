@@ -1727,6 +1727,8 @@ I18N.ko = {
   'landing.cta.title': '다음부터는 아무도 그걸로 다투지 않아요.',
   'landing.faq.q': '아직 궁금한 게 있나요?',
   'landing.faq.link': '자주 묻는 질문 보기',
+  // The „Was spielen wir heute?" guide page (#1171), linked beside the FAQ.
+  'landing.guide.link': '가이드: 오늘 무슨 보드게임 할까?',
   // The design band (#1198), shown only by a design that asks for it (Der Tisch as the face).
   // {n} is how many designs the instance offers (GET /api/config), so it never overclaims.
   'landing.designs.title': '디자인 {n}가지, 앱은 하나.',

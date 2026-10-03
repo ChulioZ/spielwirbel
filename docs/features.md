@@ -678,6 +678,19 @@ What the app does, in detail. For a short overview see the
   where no privacy policy is published — is left out of the page entirely rather
   than hidden with JavaScript a crawler never runs. Questions touching personal
   data link `/datenschutz` instead of restating it.
+- **„Was spielen wir heute?" guide** – one public page per shipped language
+  (issue #1171), at a path in that language (`/de/was-spielen-wir-heute`,
+  `/en/what-should-we-play-tonight`, …), written as a guide rather than a pitch:
+  how groups usually decide what to play, what actually matters in the choice
+  (player count, time, weight, who knows the rules, a clear no), a ten-minute
+  method that works with pen and paper, and then how Spielwirbel does it. It
+  ends in the demo where the instance offers one (otherwise in a plain link to
+  the app), and links the FAQ and the other eight languages. Server-rendered,
+  indexable — its own canonical, `hreflang` alternates, Open Graph tags and a
+  sitemap entry per language — and linked from the bottom of the landing page
+  and from every FAQ page in the reader's language. German is the reference
+  text. No tracking script: reach is read in the search engines' own consoles
+  (`docs/configuration.md`).
 - **Support link (donations)** – when the operator sets `DONATE_URL`, a heart
   button in the top bar opens a small sheet whose single action is a plain
   link to the operator's donation page (new tab). Donations are voluntary and

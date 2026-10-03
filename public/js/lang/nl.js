@@ -1791,6 +1791,8 @@ I18N.nl = {
   'landing.cta.title': 'De volgende keer discussieert er niemand meer over.',
   'landing.faq.q': 'Nog vragen?',
   'landing.faq.link': 'Lees de FAQ',
+  // The „Was spielen wir heute?" guide page (#1171), linked beside the FAQ.
+  'landing.guide.link': 'Gids: wat spelen we vanavond?',
   // The design band (#1198), shown only by a design that asks for it (Der Tisch as the face).
   // {n} is how many designs the instance offers (GET /api/config), so it never overclaims.
   'landing.designs.title': '{n} ontwerpen, één app.',

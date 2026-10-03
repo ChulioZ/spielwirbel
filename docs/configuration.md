@@ -748,6 +748,42 @@ front of it (see issue #156; it is **2** on Railway). On merge to
 > receive no new builds. Update your `docker-compose.yml`/`docker run` to pull the
 > new path.
 
+### Search engines: the guide pages and their one-time setup (issue #1171)
+
+The app serves one public „Was spielen wir heute?" guide per shipped language,
+at a translated path (`/de/was-spielen-wir-heute`, `/en/what-should-we-play-tonight`,
+… — the slugs live in `public/js/guide-paths.js`). They need no configuration:
+every instance serves them, and the only instance-dependent part, the demo
+button, renders only where `DEMO_ENABLED` is on. Each page carries its own
+canonical on `spielwirbel.app`, the full `hreflang` set and Open Graph tags,
+and is listed in `public/sitemap.xml` — a fork self-hosting under another
+domain edits the sitemap (and `DEFAULT_CANONICAL` in `lib/canonical.js`), the
+same deal as the landing page's og tags. A changed slug orphans the old URL:
+nothing redirects it.
+
+Findability needs one operator action, once, because a search engine only
+reports impressions to a verified owner. Nothing here adds a script to the site;
+the search consoles are the measurement.
+
+1. **Google Search Console** → add a *Domain* property for `spielwirbel.app`
+   and copy the `google-site-verification=…` TXT value it shows.
+2. **Bing Webmaster Tools** → add the site (or import it from Search Console,
+   which needs no record of its own) and copy its verification TXT value.
+3. At **INWX** (DNS for `spielwirbel.app`) add both TXT records on the apex
+   (`@`), wait for them to resolve (`dig +short TXT spielwirbel.app`), then press
+   *Verify* in each console. Leave the records in place — removing one
+   un-verifies the property.
+4. In both consoles submit `https://spielwirbel.app/sitemap.xml`.
+5. Optionally request indexing for the German and English guide URLs in Search
+   Console's URL inspection; the rest follow from the sitemap and the hreflang
+   links.
+6. Read impressions and clicks in the consoles' performance reports, filtered by
+   page. Expect weeks to months before the first impressions; the
+   smaller-language pages tend to rank first.
+
+Verifying it locally: `curl -s localhost:3000/de/was-spielen-wir-heute | grep
+-E '<title>|canonical|hreflang'`, and `curl -sI` for `Cache-Control: public`.
+
 ### Deploying to Railway (production)
 
 The production target is [Railway](https://railway.com): it builds the

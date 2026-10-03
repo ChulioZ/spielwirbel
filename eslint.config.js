@@ -27,6 +27,8 @@ const frontendGlobals = {
   // locales.js
   LOCALES: 'readonly', SUPPORTED_LOCALES: 'readonly', LOCALE_LABELS: 'readonly',
   LOCALE_TAGS: 'readonly', localeTag: 'readonly',
+  // guide-paths.js (issue #1171)
+  GUIDE_SLUGS: 'readonly', guidePath: 'readonly',
   // i18n.js
   I18N: 'writable',
   locale: 'writable', detectLocale: 'readonly', initLocale: 'readonly',
