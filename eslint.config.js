@@ -312,6 +312,8 @@ const frontendGlobals = {
   kontoToggleValue: 'readonly', kontoRow: 'readonly', buildKontoBggCard: 'readonly',
   // views-account-programmheft.js (issue #1376): Konto as Das Programmheft's index + sections
   composeKontoProgramme: 'readonly', composeKontoCards: 'readonly',
+  // views-account-forest.js (issue #1470): Konto as Forest's index card + section cards
+  composeKontoForest: 'readonly',
   // …and the three views-account.js builders it is the first other file to call
   buildInstallSection: 'readonly', buildAvatarForm: 'readonly', buildProfileStatsForm: 'readonly',
   // support.js (issue #173)

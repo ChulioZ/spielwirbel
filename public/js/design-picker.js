@@ -153,8 +153,14 @@ function brueckeCardMark() {
    without a poster falls back to its page/accent through the --tile-*
    defaults the stylesheet reads. */
 function designPrintArt(design) {
+  return designShapes(design, 'design-tile--print', ['bar', 'block', 'square']);
+}
+
+// The tile in the design's four poster colours, carrying the named shapes —
+// shared by the print (above) and Forest's leaf poster (below).
+function designShapes(design, cls, shapes) {
   const tile = designTile(design);
-  tile.classList.add('design-tile--print');
+  tile.classList.add(cls);
   const poster = design.poster;
   if (poster) {
     tile.style.setProperty('--poster-top', poster.ground[0]);
@@ -162,9 +168,7 @@ function designPrintArt(design) {
     tile.style.setProperty('--poster-ink', poster.ink);
     tile.style.setProperty('--poster-sub', poster.sub);
   }
-  tile.appendChild(h('<span class="design-tile__bar"></span>'));
-  tile.appendChild(h('<span class="design-tile__block"></span>'));
-  tile.appendChild(h('<span class="design-tile__square"></span>'));
+  for (const shape of shapes) tile.appendChild(h(`<span class="design-tile__${shape}"></span>`));
   return tile;
 }
 
@@ -179,6 +183,34 @@ function programmeCardBody(design) {
             <span class="design-card__active" aria-hidden="true">${esc(t('design.pick.active'))}</span>
           </span>
           <span class="design-card__line">${esc(t(design.shortKey || design.descKey))}</span>
+        </span>`;
+}
+
+/* A design's LEAF poster (#1470, Forest's F5.3-F5.5): the design's own poster
+   ground, top to foot, with a sun in its poster ink, a leaf-cornered block in
+   its poster sub and a firefly dot in the ink again — the three shapes F5
+   draws. Like the print, no word on it: F5 sets every name on the card's band
+   under the picture, never on it. Painted from registry DATA, inline — the
+   other designs' poster colours are F1's non-tokens and never enter forest.css
+   (test/forest-konto.test.js). */
+function designLeafArt(design) {
+  return designShapes(design, 'design-tile--leaf', ['sun', 'leaf', 'dot']);
+}
+
+// Forest's card band (#1470, F5.3/F5.4): the name, the „Aktiv" mark the Konto
+// shows on the worn design and the „Ausgewählt" mark the chooser shows on the
+// pick (one per surface — the stylesheet picks), then the design's short line.
+// Both marks are aria-hidden: the checked radio already says the same thing.
+function forestCardBody(design) {
+  // The word is its own span so a phone can show the check alone (F5.5).
+  const mark = (cls, key) => `<span class="${cls}" aria-hidden="true"><i class="ti ti-check"></i><span class="design-card__mark-word">${esc(t(key))}</span></span>`;
+  return `<span class="design-card__body">
+          <span class="design-card__head">
+            <span class="design-card__name">${esc(t(design.labelKey))}</span>
+            ${mark('design-card__active', 'design.pick.active')}
+          </span>
+          <span class="design-card__line">${esc(t(design.shortKey || design.descKey))}</span>
+          ${mark('design-card__picked', 'design.poster.picked')}
         </span>`;
 }
 
@@ -200,11 +232,13 @@ function renderDesignPicker(cfg, current, onPick) {
   const bruecke = designIs('bruecke');
   // Das Programmheft's P5.3 prints a poster over a paper band (#1376).
   const programme = designIs('programmheft');
+  // Forest's F5.3 sets a leaf poster over a band with its marks (#1470).
+  const forest = designIs('forest');
   for (const design of offeredDesigns(cfg)) {
     const on = design.id === current;
-    const card = programme ? h(`<label class="design-card design-card--print${on ? ' is-on' : ''}">
+    const card = programme || forest ? h(`<label class="design-card ${forest ? 'design-card--leaf' : 'design-card--print'}${on ? ' is-on' : ''}">
         <input type="radio" name="designPick" value="${esc(design.id)}"${on ? ' checked' : ''}>
-        ${programmeCardBody(design)}
+        ${forest ? forestCardBody(design) : programmeCardBody(design)}
       </label>`) : h(`<label class="design-card${on ? ' is-on' : ''}">
         <input type="radio" name="designPick" value="${esc(design.id)}"${on ? ' checked' : ''}>
         <span class="design-card__body">
@@ -219,6 +253,7 @@ function renderDesignPicker(cfg, current, onPick) {
     else if (ocean) art = designGlyphTile(design);
     else if (bruecke) art = designSwatch(design);
     else if (programme) art = designPrintArt(design);
+    else if (forest) art = designLeafArt(design);
     card.insertBefore(art, card.querySelector('.design-card__body'));
     if (bruecke) card.appendChild(brueckeCardMark());
     card.querySelector('input').addEventListener('change', () => {
@@ -288,8 +323,9 @@ function buildDesignSection(me) {
     // their order, are Klassisch's.
     const ocean = designIs('ocean');
     if (ocean) wrap.classList.add('konto-design--card');
-    // Das Programmheft (P5.3) sets the hint on the heading's baseline too.
-    const headed = ocean || designIs('programmheft');
+    // Das Programmheft (P5.3) and Forest (F5.3) set the hint under the
+    // heading as one head too.
+    const headed = ocean || designIs('programmheft') || designIs('forest');
     const head = headed ? wrap.appendChild(h('<div class="konto-design__head"></div>')) : wrap;
     head.appendChild(h(`<h2 class="konto-section__h">${esc(t('konto.design.title'))}</h2>`));
     head.appendChild(h(`<p class="muted">${esc(t('konto.design.hint'))}</p>`));
@@ -477,7 +513,9 @@ function designCardSheet(cfg, current) {
 }
 
 /* The chooser as a PROGRAMME PAGE (#1376, P5.4 at 1440, P5.5 at 390) — Das
-   Programmheft's composition of the same question, built only while it is worn.
+   Programmheft's composition of the same question, built only while it is worn
+   — or Forest, whose F5.4/F5.5 compose the question the same way (#1470); the
+   posters are then renderDesignPicker's leaf branch.
 
    ONE card list at both widths, as Ocean's postcards: every poster is a radio
    that only SELECTS (renderDesignPicker's print branch, so the Konto and the
@@ -535,7 +573,10 @@ function showDesignChooser(cfg, me, onDone) {
   let chosen = before;
   const posters = designIs('tisch');
   const postcards = !posters && designIs('ocean');
-  const prints = !posters && !postcards && designIs('programmheft');
+  // Forest's F5.4/F5.5 is the print sheet's composition — a wide sheet of
+  // posters that only select, one named commit, „Später" once per width — so
+  // it is that sheet, with forest.css drawing it (#1470).
+  const prints = !posters && !postcards && (designIs('programmheft') || designIs('forest'));
   let backdrop;
   if (posters) {
     backdrop = designPosterSheet(cfg, before);

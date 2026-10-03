@@ -951,6 +951,7 @@ public/
     views-account.js Konto settings: identity + change password (#482; accounts mode only)
     views-account-tisch.js Konto as Der Tisch's dashboard: „Du" card of setting rows, Design card, BGG + danger cards (#1265)
     views-account-programmheft.js Konto as Das Programmheft's page: an index of the sections beside them (#1376)
+    views-account-forest.js Konto as Forest's: that index as a card with icons and „Abmelden", every section a card (#1470)
     router.js        URL ↔ view routing (History API): deep links, reloads
     main.js          bootstrap: route from the current URL              (loads last)
     pwa.js           registers the service worker (installable + offline)

@@ -531,3 +531,590 @@
 :root[data-design="forest"]:not([data-scheme="dark"]) .toast :focus-visible {
   outline-color: var(--ring-on-dusk);
 }
+
+/* ===== #1470 — Anmelden, Konto erstellen, Passkey, Konto, Designwahl ===== */
+/* F5 (docs/design/forest/Forest-F5-Konto.dc.html): F5.1/F5.2 the sign-in
+   pages, F5.3 the Konto with the design posters, F5.4/F5.5 the one-time
+   chooser. Every rule is gated on the light scheme and reads tokens only —
+   test/forest-konto.test.js sweeps the section for both.
+
+   Markup: the sign-in pair is views-auth.js's showAuthPair, built from the
+   forms every design uses (the passkey stays under the submit, the fields keep
+   their order — the #1193 ruling); the posters are design-picker.js's leaf
+   branch (designLeafArt + forestCardBody), the chooser its designPrintSheet;
+   the Konto's index card views-account-forest.js's composeKontoForest.
+
+   THE OTHER DESIGNS' POSTER COLOURS ARE NOT HERE (F1's non-tokens): a poster
+   paints from --poster-*, which design-picker.js writes INLINE from each
+   design's registry row. The names on the bands fit by the poster floors below
+   (review U13, measured in every shipped locale — see the floors' comments). */
+
+/* ---- F5.1 / F5.2: the sign-in pages. ----------------------------------------
+   Logged out, so nothing here reads a round or a marker. The header carries
+   the brand (the card has no logo), so the home link comes back on these
+   screens. */
+:root[data-design="forest"]:not([data-scheme="dark"]) body.auth-screen:has(> .app > .auth) .topbar__home {
+  display: inline-flex;
+  align-items: center;
+}
+/* F5.1's two light spots on the clearing — only ever brightening it. Plain
+   var() stops, no color-mix(): a design sheet's component rules may read
+   tokens and nothing else (test/design-layer.test.js). The short fade keeps
+   the full-strength centre soft. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .auth {
+  background-image:
+    radial-gradient(520px 320px at 30% 40%, var(--raised), transparent 55%),
+    radial-gradient(520px 320px at 75% 60%, var(--raised), transparent 50%);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .auth__card {
+  display: flex;
+  flex-direction: column;
+  max-width: 460px;
+  padding: 30px 32px;
+  border: 0;
+  border-radius: 22px;
+  background: var(--surface);
+  box-shadow: var(--shadow-2);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .auth__logo { color: var(--brand); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .auth__title {
+  margin: 0 0 var(--space-2);
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 32px;
+  line-height: var(--leading-display);
+  text-align: start;
+  color: var(--ink);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .auth__sub {
+  margin: 0 0 var(--space-5);
+  font-size: 16px;
+  text-align: start;
+  color: var(--ink-soft);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .auth .field label {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .auth .input {
+  min-height: var(--target-field);
+  border-color: var(--control-edge);
+  background: var(--raised);
+  font-size: 16px;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .auth .field__hint {
+  font-size: 13px;
+  line-height: var(--leading-text);
+  color: var(--ink-soft);
+}
+/* The submit: Blatt L in Laubgrün, 800 at 18px, 52px tall (F5.1). */
+:root[data-design="forest"]:not([data-scheme="dark"]) .auth .btn--primary {
+  min-height: 52px;
+  font-size: 18px;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .auth__or {
+  margin: var(--space-4) 0 var(--space-3);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .auth__or::before,
+:root[data-design="forest"]:not([data-scheme="dark"]) .auth__or::after { background: var(--line); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .auth__alt { margin-top: 0; }
+/* The passkey keeps its place and its secondary weight: the moss button at
+   the submit's height. */
+:root[data-design="forest"]:not([data-scheme="dark"]) #passkeyLogin {
+  min-height: 52px;
+  font-size: 17px;
+  font-weight: 700;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) #passkeyLogin .ti { font-size: 20px; }
+/* Every text link at target-min, in Laubgrün 800 (F5.1). */
+:root[data-design="forest"]:not([data-scheme="dark"]) .auth__links {
+  justify-content: flex-start;
+  gap: var(--space-2) var(--space-5);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .auth .link-btn {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target-min);
+  color: var(--brand);
+  font-size: 15px;
+  font-weight: 800;
+}
+/* The legal line's two links sit INSIDE its sentence, so they are inline text
+   (2.5.8's inline exception), not targets. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .auth__terms {
+  margin-top: var(--space-3);
+  font-size: 14px;
+  line-height: var(--leading-text);
+  text-align: start;
+  color: var(--ink-soft);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .auth__terms a {
+  color: var(--brand);
+  font-weight: 800;
+}
+
+/* The pair (showAuthPair): login beside register from 640px — login always
+   first, in reading order and on the left. The card that is NOT the route's
+   drops to F1's first shadow and its submit to the secondary look: one primary
+   per page (F5.1 draws „Registrieren" as the moss button beside the green
+   „Anmelden"). */
+:root[data-design="forest"]:not([data-scheme="dark"]) .auth-pair {
+  display: grid;
+  grid-template-columns: minmax(0, 460px);
+  gap: var(--space-6) 40px;
+  justify-content: center;
+  align-items: start;
+  width: 100%;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .auth-pair .auth__card { max-width: none; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .auth-pair[data-current="login"] > .auth__card:last-of-type,
+:root[data-design="forest"]:not([data-scheme="dark"]) .auth-pair[data-current="register"] > .auth__card:first-of-type {
+  box-shadow: var(--shadow-1);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .auth-pair[data-current="login"] > .auth__card:last-of-type .btn--primary,
+:root[data-design="forest"]:not([data-scheme="dark"]) .auth-pair[data-current="register"] > .auth__card:first-of-type .btn--primary {
+  border-radius: var(--radius-leaf-s);
+  border-color: var(--control-edge);
+  background: var(--moss);
+  color: var(--ink);
+  box-shadow: none;
+}
+/* The switch is the phone's (F5.2): two segments in a moss track. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .auth-pair > .auth-seg { display: none; }
+@media (min-width: 640px) {
+  :root[data-design="forest"]:not([data-scheme="dark"]) .auth-pair { grid-template-columns: repeat(2, minmax(0, 460px)); }
+}
+@media (max-width: 639px) {
+  :root[data-design="forest"]:not([data-scheme="dark"]) .auth { align-items: flex-start; padding: var(--space-5) 0; min-height: 0; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .auth-pair { gap: var(--space-4); }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .auth-pair[data-current="login"] > .auth__card:last-of-type,
+  :root[data-design="forest"]:not([data-scheme="dark"]) .auth-pair[data-current="register"] > .auth__card:first-of-type { display: none; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .auth-pair > .auth-seg {
+    display: flex;
+    gap: var(--space-1);
+    padding: var(--space-1);
+    border-radius: var(--radius-leaf-s);
+    background: var(--moss);
+  }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .auth-seg__item {
+    flex: 1;
+    display: grid;
+    place-items: center;
+    min-height: var(--target-key);
+    padding: 0 var(--space-2);
+    border-radius: 12px 3px 12px 3px;
+    color: var(--ink);
+    font-size: 15px;
+    font-weight: 700;
+    text-align: center;
+  }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .auth-seg__item.is-on {
+    background: var(--surface);
+    font-weight: 800;
+    box-shadow: var(--shadow-1);
+  }
+  /* On a phone the form sits on the clearing itself, not on a card (F5.2). */
+  :root[data-design="forest"]:not([data-scheme="dark"]) .auth__card {
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .auth__title { font-size: 28px; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .auth .input { min-height: 48px; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .auth .btn--primary { min-height: 56px; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .auth .link-btn { min-height: var(--target-foot); }
+}
+
+/* ---- F5.3: the Konto — the index card beside the section cards. ------------ */
+:root[data-design="forest"]:not([data-scheme="dark"]) .app:has(> .konto-ph) > .lobby-head { max-width: none; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .app > .konto-ph {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4) 36px;
+  max-width: none;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .konto-index { display: none; }
+@media (min-width: 1024px) {
+  :root[data-design="forest"]:not([data-scheme="dark"]) .app > .konto-ph { grid-template-columns: 280px minmax(0, 1fr); align-items: start; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .konto-index {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    position: sticky;
+    top: var(--space-5);
+    padding: 10px;
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    box-shadow: var(--shadow-1);
+  }
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .konto-index__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) :is(.konto-index__link, .konto-index__logout) {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: var(--target-key);
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--radius-leaf-s);
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 15px;
+  font-weight: 700;
+  text-align: start;
+  cursor: pointer;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) :is(.konto-index__link, .konto-index__logout) .ti { font-size: 18px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) :is(.konto-index__link, .konto-index__logout):hover { background: var(--moss); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .konto-index__link.is-on {
+  background: var(--brand);
+  color: var(--on-accent);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .konto-index__logout {
+  margin-top: 6px;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+}
+/* Every section a card on the clearing (F1's card): paper and the first
+   shadow. scroll-margin keeps a jumped-to card clear of the page's top edge. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .konto-ph__body > .konto-card {
+  margin: 0 0 var(--space-4);
+  padding: var(--space-5);
+  border: 0;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+  scroll-margin-top: var(--space-5);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .konto-ph__body > .konto-design {
+  margin: 0 0 var(--space-5);
+  scroll-margin-top: var(--space-5);
+}
+/* Section titles in Young Serif — 24px on a card, 32px over the posters
+   (F5.3's „Design"), both over its 19px floor. Whole selectors, each outranking
+   the voice block's Alegreya reset on its own. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .konto-ph__body > .konto-card > .konto-section__h,
+:root[data-design="forest"]:not([data-scheme="dark"]) .konto-ph__body > .install-section .konto-section__h {
+  margin: 0 0 var(--space-4);
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 24px;
+  line-height: var(--leading-title);
+  color: var(--ink);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .konto-ph__body > .konto-card--danger > .konto-section__h { color: var(--danger); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .konto-design__head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-bottom: var(--space-4);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .konto-design__head > * { margin: 0; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .konto-ph__body .konto-design__head .konto-section__h {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 32px;
+  line-height: var(--leading-display);
+  color: var(--ink);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .konto-design__head .muted {
+  font-size: 16px;
+  color: var(--ink-soft);
+}
+
+/* ---- The posters (F5.3 in the Konto, F5.4/F5.5 in the chooser). ------------
+   A poster over a band, in a hairline frame with F1's first shadow; the worn /
+   picked one takes F5's 3px ink frame instead — drawn as a box-shadow, so a
+   pick moves nothing — with the focus ring pushed out past it. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .design-card--leaf {
+  position: relative;
+  gap: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 0 0 1px var(--line), var(--shadow-1);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .design-card--leaf.is-on { box-shadow: 0 0 0 3px var(--ink); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .design-card--leaf:has(input:focus-visible) {
+  outline: var(--ring-width) solid var(--brand-ring);
+  outline-offset: 5px;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .design-tile--leaf {
+  position: relative;
+  flex: none;
+  height: 200px;
+  border: 0;
+  border-radius: 0;
+  overflow: hidden;
+  background: linear-gradient(180deg,
+    var(--poster-top, var(--tile-page)),
+    var(--poster-foot, var(--poster-top, var(--tile-page))));
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .design-tile--leaf > * { position: absolute; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .design-tile__sun {
+  left: 18px;
+  top: 18px;
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: var(--poster-ink, var(--tile-accent));
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .design-tile__leaf {
+  right: 22px;
+  bottom: 26px;
+  width: 120px;
+  max-width: calc(100% - 44px);
+  height: 46px;
+  border-radius: var(--radius-leaf-s);
+  background: var(--poster-sub, var(--tile-accent));
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .design-tile__dot {
+  right: 40px;
+  top: 40px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--poster-ink, var(--tile-accent));
+}
+/* The band: the name in Young Serif, never on the picture. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .design-card--leaf .design-card__body {
+  gap: 2px;
+  padding: 12px 14px 14px;
+  background: var(--surface);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .design-card--leaf .design-card__head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-2);
+  min-width: 0;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .design-card--leaf .design-card__name {
+  /* Never narrower than its longest word: „Aktiv" wraps under the name rather
+     than squeezing it (U13). break-word, not anywhere — `anywhere` lowers the
+     min-content width and lets a flex row split the word. A BLOCK, not
+     styles.css's flex row (which existed for the retired badge): as a flex
+     container its text is an anonymous item that never shrinks below its
+     word, so no wrap rule — the phone's included — could ever reach it. */
+  flex: 1 1 auto;
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 21px;
+  line-height: var(--leading-title);
+  color: var(--ink);
+  overflow-wrap: break-word;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .design-card--leaf :is(.design-card__active, .design-card__picked) {
+  display: none;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 800;
+}
+/* „Aktiv" is the Konto's: the worn design, a Laubgrün pill (F5.3). */
+:root[data-design="forest"]:not([data-scheme="dark"]) .design-card--leaf .design-card__active {
+  flex: none;
+  margin-left: auto;
+  padding: 2px 10px;
+  border-radius: 12px 3px 12px 3px;
+  background: var(--brand);
+  color: var(--on-accent);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .konto-design .design-card--leaf.is-on .design-card__active { display: inline-flex; }
+/* „Ausgewählt" is the chooser's: the pick, in Laubgrün under the line (F5.4). */
+:root[data-design="forest"]:not([data-scheme="dark"]) .design-card--leaf .design-card__picked {
+  margin-top: var(--space-1);
+  color: var(--brand);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .design-chooser--print .design-card--leaf.is-on .design-card__picked { display: inline-flex; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .design-card--leaf .design-card__line {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--ink-soft);
+}
+/* The Konto's floor (U13): the longest name word any locale prints in 21px
+   Young Serif (nl „Programmaboekje", 193px) plus the band's 28px. F5.3 draws four across; the floor decides
+   how many actually fit. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .konto-design .design-picker {
+  grid-template-columns: repeat(auto-fill, minmax(224px, 1fr));
+  gap: 20px;
+}
+
+/* ---- F5.4: the chooser — a wide white sheet over the start screen. ---------
+   F5.4 draws it 1160px wide with seven posters in a row, 148px each — narrower
+   than the longest name word any locale prints (nl „Programmaboekje", 176px of
+   19px Young Serif, measured in Chromium), which is review U13 exactly. So the
+   floor below wins over the drawing: the sheet may grow to 1340px, where the six
+   designs that exist share one row at 1440, and below that the posters wrap and
+   the commit row stays pinned to the sheet's foot so the answer never scrolls
+   out of reach. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .sheet.design-chooser--print {
+  max-width: 1340px;
+  padding: 0 34px 24px;
+  border: 0;
+  background: var(--raised);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .design-chooser--print .design-chooser__head {
+  padding-top: 30px;
+  background: var(--raised);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .design-chooser--print .design-chooser__kicker {
+  margin: 0 0 var(--kicker-gap);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--brand);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .design-chooser--print .design-chooser__head h2 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 34px;
+  line-height: var(--leading-display);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .design-chooser--print .design-chooser__body {
+  margin: var(--space-2) 0 0;
+  max-width: 760px;
+  font-size: 16px;
+  line-height: var(--leading-text);
+  color: var(--ink-soft);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .design-chooser--print .design-chooser__list { margin: var(--space-5) 0; }
+/* The chooser's floor (U13): the longest name word at 19px (176px) plus the
+   band's 24px. auto-fit, so the designs share the row and the next one wraps rather
+   than squeezing a name out of its frame. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .design-chooser--print .design-picker {
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .design-chooser--print .design-card--leaf { border-radius: 16px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .design-chooser--print .design-tile--leaf { height: 200px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .design-chooser--print .design-tile__sun { left: 14px; top: 16px; width: 56px; height: 56px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .design-chooser--print .design-tile__leaf { left: 14px; right: 14px; bottom: 20px; width: auto; max-width: none; height: 54px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .design-chooser--print .design-tile__dot { right: 18px; top: 34px; width: 18px; height: 18px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .design-chooser--print .design-card--leaf .design-card__body {
+  min-height: 86px;
+  padding: 10px 12px 12px;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .design-chooser--print .design-card--leaf .design-card__name { font-size: 19px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .design-chooser--print .design-card--leaf .design-card__line { font-size: 13px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .design-chooser--print .design-chooser__commit {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  background: var(--raised);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .design-chooser--print .design-chooser__foot {
+  flex: 1 1 18rem;
+  margin: 0;
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .design-chooser--print .design-chooser__skip {
+  min-height: 48px;
+  padding: 0 18px;
+  font-size: 16px;
+  font-weight: 800;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .design-chooser--print .design-chooser__skip--row { display: none; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .design-chooser--print #designChooserGo {
+  min-height: 52px;
+  padding: 0 26px;
+  font-size: 18px;
+}
+
+/* ---- F5.5 (and the Konto on a phone): two columns of small posters, the
+   name and — on the pick — the check alone, and the chooser's commit first,
+   „Später" under it. The sheet comes up from below. */
+@media (max-width: 639px) {
+  /* Two across — but a WRAPPING row rather than a two-column grid, because
+     two across a phone is narrower than the longest names: nl
+     „Programmaboekje" is 176px of 19px Young Serif against a 390px phone's
+     ~130px band, and de „Programmheft", fi „Komentosilta"/„Käsiohjelma" join
+     it at 320. A card is never narrower than its longest word (min-width:
+     min-content — the card's overflow: hidden would otherwise zero its
+     automatic minimum), so such a card takes the row to itself and the rest
+     stay paired. No hyphenation: it needs dictionaries a phone may not have,
+     and without them it falls back to a bare mid-word split. Measured in
+     Chromium in all nine locales at 390 and 320 (U13). */
+  :root[data-design="forest"]:not([data-scheme="dark"]) :is(.konto-design, .design-chooser--print) .design-picker {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  :root[data-design="forest"]:not([data-scheme="dark"]) :is(.konto-design, .design-chooser--print) .design-card--leaf {
+    flex: 1 1 calc(50% - 5px);
+    min-width: min-content;
+    border-radius: 14px;
+  }
+  :root[data-design="forest"]:not([data-scheme="dark"]) :is(.konto-design, .design-chooser--print) .design-tile--leaf { height: 72px; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) :is(.konto-design, .design-chooser--print) .design-tile__sun { left: 10px; top: 10px; width: 30px; height: 30px; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) :is(.konto-design, .design-chooser--print) .design-tile__leaf { left: auto; right: 10px; bottom: 10px; width: 70px; max-width: calc(100% - 20px); height: 22px; border-radius: 10px 3px 10px 3px; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) :is(.konto-design, .design-chooser--print) .design-tile__dot { display: none; }
+  /* The band becomes one row: the name, then the pick's check at its end. */
+  :root[data-design="forest"]:not([data-scheme="dark"]) :is(.konto-design, .design-chooser--print) .design-card--leaf .design-card__body {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--space-1);
+    min-height: var(--target-key);
+    padding: 8px 10px;
+  }
+  :root[data-design="forest"]:not([data-scheme="dark"]) :is(.konto-design, .design-chooser--print) .design-card--leaf .design-card__head { flex: 1 1 auto; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) :is(.konto-design, .design-chooser--print) .design-card--leaf .design-card__name { font-size: 19px; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) :is(.konto-design, .design-chooser--print) .design-card--leaf .design-card__line { display: none; }
+  /* The worded marks lose their word and the pill (F5.5 draws the check alone;
+     the checked radio states the pick to a screen reader). */
+  :root[data-design="forest"]:not([data-scheme="dark"]) :is(.konto-design, .design-chooser--print) .design-card--leaf :is(.design-card__active, .design-card__picked) {
+    margin: 0 0 0 auto;
+    padding: 0;
+    background: transparent;
+    color: var(--brand);
+    font-size: 18px;
+  }
+  :root[data-design="forest"]:not([data-scheme="dark"]) :is(.konto-design, .design-chooser--print) .design-card--leaf .design-card__mark-word { display: none; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .sheet.design-chooser--print {
+    padding: 0 16px 18px;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .design-chooser--print .design-chooser__head { padding-top: 22px; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .design-chooser--print .design-chooser__head h2 { font-size: 26px; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .design-chooser--print .design-chooser__body { font-size: 14px; line-height: 1.4; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .design-chooser--print .design-chooser__list { margin: var(--space-3) 0; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .design-chooser--print .design-chooser__commit {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-2);
+  }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .design-chooser--print .design-chooser__foot,
+  :root[data-design="forest"]:not([data-scheme="dark"]) .design-chooser--print .design-chooser__skip { display: none; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .design-chooser--print .design-chooser__skip--row {
+    display: inline-flex;
+    align-self: center;
+    justify-content: center;
+    min-height: var(--target-key);
+  }
+}
