@@ -41,11 +41,15 @@ I18N.es = {
   'home.tischKicker': 'Café de juegos · tus mesas',
   // Ocean only (#1211): its sub-brand beside the wordmark and its lobby greeting.
   'home.oceanKicker': 'La costa · tus grupos',
+  'home.forestKicker': 'El bosque · tus claros',
   'home.oceanGreeting': 'Te damos la bienvenida a la costa.',
+  'home.forestGreeting': 'Te damos la bienvenida de nuevo al bosque.',
+  'home.forestGreetingFirst': 'Te damos la bienvenida al bosque.',
   // Die Brücke only (#1238): the lobby voice, its greeting and the notice kicker (B9).
   'home.brueckeKicker': 'Flota / Resumen',
   'home.brueckeGreeting': 'Te damos la bienvenida de nuevo a bordo.',
   'home.brueckeSignal': 'Señal entrante',
+  'home.forestSignal': 'Señal luminosa',
   'home.shared': 'Compartido',
   'home.newRound': 'Crear un grupo nuevo',
   'home.empty.title': 'Todavía no hay ningún grupo.',
@@ -165,6 +169,8 @@ I18N.es = {
   'hub.pulse.title': 'Pulso de la ronda',
   'hub.young.lock': 'desde el primer juego',
   'hub.young.emptyTitle': 'El bote aún está vacío',
+  // #1471 (F7.3): Forest's empty table names its vessel, the tree stump.
+  'hub.young.emptyTitleForest': 'El tocón aún está vacío',
   'hub.young.emptyText': 'Se sortea desde la estantería. Poned el primer juego sobre la mesa.',
   'hub.young.emptyTextBgg': 'Se sortea desde la estantería. Poned el primer juego sobre la mesa — o traed toda vuestra estantería de BGG en un solo paso.',
   'hub.young.firstCta': 'Sortear la primera sesión',
@@ -357,6 +363,7 @@ I18N.es = {
   'chronik.count': '{n} sesiones desde {month}',
   'chronik.seatedOne': '{n} en la mesa',
   'chronik.seated': '{n} en la mesa',
+  'chronik.sessionNo': 'Sesión n.º {n}',
   'chronik.wonOne': 'ganó {names}',
   'chronik.won': 'ganaron {names}',
   // Die Brücke's Chronik (#1245): how often the chosen game took the 1 in that
@@ -759,6 +766,9 @@ I18N.es = {
   'member.editName': 'Haz clic para renombrar',
   'member.edit': 'Editar',
   'member.recentWins': 'Últimas victorias',
+  'member.recentTitle': 'Últimas veces en la mesa',
+  'member.recentWon': 'ganó',
+  'member.recentJoined': 'jugó',
   'member.colorLabel': 'Color del avatar',
   'member.colorChange': 'Cambiar el color del avatar',
   'member.mySeat': 'Tu sitio',
@@ -1850,6 +1860,8 @@ I18N.es = {
   'landing.cta.title': 'La próxima vez, nadie discute.',
   'landing.faq.q': '¿Te queda alguna duda?',
   'landing.faq.link': 'Lee las preguntas frecuentes',
+  // The „Was spielen wir heute?" guide page (#1171), linked beside the FAQ.
+  'landing.guide.link': 'Guía: ¿A qué jugamos hoy?',
   // The design band (#1198), shown only by a design that asks for it (Der Tisch as the face).
   // {n} is how many designs the instance offers (GET /api/config), so it never overclaims.
   'landing.designs.title': '{n} diseños, una app.',
@@ -2026,6 +2038,9 @@ I18N.es = {
   'badges.moment.title': 'Recién conseguidas',
   'badges.moment.moreOne': '+{n} más',
   'badges.moment.more': '+{n} más',
+  // Das Programmheft's kicker on the result moment's band for a big tier (#1393):
+  // the round's Sessions 100 · 250 · 500 and Stammgast 100 · 250.
+  'badges.specialEdition': 'Edición especial',
   'badges.earnedIn': 'Conseguida en {month}',
   'badges.tierReached': 'Nivel {tier} alcanzado en {month}',
   'badges.card.next': 'Siguiente nivel: {n}',
@@ -2037,6 +2052,7 @@ I18N.es = {
   'detail.statVetoBruecke': '× sin empuje',
   // Das Programmheft's lobby and hub (#1372, P3.1/P3.2/P6.1).
   'hub.members': 'Miembros',
+  'hub.forestMarker': 'Marcador {name}',
   'hub.lead.open': 'Ver el resultado',
   'home.phExtra': 'Edición especial',
   'home.phKicker': 'Quiosco · {date}',

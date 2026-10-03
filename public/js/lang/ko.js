@@ -33,11 +33,15 @@ I18N.ko = {
   'home.tischKicker': '보드게임 카페 · 나의 테이블',
   // Ocean only (#1211): its sub-brand beside the wordmark and its lobby greeting.
   'home.oceanKicker': '해안 · 나의 모임',
+  'home.forestKicker': '숲 · 나의 빈터',
   'home.oceanGreeting': '해안에 오신 걸 환영해요.',
+  'home.forestGreeting': '숲에 다시 오신 걸 환영해요.',
+  'home.forestGreetingFirst': '숲에 오신 걸 환영해요.',
   // Die Brücke only (#1238): the lobby voice, its greeting and the notice kicker (B9).
   'home.brueckeKicker': '함대 / 개요',
   'home.brueckeGreeting': '다시 탑승하신 걸 환영해요.',
   'home.brueckeSignal': '수신 신호',
+  'home.forestSignal': '반딧불 신호',
   'home.shared': '공유됨',
   'home.newRound': '새 모임 시작하기',
   'home.empty.title': '아직 게임 모임이 없어요.',
@@ -154,6 +158,8 @@ I18N.ko = {
   'hub.pulse.title': '모임 활동',
   'hub.young.lock': '첫 게임부터',
   'hub.young.emptyTitle': '아직 판이 비어 있어요',
+  // #1471 (F7.3): Forest's empty table names its vessel, the tree stump.
+  'hub.young.emptyTitleForest': '아직 그루터기가 비어 있어요',
   'hub.young.emptyText': '게임은 선반에서 뽑아요. 첫 게임을 테이블에 올려 보세요.',
   'hub.young.emptyTextBgg': '게임은 선반에서 뽑아요. 첫 게임을 테이블에 올리거나, BGG에서 선반 전체를 한 번에 가져오세요.',
   'hub.young.firstCta': '첫 세션 시작',
@@ -342,6 +348,7 @@ I18N.ko = {
   'chronik.count': '{month}부터 세션 {n}개',
   'chronik.seatedOne': '{n}명 참여',
   'chronik.seated': '{n}명 참여',
+  'chronik.sessionNo': '세션 {n}회차',
   'chronik.wonOne': '{names} 승리',
   'chronik.won': '{names} 승리',
   // Die Brücke's Chronik (#1245): how often the chosen game took the 1 in that
@@ -718,6 +725,9 @@ I18N.ko = {
   'member.editName': '눌러서 이름 변경',
   'member.edit': '편집',
   'member.recentWins': '최근 승리',
+  'member.recentTitle': '최근 참여',
+  'member.recentWon': '승리',
+  'member.recentJoined': '참여',
   'member.colorLabel': '아바타 색상',
   'member.colorChange': '아바타 색상 변경',
   'member.mySeat': '내 자리',
@@ -1742,6 +1752,8 @@ I18N.ko = {
   'landing.cta.title': '다음부터는 아무도 그걸로 다투지 않아요.',
   'landing.faq.q': '아직 궁금한 게 있나요?',
   'landing.faq.link': '자주 묻는 질문 보기',
+  // The „Was spielen wir heute?" guide page (#1171), linked beside the FAQ.
+  'landing.guide.link': '가이드: 오늘 무슨 보드게임 할까?',
   // The design band (#1198), shown only by a design that asks for it (Der Tisch as the face).
   // {n} is how many designs the instance offers (GET /api/config), so it never overclaims.
   'landing.designs.title': '디자인 {n}가지, 앱은 하나.',
@@ -1905,6 +1917,9 @@ I18N.ko = {
   'badges.moment.title': '새로 획득',
   'badges.moment.moreOne': '+{n}개 더',
   'badges.moment.more': '+{n}개 더',
+  // Das Programmheft's kicker on the result moment's band for a big tier (#1393):
+  // the round's Sessions 100 · 250 · 500 and Stammgast 100 · 250.
+  'badges.specialEdition': '특별판',
   'badges.earnedIn': '{month} 획득',
   'badges.tierReached': '{month} {tier}단계 달성',
   'badges.card.next': '다음 단계 {n}',
@@ -1916,6 +1931,7 @@ I18N.ko = {
   'detail.statVetoBruecke': '× 추진력 없음',
   // Das Programmheft's lobby and hub (#1372, P3.1/P3.2/P6.1).
   'hub.members': '멤버',
+  'hub.forestMarker': '마커 {name}',
   'hub.lead.open': '결과 보기',
   'home.phExtra': '호외',
   'home.phKicker': '가판대 · {date}',

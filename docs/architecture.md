@@ -155,6 +155,12 @@ lib/
                      any selectable one for ?design=<id>. Reads no
                      account; mounted in front of express.static, as open as
                      the file
+  guide.js           the „Was spielen wir heute?" guide (#1171): one indexable,
+                     server-rendered page per language at a translated path,
+                     with canonical/hreflang/Open Graph tags and a demo CTA only
+                     where the demo exists
+  guide-text/        the guide's prose, one file per locale (de.js is the
+                     reference text every translation is made from)
   faq.js             the server-rendered FAQ page, one language per page in
                      every shipped locale (#1088), with each answer an instance
                      cannot honestly give gated out (issue #489)
@@ -394,6 +400,10 @@ lib/
                                              and never 404s, unlike the legal
                                              pages above; resolves ?lang →
                                              Accept-Language → de; #489/#1088)
+    guide.js         /<lang>/<slug>         (the guide pages — public, login-free;
+                                             only the nine exact encoded paths
+                                             answer, anything else falls through
+                                             to the SPA; #1171)
     admin/           /api/admin             (operator moderation — 404 unless
                                              ADMIN_PASSWORD. ONE mount in
                                              lib/app.js; the sub-routers compose
@@ -458,7 +468,8 @@ public/
                      Klassisch's; lib/web-manifest.js derives every other
                      design's (the face's included) from it
   robots.txt         crawl policy; every noindex page stays crawl-ALLOWED (#510)
-  sitemap.xml        the four public URLs, on the canonical host
+  sitemap.xml        the public URLs (landing, legal pages, FAQ, the nine guide
+                     pages), on the canonical host
   sw.js              service worker: precache the app shell, offline fallback
   fonts/             self-hosted fonts + Tabler icon set
   icons/             PWA / home-screen app icons (192, 512, apple-touch), the
@@ -500,6 +511,8 @@ public/
                      FIRST, shared with the backend, which requires it
     locales.js       the set of shipped UI locales (code, native label, BCP-47
                      tag) — shared with the backend, which requires it
+    guide-paths.js   the guide's slug per locale and guidePath() — the landing
+                     links it, lib/guide.js serves it (#1171)
     i18n.js          translation engine (t(), locale detection, plural rules)
     lang/en.js       English strings
     lang/de.js       German strings
@@ -833,6 +846,11 @@ public/
     bruecke-hub.js        Die Brücke's composition of the lobby and the round
                           hub: the hub's slot frame, the Missionskontrolle,
                           the member captions and the signal notice (#1238)
+    forest-hub.js         Forest's lobby and round hub: the three-column frame,
+                          the head with its ribbon marker, the tree stump, the
+                          „Zuletzt gespielt" card, the clearings and the
+                          „Leuchtzeichen" notice (#1466); its empty, young and
+                          demo states and the empty lobby (#1471)
     bruecke-shelf.js      Die Brücke's Regal cards and the Spielepass's stat
                           tiles and rating distribution (#1239)
     saved-filters.js      a round's saved session filters (#1328): the chip's
@@ -898,6 +916,9 @@ public/
     programmheft-tier2a.js Das Programmheft's extras with no Klassisch counterpart
                      (#1379): the Chronik's „Rückblick" sheet and „Teilen",
                      „Letzte Siege" on the member page
+    forest-tier2a.js Forest's tier 2a (#1473): the Chronik as a path and its
+                     „Rückblick" entry, the Pokale grove, the member page's
+                     five-figure Tischkarte with „Zuletzt dabei" beside it
     vote-card-composed.js Der Tisch's vote card (#1268): the felt header, the card
                      with cover and meta, the worded faces, the hand-off line
                      and the vote link's felt intro; both vote cards build

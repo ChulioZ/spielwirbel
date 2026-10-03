@@ -42,7 +42,13 @@ const CHRONIK_STRIP_FACES = 4;
    Das Programmheft sets it as an ARCHIVE OF EDITIONS (#1379, P13.1/P13.2): one
    headline per session — [date | cover | game + who won · N dabei · N Spiele |
    the score as a display numeral] — under month heads that stand in their own
-   left column from 700px, with the recap as the black box beside it. */
+   left column from 700px, with the recap as the black box beside it.
+
+   Forest walks it as a PATH (#1473, F13.1/F13.2): one step per session —
+   [date + „Session Nr. 23" | cover | game + who won | the people's rings |
+   score] — beside a line of leaves, with the recap as the card to its right
+   from 1100px and, on a phone, a „Rückblick" entry at the head that takes you
+   to it (forest-tier2a.js). */
 // Unique ids for the collapsed shelf-change runs' aria-controls.
 let chronikRunSeq = 0;
 
@@ -52,6 +58,7 @@ function renderChronikTab(round, activities) {
   const ocean = designIs('ocean');
   const bruecke = designIs('bruecke');
   const programmheft = designIs('programmheft');
+  const forest = designIs('forest');
   const loadCover = createCoverLoader(); // lazy session thumbs (#198)
   // The earnings each session produced (#1388), a row apiece under its card.
   const badgeRows = badgeChronikIndex(round);
@@ -157,7 +164,8 @@ function renderChronikTab(round, activities) {
   // desktop grid places the recap in its own column either way (bruecke.css).
   // Das Programmheft does the same (#1379): P13.2 opens on the editions, and
   // P13.1 sets the recap as the black box in the column to their right.
-  const recapLast = bruecke || programmheft;
+  // Forest too (#1473): F13.2 opens on the path, F13.1 sets the recap beside it.
+  const recapLast = bruecke || programmheft || forest;
   const periodSec = renderPeriodRecapSection(round, activities);
   if (periodSec && !recapLast) app.appendChild(periodSec);
 
@@ -174,7 +182,7 @@ function renderChronikTab(round, activities) {
   // 2025" (T13.1). Counted exactly as the rail beside it counts (round-rail.js:
   // every FINISHED session), not over the strips: a cancelled night is listed
   // but was never played, and counting it put „7" here beside the rail's „6".
-  if (tisch || ocean || bruecke || programmheft) {
+  if (tisch || ocean || bruecke || programmheft || forest) {
     const counted = round.sessions.filter((s) => s.finished);
     if (counted.length) {
       const since = counted.reduce((a, s) => (s.createdAt < a ? s.createdAt : a), counted[0].createdAt);
@@ -200,6 +208,9 @@ function renderChronikTab(round, activities) {
     });
   });
   sec.appendChild(chips);
+  // Forest's phone entry to the recap (#1473, F13.2), right under the head.
+  const recapEntry = forest ? forestRecapEntry(periodSec) : null;
+  if (recapEntry) secHead.after(recapEntry);
 
   // Das Programmheft's head actions (#1379): „Rückblick" opens the recap as a
   // sheet on a phone, „Teilen" shares the box's period on a desktop
@@ -223,6 +234,7 @@ function renderChronikTab(round, activities) {
   sec.appendChild(tl);
   app.appendChild(sec);
   if (periodSec && recapLast) app.appendChild(periodSec);
+  const sessionNo = forest ? forestSessionNumbers(round) : new Map();
 
   function buildSessionCard(s) {
     const when = fmtDateTime(s.createdAt);
@@ -272,6 +284,7 @@ function renderChronikTab(round, activities) {
     if (tisch && sPeople.length) parts.push(esc(tn(sPeople.length, 'chronik.seatedOne', 'chronik.seated')));
     const rated = sessionHasVotes(s) ? esc(tn(s.gameIds.length, 'sessions.ratedOne', 'sessions.rated')) : '';
     if (bruecke) return buildSessionLog(s, { when, chosen, sPeople, title, pill, outcome });
+    if (forest) return forestPathRow(round, s, { when, chosen, sPeople, thumbIcon, title, pill, outcome }, sessionNo.get(s.id), loadCover);
     if (programmheft) return buildSessionEdition(s, { when, chosen, sPeople, thumbIcon, title, pill, outcome });
     if (ocean) return buildSessionRow(s, { when, chosen, sPeople, thumbIcon, title, pill, outcome, rated });
     if (tisch) return buildSessionStrip(s, { when, chosen, sPeople, thumbIcon, title, pill, parts, rated });
@@ -546,7 +559,8 @@ function renderChronikTab(round, activities) {
     // Die Brücke too (#1245): B3.3 lists the sessions, one line each.
     // Das Programmheft too (#1379): P13.1 prints the editions, a lone change
     // between them stays a line of its own.
-    const fold = (tisch || ocean || bruecke || programmheft) && chronikFilter === 'all';
+    // Forest too (#1473): F13.1 walks the sessions, a run of changes folds.
+    const fold = (tisch || ocean || bruecke || programmheft || forest) && chronikFilter === 'all';
     let lastMonth = '';
     for (let i = 0; i < visible.length;) {
       const e = visible[i];

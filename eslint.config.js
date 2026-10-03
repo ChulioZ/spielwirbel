@@ -27,6 +27,8 @@ const frontendGlobals = {
   // locales.js
   LOCALES: 'readonly', SUPPORTED_LOCALES: 'readonly', LOCALE_LABELS: 'readonly',
   LOCALE_TAGS: 'readonly', localeTag: 'readonly',
+  // guide-paths.js (issue #1171)
+  GUIDE_SLUGS: 'readonly', guidePath: 'readonly',
   // i18n.js
   I18N: 'writable',
   locale: 'writable', detectLocale: 'readonly', initLocale: 'readonly',
@@ -503,6 +505,12 @@ const frontendGlobals = {
   // bruecke-hub.js (#1238) — Die Brücke's lobby notice and round hub composition
   brueckeHubFrame: 'readonly', brueckeMission: 'readonly', brueckeMissionEmpty: 'readonly', brueckeYoungLine: 'readonly', brueckeHeroCompose: 'readonly',
   brueckeStatus: 'readonly', brueckeResumeNotice: 'readonly', brueckeUpLink: 'readonly',
+  // forest-hub.js (#1466) — Forest's lobby tiles, notice and round hub composition
+  forestHubFrame: 'readonly', forestStump: 'readonly', forestPresetsLabel: 'readonly', forestMarkerLine: 'readonly',
+  forestHeroCompose: 'readonly', forestLead: 'readonly', forestRoundCard: 'readonly', forestResumeNotice: 'readonly',
+  // #1471 — its empty and young states
+  forestYoung: 'readonly', forestLocked: 'readonly', forestAsidePreviews: 'readonly', forestLockedPulse: 'readonly',
+  forestFirstRun: 'readonly',
   // bruecke-shelf.js (#1239) — Die Brücke's Regal cards and Spielepass figures
   brueckeTitleLong: 'readonly', brueckeCard: 'readonly',
   brueckePassStats: 'readonly', brueckePassDist: 'readonly',
@@ -553,6 +561,9 @@ const frontendGlobals = {
   // programmheft-tier2a.js (issue #1379): the Chronik head actions, the recap sheet, „Letzte Siege“
   programmheftChronikActions: 'readonly', openProgrammheftRecapSheet: 'readonly',
   programmheftRecentWins: 'readonly', PH_RECENT_WINS: 'readonly',
+  // forest-tier2a.js (issue #1473): the Chronik's path and recap entry, the Pokale grove, the member page
+  forestSessionNumbers: 'readonly', FOREST_PATH_FACES: 'readonly', forestPathRow: 'readonly', forestRecapEntry: 'readonly',
+  forestGrove: 'readonly', forestMemberPage: 'readonly', FOREST_RECENT_SESSIONS: 'readonly', forestRecentSessions: 'readonly',
   // member-stats.js (#1075 — split out of views-member.js)
   memberStats: 'readonly', BEST_GAME_MIN_PLAYS: 'readonly', bestGameSub: 'readonly',
   // achievements.js (#1387): the Abzeichen catalogue and its derivation

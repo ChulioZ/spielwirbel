@@ -221,6 +221,15 @@
   --shadow-3: 0 18px 44px rgba(40, 60, 30, 0.18);
   /* The primary button's own cast (F1.3), a little deeper than shadow-1. */
   --shadow-primary: 0 8px 18px rgba(40, 60, 30, 0.25);
+  /* The casts the #1466 chrome and hub draw (F2.1, F2.5, F3.1, F3.2): the
+     dock's, thrown UP from the bottom edge; the stump's and its green heart's;
+     a cover's, a seat ring's and a spine's in the Regal preview. */
+  --shadow-up: 0 -6px 18px rgba(40, 60, 30, 0.10);
+  --shadow-stump: 0 22px 34px rgba(40, 60, 30, 0.28);
+  --shadow-core: 0 10px 20px rgba(27, 42, 24, 0.35);
+  --shadow-cover: 0 6px 12px rgba(40, 60, 30, 0.25);
+  --shadow-seat: 0 4px 10px rgba(40, 60, 30, 0.15);
+  --shadow-spine: 0 3px 6px rgba(40, 60, 30, 0.2);
 }
 
 /* ---------------------------------------------------------------------------
@@ -538,6 +547,1789 @@
 }
 :root[data-design="forest"]:not([data-scheme="dark"]) .toast :focus-visible {
   outline-color: var(--ring-on-dusk);
+}
+
+/* ===== #1466 — the lobby, the round hub and the shared chrome ===============
+   Sheets F2.1 (hub, phone), F2.5 (dock), F3.1 (lobby), F3.2 (hub, desktop),
+   F6.1 (lobby, phone) and the four component sheets Forest-Kopf, -Telefonkopf,
+   -Dock and -Fuss. The markup the lobby and the hub compose is forest-hub.js;
+   EVERYTHING ELSE here restyles markup every design shares — the Kopf is
+   `.topbar`, the Wegweiser is the dock strip (860–1279) and the rail (from
+   1280), the dock is `.dock`, the Fuß is `.site-footer` — so every later Forest
+   screen wears this chrome without a line of its own. Colour rules are gated
+   like the rest of this file; geometry and type are not. Klassisch never
+   matches any of it. */
+
+/* ---- The person (F1, F8.1): a RING round a light core, the initial in ink —
+   never a filled disc. Six of the eight member tones sit near 4.2:1 on the
+   card, so a tone may frame a person and never carry their letters. The inline
+   fill is the member's colour and paints under the border too; the border is
+   made transparent and an inset shadow covers the rest in the card tone, which
+   leaves a ring as wide as the border with no change to the markup (Ocean's
+   answer to the same rule). A picture is content and sits above the shadow. */
+:root[data-design="forest"]:not([data-scheme="dark"]) :is(.avatar, .seat__ring):not(.avatar--add, .avatar--guest, .avatar-stack__more) {
+  color: var(--ink);
+  border: 4px solid transparent;
+  background-clip: border-box;
+  box-shadow: inset 0 0 0 999px var(--surface);
+  font-weight: 800;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .avatar--add:not(:has(.seat__ring)),
+:root[data-design="forest"]:not([data-scheme="dark"]) .avatar--add .seat__ring {
+  background: transparent;
+  border: 2px dashed var(--control-edge);
+  color: var(--brand);
+}
+
+/* ---- Der Kopf (Forest-Kopf): the card tone, 60px, a hairline under it; the
+   whirl on a Laubgrün disc beside the wordmark in Young Serif 21px (F1 lets the
+   face go no smaller than 19), the context line in soft ink, and the icon
+   buttons as pills that take the moss under the pointer. `--topbar-gap`, not
+   `gap`: the language globe's pull is computed from it (styles.css). */
+:root[data-design="forest"] .topbar {
+  --topbar-gap: 12px;
+  min-height: 60px;
+  padding: 8px 24px 8px 28px;
+  box-sizing: border-box;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+:root[data-design="forest"] .topbar .topbar__home {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: var(--target-key);
+  padding: 0 4px;
+  border-radius: var(--radius-md);
+  white-space: nowrap;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .topbar .topbar__home { color: var(--ink); }
+:root[data-design="forest"] .topbar .topbar__home .ti {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  font-size: 18px;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .topbar .topbar__home .ti { background: var(--brand); color: var(--on-accent); }
+:root[data-design="forest"] .topbar .topbar__home .topbar__word {
+  font-family: var(--font-display);
+  font-size: 21px;
+  font-weight: 400;
+  line-height: 1;
+}
+:root[data-design="forest"] .topbar__context { font-size: 15px; font-weight: 700; }
+:root[data-design="forest"] .topbar .topbar__acct {
+  min-width: var(--target-key);
+  min-height: var(--target-key);
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  font-size: 18px;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .topbar .topbar__acct { background: transparent; color: var(--ink); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .topbar .topbar__acct:hover { background: var(--moss); color: var(--ink); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .topbar .topbar__login { background: var(--moss); color: var(--ink); font-size: 15px; }
+/* The account as its ring and its name (account-chrome.js renderAccountFace,
+   F1.7). `:not([hidden])`: `.topbar__acct` declares no display on purpose, so a
+   bare `display` here would put the button back for a logged-out visitor
+   (.claude/rules/hidden-attribute-vs-display-rule.md). The name from 768px —
+   the Telefonkopf draws the ring alone. */
+:root[data-design="forest"] .topbar .topbar__acct--face:not([hidden]) {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 6px;
+}
+:root[data-design="forest"] .topbar__avatar { width: 32px; height: 32px; font-size: 12px; }
+:root[data-design="forest"] .topbar__name {
+  display: none;
+  max-width: 14ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  font-weight: 700;
+}
+@media (min-width: 768px) {
+  :root[data-design="forest"] .topbar .topbar__acct--face:not([hidden]) { padding: 0 8px 0 6px; }
+  :root[data-design="forest"] .topbar__name { display: block; }
+}
+:root[data-design="forest"] .topbar__acct--face .topbar-dot { top: 4px; right: auto; left: 30px; }
+
+/* ---- Der Telefonkopf (Forest-Telefonkopf): the wordmark stays — the sheet
+   draws it at every width — and the context line gives way to it. Every screen
+   names itself in its own heading, so nothing reachable goes with the label.
+   One line always (#1460): the buttons that do not fit fold into „…". */
+@media (max-width: 520px) {
+  :root[data-design="forest"] .topbar { padding: 6px 12px 6px 14px; }
+  :root[data-design="forest"] .topbar .topbar__home .topbar__word { display: inline; font-size: 20px; }
+  :root[data-design="forest"] .topbar .topbar__context { display: none; }
+}
+
+/* ---- Der Fuß (Forest-Fuss): soft ink on the clearing, 14px, bold. The band
+   and the link targets are the component layer's (#1465, above). */
+:root[data-design="forest"] .site-footer__inner { font-size: 14px; font-weight: 700; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .site-footer__links a { color: var(--ink-soft); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .site-footer__links a:hover { color: var(--ink); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .site-footer__trust { color: var(--ink-soft); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .site-footer__trust-item .ti { color: var(--ink-soft); }
+
+/* ---- Das Dock, phone (Forest-Dock, F2.5): a bar flush with the bottom edge,
+   four equal cells, the card tone with a hairline and a soft cast; the current
+   section is a LEAF — Laubgrün under the light print, in the Blatt shape. It
+   shows on the hub tabs and on the result screen, where a session ends and the
+   round goes on — with NO entry lit there, since the result is not one of the
+   four. Neue Session, the vote card and the hand-over render no dock at all
+   (views-session*.js), so they keep the whole screen. */
+@media (max-width: 859px) {
+  :root[data-design="forest"] .dock {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    transform: none;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+    gap: 4px;
+    min-height: 68px;
+    padding: 4px 8px calc(4px + env(safe-area-inset-bottom, 0px));
+    box-sizing: border-box;
+    border-width: 1px 0 0;
+    border-radius: 0;
+  }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .dock {
+    background: var(--surface);
+    border-color: var(--line);
+    box-shadow: var(--shadow-up);
+  }
+  :root[data-design="forest"] .dock .dock__item {
+    justify-content: center;
+    min-width: 0;
+    min-height: var(--target-key);
+    padding: 4px 2px;
+    border-radius: 16px 5px 16px 5px;
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1.15;
+    text-align: center;
+    overflow-wrap: anywhere;
+  }
+  :root[data-design="forest"] .dock .dock__item .ti { font-size: 22px; }
+  :root[data-design="forest"] .app:has(.result-screen) .dock.dock--sub { display: grid; }
+  :root[data-design="forest"] .app:has(.dock:not(.dock--sub)),
+  :root[data-design="forest"] .app:has(.dock:not(.dock--sub)) + .site-footer,
+  :root[data-design="forest"] .app:has(.result-screen):has(.dock),
+  :root[data-design="forest"] .app:has(.result-screen):has(.dock) + .site-footer { padding-bottom: 92px; }
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .dock .dock__item { color: var(--ink); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .dock .dock__item.is-active { background: var(--brand); color: var(--on-accent); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .dock .dock__item:not(.is-active):hover { background: var(--moss); }
+/* On the result screen no section is drawn as the page you are on (F2.5). The
+   strip still says aria-current="true" — the result lives inside the Chronik,
+   which is true — it is only not painted as current. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .app:has(.result-screen) .dock .dock__item.is-active {
+  background: transparent;
+  color: var(--ink);
+}
+
+/* ---- Der Wegweiser (Forest-Kopf's lower band, F1.7, F3.2): the round's
+   sections in a band under the Kopf on every round screen — Start · Regal ·
+   Chronik · Pokale and, at the far end, Einstellungen; the current one in ink
+   over a 3px Laubgrün line, the others in soft ink. It is the dock's in-flow
+   strip from 860 (the four sections) and the rail from 1280 (all five;
+   round-rail.js builds it lean, with the Regal and Chronik counts). It carries
+   no button (cross-design rule of 2026-09-24). The band runs edge to edge: a
+   100vmax shadow in the band tone, clipped to the band's own height. */
+@media (min-width: 860px) {
+  :root[data-design="forest"] .dock {
+    width: auto;
+    min-height: 48px;
+    margin: -24px 0 24px;
+    padding: 0;
+    gap: 4px;
+    border: 0;
+    border-radius: 0;
+    align-items: stretch;
+  }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .dock {
+    background: var(--band);
+    border-bottom: 1px solid var(--line);
+    box-shadow: 0 0 0 100vmax var(--band);
+    clip-path: inset(0 -100vmax);
+  }
+  :root[data-design="forest"] .dock .dock__item {
+    min-height: 48px;
+    padding: 0 14px;
+    border-radius: 0;
+    font-size: 15px;
+    font-weight: 700;
+  }
+  :root[data-design="forest"] .dock .dock__item .ti { font-size: 17px; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .dock .dock__item { color: var(--ink-soft); background: transparent; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .dock .dock__item:not(.is-active):hover { background: transparent; color: var(--ink); box-shadow: inset 0 -3px 0 var(--control-edge); }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .dock .dock__item.is-active,
+  :root[data-design="forest"]:not([data-scheme="dark"]) .app:has(.result-screen) .dock .dock__item.is-active {
+    background: transparent;
+    color: var(--ink);
+    box-shadow: inset 0 -3px 0 var(--brand);
+  }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .dock .dock__item:focus-visible { outline-offset: -3px; }
+}
+@media (min-width: 1280px) {
+  :root[data-design="forest"] .app:has(.rail) { grid-template-columns: minmax(0, 1fr); column-gap: 0; }
+  :root[data-design="forest"] .app:has(.rail) > .rail {
+    grid-column: 1;
+    grid-row: 1;
+    position: static;
+    flex-direction: row;
+    align-items: stretch;
+    gap: 4px;
+    min-height: 48px;
+    margin: -24px 0 24px;
+  }
+  :root[data-design="forest"] .app:has(.rail) > *:not(.rail) { grid-column: 1; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .app:has(.rail) > .rail {
+    background: var(--band);
+    border-bottom: 1px solid var(--line);
+    box-shadow: 0 0 0 100vmax var(--band);
+    clip-path: inset(0 -100vmax);
+  }
+  :root[data-design="forest"] .rail .rail__group { flex-direction: row; gap: 4px; }
+  :root[data-design="forest"] .rail .rail__group:last-child { margin-left: auto; }
+  :root[data-design="forest"] .rail .rail__label { display: none; }
+  :root[data-design="forest"] .rail .rail__item {
+    width: auto;
+    min-height: 48px;
+    gap: 8px;
+    padding: 0 14px;
+    border-radius: 0;
+    font-size: 15px;
+    font-weight: 700;
+  }
+  :root[data-design="forest"] .rail .rail__item .ti { font-size: 17px; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .rail .rail__item { color: var(--ink-soft); background: transparent; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .rail .rail__item:not(.is-active):hover { background: transparent; color: var(--ink); box-shadow: inset 0 -3px 0 var(--control-edge); }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .rail .rail__item.is-active {
+    background: transparent;
+    color: var(--ink);
+    box-shadow: inset 0 -3px 0 var(--brand);
+  }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .rail .rail__item:focus-visible { outline-offset: -3px; }
+  /* The counts: a moss pill in ink (11.3:1); aria-hidden in the markup. */
+  :root[data-design="forest"] .rail__count {
+    padding: 1px 7px;
+    border-radius: var(--radius-pill);
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1.4;
+  }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .rail__count { background: var(--moss); color: var(--ink); }
+  /* The hub spreads over the shell like F3.2; the reading cap is for prose. */
+  :root[data-design="forest"] .app > .forest-hub { max-width: none; }
+}
+
+/* ---- The page margin (F1.1): 16px on a phone, 40px from 860 — every Forest
+   screen, so the slices that follow inherit it. */
+:root[data-design="forest"] .app { padding-inline: 16px; }
+@media (min-width: 860px) {
+  :root[data-design="forest"] .app { padding-inline: 40px; }
+}
+
+/* ---- The hub frame (F2.1 phone, F3.2 desktop). One column on a phone in the
+   DOM's own order; from 860 the previews move beside the rest (F6: „Zwischen
+   768 und 1024 px trägt die Desktop-Ordnung mit zwei Hub-Spalten"); from 1280
+   the three columns 270 / free / 330, with the lists under the people. The
+   people sit in a row ABOVE a `1fr` row, so the columns beside them — which
+   span both — never stretch it (.claude/rules/hub-columns-share-row-lines.md). */
+:root[data-design="forest"] .forest-hub { display: flex; flex-direction: column; gap: var(--space-5); }
+:root[data-design="forest"] :is(.forest-hub__crew, .forest-hub__main, .forest-hub__aside) {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+:root[data-design="forest"] .forest-hub__main { gap: 22px; }
+:root[data-design="forest"] .forest-hub__aside:empty { display: none; }
+/* The head carries the round's Einstellungen at every width, so the hub's foot
+   button with the same link is retired under Forest — one link, one place. */
+:root[data-design="forest"] .app .forest-hub > .hub-actions { display: none; }
+@media (min-width: 860px) {
+  :root[data-design="forest"] .forest-hub {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 300px;
+    grid-template-rows: auto auto 1fr;
+    column-gap: 28px;
+    row-gap: var(--space-5);
+    align-items: start;
+  }
+  :root[data-design="forest"] .forest-hub__crew { grid-column: 1; grid-row: 1; }
+  :root[data-design="forest"] .forest-hub__main { grid-column: 1; grid-row: 2; }
+  :root[data-design="forest"] .forest-hub__aside { grid-column: 2; grid-row: 1 / span 3; }
+  :root[data-design="forest"] .forest-hub > .hub-offshelf { grid-column: 1; grid-row: 3; }
+}
+@media (min-width: 1280px) {
+  :root[data-design="forest"] .forest-hub {
+    grid-template-columns: 270px minmax(0, 1fr) 330px;
+    grid-template-rows: auto 1fr;
+  }
+  :root[data-design="forest"] .forest-hub__crew { grid-column: 1; grid-row: 1; }
+  :root[data-design="forest"] .forest-hub__main { grid-column: 2; grid-row: 1 / span 2; }
+  :root[data-design="forest"] .forest-hub__aside { grid-column: 3; grid-row: 1 / span 2; gap: 14px; }
+  :root[data-design="forest"] .forest-hub > .hub-offshelf { grid-column: 1; grid-row: 2; }
+}
+
+/* ---- The head (F3.2 left, F2.1 top): the ribbon marker beside the name, the
+   line under it, Einstellungen, then „Mitglieder · N" over the seats. The
+   ribbon is the marker as a bookmark (no text on it, rule T2); the name wraps
+   rather than running off a phone. */
+:root[data-design="forest"] .forest-hub .hero { margin: 0; }
+:root[data-design="forest"] .forest-head { position: relative; display: flex; align-items: flex-start; gap: 12px; }
+:root[data-design="forest"] .forest-ribbon {
+  flex: none;
+  width: 16px;
+  height: 44px;
+  background: var(--marker, var(--brand));
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 82%, 0 100%);
+}
+:root[data-design="forest"] .forest-head__text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+:root[data-design="forest"] .forest-hub .hero h1 {
+  font-size: 30px;
+  font-weight: 400;
+  line-height: var(--leading-display);
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+:root[data-design="forest"] .forest-head__marker { font-size: 14px; font-weight: 700; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-head__marker { color: var(--ink-soft); }
+:root[data-design="forest"] .forest-head__settings {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: 6px;
+  min-height: var(--target-foot);
+  font-size: 14px;
+  font-weight: 800;
+  text-decoration: none;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-head__settings { color: var(--brand); }
+/* On a phone the way to Einstellungen is a moss disc at the head's top right
+   (F2.1); the word stays in the accessible name, out of sight. */
+@media (max-width: 859px) {
+  :root[data-design="forest"] .forest-head { padding-right: 56px; }
+  :root[data-design="forest"] .forest-hub .hero h1 { font-size: 27px; }
+  :root[data-design="forest"] .forest-ribbon { width: 14px; height: 40px; }
+  :root[data-design="forest"] .forest-head__settings {
+    position: absolute;
+    top: 0;
+    right: 0;
+    justify-content: center;
+    width: var(--target-key);
+    height: var(--target-key);
+    border-radius: 50%;
+    font-size: 20px;
+  }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .forest-head__settings { background: var(--moss); color: var(--ink); }
+  :root[data-design="forest"] .forest-head__settings span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+/* The two counts live in the Wegweiser and in the previews instead. */
+:root[data-design="forest"] .forest-hub .hero__chips { display: none; }
+
+:root[data-design="forest"] .forest-members { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+:root[data-design="forest"] :is(.forest-members__label, .forest-quick__label),
+:root[data-design="forest"] .forest-hub .hub-offshelf .hub-offshelf__title {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) :is(.forest-members__label, .forest-quick__label),
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-hub .hub-offshelf .hub-offshelf__title { color: var(--brand); }
+/* The seats: a row with the caption under each ring on a phone (F2.1), a list
+   with the caption beside it from 1280 (F3.2). forest-hub.js moves the colour
+   and the initials into `.seat__ring`, so the link only lays out the ring and
+   its caption and stays the one target. */
+:root[data-design="forest"] .forest-members .hero__members { margin: 0; gap: 14px 4px; }
+:root[data-design="forest"] .forest-members .hero__members > .avatar {
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 4px;
+  width: 62px;
+  height: auto;
+  min-height: var(--target-key);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-md);
+  font-family: var(--font);
+  text-decoration: none;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-members .hero__members > .avatar {
+  background: none;
+  box-shadow: none;
+  color: var(--ink);
+}
+:root[data-design="forest"] .forest-members .seat__ring {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 48px;
+  height: 48px;
+  box-sizing: border-box;
+  border-radius: 50%;
+  font-size: 15px;
+  overflow: hidden;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-members .seat__ring {
+  border-width: 5px;
+  box-shadow: inset 0 0 0 999px var(--surface), var(--shadow-seat);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-members .avatar--add .seat__ring {
+  border-width: 2px;
+  box-shadow: none;
+}
+:root[data-design="forest"] .forest-members .avatar--add .seat__ring { font-size: 20px; }
+:root[data-design="forest"] .forest-members .seat__text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 100%;
+  line-height: 1.15;
+  text-align: center;
+}
+:root[data-design="forest"] .forest-members .seat__name { font-size: 15px; font-weight: 800; overflow-wrap: anywhere; }
+:root[data-design="forest"] .forest-members .seat__wins { font-size: 13px; font-weight: 700; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-members .seat__wins { color: var(--ink-soft); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-members .avatar--add .seat__name { color: var(--brand); }
+@media (min-width: 1280px) {
+  :root[data-design="forest"] .forest-members .hero__members { flex-direction: column; flex-wrap: nowrap; gap: 4px; }
+  :root[data-design="forest"] .forest-members .hero__members > .avatar {
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    width: auto;
+    min-height: 52px;
+  }
+  :root[data-design="forest"] .forest-members .seat__text { align-items: flex-start; text-align: left; }
+  :root[data-design="forest"] .forest-members .seat__name { font-size: 17px; }
+}
+
+/* „Nicht im Regal" under the people (F3.2): its label in the kicker style, the
+   rows as plain links on a hairline above. Below 1280 it is the page's last
+   block, where it keeps the app's rows. */
+@media (min-width: 1280px) {
+  :root[data-design="forest"] .forest-hub > .hub-offshelf { margin-top: 0; padding-top: var(--space-4); }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .forest-hub > .hub-offshelf { border-top: 1px solid var(--line); }
+  :root[data-design="forest"] .forest-hub .hub-offshelf .ds-list { gap: 2px; background: none; border: 0; box-shadow: none; }
+  :root[data-design="forest"] .forest-hub .hub-offshelf .ds-row {
+    min-height: 36px;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    font-size: 15px;
+    font-weight: 800;
+  }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .forest-hub .hub-offshelf .ds-row { background: none; box-shadow: none; }
+  :root[data-design="forest"] .forest-hub .hub-offshelf .ds-row__meta { display: none; }
+}
+
+/* ---- The stump (F1 „Baumstumpf", F2.1, F3.2): bark, rings and the one action
+   as its green heart, with the quick-start row centred under it. The rings are
+   the wrapper's own background and carry nothing; the button keeps its name,
+   its handler and its disabled reason. Its glyph stands over the label. */
+:root[data-design="forest"] .forest-stump {
+  display: grid;
+  place-items: center;
+  align-self: center;
+  width: 260px;
+  height: 260px;
+  box-sizing: border-box;
+  border-radius: 50%;
+  border: 16px solid transparent;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-stump {
+  border-color: var(--bark);
+  background: repeating-radial-gradient(circle at 48% 52%, var(--wood) 0 7px, var(--wood-ring) 7px 9px);
+  box-shadow: 0 0 0 6px var(--bark-light), var(--shadow-stump), inset 0 0 0 3px var(--wood-edge);
+}
+:root[data-design="forest"] .forest-hub .btn.hub-cta.forest-stump__core {
+  flex-direction: column;
+  gap: 4px;
+  width: 166px;
+  height: 166px;
+  margin: 0;
+  padding: 12px;
+  border-radius: 50%;
+  font-size: 21px;
+  line-height: 1.05;
+  text-align: center;
+  --press-mb: 0px;
+}
+:root[data-design="forest"] .forest-hub .forest-stump__core .ti { font-size: 40px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-hub .btn.forest-stump__core:not(:disabled) {
+  box-shadow: var(--shadow-core);
+}
+:root[data-design="forest"] .forest-hub .forest-stump__core .hub-cta__reason { font-size: 13px; line-height: 1.2; }
+@media (max-width: 859px) {
+  :root[data-design="forest"] .forest-stump { width: 244px; height: 244px; border-width: 15px; }
+  :root[data-design="forest"] .forest-hub .btn.hub-cta.forest-stump__core { width: 152px; height: 152px; font-size: 19px; }
+  :root[data-design="forest"] .forest-hub .forest-stump__core .ti { font-size: 36px; }
+}
+/* The quick-start row: „Schnellstart" in the kicker style, then up to three
+   chips, centred and wrapping as one line of text would — so a Finnish label
+   moves to the next line whole rather than being cut (F1.4). */
+:root[data-design="forest"] .forest-hub .hub-presets {
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin: -6px 0 0;
+}
+:root[data-design="forest"] .forest-hub .hub-preset { max-width: 100%; white-space: normal; }
+
+/* ---- „Zuletzt gespielt" and „Wie wär's mit", side by side under the stump
+   from 1280 (F3.2), stacked below it (F2.1). Cards as paper in the light: the
+   card tone, 18px, F1's first shadow, no border. */
+:root[data-design="forest"] .forest-pair { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; align-items: start; }
+@media (min-width: 1280px) {
+  :root[data-design="forest"] .forest-pair { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+:root[data-design="forest"] .forest-hub :is(.hub-card, .forest-last) {
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-hub :is(.hub-card, .forest-last) {
+  background: var(--surface);
+  border: 1px solid transparent;
+  box-shadow: var(--shadow-1);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-hub .hub-card--link:hover,
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-hub .forest-last:hover { border-color: var(--control-edge); }
+/* Card titles in Young Serif at 19px — the one size F1 allows it this small.
+   (0,6,0), and later in the file, so it outranks the reset list above that
+   hands every smaller display-face title back to Alegreya Sans. */
+:root[data-design="forest"] .app .forest-hub .hub-card .hub-card__title {
+  margin: 0 0 8px;
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 400;
+  line-height: var(--leading-title);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-hub .hub-card__title .ti { color: var(--ink-soft); font-size: 17px; }
+/* The previews' title is the section's own name; their icon would only repeat
+   the Wegweiser's (F3.2 draws none). */
+:root[data-design="forest"] .forest-hub .hub-preview .hub-card__title .ti { display: none; }
+:root[data-design="forest"] .forest-hub .hub-preview__sub { font-size: 14px; font-weight: 700; }
+:root[data-design="forest"] .forest-hub .hub-preview__open { align-self: flex-end; font-size: 14px; font-weight: 800; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-hub .hub-preview__open { color: var(--brand); }
+
+/* The last session: kicker and date, the cover beside the game in the display
+   face, who won in the gold ink with the crown, the score, „Ergebnis ansehen". */
+:root[data-design="forest"] .forest-last {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  text-decoration: none;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-last { color: var(--ink); }
+:root[data-design="forest"] .forest-last__kicker,
+:root[data-design="forest"] .forest-hub .hub-row--kicker {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-last__kicker { color: var(--brand); }
+:root[data-design="forest"] .forest-last__row { display: flex; align-items: center; gap: 14px; min-width: 0; }
+:root[data-design="forest"] .forest-last__cover {
+  position: relative;
+  flex: none;
+  width: 104px;
+  height: 78px;
+  overflow: hidden;
+  border-radius: 8px 3px 8px 3px;
+  background-size: cover;
+  background-position: center;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-last__cover { background-color: var(--hatch); box-shadow: var(--shadow-cover); }
+:root[data-design="forest"] .forest-last__text { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; min-width: 0; }
+:root[data-design="forest"] .forest-last__title {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 400;
+  line-height: var(--leading-display);
+  overflow-wrap: anywhere;
+}
+:root[data-design="forest"] .forest-last__result { display: inline-flex; align-items: center; gap: 5px; font-size: 14px; font-weight: 700; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-last__result { color: var(--ink-soft); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-last__result--won { color: var(--gold-deep); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-last__result--won .ti { color: var(--gold); }
+:root[data-design="forest"] .forest-last .score-pill { position: static; margin-top: 2px; font-size: 16px; padding: 3px 10px; }
+:root[data-design="forest"] .forest-last__open { display: inline-flex; align-items: center; gap: 4px; font-size: 14px; font-weight: 800; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-last__open { color: var(--brand); }
+@media (max-width: 380px) {
+  :root[data-design="forest"] .forest-last__cover { width: 76px; height: 60px; }
+}
+
+/* „Wie wär's mit": rows on hairlines, each led by a small leaf (F3.2). */
+:root[data-design="forest"] .forest-hub .hub-row { min-height: 48px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-hub .hub-row + .hub-row { border-top-color: var(--line); }
+:root[data-design="forest"] .forest-hub .hub-row__title { font-weight: 800; font-size: 15px; }
+:root[data-design="forest"] .forest-hub .hub-row__sub { font-size: 13px; font-weight: 700; }
+
+/* ---- The previews and the side cards (F3.2 right, F2.1 lower half). */
+:root[data-design="forest"] .forest-hub .hub-preview__covers { align-items: flex-end; gap: 6px; height: 52px; overflow: hidden; }
+:root[data-design="forest"] .forest-hub .hub-preview__cover {
+  width: 44px;
+  height: 44px;
+  aspect-ratio: auto;
+  border: 0;
+  border-radius: 5px 2px 5px 2px;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-hub .hub-preview__cover { background-color: var(--hatch); box-shadow: var(--shadow-spine); }
+/* Uneven spines in the light trough: every other cover a little taller. */
+:root[data-design="forest"] .forest-hub .hub-preview__cover:nth-child(3n + 2) { height: 52px; width: 36px; }
+:root[data-design="forest"] .forest-hub .hub-preview__cover:nth-child(3n) { height: 38px; width: 48px; }
+
+/* Pokale as a grove (F3.2, E7): a tree per person — the ring on top, a crown of
+   leaves, a trunk whose height is the person's share of the wins
+   (`--share`, hub-previews.js) — and the count under it. The place and the name
+   stay in the DOM for a screen reader; the ring and the trunk say it here. */
+:root[data-design="forest"] .forest-hub .hub-preview:has(.hub-preview__bar) .hub-card__body {
+  flex-flow: row wrap;
+  justify-content: space-around;
+  align-items: flex-end;
+  gap: 8px;
+}
+:root[data-design="forest"] .forest-hub .hub-preview:has(.hub-preview__bar) :is(.hub-preview__sub, .hub-preview__last, .hub-row--badges) { flex: 0 0 100%; order: 1; }
+:root[data-design="forest"] .forest-hub .hub-preview__rank {
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  padding: 0;
+}
+:root[data-design="forest"] .forest-hub .hub-preview:has(.hub-preview__bar) .hub-preview__place,
+:root[data-design="forest"] .forest-hub .hub-preview:has(.hub-preview__bar) .hub-preview__name {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+:root[data-design="forest"] .forest-hub .hub-preview__rank .hub-preview__avatar {
+  position: relative;
+  z-index: 1;
+  width: 30px;
+  height: 30px;
+  font-size: 12px;
+}
+:root[data-design="forest"] .forest-hub .hub-preview__bar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 56px;
+  margin-top: -8px;
+}
+:root[data-design="forest"] .forest-hub .hub-preview__bar::before {
+  content: '';
+  width: 36px;
+  height: 28px;
+  border-radius: 50% 50% 45% 45%;
+}
+:root[data-design="forest"] .forest-hub .hub-preview__bar::after {
+  content: '';
+  /* `--share` is a percentage (hub-previews.js). A HEIGHT percentage would
+     resolve against the column's indefinite height and come out as nothing; a
+     PADDING percentage resolves against the bar's definite 56px width, so the
+     trunk grows from 8px to ~53px with the wins. */
+  width: 6px;
+  height: 0;
+  padding-top: calc(8px + var(--share, 0%) * 0.8);
+  margin-top: -3px;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-hub .hub-preview__bar::before { background: var(--leaf-2); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-hub .hub-preview__bar::after { background: var(--bark); }
+:root[data-design="forest"] .forest-hub .hub-preview__rank .hub-preview__score { margin-top: 3px; font-size: 13px; font-weight: 800; }
+
+/* The Rundenpuls: Laubgrün bars, the facts in soft ink. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-hub .pulse-bar__fill { background: var(--brand); }
+
+/* On a phone the Pokale and the Chronik share a row (F2.1); the Regal, the
+   pulse and the Kümmerliste take the full width. Each is found by the section
+   its one link opens, so the markup stays every design's. */
+@media (max-width: 859px) {
+  :root[data-design="forest"] .forest-hub__aside { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; align-items: stretch; }
+  :root[data-design="forest"] .forest-hub__aside > * { grid-column: 1 / -1; }
+  /* A Pokale preview implies a played session, so the Chronik preview always
+     follows it; a Chronik alone keeps the full width. (`:has()` cannot nest,
+     so the pair is matched from the Pokale's side and by adjacency.) */
+  :root[data-design="forest"] .forest-hub__aside > :has(.hub-card__go[href$="/pokale"]),
+  :root[data-design="forest"] .forest-hub__aside > :has(.hub-card__go[href$="/pokale"]) + :has(.hub-card__go[href$="/chronik"]) { grid-column: auto; }
+}
+
+/* ---- The lobby (F3.1 desktop, F6.1 phone). The greeting in Young Serif
+   large, the question under it, and — from 1100 — the „Leuchtzeichen" beside
+   the greeting rather than above the clearings. */
+:root[data-design="forest"] .app:has(.lobby-list) > .lobby-head {
+  padding: 0;
+  margin: 0 0 var(--space-5);
+  background: none;
+  border-radius: 0;
+}
+:root[data-design="forest"] .lobby-head h1 {
+  font-size: 34px;
+  font-weight: 400;
+  line-height: var(--leading-display);
+}
+:root[data-design="forest"] .lobby-head__sub { font-size: 18px; font-weight: 400; }
+@media (min-width: 1100px) {
+  :root[data-design="forest"] .lobby-head h1 { font-size: 46px; }
+  :root[data-design="forest"] .app:has(.lobby-list):has(.home-resume) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 476px);
+    column-gap: var(--space-6);
+    align-content: start;
+    align-items: center;
+  }
+  /* `margin-inline: 0` because the home column centres its blocks with auto
+     margins, which inside a grid cell would shrink each one to its content. */
+  :root[data-design="forest"] .app:has(.lobby-list):has(.home-resume) > * { grid-column: 1 / -1; margin-inline: 0; }
+  :root[data-design="forest"] .app:has(.lobby-list):has(.home-resume) > .lobby-head { grid-column: 1; }
+  :root[data-design="forest"] .app:has(.lobby-list):has(.home-resume) > .home-resume { grid-column: 2; margin-bottom: var(--space-5); }
+}
+/* The resume zone's heading is the notice's own kicker under Forest. */
+:root[data-design="forest"] .home-resume:has(.forest-notice) .home-resume__head {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+:root[data-design="forest"] .home-resume:has(.forest-notice) .home-resume__list { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+
+/* Das Leuchtzeichen: the card, a dusk disc with the play glyph in the firefly,
+   the kicker in Laubgrün, the state and the round, the step. */
+:root[data-design="forest"] .forest-notice {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  border-radius: var(--radius-lg);
+  text-decoration: none;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-notice { background: var(--surface); color: var(--ink); box-shadow: var(--shadow-1); }
+:root[data-design="forest"] .forest-notice__disc {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  font-size: 20px;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-notice__disc { background: var(--dusk); color: var(--firefly); }
+:root[data-design="forest"] .forest-notice__text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+:root[data-design="forest"] .forest-notice__kicker { font-size: 12px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-notice__kicker { color: var(--brand); }
+:root[data-design="forest"] .forest-notice__title { font-size: 18px; font-weight: 800; overflow-wrap: anywhere; }
+:root[data-design="forest"] .forest-notice__meta { font-size: 14px; font-weight: 700; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-notice__meta { color: var(--ink-soft); }
+:root[data-design="forest"] .forest-notice__go { display: inline-flex; align-items: center; gap: 4px; font-size: 14px; font-weight: 800; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-notice__go { color: var(--brand); }
+
+/* The clearings: four across from 1280 (three rounds and the new one), two
+   from 860, one on a phone. */
+:root[data-design="forest"] .lobby-list { gap: var(--space-5); }
+@media (min-width: 860px) {
+  :root[data-design="forest"] .lobby-list { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+}
+@media (min-width: 1280px) {
+  :root[data-design="forest"] .lobby-list { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+:root[data-design="forest"] .round-card.round-card--forest {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 22px;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .round-card.round-card--forest {
+  background: var(--surface);
+  border: 1px solid transparent;
+  box-shadow: var(--shadow-1);
+  color: var(--ink);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .round-card.round-card--forest:hover {
+  border-color: var(--control-edge);
+  box-shadow: var(--shadow-2);
+  transform: translateY(-2px);
+}
+/* The clearing: a pale glade, the ribbon hanging from its top edge, the people
+   in the light, and a band of trees along its foot — drawn by gradients, no
+   text and no meaning beyond the picture. */
+:root[data-design="forest"] .round-card__clearing {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 250px;
+  padding: 40px 24px 92px;
+  box-sizing: border-box;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .round-card__clearing {
+  background:
+    radial-gradient(60% 55% at 50% 40%, var(--raised), transparent 75%),
+    linear-gradient(var(--sunken-soft), var(--moss));
+}
+:root[data-design="forest"] .round-card__ribbon {
+  position: absolute;
+  top: 0;
+  left: 22px;
+  width: 20px;
+  height: 50px;
+  background: var(--marker, var(--brand));
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 82%, 0 100%);
+}
+:root[data-design="forest"] .round-card__trees {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 64px;
+  background-repeat: repeat-x;
+  background-position: 6px 100%, 26px 100%, 6px 100%, 26px 100%;
+  background-size: 40px 64px;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .round-card__trees {
+  background-image:
+    linear-gradient(to right, transparent 25px, var(--bark) 25px 31px, transparent 31px),
+    linear-gradient(to right, transparent 17px, var(--bark) 17px 23px, transparent 23px),
+    linear-gradient(to right, transparent 21px, var(--bark) 21px 27px, transparent 27px),
+    radial-gradient(18px 26px at 28px 30px, var(--leaf-3) 96%, transparent 100%),
+    radial-gradient(13px 18px at 20px 40px, var(--leaf-2) 96%, transparent 100%),
+    radial-gradient(15px 21px at 24px 37px, var(--leaf-4) 96%, transparent 100%);
+  background-size: 92px 14px, 52px 10px, 70px 12px, 92px 64px, 52px 64px, 70px 64px;
+  background-position: 0 100%, 30px 100%, 14px 100%, 0 100%, 30px 100%, 14px 100%;
+}
+:root[data-design="forest"] .round-card__live {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .round-card__live { background: var(--dusk); color: var(--firefly); }
+:root[data-design="forest"] .round-card--forest .avatar-stack {
+  position: relative;
+  z-index: 1;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  max-width: 230px;
+}
+:root[data-design="forest"] .round-card--forest .avatar-stack .avatar { width: 44px; height: 44px; margin-left: 0; font-size: 13px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .round-card--forest .avatar-stack .avatar:not(.avatar-stack__more) {
+  box-shadow: inset 0 0 0 999px var(--surface), var(--shadow-seat);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .round-card--forest .avatar-stack__more { background: var(--surface); color: var(--ink); border-color: var(--control-edge); }
+:root[data-design="forest"] .round-card--forest .round-card__body { gap: 4px; padding: 16px 20px 18px; }
+:root[data-design="forest"] .lobby-list .round-card.round-card--forest .round-card__name {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 400;
+  line-height: var(--leading-title);
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+:root[data-design="forest"] .round-card--forest .round-card__stats { font-size: 14px; font-weight: 700; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .round-card--forest .round-card__stats { color: var(--ink-soft); }
+:root[data-design="forest"] .round-card--forest .round-card__last-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 12px;
+  padding-top: 12px;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .round-card--forest .round-card__last-wrap { border-top: 1px solid var(--line); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .round-card--forest .round-card__last { color: var(--ink); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .round-card--forest .round-card__last .ti { color: var(--gold); }
+@media (max-width: 859px) {
+  :root[data-design="forest"] .round-card__clearing { min-height: 120px; padding: 26px 20px 64px; }
+  :root[data-design="forest"] .round-card__ribbon { left: 16px; width: 18px; height: 40px; }
+  :root[data-design="forest"] .round-card--forest .avatar-stack .avatar { width: 36px; height: 36px; font-size: 12px; }
+  :root[data-design="forest"] .round-card--forest .avatar-stack { max-width: none; }
+  :root[data-design="forest"] .lobby-list .round-card.round-card--forest .round-card__name { font-size: 22px; }
+}
+
+/* „Neue Runde gründen" as the empty clearing: a dashed edge, the „+" and the
+   words in Laubgrün. */
+:root[data-design="forest"] .lobby-list .round-card.round-card--new {
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+  min-height: 420px;
+  border-radius: 22px;
+  font-size: 17px;
+  font-weight: 800;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .lobby-list .round-card.round-card--new {
+  background: transparent;
+  border: 2px dashed var(--control-edge);
+  color: var(--brand);
+}
+:root[data-design="forest"] .lobby-list .round-card.round-card--new .ti { font-size: 36px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .lobby-list .round-card.round-card--new:hover { background: var(--band); }
+@media (max-width: 859px) {
+  :root[data-design="forest"] .lobby-list .round-card.round-card--new { min-height: 72px; flex-direction: row; }
+  :root[data-design="forest"] .lobby-list .round-card.round-card--new .ti { font-size: 24px; }
+}
+
+/* ===== #1471 — the empty, young and long-language states ===================
+   Sheet Forest-F7-Leerzustaende.dc.html: F7.1 (lobby, no round), F7.2 (one
+   round, a 30-character name), F7.3 (no game), F7.4 (games, no session), F7.5
+   (after the first session), F7.6 (the demo round), F7.10 (Finnish, phone).
+   „An empty clearing is light and calm": a title, one line of soft ink, at
+   most one action — no grey block. Soft ink only ever lands on the page or the
+   card here; --line and --hatch carry no text, and neither does a motif. */
+
+/* ---- The empty stump (F7.3): only its rings, a little larger than the stump
+   with its green heart, since nothing sits in it. */
+:root[data-design="forest"] .forest-stump--empty { width: 252px; height: 252px; }
+@media (max-width: 859px) {
+  :root[data-design="forest"] .forest-stump--empty { width: 196px; height: 196px; border-width: 13px; }
+}
+
+/* ---- The empty table under it (F7.3): no card, no disc — the stump is the
+   picture. The title in the display face, the sentence in soft ink, the two
+   ways to fill the shelf side by side, „Spiel hinzufügen" the primary. */
+:root[data-design="forest"] .forest-hub .empty--table {
+  margin: -6px auto 0;
+  max-width: 540px;
+  padding: 0;
+  text-align: center;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-hub .empty--table {
+  background: none;
+  border: 0;
+  box-shadow: none;
+}
+:root[data-design="forest"] .forest-hub .empty--table .empty__icon { display: none; }
+:root[data-design="forest"] .forest-hub .empty--table .empty__title {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 400;
+  line-height: var(--leading-title);
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+:root[data-design="forest"] .forest-hub .empty--table .empty__text { margin-top: 8px; font-size: 16px; line-height: var(--leading-text); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-hub .empty--table .empty__title { color: var(--ink); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-hub .empty--table .empty__text { color: var(--ink-soft); }
+:root[data-design="forest"] .forest-hub .empty--table .empty__actions {
+  flex-flow: row wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 18px;
+}
+:root[data-design="forest"] .forest-hub .empty--table .empty__actions .btn { max-width: 100%; white-space: normal; }
+
+/* ---- The young line under the stump (F7.4, F7.5): what is waiting, in the
+   display face, and the sentence that says when the numbers come. */
+:root[data-design="forest"] .forest-young {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  max-width: 540px;
+  margin: -4px auto 0;
+  text-align: center;
+}
+:root[data-design="forest"] .forest-young p { margin: 0; }
+:root[data-design="forest"] .forest-young__title {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 400;
+  line-height: var(--leading-title);
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+:root[data-design="forest"] .forest-young__text { font-size: 16px; line-height: var(--leading-text); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-young__title { color: var(--ink); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-young__text { color: var(--ink-soft); }
+
+/* ---- A locked preview (F7.3, F7.4): the card of its neighbours, the title in
+   the display face (a link in ink when it leads to the sub-page), the state in
+   ink, the sentence in soft ink. */
+:root[data-design="forest"] .app .forest-hub .forest-locked .forest-locked__title {
+  margin: 0 0 6px;
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 400;
+  line-height: var(--leading-title);
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+:root[data-design="forest"] .forest-locked__title a { text-decoration: none; }
+:root[data-design="forest"] .forest-locked__title a:hover { text-decoration: underline; }
+:root[data-design="forest"] .forest-locked p { margin: 0; overflow-wrap: break-word; }
+:root[data-design="forest"] .forest-locked__state { font-size: 14px; font-weight: 800; }
+:root[data-design="forest"] .forest-locked__text { margin-top: 2px; font-size: 14px; line-height: var(--leading-text); }
+:root[data-design="forest"]:not([data-scheme="dark"]) :is(.forest-locked__title, .forest-locked__title a, .forest-locked__state) { color: var(--ink); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-locked__text { color: var(--ink-soft); }
+/* On a phone the locked Pokale and Chronik share a row, like the live pair
+   (#1466's rule matches the live ones by their link, which these title links
+   also carry — so here they are matched by the block itself). */
+@media (max-width: 859px) {
+  :root[data-design="forest"] .forest-hub__aside > .forest-locked:has(a[href$="/pokale"]),
+  :root[data-design="forest"] .forest-hub__aside > .forest-locked:has(a[href$="/pokale"]) + .forest-locked:has(a[href$="/chronik"]) { grid-column: auto; }
+}
+
+/* ---- The demo round (F7.6): „Gefällt dir das?" as a band over the hub — the
+   dusk with the light print, the sparkle in the firefly, „Eigene Runde
+   gründen" on the gold tint in ink — and the condensed list under the stump. */
+:root[data-design="forest"] .app > .hub-card--demo-invite {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 14px;
+  max-width: none; /* the band spans the hub, like .forest-hub (#1466) */
+  margin: 0 0 var(--space-5);
+  padding: 14px 18px;
+  border-radius: var(--radius-lg);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .app > .hub-card--demo-invite {
+  background: var(--dusk);
+  border: 0;
+  box-shadow: var(--shadow-1);
+  color: var(--on-dusk);
+}
+:root[data-design="forest"] .app > .hub-card--demo-invite .hub-card__title {
+  grid-column: 1 / 3;
+  grid-row: 1;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0;
+  font-family: var(--font);
+  font-size: 17px;
+  font-weight: 800;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .app > .hub-card--demo-invite .hub-card__title { color: var(--on-dusk); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .app > .hub-card--demo-invite .hub-card__title .ti { color: var(--firefly); }
+:root[data-design="forest"] .app > .hub-card--demo-invite .hub-card__body { display: contents; }
+:root[data-design="forest"] .app > .hub-card--demo-invite .hub-card__facts {
+  grid-column: 2;
+  grid-row: 2;
+  margin: 2px 0 0;
+  font-size: 14px;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .app > .hub-card--demo-invite .hub-card__facts { color: var(--dusk-soft); }
+:root[data-design="forest"] .app > .hub-card--demo-invite .hub-demo__cta {
+  grid-column: 3;
+  grid-row: 1 / 3;
+  margin: 0;
+  white-space: normal;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .app > .hub-card--demo-invite .btn.hub-demo__cta {
+  background: var(--gold-soft);
+  border-color: var(--gold-soft);
+  color: var(--ink);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .app > .hub-card--demo-invite .hub-demo__cta:focus-visible { outline-color: var(--ring-on-dusk); }
+@media (max-width: 859px) {
+  :root[data-design="forest"] .app > .hub-card--demo-invite { grid-template-columns: auto minmax(0, 1fr); row-gap: 4px; }
+  :root[data-design="forest"] .app > .hub-card--demo-invite .hub-demo__cta { grid-column: 1 / -1; grid-row: 3; margin-top: 10px; justify-self: stretch; }
+}
+
+:root[data-design="forest"] .forest-hub__main .hub-demo {
+  display: flex;
+  flex-direction: column;
+  padding: 14px 18px 6px;
+  border-radius: var(--radius-lg);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-hub__main .hub-demo { background: var(--surface); box-shadow: var(--shadow-1); }
+/* The list's name is its aria-label; printed as the kicker with an empty
+   alternative text, so a screen reader meets it once. */
+:root[data-design="forest"] .forest-hub__main .hub-demo::before {
+  content: attr(aria-label) / "";
+  padding-bottom: 10px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-hub__main .hub-demo::before { color: var(--brand); border-bottom: 1px solid var(--line); }
+:root[data-design="forest"] .forest-hub__main .hub-demo__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: var(--target-key);
+  padding: 6px 0;
+  text-decoration: none;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-hub__main .hub-demo__row { color: var(--ink); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-hub__main .hub-demo__row + .hub-demo__row { border-top: 1px solid var(--line); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-hub__main .hub-demo__row > .ti { color: var(--ink-soft); }
+:root[data-design="forest"] .forest-hub__main .hub-demo__main { display: flex; flex-flow: row wrap; column-gap: 10px; min-width: 0; flex: 1; }
+:root[data-design="forest"] .forest-hub__main .hub-demo__label { font-size: 16px; font-weight: 800; }
+:root[data-design="forest"] .forest-hub__main .hub-demo__hint { font-size: 15px; }
+:root[data-design="forest"] .forest-hub__main .hub-demo__value { font-size: 14px; font-weight: 800; text-align: right; }
+:root[data-design="forest"]:not([data-scheme="dark"]) :is(.forest-hub__main .hub-demo__hint, .forest-hub__main .hub-demo__value) { color: var(--ink-soft); }
+
+/* ---- The empty lobby (F7.1): one clearing in the middle of the page — five
+   trees, the greeting, the first-run sentence and the one action. */
+:root[data-design="forest"] .forest-first {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  padding: 72px 0 88px;
+  text-align: center;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-first {
+  background: radial-gradient(ellipse 50% 60% at 50% 50%, var(--band), transparent 70%);
+}
+:root[data-design="forest"] .forest-first .lobby-head {
+  margin: 0;
+  padding: 0;
+  max-width: 560px;
+  background: none;
+  border-radius: 0;
+}
+:root[data-design="forest"] .forest-first .lobby-head h1 { overflow-wrap: break-word; hyphens: auto; }
+:root[data-design="forest"] .forest-first .lobby-head__sub { margin-top: 10px; font-size: 18px; line-height: var(--leading-text); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-first .lobby-head__sub { color: var(--ink-soft); }
+:root[data-design="forest"] .forest-first__cta { max-width: 100%; padding-inline: 28px; white-space: normal; }
+/* Five trees of different sizes on one ground — crowns over trunks, all
+   gradients, so the picture costs no request and carries no text. */
+:root[data-design="forest"] .forest-first__trees {
+  width: 196px;
+  height: 66px;
+  background-repeat: no-repeat;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-first__trees {
+  background-image:
+    radial-gradient(13px 17px at 50% 50%, var(--leaf-3) 96%, transparent 100%),
+    radial-gradient(18px 25px at 50% 50%, var(--leaf-2) 96%, transparent 100%),
+    radial-gradient(22px 30px at 50% 50%, var(--leaf-4) 96%, transparent 100%),
+    radial-gradient(16px 22px at 50% 50%, var(--leaf-1) 96%, transparent 100%),
+    radial-gradient(12px 16px at 50% 50%, var(--leaf-4) 96%, transparent 100%),
+    linear-gradient(var(--bark), var(--bark)),
+    linear-gradient(var(--bark), var(--bark)),
+    linear-gradient(var(--bark), var(--bark)),
+    linear-gradient(var(--bark), var(--bark)),
+    linear-gradient(var(--bark), var(--bark));
+  background-size: 28px 36px, 38px 52px, 46px 60px, 34px 46px, 26px 34px, 6px 12px, 6px 12px, 6px 12px, 6px 12px, 6px 12px;
+  background-position: 0 22px, 32px 4px, 74px 0, 124px 12px, 168px 22px, 11px 100%, 48px 100%, 94px 100%, 138px 100%, 178px 100%;
+}
+@media (min-width: 1100px) {
+  :root[data-design="forest"] .forest-first .lobby-head h1 { font-size: 40px; }
+}
+@media (max-width: 859px) {
+  :root[data-design="forest"] .forest-first { padding: 48px 0 56px; }
+  :root[data-design="forest"] .forest-first .lobby-head h1 { font-size: 30px; }
+  :root[data-design="forest"] .forest-first__cta { align-self: stretch; }
+}
+
+/* ===== #1473 — tier 2a: Chronik, Pokale, Mitglied, Nicht im Regal, Könnte euch gefallen =====
+   Sheet F13 (docs/design/forest/Forest-F13-Tier2a.dc.html): the Chronik as a
+   PATH through the sessions with the recap card beside it, the Pokale as a
+   GROVE (operator decision E7), the member page as the Tischkarte with five
+   figures and a column beside it, the three off-shelf lists as tabs, and the
+   recommendations as cards. The markup Forest composes on its own is
+   forest-tier2a.js (`.session-card--path`, `.forest-recap-entry`,
+   `.forest-grove`, `.forest-member`, `.forest-recent`); the rest restyles
+   markup every design shares. Colour rules are gated like the rest of this
+   file — test/forest-tier2a.test.js sweeps the section for the gate and for a
+   spelled colour — geometry and type are not. Klassisch's DOM is unchanged,
+   pinned by a golden snapshot. The Abzeichen rows on these screens are #1477's.
+
+   NOT drawn from the sheet: the recap's „Sessions je Woche" bars and its
+   „Meistgespielt/Siegesserie" lines (the recap shows its own cards, the data
+   the app already computes), and the period's name as a display line over the
+   tiles (the picker carries it). */
+
+/* ---- The page heads (F13.1–F13.8): Young Serif, the span beside it. */
+:root[data-design="forest"] .app > .section:is(:has(> .timeline), :has(.pokale-split, .pokale-young)) > .section-head {
+  justify-content: flex-start;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin-bottom: var(--space-4);
+}
+:root[data-design="forest"] .app > .section:is(:has(> .timeline), :has(.pokale-split, .pokale-young)) > .section-head h1,
+:root[data-design="forest"] .app > .page-head:has(+ .offshelf-seg, .forest-bgg) h1,
+:root[data-design="forest"] .app > .offshelf-seg + .page-head h1 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 30px;
+  line-height: var(--leading-display);
+  letter-spacing: 0;
+  text-transform: none;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .app > .section:is(:has(> .timeline), :has(.pokale-split, .pokale-young)) > .section-head h1 { color: var(--ink); }
+:root[data-design="forest"] .app > .section:is(:has(> .timeline), :has(.pokale-split, .pokale-young)) > .section-head .chronik__count {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 800;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .app > .section:is(:has(> .timeline), :has(.pokale-split, .pokale-young)) > .section-head .chronik__count { color: var(--ink-soft); }
+@media (min-width: 860px) {
+  :root[data-design="forest"] .app > .section:is(:has(> .timeline), :has(.pokale-split, .pokale-young)) > .section-head h1,
+  :root[data-design="forest"] .app > .page-head:has(+ .offshelf-seg, .forest-bgg) h1,
+  :root[data-design="forest"] .app > .offshelf-seg + .page-head h1 { font-size: 38px; }
+  :root[data-design="forest"] .app > .section:is(:has(> .timeline), :has(.pokale-split, .pokale-young)) > .section-head .chronik__count { font-size: 15px; }
+}
+
+/* ---- The Chronik's phone entry to the recap (F13.2): the dusk card, the
+   kicker in the firefly, the period in Young Serif. From 1100px the recap
+   stands beside the path and the entry has nothing to take you to. */
+:root[data-design="forest"] .forest-recap-entry {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: var(--target-key);
+  margin: 0 0 var(--space-4);
+  padding: 14px 18px;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-recap-entry {
+  border: 0;
+  border-radius: var(--radius-lg);
+  background: var(--dusk);
+  color: var(--on-dusk);
+  box-shadow: var(--shadow-1);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-recap-entry:focus-visible { background: var(--dusk); outline-color: var(--ring-on-dusk); }
+:root[data-design="forest"] .forest-recap-entry__text { display: flex; flex: 1; flex-direction: column; gap: 2px; min-width: 0; }
+:root[data-design="forest"] .forest-recap-entry__kicker { font-size: 12px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-recap-entry__kicker { background: var(--dusk); color: var(--firefly); }
+:root[data-design="forest"] .forest-recap-entry__period { font-family: var(--font-display); font-size: 22px; line-height: var(--leading-title); overflow-wrap: anywhere; }
+:root[data-design="forest"] .forest-recap-entry__sub { font-size: 14px; font-weight: 700; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-recap-entry__sub { color: var(--dusk-soft); }
+:root[data-design="forest"] .forest-recap-entry > .ti { font-size: 20px; }
+@media (min-width: 1100px) {
+  :root[data-design="forest"] .forest-recap-entry { display: none; }
+}
+
+/* ---- The path (F13.1/F13.2). On a phone the steps are plain cards; from
+   860px a line runs down their left edge with a leaf at every session — the
+   timeline's own rail and dots, redrawn. The month heads stay as quiet
+   waymarks (every design keeps them). */
+:root[data-design="forest"] .app > .section > .timeline { gap: var(--space-3); padding-left: 0; }
+:root[data-design="forest"] .app > .section > .timeline::before { display: none; }
+:root[data-design="forest"] .app > .section > .timeline .tl-dot { display: none; }
+:root[data-design="forest"] .app > .section > .timeline .tl-month { margin: var(--space-3) 0 0; font-size: 14px; font-weight: 800; letter-spacing: 0.04em; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .app > .section > .timeline .tl-month { color: var(--ink-soft); }
+:root[data-design="forest"] .app > .section > .timeline .tl-month:first-child { margin-top: 0; }
+@media (min-width: 860px) {
+  :root[data-design="forest"] .app > .section > .timeline { padding-left: 34px; }
+  :root[data-design="forest"] .app > .section > .timeline::before { display: block; left: 10px; width: 3px; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .app > .section > .timeline::before { background: var(--line); border-radius: 2px; }
+  :root[data-design="forest"] .app > .section > .timeline .tl-dot.tl-dot--session {
+    display: block;
+    left: -32px;
+    width: 22px;
+    height: 12px;
+    transform: translateY(-50%) rotate(-24deg);
+  }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .app > .section > .timeline .tl-dot.tl-dot--session {
+    border: 0;
+    border-radius: 100% 0;
+    background: var(--leaf-1);
+  }
+  /* A step's leaf sits on its card, not on the badge rows under it. */
+  :root[data-design="forest"] .app > .section > .timeline .tl-item:has(> .session-card--path) > .tl-dot { top: 36px; }
+}
+
+/* One step: [date | cover | game + who won | rings | score]. The phone drops
+   the date column and the rings (F13.2) — the date moves to the second line,
+   „4 dabei" stays in the text. */
+:root[data-design="forest"] .session-card.session-card--path {
+  display: grid;
+  grid-template-columns: 68px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 72px;
+  padding: var(--space-3) 14px;
+  box-sizing: border-box;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .session-card.session-card--path {
+  background: var(--surface);
+  border: 1px solid transparent;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+  color: var(--ink);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .session-card.session-card--path:hover { border-color: var(--control-edge); box-shadow: var(--shadow-2); }
+:root[data-design="forest"] .session-card--path .session-card__when {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+:root[data-design="forest"] .session-card--path .session-card__img { width: 68px; height: 46px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .session-card--path .session-card__img { border-radius: var(--radius-sm); }
+:root[data-design="forest"] .session-card--path .session-card__title {
+  display: block;
+  font-family: var(--font);
+  font-size: 16px;
+  font-weight: 800;
+  line-height: var(--leading-title);
+  overflow-wrap: anywhere;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .session-card--path .session-card__title { color: var(--ink); }
+:root[data-design="forest"] .session-card--path .session-card__who { margin-top: 3px; font-size: 14px; font-weight: 700; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .session-card--path .session-card__who { color: var(--ink-soft); }
+:root[data-design="forest"] .session-card--path .session-card__who .ti-crown { display: none; font-size: 15px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .session-card--path .session-card__won { color: var(--brand); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .session-card--path .session-card__cancelled { color: var(--danger); }
+:root[data-design="forest"] .session-card--path .session-card__faces { display: none; }
+:root[data-design="forest"] .session-card--path > .score-pill { position: static; justify-self: end; }
+:root[data-design="forest"] .session-card--path:not(:has(.score-pill)) { grid-template-columns: 68px minmax(0, 1fr); }
+@media (min-width: 860px) {
+  :root[data-design="forest"] .session-card.session-card--path {
+    grid-template-columns: 104px 80px minmax(0, 1fr) auto 56px;
+    gap: var(--space-4);
+    min-height: 84px;
+    padding: var(--space-3) 18px;
+  }
+  :root[data-design="forest"] .session-card--path:not(:has(.score-pill)) { grid-template-columns: 104px 80px minmax(0, 1fr) auto 56px; }
+  :root[data-design="forest"] .session-card--path .session-card__when {
+    position: static;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip-path: none;
+    white-space: normal;
+  }
+  :root[data-design="forest"] .session-card--path .session-card__date { font-size: 15px; font-weight: 800; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .session-card--path .session-card__date { color: var(--ink); }
+  :root[data-design="forest"] .session-card--path .session-card__no { font-size: 13px; font-weight: 700; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .session-card--path .session-card__no { color: var(--ink-soft); }
+  :root[data-design="forest"] .session-card--path .session-card__img { width: 80px; height: 60px; }
+  :root[data-design="forest"] .session-card.session-card--path .session-card__title.session-card__title { font-family: var(--font-display); font-size: 22px; font-weight: 400; }
+  :root[data-design="forest"] .session-card--path .session-card__day { display: none; }
+  :root[data-design="forest"] .session-card--path .session-card__who { display: flex; align-items: center; gap: 6px; }
+  :root[data-design="forest"] .session-card--path .session-card__who .ti-crown { display: inline; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .session-card--path .session-card__who .ti-crown { color: var(--brand); }
+  :root[data-design="forest"] .session-card--path .session-card__faces { display: flex; }
+  :root[data-design="forest"] .session-card--path .session-card__faces .avatar { width: 34px; height: 34px; margin-left: -6px; font-size: 12px; }
+  :root[data-design="forest"] .session-card--path .session-card__faces .avatar:first-child { margin-left: 0; }
+  :root[data-design="forest"] .session-card--path > .score-pill { grid-column: 5; }
+  /* A night with no game has no date column: its title IS the date. */
+  :root[data-design="forest"] .session-card--path .session-card__when:empty + .session-card__img { grid-column: 2; }
+}
+/* The tables of a split evening, set in under their parent. */
+:root[data-design="forest"] .app > .section > .timeline .tl-nest { display: flex; flex-direction: column; gap: var(--space-2); margin: var(--space-2) 0 0 var(--space-6); }
+
+/* The shelf changes between the steps stay quiet lines. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .app > .section > .timeline .tl-act { background: transparent; border-color: transparent; box-shadow: none; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .app > .section > .timeline .tl-run__toggle { border-radius: var(--radius-leaf-s); background: var(--moss); color: var(--ink); }
+
+/* ---- The recap card (F13.1): the Rückblick beside the path from 1100px,
+   after it on a phone. The kinds as a moss segmented control, the totals as
+   three tiles, the share as the primary button over the full width. */
+:root[data-design="forest"] .app > .precap { padding: 22px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .app > .precap {
+  border: 0;
+  border-radius: 22px;
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+}
+:root[data-design="forest"] .app > .precap .section-head h2 { font-family: var(--font-display); font-weight: 400; font-size: 26px; text-transform: none; letter-spacing: 0; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .app > .precap .section-head h2 { color: var(--ink); }
+:root[data-design="forest"] .app > .precap .recap__lead { font-size: 14px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .app > .precap .recap__lead { color: var(--ink-soft); }
+:root[data-design="forest"] .app > .precap .precap__head { flex-wrap: wrap; gap: var(--space-3); }
+:root[data-design="forest"] .app > .precap .precap__kinds {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  flex: 1 1 100%;
+  padding: 4px;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .app > .precap .precap__kinds { background: var(--moss); border-radius: var(--radius-md); }
+:root[data-design="forest"] .app > .precap .precap__kind {
+  min-height: var(--target-key);
+  padding: 0 var(--space-3);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .app > .precap .precap__kind { border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--ink); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .app > .precap .precap__kind[aria-pressed="true"] { background: var(--surface); box-shadow: var(--shadow-seat); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .app > .precap .precap__kind:not([aria-pressed="true"]):hover { background: var(--moss-hover); }
+:root[data-design="forest"] .app > .precap .precap__picker { flex: 1 1 100%; font-size: 17px; font-weight: 700; }
+:root[data-design="forest"] .app > .precap .precap__share { flex: 1 1 100%; justify-content: center; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .app > .precap .precap__share {
+  border: 0;
+  border-radius: var(--radius-leaf-l);
+  background: var(--brand);
+  color: var(--on-accent);
+  box-shadow: var(--shadow-primary);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .app > .precap .precap__share:hover { background: var(--brand-strong); color: var(--on-accent); }
+:root[data-design="forest"] .app > .precap .recap__totals { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-2); margin-top: var(--space-4); }
+:root[data-design="forest"] .app > .precap .stat-chip--tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 10px 12px;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .app > .precap .stat-chip--tile { border: 0; border-radius: var(--radius-md); background: var(--sunken-soft); color: var(--ink); }
+:root[data-design="forest"] .app > .precap .stat-chip--tile .stat-chip__n { font-family: var(--font-display); font-size: 26px; line-height: var(--leading-display); }
+:root[data-design="forest"] .app > .precap .stat-chip--tile .stat-chip__label { font-size: 13px; font-weight: 700; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .app > .precap .stat-chip--tile .stat-chip__label { color: var(--ink-soft); }
+:root[data-design="forest"] .app > .precap .pokale-cards { grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 1100px) {
+  :root[data-design="forest"] .app:has(> .section > .timeline):has(> .precap) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 420px;
+    column-gap: var(--space-6);
+  }
+  :root[data-design="forest"] .app:has(> .section > .timeline):has(> .precap) > * { grid-column: 1 / -1; max-width: none; }
+  :root[data-design="forest"] .app:has(> .section > .timeline):has(> .precap) > .section { grid-column: 1; }
+  :root[data-design="forest"] .app:has(> .section > .timeline):has(> .precap) > .precap { grid-column: 2; align-self: start; margin-top: 0; }
+}
+
+/* ---- The Pokale (F13.3/F13.4): the grove left, the table right, the four
+   plaques under both — stacked in that order on a phone. */
+:root[data-design="forest"] .app > .section:has(.pokale-split) { max-width: none; }
+:root[data-design="forest"] .pokale-split:has(> .pokale-split__side) { display: flex; flex-direction: column; gap: var(--space-4); }
+:root[data-design="forest"] .pokale-split:has(> .pokale-split__side) > * { min-width: 0; }
+@media (min-width: 1100px) {
+  :root[data-design="forest"] .pokale-split:has(> .pokale-split__side) {
+    display: grid;
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+    align-items: start;
+    gap: var(--space-5) 28px;
+  }
+  :root[data-design="forest"] .pokale-split:has(> .pokale-split__side) > .pokale-cards { grid-column: 1 / -1; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+/* The grove: a glade card with a meadow along its foot, one tree per person.
+   `--g` (0…1, the wins against the leader's) sizes the crown and the trunk;
+   the shapes are picture only, the plate under each says it in words. */
+:root[data-design="forest"] .forest-grove { position: relative; padding: 18px 16px 14px; overflow: hidden; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-grove {
+  border-radius: 22px;
+  background: linear-gradient(to bottom, var(--surface) 0 72%, var(--moss) 72% 100%);
+  box-shadow: var(--shadow-1);
+}
+/* Doubled class: the voice block's reset (`.section :is(h1, h2, h3)`, 0,5,0)
+   would otherwise hand the heading back to the text face. */
+:root[data-design="forest"] .forest-grove .forest-grove__title.forest-grove__title {
+  margin: 0 0 var(--space-2);
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 22px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-grove__title { color: var(--ink); }
+:root[data-design="forest"] .forest-grove__trees {
+  display: flex;
+  padding-top: 22px;
+  align-items: flex-end;
+  justify-content: space-around;
+  gap: var(--space-2);
+  margin: 0;
+  padding-bottom: 0;
+  padding-inline: 0;
+  list-style: none;
+}
+:root[data-design="forest"] .forest-grove__item { display: flex; flex: 1 1 0; justify-content: center; min-width: 0; }
+:root[data-design="forest"] .forest-grove__tree {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
+  text-decoration: none;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-grove__tree { color: var(--ink); }
+:root[data-design="forest"] .forest-grove__ring { position: relative; z-index: 1; margin-bottom: -10px; }
+:root[data-design="forest"] .forest-grove__ring .avatar { width: 34px; height: 34px; font-size: 12px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-grove__item.is-lead .forest-grove__ring .avatar { box-shadow: inset 0 0 0 999px var(--surface), 0 0 0 4px var(--gold-soft); }
+:root[data-design="forest"] .forest-grove__ring .ti-crown { position: absolute; top: -18px; left: 50%; transform: translateX(-50%); font-size: 18px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-grove__ring .ti-crown { color: var(--gold); }
+:root[data-design="forest"] .forest-grove__crown {
+  width: calc(40px + var(--g, 0) * 28px);
+  height: calc(34px + var(--g, 0) * 22px);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-grove__crown { border-radius: 50%; background: var(--leaf-1); }
+:root[data-design="forest"] .forest-grove__trunk { width: 7px; height: calc(14px + var(--g, 0) * 60px); margin-top: -4px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-grove__trunk { background: var(--bark); }
+:root[data-design="forest"] .forest-grove__plate {
+  margin-top: -2px;
+  padding: 2px 8px;
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-grove__plate { border: 1.5px solid var(--line); border-radius: var(--radius-sm); background: var(--surface); color: var(--ink); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-grove__item.is-placed .forest-grove__plate { border-color: var(--ink); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-grove__item.is-lead .forest-grove__plate { border-color: var(--gold-edge); background: var(--gold-soft); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-grove__tree:hover .forest-grove__crown { background: var(--leaf-2); }
+@media (min-width: 860px) {
+  :root[data-design="forest"] .forest-grove { padding: 26px 28px 20px; }
+  :root[data-design="forest"] .forest-grove .forest-grove__title.forest-grove__title { font-size: 26px; }
+  :root[data-design="forest"] .forest-grove__trees { min-height: 340px; padding-top: 30px; }
+  :root[data-design="forest"] .forest-grove__ring .avatar { width: 48px; height: 48px; font-size: 14px; }
+  :root[data-design="forest"] .forest-grove__ring .ti-crown { top: -22px; font-size: 22px; }
+  :root[data-design="forest"] .forest-grove__crown { width: calc(60px + var(--g, 0) * 56px); height: calc(50px + var(--g, 0) * 42px); }
+  :root[data-design="forest"] .forest-grove__trunk { width: 12px; height: calc(30px + var(--g, 0) * 126px); }
+  :root[data-design="forest"] .forest-grove__plate { padding: 3px 10px; font-size: 15px; }
+}
+
+/* The table beside it: Platz · Person · Siege · Sessions · Quote, the leader's
+   row in the gold tint — no silver or bronze. A phone keeps place, person and
+   wins (F13.4). */
+:root[data-design="forest"] .pokale-split__side > .pokale-table { width: 100%; padding: 10px 12px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .pokale-split__side > .pokale-table { border-collapse: separate; border-spacing: 0; border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--shadow-1); }
+:root[data-design="forest"] .pokale-table th[scope="col"] { padding: 8px; font-family: var(--font); font-size: 12px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; text-align: left; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .pokale-table th[scope="col"] { color: var(--brand); }
+:root[data-design="forest"] .pokale-table td,
+:root[data-design="forest"] .pokale-table th[scope="row"] { padding: 10px 8px; font-size: 15px; font-weight: 800; text-align: left; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .pokale-table td,
+:root[data-design="forest"]:not([data-scheme="dark"]) .pokale-table th[scope="row"] { border-top: 1px solid var(--line); color: var(--ink); }
+:root[data-design="forest"] .pokale-table td.pokale-table__place { width: 1%; padding-inline: 8px 14px; font-family: var(--font-display); font-size: 20px; font-weight: 400; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .pokale-table .is-lead > :is(td, th) { border-top-color: transparent; background: var(--gold-soft); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .pokale-table .is-lead > :first-child { border-radius: var(--radius-md) 0 0 var(--radius-md); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .pokale-table .is-lead > :last-child { border-radius: 0 var(--radius-md) var(--radius-md) 0; }
+:root[data-design="forest"] .pokale-table__name a { display: inline-flex; align-items: center; gap: 10px; min-height: var(--target-min); text-decoration: none; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .pokale-table__name a { color: var(--ink); }
+:root[data-design="forest"] .pokale-table__swatch { flex: none; width: 26px; height: 26px; box-sizing: border-box; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .pokale-table__swatch { border: 4px solid transparent; border-radius: 50%; box-shadow: inset 0 0 0 999px var(--surface); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .pokale-table .is-lead .pokale-table__swatch { box-shadow: inset 0 0 0 999px var(--gold-soft); }
+@media (max-width: 559px) {
+  :root[data-design="forest"] .pokale-table :is(.pokale-table__sessions, .pokale-table__rate) { display: none; }
+}
+
+/* The four plaques (F13.3/F13.4). No rubric over them (review U6). */
+:root[data-design="forest"]:not([data-scheme="dark"]) .pokale-split > .pokale-cards .pokale-card { border: 0; border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--shadow-1); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .pokale-split > .pokale-cards .pokale-card__label { color: var(--brand); }
+
+/* ---- The member page (F13.5/F13.6): the Tischkarte, and from 1100px a
+   column beside it with the boxes, „Zuletzt dabei" and the two game tiles. */
+:root[data-design="forest"] .app > .forest-member { display: flex; flex-direction: column; gap: var(--space-5); max-width: none; }
+:root[data-design="forest"] .forest-member > .member-card { margin: 0; padding: 22px 20px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-member > .member-card { background: var(--surface); box-shadow: var(--shadow-1); border-radius: 22px; }
+:root[data-design="forest"] .forest-member .member-card__mark { display: none; }
+/* The ring beside the name on a phone too (F13.6), not stacked over it. */
+:root[data-design="forest"] .forest-member .member-card__id { flex-wrap: nowrap; gap: var(--space-4); }
+:root[data-design="forest"] .forest-member .member-card__who { min-width: 0; }
+:root[data-design="forest"] .forest-member .member-card__who h1 { font-family: var(--font-display); font-weight: 400; font-size: 30px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-member .member-card__who h1 { color: var(--ink); }
+:root[data-design="forest"] .forest-member .member-card__figures {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+  padding-top: 0;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-member .member-card__figures { border-top: 0; }
+:root[data-design="forest"] .forest-member .member-figure { justify-content: flex-start; min-width: 0; padding: 10px 12px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-member .member-figure { border-radius: var(--radius-md); background: var(--sunken-soft); }
+:root[data-design="forest"] .forest-member .member-figure__value { font-family: var(--font-display); font-weight: 400; font-size: 22px; }
+:root[data-design="forest"] .forest-member .member-figure__label { font-size: 12px; font-weight: 700; letter-spacing: 0; text-transform: none; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-member .member-figure__label { color: var(--ink-soft); }
+/* The favourite game's NAME (review U2): the text face, allowed to break
+   anywhere, the tile growing in height — never an ellipsis. */
+:root[data-design="forest"] .forest-member .member-figure--game { grid-column: span 2; }
+:root[data-design="forest"] .forest-member .member-figure--game .member-figure__value {
+  font-family: var(--font);
+  font-size: 17px;
+  font-weight: 800;
+  line-height: var(--leading-title);
+  overflow-wrap: anywhere;
+  hyphens: auto;
+}
+:root[data-design="forest"] .forest-member-edit { margin-top: var(--space-4); }
+:root[data-design="forest"] .forest-member .member-card__table { margin-top: var(--space-4); }
+:root[data-design="forest"] .forest-member__aside { display: flex; flex-direction: column; gap: var(--space-5); min-width: 0; }
+:root[data-design="forest"] .forest-member__aside > .member-owned { margin: 0; }
+/* „Gehört Max · 2 Spiele" (F13.5): the boxes as tiles — the cover on a glade,
+   the name and the shelf's score under it. */
+:root[data-design="forest"] .forest-member__aside > .member-owned { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--space-3); }
+:root[data-design="forest"] .forest-member__aside > .member-owned > .member-owned__title { grid-column: 1 / -1; margin-bottom: 0; }
+:root[data-design="forest"] .member-owned__row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: 10px 10px 12px;
+  text-decoration: none;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .member-owned__row { border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--shadow-1); color: var(--ink); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .member-owned__row:hover { box-shadow: var(--shadow-2); }
+:root[data-design="forest"] .member-owned__cover {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 96px;
+  overflow: hidden;
+  background-position: center;
+  background-size: cover;
+  font-size: 26px;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .member-owned__cover { border-radius: var(--radius-md); background-color: var(--sunken-soft); }
+:root[data-design="forest"] .member-owned__name { font-size: 15px; font-weight: 800; overflow-wrap: anywhere; }
+:root[data-design="forest"] .member-owned__row > .score-pill { position: static; align-self: flex-start; }
+:root[data-design="forest"] .forest-member__aside .member-owned__title,
+:root[data-design="forest"] .forest-recent__title { margin: 0 0 var(--space-3); font-family: var(--font-display); font-weight: 400; font-size: 22px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-member__aside .member-owned__title,
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-recent__title { color: var(--ink); }
+:root[data-design="forest"] .forest-member__aside > .pokale-cards { margin: 0; }
+@media (min-width: 560px) {
+  :root[data-design="forest"] .forest-member__aside > .pokale-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 860px) {
+  :root[data-design="forest"] .forest-member .member-card__figures { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  :root[data-design="forest"] .forest-member .member-figure--game { grid-column: auto; }
+  :root[data-design="forest"] .forest-member .member-card__who h1 { font-size: 38px; }
+}
+@media (min-width: 1100px) {
+  :root[data-design="forest"] .app > .forest-member { display: grid; grid-template-columns: minmax(0, 540px) minmax(0, 1fr); align-items: start; gap: var(--space-6); }
+  :root[data-design="forest"] .forest-member .member-card__figures { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  :root[data-design="forest"] .forest-member .member-figure--game { grid-column: span 2; }
+}
+@media (min-width: 1360px) {
+  :root[data-design="forest"] .forest-member .member-card__figures { grid-template-columns: repeat(4, minmax(0, 1fr)) minmax(0, 1.4fr); }
+  :root[data-design="forest"] .forest-member .member-figure--game { grid-column: auto; }
+}
+
+/* „Zuletzt dabei": date · game · state, hairlines between, a win in the
+   gold ink (5.9:1 on the card). */
+:root[data-design="forest"] .forest-recent { padding: 18px 20px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-recent { border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--shadow-1); }
+:root[data-design="forest"] .forest-recent__list { margin: 0; padding: 0; list-style: none; }
+:root[data-design="forest"] .forest-recent__row {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--target-key);
+  padding: 4px 0;
+  font-size: 15px;
+  font-weight: 700;
+  text-decoration: none;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-recent__row { border-top: 1px solid var(--line); color: var(--ink); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-recent__row:hover .forest-recent__game { color: var(--brand); }
+:root[data-design="forest"] .forest-recent__date { font-size: 13px; font-weight: 800; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-recent__date,
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-recent__state { color: var(--ink-soft); }
+:root[data-design="forest"] .forest-recent__game { overflow-wrap: anywhere; }
+:root[data-design="forest"] .forest-recent__state { font-size: 14px; font-weight: 800; text-align: right; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-recent__row.is-won .forest-recent__state { color: var(--gold-deep); }
+@media (min-width: 860px) {
+  :root[data-design="forest"] .forest-recent__row { grid-template-columns: 120px minmax(0, 1fr) auto; }
+}
+
+/* ---- „Nicht im Regal" (F13.7): the lists as tabs on a moss strip, the lit
+   one raised; a phone scrolls the strip sideways rather than the page. */
+:root[data-design="forest"] .app > .offshelf-seg {
+  display: flex;
+  gap: 4px;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 0 var(--space-3);
+  padding: 4px;
+  overflow-x: auto;
+  box-sizing: border-box;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .app > .offshelf-seg { border-radius: var(--radius-md); background: var(--moss); }
+:root[data-design="forest"] .app > .offshelf-seg .offshelf-seg__item {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--target-key);
+  padding: 0 14px;
+  font-size: 15px;
+  font-weight: 800;
+  white-space: nowrap;
+  text-decoration: none;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .app > .offshelf-seg .offshelf-seg__item { border-radius: var(--radius-sm); color: var(--ink); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .app > .offshelf-seg .offshelf-seg__item:not(.is-on):hover { background: var(--moss-hover); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .app > .offshelf-seg .offshelf-seg__item.is-on { background: var(--surface); box-shadow: var(--shadow-seat); }
+:root[data-design="forest"] .app > .forest-footnote { margin: 0 0 var(--space-4); font-size: 15px; line-height: var(--leading-text); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .app > .forest-footnote { color: var(--ink-soft); }
+:root[data-design="forest"] .app > .archive-list { max-width: none; }
+:root[data-design="forest"] .app:has(> .offshelf-seg) > .page-head { max-width: none; }
+:root[data-design="forest"] .archive-list > .archive-row { gap: var(--space-4); padding: 16px 18px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .archive-list > .archive-row { border: 0; border-radius: 22px; background: var(--surface); box-shadow: var(--shadow-1); }
+:root[data-design="forest"] .archive-list .archive-row__img { width: 90px; height: 90px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .archive-list .archive-row__img { border-radius: var(--radius-md); }
+:root[data-design="forest"] .archive-list .archive-row__title { font-size: 20px; font-weight: 400; }
+@media (min-width: 860px) {
+  :root[data-design="forest"] .archive-list .archive-row__title.archive-row__title { font-family: var(--font-display); font-size: 22px; }
+}
+@media (min-width: 1100px) {
+  :root[data-design="forest"] .app > .archive-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); }
+}
+
+/* ---- „Könnte euch gefallen" (F13.8): the BGG mark at the head's right edge,
+   the suggestions as cards — the cover on a glade, then title, facts and the
+   recommender's own reasons, each under a leaf. */
+:root[data-design="forest"] .app > .page-head:has(> .forest-bgg) { align-items: center; }
+:root[data-design="forest"] .page-head > .forest-bgg { flex: none; width: auto; height: 20px; }
+:root[data-design="forest"] .app > .rec-list { max-width: none; }
+:root[data-design="forest"] .rec-list > .rec-card { gap: var(--space-3); padding: 16px 18px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .rec-list > .rec-card { border: 0; border-radius: 22px; background: var(--surface); box-shadow: var(--shadow-1); }
+:root[data-design="forest"] .rec-list .rec-card__title { font-size: 20px; font-weight: 400; }
+:root[data-design="forest"] .rec-list .rec-card__why li { position: relative; padding-left: 22px; }
+:root[data-design="forest"] .rec-list .rec-card__why li::before {
+  content: '';
+  position: absolute;
+  top: 0.45em;
+  left: 0;
+  width: 14px;
+  height: 7px;
+  transform: rotate(-20deg);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .rec-list .rec-card__why li::before { border-radius: 100% 0; background: var(--leaf-1); }
+@media (min-width: 860px) {
+  :root[data-design="forest"] .rec-list .rec-card__title.rec-card__title { font-family: var(--font-display); font-size: 22px; }
+  :root[data-design="forest"] .app > .rec-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); }
+}
+@media (min-width: 1280px) {
+  :root[data-design="forest"] .app > .rec-list { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  :root[data-design="forest"] .rec-list > .rec-card { flex-direction: column; align-items: stretch; }
+  :root[data-design="forest"] .rec-list .rec-card__img { width: 100%; height: 150px; }
+  :root[data-design="forest"] .rec-list .rec-card__body { min-width: 0; }
 }
 
 /* ===== #1468 — Session loop: Neue Session, vote card, finale, result, several tables ===== */
