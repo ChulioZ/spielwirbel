@@ -1799,6 +1799,8 @@ I18N.nl = {
   'landing.cta.title': 'De volgende keer discussieert er niemand meer over.',
   'landing.faq.q': 'Nog vragen?',
   'landing.faq.link': 'Lees de FAQ',
+  // The „Was spielen wir heute?" guide page (#1171), linked beside the FAQ.
+  'landing.guide.link': 'Gids: wat spelen we vanavond?',
   // The design band (#1198), shown only by a design that asks for it (Der Tisch as the face).
   // {n} is how many designs the instance offers (GET /api/config), so it never overclaims.
   'landing.designs.title': '{n} ontwerpen, één app.',
@@ -1967,6 +1969,9 @@ I18N.nl = {
   'badges.moment.title': 'Net behaald',
   'badges.moment.moreOne': '+{n} meer',
   'badges.moment.more': '+{n} meer',
+  // Das Programmheft's kicker on the result moment's band for a big tier (#1393):
+  // the round's Sessions 100 · 250 · 500 and Stammgast 100 · 250.
+  'badges.specialEdition': 'Speciale editie',
   'badges.earnedIn': 'Behaald in {month}',
   'badges.tierReached': 'Niveau {tier} bereikt in {month}',
   'badges.card.next': 'Volgend niveau {n}',
@@ -1978,7 +1983,6 @@ I18N.nl = {
   'detail.statVetoBruecke': '× geen stuwkracht',
   // Das Programmheft's lobby and hub (#1372, P3.1/P3.2/P6.1).
   'hub.members': 'Leden',
-  'hub.forestSince': 'Groep sinds {month}',
   'hub.forestMarker': 'Markering {name}',
   'hub.lead.open': 'Uitslag bekijken',
   'home.phExtra': 'Extra editie',

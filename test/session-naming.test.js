@@ -205,3 +205,34 @@ test('no „Was ist neu" entry names the session an evening', () => {
   assert.deepEqual(violations, [],
     `these news strings name the session an evening (CLAUDE.md bans it):\n  ${violations.join('\n  ')}`);
 });
+
+/* The „Was spielen wir heute?" guide (#1171) is user-facing product copy in every
+ * shipped language, and a page about choosing the evening's game is exactly
+ * where „Spieleabend" / "game night" would creep back in. A THIRD value shape —
+ * nested strings with HTML markup — so it gets its own scan rather than riding
+ * on one of the two above (.claude/rules/source-scanning-guards-enumerate-shapes.md).
+ * Markup is stripped first so a ban cannot match inside a tag. */
+test('no guide page names the session an evening', () => {
+  const { TEXT } = require('../lib/guide');
+  const violations = [];
+  let scanned = 0;
+  const strings = (t) => [t.title, t.description, t.h1, t.lead,
+    ...t.sections.flatMap((s) => [s.h, s.html]),
+    ...Object.values(t.cta), ...Object.values(t.chrome).filter(Boolean)];
+
+  for (const locale of SUPPORTED_LOCALES) {
+    assert.ok(TEXT[locale], `no guide text for ${locale}`);
+    for (const value of strings(TEXT[locale])) {
+      scanned += 1;
+      const plain = value.replace(/<[^>]+>/g, ' ');
+      for (const hit of namesAnEvening(locale, plain)) {
+        violations.push(`${locale}: "${hit}" in ${JSON.stringify(plain.trim()).slice(0, 120)}`);
+      }
+    }
+  }
+  // DERIVED floor: every locale carries at least title, description, h1, lead,
+  // four section pairs, five CTA strings and three chrome strings.
+  assert.ok(scanned >= SUPPORTED_LOCALES.length * 20, `scanned only ${scanned} guide strings`);
+  assert.deepEqual(violations, [],
+    `these guide strings name the session an evening (CLAUDE.md bans it):\n  ${violations.join('\n  ')}`);
+});

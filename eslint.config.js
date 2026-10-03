@@ -27,6 +27,8 @@ const frontendGlobals = {
   // locales.js
   LOCALES: 'readonly', SUPPORTED_LOCALES: 'readonly', LOCALE_LABELS: 'readonly',
   LOCALE_TAGS: 'readonly', localeTag: 'readonly',
+  // guide-paths.js (issue #1171)
+  GUIDE_SLUGS: 'readonly', guidePath: 'readonly',
   // i18n.js
   I18N: 'writable',
   locale: 'writable', detectLocale: 'readonly', initLocale: 'readonly',
@@ -504,7 +506,7 @@ const frontendGlobals = {
   brueckeHubFrame: 'readonly', brueckeMission: 'readonly', brueckeMissionEmpty: 'readonly', brueckeYoungLine: 'readonly', brueckeHeroCompose: 'readonly',
   brueckeStatus: 'readonly', brueckeResumeNotice: 'readonly', brueckeUpLink: 'readonly',
   // forest-hub.js (#1466) — Forest's lobby tiles, notice and round hub composition
-  forestHubFrame: 'readonly', forestStump: 'readonly', forestPresetsLabel: 'readonly', forestSinceLine: 'readonly',
+  forestHubFrame: 'readonly', forestStump: 'readonly', forestPresetsLabel: 'readonly', forestMarkerLine: 'readonly',
   forestHeroCompose: 'readonly', forestLead: 'readonly', forestRoundCard: 'readonly', forestResumeNotice: 'readonly',
   // bruecke-shelf.js (#1239) — Die Brücke's Regal cards and Spielepass figures
   brueckeTitleLong: 'readonly', brueckeCard: 'readonly',

@@ -1767,6 +1767,8 @@ I18N.fi = {
   'landing.cta.title': 'Ensi kerralla siitä ei enää väitellä.',
   'landing.faq.q': 'Vieläkö jokin mietityttää?',
   'landing.faq.link': 'Lue UKK',
+  // The „Was spielen wir heute?" guide page (#1171), linked beside the FAQ.
+  'landing.guide.link': 'Opas: mitä pelataan tänään?',
   // The design band (#1198), shown only by a design that asks for it (Der Tisch as the face).
   // {n} is how many designs the instance offers (GET /api/config), so it never overclaims.
   'landing.designs.title': '{n} ulkoasua, yksi sovellus.',
@@ -1935,6 +1937,9 @@ I18N.fi = {
   'badges.moment.title': 'Juuri ansaittu',
   'badges.moment.moreOne': '+{n} lisää',
   'badges.moment.more': '+{n} lisää',
+  // Das Programmheft's kicker on the result moment's band for a big tier (#1393):
+  // the round's Sessions 100 · 250 · 500 and Stammgast 100 · 250.
+  'badges.specialEdition': 'Erikoispainos',
   'badges.earnedIn': 'Ansaittu: {month}',
   'badges.tierReached': 'Taso {tier} saavutettu: {month}',
   'badges.card.next': 'Seuraava taso {n}',
@@ -1946,7 +1951,6 @@ I18N.fi = {
   'detail.statVetoBruecke': '× ei työntöä',
   // Das Programmheft's lobby and hub (#1372, P3.1/P3.2/P6.1).
   'hub.members': 'Jäsenet',
-  'hub.forestSince': 'Porukka {month} alkaen',
   'hub.forestMarker': 'Merkki {name}',
   'hub.lead.open': 'Katso tulos',
   'home.phExtra': 'Ylimääräinen painos',

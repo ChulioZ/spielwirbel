@@ -895,8 +895,8 @@
   overflow-wrap: break-word;
   hyphens: auto;
 }
-:root[data-design="forest"] .forest-head__since { font-size: 14px; font-weight: 700; }
-:root[data-design="forest"]:not([data-scheme="dark"]) .forest-head__since { color: var(--ink-soft); }
+:root[data-design="forest"] .forest-head__marker { font-size: 14px; font-weight: 700; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-head__marker { color: var(--ink-soft); }
 :root[data-design="forest"] .forest-head__settings {
   display: inline-flex;
   align-items: center;
