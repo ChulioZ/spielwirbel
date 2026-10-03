@@ -17,6 +17,9 @@ const path = require('node:path');
 const vm = require('node:vm');
 const request = require('supertest');
 const { app } = require('./helpers');
+const guide = require('../lib/guide');
+const { SUPPORTED_LOCALES, localeTag } = require('../public/js/locales');
+const { guidePath } = require('../public/js/guide-paths');
 
 const ROOT = path.join(__dirname, '..');
 
@@ -140,6 +143,11 @@ test('GET /sitemap.xml is valid XML listing the public pages', async () => {
     'https://spielwirbel.app/impressum',
     'https://spielwirbel.app/datenschutz',
     'https://spielwirbel.app/nutzungsbedingungen',
+    // The „Was spielen wir heute?" guide (#1171), one page per language,
+    // DERIVED from the slug table rather than copied — a tenth language, or a
+    // renamed slug, has to reach the sitemap too or this goes red. Percent-
+    // encoded, as a sitemap <loc> must be (the Korean slug is Hangul).
+    ...SUPPORTED_LOCALES.map((code) => guide.guideUrl(code)),
   ]);
   // Every entry must be on the canonical host, or the sitemap advertises URLs
   // that 301 (lib/canonical.js consolidates .de/.com onto .app).
@@ -204,4 +212,51 @@ test('a deep link still serves the same generic shell (#430 stays true)', async 
 
   const home = await request(app).get('/');
   assert.equal(res.text, home.text, 'every route is served the identical document');
+});
+
+/* The guide pages (#1171) exist to be found, so every tag a search engine reads
+   is asserted over the SERVED bytes, per language, against values derived from
+   the slug table. */
+test('each guide page carries its own title, description, canonical and the full hreflang set', async () => {
+  const hreflangs = [...SUPPORTED_LOCALES, 'x-default'];
+  for (const code of SUPPORTED_LOCALES) {
+    const res = await request(app).get(encodeURI(guidePath(code)));
+    assert.equal(res.status, 200);
+    const t = guide.TEXT[code];
+    assert.ok(res.text.includes(`<title>${t.title} · Spielwirbel</title>`), `${code}: <title>`);
+    assert.ok(res.text.includes(`<meta name="description" content="${t.description}" />`), `${code}: description`);
+    // A SELF-referencing canonical on the canonical host: nine different
+    // documents, none a duplicate of another.
+    const canon = [...res.text.matchAll(/<link rel="canonical" href="([^"]+)"/g)].map((m) => m[1]);
+    assert.deepEqual(canon, [guide.guideUrl(code)], `${code}: exactly one canonical, pointing at itself`);
+    assert.match(canon[0], /^https:\/\/spielwirbel\.app\//);
+
+    const alts = [...res.text.matchAll(/<link rel="alternate" hreflang="([^"]+)" href="([^"]+)"/g)]
+      .map((m) => [m[1], m[2]]);
+    assert.deepEqual(alts.map(([l]) => l), hreflangs, `${code}: hreflang set`);
+    for (const [l, href] of alts) {
+      assert.equal(href, guide.guideUrl(l === 'x-default' ? 'de' : l), `${code}: hreflang ${l}`);
+    }
+
+    // Open Graph: one card per language.
+    const og = (prop) => (res.text.match(new RegExp(`<meta property="og:${prop}" content="([^"]*)"`)) || [])[1];
+    assert.equal(og('url'), guide.guideUrl(code));
+    assert.equal(og('title'), t.title);
+    assert.equal(og('description'), t.description);
+    assert.equal(og('locale'), localeTag(code).replace('-', '_'));
+    assert.equal(og('type'), 'article');
+    assert.match(og('image'), /^https:\/\/spielwirbel\.app\/.+\.png$/);
+
+    assert.doesNotMatch(res.text, /<meta name="robots"/, `${code}: the guide must be indexable`);
+  }
+});
+
+test('robots.txt blocks none of the guide pages', async () => {
+  const res = await request(app).get('/robots.txt');
+  for (const code of SUPPORTED_LOCALES) {
+    for (const rule of disallowRules(res.text)) {
+      assert.ok(!robotsRuleMatches(rule, encodeURI(guidePath(code))),
+        `"Disallow: ${rule}" blocks the ${code} guide`);
+    }
+  }
 });

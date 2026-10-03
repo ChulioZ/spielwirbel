@@ -1733,6 +1733,8 @@ I18N.ko = {
   'landing.cta.title': '다음부터는 아무도 그걸로 다투지 않아요.',
   'landing.faq.q': '아직 궁금한 게 있나요?',
   'landing.faq.link': '자주 묻는 질문 보기',
+  // The „Was spielen wir heute?" guide page (#1171), linked beside the FAQ.
+  'landing.guide.link': '가이드: 오늘 무슨 보드게임 할까?',
   // The design band (#1198), shown only by a design that asks for it (Der Tisch as the face).
   // {n} is how many designs the instance offers (GET /api/config), so it never overclaims.
   'landing.designs.title': '디자인 {n}가지, 앱은 하나.',
@@ -1896,6 +1898,9 @@ I18N.ko = {
   'badges.moment.title': '새로 획득',
   'badges.moment.moreOne': '+{n}개 더',
   'badges.moment.more': '+{n}개 더',
+  // Das Programmheft's kicker on the result moment's band for a big tier (#1393):
+  // the round's Sessions 100 · 250 · 500 and Stammgast 100 · 250.
+  'badges.specialEdition': '특별판',
   'badges.earnedIn': '{month} 획득',
   'badges.tierReached': '{month} {tier}단계 달성',
   'badges.card.next': '다음 단계 {n}',
@@ -1907,7 +1912,6 @@ I18N.ko = {
   'detail.statVetoBruecke': '× 추진력 없음',
   // Das Programmheft's lobby and hub (#1372, P3.1/P3.2/P6.1).
   'hub.members': '멤버',
-  'hub.forestSince': '{month}부터 함께한 모임',
   'hub.forestMarker': '마커 {name}',
   'hub.lead.open': '결과 보기',
   'home.phExtra': '호외',

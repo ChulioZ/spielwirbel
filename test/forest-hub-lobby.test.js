@@ -147,7 +147,9 @@ test('Forest hub: the F3.2 checklist, block by block, in reading order', async (
   assert.ok(hero.querySelector('.forest-ribbon[aria-hidden="true"]'), 'no ribbon marker beside the name');
   assert.equal(hero.querySelector('.forest-ribbon').textContent, '', 'the ribbon carries text (rule T2)');
   assert.match(hero.querySelector('h1').textContent, /Freitagsrunde/);
-  assert.match(hero.querySelector('.forest-head__since').textContent, /^Runde seit Januar 2026 · Marker Tanne$/);
+  // Only the marker: „Runde seit …" is left out even though this round has
+  // dated games — a month guessed from the data is not the round's age.
+  assert.equal(hero.querySelector('.forest-head__marker').textContent, 'Marker Tanne', 'the line guesses a founding month');
   const settings = hero.querySelector('a.forest-head__settings');
   assert.match(settings.getAttribute('href'), /\/round\/r1\/settings$/);
   assert.equal(settings.textContent.trim(), 'Einstellungen', 'the gear lost its accessible name');
@@ -222,7 +224,7 @@ test('Forest hub: a round without games shows the empty stump and the empty tabl
   assert.ok(dom.app.querySelector('.forest-stump--empty'), 'the empty stump is gone');
   assert.ok(dom.app.querySelector('.forest-hub__main .forest-stump + .empty--table'), 'the empty table is not under the stump');
   assert.equal(dom.app.querySelector('.forest-pair'), null, 'an empty pair wrapper stayed behind');
-  assert.equal(dom.app.querySelector('.forest-head__since').textContent, 'Marker Tanne', 'a round with nothing dated invents a month');
+  assert.equal(dom.app.querySelector('.forest-head__marker').textContent, 'Marker Tanne', 'the young round lost its marker line');
 });
 
 test('Forest rail: the Wegweiser is the five links, with the Regal and Chronik counts', async (t) => {

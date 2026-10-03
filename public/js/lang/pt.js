@@ -1799,6 +1799,8 @@ I18N.pt = {
   'landing.cta.title': 'Da próxima vez, ninguém discute por causa disso.',
   'landing.faq.q': 'Ainda com dúvidas?',
   'landing.faq.link': 'Leia o FAQ',
+  // The „Was spielen wir heute?" guide page (#1171), linked beside the FAQ.
+  'landing.guide.link': 'Guia: o que vamos jogar hoje?',
   // The design band (#1198), shown only by a design that asks for it (Der Tisch as the face).
   // {n} is how many designs the instance offers (GET /api/config), so it never overclaims.
   'landing.designs.title': '{n} designs, um app.',
@@ -1967,6 +1969,9 @@ I18N.pt = {
   'badges.moment.title': 'Recém-conquistadas',
   'badges.moment.moreOne': '+{n} outra',
   'badges.moment.more': '+{n} outras',
+  // Das Programmheft's kicker on the result moment's band for a big tier (#1393):
+  // the round's Sessions 100 · 250 · 500 and Stammgast 100 · 250.
+  'badges.specialEdition': 'Edição especial',
   'badges.earnedIn': 'Conquistada em {month}',
   'badges.tierReached': 'Nível {tier} alcançado em {month}',
   'badges.card.next': 'Próximo nível: {n}',
@@ -1978,7 +1983,6 @@ I18N.pt = {
   'detail.statVetoBruecke': '× sem impulso',
   // Das Programmheft's lobby and hub (#1372, P3.1/P3.2/P6.1).
   'hub.members': 'Membros',
-  'hub.forestSince': 'Grupo desde {month}',
   'hub.forestMarker': 'Marcador {name}',
   'hub.lead.open': 'Ver o resultado',
   'home.phExtra': 'Edição extra',

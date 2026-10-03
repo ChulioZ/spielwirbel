@@ -1894,6 +1894,8 @@ I18N.de = {
   // and the questions it does not answer get one clearly-labelled way out.
   'landing.faq.q': 'Noch Fragen?',
   'landing.faq.link': 'Häufige Fragen lesen',
+  // The „Was spielen wir heute?" guide page (#1171), linked beside the FAQ.
+  'landing.guide.link': 'Ratgeber: Was spielen wir heute?',
   // The design band (#1198), shown only by a design that asks for it (Der Tisch as the face).
   // {n} is how many designs the instance offers (GET /api/config), so it never overclaims.
   'landing.designs.title': '{n} Designs, eine App.',
@@ -2083,6 +2085,9 @@ I18N.de = {
   'badges.moment.title': 'Neu verdient',
   'badges.moment.moreOne': '+{n} weiteres',
   'badges.moment.more': '+{n} weitere',
+  // Das Programmheft's kicker on the result moment's band for a big tier (#1393):
+  // the round's Sessions 100 · 250 · 500 and Stammgast 100 · 250.
+  'badges.specialEdition': 'Sonderausgabe',
   'badges.earnedIn': 'Verdient im {month}',
   'badges.tierReached': 'Stufe {tier} erreicht im {month}',
   'badges.card.next': 'Nächste Stufe {n}',
@@ -2094,7 +2099,6 @@ I18N.de = {
   'detail.statVetoBruecke': '× kein Schub',
   // Das Programmheft's lobby and hub (#1372, P3.1/P3.2/P6.1).
   'hub.members': 'Mitglieder',
-  'hub.forestSince': 'Runde seit {month}',
   'hub.forestMarker': 'Marker {name}',
   'hub.lead.open': 'Ergebnis ansehen',
   'home.phExtra': 'Extrablatt',

@@ -80,21 +80,15 @@ function forestPresetsLabel() {
   return h(`<span class="forest-quick__label" aria-hidden="true">${esc(t('hub.preset.label'))}</span>`);
 }
 
-/* The decorative line under the round's name (F2.1, F3.2): „Runde seit Oktober
-   2025 · Marker Tanne". Never on a control.
-
-   The round stores no creation date, so „seit" is the month of the oldest
-   dated thing it holds — its first game or session — and the half is left out
-   when there is none (an operator question on #1466). The marker's name is the
-   one the VIEWER's design gives it, like its colour. */
-function forestSinceLine(round) {
-  const first = [...(round.games || []), ...(round.sessions || [])]
-    .map((x) => x.createdAt).filter(Boolean).sort()[0];
+/* The decorative line under the round's name (F2.1, F3.2): „Marker Tanne".
+   Never on a control. The sheet also prints „Runde seit Oktober 2025", but a
+   round stores no creation date and a month guessed from its oldest game or
+   session would be wrong for any round older than its data — so that half is
+   left out on purpose (operator decision on #1466, 2026-10-03). The marker's
+   name is the one the VIEWER's design gives it, like its colour. */
+function forestMarkerLine(round) {
   const marker = markerColors(round);
-  return [
-    first ? t('hub.forestSince', { month: fmtMonth(first) }) : '',
-    marker && marker.labelKey ? t('hub.forestMarker', { name: t(marker.labelKey) }) : '',
-  ].filter(Boolean).join(' · ');
+  return marker && marker.labelKey ? t('hub.forestMarker', { name: t(marker.labelKey) }) : '';
 }
 
 /* The head (F3.2 left column, F2.1 top): the ribbon marker beside the name,
@@ -118,8 +112,8 @@ function forestHeroCompose(round, hero) {
   hero.insertBefore(head, h1);
   const text = head.querySelector('.forest-head__text');
   text.appendChild(h1);
-  const since = forestSinceLine(round);
-  if (since) text.appendChild(h(`<span class="forest-head__since">${esc(since)}</span>`));
+  const markerLine = forestMarkerLine(round);
+  if (markerLine) text.appendChild(h(`<span class="forest-head__marker">${esc(markerLine)}</span>`));
   const settings = h(`<a class="forest-head__settings"><i class="ti ti-settings" aria-hidden="true"></i><span>${esc(t('rail.settings'))}</span></a>`);
   navLink(settings, roundPath(round.id, 'settings'), () => showRoundSettings(round.id));
   text.appendChild(settings);
