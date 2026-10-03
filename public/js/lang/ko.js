@@ -33,11 +33,15 @@ I18N.ko = {
   'home.tischKicker': '보드게임 카페 · 나의 테이블',
   // Ocean only (#1211): its sub-brand beside the wordmark and its lobby greeting.
   'home.oceanKicker': '해안 · 나의 모임',
+  'home.forestKicker': '숲 · 나의 빈터',
   'home.oceanGreeting': '해안에 오신 걸 환영해요.',
+  'home.forestGreeting': '숲에 다시 오신 걸 환영해요.',
+  'home.forestGreetingFirst': '숲에 오신 걸 환영해요.',
   // Die Brücke only (#1238): the lobby voice, its greeting and the notice kicker (B9).
   'home.brueckeKicker': '함대 / 개요',
   'home.brueckeGreeting': '다시 탑승하신 걸 환영해요.',
   'home.brueckeSignal': '수신 신호',
+  'home.forestSignal': '반딧불 신호',
   'home.shared': '공유됨',
   'home.newRound': '새 모임 시작하기',
   'home.empty.title': '아직 게임 모임이 없어요.',
@@ -1906,6 +1910,7 @@ I18N.ko = {
   'detail.statVetoBruecke': '× 추진력 없음',
   // Das Programmheft's lobby and hub (#1372, P3.1/P3.2/P6.1).
   'hub.members': '멤버',
+  'hub.forestMarker': '마커 {name}',
   'hub.lead.open': '결과 보기',
   'home.phExtra': '호외',
   'home.phKicker': '가판대 · {date}',

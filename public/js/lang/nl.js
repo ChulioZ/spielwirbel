@@ -55,11 +55,15 @@ I18N.nl = {
   'home.tischKicker': 'Spellencafé · jouw tafels',
   // Ocean only (#1211): its sub-brand beside the wordmark and its lobby greeting.
   'home.oceanKicker': 'De kust · jouw groepen',
+  'home.forestKicker': 'Het bos · jouw open plekken',
   'home.oceanGreeting': 'Welkom aan de kust.',
+  'home.forestGreeting': 'Welkom terug in het bos.',
+  'home.forestGreetingFirst': 'Welkom in het bos.',
   // Die Brücke only (#1238): the lobby voice, its greeting and the notice kicker (B9).
   'home.brueckeKicker': 'Vloot / Overzicht',
   'home.brueckeGreeting': 'Welkom terug aan boord.',
   'home.brueckeSignal': 'Inkomend signaal',
+  'home.forestSignal': 'Lichtsignaal',
   'home.shared': 'Gedeeld',
   'home.newRound': 'Een nieuwe groep starten',
   'home.empty.title': 'Nog geen speelgroep.',
@@ -1975,6 +1979,7 @@ I18N.nl = {
   'detail.statVetoBruecke': '× geen stuwkracht',
   // Das Programmheft's lobby and hub (#1372, P3.1/P3.2/P6.1).
   'hub.members': 'Leden',
+  'hub.forestMarker': 'Markering {name}',
   'hub.lead.open': 'Uitslag bekijken',
   'home.phExtra': 'Extra editie',
   'home.phKicker': 'Kiosk · {date}',

@@ -41,11 +41,15 @@ I18N.es = {
   'home.tischKicker': 'Café de juegos · tus mesas',
   // Ocean only (#1211): its sub-brand beside the wordmark and its lobby greeting.
   'home.oceanKicker': 'La costa · tus grupos',
+  'home.forestKicker': 'El bosque · tus claros',
   'home.oceanGreeting': 'Te damos la bienvenida a la costa.',
+  'home.forestGreeting': 'Te damos la bienvenida de nuevo al bosque.',
+  'home.forestGreetingFirst': 'Te damos la bienvenida al bosque.',
   // Die Brücke only (#1238): the lobby voice, its greeting and the notice kicker (B9).
   'home.brueckeKicker': 'Flota / Resumen',
   'home.brueckeGreeting': 'Te damos la bienvenida de nuevo a bordo.',
   'home.brueckeSignal': 'Señal entrante',
+  'home.forestSignal': 'Señal luminosa',
   'home.shared': 'Compartido',
   'home.newRound': 'Crear un grupo nuevo',
   'home.empty.title': 'Todavía no hay ningún grupo.',
@@ -2027,6 +2031,7 @@ I18N.es = {
   'detail.statVetoBruecke': '× sin empuje',
   // Das Programmheft's lobby and hub (#1372, P3.1/P3.2/P6.1).
   'hub.members': 'Miembros',
+  'hub.forestMarker': 'Marcador {name}',
   'hub.lead.open': 'Ver el resultado',
   'home.phExtra': 'Edición especial',
   'home.phKicker': 'Quiosco · {date}',

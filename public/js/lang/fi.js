@@ -32,11 +32,15 @@ I18N.fi = {
   'home.tischKicker': 'Pelikahvila · sinun pöytäsi',
   // Ocean only (#1211): its sub-brand beside the wordmark and its lobby greeting.
   'home.oceanKicker': 'Rannikko · sinun porukkasi',
+  'home.forestKicker': 'Metsä · sinun aukeasi',
   'home.oceanGreeting': 'Tervetuloa rannikolle.',
+  'home.forestGreeting': 'Tervetuloa takaisin metsään.',
+  'home.forestGreetingFirst': 'Tervetuloa metsään.',
   // Die Brücke only (#1238): the lobby voice, its greeting and the notice kicker (B9).
   'home.brueckeKicker': 'Laivasto / Yleiskatsaus',
   'home.brueckeGreeting': 'Tervetuloa takaisin kyytiin.',
   'home.brueckeSignal': 'Saapuva signaali',
+  'home.forestSignal': 'Valomerkki',
   'home.shared': 'Jaettu',
   'home.newRound': 'Aloita uusi porukka',
   'home.empty.title': 'Ei vielä yhtään peliporukkaa.',
@@ -1943,6 +1947,7 @@ I18N.fi = {
   'detail.statVetoBruecke': '× ei työntöä',
   // Das Programmheft's lobby and hub (#1372, P3.1/P3.2/P6.1).
   'hub.members': 'Jäsenet',
+  'hub.forestMarker': 'Merkki {name}',
   'hub.lead.open': 'Katso tulos',
   'home.phExtra': 'Ylimääräinen painos',
   'home.phKicker': 'Kioski · {date}',
