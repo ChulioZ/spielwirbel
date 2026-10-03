@@ -225,8 +225,10 @@ test('the firefly is never a colour on a light surface — only on the dusk', ()
      dusk ground, or its selector sits inside a dusk surface. The toast is the
      only dusk surface the component layer has; the hand-over and the hidden
      cards join with their screens. The finale's stage (#1468) is the dusk too:
-     forest.css re-points its --stage-* tokens at --dusk and --on-dusk. */
-  const DUSK_SURFACES = ['.toast', '.stage'];
+     forest.css re-points its --stage-* tokens at --dusk and --on-dusk. The
+     pass-device blind (#1469) is the dusk edge to edge, so „Los geht's" may be
+     the firefly with ink on it. */
+  const DUSK_SURFACES = ['.toast', '.stage', '.handover--forest'];
   const hits = uses([F1_TOKENS['--firefly']], ['color', 'background', 'background-color', 'outline-color', 'border-color', 'fill', 'stroke', 'box-shadow']);
   const light = hits.filter((h) => !/background(?:-color)?:\s*var\(--dusk\)/.test(h.body)
     && !DUSK_SURFACES.some((s) => h.sel.includes(s)));

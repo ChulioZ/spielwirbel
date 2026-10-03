@@ -256,3 +256,113 @@ function composeForestTablesHead(head, tableCount) {
   head.querySelector('.muted').textContent = t('tables.sameChronik');
   head.firstElementChild.prepend(h(`<p class="forest-kicker">${esc(tn(tableCount, 'tables.splitOne', 'tables.split'))}</p>`));
 }
+
+/* ---- #1469 — the shared vote and the pass-device blind (F4.5/F4.6 at 1440,
+   F6.5/F6.6 at 390) ---- */
+
+// The tree line along the blind's foot: one height per tree, from F4.6. A
+// phone shows the first six (forest.css), as F6.6 draws them.
+const FOREST_DUSK_TREES = 14;
+
+/* The pass-device blind (F4.6, F6.6), operator decision E5: the dusk — a dark
+   wood where only fireflies glow — the person's ring, „{name}, du bist dran!",
+   „Die anderen schauen kurz weg." and one big key, the firefly with ink. It
+   replaces Klassisch's card rather than repainting it, as Ocean's, Die
+   Brücke's and Das Programmheft's do: that card is one full-bleed person
+   colour, and this one is the night.
+
+   It shows NOTHING of the person before — no value, no game, no progress bar
+   (the Klassisch card's bar counts the run and would say how far the table
+   is). The ring is the person's colour round a light core with the initials
+   in ink (F1: colour only as a ring), aria-hidden because the name already
+   says who. „Zurück" sits top-left on both sheets, so it leads the DOM
+   (WCAG 2.4.3). The ids stay Klassisch's (#goBtn, #backBtn), so startVoting()
+   wires this exactly as it wires the card. The fireflies are the screen's
+   background (forest.css) and the trees are aria-hidden shapes: decoration. */
+function forestBlind(round, person, canBack) {
+  const trees = '<span class="forest-blind__tree"></span>'.repeat(FOREST_DUSK_TREES);
+  return h(`<div class="handover handover--forest">
+      ${canBack ? `<button class="handover__back" id="backBtn"><i class="ti ti-arrow-left" aria-hidden="true"></i> ${esc(t('vote.back'))}</button>` : ''}
+      <span class="forest-blind__ring" style="--person:${personColor(round, person)}" aria-hidden="true">${avatarFace(initials(person.name), { userId: person.userId })}</span>
+      <h1 class="handover__name">${esc(t('vote.turn', { name: personLabel(person) }))}</h1>
+      <p class="handover__sub">${esc(t('vote.handoverSub'))}</p>
+      <button class="handover__go" id="goBtn">${esc(t('vote.go'))}</button>
+      <span class="forest-blind__trees" aria-hidden="true">${trees}</span>
+    </div>`);
+}
+
+/* The shared vote (F4.5, F6.5), re-composed from the lobby showSessionLobby()
+   has just built. Every control keeps its node and its listener; this only
+   moves them and adds the clearing's dusk cards.
+
+   - Under the head, the drawn games face down on the dusk with a firefly each
+     — decoration, not progress (the issue), so aria-hidden and one per game
+     up to three, as both sheets draw them.
+   - The people card opens with the count („2 von 4 gewertet", `lobby.progress`)
+     and the line naming who is missing (`lobby.waitingFor*`) — information,
+     moved out of the panel. Each row keeps its state word („abgestimmt" /
+     „offen") and gets its „Für {name}" key, as both sheets draw it; `hereBtns`
+     maps person id → the hot-seat button showSessionLobby() built and wired.
+     The rows are people[] in order, so row i is person i.
+   - This device: the leading key, then „An diesem Gerät abstimmen" as the
+     caption that points at those row keys.
+   - The panel: its title, the QR control WHERE THE CODE WOULD BE, the link,
+     the note. The code stays behind its button (operator ruling 2026-09-22,
+     review U8): `POST …/vote-link/qr` mints the token, so an inline code would
+     create a live capability for every session that reaches this screen.
+   - „Abstimmung beenden" last, outside the panel — F6.5 ends on it, and at
+     1440 forest.css puts it at the end of the this-device row (F4.5). It stays
+     enabled while people are open (same ruling; showSessionLobby's comment).
+
+   DOM order is head · cards · people · this device · share · closing at every
+   width — F6.5's order. From 1280px the panel takes the right column (F4.5). */
+function composeForestLobby(root, people, voted, hereBtns, gameCount) {
+  root.classList.add('live-vote--forest');
+  const head = root.querySelector('.page-head');
+  const peopleEl = root.querySelector('.live-vote__people');
+  const actions = root.querySelector('.live-vote__actions');
+  const panel = root.querySelector('.live-vote__panel');
+
+  head.after(h(`<div class="forest-lobby__cards" aria-hidden="true">${'<span class="forest-lobby__card"></span>'.repeat(Math.min(Math.max(gameCount, 1), 3))}</div>`));
+
+  const n = people.filter((p) => voted.has(p.id)).length;
+  const top = h(`<div class="forest-lobby__head">
+      <h2 class="forest-lobby__count">${esc(t('lobby.progress', { n, total: people.length }))}</h2>
+    </div>`);
+  const waiting = panel.querySelector('.live-vote__waiting');
+  if (waiting) top.appendChild(waiting);
+  peopleEl.prepend(top);
+
+  const rows = [...peopleEl.querySelectorAll('.live-person')];
+  rows.forEach((row, i) => {
+    const btn = hereBtns.get(people[i] && people[i].id);
+    if (btn) row.appendChild(btn);
+  });
+  const hotseat = actions.querySelector('.live-vote__hotseat');
+  if (hotseat) {
+    const label = hotseat.querySelector('.field__label');
+    label.className = 'forest-lobby__here';
+    actions.appendChild(label);
+    hotseat.remove();
+  }
+
+  const close = panel.querySelector('.live-vote__close');
+  const qr = panel.querySelector('.live-vote__qr');
+  if (qr) {
+    qr.innerHTML = `<span class="forest-qr__mark"><i class="ti ti-qrcode" aria-hidden="true"></i></span>
+      <span class="forest-qr__text"><span class="forest-qr__title">${esc(t('lobby.qr'))}</span>
+      <span class="forest-qr__hint">${esc(t('lobby.qrHint'))}</span></span>`;
+    const share = panel.querySelector('.live-vote__share');
+    share.before(qr);
+    const note = panel.querySelector('.live-vote__panel-note');
+    panel.querySelector('.live-vote__share-row').after(note);
+  }
+  if (panel.querySelector('.live-vote__panel-head')) {
+    panel.after(close);
+  } else {
+    // Every vote is in: nothing to share, and closing leads the actions.
+    panel.remove();
+    actions.after(close);
+    root.classList.add('is-all-in');
+  }
+}

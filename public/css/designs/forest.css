@@ -122,6 +122,14 @@
   --dusk: #24331f;
   --dusk-soft: #c9d6bd;
   --firefly: #fff3a8;
+  /* The firefly's own glow on the dusk (#1469): the halo round each dot, the
+     ring round the blind's person, the key's glow. The same firefly at lower
+     alpha — mixing with transparent is space-independent — declared here so
+     test/design-layer.test.js's literal sweep can see every colour painted. */
+  --firefly-halo: color-mix(in oklab, var(--firefly) 45%, transparent);
+  --firefly-ring: color-mix(in oklab, var(--firefly) 25%, transparent);
+  --firefly-glow: color-mix(in oklab, var(--firefly) 40%, transparent);
+  --firefly-glow-soft: color-mix(in oklab, var(--firefly) 35%, transparent);
 
   /* ---- Laubgrün. --brand is the registry's #356427 (text at any size, 6.1:1
      on the page); --brand-strong is F1's accent-deep, the hover and the press,
@@ -1897,3 +1905,528 @@
   :root[data-design="forest"]:not([data-scheme="dark"]) .split-tables__foot { flex-direction: column; align-items: stretch; }
 }
 /* ===== end #1468 ===== */
+
+/* ===== #1469 — the shared vote and the pass-device blind ===== */
+/* Sheets: docs/design/forest/Forest-F4-Session-Desktop.dc.html (F4.5 Geteilte
+   Wertung, F4.6 Übergabe at 1440) and Forest-F6-Phone-Rest.dc.html (F6.5, F6.6
+   at 390). The markup is composeForestLobby() and forestBlind() in
+   views-session-forest.js; Klassisch's lobby and handover never carry their
+   classes.
+
+   Two departures from the sheets, both decided before this slice: the QR code
+   stays BEHIND its button (operator ruling 2026-09-22, review U8 — the code
+   mints the token), so the panel draws the control where the code would be;
+   and „Abstimmung beenden" stays enabled while people are open. The fireflies
+   live only on the dusk (E4): the face-down cards over the list and the blind. */
+
+/* --- The shared vote (F4.5 at 1440, F6.5 at 390) -------------------------- */
+:root[data-design="forest"]:not([data-scheme="dark"]) .live-vote--forest {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .live-vote--forest > .page-head { margin: 0; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .live-vote--forest > .page-head h1 {
+  margin: 0 0 4px;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 28px;
+  line-height: var(--leading-display);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .live-vote--forest > .page-head .muted { margin: 0; font-size: 15px; color: var(--ink-soft); }
+
+/* The drawn games face down on the dusk, a firefly each — decoration (the
+   issue), the glint laid over the dusk in the same body (E4). */
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-lobby__cards { display: flex; gap: 10px; padding: 4px 2px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-lobby__card {
+  flex: 0 1 104px;
+  height: 78px;
+  border-radius: 10px 3px 10px 3px;
+  background:
+    radial-gradient(circle at 76% 22%, var(--firefly) 0 2px, var(--firefly-halo) 3.5px, transparent 9px),
+    var(--dusk);
+  box-shadow: var(--shadow-1);
+  transform: rotate(-3deg);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-lobby__card:nth-child(2) {
+  background:
+    radial-gradient(circle at 30% 64%, var(--firefly) 0 2px, var(--firefly-halo) 3.5px, transparent 9px),
+    var(--dusk);
+  transform: rotate(2deg);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-lobby__card:nth-child(3) {
+  background:
+    radial-gradient(circle at 60% 40%, var(--firefly) 0 2px, var(--firefly-halo) 3.5px, transparent 9px),
+    var(--dusk);
+  transform: rotate(-1deg);
+}
+
+/* The people: one card, the count and who is missing on top, a hairline
+   between the rows. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .live-vote--forest .live-vote__people {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0;
+  padding: 4px 14px;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-lobby__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 16px;
+  padding: 10px 0 8px;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-lobby__count {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 400;
+  color: var(--ink);
+}
+/* The base sheet hides the line under Klassisch; here it is information. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .live-vote--forest .live-vote__waiting {
+  display: block;
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+/* A row: the ring, the name over the state word, and the „Für …" key at the
+   end (F6.5). From 768 the state is a chip beside the name (F4.5). */
+:root[data-design="forest"]:not([data-scheme="dark"]) .live-vote--forest .live-person {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas: "ring name key" "ring state key";
+  align-items: center;
+  column-gap: 10px;
+  min-height: 56px;
+  padding: 6px 0;
+  border: 0;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+  background: none;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .live-vote--forest .live-person .live-person__avatar {
+  grid-area: ring;
+  width: 40px;
+  height: 40px;
+  box-sizing: border-box;
+  border: 5px solid transparent;
+  box-shadow: inset 0 0 0 999px var(--surface);
+  color: var(--ink);
+  font-size: 13px;
+  overflow: hidden;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .live-vote--forest .live-person__name {
+  grid-area: name;
+  align-self: end;
+  font-size: var(--text-md);
+  font-weight: 800;
+  color: var(--ink);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .live-vote--forest .live-person__state {
+  grid-area: state;
+  align-self: start;
+  justify-self: start;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--ink-soft);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .live-vote--forest .live-person.is-voted .live-person__state { color: var(--brand); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .live-vote--forest .live-person__state .ti { display: none; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .live-vote--forest .live-person > .live-vote__hotseat-btn {
+  grid-area: key;
+  min-height: var(--target-key);
+  padding: 0 14px;
+  border-radius: var(--radius-leaf-s);
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+/* The row already shows the person's ring; the key's own small avatar would
+   say it twice. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .live-vote--forest .live-person > .live-vote__hotseat-btn .live-person__avatar { display: none; }
+/* The account-free voters' note (hidden under Klassisch) closes the list. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .live-vote--forest .live-vote__guests {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .live-vote--forest .live-vote__guests-main { display: flex; flex-direction: column; gap: 2px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .live-vote--forest .live-vote__guests-title { font-weight: 800; color: var(--ink); }
+
+/* This device: the leading key full width on a phone, then the caption that
+   points at the row keys. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .live-vote--forest .live-vote__actions { gap: 10px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .live-vote--forest .live-vote__actions .live-vote__mine {
+  min-height: 56px;
+  justify-content: center;
+  font-size: var(--text-lg);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .live-vote--forest .live-vote__done,
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-lobby__here {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--ink-soft);
+  text-align: left;
+}
+
+/* The share panel: its title, the code's control, the link, the note. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .live-vote--forest .live-vote__panel {
+  gap: 12px;
+  margin: 0;
+  padding: 14px;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .live-vote--forest .live-vote__panel-head { display: block; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .live-vote--forest .live-vote__panel-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 400;
+  line-height: var(--leading-title);
+  color: var(--ink);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .live-vote--forest .live-vote__share-row {
+  flex-direction: column;
+  flex-wrap: nowrap;
+  gap: 10px;
+}
+/* The code's control, where F6.5 draws the code: the white field with the
+   control edge, a code glyph in it, and the app's words beside it. A tap
+   opens the server-drawn code (showVoteQrSheet) — nothing is minted before.
+   (0,5,0) outranks the secondary-button rule's (0,4,0). */
+:root[data-design="forest"]:not([data-scheme="dark"]) .live-vote.live-vote--forest .live-vote__panel .btn.live-vote__qr {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  min-height: var(--target-key);
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--ink);
+  text-align: left;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-qr__mark {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 96px;
+  height: 96px;
+  border-radius: 10px;
+  background: var(--raised);
+  box-shadow: inset 0 0 0 1.5px var(--control-edge);
+  color: var(--ink);
+  font-size: 56px; /* glyph, not type */
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .live-vote--forest .live-vote__qr:hover .forest-qr__mark { box-shadow: inset 0 0 0 2.5px var(--brand); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-qr__text { display: flex; flex-direction: column; gap: 2px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-qr__title { font-size: var(--text-md); font-weight: 800; color: var(--ink); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-qr__hint { font-size: var(--text-sm); font-weight: 700; color: var(--ink-soft); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .live-vote--forest .live-vote__share {
+  flex: none;
+  min-height: var(--target-key);
+  justify-content: center;
+  border-radius: var(--radius-leaf-s);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .live-vote--forest .live-vote__panel-note {
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: var(--leading-text);
+  color: var(--ink-soft);
+}
+
+/* „Abstimmung beenden" as the sheets draw it while people are open: the
+   danger outline, not a fill — and enabled. With every vote in it is the
+   primary key and keeps the component layer's look. (0,5,0) outranks the
+   secondary-button rule's (0,4,0). */
+:root[data-design="forest"]:not([data-scheme="dark"]) .live-vote.live-vote--forest > .btn.live-vote__close:not(.btn--primary) {
+  align-self: flex-start;
+  min-height: var(--target-key);
+  padding: 0 16px;
+  border: 1.5px solid var(--danger);
+  border-radius: var(--radius-leaf-s);
+  background: none;
+  color: var(--danger);
+  font-size: var(--text-md);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .live-vote.live-vote--forest > .btn.live-vote__close:not(.btn--primary):hover { background: var(--danger-tint); }
+
+@media (min-width: 768px) {
+  :root[data-design="forest"]:not([data-scheme="dark"]) .live-vote--forest > .page-head h1 { font-size: 34px; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .live-vote--forest > .page-head .muted { font-size: var(--text-md); }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .forest-lobby__cards { gap: 14px; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .forest-lobby__card {
+    flex-basis: 150px;
+    height: 112px;
+    border-radius: 12px 4px 12px 4px;
+  }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .live-vote--forest .live-vote__people { padding: 8px 20px; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .forest-lobby__count { font-size: var(--text-xl); }
+  /* F4.5: name, then the state as a chip, then the key at the end. */
+  :root[data-design="forest"]:not([data-scheme="dark"]) .live-vote--forest .live-person {
+    display: flex;
+    gap: 12px;
+    min-height: 60px;
+  }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .live-vote--forest .live-person .live-person__avatar { width: 44px; height: 44px; font-size: var(--text-sm); }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .live-vote--forest .live-person__name { flex: 0 1 auto; align-self: center; font-size: 17px; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .live-vote--forest .live-person__state {
+    align-self: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border-radius: 12px 3px 12px 3px;
+    background: var(--moss);
+    color: var(--ink);
+    font-size: var(--text-sm);
+  }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .live-vote--forest .live-person.is-voted .live-person__state { background: var(--brand); color: var(--on-accent); }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .live-vote--forest .live-person__state .ti { display: inline-block; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .live-vote--forest .live-person > .live-vote__hotseat-btn { margin-left: auto; padding: 0 16px; font-size: 15px; }
+}
+
+/* F4.5 from 1280: the clearing on the left (head · cards · people · this
+   device, with „Abstimmung beenden" at the end of that row), the share panel
+   as the right column. DOM order stays F6.5's, so the panel reads after the
+   left column and closing reads last. */
+@media (min-width: 1280px) {
+  :root[data-design="forest"]:not([data-scheme="dark"]) .app > *:not(.rail):not(.dock).live-vote--forest { max-width: 1360px; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .live-vote--forest {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 420px;
+    column-gap: 32px;
+    row-gap: 18px;
+    align-items: start;
+  }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .live-vote--forest > * { grid-column: 1; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .live-vote--forest > .page-head { grid-row: 1; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .live-vote--forest > .forest-lobby__cards { grid-row: 2; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .live-vote--forest > .live-vote__people { grid-row: 3; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .live-vote--forest > .live-vote__actions {
+    grid-row: 4;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    /* Room for „Abstimmung beenden", which shares this row at its end. */
+    max-width: calc(100% - 260px);
+  }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .live-vote--forest .live-vote__actions .live-vote__mine { padding: 0 28px; font-size: 19px; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .live-vote--forest > .live-vote__panel {
+    grid-column: 2;
+    grid-row: 1 / span 4;
+    gap: 14px;
+    padding: 22px;
+    border-radius: 22px;
+  }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .live-vote--forest .live-vote__panel-title { font-size: var(--text-xl); }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .live-vote--forest > .live-vote__close {
+    grid-row: 4;
+    justify-self: end;
+    align-self: center;
+  }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .live-vote.live-vote--forest > .btn.live-vote__close:not(.btn--primary) { align-self: center; }
+  /* With every vote in there is no panel: closing leads the this-device row. */
+  :root[data-design="forest"]:not([data-scheme="dark"]) .live-vote--forest.is-all-in > .live-vote__close { grid-row: 5; justify-self: start; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .live-vote--forest > .session-log { grid-row: 6; }
+  /* The code's control stands where F4.5 draws the 220px code: the field over
+     the line „QR-Code · Scannen und mitbewerten". */
+  :root[data-design="forest"]:not([data-scheme="dark"]) .live-vote.live-vote--forest .live-vote__panel .btn.live-vote__qr {
+    flex-direction: column;
+    justify-content: center;
+    gap: 14px;
+    text-align: center;
+  }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .forest-qr__mark { width: 220px; height: 220px; border-radius: 16px; font-size: 120px; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .forest-qr__text { flex-direction: row; gap: 6px; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .forest-qr__hint { font-size: var(--text-md); font-weight: 800; color: var(--ink); }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .forest-qr__hint::before { content: '· '; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .live-vote--forest .live-vote__share { min-height: 48px; font-size: var(--text-md); }
+}
+
+/* --- The pass-device blind (F4.6 at 1440, F6.6 at 390) ------------------- */
+/* The dusk, edge to edge: fixed over the whole viewport, so neither the app's
+   padding nor the footer frames it (body.vote-screen already takes the top
+   bar; the wizard renders no dock). The fireflies are its background, laid
+   over the dusk in the same body (E4); the ring, the words and the key sit
+   above the tree line. A sheet or a toast still opens over it. */
+:root[data-design="forest"]:not([data-scheme="dark"]) body.vote-screen:has(.handover--forest) .site-footer { display: none; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .handover.handover--forest {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  max-width: none;
+  margin: 0;
+  padding: 72px 24px 48px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  border-radius: 0;
+  text-align: center;
+  color: var(--on-dusk);
+  background:
+    radial-gradient(circle at 10% 16%, var(--firefly) 0 2.5px, var(--firefly-halo) 4px, transparent 14px),
+    radial-gradient(circle at 24% 30%, var(--firefly) 0 2px, var(--firefly-halo) 3.5px, transparent 12px),
+    radial-gradient(circle at 70% 12%, var(--firefly) 0 3px, var(--firefly-halo) 4.5px, transparent 15px),
+    radial-gradient(circle at 84% 34%, var(--firefly) 0 2px, var(--firefly-halo) 3.5px, transparent 12px),
+    radial-gradient(circle at 16% 62%, var(--firefly) 0 1.5px, var(--firefly-halo) 3px, transparent 10px),
+    radial-gradient(circle at 80% 64%, var(--firefly) 0 2.5px, var(--firefly-halo) 4px, transparent 14px),
+    radial-gradient(circle at 50% 8%, var(--firefly) 0 2px, var(--firefly-halo) 3.5px, transparent 12px),
+    radial-gradient(circle at 40% 76%, var(--firefly) 0 1.5px, var(--firefly-halo) 3px, transparent 10px),
+    var(--dusk);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .handover--forest > :not(.forest-blind__trees) { position: relative; z-index: 1; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .handover--forest .handover__back {
+  position: absolute;
+  left: 12px;
+  top: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: var(--target-key);
+  min-width: var(--target-key);
+  margin: 0;
+  padding: 0 12px;
+  border-radius: var(--radius-md);
+  color: var(--on-dusk);
+  font-size: 15px;
+  font-weight: 800;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .handover--forest .handover__back .ti { font-size: 20px; /* glyph, not type */ }
+:root[data-design="forest"]:not([data-scheme="dark"]) .handover--forest :focus-visible { outline: 3px solid var(--ring-on-dusk); outline-offset: 4px; }
+/* The person's ring round a light core, the initials in ink (F1), with the
+   firefly's soft halo — on the dusk, where the halo means "your turn". */
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-blind__ring {
+  display: grid;
+  place-items: center;
+  width: 84px;
+  height: 84px;
+  box-sizing: border-box;
+  border: 6px solid var(--person);
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 26px; /* glyph, not type */
+  font-weight: 800;
+  box-shadow: 0 0 0 8px var(--firefly-ring);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .handover--forest .handover__name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 38px;
+  font-weight: 400;
+  line-height: 1.08;
+  color: var(--on-dusk);
+  overflow-wrap: anywhere;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .handover--forest .handover__sub {
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: 400;
+  opacity: 1;
+  color: var(--dusk-soft);
+}
+/* „Los geht's": the firefly with ink (11.9:1 the other way round), larger than
+   the key target as both sheets draw it. The doubled class outranks the base
+   .handover__go. No press edge — the firefly is lit, not raised; the resting
+   margin stands (.claude/rules/state-rules-clobber-component-values.md). */
+:root[data-design="forest"]:not([data-scheme="dark"]) .handover.handover--forest .handover__go {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+  min-height: 64px;
+  padding: 0 40px;
+  border: 0;
+  border-radius: var(--radius-leaf-l);
+  background: var(--firefly);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: var(--text-xl);
+  font-weight: 800;
+  box-shadow: 0 0 30px 6px var(--firefly-glow);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .handover.handover--forest .handover__go:active {
+  transform: translateY(1px);
+  border-bottom-width: 0;
+  margin-bottom: var(--press-mb);
+}
+/* The tree line: dark crowns along the foot, no text. Six on a phone (F6.6),
+   fourteen from 768 (F4.6). */
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-blind__trees {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  pointer-events: none;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-blind__tree {
+  width: 54px;
+  height: 110px;
+  border-radius: 50% 50% 6px 6px / 60% 60% 6px 6px;
+  background: var(--ink);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-blind__tree:nth-child(n+7) { display: none; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-blind__tree:nth-child(5n+2) { width: 70px; height: 150px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-blind__tree:nth-child(5n+3) { width: 60px; height: 120px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-blind__tree:nth-child(5n+4) { width: 80px; height: 170px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-blind__tree:nth-child(5n) { width: 58px; height: 116px; }
+@media (min-width: 768px) {
+  :root[data-design="forest"]:not([data-scheme="dark"]) .handover.handover--forest {
+    gap: 22px;
+    background:
+      radial-gradient(circle at 8% 18%, var(--firefly) 0 2.5px, var(--firefly-halo) 4px, transparent 16px),
+      radial-gradient(circle at 18% 42%, var(--firefly) 0 2px, var(--firefly-halo) 3.5px, transparent 14px),
+      radial-gradient(circle at 27% 12%, var(--firefly) 0 3px, var(--firefly-halo) 4.5px, transparent 17px),
+      radial-gradient(circle at 36% 64%, var(--firefly) 0 2px, var(--firefly-halo) 3.5px, transparent 14px),
+      radial-gradient(circle at 62% 16%, var(--firefly) 0 2.5px, var(--firefly-halo) 4px, transparent 16px),
+      radial-gradient(circle at 70% 46%, var(--firefly) 0 1.5px, var(--firefly-halo) 3px, transparent 12px),
+      radial-gradient(circle at 78% 24%, var(--firefly) 0 3px, var(--firefly-halo) 4.5px, transparent 17px),
+      radial-gradient(circle at 88% 58%, var(--firefly) 0 2px, var(--firefly-halo) 3.5px, transparent 14px),
+      radial-gradient(circle at 92% 14%, var(--firefly) 0 2.5px, var(--firefly-halo) 4px, transparent 16px),
+      radial-gradient(circle at 12% 72%, var(--firefly) 0 1.5px, var(--firefly-halo) 3px, transparent 12px),
+      radial-gradient(circle at 52% 80%, var(--firefly) 0 2px, var(--firefly-halo) 3.5px, transparent 14px),
+      radial-gradient(circle at 44% 26%, var(--firefly) 0 1.5px, var(--firefly-halo) 3px, transparent 12px),
+      var(--dusk);
+  }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .handover--forest .handover__back { left: 32px; top: 28px; padding: 0 14px; font-size: var(--text-md); }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .forest-blind__ring {
+    width: 96px;
+    height: 96px;
+    border-width: 7px;
+    font-size: 30px; /* glyph, not type */
+    box-shadow: 0 0 0 8px var(--firefly-ring), 0 0 40px 10px var(--firefly-glow-soft);
+  }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .handover--forest .handover__name { font-size: 56px; line-height: var(--leading-display); }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .handover--forest .handover__sub { font-size: var(--text-xl); }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .handover.handover--forest .handover__go { align-self: center; font-size: 24px; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .forest-blind__trees { padding: 0 30px; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .forest-blind__tree { width: 60px; height: 120px; border-radius: 50% 50% 8px 8px / 60% 60% 8px 8px; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .forest-blind__tree:nth-child(n+7) { display: block; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .forest-blind__tree:nth-child(5n+2) { width: 80px; height: 200px; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .forest-blind__tree:nth-child(5n+3) { width: 70px; height: 170px; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .forest-blind__tree:nth-child(5n+4) { width: 96px; height: 130px; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .forest-blind__tree:nth-child(5n) { width: 64px; height: 140px; }
+}
+/* ===== end #1469 ===== */

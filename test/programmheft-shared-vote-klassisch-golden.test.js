@@ -145,3 +145,14 @@ test('the snapshot can see Programmheft: the same screens under it are NOT the g
     assert.notEqual(ph[k], golden[k], `Programmheft's ${k} is identical to Klassisch's`);
   }
 });
+
+test('the snapshot can see Forest (#1469): its shared vote and blind are NOT the golden either', async (t) => {
+  // Forest's slice branches the same two views through forestWorn(); the golden
+  // above pins that Klassisch stays byte-for-byte, and this control proves the
+  // comparison can see a Forest branch at all.
+  const golden = JSON.parse(fs.readFileSync(GOLDEN, 'utf8'));
+  const forest = await renderAll(t, 'forest');
+  for (const k of Object.keys(golden)) {
+    assert.notEqual(forest[k], golden[k], `Forest's ${k} is identical to Klassisch's`);
+  }
+});
