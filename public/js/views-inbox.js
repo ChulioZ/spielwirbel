@@ -66,9 +66,10 @@ function renderInboxItem(item) {
     : item.type === 'friend_request' ? renderFriendRequestItem(item)
       : renderGenericItem(item);
   // Der Tisch (#1272, T14.2), Ocean (#1219, O14.2), Das Programmheft
-  // (#1380, P14.3) and Die Brücke (#1246, B14.3 — the type glyph as the row's
-  // kicker, the time beside it) compose the row; Klassisch does not.
-  if (designIs('tisch') || designIs('ocean') || designIs('programmheft') || designIs('bruecke')) composeInboxRow(row, item);
+  // (#1380, P14.3), Die Brücke (#1246, B14.3 — the type glyph as the row's
+  // kicker, the time beside it) and Forest (#1474, F14.4 — the glyph in a moss
+  // disc, each row a card) compose the row; Klassisch does not.
+  if (designIs('tisch') || designIs('ocean') || designIs('programmheft') || designIs('bruecke') || designIs('forest')) composeInboxRow(row, item);
   return row;
 }
 

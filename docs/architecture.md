@@ -919,6 +919,8 @@ public/
     forest-tier2a.js Forest's tier 2a (#1473): the Chronik as a path and its
                      „Rückblick" entry, the Pokale grove, the member page's
                      five-figure Tischkarte with „Zuletzt dabei" beside it
+    forest-tier2b.js Forest's tier 2b (#1474): the round's Einstellungen as two
+                     columns of cards, the name field and the marker ribbons
     vote-card-composed.js Der Tisch's vote card (#1268): the felt header, the card
                      with cover and meta, the worded faces, the hand-off line
                      and the vote link's felt intro; both vote cards build
