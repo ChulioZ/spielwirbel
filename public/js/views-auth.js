@@ -35,7 +35,9 @@ function authScreen(on) {
 // anything containing it — openAuth passes the wrapper it built, a screen
 // re-titling itself passes its card.
 function setAuthDocTitle(root) {
-  const heading = root.querySelector('.auth__title');
+  // The h1 first: Forest's pair (#1470) carries two card titles, and the page's
+  // own is the one set as h1 — every other screen has only the one.
+  const heading = root.querySelector('h1.auth__title') || root.querySelector('.auth__title');
   setDocTitle(heading && heading.textContent);
 }
 
@@ -159,12 +161,55 @@ function wireAuthSplit(card, current) {
 const authFrame = (split, formHtml) =>
   (split ? `<div class="auth-split">${authPromiseHtml()}${formHtml}</div>` : formHtml);
 
+// The card's logo — every design's but Forest's pair, whose header carries the
+// brand instead (F5.1 draws the card without one).
+const authLogoHtml = (pair) => (pair ? '' : '<div class="auth__logo"><i class="ti ti-tornado" aria-hidden="true"></i></div>');
+
+/* Forest's sign-in (#1470, F5.1 at 1440, F5.2 at 390). The design composes
+   login and register as a PAIR: both forms on the one page, side by side from
+   640px — so neither path is a click away — and on a phone only the route's
+   own card, under the same two-way switch Der Tisch heads its form with
+   (links, each a route, so history and deep links behave as before). The
+   stylesheet decides which card a phone shows, from data-current.
+
+   Both /login and /register render it, each with its own card as the page's
+   h1 (the document title follows it) and the other's as h2, its own submit as
+   the primary and the other's as the secondary (one primary per screen), and
+   focus in its own first field. What it does NOT change is any form: the
+   builders are the ones every design uses, so the passkey stays under the
+   submit and forgot-password keeps its link (the operator's 2026-09-24 ruling,
+   #1193). Forgot-password and the terminal screens keep the single card. */
+const authPair = () => designIs('forest');
+
+function showAuthPair(current) {
+  const login = current === 'login';
+  openAuth(login ? showLogin : showRegister, `<div class="auth-pair" data-current="${current}">
+      ${authSegHtml()}
+      ${loginCardHtml({ pair: true, level: login ? 1 : 2 })}
+      ${registerCardHtml({ pair: true, level: login ? 2 : 1 })}
+    </div>`, (first) => {
+    const pair = first.closest('.auth-pair');
+    const [loginCard, registerCard] = pair.querySelectorAll('.auth__card');
+    wireAuthSplit(pair, current);
+    wireLogin(loginCard, { pair: true, focus: login });
+    wireRegister(registerCard, { pair: true, focus: !login });
+  }, `/${current}`);
+}
+
 function showLogin() {
   if (!authScreensAvailable()) return showHome();
+  if (authPair()) return showAuthPair('login');
   const split = authSplit();
-  openAuth(showLogin, authFrame(split, `<form class="auth__card" autocomplete="on">
-      ${split ? authSegHtml() : '<div class="auth__logo"><i class="ti ti-tornado" aria-hidden="true"></i></div>'}
-      <h1 class="auth__title">${esc(t('auth.login.title'))}</h1>
+  openAuth(showLogin, authFrame(split, loginCardHtml({ split })), (card) => wireLogin(card, { split }), '/login');
+}
+
+// The login form. `split` heads it with Der Tisch's segmented control, `pair`
+// drops the logo and the cross-link for Forest's pair (both cards are on the
+// page, or the pair's own switch is), `level` is its title's heading level.
+function loginCardHtml({ split = false, pair = false, level = 1 } = {}) {
+  return `<form class="auth__card" autocomplete="on">
+      ${split ? authSegHtml() : authLogoHtml(pair)}
+      <h${level} class="auth__title">${esc(t('auth.login.title'))}</h${level}>
       <p class="auth__sub muted">${esc(t('auth.login.sub'))}</p>
       <div class="field">
         <label for="authEmail">${esc(t('auth.emailOrUsername'))}</label>
@@ -195,16 +240,19 @@ function showLogin() {
       </div>
       <div class="auth__links">
         <button class="link-btn" type="button" id="toForgot">${esc(t('auth.login.forgot'))}</button>
-        ${split ? '' : `<button class="link-btn" type="button" id="toRegister">${esc(t('auth.login.toRegister'))}</button>`}
+        ${split || pair ? '' : `<button class="link-btn" type="button" id="toRegister">${esc(t('auth.login.toRegister'))}</button>`}
       </div>
-    </form>`), (card) => {
-    const form = card.closest('.auth').querySelector('form');
+    </form>`;
+}
+
+function wireLogin(card, { split = false, pair = false, focus = true } = {}) {
+    const form = card;
     const ident = card.querySelector('#authEmail');
     const pw = card.querySelector('#authPassword');
     const submit = card.querySelector('button[type=submit]');
     card.querySelector('#toForgot').addEventListener('click', showForgot);
     if (split) wireAuthSplit(card, 'login');
-    else card.querySelector('#toRegister').addEventListener('click', showRegister);
+    else if (!pair) card.querySelector('#toRegister').addEventListener('click', showRegister);
     wirePasskeyLogin(card);
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -226,8 +274,7 @@ function showLogin() {
       } catch { setError(card, t('auth.error.network')); }
       submit.disabled = false;
     });
-    ident.focus();
-  }, '/login');
+    if (focus) ident.focus();
 }
 
 /* The usernameless passkey login (#418).
@@ -278,10 +325,16 @@ function wirePasskeyLogin(card) {
 
 function showRegister() {
   if (!authScreensAvailable()) return showHome();
+  if (authPair()) return showAuthPair('register');
   const split = authSplit();
-  openAuth(showRegister, authFrame(split, `<form class="auth__card" autocomplete="on">
-      ${split ? authSegHtml() : '<div class="auth__logo"><i class="ti ti-tornado" aria-hidden="true"></i></div>'}
-      <h1 class="auth__title">${esc(t('auth.register.title'))}</h1>
+  openAuth(showRegister, authFrame(split, registerCardHtml({ split })), (card) => wireRegister(card, { split }), '/register');
+}
+
+// The register form; the options are loginCardHtml's.
+function registerCardHtml({ split = false, pair = false, level = 1 } = {}) {
+  return `<form class="auth__card" autocomplete="on">
+      ${split ? authSegHtml() : authLogoHtml(pair)}
+      <h${level} class="auth__title">${esc(t('auth.register.title'))}</h${level}>
       <p class="auth__sub muted">${esc(t('auth.register.sub'))}</p>
       <div class="field">
         <label for="regEmail">${esc(t('auth.email'))}</label>
@@ -319,17 +372,20 @@ function showRegister() {
         <a href="/nutzungsbedingungen" target="_blank" rel="noopener">${esc(t('auth.register.termsLinkLabel'))}</a>.
         ${esc(t('auth.register.privacyPre'))}
         <a href="/datenschutz" target="_blank" rel="noopener">${esc(t('auth.register.privacyLinkLabel'))}</a>.</p>
-      ${split ? '' : `<div class="auth__links">
+      ${split || pair ? '' : `<div class="auth__links">
         <button class="link-btn" type="button" id="toLogin">${esc(t('auth.register.toLogin'))}</button>
       </div>`}
-    </form>`), (card) => {
-    const form = card.closest('.auth').querySelector('form');
+    </form>`;
+}
+
+function wireRegister(card, { split = false, pair = false, focus = true } = {}) {
+    const form = card;
     const email = card.querySelector('#regEmail');
     const user = card.querySelector('#regUser');
     const pw = card.querySelector('#regPw');
     const submit = card.querySelector('button[type=submit]');
     if (split) wireAuthSplit(card, 'register');
-    else card.querySelector('#toLogin').addEventListener('click', showLogin);
+    else if (!pair) card.querySelector('#toLogin').addEventListener('click', showLogin);
     // Reveal the legal line only where those pages resolve (see the markup above).
     const termsLine = card.querySelector('.auth__terms');
     if (termsLine) withAppConfig((cfg) => { termsLine.hidden = !(cfg && cfg.footer); });
@@ -360,8 +416,7 @@ function showRegister() {
       } catch { setError(card, t('auth.error.network')); }
       submit.disabled = false;
     });
-    email.focus();
-  }, '/register');
+    if (focus) email.focus();
 }
 
 function showForgot() {

@@ -31,5 +31,15 @@ Read per-character left, top and width around the break before trusting a
 line split measured this way (`.claude/rules/measure-text-ink-not-its-box.md`
 has the grouping recipe).
 
+**Playwright's bundled headless Chromium cannot hyphenate either** (measured on
+#1470): it split nl „Programmaboe|kje" bare, exactly like the
+pane. And "works everywhere else" holds only where the device HAS that language's
+dictionary — so `hyphens: auto` is a nicety, never a fit guarantee. Where a name
+must stay inside its frame in every locale, make the layout give the word room
+instead: Forest's phone design picker is a wrapping flex row whose cards carry
+`min-width: min-content` (an `overflow: hidden` card's automatic minimum is 0,
+so it must be explicit), and a card whose longest word does not fit takes the
+row to itself.
+
 **Related:** `.claude/rules/browser-pane-is-chromium-only.md`,
 `.claude/rules/preview-pane-paint-artifacts.md` (the pane's other falsehoods).
