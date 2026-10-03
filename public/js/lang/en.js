@@ -170,6 +170,8 @@ I18N.en = {
   'hub.pulse.title': 'Round pulse',
   'hub.young.lock': 'from your first game',
   'hub.young.emptyTitle': 'The pot is still empty',
+  // #1471 (F7.3): Forest's empty table names its vessel, the tree stump.
+  'hub.young.emptyTitleForest': 'The stump is still empty',
   'hub.young.emptyText': 'Sessions are whirled from the shelf. Put your first game on the table.',
   'hub.young.emptyTextBgg': 'Sessions are whirled from the shelf. Put your first game on the table — or bring your whole shelf over from BGG in one step.',
   'hub.young.firstCta': 'Whirl your first session',

@@ -55,9 +55,18 @@ function forestHubFrame() {
    the green heart of it. The rings are the wrapper's own background — pure
    picture, no text — and the button stays the same element with the same
    handler, name and disabled reason; only its frame changes. Its label stays
-   „Session wirbeln" (operator decision E1): „Laub wirbeln" is Neue Session's. */
+   „Session wirbeln" (operator decision E1): „Laub wirbeln" is Neue Session's.
+
+   Without a button (`null`, a round with no game — F7.3) the stump shows ONLY
+   its rings: the locked „Session wirbeln" would be a second, dead action
+   beside the empty table's „Spiel hinzufügen", and its reason („ab dem ersten
+   Spiel") is the table's own sentence. Picture only, so aria-hidden. */
 function forestStump(btn) {
-  const stump = h('<div class="forest-stump"></div>');
+  const stump = h(`<div class="forest-stump${btn ? '' : ' forest-stump--empty'}"></div>`);
+  if (!btn) {
+    stump.setAttribute('aria-hidden', 'true');
+    return stump;
+  }
   btn.classList.add('forest-stump__core');
   stump.appendChild(btn);
   return stump;
@@ -248,4 +257,104 @@ function forestResumeNotice({ round, session }) {
          <span class="forest-notice__go">${esc(voting ? t('round.liveVote') : t('home.resume.result'))} <i class="ti ti-arrow-right" aria-hidden="true"></i></span>
        </span>
      </a>`);
+}
+
+/* ===== #1471 — the empty, young and long-language states (F7.1–F7.6) =====
+
+   F7's rule: „An empty clearing is light and calm" — one title, one line in
+   soft ink and, where there is something to do, exactly one action. None of
+   these blocks invents a figure or a state: each says only what the app's own
+   thresholds already decide (roundIsYoung, YOUNG_ROUND_SERIES_FROM, the Pokale
+   and Chronik empty screens), in their own strings — the Programmheft's P7
+   blocks (#1377) are the precedent, in Forest's material. */
+
+/* What stands under the stump on a young round (F7.3–F7.5), or null:
+   - no game (F7.3): the empty table — „Der Stumpf ist noch leer" and the two
+     ways to fill it, „Spiel hinzufügen" the primary. The stump then shows only
+     its rings (forestStump(null)), so this table's primary is the page's one.
+   - games, nothing played (F7.4): what is waiting, in the display face, and why
+     there are no scores yet.
+   - played, but under YOUNG_ROUND_SERIES_FROM (F7.5): when series come. */
+function forestYoung(round, activeGames) {
+  if (!activeGames.length) return hubEmptyTable(round, { titleKey: 'hub.young.emptyTitleForest' });
+  if (roundIsYoung(round)) {
+    return h(`<div class="forest-young">
+         <p class="forest-young__title">${esc(tn(activeGames.length, 'hub.young.readyOne', 'hub.young.ready'))}</p>
+         <p class="forest-young__text">${esc(t('hub.young.readyText'))}</p>
+       </div>`);
+  }
+  const played = youngRoundPlayed(round, hubDeps());
+  if (played >= YOUNG_ROUND_SERIES_FROM) return null;
+  return h(`<div class="forest-young">
+       <p class="forest-young__text">${esc(tn(YOUNG_ROUND_SERIES_FROM, 'hub.young.seriesOne', 'hub.young.series'))}</p>
+     </div>`);
+}
+
+/* A LOCKED block in the right column (F7.3, F7.4): the preview's title, the
+   state in ink and the sentence in soft ink. With `tab` the title is the link
+   to that sub-page — a preview is navigation, so an empty one still leads
+   there (hub-previews.js's header). Without it the block is a plain notice. */
+function forestLocked(round, { title, state = '', text, tab = null }) {
+  const block = h(`<section class="hub-card forest-locked">
+       <h2 class="forest-locked__title">${tab ? '<a></a>' : esc(title)}</h2>
+       ${state ? `<p class="forest-locked__state">${esc(state)}</p>` : ''}
+       <p class="forest-locked__text">${esc(text)}</p>
+     </section>`);
+  if (tab) {
+    const link = block.querySelector('.forest-locked__title a');
+    link.textContent = title;
+    navLink(link, roundPath(round.id, tab), () => showRound(round.id, tab));
+  }
+  return block;
+}
+
+/* The right column's previews on a young round (F7.3, F7.4): each preview that
+   has nothing to show yet stands as a locked block in its place instead of
+   vanishing. The Regal only while the shelf is empty; Pokale and Chronik only
+   before the first played session, in the words their own empty screens use. */
+function forestAsidePreviews(round, activeGames, { regal, pokale, chronik }) {
+  const played = round.sessions.some((s) => s.finished);
+  return [
+    regal || (!activeGames.length ? forestLocked(round, {
+      title: t('hub.tab.regal'), state: tn(0, 'home.chip.gamesOne', 'home.chip.games'), text: t('hub.young.lock'), tab: 'regal',
+    }) : null),
+    pokale || (!played ? forestLocked(round, {
+      title: t('hub.tab.pokale'), state: t('pokale.emptyTitle'), text: t('pokale.empty'), tab: 'pokale',
+    }) : null),
+    chronik || (!played ? forestLocked(round, {
+      title: t('hub.tab.chronik'), state: t('chronik.emptyTitle'), text: t('chronik.empty'), tab: 'chronik',
+    }) : null),
+  ].filter(Boolean);
+}
+
+/* The Rundenpuls of a round with games and no played session (F7.4), which
+   hubPulseCard leaves out: a locked block saying when the numbers come. The
+   threshold is the pulse's own (YOUNG_ROUND_SERIES_FROM) — the sheet's „ab der
+   ersten Session" is the Programmheft's floor, not Forest's. */
+function forestLockedPulse(round, activeGames) {
+  if (!activeGames.length || !roundIsYoung(round)) return null;
+  return forestLocked(round, {
+    title: t('hub.pulse.title'),
+    text: tn(YOUNG_ROUND_SERIES_FROM, 'hub.young.pulseOne', 'hub.young.pulse'),
+  });
+}
+
+/* The empty lobby (F7.1): a row of trees over the greeting, the app's first-run
+   sentence in place of „Welche Runde spielt heute?", and ONE action — the same
+   link as Klassisch's `.lobby-cta`, as the design's primary button. `head` is
+   the lobby head views-home.js already built (its h1 is the page's).
+
+   The sheet's „Beispielrunde ansehen" is left out for the reason tischLobbyAlt
+   gives (operator, #1269): only a signed-in account sees this lobby, and with
+   one login slot the demo would sign it out of itself. */
+function forestFirstRun(head, onboard) {
+  const first = h(`<section class="forest-first">
+       <span class="forest-first__trees" aria-hidden="true"></span>
+     </section>`);
+  first.appendChild(head);
+  head.querySelector('.lobby-head__sub').textContent = t(onboard ? 'home.onboard.sub' : 'home.empty.sub');
+  const cta = h(`<a class="btn btn--primary forest-first__cta"><i class="ti ti-plus" aria-hidden="true"></i> ${esc(t('home.newRound'))}</a>`);
+  navLink(cta, '/round/new', () => showNewRound());
+  first.appendChild(cta);
+  return first;
 }

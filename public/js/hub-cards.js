@@ -171,7 +171,8 @@ function hubSuggestCard(round, activeGames, statsByGame, exclude) {
     // Ocean says it too (#1216, O7.3 „Wie wär's mit"), in the pair beside the
     // shell — the same one truthful reason, the same copy. And Die Brücke, in
     // its own slot (#1243, B7.2 „sagt, wann es losgeht").
-    if ((designIs('tisch') || designIs('ocean') || designIs('bruecke')) && roundIsYoung(round) && activeGames.length
+    // Forest too (#1471, F7.4), in the pair under the stump.
+    if ((designIs('tisch') || designIs('ocean') || designIs('bruecke') || designIs('forest')) && roundIsYoung(round) && activeGames.length
       && activeGames.length < SUGGEST_MIN_SHELF) {
       return hubSentenceCard('ti-bulb', t('hub.suggest.title'),
         tn(SUGGEST_MIN_SHELF, 'hub.young.suggestOne', 'hub.young.suggest'));
@@ -529,12 +530,15 @@ async function renderRecoTeaser(rid, grid) {
    button which is not there is the kind of promise T7 exists to stop making.
 
    Moved here from views-round-start.js by #1466 for that file's token budget:
-   it is a card renderer like its neighbours, called from the Start tab. */
-function hubEmptyTable(round) {
+   it is a card renderer like its neighbours, called from the Start tab.
+
+   `titleKey` lets Forest name its own vessel (F7.3, #1471: „Der Stumpf ist
+   noch leer" — the stump, not the pot); the sentence and the actions stay. */
+function hubEmptyTable(round, { titleKey = 'hub.young.emptyTitle' } = {}) {
   const bgg = canImportBgg();
   const table = emptyState({
     icon: 'ti-tornado',
-    title: t('hub.young.emptyTitle'),
+    title: t(titleKey),
     text: t(bgg ? 'hub.young.emptyTextBgg' : 'hub.young.emptyText'),
   });
   table.classList.add('empty--table');

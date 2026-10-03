@@ -142,12 +142,13 @@ function renderStartTab(round, activeGames) {
      the count. The threshold is the app's own — one active game — not the
      sheet's „ab 2 Spielen" (operator default on #1269). */
   // Die Brücke folds the empty table into the Missionskontrolle below (B7.1).
-  if (activeGames.length === 0 && !bh) (ph ? ph.lead : launch).appendChild(hubEmptyTable(round));
+  // Forest puts it UNDER the stump instead (F7.3, #1471 — forestYoung).
+  if (activeGames.length === 0 && !bh && !forest) (ph ? ph.lead : launch).appendChild(hubEmptyTable(round));
   // Ocean's one themed verb, „Abtauchen" (O9 §2), on the one action; Die
   // Brücke's „Mission starten" with its own glyph (B9 „Hauptaktion 1").
   const ctaLabel = ocean ? t('round.startSessionOcean')
     : bh ? t('round.startSessionBruecke')
-      : (tisch || ph) && activeGames.length && roundIsYoung(round)
+      : (tisch || ph || forest) && activeGames.length && roundIsYoung(round)
         ? t('hub.young.firstCta') : t('round.startSession');
   const startBtn = h(
     `<button class="btn btn--primary hub-cta${railOwned}"><i class="ti ${bh ? 'ti-rocket' : 'ti-tornado'}" aria-hidden="true"></i>${esc(ctaLabel)}</button>`
@@ -164,10 +165,13 @@ function renderStartTab(round, activeGames) {
     startBtn.setAttribute('aria-describedby', 'hub-cta-reason');
   }
   if (bh) launch.appendChild(brueckeMission(startBtn, round, activeGames));
-  else launch.appendChild(ocean ? oceanShell(startBtn) : forest ? forestStump(startBtn) : startBtn);
+  else launch.appendChild(ocean ? oceanShell(startBtn) : forest ? forestStump(activeGames.length ? startBtn : null) : startBtn);
   // Ocean's young round (#1216, O7.3): the shell stays the centre, and one
-  // line under it says what is waiting for the first session.
+  // line under it says what is waiting for the first session. Forest's says
+  // it for every young state, the empty table included (F7.3–F7.5, #1471).
   if (ocean && activeGames.length && roundIsYoung(round)) launch.appendChild(oceanYoungLine(activeGames));
+  const forestLine = forest && forestYoung(round, activeGames);
+  if (forestLine) launch.appendChild(forestLine);
 
   // Quick-start presets (#923): the same draw, already narrowed. Directly under
   // the CTA because they modify it — and only when this shelf can actually
@@ -426,7 +430,10 @@ function renderStartTab(round, activeGames) {
   const demo = (tisch || ph) && demoAccount;
   const demoHost = ph ? (card) => ph.lead.appendChild(card) : (card) => grid.appendChild(cardSlot(card));
   if (demo) demoHost(hubDemoSummary(round, activeGames));
-  if (demoAccount) demoHost(hubDemoInvite());
+  /* Forest (F7.6, #1471): the invitation as a band over the whole hub, the
+     condensed list under the stump — and its previews stay on the right. */
+  if (forest && demoAccount) cols.main.appendChild(hubDemoSummary(round, activeGames));
+  if (demoAccount) (forest ? (card) => cols.root.before(card) : demoHost)(hubDemoInvite());
   // Ocean pulls two cards out of the grid: the suggestions into the pair above,
   // the Kümmerliste into the preview column (O3.2's right column).
   const suggest = hubSuggestCard(round, activeGames, statsByGame, nagged);
@@ -463,6 +470,10 @@ function renderStartTab(round, activeGames) {
     regal: hubRegalPreview(round, activeGames),
     pokale: hubPokalePreview(round),
     chronik: hubChronikPreview(round),
+  }) : forest ? forestAsidePreviews(round, activeGames, {
+    regal: hubRegalPreview(round, activeGames),
+    pokale: hubPokalePreview(round),
+    chronik: hubChronikPreview(round),
   }) : [
     hubRegalPreview(round, activeGames),
     hubPokalePreview(round),
@@ -473,7 +484,9 @@ function renderStartTab(round, activeGames) {
   } else if (cols) {
     previews.forEach((card) => cols.aside.appendChild(card));
     // Forest's right column carries the pulse too (F3.2), above the Kümmerliste.
-    if (forest && pulse) cols.aside.appendChild(pulse);
+    // A young one's stands locked until it has numbers (F7.4, #1471).
+    const fpulse = forest && (pulse || forestLockedPulse(round, activeGames));
+    if (fpulse) cols.aside.appendChild(fpulse);
     if (care) cols.aside.appendChild(care);
   } else if (bh) {
     previews.forEach((card) => bh.previews.appendChild(card));
