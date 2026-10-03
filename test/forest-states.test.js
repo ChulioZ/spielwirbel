@@ -18,8 +18,8 @@ const { loadApp } = require('./support/dom');
 const { domSignature } = require('./support/dom-signature');
 
 const FIXTURE = path.join(__dirname, 'fixtures', 'programmheft-states-klassisch.json');
-const FOREST_CSS = fs.readFileSync(path.join(__dirname, '..', 'public', 'css', 'designs', 'forest.css'), 'utf8')
-  .replace(/\/\*[\s\S]*?\*\//g, '');
+const FOREST_RAW = fs.readFileSync(path.join(__dirname, '..', 'public', 'css', 'designs', 'forest.css'), 'utf8');
+const stripComments = (css) => css.replace(/\/\*[\s\S]*?\*\//g, '');
 
 const DAY = 86400000;
 const ago = (days) => new Date(Date.now() - days * DAY).toISOString();
@@ -202,9 +202,13 @@ test('Forest F7.10: the young states keep their words in Finnish', async (t) => 
 // ------------------------------------------------------------ the CSS
 
 test('Forest #1471: no text is set in a hairline, hatch or motif colour, and nothing is cut with an ellipsis', () => {
-  const start = FOREST_CSS.indexOf('.forest-stump--empty');
+  // This slice's own section only, header to the next header: later Forest
+  // slices append theirs after it, and their rules are not this guard's business.
+  const start = FOREST_RAW.indexOf('/* ===== #1471');
   assert.ok(start > 0, 'no #1471 section in forest.css');
-  const own = FOREST_CSS.slice(start);
+  const next = FOREST_RAW.indexOf('/* ===== #', start + 1);
+  const own = stripComments(FOREST_RAW.slice(start, next === -1 ? undefined : next));
+  assert.ok(own.includes('.forest-stump--empty'), 'the #1471 section lost its empty stump');
   const decls = [...own.matchAll(/(?:^|[;{\s])color:\s*var\((--[\w-]+)\)/g)].map((m) => m[1]);
   assert.ok(decls.length >= 10, `only ${decls.length} colour declarations found — did the parse break?`);
   const banned = ['--line', '--hatch', '--bark', '--bark-light', '--wood', '--wood-ring', '--wood-edge', '--leaf-1', '--leaf-2', '--leaf-3', '--leaf-4'];
