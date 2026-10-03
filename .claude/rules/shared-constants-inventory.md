@@ -600,6 +600,18 @@ a second backend reader, `lib/feed-events.js`**, which validates a
 half this time: a hand-copied key list would drop a real mark silently, or let
 a free-text `title` through into a friend's feed.
 
+**The twenty-third is `public/js/guide-paths.js`** (#1171): `GUIDE_SLUGS` and
+`guidePath`, where the „Was spielen wir heute?" guide lives in each language.
+Like `vote-path.js` both sides BUILD rather than validate — `lib/guide.js`
+serves and cross-links the nine pages from it (canonical, hreflang, sitemap
+expectations in `test/seo.test.js`) and the landing screen links the reader's
+own language from it. A hand-copied client list would link a path the server
+answers with the SPA shell — a 200, so nothing anywhere notices. Its own trap is
+encoding: the Korean slug is Hangul, so every machine-read use goes through
+`encodeURI` (`encodedGuidePath`), and the router matches the ENCODED form,
+because that is what `req.path` holds. A slug, once published, is permanent:
+nothing redirects an old one.
+
 **Each new instance must be named above.** `test/rule-enumerations.test.js`
 asserts every `require('../public/js/…')` under `lib/routes/` and `lib/` appears
 in it, because the list had already gone stale by one before anyone noticed. The

@@ -1802,6 +1802,8 @@ I18N.it = {
   'landing.cta.title': 'La prossima volta non se ne discute nemmeno.',
   'landing.faq.q': 'Hai ancora qualche dubbio?',
   'landing.faq.link': 'Leggi le FAQ',
+  // The „Was spielen wir heute?" guide page (#1171), linked beside the FAQ.
+  'landing.guide.link': 'Guida: a cosa giochiamo stasera?',
   // The design band (#1198), shown only by a design that asks for it (Der Tisch as the face).
   // {n} is how many designs the instance offers (GET /api/config), so it never overclaims.
   'landing.designs.title': '{n} design, un’app.',
@@ -1970,6 +1972,9 @@ I18N.it = {
   'badges.moment.title': 'Appena ottenuti',
   'badges.moment.moreOne': '+{n} altro',
   'badges.moment.more': '+{n} altri',
+  // Das Programmheft's kicker on the result moment's band for a big tier (#1393):
+  // the round's Sessions 100 · 250 · 500 and Stammgast 100 · 250.
+  'badges.specialEdition': 'Edizione speciale',
   'badges.earnedIn': 'Ottenuto: {month}',
   'badges.tierReached': 'Livello {tier} raggiunto: {month}',
   'badges.card.next': 'Livello successivo: {n}',

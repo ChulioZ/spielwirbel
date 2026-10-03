@@ -271,3 +271,31 @@ test('the desktop band sits right under the hero, in the design the page wears (
     assert.ok(caption.length > 0 && !caption.startsWith('landing.'), `${design}: a translated caption`);
   }
 });
+
+/* The landing page links the „Was spielen wir heute?" guide (#1171) beside the
+   FAQ, in the reader's own language — the path from the shared slug table, so
+   the link cannot name a page the server does not answer. Ungated like the FAQ
+   link: every instance serves the guide. Two locales, because a link that
+   ignored the locale would pass a German-only check. */
+for (const locale of ['de', 'ko']) {
+  test(`the closing block links the guide in the reader's language (${locale})`, async (t) => {
+    const dom = loadApp({ locale });
+    t.after(() => dom.close());
+    dom.set('fetch', async (url) => {
+      if (String(url).startsWith('/api/config')) return { ok: true, json: async () => ({}) };
+      if (String(url).startsWith('/api/stats/public')) return { ok: false, status: 404, json: async () => ({}) };
+      throw new Error(`unexpected fetch: ${url}`);
+    });
+    dom.set('accountsActive', () => true);
+    dom.set('isLoggedIn', () => false);
+    await dom.call('showLanding');
+    await settle();
+
+    const { guidePath } = require('../public/js/guide-paths');
+    const link = dom.document.querySelector('.landing-close__faq a.landing-close__guide');
+    assert.ok(link, 'no guide link in the closing block');
+    // The DOM resolves the href; compare its decoded path.
+    assert.equal(decodeURI(new URL(link.href, 'http://x').pathname), guidePath(locale));
+    assert.equal(link.textContent.trim(), dom.run(`t('landing.guide.link')`));
+  });
+}
