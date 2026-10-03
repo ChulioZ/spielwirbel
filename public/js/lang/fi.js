@@ -157,6 +157,8 @@ I18N.fi = {
   'hub.pulse.title': 'Porukan pulssi',
   'hub.young.lock': 'ensimmäisestä pelistä alkaen',
   'hub.young.emptyTitle': 'Pata on vielä tyhjä',
+  // #1471 (F7.3): Forest's empty table names its vessel, the tree stump.
+  'hub.young.emptyTitleForest': 'Kanto on vielä tyhjä',
   'hub.young.emptyText': 'Arvonta tehdään hyllystä. Nostakaa ensimmäinen peli pöytään.',
   'hub.young.emptyTextBgg': 'Arvonta tehdään hyllystä. Nostakaa ensimmäinen peli pöytään — tai tuokaa koko hylly BGG:stä yhdellä kertaa.',
   'hub.young.firstCta': 'Aloita ensimmäinen sessio',

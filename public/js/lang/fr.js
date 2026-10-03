@@ -179,6 +179,8 @@ I18N.fr = {
   'hub.pulse.title': 'Pouls de la ronde',
   'hub.young.lock': 'dès le premier jeu',
   'hub.young.emptyTitle': 'Le pot est encore vide',
+  // #1471 (F7.3): Forest's empty table names its vessel, the tree stump.
+  'hub.young.emptyTitleForest': 'La souche est encore vide',
   'hub.young.emptyText': 'Le tirage se fait dans la ludothèque. Posez votre premier jeu sur la table.',
   'hub.young.emptyTextBgg': 'Le tirage se fait dans la ludothèque. Posez votre premier jeu sur la table — ou importez toute votre ludothèque depuis BGG en une étape.',
   'hub.young.firstCta': 'Démarrer la première session',

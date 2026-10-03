@@ -178,6 +178,8 @@ I18N.it = {
   'hub.pulse.title': 'Ritmo del gruppo',
   'hub.young.lock': 'dal primo gioco',
   'hub.young.emptyTitle': 'Il piatto è ancora vuoto',
+  // #1471 (F7.3): Forest's empty table names its vessel, the tree stump.
+  'hub.young.emptyTitleForest': 'Il ceppo è ancora vuoto',
   'hub.young.emptyText': 'Si estrae dallo scaffale. Mettete il primo gioco sul tavolo.',
   'hub.young.emptyTextBgg': 'Si estrae dallo scaffale. Mettete il primo gioco sul tavolo — oppure portate tutto il vostro scaffale da BGG in un solo passaggio.',
   'hub.young.firstCta': 'Avvia la prima sessione',
