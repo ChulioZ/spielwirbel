@@ -420,7 +420,13 @@ What the app does, in detail. For a short overview see the
     in Pokale › Abzeichen (on Ocean from the editor split up only). Ocean draws each mark as a pearl in a Muschel
     (issue #1391): a full pearl when earned, a smaller one inside a ring while
     under way, an empty shell with a dashed rim while open, and a closed shell
-    for a secret — with each person's pearls threaded on a string.
+    for a secret — with each person's pearls threaded on a string. Die Brücke
+    draws it as a service plate with bevelled corners (issue #1392): full cyan
+    when earned, a cyan outline with the running count filling it while under
+    way, a grey outline while open and a hatched one for a secret, with one
+    bar per tier beside the glyph (the reached ones filled) — the panel framed
+    in HUD corners, and on the result screen a frame that flashes before the
+    plate slides into place.
 
     A win counts wherever it happened, an evening played alone included. That is
     a deliberate trade: weighting a win by the size of the field it beat is
@@ -749,7 +755,7 @@ What the app does, in detail. For a short overview see the
   announced once, never while the friend's record is hidden, and never for a
   tier the friend already held before that finish — so a newly added tier is
   not announced retroactively), pictured by the
-  badge's own earned mark — the disc, pin or pearl the Spielerkarte shows — rather
+  badge's own earned mark — the disc, pin, pearl or plate the Spielerkarte shows — rather
   than a glyph that could read as a game with no cover (issue #1428); never
   member names, ratings, votes or round names, and only for activity after you
   became friends. The screen itself is **three full-width bands** — what is
