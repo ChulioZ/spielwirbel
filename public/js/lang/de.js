@@ -2092,7 +2092,6 @@ I18N.de = {
   'detail.statVetoBruecke': '× kein Schub',
   // Das Programmheft's lobby and hub (#1372, P3.1/P3.2/P6.1).
   'hub.members': 'Mitglieder',
-  'hub.forestSince': 'Runde seit {month}',
   'hub.forestMarker': 'Marker {name}',
   'hub.lead.open': 'Ergebnis ansehen',
   'home.phExtra': 'Extrablatt',

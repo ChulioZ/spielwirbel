@@ -1905,7 +1905,6 @@ I18N.ko = {
   'detail.statVetoBruecke': '× 추진력 없음',
   // Das Programmheft's lobby and hub (#1372, P3.1/P3.2/P6.1).
   'hub.members': '멤버',
-  'hub.forestSince': '{month}부터 함께한 모임',
   'hub.forestMarker': '마커 {name}',
   'hub.lead.open': '결과 보기',
   'home.phExtra': '호외',

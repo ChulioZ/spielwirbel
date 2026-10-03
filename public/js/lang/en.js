@@ -2094,7 +2094,6 @@ I18N.en = {
   'detail.statVetoBruecke': '× no thrust',
   // Das Programmheft's lobby and hub (#1372, P3.1/P3.2/P6.1).
   'hub.members': 'Members',
-  'hub.forestSince': 'Round since {month}',
   'hub.forestMarker': 'Marker {name}',
   'hub.lead.open': 'See the result',
   'home.phExtra': 'Extra edition',

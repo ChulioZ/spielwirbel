@@ -1982,7 +1982,6 @@ I18N.fr = {
   'detail.statVetoBruecke': '× aucune poussée',
   // Das Programmheft's lobby and hub (#1372, P3.1/P3.2/P6.1).
   'hub.members': 'Membres',
-  'hub.forestSince': 'Groupe depuis {month}',
   'hub.forestMarker': 'Marqueur {name}',
   'hub.lead.open': 'Voir le résultat',
   'home.phExtra': 'Édition spéciale',

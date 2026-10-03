@@ -1942,7 +1942,6 @@ I18N.fi = {
   'detail.statVetoBruecke': '× ei työntöä',
   // Das Programmheft's lobby and hub (#1372, P3.1/P3.2/P6.1).
   'hub.members': 'Jäsenet',
-  'hub.forestSince': 'Porukka {month} alkaen',
   'hub.forestMarker': 'Merkki {name}',
   'hub.lead.open': 'Katso tulos',
   'home.phExtra': 'Ylimääräinen painos',

@@ -1976,7 +1976,6 @@ I18N.pt = {
   'detail.statVetoBruecke': '× sem impulso',
   // Das Programmheft's lobby and hub (#1372, P3.1/P3.2/P6.1).
   'hub.members': 'Membros',
-  'hub.forestSince': 'Grupo desde {month}',
   'hub.forestMarker': 'Marcador {name}',
   'hub.lead.open': 'Ver o resultado',
   'home.phExtra': 'Edição extra',

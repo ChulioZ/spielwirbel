@@ -1974,7 +1974,6 @@ I18N.nl = {
   'detail.statVetoBruecke': '× geen stuwkracht',
   // Das Programmheft's lobby and hub (#1372, P3.1/P3.2/P6.1).
   'hub.members': 'Leden',
-  'hub.forestSince': 'Groep sinds {month}',
   'hub.forestMarker': 'Markering {name}',
   'hub.lead.open': 'Uitslag bekijken',
   'home.phExtra': 'Extra editie',
