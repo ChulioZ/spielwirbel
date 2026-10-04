@@ -102,10 +102,13 @@ async function showMember(rid, mid) {
        <div class="pokale-cards member-card__games"></div>
      </div>`);
   const h1 = card.querySelector('h1');
-  const nameEl = h(`<span class="gd-title" title="${esc(t('member.editName'))}">${esc(member.name)}</span>`);
+  // The game title's shape (#424): a focusable span, role="button", Enter/Space —
+  // the name wraps, and a <button> is an atomic inline-block. Until the 2026-10-04
+  // audit it had none of the three, so Tab skipped it in every design.
+  const nameEl = h(`<span class="gd-title" role="button" tabindex="0" title="${esc(t('member.editName'))}">${esc(member.name)}</span>`);
 
-  // Click the name -> inline input; Enter/blur saves, Escape cancels.
-  nameEl.addEventListener('click', () => {
+  // Click (or Enter/Space on) the name -> inline input; Enter/blur saves, Escape cancels.
+  const startNameEdit = () => {
     const input = h('<input class="input gd-title-input" />');
     input.value = member.name;
     nameEl.replaceWith(input);
@@ -130,8 +133,14 @@ async function showMember(rid, mid) {
     input.addEventListener('blur', commit);
     input.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
-      else if (e.key === 'Escape') { handled = true; input.replaceWith(nameEl); }
+      // Hand focus back to the trigger, or a keyboard user who cancels lands on <body>.
+      else if (e.key === 'Escape') { handled = true; input.replaceWith(nameEl); nameEl.focus(); }
     });
+  };
+  nameEl.addEventListener('click', startNameEdit);
+  nameEl.addEventListener('keydown', (e) => {
+    // preventDefault on Space, or the page scrolls under the editor.
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); startNameEdit(); }
   });
   h1.appendChild(nameEl);
 

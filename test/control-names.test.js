@@ -120,6 +120,51 @@ test('each result row\'s „Spielen" and „…" are described by THAT row\'s ga
     'the rebuilt action column lost its description');
 });
 
+/* --------------------------------------------- the member page's name editor
+
+   Reported during the 2026-10-04 audit as a click-only <span>, and it was: the
+   member page's rename trigger predates #424 (which made the game title and,
+   later, the round name keyboard-operable) and never got `tabindex`, `role` or
+   a key handler — views-round.js's own comment said so. Tab skipped it in every
+   design; Das Programmheft and Forest happen to add a visible „Bearbeiten"
+   button that clicks it, so four designs had no keyboard path to a rename at
+   all. Asserted per design, because two of them compose the card differently. */
+
+const DESIGN_IDS = require('../public/js/designs').DESIGN_REGISTRY.map((d) => d.id);
+
+for (const design of DESIGN_IDS) {
+  test(`${design}: the member name is a keyboard-operable rename trigger`, async (t) => {
+    const r = round({ games: [], sessions: [] });
+    const dom = loadApp({ locale: 'de', design });
+    t.after(() => dom.close());
+    dom.set('api', async (method, url) => (/\/activities$/.test(url) ? [] : r));
+    dom.set('accountsActive', () => false);
+    dom.set('isLoggedIn', () => false);
+    await dom.call('showMember', r.id, ANNA.id);
+
+    // Scoped to the card: the desktop rail carries a `.gd-title` of its own.
+    const trigger = dom.app.querySelector('.member-card h1 .gd-title');
+    assert.ok(trigger, 'no name trigger on the member card');
+    assert.ok(trigger.tabIndex >= 0 || /^(BUTTON|A)$/.test(trigger.tagName), 'Tab never reaches the name trigger');
+    assert.equal(trigger.getAttribute('role'), 'button', 'a screen reader hears plain text, not a control');
+
+    for (const key of ['Enter', ' ']) {
+      trigger.focus();
+      const ev = new dom.window.KeyboardEvent('keydown', { key, bubbles: true, cancelable: true });
+      trigger.dispatchEvent(ev);
+      const input = dom.app.querySelector('.member-card h1 .gd-title-input');
+      assert.ok(input, `${JSON.stringify(key)} on the trigger opened no editor`);
+      if (key === ' ') assert.ok(ev.defaultPrevented, 'Space must not also scroll the page');
+      assert.equal(dom.document.activeElement, input, 'the editor did not take focus');
+      // Escape cancels and hands focus back, or a keyboard user restarts at <body>.
+      input.dispatchEvent(new dom.window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+      assert.equal(dom.app.querySelector('.member-card h1 .gd-title-input'), null, 'Escape left the editor open');
+      assert.equal(dom.document.activeElement, dom.app.querySelector('.member-card h1 .gd-title'),
+        'Escape dropped focus instead of returning it to the trigger');
+    }
+  });
+}
+
 /* ---------------------------------------------------------- A7 lobby cards */
 
 test('a lobby card\'s avatar stack is one image named by the member count', async (t) => {

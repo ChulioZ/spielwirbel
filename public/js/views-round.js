@@ -190,8 +190,8 @@ async function saveRoundName(round, raw) {
 // whose silent failures .claude/rules/native-button-vs-focusable-span.md
 // documents. What a span owes in exchange is `role` + `tabindex` + an explicit
 // Enter/Space handler; all three are here, and each is useless without the
-// others. (Note views-member.js's copy predates #424 and has none of them — copy
-// the game-detail shape, not that one.)
+// others. (views-member.js's copy predated #424 and had none of them until the
+// 2026-10-04 audit; it now has the same three.)
 function editableRoundName(round) {
   // #137: the round's name identifies it on every other person's home screen, so
   // renaming is co-owner and up. Below that this is plain text — no `.gd-title`,
