@@ -162,6 +162,10 @@ test('the daily budget refuses further sends once it is spent (#448)', async () 
       /mail_daily_budget_exhausted/,
     );
     assert.equal(mail.outbox.length, before, 'a refused send must not reach the outbox');
+    // The fields a caller LOGS for it (mailFault — never the message) still name
+    // which breaker refused it, and nothing else.
+    const err = await mail.send({ to: 'd@example.com', subject: 'S', text: 'T' }).catch((e) => e);
+    assert.deepEqual(mail.mailFault(err), { code: 'mail_daily_budget_exhausted' });
   } finally {
     delete process.env.MAIL_DAILY_MAX;
   }

@@ -88,6 +88,7 @@ test('providerCoverUrl refuses characters that would break out of url(\'…\')',
     'https://cf.geekdo-images.com/x .jpg',
     'https://cf.geekdo-images.com/x\n.jpg',
     'https://cf.geekdo-images.com/x<.jpg',
+    'https://cf.geekdo-images.com/x&#39;.jpg',      // a character reference
     "https://cf.geekdo-images.com/a.jpg');background:url('https://evil.tld/x.jpg",
     'https://cf.geekdo-images.com/a.jpg" onload="alert(1)',
   ];
