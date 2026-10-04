@@ -21,12 +21,16 @@ concludes the feature is broken, and no wording can fix it, because the rule
 doing the excluding is a number they cannot see. „Being fourth", by contrast,
 explains itself and needs no copy at all.
 
-**So the stage is the top three PLACES, full stop**, and a member with a
-negative score stands if they are in them — the operator's call, and the right
-one: seeing yourself on the podium on −1,0 beats seeing the places unclaimed.
-The one exclusion left is a member with **no record at all** (no wins, no
-losses, took part in no session that had a winner): they score exactly 0 on an
-empty sum, which would rank them above everyone who played and lost.
+**So the stage is the top three PLACES, full stop.** Under the Siegwertung a
+member with a negative score stood if they were in them — the operator's call,
+and the right one: seeing yourself on the podium on −1,0 beats seeing the places
+unclaimed. #1224 withdrew the Siegwertung and ranks on the raw win count again,
+and the rule survived it: „has won at least once" is the same mistake in a new
+costume, so a member who played a decided night and never won stands on
+„0 Siege" (`roundStandings`, `views-pokale.js`). The one exclusion left is a member
+with **no record at all** (took part in no session that had a winner): ranking
+that empty record would stand someone who never turned up beside everyone who
+played and lost (under the Siegwertung, above them: 0 on an empty sum).
 
 The only empty step left is a **tie consuming the place** — two members on 2nd
 means there is no 3rd, so the painted riser is a true statement about the

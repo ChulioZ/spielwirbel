@@ -7,6 +7,7 @@ paths:
   - "public/js/bgg-covers.js"
   - "public/js/cover-picker.js"
   - "public/js/views-round-detail.js"
+  - "public/js/game-editors.js"
   - "public/js/views-round-lookup.js"
   - "public/js/bgg-import.js"
   - "test/bgg-covers.test.js"
@@ -68,9 +69,11 @@ on the game row as `edition` — so it names the printing on the detail page **a
 selects which language edition the wish-list price quotes**. Deduping first would
 not merely mislabel a box; it would price a different one.
 
-Two consequences for the three call sites (`views-round-detail.js`'s cover
-popover, `views-round-lookup.js`'s add-game sheet and `bgg-import.js`'s bulk-import rows), all
-of which used to keep only `c.imageUrl`:
+Two consequences for the three call sites (the game page's cover popover,
+`openImagePopover` in `game-editors.js` since #968 split it out of
+`views-round-detail.js`; `views-round-lookup.js`'s add-game sheet; and
+`bgg-import.js`'s bulk-import rows), all of which used to keep only
+`c.imageUrl`:
 
 - **The edition travels WITH the cover, in both directions.** Picking a new cover
   replaces it; an upload, a `removeImage`, a pasted URL carrying no edition, a
@@ -136,14 +139,15 @@ a real capture; a hand-written one proves nothing about what BGG serves.
 
 Three pane traps met doing exactly that:
 
-- **`loading="lazy"` images never load** — the pane's `innerHeight` is 0, so the
-  IntersectionObserver cannot fire (`.claude/rules/provider-cover-sizing.md`).
+- **`loading="lazy"` images never load** — the pane never fires an
+  IntersectionObserver, at any viewport size; its 0×0 viewport is a symptom, not
+  the cause (`.claude/rules/preview-pane-paint-artifacts.md`).
   Set `loading="eager"` on the tiles before judging whether CSP and the hotlinks
   work. They do: all tiles resolve to 123×150.
-- **`gridTemplateColumns` reports a single column** for the same reason — the
-  `auto-fill` track count is computed against a 0-wide viewport. Trust the
-  screenshot for a layout claim, per
-  `.claude/rules/label-rows-lose-to-field-label.md`.
+- **`gridTemplateColumns` reports a single column** on an un-resized pane — the
+  `auto-fill` track count is computed against its 0-wide viewport. Call
+  `resize_window` first and read `innerWidth` back, or trust the screenshot for a
+  layout claim, per `.claude/rules/label-rows-lose-to-field-label.md`.
 - **`core.js` and `styles.css` are cache-first shell assets**, so an edit to
   either is invisible until the service worker is cleared *again* — it
   re-registers on the next load, so one clear per edit, not one per session

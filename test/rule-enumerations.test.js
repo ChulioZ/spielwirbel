@@ -128,8 +128,21 @@ test('every constant the backend shares out of public/js is named in its rule', 
      global and stays small enough to be worth loading into every session. */
   const rel = '.claude/rules/shared-constants-inventory.md';
   const rule = section(src(rel), rel, '## The instances');
-  const missing = [...shared].filter((n) => !rule.includes(n)).sort();
+  /* An instance counts only as an ENTRY HEADING — „**The <ordinal> is
+     `public/js/<name>.js`**" — never as a substring anywhere in the section.
+     The substring form was vacuous for `recap`: lib/user-plays.js and
+     lib/user-stats.js required public/js/recap.js from #1089 on with no entry
+     for it, and the test stayed green because unrelated prose ("the shape
+     recap.js and period-recap.js already use") contains the word
+     (.claude/rules/source-scanning-guards-enumerate-shapes.md). */
+  const entries = new Set([...rule.matchAll(/^\*\*The [a-z-]+ is `public\/js\/([A-Za-z0-9_-]+)\.js`/gm)]
+    .map((m) => m[1]));
+  // Counts HITS, so a heading pattern that stopped matching fails here rather
+  // than reporting every module missing for some other-looking reason.
+  assert.ok(entries.size >= 20, `expected at least 20 entry headings, found ${entries.size}`);
+  const missing = [...shared].filter((n) => !entries.has(n)).sort();
   assert.deepEqual(missing, [],
-    `shared-constants-inventory.md does not name: ${missing.join(', ')}`
-    + ' — every backend require out of public/js/ belongs in that inventory.');
+    `shared-constants-inventory.md has no entry for: ${missing.join(', ')}`
+    + ' — every backend require out of public/js/ gets its own paragraph there,'
+    + ' opening „**The <ordinal> is `public/js/<name>.js`**".');
 });

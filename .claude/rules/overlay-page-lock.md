@@ -86,8 +86,8 @@ following `mousedown` past a 10px slop. Two properties are load-bearing:
 - **Capture phase, on the backdrop itself.** A capture listener on the *target
   element* runs before that element's bubble listeners regardless of registration
   order, and `stopPropagation()` from it suppresses them — verified in jsdom and
-  in Chrome. That is what lets one guard cover all ten sheets without touching a
-  single call site.
+  in Chrome. That is what lets one guard — installed once, in `openSheet`
+  (`sheet.js`) — cover every sheet without touching a single call site.
 - **Pointer events, not touch events.** `pointerdown` precedes `mousedown` for a
   mouse, while for touch the compatibility `mousedown` arrives only after
   `pointerup` — so one lifecycle covers both input kinds and the flag is set at

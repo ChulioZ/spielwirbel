@@ -50,7 +50,8 @@ nothing more. Don't "improve" it with the current voter or game.
 
 ## 3. Auth screens are titled from their own `<h1>`, by `openAuth`
 
-All seven go through `openAuth`, which calls `setAuthDocTitle(wrap)` — reading
+Every auth screen goes through `openAuth` (`views-auth.js`), which calls
+`setAuthDocTitle(wrap)` — reading
 `.auth__title` back off the card it just rendered. So a new auth screen inherits
 a correct, translated title with nothing to remember, and the title cannot drift
 from the heading, because it *is* the heading.

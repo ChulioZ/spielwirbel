@@ -1,6 +1,8 @@
 ---
 paths:
   - "public/js/views-round-detail.js"
+  - "public/js/views-round.js"
+  - "public/js/views-member.js"
   - "public/js/core.js"
   - "public/js/popover.js"
   - "public/styles.css"

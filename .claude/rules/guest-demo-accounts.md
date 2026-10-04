@@ -8,6 +8,7 @@ paths:
   - "lib/routes/profile.js"
   - "public/js/views-friends.js"
   - "public/js/views-profile.js"
+  - "public/js/views-account*.js"
   - "public/js/views-landing.js"
   - "test/demo.test.js"
   - "lib/observability.js"
@@ -27,8 +28,8 @@ exist to answer "is anyone actually using this", and every tourist would corrupt
 them. The obvious implementation passes a flag from each call site into
 `trackEvent`. Two reasons that is the wrong shape here:
 
-- **A call site can forget.** There are five today and the next one is written by
-  someone who has never heard of demo mode.
+- **A call site can forget.** Every `trackEvent(…)` in `lib/routes/` is one, and
+  the next one is written by someone who has never heard of demo mode.
 - **In-memory state classifies inconsistently.** More than one process can serve
   at once, so a registry of demo tenant ids built at mint time would only be
   known to the process that minted it; the same tenant would be excluded or not
@@ -61,8 +62,8 @@ required from anywhere, including the repo.
 
 **Everything else requires `isDemoTenant` instead of re-deriving the check.** The
 cycle is specific to `observability.js` and the repo; a `lib/routes/*.js` file can
-require `lib/demo` freely (`account.js`, `friends.js`, `invitations.js` and,
-since #506, `admin.js` all do). The second consumer is the admin **Konten** list: `GET
+require `lib/demo` freely (`account.js`, `friends.js` and `invitations.js` do,
+and since #506 the admin router — `lib/routes/admin/users.js` since #996). The second consumer is the admin **Konten** list: `GET
 /api/admin/users` drops demo rows *before* the `?q=` filter, so a search term
 cannot surface one either — same reasoning as the counters, since a demo is
 purged on its own and no moderation action against one is meaningful. The third

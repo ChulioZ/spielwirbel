@@ -9,9 +9,13 @@ paths:
 
 Issue #141 added the app's one sanctioned build step: `npm run build`
 (`scripts/build.js`, using `esbuild`) mirrors `public/` into `dist/` with
-**content-hashed, minified** `js/**` + `styles.css`, rewriting every reference in
-`index.html`, `sw.js` and `login.html`. It exists purely to bust stale asset
-caches after a deploy — it is **not** a bundler/framework, and dev stays
+**content-hashed, minified** `js/**` + `styles.css` + `css/**` (the per-design
+stylesheets, since #1184), rewriting every reference in the documents listed in
+`REWRITE_FILES` (`index.html`, `sw.js` and the standalone pages `login.html`,
+`admin.html`, `kontakt.html`) — and a design stylesheet's name into
+`designs.js`'s source, in a first phase
+(`.claude/rules/design-stylesheets-are-shell-assets.md`). It exists purely to
+bust stale asset caches after a deploy — it is **not** a bundler/framework, and dev stays
 build-free. Non-obvious things that will bite if you forget them:
 
 - **NEVER rename identifiers, never bundle.** The frontend scripts share ONE
@@ -38,7 +42,8 @@ build-free. Non-obvious things that will bite if you forget them:
 - **Reference rewriting is delimited-path replacement.** `rewriteRefs` only
   replaces a mapped path when it's wrapped in matching quotes (`"…"`/`'…'`), so
   `/js/views-round.js` can't clobber `/js/views-round-settings.js` as a substring.
-  Only `public/js/**` + `styles.css` are in the manifest; **fonts, icons,
+  Only `public/js/**`, `styles.css` and `public/css/**` are in the manifest (a
+  vendored `js/vendor/**` file is hashed but not re-minified); **fonts, icons,
   `manifest.webmanifest`, `fonts/tabler-icons.css` and `index.html` itself are
   copied through unchanged** (index.html is the bootstrap document — it can't be
   content-hashed). `.DS_Store` and other dotfiles are skipped in the mirror.
@@ -50,8 +55,8 @@ build-free. Non-obvious things that will bite if you forget them:
   built `SHELL` from them.
 
   **The literal is in that digest for a reason — don't drop it as redundant
-  (#617).** Only `js/**` + `styles.css` are hashed, so a change confined to a
-  copied-through asset (`manifest.webmanifest`, icons, fonts,
+  (#617).** Only `js/**`, `styles.css` and `css/**` are hashed, so a change
+  confined to a copied-through asset (`manifest.webmanifest`, icons, fonts,
   `fonts/tabler-icons.css`) moves no hashed filename. Without the literal the
   digest is unchanged, the built `sw.js` is **byte-identical** to the previous
   deploy, no browser detects a service-worker update, and the cache-first shell

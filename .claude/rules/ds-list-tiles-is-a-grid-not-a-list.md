@@ -59,8 +59,8 @@ the same `.ds-row` children and the same helpers describe two different
 geometries, and which one you get depends on a modifier three words into a class
 attribute. Anything reading `.ds-row` alone and concluding "row" is guessing.
 
-The screens on the grid side today are the Tags manager and the provider tiles.
-`.tag-row { flex-direction: column }` compounds it: each tile is itself a
+The grid side today is the Tags manager (the per-round provider tiles shared it
+until #744 removed them). `.tag-row { flex-direction: column }` compounds it: each tile is itself a
 column, so "row" in the markup, "column" in the layout and "grid" in the
 container are three different words for one thing.
 

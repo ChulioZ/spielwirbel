@@ -117,6 +117,13 @@ re-examinations. Then look for positions that were reversed in one place and not
 another; the repo has a live example in each direction (the #332 content-width
 revert, the #207 co-tenancy reversal).
 
+**Run the forward-reference sweep every time** (`deferred-weakness-attributions-rot.md`):
+grep the in-scope files (`*.md`, `.github/`, `.claude/`, `docs/`, `.env.example`) for
+issue numbers near `tracked|follow-up|deferred|still open|until #|yet|coming|meant to
+close`, and diff them against `gh issue list --state open`. Any hit naming a closed
+issue in the present or future tense is a finding — closing an issue re-points
+nothing, and the 2026-10-04 run found nine this way.
+
 ### 4. README and configuration surface → C-006, C-010
 
 Run the `keep-readme-current.md` checklist properly: features and views, the
@@ -161,8 +168,8 @@ about what the deployment *is* today, and none of it is derivable from the code.
   reporter calibrates severity against. Verify the auth mode, whether
   registration is open, and whether it still claims anything is "not yet"
   shipped.
-- `README.md` — the `AUTH_PASSWORD` paragraph and the accounts-mode paragraph
-  both describe what the maintainer's hosted instance runs.
+- `README.md` — the status callout; and `docs/configuration.md`'s `AUTH_PASSWORD`,
+  accounts-mode and layered-mode paragraphs (moved out of the README 2026-07-30).
 - `CONTRIBUTING.md` — the pre-PR checklist must name every check that actually
   gates a merge (branch protection requires `ci-passed`, i.e. `test` **and**
   `coverage` **and** `postgres`), and the licensing terms must match `LICENSE`
@@ -174,9 +181,8 @@ about what the deployment *is* today, and none of it is derivable from the code.
 
 **The instance-state list itself lives in exactly one place:**
 `.claude/rules/ops-only-changes-still-stale-the-docs.md`'s table — every file whose
-claims change through an ops action that produces no diff. Read it here; it is
-wider than this section (it picks up two rule files, `audit-loop.md`, `lib/legal.js`,
-`lib/quota.js` and three `.github/` files) and narrower in one respect: it excludes
+claims change through an ops action that produces no diff. Read it as part of
+this step; it is wider than this section and narrower in one respect: it excludes
 `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md` and `LICENSE`, which assert **process**
 rather than instance state, so this section owns those three and the rule owns the
 rest.

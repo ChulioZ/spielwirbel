@@ -74,9 +74,10 @@ Result: 520px, 5 columns, 10 tiles. Four properties are load-bearing:
   card silently goes wide while empty
   (`.claude/rules/hidden-attribute-vs-display-rule.md`).
 
-**Not every card needs the floor.** The expansion and tags editors reach their
-caps unaided, because their content really is that wide (a full expansion title, a
-row of chips). Check first — `getBoundingClientRect().width` against the computed
+**Not every card needs the floor.** The tags editor reaches its cap unaided,
+because its content really is that wide (a row of chips) — as the expansion
+editor's popover did with a full expansion title, until #1143 made that editor a
+dialog at every width. Check first — `getBoundingClientRect().width` against the computed
 `max-width` — rather than adding a floor by symmetry.
 
 ## Why width is the axis worth spending, and height usually is not
@@ -84,7 +85,7 @@ row of chips). Check first — `getBoundingClientRect().width` against the compu
 The reflex for "this editor is cramped" is a taller cap. Width is strictly
 better here, and it is the same measurement that shows why: a wider card wraps
 its content onto **fewer lines**, so it shows more entries *and gets shorter*.
-Measured, the expansion editor at 1440x900:
+Measured on the expansion editor's popover at 1440x900 (before #1143):
 
 | Width | Row heights (px) | Rows in the 240px list | Card |
 |---|---|---|---|

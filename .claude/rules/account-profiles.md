@@ -129,11 +129,12 @@ would be indistinguishable from an account with nothing to show.
 
 ## The row link: a row with buttons can never become the anchor
 
-The Freundeskreis rows hold action buttons, and **a `<button>` inside an `<a>` is
-invalid HTML** — the Chronik `.tl-act` case in
+The Freundeskreis request cards hold action buttons, and **a `<button>` inside an
+`<a>` is invalid HTML** — the Chronik `.tl-act` case in
 `.claude/rules/in-app-nav-links.md` §3. So only the avatar+name half becomes a
-real `<a href>` (`friendRowMain`), and the row **keeps `ds-row--static`**: it is
-not itself a click target and must not promise one.
+real `<a href>` (`friendRowMain`), and the card stays an inert `<div>`: it is not
+itself a click target and must not promise one. A FRIEND has carried no button
+since #1136, so its whole tile is the `<a>` (`renderPersonTile`).
 
 This is worth stating because the issue specified the opposite (drop the
 modifier, add a row-level click handler with a `closest()` bail-out), and

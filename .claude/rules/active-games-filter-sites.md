@@ -10,6 +10,8 @@ paths:
   - "public/js/views-session.js"
   - "public/js/round-rail.js"
   - "public/js/recap.js"
+  - "public/js/member-stats.js"
+  - "lib/user-plays.js"
   - "lib/quota.js"
   - "lib/routes/rounds.js"
   - "test/support/repo-contract.js"
@@ -186,7 +188,11 @@ Its consumers:
   (Größte Uneinigkeit) and **`memberFavourites`** (Lieblingsspiele). The skip in
   `memberFavourites` sits inside the per-member scan on purpose: that is what
   makes a member fall through to their best remaining game instead of vanishing.
-- `views-member.js` `memberStats` — the member page's **Lieblingsspiel**.
+- `memberStats` (`public/js/member-stats.js`) — the member page's
+  **Lieblingsspiel**, and through `lib/user-stats.js` the account profile's.
+- `lib/user-plays.js` `seatPlays` — the own profile's play list withholds a
+  retired game's **rating**; the play itself still counts, like Meistgespielt
+  below.
 
 **Why it is a shared function and not `!g.retired` written twice:** `memberStats`
 computes its favourite from the raw sessions rather than through `recap.js`'s

@@ -30,7 +30,7 @@ So the script ignores `tool_name` entirely and walks every string in
 `tool_input`. A tool that does not exist yet is covered by construction.
 `test/guard-protected-paths.test.js` pins `matcher === '*'`; narrowing it goes red.
 
-## Two properties that fail silently if inverted
+## Properties that fail silently if inverted
 
 - **`NOT_A_PATH` is an EXCLUSION list, not an allowlist.** A tool shipping a new
   field name is scanned by default. The inverse fails *open*, which is the one

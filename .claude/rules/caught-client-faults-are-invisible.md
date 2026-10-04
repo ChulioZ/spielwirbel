@@ -41,7 +41,7 @@ today. Keep the toast exactly as it is: this adds a report, it does not change
 what the user sees.
 
 Adding a kind means adding it to `CLIENT_ERROR_KINDS`, which the route validates
-against (the eighteenth entry in
+against (`public/js/error-report.js`'s entry in
 `.claude/rules/shared-constants-inventory.md`) — a hand-copied server list would
 400 the report and restore the blind spot through the mechanism built to remove
 it.

@@ -2,6 +2,7 @@
 paths:
   - "lib/tenant.js"
   - "lib/accounts.js"
+  - "lib/upload-access.js"
   - "lib/routes/admin/**"
   - "test/admin.test.js"
 ---
@@ -51,7 +52,10 @@ always up to one access-token TTL late.
 its cover objects"*, which asserts the erased account's still-valid token gets a
 401 and no rounds. If that assertion ever flips to a 200, this bug is back.
 
-Note `requireUploadAccount` (`/uploads`) still passes any signature-valid token
-without a row check. That is the pre-existing, documented limitation that per-tenant
-uploads isolation (#207/#137) is meant to close — it leaks cover *bytes* by key
-guess, not round data, and #273 did not change it.
+`/uploads` makes the same split, one step later. `requireUploadAccount` still
+checks only the token's signature, so a gone account's token passes the gate. But
+since #955 the ownership check behind it (`requireUploadOwner`,
+`lib/upload-access.js`) resolves the caller's tenant with `callerTenantId`, which
+returns `null` for a missing row — never `'default'`. So an erased account's token
+reads no game cover. Until it expires it can still read profile pictures, which
+any signed-in account may read by design (#558/#841).

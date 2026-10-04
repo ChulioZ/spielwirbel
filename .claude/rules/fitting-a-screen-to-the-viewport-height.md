@@ -72,8 +72,9 @@ pane reports 0 for those, and on an overflowing page `innerWidth` reports the
 
 A phone card's height is not one number: a game title wrapping to two lines cost
 **33px** here, which is most of a comfortable margin. Vary the content, not just
-the viewport — long title, and the variant that renders fewer rows (a guest sees
-no „Aussortieren" row, `.claude/rules/session-guests-are-not-members.md` §4).
+the viewport — a long title above all, and any variant that renders a different
+number of rows (a guest's card lacked the „Aussortieren" row until #909 gave
+every voter the same card, `.claude/rules/session-guests-are-not-members.md` §4).
 Sizing to the happy path puts the button back under the fold for exactly the
 games with the longest names.
 

@@ -28,18 +28,21 @@ than an acknowledged gap.
   connections, `lib/mail.js`, `lib/storage/`, the `DATABASE_URL` host, `lib/providers/*`,
   the donation target. Each must appear in the policy's processor section **and** the
   recipient list in **both** DE and EN, with a `docs/legal/vvt.md` row and an AVV
-  inventory entry. Currently disclosed: Railway, Cloudflare, Heinlein/mailbox.org,
-  Ko-fi (+ Stripe, PayPal), BoardGameGeek. (Sony, Microsoft, Nintendo and Valve
-  were recipients until #981 cleared the last hotlinked storefront covers.)
+  inventory entry. The disclosed set is the marker list in `test/legal.test.js`'s
+  "covers the real processors" test — read it there; on 2026-10-04 it named
+  Railway, Cloudflare, Heinlein/mailbox.org, ZERODOX (the Impressum address
+  service), Ko-fi (+ Stripe, PayPal), BG Stats, BoardGamePrices and BoardGameGeek
+  (`geekdo-images.com`). (Sony, Microsoft, Nintendo and Valve were recipients
+  until #981 cleared the last hotlinked storefront covers.)
 - **Enforced by:** `test/legal.test.js` pins markers for named processors — which catches
   *removing* one, never *adding* one in code. This direction is the manual half.
 
 ### L-002 — Every third party the *visitor's browser* is made to contact is disclosed
 - **Status:** adopted · 2026-07-23
 - **Source:** Art. 13 GDPR · `provider-cover-hotlinking.md`
-- **Check:** Provider covers are hotlinked (#172), so the visitor's IP reaches Sony,
-  BGG directly — and, until #981 cleared the last stored ones, the four
-  storefront CDNs. Any new `IMAGE_HOSTS` entry, embed,
+- **Check:** Provider covers are hotlinked (#172), so the visitor's IP reaches
+  BGG's image hosts directly — and, until #981 cleared the last stored ones, the
+  four storefront CDNs (Sony's among them). Any new `IMAGE_HOSTS` entry, embed,
   iframe, remote font, CDN script or pixel adds a recipient. Cross-check the CSP
   `img-src`/`connect-src`/`script-src` in `lib/app.js` against the disclosed list — the
   CSP is the machine-readable inventory of who the browser may talk to.
@@ -106,8 +109,9 @@ than an acknowledged gap.
 ### L-008 — The internal records still describe the running system
 - **Status:** adopted · 2026-07-23
 - **Source:** Art. 5(2), 30, 32 GDPR · DSA
-- **Check:** `retention.md` against implemented retention (the 3-year moderation-log purge
-  is still manual — #311); `dsar-process.md` against the admin export/erasure routes;
+- **Check:** `retention.md` against implemented retention — each "automatisch" row needs a
+  job in `lib/scheduler.js` (the 3-year moderation-log purge is `purgeModerationLog` since
+  #311, closed 2026-09-14); `dsar-process.md` against the admin export/erasure routes;
   `notice-and-action.md` against the actual notice workflow and the operator inbox;
   `toms.md` against the security measures really in place; `breach-process.md` against who
   and what exists today.

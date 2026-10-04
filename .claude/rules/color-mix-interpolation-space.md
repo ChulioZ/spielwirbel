@@ -4,6 +4,8 @@ paths:
   - "public/kontakt.html"
   - "public/login.html"
   - "lib/faq.js"
+  - "lib/guide.js"
+  - "public/css/designs/**"
   - "test/a11y-contrast.test.js"
   - "test/design-tokens.test.js"
 ---
@@ -11,9 +13,12 @@ paths:
 
 The whole palette is derived by mixing (`--sunken*`, `--line`, `--brand-tint*`,
 `--brand-edge`, `--placeholder`, the `--stage-*` family), so the interpolation
-space is a design decision. All 49 mixes — 39 in `public/styles.css` plus the
-token copies in `kontakt.html`, `login.html` and `lib/faq.js` — interpolate
-`in oklab`, enforced by `test/design-tokens.test.js`.
+space is a design decision. Every mix interpolates `in oklab`.
+`test/design-tokens.test.js` enforces that over the files in its `SURFACES` list:
+`public/styles.css` and the token copies in `kontakt.html`, `login.html` and
+`lib/faq.js`. The design sheets in `public/css/designs/` and `lib/guide.js`'s
+token copy are in oklab too (checked 2026-10-04), but that test does not read
+them, so a mix added there is checked by nobody.
 
 ## The direction is the opposite of the intuitive one
 

@@ -40,10 +40,10 @@ returned **zero results in French, Spanish, Italian and Portuguese**, because
 that field is localized (`Jeu`, `Juego`) while the neighbouring
 `Metas.ProductType === 'Games'` is not.
 
-BGG is the live instance today: `parseLinkValues` keeps BGG's own English
-category and mechanic strings **unmodified** — both because the licence forbids
-rewriting retrieved data and because they are the stable key, even in the German
-UI.
+BGG is the live instance today: `linkValues` (`lib/providers/bgg.js`) keeps
+BGG's own English category and mechanic strings **unmodified** — both because
+the licence forbids rewriting retrieved data and because they are the stable key,
+even in the German UI.
 
 ## History
 

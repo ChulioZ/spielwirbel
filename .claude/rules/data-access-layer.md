@@ -54,9 +54,10 @@ Non-obvious things baked into the design — keep them:
   (!round) 404`, then calls the mutator, which returns `null` when the *sub-entity*
   is missing → the second, specific 404. A couple of methods return a small
   marker instead of a bare entity where a 400 is needed (`deleteGame` →
-  `'not_archived'`; `updateTag` → `'name_taken'`; `setBackground`/`deleteGame`
-  return the previous background / freed image path so the route can do the
-  filesystem cleanup).
+  `'not_archived'`; `updateTag` → `'name_taken'`; `deleteGame` returns the freed
+  image path so the route can do the storage cleanup. `setBackground` still
+  returns the previous background, but no route has called it since #1202
+  retired round designs).
 
   **`updateTag`'s marker is the one that could NOT have lived in the route**, and
   it is worth knowing why before moving a check outward for tidiness. The

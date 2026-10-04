@@ -117,8 +117,11 @@ Non-obvious things that cost effort — keep them:
 
 **Why the storage shape is tables-of-jsonb, not fully normalized:** the roadmap
 (§3) explicitly allows JSONB for the messy bits (votes maps, activity payloads),
-and the app never queries sessions/votes by field in SQL — routes fetch a whole
-round and filter in JS. So each entity is a row with a `data jsonb` (plus promoted
+and the round routes fetch a whole round and filter in JS. The reads that do
+query sessions/votes by field in SQL — the home-screen summaries
+(`READ_SQL.summaries`), `instanceMetrics` and `publicGameAggregates` — use jsonb
+operators guarded by `jsonb_typeof`, and the shared contract suite runs each
+against both backends. So each entity is a row with a `data jsonb` (plus promoted
 columns only for FKs/ordering/`tenant_id`). Since #136 every round table carries
 `tenant_id`, every round-scoped method is tenant-first, and the tables sit under
 forced Row-Level Security — the gotchas (superuser bypass, the tx/qt tenant

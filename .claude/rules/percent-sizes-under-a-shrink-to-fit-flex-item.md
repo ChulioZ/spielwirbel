@@ -1,6 +1,8 @@
 ---
 paths:
   - "public/styles.css"
+  - "public/css/designs/tisch.css"
+  - "public/css/designs/ocean.css"
   - "public/js/**"
 ---
 # A `%` size inside a shrink-to-fit flex item measures the TEXT next to it

@@ -24,7 +24,7 @@ divergence.
 ## `break-word`, NOT `anywhere` — and this is the whole cost of getting it wrong
 
 The issue specified `overflow-wrap: anywhere`, and that is also the value the
-rest of this sheet uses (eight sites, all user-authored titles). It is wrong
+rest of this sheet uses (mostly on user-authored names and titles). It is wrong
 here, and the reason is intrinsic sizing rather than wrapping: **only `anywhere`
 counts toward a box's min-content size**, so it lowers the `min-width: auto`
 floor of every flex item to a single syllable — and a flex item may then shrink
@@ -63,8 +63,9 @@ view spec can see any of it.
 
 ## No Hangul webfont — the system face carries it, deliberately
 
-Every `@font-face` in this sheet is a **latin subset** (Nunito's four weights
-are 64 KB together; the largest display face is 38 KB). Korean therefore falls
+Every `@font-face` in this sheet is a **latin subset** (measured 2026-10-04:
+Nunito's four weights are 64 KB together, and no other face file in
+`public/fonts/` exceeds ~27 KB). Korean therefore falls
 through the stack to `-apple-system` / `Segoe UI` / `Roboto` / `sans-serif`,
 which resolve to Apple SD Gothic Neo, Malgun Gothic and Noto Sans CJK KR — a
 good Hangul face on every platform the app targets.

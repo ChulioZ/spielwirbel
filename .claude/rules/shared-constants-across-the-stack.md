@@ -29,10 +29,10 @@ and it is the copy nobody remembers that rots.
 
 **Every instance lives in `.claude/rules/shared-constants-inventory.md`**, which
 is `paths:`-scoped to `public/js/**` and `lib/**` — the only places one can be
-created. Twenty-three of them today, and adding a paragraph
-there is a **required** part of adding a shared file:
-`test/rule-enumerations.test.js` asserts that every `require('../public/js/…')`
-under `lib/routes/` and `lib/` is named in it. That list is what makes the shape
+created. Adding a paragraph there is a **required** part of adding a shared
+file: `test/rule-enumerations.test.js` asserts every `require('../public/js/…')`
+under `lib/` has an entry heading there (the test owns the count, so none is
+stated here). That list is what makes the shape
 findable; it is not needed to *follow* the rule, which is why it is no longer
 loaded into every session.
 
@@ -105,7 +105,7 @@ document is one array entry, not a near-identical second file.
 server-rendered page whose `<style>` lives in a template literal. The assertions
 transfer because they read the file as text; the constraint that adds is that its
 CSS must stay **inline in the template**, never hoisted into a `const`, or the
-third assertion scans `${STYLE}` and passes vacuously. See
+third assertion scans `${STYLE}` (red since #1198, by its `swept.length >= 3` floor). See
 `.claude/rules/instance-specific-claims-must-be-server-rendered.md`.
 
 Two properties of the `PAGES` generalization are load-bearing and each fails
@@ -139,9 +139,9 @@ a canvas cannot read a design's tokens off the cascade when that design's colour
 block is not in force (the names are shared, so it silently reads another
 design's), so Der Tisch's share card paints from a copy that
 `test/recap-card-tisch.test.js` compares, value for value, against what
-`test/support/theme.js` resolves for the design. **Ocean's, Die Brücke's and
-the Programmheft's copies are the fourth to sixth** (#1220, #1247, #1381), same
-reason, same licence, each pinned by its own `recap-card-<id>` spec.
+`test/support/theme.js` resolves for the design. **Ocean's, Die Brücke's,
+the Programmheft's and Forest's copies** (#1220, #1247, #1381, #1475) follow,
+same reason, same licence, each pinned by its own `recap-card-<id>` spec.
 
 Use this as precedent only under the same condition: *sharing is structurally
 impossible*, not merely inconvenient. A copy that could have been a `require()`

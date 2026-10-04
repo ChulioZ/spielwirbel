@@ -71,10 +71,12 @@ every state that was tuned against the old one.
 ## Verifying it in the pane
 
 Do **not** toggle `data-scheme` at runtime; the pane updates the custom property
-and not the used value (`.claude/rules/preview-pane-paint-artifacts.md`). Build a
-subtree under `.theme-card[data-scheme="dark"]` — the app's second scheme carrier
-— with `--page-bg`/`--brand` inline, exactly as the design picker does. A plain
-`<div data-scheme="dark">` matches neither selector and silently renders light.
+and not the used value (`.claude/rules/preview-pane-paint-artifacts.md`). Wear a
+dark design before the page renders and `navigate`, as that file's recipe says:
+`<html>` is the only scheme carrier left since the picker's
+`.theme-card[data-scheme="dark"]` went at #1202, so a subtree built under that
+class, or a plain `<div data-scheme="dark">`, matches no selector and silently
+renders light.
 
 And resolve colours **through a canvas**: a computed `color-mix` comes back as
 `oklab(0.59 0.002 0.003)`, and the obvious `match(/\d+/g)` reads L/a/b as RGB and

@@ -45,8 +45,8 @@ regression will look like it came from your sizing change, not from a missing
 **Historical — the code no longer carries it.** #787 stopped hiding `.tag-mode`
 at all (it reflowed the chip row under it mid-cycle; it is rendered inert now),
 so both `.tag-mode[hidden]` and the `:not([hidden])` guard below are **gone from
-`styles.css`** and `test/regal-filter.test.js` asserts they stay gone. Don't grep
-for them. The cascade lesson is what survives, and it binds any future element
+`styles.css`** (`test/regal-filter.test.js` asserted they stayed gone until #827
+merged the two filters and dropped that assertion). Don't grep for them. The cascade lesson is what survives, and it binds any future element
 that *is* hidden by attribute inside a container with a reveal state.
 
 `.tag-mode[hidden]` was (0,2,0) — an attribute selector counts in the class

@@ -302,8 +302,9 @@ test('every toast tone keeps its message at AA on every design (Klassisch rules)
 });
 
 test('Der Tisch paints each toast tone from its own planks, at AA for the text and 3:1 for the glyph (T15b.4)', () => {
-  // `t.design.stylesheet`, not a registry lookup by id: the round world `ocean`
-  // shares its id with the user design, and carries no stylesheet (#1210).
+  // `t.design.stylesheet`, not a registry lookup by id: until #1202 the round
+  // world `ocean` shared its id with the user design and carried no stylesheet
+  // (#1210). Today the filter just skips Klassisch, which has no sheet.
   const hosts = THEMES.filter((t) => t.design.stylesheet);
   assert.ok(hosts.some((t) => t.design.id === 'tisch'), 'Der Tisch is no longer a user design with a stylesheet — this test is vacuous');
   const failures = [];

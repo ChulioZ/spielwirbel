@@ -2,6 +2,8 @@
 paths:
   - "lib/routes/admin/**"
   - "lib/routes/account.js"
+  - "lib/erasure-actions.js"
+  - "lib/retention.js"
   - "docs/legal/retention.md"
   - "test/account-deletion.test.js"
 ---
@@ -10,14 +12,17 @@ paths:
 `docs/legal/retention.md` deletes moderation-log entries **3 years after the end
 of the year of the action**, with one permanent carve-out: the Art. 17(3)(b)/(e)
 *Löschnachweis*, the record proving a deletion request was honoured. That
-carve-out is keyed on the **action name**, and #311's proposed purge spells it as
-a single literal:
+carve-out is keyed on the **action name**, and #311's issue body spelled it as a
+single literal:
 
 ```js
 keep = entry.action === 'user_erased' || entry.at >= cutoffIso;   // INCOMPLETE
 ```
 
-Since #419 there are **two** erasure actions, not one:
+The purge that shipped with #311 (`lib/retention.js`, run by `lib/scheduler.js`)
+exempts a SET instead: `ERASURE_ACTIONS` in `lib/erasure-actions.js`, which both
+repo backends' `purgeModerationLog` require. Since #419 there are **two** erasure
+actions, not one:
 
 | Action | Written by | Path |
 |---|---|---|
@@ -33,11 +38,15 @@ number of deleted rows.
 
 ## The rule
 
-**Adding any path that erases personal data means adding its action to the
-exemption in the same PR**, in `docs/legal/retention.md` (the authoritative
-description the purge must implement) — not only in the route that writes it. The
-inverse also holds: a *new* action that is ordinary moderation (a takedown, a
-redaction) must **not** be added, or it outlives its retention period.
+**Adding any path that erases personal data means adding its action to
+`ERASURE_ACTIONS` (`lib/erasure-actions.js`) in the same PR** — not only to the
+route that writes it. That list is what the purge actually skips, so an action
+missing from it is deleted after three years whatever any document says. Name it
+in `docs/legal/retention.md` as well, which describes the exemption to an
+authority, and give it a case in the purge test in `test/support/repo-contract.js`,
+which seeds each exempt action on both backends. The inverse also holds: a *new*
+action that is ordinary moderation (a takedown, a redaction) must **not** be
+added, or it outlives its retention period.
 
 Treat the direction as the asymmetry it is: the default for a new action is
 "purged after 3 years", which is the safe direction for ordinary moderation and
