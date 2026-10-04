@@ -158,7 +158,12 @@ async function initAccounts() {
   if (res.status === 200) { accountsMode = true; accountUser = res.data; return; }
   if (res.status !== 401) { accountsMode = false; return; }
   accountsMode = true;
-  if (getRefreshToken() && (await refreshAccessToken())) {
+  const outcome = getRefreshToken() ? await refreshAccessToken() : 'rejected';
+  // A refresh that could not complete (the auth limiter's 429, a 5xx, a network
+  // failure) says nothing about the session: keep the tokens and offer the
+  // retry screen, rather than signing the visitor out over it.
+  if (outcome === 'transient') return 'rate_limited';
+  if (outcome === 'ok') {
     const again = await probeMe(); // a stale access token: refreshed, probe again
     if (again.status === 200) { accountUser = again.data; return; }
   }

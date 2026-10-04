@@ -4,6 +4,8 @@ paths:
   - "lib/store.js"
   - "lib/app.js"
   - "lib/game-owners.js"
+  - "lib/mail.js"
+  - "lib/notify.js"
   - "lib/routes/**"
   - "test/fault-logging.test.js"
 ---
@@ -37,6 +39,30 @@ the storage sites (an SDK transport message: `connection refused`) and at
 `game-owners`. It is NOT fine at `lib/routes/account.js`'s `confirm-email`: a
 23505 from `users_email_idx` is reachable there, and a Knex-wrapped message can
 carry the SQL that names the address. That one logs `code` too.
+
+**A failed SEND is the third case, and the payload there is the recipient.**
+nodemailer appends the SMTP server's reply to `err.message`, and a Postfix-style
+RCPT rejection quotes the address (`550 5.1.1 <name@example.com>: Recipient
+address rejected`) — so a line that never names `to` still logs it. A
+mail-failure site therefore logs `mail.mailFault(err)` (`lib/mail.js`): `code`,
+`responseCode` and `command`, which nodemailer fills from fixed vocabulary.
+Never spread the error either — `response`, `rejected` and `recipient` carry the
+address too. The sites (2026-10-04):
+
+| Site | Event |
+|---|---|
+| `sendSafe()`, `lib/routes/account.js` | `account_mail_failed` |
+| `notifyInboxItem()`, `lib/notify.js` | `inbox_notification_failed` |
+| `lib/routes/contact.js`, operator delivery | `contact_mail_failed` |
+| `lib/routes/contact.js`, Art. 16(4) acknowledgement | `contact_ack_failed` |
+
+A new `mail.send()` catch joins this table and uses the helper. **Not yet
+converted:** the two operator-panel sends in `lib/routes/admin/notices.js`
+(`admin_notice_mail_failed`, `admin_statement_mail_failed`) still log
+`e.message`, and they mail a notifier's address — convert them the same way.
+`test/account-mail-privacy.test.js` stubs a nodemailer-shaped rejection whose
+message, `response` and `recipient` all carry the address, and sweeps every
+emitted line for `@`.
 
 **The test that proves it has to look for the payload, not for the field.**
 Asserting `line.message === undefined` passes against a line that simply spells
