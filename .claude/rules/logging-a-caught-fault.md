@@ -55,14 +55,16 @@ address too. The sites (2026-10-04):
 | `notifyInboxItem()`, `lib/notify.js` | `inbox_notification_failed` |
 | `lib/routes/contact.js`, operator delivery | `contact_mail_failed` |
 | `lib/routes/contact.js`, Art. 16(4) acknowledgement | `contact_ack_failed` |
+| `lib/routes/admin/notices.js`, Art. 16(5) decision to the notifier | `admin_notice_mail_failed` |
+| `lib/routes/admin/notices.js`, Art. 17 statement of reasons | `admin_statement_mail_failed` |
 
-A new `mail.send()` catch joins this table and uses the helper. **Not yet
-converted:** the two operator-panel sends in `lib/routes/admin/notices.js`
-(`admin_notice_mail_failed`, `admin_statement_mail_failed`) still log
-`e.message`, and they mail a notifier's address — convert them the same way.
-`test/account-mail-privacy.test.js` stubs a nodemailer-shaped rejection whose
-message, `response` and `recipient` all carry the address, and sweeps every
-emitted line for `@`.
+That is every `mail.send()` catch in the repo; the two operator-panel ones were
+converted a PR after the rest (the legal-records PR, 2026-10-04), because a sweep
+scoped to `lib/routes/*.js` does not reach `lib/routes/admin/`. A new catch joins
+this table and uses the helper. `test/account-mail-privacy.test.js` stubs a
+nodemailer-shaped rejection whose message, `response` and `recipient` all carry
+the address, drives each of the six sites through its real route, and sweeps
+every emitted line for `@`.
 
 **The test that proves it has to look for the payload, not for the field.**
 Asserting `line.message === undefined` passes against a line that simply spells
