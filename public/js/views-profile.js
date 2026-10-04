@@ -108,7 +108,8 @@ async function showProfile(username) {
         // Das Programmheft prints the activity as the Freundeskreis's rows
         // (#1380, P14.1/P14.2): the tile grid does not fit its narrow column.
         // Die Brücke too (#1246, B14.1): the activity reads beside the card.
-        rows: designIs('programmheft') || designIs('bruecke'),
+        // And Forest (#1474, F14.2): cards in the column beside the Spielerkarte.
+        rows: designIs('programmheft') || designIs('bruecke') || designIs('forest'),
         noAuthor: true,
         noReport: !!p.self,
         // Later pages (#1357) come from the profile's own feed route, which

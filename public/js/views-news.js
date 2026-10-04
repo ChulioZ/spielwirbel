@@ -71,9 +71,11 @@ async function showNews() {
 // date line, so it travels with the date at both widths — above the title on a
 // phone, in the gold column beside it from 600px — and the reading order is
 // the DOM order everywhere (WCAG 2.4.3). Klassisch renders no badge.
+// Forest prints the same badge under the date, in its date column (#1474,
+// F14.5 — the sheet's „Neu" flag, with the app's own kind as its word).
 function renderNewsEntry(entry) {
   const text = newsText(entry, getLocale()) || {};
-  const badge = designIs('tisch') && entry.kind
+  const badge = (designIs('tisch') || designIs('forest')) && entry.kind
     ? ` <span class="news-entry__kind news-entry__kind--${esc(entry.kind)}">${esc(t('news.kind.' + entry.kind))}</span>`
     : '';
   return h(`<article class="news-entry">

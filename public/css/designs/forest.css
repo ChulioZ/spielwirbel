@@ -6063,3 +6063,686 @@
   :root[data-design="forest"]:not([data-scheme="dark"]) .badge-moment { --ff-from: translate(-180px, -40px); }
 }
 /* ===== end #1477 motion ===== */
+
+/* ===== #1474 — tier 2b: Einstellungen, Profil, Freundeskreis, Postfach, Was ist neu, Entdecken ===== */
+/* F14 (docs/design/forest/Forest-F14-Tier2b.dc.html): „Alles steht auf Karten
+   über der Lichtung, ohne neue Formen." Every section a paper card on the
+   clearing — the card tone, radius 18, F1's first shadow — the headings in
+   Young Serif at 22px and up, everything smaller in Alegreya. Every rule is
+   gated on the light scheme and reads tokens only — test/forest-tier2b.test.js
+   sweeps the section for both.
+
+   Markup: views-round-settings.js hands the Einstellungen to
+   composeForestSettings (forest-tier2b.js) — two columns of cards, the marker
+   picker inline as ribbons; the inbox takes the composed row the other designs
+   share; the Freundeskreis and the profile list the feed as rows; the news
+   entries carry their kind; Entdecken's head carries the BGG mark. Klassisch's
+   DOM is unchanged. */
+
+/* ---- The page heads (F14.1–F14.6): Young Serif 32 on the clearing. */
+:root[data-design="forest"]:not([data-scheme="dark"]) :is(
+  .app:has(> .rs-fo) > .page-head,
+  .friends-screen > .lobby-head,
+  .app:has(> .news-list) > .lobby-head,
+  .app:has(> .ds-list > .inbox-row) > .lobby-head,
+  .app:has(> .stats-block) > .lobby-head
+) h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 32px;
+  line-height: var(--leading-display);
+  color: var(--ink);
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .app:has(> .rs-fo) > .page-head {
+  max-width: none;
+  margin-bottom: var(--space-4);
+}
+/* The sub-line under „Entdecken" in soft ink at reading size. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .app:has(> .stats-block) > .lobby-head .lobby-head__sub {
+  margin-top: var(--space-2);
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--ink-soft);
+}
+
+/* ---- F14.1 Rundeneinstellungen. Two columns from 1100px — the set-up on the
+   left, the actions and the danger zone in a 420px column on the right, the
+   sheet's grid — and one stack below it, in that order. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .rs-fo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+  align-items: start;
+}
+@media (min-width: 1100px) {
+  :root[data-design="forest"]:not([data-scheme="dark"]) .rs-fo {
+    grid-template-columns: minmax(0, 1fr) 420px;
+    gap: var(--space-6);
+  }
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .rs-fo__col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .rs-fo__card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: 18px 20px;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+}
+/* A card's heading is the sheet's card title: Young Serif 22 — over F1's 19px
+   floor, so the display face may come back here. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .rs-fo__card > .rs-section__h {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 22px;
+  line-height: var(--leading-title);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ink);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .rs-fo__note {
+  margin: 0;
+  font-size: 15px;
+  line-height: var(--leading-text);
+  color: var(--ink-soft);
+}
+/* „Name der Runde": the label over a white 44px field with the control edge. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .rs-fo__card--name { gap: 6px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .rs-fo__label {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .rs-fo__name {
+  width: 100%;
+  min-height: var(--target-field);
+  background: var(--raised);
+  border-color: var(--control-edge);
+  font-size: 16px;
+}
+
+/* Rows inside a set-up card („Tags", the saved filters) lose their boxes: the
+   card is the box. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .rs-fo__card .ds-list { gap: 0; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .rs-fo__card .ds-row {
+  min-height: var(--target-key);
+  padding: 6px 2px;
+  background: transparent;
+  border: 0;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+  box-shadow: none;
+  color: var(--ink);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .rs-fo__card :is(a, button).ds-row:hover {
+  box-shadow: none;
+  background: var(--band);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .rs-fo__card .rs-row .ds-row__main {
+  font-size: 16px;
+  font-weight: 800;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .rs-fo__card .rs-row .ds-row__main .ti { color: var(--brand); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .rs-fo__card .rs-row .ds-row__meta { color: var(--ink-soft); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .rs-fo__card .saved-filters__empty {
+  margin: 0;
+  font-size: 15px;
+  color: var(--ink-soft);
+}
+/* The round's tags under the „Tags" row (F14.1): the app's read-only labels in
+   Blatt S on the band tone. Not chips — a chip is a control in Forest, and
+   these are edited on the Tags screen the row leads to. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .rs-fo__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .rs-fo__tags .tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--target-foot);
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--radius-leaf-s);
+  background: var(--band);
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 700;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .rs-fo__tags .tag .ti { color: var(--brand); }
+
+/* The right column: „Runde verwalten" heads a stack of action CARDS (F14.1 —
+   a moss disc with the glyph, the label in 800, the chevron), so its own card
+   gives its frame up to them. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .rs-fo__col--act > .rs-fo__card:not(.rs-fo__card--danger) {
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .rs-fo__col--act > .rs-fo__card:not(.rs-fo__card--danger) .ds-list { gap: var(--space-3); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .rs-fo__col--act > .rs-fo__card:not(.rs-fo__card--danger) .ds-row {
+  min-height: 64px;
+  padding: 0 18px;
+  background: var(--surface);
+  border: 0;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .rs-fo__col--act > .rs-fo__card:not(.rs-fo__card--danger) .ds-row:hover {
+  background: var(--band);
+  box-shadow: var(--shadow-1);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .rs-fo__col--act .rs-row .ds-row__main { gap: var(--space-3); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .rs-fo__col--act .rs-row .ds-row__main .ti {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--moss);
+  color: var(--ink);
+  font-size: 20px;
+}
+/* The Gefahrenzone (F14.1): an outline in --danger on the clearing, the heading
+   and the button in --danger (5.6:1 on the page). Deleting stays a confirm —
+   the handler is the shared build's. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .rs-fo__card--danger {
+  background: transparent;
+  border: 1.5px solid var(--danger);
+  box-shadow: none;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .rs-fo__card--danger > .rs-section__h { color: var(--danger); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .rs-fo__card--danger .rs-danger {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .rs-fo__card--danger .rs-danger > p {
+  font-size: 15px;
+  line-height: var(--leading-text);
+  color: var(--ink-soft);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .rs-fo__card--danger .btn--danger {
+  min-height: var(--target-key);
+  font-size: 16px;
+  font-weight: 800;
+}
+
+/* ---- The marker picker as RIBBONS (F14.1 + F8.2), on Einstellungen and on
+   /design alike: each marker a 22x52 ribbon with a notched foot and its name
+   under it. The chosen one stands on the page tone inside a 3px INK frame and
+   carries the check — renderMarkerGrid's own glyph, in --marker-ink — so the
+   choice never rests on hue alone. The others carry a hairline.
+
+   A wrapping row, not a grid of eight: a card is never narrower than its
+   longest name (`min-width: min-content`), so „Sormustinkukka" keeps its line
+   in Finnish and simply takes the row a card earlier — there is no
+   hyphenation to rely on (.claude/rules/browser-pane-has-no-hyphenation.md). */
+:root[data-design="forest"]:not([data-scheme="dark"]) .marker-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .marker-card {
+  flex: 1 1 84px;
+  min-width: min-content;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 6px;
+  overflow: visible;
+  background: transparent;
+  border: 0;
+  border-radius: 14px;
+  box-shadow: inset 0 0 0 1px var(--line);
+  color: var(--ink);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .marker-card:hover {
+  background: var(--band);
+  box-shadow: inset 0 0 0 1px var(--control-edge);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .marker-card.is-active {
+  background: var(--page-bg);
+  box-shadow: 0 0 0 3px var(--ink);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .marker-card__fill {
+  place-items: start center;
+  width: 22px;
+  height: 52px;
+  padding-top: 6px;
+  box-sizing: border-box;
+  background: var(--marker);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 82%, 0 100%);
+  font-size: 16px;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .marker-card__name {
+  padding: 0;
+  font-size: 14px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+/* ---- F14.2 Profil — die Spielerkarte. From 1100px the card stands in a 560px
+   column at the left and everything else reads beside it; on a phone it leads
+   the column. A flat paper card — Forest's depth is the shadow, never a wash —
+   with the person's ring, the name in Young Serif and the four sums as tiles
+   on the page tone. Sums only: the card names no round and no other person. */
+@media (min-width: 1100px) {
+  :root[data-design="forest"]:not([data-scheme="dark"]) .profile-screen {
+    display: grid;
+    grid-template-columns: minmax(0, 560px) minmax(0, 1fr);
+    column-gap: var(--space-6);
+    align-items: start;
+  }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .profile-screen > * { grid-column: 2; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .profile-screen > .profile-card {
+    grid-column: 1;
+    grid-row: 1 / span 99;
+    margin: 0;
+  }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .profile-screen > .arecap { margin-top: 0; }
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .profile-card {
+  padding: 28px;
+  background: var(--surface);
+  border-radius: 22px;
+  box-shadow: var(--shadow-1);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .profile-card .member-card__mark { display: none; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .profile-card .member-card__id { gap: 18px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .profile-card .member-card__who { min-width: 0; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .profile-card h1 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 34px;
+  line-height: var(--leading-display);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .profile-card__meta {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .profile-card .member-card__figures {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: var(--space-4);
+  padding: 0;
+  border: 0;
+}
+@media (min-width: 560px) {
+  :root[data-design="forest"]:not([data-scheme="dark"]) .profile-card .member-card__figures { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .profile-card .member-figure {
+  align-items: flex-start;
+  min-width: 0;
+  padding: 12px;
+  border-radius: 14px;
+  background: var(--page-bg);
+  text-align: start;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .profile-card .member-figure__value {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 28px;
+  line-height: var(--leading-display);
+  color: var(--ink);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .profile-card .member-figure__label {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ink-soft);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .profile-note {
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+
+/* ---- The feed (F14.3 „Feed", and the profile's activity): a card per event,
+   the author's face first, the sentence, its time in soft ink, the cover at
+   the right. One column; collapsed to eight below 1024px behind the same
+   expander the tiles use. Above 1024 nothing is collapsed, so the expander
+   goes — this design's .link-btn display rule outranks styles.css's hide (the
+   #1272 lesson), hence the compound here. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .feed-list--rows { gap: var(--space-3); }
+@media (max-width: 1023px) {
+  :root[data-design="forest"]:not([data-scheme="dark"]) .e-feed:not(.is-open) .feed-row:nth-of-type(n + 9) { display: none; }
+}
+@media (min-width: 1024px) {
+  :root[data-design="forest"]:not([data-scheme="dark"]) .e-feed .e-feed__more { display: none; }
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .feed-row {
+  gap: 14px;
+  padding: 14px 18px;
+  background: var(--surface);
+  border: 0;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .feed-row__face {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  font-size: 13px; /* glyph, not type */
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .feed-row .feed-item__text {
+  font-size: 16px;
+  line-height: 1.35;
+  color: var(--ink);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .feed-row .feed-item__time {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .feed-row__cover {
+  width: 72px;
+  height: 54px;
+  border-radius: 6px 2px 6px 2px;
+}
+
+/* The section headings of both screens — the roster, the news, the activity —
+   in Young Serif 24 (F14.2/F14.3). */
+:root[data-design="forest"]:not([data-scheme="dark"]) :is(.friends-screen .k-band__h, .profile-screen > .friends-section__h) {
+  margin: 0 0 var(--space-3);
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 24px;
+  line-height: var(--leading-title);
+  color: var(--ink);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .profile-screen > .friends-section__h { margin-top: var(--space-5); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .friends-screen .k-band__count { color: var(--ink-soft); }
+
+/* ---- F14.3 Freunde und Feed: from 1100px the roster in a 420px card at the
+   left, the feed beside it. DOM order is kept — the head and a waiting request
+   span both columns, then the roster, the feed last — so the grid only places
+   what the reading order already says. */
+@media (min-width: 1100px) {
+  :root[data-design="forest"]:not([data-scheme="dark"]) .friends-screen {
+    display: grid;
+    grid-template-columns: 420px minmax(0, 1fr);
+    column-gap: var(--space-6);
+    align-items: start;
+  }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .friends-screen > * { grid-column: 1 / -1; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .friends-screen > .k-band:has(> .k-tiles) { grid-column: 1; margin: 0; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .friends-screen > .k-band:last-child:not(:has(> .k-tiles)) { grid-column: 2; margin: 0; }
+}
+/* The roster as F14.3's card of rows: the face, the name in 800, the line in
+   soft ink, a hairline between people. The add tile stays last, a dashed row. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .friends-screen .k-band:has(> .k-tiles) {
+  padding: 14px 18px 8px;
+  background: var(--surface);
+  border-radius: 20px;
+  box-shadow: var(--shadow-1);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .friends-screen .k-tiles {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .friends-screen .k-tiles > .k-tile {
+  min-height: 56px;
+  padding: 8px 0;
+  background: transparent;
+  border: 0;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+  box-shadow: none;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .friends-screen .k-tile .avatar {
+  width: 40px;
+  height: 40px;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .friends-screen .k-tile__name { font-size: 16px; font-weight: 800; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .friends-screen .k-tile__line {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .friends-screen .k-tiles > .k-tile--add {
+  margin: var(--space-2) 0;
+  padding: 8px 12px;
+  border: 1.5px dashed var(--control-edge);
+  border-radius: var(--radius-leaf-s);
+  color: var(--brand);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .friends-screen .k-tiles > .k-tile--add:hover {
+  background: var(--band);
+  border-color: var(--brand);
+}
+/* A request waiting on you: a paper card like everything else on the screen. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .friends-screen .k-card {
+  background: var(--surface);
+  border: 0;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+}
+
+/* ---- F14.4 Postfach: every item a card — a moss disc with the type's glyph,
+   the title in 800, the line in soft ink, „Annehmen" in green with „Ablehnen"
+   as a text action after it — the app's DOM order, not the sheet's swapped
+   pair (an incidental reordering; DOM order is visual order). A read item drops to the band tone (F14.4's last row). */
+:root[data-design="forest"]:not([data-scheme="dark"]) .app:has(> .ds-list > .inbox-row) > .ds-list { gap: 14px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .inbox-row--composed.ds-row {
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  background: var(--surface);
+  border: 0;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .inbox-row--composed.ds-row:not(.inbox-row--unread) { background: var(--band); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .inbox-row--composed .ds-row__main { flex: 1; min-width: 0; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .inbox-row--composed .ds-row__date {
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.35;
+  color: var(--ink);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .inbox-row--composed .ds-row__status {
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .inbox-row--composed .inbox-row__icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--moss);
+  color: var(--ink);
+  font-size: 20px;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .inbox-row--composed .inbox-invite__actions {
+  align-items: center;
+  gap: var(--space-2);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .inbox-row--composed .inbox-invite__actions .link-btn {
+  min-height: var(--target-key);
+  padding: 0 16px;
+  border-radius: var(--radius-leaf-s);
+  color: var(--brand);
+  font-size: 15px;
+  font-weight: 800;
+}
+@media (max-width: 639px) {
+  :root[data-design="forest"]:not([data-scheme="dark"]) .inbox-row--composed.ds-row { flex-wrap: wrap; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .inbox-row--composed .inbox-invite__actions {
+    flex-basis: 100%;
+    justify-content: flex-start;
+  }
+}
+
+/* ---- F14.5 Was ist neu: each entry a card — the date and its kind in a 130px
+   column from 600px, the title in Young Serif 22, the text at 16. The kind is
+   the green flag F14.5 draws („Neu"), in the app's own word for it. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .news-list { gap: 14px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .news-entry {
+  padding: 18px 22px;
+  background: var(--surface);
+  border: 0;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .news-entry__date {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  margin: 0 0 6px;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--ink);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .news-entry__kind {
+  padding: 2px 10px;
+  border-radius: 12px 3px 12px 3px;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.4;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .news-entry__kind--new {
+  background: var(--brand);
+  color: var(--on-accent);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .news-entry__kind--improved {
+  background: var(--moss);
+  color: var(--ink);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .news-entry__kind--fixed {
+  background: var(--raised);
+  box-shadow: inset 0 0 0 1px var(--control-edge);
+  color: var(--ink);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .news-entry__title {
+  margin: 0 0 4px;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 22px;
+  line-height: var(--leading-title);
+  color: var(--ink);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .news-entry__body {
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--ink);
+}
+@media (min-width: 600px) {
+  :root[data-design="forest"]:not([data-scheme="dark"]) .news-entry {
+    display: grid;
+    grid-template-columns: 130px minmax(0, 1fr);
+    column-gap: 20px;
+  }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .news-entry__date {
+    grid-row: 1 / span 2;
+    flex-direction: column;
+    align-items: flex-start;
+    margin: 4px 0 0;
+  }
+}
+
+/* ---- F14.6 Entdecken: the BGG mark at the head's far end, the four counters
+   as cards with Young Serif numerals, the podiums as cards. Nothing on this
+   screen is smaller than 13px (F14.6 allows 11px on an axis; there is none). */
+:root[data-design="forest"]:not([data-scheme="dark"]) .app:has(> .stats-block) > .lobby-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: var(--space-3);
+  align-items: center;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .app:has(> .stats-block) > .lobby-head > :not(.lobby-head__bgg) { grid-column: 1; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .lobby-head__bgg {
+  grid-column: 2;
+  grid-row: 1;
+  width: auto;
+  height: 24px;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .stats-block { gap: 18px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .stats-counters {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+@media (min-width: 860px) {
+  :root[data-design="forest"]:not([data-scheme="dark"]) .stats-counters { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .stats-counter {
+  padding: 16px 18px;
+  background: var(--surface);
+  border: 0;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+  text-align: start;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .stats-counter__num {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 32px;
+  line-height: var(--leading-display);
+  color: var(--ink);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .stats-counter__label {
+  margin-top: 4px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .stats-card {
+  gap: 14px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 0;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .stats-card__cover {
+  width: 72px;
+  height: 54px;
+  border-radius: 6px 2px 6px 2px;
+  background-color: var(--hatch);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .stats-card__label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .stats-card__label .ti { color: var(--brand); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .stats-card__title {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--ink);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .stats-card__value {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .stats-note {
+  font-size: 14px;
+  color: var(--ink-soft);
+}

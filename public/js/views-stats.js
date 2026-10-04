@@ -249,13 +249,16 @@ async function showEntdecken() {
   // belongs with the screen's own title. The logged-out screen is the face
   // (#1198) and keeps the plain head, as does Klassisch — byte-identical.
   const felt = !loggedOut && designIs('tisch');
+  // Forest heads F14.6 with the same BGG mark at the title's far end (#1474) —
+  // the podiums are BGG-linked games — but on the clearing, not on felt.
+  const bgg = felt || (!loggedOut && designIs('forest'));
   // Die Brücke's way up off the account screens (#1246, bruecke-hub.js) — not
   // for a logged-out visitor, who has no rounds to go back to (and wears the
   // face design anyway).
   if (!loggedOut && designIs('bruecke')) app.appendChild(brueckeUpLink());
   app.appendChild(h(`<div class="lobby-head${felt ? ' lobby-head--felt' : ''}">
       <h1>${esc(t('stats.title'))}</h1>
-      <div class="muted lobby-head__sub">${esc(t('stats.sub'))}</div>${felt ? `
+      <div class="muted lobby-head__sub">${esc(t('stats.sub'))}</div>${bgg ? `
       <img class="lobby-head__bgg" src="/icons/powered-by-bgg.png" width="900" height="264" alt="Powered by BGG" />` : ''}
     </div>`));
 
