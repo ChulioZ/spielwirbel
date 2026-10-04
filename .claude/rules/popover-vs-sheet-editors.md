@@ -23,9 +23,10 @@ more screens.
 `openPopover` directly, at every width.** The account menu has always done this;
 #1039's „…" page menu on game detail is the second. The whole argument in §1 is
 about a **text input** — an anchored card dies on a phone because *focusing a
-field* scrolls the page and tears the popover down. A menu focuses nothing, so
-there is no scroll to lose to, and a bottom sheet for three rows of buttons is
-ceremony. Measured on #1039 at 390×844: the menu opens as a `.popover--menu`,
+field* scrolls the page and tears the popover down. A menu's first BUTTON takes
+focus on open (`focusInto`, `public/js/focus-trap.js`), but with `preventScroll`
+and without a keyboard to raise, so there is still no scroll to lose to, and a
+bottom sheet for three rows of buttons is ceremony. Measured on #1039 at 390×844: the menu opens as a `.popover--menu`,
 fits inside the viewport, and dismisses on Escape with `aria-expanded` following.
 
 **The second exception, from the other end: a scanning LIST is a dialog at every
