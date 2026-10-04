@@ -353,8 +353,8 @@ What the app does, in detail. For a short overview see the
     expansions, the glance facts, and a „Mehr zum Spiel" disclosure for the rest
     of the BGG metadata), and the group's own verdict on the right: first
     **„Wer wie gewertet hat"** — one tile per person who has rated it, warmest
-    first, carrying their average across every session and the mood it rounds
-    to, so the score on the left page can be read back to the people who made
+    first, carrying the mood their average across every session rounds to
+    (the face, not the number; the vote count is in its tooltip), so the score on the left page can be read back to the people who made
     it — then the history as a
     *Stempelkarte* — one rubber stamp per session, inked in the score that game
     earned that evening, muted for an evening it was not taken to — with a
@@ -435,6 +435,13 @@ What the app does, in detail. For a short overview see the
     in standings order (six columns from seven people). On the result screen
     the round's Sessions 100 · 250 · 500 and a Stammgast 100 · 250 take one of
     the two places as a vermilion „Sonderausgabe" band.
+    Forest keeps a person's marks in jars with a bark lid (issue #1477): a jar
+    at dusk with a firefly glowing in it when earned, a light jar filling with
+    moss while under way (the count beside it carries the number), a dashed
+    outline while open and a dark jar without light for a secret. The round's
+    own marks are leaves on a branch, in the same four states. The tier stands
+    on the lid (at the leaf's stem) and as one dot per tier under the name;
+    on the phone the branch wraps and each person's jars stand on a shelf.
 
     A win counts wherever it happened, an evening played alone included. That is
     a deliberate trade: weighting a win by the size of the field it beat is
@@ -495,8 +502,10 @@ What the app does, in detail. For a short overview see the
   the saved seats remains everyone is seated.
 - **Voting** – the draw opens a **lobby** showing who has voted and who has not.
   There is nothing to configure and no mode to pick: every session works the same
-  way, and each person's ratings are saved the moment they give them: one
-  **1–5** scale per drawn game, from „gar nicht" to „unbedingt". Rating is **one
+  way, and each person's ratings are saved the moment they give them: five
+  **faces** per drawn game, each with its word, from „gar nicht" to „unbedingt"
+  — no digits, so nobody reads the score as an average of numbers they pressed
+  (#1530). Rating is **one
   tap per game** — the face you press is the answer, and the card moves on by
   itself after a short beat. After the **last** game comes a short **review**:
   every game with its rating, each one tap away from its card to change it (a
@@ -553,7 +562,7 @@ What the app does, in detail. For a short overview see the
   marked as a guest — but they never join the round, so they leave the member
   list, the Pokale standings and the win streak untouched — though they do count
   as one of the parties a member's win is measured against. A guest rates on
-  exactly the same 1–5 scale a member does.
+  exactly the same five faces a member does.
 - **Teams** – two or more of the people joining a session — members and guests
   in any mix — can be grouped into a team that plays and wins together, for that
   session only. A team counts as **one player** when the draw matches a game's
@@ -571,7 +580,7 @@ What the app does, in detail. For a short overview see the
   **Spielwirbel-Score** twice, as a number (colored by score, with a short line
   saying why it diverges from the plain average, e.g. „1× gar nicht") and as the
   width of the row's own fill, beside its rank, its rating distribution (one bar
-  per rating) and who brings the box. Picking a game puts it **on the table**: a
+  per rating, labelled by its face) and who brings the box. Picking a game puts it **on the table**: a
   band above the ranking with the box, who brings it and the one action
   („Als gespielt markieren") — and nothing at all before a game is chosen. Once
   it is played, the table carries a stamp with the date and the winners as

@@ -146,7 +146,14 @@ test('the Spielepass renders a tile per rater, with the app\'s own five moods', 
 
   const first = strip[0];
   assert.ok(first.querySelector('.avatar'), 'the tile carries the person\'s avatar');
-  assert.match(first.querySelector('.rater__n').textContent.trim(), /^[1-5](,\d)?$/);
+  // No numeric average on the tile (#1530): a „3,5" beside the score invites
+  // the arithmetic the score deliberately does not do. The face carries it, a
+  // screen reader hears the face's word, and the tooltip still counts votes.
+  for (const tile of strip) {
+    assert.doesNotMatch(tile.textContent, /\d/, `a rater tile prints a digit: „${tile.textContent.trim()}"`);
+  }
+  assert.equal(first.querySelector('.sr-only').textContent, 'gern', 'Ada\'s 4 is read out as its word');
+  assert.match(first.getAttribute('title'), /Bewertung/, 'the vote count stays in the tooltip');
   // The faces are the app's, resolved through ratingFace — never a set of this
   // screen's own (rating-faces.js's header: a second copy is what drifts).
   const moods = await dom.get('MOODS');

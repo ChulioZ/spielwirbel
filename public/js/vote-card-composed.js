@@ -19,8 +19,8 @@
    - A HAND-OFF LINE under the card on a shared device: who is next, or on the
      last person, that the result comes next.
 
-   Klassisch never reaches a builder below except `voteMoodButton`, whose
-   Klassisch branch is the markup both cards rendered before this file existed.
+   Klassisch never reaches a builder below except `voteMoodButton`, which
+   draws the one face markup every design shares (#1530).
    No module.exports: everything here builds DOM, and a required file would
    enter the coverage report mostly unreachable
    (.claude/rules/frontend-helper-modules-and-coverage.md). The specs reach it
@@ -37,10 +37,15 @@ const voteWord = (n) => t(VOTE_WORD_KEYS[n - RATING_MIN]);
 /* One face on the 1–5 scale — the one builder both cards use, so the hot-seat
    and link surfaces cannot drift apart on the app's central control.
 
-   Under Klassisch this is byte-for-byte the markup the two loops wrote inline
-   before #1268. Under Der Tisch the word joins the tile, and joins its
-   accessible NAME too: a reader hears „4 von 5 – gern", which is the part of
-   the tile that means something. */
+   A face is its glyph and its WORD, in every design, and nothing else (#1530).
+   The rung's digit is gone on purpose: a voter who pressed „4" and „5" expects
+   the score to be their mean, and the Spielwirbel-Score deliberately is not
+   (vote-score.js weights the bottom rung and shrinks thin evidence). With no
+   digit on screen there is no average to compute, so nothing to mismatch. The
+   word is the tile's accessible NAME as well, so the digit does not just move
+   into what a screen reader announces. Until #1530 Klassisch printed a digit
+   instead of a word, and its markup was byte-for-byte the pre-#1268 inline
+   loop; that promise ended here deliberately. */
 /* Whether the worn design composes its vote card here rather than drawing
    Klassisch's. Ocean (#1213) and Die Brücke (#1240) take Der Tisch's
    composition and add their own side columns; Das Programmheft (#1374) takes
@@ -50,25 +55,19 @@ const voteWord = (n) => t(VOTE_WORD_KEYS[n - RATING_MIN]);
    (#1434), so the three cannot disagree about which shape is on screen. */
 const voteCardComposed = () => designIs('tisch') || oceanWorn() || designIs('bruecke') || designIs('programmheft') || forestWorn();
 
-// The word a face carries under a composed card. Die Brücke names the two ends
+// The word a face carries, in every design. Die Brücke names the two ends
 // in its own words („kein Schub" … „volle Kraft"); the middle three keep the app's.
 const voteSaidWord = (n) => (designIs('bruecke') && brueckeVoteWord(n)) || voteWord(n);
 
 function voteMoodButton(n, selected) {
-  // Ocean's stylesheet prints only the two end words under the faces.
-  const tisch = voteCardComposed();
+  // Ocean's and Die Brücke's stylesheets print only the two end words under the
+  // faces; the middle three keep theirs as the tile's name.
   const said = voteSaidWord(n);
-  const label = tisch
-    ? t('vote.ratingLabelWord', { n, max: RATING_MAX, word: said })
-    : t('vote.ratingLabel', { n, max: RATING_MAX });
-  const word = tisch ? `<span class="mood__word">${esc(said)}</span>` : '';
   // aria-pressed carries the choice (#145): the selected face is otherwise
   // marked only by its fill, so nothing announced which rating was picked.
-  // The odd indentation is deliberate: the whitespace text nodes it produces
-  // are the ones the two inline loops produced, so Klassisch is byte-identical.
   const b = h(`<button class="mood${selected ? ' is-selected' : ''}"
-           aria-pressed="${selected}" aria-label="${esc(label)}">
-           <i class="ti ${ratingFace(n)}" aria-hidden="true"></i>${word}<span class="mood__n">${n}</span>
+           aria-pressed="${selected}" aria-label="${esc(said)}">
+           <i class="ti ${ratingFace(n)}" aria-hidden="true"></i><span class="mood__word">${esc(said)}</span>
          </button>`);
   if (selected) {
     /* --sc, not an inline `background`: an inline background is precisely

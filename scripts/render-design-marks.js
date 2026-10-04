@@ -440,21 +440,19 @@ function programmheftRecipe() {
 
 /* ------------------------------------------------------------------ Forest */
 
-// #1465: Forest's marks. They land with its token slice rather than with its
-// share card (#1475, F8.4), because test/design-marks.test.js holds every
-// coloured design to its own icons from the moment it is registered. The whirl
-// stays Spielwirbel's sign (operator decision on #1436), in F1's light print on
-// the Laubgrün the primary button wears — the leaf-green running into
-// accent-deep — so the icon reads as the design's one action. Light print on
-// the accent is 6.5:1, on accent-deep 9.0:1. #1475 may redraw them with the
-// share card; the recipe is the one place to do it.
+// #1465 rendered Forest's first marks with its token slice (test/design-marks.test.js
+// holds every coloured design to its own icons from registration); #1475 (F8.4)
+// redrew them from the design's WORDMARK BADGE — the flat Laubgrün disc with
+// the whirl in F1's light print, as the header (F1.7) and the share card's foot
+// (F8.4) wear it — standing on the clearing's light ground. The whirl stays
+// Spielwirbel's sign (operator decision on #1436). Light print on the accent is
+// 6.5:1. The whirl takes the badge's own 18/34 of the disc.
 function forestRecipe() {
   const design = designById('forest');
   const css = fs.readFileSync(path.join(PUBLIC, design.stylesheet.replace(/^\//, '')), 'utf8');
   const c = {
     page: design.page,
     accent: design.accent,
-    accentDeep: token(css, '--brand-strong'),
     onDusk: token(css, '--on-dusk'),
     ink: token(css, '--ink'),
     inkSoft: token(css, '--ink-soft'),
@@ -462,23 +460,31 @@ function forestRecipe() {
     moss: token(css, '--moss'),
     dusk: token(css, '--dusk'),
     duskSoft: token(css, '--dusk-soft'),
-    firefly: token(css, '--firefly'),
     wood: token(css, '--wood'),
     bark: token(css, '--bark'),
   };
   const fonts = fontFace('Young Serif', 400, 'young-serif-latin-400-normal.woff2')
     + fontFace('Alegreya Sans', 700, 'alegreya-sans-latin-700-normal.woff2')
     + fontFace('Alegreya Sans', 800, 'alegreya-sans-latin-800-normal.woff2');
-  const leaf = `radial-gradient(110% 110% at 30% 15%, ${c.accent}, ${c.accentDeep} 80%)`;
+  // The clearing: the page running into moss, lit from the top left — F8.4's
+  // sky. Under the disc, so the badge reads as a leaf-green coin on the light.
+  const clearing = `radial-gradient(120% 120% at 30% 15%, ${c.page}, ${c.moss} 85%)`;
+  const BADGE_GLYPH = 18 / 34;
 
-  // Der Tisch's proportions: 52% on the app icons, 36% on the maskable one so
-  // the whole whirl sits inside the inner 60%.
-  const icon = (size, glyph, ground = leaf, radius = 0) => ({
-    width: size,
-    height: size,
-    html: `<div style="position:fixed;inset:0;display:grid;place-items:center;background:${ground};`
-      + `border-radius:${radius}px">${whirl(Math.round(size * glyph), c.onDusk)}</div>`,
-  });
+  // `disc` is the badge's share of the side: 78% on the app icons, 62% on the
+  // maskable one so the whole disc sits inside the 80% safe circle. The
+  // favicon is the bare badge on transparent — a 32px tab icon is the disc.
+  const icon = (size, disc, ground = clearing) => {
+    const d = Math.round(size * disc);
+    const shadow = size >= 64 ? `box-shadow:0 ${Math.round(size * 0.02)}px ${Math.round(size * 0.05)}px rgba(40,60,30,.28);` : '';
+    return {
+      width: size,
+      height: size,
+      html: `<div style="position:fixed;inset:0;display:grid;place-items:center;background:${ground}">`
+        + `<div style="width:${d}px;height:${d}px;border-radius:50%;background:${c.accent};${shadow}`
+        + `display:grid;place-items:center">${whirl(Math.round(d * BADGE_GLYPH), c.onDusk)}</div></div>`,
+    };
+  };
 
   const marks = design.marks;
   const [i192, i512, maskable] = marks.icons;
@@ -486,14 +492,14 @@ function forestRecipe() {
     width: 1200,
     height: 630,
     // Der Tisch's Open Graph frame, Forest's materials: the dusk panel with the
-    // claim in Young Serif on the left — the one dark ground, a firefly beside
-    // the wordmark — and the clearing on the right: covers on a card, the
+    // claim in Young Serif on the left — the one dark ground, the wordmark
+    // badge beside the name (#1475) — and the clearing on the right: covers on a card, the
     // stump's cut face as a ledge, the leaf-shaped primary button. German only,
     // like every og card (link-preview-card.md §1).
     html: `<div style="position:fixed;inset:0;display:flex;background:${c.page};font-family:'Alegreya Sans'">
       <div style="width:660px;flex:none;box-sizing:border-box;padding:48px;display:flex;flex-direction:column;gap:26px;background:${c.dusk}">
         <span style="display:flex;align-items:center;gap:14px;font:400 30px 'Young Serif';color:${c.onDusk}">
-          <span style="width:14px;height:14px;border-radius:50%;background:${c.firefly};box-shadow:0 0 22px 6px ${c.firefly}"></span>Spielwirbel</span>
+          <span style="width:44px;height:44px;border-radius:50%;background:${c.accent};display:grid;place-items:center">${whirl(23, c.onDusk)}</span>Spielwirbel</span>
         <span style="font:400 60px/1.08 'Young Serif';color:${c.onDusk}">Wer am Tisch sitzt, entscheidet mit.</span>
         <span style="font:700 28px/1.45 'Alegreya Sans';color:${c.duskSoft}">Regal füllen, Session wirbeln, geheim werten.</span>
         <span style="margin-top:auto;font:800 22px 'Alegreya Sans';letter-spacing:.06em;color:${c.onDusk}">Kein Tracking · EU-Hosting · spielwirbel.app</span>
@@ -515,12 +521,12 @@ function forestRecipe() {
   return {
     fonts,
     assets: [
-      [i192.src, icon(192, 0.52)],
-      [i512.src, icon(512, 0.52)],
-      [maskable.src, icon(512, 0.36)],
-      [marks.appleTouch, icon(180, 0.5)],
-      // Flat accent-deep at 32px: a gradient there only reads as noise.
-      [marks.favicon.href, icon(32, 0.56, c.accentDeep, 7)],
+      [i192.src, icon(192, 0.78)],
+      [i512.src, icon(512, 0.78)],
+      [maskable.src, icon(512, 0.62)],
+      // iOS paints a transparent apple-touch icon black, so it keeps the ground.
+      [marks.appleTouch, icon(180, 0.78)],
+      [marks.favicon.href, icon(32, 1, 'transparent')],
       [marks.og, og],
     ],
   };
@@ -559,7 +565,11 @@ async function render(cdp, dir, fonts, rel, asset) {
   // A face that is still loading renders in a fallback and looks subtly wrong
   // rather than broken, so wait for the fonts rather than for a guessed delay.
   const { result } = await cdp.send('Runtime.evaluate', {
-    expression: 'document.fonts.ready.then(() => [...document.fonts].filter((f) => f.status === "loaded").length)',
+    // Two frames after the fonts as well: on Linux Chromium a capture right
+    // after a viewport CHANGE (192 -> 512) still painted the old height's
+    // layout, the ground restarting 438px down (#1475).
+    expression: 'document.fonts.ready.then(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))))'
+      + '.then(() => [...document.fonts].filter((f) => f.status === "loaded").length)',
     awaitPromise: true, returnByValue: true,
   });
   const { data } = await cdp.send('Page.captureScreenshot', {

@@ -270,7 +270,6 @@
   .split-group__head,
   .winner-chip,
   .gd-onboard :is(h2, h3),
-  .rater__n,
   .stamp__date,
   .editor--expansions .exp-own__head,
   .stepper__val,
@@ -288,7 +287,6 @@
   .setup-bar__summary,
   .handover__go,
   .handover__back,
-  .mood__n,
   .session-log__summary-title,
   .session-log__title,
   .result-people__name,
@@ -319,8 +317,8 @@
 
 /* „Zahlen tabellarisch" (P1.2). */
 :root[data-design="programmheft"] :is(
-  .score-pill, .stepper__val, .pool-count, .rater__n, .member-figure__value,
-  .pokale-card__value, .gd-price__amount, .trow__rank, .mood__n
+  .score-pill, .stepper__val, .pool-count, .member-figure__value,
+  .pokale-card__value, .gd-price__amount, .trow__rank
 ) {
   font-variant-numeric: tabular-nums;
 }
@@ -5155,13 +5153,6 @@
   color: var(--ink);
 }
 :root[data-design="programmheft"] .vote--ph .rating .mood .ti { font-size: 22px; /* glyph, not type */ }
-:root[data-design="programmheft"] .vote--ph .rating .mood__n {
-  order: 1;
-  font-family: var(--font-display);
-  font-size: var(--display-4);
-  font-weight: 400;
-  line-height: var(--leading-display);
-}
 :root[data-design="programmheft"] .vote--ph .rating .mood__word {
   order: 2;
   font-size: 12px;
@@ -5242,7 +5233,6 @@
   :root[data-design="programmheft"] .vote--ph .vote-felt__name { font-size: var(--display-5); }
   :root[data-design="programmheft"] .vote--ph .vote__q { margin-top: var(--space-4); font-size: 22px; }
   :root[data-design="programmheft"] .vote--ph .rating .mood { min-height: 128px; padding-top: var(--space-3); }
-  :root[data-design="programmheft"] .vote--ph .rating .mood__n { font-size: var(--display-3); }
 }
 
 /* The review step after the last card (#1434), in the same frame: the header
