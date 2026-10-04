@@ -84,7 +84,16 @@ never replaces it.
 
 **Off macOS, point `CHROME_BIN` at the binary** (`scripts/cdp.js`); as root,
 Chromium also needs `--no-sandbox`, so aim `CHROME_BIN` at a two-line wrapper
-script that adds it rather than committing the flag.
+script that adds it rather than committing the flag. On Linux Chromium a capture
+right after a viewport CHANGE painted the previous size's layout (#1475: the
+first 512px icon after the 192 showed the ground restarting 438px down), so
+`render()` waits two frames after the fonts — look at the 512s first.
+
+**Forest's marks are its wordmark badge** (#1475) — the flat Laubgrün disc with
+the whirl on the clearing's light ground, the favicon the bare disc — and
+`test/forest-marks.test.js` reads their PIXELS at points only that composition
+satisfies (light corners, disc inside the maskable safe circle), since the
+generic spec checks sizes only.
 
 **Related:** `.claude/rules/link-preview-card.md` (the og tags, CORP — the
 opt-out keys on the basename, so every design's `og-image.png` gets it),

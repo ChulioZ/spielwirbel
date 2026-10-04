@@ -600,6 +600,10 @@ public/
                      Das Programmheft's share card (#1381): a 1080×1350 front
                      page for a session and a period recap — vermilion masthead,
                      the round's marker band, headline, three facts, a table
+    recap-card-forest.js
+                     Forest's share card (#1475): 1080×1350, the result's
+                     clearing with the grown tree or the period's dusk with one
+                     firefly per session — every word on the card below it
     hub-insights.js  the Start tab's derivations: which games are worth putting
                      on the table, how often the round meets, what is quietly
                      broken, and what was played on this day in a past year
