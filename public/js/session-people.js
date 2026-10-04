@@ -47,6 +47,31 @@ function sessionPeople(round, session) {
   return people;
 }
 
+// Everyone whose ratings in this session count toward the SHELF (#1538): the
+// session's people plus whoever was removed from it afterwards. A removed person
+// no longer took part — they are out of every session-scoped reader, which is
+// why `sessionPeople` itself never sees them — but what they had already rated
+// still counts for each game's score. So this is the "outside the session" set,
+// read only by the shelf-wide aggregations (`rawGameStats`, `gameRaters`,
+// lib/recommend.js `ownRating`); swapping it back to `sessionPeople` there would
+// silently drop those ratings from every game's score.
+//
+// `removedPeople` absent means none, the same convention as `guests`. A removed
+// member resolves against the round like any member (and vanishes with them, as
+// in sessionPeople); a removed guest carries its own name, since it lives nowhere
+// else once it has left `guests`.
+function sessionRaters(round, session) {
+  const people = sessionPeople(round, session);
+  const removed = Array.isArray(session.removedPeople) ? session.removedPeople : [];
+  removed.forEach((r) => {
+    if (!r || people.some((p) => p.id === r.id)) return;
+    if (r.guest) { people.push({ id: r.id, name: r.name || '', guest: true }); return; }
+    const m = round.members.find((x) => x.id === r.id);
+    if (m) people.push({ id: m.id, name: m.name, guest: false });
+  });
+  return people;
+}
+
 // Display name for one participant: "Anna (Gast)" for a guest, "Anna" for a
 // member. Routing every name through one helper is what keeps a bare guest name
 // from slipping onto a screen — the marker is the only thing distinguishing a
@@ -176,6 +201,7 @@ if (typeof module !== 'undefined' && module.exports) {
     GUEST_NAME_MAX,
     MIN_TEAM_SIZE,
     sessionPeople,
+    sessionRaters,
     personLabel,
     partyName,
     sessionTeams,

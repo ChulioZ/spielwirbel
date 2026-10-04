@@ -1968,4 +1968,18 @@ I18N.ko = {
   'card.programmheft.winners': '승자 {n}명',
   'card.programmheft.ratings': '평가',
   'card.programmheft.present': '참가',
+  // Removing a person from a session (#1538).
+  'log.removed': '{name}이(가) 세션에서 빠졌어요',
+  'log.removedBy': '{actor}이(가) 세션에서 {name}을(를) 뺐어요',
+  'session.removeEntry': '사람 빼기',
+  'session.removeTitle': '세션에서 사람 빼기',
+  'session.removeIntro': '실수로 선택했거나 먼저 떠난 사람을 뺄 수 있어요. 참여한 것으로 치지 않지만, 이미 남긴 평가는 게임 점수에 계속 반영돼요.',
+  'session.removeAction': '빼기',
+  'session.removeActionFor': '{name} 빼기',
+  'session.removeConfirmTitle': '{name}을(를) 뺄까요?',
+  'session.removeConfirm': '{name}을(를) 이 세션의 참가자, 팀, 우승자에서 뺍니다.',
+  'session.removeConfirmVoted': '{name}을(를) 이 세션에서 뺍니다. 평가는 각 게임의 점수에 계속 반영되지만 이 세션의 결과에는 더 이상 반영되지 않아요.',
+  'session.removed': '{name}을(를) 뺐어요',
+  'session.removeLast': '세션에는 최소 한 명이 있어야 해요.',
+  'session.removeSplit': '이 세션은 여러 테이블로 나뉘었어요. 해당 테이블에서 빼 주세요.',
 };

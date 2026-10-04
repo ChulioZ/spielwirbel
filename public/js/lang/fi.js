@@ -2005,4 +2005,18 @@ I18N.fi = {
   'card.programmheft.winners': '{n} voittajaa',
   'card.programmheft.ratings': 'Arviot',
   'card.programmheft.present': 'Mukana',
+  // Removing a person from a session (#1538).
+  'log.removed': '{name} poistettiin sessiosta',
+  'log.removedBy': '{actor} poisti henkilön {name} sessiosta',
+  'session.removeEntry': 'Poista henkilö',
+  'session.removeTitle': 'Poista joku sessiosta',
+  'session.removeIntro': 'Jos joku valittiin vahingossa tai lähti aiemmin. Häntä ei enää lasketa osallistujaksi, mutta hänen jo antamansa arviot lasketaan yhä pelien pisteisiin.',
+  'session.removeAction': 'Poista',
+  'session.removeActionFor': 'Poista {name}',
+  'session.removeConfirmTitle': 'Poistetaanko {name}?',
+  'session.removeConfirm': '{name} poistetaan tästä sessiosta: pelaajalistalta, joukkueista ja voittajista.',
+  'session.removeConfirmVoted': '{name} poistetaan tästä sessiosta. Arviot lasketaan yhä kunkin pelin pisteisiin, mutta eivät enää tämän session tulokseen.',
+  'session.removed': '{name} poistettiin',
+  'session.removeLast': 'Sessiossa on oltava vähintään yksi henkilö.',
+  'session.removeSplit': 'Tämä sessio on jaettu pöytiin. Poista henkilö hänen omasta pöydästään.',
 };

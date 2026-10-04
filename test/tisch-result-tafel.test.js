@@ -267,7 +267,9 @@ test('while the evening runs there is no next one yet — and „Mehr" holds the
   assert.deepEqual([...foot.children].map(text), ['Teilen', 'Mehr']);
   foot.querySelector('.result-foot__more').click();
   const menu = dom.document.querySelector('.popover');
-  assert.deepEqual([...menu.querySelectorAll('.popover__opt')].map(text), ['Session abbrechen', 'Session löschen']);
+  // „Person entfernen" (#1538) leads the destructive group: it corrects the
+  // evening, where the other two throw it away.
+  assert.deepEqual([...menu.querySelectorAll('.popover__opt')].map(text), ['Person entfernen', 'Session abbrechen', 'Session löschen']);
 });
 
 test('„Mehr" runs the same delete Klassisch’s footer does', async (t) => {
@@ -286,7 +288,8 @@ test('„Mehr" runs the same delete Klassisch’s footer does', async (t) => {
 });
 
 test('with nothing to offer, the foot shows no „Mehr" rather than an empty menu', async (t) => {
-  const { dom } = await show(t, 'tisch', {}, {}, { canDelete: false });
+  // One person, so there is nobody to remove either (#1538).
+  const { dom } = await show(t, 'tisch', { memberIds: ['m1'], guests: [] }, {}, { canDelete: false });
   const foot = screen(dom).querySelector('.result-foot');
   assert.deepEqual([...foot.children].map(text), ['Noch eine Session', 'Teilen']);
 });

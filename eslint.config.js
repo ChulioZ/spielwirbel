@@ -184,6 +184,7 @@ const frontendGlobals = {
   // session-people.js (issue #458)
   MAX_SESSION_GUESTS: 'readonly', GUEST_NAME_MAX: 'readonly', MIN_TEAM_SIZE: 'readonly',
   sessionPeople: 'readonly', personLabel: 'readonly',
+  sessionRaters: 'readonly', // #1538
   sessionPartyGroups: 'readonly',
   // Pre-existing omissions from the same file, folded in while adding the line
   // above: both are top-level names in the shared scope and neither was listed.
@@ -624,6 +625,7 @@ const frontendGlobals = {
   showSessionLobby: 'readonly', stopLobbyPoll: 'readonly', mySeatIn: 'readonly',
   sessionGames: 'readonly', LOBBY_POLL_MS: 'readonly', lobbyPoll: 'writable',
   renderSessionLog: 'readonly', showShareUrlSheet: 'readonly',
+  showRemovePersonSheet: 'readonly', removePersonEntry: 'readonly', // #1538
   // views-vote-link.js
   showVoteLink: 'readonly', renderVoteLinkClaim: 'readonly',
   renderVoteLinkCards: 'readonly', renderVoteLinkDone: 'readonly',

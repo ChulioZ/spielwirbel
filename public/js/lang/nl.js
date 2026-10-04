@@ -2037,4 +2037,18 @@ I18N.nl = {
   'card.programmheft.winners': '{n} winnaars',
   'card.programmheft.ratings': 'Beoordelingen',
   'card.programmheft.present': 'Erbij',
+  // Removing a person from a session (#1538).
+  'log.removed': '{name} is uit de sessie gehaald',
+  'log.removedBy': '{actor} haalde {name} uit de sessie',
+  'session.removeEntry': 'Iemand verwijderen',
+  'session.removeTitle': 'Iemand uit de sessie halen',
+  'session.removeIntro': 'Voor iemand die per ongeluk is aangevinkt of eerder is vertrokken. Die persoon telt niet meer als deelnemer, maar de beoordelingen die al gegeven zijn tellen nog mee voor de score van de spellen.',
+  'session.removeAction': 'Verwijderen',
+  'session.removeActionFor': '{name} verwijderen',
+  'session.removeConfirmTitle': '{name} verwijderen?',
+  'session.removeConfirm': '{name} wordt uit deze sessie gehaald: uit de spelerslijst, de teams en de winnaars.',
+  'session.removeConfirmVoted': '{name} wordt uit deze sessie gehaald. De beoordelingen tellen nog mee voor de score van elk spel, maar niet meer voor de uitslag van deze sessie.',
+  'session.removed': '{name} is verwijderd',
+  'session.removeLast': 'Een sessie heeft minstens één persoon nodig.',
+  'session.removeSplit': 'Deze sessie is over tafels verdeeld. Haal de persoon aan diens tafel weg.',
 };

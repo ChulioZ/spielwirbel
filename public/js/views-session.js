@@ -2256,6 +2256,10 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     } catch (e) { toast(e.message, { tone: 'error' }); }
   }
 
+  // After a removal (#1538): the whole screen again from the server's view, so
+  // the tally, teams, winners and spotlight follow from the new people set.
+  function reopenResults(fresh, s) { showResults(fresh, s, games); }
+
   function renderCancel() {
     cancelWrap.innerHTML = '';
     if (finished || chosenId) return;
@@ -2292,6 +2296,12 @@ async function showResults(round, session, gamesHint, reveal, plain) {
       more.push(cancelled
         ? { icon: 'ti-arrow-back-up', label: t('result.cancelUndo'), kind: 'undoable', run: () => setCancelled(false) }
         : { icon: 'ti-x', label: t('result.cancel'), kind: 'destructive', run: confirmCancel });
+    }
+    // Taking someone out (#1538). `destructive` because its confirm is a danger
+    // one (popover.js's kind rule); first among them, since it corrects the
+    // evening where the other two throw it away.
+    if (people.length > 1) {
+      more.unshift({ icon: 'ti-user-minus', label: t('session.removeEntry'), kind: 'destructive', run: () => showRemovePersonSheet(round, session, reopenResults) });
     }
     if (roundCan(round, 'session.delete')) {
       more.push({ icon: 'ti-trash', label: t('result.deleteSession'), kind: 'destructive', run: deleteThisSession });
@@ -2674,6 +2684,10 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     return;
   }
   const footer = h('<div class="section result-footer"></div>');
+  // Taking someone out (#1538) — a correction, so first and before the two
+  // ways to throw the session away.
+  const removeEntry = removePersonEntry(round, session, reopenResults);
+  if (removeEntry) footer.appendChild(removeEntry);
   footer.appendChild(cancelWrap);
   // #137: deleting a played evening destroys its votes, result and winners for
   // everyone, so it is co-owner and up. Cancelling (above) stays an ordinary

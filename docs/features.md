@@ -570,6 +570,13 @@ What the app does, in detail. For a short overview see the
   player range, so six people in three pairs can draw a three-player game, and
   the winner picker offers the team as a single chip: recording it credits every
   member individually, so the standings and the history read as before.
+- **Removing a person** – someone ticked by mistake, or who left before the
+  game, can be taken out of a session from the voting lobby or the results
+  screen, even after the game is finished („Person entfernen"). They stop
+  counting as having played: they leave the session's people, tally, teams and
+  winners, the Chronik and their stats. Anything they had already rated still
+  counts toward each game's score on the shelf. A session keeps at least one
+  person, and a session already split into tables takes removals per table.
 - **Jetzt spielen** (play now) – when the group already knows what they want,
   launch a session for **one specific game** straight from its detail page or a
   Pokale tile: pick who joins and skip the vote entirely, landing directly on

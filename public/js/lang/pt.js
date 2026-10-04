@@ -2039,4 +2039,18 @@ I18N.pt = {
   'card.programmheft.winners': '{n} vencedores',
   'card.programmheft.ratings': 'Avaliações',
   'card.programmheft.present': 'Presentes',
+  // Removing a person from a session (#1538).
+  'log.removed': '{name} foi tirado da sessão',
+  'log.removedBy': '{actor} tirou {name} da sessão',
+  'session.removeEntry': 'Tirar alguém',
+  'session.removeTitle': 'Tirar alguém da sessão',
+  'session.removeIntro': 'Para quem foi marcado por engano ou saiu mais cedo. A pessoa deixa de contar como participante, mas as avaliações que já deu continuam contando para a pontuação dos jogos.',
+  'session.removeAction': 'Tirar',
+  'session.removeActionFor': 'Tirar {name}',
+  'session.removeConfirmTitle': 'Tirar {name}?',
+  'session.removeConfirm': '{name} sai desta sessão: da lista de jogadores, das equipes e dos vencedores.',
+  'session.removeConfirmVoted': '{name} sai desta sessão. As avaliações continuam contando para a pontuação de cada jogo, mas não mais para o resultado desta sessão.',
+  'session.removed': '{name} foi tirado',
+  'session.removeLast': 'Uma sessão precisa de pelo menos uma pessoa.',
+  'session.removeSplit': 'Esta sessão está dividida em mesas. Tire a pessoa na mesa dela.',
 };
