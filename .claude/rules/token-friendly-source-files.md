@@ -54,14 +54,19 @@ change while the rule is about *archived-game filtering*: **the rule a move
 invalidates is usually on a different topic than the PR doing the moving**, which
 is why it never occurs to anyone to check.
 
-So when you move or rename a function, `const` or file — or change a **value**
-another file's prose cites — grep for the old name across source and docs, not
-just the rules, and fix every hit in the same PR:
+So when you move or rename a function, `const` or file, change a **value**
+another file's prose cites, or change what a function **does** under its old name
+— grep for the name (for a behaviour change also its noun: `streak` for #1421)
+across source and docs, the skills' `criteria.md` included, and fix every hit in
+the same PR:
 
 ```bash
 grep -rn --exclude-dir=node_modules --exclude-dir=worktrees \
   "gameCount\|min(85vh, 660px)" .claude/ lib/ public/ docs/ test/ *.md
 ```
+
+**And don't restate a count that code or a test owns** ("seven call sites"): no
+grep finds a stale number, so say "every" and name the test that holds it.
 
 **`test/` joined that list in #956, having been missing.** Moving the theme block
 out of `core.js` reddened `test/build.test.js`, which spot-checked that the
@@ -82,10 +87,10 @@ it, and nothing can go red over it.
 `test/skills.test.js` catches a moved **file** — it asserts every repo path cited
 in `.claude/rules/`, `.claude/skills/` or the five root docs still exists. It
 cannot see a moved **function**, a stale value, or anything cited from a source
-comment (wrong file set, and it checks paths only), so that grep is on you. It is also a
-bullet in `implement`'s review phase, because the rule was already right and got
-skipped anyway — the adherence-failure remedy is a check that cannot be skipped,
-not a reworded rule.
+comment (wrong file set, paths only), so that grep is on you. It is also a bullet
+in `implement`'s review phase, because the rule was already right and got skipped
+anyway — the adherence-failure remedy is a check that cannot be skipped, not a
+reworded rule.
 
 ## The budget is a signal, not a ceiling — `test/token-budget.test.js`
 

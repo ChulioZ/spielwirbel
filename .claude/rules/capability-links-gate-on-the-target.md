@@ -1,6 +1,7 @@
 ---
 paths:
   - "lib/routes/vote-link.js"
+  - "lib/vote-link.js"
   - "lib/repo/json.js"
   - "lib/repo/postgres.js"
   - "test/vote-link.test.js"
@@ -147,7 +148,8 @@ line. That trap generalises past this feature and has its own file:
   fake round and would hand everyone the wrong swatch.
 - **`sanitizePersonVotes` moved to `lib/session-votes.js`** so the public and
   in-app writes share one copy. A second copy is how a link voter's column would
-  quietly acquire a guest `retire` flag the in-app one refuses (#458).
+  quietly acquire a shape the in-app one refuses — a guest `retire` flag (#458)
+  until #909 removed the flag; the column is `{ rating }` only now.
 
 **Related:** `.claude/rules/per-device-session-voting.md` (the session this
 shares, and why no route in that router is owner-only),

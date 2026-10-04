@@ -2,8 +2,6 @@
 
 <!-- scope: global — cited by a dozen rules as a VERIFICATION situation ("clear the SW first"); scoping it to public/sw.js would drop it exactly when someone is checking a styles.css change -->
 
-<!-- scope: global — cited by a dozen rules as a VERIFICATION situation ("clear the SW first"); scoping it to public/sw.js would drop it exactly when someone is checking a styles.css change -->
-
 Issue #142 made the app installable + offline with a plain, no-build service
 worker (`public/sw.js`), a web manifest (`public/manifest.webmanifest`), a tiny
 registration IIFE (`public/js/pwa.js`), and home-screen icons (`public/icons/`).
@@ -23,15 +21,16 @@ Non-obvious things that will bite if you forget them:
   served **cache-first**, so a changed `styles.css`/`*.js` would be served stale
   until the cache version name changes. Bumping `CACHE` (`spielwirbel-shell-vN`)
   re-precaches the shell and `activate` deletes the old cache. **Since #141** the
-  optional production build (`npm run build`) content-hashes the js/css *and*
-  rewrites the `SHELL` paths + the `CACHE` literal to a content-derived name, so a
+  optional production build (`npm run build`) content-hashes `js/**`,
+  `styles.css` and the design stylesheets under `css/**` (#1184) *and* rewrites
+  the `SHELL` paths + the `CACHE` literal to a content-derived name, so a
   **built** deploy (`NODE_ENV=production`) self-invalidates **a js/css change**.
 
   It does **not** self-invalidate anything the build copies through unhashed —
-  `manifest.webmanifest`, icons, fonts, `fonts/tabler-icons.css`. Only `js/**` +
-  `styles.css` are hashed, so a change confined to one of those files moves no
-  hashed filename, the derived digest is unchanged, and the built `sw.js` comes
-  out **byte-identical** to the previous deploy. Browsers detect a service-worker
+  `manifest.webmanifest`, icons, fonts, `fonts/tabler-icons.css`. Only `js/**`,
+  `styles.css` and `css/**` are hashed, so a change confined to one of those
+  files moves no hashed filename, the derived digest is unchanged, and the built
+  `sw.js` comes out **byte-identical** to the previous deploy. Browsers detect a service-worker
   update by byte-comparing `sw.js`, so nothing installs and the cache-first shell
   serves the stale asset indefinitely. Measured on #617: a manifest-only change
   produced the same `spielwirbel-shell-b4335061` and the same sha256 before and

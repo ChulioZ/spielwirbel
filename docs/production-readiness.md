@@ -663,12 +663,12 @@ same as anything else.
 
 | Issue | What | Notes |
 |---|---|---|
-| **#137** | Roles & permissions | **Open.** Round sharing (#207) shipped, so "which grantee may do what" is now a real question rather than a hypothetical one |
+| **#137** | Roles & permissions | Round sharing (#207) shipped, so "which grantee may do what" is now a real question rather than a hypothetical one |
 | **#173** | Voluntary donations support link | **Shipped** 2026-07-22 — legally invisible (unconditional, no AGB/Widerruf) |
 | **#207** | Invitations & round sharing (multi-user rounds) | **Shipped** 2026-07-24 as per-round grants, *not* co-tenancy — see [`.claude/rules/round-grant-resolver.md`](../.claude/rules/round-grant-resolver.md) |
-| **#209** | Per-device voting | **Open**, and deliberately deprioritised — the group needing no accounts is a defining property, so this stays opt-in and never the default |
+| **#209** | Per-device voting | Deliberately deprioritised — the group needing no accounts is a defining property, so this stays opt-in and never the default |
 | **#215** | Move `express-rate-limit` to a shared Redis store | **Closed unshipped** 2026-08-02. The single-replica pin (`railway.json`, #646) is the accepted control; the store ships with the change that raises the count |
-| **#311** | Automate the 3-year moderation-log retention purge | **Open.** Extremely low priority until ~2029 (year-end cutoff math) |
+| **#311** | Automate the 3-year moderation-log retention purge | Extremely low priority until ~2029 (year-end cutoff math) |
 | — | Horizontal scaling (multi-process behind LB — enabled by stateless tier) | Not yet filed as its own issue; needs a shared limiter store first (#215 closed unshipped) |
 | — | Mobile-web responsiveness pass | Not yet filed as its own issue |
 | — | Localize server-side error messages if user-facing surfaces grow | Not yet filed as its own issue |

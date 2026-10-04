@@ -31,8 +31,9 @@ the shared-password gate. Things that will bite if you forget them:
   for instances that set AUTH_PASSWORD — production no longer does, but a
   self-hosted checkout may, alone or layered. /api/account mounts *before* the
   gate (like /api/auth) behind the same AUTH_RATE_LIMIT_MAX limiter. test/helpers.js
-  raises that ceiling for the shared test app — an account-flow test making
-  >20 requests would otherwise flake with 429s (see security-middleware.md).
+  raises that ceiling for the shared test app — an account-flow test making more
+  requests than the default ceiling in `lib/app.js` would otherwise flake with
+  429s (see security-middleware.md).
 
 - **User objects keep every key present (null when unset).** `verification`,
   `reset`, `refreshTokens`, `emailVerified` are always written, because the
@@ -51,10 +52,13 @@ the shared-password gate. Things that will bite if you forget them:
 
 - **Mail (lib/mail.js) degrades by design.** No SMTP_PASS → messages go to
   the in-memory `outbox` (tests read tokens out of it — never set a real key
-  in tests; stub `fetch` for the mailbox.org path). Account routes wrap sends in
+  in tests; stub `nodemailer.createTransport` for the SMTP path, as
+  `test/mail.test.js` does). Account routes wrap sends in
   `sendSafe`: a mail failure logs but never 500s the flow.
 
 - **`data.users` is top-level in data.json** (a sibling of `rounds`, defaulted
-  by lib/store.js loadData) and a `users` table in Postgres with a UNIQUE
-  expression index on `data->>'email'` — `createUser` maps error 23505 to
-  `'email_taken'`.
+  by lib/store.js loadData) and a `users` table in Postgres with two UNIQUE
+  expression indexes, on `data->>'email'` and (since #320) on
+  `lower(data->>'username')`. `createUser` maps error 23505 to `'username_taken'`
+  or `'email_taken'` — not by trusting the constraint name, which names only one
+  index when both collide (see the comment there).

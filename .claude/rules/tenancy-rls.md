@@ -34,10 +34,17 @@ and the traps that cost effort:
   `lib/repo/json.js`) — don't "migrate" the live file to add it.
 
 - **Postgres RLS is the backstop, not the primary filter — and superusers
-  BYPASS it.** Policies (`ENABLE` + `FORCE ROW LEVEL SECURITY`, recreated
-  idempotently in `init()`) compare `tenant_id` to the transaction-local setting
+  BYPASS it.** The policies compare `tenant_id` to the transaction-local setting
   `app.tenant_id`; `current_setting(..., true)` is NULL when unset, so an
-  unscoped query sees zero rows (fail-closed). But **`FORCE` only binds
+  unscoped query sees zero rows (fail-closed). They live in the migrations, not
+  in code that runs at boot: the baseline
+  `lib/repo/migrations/20260719000000_initial_schema.js` sets `ENABLE` + `FORCE
+  ROW LEVEL SECURITY` and the `<table>_tenant_isolation` policy on `rounds`,
+  `members`, `games`, `sessions` and `activities`, and
+  `20260720140000_moderation.js` adds the admin read escape. `init()` only runs
+  `knex.migrate.latest()` under an advisory lock, so nothing re-applies that
+  list — a new tenant-scoped table needs its own `ENABLE`/`FORCE`/policy in the
+  migration that creates it (never an edit to the baseline). But **`FORCE` only binds
   non-superuser roles** — a superuser connection (Railway's default `postgres`
   user, CI's service container) skips RLS entirely. That's why
   `test/repo.postgres.test.js` probes through a dedicated plain role, and why a
@@ -48,11 +55,16 @@ and the traps that cost effort:
 - **Every round-table statement must run inside a transaction that sets the
   tenant.** `tx(tenant, fn)` sets `app.tenant_id` with `set_config(..., true)`
   (transaction-local — it dies at COMMIT/ROLLBACK, so no tenant ever leaks to
-  the next pooled checkout); `qt(tenant, text, params)` wraps one statement.
-  Never use bare `pool.query` on rounds/members/games/sessions/activities: under
-  a non-superuser role it returns zero rows and "no data" bugs look like data
-  loss. The users table is deliberately un-scoped (identity layer, looked up by
-  email before any tenant is known) and keeps plain `q()`.
+  the next pooled checkout); `qt(tenant, fn)` runs one builder — `fn(trx)`
+  returns it — in its own such transaction. The hot reads (`READ_SQL`) set the
+  tenant inside the single statement instead, through a materialized CTE
+  (`.claude/rules/postgres-backend.md`). Never query
+  rounds/members/games/sessions/activities through bare `knex(...)`/`knex.raw`
+  outside those (or the admin escape `atx`,
+  `.claude/rules/admin-cross-tenant-escape.md`): under a non-superuser role it
+  returns zero rows and "no data" bugs look like data loss. The users table is
+  deliberately un-scoped (identity layer, looked up by email before any tenant is
+  known) and is queried with plain `knex('users')`, no tenant setting.
 
 - **`TRUNCATE` is not subject to RLS** (it's table-level, needs its own
   privilege) — that's why the Postgres test files' cleanup keeps working as-is.
@@ -70,8 +82,9 @@ and the traps that cost effort:
   GitHub blocking relation to the go-live issue #219 in either direction) —
   because "member" is already decoupled from "user" (a name-only seat the
   owner adds), so a single-owner tenant is a complete product without either.
-  There is intentionally **no tenants table** yet — the first issue that gives
-  a tenant fields (name, settings, quotas #139) adds the entity.
+  There is **no tenants table**: a tenant is only an id on its rows, 1:1 with an
+  account. Per-tenant quotas (#139) shipped without one — their ceilings are
+  instance-wide env vars, checked against each tenant's own data (`lib/quota.js`).
 
 ## For any future cross-tenant WRITE (two PostgreSQL facts, verified on PG 16)
 

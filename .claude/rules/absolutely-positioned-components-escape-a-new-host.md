@@ -30,9 +30,10 @@ and it does not break — it **relocates**, silently:
 
 Both happened in one PR (#796's table builder). The remedies are already the
 established pattern and are one line each — `position: relative` on the host (the
-comment "anchors + clips the .cover-ph gradient layer (#256)" marks the seven
-existing ones), and `position: static` on the pill inside its row (four existing
-inline contexts spell it out).
+comment "anchors + clips the .cover-ph gradient layer (#256)" marks the existing
+ones in `styles.css`), and `position: static` on the pill inside its row (every
+existing inline context spells it out; `grep -rn 'score-pill.*position: static'
+public/` lists them, the design sheets included).
 
 ## Why nothing catches it
 

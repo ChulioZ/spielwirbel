@@ -46,8 +46,9 @@ the pill has slack, widening the desktop row by 27.5px.
 
 ## The ≤520px block is declared ABOVE the components it overrides
 
-`@media (max-width: 520px)` sits at ~line 876 of `styles.css`, while the
-components it re-styles live hundreds to ~1600 lines further down. So a
+The first `@media (max-width: 520px)` in `styles.css` (the one headed "Narrow
+screens: keep the top bar …") sits in the layout section, while the components
+it re-styles live hundreds to thousands of lines further down. So a
 phone-block override at the **same specificity** as its base rule loses on source
 order — and every such loss is silent.
 

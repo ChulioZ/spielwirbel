@@ -39,7 +39,7 @@ well-formed. The matrix, in `lib/routes/members.js`:
 
 An unknown id is deliberately folded into `not_self` rather than kept as the old
 400 `Unknown user` — that answer doubled as "does this id exist?".
-`already_seated` exists because `actorSeat` (`lib/routes/games.js`) and `seatOf`
+`already_seated` exists because `actorSeat` (`lib/actor-seat.js`) and `seatOf`
 (`lib/routes/invitations.js`) both `.find()`, so two seats for one account is
 undefined behaviour. Name and colour edits stay open to grantees; only the link
 is restricted.

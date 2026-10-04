@@ -64,9 +64,9 @@ them, and neither does any of the alternatives that look promising:
 ## How the rail resolved it
 
 Navigation moved **out** of the content column: from 1280px up, `.rail`
-(`public/js/round-rail.js`) carries the round's identity, its four sections, the
-three off-shelf lists (both archives + the Wunschliste, #560) and one
-Einstellungen entry, and the dock is `display: none`. With
+(`public/js/round-rail.js`) carries the round's identity, its four sections and
+one Einstellungen entry (and a „Nicht im Regal" group until #1500), and the dock
+is `display: none`. With
 nothing persistent left inside the column, its width is free to depend on the
 viewport — and because it depends on *only* the viewport, every screen at a
 given size gets the same pane and nothing moves as you navigate.
@@ -143,10 +143,10 @@ exempted `.setup-grid` alone; the `.page-head` above it — again a *sibling*, n
 a wrapper — stayed capped and centred, indenting each screen's own `<h1>` ~170px
 from the form it heads. Same fix, same condition (`:has(.setup-grid)`), and the
 two now share one custom property so their edges cannot drift. See
-`.claude/rules/setup-screens-two-column-layout.md`, which also records the one
-argument that lets those two screens select a width by content at all: they
-render **no navigation**, so there is nothing inside the column for a width
-change to move.
+`.claude/rules/setup-screens-two-column-layout.md` §2, which records why those
+two screens may select a width by content at all. It needs both arguments: the
+rail-less forms render **no navigation**, and session setup under Der Tisch and
+Das Programmheft carries the rail, which is the #1039 argument above.
 
 Note this is a *fourth* specificity trap on top of the three below: the cap is
 (0,3,0), so a natural-looking `.app:has(.lobby-list) > .lobby-head` is (0,3,0)
@@ -157,19 +157,20 @@ the existing exemption does.
 The lobby band's wash is `--page-glow` — deliberately the exact tint `body`
 already lays over the top of every page, so the band introduces no darker surface
 than ships everywhere. It cannot simply be deepened to taste: the sub-line is
-`.muted` (`--ink-soft`), which clears AA by 0.14 at 7% brand (4.64:1 on Schiefer)
-and **fails at 13%** (4.28:1). Nothing renders wrong when it does — the text just
+`.muted` (`--ink-soft`), which cleared AA by 0.14 at 7% brand and **failed at
+13%** (4.64:1 and 4.28:1, measured 2026-07-29 on the Schiefer round theme, before
+#1202 retired the themes). Nothing renders wrong when it does — the text just
 drops below the bar — so `test/a11y-contrast.test.js` composites the wash over
-every theme page and pins both lines, keyed to the token rather than to a
+every design's page and pins both lines, keyed to the token rather than to a
 percentage a future edit could raise past what was measured.
 
 ## Hiding something the rail replaced: your rule will lose
 
-The rail hides five things the column used to carry — the dock, the Start tab's
-hero, its CTA, its Tags/Provider/Design links and the Regal's archive footer.
-Each hide is a `display: none` competing with a component rule declared **~400
-lines further down** `styles.css`, and **three of the five lost on the first
-try.** Every failure was silent: no error, no failing test, just the rail entry
+When it shipped, the rail hid five things the column used to carry — the dock,
+the Start tab's hero, its CTA, its Tags/Provider/Design links and the Regal's
+archive footer. Each hide was a `display: none` competing with a component rule
+declared **~400 lines further down** `styles.css`, and **three of the five lost
+on the first try.** Every failure was silent: no error, no failing test, just the rail entry
 *and* the thing it replaced both rendering.
 
 | Hide | Lost to | Why |
@@ -189,20 +190,23 @@ own rules with a comment saying why it lives there.
 reintroducing the exact bug and watching it go red.
 
 **The same trap exists at the other end of the axis, and #621 hit it twice.**
-The `@media (max-width: 520px)` block is declared ~line 876, *above* most of the
-components it overrides — so a phone override that ties its base rule loses on
-source order just as surely as the rail's hides did. One of the two losses left a
+The first `@media (max-width: 520px)` block is declared early in `styles.css`
+(line 1918 on 2026-10-04), *above* most of the components it overrides — so a
+phone override that ties its base rule loses on source order just as surely as
+the rail's hides did. One of the two losses left a
 control with no accessible name at all. Same remedy, same reason:
 `.claude/rules/flex-none-cancels-flex-wrap.md`.
 
 ## A link added to something `rail-owned` needs a RAIL entry too — or it exists only below 1280px
 
-The five hides above are not merely cosmetic: the Regal's footer is one of them,
-so from 1280px up **the rail is the only way into every screen that footer links
-to**. Adding a row to the footer alone therefore ships a screen that is
+The five hides above were not merely cosmetic: the Regal's footer was one of
+them, so from 1280px up **the rail was the only way into every screen that footer
+linked to**. Adding a row to the footer alone therefore shipped a screen that was
 unreachable on a desktop-width window, with nothing red anywhere — the footer is
 correct, the screen is correct, and the width that hides one and not the other is
-the state nobody rendered.
+the state nobody rendered. The trap stands for anything still `rail-owned`, and
+under a lean rail (`railIsLean()` in `round-rail.js`) there is no rail copy at
+all.
 
 #682 did exactly that: its recommendations screen was reachable from the narrow
 surface and absent from the rail, verified in a browser at 1180px and 390px —
@@ -210,12 +214,11 @@ surface and absent from the rail, verified in a browser at 1180px and 390px —
 is this file's own "measure the transition, not the screen" advice, skipped by
 walking two points on the same side of the transition.
 
-`test/off-shelf-parity.test.js` now asserts the narrow surface's link set is a
-subset of the rail's, so the next such screen is covered without anyone
-remembering. Write the assertion as **parity**, never as "the new row exists":
-the parity form covers additions to either surface, and the anti-vacuous floor
-(the narrow surface really did render ≥4 links) is what stops it going quiet if
-that surface is refactored.
+`test/off-shelf-parity.test.js` then asserted the narrow surface's link set was a
+subset of the rail's. Write such an assertion as **parity**, never as "the new
+row exists": the parity form covers additions to either surface, and the
+anti-vacuous floor (the surface really did render ≥4 links) is what stops it
+going quiet if that surface is refactored.
 
 **It was refactored, in #777** — the `.round-footer` row below the grid became a
 sheet opened from the Regal's header — and the floor is what made the retarget a
@@ -223,6 +226,12 @@ checkable step rather than a silent one: pointed at the now-absent `.round-foote
 the spec would have compared two empty sets and passed. A parity assertion whose
 inputs can both go empty needs that floor on the surface that is *likely to move*,
 not on the stable one.
+
+**#1500 removed the width split itself.** The rail's group and the sheet went;
+the Regal's scope strip (`nav.offshelf-seg`) is now its one way onto the four
+lists, at every width and in every design. The spec now compares that strip with
+the hub's „Weitere Listen" group (`.hub-offshelf`) — same destinations, same
+counts — and keeps its floor on the hub group.
 
 ## What survived from #332, and why
 

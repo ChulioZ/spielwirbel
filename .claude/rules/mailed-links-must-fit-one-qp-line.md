@@ -101,8 +101,10 @@ body.
 ## Testing it: the default base URL hides the bug
 
 The suite runs without `APP_BASE_URL`, i.e. against `http://localhost:3000` —
-**21 characters shorter than the production origin**. A length assertion made
-under that default passes no matter how long the link grows. `withProdBaseUrl()`
+**shorter than the production origin** `https://spielwirbel.app`, and a
+self-hosted domain can be longer still. A length assertion made under that
+default under-measures every mailed link by the difference, so it can pass for a
+link that is soft-broken in production. `withProdBaseUrl()`
 in `test/account.test.js` sets the real `https://spielwirbel.app` around the
 send for exactly this reason.
 

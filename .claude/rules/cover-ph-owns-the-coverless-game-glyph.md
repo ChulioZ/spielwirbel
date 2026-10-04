@@ -7,9 +7,11 @@ paths:
 
 # `--placeholder` does NOT paint a coverless game's glyph — `.cover-ph` does
 
-Nine rules in `styles.css` set `color: var(--placeholder)` on an image box, and
-five of them read exactly like "the icon shown when a game has no cover". For two
-of those five that has been false since #256, and the CSS gives no hint of it.
+Most of `styles.css`'s `var(--placeholder)` uses are a `color:` on an image box
+(the rest are dashed `border:`s; `grep -n 'var(--placeholder)' public/styles.css`
+lists them), and most of those read exactly like "the icon shown when a game has
+no cover". For `.game-card__img` and `.pool-tile__img` that has been false since
+#256 (for `.e-tile__img` since #1137), and the CSS gives no hint of it.
 
 `coverPlaceholder()` (`public/js/cover.js`) returns a **child layer** carrying its
 own colour:
@@ -39,7 +41,6 @@ Only the boxes that render a **bare `<i>`**, which are never a game cover:
 | `.feed-item__img` | a feed row with no `ev.coverUrl` (`feed-view.js`) |
 | `.lookup__thumb--none .ti` | a search hit with no thumbnail (`lookup.js`) |
 | `.avatar--guest`, the guest add button, a guest's seat on the ring (#1016) | a **dashed border**, not a glyph at all |
-| `.theme-card__line` | a **background** — the stand-in text lines on a design card |
 
 `.game-card__img`, `.pool-tile__img` and — since #1137 made the feed tile's
 cover its whole 3:2 band — `.e-tile__img` declare the colour and never show it;
@@ -52,9 +53,9 @@ evidence that one does.
 
 The token's own name and its old comment ("fallback icons on image areas") both
 describe the #256 behaviour it lost, and the exemption list in
-`test/a11y-contrast.test.js` enumerates all five boxes as though they were one
-thing. Issue #938 was written from that reading and led with the two boxes the
-token does not paint.
+`test/a11y-contrast.test.js` (`PLACEHOLDER_GLYPHS`) enumerates every box as
+though they were one thing. Issue #938 was written from that reading and led
+with the two boxes the token did not paint.
 
 **It cost a wrong number, not just a wrong sentence.** #938 reported the glyph at
 **1.05:1 on light and 1.48:1 on dark**, concluding that the dark scheme "happens

@@ -2,7 +2,7 @@
 
 <!-- scope: global — a review-phase discipline for every change -->
 
-The user-facing description of the app is spread over four documents since
+The user-facing description of the app is spread over several documents since
 2026-07-30, when `README.md` became a ~130-line landing page and its reference
 material moved into `docs/`. **Most of what used to be a "README update" is now a
 `docs/` update**, and the file to touch depends on the change:
@@ -16,7 +16,7 @@ material moved into `docs/`. **Most of what used to be a "README update" is now 
 | changes the Node floor, the quick start, or what the app *is* | `README.md` |
 | mounts a route **outside** the `/api` auth gate, or publishes anything cross-tenant | `SECURITY.md`'s "especially relevant" list — it is what an external reporter calibrates severity against, and a surface missing from it gets either misfiled or not reported at all |
 
-## The PRODUCT copy is a fifth and sixth surface — and it was missing here
+## The PRODUCT copy is a surface too — and it was missing here
 
 Every row above points at a document for a **developer or self-hoster**. The same
 features are also described to **end users**, in two places that no row named and
@@ -24,11 +24,11 @@ that no test can check:
 
 | The change | Also update |
 |---|---|
-| changes how a user-facing feature *works*, in a way an existing answer describes | `lib/faq.js` — **both languages**, and mind its content rules (`test/faq.test.js` bans naming a device kind: say "Gerät"/"device", never "Handy"/"phone") |
+| changes how a user-facing feature *works*, in a way an existing answer describes | `lib/faq.js` — **every shipped locale**, and mind its content rules (`test/faq.test.js` bans naming a device kind: say "Gerät"/"device", never "Handy"/"phone") |
 | adds or changes a feature the pitch describes | the `landing.*` keys in **every** `public/js/lang/*.js` (hero, feature cards, the three steps) |
-| ships a genuinely new user-facing **capability** — and only then | a `NEWS` entry in `public/js/news.js` (#741), **every shipped locale inline** (#1087 — nine today; `test/news-locales.test.js` derives the set from `locales.js` and goes red naming the missing one) |
+| ships a genuinely new user-facing **capability** — and only then | a `NEWS` entry in `public/js/news.js` (#741), **every shipped locale inline** (#1087; `test/news-locales.test.js` derives the set from `locales.js` and goes red naming the missing one) |
 
-**Why this row exists.** #209 added per-device voting and the four documents above
+**Why this row exists.** #209 added per-device voting and the developer documents above
 were all updated — while `lib/faq.js` still answered "a round runs from one
 device", and the landing page still said "one device goes around the table" in
 the hero, the voting feature card and step 3. Nothing prompted it: the rule
@@ -60,7 +60,7 @@ backwards:
 
 ## The news row is a BUDGET, and its default answer is "no entry"
 
-The seventh row differs from the other six in direction: they ask whether an
+The news row differs from every other row in direction: they ask whether an
 existing description has gone stale, this one asks whether to *add* something.
 So it needs a bar, and the bar is high.
 
@@ -90,9 +90,9 @@ and unaffected.)
 
 **Rule:** whenever you implement a change (in particular in the `implement`
 skill's review phase, before committing), explicitly ask: *does this change make
-any of those seven stale?* Update it in the same branch/PR.
+any of those surfaces stale?* Update it in the same branch/PR.
 
-The eighth surface is not a document at all and has its own file: a new feature
+One more surface is not a document at all and has its own file: a new feature
 whose **uptake** nothing can report leaves the operator unable to tell whether it
 landed — `.claude/rules/propose-an-admin-stat-for-new-features.md`, same budget
 posture as the news row above, and the same default of no.

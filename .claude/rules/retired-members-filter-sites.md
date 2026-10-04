@@ -10,7 +10,11 @@ paths:
   - "public/js/round-rail.js"
   - "public/js/views-round-start.js"
   - "public/js/views-member.js"
+  - "public/js/*-hub.js"
+  - "public/js/views-badges.js"
+  - "public/js/game-editors.js"
   - "lib/routes/members.js"
+  - "lib/routes/saved-filters.js"
 ---
 
 # A retired member must vanish FORWARD and keep resolving BACKWARD (#1006)
@@ -37,26 +41,34 @@ filter `activeMembers()` (`public/js/member-active.js`):
 | `seat-picker.js` | the seat ring |
 | `team-picker.js` | who can be put in a team |
 | `views-pokale.js` | standings, streaks, trophies |
-| `recap.js` | the "two members disagree about most" card |
-| `round-rail.js`, `views-round-start.js` | the member strips |
+| `recap.js` | the Lieblingsspiele card (`memberFavourites`) — a retired member gets none |
+| `round-rail.js`, `views-round-start.js` | the member strips, Der Tisch's seat captions, the retire banner's vote floor |
+| `ocean-hub.js`, `bruecke-hub.js`, `programmheft-hub.js`, `forest-hub.js` | each design's hub seat captions (Forest also prints the member count) |
+| `views-badges.js` | whose Abzeichen the section and the hub's preview line list |
 | `views-member.js` | die Tischkarte's „Am Tisch" seat strip (#1074) — the screen that is BOTH halves of this rule: a retired member is absent from the strip and still is the page's own subject, or there would be no way to bring them back |
-| `owner-picker.js` | who can be recorded as owning a box |
+| `owner-picker.js`, `game-editors.js` | who can be recorded as owning a box |
 | `views-round-actions.js` | the free seats an invitation may fill |
 | `bgg-import.js`, `regal-bulk.js`, `views-round-lookup.js` | whether an owner field is worth showing at all |
+| `lib/routes/saved-filters.js` | which seats a saved filter stores |
 
-**Two of those files spell the predicate out instead of calling the helper** —
+Grep for both `activeMembers(` and `!m.retired` before assuming the table is
+complete. **Two files spell the predicate out instead of calling the helper** —
 `recap.js` and `owner-picker.js` — because they are `require`d
 from Node, and a `public/js` file cannot `require` a sibling. That is the same
 constraint that makes `shelfScoreOf` and `tileValue` injected parameters. It is
 one predicate, not a list or a formula, so the copy is licensed; if it ever
-becomes more than `!m.retired`, inject it.
+becomes more than `!m.retired`, inject it. `game-editors.js`'s `renderOwnerRows`
+spells it out too, without that reason (it mirrors `owner-picker.js`'s contract
+and is never required from Node), so a grep for the helper alone misses it.
 
 ## The operator decision that looks like a bug
 
 **Person-facing historical stats DO change when someone is retired**, and that is
-deliberate (2026-09-11): `recap.js`'s "game two members disagree about most" can
-name a different game afterwards. Do not "fix" it back — the card is about the
-people at the table now.
+deliberate (2026-09-11): their row leaves the Pokale standings, wins and all, and
+their card leaves the Lieblingsspiele (`memberFavourites` in `recap.js`). Do not
+"fix" it back — those cards are about the people at the table now. The
+Größte-Uneinigkeit card (`mostDivisive`) has no filter and keeps counting a
+retired member's ratings, the same way every score does: those are history.
 
 ## Why the retire dialog asks about solely-owned games
 

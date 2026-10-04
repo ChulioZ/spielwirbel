@@ -628,6 +628,18 @@ parameters with `&` now fails that spec's sized-URL check, and the render
 widths beside it (`COVER_THUMB`/`CARD`/`HERO`) are still client-only —
 the twelfth entry's "stayed out" note about them still holds.
 
+**The twenty-fifth is `public/js/recap.js`** (#1089, #1147): `isNameableGame`,
+which games a statistic may NAME as a favourite or a strongest game — a retired
+one may not. `lib/user-stats.js` injects it into the account-wide `memberStats`
+fold, and `lib/user-plays.js` withholds a retired game's rating from „Dein
+Rückblick" by it (the play itself still counts), so the profile and the round's
+own Pokale and member pages cannot disagree about whether a game the round has
+retired still counts as someone's favourite. It was required from
+#1089 on and listed only on 2026-10-04: until then the inventory test matched a
+substring, and the word „recap" already stood in unrelated prose here, so the
+missing entry stayed green (`.claude/rules/source-scanning-guards-enumerate-shapes.md`).
+The test now matches entry headings of this shape only.
+
 **Each new instance must be named above.** `test/rule-enumerations.test.js`
 asserts every `require('../public/js/…')` under `lib/routes/` and `lib/` appears
 in it, because the list had already gone stale by one before anyone noticed. The

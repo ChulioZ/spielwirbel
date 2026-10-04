@@ -44,7 +44,9 @@ account yields its tenant, and for erasure the tenant path is *required* — a
 nothing.
 
 Also baked into erasure: it refuses with `'tenant_shared'` → 409 when a second
-account shares the tenant (the no-undo mistake once tenant sharing #207 lands);
+account shares the tenant (the no-undo mistake; unreachable today, because round
+sharing #207 shipped as per-round grants and keeps a tenant 1:1 with an account —
+`.claude/rules/tenancy-rls.md` — so it stays as the backstop);
 the log entry carries **no erased personal data** (account id, tenant, date,
 reason, counts — the record outlives the erasure it evidences); the route demands
 the account's own e-mail as `confirmEmail`, checked server-side.

@@ -613,9 +613,10 @@ test('forgot-password is throttled per account, silently (#447)', async (t) => {
 // base64url secret, no '='), so the encoded width equals the literal width.
 const QP_SAFE_LINE = 75;
 
-// The tests otherwise run without APP_BASE_URL, i.e. against a short
-// http://localhost:3000 — which would pass this assertion no matter how long
-// the link grew. Measure against the real production origin.
+// The tests otherwise run without APP_BASE_URL, i.e. against
+// http://localhost:3000 — two characters shorter than the production origin,
+// so a link right at the limit would pass here and wrap there. Measure against
+// the real production origin.
 async function withProdBaseUrl(fn) {
   const prev = process.env.APP_BASE_URL;
   process.env.APP_BASE_URL = 'https://spielwirbel.app';
@@ -1447,6 +1448,24 @@ test('#485: an account predating the field reads as OFF, not as an opt-out', asy
   // registered before #485 would then have been offered a BG Stats link nobody
   // switched on. (.claude/rules/break-the-code-on-purpose.md)
   assert.equal((await getMe(acc.accessToken)).body.bgStats, false);
+});
+
+test('#618/#1089: an account predating the opt-outs reads every one of them as ON', async () => {
+  const acc = await freshAccount('optouts-legacy@example.com');
+  const keys = ['notifyRoundInvitations', 'notifyFriendRequests', 'statsVisible'];
+  const record = store.data.users.find((u) => u.id === acc.uid);
+  keys.forEach((k) => delete record[k]);
+  store.saveData();
+  const live = store.data.users.find((u) => u.id === acc.uid);
+  keys.forEach((k) => assert.equal(k in live, false, `${k} is really gone`));
+
+  // The mirror of #485 above, and just as dangerous: `undefined === true` is
+  // false, so writing an ON-default field with the opt-in shape would switch it
+  // OFF for every account registered before the field existed — no mails, and a
+  // profile whose statistics friends can no longer see. Every other account in
+  // this suite carries the keys, so only this spec can tell the shapes apart.
+  const body = (await getMe(acc.accessToken)).body;
+  keys.forEach((k) => assert.equal(body[k], true, `${k} defaults ON for a legacy account`));
 });
 
 test('a non-boolean BG Stats opt-in is refused and writes nothing (#485)', async () => {

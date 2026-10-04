@@ -12,7 +12,8 @@ paths:
 
 `test/retire-score-threshold.test.js` guards which games the archive banner
 proposes for retirement. It is a careful file — it reads `LOW_SCORE` out of
-`core.js` rather than hand-copying it (#420), it pins the anchor, it wires the
+the source (`core.js` then, `public/js/game-stats.js` since #956) rather than
+hand-copying it (#420), it pins the anchor, it wires the
 demo fixture into a real assertion. And every assertion in it was of this shape:
 
 ```js

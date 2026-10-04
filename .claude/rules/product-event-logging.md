@@ -53,8 +53,9 @@ Two call sites have a condition that is easy to get wrong when editing them:
   check; reuse it.
 - **`session_finished` fires only when `finished === true`.** `POST …/:sid/finish`
   is also the **un**-finish route (`finished: false`), which must not count.
-- `session_created` has **two** exit points (direct-pick and draw) — both are one
-  created session, so both log.
+- `session_created` fires for every session row a route creates: the two start
+  modes of `POST …/sessions` (direct-pick and draw), and once per child table in
+  `POST …/:sid/split` (#796) — each child is a created session.
 
 ## Privacy / legal position
 

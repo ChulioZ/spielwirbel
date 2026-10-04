@@ -5,14 +5,17 @@ paths:
   - "public/js/views-session.js"
   - "public/js/views-regal.js"
   - "lib/draw.js"
+  - "lib/draw-filters.js"
+  - "public/js/hub-insights.js"
   - "lib/routes/sessions.js"
 ---
 
 # A provider FACT is a filter; a round's own vocabulary is a tag — and the two must never merge
 
 The app has two ways to narrow a shelf, and since #827 they look **more**
-interchangeable than ever: two labelled sections inside one „Filter" panel, under
-one count, on the same two screens. They are not interchangeable, and the line
+interchangeable than ever: two labelled sections inside one „Filter" panel (the
+Regal's gained a third, owners, in #1433), under one count, on the same two
+screens. They are not interchangeable, and the line
 between them is what keeps either of them useful:
 
 | | Tags (#238/#241/#726) | Metadata filters (#725) |
@@ -110,6 +113,11 @@ game carries it. Three properties follow, and each is load-bearing:
 - a shelf carrying none of a field renders **no control at all**, rather than an
   empty one — the same thing the tag field already does with no round tags.
 
+**The hub's quick-start chips read the same options** (`quickPresets` in
+`public/js/hub-insights.js`): a preset is offered only when the shelf offers its
+field and narrows the shelf without emptying it, so a shelf with no BGG data shows
+no chip rather than one that opens the setup screen having changed nothing.
+
 **A control is gated on the field its own CLAUSE reads.** Since #1025 the
 playing-time pair is a **containment** test, so each control is gated on the
 game field of the same name: „at most M" compares the game's `maxPlaytime` and is
@@ -158,8 +166,10 @@ about.
 
 **That last one has a second half that is easy to miss: a stored filter whose
 control is gone must be dropped too.** `normalizeMetadataFilters(raw, options)`
-is where both happen, which is why every entry point goes through it — the route,
-the #252 preset restore, and the Regal on every render. Skip it in one place and
+is where both happen, which is why every entry point goes through it — the draw
+and the saved-filter routes (both via `resolveDrawFilters` in
+`lib/draw-filters.js`, #1328), the #252 preset restore, the hub chips above, and
+the Regal on every render. Skip it in one place and
 that screen shows an active-filter count over a control that is not on screen,
 i.e. a filter the user can neither see nor clear. The frontend spec for this
 needs the **numeric** case or the payload, not the chips: a category with no chip
@@ -169,8 +179,8 @@ looks identical whether it was dropped or not (found by breaking exactly that,
 ## 4. What is shared with the server, and what deliberately is not
 
 `fitsMetadataFilters` and the three ladders (`PLAYTIME_CHOICES`, `AGE_CHOICES`,
-`WEIGHT_CHOICES`) live in `public/js/draw-pool.js`, which `lib/draw.js` and
-`lib/routes/sessions.js` require — the shape
+`WEIGHT_CHOICES`) live in `public/js/draw-pool.js`, which `lib/draw.js`,
+`lib/draw-filters.js` and `lib/routes/sessions.js` require — the shape
 `.claude/rules/shared-constants-across-the-stack.md` exists for. The ladders are
 validated by **membership, not by range**, so the client cannot offer a step the
 route would reject and the two cannot disagree about granularity.

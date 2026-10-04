@@ -4,6 +4,9 @@ paths:
   - "public/index.html"
   - "public/manifest.webmanifest"
   - "test/theme-color.test.js"
+  - "lib/web-manifest.js"
+  - "lib/faq.js"
+  - "lib/guide.js"
 ---
 # The one themed colour that is NOT a CSS variable: the browser chrome (#523)
 
@@ -34,6 +37,15 @@ Two constraints on any change here:
   the `theme_color` its manifest URL answers with. `test/theme-color.test.js`
   parses the markup and resolves the manifest through `lib/web-manifest.js`
   rather than restating a hex, so editing one side alone goes red.
+
+**The server-rendered pages are install surfaces too.** `/faq` (`lib/faq.js`)
+and the guide pages (`lib/guide.js`) link the manifest from a template literal,
+so the test's sweep over `public/*.html` never saw them — and both kept
+Klassisch's `#c2410c` past the flip (#1202) while the manifest they link
+answered with the face's accent (found by the claude-file audit, 2026-10-04).
+They now read `faceThemeColor()` from `lib/web-manifest.js`, and the test
+renders and parses both. A new server-rendered page that links the manifest
+joins that loop; one that is not in it is unguarded.
 
 Verification is a DOM probe (`document.querySelector('meta[name=theme-color]')
 .content`), never a screenshot: the Browser pane renders no browser chrome, so a

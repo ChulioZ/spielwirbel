@@ -404,3 +404,26 @@ test('every source path cited in a source comment resolves', () => {
     + 'names the file as history, add the <citing file> -> <cited path> pair to SOURCE_PATH_HISTORY\n'
     + `with the issue that removed it:\n  ${missing.join('\n  ')}`);
 });
+
+/* `implement` phase 4 commits and pushes. `.claude/rules/verify-the-branch-
+   immediately-before-committing.md` requires the branch check to sit in the SAME
+   shell call as `git commit` — a check one call earlier proves nothing about the
+   state at commit time, and on #928 the branch had moved to `main` in between.
+   The rule named phase 4 and the guard was never added (claude-file audit
+   2026-10-04), so this pins it: the phase's command block must test the branch
+   and refuse `main` before the commit line, in the same fence. */
+test('implement phase 4 checks the branch in the same command block as git commit', () => {
+  const text = fs.readFileSync(path.join(SKILLS, 'implement', 'SKILL.md'), 'utf8');
+  const start = text.indexOf('\n## 4.');
+  assert.ok(start >= 0, 'implement/SKILL.md has a phase-4 heading');
+  const end = text.indexOf('\n## ', start + 1);
+  const phase = text.slice(start, end < 0 ? undefined : end);
+  const fence = /```bash\n([\s\S]*?)```/.exec(phase);
+  assert.ok(fence, 'phase 4 opens with a bash block');
+  const block = fence[1];
+  const commit = block.search(/^.*\bgit commit\b/m);
+  assert.ok(commit >= 0, 'the block commits');
+  const guard = block.search(/git branch --show-current[\s\S]*?!=\s*main[\s\S]*?(\|\||exit)/);
+  assert.ok(guard >= 0, 'the block refuses to run on main');
+  assert.ok(guard < commit, 'the guard runs BEFORE git commit, in the same block');
+});

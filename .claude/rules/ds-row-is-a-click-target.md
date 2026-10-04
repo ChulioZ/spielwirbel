@@ -46,8 +46,9 @@ fine is taking `.ds-row` and leaving the affordance on.
 
 Every genuinely clickable `.ds-row` in the app is a **native interactive
 element** — `<a>` (Chronik rows, the round-settings links), `<button>` (the
-round-settings actions) or `<label>` (provider, move-games and BGG-import rows,
-where the click toggles a checkbox). Every `<div class="ds-row">` is inert.
+round-settings actions) or `<label>` (rows wrapping a checkbox — the move-games
+and BGG-import rows, for instance — where the click toggles it). Every
+`<div class="ds-row">` is inert.
 
 `test/ds-row-affordance.test.js` pins exactly that: a `<div>` row must carry
 `ds-row--static`, and an `<a>`/`<button>`/`<label>` row must **not**. The second

@@ -14,7 +14,7 @@ copy, so every ceiling doubles and every per-caller bound stops bounding:
 
 | Control | What a second replica does |
 |---|---|
-| `RATE_LIMIT_MAX`, `AUTH_RATE_LIMIT_MAX`, `REGISTER_RATE_LIMIT_MAX`, `CONTACT_RATE_LIMIT_MAX` | `express-rate-limit`'s default store is per process — each replica counts a caller separately |
+| every `rateLimit(…)` limiter in `lib/app.js` — each `*RATE_LIMIT_MAX` env var | `express-rate-limit`'s default store is per process, and none of them configures another — each replica counts a caller separately |
 | `MAIL_DAILY_MAX` | the budget is per process and in memory, so N replicas send up to N× the operator mailbox's daily quota |
 | `MAX_LIVE_DEMOS_PER_IP` | *not* affected — it counts rows, not memory. Listed because the neighbouring `DEMO_RATE_LIMIT_MAX` **is**, and the two are easy to conflate (`.claude/rules/per-ip-live-caps.md`) |
 

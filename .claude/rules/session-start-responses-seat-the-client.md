@@ -4,12 +4,16 @@ paths:
   - "lib/routes/account.js"
   - "lib/routes/passkeys.js"
   - "public/js/auth-tokens.js"
+  - "public/js/views-auth.js"
+  - "public/js/demo-account.js"
 ---
 # A response that STARTS a session seats `accountUser` for its whole lifetime — send the full projection
 
-`public/js/auth-tokens.js` seats its module-level `accountUser` straight from
-whatever started the session (`accountUser = data.user || null`), and refreshes
-it from `GET /api/account/me` only on the **next cold load**. So a field the
+`accountUser` (module-level, declared in `public/js/auth-tokens.js`) is seated
+straight from whatever started the session — `accountUser = data.user || null`
+in `public/js/views-auth.js` (password and passkey login) and
+`public/js/demo-account.js` (the demo mint) — and refreshed from
+`GET /api/account/me` only on the **next cold load**. So a field the
 session-start response omits is not merely absent from one payload — it reads
 `undefined` for every screen the user visits until they reload.
 

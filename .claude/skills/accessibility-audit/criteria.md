@@ -75,8 +75,9 @@ see A-R05. AA is held here as the product bar regardless.
 ### A-007 — Focus is always visible
 - **Status:** adopted · 2026-07-23
 - **Source:** WCAG 2.2 SC 2.4.7, 2.4.11
-- **Check:** No global `outline: none`. The two scoped instances
-  (`.search-pill input`, `.paste-zone`) each provide a replacement indicator.
+- **Check:** No global `outline: none`. Every scoped instance — find them with
+  `grep -n 'outline: *none' public/styles.css public/css/designs/*.css`, not from a list
+  here (it was two at adoption) — sits beside a replacement indicator.
   Probe with a real Tab keypress — `el.focus()` from a script does not set
   `:focus-visible` in Chrome, so scripted focus "finds" bugs that do not exist.
 - **Enforced by:** — (manual)
@@ -85,8 +86,9 @@ see A-R05. AA is held here as the product bar regardless.
 - **Status:** adopted · 2026-07-23
 - **Source:** WCAG 2.2 SC 2.5.8
 - **Check:** Either the target is ≥24×24 CSS px, or ≥24px separates the centres of
-  adjacent targets. `.round-footer .link-btn` and `.tl-act__del` pass on spacing
-  (33.5px between centres) — that is compliant, not a finding.
+  adjacent targets. `.tl-act__del` passed on spacing (33.5px between centres, measured
+  2026-07-23, beside the since-removed `.round-footer .link-btn`) — that is compliant, not
+  a finding.
 - **Enforced by:** — (manual)
 
 ### A-009 — Every route-changing control is a real anchor
@@ -171,14 +173,14 @@ see A-R05. AA is held here as the product bar regardless.
 
 ### A-R01 — "Remove every `outline: none`"
 - **Status:** rejected · 2026-07-23
-- **Why:** The two occurrences are scoped and each supplies a replacement indicator.
-  Blanket removal is a lint rule, not an accessibility criterion. See A-007.
+- **Why:** Each occurrence is scoped and must supply a replacement indicator — A-007 checks
+  that. Blanket removal is a lint rule, not an accessibility criterion.
 
 ### A-R02 — "All touch targets must be 44×44 px"
 - **Status:** rejected · 2026-07-23
 - **Why:** 44px is the AAA figure (SC 2.5.5) and an Apple HIG convention. The AA bar this
-  app targets is SC 2.5.8's 24px **with a spacing exception**, which the two small targets
-  already satisfy. Adopting 44 would report compliant UI as broken. Revisit only if the
+  app targets is SC 2.5.8's 24px **with a spacing exception**, which the small targets
+  (A-008) satisfy. Adopting 44 would report compliant UI as broken. Revisit only if the
   target level moves to AAA — the native-app trigger lapsed when #143/#144 were closed
   won't-do-now on 2026-07-27 (reversibly; see `docs/production-readiness.md` §2.4).
 

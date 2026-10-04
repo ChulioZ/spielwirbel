@@ -7,6 +7,9 @@ paths:
   - "public/js/seat-picker.js"
   - "test/session-people.test.js"
   - "test/repo.test.js"
+  - "public/js/session-tally.js"
+  - "test/tie-rule.test.js"
+  - "lib/session-remove-person.js"
 ---
 # A session guest (#458) is a PERSON without a member row — and ~10 sites assumed those are the same thing
 
@@ -48,12 +51,14 @@ of its two uses, because the two are opposites:
 | Use | Needs |
 |---|---|
 | `.avatar--guest` (results, finale, seat-like chips) | a **light** fill with `--ink-soft` text and a dashed edge — the `.nr-seat--empty` "free seat" language |
-| `personColor()` → the handover card's full-bleed `background`, and `.vote__who strong`'s text colour | a **dark** tone: `.handover` is `color: #fff`, and the name sits on the page |
+| `personColor()` → the handover card's full-bleed `background`, and `.vote__who strong`'s text colour | a **dark** tone: `.handover`'s text is `--on-accent` (white in a light scheme), and the name sits on the page |
 
 Hence `.avatar--guest` uses the page-derived neutrals while `personColor()`
-returns `var(--ink-soft)` (5.78:1 under white, 4.95:1 on Schiefer — the two bars
-`.claude/rules/accessibility-contrast-and-modals.md` §1 sets). Put the light tone
-in `personColor` and the handover card renders white text on near-white.
+returns `var(--ink-soft)`, the dark tone under the card's `--on-accent` text (the
+bars are `.claude/rules/accessibility-contrast-and-modals.md` §1's; the ratios
+first recorded here were measured on the pre-#1202 round palettes, which are
+gone). Put the light tone in `personColor` and the handover card renders light
+text on near-white.
 
 There is a **third** value: on the dark finale stage the page-derived neutrals are
 a near-white disc, so `.stage__voter-avatar .avatar--guest` retakes the
@@ -61,30 +66,33 @@ a near-white disc, so `.stage__voter-avatar .avatar--guest` retakes the
 the two tie at (0,2,0) on `border-color` — order decides, as in
 `.claude/rules/responsive-content-width.md`.
 
-## 3. "A guest win must not break the streak" is NOT the default behaviour
+## 3. A guest is DROPPED from a win — and a night only guests won is SKIPPED
 
 The Pokale **win counts** exclude guests for free: `wins` is keyed by round
-member and the loop guards `if (wid in wins)`. The **streak** looks like it does
-too, and does the opposite:
+member and the loop guards `if (wid in wins)`. The **streak** (`winStreak` in
+`public/js/session-tally.js`, the one copy the Pokale card and the Programmheft
+share card both read) has to do it explicitly, and it treats two nights
+differently:
 
-```js
-if (ws.length !== 1) break;
-streakMember = ws[0];              // a guest id passes this
-…
-const streakM = round.members.find((m) => m.id === streakMember);   // undefined
-if (streakM && streak >= 2) { … }  // card silently vanishes
-```
+- **Members among the winners** — `memberWinners()` drops the guest ids, and
+  what is left is an ordinary win. Since **#1421** a shared win continues the
+  streak for every winner, so `[Anna, guest]` extends Anna's streak exactly as
+  `[Anna, Nils]` extends both of theirs.
+- **Only guests won** (`wonOnlyByGuests`) — the night is filtered out of
+  `chrono` and neither breaks nor extends. Counted as an ordinary win it would
+  leave no member among the candidates, the walk would stop, and the card would
+  silently blank a member's real streak — breaking it under another name, which
+  looks like a regression rather than a rule being applied.
 
-A night won solely by a guest therefore **blanks a member's real streak** — which
-is breaking it under another name, and looks like the feature quietly regressed
-rather than like a rule being applied. So `chrono` filters out any session with a
-guest among its winners: it neither breaks nor extends. Verified by removing that
-one `.filter()` in the browser and watching "Siegesserie Anna 2 Siege in Folge"
-disappear against otherwise identical data.
+`test/tie-rule.test.js` (test 2) and `test/session-tally.test.js` pin both.
 
-Note filtering the *guest ids* out of `winnerIds` instead is also wrong, in the
-other direction: `[Anna, guest]` would become a sole Anna win and **extend** the
-streak.
+**Until #1421 this section said the opposite, and it was right for the code of
+the time.** The streak was SOLE-win only, any night with a guest among its
+winners was skipped (`wonByGuest`), and dropping the guest ids was called wrong
+because `[Anna, guest]` would become a sole Anna win. #1421 (operator decision
+2026-09-26, recorded in `session-tally.js`'s header) made a shared win a full
+win for each winner, which is what makes dropping the guest correct now. Do not
+restore the old skip: it would discard a member's real win.
 
 ## 4. A guest votes on exactly the same scale — there is no asymmetry left
 
@@ -106,9 +114,10 @@ only a member may write.
 
 What survives is the reason the branch was cheap while it existed, and it is
 still the rule to keep: the tile was **omitted, never cast and filtered later**,
-which is what let `rawGameStats` (the raw half of `gameStats` since #894) and
-`gameStatsForSession` iterate `sessionPeople()` with **no guest-specific
-exclusion at all**. Apply that shape to the next control only some people may
+which is what let `gameStatsForSession` iterate `sessionPeople()`, and
+`rawGameStats` (the raw half of `gameStats` since #894) iterate `sessionRaters()`
+(`sessionPeople()` plus anyone removed after rating, #1538), with **no
+guest-specific exclusion at all**. Apply that shape to the next control only some people may
 use: keep it out of the payload rather than stripping it downstream, or every
 aggregate over votes grows a role check.
 
@@ -127,9 +136,9 @@ team plus one per un-teamed person. Two things here bear on this file directly:
 - **The guest tone and `personColor` are unchanged** — a team has no colour of
   its own, and a guest inside a team keeps their marker, because the team's name
   is built from `personLabel()`.
-- **A team win is a shared win**, so it breaks a streak exactly as §3 describes,
-  and a team holding a guest makes `wonByGuest` skip the whole session. Neither
-  is new behaviour; both are now reachable one step more easily.
+- **A team win is a shared win**, so since #1421 it continues the streak for
+  every member of the team (§3); a guest inside the team is dropped from the win,
+  and only a night won by guests alone is skipped.
 
 The rest — the positional wire format, the party-count arithmetic and why
 `winnerIds` stays flat — is in `.claude/rules/session-teams.md`.
@@ -175,8 +184,8 @@ The rest — the positional wire format, the party-count arithmetic and why
   podium, seat picker) needed no guard at all: they iterate `round.members`, which
   a guest is never in.
 - **The privacy policy did change.** A guest name is free text about a *third
-  party* by definition, so §5 and `vvt.md` row 3 name it explicitly and `REVISION`
-  was bumped (`.claude/rules/keep-legal-docs-current.md`). No new processor, no
+  party* by definition, so §5 and `vvt.md` row 3 name it explicitly and the
+  policy's revision was bumped (`PRIVACY_REVISION` since #521) (`.claude/rules/keep-legal-docs-current.md`). No new processor, no
   new recipient, no new on-device storage.
 
 ## Verification traps met on the way
@@ -211,10 +220,14 @@ All three were filed and reviewed on 2026-07-29; none is still open as a
   `resolveGuests` now runs for both modes. The player range is still **not**
   consulted in direct-pick mode, so guests gain no filtering role there; a spec
   pins that a chosen game stays playable however many guests are named.
-- **Editing the guest list after the draw — WON'T DO (#533).** Round *members*
-  cannot be added to a session after the draw either, so who is at the table is
-  a setup-time decision for every participant. That is also why #532 belongs in
-  the sheet rather than on the results screen.
+- **Adding to the guest list after the draw — WON'T DO (#533).** Round
+  *members* cannot be added to a session after the draw either, so who joins the
+  table is a setup-time decision for every participant. That is also why #532
+  belongs in the sheet rather than on the results screen. **Taking someone OUT is
+  the exception since #1538**, for a guest and a member alike:
+  `removePersonFromSession` (`lib/session-remove-person.js`) drops them from
+  `memberIds`/`guests`, the winners and their team, and records them in
+  `removedPeople` so their ratings still count through `sessionRaters()`.
 - **Promoting a guest to a permanent member — WON'T DO (#531).** Guest ids are
   minted **per session** (see the `resolveGuests` note above), so there is no
   stable guest identity to re-attribute history along: "the same Dana" across

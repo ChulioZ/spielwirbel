@@ -26,9 +26,10 @@ so the value never appears in `round_grants.role`.
 | `coowner` | everything below, plus delete a **played** session, delete a Chronik entry, delete a game, rename the round |
 | `editor` | run sessions (start, vote, close, finish, cancel, share a vote link, **discard one whose voting is still open**), manage the shelf, seats, tags and the colour marker (#1187, the design it replaced) |
 
-Four things stay **owner-only for every grantee role, co-owners included**, and
-the split is deliberate: a co-owner is trusted with the round's *content*, never
-with its *access control* or with where its data lives.
+These stay **owner-only for every grantee role, co-owners included** — every
+`'owner'` entry in `CAPABILITY_ROLE` — and the split is deliberate: a co-owner is
+trusted with the round's *content*, never with its *access control* or with where
+its data lives.
 
 - `round.delete` — destroying the round and every session, rating and cover in it
 - `round.shares.manage` — revoking someone else's access, or changing their role
@@ -37,6 +38,9 @@ with its *access control* or with where its data lives.
   keeps `round_grants.memberId` in sync with the seat
   (`.claude/rules/member-seat-self-claim.md`)
 - `games.moveOut` — #411's hole
+- `games.copyOut` (#916) — the same hole, since the target round is the risk:
+  it destroys nothing, but a grantee clearing it could write into any of the
+  owner's rounds
 
 ## Where it lives, and why in two files
 

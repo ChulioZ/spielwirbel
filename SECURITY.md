@@ -44,10 +44,15 @@ Security issues especially relevant given the current architecture:
   (`PUBLIC_STATS_MIN_*`, `lib/public-stats.js`) — a way to read those below the
   thresholds, or to attribute one of them to a particular tenant, is in scope;
   the published totals themselves are not.
-- **Abuse of the three write routes that sit OUTSIDE the auth gate.** Everything
+- **Abuse of the four write routes that sit OUTSIDE the auth gate.** Everything
   under `/api` is gated in `lib/app.js`, with deliberate exceptions mounted ahead
-  of it. Three of them accept writes: `/api/account` (register, login, the demo);
-  **`/api/vote`** — the shared vote link (#652), which lets an unauthenticated
+  of it. Four of them accept writes: `/api/account` (register, login, the demo);
+  **`/api/contact`** (#224), the public contact form, which lets anyone store a
+  submission in the operator's inbox (`repo.createContactNotice`, or
+  `repo.createFeedback` for the feedback category) and mail the operator — getting
+  submitted text rendered as markup rather than text in the panel or that mail,
+  or reaching any other data through it, is in scope, while accepting anonymous
+  submissions at all is by design; **`/api/vote`** — the shared vote link (#652), which lets an unauthenticated
   holder of a capability token **write** a participant's votes, so forging or
   guessing such a token, reaching a session other than the one it names, or
   escaping it into any other round data is in scope; and **`/api/client-error`**

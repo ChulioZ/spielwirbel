@@ -3,6 +3,7 @@ paths:
   - "lib/webauthn.js"
   - "lib/routes/passkeys.js"
   - "public/js/passkey.js"
+  - "public/js/auth-tokens.js"
   - "public/js/views-auth.js"
   - "public/js/views-account.js"
   - "test/passkeys.test.js"
@@ -87,7 +88,7 @@ gate is the other half of this — mounted at `/api/account` it would field
 ## 5. `accountApi(method, path, null)` sends the literal `null` — and 400s
 
 Not passkey-specific, but this is where it bit. `accountApi`
-(`public/js/views-auth.js`) serializes anything that is not **`undefined`**:
+(`public/js/auth-tokens.js`) serializes anything that is not **`undefined`**:
 
 ```js
 if (body !== undefined) { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }

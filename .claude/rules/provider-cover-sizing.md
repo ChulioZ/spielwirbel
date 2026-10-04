@@ -7,8 +7,9 @@ paths:
 # Provider covers are print-resolution masters — size them at RENDER time (#298)
 
 Since #172 a provider cover is hotlinked, so `game.image` holds whatever URL the
-provider handed us. For Sony and Microsoft that is the **full master**, and the
-numbers are not marginal — measured live on 2026-07-20:
+provider handed us. For Sony and Microsoft that was the **full master**, and the
+numbers were not marginal — measured live on 2026-07-20, when five providers
+still fed covers (only BGG is left today):
 
 | Provider | Stored URL | Bytes | Decoded |
 |---|---|---|---|
@@ -18,9 +19,10 @@ numbers are not marginal — measured live on 2026-07-20:
 | **Xbox** (retired #744, data cleared #981) | `store-images.s-microsoft.com/…` | **207–837 KB** | large |
 | **PS Store** (retired #744, data cleared #981) | `image.api.playstation.com/…` | **1.0–1.7 MB** | **3840×2160** |
 
-`public/js/cover-size.js` → `coverUrl(image, width)` rewrites those two hosts to
-a sized variant at every render site. A 14-game PS shelf went **13,196 KB → 239
-KB (55×)**, i.e. ~17 KB/cover — the same order as a BGG shelf.
+`public/js/cover-size.js` → `coverUrl(image, width)` rewrote those two hosts to
+a sized variant at every render site until #981 emptied its table (below). A
+14-game PS shelf went **13,196 KB → 239 KB (55×)**, i.e. ~17 KB/cover — the same
+order as a BGG shelf.
 
 ## The table is CLOSED since #981 — and `COVER_RESIZERS` is empty
 
@@ -63,10 +65,11 @@ first** — that number, not transferSize, is what predicts it.
 
 ## Three things that are load-bearing
 
-- **The "already has a query string" guard is not hypothetical.** The Xbox
-  *search* hit's thumbnail already arrives as `?w=150&h=150` (the *detail*
-  `imageUrl` is the bare master). Appending a second `w=` would produce a
-  malformed query. It is also what lets a future capture-time change coexist.
+- **The "already has a query string" guard was not hypothetical.** The Xbox
+  *search* hit's thumbnail arrived as `?w=150&h=150` (the *detail* `imageUrl`
+  was the bare master), and appending a second `w=` would have produced a
+  malformed query. The guard stays for the next provider that hands one over,
+  and it is what lets a future capture-time change coexist.
 - **Only add a host after checking its CDN honours the parameter.** Nintendo's
   ignores `?w=` — the response is byte-identical — so listing it would add noise
   and no benefit. BGG and Steam are already right-sized. An unrecognised host
@@ -85,11 +88,11 @@ first** — that number, not transferSize, is what predicts it.
   the thumbnail and does **not** fall back to `<image>` — a fallback would
   quietly reintroduce megabyte covers on exactly the items with unusual data.
   The trade is accepted knowingly: it is roughly half the linear resolution the
-  pre-#117 private endpoint served, so a new BGG game's cover is softer on the
-  game-detail hero. **#868 widened that hero from 240 px to 300 px**, so a
-  `fit-in/200x150` thumbnail now upscales 1.5× there rather than 1.2× — the
-  softness argument below got *stronger*, not weaker, and the hero is the one
-  frame in the app where it is visible. Re-hosting a resized copy is now
+  pre-#117 private endpoint served, so a new BGG game's cover is softer in the
+  large frames. **#868 widened the game-detail hero from 240 px to 300 px** (a
+  1.5× upscale of the `fit-in/200x150` thumbnail then), and the frames have grown
+  since: measured 2026-10-04, the hero frames draw that 200×150 thumbnail at
+  **360–567 px**, roughly 1.8–2.8× upscaled. Re-hosting a resized copy is now
   *licensed* (the BGG token grants reproduction rights) but needs an image
   pipeline this repo does not have — that is the follow-up, not a reason to store
   the master.
@@ -101,12 +104,16 @@ first** — that number, not transferSize, is what predicts it.
 
 ## The server guard needs no change — but verify it
 
-`providerCoverUrl()` (`lib/providers/index.js`) rejects `'`, `"`, `(`, `)`,
-backslash and whitespace, because `game.image` is interpolated into
-`background-image:url('…')`. `?w=330&h=330&q=90` contains none of them.
-`test/cover-size.test.js` asserts this rather than assuming it, so a future
-resizer whose query needs an unsafe character fails loudly instead of opening a
-CSS-injection hole.
+`providerCoverUrl()` (`lib/providers/index.js`) rejects `'` `"` `<` `>` `&` `\`
+and whitespace — the set is `COVER_UNSAFE_RE`, which lives in
+`public/js/cover-size.js` since #1545 and is required by
+`lib/providers/index.js` — because `game.image` is interpolated into
+`background-image:url('…')`. **Parentheses are allowed on purpose**: BGG's CDN
+serves covers under paths like `filters:strip_icc()`, and
+`test/provider-covers.test.js` pins that such a URL is kept. A future resizer's
+sized URL must pass the same check; `test/cover-size.test.js` asserts that for a
+synthetic rule rather than assuming it, so a query that needs a refused
+character fails loudly instead of opening a CSS-injection hole.
 
 ## Verifying it in the preview pane
 
