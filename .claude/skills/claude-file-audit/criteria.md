@@ -1,7 +1,12 @@
 # Claude-file criteria
 
-- **last-researched:** 2026-09-02
+- **last-researched:** 2026-10-04
 - **cadence:** 30 days
+
+The 2026-10-04 pass (the Claude Code changelog since the 2026-09-02 pass, through
+v2.1.289 of 2026-10-03) adopted nothing new, amended
+C-007, C-014, C-015, C-021, C-025 and C-026 with re-verified sources and fresh
+measurements, and rejected **C-R07**/**C-R08**.
 
 The 2026-09-02 pass was the first broad sweep since 2026-07-24 (the 2026-07-30
 scoped pass covered one operator-supplied source and deliberately did not
@@ -186,7 +191,15 @@ research at all.
   for when a sibling skill is the better match. A description that only describes the
   skill's mechanics never fires. Observable (documented 2026-07-24): the combined
   description must stay well under the 1,536-character listing cap, or it is truncated
-  in the skill listing and stops triggering.
+  in the skill listing and stops triggering. Re-verified 2026-10-04: the cap is
+  1,536 characters for `description` **plus** `when_to_use` combined
+  ([skills docs](https://code.claude.com/docs/en/skills)); the longest here was
+  838 (`claude-file-audit`) on 2026-10-04.
+  **Usage data, when the operator supplies it:** `/skill-doctor` (v2.1.261,
+  2026-09-04) shows which loaded skills go unused and what they cost in context. A committed
+  skill it shows as never invoked over a long window is a C-007 candidate (the
+  description does not fire) or a C-012 one (the skill is no longer needed). The
+  data is per-user and outside the repo, so it is an input, never a test.
 - **Enforced by:** `test/skills.test.js` (presence, `name`↔directory, non-empty description)
 
 ### C-008 — Skills compose rather than overlap
@@ -297,7 +310,11 @@ research at all.
 
 ### C-014 — Rule files are scoped deliberately: `paths:` when file-scoped, global when tool-triggered
 - **Status:** adopted · 2026-07-24 (operator decision: trial)
-- **Source:** official Claude Code memory docs (`paths:` frontmatter, retrieved 2026-07-24)
+- **Source:** official Claude Code memory docs (`paths:` frontmatter, retrieved
+  2026-07-24; re-verified 2026-10-04): a scoped rule loads when Claude uses
+  **Read, Write or Edit** on a matching file — Write/Edit only since v2.1.288
+  (2026-10-02; before that a rule whose trap surfaces when a file is CREATED never
+  loaded). `paths` is the only frontmatter field the harness reads.
 - **Check:** A rule whose every trap requires reading or editing a specific file set
   carries `paths:` frontmatter scoping it to those files; a rule whose trap surfaces
   through tools or situations (browser pane artifacts, service-worker caching, git/CI,
@@ -307,6 +324,12 @@ research at all.
   globs still match the files their traps live in. **The trial was C-022, concluded
   2026-08-01**: every rule now declares one or the other, and a new rule declaring
   neither fails the suite.
+
+  **Since v2.1.288, "fires when a file is created" no longer forces global — but
+  load timing is undocumented.** The docs do not say whether a rule triggered by a
+  Write arrives before that Write executes. A trap that must be known *before the
+  first write* (`test-file-names-collide-silently.md`: the overwrite IS the first
+  write) still needs to be resident. See C-R08.
 - **Enforced by:** `test/rule-scope.test.js` — that a declaration *exists* (either
   form), that no rule declares both, that a global marker states a reason, and that
   every `paths:` glob still matches a tracked file. **Which** files a rule should name
@@ -316,10 +339,12 @@ research at all.
 
 ### C-015 — `CLAUDE.md` stays within the documented adherence budget
 - **Status:** adopted · 2026-07-24
-- **Source:** official Claude Code guidance (target under ~200 lines per CLAUDE.md)
+- **Source:** official Claude Code guidance (target under ~200 lines per CLAUDE.md;
+  re-verified 2026-10-04 at https://code.claude.com/docs/en/memory, which also says
+  imports "don't reduce its context cost" — C-R06 stands)
 - **Check:** `wc -l CLAUDE.md` stays around or under 200 (171 at adoption, 203 on
   2026-07-30, 226 on 2026-09-07, 227 on 2026-09-14 after the i18n paragraph stopped
-  restating `CONTRIBUTING.md`'s ten-step list). Growth beyond that is a signal to move
+  restating `CONTRIBUTING.md`'s ten-step list, still 227 on 2026-10-04). Growth beyond that is a signal to move
   content into a scoped rule or a skill, not to restructure (C-R03 still holds).
 - **Enforced by:** `test/token-budget.test.js` (allowlisted, `recorded` at 226 — the entry has to
   be dropped when the trim happens, so the overshoot cannot be forgotten)
@@ -334,11 +359,13 @@ research at all.
   wc -l .claude/rules/*.md | sort -rn | head        # per file
   cat .claude/rules/*.md | wc -c                    # corpus (427 KB / 82 files on 2026-07-30;
                                                     #  862 KB / 134 on 2026-09-02;
-                                                    #  1.15 MB / 168 on 2026-09-14)
+                                                    #  1.15 MB / 168 on 2026-09-14;
+                                                    #  1.38 MB / 206 on 2026-10-04)
   ```
   **The rate is the signal, not the total.** The 2026-09-14 reading is +34 files and
   +34% in **twelve days**, against +52 files over the preceding ~33 — so the corpus is
-  compounding faster than it is being read, and nothing bounds it.
+  compounding faster than it is being read, and nothing bounds it. 2026-10-04: +38
+  files / +20% in twenty days — slower than the 2026-09-14 window, still unbounded.
   The remedy for an over-budget rule is the one `C-004` already prescribes — it holds
   several learnings, so split it — or the narrative has outgrown the trap it exists to
   prevent, in which case cut the narrative, never the trap or the *why*.
@@ -409,9 +436,18 @@ research at all.
   for f in .claude/rules/*.md; do head -5 "$f" | grep -q 'scope: global' && cat "$f"; done | wc -c
   for f in .claude/rules/*.md; do head -5 "$f" | grep -q 'scope: global' && echo "$f"; done | wc -l
   ```
-  Baseline **2026-09-02: 26 global files / 135 KB** — **2026-09-14: 29 / 151 KB**,
-  of which the four Browser-pane rules alone are **25 KB (16.7%)**, resident in every
-  session for a tool most never open. Against 18 files at the
+  Baseline **2026-09-02: 26 global files / 135 KB** — **2026-09-14: 29 / 151 KB**
+  (four Browser-pane rules, 25 KB, 16.7%) — **2026-10-04: 37 / 180 KB**, of which
+  the **seven** Browser-pane rules are **34 KB (18.9%)** and, with the two probe
+  rules (cssrules walk, Playwright mocks), 40 KB (22%) — resident in every session
+  for a tool most never open. Six of the eight global rules added since 2026-09-14
+  are verification-tool rules. The figure includes ~6 KB of `<!-- scope: global -->`
+  markers; the memory docs say block-level HTML comments are stripped from
+  CLAUDE.md before injection, which is **not** documented for rule files, so the
+  figure may overcount by ~3.5%. **Standing candidate for the residency remedy:**
+  the Browser-pane cluster — no path can trigger it, so it is global by necessity
+  as a *rule*; the residency question is whether it belongs in a skill the preview
+  workflow invokes, behind a short global pointer. Against 18 files at the
   C-022 trial's conclusion (2026-08-01) — while the corpus as a whole went
   82 files/427 KB (2026-07-30) to 134 files/862 KB. So the global slice grew ~44%
   while the corpus grew ~102%: scoping is working, and the number still needs
@@ -432,7 +468,9 @@ research at all.
   saving in the corpus — and two residuals belong in the record. That glob matches
   225 tracked files, i.e. essentially every implementation session still loads the
   inventory; and the criterion's own prediction held, the inventory reaching 440
-  lines two days after being judged at 417.**
+  lines two days after being judged at 417.** That residual recurred: on
+  2026-10-04 the inventory stood at 619 lines (+49% on the split) under a `judged`
+  allowlist entry that the growth check exempts.
   Keep it as the worked example of this remedy — what
   it demonstrates is that the seam was not the one the token-budget allowlist had
   recorded (the licensed-copy sections, a *topic* seam) but the RESIDENCY one:
@@ -489,6 +527,15 @@ research at all.
   rename), and `NOT_A_PATH` stays an *exclusion* list (an allowlist fails open).
   The reasoning is in `.claude/rules/pretooluse-guard-matches-inputs.md`, including
   the false-positive tax it knowingly accepts and the bypass it cannot close.
+
+  Re-verified 2026-10-04 against the
+  [hooks reference](https://code.claude.com/docs/en/hooks): `"*"`, `""` and an
+  omitted matcher all match every tool; any exit code other than 2, without a
+  blocking JSON decision, lets the call proceed. v2.1.288 (2026-10-02)
+  made a PreToolUse hook whose *matching* fails, or whose tool input cannot be
+  serialized, **block** the call rather than be skipped. That does not touch the
+  fail-open case `pretooluse-guard-matches-inputs.md` records — a missing script
+  exits non-2, which is still non-blocking — so the rule stands as written.
 - **Enforced by:** `test/guard-protected-paths.test.js` — the deny table, the
   must-still-work table, the end-to-end exit-code contract, and the `matcher: "*"`
   wiring assertion
@@ -550,3 +597,26 @@ research at all.
   for its narrative order. The honest answers to a `CLAUDE.md` overshoot stay the
   two C-015 already names: move content into a scoped rule, or record the
   overshoot in the allowlist.
+
+### C-R07 — "Make `/doctor prompt-audit` this audit's instrument, or a criterion"
+- **Status:** rejected · 2026-10-04
+- **Why:** `/doctor prompt-audit` (v2.1.283, 2026-09-25; the `prompt-audit`
+  subcommand of the bundled `claude-api` skill) reports stale paths, stale commands, contradicting
+  instruction files and older-model prompting patterns. As a criterion it is a
+  *procedure* (a command to run), which `audit-loop.md` §0 rules out. Its
+  stale-path half is already mechanized here (`test/skills.test.js`,
+  `rule-scope`), and its older-model lens is C-019's, which must not override
+  C-R03/C-R04 (it would strip trigger phrasing or restructure `CLAUDE.md`). The
+  part it adds — contradictions between instruction files (C-005, unenforced) —
+  makes it a reasonable thing for the operator to run ad hoc, with every item
+  verified like any helper's output. Using `claude-api` as a dev tool does not
+  touch #264 (no LLM in the app). Revisit if it gains a non-interactive mode that
+  could run in CI.
+
+### C-R08 — "Rescope the create-triggered global rules now that Write/Edit load path rules"
+- **Status:** rejected · 2026-10-04
+- **Why:** v2.1.288 makes Write/Edit load path-scoped rules, which seems to remove
+  the reason `test-file-names-collide-silently.md` (and similar) are global. But
+  the docs do not say whether the rule lands before the triggering Write runs, and
+  for an overwrite trap the first Write is the damage. C-014's "when in doubt, stay
+  global" applies. Revisit only with a measurement of load timing.
