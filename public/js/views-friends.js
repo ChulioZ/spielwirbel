@@ -115,7 +115,8 @@ async function showFriends(opts) {
     // event, the author's ring first); its stylesheet makes each one a card.
     // Das Programmheft sets it as P14.2's Meldungszeilen (#1380): date, sentence, flag.
     // Die Brücke lists it as B14.2's „Was lief" rows, a plate per event (#1246).
-    const rows = tisch || designIs('ocean') || designIs('programmheft') || bruecke;
+    // Forest draws F14.3's Feed as a card per event, the author's ring first (#1474).
+    const rows = tisch || designIs('ocean') || designIs('programmheft') || bruecke || designIs('forest');
     // Later pages (#1357) append to this list as its end scrolls into view.
     const more = {
       nextCursor: feed.nextCursor,

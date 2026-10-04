@@ -80,7 +80,7 @@ function brueckePassDist(st) {
   const max = Math.max(1, ...counts);
   const cols = counts.map((c, i) => {
     const r = i + RATING_MIN;
-    const label = t('result.barTitle', { c, r });
+    const label = t('result.barTitle', { c, word: voteSaidWord(r) });
     return `<div class="bruecke-dist__col" data-r="${r}" title="${esc(label)}">
         <span class="bruecke-dist__n" aria-hidden="true">${c}</span>
         <span class="bruecke-dist__track"><span class="bruecke-dist__bar" style="height:${Math.round((c / max) * 100)}%"></span></span>

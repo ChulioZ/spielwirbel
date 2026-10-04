@@ -289,7 +289,6 @@
   .trow__title,
   .split-group__head,
   .winner-chip,
-  .rater__n,
   .editor--expansions .exp-own__head,
   .podium__name,
   .podium__col--multi .podium__name,
@@ -304,7 +303,6 @@
   .pool-count__label,
   .setup-bar__summary,
   .handover__back,
-  .mood__n,
   .session-log__summary-title,
   .session-log__title,
   .result-people__name,
@@ -2971,14 +2969,8 @@
   font-size: 30px; /* glyph, not type */
 }
 :root[data-design="forest"]:not([data-scheme="dark"]) .vote--forest .rating .mood:hover .ti { border-color: var(--brand); }
-/* Number first, then the word — inside one button, so the order is paint only;
-   the button's accessible name is its aria-label („4 von 5 – gern"). */
-:root[data-design="forest"]:not([data-scheme="dark"]) .vote--forest .rating .mood__n {
-  order: 1;
-  font-family: var(--font);
-  font-size: var(--text-sm);
-  font-weight: 800;
-}
+/* The face, then its word (#1530: no digit). The button's accessible name is
+   its aria-label, the word itself („gern"). */
 :root[data-design="forest"]:not([data-scheme="dark"]) .vote--forest .rating .mood__word {
   order: 2;
   font-size: var(--text-xs);
@@ -5352,6 +5344,1407 @@
     justify-content: center;
     min-height: var(--target-key);
   }
+}
+
+/* ===== #1477 — Abzeichen: fireflies in jars, leaves on the branch (F17) =====
+   Sheet: docs/design/forest/Forest-F17-Abzeichen.dc.html (F17.1–F17.8), over
+   K17's shared markup (views-badges.js, #1388/#1389) — NOT the provisional
+   class names F17.10 lists. A person's mark is a JAR drawn on `.badge__mark`
+   itself: the mark is the glass, `::before` the bark lid carrying the tier's
+   numeral (`data-tier`), the glyph's own `<i>` the firefly. The round's mark
+   is a LEAF on the branch: views-badges.js stamps `data-shape="leaf"` on it
+   under Forest alone, because K17 cannot otherwise tell a round mark from a
+   person's outside the round's band (the card, the moment, a Chronik row).
+
+   The four states, never colour alone (every tile's aria-label names it too):
+     earned   — the dusk with the firefly glyph and its halo (11.8:1);
+                a leaf is Laubgrün with the light print
+     progress — a light jar filling with moss to --pct, the glyph in ink; the
+                fill is DECORATION (1.2:1) — the count in the line carries it
+     locked   — a dashed outline on the page's green
+     secret   — the dusk without light: ti-lock-question in the soft dusk ink,
+                „Geheim" (a secret leaf too — F17 draws it on a jar only)
+   An earned tier on its way to the next stays the lit jar; the line counts.
+
+   The tier: the numeral on the lid (at the leaf's stem), and one dot per tier
+   under the name (`.badge__dots`, Forest-only markup) — up to six since #1463.
+   Size is one custom property, --fj (the jar's width), set by the placement;
+   every length of the jar is derived from it.
+
+   Nothing here assumes a number of entries, tiers or secrets: the branch and
+   the shelves are auto-fill grids that wrap, the dots are a flex row, the lid
+   grows with a four-digit tier. Every rule is gated on the light scheme, and
+   every rule that DISPLAYs a container K17 hides with the attribute keeps
+   `:not([hidden])` (.claude/rules/hidden-attribute-vs-display-rule.md).
+   Static: the moment's motion is its own section. */
+
+/* --- The jar ------------------------------------------------------------- */
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge__mark {
+  --pct: 0;
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: none;
+  box-sizing: border-box;
+  width: var(--fj, 56px);
+  height: calc(var(--fj, 56px) * 1.05);
+  margin-top: calc(var(--fj, 56px) * 0.2);
+  border: 0;
+  border-radius: calc(var(--fj, 56px) * 0.23) calc(var(--fj, 56px) * 0.23) calc(var(--fj, 56px) * 0.3) calc(var(--fj, 56px) * 0.3);
+  background: var(--page-bg);
+  color: var(--ink);
+  font-size: calc(var(--fj, 56px) * 0.43);
+}
+/* The lid — bark, and the tier's numeral on it in the light print (9.1:1). */
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge__mark::before {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  top: calc(var(--fj, 56px) * -0.2);
+  left: 50%;
+  transform: translateX(-50%);
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  min-width: calc(var(--fj, 56px) * 0.7);
+  height: calc(var(--fj, 56px) * 0.25);
+  padding: 0 3px;
+  border-radius: 4px 4px 2px 2px;
+  background: var(--bark);
+  color: var(--on-dusk);
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge__mark[data-tier]::before { content: attr(data-tier); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge__mark > .ti { position: relative; line-height: 1; }
+
+:root[data-design="forest"]:not([data-scheme="dark"]) :is(.badge, .badge-card, .badge-emblem)[data-state="earned"] .badge__mark {
+  background: var(--dusk);
+  color: var(--firefly);
+  box-shadow: 0 0 0 3px var(--surface), 0 0 calc(var(--fj, 56px) * 0.27) calc(var(--fj, 56px) * 0.07) var(--firefly-halo);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) :is(.badge, .badge-card)[data-state="progress"] .badge__mark {
+  border: 2px solid var(--control-edge);
+  background: linear-gradient(to top, var(--moss) calc(var(--pct) * 1%), var(--surface) 0);
+  color: var(--ink);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) :is(.badge, .badge-card)[data-state="locked"] .badge__mark {
+  border: 2px dashed var(--control-edge);
+  background: var(--page-bg);
+  color: var(--ink-soft);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) :is(.badge, .badge-card)[data-state="secret"] .badge__mark {
+  background: var(--dusk);
+  color: var(--dusk-soft);
+}
+
+/* --- The leaf (a round's mark): Blatt corners, no lid — the tier's numeral
+   sits at the stem, bottom left. ----------------------------------------- */
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge__mark[data-shape="leaf"] {
+  height: var(--fj, 56px);
+  margin-top: 0;
+  border-radius: calc(var(--fj, 56px) * 0.47) calc(var(--fj, 56px) * 0.1);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge__mark[data-shape="leaf"]::before {
+  top: auto;
+  bottom: -5px;
+  left: -5px;
+  transform: none;
+  min-width: 22px;
+  height: 16px;
+  border-radius: 3px;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge__mark[data-shape="leaf"]:not([data-tier])::before { display: none; }
+:root[data-design="forest"]:not([data-scheme="dark"]) :is(.badge, .badge-card)[data-state="earned"] .badge__mark[data-shape="leaf"] {
+  background: var(--brand);
+  color: var(--on-dusk);
+  box-shadow: none;
+}
+
+/* --- The tile: the form over its name, its dots and its line ------------- */
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge {
+  --fj: 56px;
+  gap: 6px;
+  min-width: 0;
+  padding: 4px 2px 6px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: none;
+  color: var(--ink);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge:hover { background: none; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge:hover .badge__name { text-decoration: underline; text-underline-offset: 3px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge:focus-visible {
+  outline: var(--ring-width) solid var(--brand-ring);
+  outline-offset: var(--ring-offset);
+}
+/* `break-word`, never `anywhere`: a name splits only when it cannot fit its
+   cell at all, and `hyphens: auto` (styles.css) gets the break first in an
+   engine with the language's dictionary. A centred flex item is
+   shrink-to-fit, so the cap is what gives break-word an edge to break at. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge__name {
+  max-width: 100%;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.2;
+  overflow-wrap: break-word;
+  color: var(--ink);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge:is([data-state="locked"], [data-state="secret"]) .badge__name { color: var(--ink-soft); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge__line {
+  max-width: 100%;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.25;
+  overflow-wrap: break-word;
+  color: var(--ink-soft);
+}
+/* The tier dots: reached = Laubgrün, still to come = a ring in the field
+   edge (both clear 3:1 on the card). */
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge__dots {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 3px;
+  max-width: 100%;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge__dots > span {
+  box-sizing: border-box;
+  width: 8px;
+  height: 8px;
+  border: 1.5px solid var(--control-edge);
+  border-radius: 50%;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge__dots > span[data-on] { border-color: var(--brand); background: var(--brand); }
+/* „Neu" — a leaf chip under the line, never over the form. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge__new {
+  position: static;
+  padding: 1px 9px;
+  border-radius: var(--radius-leaf-s);
+  background: var(--brand);
+  color: var(--on-dusk);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.4;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-grid:not([hidden]) {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: 12px 6px;
+}
+
+/* --- Pokale › Abzeichen (F17.2/F17.3): under the four plaques, the rubric
+   „Abzeichen" in Young Serif, then the round's branch, then the people in
+   standings order — disclosures on a phone, open shelves on a desktop. ----- */
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-section { margin-top: var(--space-6); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-section > .section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  margin: 0 0 var(--space-3);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-section > .section-head h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 400;
+  line-height: var(--leading-display);
+  color: var(--ink);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-section > .section-head h2 .ti { display: none; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-section__summary { font-size: 13px; font-weight: 700; color: var(--ink-soft); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-section__empty {
+  padding: 18px 20px;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+  font-size: 15px;
+  line-height: var(--leading-text);
+  color: var(--ink-soft);
+}
+/* The key, as the forms it decodes — a lit jar, a filling jar, a dashed one.
+   On a phone the sheet prints only the count (F17.3). */
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-legend { display: none; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-legend__mark { width: 12px; height: 14px; border-radius: 3px 3px 4px 4px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-legend__item[data-state="earned"] .badge-legend__mark { background: var(--dusk); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-legend__item[data-state="progress"] .badge-legend__mark {
+  border: 1.5px solid var(--control-edge);
+  background: linear-gradient(to top, var(--moss) 55%, var(--surface) 0);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-legend__item[data-state="locked"] .badge-legend__mark { border: 1.5px dashed var(--control-edge); background: none; }
+
+/* The round: a card holding the BRANCH — every leaf draws its own stretch of
+   bark through its middle, half a gap past either side, so each grid row is
+   one unbroken branch however many leaves it wraps to. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-band--round {
+  margin: 0 0 var(--space-3);
+  padding: 14px 14px 12px;
+  border: 0;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-band__head {
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  align-items: baseline;
+  gap: 2px 10px;
+  margin: 0 0 8px;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-band__name {
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 400;
+  line-height: var(--leading-title);
+  overflow-wrap: break-word;
+  color: var(--ink);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-band__count { font-size: 13px; font-weight: 700; color: var(--ink-soft); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-band--round > .badge-grid:not([hidden]) {
+  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+  gap: 10px 8px;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-band--round .badge { --fj: 44px; isolation: isolate; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-band--round .badge::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: calc(4px + var(--fj) / 2 - 2px);
+  left: -4px;
+  right: -4px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--bark-light);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-band--round .badge__name { font-size: 12px; }
+/* The phone's branch prints the names (F17.3) — but a leaf on its way keeps
+   its count: the moss level is decoration, the number carries it. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-band--round .badge:not([data-state="progress"]) .badge__line { display: none; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-band--round .badge__line { font-size: 12px; }
+
+/* The people: one card per member — on a phone a disclosure whose open row is
+   a shelf of jars four across (F17.3). */
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-members { display: flex; flex-direction: column; gap: var(--space-3); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-member {
+  padding: 0 14px;
+  border: 0;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-member__head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  column-gap: 10px;
+  align-items: center;
+  min-height: 56px;
+  padding: 6px 0;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-member__head:focus-visible {
+  outline: var(--ring-width) solid var(--brand-ring);
+  outline-offset: var(--ring-offset);
+  border-radius: var(--radius-md);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-member__head > .badge-member__avatar { grid-row: 1 / 3; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-member__head > .badge-member__name { grid-column: 2; align-self: end; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-member__head > .badge-member__summary { grid-column: 2 / 4; grid-row: 2; align-self: start; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-member__head > .badge-member__rank { grid-column: 3; grid-row: 1; align-self: end; }
+/* The person ring of the sheets: the member colour as the ring round a light
+   core, as the result's „Wer dabei war" draws it. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-member__avatar {
+  box-sizing: border-box;
+  width: 36px;
+  height: 36px;
+  border: 4px solid transparent;
+  box-shadow: inset 0 0 0 999px var(--surface);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 800;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-member__name { font-size: 16px; font-weight: 800; color: var(--ink); }
+:root[data-design="forest"]:not([data-scheme="dark"]) :is(.badge-member__summary, .badge-member__rank) { font-size: 13px; font-weight: 700; color: var(--ink-soft); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-member__head::after {
+  grid-column: 4;
+  grid-row: 1 / 3;
+  margin: 0;
+  content: "\ea61";
+  font-family: "tabler-icons";
+  font-size: 20px;
+  color: var(--ink);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-member[open] > .badge-member__head::after { content: "\ea5f"; }
+/* The shelf: a bark board the jars stand on. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-member > .badge-grid:not([hidden]) {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px 6px;
+  margin: 0;
+  padding: 10px 0 14px;
+  border-top: 6px solid var(--bark-light);
+  border-radius: 3px;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-member .badge { --fj: 40px; gap: 4px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-member .badge__name { font-size: 12px; line-height: 1.15; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-member .badge__line {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  font-size: 12px;
+  line-height: 1.15;
+}
+/* „N offen" (F17.8): a moss leaf pill, the rest of the shelf behind it. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-member__more {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target-foot);
+  margin: 0 0 12px;
+  padding: 0 12px;
+  border-radius: var(--radius-leaf-s);
+  background: var(--moss);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-member__more:hover { background: var(--moss-hover); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-member > .badge-grid--rest:not([hidden]) { border-top: 0; padding-top: 0; }
+
+@media (min-width: 1024px) {
+  :root[data-design="forest"]:not([data-scheme="dark"]) .badge-section > .section-head h2 { font-size: 30px; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .badge-section__summary { font-size: 15px; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .badge-section > .section-head .badge-legend {
+    display: flex;
+    flex: none;
+    gap: 16px;
+    margin-left: auto;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink-soft);
+  }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .badge-band--round { padding: 22px 26px 18px; border-radius: var(--radius-xl); }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .badge-band__name { font-size: 22px; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .badge-band__count { font-size: 14px; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .badge-band--round > .badge-grid:not([hidden]) { grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 14px 8px; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .badge-band--round .badge { --fj: 64px; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .badge-band--round .badge__name { font-size: 14px; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .badge-band--round > .badge-grid > .badge[data-state] .badge__line {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+  }
+  /* The people as two columns of open shelves, in standings order (F17.2). */
+  :root[data-design="forest"]:not([data-scheme="dark"]) .badge-members:not(:has(> .badge-member > .badge-member__more)) {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+  }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .badge-member { padding: 16px 18px 4px; border-radius: 20px; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .badge-member__head { min-height: 0; padding: 0 0 10px; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .badge-member__head::after { display: none; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .badge-member__avatar { width: 40px; height: 40px; border-width: 5px; font-size: 13px; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .badge-member__name { font-size: 17px; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .badge-member > .badge-grid:not([hidden]) { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); }
+}
+
+/* From seven people (F17.8): every row a single shelf of small lit jars — the
+   earned ones only, the rest behind „N offen". K17's fold button is the tell
+   for a dense round; the names stay in every aria-label. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-members:has(> .badge-member > .badge-member__more) .badge-member > .badge-grid:not([hidden]):not(.badge-grid--rest) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 6px;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-members:has(> .badge-member > .badge-member__more) .badge-member > .badge-grid:not(.badge-grid--rest) .badge { --fj: 28px; padding: 2px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-members:has(> .badge-member > .badge-member__more) .badge-member > .badge-grid:not(.badge-grid--rest) .badge__mark::before { content: ""; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-members:has(> .badge-member > .badge-member__more) .badge-member > .badge-grid:not(.badge-grid--rest) :is(.badge__name, .badge__dots, .badge__line, .badge__new) { display: none; }
+
+/* --- The tap-open card (F17.1 right): the jar, the name in Young Serif, the
+   tiers as leaf chips, the way to the next as a moss bar. ------------------ */
+:root[data-design="forest"]:not([data-scheme="dark"]) .popover--badge { width: 380px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-card { --fj: 60px; gap: 12px; color: var(--ink); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-card__head { gap: 14px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-card .badge-card__name {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 400;
+  line-height: var(--leading-title);
+  overflow-wrap: break-word;
+  color: var(--ink);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-card__holder { font-size: 14px; font-weight: 700; color: var(--ink-soft); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-card__cond { font-size: 16px; line-height: var(--leading-text); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-card__tier {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 9px;
+  border: 1.5px solid var(--control-edge);
+  border-radius: var(--radius-leaf-s);
+  background: var(--raised);
+  color: var(--ink-soft);
+  font-size: 14px;
+  font-weight: 800;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-card__tier[data-reached] { border-color: var(--brand); background: var(--brand); color: var(--on-dusk); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-card__next { font-size: 14px; font-weight: 800; color: var(--ink); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-card__bar {
+  height: 12px;
+  margin-top: 6px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--brand) calc(var(--pct) * 1%), var(--moss) 0);
+  box-shadow: inset 0 0 0 1px var(--control-edge);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-card__earned { font-size: 15px; font-weight: 700; color: var(--gold-deep); }
+
+/* --- The Tischkarte row (F17.4): earned only, a small lit jar beside each
+   name, the row wrapping under the five figures. ------------------------- */
+:root[data-design="forest"]:not([data-scheme="dark"]) .member-card__badges {
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) :is(.member-card__badges, .profile-card__badges) .member-card__badges-label {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--brand);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .member-card__badges-go { color: var(--brand); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .member-card__badges-go:hover { background: var(--moss); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .member-card__badges-go:focus-visible { outline: var(--ring-width) solid var(--brand-ring); outline-offset: var(--ring-offset); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-grid--compact:not([hidden]) { display: flex; flex-wrap: wrap; gap: 6px 18px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-grid--compact .badge {
+  --fj: 32px;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--target-key);
+  padding: 0 6px 0 0;
+  text-align: left;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-grid--compact .badge__mark { width: var(--fj); height: calc(var(--fj) * 1.05); font-size: calc(var(--fj) * 0.43); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-grid--compact .badge__mark::before { content: ""; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-grid--compact .badge__name { display: block; font-size: 14px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-grid--compact :is(.badge__dots, .badge__new) { display: none; }
+
+/* --- The Spielerkarte's account jars (F17.7): jars WITHOUT a fill level —
+   the way to the next tier is the line under each (F17.10 (3)). Five since
+   #1464: an auto-fill row that wraps rather than squeezes. ---------------- */
+:root[data-design="forest"]:not([data-scheme="dark"]) .profile-card__badges {
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-grid--account:not([hidden]) { grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-grid--account .badge { --fj: 44px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-grid--account .badge[data-state="progress"] .badge__mark { background: var(--surface); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-grid--account .badge__line { font-size: 12px; }
+
+/* --- The feed's mark (F17.7) — a small lit jar, its lid bare. ------------ */
+:root[data-design="forest"]:not([data-scheme="dark"]) .feed-item__img--badge { --fj: 30px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .feed-row__badge { --fj: 26px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .e-tile__img--badge { --fj: 48px; background: var(--band); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .e-tile__img--badge .badge__mark { width: var(--fj); height: calc(var(--fj) * 1.05); font-size: calc(var(--fj) * 0.43); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-emblem .badge__mark::before { content: ""; }
+
+/* --- The hub's line and the Chronik's rows (F17.6): a mini jar each — and a
+   mini leaf for the round's own marks in the Chronik. -------------------- */
+:root[data-design="forest"]:not([data-scheme="dark"]) .hub-row--badges {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--ink);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) :is(.hub-row--badges > .ti, .chronik-row--badge .chronik-row__icon) {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: none;
+  box-sizing: border-box;
+  width: 22px;
+  height: 24px;
+  margin-top: 5px;
+  border-radius: 6px 6px 7px 7px;
+  background: var(--dusk);
+  color: var(--firefly);
+  font-size: 12px;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) :is(.hub-row--badges > .ti, .chronik-row--badge .chronik-row__icon)::after {
+  content: "";
+  position: absolute;
+  top: -5px;
+  left: 3px;
+  right: 3px;
+  height: 6px;
+  border-radius: 2px;
+  background: var(--bark);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .chronik-row--badge .chronik-row__icon[data-shape="leaf"] {
+  margin-top: 0;
+  border-radius: 10px 2px;
+  background: var(--brand);
+  color: var(--on-dusk);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .chronik-row--badge .chronik-row__icon[data-shape="leaf"]::after { display: none; }
+/* „Wer · Was" (F17.6): the row reads as the holder and the mark; the
+   „Abzeichen" label stays for a screen reader, off the page. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .chronik-row--badge {
+  gap: 10px;
+  min-height: var(--target-foot);
+  margin: 6px 0 0;
+  padding-top: 6px;
+  border-top: 1px solid var(--line);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .chronik-row--badge .chronik-row__label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .chronik-row--badge .chronik-row__text { color: var(--ink); }
+
+/* --- The result moment (F17.5): „Neu verdient" as a card opening the Tafel
+   column — at most two lit jars with their names, the rest behind „+N
+   weitere". Side by side from 700px, one under the other below. ---------- */
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-moment:not([hidden]) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 22px;
+  margin: 0 0 var(--space-4);
+  padding: 14px 16px;
+  border: 0;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-moment__title {
+  flex: 1 0 100%;
+  margin: 0;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.3;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--brand);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-moment__title .ti { display: none; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-moment__list {
+  display: flex;
+  flex: 1 0 100%;
+  flex-direction: column;
+  gap: 14px;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-moment__item { display: flex; flex-direction: column; gap: 0; min-width: 0; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-moment__holder {
+  padding-left: calc(48px + 12px);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--ink-soft);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-moment .badge {
+  --fj: 48px;
+  display: grid;
+  grid-template-columns: var(--fj) minmax(0, 1fr);
+  column-gap: 12px;
+  align-items: center;
+  justify-items: start;
+  padding: 0;
+  text-align: left;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-moment .badge__mark { grid-row: 1 / 3; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-moment .badge__mark::before { content: ""; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-moment .badge__name { grid-column: 2; align-self: end; font-size: 16px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-moment .badge__line { grid-column: 2; align-self: start; font-size: 13px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-moment :is(.badge__dots, .badge__new) { display: none; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-moment__more {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target-key);
+  margin: 0;
+  padding: 0 14px;
+  border-radius: var(--radius-leaf-s);
+  background: var(--moss);
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 800;
+  text-decoration: none;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-moment__more:hover { background: var(--moss-hover); }
+@media (min-width: 700px) {
+  :root[data-design="forest"]:not([data-scheme="dark"]) .badge-moment__list { flex: 1 1 auto; flex-direction: row; flex-wrap: wrap; gap: 14px 28px; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .badge-moment__item { flex: 1 1 220px; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .badge-moment__more { margin-left: auto; }
+}
+/* ===== end #1477 ===== */
+
+/* ===== #1477 — the firefly into the jar (F17.5's motion) =====
+   The droppable second half of the slice: revert this block alone and the
+   jars simply arrive lit. Keyed on K17's one motion hook, `data-fresh` on a
+   moment item (views-badges.js fillBadgeMoment) — a mark this screen had not
+   shown before, never on a cold load — so a winner tap lights only what it
+   earned and replays nothing.
+
+   The timeline, SHORTENED from F17.5's Zeittafel as the issue allows: the
+   sheet waits for the tree to grow (F10.4, 1 100–1 700 ms) and flies the
+   firefly at 2 200–3 100 ms, but this screen's tree stands still (the result's
+   picture is F10.4's end state, #1468) and `data-fresh` only ever appears on a
+   tap, so a 2.2 s wait would read as lag. So: 0 ms the headline, the table,
+   „Noch eine Session" and the „Neu verdient" line stand, the jar still light;
+   0–600 ms a firefly flies in from up the clearing (the scene is above the
+   moment on a phone, to its left from 1280px) while the jar dims to dusk
+   from 300 ms; 600–1 100 ms it glows once and rests; the second jar 400 ms
+   later — nothing runs past 1 500 ms (Ocean's moment ends at 1 580 ms).
+   No fill mode and no loop: each keyframe holds only while it runs, so the
+   resting state is the static skin above, and a second jar waits as a light
+   jar through a step-end hold instead of a backwards fill. Nothing blocks:
+   the jar is a button from 0 ms. Reduced motion: lit from 0 ms, because
+   nothing here exists outside the no-preference gate. */
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-design="forest"]:not([data-scheme="dark"]) .badge-moment__item[data-fresh] .badge__mark {
+    animation:
+      forest-jar-dim 600ms ease-out,
+      forest-jar-glow 500ms ease-out 600ms;
+  }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .badge-moment__item[data-fresh] .badge__mark > .ti {
+    animation: forest-firefly-fly 600ms cubic-bezier(0.3, 0.6, 0.2, 1);
+  }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .badge-moment__item[data-fresh] ~ .badge-moment__item[data-fresh] .badge__mark {
+    animation:
+      forest-jar-wait 400ms step-end,
+      forest-jar-dim 600ms ease-out 400ms,
+      forest-jar-glow 500ms ease-out 1000ms;
+  }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .badge-moment__item[data-fresh] ~ .badge-moment__item[data-fresh] .badge__mark > .ti {
+    animation:
+      forest-firefly-wait 400ms step-end,
+      forest-firefly-fly 600ms cubic-bezier(0.3, 0.6, 0.2, 1) 400ms;
+  }
+  /* Where the firefly comes from: the crown, above on a phone… */
+  :root[data-design="forest"]:not([data-scheme="dark"]) .badge-moment { --ff-from: translate(-30px, -120px); }
+
+  /* The light jar before the firefly reaches it… */
+  @keyframes forest-jar-wait {
+    from { background: var(--surface); box-shadow: none; }
+  }
+  /* …stays light while it flies, then dims to dusk… */
+  @keyframes forest-jar-dim {
+    0%, 50% { background: var(--surface); box-shadow: none; }
+  }
+  /* …and glows once. */
+  @keyframes forest-jar-glow {
+    45% { box-shadow: 0 0 0 3px var(--surface), 0 0 calc(var(--fj, 48px) * 0.6) calc(var(--fj, 48px) * 0.2) var(--firefly-glow); }
+  }
+  @keyframes forest-firefly-wait {
+    from { opacity: 0; }
+  }
+  @keyframes forest-firefly-fly {
+    from { transform: var(--ff-from) scale(0.5); opacity: 0; }
+    25% { opacity: 1; }
+  }
+}
+/* …to its left from 1280px, where the moment opens the Tafel column. */
+@media (prefers-reduced-motion: no-preference) and (min-width: 1280px) {
+  :root[data-design="forest"]:not([data-scheme="dark"]) .badge-moment { --ff-from: translate(-180px, -40px); }
+}
+/* ===== end #1477 motion ===== */
+
+/* ===== #1474 — tier 2b: Einstellungen, Profil, Freundeskreis, Postfach, Was ist neu, Entdecken ===== */
+/* F14 (docs/design/forest/Forest-F14-Tier2b.dc.html): „Alles steht auf Karten
+   über der Lichtung, ohne neue Formen." Every section a paper card on the
+   clearing — the card tone, radius 18, F1's first shadow — the headings in
+   Young Serif at 22px and up, everything smaller in Alegreya. Every rule is
+   gated on the light scheme and reads tokens only — test/forest-tier2b.test.js
+   sweeps the section for both.
+
+   Markup: views-round-settings.js hands the Einstellungen to
+   composeForestSettings (forest-tier2b.js) — two columns of cards, the marker
+   picker inline as ribbons; the inbox takes the composed row the other designs
+   share; the Freundeskreis and the profile list the feed as rows; the news
+   entries carry their kind; Entdecken's head carries the BGG mark. Klassisch's
+   DOM is unchanged. */
+
+/* ---- The page heads (F14.1–F14.6): Young Serif 32 on the clearing. */
+:root[data-design="forest"]:not([data-scheme="dark"]) :is(
+  .app:has(> .rs-fo) > .page-head,
+  .friends-screen > .lobby-head,
+  .app:has(> .news-list) > .lobby-head,
+  .app:has(> .ds-list > .inbox-row) > .lobby-head,
+  .app:has(> .stats-block) > .lobby-head
+) h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 32px;
+  line-height: var(--leading-display);
+  color: var(--ink);
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .app:has(> .rs-fo) > .page-head {
+  max-width: none;
+  margin-bottom: var(--space-4);
+}
+/* The sub-line under „Entdecken" in soft ink at reading size. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .app:has(> .stats-block) > .lobby-head .lobby-head__sub {
+  margin-top: var(--space-2);
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--ink-soft);
+}
+
+/* ---- F14.1 Rundeneinstellungen. Two columns from 1100px — the set-up on the
+   left, the actions and the danger zone in a 420px column on the right, the
+   sheet's grid — and one stack below it, in that order. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .rs-fo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+  align-items: start;
+}
+@media (min-width: 1100px) {
+  :root[data-design="forest"]:not([data-scheme="dark"]) .rs-fo {
+    grid-template-columns: minmax(0, 1fr) 420px;
+    gap: var(--space-6);
+  }
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .rs-fo__col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .rs-fo__card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: 18px 20px;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+}
+/* A card's heading is the sheet's card title: Young Serif 22 — over F1's 19px
+   floor, so the display face may come back here. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .rs-fo__card > .rs-section__h {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 22px;
+  line-height: var(--leading-title);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ink);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .rs-fo__note {
+  margin: 0;
+  font-size: 15px;
+  line-height: var(--leading-text);
+  color: var(--ink-soft);
+}
+/* „Name der Runde": the label over a white 44px field with the control edge. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .rs-fo__card--name { gap: 6px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .rs-fo__label {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .rs-fo__name {
+  width: 100%;
+  min-height: var(--target-field);
+  background: var(--raised);
+  border-color: var(--control-edge);
+  font-size: 16px;
+}
+
+/* Rows inside a set-up card („Tags", the saved filters) lose their boxes: the
+   card is the box. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .rs-fo__card .ds-list { gap: 0; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .rs-fo__card .ds-row {
+  min-height: var(--target-key);
+  padding: 6px 2px;
+  background: transparent;
+  border: 0;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+  box-shadow: none;
+  color: var(--ink);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .rs-fo__card :is(a, button).ds-row:hover {
+  box-shadow: none;
+  background: var(--band);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .rs-fo__card .rs-row .ds-row__main {
+  font-size: 16px;
+  font-weight: 800;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .rs-fo__card .rs-row .ds-row__main .ti { color: var(--brand); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .rs-fo__card .rs-row .ds-row__meta { color: var(--ink-soft); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .rs-fo__card .saved-filters__empty {
+  margin: 0;
+  font-size: 15px;
+  color: var(--ink-soft);
+}
+/* The round's tags under the „Tags" row (F14.1): the app's read-only labels in
+   Blatt S on the band tone. Not chips — a chip is a control in Forest, and
+   these are edited on the Tags screen the row leads to. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .rs-fo__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .rs-fo__tags .tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--target-foot);
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--radius-leaf-s);
+  background: var(--band);
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 700;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .rs-fo__tags .tag .ti { color: var(--brand); }
+
+/* The right column: „Runde verwalten" heads a stack of action CARDS (F14.1 —
+   a moss disc with the glyph, the label in 800, the chevron), so its own card
+   gives its frame up to them. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .rs-fo__col--act > .rs-fo__card:not(.rs-fo__card--danger) {
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .rs-fo__col--act > .rs-fo__card:not(.rs-fo__card--danger) .ds-list { gap: var(--space-3); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .rs-fo__col--act > .rs-fo__card:not(.rs-fo__card--danger) .ds-row {
+  min-height: 64px;
+  padding: 0 18px;
+  background: var(--surface);
+  border: 0;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .rs-fo__col--act > .rs-fo__card:not(.rs-fo__card--danger) .ds-row:hover {
+  background: var(--band);
+  box-shadow: var(--shadow-1);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .rs-fo__col--act .rs-row .ds-row__main { gap: var(--space-3); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .rs-fo__col--act .rs-row .ds-row__main .ti {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--moss);
+  color: var(--ink);
+  font-size: 20px;
+}
+/* The Gefahrenzone (F14.1): an outline in --danger on the clearing, the heading
+   and the button in --danger (5.6:1 on the page). Deleting stays a confirm —
+   the handler is the shared build's. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .rs-fo__card--danger {
+  background: transparent;
+  border: 1.5px solid var(--danger);
+  box-shadow: none;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .rs-fo__card--danger > .rs-section__h { color: var(--danger); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .rs-fo__card--danger .rs-danger {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .rs-fo__card--danger .rs-danger > p {
+  font-size: 15px;
+  line-height: var(--leading-text);
+  color: var(--ink-soft);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .rs-fo__card--danger .btn--danger {
+  min-height: var(--target-key);
+  font-size: 16px;
+  font-weight: 800;
+}
+
+/* ---- The marker picker as RIBBONS (F14.1 + F8.2), on Einstellungen and on
+   /design alike: each marker a 22x52 ribbon with a notched foot and its name
+   under it. The chosen one stands on the page tone inside a 3px INK frame and
+   carries the check — renderMarkerGrid's own glyph, in --marker-ink — so the
+   choice never rests on hue alone. The others carry a hairline.
+
+   A wrapping row, not a grid of eight: a card is never narrower than its
+   longest name (`min-width: min-content`), so „Sormustinkukka" keeps its line
+   in Finnish and simply takes the row a card earlier — there is no
+   hyphenation to rely on (.claude/rules/browser-pane-has-no-hyphenation.md). */
+:root[data-design="forest"]:not([data-scheme="dark"]) .marker-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .marker-card {
+  flex: 1 1 84px;
+  min-width: min-content;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 6px;
+  overflow: visible;
+  background: transparent;
+  border: 0;
+  border-radius: 14px;
+  box-shadow: inset 0 0 0 1px var(--line);
+  color: var(--ink);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .marker-card:hover {
+  background: var(--band);
+  box-shadow: inset 0 0 0 1px var(--control-edge);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .marker-card.is-active {
+  background: var(--page-bg);
+  box-shadow: 0 0 0 3px var(--ink);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .marker-card__fill {
+  place-items: start center;
+  width: 22px;
+  height: 52px;
+  padding-top: 6px;
+  box-sizing: border-box;
+  background: var(--marker);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 82%, 0 100%);
+  font-size: 16px;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .marker-card__name {
+  padding: 0;
+  font-size: 14px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+/* ---- F14.2 Profil — die Spielerkarte. From 1100px the card stands in a 560px
+   column at the left and everything else reads beside it; on a phone it leads
+   the column. A flat paper card — Forest's depth is the shadow, never a wash —
+   with the person's ring, the name in Young Serif and the four sums as tiles
+   on the page tone. Sums only: the card names no round and no other person. */
+@media (min-width: 1100px) {
+  :root[data-design="forest"]:not([data-scheme="dark"]) .profile-screen {
+    display: grid;
+    grid-template-columns: minmax(0, 560px) minmax(0, 1fr);
+    column-gap: var(--space-6);
+    align-items: start;
+  }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .profile-screen > * { grid-column: 2; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .profile-screen > .profile-card {
+    grid-column: 1;
+    grid-row: 1 / span 99;
+    margin: 0;
+  }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .profile-screen > .arecap { margin-top: 0; }
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .profile-card {
+  padding: 28px;
+  background: var(--surface);
+  border-radius: 22px;
+  box-shadow: var(--shadow-1);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .profile-card .member-card__mark { display: none; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .profile-card .member-card__id { gap: 18px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .profile-card .member-card__who { min-width: 0; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .profile-card h1 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 34px;
+  line-height: var(--leading-display);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .profile-card__meta {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .profile-card .member-card__figures {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: var(--space-4);
+  padding: 0;
+  border: 0;
+}
+@media (min-width: 560px) {
+  :root[data-design="forest"]:not([data-scheme="dark"]) .profile-card .member-card__figures { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .profile-card .member-figure {
+  align-items: flex-start;
+  min-width: 0;
+  padding: 12px;
+  border-radius: 14px;
+  background: var(--page-bg);
+  text-align: start;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .profile-card .member-figure__value {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 28px;
+  line-height: var(--leading-display);
+  color: var(--ink);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .profile-card .member-figure__label {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ink-soft);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .profile-note {
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+
+/* ---- The feed (F14.3 „Feed", and the profile's activity): a card per event,
+   the author's face first, the sentence, its time in soft ink, the cover at
+   the right. One column; collapsed to eight below 1024px behind the same
+   expander the tiles use. Above 1024 nothing is collapsed, so the expander
+   goes — this design's .link-btn display rule outranks styles.css's hide (the
+   #1272 lesson), hence the compound here. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .feed-list--rows { gap: var(--space-3); }
+@media (max-width: 1023px) {
+  :root[data-design="forest"]:not([data-scheme="dark"]) .e-feed:not(.is-open) .feed-row:nth-of-type(n + 9) { display: none; }
+}
+@media (min-width: 1024px) {
+  :root[data-design="forest"]:not([data-scheme="dark"]) .e-feed .e-feed__more { display: none; }
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .feed-row {
+  gap: 14px;
+  padding: 14px 18px;
+  background: var(--surface);
+  border: 0;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .feed-row__face {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  font-size: 13px; /* glyph, not type */
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .feed-row .feed-item__text {
+  font-size: 16px;
+  line-height: 1.35;
+  color: var(--ink);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .feed-row .feed-item__time {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .feed-row__cover {
+  width: 72px;
+  height: 54px;
+  border-radius: 6px 2px 6px 2px;
+}
+
+/* The section headings of both screens — the roster, the news, the activity —
+   in Young Serif 24 (F14.2/F14.3). */
+:root[data-design="forest"]:not([data-scheme="dark"]) :is(.friends-screen .k-band__h, .profile-screen > .friends-section__h) {
+  margin: 0 0 var(--space-3);
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 24px;
+  line-height: var(--leading-title);
+  color: var(--ink);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .profile-screen > .friends-section__h { margin-top: var(--space-5); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .friends-screen .k-band__count { color: var(--ink-soft); }
+
+/* ---- F14.3 Freunde und Feed: from 1100px the roster in a 420px card at the
+   left, the feed beside it. DOM order is kept — the head and a waiting request
+   span both columns, then the roster, the feed last — so the grid only places
+   what the reading order already says. */
+@media (min-width: 1100px) {
+  :root[data-design="forest"]:not([data-scheme="dark"]) .friends-screen {
+    display: grid;
+    grid-template-columns: 420px minmax(0, 1fr);
+    column-gap: var(--space-6);
+    align-items: start;
+  }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .friends-screen > * { grid-column: 1 / -1; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .friends-screen > .k-band:has(> .k-tiles) { grid-column: 1; margin: 0; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .friends-screen > .k-band:last-child:not(:has(> .k-tiles)) { grid-column: 2; margin: 0; }
+}
+/* The roster as F14.3's card of rows: the face, the name in 800, the line in
+   soft ink, a hairline between people. The add tile stays last, a dashed row. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .friends-screen .k-band:has(> .k-tiles) {
+  padding: 14px 18px 8px;
+  background: var(--surface);
+  border-radius: 20px;
+  box-shadow: var(--shadow-1);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .friends-screen .k-tiles {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .friends-screen .k-tiles > .k-tile {
+  min-height: 56px;
+  padding: 8px 0;
+  background: transparent;
+  border: 0;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+  box-shadow: none;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .friends-screen .k-tile .avatar {
+  width: 40px;
+  height: 40px;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .friends-screen .k-tile__name { font-size: 16px; font-weight: 800; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .friends-screen .k-tile__line {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .friends-screen .k-tiles > .k-tile--add {
+  margin: var(--space-2) 0;
+  padding: 8px 12px;
+  border: 1.5px dashed var(--control-edge);
+  border-radius: var(--radius-leaf-s);
+  color: var(--brand);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .friends-screen .k-tiles > .k-tile--add:hover {
+  background: var(--band);
+  border-color: var(--brand);
+}
+/* A request waiting on you: a paper card like everything else on the screen. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .friends-screen .k-card {
+  background: var(--surface);
+  border: 0;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+}
+
+/* ---- F14.4 Postfach: every item a card — a moss disc with the type's glyph,
+   the title in 800, the line in soft ink, „Annehmen" in green with „Ablehnen"
+   as a text action after it — the app's DOM order, not the sheet's swapped
+   pair (an incidental reordering; DOM order is visual order). A read item drops to the band tone (F14.4's last row). */
+:root[data-design="forest"]:not([data-scheme="dark"]) .app:has(> .ds-list > .inbox-row) > .ds-list { gap: 14px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .inbox-row--composed.ds-row {
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  background: var(--surface);
+  border: 0;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .inbox-row--composed.ds-row:not(.inbox-row--unread) { background: var(--band); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .inbox-row--composed .ds-row__main { flex: 1; min-width: 0; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .inbox-row--composed .ds-row__date {
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.35;
+  color: var(--ink);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .inbox-row--composed .ds-row__status {
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .inbox-row--composed .inbox-row__icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--moss);
+  color: var(--ink);
+  font-size: 20px;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .inbox-row--composed .inbox-invite__actions {
+  align-items: center;
+  gap: var(--space-2);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .inbox-row--composed .inbox-invite__actions .link-btn {
+  min-height: var(--target-key);
+  padding: 0 16px;
+  border-radius: var(--radius-leaf-s);
+  color: var(--brand);
+  font-size: 15px;
+  font-weight: 800;
+}
+@media (max-width: 639px) {
+  :root[data-design="forest"]:not([data-scheme="dark"]) .inbox-row--composed.ds-row { flex-wrap: wrap; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .inbox-row--composed .inbox-invite__actions {
+    flex-basis: 100%;
+    justify-content: flex-start;
+  }
+}
+
+/* ---- F14.5 Was ist neu: each entry a card — the date and its kind in a 130px
+   column from 600px, the title in Young Serif 22, the text at 16. The kind is
+   the green flag F14.5 draws („Neu"), in the app's own word for it. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .news-list { gap: 14px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .news-entry {
+  padding: 18px 22px;
+  background: var(--surface);
+  border: 0;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .news-entry__date {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  margin: 0 0 6px;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--ink);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .news-entry__kind {
+  padding: 2px 10px;
+  border-radius: 12px 3px 12px 3px;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.4;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .news-entry__kind--new {
+  background: var(--brand);
+  color: var(--on-accent);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .news-entry__kind--improved {
+  background: var(--moss);
+  color: var(--ink);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .news-entry__kind--fixed {
+  background: var(--raised);
+  box-shadow: inset 0 0 0 1px var(--control-edge);
+  color: var(--ink);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .news-entry__title {
+  margin: 0 0 4px;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 22px;
+  line-height: var(--leading-title);
+  color: var(--ink);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .news-entry__body {
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--ink);
+}
+@media (min-width: 600px) {
+  :root[data-design="forest"]:not([data-scheme="dark"]) .news-entry {
+    display: grid;
+    grid-template-columns: 130px minmax(0, 1fr);
+    column-gap: 20px;
+  }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .news-entry__date {
+    grid-row: 1 / span 2;
+    flex-direction: column;
+    align-items: flex-start;
+    margin: 4px 0 0;
+  }
+}
+
+/* ---- F14.6 Entdecken: the BGG mark at the head's far end, the four counters
+   as cards with Young Serif numerals, the podiums as cards. Nothing on this
+   screen is smaller than 13px (F14.6 allows 11px on an axis; there is none). */
+:root[data-design="forest"]:not([data-scheme="dark"]) .app:has(> .stats-block) > .lobby-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: var(--space-3);
+  align-items: center;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .app:has(> .stats-block) > .lobby-head > :not(.lobby-head__bgg) { grid-column: 1; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .lobby-head__bgg {
+  grid-column: 2;
+  grid-row: 1;
+  width: auto;
+  height: 24px;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .stats-block { gap: 18px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .stats-counters {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+@media (min-width: 860px) {
+  :root[data-design="forest"]:not([data-scheme="dark"]) .stats-counters { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .stats-counter {
+  padding: 16px 18px;
+  background: var(--surface);
+  border: 0;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+  text-align: start;
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .stats-counter__num {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 32px;
+  line-height: var(--leading-display);
+  color: var(--ink);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .stats-counter__label {
+  margin-top: 4px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .stats-card {
+  gap: 14px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 0;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .stats-card__cover {
+  width: 72px;
+  height: 54px;
+  border-radius: 6px 2px 6px 2px;
+  background-color: var(--hatch);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .stats-card__label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .stats-card__label .ti { color: var(--brand); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .stats-card__title {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--ink);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .stats-card__value {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .stats-note {
+  font-size: 14px;
+  color: var(--ink-soft);
 }
 
 /* ===== #1467 — Regal, Spielepass, add-game lookup =====

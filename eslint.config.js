@@ -457,6 +457,9 @@ const frontendGlobals = {
   // Pokale (session-tally.js).
   programmheftCardBlob: 'readonly', programmheftEdition: 'readonly', tischRuns: 'readonly',
   winStreak: 'readonly', sessionNumber: 'readonly', sessionWinNumber: 'readonly', sessionPlayNumber: 'readonly',
+  // recap-card-forest.js (#1475) — Forest's card; it tracks its kicker with the
+  // Programmheft’s letter-by-letter helper and draws its glyphs with Der Tisch’s.
+  forestCardBlob: 'readonly', forestCardEdition: 'readonly', programmheftTracked: 'readonly', tischGlyph: 'readonly',
   offeredDesigns: 'readonly', designTile: 'readonly', renderDesignPicker: 'readonly',
   maybeShowDesignChooser: 'readonly', showDesignChooser: 'readonly',
   buildDesignSection: 'readonly', saveAccountDesign: 'readonly',
@@ -569,6 +572,8 @@ const frontendGlobals = {
   // forest-tier2a.js (issue #1473): the Chronik's path and recap entry, the Pokale grove, the member page
   forestSessionNumbers: 'readonly', FOREST_PATH_FACES: 'readonly', forestPathRow: 'readonly', forestRecapEntry: 'readonly',
   forestGrove: 'readonly', forestMemberPage: 'readonly', FOREST_RECENT_SESSIONS: 'readonly', forestRecentSessions: 'readonly',
+  // forest-tier2b.js (issue #1474): Forest's Einstellungen; the two settings helpers it shares
+  composeForestSettings: 'readonly', forestNameCard: 'readonly', renderMarkerGrid: 'readonly', wireRoundNameField: 'readonly',
   // member-stats.js (#1075 — split out of views-member.js)
   memberStats: 'readonly', BEST_GAME_MIN_PLAYS: 'readonly', bestGameSub: 'readonly',
   // achievements.js (#1387): the Abzeichen catalogue and its derivation

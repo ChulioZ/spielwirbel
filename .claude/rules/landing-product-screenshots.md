@@ -352,7 +352,13 @@ small ones.
 |---|---|---|---|
 | `landing-shelf-phone` | 390 × 779 | 1.6 | 624 × 1246 |
 | `landing-vote` | 390 × **720** | 1.6 | 624 × **1152** |
-| `landing-result` | 390 × **derived** | 1.6 | 624 × **1413–1514** |
+| `landing-result` | 390 × **derived** | 1.6 | 624 × **1808–2005** |
+
+The result range jumped at #1530's reshoot (2026-10-03; it was 1384–1446 in
+Klassisch): the results screen now shows the „Neu verdient" badge panel (#1387)
+above the Tafel, and the seed's third session always earns one, so the derived
+cut sits one panel lower. Der Tisch's set is 2032–2283. The walkthrough bounds
+all three shots to one height, so a taller result shot renders narrower.
 
 (1246 rather than the 1247 the script's own log prints for 779 × 1.6: Chrome's
 rounding is not a rule you can predict from the arithmetic. Declare what the file
@@ -514,6 +520,13 @@ Three things differ for a non-Klassisch run, each learned by looking:
 
 `LANDING_SHOTS_PORT` / `LANDING_SHOTS_CDP_PORT` override 3199/9333 so a second
 run elsewhere does not fight this one for the ports.
+
+**On a Linux container (#1530's reshoot) two things fail before any picture
+does.** Chrome refuses to start as root without `--no-sandbox`, and the script
+only reports „Chrome did not expose a CDP page target" — point `CHROME_BIN` at a
+two-line wrapper that `exec`s Chrome with the flag. And the image has no Hangul
+font, so the `ko` set renders tofu with every test green: install one
+(`apt-get install fonts-nanum`) and LOOK at a `ko` image before trusting the run.
 
 ## 7. These images are deliberately NOT in the service worker's `SHELL`
 

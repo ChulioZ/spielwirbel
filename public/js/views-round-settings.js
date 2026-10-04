@@ -56,7 +56,9 @@ async function showRoundSettings(rid) {
   const programmheft = designIs('programmheft');
   // And Die Brücke (#1246, B14.5/B6.6): „Einstellungen · Marker · Tags · Einladen".
   const bruecke = designIs('bruecke');
-  const inlinePicker = ocean || programmheft || bruecke;
+  // And Forest (#1474, F14.1): the eight markers as ribbons in a card of their own.
+  const forest = designIs('forest');
+  const inlinePicker = ocean || programmheft || bruecke || forest;
   [
     { icon: 'ti-tags', label: t('round.tags'), sub: 'tags', go: () => showTags(rid) },
     { icon: 'ti-palette', label: t('round.marker'), sub: 'design', go: () => showMarker(rid) },
@@ -141,6 +143,7 @@ async function showRoundSettings(rid) {
   if (ocean) composeOceanSettings(round, rid);
   if (programmheft) composeProgrammheftSettings(round, rid);
   if (bruecke) composeBrueckeSettings(round, rid);
+  if (forest) composeForestSettings(round, rid);
 }
 
 /* Ocean's Einstellungen (#1219, O14.1): the same sections as cards, the marker
@@ -253,7 +256,14 @@ function programmheftNameField(round) {
        <input class="input rs-ph__name" type="text" autocomplete="off" enterkeyhint="done"
               aria-labelledby="rsPhNameH" />
      </section>`);
-  const input = sec.querySelector('input');
+  wireRoundNameField(sec.querySelector('input'), round);
+  return sec;
+}
+
+/* The commit wiring of an always-open round-name field, shared by Das
+   Programmheft's (above) and Forest's (forest-tier2b.js, #1474) — the markup is
+   each design's, the save is one. */
+function wireRoundNameField(input, round) {
   input.value = round.name;
   // One save at a time: a second blur while the first PATCH is in flight
   // (refocus, then leave again) would otherwise send the rename twice.
@@ -270,7 +280,6 @@ function programmheftNameField(round) {
     if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
     else if (e.key === 'Escape') { input.value = round.name; input.blur(); }
   });
-  return sec;
 }
 
 /* Die Brücke's Einstellungen (#1246, B14.5 desktop, B6.6 phone): every section

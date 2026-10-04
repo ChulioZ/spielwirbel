@@ -600,6 +600,10 @@ public/
                      Das Programmheft's share card (#1381): a 1080×1350 front
                      page for a session and a period recap — vermilion masthead,
                      the round's marker band, headline, three facts, a table
+    recap-card-forest.js
+                     Forest's share card (#1475): 1080×1350, the result's
+                     clearing with the grown tree or the period's dusk with one
+                     firefly per session — every word on the card below it
     hub-insights.js  the Start tab's derivations: which games are worth putting
                      on the table, how often the round meets, what is quietly
                      broken, and what was played on this day in a past year
@@ -922,6 +926,8 @@ public/
     forest-tier2a.js Forest's tier 2a (#1473): the Chronik as a path and its
                      „Rückblick" entry, the Pokale grove, the member page's
                      five-figure Tischkarte with „Zuletzt dabei" beside it
+    forest-tier2b.js Forest's tier 2b (#1474): the round's Einstellungen as two
+                     columns of cards, the name field and the marker ribbons
     vote-card-composed.js Der Tisch's vote card (#1268): the felt header, the card
                      with cover and meta, the worded faces, the hand-off line
                      and the vote link's felt intro; both vote cards build

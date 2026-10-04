@@ -18,6 +18,9 @@
        .badge-moment--special         Das Programmheft's „Sonderausgabe" band on
                                       one item, with .badge-moment__kicker (#1393)
      .badge__mark[data-tier]          the reached tier, for a design that prints it
+     .badge__mark[data-shape="leaf"]  a ROUND mark, under Forest only (#1477) —
+                                      also on the Chronik row's icon
+       .badge__dots                   Forest's one dot per tier, after the name
      .hub-row--badges                 one line in the hub's Pokale preview
      .chronik-row--badge              one row per earning under its session
      .member-card__badges             the Tischkarte, earned only
@@ -160,6 +163,25 @@ function badgeTierBars(e) {
   return `<span class="badge__tier">${def.tiers.map((_, i) => (i < on ? '<span data-on></span>' : '<span></span>')).join('')}</span>`;
 }
 
+/* Forest (#1477, F17): a person's mark is a jar, the ROUND's a leaf on the
+   branch — and nothing in K17 tells the two apart where a round mark leaves
+   its band (the card, the result moment, a Chronik row). So under Forest
+   alone the mark says which it is; every other design keeps K17 byte for byte
+   (test/forest-badges.test.js holds the golden). */
+const badgeShapeAttr = (holder) => (holder === 'round' && typeof designIs === 'function' && designIs('forest') ? ' data-shape="leaf"' : '');
+/* Forest's tier dots (F17.10 „●●○○"): one per tier of a tiered entry, the
+   reached ones `data-on`, under the NAME rather than inside the mark — so they
+   are their own aria-hidden span (the name already says the tier, „Stammgast
+   10"). Up to six since #1463; never on a secret, whose tier count would hint
+   at what it is. Rendered under Forest only, like Die Brücke's bars above. */
+function badgeTierDots(e) {
+  if (typeof designIs !== 'function' || !designIs('forest')) return '';
+  const def = badgeDefOf(e.key);
+  if (!def || !def.tiers || e.state === 'secret') return '';
+  const on = e.tier ? def.tiers.indexOf(e.tier) + 1 : 0;
+  return `<span class="badge__dots" aria-hidden="true">${def.tiers.map((_, i) => (i < on ? '<span data-on></span>' : '<span></span>')).join('')}</span>`;
+}
+
 const badgeProgress = (e) => (e.count !== null && e.of ? `${e.count} / ${e.of}` : '');
 const badgePct = (e) => (e.count !== null && e.of ? Math.max(0, Math.min(100, Math.round((e.count / e.of) * 100))) : null);
 
@@ -202,8 +224,8 @@ function badgeTile(e, ctx, opts = {}) {
   const glyph = e.state === 'secret' ? BADGE_SECRET_GLYPH : e.glyph;
   const line = opts.line === undefined ? badgeLine(e, ctx) : opts.line;
   const btn = h(`<button type="button" class="badge" data-state="${esc(e.state)}" data-key="${esc(e.key)}">
-       <span class="badge__mark"${pct === null ? '' : ` style="--pct:${pct}"`}${badgeTierAttr(e)} aria-hidden="true"><i class="ti ${esc(glyph)}"></i>${badgeTierBars(e)}</span>
-       <span class="badge__name">${esc(badgeName(e))}</span>
+       <span class="badge__mark"${pct === null ? '' : ` style="--pct:${pct}"`}${badgeTierAttr(e)}${badgeShapeAttr(e.holder)} aria-hidden="true"><i class="ti ${esc(glyph)}"></i>${badgeTierBars(e)}</span>
+       <span class="badge__name">${esc(badgeName(e))}</span>${badgeTierDots(e)}
        ${line === false ? '' : `<span class="badge__line">${esc(line)}</span>`}
        ${e.isNew ? `<span class="badge__new" aria-hidden="true">${esc(t('badges.newMark'))}</span>` : ''}
      </button>`);
@@ -260,7 +282,7 @@ function openBadgeCard(anchor, e, ctx, holder) {
     const earned = badgeEarnedText(e, ctx);
     const card = h(`<div class="badge-card" data-state="${esc(e.state)}">
          <div class="badge-card__head">
-           <span class="badge__mark"${badgeTierAttr(e)} aria-hidden="true"><i class="ti ${esc(glyph)}"></i>${badgeTierBars(e)}</span>
+           <span class="badge__mark"${badgeTierAttr(e)}${badgeShapeAttr(e.holder)} aria-hidden="true"><i class="ti ${esc(glyph)}"></i>${badgeTierBars(e)}</span>
            <div class="badge-card__title">
              <h3 class="badge-card__name" id="${id}" tabindex="-1">${esc(badgeName(e))}</h3>
              ${holder ? `<div class="badge-card__holder">${esc(holder)}</div>` : ''}
@@ -462,7 +484,7 @@ function chronikBadgeRows(round, marks) {
       : ((round.members || []).find((m) => m.id === x.mid) || {}).name || '';
     const name = t(`badges.${x.key}.name`) + (x.tier ? ` ${x.tier}` : '');
     const row = h(`<div class="chronik-row chronik-row--badge">
-         <span class="chronik-row__icon"><i class="ti ${esc(x.glyph)}" aria-hidden="true"></i></span>
+         <span class="chronik-row__icon"${badgeShapeAttr(x.holder)}><i class="ti ${esc(x.glyph)}" aria-hidden="true"></i></span>
          <span class="chronik-row__label">${esc(t('badges.title'))}</span>
          <a class="chronik-row__text">${esc(`${holder} · ${name}`)}</a>
        </div>`);

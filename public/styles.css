@@ -5535,12 +5535,24 @@ a.k-tile:focus-visible,
    button's scroll container — one that never scrolls, so the button never
    sticks. `clip` clips the same way without being a scroll container. */
 .vote.vote-review { overflow: clip; }
-/* The word beside the chosen face (composed designs) costs a phone row its
-   title: measured at 390 under Der Tisch, „Carcassonne" broke mid-word beside
-   „wäre okay". Below 480px the face and number carry it; the word stays in
-   each row's accessible name. */
+/* The word beside the chosen face costs a phone row its title: measured at 390
+   under Der Tisch, „Carcassonne" broke mid-word beside „wäre okay" in one line.
+   Until #1530 the word was hidden here and the digit carried the chip; the
+   digit is gone, so the word is the chip's only label and may not be hidden.
+   Below 480px the chip moves UNDER the title instead, so the title keeps the
+   whole column: measured at 360px across nine locales, a chip beside the title
+   (up to 88px for „ehdottomasti") broke „Carcassonne" mid-word in six of them,
+   and under it in none. */
 @media (max-width: 479px) {
-  .vote-review__word { display: none; }
+  .vote-review__row {
+    grid-template-columns: 40px minmax(0, 1fr) auto;
+    grid-template-areas: "cover game go" "cover rating go";
+    row-gap: 4px;
+  }
+  .vote-review__cover { grid-area: cover; }
+  .vote-review__game { grid-area: game; }
+  .vote-review__rating { grid-area: rating; justify-self: start; }
+  .vote-review__go { grid-area: go; }
 }
 
 /* Info affordance on the vote cards (#717). Inline in the title line so the
@@ -5599,7 +5611,7 @@ a.k-tile:focus-visible,
     max-width: 940px;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto 1fr auto auto auto auto auto 1fr;
+    grid-template-rows: auto 1fr auto auto auto auto 1fr;
     column-gap: 10px;
     padding-bottom: 4px;
   }
@@ -5608,7 +5620,6 @@ a.k-tile:focus-visible,
   .vote--split .vote__title { grid-row: 4; }
   .vote--split .vote__q { grid-row: 5; }
   .vote--split .rating { grid-row: 6; }
-  .vote--split .rating-scale { grid-row: 7; }
   .vote--split .vote__img {
     grid-column: 1;
     grid-row: 2 / -1;
@@ -5618,8 +5629,7 @@ a.k-tile:focus-visible,
   .vote--split .vote__who,
   .vote--split .vote__title,
   .vote--split .vote__q,
-  .vote--split .rating,
-  .vote--split .rating-scale { grid-column: 2; }
+  .vote--split .rating { grid-column: 2; }
 }
 
 /* Phones (#666): the same "fits without scrolling" requirement the split layout
@@ -5916,15 +5926,13 @@ a.k-tile:focus-visible,
    No min-height: a rung with no votes must be the empty track, not a stub that
    reads as one vote. */
 .trow__bars .bar { width: 100%; border-radius: 4px 4px 0 0; background: var(--sc-fill, var(--sc)); }
-/* The axis. Colour carries the scale on the glyph (a non-text UI component, 3:1)
-   while the numeral stays --ink-soft — the ramp as TEXT only just clears 4.5:1
-   at its tightest point, and a per-round theme moves the surface under it. */
+/* The axis: the face alone (#1530 removed the rung's digit). Colour carries the
+   scale on the glyph — a non-text UI component, so 3:1 rather than text's 4.5:1. */
 .trow__bars .bar-axis {
   display: flex; flex-direction: column; align-items: center; line-height: 1;
   color: var(--ink-soft);
 }
 .trow__bars .bar-axis .ti { font-size: 14px; color: var(--sc-fill, var(--sc)); /* glyph, not type */ }
-.trow__bars .bar-axis__n { font-size: var(--text-xs); font-weight: 700; }
 .trow__score { grid-area: score; text-align: right; }
 /* The action column. Nothing here is ever `disabled`: a control that cannot act
    is not rendered at all, which is what removes the 0.45-opacity „Spielen" that
@@ -6906,10 +6914,9 @@ a.k-tile:focus-visible,
   min-width: 0;
 }
 .rater__face { font-size: 22px; /* glyph, not type */ color: var(--ink-soft); }
-.rater__n { font-family: var(--font-display); font-weight: 700; font-size: var(--text-lg); font-variant-numeric: tabular-nums; }
 /* The name is the tile's only variable-length part, so it is the only thing
-   allowed to truncate — everything above it is a fixed glyph or a 3-character
-   number, and a wrapping name would make the tiles different heights. */
+   allowed to truncate — everything above it is a fixed glyph, and a wrapping
+   name would make the tiles different heights. */
 .rater__who {
   max-width: 100%;
   overflow: hidden;
@@ -10038,7 +10045,49 @@ kbd {
   transition: transform var(--dur-fast) var(--ease-out);
 }
 .mood .ti { font-size: 28px; /* glyph, not type */ }
-.mood__n { font-family: var(--font-display); font-size: var(--text-xs); font-weight: 700; }
+/* Klassisch's word under each face (#1530) — the face and its word ARE the rung;
+   there is no digit. The composed designs restyle `.mood__word` in their own
+   sheets; the tile rule is scoped to the NON-composed card (Klassisch's, and
+   the shared-link card every design but Der Tisch still draws Klassisch's
+   way), so no design's own tile geometry is touched.
+
+   The tile GROWS to its longest word instead of the word shrinking or
+   breaking mid-word: a 64px basis (56px on a phone, below) is the old fixed
+   tile, and `min-width: min-content` lets a long word („ehdottomasti",
+   „muchísimo") take what it needs while `flex-shrink` takes it back from the
+   short neighbours. A multi-word rung („helemaal niet", „en lainkaan") wraps
+   at its space. No `hyphens`: a phone without that language's dictionary
+   breaks nothing, so the layout must hold without it
+   (.claude/rules/browser-pane-has-no-hyphenation.md). */
+/* The two-ended row under the faces used to be the card's last line and gave it
+   its bottom margin; with it gone the faces sat 2px off the card's edge. */
+.vote:not(.vote--composed) .rating { padding-bottom: 18px; }
+.vote:not(.vote--composed) .rating .mood {
+  flex: 0 1 64px;
+  min-width: min-content;
+  height: auto;
+  min-height: 68px;
+  padding: 6px 4px;
+}
+@media (max-width: 520px) {
+  .vote:not(.vote--composed) .rating .mood { flex-basis: 56px; min-height: 60px; }
+}
+/* At the narrowest phones the row's own spacing is what gives: measured at
+   320px, Finnish („ehdottomasti", „mielelläni") overflowed the row by 17px and
+   Italian by 3px with the ordinary gaps and tile padding; with these (and the
+   word tracked a hair tighter — the type scale has no step below 12px), 0 in
+   all nine locales. From 375px up the ordinary spacing fits them all. */
+@media (max-width: 374px) {
+  .vote:not(.vote--composed) .rating { gap: 3px; padding-inline: 4px; }
+  .vote:not(.vote--composed) .rating .mood { padding-inline: 1px; }
+  .vote:not(.vote--composed) .rating .mood__word { letter-spacing: -0.02em; }
+}
+.mood__word {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  line-height: 1.15;
+  text-align: center;
+}
 .mood:hover { border-color: var(--brand); transform: translateY(-2px); }
 /* `--sc` is written inline by the mood loop (views-session.js), so the fill is
    still avgColor(n) by default and a design can repaint the chosen face without

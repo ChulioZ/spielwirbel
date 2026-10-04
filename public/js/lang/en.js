@@ -1181,15 +1181,13 @@ I18N.en = {
   'vote.back': 'Back',
   'vote.who': 'Now rating:',
   'vote.question': 'How much would you like to play this?',
-  // Spoken label for the 1–5 mood buttons — the visible face/number alone says
-  // nothing about the scale to a screen reader (#145).
-  'vote.ratingLabel': '{n} out of {max}',
+  // The word under each mood face, lowest first — and, since #1530, the face's
+  // whole accessible name: no digit is shown or spoken (#145, #1530).
   'vote.scaleLow': 'not at all',
   'vote.scaleHigh': 'absolutely',
   'vote.scale2': 'not really',
   'vote.scale3': 'could do',
   'vote.scale4': 'gladly',
-  'vote.ratingLabelWord': '{n} out of {max} – {word}',
   'vote.rates': '{name} is rating',
   'vote.gameOf': 'Game {n} of {total}',
   'vote.personOf': 'Person {n} of {total}',
@@ -1267,7 +1265,7 @@ I18N.en = {
   'result.distLabel': 'Distribution of ratings',
   'result.openGame': 'Open the game',
   'result.clearChoice': 'Clear the choice',
-  'result.barTitle': '{c}× rating {r}',
+  'result.barTitle': '{c}× “{word}”',
   'score.infoBody': 'The score is more than the average. If someone does not want to play a game at all, that counts for more than a good rating from someone else — so that what you end up playing is something everybody is up for.',
   'score.infoThin': 'A game with only a few ratings so far is judged more cautiously — it takes a few sessions before its score carries full weight.',
   'score.infoPlays': 'A game you keep putting on the table is judged much more favourably — even without any ratings.',
@@ -1877,7 +1875,7 @@ I18N.en = {
   'landing.hero.or': 'or',
   'landing.hero.registerLink': 'sign up free',
   'landing.shot.shelfAlt': 'Screenshot: a group’s game shelf in Spielwirbel — games as tiles with their Spielwirbel score, next to the navigation for Start, shelf, chronicle and trophies.',
-  'landing.shot.voteAlt': 'Screenshot: voting in Spielwirbel — a drawn game with the question “how much do you want to play this?” and a scale of five faces running from 1 (“not at all”) to 5 (“absolutely”).',
+  'landing.shot.voteAlt': 'Screenshot: voting in Spielwirbel — a drawn game with the question “how much do you want to play this?” and five faces, each with its word, from “not at all” to “absolutely”.',
   'landing.shot.resultAlt': 'Screenshot: a session’s result in Spielwirbel — at the top the game that was played, with its “played” stamp and the winner, and below it the start of the ranking with the winning game’s Spielwirbel score.',
   'landing.desktop.alt': 'Screenshot: a round’s start page in Spielwirbel on a wide screen — on the left the navigation with the button to start a session, and beside it the last game played, a suggestion, the round’s pulse, the shelf, trophies and chronicle.',
   'landing.desktop.caption': 'Just as much at home on a big screen as on a small one.',

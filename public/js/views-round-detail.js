@@ -861,7 +861,11 @@ async function showGameDetail(rid, gameId) {
   if (!sparse && !game.wish && !listy) rightPage.appendChild(sec);
   /* „Wer wie gewertet hat" (#1190, T3.4/T6.3) — who is behind the number the
      left page prints, as one tile per person: their avatar, the mood their
-     average rounds to, and that average.
+     average rounds to, and their name. The average itself is NOT printed
+     (#1530): it is a mean of 1–5 digits, and a „3,5" beside a score of „3,1"
+     invites the very arithmetic the Spielwirbel-Score deliberately does not do.
+     The face carries the reading (and its word, for a screen reader); the vote
+     count stays in the tile's tooltip, as the measure of how firm that face is.
 
      It is built from `gameRaters`, which walks exactly the votes the game's own
      score walks, so the row and the figure above it cannot tell different
@@ -870,8 +874,7 @@ async function showGameDetail(rid, gameId) {
 
      The FACES ARE THE APP'S FIVE, through `ratingFace` (rating-faces.js), not a
      set of this design's own: a mood is an app concept, and a second list would
-     be the third copy that file's header warns about. Same reason the tile shows
-     `fmtAvg` rather than a hand-rolled decimal.
+     be the third copy that file's header warns about.
 
      Gated exactly like „Gespielt in" below it — not on a sparse page and not on
      a wish (the round cannot have rated a game it does not own) — plus the
@@ -884,13 +887,13 @@ async function showGameDetail(rid, gameId) {
   if (raters.length) {
     const votesSec = h(`<div class="section gd-raters"><h2>${esc(t('detail.ratersTitle'))}</h2></div>`);
     const strip = h('<div class="raters"></div>');
-    raters.forEach(({ person, avg, n, face }) => {
+    raters.forEach(({ person, n, face }) => {
       // `personColor`, never `memberColor`: a guest has no member row, and the
       // unguarded call silently paints them in member #0's colour
       // (.claude/rules/session-guests-are-not-members.md §1).
       const who = personLabel(person);
       // The count rides the tile's `title` rather than taking a line of its own:
-      // it is the footnote to the average, and most people will have rated a
+      // it is the footnote to the face, and most people will have rated a
       // game once, where "aus 1 Wertung" is noise on every tile.
       const evidence = tn(n, 'score.evidenceOne', 'score.evidence', { n });
       // `avatarFace` with no opts, i.e. initials rather than a profile picture:
@@ -902,7 +905,7 @@ async function showGameDetail(rid, gameId) {
       const tile = h(`<div class="rater" title="${esc(`${who} · ${evidence}`)}">
            <span class="avatar${person.guest ? ' avatar--guest' : ''}" style="background:${personColor(round, person)}" aria-hidden="true">${avatarFace(initials(person.name), {})}</span>
            <i class="ti ${ratingFace(face)} rater__face" aria-hidden="true"></i>
-           <span class="rater__n" data-stop="${rampStop(avg)}">${esc(fmtAvg(avg))}</span>
+           <span class="sr-only">${esc(voteWord(face))}</span>
            <span class="rater__who">${esc(who)}</span>
          </div>`);
       strip.appendChild(tile);

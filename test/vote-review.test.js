@@ -98,11 +98,13 @@ test('the last rating delivers the review step, not the submission', async (t) =
   assert.ok(list.every((b) => b.tagName === 'BUTTON' && b.type === 'button'));
   assert.deepEqual(list.map((b) => b.querySelector('.vote-review__game').textContent.trim()),
     ['Catan', 'Azul', 'Dorfromantik']);
-  assert.deepEqual(list.map((b) => b.querySelector('.vote-review__n').textContent.trim()), ['4', '2', '5']);
-  // The name leads with the game and carries the rating, so a reader hears
-  // what the row is and what pressing it does.
-  assert.equal(list[0].getAttribute('aria-label'),
-    dom.run("t('vote.reviewRow', { title: 'Catan', rating: t('vote.ratingLabel', { n: 4, max: 5 }) })"));
+  // The chip is the face and its WORD, never the digit (#1530) — on Klassisch
+  // too, which printed only the number until then.
+  assert.deepEqual(list.map((b) => b.querySelector('.vote-review__word').textContent.trim()),
+    ['gern', 'eher nicht', 'unbedingt']);
+  // The name leads with the game and carries the rating as its word, so a
+  // reader hears what the row is and what pressing it does — and no digit.
+  assert.equal(list[0].getAttribute('aria-label'), 'Catan: gern. Ändern');
 
   // Focus moves to the step's heading (the issue's accessibility note).
   const heading = dom.app.querySelector('.vote-review__title');
@@ -174,7 +176,7 @@ test('a jump back from the review and a re-rate submits the new value exactly on
   await beat(dom);
   await flush();
   assert.ok(review(dom), 'the re-rate did not return to the review');
-  assert.equal(rows(dom)[0].querySelector('.vote-review__n').textContent.trim(), '1');
+  assert.equal(rows(dom)[0].querySelector('.vote-review__word').textContent.trim(), 'gar nicht');
   assert.equal(saved.length, 0);
 
   send(dom).click();
