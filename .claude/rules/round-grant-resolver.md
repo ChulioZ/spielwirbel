@@ -110,18 +110,19 @@ or an OR into the tenant policy.
 4. **`req.userId` gates the whole thing.** Legacy mode (accounts off) and
    unauthenticated callers have no `req.userId`, so `resolveRoundGrant` is a
    no-op and a password-only (accounts-off) instance is byte-for-byte unchanged. The
-   feature is also **inert until a grant exists** — there is no grant-creation
-   route yet (invitation accept, a later slice of #207, calls `createGrant` +
-   `createMember`).
+   feature is also **inert until a grant exists**, and one route creates them:
+   invitation accept (`POST /api/account/invitations/:id/accept`,
+   `lib/routes/invitations.js`) seats the invitee and then calls `createGrant`.
 
 ## Verifying a change here
 
-Isolation is the whole point, so test it end-to-end over HTTP with a **seeded**
-grant (no creation route yet): `test/round-grants-access.test.js` proves a
+Isolation is the whole point, so test it end-to-end over HTTP with a grant
+seeded through the repo: `test/round-grants-access.test.js` proves a
 grantee reads+writes exactly the granted round, cannot reach another of the
-owner's rounds (404), cannot delete it (403), and that the round never leaks into
-the grantee's `GET /api/rounds` list (home-merge is a **later** slice — grantees
-can't yet *see* shared rounds on their home). The re-scope adds no new SQL — it
+owner's rounds (404), cannot delete it (403), and that the grantee's
+`GET /api/rounds` list carries the granted round flagged `shared` — and never the
+owner's other rounds (the home-merge in `lib/routes/rounds.js` fetches each
+granted round on its own, under the owner tenant). The re-scope adds no new SQL — it
 composes `listGrantsForUser` + `forTenant`, both already proven on Postgres — and
 the app-layer tenant filter behaves identically on both backends, so the JSON
 HTTP test's guarantee transfers; the RLS backstop is proven separately as a plain

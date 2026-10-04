@@ -12,8 +12,9 @@
  *
  * Accounts must be ON for per-user tenants + grants to exist, so this enables
  * accounts and drives real accounts (register → verify → login), mirroring
- * test/quota.test.js. There is no route to CREATE a grant yet (invitation accept
- * is a later slice of #207), so grants are seeded through the repo.
+ * test/quota.test.js. Grants are seeded through the repo rather than through
+ * invitation accept (the route that creates them since #207), so each spec
+ * states the grant it needs directly.
  */
 
 process.env.ACCOUNTS_ENABLED = 'true';

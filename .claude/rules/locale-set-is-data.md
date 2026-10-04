@@ -15,9 +15,11 @@ paths:
 BCP-47 tag). Everything else derives from it: the picker, `Intl.PluralRules` in
 `tn()`, `fmtDateTime`/`fmtMonth`, and the feedback-metadata allowlist in
 `lib/routes/contact.js`. Adding a language is that row plus a `lang/<code>.js` file,
-wired into `index.html`, `sw.js`'s `SHELL` and a `CACHE` bump — **and a set of
-three landing screenshots for the new locale** (#457), which
-`test/landing-shots.test.js` requires for every `SUPPORTED_LOCALES` entry. That
+wired into `index.html`, `sw.js`'s `SHELL` and a `CACHE` bump — **and the new
+locale's landing screenshots** (#457), a full set in every design's table
+(`LANDING_SHOT_SETS` in `public/js/views-landing.js`; Der Tisch's is shot with
+`--design=tisch` since #1199), which `test/landing-shots.test.js` requires for
+every `SUPPORTED_LOCALES` entry. That
 last step is the one this checklist used to omit: skip it and the suite goes red
 pointing at a missing `.webp`, with nothing saying that shooting it is a manual
 job (`.claude/rules/landing-product-screenshots.md` is the recipe). A sixth
@@ -46,10 +48,10 @@ obvious test for "the allowlist is shared, not copied" is:
 for (const locale of SUPPORTED_LOCALES) { /* assert the route keeps it */ }   // VACUOUS
 ```
 
-`SUPPORTED_LOCALES` is `['en', 'de']`, and the hand-copied literal it replaced
-was `['de', 'en']`. **The loop passes identically against the copy** — it is
-green against exactly the code it exists to catch, and it stays that way until
-somebody adds a language, i.e. long after the drift could have been introduced.
+`SUPPORTED_LOCALES` was `['en', 'de']` then, and the hand-copied literal it
+replaced was `['de', 'en']`. **The loop passed identically against the copy** —
+green against exactly the code it existed to catch, and it stayed that way until
+somebody added a language, i.e. long after the drift could have been introduced.
 The same applies to a parity test whose locale set is derived, and to any
 "derived" check over a one- or two-item list.
 

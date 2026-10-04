@@ -61,15 +61,19 @@ it expensive:
   too.
 
 `test/pwa.test.js` asserts every `SHELL` entry is served, which catches a typo'd
-path. Nothing can catch the *omission* — that is what this file is for, and it
-is measured rather than assumed: deleting the `'/css/designs/tisch.css'` line on
-purpose leaves `test/pwa.test.js` and `test/build.test.js` **fully green**.
+path. It cannot catch the *omission*, and that is measured rather than assumed:
+deleting the `'/css/designs/tisch.css'` line on purpose left `test/pwa.test.js`
+and `test/build.test.js` **fully green**. The design specs written since pin
+their own sheet in `SHELL` (`test/bruecke-tokens.test.js`,
+`test/design-tokens-programmheft.test.js`, `test/design-tokens-forest.test.js`);
+Der Tisch's and Ocean's sheets have no such line, so a new design's spec has to
+add one — that is what this file is for.
 
 (That test's sibling — "every script index.html loads is precached" — derives
 its list from the markup, which is why a missing *script* IS caught. A design
 stylesheet has no markup to derive from: the whole point is that design.js
-injects it. So there is nothing to generalise the derivation from, and the
-omission stays a discipline.)
+injects it. The registry's `stylesheet` literals are a list a spec could derive
+from instead, but none does yet, so the omission stays a per-design check.)
 
 ## The colours: `:root[data-design]` only, and nowhere else in the file
 

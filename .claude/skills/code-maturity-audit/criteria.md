@@ -80,16 +80,21 @@ not a finding; the rejected entries below are that ledger.
   scheduling, queueing) either adopts a mature, widely-used dependency or
   records why not — in a rule, an issue, or a rejected entry here. Per concern,
   not per line: a ten-line helper is not a finding; a growing homegrown
-  subsystem is. The two open §7 items are already tracked (#212's
-  error-tracking half, #215's limiter store) — context, not fresh findings.
+  subsystem is. The two §7 items that never shipped have **no open issue**:
+  error tracking (#212 closed 2026-07-19 having shipped only pino; the deferral
+  is recorded as M-R05, and whether it gets an issue awaits an operator
+  decision raised 2026-10-04) and the limiter store (#215 closed unshipped
+  2026-08-02; the control is the `railway.json` `numReplicas: 1` pin asserted by
+  `test/docker.test.js` — S-012). Report them with that status; never as
+  "already tracked".
 - **Enforced by:** — (manual)
 
 ### M-005 — Adopted dependencies stay maintained and still fit
 - **Status:** adopted · 2026-07-29
 - **Source:** `package.json` · the #211–#214 adoptions
-- **Check (research phase):** For each production dependency — knex,
-  pino/pino-http, zod, jsonwebtoken, argon2, express, helmet,
-  express-rate-limit, multer, nodemailer, pg, @aws-sdk/client-s3, compression —
+- **Check (research phase):** For each entry in `package.json`'s
+  `dependencies` — read the file, not a list here (the 2026-07-29 list had
+  missed `sharp`, `@simplewebauthn/server` and `qrcode` by 2026-10-04) —
   the survival question: still maintained, not deprecated, not superseded by a
   Node built-in? Judge by the package's own repository activity and official
   Node release notes, not star counts. Versions are the `dependabot` skill's
@@ -106,8 +111,11 @@ not a finding; the rejected entries below are that ledger.
 
 ### M-006 — State that must be correct across the deployment lives in the store, not process memory
 - **Status:** adopted · 2026-07-29
-- **Source:** `.claude/rules/guest-demo-accounts.md` §1 (the deployment can run
-  multiple replicas) · `docs/production-readiness.md` §7 item 5
+- **Source:** `.claude/rules/guest-demo-accounts.md` §1 (more than one process
+  can serve at once) · `.claude/rules/deploy-invariants-are-pinned-in-code.md`
+  (`numReplicas: 1` is pinned in `railway.json` and asserted by
+  `test/docker.test.js`, yet every deploy overlaps two containers) ·
+  `docs/production-readiness.md` §7 item 5
 - **Check:** Sweep module-level mutable state (module-scope counters, Maps,
   caches) in `lib/` and `lib/routes/`. Classify each instance: (a) correct
   per-process by design; (b) a **documented accepted trade-off** — the

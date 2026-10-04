@@ -65,12 +65,14 @@ two on, once no such bundle can plausibly still be in use.
 
 **Updated by #137**, which re-examined every route in this router and left the
 conclusion below intact: running a session costs `round.write`, the floor every
-grantee clears. The one exception is `DELETE …/sessions/:sid`, which needs
-`coowner` — deleting a *played* evening destroys its votes, result and winners for
-everyone, which is not part of running one. Cancelling stays an ordinary write:
-it is reversible and is a session state, not a deletion. The requirements live in
-`lib/round-access.js`'s table, so this router still carries no `req.grant` guard
-of its own (`.claude/rules/round-roles-are-a-chokepoint.md`).
+grantee clears. The one exception is `DELETE …/sessions/:sid`, which since #857
+carries two acts: discarding a vote **still running** (neither `done` nor
+`cancelled`) is `session.discard`, which every editor clears — it destroys no
+result, winners or Chronik entry — while deleting a **resolved** one needs
+`session.delete` (`coowner`). The table names the floor; the handler narrows.
+Cancelling stays an ordinary write: it is reversible and is a session state, not
+a deletion. The requirements live in `lib/round-access.js`'s table, so this router
+still carries no `req.grant` guard (`.claude/rules/round-roles-are-a-chokepoint.md`).
 
 So **any invitee can start, vote in and close a session**, and "the owner's
 device" is a fiction: it is the

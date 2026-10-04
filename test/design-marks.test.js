@@ -183,8 +183,9 @@ test('?design=tisch outside production serves Der Tisch’s icons and colours', 
 });
 
 test('in production an unreleased design is refused — the face answers instead', async (t) => {
-  // Whichever design is still behind the gate. Since Ocean went live (#1222)
-  // none is, so a coloured non-face design is gated for the length of this
+  // Whichever design is still behind the gate, when one is. When every design
+  // is live (as it was from Ocean's go-live, #1222, until the next design was
+  // registered), a coloured non-face design is gated for the length of this
   // test — the next design under construction must not leak either, and a
   // skip here would leave the guard unproven until then.
   let gated = DESIGN_REGISTRY.find((d) => !d.enabled && d.page);

@@ -98,11 +98,11 @@ gives away.
 
 Ask what changed **since `last-researched`**, not what security is:
 
-- **CVE / advisory feeds** for the runtime stack: Node, Express, `helmet`,
-  `express-rate-limit`, `argon2`, `jsonwebtoken`, `knex`, `pg`, `multer`, `zod`,
-  the AWS S3 SDK. Cross-check against `npm audit` and the repo's Dependabot alerts
-  — a live advisory on a dependency is the highest-signal finding this skill
-  produces, and it routes to the `dependabot` skill.
+- **CVE / advisory feeds** for Node and every `package.json` dependency — the auth
+  ones (`argon2`, `jsonwebtoken`, `@simplewebauthn/server`), `sharp` (native, decodes
+  uploads), Express and its middleware first. Cross-check against `npm audit` and
+  the Dependabot alerts — a live advisory on a dependency is the highest-signal
+  finding this skill produces, and it routes to the `dependabot` skill.
 - **OWASP** (Top 10, ASVS, the cheat sheets) for shifts in accepted practice, and
   the **OWASP JWT / Session / CSRF** guidance specifically — those map directly to
   S-001/S-009/S-010.
@@ -111,9 +111,9 @@ Ask what changed **since `last-researched`**, not what security is:
 - **PostgreSQL RLS** advisories or behaviour changes — the tenant model rests on
   FORCE-RLS semantics that this codebase probed empirically (`tenancy-rls.md`).
 
-Then run the critique in `audit-loop.md` §C. Five conflicts are pre-recorded as
-rejected criteria (S-R01 CSRF token, S-R02 Redis limiter, S-R03 stateful tokens,
-S-R04 image proxy, S-R05 superuser-RLS) — if research proposes any again, that is
+Then run the critique in `audit-loop.md` §C. Settled conflicts are pre-recorded as
+the `S-R*` rejected criteria (CSRF token, Redis limiter, stateful tokens, image
+proxy, superuser-RLS, among others) — if research proposes any again, that is
 the ledger working. A new source may still reopen one, but only by showing the
 original reasoning was wrong on its own terms, and via the phase-C conflict path
 (put it to the user), never a silent overwrite.
@@ -184,8 +184,8 @@ gh api repos/{owner}/{repo}/dependabot/alerts --jq '[.[]|select(.state=="open")]
 ```
 
 A live advisory or open alert is a real finding — route it to `dependabot`.
-Confirm CodeQL/gitleaks/secret-scan are still wired into the required checks
-(`ci-aggregate-gate.md`).
+Confirm `gitleaks` is still a required check (`gh api …/branches/main/protection`)
+and CodeQL and secret scanning still run — only `gitleaks` gates a merge (S-020).
 
 ### 7. Public-repo disclosure → S-021
 

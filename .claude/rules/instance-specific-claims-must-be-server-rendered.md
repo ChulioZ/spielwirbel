@@ -1,6 +1,7 @@
 ---
 paths:
   - "lib/faq.js"
+  - "lib/guide.js"
   - "lib/legal.js"
   - "public/kontakt.html"
   - "public/login.html"
@@ -38,32 +39,33 @@ fewer questions. Only the answers that point at `/datenschutz`, `/impressum` or
 `/kontakt.html` hang off `legal.legalConfigured()`, because those routes 404
 until it is configured and a link into a 404 is its own defect.
 
-## Trap 1: hoisting the CSS into a `const` silently disarms the token-parity test
+## Trap 1: hoisting the CSS into a `const` disarms the hex sweep
 
 `test/standalone-page-brand.test.js` licenses the design-token copy these pages
 carry, and it reads the file as **text**, pulling the rules out of
-`<style>…</style>`. `lib/faq.js` is in its `PAGES` list — a `lib/` module beside
-two `.html` documents, which works because the assertions do not care what kind
-of file the block sits in.
+`<style>…</style>`. `lib/faq.js` is in its `PAGES` list — a `lib/` module (as are
+`lib/guide.js` and `lib/legal.js`) beside two `.html` documents, which works
+because the assertions do not care what kind of file the block sits in.
 
 They do care that the block holds **real declarations**. Write the CSS into a
 constant and interpolate it —
 
 ```js
-const STYLE = `:root { … }`;          // ← disarms the third assertion
+const STYLE = `:root { … }`;          // ← disarms the hex sweep
 …
 `<style>${STYLE}</style>`
 ```
 
-— and the third assertion ("declares no palette hex outside its `:root` copy")
-scans the seven characters `${STYLE}` instead of the stylesheet, finds no hex,
-and passes **vacuously**. Measured: with the CSS hoisted and a stray `#b83280`
-left in the file, it goes green. So the CSS stays inline in the template, and
-both ends say why.
+— and the hex sweep ("declares no palette hex outside its token copies") scans
+the interpolation `${STYLE}` instead of the stylesheet. Measured before #1198: it
+found no hex and passed **vacuously**, green with a stray `#b83280` left in the
+file. Since #1198 the sweep first asserts at least three rules to sweep, so a
+hoist now goes red — on that floor, naming no hex. So the CSS stays inline in the
+template, and both ends say why.
 
-The other two assertions keep working either way (they scan the whole file for
-`:root` and `@font-face`), which is what makes this one hard to notice — the
-suite still reports three passing tests for the file.
+The page's other tests keep working either way (they scan the whole file for
+`:root`, the face block and `@font-face`), which is what made the vacuous pass
+hard to notice: every other test for the file still passed.
 
 ## Trap 2: one document, two languages → every id is emitted twice
 

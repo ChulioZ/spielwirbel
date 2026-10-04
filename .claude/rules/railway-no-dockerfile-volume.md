@@ -29,7 +29,7 @@ what's mounted there. Persistence is attached **at the platform level**:
   on-disk JSON/uploads path at all. The product path uses managed Postgres (#127)
   + R2 object storage (#128), so a volume is optional there.
 - **compose / plain docker:** the `-v spieleabend-data:/data` mount we already
-  document in `docker-compose.yml` and the README. These give the volume
+  document in `docker-compose.yml` and `docs/configuration.md`. These give the volume
   explicitly, so dropping the `VOLUME` line changes nothing for them. (The only
   behavioural change: a bare `docker run` with **no** `-v` now writes to the
   container layer instead of an anonymous volume — but every documented run mounts

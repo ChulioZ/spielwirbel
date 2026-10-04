@@ -873,7 +873,9 @@ h1, h2, h3 { font-family: var(--font-display); }
      Capped, it would centre at 900px while the grid it introduces spans 1240px,
      leaving the screen's own <h1> indented ~170px from the content it heads.
      Both take the SAME variable so their edges cannot drift apart, and the
-     rail-less `margin-inline: auto` below centres both.
+     `margin-inline: auto` below centres both on a rail-less setup screen (Der
+     Tisch and Das Programmheft prepend the rail, and there the screen sits
+     left-aligned beside it — setup-screens-two-column-layout.md §2).
 
      Conditioned on a setup grid actually being present, so no other screen's
      head is touched. (0,5,0) against the cap's (0,3,0) — specificity, never

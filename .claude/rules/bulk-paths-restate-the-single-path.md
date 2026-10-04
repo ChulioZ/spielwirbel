@@ -8,10 +8,11 @@ paths:
 ---
 # A bulk mutation is not "the single one in a loop" — it re-decides four things
 
-`moveGames` (#253), `createGames` (#481), `retireGames`/`deleteGames` (#832) and
-`setGameOwners` (#972) all exist because the single-game path does not scale to a
-shelf that was filled in one action. Each time, the same four questions come up,
-and three of them fail **silently** if answered by reflex.
+`moveGames` (#253), `createGames` (#481), `retireGames`/`deleteGames` (#832),
+`setGameOwners` (#972) and `setGameTags` (#1000) all exist because the
+single-game path does not scale to a shelf that was filled in one action. Each
+time, the same four questions come up, and three of them fail **silently** if
+answered by reflex.
 
 ## 1. The activity is ONE counted row, not N — or NONE
 
@@ -20,8 +21,10 @@ and three of them fail **silently** if answered by reflex.
 owner change either. A counted `games_owners_set` would have been the reflex
 answer and it is the wrong one: it makes the bulk path announce in the Chronik
 something the per-game editor stays silent about, so the same edit is public or
-private depending on which screen the user happened to reach it from. It is also
-the one bulk route in `lib/routes/games.js` with no `actorSeat` argument — worth
+private depending on which screen the user happened to reach it from.
+`setGameTags` (`POST …/bulk-tags`, #1000) answers the same way for the same
+reason — the single PATCH writes nothing for a tag change. Those two are the
+`bulk-*` routes in `lib/routes/games.js` with no `actorSeat` argument — worth
 knowing before you "fix" that as an omission.
 
 Where the single path *does* write one, the rule below holds.

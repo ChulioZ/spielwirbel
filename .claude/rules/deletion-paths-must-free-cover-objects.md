@@ -18,9 +18,9 @@ nothing links to, on S3/R2 a billable object no code path can ever name again.
 those paths **before** deleting and return them to the route, which then removes
 the objects. The route — never the repo — touches storage.
 
-This is the shape `deleteGame` (`{ image }`), `setBackground` (`{ previous }`),
-`eraseAccount` (`{ images }`) and, since #280, `deleteRound` (`{ images }`) all
-use. `deleteRound` is the one that got it wrong: it returned a bare boolean, the
+This is the shape `deleteGame` (`{ image }`), `setBackground` (`{ previous }`;
+no route has called it since #1202), `eraseAccount` (`{ images }`) and, since
+#280, `deleteRound` (`{ images }`) all use. `deleteRound` is the one that got it wrong: it returned a bare boolean, the
 games cascaded away with the round (`ON DELETE CASCADE` in Postgres, a plain
 `splice` in JSON), and every cover of every deleted round was orphaned. It looked
 correct because the *rows* were gone — the leak is invisible from the app.

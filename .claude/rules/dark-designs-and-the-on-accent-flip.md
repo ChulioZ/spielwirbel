@@ -107,8 +107,9 @@ as RGB — it reported a passing avatar at 1.18:1), and compare against 4.5 / 3.
 Nothing in jsdom can run it, so it stays a browser step rather than a spec.
 
 Two hits were decorative and deliberately left: the gold seal's white lock glyph
-(2.45:1, still open as #937) and the empty-cover placeholder glyph. Both are
-`aria-hidden`, so neither was this change's to make.
+(2.45:1; #937 fixed it with `--gold-ink`, see `.claude/rules/theme-derived-colors.md`)
+and the empty-cover placeholder glyph. Both are `aria-hidden`, so neither was
+this change's to make.
 
 **The placeholder figures recorded here were wrong, and #938 inherited them.**
 This paragraph read "1.48 dark / 1.05 light" and concluded the dark scheme fared

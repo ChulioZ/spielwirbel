@@ -10,9 +10,9 @@ description: >-
 
 # Handle open Dependabot PRs
 
-Dependabot opens weekly PRs for npm deps and GitHub Actions (see
-`.github/dependabot.yml`, limit 5 npm at a time). Each already runs the CI + Lint
-workflows. Your job: get every safe one merged, and for the rest, leave a
+Dependabot opens weekly PRs for npm deps, GitHub Actions and the Dockerfile's
+Node base image (see `.github/dependabot.yml`, limit 5 npm at a time). Each
+already runs the CI + Lint workflows. Your job: get every safe one merged, and for the rest, leave a
 paper trail so a human knows exactly what's blocking it.
 
 **Merging is outward-facing and hard to reverse.** Only merge PRs that pass

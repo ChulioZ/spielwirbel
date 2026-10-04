@@ -163,6 +163,11 @@ function mergeGameInfo(game, info) {
   for (const k of ['categories', 'mechanics', 'designers']) {
     if ((info[k] || []).length && !(game[k] || []).length) game[k] = info[k];
   }
+  // The suggested-players poll (#1005), where `[]` IS an answer — so it is
+  // folded whenever it is an array and the game holds none, empty or not.
+  for (const k of ['bestWith', 'recommendedWith']) {
+    if (Array.isArray(info[k]) && !Array.isArray(game[k])) game[k] = info[k];
+  }
   return game;
 }
 

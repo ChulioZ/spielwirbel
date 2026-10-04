@@ -55,8 +55,8 @@ DOM copy at all — a sticky box only sticks inside its parent — see
 
 ## 3. Klassisch's pair has its own class, and hides while selecting
 
-`regal-add` is styled by Der Tisch, Ocean and Das Programmheft (Ocean hides it
-globally), so Klassisch's buttons are `shelf-add` and `styles.css` carries no bare
+`regal-add` is styled by Der Tisch, Ocean, Das Programmheft and Forest (Ocean
+hides it globally), so Klassisch's buttons are `shelf-add` and `styles.css` carries no bare
 `.regal-add` rule — `test/regal-second-add.test.js` asserts both. Its pair is the
 only one hidden while selecting (`.is-selecting .shelf-add`), as its tile is
 dropped. The other designs' buttons stay, because hiding only the new copy would

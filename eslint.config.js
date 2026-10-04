@@ -696,13 +696,14 @@ module.exports = [
   },
   {
     // Standalone-page scripts (public/js/pages/**): each is a self-contained IIFE
-    // loaded by its OWN html document only, so it shares nothing with the SPA's
-    // global scope — no `frontendGlobals`, and the two rules relaxed above stay
-    // ON. That is what makes the directory boundary real rather than a
-    // convention: a page script reaching for an SPA global (`t`, `api`,
-    // `showHome`) is a `no-undef` error here, and a genuinely unused top-level
-    // name inside one of these IIFEs is reported instead of being excused as
-    // "used from another file" — it cannot be, because nothing else loads it.
+    // loaded only by standalone html documents (face.js by both login.html and
+    // kontakt.html), so it shares nothing with the SPA's global scope — no
+    // `frontendGlobals`, and the two rules relaxed above stay ON. That is what
+    // makes the directory boundary real rather than a convention: a page script
+    // reaching for an SPA global (`t`, `api`, `showHome`) is a `no-undef` error
+    // here, and a genuinely unused top-level name inside one of these IIFEs is
+    // reported instead of being excused as "used from another file" — it cannot
+    // be, because nothing else loads it.
     files: ['public/js/pages/**/*.js'],
     languageOptions: {
       ecmaVersion: 2022,

@@ -90,11 +90,14 @@ owner can still merge their own PR once the checks are green. Were it ≥ 1,
 enforcing admins would make every merge impossible, because GitHub does not let
 anyone approve their own pull request.
 
-`implement` phase 6c says "the repo's branch-protection settings would block an
-un-approved merge anyway, so asking is both the rule here and the only path that
-actually goes through." That sentence was false for this repo and is now true —
-but it is true because of a setting, not because of the code, so verify it
-rather than assuming it.
+The same 0 means **protection does not block an un-approved merge**, and turning
+`enforce_admins` on did not change that: it refuses a direct push, not a merge,
+and a PR with green checks merges for whoever asks. `implement` phase 6 used to
+claim the opposite ("branch-protection settings would block an un-approved merge
+anyway"), and this file once called that claim "now true"; both were corrected
+on 2026-10-04. The walkthrough and the user's go-ahead are the only gate on a
+merge — read the setting rather than assuming it:
+`gh api repos/{owner}/{repo}/branches/main/protection --jq '.required_pull_request_reviews.required_approving_review_count'`.
 
 ## Recovering, if it happens anyway
 

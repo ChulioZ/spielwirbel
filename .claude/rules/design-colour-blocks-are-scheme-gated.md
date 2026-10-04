@@ -95,7 +95,10 @@ finding A7) is pure geometry and belongs to the voice, like the fonts and radii.
 
 `test/tisch-hub-lobby.test.js` derives this rather than listing it — every token
 the design declares only inside its gated block, against every rule that reads
-one — so a design added tomorrow is covered without anyone editing a list.
+one — but it reads `tisch.css` alone, so it covers Der Tisch and no other design.
+The other sheets are pinned piecemeal by their own specs (e.g.
+`test/bruecke-states.test.js` for one Brücke section), so a new design's gate is
+checked only if its own spec does it.
 
 **The inverse: markup a view BUILDS under `designIs()` must NOT be gated.** The
 JS branch fires in a light round too, where the gated block does not match, so

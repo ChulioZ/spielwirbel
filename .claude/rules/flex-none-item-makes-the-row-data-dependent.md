@@ -98,12 +98,15 @@ renders agreed to the tenth of a pixel.
 
 ## The guard is arithmetic, not a literal
 
-`test/game-detail-hero.test.js` derives the headroom from the sheet — `--w-read`,
-the padding, `--gd-cover-w`, the gap and `.gd-info`'s basis — and asserts
-`--gd-stats-w` fits inside it. A pinned `256` would go stale the moment any of
-those five is retuned, which is precisely the change that would re-break this.
+`test/game-detail-hero.test.js` derived the headroom from the sheet — `--w-read`,
+the padding, `--gd-cover-w`, the gap and `.gd-info`'s basis — and asserted
+`--gd-stats-w` fit inside it, until #1039 retired the column; it now asserts the
+token is gone and guards the two-track grid instead. The shape is what transfers:
+a pinned `256` would have gone stale the moment any of those five was retuned,
+which is precisely the change that would re-break this.
 
-Two things that make such a guard quietly weaker rather than red:
+Two things that made that guard quietly weaker rather than red, and will do the
+same to the next one:
 
 - **`.gd-head` is declared twice** — once at desktop and once inside
   `@media (max-width: 700px)` — and `bodyOf()` returns whichever comes **first**

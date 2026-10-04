@@ -43,6 +43,12 @@ In short, before opening a PR:
   `npm run coverage:ci` all pass. The coverage one is easy to forget and it
   **gates the merge**: CI's required `ci-passed` check fails if line coverage
   drops below the floor, even with every test green.
+- If you touch `lib/repo/` or a migration, also run the Postgres specs against a
+  local database (the `postgres` job in `.github/workflows/ci.yml` lists them;
+  `test/repo.postgres.test.js`'s header has the commands): plain `npm test`
+  skips them without `DATABASE_URL`, but that job is part of `ci-passed`.
+  Besides `ci-passed`, `main` requires `eslint`, `syntax`, `gitleaks` (the
+  secret scan) and `dco`, and every review conversation resolved.
 - Update the docs in the same PR when the change adds or renames a user-facing
   feature ([`docs/features.md`](docs/features.md)), alters the file tree
   ([`docs/architecture.md`](docs/architecture.md) — a test enforces this one), or
@@ -58,8 +64,9 @@ In short, before opening a PR:
   local login. Details in
   [`docs/configuration.md`](docs/configuration.md#a-filled-local-dev-instance).
 - Read `CLAUDE.md` — it states the current stage, the architecture you must work
-  within (no frontend build step, no framework, no ORM; German UI, English code),
-  and the production-readiness mindset that applies to new work.
+  within (no frontend build step, no framework, Knex rather than a full ORM; a
+  UI in every shipped locale, English code), and the production-readiness
+  mindset that applies to new work.
 - Skim `.claude/rules/` — one short file per hard-won gotcha (frontend script load
   order, the shared-global-scope lint setup, theme-derived colours, why you must
   never read the production `data/` folder, …). When you touch an area a rule
@@ -117,14 +124,16 @@ Nothing else needs touching — the key already exists in every other language, 
    values. Keep every key; the parity test will tell you if one is missing.
 3. Register the file in `public/index.html` (next to the other `lang/` scripts),
    add it to `SHELL` in `public/sw.js`, and bump that file's `CACHE` version.
-4. Shoot the three landing-page screenshots for the new language (the shelf,
-   the vote card and a session result). Add a seed
-   (round name, tag names, invented game titles) to `SEEDS` in
-   `scripts/landing-seed-data.js`, run `node scripts/capture-landing-shots.js`,
-   and add the `LANDING_SHOTS` entry in `public/js/views-landing.js`. This step
-   is **not** optional: the suite goes red until every shipped language has its
-   own set, because otherwise the page explaining the app would show it in
-   somebody else's language. A seed may also override `members` — do that for
+4. Shoot the landing-page screenshots for the new language — the shelf, the
+   vote card and a session result at phone width, plus the round hub at desktop
+   width — once per design that has a set. Add a seed (round name, tag names,
+   invented game titles) to `SEEDS` in `scripts/landing-seed-data.js`, run
+   `node scripts/capture-landing-shots.js` and again with `--design=tisch`, and
+   add the entry to every design's table in `public/js/views-landing.js`
+   (`LANDING_SHOTS` and `LANDING_SHOTS_TISCH`). This step is **not** optional:
+   `test/landing-shots.test.js` goes red until every shipped language has its
+   own set in every table, because otherwise the page explaining the app would
+   show it in somebody else's language. A seed may also override `members` — do that for
    any language whose readers would find the default Latin seat names foreign,
    since a seat name is read back out as an avatar.
 5. Add the language's native label to the bug-report form's language dropdown
@@ -144,7 +153,8 @@ Nothing else needs touching — the key already exists in every other language, 
    rules while translating: link the privacy policy rather than paraphrasing it,
    lead the donations answer with what donations do **not** buy, and say
    „device“ rather than naming a kind of device (`test/faq.test.js` bans the word
-   per language, so add your language's pattern to `BANNED_BY_LOCALE` too).
+   per language, so add your language's pattern to `BANNED_BY_LOCALE` in
+   `test/support/device-words.js` too).
    Screen names come from your new `lang/<code>.js`, and the parity test derives
    the required set from `locales.js`, so the suite is red until every answer
    carries the code.

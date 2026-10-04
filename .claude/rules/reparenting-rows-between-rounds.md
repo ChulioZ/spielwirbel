@@ -3,6 +3,7 @@ paths:
   - "lib/repo/**"
   - "lib/routes/games.js"
   - "public/js/views-round-actions.js"
+  - "public/js/views-round-settings.js"
   - "test/support/repo-contract.js"
 ---
 
@@ -118,11 +119,12 @@ shelf has no undo.
   game added from another device since the sheet opened would ride along
   unseen. The absent-means-all default exists for *older/other* clients, not as
   the UI's happy path.
-- **The Regal entry point is gated on `round.games.length`, not `activeGames`** —
-  archived games move too, so a round holding nothing but retired games must
-  still offer the action — **and on `!round.shared`**: moving is owner-only
-  (#411), so the entry point is hidden on a shared round and the route answers a
-  grantee `403 not_owner` before it looks anything up. That guard is what stops a
+- **The entry point (in Einstellungen since #561, `views-round-settings.js`) is
+  gated on `round.games.length`, not `activeGames`** — archived games move too,
+  so a round holding nothing but retired games must still offer the action —
+  **and on `roundCan(round, 'games.moveOut')`**: moving is owner-only (#411), so
+  no grantee role is offered it and the route answers a grantee `403 not_owner`
+  before it looks anything up. That guard is what stops a
   grantee reparenting the shelf into a round of the owner's they were never
   invited to; see `.claude/rules/round-grant-resolver.md` §2.
 

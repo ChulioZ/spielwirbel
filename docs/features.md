@@ -198,11 +198,11 @@ What the app does, in detail. For a short overview see the
   favourites). A tile never repeats a title from the list below it, obeys every
   filter and dismissal the list does, and carries the same actions.
   A game is active, retired, completed or wished-for, never two at once. All
-  three lists — and the recommendations beside them — are reached from a „Nicht im
-  Regal" group on the round's Start tab, from the same-named control in the
-  shelf's header on a phone or tablet, and from the left rail's own group from
-  1280px up. The four entries, and the counts beside them, are defined once and
-  rendered by all three, so they cannot drift apart. Every row on those lists
+  three lists — and the recommendations beside them — are reached from the
+  Regal's scope strip and from the „Weitere Listen" group on the round's Start
+  tab, at every screen size and in every design (issue #1500). The four entries,
+  and the counts beside them, are defined once and rendered by both, so they
+  cannot drift apart. Every row on those lists
   opens the game's own detail page, so a game keeps its full editing surface —
   title, cover, player range, tags — after it has left the shelf; the page then
   offers only the way back onto it. The distinction carries through to the Pokale tab: a
@@ -304,8 +304,9 @@ What the app does, in detail. For a short overview see the
 - **Round hub** – each round is a small app of its own, with four sections
   presented per screen size: a floating bottom dock on phones, a tab strip at
   the top of the content column on tablets, and from 1280px a persistent left
-  rail carrying the round's identity, the "start session" action, the four
-  sections and one Einstellungen entry (the lists off the shelf are reached
+  rail carrying the four sections and one Einstellungen entry — in Klassisch
+  also the round's identity and the "start session" action, which the other
+  designs keep on the Start tab (the lists off the shelf are reached
   through the Regal's scope strip, and count as the Regal's). All
   three stay visible on
   the round's sub-screens, marking the section they belong to:
@@ -436,9 +437,10 @@ What the app does, in detail. For a short overview see the
     in standings order (six columns from seven people). On the result screen
     the round's Sessions 100 · 250 · 500 and a Stammgast 100 · 250 take one of
     the two places as a vermilion „Sonderausgabe" band.
-    Forest keeps a person's marks in jars with a bark lid (issue #1477): a jar
-    at dusk with a firefly glowing in it when earned, a light jar filling with
-    moss while under way (the count beside it carries the number), a dashed
+    Forest, once enabled (issue #1478), keeps a person's marks in jars with a
+    bark lid (issue #1477): a jar at dusk with a firefly glowing in it when
+    earned, a light jar filling with moss while under way (the count beside it
+    carries the number), a dashed
     outline while open and a dark jar without light for a secret. The round's
     own marks are leaves on a branch, in the same four states. The tier stands
     on the lid (at the leaf's stem) and as one dot per tier under the name;
@@ -677,8 +679,9 @@ What the app does, in detail. For a short overview see the
 - **Installable app (PWA)** – a web app manifest and a service worker make the
   app installable to a phone or desktop home screen and let the app shell load
   **offline** (the shell and static assets are cached; live round data still
-  needs the network). In keeping with the no-build-step stance, the manifest,
-  service worker and icons are plain static files. Two places offer the install
+  needs the network). In keeping with the no-build-step stance, the service
+  worker and icons are plain static files, and the manifest is the static file
+  re-dressed per design by the server (issue #1199). Two places offer the install
   rather than leaving it to be discovered (issue #616): a permanent section on
   the Konto screen, and one dismissible card after a session is finished. Where
   the browser supports it that section opens the real install dialog; on iOS,
@@ -692,7 +695,8 @@ What the app does, in detail. For a short overview see the
   **Feedback** category preselected, together with the screen it was written on
   (issue #321). Submissions are **anonymous by default**: giving an e-mail
   address so the operator can reply is optional, for every category. The operator
-  reads what comes in from the moderation panel (see below) — there is no
+  reads what comes in from the moderation panel (see
+  [`configuration.md`](configuration.md)) — there is no
   third-party feedback service and no analytics script involved.
 - **FAQ** – a public page at `/faq` (issue #489), linked from the site footer and
   from the bottom of the logged-out landing page, answering what people ask
@@ -772,9 +776,9 @@ What the app does, in detail. For a short overview see the
     delete a session, delete a Chronik entry, delete an archived game, and
     rename the round.
 
-  Four things stay with the **owner alone**, whatever role they hand out:
+  Some things stay with the **owner alone**, whatever role they hand out:
   deleting the round, changing or revoking anyone's access, relinking a seat to
-  an account, and moving the shelf into another round. So a co-manager is
+  an account, and moving or copying games into another round. So a co-manager is
   trusted with the round's *content*, never with who may reach it — they cannot
   promote themselves. The role can be changed later, or the share revoked, from
   that person's member page; a grantee can always leave a round themselves.
@@ -793,7 +797,7 @@ What the app does, in detail. For a short overview see the
   announced once, never while the friend's record is hidden, and never for a
   tier the friend already held before that finish — so a newly added tier is
   not announced retroactively), pictured by the
-  badge's own earned mark — the disc, pin, pearl or plate the Spielerkarte shows — rather
+  badge's own earned mark — the disc, pin, pearl, plate or medal the Spielerkarte shows — rather
   than a glyph that could read as a game with no cover (issue #1428); never
   member names, ratings, votes or round names, and only for activity after you
   became friends. The screen itself is **three full-width bands** — what is
@@ -835,7 +839,7 @@ What the app does, in detail. For a short overview see the
   legally has to be read (the terms-change notice) and a second one on a cadence
   would teach people to dismiss both unread. The bar for adding an entry is high
   — a new capability, never a fix, a tweak or a redesign — so most releases add
-  nothing and the list starts out empty. Entries live in the deployed code, so a
+  nothing to it. Entries live in the deployed code, so a
   self-hosted instance shows exactly what shipped with its version. With accounts
   off the screen still opens; there is simply no account to badge it against.
 - **Account profiles** – *accounts mode only* (issues #558, #1132). Every account

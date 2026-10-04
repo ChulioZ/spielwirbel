@@ -97,11 +97,11 @@ not a full ORM", #211) — they are not leftover localhost-era minimalism.
   (shared helpers/state) load before the `views-*.js` files, and
   `router.js` → `main.js` → `pwa.js` come last (`main.js` bootstraps).
   **`public/js/pages/*.js` are NOT part of that scope**: each is a separate IIFE
-  loaded only by its own standalone HTML page (`login.js`, `kontakt.js`,
-  `admin.js`). They get their own `eslint.config.js` block with no SPA globals,
-  so a page script reaching for `t()`/`api()` is a `no-undef` error rather than
-  a silent runtime failure — don't add one to `index.html`, and don't put a
-  shared-scope file in there.
+  loaded only by standalone HTML pages (`login.js`, `kontakt.js`, `admin.js`;
+  `face.js` by both login and kontakt). Their `eslint.config.js` block grants no
+  SPA global but `FACE_DESIGN`, so a page script reaching for `t()`/`api()` is a
+  `no-undef` error rather than a silent runtime failure — don't add one to
+  `index.html`, and don't put a shared-scope file in there.
   - **Load-order trap:** a top-level statement in an earlier file must not
     reference a function/`const` defined in a later file at *load time* (it isn't
     defined yet). Defer such references (e.g. wrap in an arrow that runs on
