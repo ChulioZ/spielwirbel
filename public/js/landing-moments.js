@@ -44,7 +44,7 @@
    Part of the frontend's shared global scope, loaded before views-landing.js.
    Every cross-file name it uses (h, esc, t, tn, fmtAvg, fmtDate,
    coverPlaceholder, avgColor, ratingFace, initials, avatarFace, MEMBER_COLORS,
-   RATING_MIN/MAX) is read at CALL time inside renderLandingMoments(), never at
+   RATING_MIN/MAX, voteWord) is read at CALL time inside renderLandingMoments(), never at
    load time — .claude/rules/frontend-script-load-order.md. */
 
 'use strict';
@@ -163,7 +163,8 @@ function lmScenePot() {
 }
 
 /* Scene 2 — the vote card (#890/#909), as startVoting() renders it: the person,
-   the drawn cover, the question, the five mood faces and the scale. Since #1168
+   the drawn cover, the question, and the five mood faces with their words —
+   never a digit, like the card itself since #1530. Since #1168
    the face tap itself advances, so the card's one remaining control is the undo
    in its top-left corner — and the picture has to keep matching the card it
    claims to be.
@@ -176,7 +177,7 @@ function lmSceneVote() {
   const faces = [];
   for (let n = RATING_MIN; n <= RATING_MAX; n++) {
     faces.push(`<button class="mood" type="button" disabled tabindex="-1">
-           <i class="ti ${ratingFace(n)}" aria-hidden="true"></i><span class="mood__n">${n}</span>
+           <i class="ti ${ratingFace(n)}" aria-hidden="true"></i><span class="mood__word">${esc(voteWord(n))}</span>
          </button>`);
   }
   return `<div class="lm-scene lm-scene--vote">
@@ -189,7 +190,6 @@ function lmSceneVote() {
         <div class="vote__title">${esc(game.title)}</div>
         <div class="vote__q">${esc(t('vote.question'))}</div>
         <div class="rating">${faces.join('')}</div>
-        <div class="rating-scale"><span>${esc(t('vote.scaleLow'))}</span><span>${esc(t('vote.scaleHigh'))}</span></div>
       </div>
     </div>`;
 }

@@ -7,10 +7,12 @@
  * a header on the felt, the card with cover and meta, five worded faces, and on
  * a shared device a hand-off line. The link opens on a felt intro.
  *
- * Klassisch must not move at all, so the first two tests pin its DOM exactly as
- * it was before this issue: the card's children in order, the faces' markup and
- * names, the claim screen's head. Seen red by pointing the Klassisch branch at
- * the Tisch builder on purpose.
+ * Klassisch keeps its own card, so the first two tests pin its DOM exactly:
+ * the card's children in order, the faces' markup and names, the claim
+ * screen's head. Seen red by pointing the Klassisch branch at the Tisch builder
+ * on purpose. Since #1530 a Klassisch face is its glyph and its WORD — the
+ * digit and the two-ended „gar nicht … unbedingt" row are gone — and the word
+ * alone is its accessible name.
  */
 
 const { test } = require('node:test');
@@ -110,17 +112,18 @@ test('Klassisch: the hot-seat card keeps its children, faces and names exactly',
   const card = dom.app.querySelector('.vote');
   assert.equal(card.className, 'vote vote--split');
   assert.deepEqual(classesOf(card),
-    ['vote-progress', 'vote__who', 'vote__img', 'vote__title', 'vote__secret', 'vote__q', 'rating', 'rating-scale']);
+    ['vote-progress', 'vote__who', 'vote__img', 'vote__title', 'vote__secret', 'vote__q', 'rating']);
   assert.equal(text(card.querySelector('.vote__who')), 'Es bewertet: Anna');
   assert.ok(card.querySelector('.vote__who #backBtn.vote__undo .ti-arrow-back-up'), 'the corner undo is unchanged');
   const faces = [...card.querySelectorAll('.mood')];
   assert.equal(faces.length, 5);
+  const WORDS = ['gar nicht', 'eher nicht', 'wäre okay', 'gern', 'unbedingt'];
   faces.forEach((b, i) => {
-    assert.equal(moodShape(b), `i.ti ${dom.run(`ratingFace(${i + 1})`)} span.mood__n`, 'face then number, no word');
-    assert.equal(b.getAttribute('aria-label'), `${i + 1} von 5`);
+    assert.equal(moodShape(b), `i.ti ${dom.run(`ratingFace(${i + 1})`)} span.mood__word`, 'face then word, no number');
+    assert.equal(text(b), WORDS[i]);
+    assert.equal(b.getAttribute('aria-label'), WORDS[i], 'the word alone names the face');
   });
-  assert.deepEqual([...card.querySelectorAll('.rating-scale span')].map(text), ['gar nicht', 'unbedingt']);
-  assert.equal(dom.app.querySelector('.vote-felt, .vote__card, .vote__handoff, .mood__word'), null);
+  assert.equal(dom.app.querySelector('.vote-felt, .vote__card, .vote__handoff, .rating-scale'), null);
 });
 
 /* 2 — KLASSISCH: THE LINK'S CLAIM SCREEN AND CARD ARE WHAT THEY WERE. */
@@ -133,12 +136,13 @@ test('Klassisch: the link claim screen and card keep their head, children and fa
   dom.call('renderVoteLinkCards', 'tok', BALLOT, BALLOT.people[0]);
   const card = dom.app.querySelector('.vote');
   assert.equal(card.className, 'vote vote--split');
-  assert.deepEqual(classesOf(card), ['vote__who', 'vote__img', 'vote__title', 'vote__q', 'rating', 'rating-scale']);
+  assert.deepEqual(classesOf(card), ['vote__who', 'vote__img', 'vote__title', 'vote__q', 'rating']);
   assert.equal(text(card.querySelector('.vote__who')), 'Du stimmst ab als Anna');
   const faces = [...card.querySelectorAll('.mood')];
   assert.equal(faces.length, 5);
-  faces.forEach((b, i) => assert.equal(b.getAttribute('aria-label'), `${i + 1} von 5`));
-  assert.equal(card.querySelector('.mood__word'), null);
+  assert.deepEqual(faces.map((b) => b.getAttribute('aria-label')),
+    ['gar nicht', 'eher nicht', 'wäre okay', 'gern', 'unbedingt']);
+  assert.equal(card.querySelectorAll('.mood__word').length, 5);
 });
 
 /* 3 — DER TISCH: HEADER ON THE FELT, THEN THE CARD, THEN THE LINE. */
@@ -165,7 +169,7 @@ test('Der Tisch: the hot-seat card is header, card and hand-off line, in that or
   assert.deepEqual(faces.map((b) => text(b.querySelector('.mood__word'))),
     ['gar nicht', 'eher nicht', 'wäre okay', 'gern', 'unbedingt']);
   assert.deepEqual(faces.map((b) => b.getAttribute('aria-label')),
-    ['1 von 5 – gar nicht', '2 von 5 – eher nicht', '3 von 5 – wäre okay', '4 von 5 – gern', '5 von 5 – unbedingt']);
+    ['gar nicht', 'eher nicht', 'wäre okay', 'gern', 'unbedingt']);
   assert.equal(card.querySelector('.rating-scale'), null, 'the words replace the two-ended scale');
 
   // Nobody at this device has a seat, so the next open person in seat order.

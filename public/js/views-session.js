@@ -1129,8 +1129,9 @@ function startVoting(round, session, games, people, opts = {}) {
   // into the middle of the card.
   let refocus = null;
 
-  // The card as Klassisch has always drawn it: progress, who, cover, title,
-  // question, faces, the two-ended scale.
+  // The card as Klassisch draws it: progress, who, cover, title, question, and
+  // the faces with their words. The two-ended „gar nicht … unbedingt" row went
+  // when every face started carrying its own word (#1530).
   function klassischCard(person, game, color) {
     const imgStyle = game.image ? `style="background-image:url('${coverUrl(game.image, COVER_HERO)}')"` : '';
     return h(`<div class="vote vote--split">
@@ -1141,7 +1142,6 @@ function startVoting(round, session, games, people, opts = {}) {
         <div class="vote__secret"><i class="ti ti-eye-off" aria-hidden="true"></i> ${esc(t('vote.handoverSub'))}</div>
         <div class="vote__q" id="voteQ">${esc(t('vote.question'))}</div>
         <div class="rating" role="group" aria-labelledby="voteQ"></div>
-        <div class="rating-scale"><span>${esc(t('vote.scaleLow'))}</span><span>${esc(t('vote.scaleHigh'))}</span></div>
       </div>`);
   }
 
@@ -1353,8 +1353,8 @@ function startVoting(round, session, games, people, opts = {}) {
     const ratingEl = card.querySelector('.rating');
     for (let n = RATING_MIN; n <= RATING_MAX; n++) {
       const sel = current.rating === n;
-      // aria-pressed + a label that spells out the scale (#145), the word too
-      // under Der Tisch — one builder for both cards (vote-card-composed.js).
+      // aria-pressed + the face's word as its name (#145, #1530) — one builder
+      // for both cards (vote-card-composed.js).
       const b = voteMoodButton(n, sel);
       if (wanted && wanted.kind === 'mood' && wanted.n === n) restore = b;
       b.addEventListener('click', () => {
@@ -1981,11 +1981,12 @@ async function showResults(round, session, gamesHint, reveal, plain) {
       .slice(RATING_MIN)
       .map((c, i) => {
         const n = i + RATING_MIN;
-        const title = t('result.barTitle', { c, r: n });
-        // The numeral stays `--ink-soft` while the fill and the glyph carry the
-        // ramp: as TEXT on the page the tightest point of the ramp is ~4.58:1,
-        // and a per-round theme moves the surface under it. A glyph is a
-        // non-text UI component, so it sits at the 3:1 bar instead.
+        const title = t('result.barTitle', { c, word: voteSaidWord(n) });
+        // The axis is the face alone (#1530): the rung's digit went with the
+        // vote card's, so nothing on the chart invites averaging the columns.
+        // The tooltip names the rung by its WORD for the same reason. The fill
+        // and the glyph carry the ramp; a glyph is a non-text UI component, so
+        // it sits at the 3:1 bar rather than text's 4.5:1.
         /* `--sc` + `data-stop` rather than two inline colours (#1191). T8.2
            ships the bar half of a ramp DARKER than the pill half, because these
            sit on paper while a pill carries its own ink — so a design has to be
@@ -1999,7 +2000,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
           ? `<span class="bar-col__n" aria-hidden="true">${c || '·'}</span><span class="sr-only">${esc(title)}</span>` : '';
         return `<div class="bar-col" title="${esc(title)}" style="--sc:${avgColor(n)}" data-stop="${rampStop(n)}"${phLook ? ` data-count="${c}"` : ''}>
              <div class="bar-track"><div class="bar" style="height:${Math.round((c / maxBar) * 100)}%"></div>${phCount}</div>
-             <div class="bar-axis"><i class="ti ${ratingFace(n)}" aria-hidden="true"></i><span class="bar-axis__n">${n}</span></div>
+             <div class="bar-axis"><i class="ti ${ratingFace(n)}" aria-hidden="true"></i></div>
            </div>`;
       })
       .join('');

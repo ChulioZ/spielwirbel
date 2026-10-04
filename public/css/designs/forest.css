@@ -289,7 +289,6 @@
   .trow__title,
   .split-group__head,
   .winner-chip,
-  .rater__n,
   .editor--expansions .exp-own__head,
   .podium__name,
   .podium__col--multi .podium__name,
@@ -304,7 +303,6 @@
   .pool-count__label,
   .setup-bar__summary,
   .handover__back,
-  .mood__n,
   .session-log__summary-title,
   .session-log__title,
   .result-people__name,
@@ -2971,14 +2969,8 @@
   font-size: 30px; /* glyph, not type */
 }
 :root[data-design="forest"]:not([data-scheme="dark"]) .vote--forest .rating .mood:hover .ti { border-color: var(--brand); }
-/* Number first, then the word — inside one button, so the order is paint only;
-   the button's accessible name is its aria-label („4 von 5 – gern"). */
-:root[data-design="forest"]:not([data-scheme="dark"]) .vote--forest .rating .mood__n {
-  order: 1;
-  font-family: var(--font);
-  font-size: var(--text-sm);
-  font-weight: 800;
-}
+/* The face, then its word (#1530: no digit). The button's accessible name is
+   its aria-label, the word itself („gern"). */
 :root[data-design="forest"]:not([data-scheme="dark"]) .vote--forest .rating .mood__word {
   order: 2;
   font-size: var(--text-xs);
