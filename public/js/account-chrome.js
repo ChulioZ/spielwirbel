@@ -123,7 +123,21 @@ function setupAccountUi() {
   // logout takes the previous account's name off the button with it.
   renderAccountFace();
   if (!loggedIn) return;
-  btn.onclick = () => openPopover(btn, (el, close) => {
+  // `aria-expanded` (audit 2026-10-04 A4, SC 4.1.2) the way #designBtn and
+  // #moreBtn carry it: set on open, cleared through openPopover's onClose — the
+  // one hook every exit goes through (.claude/rules/popover-vs-sheet-editors.md
+  // §2b). And a toggle like theirs: the popover ignores clicks on its own
+  // anchor, so without the check a second press would close-and-reopen while
+  // the button claims to collapse.
+  btn.onclick = () => {
+    if (btn.getAttribute('aria-expanded') === 'true') { closePopover(); return; }
+    openAccountMenu(btn);
+    btn.setAttribute('aria-expanded', 'true');
+  };
+}
+
+function openAccountMenu(btn) {
+  openPopover(btn, (el, close) => {
     const username = (accountUser && accountUser.username) || '';
     el.appendChild(h(`<div class="popover__head">${
       username ? `<strong>${esc(username)}</strong>` : ''
@@ -193,7 +207,7 @@ function setupAccountUi() {
       out.addEventListener('click', () => { close(); logout(); });
       el.appendChild(out);
     }
-  });
+  }, () => btn.setAttribute('aria-expanded', 'false'));
 }
 
 /* The account button's FACE (#1279). Klassisch keeps index.html's person glyph;
@@ -244,16 +258,22 @@ function accountBtnLabel() {
     : t('a11y.account');
 }
 
-// The inbox button (issue #207): visible only when logged in, opens the inbox
-// view, and shows an unread dot. Called from setupAccountUi so it tracks the same
-// login transitions (boot, login, logout, session-lost).
+// The inbox LINK (issue #207; a link since audit 2026-10-04 A2, A-009): a route
+// change, so a real <a href="/inbox"> whose plain click routes in-app and whose
+// Cmd/Ctrl/middle-click opens a tab — wired ONCE, here at load, the way core.js
+// wires #loginBtn. Not inside setupInboxUi(): that runs on every login
+// transition, and navLink() adds a listener per call. showInbox is resolved at
+// click time, because views-inbox.js loads later.
+navLink(document.getElementById('inboxBtn'), '/inbox', () => showInbox());
+
+// Visible only when logged in, with an unread dot. Called from setupAccountUi so
+// it tracks the same login transitions (boot, login, logout, session-lost).
 function setupInboxUi() {
   const btn = document.getElementById('inboxBtn');
   if (!btn) return;
   const loggedIn = accountsActive() && isLoggedIn();
   btn.hidden = !loggedIn;
   if (!loggedIn) { setInboxDot(false); return; }
-  btn.onclick = () => showInbox();
   refreshInboxBadge();
 }
 

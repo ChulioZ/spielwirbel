@@ -108,7 +108,7 @@ function oceanHeroCompose(round, hero) {
    The same data and the same one link as Klassisch's `.round-card`; only the
    composition is Ocean's. The seat cap and the „+N" bubble are the lobby's own
    (LOBBY_AVATAR_CAP), passed in rather than re-derived. */
-function oceanRoundCard(r, { stack, seatCount, lastLine, invite }) {
+function oceanRoundCard(r, { stack, stackAttrs, seatCount, lastLine, invite }) {
   const voting = (r.openSessions || []).some((s) => s.stage === 'voting');
   const stats = [
     tn(r.gameCount, 'home.chip.gamesOne', 'home.chip.games'),
@@ -120,7 +120,7 @@ function oceanRoundCard(r, { stack, seatCount, lastLine, invite }) {
   return h(`<a class="round-card round-card--ocean" style="${markerStyle(r)}">
        <span class="round-card__water">
          <span class="round-card__tide" aria-hidden="true"></span>
-         <span class="avatar-stack" style="--seat-n:${seatCount}">${stack}</span>
+         <span class="avatar-stack" style="--seat-n:${seatCount}" ${stackAttrs}>${stack}</span>
          ${voting ? `<span class="round-card__live">${esc(t('round.liveLabel'))}</span>` : ''}
        </span>
        <span class="round-card__body">

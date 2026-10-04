@@ -86,6 +86,11 @@ that silently misses the trap. Two orderings are load-bearing:
 - **Release AFTER removing the sheet** — restoring focus to the opener while
   the dialog is still attached gets undone a moment later.
 
+**An overlay must also TAKE focus on open** (2026-10-04, SC 2.4.3) — the trap
+acts only on Tab. One fallback, `focusInto` (`focus-trap.js`): openPopover runs
+it after `attached()`, openSheet a microtask later, so a caller's synchronous
+`input.focus()` (iOS's in-gesture keyboard) runs first and wins.
+
 `openSheet` is now the choke point for a **second** thing a hand-rolled dialog
 has to do and a native `<dialog>` gets free: freezing the page behind it, so a
 drag on the backdrop doesn't scroll the screen away underneath the sheet (#622,

@@ -66,6 +66,8 @@ I18N.de = {
   // Lobby-Kachel (#820) — sichtbar steht dort nur "+3".
   'home.moreMembersOne': '{n} weiteres Mitglied',
   'home.moreMembers': '{n} weitere Mitglieder',
+  'home.membersOne': '{n} Mitglied',
+  'home.members': '{n} Mitglieder',
   'home.lastPlayed': 'Zuletzt: {game}',
   'home.lastPlayedWonOne': 'Zuletzt: {game} — {names} hat gewonnen',
   'home.lastPlayedWonMany': 'Zuletzt: {game} — {names} haben gewonnen',
@@ -360,6 +362,7 @@ I18N.de = {
   'chronik.filter.all': 'Alles',
   'chronik.filter.sessions': 'Sessions',
   'chronik.filter.changes': 'Regal-Änderungen',
+  'chronik.filter.label': 'Chronik filtern',
   'chronik.empty': 'Eure erste Session schreibt den ersten Eintrag.',
   'chronik.emptyTitle': 'Noch nichts passiert',
   'chronik.countOne': '{n} Session seit {month}',
@@ -844,6 +847,10 @@ I18N.de = {
   'addGame.playersUnit': 'Personen',
   'addGame.minPlayersPlaceholder': 'Min.',
   'addGame.maxPlayersPlaceholder': 'Max.',
+  'addGame.minPlayersDown': 'Mindestzahl Personen verringern',
+  'addGame.minPlayersUp': 'Mindestzahl Personen erhöhen',
+  'addGame.maxPlayersDown': 'Höchstzahl Personen verringern',
+  'addGame.maxPlayersUp': 'Höchstzahl Personen erhöhen',
   'addGame.tagsLabel': 'Tags (optional)',
   'addGame.ownersLabel': 'Wem gehört das Spiel? (optional)',
   'addGame.imageLabel': 'Bild (optional)',
@@ -1054,6 +1061,8 @@ I18N.de = {
   // auch im deaktivierten Zustand. Er darf nie klingen, als fehle der Runde
   // etwas: eine Runde aus Namen ohne Konten ist die normale Konfiguration.
   'startSession.barCount': 'Wie viele wirbeln?',
+  'startSession.countDown': 'Ein Spiel weniger',
+  'startSession.countUp': 'Ein Spiel mehr',
   'startSession.countQuestionOcean': 'Wie viele holen wir hoch?',
   'startSession.available': '{n} Spiele im Topf',
   'startSession.availableOne': '{n} Spiel im Topf',

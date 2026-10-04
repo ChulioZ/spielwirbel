@@ -126,3 +126,31 @@ test('an unknown stored filter falls back to Alles rather than lighting no chip'
   assert.equal(back.sessions, 2, 'and the timeline is unfiltered, never empty');
   assert.equal(back.changes, 2);
 });
+
+/* The chips' state is SAID, not only painted (audit 2026-10-04 A3, A-005).
+   `.is-on` alone is colour — a screen reader heard three plain buttons with no
+   way to tell which filter is active. Re-read after each transition, not only
+   on first render (.claude/rules/testing-views-under-jsdom.md, last section):
+   a pressed state set at render time and never updated on click is the shape
+   this exists to catch. */
+test('the chips are a labelled group whose aria-pressed follows the selection', (t) => {
+  const dom = boot(t);
+  const r = round(1);
+  const pressed = (chips) => chips.filter((c) => c.getAttribute('aria-pressed') === 'true').map((c) => c.dataset.f);
+
+  const first = render(dom, r);
+  const group = dom.app.querySelector('.filter-chips');
+  assert.equal(group.getAttribute('role'), 'group', 'three toggles with one meaning need a group');
+  assert.equal(group.getAttribute('aria-label'), dom.call('t', 'chronik.filter.label'), 'the group is unnamed');
+  assert.ok(first.chips.every((c) => ['true', 'false'].includes(c.getAttribute('aria-pressed'))),
+    'every chip must state its pressed state, the unpressed ones included');
+  assert.deepEqual(pressed(first.chips), ['all']);
+
+  first.chips.find((c) => c.dataset.f === 'changes').click();
+  assert.deepEqual(pressed(first.chips), ['changes'], 'a click moved the colour but not aria-pressed');
+  assert.deepEqual(pressed(first.chips), first.chips.filter((c) => c.classList.contains('is-on')).map((c) => c.dataset.f),
+    'aria-pressed and is-on disagree');
+
+  // …and a fresh render of the remembered choice says it too.
+  assert.deepEqual(pressed(render(dom, r).chips), ['changes']);
+});

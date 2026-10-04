@@ -92,6 +92,36 @@ function trapFocus(container) {
   };
 }
 
+/* Move focus INTO an overlay that has just opened, unless its caller already
+   did (audit 2026-10-04 A1, WCAG 2.4.3). trapFocus above only acts on a Tab, so
+   a popover — appended to the END of <body> — or a sheet with no input of its
+   own opened with focus still on the page behind it: the next Tab walked the
+   page, and an aria-modal sheet left focus on a control it says is not there.
+
+   Called by openPopover (after the caller's `attached()`) and openSheet (one
+   microtask later, after the caller's synchronous code) — never before
+   trapFocus, which captures `document.activeElement` as the restore target.
+
+   It ASKS each candidate rather than predicting from layout the way
+   focusables() does: a browser refuses focus() on a control that is not
+   rendered, so trying in DOM order is right for display:none and
+   visibility:hidden alike, and runs the same path in jsdom (no layout).
+   `preventScroll`, because a popover tears itself down on a page scroll.
+   With nothing inside able to hold focus, the dialog `box` itself takes it. */
+function focusInto(container, box) {
+  const active = document.activeElement;
+  if (active && container.contains(active)) return active;
+  for (const el of container.querySelectorAll(FOCUSABLE)) {
+    if (el.getAttribute('tabindex') === '-1' || el.closest('[aria-hidden="true"]')) continue;
+    el.focus({ preventScroll: true });
+    if (document.activeElement === el) return el;
+  }
+  const target = box || container;
+  if (!target.hasAttribute('tabindex')) target.setAttribute('tabindex', '-1');
+  target.focus({ preventScroll: true });
+  return document.activeElement === target ? target : null;
+}
+
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { trapFocus, focusables, FOCUSABLE };
+  module.exports = { trapFocus, focusables, focusInto, FOCUSABLE };
 }

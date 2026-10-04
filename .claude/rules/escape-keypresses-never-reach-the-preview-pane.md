@@ -81,10 +81,13 @@ ev.defaultPrevented                            // true — the trap took the key
 sheet.contains(document.activeElement)         // true — and pulled focus back in
 ```
 
-Note `trapFocus` deliberately does **not** move focus when a sheet OPENS — it
-acts only on Tab — so `sheet.contains(document.activeElement) === false` right
-after `openSheet` is correct behaviour for every sheet in the app, not a defect
-in a new one. Checking that first saves inventing a second bug.
+Note `trapFocus` itself still acts only on Tab, but since the 2026-10-04 audit
+(A1) **a sheet does take focus when it opens**: `openSheet` calls `focusInto`
+(`public/js/focus-trap.js`) one microtask later, after the caller's own
+synchronous focus. So `sheet.contains(document.activeElement)` is `false`
+**synchronously** after `openSheet` for a sheet with no input, and `true` once a
+turn has passed — read it after an `await`, or you will "find" the defect this
+replaced. A sheet that still holds focus outside after a turn IS a defect now.
 
 That exercises the whole real path — `onKey`, the lookup-menu branch that owns
 Escape while a dropdown is open (`.claude/rules/lookup-menu-keyboard-combobox.md`

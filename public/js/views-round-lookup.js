@@ -58,15 +58,15 @@ function showAddGameForm(round, { wish = false, title = '', hit = null, dirty = 
           <label>${esc(t('addGame.playersLabel'))}</label>
           <div class="stepper-row">
             <div class="stepper" data-for="minPlayers">
-              <button type="button" class="stepper__btn" data-d="-1" aria-label="−"><i class="ti ti-minus" aria-hidden="true"></i></button>
+              <button type="button" class="stepper__btn" data-d="-1" aria-label="${esc(t('addGame.minPlayersDown'))}"><i class="ti ti-minus" aria-hidden="true"></i></button>
               <input id="minPlayers" class="stepper__val" inputmode="numeric" value="2" aria-label="${esc(t('addGame.minPlayersPlaceholder'))}" />
-              <button type="button" class="stepper__btn" data-d="1" aria-label="+"><i class="ti ti-plus" aria-hidden="true"></i></button>
+              <button type="button" class="stepper__btn" data-d="1" aria-label="${esc(t('addGame.minPlayersUp'))}"><i class="ti ti-plus" aria-hidden="true"></i></button>
             </div>
             <span class="muted">–</span>
             <div class="stepper" data-for="maxPlayers">
-              <button type="button" class="stepper__btn" data-d="-1" aria-label="−"><i class="ti ti-minus" aria-hidden="true"></i></button>
+              <button type="button" class="stepper__btn" data-d="-1" aria-label="${esc(t('addGame.maxPlayersDown'))}"><i class="ti ti-minus" aria-hidden="true"></i></button>
               <input id="maxPlayers" class="stepper__val" inputmode="numeric" value="4" aria-label="${esc(t('addGame.maxPlayersPlaceholder'))}" />
-              <button type="button" class="stepper__btn" data-d="1" aria-label="+"><i class="ti ti-plus" aria-hidden="true"></i></button>
+              <button type="button" class="stepper__btn" data-d="1" aria-label="${esc(t('addGame.maxPlayersUp'))}"><i class="ti ti-plus" aria-hidden="true"></i></button>
             </div>
             <span class="muted">${esc(t('addGame.playersUnit'))}</span>
           </div>

@@ -194,16 +194,23 @@ function renderChronikTab(round, activities) {
   // Filter chips: everything / sessions only / shelf changes only. `is-on` is
   // driven by the remembered choice rather than hard-coded onto "all", or the
   // marked chip and the timeline would disagree on every return to the tab.
+  // The state is SAID as well as painted (audit 2026-10-04 A3): `aria-pressed`
+  // on every chip, kept in step with `is-on` on each click, and a named group —
+  // `.is-on` alone is colour (.claude/rules/accessibility-contrast-and-modals.md §3).
   const on = (f) => (f === chronikFilter ? ' is-on' : '');
-  const chips = h(`<div class="filter-chips">
-      <button class="chip${on('all')}" data-f="all">${esc(t('chronik.filter.all'))}</button>
-      <button class="chip${on('sessions')}" data-f="sessions"><i class="ti ti-confetti" aria-hidden="true"></i>${esc(t('chronik.filter.sessions'))}</button>
-      <button class="chip${on('changes')}" data-f="changes"><i class="ti ti-cards" aria-hidden="true"></i>${esc(t('chronik.filter.changes'))}</button>
+  const pressed = (f) => `aria-pressed="${f === chronikFilter}"`;
+  const chips = h(`<div class="filter-chips" role="group" aria-label="${esc(t('chronik.filter.label'))}">
+      <button class="chip${on('all')}" ${pressed('all')} data-f="all">${esc(t('chronik.filter.all'))}</button>
+      <button class="chip${on('sessions')}" ${pressed('sessions')} data-f="sessions"><i class="ti ti-confetti" aria-hidden="true"></i>${esc(t('chronik.filter.sessions'))}</button>
+      <button class="chip${on('changes')}" ${pressed('changes')} data-f="changes"><i class="ti ti-cards" aria-hidden="true"></i>${esc(t('chronik.filter.changes'))}</button>
     </div>`);
   chips.querySelectorAll('[data-f]').forEach((chip) => {
     chip.addEventListener('click', () => {
       chronikFilter = chip.dataset.f;
-      chips.querySelectorAll('[data-f]').forEach((c) => c.classList.toggle('is-on', c === chip));
+      chips.querySelectorAll('[data-f]').forEach((c) => {
+        c.classList.toggle('is-on', c === chip);
+        c.setAttribute('aria-pressed', String(c === chip));
+      });
       renderTimeline();
     });
   });

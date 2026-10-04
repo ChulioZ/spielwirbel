@@ -4290,6 +4290,22 @@ body.auth-screen .terms-banner { display: none; }
   cursor: pointer;
 }
 .topbar__acct:hover { color: var(--brand-ink, var(--brand)); border-color: var(--brand); }
+/* An icon control that is a LINK (the inbox, audit 2026-10-04 A2) draws exactly
+   like the icon BUTTONS beside it. A <button> brings three things an <a> does
+   not, and each one showed when measured in the six designs: the UA's control
+   font, whose `normal` line height sets the bar's 35px (a bare link took the
+   body's and came out 41px); its content centred across; and centred DOWN,
+   which Forest's 44px pill relies on (a bare link put its icon 2.5px from the
+   top). `font` is the UA's own button font keyword, so each engine gets the
+   metrics its buttons have; the shorthand resets the size, hence the restated
+   `font-size` after it. No `display` — that is what keeps `hidden` working
+   (.claude/rules/hidden-attribute-vs-display-rule.md). */
+a.topbar__acct:not(.topbar__login) {
+  font: -webkit-small-control;
+  font-size: var(--text-lg);
+  text-align: center;
+  align-content: center;
+}
 /* „Anmelden" is the bar's one TEXT control (#1090), offered on the logged-out
    landing and on a logged-out /entdecken. It takes the tinted pair `.btn:hover`
    already uses rather than inventing a tone
@@ -4825,6 +4841,13 @@ a.k-tile:focus-visible,
 /* The form spans the row: a username field plus a submit button does not fit a
    156-172px track, and the tile it replaces is the last cell either way. */
 .k-tile--adding { grid-column: 1 / -1; gap: 8px; }
+/* …and so does the „＋" tile when it is ALONE — an account with no friends yet
+   (audit 2026-10-04 U2). In one track its two lines wrapped to four, „Freund*in /
+   hinzufügen / mit dem / Nutzernamen", 114px tall beside six empty tracks at 1280
+   and one at 390. Spanning, each line fits on one: 69px tall at 390. Ocean's
+   plate already did; the other designs draw this roster their own way and
+   measured one line each, so this is Klassisch's rule. */
+.k-tiles > .k-tile--add:only-child { grid-column: 1 / -1; }
 
 /* One card, two request states. It is NOT a click target and must not look like
    one (.claude/rules/ds-row-is-a-click-target.md): the avatar+name half is the
@@ -6900,11 +6923,51 @@ a.k-tile:focus-visible,
    a comparison ("who likes this and who does not"), which rows make you read
    sequentially and a strip lets you scan.
 
-   `auto-fill` with a 78px floor, so four people fit a phone's column and the
+   `auto-fill` with a 72px floor, so four people fit a phone's column and the
    tiles neither stretch to half the page for two raters nor shrink below the
-   avatar for ten. */
+   avatar for ten. It was 78px, which fit four only where the strip had 336px:
+   at 390 Ocean's and Die Brücke's padded panels leave 320 and Forest's 330, so
+   four people read 3+1 there — and Forest's 312px desktop strip did the same
+   (audit 2026-10-04 U3). 72 is the floor at which 312 holds four. */
 .gd-raters { min-width: 0; }
-.raters { display: grid; grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: 8px; }
+.raters { container-type: inline-size; display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: 8px; }
+/* …and rows that fill EVENLY. auto-fill fills a row before starting the next,
+   so five people in four tracks read 4+1 and six in five read 5+1. The track
+   count stays auto-fill's; these only move the row break to the balanced place,
+   for the counts a round actually has (up to eight), in each width band the
+   strip can be — m tracks fit from 80m − 8px (72px tracks, 8px gaps):
+
+     strip     tracks   breaks
+     < 312     3        4 → 2+2
+     312–391   4        5 → 3+2, 6 → 3+3
+     392–471   5        6 → 3+3, 7 → 4+3, 8 → 4+4
+     472–551   6        7 → 4+3, 8 → 4+4
+     552–631   7        8 → 4+4
+
+   A tile starting a row is `grid-column-start: 1`, which auto-placement can
+   only honour on the NEXT row; tracks keep their width, so nothing stretches.
+   "Exactly n" is `:first-child:nth-last-child(n)` — no :has() needed.
+   test/game-raters.test.js derives every band and break from the two numbers
+   above, so a retune of the floor or the gap is measured, not assumed. */
+@container (width < 312px) {
+  .rater:first-child:nth-last-child(4) ~ .rater:nth-child(3) { grid-column-start: 1; }
+}
+@container (312px <= width < 392px) {
+  .rater:first-child:nth-last-child(5) ~ .rater:nth-child(4),
+  .rater:first-child:nth-last-child(6) ~ .rater:nth-child(4) { grid-column-start: 1; }
+}
+@container (392px <= width < 472px) {
+  .rater:first-child:nth-last-child(6) ~ .rater:nth-child(4),
+  .rater:first-child:nth-last-child(7) ~ .rater:nth-child(5),
+  .rater:first-child:nth-last-child(8) ~ .rater:nth-child(5) { grid-column-start: 1; }
+}
+@container (472px <= width < 552px) {
+  .rater:first-child:nth-last-child(7) ~ .rater:nth-child(5),
+  .rater:first-child:nth-last-child(8) ~ .rater:nth-child(5) { grid-column-start: 1; }
+}
+@container (552px <= width < 632px) {
+  .rater:first-child:nth-last-child(8) ~ .rater:nth-child(5) { grid-column-start: 1; }
+}
 .rater {
   display: flex;
   flex-direction: column;
