@@ -4288,6 +4288,22 @@ body.auth-screen .terms-banner { display: none; }
   cursor: pointer;
 }
 .topbar__acct:hover { color: var(--brand-ink, var(--brand)); border-color: var(--brand); }
+/* An icon control that is a LINK (the inbox, audit 2026-10-04 A2) draws exactly
+   like the icon BUTTONS beside it. A <button> brings three things an <a> does
+   not, and each one showed when measured in the six designs: the UA's control
+   font, whose `normal` line height sets the bar's 35px (a bare link took the
+   body's and came out 41px); its content centred across; and centred DOWN,
+   which Forest's 44px pill relies on (a bare link put its icon 2.5px from the
+   top). `font` is the UA's own button font keyword, so each engine gets the
+   metrics its buttons have; the shorthand resets the size, hence the restated
+   `font-size` after it. No `display` — that is what keeps `hidden` working
+   (.claude/rules/hidden-attribute-vs-display-rule.md). */
+a.topbar__acct:not(.topbar__login) {
+  font: -webkit-small-control;
+  font-size: var(--text-lg);
+  text-align: center;
+  align-content: center;
+}
 /* „Anmelden" is the bar's one TEXT control (#1090), offered on the logged-out
    landing and on a logged-out /entdecken. It takes the tinted pair `.btn:hover`
    already uses rather than inventing a tone

@@ -96,13 +96,15 @@
          Feedback category preselected. -->
     <button id="feedbackBtn" class="topbar__acct" type="button" hidden aria-label="Feedback"><i class="ti ti-message" aria-hidden="true"></i></button>
     <!-- Inbox (issue #207): the per-user notification inbox. Hidden unless
-         accounts are on and the user is logged in; wired by js/account.js
-         setupAccountUi(). Its items (round invitations #207, friend requests
-         #325) arrive in later slices, so it ships empty. -->
-    <button id="inboxBtn" class="topbar__acct" type="button" hidden aria-label="Postfach"><i class="ti ti-mail" aria-hidden="true"></i><span id="inboxDot" class="topbar-dot" hidden></span></button>
+         accounts are on and the user is logged in; shown by
+         js/account-chrome.js setupInboxUi(). A real <a href="/inbox"> wired
+         with navLink there, like #loginBtn above (audit 2026-10-04 A2): it is a
+         destination the router resolves, not an action. -->
+    <a id="inboxBtn" class="topbar__acct" href="/inbox" hidden aria-label="Postfach"><i class="ti ti-mail" aria-hidden="true"></i><span id="inboxDot" class="topbar-dot" hidden></span></a>
     <!-- Account menu (issue #138): hidden unless accounts are on and the user is
-         logged in; wired by js/account.js setupAccountUi(). -->
-    <button id="accountBtn" class="topbar__acct" type="button" hidden aria-label="Account"><i class="ti ti-user" aria-hidden="true"></i><span id="newsDot" class="topbar-dot" hidden></span></button>
+         logged in; wired by js/account-chrome.js setupAccountUi(), which keeps
+         aria-expanded in step with the menu like #designBtn's and #moreBtn's. -->
+    <button id="accountBtn" class="topbar__acct" type="button" hidden aria-expanded="false" aria-label="Account"><i class="ti ti-user" aria-hidden="true"></i><span id="newsDot" class="topbar-dot" hidden></span></button>
     <!-- „…" (issue #1460): shown only when the buttons above do not all fit
          beside the home link; they fold into its menu lowest priority first.
          Measured and wired by js/topbar-overflow.js, its label set there too,
