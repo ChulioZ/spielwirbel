@@ -12,11 +12,12 @@ const {
   COVER_THUMB,
   COVER_CARD,
   COVER_HERO,
+  COVER_UNSAFE_RE,
   coverUrl,
   COVER_RESIZERS,
 } = require('../public/js/cover-size');
 
-const { isAllowedImageUrl } = require('../lib/providers');
+const { isAllowedImageUrl, providerCoverUrl } = require('../lib/providers');
 
 
 
@@ -42,10 +43,47 @@ test('passes through an unrecognised host', () => {
 });
 
 test('leaves a URL that already carries a query string alone', () => {
-  // Not hypothetical: the Xbox *search* hit arrives pre-sized as ?w=150&h=150,
-  // and a second w= would produce a malformed query.
-  const url = 'https://store-images.s-microsoft.com/image/apps.1.abc?w=150&h=150';
+  // A pre-sized URL (the retired Xbox provider's search hits arrived as ?w=150…)
+  // must not get a second w=, which would produce a malformed query.
+  const url = 'https://store-images.s-microsoft.com/image/apps.1.abc?w=150';
   assert.strictEqual(coverUrl(url, COVER_CARD), url);
+});
+
+/* The render-time half of the cover URL character check. Every render site
+   interpolates coverUrl(...) into background-image:url('…'), so refusing here
+   makes a value stored before the store-time check last tightened inert, with
+   no migration. */
+test('renders nothing for a stored value carrying a character the cover check refuses', () => {
+  for (const bad of [
+    'https://cf.geekdo-images.com/x&#39;.jpg',
+    'https://cf.geekdo-images.com/x&quot;.jpg',
+    "https://cf.geekdo-images.com/x'.jpg",
+    'https://cf.geekdo-images.com/x".jpg',
+    '/uploads/a b.jpg',
+  ]) {
+    assert.strictEqual(coverUrl(bad, COVER_CARD), '', `must not render ${bad}`);
+  }
+  // Anti-vacuous: the same URL without the character renders untouched.
+  const ok = 'https://cf.geekdo-images.com/x.jpg';
+  assert.strictEqual(coverUrl(ok, COVER_CARD), ok);
+});
+
+test('the render-time and the store-time checks refuse exactly the same characters', () => {
+  /* One shared constant: lib/providers requires it for the store-time check and
+     coverUrl applies it at render time. Walking every ASCII character through
+     BOTH entry points is what notices a hand-copied second list drifting from
+     it — comparing the constant with itself could not. */
+  let refused = 0;
+  for (let c = 0; c < 128; c += 1) {
+    const url = `https://cf.geekdo-images.com/x${String.fromCharCode(c)}.jpg`;
+    const atRender = coverUrl(url, COVER_CARD) === '';
+    const atStore = providerCoverUrl(url) === null;
+    assert.strictEqual(atRender, atStore, `char ${c}: render-time ${atRender}, store-time ${atStore}`);
+    assert.strictEqual(atRender, COVER_UNSAFE_RE.test(url), `char ${c} disagrees with COVER_UNSAFE_RE`);
+    if (atRender) refused += 1;
+  }
+  // Anti-vacuous floor: the seven refused printables plus ASCII whitespace.
+  assert.ok(refused >= 12, `only ${refused} characters refused — is the check wired at all?`);
 });
 
 test('passes through non-https and non-string values untouched', () => {
@@ -94,21 +132,23 @@ test('no cover host is rewritten today — the storefront rules went with their 
 });
 
 test('a sized URL carries no character the server-side guard refuses', () => {
-  /* providerCoverUrl() rejects quotes, parens, backslashes and whitespace
+  /* COVER_UNSAFE_RE is what providerCoverUrl() and coverUrl() both refuse,
      because game.image is interpolated into background-image:url('…'). Verify
-     rather than assume that an appended query trips none of them (#298 §4).
+     rather than assume that an appended query trips none of it (#298 §4) —
+     against the shared constant itself, so this cannot drift from the check.
 
      Checked against a SYNTHETIC rule since #981 emptied the table: the two hosts
      this used to use are gone with their data, and a rule that rewrites nothing
-     cannot be asked whether what it writes is safe. The `query` shape is the one
-     a real entry uses. */
-  const UNSAFE = /['"<>\\\s]/;
-  COVER_RESIZERS.push({ host: 'sized.test', query: (w) => `w=${w}&h=${w}&q=90` });
+     cannot be asked whether what it writes is safe. The `query` shape is the
+     retired PS Store entry's. One joining several parameters with `&` fails
+     here, because `&` is refused too — a resizer that needs one is a
+     deliberate change to the check, not a new row in the table. */
+  COVER_RESIZERS.push({ host: 'sized.test', query: (w) => `w=${w}` });
   try {
     [COVER_THUMB, COVER_CARD, COVER_HERO].forEach((w) => {
       const sized = coverUrl('https://img.sized.test/a.png', w);
       assert.notStrictEqual(sized, 'https://img.sized.test/a.png', 'expected the URL to be rewritten');
-      assert.doesNotMatch(sized, UNSAFE, `${sized} carries a character the cover guard refuses`);
+      assert.doesNotMatch(sized, COVER_UNSAFE_RE, `${sized} carries a character the cover guard refuses`);
       assert.ok(sized.startsWith('https://'), 'the resizer must not change the scheme');
     });
   } finally {

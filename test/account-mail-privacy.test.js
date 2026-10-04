@@ -18,6 +18,11 @@
  * exercises the redaction for every one of them; a second route would add
  * coverage of the routes, not of the behaviour under test.
  *
+ * The address can also arrive INSIDE the error: an SMTP rejection quotes the
+ * recipient in its message (see smtpRejection below). So every mail-failure
+ * site — sendSafe, lib/notify.js and both catches in lib/routes/contact.js —
+ * logs mail.mailFault(err) instead, and each has its own spec here.
+ *
  * These specs read the ACTUAL emitted log lines rather than scanning the source,
  * because a source scan passes against any spelling that still leaks the address
  * (.claude/rules/source-scanning-guards-enumerate-shapes.md).
@@ -77,13 +82,48 @@ async function captureLogs(fn) {
   return out;
 }
 
-// Force every send to reject, the way a transport failure or the daily-budget
-// breaker does.
-function breakMail() {
+/*
+ * A rejection shaped like nodemailer's own. Its MESSAGE is the trap: nodemailer
+ * appends the SMTP server's reply to it, and a Postfix-style RCPT rejection
+ * quotes the recipient — so logging `e.message` writes the address into the log
+ * even though no call site ever names `to`. The fields beside it are what a log
+ * line may carry instead: `code`, `responseCode` and `command` are fixed
+ * vocabulary that cannot hold an address. (`response`, `rejected` and
+ * `recipient` can, and are planted here so a line that spreads the error fails.)
+ */
+function smtpRejection(to) {
+  const reply = `550 5.1.1 <${to}>: Recipient address rejected: User unknown in virtual mailbox table`;
+  return Object.assign(new Error(`Can't send mail - all recipients were rejected: ${reply}`), {
+    code: 'EENVELOPE', responseCode: 550, command: 'RCPT TO', response: reply, rejected: [to], recipient: to,
+  });
+}
+
+// Force sends to reject, the way a transport failure or the daily-budget
+// breaker does. `only(to)` picks which recipients fail; by default every one.
+function breakMail(only = () => true) {
   const orig = mail.send;
-  mail.send = async () => { throw new Error('smtp exploded'); };
+  mail.send = async (msg) => {
+    if (only(msg.to)) throw smtpRejection(msg.to);
+    return orig(msg);
+  };
   return () => { mail.send = orig; };
 }
+
+// What every mail-failure line must carry instead of the message.
+function assertDiagnosable(line) {
+  assert.equal(line.message, undefined, `a mail-failure line carries the error message: ${JSON.stringify(line)}`);
+  // The diagnostic value has to survive, or the fix is a deletion and the
+  // operator loses the ability to see that mail is failing at all — and why.
+  assert.equal(line.code, 'EENVELOPE');
+  assert.equal(line.responseCode, 550);
+  assert.equal(line.command, 'RCPT TO');
+}
+
+const noAddressIn = (logs, when) => {
+  for (const l of logs) {
+    assert.ok(!JSON.stringify(l).includes('@'), `a log line emitted ${when} contains an e-mail address: ${JSON.stringify(l)}`);
+  }
+};
 
 const ADDRESS = 'leaky.canary@example.com';
 
@@ -109,18 +149,74 @@ test('a failed account mail is logged without the recipient address', async () =
 
   const line = failed[0];
   assert.equal(line.to, undefined, `the recipient address must not be logged: ${JSON.stringify(line)}`);
-  // The diagnostic value has to survive the redaction, or the fix is a deletion
-  // and the operator loses the ability to see that mail is failing at all.
-  assert.equal(line.message, 'smtp exploded');
+  assertDiagnosable(line);
 
   // Nothing else emitted on this request may carry an address either — the
   // request logger included (it logs a path, and register's is not parameterised
   // by address, but asserting it here means a future route that IS would fail).
-  for (const l of logs) {
-    assert.ok(
-      !JSON.stringify(l).includes('@'),
-      `a log line emitted during registration contains an e-mail address: ${JSON.stringify(l)}`,
-    );
+  noAddressIn(logs, 'during registration');
+});
+
+test('a failed inbox notification is logged without the recipient address', async () => {
+  // lib/notify.js's catch. Its send is fire-and-forget, so the line is the ONLY
+  // trace a failed notification leaves.
+  const { notifyInboxItem, idle } = require('../lib/notify');
+  const email = 'notify.canary@example.com';
+  await request(app).post('/api/account/register')
+    .send({ email, password: 'correct horse battery staple', username: 'notifycanary' });
+  const verify = mail.outbox[mail.outbox.length - 1].text.match(/\/v\?t=(v1\.[0-9a-f]+\.[A-Za-z0-9_-]+)/);
+  assert.ok(verify, 'registration mailed no verification link');
+  await request(app).post('/api/account/verify-email').send({ token: verify[1] });
+  const user = await require('../lib/repo').getUserByEmail(email);
+  assert.ok(user && user.emailVerified, 'the fixture account is not verified, so nothing would be sent');
+
+  const restore = breakMail();
+  let logs;
+  try {
+    logs = await captureLogs(async () => {
+      notifyInboxItem(user.id, { type: 'friend_request', payload: { requesterUsername: 'someone' } });
+      await idle();
+    });
+  } finally {
+    restore();
+  }
+
+  const failed = logs.filter((l) => l.event === 'inbox_notification_failed');
+  assert.equal(failed.length, 1, 'the notification failure should still be logged');
+  assertDiagnosable(failed[0]);
+  noAddressIn(logs, 'by a failed notification');
+});
+
+test('a failed contact delivery and a failed acknowledgement are logged without an address', async () => {
+  // lib/routes/contact.js has two sends: the notice to the operator mailbox and
+  // the Art. 16(4) acknowledgement back to the notifier. Each has its own catch.
+  process.env.CONTACT_TO = 'ops.canary@example.com';
+  const report = {
+    name: 'Alice', email: 'notifier.canary@example.com', subject: 'Hallo', message: 'Bitte prüfen.',
+    category: 'copyright', url: 'https://spielwirbel.app/uploads/abc123.jpg', goodFaith: true,
+  };
+  try {
+    for (const [event, failing, status] of [
+      ['contact_ack_failed', report.email, 200],
+      ['contact_mail_failed', process.env.CONTACT_TO, 502],
+    ]) {
+      const restore = breakMail((to) => to === failing);
+      let logs;
+      try {
+        logs = await captureLogs(async () => {
+          const res = await request(app).post('/api/contact').send(report);
+          assert.equal(res.status, status, `${event}: ${JSON.stringify(res.body)}`);
+        });
+      } finally {
+        restore();
+      }
+      const failed = logs.filter((l) => l.event === event);
+      assert.equal(failed.length, 1, `${event} should still be logged`);
+      assertDiagnosable(failed[0]);
+      noAddressIn(logs, `around ${event}`);
+    }
+  } finally {
+    delete process.env.CONTACT_TO;
   }
 });
 
