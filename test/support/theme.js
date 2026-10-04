@@ -153,7 +153,8 @@ for (const design of DESIGN_REGISTRY) {
      that exists is also source order. */
   const scheme = bodyOfIn(`:root[data-design="${design.id}"][data-scheme="dark"]`, rules);
   /* The LIGHT mirror (#1210, Ocean). A light design's colours must not reach a
-     dark WORLD round either, so its block is gated the other way round —
+     dark scheme either (until #1202, a dark WORLD round), so its block is gated
+     the other way round —
      `:not([data-scheme="dark"])`, because the light scheme is the ABSENCE of
      the attribute and there is nothing positive to key on. Read only for a light
      design, exactly as the dark block is read only for a dark one. */

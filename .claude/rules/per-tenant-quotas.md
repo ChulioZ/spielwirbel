@@ -9,8 +9,7 @@ paths:
 
 Issue #139 added per-tenant cost/abuse caps. They are all **state caps** — they
 count current data rather than metering a rate — and `lib/quota.js`'s own header
-comment is the authoritative list. Today it holds **eight** ceilings, in two
-groups:
+comment is the authoritative list. The table mirrors it, in two groups:
 
 | Cap | Checked in | Refusal | Since |
 |---|---|---|---|
@@ -71,19 +70,17 @@ Things that will bite if you forget them:
   before the check, so re-tapping a dismissed card is never refused at the cap.
 
 - **State caps count current data; deleting frees the slot.** The rounds cap
-  counts `req.repo.listRounds().length` (tenant-scoped) and the games cap counts
+  counts `req.repo.listRoundSummaries().length` (tenant-scoped) and the games cap counts
   `round.games.length` (**active + archived**, i.e. retired *and* completed —
   every state holds a row and a possible cover). They're checked *before*
   persisting: the games check sits after the
   round-404 check but before `saveUploadedImage`, so a refused add
   leaves no orphan file even though multer already buffered the upload in memory.
-  There is deliberately no `countRounds` repo method — reusing `listRounds` avoids
-  widening the repo contract for a ≤10-row count.
+  There is deliberately no `countRounds` repo method — reusing
+  `listRoundSummaries` avoids widening the repo contract for a ≤10-row count.
 
-- **All ceilings are read per call, from env** (`MAX_ROUNDS_PER_TENANT`,
-  `MAX_GAMES_PER_ROUND`, `MAX_TAGS_PER_ROUND`, `MAX_MEMBERS_PER_ROUND`,
-  `MAX_FRIENDS_PER_USER`, `MAX_FRIEND_REQUESTS_PER_USER`; defaults
-  10 / 1000 / 30 / 50 / 500 / 50), so a test — or a live re-tune — picks up the
+- **All ceilings are read per call, from env** (each `MAX_*` variable in
+  `lib/quota.js`, beside its `DEFAULT_*`), so a test — or a live re-tune — picks up the
   current env without a rebuild, matching the rate-limit ceiling in `lib/app.js`
   (see `security-middleware.md`).
 
@@ -92,7 +89,7 @@ Things that will bite if you forget them:
   maps the code to a localized toast (`newRound.toast.quota`,
   `addGame.toast.quota`, `tags.toast.quota`, `member.toast.quota`,
   `moveGames.toast.quotaGames`/`quotaTags`, `bggImport.toast.quota` in
-  `lang/{de,en}.js`). The `limit` field in the 403 body is
+  every `lang/*.js`). The `limit` field in the 403 body is
   not surfaced (api() drops it) — the messages are intentionally number-free
   since the limits are env-tunable.
 

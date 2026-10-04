@@ -16,6 +16,10 @@
 - [ ] `npm run coverage:ci` passes — **easy to forget, and it gates the merge**:
       branch protection requires the aggregate `ci-passed` check, which fails on
       a coverage drop even with every test green
+- [ ] If it touches `lib/repo/` or a migration: the Postgres specs pass against
+      a local database (`test/repo.postgres.test.js`'s header has the commands)
+      — plain `npm test` skips them, but CI's `postgres` job is part of `ci-passed`
+- [ ] No secrets committed — the `gitleaks` secret scan is a required check
 - [ ] Tests added or updated for the change (when it's testable)
 - [ ] New user-facing strings added to **every** `public/js/lang/*.js` — the
       shipped set is `public/js/locales.js` (key parity is enforced by a test)

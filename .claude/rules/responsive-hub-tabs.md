@@ -14,9 +14,10 @@ only the placement was ever a phone convention.
 
 > **Since the rail landed there is a THIRD presentation.** From 1280px up the
 > dock is `display: none` and navigation moves out of the content column into
-> `.rail` (`public/js/round-rail.js`), which also carries the round's identity,
-> the three off-shelf lists (both archives + the Wunschliste, #560) and one
-> Einstellungen entry. Everything below still describes the
+> `.rail` (`public/js/round-rail.js`), which also carries the round's identity
+> and one Einstellungen entry. (It carried a „Nicht im Regal" group too until
+> #1500; the off-shelf lists are reached through the Regal's scope strip now, at
+> every width and in every design.) Everything below still describes the
 > two narrow presentations exactly — they are unchanged under 1280px — but
 > "the dock is the nav" is only true below that. See
 > `.claude/rules/responsive-content-width.md` for why the rail exists at all

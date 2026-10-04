@@ -16,13 +16,14 @@ paths:
 # Add-game lookup providers — how they work, and what to check before adding one
 
 The add-game title field is a search-as-you-type lookup (`lib/providers/`,
-`lib/routes/lookup.js`, `showAddGame`/`attachLookup` in
-`public/js/lookup.js`). Provider endpoints have no CORS headers, so
+`lib/routes/lookup.js`, `attachLookup`/`searchAllProviders` in
+`public/js/lookup.js`, `showAddGame` in `public/js/views-round-lookup.js`).
+Provider endpoints have no CORS headers, so
 **all provider calls run server-side** through `/api/rounds/:rid/lookup/*`; the
 browser never calls a provider. The frontend queries every provider in
 `LOOKUP_PROVIDERS` in parallel and merges the hits (round-robin interleave) into
 one dropdown; one provider failing (502) must not blank the others' results
-(`Promise.allSettled`).
+(`searchAllProviders` leaves only the failed provider's hits out).
 
 ## Since #744 there is exactly ONE provider, and that was a deliberate retirement
 
@@ -58,11 +59,17 @@ facts decided it, and they are the checklist a fifth provider has to answer:
    SteamGridDB (fan art, DMCA history). MobyGames Bronze is the documented
    starting point if digital games ever become a real segment.
 
-**What did NOT go:** every stored `game.source` link, every stored cover, the
-`COVER_RESIZERS` rules for the PS/Xbox hosts, and those hosts' place on the CSP
-`img-src` allowlist. See `LEGACY_COVER_HOSTS` in `lib/providers/index.js` — the
-render permission is deliberately no longer derived from the registry, because
-retiring a provider must not blank covers already on people's shelves.
+**What #744 deliberately left in place — until #981:** every stored
+`game.source` link, every stored cover, the `COVER_RESIZERS` rules for the
+PS/Xbox hosts, and those hosts' place on the CSP `img-src` allowlist (a frozen
+`LEGACY_COVER_HOSTS` in `lib/providers/index.js`), because retiring a provider
+must not blank covers already on people's shelves. #981 first cleared those rows
+with a one-off operator-panel action, then removed the rest: the frozen list is
+gone, `COVER_RESIZERS` (`public/js/cover-size.js`) is empty, and
+`test/provider-covers.test.js` asserts the storefront hosts are refused by both
+gates. The order is the lesson for the next retirement: clear the stored data
+first, take the render permission away second — the reverse blanks every cover
+with nothing but a console violation to say why.
 
 ## The cross-provider merge ranking must FOLD before it tokenizes (#317)
 
@@ -170,9 +177,9 @@ Four things about it bite:
 - **`Authorization: Bearer <token>`**, and the token is read **per call** from
   env (like the rate-limit ceilings in `lib/app.js`), so a test can drive it.
 - **No token ⇒ `search()` returns `[]` and `detail()` returns the null-shaped
-  product** — never a throw. The frontend merges providers with
-  `Promise.allSettled`, so a 502 here would render as "couldn't reach provider"
-  across the whole dropdown; an empty list leaves the other four clean. Note the
+  product** — never a throw. A 502 here would render as "couldn't reach
+  provider" in the dropdown, and BGG is the only provider since #744, so that
+  error row would be the whole menu; an empty list leaves it clean. Note the
   cost of that silence: a missing token is invisible to the operator — nothing
   logs, nothing 500s, the board-game search simply never finds anything. The
   admin panel used to surface it (`lookup.bggTokenSet`) until #404 dropped every
@@ -181,7 +188,9 @@ Four things about it bite:
 - **Throttling is a status code, not a queue.** BGG answers `500`/`503` when
   too busy (`202` on some endpoints, `429` generically). `fetchXml` retries
   exactly those, twice, inside one call's budget — `TIMEOUT_MS` (8 s) unless the
-  caller passes its own, which since #774 only the corpus hop does (30 s). Every
+  caller passes its own: `BULK_TIMEOUT_MS` (30 s) for a multi-id `/thing` batch,
+  i.e. the corpus hop (#774) and a `gameInfo` call asking for more than one id
+  (#828); a one-id `gameInfo` keeps the interactive 8 s. Every
   other status (notably `401`) is final, and so is an **abort**: the deadline
   fires as a *throw*, not a status, so it escapes the retry loop entirely and
   `RETRY_STATUS` never sees it. Don't turn this into an unbounded retry — the route's
@@ -267,11 +276,12 @@ provider's `IMAGE_HOSTS`). **Since #172 the server never downloads cover bytes**
 wrong `IMAGE_HOSTS` means that provider's covers are CSP-blocked with no error
 beyond a console violation. See `.claude/rules/provider-cover-hotlinking.md`.
 
-**The CSP list is NOT the same list any more (#744).** `imageCspSources()` is the
-registry's hosts **plus** a frozen `LEGACY_COVER_HOSTS`, because the two answer
-different questions: what may be *queried and stored* follows the registry, what
-may be *rendered* also has to include everything already sitting in someone's
-shelf. Deriving both from the registry was correct while providers were only ever
-added — the day one is retired it silently blanks that provider's saved covers.
-`test/provider-covers.test.js` asserts both directions for the same URLs; see
-`.claude/rules/security-middleware.md`.
+**The CSP list was briefly NOT the same list (#744 → #981).** In between,
+`imageCspSources()` was the registry's hosts **plus** a frozen
+`LEGACY_COVER_HOSTS`, because the two answered different questions: what may be
+*queried and stored* follows the registry, what may be *rendered* also had to
+include everything already sitting in someone's shelf. Deriving both from the
+registry is correct while providers are only ever added — the day one is retired
+it silently blanks that provider's saved covers. Once #981 had cleared those rows
+the two lists became one again; `test/provider-covers.test.js` now pins that a
+retired host is refused by both. See `.claude/rules/security-middleware.md`.

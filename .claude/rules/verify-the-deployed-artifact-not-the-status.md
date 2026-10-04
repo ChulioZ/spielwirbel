@@ -26,9 +26,9 @@ deploy that did not happen.
 
 ## 1. Verify the ARTIFACT — the deployed commit is directly observable
 
-The optional production build (#141) content-hashes `js/**` + `styles.css` and
-derives the service worker's `CACHE` name from that set plus the source `CACHE`
-literal (`.claude/rules/frontend-build-cache-busting.md`). That makes the
+The optional production build (#141) content-hashes `js/**`, `styles.css` and
+the design stylesheets under `css/**` (#1184), and derives the service worker's
+`CACHE` name from that set plus the source `CACHE` literal (`.claude/rules/frontend-build-cache-busting.md`). That makes the
 deployed build readable over plain HTTP, with no credentials and no dashboard:
 
 ```bash

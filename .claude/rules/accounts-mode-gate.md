@@ -43,7 +43,9 @@ switch, read per request in `lib/app.js`. Non-obvious things, keep them:
     AUTH_PASSWORD is set) **in front of** the account gate, so `/api` and
     `/uploads` require the shared session **and** the account credential when both
     are configured. `/api` stays Bearer-only; `/uploads` still takes Bearer-or-`sa`.
-  - The account routers (`/api/account`, `…/invitations`, `…/friends`) sit behind
+  - Every account router mounted under `/api/account` in `lib/app.js`
+    (`/api/account` itself, `…/invitations`, `…/friends`, `…/profile`,
+    `…/passkeys`) sits behind
     **`requireSharedIfLayered`**, so "accounts on" is **not** public sign-up on a
     sealed box. It gates on **both** switches (not just `requireAuth`) so
     password-only mode keeps answering the account routes' own **404
@@ -103,8 +105,13 @@ switch, read per request in `lib/app.js`. Non-obvious things, keep them:
 
 - **`core.js api()` is the token chokepoint.** It attaches the Bearer header when
   `getAccessToken()` is non-null (no-op in legacy mode) and, on a 401
-  `auth_required` in accounts mode, does ONE silent `refreshAccessToken()` +
-  retry, then `onSessionLost()` (→ login). Legacy mode keeps the old
+  `auth_required` in accounts mode, hands over to `recoverExpiredSession()`
+  (`public/js/auth-tokens.js`, shared with `accountApi`): ONE silent
+  `refreshAccessToken()`, which resolves `'ok' | 'rejected' | 'transient'` since
+  #1545. `'ok'` retries the request once; only `'rejected'` (a 401/403 from
+  `POST /refresh`) ends the session via `onSessionLost()` (→ login); `'transient'`
+  (429, 5xx, network) keeps the tokens and fails the request with
+  `refresh_unavailable`. Legacy mode keeps the old
   `window.location.assign('/')` bounce. The account helpers live in the
   later-loaded `auth-tokens.js` but are only referenced at call time, so the load
   order (core → account → main) is safe — see frontend-script-load-order.md.

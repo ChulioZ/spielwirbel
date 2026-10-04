@@ -50,22 +50,27 @@ The `'key' in record` assertion is not ceremony: `delete` on the wrong object (a
 snapshot rather than the live row) silently does nothing, and the spec then
 re-asserts the ordinary case under a name promising otherwise.
 
-`test/account.test.js` has two of these — `acceptedTermsRevision` (#521) and
-`bgStats` (#485). A third field gets a third.
+`test/account.test.js` holds a growing set of these — grep it for
+`delete record.` before adding a field, and add yours beside them.
 
 ## Which direction is dangerous
 
-Only one, and it decides how much this matters:
+**Both**, one per shape — an absent key is `undefined`, and the two readings
+disagree about it:
 
 | Default | Absent key must read as | Wrong shape does |
 |---|---|---|
-| ON (`!== false`) | ON | nothing — absent is falsy, so it reads ON either way |
-| **OFF (`=== true`)** | **OFF** | **turns the feature on for every pre-existing account** |
+| **ON (`!== false`)** | **ON** | `=== true` reads `undefined` as false — **turns the feature OFF for every pre-existing account** |
+| **OFF (`=== true`)** | **OFF** | `!== false` reads `undefined` as true — **turns the feature ON for every pre-existing account** |
 
-That asymmetry is why `notifyRoundInvitations`/`notifyFriendRequests` (#618)
-survived with no legacy spec and nobody noticed: their default is the same value
-an absent key produces under *both* readings. An **opt-IN** has no such luck.
-Don't read their missing spec as precedent.
+This section once said only the OFF row was dangerous ("absent is falsy, so it
+reads ON either way"), and used it to excuse `notifyRoundInvitations`,
+`notifyFriendRequests` (#618) and `statsVisible` (#1089) having no legacy spec.
+That was wrong — `undefined === true` is `false`, so the opt-in shape on any of
+them silences the mails and hides the statistics for every account older than
+the field. The three now share one spec (`#618/#1089` in `test/account.test.js`,
+reddened by flipping `statsVisible` to `=== true`); an opt-out needs its legacy
+spec exactly as an opt-in does.
 
 ## Why Route 1 does not reach it either
 

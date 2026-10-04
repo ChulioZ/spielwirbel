@@ -8,6 +8,8 @@ paths:
   - "test/recommend.test.js"
   - "test/recommend-view.test.js"
   - "test/recommend-spotlight.test.js"
+  - "test/recommendations.test.js"
+  - "public/js/vote-score.js"
 ---
 # The recommender (#682): a weighted score fails by RANKING, never by throwing
 
@@ -25,7 +27,7 @@ differ in exactly one attribute** and asserts the *difference* equals that term'
 weight:
 
 ```js
-assert.equal(delta(profile, entry({ bayesRating: 8.5 }), entry({ bayesRating: 5.5 })), W_QUALITY);
+assert.equal(delta(profile, entry({ bayesRating: 8.5 }), entry({ bayesRating: 5.5 })), r6(W_QUALITY));
 ```
 
 Each of those cases also pins the field the term must **not** read, which is
@@ -108,9 +110,10 @@ here from `round.members` would silently drop guests and flatten teams, so
 ## 5. Four hard filters that are not optimisations
 
 - **A game already in the round in ANY state is dropped**, retired included, and
-  retired is the sharpest of the five: they explicitly got rid of it. A test
-  covers all four off-shelf states, because the natural implementation filters
-  the *active* shelf and quietly recommends a retired game back.
+  retired is the sharpest case: they explicitly got rid of it. A test covers
+  every off-shelf state (retired, wish, completed), because the natural
+  implementation filters the *active* shelf and quietly recommends a retired game
+  back.
 
   **"Already known" and "shapes the profile" are two different lists (#776), and
   one loop in `buildProfile` builds both.** A **wished** game is in the first and
@@ -221,7 +224,7 @@ here from `round.members` would silently drop guests and flatten teams, so
   designers. So `W_NOVELTY_PENALTY` keeps its weight and has one path left
   instead of two.
 
-  **The sibling is the WITHIN-LIST dedupe**, which is not a fourth filter but the
+  **The sibling is the WITHIN-LIST dedupe**, which is not another filter but the
   same relation applied to the candidates against each other: nothing compared
   them, so a round whose taste points at a family of reimplemented classics got
   several editions of one game — a list that looks varied and is not. Three
@@ -334,7 +337,7 @@ prints `8.4` to a German reader who should read `8,4` — nothing throws, only t
 separator is wrong. And BGG's two range bounds are not guaranteed ordered:
 rendering them verbatim printed `80–60 Min.`, which reads as a bug in the app.
 Ordering them is not *modifying* the data — both numbers still show, unrounded
-(`.claude/rules/bgg-corpus.md`).
+(BGG's licence condition, `.claude/rules/add-game-lookup-provider.md`).
 
 **Missed:** the screen needs TWO entry points. The Regal's narrow entry to
 „Könnte euch gefallen" is `.rail-owned`, so from 1280px up it is `display: none`
@@ -394,10 +397,11 @@ reported that mechanics and categories appeared to play no role at all.
   among qualifying terms; §2's `> NEUTRAL` gate still decides *admission*, or a
   card compliments a game on an attribute nobody knows. The rescale is what made
   that gate passable for the taste terms at all — the two halves are coupled.
-- **Four of the six reasons restate the fact row** (`★ 8.4 · complexity 3.2 ·
-  2–4 players · 90 min`, `recFacts`), so mechanics and categories — the only two
-  saying something new, naming the round's *own* games — were exactly the two the
-  ordering could not reach. When adding a reason type, ask what it tells a reader
+- **Four of the six reasons restated the fact row** (`★ 8.4 · complexity 3.2 ·
+  2–4 players · 90 min`, `recFacts`), so mechanics and categories — then the only
+  two saying something new, naming the round's *own* games — were exactly the two
+  the ordering could not reach. (#1505's designer line, the seventh, names a round
+  game too.) When adding a reason type, ask what it tells a reader
   that the card does not already print.
 
 **And the two that don't restate the fact row restate EACH OTHER (#775).** Making
@@ -481,8 +485,9 @@ as hard as a staple forty votes agree on. (It was the round's OWN prior until
   scores come from `buildShelfIndex(round)`, built once per profile beside
   `buildPlayScale`, so the function walks no sessions at all. Same hoisting
   argument as §12's: the prior is a property of the shelf, not of the game being
-  scored, and per-game derivation is the 19.8 ms → 364 ms mistake this file
-  already records. Total session walks are unchanged, not increased.
+  scored, and per-game derivation is the 19.8 ms → 364 ms mistake
+  `lib/recommend.js` records beside the cached `x.affinity` (#798). Total
+  session walks are unchanged, not increased.
 - **`W_PLAYS` SURVIVED #894, and the measurement is why.** That issue proposed
   retiring it and letting plays reach the profile by lifting the prior instead;
   its own §0 required §12's three cases to be measured first, and they invert.
@@ -544,8 +549,9 @@ all** — `0.1414213562373095`. Byte-identical.
   independent facts about the same game.
 - **The retired arm short-circuits before the bonus is read.** Twenty nights do
   not soften "we got rid of it" — the state ordering §5 describes is unchanged.
-- **The ceiling moves from 2.0 to 3.0 — 2,43 since #1227's re-anchor (§15) — and
-  NO weight needed re-tuning.** Nothing
+- **The ceiling moves from 2.0 to 3.0 — since #1227's re-anchor (§15) it
+  approaches 2,6 (1,6 rated + 1,0 plays; shrinkage keeps it below that, 2,43 at
+  twenty unanimous voters) — and NO weight needed re-tuning.** Nothing
   downstream reads the magnitude: `accumulate`/`normalize` are L2-normalised and
   `weightedMean` divides by its own weights, so only ratios reach a score. Check
   that property before changing any rung — it is what makes the ladder cheap to
@@ -590,7 +596,7 @@ all** — `0.1414213562373095`. Byte-identical.
   `shared-constants-across-the-stack.md` case.
 
 `W_PLAYS` and `PLAY_SCALE_FLOOR` are approved starting values with the same
-status as the seven weights: changing a number is expected, changing the set of
+status as the `W_*` weights: changing a number is expected, changing the set of
 terms is a scope change.
 
 ## 14. A tolerance change is INVISIBLE to §1's isolation specs (#975)
@@ -685,9 +691,10 @@ it was the shelf's `maxPlaytime` until #1141. A reason line
 claiming a measurement the app never takes is the failure mode §10's guard exists
 for, arrived at by wording rather than by a model.
 
-**Related:** `.claude/rules/bgg-corpus.md` (the pool this scores, and its licence
-conditions), `.claude/rules/break-the-code-on-purpose.md` (every assertion above
-was seen red against a deliberate break), `.claude/rules/session-teams.md` §4,
+**Related:** `.claude/rules/bgg-corpus.md` (the pool this scores),
+`.claude/rules/add-game-lookup-provider.md` (BGG's licence conditions),
+`.claude/rules/break-the-code-on-purpose.md` (every assertion above was seen red
+against a deliberate break), `.claude/rules/session-teams.md` §4,
 `.claude/rules/shared-constants-across-the-stack.md`.
 
 ## 15. A formula survived the SCALE changing underneath it (#1227)
@@ -718,8 +725,8 @@ neutral tile — `A_NEUTRAL + (score - PRIOR_DEFAULT) / 2`, floored at
 `RATED_FLOOR` — so below `PRIOR_DEFAULT` a game pulls the profile *away* from
 itself, which is what a bad verdict means.
 
-**This is the class of bug this whole file exists for** (§0's premise): every
-mistake in `lib/recommend.js` is a plausible wrong list, never an error. The
+**This is the class of bug this whole file exists for** (its opening premise):
+every mistake in `lib/recommend.js` is a plausible wrong list, never an error. The
 specific shape to recognise — **a formula whose constants were calibrated
 against a scale that a later issue replaced** — has one tell, and it is the
 tell that hid this one: *the calibration point the two scales share stays
@@ -793,7 +800,7 @@ nights can lift a game rated „gar nicht" to a **positive** affinity (measured:
 they keep choosing it — and it is written down here so a future session does not
 read the ladder as an unconditional claim and „fix" it.
 
-The slope (`/ 2`) is an approved starting value like the six weights, and a
+The slope (`/ 2`) is an approved starting value like the `W_*` weights, and a
 steeper one is not free: at `/ 1` a unanimous „nicht so" reaches −1,07 and
 inverts the `A_RETIRED` invariant. `UNRATED_HALF = 25` has the same standing — a
 different half-life is a constant change, a different **curve** is a scope

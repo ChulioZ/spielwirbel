@@ -109,7 +109,7 @@ plausible reading for an adoption figure**, so the panel would report „nobody
 uses anything" on a production instance full of data while every superuser-run
 test stayed green. `test/repo.postgres.test.js` holds it with a plain-role child
 process, seeded so `sessionsWithGuests` and `roundsWithTags` must be non-zero
-(`.claude/rules/admin-cross-tenant-escape.md` §2).
+(`.claude/rules/admin-cross-tenant-escape.md` §4).
 
 **`session_vote_links` is the one that is correctly OUTSIDE `atx()`** — it is
 deliberately not tenant-scoped and not under RLS (its own migration says why:

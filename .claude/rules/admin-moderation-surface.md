@@ -9,7 +9,7 @@ paths:
 # The operator moderation surface (#268/#273/#274/#275) — traps
 
 **Since #996 it is `lib/routes/admin/`, not one file.** Seven sub-routers
-(`status`, `corpus`, `covers`, `moderation`, `users`, `log`, `notices`) plus
+(`status`, `corpus`, `storage`, `moderation`, `users`, `log`, `notices`) plus
 `shared.js` (the schemas and paging shape more than one needs) and `index.js`,
 which owns the login pair, the `ADMIN_PASSWORD` gate and the mounts.
 
@@ -165,8 +165,8 @@ load-bearing and all three fail silently if "tidied up":
 Two smaller things about the dialog itself:
 
 - **Use `<dialog>` + `showModal()` here, NOT the SPA's `openSheet`.** `admin.html`
-  is a standalone page — `views-round-detail.js` and `focus-trap.js` are not
-  loaded, so `.claude/rules/accessibility-contrast-and-modals.md` §2's machinery
+  is a standalone page — `sheet.js` (where `openSheet` lives) and `focus-trap.js`
+  are not loaded, so `.claude/rules/accessibility-contrast-and-modals.md` §2's machinery
   simply isn't there. `showModal()` brings Esc, the backdrop, focus containment
   and **focus restoration to the opener** natively, which is why the rows are
   `tabIndex = 0` — a row that was never focusable would "restore" focus to

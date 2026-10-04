@@ -8,7 +8,7 @@ paths:
 # Redefining a measure invalidates every fixture that fed the OLD one — starting with the fields nobody looked at
 
 When a number gains a **denominator** — #893 (the mean became a veto-aware
-curve), #895 (a win count became a win *above chance*), and #894/#909 next — the
+curve), #895 (a win count became a win *above chance*), #894/#909 after them — the
 code change is the easy half. The expensive half is that every fixture in the
 suite was written against the old meaning, and a fixture field that was
 **inert** under it can become the thing under test.
@@ -49,15 +49,16 @@ A zero-sum measure makes "seat everyone and adjust the win counts" impossible:
 > If every member plays every night, the scores **sum to zero** by construction.
 > So you can never have all of them above chance, however you distribute the wins.
 
-With everyone present across `T` nights and `p` parties a member scores
-`wins − T/p`, so a single-win member clears chance only when `p > T`. Chasing
+With everyone present across `T` nights and `p` parties a member scored
+`wins − T/p`, so a single-win member cleared chance only when `p > T`. Chasing
 that, the fixture grew guests padding every night out to eight parties — an
 elaborate, unreal table whose only job was to lift members over a **score
 threshold on the podium**. The padding was a fixture bending itself around a
 product decision that was itself wrong, and when live use killed the threshold
-(`.claude/rules/rank-encodings-must-not-be-growable-by-ties.md`) the padding
-evaporated with it: `wins − T/p` is a constant offset from the win count, so
-seating the round reproduces the exact order these fixtures always meant.
+(`.claude/rules/an-unclaimed-step-is-a-claim.md`) the padding evaporated with
+it: `wins − T/p` is a constant offset from the win count, so seating the round
+reproduced the exact order these fixtures always meant. (#1224 later withdrew
+the Siegwertung itself; the standings rank on the raw win count again.)
 
 **Treat an elaborate fixture as a finding, not a solution.** Needing a contrived
 table to make a spec express an ordinary situation is evidence about the
@@ -84,7 +85,10 @@ than as the fixture having no field in it.
 There is no error and no guard: seating a stranger is exactly how a session
 whose member was later removed from the round is meant to degrade. So **name
 every seat in `roundOf` too**, and when a party-weighted assertion comes out at
-the solo value, check the round's member list before the arithmetic.
+the solo value, check the round's member list before the arithmetic. The
+arithmetic above is the Siegwertung's (withdrawn in #1224); the trap outlived
+it — „Stärkstes Spiel" now counts only `contested` nights (`member-stats.js`),
+so the same fixture reads as no play at all.
 
 ## What to sweep when a measure changes
 
@@ -99,7 +103,7 @@ implementation shows that it stopped discriminating.
 
 **Related:** `.claude/rules/break-the-code-on-purpose.md` (the "fixture too small
 to fail" family this belongs to), `.claude/rules/session-teams.md` (a party is
-the unit any such denominator counts), `.claude/rules/shared-constants-across-the-stack.md`
+the unit any such denominator counts), `.claude/rules/shared-constants-inventory.md`
 (`vote-score.js`, the measure itself),
 `.claude/rules/rank-encodings-must-not-be-growable-by-ties.md` (the component
 whose specs this was found in).

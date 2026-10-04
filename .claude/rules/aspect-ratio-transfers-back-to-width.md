@@ -34,9 +34,14 @@ height instead of a max:
 ```css
 .vote .vote__img {
   aspect-ratio: auto;
-  height: max(110px, min(240px, calc(100svh - 480px)));
+  height: max(110px, min(260px, calc(100svh - 447px)));
 }
 ```
+
+(#666 shipped `min(240px, calc(100svh - 480px))`; #1168 moved the budget and the
+cap to 447/260 when it freed 33px of card height. The shape is unchanged — but
+the cap decides the landing vote shot's crop, which #1168 left 13px off:
+re-derive `.claude/rules/landing-product-screenshots.md` §4 when you move it.)
 
 `aspect-ratio: auto` is the load-bearing line — without it the `height` transfers
 back exactly like the `max-height` did. The `min()` then has to do the job the
@@ -51,8 +56,8 @@ an `<img>` would need a different answer.
 
 Two floors that are not style:
 
-- **`max(<floor>, …)` around anything with a viewport unit.** `min(240px,
-  calc(100svh - 480px))` computes negative — so, clamped, zero — in a degenerate
+- **`max(<floor>, …)` around anything with a viewport unit.** `min(260px,
+  calc(100svh - 447px))` computes negative — so, clamped, zero — in a degenerate
   viewport, and the box vanishes with nothing to explain it. Same trap as
   `.cover-picker__grid` (`.claude/rules/anchored-popover-is-placed-once.md`).
 - **The floor must clear whatever the box centres.** `.vote__img` sizes its

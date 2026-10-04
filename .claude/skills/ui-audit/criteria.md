@@ -41,7 +41,7 @@ genuinely beautiful" mandate.
   order, information architecture, what a control does, or copy. If the fix
   changes what a user *does* rather than what they *see*, it is out of scope.
 - **Evolution within the brand, never a rebrand (U-R02).** Every change stays
-  inside the worn design's own tokens (Klassisch's `--brand` `#c2410c` and 8 markers, Der Tisch's
+  inside the worn design's own tokens (Klassisch's `--brand` `#c2410c` and its markers, Der Tisch's
   felt/brass/paper) and the `color-mix`-derived token families. The app must look like itself
   tomorrow. Refining a token ramp is in scope; swapping a design's palette is not, and which design
   is the default is the design programme's decision (`docs/design/`), never an audit's.
@@ -64,9 +64,11 @@ is not a UI finding, it is a rejected idea.
   `color-mix()` on `--page-bg`/`--brand` or one of the prepared families
   (`--sunken*`, `--line`, `--brand-tint*`, `--brand-edge`, `--page-glow`, `--stage-*`).
   A raw hex in a rule that is really an accent/neutral tint is a finding — it will clash
-  on the non-standard themes (Blaugrau, Schiefer, Lavendel …). Semantics
+  on every design whose `--page-bg`/`--brand` differ from the one it was picked against
+  (each user design in `public/js/designs.js` sets its own; since #1202 the old theme
+  names — Blaugrau, Schiefer, Lavendel … — are only round-marker labels). Semantics
   (`--good/--warn/--danger`) and the trophy `--gold*` / medal silver-bronze are
-  **intentionally** theme-independent — leave them fixed.
+  **intentionally** design-independent — leave them fixed.
 - **Enforced by:** — (a token-adherence assertion is a good candidate; see SKILL.md)
 
 ### U-002 — One spacing scale, applied consistently
@@ -279,7 +281,7 @@ is not a UI finding, it is a rejected idea.
   class of observation this criterion admits; the remedy makes it concrete (a derived
   wash, a scoped glow, a tinted band that anchors a section). Every new tone is derived
   via `color-mix()` on `--page-bg`/`--brand` or an existing family (U-001/U-R05) so the
-  treatment holds on all 8 themes, and it stays above the contrast floor (U-R04) —
+  treatment holds in every design, and it stays above the contrast floor (U-R04) —
   atmosphere goes *behind* content, never into competition with reading it.
 - **Enforced by:** — (manual; the big-picture pass in SKILL.md)
 
@@ -349,10 +351,10 @@ is not a UI finding, it is a rejected idea.
 
 ### U-R05 — "Just hardcode this nicer colour here"
 - **Status:** rejected · 2026-07-26
-- **Why:** A raw hex that is a shade of the page or accent breaks on the non-standard
-  themes and is exactly what `theme-derived-colors.md` forbids. The nice colour goes in as
-  a `color-mix()` on the tokens (or a new derived family token), so all 8 themes get it.
-  See U-001.
+- **Why:** A raw hex that is a shade of the page or accent breaks in every design whose
+  page or accent differ, and is exactly what `theme-derived-colors.md` forbids. The nice
+  colour goes in as a `color-mix()` on the tokens (or a new derived family token), so every
+  design gets it. See U-001.
 
 ### U-R06 — "Add illustrations / stock imagery / an illustration pipeline"
 - **Status:** rejected · 2026-07-26

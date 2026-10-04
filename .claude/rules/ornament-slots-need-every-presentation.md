@@ -1,6 +1,7 @@
 ---
 paths:
   - "public/styles.css"
+  - "public/css/designs/**"
 ---
 # An ornament must name EVERY presentation of its host — and a scroll container is not a host
 

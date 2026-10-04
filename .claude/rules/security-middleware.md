@@ -19,8 +19,8 @@ Security headers (`helmet`) and rate limiting (`express-rate-limit`) are wired i
   score pills) and the background grain is a `data:` SVG — a stricter CSP blanks
   those with no JS error, only a silent CSP violation in the console.
 
-- **`img-src` lists the cover hosts, and since #744 that is NOT the same list as
-  the download allowlist.** `lib/app.js` spreads
+- **`img-src` lists the cover hosts — the same list as the download allowlist
+  again since #981.** `lib/app.js` spreads
   `require('./providers').imageCspSources()` into `img-src` so the browser may
   **render** provider covers. Without it, every provider cover is cross-origin
   and CSP-blocked, so the add-game preview, the link-provider cover preview, the
@@ -30,28 +30,25 @@ Security headers (`helmet`) and rate limiting (`express-rate-limit`) are wired i
   `imageCspSources()` emits both the bare `h` and a `*.h` wildcard (a lone `*.h`
   doesn't match the apex). Don't re-hardcode hosts in `lib/app.js`.
 
-  The two questions were one list until #744 retired the four digital
-  storefronts, and separating them is the whole point:
+  **From #744 to #981 the two questions had different answers**, and that split
+  is the shape to bring back if a provider is ever retired with covers still on
+  shelves: what may be **queried and stored** was the live registry
+  (`isAllowedImageUrl`), what may be **rendered** was that **plus** a frozen
+  `LEGACY_COVER_HOSTS` list — because deriving `img-src` from the registry alone
+  silently revokes it for covers **already stored on people's shelves** (~75
+  then), which go blank with nothing but a console violation. #981's operator
+  action cleared those rows, so the frozen list went with them
+  (`lib/providers/index.js` says so) and `test/provider-covers.test.js` now
+  asserts the retired hosts are refused by both gates. Adding a provider needs
+  nothing but its `IMAGE_HOSTS`.
 
-  | question | answered by |
-  |---|---|
-  | what may be **queried and stored**? | the live registry — `isAllowedImageUrl` |
-  | what may be **rendered**? | that, **plus** `LEGACY_COVER_HOSTS` |
-
-  Derived from the registry alone, unregistering a provider module silently
-  revokes `img-src` for the covers **already stored on people's shelves** — ~75
-  of them at the time — which go blank with nothing but a console violation.
-  `LEGACY_COVER_HOSTS` (`lib/providers/index.js`) is therefore a written-out,
-  frozen list; it grows only when a provider is retired and must never be pruned
-  on the reasoning that "we don't query that store any more". Adding a provider
-  still needs nothing but its `IMAGE_HOSTS`.
-
-  `test/security.test.js` asserts every `imageCspSources()` entry is on `img-src`
-  **and** that each legacy host survives in the served header;
-  `test/provider-covers.test.js` asserts the same URLs render and no longer
-  store. Note this is *not* a widening to arbitrary hosts. A same-origin image
-  proxy is the tighter alternative for a hardened hosted deploy; deferred to the
-  hosting work.
+  `test/security.test.js` asserts every `imageCspSources()` entry is on `img-src`.
+  Note this is *not* a widening to arbitrary hosts. A same-origin image proxy is
+  the tighter alternative; this rule used to call it "deferred to the hosting
+  work", but hosting has been live since 2026-07-24 and **no open issue owns
+  it**. Whether it is an accepted trade-off or gets an issue awaits an operator
+  decision (claude-file audit, 2026-10-04) — until then, do not read it as
+  tracked (`.claude/rules/deferred-weakness-attributions-rot.md`).
 
 - **The ceilings are meaningless if `req.ip` isn't the caller — see
   `.claude/rules/trust-proxy-is-a-hop-count.md`.** Every limiter here keys on
@@ -71,7 +68,7 @@ Security headers (`helmet`) and rate limiting (`express-rate-limit`) are wired i
   tiny limits to assert the 429s.
 
 - **A per-IP cap counts PAGE LOADS, not just calls — so the shell is exempt
-  (#464).** The global limiter is mounted ~115 lines ahead of `express.static`,
+  (#464).** The global limiter is mounted long before `express.static`,
   so before #464 every script, font and stylesheet spent one request from the
   same 1000-per-15-min budget as an API write. `index.html` pulled **35
   `<script src>` + 6 `<link>`** when #464 was measured (the script count grows
@@ -87,7 +84,9 @@ Security headers (`helmet`) and rate limiting (`express-rate-limit`) are wired i
 
   **The skip is an EXACT path set, not an extension test — and that distinction
   is the whole lesson.** `assetPathSet(ASSET_DIR)` walks the asset tree once per
-  `createApp()`; the skip is `assetPaths.has(req.path)`. The obvious
+  `createApp()`; the skip is `assetPaths.has(req.path)` — plus, since #1171,
+  `guidePaths.has(req.path)`, the nine guide pages' exact paths (`GUIDE_PATHS`,
+  `lib/guide.js`), for GET/HEAD only. The obvious
   implementation — "does the path end in `.js`/`.css`/`.woff2`" — is wrong in a
   way that is *worse than the bug it fixes*, and nothing about it looks wrong:
 
