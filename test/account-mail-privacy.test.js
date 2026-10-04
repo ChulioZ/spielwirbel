@@ -20,8 +20,9 @@
  *
  * The address can also arrive INSIDE the error: an SMTP rejection quotes the
  * recipient in its message (see smtpRejection below). So every mail-failure
- * site — sendSafe, lib/notify.js and both catches in lib/routes/contact.js —
- * logs mail.mailFault(err) instead, and each has its own spec here.
+ * site — sendSafe, lib/notify.js, both catches in lib/routes/contact.js and both
+ * operator-panel sends in lib/routes/admin/notices.js — logs mail.mailFault(err)
+ * instead, and each is driven through its real route here.
  *
  * These specs read the ACTUAL emitted log lines rather than scanning the source,
  * because a source scan passes against any spelling that still leaks the address
@@ -34,6 +35,8 @@
 // misconfigured spec.
 process.env.ACCOUNTS_ENABLED = 'true';
 process.env.SESSION_SECRET = 'test-session-secret';
+// The operator panel's two sends (lib/routes/admin/notices.js) sit behind it.
+process.env.ADMIN_PASSWORD = 'operator-secret-pw';
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -185,6 +188,49 @@ test('a failed inbox notification is logged without the recipient address', asyn
   assert.equal(failed.length, 1, 'the notification failure should still be logged');
   assertDiagnosable(failed[0]);
   noAddressIn(logs, 'by a failed notification');
+});
+
+test('the operator panel\'s two sends log a failure without the notifier\'s or recipient\'s address', async () => {
+  // lib/routes/admin/notices.js: the Art. 16(5) decision mail to a NOTIFIER and
+  // the Art. 17 statement of reasons to the affected person. #1545 converted the
+  // four sites outside lib/routes/admin/ and named these two as still open; both
+  // mail an address the operator was given in confidence.
+  const repo = require('../lib/repo');
+  const login = await request(app).post('/api/admin/login').send({ password: 'operator-secret-pw' });
+  assert.equal(login.status, 200);
+  const cookie = login.headers['set-cookie'];
+
+  const notifier = 'decision.canary@example.com';
+  const notice = await repo.createContactNotice({
+    createdAt: new Date().toISOString(), email: notifier, category: 'copyright',
+    url: 'https://spielwirbel.app/uploads/abc123.jpg', message: 'Bitte prüfen.', status: 'open',
+  });
+  const entry = await repo.logModeration({
+    action: 'takedown', target: '/uploads/abc123.jpg', reason: 'DSA notice', at: new Date().toISOString(),
+  });
+
+  for (const [event, call] of [
+    ['admin_notice_mail_failed', () => request(app).post(`/api/admin/notices/${notice.id}/decision`)
+      .set('Cookie', cookie).send({ status: 'rejected', note: 'Kein Verstoß.', sendEmail: true })],
+    ['admin_statement_mail_failed', () => request(app).post('/api/admin/statement')
+      .set('Cookie', cookie).send({ entryId: entry.id, to: 'statement.canary@example.com' })],
+  ]) {
+    const restore = breakMail();
+    let logs;
+    try {
+      logs = await captureLogs(async () => {
+        const res = await call();
+        // Refused whole, as before: nothing is recorded as sent.
+        assert.equal(res.status, 502, `${event}: ${JSON.stringify(res.body)}`);
+      });
+    } finally {
+      restore();
+    }
+    const failed = logs.filter((l) => l.event === event);
+    assert.equal(failed.length, 1, `${event} should still be logged`);
+    assertDiagnosable(failed[0]);
+    noAddressIn(logs, `around ${event}`);
+  }
 });
 
 test('a failed contact delivery and a failed acknowledgement are logged without an address', async () => {

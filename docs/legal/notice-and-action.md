@@ -29,16 +29,18 @@ Abschnitt 7 (Maßnahmen + Begründung), Abschnitt 10 (Kontaktstellen
 Art. 11/12). **Jede Entfernung stützt sich auf eine dort benannte Regel** —
 die Begründung (unten) zeigt auf die konkrete Ziffer.
 
-**Stand:** 2026-09-06
+**Stand:** 2026-10-04
 
 ## Kanäle (Art. 16 Abs. 1)
 
 - Kontaktformular `/kontakt.html` → `CONTACT_TO`-Postfach (Heinlein/mailbox.org).
-- Melde-Button an jedem Eintrag des Freundeskreis-Feeds (#559) — öffnet dasselbe
-  Formular mit Kategorie „Sonstiges" und vorbelegtem gemeldetem Konto/Betreff.
-  Kein eigener Kanal, sondern ein zweiter Zugang zum obigen: der Feed ist die
-  einzige Oberfläche, auf der Nutzer fremden freien Text sehen (Art. 16 Abs. 1:
-  „leicht zugänglich").
+- Melde-Buttons an den Oberflächen, auf denen Nutzer Angaben **fremder** Konten
+  sehen — an jedem Eintrag des Freundeskreis-Feeds (#559) und, seit #841, am
+  Kontoprofil (Nutzername, Profilbild) sowie an den Personen-Karten im
+  Freundeskreis. Jeder öffnet dasselbe Formular mit Kategorie „Sonstiges" und
+  vorbelegtem gemeldetem Konto (beim Feed auch dem Betreff). Kein eigener Kanal,
+  sondern weitere Zugänge zum obigen, dort, wo fremde Inhalte zu sehen sind
+  (Art. 16 Abs. 1: „leicht zugänglich").
 - E-Mail an `IMPRESSUM_EMAIL` (Alias `abuse@` läuft auf dasselbe Postfach, #307).
 - Beides ist ohne Login erreichbar; die Nutzungsbedingungen §6 nennen die
   Bestandteile einer guten Meldung (Art. 16 Abs. 2: Begründung, exakte URL —
@@ -53,7 +55,7 @@ die Begründung (unten) zeigt auf die konkrete Ziffer.
   „Meldungen" im Betreiber-Panel (`/admin.html`). Das Postfach bleibt der
   Nachweis für Meldungen, die per E-Mail eingehen (Ordner `Meldungen`,
   Aufbewahrung s. `retention.md`); bei CSAM-Bezug ist die Meldung im Formular
-  ohne E-Mail-Adresse möglich (Art. 16 Abs. 3).
+  ohne E-Mail-Adresse möglich (Art. 16 Abs. 2 lit. c).
 
 ## Ablauf
 

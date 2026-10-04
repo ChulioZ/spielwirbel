@@ -6,7 +6,7 @@ den Prüf-Rhythmus fest; die veröffentlichte Datenschutzerklärung
 Frist, die hier steht, aber nicht gelebt oder nicht veröffentlicht wird, ist
 schlimmer als keine.
 
-**Stand:** 2026-09-26
+**Stand:** 2026-10-04
 
 ## Grundsatz
 
@@ -22,7 +22,8 @@ Bild-Objekte ab — `.claude/rules/deletion-paths-must-free-cover-objects.md`).
 | Runden-/Spiel-/Mitgliedsdaten, Cover | bis Löschung durch Nutzer bzw. Kontolöschung | Nutzeraktion / `eraseAccount` (#273) |
 | **Profilbild eines Kontos (#841)** — die gespeicherte Bilddatei, `vvt.md` Zeile 4 | bis der Nutzer es entfernt **oder durch ein neues ersetzt** (das ersetzte Objekt wird im selben Vorgang gelöscht), bis zur betreiberseitigen Entfernung nach einer Meldung (Zeile Moderation) — und in jedem Fall bis Kontolöschung. Kein eigener Aufbewahrungslauf: das Bild hängt am Konto und geht mit ihm | Nutzeraktion / `takedownImage` / `eraseAccount` |
 | Konten — **mit allen am Konto hängenden Feldern**: Anmeldedaten samt zuletzt bestätigter Fassung der Nutzungsbedingungen (`vvt.md` Zeile 2), verknüpfter BoardGameGeek-Nutzername (Zeile 15), eingerichtete Passkeys (#418 — einzeln in den Kontoeinstellungen entfernbar, sonst mit dem Konto), Benachrichtigungs-Schalter und Zeitpunkt der letzten Benachrichtigung (Zeile 18) | bis Kontolöschung — seit #419 vom Nutzer selbst in den Kontoeinstellungen auslösbar, alternativ betreiberseitig auf formlose Anfrage | `eraseAccount` (#273/#419) |
-| **Gast-Demo-Konten (#427)** samt Runden, hochgeladenen Bildern und der gehashten IP-Adresse des Demo-Starts (#502, `vvt.md` Zeile 17 — kein eigener Aufbewahrungslauf) | **24 h** ab Erstellung (`DEMO_TTL_HOURS`) | **automatisch**: Hintergrundjob `purgeExpiredDemos` (`lib/scheduler.js`), ruft `eraseAccount` — der einzige Bestand mit vollautomatischer Löschfrist |
+| **Ausstehende Änderung der E-Mail-Adresse** (#1076, `vvt.md` Zeile 2) — die neue, noch unbestätigte Adresse samt gehashtem Bestätigungs-Token. Die Adresse kann ein Tippfehler und damit die eines Dritten sein | bis zur Bestätigung, zum Abbrechen oder zu einer neuen Anfrage — **höchstens 24 Stunden** ab dem Versand des Bestätigungslinks (`VERIFY_TTL_MS`), wie es die Datenschutzerklärung zusagt. Der Link wird zum selben Zeitpunkt **unbrauchbar** (Prüfung in der Route), unabhängig davon, wann der Sweep die Angabe löscht | **automatisch** (seit 2026-10-04): 15-Minuten-Sweep `purgeExpiredPendingEmails` in `lib/scheduler.js`; davor wurde ein abgelaufener Eintrag nur ignoriert und blieb gespeichert / Nutzeraktion / `eraseAccount` |
+| **Gast-Demo-Konten (#427)** samt Runden, hochgeladenen Bildern und der gehashten IP-Adresse des Demo-Starts (#502, `vvt.md` Zeile 17 — kein eigener Aufbewahrungslauf) | **24 h** ab Erstellung (`DEMO_TTL_HOURS`) | **automatisch**: Hintergrundjob `purgeExpiredDemos` (`lib/scheduler.js`), ruft `eraseAccount` — einer von mehreren Beständen mit vollautomatischer Löschfrist (ebenso: ausstehende E-Mail-Änderungen, Feed-Ereignisse, Abstimmungs-Links, zuletzt abgerufene Preise und das Moderations-Log, jeweils unten) |
 | Einladungen (Runden-Freigaben, #207) | bis Annahme/Ablehnung bzw. Widerruf | Nutzeraktion / `eraseAccount` |
 | Freigaben (`round_grants`, #207) | bis Widerruf/Verlassen bzw. Konto- oder Rundenlöschung | Nutzeraktion / `eraseAccount` |
 | Freundschaften + Freundeskreis-Feed (#325) | Freundschaft bis Entfreunden bzw. Kontolöschung; einzelne Feed-Ereignisse **12 Monate** (#1357, `MAX_FEED_EVENT_AGE_DAYS`, Default 365), dazu eine Sicherheitsobergrenze von 5000 Ereignissen je Konto (`MAX_FEED_EVENTS`) | Nutzeraktion / automatisch: beim Schreiben (je Konto) und per Scheduler-Job `purgeExpiredFeedEvents` alle 15 Min. (alle Konten) / `eraseAccount` |

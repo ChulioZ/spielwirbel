@@ -217,3 +217,42 @@ test('a demo account posts no badge', async () => {
   await sess(dan, round.id, `/${session.id}/finish`, { winnerIds: [] });
   assert.deepEqual(await badgeRows(dan), []);
 });
+
+/* Hiding the play record WITHDRAWS what it already announced (legal audit
+   2026-10-04, polish 9). The emit-side check above stops NEW badges once
+   `statsVisible` is off, but a "Siege 100" already in the store said exactly
+   what the switch now hides, and it stayed in friends' feeds for up to the
+   12-month retention. So both read routes filter `badge_earned` by the author's
+   CURRENT setting — read time, not delete, so switching back restores them,
+   and the subject's own view is untouched (they always see their own numbers,
+   lib/me-projection.js). Seeded through the repo: the earning is not under test. */
+test('hiding the record withdraws badges already announced, on both feed routes', async () => {
+  const ida = await makeAccount('bf-ida@example.com');
+  const ben = await makeAccount('bf-ben@example.com');
+  await befriend(ida, ben);
+  await new Promise((r) => setTimeout(r, 20)); // clear the acceptedAt cutoff
+  await repo.addFeedEvent(ida.user.id, { type: 'badge_earned', title: 'accountSessions', tier: 25 });
+  await repo.addFeedEvent(ida.user.id, { type: 'game_added', title: 'Azul' });
+
+  const types = (body) => body.events.map((e) => e.type).sort();
+  const friendsFeed = () => request(app).get('/api/account/friends/feed').set(auth(ben.token)).then((r) => r.body);
+  const profile = (viewer) => request(app).get(`/api/account/profile/${ida.username}`).set(auth(viewer.token)).then((r) => r.body);
+  const profilePage = (viewer) => request(app).get(`/api/account/profile/${ida.username}/feed`).set(auth(viewer.token)).then((r) => r.body);
+  const setVisible = (v) => request(app).patch('/api/account/me').set(auth(ida.token)).send({ statsVisible: v });
+
+  // The control: visible while the record is.
+  assert.deepEqual(types(await friendsFeed()), ['badge_earned', 'game_added']);
+  assert.deepEqual(types(await profile(ben)), ['badge_earned', 'game_added']);
+
+  assert.equal((await setVisible(false)).status, 200);
+  assert.deepEqual(types(await friendsFeed()), ['game_added'], '/friends/feed still announces the badge');
+  assert.deepEqual(types(await profile(ben)), ['game_added'], 'the profile\'s first page still shows it');
+  assert.deepEqual(types(await profilePage(ben)), ['game_added'], 'the profile\'s paging route still shows it');
+  // The subject's own profile is not a friend's view: their own marks stay.
+  assert.deepEqual(types(await profile(ida)), ['badge_earned', 'game_added']);
+  // Withdrawn, not deleted.
+  assert.equal((await badgeRows(ida)).length, 1);
+
+  await setVisible(true);
+  assert.deepEqual(types(await friendsFeed()), ['badge_earned', 'game_added'], 'switching back restores it');
+});

@@ -566,11 +566,14 @@ test('export answers an access request; erasure cascades and is logged (#273)', 
     assert.ok(dump.feedEvents.length >= 1);
     assert.ok(dump.feedEvents.some((e) => e.title === 'Azul'));
 
-    // The same secret-stripping the account list applies — an export is handed
-    // to the data subject, so a password hash in it would be a disclosure.
-    for (const key of ['identities', 'refreshTokens', 'verification', 'reset']) {
+    // An export is handed to the data subject, so credential material in it would
+    // be a disclosure. Since the 2026-10-04 audit the identities themselves DO go
+    // out (a passkey's label and dates are data about the subject), minus the
+    // password hash — test/account-export-fields.test.js covers every field.
+    for (const key of ['refreshTokens', 'verification', 'reset']) {
       assert.equal(key in dump.account, false, `${key} must be stripped`);
     }
+    assert.deepEqual(dump.account.identities, [{ type: 'password' }], 'the password identity, without its hash');
     // Another account's round is not in it.
     assert.equal(dump.rounds.some((r) => r.name === 'Untouched'), false);
 

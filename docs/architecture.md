@@ -273,8 +273,13 @@ lib/
                      sweep (issue #652), the stored-price sweep (issue #688),
                      the moderation-log retention purge (issue #311), the
                      Freundeskreis feed's 12-month purge (issue #1357), the
+                     expired pending-e-mail sweep (pending-email.js), the
                      public-statistics rebuild (issue #564) and the BGG
                      corpus enrichment pass (issue #681)
+  pending-email.js   deletes an unconfirmed new e-mail address once its 24 hours
+                     are up (issue #1076) — the routes already refused it; this
+                     makes the privacy policy's „längstens 24 Stunden" true of
+                     the stored row, not only of the link
   shutdown.js        the SIGTERM/SIGINT drain server.js installs — stops the
                      scheduler, lets in-flight requests finish, destroys the
                      pool, with a force-exit fallback. A factory taking its
@@ -293,6 +298,10 @@ lib/
                      registry's `enabled` gate) — shared by /me, the account
                      routes and both backends' per-design count on the
                      operator's „Funktionsnutzung" card (issues #1186, #1480)
+  account-export.js  the account record as the operator's Art. 15/20 export
+                     hands it out: every stored field except named credential
+                     material — deliberately NOT the account list's projection,
+                     which left a dozen fields out of the export until 2026-10-04
   me-projection.js   the ONE description of what a client may see about an
                      account (issue #785) — answered by GET /me and by all
                      three endpoints that start a session (password login,

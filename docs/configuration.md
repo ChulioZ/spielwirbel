@@ -560,9 +560,12 @@ person with several rounds reaching the podium alone. The three period cards get
 their own floors, because three sessions in a week is a fact and three in a year
 is noise: `PUBLIC_STATS_MIN_PLAYS_WEEK` / `_MONTH` / `_YEAR` (3/8/25) each with
 a `_PLAY_TENANTS_` spread (2/3/5). The all-time card („Spielwirbels
-Dauerbrenner") is the exception: `PUBLIC_STATS_MIN_PLAYS_ALL` and
-`PUBLIC_STATS_MIN_PLAY_TENANTS_ALL` both default to **0**, so it publishes
-whatever it says — the levers are kept only so it can be pulled back live.
+Dauerbrenner") has **no magnitude floor**: `PUBLIC_STATS_MIN_PLAYS_ALL` defaults
+to **0**, so one play is enough. Its spread, `PUBLIC_STATS_MIN_PLAY_TENANTS_ALL`,
+defaults to **2** like every other podium's, because it is a privacy safeguard
+rather than a size threshold: it keeps one group's evenings off the public page
+on their own (`docs/legal/vvt.md` row 22 promises it for every ranking). Both
+levers can still be raised live.
 Best rated pairs `PUBLIC_STATS_MIN_RATINGS`
 (5) with `PUBLIC_STATS_MIN_RATING_TENANTS` (2). Since issue #1329 both count
 **evidence**, not ratings alone: the first is ratings **plus** plays (every
