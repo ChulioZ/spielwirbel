@@ -172,3 +172,84 @@ test('a game drawn but never rated renders no strip at all', async (t_) => {
   assert.equal(dom.app.querySelector('.gd-raters'), null,
     'an empty heading over an empty strip is the emptiness this screen avoids');
 });
+
+/* ------------------------------------------------------------ the strip's rows
+
+   Four people read 3+1 at 390 in Ocean, Die Brücke and Forest, and five read 4+1
+   wherever four tracks fit (audit 2026-10-04 U3). Pixels are not assertable here
+   — jsdom applies no external stylesheet — so the sheet is read as text and every
+   number is DERIVED from the two the strip declares, its track floor and its gap:
+   the width bands, the track count in each, and the row break each count needs.
+   A retune of either number, or one break written at the wrong child, goes red. */
+
+const fs = require('node:fs');
+const path = require('node:path');
+
+const SHEET = fs.readFileSync(path.join(__dirname, '..', 'public', 'styles.css'), 'utf8')
+  .replace(/\/\*[\s\S]*?\*\//g, '');
+
+function stripSpec() {
+  const rule = /\.raters\s*\{([^}]*)\}/.exec(SHEET);
+  assert.ok(rule, 'the .raters rule is gone');
+  const floor = Number(/minmax\((\d+)px,\s*1fr\)/.exec(rule[1])[1]);
+  const gap = Number(/(?:^|[\s;])gap:\s*(\d+)px/.exec(rule[1])[1]);
+  assert.match(rule[1], /container-type:\s*inline-size/, 'the breaks query the strip\'s own width');
+  return { floor, gap };
+}
+
+// Every `@container (...) { ... }` block that breaks rows: its width band, and
+// the child each "exactly n" count starts its second row at.
+function bands() {
+  const out = [];
+  const re = /@container\s*\(([^{]*)\)\s*\{/g;
+  let m;
+  while ((m = re.exec(SHEET))) {
+    let depth = 1;
+    let i = re.lastIndex;
+    for (; depth && i < SHEET.length; i++) depth += SHEET[i] === '{' ? 1 : SHEET[i] === '}' ? -1 : 0;
+    const body = SHEET.slice(re.lastIndex, i - 1);
+    const lo = /(\d+)px\s*<=\s*width/.exec(m[1]);
+    const hi = /width\s*<\s*(\d+)px/.exec(m[1]);
+    const breaks = {};
+    for (const [, n, k] of body.matchAll(/\.rater:first-child:nth-last-child\((\d+)\)\s*~\s*\.rater:nth-child\((\d+)\)/g)) {
+      breaks[n] = Number(k);
+    }
+    if (Object.keys(breaks).length) {
+      assert.match(body, /grid-column-start:\s*1/, `the ${m[1]} band names its breaks but starts no row`);
+      out.push({ lo: lo ? Number(lo[1]) : 0, hi: hi ? Number(hi[1]) : Infinity, breaks });
+    }
+  }
+  return out;
+}
+
+test('the rater strip fits four people in every design\'s phone column', () => {
+  const { floor, gap } = stripSpec();
+  // The strips measured at 390 (2026-10-04): Ocean's and Die Brücke's padded
+  // panels 320px, Forest's 330, the rest 362 — and Forest's desktop strip 312.
+  for (const width of [312, 320, 330, 362]) {
+    const tracks = Math.floor((width + gap) / (floor + gap));
+    assert.ok(tracks >= 4, `a ${width}px strip holds ${tracks} tracks — four people wrap ${tracks}+${4 - tracks}`);
+  }
+});
+
+test('each width band breaks its rows where they fill evenly, for up to eight people', () => {
+  const { floor, gap } = stripSpec();
+  const edge = (k) => k * floor + (k - 1) * gap; // where k tracks begin to fit
+  const got = bands();
+  assert.ok(got.length >= 5, `only ${got.length} @container bands found — did the block move?`);
+  for (const { lo, hi, breaks } of got) {
+    const m = Math.floor((hi + gap) / (floor + gap)) - 1; // tracks inside the band
+    if (lo) assert.equal(lo, edge(m), `a band starts at ${lo}px, but ${m} tracks begin at ${edge(m)}px`);
+    assert.equal(hi, edge(m + 1), `the ${m}-track band must end where ${m + 1} tracks begin`);
+    // As many rows as m tracks need, and as few columns as fill them.
+    const want = {};
+    for (let n = m + 1; n <= 8; n++) {
+      const cols = Math.ceil(n / Math.ceil(n / m));
+      if (cols < m) want[n] = cols + 1;
+    }
+    assert.deepEqual({ ...breaks }, want, `the ${m}-track band (${lo}–${hi}px) breaks the wrong rows`);
+  }
+  // …and every band that NEEDS a break has a block at all.
+  const covered = new Set(got.map(({ hi }) => hi));
+  for (let m = 3; m <= 7; m++) assert.ok(covered.has(edge(m + 1)), `no band for ${m} tracks`);
+});

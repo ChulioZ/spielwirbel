@@ -70,6 +70,20 @@ test('the people are laid on the plate — a shadow, never a tilt — and the �
   assert.deepEqual(tilted, [], 'a roster tile is rotated');
 });
 
+/* An account with no friends yet sees the „＋" seat ALONE on the plate (audit
+   2026-10-04 U2). In one 156-172px track its two lines wrapped to four —
+   „Freund*in / hinzufügen / mit dem / Nutzernamen", 114px tall, measured at 390
+   and 1280 — beside six empty tracks. Alone, it takes the row; Ocean's plate
+   already did (`.friends-screen .k-tile--add` spans there), and the other designs
+   draw this roster differently and were measured at one line each. */
+test('the „＋" seat alone on the plate takes the whole row', () => {
+  const alone = bodyOf('.k-tiles > .k-tile--add:only-child');
+  assert.ok(alone, 'no rule widens the lone add tile — it wraps to four lines in one track');
+  assert.match(alone, /grid-column:\s*1\s*\/\s*-1/, 'it must span every track, at every width');
+  // Only when ALONE: beside real tiles it is one cell like them.
+  assert.doesNotMatch(bodyOf('.k-tile--add') || '', /grid-column/, 'the seat spans the row even beside friends');
+});
+
 /* #1136 measured these counts with a bare 168px grid; the plate must not cost a
    column at any of the five widths the issue names. The reference is COMPUTED
    from #1136's numbers, not typed, so the assertion is the equality. */
