@@ -172,27 +172,50 @@ test('a guest is offered on the ballot and marked as one', async () => {
    does not already have it, and never off a demo round. Both gates are decided
    from the ballot, so both are route behaviour rather than client taste. */
 
-test('a seat marks whether it belongs to an ACCOUNT — as a boolean, never the userId', async () => {
+/* Whether a seat belongs to an ACCOUNT is told to the CLAIMANT about their own
+   seat, in the answer to their vote — never on the ballot (legal audit
+   2026-10-04). Until then the ballot carried `linked` for EVERY participant, so
+   anyone holding the link learned which of the people at the table have a
+   Spielwirbel account, while the privacy policy (§5) and vvt row 19 say the link
+   shows names "ausschließlich". The note only ever needed the claimant's own
+   seat, so the minimisation costs the feature nothing. */
+test('the ballot says nothing about which participants have an account', async () => {
   const repo = require('../lib/repo');
   const { round, token } = await setup({ session: { guests: ['Dana'] } });
-  const [alice, bob] = round.members;
+  const [alice] = round.members;
   await repo.forTenant('default').updateMember(round.id, alice.id, { userId: 'u-alice' });
 
   const res = await request(app).get(`/api/vote/${token}`);
-  const by = (name) => res.body.people.find((p) => p.name === name);
-  assert.equal(by(alice.name).linked, true, 'a seat held by an account');
-  assert.equal(by(bob.name).linked, false, 'a name-only seat');
-  // A guest has no member row to hang an account off, so it is false by
-  // construction — asserted anyway, because `undefined` would read as false at
-  // every call site while meaning "this route forgot about guests".
-  assert.equal(by('Dana').linked, false);
-
-  // The point of the boolean. The route's header promises no account identifier
-  // travels, and this is the field that would have broken it: a raw userId hands
-  // a stranger holding the link a stable cross-session handle for a person.
+  assert.equal(res.status, 200);
+  assert.ok(res.body.people.length >= 3, 'the ballot lists the table');
   const body = JSON.stringify(res.body);
+  assert.equal(body.includes('"linked"'), false, `the ballot discloses account status: ${body}`);
+  // The original promise, still pinned: no account identifier travels either.
   assert.equal(body.includes('u-alice'), false, `ballot leaked a userId: ${body}`);
   assert.equal(body.includes('"userId"'), false);
+});
+
+test('the vote answer tells the claimant whether THEIR seat is an account\'s — as a boolean', async () => {
+  const repo = require('../lib/repo');
+  const { round, a, token } = await setup({ session: { guests: ['Dana'] } });
+  const [alice, bob] = round.members;
+  await repo.forTenant('default').updateMember(round.id, alice.id, { userId: 'u-alice' });
+  const vote = (pid) => request(app).post(`/api/vote/${token}/votes/${pid}`).send({ votes: { [a.id]: { rating: 4 } } });
+
+  const asAlice = await vote(alice.id);
+  assert.equal(asAlice.status, 200);
+  assert.deepEqual(asAlice.body, { ok: true, linked: true }, 'a seat held by an account');
+  assert.deepEqual((await vote(bob.id)).body, { ok: true, linked: false }, 'a name-only seat');
+  // A guest has no member row to hang an account off, so it is false by
+  // construction — asserted anyway, because `undefined` would read as "unknown"
+  // at the call site (which withholds the note) while meaning "this route
+  // forgot about guests".
+  const dana = (await request(app).get(`/api/vote/${token}`)).body.people.find((p) => p.name === 'Dana');
+  assert.deepEqual((await vote(dana.id)).body, { ok: true, linked: false });
+
+  // Never the id itself: a raw userId would hand the link holder a stable
+  // cross-session handle for a person.
+  assert.equal(JSON.stringify(asAlice.body).includes('u-alice'), false);
 });
 
 test('a DEMO round marks itself, so nothing is pitched off data that evaporates', async () => {
@@ -240,8 +263,9 @@ test('a link vote lands exactly like an in-app one', async () => {
     .post(`/api/vote/${token}/votes/${alice.id}`)
     .send({ votes: { [a.id]: { rating: 5, retire: true }, [b.id]: { rating: 2 } } });
   assert.equal(res.status, 200);
-  // Never the session back — it holds everyone else's column.
-  assert.deepEqual(res.body, { ok: true });
+  // Never the session back — it holds everyone else's column. Only the one
+  // boolean about the claimant's own seat rides along (see the `linked` cases).
+  assert.deepEqual(res.body, { ok: true, linked: false });
 
   await request(app).post(`/api/rounds/${round.id}/sessions/${session.id}/close`).send({});
   const stored = sessionOf(await getRound(round.id), session.id);

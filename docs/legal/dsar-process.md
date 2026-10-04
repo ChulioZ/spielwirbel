@@ -3,7 +3,7 @@
 Internal record (German). Requests arrive via the published e-mail address or
 the contact form; answer within **one month** (Art. 12 Abs. 3).
 
-**Stand:** 2026-09-13
+**Stand:** 2026-10-04
 
 ## Eingang & Identitätsprüfung
 
@@ -21,6 +21,21 @@ the contact form; answer within **one month** (Art. 12 Abs. 3).
 - Betreiber-Panel → Konto suchen → **Export** (#273): liefert die gespeicherten
   Konto- und Rundendaten als maschinenlesbare Datei. Zusammen mit den Angaben
   der Datenschutzerklärung (Zwecke, Empfänger, Fristen) als Antwort senden.
+- Das **Konto** steht darin seit 2026-10-04 **Feld für Feld vollständig**
+  (`lib/account-export.js`): neben Adresse, Nutzername, Profilbild und
+  Sperrstatus auch der BoardGameGeek-Nutzername, die Passkeys (Bezeichnung,
+  Anlage- und letzter Nutzungszeitpunkt, Übertragungswege, Kennung und
+  öffentlicher Schlüssel), beide Benachrichtigungs-Schalter samt Zeitpunkt der
+  letzten Benachrichtigung, die Sichtbarkeit der Spielbilanz, der
+  BG-Stats-Schalter, Design und Design-Auswahl, die bestätigte Fassung der
+  Nutzungsbedingungen, der „Was ist neu"-Stand und eine ausstehende
+  E-Mail-Änderung **samt der neuen Adresse**. Bis dahin lief der Export über die
+  Projektion der Kontoliste und ließ rund ein Dutzend dieser Felder weg.
+  Bewusst **nicht** enthalten ist Anmeldematerial: Passwort-Hash, die gehashten
+  Bestätigungs-/Reset-Token, der Token-Hash der E-Mail-Änderung und die
+  Sitzungen (Refresh-Token). `test/account-export-fields.test.js` verlangt für
+  jedes gespeicherte Kontofeld entweder den Export oder einen benannten Grund
+  für das Weglassen — ein neues Feld kann also nicht still herausfallen.
 - Der Export enthält neben Konto und Runden auch die kontobezogenen Daten in den
   globalen Speichern (#397): **Freundschaften, Freundeskreis-Feed-Ereignisse,
   Postfach (Inbox), Einladungen und Runden-Freigaben (Grants)** — genau die
@@ -36,6 +51,25 @@ the contact form; answer within **one month** (Art. 12 Abs. 3).
   den Links fragt, genügt die Auskunft über ihre Anzahl und Ablaufzeit.
 - Feedback ist kontounabhängig gespeichert; nur bei angegebener E-Mail
   zuordenbar — dann mit exportieren.
+- **Was der Export NICHT abdeckt — von Hand durchsuchen.** Drei Bestände auf
+  Betreiberseite können Daten über die anfragende Person enthalten, tragen aber
+  keine Konto-Id und sind deshalb nicht Teil des Exports:
+  - **Gespeicherte Meldungen** (`contact_notices`, Panel-Karte „Meldungen",
+    CSV-Export): nach der E-Mail-Adresse (als meldende Person) und nach dem
+    Nutzernamen (als gemeldetes Konto) suchen.
+  - **Moderations-Log** (`moderation_log`, Panel-Karte „Protokoll", Filter nach
+    Mandant bzw. CSV-Export): Einträge zur Tenant-Id des Kontos, zur Konto-Id
+    oder zur E-Mail-Adresse.
+  - **Das Postfach** (`IMPRESSUM_EMAIL`/`CONTACT_TO`, auch der Ordner
+    `Meldungen`): Korrespondenz von und über die Person.
+
+  Fundstellen in Kopie oder Zusammenfassung beifügen — **mit einer
+  Einschränkung**: ist die anfragende Person die **gemeldete**, werden Name und
+  E-Mail-Adresse der **meldenden** Person nicht herausgegeben (Art. 15 Abs. 4
+  DSGVO, Rechte Dritter; dieselbe Zusage wie im Bescheid-Muster in
+  `notice-and-action.md`: „die Identität meldender Personen geben wir nicht
+  weiter"). Mitzuteilen ist dann, *dass* eine Meldung vorlag, wann und mit
+  welchem Inhalt, soweit er die Person betrifft.
 
 ## Berichtigung (Art. 16)
 

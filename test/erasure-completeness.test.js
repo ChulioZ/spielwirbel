@@ -54,8 +54,13 @@ const GLOBAL_DISPOSITION = {
   users: {
     erase: true,
     export: false,
-    why: 'the account row itself: erased last, and the export is OF this account — '
-      + 'the route serializes the profile from its own read, not from this table',
+    // Until 2026-10-04 this said the route "serializes the profile from its own
+    // read", which was true and hid that the read went through the operator
+    // LIST's projection and dropped about a dozen stored fields. A table-level
+    // map cannot see a field-level gap, so the field level has its own spec.
+    why: 'the account row itself: erased last, and exported by the route rather than by '
+      + 'exportAccountData — through accountExport (lib/account-export.js), whose field-by-field '
+      + 'completeness test/account-export-fields.test.js enforces',
   },
   round_grants: { erase: true, export: true },
   invitations: { erase: true, export: true },

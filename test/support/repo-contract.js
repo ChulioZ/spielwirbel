@@ -3522,6 +3522,47 @@ module.exports = function repoContract(repo) {
     assert.equal(await repo.getUserById(user.id), null);
   });
 
+  /* The pending e-mail change sweep (#1076, legal audit 2026-10-04): the policy
+     keeps the new address "längstens 24 Stunden", and an expired record used to
+     be only IGNORED. Asserted on the ROWS, not on the count — this suite shares
+     a dataset, so a count is satisfied by clearing somebody else's record. */
+  test('clearExpiredPendingEmails nulls expired and malformed records, and only those', async () => {
+    const now = '2026-10-04T12:00:00.000Z';
+    const record = (expiresAt) => ({ email: `${uniq()}@example.com`, tokenHash: 'ph', expiresAt, sentAt: '2026-10-03T12:00:00.000Z' });
+    const live = await repo.createUser(userFields({ pendingEmail: record('2026-10-04T12:00:00.001Z') }));
+    const edge = await repo.createUser(userFields({ pendingEmail: record(now) }));
+    const old = await repo.createUser(userFields({ pendingEmail: record('2026-10-01T00:00:00.000Z') }));
+    // A record with no expiry is malformed; the confirm route can never accept
+    // it, so it fails closed and goes — matching the vote-link sweep's reading.
+    const broken = await repo.createUser(userFields({ pendingEmail: { email: 'x@example.com', tokenHash: 'ph' } }));
+    const none = await repo.createUser(userFields({ pendingEmail: null }));
+    // An account predating #1076 carries NO key, and must keep carrying none:
+    // writing `pendingEmail: null` onto it would break absent-key parity.
+    const legacy = await repo.createUser(userFields());
+
+    const cleared = await repo.clearExpiredPendingEmails(now);
+    assert.equal(typeof cleared, 'number', 'a count, coerced on both backends');
+    assert.ok(cleared >= 3);
+
+    assert.deepEqual((await repo.getUserById(live.id)).pendingEmail, live.pendingEmail, 'a live change survives');
+    // `<=`: the confirm route treats a record as live only while expiresAt > now,
+    // so at the instant of expiry it is already dead.
+    assert.equal((await repo.getUserById(edge.id)).pendingEmail, null, 'expired at exactly now');
+    assert.equal((await repo.getUserById(old.id)).pendingEmail, null, 'long expired');
+    assert.equal((await repo.getUserById(broken.id)).pendingEmail, null, 'no expiry at all');
+    assert.equal((await repo.getUserById(none.id)).pendingEmail, null);
+    assert.equal('pendingEmail' in (await repo.getUserById(legacy.id)), false, 'no key written onto a legacy row');
+
+    // Nothing else on a cleared row moves.
+    const after = await repo.getUserById(old.id);
+    assert.equal(after.email, old.email);
+    assert.deepEqual(after.identities, old.identities);
+
+    // Idempotent: a second sweep over the same instant finds nothing of ours.
+    await repo.clearExpiredPendingEmails(now);
+    assert.deepEqual((await repo.getUserById(live.id)).pendingEmail, live.pendingEmail);
+  });
+
   test('getUserById returns a snapshot: mutating it does not change the store', async () => {
     const user = await repo.createUser(userFields());
     const snap = await repo.getUserById(user.id);
