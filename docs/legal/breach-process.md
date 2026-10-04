@@ -3,16 +3,35 @@
 Internal record (German). Kept deliberately short — it must be executable under
 stress by one person.
 
-**Stand:** 2026-07-26
+**Stand:** 2026-10-04
 
 ## 1. Erkennen & Eindämmen (sofort)
 
 - Auffälligkeit ernst nehmen: unerwartete Logs, fremde Moderations-Aktionen,
   Hinweise per Kontaktformular/E-Mail, Anbieter-Benachrichtigung.
-- Sofortmaßnahmen je nach Fall: betroffene Secrets rotieren (`SESSION_SECRET`,
-  `ADMIN_PASSWORD`, `SMTP_PASS`, DB-Zugang via Railway), verdächtige Konten
+- Sofortmaßnahmen je nach Fall: betroffene Secrets rotieren, verdächtige Konten
   sperren (Admin-Panel), notfalls `ACCOUNTS_ENABLED` abschalten oder den Dienst
-  pausieren (Railway).
+  pausieren (Railway). Die Secrets (alle in den Railway-Variablen des
+  App-Dienstes, sofern nicht anders genannt):
+  - `SESSION_SECRET` — signiert die kurzlebigen Konto-Zugangstoken. Laufende
+    Sitzungen **überleben** die Rotation, weil die Refresh-Token nicht davon
+    abhängen (gespeichert als SHA-256-Hash); wer gestohlene Sitzungen beenden
+    muss, sperrt die betroffenen Konten im Admin-Panel.
+  - `ADMIN_PASSWORD` **und `ADMIN_SESSION_SECRET`, falls gesetzt** — das
+    Betreiber-Cookie wird mit `ADMIN_SESSION_SECRET || SESSION_SECRET ||
+    ADMIN_PASSWORD` signiert (`lib/admin.js`). Ist `ADMIN_SESSION_SECRET`
+    gesetzt, macht das Rotieren der beiden anderen ein gestohlenes, bis zu
+    12 Stunden gültiges Betreiber-Cookie **nicht** ungültig — dann dieses
+    mitrotieren.
+  - `S3_ACCESS_KEY_ID` / `S3_SECRET_ACCESS_KEY` — Zugang zum Objektspeicher
+    (Cloudflare R2) mit **allen hochgeladenen Bildern**, auch Profilbildern,
+    die häufig Personen zeigen. Neuen Schlüssel im Cloudflare-Dashboard
+    anlegen, eintragen, den alten widerrufen.
+  - `SMTP_PASS` — Versandzugang des Betreiber-Postfachs (mailbox.org).
+  - `BGG_API_TOKEN` — der lizenzierte BoardGameGeek-Zugang; kein Personenbezug,
+    aber missbrauchsfähig unter unserem Namen.
+  - DB-Zugang (`DATABASE_URL`) — Zugangsdaten über den Postgres-Dienst in
+    Railway neu erzeugen.
 - Nichts vorschnell löschen — Logs und Zustand für die Bewertung sichern
   (Railway-Logs exportieren, Zeitpunkte notieren).
 

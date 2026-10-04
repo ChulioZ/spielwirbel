@@ -182,11 +182,11 @@ function renderVoteLinkClaim(token, ballot) {
   if (designIs('tisch')) root.querySelector('.page-head').replaceWith(composedVoteLinkIntro(ballot));
 
   // Initials, never `avatarFace()`. The ballot carries no `userId` by design
-  // (#1169 settled it as a boolean `linked` instead), and AVATAR_CACHE is filled
-  // only by the auth-gated avatar route this page cannot call — so the lookup
-  // could resolve nothing anyway. This used to pass `{ userId: person.userId }`
-  // on a field that was always undefined, which read as if a linked member's
-  // picture rendered here.
+  // (nor, since the 2026-10-04 audit, whether a seat is an account's at all),
+  // and AVATAR_CACHE is filled only by the auth-gated avatar route this page
+  // cannot call — so the lookup could resolve nothing anyway. This used to
+  // pass `{ userId: person.userId }` on a field that was always undefined,
+  // which read as if a linked member's picture rendered here.
   const list = root.querySelector('#vlClaim');
   ballot.people.forEach((person) => {
     const btn = h(`<button class="btn live-vote__hotseat-btn">
@@ -389,8 +389,9 @@ function renderVoteLinkCards(token, ballot, person) {
   async function submit() {
     if (submitting) return;
     submitting = true;
+    let saved;
     try {
-      await api('POST', `/api/vote/${encodeURIComponent(token)}/votes/${encodeURIComponent(person.id)}`, { votes });
+      saved = await api('POST', `/api/vote/${encodeURIComponent(token)}/votes/${encodeURIComponent(person.id)}`, { votes });
     } catch {
       // The likeliest failure by far is that someone closed the voting while this
       // person was rating, which the server answers as an unusable link. Showing
@@ -405,7 +406,9 @@ function renderVoteLinkCards(token, ballot, person) {
     // server's. A failure here is not worth stranding them — they voted.
     let fresh = ballot;
     try { fresh = await api('GET', `/api/vote/${encodeURIComponent(token)}`); } catch { /* keep the stale count */ }
-    renderVoteLinkDone(token, fresh, person);
+    // Whether the seat just voted for belongs to an account rides the VOTE
+    // answer, about this seat only — the ballot no longer says it for anyone.
+    renderVoteLinkDone(token, fresh, { ...person, linked: saved && saved.linked });
   }
 
   render();
@@ -458,7 +461,12 @@ function renderVoteLinkDone(token, ballot, person) {
 function appendVoteLinkAppNote(root, ballot, person) {
   // 1. The claimed seat is not an account's. Someone who already has the app is
   //    not the audience, and telling them what Spielwirbel is reads as spam.
-  if (person.linked) return;
+  //    `!== false`, not truthiness: the answer comes from the vote response
+  //    (lib/routes/vote-link.js), and a response WITHOUT it — the old build
+  //    still serving for a few seconds during a deploy — is "unknown", which
+  //    must withhold a promotional note rather than show it to someone who
+  //    may well have the app.
+  if (person.linked !== false) return;
   // 2. Not on a demo tenant. A demo evaporates, so pitching off the back of one
   //    invites somebody to start from data that is about to be deleted.
   if (ballot.demo) return;

@@ -24,18 +24,23 @@ const BALLOT = {
     { id: 'g1', title: 'Catan', image: null },
     { id: 'g2', title: 'Azul', image: null },
   ],
+  // No `linked` on the ballot: since the 2026-10-04 audit the server tells only
+  // the claimant, in the vote answer, whether their own seat is an account's.
   people: [
-    { id: 'm1', name: 'Anna', guest: false, color: '#7f77dd', hasVoted: false, linked: false },
-    { id: 'm2', name: 'Ben', guest: false, color: '#2f6f4f', hasVoted: true, linked: true },
-    { id: 'gu1', name: 'Dana', guest: true, color: null, hasVoted: false, linked: false },
+    { id: 'm1', name: 'Anna', guest: false, color: '#7f77dd', hasVoted: false },
+    { id: 'm2', name: 'Ben', guest: false, color: '#2f6f4f', hasVoted: true },
+    { id: 'gu1', name: 'Dana', guest: true, color: null, hasVoted: false },
   ],
 };
+
+// The seats the stubbed server answers `linked: true` for — Ben's, as before.
+const LINKED_SEATS = new Set(['m2']);
 
 const clone = (v) => JSON.parse(JSON.stringify(v));
 
 // A harness with the ballot stubbed. `calls` records what the screen sent, which
 // is how the submit assertions read the payload without a server.
-function boot(t, { ballot = BALLOT, fail = false } = {}) {
+function boot(t, { ballot = BALLOT, fail = false, voteAnswer = null } = {}) {
   const dom = loadApp({ locale: 'de' });
   t.after(() => dom.close());
   const calls = [];
@@ -43,7 +48,9 @@ function boot(t, { ballot = BALLOT, fail = false } = {}) {
     calls.push({ method, url, body });
     if (fail) throw new Error('invalid_link');
     if (method === 'GET') return clone(ballot);
-    return { ok: true };
+    if (voteAnswer) return clone(voteAnswer);
+    // What lib/routes/vote-link.js answers: the claimant's own seat, and only it.
+    return { ok: true, linked: LINKED_SEATS.has(decodeURIComponent(url.split('/').pop())) };
   });
   // The screen calls these for chrome it does not otherwise depend on.
   dom.set('toast', () => {});
@@ -287,6 +294,16 @@ test('a seat that belongs to an ACCOUNT is never told — they already have the 
   const { dom } = boot(t);
   dom.set('confirmDialog', () => Promise.resolve(true));
   await voteThrough(dom, 'tok-linked', 'Ben');
+
+  assert.match(dom.app.textContent, /Danke/, 'never reached the done step');
+  assert.equal(noteOf(dom), null);
+});
+
+test('a vote answer that does not say whether the seat is linked withholds the note', async (t) => {
+  // The old build answers `{ ok: true }` for a few seconds of every deploy. An
+  // unknown is not "no account": a promotional sentence is the thing to drop.
+  const { dom } = boot(t, { voteAnswer: { ok: true } });
+  await voteThrough(dom, 'tok-unknown', 'Anna');
 
   assert.match(dom.app.textContent, /Danke/, 'never reached the done step');
   assert.equal(noteOf(dom), null);

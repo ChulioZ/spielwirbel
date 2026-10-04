@@ -44,6 +44,7 @@ const THRESHOLDS = [
   'PUBLIC_STATS_MIN_PLAYS_MONTH', 'PUBLIC_STATS_MIN_PLAY_TENANTS_MONTH',
   'PUBLIC_STATS_MIN_PLAYS_YEAR', 'PUBLIC_STATS_MIN_PLAY_TENANTS_YEAR',
   'PUBLIC_STATS_MIN_RATINGS', 'PUBLIC_STATS_MIN_RATING_TENANTS', 'PUBLIC_STATS_RESOLVE_MAX',
+  'PUBLIC_STATS_MIN_PLAYS_ALL', 'PUBLIC_STATS_MIN_PLAY_TENANTS_ALL',
 ];
 
 /*
@@ -71,7 +72,7 @@ afterEach(async () => {
 function openContentFloors() {
   process.env.PUBLIC_STATS_MIN_SHELVES = '1';
   process.env.PUBLIC_STATS_MIN_OWNER_TENANTS = '1';
-  for (const w of ['WEEK', 'MONTH', 'YEAR']) {
+  for (const w of ['WEEK', 'MONTH', 'YEAR', 'ALL']) {
     process.env['PUBLIC_STATS_MIN_PLAYS_' + w] = '1';
     process.env['PUBLIC_STATS_MIN_PLAY_TENANTS_' + w] = '1';
   }
@@ -382,11 +383,10 @@ test('a floor of 0 is honoured, not swallowed back to the default', async () => 
 
 test('with every metric below its threshold the payload carries NO block at all', async () => {
   stubProvider();
-  // The all-time card (#1035) has NO floor by default, so it is the one metric
-  // that has to be switched off explicitly for "nothing to render" to still be
-  // a reachable state. That is the operator's own lever, used as an operator
-  // would — not a workaround for the card.
-  process.env.PUBLIC_STATS_MIN_PLAYS_ALL = '999';
+  // Every floor at its SHIPPED default — the all-time card (#1035) included.
+  // Until the 2026-10-04 legal audit that card had no floor at all and had to
+  // be switched off by hand here; its tenant-spread floor now defaults to 2
+  // like the other podiums', so one group's play holds it under on its own.
   await seedPlayedGame({ externalId: 'thing-all-dark', title: 'Alles dunkel' });
   // The shipped counter defaults are far above a test fixture, and the content
   // floors are left at their defaults too.
@@ -394,7 +394,6 @@ test('with every metric below its threshold the payload carries NO block at all'
   assert.equal('counters' in built, false);
   assert.equal('games' in built, false);
   assert.deepEqual(Object.keys(built), ['generatedAt'], 'nothing for the client to render');
-  delete process.env.PUBLIC_STATS_MIN_PLAYS_ALL;
 });
 
 /* --------------------------- provider degradation --------------------------- */
@@ -842,42 +841,66 @@ test('#1329 ratings plus plays clear the evidence floor; ratings alone no longer
 
 /* -------------------- the all-time podium (#1035) --------------------------- */
 
-test('the all-time card publishes with NO floor, and hides when one is raised', async () => {
-  /* Every other metric hides itself until it clears a minimum; this one does
-     not, by explicit operator decision (#1035) — the instance's one durable
-     fact is published whatever it says. The lever is kept anyway so the card
-     can be pulled back live without a deploy, which is what the second half
-     asserts: `threshold()` documents 0 as a meaningful value, so "no floor"
-     has to be a DEFAULT rather than a missing clause.
+/* A play of `externalId` in a round of ANOTHER tenant. The suite's route-built
+   rounds all live in the legacy 'default' tenant, so a tenant-spread floor can
+   only be crossed by seeding past the routes; returns a cleanup. */
+async function seedPlayInTenant(tenant, externalId) {
+  const scoped = repo.forTenant(tenant);
+  const round = await scoped.createRound({ name: 'Andere Runde', members: ['Cy'] });
+  const game = await scoped.createGame(round.id, {
+    title: 'Fremd getippt', minPlayers: 1, maxPlayers: 4, image: null,
+    source: { provider: 'bgg', externalId },
+  });
+  await scoped.createSession(round.id, {
+    createdAt: new Date().toISOString(), memberIds: round.members.map((m) => m.id),
+    gameIds: [game.id], votes: {}, chosenGameId: game.id, finished: true,
+    finishedAt: new Date().toISOString(), winnerIds: [], events: [],
+  });
+  return () => scoped.deleteRound(round.id);
+}
 
-     Two steps, deliberately, not one call: an assertion that it renders proves
-     nothing about the lever, and an assertion that a raised floor hides it
-     proves nothing about the default. */
-  delete process.env.PUBLIC_STATS_MIN_PLAYS_ALL;
-  delete process.env.PUBLIC_STATS_MIN_PLAY_TENANTS_ALL;
-  // Deliberately NOT openContentFloors(): the point is that this card needs no
-  // floor lowered for it, while its period siblings sit above theirs.
+test('the all-time card needs two GROUPS behind it, and no magnitude floor', async () => {
+  /* Two floors, two different decisions, so they are pinned separately.
+
+     The MAGNITUDE floor stays 0 by operator decision (#1035): the instance's
+     one durable fact is published from the first play rather than held back
+     until a number "means something".
+
+     The TENANT-SPREAD floor defaults to 2 since the 2026-10-04 legal audit
+     (L-016, operator option a), like the other five podiums'. It is not a
+     magnitude floor at all — it is what stops one group's evenings from
+     appearing on a PUBLIC page on their own, and vvt row 22 promises it for
+     every ranking. With it at 0 a single round's play count was published.
+
+     Deliberately NOT openContentFloors(): the point is the shipped defaults. */
   stubProvider();
   await seedPlayedGame({ externalId: 'thing-alltime', title: 'Dauerbrenner' });
 
-  const games = (await rebuild()).games || {};
-  assert.ok(games.playedAll, 'one play on one shelf is enough — there is no floor');
-  assert.equal(games.playedAll.plays, 1);
-  assert.equal(games.playedAll.title, 'Provider-Titel thing-alltime');
-  assert.equal('period' in games.playedAll, false, 'all-time names no period');
-  assert.equal('playedYear' in games, false, 'while the year card is still under its own floor');
+  assert.equal('playedAll' in ((await rebuild()).games || {}), false,
+    'one group\'s play reached the public page on its own');
 
-  process.env.PUBLIC_STATS_MIN_PLAYS_ALL = '2';
-  assert.equal('playedAll' in ((await rebuild()).games || {}), false, 'the lever still works');
-  process.env.PUBLIC_STATS_MIN_PLAYS_ALL = '0';
-  process.env.PUBLIC_STATS_MIN_PLAY_TENANTS_ALL = '2';
-  assert.equal('playedAll' in ((await rebuild()).games || {}), false, 'and so does the spread lever');
-  delete process.env.PUBLIC_STATS_MIN_PLAY_TENANTS_ALL;
+  const cleanup = await seedPlayInTenant('t-alltime-second', 'thing-alltime');
+  try {
+    const games = (await rebuild()).games || {};
+    assert.ok(games.playedAll, 'two groups, one play each — and no magnitude floor in the way');
+    assert.equal(games.playedAll.plays, 2);
+    assert.equal(games.playedAll.title, 'Provider-Titel thing-alltime');
+    assert.equal('period' in games.playedAll, false, 'all-time names no period');
+    assert.equal('playedYear' in games, false, 'while the year card is still under its own floor');
+
+    // Both levers still work live, which is why they are env vars at all.
+    process.env.PUBLIC_STATS_MIN_PLAYS_ALL = '3';
+    assert.equal('playedAll' in ((await rebuild()).games || {}), false, 'the magnitude lever');
+    process.env.PUBLIC_STATS_MIN_PLAYS_ALL = '0';
+    process.env.PUBLIC_STATS_MIN_PLAY_TENANTS_ALL = '3';
+    assert.equal('playedAll' in ((await rebuild()).games || {}), false, 'and the spread lever');
+  } finally {
+    await cleanup();
+  }
 });
 
 test('the all-time card ranks on the all-time count, not on any calendar window', async () => {
   openContentFloors();
-  delete process.env.PUBLIC_STATS_MIN_PLAYS_ALL;
   stubProvider();
   // Two games. The first is played twice, but BOTH plays are backdated out of
   // every calendar window; the second is played once, today. So the year card
@@ -903,7 +926,6 @@ test('the all-time and year winners may be the same game — both cards still re
   // the two cards carry different numbers. Pinned so nobody adds a
   // suppress-if-equal comparison later.
   openContentFloors();
-  delete process.env.PUBLIC_STATS_MIN_PLAYS_ALL;
   stubProvider();
   await seedPlayedGame({ externalId: 'thing-both', title: 'Beides' });
 
