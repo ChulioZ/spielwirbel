@@ -87,8 +87,10 @@ function composeProgrammheftSetup(round, head, form, arriving) {
    „Zurück" as a word beside its arrow — the sheet's corner key is a labelled
    44px button, not a bare glyph — and the two scale ends under the five cells
    („← gar nicht … unbedingt →"; the README keeps the doubled ends on purpose).
-   The ends are the Klassisch card's own row and keys, so a reader hears the
-   cells' words once, in their buttons; the row is aria-hidden. */
+   Kept when #1530 took the digits off the cells and the end row off Klassisch:
+   here the arrows state the scale's DIRECTION, which five words in a row do not.
+   The ends are the cells' own end keys, so a reader hears the cells' words once,
+   in their buttons; the row is aria-hidden. */
 function composeProgrammheftVoteCard(card) {
   card.classList.add('vote--ph');
   const back = card.querySelector('#backBtn');
