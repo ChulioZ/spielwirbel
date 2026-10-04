@@ -225,6 +225,10 @@ lib/
                      the proposals, the validation a hand-edited arrangement
                      must pass, and the child sessions a confirm creates — the
                      part of that flow that needs only a round and a session
+  session-remove-person.js  taking one person out of a stored session: the
+                     mutation both repo backends apply, keeping the person's
+                     votes for the shelf while dropping them from everything
+                     the session itself decides (issue #1538)
   session-events.js  writes the session activity log: builds one entry and
                      appends it inside the repo mutator's own read-modify-write,
                      so the log cannot drift from what it records (issue #209)

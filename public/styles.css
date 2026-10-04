@@ -10298,6 +10298,13 @@ kbd {
 .vote-link__note a { color: var(--brand-ink, var(--brand)); }
 
 .live-vote__hotseat { display: flex; flex-direction: column; gap: 8px; }
+
+/* Taking someone out of a session (#1538): one quiet link under the actions,
+   and a sheet listing the people with a remove button each. */
+.live-vote__edit { text-align: center; }
+.remove-person__list { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.remove-person__row { display: flex; align-items: center; gap: 10px; }
+.remove-person__name { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
 .live-vote__hotseat-btn { display: flex; align-items: center; gap: 10px; justify-content: flex-start; }
 
 /* Sharing the session: the link and the code as one row of two (#652, #1170).

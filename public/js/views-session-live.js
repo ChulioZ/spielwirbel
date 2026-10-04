@@ -71,6 +71,11 @@ function sessionGames(round, session) {
 function renderSessionLog(round, session, { collapsed } = {}) {
   const byId = new Map((round.members || []).map((m) => [m.id, m.name]));
   (session.guests || []).forEach((g) => byId.set(g.id, personLabel({ name: g.name, guest: true })));
+  // A guest removed from the session (#1538) has left `guests`, but the log
+  // still names them — `removedPeople` keeps the name for exactly this.
+  (session.removedPeople || []).forEach((r) => {
+    if (r.guest && !byId.has(r.id)) byId.set(r.id, personLabel({ name: r.name, guest: true }));
+  });
   const lines = sessionLogLines(session, {
     name: (id) => byId.get(id) || null,
     title: (gid) => (round.games.find((g) => g.id === gid) || {}).title || null,
@@ -478,6 +483,22 @@ function showSessionLobby(round, session, handedOn, dealt) {
   const forest = forestWorn();
   if (forest) composeForestLobby(root, people, voted, hereBtns, games.length);
 
+  // Taking someone out (#1538) — appended AFTER the design composers above, so
+  // no design's re-ordering of these nodes can drop it, and at the foot of the
+  // ROSTER it edits: not a sixth child of `.live-vote`, whose five Der Tisch's
+  // desktop grid places by position (test/tisch-live-vote.test.js), and not in
+  // the actions, which several designs end on „Abstimmung beenden".
+  const removeEntry = removePersonEntry(round, session, (fresh, s) => {
+    stopLobbyPoll();
+    if (s.done) return showResults(fresh, s, sessionGames(fresh, s));
+    showSessionLobby(fresh, s);
+  });
+  if (removeEntry) {
+    const row = h('<div class="live-vote__edit"></div>');
+    row.appendChild(removeEntry);
+    peopleEl.appendChild(row);
+  }
+
   // Below the actions: what you can do comes first, what already happened after.
   const log = renderSessionLog(round, session);
   if (log) root.appendChild(log);
@@ -593,4 +614,86 @@ function showVoteQrSheet(round, session) {
     if (document.body.contains(backdrop)) closeSheet();
     toast(e.message, { tone: 'error' });
   });
+}
+
+/* Take someone out of a session (#1538): one sheet listing the session's people,
+   opened from the lobby and from the results screen in every design. A sheet
+   rather than a control on each person's row, because every design composes
+   those rows differently, and this is a correction the group makes rarely:
+   one quiet entry per screen keeps it out of the way of the people list's
+   real job. Each name opens a confirm, which replaces this sheet (openSheet's
+   replace path) instead of stacking on it.
+
+   `onDone(fresh, session)` re-renders the calling screen from the server's view,
+   so the tally, teams and winners follow from the new people set. */
+function showRemovePersonSheet(round, session, onDone) {
+  const people = sessionPeople(round, session);
+  const backdrop = h(`<div class="sheet-backdrop sheet-backdrop--center">
+      <div class="sheet sheet--dialog remove-person" role="dialog" aria-modal="true" aria-label="${esc(t('session.removeTitle'))}">
+        <div class="sheet__head">
+          <h2>${esc(t('session.removeTitle'))}</h2>
+          <button class="sheet__close" type="button" aria-label="${esc(t('common.close'))}"><i class="ti ti-x" aria-hidden="true"></i></button>
+        </div>
+        <p class="muted">${esc(t('session.removeIntro'))}</p>
+        <ul class="remove-person__list"></ul>
+      </div>
+    </div>`);
+  const sheet = backdrop.querySelector('.sheet');
+  const list = sheet.querySelector('.remove-person__list');
+  // A person's column is non-empty once they have rated anything: the lobby
+  // knows that only as `votedIds` (the values are redacted while voting runs),
+  // the results screen from the revealed votes themselves.
+  const voted = new Set(session.votedIds || []);
+  Object.entries(session.votes || {}).forEach(([pid, byGame]) => {
+    if (byGame && Object.keys(byGame).length) voted.add(pid);
+  });
+  people.forEach((p) => {
+    const row = h(`<li class="remove-person__row">
+        <span class="live-person__avatar live-person__avatar--sm" style="background:${personColor(round, p)}">${avatarFace(initials(p.name), { userId: p.userId })}</span>
+        <span class="remove-person__name">${esc(personLabel(p))}</span>
+        <button type="button" class="btn btn--sm remove-person__btn">${iconText('ti-user-minus', t('session.removeAction'))}</button>
+      </li>`);
+    const btn = row.querySelector('button');
+    btn.setAttribute('aria-label', t('session.removeActionFor', { name: personLabel(p) }));
+    btn.addEventListener('click', () => removePerson(p));
+    list.appendChild(row);
+  });
+  document.body.appendChild(backdrop);
+
+  const onKey = (e) => { if (e.key === 'Escape') closeSheet(); };
+  document.addEventListener('keydown', onKey, true);
+  openSheet(backdrop, onKey);
+  backdrop.addEventListener('mousedown', (e) => { if (e.target === backdrop) closeSheet(); });
+  sheet.querySelector('.sheet__close').addEventListener('click', () => closeSheet());
+
+  async function removePerson(p) {
+    const name = personLabel(p);
+    const ok = await confirmDialog({
+      title: t('session.removeConfirmTitle', { name }),
+      body: t(voted.has(p.id) ? 'session.removeConfirmVoted' : 'session.removeConfirm', { name }),
+      confirmLabel: t('session.removeAction'),
+      icon: 'ti-user-minus',
+    });
+    if (!ok) return;
+    try {
+      await api('DELETE', `/api/rounds/${round.id}/sessions/${session.id}/people/${p.id}`);
+      toast(t('session.removed', { name }));
+      const fresh = await fetchRoundFresh(round.id);
+      const s = fresh.sessions.find((x) => x.id === session.id);
+      if (!s) return showRound(round.id, 'start');
+      onDone(fresh, s);
+    } catch (e) {
+      const known = { last_person: 'session.removeLast', already_split: 'session.removeSplit' };
+      toast(known[e.message] ? t(known[e.message]) : e.message, { tone: 'error' });
+    }
+  }
+}
+
+// The quiet entry to the sheet above, or null when there is nobody to take out
+// (a session must keep at least one person, so one person means no action).
+function removePersonEntry(round, session, onDone) {
+  if (sessionPeople(round, session).length < 2) return null;
+  const btn = h(`<button type="button" class="link-btn remove-person__entry">${iconText('ti-user-minus', t('session.removeEntry'))}</button>`);
+  btn.addEventListener('click', () => showRemovePersonSheet(round, session, onDone));
+  return btn;
 }

@@ -66,6 +66,15 @@ test('a session has votes only when somebody actually voted on something', () =>
     'one person answering is enough, even beside somebody who did not');
 });
 
+// #1538: a removed person's column is kept for the shelf, but they are out of
+// the session — so if they were the only one who voted, the session itself
+// has nobody's vote to rank by.
+test('a removed person\'s column does not count as the session having votes', () => {
+  const votes = { m1: {}, m2: { g1: { rating: 4 } } };
+  assert.equal(sessionHasVotes({ votes, removedPeople: [{ id: 'm2' }] }), false);
+  assert.equal(sessionHasVotes({ votes, removedPeople: [{ id: 'm1' }] }), true);
+});
+
 test('every shape of "nobody voted" reads as no votes', () => {
   assert.equal(sessionHasVotes({}), false, 'the direct-play branch writes no key at all');
   assert.equal(sessionHasVotes({ votes: {} }), false, 'nor does an empty map');

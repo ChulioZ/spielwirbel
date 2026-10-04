@@ -82,7 +82,10 @@ function rawGameStats(round, gameId) {
     if (!s.gameIds.includes(gameId)) return;
     sessions++;
     // Guests included, for the same reason as gameStatsForSession above (#458).
-    sessionPeople(round, s).forEach((p) => {
+    // `sessionRaters`, NOT `sessionPeople`: someone removed from the session
+    // after rating (#1538) is out of that session, but their ratings still count
+    // for the shelf — see its header in session-people.js.
+    sessionRaters(round, s).forEach((p) => {
       const v = (s.votes[p.id] || {})[gameId];
       if (v && Number.isFinite(v.rating)) ratings.push(v.rating);
     });
@@ -117,7 +120,9 @@ function gameRaters(round, gameId) {
   const byPerson = new Map();
   round.sessions.forEach((s) => {
     if (!s.gameIds.includes(gameId)) return;
-    sessionPeople(round, s).forEach((p) => {
+    // The same "outside the session" set as rawGameStats (#1538), so the row
+    // keeps explaining exactly the votes the score is built from.
+    sessionRaters(round, s).forEach((p) => {
       const v = (s.votes[p.id] || {})[gameId];
       if (!v || !Number.isFinite(v.rating)) return;
       const seen = byPerson.get(p.id);

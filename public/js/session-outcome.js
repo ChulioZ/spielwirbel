@@ -117,11 +117,15 @@ const ENDING_LABELS = {
 // Derived from the votes the same screens tally, never stored, so no flag can
 // drift away from them. A person entry with no game in it is somebody who was
 // asked and never answered, which is still no vote.
+//
+// A person removed from the session (#1538) keeps their column for the shelf,
+// but it is not a vote IN this session, so it is skipped here.
 function sessionHasVotes(session) {
   const votes = session && session.votes;
   if (!votes || typeof votes !== 'object') return false;
-  return Object.values(votes).some(
-    (byGame) => byGame && typeof byGame === 'object' && Object.keys(byGame).length > 0
+  const removed = new Set((session.removedPeople || []).map((r) => r.id));
+  return Object.entries(votes).some(
+    ([pid, byGame]) => !removed.has(pid) && byGame && typeof byGame === 'object' && Object.keys(byGame).length > 0
   );
 }
 

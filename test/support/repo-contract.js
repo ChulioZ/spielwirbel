@@ -2003,6 +2003,55 @@ module.exports = function repoContract(repo) {
     assert.deepEqual(after.winnerIds, ['m1', 'gst1']);
   });
 
+  // #1538. The rules themselves are lib/session-remove-person.js's (and its own
+  // spec); what the contract pins is that BOTH backends persist the result, log
+  // the event inside the same write, and keep the removed person's vote column.
+  test('removeSessionPerson takes one person out, keeps their votes and logs it', async () => {
+    const round = await freshRound();
+    const [alice, bob] = round.members;
+    const g = await repo.createGame(T, round.id, gameFields());
+    const session = await repo.createSession(T, round.id, {
+      createdAt: 't', gameIds: [g.id], chosenGameId: g.id, chosenAt: 't',
+      finished: true, finishedAt: 't', winnerIds: [bob.id], cancelled: false, cancelledAt: null, done: true,
+      memberIds: [alice.id, bob.id],
+      guests: [{ id: 'gu1', name: 'Dora' }],
+      teams: [{ id: 'tm1', personIds: [bob.id, 'gu1'] }],
+      tableProposals: [],
+      votes: { [alice.id]: { [g.id]: { rating: 4 } }, [bob.id]: { [g.id]: { rating: 2 } }, gu1: { [g.id]: { rating: 5 } } },
+    });
+
+    const after = await repo.removeSessionPerson(T, round.id, session.id, bob.id, [alice.id, bob.id],
+      { at: 'x', type: 'person_removed', personId: bob.id });
+    assert.deepEqual(after.memberIds, [alice.id]);
+    assert.deepEqual(after.winnerIds, []);
+    assert.equal('teams' in after, false, 'a team left with one person dissolves');
+    assert.equal('tableProposals' in after, false, 'proposals go back to unset');
+    assert.deepEqual(after.votes[bob.id], { [g.id]: { rating: 2 } }, 'the column is kept');
+    assert.deepEqual(after.removedPeople, [{ id: bob.id }]);
+    assert.equal(after.events.at(-1).type, 'person_removed');
+
+    await repo.removeSessionPerson(T, round.id, session.id, 'gu1', [alice.id, bob.id]);
+    const stored = await repo.getSession(T, round.id, session.id);
+    assert.deepEqual(stored.guests, []);
+    assert.deepEqual(stored.removedPeople, [{ id: bob.id }, { id: 'gu1', guest: true, name: 'Dora' }]);
+    assert.ok(stored.votes.gu1, 'the guest\'s column is kept too');
+
+    assert.equal(await repo.removeSessionPerson(T, round.id, 'nope', alice.id, []), null);
+  });
+
+  test('removeSessionPerson materialises memberIds on a legacy "everyone" session', async () => {
+    const round = await freshRound();
+    const [alice, bob] = round.members;
+    const g = await repo.createGame(T, round.id, gameFields());
+    const legacy = await repo.createSession(T, round.id, {
+      createdAt: 't', gameIds: [g.id], votes: {}, chosenGameId: null, chosenAt: null,
+      finished: false, finishedAt: null, winnerIds: [], cancelled: false, cancelledAt: null, done: false,
+    });
+    assert.equal('memberIds' in legacy, false);
+    const after = await repo.removeSessionPerson(T, round.id, legacy.id, alice.id, [alice.id, bob.id]);
+    assert.deepEqual(after.memberIds, [bob.id]);
+  });
+
   // Per-device voting (#209) writes ONE person's column at a time instead of
   // replacing the whole map. Both backends do it through their `withSession`
   // read-modify-write, which is what makes two people submitting at the same
