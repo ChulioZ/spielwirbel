@@ -3,6 +3,8 @@ paths:
   - "public/styles.css"
   - "public/js/views-session.js"
   - "public/js/views-round.js"
+  - "public/js/views-session-setup-tisch.js"
+  - "public/js/views-session-programmheft.js"
   - "test/content-width.test.js"
 ---
 # A screen that opts out of `--w-read` must take its PAGE HEAD with it (#577)
@@ -51,21 +53,32 @@ Three parts are load-bearing and each fails silently:
 a no-op that reads as working: `test/content-width.test.js` pins that as
 arithmetic, because every selector assertion stays green at `--w-setup: 880px`.
 
-## 2. The width may be chosen by content HERE — and only because there is no rail
+## 2. The width may be chosen by content HERE — and only because it moves no navigation
 
 `.claude/rules/responsive-content-width.md` forbids picking a width from what a
 screen renders, because `.app` is centred and the hub tab strip lives inside it,
 so a second width slides the navigation sideways. `:has(.setup-grid)` is exactly
 the shape that got #332 reverted.
 
-It is safe here for one reason, and the reason is the whole licence: **neither
-setup screen renders any navigation.** Both are rail-less and both clear `.app`
-outright, so there is no persistent element inside the column for a width change
-to move. `test/content-width.test.js`'s own guard is unaffected — it constrains
-rules whose final compound is `.app`/`.site-footer`, and this one caps *children*.
+It is safe here because **no persistent element inside the column can move**,
+and that holds for two different reasons:
 
-Do not extend the exemption to a screen that renders a rail or a tab strip
-without re-deriving that argument.
+- **Rail-less.** The new-round form (every design) and session setup under
+  Klassisch, Ocean, Die Brücke and Forest render no navigation and clear `.app`
+  outright; their capped children centre.
+- **Beside a rail.** Under Der Tisch and Das Programmheft, session setup
+  prepends the round rail, shown from 1280px up (`views-session-setup-tisch.js`,
+  `views-session-programmheft.js`). That is the game detail's argument from
+  #1039, not "no navigation": the rail is excluded by the cap's own
+  `:not(.rail)`, `.app`'s width stays a function of the viewport, and beside a
+  rail the children are left-aligned, so the form only grows rightward. No dock
+  and no sub-screen tab strip render on this screen.
+
+`test/content-width.test.js`'s own guard is unaffected — it constrains rules
+whose final compound is `.app`/`.site-footer`, and this one caps *children*.
+
+Do not extend the exemption to a screen that renders a tab strip inside the
+column without re-deriving that argument.
 
 ## 3. Two presentations of the pool, picked by CSS — never a JS width branch
 

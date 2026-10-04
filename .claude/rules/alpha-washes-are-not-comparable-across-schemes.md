@@ -54,33 +54,34 @@ control you are measuring against.
 
 ## The fix shape: a per-world token, and no shared ceiling left behind
 
-Give the wash a token each host declares (`--world-backdrop-alpha`) and let the
-guard measure the **real** bar per world — `--ink` AAA, `--ink-soft` AA over the
-densest pixel — instead of pinning one number. The flat `.1` ceiling the test
-used to assert was standing in for that measurement and stood in badly: it sat
-near the ceiling on a light page (dinos' is `.090`) and at a third of it on a
-dark one, so it over-constrained exactly the worlds it was hiding a bug in, and
-said nothing while doing it.
+#1138 gave the wash a token each host declared (`--world-backdrop-alpha`) and
+let the guard measure the **real** bar per world — `--ink` AAA, `--ink-soft` AA
+over the densest pixel — instead of pinning one number. The flat `.1` ceiling the
+test used to assert was standing in for that measurement and stood in badly: it
+sat near the ceiling on a light page (dinos' was `.090`) and at a third of it on
+a dark one, so it over-constrained exactly the worlds it was hiding a bug in, and
+said nothing while doing it. Token and guard went with the worlds at #1202; the
+shape — one token per host, measured against its own bar — is what to reuse.
 
 ## A `var(--x, <literal>)` fallback belongs to whoever does NOT override it
 
 The same change nearly shipped a second bug, and it is worth its own paragraph
 because the misreading is so natural.
 
-`:is(.theme-card, .round-card)[data-world]::before` declares
-`opacity: var(--motif-a, .16)`, and `.theme-card--world` overrides `--motif-a`.
+`:is(.theme-card, .round-card)[data-world]::before` declared
+`opacity: var(--motif-a, .16)`, and `.theme-card--world` overrode `--motif-a`.
 Reading that, the literal looks like "the theme card's value, which the poster
-tunes". It is the opposite: **every** world card in the picker is a poster
-(`posters: true` is set for the WELTEN group, which *is* the world registry), so
-the override is total and the literal is reached by exactly one host — the
+tunes". It was the opposite: **every** world card in the picker was a poster
+(`posters: true` was set for the WELTEN group, which *was* the world registry), so
+the override was total and the literal was reached by exactly one host — the
 `.round-card` tile on **home**.
 
-That matters because the two hosts have unrelated grounds. The poster carries
-its world's own page inline and its bar is the accent *name* painted on the
-accent *wash*. The home tile sits on the lobby, which carries no ROUND design — home calls
-`applyBackground(null)`, and #904's dark block is scoped to `:root` and
-`.theme-card` precisely so a dark round's tile does not turn dark — so its
-ground is the standard `--surface` and its bar is `--ink-soft` body text.
+That mattered because the two hosts had unrelated grounds. The poster carried
+its world's own page inline and its bar was the accent *name* painted on the
+accent *wash*. The home tile sat on the lobby, which carried no ROUND design —
+home called `applyBackground(null)`, and #904's dark block was scoped to `:root`
+and `.theme-card` precisely so a dark round's tile did not turn dark — so its
+ground was the standard `--surface` and its bar `--ink-soft` body text.
 
 **Since #1184 that last step held only while no dark USER design was enabled**:
 a dark one puts `data-scheme="dark"` on `<html>` and the lobby's `--surface` goes
@@ -93,17 +94,17 @@ for, would have put a `.42` wash under that body text.
 
 **So before changing a `var()` fallback, find out which hosts actually reach
 it** — grep for every rule that sets the property, and check whether the
-override is conditional or total. The measured bar for the home tile is `.150`
+override is conditional or total. The measured bar for the home tile was `.150`
 (Chess, light lobby); it had shipped at `.16` since #1082, i.e. at 4.44:1 against
 a 4.5 bar, on a *light* world rather than one of the dark ones the issue was
-about. It is `.14` now, the same landing value and the same reasoning as the
-dock's motif in `.claude/rules/accessibility-contrast-and-modals.md`'s
-neighbourhood.
+about. #1138 set it to `.14`, the same landing value and the same reasoning as
+the dock's motif in `.claude/rules/accessibility-contrast-and-modals.md`'s
+neighbourhood, until #1202 removed the tile motif.
 
 ## A mask fade on a `position: fixed` layer never scrolls
 
-Third trap, same slot, and the one no alpha retune would have fixed. Slot 1 is
-`position: fixed; inset: 0`, and its fade is a **mask**, so the mask's own alpha
+Third trap, same slot, and the one no alpha retune would have fixed. Slot 1 was
+`position: fixed; inset: 0`, and its fade was a **mask**, so the mask's own alpha
 multiplies the layer's:
 
 ```css
@@ -121,10 +122,11 @@ and is not one.
 
 A floor on a *rising* fade is contrast-free by construction: it only raises the
 mask toward the full alpha, which is already the measured-safe value. So the
-guard is mechanism-based — detect a gradient that rises, require a non-zero
-first stop — rather than naming the worlds, which is what makes a future world
+guard was mechanism-based — detect a gradient that rises, require a non-zero
+first stop — rather than naming the worlds, which is what made a future world
 covered for free (`.claude/rules/ci-aggregate-gate.md` on allowlists over
-denylists).
+denylists). It went with the worlds at #1202: a user design that adds a fixed,
+faded layer needs the floor again, and nothing checks for one today.
 
 **Related:** `.claude/rules/dark-scheme-neutral-ramp-runs-upward.md` (the
 sibling: a *derived* neutral mixed at the light percentage lands somewhere else

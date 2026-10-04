@@ -42,10 +42,11 @@ silver/bronze are intentionally fixed — they encode meaning, not theme.
 ## `--brand` ON a brand tint does not clear AA — reach for `--brand-strong` (#633)
 
 The natural way to draw an accent chip is `background: var(--brand-tint); color:
-var(--brand)`. Measured across all eight themes, that lands at **4.33–4.92:1** —
-so four of the eight (Salbei 4.33, Standard 4.34, Sand 4.36, Pfirsich 4.38) sit
-**below the 4.5 text bar**, while the other four pass. `--brand-strong` on the same
-tint is 5.84–6.51 everywhere, for free.
+var(--brand)`. Measured across the eight round themes of #633 (retired by
+#1202), that landed at **4.33–4.92:1** — so four of the eight (Salbei 4.33,
+Standard 4.34, Sand 4.36, Pfirsich 4.38) sat **below the 4.5 text bar**, while
+the other four passed. `--brand-strong` on the same tint was 5.84–6.51
+everywhere, for free.
 
 (Those numbers were re-measured for #544's oklab switch; the ones here before it
 read 4.28–4.96 / 5.80–6.57 and named a theme, "Sonnenuntergang", that this app
@@ -55,16 +56,17 @@ number they agree with.)
 
 Two things make this worth writing down rather than leaving to a measurement:
 
-- **The failure is theme-dependent**, so whichever theme you happen to be looking
-  at is a coin flip — the Chronik's milestone chip was verified on Standard,
-  which is one of the *failing* four only because its accent is the warmest.
+- **The failure is design-dependent**, so whichever design you happen to be
+  looking at is a coin flip — the Chronik's milestone chip was verified on the
+  Standard theme, which was one of the *failing* four only because its accent was
+  the warmest.
 - **The bar that binds may not be the bar a reader assumes.** These glyphs are
   `aria-hidden` decoration whose meaning the adjacent label already carries, so
   1.4.11 (non-text, 3.0) is what actually applies and `var(--brand)` passes it.
   Pinning the *strict* bar anyway is the cheaper call: it costs one token swap
   and removes a judgement someone would otherwise have to re-derive.
 
-`test/a11y-contrast.test.js` composites both tints over every theme accent and
+`test/a11y-contrast.test.js` composites both tints over every design's accent and
 pins the row wash (`--ink`/`--ink-soft`) and the chip glyph, keyed to the tokens
 rather than to percentages a retune could raise past what was measured.
 
@@ -140,18 +142,24 @@ exempts it — but the glyph is the thing that says „sealed", and because `--g
 is a fill *here and nowhere else*, the fix moves no medal, crown or trophy. An
 exemption is the right answer when the fix has blast radius; this one had none.
 
-## The round worlds are retired (#1202) — two of their constraints outlive them
+## The round worlds are retired (#1202) — what of their constraints survives
 
 Rounds could wear seven worlds (#903–#905, #1084): a display face and SVG
 ornaments on ten pseudo-element slots, keyed off `<html data-world>`. The flip
 removed them with the palettes; a round that wore one now shows the colour
-marker its world maps to (`public/js/round-marker.js`). What still binds every
-user design that paints something of its own:
+marker its world maps to (`public/js/round-marker.js`). A world changed the face
+through `--font-display` only and left `--font` on Nunito; that one did not
+survive, because every user design declares its own body `--font` in its root
+block (`public/css/designs/*.css`), and only Klassisch reads in Nunito. What
+still binds every user design that paints something of its own:
 
-- **The face changes through `--font-display` only** — `--font` (body text)
-  stays Nunito, so reading is never harmed; and **`--surface` is declared by the
-  two token blocks and a design's own resolved root block, nowhere else**
-  (`test/game-detail-hero.test.js` pins *where*, not *what*).
+- **`--surface` comes from a resolved token block, never a literal elsewhere.**
+  In `styles.css` only `:root` and the dark-scheme block declare it, and
+  `paintDesign()` never writes it (`test/game-detail-hero.test.js` pins *where*,
+  not *what*). A design sheet declares it in its own root block, and where it
+  re-points it on a component scope (Der Tisch's paper overlays, the
+  Programmheft's black box, Die Brücke's raised sheets) it aliases another
+  named token — `var(--paper)`, `var(--box)`, `var(--surface-raised)`.
 - **Artwork paints in a theme TOKEN, never a shade of its own, and a motif under
   text costs contrast the plain-background harness cannot see** — so bold art
   lives in text-free bands, and an alpha tuned on a light design is not portable

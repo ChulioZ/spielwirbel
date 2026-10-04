@@ -42,11 +42,12 @@ a German paragraph nobody in the room can read governs nothing. `public/js/news.
 already draws that line explicitly — legal text whose German version is
 authoritative stays German, product copy and UI fall back to English.
 
-**Not every language conditional is a selection.** `lib/faq.js`, `lib/legal.js`
-and `lib/notify.js` render German *and* English in one document, taking `lang`
-as a literal argument per half. There is no reader-facing choice there to get
-wrong — leave them alone. The trap is only where a locale resolves to **one**
-of two outputs.
+**Not every language conditional is a selection.** `lib/legal.js` and
+`lib/notify.js` render German *and* English in one document, taking `lang` as a
+literal argument per half. There is no reader-facing choice there to get wrong —
+leave them alone. The trap is only where a locale resolves to **one** of two
+outputs. (`lib/faq.js` rendered both halves too until #1088; since then it
+renders one language per page, across every shipped locale.)
 
 **Related:** `.claude/rules/locale-set-is-data.md` (the shipped-locale list this
 falls off the end of, and why a loop over it proves nothing at two locales),

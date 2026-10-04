@@ -7,9 +7,10 @@ description: >-
   the brand. Use when asked to improve the UI, make the app prettier/fancier/more
   polished/stunning, review the visual design, or tighten the look and feel. Plain
   UI only — never UX (no flows, steps, screen order or copy); accessibility is the
-  accessibility-audit skill's job. Drives the real app in a browser over generated
-  data. Produces a ranked report with before/after evidence; files issues only
-  with your approval.
+  accessibility-audit skill's job, and rethinking ONE screen at every width is
+  screen-deep-dive's. Drives the real app in a browser over generated data.
+  Produces a ranked report with before/after evidence; files issues only with
+  your approval.
 ---
 
 # UI audit
@@ -42,7 +43,7 @@ the whole reason it can be trusted to touch a live product's look:
    visual and in scope however dramatic the visual difference; changing *which*
    content or controls a screen has, or their order of use, is UX.
 2. **Evolution, never rebrand.** Stay within the worn design's own tokens — Klassisch's `--brand`
-   (`#c2410c`) and its 8 markers, Der Tisch's felt/brass/paper (`public/js/designs.js`,
+   (`#c2410c`) and its markers, Der Tisch's felt/brass/paper (`public/js/designs.js`,
    `public/css/designs/tisch.css`) — and the `color-mix`-derived token families. The app must be
    recognizably itself tomorrow. Refine a ramp; never swap a design's palette (U-R02, U-R05). Which
    design is the default is the design programme's call (`docs/design/`), never an audit's.
@@ -64,17 +65,17 @@ Ask what has moved in **visual** design since `last-researched`:
   guidance (elevation, type scale, motion feel — not their component libraries or
   interaction patterns, which are UX), and current design-token practice.
 - **Modern CSS that raises visual quality with no framework** — `color-mix`
-  (already used), `oklch` for smoother ramps, `:has()`, container queries, subgrid,
-  view transitions and scroll-driven animation *as polish*. These fit the
-  no-build-step architecture; a technique that needs a bundler does not.
+  (already used), `oklch` for smoother ramps, `:has()`, subgrid. These fit the
+  no-build-step architecture; a technique that needs a bundler does not. Container
+  queries, view transitions and scroll-driven animation are settled (U-R07, U-R08).
 - **Type and colour craft** — pairing, scale, optical sizing, harmonious accent
   ramps.
 
 Then run the critique in `audit-loop.md` §C, filtered hard through U-013: for each
 trend, ask *does this fit a warm, friendly, playful game companion, or is it
-generic?* Six conflicts are pre-recorded as rejected criteria (U-R01 framework,
-U-R02 rebrand, U-R03 UX, U-R04 a11y trade, U-R05 hardcoded hex, U-R06 illustration
-pipeline) — if research proposes one again, that is the ledger working.
+generic?* Settled conflicts are pre-recorded as the `U-R*` rejected criteria
+(framework, rebrand, UX, a11y trade, hardcoded hex, illustration pipeline, among
+others) — if research proposes one again, that is the ledger working.
 
 ## Seeing the UI truthfully (phase E) — this is most of the value
 
@@ -96,8 +97,9 @@ renders an empty state and tells you nothing about the populated one. Leave
 The dataset must be *pretty enough to judge*: a round with ~12 games across several
 tags (some with real provider covers, some on the placeholder gradient), archived
 and completed games, a finished session with a podium, an abandoned draw, and a
-couple of rounds on different colour markers, viewed under **both** Klassisch and Der Tisch,
-so you see more than one design.
+couple of rounds on different colour markers — viewed under **every design** in
+`public/js/designs.js` (production serves the `enabled` ones; a dev instance offers
+all of them, on Konto or via `?design=<id>`), never just one.
 
 ### 2. The Browser pane lies in ways that look like design bugs
 
@@ -108,9 +110,9 @@ All documented, none are app defects (`preview-pane-paint-artifacts.md`):
 - **Screenshots go blank after any programmatic scroll** — and screenshots are
   your primary instrument here, so capture **only right after a fresh `navigate`**,
   and navigate again rather than scrolling to reach a lower section.
-- Lazy covers never load (zero-height viewport starves the IntersectionObserver),
-  so the Regal grid can look empty — judge covers on the game-detail hero and the
-  vote screen, which set `background-image` inline, not on the lazy grid.
+- Lazy covers never load — the pane fires no IntersectionObserver at any viewport
+  size — so the Regal grid can look empty: judge covers on the game-detail hero and
+  the vote screen, which set `background-image` inline, not on the lazy grid.
 - Clear the service worker after any `styles.css` edit or you are looking at stale
   bytes (`pwa-service-worker.md`, "Verifying a shell-asset change").
 
@@ -125,19 +127,28 @@ change that flatters one can break another. Use `resize_window`.
 
 Every surface, because inconsistency between them is the commonest finding:
 
-- **Lobby & entry:** home/round list, new round.
+Derive the list rather than trusting this one — the SPA screens from `resolveRoute`
+in `public/js/router.js`, the standalone pages from `public/*.html` and the
+server-rendered routes in `lib/app.js`. On 2026-10-04 it was:
+
+- **Lobby & entry:** home/round list, new round, the first-start design chooser.
 - **Round hub:** Start, Regal, Chronik, Pokale — and the dock, the strip and the
   rail as three separate looks.
 - **Sub-screens:** game detail (the cover hero is a showcase surface), member, tags,
-  providers, design/theme picker, move games, both archives.
+  the colour-marker picker, Einstellungen, move games, both archives, the
+  wishlist, recommendations, the shelf profile.
+- **Account & social:** Konto (with the design picker), profile, Freunde, inbox,
+  „Was ist neu", Entdecken.
 - **Session flow (visual only):** setup, a vote card, the finale/reveal, the
-  results podium — judge the *look* of each; do **not** touch the flow (U-R03).
-- **Sheets & popovers:** add game, link provider, feedback, support, the editors —
-  one overlay language across all of them.
+  results podium, the shared-vote page — judge the *look* of each; do **not**
+  touch the flow (U-R03).
+- **Sheets & popovers:** add game, link provider, support, the editors — one
+  overlay language across all of them.
 - **Empty / loading / error states** — the first impression surfaces (U-009).
 - **Auth & standalone pages:** login/register (need accounts env on your throwaway
-  instance), and the legal/contact pages, which have their own token copy
-  (`shared-constants-across-the-stack.md`) — check they still match the app.
+  instance), `kontakt.html` (feedback lands here), the legal pages, `/faq` and the
+  guide pages — they carry their own token copy
+  (`shared-constants-across-the-stack.md`), so check they still match the app.
 
 ## The big-picture pass — mandatory, after the walk
 

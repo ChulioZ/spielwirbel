@@ -5,7 +5,8 @@ description: >-
   Use when asked to review a PR, check if a PR is mergeable/safe, or vet changes
   before merging. Not tied to any PR author — works for human and bot PRs alike.
   For Dependabot-specific batch triage, use the `dependabot` skill (it calls this
-  one per PR).
+  one per PR). Not the built-in `/code-review`, which hunts bugs in a diff — this
+  one decides mergeability: CI state, sign-off and the repo's own constraints.
 ---
 
 # Reviewing a PR for safe merge
@@ -115,7 +116,8 @@ gh pr view <PR> --json commits \
   Dependabot PR on sign-off. (PRs opened by the `implement` skill already sign
   off their commits, so a self-authored PR passes this check normally.)
 - The rest of `CONTRIBUTING.md`'s pre-PR checklist (branch off main, tests
-  updated, i18n parity, README) overlaps phase 4's constraints and is covered
+  updated, i18n parity, the user docs — mostly `docs/` since 2026-07-30, see
+  `.claude/rules/keep-readme-current.md`) overlaps phase 4's constraints and is covered
   there; sign-off is the one piece phase 4 doesn't check.
 
 Note on squash-merge: this repo squash-merges, and GitHub may not carry a
@@ -136,7 +138,9 @@ npm test && npm run lint && npm run check:syntax
 ```
 
 For UI-affecting changes, verify in a browser (see the preview workflow), not
-just tests. Return to the base branch afterward (`git checkout main`).
+just tests — launched as `preview_start {name: "dev-temp-data"}`, never a bare
+`npm start`, which serves the production `data/`
+(`.claude/rules/no-reading-production-data.md`). Return to the base branch afterward (`git checkout main`).
 
 ## 7. Deliver the verdict
 

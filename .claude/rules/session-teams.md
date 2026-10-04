@@ -6,6 +6,8 @@ paths:
   - "test/session-people.test.js"
   - "test/sessions.test.js"
   - "public/js/views-session.js"
+  - "public/js/session-tally.js"
+  - "lib/session-remove-person.js"
 ---
 # A session team (#575) is addressed by POSITION on the wire — and a team win stays a flat list
 
@@ -96,11 +98,13 @@ pre-existing `wid in wins` guard.
 
 Two consequences worth knowing rather than rediscovering:
 
-- **A team win breaks a winning streak**, because the streak card counts only
-  nights with a *sole* winner (`ws.length !== 1`). That is the existing meaning
-  of a shared win and #575 deliberately did not change it. A team containing a
-  guest additionally makes the whole session skipped by `wonByGuest`
-  (`.claude/rules/session-guests-are-not-members.md` §3).
+- **A team win continues a winning streak for every member of the team.** Since
+  #1421 a shared win is a full win for each winner (`winStreak`,
+  `public/js/session-tally.js`). Until then the streak counted only sole-winner
+  nights, so a team win broke it — #575 deliberately left that meaning alone, and
+  #1421 changed it for every shared win at once. A guest in the winning team is
+  dropped and the members keep the win; only a night won by guests alone is
+  skipped (`.claude/rules/session-guests-are-not-members.md` §3).
 - **A team chip counts as selected only when ALL of its people are in.** A
   partially-set list — hand-crafted, or written before the team existed — reads as
   *not* selected, so one tap completes it rather than clearing it.
@@ -184,8 +188,11 @@ Both suites now pin the two-team shape (`test/session-people.test.js`,
   individually, so the vote map keys stay person ids and `gameStats`, the voter
   strip, the finale and the recap needed no change at all. That was a deliberate
   scope choice, not an omission.
-- **Teams are frozen at the start**, like the seats and the guest list — the
-  same setup-time-only decision as #533.
+- **Teams are never added to after the start**, like the seats and the guest
+  list — the same setup-time-only decision as #533. A removal is the exception
+  since #1538: `removePersonFromSession` (`lib/session-remove-person.js`) takes
+  the person out of their team and dissolves a team left below `MIN_TEAM_SIZE`,
+  so its rest play alone.
 
 ## Verifying a change here
 

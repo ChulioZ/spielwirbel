@@ -48,9 +48,10 @@ file re-dressed in its icons and colours.
 
 An id that is not **selectable on this instance** falls back to the face. In
 production that means an unreleased design (`enabled: false`) cannot leak its
-icons through this route; the spec flips `NODE_ENV` to prove it — and, with
-every design live since Ocean (#1222), gates one for the length of the test,
-because a skip would leave the guard unproven until the next design arrives.
+icons through this route; the spec flips `NODE_ENV` to prove it against a design
+still behind the gate, and when every design is live it gates one for the length
+of the test, because a skip would leave the guard unproven until the next design
+arrives.
 
 ## 3. What no test can see: an INSTALLED app keeps its icon
 

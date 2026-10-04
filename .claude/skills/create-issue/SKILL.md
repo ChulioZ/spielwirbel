@@ -53,7 +53,7 @@ Read `CLAUDE.md` and the relevant `.claude/rules/`, and locate the affected area
   third persistence backend, tenant isolation)?
 
 This is what lets the issue say "add a route under `lib/routes/sessions.js` and a key
-`session.export` to both lang files" instead of "add an export feature".
+`session.export` to every `lang/*.js`" instead of "add an export feature".
 
 ## 3. Interview to erase the uncertainties
 
@@ -66,8 +66,8 @@ only ask what genuinely changes what gets built. Typical gaps to close:
 - **Acceptance criteria** — how will we know it's done? The concrete,
   checkable behaviors.
 - **UI / UX specifics** — where in the UI does it live (which view, hub tab)?
-  What exactly does the user see and do? Any German wording the user wants for
-  the visible strings? (Code/keys stay English; display text is German.)
+  What exactly does the user see and do? Any wording the user wants for the
+  visible strings? (Code/keys stay English; display text ships in every locale.)
 - **Bugs** — exact repro steps, expected vs. actual, how often, since when.
 - **Edge cases & data** — empty states, ties, deletions, retired games,
   multi-session effects; does it change stored data (and thus need a one-time
@@ -108,11 +108,11 @@ from scratch. (For bugs: suspected cause if known, else leave to the implementer
 ## Acceptance criteria
 - [ ] Checkable behavior 1
 - [ ] …
-- [ ] Tests added/updated where applicable; `npm test`, `npm run lint`,
-      `npm run check:syntax` green
+- [ ] Tests added/updated where applicable; `npm test`, `npm run coverage:ci`,
+      `npm run lint`, `npm run check:syntax` green
 
 ## Notes
-i18n (both lang files), data/migration, edge cases, out-of-scope follow-ups,
+i18n (every locale), data/migration, edge cases, out-of-scope follow-ups,
 related/blocking issues (cross-reference them as #123 — and wire real
 dependencies per step 6).
 ```

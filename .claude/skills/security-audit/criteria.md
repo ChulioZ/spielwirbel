@@ -177,12 +177,13 @@ that a generic scanner does not know about.
 - **Check:** State-changing routes run `validateBody(schema, req, res)` and reject shape
   violations with the route's own message. Unknown fields are stripped, not trusted.
   A new write route that reads `req.body.x` without a schema is a finding. #547 finished
-  the #213 sweep, so every write route now reaches zod — but **three deliberate shapes do
-  not go through `validateBody`, and none of them is a finding** (audit 2026-08-04):
-  `lib/routes/marker.js` parses a `.catch({ type: 'none' })` union and therefore
-  **never 400s** (a malformed design falls back to "default" — the pre-zod behaviour, kept
-  on purpose); `lib/routes/account.js` applies its field schemas through `safeParse`
-  helpers (`validEmail`/`validPassword`/`validUsername`/`validBggUsername`) because it
+  the #213 sweep, so every write route now reaches zod — but **two deliberate shapes do
+  not go through `validateBody`, and neither is a finding** (audit 2026-08-04; a third,
+  the round-background route's never-400 `.catch({ type: 'none' })` union, was retired
+  with that route at the flip, #1202 — `lib/routes/marker.js` is a strict `z.object`
+  through `validateBody` and 400s): `lib/routes/account.js` applies its field schemas
+  through `safeParse` helpers (`validEmail`/`validPassword`/`validUsername`/
+  `validBggUsername`) because it
   validates fields independently, not one body shape; and `lib/routes/auth.js` reads the
   single `password` field straight into `passwordMatches`, which is a comparison rather
   than a shape. Judge a route by *whether hostile input can reach the store unchecked*,

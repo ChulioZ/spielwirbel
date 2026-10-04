@@ -49,9 +49,12 @@ const thingXml = (items, withStats) => `<?xml version="1.0" encoding="utf-8"?><i
 // about. `rating: 7.0` is the default because the stub's <average> is served
 // with stats=1 on every call — the detail surface DOES carry it (the ballot
 // projection is where it is withheld; see the vote-link spec below).
+// The poll defaults to `[]`: the stub serves no <poll>, and a fetched item with
+// no poll stores the empty answer (#1005). A game never fetched reports null.
 const infoBody = (over = {}) => ({
   weight: null, minPlaytime: null, maxPlaytime: null,
-  minAge: null, categories: [], mechanics: [], designers: [], rating: 7.0, ...over,
+  minAge: null, categories: [], mechanics: [], designers: [], rating: 7.0,
+  bestWith: [], recommendedWith: [], ...over,
 });
 
 const stubFetch = (items) => {
@@ -151,7 +154,7 @@ test('an upstream failure stamps nothing, so the next trigger retries', async ()
   global.fetch = async () => ({ status: 404, text: async () => '' });
   const res = await request(app).get(`/api/rounds/${rid}/games/${game.id}/provider-info`);
   assert.equal(res.status, 200);
-  assert.deepEqual(res.body, infoBody({ rating: null }));
+  assert.deepEqual(res.body, infoBody({ rating: null, bestWith: null, recommendedWith: null }));
 
   const stored = (await repo.getRound('default', rid)).games.find((g) => g.id === game.id);
   assert.equal('providerInfoAt' in stored, false, 'a failed fetch must not suppress the retry for the whole TTL');
@@ -170,7 +173,7 @@ test('a game without a provider link answers its stored nulls with no fetch', as
   });
   const calls = stubFetch([]);
   const res = await request(app).get(`/api/rounds/${rid}/games/${game.id}/provider-info`);
-  assert.deepEqual(res.body, infoBody({ rating: null }));
+  assert.deepEqual(res.body, infoBody({ rating: null, bestWith: null, recommendedWith: null }));
   assert.equal(calls.length, 0);
 });
 

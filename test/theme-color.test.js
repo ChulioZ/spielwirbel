@@ -124,6 +124,33 @@ for (const page of INSTALL_SURFACES) {
   });
 }
 
+/* The SERVER-RENDERED install surfaces: /faq (lib/faq.js) and the guide pages
+   (lib/guide.js) link the same manifest from a template literal, so the
+   public/*.html sweep above never saw them — and both shipped Klassisch's
+   #c2410c past the flip (#1202) while the manifest they link answered with the
+   face's accent (claude-file audit 2026-10-04). Rendered and parsed exactly like
+   the static pages; one language each is enough, since the head is shared. */
+const { renderFaq } = require('../lib/faq');
+const { renderGuide } = require('../lib/guide');
+const parseHtml = (file, html) => {
+  const { document } = new JSDOM(html).window;
+  return {
+    file,
+    linksManifest: Boolean(document.querySelector('link[rel="manifest"]')),
+    themeColors: [...document.querySelectorAll('meta[name="theme-color"]')]
+      .map((el) => el.getAttribute('content')),
+  };
+};
+for (const page of [parseHtml('/faq', renderFaq('en')), parseHtml('/en/<guide>', renderGuide('en'))]) {
+  test(`${page.file} (server-rendered) declares the manifest's theme_color`, () => {
+    assert.ok(page.linksManifest, `${page.file} no longer links the manifest — drop it from this loop`);
+    assert.equal(page.themeColors.length, 1,
+      `${page.file} declares ${page.themeColors.length} live theme-color tags, expected exactly 1`);
+    assert.equal(page.themeColors[0], MANIFEST.theme_color,
+      `${page.file} would install chrome in ${page.themeColors[0]}, the manifest says ${MANIFEST.theme_color}`);
+  });
+}
+
 test('wearing a design moves the chrome to its accent, in lockstep with --brand', (t) => {
   const dom = loadApp();
   t.after(() => dom.close());

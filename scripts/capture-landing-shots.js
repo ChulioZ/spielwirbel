@@ -85,14 +85,15 @@ const VIEWPORTS = {
   // cut still lands 68px into row 3's cover art. Unchanged by #1090 — that issue
   // touched no round screen.
   shelfPhone: { width: 390, height: 779, deviceScaleFactor: 1.6, mobile: true },
-  // 720, not the 780 that shipped before #666. The vote card now SIZES ITSELF to
-  // the viewport, so the crop is a fixed point rather than a free choice: the
-  // cover is `max(110px, min(240px, calc(100svh - 480px)))`, which reaches its
-  // 240px cap at exactly 100svh = 720. Below that the card shrinks with the crop
-  // (a smaller cover buys nothing); above it the card stops growing and the crop
-  // just adds dead space — at 780 that was ~100px of empty page plus the „powered
-  // by BGG" footer sliding into frame. Measured card bottoms: 621@660, 651@690,
-  // 671@710, 681@720, 681@780.
+  // 720 was #669's fixed point (cover `min(240px, calc(100svh - 480px))`, capped
+  // at exactly 720) and is no longer one. The vote card SIZES ITSELF to the
+  // viewport, so the crop is not a free choice: since #1168 the cover is
+  // `max(110px, min(260px, calc(100svh - 447px)))`, capped at 100svh = 707. Below
+  // that the card shrinks with the crop (a smaller cover buys nothing); above it
+  // the crop only adds dead space. Measured 2026-10-04 (en/de) card bottoms:
+  // 480@660, 527@707, 527@720 — 720 sits 13px past the cap, and ~180px of empty
+  // page plus the „powered by BGG" footer are in frame at any height. §4 of the
+  // rule has the table; re-derive it before moving this number.
   vote: { width: 390, height: 720, deviceScaleFactor: 1.6, mobile: true },
   // The results screen (#1090), same phone width as the other two. Its height is
   // a FLOOR, not the crop: resultCrop() below measures the real cut per locale.

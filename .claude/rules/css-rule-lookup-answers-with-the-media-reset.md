@@ -70,7 +70,8 @@ surfaces either is deleting the subject on purpose and reading the test NAMES
 that go red (`.claude/rules/break-the-code-on-purpose.md`).
 
 **Related:** `.claude/rules/css-text-assertions-strip-comments.md` (the other two
-traps in reading this sheet as text, and where `topLevel()` lives),
+traps in reading this sheet as text; `topLevel()` itself lives in
+`test/support/css.js` beside `rulesOf()` and `mediaBlocks()`),
 `.claude/rules/assert-the-decision-not-its-ingredients.md` (`resolvedDeclaration`,
 which faces the mirror-image problem — several rules matching, and needing the
 one that WINS).

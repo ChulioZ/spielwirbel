@@ -61,8 +61,9 @@ grep -rn "IMAGE_HOSTS" lib/providers/
 
 Then diff that set against the processor section, the recipient list (**both
 languages**), `docs/legal/vvt.md`, and the AVV inventory. Remember the browser is a
-data-discloser too: hotlinked covers send the visitor's IP to five providers
-(`provider-cover-hotlinking.md`), and a donation link, an embed or a remote font
+data-discloser too: hotlinked covers send the visitor's IP to every host in a
+provider's `IMAGE_HOSTS` — only BGG's since #981 retired the storefront hosts
+(`provider-cover-hotlinking.md`) — and a donation link, an embed or a remote font
 would each add a recipient. → **L-001, L-002**
 
 ### 2. On-device storage — the § 25 TDDDG inventory
@@ -80,8 +81,10 @@ Every hit needs an inventory entry with purpose and lifetime. A new one that is
 Walk the schema in `lib/repo/migrations/` and `lib/store.js`, not the docs. New
 columns and new free-text fields are the usual drift. Confirm each category, legal
 basis and retention appear in the policy *and* `vvt.md`, and that
-`docs/legal/retention.md` matches what the code actually deletes — note where
-retention is still manual (the 3-year moderation-log purge, #311). → **L-004, L-008**
+`docs/legal/retention.md` matches what the code actually deletes: every row it
+calls automatic needs a job in `lib/scheduler.js` (the 3-year moderation-log
+purge is `purgeModerationLog` since #311), and the rows it calls manual — stored
+contact notices, the mailbox — are the ones to ask about. → **L-004, L-008**
 
 ### 4. The reverse direction — does the code breach a promise?
 
@@ -126,22 +129,17 @@ Run the L-007 trigger list against everything that shipped since the last audit:
 consent-based processing, a paid tier, public dissemination of user content,
 child-directed features. Any one of them reopens the age-clause question *and*
 usually more. Open issues matter here too — flag them as *forthcoming* triggers,
-not current violations. The live ones as of 2026-08-05 (the previous exemplars
-#322, #325/#338 and #207 had all shipped by 2026-07-27, so this list needs
-re-checking each sweep rather than being read as fixed):
+not current violations. **Derive them each sweep from `gh issue list --state
+open`; don't keep a list here** — the one written on 2026-08-05 (#564, #560,
+#418) had shipped within weeks. Ask of each open issue whether it adds a
+trigger above, a new data category, a recipient or a retention change.
 
-- **#564** — instance-wide game statistics on the logged-out landing page and a
-  new `/entdecken` screen. The clearest dissemination trigger on the board: it
-  publishes aggregates to an unauthenticated surface. Note its own mitigation —
-  every published game name is resolved from the **provider**, never from the
-  user-typed `game.title` — which is what keeps user-authored bytes off the
-  public front door structurally rather than by moderation.
-- **#560** — the Wunschliste and its BGG **wishlist** import: a new category of
-  data imported from a third party (see also L-001's recipient question).
-- **#418** — passkeys (WebAuthn): new authentication data, so a categories and
-  retention question rather than a dissemination one.
-- **#463** — durable, searchable log retention: changes how long request logs
-  live and where, which touches `retention.md` and the `vvt.md` rows directly.
+What to look for, from #564 (public game statistics on the logged-out landing
+page): it published aggregates to an unauthenticated surface, and its mitigation
+was structural — every published game name is resolved from the **provider**,
+never from the user-typed `game.title`, which keeps user-authored bytes off the
+public front door without relying on moderation. Judge each new dissemination
+trigger by whether its guarantee is structural like that or a convention (L-016).
 
 ## Two hard limits on what you may read
 

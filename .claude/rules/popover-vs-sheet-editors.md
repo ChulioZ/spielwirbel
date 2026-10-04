@@ -228,12 +228,6 @@ after open (the autofocus), `history.state.sheet` (the Back marker),
 `history.back()` then asserting `location.pathname` is unchanged and the screen
 survived, Escape/backdrop/× closing, and focus restoration to the opener.
 
-One caveat on that last one: the tag/player **chips** are `<span>`s with a click
-handler (`makeEditableTag`), so they are not focusable and focus restores to
-`<body>` when a sheet is opened from one. That is a pre-existing keyboard-access
-gap in `makeEditableTag`, not a sheet bug — restoration works correctly from the
-onboarding `<button>`s. Fixing the chips is its own issue.
-
 **Related:** `.claude/rules/responsive-hub-tabs.md` (where 860px comes from — it
 is the dock/strip breakpoint, reused deliberately),
 `.claude/rules/sheet-history-back-dismissal.md`,

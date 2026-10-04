@@ -39,10 +39,10 @@ dismiss();
 ```
 
 Hence `attachLookup` returns `isOpen` at all — and hence the inert zero-provider
-stub (#294) must return `isOpen: () => false`, or a round that deliberately
-queries no providers throws on every Escape. Both sheets declare `let lookup =
-null` **above** `onKey` and assign it later; the handler only ever fires long
-after that assignment.
+stub (#294) must return `isOpen: () => false`, or an empty registry throws on
+every Escape (unreachable since #744 made BGG unconditional; kept for exactly
+this). Both sheets declare `let lookup = null` **above** `onKey` and assign it
+later; the handler only ever fires long after that assignment.
 
 `stopPropagation()` there is safe: the only other document-capture listener is
 `trapFocus`, which acts on Tab alone.
@@ -133,11 +133,11 @@ Typing clears the reference outright — the next render answers a different que
 - **Stub `window.api`, don't rely on the live provider.** `api` is a top-level
   `function` declaration, so it *is* a `window` property and can be wrapped
   (`.claude/rules/in-app-nav-links.md` §1 on which globals are reachable). That is
-  also the only practical way to construct a **merged** row on demand — return the
-  same title from two providers — and to stagger one provider's response to
-  exercise §4. **Since #744 registered BGG alone it is the only way at all**: the
-  merge and the badge navigation are dormant until a second provider lands, so a
-  stub is what keeps them from silently rotting in the meantime.
+  also the only practical way to stagger one provider's response against
+  another's to exercise §4 — and since #744 registered BGG alone, §4's re-sort is
+  dormant until a second provider lands, so the probe has to stage that provider
+  itself. (The stub once also built a **merged** row on demand, until #790
+  removed the merge and its per-provider badges.)
 - **Synthetic `keydown` is a valid probe here**, unlike the synthetic *click* trap
   in `.claude/rules/in-app-nav-links.md`: the whole behaviour lives in listeners
   and `defaultPrevented`, not in a default action the browser has to perform.
@@ -149,7 +149,7 @@ Typing clears the reference outright — the next render answers a different que
 
 **Related:** `.claude/rules/lookup-menu-fixed-position.md` (why the menu is fixed,
 and the reposition listeners), `.claude/rules/add-game-lookup-provider.md` (the
-providers being merged), `.claude/rules/sheet-history-back-dismissal.md` (the
+providers behind the menu), `.claude/rules/sheet-history-back-dismissal.md` (the
 sheet layer whose Escape this defers to),
 `.claude/rules/accessibility-contrast-and-modals.md` §2 (the focus trap §2 fixes),
 `.claude/rules/frontend-helper-modules-and-coverage.md` (why `lookup-nav.js` is

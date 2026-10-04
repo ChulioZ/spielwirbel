@@ -189,8 +189,9 @@ screenshot on an English page:
   its **own seed pass** — localized round name, member names and invented game
   titles — because an English page showing a round called „Donnerstagsrunde"
   holding „Die Krähenbrücke" is exactly the half-translated impression #457
-  removed. Keep every seed the same *shape* (12 games, 4 members, 2 finished
-  sessions, 4 tags) so all sets show the same badges and counts.
+  removed. Keep every seed the same *shape* (12 games, 4 members, 4 tags, and 3
+  finished sessions — the two rated ones below plus the ranked one the `result`
+  shot is taken of, #1090) so all sets show the same badges and counts.
 
 **Reshoot every locale in one run.** #457 re-captured the German set alongside the
 new English one even though #438's assets were correct, so both come from the same
@@ -199,7 +200,7 @@ cannot tell whether a difference between two locales is the app or the seed (§4
 The seeds therefore live in the script for *all* locales, not just the one being
 added.
 
-The two finished sessions must each rate **exactly one, known** game: a plain
+The first two finished sessions must each rate **exactly one, known** game: a plain
 draw is random, so the set of rated games — and therefore which cards show a `Ø`
 badge rather than "new" — would change every run. Four ratings of `4,5,4,5` and
 `4,4,5,4` gave **Ø 4.5** and **Ø 4.3** when this was written; as of #537's
@@ -311,28 +312,41 @@ height from the **file header**, not from the script's log line: at
 `test/landing-shots.test.js` reads the header. It failed on exactly that 1px,
 which is the assertion earning its keep.
 
-### The vote crop is a FIXED POINT now, not a free choice (#669)
+### The vote crop is a FIXED POINT, not a free choice (#669) — at 707 now, not 720
 
 Since #666 the vote card sizes itself to the viewport, so the crop height and the
 card height are mutually dependent — shrinking the crop shrinks the card, and the
 usual "pick a band that doesn't slice anything" reasoning does not converge on
-its own. The cover is `max(110px, min(240px, calc(100svh - 480px)))`, which
-reaches its **240px cap at exactly 100svh = 720**. Measured card bottoms:
+its own. #669 derived the crop from the cover of the day,
+`max(110px, min(240px, calc(100svh - 480px)))`, which reached its 240px cap at
+exactly 100svh = 720. It measured card bottoms 621@660, 651@690, 671@710,
+681@720 and 681@780 — 39px of slack up to the cap, growing past it — and
+committed **720** as the unique best height, which also kept the „powered by
+BGG" footer out of frame.
+
+**#1168 moved the formula to `max(110px, min(260px, calc(100svh - 447px)))`**
+(`.vote .vote__img` in `public/styles.css`), whose cap lands at **100svh = 707**,
+and nobody re-derived the crop. Re-measured 2026-10-04 with `--probe`
+(Klassisch, en and de alike):
 
 | crop height | card bottom | slack |
 |---|---|---|
-| 660 | 621 | 39 |
-| 690 | 651 | 39 |
-| 710 | 671 | 39 |
-| **720** | **681** | **39** |
-| 780 | 681 | 99 |
+| 660 | 480 | 180 |
+| **707** | **527** | **180** |
+| 720 (committed) | 527 | 193 |
 
-Below 720 the card just shrinks with the crop (a smaller cover buys nothing);
-above it the card stops growing and the crop only adds dead space. **720 is
-therefore the unique best height**, and the pre-#666 value of 780 now leaves
-~100px of empty page with the „powered by BGG" footer sliding into frame — which
-is what #669 actually fixed, over and above the card's own restyling. Re-derive
-this table (not just re-run the probe) if the cover formula changes.
+The shape held — below the cap the card shrinks 1:1 with the crop, above it the
+crop only adds dead space — so **707 is the fixed point now**, and the committed
+720 sits 13px past it. The slack did not hold: ~180px rather than 39, so at any
+crop up to the cap the picture carries an empty band and the footer. The image
+already showed the footer at #1168's reshoot, and the rating step dropping the
+top bar (#1224) moved the card up by that bar's height, widening the gap. No
+viewport height fixes that; it would take cutting the capture below the card.
+
+Re-derive this table (not just re-run the probe) when the cover formula **or
+anything else on or above the card** changes height — this time it was the
+second that moved the slack. The script's comment beside `VIEWPORTS.vote` states
+the same numbers.
 
 ## 5. Three PHONE crops, and the third one's height is DERIVED
 
@@ -386,8 +400,9 @@ because `capture-landing-shots.js` sits at the 700-line source budget):
 | order | shot FIRST | the vote shot's wizard leaves a live draw behind, which the Start tab would then show as an unfinished-session ticket |
 
 Measured 2026-09-24: Klassisch is 1800×1125 in every locale (its rail ends at
-830–874, under the floor); Der Tisch 1800×1125–1175, because its rail panel is
-taller and its labels wrap to two lines in five locales. Heights differ per asset the way the
+830–874, under the floor); Der Tisch 1800×1125–1175, because its rail panel was
+taller and its labels wrapped to two lines in five locales (the 2026-10-04
+reshoot came out 1125 in all nine). Heights may differ per asset the way the
 result shot's do, and the band is width-bound, so they do not have to agree.
 Weight is 60–78 KB per file, budgeted **separately** (`DESKTOP_BUDGET`, 120 KB)
 so the walkthrough's 200 KB cap stays exactly as strict as it was.
@@ -460,8 +475,10 @@ Three details in there are load-bearing:
   assertion for a reason that has nothing to do with the image.
 - **The weight budget is per locale, not a committed total.** A flat total gets
   laxer per visitor with each language added, which is backwards for the one
-  number guarding the page's first paint. Today: ~104 KB (en), ~108 KB (de)
-  against a 200 KB cap. Since #1090 a visitor downloads the WHOLE set — three
+  number guarding the page's first paint. Measured 2026-10-04, the three phone
+  shots: Klassisch ~120 KB (en) / ~127 KB (de), Der Tisch ~150 KB (en) / ~160 KB
+  (de), against a 200 KB cap; the desktop capture has its own 120 KB
+  (`DESKTOP_BUDGET`). Since #1090 a visitor downloads the WHOLE set — three
   walkthrough steps, three `<img src>`s — where the retired `<picture>` used to
   fetch one of two shelf widths, so the budget binds harder than it did.
 - **The parity test is what a third language trips.** Adding a `lang/fr.js` and a
@@ -539,8 +556,9 @@ got stronger. But editing `styles.css` or `views-landing.js` **does** require th
 `CACHE` bump (`.claude/rules/pwa-service-worker.md`), since both *are* in `SHELL`.
 
 **Related:** `.claude/rules/provider-cover-hotlinking.md` (why no real cover art),
-`.claude/rules/preview-pane-paint-artifacts.md` (why the Browser pane cannot
-verify this — it reports `innerWidth === 0`, so every media query takes the phone
-branch and every rect measures ~0; CDP is the trustworthy path),
+`.claude/rules/preview-pane-paint-artifacts.md` (why the Browser pane is the
+wrong instrument — a fresh tab reports a 0×0 viewport until `resize_window`, and
+its observers never fire at any size; CDP with an exact viewport is the
+trustworthy path),
 `.claude/rules/link-preview-card.md` (the sibling committed-image asset, and the
 headless-Chrome recipe this extends).

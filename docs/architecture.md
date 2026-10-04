@@ -146,8 +146,8 @@ lib/
                      attestation/assertion crypto itself is
                      @simplewebauthn/server's; this is the policy around it
   quota.js           per-tenant state caps — rounds/tenant, games/round,
-                     tags/round, members/round (issue #139; inert unless
-                     ACCOUNTS_ENABLED)
+                     tags/round, members/round, … (issue #139; inert unless
+                     ACCOUNTS_ENABLED, except saved filters/round, #1328)
   web-manifest.js    GET /manifest.webmanifest per design (#1199): the static
                      file untouched for a colourless design (Klassisch), else
                      the file re-dressed in the design's icons, theme and
@@ -182,11 +182,12 @@ lib/
                      than each deriving them, so the two cannot drift; DST is
                      avoided by construction, never handled
   public-stats.js    the instance-wide statistics published on the landing page
-                     and /entdecken (issue #564; off unless
-                     PUBLIC_STATS_ENABLED). Ranks the repo's raw provider-keyed
-                     aggregate, resolves only the handful of games that could
-                     reach a podium from the provider — never from the
-                     user-typed title — and caches the payload for the route
+                     and /entdecken (issue #564; on unless
+                     PUBLIC_STATS_ENABLED=false). Ranks the repo's raw
+                     provider-keyed aggregate, resolves only the handful of
+                     games that could reach a podium from the provider — never
+                     from the user-typed title — and caches the payload for
+                     the route
   actor-seat.js      which member seat to attribute a round activity to; one
                      definition shared by the games and members routes (#563)
   edition.js         the printing a game's cover was picked from, normalized and
@@ -271,8 +272,8 @@ lib/
                      expired-demo purge (issue #427), the expired-vote-link
                      sweep (issue #652), the stored-price sweep (issue #688),
                      the moderation-log retention purge (issue #311), the
-                     feed-event retention purge (issue #1357), the expired
-                     pending-e-mail sweep (pending-email.js), the
+                     Freundeskreis feed's 12-month purge (issue #1357), the
+                     expired pending-e-mail sweep (pending-email.js), the
                      public-statistics rebuild (issue #564) and the BGG
                      corpus enrichment pass (issue #681)
   pending-email.js   deletes an unconfirmed new e-mail address once its 24 hours
@@ -294,9 +295,9 @@ lib/
   legal.js           server-rendered Impressum / privacy policy /
                      Nutzungsbedingungen in DE + EN (issues #134/#140)
   account-design.js  which design an account wears (resolved against the
-                     registry's `enabled` gate) and when a change counts as
-                     going back to Klassisch — shared by /me, the two design
-                     routes and the operator's „Designs" tile (issue #1201)
+                     registry's `enabled` gate) — shared by /me, the account
+                     routes and both backends' per-design count on the
+                     operator's „Funktionsnutzung" card (issues #1186, #1480)
   account-export.js  the account record as the operator's Art. 15/20 export
                      hands it out: every stored field except named credential
                      material — deliberately NOT the account list's projection,
@@ -320,8 +321,9 @@ lib/
                      ranks dump is parsed with
   observability.js   structured logging, /healthz + /readyz, central error handler
   status.js          aggregate usage metrics + the quota ceilings for the
-                     operator panel's two Kennzahlen cards — Grenzen &
-                     Kontingente and Funktionsnutzung (issues #274/#404/#1124) —
+                     operator panel's Kennzahlen — the Grenzen &
+                     Kontingente card and the grouped Funktionsnutzung cards
+                     (issues #274/#404/#1124/#1480) —
                      counts only, never a secret value and never personal data
   provider-info.js   lazy backfill of BGG's standard metadata onto linked
                      games (issues #717/#724/#736/#828/#829): eligibility (a
@@ -450,10 +452,15 @@ lib/
                                              delete, move some/all to another
                                              round)
     members.js       …/members              (add a seat, edit name / avatar
-                                             color, claim/release your own seat)
-    sessions.js      …/sessions             (start, results, choice, finish,
-                                             cancel, delete, remove one game,
-                                             mint the public vote link (#652))
+                                             color, claim/release your own seat,
+                                             retire/restore a seat, delete an
+                                             unused one)
+    sessions.js      …/sessions             (start, per-device votes + close,
+                                             results, choice, finish, cancel,
+                                             delete, remove one game or one
+                                             person (#1538), the multi-table
+                                             proposals + split (#796), mint the
+                                             public vote link + its QR (#652))
     vote-link.js     /api/vote/:token       (PUBLIC, outside the auth gate: read
                                              one session's ballot and submit one
                                              claimed participant's votes — the
@@ -461,7 +468,8 @@ lib/
     activities.js    …/activities           (list the feed [GET], delete an entry)
     marker.js        …/marker               (PATCH the round's colour marker,
                                              0-7 — issue #1187)
-    tags.js          …/tags                 (create a custom tag [deduped], set its icon, delete one)
+    tags.js          …/tags                 (create a custom tag [deduped], rename it or
+                                             set its icon, reorder, delete one)
     saved-filters.js …/filters              (save the setup under a name, rename,
                                              reorder, delete — the hub's quick-start
                                              chips, issue #1328)
@@ -476,6 +484,7 @@ public/
                      on demand by js/design.js; Klassisch has none, because
       tisch.css      styles.css IS Klassisch
       ocean.css
+      bruecke.css
       programmheft.css
       forest.css
   manifest.webmanifest  PWA manifest (installable app metadata + icons) —
@@ -502,12 +511,12 @@ public/
     forest/          Forest's own marks (#1465): the whirl in light print on
                      the Laubgrün, and an og-image.png with the dusk panel
   img/               product screenshots on the logged-out landing page — the
-                     shelf, the voting screen and a session result, all phone
-                     width, one set per UI locale (landing-*.<locale>.webp),
-                     generated once from throwaway data and committed (see
-                     .claude/rules/)
-    tisch/           the same three shots with the app wearing Der Tisch
-                     (#1199), shown once the face moves to it
+                     shelf, the voting screen and a session result at phone
+                     width plus the round hub at desktop width (#1199), one set
+                     per UI locale (landing-*.<locale>.webp), generated once
+                     from throwaway data and committed (see .claude/rules/)
+    tisch/           the same shots with the app wearing Der Tisch
+                     (#1199), the set every logged-out visitor sees
   js/
     pages/           scripts for the standalone HTML pages above. Each is a
                      self-contained IIFE loaded by its OWN document only, so it
@@ -538,7 +547,7 @@ public/
     lang/fi.js       Finnish strings
     lang/ko.js       Korean strings
     core.js          DOM/API helpers, SWR fetches, member colours, the
-                     language picker  (loads first)
+                     language picker  (loads before every views-*.js)
     empty-state.js   the app's one "nothing here yet" component — medallion,
                      optional title, sub-line; shares its rules with .lobby-cta
                      (issue #869)
@@ -932,7 +941,7 @@ public/
                      the result moment, the Chronik rows, the hub line, the
                      Tischkarte row and the tap-open card
     views-member.js  member detail page (die Tischkarte: the Siegquote ring,
-                     the initials watermark, the figure strip and its
+                     the initials watermark, the figure strip and
                      the two game boxes; name/colour editing)
     programmheft-tier2a.js Das Programmheft's extras with no Klassisch counterpart
                      (#1379): the Chronik's „Rückblick" sheet and „Teilen",
@@ -989,7 +998,7 @@ public/
     feed-view.js     the friend feed's two presentations (#325, #1132): the row
                      for a narrow section, the tile grid where the feed is the
                      content. A component with three callers on three screens
-    views-friends.js Der Kreis view + home dashboard tile (#325; since #842
+    views-friends.js „Freundeskreis" view + home dashboard tile (#325; since #842
                      it invites rather than vanishing when you have no friends).
                      Holds the account vocabulary the profile shares (colour,
                      avatar, name, send error, report button)
@@ -1038,6 +1047,13 @@ scripts/
                      the per-locale seed that run puts in (round name, seats,
                      tags, invented titles, provider metadata) — a flat table,
                      so adding a language edits this file and not the pipeline
+  migrate-retire-votes.js
+                     one-off for a JSON instance: drops the retirement flag out
+                     of every stored vote (#909); Postgres does it in a Knex
+                     migration
+  migrate-drop-design-switched-back.js
+                     one-off for a JSON instance: deletes the unread
+                     `designSwitchedBack` key from every account (#1480)
 test/                automated tests (node --test + supertest); view specs
                      run the real frontend under jsdom (test/support/dom.js)
 data/                all user data (git-ignored)

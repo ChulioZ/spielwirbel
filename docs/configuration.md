@@ -257,7 +257,8 @@ and a global daily circuit breaker on all outbound mail (`MAIL_DAILY_MAX`,
 default 200 per UTC day). Past the budget, sends are refused and logged as
 `mail_daily_budget_exhausted` rather than delivered; set it below your mail
 provider's own daily limit. Both counters are per process and in memory. How
-much of the day's budget is spent shows on the admin panel's Kennzahlen card.
+much of the day's budget is spent shows on the admin panel's „Grenzen &
+Kontingente" card.
 
 Since #618 that budget has **two classes**, derived from the same number rather
 than from a second env var. The **last quarter** of `MAIL_DAILY_MAX` is reserved
@@ -276,8 +277,9 @@ tenant's rounds, #136). **This is what the maintainer's hosted instance runs**:
 public registration opened on 2026-07-24 (#219) and `AUTH_PASSWORD` was removed,
 so production is accounts-only — plus the guest demo below, enabled there since
 2026-07-27, so the app can also be tried without registering. With accounts **off** (still the default for a
-fresh checkout) the shared-password gate above is unchanged. *Roles within a
-shared tenant are still follow-up work (#137).*
+fresh checkout) the shared-password gate above is unchanged. Sharing a round
+with another account, with per-round roles (#207, #137), is described in
+[`features.md`](features.md).
 
 **Layered mode** (issue #266): the shared-password gate and accounts can run at the
 **same time** — set `AUTH_PASSWORD` **and** `ACCOUNTS_ENABLED` (with a dedicated

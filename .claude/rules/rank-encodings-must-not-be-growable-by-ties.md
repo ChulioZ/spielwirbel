@@ -1,6 +1,7 @@
 ---
 paths:
   - "public/styles.css"
+  - "public/css/designs/programmheft.css"
   - "public/js/podium.js"
   - "public/js/views-pokale.js"
   - "public/js/views-session.js"

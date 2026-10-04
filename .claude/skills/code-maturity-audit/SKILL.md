@@ -109,19 +109,29 @@ zod boundary (`lib/validate.js`) rather than regressing to hand-rolled checks.
 ### 2. Build vs buy → M-004..M-005
 
 Continue §7's ledger: any newly hand-rolled implementation of a commodity
-concern gets the question, answered in writing. The two §7 items still open are
-**already tracked** — the error-tracking half of #212 (constrained by the
-operator's deliberate `ERROR_WEBHOOK_URL` decision, see
-`.claude/rules/liveness-vs-readiness-probes.md` and `docs/deploy-railway.md`)
-and the multi-process limiter store (#215, closed unshipped — the replica pin is the control) — so they are context, not fresh
-findings; dedupe against them.
+concern gets the question, answered in writing. Two §7 items never shipped, and
+**no open issue owns either** — don't call them "tracked":
+
+- **Error tracking.** #212 shipped pino and closed 2026-07-19 with the provider
+  left open. The recorded position is M-R05: deliberately deferred,
+  `ERROR_WEBHOOK_URL` unset by operator decision
+  (`.claude/rules/liveness-vs-readiness-probes.md`, `docs/deploy-railway.md`).
+  Whether it gets an issue or stays a recorded deferral awaits an operator
+  decision (raised 2026-10-04) — check whether one was made, and if not, list it
+  under the report's operator questions rather than as a fresh finding.
+- **The shared limiter store.** #215 closed unshipped on 2026-08-02. The control
+  is the replica pin — `railway.json` `numReplicas: 1`, asserted by
+  `test/docker.test.js` (security-audit S-012) — so it is context unless a
+  change raises the count.
 
 ### 3. Multi-process state → M-006
 
 Sweep module-level mutable state in `lib/` and `lib/routes/` and classify each
 instance: correct per-process by design, a documented accepted trade-off, or a
-finding. The deployment can run **multiple replicas** (`guest-demo-accounts.md`
-§1 records the class; the count is an ops dial), so "works on my one process"
+finding. More than one process can serve at once: `railway.json` pins
+`numReplicas: 1` (asserted by `test/docker.test.js`), but every zero-downtime
+deploy overlaps two containers (`deploy-invariants-are-pinned-in-code.md`;
+`guest-demo-accounts.md` §1 records the class). So "works on my one process"
 is the sharpest hobby-vs-SaaS smell this repo has. The done-right model is the
 demo machinery: liveness counts and cooldowns are read from the store per
 request, so replicas agree by construction.

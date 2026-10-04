@@ -52,12 +52,15 @@ download-and-cache**, however tempting the reliability argument is.
   allowlist does.** On top of `isAllowedImageUrl`:
   - **https only.** A stored `http://` URL is blocked as mixed content on the
     live HTTPS origin and renders nothing, with no server-side error to notice.
-  - **No `'`, `"`, `(`, `)`, backslash or whitespace.** The frontend interpolates
+  - **No `'` `"` `<` `>` `&` `\` or whitespace** — the set is `COVER_UNSAFE_RE`
+    (`public/js/cover-size.js` since #1545, required by
+    `lib/providers/index.js`); parentheses are allowed on purpose, because BGG's CDN
+    paths contain them (`filters:strip_icc()`). The frontend interpolates
     `game.image` straight into `background-image:url('<image>')`; a quote or
-    paren in a stored URL is a CSS-injection vector. Rejecting once at the
+    backslash in a stored URL is a CSS-injection vector. Rejecting once at the
     boundary keeps every render site safe without escaping at each one. Don't
     relax this to "just escape it later" — the render sites are spread across
-    six view files.
+    the view files, and every design adds more.
 
 ## What was NOT done, and why
 
@@ -87,16 +90,15 @@ download-and-cache**, however tempting the reliability argument is.
   at them any more.) Sony, Microsoft, Nintendo and
   Valve offer no cover-art licence at any price, so hotlinking is the end state
   for them, not a stopgap.
-- **Since #744 those four are LEGACY DATA, and the hotlinks stay.** The providers
-  were retired from the lookup; not one stored cover was touched, because
-  rewriting or clearing them would visibly change existing shelves for no gain
-  and — for a cover — would mean deleting a link we are perfectly entitled to
-  keep. Their hosts therefore stay on the CSP `img-src` allowlist through
-  `LEGACY_COVER_HOSTS` while `isAllowedImageUrl` refuses them: **may render, may
-  not be stored.** That split is the one thing to preserve if you touch either
-  gate — see `.claude/rules/security-middleware.md` and
-  `.claude/rules/provider-cover-sizing.md`, whose render-time resizing keeps the
-  same covers from costing megabytes.
+- **From #744 to #981 those four were LEGACY DATA, and the hotlinks stayed.**
+  The providers were retired from the lookup without touching a stored cover, so
+  their hosts stayed on the CSP `img-src` allowlist through `LEGACY_COVER_HOSTS`
+  while `isAllowedImageUrl` refused them: **may render, may not be stored.**
+  #981's operator action then cleared those rows, and the frozen host list, the
+  resizers and the CSP entries went with them (`lib/providers/index.js`;
+  `test/provider-covers.test.js` asserts the hosts are refused). If a provider is
+  ever retired with covers still on shelves, that render/store split is the
+  shape to bring back — see `.claude/rules/provider-cover-sizing.md`.
 
 ## Privacy follow-through
 

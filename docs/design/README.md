@@ -11,8 +11,10 @@ decides how that works. The code follows it; this file is the map.
 every account that had not chosen a design wears it and is offered Klassisch
 once by the first-start chooser; the round palettes and worlds
 are gone from the code, and a round that wore one shows the colour marker it maps
-to (`public/js/round-marker.js`). Live designs: **Klassisch, Der Tisch, Ocean, Das Programmheft.** Die Brücke
-(#1204) and Forest (#1206) are in slices; Der Run (#1205) is a placeholder epic.
+to (`public/js/round-marker.js`). Live designs (the rows `public/js/designs.js`
+marks `enabled: true`): **Klassisch, Der Tisch, Ocean, Die Brücke, Das
+Programmheft.** Forest (#1206) is in slices, its go-live is #1478; Der Run
+(#1205) is a placeholder epic.
 
 ## The documents
 

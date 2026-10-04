@@ -218,10 +218,11 @@ Two things not to do either way: don't quietly widen the diff without reporting
 it, and don't let the adjacent fix grow until it is the larger half of the PR —
 at that point it wanted its own issue after all.
 
-Before moving on, check whether the change makes `README.md` stale (new or
+Before moving on, check whether the change makes the user docs stale (new or
 renamed user-facing features, changed file tree, routes, npm scripts, env
-vars) and update it in the same branch if so — see
-`.claude/rules/keep-readme-current.md`.
+vars) and update them in the same branch if so. Most of that now lands in
+`docs/` rather than `README.md` — `.claude/rules/keep-readme-current.md` has the
+table of which file each kind of change touches.
 
 Same moment, same file, one more question: **does this change warrant a „Was ist
 neu" entry** in `public/js/news.js` (#741)? The bar is deliberately high and
@@ -266,7 +267,10 @@ four green; on a failure, re-run that one command alone for its full output.
   pointer in the same PR** (the command is in
   `.claude/rules/token-friendly-source-files.md`; `.claude/rules/` alone is too
   narrow, and the citation it misses is a **code comment** stating another file's
-  value as a premise). `test/skills.test.js` catches a
+  value as a premise). **A change to what a function DOES, with no name moved, needs
+  the same grep** — for the function's name and for the behaviour's noun
+  (`streak`, `rail`, `1–5`): #1421 changed the streak rule without renaming
+  anything, and two rules went on calling the shipped behaviour wrong. `test/skills.test.js` catches a
   moved *file*; a moved **function** is invisible to it, and the rule left pointing
   at the wrong place still reads authoritative. The reason this belongs here rather
   than only in the rule: the rule a move invalidates is almost always on a
@@ -282,7 +286,9 @@ four green; on a failure, re-run that one command alone for its full output.
   `.claude/rules/frontend-helper-modules-and-coverage.md`.
 - For **substantial** UI changes (new views/layouts, non-trivial interaction or
   state, anything easy to get visibly wrong), verify in a real browser via the
-  preview workflow (the `run` skill / preview tools), not tests alone. Drive that
+  preview workflow (the `run` skill / preview tools), not tests alone — launched
+  as `preview_start {name: "dev-temp-data"}`, never a bare `npm start`, which
+  serves the production `data/` (`.claude/rules/no-reading-production-data.md`). Drive that
   check with `read_page` / `javascript_tool` probes and take **one** screenshot at
   the end as evidence — per-step screenshots are both the expensive instrument and
   the unreliable one (`.claude/rules/preview-pane-paint-artifacts.md`). For
@@ -296,11 +302,17 @@ four green; on a failure, re-run that one command alone for its full output.
 ## 4. Commit, push, open the PR
 
 ```bash
-git add -A
-git commit -s   # clear message: what changed and why; -s adds the DCO Signed-off-by trailer
+test "$(git branch --show-current)" != main || { echo "ON MAIN — ABORT"; exit 1; }
+git add -A && git commit -s   # clear message: what changed and why; -s adds the DCO Signed-off-by trailer
 git push -u origin HEAD
 gh pr create --fill   # or --title/--body; reference the issue ("Closes #42")
 ```
+
+- **Run the guard and the commit in ONE Bash call.** The branch is process-global
+  state other sessions and tools can move between phase 1 and here; a check one
+  call earlier proves nothing about the state at commit time
+  (`.claude/rules/verify-the-branch-immediately-before-committing.md`, which has
+  the #928 incident). `test/skills.test.js` pins that this block keeps it.
 
 - Write a real commit message (subject + body if the change warrants it). Commit
   with `git commit -s` so it carries the DCO `Signed-off-by` trailer that
@@ -338,9 +350,11 @@ must give an explicit go-ahead.
   to phase 2/3, push fixes, re-review) or, if it's out of your hands, report what
   needs to happen and stop.
 - If **SAFE TO MERGE** and required checks are green, do **6a then 6b below, in
-  one message, in that order**. Don't merge on your own initiative; the repo's
-  branch-protection settings would block an un-approved merge anyway, so asking
-  is both the rule here and the only path that actually goes through.
+  one message, in that order**. Don't merge on your own initiative — and don't
+  count on GitHub to stop you: branch protection requires green checks, **not an
+  approval** (`required_approving_review_count` is 0, and `enforce_admins` refuses
+  direct pushes, not merges), so a green PR merges the moment anyone asks. This
+  step is the only thing that stops an unasked merge.
 
 ### 6a. Write the walkthrough — never wait to be asked for it
 
@@ -414,11 +428,12 @@ through with `--admin`.
 
 ## 7. Monitor main's CI and the Railway deployment
 
-The merge triggers the **CI** and **Lint** workflows on `main`. Confirm they go
-green — a merge that red-lights `main` is not "done":
+The merge triggers five workflows on `main` — **CI**, **Lint**, **Secret Scan**,
+**Docker** and CodeQL's default setup. Confirm they go green — a merge that
+red-lights `main` is not "done":
 
 ```bash
-gh run list --branch main --limit 3
+gh run list --branch main --limit 6   # five runs per merge; a smaller limit hides some
 gh run watch <run-id>          # or: gh run view <run-id> --log-failed
 ```
 
@@ -457,7 +472,7 @@ curl -s "https://spielwirbel.app/sw.js?cb=$(date +%s)" | grep -m1 '^const CACHE'
 
 Compare it against a local build of the merge commit — equal means deployed,
 different means it never landed. Where the digest can't answer (a change that
-moved no `js/**` or `styles.css`), read the **deployment record** instead, which
+moved no `js/**`, `css/**` or `styles.css`), read the **deployment record** instead, which
 is the signal that disagreed. Both commands, both caveats and the newest-record
 trap are in `.claude/rules/verify-the-deployed-artifact-not-the-status.md`. **Do
 not close this phase on the commit status alone**, and be especially suspicious

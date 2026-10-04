@@ -226,10 +226,11 @@ el.style.height = '200px';
 // seen: []   — zero callbacks, ever
 ```
 
-Same root cause as the dead IntersectionObserver (`provider-cover-sizing.md`):
-the pane reports `innerWidth === 0` / `innerHeight === 0` and does not advance
-the observer pipeline. The tell is that the *initial* placement is right and only
-the update is missing, which reads exactly like a mis-wired callback.
+Same family as the dead IntersectionObserver, and **not** a viewport problem:
+`resize_window` to a real size does not revive either observer (measured on
+#979 — `.claude/rules/preview-pane-paint-artifacts.md` has the control). The tell
+is that the *initial* placement is right and only the update is missing, which
+reads exactly like a mis-wired callback.
 
 **So probe the geometry, not the observer.** `place()` reads three things, all
 stubbable from `javascript_tool` in one call:
@@ -256,9 +257,10 @@ computes to **`0px`** wherever the viewport height is degenerate — the picker
 then renders zero covers with nothing to explain why, which reads as a broken
 feature rather than a bad number. It is `max(160px, min(264px, 38vh))` now.
 
-The pane is the degenerate viewport (its `innerHeight` really is 0), so this also
-happens to be what makes the layout measurable there at all — but the floor is
-warranted on its own: one row is always better than none.
+A freshly opened pane tab reports `innerHeight === 0` until a `resize_window`
+(`.claude/rules/preview-pane-paint-artifacts.md`), so this floor is also what
+keeps the layout measurable in an unresized pane — but it is warranted on its
+own: one row is always better than none.
 
 **Related:** `.claude/rules/popover-width-is-shrink-to-fit.md` (the WIDTH axis —
 why a `max-width` here can be a no-op, and why widening a card is the cheaper

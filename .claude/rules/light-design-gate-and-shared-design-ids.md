@@ -7,10 +7,10 @@ paths:
   - "public/js/views-session*.js"
 ---
 
-# A LIGHT design gates its colours on `:not([data-scheme="dark"])` — and its id may be a world's too
+# A LIGHT design gates its colours on `:not([data-scheme="dark"])` — and its blocks are looked up by stylesheet
 
-Ocean (#1210) is the first light design with tokens of its own. Three things
-about that were not obvious from Der Tisch's seam, and each fails silently.
+Ocean (#1210) is the first light design with tokens of its own. The things
+below were not obvious from Der Tisch's seam, and each fails silently.
 
 ## 1. The gate runs the other way, and the resolver must read it
 
@@ -23,27 +23,31 @@ attribute (`setScheme` deletes it). So the block is
 :root[data-design="ocean"]:not([data-scheme="dark"]) { --surface: #f7fbfc; … }
 ```
 
-and until #1202 it is what keeps Ocean's `#10283a` ink off a dark WORLD round's
-page. `test/support/theme.js` reads this block as `light`, only for a light
-design, and `test/design-layer.test.js`'s `splitRoot` accepts the suffix — without
-both, every Ocean colour resolves to Klassisch and the whole contrast suite
-measures the wrong design while staying green. Measured: dropping `b.light` from
+and until #1202 it was what kept Ocean's `#10283a` ink off a dark WORLD round's
+page. Since the flip the scheme follows the design (`setScheme(designScheme())`
+in `round-theme.js`), but the gate is still the shape the tooling reads:
+`test/support/theme.js` reads this block as `light`, only for a light design,
+and `test/design-layer.test.js`'s `splitRoot` accepts the suffix — without both,
+every Ocean colour resolves to Klassisch and the whole contrast suite measures
+the wrong design while staying green. Measured: dropping `b.light` from
 `designBlocks` reddens seven Ocean checks by name.
 
-## 2. The two registries share ids — look a design's blocks up by STYLESHEET
+## 2. Look a design's blocks up by STYLESHEET — a guard from when ids were shared
 
-`round-designs.js` has a world `ocean`; `designs.js` has a user design `ocean`
-(and a user design `forest` is coming, beside the world `forest`). Every contrast
-sweep loops BOTH registries, so a lookup keyed on `design.id` alone hands the
-world the user design's stylesheet — which the browser never does. It crashed the
-Tisch toast test outright (`t.design.stylesheet` undefined on the world row).
+Until #1202, `round-designs.js` had a world `ocean` beside the user design `ocean`
+in `designs.js` (and a world `forest` beside the user design to come). Every
+contrast sweep looped BOTH registries, so a lookup keyed on `design.id` alone
+handed the world the user design's stylesheet — which the browser never did. It
+crashed the Tisch toast test outright (`t.design.stylesheet` undefined on the
+world row). The flip deleted `round-designs.js` (a45af150), and the collision
+with it.
 
-Use `blocksOf(design)` from `test/support/theme.js`: it answers only for a design
+`blocksOf(design)` in `test/support/theme.js` still answers only for a design
 that carries the same `stylesheet` as the one that registered the blocks, so a
-world gets nothing and a spread copy (`{ ...design, scheme }`) still resolves.
-Today the world and the design happen to share page and accent, so an id-only
-lookup would ALSO pass the sweeps — this guard is not discriminating until a
-world and a design with one id differ in colour, which Forest will.
+spread copy (`{ ...design, scheme }`) resolves and Klassisch, which has no sheet,
+gets nothing. Its comment keeps the check as the cheaper guarantee; use it rather
+than an id lookup. It never got to be discriminating: while both registries
+existed, the world and the design shared page and accent.
 
 ## 3. A small title inherits the display face without asking for it
 

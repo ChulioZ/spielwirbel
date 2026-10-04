@@ -35,9 +35,9 @@ Ask what changed **since `last-researched`**, not what accessibility is:
 - **Browser/platform changes** that invalidate a held technique: `:focus-visible`
   behaviour, `inert`, dialog element semantics, `prefers-reduced-motion`.
 
-Then run the critique in `audit-loop.md` §C. Two conflicts are pre-recorded in
-`criteria.md` (A-R02 target size, A-R03 `aria-modal`) — if research proposes
-either again, that is the ledger working, not a new finding.
+Then run the critique in `audit-loop.md` §C. Settled conflicts are pre-recorded as
+the `A-R*` entries in `criteria.md` (target size, `aria-modal`, among others) — if
+research proposes one again, that is the ledger working, not a new finding.
 
 ## Setting up a session you can trust (phase E)
 
@@ -89,8 +89,8 @@ documented and none of them are app bugs:
   fresh `navigate`.
 - `computer` scroll/input actions can time out for a whole session while the page
   stays fully responsive to `javascript_tool`.
-- Lazy covers never load, because a zero-height viewport means the
-  IntersectionObserver can never fire.
+- Lazy covers never load: the pane fires no IntersectionObserver at any
+  viewport size.
 
 So: **measure with `javascript_tool` probes** (`getComputedStyle`, element rects,
 `getAttribute`, `document.activeElement`), not pixels. See
@@ -114,21 +114,29 @@ Every screen, at **390px and 1280px** — the dock/strip switch is at 860px and 
 rail takes over at 1280px, so the three presentations are genuinely different UIs
 (`responsive-hub-tabs.md`, `responsive-content-width.md`).
 
-- **Lobby & entry:** home, new round.
+Derive the screens from `resolveRoute` in `public/js/router.js` and the pages
+from `public/*.html` + the server-rendered routes in `lib/app.js`, not from this
+list; on 2026-10-04 it was:
+
+- **Lobby & entry:** home, new round, the first-start design chooser.
 - **Round hub:** Start, Regal, Chronik, Pokale — plus the dock (<860), the strip
   (860–1279) and the rail (≥1280).
-- **Round sub-screens:** game detail, member, tags, providers, design, move games,
-  and both archives (retired, completed).
-- **Session flow:** setup → vote steps → finale → results. Highest risk: it pushes
+- **Round sub-screens:** game detail, member, tags, the colour-marker picker,
+  Einstellungen, move games, both archives (retired, completed), the wishlist,
+  recommendations, the shelf profile.
+- **Account & social:** Konto, profile, Freunde, inbox, „Was ist neu", Entdecken.
+- **Session flow:** setup → vote steps → finale → results, and the shared-vote
+  page (`/vote/<token>`). Highest risk: it pushes
   history per step, traps nothing, and the rating faces are the main colour-state
   offenders. Exercise Back at a vote step, including the decline branch of the
   confirm (`session-flow-history.md`).
-- **Sheets:** add game, link provider, feedback, support, provider image. Each one
-  gets the A-004 Tab test.
+- **Sheets:** add game, link provider, support, provider image. Each one gets the
+  A-004 Tab test.
 - **Auth:** login, register, forgot, verify/reset landings — reachable only with
   `ACCOUNTS_ENABLED` + `SESSION_SECRET` set on your throwaway instance.
-- **Standalone pages** (outside the SPA and outside i18n): `login.html`,
-  `admin.html` (needs `ADMIN_PASSWORD`), and the legal pages, which 404 until
+- **Standalone pages** (outside the SPA and its i18n): `login.html`,
+  `kontakt.html` (feedback lands here too), `admin.html` (needs `ADMIN_PASSWORD`),
+  `/faq`, the guide pages, and the legal pages, which 404 until
   `IMPRESSUM_ADDRESS` + `IMPRESSUM_EMAIL` are set.
 
 ## Prefer a test over a ticket

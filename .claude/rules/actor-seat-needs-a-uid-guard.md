@@ -3,6 +3,8 @@ paths:
   - "lib/actor-seat.js"
   - "lib/routes/games.js"
   - "lib/routes/members.js"
+  - "lib/routes/rounds.js"
+  - "lib/routes/sessions.js"
   - "test/games.test.js"
   - "test/members.test.js"
 ---
@@ -41,7 +43,8 @@ four of `lib/routes/games.js`'s activities (`game_added`, `game_retired`,
 `game_completed`, `game_deleted`).
 
 **Fixed in #563.** There is now exactly one definition, `lib/actor-seat.js`,
-required by both `lib/routes/games.js` and `lib/routes/members.js`:
+required by every route that logs an attributed activity (`games.js` and
+`members.js` from the start, `rounds.js` and `sessions.js` later):
 
 ```js
 function actorSeat(round, uid) {
