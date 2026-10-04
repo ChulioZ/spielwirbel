@@ -257,7 +257,7 @@ const frontendGlobals = {
   setupTermsBanner: 'readonly',
   enterDemo: 'readonly', resumeDemo: 'readonly', endDemo: 'readonly',
   authErrorKey: 'readonly',
-  probeMe: 'readonly', refreshAccessToken: 'readonly', onSessionLost: 'readonly',
+  probeMe: 'readonly', refreshAccessToken: 'readonly', recoverExpiredSession: 'readonly', onSessionLost: 'readonly',
   logout: 'readonly', linkToken: 'readonly', bootApp: 'readonly',
   initAccounts: 'readonly', enterApp: 'readonly', authScreen: 'readonly',
   openAuth: 'readonly', setAuthDocTitle: 'readonly', authError: 'readonly', setError: 'readonly',
@@ -403,7 +403,7 @@ const frontendGlobals = {
   // empty-state.js (issue #869)
   emptyState: 'readonly', emptyStateAction: 'readonly',
   coverUrl: 'readonly', COVER_THUMB: 'readonly', COVER_CARD: 'readonly',
-  COVER_HERO: 'readonly', COVER_RESIZERS: 'readonly',
+  COVER_HERO: 'readonly', COVER_RESIZERS: 'readonly', COVER_UNSAFE_RE: 'readonly',
   providerMatchCover: 'readonly', pickedTitle: 'readonly',
   // lookup-nav.js (issue #542)
   nextLookupIndex: 'readonly', lookupOptionIndex: 'readonly',

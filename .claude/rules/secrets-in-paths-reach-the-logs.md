@@ -33,7 +33,7 @@ feature works perfectly and the leak is invisible unless you go and read the log
 `reqPath()` redacts that one segment:
 
 ```js
-const VOTE_TOKEN_IN_PATH = /^(\/api\/vote\/)[^/]+/;
+const VOTE_TOKEN_IN_PATH = /^(\/(?:api\/)?vote\/)[^/]+/;
 // …
 return p.replace(VOTE_TOKEN_IN_PATH, '$1:token');
 ```
@@ -41,7 +41,16 @@ return p.replace(VOTE_TOKEN_IN_PATH, '$1:token');
 Keeping the route **shape** rather than dropping the line: log search still
 answers "how much is this endpoint used", which is the log-the-count-never-the-
 secret discipline the product-event allowlist already follows. It matches both
-shapes the router serves (`/api/vote/<t>` and `/api/vote/<t>/votes/<pid>`).
+shapes the router serves (`/api/vote/<t>` and `/api/vote/<t>/votes/<pid>`) **and
+the page itself, `/vote/<t>`**.
+
+**The page path was missing until 2026-10-04**, while this file called the leak
+closed. The pattern was anchored on `/api/vote/`, i.e. on the two routes the
+feature added — but the link a person opens is a page **navigation**, answered
+by the SPA shell, and `requestLogger` records that request's path exactly like
+an API call's. So every opened link still logged its token once. When you
+enumerate "what logs this secret", enumerate the **requests that carry it**, not
+the routes you wrote: the shell fallback serves paths no router names.
 
 **`errorHandler` must use `reqPath()` too, not `req.path`.** That value is
 forwarded to `ERROR_WEBHOOK_URL` — i.e. to a *third party* — which makes it the
@@ -58,7 +67,8 @@ is blind.
 
 So the spec also pins that ordinary paths survive byte-for-byte
 (`/api/rounds/abc/sessions/def`, `/healthz`) and that a loose prefix does not
-swallow a neighbour (`/api/voters/x`). Both breaks redden it.
+swallow a neighbour (`/api/voters/x`, `/voters/x`, a nested `…/vote/x`). Both
+breaks redden it.
 
 **And keep the fixture obviously fake.** A realistic 32-char base64url literal in
 the spec trips `gitleaks`' `generic-api-key` rule at 4.5 entropy — correctly, since

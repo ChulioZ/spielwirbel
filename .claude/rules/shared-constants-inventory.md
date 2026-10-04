@@ -612,6 +612,22 @@ encoding: the Korean slug is Hangul, so every machine-read use goes through
 because that is what `req.path` holds. A slug, once published, is permanent:
 nothing redirects an old one.
 
+**The twenty-fourth is `public/js/cover-size.js`'s `COVER_UNSAFE_RE`** (2026-10-04):
+the characters a cover URL may never carry. `lib/providers/index.js` requires it
+for `providerCoverUrl`, the store-time check every hotlinked cover passes, and
+`coverUrl()` in the same file applies it at RENDER time, returning `''` for a
+stored value that fails it. The render half is the reason it had to be one
+constant: a stored value is only made inert if both halves refuse the same set,
+and a value saved before the list last grew can only be caught on the way out —
+there is no migration code (CLAUDE.md). It sits in `cover-size.js` rather than
+a file of its own because `coverUrl` is its client reader and a public/js file
+cannot require() a sibling. `test/cover-size.test.js` walks every ASCII
+character through both entry points, so a hand-copied second list fails there.
+Two consequences for whoever edits it: a `COVER_RESIZERS` row whose query joins
+parameters with `&` now fails that spec's sized-URL check, and the render
+widths beside it (`COVER_THUMB`/`CARD`/`HERO`) are still client-only —
+the twelfth entry's "stayed out" note about them still holds.
+
 **Each new instance must be named above.** `test/rule-enumerations.test.js`
 asserts every `require('../public/js/…')` under `lib/routes/` and `lib/` appears
 in it, because the list had already gone stale by one before anyone noticed. The

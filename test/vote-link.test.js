@@ -588,11 +588,16 @@ test('a vote-link request never writes its token into the logs', async () => {
   assert.equal(reqPath({ originalUrl: `/api/vote/${token}/votes/m1` }), '/api/vote/:token/votes/m1');
   // With a query string, which is stripped independently.
   assert.equal(reqPath({ originalUrl: `/api/vote/${token}?x=1` }), '/api/vote/:token');
+  // The PAGE the link itself opens. Its navigation is a request like any other —
+  // answered by the SPA shell — and the request logger records its path too.
+  assert.equal(reqPath({ originalUrl: `/vote/${token}` }), '/vote/:token');
+  assert.equal(reqPath({ originalUrl: `/vote/${token}?x=1` }), '/vote/:token');
 
   // Stated as its own assertion rather than implied by the equalities above: the
   // thing that must never appear is the token, and saying so is what makes a
   // future change to the placeholder unable to pass while leaking.
-  for (const url of [`/api/vote/${token}`, `/api/vote/${token}/votes/m1`, `/api/vote/${token}?x=1`]) {
+  for (const url of [`/api/vote/${token}`, `/api/vote/${token}/votes/m1`, `/api/vote/${token}?x=1`,
+    `/vote/${token}`, `/vote/${token}/`]) {
     assert.equal(reqPath({ originalUrl: url }).includes(token), false, `leaked via ${url}`);
   }
 
@@ -603,6 +608,11 @@ test('a vote-link request never writes its token into the logs', async () => {
   assert.equal(reqPath({ originalUrl: '/healthz' }), '/healthz');
   // Not a prefix match on "/api/vote" as a substring of something else.
   assert.equal(reqPath({ originalUrl: '/api/voters/x' }), '/api/voters/x');
+  // …nor on "/vote" — neither as a neighbouring word nor nested under another
+  // segment, where the page path is not the vote link at all.
+  assert.equal(reqPath({ originalUrl: '/voters/x' }), '/voters/x');
+  assert.equal(reqPath({ originalUrl: '/round/r1/vote/x' }), '/round/r1/vote/x');
+  assert.equal(reqPath({ originalUrl: '/vote' }), '/vote');
 });
 
 /* ------------------------------ Hygiene ------------------------------------ */

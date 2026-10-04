@@ -85,13 +85,13 @@ async function api(method, url, body, _retried) {
     let payload;
     try { payload = await res.json(); msg = payload.error || msg; } catch {}
     // Session expired or missing while a gate is on. In accounts mode (#138) try
-    // a silent token refresh once and retry, then fall back to the login screen;
-    // in legacy shared-password mode (issue #129) bounce to '/', which the server
-    // serves the login page for when locked.
+    // a silent token refresh once and retry, then fall back to the login screen
+    // — or, if the refresh itself could not complete, throw and keep the session
+    // (recoverExpiredSession, auth-tokens.js); in legacy shared-password mode
+    // (issue #129) bounce to '/', which the server serves the login page for.
     if (res.status === 401 && payload && payload.error === 'auth_required') {
       if (accountsActive()) {
-        if (!_retried && (await refreshAccessToken())) return api(method, url, body, true);
-        onSessionLost();
+        if (await recoverExpiredSession(_retried)) return api(method, url, body, true);
       } else {
         // Locked out of the shared-password gate: drop the persisted cache
         // before bouncing, so the login page never fronts stale round data.

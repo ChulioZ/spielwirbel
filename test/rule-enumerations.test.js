@@ -104,11 +104,21 @@ test('every constant the backend shares out of public/js is named in its rule', 
   // the client offers and the server validates. Each instance must be listed, or
   // the rule stops being the inventory a future session checks against.
   const shared = new Set();
-  // `filesIn` is non-recursive, so `lib/routes` is named separately from `lib`.
+  // The WHOLE of lib/, recursively. This used to walk `lib/routes` and `lib` only,
+  // so lib/repo/ and lib/providers/ — where both repo backends and the cover-URL
+  // check require out of public/js — were never read at all, and a new instance
+  // there could go unlisted with this test green.
   // The depth-agnostic `(?:\.\.\/)+` matters: the routers reach public/js with
   // `../../` since they moved under lib/, and a `\.\.\/`-only regex would have
   // silently matched nothing and left `shared` empty rather than failing.
-  for (const [, text] of [...filesIn('lib/routes'), ...filesIn('lib')]) {
+  const libFiles = (dir) => fs.readdirSync(path.join(ROOT, dir), { withFileTypes: true })
+    .flatMap((e) => (e.isDirectory()
+      ? libFiles(`${dir}/${e.name}`)
+      : e.name.endsWith('.js') ? [[`${dir}/${e.name}`, src(`${dir}/${e.name}`)]] : []));
+  const scanned = libFiles('lib');
+  // Anti-vacuous: the walk must reach below lib/routes, or it is the old scan again.
+  assert.ok(scanned.some(([rel]) => rel.startsWith('lib/providers/')), 'the walk never reached lib/providers/');
+  for (const [, text] of scanned) {
     for (const m of text.matchAll(/require\('(?:\.\.\/)+public\/js\/([A-Za-z0-9_-]+)'\)/g)) shared.add(m[1]);
   }
   assert.ok(shared.size >= 3, `expected at least 3 shared frontend modules, found ${shared.size}`);
