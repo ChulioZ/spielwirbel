@@ -333,8 +333,15 @@ function renderLobbyList(rounds) {
        the neutral fill from .avatar-stack__more rather than a palette swatch.
        It stays a <span> like the seats around it — the whole card is already
        one <a>, so a nested control would be a link inside a link. The visible
-       glyph is bare "+N"; the localized wording is the accessible label. */
+       glyph is bare "+N"; the localized wording is its tooltip. */
     const moreLabel = rest > 0 ? tn(rest, 'home.moreMembersOne', 'home.moreMembers') : '';
+    /* The whole stack is ONE image to assistive tech, named by the member count
+       (audit 2026-10-04 A7). The card is one <a> whose name is its content, and
+       that content used to include every avatar's initials — „Freitagsrunde
+       MAANBECL 3 Spiele …". `role="img"` makes the seats presentational, so the
+       link reads „Freitagsrunde, 8 Mitglieder, 3 Spiele, …". Every design's
+       card wears it: the attributes ride in `parts` with the stack itself. */
+    const stackAttrs = `role="img" aria-label="${esc(tn(r.members.length, 'home.membersOne', 'home.members'))}"`;
     /* `--seat-i` / `--seat-n` are design-NEUTRAL position hints (#1189): which
        seat this is, and how many there are. Nothing in styles.css reads either,
        so Klassisch's overlapping stack is exactly what it has always been — but
@@ -355,7 +362,7 @@ function renderLobbyList(rounds) {
         )
         .join('') +
       (rest > 0
-        ? `<span class="avatar avatar-stack__more" style="--seat-i:${seats.length}" title="${esc(moreLabel)}" aria-label="${esc(moreLabel)}">+${rest}</span>`
+        ? `<span class="avatar avatar-stack__more" style="--seat-i:${seats.length}" title="${esc(moreLabel)}">+${rest}</span>`
         : '');
 
     let lastLine = '';
@@ -386,7 +393,7 @@ function renderLobbyList(rounds) {
     // (#1211, O3.1/O6.1): the same link, stack and lines, ocean-hub.js.
     // The Programmheft's tile (#1372, P3.1/P6.1), programmheft-hub.js.
     // Forest's clearing (#1466, F3.1/F6.1), forest-hub.js.
-    const parts = { stack, seatCount, lastLine, invite: lobbyInviteSlip(rounds, r) };
+    const parts = { stack, stackAttrs, seatCount, lastLine, invite: lobbyInviteSlip(rounds, r) };
     const card = designIs('ocean') ? oceanRoundCard(r, parts)
       : designIs('programmheft') ? phRoundCard(r, parts)
         : designIs('forest') ? forestRoundCard(r, parts)
@@ -395,7 +402,7 @@ function renderLobbyList(rounds) {
          <span class="round-card__body">
            <span class="round-card__name">${esc(r.name)}${r.shared ? ` <span class="round-card__shared"><i class="ti ti-users" aria-hidden="true"></i> ${esc(t('home.shared'))}</span>` : ''}</span>
            <span class="round-card__meta">
-             <span class="avatar-stack" style="--seat-n:${seatCount}">${stack}</span>
+             <span class="avatar-stack" style="--seat-n:${seatCount}" ${stackAttrs}>${stack}</span>
              <span class="stat-chip"><i class="ti ti-cards" aria-hidden="true"></i>${esc(tn(r.gameCount, 'home.chip.gamesOne', 'home.chip.games'))}</span>
              <span class="stat-chip"><i class="ti ti-confetti" aria-hidden="true"></i>${esc(tn(r.playedCount, 'home.chip.sessionsOne', 'home.chip.sessions'))}</span>
            </span>

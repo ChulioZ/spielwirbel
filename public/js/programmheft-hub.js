@@ -180,7 +180,7 @@ function phLead({ game, winnerNames, ending, when, score, pot, note = '' }) {
    own (LOBBY_AVATAR_CAP), passed in rather than re-derived. P3.1 also prints a
    cover of the last game: the round summary carries no image, so the tile has
    none (an open question on #1372, not a second read). */
-function phRoundCard(r, { stack, seatCount, lastLine, invite }) {
+function phRoundCard(r, { stack, stackAttrs, seatCount, lastLine, invite }) {
   const voting = (r.openSessions || []).some((s) => s.stage === 'voting');
   const kicker = voting ? t('round.liveLabel') : r.shared ? t('home.shared') : '';
   return h(`<a class="round-card round-card--ph" style="${markerStyle(r)}">
@@ -188,7 +188,7 @@ function phRoundCard(r, { stack, seatCount, lastLine, invite }) {
        <span class="round-card__body">
          ${kicker ? `<span class="round-card__kicker${voting ? ' round-card__kicker--live' : ''}">${esc(kicker)}</span>` : ''}
          <span class="round-card__name">${esc(r.name)}</span>
-         <span class="avatar-stack" style="--seat-n:${seatCount}">${stack}</span>
+         <span class="avatar-stack" style="--seat-n:${seatCount}" ${stackAttrs}>${stack}</span>
          ${lastLine}${invite}
          <span class="round-card__foot">
            <span>${esc(tn(r.gameCount, 'home.chip.gamesOne', 'home.chip.games'))}</span>

@@ -86,8 +86,10 @@ test('Klassisch renders exactly the setup it rendered before #1267', async (t) =
   // edit. If this moves, the Klassisch screen moved — find out why before
   // updating it. Moved ONCE on purpose since: #1328 added the „Filter
   // speichern" row under the owners note (b164e497d444db90 before it), and
-  // #1346 moved that button beside the Filter trigger (58a99d83fc6021f5 before).
-  assert.equal(sha(fingerprint(dom)), '7838a2a5a7d20674');
+  // #1346 moved that button beside the Filter trigger (58a99d83fc6021f5 before),
+  // and the 2026-10-04 audit (A5) named the count stepper's two buttons
+  // (7838a2a5a7d20674 before — reproduced exactly by putting „−"/„+" back).
+  assert.equal(sha(fingerprint(dom)), '24452e5efa0baeb7');
 
   // …and the parts #1267 touches, spelled out so a failure names them.
   assert.deepEqual([...dom.app.children].map((c) => c.className), ['page-head', 'setup-grid setup-grid--session']);

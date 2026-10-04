@@ -154,9 +154,9 @@ function showStartSession(round, prefill) {
           <div class="setup-bar__count">
             <label for="count">${esc(t('startSession.barCount'))}</label>
             <div class="stepper">
-              <button type="button" class="stepper__btn" data-d="-1" aria-label="−"><i class="ti ti-minus" aria-hidden="true"></i></button>
+              <button type="button" class="stepper__btn" data-d="-1" aria-label="${esc(t('startSession.countDown'))}"><i class="ti ti-minus" aria-hidden="true"></i></button>
               <input id="count" class="stepper__val" inputmode="numeric" value="3" />
-              <button type="button" class="stepper__btn" data-d="1" aria-label="+"><i class="ti ti-plus" aria-hidden="true"></i></button>
+              <button type="button" class="stepper__btn" data-d="1" aria-label="${esc(t('startSession.countUp'))}"><i class="ti ti-plus" aria-hidden="true"></i></button>
             </div>
           </div>
           <p class="setup-bar__summary" id="barSummary"></p>
@@ -2077,10 +2077,15 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     // in a sibling element, so it keeps working independently). The cover is
     // flagged redundant: it targets the same game as the title beside it, so it
     // stays mouse-clickable but is not a second (nameless) tab stop.
-    makeGameLink(row.querySelector('.trow__title'), round.id, g.id);
+    const titleEl = row.querySelector('.trow__title');
+    makeGameLink(titleEl, round.id, g.id);
     makeGameLink(row.querySelector('.trow__img'), round.id, g.id, { redundant: true });
+    // What the row's „Spielen" and „…" point `aria-describedby` at (audit
+    // 2026-10-04 A6): every row repeats the same two labels, so without it a
+    // screen reader's list of controls reads „Spielen, Spielen, Spielen".
+    titleEl.id = `trow-title-${i}`;
     rowRefs.push({ gameId: g.id, game: g, row, actionEl: row.querySelector('.trow__action'),
-      ownersEl: row.querySelector('.trow__owners') });
+      ownersEl: row.querySelector('.trow__owners'), titleId: titleEl.id });
     (hasTop && r.place === 1 ? topGroup : tafel).appendChild(row);
   });
   // One call for whatever the loop placed — and none to bind when no row had
@@ -2115,7 +2120,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
      is running — the issue's phase list only requires that a FINISHED session
      have no bare remove link, and putting the menu everywhere satisfies that
      while keeping the action reachable in both phases. */
-  function renderAction({ gameId, game, actionEl }) {
+  function renderAction({ gameId, game, actionEl, titleId }) {
     actionEl.innerHTML = '';
     const isChosen = gameId === chosenId;
     if (finished || cancelled) {
@@ -2123,7 +2128,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     } else if (isChosen) {
       actionEl.appendChild(h(`<span class="trow__chip">${iconText('ti-check', t('result.onTable'))}</span>`));
     } else {
-      const btn = h(`<button class="btn play-btn">${iconText('ti-player-play', t('result.play'))}</button>`);
+      const btn = h(`<button class="btn play-btn" aria-describedby="${titleId}">${iconText('ti-player-play', t('result.play'))}</button>`);
       btn.addEventListener('click', async () => {
         try {
           await api('POST', `/api/rounds/${round.id}/sessions/${session.id}/choice`, { gameId });
@@ -2149,7 +2154,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
       });
       actionEl.appendChild(btn);
     }
-    const menuBtn = h(`<button type="button" class="btn btn--sm trow__menu" aria-label="${esc(t('result.more'))}" aria-expanded="false"><i class="ti ti-dots" aria-hidden="true"></i></button>`);
+    const menuBtn = h(`<button type="button" class="btn btn--sm trow__menu" aria-label="${esc(t('result.more'))}" aria-describedby="${titleId}" aria-expanded="false"><i class="ti ti-dots" aria-hidden="true"></i></button>`);
     const items = [{ icon: 'ti-external-link', label: t('result.openGame'), kind: 'edit', run: () => showGameDetail(round.id, gameId) }];
     // Un-choosing is how a live session changes its mind; it was the second tap
     // on „Spielen" before the chip replaced that button.

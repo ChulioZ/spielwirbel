@@ -106,22 +106,27 @@ test('the bubble is absent at exactly the cap, and appears at one over it', asyn
   assert.equal(bubble.textContent.trim(), '+1', 'the remainder is wrong at the boundary');
 });
 
-test('the bubble carries a localized, pluralized accessible label', async (t) => {
+/* The bubble's words moved from an accessible label to the stack itself (audit
+   2026-10-04 A7): the stack is ONE `role="img"` named by the whole member count,
+   which makes every seat inside it — the bubble included — presentational. A
+   label left on the bubble would be read by nothing, so it is gone and its
+   wording is the tooltip; the screen-reader half is test/control-names.test.js. */
+test('the bubble carries a localized, pluralized tooltip, and the stack the count', async (t) => {
   const de = translator('de');
   const en = translator('en');
 
   const one = await lobbyCard(t, 6);
   const oneBubble = one.stack.querySelector('.avatar-stack__more');
-  assert.equal(oneBubble.getAttribute('aria-label'), de('home.moreMembersOne', { n: 1 }),
-    'the single-remainder bubble is not labelled with the singular key');
-  // The visible "+1" is a bare glyph; the label is what a screen reader reads.
-  assert.notEqual(oneBubble.getAttribute('aria-label'), '+1', 'the bubble has no label beyond its glyph');
-  assert.equal(oneBubble.getAttribute('title'), oneBubble.getAttribute('aria-label'),
-    'the bubble tooltip and its accessible label disagree');
+  assert.equal(oneBubble.getAttribute('title'), de('home.moreMembersOne', { n: 1 }),
+    'the single-remainder bubble is not titled with the singular key');
+  assert.equal(oneBubble.getAttribute('aria-label'), null,
+    'a label inside a role="img" is presentational — a dead attribute that reads as guarded');
+  assert.equal(one.stack.getAttribute('aria-label'), de('home.members', { n: 6 }),
+    'the stack names the WHOLE count, not the remainder the bubble shows');
 
   const many = await lobbyCard(t, 15);
-  assert.equal(many.stack.querySelector('.avatar-stack__more').getAttribute('aria-label'),
-    de('home.moreMembers', { n: 10 }), 'the multi-remainder bubble is not labelled with the plural key');
+  assert.equal(many.stack.querySelector('.avatar-stack__more').getAttribute('title'),
+    de('home.moreMembers', { n: 10 }), 'the multi-remainder bubble is not titled with the plural key');
 
   /* Not a parity check (i18n-parity covers that) — this asserts the keys carry
      the {n} placeholder, which a label reading "weitere Mitglieder" would not. */

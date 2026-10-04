@@ -64,6 +64,8 @@ I18N.en = {
   // avatar stack (#820) — the visible glyph is just "+3".
   'home.moreMembersOne': '{n} more member',
   'home.moreMembers': '{n} more members',
+  'home.membersOne': '{n} member',
+  'home.members': '{n} members',
   'home.lastPlayed': 'Last played: {game}',
   'home.lastPlayedWonOne': 'Last played: {game} — {names} won',
   'home.lastPlayedWonMany': 'Last played: {game} — {names} won',
@@ -358,6 +360,7 @@ I18N.en = {
   'chronik.filter.all': 'Everything',
   'chronik.filter.sessions': 'Sessions',
   'chronik.filter.changes': 'Shelf changes',
+  'chronik.filter.label': 'Filter the history',
   'chronik.empty': 'Your first session writes the first entry.',
   'chronik.emptyTitle': 'Nothing has happened yet',
   'chronik.countOne': '{n} session since {month}',
@@ -842,6 +845,10 @@ I18N.en = {
   'addGame.playersUnit': 'players',
   'addGame.minPlayersPlaceholder': 'Min',
   'addGame.maxPlayersPlaceholder': 'Max',
+  'addGame.minPlayersDown': 'Decrease minimum players',
+  'addGame.minPlayersUp': 'Increase minimum players',
+  'addGame.maxPlayersDown': 'Decrease maximum players',
+  'addGame.maxPlayersUp': 'Increase maximum players',
   'addGame.tagsLabel': 'Tags (optional)',
   'addGame.ownersLabel': 'Who owns this game? (optional)',
   'addGame.imageLabel': 'Image (optional)',
@@ -1059,6 +1066,8 @@ I18N.en = {
   // disabled state too. It must never read as though the round were missing
   // something: a round of names without accounts is the normal configuration.
   'startSession.barCount': 'How many to draw?',
+  'startSession.countDown': 'One game fewer',
+  'startSession.countUp': 'One game more',
   'startSession.countQuestionOcean': 'How many do we bring up?',
   'startSession.available': '{n} games in the pot',
   'startSession.availableOne': '{n} game in the pot',

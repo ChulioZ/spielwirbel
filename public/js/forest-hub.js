@@ -205,7 +205,7 @@ function forestLead(round, session) {
    composition is Forest's. The ribbon carries no text (rule T2) — the name sits
    on the card below it. The seat cap and the „+N" are the lobby's own
    (LOBBY_AVATAR_CAP), passed in rather than re-derived. */
-function forestRoundCard(r, { stack, seatCount, lastLine, invite }) {
+function forestRoundCard(r, { stack, stackAttrs, seatCount, lastLine, invite }) {
   const voting = (r.openSessions || []).some((s) => s.stage === 'voting');
   const stats = [
     tn(r.gameCount, 'home.chip.gamesOne', 'home.chip.games'),
@@ -218,7 +218,7 @@ function forestRoundCard(r, { stack, seatCount, lastLine, invite }) {
        <span class="round-card__clearing">
          <span class="round-card__ribbon" aria-hidden="true"></span>
          ${voting ? `<span class="round-card__live">${esc(t('round.liveLabel'))}</span>` : ''}
-         <span class="avatar-stack" style="--seat-n:${seatCount}">${stack}</span>
+         <span class="avatar-stack" style="--seat-n:${seatCount}" ${stackAttrs}>${stack}</span>
          <span class="round-card__trees" aria-hidden="true"></span>
        </span>
        <span class="round-card__body">
