@@ -1498,8 +1498,9 @@
 }
 /* The five keys (B1 „Wertungskarte"): square, a wire at rest, the face in
    each — the face is in every cell, so the colour is never the only signal
-   (B8.3). The two END words sit under the row. B1 drew a number in each cell
-   too; #1530 took the scale's digits off every design. */
+   (B8.3). Every key carries its word under the face. B1 drew a number in each
+   cell and only the two END words; #1530 took the digits off every design, and
+   the operator decided the middle three show their words too. */
 :root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .rating {
   grid-area: rating;
   display: flex;
@@ -1524,8 +1525,7 @@
 }
 :root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .rating .mood:hover { border-color: var(--brand); }
 :root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .rating .mood .ti { font-size: 24px; /* glyph, not type */ }
-/* „kein Schub" … „volle Kraft": only the ends are printed (the middle three
-   keep the tile's name). `visibility`, so the columns keep one height. */
+/* „kein Schub" … „volle Kraft" at the ends, the app's own words between. */
 :root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .rating .mood__word {
   order: 2;
   font-family: var(--font-mono);
@@ -1538,7 +1538,6 @@
   color: var(--ink-soft);
 }
 :root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .rating .mood:first-child .mood__word { color: var(--danger); }
-:root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .rating .mood:not(:first-child):not(:last-child) .mood__word { visibility: hidden; }
 /* The chosen key: its thrust colour (B8.2), the night as ink, a faint glow. */
 :root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .rating .mood.is-selected { color: var(--thrust-ink); box-shadow: 0 0 24px var(--glow-accent); }
 :root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .rating .mood.is-selected .mood__word { color: var(--thrust-ink); }
@@ -1547,6 +1546,26 @@
 :root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .rating .mood.is-selected:nth-child(3) { background: var(--thrust-3); border-color: var(--thrust-3); }
 :root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .rating .mood.is-selected:nth-child(4) { background: var(--thrust-4); border-color: var(--thrust-4); }
 :root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .rating .mood.is-selected:nth-child(5) { background: var(--thrust-5); border-color: var(--thrust-5); }
+/* Five words on a phone (#1530). A key's floor was the 44px target, and the
+   mono, uppercase, tracked word is wider than that in most locales — measured
+   at 390px, „POURQUOI PAS", „LIEVER NIET" and „MIELELLÄNI" ran up to 10px past
+   their keys, and even untracked the five French words needed 80px more than a
+   320px row has (mono has no narrow glyphs, and 12px is the type scale's
+   floor). So below 520px a key may grow to its longest word (the others give
+   it room, each still clearing the 44px target), and the word is set in the
+   app's body face in its own case. The notation voice stays from 520px up.
+   No hyphenation: the words break only at their spaces. */
+@media (max-width: 519px) {
+  :root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .rating { gap: 4px; }
+  :root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .rating .mood { min-width: min-content; padding-inline: 2px; }
+  :root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .rating .mood__word { font-family: var(--font); text-transform: none; letter-spacing: 0; }
+}
+@media (max-width: 374px) {
+  :root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .vote__card { padding-inline: var(--space-2); }
+  :root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .rating { gap: 3px; }
+  :root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .rating .mood { padding-inline: 0; }
+  :root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .rating .mood__word { letter-spacing: -0.02em; }
+}
 :root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .vote__handoff { margin: 0; font-size: var(--text-sm); color: var(--ink-2); }
 
 /* „Wer hat schon gewertet" — under the card on a phone, left of it at 1440. */

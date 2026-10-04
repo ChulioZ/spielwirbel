@@ -145,3 +145,28 @@ test('the landing page\'s picture of the card has no digits either', (t) => {
   assert.deepEqual(faces.map((f) => f.querySelector('.mood__word').textContent),
     ['gar nicht', 'eher nicht', 'wäre okay', 'gern', 'unbedingt']);
 });
+
+/* Ocean and Die Brücke used to print only the two END words and hide the middle
+   three with `visibility: hidden`, leaving the digit to tell them apart. With
+   the digit gone every face shows its word, in every design (operator decision
+   on #1530). jsdom applies no stylesheet, so this reads the sheets as text:
+   no rule naming `.mood__word` may hide it. Comments are stripped first
+   (.claude/rules/css-text-assertions-strip-comments.md). */
+test('no design sheet hides a face\'s word — all five words show in Ocean and Die Brücke too', () => {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const { rulesOf } = require('./support/css');
+  const sheets = ['public/styles.css', 'public/css/designs/ocean.css', 'public/css/designs/bruecke.css',
+    'public/css/designs/tisch.css', 'public/css/designs/programmheft.css', 'public/css/designs/forest.css'];
+  let checked = 0;
+  for (const rel of sheets) {
+    const css = fs.readFileSync(path.join(__dirname, '..', rel), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+    for (const [sel, body] of rulesOf(css)) {
+      if (!/\.mood__word(?![\w-])/.test(sel)) continue;
+      checked++;
+      assert.doesNotMatch(body, /visibility\s*:\s*hidden|display\s*:\s*none|opacity\s*:\s*0(?![.\d])/,
+        `${rel}: „${sel.trim()}" hides a face's word`);
+    }
+  }
+  assert.ok(checked >= 6, `only ${checked} .mood__word rules found — the sweep would be vacuous`);
+});

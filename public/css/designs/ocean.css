@@ -2219,9 +2219,21 @@
   line-height: 1.2;
   text-align: center;
 }
-/* O2.3 prints the scale's two ENDS only. `visibility`, so the five columns keep
-   one height; the middle three keep their word as the button's name. */
-:root[data-design="ocean"]:not([data-scheme="dark"]) .vote--ocean .rating .mood:not(:first-child):not(:last-child) .mood__word { visibility: hidden; }
+/* O2.3 printed the scale's two ENDS only and left the middle three to their
+   digits. With the digits gone (#1530) every face prints its word — operator
+   decision — so nothing here hides one. */
+/* Five words on a phone (#1530): a tile may grow to its longest word
+   („ehdottomasti" ran 3px past its tile at 390px and 10px at 320px), the
+   others giving it the room, and the words break only at their spaces. */
+@media (max-width: 519px) {
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .vote--ocean .rating .mood { min-width: min-content; padding-inline: 2px; }
+}
+@media (max-width: 374px) {
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .vote--ocean .rating { gap: 2px; }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .vote--ocean .rating .mood { padding-inline: 0; }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .vote--ocean .rating .mood .ti { width: 46px; height: 46px; font-size: 24px; /* glyph, not type */ }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .vote--ocean .rating .mood__word { letter-spacing: -0.02em; }
+}
 /* The chosen face: its bubble takes the rung of the score ramp, with the ramp's
    FIXED ink (the same pairs the score pill uses), and a deep ring. */
 :root[data-design="ocean"]:not([data-scheme="dark"]) .vote--ocean .rating .mood.is-selected .ti {

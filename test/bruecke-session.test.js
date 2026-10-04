@@ -339,9 +339,9 @@ test('the back control is a 44px key, and the faces at least as wide', () => {
   assert.equal(declaredValue(bodyFor('.setup-grid--bruecke .nr-seat'), 'min-height'), 'var(--target-key)');
 });
 
-test('only the two scale ends print a word; the middle keeps its height', () => {
-  const middle = bodyFor('.vote--bruecke .rating .mood:not(:first-child):not(:last-child) .mood__word');
-  assert.equal(declaredValue(middle, 'visibility'), 'hidden');
+test('every key prints its word — the middle three are no longer hidden (#1530)', () => {
+  assert.ok(!RULES.some(([s]) => s.trim() === GATE + '.vote--bruecke .rating .mood:not(:first-child):not(:last-child) .mood__word'),
+    'the middle three words are hidden again');
 });
 
 test('from nine places the seat list becomes a grid (B16.1)', () => {

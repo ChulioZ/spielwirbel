@@ -384,15 +384,17 @@ test('several tables: Ocean takes the one-screen split, one card per table', asy
 
 // ------------------------------------------------------------------ stylesheet
 
-test('the vote card\'s back control and faces meet the 44px token; only the two ends print a word', () => {
+test('the vote card\'s back control and faces meet the 44px token; every face prints its word', () => {
   const undo = bodyFor('.vote--ocean .vote__undo');
   assert.equal(declaredValue(undo, 'width'), 'var(--target-button)');
   assert.equal(declaredValue(undo, 'height'), 'var(--target-button)');
   const mood = bodyFor('.vote--ocean .rating .mood');
   assert.equal(declaredValue(mood, 'min-height'), '96px');
   assert.equal(declaredValue(mood, 'min-width'), 'var(--target-button)');
-  const middle = bodyFor('.vote--ocean .rating .mood:not(:first-child):not(:last-child) .mood__word');
-  assert.equal(declaredValue(middle, 'visibility'), 'hidden', 'hidden, not removed: the columns keep one height');
+  // Every face prints its word since #1530 (operator decision): no rule hides the
+  // middle three any more (test/vote-scale-no-digits.test.js sweeps every sheet).
+  assert.ok(!RULES.some(([s]) => s.trim() === GATE + '.vote--ocean .rating .mood:not(:first-child):not(:last-child) .mood__word'),
+    'the middle three words are hidden again');
 });
 
 test('every inline score pill is pinned back into the flow', () => {
