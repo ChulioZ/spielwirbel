@@ -239,7 +239,7 @@ test('the Tafel heads „Platz · Spiel · Wertungen · Score", and every step p
   // Nordlichter: 5, 4, 5 — nobody gave 1–3.
   assert.deepEqual(cols.map((c) => c.querySelector('.bar-col__n').textContent), ['·', '·', '·', '1', '2']);
   assert.deepEqual(cols.map((c) => c.dataset.count), ['0', '0', '0', '1', '2']);
-  assert.equal(cols[4].querySelector('.sr-only').textContent, '2× die Note 5', 'a reader hears the count in words');
+  assert.equal(cols[4].querySelector('.sr-only').textContent, '2× „unbedingt“', 'a reader hears the count, and the rung by its word');
   assert.equal(cols[4].querySelector('.bar-col__n').getAttribute('aria-hidden'), 'true');
 });
 

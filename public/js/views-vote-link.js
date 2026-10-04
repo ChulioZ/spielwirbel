@@ -253,7 +253,6 @@ function renderVoteLinkCards(token, ballot, person) {
         <h1 class="vote__title" tabindex="-1">${esc(game.title)}</h1>
         <div class="vote__q" id="voteQ">${esc(t('vote.question'))}</div>
         <div class="rating" role="group" aria-labelledby="voteQ"></div>
-        <div class="rating-scale"><span>${esc(t('vote.scaleLow'))}</span><span>${esc(t('vote.scaleHigh'))}</span></div>
       </div>`);
   }
 

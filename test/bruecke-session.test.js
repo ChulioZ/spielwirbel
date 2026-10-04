@@ -201,7 +201,7 @@ test('the question asks for „Schub", and only the two ends are themed', async 
   assert.equal(faces[0].querySelector('.mood__word').textContent, 'kein Schub');
   assert.equal(faces[4].querySelector('.mood__word').textContent, 'volle Kraft');
   assert.equal(faces[3].querySelector('.mood__word').textContent, 'gern', 'the middle keeps the app\'s word');
-  assert.equal(faces[0].getAttribute('aria-label'), '1 von 5 – kein Schub');
+  assert.equal(faces[0].getAttribute('aria-label'), 'kein Schub', 'the word alone names the face (#1530)');
 });
 
 test('who has rated, in words; „Verdeckt" counts the cards still to come and stands down on the last', async (t) => {
@@ -221,11 +221,12 @@ test('who has rated, in words; „Verdeckt" counts the cards still to come and s
   assert.ok(q(dom, '.bruecke-raters'), 'who rated stays');
 });
 
-test('Klassisch keeps its vote card and its plain faces', async (t) => {
+test('Klassisch keeps its vote card, and its faces carry the app\'s own words', async (t) => {
   const dom = await wizard(t, null);
   assert.equal(q(dom, '.vote--bruecke'), null);
   assert.equal(q(dom, '.bruecke-raters'), null);
-  assert.equal(q(dom, '.mood__word'), null);
+  assert.deepEqual(qa(dom, '.rating .mood__word').map((w) => w.textContent),
+    ['gar nicht', 'eher nicht', 'wäre okay', 'gern', 'unbedingt']);
   assert.ok(q(dom, '.vote__who'), 'Klassisch keeps its own card');
   assert.doesNotMatch(dom.app.textContent, /Schub/);
 });
@@ -338,9 +339,9 @@ test('the back control is a 44px key, and the faces at least as wide', () => {
   assert.equal(declaredValue(bodyFor('.setup-grid--bruecke .nr-seat'), 'min-height'), 'var(--target-key)');
 });
 
-test('only the two scale ends print a word; the middle keeps its height', () => {
-  const middle = bodyFor('.vote--bruecke .rating .mood:not(:first-child):not(:last-child) .mood__word');
-  assert.equal(declaredValue(middle, 'visibility'), 'hidden');
+test('every key prints its word — the middle three are no longer hidden (#1530)', () => {
+  assert.ok(!RULES.some(([s]) => s.trim() === GATE + '.vote--bruecke .rating .mood:not(:first-child):not(:last-child) .mood__word'),
+    'the middle three words are hidden again');
 });
 
 test('from nine places the seat list becomes a grid (B16.1)', () => {

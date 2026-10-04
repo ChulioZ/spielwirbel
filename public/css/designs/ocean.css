@@ -310,9 +310,9 @@
   .btn, .lobby-cta__action, .round-card--new, .add-tile, .opt-card, .topbar__login,
   .handover__go, .handover__back, .winner-chip,
   .nr-table__center, .tl-month, .score-pill, .exp-pill, .pool-count__label,
-  .setup-bar__summary, .mood__n, .theme-card__name, .landing-step__num,
+  .setup-bar__summary, .theme-card__name, .landing-step__num,
   .landing-claim__title, .podium__name, .rec-ignored__title,
-  .stepper__val, .pool-count, .rater__n, .member-figure__value, .pokale-card__value,
+  .stepper__val, .pool-count, .member-figure__value, .pokale-card__value,
   .gd-price__amount, .stamp__date, .landing-stats .stats-counter__num,
   /* …and the small TITLES. These rules set no face of their own, but the
      element they style is usually an h2/h3, which takes --font-display from the
@@ -335,8 +335,8 @@
 
 /* „Scores und Tabellen mit tabularen Ziffern" (O1.2). */
 :root[data-design="ocean"] :is(
-  .score-pill, .stepper__val, .pool-count, .rater__n, .member-figure__value,
-  .pokale-card__value, .gd-price__amount, .trow__rank, .mood__n
+  .score-pill, .stepper__val, .pool-count, .member-figure__value,
+  .pokale-card__value, .gd-price__amount, .trow__rank
 ) {
   font-variant-numeric: tabular-nums;
 }
@@ -1527,20 +1527,6 @@
   letter-spacing: 0;
   text-transform: none;
 }
-/* Each rater's average is a bubble in the scale colour (the issue's „the
-   round's own ratings as bubbles"), keyed on the rung the view writes. */
-:root[data-design="ocean"] .rater__n[data-stop] {
-  display: grid;
-  place-items: center;
-  box-sizing: border-box;
-  min-width: 42px;
-  height: 42px;
-  padding: 0 9px;
-  border: 2px solid transparent;
-  border-radius: var(--radius-pill);
-  font-family: var(--font);
-  font-size: var(--text-md);
-}
 :root[data-design="ocean"] .gd-plays { list-style: none; margin: 0; padding: 0; }
 :root[data-design="ocean"] .gd-play__link {
   display: flex;
@@ -1599,13 +1585,6 @@
 }
 :root[data-design="ocean"]:not([data-scheme="dark"]) .pass .section:is(.gd-raters, .gd-history, .gd-actions) > h2 { color: var(--ink); }
 :root[data-design="ocean"]:not([data-scheme="dark"]) .rater { background: var(--control-fill); }
-:root[data-design="ocean"]:not([data-scheme="dark"]) .rater__n[data-stop] { border-color: var(--control-fill); }
-:root[data-design="ocean"]:not([data-scheme="dark"]) .rater__n[data-stop="veto"] { background: var(--score-veto); color: var(--score-veto-ink); }
-:root[data-design="ocean"]:not([data-scheme="dark"]) .rater__n[data-stop="1"] { background: var(--score-1); color: var(--score-ink-low); }
-:root[data-design="ocean"]:not([data-scheme="dark"]) .rater__n[data-stop="2"] { background: var(--score-2); color: var(--score-ink-low); }
-:root[data-design="ocean"]:not([data-scheme="dark"]) .rater__n[data-stop="3"] { background: var(--score-3); color: var(--score-ink-high); }
-:root[data-design="ocean"]:not([data-scheme="dark"]) .rater__n[data-stop="4"] { background: var(--score-4); color: var(--score-ink-high); }
-:root[data-design="ocean"]:not([data-scheme="dark"]) .rater__n[data-stop="5"] { background: var(--score-5); color: var(--score-ink-high); }
 :root[data-design="ocean"]:not([data-scheme="dark"]) .gd-play + .gd-play { border-top: 1px solid var(--line-soft); }
 :root[data-design="ocean"]:not([data-scheme="dark"]) .gd-play__link { color: var(--ink); }
 :root[data-design="ocean"]:not([data-scheme="dark"]) .gd-play__what { color: var(--ink-soft); }
@@ -2231,13 +2210,8 @@
   font-size: 28px; /* glyph, not type */
 }
 :root[data-design="ocean"]:not([data-scheme="dark"]) .vote--ocean .rating .mood:hover .ti { border-color: var(--brand); }
-/* Number first, then the word — inside one button, so the order is paint only;
-   the button's accessible name is its aria-label („4 von 5 – gern"). */
-:root[data-design="ocean"]:not([data-scheme="dark"]) .vote--ocean .rating .mood__n {
-  order: 1;
-  font-family: var(--font);
-  font-size: var(--text-md);
-}
+/* The face, then its word (#1530: no digit). The button's accessible name is
+   its aria-label, the word itself („gern"). */
 :root[data-design="ocean"]:not([data-scheme="dark"]) .vote--ocean .rating .mood__word {
   order: 2;
   font-size: var(--text-xs);
@@ -2245,9 +2219,21 @@
   line-height: 1.2;
   text-align: center;
 }
-/* O2.3 prints the scale's two ENDS only. `visibility`, so the five columns keep
-   one height and the numbers one baseline. */
-:root[data-design="ocean"]:not([data-scheme="dark"]) .vote--ocean .rating .mood:not(:first-child):not(:last-child) .mood__word { visibility: hidden; }
+/* O2.3 printed the scale's two ENDS only and left the middle three to their
+   digits. With the digits gone (#1530) every face prints its word — operator
+   decision — so nothing here hides one. */
+/* Five words on a phone (#1530): a tile may grow to its longest word
+   („ehdottomasti" ran 3px past its tile at 390px and 10px at 320px), the
+   others giving it the room, and the words break only at their spaces. */
+@media (max-width: 519px) {
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .vote--ocean .rating .mood { min-width: min-content; padding-inline: 2px; }
+}
+@media (max-width: 374px) {
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .vote--ocean .rating { gap: 2px; }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .vote--ocean .rating .mood { padding-inline: 0; }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .vote--ocean .rating .mood .ti { width: 46px; height: 46px; font-size: 24px; /* glyph, not type */ }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .vote--ocean .rating .mood__word { letter-spacing: -0.02em; }
+}
 /* The chosen face: its bubble takes the rung of the score ramp, with the ramp's
    FIXED ink (the same pairs the score pill uses), and a deep ring. */
 :root[data-design="ocean"]:not([data-scheme="dark"]) .vote--ocean .rating .mood.is-selected .ti {
