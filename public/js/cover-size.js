@@ -1,8 +1,36 @@
-/* Spielwirbel – render-time cover URL sizing (#298). Pure and dependency-free,
-   so it works both as a shared-scope frontend script (browser global) and as a
-   CommonJS module the test suite can require. Load order: see index.html. */
+/* Spielwirbel – render-time cover URL sizing (#298), and the character check
+   every cover URL passes both when it is stored and when it is rendered. Pure
+   and dependency-free, so it works both as a shared-scope frontend script
+   (browser global) and as a CommonJS module that lib/providers and the test
+   suite require. Load order: see index.html. */
 
 'use strict';
+
+// Characters a cover URL may never carry — ONE list for both sides of the
+// stack (.claude/rules/shared-constants-across-the-stack.md): lib/providers
+// refuses to STORE a URL that matches it (providerCoverUrl), and coverUrl()
+// below renders nothing for a stored value that matches it, so a value saved
+// before the list last grew is inert without a migration. It lives in this
+// file rather than a file of its own because coverUrl() is its client reader
+// and a public/js file cannot require() a sibling.
+//
+// Every render site interpolates the URL into the QUOTED form
+// `background-image:url('<image>')`, sometimes inside a `style="…"` attribute
+// and sometimes via el.style (core.js loadCover). So the list is:
+//   '   ends the CSS string
+//   \   starts a CSS escape
+//   "   ends the surrounding HTML style attribute
+//   &   starts a character reference inside that attribute
+//   whitespace/control  ends the string / the attribute
+//   <>  never needed in a cover URL; refused so a future HTML context is safe
+// None of them appears in a real provider cover URL (BGG's CDN paths carry
+// none).
+//
+// Parens are deliberately ALLOWED: they are legal inside a quoted CSS string,
+// and real provider URLs contain them — BGG's CDN serves covers under paths like
+// `filters:strip_icc()`, which an over-strict guard silently drops (the cover
+// then just never appears, with nothing logged).
+const COVER_UNSAFE_RE = /['"<>&\\\s]/;
 
 // NOTE on own uploads (#867): coverUrl() still passes a '/uploads/' path
 // through byte-identically — that contract is unchanged. What changed is why it
@@ -52,6 +80,10 @@ const COVER_RESIZERS = [];
 // we know how to resize — so own uploads (`/uploads/<key>`), every unrecognised
 // host, and anything that isn't a string pass through byte-identically.
 //
+// The one exception is a string carrying a COVER_UNSAFE_RE character: that
+// returns '' (no cover), whatever its shape. Every render site goes through
+// here, which is what makes this the single place the check has to run.
+//
 // This is deliberately a RENDER-time rewrite rather than a change to what
 // `pickImage()` stores: it fixes the entire existing corpus of already-linked
 // games for free on their next load, and keeps the stored value the provider's
@@ -63,7 +95,9 @@ const COVER_RESIZERS = [];
 // matters today: the Xbox *search* hit's thumbnail arrives pre-sized as
 // `?w=150&h=150`, so appending a second `w=` would produce a malformed query.
 function coverUrl(image, width) {
-  if (typeof image !== 'string' || !image.startsWith('https://')) return image;
+  if (typeof image !== 'string') return image;
+  if (COVER_UNSAFE_RE.test(image)) return '';
+  if (!image.startsWith('https://')) return image;
   if (image.includes('?')) return image;
   let host;
   try {
@@ -79,5 +113,5 @@ function coverUrl(image, width) {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { COVER_THUMB, COVER_CARD, COVER_HERO, COVER_RESIZERS, coverUrl };
+  module.exports = { COVER_THUMB, COVER_CARD, COVER_HERO, COVER_RESIZERS, COVER_UNSAFE_RE, coverUrl };
 }
