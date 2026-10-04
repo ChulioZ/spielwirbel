@@ -304,9 +304,7 @@ I18N.fr = {
   'recap.archived': '{n} archivés',
   'recap.worstRated': 'Le moins bien noté',
   'recap.divisive': 'Le plus clivant',
-  'recap.divisiveSub': '{high} Ø {highAvg} · {low} Ø {lowAvg}',
   'recap.favourites': 'Favoris',
-  'recap.favSub': 'Ø {avg}',
   'recap.thin': 'Pas encore assez de notes pour dresser un portrait — continuez à jouer, ça viendra.',
 
   // Le bilan par période (#800) : un mois ou une année, partageable en image.
@@ -780,7 +778,7 @@ I18N.fr = {
   'member.wins': 'Victoires',
   'member.sessions': 'Sessions',
   'member.winRate': 'Taux de victoire',
-  'member.avgGiven': 'Ø note donnée',
+  'member.avgGiven': 'Note en général',
   'member.ribbonBest': 'Le meilleur',
   'member.ribbonFav': 'Préféré',
   'member.bestGame': 'Jeu le plus fort',
@@ -954,7 +952,7 @@ I18N.fr = {
   'tables.countOne': '{n} table',
   'tables.gameLabel': 'Jeu à la table {n}',
   'tables.tableLabel': 'Table {n}',
-  'tables.lowest': 'Plus bas {n}',
+  'tables.lowest': 'Plus bas',
   'tables.parties': '{n} partis',
   'tables.partiesOne': '{n} parti',
   'tables.moveHere': 'Déplacer ici',

@@ -19,6 +19,7 @@ const assert = require('node:assert/strict');
 
 const { loadApp, translator, flush } = require('./support/dom');
 const { MEMBER_COLORS } = require('../public/js/member-colors');
+const { assertRatingMark } = require('./support/rating-mark');
 
 const t = translator('de');
 
@@ -129,6 +130,15 @@ test('the strip is the Tischkarte\'s four; Runden and Spiele move into the meta 
   ]);
   assert.equal(dom.app.querySelector('.profile-card .member-bar'), null,
     'a figure grew a bar again — check what it claims to encode');
+
+  // The given-rating figure is the rung it rounds to (3,75 → 4), never „Ø 3,8" (#1537).
+  const given = [...dom.app.querySelectorAll('.profile-card .member-figure')]
+    .find((f) => f.querySelector('.member-figure__label').textContent === t('member.avgGiven'));
+  assertRatingMark(given.querySelector('.member-figure__value'), 'ti-mood-smile', t('vote.scale4'), 'given rating');
+  // The favourite tile's sub-line likewise: favAvg 5 → the top rung.
+  const fav = [...dom.app.querySelectorAll('.profile-card .pokale-card')]
+    .find((c) => c.querySelector('.pokale-card__label').textContent.trim() === t('member.favorite'));
+  assertRatingMark(fav.querySelector('.pokale-card__sub'), 'ti-mood-crazy-happy', t('vote.scaleHigh'), 'favourite tile');
 
   const meta = dom.app.querySelector('.profile-card__meta').textContent;
   assert.ok(meta.includes(t('profile.memberSince', { when: 'Januar 2026' })), `meta line: ${meta}`);
@@ -400,6 +410,10 @@ test('your own profile carries „Dein Rückblick", defaulting to the newest mon
     [t('accountRecap.bestRated', { period: march }), 'Azul'],
     [t('accountRecap.newGames', { period: march }), 'Brass'],
   ]);
+  // „Am besten bewertet": Azul averages 5 in March → the top rung, no „Ø 5,0" (#1537).
+  const best = [...sec.querySelectorAll('.pokale-card')]
+    .find((c) => c.querySelector('.pokale-card__label').textContent.trim() === t('accountRecap.bestRated', { period: march }));
+  assertRatingMark(best.querySelector('.pokale-card__sub'), 'ti-mood-crazy-happy', t('vote.scaleHigh'), 'best rated');
   const chips = [...sec.querySelectorAll('.recap__totals .stat-chip')].map((c) => c.textContent);
   assert.equal(chips.length, 3, 'sessions, games played, new');
 
@@ -457,6 +471,9 @@ test('„Teilen" hands the card the username and the picked period, as a -me fil
   assert.equal(model.sessions, 4);
   assert.deepEqual([...model.played], ['Azul']);
   assert.equal(model.ratedLabel, t('accountRecap.card.bestRated'));
+  // A canvas cannot draw the face glyph, so the card carries the WORD alone —
+  // Brass's 5 in 2026 — still a string, so the three card renderers keep their shape (#1537).
+  assert.equal(model.ratedScore, t('vote.scaleHigh'));
   assert.equal(model.shelfLabel, t('accountRecap.card.new'));
   assert.deepEqual([...model.shelf].map((s) => s.n), [2], 'Azul and Brass are both new in 2026');
   // Die Brücke's bars (#1247): a year carries its twelve months, from the same plays.

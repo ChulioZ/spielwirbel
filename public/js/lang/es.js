@@ -294,9 +294,7 @@ I18N.es = {
   'recap.archived': '{n} archivados',
   'recap.worstRated': 'El peor valorado',
   'recap.divisive': 'El que más divide',
-  'recap.divisiveSub': '{high} Ø {highAvg} · {low} Ø {lowAvg}',
   'recap.favourites': 'Favoritos',
-  'recap.favSub': 'Ø {avg}',
   'recap.thin': 'Todavía no hay valoraciones suficientes para hacerse una idea: seguid jugando y llegará.',
 
   // El resumen por periodo (#800): un mes o un año, compartible como imagen.
@@ -779,7 +777,7 @@ I18N.es = {
   'member.wins': 'Victorias',
   'member.sessions': 'Sesiones',
   'member.winRate': 'Porcentaje de victorias',
-  'member.avgGiven': 'Ø de sus valoraciones',
+  'member.avgGiven': 'Suele valorar',
   'member.ribbonBest': 'El mejor',
   'member.ribbonFav': 'Favorito',
   'member.bestGame': 'Juego más fuerte',
@@ -957,7 +955,7 @@ I18N.es = {
   'tables.countOne': '{n} mesa',
   'tables.gameLabel': 'Juego de la mesa {n}',
   'tables.tableLabel': 'Mesa {n}',
-  'tables.lowest': 'La más baja: {n}',
+  'tables.lowest': 'La más baja:',
   'tables.parties': '{n} plazas',
   'tables.partiesOne': '{n} plaza',
   'tables.moveHere': 'Sentar aquí',

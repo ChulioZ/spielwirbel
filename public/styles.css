@@ -6914,6 +6914,22 @@ a.k-tile:focus-visible,
   min-width: 0;
 }
 .rater__face { font-size: 22px; /* glyph, not type */ color: var(--ink-soft); }
+/* A person's rating drawn as the scale draws it — face + word, no number
+   (#1537, ratingMark in vote-card-composed.js). It inherits its host's type, so
+   it sits in a tile's sub-line or a builder's meta row as plain text would. The
+   one host that is NOT body text is a figure value, set in the display face at
+   `--text-2xl`: there the word drops to the sub-line's size and may wrap under
+   its face, or „ehdottomasti" alone would be wider than a 88px figure. */
+.rating-mark { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 0 0.3em; min-width: 0; vertical-align: middle; }
+.rating-mark__face { font-size: 1.15em; line-height: 1; }
+.rating-mark__word { min-width: 0; overflow-wrap: break-word; hyphens: auto; }
+.member-figure__value .rating-mark__word {
+  font-family: var(--font);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0;
+}
 /* The name is the tile's only variable-length part, so it is the only thing
    allowed to truncate — everything above it is a fixed glyph, and a wrapping
    name would make the tiles different heights. */

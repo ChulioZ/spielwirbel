@@ -24,6 +24,7 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 
 const { loadApp } = require('./support/dom');
+const { assertRatingMark } = require('./support/rating-mark');
 
 const RID = 'r1';
 
@@ -162,6 +163,14 @@ test('Größte Uneinigkeit skips a retired game but keeps a completed one', asyn
   const card = cardByLabel(dom.app, dom.run("t('recap.divisive')"));
   assert.ok(card, 'the disagreement card is missing — both archives were filtered out');
   assert.deepEqual(namedGames(card), ['Cascadia']);
+  // Anna gave Cascadia a 4 and Ben a 2: each name carries its own face + word,
+  // so the two faces side by side are the disagreement (#1537), with no Ø mean.
+  const sub = card.querySelector('.pokale-card__sub');
+  assert.ok(sub.textContent.includes('Anna') && sub.textContent.includes('Ben'), sub.textContent);
+  const [high, low] = sub.querySelectorAll('.rating-mark');
+  assertRatingMark(high, 'ti-mood-smile', 'gern', 'the high side');
+  assertRatingMark(low, 'ti-mood-sad', 'eher nicht', 'the low side');
+  assert.doesNotMatch(sub.textContent, /\d|Ø/);
 });
 
 test('a member whose top-rated game is retired keeps their next-best favourite', async (t) => {
@@ -173,11 +182,9 @@ test('a member whose top-rated game is retired keeps their next-best favourite',
   );
   assert.ok(anna, "Anna's favourite card is missing entirely");
   assert.equal(anna.querySelector('.pokale-card__value').textContent, 'Cascadia');
-  assert.equal(
-    anna.querySelector('.pokale-card__sub').textContent,
-    dom.run("t('recap.favSub', { avg: fmtAvg(4) })"),
-    'the average shown must be the one for the game named, not the retired favourite'
-  );
+  // The rating shown must be the one for the game named (4 → „gern"), not the
+  // retired favourite's 5 — and since #1537 it is a face + word, never „Ø 4,0".
+  assertRatingMark(anna.querySelector('.pokale-card__sub'), 'ti-mood-smile', 'gern', "Anna's favourite");
 });
 
 test('a round whose whole shelf is retired still renders, naming no taste card', async (t) => {
@@ -238,6 +245,7 @@ test("the member page's Lieblingsspiel follows the same rule as the Pokale card"
     ['Cascadia'],
     'a game must not vanish from the Pokale favourites while still sitting here'
   );
+  assertRatingMark(card.querySelector('.pokale-card__sub'), 'ti-mood-smile', 'gern', 'the favourite tile');
 });
 
 test('a member page still averages every rating given, retired games included', async (t) => {
@@ -252,5 +260,6 @@ test('a member page still averages every rating given, retired games included', 
   // Anna gave 3 (Catan), 5 (Azul, retired) and 4 (Cascadia) -> 4.0. This stat is
   // about how she rates, not about what is on the shelf, so the favourite filter
   // two lines above it in memberStats must not reach `allRatings`.
-  assert.equal(fig.querySelector('.member-figure__value').textContent, '\u00d8 4,0');
+  // Drawn as the rung it rounds to since #1537: 4,0 → „gern", no number.
+  assertRatingMark(fig.querySelector('.member-figure__value'), 'ti-mood-smile', 'gern', 'the given-rating figure');
 });

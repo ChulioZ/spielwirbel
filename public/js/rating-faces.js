@@ -43,6 +43,13 @@ const RATING_MAX = MOODS.length;
 // The Tabler class for one rung of the scale.
 const ratingFace = (n) => MOODS[n - 1];
 
+// The rung a person's AVERAGE is drawn as (#1537): the nearest face, clamped to
+// the scale. One rounding for every screen that shows a person's rating — the
+// Spielepass rater strip, the member and profile figures, the Pokale recap and
+// the table builder — so no two of them can draw the same mean as different
+// faces. A Spielwirbel-Score is never passed here; it stays a number.
+const ratingRung = (avg) => Math.max(RATING_MIN, Math.min(RATING_MAX, Math.round(avg)));
+
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { MOODS, RATING_MIN, RATING_MAX, ratingFace };
+  module.exports = { MOODS, RATING_MIN, RATING_MAX, ratingFace, ratingRung };
 }

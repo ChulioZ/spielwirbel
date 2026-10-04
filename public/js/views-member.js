@@ -219,10 +219,11 @@ async function showMember(rid, mid) {
      exactly that), and a card that silently loses half its content reads as
      broken rather than as empty. */
   const figures = card.querySelector('.member-card__figures');
-  const figure = (label, value, extra) =>
+  // `valueHtml` is markup: the given-rating figure is a face + word (#1537), so
+  // every other value is escaped at its own call.
+  const figure = (label, valueHtml) =>
     h(`<div class="member-figure">
-         <span class="member-figure__value">${esc(value)}</span>
-         ${extra || ''}
+         <span class="member-figure__value">${valueHtml}</span>
          <span class="member-figure__label">${esc(label)}</span>
        </div>`);
   /* FOUR figures, and none of them carries a bar. `.member-bar` (#1075) was the
@@ -230,10 +231,10 @@ async function showMember(rid, mid) {
      it went with the measure on 2026-09-22. Every figure here is a count, a
      percentage or an average, none of which has a direction to lean, so a bar
      beside one would be a second and different claim about the same number. */
-  figures.appendChild(figure(t('member.wins'), String(st.wins)));
-  figures.appendChild(figure(t('member.winRate'), st.winRate === null ? '–' : Math.round(st.winRate * 100) + '%'));
-  figures.appendChild(figure(t('member.sessions'), String(st.joined)));
-  figures.appendChild(figure(t('member.avgGiven'), st.avgGiven === null ? '–' : 'Ø ' + fmtAvg(st.avgGiven)));
+  figures.appendChild(figure(t('member.wins'), esc(String(st.wins))));
+  figures.appendChild(figure(t('member.winRate'), st.winRate === null ? '–' : esc(Math.round(st.winRate * 100) + '%')));
+  figures.appendChild(figure(t('member.sessions'), esc(String(st.joined))));
+  figures.appendChild(figure(t('member.avgGiven'), st.avgGiven === null ? '–' : ratingMark(st.avgGiven)));
   // The member's earned Abzeichen under the figures (#1388) — never the open ones.
   const badgeRow = memberCardBadges(round, member);
   if (badgeRow) figures.after(badgeRow);
@@ -263,13 +264,14 @@ async function showMember(rid, mid) {
      tone, so the two read apart at a glance instead of by their eyebrow text.
      An EMPTY tile gets none: a ribbon over „noch kein Lieblingsspiel" labels an
      absence as an award. */
-  const gameCard = (cls, icon, label, games, sub, emptyText, ribbon) => {
+  // `subHtml` is markup — the favourite's rating is a face + word (#1537).
+  const gameCard = (cls, icon, label, games, subHtml, emptyText, ribbon) => {
     const lead = games[0];
     const card = h(`<div class="pokale-card ${cls}">
          ${games.length && ribbon ? `<span class="member-ribbon">${esc(ribbon)}</span>` : ''}
          ${gameCardHead(icon, label, lead)}
          <span class="pokale-card__games"></span>
-         <span class="pokale-card__sub">${esc(sub)}</span>
+         <span class="pokale-card__sub">${subHtml}</span>
        </div>`);
     wireGameCardHead(card, rid, lead, loadCover);
     const list = card.querySelector('.pokale-card__games');
@@ -303,7 +305,7 @@ async function showMember(rid, mid) {
       'ti-sword',
       t('member.bestGame'),
       st.bestGames,
-      st.bestScore === null ? '' : bestGameSub(st),
+      st.bestScore === null ? '' : esc(bestGameSub(st)),
       t('member.bestGameNone'),
       t('member.ribbonBest')
     )
@@ -314,7 +316,7 @@ async function showMember(rid, mid) {
       'ti-heart',
       t('member.favorite'),
       st.favorite,
-      st.favAvg === null ? '' : 'Ø ' + fmtAvg(st.favAvg),
+      st.favAvg === null ? '' : ratingMark(st.favAvg),
       t('member.favoriteNone'),
       t('member.ribbonFav')
     )

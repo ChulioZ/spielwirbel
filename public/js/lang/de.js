@@ -299,9 +299,7 @@ I18N.de = {
   'recap.archived': '{n} aussortiert',
   'recap.worstRated': 'Schlechtestbewertet',
   'recap.divisive': 'Größte Uneinigkeit',
-  'recap.divisiveSub': '{high} Ø {highAvg} · {low} Ø {lowAvg}',
   'recap.favourites': 'Lieblingsspiele',
-  'recap.favSub': 'Ø {avg}',
   'recap.thin': 'Noch zu wenig gewertet für ein Bild — spielt weiter, das kommt von allein.',
 
   // Der Zeitraum-Rückblick (#800): ein Monat oder ein Jahr, teilbar als Bild.
@@ -796,7 +794,7 @@ I18N.de = {
   'member.wins': 'Siege',
   'member.sessions': 'Sessions',
   'member.winRate': 'Siegquote',
-  'member.avgGiven': 'Ø vergebene Wertung',
+  'member.avgGiven': 'Bewertet meist',
   'member.ribbonBest': 'Stärkstes',
   'member.ribbonFav': 'Liebling',
   'member.bestGame': 'Stärkstes Spiel',
@@ -975,7 +973,7 @@ I18N.de = {
   'tables.countOne': '{n} Tisch',
   'tables.gameLabel': 'Spiel an Tisch {n}',
   'tables.tableLabel': 'Tisch {n}',
-  'tables.lowest': 'Niedrigste {n}',
+  'tables.lowest': 'Niedrigste',
   'tables.parties': '{n} Parteien',
   'tables.partiesOne': '{n} Partei',
   'tables.moveHere': 'Hierher setzen',

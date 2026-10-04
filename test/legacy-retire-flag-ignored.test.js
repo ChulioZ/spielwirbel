@@ -119,11 +119,13 @@ test("a member's Ø uses the rating stored beside a stale flag", async (t) => {
   const dom = bootApp(t);
   await dom.call('showMember', RID, 'm2');
   // `.member-figure` since #1074 — the five figures are one strip in the card.
-  const values = [...dom.app.querySelectorAll('.member-figure')]
-    .map((c) => c.textContent.replace(/\s+/g, ' ').trim());
-  // Ben: 4 for Catan (his stored rating, flag ignored) and 5 for Azul -> Ø 4,5.
-  // Reading the flag as a 0 would report Ø 2,5, which is the #797 number.
-  assert.ok(values.some((v) => /Ø 4,5/.test(v)), `no Ø 4,5 among: ${values.join(' | ')}`);
+  const given = [...dom.app.querySelectorAll('.member-figure')]
+    .find((c) => c.querySelector('.member-figure__label').textContent === dom.run("t('member.avgGiven')"));
+  // Ben: 4 for Catan (his stored rating, flag ignored) and 5 for Azul -> 4,5,
+  // drawn as the top rung since #1537. Reading the flag as a 0 would give 2,5 —
+  // the #797 number — which rounds to the middle face, so the two still differ.
+  assert.ok(given.querySelector('.member-figure__value .ti-mood-crazy-happy'),
+    `not the top rung: ${given.innerHTML}`);
 });
 
 // ------------------------------------------------------- the results screen

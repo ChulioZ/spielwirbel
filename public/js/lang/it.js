@@ -303,9 +303,7 @@ I18N.it = {
   'recap.archived': '{n} archiviati',
   'recap.worstRated': 'Peggio valutato',
   'recap.divisive': 'Più divisivo',
-  'recap.divisiveSub': '{high} Ø {highAvg} · {low} Ø {lowAvg}',
   'recap.favourites': 'Preferiti',
-  'recap.favSub': 'Ø {avg}',
   'recap.thin': 'Non ci sono ancora valutazioni sufficienti per un quadro d’insieme — continuate a giocare, arriverà.',
 
   // Il riepilogo per periodo (#800): un mese o un anno, condivisibile come immagine.
@@ -779,7 +777,7 @@ I18N.it = {
   'member.wins': 'Vittorie',
   'member.sessions': 'Sessioni',
   'member.winRate': 'Percentuale di vittorie',
-  'member.avgGiven': 'Ø valutazione data',
+  'member.avgGiven': 'Di solito vota',
   'member.ribbonBest': 'Il migliore',
   'member.ribbonFav': 'Preferito',
   'member.bestGame': 'Gioco più forte',
@@ -953,7 +951,7 @@ I18N.it = {
   'tables.countOne': '{n} tavolo',
   'tables.gameLabel': 'Gioco al tavolo {n}',
   'tables.tableLabel': 'Tavolo {n}',
-  'tables.lowest': 'Minimo {n}',
+  'tables.lowest': 'Minimo',
   'tables.parties': '{n} partecipanti',
   'tables.partiesOne': '{n} partecipante',
   'tables.moveHere': 'Sposta qui',

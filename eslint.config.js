@@ -175,7 +175,7 @@ const frontendGlobals = {
   shrinkScore: 'readonly', shelfScore: 'readonly', playCounts: 'readonly',
   // rating-faces.js (issues #890, #909) — frontend only, by design; it also
   // holds the vote scale's own bounds since #909 folded vote-scale.js away
-  MOODS: 'readonly', ratingFace: 'readonly',
+  MOODS: 'readonly', ratingFace: 'readonly', ratingRung: 'readonly',
   RATING_MIN: 'readonly', RATING_MAX: 'readonly',
   // vote-advance.js (issue #1168): the beat between a rating tap and the next card
   VOTE_ADVANCE_MS: 'readonly', VOTE_ADVANCE_REDUCED_MS: 'readonly',
@@ -584,7 +584,7 @@ const frontendGlobals = {
   profileCardBadges: 'readonly', badgeEmblem: 'readonly',
   openAddMember: 'readonly', addMemberBtn: 'readonly',
   // vote-card-composed.js (issue #1268): Der Tisch's vote card + the link intro
-  VOTE_WORD_KEYS: 'readonly', voteWord: 'readonly', voteMoodButton: 'readonly', voteTurn: 'readonly',
+  VOTE_WORD_KEYS: 'readonly', voteWord: 'readonly', ratingMark: 'readonly', voteMoodButton: 'readonly', voteTurn: 'readonly',
   voteHandoffLine: 'readonly', voteMetaLine: 'readonly', composedVoteCard: 'readonly', composedVoteLinkIntro: 'readonly',
   voteCardComposed: 'readonly', voteSaidWord: 'readonly',
   // vote-review.js (issue #1434): the review step after a voter's last card

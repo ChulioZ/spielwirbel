@@ -20,6 +20,7 @@ const assert = require('node:assert/strict');
 
 const { loadApp } = require('./support/dom');
 const { RULES } = require('./support/css');
+const { assertRatingMark } = require('./support/rating-mark');
 
 const GAMES = [
   { id: 'g1', title: 'Catan', minPlayers: 2, maxPlayers: 4 },
@@ -99,6 +100,7 @@ async function builder(t, { proposals = [PROPOSALS[0]], session = parentSession(
 
 const cards = (dom) => [...dom.app.querySelectorAll('.tables-card')];
 const seatsOf = (card) => [...card.querySelectorAll('.tables-seat')].map((el) => el.textContent.trim());
+const lowOf = (card) => card.querySelector('.tables-card__low');
 const metaOf = (card) => card.querySelector('.tables-card__meta').textContent.replace(/\s+/g, ' ').trim();
 
 test('the builder renders one card per table, with its game and its people', async (t) => {
@@ -121,7 +123,9 @@ test('the two numbers under a table are computed over the SEATED only', async (t
   // Everyone seated rated a 4 and the curve leaves anything at or above 3
   // untouched, so the number itself is unchanged.
   assert.match(metaOf(a), /(^|\s)4,0/);
-  assert.match(metaOf(a), /Niedrigste 4/);
+  // The lowest is a raw rung, so it is drawn as one: face + word, no digit (#1537).
+  assertRatingMark(lowOf(a), 'ti-mood-smile', 'gern', 'lowest at table 1');
+  assert.ok(lowOf(a).textContent.includes('Niedrigste'));
   assert.match(metaOf(b), /(^|\s)4,0/);
   // Ben's 1 is on g2, and nobody is seated at g2 who gave it — so it does not
   // appear anywhere yet.
@@ -148,7 +152,7 @@ test('moving a party rescores both tables live and names the unhappy seating', a
   // number the group reads while dragging people around finally agrees that
   // one person at a game they refuse is not a table averaging a 3.
   assert.match(metaOf(b), /(^|\s)1,8/);
-  assert.match(metaOf(b), /Niedrigste 1/);
+  assertRatingMark(lowOf(b), 'ti-mood-cry', 'gar nicht', 'lowest after Ben moved');
   assert.match(dom.app.querySelector('.tables-notice').textContent, /Ben.*Azul/);
   assert.ok(b.querySelector('.tables-seat.is-hurt'), 'the chip to move is findable without reading the list');
 });
