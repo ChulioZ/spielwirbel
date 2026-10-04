@@ -184,9 +184,9 @@ function renderVoteLinkClaim(token, ballot) {
   // Initials, never `avatarFace()`. The ballot carries no `userId` by design
   // (nor, since the 2026-10-04 audit, whether a seat is an account's at all),
   // and AVATAR_CACHE is filled only by the auth-gated avatar route this page
-  // cannot call — so the lookup could resolve nothing anyway. This used to pass `{ userId: person.userId }`
-  // on a field that was always undefined, which read as if a linked member's
-  // picture rendered here.
+  // cannot call — so the lookup could resolve nothing anyway. This used to
+  // pass `{ userId: person.userId }` on a field that was always undefined,
+  // which read as if a linked member's picture rendered here.
   const list = root.querySelector('#vlClaim');
   ballot.people.forEach((person) => {
     const btn = h(`<button class="btn live-vote__hotseat-btn">
