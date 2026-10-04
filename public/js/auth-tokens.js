@@ -120,22 +120,60 @@ async function probeMe() {
   } catch { return { status: 0, data: {} }; }
 }
 
-// Exchange the refresh token for a fresh pair (rotating). Returns whether it
-// worked; on failure the (now useless) tokens are cleared. Called by core.js
-// api() on a 401 before retrying the original request.
-async function refreshAccessToken() {
+// Exchange the refresh token for a fresh pair (rotating). Resolves to a STRING,
+// which callers compare — never test for truthiness:
+//   'ok'        a fresh pair is stored — by this call, or by another tab that
+//               rotated while this request was in flight;
+//   'rejected'  POST /refresh definitively refused the token (401
+//               invalid_refresh_token, 403 account_disabled): the tokens are
+//               cleared and the session is over;
+//   'transient' no answer about the token at all — the per-IP auth limiter's
+//               429, a 5xx, a network failure, a reply without tokens. The
+//               tokens are KEPT, so a later request can simply try again.
+//
+// Concurrent callers share ONE request. Refresh tokens rotate, so a second
+// refresh presenting the same token is answered 401 — a rejection of a token
+// this tab has just rotated itself — which used to clear the fresh pair and end
+// the session whenever two requests met an expired access token together.
+const REFRESH_REJECTED = [401, 403];
+let refreshInFlight = null;
+function refreshAccessToken() {
+  if (!refreshInFlight) refreshInFlight = runRefresh().finally(() => { refreshInFlight = null; });
+  return refreshInFlight;
+}
+async function runRefresh() {
   const refresh = getRefreshToken();
-  if (!refresh) return false;
-  try {
-    const { ok, data } = await authFetch('/refresh', { refreshToken: refresh });
-    if (ok && data.accessToken) { setTokens(data.accessToken, data.refreshToken); return true; }
-  } catch {}
+  if (!refresh) return 'rejected';
+  let res;
+  try { res = await authFetch('/refresh', { refreshToken: refresh }); } catch { return 'transient'; }
+  if (res.ok && res.data.accessToken) { setTokens(res.data.accessToken, res.data.refreshToken); return 'ok'; }
+  if (!REFRESH_REJECTED.includes(res.status)) return 'transient';
+  // Tabs share this storage. If another one rotated while this request was in
+  // flight, the token presented here is spent but the stored pair is valid, and
+  // clearing it would sign every tab out.
+  if (getRefreshToken() !== refresh) return 'ok';
   clearTokens();
+  return 'rejected';
+}
+
+// What api() (core.js) and accountApi() do with a 401 from the token guard.
+// Resolves true when a refresh succeeded and the request should be retried
+// once. A rejected refresh — or a 401 that survives one — ends the session and
+// resolves false. A TRANSIENT refresh failure throws instead: the tokens stay,
+// and the caller's ordinary error handling reports a failed request rather than
+// showing the login screen (test/token-refresh.test.js).
+async function recoverExpiredSession(retried) {
+  if (!retried) {
+    const outcome = await refreshAccessToken();
+    if (outcome === 'ok') return true;
+    if (outcome === 'transient') throw new Error('refresh_unavailable');
+  }
+  onSessionLost();
   return false;
 }
 
-// The session is unrecoverably gone (refresh failed): drop tokens and show login.
-// Called by core.js api() when a 401 survives a refresh attempt.
+// The session is unrecoverably gone (refresh rejected): drop tokens and show
+// login. Called by recoverExpiredSession() above.
 function onSessionLost() {
   clearTokens();
   invalidateRoundCache(); // no cached round data may survive the identity loss
@@ -187,8 +225,7 @@ async function accountApi(method, path, body, _retried) {
     // treating change-password's wrong-current-password as one would log the
     // user out over a typo.
     if (res.status === 401 && !HANDLER_401.includes(code)) {
-      if (!_retried && (await refreshAccessToken())) return accountApi(method, path, body, true);
-      onSessionLost();
+      if (await recoverExpiredSession(_retried)) return accountApi(method, path, body, true);
       throw new Error('auth');
     }
     throw new Error(code);
