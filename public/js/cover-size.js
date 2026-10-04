@@ -20,9 +20,9 @@
 //   '   ends the CSS string
 //   \   starts a CSS escape
 //   "   ends the surrounding HTML style attribute
-//   &   starts a character reference inside that attribute
 //   whitespace/control  ends the string / the attribute
-//   <>  never needed in a cover URL; refused so a future HTML context is safe
+//   <>& never needed in a cover URL; refused so the value reads the same in
+//       every context it is rendered in
 // None of them appears in a real provider cover URL (BGG's CDN paths carry
 // none).
 //
@@ -92,8 +92,8 @@ const COVER_RESIZERS = [];
 //
 // A URL that already carries a query string is left alone. That guard is what
 // lets a capture-time change land later without conflicting — and it already
-// matters today: the Xbox *search* hit's thumbnail arrives pre-sized as
-// `?w=150&h=150`, so appending a second `w=` would produce a malformed query.
+// mattered: the retired Xbox provider's *search* thumbnails arrived pre-sized
+// as `?w=150…`, so appending a second `w=` would produce a malformed query.
 function coverUrl(image, width) {
   if (typeof image !== 'string') return image;
   if (COVER_UNSAFE_RE.test(image)) return '';
