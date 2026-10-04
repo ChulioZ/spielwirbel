@@ -372,3 +372,30 @@ test('a backfill answer carrying designers fills a game that lacks them (#1505)'
   dom.call('mergeGameInfo', game, { designers: ['Klaus Teuber'] });
   assert.deepEqual([...game.designers], ['Klaus Teuber']);
 });
+
+test('mergeGameInfo folds in every provider field, the poll included (#1005)', async (t_) => {
+  // The third hand-written list beside the two route projections
+  // (test/provider-info-projection.test.js). The sample is checked against the
+  // field set first, so a new field fails here until it is folded too.
+  const sample = {
+    weight: 2.5, minPlaytime: 30, maxPlaytime: 60, minAge: 10, rating: 7.1,
+    categories: ['Economic'], mechanics: ['Hand Management'], designers: ['Uwe'],
+    bestWith: [3], recommendedWith: [2, 3, 4],
+  };
+  assert.deepEqual(Object.keys(sample).sort(), [...PROVIDER_INFO_FIELDS].sort(),
+    'the sample no longer matches PROVIDER_INFO_FIELDS — add the new field here');
+  const { dom } = bootApp(t_);
+  const game = dom.call('mergeGameInfo', { id: 'g', title: 'Agricola' }, sample);
+  const unfilled = PROVIDER_INFO_FIELDS.filter((k) => !hasProviderField(game, k));
+  assert.deepEqual(unfilled, [], `mergeGameInfo drops: ${unfilled.join(', ')}`);
+
+  // `[]` is a real poll answer, so it fills a game that has none; a poll the
+  // game already holds is never overwritten (accretive, like every field).
+  const empty = dom.call('mergeGameInfo', { id: 'h', title: 'Azul' }, { bestWith: [], recommendedWith: [] });
+  assert.deepEqual([...empty.bestWith], []);
+  const held = dom.call('mergeGameInfo', { id: 'i', title: 'Catan', bestWith: [4] }, { bestWith: [3] });
+  assert.deepEqual([...held.bestWith], [4]);
+  // An absent poll (null in the route answer) fills nothing.
+  const none = dom.call('mergeGameInfo', { id: 'j', title: 'Uno' }, { bestWith: null, recommendedWith: null });
+  assert.equal('bestWith' in none, false);
+});

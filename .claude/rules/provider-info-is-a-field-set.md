@@ -36,9 +36,18 @@ write loop, both repo backends and the games route. It is dependency-free on
 purpose: `lib/provider-info.js` requires `./providers`, so putting the shape
 there would give the repo layer a path to the provider registry.
 
-Adding a field there is the whole change; the 7-day TTL then
-lets every already-stamped game through once, lazily, with no migration code
-(CLAUDE.md) and no thundering herd. Two accepted costs, stated in the code because
+Adding a field there is the whole change **to what is stored and counted** —
+but three hand-written lists still decide what reaches a screen, and each needs
+the field too: the per-game `GET …/provider-info` answer and the shelf-wide
+`POST …/provider-info` answer in `lib/routes/games.js`, and `mergeGameInfo` in
+`public/js/game-info.js`, which folds either answer back. #1505 had to edit all
+three for `designers`, and the poll (#1005) reached none of them until
+2026-10-04, so the Regal and the setup screen never learned a poll on the visit
+that filled it. `test/provider-info-projection.test.js` and the `mergeGameInfo`
+spec in `test/game-info-view.test.js` now compare each list with
+`PROVIDER_INFO_FIELDS`, so a field missing from one goes red there. The 7-day
+TTL then lets every already-stamped game through once, lazily, with no migration
+code (CLAUDE.md) and no thundering herd. Two accepted costs, stated in the code because
 they read as bugs otherwise: a game BGG genuinely has no categories for is re-asked
 once per TTL forever (already true for a weightless game before #724), and the
 one-time re-fetch after a deploy is spread across every game's next view.
@@ -109,9 +118,9 @@ that JSON whether or not a view renders it, so withholding it there is strictly
 stronger than withholding it in the client.
 
 The client half is still worth its shape: `gameInfoBody` and `hasGameInfo`
-(`public/js/game-info.js`) both **default `rating` to off**, so the one builder
-that fills three surfaces — two of them vote cards — fails safe when a caller
-forgets the flag. Only the game-detail surface opts in — `gameInfoRest`, which
+(`public/js/game-info.js`) both **default `rating` to off**, so the builder
+behind the ⓘ sheet both vote cards open (`openGameInfoSheet`, its one caller)
+fails safe when a caller forgets the flag. Only the game-detail surface opts in — `gameInfoRest`, which
 replaced `renderGameInfoSection` in #1039 when the section became the card's
 glance pills plus a „Mehr zum Spiel" disclosure. A spec that passes
 `{ rating: false }` itself cannot see a flipped default; the sheet spec asserts

@@ -34,8 +34,13 @@ control *at all* and a half-filled one offers a control that half works.
 **#1005 added a sixth filtered field and rode the existing triggers**, which is
 what the rule below is for: the toggle counts toward `countMetadataFilters`, so a
 draw carrying only it waits for the fill like any other filtered draw, and the
-setup screen's trigger fills the poll on the way in. Nothing new was needed —
-which is the tell that the rule is doing its job rather than being restated.
+setup screen's trigger fills the poll on the way in. The triggers needed
+nothing new — but the poll did not reach the screens that fired them: neither
+`…/provider-info` answer carried it, so on the visit that filled a shelf's polls
+the „only what BGG recommends" toggle could not appear until the next full load
+(fixed 2026-10-04; the three projection lists are in
+`.claude/rules/provider-info-is-a-field-set.md`). A trigger that fills the store
+is half the job; the answer has to bring the field back to the screen.
 
 So the rule that pairs with the field set: **a field the app filters on must have
 a trigger on the screen that filters it.** `lib/provider-info.js`'s header lists
@@ -150,6 +155,6 @@ splits from, and the accretion rule the fold-in mirrors),
 `.claude/rules/provider-metadata-is-a-filter-not-a-tag.md` (§2, the absent-value
 rule that makes an unfilled shelf fail silently rather than loudly),
 `.claude/rules/add-game-lookup-provider.md` (BGG's throttling terms the batch
-bound answers to), `.claude/rules/shared-constants-across-the-stack.md`
+bound answers to), `.claude/rules/shared-constants-inventory.md`
 (`draw-pool.js`, which both filter screens and the draw apply),
 `.claude/rules/break-the-code-on-purpose.md`.
