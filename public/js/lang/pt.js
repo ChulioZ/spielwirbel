@@ -439,6 +439,8 @@ I18N.pt = {
   'games.noMatchFilters': 'Nenhum jogo corresponde aos filtros.',
   'games.retire': 'Aposentar',
   'games.scoreNew': 'novo',
+  // F1.6's empty cover hollow under Forest (#1467) — aria-hidden, never a name.
+  'games.noCover': 'Sem imagem',
   'games.retireConfirm': 'Aposentar “{title}”? Ele sai da lista de jogos, mas continua visível em “Jogos aposentados”.',
   'games.retired': '“{title}” aposentado',
   'games.completed': '“{title}” marcado como concluído',
@@ -1998,6 +2000,8 @@ I18N.pt = {
   'detail.distTitleBruecke': 'Como a ronda o avalia',
   'detail.statPlaysBruecke': 'vezes jogado',
   'detail.statVetoBruecke': '× sem impulso',
+  // Forest's Spielepass figure (#1467): who has won this game most often.
+  'detail.factMostWins': 'Mais vitórias',
   // Das Programmheft's lobby and hub (#1372, P3.1/P3.2/P6.1).
   'hub.members': 'Membros',
   'hub.forestMarker': 'Marcador {name}',

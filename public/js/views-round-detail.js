@@ -216,7 +216,11 @@ async function showGameDetail(rid, gameId) {
   // (bruecke-shelf.js). Its one action stands under the card on the desktop and
   // in a bar above the dock on the phone — two copies, one per width.
   const bruecke = designIs('bruecke');
-  const listy = tisch || ocean || ph || bruecke;
+  // Forest (#1467, F3.4/F6.3) takes Das Programmheft's three columns — the
+  // cover in its hollow | the game, its score card, three figures and how it
+  // went | the one action, the Aktionen and the BGG card (forest-shelf.js).
+  const forest = designIs('forest');
+  const listy = tisch || ocean || ph || bruecke || forest;
   const coverCss = game.image ? `url('${coverUrl(game.image, COVER_HERO)}')` : '';
   const imgStyle = coverCss ? `style="background-image:${coverCss}"` : '';
   const fallback = coverPlaceholder(game);
@@ -360,11 +364,11 @@ async function showGameDetail(rid, gameId) {
   // our table on the right, with the one action pinned at the right page's foot.
   // Single column below 860px — the app's existing strip/dock/editor breakpoint
   // (.claude/rules/responsive-hub-tabs.md) — in the order card → history → bar.
-  const pass = h(`<div class="pass${ph ? ' ph-pass' : ''}"></div>`);
+  const pass = h(`<div class="pass${ph ? ' ph-pass' : ''}${forest ? ' forest-pass' : ''}"></div>`);
   const leftPage = h('<div class="pass__game"></div>');
   const rightPage = h('<div class="pass__table"></div>');
   pass.append(leftPage, rightPage);
-  const story = ocean || ph ? h('<div class="pass__story"></div>') : null;
+  const story = ocean || ph || forest ? h('<div class="pass__story"></div>') : null;
   if (story) leftPage.after(story);
   // What each later block is appended to: the right page, or Ocean's story.
   const tale = story || rightPage;
@@ -418,7 +422,12 @@ async function showGameDetail(rid, gameId) {
   const shown = st.score === null ? null : displayScore(st.score);
   let scoreBig = null;
   let scoreBox = null;
-  if (!sparse && !game.wish && (tisch || ph || bruecke)) {
+  // Forest states the score in a card beside its explanation, never on the
+  // cover (F3.4, rule T3); it joins the story with the three figures below.
+  const forestScore = !sparse && !game.wish && forest ? forestPassScore(st) : null;
+  if (forest) {
+    // Nothing on the cover: the score card above carries it.
+  } else if (!sparse && !game.wish && (tisch || ph || bruecke)) {
     const numeral = tischScoreNumeral(st, shown);
     wireInfoButtons(numeral);
     // The box takes the score's ramp tone (P3.4), as a Regal card's figure does.
@@ -576,7 +585,11 @@ async function showGameDetail(rid, gameId) {
 
   // The provider link, which is the one thing in the disclosure every game has
   // something to say about. „Verknüpfung lösen" is NOT here — it moved to the
-  // page menu with the other two rare state changes.
+  // page menu with the other two rare state changes. Forest lifts it out of the
+  // disclosure into a card of its own at the foot of the action column (F3.4),
+  // with the BGG badge beside a BGG link.
+  const sourceCard = forest ? h('<div class="forest-source"></div>') : null;
+  const linkHost = sourceCard || moreBody;
   if (game.source) {
     // A link built before the provider exposed a URL has none — it stays
     // unlinkable rather than rendering nothing at all.
@@ -584,13 +597,14 @@ async function showGameDetail(rid, gameId) {
       // Short label, and deliberately NO aria-label over it (#817): a spelled-out
       // name above a visible „Auf BGG ansehen" would fail WCAG 2.2 SC 2.5.3,
       // which requires the accessible name to contain the visible text.
-      moreBody.appendChild(h(`<a class="link-out" href="${esc(game.source.url)}" target="_blank" rel="noopener noreferrer"><i class="ti ti-external-link" aria-hidden="true"></i> ${esc(t('detail.viewSource', { provider: providerLabelShort(game.source.provider) }))}</a>`));
+      linkHost.appendChild(h(`<a class="link-out" href="${esc(game.source.url)}" target="_blank" rel="noopener noreferrer"><i class="ti ti-external-link" aria-hidden="true"></i> ${esc(t('detail.viewSource', { provider: providerLabelShort(game.source.provider) }))}</a>`));
     }
   } else {
     const link = h(`<button class="link-out link-out--btn"><i class="ti ti-link" aria-hidden="true"></i> ${esc(t('detail.linkProvider'))}</button>`);
     link.addEventListener('click', () => showLinkProvider(round, game));
-    moreBody.appendChild(link);
+    linkHost.appendChild(link);
   }
+  if (sourceCard && game.source && game.source.provider === 'bgg') sourceCard.appendChild(h(forestBggBadge('forest-source__bgg')));
 
   // The provider metadata's two anchors, filled now and again after the
   // detail-open backfill answers: a BGG-linked game missing a field asks the
@@ -643,9 +657,10 @@ async function showGameDetail(rid, gameId) {
   if (ocean) {
     leftPage.append(coverCol, factsHost);
     story.appendChild(card);
-  } else if (ph) {
+  } else if (ph || forest) {
     leftPage.appendChild(coverCol);
     story.appendChild(card);
+    if (forestScore) story.append(forestScore, forestPassFacts(round, gameId, st));
   } else {
     leftPage.appendChild(card);
   }
@@ -1022,7 +1037,7 @@ async function showGameDetail(rid, gameId) {
     const panel = h(`<div class="section gd-actions"><h2>${esc(t('detail.actionsTitle'))}</h2><div class="gd-actions__grid"></div></div>`);
     panel.querySelector('.gd-actions__grid')
       .append(...menuItemButtons(menuItems, () => {}, { base: 'btn btn--sm gd-act', tone: false }));
-    if (ocean || ph) rightPage.appendChild(panel);
+    if (ocean || ph || forest) rightPage.appendChild(panel);
     else rightPage.insertBefore(panel, bar);
   } else if (menuItems.length) {
     back.classList.add('back-row--split');
@@ -1040,4 +1055,5 @@ async function showGameDetail(rid, gameId) {
     });
     back.appendChild(menuBtn);
   }
+  if (sourceCard && sourceCard.firstChild) rightPage.appendChild(sourceCard);
 }

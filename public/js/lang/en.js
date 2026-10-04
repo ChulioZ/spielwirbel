@@ -436,6 +436,8 @@ I18N.en = {
   'games.noMatchFilters': 'No games match the filters.',
   'games.retire': 'Retire',
   'games.scoreNew': 'new',
+  // F1.6's empty cover hollow under Forest (#1467) — aria-hidden, never a name.
+  'games.noCover': 'No image',
   'games.retireConfirm': 'Retire “{title}”? It disappears from the games list but stays viewable under “Retired games”.',
   'games.retired': '“{title}” retired',
   'games.completed': '“{title}” marked as completed',
@@ -2116,6 +2118,8 @@ I18N.en = {
   'detail.distTitleBruecke': 'How the round rates it',
   'detail.statPlaysBruecke': 'times played',
   'detail.statVetoBruecke': '× no thrust',
+  // Forest's Spielepass figure (#1467): who has won this game most often.
+  'detail.factMostWins': 'Most wins',
   // Das Programmheft's lobby and hub (#1372, P3.1/P3.2/P6.1).
   'hub.members': 'Members',
   'hub.forestMarker': 'Marker {name}',

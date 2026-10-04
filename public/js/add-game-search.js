@@ -6,7 +6,9 @@
    for Der Tisch or Ocean (#1212, O3.5/O6.4 draw the same search-first step;
    ocean.css styles it), or Das Programmheft (#1373, P3.5/P6.4, styled by
    programmheft.css), or Die Brücke (#1239, B6.4: bruecke.css, which also
-   closes the sheet on the „Powered by BGG" badge the sheet draws) and sends
+   closes the sheet on the „Powered by BGG" badge the sheet draws), or Forest
+   (#1467, F3.5/F6.4: forest.css; the badge sits under the query, linked, on the
+   line where F3.5 counts the hits) and sends
    every other design straight to the form. Under
    Der Tisch the sheet opens on a query field with a hit count, lists the hits
    as rows that each carry their own state — „Im Regal", „Auf der Wunschliste",
@@ -46,6 +48,7 @@ function showAddGameSearch(round, { wish = false } = {}) {
                  aria-label="${esc(t('addGame.searchLabel'))}" placeholder="${esc(t('addGame.titlePlaceholder'))}" />
           <span class="add-search__count" id="addSearchCount" role="status" aria-live="polite" aria-atomic="true"></span>
         </div>
+        ${designIs('forest') ? `<div class="add-search__credit">${forestBggBadge('add-search__credit-bgg')}</div>` : ''}
         <div class="add-search__msg" id="addSearchMsg" role="status" aria-live="polite" aria-atomic="true"></div>
         <ul class="add-search__list" aria-label="${esc(t('lookup.suggestions'))}"></ul>
         <div class="add-search__ways">

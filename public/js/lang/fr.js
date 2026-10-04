@@ -440,6 +440,8 @@ I18N.fr = {
   'games.noMatchFilters': 'Aucun jeu ne correspond aux filtres.',
   'games.retire': 'Retirer',
   'games.scoreNew': 'nouveau',
+  // F1.6's empty cover hollow under Forest (#1467) — aria-hidden, never a name.
+  'games.noCover': 'Pas d’image',
   'games.retireConfirm': 'Retirer « {title} » ? Il disparaît de la liste des jeux mais reste consultable sous « Retirés ».',
   'games.retired': '« {title} » retiré',
   'games.completed': '« {title} » marqué comme terminé',
@@ -2004,6 +2006,8 @@ I18N.fr = {
   'detail.distTitleBruecke': 'Comment le groupe le note',
   'detail.statPlaysBruecke': 'parties jouées',
   'detail.statVetoBruecke': '× aucune poussée',
+  // Forest's Spielepass figure (#1467): who has won this game most often.
+  'detail.factMostWins': 'Le plus de victoires',
   // Das Programmheft's lobby and hub (#1372, P3.1/P3.2/P6.1).
   'hub.members': 'Membres',
   'hub.forestMarker': 'Marqueur {name}',

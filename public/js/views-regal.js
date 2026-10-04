@@ -59,7 +59,12 @@ function renderRegalTab(round, activeGames) {
   // Ocean's „Sortiert:" statement; its cards set the number, the meta and the
   // score as print ABOUT the cover rather than on it (phCard below).
   const ph = designIs('programmheft');
-  const composed = tisch || ocean || ph || bruecke;
+  // Forest (#1467, F3.3/F6.2/F7.8) takes the composed head and the „Sortiert:"
+  // statement too, Das Programmheft's phone „…" and its pair of adds, and cards
+  // whose cover stands in a light hollow with the title, the score and the
+  // owner on the card below it (forestShelfCard, forest-shelf.js).
+  const forest = designIs('forest');
+  const composed = tisch || ocean || ph || bruecke || forest;
   // h1, not h3: on the Regal/Chronik/Pokale tabs this is the top-level heading of
   // the view — only the Start tab renders the round-name hero (#145). The
   // section-label look is unchanged; `.section-head :is(h1,h2,h3)` styles it.
@@ -70,6 +75,7 @@ function renderRegalTab(round, activeGames) {
   const gamesTools = gamesHead.querySelector('.section-tools');
   if (ph) gamesSec.classList.add('ph-regal');
   if (bruecke) gamesSec.classList.add('bruecke-regal');
+  if (forest) gamesSec.classList.add('forest-regal');
   gamesSec.appendChild(gamesHead);
 
   const grid = h('<div class="cards"></div>');
@@ -118,6 +124,7 @@ function renderRegalTab(round, activeGames) {
     if (canImportBgg()) grid.appendChild(importTile);
     gamesSec.appendChild(grid);
   } else {
+    let forestImport = null;
     // Not under Der Tisch (#1278): T3.3 has no slot for it, and the add sheet
     // already offers the same import as a row (add-game-search.js, behind the
     // same canImportBgg() gate), so the toolbar holds exactly the sheet's
@@ -128,9 +135,12 @@ function renderRegalTab(round, activeGames) {
       // already exist for the empty-Regal tile, so this needs no new i18n key.
       const importBtn = h(`<button class="link-btn"><i class="ti ti-download" aria-hidden="true"></i> <span class="tools-label tools-label--long">${esc(t('bggImport.link'))}</span><span class="tools-label tools-label--short">${esc(t('bggImport.tile'))}</span></button>`);
       importBtn.addEventListener('click', () => showBggImport(round));
-      // P6.2 folds it into the phone's „…" (phMoreButton below).
-      if (ph) importBtn.classList.add('regal-tool--wide');
-      gamesTools.appendChild(importBtn);
+      // P6.2 folds it into the phone's „…" (phMoreButton below), and so does
+      // F6.2. F3.3 sets it at the END of the row, after „Auswählen", so under
+      // Forest it is appended there (below) — DOM order is the reading order.
+      if (ph || forest) importBtn.classList.add('regal-tool--wide');
+      if (forest) forestImport = importBtn;
+      else gamesTools.appendChild(importBtn);
     }
     // Score per game (from the already computed stats) for pill and sorting.
     // The Spielwirbel-Score, not the raw mean (#893) — the pill and the
@@ -154,7 +164,7 @@ function renderRegalTab(round, activeGames) {
     // Ocean prints the sort as a statement, „Sortiert: Bewertung" (O3.3). The
     // prefix is a visible word beside the <select>, whose own aria-label is
     // unchanged — so it is aria-hidden rather than a second name.
-    if (ocean || ph || bruecke) {
+    if (ocean || ph || bruecke || forest) {
       const sortWrap = h(`<span class="regal-sort"><span class="regal-sort__prefix" aria-hidden="true">${esc(t('games.sortedBy'))}</span></span>`);
       sortWrap.appendChild(sortSel);
       gamesTools.appendChild(sortWrap);
@@ -181,9 +191,10 @@ function renderRegalTab(round, activeGames) {
     // A hook for Der Tisch's phone row, which draws this toggle as a glyph chip
     // while it is off (T6.2 has no room for a fourth worded chip).
     if (tisch) bulk.button.classList.add('regal-select');
-    if (ph) bulk.button.classList.add('regal-tool--wide');
+    if (ph || forest) bulk.button.classList.add('regal-tool--wide');
     gamesTools.appendChild(bulk.button);
-    if (ph) gamesTools.appendChild(phMoreButton(round, bulk.button));
+    if (forestImport) gamesTools.appendChild(forestImport);
+    if (ph || forest) gamesTools.appendChild(phMoreButton(round, bulk.button));
 
 
     let query = regalFilters.query;
@@ -347,6 +358,7 @@ function renderRegalTab(round, activeGames) {
         ? `<span class="exp-pill" title="${esc(tn(expCount, 'detail.expansionsBadgeOne', 'detail.expansionsBadge', { n: expCount }))}">+${expCount}</span>`
         : '';
       const gc = ph ? phCard(round, g, fallback, score, evidence, expBadge)
+        : forest ? forestShelfCard(round, g, score, evidence, expBadge)
         : bruecke ? brueckeCard(g, fallback, score, evidence, expBadge) : h(`<a class="game-card game-card--clickable">
            <div class="game-card__img">${fallback}
              <div class="game-card__badges">${expBadge}${scorePill}</div>
@@ -456,7 +468,9 @@ function renderRegalTab(round, activeGames) {
   // the dashed tile in the grid (P6.2, #1427). CSS shows one copy per width, as
   // Ocean's three do; the sticky one is after the grid for the reason Der
   // Tisch's is.
-  if (ph && activeGames.length > 0) {
+  // Forest takes the same pair (#1427 gives every design a second add); F3.3
+  // and F6.2 keep the dashed tile closing the grid.
+  if ((ph || forest) && activeGames.length > 0) {
     gamesTools.appendChild(addBtn('regal-add regal-add--bar'));
     gamesSec.appendChild(addBtn('regal-add regal-add--dock'));
   }
