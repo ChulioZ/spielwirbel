@@ -642,12 +642,7 @@ function renderRecapSection(round, recap) {
       const card = h(`<div class="pokale-card">
            ${gameCardHead('ti-arrows-split', t('recap.divisive'), game)}
            <a class="pokale-card__value">${esc(game.title)}</a>
-           <span class="pokale-card__sub">${esc(t('recap.divisiveSub', {
-             high: nameOf(recap.divisive.high.memberId),
-             highAvg: fmtAvg(recap.divisive.high.avg),
-             low: nameOf(recap.divisive.low.memberId),
-             lowAvg: fmtAvg(recap.divisive.low.avg),
-           }))}</span>
+           <span class="pokale-card__sub">${esc(nameOf(recap.divisive.high.memberId))} ${ratingMark(recap.divisive.high.avg)} · ${esc(nameOf(recap.divisive.low.memberId))} ${ratingMark(recap.divisive.low.avg)}</span>
          </div>`);
       wireGameCardHead(card, round.id, game, loadCover);
       makeGameLink(card.querySelector('.pokale-card__value'), round.id, game.id);
@@ -674,7 +669,7 @@ function renderRecapSection(round, recap) {
              <span class="recap-fav__name">${esc(member.name)}</span>
            </span>
            <a class="pokale-card__value">${esc(game.title)}</a>
-           <span class="pokale-card__sub">${esc(t('recap.favSub', { avg: fmtAvg(fav.avg) }))}</span>
+           <span class="pokale-card__sub">${ratingMark(fav.avg)}</span>
          </div>`);
       if (game.image) loadCover(card.querySelector('.recap-fav__cover'), coverUrl(game.image, COVER_THUMB));
       makeMemberLink(card.querySelector('.recap-fav__who .avatar'), round.id, member.id);

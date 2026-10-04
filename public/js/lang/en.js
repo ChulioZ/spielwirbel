@@ -297,9 +297,7 @@ I18N.en = {
   'recap.archived': '{n} archived',
   'recap.worstRated': 'Worst rated',
   'recap.divisive': 'Most divisive',
-  'recap.divisiveSub': '{high} Ø {highAvg} · {low} Ø {lowAvg}',
   'recap.favourites': 'Favourites',
-  'recap.favSub': 'Ø {avg}',
   'recap.thin': 'Not enough ratings for a picture yet — keep playing, it will come.',
 
   // The per-period recap (#800): one calendar month or year, shareable as an image.
@@ -794,7 +792,7 @@ I18N.en = {
   'member.wins': 'Wins',
   'member.sessions': 'Sessions',
   'member.winRate': 'Win rate',
-  'member.avgGiven': 'Ø rating given',
+  'member.avgGiven': 'Usually rates',
   'member.ribbonBest': 'Strongest',
   'member.ribbonFav': 'Favourite',
   'member.bestGame': 'Strongest game',
@@ -977,7 +975,7 @@ I18N.en = {
   'tables.countOne': '{n} table',
   'tables.gameLabel': 'Game at table {n}',
   'tables.tableLabel': 'Table {n}',
-  'tables.lowest': 'Lowest {n}',
+  'tables.lowest': 'Lowest',
   'tables.parties': '{n} parties',
   'tables.partiesOne': '{n} party',
   'tables.moveHere': 'Move here',

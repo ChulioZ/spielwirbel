@@ -128,7 +128,7 @@ function gameRaters(round, gameId) {
   return [...byPerson.values()]
     .map(({ person, sum, n }) => {
       const avg = sum / n;
-      return { person, avg, n, face: Math.max(1, Math.min(RATING_MAX, Math.round(avg))) };
+      return { person, avg, n, face: ratingRung(avg) };
     })
     // Warmest first, then by name so a tie is stable rather than insertion-ordered
     // (a re-render must not reshuffle faces).

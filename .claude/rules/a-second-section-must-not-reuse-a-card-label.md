@@ -81,7 +81,7 @@ distinguishes them:
 A middot rather than a preposition, deliberately: „im Juli 2026" and „in 2026"
 need different German, so a single `{period}` template with a preposition is
 ungrammatical for one of the two. The separator is grammar-free in every
-shipped locale and is already the app's idiom (`recap.divisiveSub`, the Chronik
+shipped locale and is already the app's idiom (the Pokale „Größte Uneinigkeit" line, the Chronik
 meta line).
 
 Note the same model uses the **short** labels on the shared PNG (`recap-card.js`

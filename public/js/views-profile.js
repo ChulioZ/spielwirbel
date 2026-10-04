@@ -244,19 +244,19 @@ function renderProfileCard(p, reload) {
   /* Five figures in ONE strip, in the Tischkarte's order and treatment. There is
      no grid, so no track can be empty at any viewport. */
   const figures = h('<div class="member-card__figures"></div>');
-  const figure = (label, value, extra) =>
+  // `valueHtml` is markup, as on the member page (#1537).
+  const figure = (label, valueHtml) =>
     figures.appendChild(h(`<div class="member-figure">
-         <span class="member-figure__value">${esc(value)}</span>
-         ${extra || ''}
+         <span class="member-figure__value">${valueHtml}</span>
          <span class="member-figure__label">${esc(label)}</span>
        </div>`));
   /* Four figures, no bar — the same call the member page makes, and for the same
      reason: `.member-bar` was the Siegwertung's encoding and went with it on
      2026-09-22. See views-member.js. */
-  figure(t('member.wins'), String(st.wins));
-  figure(t('member.winRate'), st.winRate === null ? '–' : Math.round(st.winRate * 100) + '%');
-  figure(t('member.sessions'), String(st.sessions));
-  figure(t('member.avgGiven'), st.avgGiven === null ? '–' : 'Ø ' + fmtAvg(st.avgGiven));
+  figure(t('member.wins'), esc(String(st.wins)));
+  figure(t('member.winRate'), st.winRate === null ? '–' : esc(Math.round(st.winRate * 100) + '%'));
+  figure(t('member.sessions'), esc(String(st.sessions)));
+  figure(t('member.avgGiven'), st.avgGiven === null ? '–' : ratingMark(st.avgGiven));
   card.appendChild(figures);
 
   /* The account-tier Abzeichen under the totals (#1389, X17.7). `stats.badges`
@@ -276,9 +276,9 @@ function renderProfileCard(p, reload) {
      empty state — 0 is a real win RATE (a game played often and never won), and
      a game below BEST_GAME_MIN_PLAYS is unranked rather than zero. */
   cards.appendChild(profileGameTile('ti-sword', t('member.bestGame'), st.bestGames,
-    st.bestScore === null ? t('member.bestGameNone') : bestGameSub(st), t('member.ribbonBest'), loadCover));
+    esc(st.bestScore === null ? t('member.bestGameNone') : bestGameSub(st)), t('member.ribbonBest'), loadCover));
   cards.appendChild(profileGameTile('ti-heart', t('member.favorite'), st.favorite,
-    st.favAvg === null ? t('member.favoriteNone') : 'Ø ' + fmtAvg(st.favAvg), t('member.ribbonFav'), loadCover));
+    st.favAvg === null ? esc(t('member.favoriteNone')) : ratingMark(st.favAvg), t('member.ribbonFav'), loadCover));
   card.appendChild(cards);
 
   return card;
@@ -291,7 +291,8 @@ function renderProfileCard(p, reload) {
    its payloads deliberately carry no round id. So the thumb stays a <span> and
    the titles stay plain text (.claude/rules/in-app-nav-links.md). `ribbon` is
    the Tischkarte's ribbon and is left out when null. */
-function profileGameTile(icon, label, games, sub, ribbon, loadCover) {
+// `subHtml` is markup: escape text at the call, a rating arrives as ratingMark (#1537).
+function profileGameTile(icon, label, games, subHtml, ribbon, loadCover) {
   const lead = games[0];
   const tile = h(`<div class="pokale-card">
        ${games.length && ribbon ? `<span class="member-ribbon">${esc(ribbon)}</span>` : ''}
@@ -301,7 +302,7 @@ function profileGameTile(icon, label, games, sub, ribbon, loadCover) {
     : `<span class="pokale-card__icon"><i class="ti ${icon}" aria-hidden="true"></i></span>
           <span class="pokale-card__label">${esc(label)}</span>`}
        <span class="pokale-card__games"></span>
-       <span class="pokale-card__sub">${esc(sub)}</span>
+       <span class="pokale-card__sub">${subHtml}</span>
      </div>`);
   if (lead) {
     tile.classList.add('pokale-card--cover');
@@ -373,7 +374,8 @@ function renderAccountRecapSection(p) {
       played: rec.topPlayed ? rec.topPlayed.games.map((g) => g.title) : [],
       playedSub: rec.topPlayed ? tn(rec.topPlayed.count, 'home.chip.sessionsOne', 'home.chip.sessions') : '',
       rated: rec.topRated ? rec.topRated.games.map((g) => g.title) : [],
-      ratedScore: rec.topRated ? 'Ø ' + fmtAvg(rec.topRated.rating) : '',
+      // The WORD alone: a canvas cannot draw the face glyph reliably (#1537).
+      ratedScore: rec.topRated ? voteWord(ratingRung(rec.topRated.rating)) : '',
       ratedLabel: t('accountRecap.card.bestRated'),
       shelf: n ? [{ n, label: tn(n, 'accountRecap.card.gamesOne', 'accountRecap.card.games') }] : [],
       shelfLabel: t('accountRecap.card.new'),
@@ -411,16 +413,16 @@ function renderAccountRecapSection(p) {
     const scope = { period: labelOf(period) };
     if (rec.topPlayed) {
       cards.appendChild(profileGameTile('ti-flame', t('periodRecap.mostPlayed', scope), rec.topPlayed.games,
-        tn(rec.topPlayed.count, 'home.chip.sessionsOne', 'home.chip.sessions'), null, loadCover));
+        esc(tn(rec.topPlayed.count, 'home.chip.sessionsOne', 'home.chip.sessions')), null, loadCover));
     }
     if (rec.topRated) {
       cards.appendChild(profileGameTile('ti-star', t('accountRecap.bestRated', scope), rec.topRated.games,
-        'Ø ' + fmtAvg(rec.topRated.rating), null, loadCover));
+        ratingMark(rec.topRated.rating), null, loadCover));
     }
     if (rec.newGames.length) {
       cards.appendChild(profileGameTile('ti-sparkles', t('accountRecap.newGames', scope),
         rec.newGames.slice(0, ACCOUNT_RECAP_NEW_SHOWN),
-        tn(rec.newGames.length, 'accountRecap.newSubOne', 'accountRecap.newSub'), null, loadCover));
+        esc(tn(rec.newGames.length, 'accountRecap.newSubOne', 'accountRecap.newSub')), null, loadCover));
     }
     body.appendChild(cards);
   }

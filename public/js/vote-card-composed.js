@@ -34,6 +34,18 @@ const VOTE_WORD_KEYS = ['vote.scaleLow', 'vote.scale2', 'vote.scale3', 'vote.sca
 
 const voteWord = (n) => t(VOTE_WORD_KEYS[n - RATING_MIN]);
 
+/* A person's rating as the scale draws it: the rung's face and its word, never a
+   number (#1537). For an AVERAGE as much as a single vote — `ratingRung` rounds
+   it — because #1530 took the digits off the scale, and a „Ø 3,5" beside a score
+   pill would hand back the arithmetic mean the Spielwirbel-Score deliberately
+   is not. The face is aria-hidden, so a screen reader hears the word alone.
+   Lives beside `voteWord` and reads it at CALL time, so the earlier-loaded views
+   that use it (member, Pokale) are fine (.claude/rules/frontend-script-load-order.md). */
+const ratingMark = (avg) => {
+  const n = ratingRung(avg);
+  return `<span class="rating-mark"><i class="ti ${ratingFace(n)} rating-mark__face" aria-hidden="true"></i><span class="rating-mark__word">${esc(voteWord(n))}</span></span>`;
+};
+
 /* One face on the 1–5 scale — the one builder both cards use, so the hot-seat
    and link surfaces cannot drift apart on the app's central control.
 

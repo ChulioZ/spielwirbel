@@ -284,7 +284,8 @@ What the app does, in detail. For a short overview see the
 - **Members** – each member has a detail page (opened from the Start hero row,
   the Pokale podium, or a session's participant list): **one card in that
   member's own colour** carrying the whole record — wins, sessions joined, win
-  rate, average rating given, their strongest game (the one they win most often
+  rate, how they usually rate (their average rating, drawn as the scale's face
+  and word rather than a number), their strongest game (the one they win most often
   when they play it, over at least three contested evenings) and their favorite
   game. The card wears that colour rather than merely being tinted by it: the
   **win rate is the ring around the avatar**, sweeping into place once when the
@@ -603,7 +604,7 @@ What the app does, in detail. For a short overview see the
   proposes complete splits of the people and the drawn games, one per feasible
   number of tables, and the group picks between them or moves people and games by
   hand. Each table shows the Spielwirbel-Score and the *lowest* rating among
-  the people actually sitting at it, both updating live as anyone is moved, and it names —
+  the people actually sitting at it (as that rung's face and word), both updating live as anyone is moved, and it names —
   by name — everyone seated at a game they said they did not want to play. No
   score is shown: how many tables a room has is knowledge the app does not have,
   so the trade-off is the thing the group picks between rather than a number to
@@ -850,7 +851,7 @@ What the app does, in detail. For a short overview see the
   (issue #1089). „Mein Profil" in the account menu — and the handle on the Konto
   screen — open your own profile. It carries your **play record aggregated over
   every round you hold a seat in**, your own and ones shared with you: sessions
-  played, wins, win rate, your average rating given, the number of rounds and
+  played, wins, win rate, how you usually rate, the number of rounds and
   of distinct games played, and your favourite and strongest game. A
   game that sits on the shelf in several rounds counts once — entries are merged
   by their provider id, or by title when neither carries one. Below that is your
@@ -859,7 +860,7 @@ What the app does, in detail. For a short overview see the
   requests never do, and you always see your own. The record names **no round,
   no other member and no individual session or rating** — only figures and at
   most two game titles. Since #1132 it is the four figures of the card's strip —
-  wins, win rate, sessions and your average rating given — while the two that
+  wins, win rate, sessions and how you usually rate — while the two that
   describe breadth rather than performance, the
   round and game counts, are the line under your name. The favourite and
   strongest game are the two ribboned boxes at the foot of the card.

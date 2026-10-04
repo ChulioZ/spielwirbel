@@ -165,7 +165,7 @@ function forestGrove(round, ranked, rankOf, wins) {
    Tischkarte as every panelled design does; this recomposes it:
 
      - the five figures in the sheet's order — Sessions, Siege, Siegquote,
-       Ø vergebene Wertung, Lieblingsspiel. The four numbers are the SAME nodes
+       Bewertet meist, Lieblingsspiel. The four figures are the SAME nodes
        views-member.js built (moved, so the DOM order is the visual order); the
        fifth is the favourite game's name, from the `memberStats` value the
        „Lieblingsspiel" tile prints, set to wrap (review U2) — never an ellipsis;
