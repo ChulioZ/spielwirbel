@@ -279,6 +279,46 @@ test('an address registered between request and confirm is caught, and the recor
   assert.equal(after.pendingEmail, null, 'a link that can never work was left offerable');
 });
 
+test('a reset link mailed to the OLD address stops working once the change is confirmed', async () => {
+  /* A reset link is bound to the account, not to the address it was mailed to,
+     so it would otherwise outlive the address change. Confirming the change
+     clears it, exactly as a password change already does. */
+  const a = await makeAccount();
+  await request(app).post('/api/account/forgot-password').send({ email: a.email });
+  const reset = outbox[outbox.length - 1];
+  assert.equal(reset.to, a.email, 'the reset link went somewhere else');
+  const m = reset.text.match(/\/r\?t=(p1\.[0-9a-f]+\.[A-Za-z0-9_-]+)/);
+  assert.ok(m, 'forgot-password mailed no /r link');
+
+  await changeEmail(a, { email: `${fresh()}@example.com`, currentPassword: PASSWORD });
+  assert.equal((await confirm(lastChangeToken())).status, 200);
+
+  const res = await request(app).post('/api/account/reset-password')
+    .send({ token: m[1], password: 'a different correct horse' });
+  assert.equal(res.status, 400, `the old reset link still worked: ${JSON.stringify(res.body)}`);
+  assert.equal(res.body.error, 'invalid_token');
+  // …and the password it would have set did not take: the old one still logs in.
+  const login = await request(app).post('/api/account/login')
+    .send({ login: (await repo.getUserById(a.id)).email, password: PASSWORD });
+  assert.equal(login.status, 200);
+});
+
+test('a reset link minted AFTER the change works — the clear is not a blanket refusal', async () => {
+  // Anti-vacuous partner of the case above: a fresh reset to the new address
+  // must still go through, or the fix would be locking people out of recovery.
+  const a = await makeAccount();
+  const next = `${fresh()}@example.com`;
+  await changeEmail(a, { email: next, currentPassword: PASSWORD });
+  assert.equal((await confirm(lastChangeToken())).status, 200);
+
+  await request(app).post('/api/account/forgot-password').send({ email: next });
+  const m = outbox[outbox.length - 1].text.match(/\/r\?t=(p1\.[0-9a-f]+\.[A-Za-z0-9_-]+)/);
+  assert.ok(m, 'no reset link went to the new address');
+  const res = await request(app).post('/api/account/reset-password')
+    .send({ token: m[1], password: 'a different correct horse' });
+  assert.equal(res.status, 200, JSON.stringify(res.body));
+});
+
 /* --------------------------------- cancel ---------------------------------- */
 
 test('DELETE clears the pending record and kills the link', async () => {
