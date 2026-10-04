@@ -77,7 +77,7 @@ const frontendGlobals = {
   // swr.js
   createSwrStore: 'readonly',
   // focus-trap.js
-  trapFocus: 'readonly', focusables: 'readonly', FOCUSABLE: 'readonly',
+  trapFocus: 'readonly', focusables: 'readonly', focusInto: 'readonly', FOCUSABLE: 'readonly',
   // page-lock.js
   lockPage: 'readonly', unlockPage: 'readonly',
   guardDragDismiss: 'readonly', DRAG_SLOP: 'readonly',

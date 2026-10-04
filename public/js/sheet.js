@@ -64,6 +64,18 @@ function openSheet(backdrop, onKey, onClose) {
     history.pushState(Object.assign({}, history.state, { sheet: true }), '');
     sheetHistory = true;
   }
+  // Initial focus (audit 2026-10-04 A1, WCAG 2.4.3): a sheet with no input of
+  // its own (score info, QR, remove person, the confirm dialog …) left focus on
+  // the opener BEHIND this aria-modal backdrop. One microtask late on purpose:
+  // a caller that focuses its input on the line after this call does so inside
+  // the opening gesture, the only place iOS raises the keyboard
+  // (.claude/rules/popover-vs-sheet-editors.md §2), and must run first and win.
+  // trapFocus above has already captured the opener as the restore target.
+  // No "is this still the active sheet?" check, deliberately: a sheet replaced
+  // or closed in the meantime is detached, and a detached node refuses focus()
+  // — measured, an `activeSheet.el === backdrop` guard here could be deleted
+  // with every spec green (.claude/rules/redundant-guards-make-each-other-untestable.md).
+  Promise.resolve().then(() => focusInto(backdrop, backdrop.querySelector('[role="dialog"]')));
 }
 
 // Remove the sheet DOM and release the focus trap. Ordering is load-bearing

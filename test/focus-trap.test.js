@@ -155,3 +155,81 @@ test('release() does not throw when the opener has left the document', () => {
   release();
   assert.equal(global.document.activeElement, a, 'focus is left alone rather than thrown at a detached node');
 });
+
+/* ---------------------------------------------------------------- focusInto
+
+   The INITIAL focus of an overlay (audit 2026-10-04 A1, WCAG 2.4.3) — the half
+   trapFocus deliberately never did: it only acts on a Tab, so a popover or a
+   sheet with no input of its own opened with focus still on the page behind it.
+   openSheet and openPopover call this once their caller has had its turn. */
+
+const { focusInto } = require('../public/js/focus-trap');
+
+// An element whose focus() can be refused, the way a browser refuses one that
+// is not rendered (display:none, visibility:hidden) — focusInto asks rather
+// than predicting from layout, so the double must be able to say no.
+function focusable(name, { takes = true, tabindex = null, hiddenFromAT = false } = {}) {
+  const el = {
+    name,
+    calls: [],
+    getAttribute: (attr) => (attr === 'tabindex' ? tabindex : null),
+    closest: (sel) => (hiddenFromAT && sel === '[aria-hidden="true"]' ? {} : null),
+    focus(opts) { el.calls.push(opts); if (takes) global.document.activeElement = el; },
+  };
+  return el;
+}
+
+function overlay(items, { active = { name: 'opener' } } = {}) {
+  global.document = { activeElement: active };
+  const attrs = {};
+  const box = {
+    name: 'dialog',
+    hasAttribute: (a) => a in attrs,
+    setAttribute: (a, v) => { attrs[a] = v; },
+    attrs,
+    focus() { global.document.activeElement = box; },
+  };
+  const container = {
+    querySelectorAll(sel) {
+      assert.equal(sel, FOCUSABLE, 'should query the shared focusable selector');
+      return items;
+    },
+    contains: (el) => items.includes(el) || el === box,
+  };
+  return { container, box };
+}
+
+test('focusInto leaves focus alone when the caller already put it inside', () => {
+  const [a, b] = [focusable('a'), focusable('b')];
+  const { container } = overlay([a, b], { active: b });
+  assert.equal(focusInto(container), b);
+  assert.equal(global.document.activeElement, b, 'the caller\'s own focus (an input, a heading) must win');
+  assert.equal(a.calls.length, 0, 'nothing else was even tried');
+});
+
+test('focusInto moves focus from outside to the first control that takes it', () => {
+  const gone = focusable('display-none', { takes: false });
+  const [a, b] = [focusable('a'), focusable('b')];
+  const { container } = overlay([gone, a, b]);
+  assert.equal(focusInto(container), a, 'a control the browser refuses is skipped, not stopped at');
+  assert.equal(global.document.activeElement, a);
+  // A popover tears itself down on a PAGE scroll, so the focus() that put the
+  // user inside it must not scroll the page to reveal it.
+  assert.deepEqual(a.calls, [{ preventScroll: true }]);
+});
+
+test('focusInto skips what Tab never reaches: tabindex="-1" and aria-hidden subtrees', () => {
+  const opt = focusable('lookup-option', { tabindex: '-1' });
+  const deco = focusable('decor', { hiddenFromAT: true });
+  const real = focusable('real');
+  const { container } = overlay([opt, deco, real]);
+  assert.equal(focusInto(container), real);
+  assert.equal(opt.calls.length + deco.calls.length, 0);
+});
+
+test('focusInto falls back to the dialog box itself when nothing inside can hold focus', () => {
+  const { container, box } = overlay([focusable('gone', { takes: false })]);
+  assert.equal(focusInto(container, box), box);
+  assert.equal(global.document.activeElement, box);
+  assert.equal(box.attrs.tabindex, '-1', 'programmatically focusable, but still not a Tab stop');
+});

@@ -35,7 +35,10 @@ function closePopover() {
   window.removeEventListener('resize', activePopover.onGone, true);
   window.removeEventListener('scroll', activePopover.onScroll, true);
   activePopover = null;
-  if (held && restoreTo && document.contains(restoreTo) && typeof restoreTo.focus === 'function') restoreTo.focus();
+  // `preventScroll`: since openPopover moves focus INTO the card (A1), a close
+  // caused by a page scroll now restores too — and a plain focus() would scroll
+  // the page back to the anchor, fighting the user's own scroll.
+  if (held && restoreTo && document.contains(restoreTo) && typeof restoreTo.focus === 'function') restoreTo.focus({ preventScroll: true });
   // AFTER the teardown and the focus restore, so a hook that reads the world
   // back — `aria-expanded` on the trigger, a deferred rebuild — sees the closed
   // state rather than the one it is being told about. Fired for EVERY exit
@@ -199,5 +202,12 @@ function openPopover(anchor, build, onClose) {
   window.addEventListener('scroll', onScroll, true);
   activePopover = { el, restoreTo, onDoc, onKey, onGone, onScroll, place, onClose };
   if (typeof attached === 'function') attached();
+  // Initial focus (audit 2026-10-04 A1, WCAG 2.4.3): the card is appended to the
+  // END of <body>, so with focus left on the anchor a keyboard user's next Tab
+  // walked the rest of the page — 13 Tabs from the game-detail owners chip
+  // before reaching the open menu. After `attached()`, so a caller's own focus
+  // (an editor's input, the badge card's heading) wins; a menu that moved none
+  // gets its first item. `restoreTo` was read above, before any of this.
+  focusInto(el);
   return { el, close };
 }
