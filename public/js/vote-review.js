@@ -30,21 +30,20 @@
 
 'use strict';
 
-/* One row: cover, title, the chosen face with its number (and, on a composed
-   card, its word). The accessible name leads with the game — the row's visible
-   text — then the rating, then what pressing it does. */
-function voteReviewRow(game, rating, composed) {
+/* One row: cover, title, the chosen face with its word — the same two things
+   the face on the card carries, and never its digit (#1530, see
+   vote-card-composed.js `voteMoodButton`). The accessible name leads with the
+   game — the row's visible text — then the word, then what pressing it does. */
+function voteReviewRow(game, rating) {
   const cover = game.image ? `style="background-image:url('${coverUrl(game.image, COVER_THUMB)}')"` : '';
   const rated = Number.isInteger(rating);
-  const spoken = !rated ? t('vote.reviewUnrated')
-    : composed ? t('vote.ratingLabelWord', { n: rating, max: RATING_MAX, word: voteSaidWord(rating) })
-      : t('vote.ratingLabel', { n: rating, max: RATING_MAX });
+  const spoken = rated ? voteSaidWord(rating) : t('vote.reviewUnrated');
   const b = h(`<button class="vote-review__row" type="button" aria-label="${esc(t('vote.reviewRow', { title: game.title, rating: spoken }))}">
       <span class="vote-review__cover" ${cover} aria-hidden="true">${game.image ? '' : coverPlaceholder(game)}</span>
       <span class="vote-review__game">${esc(game.title)}</span>
       <span class="vote-review__rating${rated ? '' : ' is-empty'}"${rated ? ` data-n="${rating}"` : ''} aria-hidden="true">${rated
-    ? `<i class="ti ${ratingFace(rating)}"></i><span class="vote-review__n">${rating}</span>${composed ? `<span class="vote-review__word">${esc(voteSaidWord(rating))}</span>` : ''}`
-    : `<span class="vote-review__n">–</span>`}</span>
+    ? `<i class="ti ${ratingFace(rating)}"></i><span class="vote-review__word">${esc(spoken)}</span>`
+    : '<span class="vote-review__word">–</span>'}</span>
       <i class="ti ti-pencil vote-review__go" aria-hidden="true"></i>
     </button>`);
   // The same traffic-light variable the selected face carries, so the chip in
@@ -104,7 +103,7 @@ function voteReviewCard({ composed, person, who, roundName, handoff, games, rati
   const list = root.querySelector('.vote-review__list');
   games.forEach((game, i) => {
     const li = document.createElement('li');
-    const row = voteReviewRow(game, ratingOf(game), composed);
+    const row = voteReviewRow(game, ratingOf(game));
     row.addEventListener('click', () => onJump(i));
     li.appendChild(row);
     list.appendChild(li);

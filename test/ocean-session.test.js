@@ -195,18 +195,18 @@ test('„in der Tiefe" counts the cards still below, and stands down on the last
   assert.equal(q(dom, '.ocean-deep'), null);
 });
 
-test('the faces carry their words, and Klassisch keeps its card and plain faces', async (t) => {
+test('the faces carry their words, and Klassisch keeps its card', async (t) => {
   const ocean = await wizard(t, 'ocean');
   const faces = qa(ocean, '.rating .mood');
   assert.equal(faces.length, 5);
   assert.equal(faces[0].querySelector('.mood__word').textContent, 'gar nicht');
   assert.equal(faces[4].querySelector('.mood__word').textContent, 'unbedingt');
-  assert.equal(faces[3].getAttribute('aria-label'), '4 von 5 – gern');
+  assert.equal(faces[3].getAttribute('aria-label'), 'gern');
 
   const klassisch = await wizard(t, null);
   assert.equal(q(klassisch, '.vote--ocean'), null);
   assert.equal(q(klassisch, '.ocean-raters'), null);
-  assert.equal(q(klassisch, '.mood__word'), null);
+  assert.equal(qa(klassisch, '.rating .mood__word').length, 5, 'Klassisch prints a word under every face (#1530)');
   assert.ok(q(klassisch, '.vote__who'), 'Klassisch keeps its own card');
 });
 
@@ -384,15 +384,17 @@ test('several tables: Ocean takes the one-screen split, one card per table', asy
 
 // ------------------------------------------------------------------ stylesheet
 
-test('the vote card\'s back control and faces meet the 44px token; only the two ends print a word', () => {
+test('the vote card\'s back control and faces meet the 44px token; every face prints its word', () => {
   const undo = bodyFor('.vote--ocean .vote__undo');
   assert.equal(declaredValue(undo, 'width'), 'var(--target-button)');
   assert.equal(declaredValue(undo, 'height'), 'var(--target-button)');
   const mood = bodyFor('.vote--ocean .rating .mood');
   assert.equal(declaredValue(mood, 'min-height'), '96px');
   assert.equal(declaredValue(mood, 'min-width'), 'var(--target-button)');
-  const middle = bodyFor('.vote--ocean .rating .mood:not(:first-child):not(:last-child) .mood__word');
-  assert.equal(declaredValue(middle, 'visibility'), 'hidden', 'hidden, not removed: the columns keep one height');
+  // Every face prints its word since #1530 (operator decision): no rule hides the
+  // middle three any more (test/vote-scale-no-digits.test.js sweeps every sheet).
+  assert.ok(!RULES.some(([s]) => s.trim() === GATE + '.vote--ocean .rating .mood:not(:first-child):not(:last-child) .mood__word'),
+    'the middle three words are hidden again');
 });
 
 test('every inline score pill is pinned back into the flow', () => {

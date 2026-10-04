@@ -1169,15 +1169,13 @@ I18N.de = {
   'vote.back': 'Zurück',
   'vote.who': 'Es bewertet:',
   'vote.question': 'Wie gern möchtest du das spielen?',
-  // Spoken label for the 1–5 mood buttons — the visible face/number alone says
-  // nothing about the scale to a screen reader (#145).
-  'vote.ratingLabel': '{n} von {max}',
+  // The word under each mood face, lowest first — and, since #1530, the face's
+  // whole accessible name: no digit is shown or spoken (#145, #1530).
   'vote.scaleLow': 'gar nicht',
   'vote.scaleHigh': 'unbedingt',
   'vote.scale2': 'eher nicht',
   'vote.scale3': 'wäre okay',
   'vote.scale4': 'gern',
-  'vote.ratingLabelWord': '{n} von {max} – {word}',
   'vote.rates': '{name} wertet',
   'vote.gameOf': 'Spiel {n} von {total}',
   'vote.personOf': 'Person {n} von {total}',
@@ -1256,7 +1254,7 @@ I18N.de = {
   'result.distLabel': 'Verteilung der Wertungen',
   'result.openGame': 'Zum Spiel',
   'result.clearChoice': 'Auswahl aufheben',
-  'result.barTitle': '{c}× die Note {r}',
+  'result.barTitle': '{c}× „{word}“',
   'score.infoBody': 'Der Score ist mehr als der Durchschnitt. Wenn jemand ein Spiel gar nicht spielen möchte, zählt das schwerer als eine gute Bewertung von jemand anderem — damit am Ende gespielt wird, worauf alle Lust haben.',
   'score.infoThin': 'Ein Spiel mit erst wenigen Bewertungen wird vorsichtiger eingeschätzt — es braucht ein paar Sessions, bis sich sein Score voll durchsetzt.',
   'score.infoPlays': 'Ein Spiel, das ihr immer wieder auf den Tisch legt, wird deutlich besser eingeschätzt — auch ohne Bewertungen.',
@@ -1870,7 +1868,7 @@ I18N.de = {
   'landing.hero.or': 'oder',
   'landing.hero.registerLink': 'kostenlos registrieren',
   'landing.shot.shelfAlt': 'Screenshot: das Spielregal einer Runde in Spielwirbel – Spiele als Kacheln mit ihrem Spielwirbel-Score, daneben die Navigation zu Start, Regal, Chronik und Pokalen.',
-  'landing.shot.voteAlt': 'Screenshot: die Abstimmung in Spielwirbel – ein ausgelostes Spiel mit der Frage „Wie gern möchtest du das spielen?“ und einer Skala aus fünf Gesichtern von 1 („gar nicht“) bis 5 („unbedingt“).',
+  'landing.shot.voteAlt': 'Screenshot: die Abstimmung in Spielwirbel – ein ausgelostes Spiel mit der Frage „Wie gern möchtest du das spielen?“ und fünf Gesichtern, jedes mit seinem Wort, von „gar nicht“ bis „unbedingt“.',
   'landing.shot.resultAlt': 'Screenshot: das Ergebnis einer Session in Spielwirbel – oben das gespielte Spiel mit dem Stempel „Gespielt“ und dem Gewinner, darunter der Beginn der Wertung mit dem Spielwirbel-Score des Siegerspiels.',
   'landing.desktop.alt': 'Screenshot: die Startseite einer Runde in Spielwirbel auf einem breiten Bildschirm – links die Navigation mit dem Knopf zum Start einer Session, daneben das zuletzt gespielte Spiel, ein Vorschlag, der Rundenpuls, das Regal, die Pokale und die Chronik.',
   'landing.desktop.caption': 'Auf dem großen Bildschirm genauso zu Hause wie auf dem kleinen.',

@@ -160,15 +160,14 @@ test('Ocean: the detail is three columns — the cover over its facts, the story
   assert.equal(dom.app.querySelector('.gd-menu'), null, 'the „…" menu duplicates the panel');
 });
 
-test('Ocean: each rater\'s average is a bubble on the scale\'s rung', async (t) => {
+test('Ocean: each rater is a face and a name, with no numeric bubble (#1530)', async (t) => {
   const { dom } = boot(t, 'ocean');
   await dom.call('showGameDetail', RID, 'g1');
-  const ns = [...dom.app.querySelectorAll('.rater__n')];
-  assert.equal(ns.length, 2);
-  const rungs = ns.map((n) => [n.textContent, n.dataset.stop]).sort();
-  // Anna gave a 5, Ben a 2 — the rung is rampStop's, so it cannot disagree with
-  // the score pill's own ramp.
-  assert.deepEqual(rungs, [['2,0', '2'], ['5,0', '5']]);
+  const tiles = [...dom.app.querySelectorAll('.rater')];
+  assert.equal(tiles.length, 2);
+  // Anna gave a 5, Ben a 2: the faces say so, and nothing prints the digit.
+  assert.deepEqual(tiles.map((el) => el.querySelector('.sr-only').textContent).sort(), ['eher nicht', 'unbedingt']);
+  for (const el of tiles) assert.doesNotMatch(el.textContent, /\d/);
 });
 
 test('Klassisch: the detail keeps the spread, the cover pill and the stamps', async (t) => {
