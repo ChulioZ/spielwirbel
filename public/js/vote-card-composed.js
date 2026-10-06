@@ -171,7 +171,7 @@ function composedVoteCard({ person, count, roundName, gameN, gameTotal, secret, 
         ${secret ? `<div class="vote__secret"><i class="ti ti-eye-off" aria-hidden="true"></i> ${esc(t('vote.handoverSub'))}</div>` : ''}
       </div>
       <div class="vote__card">
-        <div class="vote__img" ${imgStyle}>${coverPlaceholder(game)}</div>
+        <div class="vote__img${isThumbCover(game.image) ? ' cover--thumb' : ''}" ${imgStyle}>${coverPlaceholder(game)}</div>
         <h1 class="vote__title" tabindex="-1">${esc(game.title)}</h1>
         ${meta ? `<p class="vote__meta">${esc(meta)}</p>` : ''}
         <div class="vote__q" id="voteQ">${esc(t(designIs('bruecke') ? 'vote.questionBruecke' : 'vote.question'))}</div>

@@ -144,7 +144,7 @@ function phHeroCompose(round, hero) {
    other place to say it. */
 function phLead({ game, winnerNames, ending, when, score, pot, note = '' }) {
   const cover = game.image
-    ? `<span class="ph-lead__cover" style="background-image:url('${coverUrl(game.image, COVER_HERO)}')"></span>`
+    ? `<span class="ph-lead__cover${isThumbCover(game.image) ? ' cover--thumb' : ''}" style="background-image:url('${coverUrl(game.image, COVER_HERO)}')"></span>`
     : `<span class="ph-lead__cover">${coverPlaceholder(game)}</span>`;
   const MARK = '\u0000';
   let headline;

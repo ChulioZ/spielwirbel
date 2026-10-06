@@ -933,6 +933,28 @@
   :root[data-design="programmheft"] .ph-lead__cover { aspect-ratio: 3 / 2; }
   :root[data-design="programmheft"] .ph-lead__headline { font-size: var(--display-4); }
 }
+/* A thumbnail-only cover (#1542) gets the hero's two layers instead of
+   `cover`: at 3:2 the lead drew BGG's 200px thumbnail 567px wide (2.8x). The
+   blurred copy fills the frame and the sharp cover sits on it at the shared
+   `.cover--thumb::after` cap (styles.css). The span's own `cover` paint stays
+   underneath, hidden by the opaque blurred layer. */
+:root[data-design="programmheft"] .ph-lead__cover.cover--thumb::before,
+:root[data-design="programmheft"] .ph-lead__cover.cover--thumb::after {
+  content: '';
+  position: absolute;
+  background-image: inherit;
+  background-position: center;
+}
+:root[data-design="programmheft"] .ph-lead__cover.cover--thumb::before {
+  inset: 0;
+  background-size: cover;
+  filter: blur(22px);
+  transform: scale(1.15);
+}
+:root[data-design="programmheft"] .ph-lead__cover.cover--thumb::after {
+  background-size: contain;
+  background-repeat: no-repeat;
+}
 :root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-lead__winner { color: var(--vermilion); font-size: var(--display-6); }
 :root[data-design="programmheft"] .ph-lead__facts { display: flex; flex-wrap: wrap; gap: 0 var(--space-5); padding-block: var(--space-2); }
 :root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-lead__facts { border-block: var(--rule-col) solid var(--ink); }
