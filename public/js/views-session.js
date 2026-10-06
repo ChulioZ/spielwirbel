@@ -376,8 +376,9 @@ function showStartSession(round, prefill) {
      its entering rows get `is-set` and a stagger index capped at 9 instead of
      the throw's mark and direction, and the rows are SET in from the left
      (programmheft.css). Die Brücke's B10.2 (#1248) takes the same gate and the
-     same `is-set` mark — its titles drive in from below (bruecke.css). */
-  const setLook = ph || bruecke;
+     same `is-set` mark — its titles drive in from below (bruecke.css) — and so
+     does Forest's F10.2 (#1476): its covers drop onto the stump (forest.css). */
+  const setLook = ph || bruecke || forest;
   let potSeen = null;
   const potThrows = (games) => {
     const marks = new Map();
