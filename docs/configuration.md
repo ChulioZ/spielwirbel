@@ -587,9 +587,11 @@ rather than falling back to the default.
 
 The payload is rebuilt by the background scheduler and served from memory —
 nothing is computed per request and nothing is stored — and
-`PUBLIC_STATS_RESOLVE_MAX` (default 30 since issue #1557, was 20) caps how many
-*new* provider lookups one rebuild may make — the podiums spend first, the
-favourite cards (below) whatever is left. Only games that could actually reach a podium are resolved
+`PUBLIC_STATS_RESOLVE_MAX` (default 50 since issue #1424, 30 since #1557, was
+20) caps how many *new* provider lookups one rebuild may make — the podiums
+spend first (up to five candidates each, for a list of three), the favourite
+cards (below) whatever is left. A rebuild that hits the cap publishes shorter
+lists and the next one completes them. Only games that could actually reach a podium are resolved
 (ranking happens on the raw numbers first) and successful lookups are memoized,
 so a steady state costs no upstream requests.
 

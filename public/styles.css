@@ -4527,6 +4527,79 @@ a.stats-card__title:focus-visible { text-decoration: underline; }
   .landing-stats .stats-cards { --walk-bleed: 14px; }
 }
 .stats-card__value { font-size: var(--text-sm); }
+/* Places 2–3 of a card's ranked list (#1424): compact rows on their own line
+   under the leader. The card wraps so the list takes the full width, and packs
+   its lines to the top so a card holding one entry next to one holding three
+   does not float its leader in the middle of the taller grid row. The rank
+   column is the cover's width, so every title in a card starts on one edge. */
+.stats-card { flex-wrap: wrap; align-content: flex-start; }
+/* …and since the card now wraps, the leader's body needs a zero basis: at
+   `auto` a long label („Meistgespielt im Oktober 2026") made the body wider
+   than the room beside the cover, so it wrapped UNDER the cover instead of
+   shrinking beside it as it did when the card was a single line. */
+.stats-card__body { flex: 1 1 0; }
+.stats-card__more {
+  flex: 1 0 100%;
+  list-style: none;
+  margin: 0;
+  padding: 8px 0 0;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.stats-card__row { display: flex; align-items: baseline; gap: 12px; min-width: 0; }
+.stats-card__rank {
+  flex: 0 0 56px;
+  text-align: center;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+}
+.stats-card__row-body { display: flex; flex-direction: column; min-width: 0; }
+.stats-card__row-title {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+a.stats-card__row-title { color: inherit; text-decoration: none; }
+a.stats-card__row-title:hover,
+a.stats-card__row-title:focus-visible { text-decoration: underline; }
+.stats-card__row-value { font-size: var(--text-xs); }
+/* A bar list (#1424) — only Das Programmheft renders one (views-stats.js
+   statsBarCard), and its sheet gives it the ink. This is the structure alone:
+   rank, title, a bar whose length is the entry's share of the leader's count,
+   and the count. Below 520px the bar drops under the title so the title keeps
+   room for a name. */
+/* nowrap is load-bearing: the base card wraps, and a WRAPPING column sizes
+   each flex line to its content — so the rows stopped wherever their text did
+   (measured 168px short of the card's edge) instead of spanning it. */
+.stats-card--bars { flex-direction: column; flex-wrap: nowrap; align-items: stretch; gap: 8px; }
+.stats-card__bars { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.stats-card__bar-row {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 32px;
+}
+.stats-card__bar-row .stats-card__rank { text-align: left; }
+.stats-card__bar { display: block; height: 12px; width: calc(var(--stats-share, 0) * 100%); background: var(--brand); }
+.stats-card__bar-row .stats-card__row-value { font-size: var(--text-sm); text-align: right; white-space: nowrap; }
+@media (max-width: 519px) {
+  .stats-card__bar-row {
+    grid-template-columns: 26px minmax(0, 1fr) auto;
+    grid-template-areas: "rank title value" ". bar bar";
+    row-gap: 4px;
+  }
+  .stats-card__bar-row .stats-card__rank { grid-area: rank; }
+  .stats-card__bar-row .stats-card__row-title { grid-area: title; }
+  .stats-card__bar-row .stats-card__row-value { grid-area: value; }
+  .stats-card__bar { grid-area: bar; }
+}
 .stats-note { font-size: var(--text-sm); margin: 0; }
 /* ===== Home dashboard zones (#842) =====
    The logged-in home screen is four zones: the greeting band, the sessions

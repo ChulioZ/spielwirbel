@@ -317,7 +317,8 @@
   .marker-card__name,
   .badge__name,
   .badge-moment__title,
-  .badge-card__name
+  .badge-card__name,
+  .stats-card__row-title
 ) {
   font-family: var(--font);
 }

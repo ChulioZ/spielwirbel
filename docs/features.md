@@ -953,6 +953,11 @@ What the app does, in detail. For a short overview see the
   average, counting only games that already clear the best-rated card's
   evidence bar, and only once at least three such games across two accounts
   carry it. The names are BoardGameGeek's own, so they stay in English.
+  Every card is a short ranked list rather than one winner (issue #1424): the
+  leader with its cover, then places 2 and 3 as compact rows. Each place clears
+  the card's own minimum, so a card may show fewer than three and is never
+  padded. Under Das Programmheft the four „Meistgespielt" cards are drawn as
+  bars, each sized as a share of the leader's sessions.
   The section appears on the logged-out landing
   page, on a shareable `/entdecken` screen and as a home-dashboard tile showing
   the first few rankings with their cover art —
