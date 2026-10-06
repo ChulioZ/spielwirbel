@@ -56,8 +56,9 @@ two bounds** — a tighter per-IP cap on that one route
 (`REGISTER_RATE_LIMIT_MAX`) plus a global daily send budget in `lib/mail.js`
 (`MAIL_DAILY_MAX`) that bounds the mailbox quota itself rather than the mechanism
 abusing it. See `.claude/rules/bounding-bulk-registration-mail.md`. The third
-option, reaping expired unverified accounts, was **not** taken: the squatting
-half is still open.
+option, reaping expired unverified accounts, was not part of #448; it shipped in
+#1544 (`purgeUnverifiedAccounts`, 7 days after sign-up), which closes the
+squatting half.
 
 ## Every skip must stay silent — including the cooldown one
 

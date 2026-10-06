@@ -3563,6 +3563,31 @@ module.exports = function repoContract(repo) {
     assert.deepEqual((await repo.getUserById(live.id)).pendingEmail, live.pendingEmail);
   });
 
+  test('listStaleUnverifiedUsers lists only explicitly-unverified, non-demo accounts at or before the cutoff', async () => {
+    // The caller ERASES what this returns (#1544), so every exclusion is a
+    // test: a row this sweep cannot vouch for must be kept, not deleted.
+    const cutoff = '2026-09-29T10:00:00.000Z';
+    const at = (createdAt, over = {}) => repo.createUser(userFields({ createdAt, ...over }));
+    const old = await at('2026-09-01T00:00:00.000Z');
+    const edge = await at(cutoff);
+    const young = await at('2026-09-29T10:00:00.001Z');
+    const verified = await at('2026-09-01T00:00:00.000Z', { emailVerified: true });
+    // No flag at all: not something this sweep can vouch for.
+    const flagless = await at('2026-09-01T00:00:00.000Z', { emailVerified: undefined });
+    const demo = await at('2026-09-01T00:00:00.000Z', { demo: true, demoExpiresAt: '2099-01-01T00:00:00.000Z' });
+    const undated = await at('');
+
+    const ids = await repo.listStaleUnverifiedUsers(cutoff);
+    assert.ok(Array.isArray(ids));
+    assert.ok(ids.includes(old.id), 'a week-old unverified account');
+    assert.ok(ids.includes(edge.id), 'created exactly at the cutoff');
+    assert.ok(!ids.includes(young.id), 'one millisecond younger than the cutoff');
+    assert.ok(!ids.includes(verified.id), 'a verified account');
+    assert.ok(!ids.includes(demo.id), 'a demo account belongs to the demo sweep');
+    assert.ok(!ids.includes(undated.id), 'a row without createdAt is kept, not read as ancient');
+    assert.ok(!ids.includes(flagless.id), 'a row without an explicit false flag');
+  });
+
   test('getUserById returns a snapshot: mutating it does not change the store', async () => {
     const user = await repo.createUser(userFields());
     const snap = await repo.getUserById(user.id);

@@ -274,12 +274,16 @@ lib/
                      the moderation-log retention purge (issue #311), the
                      Freundeskreis feed's 12-month purge (issue #1357), the
                      expired pending-e-mail sweep (pending-email.js), the
-                     public-statistics rebuild (issue #564) and the BGG
+                     never-verified-account erasure (unverified-accounts.js,
+                     issue #1544), the public-statistics rebuild (issue #564) and the BGG
                      corpus enrichment pass (issue #681)
   pending-email.js   deletes an unconfirmed new e-mail address once its 24 hours
                      are up (issue #1076) — the routes already refused it; this
                      makes the privacy policy's „längstens 24 Stunden" true of
                      the stored row, not only of the link
+  unverified-accounts.js erases an account whose e-mail address is still
+                     unconfirmed 7 days after sign-up (issue #1544), through
+                     eraseAccount — frees the address and username it held
   shutdown.js        the SIGTERM/SIGINT drain server.js installs — stops the
                      scheduler, lets in-flight requests finish, destroys the
                      pool, with a force-exit fallback. A factory taking its

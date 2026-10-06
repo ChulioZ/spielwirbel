@@ -98,10 +98,12 @@ discards the whole uncommitted change
   (`.claude/rules/keep-legal-docs-current.md`) — it must never arrive as a side
   effect of a rate-limiting change.
 - **No reaper for expired unverified accounts.** The *squatting* half (a
-  registration parks someone's address **and** username with nothing reaping it)
-  is untouched and remains open. A reaper must key off the **account's** age, not
-  the current token's expiry, or a user who legitimately resends (#435) is deleted
-  out from under themselves.
+  registration parks someone's address **and** username) was left open here and
+  shipped separately in #1544: `purgeUnverifiedAccounts`
+  (`lib/unverified-accounts.js`) erases a never-verified account **7 days after
+  `createdAt`**. It keys off the **account's** age, not the current token's
+  expiry, so a resend (#435) cannot extend it — and a user who resends on day 6
+  still has a day to click.
 - **The counters are per process and in memory**, so each instance carries its own
   budget and a restart clears it — the same caveat as the rate limiters, and the
   reason a shared limiter store would be a prerequisite of a second replica (#215
