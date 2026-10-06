@@ -219,3 +219,78 @@ test('the BGG corpus answers without a provider hop, and an outage leaves the ca
   assert.equal(built.names.favDesigner[0].name, 'Corpus Designer');
   assert.equal(built.names.favCategory[0].name, 'Abstract');
 });
+
+/* ----------------------- the games behind a name (#1560) ----------------------- */
+
+test('each favourite name carries every game behind it, best first, named by the provider', async () => {
+  openFloors();
+  process.env.PUBLIC_STATS_MIN_NAME_GAMES = '1';
+  stubProvider({
+    g1: { designers: ['List Designer'], imageUrl: 'https://cf.geekdo-images.com/g1.jpg' },
+    g2: { designers: ['List Designer'] },
+    g3: { designers: ['List Designer'] },
+  });
+  await seedRated([{ id: 'g1', rating: 3 }, { id: 'g2', rating: 5 }, { id: 'g3', rating: 1 }]);
+
+  const built = await publicStats.rebuild();
+  const entry = built.names.favDesigner[0];
+  assert.equal(entry.name, 'List Designer');
+  assert.equal(entry.list.length, entry.games, 'the count on the trigger and the rows agree');
+  assert.deepEqual(entry.list.map((g) => g.title), ['Provider-Titel g2', 'Provider-Titel g1', 'Provider-Titel g3'],
+    'best score first, and the PROVIDER’s title rather than the typed one');
+  assert.equal(entry.list[1].image, 'https://cf.geekdo-images.com/g1.jpg');
+  assert.equal(entry.list[0].image, null);
+  assert.equal(entry.list[0].url, 'https://boardgamegeek.com/boardgame/g2');
+  for (const g of entry.list) {
+    assert.equal(g.score, Math.round(g.score * 10) / 10, 'one decimal, like bestRated');
+    assert.deepEqual(Object.keys(g).sort(), ['image', 'score', 'title', 'url']);
+  }
+  assert.ok(entry.list[0].score > entry.list[1].score && entry.list[1].score > entry.list[2].score);
+  assert.ok(!JSON.stringify(built).includes('GETIPPT'), 'no user-typed byte reaches a list');
+});
+
+test('a corpus-answered game is named from the corpus, with a vouched-for cover and a BGG link', async () => {
+  openFloors();
+  process.env.PUBLIC_STATS_MIN_NAME_GAMES = '1';
+  bgg.detail = async () => ({ title: null });
+  await seedRated([{ id: '911', rating: 5 }, { id: '912', rating: 4 }]);
+  await repo.replaceCorpus([
+    { externalId: '911', name: 'Corpus Spiel', rank: 1 },
+    { externalId: '912', name: 'Anderes Spiel', rank: 2 },
+  ], {});
+  await repo.updateCorpusEntries([
+    { externalId: '911', enrichedAt: '2026-10-01T00:00:00.000Z', info: { designers: ['Corpus Designer'], categories: [], mechanics: [], imageUrl: 'https://cf.geekdo-images.com/911.jpg' } },
+    // A cover no provider vouches for degrades to the coverless row.
+    { externalId: '912', enrichedAt: '2026-10-01T00:00:00.000Z', info: { designers: ['Corpus Designer'], categories: [], mechanics: [], imageUrl: 'https://evil.example/x.jpg' } },
+  ]);
+  process.env.PUBLIC_STATS_RESOLVE_MAX = '0';
+
+  const built = await publicStats.rebuild();
+  const entry = built.names.favDesigner[0];
+  assert.deepEqual(entry.list.map((g) => [g.title, g.image, g.url]), [
+    ['Corpus Spiel', 'https://cf.geekdo-images.com/911.jpg', 'https://boardgamegeek.com/boardgame/911'],
+    ['Anderes Spiel', null, 'https://boardgamegeek.com/boardgame/912'],
+  ]);
+});
+
+test('a name with a game nobody can name keeps its card but loses its list', async () => {
+  openFloors();
+  process.env.PUBLIC_STATS_MIN_NAME_GAMES = '1';
+  bgg.detail = async () => ({ title: null });
+  await seedRated([{ id: '921', rating: 5 }, { id: '922', rating: 3 }]);
+  await repo.replaceCorpus([
+    { externalId: '921', name: 'Benannt', rank: 1 },
+    { externalId: '922', name: '   ', rank: 2 },
+  ], {});
+  await repo.updateCorpusEntries([
+    { externalId: '921', enrichedAt: '2026-10-01T00:00:00.000Z', info: { designers: ['Half Designer'], categories: [], mechanics: [] } },
+    { externalId: '922', enrichedAt: '2026-10-01T00:00:00.000Z', info: { designers: ['Half Designer'], categories: [], mechanics: [] } },
+  ]);
+  process.env.PUBLIC_STATS_RESOLVE_MAX = '0';
+
+  const built = await publicStats.rebuild();
+  const entry = built.names.favDesigner[0];
+  assert.equal(entry.name, 'Half Designer');
+  assert.equal(entry.games, 2, 'the average still counts both games');
+  assert.equal(entry.list, undefined, 'never a blank row: no list at all');
+});

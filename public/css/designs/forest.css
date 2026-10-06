@@ -318,7 +318,8 @@
   .badge__name,
   .badge-moment__title,
   .badge-card__name,
-  .stats-card__row-title
+  .stats-card__row-title,
+  .stats-games__title
 ) {
   font-family: var(--font);
 }

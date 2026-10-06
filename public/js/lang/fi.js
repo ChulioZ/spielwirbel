@@ -1405,6 +1405,9 @@ I18N.fi = {
   'stats.favMechanic': 'Suosikkimekaniikka',
   'stats.favGamesOne': 'Pisteet {score} — {n} pelistä',
   'stats.favGames': 'Pisteet {score} — {n} pelistä',
+  // The popup listing the games behind a favourite name (#1560): its title, then each game's score.
+  'stats.favListTitle': '{label} · {name}',
+  'stats.favListScore': 'Pisteet {score}',
   'stats.ratedPlaysOne': '{rated} · {n} sessio',
   'stats.ratedPlays': '{rated} · {n} sessiota',
   'stats.counter.players': 'pelaajaa',

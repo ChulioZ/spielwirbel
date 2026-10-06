@@ -61,9 +61,14 @@ test('nothing else in the sheet re-declares word-break, except the one that mean
      syllable breaking on that component alone. Enumerating the overrides here
      means a new one arrives as a red test rather than as a ragged chip nobody
      screenshots. `.popover__head` is deliberate: it holds the account's e-mail
-     address, a single unbreakable Latin token that must wrap somewhere. */
+     address, a single unbreakable Latin token that must wrap somewhere.
+
+     It is scoped OFF the editor head (#1560): the designs that draw the
+     form-sheet popover reuse `.popover__head` for its title, and `break-all`
+     there split every title mid-word — „UWE R / OSENBERG" in Der Tisch's 300px
+     card. A title is words, not an address, so it wraps at spaces. */
   const setters = RULES
     .filter(([, body]) => declaredValue(body, 'word-break'))
     .map(([sel]) => sel);
-  assert.deepEqual(setters, [':lang(ko)', '.popover__head']);
+  assert.deepEqual(setters, [':lang(ko)', '.popover__head:not(.popover__head--editor)']);
 });

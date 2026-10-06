@@ -1437,6 +1437,9 @@ I18N.nl = {
   'stats.favMechanic': 'Favoriete mechaniek',
   'stats.favGamesOne': 'Score {score} — uit {n} spel',
   'stats.favGames': 'Score {score} — uit {n} spellen',
+  // The popup listing the games behind a favourite name (#1560): its title, then each game's score.
+  'stats.favListTitle': '{label} · {name}',
+  'stats.favListScore': 'Score {score}',
   'stats.ratedPlaysOne': '{rated} · {n} sessie',
   'stats.ratedPlays': '{rated} · {n} sessies',
   'stats.counter.players': 'spelers',

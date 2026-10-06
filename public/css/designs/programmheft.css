@@ -306,7 +306,8 @@
   .rs-section__h,
   .friends-section__h,
   .k-band__h,
-  .stats-card__row-title
+  .stats-card__row-title,
+  .stats-games__title
 ) {
   font-family: var(--font);
 }

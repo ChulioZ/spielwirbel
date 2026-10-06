@@ -1379,6 +1379,9 @@ I18N.ko = {
   'stats.favMechanic': '최애 메커니즘',
   'stats.favGamesOne': '점수 {score} — 게임 {n}개 기준',
   'stats.favGames': '점수 {score} — 게임 {n}개 기준',
+  // The popup listing the games behind a favourite name (#1560): its title, then each game's score.
+  'stats.favListTitle': '{label} · {name}',
+  'stats.favListScore': '점수 {score}',
   'stats.ratedPlaysOne': '{rated} · 세션 {n}회',
   'stats.ratedPlays': '{rated} · 세션 {n}회',
   'stats.counter.players': '명의 참가자',

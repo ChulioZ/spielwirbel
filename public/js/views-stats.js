@@ -97,8 +97,10 @@ const STATS_PODIUMS = [
 
 /* The three favourites (#1557): a NAME rather than a game, so they live under
    the payload's own `names` key and are drawn after the six game podiums. The
-   entry is `{ name, score, games }` — handed to statsCard as its title with no
-   cover and no link, which is what the no-cover placeholder is for.
+   entry is `{ name, score, games, list? }` — handed to statsCard as its title
+   with no cover and no link, which is what the no-cover placeholder is for.
+   `list` (#1560) is every game the average was computed from; when present,
+   the count line becomes the button that opens it (openStatsGames).
 
    Ranked on the Spielwirbel-Score, so they carry the same ⓘ as `bestRated`.
    The names are BGG's own (in English, like the shelf profile shows them), so
@@ -110,6 +112,7 @@ const STATS_FAVOURITES = [
 ].map((f) => ({
   ...f,
   info: 'score',
+  games: true,
   line: (e) => tn(e.games, 'stats.favGamesOne', 'stats.favGames', { score: fmtAvg(e.score) }),
 }));
 
@@ -181,6 +184,69 @@ function statsTitle(entry, cls) {
     : `<span class="${cls}">${esc(entry.title)}</span>`;
 }
 
+/* An entry's value line. For a favourite whose payload lists its games
+   (#1560), the line is the button that opens them — the count is the obvious
+   handle, and the list explains the average. It names the card and the rank
+   rather than carrying the list, so the click handler reads the games from the
+   payload it was rendered from (wireStatsGames). Without a list it stays the
+   plain text it always was, which is also every podium's markup, unchanged. */
+function statsValue(podium, e, cls, rank) {
+  const text = esc(podium.line(e));
+  if (!podium.games || !Array.isArray(e.list) || !e.list.length) {
+    return `<span class="${cls} muted">${text}</span>`;
+  }
+  return `<button type="button" class="${cls} stats-card__games muted" data-stats-fav="${esc(podium.key)}" data-stats-rank="${rank}" aria-haspopup="dialog" aria-expanded="false">${text}</button>`;
+}
+
+/* The games behind one favourite name (#1560). Through openEditor, so it is an
+   anchored popover from 860px and a sheet below it, with Escape, Back, the
+   backdrop and focus restoration included (.claude/rules/popover-vs-sheet-editors.md).
+   Read-only, like the badge card. Covers are decorative (the title beside
+   each is the name); titles link out to the provider like every stats title. */
+function openStatsGames(btn, fav, entry) {
+  const title = t('stats.favListTitle', { label: t('stats.' + fav.key), name: entry.name });
+  btn.setAttribute('aria-expanded', 'true');
+  openEditor(btn, 'stats-games', title, (el) => {
+    // Klassisch's popover is a bare <div> with no head; the designs that draw
+    // the form-sheet popover (and every sheet) already carry a titled one.
+    const bare = el.classList.contains('popover') && !el.querySelector('.popover__head');
+    if (bare) {
+      el.setAttribute('role', 'dialog');
+      el.setAttribute('aria-label', title);
+    }
+    const rows = entry.list.map((g) => `
+      <li class="stats-games__row">
+        ${g.image
+    ? `<img class="stats-games__cover" src="${esc(coverUrl(g.image, COVER_THUMB))}" alt="" loading="lazy" />`
+    : '<span class="stats-games__cover stats-games__cover--none" aria-hidden="true"></span>'}
+        <span class="stats-games__body">
+          ${statsTitle(g, 'stats-games__name')}
+          <span class="stats-games__score muted">${esc(t('stats.favListScore', { score: fmtAvg(g.score) }))}</span>
+        </span>
+      </li>`).join('');
+    const body = h(`<div class="stats-games">
+        ${bare ? `<h2 class="stats-games__title">${esc(title)}</h2>` : ''}
+        <ol class="stats-games__list">${rows}</ol>
+      </div>`);
+    el.appendChild(body);
+    const first = body.querySelector('a, button');
+    // After the container is live — focus() on a detached node does nothing.
+    return () => { if (first) first.focus(); };
+  }, () => btn.setAttribute('aria-expanded', 'false'));
+}
+
+/* One delegated listener per mounted block, closing over the payload the block
+   was rendered from, so the list a click opens is the one whose count it shows. */
+function wireStatsGames(root, stats) {
+  root.addEventListener('click', (ev) => {
+    const btn = ev.target.closest('[data-stats-fav]');
+    if (!btn || !root.contains(btn)) return;
+    const fav = STATS_FAVOURITES.find((f) => f.key === btn.dataset.statsFav);
+    const entry = fav && statsList(stats.names && stats.names[fav.key])[Number(btn.dataset.statsRank)];
+    if (entry && Array.isArray(entry.list) && entry.list.length) openStatsGames(btn, fav, entry);
+  });
+}
+
 /* One card: a metric and its ranked entries (#1424). The LEADER keeps the
    markup the card had when it held one winner — cover, label, title, value —
    so every design's rules for it still apply, and places 2–3 follow as compact
@@ -207,7 +273,7 @@ function statsCard(podium, list, withInfo = !!podium.info) {
           <span class="stats-card__rank">${i + 2}</span>
           <span class="stats-card__row-body">
             ${statsTitle(e, 'stats-card__row-title')}
-            <span class="stats-card__row-value muted">${esc(podium.line(e))}</span>
+            ${statsValue(podium, e, 'stats-card__row-value', i + 1)}
           </span>
         </li>`).join('')}</ol>`
     : '';
@@ -217,7 +283,7 @@ function statsCard(podium, list, withInfo = !!podium.info) {
       <span class="stats-card__body">
         ${label}
         ${statsTitle(entry, 'stats-card__title')}
-        <span class="stats-card__value muted">${esc(podium.line(entry))}</span>
+        ${statsValue(podium, entry, 'stats-card__value', 0)}
       </span>${more}
     </li>`;
 }
@@ -283,6 +349,7 @@ function renderPublicStats(stats) {
   // caller appends it, and doing it here means no surface can mount the block
   // and forget the ⓘ (the landing page being the one that would hurt).
   wireInfoButtons(el);
+  wireStatsGames(el, stats);
   return el;
 }
 
@@ -453,6 +520,7 @@ async function mountHomeStatsPanel(placeholder) {
     `<ul class="stats-cards stats-cards--home">${statsCardsHtml(podiums)}</ul>`
   );
   wireInfoButtons(list);
+  wireStatsGames(list, stats);
   placeholder.appendChild(list);
   placeholder.appendChild(h(`<p class="stats-note muted">${esc(t('stats.note'))}</p>`));
 }
