@@ -126,3 +126,19 @@ test('the username and address can be registered again afterwards', async (t) =>
   assert.ok(fresh && fresh.id !== user.id, 'the address is still claimed by the erased row');
   assert.equal(fresh.username, user.username);
 });
+
+test('an account verified after the list was taken is not erased', async (t) => {
+  t.mock.timers.enable({ apis: ['Date'], now: Date.parse('2026-10-06T10:00:00.000Z') });
+  const user = await register('race');
+  t.mock.timers.tick(UNVERIFIED_ACCOUNT_TTL_MS);
+  // The race: the sweep lists the id, then the person confirms before the
+  // erase. Simulated by verifying from inside the list call.
+  const realList = repo.listStaleUnverifiedUsers;
+  t.mock.method(repo, 'listStaleUnverifiedUsers', async (cutoff) => {
+    const ids = await realList(cutoff);
+    await repo.updateUser(user.id, { emailVerified: true, verification: null });
+    return ids;
+  });
+  await scheduler.runJob('purgeUnverifiedAccounts');
+  assert.ok(await repo.getUserById(user.id), 'erased an account confirmed mid-sweep');
+});
