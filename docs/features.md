@@ -327,9 +327,10 @@ What the app does, in detail. For a short overview see the
     eight or more games carry BoardGameGeek data (how many games seat each table
     size from 2 to 6+, counting owned expansions, and the gaps a draw will hit —
     „Für 6+ Personen: nur 2 Spiele", „Über 120 Min.: kein Spiel"; it opens a
-    screen with every band — players, playing time, weight — the leading
-    mechanics, categories and designers (a designer counts once two games share
-    them), and a „Teilen" that draws the profile as an image
+    screen with every band — players, playing time, weight — the mechanics,
+    categories and designers the round rates best, ranked by the mean
+    Spielwirbel-Score of their games (a name counts once two of its games have a
+    score; unscored games are left out), and a „Teilen" that draws the profile as an image
     on the device, issue #1173), a „**heute vor N Jahren**"
     anniversary when one falls on today, and a teaser from the recommendations
     screen. Below the derived cards, a **preview of each of the round's other

@@ -106,41 +106,59 @@ function shelfDimension(games, keys, bandsOf) {
   return { known, unknown: games.length - known, bands: keys.map((key) => ({ key, n: counts.get(key) })) };
 }
 
-// The most frequent names in one list field, most common first; a tie is broken
-// by name so the order is stable across renders. A name held by ONE game is not
-// "leading" anything, so it is left out — on a small shelf the top five would
-// otherwise be five arbitrary singletons.
+// The names in one list field the round RATES best (#1556): ranked by the mean
+// shelf score of their games, not by how many games carry them — a count says
+// what was bought, the score what was enjoyed.
+//
+// Only games with a score count, for the value AND for `n`: an unscored box
+// says nothing about taste, so it must neither drag a mean down nor pad the
+// count shown beside it. "Scored" is exactly what the Regal shows a score for
+// (shelfScore: rated, or played often enough to earn the prior) — the list and
+// the shelf must never disagree about which games have a number. A name needs
+// two scored games to lead anything; on a small shelf the top five would
+// otherwise be five singletons riding one game's score.
+//
+// Ranked on the UNCLAMPED mean, like every ranking (core.js displayScore); a
+// tie goes to more evidence (more scored games), then by name so the order is
+// stable across renders.
 //
 // `keep` narrows a game's list before counting — the designers pass
 // `deps.creditedDesigners`, so BGG's `(Uncredited)` sentinel never reads as one
-// prolific designer behind every party game (#1505).
-function shelfTop(games, field, keep = (list) => list) {
-  const counts = new Map();
+// designer behind every party game (#1505).
+function shelfTop(games, field, scoreOf, keep = (list) => list) {
+  const byName = new Map();
   games.forEach((g) => {
     if (!Array.isArray(g[field])) return;
+    const score = scoreOf(g);
+    if (!shelfNum(score)) return;
     new Set(keep(g[field])).forEach((name) => {
       if (typeof name !== 'string' || !name) return;
-      counts.set(name, (counts.get(name) || 0) + 1);
+      const acc = byName.get(name) || { sum: 0, n: 0 };
+      acc.sum += score;
+      acc.n += 1;
+      byName.set(name, acc);
     });
   });
-  return [...counts.entries()]
-    .filter(([, n]) => n >= 2)
-    .sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0))
-    .slice(0, SHELF_PROFILE_TOP)
-    .map(([name, n]) => ({ name, n }));
+  return [...byName.entries()]
+    .filter(([, acc]) => acc.n >= 2)
+    .map(([name, acc]) => ({ name, score: acc.sum / acc.n, n: acc.n }))
+    .sort((a, b) => b.score - a.score || b.n - a.n || (a.name < b.name ? -1 : a.name > b.name ? 1 : 0))
+    .slice(0, SHELF_PROFILE_TOP);
 }
 
 /* The profile of a shelf, or null when it has too little data to say anything.
 
    `games` is the ACTIVE shelf (isActiveGame) — a wished or archived game reaches
    no draw, so it has no place in "what can this shelf do".
-   `deps` is { fitsPlayerCount } from draw-pool.js and { creditedDesigners }
-   from provider-info-fields.js — both handed in for the same reason (see the
-   header): this file cannot require() a sibling.
+   `deps` is { fitsPlayerCount } from draw-pool.js, { creditedDesigners } from
+   provider-info-fields.js and { scoreOf } — a game's shelf score or null, read
+   from the caller's roundScoreIndex (game-stats.js) — all handed in for the
+   same reason (see the header): this file cannot require() a sibling.
 
    Returns { linked, total, seats, time, weight, mechanics, categories,
    designers, gaps }:
    each of seats/time/weight is { known, unknown, bands: [{ key, n }] } or null;
+   each of mechanics/categories/designers is [{ name, score, n }] (shelfTop);
    `gaps` lists every seat/time band under SHELF_PROFILE_FEW as { dim, key, n }, emptiest
    first (a band with NOTHING is the stronger statement), dimension order
    otherwise. */
@@ -175,9 +193,9 @@ function shelfProfile(games, deps) {
     seats,
     time,
     weight,
-    mechanics: shelfTop(shelf, 'mechanics'),
-    categories: shelfTop(shelf, 'categories'),
-    designers: shelfTop(shelf, 'designers', deps.creditedDesigners),
+    mechanics: shelfTop(shelf, 'mechanics', deps.scoreOf),
+    categories: shelfTop(shelf, 'categories', deps.scoreOf),
+    designers: shelfTop(shelf, 'designers', deps.scoreOf, deps.creditedDesigners),
     gaps,
   };
 }

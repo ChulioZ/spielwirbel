@@ -636,8 +636,9 @@ public/
                      broken, and what was played on this day in a past year
                      (issue #923)
     shelf-profile.js the Regal-Steckbrief's builder: the active shelf's seat,
-                     playing-time and weight bands, its top mechanics and
-                     categories, and the gaps under three games (issue #1173)
+                     playing-time and weight bands, the mechanics, categories
+                     and designers its games score best on (#1556), and the
+                     gaps under three games (issue #1173)
     shelf-profile-card.js
                      the Steckbrief as a shareable PNG — flat fills, no SVG, no
                      pattern, the same-origin BGG badge (issue #1173)

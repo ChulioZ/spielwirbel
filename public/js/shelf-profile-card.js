@@ -1,7 +1,7 @@
 /* Spielwirbel – the Regal-Steckbrief as a shareable image (#1173).
 
    One portrait card: the round's name, the bands as horizontal bars, the
-   leading mechanics, categories and designers, and the gaps. Drawn on the device and handed
+   best-scored mechanics, categories and designers (#1556), and the gaps. Drawn on the device and handed
    to the user's own share sheet (or saved) by shareShelfProfile in
    views-shelf-profile.js — nothing is uploaded, the same trust shape as the
    period recap's card.

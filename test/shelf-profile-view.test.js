@@ -30,7 +30,17 @@ const linkedRound = (over = {}) => ({
   // Designers (#1505): five uncredited games and four by one person, so the
   // sentinel would lead the list if any surface forgot to drop it.
   games: Array.from({ length: 9 }, (_, i) => game(10 + i, { designers: i < 5 ? ['(Uncredited)'] : ['Uwe Rosenberg'] })),
-  sessions: [],
+  // One evening that rated every game, so each has a shelf score: since #1556
+  // the name lists rank by score, and an unscored shelf lists no name at all.
+  // The uncredited games are rated HIGHER, so a surface that forgot the
+  // sentinel filter would lead with it.
+  sessions: [{
+    id: 's1', createdAt: '2026-09-01T20:00:00.000Z', finished: true, done: true,
+    gameIds: Array.from({ length: 9 }, (_, i) => 10 + i),
+    memberIds: [1, 2],
+    votes: Object.fromEntries([1, 2].map((m) => [m,
+      Object.fromEntries(Array.from({ length: 9 }, (_, i) => [10 + i, { rating: i < 5 ? 5 : 4 }]))])),
+  }],
   tags: [],
   ...over,
 });
@@ -106,10 +116,24 @@ test('the screen: every dimension, the full gap list, the leading mechanics, and
   const dom = await screen(t, linkedRound());
   assert.equal(dom.app.querySelector('.page-head h1').textContent, 'Regal-Steckbrief');
   const panels = [...dom.app.querySelectorAll('.shelf-profile > .shelf-panel')];
-  assert.deepEqual(panels.map((p) => p.querySelector('.hub-card__title').textContent),
+  assert.deepEqual(panels.map((p) => p.querySelector('.hub-card__title').textContent.trim()),
     ['Personen', 'Spieldauer', 'Komplexität', 'Lücken', 'Mechaniken', 'Kategorien', 'Autor:innen']);
-  const designers = panels[6].querySelectorAll('.shelf-top__row');
-  assert.deepEqual([...designers].map((r) => r.textContent), ['Uwe Rosenberg4'], 'the sentinel is never a designer');
+  const designers = [...panels[6].querySelectorAll('.shelf-top__row')];
+  assert.deepEqual(designers.map((r) => r.querySelector('.shelf-top__name').textContent), ['Uwe Rosenberg'],
+    'the sentinel is never a designer');
+  // Each row carries the mean SHELF score as the shelf's own pill, clamped for
+  // display, and the number of scored games behind it (#1556).
+  const uweScore = dom.run('fmtAvg(displayScore(gameStats(' + JSON.stringify(linkedRound()) + ', 15).score))');
+  assert.equal(designers[0].querySelector('.shelf-top__val .score-pill').textContent, uweScore);
+  assert.equal(designers[0].querySelector('.shelf-top__n').textContent, 'aus 4 Spielen');
+  assert.ok(panels[6].querySelector('.hub-card__title [data-info-topic="score"]'), 'the ⓘ says what the order is');
+  assert.equal(panels[6].querySelector('.shelf-card__sub').textContent, 'Nach Spielwirbel-Score');
+  // The share image carries the same value the screen shows.
+  const items = JSON.parse(dom.run(`(() => { const r = ${JSON.stringify(linkedRound())};
+    const a = r.games.filter(isActiveGame);
+    const p = shelfProfile(a, shelfProfileDeps(roundScoreIndex(r, a).byGame));
+    return JSON.stringify(shelfShareModel(r, p).lists.map((l) => l.items)); })()`));
+  assert.deepEqual(items[2], [`Uwe Rosenberg · ${uweScore}`]);
   // 5, 6+, ≤30, 61–120, >120, light, heavy — all of them, not the card's three.
   // Five, not seven: weight bands draw as bars but list no gap (#1173 review).
   assert.equal(dom.app.querySelectorAll('.shelf-panel .shelf-gap').length, 5);
@@ -174,8 +198,9 @@ for (const design of [null, 'tisch']) {
     assert.ok(text.includes('Freitagsrunde'), 'the round is named on the image');
     assert.ok(text.includes('Für 6+ Personen: kein Spiel'), 'the gaps travel with the image');
     // The designers travel too (#1505), in a panel of their own below the two
-    // other lists — a third column would cut most names to an ellipsis.
-    assert.ok(text.includes('Autor:innen') && text.includes('Uwe Rosenberg · 4'), 'the designers are on the image');
+    // other lists — a third column would cut most names to an ellipsis. Since
+    // #1556 a name carries its score („3,8"), never the old count („4").
+    assert.ok(text.includes('Autor:innen') && text.some((s) => /^Uwe Rosenberg · \d+,\d$/.test(s)), 'the designers are on the image');
     assert.ok(!text.some((s) => /Uncredited/.test(s)), 'the sentinel reached the image');
     assert.deepEqual(toasts, ['Bild gespeichert.'], 'no file sharing in jsdom, so the image is saved');
   });
