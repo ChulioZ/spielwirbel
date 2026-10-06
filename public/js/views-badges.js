@@ -344,10 +344,8 @@ function renderBadgeSection(round, ranked, rankOf) {
          <span class="badge-band__name">${esc(round.name)}</span>
          <span class="badge-band__count">${esc(t('badges.ofTotal', { n: roundEarned, total: ctx.all.round.length }))}</span>
        </div>
-       <div class="badge-grid"></div>
      </div>`);
-  const roundGrid = band.querySelector('.badge-grid');
-  ctx.all.round.forEach((e) => roundGrid.appendChild(badgeTile(e, ctx, { holder: round.name })));
+  badgeFillLeadAndStrip(band, ctx.all.round, (e, opts) => badgeTile(e, ctx, { holder: round.name, ...opts }));
   sec.appendChild(band);
 
   const dense = members.length >= BADGE_DENSE_FROM;
@@ -363,6 +361,34 @@ function renderBadgeSection(round, ranked, rankOf) {
   })));
   sec.appendChild(list);
   return sec;
+}
+
+/* #1541: what a holder has (earned, then in progress) leads as full tiles, and
+   what it has not (locked, secret) follows as a strip of bare marks — 42
+   entries a holder made the section a wall of grey outlines that buried the
+   Ruhmeshalle. Catalogue order holds within each group. The strip is NOT
+   `.badge-grid--compact`: every design skins that one as the Tischkarte's row,
+   which prints the name. A strip mark drops its condition line (operator
+   decision 2026-10-04) — it lives in the card, and in the aria-label. */
+const BADGE_LEAD = { earned: 0, progress: 1 };
+const badgeLeads = (e) => e.state in BADGE_LEAD;
+function badgeLeadOrder(entries) {
+  return entries.filter(badgeLeads).sort((a, b) => BADGE_LEAD[a.state] - BADGE_LEAD[b.state]);
+}
+function badgeStripGrid(entries, tile, attrs = '') {
+  const grid = h(`<div class="badge-grid badge-grid--strip"${attrs}></div>`);
+  entries.forEach((e) => grid.appendChild(tile(e, { line: false })));
+  return grid;
+}
+function badgeFillLeadAndStrip(host, entries, tile) {
+  const lead = badgeLeadOrder(entries);
+  const closed = entries.filter((e) => !badgeLeads(e));
+  if (lead.length) {
+    const grid = h('<div class="badge-grid"></div>');
+    lead.forEach((e) => grid.appendChild(tile(e)));
+    host.appendChild(grid);
+  }
+  if (closed.length) host.appendChild(badgeStripGrid(closed, tile));
 }
 
 /* The key to the drawing (T17.2, O17.2): one swatch per state a tile can show
@@ -390,27 +416,41 @@ function badgeMemberRow(round, ctx, m, { dense, open, rank }) {
          <span class="badge-member__summary">${esc(counts.join(' · '))}</span>
          ${rank ? `<span class="badge-member__rank">${esc(t('badges.rank', { n: rank }))}</span>` : ''}
        </summary>
-       <div class="badge-grid"></div>
      </details>`);
   if (open) row.open = true;
-  const grid = row.querySelector('.badge-grid');
-  const tile = (e) => badgeTile(e, ctx, { holder: m.name });
-  // A dense round (X17.8): earned marks in the row, the rest behind „N offen".
-  const shown = dense ? earned : entries;
-  shown.forEach((e) => grid.appendChild(tile(e)));
-  const rest = dense ? entries.filter((e) => e.state !== 'earned') : [];
-  if (rest.length) {
-    const restId = `abzeichen-${m.id}-offen`;
-    const more = h(`<button type="button" class="link-btn badge-member__more" aria-expanded="false" aria-controls="${esc(restId)}">${esc(tn(rest.length, 'badges.count.openOne', 'badges.count.open'))}</button>`);
-    const restGrid = h(`<div class="badge-grid badge-grid--rest" id="${esc(restId)}" hidden></div>`);
-    rest.forEach((e) => restGrid.appendChild(tile(e)));
+  const tile = (e, opts) => badgeTile(e, ctx, { holder: m.name, ...opts });
+  if (!dense) {
+    badgeFillLeadAndStrip(row, entries, tile);
+    return row;
+  }
+  // A dense round (X17.8): earned marks in the row; in-progress tiles and the
+  // strip behind „N offen", both revealed by the one toggle.
+  if (earned.length) {
+    const grid = h('<div class="badge-grid"></div>');
+    earned.forEach((e) => grid.appendChild(tile(e)));
+    row.appendChild(grid);
+  }
+  const going = entries.filter((e) => e.state === 'progress');
+  const closed = entries.filter((e) => !badgeLeads(e));
+  const restCount = going.length + closed.length;
+  if (restCount) {
+    const id = `abzeichen-${m.id}-offen`;
+    const grids = [];
+    if (going.length) {
+      const g = h(`<div class="badge-grid badge-grid--rest" id="${esc(id)}" hidden></div>`);
+      going.forEach((e) => g.appendChild(tile(e)));
+      grids.push(g);
+    }
+    if (closed.length) grids.push(badgeStripGrid(closed, tile, ` id="${esc(id)}-strip" hidden`));
+    grids.forEach((g) => g.classList.add('badge-grid--rest'));
+    const more = h(`<button type="button" class="link-btn badge-member__more" aria-expanded="false" aria-controls="${esc(grids.map((g) => g.id).join(' '))}">${esc(tn(restCount, 'badges.count.openOne', 'badges.count.open'))}</button>`);
     more.addEventListener('click', () => {
       const show = more.getAttribute('aria-expanded') !== 'true';
       more.setAttribute('aria-expanded', String(show));
-      restGrid.hidden = !show;
+      grids.forEach((g) => { g.hidden = !show; });
     });
     row.appendChild(more);
-    row.appendChild(restGrid);
+    grids.forEach((g) => row.appendChild(g));
   }
   return row;
 }

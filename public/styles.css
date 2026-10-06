@@ -11083,7 +11083,10 @@ kbd {
   grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
   gap: 10px;
 }
-.badge-grid--compact { grid-template-columns: repeat(auto-fill, minmax(44px, max-content)); gap: 6px; }
+.badge-grid--compact,
+.badge-grid--strip { grid-template-columns: repeat(auto-fill, minmax(44px, max-content)); gap: 6px; }
+/* #1541: the locked/secret marks after the full tiles — set off by a gap. */
+.badge-grid + .badge-grid--strip { margin-top: 10px; }
 .badge-grid--rest { margin-top: 10px; }
 .badge-grid[hidden] { display: none; }
 
@@ -11153,12 +11156,11 @@ kbd {
 .badge[data-state="locked"] .badge__name,
 .badge[data-state="secret"] .badge__name { color: var(--ink-soft); }
 
-/* The compact row (Tischkarte): marks only, the name stays in the aria-label. */
-.badge-grid--compact .badge { padding: 4px; border-color: transparent; background: none; }
-.badge-grid--compact .badge__mark { width: 36px; height: 36px; font-size: var(--text-md); }
-.badge-grid--compact .badge__name,
-.badge-grid--compact .badge__line,
-.badge-grid--compact .badge__new { display: none; }
+/* The compact row (Tischkarte) and Pokale's strip of closed marks (#1541):
+   marks only, the name stays in the aria-label. */
+:is(.badge-grid--compact, .badge-grid--strip) .badge { padding: 4px; border-color: transparent; background: none; }
+:is(.badge-grid--compact, .badge-grid--strip) .badge__mark { width: 36px; height: 36px; font-size: var(--text-md); }
+:is(.badge-grid--compact, .badge-grid--strip) :is(.badge__name, .badge__line, .badge__new) { display: none; }
 
 .badge-band--round {
   margin-bottom: 14px;
