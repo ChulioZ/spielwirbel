@@ -6,7 +6,7 @@
  * (.claude/rules/testing-views-under-jsdom.md): the stump with its themed
  * heading and count, the count question with the app's line under it and
  * „Laub wirbeln", the vote card's side columns and labelled „Zurück", the
- * finale's reveal verb, the result's kicker, fact line and three columns, and
+ * finale's reveal verb, the result's kicker, fact line and two columns, and
  * the several tables' head. Klassisch's side is the golden snapshot in
  * test/programmheft-session-klassisch-golden.test.js, whose control also
  * renders Forest. jsdom applies no stylesheet, so the layout was measured in
@@ -23,7 +23,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const { loadApp, flush } = require('./support/dom');
-const { rulesOf, declaredValue } = require('./support/css');
+const { rulesOf, declaredValue, mediaBlocks } = require('./support/css');
 
 const HEAD = '/* ===== #1468 — Session loop: Neue Session, vote card, finale, result, several tables ===== */';
 const RAW = fs.readFileSync(path.join(__dirname, '..', 'public/css/designs/forest.css'), 'utf8');
@@ -288,18 +288,26 @@ test('an unsettled session has no place in the count, so the fact line is hidden
   assert.equal(q(dom, '.forest-facts').hidden, true);
 });
 
-test('the result is three columns in DOM order: people · head, scene and facts · Tafel and foot', async (t) => {
+// #1568: two columns, departing from F4.3's three on purpose (drawn with a few
+// rows, measured at eight), as Ocean's did in #1430. The foot sits under the
+// headline — after the ~520px tree it fell under the fold (operator decision)
+// — so „Noch eine Session" comes ahead of the scene and the ranking in tab
+// order too, which is intended.
+test('the result is two columns in DOM order: side (people · head · foot · scene · facts), then the Tafel', async (t) => {
   const dom = await result(t);
   const screen = q(dom, '.result-screen');
   assert.ok(screen.classList.contains('result-screen--forest'));
   assert.deepEqual([...screen.children].map((el) => el.className),
-    ['forest-result__people', 'forest-result__main', 'forest-result__tafel']);
-  const main = q(dom, '.forest-result__main');
-  assert.deepEqual([...main.children].map((el) => el.className.split(' ')[0]), ['page-head', 'tisch-slot', 'forest-facts']);
+    ['forest-result__side', 'forest-result__tafel']);
+  const side = q(dom, '.forest-result__side');
+  assert.deepEqual([...side.children].map((el) => el.className.split(' ')[0]),
+    ['forest-result__people', 'page-head', 'result-foot', 'tisch-slot', 'forest-facts']);
+  assert.ok(side.querySelector('.result-people__person.is-winner'), 'the people are the side column\'s ring row');
   const list = q(dom, '.forest-result__tafel');
-  assert.ok(list.querySelector('.tafel'));
-  assert.equal(list.lastElementChild.className, 'result-foot', 'the foot closes the Tafel column');
-  assert.match(text(list.querySelector('.result-foot__again')), /Noch eine Session/, 'tables.oneMore, never „Noch eine Runde"');
+  assert.deepEqual([...list.children].map((el) => el.className.split(' ')[0]).slice(0, 2), ['badge-moment', 'tafel'],
+    'the badge moment opens the Tafel column, then the ranking');
+  assert.equal(list.querySelector('.result-foot'), null, 'the foot is not under the Tafel any more');
+  assert.match(text(side.querySelector('.result-foot__again')), /Noch eine Session/, 'tables.oneMore, never „Noch eine Runde"');
   assert.equal(text(q(dom, '.tisch__actions-label')), 'Falls etwas anders lief');
 });
 
@@ -373,4 +381,53 @@ test('the hidden cards are the dusk, and only there does a firefly shine', () =>
   assert.match(declaredValue(card, 'background'), /var\(--firefly\)[\s\S]*var\(--dusk\)/);
   // Anti-vacuous: the section was found and parsed.
   assert.ok(RULES.length > 100, `only ${RULES.length} rules in the #1468 section`);
+});
+
+// #1568: where the row is wide it is ONE line — the distribution beside the
+// title and a still-choosing row's action inline — from 720px at every width
+// above, in both arrangements. The bars stay last in the DOM; only the grid
+// area moves.
+const wideRules = () => mediaBlocks(SECTION)
+  .filter(([mq]) => /^\(min-width:\s*720px\)$/.test(mq.trim()))
+  .flatMap(([, css]) => rulesOf(css));
+const wideBody = (sel) => {
+  // Split the group on its top-level commas only: `:has(a, b)` holds one.
+  const members = (group) => group.split(/,(?![^(]*\))/).map((x) => x.trim());
+  const hit = wideRules().find(([s]) => members(s).includes(F + sel));
+  assert.ok(hit, `forest.css has no ≥720px rule for ${sel}`);
+  return hit[1];
+};
+
+test('from 720px a Forest row is one line, the distribution between the title and the leaf — settled or choosing', () => {
+  for (const sel of ['.result-screen--forest .tafel .trow', '.result-screen--forest .tafel .trow:has(.play-btn, .trow__chip)']) {
+    const areas = declaredValue(wideBody(sel), 'grid-template-areas')
+      .split('"').filter((x) => x.trim()).map((x) => x.trim().split(/\s+/));
+    assert.equal(areas.length, 1, `${sel}: one line`);
+    assert.deepEqual(areas[0], ['rank', 'cover', 'main', 'bars', 'pill', 'sub']);
+    assert.equal(declaredValue(wideBody(sel), 'grid-template-columns').split(/\s+(?![^(]*\))/).length, 6);
+  }
+  // Nothing caps the one-line row at the old 1279px edge any more.
+  assert.ok(!mediaBlocks(SECTION).some(([mq, css]) => /max-width:\s*1279px/.test(mq)
+    && rulesOf(css).some(([s]) => s.includes('.trow'))), 'a row rule still stops at 1279px');
+});
+
+test('from 720px „Gehört …" sits beside the title; the veto pill keeps a line under both', () => {
+  const main = wideBody('.result-screen--forest .tafel .trow .trow__main');
+  assert.equal(declaredValue(main, 'display'), 'grid');
+  assert.equal(declaredValue(main, 'grid-template-columns'), 'minmax(0, max-content) minmax(0, 1fr)');
+  assert.equal(declaredValue(wideBody('.result-screen--forest .tafel .trow .trow__main > :not(.trow__title):not(.trow__owners)'), 'grid-column'), '1 / -1');
+});
+
+test('the side column is pinned only where it fits the viewport: sticky behind a min-height gate, never without', () => {
+  const sel = F + '.result-screen--forest .forest-result__side';
+  const blocks = mediaBlocks(SECTION);
+  const gated = blocks.filter(([mq]) => /min-width:\s*1280px/.test(mq) && /min-height:\s*\d+px/.test(mq));
+  assert.ok(gated.some(([, css]) => rulesOf(css).some(([s, b]) => s === sel && /position:\s*sticky/.test(b))),
+    'no height-gated sticky rule for the side column');
+  for (const [mq, css] of blocks) {
+    if (/min-height/.test(mq)) continue;
+    assert.ok(!rulesOf(css).some(([s, b]) => s === sel && /position:\s*sticky/.test(b)), `ungated sticky in @media ${mq}`);
+  }
+  assert.ok(!RULES.some(([s, b]) => s === sel && /position:\s*sticky/.test(b) && !gated.some(([, css]) => css.includes(b))),
+    'no top-level sticky on the side column');
 });
