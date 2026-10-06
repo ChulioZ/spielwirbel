@@ -5834,6 +5834,13 @@
 :root[data-design="forest"]:not([data-scheme="dark"]) .badge-grid--compact .badge__name { display: block; font-size: 14px; }
 :root[data-design="forest"]:not([data-scheme="dark"]) .badge-grid--compact :is(.badge__dots, .badge__new) { display: none; }
 
+/* Pokale's strip of closed marks (#1541): locked and secret entries follow the
+   full tiles as bare marks — no name, no condition (the card has it). Scoped
+   through the band and the row so it outranks their column rules. */
+:root[data-design="forest"]:not([data-scheme="dark"]) :is(.badge-band--round, .badge-member) > .badge-grid--strip:not([hidden]) { display: flex; flex-direction: row; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) :is(.badge-band--round, .badge-member) > .badge-grid--strip .badge { --fj: 32px; min-width: 24px; padding: 2px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) :is(.badge-band--round, .badge-member) > .badge-grid--strip :is(.badge__name, .badge__line, .badge__dots, .badge__new) { display: none; }
+
 /* --- The Spielerkarte's account jars (F17.7): jars WITHOUT a fill level —
    the way to the next tier is the line under each (F17.10 (3)). Five since
    #1464: an auto-fill row that wraps rather than squeezes. ---------------- */

@@ -8779,6 +8779,13 @@
   text-align: center;
 }
 :root[data-design="tisch"][data-scheme="dark"] .badge-grid--compact .badge__new { display: none; }
+
+/* Pokale's strip of closed marks (#1541): locked and secret entries follow the
+   full tiles as bare marks — no name, no condition (the card has it). Scoped
+   through the band and the row so it outranks their column rules. */
+:root[data-design="tisch"][data-scheme="dark"] :is(.badge-band--round, .badge-member) > .badge-grid--strip:not([hidden]) { display: flex; flex-direction: row; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+:root[data-design="tisch"][data-scheme="dark"] :is(.badge-band--round, .badge-member) > .badge-grid--strip .badge { --pin: 36px; min-width: 24px; padding: 2px; }
+:root[data-design="tisch"][data-scheme="dark"] :is(.badge-band--round, .badge-member) > .badge-grid--strip :is(.badge__name, .badge__line, .badge__dots, .badge__new) { display: none; }
 /* 1440 (T17.4): the kicker in a 96px column on the left, the pins in a row
    beside it with the name to the right of each. */
 @media (min-width: 860px) {

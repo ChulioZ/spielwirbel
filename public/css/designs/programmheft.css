@@ -6739,6 +6739,23 @@
 :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-grid--compact:not([hidden]) { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px 4px; }
 :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-grid--compact .badge { --ph-mark: 44px; gap: 6px; padding: 0; }
 :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-grid--compact .badge__name { display: block; margin: 0; font-size: 12px; text-align: center; }
+
+/* Pokale's strip of closed marks (#1541): locked and secret entries follow the
+   full tiles as bare marks — no name, no condition (the card has it). Scoped
+   through the band and the row so it outranks their column rules. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) :is(.badge-band--round, .badge-member) > .badge-grid--strip:not([hidden]) { display: flex; flex-direction: row; flex-wrap: wrap; gap: 6px; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) :is(.badge-band--round, .badge-member) > .badge-grid--strip .badge { --ph-mark: 36px; min-width: 24px; padding: 2px; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) :is(.badge-band--round, .badge-member) > .badge-grid--strip :is(.badge__name, .badge__line, .badge__dots, .badge__new) { display: none; }
+/* A member's medals are list ROWS between dotted hairs; a closed mark in the
+   strip is a bare medal, so it leaves that row drawing and sits under the list. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member > .badge-grid--strip:not([hidden]) { padding: 8px 0; border-top: 1px dotted var(--hair); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member > .badge-grid--strip .badge { display: inline-flex; min-height: 0; border-top: 0; }
+/* The desktop band sets each column 118px wide with a dotted rule. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-band--round > .badge-grid--strip .badge { width: auto; border-right: 0; }
+/* From 1024px the band is a head | tiles grid: the strip joins the tiles' column. */
+@media (min-width: 1024px) {
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-band--round > .badge-grid--strip { grid-column: 2; }
+}
 @media (min-width: 1024px) {
   :root[data-design="programmheft"]:not([data-scheme="dark"]) .member-card__badges { flex-wrap: nowrap; gap: 20px; padding: 12px 0; }
   :root[data-design="programmheft"]:not([data-scheme="dark"]) .member-card__badges > .member-card__badges-label { flex: 0 0 110px; }

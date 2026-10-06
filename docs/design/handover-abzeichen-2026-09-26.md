@@ -9,7 +9,7 @@ Spielwirbel · 2026-09-26 · companion to `handover-claude-design-2026-09-19.md`
 > | Noun | **„Abzeichen"** — one word in every design, on every label |
 > | Holders | **member of a round + the round + the account tier** (cross-round, on the Spielerkarte) |
 > | Catalogue | the **★ core set** (about 20) for the first release; the un-starred rows stay in this file as the backlog |
-> | Locked entries | **visible, with condition and progress** („Stammgast 24 / 25") |
+> | Locked entries | **visible, with condition and progress** („Stammgast 24 / 25") — *superseded for the Pokale grid, see below* |
 > | Secret entries | **yes, up to three** (a „?" tile, no condition until earned) |
 > | A10 „Strenges Urteil" | **out** — the catalogue rewards play, not vetoes |
 > | Account tier | Sessions 25 · 100 · 500, Wins 10 · 50, Runden 2 · 5, Jahre 1 · 2 · 3; visible to **self + friends**, totals only |
@@ -21,6 +21,16 @@ Spielwirbel · 2026-09-26 · companion to `handover-claude-design-2026-09-19.md`
 > **2026-10-01 — the tier cap is lifted (#1463).** The operator lifted the first release's cap („three tiers at most", four for Stammgast and the round's Sessions) on 2026-10-01: twelve ladders are longer and five single marks became tiered (Serienheld 3 · 5 · 7, Gastgeber 10 · 25 · 50, Entdecker 5 · 10 · 25, Große Runde 8 · 12 · 16, Dauerbrenner 10 · 25 · 50); the account tier is now Sessions 25 · 100 · 250 · 500 · 1000, Wins 10 · 25 · 50 · 100 · 250, Runden 2 · 3 · 5, Jahre unchanged. The rows above and below are the record of 2026-09-26 and stay as written; `public/js/achievements.js` `BADGE_CATALOGUE` is the current ladder.
 >
 > **2026-10-01 — the secret cap is lifted, 20 entries added (#1464).** The operator lifted „up to three" secrets on 2026-10-01 and #1464 added 20 Abzeichen (9 member · 10 round · 1 account), seven of them secret: 41 entries, ten secrets. **Vollzählig**, planned in the same issue, was **dropped on 2026-10-02**: members store no `createdAt`, so „every member at that time" could only mean everyone seen at a table so far — which a round's first evening satisfies by construction, whoever stayed home. The rows above stay as written; `BADGE_CATALOGUE` is the current catalogue.
+
+**Superseded 2026-10-04 for Pokale (#1541).** With 42 catalogue entries the
+locked and secret tiles grew into a wall of grey outlines that pushed the
+Ruhmeshalle off the screen. On the Pokale grid, earned and in-progress tiles now
+lead at full size, and locked and secret entries follow as a strip of bare marks
+with no name and no condition on the tile. The condition, the tiers and the
+progress live in the tap card (`openBadgeCard`), and in the mark's accessible
+name. In-progress tiles keep their count. A design package must not
+reintroduce the condition on a locked Pokale tile. The Tischkarte never showed
+locked marks and is unaffected.
 
 ---
 

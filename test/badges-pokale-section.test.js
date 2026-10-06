@@ -86,6 +86,48 @@ test('a reached tier is said once, in the name — no corner pill (operator deci
   assert.equal(section(dom).querySelectorAll('.badge__tier').length, 0);
 });
 
+/* #1541: the full tiles lead and the closed ones shrink into a strip after
+   them — in the round band and in every member row. The condition leaves the
+   locked tile (it lives in the card), but never the accessible name. */
+const RANK = { earned: 0, progress: 1, locked: 2, secret: 2 };
+function assertLeadThenStrip(holder, label) {
+  const full = [...holder.querySelectorAll(':scope > .badge-grid:not(.badge-grid--strip) .badge')];
+  const strip = [...holder.querySelectorAll(':scope > .badge-grid--strip .badge')];
+  assert.ok(full.length && strip.length, `${label}: both a full grid and a strip`);
+  assert.ok(full.every((b) => b.dataset.state === 'earned' || b.dataset.state === 'progress'), `${label}: full tiles are earned or in progress`);
+  assert.ok(strip.every((b) => b.dataset.state === 'locked' || b.dataset.state === 'secret'), `${label}: the strip holds locked and secret`);
+  const ranks = full.map((b) => RANK[b.dataset.state]);
+  assert.deepEqual(ranks, [...ranks].sort((a, b) => a - b), `${label}: earned before progress`);
+  assert.ok(holder.querySelector(':scope > .badge-grid--strip').classList.contains('badge-grid--compact') === false,
+    `${label}: the strip is not the Tischkarte's compact row, whose design skins print the name`);
+  for (const b of strip) {
+    assert.equal(b.querySelector('.badge__line'), null, `${label}: ${b.dataset.key} carries no condition line on the tile`);
+    assert.ok(b.getAttribute('aria-label').length > b.dataset.key.length, `${label}: ${b.dataset.key} keeps its accessible name`);
+  }
+}
+
+test('earned and in-progress tiles lead; locked and secret ones follow as a compact strip (#1541)', async (t) => {
+  const dom = await pokale(t, badgeRound([night('s1', 1), night('s2', 2, { winnerIds: ['m2'] })]));
+  const sec = section(dom);
+  assertLeadThenStrip(sec.querySelector('.badge-band--round'), 'round band');
+  for (const row of sec.querySelectorAll('.badge-member')) assertLeadThenStrip(row, row.dataset.mid);
+  // Catalogue order is kept within a group.
+  const keys = (sel) => [...sec.querySelectorAll(`.badge-band--round ${sel} .badge`)].map((b) => b.dataset.key);
+  // The round's own catalogue entries — a key may exist for both holders.
+  const catalogue = Array.from(dom.run("BADGE_CATALOGUE.filter((d) => d.holder === 'round').map((d) => d.key)"));
+  const k = keys('.badge-grid--strip');
+  assert.deepEqual(k, catalogue.filter((c) => k.includes(c)), 'stable catalogue order inside the strip');
+});
+
+test('a strip mark opens the same card, with the condition the tile no longer shows (#1541)', async (t) => {
+  const dom = await pokale(t, badgeRound([night('s1', 1)]));
+  const locked = section(dom).querySelector('.badge-band--round .badge-grid--strip .badge[data-state="locked"]');
+  locked.click();
+  const card = dom.document.querySelector('.sheet-backdrop .badge-card');
+  assert.ok(card, 'the card opens');
+  assert.ok(card.querySelector('.badge-card__cond').textContent.length > 0, 'and states the condition');
+});
+
 test('from seven members a row shows only its earned marks, the rest behind „N offen"', async (t) => {
   const seven = ['m1', 'm2', 'm3', 'm4', 'm5', 'm6', 'm7'];
   const dom = await pokale(t, badgeRound([night('s1', 1, { memberIds: seven })], 7));
@@ -95,12 +137,17 @@ test('from seven members a row shows only its earned marks, the rest behind „N
   assert.deepEqual(shown.map((b) => [b.dataset.key, b.dataset.state]),
     [['firstWin', 'earned'], ['founder', 'earned'], ['beginnersLuck', 'earned']], 'only earned marks in the row');
   const more = row.querySelector('.badge-member__more');
-  const rest = row.querySelector('.badge-grid--rest');
-  assert.equal(more.textContent, `${rest.querySelectorAll('.badge').length} offen`);
-  assert.equal(rest.hidden, true);
+  const rest = [...row.querySelectorAll(':scope > .badge-grid--rest')];
+  const restTiles = rest.flatMap((g) => [...g.querySelectorAll('.badge')]);
+  assert.equal(more.textContent, `${restTiles.length} offen`);
+  assert.deepEqual(more.getAttribute('aria-controls').split(' '), rest.map((g) => g.id), 'the toggle names every grid it reveals');
+  const strip = row.querySelector(':scope > .badge-grid--rest.badge-grid--strip');
+  assert.ok(strip, 'the closed marks fold into the compact strip (#1541)');
+  assert.ok([...strip.querySelectorAll('.badge')].every((b) => /^(locked|secret)$/.test(b.dataset.state)));
+  assert.ok(rest.every((g) => g.hidden));
   assert.equal(more.getAttribute('aria-expanded'), 'false');
   more.click();
-  assert.equal(rest.hidden, false, 'the toggle reveals the rest');
+  assert.ok(rest.every((g) => !g.hidden), 'the toggle reveals the rest');
   assert.equal(more.getAttribute('aria-expanded'), 'true');
 
   // Six members is not dense: every tile in the row.

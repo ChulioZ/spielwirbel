@@ -206,13 +206,15 @@ test('the branch and the shelves are auto-fill grids — no count of entries any
 test('a mark on its way keeps its count wherever it is drawn (the moss level is decoration)', () => {
   assert.equal(decl(body('.badge-band--round .badge:not([data-state="progress"]) .badge__line'), 'display'), 'none');
   // Every other rule hiding a line names a place a counting mark never sits:
-  // a dense row's EARNED shelf, the Tischkarte (earned only) and the moment.
+  // a dense row's EARNED shelf, the Tischkarte (earned only), the moment, and
+  // Pokale's strip, which holds only locked and secret marks (#1541).
   const hides = RULES.filter(([, b]) => /display:\s*none/.test(b))
     .flatMap(([sel]) => members(sel).filter((m) => /\.badge__line\b/.test(m)))
     .map((m) => m.slice(GATE.length).trim());
   assert.deepEqual(hides, [
     '.badge-band--round .badge:not([data-state="progress"]) .badge__line',
     '.badge-members:has(> .badge-member > .badge-member__more) .badge-member > .badge-grid:not(.badge-grid--rest) :is(.badge__name, .badge__dots, .badge__line, .badge__new)',
+    ':is(.badge-band--round, .badge-member) > .badge-grid--strip :is(.badge__name, .badge__line, .badge__dots, .badge__new)',
   ]);
 });
 

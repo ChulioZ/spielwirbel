@@ -6103,6 +6103,15 @@
 :root[data-design="ocean"]:not([data-scheme="dark"]) .badge-grid--compact .badge__mark::after { display: none; }
 :root[data-design="ocean"]:not([data-scheme="dark"]) .badge-grid--compact .badge__mark > .ti { margin-top: 0; }
 :root[data-design="ocean"]:not([data-scheme="dark"]) .badge-grid--compact .badge__name { display: block; }
+
+/* Pokale's strip of closed marks (#1541): locked and secret entries follow the
+   full tiles as bare marks — no name, no condition (the card has it). Scoped
+   through the band and the row so it outranks their column rules. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) :is(.badge-band--round, .badge-member) > .badge-grid--strip:not([hidden]) { display: flex; flex-direction: row; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) :is(.badge-band--round, .badge-member) > .badge-grid--strip .badge { --o-mark: 36px; --o-ring: 0px; width: auto; min-width: 24px; padding: 2px; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) :is(.badge-band--round, .badge-member) > .badge-grid--strip :is(.badge__name, .badge__line, .badge__dots, .badge__new) { display: none; }
+/* No string: the strip is what is still closed, not a strand of pearls. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .badge-member > .badge-grid--strip::before { display: none; }
 @media (min-width: 860px) {
   :root[data-design="ocean"]:not([data-scheme="dark"]) .member-card__badges {
     --o-mark: 40px;

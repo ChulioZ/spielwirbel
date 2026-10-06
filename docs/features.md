@@ -408,7 +408,9 @@ What the app does, in detail. For a short overview see the
     reached. Nothing is stored: they are derived from the sessions on every
     render, so deleting a session removes what it earned — and a tier added to
     a ladder later (issue #1463) appears already dated at the session that first
-    satisfied it. From seven members a
+    satisfied it. Earned and in-progress marks lead as full tiles; locked and
+    secret ones follow as a strip of bare marks whose condition lives in the
+    card (issue #1541). From seven members a
     row shows only earned marks, the rest behind „N offen"; before the first
     finished session the section is one line. A legend in the section head
     keys the three drawn states (verdient, unterwegs, offen), and each member
