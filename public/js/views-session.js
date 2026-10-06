@@ -2052,7 +2052,8 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     // Das Programmheft prints the revealed Tafel top first (P10.4); capped at
     // the tenth row so any Tafel is printed inside the sheet's 1.8s. Die
     // Brücke's decrypted Tafel drives in on the same index (B10.4, #1248).
-    const printVar = reveal && (phLook || brueckeLook) ? `--print-i:${Math.min(i, 9)};` : '';
+    // Forest reads the same index to light its rows up one by one (F10.4, #1476).
+    const printVar = reveal && (phLook || brueckeLook || forestLook) ? `--print-i:${Math.min(i, 9)};` : '';
     const rankClass = r.place && r.place <= 3 ? ` trow__rank--${r.place}` : '';
     const row = tischLook ? composedTrow({
       row: r, hasVotes, bars, rankClass, imgStyle, fallback,

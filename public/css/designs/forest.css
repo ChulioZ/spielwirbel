@@ -3404,6 +3404,44 @@
   border-radius: 4px;
   background: var(--bark);
 }
+/* F10.4 „Aufleuchten und der Baum" (#1476, Forest-F10-Motion.dc.html), its
+   second half: when the game is marked played, the tree above grows for it —
+   the trunk up from the grass (0–600ms), the crown sprouting from the trunk
+   with a 6% spring (400–780ms), then the three fireflies rise and settle twice
+   (700–1 900ms) and stop. `data-stamped` is set only on the render after a
+   finish the reader just recorded (views-session.js, #1200's gate), so a cold
+   load, a Chronik visit or a winner change shows the tree standing — which is
+   also the reduced-motion picture. The sheet runs this straight after the
+   reveal; in the app the tree only exists once a game is played, so it plays
+   on that click instead.
+
+   `scale` on the pseudo-elements and `background-position` on the band are
+   the only things that move: no text, and nothing the band's layout reads.
+   The fireflies are the band's first three background layers, so they move by
+   their positions while the fourth — the sky and the grass — stays at 0 0. */
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-design="forest"]:not([data-scheme="dark"]) .result-screen--forest .tisch-slot[data-stamped] .tisch:is([data-state="done"], [data-state="picking"])::after {
+    transform-origin: 50% 100%;
+    animation: forest-grow 600ms cubic-bezier(.2, .7, .2, 1) backwards;
+  }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .result-screen--forest .tisch-slot[data-stamped] .tisch:is([data-state="done"], [data-state="picking"])::before {
+    transform-origin: 45% 100%;
+    animation: forest-crown 380ms ease-out 400ms backwards;
+  }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .result-screen--forest .tisch-slot[data-stamped] .tisch:is([data-state="done"], [data-state="picking"]) {
+    animation: forest-fireflies 600ms ease-in-out 700ms 2 backwards;
+  }
+  @keyframes forest-grow {
+    from { scale: 1 0; }
+  }
+  @keyframes forest-crown {
+    from { scale: 0; }
+    80% { scale: 1.06; }
+  }
+  @keyframes forest-fireflies {
+    50% { background-position: 0 -46px, 0 -46px, 0 -46px, 0 0; }
+  }
+}
 :root[data-design="forest"]:not([data-scheme="dark"]) .result-screen--forest .tisch:is([data-state="done"], [data-state="picking"]) .tisch__box {
   grid-row: 1;
   z-index: 2;
@@ -3527,6 +3565,31 @@
 /* The row's score-width fill is the other designs' axis; Forest reads the
    score from its leaf, as F4.3 draws the rows. */
 :root[data-design="forest"]:not([data-scheme="dark"]) .result-screen--forest .tafel .trow::before { content: none; }
+/* F10.4 „Aufleuchten und der Baum" (#1476), its first half: on „Sieger
+   enthüllen" the rows start under the dusk and light up one after another —
+   350ms apart, 320ms each, the third and every later row together, so the
+   whole Tafel is lit by 1 020ms. Keyed on the app's own reveal marks (`.is-race`
+   on every row, `--print-i` per row, both set only on the reveal), so a cold
+   load or a Chronik visit is lit from the start. The cover is a pseudo-element
+   over the row that takes no clicks: „Spielen" is usable from 0ms. It rests
+   transparent and exists only inside the gate, so reduced motion shows the lit
+   Tafel at once. */
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-design="forest"]:not([data-scheme="dark"]) .result-screen--forest .tafel .trow.is-race::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    border-radius: inherit;
+    background: var(--dusk);
+    pointer-events: none;
+    opacity: 0;
+    animation: forest-light 320ms ease-out calc(min(var(--print-i, 0), 2) * 350ms) backwards;
+  }
+  @keyframes forest-light {
+    from { opacity: 1; }
+  }
+}
 :root[data-design="forest"]:not([data-scheme="dark"]) .result-screen--forest .tafel-top .trow {
   border: 1.5px solid var(--gold);
   background: var(--gold-soft);
