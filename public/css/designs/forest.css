@@ -3253,34 +3253,48 @@
 :root[data-design="forest"]:not([data-scheme="dark"]) .stage__title { font-weight: 400; }
 :root[data-design="forest"]:not([data-scheme="dark"]) .stage :focus-visible { outline-color: var(--ring-on-dusk); }
 
-/* --- The result (F2.4 at 390, F4.3 at 1440, F7.9 the tie) ------------------
-   The shared result composition, arranged by composeForestResult into three
-   columns from 1280px — the people („Wer dabei war") | the sentence, the grown
-   tree and the fact line | the Tafel and the foot — and one column below, in
-   the same order. */
+/* --- The result (F2.4 at 390, F4.3 at 1440, F7.9 the tie; rearranged by #1568)
+   The shared result composition, arranged by composeForestResult into two
+   columns from 1280px: the SIDE column (the people as a ring row, the
+   sentence, the foot, the grown tree, the fact line) and the TAFEL column (the
+   badge moment, the ranking, then the log). One column below, in the same
+   order.
+
+   This DEPARTS FROM F4.3 ON PURPOSE, as Ocean's did from O4.4 (#1430). The
+   sheet draws people | sentence and tree | Tafel 500 with the foot under the
+   Tafel, and it was drawn with a few rows. Measured at eight (#1568,
+   1440×900): the Tafel was 500px wide and 1584px tall, the document 1972px,
+   the people column stopped at 554 and the middle at 949, and „Noch eine
+   Session" sat at y 1764, after the whole list. So the Tafel takes the wide
+   column (capped, so a row keeps a readable measure) and the side column pins
+   beside it. The foot sits under the headline rather than under the tree, as
+   Ocean's does: after the ~520px scene it landed at y≈1150, under the fold of
+   a 900px-tall screen (operator decision on #1568). */
 @media (min-width: 1280px) {
   :root[data-design="forest"]:not([data-scheme="dark"]) .result-screen--forest {
     display: grid;
-    grid-template-columns: minmax(150px, 190px) minmax(0, 1fr) minmax(360px, 500px);
+    grid-template-columns: minmax(400px, 460px) minmax(0, 760px);
     column-gap: 32px;
     align-items: start;
   }
-  /* While no game is on the table there is no scene to stand beside the Tafel,
-     so the Tafel takes the middle under the headline (F7.9 draws the ranking
-     at full width beside the people) — DOM order still people · head · Tafel. */
-  :root[data-design="forest"]:not([data-scheme="dark"]) .result-screen--forest:has(.tisch[hidden]) {
-    grid-template-columns: minmax(150px, 190px) minmax(0, 1fr);
-  }
-  :root[data-design="forest"]:not([data-scheme="dark"]) .result-screen--forest:has(.tisch[hidden]) .forest-result__people { grid-row: 1 / span 2; }
-  :root[data-design="forest"]:not([data-scheme="dark"]) .result-screen--forest:has(.tisch[hidden]) :is(.forest-result__main, .forest-result__tafel) { grid-column: 2; }
-  :root[data-design="forest"]:not([data-scheme="dark"]) .result-screen--forest .forest-result__people .result-people__list {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 18px;
-  }
-  :root[data-design="forest"]:not([data-scheme="dark"]) .result-screen--forest .forest-result__people .result-people__person {
-    flex-direction: row;
-    gap: 12px;
+  /* The foot on ONE line in the side column: „Noch eine Session" at its own
+     width rather than a 12em basis, which pushed „Mehr" to a second line. A
+     long locale still wraps — nothing overflows. */
+  :root[data-design="forest"]:not([data-scheme="dark"]) .result-screen--forest .forest-result__side .result-foot__again { flex: 1 1 auto; }
+}
+/* Pinned while the Tafel scrolls — but only where the whole side column fits
+   under the top bar. A sticky column taller than the viewport strands its own
+   bottom: the foot would stay cut off until the very end of the scroll. The
+   height is the column's measured one at 1440 with a played game (~945px:
+   four people, a three-line headline, the foot, the tree's 520px scene, the
+   fact line) plus the 80px offset and some slack; below it the column is
+   static, and the foot is in the first viewport anyway, under the headline.
+   `align-self: start` comes from the grid's `align-items`, without which the
+   item would stretch and have no travel. */
+@media (min-width: 1280px) and (min-height: 1080px) {
+  :root[data-design="forest"]:not([data-scheme="dark"]) .result-screen--forest .forest-result__side {
+    position: sticky;
+    top: 80px;
   }
 }
 :root[data-design="forest"]:not([data-scheme="dark"]) .result-screen--forest .page-head--result { margin-bottom: 16px; }
@@ -3511,13 +3525,13 @@
 }
 /* „Session Nr. 23 · 9. Sieg für Jonas · Nordlichter zum 4. Mal" — facts, not
    prose, in soft ink under the scene. */
-:root[data-design="forest"]:not([data-scheme="dark"]) .forest-facts {
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-result__facts {
   margin: -8px 0 20px;
   font-size: var(--text-md);
   font-weight: 700;
   color: var(--ink-soft);
 }
-:root[data-design="forest"]:not([data-scheme="dark"]) .forest-facts[hidden] { display: none; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-result__facts[hidden] { display: none; }
 
 /* The Tafel: „Die Abstimmung · 3 Spiele" as one card of compact rows — rank,
    cover, title with who brings it, the distribution, the score leaf and the
@@ -3643,25 +3657,31 @@
 /* The axis glyph stays in ink: the ramp's light rungs are not a 3:1 glyph on
    white (the colour is the bar's; the face and numeral name the rung). */
 :root[data-design="forest"]:not([data-scheme="dark"]) .result-screen--forest .trow__bars .bar-axis .ti { color: var(--ink-soft); }
-/* ONE LINE only where the Tafel is wide: the single column from 720px up to
-   the three-column layout, where its own column is ~500px and the row keeps the
-   distribution under the title instead. */
-@media (min-width: 720px) and (max-width: 1279px) {
+/* ONE LINE wherever the row is wide (#1568, as Ocean's since #1430): the
+   distribution beside the title and a still-choosing row's „Spielen" / „Auf
+   dem Tisch" inline instead of on a line of its own. The distribution stays
+   shown on every row and stays LAST in the DOM (#1363) — only its grid area
+   moves, never `order`. From 720px the Tafel is ≥ ~600px wide in both
+   arrangements: the single column below 1280, and the Tafel column from 1280,
+   whose floor is ~650px at a 1280 viewport. Below it the two-line row above
+   stands. */
+@media (min-width: 720px) {
   :root[data-design="forest"]:not([data-scheme="dark"]) .result-screen--forest .tafel .trow,
   :root[data-design="forest"]:not([data-scheme="dark"]) .result-screen--forest .tafel .trow:has(.play-btn, .trow__chip) {
     grid-template-columns: 22px 52px minmax(0, 1fr) auto auto auto;
     grid-template-areas: "rank cover main bars pill sub";
   }
   :root[data-design="forest"]:not([data-scheme="dark"]) .result-screen--forest .trow__bars { padding-top: 0; }
-}
-@media (min-width: 1280px) {
-  /* …and again once the Tafel takes the middle (no game on the table yet). */
-  :root[data-design="forest"]:not([data-scheme="dark"]) .result-screen--forest:has(.tisch[hidden]) .tafel .trow,
-  :root[data-design="forest"]:not([data-scheme="dark"]) .result-screen--forest:has(.tisch[hidden]) .tafel .trow:has(.play-btn, .trow__chip) {
-    grid-template-columns: 22px 52px minmax(0, 1fr) auto auto auto;
-    grid-template-areas: "rank cover main bars pill sub";
+  /* „Gehört …" beside the title rather than under it (#1430's operator
+     decision, carried over); the veto pill keeps a line of its own under both. */
+  :root[data-design="forest"]:not([data-scheme="dark"]) .result-screen--forest .tafel .trow .trow__main {
+    display: grid;
+    grid-template-columns: minmax(0, max-content) minmax(0, 1fr);
+    align-items: baseline;
+    column-gap: 12px;
   }
-  :root[data-design="forest"]:not([data-scheme="dark"]) .result-screen--forest:has(.tisch[hidden]) .trow__bars { padding-top: 0; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .result-screen--forest .tafel .trow .trow__main > :not(.trow__title):not(.trow__owners) { grid-column: 1 / -1; justify-self: start; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .result-screen--forest .tafel .trow .trow__owners { margin-top: 0; }
 }
 /* The veto line — „1× gar nicht" — with the veto's own word, on the veto ramp
    colour with its light ink (F1.5: the veto always with its word). */
@@ -3677,12 +3697,13 @@
 }
 :root[data-design="forest"]:not([data-scheme="dark"]) .result-screen--forest .tafel-top .trow .score-why { color: var(--score-veto-ink); }
 
-/* The foot: „Noch eine Session" with the whirl, „Teilen", „Mehr". */
+/* The foot: „Noch eine Session" with the whirl, „Teilen", „Mehr" — under the
+   headline and over the scene since #1568, so it keeps a gap below as well. */
 :root[data-design="forest"]:not([data-scheme="dark"]) .result-screen--forest .result-foot {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-  margin-top: 16px;
+  margin: 16px 0 20px;
 }
 :root[data-design="forest"]:not([data-scheme="dark"]) .result-screen--forest .result-foot[hidden] { display: none; }
 :root[data-design="forest"]:not([data-scheme="dark"]) .result-screen--forest .result-foot__again {

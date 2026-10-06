@@ -1554,9 +1554,9 @@ async function showResults(round, session, gamesHint, reveal, plain) {
   // — the band and its foot in the column beside the Tafel — and prints the
   // report's kicker over the headline and every step's count in the Tafel.
   const phLook = designIs('programmheft');
-  // Forest (#1468, F2.4/F4.3) takes it too and arranges it in three columns at
-  // the end — the people, the sentence over the grown tree and the fact line,
-  // the Tafel with the corrections and the foot (composeForestResult).
+  // Forest (#1468, F2.4/F4.3) takes it too and arranges it in two columns at
+  // the end (#1568) — the people, the sentence over the grown tree, the fact
+  // line and the foot beside the Tafel (composeForestResult).
   const forestLook = forestWorn();
   const tischLook = designIs('tisch') || oceanLook || brueckeLook || phLook || forestLook;
   // „1× kein Schub" under Die Brücke — the scale's end word, never „kein Veto".
@@ -1679,7 +1679,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
   // Forest's kicker replaces the subtitle the same way (F2.4, F4.3): it carries
   // the date, and the Tafel's title the count. The fact line under the scene is
   // painted by updateTitle(), which every phase change reaches.
-  const forestFacts = forestLook ? h('<p class="forest-facts" hidden></p>') : null;
+  const forestFacts = forestLook ? h('<p class="forest-result__facts" hidden></p>') : null;
   if (forestLook) {
     head.querySelector('.muted').remove();
     head.firstElementChild.prepend(forestResultKicker(session));
@@ -2675,9 +2675,9 @@ async function showResults(round, session, gamesHint, reveal, plain) {
   // ("nothing belongs after a back link") is satisfied by construction.
   // Der Tisch ends on its own foot instead, which carries the same two actions
   // behind „Mehr" (renderTischFoot) — still the last block on the screen, except
-  // under Ocean, whose composer moves it into the side column ahead of the
-  // Tafel (#1430): there the destructive pair is one more tap away behind
-  // „Mehr", and „Noch eine Session" is what the screen is for next.
+  // under Ocean and Forest, whose composers move it into the side column ahead
+  // of the Tafel (#1430, #1568): there the destructive pair is one more tap
+  // away behind „Mehr", and „Noch eine Session" is what the screen is for next.
   if (tischFoot) {
     // Der Tisch's own foot sits under the box, inside its slot (#1430): the
     // slot is ONE grid item, so the foot travels with the pinned box beside the
