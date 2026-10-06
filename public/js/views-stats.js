@@ -33,14 +33,16 @@
 
 // The six podiums, in render order, each with the icon and the i18n key that
 // phrases its value. Data rather than six near-identical branches, so adding a
-// metric is a row here and a key pair in every lang file.
+// metric is a row here and a key pair in every lang file. `bar` names the
+// count a design may draw the card's list as bars of (#1424, Das Programmheft's
+// „Meistgespielt") — the four play cards, whose entries are comparable counts.
 //
 // Icons are declared in the bundled tabler subset — an UNDECLARED class renders
 // nothing at all, silently (.claude/rules/tabler-icon-codepoints.md). All six
 // are already used elsewhere in the app.
 const STATS_PODIUMS = [
   { key: 'mostOwned', icon: 'ti-cards', line: (e) => tn(e.shelves, 'stats.shelves.one', 'stats.shelves.many') },
-  { key: 'playedWeek', icon: 'ti-flame', line: (e) => tn(e.plays, 'stats.plays.one', 'stats.plays.many') },
+  { key: 'playedWeek', icon: 'ti-flame', bar: 'plays', line: (e) => tn(e.plays, 'stats.plays.one', 'stats.plays.many') },
   /* The month and the year NAME their period (#964), from `entry.period` rather
      than from the reader's clock. The counts are calendar-bounded on the
      server's Europe/Berlin calendar and cached for everyone, so a label built
@@ -48,15 +50,15 @@ const STATS_PODIUMS = [
      a reader is in another zone or the payload is a few minutes past midnight
      on the 1st — which is the whole class of bug this replaced. The week names
      none: nobody reads ISO week numbers. */
-  { key: 'playedMonth', icon: 'ti-calendar', label: (e) => t('stats.playedMonth', { month: fmtMonthKey(e.period) }), line: (e) => tn(e.plays, 'stats.plays.one', 'stats.plays.many') },
-  { key: 'playedYear', icon: 'ti-history', label: (e) => t('stats.playedYear', { year: e.period }), line: (e) => tn(e.plays, 'stats.plays.one', 'stats.plays.many') },
+  { key: 'playedMonth', icon: 'ti-calendar', bar: 'plays', label: (e) => t('stats.playedMonth', { month: fmtMonthKey(e.period) }), line: (e) => tn(e.plays, 'stats.plays.one', 'stats.plays.many') },
+  { key: 'playedYear', icon: 'ti-history', bar: 'plays', label: (e) => t('stats.playedYear', { year: e.period }), line: (e) => tn(e.plays, 'stats.plays.one', 'stats.plays.many') },
   /* All-time (#1035), after the three calendar cards so the ladder reads
      week → month → year → ever. It names no period and takes the static
      `t('stats.' + key)` path, like `mostOwned` and `playedWeek` — and its label
      deliberately names the PHENOMENON („Spielwirbels Dauerbrenner") rather than
      the measurement the other three state, because there is no window to name.
      The value line reuses the same plural pair unchanged. */
-  { key: 'playedAll', icon: 'ti-crown', line: (e) => tn(e.plays, 'stats.plays.one', 'stats.plays.many') },
+  { key: 'playedAll', icon: 'ti-crown', bar: 'plays', line: (e) => tn(e.plays, 'stats.plays.one', 'stats.plays.many') },
   /* The value is the SPIELWIRBEL-SCORE, not a raw mean (#914) — so the copy must
      not call it an average, and the card carries the ⓘ that explains it. This is
      the only surface where a LOGGED-OUT visitor meets the score, which is why
@@ -111,16 +113,24 @@ const STATS_FAVOURITES = [
   line: (e) => tn(e.games, 'stats.favGamesOne', 'stats.favGames', { score: fmtAvg(e.score) }),
 }));
 
+/* A card's ranked entries (#1424). An ARRAY since #1424 — a single entry
+   object before it — and both are read: the service worker can serve a client
+   from before the deploy against the new payload or the reverse for a load, so
+   neither side may assume the other's shape. */
+const statsList = (v) => (Array.isArray(v) ? v : v ? [v] : []).filter(Boolean);
+
 // Every card the payload can carry, in render order, each paired with the
-// entry it draws: game podiums first, then the favourites. One list, so the
-// full block and the home panel's first few cannot order them differently.
+// ranked entries it draws: game podiums first, then the favourites. One list,
+// so the full block and the home panel's first few cannot order them
+// differently.
 function statsEntries(stats) {
   const games = stats.games || {};
   const names = stats.names || {};
+  const asTitle = (n) => ({ title: n.name, image: null, url: null, ...n });
   return [
-    ...STATS_PODIUMS.filter((p) => games[p.key]).map((p) => [p, games[p.key]]),
-    ...STATS_FAVOURITES.filter((f) => names[f.key]).map((f) => [f, { title: names[f.key].name, image: null, url: null, ...names[f.key] }]),
-  ];
+    ...STATS_PODIUMS.map((p) => [p, statsList(games[p.key])]),
+    ...STATS_FAVOURITES.map((f) => [f, statsList(names[f.key]).map(asTitle)]),
+  ].filter(([, list]) => list.length);
 }
 
 /* A list of cards with ONE ⓘ per topic: the favourites carry the score topic
@@ -128,10 +138,10 @@ function statsEntries(stats) {
    that has it explains the number for every card after it. */
 function statsCardsHtml(entries) {
   const explained = new Set();
-  return entries.map(([p, entry]) => {
+  return entries.map(([p, list]) => {
     const withInfo = !!p.info && !explained.has(p.info);
     if (withInfo) explained.add(p.info);
-    return statsCard(p, entry, withInfo);
+    return statsCard(p, list, withInfo);
   }).join('');
 }
 
@@ -163,25 +173,77 @@ function publicStatsHasContent(stats) {
   return !!stats && (!!stats.counters || !!stats.games || !!stats.names);
 }
 
-// One podium card. The cover is sized at render time — a provider master can be
-// several thousand pixels wide (.claude/rules/provider-cover-sizing.md) — and is
-// decorative here: the title beside it is the accessible name, so alt is empty
-// rather than a duplicate.
-function statsCard(podium, entry, withInfo = !!podium.info) {
+// An entry's name: an outbound provider link when the payload carries one,
+// plain text otherwise (a favourite's name, an unlinked game).
+function statsTitle(entry, cls) {
+  return entry.url
+    ? `<a class="${cls}" href="${esc(entry.url)}" target="_blank" rel="noopener noreferrer">${esc(entry.title)}</a>`
+    : `<span class="${cls}">${esc(entry.title)}</span>`;
+}
+
+/* One card: a metric and its ranked entries (#1424). The LEADER keeps the
+   markup the card had when it held one winner — cover, label, title, value —
+   so every design's rules for it still apply, and places 2–3 follow as compact
+   rows in an <ol> carrying a visible rank. The leader's own rank is implied by
+   its place, as it was before the list existed.
+
+   The cover is sized at render time — a provider master can be several
+   thousand pixels wide (.claude/rules/provider-cover-sizing.md) — and is
+   decorative here: the title beside it is the accessible name, so alt is empty
+   rather than a duplicate. Places 2–3 draw no cover: three thumbnails per card
+   would make the grid a wall of art. */
+function statsCard(podium, list, withInfo = !!podium.info) {
+  const [entry, ...rest] = list;
+  const label = `<span class="stats-card__label"><i class="ti ${podium.icon}" aria-hidden="true"></i>${esc(podium.label ? podium.label(entry) : t('stats.' + podium.key))}${withInfo ? ` ${infoButton(podium.info)}` : ''}</span>`;
+  // A design owns its layout: Das Programmheft draws its „Meistgespielt" cards
+  // as a bar list (P14.5), every other design keeps the card.
+  if (podium.bar && designIs('programmheft')) return statsBarCard(podium, list, label);
   const cover = entry.image
     ? `<img class="stats-card__cover" src="${esc(coverUrl(entry.image, COVER_THUMB))}" alt="" loading="lazy" />`
     : '<span class="stats-card__cover stats-card__cover--none" aria-hidden="true"></span>';
-  const title = entry.url
-    ? `<a class="stats-card__title" href="${esc(entry.url)}" target="_blank" rel="noopener noreferrer">${esc(entry.title)}</a>`
-    : `<span class="stats-card__title">${esc(entry.title)}</span>`;
+  const more = rest.length
+    ? `<ol class="stats-card__more" start="2">${rest.map((e, i) => `
+        <li class="stats-card__row">
+          <span class="stats-card__rank">${i + 2}</span>
+          <span class="stats-card__row-body">
+            ${statsTitle(e, 'stats-card__row-title')}
+            <span class="stats-card__row-value muted">${esc(podium.line(e))}</span>
+          </span>
+        </li>`).join('')}</ol>`
+    : '';
   return `
     <li class="stats-card">
       ${cover}
       <span class="stats-card__body">
-        <span class="stats-card__label"><i class="ti ${podium.icon}" aria-hidden="true"></i>${esc(podium.label ? podium.label(entry) : t('stats.' + podium.key))}${withInfo ? ` ${infoButton(podium.info)}` : ''}</span>
-        ${title}
+        ${label}
+        ${statsTitle(entry, 'stats-card__title')}
         <span class="stats-card__value muted">${esc(podium.line(entry))}</span>
-      </span>
+      </span>${more}
+    </li>`;
+}
+
+/* Das Programmheft's „Meistgespielt" (P14.5, #1416 → #1424): every entry —
+   the leader included — as one row of rank, title, an ink bar and the count.
+   The bar's length is the entry's share of the LEADER's count, so the leader's
+   bar is always full and a list reads as a comparison, not as absolute
+   magnitudes. `--stats-share` is written inline and is data only: a design
+   reads it and never sets it (.claude/rules/inline-custom-properties-cannot-be-overridden.md). */
+function statsBarCard(podium, list, label) {
+  const top = list[0][podium.bar] || 1;
+  const rows = list.map((e, i) => {
+    const share = Math.round((e[podium.bar] / top) * 1000) / 1000;
+    return `
+      <li class="stats-card__bar-row" style="--stats-share: ${share}">
+        <span class="stats-card__rank">${i + 1}</span>
+        ${statsTitle(e, i === 0 ? 'stats-card__title stats-card__row-title' : 'stats-card__row-title')}
+        <span class="stats-card__bar" aria-hidden="true"></span>
+        <span class="stats-card__row-value">${esc(podium.line(e))}</span>
+      </li>`;
+  }).join('');
+  return `
+    <li class="stats-card stats-card--bars">
+      ${label}
+      <ol class="stats-card__bars">${rows}</ol>
     </li>`;
 }
 

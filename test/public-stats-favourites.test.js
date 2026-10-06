@@ -140,12 +140,12 @@ test('the favourites rank by score, need three games by default, and carry no ty
 
   const built = await publicStats.rebuild();
   assert.ok(built.names, 'the favourites block is present');
-  assert.equal(built.names.favDesigner.name, 'Few Designer');
-  assert.equal(built.names.favCategory.name, 'Strategy');
-  assert.equal(built.names.favMechanic.name, 'Worker Placement');
-  assert.equal(built.names.favDesigner.games, 3);
-  assert.equal(typeof built.names.favDesigner.score, 'number');
-  assert.equal(built.names.favDesigner.score, Math.round(built.names.favDesigner.score * 10) / 10,
+  assert.equal(built.names.favDesigner[0].name, 'Few Designer');
+  assert.equal(built.names.favCategory[0].name, 'Strategy');
+  assert.equal(built.names.favMechanic[0].name, 'Worker Placement');
+  assert.equal(built.names.favDesigner[0].games, 3);
+  assert.equal(typeof built.names.favDesigner[0].score, 'number');
+  assert.equal(built.names.favDesigner[0].score, Math.round(built.names.favDesigner[0].score * 10) / 10,
     'rounded to one decimal, like bestRated');
   assert.ok(!JSON.stringify(built).includes('GETIPPT'), 'no user-typed title or link field reaches the payload');
 
@@ -164,7 +164,7 @@ test('each favourite is absent until a name clears its floor, and 0 is honoured'
   process.env.PUBLIC_STATS_MIN_NAME_GAMES = '0';
   publicStats.resetForTests();
   const open = await publicStats.rebuild();
-  assert.equal(open.names.favDesigner.name, 'Ann Designer');
+  assert.equal(open.names.favDesigner[0].name, 'Ann Designer');
   assert.equal(open.names.favCategory, undefined, 'no game carries a category, so no card');
 });
 
@@ -178,7 +178,7 @@ test('BGG’s (Uncredited) sentinel never wins the designer card', async () => {
   await seedRated([{ id: 'u', rating: 5 }, { id: 'c', rating: 2 }]);
 
   const built = await publicStats.rebuild();
-  assert.equal(built.names.favDesigner.name, 'Credited Designer');
+  assert.equal(built.names.favDesigner[0].name, 'Credited Designer');
 });
 
 test('a game below the „Bestbewertet“ evidence floor moves no average', async () => {
@@ -216,6 +216,6 @@ test('the BGG corpus answers without a provider hop, and an outage leaves the ca
   // Spend the whole budget on the podiums, so any name now came from the corpus.
   process.env.PUBLIC_STATS_RESOLVE_MAX = '0';
   const built = await publicStats.rebuild();
-  assert.equal(built.names.favDesigner.name, 'Corpus Designer');
-  assert.equal(built.names.favCategory.name, 'Abstract');
+  assert.equal(built.names.favDesigner[0].name, 'Corpus Designer');
+  assert.equal(built.names.favCategory[0].name, 'Abstract');
 });

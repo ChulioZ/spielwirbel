@@ -305,7 +305,8 @@
   .konto-section__h,
   .rs-section__h,
   .friends-section__h,
-  .k-band__h
+  .k-band__h,
+  .stats-card__row-title
 ) {
   font-family: var(--font);
 }
@@ -2774,6 +2775,13 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+/* From 1280px the Discover column widens to --w-detail (#1424, styles.css):
+   three columns of rows, so the page is not 1560px tall beside empty margins. */
+@media (min-width: 1280px) {
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .app > .stats-block .stats-cards {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
 :root[data-design="programmheft"]:not([data-scheme="dark"]) .stats-block .stats-card {
   gap: var(--space-3);
   min-height: 72px;
@@ -2800,6 +2808,33 @@
   color: var(--ink);
 }
 :root[data-design="programmheft"]:not([data-scheme="dark"]) .stats-block .stats-card__value { color: var(--ink-2); }
+/* P14.5 „Meistgespielt" as bars (#1424): rank in Anton, the title bold, an
+   ink bar the length of the entry's share of the leader's plays, the count at
+   the right — the sheet's row, three of them per card. The rank column is the
+   sheet's 26px; the leader carries no cover here, by the sheet. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .stats-block .stats-card--bars {
+  padding: var(--space-3) 0;
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .stats-block .stats-card__bar-row { min-height: 36px; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .stats-block .stats-card__bar-row .stats-card__rank {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 24px;
+  line-height: 1;
+  color: var(--ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .stats-block .stats-card__bar-row .stats-card__row-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .stats-block .stats-card__bar { height: 16px; background: var(--ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .stats-block .stats-card__bar-row .stats-card__row-value {
+  font-size: 14px;
+  color: var(--ink-2);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .stats-block .stats-card__more { border-top: 1px dotted var(--hair); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .stats-block .stats-card__rank { color: var(--ink); }
 
 /* ===== #1376 — Anmelden, Konto erstellen, Passkey, Konto, Designwahl ===== */
 /* P5 (docs/design/programmheft/Programmheft-P5-Konto.dc.html): P5.1/P5.2 the

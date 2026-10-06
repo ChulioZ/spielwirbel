@@ -193,7 +193,7 @@ test('the podium names the game from the PROVIDER, never from the typed title', 
 
   const built = await rebuild();
   assert.ok(built.games, 'the podium block is present');
-  assert.equal(built.games.mostOwned.title, `Provider-Titel ${externalId}`);
+  assert.equal(built.games.mostOwned[0].title, `Provider-Titel ${externalId}`);
 
   // The generic sweep: serialize the WHOLE payload and assert the user-authored
   // string is absent anywhere in it. Written this way — rather than checking the
@@ -205,7 +205,7 @@ test('the podium names the game from the PROVIDER, never from the typed title', 
   const res = await request(app).get('/api/stats/public');
   assert.equal(res.status, 200);
   assert.ok(!JSON.stringify(res.body).includes('MEIN GETIPPTER TITEL'));
-  assert.equal(res.body.games.mostOwned.title, `Provider-Titel ${externalId}`);
+  assert.equal(res.body.games.mostOwned[0].title, `Provider-Titel ${externalId}`);
 });
 
 test('the route serves the CACHED payload and never resolves per request', async () => {
@@ -278,7 +278,7 @@ test('most-owned needs several ACCOUNTS, not one account with several rounds', a
   // Drop the account floor and the very same data qualifies — so the assertion
   // above is about the gate, not about the fixture being too small.
   process.env.PUBLIC_STATS_MIN_OWNER_TENANTS = '1';
-  assert.equal((await rebuild()).games.mostOwned.shelves, 2);
+  assert.equal((await rebuild()).games.mostOwned[0].shelves, 2);
 });
 
 /* ------------------------ calendar periods (#964) --------------------------- */
@@ -300,8 +300,8 @@ test('the month and year cards carry the PERIOD they are counting', async () => 
   await seedPlayedGame({ externalId: 'thing-period', title: 'Periodisch' });
 
   const built = await rebuild('2024-11-15T12:00:00.000Z');
-  assert.equal(built.games.playedMonth.period, '2024-11');
-  assert.equal(built.games.playedYear.period, '2024');
+  assert.equal(built.games.playedMonth[0].period, '2024-11');
+  assert.equal(built.games.playedYear[0].period, '2024');
   // The week card names no period on purpose — nobody reads ISO week numbers —
   // so it must not grow one by accident.
   assert.equal('period' in built.games.playedWeek, false, 'the week card names no period');
@@ -453,7 +453,7 @@ test('the runner-up is published when the leader cannot be resolved', async () =
 
   stubProvider({ 'thing-leader': { provider: 'bgg', externalId: 'thing-leader', title: null } });
   const built = await rebuild();
-  assert.equal(built.games.mostOwned.title, 'Provider-Titel thing-runner');
+  assert.equal(built.games.mostOwned[0].title, 'Provider-Titel thing-runner');
 });
 
 /* ------------------------------ the scheduler ------------------------------- */
@@ -483,9 +483,9 @@ test('the podium ranks on the score, so a veto loses to a game nobody objects to
   });
 
   const built = await rebuild();
-  assert.equal(built.games.bestRated.title, 'Provider-Titel thing-content');
-  assert.equal(built.games.bestRated.score, 3.3);
-  assert.equal(built.games.bestRated.ratings, 3);
+  assert.equal(built.games.bestRated[0].title, 'Provider-Titel thing-content');
+  assert.equal(built.games.bestRated[0].score, 3.3);
+  assert.equal(built.games.bestRated[0].ratings, 3);
 });
 
 /* #928's acceptance criterion for this surface, and the bug it names: until then
@@ -536,12 +536,12 @@ test('#928 deep evidence outranks a thin unanimous verdict — the podium is shr
   }
 
   const built = await rebuild();
-  assert.equal(built.games.bestRated.ratings, 12, 'the deep game won');
-  assert.equal(built.games.bestRated.title, 'Provider-Titel thing-deep');
+  assert.equal(built.games.bestRated[0].ratings, 12, 'the deep game won');
+  assert.equal(built.games.bestRated[0].title, 'Provider-Titel thing-deep');
   // 12 votes at Ø 4,5 shrink to 4,1; 3 votes at 5,0 shrink to 3,9. Unshrunk the
   // order is 5,0 against 4,5 — i.e. exactly reversed, which is what makes the
   // winner here evidence about the shrinkage rather than about the fixture.
-  assert.equal(built.games.bestRated.score, 4.1);
+  assert.equal(built.games.bestRated[0].score, 4.1);
 });
 
 /* Five vetoes score −5, and a negative on a public front door reads as a broken
@@ -561,8 +561,8 @@ test('a published score is clamped at the display floor, but the RANKING is not'
   });
 
   const built = await rebuild();
-  assert.equal(built.games.bestRated.title, 'Provider-Titel thing-bad', 'the floor decided the ranking');
-  assert.equal(built.games.bestRated.score, 0, 'a negative reached the public payload');
+  assert.equal(built.games.bestRated[0].title, 'Provider-Titel thing-bad', 'the floor decided the ranking');
+  assert.equal(built.games.bestRated[0].score, 0, 'a negative reached the public payload');
 });
 
 /* THE CURVE HAS ONE HOME (#914). The repo aggregate reports a per-tile histogram
@@ -586,16 +586,16 @@ test('retuning TILE_VALUE moves the published score — the curve is not restate
   const { TILE_VALUE } = require('../public/js/vote-score');
   const original = TILE_VALUE.slice();
 
-  assert.equal((await rebuild()).games.bestRated.score, 2.4, 'the shipped curve');
+  assert.equal((await rebuild()).games.bestRated[0].score, 2.4, 'the shipped curve');
 
   try {
     // Forgive the veto entirely: `{5,5,1}` becomes the raw mean again.
     TILE_VALUE[1] = 1;
-    assert.equal((await rebuild()).games.bestRated.score, 3.3, 'the podium did not follow the retune');
+    assert.equal((await rebuild()).games.bestRated[0].score, 3.3, 'the podium did not follow the retune');
   } finally {
     original.forEach((v, i) => { TILE_VALUE[i] = v; });
   }
-  assert.equal((await rebuild()).games.bestRated.score, 2.4, 'the retune leaked out of the case');
+  assert.equal((await rebuild()).games.bestRated[0].score, 2.4, 'the retune leaked out of the case');
 });
 
 /* THE PODIUM MAY NOT CROWN AN UNRATED GAME — a regression #928 introduced and
@@ -658,9 +658,9 @@ test('#928 a game with no ratings can never take the best-rated podium', async (
   }));
 
   const built = await rebuild();
-  assert.equal(built.games.bestRated.title, 'Provider-Titel thing-meh',
+  assert.equal(built.games.bestRated[0].title, 'Provider-Titel thing-meh',
     'an unrated game outranked a rated one on the best-rated podium');
-  assert.equal(built.games.bestRated.ratings, 1);
+  assert.equal(built.games.bestRated[0].ratings, 1);
 });
 
 /* THE PLAY LIFT REACHES THIS PODIUM TOO (#928), which is the half of the parity
@@ -718,12 +718,12 @@ test('#928 plays lift the published score, using the all-time count', async () =
   }
 
   const built = await rebuild();
-  assert.equal(built.games.bestRated.title, 'Provider-Titel thing-staple',
+  assert.equal(built.games.bestRated[0].title, 'Provider-Titel thing-staple',
     'without the play lift the better-rated but unplayed game would win');
   // {3,3,3} shrunk toward a prior six plays lifted to 4,5 -> 3,9. The quiet
   // game's {4,4,4} shrinks to 3,4, which is what it would have won with.
-  assert.equal(built.games.bestRated.score, 3.9);
-  assert.equal(built.games.bestRated.ratings, 3);
+  assert.equal(built.games.bestRated[0].score, 3.9);
+  assert.equal(built.games.bestRated[0].ratings, 3);
 });
 
 /* THE PODIUM PRINTS THE REGAL'S NUMBER — unfinished plays included (#1329).
@@ -787,11 +787,11 @@ test('#1329 the podium score equals the Regal score when some plays are unfinish
   const regal = Math.round(Math.max(SCORE_MIN, shelfScore(sc.score, sc.count, plays)) * 10) / 10;
 
   const built = await rebuild();
-  assert.equal(built.games.bestRated.title, 'Provider-Titel thing-open');
-  assert.equal(built.games.bestRated.score, regal, 'Discover and the Regal print different numbers');
-  assert.equal(built.games.bestRated.plays, 6, 'the line shows the plays that lifted the score');
+  assert.equal(built.games.bestRated[0].title, 'Provider-Titel thing-open');
+  assert.equal(built.games.bestRated[0].score, regal, 'Discover and the Regal print different numbers');
+  assert.equal(built.games.bestRated[0].plays, 6, 'the line shows the plays that lifted the score');
   // The most-played tiles are NOT this count: they stay finished-only (#1059).
-  assert.equal(built.games.playedAll.plays, 2, 'the all-time card counts finished plays only');
+  assert.equal(built.games.playedAll[0].plays, 2, 'the all-time card counts finished plays only');
 });
 
 /* PLAYS ARE EVIDENCE FOR THE GATE (#1329). A game rated once and played a lot
@@ -832,8 +832,12 @@ test('#1329 ratings plus plays clear the evidence floor; ratings alone no longer
   assert.equal('bestRated' in ((await rebuild()).games || {}), false, '1 rating + 3 plays is under the floor of 5');
 
   await pick();
-  const bestRated = ((await rebuild()).games || {}).bestRated;
-  assert.ok(bestRated, '1 rating + 4 plays is five pieces of evidence');
+  const list = ((await rebuild()).games || {}).bestRated;
+  assert.ok(list, '1 rating + 4 plays is five pieces of evidence');
+  // Since #1424 the card is a list, so the never-rated game must be absent from
+  // EVERY place, not merely from first.
+  assert.equal(list.length, 1, 'a never-rated game reached the best-rated list');
+  const [bestRated] = list;
   assert.equal(bestRated.title, 'Provider-Titel thing-evidence', 'a never-rated game took the best-rated podium');
   assert.equal(bestRated.ratings, 1);
   assert.equal(bestRated.plays, 4);
@@ -883,8 +887,8 @@ test('the all-time card needs two GROUPS behind it, and no magnitude floor', asy
   try {
     const games = (await rebuild()).games || {};
     assert.ok(games.playedAll, 'two groups, one play each — and no magnitude floor in the way');
-    assert.equal(games.playedAll.plays, 2);
-    assert.equal(games.playedAll.title, 'Provider-Titel thing-alltime');
+    assert.equal(games.playedAll[0].plays, 2);
+    assert.equal(games.playedAll[0].title, 'Provider-Titel thing-alltime');
     assert.equal('period' in games.playedAll, false, 'all-time names no period');
     assert.equal('playedYear' in games, false, 'while the year card is still under its own floor');
 
@@ -915,8 +919,8 @@ test('the all-time card ranks on the all-time count, not on any calendar window'
 
   const built = await rebuild('2031-06-15T12:00:00.000Z');
   const games = built.games || {};
-  assert.equal(games.playedAll.url.includes('thing-old'), true, 'all-time sees both old plays');
-  assert.equal(games.playedAll.plays, 2);
+  assert.equal(games.playedAll[0].url.includes('thing-old'), true, 'all-time sees both old plays');
+  assert.equal(games.playedAll[0].plays, 2);
   assert.equal('playedYear' in games, false, 'and 2031 saw none of them');
 });
 
@@ -930,6 +934,6 @@ test('the all-time and year winners may be the same game — both cards still re
   await seedPlayedGame({ externalId: 'thing-both', title: 'Beides' });
 
   const games = (await rebuild()).games || {};
-  assert.equal(games.playedAll.url, games.playedYear.url, 'the fixture really is the same game');
+  assert.equal(games.playedAll[0].url, games.playedYear[0].url, 'the fixture really is the same game');
   assert.ok(games.playedAll && games.playedYear, 'and both cards are published');
 });
