@@ -857,8 +857,9 @@ What the app does, in detail. For a short overview see the
   rarer moves into the „…" menu beside „Zurück": unfriend, withdraw a request,
   and report the account. On your own profile the picture wears a pencil and
   leads to Konto, which is where it is actually changed.
-  Below the card is that account's activity, as a grid of tiles rather than a
-  column of rows — **only between accepted friends**, and still only for activity
+  Below the card — beside it from 1100px wide, in every design (#1583), with
+  the card in the left column — is that account's activity, as a grid of tiles
+  rather than a column of rows — **only between accepted friends**, and still only for activity
   after you became friends. No e-mail address is ever shown. Signing in is
   required, so profiles are not public web pages and are not crawlable.
 - **Your own profile, and your record across rounds** – *accounts mode only*

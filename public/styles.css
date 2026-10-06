@@ -5090,6 +5090,41 @@ a.k-tile:focus-visible,
    identity the card states. */
 .profile-note { font-size: var(--text-sm); margin: 0 0 18px; }
 .profile-screen > .empty-note { margin-top: 0; }
+/* Two columns from 1100px (#1583): die Spielerkarte stands at the left, and
+   everything else — the friend note, „Dein Rückblick", „Aktivitäten" — reads
+   beside it. Stacked full width, the Rückblick's month picker alone ran ~1200px
+   wide at 1440. This is the composition Die Brücke, Das Programmheft and Forest
+   drew first (B14.1/P14.1/F14.2); their own sheets restate it with their own
+   card width and gap, at a higher specificity, so this base is what Klassisch,
+   Der Tisch and Ocean wear and what a new design inherits.
+
+   DOM order = visual order: the card is the first child and the left column,
+   so `grid-row: 1 / span 99` only lets it run past the right column's rows
+   rather than moving anything. Below 1100px nothing here applies — the phone
+   keeps its single column.
+
+   520px, not Die Brücke's 420: this card keeps the Tischkarte's two game
+   tiles side by side, and at 460 the „Lieblingsspiel" kicker ran past its
+   tile's edge (measured in Klassisch and Ocean). The gap carries a literal
+   fallback because Klassisch and Der Tisch declare no `--space-6` — without
+   it the column-gap is invalid at computed-value time and the two columns
+   touch (measured: 0px). */
+@media (min-width: 1100px) {
+  .profile-screen {
+    display: grid;
+    grid-template-columns: minmax(0, 520px) minmax(0, 1fr);
+    column-gap: var(--space-6, 28px);
+    align-items: start;
+  }
+  .profile-screen > * { grid-column: 2; }
+  .profile-screen > .profile-card {
+    grid-column: 1;
+    grid-row: 1 / span 99;
+    margin: 0;
+  }
+  /* Whatever stands first in the right-hand column starts at the card's top. */
+  .profile-screen > .profile-card + * { margin-top: 0; }
+}
 /* The feed: one row per event, a small square cover thumb + the line + time. */
 .feed-list { display: flex; flex-direction: column; gap: 10px; }
 .feed-item {
