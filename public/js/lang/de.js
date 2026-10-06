@@ -1495,6 +1495,9 @@ I18N.de = {
   'stats.favMechanic': 'Lieblingsmechanik',
   'stats.favGamesOne': 'Score {score} — aus {n} Spiel',
   'stats.favGames': 'Score {score} — aus {n} Spielen',
+  // The popup listing the games behind a favourite name (#1560): its title, then each game's score.
+  'stats.favListTitle': '{label} · {name}',
+  'stats.favListScore': 'Score {score}',
   // The best-rated line with the plays that lifted its score (#1329).
   // {rated} is the stats.ratedOne/stats.rated line above, already
   // inflected for the rating count; {n} is the play count.

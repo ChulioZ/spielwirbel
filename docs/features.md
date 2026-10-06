@@ -953,6 +953,9 @@ What the app does, in detail. For a short overview see the
   average, counting only games that already clear the best-rated card's
   evidence bar, and only once at least three such games across two accounts
   carry it. The names are BoardGameGeek's own, so they stay in English.
+  Each name's game count („Score 4,3 — aus 4 Spielen") opens the games behind
+  it — cover, title linking to BoardGameGeek and each game's own score, best
+  first (issue #1560) — as a popover on a wide screen and a sheet on a phone.
   Every card is a short ranked list rather than one winner (issue #1424): the
   leader with its cover, then places 2 and 3 as compact rows. Each place clears
   the card's own minimum, so a card may show fewer than three and is never

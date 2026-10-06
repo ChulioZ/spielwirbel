@@ -1439,6 +1439,9 @@ I18N.pt = {
   'stats.favMechanic': 'Mecânica favorita',
   'stats.favGamesOne': 'Pontuação {score} — de {n} jogo',
   'stats.favGames': 'Pontuação {score} — de {n} jogos',
+  // The popup listing the games behind a favourite name (#1560): its title, then each game's score.
+  'stats.favListTitle': '{label} · {name}',
+  'stats.favListScore': 'Pontuação {score}',
   'stats.ratedPlaysOne': '{rated} · {n} sessão',
   'stats.ratedPlays': '{rated} · {n} sessões',
   'stats.counter.players': 'jogadores',

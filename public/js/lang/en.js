@@ -1504,6 +1504,9 @@ I18N.en = {
   'stats.favMechanic': 'Favourite mechanic',
   'stats.favGamesOne': 'Score {score} — from {n} game',
   'stats.favGames': 'Score {score} — from {n} games',
+  // The popup listing the games behind a favourite name (#1560): its title, then each game's score.
+  'stats.favListTitle': '{label} · {name}',
+  'stats.favListScore': 'Score {score}',
   'stats.ratedPlaysOne': '{rated} · {n} session',
   'stats.ratedPlays': '{rated} · {n} sessions',
   'stats.counter.players': 'players',

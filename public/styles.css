@@ -4588,6 +4588,54 @@ a.stats-card__row-title { color: inherit; text-decoration: none; }
 a.stats-card__row-title:hover,
 a.stats-card__row-title:focus-visible { text-decoration: underline; }
 .stats-card__row-value { font-size: var(--text-xs); }
+/* A favourite's count line as the button that lists its games (#1560). It
+   keeps the plain line's look — size and muted ink come from the value class
+   beside it — and adds a dotted underline as the affordance, solid on hover, so
+   it reads as tappable without turning the card into a row of links. The
+   padding lifts the hit box to the 24px WCAG 2.5.8 floor without moving the
+   text; the negative margin gives that height back to the card. The colour is
+   .muted's, restated: a <button> does not inherit it, and `color: inherit`
+   here would out-order .muted and paint the line in full ink. */
+.stats-card__games {
+  font: inherit;
+  color: var(--ink-soft);
+  background: none;
+  border: 0;
+  padding: 4px 0;
+  margin: -4px 0;
+  text-align: start;
+  cursor: pointer;
+  align-self: flex-start;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+}
+.stats-card__value.stats-card__games { font-size: var(--text-sm); }
+.stats-card__row-value.stats-card__games { font-size: var(--text-xs); }
+.stats-card__games:hover { text-decoration-style: solid; }
+.stats-card__games:focus-visible { outline: 2px solid var(--brand-ring, var(--brand)); outline-offset: 2px; border-radius: 2px; }
+/* The popup itself: one row per game, cover, linked title, score. Colours come
+   from the overlay's own tokens, so every design's popover/sheet paints it. */
+.popover--stats-games { width: 340px; max-width: calc(100vw - 32px); }
+.stats-games__title { margin: 0 0 10px; font-size: var(--text-md); }
+.stats-games__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.stats-games__row { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.stats-games__cover {
+  width: 40px;
+  height: 40px;
+  flex: none;
+  border-radius: var(--radius-md);
+  object-fit: cover;
+  background: var(--line);
+}
+.stats-games__cover--none { display: block; }
+.stats-games__body { display: flex; flex-direction: column; min-width: 0; }
+/* Wraps rather than ellipsising: naming the games is the popup's whole job,
+   and „Caverna: The Cave Farmers" lost its tail in a 300px card. */
+.stats-games__name { font-weight: 600; overflow-wrap: break-word; }
+a.stats-games__name { color: inherit; text-decoration: none; }
+a.stats-games__name:hover,
+a.stats-games__name:focus-visible { text-decoration: underline; }
+.stats-games__score { font-size: var(--text-sm); }
 /* A bar list (#1424) — only Das Programmheft renders one (views-stats.js
    statsBarCard), and its sheet gives it the ink. This is the structure alone:
    rank, title, a bar whose length is the entry's share of the leader's count,
