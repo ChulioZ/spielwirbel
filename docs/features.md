@@ -440,7 +440,7 @@ What the app does, in detail. For a short overview see the
     in standings order (six columns from seven people). On the result screen
     the round's Sessions 100 · 250 · 500 and a Stammgast 100 · 250 take one of
     the two places as a vermilion „Sonderausgabe" band.
-    Forest, once enabled (issue #1478), keeps a person's marks in jars with a
+    Forest keeps a person's marks in jars with a
     bark lid (issue #1477): a jar at dusk with a firefly glowing in it when
     earned, a light jar filling with moss while under way (the count beside it
     carries the number), a dashed
@@ -908,13 +908,15 @@ What the app does, in detail. For a short overview see the
   and are reportable from the profile and from a feed tile.
 - **Design (per user)** – *Der Tisch by default, Klassisch one tap away*
   (issues #1184, #1186, #1202). A design is the look the whole app wears **for
-  you** — not for the round. Five are live: **Der Tisch** — dark felt, brass and
+  you** — not for the round. Six are live: **Der Tisch** — dark felt, brass and
   paper cards, as if everything lay on the games table — **Ocean** (#1222), a
   light, water-blue design with rounded forms, **Das Programmheft** (#1383),
   black on paper with big numbers and a single vermilion, set like a printed
   theatre programme, **Die Brücke** (#1249), a dark command bridge of softly lit
-  plates in cyan and amber, whose hub button reads „Mission starten", and
-  **Klassisch**, the
+  plates in cyan and amber, whose hub button reads „Mission starten",
+  **Forest** (#1478), a light clearing at the edge of a wood — pale green
+  paper, leaf-shaped corners and fireflies at dusk, where a Session's games are
+  gathered on a tree stump — and **Klassisch**, the
   look the app started with, which stays selectable for good. Since the flip
   (#1202) Der Tisch is what every account wears until it chooses, and what a
   logged-out visitor sees (landing, sign-in, FAQ, legal pages). An account that

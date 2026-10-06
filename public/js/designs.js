@@ -496,9 +496,9 @@ const DESIGN_REGISTRY = [
      in the light, leaf-shaped corners, and a dusk ground (#24331f) as the one
      dark surface — the only place its fireflies carry meaning.
 
-     `enabled: false` until its go-live issue (#1478); the screens are
-     #1466-#1477. Outside production it is selectable like any registered
-     design, so it can be built and reviewed on dev-temp-data.
+     Live since its go-live (#1478): selectable in the chooser and on Konto for
+     every account. The screens are #1466-#1477; nobody is moved into it, and
+     the first-start chooser was deliberately not asked again for it.
 
      The accent is F1's Laubgrün, which carries text at any size (6.1:1 on the
      page, 6.4:1 on the band), so unlike Das Programmheft no second, darker
@@ -574,7 +574,7 @@ const DESIGN_REGISTRY = [
     // F8.4's share card (recap-card-forest.js, #1475): the result's clearing
     // and the period's dusk, one firefly per session.
     card: 'forest',
-    enabled: false,
+    enabled: true,
   },
 ];
 

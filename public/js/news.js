@@ -48,6 +48,117 @@
 // AFTER, which is the exact unearned interruption this design exists to avoid.
 const NEWS = [
   /*
+   * #1478, Forest goes live. A capability that did not exist: a sixth design
+   * to choose besides Der Tisch, Ocean, Das Programmheft, Die Brücke and
+   * Klassisch. Dated after the Brücke entry so every account that has read that
+   * one still gets the dot. Like the others, it says where to find it — nobody
+   * is moved into it, and the first-start chooser is deliberately NOT asked
+   * again. The hub button keeps „Session wirbeln"; it names the stump and the
+   * setup's „Laub wirbeln" so a reader who switches recognises the ritual.
+   */
+  {
+    revision: '2026-10-06',
+    kind: 'new',
+    de: {
+      title: 'Forest — ein Design wie eine Lichtung',
+      body: 'Neben „Der Tisch", „Ocean", „Das Programmheft", „Die Brücke" und '
+        + '„Klassisch" gibt es jetzt „Forest": hell wie eine Lichtung am Waldrand, '
+        + 'Laubgrün, Blattecken und Glühwürmchen in der Dämmerung. Alles bleibt an '
+        + 'derselben Stelle — Regal, Chronik, Pokale, Session wirbeln; die Spiele '
+        + 'einer Session landen dort auf einem Baumstumpf, und gezogen wird mit '
+        + '„Laub wirbeln". Wählen kannst du es jederzeit über das Paletten-Symbol '
+        + 'oben oder im Konto. Das Design gilt nur für dich; alle anderen in der '
+        + 'Runde sehen weiter ihr eigenes.',
+    },
+    en: {
+      title: 'Forest — a design like a clearing',
+      body: 'Besides „The Table", „Ocean", „The Programme", „The Bridge" and '
+        + '„Classic" there is now „Forest": bright as a clearing at the edge of a '
+        + 'wood, leaf green, leaf-shaped corners and fireflies at dusk. Everything '
+        + 'stays where it was — Shelf, History, Trophies, Start session; a '
+        + 'session\'s games gather on a tree stump there, and the draw is „Whirl '
+        + 'the leaves". Choose it any time with the palette icon at the top or in '
+        + 'your account. The design is only yours; everyone else in the round '
+        + 'keeps seeing their own.',
+    },
+    es: {
+      title: 'Forest: un diseño como un claro del bosque',
+      body: 'Además de «La mesa», «Océano», «El Programa», «El puente» y «Clásico» '
+        + 'ahora está «Forest»: luminoso como un claro en el linde del bosque, '
+        + 'verde hoja, esquinas en forma de hoja y luciérnagas al anochecer. Todo '
+        + 'sigue en su sitio: Estantería, Historial, Trofeos, Sortear sesión; allí '
+        + 'los juegos de una sesión se reúnen sobre un tocón y el sorteo es '
+        + '«Arremolinar las hojas». Puedes elegirlo cuando quieras con el icono de '
+        + 'la paleta arriba o en tu cuenta. El diseño es solo tuyo; los demás del '
+        + 'grupo siguen viendo el suyo.',
+    },
+    fr: {
+      title: 'Forest — un design comme une clairière',
+      body: 'À côté de « La table », « Océan », « Le Programme », « La passerelle » '
+        + 'et « Classique », il y a désormais « Forest » : lumineux comme une '
+        + 'clairière à l\'orée du bois, vert feuille, coins en forme de feuille et '
+        + 'lucioles au crépuscule. Tout reste à sa place — Étagère, Historique, '
+        + 'Trophées, Démarrer une session ; les jeux d\'une session s\'y '
+        + 'rassemblent sur une souche, et le tirage s\'appelle « Faire '
+        + 'tourbillonner les feuilles ». Tu peux le choisir quand tu veux avec '
+        + 'l\'icône de palette en haut ou dans ton compte. Le design n\'est que le '
+        + 'tien ; les autres du groupe gardent le leur.',
+    },
+    it: {
+      title: 'Forest: un design come una radura',
+      body: 'Oltre a «Il tavolo», «Oceano», «Il Programma», «La plancia» e '
+        + '«Classico» ora c\'è «Forest»: luminoso come una radura al margine del '
+        + 'bosco, verde foglia, angoli a forma di foglia e lucciole al crepuscolo. '
+        + 'Tutto resta al suo posto: Scaffale, Cronologia, Trofei, Avvia una '
+        + 'sessione; lì i giochi di una sessione si raccolgono su un ceppo e '
+        + 'l\'estrazione è «Far turbinare le foglie». Puoi sceglierlo quando vuoi '
+        + 'con l\'icona della tavolozza in alto o nel tuo account. Il design è solo '
+        + 'tuo; gli altri del gruppo continuano a vedere il proprio.',
+    },
+    nl: {
+      title: 'Forest — een ontwerp als een open plek in het bos',
+      body: 'Naast „De tafel", „Oceaan", „Het Programmaboekje", „De brug" en '
+        + '„Klassiek" is er nu „Forest": licht als een open plek aan de bosrand, '
+        + 'bladgroen, bladvormige hoeken en vuurvliegjes in de schemering. Alles '
+        + 'blijft op dezelfde plek — Kast, Geschiedenis, Trofeeën, Sessie starten; '
+        + 'de spellen van een sessie verzamelen zich daar op een boomstronk, en '
+        + 'geloot wordt met „Bladeren laten dwarrelen". Kies het wanneer je wilt '
+        + 'via het paletpictogram bovenaan of in je account. Het ontwerp is alleen '
+        + 'van jou; de anderen in de groep blijven hun eigen zien.',
+    },
+    pt: {
+      title: 'Forest — um design como uma clareira',
+      body: 'Além de «A mesa», «Oceano», «O Programa», «A ponte» e «Clássico», agora '
+        + 'há «Forest»: luminoso como uma clareira à beira do bosque, verde-folha, '
+        + 'cantos em forma de folha e pirilampos ao entardecer. Tudo continua no '
+        + 'mesmo lugar: Estante, Histórico, Troféus, Iniciar sessão; ali os jogos '
+        + 'de uma sessão juntam-se sobre um toco e o sorteio é «Fazer as folhas '
+        + 'rodopiar». Escolha-o quando quiser pelo ícone da paleta no topo ou na '
+        + 'sua conta. O design é só seu; os outros do grupo continuam a ver o '
+        + 'deles.',
+    },
+    fi: {
+      title: 'Forest — ulkoasu kuin metsäaukio',
+      body: '”Pöydän”, ”Valtameren”, ”Käsiohjelman”, ”Komentosillan” ja '
+        + '”Klassisen” rinnalla on nyt ”Forest”: valoisa kuin aukio metsän '
+        + 'laidalla, lehdenvihreä, lehdenmuotoiset kulmat ja tulikärpäsiä '
+        + 'hämärässä. Kaikki on yhä samassa paikassa — Hylly, Historia, Palkinnot, '
+        + 'Aloita sessio; session pelit kootaan siellä kannon päälle, ja arvonta '
+        + 'on ”Pyöräytä lehdet”. Voit valita sen milloin tahansa ylhäällä olevasta '
+        + 'palettikuvakkeesta tai tililläsi. Ulkoasu on vain sinun; muut '
+        + 'porukassa näkevät edelleen omansa.',
+    },
+    ko: {
+      title: 'Forest — 숲속 빈터 같은 디자인',
+      body: '„테이블", „바다", „프로그램북", „함교", „클래식"에 이어 이제 „Forest"가 있습니다. '
+        + '숲 가장자리의 빈터처럼 밝고, 잎사귀 초록과 잎 모양 모서리, 해 질 녘의 반딧불이가 '
+        + '어우러집니다. 선반, 기록, 트로피, 세션 시작은 모두 그 자리에 있고, 세션의 게임들은 '
+        + '나무 그루터기 위에 모이며 추첨은 „낙엽 휘날리기"로 합니다. 언제든 위쪽의 팔레트 '
+        + '아이콘이나 계정에서 고를 수 있어요. 디자인은 나에게만 적용되고, 모임의 다른 사람들은 '
+        + '계속 각자의 디자인을 봅니다.',
+    },
+  },
+  /*
    * #1249, Die Brücke goes live. A capability that did not exist: a fifth
    * design to choose besides Der Tisch, Ocean, Das Programmheft and Klassisch.
    * Dated after the Programmheft entry (which shipped the same day this was

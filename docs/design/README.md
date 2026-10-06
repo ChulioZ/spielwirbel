@@ -13,8 +13,8 @@ once by the first-start chooser; the round palettes and worlds
 are gone from the code, and a round that wore one shows the colour marker it maps
 to (`public/js/round-marker.js`). Live designs (the rows `public/js/designs.js`
 marks `enabled: true`): **Klassisch, Der Tisch, Ocean, Die Brücke, Das
-Programmheft.** Forest (#1206) is in slices, its go-live is #1478; Der Run
-(#1205) is a placeholder epic.
+Programmheft, Forest** (Forest's go-live was #1478). Der Run (#1205) is a
+placeholder epic.
 
 ## The documents
 
@@ -43,7 +43,7 @@ its epic #1207 closes when Ocean is enabled. **Die Brücke's slices are
 #1237–#1249**, filed from the package in PR #1234 (round 2) and PR #1236
 (round 3, which added the shared vote and the blind); its epic #1204 closes when
 Die Brücke is enabled. **Das Programmheft's slices are #1371–#1383**, filed
-from the package in this folder; its epic #1203 closed when it was enabled. **Forest's slices are #1465–#1476**, with its go-live #1478 and its Abzeichen skin #1477; its epic #1206 closes when Forest is enabled. The decisions behind them are in the handover's §1 and in the issues
+from the package in this folder; its epic #1203 closed when it was enabled. **Forest's slices are #1465–#1476**, with its go-live #1478 and its Abzeichen skin #1477; its epic #1206 closed when Forest was enabled. The decisions behind them are in the handover's §1 and in the issues
 themselves; do not re-derive them.
 
 ## Opening a sheet
