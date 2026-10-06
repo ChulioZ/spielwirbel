@@ -12,8 +12,8 @@
    under 119px in Die Brücke). `grid-auto-rows: 1fr` makes every row as tall as
    the tallest, so the tile is a card-sized cell wherever it lands.
 
-   Scoped to the two designs on purpose: the others draw their own tile and are
-   not part of this change. Desktop only (>= 860px, where the grid has columns):
+   Scoped per design: Klassisch and Die Brücke take both halves, Ocean (added
+   in review) only the equal rows, since its tile already centres. Desktop only (>= 860px, where the grid has columns):
    on a phone the list is one column, every design keeps the tile a short row
    there, and stretching each card to the tallest one would cost the phone
    height for nothing.
@@ -29,8 +29,10 @@ const path = require('node:path');
 const { CSS, rulesOf, mediaBlocks } = require('./support/css');
 const { loadApp } = require('./support/dom');
 
-const BRUECKE = fs.readFileSync(path.join(__dirname, '..', 'public/css/designs/bruecke.css'), 'utf8')
+const sheet = (name) => fs.readFileSync(path.join(__dirname, '..', `public/css/designs/${name}.css`), 'utf8')
   .replace(/\/\*[\s\S]*?\*\//g, '');
+const BRUECKE = sheet('bruecke');
+const OCEAN = sheet('ocean');
 
 /** The declarations of `selector` inside the sheet's >= 860px blocks. */
 function desktopRule(css, selector) {
@@ -39,6 +41,17 @@ function desktopRule(css, selector) {
   const hit = blocks.flatMap(([, body]) => rulesOf(body)).find(([sel]) => sel === selector);
   return hit ? hit[1] : null;
 }
+
+/* Ocean joined in review: its tile already centres at every width (ocean.css,
+   „its label centred"), but with three columns at 1280 it wrapped alone onto a
+   107px row under 378px cards — the same short box, one design over. So only
+   the row half applies to it. */
+test('ocean: from 860px up every lobby row is as tall as the tallest card', () => {
+  const body = desktopRule(OCEAN, ':root[data-design="ocean"] .lobby-list');
+  assert.ok(body, 'no desktop .lobby-list rule for ocean');
+  assert.match(body, /grid-auto-rows:\s*1fr\s*(;|$)/,
+    "ocean's lobby rows are not equalised, so the tile on its own row stays a short box");
+});
 
 for (const [design, css] of [['klassisch', CSS], ['bruecke', BRUECKE]]) {
   test(`${design}: from 860px up every lobby row is as tall as the tallest card`, () => {

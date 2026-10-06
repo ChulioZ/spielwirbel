@@ -2542,8 +2542,8 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
      wraps onto a row of its own, and an `auto` row is only as tall as its one
      line of text — 67px under 187px cards at 1440 — so it read as a separate
      box under the grid. Equal rows make it a card-sized tile wherever it lands.
-     Klassisch only here (Die Brücke restates it in bruecke.css); the other
-     designs draw their own tile. Not on a phone: one column, where stretching
+     Klassisch only here (Die Brücke and Ocean restate it in their sheets).
+     Not on a phone: one column, where stretching
      every card to the tallest would cost height for nothing. */
   :root[data-design="klassisch"] .lobby-list { grid-auto-rows: 1fr; }
   /* …and then centres its content in that cell, icon over label, the way the
