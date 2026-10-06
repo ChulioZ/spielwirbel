@@ -153,8 +153,8 @@ test('Forest F7.4: games but no session — „Erste Session wirbeln", what is w
   const locked = aside.filter((el) => el.classList.contains('forest-locked'));
   assert.deepEqual(locked.map((b) => text(b.querySelector('.forest-locked__title'))), ['Pokale', 'Chronik', 'Rundenpuls'],
     'the Regal preview must be the real one once the shelf holds games');
-  // The pulse's own floor, not the sheet's „ab der ersten Session".
-  assert.equal(text(locked[2].querySelector('.forest-locked__text')), 'Zahlen gibt es ab 3 Sessions.');
+  // The pulse's own floor — the first session in every design since #1586.
+  assert.equal(text(locked[2].querySelector('.forest-locked__text')), 'Zahlen gibt es ab der ersten Session.');
   assert.ok(aside[0].querySelector('a[href$="/regal"]'), 'the Regal preview no longer leads the column');
 });
 

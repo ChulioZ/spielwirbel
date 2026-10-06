@@ -323,13 +323,14 @@ function forestAsidePreviews(round, activeGames, { regal, pokale, chronik }) {
 
 /* The Rundenpuls of a round with games and no played session (F7.4), which
    hubPulseCard leaves out: a locked block saying when the numbers come. The
-   threshold is the pulse's own (YOUNG_ROUND_SERIES_FROM) — the sheet's „ab der
-   ersten Session" is the Programmheft's floor, not Forest's. */
+   threshold is the pulse's own floor — the first played session in every
+   design since #1586, so the sheet's „ab der ersten Session" holds here too;
+   only the bars wait for YOUNG_ROUND_SERIES_FROM. */
 function forestLockedPulse(round, activeGames) {
   if (!activeGames.length || !roundIsYoung(round)) return null;
   return forestLocked(round, {
     title: t('hub.pulse.title'),
-    text: tn(YOUNG_ROUND_SERIES_FROM, 'hub.young.pulseOne', 'hub.young.pulse'),
+    text: tn(1, 'hub.young.pulseOne', 'hub.young.pulse'),
   });
 }
 

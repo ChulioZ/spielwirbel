@@ -66,7 +66,8 @@ function roundIsYoung(round) {
 
 /* A card that says one sentence instead of a number (T7.4). Der Tisch only:
    T7's rule is „wo Zahlen fehlen, steht kein „0" und keine leere Achse, sondern
-   ein Satz, ab wann es Zahlen gibt". Klassisch never reaches this. */
+   ein Satz, ab wann es Zahlen gibt". Die Brücke's Rundenpuls uses it too
+   (B7.1); Klassisch never reaches this. */
 function hubSentenceCard(icon, title, text) {
   const card = hubCard(icon, title);
   card.classList.add('hub-card--sentence');
@@ -259,36 +260,35 @@ function hubPresetChips(round, activeGames) {
    percentage, which is also why the whole row degrades to readable text when
    styles fail to load. */
 function hubPulseCard(round, activeGames) {
-  /* Der Tisch draws its tiles from the FIRST played evening (T7.5, #1280):
-     every tile is a real figure at one session. Klassisch's bar chart waits
-     for YOUNG_ROUND_SERIES_FROM (#1318 merge interview, 2026-09-25) — a chart
-     off one or two evenings is the same noise the podium and the streak card
-     already wait out, so all three share one threshold. */
+  /* The FACTS come from the first played session in every design (#1586,
+     standardised on Der Tisch's T7.5, #1280): the sessions of the last twelve
+     months, the days since the last one and the games never played are real
+     figures at one evening, and a design owns how they are laid out, never
+     whether they are said (#1422). Only the SERIES wait for
+     YOUNG_ROUND_SERIES_FROM (#1318 merge interview, 2026-09-25) — a chart off
+     one or two evenings is the same noise the podium and the streak card
+     already wait out, so all three share one threshold.
+
+     The Programmheft is the one design that draws its bars from the first
+     session (P7.5, #1377), and it says when series come in its lead story
+     (phLead's `note`) rather than under the card. */
   const tisch = designIs('tisch');
-  /* The Programmheft draws from the first played session as well (P7.5,
-     #1377) — its bars, not Der Tisch's tiles — and says when series come in
-     its lead story instead (phLead's `note`). Its young sentence is a locked
-     block of its own (phYoungSide), so it takes none from here. */
-  const floor = tisch || designIs('programmheft') ? 1 : YOUNG_ROUND_SERIES_FROM;
-  const pulse = roundPulse(round, activeGames, { minSessions: floor }, hubDeps());
+  const ph = designIs('programmheft');
+  const pulse = roundPulse(round, activeGames, { minSessions: 1 }, hubDeps());
   if (!pulse) {
-    // A young round gets the sentence, never a „0" (T7.4, #1269) — Der Tisch
-    // from its empty table on, Klassisch once something has been played (its
-    // empty hub keeps the card off, as it always did). The count is the
-    // pulse's own floor, so the copy cannot promise numbers sooner than
-    // roundPulse() will draw them.
-    const say = tisch ? roundIsYoung(round) : youngRoundPlayed(round, hubDeps()) > 0
-      && youngRoundPlayed(round, hubDeps()) < floor;
-    /* Die Brücke draws the Rundenpuls on the freshly founded round too (#1243,
-       B7.1 — „Leer" still shows the block, with a sentence), empty shelf or
-       not. Its bars keep Klassisch's floor: B7.3's two-bar chart is the noise
-       #1318 decided to wait out, so the sentence stands in until then. */
-    const bruecke = designIs('bruecke') && roundIsYoung(round);
-    if (bruecke || (say && activeGames.length)) {
-      return hubSentenceCard('ti-activity', t('hub.pulse.title'),
-        tn(floor, 'hub.young.pulseOne', 'hub.young.pulse'));
-    }
-    return null;
+    /* Nothing played in the last twelve months. A YOUNG round gets the
+       sentence, never a „0" (T7.4, #1269) — Der Tisch once it has games, Die
+       Brücke from the freshly founded round on (#1243, B7.1 — „Leer" still
+       shows the block, empty shelf or not). Klassisch, Ocean and Forest keep
+       the card off here as they always did (Forest stands a locked block in
+       its place, forestLockedPulse). The count is the pulse's own floor — one
+       session since #1586 — so the copy promises numbers exactly when
+       roundPulse() draws them. */
+    const young = roundIsYoung(round);
+    const say = (tisch && young && activeGames.length) || (designIs('bruecke') && young);
+    return say
+      ? hubSentenceCard('ti-activity', t('hub.pulse.title'), tn(1, 'hub.young.pulseOne', 'hub.young.pulse'))
+      : null;
   }
   const card = hubCard('ti-activity', t('hub.pulse.title'));
   const body = card.querySelector('.hub-card__body');
@@ -296,30 +296,22 @@ function hubPulseCard(round, activeGames) {
      the sheet's „und Trends" was dropped — the Tisch pulse has no trend
      line, #1280 review) — the same YOUNG_ROUND_SERIES_FROM that holds back the
      Pokale streak card, so the sentence cannot promise something already on
-     screen. Every design since #1318 (Klassisch's two-bar chart at two
-     sessions is the same noise); in both it closes the card. */
-  const young = youngRoundPlayed(round, hubDeps()) < YOUNG_ROUND_SERIES_FROM;
+     screen. It closes the card, after the facts and the coverage link (#1586),
+     in every design but two that already say it once on the same screen: the
+     Programmheft in its lead (above), Forest under the stump (forestYoung,
+     F7.5) — a second copy in the card would repeat it a column away. */
+  const young = !ph && !designIs('forest') && youngRoundPlayed(round, hubDeps()) < YOUNG_ROUND_SERIES_FROM;
   const threshold = () => h(`<p class="hub-card__facts hub-card__threshold">${esc(tn(YOUNG_ROUND_SERIES_FROM, 'hub.young.seriesOne', 'hub.young.series'))}</p>`);
   if (tisch) {
     hubPulseTiles(round, card, pulse);
     if (young) body.appendChild(threshold());
     return card;
   }
-  const peak = Math.max(...pulse.months.map((m) => m.count), 1);
-  // `month: 'narrow'` gives one letter per bar, which is what makes twelve of
-  // them fit a 280px card at every locale. The full month name rides along as
-  // the accessible name, so the axis is never only a letter.
-  const narrow = (at) => new Date(at).toLocaleString(localeTag(locale), { month: 'narrow' });
-  const bars = pulse.months
-    .map((m) => {
-      const label = t('hub.pulse.barLabel', { month: fmtMonth(new Date(m.at).toISOString()), n: m.count });
-      return `<span class="pulse-bar" title="${esc(label)}">
-           <span class="pulse-bar__fill" style="height:${Math.round((m.count / peak) * 100)}%"></span>
-           <span class="pulse-bar__tick" aria-hidden="true">${esc(narrow(m.at))}</span>
-         </span>`;
-    })
-    .join('');
-  body.appendChild(h(`<div class="pulse-bars" role="img" aria-label="${esc(tn(pulse.total, 'hub.pulse.sessionsOne', 'hub.pulse.sessions'))}">${bars}</div>`));
+  /* The bars gate on the twelve-month TOTAL they would draw, the floor
+     roundPulse() itself applied until #1586: a round with older evenings but
+     fewer than three in the window states its facts without a two-bar chart,
+     and without the series sentence either — it is not young. */
+  if (ph || pulse.total >= YOUNG_ROUND_SERIES_FROM) hubPulseBars(body, pulse);
 
   const facts = [tn(pulse.total, 'hub.pulse.sessionsOne', 'hub.pulse.sessions')];
   if (pulse.daysSinceLast !== null) {
@@ -347,11 +339,27 @@ function hubPulseCard(round, activeGames) {
     navLink(link, roundPath(round.id, 'regal'), () => showRound(round.id, 'regal'));
     body.appendChild(link);
   }
-  // No series sentence here: the bars only exist from YOUNG_ROUND_SERIES_FROM
-  // on, so a drawn Klassisch pulse is never young (the Programmheft's, drawn
-  // from one session, says it in its lead instead). Left out deliberately —
-  // a guard for a state this branch cannot enter would be untestable.
+  if (young) body.appendChild(threshold());
   return card;
+}
+
+/* The twelve monthly bars of a pulse that has a series to draw. */
+function hubPulseBars(body, pulse) {
+  const peak = Math.max(...pulse.months.map((m) => m.count), 1);
+  // `month: 'narrow'` gives one letter per bar, which is what makes twelve of
+  // them fit a 280px card at every locale. The full month name rides along as
+  // the accessible name, so the axis is never only a letter.
+  const narrow = (at) => new Date(at).toLocaleString(localeTag(locale), { month: 'narrow' });
+  const bars = pulse.months
+    .map((m) => {
+      const label = t('hub.pulse.barLabel', { month: fmtMonth(new Date(m.at).toISOString()), n: m.count });
+      return `<span class="pulse-bar" title="${esc(label)}">
+           <span class="pulse-bar__fill" style="height:${Math.round((m.count / peak) * 100)}%"></span>
+           <span class="pulse-bar__tick" aria-hidden="true">${esc(narrow(m.at))}</span>
+         </span>`;
+    })
+    .join('');
+  body.appendChild(h(`<div class="pulse-bars" role="img" aria-label="${esc(tn(pulse.total, 'hub.pulse.sessionsOne', 'hub.pulse.sessions'))}">${bars}</div>`));
 }
 
 /* Der Tisch's Rundenpuls (T2.2, T3.2; #1263): three stat tiles — a number over
