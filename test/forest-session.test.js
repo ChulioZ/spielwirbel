@@ -97,7 +97,8 @@ test('the setup has NO step bar and keeps the app\'s title (P6)', async (t) => {
 
 test('„Der Baumstumpf" is its own section named by its kicker; the count reads „… auf dem Stumpf"', async (t) => {
   const dom = await setup(t);
-  const stump = q(dom, '.forest-stump');
+  const stump = q(dom, '.forest-pot');
+  assert.equal(q(dom, '.forest-stump'), null, 'the hub\'s stump class stays off the pot (#1572)');
   assert.equal(stump.getAttribute('aria-labelledby'), 'potHeading');
   assert.equal(text(stump.querySelector('#potHeading')), 'Der Baumstumpf');
   assert.equal(text(stump.querySelector('#poolTitle')), '3 Spiele auf dem Stumpf');
