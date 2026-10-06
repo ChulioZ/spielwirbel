@@ -2607,6 +2607,28 @@
 }
 :root[data-design="forest"]:not([data-scheme="dark"]) .forest-stump .pool-tile:nth-child(3n + 2) .pool-tile__img { transform: rotate(6deg); }
 :root[data-design="forest"]:not([data-scheme="dark"]) .forest-stump .pool-tile:nth-child(3n) .pool-tile__img { transform: rotate(-2deg); }
+/* F10.2 „Der Stumpf füllt sich" (#1476, Forest-F10-Motion.dc.html): a game
+   that newly fits drops onto the stump and springs 6px past its place — 520ms,
+   80ms after the one before. views-session.js marks the ENTERING covers `is-set`
+   with `--set-i` (the gate Der Tisch, Das Programmheft and Die Brücke share:
+   the first paint is still, a leaving game sets nothing, a re-render sets
+   nothing), capped at 9, so any number is down by 1 240ms. The count beside it
+   changes at once — it is information, not decoration.
+
+   Only the cover moves, and only by `translate`: `transform` holds its resting
+   tilt, which the individual property composes with. No end frame and a
+   backwards fill only, so it lands on the resting stump, which is also what
+   reduced motion shows. The sheet's leaving game „weht zur Seite" is not built:
+   the pot is rebuilt on every change, so a leaving cover is already gone. */
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-design="forest"]:not([data-scheme="dark"]) .forest-stump .pool-tile.is-set .pool-tile__img {
+    animation: forest-drop 520ms cubic-bezier(.3, .8, .3, 1) calc(var(--set-i, 0) * 80ms) backwards;
+  }
+  @keyframes forest-drop {
+    from { translate: 0 -170px; opacity: 0; }
+    70% { translate: 0 6px; opacity: 1; }
+  }
+}
 /* The covers are the picture; the title is each tile's `title` and stays in the
    accessibility tree, clipped rather than removed (T3: no text on a cover). */
 :root[data-design="forest"]:not([data-scheme="dark"]) .forest-stump .pool-tile__name {
