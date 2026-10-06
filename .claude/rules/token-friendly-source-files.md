@@ -116,10 +116,14 @@ Three things about that shape are deliberate:
   allowlist entry *is* the answer. Trimming a file to hit a number, at the cost of
   a `why` comment or a load-bearing constraint, is the outcome this rule exists to
   prevent, not to cause.
-- **Allowlist entries are `judged` or `recorded`**, and the test cannot tell them
-  apart. `recorded` means "over budget, nobody has applied the seam test yet" —
-  writing that down is the whole point, because otherwise it is indistinguishable
-  from "this one is fine". They are `M-001`'s worklist.
+- **Every entry opens `judged|recorded <YYYY-MM-DD> at <N> lines — `**, N being
+  the test's `lineCount()`. `recorded` ("nobody has applied the seam test yet",
+  `M-001`'s worklist) fails past **1.25×** N; `judged` past **1.5×** N, because a
+  judgement is about a file of that size. Judged entries were exempt until
+  2026-10-06, and the audit two days earlier found the period's biggest growth
+  entirely in them (`views-session.js` 1624 → 2785). The fix for a red judged
+  entry is a **fresh judgement** — the seam test again, then a re-recorded date
+  and size, or a split — never a trim.
 - **An entry must stay over budget or be removed.** A file that shrinks back under
   its budget fails the test until its entry goes, so the list cannot rot into
   names nobody has looked at — the anti-vacuous half, and the reason the list is
