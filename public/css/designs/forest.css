@@ -3525,13 +3525,13 @@
 }
 /* „Session Nr. 23 · 9. Sieg für Jonas · Nordlichter zum 4. Mal" — facts, not
    prose, in soft ink under the scene. */
-:root[data-design="forest"]:not([data-scheme="dark"]) .forest-facts {
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-result__facts {
   margin: -8px 0 20px;
   font-size: var(--text-md);
   font-weight: 700;
   color: var(--ink-soft);
 }
-:root[data-design="forest"]:not([data-scheme="dark"]) .forest-facts[hidden] { display: none; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-result__facts[hidden] { display: none; }
 
 /* The Tafel: „Die Abstimmung · 3 Spiele" as one card of compact rows — rank,
    cover, title with who brings it, the distribution, the score leaf and the

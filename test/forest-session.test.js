@@ -272,20 +272,31 @@ test('the fact line is built from counts the app keeps: the session\'s number, t
     finished({ id: 'sx', createdAt: '2026-09-21T18:00:00.000Z', winnerIds: ['m2'], chosenGameId: 'g1' }),
   ];
   const dom = await result(t, {}, earlier);
-  const facts = q(dom, '.forest-facts');
+  const facts = q(dom, '.forest-result__facts');
   assert.equal(facts.hidden, false);
   assert.equal(text(facts), 'Session Nr. 2 · 2. Sieg für Ben · Nordlichter zum 2. Mal', 'a later session never counts');
 });
 
+// The Spielepass's three figures are `.forest-facts`, a three-column grid
+// (forest-shelf.js). The result's one-sentence fact line used to share that
+// class, so the grid squeezed it into a third of its width and it wrapped to
+// three lines. It has a class of its own now.
+test('the result\'s fact line is its own element, not the Spielepass\'s figure grid', async (t) => {
+  const dom = await result(t);
+  assert.equal(dom.app.querySelector('.result-screen .forest-facts'), null);
+  assert.equal(q(dom, '.forest-result__facts').tagName, 'P');
+  assert.equal(declaredValue(bodyFor('.forest-result__facts'), 'font-weight'), '700');
+});
+
 test('a shared win has no single „n-th win", so that part drops — and both winners wear the crown (F7.9)', async (t) => {
   const dom = await result(t, { winnerIds: ['m2', 'm3'] });
-  assert.equal(text(q(dom, '.forest-facts')), 'Session Nr. 1 · Nordlichter zum 1. Mal');
+  assert.equal(text(q(dom, '.forest-result__facts')), 'Session Nr. 1 · Nordlichter zum 1. Mal');
   assert.equal(qa(dom, '.result-people__person.is-winner').length, 2);
 });
 
 test('an unsettled session has no place in the count, so the fact line is hidden', async (t) => {
   const dom = await result(t, { finished: false, winnerIds: [] });
-  assert.equal(q(dom, '.forest-facts').hidden, true);
+  assert.equal(q(dom, '.forest-result__facts').hidden, true);
 });
 
 // #1568: two columns, departing from F4.3's three on purpose (drawn with a few
@@ -301,7 +312,7 @@ test('the result is two columns in DOM order: side (people · head · foot · sc
     ['forest-result__side', 'forest-result__tafel']);
   const side = q(dom, '.forest-result__side');
   assert.deepEqual([...side.children].map((el) => el.className.split(' ')[0]),
-    ['forest-result__people', 'page-head', 'result-foot', 'tisch-slot', 'forest-facts']);
+    ['forest-result__people', 'page-head', 'result-foot', 'tisch-slot', 'forest-result__facts']);
   assert.ok(side.querySelector('.result-people__person.is-winner'), 'the people are the side column\'s ring row');
   const list = q(dom, '.forest-result__tafel');
   assert.deepEqual([...list.children].map((el) => el.className.split(' ')[0]).slice(0, 2), ['badge-moment', 'tafel'],

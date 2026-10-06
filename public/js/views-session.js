@@ -1679,7 +1679,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
   // Forest's kicker replaces the subtitle the same way (F2.4, F4.3): it carries
   // the date, and the Tafel's title the count. The fact line under the scene is
   // painted by updateTitle(), which every phase change reaches.
-  const forestFacts = forestLook ? h('<p class="forest-facts" hidden></p>') : null;
+  const forestFacts = forestLook ? h('<p class="forest-result__facts" hidden></p>') : null;
   if (forestLook) {
     head.querySelector('.muted').remove();
     head.firstElementChild.prepend(forestResultKicker(session));
