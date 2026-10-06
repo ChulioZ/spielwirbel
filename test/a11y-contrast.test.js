@@ -1185,6 +1185,146 @@ test('the winners\' gold fill clears AA too, at its higher alpha', () => {
     `the winners' rows fill at ${(alpha * 100).toFixed(0)}% --gold over --surface; body text on it needs ${AA_TEXT}:1`);
 });
 
+/* The DISTRIBUTION BARS (#1569). Bar height is the only place the result screen
+   shows how many votes a rung got (the axis names the rung, never the count), so
+   a filled bar is a non-text graphic carrying information: SC 1.4.11, 3:1 against
+   everything it touches. It touches its TRACK (above it, inside the column) and
+   the ROW behind the column on either side — measured on the winner row, the one
+   ground a design repaints most freely. Forest shipped with its brightening pill
+   ramp on the bars, and its 5 sat at 1.03:1 on both.
+
+   "What draws the boundary" is the fill, unless the design rings the bar with an
+   inset `box-shadow` edge — then the edge is the boundary, and the fill may be
+   any colour. Every piece is read off the design's OWN sheet (scheme-qualified
+   rules only where they apply) and resolved through its tokens, falling back to
+   styles.css's: `--sunken` for the track, avgColor() for the fill, the
+   `.tafel-top`/`.tafel-top .trow` grounds and the `.trow::before` gold tint for
+   the winner row. A design that hides `.bar` (Das Programmheft prints the count
+   instead, #1374) draws no bar and is skipped BY NAME, so a design that hides
+   bars by accident cannot pass this vacuously. */
+const ROOT_DIR = require('node:path').join(__dirname, '..');
+const designRulesFor = (t) => {
+  if (!t.design.stylesheet) return [];
+  const css = require('node:fs')
+    .readFileSync(require('node:path').join(ROOT_DIR, 'public', t.design.stylesheet), 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, '');
+  const applies = (one) => one.includes(`[data-design="${t.design.id}"]`)
+    && !(t.dark && one.includes(':not([data-scheme="dark"])'))
+    && !(!t.dark && /(?<!:not\()\[data-scheme="dark"\]/.test(one));
+  // Each rule keeps only the members of its selector group that apply here.
+  // Split at TOP-LEVEL commas only — `:is(.bar, .bar-axis)` is one member.
+  const members = (sel) => sel.split(/,(?![^()]*\))/).map((s) => s.trim());
+  return rulesOf(css).map(([sel, body]) => [members(sel).filter(applies).join(', '), body])
+    .filter(([sel]) => sel);
+};
+// Source order wins among a design's own rules — they are written as one
+// specificity tier (`:root[data-design] .scope …`), so order is the tie-break.
+const designDecl = (rules, el, prop, within = null) => {
+  // Pre-filtered on the class so the matcher only meets selectors that could
+  // name this element — it throws, by design, on shapes it cannot model.
+  const cls = new RegExp(`\\.${el.classes[0]}(?![\\w-])`);
+  const hits = rules.filter(([sel, body]) => declaredValue(body, prop) && cls.test(sel)
+    && (!within || sel.includes(within)) && matchesEl(sel, el));
+  return hits.length ? declaredValue(hits[hits.length - 1][1], prop) : null;
+};
+/* A token as the BAR sees it. A design may re-point tokens on an ancestor —
+   Der Tisch's `.tafel` turns --surface/--sunken into paper (the whole Tafel is a
+   paper sheet on the felt) — so a custom property declared on the result
+   screen, the Tafel or the row wins over the design's root block, exactly as
+   the cascade inherits it. Without this the sweep measures Der Tisch's bars on
+   walnut, which they are never drawn on. */
+const ANCESTORS = (t) => [
+  { tag: 'div', classes: ['result-screen', `result-screen--${t.design.id}`] },
+  { tag: 'div', classes: ['tafel'] },
+  { tag: 'div', classes: ['trow'] },
+];
+function barResolver(t, rules) {
+  const scoped = new Map();
+  for (const [sel, body] of rules) {
+    // Only a rule declaring a token can re-point one; layout rules are skipped
+    // before matching, since the matcher throws on shapes like `:has()`.
+    if (!/(?:^|[\s;{])--[\w-]+:/.test(body)) continue;
+    if (!ANCESTORS(t).some((el) => el.classes.some((c) => new RegExp(`\\.${c}(?![\\w-])`).test(sel)) && matchesEl(sel, el))) continue;
+    for (const [, prop, value] of body.matchAll(/(?:^|[\s;{])(--[\w-]+):\s*([^;}]+)/g)) scoped.set(prop, value.trim());
+  }
+  const resolve = (expr) => {
+    const v = /^var\((--[\w-]+)\)$/.exec(expr.trim());
+    if (v) return scoped.has(v[1]) ? resolve(scoped.get(v[1])) : token(v[1], t.design);
+    return evaluate(expr, t.design);
+  };
+  return resolve;
+}
+const varToken = (value, resolve) => {
+  const m = /var\((--[\w-]+)\)/.exec(value || '');
+  return m ? resolve(`var(${m[1]})`) : null;
+};
+const BAR = { tag: 'div', classes: ['bar'] };
+const TRACK = { tag: 'div', classes: ['bar-track'] };
+const ROW = { tag: 'div', classes: ['trow'] };
+const TOP = { tag: 'div', classes: ['tafel-top'] };
+// 1–5 only: the chart drops slot 0 (`r.dist.slice(RATING_MIN)`, views-session.js),
+// since a vote is a rating 1–5 and a veto is a reason, not a column (#909).
+const RUNGS = ['1', '2', '3', '4', '5'];
+const BARLESS = ['programmheft'];
+
+function barGrounds(t, rules, resolve) {
+  const c = (name) => resolve(`var(${name})`);
+  const track = varToken(designDecl(rules, TRACK, 'background'), resolve) || c('--sunken');
+  // The winner row: its own background if opaque, else the .tafel-top behind it
+  // (styles.css: a transparent row on a --gold-soft container), else the page.
+  const rowBg = designDecl(rules, ROW, 'background', '.tafel-top');
+  const topBg = designDecl(rules, TOP, 'background');
+  const rowGround = varToken(rowBg, resolve)
+    || (rowBg ? null : c('--gold-soft'))
+    || varToken(topBg, resolve) || (topBg ? t.page : c('--gold-soft'));
+  const grounds = [['track', track], ['winner row', rowGround]];
+  // The score fill laid over the row up to --pct, unless the design drops it.
+  const beforeOff = rules.some(([sel, body]) => /\.trow::before/.test(sel) && /content:\s*none/.test(body));
+  if (!beforeOff) {
+    const tint = varToken(designDecl(rules, ROW, '--fill-tint', '.tafel-top'), resolve) || c('--gold');
+    const a = designDecl(rules, ROW, '--fill-a', '.tafel-top') || '22%';
+    grounds.push(['winner row fill', mixOklab(tint, c('--surface'), parseFloat(a) / 100)]);
+  }
+  return grounds;
+}
+
+test('every non-empty distribution bar draws a 3:1 boundary against its track and the winner row, on every design', () => {
+  const failures = [];
+  const measured = [];
+  for (const t of THEMES) {
+    const rules = designRulesFor(t);
+    if (designDecl(rules, BAR, 'display') === 'none') {
+      assert.ok(BARLESS.includes(t.design.id), `${name(t)} hides .bar — if that is deliberate, add it to BARLESS with its reason`);
+      continue;
+    }
+    measured.push(t.design.id);
+    const resolve = barResolver(t, rules);
+    const edge = varToken(designDecl(rules, BAR, 'box-shadow'), resolve);
+    for (const rung of RUNGS) {
+      const col = { tag: 'div', classes: ['bar-col'], attrs: { 'data-stop': rung } };
+      const fill = varToken(designDecl(rules, col, '--sc-fill'), resolve) || avgRgb(Number(rung), t.dark);
+      const boundary = edge || fill;
+      for (const [label, ground] of barGrounds(t, rules, resolve)) {
+        const ratio = contrast(boundary, ground);
+        if (ratio < AA_LARGE) failures.push(`${name(t)} rung ${rung} on the ${label} = ${ratio.toFixed(2)}:1`);
+      }
+    }
+  }
+  assert.deepEqual(measured.sort(), THEMES.map((t) => t.design.id).filter((id) => !BARLESS.includes(id)).sort(),
+    'every design that draws bars must be measured');
+  assert.deepEqual(failures, [], `SC 1.4.11 — a filled bar is a graphic carrying the vote count; needs ${AA_LARGE}:1`);
+});
+
+test('the bar sweep can see a ringed bar: Forest’s edge is inset and read as the boundary', () => {
+  /* The control for the sweep above. Without it, a designDecl() that matched
+     nothing would leave every design on its fill — green wherever the fills
+     happen to pass, and blind to the edge Forest's fix depends on. */
+  const forest = THEMES.find((t) => t.design.id === 'forest');
+  const edge = designDecl(designRulesFor(forest), BAR, 'box-shadow');
+  assert.match(edge || '', /^inset\b/, 'Forest’s bar edge must be an INSET shadow — a border or outset ring draws a stub on a rung with no votes');
+  assert.ok(varToken(edge, barResolver(forest, designRulesFor(forest))), `Forest’s bar edge "${edge}" names no token the sweep can measure`);
+});
+
 /* The tripwire that stood here ("no ENABLED user design is dark", #1184) and
    the two world-motif grounds it protected — the dock's and the home tile's,
    both composited against the STANDARD light --surface — went with the flip
