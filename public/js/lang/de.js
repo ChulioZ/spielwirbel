@@ -1488,6 +1488,13 @@ I18N.de = {
   'stats.plays.many': '{n} Sessions',
   'stats.ratedOne': 'Score {score} — {n} Bewertung',
   'stats.rated': 'Score {score} — {n} Bewertungen',
+  // The favourite cards (#1557): ranked by the mean Spielwirbel-Score of a
+  // name's games. The names themselves are BGG's, in English, untranslated.
+  'stats.favDesigner': 'Lieblingsautor:in',
+  'stats.favCategory': 'Lieblingskategorie',
+  'stats.favMechanic': 'Lieblingsmechanik',
+  'stats.favGamesOne': 'Score {score} — aus {n} Spiel',
+  'stats.favGames': 'Score {score} — aus {n} Spielen',
   // The best-rated line with the plays that lifted its score (#1329).
   // {rated} is the stats.ratedOne/stats.rated line above, already
   // inflected for the rating count; {n} is the play count.

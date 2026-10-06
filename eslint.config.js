@@ -281,7 +281,7 @@ const frontendGlobals = {
   publicStatsHasContent: 'readonly', mountLandingStats: 'readonly',
   mountHomeStatsPanel: 'readonly', statsCard: 'readonly',
   renderEntdeckenCta: 'readonly',
-  STATS_PODIUMS: 'readonly', STATS_COUNTERS: 'readonly',
+  STATS_PODIUMS: 'readonly', STATS_COUNTERS: 'readonly', STATS_FAVOURITES: 'readonly', statsEntries: 'readonly', statsCardsHtml: 'readonly',
   // views-inbox.js (issue #207)
   showInbox: 'readonly', renderInboxItem: 'readonly',
   renderInvitationItem: 'readonly', renderGenericItem: 'readonly',

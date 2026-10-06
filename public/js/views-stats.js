@@ -93,6 +93,48 @@ const STATS_PODIUMS = [
   },
 ];
 
+/* The three favourites (#1557): a NAME rather than a game, so they live under
+   the payload's own `names` key and are drawn after the six game podiums. The
+   entry is `{ name, score, games }` — handed to statsCard as its title with no
+   cover and no link, which is what the no-cover placeholder is for.
+
+   Ranked on the Spielwirbel-Score, so they carry the same ⓘ as `bestRated`.
+   The names are BGG's own (in English, like the shelf profile shows them), so
+   nothing here is translated or user-authored. */
+const STATS_FAVOURITES = [
+  { key: 'favDesigner', icon: 'ti-pencil' },
+  { key: 'favCategory', icon: 'ti-tags' },
+  { key: 'favMechanic', icon: 'ti-puzzle' },
+].map((f) => ({
+  ...f,
+  info: 'score',
+  line: (e) => tn(e.games, 'stats.favGamesOne', 'stats.favGames', { score: fmtAvg(e.score) }),
+}));
+
+// Every card the payload can carry, in render order, each paired with the
+// entry it draws: game podiums first, then the favourites. One list, so the
+// full block and the home panel's first few cannot order them differently.
+function statsEntries(stats) {
+  const games = stats.games || {};
+  const names = stats.names || {};
+  return [
+    ...STATS_PODIUMS.filter((p) => games[p.key]).map((p) => [p, games[p.key]]),
+    ...STATS_FAVOURITES.filter((f) => names[f.key]).map((f) => [f, { title: names[f.key].name, image: null, url: null, ...names[f.key] }]),
+  ];
+}
+
+/* A list of cards with ONE ⓘ per topic: the favourites carry the score topic
+   too, and four identical buttons on one grid would be noise — the first card
+   that has it explains the number for every card after it. */
+function statsCardsHtml(entries) {
+  const explained = new Set();
+  return entries.map(([p, entry]) => {
+    const withInfo = !!p.info && !explained.has(p.info);
+    if (withInfo) explained.add(p.info);
+    return statsCard(p, entry, withInfo);
+  }).join('');
+}
+
 // The scale counters, in render order: rounds first, then the people in them.
 const STATS_COUNTERS = ['rounds', 'players', 'games', 'sessions'];
 
@@ -118,14 +160,14 @@ function loadPublicStats() {
 // entirely when every metric is below its threshold, so this is what keeps a
 // switched-on-but-still-quiet instance from showing an empty section.
 function publicStatsHasContent(stats) {
-  return !!stats && (!!stats.counters || !!stats.games);
+  return !!stats && (!!stats.counters || !!stats.games || !!stats.names);
 }
 
 // One podium card. The cover is sized at render time — a provider master can be
 // several thousand pixels wide (.claude/rules/provider-cover-sizing.md) — and is
 // decorative here: the title beside it is the accessible name, so alt is empty
 // rather than a duplicate.
-function statsCard(podium, entry) {
+function statsCard(podium, entry, withInfo = !!podium.info) {
   const cover = entry.image
     ? `<img class="stats-card__cover" src="${esc(coverUrl(entry.image, COVER_THUMB))}" alt="" loading="lazy" />`
     : '<span class="stats-card__cover stats-card__cover--none" aria-hidden="true"></span>';
@@ -136,7 +178,7 @@ function statsCard(podium, entry) {
     <li class="stats-card">
       ${cover}
       <span class="stats-card__body">
-        <span class="stats-card__label"><i class="ti ${podium.icon}" aria-hidden="true"></i>${esc(podium.label ? podium.label(entry) : t('stats.' + podium.key))}${podium.info ? ` ${infoButton(podium.info)}` : ''}</span>
+        <span class="stats-card__label"><i class="ti ${podium.icon}" aria-hidden="true"></i>${esc(podium.label ? podium.label(entry) : t('stats.' + podium.key))}${withInfo ? ` ${infoButton(podium.info)}` : ''}</span>
         ${title}
         <span class="stats-card__value muted">${esc(podium.line(entry))}</span>
       </span>
@@ -164,10 +206,9 @@ function renderPublicStats(stats) {
         </li>`).join('')}</ul>`
     : '';
 
-  const cards = stats.games
-    ? `<ul class="stats-cards">${STATS_PODIUMS
-      .filter((p) => stats.games[p.key])
-      .map((p) => statsCard(p, stats.games[p.key])).join('')}</ul>`
+  const entries = statsEntries(stats);
+  const cards = entries.length
+    ? `<ul class="stats-cards">${statsCardsHtml(entries)}</ul>`
     : '';
 
   // The provenance note is not decoration: the podiums cover only
@@ -338,9 +379,7 @@ async function mountHomeStatsPanel(placeholder) {
   navLink(head.querySelector('a'), '/entdecken', () => showEntdecken());
   placeholder.appendChild(head);
 
-  const podiums = stats.games
-    ? STATS_PODIUMS.filter((p) => stats.games[p.key]).slice(0, HOME_STATS_PODIUMS)
-    : [];
+  const podiums = statsEntries(stats).slice(0, HOME_STATS_PODIUMS);
   if (!podiums.length) {
     // Counters but no podiums (a young instance): the heading and the link are
     // still honest — there IS something behind them — and there is simply no
@@ -349,7 +388,7 @@ async function mountHomeStatsPanel(placeholder) {
     return;
   }
   const list = h(
-    `<ul class="stats-cards stats-cards--home">${podiums.map((p) => statsCard(p, stats.games[p.key])).join('')}</ul>`
+    `<ul class="stats-cards stats-cards--home">${statsCardsHtml(podiums)}</ul>`
   );
   wireInfoButtons(list);
   placeholder.appendChild(list);

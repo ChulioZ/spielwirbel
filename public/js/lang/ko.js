@@ -1372,6 +1372,13 @@ I18N.ko = {
   'stats.plays.many': '세션 {n}회',
   'stats.ratedOne': '점수 {score} — 평가 {n}개',
   'stats.rated': '점수 {score} — 평가 {n}개',
+  // The favourite cards (#1557): ranked by the mean Spielwirbel-Score of a
+  // name's games. The names themselves are BGG's, in English, untranslated.
+  'stats.favDesigner': '최애 디자이너',
+  'stats.favCategory': '최애 카테고리',
+  'stats.favMechanic': '최애 메커니즘',
+  'stats.favGamesOne': '점수 {score} — 게임 {n}개 기준',
+  'stats.favGames': '점수 {score} — 게임 {n}개 기준',
   'stats.ratedPlaysOne': '{rated} · 세션 {n}회',
   'stats.ratedPlays': '{rated} · 세션 {n}회',
   'stats.counter.players': '명의 참가자',

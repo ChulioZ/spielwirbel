@@ -1430,6 +1430,13 @@ I18N.nl = {
   'stats.plays.many': '{n} sessies',
   'stats.ratedOne': 'Score {score} — {n} beoordeling',
   'stats.rated': 'Score {score} — {n} beoordelingen',
+  // The favourite cards (#1557): ranked by the mean Spielwirbel-Score of a
+  // name's games. The names themselves are BGG's, in English, untranslated.
+  'stats.favDesigner': 'Favoriete ontwerper',
+  'stats.favCategory': 'Favoriete categorie',
+  'stats.favMechanic': 'Favoriete mechaniek',
+  'stats.favGamesOne': 'Score {score} — uit {n} spel',
+  'stats.favGames': 'Score {score} — uit {n} spellen',
   'stats.ratedPlaysOne': '{rated} · {n} sessie',
   'stats.ratedPlays': '{rated} · {n} sessies',
   'stats.counter.players': 'spelers',

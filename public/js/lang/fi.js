@@ -1398,6 +1398,13 @@ I18N.fi = {
   'stats.plays.many': '{n} sessiota',
   'stats.ratedOne': 'Pisteet {score} — {n} arvio',
   'stats.rated': 'Pisteet {score} — {n} arviota',
+  // The favourite cards (#1557): ranked by the mean Spielwirbel-Score of a
+  // name's games. The names themselves are BGG's, in English, untranslated.
+  'stats.favDesigner': 'Suosikkisuunnittelija',
+  'stats.favCategory': 'Suosikkikategoria',
+  'stats.favMechanic': 'Suosikkimekaniikka',
+  'stats.favGamesOne': 'Pisteet {score} — {n} pelistä',
+  'stats.favGames': 'Pisteet {score} — {n} pelistä',
   'stats.ratedPlaysOne': '{rated} · {n} sessio',
   'stats.ratedPlays': '{rated} · {n} sessiota',
   'stats.counter.players': 'pelaajaa',

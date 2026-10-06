@@ -571,3 +571,47 @@ test('the home dashboard panel still shows three podiums, and not the new one', 
   const titles = [...host.querySelectorAll('.stats-card__title')].map((n) => n.textContent);
   assert.deepEqual(titles, ['Cascadia', 'Ark Nova', 'Azul']);
 });
+
+/* THE FAVOURITES (#1557) are names, not games: no cover, no link, the name as
+   plain text, after the six game podiums. They carry the score topic like
+   `bestRated`, but a screen still draws ONE ⓘ for it — on the first card that
+   has it — so four identical buttons never sit on one grid. */
+const NAMES = {
+  favDesigner: { name: 'Uwe Rosenberg', score: 4.3, games: 5 },
+  favCategory: { name: 'Economic', score: 4.1, games: 1 },
+  favMechanic: { name: 'Worker Placement', score: 3.9, games: 12 },
+};
+
+test('#1557 the favourite cards render after the podiums, as plain names with their own line', async (t) => {
+  const dom = bootWith(t, ok({ ...FULL, names: NAMES }));
+  await dom.call('showEntdecken');
+
+  const cards = [...dom.document.querySelectorAll('.stats-card')];
+  assert.deepEqual(
+    cards.map((c) => c.querySelector('.stats-card__title').textContent),
+    ['Cascadia', 'Ark Nova', 'Wingspan', 'Uwe Rosenberg', 'Economic', 'Worker Placement'],
+  );
+  const fav = cards[3];
+  assert.equal(fav.querySelector('.stats-card__title').tagName, 'SPAN', 'a name links nowhere');
+  assert.ok(fav.querySelector('.stats-card__cover--none'), 'and has no cover');
+  assert.match(fav.querySelector('.stats-card__label').textContent, /Lieblingsautor:in/);
+  assert.equal(fav.querySelector('.stats-card__label i').className, 'ti ti-pencil');
+  assert.equal(fav.querySelector('.stats-card__value').textContent, 'Score 4,3 — aus 5 Spielen');
+  assert.equal(cards[4].querySelector('.stats-card__value').textContent, 'Score 4,1 — aus 1 Spiel');
+
+  const infos = dom.document.querySelectorAll('.stats-card [data-info-topic="score"]');
+  assert.equal(infos.length, 1, 'one score ⓘ per screen');
+  assert.equal(infos[0].closest('.stats-card').querySelector('.stats-card__title').textContent, 'Wingspan');
+});
+
+test('#1557 favourites alone are content, and then the first of them carries the ⓘ', async (t) => {
+  const dom = bootWith(t, ok({ generatedAt: FULL.generatedAt, names: NAMES }));
+  await dom.call('showEntdecken');
+
+  assert.equal(dom.document.querySelector('.empty-note'), null, 'a names-only payload is not empty');
+  assert.equal(dom.document.querySelectorAll('.stats-card').length, 3);
+  const infos = dom.document.querySelectorAll('.stats-card [data-info-topic="score"]');
+  assert.equal(infos.length, 1);
+  assert.equal(infos[0].closest('.stats-card').querySelector('.stats-card__title').textContent, 'Uwe Rosenberg');
+  assert.ok(dom.document.querySelector('.stats-note'), 'the provenance note travels with the cards');
+});

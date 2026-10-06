@@ -1497,6 +1497,13 @@ I18N.en = {
   'stats.plays.many': '{n} sessions',
   'stats.ratedOne': 'Score {score} — {n} rating',
   'stats.rated': 'Score {score} — {n} ratings',
+  // The favourite cards (#1557): ranked by the mean Spielwirbel-Score of a
+  // name's games. The names themselves are BGG's, in English, untranslated.
+  'stats.favDesigner': 'Favourite designer',
+  'stats.favCategory': 'Favourite category',
+  'stats.favMechanic': 'Favourite mechanic',
+  'stats.favGamesOne': 'Score {score} — from {n} game',
+  'stats.favGames': 'Score {score} — from {n} games',
   'stats.ratedPlaysOne': '{rated} · {n} session',
   'stats.ratedPlays': '{rated} · {n} sessions',
   'stats.counter.players': 'players',
