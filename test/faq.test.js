@@ -101,8 +101,15 @@ test('an unknown ?lang is ignored, and Accept-Language decides when there is non
   assert.match(String(ko.headers.vary || ''), /Accept-Language/i);
   assert.doesNotMatch(String((await request(app).get('/faq?lang=ko')).headers.vary || ''), /Accept-Language/i);
 
-  const none = await request(app).get('/faq').set('Accept-Language', 'zz');
-  assert.ok(none.text.includes('Häufige Fragen'), 'no match did not fall back to German');
+  // A browser speaking none of the shipped languages gets ENGLISH (operator
+  // decision 2026-10-06, .claude/rules/not-english-is-not-german.md): German is
+  // the exception for a German reader, not the default for everyone else.
+  const none = await request(app).get('/faq').set('Accept-Language', 'zz, sv;q=0.8');
+  assert.ok(none.text.includes('Frequently asked questions'), 'an unmatched header did not fall back to English');
+  assert.equal(none.text.match(/<html lang="([^"]+)"/)[1], localeTag('en'));
+  // No header at all (crawlers, scripts) keeps the documented German default.
+  const bare = await request(app).get('/faq');
+  assert.ok(bare.text.includes('Häufige Fragen'), 'a request without Accept-Language left German');
 });
 
 test('the language row links every OTHER language, and the ids are the same set', async () => {

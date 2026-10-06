@@ -1699,7 +1699,7 @@ I18N.nl = {
   'design.forest.short': 'Open plek, bladgroen, vuurvliegjes',
   'design.chooser.kicker': 'Nieuw in Spielwirbel',
   'design.chooser.title': 'Kies een ontwerp.',
-  'design.chooser.body': 'Alles blijft op dezelfde plek — kast, kroniek, prijzen, sessie starten. Alleen het uiterlijk verandert. Je kunt het altijd wijzigen in je account.',
+  'design.chooser.body': 'Er gaat niets verloren — kast, kroniek, prijzen, sessie starten zijn er allemaal. Elk ontwerp ordent en kleurt ze alleen op zijn eigen manier. Je kunt het altijd wijzigen in je account.',
   'design.chooser.later': 'Er komen meer ontwerpen bij. Je keuze blijft tot je hem wijzigt.',
   'design.chooser.skip': 'Later beslissen',
   'design.chooser.confirm': 'Dit ontwerp gebruiken',
@@ -1828,7 +1828,7 @@ I18N.nl = {
   // The design band (#1198), shown only by a design that asks for it (Der Tisch as the face).
   // {n} is how many designs the instance offers (GET /api/config), so it never overclaims.
   'landing.designs.title': '{n} ontwerpen, één app.',
-  'landing.designs.desc': 'Elk account kiest zijn eigen ontwerp. Alles staat in elk ervan op dezelfde plek — het ziet er alleen anders uit.',
+  'landing.designs.desc': 'Elk account kiest zijn eigen ontwerp. Elk ervan doet hetzelfde met dezelfde gegevens — alleen op zijn eigen manier geordend.',
 
   'demo.banner.text': 'Je probeert Spielwirbel uit in een demogroep. Die wordt automatisch verwijderd — niets hiervan blijft bewaard.',
   'demo.banner.cta': 'Gratis registreren',

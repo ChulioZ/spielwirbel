@@ -33,10 +33,13 @@ not a finding; the rejected entries below are that ledger.
   here names the seam, not just the size.
   **`test/token-budget.test.js` now holds the 700-line line**, with an allowlist
   whose entries are split `judged` (measured against the seam test and kept) and
-  `recorded` (over budget, never actually judged). **The `recorded` entries are this
-  criterion's worklist** — the test deliberately cannot tell the two apart, so
-  reading them and either judging or splitting them is the manual half that stays
-  here. A file arriving over budget with no entry fails CI, so the audit no longer
+  `recorded` (over budget, never actually judged). Since #1552 every entry carries
+  the date and size it was judged or recorded at, and a `judged` file past 1.5×
+  that size fails CI and asks for a fresh judgement (`recorded` keeps its 1.25×).
+  **The worklist is the `recorded` entries plus every entry whose text says it was
+  re-recorded "NOT a re-judgement"** — the ten files #1552 found already past 1.5×
+  (#1543 owns `views-session.js`). Reading them and either judging or splitting
+  them is the manual half that stays here. A file arriving over budget with no entry fails CI, so the audit no longer
   has to catch growth; it only has to catch a bad seam.
 - **Enforced by:** `test/token-budget.test.js` (the threshold and the allowlist);
   the seam judgement is manual
@@ -80,10 +83,10 @@ not a finding; the rejected entries below are that ledger.
   scheduling, queueing) either adopts a mature, widely-used dependency or
   records why not — in a rule, an issue, or a rejected entry here. Per concern,
   not per line: a ten-line helper is not a finding; a growing homegrown
-  subsystem is. The two §7 items that never shipped have **no open issue**:
-  error tracking (#212 closed 2026-07-19 having shipped only pino; the deferral
-  is recorded as M-R05, and whether it gets an issue awaits an operator
-  decision raised 2026-10-04) and the limiter store (#215 closed unshipped
+  subsystem is. The two §7 items that never shipped: error tracking (#212
+  closed 2026-07-19 having shipped only pino; M-R05 records why no SDK is bundled
+  unasked, and since 2026-10-06 the evaluation is owned by #463, widened to
+  durable logs + error tracking by operator decision) and the limiter store (#215 closed unshipped
   2026-08-02; the control is the `railway.json` `numReplicas: 1` pin asserted by
   `test/docker.test.js` — S-012). Report them with that status; never as
   "already tracked".
@@ -237,7 +240,8 @@ not a finding; the rejected entries below are that ledger.
   carry personal data, so any destination is a new processor needing an AVV).
   A future adoption is a legal + ops decision the user drives
   (`.claude/rules/keep-legal-docs-current.md`), never a maturity finding that
-  "the gap is still open".
+  "the gap is still open". That decision now has an owner: #463 (operator,
+  2026-10-06).
 
 ### M-R06 — "Adopt <enterprise pattern> because production SaaS" — meta-criterion
 - **Status:** rejected · 2026-07-29

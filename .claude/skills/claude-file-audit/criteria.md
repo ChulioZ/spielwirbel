@@ -620,3 +620,12 @@ research at all.
   the docs do not say whether the rule lands before the triggering Write runs, and
   for an overwrite trap the first Write is the damage. C-014's "when in doubt, stay
   global" applies. Revisit only with a measurement of load timing.
+
+### C-R09 — "Add an InstructionsLoaded hook that logs which rules load per session"
+- **Status:** rejected · 2026-10-06 (operator decision)
+- **Why:** The 2026-10-04 research pass raised it as the way to measure whether
+  path-scoped rules actually fire (C-014, C-R08). The operator declined it for now:
+  it is a standing posture change like C-026, the scoping problems it would
+  measure have not shown up as real misses, and the token cost of the global set is
+  being addressed by moving the Browser-pane rules into a skill instead. Revisit if
+  a path-scoped rule is found to have failed to load when it mattered.
