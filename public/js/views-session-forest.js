@@ -59,8 +59,11 @@ const FOREST_COUNT_LEAVES = 8;
    - The count card: „Wie viele Blätter fliegen?" with the app's own line „3 von
      9 Spielen werden gezogen" right beneath it (E3), the leaves and the
      stepper, then „Laub wirbeln" as its own big key.
+   - `arriving` marks the count's leaves `data-opening` for motion ritual F10.1
+     (#1476): they whirl in on an arrival, and only then — paintForestCount()
+     takes the mark off at the first count change.
    DOM order is visual order at every width (WCAG 2.4.3). */
-function composeForestSetup(form) {
+function composeForestSetup(form, arriving) {
   form.classList.add('setup-grid--forest');
   const aside = form.querySelector('.setup-grid__aside');
 
@@ -93,7 +96,7 @@ function composeForestSetup(form) {
   // The app's line under the question, always (E3) — it is the same node the
   // shared updateHint() fills, only moved.
   count.querySelector('label').after(bar.querySelector('#barSummary'));
-  count.querySelector('.stepper').before(h('<span class="forest-leaves" aria-hidden="true"></span>'));
+  count.querySelector('.stepper').before(h(`<span class="forest-leaves"${arriving ? ' data-opening' : ''} aria-hidden="true"></span>`));
   const go = bar.querySelector('#go');
   go.innerHTML = `<i class="ti ti-tornado" aria-hidden="true"></i> ${esc(t('startSession.drawForest'))}`;
 }
@@ -111,12 +114,19 @@ function forestDrawSummary(people, potSize, count) {
 }
 
 // The count's leaves: one per game that will be drawn, capped. Called from
-// updateHint(), which every count change reaches under Forest.
+// updateHint(), which every seat, filter and count change reaches under Forest.
+// The row is rebuilt only when the number changes: rebuilt leaves are new nodes,
+// so under the arrival's `data-opening` they would whirl again (F10.1, #1476) —
+// and the first change after the arrival takes that mark off for good.
 function paintForestCount(form) {
   const row = form.querySelector('.forest-leaves');
   if (!row) return;
   const n = parseInt(form.querySelector('#count').value, 10);
   const shown = Math.max(0, Math.min(Number.isInteger(n) ? n : 0, FOREST_COUNT_LEAVES));
+  const painted = row.dataset.n;
+  if (painted === String(n)) return;
+  if (painted !== undefined) row.removeAttribute('data-opening');
+  row.dataset.n = String(n);
   row.innerHTML = '<span class="forest-leaves__leaf"></span>'.repeat(shown);
   row.classList.toggle('is-more', Number.isInteger(n) && n > FOREST_COUNT_LEAVES);
 }

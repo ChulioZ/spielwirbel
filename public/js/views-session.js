@@ -68,7 +68,8 @@ function showStartSession(round, prefill) {
   setContext(round.name);
   setDocTitle(t('startSession.title'), round.name);
   // Arriving, as opposed to re-rendering itself (a language switch through
-  // currentView): only an arrival plays Das Programmheft's opening (#1382).
+  // currentView): only an arrival plays Das Programmheft's opening (#1382) and
+  // Forest's whirl of leaves (#1476).
   const arriving = !app.querySelector('.setup-grid');
   app.innerHTML = '';
   const head = h(`<div class="page-head"><h1>${esc(t('startSession.title'))}</h1></div>`);
@@ -169,7 +170,7 @@ function showStartSession(round, prefill) {
   if (ocean) composeOceanSetup(form);
   if (bruecke) composeBrueckeSetup(head, form);
   if (ph) composeProgrammheftSetup(round, head, form, arriving);
-  if (forest) composeForestSetup(form);
+  if (forest) composeForestSetup(form, arriving);
 
   // Custom-tag filter (#238, tri-state #241): all ignored by default = no tag
   // filter. Map<tagId, 'include'|'exclude'>; included tags combine per
