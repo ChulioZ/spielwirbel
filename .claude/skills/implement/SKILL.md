@@ -281,7 +281,9 @@ four green; on a failure, re-run that one command alone for its full output.
   700 lines for source, 150 for a rule, 250 for a `SKILL.md`. That is not an
   instruction to trim: apply the seam test (several *independently editable*
   concerns, not raw length), split along a real boundary if there is one, and
-  otherwise add the allowlist entry with a written reason. A `public/js` split is
+  otherwise add the allowlist entry with a written reason. An allowlisted file
+  that outgrew its entry's size (1.5× judged, 1.25× recorded) is the same call: a
+  fresh seam test, then re-record the date and size or split. A `public/js` split is
   not free — it needs the four wiring points in
   `.claude/rules/frontend-helper-modules-and-coverage.md`.
 - For **substantial** UI changes (new views/layouts, non-trivial interaction or
