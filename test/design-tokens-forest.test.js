@@ -45,11 +45,11 @@ const decl = (name) => {
 const v = (name) => token(name, FOREST);
 const hexOf = (rgb) => '#' + rgb.map((c) => Math.round(c).toString(16).padStart(2, '0')).join('');
 
-test('the registry row exists, is gated off in production, and every locale names it', () => {
+test('the registry row exists, is live in production, and every locale names it', () => {
   assert.ok(FOREST, 'no forest row in public/js/designs.js');
-  assert.equal(FOREST.enabled, false, 'Forest goes live with #1478, not before');
-  assert.equal(isSelectableDesign('forest', { production: true }), false, 'production must not offer it yet');
-  assert.equal(isSelectableDesign('forest', { production: false }), true, 'dev-temp-data must, so it can be built');
+  assert.equal(FOREST.enabled, true, 'live since its go-live (#1478)');
+  assert.equal(isSelectableDesign('forest', { production: true }), true, 'production offers it in the chooser and on Konto');
+  assert.equal(isSelectableDesign('forest', { production: false }), true, 'and so does every other instance');
   assert.equal(FOREST.stylesheet, '/css/designs/forest.css');
   assert.equal(FOREST.page, '#ecf1e4', 'F1.1 „page"');
   assert.equal(FOREST.accent, '#356427', 'F1.1 „accent" — text at any size');
