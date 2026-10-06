@@ -574,15 +574,22 @@ Regal's score is lifted by), the second the larger of the two account spreads
 (the rounds that rated it, the rounds that played it). A game still needs at
 least one rating whatever the floors say, so an unrated game never tops a card
 called „Bestbewertet". The names still say `RATING` on purpose — renaming them
-would silently reset a value an operator has already set. Like every ceiling
+would silently reset a value an operator has already set. The three favourite cards (issue #1557 — designer, category, mechanic) rank
+names by the mean score of their games, over the games that clear the two
+best-rated floors above. A name needs `PUBLIC_STATS_MIN_NAME_GAMES` (3) such
+games, and `PUBLIC_STATS_MIN_NAME_TENANTS` (2) is the account spread behind it —
+the largest spread among its games, which never overstates it. The names come
+from the BGG corpus where it covers a game, otherwise from the provider within
+the lookup budget. Like every ceiling
 here they are read per call,
 so raising one pulls a single metric back without a deploy. A `0` is honoured
 rather than falling back to the default.
 
 The payload is rebuilt by the background scheduler and served from memory —
 nothing is computed per request and nothing is stored — and
-`PUBLIC_STATS_RESOLVE_MAX` (default 20) caps how many *new* provider lookups one
-rebuild may make. Only games that could actually reach a podium are resolved
+`PUBLIC_STATS_RESOLVE_MAX` (default 30 since issue #1557, was 20) caps how many
+*new* provider lookups one rebuild may make — the podiums spend first, the
+favourite cards (below) whatever is left. Only games that could actually reach a podium are resolved
 (ranking happens on the raw numbers first) and successful lookups are memoized,
 so a steady state costs no upstream requests.
 
