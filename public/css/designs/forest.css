@@ -3647,13 +3647,22 @@
 /* The distribution on the brightening ramp, keyed on the column's data-stop —
    `--sc-fill`, because `--sc` arrives inline and cannot be overridden
    (.claude/rules/inline-custom-properties-cannot-be-overridden.md). */
-:root[data-design="forest"]:not([data-scheme="dark"]) .result-screen--forest .bar-col[data-stop="veto"] { --sc-fill: var(--score-veto); }
 :root[data-design="forest"]:not([data-scheme="dark"]) .result-screen--forest .bar-col[data-stop="1"] { --sc-fill: var(--score-1); }
 :root[data-design="forest"]:not([data-scheme="dark"]) .result-screen--forest .bar-col[data-stop="2"] { --sc-fill: var(--score-2); }
 :root[data-design="forest"]:not([data-scheme="dark"]) .result-screen--forest .bar-col[data-stop="3"] { --sc-fill: var(--score-3); }
 :root[data-design="forest"]:not([data-scheme="dark"]) .result-screen--forest .bar-col[data-stop="4"] { --sc-fill: var(--score-4); }
 :root[data-design="forest"]:not([data-scheme="dark"]) .result-screen--forest .bar-col[data-stop="5"] { --sc-fill: var(--score-5); }
 :root[data-design="forest"]:not([data-scheme="dark"]) .result-screen--forest .trow__bars .bar-track { background: var(--sunken-soft); }
+/* The ramp brightens toward 5 on purpose (F1.5), and its 3–5 were measured as
+   pill grounds under ink — never as a graphic on a pale track: a 5 sat at 1.03:1
+   on the track and on the gold winner row (#1569). So the bar carries an EDGE
+   that draws its boundary (SC 1.4.11: 3.44:1 on the track, 3.42:1 on --gold-soft)
+   and the ramp stays as designed —
+   Programmheft's ruled cells are the precedent for edging rather than recolouring.
+   An INSET shadow, never a border: a rung with no votes is a 0%-tall `.bar`,
+   which a border would draw as a stub reading as one vote, while an inset
+   shadow paints nothing on an empty box. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .result-screen--forest .trow__bars .bar { box-shadow: inset 0 0 0 1.5px var(--control-edge); }
 /* The axis glyph stays in ink: the ramp's light rungs are not a 3:1 glyph on
    white (the colour is the bar's; the face and numeral name the rung). */
 :root[data-design="forest"]:not([data-scheme="dark"]) .result-screen--forest .trow__bars .bar-axis .ti { color: var(--ink-soft); }
