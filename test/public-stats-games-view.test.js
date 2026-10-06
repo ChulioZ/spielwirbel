@@ -137,3 +137,21 @@ test('the home panel wires the same trigger', async (t) => {
   trigger.click();
   assert.ok(dom.document.querySelector('.stats-games__row'));
 });
+
+/* On a phone the popup docks to the bottom edge in EVERY design (#1560) —
+   Klassisch's editors are otherwise centred dialogs below 860px, and this one
+   alone is scoped off that, so no other Klassisch editor moves. CSS text,
+   because jsdom applies no stylesheet. */
+const { CSS, rulesOf, mediaBlocks, declaredValue } = require('./support/css');
+
+test('below 640px the games popup is a bottom sheet, and only that editor moves', () => {
+  const phone = mediaBlocks(CSS).filter(([q]) => q.includes('max-width: 639px')).flatMap(([, b]) => rulesOf(b));
+  const dock = phone.find(([sel]) => /^\.sheet-backdrop--editor:has\(\.editor--stats-games\)$/.test(sel.trim()));
+  assert.ok(dock, 'no phone rule docks the games popup');
+  assert.equal(declaredValue(dock[1], 'align-items'), 'flex-end');
+  const sheet = phone.find(([sel]) => /^\.sheet-backdrop--editor:has\(\.editor--stats-games\) > \.sheet$/.test(sel.trim()));
+  assert.ok(sheet, 'the docked sheet keeps the dialog’s width and corners');
+  assert.equal(declaredValue(sheet[1], 'max-width'), 'none');
+  // No unscoped editor docking in the base sheet: Klassisch's other editors stay dialogs.
+  assert.equal(phone.some(([sel]) => sel.trim() === '.sheet-backdrop--editor'), false);
+});

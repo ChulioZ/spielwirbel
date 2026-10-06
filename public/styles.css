@@ -4636,6 +4636,20 @@ a.stats-games__name { color: inherit; text-decoration: none; }
 a.stats-games__name:hover,
 a.stats-games__name:focus-visible { text-decoration: underline; }
 .stats-games__score { font-size: var(--text-sm); }
+/* On a phone the list docks to the bottom edge as a sheet (#1560), in every
+   design: Klassisch's editors are otherwise centred dialogs below 860px, so
+   this is scoped to this one editor and no other Klassisch editor moves. 639px
+   is the app's own sheet breakpoint, the width Der Tisch docks its editors at
+   too (tisch.css, „The phone appearance"). */
+@media (max-width: 639px) {
+  .sheet-backdrop--editor:has(.editor--stats-games) { align-items: flex-end; padding: 0; }
+  .sheet-backdrop--editor:has(.editor--stats-games) > .sheet {
+    width: 100%;
+    max-width: none;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    border-bottom: none;
+  }
+}
 /* A bar list (#1424) — only Das Programmheft renders one (views-stats.js
    statsBarCard), and its sheet gives it the ink. This is the structure alone:
    rank, title, a bar whose length is the entry's share of the leader's count,
