@@ -10922,7 +10922,7 @@ kbd {
    reason. Colour and underline come from .nav-link. */
 .archive-row__title { display: block; font-family: var(--font-display); font-size: var(--text-lg); font-weight: 700; }
 .archive-row__meta { font-size: var(--text-sm); font-weight: 600; margin-top: 3px; }
-.archive-row__actions { display: flex; gap: 8px; flex: none; flex-wrap: wrap; }
+.archive-row__actions { display: flex; gap: 8px; flex: 0 1 auto; flex-wrap: wrap; } /* shrinks, so the wrap engages at 320px (.claude/rules/flex-none-cancels-flex-wrap.md) */
 .archive-row__actions .btn { font-size: var(--text-sm); padding: 8px 14px; }
 
 /* --- Bulk shelf tidying (#832) --------------------------------------------

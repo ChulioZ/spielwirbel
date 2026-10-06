@@ -89,6 +89,24 @@ test('.rec-card__actions can shrink, so a third action wraps instead of overflow
     '.rec-card__actions may not shrink past its widest button');
 });
 
+test('.archive-row__actions can shrink, so its two buttons wrap instead of overflowing', () => {
+  // The third instance of the pair (found building #1578): the archive lists'
+  // „Comeback" + „Endgültig löschen" are `flex: none` + `flex-wrap: wrap`, so at
+  // 320px the actions held their one-line width — the document scrolled
+  // sideways by 8px in German and 35px in Dutch on every list screen.
+  const flex = flexOf(bodyOf('.archive-row__actions'));
+  assert.ok(flex, '.archive-row__actions declares no flex');
+  assert.notEqual(flex.shrink, 0,
+    '.archive-row__actions cannot shrink, so its flex-wrap can never engage');
+  assert.equal(flex.grow, 0, '.archive-row__actions grows, which moves the actions on a wide row');
+  assert.match(bodyOf('.archive-row__actions'), /flex-wrap:\s*wrap/,
+    '.archive-row__actions no longer wraps, so shrinking alone cannot make it fit');
+  // Like .rec-card__actions, NOT min-width:0: the automatic minimum keeps the
+  // column from shrinking narrower than its widest single button.
+  assert.doesNotMatch(bodyOf('.archive-row__actions'), /min-width:\s*0/,
+    '.archive-row__actions may not shrink past its widest button');
+});
+
 test('the search pill and its input can both shrink below their content', () => {
   // A flex item's automatic minimum size is its min-content width, so BOTH the
   // pill and the input need min-width:0 — with either missing the 150px input
