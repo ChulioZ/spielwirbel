@@ -115,3 +115,39 @@ test('Das Programmheft draws „Meistgespielt" as bars sized by plays, and only 
   assert.equal(card(dom, 'Regal').classList.contains('stats-card--bars'), false);
   assert.ok(card(dom, 'Regal').querySelector('.stats-card__more'));
 });
+
+/* --------------------- the widened column (≥1280px) --------------------- */
+
+/* Once every card holds a list, the 900px reading measure left a 1920px
+   Discover page 1250–1680px tall beside 510px of empty margin on either side
+   (measured per design, #1424). From 1280px the whole screen takes
+   `--w-detail`; Die Brücke and Das Programmheft, which pin their own column
+   count, go from two to three. CSS text, because jsdom applies no stylesheet. */
+const fs = require('node:fs');
+const path = require('node:path');
+const { CSS, rulesOf, mediaBlocks, specificity } = require('./support/css');
+
+const rulesAt = (css, query) => mediaBlocks(css)
+  .filter(([q]) => q.includes(query)).flatMap(([, body]) => rulesOf(body));
+
+test('from 1280px every child of the Discover screen leaves the reading measure together', () => {
+  const hits = rulesAt(CSS, 'min-width: 1280px')
+    .filter(([sel, body]) => sel.includes(':has(> .stats-block)') && /max-width:\s*var\(--w-detail\)/.test(body));
+  assert.equal(hits.length, 1, 'nothing widens the Discover column from 1280px');
+  const [sel] = hits[0];
+  // Every child, so the head, the CTA and Die Brücke's up link share the
+  // block's edges; a named list would leave a new sibling at 900.
+  assert.match(sel, /> \*:not\(\.rail\):not\(\.dock\)$/);
+  // The cap is (0,3,0); a tie would be decided by source order.
+  assert.ok(specificity(sel)[1] > 3, `"${sel}" does not out-rank the reading-measure cap`);
+});
+
+test('Die Brücke and Das Programmheft draw three columns in the widened column', () => {
+  for (const id of ['bruecke', 'programmheft']) {
+    const sheet = fs.readFileSync(path.join(__dirname, '..', `public/css/designs/${id}.css`), 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, '');
+    const three = rulesAt(sheet, 'min-width: 1280px').some(([sel, body]) =>
+      /\.stats-cards$/.test(sel) && /repeat\(3, minmax\(0, 1fr\)\)/.test(body));
+    assert.ok(three, `${id}: the Discover cards stay two across in a 1400px column`);
+  }
+});

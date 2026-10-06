@@ -957,7 +957,9 @@ What the app does, in detail. For a short overview see the
   leader with its cover, then places 2 and 3 as compact rows. Each place clears
   the card's own minimum, so a card may show fewer than three and is never
   padded. Under Das Programmheft the four „Meistgespielt" cards are drawn as
-  bars, each sized as a share of the leader's sessions.
+  bars, each sized as a share of the leader's sessions. From 1280px the
+  screen widens past the reading measure, so the cards run five across (three
+  in Die Brücke and Das Programmheft) instead of leaving the margins empty.
   The section appears on the logged-out landing
   page, on a shareable `/entdecken` screen and as a home-dashboard tile showing
   the first few rankings with their cover art —

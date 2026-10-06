@@ -983,6 +983,25 @@ h1, h2, h3 { font-family: var(--font-display); }
     max-width: var(--w-detail);
   }
 
+  /* Discover (#1424) takes the same licence once its cards became ranked lists.
+     Measured at 1920 with all nine cards holding three entries: the column sat
+     at 900px with 510px empty on either side, and the page ran 1252–1676px tall
+     depending on the design — Die Brücke and Das Programmheft, which draw two
+     columns, worst. At `--w-detail` the auto-fill designs take five columns and
+     those two take three (their own sheets), 200–455px shorter.
+
+     EVERY child moves, not a named list: the screen is one record — head, block,
+     the logged-out CTA, Die Brücke's up link — and a sibling left at 900 would
+     give it a second left edge. Conditioned on `> .stats-block`, which only
+     /entdecken renders as a direct child (the landing and home surfaces nest
+     the block in their own placeholder), and on the block being there at all:
+     the empty state keeps the reading measure, since one sentence needs none.
+
+     (0,4,0) against the cap's (0,3,0) — specificity, never source order. */
+  .app:has(> .stats-block) > *:not(.rail):not(.dock) {
+    max-width: var(--w-detail);
+  }
+
   /* The logged-out landing page (#1090) takes the same licence, on the plainest
      argument of the four: nothing persistent renders on this screen at all. The
      auth-screen chrome hides home, context and feedback, the rail never renders

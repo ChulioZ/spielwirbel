@@ -2775,6 +2775,13 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+/* From 1280px the Discover column widens to --w-detail (#1424, styles.css):
+   three columns of rows, so the page is not 1560px tall beside empty margins. */
+@media (min-width: 1280px) {
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .app > .stats-block .stats-cards {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
 :root[data-design="programmheft"]:not([data-scheme="dark"]) .stats-block .stats-card {
   gap: var(--space-3);
   min-height: 72px;

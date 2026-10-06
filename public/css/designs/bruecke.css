@@ -3440,6 +3440,11 @@
 @media (min-width: 1024px) {
   :root[data-design="bruecke"] .stats-block .stats-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3) 20px; }
 }
+/* From 1280px the Discover column widens to --w-detail (#1424, styles.css), and
+   two plates across left a 1400px page 1676px tall: three across. */
+@media (min-width: 1280px) {
+  :root[data-design="bruecke"] .app > .stats-block .stats-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
 :root[data-design="bruecke"] .stats-block .stats-card { min-height: 72px; padding: var(--space-3) var(--space-4); }
 :root[data-design="bruecke"][data-scheme="dark"] .stats-block .stats-card {
   background: var(--surface);
