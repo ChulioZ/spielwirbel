@@ -5481,8 +5481,13 @@ a.k-tile:focus-visible,
   padding: 2px 10px 8px;
   margin-bottom: 4px;
   border-bottom: 1px solid var(--line);
-  word-break: break-all;
 }
+/* The account menu's head holds an e-mail address, one unbreakable token that
+   must wrap somewhere. NOT the editor head the form-sheet designs reuse this
+   class for: that holds a title, and break-all split it mid-word (#1560). A
+   separate rule rather than `word-break: normal` on the editor head, which
+   would also undo `:lang(ko)`'s keep-all there (test/hangul-line-breaking). */
+.popover__head:not(.popover__head--editor) { word-break: break-all; }
 .popover__head strong { display: block; color: var(--ink); font-weight: 600; }
 
 
