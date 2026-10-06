@@ -1081,6 +1081,15 @@
   box-shadow: var(--shadow-core);
 }
 :root[data-design="forest"] .forest-hub .forest-stump__core .hub-cta__reason { font-size: 13px; line-height: 1.2; }
+/* F10.1 „Start" (#1476), its first half: the heart gives under the press —
+   scale .96 on top of `.btn:active`'s own 2px, the focus ring left as it is.
+   `:active` is painted while the pointer is down, before the click navigates,
+   so this is the part of the sheet's hub beat that can be seen. The scale is a
+   state, so it holds under reduced motion too; only its easing is gated. */
+:root[data-design="forest"] .forest-hub .btn.forest-stump__core:not(:disabled):active { scale: .96; }
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-design="forest"] .forest-hub .btn.forest-stump__core { transition: scale 200ms ease-out, background var(--dur-base) var(--ease-out), border-color var(--dur-base) var(--ease-out); }
+}
 @media (max-width: 859px) {
   :root[data-design="forest"] .forest-stump { width: 244px; height: 244px; border-width: 15px; }
   :root[data-design="forest"] .forest-hub .btn.hub-cta.forest-stump__core { width: 152px; height: 152px; font-size: 19px; }
@@ -2741,6 +2750,38 @@
   height: 8px;
   border-radius: 0 100% 0 100%;
   background: var(--leaf-4);
+}
+/* F10.1 „Start" (#1476, Forest-F10-Motion.dc.html), its second half: the
+   leaves whirl out of the stump and settle — 900ms each, 40ms apart, so eight
+   are down by 1 180ms. The sheet plays it on the hub, which the press replaces
+   in the same task, so it would never be painted there (and holding the
+   navigation for it is #1122's mistake); it plays here, on ARRIVAL, where the
+   leaves are the count's picture. `data-opening` is set only on an arrival and
+   taken off by the first count change (views-session-forest.js), so a re-render
+   or a stepper tap repaints them still. The covers on the stump arrive still,
+   as every design's pot does since #1122.
+
+   Only `translate`, `rotate` and `scale` move: `transform` holds each leaf's
+   resting tilt, and the individual properties compose with it. No end frame
+   and a backwards fill only, so the ritual lands on the leaves as they rest —
+   which is also the reduced-motion picture, since nothing here exists outside
+   the gate. They come from the left, where the stump stands at 1100px and up
+   (the only width the leaves are drawn at). */
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-design="forest"]:not([data-scheme="dark"]) .forest-leaves[data-opening] .forest-leaves__leaf {
+    animation: forest-whirl 900ms cubic-bezier(.2, .7, .2, 1) backwards;
+  }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .forest-leaves[data-opening] .forest-leaves__leaf:nth-child(2) { animation-delay: 40ms; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .forest-leaves[data-opening] .forest-leaves__leaf:nth-child(3) { animation-delay: 80ms; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .forest-leaves[data-opening] .forest-leaves__leaf:nth-child(4) { animation-delay: 120ms; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .forest-leaves[data-opening] .forest-leaves__leaf:nth-child(5) { animation-delay: 160ms; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .forest-leaves[data-opening] .forest-leaves__leaf:nth-child(6) { animation-delay: 200ms; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .forest-leaves[data-opening] .forest-leaves__leaf:nth-child(7) { animation-delay: 240ms; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .forest-leaves[data-opening] .forest-leaves__leaf:nth-child(8) { animation-delay: 280ms; }
+  @keyframes forest-whirl {
+    from { translate: -160px 24px; rotate: -200deg; scale: .3; opacity: 0; }
+    60% { opacity: 1; }
+  }
 }
 /* „Laub wirbeln" with the whirl: the one primary, as big as the sheets draw it
    (60px on a phone, the tall leaf key at 1440). Young Serif never on a button. */
