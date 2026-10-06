@@ -3050,6 +3050,29 @@
 :root[data-design="forest"]:not([data-scheme="dark"]) .vote--forest .rating .mood.is-selected .ti {
   border: 3px solid var(--ink);
   box-shadow: 0 0 0 6px var(--gold-soft);
+  /* Lifted 6px — F10.3's end frame, at rest and under reduced motion alike.
+     `translate`, so nothing else that transforms the disc is overridden. */
+  translate: 0 -6px;
+}
+/* F10.3 „Die Stimme glimmt" (#1476, Forest-F10-Motion.dc.html): the halo opens
+   behind the face just chosen — past its resting 6px and back — and the face
+   rises to its 6px. Only `.vote--advancing` (vote-advance.js) marks the card
+   showing a FRESH tap, so a choice already made („Zurück", the review) arrives
+   at rest. The next card comes at 340ms (VOTE_ADVANCE_MS), so the sheet's
+   ≈ 0,5 s is fitted inside it: glow 0–300ms, lift 60–300ms. Nothing else
+   moves and „Weiter" is usable throughout; the choice reads from the fill and
+   the ring without the light. No end frame: both land on the rule above. */
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-design="forest"]:not([data-scheme="dark"]) .vote--forest.vote--advancing .rating .mood.is-selected .ti {
+    animation: forest-glow 300ms ease-out, forest-lift 240ms ease-out 60ms backwards;
+  }
+  @keyframes forest-glow {
+    from { box-shadow: 0 0 0 0 var(--gold-soft); }
+    70% { box-shadow: 0 0 0 10px var(--gold-soft); }
+  }
+  @keyframes forest-lift {
+    from { translate: 0 0; }
+  }
 }
 :root[data-design="forest"]:not([data-scheme="dark"]) .vote--forest .rating .mood.is-selected:nth-child(1) .ti { background: var(--score-1); color: var(--score-ink-low); }
 :root[data-design="forest"]:not([data-scheme="dark"]) .vote--forest .rating .mood.is-selected:nth-child(2) .ti { background: var(--score-2); color: var(--score-ink-low); }
