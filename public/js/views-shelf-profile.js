@@ -18,9 +18,19 @@
    Part of the frontend; all files share one global script scope. Loaded after
    views-round-start.js, which calls hubShelfProfileCard at RENDER time. */
 
-// The builder's one dependency, the draw pool's own seat predicate — injected
-// for the reason shelf-profile.js's header gives.
-const shelfProfileDeps = () => ({ fitsPlayerCount, creditedDesigners });
+// The builder's dependencies, injected for the reason shelf-profile.js's header
+// gives: the draw pool's own seat predicate, the (Uncredited) filter, and each
+// game's SHELF score from the caller's roundScoreIndex — the number the Regal
+// prints, so the ranked lists can never disagree with the shelf (#1556).
+const shelfProfileDeps = (statsByGame) => ({
+  fitsPlayerCount,
+  creditedDesigners,
+  scoreOf: (g) => { const st = statsByGame[g.id]; return st ? st.score : null; },
+});
+
+// A listed name's score as the screen and the image print it: clamped for
+// display, like every score (core.js displayScore). It was RANKED unclamped.
+const shelfTopScore = (it) => fmtAvg(displayScore(it.score));
 
 // Section titles per dimension. Playing time and weight reuse the filter panel's
 // labels: the same fields, named the same way wherever the app shows them.
@@ -98,8 +108,8 @@ const SHELF_CARD_GAPS = 3;
    size" is the question a draw asks first — plus the strongest gaps, and links
    to the screen. Should a shelf lack seat data but carry the others, the first
    dimension that has enough data stands in. */
-function hubShelfProfileCard(round, activeGames) {
-  const p = shelfProfile(activeGames, shelfProfileDeps());
+function hubShelfProfileCard(round, activeGames, statsByGame) {
+  const p = shelfProfile(activeGames, shelfProfileDeps(statsByGame));
   if (!p) return null;
   const card = hubCard('ti-id', t('shelfProfile.title'));
   card.classList.add('hub-card--shelf', 'hub-card--link');
@@ -130,16 +140,29 @@ function shelfPanel(title) {
   return { panel, body: panel.querySelector('.hub-card__body') };
 }
 
-// The mechanics, categories or designers as a ranked list with their counts. The names are
-// BGG's own and stay untranslated — its terms allow choosing which of its names
-// to show, never rewriting one.
+/* The mechanics, categories or designers the round rates best (#1556), each
+   with its mean score as the shelf's own pill and the number of scored games
+   behind it. The sub-line and the ⓘ say what orders the list — without them a
+   ranked list of names reads as "most common", which it was until #1556.
+
+   The names are BGG's own and stay untranslated — its terms allow choosing
+   which of its names to show, never rewriting one. */
 function shelfTopPanel(title, items) {
   const { panel, body } = shelfPanel(title);
+  panel.querySelector('.hub-card__title').insertAdjacentHTML('beforeend', ` ${infoButton('score')}`);
+  body.appendChild(h(`<div class="shelf-card__sub">${esc(t('shelfProfile.byScore'))}</div>`));
   const list = h('<ol class="shelf-top"></ol>');
   items.forEach((it) => {
-    list.appendChild(h(`<li class="shelf-top__row"><span class="shelf-top__name">${esc(it.name)}</span><span class="shelf-top__n">${it.n}</span></li>`));
+    list.appendChild(h(`<li class="shelf-top__row">
+         <span class="shelf-top__name">${esc(it.name)}</span>
+         <span class="shelf-top__val">
+           <span class="shelf-top__n">${esc(tn(it.n, 'shelfProfile.topGamesOne', 'shelfProfile.topGames'))}</span>
+           <span class="score-pill" style="--sc:${scoreColor(it.score)}" data-stop="${scoreStop(it.score)}">${shelfTopScore(it)}</span>
+         </span>
+       </li>`));
   });
   body.appendChild(list);
+  wireInfoButtons(panel);
   return panel;
 }
 
@@ -151,7 +174,7 @@ function shelfShareModel(round, p) {
     { title: t('metaFilter.categories'), items: p.categories },
     { title: t('gameInfo.designers'), items: p.designers },
   ].filter((l) => l.items.length)
-    .map((l) => ({ title: l.title, items: l.items.map((it) => `${it.name} · ${it.n}`) }));
+    .map((l) => ({ title: l.title, items: l.items.map((it) => `${it.name} · ${shelfTopScore(it)}`) }));
   return {
     roundName: round.name,
     title: t('shelfProfile.title'),
@@ -197,7 +220,8 @@ async function showShelfProfile(rid) {
   setContext(round.name);
   setDocTitle(t('shelfProfile.title'), round.name);
 
-  const p = shelfProfile(round.games.filter(isActiveGame), shelfProfileDeps());
+  const activeGames = round.games.filter(isActiveGame);
+  const p = shelfProfile(activeGames, shelfProfileDeps(roundScoreIndex(round, activeGames).byGame));
 
   app.innerHTML = '';
   renderSubScreenTabs(round, 'shelf-profile');

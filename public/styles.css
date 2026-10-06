@@ -1684,7 +1684,11 @@ a.hub-row:hover { background: var(--sunken-soft); }
 .shelf-top { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: var(--text-sm); }
 .shelf-top__row { display: flex; justify-content: space-between; gap: 10px; }
 .shelf-top__name { min-width: 0; overflow-wrap: anywhere; }
-.shelf-top__n { flex: none; font-weight: 700; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+.shelf-top__row { align-items: center; }
+.shelf-top__val { flex: none; display: flex; align-items: center; gap: 8px; }
+.shelf-top__n { color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+/* The pill was made for a cover's corner (absolute); here it is a row value. */
+.shelf-top__val .score-pill { position: static; }
 
 /* The quick-start chips (#923), directly under the big CTA they modify — in the
    pane below 1280px and in the rail above it, following that button either way. */

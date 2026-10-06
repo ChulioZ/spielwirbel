@@ -16,8 +16,11 @@ const { fitsPlayerCount, isActiveGame } = require('../public/js/draw-pool');
 const { creditedDesigners } = require('../public/js/provider-info-fields');
 const { DEMO_ROUNDS } = require('../lib/demo-seed');
 
-// Both seams the browser hands in (views-shelf-profile.js `shelfProfileDeps`).
-const deps = { fitsPlayerCount, creditedDesigners };
+// The seams the browser hands in (views-shelf-profile.js `shelfProfileDeps`).
+// `scoreOf` stands in for the round's shelf index (roundScoreIndex): a fixture
+// game carries its shelf score as `score`, and a game without one is unscored.
+const scoreOf = (game) => (Number.isFinite(game.score) ? game.score : null);
+const deps = { fitsPlayerCount, creditedDesigners, scoreOf };
 const band = (dim, key) => dim.bands.find((b) => b.key === key).n;
 
 // A linked game: some provider data, a 2–4 range, a medium hour.
@@ -134,25 +137,54 @@ test('gaps: every seat and time band under three, the empty ones first, dimensio
   assert.deepEqual(full.gaps, [], 'a shelf with three or more in every band has no gaps');
 });
 
-test('the top mechanics and categories: most common first, ties by name, no singletons, at most five', () => {
-  // Fresh arrays per game: the fixture helper would otherwise share one.
-  const shelf = shelfOf(8, { categories: [] }).map((x) => ({ ...x, mechanics: ['Dice Rolling'] }));
-  shelf[0].mechanics = ['Dice Rolling', 'Worker Placement', 'Worker Placement'];  // a duplicate counts once
-  shelf[1].mechanics = ['Dice Rolling', 'Worker Placement', 'Auction'];
-  shelf[2].mechanics = ['Dice Rolling', 'Auction', 'Solo'];
-  ['A', 'B', 'C', 'D', 'E'].forEach((m) => { shelf[3].mechanics.push(m); shelf[4].mechanics.push(m); });
+// A shelf of `n` scored games with no mechanics or categories, for the list
+// tests to hand names to. Fresh arrays per game: the helper would share one.
+const listShelf = (n = 9) => shelfOf(n, { score: 3 }).map((x) => ({ ...x, mechanics: [], categories: [] }));
+const row = (it) => `${it.name}:${it.score}:${it.n}`;
+
+test('the top names rank by their games\' mean shelf score, not by how many games carry them (#1556)', () => {
+  const shelf = listShelf();
+  // Common is on four mediocre games, Loved on two favourites. A count ranking
+  // puts Common first; the score ranking must not.
+  [0, 1, 2, 3].forEach((i) => { shelf[i].mechanics = ['Common']; shelf[i].score = 2; });
+  [4, 5].forEach((i) => { shelf[i].mechanics = ['Loved']; shelf[i].score = 4.5; });
+  shelf[4].score = 4;
+  shelf[5].score = 5;
   const p = shelfProfile(shelf, deps);
-  assert.deepEqual(p.mechanics.map((m) => `${m.name}:${m.n}`),
-    ['Dice Rolling:8', 'A:2', 'Auction:2', 'B:2', 'C:2']);
-  assert.ok(!p.mechanics.some((m) => m.name === 'Solo'), 'a name held by one game leads nothing');
-  assert.deepEqual(p.categories, []);
-  // The singleton guard needs a list SHORTER than five to be visible at all —
-  // above, Solo loses the cut to the pairs anyway (measured: green with the
-  // filter deleted).
-  shelf[0].categories = ['Rare'];
-  shelf[1].categories = ['Common'];
-  shelf[2].categories = ['Common'];
-  assert.deepEqual(shelfProfile(shelf, deps).categories.map((c) => c.name), ['Common']);
+  assert.deepEqual(p.mechanics.map(row), ['Loved:4.5:2', 'Common:2:4']);
+});
+
+test('an unscored game moves neither a name\'s value nor its count, and a name needs two SCORED games (#1556)', () => {
+  const shelf = listShelf();
+  // Loved: two scored games plus three unscored ones — still 4.5 over 2.
+  [0, 1, 2, 3, 4].forEach((i) => { shelf[i].mechanics = ['Loved']; });
+  shelf[0].score = 4;
+  shelf[1].score = 5;
+  [2, 3, 4].forEach((i) => { shelf[i].score = null; });
+  // Solo: one scored game and two unscored — never listed, however many boxes.
+  [5, 6, 7].forEach((i) => { shelf[i].categories = ['Solo']; });
+  shelf[6].score = null;
+  shelf[7].score = undefined;
+  const p = shelfProfile(shelf, deps);
+  assert.deepEqual(p.mechanics.map(row), ['Loved:4.5:2']);
+  assert.deepEqual(p.categories, [], 'one scored game leads nothing; no fallback to counts');
+});
+
+test('ties: more scored games first, then by name; at most five; duplicates count once (#1556)', () => {
+  const shelf = listShelf(12);
+  // B and A share a mean of 3 on two games each; Wide has the same mean on
+  // three. Wide wins the tie by evidence, then A before B by name.
+  shelf[0].mechanics = ['B', 'B'];  // a duplicate on one game counts once
+  shelf[1].mechanics = ['B'];
+  shelf[2].mechanics = ['A'];
+  shelf[3].mechanics = ['A'];
+  [4, 5, 6].forEach((i) => { shelf[i].mechanics = ['Wide']; });
+  // Three more names above them, so the cut at five is visible.
+  ['Top1', 'Top2', 'Top3'].forEach((m) => { shelf[7].mechanics.push(m); shelf[8].mechanics.push(m); });
+  shelf[7].score = 4;
+  shelf[8].score = 4;
+  const p = shelfProfile(shelf, deps);
+  assert.deepEqual(p.mechanics.map(row), ['Top1:4:2', 'Top2:4:2', 'Top3:4:2', 'Wide:3:3', 'A:3:2']);
 });
 
 test('the demo seed’s big round has a profile, and its two small rounds do not', () => {
@@ -166,16 +198,17 @@ test('the demo seed’s big round has a profile, and its two small rounds do not
   assert.equal(shelfProfile(active(group), deps), null);
 });
 
-test('the top designers: counted like mechanics, with BGG\'s (Uncredited) sentinel never among them (#1505)', () => {
-  /* Five uncredited games outnumber everything else on this shelf, so a builder
-   * that forgot the filter would lead with "(Uncredited) · 5" — every party
-   * game reading as the work of one prolific designer. */
+test('the top designers: ranked like mechanics, with BGG\'s (Uncredited) sentinel never among them (#1505)', () => {
+  /* Five uncredited games score highest on this shelf, so a builder that forgot
+   * the filter would lead with "(Uncredited)" — every party game reading as the
+   * work of one beloved designer. */
   const shelf = shelfOf(9).map((x, i) => ({
     ...x,
+    score: i < 5 ? 5 : 3,
     designers: i < 5 ? ['(Uncredited)'] : i < 8 ? ['Uwe Rosenberg'] : ['Uwe Rosenberg', 'Solo Person'],
   }));
   const p = shelfProfile(shelf, deps);
-  assert.deepEqual(p.designers, [{ name: 'Uwe Rosenberg', n: 4 }]);
+  assert.deepEqual(p.designers, [{ name: 'Uwe Rosenberg', score: 3, n: 4 }]);
   // A shelf with no designer data has an empty list, like the other two.
-  assert.deepEqual(shelfProfile(shelfOf(9), deps).designers, []);
+  assert.deepEqual(shelfProfile(shelfOf(9, { score: 3 }), deps).designers, []);
 });
