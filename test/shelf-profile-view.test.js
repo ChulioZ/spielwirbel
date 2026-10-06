@@ -123,13 +123,16 @@ test('the screen: every dimension, the full gap list, the leading mechanics, and
     'the sentinel is never a designer');
   // Each row carries the mean SHELF score as the shelf's own pill, clamped for
   // display, and the number of scored games behind it (#1556).
-  const uweScore = dom.run('fmtAvg(displayScore(gameStats(' + JSON.stringify(linkedRound()) + ', 15).score))');
+  // The round goes in as a window global, never spliced into the evaluated
+  // source (CodeQL: code built from data).
+  dom.set('shelfTestRound', linkedRound());
+  const uweScore = dom.run('fmtAvg(displayScore(gameStats(shelfTestRound, 15).score))');
   assert.equal(designers[0].querySelector('.shelf-top__val .score-pill').textContent, uweScore);
   assert.equal(designers[0].querySelector('.shelf-top__n').textContent, 'aus 4 Spielen');
   assert.ok(panels[6].querySelector('.hub-card__title [data-info-topic="score"]'), 'the ⓘ says what the order is');
   assert.equal(panels[6].querySelector('.shelf-card__sub').textContent, 'Nach Spielwirbel-Score');
   // The share image carries the same value the screen shows.
-  const items = JSON.parse(dom.run(`(() => { const r = ${JSON.stringify(linkedRound())};
+  const items = JSON.parse(dom.run(`(() => { const r = shelfTestRound;
     const a = r.games.filter(isActiveGame);
     const p = shelfProfile(a, shelfProfileDeps(roundScoreIndex(r, a).byGame));
     return JSON.stringify(shelfShareModel(r, p).lists.map((l) => l.items)); })()`));
