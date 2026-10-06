@@ -4064,7 +4064,8 @@
    design opts in here. Each segment is a real link to its own route — the „one
    screen with segments" O13.3 draws, without merging three addresses. ONE ROW
    THAT SCROLLS rather than wraps, for Der Tisch's reason: a segmented control
-   broken over two lines stops reading as one choice. */
+   broken over two lines stops reading as one choice — from 640px; a phone
+   wraps it as text tabs (#1578, below). */
 :root[data-design="ocean"]:not([data-scheme="dark"]) .offshelf-seg {
   display: flex;
   gap: 3px;
@@ -4112,6 +4113,39 @@
   background: var(--control-edge);
 }
 :root[data-design="ocean"]:not([data-scheme="dark"]) .offshelf-seg__item[data-sub="recommendations"] .ti { color: var(--brand); }
+/* A phone (#1578): the scrolling tray hid two of the five lists. Below 640px
+   it is Das Programmheft's composition instead — wrapped text tabs over a
+   hairline, the current one underlined in the accent; the suggestions keep
+   their accent ink rather than the hairline that set them apart in one row.
+   From 640px the tray above is untouched. */
+@media (max-width: 639px) {
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .offshelf-seg {
+    flex-wrap: wrap;
+    gap: 0 18px;
+    width: auto;
+    padding: 0;
+    overflow-x: visible;
+    border-bottom: 1px solid var(--line);
+    border-radius: 0;
+    background: none;
+  }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .offshelf-seg__item {
+    max-width: 100%;
+    min-height: 44px;
+    padding: 0;
+    border-bottom: 3px solid transparent;
+    border-radius: 0;
+    white-space: normal;
+  }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .offshelf-seg__item .ti { display: none; }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .offshelf-seg__item[data-sub="recommendations"] { margin-left: 0; color: var(--brand); }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .offshelf-seg__item[data-sub="recommendations"]::before { content: none; }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .offshelf-seg__item.is-on {
+    border-bottom-color: var(--brand);
+    background: none;
+    box-shadow: none;
+  }
+}
 
 /* The rows: a 4:3 cover, the title, and the actions (O13.3). Aussortiert's
    covers are washed out — those games left the shelf; Durchgespielt and the

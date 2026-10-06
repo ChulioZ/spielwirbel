@@ -70,7 +70,9 @@ function offShelfEntries(round) {
    is. Die Brücke (B6.7) and Das Programmheft (P13.7) set each segment as its
    name beside its figure — a tab readout rather than a sentence; the others use
    the counted label. Every design styles the strip in its own sheet, and
-   Klassisch in styles.css. */
+   Klassisch in styles.css — and below 640px Klassisch, Der Tisch, Ocean and
+   Forest wrap that counted label as text tabs (#1578), in CSS alone, so the
+   markup here is the same at every width. */
 function offShelfSegments(round, activeSub) {
   const nav = h(`<nav class="offshelf-seg" aria-label="${esc(t('offShelf.scope'))}"></nav>`);
   const figures = designIs('bruecke') || designIs('programmheft');

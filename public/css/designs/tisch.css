@@ -7371,7 +7371,8 @@
 
    ONE ROW THAT SCROLLS rather than wraps: four labels in Finnish do not fit
    390px, and a segmented control broken over two lines stops reading as one
-   choice among four. The tray is as wide as its segments and no wider. */
+   choice among four. The tray is as wide as its segments and no wider. Below
+   640px the segments wrap as text tabs instead (#1578, below). */
 :root[data-design="tisch"][data-scheme="dark"] .offshelf-seg {
   display: flex;
   gap: 3px;
@@ -7405,6 +7406,35 @@
 :root[data-design="tisch"][data-scheme="dark"] .offshelf-seg__item.is-on {
   background: linear-gradient(180deg, var(--brass-hi), var(--gold-deep));
   color: var(--on-accent);
+}
+/* A phone (#1578): the scroll above hid two of the five lists, so below 640px
+   the tray wraps and its segments become text tabs — Das Programmheft's
+   composition — the current one underlined in brass. The tray itself stays:
+   the labels are gold, and gold is text only on WOOD (finding A1), never on the
+   felt the page would otherwise put under them. From 640px nothing changes. */
+@media (max-width: 639px) {
+  :root[data-design="tisch"][data-scheme="dark"] .offshelf-seg {
+    flex-wrap: wrap;
+    gap: 0 16px;
+    width: auto;
+    padding: 0 12px;
+    overflow-x: visible;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .offshelf-seg__item {
+    max-width: 100%;
+    min-height: 44px;
+    padding: 0;
+    border-bottom: 3px solid transparent;
+    border-radius: 0;
+    white-space: normal;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .offshelf-seg__item .ti { display: none; }
+  :root[data-design="tisch"][data-scheme="dark"] .offshelf-seg__item:hover { background: none; }
+  :root[data-design="tisch"][data-scheme="dark"] .offshelf-seg__item.is-on {
+    border-bottom-color: var(--brass-hi);
+    background: none;
+    color: var(--gold);
+  }
 }
 
 /* The rows: wood cards with the list's own glyph in brass, and the covers
