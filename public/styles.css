@@ -3111,6 +3111,21 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
   background-size: contain;
   background-repeat: no-repeat;
 }
+/* A cover that only exists at thumbnail size (#1542): BGG's signed
+   `fit-in/200x150`, flagged `cover--thumb` by isThumbCover() at the render
+   site. The hero frames grew to 360–567px, so `contain` above drew that 200px
+   image at up to 2.8x and it read as mush. The FRAME keeps its size — each
+   design's composition is untouched — and only the sharp layer stops at 1.5x
+   the native box (300 x 225), centred, with the blurred copy in ::before
+   filling the rest as a mat. 1.5x is the upscale #868 accepted for the hero
+   (.claude/rules/provider-cover-sizing.md); a frame already under the cap is
+   unaffected, since `min(100%, …)` resolves to the frame. */
+.cover--thumb::after {
+  inset: 0;
+  margin: auto;
+  width: min(100%, 300px);
+  height: min(100%, 225px);
+}
 /* Overlay/interactive children must stay above the cover layers — ::after is an
    auto-z-index positioned sibling that would otherwise paint over them. The
    selection tick was missing here until #1358: it sat under every real cover. */

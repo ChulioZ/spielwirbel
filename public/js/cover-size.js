@@ -43,7 +43,7 @@ const COVER_UNSAFE_RE = /['"<>&\\\s]/;
 // sized for the box it lands in, not the provider's print-resolution master.
 //   THUMB — 38–74px chips: pool thumbs, result rows, tickets, archive rows
 //   CARD  — the Regal grid (minmax(220px, 1fr) at aspect-ratio 4/3)
-//   HERO  — the game-detail hero (240px) and the voting screen's big frame
+//   HERO  — the game-detail hero, the Programmheft lead and the voting card
 const COVER_THUMB = 160;
 const COVER_CARD = 330;
 const COVER_HERO = 480;
@@ -112,6 +112,24 @@ function coverUrl(image, width) {
   return `${image}?${match.query(width)}`;
 }
 
+// A cover that only EXISTS at thumbnail size (#1542). BGG hands us its signed
+// `fit-in/200x150` variant and nothing larger can be fetched (see above), so a
+// hero frame drawing it at 360–567px was a 1.8–2.8x upscale — visibly mushy.
+// Render sites add `cover--thumb` to a hero/lead frame when this is true, and
+// the stylesheet caps the sharp layer at 1.5x the native box (300 x 225) while
+// the blurred copy behind it keeps filling the frame as a mat.
+//
+// Keyed on the URL, not on the provider: uploads (`/uploads/<key>`, re-encoded
+// to COVER_MAX_DIM) and any future full-size cover are left uncapped, and a
+// fit-in variant wider than COVER_NATIVE_MAX would need no cap at hero size.
+const COVER_NATIVE_MAX = 200;
+const FIT_IN_RE = /\/fit-in\/(\d+)x\d+\//;
+function isThumbCover(image) {
+  if (typeof image !== 'string') return false;
+  const m = FIT_IN_RE.exec(image);
+  return !!m && Number(m[1]) <= COVER_NATIVE_MAX;
+}
+
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { COVER_THUMB, COVER_CARD, COVER_HERO, COVER_RESIZERS, COVER_UNSAFE_RE, coverUrl };
+  module.exports = { COVER_THUMB, COVER_CARD, COVER_HERO, COVER_RESIZERS, COVER_UNSAFE_RE, coverUrl, isThumbCover };
 }

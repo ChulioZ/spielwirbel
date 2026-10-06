@@ -396,7 +396,7 @@ async function showGameDetail(rid, gameId) {
   // for the same reason as the chips (#424); its fixed box means the UA's
   // inline-block is no change, and the `.gd-img--edit:focus-visible` overlay
   // rule was already written for a focusable frame.
-  const imgEl = h(`<button type="button" class="gd-img gd-img--edit" ${imgStyle} title="${esc(t('detail.changeImage'))}">${fallback}<span class="gd-img__edit">${esc(t('detail.changeImage'))}</span></button>`);
+  const imgEl = h(`<button type="button" class="gd-img gd-img--edit${isThumbCover(game.image) ? ' cover--thumb' : ''}" ${imgStyle} title="${esc(t('detail.changeImage'))}">${fallback}<span class="gd-img__edit">${esc(t('detail.changeImage'))}</span></button>`);
   imgEl.addEventListener('click', () => editImage(imgEl));
   coverCol.appendChild(imgEl);
 

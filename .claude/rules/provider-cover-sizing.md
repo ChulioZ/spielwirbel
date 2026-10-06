@@ -1,6 +1,7 @@
 ---
 paths:
   - "public/js/cover-size.js"
+  - "test/cover-thumb-cap.test.js"
   - "lib/providers/**"
   - "test/cover-size.test.js"
 ---
@@ -91,11 +92,18 @@ first** — that number, not transferSize, is what predicts it.
   pre-#117 private endpoint served, so a new BGG game's cover is softer in the
   large frames. **#868 widened the game-detail hero from 240 px to 300 px** (a
   1.5× upscale of the `fit-in/200x150` thumbnail then), and the frames have grown
-  since: measured 2026-10-04, the hero frames draw that 200×150 thumbnail at
-  **360–567 px**, roughly 1.8–2.8× upscaled. Re-hosting a resized copy is now
-  *licensed* (the BGG token grants reproduction rights) but needs an image
-  pipeline this repo does not have — that is the follow-up, not a reason to store
-  the master.
+  since: measured 2026-10-04, the hero frames drew that 200×150 thumbnail at
+  **360–567 px**, roughly 1.8–2.8× upscaled. **#1542 capped them**: the render
+  sites (game hero, Programmheft lead, the three vote cards) add `cover--thumb`
+  when `isThumbCover()` (`public/js/cover-size.js`) sees a `fit-in/` variant
+  ≤ 200 px wide, and `.cover--thumb::after` in `styles.css` stops the sharp layer
+  at **300 × 225** (1.5× native) while the blurred `::before` copy fills the
+  frame as a mat. The frames keep their size, so no design's composition moved;
+  uploads are never flagged. `test/cover-thumb-cap.test.js` pins the URL test,
+  each render site and the cap. A new hero-size frame must add the flag too.
+  Re-hosting a resized copy is now *licensed* (the BGG token grants
+  reproduction rights) but needs an image pipeline this repo does not have —
+  that is the follow-up, not a reason to store the master.
 - **It must be render-time, not capture-time.** This repo keeps no permanent
   migration code (CLAUDE.md), so rewriting what `pickImage()` stores would fix
   only games added afterwards and leave the whole existing corpus slow. On

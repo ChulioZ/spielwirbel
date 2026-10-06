@@ -404,6 +404,7 @@ const frontendGlobals = {
   emptyState: 'readonly', emptyStateAction: 'readonly',
   coverUrl: 'readonly', COVER_THUMB: 'readonly', COVER_CARD: 'readonly',
   COVER_HERO: 'readonly', COVER_RESIZERS: 'readonly', COVER_UNSAFE_RE: 'readonly',
+  isThumbCover: 'readonly',
   providerMatchCover: 'readonly', pickedTitle: 'readonly',
   // lookup-nav.js (issue #542)
   nextLookupIndex: 'readonly', lookupOptionIndex: 'readonly',
