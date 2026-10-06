@@ -80,10 +80,10 @@ not a finding; the rejected entries below are that ledger.
   scheduling, queueing) either adopts a mature, widely-used dependency or
   records why not — in a rule, an issue, or a rejected entry here. Per concern,
   not per line: a ten-line helper is not a finding; a growing homegrown
-  subsystem is. The two §7 items that never shipped have **no open issue**:
-  error tracking (#212 closed 2026-07-19 having shipped only pino; the deferral
-  is recorded as M-R05, and whether it gets an issue awaits an operator
-  decision raised 2026-10-04) and the limiter store (#215 closed unshipped
+  subsystem is. The two §7 items that never shipped: error tracking (#212
+  closed 2026-07-19 having shipped only pino; M-R05 records why no SDK is bundled
+  unasked, and since 2026-10-06 the evaluation is owned by #463, widened to
+  durable logs + error tracking by operator decision) and the limiter store (#215 closed unshipped
   2026-08-02; the control is the `railway.json` `numReplicas: 1` pin asserted by
   `test/docker.test.js` — S-012). Report them with that status; never as
   "already tracked".
@@ -237,7 +237,8 @@ not a finding; the rejected entries below are that ledger.
   carry personal data, so any destination is a new processor needing an AVV).
   A future adoption is a legal + ops decision the user drives
   (`.claude/rules/keep-legal-docs-current.md`), never a maturity finding that
-  "the gap is still open".
+  "the gap is still open". That decision now has an owner: #463 (operator,
+  2026-10-06).
 
 ### M-R06 — "Adopt <enterprise pattern> because production SaaS" — meta-criterion
 - **Status:** rejected · 2026-07-29

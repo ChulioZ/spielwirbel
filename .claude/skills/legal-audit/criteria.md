@@ -140,7 +140,10 @@ than an acknowledged gap.
   been wrong before: the Postgres service sat in a **US region under an EU app** until
   2026-07-20 (`railway-db-same-region.md`) — a performance bug *and* an undisclosed
   transfer. Re-verify the region of every Railway service and the R2 bucket, not just the
-  app's. Also confirm the EU-US Data Privacy Framework adequacy decision still
+  app's (last verified 2026-10-06 by the operator: app and Postgres in EU West;
+  the R2 bucket's location hint is Eastern Europe with no EU jurisdiction set, so
+  it stays covered by the Cloudflare US-transfer statement, not by a residency
+  claim). Also confirm the EU-US Data Privacy Framework adequacy decision still
   stands — the Cloudflare transfer statement leans on it, with SCCs as fallback
   (General Court upheld it 2025-09, *Latombe*; appeal C-703/25 P pending as of
   2026-07-24).

@@ -1639,7 +1639,7 @@ I18N.ko = {
   'design.forest.short': '빈터, 잎사귀 초록, 반딧불이',
   'design.chooser.kicker': 'Spielwirbel의 새로운 기능',
   'design.chooser.title': '디자인을 골라 보세요.',
-  'design.chooser.body': '책장, 연대기, 트로피, 세션 시작 — 모든 것은 그대로 같은 자리에 있습니다. 보이는 모습만 달라집니다. 계정에서 언제든지 바꿀 수 있습니다.',
+  'design.chooser.body': '책장, 연대기, 트로피, 세션 시작 — 사라지는 것은 없습니다. 디자인마다 자기 방식으로 배치하고 꾸밀 뿐입니다. 계정에서 언제든지 바꿀 수 있습니다.',
   'design.chooser.later': '디자인은 계속 추가됩니다. 선택은 바꾸기 전까지 유지됩니다.',
   'design.chooser.skip': '나중에 결정',
   'design.chooser.confirm': '이 디자인 사용',
@@ -1764,7 +1764,7 @@ I18N.ko = {
   // The design band (#1198), shown only by a design that asks for it (Der Tisch as the face).
   // {n} is how many designs the instance offers (GET /api/config), so it never overclaims.
   'landing.designs.title': '디자인 {n}가지, 앱은 하나.',
-  'landing.designs.desc': '계정마다 자기 디자인을 고릅니다. 모든 것은 어느 디자인에서나 같은 자리에 있고, 모습만 달라집니다.',
+  'landing.designs.desc': '계정마다 자기 디자인을 고릅니다. 어느 디자인이든 같은 데이터로 같은 일을 하고, 배치만 자기 방식대로 다릅니다.',
   'demo.banner.text': '지금 Spielwirbel을 데모 모임으로 체험하고 계세요. 자동으로 삭제되며, 여기에 남는 건 아무것도 없어요.',
   'demo.banner.cta': '무료로 가입하기',
   'demo.banner.terms': '이용약관이 적용돼요.',

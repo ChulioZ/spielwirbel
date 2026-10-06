@@ -109,16 +109,16 @@ zod boundary (`lib/validate.js`) rather than regressing to hand-rolled checks.
 ### 2. Build vs buy → M-004..M-005
 
 Continue §7's ledger: any newly hand-rolled implementation of a commodity
-concern gets the question, answered in writing. Two §7 items never shipped, and
-**no open issue owns either** — don't call them "tracked":
+concern gets the question, answered in writing. Two §7 items never shipped — one
+is now owned by an open issue, the other by a pinned control:
 
 - **Error tracking.** #212 shipped pino and closed 2026-07-19 with the provider
   left open. The recorded position is M-R05: deliberately deferred,
   `ERROR_WEBHOOK_URL` unset by operator decision
   (`.claude/rules/liveness-vs-readiness-probes.md`, `docs/deploy-railway.md`).
-  Whether it gets an issue or stays a recorded deferral awaits an operator
-  decision (raised 2026-10-04) — check whether one was made, and if not, list it
-  under the report's operator questions rather than as a fresh finding.
+  **Operator decision 2026-10-06: it is evaluated together with durable log
+  retention in #463** (one processor, one policy/VVT change). Check #463's state
+  before relying on that (`.claude/rules/deferred-weakness-attributions-rot.md`).
 - **The shared limiter store.** #215 closed unshipped on 2026-08-02. The control
   is the replica pin — `railway.json` `numReplicas: 1`, asserted by
   `test/docker.test.js` (security-audit S-012) — so it is context unless a

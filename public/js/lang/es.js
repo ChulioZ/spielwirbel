@@ -1730,7 +1730,7 @@ I18N.es = {
   'design.forest.short': 'Un claro, verde hoja, luciérnagas',
   'design.chooser.kicker': 'Novedad en Spielwirbel',
   'design.chooser.title': 'Elige un diseño.',
-  'design.chooser.body': 'Todo sigue en el mismo sitio: estantería, crónica, trofeos y el sorteo de la sesión. Solo cambia el aspecto. Puedes cambiarlo cuando quieras en tu cuenta.',
+  'design.chooser.body': 'No se pierde nada: estantería, crónica, trofeos y el sorteo de la sesión siguen ahí. Cada diseño solo los ordena y los pinta a su manera. Puedes cambiarlo cuando quieras en tu cuenta.',
   'design.chooser.later': 'Llegarán más diseños. Tu elección se mantiene hasta que la cambies.',
   'design.chooser.skip': 'Decidir más tarde',
   'design.chooser.confirm': 'Usar este diseño',
@@ -1872,7 +1872,7 @@ I18N.es = {
   // The design band (#1198), shown only by a design that asks for it (Der Tisch as the face).
   // {n} is how many designs the instance offers (GET /api/config), so it never overclaims.
   'landing.designs.title': '{n} diseños, una app.',
-  'landing.designs.desc': 'Cada cuenta elige su propio diseño. Todo está en el mismo sitio en cada uno; solo cambia el aspecto.',
+  'landing.designs.desc': 'Cada cuenta elige su propio diseño. Todos hacen lo mismo con los mismos datos; cada uno los ordena a su manera.',
 
   // Modo demostración (#427). El aviso es PERMANENTE (no un mensaje pasajero),
   // así que su texto tiene que seguir siendo cierto durante toda la sesión y no

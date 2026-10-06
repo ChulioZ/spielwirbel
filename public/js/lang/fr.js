@@ -1707,7 +1707,7 @@ I18N.fr = {
   'design.forest.short': 'Une clairière, vert feuille, des lucioles',
   'design.chooser.kicker': 'Nouveau sur Spielwirbel',
   'design.chooser.title': 'Choisis un design.',
-  'design.chooser.body': 'Tout reste au même endroit : étagère, chronique, trophées, lancement de la session. Seule l\'apparence change. Tu peux en changer à tout moment dans ton compte.',
+  'design.chooser.body': 'Rien ne disparaît : étagère, chronique, trophées, lancement de la session sont tous là. Chaque design les dispose et les peint simplement à sa façon. Tu peux en changer à tout moment dans ton compte.',
   'design.chooser.later': 'D\'autres designs arriveront. Ton choix reste jusqu\'à ce que tu le changes.',
   'design.chooser.skip': 'Décider plus tard',
   'design.chooser.confirm': 'Utiliser ce design',
@@ -1836,7 +1836,7 @@ I18N.fr = {
   // The design band (#1198), shown only by a design that asks for it (Der Tisch as the face).
   // {n} is how many designs the instance offers (GET /api/config), so it never overclaims.
   'landing.designs.title': '{n} designs, une appli.',
-  'landing.designs.desc': 'Chaque compte choisit son propre design. Tout reste au même endroit dans chacun — seul l’aspect change.',
+  'landing.designs.desc': 'Chaque compte choisit son propre design. Tous font la même chose avec les mêmes données — chacun les dispose à sa façon.',
 
   'demo.banner.text': 'Tu essaies Spielwirbel dans un groupe de démonstration. Il est supprimé automatiquement — rien n’y est conservé.',
   'demo.banner.cta': 'S’inscrire gratuitement',

@@ -1779,7 +1779,7 @@ I18N.en = {
   'design.forest.short': 'A clearing, leaf green, fireflies',
   'design.chooser.kicker': 'New in Spielwirbel',
   'design.chooser.title': 'Pick a design.',
-  'design.chooser.body': 'Everything stays where it is — shelf, chronicle, trophies, spinning up a session. It just looks different. You can switch any time in your account.',
+  'design.chooser.body': 'Nothing goes away — shelf, chronicle, trophies, spinning up a session are all there. Each design just arranges and paints them its own way. You can switch any time in your account.',
   'design.chooser.later': 'More designs are coming. Your choice stays until you change it.',
   'design.chooser.skip': 'Decide later',
   'design.chooser.confirm': 'Use this design',
@@ -1927,7 +1927,7 @@ I18N.en = {
   // The design band (#1198), shown only by a design that asks for it (Der Tisch as the face).
   // {n} is how many designs the instance offers (GET /api/config), so it never overclaims.
   'landing.designs.title': '{n} designs, one app.',
-  'landing.designs.desc': 'Every account picks its own design. Everything sits in the same place in each of them — it just looks different.',
+  'landing.designs.desc': 'Every account picks its own design. Each one does the same things with the same data — just arranged its own way.',
 
   // Guest demo mode (#427). The banner is PERSISTENT (not a toast), so its
   // wording has to stay true for the whole session and must never let the

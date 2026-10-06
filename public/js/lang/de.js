@@ -1774,7 +1774,7 @@ I18N.de = {
   'design.forest.short': 'Lichtung, Laubgrün, Glühwürmchen',
   'design.chooser.kicker': 'Neu in Spielwirbel',
   'design.chooser.title': 'Wähl dir ein Design.',
-  'design.chooser.body': 'Alles liegt weiter an derselben Stelle — Regal, Chronik, Pokale, Session wirbeln. Es sieht nur anders aus. Du kannst jederzeit im Konto wechseln.',
+  'design.chooser.body': 'Nichts geht verloren — Regal, Chronik, Pokale, Session wirbeln sind alle da. Jedes Design ordnet und malt sie nur auf seine Art. Du kannst jederzeit im Konto wechseln.',
   'design.chooser.later': 'Neue Designs kommen dazu. Deine Wahl bleibt, bis du sie änderst.',
   'design.chooser.skip': 'Später entscheiden',
   'design.chooser.confirm': 'Design übernehmen',
@@ -1925,7 +1925,7 @@ I18N.de = {
   // The design band (#1198), shown only by a design that asks for it (Der Tisch as the face).
   // {n} is how many designs the instance offers (GET /api/config), so it never overclaims.
   'landing.designs.title': '{n} Designs, eine App.',
-  'landing.designs.desc': 'Jedes Konto wählt sein eigenes Design. Alles liegt überall an derselben Stelle – es sieht nur anders aus.',
+  'landing.designs.desc': 'Jedes Konto wählt sein eigenes Design. Jedes kann dasselbe und zeigt dieselben Daten – nur auf seine eigene Art angeordnet.',
 
   // Guest demo mode (#427). The banner is PERSISTENT (not a toast), so its
   // wording has to stay true for the whole session and must never let the

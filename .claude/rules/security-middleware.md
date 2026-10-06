@@ -45,10 +45,12 @@ Security headers (`helmet`) and rate limiting (`express-rate-limit`) are wired i
   `test/security.test.js` asserts every `imageCspSources()` entry is on `img-src`.
   Note this is *not* a widening to arbitrary hosts. A same-origin image proxy is
   the tighter alternative; this rule used to call it "deferred to the hosting
-  work", but hosting has been live since 2026-07-24 and **no open issue owns
-  it**. Whether it is an accepted trade-off or gets an issue awaits an operator
-  decision (claude-file audit, 2026-10-04) — until then, do not read it as
-  tracked (`.claude/rules/deferred-weakness-attributions-rot.md`).
+  work", but hosting has been live since 2026-07-24 and no issue ever owned it.
+  **The operator accepted the trade-off on 2026-10-06**: covers stay hotlinked
+  and the visitor's browser fetches them from the provider's CDN, which the
+  privacy policy already discloses. No issue tracks a proxy; reopen it only as a
+  fresh decision (e.g. if a cover re-hosting pipeline is ever built), and don't
+  report the hotlink as an open gap (`.claude/rules/deferred-weakness-attributions-rot.md`).
 
 - **The ceilings are meaningless if `req.ip` isn't the caller — see
   `.claude/rules/trust-proxy-is-a-hop-count.md`.** Every limiter here keys on

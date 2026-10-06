@@ -1667,7 +1667,7 @@ I18N.fi = {
   'design.forest.short': 'Aukio, lehdenvihreä, tulikärpäset',
   'design.chooser.kicker': 'Uutta Spielwirbelissä',
   'design.chooser.title': 'Valitse ulkoasu.',
-  'design.chooser.body': 'Kaikki pysyy samassa paikassa — hylly, kronikka, palkinnot ja pelin arvonta. Vain ulkoasu muuttuu. Voit vaihtaa milloin tahansa tilisi asetuksista.',
+  'design.chooser.body': 'Mitään ei katoa — hylly, kronikka, palkinnot ja pelin arvonta ovat kaikki mukana. Jokainen ulkoasu vain järjestää ja värittää ne omalla tavallaan. Voit vaihtaa milloin tahansa tilisi asetuksista.',
   'design.chooser.later': 'Lisää ulkoasuja on tulossa. Valintasi säilyy, kunnes vaihdat sen.',
   'design.chooser.skip': 'Päätä myöhemmin',
   'design.chooser.confirm': 'Ota tämä käyttöön',
@@ -1796,7 +1796,7 @@ I18N.fi = {
   // The design band (#1198), shown only by a design that asks for it (Der Tisch as the face).
   // {n} is how many designs the instance offers (GET /api/config), so it never overclaims.
   'landing.designs.title': '{n} ulkoasua, yksi sovellus.',
-  'landing.designs.desc': 'Jokainen tili valitsee oman ulkoasunsa. Kaikki on jokaisessa samassa paikassa – vain ulkonäkö vaihtuu.',
+  'landing.designs.desc': 'Jokainen tili valitsee oman ulkoasunsa. Kaikki tekevät samat asiat samoilla tiedoilla – kukin vain järjestää ne omalla tavallaan.',
 
   'demo.banner.text': 'Kokeilet Spielwirbeliä demoporukassa. Se poistetaan automaattisesti — mitään täällä ei säilytetä.',
   'demo.banner.cta': 'Rekisteröidy ilmaiseksi',

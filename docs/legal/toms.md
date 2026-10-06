@@ -4,7 +4,7 @@ Internal record (German — it addresses a German supervisory authority). Every
 item is implemented in this repository or the hosting setup; keep it truthful —
 list nothing that is not actually in place.
 
-**Stand:** 2026-09-08
+**Stand:** 2026-10-06
 
 ## Verschlüsselung & Transport
 
@@ -32,7 +32,9 @@ list nothing that is not actually in place.
 
 - Jede Zeile trägt `tenant_id`; jede Abfrage filtert darauf; zusätzlich
   **Row-Level Security (FORCE)** in PostgreSQL als Backstop (#136,
-  `.claude/rules/tenancy-rls.md`).
+  `.claude/rules/tenancy-rls.md`). Die Anwendung verbindet sich mit einer
+  eigenen Anwendungsrolle statt des Superusers `postgres` (geprüft 2026-10-06),
+  sodass FORCE RLS tatsächlich greift — ein Superuser umginge es.
 - Betreiber-Lesezugriff für Moderation ist eine separate, **nur-lesende**
   RLS-Policy; Schreibzugriffe bleiben mandantengebunden (#268/#275). Die
   transaktionslokale Umzugs-Policy für das einmalige Übertragen der Alt-Daten
@@ -77,7 +79,9 @@ list nothing that is not actually in place.
     umfasst **bis zu ca. 4 Wochen** (rollierend die letzten 4 wöchentlichen
     Vollsicherungen), ist plattformseitig **nicht konfigurierbar** und beginnt
     mit der Aktivierung am 2026-08-04 — rückwirkend darüber hinaus ist keine
-    Wiederherstellung möglich. Maßgeblich für Löschfristen: `retention.md`.
+    Wiederherstellung möglich. Am 2026-10-06 reichte der früheste
+    Wiederherstellungspunkt bis 2026-09-08 zurück: Das Fenster rollt also
+    tatsächlich und hält rund 4 Wochen. Maßgeblich für Löschfristen: `retention.md`.
   - **Tägliche Volume-Sicherungen** mit 6 Tagen Aufbewahrung, dazu manuelle
     Sicherungen auf Anforderung.
 - Deployment reproduzierbar aus dem Repo (Dockerfile).
