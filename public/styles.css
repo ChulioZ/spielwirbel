@@ -10910,7 +10910,8 @@ kbd {
    Ocean's tray no border). Klassisch's own is a sunken tray with the current
    view lifted out of it as a paper pill — ONE ROW THAT SCROLLS rather than
    wraps, for Der Tisch's reason (tisch.css): a segmented control broken over
-   two lines stops reading as one choice. */
+   two lines stops reading as one choice. Below 640px it is wrapped text tabs
+   instead (#1578, the phone block after these rules). */
 .offshelf-seg { display: none; }
 :root[data-design="klassisch"] .offshelf-seg {
   display: flex;
@@ -10943,6 +10944,40 @@ kbd {
   color: var(--ink);
   box-shadow: var(--shadow-1);
 }
+/* A phone (#1578): the one-row tray hid two of the five behind a sideways
+   scroll, the third cut off mid-word. Below 640px the strip is Das
+   Programmheft's composition instead — wrapped text tabs over a hairline, name
+   and count, the current one underlined in the accent — in Klassisch's own
+   colours and type. Wrapped tabs still read as one choice, which a wrapped
+   pill tray would not; that was the reason for the scroll. From 640px the tray
+   above is untouched. Der Tisch, Ocean and Forest do the same in their sheets;
+   test/offshelf-phone-tabs.test.js pins all four. */
+@media (max-width: 639px) {
+  :root[data-design="klassisch"] .offshelf-seg {
+    flex-wrap: wrap;
+    gap: 0 18px;
+    width: auto;
+    padding: 0;
+    overflow-x: visible;
+    border-bottom: 1px solid var(--line);
+    border-radius: 0;
+    background: none;
+  }
+  :root[data-design="klassisch"] .offshelf-seg__item {
+    max-width: 100%;
+    min-height: 44px;
+    padding: 0;
+    border-bottom: 3px solid transparent;
+    border-radius: 0;
+    white-space: normal;
+  }
+  :root[data-design="klassisch"] .offshelf-seg__item .ti { display: none; }
+  :root[data-design="klassisch"] .offshelf-seg__item.is-on {
+    border-bottom-color: var(--brand);
+    background: none;
+    box-shadow: none;
+  }
+}
 .archive-list { display: flex; flex-direction: column; gap: 12px; }
 .archive-row {
   display: flex;
@@ -10974,7 +11009,7 @@ kbd {
    reason. Colour and underline come from .nav-link. */
 .archive-row__title { display: block; font-family: var(--font-display); font-size: var(--text-lg); font-weight: 700; }
 .archive-row__meta { font-size: var(--text-sm); font-weight: 600; margin-top: 3px; }
-.archive-row__actions { display: flex; gap: 8px; flex: none; flex-wrap: wrap; }
+.archive-row__actions { display: flex; gap: 8px; flex: 0 1 auto; flex-wrap: wrap; } /* shrinks, so the wrap engages at 320px (.claude/rules/flex-none-cancels-flex-wrap.md) */
 .archive-row__actions .btn { font-size: var(--text-sm); padding: 8px 14px; }
 
 /* --- Bulk shelf tidying (#832) --------------------------------------------

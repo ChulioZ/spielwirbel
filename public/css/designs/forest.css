@@ -2270,7 +2270,8 @@
 }
 
 /* ---- „Nicht im Regal" (F13.7): the lists as tabs on a moss strip, the lit
-   one raised; a phone scrolls the strip sideways rather than the page. */
+   one raised, scrolling sideways where it is too long; below 640px the
+   lists wrap as text tabs instead (#1578, below). */
 :root[data-design="forest"] .app > .offshelf-seg {
   display: flex;
   gap: 4px;
@@ -2297,6 +2298,33 @@
 :root[data-design="forest"]:not([data-scheme="dark"]) .app > .offshelf-seg .offshelf-seg__item { border-radius: var(--radius-sm); color: var(--ink); }
 :root[data-design="forest"]:not([data-scheme="dark"]) .app > .offshelf-seg .offshelf-seg__item:not(.is-on):hover { background: var(--moss-hover); }
 :root[data-design="forest"]:not([data-scheme="dark"]) .app > .offshelf-seg .offshelf-seg__item.is-on { background: var(--surface); box-shadow: var(--shadow-seat); }
+/* A phone (#1578): the sideways strip hid two of the five lists. Below 640px it
+   is Das Programmheft's composition — wrapped text tabs over a moss rule, the
+   current one underlined in the accent. From 640px the strip above is
+   untouched. */
+@media (max-width: 639px) {
+  :root[data-design="forest"] .app > .offshelf-seg {
+    flex-wrap: wrap;
+    gap: 0 18px;
+    width: auto;
+    padding: 0;
+    overflow-x: visible;
+  }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .app > .offshelf-seg { border-bottom: 2px solid var(--moss); border-radius: 0; background: none; }
+  :root[data-design="forest"] .app > .offshelf-seg .offshelf-seg__item {
+    max-width: 100%;
+    padding: 0;
+    white-space: normal;
+  }
+  :root[data-design="forest"] .app > .offshelf-seg .offshelf-seg__item .ti { display: none; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .app > .offshelf-seg .offshelf-seg__item { border-bottom: 3px solid transparent; border-radius: 0; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .app > .offshelf-seg .offshelf-seg__item:not(.is-on):hover { background: none; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .app > .offshelf-seg .offshelf-seg__item.is-on {
+    border-bottom-color: var(--brand);
+    background: none;
+    box-shadow: none;
+  }
+}
 :root[data-design="forest"] .app > .forest-footnote { margin: 0 0 var(--space-4); font-size: 15px; line-height: var(--leading-text); }
 :root[data-design="forest"]:not([data-scheme="dark"]) .app > .forest-footnote { color: var(--ink-soft); }
 :root[data-design="forest"] .app > .archive-list { max-width: none; }
