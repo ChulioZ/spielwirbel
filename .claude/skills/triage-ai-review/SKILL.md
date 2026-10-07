@@ -40,6 +40,11 @@ Phase 5 already runs `gh pr checks <PR> --watch`; CodeRabbit reports there as a
 non-required `CodeRabbit` status. When it reads `pending`, the review is still
 running — wait for it rather than triaging a half-posted review.
 
+**That status is the only reliable "done" signal.** A re-review that finds
+nothing new posts **no** review at all. It only flips the status to `success`
+("Review completed") and edits its summary comment. So a watcher waiting for a
+new review, or for new threads, waits forever on a clean round (#1593).
+
 If its summary comment says the review was **skipped or rate-limited**, that is
 trial data: log it (§5) with the wait it states. Do not post
 `@coderabbitai review` to force one — that is a public comment, so it goes in the
@@ -124,8 +129,12 @@ git add -A && git commit -s -m "Address CodeRabbit review: <what>" && git push
 
 Re-run `implement` phase 3's four checks first; a fix is code like any other.
 
-The push triggers one incremental review. Triage its **new** threads once more
-(§2–§3). If that second round still produces findings, fix only real bugs and
+The push triggers one incremental review, and that review **resolves, by
+itself, every thread whose fix it confirms**. On #1593 it closed all six fixed
+threads unprompted. So after it lands, re-run §2: what is still open is the
+rejected and deferred threads, plus any fix it did not accept. Re-read the code
+for an unaccepted fix before calling it done. Triage the review's **new**
+threads too (§2–§3). If that second round still produces findings, fix only real bugs and
 stop: a third round is a loop, not a review — report what is left. CodeRabbit
 also pauses itself after 5 reviewed commits (`auto_pause_after_reviewed_commits`
 default), so a long-lived PR may stop being reviewed at all; say so if it does.
@@ -159,9 +168,12 @@ Essentials plan allows half the trial's hourly reviews.
 
 ## 6. Draft the replies — hand them to the walkthrough
 
-One reply per thread, **under ~60 words**, plain English:
+Draft replies **after** the incremental review (§4), and only for threads still
+open by then. A thread CodeRabbit already resolved needs nothing, and a reply
+on it is noise. One reply per thread, **under ~60 words**, plain English:
 
-- fixed → `Fixed in <short-sha>: <what changed>.`
+- fixed, but left open → `Fixed in <short-sha>: <what changed>.` (when there
+  was no re-review, e.g. it was paused or rate-limited)
 - rejected → `Not changing: <reason>.` cite the rule as `.claude/rules/<x>.md`
 - deferred → `Valid, out of scope here — proposed as a follow-up issue.`
 
