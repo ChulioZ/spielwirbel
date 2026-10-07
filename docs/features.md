@@ -394,8 +394,10 @@ What the app does, in detail. For a short overview see the
     on noise, so the tab names the leader („Anna führt mit 2 Siegen", crowned
     and linked to their page) and says „Ein Podium braucht 3 Sessions."; the
     hub's Pokale preview does the same, the winning-streak tile waits for the
-    same third session, and the Rundenpuls closes on a sentence saying when
-    series come.
+    same third session, and the Rundenpuls — whose facts (sessions in the last
+    twelve months, days since the last one, games never played) appear from the
+    first played session in every design (#1586) — holds its monthly bars back
+    and closes on a sentence saying when series come.
 
     **Abzeichen** (badges, issue #1388) sit below the standings: a band for the
     round, then one row per member in standings order — the first win, ten
@@ -857,8 +859,9 @@ What the app does, in detail. For a short overview see the
   rarer moves into the „…" menu beside „Zurück": unfriend, withdraw a request,
   and report the account. On your own profile the picture wears a pencil and
   leads to Konto, which is where it is actually changed.
-  Below the card is that account's activity, as a grid of tiles rather than a
-  column of rows — **only between accepted friends**, and still only for activity
+  Below the card — beside it from 1100px wide, in every design (#1583), with
+  the card in the left column — is that account's activity, as a grid of tiles
+  rather than a column of rows — **only between accepted friends**, and still only for activity
   after you became friends. No e-mail address is ever shown. Signing in is
   required, so profiles are not public web pages and are not crawlable.
 - **Your own profile, and your record across rounds** – *accounts mode only*

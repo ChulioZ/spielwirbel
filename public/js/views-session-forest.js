@@ -81,7 +81,7 @@ function composeForestSetup(form, arriving) {
   const panel = aside.querySelector('.setup-panel');
   // The count reads as the pill on the stump's lip, below the covers.
   panel.appendChild(panel.querySelector('#poolTitle'));
-  const stump = h(`<section class="forest-stump" aria-labelledby="potHeading">
+  const stump = h(`<section class="forest-pot" aria-labelledby="potHeading">
       <h2 class="forest-kicker" id="potHeading">${esc(t('startSession.potHeadingForest'))}</h2>
     </section>`);
   stump.appendChild(panel);
