@@ -297,7 +297,9 @@ four green; on a failure, re-run that one command alone for its full output.
   small, straightforward, low-risk UI tweaks (copy, a class, an icon, a spacing
   value), it's enough to confirm the diff looks correct — a human does the visual
   review. Use judgement; when unsure, verify.
-- Consider running `/code-review` on the working diff for a second pass.
+- Consider running `/code-review` on the working diff for a second pass. Don't
+  skip your own review because CodeRabbit will look too: the trial measures
+  what it finds *beyond* this phase, which only works if this phase is done.
 - Only proceed once you genuinely expect it to behave as intended. If review
   turns up problems, fix them and re-run this phase.
 
@@ -341,6 +343,12 @@ returns a verdict: `SAFE TO MERGE` or `NOT SAFE` with concrete blockers.
 Review your own PR honestly — the fact that you wrote it is not evidence it's
 correct. Wait for CI (`gh pr checks <PR> --watch`) so the verdict reflects real
 check results, not pending ones.
+
+**Before the verdict, triage CodeRabbit's review** with the **`triage-ai-review`**
+skill: it fixes the valid findings in one batched push (so run `review-pr` after
+it, on the final diff), drafts a reply per thread for 6a, and logs each finding
+for the trial. Don't skip it on a small PR — `main` requires every review
+conversation resolved, so an untriaged CodeRabbit thread blocks the merge.
 
 ## 6. Walk the user through the change, THEN ask to merge
 
@@ -397,6 +405,10 @@ can read the diff; they cannot read your reasoning). Cover:
   something, say which one and what it would take.
 - **How it was verified** — break-on-purpose results, browser checks, and what
   each actually proved.
+- **What CodeRabbit flagged** — per finding: fixed, rejected or deferred, and
+  why; then the drafted thread replies **verbatim**, since approving the merge
+  also approves publishing that text (`triage-ai-review` §6). Say so plainly
+  when it found nothing your own review had missed — that is trial data too.
 
 **Surface the weaknesses rather than selling the change.** A walkthrough that
 reads as advocacy is worse than none: it spends the user's trust to skip their
@@ -407,7 +419,9 @@ context you don't, and this is the last cheap moment to use it.
 ### 6b. Ask for the go-ahead, in the same message
 
 Call `AskUserQuestion` naming the PR, the review verdict, and that CI is green,
-and wait for a clear yes.
+and wait for a clear yes. If CodeRabbit opened threads, the question also says
+that a yes **posts the drafted replies and resolves the threads** before merging,
+and offers the alternative of resolving them without replies.
 
 Keep the same discipline when the answer is not a plain yes: if they push back or
 ask for a change, **do not merge on the strength of the earlier approval** —
@@ -416,7 +430,9 @@ re-verify, re-state what moved, and ask again. An answer that grants permission
 
 ### 6c. Merge
 
-Once the user says yes, do a **normal** squash merge — no admin override, no
+Once the user says yes, first post the approved CodeRabbit replies and resolve
+the threads (`triage-ai-review` §7) — an unresolved thread makes the merge
+below fail. Then do a **normal** squash merge — no admin override, no
 `--admin`, no bypassing branch protection:
 
 ```bash

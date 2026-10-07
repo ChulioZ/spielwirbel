@@ -48,7 +48,9 @@ In short, before opening a PR:
   `test/repo.postgres.test.js`'s header has the commands): plain `npm test`
   skips them without `DATABASE_URL`, but that job is part of `ci-passed`.
   Besides `ci-passed`, `main` requires `eslint`, `syntax`, `gitleaks` (the
-  secret scan) and `dco`, and every review conversation resolved.
+  secret scan) and `dco`, and every review conversation resolved. That includes
+  the threads **CodeRabbit**, an AI reviewer, opens on your PR: fix what it gets
+  right, and reply briefly where it is wrong. It is a second opinion, not a gate.
 - Update the docs in the same PR when the change adds or renames a user-facing
   feature ([`docs/features.md`](docs/features.md)), alters the file tree
   ([`docs/architecture.md`](docs/architecture.md) — a test enforces this one), or
@@ -84,6 +86,7 @@ trigger. Each is self-contained and enforces this repo's constraints.
 | **`pick-issue`** | Surveys open issues, Dependabot PRs and human PRs, and hands the best next one to the right builder skill. An open non-draft human PR is picked first — only a security exposure or broken core functionality outranks it — so contributors get feedback fast; everything else is ranked by value-for-effort. |
 | **`implement`** | Takes a change end-to-end: branch from up-to-date `main`, write the code **plus tests**, review locally, open a PR, review it, and merge only if it's safe — then watch `main`'s CI and clean up. |
 | **`review-pr`** | Reviews a pull request (human or bot) against this repo's constraints and returns a `SAFE TO MERGE` / `NOT SAFE` verdict with concrete blockers. |
+| **`triage-ai-review`** | Triages CodeRabbit's review of a PR you opened: verifies each finding, fixes the valid ones in one push, drafts the thread replies for your approval, and logs the findings for the trial. |
 | **`dependabot`** | Triages open Dependabot PRs, merging what passes review and commenting on what doesn't. |
 | **`test-data`** | Creates isolated, throwaway data in a temp `DATA_DIR` for tests or manual runs — the safe alternative to ever touching the real `data/`. |
 | **`audit`** | Runs the full audit sweep — accessibility, legal, security, UI, Claude-file, and code-maturity — in one pass, merges the results into one ranked report, and files issues only with your approval. |
@@ -96,8 +99,8 @@ trigger. Each is self-contained and enforces this repo's constraints.
 | **`screen-deep-dive`** | Takes *one* screen apart at every screen size: measures its layout over generated data at phone, tablet, laptop and desktop widths, diagnoses where the height and the width go, proposes tiered improvements as live, clickable prototypes in a device-frame artifact, and — once you decide — files one implementable issue per agreed slice. UX, layout and visuals together, no product code. |
 
 A typical flow: **`create-issue`** to capture the work → **`pick-issue`** to
-choose what's next → **`implement`** to ship it (it calls `review-pr` before
-merging). If a pull request is open, though, `pick-issue` sends you to
+choose what's next → **`implement`** to ship it (it calls `triage-ai-review` and
+`review-pr` before merging). If a pull request is open, though, `pick-issue` sends you to
 **`review-pr`** instead — an unanswered PR outranks the backlog, because the wait
 is the only cost that grows while you build something else. When a whole screen
 needs rethinking rather than a single change, **`screen-deep-dive`** produces

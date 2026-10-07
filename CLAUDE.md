@@ -197,7 +197,10 @@ not a full ORM", #211) — they are not leftover localhost-era minimalism.
   real DB), plus lint/syntax/gitleaks; branch protection requires the aggregate
   `ci-passed`, not the individual jobs (`.claude/rules/ci-aggregate-gate.md`).
   Dependabot (`.github/dependabot.yml`) opens weekly dependency-update PRs, which
-  those workflows then validate.
+  those workflows then validate. **CodeRabbit** (`.coderabbit.yaml`, on trial)
+  reviews every non-Dependabot PR; it is not a required check, but `main` requires every
+  review conversation resolved, so its threads gate the merge — triage them with
+  the `triage-ai-review` skill.
 - API smoke tests: `curl` against `http://localhost:3000/api/...`.
 - For UI changes, verify in a real browser. Note: a non-painted/headless preview
   tab may not flush `requestAnimationFrame`, so grid contents that render via

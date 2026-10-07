@@ -26,3 +26,7 @@ data/
 
 # Claude Code local settings
 .claude/settings.local.json
+
+# Local per-finding log of the CodeRabbit trial (triage-ai-review skill §5).
+# An evaluation of a vendor, kept private on purpose.
+.ai-review-trial/
