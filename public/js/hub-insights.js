@@ -298,10 +298,10 @@ function roundPulse(round, activeGames, opts, deps) {
      floor moved: the pulse is a claim about the last twelve months, so a round
      whose only evenings predate them has no pulse to draw. */
   const total = months.reduce((n, m) => n + m.count, 0);
-  // `o.minSessions` lowers the floor for Der Tisch, whose tiles are real
-  // figures from the first evening on (T7.5) — there is no bar chart to be
-  // drawn from one point. Klassisch passes YOUNG_ROUND_SERIES_FROM (#1318);
-  // the default below only serves a caller that passes nothing.
+  // `o.minSessions` lowers the floor: the hub card passes 1 in every design,
+  // because its facts are real figures from the first evening on (T7.5,
+  // #1586) — the bars are gated on YOUNG_ROUND_SERIES_FROM by the card itself.
+  // The default below only serves a caller that passes nothing.
   const floor = Number.isInteger(o.minSessions) && o.minSessions > 0 ? o.minSessions : PULSE_MIN_SESSIONS;
   if (total < floor) return null;
 

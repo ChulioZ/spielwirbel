@@ -111,11 +111,18 @@ test('every site gates on the shared constant, never on a literal', () => {
 const klassischPokalePreview = (dom) =>
   dom.app.querySelector('.hub-cards .hub-preview .hub-card__title .ti-trophy').closest('.hub-preview');
 
-test('Klassisch hub after one session: the pulse is a sentence, and the Pokale preview names only the leader (#1318)', async (t) => {
+test('Klassisch hub after one session: the pulse states its facts plus the series sentence, and the Pokale preview names only the leader (#1318, #1586)', async (t) => {
   const dom = await hub(t, null, round(1));
   const pulse = cardByTitle(dom, 'Rundenpuls');
+  assert.equal(pulse.classList.contains('hub-card--sentence'), false, 'a played round gets its facts, not the sentence card');
   assert.equal(pulse.querySelector('.pulse-bars'), null, 'Klassisch’s bar chart waits for three sessions');
-  assert.match(pulse.textContent, new RegExp(`${YOUNG_ROUND_SERIES_FROM} Sessions`));
+  assert.equal(pulse.querySelector('.hub-card__facts:not(.hub-card__threshold)').textContent,
+    '1 Session in 12 Monaten · Vor 3 Tagen gespielt');
+  const coverage = pulse.querySelector('a.hub-row');
+  assert.equal(coverage.textContent.trim(), '7 von 8 Spielen waren noch nie dran');
+  assert.equal(coverage.getAttribute('href'), '/round/r1/regal', 'the coverage link reaches the Regal');
+  assert.equal(pulse.querySelector('.hub-card__body').lastElementChild.textContent, SERIES,
+    'the series sentence closes the card, after the facts');
   const card = klassischPokalePreview(dom);
   assert.deepEqual([...card.querySelectorAll('.hub-preview__name')].map((e) => e.textContent), ['Anna'],
     'no second and third place off one evening');
@@ -124,12 +131,13 @@ test('Klassisch hub after one session: the pulse is a sentence, and the Pokale p
   assert.equal(dom.app.querySelector('.hub-demo, .hub-card--demo-invite'), null);
 });
 
-test('Klassisch hub at two sessions: the pulse is a sentence, and the bar chart waits for three (#1318)', async (t) => {
+test('Klassisch hub at two sessions: facts plus the series sentence, and the bar chart waits for three (#1318, #1586)', async (t) => {
   const two = await hub(t, null, round(YOUNG_ROUND_SERIES_FROM - 1));
   const pulse = cardByTitle(two, 'Rundenpuls');
   assert.ok(pulse, 'a played round still gets the card');
   assert.equal(pulse.querySelector('.pulse-bars'), null, 'no bar chart off two evenings');
-  assert.match(pulse.textContent, new RegExp(`${YOUNG_ROUND_SERIES_FROM} Sessions`), 'the sentence names the threshold');
+  assert.match(pulse.textContent, /2 Sessions in 12 Monaten/, 'the facts are stated before the series');
+  assert.equal(pulse.querySelector('.hub-card__threshold').textContent, SERIES, 'the sentence names the threshold');
   const three = await hub(t, null, round(YOUNG_ROUND_SERIES_FROM));
   const drawn = cardByTitle(three, 'Rundenpuls');
   assert.ok(drawn.querySelector('.pulse-bars'), 'the bars arrive at three');
@@ -155,6 +163,41 @@ test('Der Tisch hub: the series sentence stays until the third session and then 
   const three = await hub(t, 'tisch', round(YOUNG_ROUND_SERIES_FROM));
   assert.equal(cardByTitle(three, 'Rundenpuls').querySelector('.hub-card__threshold'), null);
 });
+
+/* #1586: the facts are content, so every design states them from the first
+   played session — each in its own form — and only the bars wait. The series
+   sentence closes the card wherever the screen does not already say it once:
+   the Programmheft says it in its lead. No design draws bars before three
+   (#1586 merge interview, 2026-10-07, the Programmheft included). */
+const pulseCard = (dom) => [...dom.app.querySelectorAll('section.hub-card')]
+  .find((c) => c.querySelector('.hub-card__title').textContent.trim() === 'Rundenpuls');
+const SERIES_ELSEWHERE = { programmheft: '.ph-lead' };
+
+for (const design of ['klassisch', 'tisch', 'ocean', 'bruecke', 'programmheft', 'forest']) {
+  for (const n of [1, YOUNG_ROUND_SERIES_FROM - 1]) {
+    test(`${design} hub at ${n} played session(s): the three facts, the Regal link, the series sentence once (#1586)`, async (t) => {
+      const dom = await hub(t, design, round(n));
+      const pulse = pulseCard(dom);
+      assert.ok(pulse, 'no Rundenpuls on a played round');
+      assert.equal(pulse.classList.contains('hub-card--sentence'), false, 'the sentence card stands in for the facts');
+      const said = pulse.textContent.replace(/\s+/g, ' ');
+      assert.match(said, new RegExp(`${n} ?Sessions? in 12 Monaten`), 'the session count is missing');
+      assert.match(said, /3 ?Tage(n)? (her|gespielt)/, 'the days since the last session are missing');
+      assert.match(said, new RegExp(`${8 - n} ?(von 8 Spielen waren noch nie dran|ungespielt)`), 'the never-played count is missing');
+      assert.ok(pulse.querySelector('a[href="/round/r1/regal"]'), 'the coverage link no longer reaches the Regal');
+      assert.equal(pulse.querySelector('.pulse-bars'), null, 'the bars wait for three sessions');
+      const elsewhere = SERIES_ELSEWHERE[design];
+      const inCard = pulse.querySelector('.hub-card__threshold');
+      if (elsewhere) {
+        assert.equal(inCard, null, `${design} says the series sentence twice`);
+        assert.match(dom.app.querySelector(elsewhere).textContent, /Serien zeigen wir ab 3 Sessions/);
+      } else {
+        assert.equal(inCard.textContent, SERIES);
+        assert.equal(pulse.querySelector('.hub-card__body').lastElementChild, inCard, 'the sentence closes the card');
+      }
+    });
+  }
+}
 
 test('Der Tisch Pokale preview below the threshold names only the leader and says when the podium comes', async (t) => {
   const dom = await hub(t, 'tisch', round(YOUNG_ROUND_PODIUM_FROM - 1));

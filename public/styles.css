@@ -2538,6 +2538,23 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
 .lobby-list { display: grid; grid-template-columns: 1fr; gap: 14px; }
 @media (min-width: 860px) {
   .lobby-list { grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); }
+  /* „Neue Runde gründen" is the grid's last cell (#1585). With three rounds it
+     wraps onto a row of its own, and an `auto` row is only as tall as its one
+     line of text — 67px under 187px cards at 1440 — so it read as a separate
+     box under the grid. Equal rows make it a card-sized tile wherever it lands.
+     Klassisch only here (Die Brücke and Ocean restate it in their sheets).
+     Not on a phone: one column, where stretching
+     every card to the tallest would cost height for nothing. */
+  :root[data-design="klassisch"] .lobby-list { grid-auto-rows: 1fr; }
+  /* …and then centres its content in that cell, icon over label, the way the
+     other designs compose it: `.round-card` is `align-items: flex-start`, so a
+     stretched tile would otherwise pin its label to the top edge. */
+  :root[data-design="klassisch"] .lobby-list .round-card--new {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  :root[data-design="klassisch"] .lobby-list .round-card--new .ti { font-size: var(--text-3xl); }
 }
 
 /* „Nächster Schritt" (#1280; every design since #1318): a one-round lobby

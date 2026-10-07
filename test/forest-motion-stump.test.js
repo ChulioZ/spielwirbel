@@ -53,22 +53,22 @@ async function setup(t, design) {
 
 const qa = (dom, sel) => [...dom.app.querySelectorAll(sel)];
 const seat = (dom, name) => qa(dom, '.nr-seat').find((s) => s.textContent.includes(name));
-const set = (dom) => qa(dom, '.forest-stump .pool-tile.is-set');
+const set = (dom) => qa(dom, '.forest-pot .pool-tile.is-set');
 
 test('the first paint drops nothing — the stump is simply set', async (t) => {
   const dom = await setup(t, 'forest');
-  assert.equal(qa(dom, '.forest-stump .pool-tile').length, 12);
+  assert.equal(qa(dom, '.forest-pot .pool-tile').length, 12);
   assert.equal(set(dom).length, 0, 'an arriving screen must not be in motion (#1122)');
 });
 
 test('a seat tap drops exactly the covers that enter, the stagger capped at the ninth', async (t) => {
   const dom = await setup(t, 'forest');
   seat(dom, 'Clara').click();
-  assert.equal(qa(dom, '.forest-stump .pool-tile').length, 1);
+  assert.equal(qa(dom, '.forest-pot .pool-tile').length, 1);
   assert.equal(set(dom).length, 0, 'covers leaving the stump drop nothing, and the one staying stays put');
 
   seat(dom, 'Clara').click();
-  assert.equal(qa(dom, '.forest-stump .pool-tile').length, 12);
+  assert.equal(qa(dom, '.forest-pot .pool-tile').length, 12);
   assert.deepEqual(set(dom).map((el) => el.getAttribute('title')), GAMES.slice(1).map((g) => g.title),
     'the eleven games Clara brought back, and not Azul');
   assert.deepEqual(set(dom).map((el) => el.style.getPropertyValue('--set-i')),
@@ -83,7 +83,7 @@ test('a re-render of the screen on show drops nothing', async (t) => {
   seat(dom, 'Clara').click();
   await dom.run('currentView()');
   await flush();
-  assert.equal(qa(dom, '.forest-stump .pool-tile').length, 12);
+  assert.equal(qa(dom, '.forest-pot .pool-tile').length, 12);
   assert.equal(set(dom).length, 0, 'a language switch is not a change to the stump');
 });
 
@@ -107,7 +107,7 @@ function keyframes(name) {
   return FOREST_CSS.slice(m.index + m[0].length, i - 1);
 }
 
-const COVER = ':root[data-design="forest"]:not([data-scheme="dark"]) .forest-stump .pool-tile.is-set .pool-tile__img';
+const COVER = ':root[data-design="forest"]:not([data-scheme="dark"]) .forest-pot .pool-tile.is-set .pool-tile__img';
 
 test('forest-drop: Forest only, inside the motion gate, the ninth cover down by ≈ 1,2 s, no end frame', () => {
   const users = rulesOf(FOREST_CSS).filter(([, b]) => /animation[-a-z]*:[^;]*forest-drop/.test(b));

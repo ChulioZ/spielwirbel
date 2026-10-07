@@ -4075,6 +4075,17 @@
   letter-spacing: var(--track-display);
   text-transform: uppercase;
 }
+/* The tile is the grid's last cell, as tall as a round card (#1585) — the same
+   equal-rows rule Klassisch carries in styles.css, and for the same reason. */
+@media (min-width: 860px) {
+  :root[data-design="bruecke"] .lobby-list { grid-auto-rows: 1fr; }
+  :root[data-design="bruecke"] .lobby-list .round-card--new {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  :root[data-design="bruecke"] .lobby-list .round-card--new .ti { font-size: var(--text-3xl); }
+}
 :root[data-design="bruecke"][data-scheme="dark"] .round-card:not(.round-card--new):hover {
   border-color: var(--brand);
   box-shadow: 0 0 18px var(--glow-accent);

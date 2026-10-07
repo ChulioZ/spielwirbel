@@ -138,7 +138,7 @@ test('a young Brücke round says under the ignition what is waiting, and when nu
   const pulse = dom.app.querySelector('.bruecke-hub__pulse .hub-card--sentence');
   assert.ok(pulse, 'the Rundenpuls says nothing on a young Brücke round');
   assert.equal(text(pulse.querySelector('.hub-card__facts')),
-    dom.run("tn(YOUNG_ROUND_SERIES_FROM, 'hub.young.pulseOne', 'hub.young.pulse')"));
+    dom.run("tn(1, 'hub.young.pulseOne', 'hub.young.pulse')"), 'numbers come with the first session (#1586)');
 });
 
 test('the freshly founded Brücke round says when the Rundenpuls fills, too', async (t) => {

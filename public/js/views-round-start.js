@@ -168,7 +168,7 @@ function renderStartTab(round, activeGames) {
   else launch.appendChild(ocean ? oceanShell(startBtn) : forest ? forestStump(activeGames.length ? startBtn : null) : startBtn);
   // Ocean's young round (#1216, O7.3): the shell stays the centre, and one
   // line under it says what is waiting for the first session. Forest's says
-  // it for every young state, the empty table included (F7.3–F7.5, #1471).
+  // it for every unplayed state, the empty table included (F7.3–F7.4, #1471).
   if (ocean && activeGames.length && roundIsYoung(round)) launch.appendChild(oceanYoungLine(activeGames));
   const forestLine = forest && forestYoung(round, activeGames);
   if (forestLine) launch.appendChild(forestLine);
