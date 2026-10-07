@@ -98,7 +98,7 @@ reviews:
     docstrings:
       mode: "off"
 
-  # Finishing touches CodeRabbit would push to the branch itself. Commits on a
+  # Finishing touches that push commits to the branch themselves. Commits on a
   # PR branch belong to its author (and must carry a DCO sign-off), so the
   # generators stay off — this also keeps the trial to roughly what the
   # Essentials plan includes, since unit tests and merge-conflict resolution
@@ -111,6 +111,9 @@ reviews:
     fix_ci:
       enabled: false
     resolve_merge_conflict:
+      enabled: false
+    # The "🪄 Fix CodeRabbit comments" checkbox commits too — same reason.
+    autofix:
       enabled: false
 
   tools:
