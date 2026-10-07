@@ -1047,7 +1047,10 @@
 /* ---- The stump (F1 „Baumstumpf", F2.1, F3.2): bark, rings and the one action
    as its green heart, with the quick-start row centred under it. The rings are
    the wrapper's own background and carry nothing; the button keeps its name,
-   its handler and its disabled reason. Its glyph stands over the label. */
+   its handler and its disabled reason. Its glyph stands over the label.
+   This class is the hub's alone: Neue Session's pot is `.forest-pot` (#1572).
+   They shared it once, and the pot's flex column outranked this grid, which
+   lifted the heart 31px off the centre; test/forest-stump-class.test.js. */
 :root[data-design="forest"] .forest-stump {
   display: grid;
   place-items: center;
@@ -2546,12 +2549,14 @@
 /* The stump: the pool's tile panel, drawn as the stump at EVERY width — the
    compact strip is hidden, so there is one presentation of the pot. Rings of
    wood inside a bark rim; the covers lie on it as leaves, turned a little each;
-   the count is the dusk pill on its lip. The kicker „Der Baumstumpf" names it. */
+   the count is the dusk pill on its lip. The kicker „Der Baumstumpf" names it.
+   `.forest-pot`, never the hub's `.forest-stump` (#1572): the stump is drawn on
+   .setup-panel here, so the hub's 260px disc on the section was a second rim. */
 :root[data-design="forest"]:not([data-scheme="dark"]) .setup-grid--forest .pool-hint { display: none; }
 @media (max-width: 859px) {
   :root[data-design="forest"]:not([data-scheme="dark"]) .setup-filterbar .setup-save__btn { min-height: var(--target-key); }
 }
-:root[data-design="forest"]:not([data-scheme="dark"]) .forest-stump {
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-pot {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -2571,8 +2576,8 @@
   text-transform: uppercase;
   color: var(--brand);
 }
-:root[data-design="forest"]:not([data-scheme="dark"]) .forest-stump > .forest-kicker { align-self: center; }
-:root[data-design="forest"]:not([data-scheme="dark"]) .forest-stump .setup-panel {
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-pot > .forest-kicker { align-self: center; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-pot .setup-panel {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -2588,7 +2593,7 @@
   background: repeating-radial-gradient(circle at 50% 50%, var(--wood) 0 9px, var(--wood-ring) 9px 10.5px);
   box-shadow: 0 0 0 4px var(--bark-light), var(--shadow-2);
 }
-:root[data-design="forest"]:not([data-scheme="dark"]) .forest-stump .setup-panel__body {
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-pot .setup-panel__body {
   width: 100%;
   max-height: 100%;
   overflow: auto;
@@ -2598,15 +2603,15 @@
   gap: 10px;
   padding: 4px;
 }
-:root[data-design="forest"]:not([data-scheme="dark"]) .forest-stump .pool-tile { position: relative; }
-:root[data-design="forest"]:not([data-scheme="dark"]) .forest-stump .pool-tile__img {
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-pot .pool-tile { position: relative; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-pot .pool-tile__img {
   border: 2px solid var(--surface);
   border-radius: var(--radius-leaf-s);
   box-shadow: var(--shadow-1);
   transform: rotate(-7deg);
 }
-:root[data-design="forest"]:not([data-scheme="dark"]) .forest-stump .pool-tile:nth-child(3n + 2) .pool-tile__img { transform: rotate(6deg); }
-:root[data-design="forest"]:not([data-scheme="dark"]) .forest-stump .pool-tile:nth-child(3n) .pool-tile__img { transform: rotate(-2deg); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-pot .pool-tile:nth-child(3n + 2) .pool-tile__img { transform: rotate(6deg); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-pot .pool-tile:nth-child(3n) .pool-tile__img { transform: rotate(-2deg); }
 /* F10.2 „Der Stumpf füllt sich" (#1476, Forest-F10-Motion.dc.html): a game
    that newly fits drops onto the stump and springs 6px past its place — 520ms,
    80ms after the one before. views-session.js marks the ENTERING covers `is-set`
@@ -2621,7 +2626,7 @@
    reduced motion shows. The sheet's leaving game „weht zur Seite" is not built:
    the pot is rebuilt on every change, so a leaving cover is already gone. */
 @media (prefers-reduced-motion: no-preference) {
-  :root[data-design="forest"]:not([data-scheme="dark"]) .forest-stump .pool-tile.is-set .pool-tile__img {
+  :root[data-design="forest"]:not([data-scheme="dark"]) .forest-pot .pool-tile.is-set .pool-tile__img {
     animation: forest-drop 520ms cubic-bezier(.3, .8, .3, 1) calc(var(--set-i, 0) * 80ms) backwards;
   }
   @keyframes forest-drop {
@@ -2631,7 +2636,7 @@
 }
 /* The covers are the picture; the title is each tile's `title` and stays in the
    accessibility tree, clipped rather than removed (T3: no text on a cover). */
-:root[data-design="forest"]:not([data-scheme="dark"]) .forest-stump .pool-tile__name {
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-pot .pool-tile__name {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -2639,7 +2644,7 @@
   clip-path: inset(50%);
   white-space: nowrap;
 }
-:root[data-design="forest"]:not([data-scheme="dark"]) .forest-stump .setup-panel__empty {
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-pot .setup-panel__empty {
   margin: 0;
   text-align: center;
   font-weight: 700;
@@ -2648,7 +2653,7 @@
 /* „9 Spiele auf dem Stumpf" — the count as the dusk pill on the stump's lip,
    the light print on the dusk (12.4:1). The marker band the app draws under
    the pool title stays off it: the pill is the heading. */
-:root[data-design="forest"]:not([data-scheme="dark"]) .forest-stump .setup-panel__title {
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-pot .setup-panel__title {
   position: absolute;
   bottom: -10px;
   left: 50%;
@@ -2665,26 +2670,26 @@
   font-weight: 800;
   box-shadow: var(--shadow-1);
 }
-:root[data-design="forest"]:not([data-scheme="dark"]) .forest-stump .setup-panel__title::after { content: none; }
-:root[data-design="forest"]:not([data-scheme="dark"]) .forest-stump .setup-panel__title .pool-count-group { align-items: baseline; gap: 6px; }
-:root[data-design="forest"]:not([data-scheme="dark"]) .forest-stump .setup-panel__title .pool-count {
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-pot .setup-panel__title::after { content: none; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-pot .setup-panel__title .pool-count-group { align-items: baseline; gap: 6px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-pot .setup-panel__title .pool-count {
   color: inherit;
   font-family: var(--font);
   font-size: var(--text-xl);
   font-weight: 800;
 }
-:root[data-design="forest"]:not([data-scheme="dark"]) .forest-stump .setup-panel__title .pool-count__label {
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-pot .setup-panel__title .pool-count__label {
   color: inherit;
   font-size: var(--text-md);
   font-weight: 800;
 }
 /* Under the stump: the filter row, the reset and „3 weitere Spiele fehlen …". */
-:root[data-design="forest"]:not([data-scheme="dark"]) .forest-stump .setup-filterbar {
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-pot .setup-filterbar {
   justify-content: center;
   margin: 0;
 }
-:root[data-design="forest"]:not([data-scheme="dark"]) .forest-stump .fbar__trigger { min-height: var(--target-key); }
-:root[data-design="forest"]:not([data-scheme="dark"]) .forest-stump .pool-owners-note {
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-pot .fbar__trigger { min-height: var(--target-key); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .forest-pot .pool-owners-note {
   margin: 0;
   text-align: center;
   font-size: var(--text-sm);

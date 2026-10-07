@@ -1110,7 +1110,10 @@
    set on the water: the only label there is the running-vote badge, on the
    sun. */
 @media (min-width: 860px) {
-  :root[data-design="ocean"] .lobby-list { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 24px; }
+  /* Equal rows (#1585): with three columns the „Neue Runde gründen" tile wraps
+     alone onto a row that is only as tall as its label — 107px under 378px
+     tiles at 1280 — so it read as a box under the grid, not as its last tile. */
+  :root[data-design="ocean"] .lobby-list { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 24px; grid-auto-rows: 1fr; }
 }
 :root[data-design="ocean"] .round-card--ocean {
   flex-direction: column;
