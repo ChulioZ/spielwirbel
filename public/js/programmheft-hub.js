@@ -139,9 +139,9 @@ function phHeroCompose(round, hero) {
    no locale's word order is assumed.
 
    `note` is the young round's line under the facts (P7.5, #1377): until
-   YOUNG_ROUND_SERIES_FROM the lead says when series come, because the
-   Programmheft draws its Rundenpuls from the first session and so has no
-   other place to say it. */
+   YOUNG_ROUND_SERIES_FROM the lead says when series come — the one place this
+   design says it, so the Rundenpuls card (whose bars wait for the same
+   threshold since the #1586 merge interview) does not repeat it. */
 function phLead({ game, winnerNames, ending, when, score, pot, note = '' }) {
   const cover = game.image
     ? `<span class="ph-lead__cover${isThumbCover(game.image) ? ' cover--thumb' : ''}" style="background-image:url('${coverUrl(game.image, COVER_HERO)}')"></span>`

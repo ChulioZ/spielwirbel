@@ -156,12 +156,13 @@ test('Programmheft P7.4: games but no session — the lead says what is ready, t
   assert.deepEqual(locked, ['Pokale', 'Chronik'], 'the Regal preview must be the real one once the shelf holds games');
 });
 
-test('Programmheft P7.5: after the first session — the pulse draws, the lead says when series come', async (t) => {
+test('Programmheft P7.5: after the first session — the pulse states its facts, the lead says when series come', async (t) => {
   const dom = await hub(t, 'programmheft', firstRound());
   const lead = dom.app.querySelector('.ph-hub__lead .ph-lead');
   assert.ok(lead, 'no lead story after the first session');
   assert.equal(text(lead.querySelector('.ph-lead__note')), 'Serien zeigen wir ab 3 Sessions — vorher wären sie Zufall.');
-  assert.ok(dom.app.querySelector('.ph-hub__side .pulse-bars'), 'the Rundenpuls does not draw from the first session');
+  // The bars wait for YOUNG_ROUND_SERIES_FROM here too (#1586 merge interview, 2026-10-07).
+  assert.equal(dom.app.querySelector('.ph-hub__side .pulse-bars'), null, 'the Programmheft draws a series off one evening');
   assert.equal(dom.app.querySelector('.ph-locked'), null, 'a locked block survived the first session');
   assert.doesNotMatch(text(dom.app.querySelector('.ph-hub__box .hub-cta')), /Erste/);
 });

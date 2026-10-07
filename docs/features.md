@@ -394,8 +394,10 @@ What the app does, in detail. For a short overview see the
     on noise, so the tab names the leader („Anna führt mit 2 Siegen", crowned
     and linked to their page) and says „Ein Podium braucht 3 Sessions."; the
     hub's Pokale preview does the same, the winning-streak tile waits for the
-    same third session, and the Rundenpuls closes on a sentence saying when
-    series come.
+    same third session, and the Rundenpuls — whose facts (sessions in the last
+    twelve months, days since the last one, games never played) appear from the
+    first played session in every design (#1586) — holds its monthly bars back
+    and closes on a sentence saying when series come.
 
     **Abzeichen** (badges, issue #1388) sit below the standings: a band for the
     round, then one row per member in standings order — the first win, ten

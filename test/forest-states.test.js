@@ -153,15 +153,18 @@ test('Forest F7.4: games but no session — „Erste Session wirbeln", what is w
   const locked = aside.filter((el) => el.classList.contains('forest-locked'));
   assert.deepEqual(locked.map((b) => text(b.querySelector('.forest-locked__title'))), ['Pokale', 'Chronik', 'Rundenpuls'],
     'the Regal preview must be the real one once the shelf holds games');
-  // The pulse's own floor, not the sheet's „ab der ersten Session".
-  assert.equal(text(locked[2].querySelector('.forest-locked__text')), 'Zahlen gibt es ab 3 Sessions.');
+  // The pulse's own floor — the first session in every design since #1586.
+  assert.equal(text(locked[2].querySelector('.forest-locked__text')), 'Zahlen gibt es ab der ersten Session.');
   assert.ok(aside[0].querySelector('a[href$="/regal"]'), 'the Regal preview no longer leads the column');
 });
 
-test('Forest F7.5: after the first session — the stump says „Session wirbeln", the line says when series come', async (t) => {
+test('Forest F7.5: after the first session — the stump says „Session wirbeln", the Rundenpuls says when series come', async (t) => {
   const dom = await hub(t, 'forest', firstRound());
   assert.match(text(dom.app.querySelector('.forest-stump > .hub-cta')), /^Session wirbeln$/);
-  assert.equal(text(dom.app.querySelector('.forest-stump + .forest-young')), 'Serien zeigen wir ab 3 Sessions — vorher wären sie Zufall.');
+  /* The series sentence lives in the Rundenpuls card it explains, not under the
+     stump a column away (#1586 merge interview, 2026-10-07). */
+  assert.equal(dom.app.querySelector('.forest-young'), null, 'the series line still stands under the stump');
+  assert.match(text(dom.app.querySelector('.hub-card__threshold')), /^Serien zeigen wir ab 3 Sessions/);
   assert.ok(dom.app.querySelector('.forest-pair .forest-last'), '„Zuletzt gespielt" is gone');
   assert.equal(dom.app.querySelector('.forest-locked'), null, 'a locked block survived the first session');
 });

@@ -1564,8 +1564,8 @@
 }
 :root[data-design="forest"] .forest-hub .empty--table .empty__actions .btn { max-width: 100%; white-space: normal; }
 
-/* ---- The young line under the stump (F7.4, F7.5): what is waiting, in the
-   display face, and the sentence that says when the numbers come. */
+/* ---- The young line under the stump (F7.4): what is waiting, in the display
+   face. F7.5's series sentence moved into the Rundenpuls card (#1586). */
 :root[data-design="forest"] .forest-young {
   display: flex;
   flex-direction: column;
