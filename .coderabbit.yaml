@@ -1,0 +1,140 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+#
+# CodeRabbit AI review. A trial (Advanced plan, ends 2026-10-21) evaluating
+# whether an AI reviewer adds value on top of this repo's own Claude review loop
+# (`implement` → `review-pr`). How a session triages what it posts:
+# .claude/skills/triage-ai-review/SKILL.md.
+#
+# Two rules shape everything below:
+# - It is ONE input, never a gate: it is not a required check, and approving is
+#   off. But branch protection requires every review conversation resolved, so
+#   each unresolved thread it opens DOES block the merge until it is triaged.
+# - It reads the same rules Claude does. `.claude/rules/` is the single source of
+#   truth; nothing here restates a rule, it only points at the risky paths.
+
+language: en-US
+
+reviews:
+  profile: chill
+  # Off on purpose: an approval would read as a verdict, and the verdict belongs
+  # to `review-pr` plus the maintainer (required approvals are 0 anyway).
+  request_changes_workflow: false
+  # Solo maintainer — reviewer/label suggestions and the fortune are noise.
+  suggested_reviewers: false
+  suggested_labels: false
+  in_progress_fortune: false
+  poem: false
+
+  auto_review:
+    enabled: true
+    drafts: false
+    # Re-review on push, as it would run in real use — every push costs a
+    # review against the hourly rate limit, so the triage skill batches fixes.
+    auto_incremental_review: true
+    # Dependency bumps are triaged by the `dependabot` skill; reviewing them
+    # would spend the rate limit on lockfile churn.
+    ignore_usernames:
+      - "dependabot[bot]"
+
+  # Generated, binary or vendored files, and the design reference sheets.
+  path_filters:
+    - "!package-lock.json"
+    - "!dist/**"
+    - "!public/fonts/**"
+    - "!public/img/**"
+    - "!public/icons/**"
+    - "!public/js/vendor/**"
+    - "!docs/design/**"
+
+  path_instructions:
+    - path: "lib/repo/**"
+      instructions: >-
+        Data-access layer serving many tenants in production (Postgres + RLS).
+        Check tenant isolation first: every query runs inside the tenant-scoped
+        tx/qt set_config pattern, no raw pool.query for round data, and the JSON
+        backend's store is mutated in place, never reassigned. See
+        .claude/rules/tenancy-rls.md and .claude/rules/postgres-backend.md.
+    - path: "lib/repo/migrations/**"
+      instructions: >-
+        Knex migrations are permanent and run on boot. A data-rewriting
+        migration under FORCE RLS matches zero rows and still reports success —
+        see .claude/rules/rls-blocks-data-migrations.md.
+    - path: "lib/routes/**"
+      instructions: >-
+        Routes must read and write through req.repo, never lib/store.js. Flag any
+        path that skips auth, tenant scoping or input validation — the app is a
+        public multi-tenant SaaS with open registration and demo accounts.
+    - path: "public/js/**"
+      instructions: >-
+        No framework, no bundler: plain scripts sharing one global scope, so load
+        order matters and every new top-level name must be added to the globals
+        list in eslint.config.js. User-facing text comes from public/js/lang/*.js,
+        never a hard-coded string. See .claude/rules/frontend-script-load-order.md.
+    - path: "public/js/lang/*.js"
+      instructions: >-
+        Every shipped locale must carry the same keys (parity is tested). Check
+        the wording rules in CLAUDE.md (e.g. the session-naming rule), not
+        grammar or style preferences.
+    - path: "test/**"
+      instructions: >-
+        Focus on vacuous assertions — a spec that would stay green if the code
+        under test were broken (.claude/rules/break-the-code-on-purpose.md) — and
+        on tests touching the real data/ instead of an isolated DATA_DIR.
+    - path: ".claude/**"
+      instructions: >-
+        Agent instructions, not code. Flag contradictions with other rules or
+        skills, pointers to files or functions that no longer exist, and a rule
+        missing its scope declaration. Do not comment on prose style or length.
+    - path: ".github/workflows/**"
+      instructions: >-
+        Actions must be pinned by commit SHA, permissions least-privilege, and
+        branch protection gates on the aggregate ci-passed job — see
+        .claude/rules/ci-aggregate-gate.md and
+        .claude/rules/pin-images-and-actions-by-digest.md.
+
+  pre_merge_checks:
+    # The codebase does not use docstrings; an 80% coverage warning on every PR
+    # would be pure noise.
+    docstrings:
+      mode: "off"
+
+  # Finishing touches CodeRabbit would push to the branch itself. Commits on a
+  # PR branch belong to its author (and must carry a DCO sign-off), so the
+  # generators stay off — this also keeps the trial to roughly what the
+  # Essentials plan includes, since unit tests and merge-conflict resolution
+  # are Team-tier.
+  finishing_touches:
+    docstrings:
+      enabled: false
+    unit_tests:
+      enabled: false
+    fix_ci:
+      enabled: false
+    resolve_merge_conflict:
+      enabled: false
+
+  tools:
+    # Already enforced by CI with the repo's own config (eslint.config.js holds
+    # the shared-scope globals list; gitleaks is a required check). A second run
+    # without that context only produces false positives.
+    eslint:
+      enabled: false
+    biome:
+      enabled: false
+    gitleaks:
+      enabled: false
+    # Prose nits on the rule and doc files — not what this trial measures.
+    markdownlint:
+      enabled: false
+    languagetool:
+      enabled: false
+
+knowledge_base:
+  code_guidelines:
+    enabled: true
+    # CLAUDE.md is a default; the rules are where most of the repo's knowledge
+    # lives.
+    filePatterns:
+      - ".claude/rules/*.md"
+  learnings:
+    scope: local

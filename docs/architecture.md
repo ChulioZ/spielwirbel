@@ -1072,6 +1072,7 @@ Dockerfile           production container image (node pinned to an exact patch,
 docker-compose.yml   one-command run with a persistent /data volume
 knexfile.js          Knex config (Postgres) shared by the app + the migrate CLI
 railway.json         Railway build/deploy config (see docs/deploy-railway.md)
+.coderabbit.yaml     CodeRabbit AI review config (trial; not a required check)
 .github/workflows/   CI: tests, lint, secret scan, Docker image build + publish
 .github/             dependabot.yml, FUNDING.yml, and the contributor-facing
                      ISSUE_TEMPLATE/ forms + PULL_REQUEST_TEMPLATE.md
