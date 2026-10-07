@@ -167,10 +167,11 @@ test('Der Tisch hub: the series sentence stays until the third session and then 
 /* #1586: the facts are content, so every design states them from the first
    played session — each in its own form — and only the bars wait. The series
    sentence closes the card wherever the screen does not already say it once:
-   the Programmheft says it in its lead, Forest under the stump. */
+   the Programmheft says it in its lead. No design draws bars before three
+   (#1586 merge interview, 2026-10-07, the Programmheft included). */
 const pulseCard = (dom) => [...dom.app.querySelectorAll('section.hub-card')]
   .find((c) => c.querySelector('.hub-card__title').textContent.trim() === 'Rundenpuls');
-const SERIES_ELSEWHERE = { programmheft: '.ph-lead', forest: '.forest-young' };
+const SERIES_ELSEWHERE = { programmheft: '.ph-lead' };
 
 for (const design of ['klassisch', 'tisch', 'ocean', 'bruecke', 'programmheft', 'forest']) {
   for (const n of [1, YOUNG_ROUND_SERIES_FROM - 1]) {
@@ -184,8 +185,7 @@ for (const design of ['klassisch', 'tisch', 'ocean', 'bruecke', 'programmheft', 
       assert.match(said, /3 ?Tage(n)? (her|gespielt)/, 'the days since the last session are missing');
       assert.match(said, new RegExp(`${8 - n} ?(von 8 Spielen waren noch nie dran|ungespielt)`), 'the never-played count is missing');
       assert.ok(pulse.querySelector('a[href="/round/r1/regal"]'), 'the coverage link no longer reaches the Regal');
-      assert.equal(Boolean(pulse.querySelector('.pulse-bars')), design === 'programmheft',
-        'the bars wait for three sessions (the Programmheft draws from the first, P7.5)');
+      assert.equal(pulse.querySelector('.pulse-bars'), null, 'the bars wait for three sessions');
       const elsewhere = SERIES_ELSEWHERE[design];
       const inCard = pulse.querySelector('.hub-card__threshold');
       if (elsewhere) {

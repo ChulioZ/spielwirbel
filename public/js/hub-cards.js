@@ -267,11 +267,10 @@ function hubPulseCard(round, activeGames) {
      whether they are said (#1422). Only the SERIES wait for
      YOUNG_ROUND_SERIES_FROM (#1318 merge interview, 2026-09-25) — a chart off
      one or two evenings is the same noise the podium and the streak card
-     already wait out, so all three share one threshold.
-
-     The Programmheft is the one design that draws its bars from the first
-     session (P7.5, #1377), and it says when series come in its lead story
-     (phLead's `note`) rather than under the card. */
+     already wait out, so all three share one threshold. In every design: the
+     Programmheft drew its bars from the first session (P7.5, #1377) until the
+     #1586 merge interview (2026-10-07) gated it too; it still says when series
+     come in its lead story (phLead's `note`) rather than under the card. */
   const tisch = designIs('tisch');
   const ph = designIs('programmheft');
   const pulse = roundPulse(round, activeGames, { minSessions: 1 }, hubDeps());
@@ -297,10 +296,10 @@ function hubPulseCard(round, activeGames) {
      line, #1280 review) — the same YOUNG_ROUND_SERIES_FROM that holds back the
      Pokale streak card, so the sentence cannot promise something already on
      screen. It closes the card, after the facts and the coverage link (#1586),
-     in every design but two that already say it once on the same screen: the
-     Programmheft in its lead (above), Forest under the stump (forestYoung,
-     F7.5) — a second copy in the card would repeat it a column away. */
-  const young = !ph && !designIs('forest') && youngRoundPlayed(round, hubDeps()) < YOUNG_ROUND_SERIES_FROM;
+     in every design but the Programmheft, which says it once in its lead
+     (above). Forest said it under the stump (F7.5) until the #1586 merge
+     interview moved it here, beside the bars it explains. */
+  const young = !ph && youngRoundPlayed(round, hubDeps()) < YOUNG_ROUND_SERIES_FROM;
   const threshold = () => h(`<p class="hub-card__facts hub-card__threshold">${esc(tn(YOUNG_ROUND_SERIES_FROM, 'hub.young.seriesOne', 'hub.young.series'))}</p>`);
   if (tisch) {
     hubPulseTiles(round, card, pulse);
@@ -311,7 +310,7 @@ function hubPulseCard(round, activeGames) {
      roundPulse() itself applied until #1586: a round with older evenings but
      fewer than three in the window states its facts without a two-bar chart,
      and without the series sentence either — it is not young. */
-  if (ph || pulse.total >= YOUNG_ROUND_SERIES_FROM) hubPulseBars(body, pulse);
+  if (pulse.total >= YOUNG_ROUND_SERIES_FROM) hubPulseBars(body, pulse);
 
   const facts = [tn(pulse.total, 'hub.pulse.sessionsOne', 'hub.pulse.sessions')];
   if (pulse.daysSinceLast !== null) {

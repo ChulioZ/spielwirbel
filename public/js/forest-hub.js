@@ -268,7 +268,8 @@ function forestResumeNotice({ round, session }) {
      its rings (forestStump(null)), so this table's primary is the page's one.
    - games, nothing played (F7.4): what is waiting, in the display face, and why
      there are no scores yet.
-   - played, but under YOUNG_ROUND_SERIES_FROM (F7.5): when series come. */
+   Once played, nothing: F7.5's „when series come" moved into the Rundenpuls
+   card it explains (#1586 merge interview, 2026-10-07). */
 function forestYoung(round, activeGames) {
   if (!activeGames.length) return hubEmptyTable(round, { titleKey: 'hub.young.emptyTitleForest' });
   if (roundIsYoung(round)) {
@@ -277,11 +278,7 @@ function forestYoung(round, activeGames) {
          <p class="forest-young__text">${esc(t('hub.young.readyText'))}</p>
        </div>`);
   }
-  const played = youngRoundPlayed(round, hubDeps());
-  if (played >= YOUNG_ROUND_SERIES_FROM) return null;
-  return h(`<div class="forest-young">
-       <p class="forest-young__text">${esc(tn(YOUNG_ROUND_SERIES_FROM, 'hub.young.seriesOne', 'hub.young.series'))}</p>
-     </div>`);
+  return null;
 }
 
 /* A LOCKED block in the right column (F7.3, F7.4): the preview's title, the
