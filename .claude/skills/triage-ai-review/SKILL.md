@@ -77,10 +77,15 @@ findings:
 ```bash
 gh api 'repos/{owner}/{repo}/pulls/<N>/reviews' \
   --jq '.[] | select(.user.login|test("coderabbit"))
-        | "=== \(.submitted_at)\n\(.body | .[0:4000])"'
+  | (.body | gsub("<details>\\s*<summary>🤖 Prompt to fix[\\s\\S]*?</details>"; "")
+           | gsub("<details>\\s*<summary>ℹ️ Review info[\\s\\S]*$"; "")) as $b
+  | "=== \(.submitted_at) (\($b|length) of \(.body|length) chars kept)\n\($b)"'
 ```
 
-Skip the body's "Prompt to fix review comments" block. It restates the threads.
+This strips the boilerplate instead of capping the length. On #1593 the "Prompt
+to fix" block (which restates the threads) and the review info made up 94% of a
+3,888-character body that held no body findings at all. A fixed cap would
+therefore cut exactly the outside-diff and nitpick sections it is meant to read.
 
 ## 3. Triage each finding — verify, don't obey
 
