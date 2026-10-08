@@ -5436,7 +5436,7 @@
    1. The REVEAL (`data-print` on the head, `.is-race` on every row — both set
       by „Auflösen" only): the headline is wiped in from the left (300ms), then
       the Tafel is printed row by row from the top, 120ms apart, each wipe
-      300ms. `--print-i` is capped at 9 in views-session.js, so any Tafel is
+      300ms. `--print-i` is capped at 9 in views-session-result-tafel.js, so any Tafel is
       printed by 300 + 9 × 120 + 300 = 1 680ms — inside the sheet's 1 800ms.
       The sheet's count-up of the score is not built (dropped with P10.2's).
       `ph-print` has a `to` frame on purpose: a row holds buttons, and a

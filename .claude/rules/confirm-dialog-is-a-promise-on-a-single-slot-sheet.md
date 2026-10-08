@@ -3,6 +3,7 @@ paths:
   - "public/js/confirm-dialog.js"
   - "public/js/sheet.js"
   - "public/js/views-session.js"
+  - "public/js/views-session-result-actions.js"
   - "public/js/router.js"
   - "test/support/dom.js"
 ---

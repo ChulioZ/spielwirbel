@@ -964,6 +964,12 @@ public/
                      game with its rating, a row back to each card, „Absenden";
                      one builder for both vote surfaces, in each design's frame
     views-session.js session setup, the rating cards, finale, results
+    views-session-setup-pool.js the setup's pot: the live pool preview (tile
+                     panel and strip), the tag section, the „ohne Spiele" chips
+    views-session-result-tafel.js the results' tally and Tafel rows (#1056)
+    views-session-result-band.js the results' table band, headline and finish
+    views-session-result-actions.js the results' row actions, cancel/delete
+                     and footers (all four split out in #1543)
     result-tafel-composed.js Der Tisch's result: the column-header Tafel of compact
                      rows with pills, the crowned people, the foot (#1275)
     views-session-tables.js the multi-table builder and, once confirmed, the split

@@ -7,7 +7,8 @@
    pieces; and a foot carrying „Noch eine Session" with „Teilen" and „Mehr"
    beside it.
 
-   Every builder here is called from showResults (views-session.js) and only
+   Every builder here is called from the results screen (showResults in
+   views-session.js and the views-session-result-*.js files it is split into) and only
    under `tischLook` (Der Tisch, and Ocean, which shares the composition) —
    Klassisch never reaches this file, so its DOM is the default path,
    untouched. Its own file rather than more branches inside
@@ -43,7 +44,7 @@ function composedTafelCols() {
 /* One compact row. The cells showResults already computes are passed in as
    finished HTML, so the classes every downstream handler reads (`.trow__title`,
    `.trow__img`, `.trow__owners`, `.trow__action`) are the same ones the
-   Klassisch row carries — updateChosen, the lift, the reveal race and the
+   Klassisch row carries — resultUpdateChosen, the lift, the reveal race and the
    owners stand-down need no second code path.
 
    DOM ORDER IS VISUAL ORDER (WCAG 2.4.3): the distribution comes LAST, because
@@ -102,7 +103,7 @@ function composedPersonCrown() {
   return '<i class="ti ti-crown result-people__crown" aria-hidden="true"></i>';
 }
 
-// Re-run on every render of the band (renderTisch), because a winner chip, the
+// Re-run on every render of the band (resultRenderBand), because a winner chip, the
 // reset and „Ändern" all move the winners without re-rendering the screen.
 function paintComposedCrowns(root, winnerIds) {
   if (!root) return;

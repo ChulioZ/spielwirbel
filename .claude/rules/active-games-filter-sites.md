@@ -8,6 +8,7 @@ paths:
   - "public/js/views-round*.js"
   - "public/js/views-member.js"
   - "public/js/views-session.js"
+  - "public/js/views-session-setup-pool.js"
   - "public/js/round-rail.js"
   - "public/js/recap.js"
   - "public/js/member-stats.js"

@@ -3751,7 +3751,7 @@
 :root[data-design="tisch"][data-scheme="dark"] .tafel .tafel-top .trow .score-pill * { color: var(--sc-ink, var(--on-accent)); }
 
 /* --- Motion ritual 4a: the reveal — the race, then the gold sweep (#1200, T10.4)
-   „Auflösen" already marks the reveal (views-session.js: `.is-race` on every row
+   „Auflösen" already marks the reveal (views-session-result-tafel.js: `.is-race` on every row
    with `--dur` inline, `.is-reveal` on the gold group), so this is CSS alone
    and keyed on nothing new. First the data, then the award, in that order:
 
@@ -3921,7 +3921,7 @@
 }
 
 /* --- Motion ritual 5: „Gespielt" is stamped (#1200, T10.5) -----------------
-   views-session.js sets `data-stamped` on the slot for the ONE render that
+   views-session-result-band.js sets `data-stamped` on the slot for the ONE render that
    follows the finish the reader just recorded — not a later winner change, not
    a Chronik visit to a finished session, so this is the reader's own hand on
    the stamp, not an arrival (#1122 took the stamp's entry press out of the app

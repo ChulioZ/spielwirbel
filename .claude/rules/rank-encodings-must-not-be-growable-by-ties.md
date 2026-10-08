@@ -5,6 +5,7 @@ paths:
   - "public/js/podium.js"
   - "public/js/views-pokale.js"
   - "public/js/views-session.js"
+  - "public/js/views-session-result-tafel.js"
 ---
 # A visual that encodes RANK must not encode it in a dimension a TIE can grow
 

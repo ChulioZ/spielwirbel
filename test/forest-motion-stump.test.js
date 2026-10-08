@@ -5,7 +5,7 @@
  * a leaf and springs 6px, 80ms after the one before it.
  *
  * The gate is the one Der Tisch's T10.1, Das Programmheft's P10.2 and Die
- * Brücke's B10.2 share (views-session.js `potThrows`): the first paint is still
+ * Brücke's B10.2 share (views-session-setup-pool.js `potThrows`): the first paint is still
  * (#1122), games LEAVING the stump set nothing, and a re-render of the screen
  * on show sets nothing. Forest takes the shared `is-set` mark and `--set-i`
  * index; only forest.css says what a set cover does.

@@ -28,6 +28,13 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const { loadApp } = require('./support/dom');
+
+// The files showResults' Tafel, table band and session controls live in since
+// #1543 — every source scan of "the results screen" reads these as well.
+const RESULT_FILES = ['tafel', 'band', 'actions'].map((part) => {
+  const f = `views-session-result-${part}.js`;
+  return [f, fs.readFileSync(path.join(__dirname, '..', 'public', 'js', f), 'utf8')];
+});
 const { bodyOf, mediaBlocks, rulesOf, outranks, RULES } = require('./support/css');
 const { MEMBER_COLORS } = require('../public/js/member-colors');
 const { LEGACY_MARKER_INDEX } = require('../public/js/round-marker');
@@ -122,8 +129,11 @@ test('nothing on this screen is a disabled control any more', () => {
      permanent trash link (168px) — spent instrument on a record. */
   const src = fs.readFileSync(path.join(__dirname, '..', 'public/js/views-session.js'), 'utf8');
   const results = src.slice(src.indexOf('async function showResults'));
-  assert.doesNotMatch(results.slice(0, results.indexOf('\n}\n')), /\.disabled\s*=/,
-    'showResults disables a control instead of not rendering it');
+  // showResults' own body, plus the three files its Tafel, band and controls
+  // moved to (#1543) — the scan must follow the code, or it watches a shell.
+  for (const [name, code] of [['showResults', results.slice(0, results.indexOf('\n}\n'))], ...RESULT_FILES]) {
+    assert.doesNotMatch(code, /\.disabled\s*=/, `${name} disables a control instead of not rendering it`);
+  }
   for (const dead of ['.trow__remove', '.spotlight--shared .spotlight__winner']) {
     assert.equal(bodyOf(dead), null, `${dead} is styling something no caller emits`);
   }
@@ -369,9 +379,11 @@ test('the confetti colours its bits through a custom property, so a design rule 
 });
 
 test('the results screen names no retired world, and still has exactly one particle generator', () => {
-  const src = fs.readFileSync(path.join(__dirname, '..', 'public/js/views-session.js'), 'utf8');
+  // views-session.js plus the three files the results screen was split into (#1543).
+  const src = [fs.readFileSync(path.join(__dirname, '..', 'public/js/views-session.js'), 'utf8'),
+    ...RESULT_FILES.map(([, code]) => code)].join('\n');
   for (const id of Object.keys(LEGACY_MARKER_INDEX)) {
-    assert.doesNotMatch(src, new RegExp(`['"\`]${id}['"\`]`), `views-session.js names the retired '${id}' design`);
+    assert.doesNotMatch(src, new RegExp(`['"\`]${id}['"\`]`), `the results screen names the retired '${id}' design`);
   }
   // Spelled in two halves so this spec is not itself a hit for the #1202 grep.
   assert.doesNotMatch(src, new RegExp(`data-${'world'}|\\bWORLDS\\b|\\bsetWorld\\b`), 'no world branch survives the flip');
