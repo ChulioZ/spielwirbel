@@ -1262,7 +1262,7 @@ const BAR = { tag: 'div', classes: ['bar'] };
 const TRACK = { tag: 'div', classes: ['bar-track'] };
 const ROW = { tag: 'div', classes: ['trow'] };
 const TOP = { tag: 'div', classes: ['tafel-top'] };
-// 1–5 only: the chart drops slot 0 (`r.dist.slice(RATING_MIN)`, views-session.js),
+// 1–5 only: the chart drops slot 0 (`r.dist.slice(RATING_MIN)`, views-session-result-tafel.js),
 // since a vote is a rating 1–5 and a veto is a reason, not a column (#909).
 const RUNGS = ['1', '2', '3', '4', '5'];
 const BARLESS = ['programmheft'];

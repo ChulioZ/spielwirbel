@@ -303,8 +303,9 @@ function showStartSession(round, prefill) {
   seatTable.setAttribute('role', 'group');
   seatTable.setAttribute('aria-labelledby', 'seatsLabel');
   const multiTableNote = form.querySelector('#multiTableNote');
-  /* „Wer hat seine Spiele nicht dabei?" (#1002) — see buildSetupShelfField. Null
-     on an unmarked shelf, which is what decides whether the chip is offered. */
+  /* „Wer hat seine Spiele nicht dabei?" (#1002) — see buildSetupShelfField. Its
+     `field` is null on an unmarked shelf, which is what decides whether the chip
+     is offered; `refresh` is then a no-op. */
   const shelf = buildSetupShelfField(setup, () => {
     addons.relabelAddons();
     updateHint();

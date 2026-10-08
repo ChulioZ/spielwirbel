@@ -10,7 +10,7 @@
  * on show sets nothing. Forest takes the shared `is-set` mark and `--set-i`
  * index; only forest.css says what a set cover does.
  *
- * The stagger index is capped at 9 in views-session.js, so any number of
+ * The stagger index is capped at 9 in views-session-setup-pool.js, so any number of
  * entering covers is down inside the sheet's ≈ 1,2 s.
  *
  * Not built: the sheet's „fällt ein Spiel heraus, weht es in 300 ms zur Seite".

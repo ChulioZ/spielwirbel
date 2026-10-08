@@ -378,9 +378,11 @@ test('the confetti colours its bits through a custom property, so a design rule 
   }
 });
 
-test('the results screen names no retired world, and still has exactly one particle generator', () => {
-  // views-session.js plus the three files the results screen was split into (#1543).
+test('the session screens name no retired world, and the results still have exactly one particle generator', () => {
+  // views-session.js plus the four files its setup and results screens were
+  // split into (#1543) — the setup's pot names designs as much as the results do.
   const src = [fs.readFileSync(path.join(__dirname, '..', 'public/js/views-session.js'), 'utf8'),
+    fs.readFileSync(path.join(__dirname, '..', 'public/js/views-session-setup-pool.js'), 'utf8'),
     ...RESULT_FILES.map(([, code]) => code)].join('\n');
   for (const id of Object.keys(LEGACY_MARKER_INDEX)) {
     assert.doesNotMatch(src, new RegExp(`['"\`]${id}['"\`]`), `the results screen names the retired '${id}' design`);

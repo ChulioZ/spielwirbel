@@ -4933,7 +4933,7 @@
 /* P10.2 „Der Topf" (#1382): the pot is SET, not poured — a row that ENTERS
    (a seat tap, a filter: „Filterwechsel setzen nur die geänderten Zeilen neu")
    moves in 16px from the left, 280ms, 120ms after the one before it.
-   views-session.js marks `is-set` with Der Tisch's T10.1 gate, so the first
+   views-session-setup-pool.js marks `is-set` with Der Tisch's T10.1 gate, so the first
    paint is still: the sheet sets the whole arriving pot and counts the numeral
    up, and both were dropped at the PR (#1122 — an arriving screen in motion
    reads as one still loading). `--set-i` is capped at 9, so the ninth row

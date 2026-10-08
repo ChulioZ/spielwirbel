@@ -278,6 +278,18 @@ test('the results screen opens with the back control and ends with the delete', 
     assert.equal(results.indexOf(call, footer + 1), -1,
       `something is appended with ${call}…) after the footer row, which is meant to end the screen`);
   });
+  /* Since #1543 the Tafel, the band and the session controls run from three
+     files of their own, so "nothing after the footer" must hold there too. Only
+     the Tafel builder appends to the screen at all, and showResults calls it
+     before the footer; the band and the actions write into their own nodes. */
+  const part = (p) => strip(read(`public/js/views-session-result-${p}.js`));
+  for (const p of ['band', 'actions']) {
+    assert.doesNotMatch(part(p), /\b(?:screen|app)\.appendChild\(/, `views-session-result-${p}.js appends to the screen`);
+  }
+  assert.deepEqual(part('tafel').match(/\b(?:screen|app)\.appendChild\([^)]*\)/g), ['screen.appendChild(tafel)'],
+    'the Tafel builder appends exactly its own Tafel to the screen');
+  const tafelCall = results.indexOf('buildResultTafel(rs)');
+  assert.ok(tafelCall !== -1 && tafelCall < footer, 'showResults builds the Tafel before the footer row');
 });
 
 /* A `ti-*` class whose rule is missing renders NOTHING — no tofu, no console
