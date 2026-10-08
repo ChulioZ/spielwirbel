@@ -3,6 +3,7 @@ paths:
   - "public/js/session-people.js"
   - "lib/routes/sessions.js"
   - "public/js/views-session.js"
+  - "public/js/views-session-result-band.js"
   - "public/js/guest-picker.js"
   - "public/js/seat-picker.js"
   - "test/session-people.test.js"

@@ -6031,7 +6031,7 @@ a.k-tile:focus-visible,
   border-radius: 2px;
   background: linear-gradient(90deg, var(--marker), var(--marker-deep));
 }
-/* Only while nothing is chosen — `updateChosen` owns the attribute. The
+/* Only while nothing is chosen — `resultUpdateChosen` owns the attribute. The
    attribute alone would lose to the author `display` above it, so it is spelled
    out (.claude/rules/hidden-attribute-vs-display-rule.md). */
 .tafel__hint { font-size: var(--text-sm); color: var(--ink-soft); }

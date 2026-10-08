@@ -52,7 +52,7 @@ function ownerNames(round, ownerIds) {
 // The members the Regal's owner filter offers (#1433): those owning at least one
 // of `games`, in the round's member order. EMPTY on an unmarked shelf, which is
 // what gates the whole section: it asks the setup screen's `shelfIsMarked`
-// question (views-session.js), a control that could only empty the shelf is
+// question (views-session-setup-pool.js), a control that could only empty the shelf is
 // not offered — and a member who owns nothing here is left out for the same
 // reason. It is also stricter than that test where it matters: owner ids naming
 // only deleted seats offer nobody rather than an empty section. Retired seats are included when they still own a box: the card

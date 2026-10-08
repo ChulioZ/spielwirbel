@@ -6,6 +6,8 @@ paths:
   - "test/session-people.test.js"
   - "test/sessions.test.js"
   - "public/js/views-session.js"
+  - "public/js/views-session-setup-pool.js"
+  - "public/js/views-session-result-band.js"
   - "public/js/session-tally.js"
   - "lib/session-remove-person.js"
 ---

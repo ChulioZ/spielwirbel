@@ -2788,7 +2788,7 @@
    tile panel live INSIDE that frame, so they lose their own — a frame in a
    frame is the one thing both sheets never draw.
 
-   The app renders the pool twice and lets width pick one (views-session.js);
+   The app renders the pool twice and lets width pick one (views-session-setup-pool.js);
    this dresses whichever one is on screen, so the two cannot diverge. The
    frame below stays for any `.setup-panel` outside the setup (the landing's
    pot scene draws one). */
@@ -2831,7 +2831,7 @@
   font-weight: 700;
   color: var(--ink-soft);
 }
-/* The count in the heading row is the app's two-span numeral (views-session.js
+/* The count in the heading row is the app's two-span numeral (views-session-setup-pool.js
    `potCount`), set here as one quiet phrase — the sheets print „9 Spiele im
    Topf", not a display figure. */
 :root[data-design="tisch"][data-scheme="dark"] .tisch-pot__count .pool-count,
@@ -2899,7 +2899,7 @@
 
 /* --- Motion ritual 1: the pot fills (#1200, T10.1) -------------------------
    A game that ENTERS the pot is thrown onto the table from outside and lands in
-   its place. views-session.js marks only the entering ones (`.is-thrown`, a
+   its place. views-session-setup-pool.js marks only the entering ones (`.is-thrown`, a
    `data-throw` direction 0–4 and its index as `--throw-i`), never the ones
    already there, and never on the screen's first paint — so this is feedback
    on a seat tap or a loosened filter, not an entry animation (#1122).
@@ -3751,7 +3751,7 @@
 :root[data-design="tisch"][data-scheme="dark"] .tafel .tafel-top .trow .score-pill * { color: var(--sc-ink, var(--on-accent)); }
 
 /* --- Motion ritual 4a: the reveal — the race, then the gold sweep (#1200, T10.4)
-   „Auflösen" already marks the reveal (views-session.js: `.is-race` on every row
+   „Auflösen" already marks the reveal (views-session-result-tafel.js: `.is-race` on every row
    with `--dur` inline, `.is-reveal` on the gold group), so this is CSS alone
    and keyed on nothing new. First the data, then the award, in that order:
 
@@ -3921,7 +3921,7 @@
 }
 
 /* --- Motion ritual 5: „Gespielt" is stamped (#1200, T10.5) -----------------
-   views-session.js sets `data-stamped` on the slot for the ONE render that
+   views-session-result-band.js sets `data-stamped` on the slot for the ONE render that
    follows the finish the reader just recorded — not a later winner change, not
    a Chronik visit to a finished session, so this is the reader's own hand on
    the stamp, not an arrival (#1122 took the stamp's entry press out of the app
@@ -3944,7 +3944,7 @@
   }
 }
 /* „Falls etwas anders lief" — the three corrections as a labelled group on the
-   walnut (T4.4). The label is rendered by views-session.js on every design and
+   walnut (T4.4). The label is rendered by views-session-result-band.js on every design and
    revealed here; see styles.css for why it cannot be a `content:`. */
 :root[data-design="tisch"][data-scheme="dark"] .tisch__actions {
   flex-direction: column;

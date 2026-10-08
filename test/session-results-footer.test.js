@@ -212,7 +212,7 @@ for (const [label, over] of [
 
     assert.equal(cancelBtn(dom), null, 'the cancel control must be gone');
     const wrap = dom.app.querySelector('.result-footer .cancel-area');
-    assert.ok(wrap, 'the wrapper itself stays (renderCancel writes into it)');
+    assert.ok(wrap, 'the wrapper itself stays (resultRenderCancel writes into it)');
     assert.equal(wrap.children.length, 0, 'and it must be empty, so :empty can hide it');
     assert.ok(deleteBtn(dom), 'delete stays');
   });

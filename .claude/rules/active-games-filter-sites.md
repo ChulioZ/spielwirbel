@@ -8,6 +8,7 @@ paths:
   - "public/js/views-round*.js"
   - "public/js/views-member.js"
   - "public/js/views-session.js"
+  - "public/js/views-session-setup-pool.js"
   - "public/js/round-rail.js"
   - "public/js/recap.js"
   - "public/js/member-stats.js"
@@ -150,7 +151,8 @@ before assuming you have them all:
 
 **Frontend:** `views-round.js` `activeGames`, `views-session.js` `activeGames`
 (the one site that is **not** a copy — it passes the shared `isActiveGame`
-straight to `filter`, and its pool preview uses `fitsPlayerCount` too, #634),
+straight to `filter`; its pool preview, `setupPoolPreview` in
+`views-session-setup-pool.js` since #1543, uses `fitsPlayerCount` too, #634),
 `views-pokale.js` (the Pokale "best rated" list, the stats scope, and the
 per-row "Jetzt spielen" launcher at the `pokaleGameCard` level — it lived in
 `views-round-tabs.js` until #528 split that file),

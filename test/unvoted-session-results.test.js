@@ -141,7 +141,7 @@ test('the row keeps every control that is not about votes', async (t) => {
   assert.ok(band && !band.hidden, 'the table band carries them instead');
   assert.ok([...band.querySelectorAll('button')].some((b) => /Als gespielt markieren/.test(b.textContent)),
     'with the one action the evening needs');
-  // …which is the wiring updateChosen drives through `rowRefs`.
+  // …which is the wiring resultUpdateChosen drives through `rowRefs`.
   assert.ok(row.classList.contains('is-chosen'), 'the chosen row is still marked');
 });
 

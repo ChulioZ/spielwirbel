@@ -111,7 +111,7 @@ test('each result row\'s „Spielen" and „…" are described by THAT row\'s ga
   const ids = rows.map((row) => row.querySelector('.trow__title').id);
   assert.equal(new Set(ids).size, ids.length);
 
-  // The column is REBUILT on every phase change (updateChosen); the reference
+  // The column is REBUILT on every phase change (resultUpdateChosen); the reference
   // must survive that, not only the first render.
   rows[1].querySelector('.play-btn').click();
   await new Promise((res) => setImmediate(res));

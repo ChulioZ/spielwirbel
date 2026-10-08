@@ -9,7 +9,7 @@
    Its own file because three screens draw the same scale and must draw it
    identically: the vote card (views-session.js), the shared-link vote card
    (views-vote-link.js) and the session result distribution
-   (views-session.js's showResults). It lived inside the first two as a private
+   (views-session-result-tafel.js, for showResults). It lived inside the first two as a private
    `const MOODS` and the chart would have been the third copy — a drift there
    does not throw, it just renders a different face for the same number on the
    screen the group reads seconds after pressing the tile.

@@ -83,7 +83,7 @@ for (const [file, rx, what] of [
   ['views-chronik.js', /games_retired: \{ icon: '(ti-[a-z-]+)'/, 'the Chronik games_retired row'],
   ['views-period-recap.js', /chip\('(ti-[a-z-]+)', tn\(rec\.retired/, 'the recap retired chip'],
   ['views-round-detail.js', /iconText\('(ti-[a-z-]+)', t\('result\.retiredTag'\)\)/, 'the game-detail retired tag'],
-  ['views-session.js', /iconText\('(ti-[a-z-]+)', t\('result\.retiredTag'\)\)/, 'the session-result retired tag'],
+  ['views-session-result-tafel.js', /iconText\('(ti-[a-z-]+)', t\('result\.retiredTag'\)\)/, 'the session-result retired tag'],
 ]) {
   test(`${what} uses ti-archive`, () => {
     const m = src(file).match(rx);

@@ -3,6 +3,7 @@ paths:
   - "lib/feed.js"
   - "lib/routes/**"
   - "public/js/views-session.js"
+  - "public/js/views-session-result-band.js"
 ---
 # An event emitted per REQUEST announces one evening three times
 
@@ -12,8 +13,8 @@ plain `if (finished)` / `if (!wish)`, i.e. **on the request**, while the screens
 that drive them re-POST the same state as an ordinary save:
 
 ```js
-// public/js/views-session.js — the results screen has NO save button, by design
-async function saveWinners(ids) {
+// public/js/views-session-result-band.js — the results screen has NO save button, by design
+async function resultSaveWinners(rs, ids) {
   await api('POST', `…/sessions/${session.id}/finish`, { finished: true, winnerIds: ids });
 }
 ```

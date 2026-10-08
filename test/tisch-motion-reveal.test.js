@@ -11,7 +11,8 @@
  * So the jsdom half pins that those hooks still mean what the stylesheet
  * assumes — present on the reveal, absent on a cold load — and the CSS half
  * pins the timing arithmetic that keeps the whole reveal inside T10's 900ms,
- * derived from the race formula in views-session.js rather than copied from it.
+ * derived from the race formula in views-session-result-tafel.js rather than copied
+ * from it.
  */
 
 const { test } = require('node:test');
@@ -98,11 +99,11 @@ function keyframes(name) {
 
 // The longest race the result screen can write: `--dur` = a + score × b at the
 // scale's top. Read from the source, so a retune there re-checks the ceiling here.
-const RACE = /--dur:\$\{\(([\d.]+) \+ r\.shown \* ([\d.]+)\)/.exec(read('public', 'js', 'views-session.js'));
+const RACE = /--dur:\$\{\(([\d.]+) \+ r\.shown \* ([\d.]+)\)/.exec(read('public', 'js', 'views-session-result-tafel.js'));
 const MAX_DUR = RACE ? Number(RACE[1]) + 5 * Number(RACE[2]) : NaN;
 
 test('the race is retimed so the winner lands inside 900ms, order kept', () => {
-  assert.ok(Number.isFinite(MAX_DUR), 'the race formula was found in views-session.js');
+  assert.ok(Number.isFinite(MAX_DUR), 'the race formula was found in views-session-result-tafel.js');
   const body = gatedBody(':root[data-design="tisch"] .result-screen .trow.is-race::before');
   assert.ok(body, 'the retime sits inside the motion gate, on the result screen only');
   const k = Number(/animation-duration:\s*calc\(var\(--dur, 1s\) \* ([\d.]+)\)/.exec(body)[1]);

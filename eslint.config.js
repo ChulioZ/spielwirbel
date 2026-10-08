@@ -593,7 +593,17 @@ const frontendGlobals = {
   voteReviewRow: 'readonly', voteReviewCard: 'readonly',
   // views-session.js
   showStartSession: 'readonly', startVoting: 'readonly', showResults: 'readonly',
-  showFinale: 'readonly', canShareResult: 'readonly', shareResult: 'readonly',
+  showFinale: 'readonly', canShareResult: 'readonly', shareResult: 'readonly', fitSetupPool: 'readonly',
+  // views-session-setup-pool.js (issue #1543): the setup screen's pot, tag section and shelf chips
+  setupPoolPreview: 'readonly', buildSetupTagSection: 'readonly', buildSetupShelfField: 'readonly',
+  // views-session-result-tafel.js (issue #1543): the results screen's tally and Tafel rows
+  resultArchivedBadge: 'readonly', tallyResultRows: 'readonly', buildResultTafel: 'readonly',
+  // views-session-result-band.js (issue #1543): the table band, the headline and the finish
+  resultUpdateTitle: 'readonly', resultRenderBand: 'readonly', resultSaveWinners: 'readonly',
+  // views-session-result-actions.js (issue #1543): row actions, cancel/delete and the footers
+  resultIsSoloDirectPlay: 'readonly', resultRemoveGame: 'readonly', resultRenderAction: 'readonly',
+  resultUpdateChosen: 'readonly', resultSetCancelled: 'readonly', resultConfirmCancel: 'readonly',
+  resultDeleteSession: 'readonly', resultRenderCancel: 'readonly', resultRenderFoot: 'readonly',
   // views-session-setup-tisch.js (issue #1267): Der Tisch's setup composition
   composeTischSetup: 'readonly', tischDrawSummary: 'readonly',
   tischSetupDateLine: 'readonly',

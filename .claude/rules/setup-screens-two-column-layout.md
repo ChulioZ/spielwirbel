@@ -2,6 +2,7 @@
 paths:
   - "public/styles.css"
   - "public/js/views-session.js"
+  - "public/js/views-session-setup-pool.js"
   - "public/js/views-round.js"
   - "public/js/views-session-setup-tisch.js"
   - "public/js/views-session-programmheft.js"

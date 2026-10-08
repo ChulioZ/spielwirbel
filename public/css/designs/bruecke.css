@@ -4544,7 +4544,7 @@
    text; the rows are here.
 
    The gate is Der Tisch's T10.1 pot bookkeeping, shared with Das
-   Programmheft's P10.2 (views-session.js marks `is-set` with `--set-i`): the
+   Programmheft's P10.2 (views-session-setup-pool.js marks `is-set` with `--set-i`): the
    first paint is still, because an arriving screen in motion reads as one still
    loading (#1122), and a re-render marks nothing. A row moves up 6px from
    under its place, 300ms on B10.1's curve, 40ms after the one before it; the

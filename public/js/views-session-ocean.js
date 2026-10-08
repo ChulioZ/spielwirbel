@@ -209,7 +209,7 @@ function composeOceanLobby(root, peopleEl, people, voted) {
    Tafel — DOM order is the visual order at every width (WCAG 2.4.3, no
    `order:`), which moves the screen's next action earlier in tab order on
    purpose. Called once at the end of showResults(), after the foot is
-   appended; renderTisch() and friends hold their nodes by reference, so moving
+   appended; resultRenderBand() and friends hold their nodes by reference, so moving
    them changes nothing they do.
 
    `peopleEl` is Der Tisch's crowned „Wer dabei war" row, which the shared

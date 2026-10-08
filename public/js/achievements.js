@@ -526,7 +526,7 @@ function badgeUnanimous(c, s) {
 }
 
 /* The vote's places, ranked exactly as the result screen ranks it
-   (views-session.js) — the Spielwirbel-Score per game, sorted on the unclamped
+   (views-session-result-tafel.js) — the Spielwirbel-Score per game, sorted on the unclamped
    value, then `computePlaces` over the DISPLAYED number — so a mark agrees with
    the podium the table actually saw. A game nobody rated has no place and is
    left out: [{ gid, place }], best first. */

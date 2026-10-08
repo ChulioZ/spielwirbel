@@ -3,6 +3,7 @@ paths:
   - "public/js/draw-pool.js"
   - "public/js/filter-panel.js"
   - "public/js/views-session.js"
+  - "public/js/views-session-setup-pool.js"
   - "public/js/views-regal.js"
   - "lib/draw.js"
   - "lib/draw-filters.js"

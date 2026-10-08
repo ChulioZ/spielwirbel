@@ -210,7 +210,7 @@ function forestResultKicker(session) {
      „n-th", and a guest has no record to count in;
    - the play only when a game was played.
 
-   Refilled from updateTitle(), which every phase change reaches, so a winner
+   Refilled from resultUpdateTitle(), which every phase change reaches, so a winner
    tap or „Zurücksetzen" moves it with the headline. Empty, it is hidden. */
 function paintForestFacts(el, { round, session, finished, game, winnerIds, people }) {
   if (!el) return;
@@ -244,7 +244,7 @@ function paintForestFacts(el, { round, session, finished, game, winnerIds, peopl
    (WCAG 2.4.3, no `order:`): the people, the sentence, the foot, the scene,
    the facts, then the Tafel — which moves „Noch eine Session" ahead of the
    tree and the ranking in tab order, on a phone too, on purpose. Called once
-   at the end of showResults(), after the foot is appended; renderTisch() and
+   at the end of showResults(), after the foot is appended; resultRenderBand() and
    friends hold their nodes by reference, so moving them changes nothing they
    do. */
 function composeForestResult(screen, head, peopleEl, facts) {

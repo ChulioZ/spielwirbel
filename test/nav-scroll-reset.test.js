@@ -76,8 +76,13 @@ test('the session flow no longer hand-rolls its own scroll resets', async () => 
      keeping them would actively undo back-restoration inside the wizard. */
   const fs = require('node:fs');
   const path = require('node:path');
-  const src = fs.readFileSync(path.join(__dirname, '..', 'public/js/views-session.js'), 'utf8');
-  const strays = [...src.matchAll(/window\.scrollTo\s*\(/g)];
-  assert.equal(strays.length, 0,
-    `views-session.js still hand-rolls ${strays.length} scroll reset(s); syncUrl covers the forward case for every view`);
+  // views-session.js and the four files its two biggest screens were split into
+  // (#1543) — a reset moved out with the code would otherwise go unseen.
+  for (const f of ['views-session.js', 'views-session-setup-pool.js', 'views-session-result-tafel.js',
+    'views-session-result-band.js', 'views-session-result-actions.js']) {
+    const src = fs.readFileSync(path.join(__dirname, '..', 'public/js', f), 'utf8');
+    const strays = [...src.matchAll(/window\.scrollTo\s*\(/g)];
+    assert.equal(strays.length, 0,
+      `${f} still hand-rolls ${strays.length} scroll reset(s); syncUrl covers the forward case for every view`);
+  }
 });
