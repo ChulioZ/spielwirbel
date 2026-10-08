@@ -325,6 +325,9 @@ function renderRegalTab(round, activeGames) {
     // the sort the user just chose.
     refreshShelfGameInfo(rid, activeGames, () => {
       mountFilterPanel();
+      // renderGames() only reorders the cards built below, so the playing time
+      // the fill just brought would not reach a tile until the next visit.
+      activeGames.forEach((g) => refreshCardMeta(cardById[g.id], g));
       renderGames();
       swrStore.set('round:' + rid, round);
     });
@@ -365,7 +368,7 @@ function renderRegalTab(round, activeGames) {
              <span class="game-card__pick" aria-hidden="true"><i class="ti ti-check"></i></span>
            </div>
            <div class="game-card__body">
-             <div class="game-card__title">${esc(g.title)}</div>${ocean ? cardMeta(g) : ''}
+             <div class="game-card__title">${esc(g.title)}</div>${cardMeta(g)}
            </div>
          </a>`);
       if (g.image) loadCover(gc, coverUrl(g.image, COVER_CARD), gc.querySelector('.game-card__img'));
@@ -513,8 +516,10 @@ function renderRegalTab(round, activeGames) {
   // game grid, so they moved to the round's Einstellungen screen (#561).
 }
 
-// The meta line under an Ocean card's title (O3.3: „2–5 · 90 Min") — the
-// player range and the playing time the game already carries, nothing new.
+// The meta line under a card's title (O3.3: „2–5 · 90 Min") — the player range
+// and the playing time the game already carries, nothing new. Every design's
+// shelf card prints it since #1580: the default card (Klassisch, Der Tisch,
+// Ocean) under the title, Die Brücke, Das Programmheft and Forest in their own.
 // The range is bare digits behind the people glyph, as the sheet prints it:
 // „3–7 Personen · 20–60 Min." wraps to two lines in a 170px box. The full
 // wording is what a screen reader hears (`.sr-only`), so the bare digits never
@@ -529,6 +534,21 @@ function cardMeta(g) {
     ? `<span aria-hidden="true"><i class="ti ti-users"></i> ${esc(range)}</span><span class="sr-only">${esc(playersText(g.minPlayers, g.maxPlayers))}</span>`
     : '';
   return `<div class="game-card__meta">${[players, time ? esc(time) : ''].filter(Boolean).join(' · ')}</div>`;
+}
+
+// Re-render a built card's meta line in place after the backfill fills its game
+// (#736). Each design seats the line somewhere else; Forest drops its row
+// entirely when there is nothing to put in it, so that one is recreated.
+function refreshCardMeta(gc, g) {
+  if (!gc) return;
+  const html = cardMeta(g);
+  const old = gc.querySelector('.game-card__meta');
+  if (old) { if (html) old.replaceWith(h(html)); else old.remove(); return; }
+  if (!html) return;
+  const host = gc.querySelector('.ph-card__kicker, .bruecke-card__meta, .forest-card__meta');
+  if (host) host.prepend(h(html));
+  else if (gc.querySelector('.forest-card__head')) gc.querySelector('.forest-card__head').after(h(`<div class="forest-card__meta">${html}</div>`));
+  else gc.querySelector('.game-card__title').after(h(html));
 }
 
 // A Programmheft card (#1373, P3.3/P6.2): the meta line ABOVE the cover, the

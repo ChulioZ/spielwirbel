@@ -277,8 +277,10 @@ More columns mean more covers decoded at once, so `COVER_CARD` (330px) looks due
 for a re-check (`.claude/rules/provider-cover-sizing.md`). It holds: `.cards`
 uses **`auto-fill` with a `1fr` max**, so extra room becomes extra *columns*,
 not wider cards — measured 220px per card at 1920 and 235px at 1280, i.e. still
-at the floor. On a phone the card is 175px while we still request 330px, which
-is 1.9×, inside the DPR headroom the constant is built from.
+at the floor. Klassisch's floor is 160px since #1580, which only makes cards
+narrower against the same 330px request (2× at the floor). On a phone the card
+is 175px while we still request 330px, which is 1.9×, inside the DPR headroom
+the constant is built from.
 
 That reasoning depends on `auto-fill`; switching to `auto-fit` would collapse
 empty tracks and let cards balloon on a sparse shelf, which *would* put the

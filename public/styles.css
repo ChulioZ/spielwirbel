@@ -760,7 +760,9 @@ h1, h2, h3 { font-family: var(--font-display); }
 
    1280 is measured, not taste: the rail costs --rail-w + --rail-gap = 292px, so
    below it a rail yields FEWER Regal columns than the plain 1000px column. At
-   1280 the two are equal (4 columns); by 1920 the rail shell gives 6.
+   1280 the two were equal (4 columns at the 220px floor) and by 1920 the rail
+   shell gave 6. Klassisch's floor is 160px since #1580, which keeps the
+   comparison but shifts both counts up (about 5 and 9).
 
    Below 1280 every rule here is inert — `.rail` is display:none and the dock /
    in-flow strip (#331) render exactly as before. */
@@ -3356,6 +3358,27 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
 }
 .game-card__body { padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; }
 .game-card__title { font-weight: 700; font-size: var(--text-lg); }
+
+/* Klassisch's shelf (#1580): the two facts a game is picked by — players and
+   playing time — under every title, and a denser grid. Scoped to Klassisch:
+   Die Brücke, Das Programmheft and Forest print the same `.game-card__meta` in
+   cards of their own, and an unscoped rule would restyle it there. It WRAPS
+   rather than ellipsising: at the 160px floor „3–7 · 120–180 Min." needs ~140px
+   of a 131px line (measured in WebKit), and an ellipsis cuts off exactly the
+   playing time (operator decision 2026-10-06 lifts „Klassisch stays unchanged"
+   for this layout). */
+:root[data-design="klassisch"] .game-card__meta {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+/* From 521px up the floor drops from 220px to 160px: six columns where four
+   stood at 1440 (beside the rail). The phone keeps the two-up rule above, so the
+   query starts where that one ends. A card at the floor still requests the
+   330px COVER_CARD, about 2x — inside the DPR headroom (provider-cover-sizing). */
+@media (min-width: 521px) {
+  :root[data-design="klassisch"] .cards { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+}
 .game-card__row { display: flex; align-items: center; justify-content: space-between; }
 
 .tag {
