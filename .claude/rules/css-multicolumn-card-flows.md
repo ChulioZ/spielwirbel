@@ -147,7 +147,7 @@ behave, the card simply has no spacing — so each append site is guarded by a
 with an exact tile/card count so a fixture that renders two of three cannot
 leave the third's append unguarded.
 
-**Related:** `.claude/rules/auto-fit-collapses-only-empty-tracks.md` (the
-guarantee point 3 costs you), `.claude/rules/tiles-vs-lists.md` (which
-containers may be tiled at all), `.claude/rules/responsive-content-width.md`,
-`.claude/rules/css-text-assertions-strip-comments.md`.
+**Related:** `.claude/rules/webkit-blanks-multicol-under-a-rotated-sibling.md` (a
+sixth, WebKit-only), `.claude/rules/auto-fit-collapses-only-empty-tracks.md` (the
+guarantee point 3 costs you), `.claude/rules/tiles-vs-lists.md` (which containers
+may be tiled), `.claude/rules/responsive-content-width.md`, `.claude/rules/css-text-assertions-strip-comments.md`.
