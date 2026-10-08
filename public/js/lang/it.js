@@ -1085,6 +1085,7 @@ I18N.it = {
   'lobby.qrLoading': 'Creazione del codice …',
   'lobby.qrAlt': 'Codice QR per votare',
   'lobby.progress': '{n} su {total} valutati',
+  'lobby.votedCount': 'Hanno votato: {n} su {total}',
   'lobby.panelTitle': 'Votare dal proprio dispositivo',
   'lobby.panelNote': 'Il link non richiede un account. Chi ce l’ha valuta i giochi sorteggiati — e non vede altro del gruppo.',
   'lobby.guestVoterOne': '{names} vota senza account',

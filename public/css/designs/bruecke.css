@@ -4210,6 +4210,17 @@
   color: var(--ink-soft);
 }
 :root[data-design="bruecke"][data-scheme="dark"] .live-vote--bruecke .live-person__state .ti { display: none; }
+/* „Für …" on the person's own row (#1574), on a second line under the name: as
+   a fifth item it would land in the LED's 10px column, and a column of its own
+   would push every row's state word out of line with the rows that have no
+   key. The row already shows the avatar. */
+:root[data-design="bruecke"][data-scheme="dark"] .live-vote--bruecke .live-person > .live-vote__hotseat-btn {
+  grid-column: 3 / -1;
+  grid-row: 2;
+  justify-self: start;
+  margin-bottom: 6px;
+}
+:root[data-design="bruecke"][data-scheme="dark"] .live-vote--bruecke .live-person > .live-vote__hotseat-btn .live-person__avatar--sm { display: none; }
 :root[data-design="bruecke"][data-scheme="dark"] .live-vote--bruecke .live-person.is-voted .live-person__state { color: var(--good); }
 /* „Deine Stimme ist da": a raised strip with the good edge. */
 :root[data-design="bruecke"][data-scheme="dark"] .live-vote--bruecke .live-vote__done {
@@ -4316,18 +4327,10 @@
   color: var(--ink-2);
 }
 
-/* THIS DEVICE. The leading button, the people who can take the device, and
-   last „Abstimmung beenden" with who is still open. */
+/* THIS DEVICE. The leading button, and last „Abstimmung beenden" with who is
+   still open. The people who can take the device carry their „Für …" key on
+   their own row since #1574, so this column no longer lists them. */
 :root[data-design="bruecke"][data-scheme="dark"] .live-vote--bruecke .live-vote__actions { gap: var(--space-3); }
-:root[data-design="bruecke"][data-scheme="dark"] .live-vote--bruecke .live-vote__hotseat .field__label {
-  margin: 0;
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  font-weight: 600;
-  letter-spacing: var(--track-notation);
-  text-transform: uppercase;
-  color: var(--ink-soft);
-}
 :root[data-design="bruecke"][data-scheme="dark"] .live-vote--bruecke .live-vote__hotseat-btn {
   min-height: var(--target-key);
   font-family: var(--font-display);

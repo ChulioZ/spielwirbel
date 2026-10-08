@@ -193,6 +193,20 @@ function showSessionLobby(round, session, handedOn, dealt) {
      stop being observable. So a box is filled when the person is done and open
      when they are not, and the count beside it says the same thing in words. */
   const peopleEl = root.querySelector('#lvPeople');
+  /* The list's own count (#1574): how many of the people above have voted.
+     Rendered for every design and shown by the ones that do not compose a
+     count of their own — Klassisch, Der Tisch and Ocean; Die Brücke, Das
+     Programmheft and Forest each head their list with theirs, so this one
+     stays hidden there (the #1191 shape, like the row's dots below). */
+  const votedCount = people.filter((p) => voted.has(p.id)).length;
+  // Its own key rather than `lobby.progress`: Der Tisch and Ocean show that one
+  // on every row as a count of GAMES, and the two read identically otherwise.
+  peopleEl.appendChild(h(`<p class="live-vote__count">${esc(t('lobby.votedCount', {
+    n: votedCount,
+    total: people.length,
+  }))}</p>`));
+  // Each person's row, by id: the „Für …" keys below go INTO these (#1574).
+  const rowOf = new Map();
   people.forEach((p) => {
     const done = voted.has(p.id);
     // aria-hidden: the state line and the count already carry this in words, so
@@ -214,6 +228,7 @@ function showSessionLobby(round, session, handedOn, dealt) {
           total: games.length,
         }))}</span>
       </div>`);
+    rowOf.set(p.id, chip);
     peopleEl.appendChild(chip);
   });
 
@@ -320,26 +335,26 @@ function showSessionLobby(round, session, handedOn, dealt) {
   // Everyone else who can vote here. `nextUp` is dropped for the same reason the
   // own seat is: it is already the leading button.
   const rest = hotseat.filter((p) => !nextUp || p.id !== nextUp.id);
-  // Das Programmheft (#1375) moves each of these keys into its person's row;
-  // the map is how it finds them without a marker on Klassisch's markup.
+  /* Each key sits IN its person's row, at its end (#1574) — every design, as
+     Das Programmheft (#1375) and Forest (#1469) drew it first. It used to be a
+     second list under the actions, „An diesem Gerät abstimmen" over „Für Anna /
+     Für Ben …", which named the same people twice and left the eye to match
+     „Ben — offen" with „Für Ben". `hereBtns` still maps person id → key for the
+     designs that caption them. The row already shows the avatar, so the key's
+     own one is hidden there in CSS rather than dropped from the markup: the
+     shared-link page (views-vote-link.js) builds the same button for a list. */
   const hereBtns = new Map();
-  if (rest.length) {
-    const list = h(`<div class="live-vote__hotseat">
-        <div class="field__label">${esc(t('lobby.hereLabel'))}</div>
-      </div>`);
-    rest.forEach((p) => {
-      const btn = h(`<button class="btn live-vote__hotseat-btn">
-          <span class="live-person__avatar live-person__avatar--sm" style="background:${personColor(round, p)}">${avatarFace(initials(p.name), { userId: p.userId })}</span>
-          ${esc(t('lobby.voteHere', { name: personLabel(p) }))}
-        </button>`);
-      // With the handover screen: on this device the next person really is being
-      // handed a phone, which is exactly what that screen is for.
-      btn.addEventListener('click', () => voteFor(p, false));
-      hereBtns.set(p.id, btn);
-      list.appendChild(btn);
-    });
-    actions.appendChild(list);
-  }
+  rest.forEach((p) => {
+    const btn = h(`<button class="btn live-vote__hotseat-btn">
+        <span class="live-person__avatar live-person__avatar--sm" style="background:${personColor(round, p)}">${avatarFace(initials(p.name), { userId: p.userId })}</span>
+        ${esc(t('lobby.voteHere', { name: personLabel(p) }))}
+      </button>`);
+    // With the handover screen: on this device the next person really is being
+    // handed a phone, which is exactly what that screen is for.
+    btn.addEventListener('click', () => voteFor(p, false));
+    hereBtns.set(p.id, btn);
+    rowOf.get(p.id).appendChild(btn);
+  });
 
   /* „Am eigenen Gerät mitstimmen" (T4.3/T6.5): the share controls and the action
      that ends the voting, as one paper block beside the people.
@@ -536,164 +551,4 @@ function showSessionLobby(round, session, handedOn, dealt) {
       if (before !== after) showSessionLobby(fresh, s, handedOn);
     } catch { /* a failed poll is not worth a toast; the next tick retries */ }
   }, LOBBY_POLL_MS);
-}
-
-/* Last-resort share fallback: no `navigator.share`, no clipboard. Was a
-   `prompt()` used as a read-only display — an INPUT dialog for something the
-   user can only read, in OS chrome, on a screen the round has themed (#939).
-   A field rather than a paragraph because the URL still has to be selectable,
-   and it says "copy this" rather than the clipboard path's "copied": nothing
-   was copied, and claiming otherwise is the one thing this branch must not do. */
-function showShareUrlSheet(url) {
-  const backdrop = h(`<div class="sheet-backdrop sheet-backdrop--center">
-      <div class="sheet sheet--dialog" role="dialog" aria-modal="true" aria-label="${esc(t('lobby.share'))}">
-        <div class="sheet__head">
-          <h2>${esc(t('lobby.share'))}</h2>
-          <button class="sheet__close" type="button" aria-label="${esc(t('common.close'))}"><i class="ti ti-x" aria-hidden="true"></i></button>
-        </div>
-        <p class="muted">${esc(t('lobby.shareManual'))}</p>
-        <input id="shareUrlField" class="input" readonly
-          aria-label="${esc(t('lobby.share'))}" value="${esc(url)}" />
-      </div>
-    </div>`);
-  const sheet = backdrop.querySelector('.sheet');
-  document.body.appendChild(backdrop);
-
-  const onKey = (e) => { if (e.key === 'Escape') closeSheet(); };
-  document.addEventListener('keydown', onKey, true);
-  openSheet(backdrop, onKey);
-  backdrop.addEventListener('mousedown', (e) => { if (e.target === backdrop) closeSheet(); });
-  sheet.querySelector('.sheet__close').addEventListener('click', () => closeSheet());
-
-  // Focus AFTER openSheet, and select the whole URL: a manual copy is the only
-  // thing this sheet is for, so it starts one keystroke away.
-  const field = sheet.querySelector('#shareUrlField');
-  field.focus();
-  field.select();
-}
-
-/* The vote link as a code to hold up at the table (#1170).
-
-   Drawn by the server (lib/routes/sessions.js), which mints the link through
-   the same guard the share button does and encodes the URL it would itself
-   serve — so the picture cannot point somewhere the link does not. Fetched on
-   every open rather than cached: the code then always shows the link currently
-   in force.
-
-   Injected as inline SVG, never as a `data:` image URL — the token would
-   otherwise sit in an attribute that a screenshot, a devtools copy or a crash
-   report carries off with it. The markup is the server's own. */
-function showVoteQrSheet(round, session) {
-  const backdrop = h(`<div class="sheet-backdrop sheet-backdrop--center">
-      <div class="sheet sheet--dialog vote-qr" role="dialog" aria-modal="true" aria-label="${esc(t('lobby.qr'))}">
-        <div class="sheet__head">
-          <h2>${esc(round.name)}</h2>
-          <button class="sheet__close" type="button" aria-label="${esc(t('common.close'))}"><i class="ti ti-x" aria-hidden="true"></i></button>
-        </div>
-        <div class="vote-qr__code" role="img" aria-label="${esc(t('lobby.qrAlt'))}">
-          <p class="muted center">${esc(t('lobby.qrLoading'))}</p>
-        </div>
-        <p class="muted center vote-qr__hint">${esc(t('lobby.qrHint'))}</p>
-      </div>
-    </div>`);
-  const sheet = backdrop.querySelector('.sheet');
-  document.body.appendChild(backdrop);
-
-  const onKey = (e) => { if (e.key === 'Escape') closeSheet(); };
-  document.addEventListener('keydown', onKey, true);
-  openSheet(backdrop, onKey);
-  backdrop.addEventListener('mousedown', (e) => { if (e.target === backdrop) closeSheet(); });
-  sheet.querySelector('.sheet__close').addEventListener('click', () => closeSheet());
-
-  api('POST', `/api/rounds/${round.id}/sessions/${session.id}/vote-link/qr`, {}).then(({ svg }) => {
-    // The sheet may be gone by now — a code nobody is waiting for is not an
-    // error, and writing into a detached node would hide the next one.
-    if (!document.body.contains(backdrop)) return;
-    sheet.querySelector('.vote-qr__code').innerHTML = svg;
-  }).catch((e) => {
-    if (document.body.contains(backdrop)) closeSheet();
-    toast(e.message, { tone: 'error' });
-  });
-}
-
-/* Take someone out of a session (#1538): one sheet listing the session's people,
-   opened from the lobby and from the results screen in every design. A sheet
-   rather than a control on each person's row, because every design composes
-   those rows differently, and this is a correction the group makes rarely:
-   one quiet entry per screen keeps it out of the way of the people list's
-   real job. Each name opens a confirm, which replaces this sheet (openSheet's
-   replace path) instead of stacking on it.
-
-   `onDone(fresh, session)` re-renders the calling screen from the server's view,
-   so the tally, teams and winners follow from the new people set. */
-function showRemovePersonSheet(round, session, onDone) {
-  const people = sessionPeople(round, session);
-  const backdrop = h(`<div class="sheet-backdrop sheet-backdrop--center">
-      <div class="sheet sheet--dialog remove-person" role="dialog" aria-modal="true" aria-label="${esc(t('session.removeTitle'))}">
-        <div class="sheet__head">
-          <h2>${esc(t('session.removeTitle'))}</h2>
-          <button class="sheet__close" type="button" aria-label="${esc(t('common.close'))}"><i class="ti ti-x" aria-hidden="true"></i></button>
-        </div>
-        <p class="muted">${esc(t('session.removeIntro'))}</p>
-        <ul class="remove-person__list"></ul>
-      </div>
-    </div>`);
-  const sheet = backdrop.querySelector('.sheet');
-  const list = sheet.querySelector('.remove-person__list');
-  // A person's column is non-empty once they have rated anything: the lobby
-  // knows that only as `votedIds` (the values are redacted while voting runs),
-  // the results screen from the revealed votes themselves.
-  const voted = new Set(session.votedIds || []);
-  Object.entries(session.votes || {}).forEach(([pid, byGame]) => {
-    if (byGame && Object.keys(byGame).length) voted.add(pid);
-  });
-  people.forEach((p) => {
-    const row = h(`<li class="remove-person__row">
-        <span class="live-person__avatar live-person__avatar--sm" style="background:${personColor(round, p)}">${avatarFace(initials(p.name), { userId: p.userId })}</span>
-        <span class="remove-person__name">${esc(personLabel(p))}</span>
-        <button type="button" class="btn btn--sm remove-person__btn">${iconText('ti-user-minus', t('session.removeAction'))}</button>
-      </li>`);
-    const btn = row.querySelector('button');
-    btn.setAttribute('aria-label', t('session.removeActionFor', { name: personLabel(p) }));
-    btn.addEventListener('click', () => removePerson(p));
-    list.appendChild(row);
-  });
-  document.body.appendChild(backdrop);
-
-  const onKey = (e) => { if (e.key === 'Escape') closeSheet(); };
-  document.addEventListener('keydown', onKey, true);
-  openSheet(backdrop, onKey);
-  backdrop.addEventListener('mousedown', (e) => { if (e.target === backdrop) closeSheet(); });
-  sheet.querySelector('.sheet__close').addEventListener('click', () => closeSheet());
-
-  async function removePerson(p) {
-    const name = personLabel(p);
-    const ok = await confirmDialog({
-      title: t('session.removeConfirmTitle', { name }),
-      body: t(voted.has(p.id) ? 'session.removeConfirmVoted' : 'session.removeConfirm', { name }),
-      confirmLabel: t('session.removeAction'),
-      icon: 'ti-user-minus',
-    });
-    if (!ok) return;
-    try {
-      await api('DELETE', `/api/rounds/${round.id}/sessions/${session.id}/people/${p.id}`);
-      toast(t('session.removed', { name }));
-      const fresh = await fetchRoundFresh(round.id);
-      const s = fresh.sessions.find((x) => x.id === session.id);
-      if (!s) return showRound(round.id, 'start');
-      onDone(fresh, s);
-    } catch (e) {
-      const known = { last_person: 'session.removeLast', already_split: 'session.removeSplit' };
-      toast(known[e.message] ? t(known[e.message]) : e.message, { tone: 'error' });
-    }
-  }
-}
-
-// The quiet entry to the sheet above, or null when there is nobody to take out
-// (a session must keep at least one person, so one person means no action).
-function removePersonEntry(round, session, onDone) {
-  if (sessionPeople(round, session).length < 2) return null;
-  const btn = h(`<button type="button" class="link-btn remove-person__entry">${iconText('ti-user-minus', t('session.removeEntry'))}</button>`);
-  btn.addEventListener('click', () => showRemovePersonSheet(round, session, onDone));
-  return btn;
 }

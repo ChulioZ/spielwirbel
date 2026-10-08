@@ -1081,6 +1081,7 @@ I18N.nl = {
   'lobby.qrLoading': 'Code wordt gemaakt …',
   'lobby.qrAlt': 'QR-code om mee te stemmen',
   'lobby.progress': '{n} van {total} beoordeeld',
+  'lobby.votedCount': 'Gestemd: {n} van {total}',
   'lobby.panelTitle': 'Stemmen op je eigen apparaat',
   'lobby.panelNote': 'De link heeft geen account nodig. Wie hem heeft beoordeelt de getrokken spellen — en ziet verder niets van de groep.',
   'lobby.guestVoterOne': '{names} stemt zonder account',
