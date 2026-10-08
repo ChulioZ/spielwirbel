@@ -67,12 +67,14 @@ const K = ':root[data-design="klassisch"]';
 const inMedia = (css, rx) => mediaBlocks(css).filter(([q]) => rx.test(q)).map(([, body]) => body).join('\n');
 const floorOf = (body) => Number((/minmax\((\d+)px/.exec(declaredValue(body, 'grid-template-columns') || '') || [])[1]);
 
-test('Klassisch: the meta line is styled under Klassisch only, as one ellipsised line', () => {
+test('Klassisch: the meta line is styled under Klassisch only, and it wraps', () => {
   const rules = rulesOf(read('public/styles.css'));
   const meta = rules.find(([s]) => s.trim() === `${K} .game-card__meta`);
   assert.ok(meta, 'Klassisch styles the line');
-  assert.equal(declaredValue(meta[1], 'white-space'), 'nowrap');
-  assert.equal(declaredValue(meta[1], 'text-overflow'), 'ellipsis');
+  // At the 160px floor „3–7 · 120–180 Min." needs ~140px of a 131px line
+  // (measured in WebKit): an ellipsis would cut off exactly the playing time.
+  assert.notEqual(declaredValue(meta[1], 'white-space'), 'nowrap', 'the line may wrap');
+  assert.equal(declaredValue(meta[1], 'text-overflow'), null, 'nothing is ellipsised away');
   // Die Brücke, Das Programmheft and Forest embed the same element in their own
   // cards, so an unscoped rule would restyle it there.
   assert.equal(rules.find(([s]) => s.trim() === '.game-card__meta'), undefined, 'no unscoped .game-card__meta rule');
@@ -94,18 +96,28 @@ test('Klassisch: a denser grid from 521px, the phone two-up untouched', () => {
 test('Der Tisch: the pinned row still holds two title lines plus the meta line', () => {
   /* Its shelf rows are a fixed pitch (the planks are drawn under them), so the
      body budget must hold the padding, two clamped title lines, the gap and the
-     meta line — on the normal shelf and on the dense 40+-game one. */
+     meta line — one line on the normal shelf, two on the dense 40+-game one,
+     where an 87px track cannot hold „3–7 · 120–180 Min." (113px, measured).
+     Every input is read from the sheets, so retuning any one of them is
+     re-checked here rather than silently eating the dense row's slack. */
   const T = ':root[data-design="tisch"][data-scheme="dark"]';
+  const DENSE = `${T} .cards:has(> a.game-card:nth-of-type(40))`;
   const rules = rulesOf(read('public/css/designs/tisch.css'));
   const prop = (sel, p) => declaredValue((rules.find(([s]) => s.trim() === sel) || [])[1] || '', p);
   const px = (v) => (/^var\((--[\w-]+)\)$/.test(v) ? rootPx(/^var\((--[\w-]+)\)$/.exec(v)[1]) : parseFloat(v));
-  const metaLine = px(prop(`${T} .game-card__meta`, 'font-size')) * 1.5; // body line-height
-  assert.ok(metaLine > 0, 'Der Tisch styles the meta line');
-  const body = (titleSize, shelfBody) => {
-    const need = 9 + 2 * titleSize * 1.3 + 3 + metaLine;
+  const padTop = parseFloat(prop(`${T} .game-card__body`, 'padding').split(/\s+/)[0]);
+  const gap = parseFloat(prop(`${T} .game-card__body`, 'gap'));
+  const titleLh = parseFloat(prop(`${T} .game-card__title`, 'line-height'));
+  const pageLh = parseFloat(declaredValue(rulesOf(read('public/styles.css')).find(([s]) => s.trim() === 'body')[1], 'line-height'));
+  for (const v of [padTop, gap, titleLh, pageLh]) assert.ok(Number.isFinite(v), 'an input did not parse');
+  const metaLine = px(prop(`${T} .game-card__meta`, 'font-size')) * pageLh;
+  const fits = (titleSize, metaLines, shelfBody) => {
+    const need = padTop + 2 * titleSize * titleLh + gap + metaLines * metaLine;
     assert.ok(need <= shelfBody, `needs ${need.toFixed(1)}px, the row gives ${shelfBody}px`);
   };
-  body(px(prop(`${T} .game-card__title`, 'font-size')), parseFloat(prop(`${T} .cards`, '--shelf-body')));
-  body(px(prop(`${T} .cards:has(> a.game-card:nth-of-type(40)) .game-card__title`, 'font-size')),
-    parseFloat(prop(`${T} .cards:has(> a.game-card:nth-of-type(40))`, '--shelf-body')));
+  fits(px(prop(`${T} .game-card__title`, 'font-size')), 1, parseFloat(prop(`${T} .cards`, '--shelf-body')));
+  fits(px(prop(`${DENSE} .game-card__title`, 'font-size')), 2, parseFloat(prop(DENSE, '--shelf-body')));
+  // …and the dense line really does wrap, capped at the two the budget holds.
+  assert.equal(prop(`${DENSE} .game-card__meta`, 'white-space'), 'normal');
+  assert.equal(parseFloat(prop(`${DENSE} .game-card__meta`, 'max-height')), 2 * pageLh, 'two lines, in em');
 });

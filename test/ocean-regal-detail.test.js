@@ -122,7 +122,7 @@ test('Ocean: „Spiel hinzufügen" exists once per width — tile, toolbar pill 
   assert.equal(fab.getAttribute('aria-label'), 'Spiel hinzufügen', 'an icon-only button needs its name');
 });
 
-test('Klassisch: the Regal is exactly as it was', (t) => {
+test('Klassisch: none of Ocean\'s Regal composition leaks into it', (t) => {
   const { dom, round } = boot(t, 'klassisch');
   regal(dom, round);
   // `.game-card__meta` is not on this list since #1580: every design's card

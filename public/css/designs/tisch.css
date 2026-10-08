@@ -1882,13 +1882,25 @@
    else. */
 :root[data-design="tisch"][data-scheme="dark"] .cards:has(> a.game-card:nth-of-type(40)) {
   --shelf-cover: 76px;
-  --shelf-body: 62px;
+  /* Two title lines plus a meta line that wraps to two here (below). */
+  --shelf-body: 80px;
   grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
   column-gap: 12px;
   row-gap: calc(var(--shelf-plank) + var(--shelf-clear));
 }
 :root[data-design="tisch"][data-scheme="dark"] .cards:has(> a.game-card:nth-of-type(40)) .game-card__title {
   font-size: var(--text-xs);
+}
+/* An 87px track cannot hold „3–7 · 120–180 Min." (113px, measured in WebKit):
+   on one line the playing time is ellipsised away on every tile of exactly the
+   big imported shelves this mode is for. So the line wraps to two here, at the
+   „·", capped at two lines so the row pitch above still holds. A height cap
+   rather than `-webkit-line-clamp`: WebKit's clamp counted the visually hidden
+   `.sr-only` range and drew „Min.…" on text that fits (measured). */
+:root[data-design="tisch"][data-scheme="dark"] .cards:has(> a.game-card:nth-of-type(40)) .game-card__meta {
+  white-space: normal;
+  text-overflow: clip;
+  max-height: 3em;
 }
 
 /* --- The Regal's toolbar (T3.3 desktop, T6.2 phone) -----------------------
