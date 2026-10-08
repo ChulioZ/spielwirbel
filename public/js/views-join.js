@@ -22,14 +22,13 @@ const joinPath = (token) => '/join/' + encodeURIComponent(token);
 // isVoteLinkRoute — the server decides whether the token is real.
 const isJoinLinkRoute = (p) => /^\/join\/[^/]+\/*$/.test(p);
 
-// Which render owns the screen: a preview that lands after the visitor moved on
-// (a second link, a language switch) must not paint over the newer screen — its
-// button would join the round of a link no longer in the address bar.
-let joinRender = 0;
-
 async function showJoinLink(token) {
-  const mine = ++joinRender;
-  currentView = () => showJoinLink(token);
+  // Whether this call still owns the screen when the preview lands: every view
+  // sets currentView on entry, so a second link, a language switch or a plain
+  // navigation away all replace this one. A stale preview must not paint over
+  // them — its button would join the round of a link no longer on screen.
+  const view = () => showJoinLink(token);
+  currentView = view;
   syncUrl(joinPath(token));
   // No round name in the tab title: the tab is visible to anyone glancing at
   // the phone, and the screen is reachable before the person has joined.
@@ -46,10 +45,10 @@ async function showJoinLink(token) {
   try {
     preview = await accountApi('POST', '/join/preview', { token });
   } catch (e) {
-    if (mine === joinRender) renderJoinRefused(e.message);
+    if (currentView === view) renderJoinRefused(e.message);
     return;
   }
-  if (mine === joinRender) renderJoinConfirm(token, preview);
+  if (currentView === view) renderJoinConfirm(token, preview);
 }
 
 // Logged out: what this is, and the way in. Both buttons park the link so a

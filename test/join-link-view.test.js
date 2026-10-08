@@ -172,9 +172,23 @@ test('a failed share sheet falls back to the clipboard; a dismissed one does not
     const { dom } = app(t);
     dom.set('api', async () => []);
     dom.set('accountApi', async () => ({ friends: [] }));
-    dom.run(`window.__copies = 0; navigator.share = async () => { const e = new Error('x'); e.name = ${JSON.stringify(name)}; throw e; };
-      navigator.clipboard = { writeText: async () => { window.__copies += 1; } };`);
+    // Stubs installed as objects, not as source text: no code is built from a value.
+    let copied = 0;
+    dom.window.navigator.share = async () => { const e = new Error('x'); e.name = name; throw e; };
+    dom.window.navigator.clipboard = { writeText: async () => { copied += 1; } };
     await dom.call('shareInviteLink', { token: 'tok-d' }, { name: 'R' });
-    assert.equal(dom.run('window.__copies'), copies, name);
+    assert.equal(copied, copies, name);
   }
+});
+
+test('a preview that lands after the visitor left the screen does not paint over it', async (t) => {
+  const { dom } = app(t);
+  let resolve;
+  dom.set('accountApi', () => new Promise((r) => { resolve = r; }));
+  const pending = dom.call('showJoinLink', 'tok-e');
+  // Any other screen taking over sets currentView on entry, as every view does.
+  dom.run('currentView = () => {}');
+  resolve({ roundName: 'Runde E', seatName: null });
+  await pending;
+  assert.equal(dom.app.querySelector('#joinGo'), null, 'no join button for a link the visitor left');
 });
