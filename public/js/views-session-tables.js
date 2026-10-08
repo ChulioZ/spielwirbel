@@ -508,8 +508,9 @@ function renderTischTable(round, session, games, children, child, index, voted, 
   const outcome = sessionOutcome(child);
   const winners = new Set(child.winnerIds || []);
 
-  // The standard sentence — the result screen's own keys (views-session.js
-  // resultUpdateTitle), so a table says what that table's result screen says. The
+  // The standard sentence — the result screen's own keys (resultUpdateTitle in
+  // views-session-result-band.js), so a table says what that table's result
+  // screen says. The
   // winners' names are cut out of the escaped string and put back inside a span,
   // which is what lets the design set them apart without a second copy of the
   // sentence's grammar.
