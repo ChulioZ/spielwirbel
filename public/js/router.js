@@ -190,6 +190,9 @@ function resolveRoute(pathname) {
   // case — bootApp only has to make sure a logged-out visitor gets here instead
   // of the login screen.
   if (parts[0] === 'vote' && parts[1]) return () => showVoteLink(decodeURIComponent(parts[1]));
+  // A round invite link (#1515). The screen handles both states itself — the
+  // confirmation for an account, the way to sign in for everyone else.
+  if (parts[0] === 'join' && parts[1]) return () => showJoinLink(decodeURIComponent(parts[1]));
   if (parts[0] === 'login') return () => showLogin();
   if (parts[0] === 'register') return () => showRegister();
   if (parts[0] === 'forgot-password') return () => showForgot();

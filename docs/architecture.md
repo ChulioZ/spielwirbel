@@ -253,6 +253,9 @@ lib/
   demo-tenant.js     the one definition of the `demo-` tenant-id prefix that
                      classifies a tenant as a demo, dependency-free so the repo
                      backends and the logger can require it without a cycle
+  invite-link.js     the round invite link's 7-day TTL (issue #1515): the age
+                     half of the join gate plus the sweep, split like
+                     vote-link.js below
   vote-link.js       the vote link's TTL (issue #652): the age half of the
                      public route's gate, plus the sweep that deletes rows past
                      it. Exists because an ABANDONED session — never closed,
@@ -385,6 +388,10 @@ lib/
                                              decline; the inviter fixes the
                                              member-seat take-over (#207) —
                                              404 unless ACCOUNTS_ENABLED)
+    join.js          /api/account/join      (join a round through an invite
+                                             link (#1515): preview + join, the
+                                             token in the body; 404 unless
+                                             ACCOUNTS_ENABLED)
     friends.js       /api/account/friends   (friendships + Freundeskreis feed:
                                              send / accept / decline / unfriend,
                                              list, feed paged by ?before= (#325, #1357) —
@@ -470,6 +477,8 @@ lib/
                                              claimed participant's votes — the
                                              account-free half of #209/#612)
     activities.js    …/activities           (list the feed [GET], delete an entry)
+    invite-links.js  …/invite-links         (the owner's round invite links (#1515):
+                                             mint/replace, list, revoke by slot)
     marker.js        …/marker               (PATCH the round's colour marker,
                                              0-7 — issue #1187)
     tags.js          …/tags                 (create a custom tag [deduped], rename it or
@@ -1000,6 +1009,8 @@ public/
     views-vote-link.js the PUBLIC /vote/:token screen (#652): claim your name
                      from the participant list and rate the drawn games without
                      an account — the only view that runs logged out
+    views-join.js    the /join/:token screen (#1515): „join this round?" for an
+                     account, the way to sign in for everyone else
     views-inbox.js   per-user notification inbox (#207; accounts mode only)
     views-news.js    the pulled „Was ist neu" screen at /neu, reached from the
                      account menu; opening it marks the entries seen (#741)

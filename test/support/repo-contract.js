@@ -3803,6 +3803,49 @@ module.exports = function repoContract(repo) {
     assert.equal(await repo.findSessionVoteLink(fresh.id), null);
   });
 
+  test('round invite links (#1515): one per slot, replaced on re-mint, consumed once, swept by age', async () => {
+    const t = `ril-${Math.random().toString(16).slice(2)}`;
+    const round = await repo.createRound(t, { name: 'Invited', members: ['Ann', 'Bo'] });
+    const [ann] = round.members;
+
+    const first = await repo.createRoundInviteLink({ roundId: round.id, ownerTenantId: t, memberId: null });
+    assert.ok(/^[A-Za-z0-9_-]{32,}$/.test(first.id), `an unguessable base64url token (got ${first.id})`);
+    assert.equal(first.memberId, null);
+    assert.equal(first.ownerTenantId, t);
+    const seat = await repo.createRoundInviteLink({ roundId: round.id, ownerTenantId: t, memberId: ann.id });
+    assert.equal(seat.memberId, ann.id);
+
+    // Re-minting the fresh slot REPLACES its link; the seat slot is untouched.
+    const second = await repo.createRoundInviteLink({ roundId: round.id, ownerTenantId: t, memberId: null });
+    assert.notEqual(second.id, first.id);
+    assert.equal(await repo.findRoundInviteLink(first.id), null, 'the replaced token no longer resolves');
+    const listed = await repo.listRoundInviteLinks(round.id);
+    assert.deepEqual(listed.map((l) => l.id).sort(), [second.id, seat.id].sort());
+    assert.equal((await repo.findRoundInviteLink(seat.id)).roundId, round.id);
+    assert.equal(await repo.findRoundInviteLink(seat.id.slice(0, -1)), null, 'a truncated token resolves nothing');
+
+    // Consumed exactly once — the join route's claim relies on it.
+    assert.equal((await repo.deleteRoundInviteLink(seat.id)).id, seat.id);
+    assert.equal(await repo.deleteRoundInviteLink(seat.id), null);
+
+    // The sweep: a past cutoff spares the live row, a future one takes it.
+    assert.equal(await repo.deleteExpiredRoundInviteLinks('2000-01-01T00:00:00.000Z'), 0);
+    assert.ok(await repo.findRoundInviteLink(second.id));
+    assert.ok((await repo.deleteExpiredRoundInviteLinks('2999-01-01T00:00:00.000Z')) >= 1);
+    assert.equal(await repo.findRoundInviteLink(second.id), null);
+  });
+
+  test('deleting a round takes its invite links with it, and only its own', async () => {
+    const t = `rid-${Math.random().toString(16).slice(2)}`;
+    const doomedRound = await repo.createRound(t, { name: 'Gone', members: ['Ann'] });
+    const kept = await repo.createRound(t, { name: 'Kept', members: ['Bo'] });
+    const doomed = await repo.createRoundInviteLink({ roundId: doomedRound.id, ownerTenantId: t, memberId: null });
+    const survivor = await repo.createRoundInviteLink({ roundId: kept.id, ownerTenantId: t, memberId: null });
+    assert.ok(await repo.deleteRound(t, doomedRound.id));
+    assert.equal(await repo.findRoundInviteLink(doomed.id), null);
+    assert.ok(await repo.findRoundInviteLink(survivor.id), 'another round\'s link survives');
+  });
+
   test('deleting a round takes its vote links with it, and only its own', async () => {
     const tenant = `vld-${Math.random().toString(16).slice(2)}`;
     const round = await repo.createRound(tenant, { name: 'Linked', members: ['Ann'] });

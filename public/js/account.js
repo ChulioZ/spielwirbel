@@ -117,6 +117,10 @@ async function bootApp() {
     // shared "look what this instance is playing" link with a login wall, which
     // is exactly the audience the screen is published for.
     if (isPublicStatsRoute(path)) return routeTo(path);
+    // A round invite link (#1515) DOES need an account, but a bare login wall
+    // would not say why — the link's screen explains it and parks itself in
+    // pendingPath when the visitor chooses to sign in.
+    if (isJoinLinkRoute(path)) return routeTo(path);
     pendingPath = path;
     // routeTo() rather than showLogin() directly: it sets `routing`, which makes
     // the login screen's syncUrl REPLACE the deep link's history entry instead

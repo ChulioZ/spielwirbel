@@ -98,7 +98,8 @@ recolour every existing member. The contract suite and a route test both pin the
 resulting order, and the route test pins that the existing seats come back
 byte-identical.
 
-`createMember` is therefore shared by invitation-accept and this route, which is
+`createMember` is therefore shared by invitation-accept, invite-link join
+(#1515, `lib/routes/join.js` — the fresh-seat link) and this route, which is
 why its `member_added` activity is written in the **repo** rather than either
 caller — see `.claude/rules/actor-seat-needs-a-uid-guard.md` for the attribution
 trap that shares.

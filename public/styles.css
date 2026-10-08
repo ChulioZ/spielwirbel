@@ -10624,6 +10624,24 @@ kbd {
 .vote-link__note { margin-top: 28px; font-size: var(--text-md); }
 .vote-link__note a { color: var(--brand-ink, var(--brand)); }
 
+/* Round invite links (#1515). The owner's section sits under the by-username
+   form in the „Einladen" sheet, set off by a rule rather than a card: one sheet,
+   two ways to invite. Each live link is a row that may wrap — a long seat name
+   and two buttons do not fit a 320px sheet on one line. */
+.invite-link { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line); }
+/* The body face, not the display face every h3 takes: at 16px a display face is
+   what the designs' small-display-face sweeps forbid (test/design-tokens*.test.js). */
+.invite-link__title { margin: 0 0 4px; font-family: inherit; font-size: var(--text-md); }
+.invite-link__list { list-style: none; margin: 12px 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.invite-link__list:empty { display: none; }
+.invite-link__row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.invite-link__label { flex: 1 1 100%; min-width: 0; overflow-wrap: anywhere; }
+.invite-link__until { display: block; font-size: var(--text-sm); }
+/* The /join/<token> screen: the page head carries the question, the note the
+   role, the toolbar the answer. */
+.join__note { margin: 12px 0 0; }
+.join__actions { margin-top: 20px; }
+
 .live-vote__hotseat { display: flex; flex-direction: column; gap: 8px; }
 
 /* Taking someone out of a session (#1538): one quiet link under the actions,

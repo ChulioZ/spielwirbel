@@ -338,6 +338,10 @@ async function showInvite(round) {
     }
   });
 
+  // Invite by link (#1515), below the by-username form. Its list loads in the
+  // background like the picker below, so the sheet opens without waiting.
+  insertInviteLinkSection(form, round, backdrop);
+
   // The Freundeskreis picker (#466) is fetched only AFTER the sheet is up:
   // typing a username must never wait on a network call. A failed fetch simply
   // leaves the picker out — the username field is the whole feature without it,
@@ -377,6 +381,104 @@ function insertFriendPicker(form, round, friends) {
   field.querySelector('#inviteFriend').addEventListener('change', (e) => {
     if (e.target.value) user.value = e.target.value;
   });
+}
+
+/* Invite by link (#1515): a token whose holder — signed in — may join this round
+   as an editor. The owner fixes the seat here, exactly as for an invitation: a
+   fresh seat (the link stays usable for its 7 days) or one unclaimed seat (the
+   link dies once that seat is taken). One link per seat choice; making a new one
+   replaces the old, which is also how a link that went astray is retired.
+
+   The list shows what is live and lets the owner share each link again or
+   revoke it. Owner-only by the same gate as the sheet itself. */
+function insertInviteLinkSection(form, round, backdrop) {
+  const rid = round.id;
+  const freeSeats = activeMembers(round).filter((m) => !m.userId);
+  const section = h(`<section class="invite-link" aria-labelledby="inviteLinkTitle">
+      <h3 id="inviteLinkTitle" class="invite-link__title">${esc(t('inviteLink.title'))}</h3>
+      <p class="muted field__hint">${esc(t('inviteLink.intro'))}</p>
+      <ul class="invite-link__list"></ul>
+      <div class="field">
+        <label for="inviteLinkSeat">${esc(t('invite.seat'))}</label>
+        <select id="inviteLinkSeat" class="input">
+          <option value="">${esc(t('inviteLink.fresh'))}</option>
+          ${freeSeats.map((m) => `<option value="${esc(m.id)}">${esc(t('invite.takeOver', { name: m.name }))}</option>`).join('')}
+        </select>
+      </div>
+      <div class="toolbar">
+        <button type="button" id="inviteLinkGo" class="btn"><i class="ti ti-link" aria-hidden="true"></i> ${esc(t('inviteLink.create'))}</button>
+      </div>
+    </section>`);
+  form.appendChild(section);
+  const list = section.querySelector('.invite-link__list');
+
+  const render = (links) => {
+    list.replaceChildren(...links.map((link) => {
+      const label = link.seatName ? t('invite.takeOver', { name: link.seatName }) : t('inviteLink.fresh');
+      const row = h(`<li class="invite-link__row">
+          <span class="invite-link__label">${esc(label)}<span class="muted invite-link__until">${esc(t('inviteLink.until', { date: fmtDate(link.expiresAt) }))}</span></span>
+          <button type="button" class="btn btn--sm invite-link__share"><i class="ti ti-share" aria-hidden="true"></i> ${esc(t('inviteLink.share'))}</button>
+          <button type="button" class="btn btn--sm btn--ghost invite-link__revoke">${esc(t('inviteLink.revoke'))}</button>
+        </li>`);
+      row.querySelector('.invite-link__share').addEventListener('click', () => shareInviteLink(link, round));
+      row.querySelector('.invite-link__revoke').addEventListener('click', async () => {
+        try {
+          await api('DELETE', `/api/rounds/${rid}/invite-links/${encodeURIComponent(link.slot)}`);
+          toast(t('inviteLink.toast.revoked'));
+          await load();
+        } catch {
+          toast(t('inviteLink.err.generic'), { tone: 'error' });
+        }
+      });
+      return row;
+    }));
+  };
+  const load = async () => {
+    const links = await api('GET', `/api/rounds/${rid}/invite-links`);
+    if (backdrop.isConnected) render(links || []);
+  };
+
+  const go = section.querySelector('#inviteLinkGo');
+  go.addEventListener('click', async () => {
+    go.disabled = true;
+    try {
+      const memberId = section.querySelector('#inviteLinkSeat').value || null;
+      const { link } = await api('POST', `/api/rounds/${rid}/invite-links`, { memberId });
+      await shareInviteLink(link, round);
+      await load();
+    } catch (e) {
+      toast(inviteLinkError(e.message), { tone: 'error' });
+    } finally {
+      go.disabled = false;
+    }
+  });
+
+  load().catch(() => { /* no list; making a link still works */ });
+}
+
+// The vote link's share ladder (views-session-live.js): the phone's share sheet,
+// else the clipboard, else the URL shown for a manual copy — never a „copied"
+// toast for a copy that did not happen.
+async function shareInviteLink(link, round) {
+  const url = location.origin + joinPath(link.token);
+  if (navigator.share) {
+    try { await navigator.share({ text: t('inviteLink.shareText', { round: round.name }), url }); } catch { /* dismissed */ }
+  } else if (navigator.clipboard) {
+    await navigator.clipboard.writeText(url);
+    toast(t('inviteLink.toast.copied'), { tone: 'success' });
+  } else {
+    showShareUrlSheet(url);
+  }
+}
+
+function inviteLinkError(code) {
+  const map = {
+    invalid_seat: 'invite.err.seatGone',
+    seat_taken: 'invite.err.seatTaken',
+    quota_members: 'member.toast.quota',
+    demo_forbidden: 'inviteLink.err.demo',
+  };
+  return t(map[code] || 'inviteLink.err.generic');
 }
 
 // Map a send-route error code to a localized message.

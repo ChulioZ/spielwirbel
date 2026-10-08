@@ -85,6 +85,7 @@ function clientErrorPathShape(pathname) {
   if (parts.length === 1 && CLIENT_ERROR_SCREENS.indexOf(parts[0]) !== -1) return '/' + parts[0];
   if (parts[0] === 'u' && parts.length === 2) return '/u/:username';
   if (parts[0] === 'vote' && parts.length >= 2) return '/vote/:token';
+  if (parts[0] === 'join' && parts.length >= 2) return '/join/:token';
   if (parts[0] === 'round') {
     if (parts.length === 2) return parts[1] === 'new' ? '/round/new' : '/round/:rid';
     if (parts.length === 3 && CLIENT_ERROR_ROUND_TABS.indexOf(parts[2]) !== -1) {

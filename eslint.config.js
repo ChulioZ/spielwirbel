@@ -641,6 +641,8 @@ const frontendGlobals = {
   showRemovePersonSheet: 'readonly', removePersonEntry: 'readonly', // #1538
   // views-vote-link.js
   showVoteLink: 'readonly', renderVoteLinkClaim: 'readonly',
+  // views-join.js (#1515)
+  showJoinLink: 'readonly', joinPath: 'readonly', isJoinLinkRoute: 'readonly',
   renderVoteLinkCards: 'readonly', renderVoteLinkDone: 'readonly',
   renderVoteLinkDead: 'readonly', voteLinkClaim: 'readonly',
   setVoteLinkClaim: 'readonly', voteLinkColor: 'readonly',
