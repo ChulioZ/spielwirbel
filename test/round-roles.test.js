@@ -125,6 +125,7 @@ const MOUNTS = [
   ['/filters', '../lib/routes/saved-filters'],
   ['/lookup', '../lib/routes/lookup'],
   ['/recommendations', '../lib/routes/recommendations'],
+  ['/invite-links', '../lib/routes/invite-links'],
 ];
 
 // MOUNTS is a hand-copied mirror of lib/app.js, and a router missing from it is

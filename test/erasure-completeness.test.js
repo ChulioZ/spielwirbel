@@ -74,6 +74,13 @@ const GLOBAL_DISPOSITION = {
       + 'one into a data export would hand the requester a working credential in a '
       + 'file they are about to email themselves',
   },
+  round_invite_links: {
+    erase: true,
+    export: false,
+    why: 'a LIVE capability token (#1515), for the vote links\' reason: a working '
+      + 'invitation into the account\'s rounds has no place in a file the requester '
+      + 'downloads and may forward',
+  },
   moderation_log: {
     erase: false,
     export: false,
@@ -242,6 +249,7 @@ if (!process.env.DATABASE_URL) {
     await repo.createFriendRequest({ requesterUserId: uid, addresseeUserId: other });
     await repo.addFeedEvent(uid, { type: 'session_played', title: 'Catan', at: now });
     await repo.createSessionVoteLink({ tenantId: tenant, roundId: round.id, sessionId: session.id });
+    await repo.createRoundInviteLink({ roundId: round.id, ownerTenantId: tenant, memberId: null });
 
     // Every fixture landed — otherwise the counts below are all zero before the
     // erase and the whole test passes against an eraseAccount that does nothing.

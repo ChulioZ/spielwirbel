@@ -64,6 +64,14 @@ Security issues especially relevant given the current architecture:
   *instance* warn/error buffer behind `GET /api/admin/logs`, or reaching any
   round, session or account data through it. That the endpoint accepts reports
   from unauthenticated callers at all is **by design** and is not a finding.
+- **Round invite links** (`/join/<token>`, `POST /api/account/join`,
+  `lib/routes/join.js`, #1515) — a capability token the round's owner shares,
+  which lets any **signed-in** account that holds it join that round as an
+  editor. In scope: forging or guessing a token, joining a round other than the
+  one it names, obtaining any role but editor or any seat but the one the owner
+  chose, using a link after it was revoked, replaced, consumed or expired, or
+  reaching the token through a log, an error report or a data export. That a
+  link works for whoever holds it, until one of those ends it, is **by design**.
 - **The per-design web manifest** (`GET /manifest.webmanifest?design=<id>`,
   `lib/web-manifest.js`, #1199) — a read route outside the gate, as open as the
   static file it stands in front of. It reads no account and no round; the id is

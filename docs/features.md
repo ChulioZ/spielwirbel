@@ -789,6 +789,17 @@ What the app does, in detail. For a short overview see the
   that person's member page; a grantee can always leave a round themselves.
   Whatever the UI offers, the server decides: an action a role may not perform
   is refused even if the request is made by hand.
+- **Invite links** – *accounts mode only* (issue #1515). In the same
+  „Einladen" sheet the owner can also create a **link** and share it anywhere
+  (the group chat, a message). Whoever opens it and is signed in sees „Runde X
+  beitreten?" and joins with one tap as **Mitspielen** (player); a logged-out
+  visitor is told what the link is and sent to sign in, landing back on it
+  afterwards. The owner fixes the seat when creating the link, exactly as for an
+  invitation: a **fresh seat** (the link stays usable for everyone who opens it)
+  or one **unclaimed seat** (the link works once). There is at most one link per
+  seat choice — a new one replaces the old — and every link expires after
+  **7 days**; the sheet lists the live ones to share again or revoke. The
+  round's member quota bounds how many people a fresh-seat link can bring in.
 - **Friends (Freundeskreis)** – *accounts mode only* (issue #325). Send a friend
   request to another account by its **username**; the recipient accepts or
   declines it in the in-app inbox. Friends then see each other's activity in a

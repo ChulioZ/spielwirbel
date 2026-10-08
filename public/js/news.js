@@ -48,6 +48,52 @@
 // AFTER, which is the exact unearned interruption this design exists to avoid.
 const NEWS = [
   /*
+   * #1515, round invite links. A capability that did not exist: until now a
+   * round could only be shared with an account whose username the owner typed.
+   * Says where it lives (Einstellungen → „Einladen") and the two limits a
+   * reader would otherwise ask about — seven days, revocable.
+   */
+  {
+    revision: '2026-10-08',
+    kind: 'new',
+    de: {
+      title: 'Per Link in die Runde einladen',
+      body: 'Unter Einstellungen → „Einladen" kannst du jetzt auch einen Link erstellen und ihn selbst in den Gruppenchat schicken. Wer ihn öffnet und angemeldet ist, tritt der Runde mit einem Klick bei — auf einem eigenen neuen Platz oder auf dem, den du dafür ausgesucht hast. Ein Link gilt sieben Tage, und du kannst ihn jederzeit widerrufen.',
+    },
+    en: {
+      title: 'Invite people to a group with a link',
+      body: 'Under Settings → “Invite” you can now also create a link and post it in the group chat yourself. Whoever opens it while signed in joins the group with one tap — on a seat of their own or on the one you picked for them. A link lasts seven days, and you can revoke it at any time.',
+    },
+    es: {
+      title: 'Invitar al grupo con un enlace',
+      body: 'En Ajustes → «Invitar» ahora también puedes crear un enlace y mandarlo tú al chat del grupo. Quien lo abra con la sesión iniciada se une al grupo con un toque: en una plaza propia o en la que hayas elegido. Un enlace vale siete días y puedes revocarlo cuando quieras.',
+    },
+    fr: {
+      title: 'Inviter dans un groupe par lien',
+      body: 'Dans Réglages → « Inviter », tu peux désormais aussi créer un lien et l’envoyer toi-même dans la discussion du groupe. Qui l’ouvre en étant connecté rejoint le groupe d’un geste — sur une place à lui ou sur celle que tu as choisie. Un lien vaut sept jours, et tu peux le révoquer à tout moment.',
+    },
+    it: {
+      title: 'Invitare nel gruppo con un link',
+      body: 'In Impostazioni → «Invita» ora puoi anche creare un link e inviarlo tu nella chat del gruppo. Chi lo apre dopo aver effettuato l’accesso entra nel gruppo con un tocco: su un posto tutto suo o su quello che hai scelto. Un link vale sette giorni e puoi revocarlo in qualsiasi momento.',
+    },
+    nl: {
+      title: 'Uitnodigen voor de groep met een link',
+      body: 'Onder Instellingen → ‘Uitnodigen’ kun je nu ook een link maken en die zelf in de groepschat zetten. Wie hem opent terwijl hij is ingelogd, komt met één tik bij de groep — op een eigen plek of op de plek die jij hebt gekozen. Een link is zeven dagen geldig en je kunt hem altijd intrekken.',
+    },
+    pt: {
+      title: 'Convidar para o grupo com um link',
+      body: 'Em Configurações → “Convidar” agora você também pode criar um link e mandá-lo você mesmo no chat do grupo. Quem abrir com a sessão iniciada entra no grupo com um toque — num lugar só seu ou no que você escolheu. Um link vale sete dias, e você pode revogá-lo a qualquer momento.',
+    },
+    fi: {
+      title: 'Kutsu porukkaan linkillä',
+      body: 'Kohdassa Asetukset → ”Kutsu” voit nyt myös luoda linkin ja lähettää sen itse porukan chattiin. Kirjautunut avaaja liittyy porukkaan yhdellä napautuksella — omalle paikalleen tai sille, jonka valitsit. Linkki on voimassa seitsemän päivää, ja voit perua sen milloin tahansa.',
+    },
+    ko: {
+      title: '링크로 그룹에 초대하기',
+      body: '이제 설정 → “초대”에서 링크를 만들어 단체 대화방에 직접 보낼 수 있어요. 로그인한 상태로 링크를 연 사람은 한 번만 눌러 그룹에 들어와요 — 새 자리로, 또는 여러분이 골라 둔 자리로요. 링크는 7일 동안 유효하고 언제든 취소할 수 있어요.',
+    },
+  },
+  /*
    * #1478, Forest goes live. A capability that did not exist: a sixth design
    * to choose besides Der Tisch, Ocean, Das Programmheft, Die Brücke and
    * Klassisch. Dated after the Brücke entry so every account that has read that
