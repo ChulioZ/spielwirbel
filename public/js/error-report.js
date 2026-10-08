@@ -98,6 +98,15 @@ function clientErrorPathShape(pathname) {
   return '/other';
 }
 
+// A path with any live capability token — a vote link's or a round invite
+// link's — replaced by its placeholder; every other path as given. For the
+// FEEDBACK form's context, which keeps the real path because the operator wants
+// to know the screen (so it cannot use the shape above), but must never store a
+// working credential where the operator panel reads it (#1515 review).
+function redactCapabilityPath(pathname) {
+  return String(pathname || '').replace(/^\/(vote|join)\/[^/]+/, '/$1/:token');
+}
+
 // A shape is exactly a string that is its OWN shape — so the server validates
 // with the same function that produced the value, and there is no second regex
 // to drift out of sync with the route table above.
@@ -252,6 +261,7 @@ if (typeof module !== 'undefined' && module.exports) {
     CLIENT_ERROR_MAX_PER_LOAD,
     clientErrorPathShape,
     isClientErrorPathShape,
+    redactCapabilityPath,
     clientErrorSource,
     clientErrorMessage,
     clientErrorReport,

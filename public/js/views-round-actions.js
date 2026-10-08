@@ -409,7 +409,9 @@ function insertInviteLinkSection(form, round, backdrop) {
         <button type="button" id="inviteLinkGo" class="btn"><i class="ti ti-link" aria-hidden="true"></i> ${esc(t('inviteLink.create'))}</button>
       </div>
     </section>`);
-  form.appendChild(section);
+  // Above the pinned „Einladung senden" bar, never after it: that bar is the
+  // sheet's sticky footer (.sheet__actions) and must stay its last child.
+  form.querySelector('.sheet__actions').before(section);
   const list = section.querySelector('.invite-link__list');
 
   const render = (links) => {
@@ -441,16 +443,20 @@ function insertInviteLinkSection(form, round, backdrop) {
   const go = section.querySelector('#inviteLinkGo');
   go.addEventListener('click', async () => {
     go.disabled = true;
+    let link;
     try {
       const memberId = section.querySelector('#inviteLinkSeat').value || null;
-      const { link } = await api('POST', `/api/rounds/${rid}/invite-links`, { memberId });
-      await shareInviteLink(link, round);
-      await load();
+      ({ link } = await api('POST', `/api/rounds/${rid}/invite-links`, { memberId }));
     } catch (e) {
       toast(inviteLinkError(e.message), { tone: 'error' });
+      return;
     } finally {
       go.disabled = false;
     }
+    // The link exists from here on, whatever sharing it does: list it first, so
+    // a share that fails cannot hide a link that was in fact created.
+    await load().catch(() => {});
+    await shareInviteLink(link, round);
   });
 
   load().catch(() => { /* no list; making a link still works */ });
@@ -464,8 +470,15 @@ async function shareInviteLink(link, round) {
   if (navigator.share) {
     try { await navigator.share({ text: t('inviteLink.shareText', { round: round.name }), url }); } catch { /* dismissed */ }
   } else if (navigator.clipboard) {
-    await navigator.clipboard.writeText(url);
-    toast(t('inviteLink.toast.copied'), { tone: 'success' });
+    // A clipboard write can be refused (permission, or the click's activation
+    // spent on the request before it); fall back to the URL for a manual copy.
+    // Never throws, so neither caller can report a created link as a failure.
+    try {
+      await navigator.clipboard.writeText(url);
+      toast(t('inviteLink.toast.copied'), { tone: 'success' });
+    } catch {
+      showShareUrlSheet(url);
+    }
   } else {
     showShareUrlSheet(url);
   }

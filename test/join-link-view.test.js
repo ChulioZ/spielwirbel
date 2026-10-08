@@ -95,6 +95,7 @@ test('the owner\'s sheet lists live links and mints one for the chosen seat', as
 
   const section = dom.document.querySelector('.invite-link');
   assert.ok(section, 'the link section is in the invite sheet');
+  assert.ok(section.nextElementSibling.classList.contains('sheet__actions'), 'above the pinned footer, which stays last');
   const rows = section.querySelectorAll('.invite-link__row');
   assert.equal(rows.length, 1);
   assert.match(text(rows[0]), /Eigener neuer Platz/);
@@ -111,4 +112,29 @@ test('the owner\'s sheet lists live links and mints one for the chosen seat', as
   rows[0].querySelector('.invite-link__revoke').click();
   await flush();
   assert.ok(calls.some((c) => c[0] === 'DELETE' && c[1] === '/api/rounds/r1/invite-links/fresh'), 'revoked by slot, never by token');
+});
+
+test('a refused clipboard falls back to the URL, and the new link is still listed', async (t) => {
+  const { dom } = app(t);
+  const round = { id: 'r1', name: 'Donnerstagsrunde', members: [{ id: 'm1', name: 'Anna' }] };
+  let gets = 0;
+  dom.set('api', async (method) => {
+    if (method === 'GET') { gets += 1; return []; }
+    return { link: { token: 'tok-c', slot: 'fresh', memberId: null, seatName: null, expiresAt: '2026-10-15T12:00:00.000Z' } };
+  });
+  dom.set('accountApi', async () => ({ friends: [] }));
+  const shown = [];
+  dom.set('showShareUrlSheet', (url) => { shown.push(url); });
+  const toasts = [];
+  dom.set('toast', (msg, opts) => { toasts.push([msg, opts && opts.tone]); });
+  dom.run('navigator.share = undefined; navigator.clipboard = { writeText: async () => { throw new Error(\'NotAllowedError\'); } };');
+  dom.call('showInvite', round);
+  await flush(); await flush();
+  const before = gets;
+  dom.document.querySelector('#inviteLinkGo').click();
+  await flush(); await flush(); await flush();
+  assert.equal(gets, before + 1, 'the list is reloaded with the new link');
+  assert.equal(shown.length, 1, 'the URL is shown for a manual copy');
+  assert.match(shown[0], /\/join\/tok-c$/);
+  assert.ok(!toasts.some(([, tone]) => tone === 'error'), 'no error for a link that was created');
 });

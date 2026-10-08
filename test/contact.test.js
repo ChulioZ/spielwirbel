@@ -213,6 +213,22 @@ test('the feedback category is stored in the feedback store, not as a notice, an
   assert.equal(outbox.length, beforeMail);
 });
 
+test('feedback sent from a vote or invite link stores the screen, never the live token (#1515)', async () => {
+  const token = 'NOT-A-REAL-TOKEN-just-a-path-segment';
+  for (const [page, shape] of [['/join/', '/join/:token'], ['/vote/', '/vote/:token']]) {
+    const message = `Feedback from ${page}`;
+    const res = await request(app).post('/api/contact').send({ message, category: 'feedback', path: `${page}${token}` });
+    assert.equal(res.status, 200);
+    const entry = await storedFeedback(message);
+    assert.equal(entry.context.path, shape);
+    assert.ok(!JSON.stringify(entry).includes(token), 'the token is nowhere in the stored row');
+  }
+  // Every other path is kept as it is.
+  const { redactCapabilityPath } = require('../public/js/error-report');
+  assert.equal(redactCapabilityPath('/round/r1/regal'), '/round/r1/regal');
+  assert.equal(redactCapabilityPath('/joined/x'), '/joined/x');
+});
+
 test('feedback keeps a typed e-mail but needs no good-faith statement (#321)', async () => {
   const res = await request(app).post('/api/contact').send({
     message: 'Please reply about the bug',

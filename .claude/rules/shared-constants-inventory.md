@@ -490,6 +490,11 @@ route table. Generalise that rather than the constant: **where a client
 normalises a value, share the normaliser and validate by idempotence**, instead
 of sharing the value and writing a pattern for it at the far end.
 
+**#1515 added `redactCapabilityPath`**, the same idea for the feedback form,
+which keeps a real path (the operator wants the screen) but must not store a
+vote or invite link's live token: `core.js` applies it to the link it opens and
+`lib/routes/contact.js` again before storing, since the form is public.
+
 Note what deliberately did **not** join it: `uaEngine` lives in
 `lib/observability.js`, because the engine is derived **server-side** from the
 request's own header and the client never sends one — it is not shared at all,

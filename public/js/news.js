@@ -62,7 +62,7 @@ const NEWS = [
     },
     en: {
       title: 'Invite people to a group with a link',
-      body: 'Under Settings → „Invite" you can now also create a link and post it in the group chat yourself. Whoever opens it while signed in joins the group with one tap — on a seat of their own or on the one you picked for them. A link lasts seven days, and you can revoke it at any time.',
+      body: 'Under Settings → “Invite” you can now also create a link and post it in the group chat yourself. Whoever opens it while signed in joins the group with one tap — on a seat of their own or on the one you picked for them. A link lasts seven days, and you can revoke it at any time.',
     },
     es: {
       title: 'Invitar al grupo con un enlace',

@@ -19,7 +19,7 @@ const frontendGlobals = {
   CLIENT_ERROR_MAX_PER_LOAD: 'readonly', CLIENT_ERROR_SCREENS: 'readonly',
   CLIENT_ERROR_ROUND_TABS: 'readonly', CLIENT_ERROR_ROUND_ITEMS: 'readonly',
   CLIENT_ERROR_SCRIPT_RE: 'readonly', CLIENT_ERROR_OPAQUE: 'readonly',
-  clientErrorPathShape: 'readonly', isClientErrorPathShape: 'readonly',
+  clientErrorPathShape: 'readonly', isClientErrorPathShape: 'readonly', redactCapabilityPath: 'readonly',
   clientErrorSource: 'readonly', clientErrorMessage: 'readonly',
   clientErrorReport: 'readonly', resetClientErrorBudget: 'readonly',
   reportClientError: 'readonly', installClientErrorReporting: 'readonly',

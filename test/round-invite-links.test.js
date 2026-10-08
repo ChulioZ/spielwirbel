@@ -157,6 +157,28 @@ test('a new link for the same slot replaces the old one; revoking by slot kills 
   assert.deepEqual((await links(owner, round.id)).body.map((l) => l.slot), [anna.id]);
 });
 
+test('removing a grantee retires the links that would let them back in; leaving does not', async () => {
+  const owner = await fresh('owner');
+  const round = await makeRound(owner, ['Anna', 'Bob']);
+  const bob = round.members.find((m) => m.name === 'Bob');
+  const freshLink = (await mint(owner, round.id)).body.link;
+  const kim = await fresh('kim');
+  await join(kim, freshLink.token);
+  const bobLink = (await mint(owner, round.id, bob.id)).body.link;
+
+  // Leaving on one's own keeps every link: nobody was shut out.
+  const lea = await fresh('lea');
+  await join(lea, freshLink.token);
+  assert.equal((await request(app).delete(`/api/rounds/${round.id}/shares/${lea.user.id}`).set(auth(lea.token))).status, 204);
+  assert.equal((await links(owner, round.id)).body.length, 2);
+
+  // The owner removing kim drops the reusable link kim could simply reopen, and
+  // keeps the link for an unrelated seat.
+  assert.equal((await request(app).delete(`/api/rounds/${round.id}/shares/${kim.user.id}`).set(auth(owner.token))).status, 204);
+  assert.deepEqual((await preview(kim, freshLink.token)).body, { error: 'invalid_link' });
+  assert.deepEqual((await links(owner, round.id)).body.map((l) => l.token), [bobLink.token]);
+});
+
 test('the owner cannot join their own round, and a logged-out caller is refused', async () => {
   const owner = await fresh('owner');
   const round = await makeRound(owner, ['Anna']);
