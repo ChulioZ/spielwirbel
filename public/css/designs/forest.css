@@ -1127,13 +1127,16 @@
 }
 :root[data-design="forest"]:not([data-scheme="dark"]) .forest-hub .hub-card--link:hover,
 :root[data-design="forest"]:not([data-scheme="dark"]) .forest-hub .forest-last:hover { border-color: var(--control-edge); }
-/* The live ticket lifts WITHOUT the base hover's rotate() (#1571). In WebKit a
-   rotated ticket blanks the recommendations teaser below it for as long as the
-   hover lasts: the teaser sits in .hub-cards' column flow, and the rotation is
-   what tips it. Measured with the headless WebKit probe
+/* A hub ticket lifts WITHOUT the base hover's rotate() (#1571) — the same
+   rotation-free hover Ocean's hub already has. In WebKit a rotated ticket
+   blanks the recommendations teaser below it for as long as the hover lasts:
+   the teaser sits in .hub-cards' column flow, and the rotation is what tips it.
+   Measured with the headless WebKit probe
    (.claude/rules/browser-pane-is-chromium-only.md): translateY alone, or the
    flow without columns, leaves the teaser painted; dropping the shadow does
-   not. Lift and shadow stay, so the hover still answers the pointer. */
+   not. Lift and shadow stay, so the hover still answers the pointer. Today the
+   only .ticket on this hub is the live one (the last-played one is
+   .forest-last), but the rule holds for any ticket placed here. */
 :root[data-design="forest"] .forest-hub .ticket:hover { transform: translateY(-2px); }
 /* Card titles in Young Serif at 19px — the one size F1 allows it this small.
    (0,6,0), and later in the file, so it outranks the reset list above that

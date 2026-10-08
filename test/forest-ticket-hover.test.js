@@ -38,10 +38,18 @@ test('Forest lifts the hub ticket on hover without rotating it', () => {
   assert.doesNotMatch(t, /rotate/, 'a rotated ticket blanks the teaser in WebKit (#1571)');
 });
 
+/* Two shapes a tilt can come back in, and a scan that knows only one is green
+   against the other (.claude/rules/source-scanning-guards-enumerate-shapes.md):
+   the `transform` shorthand and the individual `rotate` property, which this
+   sheet uses elsewhere; and a selector that names the ticket inside :is(). */
+const HOVERED_TICKET = /\.ticket(?:--[\w-]+)?(?![\w-])[^{]*:hover|:hover[^{]*\.ticket(?:--[\w-]+)?(?![\w-])/;
+const rotates = (body) => /rotate/.test(transformOf(body) || '')
+  || /(?:^|;)\s*rotate\s*:(?!\s*none\s*(?:;|$))[^;]+/.test(body || '');
+
 test('no Forest rule puts a rotation back on a hovered ticket', () => {
   const rotating = FOREST_RULES
-    .filter(([sel]) => /\.ticket[^,]*:hover/.test(sel))
-    .filter(([, body]) => /rotate/.test(transformOf(body) || ''));
+    .filter(([sel]) => HOVERED_TICKET.test(sel))
+    .filter(([, body]) => rotates(body));
   assert.deepEqual(rotating.map(([sel]) => sel), []);
 });
 
