@@ -4376,8 +4376,8 @@
 /* Ocean's avatar ring (#1211's `.avatar` rule, which these do not carry): the
    member colour under a transparent border, the raised surface inset over the
    rest. A filled disc with white initials is text on a person colour under
-   24px, which six of the eight fail. Both sizes, since the hot-seat buttons
-   carry the small one. */
+   24px, which six of the eight fail. Both sizes, since the hand-on button
+   („Weiter zu …") carries the small one. */
 :root[data-design="ocean"]:not([data-scheme="dark"]) .live-vote--ocean .live-person__avatar {
   color: var(--ink);
   border: 3px solid transparent;
@@ -4406,6 +4406,23 @@
   justify-self: start;
 }
 :root[data-design="ocean"]:not([data-scheme="dark"]) .live-vote--ocean .live-person.is-voted { background: var(--surface); }
+/* „Für …" on the person's own row (#1574), under the state — the same line Der
+   Tisch gives it, and for its reason: a column of its own would misalign the
+   rows that carry no key. The row already shows the avatar. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .live-vote--ocean .live-person > .live-vote__hotseat-btn {
+  grid-column: 2 / -1;
+  grid-row: 3;
+  justify-self: start;
+  margin-top: 6px;
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .live-vote--ocean .live-person > .live-vote__hotseat-btn .live-person__avatar { display: none; }
+/* The list's count (#1574): people who have voted, heading the rows. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .live-vote--ocean .live-vote__count {
+  display: block;
+  margin: 0;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
 :root[data-design="ocean"]:not([data-scheme="dark"]) .live-vote--ocean .live-person.is-voted .live-person__state { color: var(--good); }
 :root[data-design="ocean"]:not([data-scheme="dark"]) .live-vote--ocean .live-person__dots {
   display: flex;

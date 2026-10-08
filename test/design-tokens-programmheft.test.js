@@ -330,6 +330,9 @@ test('Anton is never set under 24px — every small display-face rule is moved t
     if (display) seen += 1;
     if (n >= 24) continue;
     for (const s of splitSel(sel)) {
+      // A rule scoped to ANOTHER design can never match here (#1574 added the
+      // first Klassisch-scoped heading size to styles.css).
+      if (/\[data-design="(?!programmheft")[\w-]+"\]/.test(s)) continue;
       const last = s.replace(/:is\(([^)]*)\)/g, (m, inner) => inner.replace(/\s+/g, '')).split(' ').pop();
       const titled = !/font-family/.test(body) && TITLE.test(last);
       if ((display || titled) && !listed.has(s)) small.push(`${s} (${size.trim()} = ${n}px)`);

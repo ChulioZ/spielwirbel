@@ -10583,6 +10583,7 @@ kbd {
 .live-vote { --live-actions-gap: 12px; }
 .live-person__dots,
 .live-person__progress,
+.live-vote__count,
 .live-vote__guests,
 .live-vote__panel-head,
 .live-vote__waiting { display: none; }
@@ -10617,6 +10618,65 @@ kbd {
 .live-vote__share-row { display: flex; flex-wrap: wrap; gap: 8px; }
 .live-vote__share { flex: 1 1 14rem; }
 .live-vote__qr { flex: 0 1 auto; }
+
+/* Klassisch's lobby as ONE list (#1574): a row per person — avatar · name ·
+   state · „Für Anna" — headed by the count, with „Am eigenen Gerät
+   mitstimmen" explained in a panel beside it from 860px (below it on a phone).
+   It used to be a grid of name chips plus a second list of „Für …" buttons, so
+   every open person was named twice. Scoped to Klassisch because every other
+   design composes this screen itself; an unscoped row rule would leak into
+   whatever properties they do not restate (operator decision 2026-10-06 lifts
+   „Klassisch stays unchanged" for this layout only). */
+:root[data-design="klassisch"] .live-vote__people { grid-template-columns: minmax(0, 1fr); }
+:root[data-design="klassisch"] .live-vote__count {
+  display: block;
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+/* The row wraps, so on a phone a long „Für …" drops to a line of its own at the
+   row's right edge instead of squeezing the name to „Ga…". The name's 8em basis
+   is what decides when: below it, the key wraps. */
+:root[data-design="klassisch"] .live-person { flex-wrap: wrap; row-gap: 8px; }
+:root[data-design="klassisch"] .live-person__name { flex: 1 1 8em; }
+:root[data-design="klassisch"] .live-person > .live-vote__hotseat-btn {
+  flex: none;
+  margin-left: auto;
+  padding: 6px 14px;
+}
+/* The row already shows the person's avatar. */
+:root[data-design="klassisch"] .live-person > .live-vote__hotseat-btn .live-person__avatar { display: none; }
+/* The panel is a card only while it explains something — with every vote in it
+   holds nothing but „Abstimmung beenden", which stays a plain column. */
+:root[data-design="klassisch"] .live-vote__panel-head { display: block; }
+:root[data-design="klassisch"] .live-vote__panel:has(.live-vote__panel-head) {
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+}
+:root[data-design="klassisch"] .live-vote__panel-title { margin: 0 0 4px; font-size: var(--text-lg); }
+:root[data-design="klassisch"] .live-vote__panel-note { margin: 0; font-size: var(--text-sm); color: var(--ink-soft); }
+@media (min-width: 860px) {
+  /* The list left, the panel right — Der Tisch's T4.3 split. `.live-vote`'s
+     children are a fixed five (head, people, actions, panel, log), so the panel
+     can name row 2 and span the actions' row too without counting anything
+     that changes with who has voted. */
+  :root[data-design="klassisch"] .live-vote:has(.live-vote__panel-head) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    column-gap: 24px;
+    align-items: start;
+  }
+  :root[data-design="klassisch"] .live-vote:has(.live-vote__panel-head) > :is(.page-head, .session-log) { grid-column: 1 / -1; }
+  :root[data-design="klassisch"] .live-vote:has(.live-vote__panel-head) > :is(.live-vote__people, .live-vote__actions) { grid-column: 1; }
+  :root[data-design="klassisch"] .live-vote:has(.live-vote__panel-head) > .live-vote__panel {
+    grid-column: 2;
+    grid-row: 2 / span 2;
+    margin-top: 0;
+  }
+}
 
 /* The code itself. Black on white REGARDLESS of the design: a dark design
    would otherwise hand a scanner an inverted code, which many phone cameras

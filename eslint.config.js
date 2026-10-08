@@ -635,7 +635,9 @@ const frontendGlobals = {
   // views-session-live.js
   showSessionLobby: 'readonly', stopLobbyPoll: 'readonly', mySeatIn: 'readonly',
   sessionGames: 'readonly', LOBBY_POLL_MS: 'readonly', lobbyPoll: 'writable',
-  renderSessionLog: 'readonly', showShareUrlSheet: 'readonly',
+  renderSessionLog: 'readonly',
+  // views-session-sheets.js (issue #1574): the lobby's share, QR and remove-person sheets
+  showShareUrlSheet: 'readonly', showVoteQrSheet: 'readonly',
   showRemovePersonSheet: 'readonly', removePersonEntry: 'readonly', // #1538
   // views-vote-link.js
   showVoteLink: 'readonly', renderVoteLinkClaim: 'readonly',

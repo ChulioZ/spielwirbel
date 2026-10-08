@@ -277,7 +277,8 @@ test('Klassisch keeps its own lobby and handover (control)', async (t) => {
   await dom.call('showSessionLobby', roundFixture(), sessionFixture(), false);
   t.after(() => dom.call('stopLobbyPoll'));
   assert.equal(q(dom, '.live-vote--forest, .forest-lobby__cards'), null);
-  assert.ok(q(dom, '.live-vote__hotseat'));
+  // Klassisch's own key-in-row lobby (#1574), with none of Forest's composition.
+  assert.ok(q(dom, '.live-person > .live-vote__hotseat-btn'));
   const b = await blind(t, [clara], 'klassisch');
   assert.equal(q(b, '.handover--forest'), null);
   assert.match(q(b, '.handover').getAttribute('style'), /background:/);

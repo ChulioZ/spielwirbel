@@ -977,6 +977,8 @@ public/
     views-session-live.js the voting lobby every session opens (#655): who has voted, vote for
                      yourself or for anyone still open on this device, and end
                      the voting (issue #209)
+    views-session-sheets.js the lobby's sheets: the share-URL fallback, the vote
+                     link as a QR code (#1170), and taking someone out (#1538)
     views-session-setup-tisch.js Der Tisch's setup as two panels („Wer spielt mit?",
                      „Der Topf"), the step line, the rail kept (#1267)
     views-session-ocean.js Ocean's session loop (#1213): the setup in three columns

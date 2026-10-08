@@ -4557,6 +4557,27 @@
   grid-row: 2;
   justify-self: start;
 }
+/* „Für …" on the person's own row (#1574), on a line of its own under the state:
+   beside the boxes it would need a fifth column, and an empty one on every row
+   without a key would still pay its gap and push those rows' counts out of line
+   with the rest. The row shows the avatar already, so the key's is hidden. */
+:root[data-design="tisch"][data-scheme="dark"] .live-person > .live-vote__hotseat-btn {
+  grid-column: 2 / -1;
+  grid-row: 3;
+  justify-self: start;
+  margin-top: 6px;
+  padding: 6px 14px;
+}
+:root[data-design="tisch"][data-scheme="dark"] .live-person > .live-vote__hotseat-btn .live-person__avatar { display: none; }
+/* The list's count (#1574): people who have voted, over the rows' own per-game
+   counts. */
+:root[data-design="tisch"][data-scheme="dark"] .live-vote__count {
+  display: block;
+  margin: 0;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
 /* The boxes span both rows at the right edge, beside the count. */
 :root[data-design="tisch"][data-scheme="dark"] .live-person__dots {
   display: flex;
@@ -4756,8 +4777,8 @@
      than lifting the panel out of that column on this width, the WHOLE column
      becomes the right-hand one.
 
-     That is not a compromise, it is the better reading: „Jetzt abstimmen" and
-     the hot-seat buttons are actions, the panel is actions, and the sheet's
+     That is not a compromise, it is the better reading: „Jetzt abstimmen" is
+     an action, the panel is actions, and the sheet's
      right column is where this screen's actions live. The alternative —
      `display: contents` on the actions plus an explicit `grid-row` on the panel
      — places the panel against a row count that changes with who has voted and
