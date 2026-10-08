@@ -118,9 +118,12 @@ test('a refused clipboard falls back to the URL, and the new link is still liste
   const { dom } = app(t);
   const round = { id: 'r1', name: 'Donnerstagsrunde', members: [{ id: 'm1', name: 'Anna' }] };
   let gets = 0;
+  const created = { token: 'tok-c', slot: 'fresh', memberId: null, seatName: null, expiresAt: '2026-10-15T12:00:00.000Z' };
+  let minted = false;
   dom.set('api', async (method) => {
-    if (method === 'GET') { gets += 1; return []; }
-    return { link: { token: 'tok-c', slot: 'fresh', memberId: null, seatName: null, expiresAt: '2026-10-15T12:00:00.000Z' } };
+    if (method === 'GET') { gets += 1; return minted ? [created] : []; }
+    minted = true;
+    return { link: created };
   });
   dom.set('accountApi', async () => ({ friends: [] }));
   const shown = [];
@@ -134,7 +137,44 @@ test('a refused clipboard falls back to the URL, and the new link is still liste
   dom.document.querySelector('#inviteLinkGo').click();
   await flush(); await flush(); await flush();
   assert.equal(gets, before + 1, 'the list is reloaded with the new link');
+  assert.equal(dom.document.querySelectorAll('.invite-link__row').length, 1, 'and the new link is on it');
   assert.equal(shown.length, 1, 'the URL is shown for a manual copy');
   assert.match(shown[0], /\/join\/tok-c$/);
   assert.ok(!toasts.some(([, tone]) => tone === 'error'), 'no error for a link that was created');
+});
+
+test('a malformed token segment routes to the screen instead of throwing', (t) => {
+  const { dom } = app(t);
+  const seen = [];
+  dom.set('showJoinLink', (tok) => { seen.push(tok); });
+  dom.set('showVoteLink', (tok) => { seen.push(tok); });
+  dom.call('resolveRoute', '/join/%ZZ')();
+  dom.call('resolveRoute', '/vote/%ZZ')();
+  dom.call('resolveRoute', `/join/${encodeURIComponent('a b')}`)();
+  assert.deepEqual(seen, ['%ZZ', '%ZZ', 'a b']);
+});
+
+test('a preview that lands after a newer link took over does not paint over it', async (t) => {
+  const { dom } = app(t);
+  const pending = {};
+  dom.set('accountApi', (method, path, body) => new Promise((resolve) => { pending[body.token] = resolve; }));
+  const first = dom.call('showJoinLink', 'tok-a');
+  const second = dom.call('showJoinLink', 'tok-b');
+  pending['tok-b']({ roundName: 'Runde B', seatName: null });
+  await second;
+  pending['tok-a']({ roundName: 'Runde A', seatName: null });
+  await first;
+  assert.match(text(dom.app.querySelector('h1')), /Runde B/);
+});
+
+test('a failed share sheet falls back to the clipboard; a dismissed one does not', async (t) => {
+  for (const [name, copies] of [['NotAllowedError', 1], ['AbortError', 0]]) {
+    const { dom } = app(t);
+    dom.set('api', async () => []);
+    dom.set('accountApi', async () => ({ friends: [] }));
+    dom.run(`window.__copies = 0; navigator.share = async () => { const e = new Error('x'); e.name = ${JSON.stringify(name)}; throw e; };
+      navigator.clipboard = { writeText: async () => { window.__copies += 1; } };`);
+    await dom.call('shareInviteLink', { token: 'tok-d' }, { name: 'R' });
+    assert.equal(dom.run('window.__copies'), copies, name);
+  }
 });

@@ -468,8 +468,17 @@ function insertInviteLinkSection(form, round, backdrop) {
 async function shareInviteLink(link, round) {
   const url = location.origin + joinPath(link.token);
   if (navigator.share) {
-    try { await navigator.share({ text: t('inviteLink.shareText', { round: round.name }), url }); } catch { /* dismissed */ }
-  } else if (navigator.clipboard) {
+    try {
+      await navigator.share({ text: t('inviteLink.shareText', { round: round.name }), url });
+      return;
+    } catch (e) {
+      // A dismissed sheet is the person's choice; anything else (no user
+      // activation left after the request, a share target that failed) falls
+      // through to the copy paths below rather than ending in silence.
+      if (e && e.name === 'AbortError') return;
+    }
+  }
+  if (navigator.clipboard) {
     // A clipboard write can be refused (permission, or the click's activation
     // spent on the request before it); fall back to the URL for a manual copy.
     // Never throws, so neither caller can report a created link as a failure.

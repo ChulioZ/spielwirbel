@@ -179,6 +179,18 @@ test('removing a grantee retires the links that would let them back in; leaving 
   assert.deepEqual((await links(owner, round.id)).body.map((l) => l.token), [bobLink.token]);
 });
 
+test('another tenant cannot revoke a round\'s link by naming its id', async () => {
+  const owner = await fresh('owner');
+  const round = await makeRound(owner, ['Anna']);
+  const { link } = (await mint(owner, round.id)).body;
+  // An account with no grant here passes the role gate as the owner of its OWN
+  // tenant; only the tenant-scoped round read stops it.
+  const stranger = await fresh('stranger');
+  const res = await request(app).delete(`/api/rounds/${round.id}/invite-links/fresh`).set(auth(stranger.token));
+  assert.equal(res.status, 404);
+  assert.ok(await repo.findRoundInviteLink(link.token), 'the link is untouched');
+});
+
 test('the owner cannot join their own round, and a logged-out caller is refused', async () => {
   const owner = await fresh('owner');
   const round = await makeRound(owner, ['Anna']);
