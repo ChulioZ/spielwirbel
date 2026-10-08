@@ -325,6 +325,9 @@ function renderRegalTab(round, activeGames) {
     // the sort the user just chose.
     refreshShelfGameInfo(rid, activeGames, () => {
       mountFilterPanel();
+      // renderGames() only reorders the cards built below, so the playing time
+      // the fill just brought would not reach a tile until the next visit.
+      activeGames.forEach((g) => refreshCardMeta(cardById[g.id], g));
       renderGames();
       swrStore.set('round:' + rid, round);
     });
@@ -531,6 +534,21 @@ function cardMeta(g) {
     ? `<span aria-hidden="true"><i class="ti ti-users"></i> ${esc(range)}</span><span class="sr-only">${esc(playersText(g.minPlayers, g.maxPlayers))}</span>`
     : '';
   return `<div class="game-card__meta">${[players, time ? esc(time) : ''].filter(Boolean).join(' · ')}</div>`;
+}
+
+// Re-render a built card's meta line in place after the backfill fills its game
+// (#736). Each design seats the line somewhere else; Forest drops its row
+// entirely when there is nothing to put in it, so that one is recreated.
+function refreshCardMeta(gc, g) {
+  if (!gc) return;
+  const html = cardMeta(g);
+  const old = gc.querySelector('.game-card__meta');
+  if (old) { if (html) old.replaceWith(h(html)); else old.remove(); return; }
+  if (!html) return;
+  const host = gc.querySelector('.ph-card__kicker, .bruecke-card__meta, .forest-card__meta');
+  if (host) host.prepend(h(html));
+  else if (gc.querySelector('.forest-card__head')) gc.querySelector('.forest-card__head').after(h(`<div class="forest-card__meta">${html}</div>`));
+  else gc.querySelector('.game-card__title').after(h(html));
 }
 
 // A Programmheft card (#1373, P3.3/P6.2): the meta line ABOVE the cover, the

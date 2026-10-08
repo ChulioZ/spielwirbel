@@ -14,7 +14,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const { loadApp } = require('./support/dom');
+const { loadApp, waitFor } = require('./support/dom');
 const { rulesOf, declaredValue, mediaBlocks, rootPx } = require('./support/css');
 
 const roundFixture = () => ({
@@ -59,6 +59,39 @@ for (const design of ['klassisch', 'tisch', 'ocean']) {
   test(`${design}: a game carrying neither fact keeps a one-line body`, (t) => {
     const dom = regal(t, design);
     assert.equal(card(dom, 'g2').querySelector('.game-card__meta'), null);
+  });
+}
+
+/* The backfill (#736) fills playing time IN PLACE after the cards are built,
+   and renderGames() only reorders them — so the tile must be repainted, in
+   every design, both where a line exists (players → players · time) and where
+   none did (Forest drops its whole row then). */
+for (const design of ['klassisch', 'tisch', 'ocean', 'programmheft', 'bruecke', 'forest']) {
+  test(`${design}: playing time the backfill brings reaches the tile without a re-render`, async (t) => {
+    const dom = loadApp({ locale: 'de' });
+    t.after(() => dom.close());
+    const bgg = (id) => ({ provider: 'bgg', id });
+    const round = { ...roundFixture(), games: [
+      { id: 'g3', title: 'Flussläufer', source: bgg('11'), minPlayers: 2, maxPlayers: 4 },
+      { id: 'g4', title: 'Nebelturm', source: bgg('12') },
+    ] };
+    dom.set('api', async (method, url) => {
+      if (method === 'POST' && url.endsWith('/games/provider-info')) {
+        return { games: [{ id: 'g3', minPlaytime: 45, maxPlaytime: 45 }, { id: 'g4', minPlaytime: 30, maxPlaytime: 60 }] };
+      }
+      return /^\/api\/rounds\/[^/]+$/.test(url) && method === 'GET' ? round : [];
+    });
+    dom.set('toast', () => {});
+    dom.set('isLoggedIn', () => false);
+    dom.run(`applyDesign(${JSON.stringify(design)})`);
+    dom.call('renderRegalTab', round, round.games);
+    assert.equal(card(dom, 'g4').querySelector('.game-card__meta'), null, 'nothing to say before the fill');
+    const meta = await waitFor(() => /60 Min\./.test(text(card(dom, 'g4'))) && card(dom, 'g4').querySelector('.game-card__meta'),
+      { label: 'the filled time on g4' });
+    assert.match(text(meta), /30–60 Min\./);
+    const g3 = card(dom, 'g3').querySelectorAll('.game-card__meta');
+    assert.equal(g3.length, 1, 'the line is replaced, not doubled');
+    assert.match(text(g3[0]), /2–4.*45 Min\./);
   });
 }
 
