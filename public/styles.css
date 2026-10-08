@@ -1437,6 +1437,14 @@ h1, h2, h3 { font-family: var(--font-display); }
   columns: 280px;
   column-gap: 12px;
   margin-top: 20px;
+  /* WebKit blanked this flow's cards while a tilted ticket above it was
+     hovered (#1571): the ticket's rotate() plus the column flow is the
+     combination, in Klassisch, Die Brücke and Forest alike. Its own stacking
+     context keeps the flow painted
+     (.claude/rules/webkit-blanks-multicol-under-a-rotated-sibling.md has the
+     measurements and the alternatives). Nothing inside a card sets z-index,
+     so no stacking order changes. */
+  isolation: isolate;
 }
 .hub-cards:empty { display: none; }
 /* `column-width` reproduces `auto-fill`, so the pane makes as many columns as
