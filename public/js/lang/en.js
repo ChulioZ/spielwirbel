@@ -1121,6 +1121,7 @@ I18N.en = {
   'lobby.qrLoading': 'Drawing the code …',
   'lobby.qrAlt': 'QR code for the vote link',
   'lobby.progress': '{n} of {total} rated',
+  'lobby.votedCount': 'Voted: {n} of {total}',
   'lobby.panelTitle': 'Vote from your own device',
   'lobby.panelNote': 'The link needs no account. Whoever has it rates the drawn games — and sees nothing else of the round.',
   'lobby.guestVoterOne': '{names} is voting without an account',

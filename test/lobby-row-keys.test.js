@@ -98,7 +98,7 @@ test('the list carries its count, read from who has voted', async (t) => {
   const count = dom.app.querySelector('.live-vote__people > .live-vote__count');
   assert.ok(count, 'the count is rendered inside the list');
   assert.equal(dom.app.querySelector('.live-vote__people').firstElementChild, count, 'and heads it');
-  assert.equal(text(count), '1 von 4 gewertet');
+  assert.equal(text(count), 'Abgestimmt: 1 von 4', 'its own words, not the per-game „gewertet" count');
 });
 
 /* CSS: who SHOWS the count and the panel. The view renders both for every
@@ -126,4 +126,20 @@ test('Klassisch explains the shared link, beside the list from 860px', () => {
   const panel = rulesOf(wide).find(([s]) => s.trim() === `${K} .live-vote:has(.live-vote__panel-head) > .live-vote__panel`);
   assert.ok(panel, 'the panel is placed');
   assert.equal(declaredValue(panel[1], 'grid-column'), '2', 'in the second column, beside the list');
+});
+
+test('Klassisch: a row key shrinks and wraps its label, and only a row WITH a key wraps', () => {
+  /* A member name has no length cap and the Finnish label is twice the German
+     one, so a key that cannot shrink overflows a 320px row. And a row without a
+     key must keep its single line: wrapping every row dropped „✓ abgestimmt" onto
+     a second line at 320px (both measured in WebKit). */
+  const rules = rulesOf(read('public/styles.css'));
+  const key = rules.find(([s]) => s.trim() === `${K} .live-person > .live-vote__hotseat-btn`);
+  assert.ok(key, 'Klassisch styles the row key');
+  assert.notEqual(declaredValue(key[1], 'flex'), 'none', 'the key may shrink');
+  assert.equal(declaredValue(key[1], 'max-width'), '100%', 'and never grows past its row');
+  assert.equal(declaredValue(key[1], 'white-space'), 'normal', 'so its label wraps instead');
+  const wraps = rules.filter(([, body]) => declaredValue(body, 'flex-wrap') === 'wrap').map(([s]) => s.trim());
+  assert.ok(wraps.includes(`${K} .live-person:has(> .live-vote__hotseat-btn)`), 'a row with a key wraps');
+  assert.ok(!wraps.includes(`${K} .live-person`), 'every other row keeps one line');
 });

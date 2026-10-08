@@ -10635,15 +10635,25 @@ kbd {
   font-weight: 700;
   color: var(--ink-soft);
 }
-/* The row wraps, so on a phone a long „Für …" drops to a line of its own at the
-   row's right edge instead of squeezing the name to „Ga…". The name's 8em basis
-   is what decides when: below it, the key wraps. */
-:root[data-design="klassisch"] .live-person { flex-wrap: wrap; row-gap: 8px; }
-:root[data-design="klassisch"] .live-person__name { flex: 1 1 8em; }
+/* A row WITH a key wraps, so on a phone a long „Für …" drops to a line of its
+   own at the row's right edge instead of squeezing the name to „Ga…". The
+   name's 8em basis is what decides when: below it, the key wraps. Only those
+   rows — a row without a key keeps the single line it always had, where the name
+   gives way with an ellipsis rather than pushing „✓ abgestimmt" onto a second
+   line at 320px. */
+:root[data-design="klassisch"] .live-person:has(> .live-vote__hotseat-btn) { flex-wrap: wrap; row-gap: 8px; }
+:root[data-design="klassisch"] .live-person:has(> .live-vote__hotseat-btn) > .live-person__name { flex: 1 1 8em; }
+/* Shrinks and wraps its own label rather than overflowing the row: a member name
+   has no length cap, and the Finnish label is twice the German one. */
 :root[data-design="klassisch"] .live-person > .live-vote__hotseat-btn {
-  flex: none;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
   margin-left: auto;
   padding: 6px 14px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: center;
 }
 /* The row already shows the person's avatar. */
 :root[data-design="klassisch"] .live-person > .live-vote__hotseat-btn .live-person__avatar { display: none; }

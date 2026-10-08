@@ -199,7 +199,9 @@ function showSessionLobby(round, session, handedOn, dealt) {
      Programmheft and Forest each head their list with theirs, so this one
      stays hidden there (the #1191 shape, like the row's dots below). */
   const votedCount = people.filter((p) => voted.has(p.id)).length;
-  peopleEl.appendChild(h(`<p class="live-vote__count">${esc(t('lobby.progress', {
+  // Its own key rather than `lobby.progress`: Der Tisch and Ocean show that one
+  // on every row as a count of GAMES, and the two read identically otherwise.
+  peopleEl.appendChild(h(`<p class="live-vote__count">${esc(t('lobby.votedCount', {
     n: votedCount,
     total: people.length,
   }))}</p>`));

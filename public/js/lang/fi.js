@@ -1052,6 +1052,7 @@ I18N.fi = {
   'lobby.qrLoading': 'Koodia luodaan …',
   'lobby.qrAlt': 'QR-koodi äänestykseen',
   'lobby.progress': '{n}/{total} arvioitu',
+  'lobby.votedCount': 'Äänestäneet: {n}/{total}',
   'lobby.panelTitle': 'Äänestä omalla laitteella',
   'lobby.panelNote': 'Linkki ei vaadi tiliä. Sen saanut arvioi arvotut pelit — eikä näe muuta seurueesta.',
   'lobby.guestVoterOne': '{names} äänestää ilman tiliä',

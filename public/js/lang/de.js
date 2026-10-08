@@ -1116,6 +1116,7 @@ I18N.de = {
   'lobby.qrLoading': 'Code wird erstellt …',
   'lobby.qrAlt': 'QR-Code zum Mitstimmen',
   'lobby.progress': '{n} von {total} gewertet',
+  'lobby.votedCount': 'Abgestimmt: {n} von {total}',
   'lobby.panelTitle': 'Am eigenen Gerät mitstimmen',
   'lobby.panelNote': 'Der Link braucht kein Konto. Wer ihn hat, wertet die ausgelosten Spiele — und sieht sonst nichts von der Runde.',
   'lobby.guestVoterOne': '{names} stimmt ohne Konto ab',

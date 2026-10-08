@@ -1036,6 +1036,7 @@ I18N.ko = {
   'lobby.qrLoading': '코드를 만드는 중 …',
   'lobby.qrAlt': '투표 링크 QR 코드',
   'lobby.progress': '{total}개 중 {n}개 평가함',
+  'lobby.votedCount': '투표 완료: {n}/{total}',
   'lobby.panelTitle': '각자 기기에서 투표하기',
   'lobby.panelNote': '링크에는 계정이 필요 없습니다. 링크를 받은 사람은 뽑힌 게임을 평가하고, 모임의 다른 내용은 볼 수 없습니다.',
   'lobby.guestVoterOne': '{names} 님이 계정 없이 투표합니다',
