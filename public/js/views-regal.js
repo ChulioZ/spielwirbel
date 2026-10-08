@@ -365,7 +365,7 @@ function renderRegalTab(round, activeGames) {
              <span class="game-card__pick" aria-hidden="true"><i class="ti ti-check"></i></span>
            </div>
            <div class="game-card__body">
-             <div class="game-card__title">${esc(g.title)}</div>${ocean ? cardMeta(g) : ''}
+             <div class="game-card__title">${esc(g.title)}</div>${cardMeta(g)}
            </div>
          </a>`);
       if (g.image) loadCover(gc, coverUrl(g.image, COVER_CARD), gc.querySelector('.game-card__img'));
@@ -513,8 +513,10 @@ function renderRegalTab(round, activeGames) {
   // game grid, so they moved to the round's Einstellungen screen (#561).
 }
 
-// The meta line under an Ocean card's title (O3.3: „2–5 · 90 Min") — the
-// player range and the playing time the game already carries, nothing new.
+// The meta line under a card's title (O3.3: „2–5 · 90 Min") — the player range
+// and the playing time the game already carries, nothing new. Every design's
+// shelf card prints it since #1580: the default card (Klassisch, Der Tisch,
+// Ocean) under the title, Die Brücke, Das Programmheft and Forest in their own.
 // The range is bare digits behind the people glyph, as the sheet prints it:
 // „3–7 Personen · 20–60 Min." wraps to two lines in a 170px box. The full
 // wording is what a screen reader hears (`.sr-only`), so the bare digits never
