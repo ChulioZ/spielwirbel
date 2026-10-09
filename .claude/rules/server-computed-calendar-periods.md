@@ -1,6 +1,7 @@
 ---
 paths:
   - "lib/calendar-periods.js"
+  - "lib/quiz.js"
   - "lib/public-stats.js"
   - "lib/repo/json.js"
   - "lib/repo/postgres.js"

@@ -259,6 +259,10 @@ lib/
   price-watches.js   the daily price-alert check (issue #680): the dip rule,
                      the per-watch claim that keeps two processes from
                      notifying twice, batched upstream requests
+  quiz.js            the weekly quiz's round lifecycle (issue #743): build once
+                     per week, announce once, the public sample, the purge
+  quiz-generate.js   the quiz generator — a pure, week-seeded function from
+                     corpus rows to questions whose distractors are provably wrong
   vote-link.js       the vote link's TTL (issue #652): the age half of the
                      public route's gate, plus the sweep that deletes rows past
                      it. Exists because an ABANDONED session — never closed,
@@ -483,6 +487,9 @@ lib/
     price-watches.js /api/price-watches     (an account's price alerts (#680):
                                              list, set, change, remove, and the
                                              game-name search; global per account)
+    quiz.js          /api/quiz              (the weekly quiz (#743): this week's
+                                             round, one answer at a time, the
+                                             friends leaderboard; global per account)
     invite-links.js  …/invite-links         (the owner's round invite links (#1515):
                                              mint/replace, list, revoke by slot)
     marker.js        …/marker               (PATCH the round's colour marker,
@@ -1017,6 +1024,8 @@ public/
                      an account — the only view that runs logged out
     views-price-watches.js the /preisalarme list, the alert control under a
                      wished game's price, and the price-drop inbox row (#680)
+    views-quiz.js    the /quiz screen, its home tile and inbox row, and the
+                     landing page's playable sample question (#743)
     views-join.js    the /join/:token screen (#1515): „join this round?" for an
                      account, the way to sign in for everyone else
     views-inbox.js   per-user notification inbox (#207; accounts mode only)

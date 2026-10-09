@@ -253,7 +253,7 @@ const frontendGlobals = {
   accountsActive: 'readonly', isLoggedIn: 'readonly', authFetch: 'readonly',
   currentUserId: 'readonly', currentUsername: 'readonly',
   isDemoAccount: 'readonly', bgStatsEnabled: 'readonly', setCachedPref: 'readonly',
-  startDemo: 'readonly', setupDemoBanner: 'readonly', leaveDemoForRegister: 'readonly',
+  startDemo: 'readonly', setupDemoBanner: 'readonly', leaveDemoForRegister: 'readonly', leaveDemoForLogin: 'readonly',
   setupTermsBanner: 'readonly',
   enterDemo: 'readonly', resumeDemo: 'readonly', endDemo: 'readonly',
   authErrorKey: 'readonly',
@@ -645,6 +645,9 @@ const frontendGlobals = {
   showJoinLink: 'readonly', joinPath: 'readonly', isJoinLinkRoute: 'readonly',
   // views-price-watches.js (#680)
   showPriceWatches: 'readonly', priceWatchesAvailable: 'readonly', renderPriceWatchControl: 'readonly', renderPriceDropItem: 'readonly',
+  // views-quiz.js (#743)
+  showQuiz: 'readonly', quizAvailable: 'readonly', renderQuizRoundItem: 'readonly', mountHomeQuiz: 'readonly', mountLandingQuiz: 'readonly',
+  showQuizArchive: 'readonly', quizArchiveLink: 'readonly',
   renderVoteLinkCards: 'readonly', renderVoteLinkDone: 'readonly',
   renderVoteLinkDead: 'readonly', voteLinkClaim: 'readonly',
   setVoteLinkClaim: 'readonly', voteLinkColor: 'readonly',

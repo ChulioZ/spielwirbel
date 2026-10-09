@@ -277,6 +277,31 @@ function renderHomeDash() {
   // logged in — this hub only renders for someone who is, in accounts mode, but
   // a password-only instance reaches it logged out and the numbers are public
   // either way.
+  // The weekly quiz (#743): this week's state in one line, right after the
+  // friends tile. On a cold load home can render before /api/config has
+  // answered; then NOTHING is reserved — an instance without the quiz must not
+  // flash an empty slot — and the tile is inserted when the config arrives and
+  // says the quiz runs. A config that never answers adds no tile, rather than a
+  // timeout guessing "off" for good.
+  if (accountsActive() && isLoggedIn()) {
+    const quizSlot = () => {
+      const quiz = h('<section class="home-quiz dash-tile" id="homeQuiz"></section>');
+      mountHomeQuiz(quiz);
+      return cardSlot(quiz);
+    };
+    if (accountCfg) {
+      if (quizAvailable()) dash.appendChild(quizSlot());
+    } else {
+      withAppConfig(() => {
+        if (!quizAvailable() || dash.querySelector('#homeQuiz')) return;
+        const friends = dash.querySelector('#homeFriends');
+        const after = friends && friends.closest('.card-slot');
+        if (after && after.parentElement === dash) after.after(quizSlot());
+        else dash.prepend(quizSlot());
+      });
+    }
+  }
+
   const stats = h('<section class="home-stats dash-tile" id="homeStats"></section>');
   dash.appendChild(cardSlot(stats));
   mountHomeStatsPanel(stats);

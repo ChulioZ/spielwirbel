@@ -71,7 +71,7 @@ const CLIENT_ERROR_MAX_PER_LOAD = 5;
 // The three lists mirror resolveRoute() in public/js/router.js. They are
 // ALLOWLISTS — anything off them folds to '/other'.
 const CLIENT_ERROR_SCREENS = [
-  'inbox', 'freunde', 'konto', 'neu', 'entdecken', 'login', 'register', 'forgot-password', 'preisalarme',
+  'inbox', 'freunde', 'konto', 'neu', 'entdecken', 'login', 'register', 'forgot-password', 'preisalarme', 'quiz',
 ];
 const CLIENT_ERROR_ROUND_TABS = [
   'start', 'regal', 'chronik', 'pokale', 'retired', 'completed', 'wishlist',
@@ -84,6 +84,7 @@ function clientErrorPathShape(pathname) {
   if (!parts.length) return '/';
   if (parts.length === 1 && CLIENT_ERROR_SCREENS.indexOf(parts[0]) !== -1) return '/' + parts[0];
   if (parts[0] === 'u' && parts.length === 2) return '/u/:username';
+  if (parts[0] === 'quiz' && parts.length === 2 && parts[1] === 'archiv') return '/quiz/archiv';
   if (parts[0] === 'vote' && parts.length >= 2) return '/vote/:token';
   if (parts[0] === 'join' && parts.length >= 2) return '/join/:token';
   if (parts[0] === 'round') {

@@ -135,6 +135,14 @@ reason — they are the frontend's own two screens agreeing with each other — 
 the DOM that renders the controls deliberately did **not** join this file (see
 `.claude/rules/provider-metadata-is-a-filter-not-a-tag.md` §4).
 
+**#743 gave the ladders a third reader, `lib/quiz-generate.js`**: the weekly quiz
+asks for a game's weight and playing time in bands cut from `WEIGHT_CHOICES` and
+`PLAYTIME_CHOICES`, so a quiz answer names the same bands the Regal filter and
+the draw preview use. A hand-copied ladder there would let the quiz call „2–3" a
+band the filter has since split, with nothing red. The same file also requires
+`creditedDesigners` (the fifteenth entry), so BGG's „(Uncredited)" can never be
+a designer the quiz asks about or offers.
+
 It gained two more exports with owned expansions (#653), each for a different
 half of this rule. **`requiredExpansions`** is the logic half again: the results
 screen's „Braucht Erweiterung: …" line has to name the same set that made the

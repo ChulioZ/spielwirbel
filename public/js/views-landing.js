@@ -453,6 +453,11 @@ function showLanding() {
          this comment is inside a template literal.) -->
     <section class="landing-section landing-stats" id="landingStats"></section>
 
+    <!-- The weekly quiz's sample question (#743). EMPTY, like the statistics
+         above: mountLandingQuiz fills it or removes it outright when the quiz
+         is off. (No backticks in here: this comment is inside a template literal.) -->
+    <section class="landing-section landing-quiz" id="landingQuiz"></section>
+
     <section class="landing-section landing-close">
       <h2 class="landing-section__title">${esc(t('landing.cta.title'))}</h2>
       ${renderLandingOffer({ trust: false })}
@@ -477,6 +482,7 @@ function showLanding() {
   // Not awaited: the landing page must render at once, and the block appears
   // (or its placeholder disappears) when the payload lands.
   mountLandingStats(view.querySelector('#landingStats'));
+  mountLandingQuiz(view.querySelector('#landingQuiz'));
   mountLandingDesigns(view.querySelector('#landingDesigns'));
 }
 

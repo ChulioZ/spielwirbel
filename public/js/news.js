@@ -48,6 +48,51 @@
 // AFTER, which is the exact unearned interruption this design exists to avoid.
 const NEWS = [
   /*
+   * #743, the weekly quiz. A capability that did not exist: the first surface
+   * worth opening when no session is planned. Says what is asked, that the
+   * answer shows at once, where it lives and when a round starts.
+   */
+  {
+    revision: '2026-10-10',
+    kind: 'new',
+    de: {
+      title: 'Wochenquiz',
+      body: 'Jede Woche gibt es jetzt ein Quiz mit neuen Fragen rund um Brettspiele: wie komplex ein Spiel ist, für wie viele Personen, von wem es stammt, wann es erschien und mehr. Ob deine Antwort stimmt, siehst du sofort, und in der Rangliste vergleichst du dich mit deinem Freundeskreis. Du findest das Quiz im Konto-Menü unter „Wochenquiz“ und auf der Startseite; montags kommt eine neue Runde.',
+    },
+    en: {
+      title: 'Weekly quiz',
+      body: 'There is now a quiz every week with new questions about board games: how complex a game is, how many players it is for, who designed it, when it came out and more. You see straight away whether your answer is right, and the leaderboard compares you with your friends. Find it in the account menu under “Weekly quiz” and on the home screen; a new round starts every Monday.',
+    },
+    es: {
+      title: 'Quiz semanal',
+      body: 'Ahora hay cada semana un quiz con preguntas nuevas sobre juegos de mesa: lo complejo que es un juego, para cuántas personas es, quién lo diseñó, cuándo salió y más. Ves al instante si tu respuesta es correcta, y la clasificación te compara con tus amistades. Lo encontrarás en el menú de la cuenta, en «Quiz semanal», y en la pantalla de inicio; cada lunes empieza una ronda nueva.',
+    },
+    fr: {
+      title: 'Quiz de la semaine',
+      body: 'Chaque semaine, un quiz de nouvelles questions sur les jeux de société : la complexité d’un jeu, pour combien de personnes il est, qui l’a conçu, quand il est paru, et plus encore. Vous voyez aussitôt si votre réponse est juste, et le classement vous compare à vos amis. Vous le trouverez dans le menu du compte, sous « Quiz de la semaine », et sur l’écran d’accueil ; une nouvelle manche commence chaque lundi.',
+    },
+    it: {
+      title: 'Quiz settimanale',
+      body: 'Ogni settimana c’è ora un quiz con nuove domande sui giochi da tavolo: quanto è complesso un gioco, per quante persone è, chi l’ha ideato, quando è uscito e altro. Vedi subito se la risposta è giusta, e la classifica ti confronta con i tuoi amici. Lo trovi nel menu dell’account, alla voce «Quiz settimanale», e nella schermata iniziale; ogni lunedì inizia un nuovo turno.',
+    },
+    nl: {
+      title: 'Weekquiz',
+      body: 'Er is nu elke week een quiz met nieuwe vragen over bordspellen: hoe complex een spel is, voor hoeveel personen, wie het ontwierp, wanneer het verscheen en meer. Je ziet meteen of je antwoord klopt, en de ranglijst vergelijkt je met je vrienden. Je vindt de quiz in het accountmenu onder “Weekquiz” en op het startscherm; elke maandag begint een nieuwe ronde.',
+    },
+    pt: {
+      title: 'Quiz semanal',
+      body: 'Agora toda semana tem um quiz com novas perguntas sobre jogos de tabuleiro: a complexidade de um jogo, para quantas pessoas ele é, quem o criou, quando saiu e mais. Você vê na hora se acertou, e a classificação compara você com seus amigos. O quiz fica no menu da conta, em “Quiz semanal”, e na tela inicial; toda segunda-feira começa uma nova rodada.',
+    },
+    fi: {
+      title: 'Viikkovisa',
+      body: 'Nyt joka viikko on visa, jossa on uusia kysymyksiä lautapeleistä: kuinka monimutkainen peli on, monelleko pelaajalle, kuka sen suunnitteli, milloin se julkaistiin ja muuta. Näet heti, oliko vastauksesi oikein, ja tulostaulu vertaa sinua ystäviisi. Löydät visan tilivalikosta kohdasta ”Viikkovisa” ja aloitusnäkymästä; uusi kierros alkaa joka maanantai.',
+    },
+    ko: {
+      title: '주간 퀴즈',
+      body: '이제 매주 보드게임에 관한 새 질문으로 된 퀴즈가 열려요. 게임의 복잡도, 인원, 디자이너, 출시 연도 등을 묻습니다. 답이 맞았는지 바로 확인할 수 있고, 순위표에서 친구들과 비교할 수 있어요. 계정 메뉴의 “주간 퀴즈”와 홈 화면에서 찾을 수 있으며, 매주 월요일에 새 라운드가 시작돼요.',
+    },
+  },
+  /*
    * #680, price alerts. A capability that did not exist: the price on a wished
    * game was only ever shown, never watched. Says where it lives (under the
    * price, and „Preisalarme" in the account menu), that it belongs to the

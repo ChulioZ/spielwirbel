@@ -168,6 +168,30 @@ What the app does, in detail. For a short overview see the
   once, a further drop again, and a price rising back above the threshold arms
   the alert for the next dip. Up to 50 alerts per account
   (`MAX_PRICE_WATCHES_PER_USER`).
+- **Weekly quiz** – *accounts mode, where the operator switched it on* (issue
+  #743, `QUIZ_ENABLED`). Five questions a week about well-known board games,
+  built from the BGG corpus: complexity, the box's player range and playing time,
+  year, category, mechanic, designer, and a ranking duel between four games.
+  Each answer is checked by the server the moment it is given and cannot be
+  changed afterwards; the browser never holds the answer key of an unanswered
+  question. **Wochenquiz** in the account menu and a home tile lead to `/quiz`,
+  which also shows the week's leaderboard among the account's confirmed friends.
+  A new round opens every Monday (Berlin time) and puts an inbox item — never an
+  e-mail — in front of everyone who played before. The leaderboard leaves out a
+  friend who hid their numbers (`statsVisible`). A guest demo cannot play — the
+  round is the same for everyone and every answer reveals its key — so the demo
+  and the logged-out landing page show a **teaser** instead: one real question
+  with its choices and, in place of an answer, the way to register or sign in.
+  A public **statistics and archive** page (`/quiz/archiv`, also logged out)
+  publishes **percentages only** — never a player count, nor any absolute number
+  one could be read off. The running week shows the share of answers right,
+  overall and per question, its trickiest question so far and when the next
+  round opens — never the choices or the key while it can still be played. Every
+  closed week of the last year shows its questions, the right answer and each
+  choice's share of the picks. No names; the totals are taken when a week closes
+  and kept with the round for 52 weeks, the answers themselves only eight.
+  Category, mechanic and designer
+  names stay in BGG's English in every language: the data may not be modified.
   Beside those three lists the shelf offers **„Das könnte euch auch
   gefallen"** — games the round does *not* own, ranked against its own taste.
   The profile comes from the three things BoardGameGeek cannot know: which games
