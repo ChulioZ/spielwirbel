@@ -52,8 +52,11 @@ function priceWatchError(code) {
 }
 
 /* The control under a wished game's price box. `price` is the live answer the
-   box just rendered; its currency is the market the reader would watch in.
-   `anchor` is replaced, so the caller only has to reserve the spot. */
+   box just rendered (its currency is the market the reader would watch in), or
+   null when there is none — then an EXISTING watch still shows, editable and
+   stoppable, because a watch belongs on every wished copy of its game; only
+   setting a new one needs today's price. `anchor` is replaced, so the caller
+   only has to reserve the spot. */
 async function renderPriceWatchControl(anchor, game, price) {
   if (!(await priceWatchesReady())) return anchor.remove();
   let watches;
@@ -65,6 +68,7 @@ async function renderPriceWatchControl(anchor, game, price) {
   if (!anchor.isConnected) return undefined;
   const externalId = String(game.source.externalId);
   let watch = (watches || []).find((w) => w.externalId === externalId) || null;
+  if (!watch && !price) return anchor.remove();
   const box = h('<div class="section gd-watch"></div>');
   anchor.replaceWith(box);
 
@@ -90,8 +94,11 @@ async function renderPriceWatchControl(anchor, game, price) {
         }
       });
       box.appendChild(row);
-    } else {
+    } else if (price) {
       renderForm(null);
+    } else {
+      // Stopped while no price is on screen: nothing to offer a new watch from.
+      box.remove();
     }
   };
 

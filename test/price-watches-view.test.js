@@ -175,3 +175,19 @@ test('editing an existing watch labels the amount in the WATCH\'s currency, not 
   dom.app.querySelector('#gdWatchEdit').click();
   assert.match(text(dom.app.querySelector('.gd-watch__label')), /GBP/);
 });
+
+test('without a live price an existing watch still shows — and no new one is offered', async (t) => {
+  for (const [watches, shown] of [[[WATCH], true], [[], false]]) {
+    const { dom } = app(t);
+    dom.set('api', async () => ({ watches, limit: 50 }));
+    const anchor = dom.document.createElement('div');
+    dom.app.appendChild(anchor);
+    await dom.call('renderPriceWatchControl', anchor, { title: 'Arche Nova', source: { externalId: '342942' } }, null);
+    assert.equal(!!dom.app.querySelector('.gd-watch__state'), shown);
+    assert.equal(dom.app.querySelector('.gd-watch__form'), null, 'no form to set a watch without a price');
+    if (shown) {
+      dom.app.querySelector('#gdWatchEdit').click();
+      assert.equal(dom.app.querySelector('#gdWatchAt').value, '40', 'editing starts from the watch\'s own threshold');
+    }
+  }
+});

@@ -747,7 +747,9 @@ async function showGameDetail(rid, gameId) {
           renderPriceWatchControl(watchAnchor, game, p).catch(() => watchAnchor.remove());
           return undefined;
         }
-        watchAnchor.remove();
+        // No live price: an existing watch still shows (it belongs on every
+        // wished copy of its game); only a NEW one needs today's price.
+        renderPriceWatchControl(watchAnchor, game, null).catch(() => watchAnchor.remove());
         // A settled "nobody stocks this" is stated, not blanked — also when no
         // stored price was on screen first (operator decision on #707). Any
         // other unavailable answer has nothing honest to show.
@@ -756,7 +758,7 @@ async function showGameDetail(rid, gameId) {
       })
       .catch(() => {
         liveSettled = true;
-        watchAnchor.remove();
+        renderPriceWatchControl(watchAnchor, game, null).catch(() => watchAnchor.remove());
         // Our own server became unreachable mid-view. A stored price already on
         // screen stays — re-rendered without the "checking…" note, which would
         // otherwise claim a check that is no longer running.

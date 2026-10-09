@@ -3804,11 +3804,11 @@ module.exports = function repoContract(repo) {
   });
 
   test('price watches (#680): one per account and game, owner-scoped, claimed once, recorded with one inbox item', async () => {
-    const tag = Math.random().toString(16).slice(2);
+    const tag = uniq();
     const uid = `pw-${tag}`;
     const other = `pw-other-${tag}`;
     const fields = (externalId) => ({ externalId, title: `Spiel ${externalId}`, thresholdCents: 3000, destination: 'DE', currency: 'EUR', editionLang: 'DE' });
-    const a = await repo.createPriceWatch(uid, fields(`9${tag.slice(0, 6).replace(/\D/g, '1')}`));
+    const a = await repo.createPriceWatch(uid, fields(String(parseInt(tag.slice(1, 9), 16))));
     assert.equal(a.userId, uid);
     assert.equal(a.armed, true);
     assert.equal(a.lastCheckedAt, null);
