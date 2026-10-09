@@ -204,7 +204,7 @@ function editableRoundName(round) {
   const el = h(`<span class="gd-title" role="button" tabindex="0" title="${esc(t('round.editName'))}">${esc(round.name)}</span>`);
 
   const startEdit = () => {
-    const input = h('<input class="input rn-title-input" />');
+    const input = h('<input class="input rn-title-input" autocorrect="off" spellcheck="false" />');
     input.value = round.name;
     el.replaceWith(input);
     input.focus();

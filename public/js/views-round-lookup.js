@@ -45,7 +45,7 @@ function showAddGameForm(round, { wish = false, title = '', hit = null, dirty = 
         <div class="field">
           <label for="title">${esc(t('addGame.titleLabel'))}</label>
           <div class="lookup" id="lookup">
-            <input id="title" class="input" placeholder="${esc(t('addGame.titlePlaceholder'))}" autocomplete="off" aria-describedby="dupHint" />
+            <input id="title" class="input" placeholder="${esc(t('addGame.titlePlaceholder'))}" autocomplete="off" aria-describedby="dupHint" autocorrect="off" spellcheck="false" />
             <div class="lookup__menu" id="lookupMenu" hidden></div>
           </div>
           <div class="muted field__hint">${esc(t('addGame.searchHint'))}</div>
@@ -76,7 +76,7 @@ function showAddGameForm(round, { wish = false, title = '', hit = null, dirty = 
           <div class="filter-chips" id="tagSeg" hidden></div>
           <div class="toolbar" style="margin-top:6px">
             <input id="newTag" class="input" placeholder="${esc(t('tags.addPlaceholder'))}"
-                   aria-label="${esc(t('tags.addPlaceholder'))}" style="flex:1" autocomplete="off" />
+                   aria-label="${esc(t('tags.addPlaceholder'))}" style="flex:1" autocomplete="off" autocorrect="off" spellcheck="false" />
             <button type="button" id="addTagBtn" class="btn">${esc(t('tags.add'))}</button>
           </div>
         </div>
@@ -511,7 +511,7 @@ function showLinkProvider(round, game) {
         <div class="field">
           <label for="linkTitle">${esc(t('linkProvider.searchLabel'))}</label>
           <div class="lookup" id="lookup">
-            <input id="linkTitle" class="input" placeholder="${esc(t('addGame.titlePlaceholder'))}" autocomplete="off" />
+            <input id="linkTitle" class="input" placeholder="${esc(t('addGame.titlePlaceholder'))}" autocomplete="off" autocorrect="off" spellcheck="false" />
             <div class="lookup__menu" id="lookupMenu" hidden></div>
           </div>
           <div class="muted field__hint">${esc(t('linkProvider.searchHint'))}</div>

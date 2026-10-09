@@ -157,7 +157,7 @@ function renderRegalTab(round, activeGames) {
 
     // Search pill + sort next to the heading. Sort, search and filter chips are
     // all kept for the session (scoped to this round) — see regalFilters.
-    const search = h(`<label class="search-pill"><i class="ti ti-search" aria-hidden="true"></i><input type="search" placeholder="${esc(t('games.search'))}" aria-label="${esc(t('games.search'))}" /></label>`);
+    const search = h(`<label class="search-pill"><i class="ti ti-search" aria-hidden="true"></i><input type="search" placeholder="${esc(t('games.search'))}" aria-label="${esc(t('games.search'))}" autocorrect="off" spellcheck="false" /></label>`);
     const searchInput = search.querySelector('input');
     searchInput.value = regalFilters.query;
     const sortSel = h(`<select class="sort-select" aria-label="${esc(t('games.sortLabel'))}">

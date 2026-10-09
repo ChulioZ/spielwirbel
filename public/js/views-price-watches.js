@@ -269,7 +269,7 @@ function renderWatchSearch(current, onAdded) {
   const box = h(`<form class="price-watches__search" role="search">
       <label for="watchSearch" class="field__label">${esc(t('priceWatch.searchLabel'))}</label>
       <div class="price-watches__search-row">
-        <input id="watchSearch" class="input" type="search" autocomplete="off" placeholder="${esc(t('priceWatch.searchPlaceholder'))}">
+        <input id="watchSearch" class="input" type="search" autocomplete="off" placeholder="${esc(t('priceWatch.searchPlaceholder'))}" autocorrect="off" spellcheck="false">
         <button type="submit" class="btn"><i class="ti ti-search" aria-hidden="true"></i> ${esc(t('priceWatch.search'))}</button>
       </div>
       <div class="ds-list price-watches__results" aria-live="polite"></div>

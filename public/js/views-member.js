@@ -109,7 +109,7 @@ async function showMember(rid, mid) {
 
   // Click (or Enter/Space on) the name -> inline input; Enter/blur saves, Escape cancels.
   const startNameEdit = () => {
-    const input = h('<input class="input gd-title-input" />');
+    const input = h('<input class="input gd-title-input" autocorrect="off" spellcheck="false" />');
     input.value = member.name;
     nameEl.replaceWith(input);
     input.focus();
@@ -627,7 +627,7 @@ function openAddMember(anchor, round) {
     // No maxlength: no member-name input in the app has one (the rename field and
     // the new-round form both omit it) and the route sets no ceiling either, so a
     // cap here alone would be cosmetic and asymmetric.
-    const input = h(`<input class="input" placeholder="${esc(t('member.addPlaceholder'))}" />`);
+    const input = h(`<input class="input" placeholder="${esc(t('member.addPlaceholder'))}" autocorrect="off" spellcheck="false" />`);
     const okBtn = h(`<button class="btn btn--primary">${esc(t('common.add'))}</button>`);
     const save = async () => {
       const name = input.value.trim();

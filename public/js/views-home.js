@@ -497,7 +497,7 @@ async function showNewRound() {
       <div class="setup-grid__main">
         <div class="field">
           <label for="roundName">${esc(t('newRound.nameLabel'))}</label>
-          <input id="roundName" class="input" placeholder="${esc(t('newRound.namePlaceholder'))}" />
+          <input id="roundName" class="input" placeholder="${esc(t('newRound.namePlaceholder'))}" autocorrect="off" spellcheck="false" />
         </div>
         ${importField}
       </div>
@@ -509,7 +509,7 @@ async function showNewRound() {
             <div class="nr-table__center"></div>
           </div>
           <div class="row">
-            <input id="memberInput" class="input" placeholder="${esc(t('newRound.memberPlaceholder'))}" />
+            <input id="memberInput" class="input" placeholder="${esc(t('newRound.memberPlaceholder'))}" autocorrect="off" spellcheck="false" />
             <button id="addMember" class="btn">${esc(t('newRound.add'))}</button>
           </div>
         </div>

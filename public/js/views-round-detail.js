@@ -308,7 +308,7 @@ async function showGameDetail(rid, gameId) {
 
   // Activate the title → inline input; Enter/blur saves, Escape cancels.
   function startTitleEdit(spanEl) {
-    const input = h('<input class="input gd-title-input" />');
+    const input = h('<input class="input gd-title-input" autocorrect="off" spellcheck="false" />');
     input.value = game.title;
     spanEl.replaceWith(input);
     input.focus();
