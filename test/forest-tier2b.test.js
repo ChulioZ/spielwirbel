@@ -93,6 +93,11 @@ function profilePayload(self) {
 function boot(t, design) {
   const dom = loadApp({ locale: 'de', design });
   t.after(() => dom.close());
+  // The friend feed prints AGES („vor 2 Wochen") computed from Date.now(), so an
+  // unpinned clock made the golden expire: it went red on 2026-10-09, eleven days
+  // after the fixture's events, with no code changed. Pinned to a day the
+  // golden's ages were recorded on.
+  dom.run("Date.now = () => Date.parse('2026-10-06T12:00:00Z')");
   const calls = [];
   dom.set('api', async (method, url, body) => {
     calls.push({ method, url, body });

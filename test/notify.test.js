@@ -182,6 +182,18 @@ test('a second item within the hour is suppressed, and the next one names the to
   assert.match(last.text, /3 offene Anfragen/, 'names the running unread total, not just this item');
 });
 
+test('an unread item that never mails (a price drop, #680) does not inflate the coalesced count', async () => {
+  const sender = await makeAccount('nt-pd-s@example.com');
+  const target = await makeAccount('nt-pd-t@example.com');
+  // Three unread price drops waiting — the inbox holds them, nobody mails them.
+  for (let i = 0; i < 3; i += 1) await repo.addInboxItem(target.user.id, { type: 'price_drop', payload: { watchId: `w${i}` } });
+  await sendFriendRequest(sender, target.username);
+  const mails = mailsTo(target);
+  const last = mails[mails.length - 1];
+  assert.doesNotMatch(last.subject, /Anfragen \/ New requests/, 'one request waiting, so it is named, not counted');
+  assert.match(last.text, new RegExp(sender.username), 'the one friend request, by name');
+});
+
 /* ------------------------------ the opt-outs -------------------------------- */
 
 test('the two per-type opt-outs are independent (#618)', async () => {

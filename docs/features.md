@@ -154,8 +154,20 @@ What the app does, in detail. For a short overview see the
   current or shown past seven days. A lookup that settles on "nobody stocks
   this" says so instead of showing nothing. Which **edition** is priced follows
   the cover the round picked, so everyone in it sees one price for one wish;
-  where it ships to and in what currency still follows each reader. Read-only and
-  server-side: no alerts, no price history, and no affiliate links of any kind.
+  where it ships to and in what currency still follows each reader. No price
+  history and no affiliate links of any kind.
+- **Price alerts** – *accounts mode, where prices are on* (issue #680). Under a
+  wished game's price, „Preis beobachten" sets an alert: tell me when this game
+  costs at most X. The alert belongs to the **account and the game**, not to the
+  wish — it shows on every wished copy of that game in any round, and it stays
+  until its owner ends it. The account menu's **Preisalarme** lists every alert
+  (threshold, the price last seen, shipping region and edition), lets you change
+  or end one, and adds one by searching a game name. Prices are checked once a
+  day; a drop to the threshold or below puts a message in the in-app inbox —
+  never an e-mail — saying the price and when it was seen. Each dip is reported
+  once, a further drop again, and a price rising back above the threshold arms
+  the alert for the next dip. Up to 50 alerts per account
+  (`MAX_PRICE_WATCHES_PER_USER`).
   Beside those three lists the shelf offers **„Das könnte euch auch
   gefallen"** — games the round does *not* own, ranked against its own taste.
   The profile comes from the three things BoardGameGeek cannot know: which games

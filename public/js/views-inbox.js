@@ -64,7 +64,8 @@ function afterRemove() {
 function renderInboxItem(item) {
   const row = item.type === 'round_invitation' ? renderInvitationItem(item)
     : item.type === 'friend_request' ? renderFriendRequestItem(item)
-      : renderGenericItem(item);
+      : item.type === 'price_drop' ? renderPriceDropItem(item) // #680, views-price-watches.js
+        : renderGenericItem(item);
   // Der Tisch (#1272, T14.2), Ocean (#1219, O14.2), Das Programmheft
   // (#1380, P14.3), Die Brücke (#1246, B14.3 — the type glyph as the row's
   // kicker, the time beside it) and Forest (#1474, F14.4 — the glyph in a moss
@@ -91,13 +92,15 @@ function renderInboxItem(item) {
 const INBOX_ICONS = {
   round_invitation: 'ti-user-plus',
   friend_request: 'ti-users',
+  price_drop: 'ti-trending-down',
 };
 function composeInboxRow(row, item) {
   const kind = INBOX_ICONS[item.type] ? item.type : 'notice';
   const icon = INBOX_ICONS[item.type] || 'ti-mail';
   row.classList.add('inbox-row--composed', `inbox-row--${kind.replace('_', '-')}`);
   row.prepend(h(`<span class="inbox-row__icon" aria-hidden="true"><i class="ti ${icon}"></i></span>`));
-  if (kind !== 'notice' && item.createdAt) {
+  // A price drop states when its price was seen, which is the time that matters.
+  if (kind !== 'notice' && kind !== 'price_drop' && item.createdAt) {
     row.querySelector('.ds-row__main').appendChild(
       h(`<div class="ds-row__status muted inbox-row__when">${esc(fmtDateTime(item.createdAt))}</div>`));
   }

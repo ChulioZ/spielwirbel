@@ -168,8 +168,10 @@ filters (`MAX_SAVED_FILTERS_PER_ROUND`, default 6, issue #1328), because it
 bounds the hub's quick-start chip row rather than abuse. Per
 **account** rather than per
 tenant: accepted friends (`MAX_FRIENDS_PER_USER`, default 500), open outgoing
-friend requests (`MAX_FRIEND_REQUESTS_PER_USER`, default 50) and passkeys
-(`MAX_PASSKEYS_PER_USER`, default 20, issue #418). Two more are trims rather
+friend requests (`MAX_FRIEND_REQUESTS_PER_USER`, default 50), passkeys
+(`MAX_PASSKEYS_PER_USER`, default 20, issue #418) and price alerts
+(`MAX_PRICE_WATCHES_PER_USER`, default 50, issue #680 — it also bounds the daily
+price job's upstream requests, which it batches 20 games at a time). Two more are trims rather
 than refusals — the oldest rows are dropped instead of the write being rejected:
 the friends feed (`MAX_FEED_EVENTS`, default 5000, issue #325) and the in-app
 inbox (`MAX_INBOX_ITEMS`, default 100, issue #207). With accounts off (the

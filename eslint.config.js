@@ -643,6 +643,8 @@ const frontendGlobals = {
   showVoteLink: 'readonly', renderVoteLinkClaim: 'readonly',
   // views-join.js (#1515)
   showJoinLink: 'readonly', joinPath: 'readonly', isJoinLinkRoute: 'readonly',
+  // views-price-watches.js (#680)
+  showPriceWatches: 'readonly', priceWatchesAvailable: 'readonly', renderPriceWatchControl: 'readonly', renderPriceDropItem: 'readonly',
   renderVoteLinkCards: 'readonly', renderVoteLinkDone: 'readonly',
   renderVoteLinkDead: 'readonly', voteLinkClaim: 'readonly',
   setVoteLinkClaim: 'readonly', voteLinkColor: 'readonly',

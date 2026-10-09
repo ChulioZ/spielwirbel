@@ -60,6 +60,8 @@ const OFF = {
   savedFilters: { perRound: 6, nameMax: 40 },
   designs: selectableDesignIds({ production: false }),
   faceDesign: FACE_DESIGN,
+  // #680: whether prices (and so price alerts) exist — off unless PRICES_ENABLED.
+  prices: false,
 };
 
 test.afterEach(() => {
@@ -248,4 +250,12 @@ test('production reports only the enabled designs; outside it, the whole registr
   // The face is a design that actually exists, in both directions — a face the
   // server does not offer would leave every logged-out surface unpainted.
   assert.ok(prod.body.designs.includes(prod.body.faceDesign), 'the face must be an enabled design in production');
+});
+
+test('`prices` follows PRICES_ENABLED, read per request (#680)', async (t) => {
+  t.after(() => { delete process.env.PRICES_ENABLED; });
+  process.env.PRICES_ENABLED = 'true';
+  assert.equal((await request(app).get('/api/config')).body.prices, true);
+  delete process.env.PRICES_ENABLED;
+  assert.equal((await request(app).get('/api/config')).body.prices, false);
 });

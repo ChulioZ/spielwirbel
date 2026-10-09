@@ -48,6 +48,52 @@
 // AFTER, which is the exact unearned interruption this design exists to avoid.
 const NEWS = [
   /*
+   * #680, price alerts. A capability that did not exist: the price on a wished
+   * game was only ever shown, never watched. Says where it lives (under the
+   * price, and „Preisalarme" in the account menu), that it belongs to the
+   * person rather than the round, and how often it checks.
+   */
+  {
+    revision: '2026-10-09',
+    kind: 'new',
+    de: {
+      title: 'Preisalarme',
+      body: 'Unter dem Preis eines Spiels auf der Wunschliste kannst du jetzt einen Preisalarm setzen: Fällt der Preis auf deinen Betrag oder darunter, bekommst du eine Nachricht in dein Postfach. Der Alarm gehört dir, nicht der Runde — er gilt für das Spiel in jeder deiner Runden. Alle Alarme findest du im Konto-Menü unter „Preisalarme"; dort kannst du auch nach einem Spiel suchen, das auf keiner Wunschliste steht. Geprüft wird einmal täglich.',
+    },
+    en: {
+      title: 'Price alerts',
+      body: 'Under a wished game’s price you can now set a price alert: when the price drops to your amount or below, you get a message in your inbox. The alert is yours, not the group’s — it covers the game in every group you’re in. All your alerts are in the account menu under “Price alerts”, where you can also search for a game that’s on no wish list. Prices are checked once a day.',
+    },
+    es: {
+      title: 'Alertas de precio',
+      body: 'Bajo el precio de un juego de la lista de deseos ya puedes crear una alerta: si el precio baja a tu importe o menos, recibes un mensaje en tu buzón. La alerta es tuya, no del grupo, y vale para el juego en todos tus grupos. Todas tus alertas están en el menú de la cuenta, en «Alertas de precio», donde también puedes buscar un juego que no esté en ninguna lista. Los precios se comprueban una vez al día.',
+    },
+    fr: {
+      title: 'Alertes de prix',
+      body: 'Sous le prix d’un jeu de la liste d’envies, tu peux maintenant créer une alerte : si le prix descend à ton montant ou en dessous, tu reçois un message dans ta boîte. L’alerte est à toi, pas au groupe — elle vaut pour le jeu dans tous tes groupes. Toutes tes alertes sont dans le menu du compte, sous « Alertes de prix », où tu peux aussi chercher un jeu qui n’est sur aucune liste. Les prix sont vérifiés une fois par jour.',
+    },
+    it: {
+      title: 'Avvisi di prezzo',
+      body: 'Sotto il prezzo di un gioco della lista dei desideri ora puoi impostare un avviso: se il prezzo scende al tuo importo o sotto, ricevi un messaggio nella tua casella. L’avviso è tuo, non del gruppo, e vale per il gioco in tutti i tuoi gruppi. Trovi tutti gli avvisi nel menu dell’account, in «Avvisi di prezzo», dove puoi anche cercare un gioco che non è in nessuna lista. I prezzi vengono controllati una volta al giorno.',
+    },
+    nl: {
+      title: 'Prijsalarmen',
+      body: 'Onder de prijs van een spel op de verlanglijst kun je nu een prijsalarm instellen: daalt de prijs naar jouw bedrag of lager, dan krijg je een bericht in je inbox. Het alarm is van jou, niet van de groep — het geldt voor het spel in al je groepen. Al je alarmen staan in het accountmenu onder ‘Prijsalarmen’, waar je ook een spel kunt zoeken dat op geen enkele lijst staat. Prijzen worden één keer per dag gecontroleerd.',
+    },
+    pt: {
+      title: 'Alertas de preço',
+      body: 'Abaixo do preço de um jogo da lista de desejos agora você pode criar um alerta: se o preço cair até o seu valor ou menos, você recebe uma mensagem na caixa de entrada. O alerta é seu, não do grupo — vale para o jogo em todos os seus grupos. Todos os seus alertas ficam no menu da conta, em “Alertas de preço”, onde você também pode procurar um jogo que não está em nenhuma lista. Os preços são verificados uma vez por dia.',
+    },
+    fi: {
+      title: 'Hintahälytykset',
+      body: 'Toivelistan pelin hinnan alle voit nyt asettaa hintahälytyksen: kun hinta laskee summaasi tai alle, saat viestin postilaatikkoosi. Hälytys on sinun, ei porukan — se koskee peliä kaikissa porukoissasi. Kaikki hälytyksesi löytyvät tilivalikosta kohdasta ”Hintahälytykset”, jossa voit myös etsiä pelin, joka ei ole millään listalla. Hinnat tarkistetaan kerran päivässä.',
+    },
+    ko: {
+      title: '가격 알림',
+      body: '이제 위시리스트 게임의 가격 아래에서 가격 알림을 설정할 수 있어요. 가격이 설정한 금액 이하로 내려가면 받은 편지함으로 알려 드려요. 알림은 그룹이 아니라 내 것이라, 내가 속한 모든 그룹의 그 게임에 적용돼요. 모든 알림은 계정 메뉴의 “가격 알림”에서 볼 수 있고, 거기서 어떤 목록에도 없는 게임을 검색할 수도 있어요. 가격은 하루에 한 번 확인해요.',
+    },
+  },
+  /*
    * #1515, round invite links. A capability that did not exist: until now a
    * round could only be shared with an account whose username the owner typed.
    * Says where it lives (Einstellungen → „Einladen") and the two limits a

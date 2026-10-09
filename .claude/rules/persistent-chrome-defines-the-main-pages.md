@@ -13,8 +13,9 @@ A new screen has to answer "does this get a back control?", and the answer is no
 a judgement call:
 
 > **Main pages are the ones reachable from chrome the user always has.** The
-> brand mark → `/`, the inbox button → `/inbox`, the account menu → `/freunde`
-> and `/konto`, the dock/rail → the four round sections. Those get **no** back
+> brand mark → `/`, the inbox button → `/inbox`, the account menu → `/freunde`,
+> `/konto`, `/neu`, `/entdecken` and `/preisalarme` (where prices exist), the
+> dock/rail → the four round sections. Those get **no** back
 > control. **Everything else gets exactly one, as the first element of the
 > content column, at every viewport width.**
 
