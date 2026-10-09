@@ -1284,7 +1284,7 @@
   background-color: transparent;
   font-weight: 700;
 }
-:root[data-design="ocean"] .regal-head .section-tools :is(.link-btn, .fbar__trigger) {
+:root[data-design="ocean"] .regal-head .section-tools :is(.link-btn, .fbar__trigger, .regal-more) {
   gap: 6px;
   min-height: var(--target-control);
   padding: 0 14px;
@@ -1311,7 +1311,9 @@
 :root[data-design="ocean"]:not([data-scheme="dark"]) .section .regal-head .regal-title h1 { color: var(--ink); }
 :root[data-design="ocean"]:not([data-scheme="dark"]) .regal-sort { background: var(--sunken); color: var(--ink); }
 :root[data-design="ocean"]:not([data-scheme="dark"]) .regal-sort .sort-select { color: var(--ink); }
-:root[data-design="ocean"]:not([data-scheme="dark"]) .regal-head .section-tools .fbar__trigger {
+/* The phone's „…" (#1577) is a square sibling of the filter pill. */
+:root[data-design="ocean"] .regal-head .section-tools .regal-more { min-width: var(--target-control); padding: 0; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .regal-head .section-tools :is(.fbar__trigger, .regal-more) {
   background: var(--sunken);
   border-color: transparent;
   color: var(--ink);

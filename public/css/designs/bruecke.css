@@ -4745,7 +4745,7 @@
 }
 :root[data-design="bruecke"] .bruecke-regal .regal-head .search-pill input { font-size: var(--text-sm); }
 :root[data-design="bruecke"] .bruecke-regal .regal-sort,
-:root[data-design="bruecke"] .bruecke-regal .regal-head .section-tools :is(.link-btn, .fbar__trigger, .bruecke-add--bar) {
+:root[data-design="bruecke"] .bruecke-regal .regal-head .section-tools :is(.link-btn, .fbar__trigger, .regal-more, .bruecke-add--bar) {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -4767,6 +4767,12 @@
   font: inherit;
   letter-spacing: inherit;
   text-transform: inherit;
+}
+/* The phone's „…" (#1577): a square key beside the filter. The toolbar rule
+   above gives it a `display` at (0,6,0), so the desktop hide outranks it. */
+:root[data-design="bruecke"] .bruecke-regal .regal-head .section-tools .regal-more { justify-content: center; min-width: var(--target-key); padding: 0; }
+@media (min-width: 860px) {
+  :root[data-design="bruecke"] .bruecke-regal .regal-head .section-tools .regal-more.regal-more { display: none; }
 }
 /* With the trigger lifted into the toolbar, an empty filter bar would still
    cost its wrapper's margin. */
@@ -4853,6 +4859,10 @@
   :root[data-design="bruecke"] .bruecke-regal .regal-head .section-tools { flex: 1 1 100%; }
   :root[data-design="bruecke"] .bruecke-regal .regal-head .search-pill { flex: 1 1 100%; min-width: 0; }
   :root[data-design="bruecke"] .bruecke-regal .regal-head .section-tools .btn.bruecke-add--bar { display: none; }
+  /* „Auswählen" and the BGG import live in the „…" on a phone (#1577). The
+     toolbar rule above gives them a `display` at (0,6,0), so the hide has to
+     outrank it. */
+  :root[data-design="bruecke"] .bruecke-regal .regal-head .section-tools .regal-tool--wide.regal-tool--wide { display: none; }
   :root[data-design="bruecke"] .bruecke-add--dock {
     display: flex;
     justify-content: center;
@@ -4865,6 +4875,12 @@
     letter-spacing: var(--track-display);
     text-transform: uppercase;
   }
+}
+/* At phone width the row is sort · ⓘ · Filter · „…" (#1577), and „Sortiert:"
+   (~80px, aria-hidden — the select names itself) is what keeps it to one line,
+   as on Ocean's phone. */
+@media (max-width: 599px) {
+  :root[data-design="bruecke"] .bruecke-regal .regal-sort__prefix { display: none; }
 }
 /* B2.6: two columns on a phone, whatever the shelf holds. */
 @media (max-width: 520px) {
@@ -5119,12 +5135,12 @@
 }
 :root[data-design="bruecke"][data-scheme="dark"] .bruecke-regal .regal-head .search-pill .ti { color: var(--brand); }
 :root[data-design="bruecke"][data-scheme="dark"] .bruecke-regal .regal-sort,
-:root[data-design="bruecke"][data-scheme="dark"] .bruecke-regal .regal-head .section-tools :is(.link-btn, .fbar__trigger) {
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-regal .regal-head .section-tools :is(.link-btn, .fbar__trigger, .regal-more) {
   background: transparent;
   border-color: var(--line);
   color: var(--ink);
 }
-:root[data-design="bruecke"][data-scheme="dark"] .bruecke-regal .regal-head .section-tools :is(.link-btn, .fbar__trigger):hover { border-color: var(--brand); }
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-regal .regal-head .section-tools :is(.link-btn, .fbar__trigger, .regal-more):hover { border-color: var(--brand); }
 :root[data-design="bruecke"][data-scheme="dark"] .bruecke-regal .regal-sort .sort-select { background-color: transparent; color: var(--ink); }
 :root[data-design="bruecke"][data-scheme="dark"] .bruecke-add {
   background: transparent;

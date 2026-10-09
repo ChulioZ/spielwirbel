@@ -2228,6 +2228,44 @@ a.hub-row:hover { background: var(--sunken-soft); }
    sit beside the trigger as removable chips, which also say WHICH, where the
    count badge they replaced could only say how many. */
 .regal-filter { margin: 2px 0 16px; }
+/* Klassisch lifts the trigger into the toolbar on a phone (#1577), so with no
+   filter applied the bar is empty and would still cost its margin. Every design
+   that lifts it already says the same in its own sheet. */
+.regal-filter:not(:has(.fbar__trigger)):has(.fbar__chips[hidden]) { display: none; }
+/* The Regal's phone toolbar (#1577, Das Programmheft's P6.2 for every design
+   but Der Tisch): search on a row of its own, then ONE row — sort · ⓘ · Filter
+   · „…" — with „Auswählen" and the BGG import (the `regal-tool--wide` pair) in
+   the „…". One control per width: `display: none` keeps the hidden copy out of
+   the accessibility tree. Scoped by `:has(> .regal-more)`, which only the Regal
+   renders, and compounded so `.link-btn`/`.btn` (0,1,0) cannot win on source
+   order. Das Programmheft, Forest, Ocean and Die Brücke style their own button
+   and repeat the hide at their own specificity. */
+.section-tools .regal-more { justify-content: center; min-width: 44px; min-height: 40px; padding: 0; }
+.section-tools .regal-more .ti { font-size: var(--text-lg); }
+/* Klassisch draws it as the Filter pill beside it rather than as a chunky
+   `.btn` (57px against the pill's 42px). Scoped to Klassisch: every other
+   design's sheet styles the key itself. Pressing compensates by nothing, like
+   `.btn--ghost`, since its bottom border no longer shrinks
+   (.claude/rules/state-rules-clobber-component-values.md). */
+:root[data-design="klassisch"] .section-tools .regal-more {
+  min-width: 42px;
+  min-height: 42px;
+  border-bottom-width: 1.5px;
+  border-radius: var(--radius-pill);
+  color: var(--ink-soft);
+}
+:root[data-design="klassisch"] .section-tools .regal-more:active { transform: translateY(1px); margin-bottom: var(--press-mb); }
+@media (min-width: 860px) {
+  .section-tools .regal-more { display: none; }
+}
+@media (max-width: 859px) {
+  .section-tools:has(> .regal-more) { flex: 1 1 100%; }
+  .section-tools:has(> .regal-more) > .search-pill { flex: 1 1 100%; }
+  .section-tools:has(> .regal-more) > .search-pill input { flex-grow: 1; }
+  /* Doubled class: (0,4,0), because Ocean's sheet gives every `.link-btn` a
+     display at (0,3,0) and loads after this file. */
+  .section-tools:has(> .regal-more) > .regal-tool--wide.regal-tool--wide { display: none; }
+}
 /* #854, and note the SCOPE: on the setup screen the trigger and the applied chips
    must not be ONE flex item of the bar they sit in. They were — `.fbar` wraps
    both — so a chip with a long label inflated that item's min-content width until

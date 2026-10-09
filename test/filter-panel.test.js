@@ -708,8 +708,11 @@ test('Regal: both halves live in ONE panel, as two labelled sections (#827)', ()
     games: GAMES.map((g) => ({ ...g, tagIds: g.id === 'g3' ? ['t1'] : [] })),
   });
 
-  const wrap = dom.app.querySelector('.regal-filter');
-  assert.equal(wrap.querySelectorAll('.fbar__trigger').length, 1,
+  // One trigger in the whole Regal section — beside the applied chips at
+  // desktop, lifted into the toolbar row on a phone (#1577), which is the
+  // arrangement jsdom (no matchMedia) renders.
+  const sec = dom.app.querySelector('.regal-filter').closest('.section');
+  assert.equal(sec.querySelectorAll('.fbar__trigger').length, 1,
     'one control, not a chip row beside a drawer');
   const body = openPanel();
   // Tags first, metadata second, both direct children of the one body: the

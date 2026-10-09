@@ -68,8 +68,12 @@ const sig = (el) => {
 
 // ------------------------------------------------------------- Klassisch
 
-test('Klassisch: the Regal head, tools row and grid are exactly as before — plus the header add (#1427)', async (t) => {
-  const dom = await renderRegal(t, null);
+// A desktop viewport: Klassisch's phone row is #1577's (test/regal-phone-toolbar.test.js).
+const wide = (dom) => dom.run(`window.matchMedia = (q) => ({ matches: /min-width: 860px/.test(q),
+  addEventListener() {}, removeEventListener() {} });`);
+
+test('Klassisch: the Regal head, tools row and grid are exactly as before at desktop — plus the header add (#1427) and the phone „…" (#1577)', async (t) => {
+  const dom = await renderRegal(t, null, shelf, wide);
   const head = dom.app.querySelector('.section-head');
   assert.equal(head.className, 'section-head');
   assert.equal(head.children.length, 2);
@@ -78,7 +82,7 @@ test('Klassisch: the Regal head, tools row and grid are exactly as before — pl
   assert.equal(head.querySelector('.regal-title'), null);
 
   const row = [...tools(dom).children];
-  assert.deepEqual(row.map((el) => el.tagName.toLowerCase()), ['button', 'label', 'select', 'button', 'button', 'button']);
+  assert.deepEqual(row.map((el) => el.tagName.toLowerCase()), ['button', 'label', 'select', 'button', 'button', 'button', 'button']);
   // The BGG import leads the row. No off-shelf control since #1500 — the scope
   // strip above the section reaches the lists.
   assert.ok(row[0].querySelector('.ti-download'), 'the import button leads the Klassisch row');
@@ -86,7 +90,9 @@ test('Klassisch: the Regal head, tools row and grid are exactly as before — pl
   assert.equal(tools(dom).querySelector('.ti-archive'), null, 'the toolbar still carries the off-shelf control');
   // The header add (#1427) closes the row, under its own class — never the
   // gold `regal-add` of Der Tisch, asserted below.
-  assert.ok(row[5].classList.contains('shelf-add--bar'), 'the header add closes the Klassisch row');
+  // The phone's „…" sits before it; CSS shows it below 860px only.
+  assert.ok(row[5].classList.contains('regal-more'), 'the phone „…" precedes the header add');
+  assert.ok(row[6].classList.contains('shelf-add--bar'), 'the header add closes the Klassisch row');
   assert.equal(tools(dom).querySelector('.fbar__trigger'), null, 'the filter trigger stays in its panel');
   assert.ok(dom.app.querySelector('.regal-filter .fbar > .fbar__trigger'));
   assert.equal(dom.app.querySelector('.fbar__count'), null);
