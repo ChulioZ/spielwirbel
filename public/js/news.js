@@ -81,7 +81,7 @@ const NEWS = [
     },
     pt: {
       title: 'Quiz semanal',
-      body: 'Agora há todas as semanas um quiz com novas perguntas sobre jogos de tabuleiro: a complexidade de um jogo, para quantas pessoas é, quem o criou, quando saiu e mais. Vê logo se a resposta está certa, e a classificação compara-o com os seus amigos. Encontra-o no menu da conta, em “Quiz semanal”, e no ecrã inicial; todas as segundas-feiras começa uma nova ronda.',
+      body: 'Agora toda semana tem um quiz com novas perguntas sobre jogos de tabuleiro: a complexidade de um jogo, para quantas pessoas ele é, quem o criou, quando saiu e mais. Você vê na hora se acertou, e a classificação compara você com seus amigos. O quiz fica no menu da conta, em “Quiz semanal”, e na tela inicial; toda segunda-feira começa uma nova rodada.',
     },
     fi: {
       title: 'Viikkovisa',
