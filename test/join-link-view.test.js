@@ -60,7 +60,7 @@ test('signed in: „Runde beitreten?" with the seat, and joining opens the round
 
 test('every refusal gets its own words, and an unknown one a generic line', async (t) => {
   for (const [code, title] of [['invalid_link', /ins Leere/], ['own_round', /deine eigene Runde/],
-    ['already_member', /schon dabei/], ['quota_members', /voll/], ['demo_forbidden', /Demo-Konto/], ['weird', /nicht geklappt/]]) {
+    ['already_member', /schon dabei/], ['quota_members', /voll/], ['demo_forbidden', /Demo-Konto/], ['account_disabled', /gesperrt/], ['weird', /nicht geklappt/]]) {
     const { dom } = app(t);
     dom.set('accountApi', async () => { throw new Error(code); });
     await dom.call('showJoinLink', TOKEN);

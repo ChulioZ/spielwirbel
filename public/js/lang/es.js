@@ -1644,6 +1644,8 @@ I18N.es = {
   'join.fullBody': 'Ha alcanzado el número máximo de plazas. Avisa a quien te invitó.',
   'join.demoTitle': 'No con una cuenta de demostración',
   'join.demoBody': 'Una cuenta de demostración no puede unirse a un grupo real. Crea una cuenta y abre el enlace otra vez.',
+  'join.disabledTitle': 'Esta cuenta está suspendida',
+  'join.disabledBody': 'Una cuenta suspendida no puede unirse a un grupo. Contacta con el operador si crees que es un error.',
   'join.failedTitle': 'No ha funcionado',
   'join.failedBody': 'Inténtalo de nuevo en un momento.',
   'join.home': 'Ir al inicio',

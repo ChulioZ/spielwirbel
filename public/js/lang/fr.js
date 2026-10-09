@@ -1627,6 +1627,8 @@ I18N.fr = {
   'join.fullBody': 'Il a atteint son nombre maximal de places. Préviens la personne qui t’a invité·e.',
   'join.demoTitle': 'Pas avec un compte de démonstration',
   'join.demoBody': 'Un compte de démonstration ne peut pas rejoindre un vrai groupe. Crée un compte et rouvre le lien.',
+  'join.disabledTitle': 'Ce compte est suspendu',
+  'join.disabledBody': 'Un compte suspendu ne peut pas rejoindre de groupe. Contacte l’exploitant si tu penses que c’est une erreur.',
   'join.failedTitle': 'Ça n’a pas marché',
   'join.failedBody': 'Réessaie dans un instant.',
   'join.home': 'Aller à l’accueil',

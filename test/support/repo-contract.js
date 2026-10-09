@@ -3803,6 +3803,78 @@ module.exports = function repoContract(repo) {
     assert.equal(await repo.findSessionVoteLink(fresh.id), null);
   });
 
+  test('joinRound (#1604): claim, seat and grant land together — and a refusal writes nothing', async () => {
+    const t = `jr-${uniq()}`;
+    const round = await repo.createRound(t, { name: 'Joinbar', members: ['Ann', 'Bo', 'Cy'] });
+    const [ann, bo, cy] = round.members;
+    const u = (k) => `jr-user-${k}-${uniq()}`;
+    const grantOf = async (uid) => (await repo.listGrantsForUser(uid)).find((g) => g.roundId === round.id);
+    const membersNow = async () => (await repo.getRoundMeta(t, round.id)).members;
+
+    // A seat link: the link is consumed, the seat taken, the grant written.
+    const link = await repo.createRoundInviteLink({ roundId: round.id, ownerTenantId: t, memberId: ann.id });
+    const u1 = u(1);
+    const ok = await repo.joinRound(t, round.id, { userId: u1, memberId: ann.id, memberName: 'x', role: 'editor', claim: { link: link.id } });
+    assert.equal(ok.memberId, ann.id);
+    assert.equal((await grantOf(u1)).memberId, ann.id);
+    assert.equal((await membersNow()).find((m) => m.id === ann.id).userId, u1);
+    assert.equal(await repo.findRoundInviteLink(link.id), null, 'the link is consumed');
+
+    // An invitation into a fresh seat: accepted, seat created, grant with the role.
+    const u2 = u(2);
+    const inv = await repo.createInvitation({ roundId: round.id, ownerTenantId: t, inviterUserId: 'owner', inviteeUserId: u2, memberId: null, role: 'coowner' });
+    const fresh = await repo.joinRound(t, round.id, { userId: u2, memberName: 'Dee', role: 'coowner', claim: { invitation: inv.id } });
+    assert.equal((await membersNow()).find((m) => m.id === fresh.memberId).name, 'Dee');
+    assert.equal((await grantOf(u2)).role, 'coowner');
+    assert.equal((await repo.getInvitation(inv.id)).status, 'accepted');
+
+    // Refusals, each leaving everything exactly as it was.
+    const seats = async () => (await membersNow()).map((m) => ({ id: m.id, name: m.name, userId: m.userId || null }));
+    const before = await seats();
+    const u3 = u(3);
+    const inv3 = await repo.createInvitation({ roundId: round.id, ownerTenantId: t, inviterUserId: 'owner', inviteeUserId: u3, memberId: bo.id, role: 'editor' });
+    const link3 = await repo.createRoundInviteLink({ roundId: round.id, ownerTenantId: t, memberId: bo.id });
+    // The seat is taken in between (here: by u1's own seat, the one already claimed).
+    assert.equal(await repo.joinRound(t, round.id, { userId: u3, memberId: ann.id, memberName: 'x', claim: { invitation: inv3.id } }), 'seat_unavailable');
+    assert.equal((await repo.getInvitation(inv3.id)).status, 'pending', 'the claim rolled back with the refusal');
+    assert.equal(await repo.joinRound(t, round.id, { userId: u3, memberId: 'gone', memberName: 'x', claim: { link: link3.id } }), 'seat_unavailable');
+    assert.ok(await repo.findRoundInviteLink(link3.id), 'the link survives a refused join');
+    await repo.retireMember(t, round.id, cy.id, true);
+    assert.equal(await repo.joinRound(t, round.id, { userId: u3, memberId: cy.id, memberName: 'x' }), 'seat_unavailable', 'a retired seat');
+    assert.equal(await repo.joinRound(t, round.id, { userId: u1, memberName: 'again' }), 'already_member');
+    // An account linked to a seat by the owner, with NO grant: only the seat
+    // check can see it (the grant index cannot), so it is pinned on its own.
+    const linkedOnly = u('linked');
+    await repo.updateMember(t, round.id, bo.id, { userId: linkedOnly });
+    assert.equal(await repo.joinRound(t, round.id, { userId: linkedOnly, memberName: 'twice' }), 'already_member');
+    await repo.updateMember(t, round.id, bo.id, { userId: null });
+    assert.equal(await repo.joinRound(t, round.id, { userId: u3, memberName: 'x', claim: { link: 'no-such-link' } }), 'claim_lost');
+    assert.equal(await repo.joinRound(t, round.id, { userId: u3, memberName: 'x', claim: { invitation: inv.id } }), 'claim_lost', 'no longer pending');
+    const count = (await membersNow()).length;
+    assert.equal(await repo.joinRound(t, round.id, { userId: u3, memberName: 'x', memberLimit: count }), 'quota_members');
+    assert.equal(await repo.joinRound(`${t}-other`, round.id, { userId: u3, memberName: 'x' }), 'round_gone', 'another tenant cannot reach the round');
+    assert.deepEqual(await seats(), before, 'no refusal added, claimed or changed a seat');
+    assert.equal(await grantOf(u3), undefined, 'and no refusal wrote a grant');
+
+    // Two accounts racing for one seat link: exactly one gets it.
+    const race = await repo.createRoundInviteLink({ roundId: round.id, ownerTenantId: t, memberId: bo.id });
+    const [ra, rb] = [u('ra'), u('rb')];
+    const results = await Promise.all([ra, rb].map((uid) =>
+      repo.joinRound(t, round.id, { userId: uid, memberId: bo.id, memberName: 'x', claim: { link: race.id } })));
+    assert.equal(results.filter((r) => r && r.memberId === bo.id).length, 1, `one winner: ${JSON.stringify(results)}`);
+    assert.equal([await grantOf(ra), await grantOf(rb)].filter(Boolean).length, 1);
+
+    // Five accounts racing for the LAST fresh seat under the quota: exactly one
+    // gets it. The count and the insert share the round's lock — without it,
+    // several read the same count and all insert.
+    const limit = (await membersNow()).length + 1;
+    const racers = [1, 2, 3, 4, 5].map((k) => u(`q${k}`));
+    const outcomes = await Promise.all(racers.map((uid) =>
+      repo.joinRound(t, round.id, { userId: uid, memberName: 'racer', memberLimit: limit })));
+    assert.equal(outcomes.filter((r) => r && r.memberId).length, 1, `one seat under the quota: ${JSON.stringify(outcomes)}`);
+    assert.equal((await membersNow()).length, limit);
+  });
+
   test('price watches (#680): one per account and game, owner-scoped, claimed once, recorded with one inbox item', async () => {
     const tag = uniq();
     const uid = `pw-${tag}`;

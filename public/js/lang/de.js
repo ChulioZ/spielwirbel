@@ -1688,6 +1688,8 @@ I18N.de = {
   'join.fullBody': 'Sie hat die Höchstzahl an Plätzen erreicht. Sag der Person Bescheid, die dich eingeladen hat.',
   'join.demoTitle': 'Nicht mit einem Demo-Konto',
   'join.demoBody': 'Ein Demo-Konto kann keiner echten Runde beitreten. Erstelle ein Konto und öffne den Link noch einmal.',
+  'join.disabledTitle': 'Dieses Konto ist gesperrt',
+  'join.disabledBody': 'Mit einem gesperrten Konto kann man keiner Runde beitreten. Wende dich an den Betreiber, wenn du das für einen Fehler hältst.',
   'join.failedTitle': 'Das hat nicht geklappt',
   'join.failedBody': 'Versuch es gleich noch einmal.',
   'join.home': 'Zur Startseite',

@@ -1619,6 +1619,8 @@ I18N.nl = {
   'join.fullBody': 'Het maximale aantal plekken is bereikt. Laat het weten aan wie je heeft uitgenodigd.',
   'join.demoTitle': 'Niet met een demo-account',
   'join.demoBody': 'Een demo-account kan niet bij een echte groep. Maak een account aan en open de link opnieuw.',
+  'join.disabledTitle': 'Dit account is geschorst',
+  'join.disabledBody': 'Een geschorst account kan niet bij een groep. Neem contact op met de beheerder als je denkt dat dit een fout is.',
   'join.failedTitle': 'Dat lukte niet',
   'join.failedBody': 'Probeer het zo nog eens.',
   'join.home': 'Naar de startpagina',

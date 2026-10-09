@@ -1694,6 +1694,8 @@ I18N.en = {
   'join.fullBody': 'It has reached its maximum number of seats. Let the person who invited you know.',
   'join.demoTitle': 'Not with a demo account',
   'join.demoBody': 'A demo account can’t join a real group. Create an account and open the link again.',
+  'join.disabledTitle': 'This account is suspended',
+  'join.disabledBody': 'A suspended account can’t join a group. Contact the operator if you think this is a mistake.',
   'join.failedTitle': 'That didn’t work',
   'join.failedBody': 'Please try again in a moment.',
   'join.home': 'Go to the start page',

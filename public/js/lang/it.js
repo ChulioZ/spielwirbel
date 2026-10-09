@@ -1626,6 +1626,8 @@ I18N.it = {
   'join.fullBody': 'Ha raggiunto il numero massimo di posti. Avvisa chi ti ha invitato.',
   'join.demoTitle': 'Non con un account demo',
   'join.demoBody': 'Un account demo non può unirsi a un gruppo vero. Crea un account e apri di nuovo il link.',
+  'join.disabledTitle': 'Questo account è sospeso',
+  'join.disabledBody': 'Un account sospeso non può unirsi a un gruppo. Contatta il gestore se pensi che sia un errore.',
   'join.failedTitle': 'Non ha funzionato',
   'join.failedBody': 'Riprova tra un momento.',
   'join.home': 'Vai alla home',

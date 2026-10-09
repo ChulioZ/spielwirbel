@@ -1587,6 +1587,8 @@ I18N.fi = {
   'join.fullBody': 'Paikkojen enimmäismäärä on täynnä. Kerro asiasta kutsujallesi.',
   'join.demoTitle': 'Ei demotilillä',
   'join.demoBody': 'Demotili ei voi liittyä oikeaan porukkaan. Luo tili ja avaa linkki uudelleen.',
+  'join.disabledTitle': 'Tämä tili on jäädytetty',
+  'join.disabledBody': 'Jäädytetyllä tilillä ei voi liittyä porukkaan. Ota yhteyttä ylläpitäjään, jos tämä on mielestäsi virhe.',
   'join.failedTitle': 'Se ei onnistunut',
   'join.failedBody': 'Yritä hetken päästä uudelleen.',
   'join.home': 'Etusivulle',

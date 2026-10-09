@@ -804,7 +804,8 @@ What the app does, in detail. For a short overview see the
 - **Invite links** – *accounts mode only* (issue #1515). In the same
   „Einladen" sheet the owner can also create a **link** and share it anywhere
   (the group chat, a message). Whoever opens it and is signed in sees „Runde X
-  beitreten?" and joins with one tap as **Mitspielen** (player); a logged-out
+  beitreten?" and joins with one tap as **Mitspielen** (player) — any account
+  but a guest demo, which cannot join a real round; a logged-out
   visitor is told what the link is and sent to sign in, landing back on it
   afterwards. The owner fixes the seat when creating the link, exactly as for an
   invitation: a **fresh seat** (the link stays usable for everyone who opens it)
