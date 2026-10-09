@@ -37,6 +37,10 @@
 // say — the allowlist discipline of .claude/rules/product-event-logging.md.
 const SESSION_EVENTS = {
   started: 'log.started',
+  // An evening logged after the fact (#1616), in place of `started` — the
+  // session was entered, not run — and a finished session moved to another day.
+  logged: 'log.logged',
+  redated: 'log.redated',
   voted: 'log.voted', // resolved to votedSelf/votedFor below — it needs two names
   voting_closed: 'log.closed',
   game_chosen: 'log.chose',

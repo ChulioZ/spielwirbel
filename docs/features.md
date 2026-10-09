@@ -632,6 +632,16 @@ What the app does, in detail. For a short overview see the
   launch a session for **one specific game** straight from its detail page or a
   Pokale tile: pick who joins and skip the vote entirely, landing directly on
   the results screen with that game chosen.
+  The sheet also asks **Wann?** (when): left on today it is the ordinary direct
+  play; a past day **logs** the session instead — it is created already played
+  on that day, and lands on its results with the winner picker open.
+- **Session nachtragen** (log a past session) – the Chronik offers it for an
+  evening played before the group found the app, or entered a day late: pick a
+  game from the shelf, then the same sheet, dated yesterday. A logged session
+  counts in the Chronik, the recaps, Pokale and the badges on its own day, and is
+  not announced to friends (it is bookkeeping, not news).
+- **Datum ändern** (change date) – any played session can be moved to another
+  day from its results screen; the session's log records who changed it.
 - **Finale & results** – votes stay sealed until everyone is done, then a
   little show reveals the results: the ranked rows fill in as a race, shortest
   first, and the game that won the vote is last to finish — rows sharing first

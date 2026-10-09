@@ -1304,7 +1304,9 @@ async function showResults(round, session, gamesHint, reveal, plain) {
        is who won, and on „Ändern". A party tap keeps it open (#1327) — several
        people often won — while an ending (single-choice) or „Fertig" collapses
        it again. */
-    pickerOpen: false,
+    // …except for an evening just LOGGED after the fact (#1616), whose one open
+    // question is who won: the direct-play sheet asks for it, once.
+    pickerOpen: takeResultPickerOpen(session.id),
     /* Which party chip to hand keyboard focus back to after the re-render a tap
        causes (#1327): resultRenderBand() rebuilds the chips, so the tapped
        button is detached and focus would fall to <body> — a full Tab back into
@@ -1508,13 +1510,17 @@ async function showResults(round, session, gamesHint, reveal, plain) {
   // (#614). Writing into a detached node is fine — it is in the document by the
   // time anything can click it.
   const cancelWrap = h('<div class="cancel-area"></div>');
+  // „Datum ändern" (#1616), Klassisch's footer only — the composed designs carry
+  // it behind „Mehr" (resultRenderFoot). Refilled with the cancel area, since
+  // the session can become finished after render.
+  const dateWrap = h('<div class="date-area"></div>');
   // Der Tisch's foot takes the place of that footer row (#1275); built here for
   // the same reason, and filled by resultRenderFoot.
   const tischFoot = tischLook ? h('<div class="result-foot" hidden></div>') : null;
 
   // The ranked rows (#1056) and their gold top group, appended to the screen.
   Object.assign(rs, { screen, titleEl, forestFacts, peopleEl, shareNow, when,
-    badgeMoment, tischSlot, tisch, cancelWrap, tischFoot });
+    badgeMoment, tischSlot, tisch, cancelWrap, dateWrap, tischFoot });
   buildResultTafel(rs);
 
   /* The phone's one CTA (#1057). Desktop gets NO action bar: a sticky bar inside
@@ -1584,6 +1590,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
   // ways to throw the session away.
   const removeEntry = removePersonEntry(round, session, rs.reopen);
   if (removeEntry) footer.appendChild(removeEntry);
+  footer.appendChild(dateWrap);
   footer.appendChild(cancelWrap);
   // #137: deleting a played evening destroys its votes, result and winners for
   // everyone, so it is co-owner and up. Cancelling (above) stays an ordinary

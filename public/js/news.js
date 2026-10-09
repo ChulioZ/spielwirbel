@@ -48,6 +48,52 @@
 // AFTER, which is the exact unearned interruption this design exists to avoid.
 const NEWS = [
   /*
+   * #1616, logging a past session. A capability that did not exist: every
+   * session was dated „now", so a group that found the app midway could not
+   * get its earlier evenings into the Chronik. Says where both entry points
+   * are and that a date can be corrected afterwards.
+   */
+  {
+    revision: '2026-10-11',
+    kind: 'new',
+    de: {
+      title: 'Sessions nachtragen',
+      body: 'Ihr habt schon gespielt, bevor ihr Spielwirbel genutzt habt, oder vergessen, eine Session einzutragen? In der Chronik gibt es jetzt „Session nachtragen“: Spiel wählen, Tag wählen, wer dabei war und wer gewonnen hat – fertig. Auch „Jetzt spielen“ fragt jetzt „Wann?“. Und stimmt das Datum einer gespielten Session nicht, änderst du es auf ihrer Ergebnisseite. Chronik, Rückblick und Abzeichen richten sich nach dem Tag, an dem ihr gespielt habt.',
+    },
+    en: {
+      title: 'Log past sessions',
+      body: 'Played before you started using Spielwirbel, or forgot to enter a session? The history now has “Log a past session”: pick the game, the day, who was there and who won – done. “Play now” also asks “When?” now. And if a played session has the wrong date, change it on its results page. The history, the recaps and the badges follow the day you actually played.',
+    },
+    es: {
+      title: 'Registrar sesiones pasadas',
+      body: '¿Jugasteis antes de usar Spielwirbel o se os olvidó apuntar una sesión? En el historial ahora está «Registrar una sesión pasada»: elige el juego, el día, quién estaba y quién ganó, y listo. «Jugar ya» también pregunta ya «¿Cuándo?». Y si una sesión jugada tiene la fecha mal, la cambias en su página de resultados. El historial, los resúmenes y las insignias siguen el día en que jugasteis de verdad.',
+    },
+    fr: {
+      title: 'Ajouter des sessions passées',
+      body: 'Vous avez joué avant d’utiliser Spielwirbel, ou oublié d’enregistrer une session ? L’historique propose désormais « Ajouter une session passée » : choisissez le jeu, le jour, qui était là et qui a gagné, c’est tout. « Jouer maintenant » demande aussi « Quand ? ». Et si la date d’une session jouée est fausse, vous la changez sur sa page de résultats. L’historique, les récapitulatifs et les badges suivent le jour où vous avez vraiment joué.',
+    },
+    it: {
+      title: 'Registrare sessioni passate',
+      body: 'Avete giocato prima di usare Spielwirbel, o vi siete dimenticati di registrare una sessione? Nella cronologia ora c’è «Registra una sessione passata»: scegli il gioco, il giorno, chi c’era e chi ha vinto, ed è fatta. Anche «Gioca subito» chiede adesso «Quando?». E se una sessione giocata ha la data sbagliata, la cambi nella sua pagina dei risultati. Cronologia, riepiloghi e distintivi seguono il giorno in cui avete giocato davvero.',
+    },
+    nl: {
+      title: 'Eerdere sessies toevoegen',
+      body: 'Speelden jullie al voordat jullie Spielwirbel gebruikten, of vergaten jullie een sessie in te voeren? In de geschiedenis staat nu “Eerdere sessie toevoegen”: kies het spel, de dag, wie er was en wie won – klaar. “Nu spelen” vraagt nu ook “Wanneer?”. En klopt de datum van een gespeelde sessie niet, dan wijzig je die op de resultatenpagina. Geschiedenis, overzichten en badges volgen de dag waarop jullie echt speelden.',
+    },
+    pt: {
+      title: 'Registrar sessões passadas',
+      body: 'Vocês jogaram antes de usar o Spielwirbel ou esqueceram de registrar uma sessão? No histórico agora tem “Registrar uma sessão passada”: escolha o jogo, o dia, quem estava e quem ganhou – pronto. “Jogar agora” também pergunta “Quando?”. E se uma sessão jogada estiver com a data errada, você muda na página de resultados dela. O histórico, os resumos e as insígnias seguem o dia em que vocês realmente jogaram.',
+    },
+    fi: {
+      title: 'Aiempien sessioiden lisääminen',
+      body: 'Pelasitteko jo ennen Spielwirbelin käyttöä, tai unohtuiko session kirjaaminen? Historiassa on nyt ”Lisää aiempi sessio”: valitse peli, päivä, ketkä olivat mukana ja kuka voitti – valmis. Myös ”Pelaa heti” kysyy nyt ”Milloin?”. Ja jos pelatun session päivämäärä on väärä, muutat sen sen tulossivulla. Historia, koosteet ja merkit seuraavat päivää, jona oikeasti pelasitte.',
+    },
+    ko: {
+      title: '지난 세션 추가',
+      body: 'Spielwirbel을 쓰기 전에 이미 플레이했거나 세션 기록을 잊으셨나요? 이제 기록 화면에 “지난 세션 추가”가 있어요. 게임, 날짜, 함께한 사람과 승자만 고르면 끝이에요. “바로 플레이”도 이제 “언제?”를 물어요. 플레이한 세션의 날짜가 틀렸다면 결과 페이지에서 바꿀 수 있어요. 기록, 요약, 배지는 실제로 플레이한 날을 따라가요.',
+    },
+  },
+  /*
    * #743, the weekly quiz. A capability that did not exist: the first surface
    * worth opening when no session is planned. Says what is asked, that the
    * answer shows at once, where it lives and when a round starts.

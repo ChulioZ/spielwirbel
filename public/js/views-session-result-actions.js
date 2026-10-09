@@ -189,8 +189,24 @@ async function resultDeleteSession(rs) {
   } catch (e) { toast(e.message, { tone: 'error' }); }
 }
 
+// Move this finished session to another day (#1616) — the evening was entered
+// a day late, or its date is simply wrong. Re-renders from the server's view.
+function resultChangeDate(rs) {
+  showSessionDateSheet(rs.round, rs.session, rs.reopen);
+}
+
 function resultRenderCancel(rs) {
-  const { cancelWrap } = rs;
+  const { cancelWrap, dateWrap } = rs;
+  // „Datum ändern" (#1616) beside it, for a finished session only: a date means
+  // something once a game was played, and a running session's date is today.
+  if (dateWrap) {
+    dateWrap.innerHTML = '';
+    if (rs.finished) {
+      const btn = h(`<button class="link-btn" type="button">${iconText('ti-calendar-event', t('result.changeDate'))}</button>`);
+      btn.addEventListener('click', () => resultChangeDate(rs));
+      dateWrap.appendChild(btn);
+    }
+  }
   cancelWrap.innerHTML = '';
   if (rs.finished || rs.chosenId) return;
   if (rs.cancelled) {
@@ -233,6 +249,10 @@ function resultRenderFoot(rs) {
   // evening where the other two throw it away.
   if (people.length > 1) {
     more.unshift({ icon: 'ti-user-minus', label: t('session.removeEntry'), kind: 'destructive', run: () => showRemovePersonSheet(round, session, rs.reopen) });
+  }
+  // A correction, not a loss — so `edit`, which sorts first (#1616).
+  if (rs.finished) {
+    more.push({ icon: 'ti-calendar-event', label: t('result.changeDate'), kind: 'edit', run: () => resultChangeDate(rs) });
   }
   if (roundCan(round, 'session.delete')) {
     more.push({ icon: 'ti-trash', label: t('result.deleteSession'), kind: 'destructive', run: () => resultDeleteSession(rs) });

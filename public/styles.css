@@ -2124,6 +2124,16 @@ a.hub-row:hover { background: var(--sunken-soft); }
 .sort-select:focus { outline: 2px solid var(--brand-ring, var(--brand)); border-color: var(--brand); }
 
 /* Filter chips: type (radio-like) and duration (multi-toggle). */
+/* „Session nachtragen" (#1616), under the Chronik's filter chips — a quiet
+   secondary action, so it sits left-aligned below the row it follows rather
+   than competing with the chips for their line. */
+.chronik-log { margin: -6px 0 16px; }
+/* The game list „Session nachtragen" opens: one button per shelf game, picking
+   is the action. A bounded box the sheet scrolls past, never a page-long list. */
+.log-pick { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.log-pick li[hidden] { display: none; }
+.log-pick__row { width: 100%; font-family: inherit; color: var(--ink); text-align: left; }
+.log-pick__empty { margin: 8px 0 0; }
 .filter-chips {
   display: flex;
   align-items: center;
@@ -6455,6 +6465,9 @@ a.k-tile:focus-visible,
 }
 .cancel-area { text-align: center; }
 .cancel-area:empty { display: none; }
+/* „Datum ändern" (#1616) beside it — empty until the session is finished, and
+   collapsed then for the same reason as the cancel area. */
+.date-area:empty { display: none; }
 .play-btn { margin-top: 8px; padding: 8px 14px; font-size: var(--text-md); }
 .trow.is-chosen {
   border-color: var(--brand);

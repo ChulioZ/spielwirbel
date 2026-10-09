@@ -215,6 +215,16 @@ function renderChronikTab(round, activities) {
     });
   });
   sec.appendChild(chips);
+  // „Session nachtragen" (#1616): an evening played before the group found the
+  // app, or entered a day late. Here because the Chronik is the round's time
+  // axis — the place a missing evening is noticed. One renderer serves every
+  // design, so every design gets it. Offered only with something on the shelf
+  // to log, since a logged session is a direct pick of one shelf game.
+  if (round.games.some(isActiveGame)) {
+    const logBtn = h(`<button type="button" class="btn btn--sm chronik-log">${iconText('ti-calendar-plus', t('chronik.log.cta'))}</button>`);
+    logBtn.addEventListener('click', () => showLogSessionPicker(round));
+    chips.after(logBtn);
+  }
   // Forest's phone entry to the recap (#1473, F13.2), right under the head.
   const recapEntry = forest ? forestRecapEntry(periodSec) : null;
   if (recapEntry) secHead.after(recapEntry);
