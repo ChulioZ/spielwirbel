@@ -748,6 +748,7 @@ I18N.fr = {
   'quiz.wrong': 'Raté – la bonne réponse est : {answer}',
   'quiz.score': '{score} sur {answered} justes · {answered} sur {total} répondues',
   'quiz.scoreNone': '{total} questions vous attendent.',
+  'quiz.nextRound': 'Tout est répondu – la prochaine manche commence le {date}.',
   'quiz.source': 'Données de jeux de BoardGameGeek',
   'quiz.rankAsOf': 'Classement BGG du {date}',
   'quiz.board.title': 'Classement entre amis',

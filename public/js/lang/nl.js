@@ -743,6 +743,7 @@ I18N.nl = {
   'quiz.wrong': 'Helaas – het juiste antwoord is: {answer}',
   'quiz.score': '{score} van {answered} goed · {answered} van {total} beantwoord',
   'quiz.scoreNone': 'Er wachten {total} vragen op je.',
+  'quiz.nextRound': 'Alles beantwoord – de volgende ronde begint op {date}.',
   'quiz.source': 'Spelgegevens van BoardGameGeek',
   'quiz.rankAsOf': 'BGG-ranglijst van {date}',
   'quiz.board.title': 'Ranglijst onder vrienden',

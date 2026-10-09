@@ -747,6 +747,7 @@ I18N.es = {
   'quiz.wrong': 'No es así: la respuesta correcta es {answer}',
   'quiz.score': '{score} de {answered} correctas · {answered} de {total} respondidas',
   'quiz.scoreNone': 'Te esperan {total} preguntas.',
+  'quiz.nextRound': 'Todo respondido: la próxima ronda empieza el {date}.',
   'quiz.source': 'Datos de juegos de BoardGameGeek',
   'quiz.rankAsOf': 'Ranking de BGG del {date}',
   'quiz.board.title': 'Clasificación entre tus amistades',

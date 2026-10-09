@@ -720,6 +720,7 @@ I18N.fi = {
   'quiz.wrong': 'Väärin – oikea vastaus on: {answer}',
   'quiz.score': '{score}/{answered} oikein · {answered}/{total} vastattu',
   'quiz.scoreNone': '{total} kysymystä odottaa sinua.',
+  'quiz.nextRound': 'Kaikki vastattu – seuraava kierros alkaa {date}.',
   'quiz.source': 'Pelitiedot: BoardGameGeek',
   'quiz.rankAsOf': 'BGG-ranking {date}',
   'quiz.board.title': 'Ystävien tulostaulu',

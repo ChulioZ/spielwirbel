@@ -161,13 +161,19 @@ async function showQuiz() {
   }
 
   const score = h('<p class="quiz__score" aria-live="polite"></p>');
+  // Once the week is done, say when the next one starts — a finished /quiz
+  // otherwise leaves the reader with nothing to look forward to.
+  const next = h('<p class="muted quiz__next"></p>');
   const paintScore = () => {
     score.textContent = round.answered
       ? t('quiz.score', { score: round.score, answered: round.answered, total: round.total })
       : t('quiz.scoreNone', { total: round.total });
+    next.textContent = round.answered === round.total && round.opensNext
+      ? t('quiz.nextRound', { date: fmtDate(round.opensNext) }) : '';
   };
   paintScore();
   app.appendChild(score);
+  app.appendChild(next);
 
   const list = h('<div class="quiz__questions"></div>');
   round.questions.forEach((q, index) => {
@@ -253,7 +259,11 @@ async function loadQuizBoard(board) {
    nothing to show (views-home.js renderHomeDash). */
 async function mountHomeQuiz(tile) {
   const drop = () => { const slot = tile.closest('.card-slot'); (slot || tile).remove(); };
-  if (!quizAvailable()) return drop();
+  // quizReady, not quizAvailable: on a cold load the home screen can render
+  // before /api/config has answered, and the synchronous read would drop the
+  // tile on an instance that runs the quiz.
+  if (!(await quizReady())) return drop();
+  if (!tile.isConnected) return undefined;
   // A guest demo cannot play; its tile says what an account would get.
   if (isDemoAccount()) {
     const a = h(`<a class="home-quiz__link">

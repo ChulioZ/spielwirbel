@@ -714,6 +714,7 @@ I18N.ko = {
   'quiz.wrong': '아쉬워요 – 정답은 {answer}',
   'quiz.score': '{answered}개 중 {score}개 정답 · {total}개 중 {answered}개 답함',
   'quiz.scoreNone': '질문 {total}개가 기다리고 있어요.',
+  'quiz.nextRound': '모두 답했어요 – 다음 라운드는 {date}에 시작돼요.',
   'quiz.source': '게임 정보: BoardGameGeek',
   'quiz.rankAsOf': '{date} 기준 BGG 순위',
   'quiz.board.title': '친구들과의 순위',

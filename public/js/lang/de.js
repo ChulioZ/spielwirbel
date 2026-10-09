@@ -764,6 +764,7 @@ I18N.de = {
   'quiz.wrong': 'Leider falsch – richtig ist: {answer}',
   'quiz.score': '{score} von {answered} richtig · {answered} von {total} beantwortet',
   'quiz.scoreNone': '{total} Fragen warten auf dich.',
+  'quiz.nextRound': 'Alles beantwortet – die nächste Runde startet am {date}.',
   'quiz.source': 'Spieldaten von BoardGameGeek',
   'quiz.rankAsOf': 'BGG-Rangliste vom {date}',
   'quiz.board.title': 'Rangliste im Freundeskreis',

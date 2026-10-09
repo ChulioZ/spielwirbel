@@ -10674,6 +10674,8 @@ kbd {
    (.claude/rules/accessibility-contrast-and-modals.md §3). */
 .quiz__intro { margin: 0 0 12px; }
 .quiz__score { font-weight: 600; margin: 0 0 14px; }
+.quiz__next { margin: -10px 0 14px; font-size: var(--text-sm); }
+.quiz__next:empty { display: none; }
 .quiz__empty { margin-top: 12px; }
 .quiz__questions { display: flex; flex-direction: column; gap: 16px; }
 .quiz__source { font-size: var(--text-sm); margin: 16px 0 0; }

@@ -762,6 +762,7 @@ I18N.en = {
   'quiz.wrong': 'Not quite – the answer is: {answer}',
   'quiz.score': '{score} of {answered} correct · {answered} of {total} answered',
   'quiz.scoreNone': '{total} questions are waiting for you.',
+  'quiz.nextRound': 'All answered – the next round starts on {date}.',
   'quiz.source': 'Game data from BoardGameGeek',
   'quiz.rankAsOf': 'BGG ranking as of {date}',
   'quiz.board.title': 'Leaderboard among your friends',

@@ -248,7 +248,8 @@ test('/quiz/archiv: percentages only — the running week with its trickiest que
   const cur = dom.app.querySelector('.quiz-archive__week--current');
   assert.match(text(cur), /KW 41\/2026/);
   assert.match(text(cur), /62 % der Antworten richtig/);
-  assert.match(text(cur), /Neue Runde ab 12\.10\.2026/);
+  // The date in the READER's zone, the way the app formats it — CI runs in UTC.
+  assert.ok(text(cur).includes(`Neue Runde ab ${dom.call('fmtDate', archive.current.opensNext)}`));
   assert.match(text(cur), /noch keine Antworten/);
   const hardest = cur.querySelectorAll('.quiz-archive__q--hardest');
   assert.equal(hardest.length, 1);
@@ -299,5 +300,33 @@ test('a logged-out visitor cold-loading /quiz/archiv gets the page — /quiz its
     dom.run(`history.replaceState({}, '', '${path}')`);
     await dom.call('bootApp');
     assert.deepEqual(routed, [want], path);
+  }
+});
+
+test('a finished week on /quiz says when the next round starts; an unfinished one does not', async (t) => {
+  for (const [answered, shown] of [[5, true], [1, false]]) {
+    const dom = app(t);
+    dom.set('api', async (method, url) => (url === '/api/quiz/current'
+      ? { ...JSON.parse(JSON.stringify(ROUND)), answered, score: 2, opensNext: '2026-10-11T22:00:00.000Z' } : { entries: [] }));
+    await dom.call('showQuiz');
+    const next = dom.app.querySelector('.quiz__next');
+    if (shown) assert.ok(text(next).includes(`nächste Runde startet am ${dom.call('fmtDate', '2026-10-11T22:00:00.000Z')}`), text(next));
+    else assert.equal(text(next), '', 'an unfinished week announced the next one');
+  }
+});
+
+test('on a cold load the home tile waits for the config — shown where the quiz runs, gone where it does not', async (t) => {
+  for (const [quizOn, kept] of [[true, true], [false, false]]) {
+    const dom = app(t);
+    dom.run('accountCfg = null');
+    dom.set('withAppConfig', (cb) => { dom.run(`accountCfg = { quiz: ${quizOn} }`); cb(dom.run('accountCfg')); });
+    dom.set('api', async () => ({ ...ROUND, answered: 0, score: 0 }));
+    const dash = dom.call('renderHomeDash');
+    dom.app.appendChild(dash);
+    const tile = dash.querySelector('#homeQuiz');
+    assert.ok(tile, 'no slot was placed while the config was still out');
+    await flush(); await flush();
+    assert.equal(tile.isConnected, kept, quizOn ? 'the tile was dropped on an instance running the quiz' : 'the tile stayed where the quiz is off');
+    if (kept) assert.match(text(tile), /5 neue Fragen/);
   }
 });

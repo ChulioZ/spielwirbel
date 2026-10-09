@@ -278,8 +278,10 @@ function renderHomeDash() {
   // a password-only instance reaches it logged out and the numbers are public
   // either way.
   // The weekly quiz (#743): this week's state in one line. The same
-  // placeholder-or-remove shape, and only where the quiz runs at all.
-  if (quizAvailable()) {
+  // placeholder-or-remove shape. Placed whenever the config has not answered
+  // yet as well (a cold load) — the tile waits for it and removes its slot
+  // where the quiz does not run.
+  if (accountsActive() && isLoggedIn() && (!accountCfg || quizAvailable())) {
     const quiz = h('<section class="home-quiz dash-tile" id="homeQuiz"></section>');
     dash.appendChild(cardSlot(quiz));
     mountHomeQuiz(quiz);

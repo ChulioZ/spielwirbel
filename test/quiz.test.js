@@ -117,6 +117,7 @@ test('the round carries no answer key until a question is answered, and an answe
   assert.equal(cur.body.week, weekKey());
   assert.equal(cur.body.total, 5);
   assert.equal(cur.body.answered, 0);
+  assert.ok(Date.parse(cur.body.opensNext) > Date.now(), 'the round says when the next one opens');
   assert.ok(!JSON.stringify(cur.body).includes('"answer"'), 'an answer key reached the browser before any answer');
 
   const stored = store.data.quizRounds[0].questions;
