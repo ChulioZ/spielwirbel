@@ -168,6 +168,18 @@ What the app does, in detail. For a short overview see the
   once, a further drop again, and a price rising back above the threshold arms
   the alert for the next dip. Up to 50 alerts per account
   (`MAX_PRICE_WATCHES_PER_USER`).
+- **Weekly quiz** – *accounts mode, where the operator switched it on* (issue
+  #743, `QUIZ_ENABLED`). Five questions a week about well-known board games,
+  built from the BGG corpus: complexity, the box's player range and playing time,
+  year, category, mechanic, designer, and a ranking duel between four games.
+  Each answer is checked by the server the moment it is given and cannot be
+  changed afterwards; the browser never holds the answer key of an unanswered
+  question. **Wochenquiz** in the account menu and a home tile lead to `/quiz`,
+  which also shows the week's leaderboard among the account's confirmed friends.
+  A new round opens every Monday (Berlin time) and puts an inbox item — never an
+  e-mail — in front of everyone who played before. The logged-out landing page
+  carries one playable, unscored sample question. Category, mechanic and designer
+  names stay in BGG's English in every language: the data may not be modified.
   Beside those three lists the shelf offers **„Das könnte euch auch
   gefallen"** — games the round does *not* own, ranked against its own taste.
   The profile comes from the three things BoardGameGeek cannot know: which games

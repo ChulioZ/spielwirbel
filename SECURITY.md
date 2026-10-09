@@ -44,6 +44,12 @@ Security issues especially relevant given the current architecture:
   (`PUBLIC_STATS_MIN_*`, `lib/public-stats.js`) — a way to read those below the
   thresholds, or to attribute one of them to a particular tenant, is in scope;
   the published totals themselves are not.
+- **The weekly quiz's answer key** (#743). `GET /api/quiz/sample` is public and
+  carries its own answer by design — it is never scored and uses none of the
+  week's scored games. Reading the answer to a **scored** question before
+  answering it (from any endpoint, as any account), changing an answer once its
+  result was shown, or seeing the leaderboard entry of an account that is not a
+  confirmed friend is in scope.
 - **Abuse of the four write routes that sit OUTSIDE the auth gate.** Everything
   under `/api` is gated in `lib/app.js`, with deliberate exceptions mounted ahead
   of it. Four of them accept writes: `/api/account` (register, login, the demo);

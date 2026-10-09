@@ -14,7 +14,8 @@ a judgement call:
 
 > **Main pages are the ones reachable from chrome the user always has.** The
 > brand mark → `/`, the inbox button → `/inbox`, the account menu → `/freunde`,
-> `/konto`, `/neu`, `/entdecken` and `/preisalarme` (where prices exist), the
+> `/konto`, `/neu`, `/entdecken`, `/preisalarme` (where prices exist) and
+> `/quiz` (where the weekly quiz runs), the
 > dock/rail → the four round sections. Those get **no** back
 > control. **Everything else gets exactly one, as the first element of the
 > content column, at every viewport width.**

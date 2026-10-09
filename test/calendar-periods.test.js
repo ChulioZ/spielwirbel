@@ -133,3 +133,21 @@ test('localMidnight resolves a date whose midnight sits across a transition', ()
   assert.equal(new Date(localMidnight('Pacific/Auckland', 2026, 6, 15)).toISOString(),
     '2026-06-14T12:00:00.000Z');
 });
+
+test('weekKey: the ISO week in Berlin time, with the year of its Thursday (#743)', () => {
+  const { weekKey } = require('../lib/calendar-periods');
+  // 2026-12-31 is a Thursday: week 53 of 2026, and 2027-01-01 belongs to it.
+  assert.equal(weekKey('2026-12-31T12:00:00Z'), '2026-W53');
+  assert.equal(weekKey('2027-01-01T12:00:00Z'), '2026-W53');
+  assert.equal(weekKey('2027-01-04T12:00:00Z'), '2027-W01');
+  // 2025-12-29 (a Monday) already opens 2026's week 1.
+  assert.equal(weekKey('2025-12-29T10:00:00Z'), '2026-W01');
+  // Monday 00:30 in Berlin (CEST) is still Sunday 22:30 in UTC.
+  assert.equal(weekKey('2026-10-04T21:30:00Z'), '2026-W40');
+  assert.equal(weekKey('2026-10-04T22:30:00Z'), '2026-W41');
+  // Stepping back crosses the DST switch on the calendar, not by 168 hours.
+  assert.equal(weekKey('2026-10-26T00:30:00Z', 1), '2026-W43');
+  assert.equal(weekKey('2026-10-09T12:00:00Z', 8), '2026-W33');
+  // Zero-padded, so the keys sort as strings.
+  assert.ok(weekKey('2026-02-10T12:00:00Z') < weekKey('2026-10-09T12:00:00Z'));
+});

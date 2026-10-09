@@ -618,6 +618,28 @@ is cached for a few seconds, so polling it cannot drive database load. Don't mak
 `/readyz` the *deploy* health check: a transient database blip would then
 restart-loop the container.
 
+### The weekly quiz (issue #743)
+
+Five questions a week about board games, generated from the corpus above, with a
+friends-only leaderboard and one unscored sample question on the logged-out
+landing page. **Off by default**: set `QUIZ_ENABLED=true` (it also needs accounts
+mode — scores are kept per account). An instance with an empty or not yet
+enriched corpus simply shows no quiz anywhere, flag or not.
+
+A round is built once per ISO week (Berlin time) — on the first scheduler tick of
+the week or the first visit, whichever comes first — and stored, so a corpus
+upload mid-week never changes questions someone has already answered. Players of
+an earlier round get an in-app inbox item when a new one opens; **no e-mail is
+ever sent** for it (`lib/notify.js` does not mail this type).
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `QUIZ_ENABLED` | off | `true` turns the quiz on |
+| `QUIZ_POOL_SIZE` | 500 | the best-ranked corpus games questions are drawn from |
+| `QUIZ_QUESTIONS_PER_ROUND` | 5 | questions per week (3–8), each of a different type |
+| `QUIZ_GAME_COOLDOWN_WEEKS` | 4 | how many past rounds' games a new round avoids |
+| `QUIZ_RETENTION_WEEKS` | 8 | how long rounds and answers are kept; the purge runs even with the quiz off |
+
 ### A filled local dev instance
 
 A fresh clone starts empty, so a UI change gets verified against a blank Regal,

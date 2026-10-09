@@ -82,6 +82,13 @@ const GLOBAL_DISPOSITION = {
       + 'downloads and may forward',
   },
   price_watches: { erase: true, export: true },
+  quiz_submissions: { erase: true, export: true },
+  quiz_rounds: {
+    erase: false,
+    export: false,
+    why: 'one week of quiz questions (#743) built from public BGG corpus facts — '
+      + 'no account, tenant or personal data in it, so nothing to erase or export',
+  },
   moderation_log: {
     erase: false,
     export: false,
@@ -217,6 +224,7 @@ if (!process.env.DATABASE_URL) {
       friendships: 'friendships',
       feed_events: 'feedEvents',
       price_watches: 'priceWatches',
+      quiz_submissions: 'quizSubmissions',
     };
     for (const [table, d] of Object.entries(GLOBAL_DISPOSITION)) {
       if (!d.export) continue;
@@ -251,6 +259,7 @@ if (!process.env.DATABASE_URL) {
     await repo.createFriendRequest({ requesterUserId: uid, addresseeUserId: other });
     await repo.addFeedEvent(uid, { type: 'session_played', title: 'Catan', at: now });
     await repo.createPriceWatch(uid, { externalId: '13', title: 'Catan', thresholdCents: 2000, destination: 'DE', currency: 'EUR', editionLang: 'DE' });
+    await repo.recordQuizAnswer(uid, '2026-W41', 0, 5, { choice: 0, correct: true });
     await repo.createSessionVoteLink({ tenantId: tenant, roundId: round.id, sessionId: session.id });
     await repo.createRoundInviteLink({ roundId: round.id, ownerTenantId: tenant, memberId: null });
 

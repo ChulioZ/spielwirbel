@@ -62,6 +62,7 @@ const OFF = {
   faceDesign: FACE_DESIGN,
   // #680: whether prices (and so price alerts) exist — off unless PRICES_ENABLED.
   prices: false,
+  quiz: false,
 };
 
 test.afterEach(() => {

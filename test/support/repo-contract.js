@@ -3900,6 +3900,74 @@ module.exports = function repoContract(repo) {
     assert.equal((await membersNow()).length, limit);
   });
 
+  test('weekly quiz (#743): one round per week, announced once, one final answer per question, purged by week', async () => {
+    const tag = uniq();
+    // Week keys far from any real week, so other cases' rounds never collide.
+    const wk = (n) => `19${String(10 + (parseInt(tag.slice(1, 3), 16) % 80)).padStart(2, '0')}-W${String(n).padStart(2, '0')}`;
+    const round = { week: wk(10), generatedAt: '2026-10-09T00:00:00.000Z', dumpDate: '2026-10-01', questions: [{ type: 'year', answer: 1 }], sample: null };
+    const created = await repo.createQuizRound(round);
+    assert.equal(created.week, wk(10));
+    assert.equal(created.announcedAt, null);
+    assert.equal(await repo.createQuizRound({ ...round, questions: [] }), 'exists');
+    assert.deepEqual((await repo.getQuizRound(wk(10))).questions, round.questions, 'the first round stands');
+    assert.equal(await repo.getQuizRound(wk(11)), null);
+    await repo.createQuizRound({ ...round, week: wk(9) });
+    assert.deepEqual((await repo.listQuizRounds(1000)).filter((r) => r.week.startsWith(wk(1).slice(0, 4))).map((r) => r.week), [wk(10), wk(9)], 'newest first');
+
+    // Announced exactly once.
+    assert.equal(await repo.claimQuizAnnouncement(wk(10), '2026-10-09T01:00:00.000Z'), true);
+    assert.equal(await repo.claimQuizAnnouncement(wk(10), '2026-10-09T01:00:01.000Z'), false);
+    assert.equal(await repo.claimQuizAnnouncement(wk(11), '2026-10-09T01:00:00.000Z'), false, 'no round, nothing to claim');
+
+    // Answers: created on the first, each question final.
+    const uid = `qz-${tag}`;
+    const other = `qz-other-${tag}`;
+    const first = await repo.recordQuizAnswer(uid, wk(10), 1, 3, { choice: 2, correct: true });
+    assert.equal(first.userId, uid);
+    assert.equal(first.week, wk(10));
+    assert.equal(first.score, 1);
+    assert.equal(first.answers.length, 3);
+    assert.equal(first.answers[0], null, 'an unanswered slot stays null, not absent');
+    assert.equal(await repo.recordQuizAnswer(uid, wk(10), 1, 3, { choice: 0, correct: false }), 'answered');
+    const second = await repo.recordQuizAnswer(uid, wk(10), 0, 3, { choice: 0, correct: false });
+    assert.equal(second.score, 1);
+    assert.deepEqual(second.answers.map((a) => a && a.choice), [0, 2, null]);
+    assert.equal((await repo.getQuizSubmission(uid, wk(10))).id, first.id, 'one submission per account and week');
+    assert.equal(await repo.getQuizSubmission(other, wk(10)), null);
+    // Racing answers to ONE question of an EXISTING submission: exactly one is
+    // recorded. The submission must exist first — a first answer is already
+    // serialised by the insert's unique index, so racing that would stay green
+    // with the row lock deleted (measured on Postgres).
+    await repo.recordQuizAnswer(other, wk(10), 0, 3, { choice: 0, correct: false });
+    const raced = await Promise.all([0, 1, 2].map((c) => repo.recordQuizAnswer(other, wk(10), 2, 3, { choice: c, correct: c === 1 })));
+    assert.equal(raced.filter((r) => r === 'answered').length, 2, 'a raced question took more than one answer');
+    await repo.recordQuizAnswer(other, wk(9), 0, 3, { choice: 0, correct: true });
+
+    assert.deepEqual((await repo.listQuizSubmissions(wk(10), [uid, other, 'nobody'])).map((x) => x.userId).sort(), [other, uid].sort());
+    assert.deepEqual(await repo.listQuizSubmissions(wk(10), []), []);
+    const players = await repo.listQuizPlayers(wk(10));
+    assert.ok(players.includes(other), 'played an earlier week');
+    assert.ok(!players.includes(uid), 'played only the current week');
+
+    // The round item replaces the account's previous one and leaves the rest.
+    await repo.addInboxItem(uid, { type: 'friend_request', payload: {} });
+    await repo.putQuizRoundItem(uid, { week: wk(9), questions: 5 });
+    await repo.putQuizRoundItem(uid, { week: wk(10), questions: 5 });
+    const inbox = await repo.listInbox(uid);
+    assert.deepEqual(inbox.filter((it) => it.type === 'quiz_round').map((it) => it.payload.week), [wk(10)]);
+    assert.equal(inbox.filter((it) => it.type === 'friend_request').length, 1);
+    assert.equal(inbox.find((it) => it.type === 'quiz_round').read, false);
+
+    // Purge by week: everything before wk(10) goes, wk(10) stays.
+    const removed = await repo.purgeQuizBefore(wk(10));
+    assert.ok(removed.rounds >= 1 && removed.submissions >= 1);
+    assert.equal(await repo.getQuizRound(wk(9)), null);
+    assert.ok(await repo.getQuizRound(wk(10)));
+    assert.equal(await repo.getQuizSubmission(other, wk(9)), null);
+    assert.ok(await repo.getQuizSubmission(other, wk(10)));
+    await repo.purgeQuizBefore(wk(99));
+  });
+
   test('price watches (#680): one per account and game, owner-scoped, claimed once, recorded with one inbox item', async () => {
     const tag = uniq();
     const uid = `pw-${tag}`;
@@ -6204,7 +6272,7 @@ module.exports = function repoContract(repo) {
     // Exactly the five named keys — this is the export/erasure symmetry guard: it
     // must stay in step with the stores eraseAccount deletes (the erase tests below
     // pin the delete side), so a sixth store added to one shows up as a shape drift.
-    assert.deepEqual(Object.keys(mine).sort(), ['feedEvents', 'friendships', 'grants', 'inbox', 'invitations', 'priceWatches']);
+    assert.deepEqual(Object.keys(mine).sort(), ['feedEvents', 'friendships', 'grants', 'inbox', 'invitations', 'priceWatches', 'quizSubmissions']);
     assert.equal(mine.grants.length, 1);
     assert.equal(mine.grants[0].roundId, round.id);
     assert.equal(mine.grants[0].userId, me.id);
@@ -6229,7 +6297,7 @@ module.exports = function repoContract(repo) {
     const bTenant = `expg-b-${rand()}`;
     const bystander = await repo.createUser(userFields({ tenantId: bTenant }));
     assert.deepEqual(await repo.exportAccountData(bystander.id, bTenant), {
-      grants: [], invitations: [], inbox: [], friendships: [], feedEvents: [], priceWatches: [],
+      grants: [], invitations: [], inbox: [], friendships: [], feedEvents: [], priceWatches: [], quizSubmissions: [],
     });
   });
 

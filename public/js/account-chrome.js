@@ -167,6 +167,12 @@ function openAccountMenu(btn) {
       watches.addEventListener('click', () => { close(); showPriceWatches(); });
       el.appendChild(watches);
     }
+    // Wochenquiz (#743): only where the quiz runs — the same cached-config gate.
+    if (quizAvailable()) {
+      const quizRow = h(`<button class="popover__opt"><i class="ti ti-bulb" aria-hidden="true"></i> ${esc(t('quiz.menu'))}</button>`);
+      quizRow.addEventListener('click', () => { close(); showQuiz(); });
+      el.appendChild(quizRow);
+    }
     // Konto (#482): account settings — password change today, passkeys (#418)
     // and account deletion (#419) later.
     const konto = h(`<button class="popover__opt"><i class="ti ti-user" aria-hidden="true"></i> ${esc(t('konto.menu'))}</button>`);

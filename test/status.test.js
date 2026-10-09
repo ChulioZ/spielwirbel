@@ -462,6 +462,26 @@ test('„ohne Runde" and the BG-Stats opt-in count accounts, by tenant', async (
   assert.equal(a.accountsTotal - b.accountsTotal, 2);
 });
 
+test('„Wochenquiz diese Woche" counts accounts with an answer in THIS week\'s round, never a demo account', async () => {
+  const { weekKey } = require('../lib/calendar-periods');
+  const before = (await instanceStatus()).metrics.adoption;
+  const mkUser = (tenantId) => repo.createUser({
+    email: `${uniq()}@example.test`, username: uniq(), tenantId,
+    createdAt: iso(1), emailVerified: true, identities: [], verification: null,
+    reset: null, refreshTokens: [], bgStats: false,
+  });
+  const player = await mkUser(`qz-${uniq()}`);
+  const lastWeekOnly = await mkUser(`qz-${uniq()}`);
+  const demo = await mkUser(`demo-${uniq()}`);
+  await repo.recordQuizAnswer(player.id, weekKey(), 0, 5, { choice: 0, correct: true });
+  await repo.recordQuizAnswer(player.id, weekKey(), 1, 5, { choice: 0, correct: false });
+  await repo.recordQuizAnswer(lastWeekOnly.id, weekKey(undefined, 1), 0, 5, { choice: 0, correct: true });
+  await repo.recordQuizAnswer(demo.id, weekKey(), 0, 5, { choice: 0, correct: true });
+  const after = (await instanceStatus()).metrics.adoption;
+  assert.equal(after.accountsPlayedQuiz - before.accountsPlayedQuiz, 1,
+    'one account played this week — last week\'s player and the demo account do not count');
+});
+
 /* ------------------- ADMIN_EXCLUDE_TENANTS (#1174) ------------------------ */
 
 test('an excluded tenant leaves the adoption card but not the counters', async () => {
@@ -473,11 +493,12 @@ test('an excluded tenant leaves the adoption card but not the counters', async (
   await repo.createSession(tenant, round.id, {
     gameIds: [], votes: votesBy(2), createdAt: iso(1), finished: true, winnerIds: ['m1'],
   });
-  await repo.createUser({
+  const excluded = await repo.createUser({
     email: `${uniq()}@example.test`, username: uniq(), tenantId: tenant,
     createdAt: iso(1), emailVerified: true, identities: [], verification: null,
     reset: null, refreshTokens: [], bgStats: true, avatar: '/uploads/a.webp',
   });
+  await repo.recordQuizAnswer(excluded.id, require('../lib/calendar-periods').weekKey(), 0, 5, { choice: 0, correct: true });
 
   const plain = await instanceStatus();
   const hidden = await withEnv({ ADMIN_EXCLUDE_TENANTS: tenant }, instanceStatus);
@@ -493,6 +514,7 @@ test('an excluded tenant leaves the adoption card but not the counters', async (
   assert.equal(p.gamesWithOwnCover - a.gamesWithOwnCover, 1);
   assert.equal(p.accountsWithBgStats - a.accountsWithBgStats, 1);
   assert.equal(p.accountsWithAvatar - a.accountsWithAvatar, 1);
+  assert.equal(p.accountsPlayedQuiz - a.accountsPlayedQuiz, 1);
   assert.equal(p.funnel.started - a.funnel.started, 1);
   assert.equal(p.funnel.played - a.funnel.played, 1);
   assert.equal(p.roundsByFinished.one - a.roundsByFinished.one, 1);

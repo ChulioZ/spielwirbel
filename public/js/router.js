@@ -203,6 +203,8 @@ function resolveRoute(pathname) {
   if (parts[0] === 'join' && parts[1]) return () => showJoinLink(safeDecodeSegment(parts[1]));
   // The account's price watches (#680) — guarded in the view, like /inbox.
   if (parts[0] === 'preisalarme') return () => showPriceWatches();
+  // The weekly quiz (#743) — guarded in the view, like /preisalarme.
+  if (parts[0] === 'quiz') return () => showQuiz();
   if (parts[0] === 'login') return () => showLogin();
   if (parts[0] === 'register') return () => showRegister();
   if (parts[0] === 'forgot-password') return () => showForgot();

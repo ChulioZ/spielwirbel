@@ -277,6 +277,14 @@ function renderHomeDash() {
   // logged in — this hub only renders for someone who is, in accounts mode, but
   // a password-only instance reaches it logged out and the numbers are public
   // either way.
+  // The weekly quiz (#743): this week's state in one line. The same
+  // placeholder-or-remove shape, and only where the quiz runs at all.
+  if (quizAvailable()) {
+    const quiz = h('<section class="home-quiz dash-tile" id="homeQuiz"></section>');
+    dash.appendChild(cardSlot(quiz));
+    mountHomeQuiz(quiz);
+  }
+
   const stats = h('<section class="home-stats dash-tile" id="homeStats"></section>');
   dash.appendChild(cardSlot(stats));
   mountHomeStatsPanel(stats);

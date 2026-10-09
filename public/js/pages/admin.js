@@ -370,6 +370,9 @@
         line('Passkey', a.accountsWithPasskey, accounts),
         line('Konto-Bild', a.accountsWithAvatar, accounts),
         line('BG-Stats-Weitergabe', a.accountsWithBgStats, accounts),
+        // The weekly quiz (#743): accounts that answered at least one question
+        // of THIS week's round — a weekly reading, not a running total.
+        line('Wochenquiz diese Woche', a.accountsPlayedQuiz, accounts),
         /* Registered and never started anything. Measured by TENANT, the only
            link that exists — an account invited into someone else's tenant
            (#138) therefore reads as settled, which the label says rather than

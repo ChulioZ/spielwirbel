@@ -65,7 +65,8 @@ function renderInboxItem(item) {
   const row = item.type === 'round_invitation' ? renderInvitationItem(item)
     : item.type === 'friend_request' ? renderFriendRequestItem(item)
       : item.type === 'price_drop' ? renderPriceDropItem(item) // #680, views-price-watches.js
-        : renderGenericItem(item);
+        : item.type === 'quiz_round' ? renderQuizRoundItem(item) // #743, views-quiz.js
+          : renderGenericItem(item);
   // Der Tisch (#1272, T14.2), Ocean (#1219, O14.2), Das Programmheft
   // (#1380, P14.3), Die Brücke (#1246, B14.3 — the type glyph as the row's
   // kicker, the time beside it) and Forest (#1474, F14.4 — the glyph in a moss
@@ -93,6 +94,7 @@ const INBOX_ICONS = {
   round_invitation: 'ti-user-plus',
   friend_request: 'ti-users',
   price_drop: 'ti-trending-down',
+  quiz_round: 'ti-bulb',
 };
 function composeInboxRow(row, item) {
   const kind = INBOX_ICONS[item.type] ? item.type : 'notice';

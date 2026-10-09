@@ -645,6 +645,8 @@ const frontendGlobals = {
   showJoinLink: 'readonly', joinPath: 'readonly', isJoinLinkRoute: 'readonly',
   // views-price-watches.js (#680)
   showPriceWatches: 'readonly', priceWatchesAvailable: 'readonly', renderPriceWatchControl: 'readonly', renderPriceDropItem: 'readonly',
+  // views-quiz.js (#743)
+  showQuiz: 'readonly', quizAvailable: 'readonly', renderQuizRoundItem: 'readonly', mountHomeQuiz: 'readonly', mountLandingQuiz: 'readonly',
   renderVoteLinkCards: 'readonly', renderVoteLinkDone: 'readonly',
   renderVoteLinkDead: 'readonly', voteLinkClaim: 'readonly',
   setVoteLinkClaim: 'readonly', voteLinkColor: 'readonly',

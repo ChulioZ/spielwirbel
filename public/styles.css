@@ -4787,10 +4787,12 @@ a.stats-games__name:focus-visible { text-decoration: underline; }
 /* A count beside the width caps the used count at min(count, fit), floored at
    1 — a MAXIMUM, so a phone still resolves to one column with no media query.
    Three rules because three tiles is the zone's ceiling; a fourth tile would
-   need a fourth rule, since an uncapped count falls back to the five that fit. */
+   need a fourth rule, since an uncapped count falls back to the five that fit.
+   The weekly quiz (#743) made it four where the quiz runs — hence the fourth. */
 .home-dash:has(> :only-child)              { columns: 320px 1; }
 .home-dash:has(> :nth-child(2):last-child) { columns: 320px 2; }
 .home-dash:has(> :nth-child(3):last-child) { columns: 320px 3; }
+.home-dash:has(> :nth-child(4):last-child) { columns: 320px 4; }
 .home-dash:empty { display: none; }
 /* Spacing and `break-inside` are the SLOT's (`.card-slot`, declared with
    `.hub-cards`) — see #946: on the tile itself, WebKit carries the margin over
@@ -10666,6 +10668,45 @@ kbd {
 .inbox-row__price { margin-top: 2px; }
 .inbox-row__offers { display: inline-block; margin-top: 4px; }
 .inbox-row__source { font-size: var(--text-sm); margin-top: 2px; }
+
+/* The weekly quiz (#743). Right and wrong are carried by an icon and a sentence
+   as well as the border colour — never by colour alone
+   (.claude/rules/accessibility-contrast-and-modals.md §3). */
+.quiz__intro { margin: 0 0 12px; }
+.quiz__score { font-weight: 600; margin: 0 0 14px; }
+.quiz__empty { margin-top: 12px; }
+.quiz__questions { display: flex; flex-direction: column; gap: 16px; }
+.quiz__source { font-size: var(--text-sm); margin: 16px 0 0; }
+.quiz-q__head { display: flex; align-items: flex-start; gap: 12px; }
+.quiz-q__cover { width: 56px; height: 56px; object-fit: cover; border-radius: var(--radius-sm); flex: 0 0 auto; }
+.quiz-q__ask { min-width: 0; }
+.quiz-q__n { font-size: var(--text-sm); }
+.quiz-q__text { font-size: var(--text-md); margin: 2px 0 0; overflow-wrap: anywhere; }
+.quiz-q__choices { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr)); gap: 8px; margin-top: 12px; }
+.quiz-choice {
+  display: flex; align-items: center; gap: 8px; text-align: left;
+  padding: 10px 12px; border: 2px solid var(--line); border-radius: var(--radius-md);
+  background: var(--surface); color: var(--ink); font: inherit; cursor: pointer; min-height: 44px;
+}
+.quiz-choice:hover:not(:disabled) { border-color: var(--brand); }
+.quiz-choice:disabled { cursor: default; }
+.quiz-choice__label { min-width: 0; overflow-wrap: anywhere; }
+.quiz-choice__cover { width: 36px; height: 36px; object-fit: cover; border-radius: var(--radius-sm); flex: 0 0 auto; }
+.quiz-choice__mark { flex: 0 0 auto; font-size: 1.1em; }
+.quiz-choice--right { border-color: var(--good); }
+.quiz-choice--wrong { border-color: var(--danger); }
+.quiz-q__result { margin: 10px 0 0; font-weight: 600; }
+.quiz-q__result:empty { margin: 0; } /* stays in the tree: a live region must exist before its text does */
+.quiz-board { margin-top: 28px; }
+.quiz-board__rows { list-style: none; padding: 0; margin: 0; }
+.quiz-board__row--me { font-weight: 600; }
+.quiz-board__rank { display: inline-block; min-width: 2ch; }
+.home-quiz__link { display: flex; flex-direction: column; gap: 6px; text-decoration: none; color: inherit; }
+.home-quiz__label { display: flex; align-items: center; gap: 7px; font-size: var(--text-sm); font-weight: 600; color: var(--brand-ink, var(--brand-strong)); }
+.inbox-row__quiz { display: inline-block; margin-top: 4px; }
+.landing-quiz .quiz-q { max-width: 640px; margin: 0 auto; }
+.landing-quiz__cta { text-align: center; margin-top: 14px; }
+.landing-quiz__cta[hidden] { display: none; }
 
 .live-vote__hotseat { display: flex; flex-direction: column; gap: 8px; }
 
