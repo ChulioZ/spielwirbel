@@ -104,7 +104,7 @@ function showLogSessionPicker(round) {
         <p class="muted">${esc(t('chronik.log.hint'))}</p>
         <div class="field">
           <label for="logPickSearch">${esc(t('chronik.log.search'))}</label>
-          <input id="logPickSearch" class="input" type="search" autocomplete="off">
+          <input id="logPickSearch" class="input" type="search" autocomplete="off" autocorrect="off" spellcheck="false">
         </div>
         <ul class="log-pick" role="list"></ul>
         <p class="muted log-pick__empty" hidden>${esc(t('chronik.log.none'))}</p>

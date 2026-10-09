@@ -54,7 +54,7 @@ function renderSeatPicker(round, joining, onChange, guestList, opts = {}) {
         <div class="row">
           <input class="input" maxlength="${GUEST_NAME_MAX}"
                  aria-label="${esc(t('startSession.guestPlaceholder'))}"
-                 placeholder="${esc(t('startSession.guestPlaceholder'))}" />
+                 placeholder="${esc(t('startSession.guestPlaceholder'))}" autocorrect="off" spellcheck="false" />
           <button type="button" class="btn">${iconText('ti-plus', t('startSession.guestAdd'))}</button>
         </div>
         <div class="muted field__hint">${esc(guestList.note)}</div>

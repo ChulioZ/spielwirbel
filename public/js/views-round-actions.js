@@ -273,7 +273,7 @@ async function showInvite(round) {
           <label for="inviteHandle">${esc(t('invite.username'))}</label>
           <input id="inviteHandle" class="input" type="text" autocomplete="off" spellcheck="false"
                  data-1p-ignore data-lpignore="true" data-bwignore
-                 placeholder="${esc(t('invite.usernamePlaceholder'))}">
+                 placeholder="${esc(t('invite.usernamePlaceholder'))}" autocorrect="off">
         </div>
         <div class="field">
           <label for="inviteSeat">${esc(t('invite.seat'))}</label>

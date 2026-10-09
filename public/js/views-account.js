@@ -377,7 +377,7 @@ async function openDeleteSheet(me) {
     : ''}
         <div class="field">
           <label for="kdUser">${esc(t('konto.delete.confirmLabel', { username: me.username || '' }))}</label>
-          <input id="kdUser" class="input" autocomplete="off" autocapitalize="off" spellcheck="false" />
+          <input id="kdUser" class="input" autocomplete="off" autocapitalize="off" spellcheck="false" autocorrect="off" />
         </div>
         <div class="field">
           <label for="kdPw">${esc(t('konto.delete.password'))}</label>
@@ -446,7 +446,7 @@ function buildBggForm(current) {
   const form = h(`<form class="konto-pw">
       <div class="field">
         <label for="kBgg">${esc(t('konto.bgg.label'))}</label>
-        <input id="kBgg" class="input" autocomplete="off" spellcheck="false" value="${esc(current || '')}" />
+        <input id="kBgg" class="input" autocomplete="off" spellcheck="false" value="${esc(current || '')}" autocorrect="off" />
         <p class="field__hint muted">${esc(t('konto.bgg.hint'))}</p>
       </div>
       <p class="konto-error" role="alert"></p>
@@ -834,7 +834,7 @@ function renderPasskeyRow(passkey, render, err) {
   const nameEl = row.querySelector('.konto-passkey__name');
   row.querySelector('[data-act=rename]').addEventListener('click', () => {
     if (!nameEl.isConnected) return; // an editor is already open on this row
-    const input = h(`<input class="input konto-passkey__input" aria-label="${esc(t('konto.passkey.renamePrompt'))}" />`);
+    const input = h(`<input class="input konto-passkey__input" aria-label="${esc(t('konto.passkey.renamePrompt'))}" autocorrect="off" spellcheck="false" />`);
     input.value = passkey.name || '';
     nameEl.replaceWith(input);
     input.focus();

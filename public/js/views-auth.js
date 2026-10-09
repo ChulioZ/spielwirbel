@@ -218,7 +218,7 @@ function loginCardHtml({ split = false, pair = false, level = 1 } = {}) {
              phone keyboard must not lead with '@'. autocomplete="username" is
              finally literally accurate. -->
         <input id="authEmail" class="input" type="text" autocomplete="username"
-               spellcheck="false" autocapitalize="none" />
+               spellcheck="false" autocapitalize="none" autocorrect="off" />
       </div>
       <div class="field">
         <label for="authPassword">${esc(t('auth.password'))}</label>
@@ -350,7 +350,7 @@ function registerCardHtml({ split = false, pair = false, level = 1 } = {}) {
              the handle as well since #431 — but only one field can own the
              token, and it is the one on the login form.) -->
         <input id="regUser" class="input" type="text" autocomplete="nickname"
-               maxlength="${USERNAME_MAX}" spellcheck="false" autocapitalize="none" />
+               maxlength="${USERNAME_MAX}" spellcheck="false" autocapitalize="none" autocorrect="off" />
         <div class="field__hint muted">${esc(t('auth.register.userHint', { min: USERNAME_MIN, max: USERNAME_MAX }))}</div>
       </div>
       <div class="field">

@@ -181,7 +181,7 @@ function settingsNameField(round) {
   const sec = h(`<section class="rs-sec rs-sec--name">
        <h2 class="rs-section__h" id="rsNameH">${esc(t('newRound.nameLabel'))}</h2>
        <input class="input rs-name" type="text" autocomplete="off" enterkeyhint="done"
-              aria-labelledby="rsNameH" />
+              aria-labelledby="rsNameH" autocorrect="off" spellcheck="false" />
      </section>`);
   wireRoundNameField(sec.querySelector('input'), round);
   return sec;
@@ -295,7 +295,7 @@ function programmheftNameField(round) {
   const sec = h(`<section class="rs-ph__sec rs-ph__sec--name">
        <h2 class="rs-section__h" id="rsPhNameH">${esc(t('newRound.nameLabel'))}</h2>
        <input class="input rs-ph__name" type="text" autocomplete="off" enterkeyhint="done"
-              aria-labelledby="rsPhNameH" />
+              aria-labelledby="rsPhNameH" autocorrect="off" spellcheck="false" />
      </section>`);
   wireRoundNameField(sec.querySelector('input'), round);
   return sec;
@@ -462,7 +462,7 @@ async function showTags(rid) {
 
   const addRow = h(`<div class="toolbar" style="margin-bottom:14px">
        <input class="input" style="flex:1" maxlength="30" placeholder="${esc(t('tags.addPlaceholder'))}"
-              aria-label="${esc(t('tags.addPlaceholder'))}" />
+              aria-label="${esc(t('tags.addPlaceholder'))}" autocorrect="off" spellcheck="false" />
        <button class="btn btn--primary"><i class="ti ti-plus" aria-hidden="true"></i> ${esc(t('tags.add'))}</button>
      </div>`);
   const input = addRow.querySelector('input');
@@ -615,7 +615,7 @@ async function showTags(rid) {
         const editor = h(`<div class="tag-edit">
              <div class="toolbar">
                <input class="input" style="flex:1" maxlength="30" value="${esc(tg.name)}"
-                      aria-label="${esc(t('tags.namePlaceholder'))}" />
+                      aria-label="${esc(t('tags.namePlaceholder'))}" autocorrect="off" spellcheck="false" />
                <button class="btn btn--primary">${esc(t('tags.save'))}</button>
              </div>
            </div>`);
