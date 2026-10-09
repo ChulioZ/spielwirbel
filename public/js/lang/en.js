@@ -1080,10 +1080,10 @@ I18N.en = {
   'tables.gameLabel': 'Game at table {n}',
   'tables.tableLabel': 'Table {n}',
   'tables.lowest': 'Lowest',
-  'tables.parties': '{n} parties',
-  'tables.partiesOne': '{n} party',
+  'tables.seats': '{n} seats',
+  'tables.seatsOne': '{n} seat',
   'tables.moveHere': 'Move here',
-  'tables.tooSmall': 'At least {n} parties per table',
+  'tables.tooSmall': 'At least {n} seats per table',
   'tables.outOfRange': 'That many do not fit around one table of "{title}"',
   'tables.unhappy': '{name} is at "{title}" - they did not want to play it',
   'tables.blocked': 'One table does not work yet',
@@ -1148,7 +1148,7 @@ I18N.en = {
   // why the note says so — it is the only visible explanation of a pool that
   // shrank or grew when a team was formed.
   'startSession.teamsLabel': 'Anyone playing as a team?',
-  'startSession.teamsNote': 'A team counts as one party in the draw — and wins together.',
+  'startSession.teamsNote': 'Everyone in a team counts as a player in the draw. If a team shares one hand, switch it to “One seat” — then it counts as one. Teams win together.',
   'startSession.withoutShelfLabel': 'Who didn’t bring their games?',
   'startSession.withoutShelfNote': 'Pick anyone who didn’t bring their games today. They still play, vote and count for teams as always — only their own games stay out of the draw.',
   'startSession.teamMake': 'Form a team',
@@ -1158,6 +1158,10 @@ I18N.en = {
   'startSession.addon.shelf': 'Someone without games?',
   'startSession.addon.shelfOn': '{names} without games',
   'startSession.teamDissolve': 'Dissolve team {name}',
+  // Own seats vs one shared seat per team (#1610).
+  'startSession.teamSeatsLabel': 'Seats for {name}',
+  'startSession.teamOwnSeats': 'Own seats',
+  'startSession.teamSharedSeat': 'One seat',
   'startSession.toast.teamMin': 'A team needs at least {n} people',
   // Per-device voting (#209). The note describes what the feature does, in the
   // disabled state too. It must never read as though the round were missing

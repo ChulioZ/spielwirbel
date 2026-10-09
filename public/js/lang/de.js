@@ -1078,10 +1078,10 @@ I18N.de = {
   'tables.gameLabel': 'Spiel an Tisch {n}',
   'tables.tableLabel': 'Tisch {n}',
   'tables.lowest': 'Niedrigste',
-  'tables.parties': '{n} Parteien',
-  'tables.partiesOne': '{n} Partei',
+  'tables.seats': '{n} Plätze',
+  'tables.seatsOne': '{n} Platz',
   'tables.moveHere': 'Hierher setzen',
-  'tables.tooSmall': 'Mindestens {n} Parteien pro Tisch',
+  'tables.tooSmall': 'Mindestens {n} Plätze pro Tisch',
   'tables.outOfRange': 'So viele passen bei „{title}“ nicht an einen Tisch',
   'tables.unhappy': '{name} sitzt bei „{title}“ – das wollte diese Person nicht spielen',
   'tables.blocked': 'Ein Tisch passt noch nicht',
@@ -1143,7 +1143,7 @@ I18N.de = {
   'startSession.toast.guestName': 'Bitte einen Namen für den Gast eingeben',
   // Teams (#575): Mitglieder und Gäste beliebig gemischt, nur für diese Session.
   'startSession.teamsLabel': 'Spielt jemand im Team?',
-  'startSession.teamsNote': 'Ein Team zählt beim Auslosen als eine Partei – und gewinnt gemeinsam.',
+  'startSession.teamsNote': 'Beim Auslosen zählt jede Person im Team mit. Spielt ein Team mit einer gemeinsamen Hand, stellt es auf „Ein Platz“ – dann zählt es als eine Person. Teams gewinnen gemeinsam.',
   'startSession.withoutShelfLabel': 'Wer hat seine Spiele nicht dabei?',
   'startSession.withoutShelfNote': 'Wähle die Personen aus, die ihre Spiele heute nicht dabeihaben. Sie spielen, stimmen ab und zählen für Teams wie immer — nur ihre eigenen Spiele bleiben bei der Auslosung außen vor.',
   'startSession.teamMake': 'Team bilden',
@@ -1153,6 +1153,10 @@ I18N.de = {
   'startSession.addon.shelf': 'Jemand ohne Spiele?',
   'startSession.addon.shelfOn': '{names} ohne Spiele',
   'startSession.teamDissolve': 'Team {name} auflösen',
+  // Own seats vs one shared seat per team (#1610).
+  'startSession.teamSeatsLabel': 'Plätze für {name}',
+  'startSession.teamOwnSeats': 'Eigene Plätze',
+  'startSession.teamSharedSeat': 'Ein Platz',
   'startSession.toast.teamMin': 'Ein Team braucht mindestens {n} Personen',
   // Per-Gerät-Abstimmung (#209). Der Hinweis beschreibt, was die Funktion tut —
   // auch im deaktivierten Zustand. Er darf nie klingen, als fehle der Runde

@@ -22,10 +22,13 @@
 
 'use strict';
 
-// The smallest table worth calling a table, counted in PARTIES rather than
-// bodies (#575): a pair playing as one team holds one hand, so three parties is
-// three hands whatever the headcount behind them. Everything here counts parties
-// for feasibility and PEOPLE for ratings, and the two are never conflated.
+// The smallest table worth calling a table, counted in SEATS (#1610): a pair
+// sharing one hand as a team takes one seat (#575), a team whose people each
+// play their own takes its headcount. Everything here counts seats for
+// feasibility and PEOPLE for ratings, and the two are never conflated. The
+// PARTY stays the atom the search moves, so a team never spans two tables — a
+// party simply weighs its seats. (The name predates #1610, when every party was
+// one seat.)
 const MIN_TABLE_PARTIES = 3;
 
 // At or below this, a seating is a tier-1 violation: the person is at a game
@@ -186,7 +189,7 @@ function scoreSplit(tables, ctx) {
     violations += agg.violations;
     sum += agg.sum;
     if (agg.lowest < lowest) lowest = agg.lowest;
-    emptySeats += ctx.capOf(tb.gameId) - tb.partyIds.length;
+    emptySeats += ctx.capOf(tb.gameId) - ctx.seatsAt(tb);
   });
   return [violations, -sum, -(lowest === Infinity ? 0 : lowest), emptySeats, tables.length];
 }
@@ -265,13 +268,22 @@ function chooseTableSizes(admits, totalParties, rand) {
 // left scores best for that party alone. A deliberately shallow start — the local
 // search below is what actually finds the split; this only has to be feasible and
 // not absurd.
+//
+// The heaviest parties go first (#1610), the shuffle deciding only among equals:
+// a four-seat team placed last finds every table one seat short. With every
+// party one seat — every split before #1610 — the stable sort is a no-op, so the
+// order, and therefore every proposal, is unchanged. Returns null when the
+// greedy fill still cannot place someone; the caller's next restart retries.
 function seedTableAssignment(gameIds, sizes, partyIds, ctx, rand) {
   const tables = gameIds.map((gameId) => ({ gameId, partyIds: [] }));
-  shuffleSeeded(partyIds, rand).forEach((pid) => {
+  const room = sizes.slice();
+  const order = shuffleSeeded(partyIds, rand).sort((a, b) => ctx.seatsOf(b) - ctx.seatsOf(a));
+  for (const pid of order) {
+    const w = ctx.seatsOf(pid);
     let best = -1;
     let bestKey = null;
     tables.forEach((tb, t) => {
-      if (tb.partyIds.length >= sizes[t]) return;
+      if (room[t] < w) return;
       const cell = ctx.cell(pid, tb.gameId);
       const key = [cell.violations, -cell.sum, -cell.lowest];
       if (bestKey === null || compareSplits(key, bestKey) < 0) {
@@ -279,19 +291,23 @@ function seedTableAssignment(gameIds, sizes, partyIds, ctx, rand) {
         best = t;
       }
     });
+    if (best < 0) return null;
     tables[best].partyIds.push(pid);
-  });
+    room[best] -= w;
+  }
   return tables;
 }
 
-// Try one party moving from `from` to `to`. Both table sizes change, so both have
-// to stay inside their game's admitted set — the holes an expansion leaves make
-// this a real test rather than a range check.
+// Try one party moving from `from` to `to`. Both table sizes change — by the
+// party's seats (#1610) — so both have to stay inside their game's admitted set:
+// the holes an expansion leaves make this a real test rather than a range check.
 function trySplitMove(from, to, tables, ctx, state) {
-  if (from.partyIds.length - 1 < MIN_TABLE_PARTIES) return false;
-  if (!ctx.admits(from.gameId, from.partyIds.length - 1)) return false;
-  if (!ctx.admits(to.gameId, to.partyIds.length + 1)) return false;
+  const fromSeats = ctx.seatsAt(from);
+  const toSeats = ctx.seatsAt(to);
   for (let i = 0; i < from.partyIds.length; i++) {
+    const w = ctx.seatsOf(from.partyIds[i]);
+    if (fromSeats - w < MIN_TABLE_PARTIES) continue;
+    if (!ctx.admits(from.gameId, fromSeats - w) || !ctx.admits(to.gameId, toSeats + w)) continue;
     const x = from.partyIds.splice(i, 1)[0];
     to.partyIds.push(x);
     const next = scoreSplit(tables, ctx);
@@ -310,6 +326,9 @@ function trySplitSwap(ta, tb, tables, ctx, state) {
     for (let j = 0; j < tb.partyIds.length; j++) {
       const x = ta.partyIds[i];
       const y = tb.partyIds[j];
+      // Two parties of different weight change both tables' seats (#1610).
+      const dw = ctx.seatsOf(y) - ctx.seatsOf(x);
+      if (dw && (!ctx.admits(ta.gameId, ctx.seatsAt(ta) + dw) || !ctx.admits(tb.gameId, ctx.seatsAt(tb) - dw))) continue;
       ta.partyIds[i] = y;
       tb.partyIds[j] = x;
       const next = scoreSplit(tables, ctx);
@@ -330,7 +349,7 @@ function trySplitGameSwap(tables, ctx, unused, state) {
   for (let t = 0; t < tables.length; t++) {
     for (let u = 0; u < unused.length; u++) {
       const gid = unused[u];
-      if (!ctx.admits(gid, tables[t].partyIds.length)) continue;
+      if (!ctx.admits(gid, ctx.seatsAt(tables[t]))) continue;
       const prev = tables[t].gameId;
       tables[t].gameId = gid;
       const next = scoreSplit(tables, ctx);
@@ -375,9 +394,10 @@ function bestSplitForCount(k, ctx, rand, restarts, maxPasses) {
   for (let r = 0; r < restarts; r++) {
     const shuffled = shuffleSeeded(ctx.gameIds, rand);
     const picked = shuffled.slice(0, k);
-    const sizes = chooseTableSizes(picked.map((gid) => ctx.sizesOf(gid)), ctx.partyIds.length, rand);
+    const sizes = chooseTableSizes(picked.map((gid) => ctx.sizesOf(gid)), ctx.totalSeats, rand);
     if (!sizes) continue;
     const tables = seedTableAssignment(picked, sizes, ctx.partyIds, ctx, rand);
+    if (!tables) continue;
     const score = improveSplit(tables, ctx, shuffled.slice(k), maxPasses);
     if (bestScore === null || compareSplits(score, bestScore) < 0) {
       bestScore = score;
@@ -411,12 +431,14 @@ const MAX_TABLE_PROPOSALS = 5;
    count is also the default the issue asks for, so the window starts where the
    highlight is.
 
-   `parties` is [{ id, personIds }] — one entry per team plus one per un-teamed
-   person, so a team is never split across two tables and all its people's ratings
-   count. */
+   `parties` is [{ id, personIds, seats }] — one entry per team plus one per
+   un-teamed person, so a team is never split across two tables and all its
+   people's ratings count. `seats` (#1610) is what the party takes at a table; an
+   absent one is 1, which is every party before own-seat teams existed. */
 function proposeTableSplits({ parties, games, votes, seed, tileValue, fitsPlayerCount }) {
   const partyList = (parties || []).filter((p) => p && Array.isArray(p.personIds) && p.personIds.length);
-  const total = partyList.length;
+  const seatsById = new Map(partyList.map((p) => [p.id, Number.isInteger(p.seats) && p.seats > 0 ? p.seats : 1]));
+  const total = [...seatsById.values()].reduce((n, w) => n + w, 0);
   const counts = feasibleTableCounts(games, total, fitsPlayerCount);
   if (!counts.length) return [];
 
@@ -447,6 +469,9 @@ function proposeTableSplits({ parties, games, votes, seed, tileValue, fitsPlayer
 
   const ctx = {
     partyIds: partyList.map((p) => p.id),
+    totalSeats: total,
+    seatsOf: (pid) => seatsById.get(pid),
+    seatsAt: (tb) => tb.partyIds.reduce((n, pid) => n + seatsById.get(pid), 0),
     gameIds: usable,
     cell: (pid, gid) => cells.get(pid + ' ' + gid),
     sizesOf: (gid) => sizesByGame.get(gid),
@@ -468,7 +493,7 @@ function proposeTableSplits({ parties, games, votes, seed, tileValue, fitsPlayer
 
   const byId = new Map(partyList.map((p) => [p.id, p]));
   const rand = mulberry32(splitSeedFrom(seed));
-  const restarts = restartBudget(total);
+  const restarts = restartBudget(partyList.length);
   const proposals = [];
   for (const k of counts) {
     if (proposals.length >= MAX_TABLE_PROPOSALS) break;

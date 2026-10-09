@@ -327,7 +327,8 @@ async function showTableBuilder(round, session, gamesHint) {
         const game = gameById.get(table.gameId);
         const personIds = tablePeopleIds(table, partyById);
         const fb = tableFeedback({ gameId: table.gameId, personIds }, session.votes || {}, tileValue);
-        const size = table.partyIds.length;
+        // Seats, not parties (#1610): an own-seat team takes its headcount.
+        const size = table.partyIds.reduce((n, pid) => n + ((partyById.get(pid) || {}).seats || 1), 0);
         const tooSmall = size < MIN_TABLE_PARTIES;
         const stale = !!game && !isActiveGame(game);
         const outOfRange = !game || !fitsPlayerCount(game, size);
@@ -343,7 +344,7 @@ async function showTableBuilder(round, session, gamesHint) {
              <div class="tables-card__meta">
                <span class="score-pill"${fb.avg === null ? '' : ` style="--sc:${scoreColor(fb.avg)}" data-stop="${scoreStop(fb.avg)}"`}>${fb.avg === null ? '–' : fmtAvg(displayScore(fb.avg))}</span>
                <span class="tables-card__low">${esc(t('tables.lowest'))} ${fb.lowest === null ? '–' : ratingMark(fb.lowest)}</span>
-               <span class="tables-card__size">${esc(tn(size, 'tables.partiesOne', 'tables.parties'))}</span>
+               <span class="tables-card__size">${esc(tn(size, 'tables.seatsOne', 'tables.seats'))}</span>
              </div>
              <div class="tables-card__warn"></div>
            </div>`);

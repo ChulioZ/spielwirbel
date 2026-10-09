@@ -196,7 +196,8 @@ What the app does, in detail. For a short overview see the
   gefallen"** — games the round does *not* own, ranked against its own taste.
   The profile comes from the three things BoardGameGeek cannot know: which games
   this group actually rated well, which ones it keeps putting on the table, and
-  how many people really sit at their table (parties, so a team counts once).
+  how many people really sit at their table (seats, so a team sharing one hand
+  counts once and a cooperative table counts everyone).
   That middle one matters most to a round that picks its games directly instead
   of voting: those evenings leave no ratings behind, so without counting the
   plays the app would know nothing about them. A game by a designer whose
@@ -610,10 +611,16 @@ What the app does, in detail. For a short overview see the
   exactly the same five faces a member does.
 - **Teams** – two or more of the people joining a session — members and guests
   in any mix — can be grouped into a team that plays and wins together, for that
-  session only. A team counts as **one player** when the draw matches a game's
-  player range, so six people in three pairs can draw a three-player game, and
-  the winner picker offers the team as a single chip: recording it credits every
-  member individually, so the standings and the history read as before.
+  session only. Each team says whether its people have **their own seats** (the
+  default — a cooperative table, or the pairs in Tichu, count everyone) or
+  **share one seat** (one hand between them, so the team counts as one player).
+  The draw matches a game's player range against those seats, so four people
+  cooperating draw a four-player game while six people in three pairs sharing a
+  hand can draw a three-player one; the recommender reads the same seat count
+  and a multi-table split sizes its tables by it. The winner picker offers the
+  team as a single chip: recording it credits every member individually, so the
+  standings and the history read as before — and a table that won together
+  against the game is still not a contest between players, whatever its seats.
 - **Removing a person** – someone ticked by mistake, or who left before the
   game, can be taken out of a session from the voting lobby or the results
   screen, even after the game is finished („Person entfernen"). They stop
