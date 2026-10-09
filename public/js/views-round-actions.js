@@ -513,6 +513,7 @@ function inviteError(code) {
     invalid_seat: 'invite.err.seatGone',
     seat_taken: 'invite.err.seatTaken',
     round_not_found: 'invite.err.roundGone',
+    quota_members: 'member.toast.quota',
   };
   return t(map[code] || 'invite.err.generic');
 }

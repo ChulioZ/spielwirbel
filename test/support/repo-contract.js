@@ -3856,6 +3856,31 @@ module.exports = function repoContract(repo) {
     assert.deepEqual(await seats(), before, 'no refusal added, claimed or changed a seat');
     assert.equal(await grantOf(u3), undefined, 'and no refusal wrote a grant');
 
+    // A grant WITHOUT a seat, joining a full round: both backends say
+    // already_member — the state, not the quota, is the answer.
+    const grantOnly = u('grant-only');
+    await repo.createGrant({ roundId: round.id, ownerTenantId: t, userId: grantOnly, memberId: null, role: 'editor' });
+    assert.equal(await repo.joinRound(t, round.id, { userId: grantOnly, memberName: 'x', memberLimit: 0 }), 'already_member');
+
+    // A fresh-seat link is checked, not consumed; a gone one refuses the join.
+    const freshLink = await repo.createRoundInviteLink({ roundId: round.id, ownerTenantId: t, memberId: null });
+    const u4 = u(4);
+    assert.ok((await repo.joinRound(t, round.id, { userId: u4, memberName: 'Ed', claim: { link: freshLink.id, consume: false } })).memberId);
+    assert.ok(await repo.findRoundInviteLink(freshLink.id), 'a reusable link survives a join');
+    await repo.deleteRoundInviteLink(freshLink.id);
+    assert.equal(await repo.joinRound(t, round.id, { userId: u(5), memberName: 'x', claim: { link: freshLink.id, consume: false } }), 'claim_lost',
+      'a fresh link revoked before the write refuses the join');
+
+    // claimMemberSeat: the conditional claim an owner's self-claim goes through.
+    const free = (await membersNow()).find((m) => !m.userId && !m.retired);
+    const owner = u('owner');
+    assert.equal((await repo.claimMemberSeat(t, round.id, free.id, owner)).userId, owner);
+    assert.equal((await repo.claimMemberSeat(t, round.id, free.id, owner)).userId, owner, 'their own seat again is fine');
+    assert.equal(await repo.claimMemberSeat(t, round.id, ann.id, owner), 'seat_taken', 'never overwrites another account');
+    assert.equal((await membersNow()).find((m) => m.id === ann.id).userId, u1);
+    assert.equal(await repo.claimMemberSeat(t, round.id, 'nope', owner), null);
+    await repo.updateMember(t, round.id, free.id, { userId: null });
+
     // Two accounts racing for one seat link: exactly one gets it.
     const race = await repo.createRoundInviteLink({ roundId: round.id, ownerTenantId: t, memberId: bo.id });
     const [ra, rb] = [u('ra'), u('rb')];

@@ -99,11 +99,12 @@ resulting order, and the route test pins that the existing seats come back
 byte-identical.
 
 `createMember` is this route's writer; the two JOINS (invitation accept, an
-invite link) create their fresh seat inside `joinRound` (#1604), which writes
-the same `member_added` activity, which is
-why its `member_added` activity is written in the **repo** rather than either
-caller — see `.claude/rules/actor-seat-needs-a-uid-guard.md` for the attribution
-trap that shares.
+invite link) create their fresh seat inside `joinRound` (#1604) instead. Both
+write the `member_added` activity in the **repo** rather than in a caller — see
+`.claude/rules/actor-seat-needs-a-uid-guard.md` for the attribution trap that
+shares. And a seat CLAIM (this route's self-claim, a join) is a conditional
+write — `claimMemberSeat` / `joinRound` — never a read in the route followed by
+a plain `updateMember`, which a join committing in between would lose to.
 
 ## 3. Moving seats is deliberately a two-step, and silent
 

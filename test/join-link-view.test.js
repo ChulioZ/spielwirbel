@@ -192,3 +192,20 @@ test('a preview that lands after the visitor left the screen does not paint over
   await pending;
   assert.equal(dom.app.querySelector('#joinGo'), null, 'no join button for a link the visitor left');
 });
+
+test('an invitation the round is too full for stays in the inbox, saying why (#1604)', async (t) => {
+  const { dom } = app(t);
+  const toasts = [];
+  dom.set('toast', (msg) => { toasts.push(msg); });
+  dom.set('accountApi', async (method, url) => {
+    if (url.endsWith('/accept')) throw new Error('quota_members');
+    return { items: [] };
+  });
+  const row = dom.call('renderInboxItem', { id: 'i1', type: 'round_invitation', read: false, createdAt: '2026-10-09T08:00:00Z',
+    payload: { invitationId: 'inv1', roundId: 'r1', roundName: 'Runde', inviterUsername: 'ada', memberName: null } });
+  dom.app.appendChild(row);
+  row.querySelector('.inbox-invite__accept').click();
+  await flush(); await flush();
+  assert.equal(row.isConnected, true, 'the still-valid invitation is not dropped');
+  assert.match(toasts.join(' '), /Limit/);
+});

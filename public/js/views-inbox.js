@@ -133,13 +133,18 @@ function renderInvitationItem(item) {
       refreshInboxBadge();
       showRound(roundId, 'start');
     } catch (e) {
-      // Any accept failure means the invite is no longer actionable (seat taken,
+      // A full round (#1604) leaves the invitation PENDING — it works once a seat
+      // is freed — so the row stays, and says why it did not go through.
+      if (e.message === 'quota_members') {
+        toast(t('member.toast.quota'), { tone: 'error' });
+        return;
+      }
+      // Any other failure means the invite is no longer actionable (seat taken,
       // round gone, already resolved) — the server has cleared it, so drop the row
       // and stay on the inbox (afterRemove re-renders the empty state if needed).
       row.remove();
       afterRemove();
-      const msg = { seat_unavailable: 'inbox.invite.seatGone', quota_members: 'member.toast.quota' }[e.message];
-      toast(t(msg || 'inbox.invite.failed'), { tone: 'error' });
+      toast(t(e.message === 'seat_unavailable' ? 'inbox.invite.seatGone' : 'inbox.invite.failed'), { tone: 'error' });
     }
   });
 
