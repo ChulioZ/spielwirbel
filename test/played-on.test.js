@@ -74,6 +74,11 @@ test('the server refuses the future, the pre-2000 past and anything not a zoned 
   assert.equal(normalizePlayedOn('2026-10-09T12:30:00Z', now), null, 'past the skew');
   assert.equal(normalizePlayedOn('1999-12-31T20:00:00Z', now), null, 'before PLAYED_ON_MIN');
   assert.ok(normalizePlayedOn(`${PLAYED_ON_MIN}T20:00:00Z`, now), 'PLAYED_ON_MIN itself is fine');
+  // A day that does not exist is refused rather than rolled into March (Date.parse
+  // alone accepts 2026-02-30 and answers 2 March) — with or without an offset.
+  assert.equal(normalizePlayedOn('2026-02-30T20:00:00Z', now), null, 'no 30 February');
+  assert.equal(normalizePlayedOn('2026-04-31T20:00:00+02:00', now), null, 'no 31 April');
+  assert.ok(normalizePlayedOn('2024-02-29T20:00:00Z', now), 'a real leap day is fine');
   for (const bad of ['2026-03-01', '2026-03-01T20:00:00', '1', 'March 3', '', null, 42, {}]) {
     assert.equal(normalizePlayedOn(bad, now), null, `refuses ${JSON.stringify(bad)}`);
   }

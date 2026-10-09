@@ -114,7 +114,10 @@ function showLogSessionPicker(round) {
   const list = sheet.querySelector('.log-pick');
   const empty = sheet.querySelector('.log-pick__empty');
   const search = sheet.querySelector('#logPickSearch');
-  const yesterday = localDayKey(new Date(Date.now() - 86400000));
+  // Yesterday as a CALENDAR day: now − 24 h lands two days back in the first
+  // hour after a DST change (.claude/rules/server-computed-calendar-periods.md §3).
+  const now = new Date();
+  const yesterday = localDayKey(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 12));
 
   // One <button> per game: picking IS the action, so there is no OK step.
   games.forEach((g) => {

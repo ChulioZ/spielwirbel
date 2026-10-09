@@ -24,7 +24,8 @@ const toasts = [];
 dom.set('toast', (msg, opts) => toasts.push({ msg, tone: opts && opts.tone }));
 
 const plain = (o) => JSON.parse(JSON.stringify(o));
-const day = (offset) => dom.run(`localDayKey(new Date(Date.now() + ${offset} * 86400000))`);
+// Calendar days, not 24-hour steps, which slip a day around a DST change.
+const day = (offset) => dom.run(`(() => { const d = new Date(); d.setDate(d.getDate() + ${offset}); return localDayKey(d); })()`);
 
 let rid = 0;
 const roundFixture = (over = {}) => ({

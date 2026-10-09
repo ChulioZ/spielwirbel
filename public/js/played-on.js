@@ -74,6 +74,12 @@ function playedOnInstant(dayKey, now = new Date()) {
 // format, which matters because the backends ORDER sessions by the raw string.
 function normalizePlayedOn(value, now = Date.now()) {
   if (typeof value !== 'string' || !PLAYED_ON_SHAPE.test(value)) return null;
+  // The written calendar day must exist: Date.parse quietly rolls „2026-02-30"
+  // into 2 March. Checked on the date as WRITTEN, before any offset applies,
+  // so a legitimate offset that moves the UTC day is not mistaken for one.
+  const [y, mo, d] = value.slice(0, 10).split('-').map(Number);
+  const cal = new Date(Date.UTC(y, mo - 1, d));
+  if (cal.getUTCFullYear() !== y || cal.getUTCMonth() !== mo - 1 || cal.getUTCDate() !== d) return null;
   const ms = Date.parse(value);
   if (!Number.isFinite(ms)) return null;
   if (ms > now + PLAYED_ON_SKEW_MS) return null;
