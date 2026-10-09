@@ -119,9 +119,25 @@ function resolveTeamMembers(people, session) {
     // out of a later valid one.
     if (members.length < MIN_TEAM_SIZE) return;
     members.forEach((p) => claimed.add(p.id));
-    teams.push({ id: tm.id, people: members });
+    teams.push({ id: tm.id, people: members, sharedSeat: teamSharesSeat({ sharedSeat: tm.sharedSeat, people: members }, people) });
   });
   return teams;
+}
+
+// Whether a team SHARES one seat (#1610) — one hand between them, so it counts
+// as one player, which is how every team counted under #575 — or gives each of
+// its people their own seat, so it counts its headcount (a cooperative table,
+// Tichu's two pairs). `team.people` is the RESOLVED team, `people` the session's.
+//
+// A stored boolean always wins. A team stored before the choice existed carries
+// no key, and its shape decides: one holding EVERYONE at the table reads as own
+// seats, since nobody forms a whole-table team to mean "this was a solo
+// session", while a partial team was #575's own case of pairs sharing a hand.
+// "Everyone" is the resolved people, so a member removed from the round since
+// (#1538) shrinks the table and the team alike.
+function teamSharesSeat(team, people) {
+  if (typeof team.sharedSeat === 'boolean') return team.sharedSeat;
+  return team.people.length !== people.length;
 }
 
 // The naming half, split from the resolution above so a caller that only needs
@@ -134,6 +150,7 @@ function teamsForPeople(people, session) {
     id: tm.id,
     people: tm.people,
     personIds: tm.people.map((p) => p.id),
+    sharedSeat: tm.sharedSeat,
     name: partyName(tm.people),
   }));
 }
@@ -159,12 +176,22 @@ function sessionPartyGroups(round, session) {
   people.forEach((p) => {
     const tm = teamOf.get(p.id);
     if (!tm) {
-      parties.push({ id: p.id, people: [p], personIds: [p.id], team: false });
+      parties.push({ id: p.id, people: [p], personIds: [p.id], team: false, seats: 1 });
       return;
     }
     if (seen.has(tm.id)) return;
     seen.add(tm.id);
-    parties.push({ id: tm.id, people: tm.people, personIds: tm.people.map((x) => x.id), team: true });
+    parties.push({
+      id: tm.id,
+      people: tm.people,
+      personIds: tm.people.map((x) => x.id),
+      team: true,
+      sharedSeat: tm.sharedSeat,
+      // How many places this party takes at a table (#1610) — what the
+      // multi-table search sizes its tables in. The PARTY stays the atom it
+      // seats, so a team still never spans two tables.
+      seats: tm.sharedSeat ? 1 : tm.people.length,
+    });
   });
   return parties;
 }
@@ -195,6 +222,23 @@ function sessionPartyCount(round, session) {
   return people.length - teamed + teams.length;
 }
 
+// How many SEATS one stored session had (#1610): a shared-seat team counts one,
+// an own-seat team its people, everyone else one each. This is the size the
+// draw's player range and the recommender's table-size distribution read —
+// a box's player count is a headcount, and four people cooperating against the
+// game are a four-player table, not a solo one.
+//
+// It sits beside `sessionPartyCount` rather than replacing it: the contest
+// readers (win rate, the streak, the contest badges) keep counting SIDES, and a
+// table that won or lost together against the game is still not a contest.
+function sessionSeatCount(round, session) {
+  const people = sessionPeople(round, session);
+  const teams = resolveTeamMembers(people, session);
+  const sharedTeamed = teams.reduce((n, tm) => n + (tm.sharedSeat ? tm.people.length : 0), 0);
+  const sharedTeams = teams.filter((tm) => tm.sharedSeat).length;
+  return people.length - sharedTeamed + sharedTeams;
+}
+
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     MAX_SESSION_GUESTS,
@@ -208,5 +252,7 @@ if (typeof module !== 'undefined' && module.exports) {
     sessionPartyGroups,
     sessionParties,
     sessionPartyCount,
+    sessionSeatCount,
+    teamSharesSeat,
   };
 }

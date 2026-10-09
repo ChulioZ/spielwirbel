@@ -243,8 +243,12 @@ function showStartSession(round, prefill) {
     addons.relabelAddons();
     updateHint();
   });
+  // SEATS, the live twin of `sessionSeatCount` over the stored session (#1610):
+  // a team sharing one hand counts once, an own-seat team its headcount. The
+  // server counts the blob it is about to store the same way, and the preview
+  // must promise the pool the draw will produce (.claude/rules/session-teams.md §2).
   const playerCount = () =>
-    joining.size + guests.length - teamPicker.teamedPeopleCount() + teamPicker.teamCount();
+    joining.size + guests.length - teamPicker.sharedTeamedPeopleCount() + teamPicker.sharedTeamCount();
   // Multi-table mode (#796). Preset from the same #252 blob as everything else on
   // this screen; the checkbox below is bound to it and the pool reads it live.
   const tableState = { multiTable: !!(preset && preset.multiTable) };

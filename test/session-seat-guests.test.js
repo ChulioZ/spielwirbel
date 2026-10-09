@@ -281,7 +281,7 @@ test('removing a guest takes them out of their team, and the positions stay righ
   await new Promise((r) => setImmediate(r));
 
   assert.deepEqual(plain(sent[0].body.guests), ['Kim', 'Lea']);
-  assert.deepEqual(plain(sent[0].body.teams), [{ memberIds: ['m1'], guestIndices: [1] }]);
+  assert.deepEqual(plain(sent[0].body.teams), [{ sharedSeat: false, memberIds: ['m1'], guestIndices: [1] }]);
 });
 
 test('… and the team dissolves when the guest holding it up goes home', async () => {
@@ -310,7 +310,7 @@ test('… and the team dissolves when the guest holding it up goes home', async 
   await new Promise((r) => setImmediate(r));
 
   assert.deepEqual(plain(sent[0].body.guests), ['Lea']);
-  assert.deepEqual(plain(sent[0].body.teams), [{ memberIds: ['m1'], guestIndices: [0] }],
+  assert.deepEqual(plain(sent[0].body.teams), [{ sharedSeat: false, memberIds: ['m1'], guestIndices: [0] }],
     'the team kept a position instead of the person, so it now names whoever moved into that slot');
 });
 

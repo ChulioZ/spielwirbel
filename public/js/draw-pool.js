@@ -31,8 +31,9 @@ function isActiveGame(game) {
 // Whether the game's OWN box admits a table of `playerCount`, ignoring anything
 // the round owns for it. Expansions are folded in by fitsPlayerCount below.
 //
-// `playerCount` is a PARTY count, not a headcount — members plus guests, with
-// each team counting once (#575) — and it stays a parameter on purpose: the
+// `playerCount` is a SEAT count — members plus guests, with a team that shares
+// one hand counting once (#575) and one whose people each have a seat counting
+// its headcount (#1610) — and it stays a parameter on purpose: the
 // arithmetic that produces it differs per caller (the route reads a stored
 // session, the setup screen reads live pickers), and deriving it here from
 // `round.members` would silently drop guests and flatten teams
