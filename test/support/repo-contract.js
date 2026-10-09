@@ -3803,6 +3803,51 @@ module.exports = function repoContract(repo) {
     assert.equal(await repo.findSessionVoteLink(fresh.id), null);
   });
 
+  test('price watches (#680): one per account and game, owner-scoped, claimed once, recorded with one inbox item', async () => {
+    const tag = Math.random().toString(16).slice(2);
+    const uid = `pw-${tag}`;
+    const other = `pw-other-${tag}`;
+    const fields = (externalId) => ({ externalId, title: `Spiel ${externalId}`, thresholdCents: 3000, destination: 'DE', currency: 'EUR', editionLang: 'DE' });
+    const a = await repo.createPriceWatch(uid, fields(`9${tag.slice(0, 6).replace(/\D/g, '1')}`));
+    assert.equal(a.userId, uid);
+    assert.equal(a.armed, true);
+    assert.equal(a.lastCheckedAt, null);
+    assert.equal(await repo.createPriceWatch(uid, fields(a.externalId)), 'exists');
+    const theirs = await repo.createPriceWatch(other, fields(a.externalId));
+    assert.notEqual(theirs, 'exists', 'another account may watch the same game');
+
+    assert.deepEqual((await repo.listPriceWatches(uid)).map((w) => w.id), [a.id]);
+    assert.equal(await repo.getPriceWatch(other, a.id), null, 'scoped to the owner');
+    assert.equal(await repo.updatePriceWatch(other, a.id, { thresholdCents: 1 }), null);
+    assert.equal((await repo.updatePriceWatch(uid, a.id, { thresholdCents: 2500 })).thresholdCents, 2500);
+
+    // Due, then claimed exactly once.
+    const due = await repo.listDuePriceWatches('2999-01-01T00:00:00.000Z', '2999-01-01T00:00:00.000Z', 10000);
+    assert.ok(due.some((w) => w.id === a.id));
+    const at = new Date().toISOString();
+    assert.equal(await repo.claimPriceWatch(a.id, null, at), true);
+    assert.equal(await repo.claimPriceWatch(a.id, null, at), false, 'the second claimer saw a stale attempt');
+    const notDue = await repo.listDuePriceWatches('2999-01-01T00:00:00.000Z', '2000-01-01T00:00:00.000Z', 10000);
+    assert.ok(!notDue.some((w) => w.id === a.id), 'an attempt pauses the watch');
+
+    // Recording: state + one inbox item, replacing this watch's previous one and
+    // leaving every other item alone.
+    await repo.addInboxItem(uid, { type: 'friend_request', payload: { x: 1 } });
+    await repo.recordPriceWatchCheck(a.id, { lastCheckedAt: at, armed: false }, { watchId: a.id, amountCents: 2400 });
+    await repo.recordPriceWatchCheck(a.id, { lastCheckedAt: at }, { watchId: a.id, amountCents: 2300 });
+    const inbox = await repo.listInbox(uid);
+    const priceDrops = inbox.filter((it) => it.type === 'price_drop');
+    assert.equal(priceDrops.length, 1);
+    assert.equal(priceDrops[0].payload.amountCents, 2300);
+    assert.ok(inbox.some((it) => it.type === 'friend_request'));
+    assert.equal((await repo.getPriceWatch(uid, a.id)).armed, false);
+    assert.equal((await repo.recordPriceWatchCheck(a.id, {}, null)).id, a.id, 'no item without a payload');
+    assert.equal((await repo.listInbox(uid)).filter((it) => it.type === 'price_drop').length, 1);
+
+    assert.equal((await repo.deletePriceWatch(uid, a.id)).id, a.id);
+    assert.equal(await repo.deletePriceWatch(uid, a.id), null);
+  });
+
   test('round invite links (#1515): one per slot, replaced on re-mint, consumed once, swept by age', async () => {
     const t = `ril-${Math.random().toString(16).slice(2)}`;
     const round = await repo.createRound(t, { name: 'Invited', members: ['Ann', 'Bo'] });
@@ -6053,7 +6098,7 @@ module.exports = function repoContract(repo) {
     // Exactly the five named keys — this is the export/erasure symmetry guard: it
     // must stay in step with the stores eraseAccount deletes (the erase tests below
     // pin the delete side), so a sixth store added to one shows up as a shape drift.
-    assert.deepEqual(Object.keys(mine).sort(), ['feedEvents', 'friendships', 'grants', 'inbox', 'invitations']);
+    assert.deepEqual(Object.keys(mine).sort(), ['feedEvents', 'friendships', 'grants', 'inbox', 'invitations', 'priceWatches']);
     assert.equal(mine.grants.length, 1);
     assert.equal(mine.grants[0].roundId, round.id);
     assert.equal(mine.grants[0].userId, me.id);
@@ -6078,7 +6123,7 @@ module.exports = function repoContract(repo) {
     const bTenant = `expg-b-${rand()}`;
     const bystander = await repo.createUser(userFields({ tenantId: bTenant }));
     assert.deepEqual(await repo.exportAccountData(bystander.id, bTenant), {
-      grants: [], invitations: [], inbox: [], friendships: [], feedEvents: [],
+      grants: [], invitations: [], inbox: [], friendships: [], feedEvents: [], priceWatches: [],
     });
   });
 

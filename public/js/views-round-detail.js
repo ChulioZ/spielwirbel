@@ -716,6 +716,9 @@ async function showGameDetail(rid, gameId) {
   if (game.wish && game.source && game.source.externalId) {
     const priceAnchor = h('<div></div>');
     tale.appendChild(priceAnchor);
+    // The price watch (#680) sits under the box, once a LIVE price is on screen.
+    const watchAnchor = h('<div></div>');
+    tale.appendChild(watchAnchor);
     // Stale-while-revalidate (#707): two requests race. `stored=1` answers from
     // the last-known-price store instantly; the full request may block on the
     // upstream for seconds (every in-memory cache miss — hourly, and after each
@@ -737,7 +740,11 @@ async function showGameDetail(rid, gameId) {
     api('GET', `/api/rounds/${rid}/games/${gameId}/prices?${q}`)
       .then((p) => {
         liveSettled = true;
-        if (p && p.available) return swap(renderPriceSection(p));
+        if (p && p.available) {
+          swap(renderPriceSection(p));
+          return renderPriceWatchControl(watchAnchor, game, p);
+        }
+        watchAnchor.remove();
         // A settled "nobody stocks this" is stated, not blanked — also when no
         // stored price was on screen first (operator decision on #707). Any
         // other unavailable answer has nothing honest to show.
@@ -746,6 +753,7 @@ async function showGameDetail(rid, gameId) {
       })
       .catch(() => {
         liveSettled = true;
+        watchAnchor.remove();
         // Our own server became unreachable mid-view. A stored price already on
         // screen stays — re-rendered without the "checking…" note, which would
         // otherwise claim a check that is no longer running.

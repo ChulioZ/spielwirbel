@@ -81,6 +81,7 @@ const GLOBAL_DISPOSITION = {
       + 'invitation into the account\'s rounds has no place in a file the requester '
       + 'downloads and may forward',
   },
+  price_watches: { erase: true, export: true },
   moderation_log: {
     erase: false,
     export: false,
@@ -215,6 +216,7 @@ if (!process.env.DATABASE_URL) {
       inbox: 'inbox',
       friendships: 'friendships',
       feed_events: 'feedEvents',
+      price_watches: 'priceWatches',
     };
     for (const [table, d] of Object.entries(GLOBAL_DISPOSITION)) {
       if (!d.export) continue;
@@ -248,6 +250,7 @@ if (!process.env.DATABASE_URL) {
     await repo.addInboxItem(uid, { type: 'test', createdAt: now });
     await repo.createFriendRequest({ requesterUserId: uid, addresseeUserId: other });
     await repo.addFeedEvent(uid, { type: 'session_played', title: 'Catan', at: now });
+    await repo.createPriceWatch(uid, { externalId: '13', title: 'Catan', thresholdCents: 2000, destination: 'DE', currency: 'EUR', editionLang: 'DE' });
     await repo.createSessionVoteLink({ tenantId: tenant, roundId: round.id, sessionId: session.id });
     await repo.createRoundInviteLink({ roundId: round.id, ownerTenantId: tenant, memberId: null });
 

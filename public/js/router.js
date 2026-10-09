@@ -201,6 +201,8 @@ function resolveRoute(pathname) {
   // A round invite link (#1515). The screen handles both states itself — the
   // confirmation for an account, the way to sign in for everyone else.
   if (parts[0] === 'join' && parts[1]) return () => showJoinLink(safeDecodeSegment(parts[1]));
+  // The account's price watches (#680) — guarded in the view, like /inbox.
+  if (parts[0] === 'preisalarme') return () => showPriceWatches();
   if (parts[0] === 'login') return () => showLogin();
   if (parts[0] === 'register') return () => showRegister();
   if (parts[0] === 'forgot-password') return () => showForgot();

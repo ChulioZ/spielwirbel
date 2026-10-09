@@ -1,0 +1,227 @@
+{
+ "currency": "EUR",
+ "sitename": "Brettspielpreise.de",
+ "url": "https://brettspielpreise.de",
+ "logo": "https://brettspielpreise.de/img/meeple-logo-GB.png",
+ "items": [
+  {
+   "id": 40549,
+   "name": "Ark Nova",
+   "url": "https://brettspielpreise.de/item/show/40549/ark-nova?utm_source=site_spielwirbel.app&utm_medium=cmsplugin&utm_content=getprice&utm_campaign=wpplugin",
+   "image": "https://d2qg6c07ydxh2f.cloudfront.net/items/49/img_40549_MAIN.png",
+   "thumbnail": "https://d2qg6c07ydxh2f.cloudfront.net/items/49/img_40549_THUMBNAIL.png",
+   "versions": {
+    "lang": [
+     "GB"
+    ]
+   },
+   "external_id": "342942",
+   "prices": [
+    {
+     "link": "https://brettspielpreise.de/item/go?source=A&storeitemid=3138559",
+     "price": 55.17,
+     "product": 55.17,
+     "shipping": "0.00",
+     "discount": null,
+     "fee": 0,
+     "stock": "Y",
+     "shipping_known": true,
+     "country": "DE"
+    },
+    {
+     "link": "https://brettspielpreise.de/item/go?source=A&storeitemid=3915596",
+     "price": 62.95,
+     "product": 62.95,
+     "shipping": "0.00",
+     "discount": null,
+     "fee": 0,
+     "stock": "Y",
+     "shipping_known": true,
+     "country": "DE"
+    },
+    {
+     "link": "https://brettspielpreise.de/item/go?source=A&storeitemid=3378129",
+     "price": 46.99,
+     "product": 46.99,
+     "shipping": 0,
+     "discount": null,
+     "fee": 0,
+     "stock": "Y",
+     "shipping_known": false,
+     "country": "DE"
+    },
+    {
+     "link": "https://brettspielpreise.de/item/go?source=A&storeitemid=6760827",
+     "price": 62,
+     "product": 47,
+     "shipping": "15.00",
+     "discount": null,
+     "fee": 0,
+     "stock": "Y",
+     "shipping_known": true,
+     "country": "LV"
+    }
+   ]
+  },
+  {
+   "id": 42840,
+   "name": "Arche Nova",
+   "url": "https://brettspielpreise.de/item/show/42840/arche-nova?utm_source=site_spielwirbel.app&utm_medium=cmsplugin&utm_content=getprice&utm_campaign=wpplugin",
+   "image": "https://d2qg6c07ydxh2f.cloudfront.net/items/40/img_42840_MAIN.png",
+   "thumbnail": "https://d2qg6c07ydxh2f.cloudfront.net/items/40/img_42840_THUMBNAIL.png",
+   "versions": {
+    "lang": [
+     "DE"
+    ]
+   },
+   "external_id": "342942",
+   "prices": [
+    {
+     "link": "https://brettspielpreise.de/item/go?source=A&storeitemid=3138540",
+     "price": 49.89,
+     "product": 44.99,
+     "shipping": "4.90",
+     "discount": null,
+     "fee": 0,
+     "stock": "Y",
+     "shipping_known": true,
+     "country": "DE"
+    },
+    {
+     "link": "https://brettspielpreise.de/item/go?source=A&storeitemid=4116437",
+     "price": 50.99,
+     "product": 50.99,
+     "shipping": "0.00",
+     "discount": null,
+     "fee": 0,
+     "stock": "Y",
+     "shipping_known": true,
+     "country": "DE"
+    },
+    {
+     "link": "https://brettspielpreise.de/item/go?source=A&storeitemid=6340647",
+     "price": 56.99,
+     "product": 56.99,
+     "shipping": "0.00",
+     "discount": null,
+     "fee": 0,
+     "stock": "Y",
+     "shipping_known": true,
+     "country": "DE"
+    },
+    {
+     "link": "https://brettspielpreise.de/item/go?source=A&storeitemid=6400390",
+     "price": 57.5,
+     "product": 52.5,
+     "shipping": "5.00",
+     "discount": null,
+     "fee": 0,
+     "stock": "Y",
+     "shipping_known": true,
+     "country": "DE"
+    }
+   ]
+  },
+  {
+   "id": 69172,
+   "name": "Archa Nova",
+   "url": "https://brettspielpreise.de/item/show/69172/archa-nova?utm_source=site_spielwirbel.app&utm_medium=cmsplugin&utm_content=getprice&utm_campaign=wpplugin",
+   "image": "https://d2qg6c07ydxh2f.cloudfront.net/items/72/img_69172_MAIN.png",
+   "thumbnail": "https://d2qg6c07ydxh2f.cloudfront.net/items/72/img_69172_THUMBNAIL.png",
+   "versions": {
+    "lang": [
+     "CZ"
+    ]
+   },
+   "external_id": "342942",
+   "prices": []
+  },
+  {
+   "id": 949,
+   "name": "Catan",
+   "url": "https://brettspielpreise.de/item/show/949/catan?utm_source=site_spielwirbel.app&utm_medium=cmsplugin&utm_content=getprice&utm_campaign=wpplugin",
+   "image": "https://d2qg6c07ydxh2f.cloudfront.net/items/49/img_949_MAIN.png",
+   "thumbnail": "https://d2qg6c07ydxh2f.cloudfront.net/items/49/img_949_THUMBNAIL.png",
+   "versions": {
+    "lang": [
+     "GB"
+    ]
+   },
+   "external_id": "13",
+   "prices": [
+    {
+     "link": "https://brettspielpreise.de/item/go?source=A&storeitemid=7191068",
+     "price": 27.82,
+     "product": 12.5,
+     "shipping": "15.32",
+     "discount": null,
+     "fee": 0,
+     "stock": "Y",
+     "shipping_known": true,
+     "country": "GB"
+    },
+    {
+     "link": "https://brettspielpreise.de/item/go?source=A&storeitemid=3434432",
+     "price": 43.47,
+     "product": 33.47,
+     "shipping": "10.00",
+     "discount": null,
+     "fee": 0,
+     "stock": "Y",
+     "shipping_known": true,
+     "country": "RO"
+    },
+    {
+     "link": "https://brettspielpreise.de/item/go?source=A&storeitemid=7014070",
+     "price": 44.85,
+     "product": 29.95,
+     "shipping": "14.90",
+     "discount": null,
+     "fee": 0,
+     "stock": "Y",
+     "shipping_known": true,
+     "country": "PT"
+    },
+    {
+     "link": "https://brettspielpreise.de/item/go?source=A&storeitemid=2437504",
+     "price": 51.01,
+     "product": 42.47,
+     "shipping": "8.54",
+     "discount": null,
+     "fee": 0,
+     "stock": "Y",
+     "shipping_known": true,
+     "country": "GB"
+    }
+   ]
+  },
+  {
+   "id": 4122,
+   "name": "The Settlers of Catan - Anniversary Wood Edition",
+   "url": "https://brettspielpreise.de/item/show/4122/the-settlers-of-catan-anniversary-wood-edition?utm_source=site_spielwirbel.app&utm_medium=cmsplugin&utm_content=getprice&utm_campaign=wpplugin",
+   "image": "https://d2qg6c07ydxh2f.cloudfront.net/items/22/img_4122_MAIN.png",
+   "thumbnail": "https://d2qg6c07ydxh2f.cloudfront.net/items/22/img_4122_THUMBNAIL.png",
+   "versions": {
+    "lang": [
+     "GB"
+    ]
+   },
+   "external_id": "13",
+   "prices": []
+  },
+  {
+   "id": 4122,
+   "name": "The Settlers of Catan - Anniversary Wood Edition",
+   "url": "https://brettspielpreise.de/item/show/4122/the-settlers-of-catan-anniversary-wood-edition?utm_source=site_spielwirbel.app&utm_medium=cmsplugin&utm_content=getprice&utm_campaign=wpplugin",
+   "image": "https://d2qg6c07ydxh2f.cloudfront.net/items/22/img_4122_MAIN.png",
+   "thumbnail": "https://d2qg6c07ydxh2f.cloudfront.net/items/22/img_4122_THUMBNAIL.png",
+   "versions": {
+    "lang": [
+     "GB"
+    ]
+   },
+   "external_id": "13",
+   "prices": []
+  }
+ ]
+}

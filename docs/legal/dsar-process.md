@@ -3,7 +3,7 @@
 Internal record (German). Requests arrive via the published e-mail address or
 the contact form; answer within **one month** (Art. 12 Abs. 3).
 
-**Stand:** 2026-10-08
+**Stand:** 2026-10-09
 
 ## Eingang & Identitätsprüfung
 
@@ -38,7 +38,8 @@ the contact form; answer within **one month** (Art. 12 Abs. 3).
   für das Weglassen — ein neues Feld kann also nicht still herausfallen.
 - Der Export enthält neben Konto und Runden auch die kontobezogenen Daten in den
   globalen Speichern (#397): **Freundschaften, Freundeskreis-Feed-Ereignisse,
-  Postfach (Inbox), Einladungen und Runden-Freigaben (Grants)** — genau die
+  Postfach (Inbox), Einladungen, Runden-Freigaben (Grants) und — seit #680 —
+  Preisalarme** — genau die
   Kategorien, die die Kontolöschung (Art. 17) ebenfalls entfernt. Auskunft und
   Löschung decken damit dieselben Datensätze ab — mit **einer bewussten
   Ausnahme**: die **Abstimmungslinks** (#652, VVT Zeile 19) werden bei der

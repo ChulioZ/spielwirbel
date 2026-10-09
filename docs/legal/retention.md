@@ -6,7 +6,7 @@ den Prüf-Rhythmus fest; die veröffentlichte Datenschutzerklärung
 Frist, die hier steht, aber nicht gelebt oder nicht veröffentlicht wird, ist
 schlimmer als keine.
 
-**Stand:** 2026-10-08
+**Stand:** 2026-10-09
 
 ## Grundsatz
 
@@ -29,6 +29,7 @@ Bild-Objekte ab — `.claude/rules/deletion-paths-must-free-cover-objects.md`).
 | Einladungslinks (#1515, `vvt.md` Zeile 13) — zufällige Kennung, Runde, vorgesehener Platz, Erstellungszeitpunkt; keine Daten über Empfänger | bis Widerruf, Ersetzung durch einen neuen Link für denselben Platz, Verbrauch (ein Link für einen bestimmten Platz gilt nur einmal) oder Löschung der Runde/des Kontos — **und in jedem Fall höchstens 7 Tage** ab Erstellung. Zum selben Stichtag **unbrauchbar** (Prüfung in der Route), unabhängig davon, wann der Sweep läuft | Nutzeraktion / automatisch: Scheduler-Job `purgeExpiredInviteLinks` alle 15 Min. / `deleteRound` / `eraseAccount` |
 | Freigaben (`round_grants`, #207) | bis Widerruf/Verlassen bzw. Konto- oder Rundenlöschung | Nutzeraktion / `eraseAccount` |
 | Freundschaften + Freundeskreis-Feed (#325) | Freundschaft bis Entfreunden bzw. Kontolöschung; einzelne Feed-Ereignisse **12 Monate** (#1357, `MAX_FEED_EVENT_AGE_DAYS`, Default 365), dazu eine Sicherheitsobergrenze von 5000 Ereignissen je Konto (`MAX_FEED_EVENTS`) | Nutzeraktion / automatisch: beim Schreiben (je Konto) und per Scheduler-Job `purgeExpiredFeedEvents` alle 15 Min. (alle Konten) / `eraseAccount` |
+| Preisalarme (#680, `vvt.md` Zeile 24) — beobachtetes Spiel, Höchstpreis, Markt, zuletzt gesehener Preis | bis der Nutzer den Alarm beendet oder sein Konto löscht. Kein Ablauf: der Alarm ist eine Einstellung des Nutzers wie ein Abonnement, und er endet mit ihr. Die Benachrichtigungen dazu sind Postfach-Einträge (nächste Zeile); je Alarm liegt höchstens einer im Postfach, ein neuer ersetzt den alten | Nutzeraktion / `eraseAccount` |
 | Postfach-Benachrichtigungen (Inbox, #207) | je Konto auf 100 Einträge begrenzt (älteste werden verdrängt); Kontolöschung räumt vollständig | automatisch / `eraseAccount` |
 | Abstimmungs-Links ohne Konto (#652) | mit dem Ende der Abstimmung, beim Abbrechen/Löschen der Session oder der Runde, bei Kontolöschung — **und in jedem Fall spätestens 30 Tage nach dem Erzeugen** (`VOTE_LINK_TTL_DAYS`). Die Höchstfrist ist nicht nur Aufräumen: eine Session, die nie geschlossen wird, erreicht keinen der ereignisgesteuerten Pfade, und ohne sie bliebe der Link unbegrenzt gültig. Er wird zum selben Stichtag **unbrauchbar** (Prüfung in der Route), unabhängig davon, wann der Sweep die Zeile löscht | automatisch (Route + `deleteRound`/`eraseAccount` + 15-Minuten-Sweep in `lib/scheduler.js`) |
 | Zuletzt abgerufene Preise (`last_prices`, #688 — **keine personenbezogenen Daten**, `vvt.md` Zeile 21: Spiel-Kennung + Preis, ohne Nutzer-/Konto-/Mandanten-Bezug) | **7 Tage** ab Abruf (`PRICES_FALLBACK_MAX_AGE_DAYS`). Die Frist ist keine Datenschutz-, sondern eine **Richtigkeits**-Frist: älter darf der Preis nicht angezeigt werden, weil er sonst irreführend wäre (§ 5a UWG). Die Anzeige endet zum selben Stichtag über die Alterprüfung in `lib/prices/index.js`, unabhängig davon, wann der Sweep die Zeile löscht | automatisch (15-Minuten-Sweep in `lib/scheduler.js`) |

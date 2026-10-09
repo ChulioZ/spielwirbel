@@ -71,7 +71,7 @@ const CLIENT_ERROR_MAX_PER_LOAD = 5;
 // The three lists mirror resolveRoute() in public/js/router.js. They are
 // ALLOWLISTS — anything off them folds to '/other'.
 const CLIENT_ERROR_SCREENS = [
-  'inbox', 'freunde', 'konto', 'neu', 'entdecken', 'login', 'register', 'forgot-password',
+  'inbox', 'freunde', 'konto', 'neu', 'entdecken', 'login', 'register', 'forgot-password', 'preisalarme',
 ];
 const CLIENT_ERROR_ROUND_TABS = [
   'start', 'regal', 'chronik', 'pokale', 'retired', 'completed', 'wishlist',

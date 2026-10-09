@@ -10642,6 +10642,31 @@ kbd {
 .join__note { margin: 12px 0 0; }
 .join__actions { margin-top: 20px; }
 
+/* Price watches (#680). The control sits under the price box it watches; the
+   list is ordinary .ds-rows whose actions wrap under the text on a phone. */
+.gd-watch__state { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; }
+.gd-watch__actions { flex-wrap: wrap; align-items: center; gap: 8px; }
+.gd-watch__label { display: flex; align-items: center; gap: 6px; font-weight: 600; margin-bottom: 6px; }
+.gd-watch__row,
+.price-watches__search-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.gd-watch__input { flex: 0 1 9em; min-width: 0; }
+.price-watches__search-row .input { flex: 1 1 12em; min-width: 0; }
+.price-watches__intro { margin: 0 0 16px; }
+.price-watches__search { margin-bottom: 20px; }
+.price-watches__results:not(:empty) { margin-top: 10px; }
+.price-watch,
+.price-watches__hit { flex-wrap: wrap; row-gap: 8px; }
+.price-watch .ds-row__main { min-width: 0; flex: 1 1 14em; }
+.price-watch__title { font-weight: 600; overflow-wrap: anywhere; }
+.price-watch__meta,
+.price-watch__where { font-size: var(--text-sm); }
+.price-watch__actions,
+.price-watch__form { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.price-watch__input { width: 7em; }
+.inbox-row__price { margin-top: 2px; }
+.inbox-row__offers { display: inline-block; margin-top: 4px; }
+.inbox-row__source { font-size: var(--text-sm); margin-top: 2px; }
+
 .live-vote__hotseat { display: flex; flex-direction: column; gap: 8px; }
 
 /* Taking someone out of a session (#1538): one quiet link under the actions,

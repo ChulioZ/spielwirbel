@@ -113,6 +113,13 @@ Re-read it before storing anything **more** (a history, a per-user row): the
 permission above is for one current value per lookup, and § 87b UrhG (database
 right) is the neighbouring question #679's notes already used to reject scraping.
 
+**Re-read 2026-10-09 for #680's price alerts** — the first per-user row: unchanged,
+still no retention clause, and the same page documents `eid` as a
+comma-separated list, which is what the daily alert job batches on. The alert
+row stores one last-seen price per watch (overwritten, not a history) and
+lives in its own table and VVT row (24), so this table's classification above
+is untouched.
+
 ## 5. Global and un-scoped, and the VVT reasoning turns on the row's CONTENT
 
 The table has no `tenant_id` and no RLS, like `moderation_log` — a price is a

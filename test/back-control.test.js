@@ -87,6 +87,7 @@ function bootApp(t, { loggedIn = true, profile = null } = {}) {
     if (/\/activities$/.test(url)) return [];
     if (/^\/api\/rounds\/[^/]+$/.test(url)) return round;
     if (url === '/api/rounds') return [SUMMARY];
+    if (url === '/api/price-watches') return { watches: [], limit: 50 };
     return {};
   });
   dom.set('accountsActive', () => true);
@@ -161,6 +162,9 @@ const MAIN = [
   // bootApp's `fetch`, so it renders its empty state here — which still has to
   // satisfy assertRendered, i.e. the screen is genuinely there.
   ['entdecken', (dom) => dom.call('showEntdecken')],
+  // Preisalarme (#680), the account menu's watch list — only where prices
+  // exist, so the cached config says they do.
+  ['preisalarme', (dom) => { dom.run('accountCfg = { prices: true }'); return dom.call('showPriceWatches'); }],
 ];
 
 for (const [name, render] of NON_MAIN) {
