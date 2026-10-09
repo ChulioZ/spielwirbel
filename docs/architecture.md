@@ -942,8 +942,8 @@ public/
                           renders
     views-round-settings.js round Einstellungen screen: the round-level actions
                           (invite, move games, delete/leave) in one place (#561),
-                          plus the two sub-screens it links to — the colour
-                          marker picker and the tag manager (#956, #1187)
+                          the round's name and colour marker on the page
+                          (#1581), plus the tag manager it links to (#956)
     views-round-actions.js  the two sheets that screen opens: move games, invite
     views-round-lookup.js the two lookup sheets: add a game, link an existing
                           game to a provider

@@ -9,9 +9,9 @@
    concern, and on a phone it was reachable only by switching tabs and scrolling
    past the entire month-grouped history.
 
-   Since #956 it also HOLDS showMarker (the design picker until #1187) and showTags, the two sub-screens its own
-   row list links to. They came from views-round-detail.js, where they were an
-   independently editable concern sitting inside a file past its size budget
+   Since #956 it also HOLDS showTags, the sub-screen its own row list links to
+   (and held showMarker until #1581 put the marker picker on this screen). It
+   came from views-round-detail.js, where it was an independently editable concern sitting inside a file past its size budget
    (.claude/rules/token-friendly-source-files.md).
 
    The two sheets it opens — showTransferGames and showInvite — are in
@@ -42,34 +42,22 @@ async function showRoundSettings(rid) {
   app.appendChild(backRow(() => showRound(rid)));
   app.appendChild(h(`<div class="page-head"><h1>${esc(t('rail.settings'))}</h1></div>`));
 
-  // --- The three routed configuration screens. Real <a href> via navLink (#330);
-  // they own their own screens, so this only links to them and duplicates nothing.
+  // --- The round's set-up. The marker is picked ON this screen in every design
+  // (#1581): Ocean, Die Brücke, Das Programmheft and Forest put it in their own
+  // compositions below, and Klassisch and Der Tisch in composeDefaultSettings.
+  // So the one routed sub-screen left is Tags; /design lands here (router.js).
+  const ocean = designIs('ocean');
+  const programmheft = designIs('programmheft');
+  const bruecke = designIs('bruecke');
+  const forest = designIs('forest');
   app.appendChild(h(`<h2 class="rs-section__h">${esc(t('roundSettings.config'))}</h2>`));
   const nav = h('<div class="ds-list"></div>');
-  // Ocean puts the marker picker ON this screen (#1219, O14.1 „Name & Marker"),
-  // so its row would only lead to the same eight swatches one tap further on —
-  // a new place replaces its entry point. The /design route itself stays: a
-  // bookmark still reaches it, and Klassisch and Der Tisch still link to it.
-  const ocean = designIs('ocean');
-  // Das Programmheft draws the picker inline as well (#1380, P14.6), for the
-  // same reason — so its row goes too.
-  const programmheft = designIs('programmheft');
-  // And Die Brücke (#1246, B14.5/B6.6): „Einstellungen · Marker · Tags · Einladen".
-  const bruecke = designIs('bruecke');
-  // And Forest (#1474, F14.1): the eight markers as ribbons in a card of their own.
-  const forest = designIs('forest');
-  const inlinePicker = ocean || programmheft || bruecke || forest;
-  [
-    { icon: 'ti-tags', label: t('round.tags'), sub: 'tags', go: () => showTags(rid) },
-    { icon: 'ti-palette', label: t('round.marker'), sub: 'design', go: () => showMarker(rid) },
-  ].filter(({ sub }) => !(inlinePicker && sub === 'design')).forEach(({ icon, label, sub, go }) => {
-    const row = h(`<a class="ds-row rs-row">
-         <div class="ds-row__main"><i class="ti ${icon}" aria-hidden="true"></i><span>${esc(label)}</span></div>
-         <div class="ds-row__meta"><i class="ti ti-chevron-right" aria-hidden="true"></i></div>
-       </a>`);
-    navLink(row, roundPath(rid, sub), go);
-    nav.appendChild(row);
-  });
+  const tagsRow = h(`<a class="ds-row rs-row">
+       <div class="ds-row__main"><i class="ti ti-tags" aria-hidden="true"></i><span>${esc(t('round.tags'))}</span></div>
+       <div class="ds-row__meta"><i class="ti ti-chevron-right" aria-hidden="true"></i></div>
+     </a>`);
+  navLink(tagsRow, roundPath(rid, 'tags'), () => showTags(rid));
+  nav.appendChild(tagsRow);
   app.appendChild(nav);
 
   // --- The round's saved session filters (#1328) — rename, delete, reorder.
@@ -144,6 +132,59 @@ async function showRoundSettings(rid) {
   if (programmheft) composeProgrammheftSettings(round, rid);
   if (bruecke) composeBrueckeSettings(round, rid);
   if (forest) composeForestSettings(round, rid);
+  if (!(ocean || programmheft || bruecke || forest)) composeDefaultSettings(round, rid);
+}
+
+/* Klassisch's and Der Tisch's Einstellungen (#1581): the composition Das
+   Programmheft drew for P14.6, in the two designs' own components. The left
+   column is the round's set-up — its name as an open field (co-owners and up,
+   #137), the marker picker, „Runde einrichten" and the saved filters; the right
+   one is what acts on the round — „Runde verwalten" and the Gefahrenzone. Two
+   columns from 1280px, one below (styles.css `.rs-cols`). Composed AFTER the
+   shared build out of its own nodes, like every design's, so every handler
+   above is the one that runs. DOM order is the reading order (WCAG 2.4.3).
+
+   This replaced the separate /design screen (showMarker until #1581), which
+   only ever held the eight swatches one tap away from here. */
+function composeDefaultSettings(round, rid) {
+  const head = app.querySelector(':scope > .page-head');
+  const kids = [...app.children];
+  const after = kids.slice(kids.indexOf(head) + 1);
+  const main = h('<div class="rs-col"></div>');
+  const aside = h('<div class="rs-col rs-col--act"></div>');
+  if (roundCan(round, 'round.edit')) main.appendChild(settingsNameField(round));
+  const marker = h(`<section class="rs-sec rs-sec--marker">
+       <h2 class="rs-section__h">${esc(t('marker.title'))}</h2>
+       <p class="muted rs-sec__note">${esc(t('marker.note'))}</p>
+     </section>`);
+  marker.appendChild(renderMarkerGrid(round, rid));
+  main.appendChild(marker);
+
+  // „Runde verwalten" and the Gefahrenzone start the right-hand column.
+  const manage = t('roundSettings.manage');
+  let col = main;
+  after.forEach((el) => {
+    if (el.matches('h2.rs-section__h')
+      && (el.classList.contains('rs-section__h--danger') || el.textContent === manage)) col = aside;
+    col.appendChild(el);
+  });
+
+  const cols = h('<div class="rs-cols"></div>');
+  cols.appendChild(main);
+  if (aside.childElementCount) cols.appendChild(aside);
+  app.appendChild(cols);
+}
+
+/* Klassisch's and Der Tisch's always-open name field — Das Programmheft's
+   (programmheftNameField below) in the shared components, with the same commit. */
+function settingsNameField(round) {
+  const sec = h(`<section class="rs-sec rs-sec--name">
+       <h2 class="rs-section__h" id="rsNameH">${esc(t('newRound.nameLabel'))}</h2>
+       <input class="input rs-name" type="text" autocomplete="off" enterkeyhint="done"
+              aria-labelledby="rsNameH" />
+     </section>`);
+  wireRoundNameField(sec.querySelector('input'), round);
+  return sec;
 }
 
 /* Ocean's Einstellungen (#1219, O14.1): the same sections as cards, the marker
@@ -326,36 +367,6 @@ function composeBrueckeSettings(round, rid) {
   app.appendChild(cols);
 }
 
-// =================== The two sub-screens Einstellungen links to ===================
-//
-// Moved here from views-round-detail.js by #956: both are routed screens of
-// their own (router.js reaches them directly) and both are reached from the row
-// list above, so they belong with the screen that offers them rather than beside
-// the game detail view they had nothing to do with.
-
-async function showMarker(rid) {
-  currentView = () => showMarker(rid);
-  syncUrl(roundPath(rid, 'design'));
-  app.innerHTML = '<p class="muted">…</p>';
-  let round;
-  try { round = await fetchRound(rid); }
-  catch { return showHome(); }
-  applyMarker(round);
-  setContext(round.name);
-  setDocTitle(t('round.marker'), round.name);
-
-  app.innerHTML = '';
-  renderSubScreenTabs(round, 'design');
-  app.appendChild(backRow(() => showRound(rid)));
-  app.appendChild(h(`<div class="page-head"><h1>${esc(t('marker.title'))}</h1></div>`));
-
-  const sec = h('<div class="section"></div>');
-  sec.appendChild(h(`<div class="muted" style="margin-bottom:14px">${esc(t('marker.note'))}</div>`));
-  const grid = renderMarkerGrid(round, rid);
-  sec.appendChild(grid);
-  app.appendChild(sec);
-}
-
 /* The eight swatches, and they are the ACTIVE design's eight (#1187). A round
    stores only an index, so the picker shows what the chooser will paint for the
    person looking at it — someone on Der Tisch picks between felts, someone on
@@ -371,8 +382,8 @@ async function showMarker(rid) {
    (#1202) a round that wore one shows the marker it maps to (round-marker.js),
    and the picker shows that marker pressed.
 
-   Shared by the /design screen and, under Ocean, the Einstellungen screen's
-   marker card (#1219). A pick re-renders whichever of the two is showing. */
+   Drawn on the Einstellungen screen in every design (#1581 retired the
+   separate /design screen that held it before); a pick re-renders it. */
 function renderMarkerGrid(round, rid) {
   const active = activeDesign();
   const designId = (active && active.id) || FACE_DESIGN;

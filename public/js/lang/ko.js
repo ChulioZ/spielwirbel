@@ -1325,7 +1325,6 @@ I18N.ko = {
   'theme.sand': '모래',
   'theme.schiefer': '슬레이트',
   'theme.pfirsich': '복숭아',
-  'round.marker': '색상 마커',
   'marker.title': '색상 마커',
   'marker.note': '모든 모임은 색을 하나씩 가집니다. 모임에 속한 모두가 각자의 디자인 안에서 같은 색을 봅니다.',
   'marker.tisch.tannenfilz': '전나무 펠트',

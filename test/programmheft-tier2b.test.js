@@ -119,12 +119,11 @@ test('every heading takes its section with it: setup left, managing and danger r
   assert.deepEqual([...dom.app.children].map((el) => el.className.split(' ')[0]).slice(-2), ['page-head', 'rs-ph']);
 });
 
-test('Klassisch keeps its settings list and its /design row, with no Programmheft columns', async (t) => {
+test('Klassisch takes none of the Programmheft columns', async (t) => {
   const { dom } = bootRound(t, 'klassisch');
   await dom.call('showRoundSettings', RID);
-  assert.equal(dom.app.querySelector('.rs-ph, .rs-ph__sec, .marker-cards'), null);
-  const hrefs = [...dom.app.querySelectorAll('.rs-row[href]')].map((a) => a.getAttribute('href'));
-  assert.deepEqual(hrefs, [`/round/${RID}/tags`, `/round/${RID}/design`]);
+  assert.equal(dom.app.querySelector('.rs-ph, .rs-ph__sec'), null);
+  assert.ok(dom.app.querySelector('.rs-cols .marker-cards'), 'the control: Klassisch\'s own composition rendered');
 });
 
 // --- P14 Freundeskreis, profile, inbox --------------------------------------

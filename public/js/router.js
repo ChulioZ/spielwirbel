@@ -222,7 +222,8 @@ function resolveRoute(pathname) {
     if (sub === 'wishlist') return () => showWishlist(rid);
     if (sub === 'recommendations') return () => showRecommendations(rid);
     if (sub === 'shelf-profile') return () => showShelfProfile(rid);
-    if (sub === 'design') return () => showMarker(rid);
+    // The marker screen's old address (#1581 put the picker on Einstellungen).
+    if (sub === 'design') return () => showRoundSettings(rid);
     if (sub === 'tags') return () => showTags(rid);
     if (sub === 'settings') return () => showRoundSettings(rid);
     if (sub === 'game' && parts[3]) return () => showGameDetail(rid, parts[3]);

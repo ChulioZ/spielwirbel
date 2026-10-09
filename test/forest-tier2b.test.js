@@ -149,7 +149,6 @@ const SCREENS = [
   ['inbox', (dom) => dom.call('showInbox')],
   ['news', (dom) => dom.call('showNews')],
   ['entdecken', (dom) => dom.call('showEntdecken')],
-  ['marker', (dom) => dom.call('showMarker', RID)],
 ];
 
 async function renderAll(t, design) {

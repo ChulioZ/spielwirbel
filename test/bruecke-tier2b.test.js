@@ -132,12 +132,11 @@ test('every heading takes its section into a plate, and the Gefahrenzone comes l
     ['back-row', 'page-head', 'rs-br']);
 });
 
-test('Klassisch keeps its settings list and its /design row, with no Brücke plates', async (t) => {
+test('Klassisch takes none of the Brücke plates', async (t) => {
   const { dom } = bootRound(t, 'klassisch');
   await dom.call('showRoundSettings', RID);
-  assert.equal(dom.app.querySelector('.rs-br, .rs-br__plate, .marker-cards'), null);
-  const hrefs = [...dom.app.querySelectorAll('.rs-row[href]')].map((a) => a.getAttribute('href'));
-  assert.deepEqual(hrefs, [`/round/${RID}/tags`, `/round/${RID}/design`]);
+  assert.equal(dom.app.querySelector('.rs-br, .rs-br__plate'), null);
+  assert.ok(dom.app.querySelector('.rs-cols .marker-cards'), 'the control: Klassisch\'s own composition rendered');
 });
 
 // --- the account screens ------------------------------------------------------

@@ -1383,7 +1383,6 @@ I18N.it = {
   'theme.sand': 'Sabbia',
   'theme.schiefer': 'Ardesia',
   'theme.pfirsich': 'Pesca',
-  'round.marker': 'Marcatore di colore',
   'marker.title': 'Marcatore di colore',
   'marker.note': 'Ogni gruppo porta un colore. Tutti nel gruppo lo vedono, ciascuno nel proprio design.',
   'marker.tisch.tannenfilz': 'Feltro abete',

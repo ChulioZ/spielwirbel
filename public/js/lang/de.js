@@ -1424,7 +1424,6 @@ I18N.de = {
   'theme.sand': 'Sand',
   'theme.schiefer': 'Schiefer',
   'theme.pfirsich': 'Pfirsich',
-  'round.marker': 'Farbmarker',
   'marker.title': 'Farbmarker',
   'marker.note': 'Jede Runde trägt eine Farbe. Alle in der Runde sehen sie – jede und jeder im eigenen Design.',
   'marker.tisch.tannenfilz': 'Tannenfilz',
