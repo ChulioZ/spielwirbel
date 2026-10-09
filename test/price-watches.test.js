@@ -252,3 +252,50 @@ test('the search answers from BGG\'s search, mapped to what a watch needs', asyn
   const res = await request(app).get('/api/price-watches/search?q=arche-unique-q').set(auth(mia.token));
   assert.deepEqual(res.body.results, [{ externalId: '342942', title: 'Arche Nova', year: 2021 }]);
 });
+
+test('ending a watch removes its price message; saving the same threshold does not re-alert', async () => {
+  const nina = await account('nina');
+  const { watch: w } = (await watch(nina, { externalId: '700', thresholdCents: 3000 })).body;
+  priceOf['700'] = 25;
+  let now = Date.now();
+  assert.equal((await checkPriceWatches({ now })).notified, 1);
+  // Opening „Ändern" and saving the same value: still the same question.
+  await request(app).patch(`/api/price-watches/${w.id}`).set(auth(nina.token)).send({ thresholdCents: 3000 });
+  now += DAY;
+  assert.equal((await checkPriceWatches({ now })).notified, 0);
+  assert.equal(priceItems(nina.user.id).length, 1);
+  await request(app).delete(`/api/price-watches/${w.id}`).set(auth(nina.token));
+  assert.equal(priceItems(nina.user.id).length, 0);
+});
+
+test('one failed request ends the tick for the upstream: no chunk after it waits out the timeout', async () => {
+  const otto = await account('otto');
+  process.env.MAX_PRICE_WATCHES_PER_USER = '50';
+  for (let i = 1; i <= 25; i += 1) await watch(otto, { externalId: String(3000 + i) });
+  failing = true;
+  const r = await checkPriceWatches();
+  assert.equal(r.requests, 1);
+  assert.equal(r.failed, 25);
+});
+
+test('a body in another currency changes nothing but the check time', async () => {
+  const pia = await account('pia');
+  const { watch: w } = (await watch(pia, { externalId: '800', thresholdCents: 9000 })).body;
+  priceOf['800'] = 50;
+  let now = Date.now();
+  await checkPriceWatches({ now });
+  const before = store.data.priceWatches.find((x) => x.id === w.id).lastPrice;
+  const real = global.fetch;
+  global.fetch = async (url) => { const r = await real(url); const body = await r.json(); return { ok: true, status: 200, json: async () => ({ ...body, currency: 'USD' }) }; };
+  now += DAY;
+  const r = await checkPriceWatches({ now });
+  assert.equal(r.notified, 0);
+  assert.deepEqual(store.data.priceWatches.find((x) => x.id === w.id).lastPrice, before, 'not „nicht vorrätig"');
+});
+
+test('a long game title is shortened, not refused', async () => {
+  const quinn = await account('quinn');
+  const res = await watch(quinn, { externalId: '900', title: 'x'.repeat(250) });
+  assert.equal(res.status, 201);
+  assert.equal(res.body.watch.title.length, 200);
+});

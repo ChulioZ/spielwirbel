@@ -742,7 +742,10 @@ async function showGameDetail(rid, gameId) {
         liveSettled = true;
         if (p && p.available) {
           swap(renderPriceSection(p));
-          return renderPriceWatchControl(watchAnchor, game, p);
+          // Not returned: a failing control must never reach the .catch below,
+          // which would swap this live price back to the stored one.
+          renderPriceWatchControl(watchAnchor, game, p).catch(() => watchAnchor.remove());
+          return undefined;
         }
         watchAnchor.remove();
         // A settled "nobody stocks this" is stated, not blanked — also when no

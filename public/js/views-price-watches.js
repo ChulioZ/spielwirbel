@@ -95,13 +95,22 @@ async function renderPriceWatchControl(anchor, game, price) {
     }
   };
 
-  // Prefilled with today's price rounded down: "tell me when it is cheaper than
-  // now" is the common case, and the number is the reader's to change.
+  // Prefilled BELOW today's price: "tell me when it is cheaper than now" is the
+  // common case, and a prefill equal to today's price would alert on the first
+  // check for a price that never moved (39,00 € floors to 39). The next whole
+  // amount below, or a cent below for a price under 1. The reader may change it.
+  const belowToday = (amount) => {
+    const whole = Math.ceil(amount) - 1;
+    return whole >= 1 ? whole : Math.max(0.01, (Math.round(amount * 100) - 1) / 100);
+  };
   const renderForm = (cents) => {
     box.replaceChildren();
-    const start = cents != null ? cents / 100 : Math.floor(price.amount);
+    const start = cents != null ? cents / 100 : belowToday(price.amount);
+    // An existing watch compares in the currency it was SET in, whatever market
+    // this reader would see today — label the amount with that one.
+    const currency = watch ? watch.currency : price.currency;
     const form = h(`<form class="gd-watch__form">
-        <label for="gdWatchAt" class="gd-watch__label"><i class="ti ti-bell" aria-hidden="true"></i> ${esc(t('priceWatch.label', { currency: price.currency }))}</label>
+        <label for="gdWatchAt" class="gd-watch__label"><i class="ti ti-bell" aria-hidden="true"></i> ${esc(t('priceWatch.label', { currency }))}</label>
         <div class="gd-watch__row">
           <input id="gdWatchAt" class="input gd-watch__input" type="text" inputmode="decimal" autocomplete="off" value="${esc(String(start))}">
           <button type="submit" class="btn">${esc(t(watch ? 'priceWatch.save' : 'priceWatch.start'))}</button>
@@ -336,16 +345,23 @@ function renderPriceDropItem(item) {
       } catch {}
     });
   }
+  // „Beenden" means "stop watching this GAME": it ends whichever watch on the
+  // game is live now — which may be a newer one than the watch that wrote this
+  // item, if the reader ended that one and set another since.
   row.querySelector('.inbox-row__stop').addEventListener('click', async (ev) => {
     ev.stopPropagation();
     try {
-      await api('DELETE', `/api/price-watches/${encodeURIComponent(p.watchId)}`);
-    } catch (err) {
-      // Already gone (removed from the list meanwhile) is the outcome wanted.
-      if (err.message !== 'not_found') { toast(t('priceWatch.err.generic'), { tone: 'error' }); return; }
+      const { watches } = await api('GET', '/api/price-watches');
+      const live = (watches || []).find((w) => w.externalId === p.externalId);
+      if (live) await api('DELETE', `/api/price-watches/${encodeURIComponent(live.id)}`);
+    } catch {
+      toast(t('priceWatch.err.generic'), { tone: 'error' });
+      return;
     }
     toast(t('priceWatch.toast.stopped'));
-    row.querySelector('.inbox-row__stop').remove();
+    // Ending the watch removed this item server-side too; take it off screen.
+    row.remove();
+    afterRemove();
   });
   row.querySelector('.inbox-row__del').addEventListener('click', async (ev) => {
     ev.stopPropagation();

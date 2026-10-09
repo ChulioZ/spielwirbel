@@ -122,11 +122,17 @@ test('/preisalarme lists each watch with its threshold, last price and market, a
 test('a price-drop item states the price, the threshold, when it was seen, and links to the aggregator', async (t) => {
   const { dom } = app(t);
   const calls = [];
-  dom.set('api', async (method, url) => { calls.push([method, url]); return null; });
-  dom.set('accountApi', async () => ({}));
+  // The watch that wrote the item (w1) was ended since and a new one set (w9):
+  // „Beenden" must end the game's LIVE watch, not report the old one's 404.
+  dom.set('api', async (method, url) => {
+    calls.push([method, url]);
+    return method === 'GET' ? { watches: [{ ...WATCH, id: 'w9' }], limit: 50 } : null;
+  });
+  // afterRemove() re-reads the inbox once its last row is gone.
+  dom.set('accountApi', async (method, url) => (url === '/inbox' ? { items: [] } : {}));
   const item = {
     id: 'i1', type: 'price_drop', read: false, createdAt: '2026-10-08T06:00:00Z',
-    payload: { watchId: 'w1', title: 'Arche Nova', amountCents: 3899, currency: 'EUR', shippingKnown: true, thresholdCents: 4000,
+    payload: { watchId: 'w1', externalId: '342942', title: 'Arche Nova', amountCents: 3899, currency: 'EUR', shippingKnown: true, thresholdCents: 4000,
       observedAt: '2026-10-08T06:00:00Z', url: 'https://brettspielpreise.de/item/show/1/arche-nova' },
   };
   const row = dom.call('renderInboxItem', item);
@@ -137,8 +143,9 @@ test('a price-drop item states the price, the threshold, when it was seen, and l
   assert.equal(row.querySelector('.inbox-row__offers').getAttribute('href'), item.payload.url);
   assert.match(text(row), /Brettspielpreise\.de/, 'the source line their terms ask for');
   row.querySelector('.inbox-row__stop').click();
-  await flush();
-  assert.deepEqual(calls[0], ['DELETE', '/api/price-watches/w1']);
+  await flush(); await flush();
+  assert.deepEqual(calls.map((c) => c.join(' ')), ['GET /api/price-watches', 'DELETE /api/price-watches/w9']);
+  assert.equal(row.isConnected, false, 'the item goes with the watch');
 });
 
 test('a price-drop link that is not https is not rendered', (t) => {
@@ -146,4 +153,25 @@ test('a price-drop link that is not https is not rendered', (t) => {
   const row = dom.call('renderInboxItem', { id: 'i2', type: 'price_drop', read: true, createdAt: '2026-10-08T06:00:00Z',
     payload: { watchId: 'w1', title: 'X', amountCents: 100, currency: 'EUR', thresholdCents: 200, observedAt: '2026-10-08T06:00:00Z', url: 'javascript:alert(1)' } });
   assert.equal(row.querySelector('.inbox-row__offers'), null);
+});
+
+test('the prefill is BELOW today\'s price, so setting it unchanged never alerts on a price that did not move', async (t) => {
+  for (const [amount, want] of [[42.99, '42'], [39, '38'], [0.5, '0.49']]) {
+    const { dom } = app(t);
+    dom.set('api', async () => ({ watches: [], limit: 50 }));
+    const anchor = dom.document.createElement('div');
+    dom.app.appendChild(anchor);
+    await dom.call('renderPriceWatchControl', anchor, { title: 'X', source: { externalId: '1' } }, { amount, currency: 'EUR' });
+    assert.equal(dom.app.querySelector('#gdWatchAt').value, want, String(amount));
+  }
+});
+
+test('editing an existing watch labels the amount in the WATCH\'s currency, not today\'s market', async (t) => {
+  const { dom } = app(t);
+  dom.set('api', async () => ({ watches: [{ ...WATCH, currency: 'GBP' }], limit: 50 }));
+  const anchor = dom.document.createElement('div');
+  dom.app.appendChild(anchor);
+  await dom.call('renderPriceWatchControl', anchor, { title: 'Arche Nova', source: { externalId: '342942' } }, { amount: 42.99, currency: 'EUR' });
+  dom.app.querySelector('#gdWatchEdit').click();
+  assert.match(text(dom.app.querySelector('.gd-watch__label')), /GBP/);
 });

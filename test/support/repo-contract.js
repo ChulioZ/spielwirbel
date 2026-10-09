@@ -3844,8 +3844,17 @@ module.exports = function repoContract(repo) {
     assert.equal((await repo.recordPriceWatchCheck(a.id, {}, null)).id, a.id, 'no item without a payload');
     assert.equal((await repo.listInbox(uid)).filter((it) => it.type === 'price_drop').length, 1);
 
+    // A record decided against a threshold that has since changed is dropped.
+    await repo.updatePriceWatch(uid, a.id, { thresholdCents: 2000, armed: true });
+    assert.equal(await repo.recordPriceWatchCheck(a.id, { armed: false }, null, 2500), null);
+    assert.equal((await repo.getPriceWatch(uid, a.id)).armed, true, 'the edit stands');
+
+    // Ending the watch takes its price message with it, and nothing else.
     assert.equal((await repo.deletePriceWatch(uid, a.id)).id, a.id);
     assert.equal(await repo.deletePriceWatch(uid, a.id), null);
+    const after = await repo.listInbox(uid);
+    assert.equal(after.filter((it) => it.type === 'price_drop').length, 0);
+    assert.ok(after.some((it) => it.type === 'friend_request'));
   });
 
   test('round invite links (#1515): one per slot, replaced on re-mint, consumed once, swept by age', async () => {
