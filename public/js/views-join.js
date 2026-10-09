@@ -117,6 +117,8 @@ function renderJoinRefused(code) {
     already_member: ['join.memberTitle', 'join.memberBody'],
     quota_members: ['join.fullTitle', 'join.fullBody'],
     demo_forbidden: ['join.demoTitle', 'join.demoBody'],
+    // A suspended account: retrying cannot help, so it must not be told to.
+    account_disabled: ['join.disabledTitle', 'join.disabledBody'],
   };
   const [title, body] = map[code] || ['join.failedTitle', 'join.failedBody'];
   renderJoinMessage(title, body);

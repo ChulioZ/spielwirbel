@@ -60,7 +60,7 @@ test('signed in: „Runde beitreten?" with the seat, and joining opens the round
 
 test('every refusal gets its own words, and an unknown one a generic line', async (t) => {
   for (const [code, title] of [['invalid_link', /ins Leere/], ['own_round', /deine eigene Runde/],
-    ['already_member', /schon dabei/], ['quota_members', /voll/], ['demo_forbidden', /Demo-Konto/], ['weird', /nicht geklappt/]]) {
+    ['already_member', /schon dabei/], ['quota_members', /voll/], ['demo_forbidden', /Demo-Konto/], ['account_disabled', /gesperrt/], ['weird', /nicht geklappt/]]) {
     const { dom } = app(t);
     dom.set('accountApi', async () => { throw new Error(code); });
     await dom.call('showJoinLink', TOKEN);
@@ -191,4 +191,21 @@ test('a preview that lands after the visitor left the screen does not paint over
   resolve({ roundName: 'Runde E', seatName: null });
   await pending;
   assert.equal(dom.app.querySelector('#joinGo'), null, 'no join button for a link the visitor left');
+});
+
+for (const [code, says] of [['quota_members', /Limit/], ['account_disabled', /gesperrt/]]) test(`an invitation refused with ${code} stays in the inbox, saying why (#1604)`, async (t) => {
+  const { dom } = app(t);
+  const toasts = [];
+  dom.set('toast', (msg) => { toasts.push(msg); });
+  dom.set('accountApi', async (method, url) => {
+    if (url.endsWith('/accept')) throw new Error(code);
+    return { items: [] };
+  });
+  const row = dom.call('renderInboxItem', { id: 'i1', type: 'round_invitation', read: false, createdAt: '2026-10-09T08:00:00Z',
+    payload: { invitationId: 'inv1', roundId: 'r1', roundName: 'Runde', inviterUsername: 'ada', memberName: null } });
+  dom.app.appendChild(row);
+  row.querySelector('.inbox-invite__accept').click();
+  await flush(); await flush();
+  assert.equal(row.isConnected, true, 'the still-valid invitation is not dropped');
+  assert.match(toasts.join(' '), says);
 });

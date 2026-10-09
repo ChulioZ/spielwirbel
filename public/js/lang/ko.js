@@ -1561,6 +1561,8 @@ I18N.ko = {
   'join.fullBody': '자리가 최대 개수에 도달했어요. 초대한 사람에게 알려 주세요.',
   'join.demoTitle': '데모 계정으로는 안 돼요',
   'join.demoBody': '데모 계정은 실제 그룹에 들어갈 수 없어요. 계정을 만든 다음 링크를 다시 열어 주세요.',
+  'join.disabledTitle': '이 계정은 정지되었어요',
+  'join.disabledBody': '정지된 계정으로는 그룹에 들어갈 수 없어요. 잘못된 것 같다면 운영자에게 문의해 주세요.',
   'join.failedTitle': '잘 안 됐어요',
   'join.failedBody': '잠시 후 다시 시도해 주세요.',
   'join.home': '시작 화면으로',

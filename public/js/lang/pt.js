@@ -1621,6 +1621,8 @@ I18N.pt = {
   'join.fullBody': 'Ele atingiu o número máximo de lugares. Avise quem convidou você.',
   'join.demoTitle': 'Não com uma conta de demonstração',
   'join.demoBody': 'Uma conta de demonstração não pode entrar em um grupo real. Crie uma conta e abra o link de novo.',
+  'join.disabledTitle': 'Esta conta está suspensa',
+  'join.disabledBody': 'Uma conta suspensa não pode entrar em um grupo. Fale com o operador se achar que é um engano.',
   'join.failedTitle': 'Não deu certo',
   'join.failedBody': 'Tente de novo daqui a pouco.',
   'join.home': 'Ir para o início',

@@ -67,7 +67,7 @@ Security issues especially relevant given the current architecture:
 - **Round invite links** (`/join/<token>`, `POST /api/account/join`,
   `lib/routes/join.js`, #1515) — a capability token the round's owner shares,
   which lets any **signed-in** account that holds it join that round as an
-  editor. In scope: forging or guessing a token, joining a round other than the
+  editor (demo accounts excepted). In scope: forging or guessing a token, joining a round other than the
   one it names, obtaining any role but editor or any seat but the one the owner
   chose, using a link after it was revoked, replaced, consumed or expired, or
   reaching the token through a log, an error report or a data export. That a

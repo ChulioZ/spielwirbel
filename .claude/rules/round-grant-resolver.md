@@ -113,10 +113,13 @@ or an OR into the tenant policy.
    feature is also **inert until a grant exists**, and two routes create them:
    invitation accept (`POST /api/account/invitations/:id/accept`,
    `lib/routes/invitations.js`) and, since #1515, joining through an invite link
-   (`POST /api/account/join`, `lib/routes/join.js`). Both seat the account first
-   and then call `createGrant`; a third producer must too, and must refuse the
-   owner's own account itself — an owner who created the round without a seat
-   has none for a seat check to find.
+   (`POST /api/account/join`, `lib/routes/join.js`). Both go through ONE repo
+   write, `joinRound` (#1604): claim, seat and grant in a single transaction
+   under the round's row lock, or none of them — as separate writes a failure
+   or a concurrent request between them left a claimed invitation without a
+   seat, or a grant on a seat deleted in between. A third producer must use it
+   too, and must refuse the owner's own account itself — an owner who created
+   the round without a seat has none for a seat check to find.
 
 5. **A GLOBAL store keyed by `:rid` must be reached through `req.repo` first.**
    No grant on a round means "owner" to the role gate — of the caller's OWN
