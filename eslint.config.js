@@ -469,7 +469,7 @@ const frontendGlobals = {
   setupDesignMenu: 'readonly',
   // topbar-overflow.js (#1460) — the top bar's „…" menu, wired by main.js.
   setupTopbarOverflow: 'readonly', fitTopbar: 'readonly',
-  showMarker: 'readonly', showGameDetail: 'readonly',
+  showGameDetail: 'readonly',
   // game-editors.js (#968 — the five field editors, split out of
   // views-round-detail.js; each takes an explicit context)
   openPlayersPopover: 'readonly', openOwnersPopover: 'readonly',

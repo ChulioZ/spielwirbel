@@ -690,8 +690,8 @@ What the app does, in detail. For a short overview see the
   and every other per-session number are deliberately **not** shrunk: there `n`
   is the whole electorate rather than a sample. The game's own page shows the
   score alone, with an ⓘ explaining the principle.
-- **Colour marker** – each round carries **one colour**, picked under
-  Einstellungen → Farbmarker and shown to everyone in the round: on the lobby
+- **Colour marker** – each round carries **one colour**, picked right on
+  Einstellungen and shown to everyone in the round: on the lobby
   tile, beside the round's name in the top bar, on the session screens and along
   the head of the recap card a group shares. It is **not** a design — the colour
   is stored as one of eight *slots*, and each design paints those slots in its

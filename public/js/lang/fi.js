@@ -1347,7 +1347,6 @@ I18N.fi = {
   'theme.sand': 'Hiekka',
   'theme.schiefer': 'Liuske',
   'theme.pfirsich': 'Persikka',
-  'round.marker': 'Värimerkki',
   'marker.title': 'Värimerkki',
   'marker.note': 'Jokaisella porukalla on yksi väri. Kaikki porukassa näkevät sen — kukin omassa ulkoasussaan.',
   'marker.tisch.tannenfilz': 'Kuusihuopa',

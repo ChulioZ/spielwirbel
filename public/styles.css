@@ -5657,6 +5657,24 @@ a.k-tile:focus-visible,
 .wish-pick__row .ds-row__meta,
 .off-shelf__row .ds-row__meta { color: var(--ink-soft); }
 
+/* Klassisch's and Der Tisch's two columns (#1581, composeDefaultSettings): the
+   round's set-up — name, marker, „Runde einrichten", saved filters — on the
+   left, „Runde verwalten" and the Gefahrenzone on the right, from 1280px.
+   Below that one column at the reading measure. The wrapper holds
+   .marker-cards, so the shell's cap exempts it (it would otherwise stop the
+   second column short); each column restores the measure itself instead. */
+.rs-cols {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0 48px;
+}
+.rs-col { min-width: 0; max-width: var(--w-read); }
+.rs-sec { margin-bottom: 30px; }
+.rs-sec__note { margin: 0 0 14px; }
+@media (min-width: 1280px) {
+  .rs-cols { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); }
+}
+
 /* Account menu header (username + e-mail) above the logout item in the shared
    popover. The username (#320) leads: it is the account's public identity, the
    one a report or an invitation names, so it must be readable off this menu. */

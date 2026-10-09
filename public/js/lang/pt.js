@@ -1378,7 +1378,6 @@ I18N.pt = {
   'theme.sand': 'Areia',
   'theme.schiefer': 'Ardósia',
   'theme.pfirsich': 'Pêssego',
-  'round.marker': 'Marcador de cor',
   'marker.title': 'Marcador de cor',
   'marker.note': 'Cada grupo tem uma cor. Toda a gente no grupo a vê — cada um no seu próprio design.',
   'marker.tisch.tannenfilz': 'Feltro pinheiro',

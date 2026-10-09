@@ -1390,7 +1390,6 @@ I18N.es = {
   'theme.sand': 'Arena',
   'theme.schiefer': 'Pizarra',
   'theme.pfirsich': 'Melocotón',
-  'round.marker': 'Marcador de color',
   'marker.title': 'Marcador de color',
   'marker.note': 'Cada ronda lleva un color. Todo el mundo en la ronda lo ve, cada cual en su propio diseño.',
   'marker.tisch.tannenfilz': 'Fieltro pino',

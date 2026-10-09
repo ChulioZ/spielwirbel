@@ -1384,7 +1384,6 @@ I18N.fr = {
   'theme.sand': 'Sable',
   'theme.schiefer': 'Ardoise',
   'theme.pfirsich': 'Pêche',
-  'round.marker': 'Marqueur de couleur',
   'marker.title': 'Marqueur de couleur',
   'marker.note': 'Chaque ronde porte une couleur. Tout le monde dans la ronde la voit, chacun dans son propre design.',
   'marker.tisch.tannenfilz': 'Feutre sapin',

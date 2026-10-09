@@ -133,7 +133,6 @@ function assertRendered(app, name) {
 
 /** Every screen that must offer exactly one way back, and how to render it. */
 const NON_MAIN = [
-  ['design', (dom) => dom.call('showMarker', RID)],
   ['tags', (dom) => dom.call('showTags', RID)],
   ['game detail', (dom) => dom.call('showGameDetail', RID, 'g1')],
   ['member', (dom) => dom.call('showMember', RID, 'm1')],

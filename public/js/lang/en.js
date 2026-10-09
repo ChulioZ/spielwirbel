@@ -1433,7 +1433,6 @@ I18N.en = {
   'theme.sand': 'Sand',
   'theme.schiefer': 'Slate',
   'theme.pfirsich': 'Peach',
-  'round.marker': 'Colour marker',
   'marker.title': 'Colour marker',
   'marker.note': 'Every round carries one colour. Everyone in the round sees it — each in their own design.',
   'marker.tisch.tannenfilz': 'Pine felt',

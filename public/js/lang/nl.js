@@ -1376,7 +1376,6 @@ I18N.nl = {
   'theme.sand': 'Zand',
   'theme.schiefer': 'Leisteen',
   'theme.pfirsich': 'Perzik',
-  'round.marker': 'Kleurmarkering',
   'marker.title': 'Kleurmarkering',
   'marker.note': 'Elke ronde heeft één kleur. Iedereen in de ronde ziet hem — elk in het eigen ontwerp.',
   'marker.tisch.tannenfilz': 'Dennenvilt',
