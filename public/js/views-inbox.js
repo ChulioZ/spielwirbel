@@ -133,10 +133,12 @@ function renderInvitationItem(item) {
       refreshInboxBadge();
       showRound(roundId, 'start');
     } catch (e) {
-      // A full round (#1604) leaves the invitation PENDING — it works once a seat
-      // is freed — so the row stays, and says why it did not go through.
-      if (e.message === 'quota_members') {
-        toast(t('member.toast.quota'), { tone: 'error' });
+      // Refusals that leave the invitation PENDING keep the row and say why: a
+      // full round (#1604) works once a seat is freed; a suspended account is
+      // refused before anything is claimed.
+      const pending = { quota_members: 'member.toast.quota', account_disabled: 'join.disabledBody' }[e.message];
+      if (pending) {
+        toast(t(pending), { tone: 'error' });
         return;
       }
       // Any other failure means the invite is no longer actionable (seat taken,
