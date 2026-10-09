@@ -259,11 +259,9 @@ async function loadQuizBoard(board) {
    nothing to show (views-home.js renderHomeDash). */
 async function mountHomeQuiz(tile) {
   const drop = () => { const slot = tile.closest('.card-slot'); (slot || tile).remove(); };
-  // quizReady, not quizAvailable: on a cold load the home screen can render
-  // before /api/config has answered, and the synchronous read would drop the
-  // tile on an instance that runs the quiz.
-  if (!(await quizReady())) return drop();
-  if (!tile.isConnected) return undefined;
+  // renderHomeDash places the tile only once the config says the quiz runs
+  // (it waits for a cold load's config rather than reserving a slot).
+  if (!quizAvailable()) return drop();
   // A guest demo cannot play; its tile says what an account would get.
   if (isDemoAccount()) {
     const a = h(`<a class="home-quiz__link">

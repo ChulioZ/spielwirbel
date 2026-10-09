@@ -315,18 +315,27 @@ test('a finished week on /quiz says when the next round starts; an unfinished on
   }
 });
 
-test('on a cold load the home tile waits for the config — shown where the quiz runs, gone where it does not', async (t) => {
-  for (const [quizOn, kept] of [[true, true], [false, false]]) {
+test('on a cold load the home tile waits for the config — inserted where the quiz runs, never reserved where it does not', async (t) => {
+  for (const quizOn of [true, false]) {
     const dom = app(t);
     dom.run('accountCfg = null');
-    dom.set('withAppConfig', (cb) => { dom.run(`accountCfg = { quiz: ${quizOn} }`); cb(dom.run('accountCfg')); });
+    let answer = null;
+    dom.set('withAppConfig', (cb) => { answer = cb; });
     dom.set('api', async () => ({ ...ROUND, answered: 0, score: 0 }));
     const dash = dom.call('renderHomeDash');
     dom.app.appendChild(dash);
-    const tile = dash.querySelector('#homeQuiz');
-    assert.ok(tile, 'no slot was placed while the config was still out');
+    assert.equal(dash.querySelector('#homeQuiz'), null, 'a slot was reserved before the config answered');
+    assert.ok(answer, 'nothing waited for the config');
+    dom.run(`accountCfg = { quiz: ${quizOn} }`);
+    answer(dom.run('accountCfg'));
     await flush(); await flush();
-    assert.equal(tile.isConnected, kept, quizOn ? 'the tile was dropped on an instance running the quiz' : 'the tile stayed where the quiz is off');
-    if (kept) assert.match(text(tile), /5 neue Fragen/);
+    const tile = dash.querySelector('#homeQuiz');
+    if (quizOn) {
+      assert.ok(tile, 'the tile never arrived on an instance running the quiz');
+      assert.match(text(tile), /5 neue Fragen/);
+      assert.ok(tile.parentElement.classList.contains('card-slot'));
+    } else {
+      assert.equal(tile, null, 'a tile appeared where the quiz is off');
+    }
   }
 });
