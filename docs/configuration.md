@@ -640,8 +640,8 @@ closes, its anonymous totals are stored on the round for the public archive at
 | `QUIZ_ENABLED` | off | `true` turns the quiz on |
 | `QUIZ_POOL_SIZE` | 500 | the best-ranked corpus games questions are drawn from |
 | `QUIZ_QUESTIONS_PER_ROUND` | 5 | questions per week (3–8), each of a different type |
-| `QUIZ_GAME_COOLDOWN_WEEKS` | 4 | how many past rounds' games a new round avoids |
-| `QUIZ_RETENTION_WEEKS` | 8 | how long rounds and answers are kept (1–8 — the privacy policy promises eight weeks at most, so a larger value is ignored); the purge runs even with the quiz off. The cooldown above is capped at it |
+| `QUIZ_GAME_COOLDOWN_WEEKS` | 4 | how many past rounds' games a new round avoids (0–52, the rounds' own 52-week life) |
+| `QUIZ_RETENTION_WEEKS` | 8 | how long **answers** are kept (1–8 — the privacy policy promises eight weeks at most, so a larger value is ignored); rounds with their anonymous totals are kept 52 weeks regardless. The purge runs even with the quiz off |
 
 ### A filled local dev instance
 
