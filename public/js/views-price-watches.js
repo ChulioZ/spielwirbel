@@ -58,6 +58,13 @@ function priceWatchError(code) {
    setting a new one needs today's price. `anchor` is replaced, so the caller
    only has to reserve the spot. */
 async function renderPriceWatchControl(anchor, game, price) {
+  // Decided BEFORE the first await wherever the answer is already known, so the
+  // empty anchor never outlives the render that placed it (a screen without
+  // accounts or without prices must look exactly as it did before #680).
+  if (!(accountsActive() && isLoggedIn()) || (accountCfg && !accountCfg.prices)) return anchor.remove();
+  // Without a live price there is only an existing watch to show, and no reason
+  // to hold a placeholder open while /api/config is still on its way.
+  if (!price && !accountCfg) return anchor.remove();
   if (!(await priceWatchesReady())) return anchor.remove();
   let watches;
   try {
