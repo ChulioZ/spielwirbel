@@ -1841,6 +1841,45 @@ module.exports = function repoContract(repo) {
     assert.equal(await repo.deleteSession(T, round.id, session.id), false);
   });
 
+  // A session logged after the fact (#1616) is inserted LAST while belonging
+  // earlier, so both backends must read a round's sessions back by createdAt —
+  // Postgres from its `seq`-ordered rows, JSON from its insertion-ordered array.
+  // Equal stamps keep insertion order, which is what lets the tables of one
+  // split stay in the order they were written.
+  test('a round reads its sessions by createdAt; setSessionDate moves all three stamps', async () => {
+    const round = await freshRound();
+    const g = await repo.createGame(T, round.id, gameFields());
+    const blob = (createdAt, finished) => ({
+      createdAt, gameIds: [g.id], votes: {}, chosenGameId: g.id, chosenAt: createdAt,
+      finished, finishedAt: finished ? createdAt : null, winnerIds: [], cancelled: false, cancelledAt: null, done: true,
+    });
+    const march = await repo.createSession(T, round.id, blob('2026-03-10T20:00:00.000Z', true));
+    const tieA = await repo.createSession(T, round.id, blob('2026-02-01T20:00:00.000Z', true));
+    const tieB = await repo.createSession(T, round.id, blob('2026-02-01T20:00:00.000Z', false));
+    const order = async () => (await repo.getRound(T, round.id)).sessions.map((s) => s.id);
+    assert.deepEqual(await order(), [tieA.id, tieB.id, march.id], 'by date, ties in insertion order');
+    assert.deepEqual((await repo.listRounds(T)).find((r) => r.id === round.id).sessions.map((s) => s.id),
+      [tieA.id, tieB.id, march.id], 'the list read agrees with the single read');
+
+    const at = '2026-01-15T20:00:00.000Z';
+    const moved = await repo.setSessionDate(T, round.id, march.id, at,
+      { at: 'now', type: 'redated' });
+    assert.equal(moved.createdAt, at);
+    assert.equal(moved.chosenAt, at);
+    assert.equal(moved.finishedAt, at);
+    assert.deepEqual(moved.events.map((e) => e.type), ['redated']);
+    assert.deepEqual(await order(), [march.id, tieA.id, tieB.id]);
+
+    // An unfinished session keeps a null finishedAt rather than gaining one.
+    const open = await repo.setSessionDate(T, round.id, tieB.id, at);
+    assert.equal(open.finishedAt, null);
+    assert.equal(await repo.setSessionDate(T, round.id, 'missing', at), null);
+
+    // And a finish with an explicit stamp keeps it, where an absent one is now.
+    const kept = await repo.finishSession(T, round.id, tieA.id, { finished: true, winnerIds: [], at });
+    assert.equal(kept.finishedAt, at);
+  });
+
   // How a played session ended when nobody won (#1038). Like `guests` below it
   // lives inside the blob, so the absent-key parity is the thing that can break
   // silently — and here there is a second half the guests case does not have:

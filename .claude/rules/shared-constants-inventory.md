@@ -653,6 +653,19 @@ substring, and the word „recap" already stood in unrelated prose here, so the
 missing entry stayed green (`.claude/rules/source-scanning-guards-enumerate-shapes.md`).
 The test now matches entry headings of this shape only.
 
+**The twenty-sixth is `public/js/played-on.js`** (#1616): the day a session
+was played when it is not today. The client turns a picked calendar day into an
+instant (`playedOnInstant`, 20:00 LOCAL, capped at now) and offers
+`PLAYED_ON_MIN` as the date input's floor; `lib/routes/sessions.js` validates
+the submitted instant with `normalizePlayedOn` from the same file. The plain
+offer/validate shape — a drifted server floor or skew would 400 a date the
+picker offered — with one property the others lack: the conversion that makes
+the stored value correct runs where the ZONE is known, which is only the
+client, so the server validates a shape and a range and never converts. Its
+`toISOString` normalisation is load-bearing beyond tidiness: both backends
+order a round's sessions by the raw `createdAt` string (`lib/session-order.js`),
+and an offset-carrying stamp would sort out of place among `Z` ones.
+
 **Each new instance must be named above.** `test/rule-enumerations.test.js`
 asserts every `require('../public/js/…')` under `lib/routes/` and `lib/` appears
 in it, because the list had already gone stale by one before anyone noticed. The

@@ -288,10 +288,23 @@ test('„Mehr" runs the same delete Klassisch’s footer does', async (t) => {
 });
 
 test('with nothing to offer, the foot shows no „Mehr" rather than an empty menu', async (t) => {
-  // One person, so there is nobody to remove either (#1538).
+  // One person, so there is nobody to remove either (#1538); a game already
+  // chosen, so nothing to cancel; and not yet played, so no date to change
+  // (#1616) — every item the menu can hold, ruled out.
+  const { dom } = await show(t, 'tisch', { memberIds: ['m1'], guests: [], finished: false, winnerIds: [] },
+    {}, { canDelete: false });
+  const foot = screen(dom).querySelector('.result-foot');
+  assert.deepEqual([...foot.children].map(text), ['Teilen']);
+});
+
+test('a played session keeps „Datum ändern" behind „Mehr", ahead of the destructive group (#1616)', async (t) => {
   const { dom } = await show(t, 'tisch', { memberIds: ['m1'], guests: [] }, {}, { canDelete: false });
   const foot = screen(dom).querySelector('.result-foot');
-  assert.deepEqual([...foot.children].map(text), ['Noch eine Session', 'Teilen']);
+  assert.deepEqual([...foot.children].map(text), ['Noch eine Session', 'Teilen', 'Mehr']);
+  foot.querySelector('.result-foot__more').click();
+  const opts = [...dom.document.querySelectorAll('.popover__opt')];
+  assert.deepEqual(opts.map(text), ['Datum ändern']);
+  assert.equal(opts[0].dataset.kind, 'edit');
 });
 
 /* ------------------------- the setup's `memberIds` prefill ------------------------- */

@@ -11,8 +11,10 @@
 
 // Bottom sheet: pick who joins, then start a session for one specific game with
 // no vote and no draw, landing straight on the results screen with that game
-// already chosen. Opened from the game detail page and the Pokale cards.
-function startDirectSession(round, game) {
+// already chosen. Opened from the game detail page and the Pokale cards — and,
+// with `opts.dayKey` set to yesterday, from the Chronik's „Session nachtragen"
+// (#1616).
+function startDirectSession(round, game, opts = {}) {
   const label = t('directPlay.title', { title: game.title });
   const backdrop = h(`<div class="sheet-backdrop">
       <div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(label)}">
@@ -25,6 +27,7 @@ function startDirectSession(round, game) {
           <div id="seatMount"></div>
         </div>
         <div id="addonMount"></div>
+        <div id="playedOnMount"></div>
         <div class="toolbar sheet__actions">
           <button id="startDirect" class="btn btn--primary btn--lg"><i class="ti ti-player-play" aria-hidden="true"></i> ${esc(t('directPlay.start'))}</button>
         </div>
@@ -68,6 +71,20 @@ function startDirectSession(round, game) {
     on: () => teamPicker.teamCount() > 0,
   });
   sheet.querySelector('#addonMount').replaceWith(addons);
+  // „Wann?" (#1616): today by default, so playing tonight is exactly the sheet
+  // it always was. A past day logs the evening instead — created finished on
+  // that day, with no running session in between.
+  const dateField = playedOnField(opts.dayKey);
+  sheet.querySelector('#playedOnMount').replaceWith(dateField);
+  const relabel = () => {
+    const past = isPastDay(dateField.value());
+    sheet.querySelector('#startDirect').innerHTML = past
+      ? `<i class="ti ti-calendar-plus" aria-hidden="true"></i> ${esc(t('directPlay.log'))}`
+      : `<i class="ti ti-player-play" aria-hidden="true"></i> ${esc(t('directPlay.start'))}`;
+  };
+  dateField.input.addEventListener('change', relabel);
+  dateField.input.addEventListener('input', relabel);
+  relabel();
 
   const dismiss = () => closeSheet();
   // The ring's guest-name input owns Escape while it is open (#1016). This
@@ -89,13 +106,22 @@ function startDirectSession(round, game) {
 
   sheet.querySelector('#startDirect').addEventListener('click', async () => {
     if (joining.size === 0) return toast(t('startSession.toast.noMembers'));
+    const day = readPlayedOnDay(dateField);
+    if (!day) return;
+    // Only a PAST day is sent: today stays the ordinary direct play, stamped
+    // now by the server, with its feed line and its running results screen.
+    const playedOn = isPastDay(day) ? playedOnInstant(day) : null;
     try {
       const data = await api('POST', `/api/rounds/${round.id}/sessions`, {
         gameId: game.id,
         memberIds: [...joining],
         guests: guestList.guests, // names only; the server mints the ids (#458)
         teams: teamPicker.teamPayload(), // guests by POSITION in `guests` (#575)
+        ...(playedOn ? { playedOn } : {}),
       });
+      // A logged evening lands with the winner picker OPEN: the one question
+      // left about it is who won.
+      if (playedOn) openResultPickerOnce(data.session.id);
       closeSheet(() => showResults(round, data.session, data.games));
     } catch (e) { toast(e.message, { tone: 'error' }); }
   });

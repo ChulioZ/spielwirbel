@@ -143,6 +143,10 @@
    (.claude/rules/tabler-icon-codepoints.md). */
 .ti-fingerprint::before { content: "\ebd1"; }
 .ti-calendar::before { content: "\ea53"; }
+/* Logging a past session and moving its date (#1616). Both read from this
+   bundle's own cmap via fontTools. */
+.ti-calendar-plus::before { content: "\ebba"; }
+.ti-calendar-event::before { content: "\ea52"; }
 .ti-message::before { content: "\eaef"; }
 /* The terms-change notice (#521). Codepoint read from this bundle's own cmap. */
 .ti-file-text::before { content: "\eaa2"; }

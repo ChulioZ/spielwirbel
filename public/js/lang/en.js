@@ -1258,6 +1258,8 @@ I18N.en = {
   'log.someone': 'Someone',
   'log.aGame': 'a game',
   'log.started': '{actor} started the session',
+  'log.logged': '{actor} logged the session',
+  'log.redated': '{actor} changed the date',
   'log.votedSelf': '{name} voted',
   'log.votedFor': '{actor} voted for {name}',
   'log.closed': '{actor} ended the voting',
@@ -1272,6 +1274,19 @@ I18N.en = {
   'directPlay.button': 'Play now',
   'directPlay.title': 'Play “{title}”',
   'directPlay.start': 'Start',
+  'directPlay.log': 'Log session',
+  'playedOn.label': 'When?',
+  'playedOn.changeTitle': 'Change date',
+  'playedOn.changeHint': 'The day you played. The history, Month & year and the badges follow it.',
+  'playedOn.toast.invalid': 'Please pick a valid date',
+  'playedOn.toast.future': 'That date is in the future',
+  'playedOn.toast.changed': 'Date changed to {date}',
+  'result.changeDate': 'Change date',
+  'chronik.log.cta': 'Log a past session',
+  'chronik.log.title': 'Which game did you play?',
+  'chronik.log.hint': 'For a session that already happened – you pick the day in the next step.',
+  'chronik.log.search': 'Search games',
+  'chronik.log.none': 'No game found',
   // The direct-play flow has no voting phase, so its guests cannot vote — they
   // are recorded as present and can be picked as the winner (#532). Hence a
   // wording of its own rather than reusing startSession.guestsNote, which

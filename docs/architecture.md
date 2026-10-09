@@ -233,6 +233,10 @@ lib/
   session-events.js  writes the session activity log: builds one entry and
                      appends it inside the repo mutator's own read-modify-write,
                      so the log cannot drift from what it records (issue #209)
+  session-order.js   the order a round's sessions are read in — by createdAt,
+                     insertion order as the tiebreak — applied where both repo
+                     backends assemble a round, so a session logged after the
+                     fact sits at its own date for every reader (issue #1616)
   demo.js            guest demo mode: mints, seeds and purges throwaway demo
                      accounts (issue #427; off unless DEMO_ENABLED)
   demo-seed.js       the content a demo tenant is seeded with — three rounds,
@@ -751,6 +755,9 @@ public/
     session-log.js   the session activity log's event types and their phrasing —
                      one list, written by lib/session-events.js and rendered by
                      the lobby and the results screen (issue #209)
+    played-on.js     the day a session was played when it is not today: a picked
+                     day becomes 20:00 local time on the client, and the server
+                     validates the instant with the same file (issue #1616)
     news.js          the „Was ist neu" entry list + its newest revision — a code
                      constant that ships with the release it describes, read by
                      the /neu screen and by lib/routes/account.js (issue #741)
@@ -953,7 +960,11 @@ public/
                      account gate, the owned/wish picker, the error
                      phrasing (#481, moved out in #956)
     direct-session.js „Jetzt spielen" — start a session for one game with
-                     no vote and no draw, straight to the results screen
+                     no vote and no draw, straight to the results screen;
+                     its „Wann?" field logs a past day instead (#1616)
+    session-date.js  a session's day when it is not today: the „Wann?" field,
+                     „Datum ändern" on a played session and the Chronik's
+                     „Session nachtragen" game picker (issue #1616)
     member-stats.js  one member's statistics, derived on demand from the
                      round's sessions. Split out of views-member.js by #1075;
                      a pure derivation, edited when a statistic changes rather

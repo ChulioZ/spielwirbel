@@ -116,7 +116,10 @@ while every other surface in the app dates a session by `createdAt`.
 `finishedAt` is **not** "when it ended". `finishSession` sets it to `now` on every
 successful POST, and that route is re-POSTed by every winner-chip tap — so
 correcting a winner weeks later dragged the play into the current week and month
-while the Chronik entry stayed put. The Pokale streak already knew this
+while the Chronik entry stayed put. (Since #1616 a session whose day was set
+by hand — logged after the fact, or re-dated — is the exception: the route
+passes its own `createdAt` as the stamp, so its `finishedAt` holds still. Every
+other session still moves.) The Pokale streak already knew this
 (`winStreak` in `public/js/session-tally.js` since #1381 reads `createdAt`,
 with a comment saying why); the Discover
 aggregate was the one place that did not.
