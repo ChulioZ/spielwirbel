@@ -10705,8 +10705,13 @@ kbd {
 .home-quiz__label { display: flex; align-items: center; gap: 7px; font-size: var(--text-sm); font-weight: 600; color: var(--brand-ink, var(--brand-strong)); }
 .inbox-row__quiz { display: inline-block; margin-top: 4px; }
 .landing-quiz .quiz-q { max-width: 640px; margin: 0 auto; }
-.landing-quiz__cta { text-align: center; margin-top: 14px; }
-.landing-quiz__cta[hidden] { display: none; }
+/* The teaser (landing page, guest demo): the choices as a plain list — nothing
+   to press — and the way to an account where an answer would go. */
+.quiz-q__choices--teaser { list-style: none; padding: 0; }
+.quiz-choice--teaser { cursor: default; border-style: dashed; color: var(--ink-soft); }
+.quiz-teaser__cta { margin-top: 14px; }
+.quiz-teaser__cta p { margin: 0 0 10px; }
+.quiz-teaser__actions { display: flex; flex-wrap: wrap; gap: 8px; }
 
 .live-vote__hotseat { display: flex; flex-direction: column; gap: 8px; }
 

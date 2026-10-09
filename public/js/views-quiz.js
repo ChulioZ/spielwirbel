@@ -135,6 +135,16 @@ async function showQuiz() {
   app.appendChild(head);
   app.appendChild(h(`<p class="muted quiz__intro">${esc(t('quiz.intro'))}</p>`));
 
+  // A guest demo sees the teaser, with leaving the demo as the way in.
+  if (isDemoAccount()) {
+    const q = await loadQuizTeaser();
+    if (!head.isConnected) return undefined;
+    app.appendChild(q
+      ? renderQuizTeaser(q, { onRegister: () => leaveDemoForRegister(), onLogin: () => leaveDemoForLogin() })
+      : h(`<p class="muted quiz__empty">${esc(t('quiz.none'))}</p>`));
+    return undefined;
+  }
+
   let round;
   try {
     round = await api('GET', '/api/quiz/current');
@@ -243,6 +253,16 @@ async function loadQuizBoard(board) {
 async function mountHomeQuiz(tile) {
   const drop = () => { const slot = tile.closest('.card-slot'); (slot || tile).remove(); };
   if (!quizAvailable()) return drop();
+  // A guest demo cannot play; its tile says what an account would get.
+  if (isDemoAccount()) {
+    const a = h(`<a class="home-quiz__link">
+        <span class="home-quiz__label"><i class="ti ti-bulb" aria-hidden="true"></i>${esc(t('quiz.title'))}</span>
+        <span class="home-quiz__line">${esc(t('quiz.home.teaser'))}</span>
+      </a>`);
+    navLink(a, '/quiz', () => showQuiz());
+    tile.replaceChildren(a);
+    return undefined;
+  }
   let round;
   try {
     round = await api('GET', '/api/quiz/current');
@@ -307,35 +327,63 @@ function renderQuizRoundItem(item) {
   return row;
 }
 
-/* The landing page's sample (#743): ONE question a visitor can answer before
-   being asked for anything. It is never scored — the endpoint serves it with
-   its answer, built from games this week's scored questions do not use — so it
-   is checked right here. The placeholder is removed outright when the quiz is
-   off or has no round: no heading, no container, no gap. */
-async function mountLandingQuiz(placeholder) {
-  let q = null;
+/* The quiz as a TEASER (#743, operator decision): one real question with its
+   choices — and in place of a way to answer, the way to an account. Shown on
+   the logged-out landing page and to a guest demo, which may not play: every
+   account gets the same round and every answer reveals its key, so a
+   throwaway demo would be a free look at the answers. The question is the
+   week's unscored sample, built from games the scored round does not use, and
+   it arrives without its answer. */
+function renderQuizTeaser(q, { onRegister, onLogin }) {
+  const card = h(`<article class="card quiz-q quiz-q--teaser" data-type="${esc(q.type)}">
+      <div class="quiz-q__head">
+        ${q.subject ? quizCover(q.subject.imageUrl, 'quiz-q__cover') : ''}
+        <div class="quiz-q__ask"><h3 class="quiz-q__text">${esc(quizQuestionText(q))}</h3></div>
+      </div>
+      <ul class="quiz-q__choices quiz-q__choices--teaser"></ul>
+      <div class="quiz-teaser__cta">
+        <p class="muted">${esc(t('quiz.teaser.more'))}</p>
+        <div class="toolbar quiz-teaser__actions">
+          <button class="btn btn--primary quiz-teaser__register" type="button">${esc(t('quiz.teaser.register'))}</button>
+          <button class="btn quiz-teaser__login" type="button">${esc(t('quiz.teaser.login'))}</button>
+        </div>
+      </div>
+    </article>`);
+  const list = card.querySelector('.quiz-q__choices');
+  q.choices.forEach((c) => {
+    list.appendChild(h(`<li class="quiz-choice quiz-choice--teaser${q.type === 'duel' ? ' quiz-choice--game' : ''}">
+        ${q.type === 'duel' ? quizCover(c.imageUrl, 'quiz-choice__cover') : ''}
+        <span class="quiz-choice__label">${esc(quizChoiceLabel(q.type, c))}</span>
+      </li>`));
+  });
+  card.querySelector('.quiz-teaser__register').addEventListener('click', () => onRegister());
+  card.querySelector('.quiz-teaser__login').addEventListener('click', () => onLogin());
+  return card;
+}
+
+// The teaser question, or null when the quiz is off or has no round. Public
+// (no account needed), so a plain fetch rather than api().
+async function loadQuizTeaser() {
   try {
     const r = await fetch('/api/quiz/sample');
-    if (r.ok) q = (await r.json()).question;
-  } catch {}
+    if (!r.ok) return null;
+    const q = (await r.json()).question;
+    return q && Array.isArray(q.choices) ? q : null;
+  } catch {
+    return null;
+  }
+}
+
+/* The landing page's block: the teaser, with registering or signing in as the
+   answer. The placeholder is removed outright when there is no teaser: no
+   heading, no container, no gap. */
+async function mountLandingQuiz(placeholder) {
+  const q = await loadQuizTeaser();
   if (!placeholder.isConnected) return;
-  if (!q || !Array.isArray(q.choices)) {
+  if (!q) {
     placeholder.remove();
     return;
   }
-  placeholder.appendChild(h(`<h2 class="landing-section__title">${esc(t('quiz.landing.title'))}</h2>`));
-  const cta = h(`<div class="landing-quiz__cta" hidden>
-      <p class="muted">${esc(t('quiz.landing.more'))}</p>
-      <button class="btn btn--primary landing-quiz__register" type="button">${esc(t('quiz.landing.register'))}</button>
-    </div>`);
-  cta.querySelector('.landing-quiz__register').addEventListener('click', () => showRegister());
-  placeholder.appendChild(renderQuizCard(q, {
-    index: 0,
-    total: 0,
-    onPick: async (choice) => {
-      cta.hidden = false;
-      return { correct: choice === q.answer, answer: q.answer };
-    },
-  }));
-  placeholder.appendChild(cta);
+  placeholder.appendChild(h(`<h2 class="landing-section__title">${esc(t('quiz.teaser.title'))}</h2>`));
+  placeholder.appendChild(renderQuizTeaser(q, { onRegister: () => showRegister(), onLogin: () => showLogin() }));
 }

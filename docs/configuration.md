@@ -621,8 +621,9 @@ restart-loop the container.
 ### The weekly quiz (issue #743)
 
 Five questions a week about board games, generated from the corpus above, with a
-friends-only leaderboard and one unscored sample question on the logged-out
-landing page. **Off by default**: set `QUIZ_ENABLED=true` (it also needs accounts
+friends-only leaderboard and a teaser question (no answering — the way to an
+account instead) on the logged-out landing page and for guest demos, which
+cannot play. **Off by default**: set `QUIZ_ENABLED=true` (it also needs accounts
 mode — scores are kept per account). An instance with an empty or not yet
 enriched corpus simply shows no quiz anywhere, flag or not.
 
@@ -638,7 +639,7 @@ ever sent** for it (`lib/notify.js` does not mail this type).
 | `QUIZ_POOL_SIZE` | 500 | the best-ranked corpus games questions are drawn from |
 | `QUIZ_QUESTIONS_PER_ROUND` | 5 | questions per week (3–8), each of a different type |
 | `QUIZ_GAME_COOLDOWN_WEEKS` | 4 | how many past rounds' games a new round avoids |
-| `QUIZ_RETENTION_WEEKS` | 8 | how long rounds and answers are kept; the purge runs even with the quiz off |
+| `QUIZ_RETENTION_WEEKS` | 8 | how long rounds and answers are kept (1–8 — the privacy policy promises eight weeks at most, so a larger value is ignored); the purge runs even with the quiz off. The cooldown above is capped at it |
 
 ### A filled local dev instance
 

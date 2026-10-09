@@ -168,16 +168,30 @@ test('a week is generated once — twice in a row, or three times at once', asyn
   assert.deepEqual(store.data.quizRounds[0].questions, x.questions);
 });
 
-test('the public sample is unscored, carries its answer, and is none of the scored questions', async () => {
+test('the public teaser carries no answer, and is none of the scored questions', async () => {
   await seedCorpus();
   const res = await request(app).get('/api/quiz/sample');
   assert.equal(res.status, 200);
   const q = res.body.question;
-  assert.equal(typeof q.answer, 'number');
+  assert.equal(q.answer, undefined, 'the teaser is not answerable, so it carries no key');
+  assert.equal(q.choices.length, 4);
   const round = store.data.quizRounds[0];
   const gamesOf = (x) => (x.type === 'duel' ? x.choices.map((c) => c.externalId) : [x.subject.externalId]);
   const scored = new Set(round.questions.flatMap(gamesOf));
   for (const id of gamesOf(q)) assert.ok(!scored.has(id), `the public sample uses scored game ${id}`);
+});
+
+test('a guest demo may not play: every quiz route refuses it', async () => {
+  await seedCorpus();
+  const a = await account('demo');
+  store.data.users.find((u) => u.id === a.user.id).tenantId = `demo-${a.user.id}`;
+  for (const [method, url, body] of [['get', '/api/quiz/current'], ['post', '/api/quiz/current/answers', { week: weekKey(), index: 0, choice: 0 }], ['get', '/api/quiz/leaderboard']]) {
+    const res = await request(app)[method](url).set(auth(a.token)).send(body);
+    assert.equal(res.status, 403, `${method} ${url}`);
+    assert.equal(res.body.error, 'demo_forbidden');
+  }
+  assert.equal(store.data.quizSubmissions.length, 0);
+  assert.equal((await request(app).get('/api/quiz/sample')).status, 200, 'the teaser stays public');
 });
 
 test('opening a round tells past players — once, in the inbox, and never by mail', async () => {
@@ -192,6 +206,12 @@ test('opening a round tells past players — once, in the inbox, and never by ma
   const suspended = await account('suspended');
   await repo.recordQuizAnswer(suspended.user.id, weekKey(lastWeek.toISOString()), 0, 5, { choice: 0, correct: false });
   store.data.users.find((u) => u.id === suspended.user.id).disabled = true;
+  // A past player who already answered THIS week's round (opened by a visitor
+  // before the tick) needs no "new round" item for it.
+  const early = await account('early');
+  await repo.recordQuizAnswer(early.user.id, weekKey(lastWeek.toISOString()), 0, 5, { choice: 0, correct: false });
+  await quiz.ensureRound();
+  await repo.recordQuizAnswer(early.user.id, weekKey(), 0, 5, { choice: 0, correct: false });
 
   const mails = outbox.length;
   assert.deepEqual(await runJob('openQuizRound'), { week: weekKey(), notified: 1 });
@@ -202,6 +222,7 @@ test('opening a round tells past players — once, in the inbox, and never by ma
   assert.equal(items(player.user.id).length, 1, 'the past player got exactly one item');
   assert.equal(items(newcomer.user.id).length, 0, 'an account that never played got an item');
   assert.equal(items(suspended.user.id).length, 0, 'a suspended account got an item');
+  assert.equal(items(early.user.id).length, 0, 'an account already playing this round got an item');
   assert.equal(items(player.user.id)[0].payload.week, weekKey());
 
   // Next week's round replaces the item rather than stacking a second one.
@@ -211,7 +232,27 @@ test('opening a round tells past players — once, in the inbox, and never by ma
   assert.equal(items(player.user.id)[0].payload.week, weekKey(nextWeek.toISOString()));
 });
 
-test('the leaderboard is the caller and confirmed friends — nobody else, no demo account', async () => {
+test('one recipient failing does not cost the others their announcement', async () => {
+  await seedCorpus();
+  const a = await account('fails');
+  const b = await account('fine');
+  const lastWeek = new Date(Date.now() - 7 * 86400000);
+  await quiz.ensureRound(lastWeek);
+  for (const who of [a, b]) await repo.recordQuizAnswer(who.user.id, weekKey(lastWeek.toISOString()), 0, 5, { choice: 0, correct: true });
+  const put = repo.putQuizRoundItem;
+  repo.putQuizRoundItem = async (uid, payload) => {
+    if (uid === a.user.id) throw Object.assign(new Error('boom'), { code: 'EBOOM' });
+    return put(uid, payload);
+  };
+  try {
+    assert.deepEqual(await runJob('openQuizRound'), { week: weekKey(), notified: 1 });
+  } finally {
+    repo.putQuizRoundItem = put;
+  }
+  assert.equal(store.data.inbox.filter((it) => it.userId === b.user.id && it.type === 'quiz_round').length, 1);
+});
+
+test('the leaderboard is the caller and confirmed friends — nobody else, no demo account, no hidden numbers', async () => {
   await seedCorpus();
   const me = await account('me');
   const friend = await account('friend');
@@ -219,12 +260,16 @@ test('the leaderboard is the caller and confirmed friends — nobody else, no de
   const stranger = await account('stranger');
   await befriend(me, friend);
   await repo.createFriendRequest({ requesterUserId: me.user.id, addresseeUserId: pending.user.id });
+  const hidden = await account('hidden');
+  await befriend(me, hidden);
+  store.data.users.find((u) => u.id === hidden.user.id).statsVisible = false;
+  store.data.users.find((u) => u.id === me.user.id).statsVisible = false;
   const demo = await repo.createUser({ email: 'demo@example.com', username: 'demo-quizzer', tenantId: 'demo-abc', emailVerified: true });
   const f = await repo.createFriendRequest({ requesterUserId: me.user.id, addresseeUserId: demo.id });
   await repo.acceptFriendRequest(f.id, demo.id);
 
   const round = await quiz.ensureRound();
-  for (const [who, score] of [[friend.user.id, 3], [pending.user.id, 5], [stranger.user.id, 5], [demo.id, 5], [me.user.id, 2]]) {
+  for (const [who, score] of [[friend.user.id, 3], [pending.user.id, 5], [stranger.user.id, 5], [demo.id, 5], [hidden.user.id, 4], [me.user.id, 2]]) {
     for (let i = 0; i < score; i += 1) {
       await repo.recordQuizAnswer(who, round.week, i, round.questions.length, { choice: round.questions[i].answer, correct: true });
     }
@@ -248,4 +293,17 @@ test('the retention sweep drops old weeks — with the quiz switched off', async
   const removed = await runJob('purgeQuiz');
   assert.deepEqual(removed, { rounds: 1, submissions: 1 });
   assert.deepEqual(store.data.quizRounds.map((r) => r.week), [weekKey()]);
+});
+
+test('the retention never exceeds the eight weeks the privacy policy promises', async () => {
+  await seedCorpus();
+  const old = new Date(Date.now() - 9 * 7 * 86400000);
+  await quiz.ensureRound(old);
+  await quiz.ensureRound();
+  process.env.QUIZ_RETENTION_WEEKS = '52';
+  try {
+    assert.deepEqual(await runJob('purgeQuiz'), { rounds: 1, submissions: 0 }, 'a nine-week-old round outlived the published period');
+  } finally {
+    delete process.env.QUIZ_RETENTION_WEEKS;
+  }
 });

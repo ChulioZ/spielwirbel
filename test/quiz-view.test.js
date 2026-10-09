@@ -180,25 +180,53 @@ test('the home tile states the week in one line, and takes its slot away when th
   assert.equal(s2.isConnected, false, 'an empty tile left its slot behind');
 });
 
-test('the landing sample is answered on the spot and then offers an account; no sample, no block', async (t) => {
+const TEASER = { type: 'year', subject: { externalId: '9', name: 'Azul', imageUrl: null }, choices: [2015, 2017, 2019, 2021] };
+
+test('the landing teaser shows a real question — and register or sign in where an answer would go', async (t) => {
   const dom = app(t);
-  const sample = { type: 'year', subject: { externalId: '9', name: 'Azul', imageUrl: null }, choices: [2015, 2017, 2019, 2021], answer: 1 };
-  dom.window.fetch = async () => ({ ok: true, json: async () => ({ question: sample }) });
+  dom.window.fetch = async () => ({ ok: true, json: async () => ({ question: TEASER }) });
+  const went = [];
+  dom.set('showRegister', () => went.push('register'));
+  dom.set('showLogin', () => went.push('login'));
   const slot = dom.document.createElement('section');
   dom.app.appendChild(slot);
   await dom.call('mountLandingQuiz', slot);
-  assert.match(text(slot), /Teste dein Spielewissen/);
-  const cta = slot.querySelector('.landing-quiz__cta');
-  assert.equal(cta.hidden, true, 'the account pitch waits for an answer');
-  slot.querySelectorAll('.quiz-choice')[3].click();
-  await flush();
-  assert.match(text(slot.querySelector('.quiz-q__result')), /richtig ist: 2017/);
-  assert.equal(cta.hidden, false);
+  assert.match(text(slot), /Das Wochenquiz/);
+  assert.match(text(slot), /In welchem Jahr erschien „Azul“\?/);
+  assert.deepEqual([...slot.querySelectorAll('.quiz-choice')].map(text), ['2015', '2017', '2019', '2021']);
+  assert.equal(slot.querySelectorAll('.quiz-q__choices button').length, 0, 'a teaser choice can be pressed');
+  slot.querySelector('.quiz-teaser__register').click();
+  slot.querySelector('.quiz-teaser__login').click();
+  assert.deepEqual(went, ['register', 'login']);
 
   const off = app(t);
   off.window.fetch = async () => ({ ok: false, json: async () => ({}) });
   const s2 = off.document.createElement('section');
   off.app.appendChild(s2);
   await off.call('mountLandingQuiz', s2);
-  assert.equal(s2.isConnected, false);
+  assert.equal(s2.isConnected, false, 'no teaser, no block');
+});
+
+test('a guest demo gets the teaser on /quiz and on its home tile, and never the scored round', async (t) => {
+  const dom = app(t);
+  dom.set('isDemoAccount', () => true);
+  const asked = [];
+  dom.set('api', async (method, url) => { asked.push(url); return JSON.parse(JSON.stringify(ROUND)); });
+  dom.window.fetch = async () => ({ ok: true, json: async () => ({ question: TEASER }) });
+  const went = [];
+  dom.set('leaveDemoForRegister', () => went.push('register'));
+  dom.set('leaveDemoForLogin', () => went.push('login'));
+  await dom.call('showQuiz');
+  assert.equal(asked.length, 0, 'a demo asked for the scored round');
+  assert.ok(dom.app.querySelector('.quiz-q--teaser'));
+  assert.equal(dom.app.querySelector('.quiz-board'), null);
+  dom.app.querySelector('.quiz-teaser__register').click();
+  dom.app.querySelector('.quiz-teaser__login').click();
+  assert.deepEqual(went, ['register', 'login']);
+
+  const tile = dom.document.createElement('section');
+  dom.app.appendChild(tile);
+  await dom.call('mountHomeQuiz', tile);
+  assert.match(text(tile), /mit einem Konto spielst du mit/);
+  assert.equal(asked.length, 0);
 });

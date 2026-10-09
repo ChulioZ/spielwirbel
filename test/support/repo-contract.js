@@ -3949,11 +3949,15 @@ module.exports = function repoContract(repo) {
     assert.ok(players.includes(other), 'played an earlier week');
     assert.ok(!players.includes(uid), 'played only the current week');
 
-    // The round item replaces the account's previous one and leaves the rest.
-    await repo.addInboxItem(uid, { type: 'friend_request', payload: {} });
-    await repo.putQuizRoundItem(uid, { week: wk(9), questions: 5 });
-    await repo.putQuizRoundItem(uid, { week: wk(10), questions: 5 });
-    const inbox = await repo.listInbox(uid);
+    // The round item replaces the account's previous one and leaves the rest —
+    // and is refused for an account that does not exist (erased since the
+    // fan-out read its list).
+    assert.equal(await repo.putQuizRoundItem(`qz-gone-${tag}`, { week: wk(10), questions: 5 }), null);
+    const owner = (await repo.createUser({ email: `${uid}@example.test`, username: uid, tenantId: uid })).id;
+    await repo.addInboxItem(owner, { type: 'friend_request', payload: {} });
+    await repo.putQuizRoundItem(owner, { week: wk(9), questions: 5 });
+    await repo.putQuizRoundItem(owner, { week: wk(10), questions: 5 });
+    const inbox = await repo.listInbox(owner);
     assert.deepEqual(inbox.filter((it) => it.type === 'quiz_round').map((it) => it.payload.week), [wk(10)]);
     assert.equal(inbox.filter((it) => it.type === 'friend_request').length, 1);
     assert.equal(inbox.find((it) => it.type === 'quiz_round').read, false);

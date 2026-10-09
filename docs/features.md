@@ -177,8 +177,12 @@ What the app does, in detail. For a short overview see the
   question. **Wochenquiz** in the account menu and a home tile lead to `/quiz`,
   which also shows the week's leaderboard among the account's confirmed friends.
   A new round opens every Monday (Berlin time) and puts an inbox item — never an
-  e-mail — in front of everyone who played before. The logged-out landing page
-  carries one playable, unscored sample question. Category, mechanic and designer
+  e-mail — in front of everyone who played before. The leaderboard leaves out a
+  friend who hid their numbers (`statsVisible`). A guest demo cannot play — the
+  round is the same for everyone and every answer reveals its key — so the demo
+  and the logged-out landing page show a **teaser** instead: one real question
+  with its choices and, in place of an answer, the way to register or sign in.
+  Category, mechanic and designer
   names stay in BGG's English in every language: the data may not be modified.
   Beside those three lists the shelf offers **„Das könnte euch auch
   gefallen"** — games the round does *not* own, ranked against its own taste.
