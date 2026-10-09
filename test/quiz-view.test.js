@@ -230,3 +230,74 @@ test('a guest demo gets the teaser on /quiz and on its home tile, and never the 
   assert.match(text(tile), /mit einem Konto spielst du mit/);
   assert.equal(asked.length, 0);
 });
+
+test('/quiz/archiv: percentages only — the running week with its trickiest question, a closed week with the answer marked in words', async (t) => {
+  const dom = app(t);
+  dom.set('isLoggedIn', () => false);
+  const archive = {
+    current: { week: '2026-W41', total: 3, opensNext: '2026-10-11T22:00:00.000Z', correctPct: 62, questions: [
+      { type: 'year', subject: { externalId: '1', name: 'Azul' }, correctPct: 75 },
+      { type: 'year', subject: { externalId: '3', name: 'Brass' }, correctPct: 20 },
+      { type: 'year', subject: { externalId: '4', name: 'Catan' }, correctPct: null },
+    ] },
+    past: [{ week: '2026-W40', total: 5, correctPct: 50, questions: [{ type: 'year', subject: { externalId: '2', name: 'Root' }, choices: [2014, 2016, 2018, 2021], answer: 2, correctPct: 50, pickPcts: [0, 50, 50, 0] }] }],
+  };
+  dom.window.fetch = async () => ({ ok: true, json: async () => archive });
+  await dom.call('showQuizArchive');
+  assert.ok(dom.app.querySelector('.back-row'), 'not a main page: it has a back control');
+  const cur = dom.app.querySelector('.quiz-archive__week--current');
+  assert.match(text(cur), /KW 41\/2026/);
+  assert.match(text(cur), /62 % der Antworten richtig/);
+  assert.match(text(cur), /Neue Runde ab 12\.10\.2026/);
+  assert.match(text(cur), /noch keine Antworten/);
+  const hardest = cur.querySelectorAll('.quiz-archive__q--hardest');
+  assert.equal(hardest.length, 1);
+  assert.match(text(hardest[0]), /Brass.*20 % richtig.*kniffligste Frage bisher/);
+  assert.doesNotMatch(text(dom.app), /Mitgespielt|Mitspielende/, 'a player count is shown');
+
+  // A tie at the bottom names nobody.
+  const tie = app(t);
+  tie.set('isLoggedIn', () => false);
+  const tied = JSON.parse(JSON.stringify(archive));
+  tied.current.questions[0].correctPct = 20;
+  tie.window.fetch = async () => ({ ok: true, json: async () => tied });
+  await tie.call('showQuizArchive');
+  assert.equal(tie.app.querySelectorAll('.quiz-archive__q--hardest').length, 0);
+  assert.equal(cur.querySelector('.quiz-archive__choices'), null, 'the running week shows choices');
+  const past = dom.app.querySelector('details.quiz-archive__week');
+  assert.match(text(past), /KW 40\/2026 50 % der Antworten richtig/);
+  const right = past.querySelector('.quiz-archive__choice--right');
+  assert.match(text(right), /2018 \(richtige Antwort\) 50 % gewählt/);
+  assert.ok(right.querySelector('.ti-check'));
+
+  const none = app(t);
+  none.window.fetch = async () => ({ ok: false, json: async () => ({}) });
+  await none.call('showQuizArchive');
+  assert.match(text(none.app), /keine Quizwochen/);
+});
+
+test('the archive is linked from /quiz and from the teaser', async (t) => {
+  const dom = app(t);
+  dom.set('api', async (method, url) => (url === '/api/quiz/current' ? JSON.parse(JSON.stringify(ROUND)) : { entries: [] }));
+  await dom.call('showQuiz');
+  assert.equal(dom.app.querySelector('.quiz-archive-link a').getAttribute('href'), '/quiz/archiv');
+  const card = dom.call('renderQuizTeaser', TEASER, { onRegister() {}, onLogin() {} });
+  assert.equal(card.querySelector('.quiz-archive-link a').getAttribute('href'), '/quiz/archiv');
+});
+
+test('a logged-out visitor cold-loading /quiz/archiv gets the page — /quiz itself still asks to log in', async (t) => {
+  // Found in a browser: every spec above calls showQuizArchive() directly, so
+  // none went near bootApp, and the deep link landed on the login wall.
+  for (const [path, want] of [['/quiz/archiv', '/quiz/archiv'], ['/quiz', '/login']]) {
+    const dom = loadApp({ locale: 'de' });
+    t.after(() => dom.close());
+    dom.set('accountsActive', () => true);
+    dom.set('isLoggedIn', () => false);
+    dom.set('initAccounts', async () => 'ok');
+    const routed = [];
+    dom.set('routeTo', (p) => { routed.push(p); });
+    dom.run(`history.replaceState({}, '', '${path}')`);
+    await dom.call('bootApp');
+    assert.deepEqual(routed, [want], path);
+  }
+});

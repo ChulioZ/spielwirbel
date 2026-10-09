@@ -51,7 +51,10 @@ Security issues especially relevant given the current architecture:
   result was shown, playing as a guest demo, or seeing the leaderboard entry of
   an account that is not a confirmed friend or that hid its numbers is in scope.
   A second registered account learning the key by playing first is a known
-  limit of a shared weekly round, not a finding.
+  limit of a shared weekly round, not a finding. `GET /api/quiz/archive` is
+  public too and carries percentages only: an account id or name in it, a player
+  count or any absolute count one could be read off, or the running week's
+  choices, key or pick split, is in scope.
 - **Abuse of the four write routes that sit OUTSIDE the auth gate.** Everything
   under `/api` is gated in `lib/app.js`, with deliberate exceptions mounted ahead
   of it. Four of them accept writes: `/api/account` (register, login, the demo);

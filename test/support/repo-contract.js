@@ -3962,14 +3962,29 @@ module.exports = function repoContract(repo) {
     assert.equal(inbox.filter((it) => it.type === 'friend_request').length, 1);
     assert.equal(inbox.find((it) => it.type === 'quiz_round').read, false);
 
-    // Purge by week: everything before wk(10) goes, wk(10) stays.
-    const removed = await repo.purgeQuizBefore(wk(10));
-    assert.ok(removed.rounds >= 1 && removed.submissions >= 1);
+    // The anonymous read for the statistics: answers only, no account ids.
+    const weekAnswers = await repo.listQuizWeekAnswers(wk(10));
+    assert.equal(weekAnswers.length, 2);
+    assert.ok(weekAnswers.every((a) => Array.isArray(a) && a.length === 3));
+    assert.ok(!JSON.stringify(weekAnswers).includes(uid), 'the anonymous read carries an account id');
+    // A closed week's totals are written once and kept.
+    assert.equal(await repo.setQuizRoundStats(wk(10), { players: 2, scoreSum: 1, questions: [] }), true);
+    assert.equal(await repo.setQuizRoundStats(wk(10), { players: 9, scoreSum: 9, questions: [] }), false);
+    assert.equal((await repo.getQuizRound(wk(10))).stats.players, 2);
+    assert.equal(await repo.setQuizRoundStats(wk(11), { players: 1 }), false, 'no round, no totals');
+
+    // Purge, two horizons: answers before one week, rounds before another.
+    const kept = await repo.purgeQuizBefore({ roundsBefore: wk(1), submissionsBefore: wk(10) });
+    assert.equal(kept.rounds, 0, 'a round older than the answers horizon but inside its own stays');
+    assert.ok(await repo.getQuizRound(wk(9)));
+    assert.equal(await repo.getQuizSubmission(other, wk(9)), null);
+    const removed = await repo.purgeQuizBefore({ roundsBefore: wk(10), submissionsBefore: wk(10) });
+    assert.ok(removed.rounds >= 1);
     assert.equal(await repo.getQuizRound(wk(9)), null);
     assert.ok(await repo.getQuizRound(wk(10)));
     assert.equal(await repo.getQuizSubmission(other, wk(9)), null);
     assert.ok(await repo.getQuizSubmission(other, wk(10)));
-    await repo.purgeQuizBefore(wk(99));
+    await repo.purgeQuizBefore({ roundsBefore: wk(99), submissionsBefore: wk(99) });
   });
 
   test('price watches (#680): one per account and game, owner-scoped, claimed once, recorded with one inbox item', async () => {

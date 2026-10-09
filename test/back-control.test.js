@@ -144,6 +144,7 @@ const NON_MAIN = [
   ['session results', (dom, round) => dom.call('showResults', round, SESSION)],
   ['profile', (dom) => dom.call('showProfile', 'ada')],
   ['new round', (dom) => dom.call('showNewRound')],
+  ['quiz archive', (dom) => dom.call('showQuizArchive')],
 ];
 
 /** Every screen persistent chrome reaches, which must therefore offer none. */

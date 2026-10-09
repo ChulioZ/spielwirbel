@@ -182,6 +182,14 @@ What the app does, in detail. For a short overview see the
   round is the same for everyone and every answer reveals its key — so the demo
   and the logged-out landing page show a **teaser** instead: one real question
   with its choices and, in place of an answer, the way to register or sign in.
+  A public **statistics and archive** page (`/quiz/archiv`, also logged out)
+  publishes **percentages only** — never a player count, nor any absolute number
+  one could be read off. The running week shows the share of answers right,
+  overall and per question, its trickiest question so far and when the next
+  round opens — never the choices or the key while it can still be played. Every
+  closed week of the last year shows its questions, the right answer and each
+  choice's share of the picks. No names; the totals are taken when a week closes
+  and kept with the round for 52 weeks, the answers themselves only eight.
   Category, mechanic and designer
   names stay in BGG's English in every language: the data may not be modified.
   Beside those three lists the shelf offers **„Das könnte euch auch

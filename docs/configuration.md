@@ -631,7 +631,9 @@ A round is built once per ISO week (Berlin time) — on the first scheduler tick
 the week or the first visit, whichever comes first — and stored, so a corpus
 upload mid-week never changes questions someone has already answered. Players of
 an earlier round get an in-app inbox item when a new one opens; **no e-mail is
-ever sent** for it (`lib/notify.js` does not mail this type).
+ever sent** for it (`lib/notify.js` does not mail this type). When a week
+closes, its anonymous totals are stored on the round for the public archive at
+`/quiz/archiv`; rounds are kept 52 weeks, answers only `QUIZ_RETENTION_WEEKS`.
 
 | Variable | Default | Meaning |
 |---|---|---|

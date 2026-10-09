@@ -445,6 +445,9 @@ async function showEntdecken() {
   // Appended in BOTH branches on purpose: an instance with nothing to publish is
   // exactly where a visitor most needs somewhere to go.
   if (loggedOut) app.appendChild(renderEntdeckenCta());
+  // The weekly quiz's public statistics (#743), where the quiz runs — read off
+  // the cached config, so an instance without it renders exactly as before.
+  if (accountCfg && accountCfg.quiz) app.appendChild(quizArchiveLink());
   // Deliberately NO back control: the account menu reaches this screen, exactly
   // like /freunde, /konto and /neu, which makes it a main page — and a main
   // page's way "up" is the persistent chrome

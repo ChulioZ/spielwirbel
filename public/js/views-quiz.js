@@ -211,6 +211,7 @@ async function showQuiz() {
     </section>`);
   app.appendChild(board);
   loadQuizBoard(board);
+  app.appendChild(quizArchiveLink());
   return undefined;
 }
 
@@ -349,6 +350,7 @@ function renderQuizTeaser(q, { onRegister, onLogin }) {
         </div>
       </div>
     </article>`);
+  card.querySelector('.quiz-teaser__cta').appendChild(quizArchiveLink());
   const list = card.querySelector('.quiz-q__choices');
   q.choices.forEach((c) => {
     list.appendChild(h(`<li class="quiz-choice quiz-choice--teaser${q.type === 'duel' ? ' quiz-choice--game' : ''}">
@@ -359,6 +361,13 @@ function renderQuizTeaser(q, { onRegister, onLogin }) {
   card.querySelector('.quiz-teaser__register').addEventListener('click', () => onRegister());
   card.querySelector('.quiz-teaser__login').addEventListener('click', () => onLogin());
   return card;
+}
+
+// The way to the public statistics and archive — a real link (in-app-nav-links.md).
+function quizArchiveLink() {
+  const p = h(`<p class="quiz-archive-link"><a><i class="ti ti-history" aria-hidden="true"></i> ${esc(t('quiz.archive.link'))}</a></p>`);
+  navLink(p.querySelector('a'), '/quiz/archiv', () => showQuizArchive());
+  return p;
 }
 
 // The teaser question, or null when the quiz is off or has no round. Public
@@ -386,4 +395,104 @@ async function mountLandingQuiz(placeholder) {
   }
   placeholder.appendChild(h(`<h2 class="landing-section__title">${esc(t('quiz.teaser.title'))}</h2>`));
   placeholder.appendChild(renderQuizTeaser(q, { onRegister: () => showRegister(), onLogin: () => showLogin() }));
+}
+
+/* /quiz/archiv — the quiz's public statistics and the last year's weeks
+   (#743, operator decisions). Reachable logged out, like /entdecken. It shows
+   PERCENTAGES ONLY — never how many played, and the server sends no count it
+   could be read off. While a week runs: the share right overall and per
+   question, the trickiest question so far and when the next round opens —
+   never the choices or the key. A closed week: its questions, the right answer
+   and each choice's share of the picks. Not a main page (linked from /quiz, the
+   teaser and /entdecken), so it has a back control. */
+const quizWeekLabel = (key) => {
+  const m = /^(\d{4})-W(\d{2})$/.exec(String(key || ''));
+  return m ? t('quiz.archive.week', { week: Number(m[2]), year: m[1] }) : String(key || '');
+};
+const quizRate = (pctValue) => (pctValue == null ? t('quiz.archive.noAnswers') : t('quiz.archive.rate', { pct: pctValue }));
+const quizOverall = (pctValue) => (pctValue == null ? t('quiz.archive.overallNone') : t('quiz.archive.overall', { pct: pctValue }));
+
+async function showQuizArchive() {
+  const view = () => showQuizArchive();
+  currentView = view;
+  syncUrl('/quiz/archiv');
+  setContext(t('quiz.archive.title'));
+  setDocTitle(t('quiz.archive.title'));
+  applyMarker(null);
+  const loggedOut = accountsActive() && !isLoggedIn();
+  authScreen(loggedOut);
+  showLoginLink(loggedOut);
+  app.innerHTML = '';
+  app.appendChild(backRow(loggedOut ? '/' : '/quiz'));
+  const head = h(`<div class="lobby-head"><h1>${esc(t('quiz.archive.title'))}</h1></div>`);
+  app.appendChild(head);
+  app.appendChild(h(`<p class="muted quiz__intro">${esc(t('quiz.archive.intro'))}</p>`));
+
+  let data = null;
+  try {
+    const r = await fetch('/api/quiz/archive');
+    if (r.ok) data = await r.json();
+  } catch {}
+  if (currentView !== view || !head.isConnected) return;
+  if (!data || (!data.current && !(data.past || []).length)) {
+    app.appendChild(h(`<p class="muted empty-note">${esc(t('quiz.archive.empty'))}</p>`));
+    return;
+  }
+
+  if (data.current) {
+    const c = data.current;
+    // The trickiest question so far: the ONE lowest share right among the
+    // answered ones — named only when a single question is lowest, not on a tie.
+    const rated = c.questions.map((q, i) => [i, q.correctPct]).filter(([, v]) => v != null);
+    const min = rated.length > 1 ? Math.min(...rated.map(([, v]) => v)) : null;
+    const atMin = rated.filter(([, v]) => v === min);
+    const hardest = min != null && atMin.length === 1 ? atMin[0][0] : -1;
+    const cur = h(`<section class="card quiz-archive__week quiz-archive__week--current">
+        <h2 class="section-title">${esc(t('quiz.archive.current'))} · ${esc(quizWeekLabel(c.week))}</h2>
+        <p class="quiz-archive__summary">${esc(quizOverall(c.correctPct))}</p>
+        <p class="muted quiz-archive__next">${esc(t('quiz.archive.next', { date: fmtDate(c.opensNext) }))}</p>
+        <ol class="quiz-archive__questions"></ol>
+      </section>`);
+    const ol = cur.querySelector('ol');
+    c.questions.forEach((q, i) => {
+      ol.appendChild(h(`<li class="quiz-archive__q${i === hardest ? ' quiz-archive__q--hardest' : ''}">
+          <span class="quiz-archive__text">${esc(quizQuestionText(q))}</span>
+          <span class="quiz-archive__rate muted">${esc(quizRate(q.correctPct))}</span>
+          ${i === hardest ? `<span class="quiz-archive__tag"><i class="ti ti-flame" aria-hidden="true"></i>${esc(t('quiz.archive.hardest'))}</span>` : ''}
+        </li>`));
+    });
+    app.appendChild(cur);
+  }
+
+  if ((data.past || []).length) {
+    app.appendChild(h(`<h2 class="section-title quiz-archive__past-title">${esc(t('quiz.archive.past'))}</h2>`));
+    data.past.forEach((w) => {
+      // One closed week, collapsed to its share right until opened.
+      const box = h(`<details class="card quiz-archive__week">
+          <summary><strong>${esc(quizWeekLabel(w.week))}</strong> <span class="muted">${esc(quizOverall(w.correctPct))}</span></summary>
+          <ol class="quiz-archive__questions"></ol>
+        </details>`);
+      const ol = box.querySelector('ol');
+      w.questions.forEach((q) => {
+        const li = h(`<li class="quiz-archive__q">
+            <span class="quiz-archive__text">${esc(quizQuestionText(q))}</span>
+            <span class="quiz-archive__rate muted">${esc(quizRate(q.correctPct))}</span>
+            <ul class="quiz-archive__choices"></ul>
+          </li>`);
+        const ul = li.querySelector('ul');
+        q.choices.forEach((c, i) => {
+          const right = i === q.answer;
+          const share = (q.pickPcts || [])[i];
+          ul.appendChild(h(`<li class="quiz-archive__choice${right ? ' quiz-archive__choice--right' : ''}">
+              ${right ? '<i class="ti ti-check" aria-hidden="true"></i>' : ''}
+              <span>${esc(quizChoiceLabel(q.type, c))}${right ? ` <span class="sr-only">${esc(t('quiz.archive.correct'))}</span>` : ''}</span>
+              ${share == null ? '' : `<span class="muted">${esc(t('quiz.archive.picked', { pct: share }))}</span>`}
+            </li>`));
+        });
+        ol.appendChild(li);
+      });
+      app.appendChild(box);
+    });
+  }
+  app.appendChild(h(`<p class="muted quiz__source">${esc(t('quiz.source'))}</p>`));
 }

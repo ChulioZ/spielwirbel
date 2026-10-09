@@ -10704,6 +10704,22 @@ kbd {
 .home-quiz__link { display: flex; flex-direction: column; gap: 6px; text-decoration: none; color: inherit; }
 .home-quiz__label { display: flex; align-items: center; gap: 7px; font-size: var(--text-sm); font-weight: 600; color: var(--brand-ink, var(--brand-strong)); }
 .inbox-row__quiz { display: inline-block; margin-top: 4px; }
+/* The public statistics and archive (/quiz/archiv). */
+.quiz-archive-link { margin: 18px 0 0; }
+.quiz-archive-link a { display: inline-flex; align-items: center; gap: 6px; }
+.quiz-archive__week { margin-top: 14px; }
+.quiz-archive__week > summary { cursor: pointer; display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
+.quiz-archive__summary { margin: 0 0 10px; }
+.quiz-archive__past-title { margin-top: 28px; }
+.quiz-archive__questions { margin: 10px 0 0; padding-left: 1.4em; display: flex; flex-direction: column; gap: 10px; }
+.quiz-archive__q { overflow-wrap: anywhere; }
+.quiz-archive__text { display: block; font-weight: 600; }
+.quiz-archive__rate { font-size: var(--text-sm); }
+.quiz-archive__choices { list-style: none; padding: 0; margin: 6px 0 0; display: flex; flex-direction: column; gap: 3px; }
+.quiz-archive__choice { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline; font-size: var(--text-sm); }
+.quiz-archive__choice--right { font-weight: 600; }
+.quiz-archive__next { margin: -6px 0 10px; font-size: var(--text-sm); }
+.quiz-archive__tag { display: inline-flex; align-items: center; gap: 4px; margin-left: 8px; font-size: var(--text-sm); font-weight: 600; color: var(--brand-ink, var(--brand-strong)); }
 .landing-quiz .quiz-q { max-width: 640px; margin: 0 auto; }
 /* The teaser (landing page, guest demo): the choices as a plain list — nothing
    to press — and the way to an account where an answer would go. */

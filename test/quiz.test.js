@@ -282,9 +282,11 @@ test('the leaderboard is the caller and confirmed friends — nobody else, no de
   ]);
 });
 
-test('the retention sweep drops old weeks — with the quiz switched off', async () => {
+test('the retention sweep: answers after 8 weeks, rounds after a year — with the quiz switched off', async () => {
   await seedCorpus();
   const old = new Date(Date.now() - 10 * 7 * 86400000);
+  const ancient = new Date(Date.now() - 53 * 7 * 86400000);
+  await quiz.ensureRound(ancient);
   await quiz.ensureRound(old);
   await quiz.ensureRound();
   const a = await account('old');
@@ -292,7 +294,8 @@ test('the retention sweep drops old weeks — with the quiz switched off', async
   delete process.env.QUIZ_ENABLED;
   const removed = await runJob('purgeQuiz');
   assert.deepEqual(removed, { rounds: 1, submissions: 1 });
-  assert.deepEqual(store.data.quizRounds.map((r) => r.week), [weekKey()]);
+  assert.deepEqual(store.data.quizRounds.map((r) => r.week).sort(), [weekKey(old.toISOString()), weekKey()].sort(),
+    'a ten-week-old round stays for the archive; the year-old one goes');
 });
 
 test('the retention never exceeds the eight weeks the privacy policy promises', async () => {
@@ -300,10 +303,68 @@ test('the retention never exceeds the eight weeks the privacy policy promises', 
   const old = new Date(Date.now() - 9 * 7 * 86400000);
   await quiz.ensureRound(old);
   await quiz.ensureRound();
+  const a = await account('nine');
+  await repo.recordQuizAnswer(a.user.id, weekKey(old.toISOString()), 0, 5, { choice: 0, correct: true });
   process.env.QUIZ_RETENTION_WEEKS = '52';
   try {
-    assert.deepEqual(await runJob('purgeQuiz'), { rounds: 1, submissions: 0 }, 'a nine-week-old round outlived the published period');
+    assert.deepEqual(await runJob('purgeQuiz'), { rounds: 0, submissions: 1 }, 'nine-week-old answers outlived the published period');
   } finally {
     delete process.env.QUIZ_RETENTION_WEEKS;
   }
+});
+
+test('the public archive: percentages only — the running week without its key, closed weeks with answers and pick shares, no names', async () => {
+  await seedCorpus();
+  quiz.resetArchiveMemo();
+  delete process.env.QUIZ_ENABLED;
+  assert.equal((await request(app).get('/api/quiz/archive')).status, 404, 'off: nothing published');
+  process.env.QUIZ_ENABLED = 'true';
+
+  const lastWeek = new Date(Date.now() - 7 * 86400000);
+  const prev = await quiz.ensureRound(lastWeek);
+  const cur = await quiz.ensureRound();
+  const a = await account('arch-a');
+  const b = await account('arch-b');
+  // Last week: a got question 0 right, b picked choice (answer+1) wrong.
+  const wrong = (prev.questions[0].answer + 1) % prev.questions[0].choices.length;
+  await repo.recordQuizAnswer(a.user.id, prev.week, 0, prev.questions.length, { choice: prev.questions[0].answer, correct: true });
+  await repo.recordQuizAnswer(b.user.id, prev.week, 0, prev.questions.length, { choice: wrong, correct: false });
+  // This week: one player, one right answer.
+  await repo.recordQuizAnswer(a.user.id, cur.week, 1, cur.questions.length, { choice: cur.questions[1].answer, correct: true });
+
+  await runJob('openQuizRound');
+  const stored = store.data.quizRounds.find((r) => r.week === prev.week).stats;
+  assert.equal(stored.players, 2, 'the closed week was tallied when the job ran');
+  assert.equal(store.data.quizRounds.find((r) => r.week === cur.week).stats, undefined, 'the running week is not closed');
+
+  quiz.resetArchiveMemo();
+  const res = await request(app).get('/api/quiz/archive');
+  assert.equal(res.status, 200);
+  const body = JSON.stringify(res.body);
+  for (const acct of [a, b]) {
+    assert.ok(!body.includes(acct.user.id) && !body.includes(acct.user.username), 'an account reached the public archive');
+  }
+  // PERCENTAGES ONLY (operator decision): no player count, and no absolute
+  // count one could be read off — not per question, not per choice.
+  const keys = new Set();
+  JSON.parse(body, (k, v) => { keys.add(k); return v; });
+  for (const k of ['players', 'scoreSum', 'answered', 'correct', 'picks']) assert.ok(!keys.has(k), `the archive published "${k}"`);
+  const c = res.body.current;
+  assert.equal(c.week, cur.week);
+  assert.equal(c.questions[1].correctPct, 100);
+  assert.equal(c.questions[0].correctPct, null, 'an unanswered question has no share, not 0 %');
+  assert.equal(c.correctPct, 100);
+  assert.match(c.opensNext, /^\d{4}-\d{2}-\d{2}T/);
+  assert.ok(Date.parse(c.opensNext) > Date.now() && Date.parse(c.opensNext) - Date.now() <= 7 * 86400000 + 3600000);
+  for (const q of c.questions) {
+    assert.equal(q.choices, undefined, 'the running week published its choices');
+    assert.equal(q.answer, undefined, 'the running week published its key');
+    assert.equal(q.pickPcts, undefined, 'the running week published its pick split');
+  }
+  const p = res.body.past.find((w) => w.week === prev.week);
+  assert.equal(p.correctPct, 50);
+  assert.equal(p.questions[0].answer, prev.questions[0].answer);
+  assert.equal(p.questions[0].correctPct, 50);
+  assert.equal(p.questions[0].pickPcts[prev.questions[0].answer], 50);
+  assert.equal(p.questions[0].pickPcts[wrong], 50);
 });
