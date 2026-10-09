@@ -248,8 +248,9 @@ What the app does, in detail. For a short overview see the
   game keeps counting everywhere. Deleting one game permanently requires it to be
   off the shelf first — archived or wished-for — so nothing in the active
   collection can be erased by a single stray tap.
-  A shelf can also be **tidied in bulk**. The Regal has a „Auswählen" mode that
-  turns the covers into a selection: it keeps the search, the tag chips, the
+  A shelf can also be **tidied in bulk**. The Regal has a „Auswählen" mode (on a phone
+  it sits in the toolbar's „…" menu, beside the BGG import) that turns the covers
+  into a selection: it keeps the search, the tag chips, the
   metadata filters and the sort working, so „Alle auswählen" means everything you
   have narrowed to, and the picked games can be retired, have their **owners set**
   or their **tags changed** in one step — or be deleted outright. Setting owners replaces whatever each game held, so picking

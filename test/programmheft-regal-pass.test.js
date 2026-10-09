@@ -181,7 +181,9 @@ test('add game: Das Programmheft opens the search-first step, not the form', (t)
 test('control: Klassisch keeps the form and none of the Programmheft hooks', async (t) => {
   const { dom, round } = boot(t, 'klassisch');
   renderRegal(dom, round);
-  assert.equal(dom.app.querySelector('.ph-regal, .ph-card, .ph-offshelf, .regal-more'), null);
+  // `.regal-more` is not a Programmheft hook since #1577: every design but
+  // Der Tisch folds „Auswählen" and the import into it on a phone.
+  assert.equal(dom.app.querySelector('.ph-regal, .ph-card, .ph-offshelf'), null);
   dom.call('showAddGame', round, {});
   assert.equal(dom.document.querySelector('.sheet.add-search'), null);
 });
