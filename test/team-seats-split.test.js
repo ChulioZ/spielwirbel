@@ -100,3 +100,22 @@ test('children carry the team\'s seat choice explicitly', () => {
   const teamed = children.find((c) => c.teams);
   assert.equal(teamed.teams[0].sharedSeat, true);
 });
+
+// CodeRabbit on #1615: the greedy seed put the heavy party where IT liked best
+// and stranded the rest. Weights 3,2,2 over a three-seat and a four-seat game
+// split only one way — the team of three at the three-seat game — and the team
+// prefers the other one, so a preference-only placement fails on every restart.
+test('the seed backtracks when the preferred table leaves a later party nowhere to sit', () => {
+  const parties = [
+    { id: 'T', personIds: ['a', 'b', 'c'], seats: 3 },
+    { id: 'P', personIds: ['d', 'e'], seats: 2 },
+    { id: 'Q', personIds: ['f', 'g'], seats: 2 },
+  ];
+  const votes = Object.fromEntries(['a', 'b', 'c', 'd', 'e', 'f', 'g'].map((p) => [p, { x: { rating: 5 }, y: { rating: 2 } }]));
+  const [proposal] = proposeTableSplits({
+    parties, games: [game('x', 4, 4), game('y', 3, 3)], votes, seed: 's', tileValue, fitsPlayerCount,
+  });
+  assert.ok(proposal, 'a feasible split got no proposal');
+  const atY = proposal.tables.find((tb) => tb.gameId === 'y').personIds;
+  assert.deepEqual(atY.slice().sort(), ['a', 'b', 'c']);
+});

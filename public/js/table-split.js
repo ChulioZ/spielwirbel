@@ -264,38 +264,51 @@ function chooseTableSizes(admits, totalParties, rand) {
   return admits.map((sizes, t) => sizes[idx[t]]);
 }
 
-// Seat every party, one at a time in random order, at whichever table with room
-// left scores best for that party alone. A deliberately shallow start — the local
-// search below is what actually finds the split; this only has to be feasible and
-// not absurd.
+// Seat every party at a table with room left, best-liked table first. A
+// deliberately shallow start — the local search below is what actually finds the
+// split; this only has to be feasible and not absurd.
 //
-// The heaviest parties go first (#1610), the shuffle deciding only among equals:
-// a four-seat team placed last finds every table one seat short. With every
-// party one seat — every split before #1610 — the stable sort is a no-op, so the
-// order, and therefore every proposal, is unchanged. Returns null when the
-// greedy fill still cannot place someone; the caller's next restart retries.
+// The heaviest parties go first (#1610), the shuffle deciding only among equals,
+// and each party tries the tables in the order it likes them — BACKTRACKING when
+// a later party finds no room. Preference alone is not enough once parties weigh
+// more than one seat: a team of three that likes the four-seat game best takes
+// it, and the two pairs behind it have nowhere left, on every restart alike.
+//
+// With every party one seat — every split before #1610 — the first choice always
+// fits, nothing ever backtracks, and the placement is exactly the old greedy one.
+// Heaviest-first keeps the search to the few heavy parties, and a step budget
+// bounds a pathological shelf; null means "no seating found", and the caller's
+// next restart tries another set of table sizes.
+const SEED_STEP_BUDGET = 20000;
+
 function seedTableAssignment(gameIds, sizes, partyIds, ctx, rand) {
   const tables = gameIds.map((gameId) => ({ gameId, partyIds: [] }));
   const room = sizes.slice();
   const order = shuffleSeeded(partyIds, rand).sort((a, b) => ctx.seatsOf(b) - ctx.seatsOf(a));
-  for (const pid of order) {
+  let steps = 0;
+  const place = (k) => {
+    if (k === order.length) return true;
+    if (++steps > SEED_STEP_BUDGET) return false;
+    const pid = order[k];
     const w = ctx.seatsOf(pid);
-    let best = -1;
-    let bestKey = null;
+    const choices = [];
     tables.forEach((tb, t) => {
       if (room[t] < w) return;
       const cell = ctx.cell(pid, tb.gameId);
-      const key = [cell.violations, -cell.sum, -cell.lowest];
-      if (bestKey === null || compareSplits(key, bestKey) < 0) {
-        bestKey = key;
-        best = t;
-      }
+      choices.push({ t, key: [cell.violations, -cell.sum, -cell.lowest] });
     });
-    if (best < 0) return null;
-    tables[best].partyIds.push(pid);
-    room[best] -= w;
-  }
-  return tables;
+    // Stable, so equal keys keep table order — the old greedy's first-best pick.
+    choices.sort((a, b) => compareSplits(a.key, b.key));
+    for (const { t } of choices) {
+      tables[t].partyIds.push(pid);
+      room[t] -= w;
+      if (place(k + 1)) return true;
+      tables[t].partyIds.pop();
+      room[t] += w;
+    }
+    return false;
+  };
+  return place(0) ? tables : null;
 }
 
 // Try one party moving from `from` to `to`. Both table sizes change — by the
