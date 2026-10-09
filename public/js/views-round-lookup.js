@@ -248,14 +248,23 @@ function showAddGameForm(round, { wish = false, title = '', hit = null, dirty = 
   const preview = form.querySelector('.paste-zone__preview');
   const clearBtn = form.querySelector('#clearImg');
 
+  // Bumped by every change of the cover, so a FileReader still in flight for an
+  // older paste cannot repaint over a clear, a newer paste or an edition pick.
+  let previewSeq = 0;
+
   function setImage(blob) {
-    if (preview.src && preview.src.startsWith('blob:')) URL.revokeObjectURL(preview.src);
+    const seq = ++previewSeq;
     chosenImageUrl = null; // a pasted/cleared image overrides a provider cover
     chosenEdition = null; // …and so is not any BGG printing (#742)
     if (coverPicker) coverPicker.setCurrent(null);
     pastedBlob = blob;
     if (blob) {
-      preview.src = URL.createObjectURL(blob);
+      // A data: URL, not URL.createObjectURL: the CSP's img-src (lib/app.js)
+      // allows data: and deliberately not blob:, so a blob preview is refused
+      // by the browser while the upload (which sends pastedBlob) works (#1612).
+      const reader = new FileReader();
+      reader.onload = () => { if (seq === previewSeq) preview.src = reader.result; };
+      reader.readAsDataURL(blob);
       preview.hidden = false;
       pasteZone.classList.add('has-image');
       clearBtn.hidden = false;
@@ -301,7 +310,7 @@ function showAddGameForm(round, { wish = false, title = '', hit = null, dirty = 
   // through the one function that changes the cover is what keeps the two from
   // ever describing different boxes.
   function showProviderImage(url, cover) {
-    if (preview.src && preview.src.startsWith('blob:')) URL.revokeObjectURL(preview.src);
+    previewSeq++;
     pastedBlob = null;
     chosenImageUrl = url;
     chosenEdition = cover ? editionFromCover(cover) : null;
