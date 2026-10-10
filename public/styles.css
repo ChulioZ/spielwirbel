@@ -3591,6 +3591,30 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
 .input:focus, .select:focus { outline: 2px solid var(--brand-ring, var(--brand)); border-color: var(--brand); }
 .row { display: flex; gap: 10px; align-items: center; }
 .row .input { flex: 1; }
+/* The „Wann?" field's day and optional time (#1629). Side by side where both
+   fit, the time wrapping under the day where they do not: a 12-hour locale's
+   time („07:30 PM" plus the picker icon) needs ~8em, and squeezed beside the
+   day on a phone it was clipped to „07:30 P" (measured, en-US at 390px).
+   Compounded with `.row` so the bases beat `.row .input` on specificity rather
+   than source order.
+   The ✕ that empties the time is its own class rather than a `.link-btn`: Der
+   Tisch restyles every `.link-btn` with a `display` at (0,3,0), which beat a
+   `[hidden]` rule and left the ✕ showing beside an empty field. Hidden, it
+   keeps its box (visibility, not display), so its appearing on the first typed
+   digit cannot push the row into a wrap under the user's finger. */
+.played-on__row { flex-wrap: wrap; row-gap: 8px; }
+.row.played-on__row .played-on__input { flex: 1 1 11em; min-width: 0; }
+/* The time and its ✕ wrap as ONE item, so the ✕ never lands alone on a line. */
+.played-on__at { flex: 1 1 calc(8em + 40px); display: flex; align-items: center; gap: 8px; min-width: 0; }
+.played-on__at .played-on__time { flex: 1 1 auto; min-width: 0; }
+.played-on__clear {
+  display: inline-flex; align-items: center; justify-content: center; flex: none;
+  min-width: 32px; min-height: 32px; padding: 6px;
+  background: none; border: 0; border-radius: var(--radius-md);
+  color: var(--ink-soft); font: inherit; cursor: pointer;
+}
+.played-on__clear:hover { color: var(--ink); }
+.played-on__clear[hidden] { visibility: hidden; }
 
 .toolbar { display: flex; gap: 10px; flex-wrap: wrap; }
 /* ≤520px: stretched buttons, so a wrap reads as a deliberate stack instead of

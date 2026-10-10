@@ -495,6 +495,65 @@ module.exports = function repoContract(repo) {
       (await repo.listRoundSummaries(T)).find((x) => x.id === quiet.id).openSessions, []);
   });
 
+  /* Whether an open session's stamp is the 20:00 stand-in (#1629) — the summary
+     carries `dateOnly: true` so the resume zone prints no time nobody entered.
+     A hand-dated session is born finished, so this is reached through an
+     un-finish. The SQL restates played-on.js's isDateOnlySession and cannot
+     require it, so every branch of the predicate is a row here: the stored
+     boolean either way (FALSE must beat a `logged` entry), the legacy
+     events-only reading, a malformed events value, and the app-stamped case. */
+  test('listRoundSummaries: openSessions flags a date-only session, and nothing else', async () => {
+    const round = await freshRound({ name: 'Dates' });
+    const open = (over) => repo.createSession(T, round.id, {
+      gameIds: [], votes: {}, chosenGameId: null, chosenAt: null,
+      finished: false, finishedAt: null, winnerIds: [],
+      cancelled: false, cancelledAt: null, done: true, ...over,
+    });
+    const logged = [{ type: 'logged', at: '2026-05-20T09:00:00.000Z' }];
+    const marked = await open({ createdAt: '2026-05-01T18:00:00.000Z', dateOnly: true });
+    const timed = await open({ createdAt: '2026-05-02T18:00:00.000Z', dateOnly: false, events: logged });
+    const legacy = await open({
+      createdAt: '2026-05-03T18:00:00.000Z',
+      events: [{ type: 'started', at: 't' }, { type: 'redated', at: 't' }],
+    });
+    const app = await open({ createdAt: '2026-05-04T18:00:00.000Z', events: [{ type: 'started', at: 't' }] });
+    const odd = await open({ createdAt: '2026-05-05T18:00:00.000Z', events: { type: 'logged' }, dateOnly: 'yes' });
+    const s = (await repo.listRoundSummaries(T)).find((x) => x.id === round.id);
+    // Capped at three, newest first: odd, app, legacy.
+    assert.deepEqual(s.openSessions.map((o) => [o.id, o.dateOnly]),
+      [[odd.id, undefined], [app.id, undefined], [legacy.id, true]]);
+    assert.equal('dateOnly' in s.openSessions[0], false, 'absent, never false or null');
+
+    const more = await freshRound({ name: 'Dates 2' });
+    const again = (over) => repo.createSession(T, more.id, {
+      gameIds: [], votes: {}, chosenGameId: null, chosenAt: null, finished: false, finishedAt: null,
+      winnerIds: [], cancelled: false, cancelledAt: null, done: true, ...over,
+    });
+    assert.ok(marked && timed);
+    const m2 = await again({ createdAt: '2026-05-01T18:00:00.000Z', dateOnly: true });
+    const t2 = await again({ createdAt: '2026-05-02T18:00:00.000Z', dateOnly: false, events: logged });
+    assert.ok(m2.id && t2.id, 'the fixture minted real ids');
+    const summary = (await repo.getRoundSummary(T, more.id)).openSessions;
+    assert.deepEqual(summary.map((o) => [o.id, o.dateOnly]), [[t2.id, undefined], [m2.id, true]],
+      'a stored false beats the logged entry; a stored true needs no entry');
+  });
+
+  /* setSessionDate writes the marker only when handed a boolean (#1629), so a
+     caller that does not know leaves it as it was. */
+  test('setSessionDate writes dateOnly when given one, and leaves it otherwise', async () => {
+    const round = await freshRound();
+    const s = await repo.createSession(T, round.id, {
+      createdAt: '2026-03-10T20:00:00.000Z', gameIds: [], votes: {}, chosenGameId: null, chosenAt: null,
+      finished: true, finishedAt: '2026-03-10T20:00:00.000Z', winnerIds: [],
+      cancelled: false, cancelledAt: null, done: true,
+    });
+    const at = '2026-03-09T17:15:00.000Z';
+    assert.equal('dateOnly' in await repo.setSessionDate(T, round.id, s.id, at), false);
+    assert.equal((await repo.setSessionDate(T, round.id, s.id, at, null, false)).dateOnly, false);
+    assert.equal((await repo.setSessionDate(T, round.id, s.id, at)).dateOnly, false, 'kept');
+    assert.equal((await repo.setSessionDate(T, round.id, s.id, at, null, true)).dateOnly, true);
+  });
+
   /* The cap is what keeps this summary proportional to the sub-kilobyte screen
      it answers (.claude/rules/railway-db-same-region.md). It is a constant on
      the JSON side and a bare LIMIT in the SQL, so nothing but this makes the

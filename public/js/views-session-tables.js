@@ -60,7 +60,7 @@ async function showTableBuilder(round, session, gamesHint) {
   const parties = sessionParties(round, session);
   const partyById = new Map(parties.map((p) => [p.id, p]));
   const gameById = new Map(games.map((g) => [g.id, g]));
-  const when = fmtDateTime(session.createdAt);
+  const when = fmtSessionWhen(session);
 
   app.innerHTML = '';
   renderSubScreenTabs(round, 'session');
@@ -479,7 +479,7 @@ function renderTischSplit(round, session, games, children) {
     const shareBtn = h(`<button type="button" class="btn btn--ghost">${iconText('ti-share', t('tables.shareAll'))}</button>`);
     shareBtn.addEventListener('click', () => shareResult({
       roundName: round.name,
-      when: fmtDateTime(session.createdAt),
+      when: fmtSessionWhen(session),
       outcome: 'split',
       tables: children.map((child) => ({
         title: (round.games.find((g) => g.id === child.chosenGameId) || {}).title || t('tables.gameGone'),

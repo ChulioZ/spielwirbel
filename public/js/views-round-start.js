@@ -211,7 +211,7 @@ function renderStartTab(round, activeGames) {
              <span class="ticket__info">
                <span class="ticket__label">${esc(t('round.liveLabel'))}</span>
                <span class="ticket__title">${esc(tn(n, 'round.draftTitleOne', 'round.draftTitle'))}</span>
-               <span class="ticket__meta">${esc(fmtDateTime(session.createdAt))}</span>
+               <span class="ticket__meta">${esc(fmtSessionWhen(session))}</span>
              </span>
            </span>
            <span class="ticket__stub">
@@ -266,7 +266,7 @@ function renderStartTab(round, activeGames) {
   newestSessionsFirst(inProgress)
     .forEach((session) => {
       const game = session.chosenGameId && round.games.find((g) => g.id === session.chosenGameId);
-      const when = fmtDateTime(session.chosenAt || session.createdAt);
+      const when = fmtSessionWhen(session, session.chosenAt || session.createdAt);
       const imgStyle = game && game.image ? ` style="background-image:url('${coverUrl(game.image, COVER_THUMB)}')"` : '';
       const fallback = game
         ? coverPlaceholder(game)
@@ -335,7 +335,7 @@ function renderStartTab(round, activeGames) {
       game,
       winnerNames: (lastPlayed.winnerIds || []).map((wid) => personLabel(people.find((p) => p.id === wid))).filter(Boolean),
       ending: sessionEnding(lastPlayed),
-      when: fmtDateTime(lastPlayed.createdAt),
+      when: fmtSessionWhen(lastPlayed),
       score: sst.avg !== null ? fmtAvg(displayScore(sst.score)) : '',
       pot: (lastPlayed.gameIds || []).length,
       note: youngRoundPlayed(round, hubDeps()) < YOUNG_ROUND_SERIES_FROM
@@ -357,7 +357,7 @@ function renderStartTab(round, activeGames) {
       .map((wid) => personLabel(lastPeople.find((p) => p.id === wid)))
       .filter(Boolean);
     const sst = gameStatsForSession(round, lastPlayed, game.id);
-    const when = fmtDateTime(lastPlayed.createdAt);
+    const when = fmtSessionWhen(lastPlayed);
     const imgStyle = game.image ? ` style="background-image:url('${coverUrl(game.image, COVER_THUMB)}')"` : '';
     const fallback = coverPlaceholder(game);
     const pill =

@@ -756,8 +756,10 @@ public/
                      one list, written by lib/session-events.js and rendered by
                      the lobby and the results screen (issue #209)
     played-on.js     the day a session was played when it is not today: a picked
-                     day becomes 20:00 local time on the client, and the server
-                     validates the instant with the same file (issue #1616)
+                     day (and optional time) becomes a local instant on the
+                     client — 20:00 when no time is given — the server validates
+                     it with the same file, and whether a session is shown by
+                     date only is read here too (issues #1616, #1629)
     point-records.js per-player points on a finished session: the bounds the
                      route also validates with, and the personal bests and group
                      records derived from the sessions, never stored (issue #1630)

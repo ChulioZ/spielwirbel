@@ -15,6 +15,7 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const {
   PLAYED_ON_MIN, localDayKey, isPastDay, playedOnInstant, normalizePlayedOn,
+  localTimeKey, isFuturePlayedOn, isDateOnlySession, requestedDateOnly,
 } = require('../public/js/played-on');
 const { periodKeyOf } = require('../public/js/period-recap');
 
@@ -81,5 +82,71 @@ test('the server refuses the future, the pre-2000 past and anything not a zoned 
   assert.ok(normalizePlayedOn('2024-02-29T20:00:00Z', now), 'a real leap day is fine');
   for (const bad of ['2026-03-01', '2026-03-01T20:00:00', '1', 'March 3', '', null, 42, {}]) {
     assert.equal(normalizePlayedOn(bad, now), null, `refuses ${JSON.stringify(bad)}`);
+  }
+});
+
+// ---- The optional time (#1629) ----
+
+test('a picked day WITH a time is stored at that local time, not at 20:00', () => {
+  const now = new Date(2026, 9, 9, 12);
+  const iso = playedOnInstant('2026-03-01', now, '18:45');
+  const d = new Date(iso);
+  assert.equal(localDayKey(d), '2026-03-01');
+  assert.equal(localTimeKey(d), '18:45');
+  // An early-morning time is still THAT day, in a zone where it is the next day in UTC.
+  assert.equal(localDayKey(new Date(playedOnInstant('2026-03-01', now, '23:30'))), '2026-03-01');
+  assert.equal(localTimeKey(new Date(playedOnInstant('2026-03-01', now, '00:05'))), '00:05');
+});
+
+test('an empty time is the 20:00 stand-in — the #1616 behaviour, unchanged', () => {
+  const now = new Date(2026, 9, 9, 12);
+  assert.equal(playedOnInstant('2026-03-01', now, ''), playedOnInstant('2026-03-01', now));
+  assert.equal(new Date(playedOnInstant('2026-03-01', now, '')).getHours(), 20);
+});
+
+test('a time that is not a time is refused, like an impossible day', () => {
+  const now = new Date(2026, 9, 9, 12);
+  for (const bad of ['24:00', '7:30', '12:60', 'noon', '12:30:00']) {
+    assert.equal(playedOnInstant('2026-03-01', now, bad), null, `refuses ${bad}`);
+  }
+});
+
+test('only a TYPED time can lie in the future — and it is reported, not capped', () => {
+  const now = new Date(2026, 9, 9, 15, 30);
+  assert.equal(isFuturePlayedOn('2026-10-09', '16:00', now), true, 'later today');
+  assert.equal(isFuturePlayedOn('2026-10-09', '15:00', now), false, 'earlier today');
+  assert.equal(isFuturePlayedOn('2026-10-08', '23:59', now), false, 'any time yesterday');
+  assert.equal(isFuturePlayedOn('2026-10-09', '', now), false, 'the stand-in is capped instead');
+  // The stand-in IS capped: today at 20:00 while it is 15:30 becomes now.
+  assert.equal(playedOnInstant('2026-10-09', now), now.toISOString());
+});
+
+test('a stored dateOnly wins in BOTH directions; without one the log decides', () => {
+  const logged = [{ type: 'logged', at: 'x' }];
+  const redated = [{ type: 'started', at: 'x' }, { type: 'redated', at: 'y' }];
+  // The marker beats the log either way — a timed re-date of a logged session is
+  // still in its log as `logged`, and must show its time.
+  assert.equal(isDateOnlySession({ dateOnly: false, events: logged }), false);
+  assert.equal(isDateOnlySession({ dateOnly: true, events: [] }), true);
+  // No marker: a hand-dated session from before #1629 is date-only…
+  assert.equal(isDateOnlySession({ events: logged }), true);
+  assert.equal(isDateOnlySession({ events: redated }), true);
+  // …and an app-stamped one is not.
+  assert.equal(isDateOnlySession({ events: [{ type: 'started' }, { type: 'finished' }] }), false);
+  assert.equal(isDateOnlySession({}), false);
+  assert.equal(isDateOnlySession(null), false);
+  // A summary row carries the boolean or nothing.
+  assert.equal(isDateOnlySession({ at: 'x', dateOnly: true }), true);
+  assert.equal(isDateOnlySession({ at: 'x' }), false);
+  // A malformed log is no log, rather than a crash in the home summary.
+  assert.equal(isDateOnlySession({ events: { type: 'logged' } }), false);
+  // A non-boolean marker is no marker.
+  assert.equal(isDateOnlySession({ dateOnly: 'false', events: logged }), true);
+});
+
+test('a request says „a time was entered" only with an explicit false', () => {
+  assert.equal(requestedDateOnly(false), false);
+  for (const v of [true, undefined, null, 'false', 0]) {
+    assert.equal(requestedDateOnly(v), true, `${JSON.stringify(v)} reads as date-only`);
   }
 });

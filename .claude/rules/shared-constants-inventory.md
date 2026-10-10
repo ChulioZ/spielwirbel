@@ -673,6 +673,18 @@ client, so the server validates a shape and a range and never converts. Its
 order a round's sessions by the raw `createdAt` string (`public/js/session-order.js`),
 and an offset-carrying stamp would sort out of place among `Z` ones.
 
+**#1629 added the optional time and the date-only marker to the same file.**
+`playedOnInstant` takes an `'HH:MM'` (no time = the 20:00 stand-in), and
+`isDateOnlySession` decides whether a session's stamp is shown with its time:
+the stored `dateOnly` boolean wins, and without one a `logged`/`redated` entry
+in its log means date-only (every session hand-dated before the marker). Both
+repo backends answer the home summary's `openSessions[].dateOnly` from it — the
+JSON one by requiring it, the Postgres one by restating it in SQL, pinned
+branch by branch in the repo contract — and every client surface prints a
+session's date through `fmtSessionWhen` (`i18n.js`), which reads it.
+`requestedDateOnly` is the server's reading of a request: only an explicit
+`false` means a time was entered, because a pre-#1629 client sends no flag.
+
 **The twenty-seventh is `public/js/session-order.js`** (#1616, moved from `lib/`
 by #1622): the two orders a round's sessions are read in. `sortSessionsByDate`
 is what both repo backends apply when they assemble a round (chronological,

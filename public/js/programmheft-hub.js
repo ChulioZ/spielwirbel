@@ -208,7 +208,7 @@ function phRoundCard(r, { stack, stackAttrs, seatCount, lastLine, invite }) {
 function phResumeNotice({ round, session }) {
   const voting = session.stage === 'voting';
   const state = voting ? t('round.liveLabel') : session.gameTitle || t('round.inProgressDeciding');
-  const text = [round.name, state, fmtDateTime(session.at)].join(' · ');
+  const text = [round.name, state, fmtSessionWhen(session, session.at)].join(' · ');
   return h(`<a class="ph-extra">
        <span class="ph-extra__label">${esc(t('home.phExtra'))}</span>
        <span class="ph-extra__text">${esc(text)}</span>

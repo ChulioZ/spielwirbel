@@ -259,7 +259,7 @@ function renderChronikTab(round, activities) {
   const sessionNo = forest ? forestSessionNumbers(round) : new Map();
 
   function buildSessionCard(s) {
-    const when = fmtDateTime(s.createdAt);
+    const when = fmtSessionWhen(s);
     const chosen = s.chosenGameId && round.games.find((g) => g.id === s.chosenGameId);
     // Against the session's own people, so a guest winner is listed with its
     // marker rather than silently dropped (#458).
