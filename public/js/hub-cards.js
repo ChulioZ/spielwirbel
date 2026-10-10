@@ -44,6 +44,7 @@ const hubDeps = () => ({
   filterOptions: metadataFilterOptions,
   normalizeMetadata: normalizeMetadataFilters,
   fitsMetadata: fitsMetadataFilters,
+  newestFirst: newestSessionsFirst,
 });
 
 // One card frame. The title is a real <h2> so the grid reads as a set of

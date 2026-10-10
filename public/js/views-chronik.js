@@ -153,7 +153,12 @@ function renderChronikTab(round, activities) {
     const by = a.actorMemberId && (round.members.find((m) => m.id === a.actorMemberId) || {}).name;
     entries.push({ kind: 'activity', at: a.at, id: a.id, gameId: a.gameId, type: a.type, by, ...meta });
   });
-  entries.sort((a, b) => String(b.at).localeCompare(String(a.at)));
+  // Newest first, ties last-pushed first (#1622): sessions are pushed in the
+  // repo's chronological order, so two logged for one day — both at 20:00 —
+  // list the later-entered one on top, as two on different days would.
+  const ordered = newestSessionsFirst(entries, (e) => e.at);
+  entries.length = 0;
+  entries.push(...ordered);
 
   // The per-period recap (#800) is its own section ABOVE the timeline (#851):
   // the Chronik is the round's time axis, so the shareable card for a month
