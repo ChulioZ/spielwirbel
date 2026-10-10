@@ -493,9 +493,11 @@ What the app does, in detail. For a short overview see the
     a deliberate trade: weighting a win by the size of the field it beat is
     fairer and was how the standings worked for a while, but it needed a
     paragraph to explain and left everyone but the leader on a negative number,
-    which a leaderboard cannot afford. The winning-streak tile still skips solo
-    evenings, for the reason it already skipped nights only a guest won: an evening
-    that was not a contest can neither break nor extend a streak.
+    which a leaderboard cannot afford. The winning-streak tile still skips
+    evenings with only one person at the table, for the reason it already skipped
+    nights only a guest won: an evening that was not a contest can neither break
+    nor extend a streak. A table that played as one team against the game is a
+    contest (issue #1624): its shared win extends the streak, its loss breaks it.
     A shared win is a full win for every winner, and it continues the streak
     for each of them (issue #1421); two who keep winning together hold it
     jointly, and the tile names both. A win shared with a guest counts the
@@ -619,8 +621,10 @@ What the app does, in detail. For a short overview see the
   hand can draw a three-player one; the recommender reads the same seat count
   and a multi-table split sizes its tables by it. The winner picker offers the
   team as a single chip: recording it credits every member individually, so the
-  standings and the history read as before — and a table that won together
-  against the game is still not a contest between players, whatever its seats.
+  standings and the history read as before. A table that played as one team
+  against the game counts as a contest for the win rate, the streak and the
+  badges (issue #1624): a shared win raises everyone's rate and a shared
+  „Verloren" lowers it, exactly as the same evening recorded without a team.
 - **Removing a person** – someone ticked by mistake, or who left before the
   game, can be taken out of a session from the voting lobby or the results
   screen, even after the game is finished („Person entfernen"). They stop
@@ -661,7 +665,8 @@ What the app does, in detail. For a short overview see the
   campaign session that is over for tonight while the campaign is not). A winner
   and an ending are mutually exclusive, every screen that lists a finished
   session says the ending where there is one, and the statistics treat a loss as
-  a contested night everybody lost while the other two count as non-competitive.
+  a contested night everybody lost — whether or not the table was recorded as
+  one team — while the other two count as non-competitive.
   Or
   cancel the session if nothing appealed. Sessions can be deleted later, and a
   single game can be removed from a session's results.

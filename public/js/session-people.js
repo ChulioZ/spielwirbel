@@ -228,15 +228,37 @@ function sessionPartyCount(round, session) {
 // a box's player count is a headcount, and four people cooperating against the
 // game are a four-player table, not a solo one.
 //
-// It sits beside `sessionPartyCount` rather than replacing it: the contest
-// readers (win rate, the streak, the contest badges) keep counting SIDES, and a
-// table that won or lost together against the game is still not a contest.
+// It sits beside `sessionPartyCount` rather than replacing it: how many seats a
+// session had is a sizing question, and neither count decides what a contest is
+// — that is `isContestSession` below, which counts PEOPLE.
 function sessionSeatCount(round, session) {
   const people = sessionPeople(round, session);
   const teams = resolveTeamMembers(people, session);
   const sharedTeamed = teams.reduce((n, tm) => n + (tm.sharedSeat ? tm.people.length : 0), 0);
   const sharedTeams = teams.filter((tm) => tm.sharedSeat).length;
   return people.length - sharedTeamed + sharedTeams;
+}
+
+/* Was this session a CONTEST (#1624) — one that can raise or lower a win rate,
+   extend or break a streak, and earn a contest badge?
+
+   More than one PERSON at the table, and an ending that was about winning. It
+   counts people rather than parties on purpose: a whole-table team (everyone on
+   one side, against the game) is a real result, and counting SIDES made the
+   same evening a loss for all four when recorded as four people and no result
+   at all when recorded as one team. Only a one-person session stays out — one
+   person always wins against no one (#895) — along with „Kein Sieger" and
+   „Fortsetzung folgt" (#1038). „Verloren" and an unrecorded ending stay
+   contested and unwon.
+
+   The ONE copy of the rule: memberStats (rate, „Stärkstes Spiel"), winStreak
+   and the contest badges all call it. `sessionEnding` lives in
+   session-outcome.js, a sibling this file cannot require(), so it is passed in
+   — the deps shape those three callers already use. */
+function isContestSession(round, session, endingOf) {
+  if (sessionPeople(round, session).length < 2) return false;
+  const ending = endingOf(session);
+  return ending !== 'noWinner' && ending !== 'ongoing';
 }
 
 if (typeof module !== 'undefined' && module.exports) {
@@ -253,6 +275,7 @@ if (typeof module !== 'undefined' && module.exports) {
     sessionParties,
     sessionPartyCount,
     sessionSeatCount,
+    isContestSession,
     teamSharesSeat,
   };
 }

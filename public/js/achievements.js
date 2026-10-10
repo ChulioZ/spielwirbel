@@ -257,13 +257,13 @@ function badgeYearsSince(iso, now) {
   return { steps, count: steps.length };
 }
 
-// A night that was a CONTEST: more than one party, and not ended as „Kein
-// Sieger"/„Fortsetzung folgt" (#1038). The Pokale streak's own filter, so
-// Serienheld cannot be earned by logging solo plays (#895) and Comeback's
+// A night that was a CONTEST — `isContestSession` (session-people.js), the
+// Pokale streak's and the win rate's own rule: more than one person (#895,
+// #1624 — a whole-table team counts), not „Kein Sieger"/„Fortsetzung folgt"
+// (#1038). So Serienheld cannot be earned by logging solo plays and Comeback's
 // drought cannot be run up by them either.
 function badgeIsContest(c, s) {
-  const e = c.deps.sessionEnding(s);
-  return c.deps.sessionPartyCount(c.round, s) > 1 && e !== 'noWinner' && e !== 'ongoing';
+  return c.deps.isContestSession(c.round, s, c.deps.sessionEnding);
 }
 
 // --- A. member conditions ------------------------------------------------------
@@ -617,7 +617,7 @@ function badgeEvaluate(def, m, latestId) {
 
 function badgeDeps(deps) {
   return deps || {
-    sessionPeople, sessionPartyGroups, sessionPartyCount, sessionEnding, sessionHasVotes,
+    sessionPeople, sessionPartyGroups, isContestSession, sessionEnding, sessionHasVotes,
     scoreRatings, TILE_VALUE, SCORE_MIN, computePlaces, isActiveGame,
   };
 }

@@ -24,7 +24,7 @@ const {
 const DEPS = {
   sessionPeople: people.sessionPeople,
   sessionPartyGroups: people.sessionPartyGroups,
-  sessionPartyCount: people.sessionPartyCount,
+  isContestSession: people.isContestSession,
   sessionEnding: outcome.sessionEnding,
   sessionHasVotes: outcome.sessionHasVotes,
   scoreRatings: voteScore.scoreRatings,

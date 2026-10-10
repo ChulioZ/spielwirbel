@@ -28,7 +28,7 @@ const {
 const DEPS = {
   sessionPeople: people.sessionPeople,
   sessionPartyGroups: people.sessionPartyGroups,
-  sessionPartyCount: people.sessionPartyCount,
+  isContestSession: people.isContestSession,
   sessionEnding: outcome.sessionEnding,
   sessionHasVotes: outcome.sessionHasVotes,
   scoreRatings: voteScore.scoreRatings,
@@ -215,6 +215,20 @@ test('Serienheld: three contested wins in a row; two, or a broken run, miss', ()
   assert.equal(mine(mkRound({ sessions: [sess(W), solo, sess(W)] }), 'streak').state, 'locked', 'a solo win does not extend');
   const noWinner = sess({ ending: 'noWinner' });
   assert.equal(mine(mkRound({ sessions: [sess(W), sess(W), noWinner, sess(W)] }), 'streak').state, 'earned', 'noWinner does not break');
+});
+
+// A whole-table team (everyone on one side, against the game) is a contest
+// (#1624): its shared win extends the run, its shared „Verloren" breaks it.
+test('Serienheld and Comeback count whole-table team sessions as contests', () => {
+  const team = (over) => sess({ teams: [{ id: 't', personIds: ['a', 'b'], sharedSeat: false }], ...over });
+  const W = { winnerIds: ['a'] };
+  assert.equal(mine(mkRound({ sessions: [sess(W), team({ winnerIds: ['a', 'b'] }), sess(W)] }), 'streak').state, 'earned',
+    'a team win extends the run');
+  assert.equal(mine(mkRound({ sessions: [sess(W), sess(W), team({ ending: 'lost' }), sess(W)] }), 'streak').state, 'locked',
+    'a team loss breaks it');
+  const drought = many(BADGE_COMEBACK_DROUGHT, () => team({ ending: 'lost' }));
+  assert.equal(mine(mkRound({ sessions: [...drought, sess(W)] }), 'comeback').state, 'earned',
+    'team losses run up the drought');
 });
 
 test('Serienheld 3 · 5 · 7: each tier dated at the session that extends the best run to it', () => {
