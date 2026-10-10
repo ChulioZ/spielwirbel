@@ -1477,6 +1477,11 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     );
   }
 
+  // The evening's points (#1630), best first, with the „neuer Rekord" marks —
+  // after who was here and who played together, since the points belong to
+  // those same seats. Absent until someone enters them.
+  const pointsEl = session.finished ? renderSessionPoints(round, session) : null;
+  if (pointsEl) screen.appendChild(pointsEl);
 
   /* Der Tisch (#1057) — the chosen game, as a band above the Tafel, and the
      only place the evening's own controls live.

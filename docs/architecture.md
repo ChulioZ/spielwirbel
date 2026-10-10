@@ -758,6 +758,9 @@ public/
     played-on.js     the day a session was played when it is not today: a picked
                      day becomes 20:00 local time on the client, and the server
                      validates the instant with the same file (issue #1616)
+    point-records.js per-player points on a finished session: the bounds the
+                     route also validates with, and the personal bests and group
+                     records derived from the sessions, never stored (issue #1630)
     news.js          the „Was ist neu" entry list + its newest revision — a code
                      constant that ships with the release it describes, read by
                      the /neu screen and by lib/routes/account.js (issue #741)
@@ -969,6 +972,9 @@ public/
     session-date.js  a session's day when it is not today: the „Wann?" field,
                      „Datum ändern" on a played session and the Chronik's
                      „Session nachtragen" game picker (issue #1616)
+    session-points.js a finished session's points: the sheet that enters
+                     them, the result's points block and the game page's record
+                     line (issue #1630)
     member-stats.js  one member's statistics, derived on demand from the
                      round's sessions. Split out of views-member.js by #1075;
                      a pure derivation, edited when a statistic changes rather

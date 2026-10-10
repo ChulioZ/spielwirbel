@@ -90,11 +90,13 @@ function bgStatsBggId(game) {
 
 // The play, or null when this session is not one.
 //
-// `model` is { session, game, people, parties, winnerIds } — the values
+// `model` is { session, game, people, parties, winnerIds, scores } — the values
 // showResults already holds. `game` is the CHOSEN game resolved against the
 // round, so a null there means "nothing chosen" and needs no second check.
+// `scores` is the session's points (#1630) keyed by PARTY id — a team's id or
+// an un-teamed person's — absent when nobody entered any.
 function bgStatsPlay(model) {
-  const { session, game, people, parties, winnerIds } = model || {};
+  const { session, game, people, parties, winnerIds, scores } = model || {};
   if (!session || !game) return null;
   if (!session.finished || session.cancelled) return null;
   // The end of the evening, falling back to when it started: a session finished
@@ -107,12 +109,18 @@ function bgStatsPlay(model) {
   // the labels are stable for one session rather than depending on which person
   // is looked up first.
   const teamOf = new Map();
+  // person id -> the party id their points are keyed by: their team's, or
+  // their own. A team's score goes to every member of that team (#1630) — BG
+  // Stats groups them by the shared `team` label, so each carries the same one.
+  const partyOf = new Map();
   let teamIndex = 0;
   (parties || []).forEach((party) => {
+    (party.people || []).forEach((p) => partyOf.set(p.id, party.id));
     if (!party.team) return;
     const label = bgStatsTeamLabel(teamIndex++);
     (party.people || []).forEach((p) => teamOf.set(p.id, label));
   });
+  const points = scores && typeof scores === 'object' && Object.keys(scores).length ? scores : null;
 
   const won = new Set(winnerIds || []);
   const play = {
@@ -130,8 +138,12 @@ function bgStatsPlay(model) {
       sourceGameId: game.id,
       // BG Stats has no per-player RATING field — only score/rank/winner — and
       // our 1-5 votes are a Spielwirbel concept, not a play record. So they stay
-      // here: no points, no scores, winners only.
-      noPoints: true,
+      // here. A session with points (#1630) sends each player's `score` and the
+      // game's direction (`highestWins`); one without stays winners-only.
+      // Field names per BG Stats' "Linking and pushing to BG Stats from other
+      // apps or websites" support page, whose example play carries
+      // game.highestWins, game.noPoints and players[].score.
+      ...(points ? { highestWins: !game.lowScoreWins } : { noPoints: true }),
     },
     players: (people || []).map((person) => {
       const player = {
@@ -141,6 +153,10 @@ function bgStatsPlay(model) {
       };
       const team = teamOf.get(person.id);
       if (team) player.team = team;
+      // `winner` stays what Spielwirbel recorded — never re-derived from the
+      // points, the same rule the app itself keeps.
+      const score = points ? points[partyOf.get(person.id)] : undefined;
+      if (Number.isInteger(score)) player.score = score;
       return player;
     }),
   };

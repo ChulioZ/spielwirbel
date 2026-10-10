@@ -164,7 +164,7 @@ function tischScoreNumeral(st, shown) {
 // the same status line the stamp prints — and the evening's score pill. The
 // avatar is the FIRST winner's (initials, for the reason the raters band gives);
 // every winner is named in the text beside it.
-function tischPlayRow(round, s, { picked, status, winners, scoreCell }) {
+function tischPlayRow(round, s, { picked, status, winners, scoreCell, points = '' }) {
   const first = winners[0];
   const who = first
     ? `<span class="avatar${first.guest ? ' avatar--guest' : ''}" style="background:${personColor(round, first)}" aria-hidden="true">${avatarFace(initials(first.name), {})}</span>`
@@ -173,7 +173,7 @@ function tischPlayRow(round, s, { picked, status, winners, scoreCell }) {
   const what = names.length
     ? esc(tn(names.length, 'detail.playWonOne', 'detail.playWonMany', { names: names.join(', ') }))
     : status;
-  return h(`<li class="gd-play${picked ? '' : ' gd-play--muted'}"><a class="gd-play__link">${who}<span class="gd-play__date">${esc(fmtDate(s.createdAt))}</span><span class="gd-play__what">${what}</span>${scoreCell}</a></li>`);
+  return h(`<li class="gd-play${picked ? '' : ' gd-play--muted'}"><a class="gd-play__link">${who}<span class="gd-play__date">${esc(fmtDate(s.createdAt))}</span><span class="gd-play__what">${what}${points ? ` · ${esc(points)}` : ''}</span>${scoreCell}</a></li>`);
 }
 
 // =================== Game detail ===================
@@ -773,6 +773,12 @@ async function showGameDetail(rid, gameId) {
   // so a heading over one line of muted text only adds to the emptiness.
   // A wish omits it too (#699), same reasoning as the score badge above.
   const sec = h(`<div class="section gd-history"><h2>${esc(t('detail.relatedTitle'))}</h2></div>`);
+  // Points (#1630): the group record heads the history it was set in, and each
+  // scored stamp names its evening's best.
+  const pointRecords = gamePointRecords(round, game);
+  const recordEl = renderGamePointRecord(round, game, pointRecords, (next) => updateGame({ lowScoreWins: next }));
+  if (recordEl) sec.appendChild(recordEl);
+  const topPoints = new Map(pointRecords.plays.map((p) => [p.session.id, playTopPointsText(round, p)]));
   if (related.length === 0) {
     sec.appendChild(h(`<div class="muted">${esc(t('detail.relatedEmpty'))}</div>`));
   } else {
@@ -839,7 +845,7 @@ async function showGameDetail(rid, gameId) {
       // of the ramp carries this with it (.claude/rules/theme-derived-colors.md).
       const PLAYED_UNRATED = 4.5;
       if (listy) {
-        const row = tischPlayRow(round, s, { picked, status, winners: s.finished ? winners : [], scoreCell });
+        const row = tischPlayRow(round, s, { picked, status, winners: s.finished ? winners : [], scoreCell, points: topPoints.get(s.id) });
         navLink(row.querySelector('a'), resultsPath(round.id, s.id), () => showResults(round, s));
         list.appendChild(row);
         return;
@@ -860,6 +866,7 @@ async function showGameDetail(rid, gameId) {
              <div class="stamp__lines">
                <div class="stamp__status">${status}</div>
                ${winner}
+               ${topPoints.get(s.id) ? `<div class="stamp__pts">${iconText('ti-target', topPoints.get(s.id))}</div>` : ''}
              </div>
              ${scoreCell}
            </div>

@@ -328,7 +328,7 @@ function resultRenderBand(rs) {
        (.claude/rules/secrets-in-paths-reach-the-logs.md, same reasoning one hop
        further out). */
     const pushUrl = bgStatsEnabled()
-      ? bgStatsPlayUrl({ session, game, people, parties, winnerIds: rs.winnerIds })
+      ? bgStatsPlayUrl({ session, game, people, parties, winnerIds: rs.winnerIds, scores: session.scores })
       : null;
     if (pushUrl) {
       actions.appendChild(h(`<a class="link-btn" target="_blank" rel="noopener noreferrer" href="${esc(pushUrl)}">${iconText('ti-external-link', t('result.bgStats'))}</a>`));

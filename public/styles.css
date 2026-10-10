@@ -6467,6 +6467,9 @@ a.k-tile:focus-visible,
 .cancel-area:empty { display: none; }
 /* „Datum ändern" (#1616) beside it — empty until the session is finished, and
    collapsed then for the same reason as the cancel area. */
+/* It holds „Punkte eintragen" (#1630) too, so it spaces its own two links the
+   way the footer spaces its children. */
+.date-area { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 20px; }
 .date-area:empty { display: none; }
 .play-btn { margin-top: 8px; padding: 8px 14px; font-size: var(--text-md); }
 .trow.is-chosen {
@@ -7248,6 +7251,17 @@ a.k-tile:focus-visible,
    and fades the corner text, which would put the measured numbers above out by
    an amount nothing checks. */
 .gd-history { min-width: 0; }
+/* The game's group record and its „lower score wins" switch (#1630), at the
+   head of the history it was set in. */
+.gd-record { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; margin: 0 0 12px; }
+.gd-record__line { margin: 0; font-weight: 700; font-variant-numeric: tabular-nums; }
+.gd-record__dir { display: inline-flex; align-items: center; gap: 6px; font-size: var(--text-sm); color: var(--ink-soft); cursor: pointer; }
+/* The points sheet: one row per seat, name | ± | number. */
+.points-list { display: grid; gap: 8px; margin: 4px 0 16px; }
+.points-row { display: grid; grid-template-columns: minmax(0, 1fr) auto 7.5em; align-items: center; gap: 8px; }
+.points-row__name { font-weight: 700; overflow-wrap: anywhere; }
+.points-row__input { text-align: right; font-variant-numeric: tabular-nums; }
+.points-row__input[aria-invalid="true"] { border-color: var(--danger); }
 
 /* „Wer wie gewertet hat" (#1190): one tile per person behind the game's score —
    avatar, the mood their average rounds to, the average itself, the name.
@@ -7401,6 +7415,7 @@ a.k-tile:focus-visible,
   letter-spacing: 0.04em;
 }
 .stamp__win { margin-top: 3px; font-size: var(--text-sm); }
+.stamp__pts { margin-top: 3px; font-size: var(--text-sm); font-variant-numeric: tabular-nums; }
 /* Below the split the right page is a single column, so an auto-fill grid would
    put the whole Stempelkarte in one 1-wide stack — the tallest thing on the
    phone page again, which is what this component exists to stop. One snapping
@@ -11104,6 +11119,16 @@ kbd {
 .result-people__person { display: inline-flex; align-items: center; gap: 7px; }
 .result-people__person .avatar { width: 28px; height: 28px; font-size: 11px; /* glyph, not type */ }
 .result-people__name { font-size: var(--text-sm); font-weight: 700; }
+/* The evening's points (#1630), best first. An ordered list in the same row
+   rhythm as „Wer dabei war" above it: the order IS the content, so it reads
+   left to right and wraps like text rather than tiling. Names are inherited
+   ink; the „neuer Rekord" mark takes --good, which every design measures as
+   text against its page. */
+.result-points__list { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 0; padding: 0; list-style: none; }
+.result-points__line { display: inline-flex; align-items: baseline; gap: 6px; font-size: var(--text-sm); }
+.result-points__name { font-weight: 700; }
+.result-points__value { font-weight: 800; font-variant-numeric: tabular-nums; }
+.result-points__record { color: var(--good); font-weight: 800; font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.04em; }
 
 /* The WINNER SPOTLIGHT (#897). This screen used to open with the podium stage,
    and the ranked rows below it already state the same ranking with distribution

@@ -28,6 +28,7 @@ const {
   bgStatsPlayUrl,
 } = require('../public/js/bgstats');
 const { MAX_SESSION_GUESTS, GUEST_NAME_MAX } = require('../public/js/session-people');
+const { POINTS_MIN } = require('../public/js/point-records');
 
 // --- fixtures ---------------------------------------------------------------
 
@@ -195,6 +196,35 @@ test('the worst case this app can produce stays inside the URL budget', () => {
       return acc;
     }, []),
     winnerIds: [],
+    // Points on every seat (#1630), each at its widest — the minimum is the
+    // longest literal the bounds allow.
+    scores: Object.fromEntries(people.map((p, i) => [i % 2 ? 't' + i : 'unused' + i, POINTS_MIN])),
   });
+  assert.ok(url.includes(encodeURIComponent(`"score":${POINTS_MIN}`)), 'the worst case carries points');
   assert.ok(url.length <= BGSTATS_URL_MAX, `worst-case URL is ${url.length} chars`);
+});
+
+test('a session with points sends each player\'s score and the direction; teams share theirs (#1630)', () => {
+  const play = bgStatsPlay(model({
+    people: [anna, ben, dana],
+    parties: [teamOf('t1', anna, dana), solo(ben)],
+    scores: { t1: 40, m2: -2 },
+  }));
+  assert.equal(play.game.highestWins, true);
+  assert.equal('noPoints' in play.game, false);
+  assert.deepEqual(play.players.map((p) => [p.name, p.score]), [['Anna', 40], ['Ben', -2], ['Dana', 40]]);
+  // The winner stays what was recorded, never re-derived from the points.
+  assert.deepEqual(play.players.map((p) => p.winner), [true, false, false]);
+
+  const low = bgStatsPlay(model({ game: { ...game, lowScoreWins: true }, scores: { m1: 3 } }));
+  assert.equal(low.game.highestWins, false);
+  assert.deepEqual(low.players.map((p) => 'score' in p), [true, false, false], 'a seat with no points sends none');
+});
+
+test('a session without points keeps the winners-only payload byte for byte', () => {
+  const before = JSON.stringify(bgStatsPlay(model()));
+  assert.equal(JSON.stringify(bgStatsPlay(model({ scores: {} }))), before);
+  assert.equal(JSON.stringify(bgStatsPlay(model({ scores: undefined }))), before);
+  assert.equal(JSON.parse(before).game.noPoints, true);
+  assert.ok(!before.includes('"score"'));
 });
