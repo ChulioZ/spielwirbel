@@ -518,6 +518,39 @@ module.exports = function repoContract(repo) {
     assert.deepEqual(s.openSessions.map((o) => o.id), [made[4].id, made[3].id, made[2].id]);
   });
 
+  /* Two sessions at ONE stamp (#1622) — every session logged for the same past
+     day is stored at 20:00 local, so this is the ordinary case, not an edge.
+     On a tie the later-inserted session is the newer one (the round read's own
+     order, public/js/session-order.js), so both newest-first summaries must
+     pick it. The JSON side gets that from newestSessionsFirst; the SQL restates
+     it as `seq DESC`, and a descending sort whose tiebreak stayed ascending
+     picks the FIRST-entered session on both. */
+  test('listRoundSummaries: a createdAt tie goes to the later-inserted session', async () => {
+    const day = '2026-03-14T19:00:00.000Z';
+    const round = await freshRound({ name: 'Tie' });
+    const a = await repo.createGame(T, round.id, gameFields({ title: 'Entered first' }));
+    const b = await repo.createGame(T, round.id, gameFields({ title: 'Entered second' }));
+    for (const game of [a, b]) {
+      await repo.createSession(T, round.id, {
+        createdAt: day, gameIds: [game.id], votes: {}, chosenGameId: game.id, chosenAt: day,
+        finished: true, finishedAt: day, winnerIds: [], cancelled: false, cancelledAt: null, done: true,
+      });
+    }
+    const open = [];
+    for (let i = 0; i < 2; i++) {
+      open.push(await repo.createSession(T, round.id, {
+        createdAt: day, gameIds: [], votes: {}, chosenGameId: null, chosenAt: null,
+        finished: false, finishedAt: null, winnerIds: [], cancelled: false, cancelledAt: null, done: false,
+      }));
+    }
+    const s = (await repo.listRoundSummaries(T)).find((x) => x.id === round.id);
+    assert.equal(s.lastPlayed.gameTitle, 'Entered second');
+    assert.deepEqual(s.openSessions.map((o) => o.id), [open[1].id, open[0].id]);
+    const one = await repo.getRoundSummary(T, round.id);
+    assert.equal(one.lastPlayed.gameTitle, 'Entered second');
+    assert.deepEqual(one.openSessions.map((o) => o.id), [open[1].id, open[0].id]);
+  });
+
   test('listRoundSummaries is tenant-scoped and returns snapshots', async () => {
     const round = await freshRound();
     await repo.setBackground(T, round.id, { type: 'theme', page: '#eee', accent: '#111111' });

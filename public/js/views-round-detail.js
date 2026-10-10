@@ -339,9 +339,8 @@ async function showGameDetail(rid, gameId) {
 
   // Related sessions (those that drew this game) – newest first. Computed up
   // here, not at its own section below, because `sparse` needs it.
-  const related = round.sessions
-    .filter((s) => s.gameIds.includes(gameId))
-    .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+  const related = newestSessionsFirst(round.sessions
+    .filter((s) => s.gameIds.includes(gameId)));
 
   // A game nobody has touched yet: no cover, no rating, no session, no tags
   // (#256). Rendering the normal layout for it produced a page of near-empty

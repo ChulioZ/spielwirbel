@@ -130,6 +130,10 @@ test('the hub offers no resume for a split parent, and groups its tables', async
   assert.ok(group, 'the two tables are one evening, not two');
   assert.equal(group.querySelectorAll('.ticket--live').length, 2);
   assert.equal(group.querySelector('.split-group__head').getAttribute('href'), '/round/7/session/p1');
+  // Table 1 first. The tables share one stamp, and the newest-first walk that
+  // feeds the group hands them over last table first (#1622).
+  assert.deepEqual([...group.querySelectorAll('.ticket--live')].map((a) => a.getAttribute('href')),
+    ['/round/7/session/c1', '/round/7/session/c2']);
 });
 
 test('an unparented in-progress session keeps its own ticket', async (t) => {

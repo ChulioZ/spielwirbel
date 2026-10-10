@@ -198,9 +198,8 @@ function renderStartTab(round, activeGames) {
   // over), and the discard deletes the row.
   // The draw stays secret until everyone has rated, so this ticket deliberately
   // shows neither cover nor title — only how many games were drawn.
-  round.sessions
-    .filter((s) => !s.done && !s.cancelled)
-    .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)))
+  newestSessionsFirst(round.sessions
+    .filter((s) => !s.done && !s.cancelled))
     .forEach((session) => {
       const n = (session.gameIds || []).length;
       // One vocabulary since #655: every open session's votes live on the
@@ -264,8 +263,7 @@ function renderStartTab(round, activeGames) {
   );
   const groupKey = (s) => (s.parentSessionId && splitParents.has(s.parentSessionId) ? s.parentSessionId : null);
   const mounts = new Map(); // parent id -> the element its tables render into
-  inProgress
-    .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)))
+  newestSessionsFirst(inProgress)
     .forEach((session) => {
       const game = session.chosenGameId && round.games.find((g) => g.id === session.chosenGameId);
       const when = fmtDateTime(session.chosenAt || session.createdAt);
@@ -313,7 +311,10 @@ function renderStartTab(round, activeGames) {
         tickets.appendChild(group);
         mounts.set(parentId, group.querySelector('.split-group__body'));
       }
-      mounts.get(parentId).appendChild(ticket);
+      // Prepended: the loop runs newest-first, and a split's tables share one
+      // stamp, so they arrive last table first (#1622). Prepending puts table 1
+      // back on top inside the group, the order the Chronik nests them in.
+      mounts.get(parentId).prepend(ticket);
     });
 
   // "Last played" ticket: the newest finished session whose chosen game still
@@ -324,9 +325,8 @@ function renderStartTab(round, activeGames) {
      shell (O3.2) and stacked on a phone (O2.1): one wrapper, filled here and by
      the suggestion card below, dropped again if neither has anything to say. */
   const pair = cols ? cols.main.appendChild(h(`<div class="${forest ? 'forest-pair' : 'ocean-pair'}"></div>`)) : null;
-  const lastPlayed = round.sessions
-    .filter((s) => s.finished && s.chosenGameId && round.games.some((g) => g.id === s.chosenGameId))
-    .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)))[0];
+  const lastPlayed = newestSessionsFirst(round.sessions
+    .filter((s) => s.finished && s.chosenGameId && round.games.some((g) => g.id === s.chosenGameId)))[0];
   if (lastPlayed && ph) {
     const game = round.games.find((g) => g.id === lastPlayed.chosenGameId);
     const people = sessionPeople(round, lastPlayed);

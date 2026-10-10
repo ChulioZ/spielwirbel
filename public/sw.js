@@ -27,7 +27,7 @@
  * See .claude/rules/frontend-build-cache-busting.md.
  */
 
-const CACHE = 'spielwirbel-shell-v494';
+const CACHE = 'spielwirbel-shell-v495';
 
 // Everything the app needs to boot offline. Kept in sync with the <script>/<link>
 // order in index.html; each entry must be a real, servable path or install fails
@@ -140,6 +140,7 @@ const SHELL = [
   '/js/table-split.js',
   '/js/session-log.js',
   '/js/played-on.js',
+  '/js/session-order.js',
   '/js/avatar-policy.js',
   '/js/cover-policy.js',
   '/js/member-avatar.js',

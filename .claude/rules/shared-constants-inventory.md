@@ -663,8 +663,22 @@ picker offered — with one property the others lack: the conversion that makes
 the stored value correct runs where the ZONE is known, which is only the
 client, so the server validates a shape and a range and never converts. Its
 `toISOString` normalisation is load-bearing beyond tidiness: both backends
-order a round's sessions by the raw `createdAt` string (`lib/session-order.js`),
+order a round's sessions by the raw `createdAt` string (`public/js/session-order.js`),
 and an offset-carrying stamp would sort out of place among `Z` ones.
+
+**The twenty-seventh is `public/js/session-order.js`** (#1616, moved from `lib/`
+by #1622): the two orders a round's sessions are read in. `sortSessionsByDate`
+is what both repo backends apply when they assemble a round (chronological,
+insertion order on a tie); `newestSessionsFirst` is what every newest-first
+reader uses — the JSON backend's `lastPlayed`/`openSessions` summaries and a
+dozen frontend lists. It is logic rather than a value, and it earns the shape
+because the failure is a plausible wrong ORDER: a descending comparator written
+inline keeps tied stamps in their ascending insertion order, so two sessions
+logged for one past day (both 20:00 local) listed the first-entered one on top,
+with nothing red anywhere. Postgres cannot require it and restates the tiebreak
+as `ORDER BY createdAt DESC, seq DESC`; the repo contract pins both backends
+against one tied fixture. `hub-insights.js` takes it injected as
+`deps.newestFirst`, the shape that file's header explains.
 
 **Each new instance must be named above.** `test/rule-enumerations.test.js`
 asserts every `require('../public/js/…')` under `lib/routes/` and `lib/` appears

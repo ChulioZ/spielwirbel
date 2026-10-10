@@ -564,6 +564,8 @@ const frontendGlobals = {
   // with the server) and session-date.js (the field and the two sheets).
   PLAYED_ON_MIN: 'readonly', localDayKey: 'readonly', isPastDay: 'readonly', playedOnInstant: 'readonly',
   playedOnField: 'readonly', readPlayedOnDay: 'readonly', showSessionDateSheet: 'readonly',
+  // The two session orders (#1616, #1622): session-order.js, shared with the repo.
+  sortSessionsByDate: 'readonly', newestSessionsFirst: 'readonly',
   showLogSessionPicker: 'readonly', openResultPickerOnce: 'readonly', takeResultPickerOpen: 'readonly',
   showLinkProvider: 'readonly', attachLookup: 'readonly', searchProvider: 'readonly',
   lookupDetail: 'readonly',
