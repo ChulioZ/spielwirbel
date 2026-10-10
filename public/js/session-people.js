@@ -258,7 +258,8 @@ function sessionSeatCount(round, session) {
 function isContestSession(round, session, endingOf) {
   if (sessionPeople(round, session).length < 2) return false;
   const ending = endingOf(session);
-  return ending !== 'noWinner' && ending !== 'ongoing';
+  // null: not a PLAYED session (cancelled, split) — no ending, so no contest.
+  return ending !== null && ending !== 'noWinner' && ending !== 'ongoing';
 }
 
 if (typeof module !== 'undefined' && module.exports) {

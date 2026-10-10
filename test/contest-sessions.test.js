@@ -59,6 +59,11 @@ test('one person, „Kein Sieger" and „Fortsetzung folgt" are still no contest
   assert.equal(isContestSession(r, wholeTeam({ ending: 'noWinner' }), sessionEnding), false);
   assert.equal(isContestSession(r, wholeTeam({ ending: 'ongoing' }), sessionEnding), false);
   assert.equal(isContestSession(r, wholeTeam({ ending: 'lost' }), sessionEnding), true, '„Verloren" stays contested');
+  // A session that was not PLAYED has no ending at all — the predicate itself
+  // refuses it, rather than trusting every caller's `finished` filter.
+  assert.equal(isContestSession(r, sess({ cancelled: true }), sessionEnding), false, 'cancelled');
+  assert.equal(isContestSession(r, sess({ childSessionIds: ['c1'] }), sessionEnding), false, 'split parent');
+  assert.equal(isContestSession(r, sess({ ending: undefined }), sessionEnding), true, 'unrecorded stays contested');
 });
 
 test('a whole-table team win counts as a contested win for every member', () => {
