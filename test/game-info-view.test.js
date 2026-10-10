@@ -96,6 +96,9 @@ function bootApp(t_, { providerInfo } = {}) {
    (a game with no provider data has no rows in the disclosure at all). */
 const glance = (dom) => dom.app.querySelector('.gd-head .gd-facts');
 const metaBody = (dom) => dom.app.querySelector('.gd-more__body .game-info__body');
+// The provider pills only. Since #1627 a game with no playing time carries one
+// more pill — the empty invitation to set one — which is not provider metadata.
+const providerPills = (dom) => (glance(dom) ? glance(dom).querySelectorAll('.fact:not(.fact--empty)').length : 0);
 const pillOf = (root, label) => [...(root ? root.querySelectorAll('.fact') : [])]
   .find((f) => f.querySelector('.fact__label')
     && f.querySelector('.fact__label').textContent === label);
@@ -151,7 +154,7 @@ test('the card carries the weight pill and the disclosure the BGG attribution', 
 test('a storefront game gets no section and fires no backfill request', async (t_) => {
   const { dom, infoCalls } = bootApp(t_);
   await dom.call('showGameDetail', RID, 'g2');
-  assert.equal(glance(dom), null, 'no glance pills for a game with no provider metadata');
+  assert.equal(providerPills(dom), 0, 'no glance pills for a game with no provider metadata');
   assert.equal(metaBody(dom), null, 'and no reference rows in the disclosure either');
   assert.equal(infoCalls.length, 0);
 });
@@ -179,7 +182,7 @@ test('a backfill that finds nothing leaves the page without the section', async 
   await dom.call('showGameDetail', RID, 'g3');
   await new Promise((r) => setTimeout(r, 0));
   assert.equal(infoCalls.length, 1);
-  assert.equal(glance(dom), null);
+  assert.equal(providerPills(dom), 0);
   assert.equal(metaBody(dom), null);
 });
 

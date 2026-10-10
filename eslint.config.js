@@ -118,6 +118,7 @@ const frontendGlobals = {
   renderSetupAddons: 'readonly',
   hasGameInfo: 'readonly', gameInfoButton: 'readonly', openGameInfoSheet: 'readonly',
   gameGlanceFacts: 'readonly', gameInfoRest: 'readonly', playtimeText: 'readonly',
+  playtimeRangeText: 'readonly',
   wantsGameInfo: 'readonly', mergeGameInfo: 'readonly',
   foldGameInfoList: 'readonly', refreshShelfGameInfo: 'readonly',
   // username-policy.js
@@ -159,6 +160,7 @@ const frontendGlobals = {
   // draw-pool.js's metadata filters (issue #725) — also required by lib/draw.js
   // and lib/routes/sessions.js
   fitsMetadataFilters: 'readonly', metadataFilterOptions: 'readonly',
+  gamePlaytime: 'readonly', PLAYTIME_OVERRIDE_MAX: 'readonly',
   hasMetadataFilterOptions: 'readonly', normalizeMetadataFilters: 'readonly',
   countMetadataFilters: 'readonly', isFiniteNum: 'readonly',
   PLAYTIME_CHOICES: 'readonly', AGE_CHOICES: 'readonly', WEIGHT_CHOICES: 'readonly',
@@ -476,7 +478,10 @@ const frontendGlobals = {
   openPlayersPopover: 'readonly', openOwnersPopover: 'readonly',
   openTagsPopover: 'readonly', openImagePopover: 'readonly',
   openExpansionEditor: 'readonly', saveExpansions: 'readonly', showAddGame: 'readonly',
+  editorRowButton: 'readonly', editorActions: 'readonly',
   setExpansionsCap: 'readonly',
+  // game-editor-playtime.js (#1627) — the playing-time editor
+  openPlaytimePopover: 'readonly', playtimeOverrideFrom: 'readonly',
   // saved-filters.js (#1328) — the hub chips, the setup save control, the
   // Einstellungen list
   setSavedFilterLimits: 'readonly', savedFilterPrefill: 'readonly',

@@ -469,6 +469,8 @@ test('the editors\' inner layout rules are shared by both presentations', () => 
   for (const sel of [
     ':is(.popover--players, .editor--players) .pp-row',
     ':is(.popover--players, .editor--players) .pp-row .input',
+    ':is(.popover--playtime, .editor--playtime) .pp-row',
+    ':is(.popover--playtime, .editor--playtime) .pp-row .input',
     ':is(.popover--tags, .editor--tags) .pp-row',
     ':is(.popover--tags, .editor--tags) .pp-row .input',
     ':is(.popover--tags, .editor--tags) .filter-chips',
@@ -482,6 +484,19 @@ test('the editors\' inner layout rules are shared by both presentations', () => 
   assert.ok(editor, '.editor rule not found in styles.css');
   assert.match(editor, /display:\s*flex/);
   assert.match(editor, /flex-direction:\s*column/);
+});
+
+/* The two numeric editors put two fields AND „Übernehmen" on one row inside a
+   popover capped at 300px. In German that row measured 317px (players) and 341px
+   (playtime, #1627), so the button hung past the card's edge. jsdom has no
+   layout, so the guard is the rule that lets the row wrap. */
+test('the numeric editors\' rows may wrap, so the apply button stays inside the popover', () => {
+  for (const sel of [
+    ':is(.popover--players, .editor--players) .pp-row',
+    ':is(.popover--playtime, .editor--playtime) .pp-row',
+  ]) {
+    assert.match(bodyOf(sel) || '', /flex-wrap:\s*wrap/, `${sel} must wrap`);
+  }
 });
 
 /* The owners editor (#971) is the fifth `openEditor` variant. It gets the tags

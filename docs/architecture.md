@@ -945,6 +945,10 @@ public/
                      views-round-detail.js, whose remaining seam ran INSIDE
                      showGameDetail; each takes one explicit context instead of
                      closing over that function's scope
+    game-editor-playtime.js  the game page's playing-time editor (#1627):
+                     a round's own min–max minutes, stored beside BGG's pair
+                     as `playtimeOverride` and read everywhere through
+                     `gamePlaytime` (draw-pool.js)
     views-round-detail.js game detail, plus the wish-list price block it
                           renders
     views-round-settings.js round Einstellungen screen: the round-level actions

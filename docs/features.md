@@ -74,7 +74,12 @@ What the app does, in detail. For a short overview see the
   them as their own section, so a voter facing an unfamiliar game sees more than
   a cover. Playing time is shown as a **range** wherever the bounds differ
   (`20–600 Min.`), because that spread is what tells you a game is a campaign
-  rather than a filler. BGG's **community rating** is shown on the detail page
+  rather than a filler. A round can **correct the playing time by hand** on the
+  game's page (tap the pill) when BGG's figure is not its own — a long setup, a
+  variant, a slow table — or set one for a game BGG knows nothing about; the
+  duration filter, the draw, both voting screens and the Regal then all use the
+  round's number, the page notes „eigene Angabe · BGG: …" beside it, and one tap
+  goes back to BGG's value. A later BGG refresh never overwrites the correction. BGG's **community rating** is shown on the detail page
   only, and never on either voting screen — a score next to a ballot anchors the
   vote. BGG's *rank* and *geek rating* are not imported at all, and neither is
   the game's **description** — publisher blurbs turned out to put readers off
