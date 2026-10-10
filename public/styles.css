@@ -8060,7 +8060,10 @@ a.k-tile:focus-visible,
    (max-width/min-width above) stay popover-only; every inner layout rule below
    is shared via :is(), which keeps the (0,2,0) specificity these already had. */
 .editor { display: flex; flex-direction: column; gap: 6px; }
-:is(.popover--players, .editor--players) .pp-row { display: flex; align-items: center; gap: 8px; }
+/* `flex-wrap` because the popover is capped at 300px and „Übernehmen" plus two
+   fields measured 317px in German — the button hung 26px past the card's edge.
+   Wrapping drops it to its own line only where it does not fit. */
+:is(.popover--players, .editor--players) .pp-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 :is(.popover--players, .editor--players) .pp-row .input { width: 68px; }
 /* The playing-time editor (#1627) is the players editor's shape with wider
    fields — minutes run to four digits where seats run to two. The row wraps:
