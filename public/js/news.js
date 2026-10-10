@@ -48,6 +48,52 @@
 // AFTER, which is the exact unearned interruption this design exists to avoid.
 const NEWS = [
   /*
+   * #1630, points and records. A capability that did not exist: a session
+   * recorded who won and nothing per player, so beating your own best lived on
+   * paper. Says where to enter them, the record mark, where the round's record
+   * is, and that the winner is still tapped separately.
+   */
+  {
+    revision: '2026-10-12',
+    kind: 'new',
+    de: {
+      title: 'Punkte und Rekorde',
+      body: 'Auf der Ergebnisseite einer gespielten Session gibt es jetzt „Punkte eintragen“: die Punktzahl jeder Person, bei Teams eine pro Team, auch negativ. Wer seinen bisherigen Bestwert in diesem Spiel schlägt, bekommt „Neuer Rekord“, und die Seite des Spiels zeigt den Rekord eurer Runde. Gewinnt bei einem Spiel die niedrigste Punktzahl, stellst du das dort um. Wer gewonnen hat, tippt ihr weiter wie bisher an.',
+    },
+    en: {
+      title: 'Points and records',
+      body: 'A played session’s results page now has “Enter points”: each player’s score, one per team when you played in teams, negatives included. Beat your own best in that game and you get a “New record”, and the game’s page shows your round’s record. If the lowest score wins in a game, switch that on its page. Who won is still tapped in as before.',
+    },
+    es: {
+      title: 'Puntos y récords',
+      body: 'La página de resultados de una sesión jugada tiene ahora «Anotar puntos»: la puntuación de cada persona, una por equipo si jugasteis en equipos, también en negativo. Si superas tu mejor marca en ese juego, aparece «Nuevo récord», y la página del juego muestra el récord de vuestro grupo. Si en un juego gana la puntuación más baja, cámbialo en su página. Quién ganó se sigue marcando como antes.',
+    },
+    fr: {
+      title: 'Points et records',
+      body: 'La page de résultats d’une session jouée propose désormais « Saisir les points » : le score de chaque personne, un par équipe si vous avez joué en équipes, négatifs compris. Battez votre meilleur score à ce jeu et vous obtenez « Nouveau record », et la page du jeu affiche le record de votre groupe. Si le score le plus bas gagne à un jeu, changez-le sur sa page. Qui a gagné se coche toujours comme avant.',
+    },
+    it: {
+      title: 'Punti e record',
+      body: 'La pagina dei risultati di una sessione giocata ha ora «Inserisci i punti»: il punteggio di ogni persona, uno per squadra se avete giocato a squadre, anche negativo. Se batti il tuo record in quel gioco compare «Nuovo record», e la pagina del gioco mostra il record del vostro gruppo. Se in un gioco vince il punteggio più basso, cambialo nella sua pagina. Chi ha vinto si segna come prima.',
+    },
+    nl: {
+      title: 'Punten en records',
+      body: 'De resultatenpagina van een gespeelde sessie heeft nu “Punten invullen”: de score van ieder, één per team als jullie in teams speelden, ook negatief. Versla je je eigen beste score in dat spel, dan zie je “Nieuw record”, en de pagina van het spel toont het record van jullie groep. Wint bij een spel de laagste score, zet dat dan om op de pagina van het spel. Wie won tik je aan zoals altijd.',
+    },
+    pt: {
+      title: 'Pontos e recordes',
+      body: 'A página de resultados de uma sessão jogada agora tem “Registrar pontos”: a pontuação de cada pessoa, uma por equipe se vocês jogaram em equipes, incluindo negativos. Se você bater o seu melhor nesse jogo, aparece “Novo recorde”, e a página do jogo mostra o recorde do seu grupo. Se a menor pontuação vence em um jogo, mude isso na página dele. Quem ganhou continua sendo marcado como antes.',
+    },
+    fi: {
+      title: 'Pisteet ja ennätykset',
+      body: 'Pelatun session tulossivulla on nyt ”Kirjaa pisteet”: jokaisen pisteet, tiimeissä pelattaessa yhdet tiimiä kohden, myös negatiiviset. Kun lyöt oman parhaasi siinä pelissä, saat ”Uusi ennätys”, ja pelin sivu näyttää ryhmänne ennätyksen. Jos pelissä voittaa pienin pistemäärä, vaihda se pelin sivulla. Voittaja merkitään kuten ennenkin.',
+    },
+    ko: {
+      title: '점수와 기록',
+      body: '플레이한 세션의 결과 페이지에 이제 “점수 입력”이 있어요. 각자의 점수를 입력하고, 팀으로 했다면 팀마다 하나씩, 음수도 돼요. 그 게임에서 자기 최고 점수를 넘기면 “새 기록”이 표시되고, 게임 페이지에서 모임의 기록을 볼 수 있어요. 가장 낮은 점수가 이기는 게임이라면 게임 페이지에서 바꿔 주세요. 승자는 지금처럼 따로 눌러서 정해요.',
+    },
+  },
+  /*
    * #1616, logging a past session. A capability that did not exist: every
    * session was dated „now", so a group that found the app midway could not
    * get its earlier evenings into the Chronik. Says where both entry points

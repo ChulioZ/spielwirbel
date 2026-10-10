@@ -688,6 +688,16 @@ row first); the repo contract pins both backends against a tied and an undated
 fixture. `hub-insights.js` takes it injected as
 `deps.newestFirst`, the shape that file's header explains.
 
+**The twenty-eighth is `public/js/point-records.js`** (#1630): `POINTS_MIN`,
+`POINTS_MAX` and `isValidPoints`, the bounds a player's points may take on a
+finished session. The plain offer/validate shape — the points sheet accepts what
+`PUT …/sessions/:sid/scores` accepts, so a drifted server copy would 400 a value
+the sheet let through. Named "points" rather than "score" on purpose:
+`vote-score.js` already owns `SCORE_MIN` in the same global scope, and a second
+meaning under one word is how a reader picks up the wrong one. The derivation in
+the same file (bests, records) has no server reader — it rides along because it
+is the same feature's pure half, not because it is shared.
+
 **Each new instance must be named above.** `test/rule-enumerations.test.js`
 asserts every `require('../public/js/…')` under `lib/routes/` and `lib/` appears
 in it, because the list had already gone stale by one before anyone noticed. The

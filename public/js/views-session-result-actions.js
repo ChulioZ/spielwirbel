@@ -195,12 +195,25 @@ function resultChangeDate(rs) {
   showSessionDateSheet(rs.round, rs.session, rs.reopen);
 }
 
+// Enter or change this finished session's points (#1630). Re-renders from the
+// server's view, since a record mark depends on every session of the game.
+function resultEditPoints(rs) {
+  showSessionPointsSheet(rs.round, rs.session, rs.reopen);
+}
+
 function resultRenderCancel(rs) {
   const { cancelWrap, dateWrap } = rs;
   // „Datum ändern" (#1616) beside it, for a finished session only: a date means
   // something once a game was played, and a running session's date is today.
+  // „Punkte eintragen" (#1630) ahead of it, on the same condition: points are
+  // about a game that was played.
   if (dateWrap) {
     dateWrap.innerHTML = '';
+    if (rs.finished && rs.chosenId) {
+      const pts = h(`<button class="link-btn" type="button">${iconText('ti-target', sessionPointsLabel(rs.session))}</button>`);
+      pts.addEventListener('click', () => resultEditPoints(rs));
+      dateWrap.appendChild(pts);
+    }
     if (rs.finished) {
       const btn = h(`<button class="link-btn" type="button">${iconText('ti-calendar-event', t('result.changeDate'))}</button>`);
       btn.addEventListener('click', () => resultChangeDate(rs));
@@ -250,7 +263,10 @@ function resultRenderFoot(rs) {
   if (people.length > 1) {
     more.unshift({ icon: 'ti-user-minus', label: t('session.removeEntry'), kind: 'destructive', run: () => showRemovePersonSheet(round, session, rs.reopen) });
   }
-  // A correction, not a loss — so `edit`, which sorts first (#1616).
+  // A correction, not a loss — so `edit`, which sorts first (#1616, #1630).
+  if (rs.finished && rs.chosenId) {
+    more.push({ icon: 'ti-target', label: sessionPointsLabel(session), kind: 'edit', run: () => resultEditPoints(rs) });
+  }
   if (rs.finished) {
     more.push({ icon: 'ti-calendar-event', label: t('result.changeDate'), kind: 'edit', run: () => resultChangeDate(rs) });
   }

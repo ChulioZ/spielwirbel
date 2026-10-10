@@ -571,6 +571,12 @@ const frontendGlobals = {
   playedOnField: 'readonly', readPlayedOnDay: 'readonly', showSessionDateSheet: 'readonly',
   // The two session orders (#1616, #1622): session-order.js, shared with the repo.
   sortSessionsByDate: 'readonly', newestSessionsFirst: 'readonly',
+  // A finished session's points (#1630): point-records.js (pure, shared with the
+  // route) and session-points.js (the sheet and the result's block).
+  POINTS_MIN: 'readonly', POINTS_MAX: 'readonly', isValidPoints: 'readonly', pointsBeat: 'readonly',
+  gamePointRecords: 'readonly', sessionPointLines: 'readonly',
+  parsePointsInput: 'readonly', showSessionPointsSheet: 'readonly', sessionPointsLabel: 'readonly',
+  renderSessionPoints: 'readonly', playTopPointsText: 'readonly', renderGamePointRecord: 'readonly',
   showLogSessionPicker: 'readonly', openResultPickerOnce: 'readonly', takeResultPickerOpen: 'readonly',
   showLinkProvider: 'readonly', attachLookup: 'readonly', searchProvider: 'readonly',
   lookupDetail: 'readonly',

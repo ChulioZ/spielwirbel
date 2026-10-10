@@ -692,11 +692,24 @@ What the app does, in detail. For a short overview see the
   tables, and each table links back. The proposals are computed once, on the
   server, and never move afterwards, so everyone in the room is looking at the
   same split.
+- **Punkte eintragen** (enter points, #1630) – a played session can record each
+  player's score: one field per person, or per team when the session had teams
+  (a team's score never becomes a member's personal best). Whole numbers,
+  negatives allowed; a „±" button gives a phone keypad its missing minus. The
+  result lists the points best first, and a score that beats that member's best
+  in this game's earlier sessions (by date) is marked **„Neuer Rekord"** — a
+  first score or a tie is not. The game page shows the round's **record** (score,
+  who, when) above its play history, each scored stamp names that evening's
+  best, and the switch **„Niedrigere Punktzahl gewinnt"** there flips bests,
+  records and the order for golf-style games. Points never decide the winner,
+  which is still tapped as before. Bests and records are derived from the
+  sessions, never stored, so deleting or re-dating a session corrects them.
 - **Push a play to BG Stats** – a finished session can be handed to
   [BG Stats](https://www.bgstatsapp.com/) as a play: the game, the date, who took
   part and who won, as one link the user taps on their own device (nothing is
   sent server-side, and ratings deliberately do not travel — BG Stats has no
-  per-player rating field). Off by default and enabled per account under
+  per-player rating field). A session with points also sends each player's score
+  (a team's to each of its members) and the game's direction. Off by default and enabled per account under
   **Konto → BG Stats**, because a website cannot tell whether the app is
   installed and the push happens on the tapping person's own device.
 - **Ratings on demand** – a game's rating is always computed live from all

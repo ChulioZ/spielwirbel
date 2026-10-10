@@ -1941,6 +1941,42 @@ module.exports = function repoContract(repo) {
     assert.equal(kept.finishedAt, at);
   });
 
+  // A finished session's points (#1630). Absent-key parity both ways: an empty
+  // object CLEARS the key rather than storing {}, un-finishing keeps the points,
+  // and removing the played game takes them with its result. lowScoreWins on a
+  // game is the same shape — `false` deletes it.
+  test('setSessionScores stores, clears and survives un-finishing; lowScoreWins clears to absence', async () => {
+    const round = await freshRound();
+    const g = await repo.createGame(T, round.id, gameFields());
+    const session = await repo.createSession(T, round.id, {
+      createdAt: 't', gameIds: [g.id], votes: {}, chosenGameId: g.id, chosenAt: 't',
+      finished: true, finishedAt: 't', winnerIds: [], cancelled: false, cancelledAt: null, done: true,
+    });
+    const read = async () => (await repo.getRound(T, round.id)).sessions[0];
+    assert.equal('scores' in (await read()), false, 'a session grows no key on its own');
+
+    const saved = await repo.setSessionScores(T, round.id, session.id, { m1: 42, m2: -3 }, { at: 'now', type: 'scored' });
+    assert.deepEqual(saved.scores, { m1: 42, m2: -3 });
+    assert.deepEqual(saved.events.map((e) => e.type), ['scored']);
+    assert.deepEqual((await read()).scores, { m1: 42, m2: -3 });
+
+    await repo.finishSession(T, round.id, session.id, { finished: false, winnerIds: [] });
+    assert.deepEqual((await read()).scores, { m1: 42, m2: -3 }, 'un-finishing keeps the points');
+
+    await repo.setSessionScores(T, round.id, session.id, {});
+    assert.equal('scores' in (await read()), false, 'an empty object clears the key');
+
+    await repo.setSessionScores(T, round.id, session.id, { m1: 7 });
+    await repo.removeSessionGame(T, round.id, session.id, g.id);
+    assert.equal('scores' in (await read()), false, 'removing the played game drops its points');
+    assert.equal(await repo.setSessionScores(T, round.id, 'missing', { m1: 1 }), null);
+
+    await repo.updateGame(T, round.id, g.id, { lowScoreWins: true });
+    assert.equal((await repo.getGame(T, round.id, g.id)).lowScoreWins, true);
+    await repo.updateGame(T, round.id, g.id, { lowScoreWins: false });
+    assert.equal('lowScoreWins' in (await repo.getGame(T, round.id, g.id)), false, 'false is absence');
+  });
+
   // How a played session ended when nobody won (#1038). Like `guests` below it
   // lives inside the blob, so the absent-key parity is the thing that can break
   // silently — and here there is a second half the guests case does not have:

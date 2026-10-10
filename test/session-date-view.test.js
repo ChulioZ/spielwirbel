@@ -159,9 +159,9 @@ test('a finished session offers „Datum ändern" and PATCHes the new day', asyn
   dom.set('fetchRoundFresh', async () => round);
   recordApi(() => ({}));
   await dom.call('showResults', round, session, round.games);
-  const btn = [...dom.app.querySelectorAll('.date-area button')];
+  // The area also holds „Punkte eintragen" since #1630.
+  const btn = [...dom.app.querySelectorAll('.date-area button')].filter((b) => /Datum ändern/.test(b.textContent));
   assert.equal(btn.length, 1, 'the footer offers the change');
-  assert.match(btn[0].textContent, /Datum ändern/);
 
   btn[0].click();
   const sheet = dom.document.querySelector('.sheet');
