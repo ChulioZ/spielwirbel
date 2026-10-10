@@ -30,8 +30,8 @@ async function addGame(rid, title = 'Azul') {
 const PAST = '2026-03-01T20:00:00.000Z';
 const log = (rid, body) => request(app).post(`/api/rounds/${rid}/sessions`).send(body);
 const finish = (rid, sid, body) => request(app).post(`/api/rounds/${rid}/sessions/${sid}/finish`).send(body);
-const redate = (rid, sid, playedOn) =>
-  request(app).patch(`/api/rounds/${rid}/sessions/${sid}/date`).send({ playedOn });
+const redate = (rid, sid, playedOn, extra = {}) =>
+  request(app).patch(`/api/rounds/${rid}/sessions/${sid}/date`).send({ playedOn, ...extra });
 const roundOf = (rid) => request(app).get(`/api/rounds/${rid}`).then((r) => r.body);
 
 test('a logged session is created FINISHED on its own day', async () => {
@@ -153,4 +153,76 @@ test('a session logged LAST but played FIRST reads back first, not newest', asyn
   await finish(round.id, today.id, {});
   await redate(round.id, today.id, '2026-02-01T20:00:00.000Z');
   assert.deepEqual((await roundOf(round.id)).sessions.map((s) => s.id), [today.id, past.id]);
+});
+
+// ---- The optional time (#1629) ----
+
+const summaryOf = async (rid) =>
+  (await request(app).get('/api/rounds').then((r) => r.body)).find((r) => r.id === rid);
+
+test('a logged session records whether a time was entered — as a boolean either way', async () => {
+  const round = await createRound(request);
+  const game = await addGame(round.id);
+  const plain = (await log(round.id, { gameId: game.id, playedOn: PAST })).body.session;
+  assert.equal(plain.dateOnly, true, 'a pre-#1629 client sends no flag: the 20:00 stand-in');
+  const timed = (await log(round.id, { gameId: game.id, playedOn: PAST, dateOnly: false })).body.session;
+  assert.equal(timed.dateOnly, false);
+  // Lenient like the rest of this schema: anything but `false` is date-only.
+  const odd = (await log(round.id, { gameId: game.id, playedOn: PAST, dateOnly: 'no' })).body.session;
+  assert.equal(odd.dateOnly, true);
+  // An ordinary start grows no key at all.
+  const now = (await log(round.id, { gameId: game.id })).body.session;
+  assert.equal('dateOnly' in now, false);
+});
+
+test('a TODAY session with an entered time is logged, born finished at that time', async () => {
+  const round = await createRound(request);
+  const game = await addGame(round.id);
+  const earlier = new Date(Date.now() - 2 * 3600000);
+  earlier.setSeconds(0, 0);
+  const res = await log(round.id, { gameId: game.id, playedOn: earlier.toISOString(), dateOnly: false });
+  assert.equal(res.status, 201);
+  assert.equal(res.body.session.finished, true);
+  assert.equal(res.body.session.createdAt, earlier.toISOString());
+  assert.equal(res.body.session.events[0].type, 'logged');
+});
+
+test('re-dating writes the marker: with a time, without one, and back', async () => {
+  const round = await createRound(request);
+  const game = await addGame(round.id);
+  const s = (await log(round.id, { gameId: game.id, playedOn: PAST })).body.session;
+  const timed = await redate(round.id, s.id, '2026-03-01T18:30:00.000Z', { dateOnly: false });
+  assert.equal(timed.status, 200);
+  assert.equal(timed.body.dateOnly, false);
+  assert.equal(timed.body.createdAt, '2026-03-01T18:30:00.000Z');
+  const plain = await redate(round.id, s.id, PAST);
+  assert.equal(plain.body.dateOnly, true, 'no flag: the stand-in again');
+  // …and an app-stamped session moved to a day with no time becomes date-only.
+  const other = (await log(round.id, { gameId: game.id })).body.session;
+  await finish(round.id, other.id, {});
+  assert.equal((await redate(round.id, other.id, PAST, { dateOnly: true })).body.dateOnly, true);
+});
+
+test('a dateOnly that is not a boolean is a 400 on the re-date', async () => {
+  const round = await createRound(request);
+  const game = await addGame(round.id);
+  const s = (await log(round.id, { gameId: game.id, playedOn: PAST, dateOnly: false })).body.session;
+  assert.equal((await redate(round.id, s.id, PAST, { dateOnly: 'yes' })).status, 400);
+  assert.equal((await roundOf(round.id)).sessions.find((x) => x.id === s.id).dateOnly, false, 'nothing moved');
+});
+
+test('the home summary flags an UN-finished date-only session, and only that one', async () => {
+  const round = await createRound(request);
+  const game = await addGame(round.id);
+  const plain = (await log(round.id, { gameId: game.id, playedOn: PAST })).body.session;
+  const timed = (await log(round.id, { gameId: game.id, playedOn: PAST, dateOnly: false })).body.session;
+  const running = (await log(round.id, { gameId: game.id })).body.session;
+  // „Doch nicht gespielt" brings a logged session back into the resume zone.
+  await finish(round.id, plain.id, { finished: false });
+  await finish(round.id, timed.id, { finished: false });
+  const open = new Map((await summaryOf(round.id)).openSessions.map((s) => [s.id, s]));
+  assert.equal(open.size, 3, 'all three are open');
+  assert.equal(open.get(plain.id).dateOnly, true);
+  assert.equal('dateOnly' in open.get(timed.id), false, 'a time was entered');
+  assert.equal('dateOnly' in open.get(running.id), false, 'stamped by the app');
 });

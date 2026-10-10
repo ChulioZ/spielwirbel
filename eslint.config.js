@@ -568,7 +568,11 @@ const frontendGlobals = {
   // A session's day when it is not today (#1616): played-on.js (pure, shared
   // with the server) and session-date.js (the field and the two sheets).
   PLAYED_ON_MIN: 'readonly', localDayKey: 'readonly', isPastDay: 'readonly', playedOnInstant: 'readonly',
-  playedOnField: 'readonly', readPlayedOnDay: 'readonly', showSessionDateSheet: 'readonly',
+  // …and its optional time (#1629): the field's second input, the date-only
+  // marker every session date reads through, and its formatter (i18n.js).
+  localTimeKey: 'readonly', isFuturePlayedOn: 'readonly', isDateOnlySession: 'readonly',
+  fmtSessionWhen: 'readonly',
+  playedOnField: 'readonly', readPlayedOn: 'readonly', showSessionDateSheet: 'readonly',
   // The two session orders (#1616, #1622): session-order.js, shared with the repo.
   sortSessionsByDate: 'readonly', newestSessionsFirst: 'readonly',
   // A finished session's points (#1630): point-records.js (pure, shared with the

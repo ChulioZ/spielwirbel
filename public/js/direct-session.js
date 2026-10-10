@@ -73,17 +73,20 @@ function startDirectSession(round, game, opts = {}) {
   sheet.querySelector('#addonMount').replaceWith(addons);
   // „Wann?" (#1616): today by default, so playing tonight is exactly the sheet
   // it always was. A past day logs the evening instead — created finished on
-  // that day, with no running session in between.
+  // that day, with no running session in between. So does a TIME (#1629), on
+  // any day: „we played at 18:00" is an evening that already happened.
   const dateField = playedOnField(opts.dayKey);
   sheet.querySelector('#playedOnMount').replaceWith(dateField);
+  const logs = () => isPastDay(dateField.value()) || !!dateField.time();
   const relabel = () => {
-    const past = isPastDay(dateField.value());
-    sheet.querySelector('#startDirect').innerHTML = past
+    sheet.querySelector('#startDirect').innerHTML = logs()
       ? `<i class="ti ti-calendar-plus" aria-hidden="true"></i> ${esc(t('directPlay.log'))}`
       : `<i class="ti ti-player-play" aria-hidden="true"></i> ${esc(t('directPlay.start'))}`;
   };
-  dateField.input.addEventListener('change', relabel);
-  dateField.input.addEventListener('input', relabel);
+  [dateField.input, dateField.timeInput].forEach((el) => {
+    el.addEventListener('change', relabel);
+    el.addEventListener('input', relabel);
+  });
   relabel();
 
   const dismiss = () => closeSheet();
@@ -106,18 +109,22 @@ function startDirectSession(round, game, opts = {}) {
 
   sheet.querySelector('#startDirect').addEventListener('click', async () => {
     if (joining.size === 0) return toast(t('startSession.toast.noMembers'));
-    const day = readPlayedOnDay(dateField);
-    if (!day) return;
-    // Only a PAST day is sent: today stays the ordinary direct play, stamped
-    // now by the server, with its feed line and its running results screen.
-    const playedOn = isPastDay(day) ? playedOnInstant(day) : null;
+    const picked = readPlayedOn(dateField);
+    if (!picked) return;
+    // Only a PAST day or an entered time is sent: today with no time stays the
+    // ordinary direct play, stamped now by the server, with its feed line and
+    // its running results screen. `dateOnly` says whether the instant is the
+    // 20:00 stand-in (#1629).
+    const playedOn = isPastDay(picked.day) || picked.time
+      ? playedOnInstant(picked.day, new Date(), picked.time)
+      : null;
     try {
       const data = await api('POST', `/api/rounds/${round.id}/sessions`, {
         gameId: game.id,
         memberIds: [...joining],
         guests: guestList.guests, // names only; the server mints the ids (#458)
         teams: teamPicker.teamPayload(), // guests by POSITION in `guests` (#575)
-        ...(playedOn ? { playedOn } : {}),
+        ...(playedOn ? { playedOn, dateOnly: !picked.time } : {}),
       });
       // A logged evening lands with the winner picker OPEN: the one question
       // left about it is who won.

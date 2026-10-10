@@ -107,6 +107,15 @@ function fmtDate(iso) {
   return new Date(iso).toLocaleDateString(localeTag(locale), { dateStyle: 'medium' });
 }
 
+// When a SESSION happened (#1629): date and time, or the date alone for a
+// session whose date was entered without a time — its stored 20:00 is a
+// stand-in nobody entered (isDateOnlySession, played-on.js, which loads after
+// this file and is only read at call time). `iso` defaults to the session's
+// own stamp; a summary row passes its `at`.
+function fmtSessionWhen(session, iso = session.createdAt) {
+  return isDateOnlySession(session) ? fmtDate(iso) : fmtDateTime(iso);
+}
+
 // Month + year, for timeline group labels ("Juli 2026").
 function fmtMonth(iso) {
   return new Date(iso).toLocaleString(localeTag(locale), { month: 'long', year: 'numeric' });

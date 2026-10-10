@@ -155,7 +155,7 @@ function oceanResumeNotice({ round, session }) {
   // A running vote is about the ROUND (the draw is secret), a result waiting to
   // be entered is about its game — so the round moves into the meta line there.
   const title = voting ? round.name : session.gameTitle || t('round.inProgressDeciding');
-  const meta = [voting ? '' : round.name, fmtDateTime(session.at),
+  const meta = [voting ? '' : round.name, fmtSessionWhen(session, session.at),
     voting ? t('round.liveVote') : t('home.resume.result')].filter(Boolean).join(' · ');
   return h(`<a class="ocean-notice">
        <span class="ocean-notice__bubble" aria-hidden="true"><i class="ti ti-player-play"></i></span>

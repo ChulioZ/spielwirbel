@@ -223,7 +223,7 @@ function brueckeResumeNotice({ round, session }) {
   const title = voting
     ? `${t('round.liveLabel')} · ${round.name}`
     : session.gameTitle || t('round.inProgressDeciding');
-  const meta = [voting ? '' : round.name, fmtDateTime(session.at)].filter(Boolean).join(' · ');
+  const meta = [voting ? '' : round.name, fmtSessionWhen(session, session.at)].filter(Boolean).join(' · ');
   return h(`<a class="bruecke-notice">
        <span class="bruecke-notice__kicker">${esc(t('home.brueckeSignal'))}</span>
        <span class="bruecke-notice__title">${esc(title)}</span>

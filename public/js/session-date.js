@@ -1,9 +1,11 @@
-/* Spielwirbel – a session's DAY, when it is not today (#1616).
+/* Spielwirbel – a session's DAY, when it is not today (#1616), and its
+   optional TIME (#1629).
 
    Three pieces, all DOM:
-   - `playedOnField`, the „Wann?" field the direct-play sheet carries;
-   - `showSessionDateSheet`, moving a finished session to another day — opened
-     from the results screen's rare actions;
+   - `playedOnField`, the „Wann?" field the direct-play sheet carries — a day
+     and an optional time;
+   - `showSessionDateSheet`, moving a finished session to another day or time —
+     opened from the results screen's rare actions;
    - `showLogSessionPicker`, the Chronik's „Session nachtragen": pick a game
      from the shelf, then the SAME direct-play sheet, dated yesterday.
 
@@ -25,28 +27,58 @@ function takeResultPickerOpen(sid) {
 }
 
 // The „Wann?" field: a native date input — the platform's own calendar on
-// every device, already localised — bounded to PLAYED_ON_MIN…today. `value()`
-// reads the picked day key ('YYYY-MM-DD'), or '' while it is cleared.
-function playedOnField(dayKey, note) {
+// every device, already localised — bounded to PLAYED_ON_MIN…today, beside an
+// OPTIONAL native time input (#1629). An empty time means „we only know the
+// day": the session is stored at the 20:00 stand-in and shown by date alone.
+// The ✕ empties the time, because not every platform's time input can be
+// cleared by hand (iOS cannot). `value()` reads the day key ('YYYY-MM-DD', or
+// '' while cleared) and `time()` the 'HH:MM', or ''. `note` replaces the hint
+// under the inputs; '' drops it (the change sheet states its own above).
+function playedOnField(dayKey, note, timeKey = '') {
   const id = `playedOn-${++playedOnFieldSeq}`;
   const today = localDayKey(new Date());
+  const timeLabel = t('playedOn.timeLabel');
   const wrap = h(`<div class="field played-on">
       <label for="${id}">${esc(t('playedOn.label'))}</label>
-      <input id="${id}" class="input played-on__input" type="date" min="${PLAYED_ON_MIN}" max="${today}" value="${esc(dayKey || today)}">
-      ${note ? `<p class="field__hint muted">${esc(note)}</p>` : ''}
+      <div class="row played-on__row">
+        <input id="${id}" class="input played-on__input" type="date" min="${PLAYED_ON_MIN}" max="${today}" value="${esc(dayKey || today)}">
+        <span class="played-on__at">
+          <input class="input played-on__time" type="time" aria-label="${esc(timeLabel)}" title="${esc(timeLabel)}" value="${esc(timeKey)}">
+          <button type="button" class="played-on__clear" aria-label="${esc(t('playedOn.timeClear'))}" title="${esc(t('playedOn.timeClear'))}"><i class="ti ti-x" aria-hidden="true"></i></button>
+        </span>
+      </div>
+      ${note === '' ? '' : `<p class="field__hint muted">${esc(note || t('playedOn.timeHint'))}</p>`}
     </div>`);
-  const input = wrap.querySelector('input');
+  const input = wrap.querySelector('.played-on__input');
+  const timeInput = wrap.querySelector('.played-on__time');
+  const clear = wrap.querySelector('.played-on__clear');
+  const syncClear = () => { clear.hidden = !timeInput.value; };
+  timeInput.addEventListener('input', syncClear);
+  timeInput.addEventListener('change', syncClear);
+  clear.addEventListener('click', () => {
+    timeInput.value = '';
+    syncClear();
+    // So a caller listening for changes (the direct-play button label) hears it.
+    timeInput.dispatchEvent(new Event('change', { bubbles: true }));
+    timeInput.focus();
+  });
+  syncClear();
   wrap.input = input;
+  wrap.timeInput = timeInput;
   wrap.value = () => input.value;
+  wrap.time = () => timeInput.value;
   return wrap;
 }
 
-// The day key the field holds, or null with a toast when it is unusable: empty,
-// before PLAYED_ON_MIN or after today. The input's own min/max stop a picker
-// from offering those days, but a typed value is not bounded by them.
-function readPlayedOnDay(field) {
+// The field's { day, time } ('' for no time), or null with a toast when it is
+// unusable: an empty or impossible day, one before PLAYED_ON_MIN or after
+// today, or a time still ahead. The inputs' own min/max stop a picker from
+// offering those days, but a typed value is not bounded by them, and a time
+// input has no notion of „not later than now" at all.
+function readPlayedOn(field) {
   const day = field.value();
-  if (!day || !playedOnInstant(day)) {
+  const time = field.time();
+  if (!day || !playedOnInstant(day, new Date(), time)) {
     toast(t('playedOn.toast.invalid'), { tone: 'error' });
     return null;
   }
@@ -58,27 +90,38 @@ function readPlayedOnDay(field) {
     toast(t('playedOn.toast.invalid'), { tone: 'error' });
     return null;
   }
-  return day;
+  if (isFuturePlayedOn(day, time)) {
+    toast(t('playedOn.toast.futureTime'), { tone: 'error' });
+    return null;
+  }
+  return { day, time };
 }
 
-// Move a finished session to another day. `onSaved(fresh, session)` re-renders
-// the caller from the server's view, since every date-derived thing on the
-// screen (the stamp, the Chronik's month, the recap) follows from it.
+// Move a finished session to another day or time. `onSaved(fresh, session)`
+// re-renders the caller from the server's view, since every date-derived thing
+// on the screen (the stamp, the Chronik's month, the recap) follows from it.
+// The time starts filled with the session's own when it has a real one, and
+// empty for a date-only session — so „Übernehmen" untouched changes nothing.
 function showSessionDateSheet(round, session, onSaved) {
-  const current = session.createdAt ? localDayKey(new Date(session.createdAt)) : localDayKey(new Date());
+  const stamp = session.createdAt ? new Date(session.createdAt) : new Date();
+  const current = localDayKey(stamp);
+  const currentTime = isDateOnlySession(session) ? '' : localTimeKey(stamp);
   let field = null;
   openBulkPicker({ title: t('playedOn.changeTitle'), hint: t('playedOn.changeHint') }, (sheet) => {
-    field = playedOnField(current);
+    field = playedOnField(current, '', currentTime);
     sheet.querySelector('.sheet__actions').before(field);
     return field;
   }, async () => {
-    const day = readPlayedOnDay(field);
-    if (!day || day === current) return;
+    const picked = readPlayedOn(field);
+    if (!picked) return;
+    if (picked.day === current && picked.time === currentTime) return;
+    const playedOn = playedOnInstant(picked.day, new Date(), picked.time);
     try {
       await api('PATCH', `/api/rounds/${round.id}/sessions/${session.id}/date`, {
-        playedOn: playedOnInstant(day),
+        playedOn,
+        dateOnly: !picked.time,
       });
-      toast(t('playedOn.toast.changed', { date: fmtDate(playedOnInstant(day)) }));
+      toast(t('playedOn.toast.changed', { date: picked.time ? fmtDateTime(playedOn) : fmtDate(playedOn) }));
       const fresh = await fetchRoundFresh(round.id);
       const sess = fresh.sessions.find((s) => s.id === session.id) || session;
       onSaved(fresh, sess);

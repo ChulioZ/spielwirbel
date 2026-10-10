@@ -227,7 +227,7 @@ function renderResumeZone(rounds) {
            <span class="ticket__info">
              <span class="ticket__label">${esc(round.name)}</span>
              <span class="ticket__title">${esc(title)}</span>
-             <span class="ticket__meta">${esc(fmtDateTime(session.at))}</span>
+             <span class="ticket__meta">${esc(fmtSessionWhen(session, session.at))}</span>
            </span>
          </span>
          <span class="ticket__stub">

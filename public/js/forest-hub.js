@@ -241,7 +241,7 @@ function forestResumeNotice({ round, session }) {
   const title = voting
     ? `${t('round.liveLabel')} · ${round.name}`
     : session.gameTitle || t('round.inProgressDeciding');
-  const meta = [voting ? '' : round.name, fmtDateTime(session.at)].filter(Boolean).join(' · ');
+  const meta = [voting ? '' : round.name, fmtSessionWhen(session, session.at)].filter(Boolean).join(' · ');
   return h(`<a class="forest-notice">
        <span class="forest-notice__disc" aria-hidden="true"><i class="ti ti-player-play"></i></span>
        <span class="forest-notice__text">

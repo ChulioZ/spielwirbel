@@ -1344,7 +1344,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
      children of `#app`. */
   const screen = h('<div class="result-screen"></div>');
   app.appendChild(screen);
-  const when = fmtDateTime(session.createdAt);
+  const when = fmtSessionWhen(session);
   /* `page-head--result`, not a change to `.page-head` itself: that class is
      shared by ~16 sites and only this one puts a whole SENTENCE in the title
      slot. With the finished-session title („„Ticket to Ride" wurde gespielt.

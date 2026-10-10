@@ -30,7 +30,7 @@ const PROSE = [
 const HONEYPOT = ['public/kontakt.html#website'];
 
 const NO_TEXT_TYPES = new Set(['password', 'email', 'checkbox', 'radio', 'file',
-  'range', 'color', 'hidden', 'date', 'number', 'submit', 'button']);
+  'range', 'color', 'hidden', 'date', 'time', 'number', 'submit', 'button']);
 
 function jsFiles(dir) {
   return fs.readdirSync(path.join(ROOT, dir), { withFileTypes: true }).flatMap((e) => {
